@@ -5,6 +5,14 @@ extends Node3D
 ## Reads the actor's combat state through get_rig_state() and poses limb pivots. During an
 ## attack's active window the weapon arm uses AttackGeometry exactly, so the swing on screen
 ## is the swing the hit sweep tests. Purely presentational: never changes gameplay state.
+##
+## Poses by hit shape: weapon_arc (exact arc), cylinder_pulse (stomp; a roar - a pulse with
+## morale damage - flings both arms wide), sector_pulse (a wide horizontal sweep), projectile
+## (a one-hand cast, or a two-hand overhead throw for boulders and bodies) and none (a two-arm
+## flex for self buffs). A rig state may carry "pose_override": {"arm": Vector2, "off":
+## Vector2, "exact": bool} (yaw, pitch in degrees) from a player component's rig_state(), which
+## wins over every pose (P07 holding). set_status_tint() keeps a status colour on the materials
+## (HitFeedback); hit flashes still play on top of it.
 
 @export var weapon_arm_path: NodePath
 @export var off_arm_path: NodePath
@@ -96,11 +104,27 @@ func _process(delta: float) -> void:
 	var off := off_idle_pose
 	var exact := false
 	var twist := 0.0
-	if action != null and action.hit_shape == "weapon_arc":
+	var override: Variant = s.get("pose_override")
+	if typeof(override) == TYPE_DICTIONARY:
+		arm = override.get("arm", arm)
+		off = override.get("off", off)
+		exact = bool(override.get("exact", false))
+	elif action != null and action.hit_shape in ["sector_pulse", "projectile", "none"] \
+			and action.is_attack():
+		var pose := ability_pose(action, phase, f)
+		arm = pose[0]
+		off = pose[1]
+		twist = deg_to_rad(pose[2])
+	elif action != null and action.hit_shape == "weapon_arc":
 		arm = AttackGeometry.pose_for(action, phase, f, idle_arm_pose)
 		exact = phase == ActionDef.Phase.ACTIVE
 		off = off_idle_pose + Vector2(0.0, 30.0)
 		twist = -deg_to_rad(arm.x) * 0.3
+	elif action != null and action.hit_shape == "cylinder_pulse" \
+			and float(action.param("morale_damage", 0.0)) > 0.0:
+		var pose := ability_pose(action, phase, f)
+		arm = pose[0]
+		off = pose[1]
 	elif action != null and action.hit_shape == "cylinder_pulse":
 		var raised := Vector2(20.0, 70.0)
 		var slammed := Vector2(10.0, -70.0)
@@ -169,12 +193,99 @@ func _update_body(s: Dictionary, delta: float) -> void:
 
 
 var _flash_applied := 0.0
+var _tint := Color(0.0, 0.0, 0.0, 0.0)   ## rgb = status colour, a = strength (0 = none)
+var _tint_dirty := false
+
+
+## A lasting status colour (alpha = strength, 0 removes it), e.g. stone grey under Stone Skin.
+func set_status_tint(color: Color) -> void:
+	if color.is_equal_approx(_tint):
+		return
+	_tint = color
+	_tint_dirty = true
+
+
+func status_tint() -> Color:
+	return _tint
 
 
 func _update_flash(delta: float) -> void:
-	if _flash <= 0.0 and _flash_applied <= 0.0:
+	if _flash <= 0.0 and _flash_applied <= 0.0 and not _tint_dirty:
 		return  # nothing to fade: do not touch the materials every frame
+	_tint_dirty = false
 	_flash = maxf(0.0, _flash - delta * 6.0)
+	var tint_rgb := Color(_tint.r, _tint.g, _tint.b)
 	for i in _materials.size():
-		_materials[i].albedo_color = _base_colors[i].lerp(_flash_color, _flash * 0.85)
+		var base := _base_colors[i].lerp(tint_rgb, clampf(_tint.a, 0.0, 1.0))
+		_materials[i].albedo_color = base.lerp(_flash_color, _flash * 0.85)
 	_flash_applied = _flash
+
+
+## Arm poses (yaw, pitch in degrees) and the torso twist (degrees) of the ability shapes:
+## [weapon arm, off arm, twist] at `phase` and phase fraction `f`.
+func ability_pose(action: ActionDef, phase: int, f: float) -> Array:
+	var idle := idle_arm_pose
+	var off_idle := off_idle_pose
+	var t := clampf(f, 0.0, 1.0)
+	var e := 1.0 - (1.0 - t) * (1.0 - t)
+	var settle := smoothstep(0.0, 1.0, t)
+	match action.hit_shape:
+		"sector_pulse":
+			var wound := Vector2(110.0, 5.0)
+			var swept := Vector2(-110.0, 0.0)
+			var guard := Vector2(-30.0, 20.0)
+			match phase:
+				ActionDef.Phase.WINDUP:
+					return [idle.lerp(wound, e), off_idle.lerp(guard, e), 25.0 * e]
+				ActionDef.Phase.ACTIVE:
+					return [wound.lerp(swept, t), guard, lerpf(25.0, -25.0, t)]
+			return [swept.lerp(idle, settle), guard.lerp(off_idle, settle), lerpf(-25.0, 0.0, t)]
+		"projectile":
+			var spec: Variant = action.param("projectile", {})
+			var visual := str((spec as Dictionary).get("visual", "bolt")) if typeof(spec) == TYPE_DICTIONARY else "bolt"
+			if visual in ["boulder", "thrown_body"]:
+				var up := Vector2(15.0, 85.0)
+				var down := Vector2(10.0, 5.0)
+				match phase:
+					ActionDef.Phase.WINDUP:
+						return [idle.lerp(up, e), off_idle.lerp(Vector2(-up.x, up.y), e), 0.0]
+					ActionDef.Phase.ACTIVE:
+						return [down, Vector2(-down.x, down.y), 0.0]
+				return [down.lerp(idle, settle), Vector2(-down.x, down.y).lerp(off_idle, settle), 0.0]
+			var raised := Vector2(-25.0, 55.0)
+			var thrust := Vector2(-5.0, 5.0)
+			match phase:
+				ActionDef.Phase.WINDUP:
+					return [idle, off_idle.lerp(raised, e), -10.0 * e]
+				ActionDef.Phase.ACTIVE:
+					return [idle, thrust, -10.0]
+			return [idle, thrust.lerp(off_idle, settle), lerpf(-10.0, 0.0, t)]
+		"cylinder_pulse":
+			var pulled := Vector2(30.0, -40.0)
+			var wide := Vector2(85.0, 20.0)
+			match phase:
+				ActionDef.Phase.WINDUP:
+					return [idle.lerp(pulled, e), off_idle.lerp(Vector2(-pulled.x, pulled.y), e), 0.0]
+				ActionDef.Phase.ACTIVE:
+					return [wide, Vector2(-wide.x, wide.y), 0.0]
+			return [wide.lerp(idle, settle), Vector2(-wide.x, wide.y).lerp(off_idle, settle), 0.0]
+	var flex := Vector2(45.0, 35.0)
+	match phase:
+		ActionDef.Phase.WINDUP:
+			return [idle.lerp(flex, e), off_idle.lerp(Vector2(-flex.x, flex.y), e), 0.0]
+		ActionDef.Phase.ACTIVE:
+			return [flex, Vector2(-flex.x, flex.y), 0.0]
+	return [flex.lerp(idle, settle), Vector2(-flex.x, flex.y).lerp(off_idle, settle), 0.0]
+
+
+# --------------------------------------------------------------------------- package extensions
+# Later packages add their members directly below their own anchor (plan §1.5): P05 the body
+# scale k of a growth stage (pivots in Body space are pivot / k), P07 holding and throwing a
+# body (a component's rig_state() can also set "pose_override"), P08 the weapon visual per
+# weapon record.
+
+## @anchor P05
+
+## @anchor P07
+
+## @anchor P08

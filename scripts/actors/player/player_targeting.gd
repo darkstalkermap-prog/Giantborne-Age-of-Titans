@@ -5,9 +5,11 @@ extends PlayerComponent
 ## (a LockOnTracker); camera_rig.lock_target and Events.lock_target_changed are only ever
 ## updated through sync_lock().
 ##
-## Which entities the player may target at all is decided in one place, may_target(): P03
-## switches it to TargetingRules.player_may_target (hostile-only targeting), P11a adds the
-## boss's extra lock anchors where the candidates are gathered.
+## Which entities the player may target at all is decided in one place, may_target(): hostile-
+## only targeting (P03, decision 17) - TargetingRules.player_may_target, so team ENEMY and
+## faction-less NEUTRAL targets (dummies, props) only; neutral villagers and guards are never
+## locked or soft-targeted. P11a adds the boss's extra lock anchors where the candidates are
+## gathered.
 
 
 func setup(p: GiantPlayer) -> void:
@@ -32,9 +34,9 @@ func locked_entity() -> CombatEntity:
 	return Sim.get_entity(player.lock.target_id)
 
 
-## Whether lock-on and soft targeting may consider `e` at all.
+## Whether lock-on and soft targeting may consider `e` at all (hostile-only, P03).
 func may_target(e: CombatEntity) -> bool:
-	return e != null and e != player.entity and CombatEntity.can_damage(player.entity.team, e.team)
+	return e != null and e != player.entity and TargetingRules.player_may_target(e)
 
 
 func eye() -> Vector3:

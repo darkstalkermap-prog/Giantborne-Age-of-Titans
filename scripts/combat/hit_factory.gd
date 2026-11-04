@@ -26,10 +26,13 @@ static func _candidate_before(x: Dictionary, y: Dictionary) -> bool:
 	return (x.entity as CombatEntity).entity_id < (y.entity as CombatEntity).entity_id
 
 
-## True when `target` must not receive this attack at all. P02: never (no filtering). P03:
-## the player's area effects skip entities the player may not target (neutral bystanders).
-static func skip_candidate(_attacker: CombatEntity, _target: CombatEntity, _area_effect: bool) -> bool:
-	return false
+## True when `target` must not receive this attack at all: the player's area effects (cylinder
+## and sector pulses, projectile splash, Roar) skip every entity the player may not target, so
+## they never touch neutral bystanders (decision 17). Direct weapon arcs and direct projectile
+## hits are never filtered: a deliberate swing still lands (P11b makes that an offence).
+static func skip_candidate(attacker: CombatEntity, target: CombatEntity, area_effect: bool) -> bool:
+	return area_effect and attacker != null and attacker.team == CombatEntity.Team.PLAYER \
+		and not TargetingRules.player_may_target(target)
 
 
 ## One HitEvent for one candidate ({entity, hurtbox, point, substep, distance, weak_point}).
@@ -66,6 +69,27 @@ static func build(ctx: AttackContext, a: ActionDef, cand: Dictionary, pulse_id: 
 	e.category = a.category
 	e.attacker_growth_stage = ctx.growth_stage
 	## @anchor P03
+	# Buffs (Titan Surge): live for melee and pulses, frozen at launch for projectiles.
+	e.outgoing_damage_mult = c.outgoing_damage_mult() if is_nan(ctx.outgoing_damage_mult) \
+		else ctx.outgoing_damage_mult
+	e.outgoing_poise_mult = c.outgoing_poise_mult() if is_nan(ctx.outgoing_poise_mult) \
+		else ctx.outgoing_poise_mult
+	# The record's array (read-only for everyone: CombatEntity only reads it).
+	var p03_statuses: Variant = a.param("on_hit_statuses", [])
+	e.on_hit_statuses = p03_statuses if typeof(p03_statuses) == TYPE_ARRAY else []
+	e.morale_damage = float(a.param("morale_damage", 0.0))
+	if a.uses_weapon:
+		# Weapon tags (TreeWeapon) ride on every weapon blow.
+		var p03_weapon_tags: Variant = ctx.weapon.get("tags", [])
+		if typeof(p03_weapon_tags) == TYPE_ARRAY and not (p03_weapon_tags as Array).is_empty():
+			var p03_tags := PackedStringArray(a.tags)
+			for p03_tag: Variant in p03_weapon_tags:
+				if not p03_tags.has(str(p03_tag)):
+					p03_tags.append(str(p03_tag))
+			e.tags = p03_tags
+	e.from_projectile = ctx.from_projectile
+	e.projectile_id = ctx.projectile_id
+	e.area_effect = ctx.area_effect
 	## @anchor P07
 	return e
 
