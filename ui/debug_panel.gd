@@ -70,9 +70,9 @@ func _process(delta: float) -> void:
 		if s == null:
 			continue
 		var a := s.get_debug_info()
-		lines.append("%s  AI=%s  combat=%s  action=%s  H %.0f  poise %.0f  token=%s  path_fail=%d" % [
-			s.entity.entity_id, a.ai, a.combat, a.action if a.action != "" else "-", a.health, a.poise,
-			a.token, a.path_failures])
+		lines.append("%s  AI=%s  combat=%s  action=%s  H %.0f  S %.0f  poise %.0f  guard=%s  token=%s  path_fail=%d" % [
+			s.entity.entity_id, a.ai, a.combat, a.action if a.action != "" else "-", a.health, a.stamina,
+			a.poise, a.guard, a.token, a.path_failures])
 	var pool := get_tree().get_first_node_in_group("debris_pool") as DebrisPool
 	var debris := pool.active_count() if pool != null else 0
 	lines.append("entities %d  debris %d/%d  pending hits %d  world deltas %d" % [Sim.entities().size(),

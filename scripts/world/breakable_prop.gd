@@ -58,7 +58,11 @@ func _apply_broken_state(spawn_debris: bool) -> void:
 	broken.visible = true
 	for child in get_children():
 		if child is CollisionShape3D and child.name.begins_with("Block"):
-			child.queue_free()  # removed (not just disabled) so navmesh rebakes ignore it
+			# Disable and detach now (not at end of frame) so a navmesh bake in the same frame -
+			# e.g. the sandbox loading with this prop already destroyed - never sees it.
+			(child as CollisionShape3D).disabled = true
+			remove_child(child)
+			child.queue_free()
 	for hb in entity.hurtboxes:
 		hb.set_deferred("monitorable", false)
 		for c in hb.get_children():

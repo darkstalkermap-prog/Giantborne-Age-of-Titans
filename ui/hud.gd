@@ -22,6 +22,7 @@ var _help: PanelContainer
 var _help_label: Label
 var _mode_label: Label
 var _loot_label: Label
+var _labels_dirty := true
 var _last_message := ""
 var _last_message_time := -10.0
 var _time := 0.0
@@ -41,6 +42,13 @@ func _ready() -> void:
 	Events.loot_awarded.connect(_on_loot)
 	Events.object_destroyed.connect(_on_object_destroyed)
 	Events.camera_mode_changed.connect(_on_camera_mode_changed)
+	Settings.changed.connect(_on_settings_changed)
+
+
+func _on_settings_changed(key: String) -> void:
+	if key == "bindings":
+		_labels_dirty = true
+		_refresh_mode_label()
 
 
 func _on_object_destroyed(_tick: int, world_id: String, _by: String) -> void:
@@ -281,8 +289,8 @@ func _controls_text() -> String:
 		["Sprint", "sprint", ""],
 		["Lock target / switch", "lock_target", "wheel or right-stick flick while locked"],
 		["Camera mode", "camera_toggle", "wheel zooms when not locked"],
-		["Heavy Footfall (slot 1)", "ability_1", "pad: LT + A"],
-		["Ultimate", "ultimate", "pad: LT + RT (none equipped in M1)"],
+		["Heavy Footfall (slot 1)", "ability_1", ""],
+		["Ultimate", "ultimate", "none equipped in M1"],
 		["Pause / settings / rebind", "pause", ""],
 		["Controls overlay", "help", ""],
 	]
@@ -366,15 +374,20 @@ func _update_resources() -> void:
 func _update_hotbar() -> void:
 	var c := player.controller
 	var pools := player.entity.combatant.pools
+	_update_slots(c, pools)
+	_labels_dirty = false
+
+
+func _update_slots(c: CombatController, pools: ResourcePool) -> void:
 	for slot: Dictionary in _slots:
 		var i: int = slot.index
 		var is_ultimate := i == 8
 		var id := str(c.loadout.get("ultimate" if is_ultimate else "slot_%d" % (i + 1), ""))
 		var def: ActionDef = c.library.get(id) if id != "" else null
-		var kb := InputBindings.describe_action("ultimate" if is_ultimate else "ability_%d" % (i + 1), false)
-		var pad: String = "LT+RT" if is_ultimate else "LT+" + str(["A", "B", "X", "Y", "Up", "Rt", "Dn", "Lt"][i])
-		(slot.key as Label).text = kb
-		(slot.pad as Label).text = pad
+		if _labels_dirty:
+			var action_name := "ultimate" if is_ultimate else "ability_%d" % (i + 1)
+			(slot.key as Label).text = InputBindings.describe_action(action_name, false)
+			(slot.pad as Label).text = InputBindings.short_pad_label(action_name)
 		var root: PanelContainer = slot.root
 		if def == null:
 			(slot.title as Label).text = "ULT" if is_ultimate else ""

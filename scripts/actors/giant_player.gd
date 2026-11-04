@@ -139,6 +139,8 @@ func sim_step(tick: int, dt: float) -> void:
 	if controller.state != CombatController.State.DEAD:
 		_handle_meta(intents)
 		_handle_actions(intents)
+		if intents.block_held:
+			controller.resume_held_block()
 	_update_sprint(intents, dt)
 	_update_facing(intents, dt)
 	_update_movement(intents, dt)
@@ -180,6 +182,10 @@ func _handle_meta(intents: Dictionary) -> void:
 				sprint_toggled = not sprint_toggled
 			&"interact":
 				Events.hud_message.emit("Nothing to grab here yet (grabs arrive in M3)", "info")
+	# Hold mode follows the polled key state, not only release edges: a release that happened
+	# while paused or unfocused (no edge delivered) still ends the lock.
+	if hold_lock and lock.is_locked() and not intents.lock_held:
+		_release_lock("manual")
 
 
 func _handle_actions(intents: Dictionary) -> void:

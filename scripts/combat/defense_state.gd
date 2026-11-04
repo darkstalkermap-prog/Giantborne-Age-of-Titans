@@ -41,3 +41,13 @@ func apply_block_def(block: ActionDef) -> void:
 
 func in_parry_window() -> bool:
 	return blocking and block_elapsed_ticks >= 0 and block_elapsed_ticks < parry_window_ticks
+
+
+## Enemy guards (data "guard" block) use the same block rules with their own tuning.
+func apply_guard(guard: Dictionary) -> void:
+	coverage_deg = float(guard.get("coverage_deg", coverage_deg))
+	physical_reduction = float(guard.get("physical_reduction", physical_reduction))
+	elemental_reduction = float(guard.get("elemental_reduction", elemental_reduction))
+	impact_stamina_factor = float(guard.get("impact_stamina_factor", impact_stamina_factor))
+	guard_break_damage_fraction = float(guard.get("guard_break_damage_fraction", guard_break_damage_fraction))
+	guard_break_stagger_s = float(guard.get("guard_break_stagger_s", guard_break_stagger_s))

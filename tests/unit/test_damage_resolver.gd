@@ -85,8 +85,14 @@ func test_consumed_parry_window_blocks_only() -> void:
 func test_unparryable_and_unblockable() -> void:
 	var r := DamageResolver.resolve(_hit(40.0, 1.0, PackedStringArray(["Melee", "Unparryable"])), defender, _defense(true, 2))
 	assert_eq(r.outcome, HitResult.Outcome.BLOCKED, "unparryable is still blockable")
-	var u := DamageResolver.resolve(_hit(40.0, 1.0, PackedStringArray(["Melee", "Parryable", "Unblockable"])), defender, _defense(true, 2))
-	assert_eq(u.outcome, HitResult.Outcome.HIT, "unblockable ignores block (and parry)")
+	var unblockable := PackedStringArray(["Melee", "Parryable", "Unblockable"])
+	var u := DamageResolver.resolve(_hit(40.0, 1.0, unblockable), defender, _defense(true, 2))
+	assert_eq(u.outcome, HitResult.Outcome.PARRIED, "flags are independent: unblockable can still be parried in the window")
+	var u_late := DamageResolver.resolve(_hit(40.0, 1.0, unblockable), defender, _defense(true, 30))
+	assert_eq(u_late.outcome, HitResult.Outcome.HIT, "unblockable outside the parry window ignores the block")
+	assert_eq(u_late.health_damage, 37, "full damage through the block")
+	var both := DamageResolver.resolve(_hit(40.0, 1.0, PackedStringArray(["Melee", "Unparryable", "Unblockable"])), defender, _defense(true, 2))
+	assert_eq(both.outcome, HitResult.Outcome.HIT, "unparryable + unblockable gets through any guard")
 	var magic := DamageResolver.resolve(_hit(40.0, 1.0, PackedStringArray(["Magic", "Parryable"])), defender, _defense(true, 2))
 	assert_eq(magic.outcome, HitResult.Outcome.BLOCKED, "only melee can be parried")
 

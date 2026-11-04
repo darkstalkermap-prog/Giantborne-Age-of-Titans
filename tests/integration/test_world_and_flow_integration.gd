@@ -202,3 +202,80 @@ func test_attack_tokens_limit_attackers() -> void:
 		max_holders = maxi(max_holders, Sim.token_holders("player").size())
 	assert_true(max_holders >= 1, "soldiers took attack tokens")
 	assert_true(max_holders <= 2, "never more than two melee attackers at once (saw %d)" % max_holders)
+
+
+func test_hold_lock_follows_polled_key_state() -> void:
+	Settings.set_value("lock_mode", "hold", false)
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	spawn_soldier(Vector3(0, 0.05, -8), PI)
+	await step_ticks(3)
+	p.router.set_injected_hold(&"lock", true)
+	p.router.inject_edge(&"lock_press")
+	await step_ticks(2)
+	assert_eq(p.lock.target_id, "soldier_01", "hold mode: locked while held")
+	# Release without any release edge (as when the key goes up during a pause or focus loss).
+	p.router.set_injected_hold(&"lock", false)
+	await step_ticks(1)
+	assert_eq(p.lock.target_id, "", "hold mode: the lock ends as soon as the key is no longer held")
+	Settings.set_value("lock_mode", "toggle", false)
+
+
+func test_held_block_resumes_without_parry_window() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	await step_ticks(8)
+	p.router.inject_light_attack()
+	await step_ticks(2)
+	p.router.set_injected_hold(&"block", true)
+	p.router.inject_edge(&"block_press")   # buffered during windup, expires before recovery
+	await step_ticks(30)
+	assert_eq(p.controller.state, CombatController.State.BLOCKING, "held block resumes once the attack allows it")
+	assert_false(p.controller.parry_available, "a resumed (not pressed) block opens no parry window")
+	assert_near(p.entity.combatant.pools.stamina, 100.0 - 8.0 - 5.0, 0.01, "light 8 + block entry 5, charged once")
+	await step_ticks(30)
+	assert_eq(p.controller.state, CombatController.State.BLOCKING, "stays blocking while held")
+	assert_near(p.entity.combatant.pools.stamina, 87.0, 0.01, "no repeated entry cost while held")
+	p.router.set_injected_hold(&"block", false)
+	p.router.inject_edge(&"block_release")
+	await step_ticks(2)
+	assert_eq(p.controller.state, CombatController.State.LOCOMOTION, "released")
+
+
+func test_pad_combos_are_remappable() -> void:
+	var router := InputRouter.new()
+	world.add_child(router)
+	await get_tree().process_frame
+	Settings.set_action_binding("ability_1", true, {"joy_button": "y"})
+	assert_eq(InputBindings.short_pad_label("ability_1"), "LT+Y", "hotbar label follows the remap")
+	Input.action_press("ability_modifier")
+	var y := InputEventJoypadButton.new()
+	y.button_index = JOY_BUTTON_Y
+	y.pressed = true
+	Input.parse_input_event(y)
+	await get_tree().process_frame
+	assert_eq(router.consume().edges, [&"slot_1"] as Array, "LT + Y now fires slot 1")
+	y.pressed = false
+	Input.parse_input_event(y)
+	Input.action_release("ability_modifier")
+	var a := InputEventJoypadButton.new()
+	a.button_index = JOY_BUTTON_A
+	a.pressed = true
+	Input.parse_input_event(a)
+	await get_tree().process_frame
+	assert_eq(router.consume().edges, [&"jump"] as Array, "A alone still jumps")
+	a.pressed = false
+	Input.parse_input_event(a)
+	await get_tree().process_frame
+	Settings.reset_bindings()
+	assert_eq(InputBindings.short_pad_label("ability_1"), "LT+A", "defaults restored")
+
+
+func test_dodged_hits_keep_the_fight_in_combat() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	await step_ticks(8)
+	p.entity.combatant.pools.since_combat = 9.5
+	p.router.inject_edge(&"dodge")
+	await step_ticks(8)
+	queue_hit("tester", "player", Vector3(0, 0, -2))
+	await step_ticks(1)
+	assert_true(hits.size() == 1 and hits[0].outcome == HitResult.Outcome.EVADED, "evaded")
+	assert_true(p.entity.combatant.pools.since_combat < 0.1, "an evaded hit still counts as combat (fury does not decay)")

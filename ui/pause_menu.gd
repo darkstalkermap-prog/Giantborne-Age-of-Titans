@@ -246,6 +246,9 @@ func _input(event: InputEvent) -> void:
 	var is_pad := event is InputEventJoypadButton or event is InputEventJoypadMotion
 	if is_pad != _capture_pad:
 		return
+	# Holding the modifier (LT) while choosing a combo button must not bind the modifier itself.
+	if InputBindings.COMBO_ACTIONS.has(_capture_action) and event.is_action("ability_modifier"):
+		return
 	var d := InputBindings.event_to_dict(event)
 	if d.is_empty():
 		return

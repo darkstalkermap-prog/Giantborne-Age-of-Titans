@@ -24,8 +24,10 @@ static func write_json(path: String, data: Dictionary) -> Error:
 		DirAccess.remove_absolute(tmp)
 		return ERR_FILE_CORRUPT
 	if FileAccess.file_exists(path):
-		var previous := JsonIO.read_file(path)
-		if previous.ok and typeof(previous.data) == TYPE_DICTIONARY:
+		# Only a previous file that this build could itself load becomes the backup; a corrupt
+		# or newer-version main file must never overwrite the last good backup.
+		var previous := _try_load(path, int(data.get("schema_version", 1)))
+		if previous.ok:
 			var copy_err := DirAccess.copy_absolute(path, path + ".bak")
 			if copy_err != OK:
 				push_warning("SaveIO: could not refresh backup for %s (error %d)" % [path, copy_err])

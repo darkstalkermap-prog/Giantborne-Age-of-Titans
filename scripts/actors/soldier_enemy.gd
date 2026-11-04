@@ -109,7 +109,7 @@ func sim_step(tick: int, dt: float) -> void:
 	_update_facing(dt)
 	_update_movement(dt)
 	_run_hit_queries(tick)
-	entity.combatant.pools.tick(dt, true)
+	entity.combatant.pools.tick(dt, not is_guarding())
 	entity.combatant.poise.tick(dt)
 
 
@@ -198,7 +198,10 @@ func _update_facing(dt: float) -> void:
 		_:
 			turn = false
 	if turn:
-		var step := deg_to_rad(float(record.get("turn_rate_deg_s", 300.0))) * dt
+		var rate := float(record.get("turn_rate_deg_s", 300.0))
+		if is_guarding():
+			rate = float((record.get("guard", {}) as Dictionary).get("turn_rate_deg_s", rate))
+		var step := deg_to_rad(rate) * dt
 		facing_yaw = wrapf(facing_yaw + clampf(TargetingRules.yaw_delta(facing_yaw, target_yaw), -step, step), -PI, PI)
 	rotation.y = facing_yaw
 
@@ -329,6 +332,34 @@ func _run_hit_queries(tick: int) -> void:
 		Sim.queue_hit(e)
 
 
+## Soldiers "guard the front" (spec 10): while aware and not attacking they hold a frontal
+## guard that blocks with the normal block rules and their own stamina. Flank them, or break
+## the guard with heavy attacks (a broken guard staggers them). They turn slower while guarding.
+func is_guarding() -> bool:
+	var guard: Dictionary = record.get("guard", {})
+	if guard.is_empty() or controller.state != CombatController.State.LOCOMOTION or not brain.aware:
+		return false
+	if not (brain.state in [SoldierBrain.AIState.ALERT, SoldierBrain.AIState.APPROACH,
+			SoldierBrain.AIState.RECOVER, SoldierBrain.AIState.REPOSITION]):
+		return false
+	return entity.combatant.pools.stamina >= float(guard.get("min_stamina", 0.0))
+
+
+func get_defense_state() -> DefenseState:
+	var d := DefenseState.new()
+	d.position = global_position
+	d.forward = -global_transform.basis.z
+	d.height_m = entity.combatant.height_m
+	d.is_dead = controller.state == CombatController.State.DEAD
+	d.blocking = is_guarding()
+	d.parry_available = false
+	d.block_elapsed_ticks = 1 << 20
+	d.stamina = entity.combatant.pools.stamina
+	d.stability = entity.combatant.stability
+	d.apply_guard(record.get("guard", {}))
+	return d
+
+
 func on_entity_died(_killer_id: String) -> void:
 	Sim.release_all_tokens(entity.entity_id)
 	# Corpses stop blocking the giant and stop being hit.
@@ -356,6 +387,7 @@ func get_rig_state() -> Dictionary:
 		"dead": controller.state == CombatController.State.DEAD,
 		"staggered": controller.state == CombatController.State.STAGGERED,
 		"dodging": false,
+		"guarding": is_guarding(),
 	}
 
 
@@ -367,6 +399,8 @@ func get_debug_info() -> Dictionary:
 		"health": entity.combatant.pools.health,
 		"poise": entity.combatant.poise.value,
 		"token": brain.holds_token,
+		"guard": is_guarding(),
+		"stamina": entity.combatant.pools.stamina,
 		"aware": brain.aware,
 		"path_failures": path_failures,
 	}

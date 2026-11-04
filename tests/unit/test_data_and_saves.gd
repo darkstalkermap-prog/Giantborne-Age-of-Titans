@@ -132,3 +132,52 @@ func _rm_tree(path: String) -> void:
 	for d in dir.get_directories():
 		_rm_tree(path.path_join(d))
 	DirAccess.remove_absolute(path)
+
+
+func test_required_records_and_enum_lists() -> void:
+	# Copy the shipped data, drop one record the scenes depend on, and add a typo'd immunity.
+	_rm_tree(TMP_DATA)
+	for path in JsonIO.list_json_files(GameData.DATA_ROOT):
+		if path.ends_with("fence_wood.json"):
+			continue
+		var rel := path.trim_prefix(GameData.DATA_ROOT + "/").replace("/", "__")
+		var parsed := JsonIO.read_file(path)
+		if path.ends_with("soldier.json"):
+			parsed.data["immunities"] = ["Fire"]
+		_write(rel, parsed.data)
+	GameData.load_all(TMP_DATA)
+	var errs := "\n".join(GameData.errors)
+	assert_true(errs.contains("missing reference 'prop.fence_wood'"), "a record the scenes need is reported missing")
+	assert_true(errs.contains("unknown value 'Fire'"), "immunities must be known damage types or tags")
+	assert_false(GameData.is_valid(), "the sandbox would refuse to start")
+
+
+func test_backup_never_replaced_by_unloadable_main() -> void:
+	DirAccess.make_dir_recursive_absolute(SAVE.get_base_dir())
+	SaveIO.write_json(SAVE, {"schema_version": 1, "value": 1})
+	SaveIO.write_json(SAVE, {"schema_version": 1, "value": 2})     # bak = 1, main = 2
+	var f := FileAccess.open(SAVE, FileAccess.WRITE)
+	f.store_string(JSON.stringify({"schema_version": 7}))           # a newer build wrote main
+	f.close()
+	SaveIO.write_json(SAVE, {"schema_version": 1, "value": 3})     # must not back up the v7 file
+	var bak := SaveIO.read_json(SAVE + ".bak", 1)
+	assert_true(bak.ok, "backup still loadable")
+	assert_eq(int(bak.data.get("value", -1)), 1, "backup is still the last valid file")
+	f = FileAccess.open(SAVE, FileAccess.WRITE)
+	f.store_string("garbage")
+	f.close()
+	var r := SaveIO.read_json(SAVE, 1)
+	assert_true(r.ok and r.source == "backup", "recovers from the preserved backup")
+
+
+func test_bad_saved_binding_falls_back_to_defaults() -> void:
+	var before := Settings.load_message
+	Settings._merge({"bindings": {"attack_light": [{"mouse_button": "Left"}], "pause": [{"key": "Esc"}],
+		"jump": [{"key": "G"}]}})
+	Settings.apply_bindings()
+	assert_eq(InputBindings.describe_action("attack_light", false), "Mouse Left", "invalid override ignored: default LMB kept")
+	assert_eq(InputBindings.describe_action("pause", false), "Escape", "invalid override ignored: default Escape kept")
+	assert_eq(InputBindings.describe_action("jump", false), "G", "valid override still applied")
+	assert_true(Settings.load_message.contains("attack_light") and Settings.load_message.contains("pause"), "player is told which bindings were ignored")
+	Settings.load_message = before
+	Settings.reset_bindings()

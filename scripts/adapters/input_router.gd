@@ -5,9 +5,11 @@ extends Node
 ## Input contexts: GAMEPLAY (intents flow), MENU (pause/settings: gameplay input is
 ## suppressed), TEXT (reserved for typing). Modifier combos consume their inputs:
 ##   * keyboard: Shift + light attack = ONE heavy attack (never also a light attack);
-##   * controller: holding LT turns A/B/X/Y into ability slots 1-4 and D-pad Up/Right/Down/Left
-##     into slots 5-8 (so LT+B never dodges and LT+Up never switches camera), and LT+RT is the
-##     ultimate (never a heavy attack).
+##   * controller: the controller bindings of ability_1..8 and ultimate are COMBO buttons that
+##     only fire while the "ability_modifier" (LT by default) is held. Defaults: LT + A/B/X/Y =
+##     slots 1-4, LT + D-pad Up/Right/Down/Left = slots 5-8, LT + RT = ultimate. While the
+##     modifier is held those buttons do nothing else (LT+B never dodges, LT+Up never switches
+##     camera, LT+RT never heavy attacks). All of it is remappable like any other binding.
 ## Tests and the autopilot drive the same path through the inject_* methods.
 
 enum Context { GAMEPLAY, MENU, TEXT }
@@ -15,10 +17,6 @@ enum Context { GAMEPLAY, MENU, TEXT }
 ## Global context shared by every router (one player in the prototype).
 static var context: int = Context.GAMEPLAY
 
-const PAD_COMBO_SLOTS := {
-	JOY_BUTTON_A: 1, JOY_BUTTON_B: 2, JOY_BUTTON_X: 3, JOY_BUTTON_Y: 4,
-	JOY_BUTTON_DPAD_UP: 5, JOY_BUTTON_DPAD_RIGHT: 6, JOY_BUTTON_DPAD_DOWN: 7, JOY_BUTTON_DPAD_LEFT: 8,
-}
 const FLICK_ON := 0.75
 const FLICK_OFF := 0.35
 
@@ -47,21 +45,40 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var pad := event is InputEventJoypadButton or event is InputEventJoypadMotion
 	if pad and _pad_modifier_held():
-		if event is InputEventJoypadButton:
-			var jb := event as InputEventJoypadButton
-			if PAD_COMBO_SLOTS.has(jb.button_index):
-				if jb.pressed:
-					_edges.append(StringName("slot_%d" % PAD_COMBO_SLOTS[jb.button_index]))
-				get_viewport().set_input_as_handled()
+		for i in range(1, 9):
+			if _edge(event, "ability_%d" % i) == 1:
+				_edges.append(StringName("slot_%d" % i))
+				_consume_combo(event)
 				return
-		if _edge(event, "attack_heavy") == 1:
+		if _edge(event, "ultimate") == 1:
 			_edges.append(&"ultimate")
-			get_viewport().set_input_as_handled()
+			_consume_combo(event)
 			return
-	_route(event)
+		if _is_combo_input(event):
+			_consume_combo(event)  # held/released combo button while the modifier is down
+			return
+	_route(event, pad)
 
 
-func _route(event: InputEvent) -> void:
+## True when the event belongs to a combo binding (ability_N / ultimate controller bindings).
+func _is_combo_input(event: InputEvent) -> bool:
+	for action_name: String in InputBindings.COMBO_ACTIONS:
+		if InputMap.has_action(action_name) and event.is_action(action_name):
+			return true
+	return false
+
+
+## Swallows a combo input. Axis states of the actions it would otherwise trigger are synced,
+## so releasing the modifier before the trigger cannot produce a phantom press later.
+func _consume_combo(event: InputEvent) -> void:
+	if event is InputEventJoypadMotion:
+		for action_name: String in InputBindings.ACTIONS:
+			if InputMap.has_action(action_name) and event.is_action(action_name):
+				_axis_pressed[action_name] = event.get_action_strength(action_name) >= 0.5
+	get_viewport().set_input_as_handled()
+
+
+func _route(event: InputEvent, pad: bool) -> void:
 	var handled := false
 	if _edge(event, "attack_light") == 1:
 		_edges.append(&"heavy" if _modifier_held() else &"light")
@@ -85,14 +102,20 @@ func _route(event: InputEvent) -> void:
 			handled = true
 	var simple := {"dodge": &"dodge", "jump": &"jump", "interact": &"interact",
 		"sprint": &"sprint_press", "target_prev": &"target_left", "target_next": &"target_right",
-		"camera_toggle": &"camera_toggle", "ultimate": &"ultimate"}
+		"camera_toggle": &"camera_toggle"}
 	for action_name: String in simple:
 		if _edge(event, action_name) == 1:
 			_edges.append(simple[action_name])
 			handled = true
-	for i in range(1, 9):
-		if _edge(event, "ability_%d" % i) == 1:
-			_edges.append(StringName("slot_%d" % i))
+	# Controller bindings of abilities and the ultimate are combos (handled above, only with the
+	# modifier held); here only keyboard/mouse bindings fire them directly.
+	if not pad:
+		for i in range(1, 9):
+			if _edge(event, "ability_%d" % i) == 1:
+				_edges.append(StringName("slot_%d" % i))
+				handled = true
+		if _edge(event, "ultimate") == 1:
+			_edges.append(&"ultimate")
 			handled = true
 	if handled:
 		get_viewport().set_input_as_handled()

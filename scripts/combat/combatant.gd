@@ -53,7 +53,7 @@ static func from_record(p_entity_id: String, rec: Dictionary, height_override :=
 	if rec.has("resources"):
 		resources = (rec.resources as Dictionary).duplicate()
 	else:
-		resources = {"health": float(rec.get("health", 100.0)), "stamina": 100.0,
+		resources = {"health": float(rec.get("health", 100.0)), "stamina": float(rec.get("stamina", 100.0)),
 			"essence": 0.0, "fury_max": 100.0}
 	resources["health"] = float(resources.get("health", 100.0)) + 15.0 * endurance_bonus
 	resources["stamina"] = float(resources.get("stamina", 100.0)) + 2.0 * endurance_bonus

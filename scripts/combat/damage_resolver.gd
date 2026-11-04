@@ -70,19 +70,19 @@ static func resolve(hit: HitEvent, defender: Combatant, defense: DefenseState) -
 	var size_ratio := hit.attacker_height_m / maxf(defense.height_m, 0.01)
 	var knock := CombatRules.knockback_speed(hit.knockback_impulse, size_ratio, defense.stability,
 		hit.knockback_max_speed)
-	var blockable := defense.blocking and not hit.has_tag("Unblockable") \
-		and CombatRules.block_covers(defense.position, defense.forward, hit.attacker_position,
-			defense.coverage_deg)
-	if blockable:
-		var parryable := hit.has_tag("Melee") and hit.has_tag("Parryable") \
-			and not hit.has_tag("Unparryable")
-		if parryable and defense.parry_available and defense.in_parry_window() \
-				and defense.stamina + EPSILON >= defense.parry_extra_stamina:
-			r.outcome = HitResult.Outcome.PARRIED
-			r.stamina_damage = defense.parry_extra_stamina
-			r.attacker_poise_damage = defense.parry_poise_damage
-			r.notes = "parry"
-			return r
+	# Unblockable and Unparryable are independent flags (spec 6): an Unblockable attack can still
+	# be parried inside the window; an Unparryable one can still be blocked.
+	var guarding := defense.blocking and CombatRules.block_covers(defense.position, defense.forward,
+		hit.attacker_position, defense.coverage_deg)
+	var parryable := hit.has_tag("Melee") and hit.has_tag("Parryable") and not hit.has_tag("Unparryable")
+	if guarding and parryable and defense.parry_available and defense.in_parry_window() \
+			and defense.stamina + EPSILON >= defense.parry_extra_stamina:
+		r.outcome = HitResult.Outcome.PARRIED
+		r.stamina_damage = defense.parry_extra_stamina
+		r.attacker_poise_damage = defense.parry_poise_damage
+		r.notes = "parry"
+		return r
+	if guarding and not hit.has_tag("Unblockable"):
 		var impact := CombatRules.impact_stamina_cost(m.total, defense.impact_stamina_factor)
 		if defense.stamina + EPSILON >= float(impact):
 			r.outcome = HitResult.Outcome.BLOCKED

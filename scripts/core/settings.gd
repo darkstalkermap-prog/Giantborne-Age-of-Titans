@@ -83,16 +83,27 @@ func _merge(data: Dictionary) -> void:
 		values[key] = v
 
 
+## Keeps an action's override only if every entry in it is valid; otherwise that action falls
+## back to its default bindings (an override replaces the defaults, so a half-broken override
+## could otherwise leave an action unbound). Problems are reported in load_message.
 func _sanitize_bindings(raw: Dictionary) -> Dictionary:
 	var clean := {}
+	var dropped := PackedStringArray()
 	for action_name: Variant in raw:
 		if not InputBindings.ACTIONS.has(action_name) or typeof(raw[action_name]) != TYPE_ARRAY:
+			dropped.append(str(action_name))
 			continue
-		var events: Array = []
+		var ok := true
 		for ev: Variant in raw[action_name]:
-			if InputBindings.validate_event_dict(ev) == "":
-				events.append(ev)
-		clean[action_name] = events
+			if InputBindings.validate_event_dict(ev) != "":
+				ok = false
+		if ok:
+			clean[action_name] = raw[action_name]
+		else:
+			dropped.append(str(action_name))
+	if not dropped.is_empty():
+		load_message += (" " if load_message != "" else "") + \
+			"Ignored invalid saved bindings for: %s (defaults used)." % ", ".join(dropped)
 	return clean
 
 

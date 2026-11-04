@@ -439,6 +439,21 @@ func _set_state(new_state: int) -> void:
 	state_changed.emit(old, new_state)
 
 
+## Block is a held stance: if the block input is still held when the actor becomes free to
+## block again (its press expired in the buffer, it attacked out of block, a stagger ended),
+## resume blocking. The 5 stamina entry cost is charged again, but no parry window opens -
+## only a fresh press does. Silent: never emits a rejection.
+func resume_held_block() -> bool:
+	if not block_held or state == State.BLOCKING or state == State.DEAD or buffer.has_pending():
+		return false
+	var v := _evaluate(&"block", {})
+	if v.verdict != Verdict.ACCEPT:
+		return false
+	_accept(v.action, &"block", {})
+	parry_available = false
+	return true
+
+
 # --------------------------------------------------------------------------- reactions
 
 ## A blocked parryable hit inside the parry window that did not parry consumes the window:

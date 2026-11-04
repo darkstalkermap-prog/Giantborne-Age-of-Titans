@@ -13,6 +13,10 @@ const ACTIONS := [
 	"ability_modifier", "ultimate", "pause", "help", "debug_panel", "debug_reset",
 ]
 
+## Actions whose controller binding is a combo with "ability_modifier" (LT by default).
+const COMBO_ACTIONS := ["ability_1", "ability_2", "ability_3", "ability_4", "ability_5",
+	"ability_6", "ability_7", "ability_8", "ultimate"]
+
 const LABELS := {
 	"move_forward": "Move forward", "move_back": "Move back", "move_left": "Move left",
 	"move_right": "Move right", "look_left": "Look left (stick)", "look_right": "Look right (stick)",
@@ -35,6 +39,11 @@ const JOY_BUTTONS := {"a": 0, "b": 1, "x": 2, "y": 3, "back": 4, "guide": 5, "st
 	"dpad_down": 12, "dpad_left": 13, "dpad_right": 14}
 const JOY_AXES := {"left_x": 0, "left_y": 1, "right_x": 2, "right_y": 3, "trigger_left": 4,
 	"trigger_right": 5}
+
+const SHORT_PAD := {"a": "A", "b": "B", "x": "X", "y": "Y", "back": "Back", "guide": "Guide",
+	"start": "Start", "left_stick": "L3", "right_stick": "R3", "left_shoulder": "LB",
+	"right_shoulder": "RB", "dpad_up": "Up", "dpad_down": "Dn", "dpad_left": "Lt", "dpad_right": "Rt",
+	"trigger_left": "LT", "trigger_right": "RT"}
 
 const MOUSE_LABELS := {"left": "Mouse Left", "right": "Mouse Right", "middle": "Mouse Middle",
 	"wheel_up": "Wheel Up", "wheel_down": "Wheel Down", "wheel_left": "Wheel Left",
@@ -186,4 +195,38 @@ static func describe_action(action_name: String, pad: bool) -> String:
 	for d: Dictionary in current_events(action_name):
 		if is_pad_event(d) == pad:
 			parts.append(describe(d))
-	return " / ".join(parts) if not parts.is_empty() else "-"
+	if parts.is_empty():
+		return "-"
+	if pad and COMBO_ACTIONS.has(action_name):
+		return "%s + %s" % [describe_action("ability_modifier", true), " / ".join(parts)]
+	return " / ".join(parts)
+
+
+## Compact controller label for the hotbar, e.g. "LT+A" (combos include the modifier).
+static func short_pad_label(action_name: String) -> String:
+	var button := ""
+	for d: Dictionary in current_events(action_name):
+		if is_pad_event(d):
+			button = short_pad(d)
+			break
+	if button == "":
+		return ""
+	if not COMBO_ACTIONS.has(action_name):
+		return button
+	var modifier := ""
+	for d: Dictionary in current_events("ability_modifier"):
+		if is_pad_event(d):
+			modifier = short_pad(d)
+			break
+	return "%s+%s" % [modifier if modifier != "" else "?", button]
+
+
+static func short_pad(d: Dictionary) -> String:
+	if d.has("joy_button"):
+		return SHORT_PAD.get(d.joy_button, str(d.joy_button))
+	if d.has("joy_axis"):
+		if SHORT_PAD.has(d.joy_axis):
+			return SHORT_PAD[d.joy_axis]
+		var stick := "LS" if str(d.joy_axis).begins_with("left") else "RS"
+		return "%s%s%s" % [stick, str(d.joy_axis).right(1).to_upper(), "+" if float(d.get("dir", 1)) > 0 else "-"]
+	return ""

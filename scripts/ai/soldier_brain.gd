@@ -135,8 +135,11 @@ func decide(tick: int, controller_state: int, my_position: Vector3, request_toke
 		_set_state(AIState.FLEE)
 	var memory_ok := (now - last_seen_tick) <= _ticks(float(ai.get("memory_s", 3.0)))
 	var target_alive: bool = perception.get("alive", false)
-	var distance: float = perception.get("distance", INF)
-	var target_pos: Vector3 = perception.get("position", last_known)
+	# Only what the soldier can see is used: while the target is hidden the brain works from the
+	# last known position (memory), never from the target's live position.
+	var seen: bool = perception.get("visible", false)
+	var target_pos: Vector3 = perception.get("position", last_known) if seen else last_known
+	var distance: float = perception.get("distance", INF) if seen else _flat_distance(my_position, last_known)
 	match state:
 		AIState.IDLE:
 			_stop()
@@ -185,7 +188,7 @@ func decide(tick: int, controller_state: int, my_position: Vector3, request_toke
 			var facing_ok := absf(float(perception.get("facing_deg", 180.0))) <= ATTACK_FACING_DEG
 			if distance <= attack_range:
 				_stop_moving()
-				if now >= strike_ready_tick and facing_ok:
+				if seen and now >= strike_ready_tick and facing_ok:
 					if holds_token or request_token.call():
 						holds_token = true
 						attack_request = _choose_attack()

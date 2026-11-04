@@ -6,6 +6,11 @@ extends Node
 ## objects are a cached, typed view built after validation.
 
 const DATA_ROOT := "res://data"
+## Records the shipped scenes and code look up by id. Missing or mistyped -> startup error.
+const REQUIRED_RECORDS := {
+	"player.giant": "player", "enemy.soldier": "enemy", "prop.fence_wood": "prop",
+	"prop.practice_dummy": "prop", "input.default": "input_bindings", "action.block": "action",
+}
 
 signal reloaded
 
@@ -24,7 +29,8 @@ func _ready() -> void:
 		push_error("[data] " + e)
 
 
-func load_all(root: String) -> void:
+## check_required: also verify the ids the shipped scenes/code depend on (REQUIRED_RECORDS).
+func load_all(root: String, check_required: bool = true) -> void:
 	records.clear()
 	record_paths.clear()
 	errors.clear()
@@ -51,6 +57,9 @@ func load_all(root: String) -> void:
 			continue
 		records[id] = parsed.data
 		record_paths[id] = path
+	if check_required:
+		for id: String in REQUIRED_RECORDS:
+			refs.append({"ctx": "required by the sandbox scenes/code", "id": id, "type": REQUIRED_RECORDS[id]})
 	errors.append_array(DataValidator.validate_references(records, refs))
 	for id: String in records:
 		if records[id].get("type") == "action":

@@ -114,7 +114,7 @@ func _process(delta: float) -> void:
 			_:
 				arm = slammed.lerp(idle_arm_pose, f)
 				off = Vector2(-slammed.x, slammed.y).lerp(off_idle_pose, f)
-	elif state == CombatController.State.BLOCKING:
+	elif state == CombatController.State.BLOCKING or s.get("guarding", false):
 		arm = block_pose
 		off = off_block_pose
 	elif state == CombatController.State.DODGING:

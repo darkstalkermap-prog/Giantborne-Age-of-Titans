@@ -27,6 +27,8 @@ const CANCEL_INTO := ["light", "heavy", "dodge", "block", "ability", "jump"]
 const PHASES := ["windup", "active", "recovery"]
 const SIZE_POLICIES := ["attacker_growth", "none"]
 const INTERRUPT_POLICIES := ["hard_stagger", "super_armor"]
+const INTERACTION_PERMISSIONS := ["grab_small", "throw_boulder", "tree_weapon", "gate_breach",
+	"formation_sweep", "siege_disruption", "monster_grapple", "titan_execution"]
 const ID_REGEX := "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
 
 
@@ -234,7 +236,7 @@ static func schema_for(type: String) -> Dictionary:
 				"weapon_pivot_m": {"t": "vec3", "req": true},
 				"attack_origin_m": {"t": "vec3", "req": true},
 				"arm_length_m": _pos(true),
-				"interaction_permissions": {"t": "array", "items": "string"},
+				"interaction_permissions": {"t": "array", "items": "string", "items_enum": INTERACTION_PERMISSIONS},
 				"unlocks": {"t": "array", "items": "string", "items_ref": "action"},
 			})
 		"player":
@@ -256,7 +258,7 @@ static func schema_for(type: String) -> Dictionary:
 				"poise": {"t": "dict", "req": true, "fields": _poise_fields()},
 				"armor": _num(0.0),
 				"resistances": {"t": "dict", "keys_enum": DAMAGE_TYPES, "values": _num(-0.5, 0.75)},
-				"immunities": {"t": "array", "items": "string"},
+				"immunities": {"t": "array", "items": "string", "items_enum": DAMAGE_TYPES + TAGS},
 				"crit_chance": _num(0.0, 1.0),
 				"crit_multiplier": _num(1.0),
 				"stability": _pos(),
@@ -277,9 +279,19 @@ static func schema_for(type: String) -> Dictionary:
 				"height_m": _pos(true),
 				"capsule_radius_m": _pos(true),
 				"health": _pos(true),
+				"stamina": _pos(),
+				"guard": {"t": "dict", "fields": {
+					"coverage_deg": _num(0.0, 360.0, true),
+					"min_stamina": _num(0.0, null, true),
+					"turn_rate_deg_s": _pos(true),
+					"physical_reduction": _num(0.0, 1.0, true),
+					"elemental_reduction": _num(0.0, 1.0, true),
+					"impact_stamina_factor": _num(0.0, null, true),
+					"guard_break_damage_fraction": _num(0.0, 1.0, true),
+					"guard_break_stagger_s": _num(0.0, null, true)}},
 				"armor": _num(0.0),
 				"resistances": {"t": "dict", "keys_enum": DAMAGE_TYPES, "values": _num(-0.5, 0.75)},
-				"immunities": {"t": "array", "items": "string"},
+				"immunities": {"t": "array", "items": "string", "items_enum": DAMAGE_TYPES + TAGS},
 				"attributes": {"t": "dict", "keys_enum": ATTRIBUTES, "values": _num(0.0)},
 				"poise": {"t": "dict", "req": true, "fields": _poise_fields()},
 				"stability": _pos(),
@@ -323,7 +335,7 @@ static func schema_for(type: String) -> Dictionary:
 				"health": _pos(true),
 				"armor": _num(0.0),
 				"resistances": {"t": "dict", "keys_enum": DAMAGE_TYPES, "values": _num(-0.5, 0.75)},
-				"immunities": {"t": "array", "items": "string"},
+				"immunities": {"t": "array", "items": "string", "items_enum": DAMAGE_TYPES + TAGS},
 				"accepted_attack_categories": {"t": "array", "req": true, "items": "string",
 					"items_enum": ATTACK_CATEGORIES},
 				"min_growth_stage": _int(1, 10),

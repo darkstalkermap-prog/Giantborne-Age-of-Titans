@@ -154,8 +154,9 @@ func _apply(result: HitResult, attacker: CombatEntity) -> void:
 		pools.damage_health(result.health_damage)
 		if combatant.unkillable and pools.health < 1.0:
 			pools.health = 1.0
-	if result.outcome in [HitResult.Outcome.HIT, HitResult.Outcome.BLOCKED,
-			HitResult.Outcome.GUARD_BROKEN, HitResult.Outcome.PARRIED]:
+	# Every resolved exchange counts as combat for both sides - including evaded (dodged) and
+	# immune hits - so fury never decays while a fight is actually going on.
+	if result.outcome != HitResult.Outcome.IGNORED:
 		pools.mark_combat()
 		if attacker != null:
 			attacker.combatant.pools.mark_combat()
