@@ -219,6 +219,9 @@ func _on_action_started(action: ActionDef, instance_id: int) -> void:
 		"dodge":
 			sprinting = false
 			dodge_direction = _dodge_direction()
+		"block":
+			facing_yaw = _attack_facing_yaw()   # raise the guard toward the aim / locked target
+			rotation.y = facing_yaw
 		"light", "heavy", "ability", "ultimate":
 			sprinting = false
 			if action.kind == "heavy":
@@ -304,7 +307,7 @@ func _update_facing(intents: Dictionary, dt: float) -> void:
 	var instant := false
 	var target := locked_entity()
 	match controller.state:
-		CombatController.State.LOCOMOTION, CombatController.State.BLOCKING:
+		CombatController.State.LOCOMOTION:
 			if target != null:
 				target_yaw = _yaw_to(target.anchor_position())
 			elif camera_rig.is_first_person():
@@ -312,6 +315,11 @@ func _update_facing(intents: Dictionary, dt: float) -> void:
 				instant = true
 			elif (intents.move as Vector2).length() > 0.1:
 				target_yaw = TargetingRules.yaw_of(_move_dir_world(intents.move))
+		CombatController.State.BLOCKING:
+			# The guard follows the aim (or the locked target), never the movement direction, so
+			# backing off or strafing keeps the block facing what the player is looking at.
+			target_yaw = _attack_facing_yaw()
+			instant = camera_rig.is_first_person() and target == null
 		CombatController.State.ATTACKING, CombatController.State.CASTING:
 			if controller.phase() == ActionDef.Phase.WINDUP:
 				if target != null:
@@ -578,9 +586,14 @@ func _try_lock() -> void:
 
 func _switch_target(direction: int) -> void:
 	var current := locked_entity()
-	if current == null or camera_rig.camera.is_position_behind(current.anchor_position()):
+	if current == null:
 		return
-	var screen := camera_rig.camera.unproject_position(current.anchor_position())
+	var cam := camera_rig.camera
+	# If the current target is behind the camera (first-person free look), switch relative to
+	# the screen centre instead of doing nothing.
+	var screen := cam.get_viewport().get_visible_rect().size * 0.5
+	if not cam.is_position_behind(current.anchor_position()):
+		screen = cam.unproject_position(current.anchor_position())
 	if lock.switch_target(direction, _gather_candidates(true), screen, camera_rig.aim_forward(), Sim.tick / 60.0):
 		_sync_lock(lock.target_id, "switched")
 

@@ -254,8 +254,10 @@ func _build_giant() -> Node:
 		hip.add_child(_box("Foot", Vector3(0.5, 0.16, 0.72), Vector3(0, -1.52, -0.1), "giant_belt"))
 		body.add_child(hip)
 	var torso := _n3("Torso", Vector3(0, 1.6, 0))
-	torso.add_child(_box("Chest", Vector3(1.3, 1.45, 0.8), Vector3(0, 0.73, 0), "giant_tunic"))
-	torso.add_child(_box("Belt", Vector3(1.36, 0.18, 0.86), Vector3(0, 0.1, 0), "giant_belt"))
+	# Chest and belt are hidden in first person too: from the eye they would cover the ground
+	# (and any human) within ~2.6 m of the giant and the crosshair when looking down.
+	torso.add_child(_box("Chest", Vector3(1.3, 1.45, 0.8), Vector3(0, 0.73, 0), "giant_tunic", FP_HIDDEN))
+	torso.add_child(_box("Belt", Vector3(1.36, 0.18, 0.86), Vector3(0, 0.1, 0), "giant_belt", FP_HIDDEN))
 	torso.add_child(_box("Neck", Vector3(0.36, 0.2, 0.36), Vector3(0, 1.52, 0), "giant_skin", FP_HIDDEN))
 	torso.add_child(_box("Head", Vector3(0.62, 0.62, 0.62), Vector3(0, 1.74 + 0.0, 0), "giant_skin", FP_HIDDEN))
 	torso.add_child(_box("Hair", Vector3(0.66, 0.16, 0.66), Vector3(0, 2.08, 0.02), "giant_hair", FP_HIDDEN))

@@ -19,11 +19,15 @@ static var context: int = Context.GAMEPLAY
 
 const FLICK_ON := 0.75
 const FLICK_OFF := 0.35
+## A flick must go from below FLICK_OFF to above FLICK_ON within this many ticks (0.1 s), so a
+## slow push (ordinary first-person look while locked) never switches targets.
+const FLICK_MAX_TICKS := 6
 
 var _edges: Array[StringName] = []
 var _look_delta := Vector2.ZERO
 var _axis_pressed: Dictionary = {}
 var _flick_armed := true
+var _ticks_since_centered := 0
 
 var use_injection := false
 var injected_move := Vector2.ZERO
@@ -167,11 +171,15 @@ func consume() -> Dictionary:
 		move = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	if context == Context.GAMEPLAY and not use_injection:
 		var rx := Input.get_action_strength("look_right") - Input.get_action_strength("look_left")
-		if absf(rx) >= FLICK_ON and _flick_armed:
-			_flick_armed = false
-			_edges.append(&"stick_flick_right" if rx > 0.0 else &"stick_flick_left")
-		elif absf(rx) <= FLICK_OFF:
+		if absf(rx) <= FLICK_OFF:
 			_flick_armed = true
+			_ticks_since_centered = 0
+		else:
+			_ticks_since_centered += 1
+			if absf(rx) >= FLICK_ON and _flick_armed:
+				_flick_armed = false
+				if _ticks_since_centered <= FLICK_MAX_TICKS:
+					_edges.append(&"stick_flick_right" if rx > 0.0 else &"stick_flick_left")
 	var out := {
 		"edges": _edges.duplicate(),
 		"move": move,

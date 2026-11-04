@@ -44,9 +44,15 @@ func test_destroyed_breakable_at_load_is_not_a_nav_obstacle() -> void:
 	var arena: Node3D = (load("res://scenes/world/sandbox_arena.tscn") as PackedScene).instantiate()
 	(arena.get_node("Soldier01") as SoldierEnemy).ai_enabled = false
 	world.add_child(arena)
-	await step_ticks(4)
 	var map := arena.get_world_3d().navigation_map
-	var path := NavigationServer3D.map_get_path(map, Vector3(10, 0, 34), Vector3(14, 0, 34), true)
+	# The navigation map syncs asynchronously; wait for a synced map that yields a path.
+	var path := PackedVector3Array()
+	for i in 120:
+		await step_ticks(1)
+		if NavigationServer3D.map_get_iteration_id(map) > 0:
+			path = NavigationServer3D.map_get_path(map, Vector3(10, 0, 34), Vector3(14, 0, 34), true)
+			if path.size() >= 2:
+				break
 	var length := 0.0
 	for i in range(1, path.size()):
 		length += path[i - 1].distance_to(path[i])

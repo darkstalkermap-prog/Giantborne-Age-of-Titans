@@ -43,6 +43,7 @@ var _sphere := SphereShape3D.new()
 
 func _ready() -> void:
 	top_level = true
+	process_priority = -10  # update before the HUD projects markers with this camera
 	_sphere.radius = COLLISION_RADIUS
 	Settings.changed.connect(_on_settings_changed)
 
@@ -186,19 +187,23 @@ func _update_transform(delta: float) -> void:
 		global_transform = Transform3D(basis, eye)
 		obstructed = false
 	else:
+		# One rigid arm from the pivot to the over-the-shoulder camera point, swept as a sphere.
+		# (A separate lateral leg could end touching a door jamb and collapse the back leg to 0.)
+		# current_distance is the arm length: it retracts instantly and restores smoothly, and it
+		# never exceeds the swept safe length, so the camera cannot enter geometry.
 		var pivot := player.global_position + Vector3.UP * float(profile.get("camera_pivot_height_m", 3.3))
 		var right := Vector3(cos(yaw), 0.0, -sin(yaw))
-		var shoulder := pivot + right * float(profile.get("camera_shoulder_offset_m", 0.85))
+		var desired := pivot + right * float(profile.get("camera_shoulder_offset_m", 0.85)) + basis.z * desired_distance
+		var arm := desired - pivot
+		var arm_length := arm.length()
 		var space := player.get_world_3d().direct_space_state
-		var shoulder_safe := pivot.lerp(shoulder, _sweep(space, pivot, shoulder))
-		var back := basis.z * desired_distance
-		var safe_distance := desired_distance * _sweep(space, shoulder_safe, shoulder_safe + back)
-		obstructed = safe_distance < desired_distance - 0.01
-		if safe_distance < current_distance or delta <= 0.0:
-			current_distance = safe_distance
+		var safe_length := arm_length * _sweep(space, pivot, desired)
+		obstructed = safe_length < arm_length - 0.01
+		if safe_length < current_distance or delta <= 0.0:
+			current_distance = safe_length
 		else:
-			current_distance = move_toward(current_distance, safe_distance, RESTORE_SPEED * delta)
-		global_transform = Transform3D(basis, shoulder_safe + basis.z * current_distance)
+			current_distance = move_toward(current_distance, safe_length, RESTORE_SPEED * delta)
+		global_transform = Transform3D(basis, pivot + arm / maxf(arm_length, 0.001) * current_distance)
 	_apply_shake(delta)
 
 

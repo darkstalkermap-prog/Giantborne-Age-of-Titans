@@ -54,30 +54,30 @@ size = Vector3(0.22, 0.45, 0.22)
 [sub_resource type="BoxMesh" id="BoxMesh_hvgj7"]
 size = Vector3(0.22, 0.45, 0.22)
 
-[node name="FenceWood" type="StaticBody3D" unique_id=2136787905]
+[node name="FenceWood" type="StaticBody3D" unique_id=384431890]
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_pco3b")
 world_id = "sandbox.fence_01"
 
-[node name="BlockShape" type="CollisionShape3D" parent="." unique_id=781745129]
+[node name="BlockShape" type="CollisionShape3D" parent="." unique_id=936166323]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("BoxShape3D_hyta4")
 
-[node name="CombatEntity" type="Node" parent="." unique_id=2042465395]
+[node name="CombatEntity" type="Node" parent="." unique_id=1932138280]
 script = ExtResource("2_e7sl1")
 entity_id = "sandbox.fence_01"
 definition_id = "prop.fence_wood"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="." unique_id=1118800083]
+[node name="Anchors" type="Node3D" parent="." unique_id=1160928474]
 
-[node name="Center" type="Marker3D" parent="Anchors" unique_id=100274482]
+[node name="Center" type="Marker3D" parent="Anchors" unique_id=981997369]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 
-[node name="Hurtboxes" type="Node3D" parent="." unique_id=572960785]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=133575148]
 
-[node name="Panel" type="Area3D" parent="Hurtboxes" unique_id=307982531]
+[node name="Panel" type="Area3D" parent="Hurtboxes" unique_id=869642088]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 collision_layer = 4
 collision_mask = 0
@@ -85,70 +85,70 @@ monitoring = false
 script = ExtResource("3_b326h")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Panel" unique_id=40595703]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Panel" unique_id=1902806169]
 shape = SubResource("BoxShape3D_ggfuq")
 
-[node name="Intact" type="Node3D" parent="." unique_id=2105219497]
+[node name="Intact" type="Node3D" parent="." unique_id=1275630463]
 
-[node name="Post0" type="MeshInstance3D" parent="Intact" unique_id=376551756]
+[node name="Post0" type="MeshInstance3D" parent="Intact" unique_id=1556911800]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.85, 0)
 material_override = SubResource("StandardMaterial3D_nhvqg")
 mesh = SubResource("BoxMesh_hm0dg")
 
-[node name="Post1" type="MeshInstance3D" parent="Intact" unique_id=832157474]
+[node name="Post1" type="MeshInstance3D" parent="Intact" unique_id=45265056]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.85, 0)
 material_override = SubResource("StandardMaterial3D_nhvqg")
 mesh = SubResource("BoxMesh_u85n2")
 
-[node name="Post2" type="MeshInstance3D" parent="Intact" unique_id=272895716]
+[node name="Post2" type="MeshInstance3D" parent="Intact" unique_id=1229773961]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 material_override = SubResource("StandardMaterial3D_nhvqg")
 mesh = SubResource("BoxMesh_uabt4")
 
-[node name="Post3" type="MeshInstance3D" parent="Intact" unique_id=1455770926]
+[node name="Post3" type="MeshInstance3D" parent="Intact" unique_id=1086028296]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.85, 0)
 material_override = SubResource("StandardMaterial3D_nhvqg")
 mesh = SubResource("BoxMesh_lvwbs")
 
-[node name="Post4" type="MeshInstance3D" parent="Intact" unique_id=1323938937]
+[node name="Post4" type="MeshInstance3D" parent="Intact" unique_id=868678066]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.85, 0)
 material_override = SubResource("StandardMaterial3D_nhvqg")
 mesh = SubResource("BoxMesh_7usft")
 
-[node name="RailLow" type="MeshInstance3D" parent="Intact" unique_id=181098077]
+[node name="RailLow" type="MeshInstance3D" parent="Intact" unique_id=1868049237]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 material_override = SubResource("StandardMaterial3D_8gwqb")
 mesh = SubResource("BoxMesh_p6uvo")
 
-[node name="RailHigh" type="MeshInstance3D" parent="Intact" unique_id=134412525]
+[node name="RailHigh" type="MeshInstance3D" parent="Intact" unique_id=139487187]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
 material_override = SubResource("StandardMaterial3D_8gwqb")
 mesh = SubResource("BoxMesh_onmcr")
 
-[node name="Broken" type="Node3D" parent="." unique_id=1728256330]
+[node name="Broken" type="Node3D" parent="." unique_id=146860898]
 visible = false
 
-[node name="Stump0" type="MeshInstance3D" parent="Broken" unique_id=1052000127]
+[node name="Stump0" type="MeshInstance3D" parent="Broken" unique_id=920966177]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.22, 0)
 material_override = SubResource("StandardMaterial3D_nhvqg")
 mesh = SubResource("BoxMesh_ot5ax")
 
-[node name="Stump1" type="MeshInstance3D" parent="Broken" unique_id=893436956]
+[node name="Stump1" type="MeshInstance3D" parent="Broken" unique_id=922173193]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.22, 0)
 material_override = SubResource("StandardMaterial3D_nhvqg")
 mesh = SubResource("BoxMesh_f87nn")
 
-[node name="Stump2" type="MeshInstance3D" parent="Broken" unique_id=2046884017]
+[node name="Stump2" type="MeshInstance3D" parent="Broken" unique_id=713060361]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, 0)
 material_override = SubResource("StandardMaterial3D_nhvqg")
 mesh = SubResource("BoxMesh_4s5dx")
 
-[node name="Stump3" type="MeshInstance3D" parent="Broken" unique_id=250904975]
+[node name="Stump3" type="MeshInstance3D" parent="Broken" unique_id=781068928]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.22, 0)
 material_override = SubResource("StandardMaterial3D_nhvqg")
 mesh = SubResource("BoxMesh_rqdoi")
 
-[node name="Stump4" type="MeshInstance3D" parent="Broken" unique_id=242659653]
+[node name="Stump4" type="MeshInstance3D" parent="Broken" unique_id=1834244715]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.22, 0)
 material_override = SubResource("StandardMaterial3D_nhvqg")
 mesh = SubResource("BoxMesh_hvgj7")
