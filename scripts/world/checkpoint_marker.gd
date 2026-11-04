@@ -2,14 +2,16 @@ class_name CheckpointMarker
 extends Marker3D
 ## A respawn point: shrine spawn points, waystones and test-level checkpoints (plan §2.7.4).
 ## GameSession (P06) moves the player to the marker of the last checkpoint reached.
-## Group "checkpoints" (joined at construction, so subclasses need no super() calls).
+## Group "checkpoints": joined in _notification (which runs for every class of the hierarchy),
+## so subclasses need no super() calls in _init or _ready.
 
 ## Stable id, e.g. "valley.shrine.grove" or "valley.cp.forest_road".
 @export var checkpoint_id := ""
 
 
-func _init() -> void:
-	add_to_group("checkpoints")
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_ENTER_TREE:
+		add_to_group("checkpoints")
 
 
 ## Where (and facing which way) the player respawns: the marker's global transform with the

@@ -20,6 +20,28 @@ class Probe:
 		uses += 1
 
 
+class OwnInit:
+	extends Interactable
+	var built := false
+
+	func _init() -> void:   # no super(): the group join must not depend on it
+		built = true
+
+
+class OwnInitMarker:
+	extends CheckpointMarker
+
+	func _init() -> void:
+		checkpoint_id = "test.cp.own_init"
+
+
+class OwnInitWidget:
+	extends HudWidget
+
+	func _init() -> void:
+		pass
+
+
 class Offer:
 	extends PlayerComponent
 	var offered := {}
@@ -168,6 +190,21 @@ func test_checkpoint_marker() -> void:
 	assert_true(t.origin.is_equal_approx(Vector3(3, 1, -4)), "spawn at the marker")
 	var fwd := -t.basis.z
 	assert_true(fwd.is_equal_approx(Vector3(-1, 0, 0)), "facing the marker's yaw, level (%s)" % fwd)
+	var own := OwnInitMarker.new()
+	world.add_child(own)
+	assert_true(own.is_in_group("checkpoints") and own.checkpoint_id == "test.cp.own_init",
+		"a subclass with its own _init still joins the group")
+
+
+func test_subclasses_with_their_own_init_still_join() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var it := OwnInit.new()
+	it.prompt = "Own"
+	it.position = Vector3(0, 0, -2.0)
+	world.add_child(it)
+	await step_ticks(8)
+	assert_true(it.built and it.is_in_group("interactables"), "own _init ran and the group was joined")
+	assert_eq(p.interact.current_prompt(), "Own", "and PlayerInteract finds it")
 
 
 func test_hud_widgets_and_the_interact_prompt() -> void:
@@ -191,6 +228,11 @@ func test_hud_widgets_and_the_interact_prompt() -> void:
 		if child is HudWidget:
 			widgets += 1
 	assert_eq(widgets, created + 1, "one widget per existing registry entry (+ the extra one)")
+	assert_eq((prompt as Control).mouse_filter, Control.MOUSE_FILTER_IGNORE, "widgets never take the mouse")
+	var own := OwnInitWidget.new()
+	hud.add_child(own)
+	assert_eq(own.mouse_filter, Control.MOUSE_FILTER_IGNORE, "even a widget with its own _init")
+	own.queue_free()
 	assert_eq(prompt.call("visible_text"), "", "hidden without a candidate")
 	_probe(Vector3(0, 0, -2.0), "test.elder", "Talk")
 	await step_ticks(8)

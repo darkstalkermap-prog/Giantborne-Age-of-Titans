@@ -192,6 +192,7 @@ func add_component(component_name: StringName, c: PlayerComponent) -> void:
 	_by_name[component_name] = c
 	if String(component_name) in self:
 		set(String(component_name), c)
+	c.player = self   # also set when an override of setup() forgets super(p)
 	c.setup(self)
 	_sort_edge_order()
 

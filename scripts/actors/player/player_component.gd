@@ -11,7 +11,8 @@ extends RefCounted
 var player: GiantPlayer
 
 
-## Called once from GiantPlayer._ready, after the controller, router and geometry exist.
+## Called once when the component is added (from GiantPlayer._ready for the registry), after
+## the controller and router exist. `player` is already set; overrides call super(p) anyway.
 func setup(p: GiantPlayer) -> void:
 	player = p
 

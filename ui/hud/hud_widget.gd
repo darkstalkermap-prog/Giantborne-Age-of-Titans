@@ -9,10 +9,17 @@ extends Control
 ## small read API (e.g. visible_text()) so tests need not reach into its nodes.
 
 var hud: Hud
+var _mouse_filter_set := false
 
 
-func _init() -> void:
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+## The HUD never takes mouse input (clicks are attacks): every widget starts with
+## MOUSE_FILTER_IGNORE when it first enters the tree. _notification runs for every class of
+## the hierarchy, so this holds even when a widget defines its own _init; a widget that really
+## needs mouse input sets its filter in _ready.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_ENTER_TREE and not _mouse_filter_set:
+		_mouse_filter_set = true
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 ## The player the HUD follows, or null (no player yet, or it was freed by a reload).

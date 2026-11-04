@@ -5,9 +5,10 @@ extends CharacterBody3D
 ## shared glue - perception at the record's rate (5 Hz), decisions (10 Hz), facing with
 ## tracking limits, NavigationAgent3D movement, hearing, ally deaths and death cleanup.
 ##
-## Archetypes override the virtuals: _make_brain(), _sense_extra(snapshot), _is_guarding()
-## and _custom_movement(dt). Required child nodes: CombatEntity, NavAgent; Visual (ActorRig)
-## is optional. Group "enemies".
+## Archetypes override the virtuals: _make_brain(), _sense_extra(snapshot), _is_guarding(),
+## _custom_movement(dt) and _turn_rate_deg_s(); an archetype that overrides _ready() or
+## _exit_tree() must call super(). Required child nodes: CombatEntity, NavAgent; Visual
+## (ActorRig) is optional. Group "enemies".
 
 const GRAVITY := 22.0
 const KNOCKBACK_DECEL := 30.0

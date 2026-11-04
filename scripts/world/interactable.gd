@@ -6,7 +6,8 @@ extends Node3D
 ## or shows blocked_reason() as a warning when can_interact() is false.
 ##
 ## Subclasses override the four methods below; the defaults make a plain, always-usable node.
-## Group "interactables" (joined at construction, so subclasses need no super() calls).
+## Group "interactables": joined in _notification (which runs for every class of the
+## hierarchy), so subclasses need no super() calls in _init or _ready.
 
 ## Stable id reported in Events.interacted (quests, tutorial, bot).
 @export var interact_id := ""
@@ -20,8 +21,9 @@ extends Node3D
 @export var enabled := true
 
 
-func _init() -> void:
-	add_to_group("interactables")
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_ENTER_TREE:
+		add_to_group("interactables")
 
 
 func can_interact(_player: GiantPlayer) -> bool:
