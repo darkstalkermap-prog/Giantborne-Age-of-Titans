@@ -14,6 +14,7 @@
 	"recovery_s": 0.30,
 	"poise_damage": 12,
 	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
 	"tags": ["Melee", "Parryable", "BasicAttack", "Light"],
 	"category": "melee",
 	"uses_weapon": true,

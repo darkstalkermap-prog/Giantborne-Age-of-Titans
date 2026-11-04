@@ -26,6 +26,7 @@ const ATTRIBUTES := ["strength", "endurance", "dexterity", "intellect", "willpow
 const CANCEL_INTO := ["light", "heavy", "dodge", "block", "ability", "jump"]
 const PHASES := ["windup", "active", "recovery"]
 const SIZE_POLICIES := ["attacker_growth", "none"]
+const INTERRUPT_POLICIES := ["hard_stagger", "super_armor"]
 const ID_REGEX := "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
 
 
@@ -187,6 +188,7 @@ static func schema_for(type: String) -> Dictionary:
 				"tracking_fraction": _num(0.0, 1.0),
 				"soft_target_max_deg": _num(0.0, 45.0),
 				"unlock_stage": _int(1, 10),
+				"interrupt_policy": _str(false, INTERRUPT_POLICIES),
 				"duration_s": _pos(),
 				"move_s": _pos(),
 				"iframe_start_s": _num(0.0),
@@ -487,6 +489,10 @@ static func _semantic_action(d: Dictionary, ctx: String, out: Dictionary) -> voi
 			out.errors.append("%s: hit_shape 'weapon_arc' requires an 'arc'" % ctx)
 		if shape == "cylinder_pulse":
 			_require(d, ["radius_m", "height_m"], ctx, out, "hit_shape 'cylinder_pulse'")
+		if kind == "heavy" and typeof(d.get("cancels")) == TYPE_ARRAY:
+			for rule: Variant in d.cancels:
+				if typeof(rule) == TYPE_DICTIONARY and rule.get("phase") == "active":
+					out.errors.append("%s: heavy attacks cannot be cancelled during their active strike" % ctx)
 		if d.has("damage_split") and typeof(d.damage_split) == TYPE_DICTIONARY:
 			var total := 0.0
 			for k: Variant in d.damage_split:

@@ -214,7 +214,8 @@ func stagger(seconds: float, reason: String) -> void:
 	if combatant.dead:
 		return
 	if controller != null:
-		controller.apply_stagger(seconds, reason)
+		if not controller.apply_stagger(seconds, reason):
+			return
 	else:
 		combatant.poise.begin_stagger()
 		combatant.poise.end_stagger()

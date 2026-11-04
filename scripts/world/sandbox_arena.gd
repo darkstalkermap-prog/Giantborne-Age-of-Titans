@@ -11,9 +11,17 @@ var bake_count := 0
 
 func _ready() -> void:
 	add_to_group("sandbox")
-	nav_region.bake_finished.connect(func() -> void: bake_count += 1)
+	# The NavigationMesh is a sub-resource shared by every instance of this scene. Give each
+	# instance its own copy so a background rebake in a scene being reset can never collide
+	# with the fresh scene's bake.
+	nav_region.navigation_mesh = nav_region.navigation_mesh.duplicate()
+	nav_region.bake_finished.connect(_on_bake_finished)
 	nav_region.bake_navigation_mesh(false)
 	Events.object_destroyed.connect(_on_object_destroyed)
+
+
+func _on_bake_finished() -> void:
+	bake_count += 1
 
 
 func _on_object_destroyed(_tick: int, _world_id: String, _by: String) -> void:

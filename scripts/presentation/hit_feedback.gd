@@ -107,8 +107,21 @@ func _on_hit_resolved(_tick: int, r: HitResult) -> void:
 		return
 	if target.team == CombatEntity.Team.PLAYER and r.health_damage > 0:
 		rig.add_shake(clampf(0.25 + r.health_damage / 120.0, 0.25, 0.7))
+		_rumble(0.35, 0.6, 0.18)
 	elif r.event.attacker_id == "player" and r.health_damage > 0:
 		rig.add_shake(0.35 if r.event.has_tag("Heavy") else 0.15)
+		_rumble(0.2, 0.45 if r.event.has_tag("Heavy") else 0.15, 0.1)
+	elif r.outcome == HitResult.Outcome.PARRIED and target.team == CombatEntity.Team.PLAYER:
+		_rumble(0.5, 0.2, 0.12)
+
+
+## Controller rumble, scaled by the vibration setting (0 disables it).
+func _rumble(weak: float, strong: float, seconds: float) -> void:
+	var scale := float(Settings.get_value("vibration"))
+	if scale <= 0.0:
+		return
+	for device in Input.get_connected_joypads():
+		Input.start_joy_vibration(device, clampf(weak * scale, 0.0, 1.0), clampf(strong * scale, 0.0, 1.0), seconds)
 
 
 func _spawn_number(pos: Vector3, text: String, color: Color) -> void:

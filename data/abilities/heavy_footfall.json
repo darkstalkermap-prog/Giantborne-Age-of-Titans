@@ -16,6 +16,7 @@
 	"recovery_s": 0.45,
 	"poise_damage": 25,
 	"max_hits_per_target": 1,
+	"interrupt_policy": "hard_stagger",
 	"tags": ["Ability", "AoE", "Unparryable"],
 	"category": "ability",
 	"uses_weapon": false,

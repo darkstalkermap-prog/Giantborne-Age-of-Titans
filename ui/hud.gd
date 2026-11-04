@@ -134,21 +134,28 @@ func _make_slot(index: int) -> Dictionary:
 	cooldown.anchor_bottom = 1.0
 	cooldown.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stack.add_child(cooldown)
-	var key := UiKit.label("", 11, UiKit.MUTED)
-	key.position = Vector2(0, -2)
+	var key := UiKit.label("", 12, UiKit.TEXT)
+	key.position = Vector2(0, -4)
 	stack.add_child(key)
-	var title := UiKit.label("", 10)
+	var pad := UiKit.label("", 8, UiKit.MUTED)
+	pad.anchor_left = 1.0
+	pad.anchor_right = 1.0
+	pad.offset_left = -40
+	pad.offset_top = -2
+	pad.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	stack.add_child(pad)
+	var title := UiKit.label("", 9)
 	title.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.clip_text = true
 	stack.add_child(title)
-	var cost := UiKit.label("", 10, UiKit.STAMINA)
+	var cost := UiKit.label("", 9, UiKit.STAMINA)
 	cost.anchor_top = 1.0
 	cost.anchor_bottom = 1.0
 	cost.anchor_right = 1.0
-	cost.offset_top = -14
-	cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	cost.offset_top = -13
+	cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stack.add_child(cost)
 	var timer := UiKit.label("", 18)
 	timer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -159,11 +166,11 @@ func _make_slot(index: int) -> Dictionary:
 	reason.anchor_top = 1.0
 	reason.anchor_bottom = 1.0
 	reason.anchor_right = 1.0
-	reason.offset_top = 2
-	reason.offset_bottom = 16
+	reason.offset_top = 8
+	reason.offset_bottom = 22
 	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stack.add_child(reason)
-	return {"root": root, "cooldown": cooldown, "key": key, "title": title, "cost": cost,
+	return {"root": root, "cooldown": cooldown, "key": key, "pad": pad, "title": title, "cost": cost,
 		"timer": timer, "reason": reason, "index": index}
 
 
@@ -365,8 +372,9 @@ func _update_hotbar() -> void:
 		var id := str(c.loadout.get("ultimate" if is_ultimate else "slot_%d" % (i + 1), ""))
 		var def: ActionDef = c.library.get(id) if id != "" else null
 		var kb := InputBindings.describe_action("ultimate" if is_ultimate else "ability_%d" % (i + 1), false)
-		var pad: String = "LT+RT" if is_ultimate else "LT+" + str(["A", "B", "X", "Y", "Up", "Right", "Down", "Left"][i])
-		(slot.key as Label).text = "%s  %s" % [kb, pad]
+		var pad: String = "LT+RT" if is_ultimate else "LT+" + str(["A", "B", "X", "Y", "Up", "Rt", "Dn", "Lt"][i])
+		(slot.key as Label).text = kb
+		(slot.pad as Label).text = pad
 		var root: PanelContainer = slot.root
 		if def == null:
 			(slot.title as Label).text = "ULT" if is_ultimate else ""

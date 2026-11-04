@@ -44,6 +44,7 @@ var knockback_max_speed := 0.0
 var tracking_fraction := 0.0
 var soft_target_max_deg := 10.0
 var unlock_stage := 1
+var interrupt_policy := "hard_stagger"   ## hard_stagger: a hard stagger interrupts; super_armor: it does not
 var iframe_start_tick := 0
 var iframe_end_tick := 0
 var params: Dictionary = {}   ## the raw record, for kind-specific tuning
@@ -89,6 +90,7 @@ static func from_dict(d: Dictionary) -> ActionDef:
 	a.tracking_fraction = float(d.get("tracking_fraction", 0.0))
 	a.soft_target_max_deg = float(d.get("soft_target_max_deg", 10.0))
 	a.unlock_stage = int(d.get("unlock_stage", 1))
+	a.interrupt_policy = str(d.get("interrupt_policy", "hard_stagger"))
 	if a.kind == "dodge":
 		# Dodge: "active" is the movement burst, "recovery" the rest of the 0.75 s.
 		var total := seconds_to_ticks(float(d.get("duration_s", 0.75)))

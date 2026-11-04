@@ -131,7 +131,10 @@ func _check_row(grid: GridContainer, text: String, key: String) -> void:
 	grid.add_child(UiKit.label(text, 15))
 	var c := CheckBox.new()
 	c.button_pressed = bool(Settings.get_value(key))
-	c.toggled.connect(func(on: bool) -> void: Settings.set_value(key, on))
+	c.text = "On" if c.button_pressed else "Off"
+	c.toggled.connect(func(on: bool) -> void:
+		c.text = "On" if on else "Off"
+		Settings.set_value(key, on))
 	grid.add_child(c)
 
 

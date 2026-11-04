@@ -449,9 +449,14 @@ func on_block_impact(failed_parry: bool) -> void:
 
 
 ## Hard stagger: interrupts ordinary attacks and casts. No refund for interrupted actions.
-func apply_stagger(seconds: float, reason: String) -> void:
+## Actions authored with interrupt_policy "super_armor" keep running (the poise meter still
+## resets); returns false in that case.
+func apply_stagger(seconds: float, reason: String) -> bool:
 	if state == State.DEAD:
-		return
+		return false
+	if action != null and action.interrupt_policy == "super_armor":
+		combatant.poise.value = 0.0
+		return false
 	if action != null:
 		_finish_action(true)
 	buffer.clear()
@@ -460,6 +465,7 @@ func apply_stagger(seconds: float, reason: String) -> void:
 	combatant.poise.begin_stagger()
 	_set_state(State.STAGGERED)
 	staggered.emit(seconds, reason)
+	return true
 
 
 func _end_stagger() -> void:
