@@ -207,6 +207,7 @@ func _sign(text: String, pos: Vector3) -> Label3D:
 	l.font_size = 64
 	l.pixel_size = 0.006
 	l.outline_size = 12
+	l.visibility_range_begin = 7.0   # hide when the camera is right next to it
 	l.visibility_range_end = 40.0
 	l.modulate = Color(1.0, 0.95, 0.8)
 	return l

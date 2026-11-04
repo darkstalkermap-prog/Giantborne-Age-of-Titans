@@ -13,6 +13,17 @@ Footfall, a HUD, settings, key rebinding and a debug reset. Graphics are deliber
 The test results and the full acceptance-check list are in
 [docs/M1_HANDOFF.md](docs/M1_HANDOFF.md).
 
+| | |
+| --- | --- |
+| ![Third person at spawn](docs/screenshots/01_spawn_third_person.jpg) | ![Heavy attack on the dummy: 66](docs/screenshots/02_heavy_on_dummy_66.jpg) |
+| Third person at spawn: HUD, hotbar, crosshair | Heavy attack on the armor-25 dummy shows **66** |
+| ![First person light attack: 37](docs/screenshots/03_first_person_light_37.jpg) | ![Fence broken, loot awarded](docs/screenshots/04_fence_broken_loot.jpg) |
+| First person (head and chest hidden): light attack **37** | Fence broken: debris, stumps, "+1 Wood Scrap" |
+| ![Heavy Footfall](docs/screenshots/05_heavy_footfall_44.jpg) | ![Lock-on while blocking a soldier](docs/screenshots/06_lock_on_block_soldier.jpg) |
+| Heavy Footfall: shock ring, **44**, cooldown on slot 1 | Lock-on frame and marker; the camera orbits so the small soldier stays visible |
+
+*(Screenshots come from the exported Linux release build, rendered on a software GPU.)*
+
 ---
 
 ## 1. Requirements

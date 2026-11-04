@@ -48,39 +48,39 @@ height = 0.54
 radial_segments = 10
 rings = 6
 
-[node name="PracticeDummy" type="StaticBody3D" unique_id=2017202191]
+[node name="PracticeDummy" type="StaticBody3D" unique_id=844036520]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_fcjv8")
 
-[node name="Shape" type="CollisionShape3D" parent="." unique_id=947506505]
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=466351543]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 shape = SubResource("CylinderShape3D_xcqcm")
 
-[node name="CombatEntity" type="Node" parent="." unique_id=427641126]
+[node name="CombatEntity" type="Node" parent="." unique_id=519280047]
 script = ExtResource("2_uersc")
 entity_id = "dummy_01"
 definition_id = "prop.practice_dummy"
 anchor_path = NodePath("../Anchors/Torso")
 
-[node name="Anchors" type="Node3D" parent="." unique_id=1530401662]
+[node name="Anchors" type="Node3D" parent="." unique_id=1268945222]
 
-[node name="Torso" type="Marker3D" parent="Anchors" unique_id=2130947646]
+[node name="Torso" type="Marker3D" parent="Anchors" unique_id=1393565305]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
 
-[node name="Hurtboxes" type="Node3D" parent="." unique_id=1126481212]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=1190536498]
 
-[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=1839144670]
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=1521712228]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
 script = ExtResource("3_7gaia")
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=312189881]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=348714154]
 shape = SubResource("BoxShape3D_1ofw1")
 
-[node name="Post" type="Area3D" parent="Hurtboxes" unique_id=33113519]
+[node name="Post" type="Area3D" parent="Hurtboxes" unique_id=1577743451]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 collision_layer = 4
 collision_mask = 0
@@ -88,32 +88,32 @@ monitoring = false
 script = ExtResource("3_7gaia")
 region = "legs"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Post" unique_id=1413790181]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Post" unique_id=848133089]
 shape = SubResource("BoxShape3D_xmw45")
 
-[node name="Visual" type="Node3D" parent="." unique_id=1382454745]
+[node name="Visual" type="Node3D" parent="." unique_id=164896875]
 
-[node name="Base" type="MeshInstance3D" parent="Visual" unique_id=584519393]
+[node name="Base" type="MeshInstance3D" parent="Visual" unique_id=1198560836]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
 material_override = SubResource("StandardMaterial3D_nhvqg")
 mesh = SubResource("CylinderMesh_er05u")
 
-[node name="Post" type="MeshInstance3D" parent="Visual" unique_id=914295366]
+[node name="Post" type="MeshInstance3D" parent="Visual" unique_id=2140061284]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 material_override = SubResource("StandardMaterial3D_8gwqb")
 mesh = SubResource("CylinderMesh_1dekp")
 
-[node name="Crossbar" type="MeshInstance3D" parent="Visual" unique_id=1976456328]
+[node name="Crossbar" type="MeshInstance3D" parent="Visual" unique_id=178835065]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
 material_override = SubResource("StandardMaterial3D_8gwqb")
 mesh = SubResource("BoxMesh_lm123")
 
-[node name="Sack" type="MeshInstance3D" parent="Visual" unique_id=292000967]
+[node name="Sack" type="MeshInstance3D" parent="Visual" unique_id=164725903]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
 material_override = SubResource("StandardMaterial3D_dtn5v")
 mesh = SubResource("BoxMesh_aibhm")
 
-[node name="Head" type="MeshInstance3D" parent="Visual" unique_id=817032944]
+[node name="Head" type="MeshInstance3D" parent="Visual" unique_id=465445342]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.02, 0)
 material_override = SubResource("StandardMaterial3D_dtn5v")
 mesh = SubResource("SphereMesh_jhl5m")
