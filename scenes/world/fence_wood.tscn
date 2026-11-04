@@ -1,71 +1,71 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="1_pco3b"]
-[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_e7sl1"]
-[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_b326h"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="1_5fc47"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_hyta4"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(8, 1.6, 0.3)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_ggfuq"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
 size = Vector3(8, 1.6, 0.6)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nhvqg"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
 albedo_color = Color(0.36, 0.25, 0.15, 1)
 roughness = 0.9
 
-[sub_resource type="BoxMesh" id="BoxMesh_hm0dg"]
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
 size = Vector3(0.22, 1.7, 0.22)
 
-[sub_resource type="BoxMesh" id="BoxMesh_u85n2"]
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
 size = Vector3(0.22, 1.7, 0.22)
 
-[sub_resource type="BoxMesh" id="BoxMesh_uabt4"]
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
 size = Vector3(0.22, 1.7, 0.22)
 
-[sub_resource type="BoxMesh" id="BoxMesh_lvwbs"]
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
 size = Vector3(0.22, 1.7, 0.22)
 
-[sub_resource type="BoxMesh" id="BoxMesh_7usft"]
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
 size = Vector3(0.22, 1.7, 0.22)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8gwqb"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_9"]
 albedo_color = Color(0.55, 0.38, 0.22, 1)
 roughness = 0.85
 
-[sub_resource type="BoxMesh" id="BoxMesh_p6uvo"]
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
 size = Vector3(8.2, 0.16, 0.1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_onmcr"]
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
 size = Vector3(8.2, 0.16, 0.1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_ot5ax"]
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
 size = Vector3(0.22, 0.45, 0.22)
 
-[sub_resource type="BoxMesh" id="BoxMesh_f87nn"]
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
 size = Vector3(0.22, 0.45, 0.22)
 
-[sub_resource type="BoxMesh" id="BoxMesh_4s5dx"]
+[sub_resource type="BoxMesh" id="BoxMesh_14"]
 size = Vector3(0.22, 0.45, 0.22)
 
-[sub_resource type="BoxMesh" id="BoxMesh_rqdoi"]
+[sub_resource type="BoxMesh" id="BoxMesh_15"]
 size = Vector3(0.22, 0.45, 0.22)
 
-[sub_resource type="BoxMesh" id="BoxMesh_hvgj7"]
+[sub_resource type="BoxMesh" id="BoxMesh_16"]
 size = Vector3(0.22, 0.45, 0.22)
 
 [node name="FenceWood" type="StaticBody3D"]
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("1_pco3b")
+script = ExtResource("1_5fc47")
 world_id = "sandbox.fence_01"
 
 [node name="BlockShape" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
-shape = SubResource("BoxShape3D_hyta4")
+shape = SubResource("BoxShape3D_1")
 
 [node name="CombatEntity" type="Node" parent="."]
-script = ExtResource("2_e7sl1")
+script = ExtResource("2_c8050")
 entity_id = "sandbox.fence_01"
 definition_id = "prop.fence_wood"
 anchor_path = NodePath("../Anchors/Center")
@@ -82,73 +82,73 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
-script = ExtResource("3_b326h")
+script = ExtResource("3_129e0")
 region = "body"
 
 [node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Panel"]
-shape = SubResource("BoxShape3D_ggfuq")
+shape = SubResource("BoxShape3D_2")
 
 [node name="Intact" type="Node3D" parent="."]
 
 [node name="Post0" type="MeshInstance3D" parent="Intact"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.85, 0)
-material_override = SubResource("StandardMaterial3D_nhvqg")
-mesh = SubResource("BoxMesh_hm0dg")
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_4")
 
 [node name="Post1" type="MeshInstance3D" parent="Intact"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.85, 0)
-material_override = SubResource("StandardMaterial3D_nhvqg")
-mesh = SubResource("BoxMesh_u85n2")
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_5")
 
 [node name="Post2" type="MeshInstance3D" parent="Intact"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
-material_override = SubResource("StandardMaterial3D_nhvqg")
-mesh = SubResource("BoxMesh_uabt4")
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_6")
 
 [node name="Post3" type="MeshInstance3D" parent="Intact"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.85, 0)
-material_override = SubResource("StandardMaterial3D_nhvqg")
-mesh = SubResource("BoxMesh_lvwbs")
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_7")
 
 [node name="Post4" type="MeshInstance3D" parent="Intact"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.85, 0)
-material_override = SubResource("StandardMaterial3D_nhvqg")
-mesh = SubResource("BoxMesh_7usft")
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_8")
 
 [node name="RailLow" type="MeshInstance3D" parent="Intact"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
-material_override = SubResource("StandardMaterial3D_8gwqb")
-mesh = SubResource("BoxMesh_p6uvo")
+material_override = SubResource("StandardMaterial3D_9")
+mesh = SubResource("BoxMesh_10")
 
 [node name="RailHigh" type="MeshInstance3D" parent="Intact"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
-material_override = SubResource("StandardMaterial3D_8gwqb")
-mesh = SubResource("BoxMesh_onmcr")
+material_override = SubResource("StandardMaterial3D_9")
+mesh = SubResource("BoxMesh_11")
 
 [node name="Broken" type="Node3D" parent="."]
 visible = false
 
 [node name="Stump0" type="MeshInstance3D" parent="Broken"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.22, 0)
-material_override = SubResource("StandardMaterial3D_nhvqg")
-mesh = SubResource("BoxMesh_ot5ax")
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_12")
 
 [node name="Stump1" type="MeshInstance3D" parent="Broken"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.22, 0)
-material_override = SubResource("StandardMaterial3D_nhvqg")
-mesh = SubResource("BoxMesh_f87nn")
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_13")
 
 [node name="Stump2" type="MeshInstance3D" parent="Broken"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, 0)
-material_override = SubResource("StandardMaterial3D_nhvqg")
-mesh = SubResource("BoxMesh_4s5dx")
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_14")
 
 [node name="Stump3" type="MeshInstance3D" parent="Broken"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.22, 0)
-material_override = SubResource("StandardMaterial3D_nhvqg")
-mesh = SubResource("BoxMesh_rqdoi")
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_15")
 
 [node name="Stump4" type="MeshInstance3D" parent="Broken"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.22, 0)
-material_override = SubResource("StandardMaterial3D_nhvqg")
-mesh = SubResource("BoxMesh_hvgj7")
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_16")

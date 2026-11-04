@@ -6,9 +6,12 @@ extends RefCounted
 ## and calls kit.save(root, path) for every scene it makes; tools/build_scenes.gd runs them in
 ## order. Builders and the kit live in tools/ (never exported); gameplay code must not use them.
 ##
-## save() writes the scene with ResourceSaver and then removes every " unique_id=<n>" attribute
-## Godot 4.6 puts on node lines (random per save; a scene without them loads the same), so a
-## regenerated scene only differs when its content does.
+## save() writes the scene with ResourceSaver, then makes the text deterministic: it removes
+## every " unique_id=<n>" attribute Godot 4.6 puts on node lines (random per save; a scene
+## without them loads the same) and renumbers the ext_resource / sub_resource ids, which Godot
+## draws from a random stream that advances with every save of the process (so an --only build
+## and a full build would otherwise disagree). A regenerated scene only differs when its
+## content does.
 ##
 ## Materials are additive: the shared palette is MATERIALS below, and a builder may add its own
 ## with add_material() (no edit of this file needed).
@@ -60,6 +63,9 @@ var saved := PackedStringArray()
 var out_root := ""
 
 var _unique_id_re := RegEx.create_from_string(" unique_id=-?[0-9]+")
+var _header_re := RegEx.create_from_string("^\\[(ext_resource|sub_resource) [^\\n]*\\]$")
+var _attr_re := RegEx.create_from_string("(\\w+)=\"([^\"]*)\"")
+var _ref_re := RegEx.create_from_string("(ExtResource|SubResource)\\(\"([^\"]+)\"\\)")
 
 
 func _init(p_out_root := "") -> void:
@@ -129,13 +135,55 @@ func strip_unique_ids(text: String) -> String:
 	return _unique_id_re.sub(text, "", true)
 
 
+## The text with every ext_resource id renumbered "<n>_<first 5 hex of md5(path)>" and every
+## sub_resource id "<Type>_<n>" (n counts in file order), references included.
+func normalize_resource_ids(text: String) -> String:
+	var lines := text.split("\n")
+	var mapping := {}   # old id -> new id (ext and sub ids never collide: Godot keeps them apart)
+	var ext_n := 0
+	var sub_n := 0
+	for line in lines:
+		var h := _header_re.search(line)
+		if h == null:
+			continue
+		var attrs := {}
+		for m in _attr_re.search_all(line):
+			attrs[m.get_string(1)] = m.get_string(2)
+		if not attrs.has("id"):
+			continue
+		if h.get_string(1) == "ext_resource":
+			ext_n += 1
+			mapping[attrs.id] = "%d_%s" % [ext_n, str(attrs.get("path", "")).md5_text().substr(0, 5)]
+		else:
+			sub_n += 1
+			mapping[attrs.id] = "%s_%d" % [str(attrs.get("type", "Resource")), sub_n]
+	if mapping.is_empty():
+		return text
+	for i in lines.size():
+		var line := lines[i]
+		if _header_re.search(line) != null:
+			var id_m := RegEx.create_from_string(" id=\"([^\"]+)\"").search(line)
+			if id_m != null and mapping.has(id_m.get_string(1)):
+				line = line.substr(0, id_m.get_start(1)) + str(mapping[id_m.get_string(1)]) + line.substr(id_m.get_end(1))
+		var refs := _ref_re.search_all(line)
+		if not refs.is_empty():
+			var out := ""
+			var at := 0
+			for m in refs:
+				out += line.substr(at, m.get_start(2) - at) + str(mapping.get(m.get_string(2), m.get_string(2)))
+				at = m.get_end(2)
+			line = out + line.substr(at)
+		lines[i] = line
+	return "\n".join(lines)
+
+
 func _strip_file(path: String) -> int:
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
 		return FileAccess.get_open_error()
 	var text := f.get_as_text()
 	f.close()
-	var stripped := strip_unique_ids(text)
+	var stripped := normalize_resource_ids(strip_unique_ids(text))
 	if stripped == text:
 		return OK
 	f = FileAccess.open(path, FileAccess.WRITE)

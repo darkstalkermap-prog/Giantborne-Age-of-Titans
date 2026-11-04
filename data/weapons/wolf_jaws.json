@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "weapon.wolf_jaws",
+	"type": "weapon",
+	"family": "jaws",
+	"display_name": "Wolf Jaws",
+	"damage_multiplier": 1.0,
+	"length_m": 0.45,
+	"hit_radius_m": 0.22
+}
