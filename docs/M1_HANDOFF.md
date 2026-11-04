@@ -73,11 +73,11 @@ here, but part of it can only be confirmed on your PC.
 | Launch without missing dependencies | PASS | Editor build and exported Linux build |
 | Move and attack | PASS | Integration tests; screenshot tour |
 | Switch perspective | PASS | `test_camera_switch_preserves_state`, first-person tests, screenshots |
-| Fight one enemy | PASS | `test_soldier_engages_with_readable_attacks`; soak run (dozens of soldier kills) |
+| Fight one enemy | PASS | `test_soldier_engages_with_readable_attacks`, `test_soldier_guard_blocks_front_flank_and_heavy_break_it`; soak run (17 soldier kills) |
 | Block / parry / dodge | PASS | `test_parry_real_soldier_slash`, `test_late_block_is_ordinary_block`, `test_dodge_invulnerability_in_engine`, guard break |
 | Die and reset | PASS | `test_player_death_is_final_until_reset`; the soak run reset the sandbox repeatedly through the same reload path |
 | Break a fence | PASS | `test_fence_breaks_once_and_loot_once`; screenshot |
-| No crashes in a 10-minute run | PASS | 600 simulated seconds (36,001 ticks) of autopilot play, exit 0, **zero** errors or warnings |
+| No crashes in a 10-minute run | PASS | 600 simulated seconds (36,001 ticks) of autopilot play on the final code, exit 0, **zero** errors or warnings |
 | Inputs give feedback on the next physics tick | PASS | `test_input_feedback_on_next_tick` |
 
 ### Combat correctness
@@ -96,7 +96,7 @@ here, but part of it can only be confirmed on your PC.
 ### Camera (stage 1; three sizes are M3)
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Fixed obstacle route in both modes (narrow door, ceiling clearance, slope, nearby wall) | PASS (stage 1) | `test_route_third_person`, `test_route_first_person`: every waypoint reached, **0** ticks with the camera inside geometry |
+| Fixed obstacle route in both modes (narrow door, ceiling clearance, slope, nearby wall) | PASS (stage 1) | `test_route_third_person`, `test_route_first_person`: every waypoint reached, **0** ticks with the camera inside geometry; `test_follow_arm_stays_long_through_a_doorway`: the arm never collapses |
 | No persistent camera penetration | PASS | The same route test, plus `test_third_person_camera_does_not_enter_wall` |
 | Crosshair not obscured | PARTIAL | HUD crosshair verified in screenshots. Lock-on side-orbit added after screenshots showed the giant hiding small targets. Judging comfort needs human playtests. |
 | Camera switch preserves position, resources, target and attack timing | PASS | `test_camera_switch_preserves_state` |
@@ -126,19 +126,39 @@ here, but part of it can only be confirmed on your PC.
 Command: `tools/run_tests.sh` (headless, `--fixed-fps 60`).
 
 ```
-RESULT: 12 suites, 1070 checks, 0 failures
+RESULT: 14 suites, 1122 checks, 0 failures
 ```
 - 6 unit suites: rules, resolver, controller, resources/poise, targeting/registry/geometry,
   data/saves.
-- 6 integration suites with real scenes and physics: hits, defense, targeting/camera,
-  world/flow/AI/input, obstacle route, first-person combat.
+- 8 integration suites with real scenes, physics and input events: hits, defense,
+  targeting/camera, world/flow/AI/input, obstacle route, first-person combat, plus two suites
+  of regression tests for the review findings.
+- The runner installs an engine `Logger`: any script or engine error during a test fails that
+  test (verified with a deliberately crashing probe). It also always isolates the player's
+  settings file.
 
-The 10-minute soak (`--autoplay=600`, seeded) result line:
+The 10-minute soak (`--autoplay=600`, seeded, current code) result line:
 ```
-{"attacks":209,"heavies":45,"blocks":60,"dodges":44,"footfalls":33,"jumps":13,"lock_presses":32,
- "camera_toggles":14,"fence_breaks":13,"soldier_kills":19,"resets":19,"hits_resolved":168,
- "max_debris":8,"simulated_s":600.02,"ticks":36001}   # zero errors or warnings in the log
+{"attacks":247,"heavies":56,"blocks":67,"parries":2,"dodges":48,"footfalls":38,"jumps":12,
+ "lock_presses":34,"camera_toggles":16,"fence_breaks":11,"soldier_kills":17,"resets":17,
+ "hits_resolved":195,"max_debris":8,"simulated_s":600.02,"ticks":36001}   # 0 errors, 0 warnings
 ```
+
+## 5b. Independent review
+
+After the first complete build, five independent reviewers each checked one area of the spec:
+combat rules, input and the action state machine, camera and targeting, AI/world/data, and
+engine robustness. A separate skeptical verifier then tried to refute each finding, often by
+re-running the scenario in the engine. Of the 22 findings, every one was real, and every one is
+fixed with a regression test. The verifiers then re-checked the fixed code in the engine.
+
+| Area | Findings (all fixed) |
+| --- | --- |
+| Combat rules | Unblockable wrongly implied unparryable; dodged hits did not count as combat (fury decayed mid-fight) |
+| Input / state machine | Hold-mode lock stuck after a release during pause; a held block never resumed; controller combos were hard-coded (not remappable) |
+| Camera / targeting | Follow arm collapsed to 0 m at door jambs and walls; the giant's chest hid humans in first person; the block faced the movement direction, not the aim; first-person stick look switched targets; switching failed with the target behind the camera; the lock marker was a frame late |
+| AI / world / data | The soldier tracked a hidden giant's live position; the soldier did not "guard the front" (spec 10); one bad saved binding unbound an action; ids used by scenes were not validated; a breakable that loaded destroyed stayed in the navmesh; a newer-version file could overwrite the good backup; immunity names were unchecked |
+| Engine robustness | Mouse sensitivity depended on window size; keyboard slider changes were lost on quit; the test runner could pass a crashing test; running tests could wipe the player's bindings |
 
 ## 6. Bugs found while testing (all fixed)
 
@@ -152,6 +172,7 @@ The 10-minute soak (`--autoplay=600`, seeded) result line:
 - The heavy overhead slam came down 0.8 m right of a human standing in front of the giant (found
   by the first-person test). The slam now angles inward.
 - With no navmesh, soldiers could not move. They now steer directly when there is no path data.
+- The 22 review findings in section 5b.
 
 ## 7. Known limitations
 
