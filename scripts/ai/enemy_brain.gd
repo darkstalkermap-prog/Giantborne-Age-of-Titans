@@ -14,6 +14,13 @@ extends RefCounted
 ## close to the target's legs, take one of the target's attack tokens, strike, pause, repeat;
 ## without a token, circle. Archetype brains override _decide_engaged() and _choose_attack().
 ## Losing sight leads to investigating the last known position for memory_s, then patrol.
+##
+## Morale and size tactics (P04, below its anchor): ally deaths (debounced), commander deaths,
+## morale damage from hits and scripted events lower morale; it recovers when nothing is lost
+## for a while. Below flee_morale a unit flees to a reachable point and regroups only with a
+## leader, or routs. A unit facing a target much taller than itself (tactics.outmatched_ratio)
+## switches to its outmatched behaviour: formation (HOLD at a marker or in a line), harass
+## (WolfBrain), or the spread / kite / retreat hooks ranged brains fill in (P09).
 
 ## The first ten keep their M1 indices (SoldierBrain.AIState.* still resolves); later states
 ## are appended: HOLD (P04 formations), STAND_DOWN (P11b), RETURN (P10a leash), ROUTED (P04).
@@ -65,6 +72,7 @@ func _init(p_actor_id: String, record: Dictionary, seed_value: int) -> void:
 	attack_weights = record.get("attack_weights", [])
 	morale = float(record.get("morale", 70.0))
 	rng.seed = seed_value
+	_p04_init(record)
 
 
 func state_name() -> String:
@@ -94,6 +102,9 @@ func _in_state_s() -> float:
 func perceive(tick: int, snapshot: Dictionary) -> void:
 	now = tick
 	perception = snapshot
+	if state == AIState.ROUTED:
+		aware = false   # out of the fight for good (P04): never defers a checkpoint again
+		return
 	if snapshot.get("exists", false) and snapshot.get("alive", false) and snapshot.get("visible", false):
 		target_id = snapshot.target_id
 		last_known = snapshot.position
@@ -108,7 +119,9 @@ func perceive(tick: int, snapshot: Dictionary) -> void:
 ## Hearing (an attack within hearing range) or being hit reveals the position.
 func on_noise(tick: int, position: Vector3, source_id: String, certain: bool) -> void:
 	now = tick
-	if state in [AIState.DEAD, AIState.FLEE]:
+	if state in [AIState.DEAD, AIState.FLEE, AIState.ROUTED]:
+		if state == AIState.ROUTED and certain:
+			_reflee_from = position   # a routed unit that is hit flees again (P04)
 		return
 	last_known = position
 	target_id = source_id
@@ -120,8 +133,15 @@ func on_noise(tick: int, position: Vector3, source_id: String, certain: bool) ->
 		_set_state(AIState.ALERT)
 
 
-func on_ally_died() -> void:
-	morale = maxf(0.0, morale - 10.0)
+## A same-team death nearby (the actor checks ai.ally_death_radius_m): -10 morale, at most once
+## per ai.morale_debounce_s (three deaths within 2 s cost -10 once), x1.5 while outmatched.
+## tick < 0 uses the brain's last known tick.
+func on_ally_died(tick: int = -1) -> void:
+	var t := tick if tick >= 0 else now
+	if _last_ally_loss_tick != NO_TICK and t - _last_ally_loss_tick < _ticks(float(ai.get("morale_debounce_s", 2.0))):
+		return
+	_last_ally_loss_tick = t
+	apply_morale(-ALLY_DEATH_MORALE * _loss_mult(), "ally_died", t)
 
 
 # --------------------------------------------------------------------------- decisions
@@ -140,14 +160,22 @@ func decide(tick: int, p_controller_state: int, my_position: Vector3, request_to
 		return
 	if controller_state == CombatController.State.STAGGERED:
 		_release(release_token)
+		if state in [AIState.FLEE, AIState.ROUTED]:
+			_resume_after_stagger = state
 		_set_state(AIState.STAGGERED)
 		_stop()
 		return
 	if state == AIState.STAGGERED:
-		_set_state(AIState.APPROACH if aware else AIState.PATROL)
-	if state != AIState.FLEE and morale < float(ai.get("flee_morale", 25.0)) and aware:
+		if _resume_after_stagger >= 0:
+			_set_state(_resume_after_stagger)
+			_resume_after_stagger = -1
+		else:
+			_set_state(AIState.APPROACH if aware else AIState.PATROL)
+	_recover_morale()
+	if not (state in [AIState.FLEE, AIState.ROUTED]) and not ignores_morale \
+			and morale < float(ai.get("flee_morale", 25.0)) and aware:
 		_release(release_token)
-		_set_state(AIState.FLEE)
+		_begin_flee()
 	var memory_ok := (now - last_seen_tick) <= _ticks(float(ai.get("memory_s", 3.0)))
 	var target_alive: bool = perception.get("alive", false)
 	# Only what the enemy can see is used: while the target is hidden the brain works from the
@@ -188,13 +216,10 @@ func decide(tick: int, p_controller_state: int, my_position: Vector3, request_to
 				_set_state(AIState.PATROL)
 		AIState.FLEE:
 			_release(release_token)
-			var flee_dir := my_position - target_pos
-			flee_dir.y = 0.0
-			move_target = my_position + (flee_dir.normalized() if flee_dir.length() > 0.1 else Vector3.BACK) * 8.0
-			move_speed = -1.0
-			face_point = Vector3.INF
-			if _in_state_s() >= 4.0 and morale > float(ai.get("regroup_morale", 45.0)):
-				_set_state(AIState.APPROACH)
+			_decide_flee(my_position, target_pos, distance, seen)
+		AIState.ROUTED:
+			_release(release_token)
+			_decide_routed(my_position, target_pos)
 		AIState.DEAD:
 			_stop()
 		_:
@@ -207,6 +232,9 @@ func decide(tick: int, p_controller_state: int, my_position: Vector3, request_to
 ## strike with a token when in range and facing it, pause between strikes, circle without one.
 func _decide_engaged(my_position: Vector3, target_pos: Vector3, distance: float, seen: bool,
 		memory_ok: bool, target_alive: bool, request_token: Callable, release_token: Callable) -> void:
+	if _decide_outmatched(outmatched_behavior(), my_position, target_pos, distance, seen, memory_ok,
+			target_alive, request_token, release_token):
+		return
 	match state:
 		AIState.APPROACH:
 			if not target_alive and perception.get("exists", false):
@@ -271,10 +299,11 @@ func _decide_engaged(my_position: Vector3, target_pos: Vector3, distance: float,
 				_set_state(AIState.APPROACH)
 
 
-## True once the requested attack is over (the controller left ATTACKING). Archetypes may widen
-## the check (P04: abilities run in CASTING).
+## True once the requested attack is over: the controller is neither ATTACKING nor CASTING
+## (enemy actions of kind "ability" run in CASTING).
 func _attack_finished() -> bool:
-	return controller_state != CombatController.State.ATTACKING
+	return controller_state != CombatController.State.ATTACKING \
+		and controller_state != CombatController.State.CASTING
 
 
 ## Called by the actor when a path makes no progress for path_fail_s: pick a new destination.
@@ -288,6 +317,10 @@ func on_path_failed(_my_position: Vector3) -> void:
 		AIState.ALERT:
 			aware = false
 			_set_state(AIState.PATROL)
+		AIState.FLEE, AIState.ROUTED:
+			_flee_blocked = true   # P04: pick another reachable flee point
+		AIState.HOLD:
+			_hold_slot_tick = NO_TICK   # P04: ask for the slot again
 		_:
 			_stop_moving()
 
@@ -343,6 +376,442 @@ static func _flat_distance(a: Vector3, b: Vector3) -> float:
 # Later packages add their members directly below their own anchor (plan §1.5).
 
 ## @anchor P04
+# --- morale, flight and size tactics (P04) --------------------------------------------------
+
+## Morale changed by `delta` (after scaling and clamping). reason: the attacker's entity id,
+## "ally_died", "commander_died", "awe", "siege_destroyed", "recover", ...
+signal morale_changed(morale: float, delta: float, reason: String)
+## Emitted once, when the unit routs (it fled without a leader for ai.rout_after_s).
+signal routed
+
+const NO_TICK := -1000000000
+const ALLY_DEATH_MORALE := 10.0
+const COMMANDER_DEATH_MORALE := 25.0
+## Morale losses from attackers and ally deaths count this much more while outmatched.
+const OUTMATCHED_LOSS_MULT := 1.5
+const MORALE_RECOVERY_PER_S := 2.0
+const MORALE_RECOVERY_DELAY_S := 6.0
+const MIN_FLEE_S := 4.0
+const FLEE_ARRIVE_M := 1.2
+const FLEE_REPICK_S := 2.0
+## A fleeing unit that has arrived moves on when its target comes this close.
+const FLEE_THREAT_M := 5.0
+## A holding unit walks to its slot until it is this close, and steps out again only once the
+## slot is HOLD_LEAVE_M away (hysteresis: no shuffling on the spot, yet a tidy line).
+const HOLD_ARRIVE_M := 0.3
+const HOLD_LEAVE_M := 0.8
+const HOLD_SLOT_REFRESH_S := 0.5
+## Scripted morale events (on_morale_event): event -> morale change. No slice content raises
+## "siege_destroyed" (siege equipment is deferred); the hook is unit-tested.
+const MORALE_EVENTS := {"siege_destroyed": -20.0}
+## Morale-loss sources that are applied as given, never x1.5 while outmatched (P11b's awe and
+## the scripted events are absolute).
+const UNSCALED_MORALE_SOURCES := ["awe", "siege_destroyed", "script"]
+
+## The record's morale (recovery stops there).
+var start_morale := 70.0
+## Bosses ignore morale: no losses, no flight.
+var ignores_morale := false
+## The record's tactics block (outmatched_ratio, outmatched_behavior, flank_angle_deg, ...).
+var tactics: Dictionary = {}
+var own_height_m := 1.8
+## Where a fleeing or routed unit runs to (INF = not chosen yet).
+var flee_point := Vector3.INF
+## Engine-side helpers the actor installs (unit tests leave them unset; pure fallbacks apply):
+## flee_resolver(from: Vector3, threat: Vector3, distance: float) -> Vector3 - a reachable flee
+## destination, or Vector3.INF when there is none;
+var flee_resolver := Callable()
+## formation_resolver(my_position: Vector3, target_pos: Vector3) -> Vector3 - this unit's HOLD
+## slot (a claimed formation marker, or its place in an ad-hoc line), INF = hold where it is;
+var formation_resolver := Callable()
+## formation_release() -> void - gives a claimed formation marker back.
+var formation_release := Callable()
+
+var _last_loss_tick := NO_TICK
+var _last_ally_loss_tick := NO_TICK
+var _last_recover_tick := NO_TICK
+var _recover_accum := 0.0
+var _no_leader_since := NO_TICK
+var _last_flee_pick_tick := NO_TICK
+var _flee_blocked := false
+var _reflee_from := Vector3.INF
+var _resume_after_stagger := -1
+var _routed_emitted := false
+var _hold_mode := false
+var _hold_moving := false
+var _hold_slot := Vector3.INF
+var _hold_slot_tick := NO_TICK
+## action id -> Vector2(ai_min_range_m, ai_max_range_m), measured from the target's capsule.
+var _attack_ranges: Dictionary = {}
+
+
+func _p04_init(record: Dictionary) -> void:
+	start_morale = morale
+	ignores_morale = bool(record.get("ignores_morale", false))
+	var t: Variant = record.get("tactics", {})
+	tactics = t if typeof(t) == TYPE_DICTIONARY else {}
+	own_height_m = float(record.get("height_m", 1.8))
+	for id: Variant in attacks:
+		_cache_attack_range(str(id))
+	var hold := str(tactics.get("hold_attack", ""))
+	if hold != "":
+		_cache_attack_range(hold)
+
+
+func _cache_attack_range(id: String) -> void:
+	var rec: Dictionary = GameData.get_record(id)
+	_attack_ranges[id] = Vector2(float(rec.get("ai_min_range_m", 0.0)), float(rec.get("ai_max_range_m", INF)))
+
+
+# ---- morale
+
+## Changes morale by `delta` (clamped to 0..100) and reports the change. Ignored by bosses and
+## the dead. tick < 0 uses the brain's last known tick.
+func apply_morale(delta: float, reason: String, tick: int = -1) -> void:
+	if ignores_morale or state == AIState.DEAD or delta == 0.0:
+		return
+	var t := tick if tick >= 0 else now
+	var before := morale
+	morale = clampf(morale + delta, 0.0, 100.0)
+	if delta < 0.0:
+		_last_loss_tick = t
+		_recover_accum = 0.0
+	if not is_equal_approx(morale, before):
+		morale_changed.emit(morale, morale - before, reason)
+
+
+## Morale damage from a hit (Thunder Roar's -20) or another source. source_id is the attacker's
+## entity id, or a reason such as "awe". Losses from an attacker count x1.5 while outmatched.
+func on_morale_delta(delta: float, source_id: String, tick: int = -1) -> void:
+	if delta < 0.0 and not UNSCALED_MORALE_SOURCES.has(source_id):
+		delta *= _loss_mult()
+	apply_morale(delta, source_id, tick)
+
+
+## The encounter's commander (or a commander nearby) died: -25, x1.5 while outmatched. Not
+## debounced; ordinary deaths in the next ai.morale_debounce_s cost nothing more.
+func on_commander_died(tick: int = -1) -> void:
+	var t := tick if tick >= 0 else now
+	_last_ally_loss_tick = t
+	apply_morale(-COMMANDER_DEATH_MORALE * _loss_mult(), "commander_died", t)
+
+
+## Scripted morale events (MORALE_EVENTS, e.g. "siege_destroyed" -20). Returns false (and
+## changes nothing) for an unknown event.
+func on_morale_event(event: StringName, tick: int = -1) -> bool:
+	var key := String(event)
+	if not MORALE_EVENTS.has(key):
+		return false
+	apply_morale(float(MORALE_EVENTS[key]), key, tick)
+	return true
+
+
+func _loss_mult() -> float:
+	return OUTMATCHED_LOSS_MULT if is_outmatched() else 1.0
+
+
+## +2 morale per second once MORALE_RECOVERY_DELAY_S have passed without a loss, up to the
+## record's starting morale (so FLEE can end). Runs in every decide().
+func _recover_morale() -> void:
+	var last := _last_recover_tick
+	_last_recover_tick = now
+	if ignores_morale or state == AIState.ROUTED or morale >= start_morale or last == NO_TICK:
+		_recover_accum = 0.0
+		return
+	var from := maxi(last, _last_loss_tick + _ticks(MORALE_RECOVERY_DELAY_S))
+	if now <= from:
+		return
+	_recover_accum += MORALE_RECOVERY_PER_S * float(now - from) / TICK_RATE
+	if _recover_accum >= 1.0:
+		var whole := floorf(_recover_accum)
+		_recover_accum -= whole
+		apply_morale(minf(whole, start_morale - morale), "recover", now)
+
+
+# ---- size
+
+## The perceived target's height over this unit's height (0 without a perception).
+func size_ratio() -> float:
+	if own_height_m <= 0.0:
+		return 0.0
+	return float(perception.get("target_height", 0.0)) / own_height_m
+
+
+## True when the perceived target is at least tactics.outmatched_ratio times this unit's height
+## (decision 26: a stage-2 giant outmatches soldiers, 5.49 / 1.8 = 3.05 >= 2.5).
+func is_outmatched() -> bool:
+	var ratio := float(tactics.get("outmatched_ratio", 0.0))
+	return ratio > 0.0 and bool(perception.get("exists", false)) and size_ratio() >= ratio - 1e-6
+
+
+## tactics.outmatched_behavior while outmatched, otherwise "none".
+func outmatched_behavior() -> String:
+	if not is_outmatched():
+		return "none"
+	return str(tactics.get("outmatched_behavior", "none"))
+
+
+## True while a leader remains to regroup around (the actor fills "has_leader" in every
+## perception snapshot: a living commander of the encounter, or - when the encounter has no
+## commander - a living ally within ai.leader_radius_m that is not fleeing).
+func has_leader() -> bool:
+	return bool(perception.get("has_leader", false))
+
+
+## True while the unit holds a formation slot (HOLD and its strikes).
+func in_formation() -> bool:
+	return _hold_mode
+
+
+# ---- attack choice by range
+
+## The attacks whose ai range band (ai_min_range_m..ai_max_range_m, from the target's capsule
+## surface; an action without one fits any range) contains `edge_m`.
+func attacks_in_range(edge_m: float) -> Array[String]:
+	var out: Array[String] = []
+	for id: Variant in attacks:
+		var r: Vector2 = _attack_ranges.get(str(id), Vector2(0.0, INF))
+		if edge_m >= r.x - 1e-6 and edge_m <= r.y + 1e-6:
+			out.append(str(id))
+	return out
+
+
+## Weighted pick (own RNG, the record's attack_weights) among attacks_in_range(edge_m); "" when
+## none fits.
+func choose_attack_in_range(edge_m: float) -> String:
+	var fits := attacks_in_range(edge_m)
+	if fits.size() <= 1:
+		return fits[0] if fits.size() == 1 else ""
+	var weights: Array[float] = []
+	var total := 0.0
+	for id in fits:
+		var i := attacks.find(id)
+		var w := float(attack_weights[i]) if attack_weights.size() == attacks.size() and i >= 0 else 1.0
+		weights.append(w)
+		total += w
+	var roll := rng.randf() * total
+	for i in fits.size():
+		roll -= weights[i]
+		if roll <= 0.0:
+			return fits[i]
+	return fits[fits.size() - 1]
+
+
+# ---- outmatched behaviours
+
+## Runs the outmatched behaviour of this decision. Returns true when it handled it; otherwise
+## the unit fights normally (leaving a formation it held).
+func _decide_outmatched(behavior: String, my_position: Vector3, target_pos: Vector3, distance: float,
+		seen: bool, memory_ok: bool, target_alive: bool, request_token: Callable, release_token: Callable) -> bool:
+	var handled := false
+	match behavior:
+		"formation":
+			handled = _decide_formation(my_position, target_pos, distance, seen, memory_ok, target_alive,
+				request_token, release_token)
+		"harass":
+			handled = _decide_harass(my_position, target_pos, distance, seen, memory_ok, target_alive,
+				request_token, release_token)
+		"spread":
+			handled = _decide_spread(my_position, target_pos, distance, seen, memory_ok, target_alive,
+				request_token, release_token)
+		"kite":
+			handled = _decide_kite(my_position, target_pos, distance, seen, memory_ok, target_alive,
+				request_token, release_token)
+		"retreat":
+			handled = _decide_retreat(my_position, target_pos, distance, seen, memory_ok, target_alive,
+				request_token, release_token)
+	if not handled:
+		if _hold_mode:
+			_leave_hold()
+		if state == AIState.HOLD:
+			_set_state(AIState.APPROACH)
+	return handled
+
+
+## Outmatched hooks; true = handled. The base handles none of them (the unit fights normally):
+## WolfBrain fills harass, the ranged brains (P09) spread, kite and retreat.
+func _decide_harass(_my_position: Vector3, _target_pos: Vector3, _distance: float, _seen: bool,
+		_memory_ok: bool, _target_alive: bool, _request_token: Callable, _release_token: Callable) -> bool:
+	return false
+
+
+func _decide_spread(_my_position: Vector3, _target_pos: Vector3, _distance: float, _seen: bool,
+		_memory_ok: bool, _target_alive: bool, _request_token: Callable, _release_token: Callable) -> bool:
+	return false
+
+
+func _decide_kite(_my_position: Vector3, _target_pos: Vector3, _distance: float, _seen: bool,
+		_memory_ok: bool, _target_alive: bool, _request_token: Callable, _release_token: Callable) -> bool:
+	return false
+
+
+func _decide_retreat(_my_position: Vector3, _target_pos: Vector3, _distance: float, _seen: bool,
+		_memory_ok: bool, _target_alive: bool, _request_token: Callable, _release_token: Callable) -> bool:
+	return false
+
+
+## Formation (outmatched soldiers, decision 26): HOLD at the slot formation_resolver gives (a
+## formation marker, or a place in an ad-hoc line), facing the target with the guard up; strike
+## only when the target's capsule is within reach - with tactics.hold_attack when set (P11b's
+## brace counter) - holding one of the target's melee tokens; then back to HOLD.
+func _decide_formation(my_position: Vector3, target_pos: Vector3, distance: float, seen: bool,
+		memory_ok: bool, target_alive: bool, request_token: Callable, release_token: Callable) -> bool:
+	if not target_alive and perception.get("exists", false):
+		_leave_hold()
+		_release(release_token)
+		aware = false
+		_set_state(AIState.PATROL)
+		return true
+	if not memory_ok:
+		_leave_hold()
+		_release(release_token)
+		investigating = true
+		aware = false
+		_set_state(AIState.ALERT)
+		return true
+	if not _hold_mode:
+		_hold_moving = true   # a fresh hold: walk all the way to the slot
+	_hold_mode = true
+	face_point = target_pos
+	match state:
+		AIState.ATTACK:
+			_stop_moving()
+			if _attack_finished() and _in_state_s() > 0.05:
+				strike_ready_tick = now + _ticks(rng.randf_range(float(ai.get("strike_pause_min_s", 0.8)),
+					float(ai.get("strike_pause_max_s", 1.4))))
+				_set_state(AIState.RECOVER)
+			return true
+		AIState.RECOVER:
+			_stop_moving()
+			if now >= strike_ready_tick:
+				_release(release_token)
+				_set_state(AIState.HOLD)
+			return true
+	_set_state(AIState.HOLD)
+	var slot := _current_hold_slot(my_position, target_pos)
+	var to_slot := _flat_distance(my_position, slot) if slot != Vector3.INF else 0.0
+	if to_slot > HOLD_LEAVE_M:
+		_hold_moving = true
+	if _hold_moving and to_slot > HOLD_ARRIVE_M:
+		move_target = slot
+		move_speed = -1.0 if to_slot > 4.0 else 0.0
+	else:
+		_hold_moving = false
+		_stop_moving()
+	var facing_ok := absf(float(perception.get("facing_deg", 180.0))) <= ATTACK_FACING_DEG
+	if seen and facing_ok and now >= strike_ready_tick and distance <= hold_reach():
+		if holds_token or request_token.call():
+			holds_token = true
+			var hold_attack := str(tactics.get("hold_attack", ""))
+			attack_request = hold_attack if hold_attack != "" else _choose_attack()
+			_set_state(AIState.ATTACK)
+	return true
+
+
+## How close (centre to centre) the target must come before a holding unit strikes: the hold
+## attack's ai_max_range_m, or ai.attack_range_m, plus the target's capsule radius.
+func hold_reach() -> float:
+	var radius := float(perception.get("target_radius", 0.85))
+	var hold := str(tactics.get("hold_attack", ""))
+	if hold != "" and _attack_ranges.has(hold) and (_attack_ranges[hold] as Vector2).y < INF:
+		return (_attack_ranges[hold] as Vector2).y + radius
+	return float(ai.get("attack_range_m", 1.2)) + radius
+
+
+func _current_hold_slot(my_position: Vector3, target_pos: Vector3) -> Vector3:
+	if _hold_slot_tick == NO_TICK or now - _hold_slot_tick >= _ticks(HOLD_SLOT_REFRESH_S):
+		_hold_slot_tick = now
+		_hold_slot = Vector3.INF
+		if formation_resolver.is_valid():
+			_hold_slot = formation_resolver.call(my_position, target_pos)
+	return _hold_slot
+
+
+func _leave_hold() -> void:
+	if _hold_mode and formation_release.is_valid():
+		formation_release.call()
+	_hold_mode = false
+	_hold_moving = false
+	_hold_slot = Vector3.INF
+	_hold_slot_tick = NO_TICK
+
+
+# ---- flight and rout
+
+func _begin_flee() -> void:
+	_leave_hold()
+	_set_state(AIState.FLEE)
+	flee_point = Vector3.INF
+	_no_leader_since = NO_TICK
+	_flee_blocked = false
+
+
+## FLEE (spec 10): run to a reachable point ai.flee_distance_m away for at least MIN_FLEE_S;
+## regroup above regroup_morale only with a leader (unless ai.regroup_needs_leader is false);
+## with no leader for ai.rout_after_s the unit routs.
+func _decide_flee(my_position: Vector3, target_pos: Vector3, distance: float, seen: bool) -> void:
+	face_point = Vector3.INF
+	var repick := flee_point == Vector3.INF or _flee_blocked
+	if not repick and seen and distance < FLEE_THREAT_M \
+			and _flat_distance(my_position, flee_point) <= FLEE_ARRIVE_M \
+			and now - _last_flee_pick_tick >= _ticks(FLEE_REPICK_S):
+		repick = true
+	if repick:
+		flee_point = _pick_flee_point(my_position, target_pos)
+	_go_to(my_position, flee_point)
+	var needs_leader := bool(ai.get("regroup_needs_leader", true))
+	var leader := has_leader()
+	if leader:
+		_no_leader_since = NO_TICK
+	elif _no_leader_since == NO_TICK:
+		_no_leader_since = now
+	if _in_state_s() >= MIN_FLEE_S and morale > float(ai.get("regroup_morale", 45.0)) \
+			and (leader or not needs_leader):
+		flee_point = Vector3.INF
+		_set_state(AIState.APPROACH if aware else AIState.ALERT)
+		return
+	if needs_leader and not leader \
+			and now - _no_leader_since >= _ticks(float(ai.get("rout_after_s", 20.0))):
+		_set_state(AIState.ROUTED)
+		aware = false
+		if not _routed_emitted:
+			_routed_emitted = true
+			routed.emit()
+
+
+## ROUTED: stay at the flee point, attack nothing, flee again when hit. Never regroups.
+func _decide_routed(my_position: Vector3, target_pos: Vector3) -> void:
+	face_point = Vector3.INF
+	aware = false
+	if _reflee_from != Vector3.INF:
+		flee_point = _pick_flee_point(my_position, _reflee_from)
+		_reflee_from = Vector3.INF
+	elif _flee_blocked or flee_point == Vector3.INF:
+		flee_point = _pick_flee_point(my_position, target_pos)
+	_go_to(my_position, flee_point)
+
+
+func _pick_flee_point(my_position: Vector3, threat: Vector3) -> Vector3:
+	_last_flee_pick_tick = now
+	_flee_blocked = false
+	var dist := float(ai.get("flee_distance_m", 12.0))
+	if flee_resolver.is_valid():
+		var p: Vector3 = flee_resolver.call(my_position, threat, dist)
+		# Nowhere reachable to run to (cornered): stand rather than run into a wall.
+		return p if p != Vector3.INF else my_position
+	var away := my_position - threat
+	away.y = 0.0
+	if away.length() < 0.1:
+		away = Vector3.BACK
+	return my_position + away.normalized() * dist
+
+
+func _go_to(my_position: Vector3, point: Vector3) -> void:
+	if point == Vector3.INF or _flat_distance(my_position, point) <= FLEE_ARRIVE_M:
+		_stop_moving()
+	else:
+		move_target = point
+		move_speed = -1.0
 ## @anchor P07
 ## @anchor P09
 ## @anchor P10a
