@@ -185,8 +185,8 @@ func _advance(p: Projectile, tick: int) -> void:
 		if not p.pierce and first_substep >= 0 and int(c.substep) != first_substep:
 			break
 		var target: CombatEntity = c.entity
-		if p.hit_entities.has(target.entity_id):
-			continue
+		if p.hit_entities.has(target.entity_id) or not target.is_alive():
+			continue   # one hit per projectile and target; a corpse never stops a shot
 		p.ctx.attacker_position = c.point
 		p.ctx.area_effect = false
 		if HitFactory.queue(p.ctx, p.action, [c], p.id, tick) > 0:
