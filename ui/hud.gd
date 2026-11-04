@@ -1,8 +1,14 @@
 class_name Hud
 extends Control
 ## In-game HUD: health/stamina/essence/fury, the 8-slot hotbar plus ultimate (cost, cooldown,
-## key binding, unavailable reason), crosshair, lock-on marker and target frame, messages,
-## death overlay and the F1 controls overlay. Reads state; never changes gameplay.
+## key binding, unavailable reason, and the selected target of projectile slots), crosshair,
+## lock-on marker and target frame, messages, death overlay and the F1 controls overlay. Reads
+## state; never changes gameplay.
+##
+## Hotbar reasons come from CombatController.preview_reason (P03), the same evaluation a request
+## gets, so the HUD can never disagree with the controller. A player component may add request
+## parameters for a slot (a grab's precheck, P07) with preview_params(slot_key, def, params);
+## the HUD passes them to preview_reason.
 
 const MESSAGE_LIFETIME := 2.6
 
@@ -24,6 +30,7 @@ var _help_label: Label
 var _mode_label: Label
 var _loot_label: Label
 var _labels_dirty := true
+var _slot_states: Array[Dictionary] = []   ## per slot: {"id", "reason_code", "reason", "target"}
 var _last_message := ""
 var _last_message_time := -10.0
 var _time := 0.0
@@ -47,6 +54,7 @@ func _ready() -> void:
 	Events.object_destroyed.connect(_on_object_destroyed)
 	Events.camera_mode_changed.connect(_on_camera_mode_changed)
 	Events.growth_changed.connect(_on_growth_changed)
+	Events.action_rejected.connect(_on_action_rejected)
 	Settings.changed.connect(_on_settings_changed)
 
 
@@ -66,6 +74,24 @@ func _on_camera_mode_changed(_mode: int) -> void:
 
 func _on_growth_changed(_tick: int, _entity_id: String, _old_stage: int, _new_stage: int) -> void:
 	_refresh_mode_label()
+
+
+## Notices for the rejection reasons GiantPlayer does not announce itself (it covers stamina,
+## cooldown, empty slots and growth locks).
+func _on_action_rejected(_tick: int, actor_id: String, action_id: String, reason: String) -> void:
+	if player == null or not is_instance_valid(player) or actor_id != player.entity.entity_id:
+		return
+	var def := GameData.get_action(action_id)
+	var label := def.display_name if def != null else action_id
+	match reason:
+		"essence":
+			show_message("Not enough essence for %s" % label, "warn")
+		"fury":
+			show_message("%s needs %d fury" % [label, int(def.fury_cost) if def != null else 100], "warn")
+		"level_locked":
+			show_message("%s unlocks at level %d" % [label, def.unlock_level if def != null else 1], "warn")
+		"no_target":
+			show_message("No target for %s" % label, "warn")
 
 
 func _build_resources() -> void:
@@ -123,6 +149,7 @@ func _build_hotbar() -> void:
 		var slot := _make_slot(i)
 		h.add_child(slot.root)
 		_slots.append(slot)
+		_slot_states.append({"id": "", "reason_code": "", "reason": "", "target": ""})
 	_loot_label = UiKit.label("", 13, UiKit.MUTED)
 	_loot_label.anchor_left = 1.0
 	_loot_label.anchor_right = 1.0
@@ -187,8 +214,16 @@ func _make_slot(index: int) -> Dictionary:
 	reason.offset_bottom = 22
 	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stack.add_child(reason)
+	# Selected target of projectile slots ("» Soldier" when locked, otherwise "aim"), above the slot.
+	var target := UiKit.label("", 10, UiKit.TEXT)
+	target.anchor_right = 1.0
+	target.offset_top = -16
+	target.offset_bottom = -4
+	target.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	target.clip_text = true
+	stack.add_child(target)
 	return {"root": root, "cooldown": cooldown, "key": key, "pad": pad, "title": title, "cost": cost,
-		"timer": timer, "reason": reason, "index": index}
+		"timer": timer, "reason": reason, "target": target, "index": index}
 
 
 func _build_center() -> void:
@@ -312,11 +347,12 @@ func _controls_text() -> String:
 		["Sprint", "sprint", ""],
 		["Lock target / switch", "lock_target", "wheel or right-stick flick while locked"],
 		["Camera mode", "camera_toggle", "wheel zooms when not locked"],
-		["Heavy Footfall (slot 1)", "ability_1", ""],
-		["Ultimate", "ultimate", "none equipped in M1"],
+	]
+	rows.append_array(_ability_rows())
+	rows.append_array([
 		["Pause / settings / rebind", "pause", ""],
 		["Controls overlay", "help", ""],
-	]
+	])
 	var lines := PackedStringArray(["CONTROLS  (rebind in Pause > Controls)", ""])
 	for r: Array in rows:
 		var kb := InputBindings.describe_action(r[1], false)
@@ -330,6 +366,22 @@ func _controls_text() -> String:
 		lines.append("")
 		lines.append("Browser: the first Esc frees the mouse and pauses; click the game to resume.")
 	return "\n".join(lines)
+
+
+## One help row per filled hotbar slot of the current loadout, then the ultimate.
+func _ability_rows() -> Array:
+	var rows: Array = []
+	var loadout: Dictionary = player.controller.loadout if player != null and is_instance_valid(player) else {}
+	for i in 8:
+		var id := str(loadout.get("slot_%d" % (i + 1), ""))
+		var def := GameData.get_action(id) if id != "" else null
+		if def != null:
+			rows.append(["%s (slot %d)" % [def.display_name, i + 1], "ability_%d" % (i + 1), ""])
+	var ult_id := str(loadout.get("ultimate", ""))
+	var ult := GameData.get_action(ult_id) if ult_id != "" else null
+	rows.append(["Ultimate: %s" % ult.display_name if ult != null else "Ultimate", "ultimate",
+		("%d fury" % int(ult.fury_cost)) if ult != null else "none equipped"])
+	return rows
 
 
 func show_message(text: String, kind: String = "info") -> void:
@@ -407,7 +459,11 @@ func _update_hotbar() -> void:
 	_labels_dirty = false
 
 
-func _update_slots(c: CombatController, pools: ResourcePool) -> void:
+func _update_slots(c: CombatController, _pools: ResourcePool) -> void:
+	var providers: Array = []
+	for comp in player.components():
+		if comp.has_method("preview_params"):
+			providers.append(comp)
 	for slot: Dictionary in _slots:
 		var i: int = slot.index
 		var is_ultimate := i == 8
@@ -423,8 +479,10 @@ func _update_slots(c: CombatController, pools: ResourcePool) -> void:
 			(slot.cost as Label).text = ""
 			(slot.timer as Label).text = ""
 			(slot.reason as Label).text = ""
+			(slot.target as Label).text = ""
 			(slot.cooldown as ColorRect).offset_top = 0
 			root.modulate = Color(1, 1, 1, 0.45)
+			_slot_states[i] = {"id": "", "reason_code": "", "reason": "", "target": ""}
 			continue
 		root.modulate = Color.WHITE
 		(slot.title as Label).text = def.hotbar_label
@@ -440,22 +498,62 @@ func _update_slots(c: CombatController, pools: ResourcePool) -> void:
 		var frac := c.cooldowns.remaining_fraction(def.id, Sim.tick)
 		(slot.cooldown as ColorRect).offset_top = -60.0 * frac
 		(slot.timer as Label).text = ("%.1f" % remaining) if remaining > 0.0 else ""
-		var reason := ""
-		if c.state == CombatController.State.DEAD:
-			reason = "Dead"
-		elif def.unlock_stage > c.growth_stage:
-			reason = "Stage %d" % def.unlock_stage
-		elif remaining > 0.0:
-			reason = "Cooldown"
-		elif pools.stamina + 1e-6 < def.stamina_cost:
-			reason = "Stamina"
-		elif pools.essence + 1e-6 < def.essence_cost:
-			reason = "Essence"
-		elif pools.fury + 1e-6 < def.fury_cost:
-			reason = "Fury"
-		elif c.is_committed():
-			reason = "Busy"
+		var slot_key := "ultimate" if is_ultimate else "slot_%d" % (i + 1)
+		var params := _preview_params(slot_key, def, providers)
+		var code := c.preview_reason(&"ultimate" if is_ultimate else &"slot", params)
+		var reason := reason_text(code, def)
 		(slot.reason as Label).text = reason
+		var target := ""
+		if def.hit_shape == "projectile":
+			var locked := player.locked_entity()
+			target = ("» %s" % locked.display_name()) if locked != null and locked.is_alive() else "aim"
+		(slot.target as Label).text = target
+		_slot_states[i] = {"id": def.id, "reason_code": code, "reason": reason, "target": target}
+
+
+## Request parameters for a slot's preview: {"slot": n} for slots 1-8, {} for the ultimate,
+## plus whatever the player components in `providers` add through preview_params(slot_key,
+## def, params).
+func _preview_params(slot_key: String, def: ActionDef, providers: Array) -> Dictionary:
+	var params := {} if slot_key == "ultimate" else {"slot": int(slot_key.substr(5))}
+	for comp: Object in providers:
+		comp.call("preview_params", slot_key, def, params)
+	return params
+
+
+## Hotbar text for a preview_reason code ("" = available): Dead, Stage N, Lv N, Cooldown,
+## Stamina, Essence, Fury, Busy, No target; anything else is shown capitalised.
+static func reason_text(code: String, def: ActionDef) -> String:
+	match code:
+		"":
+			return ""
+		"dead":
+			return "Dead"
+		"locked":
+			return "Stage %d" % (def.unlock_stage if def != null else 1)
+		"level_locked":
+			return "Lv %d" % (def.unlock_level if def != null else 1)
+		"cooldown":
+			return "Cooldown"
+		"stamina":
+			return "Stamina"
+		"essence":
+			return "Essence"
+		"fury":
+			return "Fury"
+		"busy", "airborne":
+			return "Busy"
+		"no_target", "no_grab_target":
+			return "No target"
+	return code.capitalize()
+
+
+## What hotbar slot `index` (0-7 = slots 1-8, 8 = ultimate) shows now: {"id", "reason_code"
+## (the preview_reason code), "reason" (its text), "target" (projectile slots)}.
+func slot_state(index: int) -> Dictionary:
+	if index < 0 or index >= _slot_states.size():
+		return {}
+	return _slot_states[index].duplicate()
 
 
 func _update_target() -> void:
