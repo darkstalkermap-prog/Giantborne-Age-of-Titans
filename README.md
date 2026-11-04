@@ -72,7 +72,10 @@ button; changes are saved to `user://settings.json`.
 
 Modifier inputs are consumed: Shift + left mouse issues one heavy attack and never also a light
 attack. With LT held, B uses slot 2 instead of dodging, D-pad Up uses slot 5 instead of switching
-camera, and RT is the ultimate instead of a heavy attack. **Settings** (Esc → Settings) covers
+camera, and RT is the ultimate instead of a heavy attack. The controller combo buttons are
+remappable too; the Controls page shows them as "LT + button". Holding block keeps you blocking
+(it resumes after attacks or staggers), but only a fresh press opens the parry window. While
+blocking, the guard faces where you aim. **Settings** (Esc → Settings) covers
 mouse sensitivity, stick speed, invert Y, FOV (75° default), hold/toggle sprint, hold/toggle
 lock-on, camera shake, head bob, hit flash, vibration, first-person aim assist and damage
 numbers. Motion blur is off and is not part of the prototype.
@@ -89,7 +92,7 @@ You spawn at the south end, facing north.
 | Doorway 2.6 × 5 m | north-west | Narrow-door and camera test. |
 | Low arch, 4.2 m ceiling | north-east | Ceiling-clearance and camera test. |
 | Ramp (20°) and platform | far north-east | Slope test. |
-| Soldier patrol | north (about 55 m away) | It notices you within 25 m, approaches your legs, telegraphs its strikes (0.55 s slash, 0.85 s overhead chop) and pauses between them. Parrying it staggers it. |
+| Soldier patrol | north (about 55 m away) | It notices you within 25 m, approaches your legs, telegraphs its strikes (0.55 s slash, 0.85 s overhead chop) and pauses between them. Between strikes it **guards its front** (sword raised): frontal hits are mostly blocked. Flank it (it turns slowly while guarding) or break the guard with heavy attacks, which staggers it. Parrying its strikes staggers it too. |
 
 **Combat basics:**
 - Attacks cost stamina (light 8, heavy 22, dodge 18, block 5 on entry, sprint 8/s). Stamina
@@ -173,11 +176,12 @@ editor, don't re-run it**, because it overwrites them.
 - **Only stage 1 is playable.** Growth stages 2–3 exist as data only; growth, grabs, abilities
   2–8, the ultimate, and character/world save files are later milestones.
 - **First-person framing.** The club is mostly below the view when you look straight ahead;
-  look down to see your swings (this is also how you hit humans in first person).
+  look down to see your swings (this is also how you hit humans in first person). Your chest
+  is hidden in first person, so you can see enemies at your feet.
 - **Sandbox-only shortcuts.** The navmesh re-bakes when the fence breaks, and the fence's
   partial damage is not persisted.
-- **Balance.** All numbers are first-pass tuning from the spec. One soldier is no match for the
-  giant yet.
+- **Balance.** All numbers are first-pass tuning from the spec. One soldier is no real match for
+  the giant yet, even with its guard.
 
 ## 9. Manual test checklist (about 10 minutes)
 
@@ -193,7 +197,9 @@ editor, don't re-run it**, because it overwrites them.
 7. Break the fence: debris, "+1 Wood Scrap", and you can now walk through.
 8. Walk north to the soldier and lock on with Tab: you see the frame and diamond marker. Block
    (right mouse) and watch for **BLOCK 9**. Tap block just before its sword lands for
-   **PARRY**, and the soldier staggers. Dodge through a strike for **EVADE**.
+   **PARRY**, and the soldier staggers. Dodge through a strike for **EVADE**. Hit its raised
+   guard from the front (**BLOCK** numbers), then circle to its side, or use heavies until the
+   guard breaks.
 9. Kill the soldier: the lock releases at once and does not jump to another target.
 10. Walk through the doorway, under the low arch and up the ramp in both camera modes. The camera
     should never sit inside a wall.
