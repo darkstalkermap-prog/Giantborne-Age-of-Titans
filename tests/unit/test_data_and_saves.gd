@@ -181,3 +181,13 @@ func test_bad_saved_binding_falls_back_to_defaults() -> void:
 	assert_true(Settings.load_message.contains("attack_light") and Settings.load_message.contains("pause"), "player is told which bindings were ignored")
 	Settings.load_message = before
 	Settings.reset_bindings()
+
+
+func test_live_setting_changes_are_flushed() -> void:
+	var fov: float = Settings.get_value("fov_deg")
+	Settings.set_value("fov_deg", 81.0, false)   # live slider change, not yet written
+	assert_true(Settings._unsaved, "a live change is marked unsaved")
+	Settings.notification(Node.NOTIFICATION_WM_CLOSE_REQUEST)
+	assert_false(Settings._unsaved, "closing the window flushes pending changes")
+	Settings.set_value("fov_deg", fov, false)
+	Settings.flush()

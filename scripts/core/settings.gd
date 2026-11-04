@@ -36,6 +36,7 @@ signal changed(key: String)
 var values: Dictionary = {}
 var load_message := ""
 var persist := true
+var _unsaved := false   ## changed with save=false (live slider drags) and not yet written
 ## Session-only state that survives sandbox resets but is never written to disk.
 var session := {"camera_mode": 0}
 
@@ -108,6 +109,7 @@ func _sanitize_bindings(raw: Dictionary) -> Dictionary:
 
 
 func save_settings() -> Error:
+	_unsaved = false
 	if not persist:
 		return OK
 	var data := values.duplicate(true)
@@ -129,6 +131,19 @@ func set_value(key: String, v: Variant, save := true) -> void:
 	changed.emit(key)
 	if save:
 		save_settings()
+	else:
+		_unsaved = true
+
+
+## Writes pending changes (from live slider edits) - called on quit and window close.
+func flush() -> void:
+	if _unsaved:
+		save_settings()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		flush()
 
 
 func apply_bindings() -> void:

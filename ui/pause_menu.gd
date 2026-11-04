@@ -73,7 +73,7 @@ func open() -> void:
 
 func close() -> void:
 	_cancel_capture()
-	Settings.save_settings()  # covers keyboard/gamepad slider changes (no drag_ended)
+	Settings.flush()  # covers keyboard/wheel/gamepad slider changes (no drag_ended)
 	visible = false
 	get_tree().paused = false
 	InputRouter.set_context(InputRouter.Context.GAMEPLAY)
@@ -101,7 +101,9 @@ func _build_main() -> Control:
 		Events.sandbox_reset_requested.emit("menu_restart"))
 	v.add_child(restart)
 	var quit := UiKit.button("Quit to desktop", 20)
-	quit.pressed.connect(func() -> void: get_tree().quit())
+	quit.pressed.connect(func() -> void:
+		Settings.flush()
+		get_tree().quit())
 	v.add_child(quit)
 	var info := UiKit.label("Giantborn: Age of Titans  -  prototype %s  -  Godot %s" % [
 		ProjectSettings.get_setting("application/config/version"), Engine.get_version_info().string], 12, UiKit.MUTED)
@@ -123,7 +125,7 @@ func _slider_row(grid: GridContainer, text: String, key: String, lo: float, hi: 
 	s.value_changed.connect(func(v: float) -> void:
 		Settings.set_value(key, v, false)
 		value_label.text = "%.2f" % v)
-	s.drag_ended.connect(func(_changed: bool) -> void: Settings.save_settings())
+	s.drag_ended.connect(func(_changed: bool) -> void: Settings.flush())
 	var h := HBoxContainer.new()
 	h.add_child(s)
 	h.add_child(value_label)

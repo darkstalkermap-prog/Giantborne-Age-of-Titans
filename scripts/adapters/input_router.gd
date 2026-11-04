@@ -43,7 +43,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion:
 		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-			_look_delta += (event as InputEventMouseMotion).relative
+			# screen_relative is in real screen pixels; relative is divided by the canvas_items
+			# stretch scale, which would make sensitivity depend on the window size.
+			_look_delta += (event as InputEventMouseMotion).screen_relative
 		return
 	if event is InputEventKey and (event as InputEventKey).echo:
 		return

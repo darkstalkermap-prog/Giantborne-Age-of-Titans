@@ -6,8 +6,18 @@ extends Node
 const SUITE_DIRS := ["res://tests/unit", "res://tests/integration"]
 
 
+var _logger := TestErrorLogger.new()
+
+
 func _ready() -> void:
+	# Tests never read or write the player's user://settings.json, whatever the flags.
+	Settings.persist = false
+	Settings.values = Settings.DEFAULTS.duplicate(true)
+	Settings.load_message = ""
+	Settings.apply_bindings()
+	OS.add_logger(_logger)
 	await get_tree().process_frame
+	_logger.take()  # discard anything logged during startup
 	var filter := ""
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--filter="):
@@ -40,6 +50,8 @@ func _ready() -> void:
 				await suite.before_each()
 				await suite.call(method_name)
 				await suite.after_each()
+				for err in _logger.take():
+					suite.failures.append("%s: engine/script error: %s" % [suite.current_test, err])
 			total_checks += suite.checks
 			total_failures.append_array(suite.failures)
 			print("  %-40s %4d checks  %3d failures  (%d ms)" % [suite.name, suite.checks,
@@ -50,6 +62,7 @@ func _ready() -> void:
 	for f in total_failures:
 		print("FAIL  " + f)
 	print("RESULT: %d suites, %d checks, %d failures" % [suites, total_checks, total_failures.size()])
+	OS.remove_logger(_logger)
 	get_tree().quit(1 if not total_failures.is_empty() else 0)
 
 
