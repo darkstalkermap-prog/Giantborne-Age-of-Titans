@@ -11,6 +11,7 @@ var _bars: Dictionary = {}
 var _bar_labels: Dictionary = {}
 var _slots: Array[Dictionary] = []
 var _crosshair: Control
+var _capture_hint: PanelContainer
 var _marker: Control
 var _target_frame: PanelContainer
 var _target_name: Label
@@ -183,6 +184,20 @@ func _make_slot(index: int) -> Dictionary:
 
 
 func _build_center() -> void:
+	_capture_hint = UiKit.panel(Color(0.05, 0.06, 0.08, 0.85))
+	_capture_hint.anchor_left = 0.5
+	_capture_hint.anchor_right = 0.5
+	_capture_hint.anchor_top = 0.5
+	_capture_hint.anchor_bottom = 0.5
+	_capture_hint.offset_left = -190
+	_capture_hint.offset_right = 190
+	_capture_hint.offset_top = 40
+	_capture_hint.offset_bottom = 84
+	var hint := UiKit.label("Click the game to control the camera", 17)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_capture_hint.add_child(hint)
+	_capture_hint.visible = false
+	add_child(_capture_hint)
 	_crosshair = Crosshair.new()
 	_crosshair.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -303,6 +318,9 @@ func _controls_text() -> String:
 	if OS.is_debug_build():
 		lines.append("")
 		lines.append("Debug: F3 panel, F5 reset sandbox")
+	if OS.has_feature("web"):
+		lines.append("")
+		lines.append("Browser: the first Esc frees the mouse and pauses; click the game to resume.")
 	return "\n".join(lines)
 
 
@@ -337,7 +355,7 @@ func _on_loot(_tick: int, _world_id: String, item_id: String, count: int, _who: 
 func _refresh_mode_label() -> void:
 	if player == null:
 		return
-	_mode_label.text = "%s  [%s]   Stage %d   |   F1 controls" % [
+	_mode_label.text = "%s  [%s]   Stage %d   |   F1 or H: controls" % [
 		"First person" if player.camera_rig.is_first_person() else "Third person",
 		InputBindings.describe_action("camera_toggle", false), player.growth_stage]
 
@@ -355,6 +373,9 @@ func _process(delta: float) -> void:
 	_update_messages()
 	_death.visible = player.controller.state == CombatController.State.DEAD
 	_crosshair.visible = not _death.visible
+	# Without a captured mouse there is no mouse look; tell the player how to get it back.
+	_capture_hint.visible = not _death.visible and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED \
+		and DisplayServer.get_name() != "headless" and not get_tree().paused
 	var parts := PackedStringArray()
 	for item_id: String in WorldState.inventory:
 		parts.append("%s x%d" % [GameData.get_record(item_id).get("display_name", item_id), WorldState.inventory[item_id]])

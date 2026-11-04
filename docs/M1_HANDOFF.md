@@ -126,10 +126,10 @@ here, but part of it can only be confirmed on your PC.
 Command: `tools/run_tests.sh` (headless, `--fixed-fps 60`).
 
 ```
-RESULT: 14 suites, 1124 checks, 0 failures
+RESULT: 15 suites, 1133 checks, 0 failures
 ```
-- 6 unit suites: rules, resolver, controller, resources/poise, targeting/registry/geometry,
-  data/saves.
+- 7 unit suites: rules, resolver, controller, resources/poise, targeting/registry/geometry,
+  data/saves, click-to-capture.
 - 8 integration suites with real scenes, physics and input events: hits, defense,
   targeting/camera, world/flow/AI/input, obstacle route, first-person combat, plus two suites
   of regression tests for the review findings.
@@ -164,6 +164,22 @@ switches only on a flick-and-release ("tap").
 | AI / world / data | The soldier tracked a hidden giant's live position; the soldier did not "guard the front" (spec 10); one bad saved binding unbound an action; ids used by scenes were not validated; a breakable that loaded destroyed stayed in the navmesh; a newer-version file could overwrite the good backup; immunity names were unchecked |
 | Engine robustness | Mouse sensitivity depended on window size; keyboard slider changes were lost on quit; the test runner could pass a crashing test; running tests could wipe the player's bindings |
 
+## 5c. Browser build (play link)
+
+The play link (README, "Browser build") is the single-threaded Web export, published as a
+claude.ai Artifact with `web/launcher.html` as the page. Tested locally in Playwright Chromium
+with a software GPU, serving the exact files that were published:
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Loads the packed engine and data, then boots to the arena | PASS | 12.3 MB downloaded and unpacked; arena and HUD up 3.1 s after Play; no console errors |
+| Click takes the mouse; Esc gives it back and opens the pause menu; Resume takes it again | PASS | Headed Chromium on a virtual display: pointer lock on, off, on |
+| V switches camera, H shows the controls (with the browser note), pause menu has no Quit | PASS | Screenshots of each state |
+| A host that forbids WebAssembly gets a plain message and the exact error to copy | PASS | Simulated with a strict Content-Security-Policy |
+| Phone width: the page fits with no sideways scroll and says to use a computer | PASS | 390 px viewport |
+| Runs inside the claude.ai Artifact frame | NOT RUN | Can only be checked by opening the link |
+| Real browsers (Chrome, Edge, Firefox, Safari on a real GPU); gamepad inside the frame | NOT RUN | Needs a real computer |
+
 ## 6. Bugs found while testing (all fixed)
 
 - HUD invisible: Godot 4's `set_anchors_preset` keeps the old rect. Now `set_anchors_and_offsets_preset`.
@@ -177,6 +193,11 @@ switches only on a flick-and-release ("tap").
   by the first-person test). The slam now angles inward.
 - With no navmesh, soldiers could not move. They now steer directly when there is no path data.
 - The 22 review findings in section 5b.
+- Clicking the game did not take the mouse back. The input router consumed the click as an
+  attack before `main.gd` saw it. On desktop this was hidden, because the mouse is captured at
+  startup and when menus close; the browser build depends on that click, since browsers grant
+  pointer lock only inside one. Found by the headed-browser test. `main.gd` now takes the click
+  in `_input` (unit checks in `test_mouse_capture`), and that click no longer also swings.
 
 ## 7. Known limitations
 

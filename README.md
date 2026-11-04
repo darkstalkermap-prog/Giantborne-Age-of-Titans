@@ -13,6 +13,11 @@ Footfall, a HUD, settings, key rebinding and a debug reset. Graphics are deliber
 The test results and the full acceptance-check list are in
 [docs/M1_HANDOFF.md](docs/M1_HANDOFF.md).
 
+**Play it in a browser:** <https://claude.ai/artifact/2UYupKVL1xE6pttiZ6NLqe>. The link is
+private until you share it from the page's **Share** menu on claude.ai. It needs a computer with
+a keyboard and mouse. How it is built is described under
+[Browser build](#browser-build-the-play-link).
+
 | | |
 | --- | --- |
 | ![Third person at spawn](docs/screenshots/01_spawn_third_person.jpg) | ![Heavy attack on the dummy: 66](docs/screenshots/02_heavy_on_dummy_66.jpg) |
@@ -76,7 +81,7 @@ button; changes are saved to `user://settings.json`.
 | Ability slots 1–8 (slot 1 = Heavy Footfall) | 1–8 | LT + A/B/X/Y, LT + D-pad Up/Right/Down/Left |
 | Ultimate (none equipped in M1) | R | LT + RT |
 | Pause, settings, rebinding | Esc | Start |
-| Controls overlay | F1 | — |
+| Controls overlay | F1 or H | — |
 | Restart after defeat | Enter | — |
 | **Debug panel** (debug builds only) | F3 | — |
 | **Debug reset** (debug builds only) | F5 | — |
@@ -156,6 +161,32 @@ godot --headless --path . --export-release "Windows Desktop" builds/windows/Gian
 ```
 Release exports disable the F3 debug panel and the F5 debug reset.
 
+### Browser build (the play link)
+
+The play link is the **Web** preset (single-threaded, so it needs no special server headers),
+hosted as a claude.ai Artifact. `web/launcher.html` is the page: a Play button, the controls and
+a loader. The host serves files of up to 16 MB and no archives, so the 36 MB engine
+(`index.wasm`) and the game data (`index.pck`) ship gzipped and base64-encoded as `.txt` files,
+and the launcher unpacks them in the browser.
+
+```bash
+tools/build_web.sh
+```
+This exports into `builds/web/`, packs the two files and updates the byte counts in
+`web/launcher.html`. To test locally, serve that folder with any static web server (for example
+`python3 -m http.server -d builds/web 8000`) and open `http://localhost:8000/play.html`. To update
+the play link, ask Claude to republish `web/launcher.html` to the same artifact URL with these
+files from `builds/web/`: `index.js`, `index.wasm.gz.b64.txt`, `index.pck.gz.b64.txt`,
+`index.audio.worklet.js`, `index.audio.position.worklet.js` and `poster.jpg`.
+
+Differences in the browser:
+- Click the game to take the mouse. The first **Esc** gives the mouse back and pauses, because
+  the browser keeps that key press for itself. Click **Resume** or the game to carry on.
+- **H** shows the controls (F1 may open the browser's help).
+- The F5 debug reset and the F3 debug panel exist only in debug builds; use
+  **Esc → Restart sandbox**.
+- Settings and key bindings are saved in that browser. There is no Quit button; close the tab.
+
 ## 7. Project layout
 
 ```
@@ -164,7 +195,8 @@ scripts/     core (autoloads, data, saves) · combat (rules + controller) · ada
 scenes/      main, player/giant, enemies/soldier, world/{sandbox_arena, practice_dummy, fence_wood}
 ui/          HUD, debug panel, pause/settings/rebind menu
 tests/       unit/ and integration/ suites, test runner
-tools/       run_tests.sh, build_scenes.tscn (scene generator)
+tools/       run_tests.sh, build_web.sh (browser build), build_scenes.tscn (scene generator)
+web/         launcher.html: the page behind the browser play link
 docs/        spec, architecture, decisions, M1 handoff
 ```
 Gameplay numbers live in `data/` and are validated at startup (duplicate ids, missing
@@ -182,6 +214,10 @@ editor, don't re-run it**, because it overwrites them.
 - **Not tested on real hardware yet.** Everything was tested in a Linux container with a
   software renderer. Windows play, real GPU performance, and gamepad feel (including
   vibration) need your PC. See the handoff for the checklist.
+- **Browser build.** It was tested in Chromium on a software GPU (headless and on a virtual
+  display), not yet in a real desktop browser, Firefox or Safari. Gamepads may not be detected
+  inside the claude.ai page. The browser version runs single-threaded, so it is slower than the
+  desktop build on the same computer.
 - **Physics interpolation is off.** On monitors faster than 60 Hz, character movement updates
   at 60 Hz (mouse look stays smooth).
 - **Only stage 1 is playable.** Growth stages 2–3 exist as data only; growth, grabs, abilities

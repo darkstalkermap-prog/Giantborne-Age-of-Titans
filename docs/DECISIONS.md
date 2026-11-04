@@ -81,3 +81,14 @@ data or a small code path that can be changed.
 | World deltas | Kept in memory in M1. The versioned format (`WorldState.to_save_dict`) and `SaveIO` are ready for the M3/M4 checkpoint saves. |
 | Data validation | Unknown keys are errors, which catches typos. Timings that are not whole ticks produce warnings and are rounded. Immunities and interaction permissions are checked against known lists. The ids the shipped scenes and code look up (`player.giant`, `enemy.soldier`, `prop.fence_wood`, `prop.practice_dummy`, `input.default`, `action.block`) must exist with the right type. Any validation error replaces the sandbox with a full error list. |
 | Settings file | Saved through `SaveIO` (temp file → verify → backup the previous file only if this build could load it → replace). Corrupt files fall back to the backup with a message in the pause menu. A newer schema version is rejected; the file is kept as `settings.schemaN.rejected.json`, and defaults are used. Sliders apply live and write the file once per drag. |
+
+## Browser build
+
+| Topic | Decision |
+| --- | --- |
+| Hosting | The play link is a claude.ai Artifact: private by default, shared from the page's Share menu, with no extra branch, service or account. |
+| Threads | The Web export is single-threaded, so it needs no cross-origin isolation headers, which the Artifact host cannot send. |
+| File packing | The host serves `.js`, `.wasm`, text and images, but not `.pck` or archives, and caps binary files at 15 MB and text files at 16 MB. The 36 MB `index.wasm` and the `index.pck` therefore ship gzipped and base64-encoded as `.txt` files (12.5 MB and 0.3 MB). The launcher's `fetch` wrapper downloads them with progress, decodes them, unpacks them with `DecompressionStream`, and hands Godot ordinary responses. `tools/build_web.sh` writes the byte counts into the launcher. |
+| Mouse | Browsers grant pointer lock only inside a click and keep the first Esc press for themselves. On the web the game does not capture the mouse at startup. A click on the game captures it (in `_input`, before gameplay input sees the click), and losing the lock opens the pause menu, so the game never runs on with a free cursor. |
+| Release build | The play link uses a release export: no F3 panel and no F5 reset (Esc → Restart sandbox instead). Quit is hidden, since a tab is closed by the browser. |
+| Updates | When the page is republished, open viewers reload at a quiet moment. The launcher remembers that a game was running and starts it again at once; the sandbox itself starts fresh. |

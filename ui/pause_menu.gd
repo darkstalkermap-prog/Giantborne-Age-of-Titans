@@ -104,6 +104,7 @@ func _build_main() -> Control:
 	quit.pressed.connect(func() -> void:
 		Settings.flush()
 		get_tree().quit())
+	quit.visible = not OS.has_feature("web")  # a browser tab is closed by the browser
 	v.add_child(quit)
 	var info := UiKit.label("Giantborn: Age of Titans  -  prototype %s  -  Godot %s" % [
 		ProjectSettings.get_setting("application/config/version"), Engine.get_version_info().string], 12, UiKit.MUTED)

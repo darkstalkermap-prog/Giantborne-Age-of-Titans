@@ -34,7 +34,7 @@
 		"ability_modifier": [{"joy_axis": "trigger_left", "dir": 1}],
 		"ultimate": [{"key": "R"}, {"joy_axis": "trigger_right", "dir": 1}],
 		"pause": [{"key": "Escape"}, {"joy_button": "start"}],
-		"help": [{"key": "F1"}],
+		"help": [{"key": "F1"}, {"key": "H"}],
 		"debug_panel": [{"key": "F3"}],
 		"debug_reset": [{"key": "F5"}]
 	},
