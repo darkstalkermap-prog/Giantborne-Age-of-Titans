@@ -442,6 +442,16 @@ func _process(delta: float) -> void:
 	_loot_label.text = ("Loot: " + ", ".join(parts)) if not parts.is_empty() else ""
 
 
+## Updates the resource bars, hotbar and target frame from the current state right away
+## (normally once per frame in _process; tests call it to read slot_state() for this tick).
+func refresh() -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	_update_resources()
+	_update_hotbar()
+	_update_target()
+
+
 func _update_resources() -> void:
 	var p := player.entity.combatant.pools
 	var values := {"health": [p.health, p.health_max], "stamina": [p.stamina, p.stamina_max],

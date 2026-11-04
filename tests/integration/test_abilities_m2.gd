@@ -566,3 +566,113 @@ func test_thunder_roar_slows_and_costs_morale_unblockably() -> void:
 	await step_ticks(15)
 	assert_false(_has_status(s, "status.slow"), "the slow ends after 3 s")
 	assert_near(s.controller.move_speed_multiplier(), 1.0, 1e-9, "full speed again")
+
+
+# --------------------------------------------------------------------------- hotbar and status row
+
+func _hud() -> Hud:
+	var layer := CanvasLayer.new()
+	world.add_child(layer)
+	var hud := Hud.new()
+	layer.add_child(hud)
+	return hud
+
+
+## Every slot's shown reason is the reason preview_reason gives for that slot right now.
+func _check_hotbar(hud: Hud, p: GiantPlayer, label: String) -> void:
+	await get_tree().process_frame
+	hud.refresh()   # this tick's state (the HUD's own update ran a physics tick earlier)
+	for i in 9:
+		var ultimate := i == 8
+		var id := str(p.controller.loadout.get("ultimate" if ultimate else "slot_%d" % (i + 1), ""))
+		var state := hud.slot_state(i)
+		assert_eq(state.id, id, "%s: slot %d shows %s" % [label, i + 1, id])
+		if id == "":
+			assert_eq(state.reason, "", "%s: an empty slot has no reason" % label)
+			continue
+		var code := p.controller.preview_reason(&"ultimate", {}) if ultimate \
+			else p.controller.preview_reason(&"slot", {"slot": i + 1})
+		assert_eq(state.reason_code, code, "%s: slot %d reason code = preview_reason" % [label, i + 1])
+		assert_eq(state.reason, Hud.reason_text(code, GameData.get_action(id)), "%s: slot %d text" % [label, i + 1])
+
+
+func test_hotbar_reasons_follow_preview_reason() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var hud := _hud()
+	await step_ticks(2)
+	var pools := p.entity.combatant.pools
+	await _check_hotbar(hud, p, "ready")
+	assert_eq(hud.slot_state(0).reason, "", "Footfall is available")
+	assert_eq(hud.slot_state(8).reason, "Fury", "the ultimate needs 100 fury")
+	p.controller.level = 1
+	await _check_hotbar(hud, p, "level 1")
+	assert_eq(hud.slot_state(2).reason, "Lv 2", "Stone Skin unlocks at level 2")
+	assert_eq(hud.slot_state(5).reason, "Lv 3", "Runic Bolt at level 3")
+	assert_eq(hud.slot_state(6).reason, "Lv 4", "Mend at level 4")
+	assert_eq(hud.slot_state(1).reason, "", "Sweeping Blow at level 1")
+	p.controller.level_exempt["ability.runic_bolt"] = true
+	await _check_hotbar(hud, p, "exempt")
+	assert_eq(hud.slot_state(5).reason, "", "a reward-taught ability skips the level gate")
+	p.controller.level = 99
+	TestFixtures.record_override("ability.runic_bolt", {"unlock_stage": 2})
+	await _check_hotbar(hud, p, "stage gate")
+	assert_eq(hud.slot_state(5).reason, "Stage 2", "a growth-stage gate")
+	TestFixtures.restore_all()
+	pools.stamina = 5.0
+	pools.essence = 10.0
+	await _check_hotbar(hud, p, "low resources")
+	assert_eq(hud.slot_state(1).reason, "Stamina", "Sweeping Blow needs 18 stamina")
+	assert_eq(hud.slot_state(2).reason, "Essence", "Stone Skin needs 25 essence")
+	pools.stamina = pools.stamina_max
+	pools.essence = pools.essence_max
+	pools.fury = 100.0
+	pools.mark_combat()   # fury decays only after 10 s out of combat
+	await _check_hotbar(hud, p, "full")
+	assert_eq(hud.slot_state(8).reason, "", "the ultimate is ready at 100 fury")
+	_cast(p, "ability.heavy_footfall")
+	await step_ticks(3)
+	await _check_hotbar(hud, p, "casting")
+	assert_eq(hud.slot_state(1).reason, "Busy", "busy while Footfall is cast")
+	assert_eq(hud.slot_state(0).reason, "Cooldown", "Footfall itself is cooling down")
+	await step_ticks(70)
+	await _check_hotbar(hud, p, "cooling down")
+	assert_eq(hud.slot_state(0).reason, "Cooldown", "still cooling down after the cast")
+	assert_eq(hud.slot_state(1).reason, "", "the others are free again")
+	p.controller.kill()
+	await _check_hotbar(hud, p, "dead")
+	assert_eq(hud.slot_state(1).reason, "Dead", "dead")
+
+
+func test_hotbar_target_line_for_projectile_slots() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var hud := _hud()
+	spawn_dummy(Vector3(0, 0, -10))
+	await step_ticks(2)
+	await get_tree().process_frame
+	hud.refresh()
+	assert_eq(hud.slot_state(5).id, "ability.runic_bolt", "slot 6 holds Runic Bolt")
+	assert_eq(hud.slot_state(5).target, "aim", "unlocked: the bolt flies at the crosshair")
+	assert_eq(hud.slot_state(0).target, "", "no target line on a pulse")
+	p.router.inject_edge(&"lock_press")
+	await step_ticks(2)
+	hud.refresh()
+	assert_eq(hud.slot_state(5).target, "» Practice Dummy", "locked: the selected target")
+
+
+func test_status_row_shows_the_players_statuses() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var hud := _hud()
+	await step_ticks(2)
+	var row: Node = hud.get_node_or_null("StatusRow")
+	assert_true(row != null and row.has_method("visible_text"), "the status row widget is on the HUD")
+	if row == null:
+		return
+	await get_tree().process_frame
+	assert_eq(row.visible_text(), "", "nothing active")
+	p.entity.apply_status("status.stone_skin")
+	p.entity.apply_status("status.slow")
+	await get_tree().process_frame
+	assert_eq(row.visible_text(), "SLOW 3s  SKIN 6s", "chips sorted by status id, seconds rounded up")
+	await step_ticks(185)
+	await get_tree().process_frame
+	assert_eq(row.visible_text(), "SKIN 3s", "the slow expired")
