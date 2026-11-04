@@ -42,7 +42,7 @@ func test_soldier_guard_blocks_front_flank_and_heavy_break_it() -> void:
 func test_destroyed_breakable_at_load_is_not_a_nav_obstacle() -> void:
 	WorldState.record_destroyed("sandbox.fence_01")
 	var arena: Node3D = (load("res://scenes/world/sandbox_arena.tscn") as PackedScene).instantiate()
-	(arena.get_node("Soldier01") as SoldierEnemy).ai_enabled = false
+	TestSpawn.disable_all_ai(arena)
 	world.add_child(arena)
 	var map := arena.get_world_3d().navigation_map
 	# The navigation map syncs asynchronously; wait for a synced map that yields a path.
