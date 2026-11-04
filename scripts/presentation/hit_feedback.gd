@@ -14,7 +14,7 @@ const ROAR_LIFETIME := 0.55
 const BUFF_LIFETIME := 0.6
 ## Status id -> rig tint (alpha = strength), in priority order: the first active one shows.
 const STATUS_TINTS := [
-	["status.titan_surge", Color(1.0, 0.55, 0.2, 0.40)],
+	["status.titan_surge", Color(1.0, 0.55, 0.2, 0.30)],
 	["status.stone_skin", Color(0.62, 0.58, 0.50, 0.45)],
 	["status.slow", Color(0.45, 0.70, 1.0, 0.35)],
 	["status.mend", Color(0.45, 1.0, 0.50, 0.30)],

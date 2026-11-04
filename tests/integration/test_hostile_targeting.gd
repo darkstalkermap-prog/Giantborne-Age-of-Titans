@@ -9,9 +9,10 @@ extends IntegrationSuite
 const STUB_SCRIPT := "res://tests/support/stub_enemy.gd"
 
 
-func before_each() -> void:
+func after_each() -> void:
+	for n in get_tree().get_nodes_in_group(ProjectileSystem.GROUP):
+		n.queue_free()   # the system lives under the current scene here (no level node)
 	await super()
-	world.add_to_group("level_root")   # projectile systems are freed with the test world
 
 
 ## A NEUTRAL village member on the soldier body (StubEnemy: no guard, no AI).

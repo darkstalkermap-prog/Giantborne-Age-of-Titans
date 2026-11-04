@@ -31,8 +31,6 @@ func before_each() -> void:
 	spawned.clear()
 	rejected.clear()
 	effects.clear()
-	# Projectile systems parent to the "level_root" node: the test world, freed after the test.
-	world.add_to_group("level_root")
 	Events.projectile_impact.connect(_on_impact)
 	Events.projectile_spawned.connect(_on_spawned)
 	Events.action_rejected.connect(_on_rejected)
@@ -45,6 +43,10 @@ func after_each() -> void:
 		for c: Dictionary in sig.get_connections():
 			if (c.callable as Callable).get_object() == self:
 				sig.disconnect(c.callable)
+	# Without a level node the projectile system lives under the current scene (the test
+	# runner): free it with the test, like a level unload would.
+	for n in get_tree().get_nodes_in_group(ProjectileSystem.GROUP):
+		n.queue_free()
 	await super()
 
 
@@ -279,7 +281,6 @@ func test_projectile_stops_at_a_wall() -> void:
 		assert_eq(impacts[0].hit, "", "on the world")
 		assert_near((impacts[0].position as Vector3).z, -5.5, 0.05, "touching the wall's face (radius 0.3)")
 	assert_eq(sys.active_count(), 0, "removed on impact")
-	assert_eq(sys.get_parent(), world, "the system lives in the level (here the test world)")
 
 
 func test_projectile_blocked_by_a_front_guard_using_the_impact_point() -> void:
@@ -468,7 +469,6 @@ func test_enemy_target_aim_uses_the_stored_aim_point() -> void:
 
 
 func test_no_projectile_survives_its_level() -> void:
-	world.remove_from_group("level_root")
 	var level := Node3D.new()
 	level.name = "Level"
 	level.add_to_group("level_root")

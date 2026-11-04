@@ -217,10 +217,13 @@ func _make_slot(index: int) -> Dictionary:
 	# Selected target of projectile slots ("» Soldier" when locked, otherwise "aim"), above the slot.
 	var target := UiKit.label("", 10, UiKit.TEXT)
 	target.anchor_right = 1.0
+	target.offset_left = -10
+	target.offset_right = 10
 	target.offset_top = -16
 	target.offset_bottom = -4
 	target.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	target.clip_text = true
+	target.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	stack.add_child(target)
 	return {"root": root, "cooldown": cooldown, "key": key, "pad": pad, "title": title, "cost": cost,
 		"timer": timer, "reason": reason, "target": target, "index": index}
