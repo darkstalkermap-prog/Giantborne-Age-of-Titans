@@ -4,6 +4,7 @@
 	"type": "enemy",
 	"archetype": "soldier",
 	"display_name": "Soldier",
+	"scene": "res://scenes/enemies/soldier.tscn",
 	"height_m": 1.8,
 	"capsule_radius_m": 0.35,
 	"health": 220,
@@ -53,8 +54,16 @@
 		"regroup_morale": 45
 	},
 	"morale": 70,
+	"tactics": {
+		"outmatched_ratio": 2.5,
+		"outmatched_behavior": "formation",
+		"formation_spacing_m": 3.0
+	},
 	"threat": 0.6,
 	"lockable": true,
 	"grants_fury": true,
-	"crit_chance": 0.0
+	"crit_chance": 0.0,
+	"xp_reward": 20,
+	"mass_class": "small",
+	"nav_layers": 1
 }
