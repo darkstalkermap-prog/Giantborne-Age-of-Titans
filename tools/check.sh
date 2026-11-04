@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # The definition-of-done sequence of the M2-M5 plan (§1.1), failing on the first bad step:
 #   1. import   2. build scenes (only with --only=... or --build)   3. import again
-#   4. full test suite (plus the slow suites with --slow)   5. 120 s autoplay with 0 errors
+#   4. full test suite (plus the slow suites with --slow; it also parses every script)
+#   5. 120 s autoplay with 0 errors
 #
 # Usage: tools/check.sh [--slow] [--only=<builder>[,<builder>]] [--build] [--autoplay=SECONDS]
 #   --only=...    rebuild the named scene builders (before P04's builder split: all of them)
@@ -54,13 +55,6 @@ step() {
 	echo "== $1"
 }
 
-# A script that fails to parse shows up in the import log; catch it before running anything.
-check_import_log() {
-	if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|Compile Error" "$1" >/dev/null; then
-		fail "script errors during import (see $1)" "$1"
-	fi
-}
-
 step "import"
 run_limited 600 "$GD" --headless --path . --import >"$LOGS/import1.log" 2>&1 \
 	|| fail "import exited with $?" "$LOGS/import1.log"
@@ -81,7 +75,6 @@ fi
 step "import (register new classes and resources)"
 run_limited 600 "$GD" --headless --path . --import >"$LOGS/import2.log" 2>&1 \
 	|| fail "second import exited with $?" "$LOGS/import2.log"
-check_import_log "$LOGS/import2.log"
 
 TEST_ARGS=(-- --no-user-settings)
 if [ "$SLOW" = "1" ]; then
