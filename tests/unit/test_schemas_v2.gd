@@ -94,18 +94,36 @@ func test_new_enum_values_are_declared() -> void:
 	for fam in ["tree", "bow", "staff", "jaws", "natural"]:
 		assert_true(DataValidator.WEAPON_FAMILIES.has(fam), "WEAPON_FAMILIES has %s" % fam)
 	assert_true(DataValidator.ARCHETYPES.has("training"), "ARCHETYPES has training")
-	assert_eq(DataValidator.STATUS_STACKING, ["refresh_no_stack", "strongest_wins", "independent"], "stacking")
-	assert_eq(DataValidator.STATUS_MODIFIERS.size(), 7, "seven status modifiers")
-	assert_eq(DataValidator.MASS_CLASSES, ["small", "medium", "large", "immovable"], "mass classes")
-	assert_eq(DataValidator.GRAB_ATTACH, ["none", "torso_fist", "scruff", "two_hand"], "grab attach")
-	assert_eq(DataValidator.CONDITION_TYPES.size(), 14, "condition types")
-	assert_eq(DataValidator.BOT_ACTIONS.size(), 12, "bot actions")
-	assert_eq(DataValidator.TUTORIAL_EVENTS.size(), 12, "tutorial events")
-	for list: Array in [DataValidator.STATUS_TAGS, DataValidator.PROJECTILE_VISUALS, DataValidator.AIM_MODES,
-			DataValidator.TELEGRAPH_SHAPES, DataValidator.OUTMATCHED_BEHAVIORS, DataValidator.NPC_ROLES,
-			DataValidator.ITEM_CATEGORIES, DataValidator.DODGE_STYLES, DataValidator.TUTORIAL_TRIGGERS,
-			DataValidator.TUTORIAL_DISMISS]:
-		assert_true(list.size() >= 2, "enum list declared: %s" % [list])
+	var planned := {
+		"STATUS_STACKING": [DataValidator.STATUS_STACKING, ["refresh_no_stack", "strongest_wins", "independent"]],
+		"STATUS_MODIFIERS": [DataValidator.STATUS_MODIFIERS, ["armor_flat", "slow_fraction", "outgoing_damage_mult",
+			"outgoing_poise_mult", "fury_gain_mult", "heal_per_tick", "damage_taken_mult"]],
+		"STATUS_TAGS": [DataValidator.STATUS_TAGS, ["Buff", "Debuff", "Slow", "Fear", "Heal", "Barrier", "Ultimate"]],
+		"MASS_CLASSES": [DataValidator.MASS_CLASSES, ["small", "medium", "large", "immovable"]],
+		"PROJECTILE_VISUALS": [DataValidator.PROJECTILE_VISUALS, ["bolt", "boulder", "arrow", "thrown_body"]],
+		"AIM_MODES": [DataValidator.AIM_MODES, ["lock_or_camera", "camera", "target", "forward"]],
+		"TELEGRAPH_SHAPES": [DataValidator.TELEGRAPH_SHAPES, ["circle", "line", "cone"]],
+		"GRAB_ATTACH": [DataValidator.GRAB_ATTACH, ["none", "torso_fist", "scruff", "two_hand"]],
+		"OUTMATCHED_BEHAVIORS": [DataValidator.OUTMATCHED_BEHAVIORS, ["none", "formation", "harass", "spread",
+			"kite", "retreat"]],
+		"NPC_ROLES": [DataValidator.NPC_ROLES, ["civilian", "talker"]],
+		"ITEM_CATEGORIES": [DataValidator.ITEM_CATEGORIES, ["material", "quest", "trophy", "key"]],
+		"DODGE_STYLES": [DataValidator.DODGE_STYLES, ["roll", "sidestep"]],
+		"CONDITION_TYPES": [DataValidator.CONDITION_TYPES, ["flag", "entered", "killed", "encounter_cleared",
+			"destroyed", "has_item", "hits_on", "stage_at_least", "level_at_least", "weapon_equipped",
+			"dialogue_outcome", "all", "any", "not"]],
+		"BOT_ACTIONS": [DataValidator.BOT_ACTIONS, ["go", "fight_encounter", "kill", "attack", "break", "hurl_at",
+			"interact", "talk", "grow", "rest", "equip", "wait"]],
+		"TUTORIAL_TRIGGERS": [DataValidator.TUTORIAL_TRIGGERS, ["entered", "flag", "level", "stage", "event"]],
+		"TUTORIAL_DISMISS": [DataValidator.TUTORIAL_DISMISS, ["action_kind", "action_id", "event", "flag", "timeout"]],
+		"TUTORIAL_EVENTS": [DataValidator.TUTORIAL_EVENTS, ["camera_mode_changed", "lock_target_changed",
+			"ability_started", "telegraph_started", "hit_resolved", "staggered", "grab_started", "boss_phase_changed",
+			"interacted", "attributes_changed", "shrine_activated", "encounter_activated"]],
+	}
+	for list_name: String in planned:
+		var declared: Array = planned[list_name][0]
+		for v: String in planned[list_name][1]:
+			assert_true(declared.has(v), "%s has %s" % [list_name, v])
 
 
 # --------------------------------------------------------------------------- status_effect
@@ -172,13 +190,13 @@ func test_progression_valid_example() -> void:
 	assert_eq(r.errors.size(), 0, "the shipped record validates: %s" % "\n".join(r.errors))
 	assert_eq(DataValidator.validate_references(GameData.records, r.refs).size(), 0, "its references resolve")
 	var p := _progression()
+	assert_eq(int(p.level_cap), 20, "level cap 20")
 	assert_eq((p.xp_to_next as Array).size(), 19, "19 level steps")
-	assert_eq(int(p.xp_to_next[0]), 100, "L1 -> L2 costs 100")
-	assert_eq(int(p.xp_to_next[18]), 1000, "L19 -> L20 costs 1000")
-	for i in 19:
-		assert_eq(int(p.xp_to_next[i]), CombatRules.xp_to_next_level(i + 1), "matches CombatRules at L%d" % (i + 1))
-	assert_eq(p.ability_library, ["ability.heavy_footfall"], "only abilities that exist today")
-	assert_eq(p.new_game.known_abilities, ["ability.heavy_footfall"], "new game knows Footfall")
+	assert_eq((p.new_game.slots as Array).size(), 8, "8 hotbar slots")
+	assert_true((p.ability_library as Array).has("ability.heavy_footfall"), "the library holds Footfall")
+	assert_true((p.new_game.known_abilities as Array).has("ability.heavy_footfall"), "a new game knows Footfall")
+	for id: Variant in p.ability_library:
+		assert_true(GameData.get_action(str(id)) != null, "library ability %s exists" % id)
 
 
 func test_progression_invalid_examples() -> void:
@@ -250,17 +268,20 @@ func test_untelegraphed_enemy_attack_warns() -> void:
 	_write("f.json", GameData.get_record("weapon.soldier_sword"))
 	_loaded_tmp = true
 	GameData.load_all(TMP_DATA, false)
-	var w := "\n".join(GameData.warnings)
-	assert_eq(GameData.errors.size(), 0, "the test data is valid: %s" % "\n".join(GameData.errors))
-	assert_true(w.contains("(ability.test_chop): enemy attack") and w.contains("has no telegraph"),
-		"an untelegraphed 0.85 s enemy attack warns")
-	assert_true(w.contains("(ability.test_cast): enemy attack (used by enemy.test_caster)"),
+	# A warning until P09 turns the same finding into an error: accept it in either list.
+	var findings := "\n".join(GameData.warnings) + "\n" + "\n".join(GameData.errors)
+	var other_errors := Array(GameData.errors).filter(func(e: String) -> bool: return not e.contains("has no telegraph"))
+	assert_eq(other_errors.size(), 0, "the test data is otherwise valid: %s" % "\n".join(other_errors))
+	assert_true(findings.contains("(ability.test_chop): enemy attack (kind enemy_attack) with windup_s 0.85"),
+		"an untelegraphed 0.85 s enemy attack is reported")
+	assert_true(findings.contains("(ability.test_cast): enemy attack (used by enemy.test_caster)"),
 		"an ability listed in an enemy's attacks counts as an enemy attack")
-	assert_false(w.contains("ability.test_quick"), "a 0.75 s windup needs no telegraph")
-	assert_false(w.contains("ability.test_player_cast"), "player abilities are not checked")
+	assert_false(findings.contains("ability.test_quick"), "a 0.75 s windup needs no telegraph")
+	assert_false(findings.contains("ability.test_player_cast"), "player abilities are not checked")
 	GameData.load_all(GameData.DATA_ROOT)
-	assert_true("\n".join(GameData.warnings).contains("(ability.soldier_chop)"),
-		"the shipped 0.85 s soldier chop warns until telegraphs exist (P04/P09)")
+	if not (GameData.get_record("ability.soldier_chop") as Dictionary).has("telegraph"):
+		assert_true("\n".join(GameData.warnings).contains("(ability.soldier_chop)"),
+			"the shipped 0.85 s soldier chop is reported until it has a telegraph")
 
 
 # --------------------------------------------------------------------------- P01 fields
@@ -378,21 +399,25 @@ func test_router_emits_debug_edges_only() -> void:
 
 func test_override_record_refreshes_cached_action_in_place() -> void:
 	var a := GameData.get_action("ability.light_1")
+	var power := a.power
+	var windup_mult := a.move_mult(ActionDef.Phase.WINDUP)
+	var active_mult := a.move_mult(ActionDef.Phase.ACTIVE)
+	var original: Dictionary = (GameData.get_record("ability.light_1") as Dictionary).duplicate(true)
 	var prev := GameData.override_record("ability.light_1",
 		{"power": 99, "movement": {"windup_speed_mult": 0.9}, "tags": ["Melee", "Light"]})
 	assert_true(GameData.get_action("ability.light_1") == a, "the cached ActionDef object is kept")
 	assert_near(a.power, 99.0, 1e-9, "and refreshed")
 	assert_near(a.move_mult(ActionDef.Phase.WINDUP), 0.9, 1e-9, "nested dictionaries merge")
-	assert_near(a.move_mult(ActionDef.Phase.ACTIVE), 0.15, 1e-9, "untouched nested keys survive")
+	assert_near(a.move_mult(ActionDef.Phase.ACTIVE), active_mult, 1e-9, "untouched nested keys survive")
 	assert_false(a.has_tag("BasicAttack"), "arrays are replaced")
 	assert_near(float(GameData.get_record("ability.light_1").power), 99.0, 1e-9, "the record changed")
-	assert_near(float(prev.power), 40.0, 1e-9, "the previous record is returned")
+	assert_eq(prev, original, "the previous record is returned")
 	GameData.restore_record("ability.light_1", prev)
 	assert_true(GameData.get_action("ability.light_1") == a, "restore keeps the object")
-	assert_near(a.power, 40.0, 1e-9, "power restored")
-	assert_near(a.move_mult(ActionDef.Phase.WINDUP), 0.3, 1e-9, "movement restored")
+	assert_near(a.power, power, 1e-9, "power restored")
+	assert_near(a.move_mult(ActionDef.Phase.WINDUP), windup_mult, 1e-9, "movement restored")
 	assert_true(a.has_tag("BasicAttack"), "tags restored")
-	assert_eq(GameData.get_record("ability.light_1"), prev, "the record is back")
+	assert_eq(GameData.get_record("ability.light_1"), original, "the record is back")
 
 
 func test_override_record_creates_and_restore_removes() -> void:

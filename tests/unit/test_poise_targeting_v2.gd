@@ -143,8 +143,15 @@ func test_poise_meter_new_fields_and_reconfigure() -> void:
 
 # --------------------------------------------------------------------------- Combatant
 
+func _base_giant() -> Dictionary:
+	return {"id": "test.giant", "attributes": {"strength": 10, "endurance": 10, "dexterity": 10,
+		"intellect": 10, "willpower": 10, "constitution": 10},
+		"resources": {"health": 500, "stamina": 100, "essence": 100, "fury_max": 100},
+		"poise": {"threshold": 100, "stagger_s": 1.0}}
+
+
 func test_combatant_derived_values() -> void:
-	var c := Combatant.from_record("player", GameData.get_record("player.giant"), 3.6576)
+	var c := Combatant.from_record("player", _base_giant(), 3.6576)
 	assert_near(c.pools.health_max, 500.0, 1e-9, "base health")
 	c.pools.damage_health(250.0)
 	c.growth_bonus = {"health": 150, "stamina": 10}
@@ -162,6 +169,11 @@ func test_combatant_derived_values() -> void:
 	assert_near(c.poise.threshold, 112.0, 1e-9, "Constitution 14 adds 12 poise threshold")
 	assert_near(c.recovery_scale(), 0.9, 1e-9, "Dexterity 30 -> 10% faster recovery")
 	assert_near(c.attribute("strength"), 10.0, 1e-9, "unlisted attributes are kept")
+	var shipped := Combatant.from_record("player", GameData.get_record("player.giant"), 3.6576)
+	var before := shipped.pools.health_max
+	shipped.growth_bonus = {"health": 150}
+	shipped.recompute_derived()
+	assert_near(shipped.pools.health_max, before + 150.0, 1e-9, "the shipped giant grows by its bonus")
 	c.set_height(5.4864)
 	assert_near(c.height_m, 5.4864, 1e-9, "set_height")
 
@@ -177,18 +189,19 @@ func test_combatant_reads_new_record_fields() -> void:
 	assert_eq(mage.xp_reward, 15, "xp_reward")
 	assert_eq(mage.status_immunities, PackedStringArray(["Fear"]), "status_immunities")
 	assert_eq(str(mage.base_record.id), "test.mage", "base_record")
-	var soldier := Combatant.from_record("s", GameData.get_record("enemy.soldier"))
-	assert_near(soldier.pools.essence_max, 0.0, 1e-9, "no essence field -> 0 (unchanged)")
-	assert_eq(soldier.mass_class, "small", "default mass class")
+	var grunt := Combatant.from_record("s", {"id": "test.grunt", "health": 220, "stamina": 40})
+	assert_near(grunt.pools.essence_max, 0.0, 1e-9, "no essence field -> 0 (unchanged)")
+	assert_eq(grunt.mass_class, "small", "default mass class")
+	assert_eq(grunt.xp_reward, 0, "default xp_reward")
 
 
 func test_recovery_scale_pushed_to_controller() -> void:
 	var ce := _bare("test.dex", "player.giant", CombatEntity.Team.PLAYER)
 	var ctl := CombatController.new(ce.entity_id, ce.combatant)
 	ce.controller = ctl
-	assert_near(ctl.recovery_scale, 1.0, 1e-9, "Dexterity 10 -> 1.0")
+	assert_near(ctl.recovery_scale, ce.combatant.recovery_scale(), 1e-9, "starts from the combatant")
 	ce.combatant.set_attributes({"dexterity": 30})
-	assert_near(ctl.recovery_scale, 0.9, 1e-9, "CombatEntity pushes the new recovery_scale")
+	assert_near(ctl.recovery_scale, CombatRules.recovery_scale(30.0), 1e-9, "CombatEntity pushes the new recovery_scale")
 
 
 # --------------------------------------------------------------------------- poise rules
@@ -232,7 +245,8 @@ func test_much_larger_attacker_staggers_longer() -> void:
 		var r := ce.receive_hit(_hit(50.0, c[1]), null)
 		assert_true(r.poise_broken, "%s: poise broken" % c[0])
 		assert_eq(ctl.stagger_ticks_left, c[2], "%s: attacker %.2f m vs 1.8 m staggers %d ticks" % [c[0], c[1], c[2]])
-	var ce2 := _bare("test.soldier_plain", "enemy.soldier")
+	_enemy("enemy.test_plain", {"threshold": 40, "stagger_s": 1.0, "immunity_s": 1.5})
+	var ce2 := _bare("test.grunt_plain", "enemy.test_plain")
 	var ctl2 := CombatController.new(ce2.entity_id, ce2.combatant)
 	ce2.controller = ctl2
 	ctl2.begin_tick(600)

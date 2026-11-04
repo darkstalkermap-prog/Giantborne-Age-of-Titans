@@ -310,7 +310,8 @@ func test_projectiles_outlive_a_shooter_that_died_earlier() -> void:
 
 func test_status_pass_heals_and_expires_through_sim() -> void:
 	var patient := _bare("test.patient", "enemy.soldier")
-	patient.combatant.pools.health = 100.0
+	var start := patient.combatant.pools.health_max - 150.0
+	patient.combatant.pools.health = start
 	var t0 := Sim.tick
 	assert_true(patient.apply_status(MEND, NAN, -1.0, "player"), "Mend applied")
 	assert_eq(applied, [[t0, "test.patient", MEND, "player", 4.0]], "status_applied(tick, entity, status, source, duration)")
@@ -321,16 +322,16 @@ func test_status_pass_heals_and_expires_through_sim() -> void:
 		assert_eq(h[3], "player", "heals report the caster")
 	assert_eq(healed.size(), 8, "8 heal ticks")
 	assert_near(total, 100.0, 1e-6, "100 over 4 s")
-	assert_near(patient.combatant.pools.health, 200.0, 1e-6, "applied to health")
+	assert_near(patient.combatant.pools.health, start + 100.0, 1e-6, "applied to health")
 	assert_eq(healed.back()[0], t0 + 240, "the last heal lands on the expiry tick")
 	assert_eq(expired, [[t0 + 240, "test.patient", MEND]], "status_expired exactly once, at expiry")
 	assert_false(patient.combatant.statuses.has(MEND), "gone")
 	healed.clear()
 	var full := _bare("test.nearly_full", "enemy.soldier")
-	full.combatant.pools.health = 210.0
+	full.combatant.pools.health = full.combatant.pools.health_max - 10.0
 	full.apply_status(MEND, NAN, -1.0, "player")
 	await step_ticks(240)
-	assert_near(full.combatant.pools.health, 220.0, 1e-6, "healing caps at maximum health")
+	assert_near(full.combatant.pools.health, full.combatant.pools.health_max, 1e-6, "healing caps at maximum health")
 	var gained := 0.0
 	for h: Array in healed:
 		gained += float(h[2])
