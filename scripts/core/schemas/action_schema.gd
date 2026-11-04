@@ -83,6 +83,43 @@ static func fields() -> Dictionary:
 		"resume_threshold": U.num(0.0),
 	}
 	## @anchor P03
+	f.merge({
+		# Sector pulse: a cylinder pulse kept to |yaw delta| <= sector_deg / 2 of the facing.
+		"sector_deg": {"t": "number", "gt": 0.0, "max": 360.0},
+		# Pulse radius: "fixed" (radius_m / radius_by_stage_m) or the profile's melee_reach_m.
+		"radius_from": U.str_field(false, ["fixed", "melee_reach"]),
+		# Pulse radius per growth stage (index = stage - 1; the last entry beyond the list).
+		"radius_by_stage_m": {"t": "array", "items": "number"},
+		# Statuses the actor gives itself when the action enters ACTIVE.
+		"self_statuses": {"t": "array", "items": "dict", "item_fields": {
+			"status": U.ref("status_effect", true),
+			"magnitude": U.num(),
+			"duration_s": U.pos(),
+		}},
+		# Statuses a HIT applies (on BLOCKED only the entries with on_blocked).
+		"on_hit_statuses": {"t": "array", "items": "dict", "item_fields": {
+			"status": U.ref("status_effect", true),
+			"magnitude": U.num(),
+			"duration_s": U.pos(),
+			"on_blocked": U.bool_field(),
+		}},
+		# Morale the defender loses on HIT or BLOCKED (actor.on_morale_delta).
+		"morale_damage": U.num(0.0),
+		# Required for hit_shape "projectile". launch_offset_m is stage-1 local (scaled by k).
+		"projectile": {"t": "dict", "fields": {
+			"speed_mps": U.pos(true),
+			"radius_m": U.pos(true),
+			"range_m": U.pos(true),
+			"gravity_mps2": U.num(0.0),
+			"aim": U.str_field(false, DataValidator.AIM_MODES),
+			"arc_to_target": U.bool_field(),
+			"launch_offset_m": U.vec3(),
+			"visual": U.str_field(false, DataValidator.PROJECTILE_VISUALS),
+			"impact_radius_m": U.num(0.0),
+			"impact_height_m": U.pos(),
+			"pierce": U.bool_field(),
+		}},
+	})
 
 	## @anchor P04
 
@@ -147,6 +184,21 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		"sprint":
 			U.require(d, ["drain_per_s", "speed_mult", "resume_threshold"], ctx, out, "sprint")
 	## @anchor P03
+	var p03_shape: String = str(d.get("hit_shape", ""))
+	if p03_shape == "sector_pulse":
+		U.require(d, ["sector_deg"], ctx, out, "hit_shape 'sector_pulse'")
+		if str(d.get("radius_from", "fixed")) == "fixed" and not d.has("radius_m") \
+				and not d.has("radius_by_stage_m"):
+			out.errors.append("%s: hit_shape 'sector_pulse' needs 'radius_m', 'radius_by_stage_m' or radius_from 'melee_reach'" % ctx)
+	if p03_shape == "projectile":
+		U.require(d, ["projectile"], ctx, out, "hit_shape 'projectile'")
+	if typeof(d.get("radius_by_stage_m")) == TYPE_ARRAY:
+		var p03_radii: Array = d.radius_by_stage_m
+		if p03_radii.is_empty():
+			out.errors.append("%s.radius_by_stage_m: must list at least one radius" % ctx)
+		for p03_i in p03_radii.size():
+			if U.is_number(p03_radii[p03_i]) and float(p03_radii[p03_i]) <= 0.0:
+				out.errors.append("%s.radius_by_stage_m[%d]: must be > 0 (got %s)" % [ctx, p03_i, p03_radii[p03_i]])
 
 	## @anchor P04
 

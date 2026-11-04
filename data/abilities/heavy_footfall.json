@@ -23,6 +23,7 @@
 	"crit_eligible": false,
 	"hit_shape": "cylinder_pulse",
 	"radius_m": 3.0,
+	"radius_by_stage_m": [3.0, 4.0, 5.0],
 	"height_m": 2.6,
 	"movement": {"windup_speed_mult": 0.0, "active_speed_mult": 0.0, "recovery_speed_mult": 0.2},
 	"knockback_impulse": 6.0,
