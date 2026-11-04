@@ -176,7 +176,11 @@ func load_components(entries: Array) -> void:
 		var script := load(path) as Script
 		if script == null:
 			continue
-		add_component(StringName(str(entry[0])), script.new())
+		var instance: Variant = script.new()
+		if not instance is PlayerComponent:
+			push_warning("GiantPlayer: %s is not a PlayerComponent" % path)
+			continue
+		add_component(StringName(str(entry[0])), instance)
 
 
 ## Registers (and sets up) a component; a component with the same name is replaced.
