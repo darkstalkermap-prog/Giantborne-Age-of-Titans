@@ -9,10 +9,17 @@ extends RefCounted
 ##
 ## Per tick the owner calls begin_tick(now) first (advances timelines, may consume the
 ## buffered request), then request(...) for new inputs.
+##
+## States: ATTACKING (light/heavy/enemy_attack), CASTING (ability/ultimate), EXECUTING (actions
+## whose hit_shape is "grab"; advances like CASTING), DODGING, BLOCKING, STAGGERED, GRABBED
+## (held by another actor: no timeline, no stagger; leaves only via release_grabbed or death)
+## and DEAD.
 
 enum State { LOCOMOTION, ATTACKING, BLOCKING, DODGING, CASTING, STAGGERED, GRABBED, EXECUTING, DEAD }
 const STATE_NAMES := ["Locomotion", "Attacking", "Blocking", "Dodging", "Casting", "Staggered",
 	"Grabbed", "Executing", "Dead"]
+## States whose action timeline advances in begin_tick.
+const TIMELINE_STATES := [State.ATTACKING, State.CASTING, State.DODGING, State.EXECUTING]
 
 enum Verdict { ACCEPT, RETRY, REJECT }
 
@@ -21,6 +28,9 @@ signal action_ended(action: ActionDef, instance_id: int, interrupted: bool)
 signal request_rejected(kind: StringName, action_id: String, reason: String)
 signal state_changed(old_state: int, new_state: int)
 signal staggered(duration_s: float, reason: String)
+## Emitted whenever phase() changes while an action runs, including the first phase on accept
+## (after action_started). Not emitted when an action finishes (see action_ended).
+signal phase_entered(action: ActionDef, instance_id: int, phase: int)
 
 var actor_id := ""
 var combatant: Combatant
@@ -31,7 +41,15 @@ var elapsed := 0                    ## ticks since the current action was accept
 var now := 0
 var growth_stage := 1
 var on_floor := true
-var recovery_scale := 1.0           ## Dexterity bonus; affects recovery only
+## Dexterity: multiplies the recovery ticks of attack kinds (light, heavy, ability, ultimate,
+## enemy_attack) only. Windup, active, parry and dodge timing never change.
+var recovery_scale := 1.0
+## Character level for unlock_level gating. 99 = gating off (sandbox, tests).
+var level := 99
+## Action id -> true: taught early by a reward; skips the unlock_level check.
+var level_exempt := {}
+var held_by := ""                   ## holder id while GRABBED
+var holding_id := ""                ## target id while this actor holds something (PlayerGrab)
 
 var cooldowns := Cooldowns.new()
 var buffer := InputBuffer.new()
@@ -75,6 +93,10 @@ func set_instance_source(source: Callable) -> void:
 func add_action(def: ActionDef) -> void:
 	if def != null:
 		library[def.id] = def
+
+
+func set_growth_stage(stage: int) -> void:
+	growth_stage = stage
 
 
 # --------------------------------------------------------------------------- queries
@@ -151,25 +173,30 @@ func can_rotate() -> bool:
 	match state:
 		State.LOCOMOTION, State.BLOCKING:
 			return true
-		State.ATTACKING, State.CASTING:
+		State.ATTACKING, State.CASTING, State.EXECUTING:
 			return phase() == ActionDef.Phase.WINDUP
 	return false
 
 
+## The state's own multiplier times the combatant's slow multiplier (1.0 without statuses).
 func move_speed_multiplier() -> float:
+	var base := 0.0
 	match state:
 		State.LOCOMOTION:
-			return 1.0
+			base = 1.0
 		State.BLOCKING:
-			return float(block_def.param("move_speed_mult", 0.4)) if block_def != null else 0.4
-		State.ATTACKING, State.CASTING:
-			return action.move_mult(phase()) if action != null else 0.0
-	return 0.0
+			base = float(block_def.param("move_speed_mult", 0.4)) if block_def != null else 0.4
+		State.ATTACKING, State.CASTING, State.EXECUTING:
+			base = action.move_mult(phase()) if action != null else 0.0
+	if combatant != null and base != 0.0:
+		base *= combatant.move_mult()
+	return base
 
 
-## Stamina regeneration pauses while sprinting, blocking, or committed to an attack/cast.
+## Stamina regeneration pauses while sprinting, blocking, or committed to an attack/cast/grab.
 func stamina_regen_allowed(sprinting: bool) -> bool:
-	return not sprinting and not (state in [State.BLOCKING, State.ATTACKING, State.CASTING])
+	return not sprinting and not (state in [State.BLOCKING, State.ATTACKING, State.CASTING,
+		State.EXECUTING])
 
 
 func state_name() -> String:
@@ -191,10 +218,15 @@ func next_light_id() -> String:
 func begin_tick(p_now: int) -> void:
 	now = p_now
 	match state:
-		State.ATTACKING, State.CASTING, State.DODGING:
+		State.ATTACKING, State.CASTING, State.DODGING, State.EXECUTING:
+			var before := phase()
 			elapsed += 1
 			if elapsed >= _total_ticks():
 				_finish_action(false)
+			else:
+				var after := phase()
+				if after != before:
+					phase_entered.emit(action, instance_id, after)
 		State.STAGGERED:
 			stagger_ticks_left -= 1
 			if stagger_ticks_left <= 0:
@@ -226,6 +258,9 @@ func _try_buffered() -> void:
 
 ## kind: &"light", &"heavy", &"dodge", &"block", &"block_release", &"jump", &"slot"
 ## (params.slot = 1..8), &"ultimate", or &"attack" (params.action_id, used by AI).
+## params may carry "precheck": Callable() -> String (a reject reason, "" = ok). It runs last,
+## only when everything else would accept (also when a buffered request is retried); a
+## non-empty reason rejects with that reason and nothing is spent.
 func request(kind: StringName, params: Dictionary = {}) -> int:
 	if kind == &"block_release":
 		block_held = false
@@ -247,6 +282,24 @@ func request(kind: StringName, params: Dictionary = {}) -> int:
 	return v.verdict
 
 
+## Side-effect free: the reason request(kind, params) would be rejected with right now, "busy"
+## if it would be buffered, "" if it would be accepted. Shares _evaluate() with request(), so
+## the HUD can never disagree with the controller.
+func preview_reason(kind: StringName, params: Dictionary = {}) -> String:
+	if kind == &"block_release":
+		return ""
+	var v := _evaluate(kind, params)
+	match v.verdict:
+		Verdict.ACCEPT:
+			return ""
+		Verdict.RETRY:
+			return "busy"
+	return str(v.reason)
+
+
+## Order: dead -> resolve -> unlock_stage ("locked") -> unlock_level ("level_locked", skipped
+## for level_exempt ids) -> cooldown -> state ("busy" RETRY) -> airborne -> stamina -> essence
+## -> fury -> precheck. RETRY is only for state or timing; everything else is REJECT.
 func _evaluate(kind: StringName, params: Dictionary) -> Dictionary:
 	var result := {"verdict": Verdict.REJECT, "action": null, "action_id": "", "reason": ""}
 	if state == State.DEAD:
@@ -262,15 +315,18 @@ func _evaluate(kind: StringName, params: Dictionary) -> Dictionary:
 	if def.unlock_stage > growth_stage:
 		result.reason = "locked"
 		return result
+	if def.unlock_level > level and not level_exempt.has(def.id):
+		result.reason = "level_locked"
+		return result
 	if not cooldowns.is_ready(def.id, now):
 		result.reason = "cooldown"
 		return result
 	match state:
-		State.STAGGERED, State.GRABBED, State.EXECUTING:
+		State.STAGGERED, State.GRABBED:
 			result.verdict = Verdict.RETRY
 			result.reason = "busy"
 			return result
-		State.ATTACKING, State.CASTING, State.DODGING:
+		State.ATTACKING, State.CASTING, State.DODGING, State.EXECUTING:
 			if action == null or not action.allows_cancel(_cancel_group(kind), phase(), ticks_in_phase()):
 				result.verdict = Verdict.RETRY
 				result.reason = "busy"
@@ -295,6 +351,12 @@ func _evaluate(kind: StringName, params: Dictionary) -> Dictionary:
 	if def.fury_cost > combatant.pools.fury + 1e-6:
 		result.reason = "fury"
 		return result
+	var precheck: Variant = params.get("precheck")
+	if typeof(precheck) == TYPE_CALLABLE and (precheck as Callable).is_valid():
+		var why := str((precheck as Callable).call())
+		if why != "":
+			result.reason = why
+			return result
 	result.verdict = Verdict.ACCEPT
 	result.reason = ""
 	return result
@@ -347,18 +409,20 @@ func _resolve(kind: StringName, params: Dictionary) -> ActionDef:
 	return library.get(id)
 
 
-func _accept(def: ActionDef, kind: StringName, params: Dictionary) -> void:
+## Starts `def`. pay = false (force_action) skips costs and the cooldown.
+func _accept(def: ActionDef, _kind: StringName, _params: Dictionary, pay := true) -> void:
 	if action != null:
 		_finish_action(false, true)
 	# Costs and cooldown are committed exactly once, here.
-	if def.stamina_cost > 0.0:
-		combatant.pools.spend_stamina(def.stamina_cost)
-	if def.essence_cost > 0.0:
-		combatant.pools.spend_essence(def.essence_cost)
-	if def.fury_cost > 0.0:
-		combatant.pools.spend_fury(def.fury_cost)
-	if def.cooldown_s > 0.0:
-		cooldowns.start(def.id, def.cooldown_s, now)
+	if pay:
+		if def.stamina_cost > 0.0:
+			combatant.pools.spend_stamina(def.stamina_cost)
+		if def.essence_cost > 0.0:
+			combatant.pools.spend_essence(def.essence_cost)
+		if def.fury_cost > 0.0:
+			combatant.pools.spend_fury(def.fury_cost)
+		if def.cooldown_s > 0.0:
+			cooldowns.start(def.id, def.cooldown_s, now)
 	instance_id = _next_instance_id()
 	match def.kind:
 		"block":
@@ -377,19 +441,30 @@ func _accept(def: ActionDef, kind: StringName, params: Dictionary) -> void:
 			_timeline_recovery = def.recovery_ticks
 			if def.is_attack():
 				_timeline_recovery = int(roundf(def.recovery_ticks * recovery_scale))
-			if def.kind == "dodge":
-				_set_state(State.DODGING)
-			elif def.kind == "ability" or def.kind == "ultimate":
-				_set_state(State.CASTING)
-			else:
-				_set_state(State.ATTACKING)
+			_set_state(_timeline_state_for(def))
 	if def.kind == "light":
 		chain_next_id = def.chain_next if def.chain_next != "" else ""
 		chain_expire_tick = -1
 	elif def.is_attack():
 		chain_next_id = ""
 		chain_expire_tick = -1
-	action_started.emit(def, instance_id)
+	var started_id := instance_id
+	action_started.emit(def, started_id)
+	# A listener may already have replaced or ended the action; only report the phase it is in.
+	if action == def and instance_id == started_id:
+		var p := phase()
+		if p == ActionDef.Phase.WINDUP or p == ActionDef.Phase.ACTIVE or p == ActionDef.Phase.RECOVERY:
+			phase_entered.emit(def, started_id, p)
+
+
+static func _timeline_state_for(def: ActionDef) -> int:
+	if def.kind == "dodge":
+		return State.DODGING
+	if def.hit_shape == "grab":
+		return State.EXECUTING
+	if def.kind == "ability" or def.kind == "ultimate":
+		return State.CASTING
+	return State.ATTACKING
 
 
 func _reject(kind: StringName, action_id_value: String, reason: String) -> void:
@@ -411,7 +486,7 @@ func _finish_action(interrupted: bool, canceled := false) -> void:
 		chain_next_id = ""
 		chain_expire_tick = -1
 	hit_registry.forget(finished_id)
-	if state in [State.ATTACKING, State.CASTING, State.DODGING]:
+	if state in TIMELINE_STATES:
 		_set_state(State.LOCOMOTION)
 	action_ended.emit(finished, finished_id, interrupted)
 
@@ -454,6 +529,60 @@ func resume_held_block() -> bool:
 	return true
 
 
+# --------------------------------------------------------------------------- scripted actions
+
+## Scripted follow-up (charge -> wall recovery, the boss phase roar): finishes the current action
+## (not interrupted), leaves block, stagger or a grab, clears the buffer, and starts `def`
+## without cost, cooldown or state checks. Ignored when dead.
+func force_action(def: ActionDef) -> void:
+	if def == null or state == State.DEAD:
+		return
+	_finish_action(false)
+	buffer.clear()
+	if state == State.STAGGERED:
+		stagger_ticks_left = 0
+		combatant.poise.end_stagger()
+	elif state == State.GRABBED:
+		held_by = ""
+		combatant.poise.end_stagger()
+	_set_state(State.LOCOMOTION)
+	_accept(def, &"attack", {}, false)
+
+
+## Another actor grabbed this one. Allowed from LOCOMOTION, ATTACKING, CASTING, STAGGERED and
+## BLOCKING: interrupts the running action (no refund), clears the buffer, ends the stagger and
+## enters GRABBED (no timeline, no stagger, poise locked). Returns false otherwise.
+func enter_grabbed(holder_id: String) -> bool:
+	if not (state in [State.LOCOMOTION, State.ATTACKING, State.CASTING, State.STAGGERED, State.BLOCKING]):
+		return false
+	if action != null:
+		_finish_action(true)
+	buffer.clear()
+	stagger_ticks_left = 0
+	stagger_reason = ""
+	combatant.poise.begin_stagger()
+	held_by = holder_id
+	_set_state(State.GRABBED)
+	return true
+
+
+## The holder let go (thrown, dropped, crushed, interrupted ...): GRABBED -> STAGGERED for
+## recovery_s (LOCOMOTION when recovery_s <= 0). Ignored unless GRABBED.
+func release_grabbed(reason: String, recovery_s: float = 0.6) -> void:
+	if state != State.GRABBED:
+		return
+	held_by = ""
+	if recovery_s <= 0.0:
+		combatant.poise.end_stagger()
+		_set_state(State.LOCOMOTION)
+		return
+	stagger_ticks_left = maxi(1, ActionDef.seconds_to_ticks(recovery_s))
+	stagger_reason = reason
+	combatant.poise.begin_stagger()
+	_set_state(State.STAGGERED)
+	staggered.emit(recovery_s, reason)
+
+
 # --------------------------------------------------------------------------- reactions
 
 ## A blocked parryable hit inside the parry window that did not parry consumes the window:
@@ -465,9 +594,10 @@ func on_block_impact(failed_parry: bool) -> void:
 
 ## Hard stagger: interrupts ordinary attacks and casts. No refund for interrupted actions.
 ## Actions authored with interrupt_policy "super_armor" keep running (the poise meter still
-## resets); returns false in that case.
+## resets); returns false in that case. Returns false while GRABBED (only the holder's release
+## or death leaves GRABBED).
 func apply_stagger(seconds: float, reason: String) -> bool:
-	if state == State.DEAD:
+	if state == State.DEAD or state == State.GRABBED:
 		return false
 	if action != null and action.interrupt_policy == "super_armor":
 		combatant.poise.value = 0.0
@@ -496,4 +626,5 @@ func kill() -> void:
 		_finish_action(true)
 	buffer.clear()
 	stagger_ticks_left = 0
+	held_by = ""
 	_set_state(State.DEAD)

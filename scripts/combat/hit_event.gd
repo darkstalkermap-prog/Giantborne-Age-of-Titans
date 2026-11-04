@@ -32,6 +32,16 @@ var substep := 0
 var distance := 0.0
 var category := "melee"
 var attacker_growth_stage := 1
+## Statuses this hit applies: [{"status": id, "magnitude": float, "duration_s": float,
+## "on_blocked": bool}] - on HIT, and on BLOCKED for entries with on_blocked (CombatEntity).
+var on_hit_statuses: Array = []
+## Morale the defender loses on HIT or BLOCKED (actor.on_morale_delta, when it has one).
+var morale_damage := 0.0
+## Projectile hits still land after their shooter died on an earlier tick (decision 8).
+var from_projectile := false
+var projectile_id := 0
+## Set for cylinder and sector pulses and projectile splash (player area effects skip neutrals).
+var area_effect := false
 
 
 func has_tag(tag: String) -> bool:

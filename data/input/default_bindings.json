@@ -36,7 +36,12 @@
 		"pause": [{"key": "Escape"}, {"joy_button": "start"}],
 		"help": [{"key": "F1"}, {"key": "H"}],
 		"debug_panel": [{"key": "F3"}],
-		"debug_reset": [{"key": "F5"}]
+		"debug_reset": [{"key": "F5"}],
+		"inventory": [{"key": "I"}, {"joy_button": "back"}],
+		"debug_grow": [{"key": "F6"}],
+		"debug_shrink": [{"key": "F7"}],
+		"debug_xp": [{"key": "F8"}],
+		"debug_checkpoint": [{"key": "F9"}]
 	},
 	"deadzones": {"default": 0.2, "attack_heavy": 0.5, "ability_modifier": 0.5}
 }

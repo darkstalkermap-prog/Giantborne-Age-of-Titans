@@ -11,6 +11,7 @@ const ACTIONS := [
 	"ability_1", "ability_2", "ability_3", "ability_4",
 	"ability_5", "ability_6", "ability_7", "ability_8",
 	"ability_modifier", "ultimate", "pause", "help", "debug_panel", "debug_reset",
+	"inventory", "debug_grow", "debug_shrink", "debug_xp", "debug_checkpoint",
 ]
 
 ## Actions whose controller binding is a combo with "ability_modifier" (LT by default).
@@ -30,6 +31,8 @@ const LABELS := {
 	"ability_6": "Ability 6", "ability_7": "Ability 7", "ability_8": "Ability 8",
 	"ability_modifier": "Ability modifier (pad)", "ultimate": "Ultimate", "pause": "Pause menu",
 	"help": "Controls overlay", "debug_panel": "Debug panel", "debug_reset": "Debug reset",
+	"inventory": "Inventory", "debug_grow": "Debug grow", "debug_shrink": "Debug shrink",
+	"debug_xp": "Debug +100 XP", "debug_checkpoint": "Debug reload checkpoint",
 }
 
 const MOUSE_BUTTONS := {"left": 1, "right": 2, "middle": 3, "wheel_up": 4, "wheel_down": 5,

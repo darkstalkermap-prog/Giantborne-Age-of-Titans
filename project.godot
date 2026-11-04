@@ -38,6 +38,7 @@ window/stretch/aspect="expand"
 3d_physics/layer_3="hurtboxes"
 3d_physics/layer_4="debris"
 3d_physics/layer_5="breakables"
+3d_physics/layer_6="blockers"
 
 [physics]
 

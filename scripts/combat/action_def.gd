@@ -44,6 +44,7 @@ var knockback_max_speed := 0.0
 var tracking_fraction := 0.0
 var soft_target_max_deg := 10.0
 var unlock_stage := 1
+var unlock_level := 1                    ## character level gate (CombatController.level; 99 = off)
 var interrupt_policy := "hard_stagger"   ## hard_stagger: a hard stagger interrupts; super_armor: it does not
 var iframe_start_tick := 0
 var iframe_end_tick := 0
@@ -56,6 +57,14 @@ static func seconds_to_ticks(seconds: float) -> int:
 
 static func from_dict(d: Dictionary) -> ActionDef:
 	var a := ActionDef.new()
+	a.fill(d)
+	return a
+
+
+## (Re)reads every field from a record. GameData.override_record() refills cached ActionDefs in
+## place, so holders of the object (CombatController.library) see the change.
+func fill(d: Dictionary) -> void:
+	var a := self
 	a.params = d
 	a.id = str(d.get("id", ""))
 	a.kind = str(d.get("kind", ""))
@@ -90,6 +99,7 @@ static func from_dict(d: Dictionary) -> ActionDef:
 	a.tracking_fraction = float(d.get("tracking_fraction", 0.0))
 	a.soft_target_max_deg = float(d.get("soft_target_max_deg", 10.0))
 	a.unlock_stage = int(d.get("unlock_stage", 1))
+	a.unlock_level = int(d.get("unlock_level", 1))
 	a.interrupt_policy = str(d.get("interrupt_policy", "hard_stagger"))
 	if a.kind == "dodge":
 		# Dodge: "active" is the movement burst, "recovery" the rest of the 0.75 s.
@@ -103,7 +113,8 @@ static func from_dict(d: Dictionary) -> ActionDef:
 		a.windup_ticks = seconds_to_ticks(float(d.get("windup_s", 0.0)))
 		a.active_ticks = seconds_to_ticks(float(d.get("active_s", 0.0)))
 		a.recovery_ticks = seconds_to_ticks(float(d.get("recovery_s", 0.0)))
-	return a
+		a.iframe_start_tick = 0
+		a.iframe_end_tick = 0
 
 
 func is_attack() -> bool:
