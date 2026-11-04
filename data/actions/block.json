@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "action.block",
+	"type": "action",
+	"kind": "block",
+	"display_name": "Block / Parry",
+	"stamina_cost": 5,
+	"parry_window_s": 0.20,
+	"parry_extra_stamina": 5,
+	"parry_poise_damage": 40,
+	"coverage_deg": 120,
+	"physical_reduction": 0.75,
+	"elemental_reduction": 0.50,
+	"impact_stamina_factor": 0.25,
+	"guard_break_damage_fraction": 0.50,
+	"guard_break_stagger_s": 1.0,
+	"move_speed_mult": 0.4
+}

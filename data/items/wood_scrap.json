@@ -1,0 +1,8 @@
+{
+	"schema_version": 1,
+	"id": "item.wood_scrap",
+	"type": "item",
+	"display_name": "Wood Scrap",
+	"description": "Splintered fence timber. Placeholder loot proving one-time awards.",
+	"stack_max": 99
+}

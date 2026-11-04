@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "action.sprint",
+	"type": "action",
+	"kind": "sprint",
+	"display_name": "Sprint",
+	"drain_per_s": 8,
+	"speed_mult": 1.5,
+	"resume_threshold": 25
+}

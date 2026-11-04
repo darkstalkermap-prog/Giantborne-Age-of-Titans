@@ -1,0 +1,30 @@
+{
+	"schema_version": 1,
+	"id": "player.giant",
+	"type": "player",
+	"display_name": "Giantborn",
+	"ancestry": "ancestry.neutral",
+	"growth_profile": "growth.01",
+	"weapon": "weapon.club",
+	"attributes": {"strength": 10, "endurance": 10, "dexterity": 10, "intellect": 10, "willpower": 10, "constitution": 10},
+	"resources": {"health": 500, "stamina": 100, "essence": 100, "fury_max": 100},
+	"regen": {"stamina_per_s": 15, "stamina_delay_s": 1.0, "essence_per_s": 4, "essence_delay_s": 2.0, "fury_decay_per_s": 5, "fury_decay_delay_s": 10},
+	"fury_gain": {"basic_attack": 4, "parry": 6, "kill": 8},
+	"poise": {"threshold": 100, "recover_per_s": 20, "recover_delay_s": 3.0, "stagger_s": 1.0, "immunity_s": 1.5},
+	"armor": 0,
+	"resistances": {},
+	"immunities": [],
+	"crit_chance": 0.05,
+	"crit_multiplier": 1.5,
+	"stability": 1.0,
+	"loadout": {
+		"light_chain": "ability.light_1",
+		"heavy": "ability.heavy_1",
+		"dodge": "action.dodge",
+		"block": "action.block",
+		"jump": "action.jump",
+		"sprint": "action.sprint",
+		"slots": ["ability.heavy_footfall", "", "", "", "", "", "", ""],
+		"ultimate": ""
+	}
+}

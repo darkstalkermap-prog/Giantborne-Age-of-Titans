@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "action.dodge",
+	"type": "action",
+	"kind": "dodge",
+	"display_name": "Dodge",
+	"stamina_cost": 18,
+	"duration_s": 0.75,
+	"move_s": 0.45,
+	"iframe_start_s": 0.10,
+	"iframe_end_s": 0.30,
+	"distance_m": 4.5,
+	"cancels": [{"into": ["light", "heavy", "block", "dodge"], "phase": "recovery", "after_s": 0.15}]
+}

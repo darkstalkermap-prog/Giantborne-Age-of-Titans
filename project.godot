@@ -1,0 +1,52 @@
+; Engine configuration file.
+; Pinned engine: Godot 4.6.3-stable (official build 7d41c59c4). See README.md.
+; Input bindings are NOT stored here: they are loaded from data/input/default_bindings.json
+; plus user overrides (user://settings.json) by the Settings autoload, so they stay remappable.
+
+config_version=5
+
+[application]
+
+config/name="Giantborn: Age of Titans"
+config/description="Low-poly combat sandbox prototype (milestones M0/M1)."
+config/version="0.1.0-m1"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.6", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Events="*res://scripts/core/events.gd"
+GameData="*res://scripts/core/game_data.gd"
+Settings="*res://scripts/core/settings.gd"
+WorldState="*res://scripts/core/world_state.gd"
+Sim="*res://scripts/core/sim.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[layer_names]
+
+3d_render/layer_1="default"
+3d_render/layer_2="first_person_hidden"
+3d_physics/layer_1="world"
+3d_physics/layer_2="actors"
+3d_physics/layer_3="hurtboxes"
+3d_physics/layer_4="debris"
+3d_physics/layer_5="breakables"
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+common/physics_ticks_per_second=60
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+anti_aliasing/quality/msaa_3d=1
+lights_and_shadows/directional_shadow/size=2048
