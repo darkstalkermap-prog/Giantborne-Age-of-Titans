@@ -126,7 +126,7 @@ here, but part of it can only be confirmed on your PC.
 Command: `tools/run_tests.sh` (headless, `--fixed-fps 60`).
 
 ```
-RESULT: 14 suites, 1122 checks, 0 failures
+RESULT: 14 suites, 1124 checks, 0 failures
 ```
 - 6 unit suites: rules, resolver, controller, resources/poise, targeting/registry/geometry,
   data/saves.
@@ -150,7 +150,11 @@ After the first complete build, five independent reviewers each checked one area
 combat rules, input and the action state machine, camera and targeting, AI/world/data, and
 engine robustness. A separate skeptical verifier then tried to refute each finding, often by
 re-running the scenario in the engine. Of the 22 findings, every one was real, and every one is
-fixed with a regression test. The verifiers then re-checked the fixed code in the engine.
+fixed with a regression test. The verifiers then re-checked the fixed code in the engine,
+including real X11 window events for the mouse-sensitivity and window-close cases. They
+confirmed 21 fixes. For the 22nd (right-stick target switching in first-person lock), they
+showed my first fix was incomplete: a fast push that was then held still switched. It now
+switches only on a flick-and-release ("tap").
 
 | Area | Findings (all fixed) |
 | --- | --- |

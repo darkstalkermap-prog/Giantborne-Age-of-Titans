@@ -168,16 +168,24 @@ func _handle_meta(intents: Dictionary) -> void:
 			&"lock_release":
 				if hold_lock and lock.is_locked():
 					_release_lock("manual")
-			&"target_left", &"stick_flick_left":
+			&"target_left":
 				if lock.is_locked():
 					_switch_target(-1)
-				elif e == &"target_left":
+				else:
 					camera_rig.zoom(-1)
-			&"target_right", &"stick_flick_right":
+			&"target_right":
 				if lock.is_locked():
 					_switch_target(1)
-				elif e == &"target_right":
+				else:
 					camera_rig.zoom(1)
+			# Right stick: in third-person lock the stick does not look, so a fast flick switches
+			# at once; in first-person lock it also looks, so only a flick-and-release ("tap") does.
+			&"stick_flick_left", &"stick_flick_right":
+				if lock.is_locked() and not camera_rig.is_first_person():
+					_switch_target(-1 if e == &"stick_flick_left" else 1)
+			&"stick_tap_left", &"stick_tap_right":
+				if lock.is_locked() and camera_rig.is_first_person():
+					_switch_target(-1 if e == &"stick_tap_left" else 1)
 			&"sprint_press":
 				sprint_toggled = not sprint_toggled
 			&"interact":

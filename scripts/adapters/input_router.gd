@@ -22,12 +22,18 @@ const FLICK_OFF := 0.35
 ## A flick must go from below FLICK_OFF to above FLICK_ON within this many ticks (0.1 s), so a
 ## slow push (ordinary first-person look while locked) never switches targets.
 const FLICK_MAX_TICKS := 6
+## A "tap" is a fast flick that also returns to centre within this many ticks (0.25 s) of
+## reaching FLICK_ON. First-person lock switches targets only on taps, because there the stick
+## also looks around: a fast push that is then held is looking, not switching.
+const TAP_RETURN_TICKS := 15
 
 var _edges: Array[StringName] = []
 var _look_delta := Vector2.ZERO
 var _axis_pressed: Dictionary = {}
 var _flick_armed := true
 var _ticks_since_centered := 0
+var _tap_pending := 0         ## +1 / -1 while a fast flick may still become a tap, else 0
+var _ticks_since_flick := 0
 
 var use_injection := false
 var injected_move := Vector2.ZERO
@@ -173,15 +179,26 @@ func consume() -> Dictionary:
 		move = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	if context == Context.GAMEPLAY and not use_injection:
 		var rx := Input.get_action_strength("look_right") - Input.get_action_strength("look_left")
+		if _tap_pending != 0:
+			_ticks_since_flick += 1
 		if absf(rx) <= FLICK_OFF:
+			if _tap_pending != 0 and _ticks_since_flick <= TAP_RETURN_TICKS:
+				_edges.append(&"stick_tap_right" if _tap_pending > 0 else &"stick_tap_left")
+			_tap_pending = 0
 			_flick_armed = true
 			_ticks_since_centered = 0
 		else:
 			_ticks_since_centered += 1
+			if _tap_pending != 0 and _ticks_since_flick > TAP_RETURN_TICKS:
+				_tap_pending = 0  # held after the flick: that was looking
 			if absf(rx) >= FLICK_ON and _flick_armed:
 				_flick_armed = false
 				if _ticks_since_centered <= FLICK_MAX_TICKS:
+					# Immediate edge for third-person lock (the stick does not look there) ...
 					_edges.append(&"stick_flick_right" if rx > 0.0 else &"stick_flick_left")
+					# ... and a pending tap for first-person lock, emitted on a quick return.
+					_tap_pending = 1 if rx > 0.0 else -1
+					_ticks_since_flick = 0
 	var out := {
 		"edges": _edges.duplicate(),
 		"move": move,

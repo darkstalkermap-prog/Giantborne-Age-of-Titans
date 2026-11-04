@@ -65,10 +65,26 @@ func test_only_fast_stick_flicks_switch_targets() -> void:
 	router.consume()
 	Input.action_press("look_right", 1.0)   # snap from centre to full deflection
 	await get_tree().process_frame
-	assert_true(router.consume().edges.has(&"stick_flick_right"), "a fast flick switches")
+	assert_true(router.consume().edges.has(&"stick_flick_right"), "a fast flick switches (third-person lock)")
+	var tapped := false
+	for i in 30:   # ... but holding it afterwards is looking: no first-person tap
+		await get_tree().process_frame
+		if router.consume().edges.has(&"stick_tap_right"):
+			tapped = true
 	Input.action_release("look_right")
 	await get_tree().process_frame
+	if router.consume().edges.has(&"stick_tap_right"):
+		tapped = true
+	assert_false(tapped, "fast push then hold is first-person look, not a tap")
+	Input.action_press("look_right", 1.0)   # flick and release quickly
+	await get_tree().process_frame
 	router.consume()
+	for i in 4:
+		await get_tree().process_frame
+		router.consume()
+	Input.action_release("look_right")
+	await get_tree().process_frame
+	assert_true(router.consume().edges.has(&"stick_tap_right"), "a quick flick-and-release is a first-person tap")
 
 
 func test_switch_target_when_current_is_behind_camera() -> void:
