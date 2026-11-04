@@ -8,8 +8,9 @@ extends RefCounted
 ##   strongest_wins    keeps the larger magnitude and refreshes the duration (slow)
 ##   independent       every application is its own instance (not used in the slice)
 ## Timing: applied at tick T with duration D ticks -> active through T + D - 1, removed by the
-## status pass on T + D. Periodic effects tick every tick_ticks after application (restarted on
-## refresh), the last one on the expiry tick: Mend heals 8 x 12.5 = 100 over 4 s.
+## status pass on T + D. A refresh never shortens the remaining time. Periodic effects tick
+## every tick_ticks after application (restarted on refresh), the last one on the expiry tick:
+## Mend heals 8 x 12.5 = 100 over 4 s.
 
 signal changed
 
@@ -39,7 +40,8 @@ func apply(def: StatusDef, magnitude: float, duration_s: float, source_id: Strin
 			existing.modifiers = _modifiers_for(def, mag)
 		existing.def = def
 		existing.applied_tick = now
-		existing.expires_tick = now + ticks
+		# A refresh never cuts a status short (a brief re-application keeps the longer expiry).
+		existing.expires_tick = maxi(int(existing.expires_tick), now + ticks)
 		existing.next_tick = now + def.tick_ticks if def.tick_ticks > 0 else -1
 		existing.source = source_id
 		changed.emit()

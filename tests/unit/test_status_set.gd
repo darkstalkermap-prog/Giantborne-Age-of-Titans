@@ -82,6 +82,9 @@ func test_strongest_slow_wins_and_refreshes() -> void:
 	assert_near(set.magnitude("status.slow"), 0.5, 1e-9, "a stronger slow wins")
 	assert_near(set.modifier_max("slow_fraction"), 0.5, 1e-9, "the modifier follows the magnitude")
 	assert_near(set.remaining_s("status.slow", T0 + 40), 3.0, 1e-9, "and refreshes")
+	set.apply(_slow(), 0.1, 0.5, "d", T0 + 50, _none())
+	assert_near(set.remaining_s("status.slow", T0 + 50), (220 - 50) / 60.0, 1e-9,
+		"a brief re-application never cuts it short (the 3 s from T0+40 still ends at T0+220)")
 	var c := Combatant.from_record("def", {"id": "test.def", "health": 100})
 	assert_near(c.move_mult(), 1.0, 1e-9, "no slow -> full speed")
 	c.statuses.apply(_slow(), 0.95, -1.0, "x", T0, _none())
