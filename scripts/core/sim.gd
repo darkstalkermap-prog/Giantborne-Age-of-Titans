@@ -18,6 +18,8 @@ var _actors: Dictionary = {}     ## entity_id -> Node implementing sim_step(tick
 var _ordered: Array[Node] = []
 var _order_dirty := false
 var _entities: Dictionary = {}   ## entity_id -> CombatEntity
+var _entity_cache: Array[CombatEntity] = []
+var _entity_cache_dirty := true
 var _pending_hits: Array[HitEvent] = []
 var _next_instance_id := 1
 var _tokens: Dictionary = {}     ## target_id -> Array[String] of holder ids
@@ -57,11 +59,13 @@ func register_entity(entity: CombatEntity) -> void:
 			entity.entity_id, existing.get_path(), entity.get_path()])
 		return
 	_entities[entity.entity_id] = entity
+	_entity_cache_dirty = true
 
 
 func unregister_entity(entity: CombatEntity) -> void:
 	if _entities.get(entity.entity_id) == entity:
 		_entities.erase(entity.entity_id)
+		_entity_cache_dirty = true
 	release_all_tokens(entity.entity_id)
 
 
@@ -74,13 +78,19 @@ func get_entity(entity_id: String) -> CombatEntity:
 
 
 ## Entities sorted by id (stable iteration for targeting and AI).
+## Entities sorted by id (stable iteration for targeting and AI). The sorted list is cached
+## and rebuilt only when the registry changes.
 func entities() -> Array[CombatEntity]:
-	var ids := _entities.keys()
-	ids.sort()
+	if _entity_cache_dirty:
+		_entity_cache_dirty = false
+		_entity_cache.clear()
+		var ids := _entities.keys()
+		ids.sort()
+		for id: String in ids:
+			_entity_cache.append(_entities[id])
 	var out: Array[CombatEntity] = []
-	for id: String in ids:
-		var e := get_entity(id)
-		if e != null:
+	for e in _entity_cache:
+		if is_instance_valid(e):
 			out.append(e)
 	return out
 

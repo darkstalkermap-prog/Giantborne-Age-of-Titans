@@ -168,9 +168,13 @@ func _update_body(s: Dictionary, delta: float) -> void:
 	body.position = body.position.lerp(Vector3.ZERO, 1.0 - exp(-18.0 * delta))
 
 
+var _flash_applied := 0.0
+
+
 func _update_flash(delta: float) -> void:
-	if _flash <= 0.0 and _materials.is_empty():
-		return
+	if _flash <= 0.0 and _flash_applied <= 0.0:
+		return  # nothing to fade: do not touch the materials every frame
 	_flash = maxf(0.0, _flash - delta * 6.0)
 	for i in _materials.size():
 		_materials[i].albedo_color = _base_colors[i].lerp(_flash_color, _flash * 0.85)
+	_flash_applied = _flash

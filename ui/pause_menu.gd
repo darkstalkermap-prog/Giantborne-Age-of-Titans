@@ -73,6 +73,7 @@ func open() -> void:
 
 func close() -> void:
 	_cancel_capture()
+	Settings.save_settings()  # covers keyboard/gamepad slider changes (no drag_ended)
 	visible = false
 	get_tree().paused = false
 	InputRouter.set_context(InputRouter.Context.GAMEPLAY)
@@ -118,9 +119,11 @@ func _slider_row(grid: GridContainer, text: String, key: String, lo: float, hi: 
 	s.value = float(Settings.get_value(key))
 	s.custom_minimum_size = Vector2(260, 24)
 	var value_label := UiKit.label("%.2f" % s.value, 13, UiKit.MUTED)
+	# Apply live while dragging; write the settings file once, when the drag ends.
 	s.value_changed.connect(func(v: float) -> void:
-		Settings.set_value(key, v)
+		Settings.set_value(key, v, false)
 		value_label.text = "%.2f" % v)
+	s.drag_ended.connect(func(_changed: bool) -> void: Settings.save_settings())
 	var h := HBoxContainer.new()
 	h.add_child(s)
 	h.add_child(value_label)
