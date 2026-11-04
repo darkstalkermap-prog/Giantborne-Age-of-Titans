@@ -37,12 +37,16 @@ func _ready() -> void:
 	_build_center()
 	_build_target_frame()
 	_build_messages()
+	# Widgets from ui/hud/ (HudWidgets.WIDGETS; missing files skipped), under the death and
+	# help overlays.
+	HudWidgets.create_all(self)
 	_build_death()
 	_build_help()
 	Events.hud_message.connect(show_message)
 	Events.loot_awarded.connect(_on_loot)
 	Events.object_destroyed.connect(_on_object_destroyed)
 	Events.camera_mode_changed.connect(_on_camera_mode_changed)
+	Events.growth_changed.connect(_on_growth_changed)
 	Settings.changed.connect(_on_settings_changed)
 
 
@@ -57,6 +61,10 @@ func _on_object_destroyed(_tick: int, world_id: String, _by: String) -> void:
 
 
 func _on_camera_mode_changed(_mode: int) -> void:
+	_refresh_mode_label()
+
+
+func _on_growth_changed(_tick: int, _entity_id: String, _old_stage: int, _new_stage: int) -> void:
 	_refresh_mode_label()
 
 

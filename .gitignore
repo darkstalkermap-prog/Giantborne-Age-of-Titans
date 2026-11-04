@@ -7,3 +7,5 @@ builds/
 .DS_Store
 Thumbs.db
 *.swp
+# Per-worktree Godot user folder (tools/gd.sh sets XDG_DATA_HOME here)
+.userdata/

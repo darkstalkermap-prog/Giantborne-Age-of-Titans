@@ -6,6 +6,14 @@ extends Node
 ## a keyboard) and by turning the camera like a mouse would - never by editing combat state.
 ## State lives in static variables so a run survives sandbox resets (scene reloads).
 ## Prints one "AUTOPILOT_RESULT {json}" line, then quits.
+##
+## Every tool run (--autoplay, --scenario) installs an ErrorCounter: the result carries
+## "errors", "warnings" and "error_samples" (the first five), and the process exits with code
+## EXIT_ERRORS when any engine or script error was logged during the run (0 otherwise).
+
+const EXIT_OK := 0
+const EXIT_ERRORS := 1
+const RESULT_SAMPLES := 5
 
 static var _started := false
 static var _elapsed := 0.0
@@ -16,13 +24,15 @@ static var _stats: Dictionary = {}
 static var _frame_ms: Array[float] = []
 static var _step := 0
 static var _rng := RandomNumberGenerator.new()
+static var _error_counter: ErrorCounter = null
+static var _finished := false
 
 var player: GiantPlayer
 var _decision_left := 0.0
 var _block_left := 0.0
 var _heavy_pending := false
 var _dead_time := 0.0
-var _no_soldier_time := 0.0
+var _no_enemy_time := 0.0
 var _step_time := 0.0
 var _busy := false
 var _stuck_time := 0.0
@@ -42,7 +52,10 @@ func configure(seconds: float, scenario: String, capture_dir: String) -> void:
 	_stats = {"ticks": 0, "attacks": 0, "heavies": 0, "dodges": 0, "blocks": 0, "footfalls": 0,
 		"jumps": 0, "resets": 0, "player_deaths": 0, "soldier_kills": 0, "camera_toggles": 0,
 		"lock_presses": 0, "fence_breaks": 0, "hits_resolved": 0, "parries": 0,
-		"max_debris": 0, "rejections": 0}
+		"max_debris": 0, "rejections": 0, "enemy_kills": 0}
+	# Count every engine/script error of the run (the logger lives as long as the process).
+	_error_counter = ErrorCounter.new()
+	OS.add_logger(_error_counter)
 
 
 func _ready() -> void:
@@ -64,6 +77,9 @@ func _on_hit_resolved(_t: int, r: HitResult) -> void:
 func _on_entity_died(_t: int, id: String, _k: String) -> void:
 	if id.begins_with("soldier"):
 		_stats.soldier_kills += 1
+	var e := Sim.get_entity(id)
+	if e != null and e.actor != null and e.actor.is_in_group("enemies"):
+		_stats.enemy_kills += 1
 
 
 func _on_object_destroyed(_t: int, _id: String, _by: String) -> void:
@@ -104,11 +120,12 @@ func _physics_process(dt: float) -> void:
 
 # --------------------------------------------------------------------------- soak
 
-func _alive_soldier() -> SoldierEnemy:
+## First living enemy of any archetype (duck typed: an "enemies" node with a CombatEntity).
+func _alive_enemy() -> Node3D:
 	for n in get_tree().get_nodes_in_group("enemies"):
-		var s := n as SoldierEnemy
-		if s != null and s.entity.is_alive():
-			return s
+		var e: Variant = n.get("entity")
+		if n is Node3D and e is CombatEntity and (e as CombatEntity).is_alive():
+			return n
 	return null
 
 
@@ -131,12 +148,12 @@ func _run_soak(dt: float) -> void:
 			_stats.resets += 1
 			Events.sandbox_reset_requested.emit("autopilot_after_death")
 		return
-	var soldier := _alive_soldier()
-	var target: Node3D = soldier
-	if soldier == null:
-		_no_soldier_time += dt
-		if _no_soldier_time > 12.0:
-			_no_soldier_time = -1000.0
+	var enemy := _alive_enemy()
+	var target: Node3D = enemy
+	if enemy == null:
+		_no_enemy_time += dt
+		if _no_enemy_time > 12.0:
+			_no_enemy_time = -1000.0
 			_stats.resets += 1
 			Events.sandbox_reset_requested.emit("autopilot_respawn_soldier")
 			return
@@ -210,18 +227,45 @@ func _run_soak(dt: float) -> void:
 
 
 func _finish() -> void:
-	var sorted := _frame_ms.duplicate()
+	if _finished:
+		return
+	_finished = true
+	var counted := {}
+	if _error_counter != null:
+		counted = _error_counter.take()
+		OS.remove_logger(_error_counter)
+		_error_counter = null
+	var result := build_result(_stats, _elapsed, _frame_ms, _shots, counted)
+	print("AUTOPILOT_RESULT " + JSON.stringify(result))
+	get_tree().quit(exit_code(result))
+
+
+## The AUTOPILOT_RESULT dictionary: the run's stats, timing, shots and the error counts
+## (`counted` is an ErrorCounter.take() result; {} counts as no errors).
+static func build_result(stats: Dictionary, elapsed: float, frame_ms: Array, shots: Array,
+		counted: Dictionary) -> Dictionary:
+	var sorted := frame_ms.duplicate()
 	sorted.sort()
-	var result := _stats.duplicate()
-	result["simulated_s"] = snappedf(_elapsed, 0.01)
+	var result := stats.duplicate()
+	result["simulated_s"] = snappedf(elapsed, 0.01)
 	result["frames"] = sorted.size()
 	if not sorted.is_empty():
 		result["frame_ms_p50"] = snappedf(sorted[int(sorted.size() * 0.5)], 0.01)
 		result["frame_ms_p95"] = snappedf(sorted[int((sorted.size() - 1) * 0.95)], 0.01)
 		result["frame_ms_p99"] = snappedf(sorted[int((sorted.size() - 1) * 0.99)], 0.01)
-	result["shots"] = _shots
-	print("AUTOPILOT_RESULT " + JSON.stringify(result))
-	get_tree().quit(0)
+	result["shots"] = shots
+	result["errors"] = int(counted.get("errors", 0))
+	result["warnings"] = int(counted.get("warnings", 0))
+	result["error_samples"] = (counted.get("error_samples", []) as Array).slice(0, RESULT_SAMPLES)
+	return result
+
+
+## Process exit code for a result: EXIT_ERRORS when the run logged any error, else EXIT_OK.
+## (P14 and P17a add further codes for failed scenario checks.)
+static func exit_code(result: Dictionary) -> int:
+	if int(result.get("errors", 0)) > 0:
+		return EXIT_ERRORS
+	return EXIT_OK
 
 
 # --------------------------------------------------------------------------- screenshot tour
