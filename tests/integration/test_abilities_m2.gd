@@ -19,6 +19,21 @@ class MoraleDummy:
 		morale_calls.append([delta, source_id])
 
 
+## A player component that adds a precheck to one slot, as P07's grab will: the HUD passes its
+## preview_params to preview_reason, so the slot shows the reason a request would get.
+class PrecheckProbe:
+	extends PlayerComponent
+	var slot_key := "slot_6"
+	var reason := "no_target"
+
+	func preview_params(key: String, _def: ActionDef, params: Dictionary) -> void:
+		if key == slot_key:
+			params["precheck"] = check
+
+	func check() -> String:
+		return reason
+
+
 var impacts: Array = []
 var spawned: Array = []
 var rejected: Array = []
@@ -468,6 +483,42 @@ func test_enemy_target_aim_uses_the_stored_aim_point() -> void:
 			"without a stored point it aims at the target's anchor at launch")
 
 
+## Decision 8: a shot in flight still lands after its shooter dies; a shooter that is freed
+## (despawned, level unloaded) takes its projectiles with it.
+func test_a_bolt_in_flight_outlives_its_dead_shooter() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var s := spawn_soldier(Vector3(0, 0.05, -14), PI, "shooter")
+	await step_ticks(2)
+	var sys := _system()
+	var ends: Array = []
+	sys.projectile_ended.connect(func(pr: Projectile, why: String) -> void: ends.append([pr.id, why]))
+	var first := sys.spawn(s.entity, action("ability.runic_bolt"), Vector3(0, 2.0, -12), Vector3(0, 0, 35),
+		s.runner.context())
+	queue_hit("tester", "shooter", s.global_position + Vector3(0, 0, -2), 9999.0)
+	await step_ticks(1)
+	assert_false(s.entity.is_alive(), "the shooter died while its bolt was in flight")
+	assert_eq(sys.active_count(), 1, "the bolt keeps flying")
+	assert_true(await TestWait.until(self, func() -> bool: return hits_on("player").size() == 1, 40),
+		"and still lands on the giant")
+	var on := hits_on("player")
+	if on.size() == 1:
+		assert_eq(on[0].event.attacker_id, "shooter", "from the dead shooter")
+		assert_true(on[0].event.from_projectile, "as a projectile hit")
+		assert_eq(on[0].outcome, HitResult.Outcome.HIT, "resolved, not dropped")
+	assert_eq(ends, [[first, "impact"]], "it ended on the impact")
+	var s2 := spawn_soldier(Vector3(5, 0.05, -14), PI, "shooter_2")
+	await step_ticks(2)
+	var second := sys.spawn(s2.entity, action("ability.runic_bolt"), Vector3(5, 2.0, -12), Vector3(0, 0, 35),
+		s2.runner.context())
+	await step_ticks(2)
+	s2.queue_free()
+	await step_ticks(2)
+	assert_true(sys.get_projectile(second) == null, "a freed shooter's bolt is removed")
+	assert_eq(ends.back(), [second, "owner_gone"], "with reason owner_gone")
+	await step_ticks(30)
+	assert_eq(hits_on("player").size(), 1, "and never lands")
+
+
 func test_no_projectile_survives_its_level() -> void:
 	var level := Node3D.new()
 	level.name = "Level"
@@ -643,6 +694,33 @@ func test_hotbar_reasons_follow_preview_reason() -> void:
 	assert_eq(hud.slot_state(1).reason, "Dead", "dead")
 
 
+## A component's precheck reaches the hotbar through preview_params (the hook P07's grab uses),
+## and the precheck codes map to their text.
+func test_hotbar_shows_a_component_precheck_reason() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var hud := _hud()
+	await step_ticks(2)
+	var probe := PrecheckProbe.new()
+	p.add_component(&"precheck_probe", probe)
+	await get_tree().process_frame
+	hud.refresh()
+	assert_eq(p.controller.preview_reason(&"slot", {"slot": 6, "precheck": probe.check}), "no_target",
+		"the precheck rejects slot 6")
+	assert_eq(hud.slot_state(5).reason_code, "no_target", "the hotbar previews with the component's params")
+	assert_eq(hud.slot_state(5).reason, "No target", "shown as No target")
+	assert_eq(hud.slot_state(0).reason, "", "the other slots are unaffected")
+	probe.reason = "no_grab_target"
+	hud.refresh()
+	assert_eq(hud.slot_state(5).reason, "No target", "the grab's reason reads the same")
+	probe.reason = "too_heavy"
+	hud.refresh()
+	assert_eq(hud.slot_state(5).reason, "Too Heavy", "any other code is shown capitalised")
+	probe.reason = ""
+	hud.refresh()
+	assert_eq(hud.slot_state(5).reason, "", "an empty precheck accepts")
+	p.remove_component(&"precheck_probe")
+
+
 func test_hotbar_target_line_for_projectile_slots() -> void:
 	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
 	var hud := _hud()
@@ -676,3 +754,47 @@ func test_status_row_shows_the_players_statuses() -> void:
 	await step_ticks(185)
 	await get_tree().process_frame
 	assert_eq(row.visible_text(), "SKIN 3s", "the slow expired")
+
+
+# --------------------------------------------------------------------------- presentation
+
+func test_hit_feedback_draws_every_ability_effect_and_status_tints() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var fb := HitFeedback.new()
+	world.add_child(fb)
+	await step_ticks(2)
+	var kinds := ["sector", "roar", "self_buff", "aim_preview"]
+	for kind: String in kinds:
+		assert_false(fb.effect_visible(kind), "%s: hidden at first" % kind)
+	Events.ability_effect.emit(Sim.tick, "player", "ability.sweeping_blow", "sector", Vector3.ZERO, 3.5, 0.0, 120.0)
+	Events.ability_effect.emit(Sim.tick, "player", "ability.thunder_roar", "roar", Vector3.ZERO, 6.0, 0.0, 360.0)
+	Events.ability_effect.emit(Sim.tick, "player", "ability.stone_skin", "self_buff", Vector3.ZERO, 0.0, 0.0, 0.0)
+	Events.ability_effect.emit(Sim.tick, "player", "ability.runic_bolt", "cast", Vector3(0, 3, -1), 0.0, 0.0, 0.0)
+	# P07 emits aim_preview during Boulder Hurl's windup at the predicted landing point.
+	Events.ability_effect.emit(Sim.tick, "player", "ability.boulder_hurl", "aim_preview", Vector3(0, 0, -12),
+		1.5, 0.0, 0.0)
+	for kind: String in kinds:
+		assert_true(fb.effect_visible(kind), "%s: shown" % kind)
+	for i in 6:
+		await get_tree().process_frame
+	assert_true(fb.effect_visible("aim_preview"), "the landing ring stays briefly after an emit")
+	for i in 30:
+		await get_tree().process_frame
+	assert_false(fb.effect_visible("aim_preview"), "and goes once the emits stop")
+	assert_false(fb.effect_visible("sector"), "the sector fades")
+	for i in 20:
+		await get_tree().process_frame
+	for kind: String in kinds:
+		assert_false(fb.effect_visible(kind), "%s: gone again" % kind)
+	# Status tints: the first STATUS_TINTS entry the actor has, cleared when the last expires.
+	var rig := p.rig
+	assert_near(rig.status_tint().a, 0.0, 1e-9, "no tint without statuses")
+	p.entity.apply_status("status.stone_skin", NAN, 0.5)
+	assert_eq(rig.status_tint(), HitFeedback.STATUS_TINTS[1][1], "Stone Skin tints the rig")
+	p.entity.apply_status("status.titan_surge", NAN, 1.0)
+	assert_eq(rig.status_tint(), HitFeedback.STATUS_TINTS[0][1], "Titan Surge has the higher priority")
+	await step_ticks(35)
+	assert_false(p.entity.combatant.statuses.has("status.stone_skin"), "Stone Skin expired")
+	assert_eq(rig.status_tint(), HitFeedback.STATUS_TINTS[0][1], "the surge tint stays")
+	await step_ticks(30)
+	assert_near(rig.status_tint().a, 0.0, 1e-9, "no tint once every status expired")

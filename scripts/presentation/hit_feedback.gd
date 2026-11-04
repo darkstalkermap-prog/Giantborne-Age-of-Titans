@@ -3,15 +3,20 @@ extends Node3D
 ## Presentation-only reactions to combat events: floating damage and heal numbers, hit
 ## flashes, camera shake, wall-clank sparks, the Heavy Footfall shock ring, and the M2 ability
 ## effects (P03): the Sweeping Blow sector, the Thunder Roar ring, a rising ring for self buffs,
-## sparks for casts and projectile impacts, and status tints on actor rigs (Stone Skin, slow,
-## Mend, Titan Surge). Listens to Events; never changes gameplay state. Every effect respects
-## the comfort settings. Projectile meshes themselves belong to the ProjectileSystem.
+## sparks for casts and projectile impacts, a ground ring at a predicted landing point (kind
+## "aim_preview", which P07 emits during Boulder Hurl's windup), and status tints on actor rigs
+## (Stone Skin, slow, Mend, Titan Surge). Listens to Events; never changes gameplay state. Every
+## effect respects the comfort settings. Projectile meshes themselves belong to the
+## ProjectileSystem.
 
 const NUMBER_POOL := 24
 const NUMBER_LIFETIME := 0.9
 const SECTOR_LIFETIME := 0.35
 const ROAR_LIFETIME := 0.55
 const BUFF_LIFETIME := 0.6
+## The landing ring stays this long after the last aim_preview, so a sender that emits every
+## windup tick keeps it up and it disappears soon after the throw.
+const AIM_PREVIEW_HOLD := 0.2
 ## Status id -> rig tint (alpha = strength), in priority order: the first active one shows.
 const STATUS_TINTS := [
 	["status.titan_surge", Color(1.0, 0.55, 0.2, 0.30)],
@@ -39,6 +44,8 @@ var _buff: MeshInstance3D
 var _buff_age := 99.0
 var _buff_origin := Vector3.ZERO
 var _buff_height := 3.66
+var _aim: MeshInstance3D
+var _aim_age := 99.0
 
 
 func _ready() -> void:
@@ -87,6 +94,7 @@ func _ready() -> void:
 	add_child(_sector)
 	_roar = _make_ring(Color(0.70, 0.85, 1.0, 0.85), 0.92)
 	_buff = _make_ring(Color(1.0, 0.85, 0.40, 0.85), 0.85)
+	_aim = _make_ring(Color(1.0, 0.62, 0.25, 0.80), 0.86)
 	Events.hit_resolved.connect(_on_hit_resolved)
 	Events.attack_clanked.connect(_on_clank)
 	Events.area_pulse.connect(_on_area_pulse)
@@ -244,6 +252,31 @@ func _on_ability_effect(_tick: int, actor_id: String, _action_id: String, kind: 
 			_buff.visible = true
 		"cast":
 			_spark(center)
+		"aim_preview":
+			# A ground ring at the predicted landing point, `radius` wide (the splash; 1 m when
+			# 0). Each emit moves it and keeps it up for AIM_PREVIEW_HOLD.
+			var r := radius if radius > 0.0 else 1.0
+			_aim.global_position = center + Vector3.UP * 0.1
+			_aim.scale = Vector3(r, 1.0, r)
+			_aim_age = 0.0
+			_aim.visible = true
+
+
+## Whether the effect of an ability_effect `kind` ("sector", "roar", "self_buff",
+## "aim_preview"), or "pulse" (the Footfall ring), is showing now (tests, debug).
+func effect_visible(kind: String) -> bool:
+	match kind:
+		"sector":
+			return _sector.visible
+		"roar":
+			return _roar.visible
+		"self_buff":
+			return _buff.visible
+		"aim_preview":
+			return _aim.visible
+		"pulse":
+			return _ring.visible
+	return false
 
 
 func _on_projectile_impact(_tick: int, _projectile_id: int, point: Vector3, _hit_entity_id: String) -> void:
@@ -369,3 +402,7 @@ func _process_ability_effects(delta: float) -> void:
 		(_buff.material_override as StandardMaterial3D).albedo_color.a = 0.85 * (1.0 - t)
 		if _buff_age >= BUFF_LIFETIME:
 			_buff.visible = false
+	if _aim.visible:
+		_aim_age += delta
+		if _aim_age >= AIM_PREVIEW_HOLD:
+			_aim.visible = false
