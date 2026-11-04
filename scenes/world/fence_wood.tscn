@@ -1,0 +1,154 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="1_pco3b"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_e7sl1"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_b326h"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hyta4"]
+size = Vector3(8, 1.6, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ggfuq"]
+size = Vector3(8, 1.6, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nhvqg"]
+albedo_color = Color(0.36, 0.25, 0.15, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_hm0dg"]
+size = Vector3(0.22, 1.7, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_u85n2"]
+size = Vector3(0.22, 1.7, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_uabt4"]
+size = Vector3(0.22, 1.7, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lvwbs"]
+size = Vector3(0.22, 1.7, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7usft"]
+size = Vector3(0.22, 1.7, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8gwqb"]
+albedo_color = Color(0.55, 0.38, 0.22, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_p6uvo"]
+size = Vector3(8.2, 0.16, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_onmcr"]
+size = Vector3(8.2, 0.16, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ot5ax"]
+size = Vector3(0.22, 0.45, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_f87nn"]
+size = Vector3(0.22, 0.45, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4s5dx"]
+size = Vector3(0.22, 0.45, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rqdoi"]
+size = Vector3(0.22, 0.45, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hvgj7"]
+size = Vector3(0.22, 0.45, 0.22)
+
+[node name="FenceWood" type="StaticBody3D" unique_id=1080595563]
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("1_pco3b")
+world_id = "sandbox.fence_01"
+
+[node name="BlockShape" type="CollisionShape3D" parent="." unique_id=129918705]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("BoxShape3D_hyta4")
+
+[node name="CombatEntity" type="Node" parent="." unique_id=530264117]
+script = ExtResource("2_e7sl1")
+entity_id = "sandbox.fence_01"
+definition_id = "prop.fence_wood"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="." unique_id=541745723]
+
+[node name="Center" type="Marker3D" parent="Anchors" unique_id=341937744]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=996904055]
+
+[node name="Panel" type="Area3D" parent="Hurtboxes" unique_id=1882169367]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_b326h")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Panel" unique_id=1709694650]
+shape = SubResource("BoxShape3D_ggfuq")
+
+[node name="Intact" type="Node3D" parent="." unique_id=1842679886]
+
+[node name="Post0" type="MeshInstance3D" parent="Intact" unique_id=1651091863]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.85, 0)
+material_override = SubResource("StandardMaterial3D_nhvqg")
+mesh = SubResource("BoxMesh_hm0dg")
+
+[node name="Post1" type="MeshInstance3D" parent="Intact" unique_id=904994819]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.85, 0)
+material_override = SubResource("StandardMaterial3D_nhvqg")
+mesh = SubResource("BoxMesh_u85n2")
+
+[node name="Post2" type="MeshInstance3D" parent="Intact" unique_id=1924371965]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+material_override = SubResource("StandardMaterial3D_nhvqg")
+mesh = SubResource("BoxMesh_uabt4")
+
+[node name="Post3" type="MeshInstance3D" parent="Intact" unique_id=1236013135]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.85, 0)
+material_override = SubResource("StandardMaterial3D_nhvqg")
+mesh = SubResource("BoxMesh_lvwbs")
+
+[node name="Post4" type="MeshInstance3D" parent="Intact" unique_id=734642408]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.85, 0)
+material_override = SubResource("StandardMaterial3D_nhvqg")
+mesh = SubResource("BoxMesh_7usft")
+
+[node name="RailLow" type="MeshInstance3D" parent="Intact" unique_id=1805014507]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+material_override = SubResource("StandardMaterial3D_8gwqb")
+mesh = SubResource("BoxMesh_p6uvo")
+
+[node name="RailHigh" type="MeshInstance3D" parent="Intact" unique_id=691948067]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+material_override = SubResource("StandardMaterial3D_8gwqb")
+mesh = SubResource("BoxMesh_onmcr")
+
+[node name="Broken" type="Node3D" parent="." unique_id=832750098]
+visible = false
+
+[node name="Stump0" type="MeshInstance3D" parent="Broken" unique_id=709112817]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.22, 0)
+material_override = SubResource("StandardMaterial3D_nhvqg")
+mesh = SubResource("BoxMesh_ot5ax")
+
+[node name="Stump1" type="MeshInstance3D" parent="Broken" unique_id=1590068262]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.22, 0)
+material_override = SubResource("StandardMaterial3D_nhvqg")
+mesh = SubResource("BoxMesh_f87nn")
+
+[node name="Stump2" type="MeshInstance3D" parent="Broken" unique_id=37324509]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, 0)
+material_override = SubResource("StandardMaterial3D_nhvqg")
+mesh = SubResource("BoxMesh_4s5dx")
+
+[node name="Stump3" type="MeshInstance3D" parent="Broken" unique_id=1298234431]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.22, 0)
+material_override = SubResource("StandardMaterial3D_nhvqg")
+mesh = SubResource("BoxMesh_rqdoi")
+
+[node name="Stump4" type="MeshInstance3D" parent="Broken" unique_id=1345757693]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.22, 0)
+material_override = SubResource("StandardMaterial3D_nhvqg")
+mesh = SubResource("BoxMesh_hvgj7")

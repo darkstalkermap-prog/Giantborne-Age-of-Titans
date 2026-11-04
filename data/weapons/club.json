@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "weapon.club",
+	"type": "weapon",
+	"family": "club",
+	"display_name": "Oak Club",
+	"damage_multiplier": 1.0,
+	"length_m": 1.85,
+	"hit_radius_m": 0.45
+}

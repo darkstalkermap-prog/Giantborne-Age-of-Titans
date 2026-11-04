@@ -1,0 +1,9 @@
+# Godot 4 caches and local state
+.godot/
+*.tmp
+# Export output (build locally; see README)
+builds/
+# Editor / OS clutter
+.DS_Store
+Thumbs.db
+*.swp

@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "action.jump",
+	"type": "action",
+	"kind": "jump",
+	"display_name": "Jump",
+	"stamina_cost": 0,
+	"velocity_mps": 6.5
+}

@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "weapon.soldier_sword",
+	"type": "weapon",
+	"family": "sword",
+	"display_name": "Arming Sword",
+	"damage_multiplier": 1.0,
+	"length_m": 0.95,
+	"hit_radius_m": 0.22
+}

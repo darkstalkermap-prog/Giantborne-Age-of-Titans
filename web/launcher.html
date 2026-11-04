@@ -1,0 +1,467 @@
+<title>Giantborn: Age of Titans</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Alegreya+Sans+SC:wght@500&family=Grenze+Gotisch:wght@700;800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one centred column. The playable stage is the hero; the field notes sit below it
+   on a three-slab grid that stacks on phones. One dark world, committed on purpose. */
+:root {
+  --night: #101310;      /* page ground */
+  --slab: #1a1f1a;       /* panels */
+  --rim: #2c352c;        /* hairlines and keycap edges */
+  --bone: #ece5d3;       /* text */
+  --dim: #a7aa98;        /* secondary text */
+  --moss: #a6bd86;       /* accent: the arena floor */
+  --ember: #e3923f;      /* call to action: the fury bar */
+  --ember-ink: #1c1208;  /* text on ember */
+  --danger: #ef8f7d;
+  --display: "Grenze Gotisch", "Palatino Linotype", Georgia, serif;
+  --body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --smallcaps: "Alegreya Sans SC", "Alegreya Sans", "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+html, body { background: var(--night); color: var(--bone); }
+[hidden] { display: none !important; }
+body {
+  font-family: var(--body);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 1.75rem 3.5rem;
+}
+.wrap { max-width: 68rem; margin: 0 auto; display: grid; gap: 1.75rem; }
+
+.masthead { display: grid; gap: 0.5rem; }
+.eyebrow {
+  margin: 0; font-family: var(--smallcaps); font-size: 0.9rem; letter-spacing: 0.08em;
+  color: var(--moss);
+}
+h1 { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.9rem; text-wrap: balance; }
+h1 .name { font-family: var(--display); font-weight: 800; font-size: clamp(2.8rem, 7vw, 4.6rem); line-height: 0.95; letter-spacing: 0.01em; }
+h1 .sub { font-family: var(--smallcaps); font-weight: 500; font-size: clamp(1.1rem, 2.4vw, 1.45rem); letter-spacing: 0.12em; color: var(--dim); }
+.pitch { margin: 0; max-width: 62ch; color: var(--bone); }
+.pitch strong { color: var(--moss); font-weight: 700; }
+
+/* The stage: a poster until Play, then the game itself fills the whole page. */
+.stage {
+  position: relative; overflow: hidden; border-radius: 10px; background: #000;
+  aspect-ratio: 16 / 9; max-width: 100%; border: 1px solid var(--rim);
+}
+.poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(0.85) brightness(0.62); }
+.gate {
+  position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 0.9rem;
+  padding: 1.25rem; text-align: center;
+  background: radial-gradient(ellipse at center, rgba(16, 19, 16, 0.25), rgba(16, 19, 16, 0.78));
+}
+.gate.failed { background: rgba(16, 19, 16, 0.9); }
+.play {
+  font: 700 1.3rem/1 var(--body); letter-spacing: 0.02em; color: var(--ember-ink); background: var(--ember);
+  border: 0; border-radius: 999px; padding: 1rem 2.1rem; cursor: pointer;
+  box-shadow: 0 0 0 6px rgba(227, 146, 63, 0.18), 0 12px 30px rgba(0, 0, 0, 0.45);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.play:hover { transform: translateY(-1px); box-shadow: 0 0 0 9px rgba(227, 146, 63, 0.22), 0 14px 34px rgba(0, 0, 0, 0.5); }
+.play:focus-visible { outline: 3px solid var(--bone); outline-offset: 4px; }
+.gate-note { margin: 0; max-width: 44ch; font-size: 0.95rem; color: var(--bone); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+.meter { width: min(22rem, 80vw); height: 8px; border-radius: 999px; background: rgba(236, 229, 211, 0.15); overflow: hidden; }
+.meter-fill { height: 100%; width: 0%; background: var(--moss); transition: width 160ms linear; }
+.status { margin: 0; min-height: 1.5em; font-family: var(--mono); font-size: 0.85rem; color: var(--bone); font-variant-numeric: tabular-nums; }
+.status.error { color: var(--danger); font-family: var(--body); font-size: 1rem; max-width: 52ch; }
+.detail { width: min(40rem, 88vw); text-align: left; font-size: 0.88rem; color: var(--dim); }
+.detail summary { cursor: pointer; width: max-content; margin: 0 auto; }
+.detail summary:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+.detail pre {
+  margin: 0.5rem 0 0; max-height: 9rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere;
+  font-family: var(--mono); font-size: 0.78rem; color: var(--bone); background: rgba(16, 19, 16, 0.88);
+  border: 1px solid var(--rim); border-radius: 6px; padding: 0.6rem 0.7rem; user-select: text;
+}
+#game-canvas { display: block; width: 100%; height: 100%; outline: none; }
+.tools { position: absolute; z-index: 3; display: flex; gap: 0.5rem;
+  top: calc(0.75rem + env(safe-area-inset-top, 0px)); right: calc(0.75rem + env(safe-area-inset-right, 0px)); }
+.tools button, .sheet button {
+  font: 500 0.9rem/1 var(--body); color: var(--bone); background: rgba(16, 19, 16, 0.82);
+  border: 1px solid var(--rim); border-radius: 6px; padding: 0.55rem 0.8rem; cursor: pointer;
+}
+.tools button:hover, .sheet button:hover { border-color: var(--moss); }
+.tools button:focus-visible, .sheet button:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+
+body.playing { overflow: hidden; }
+body.playing .stage { position: fixed; inset: 0; z-index: 50; border-radius: 0; border: 0; aspect-ratio: auto; }
+
+/* Field notes */
+.notes { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1rem; }
+.slab { background: var(--slab); border: 1px solid var(--rim); border-radius: 10px; padding: 1.1rem 1.25rem 1.25rem; min-width: 0; }
+.slab h2 { margin: 0 0 0.7rem; font-family: var(--smallcaps); font-weight: 500; font-size: 1.05rem; letter-spacing: 0.1em; color: var(--moss); }
+.keys { width: 100%; border-collapse: collapse; font-size: 0.98rem; }
+.keys td { padding: 0.32rem 0; vertical-align: top; border-bottom: 1px solid var(--rim); }
+.keys tr:last-child td { border-bottom: 0; }
+.keys td:first-child { color: var(--dim); padding-right: 0.9rem; }
+.keys td:last-child { text-align: right; white-space: nowrap; }
+kbd {
+  font-family: var(--mono); font-size: 0.8rem; color: var(--bone); background: var(--night);
+  border: 1px solid var(--rim); border-bottom-width: 2px; border-radius: 4px; padding: 0.08rem 0.38rem;
+}
+.pad { margin: 0.85rem 0 0; font-size: 0.92rem; color: var(--dim); }
+.route { margin: 0; padding-left: 1.3rem; display: grid; gap: 0.45rem; }
+.route li::marker { color: var(--moss); font-family: var(--mono); font-size: 0.85rem; }
+.num { font-family: var(--mono); font-size: 0.9rem; color: var(--ember); font-variant-numeric: tabular-nums; }
+.about { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem 1.5rem; }
+.about h2 { grid-column: 1 / -1; margin-bottom: 0; }
+.about p { margin: 0; color: var(--dim); font-size: 0.95rem; }
+.about p b { color: var(--bone); font-weight: 500; }
+
+/* Controls sheet shown over the running game */
+.sheet { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(8, 10, 8, 0.72);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 1rem; }
+.sheet-card { width: min(34rem, 100%); max-height: 100%; overflow: auto; display: grid; gap: 0.8rem; }
+.sheet-card .row { display: flex; justify-content: flex-end; }
+
+@media (max-width: 760px) {
+  .notes, .about { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .play, .meter-fill { transition: none; }
+}
+</style>
+
+<main class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">Playable prototype &middot; milestone M1 combat sandbox &middot; build 0.1.0-m1</p>
+    <h1><span class="name">Giantborn</span><span class="sub">Age of Titans</span></h1>
+    <p class="pitch">You are a <strong>12-foot juvenile giant</strong> in a 120 &times; 120 m test arena. Break the
+      fence, learn your club on the practice dummy, then go north and fight the soldier who patrols there.</p>
+  </header>
+
+  <section class="stage" id="stage" aria-label="Game">
+    <img class="poster" id="poster" src="poster.jpg" alt="The giant standing in the sandbox arena, with the practice dummy ahead and a wooden fence to the right">
+    <canvas id="game-canvas" tabindex="0" hidden></canvas>
+    <div class="gate" id="gate">
+      <button class="play" id="play" type="button">Play in browser</button>
+      <p class="gate-note" id="gate-note">About 12 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
+      <div class="meter" id="meter" hidden><div class="meter-fill" id="meter-fill"></div></div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <details class="detail" id="detail" hidden><summary>Technical details</summary><pre id="detail-text"></pre></details>
+    </div>
+    <div class="tools" id="tools" hidden>
+      <button type="button" id="show-controls">Controls</button>
+      <button type="button" id="fullscreen">Fullscreen</button>
+    </div>
+  </section>
+
+  <section class="notes" aria-label="How to play">
+    <div class="slab" id="controls-slab">
+      <h2>Controls</h2>
+      <table class="keys">
+        <tbody>
+          <tr><td>Move / look</td><td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> + mouse</td></tr>
+          <tr><td>Light attack, three-hit chain</td><td><kbd>Left click</kbd></td></tr>
+          <tr><td>Heavy attack</td><td><kbd>Shift</kbd> + <kbd>Left click</kbd></td></tr>
+          <tr><td>Block; tap just before a hit to parry</td><td><kbd>Right click</kbd></td></tr>
+          <tr><td>Dodge / jump</td><td><kbd>Space</kbd> / <kbd>F</kbd></td></tr>
+          <tr><td>Sprint</td><td>hold <kbd>Shift</kbd></td></tr>
+          <tr><td>Lock target / switch target</td><td><kbd>Tab</kbd> / wheel</td></tr>
+          <tr><td>Third / first person</td><td><kbd>V</kbd></td></tr>
+          <tr><td>Heavy Footfall (ability slot 1)</td><td><kbd>1</kbd></td></tr>
+          <tr><td>Pause, settings, rebind keys</td><td><kbd>Esc</kbd></td></tr>
+          <tr><td>Controls in the game</td><td><kbd>H</kbd></td></tr>
+        </tbody>
+      </table>
+      <p class="pad">Gamepad: sticks move and look, RB light, RT heavy, LB block, B dodge, A jump, LT&nbsp;+&nbsp;A Heavy Footfall, Start pauses.</p>
+    </div>
+
+    <div class="slab">
+      <h2>What to try</h2>
+      <ol class="route">
+        <li>Hit the dummy ahead (armor 25). A light attack shows <span class="num">37</span>, a heavy <span class="num">66</span>, and three lights in a row chain to <span class="num">37 40 46</span>.</li>
+        <li>Stand next to it and press <kbd>1</kbd> for Heavy Footfall: a shock ring, <span class="num">44</span> damage and an 8&nbsp;s cooldown.</li>
+        <li>Press <kbd>V</kbd> for first person and swing while looking down.</li>
+        <li>Swing at the wall in the lane to your left: the dummy behind it must take nothing.</li>
+        <li>Break the fence on your right for <span class="num">+1</span> Wood Scrap.</li>
+        <li>Walk north, lock onto the soldier with <kbd>Tab</kbd>, block its sword, parry by tapping block just before it lands, and dodge through a swing.</li>
+        <li>Between strikes it raises its guard. Circle to its side or break the guard with heavy attacks.</li>
+        <li>Walk through the doorway, under the low arch and up the ramp in both camera modes.</li>
+      </ol>
+    </div>
+
+    <div class="slab about">
+      <h2>About this build</h2>
+      <p><b>What it is.</b> The first playable milestone of Giantborn: Age of Titans, built with Godot 4.6.3: one arena, one giant at stage 1 of 10, one enemy, a dummy and a breakable fence.</p>
+      <p><b>What it is not yet.</b> The art is placeholder boxes and there is no sound. Growth stages, grabs, more abilities and the valley come in later milestones.</p>
+      <p><b>If something goes wrong.</b> Esc opens the pause menu, where Restart sandbox resets everything. Settings are saved in this browser. Note what you did, what you expected and what happened.</p>
+    </div>
+  </section>
+</main>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="slab sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="row"><button type="button" id="close-sheet">Back to the game</button></div>
+    <div id="sheet-body"></div>
+  </div>
+</div>
+
+<script src="index.js"></script>
+<script>
+(function () {
+  // Byte counts of the current export (raw and packed as .txt), used for the progress bar.
+  const BUILD = { wasm: 37700666, pck: 370508, wasmPacked: 12528700, pckPacked: 321704 }; // set by tools/build_web.sh
+
+  const stage = document.getElementById('stage');
+  const poster = document.getElementById('poster');
+  const canvas = document.getElementById('game-canvas');
+  const gate = document.getElementById('gate');
+  const play = document.getElementById('play');
+  const gateNote = document.getElementById('gate-note');
+  const meter = document.getElementById('meter');
+  const meterFill = document.getElementById('meter-fill');
+  const statusEl = document.getElementById('status');
+  const tools = document.getElementById('tools');
+  const sheet = document.getElementById('sheet');
+  const detail = document.getElementById('detail');
+  const detailText = document.getElementById('detail-text');
+  const fullscreenButton = document.getElementById('fullscreen');
+
+  // The last few engine errors and blocked loads, shown under a failure so it can be reported.
+  const log = [];
+  function remember(line) {
+    log.push(String(line));
+    if (log.length > 12) log.shift();
+  }
+  document.addEventListener('securitypolicyviolation', function (e) {
+    remember('Blocked by the page host: ' + e.violatedDirective + ' ' + (e.blockedURI || ''));
+  });
+
+  function setStatus(text, isError) {
+    statusEl.textContent = text;
+    statusEl.classList.toggle('error', !!isError);
+  }
+  function setMeter(fraction) {
+    meterFill.style.width = Math.round(Math.max(0, Math.min(1, fraction)) * 100) + '%';
+  }
+  function mb(bytes) { return (bytes / 1048576).toFixed(1); }
+
+  if (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+    gateNote.textContent = 'This prototype needs a keyboard and mouse or a gamepad. Open this link on a computer to play.';
+  }
+
+  // The page host serves text files up to 16 MB but no archives or large binaries, and the
+  // engine is 36 MB. So the build ships index.wasm and index.pck gzipped and base64-encoded as
+  // .txt files: download them here with progress, unpack them in the browser, and hand Godot
+  // ordinary responses.
+  const PACKED = {
+    'index.wasm': { url: 'index.wasm.gz.b64.txt', type: 'application/wasm' },
+    'index.pck': { url: 'index.pck.gz.b64.txt', type: 'application/octet-stream' },
+  };
+  const packedTotal = BUILD.wasmPacked + BUILD.pckPacked;
+  let packedReceived = 0;
+  const realFetch = window.fetch.bind(window);
+
+  function decodeBase64(text) {
+    if (typeof Uint8Array.fromBase64 === 'function') return Uint8Array.fromBase64(text);
+    const binary = atob(text);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  async function fetchPacked(entry) {
+    const res = await realFetch(entry.url);
+    if (!res.ok) {
+      throw new Error('The game files could not be downloaded (HTTP ' + res.status + ').');
+    }
+    const reader = res.body.getReader();
+    const chunks = [];
+    for (;;) {
+      const step = await reader.read();
+      if (step.done) break;
+      chunks.push(step.value);
+      packedReceived += step.value.length;
+      setMeter(0.85 * Math.min(1, packedReceived / packedTotal));
+      setStatus('Downloading the game ' + mb(Math.min(packedReceived, packedTotal)) + ' / ' + mb(packedTotal) + ' MB');
+    }
+    const text = (await new Blob(chunks).text()).replace(/[^A-Za-z0-9+/=]/g, '');
+    const gz = decodeBase64(text);
+    if (gz.length < 2 || gz[0] !== 0x1f || gz[1] !== 0x8b) {
+      throw new Error('The game files arrived damaged.');
+    }
+    if (!('DecompressionStream' in window)) {
+      throw new Error('This browser cannot unpack the game. Use a current Chrome, Edge, Firefox or Safari.');
+    }
+    if (packedReceived >= packedTotal) setStatus('Unpacking and starting the game');
+    const body = new Blob([gz]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return new Response(body, { status: 200, headers: { 'Content-Type': entry.type } });
+  }
+
+  window.fetch = function (input, init) {
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    const match = /(?:^|\/)(index\.(?:wasm|pck))(?:\?|$)/.exec(url);
+    return match ? fetchPacked(PACKED[match[1]]) : realFetch(input, init);
+  };
+
+  // The smallest valid WebAssembly module: if this does not compile, the engine cannot either.
+  function wasmProblem() {
+    if (typeof WebAssembly !== 'object') return 'WebAssembly is not available in this browser.';
+    try {
+      new WebAssembly.Module(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
+      return '';
+    } catch (e) {
+      return (e && e.message) || String(e);
+    }
+  }
+
+  // Once the engine has begun loading it cannot be started twice in one page, so a retry reloads.
+  let attempted = false;
+  let running = false;
+  function fail(message, retryLabel) {
+    running = false;
+    document.body.classList.remove('playing');
+    canvas.hidden = true;
+    meter.hidden = true;
+    tools.hidden = true;
+    poster.hidden = false;
+    gate.hidden = false;
+    setStatus(message, true);
+    gate.classList.add('failed');
+    gateNote.hidden = true;
+    if (log.length) {
+      detailText.textContent = log.join('\n');
+      detail.hidden = false;
+    }
+    play.hidden = !retryLabel;
+    if (retryLabel) play.textContent = retryLabel;
+  }
+
+  async function start() {
+    if (running) return;
+    if (attempted) {
+      location.reload();
+      return;
+    }
+    if (typeof Engine === 'undefined') {
+      fail('The game files did not load. Check your connection, then reload the page.');
+      return;
+    }
+    const missing = Engine.getMissingFeatures({ threads: false });
+    if (missing.length !== 0) {
+      fail('This browser cannot run the game: ' + missing.join('; ') + '. Use a current Chrome, Edge, Firefox or Safari on a computer.');
+      return;
+    }
+    const problem = wasmProblem();
+    if (problem) {
+      remember(problem);
+      fail('This page is not allowed to run WebAssembly, which the game engine needs. Copy the technical details below and send them to whoever shared the link.');
+      return;
+    }
+    attempted = true;
+    running = true;
+    play.hidden = true;
+    detail.hidden = true;
+    meter.hidden = false;
+    setMeter(0);
+    setStatus('Starting the download');
+    document.body.classList.add('playing');
+    canvas.hidden = false;
+    const engine = new Engine({
+      canvas: canvas,
+      executable: 'index',
+      args: [],
+      canvasResizePolicy: 2,
+      focusCanvas: true,
+      ensureCrossOriginIsolationHeaders: false,
+      experimentalVK: false,
+      gdextensionLibs: [],
+      emscriptenPoolSize: 8,
+      godotPoolSize: 4,
+      fileSizes: { 'index.pck': BUILD.pck, 'index.wasm': BUILD.wasm },
+      onPrintError: function () {
+        const line = Array.prototype.join.call(arguments, ' ');
+        remember(line);
+        console.error(line);
+      },
+      onExit: function (code) {
+        // Only report an exit from a running game; a failed start reports its own reason.
+        if (gate.hidden) fail('The game stopped' + (code ? ' (exit code ' + code + ')' : '') + '.', 'Reload and play again');
+      },
+    });
+    try {
+      await engine.startGame({
+        onProgress: function (current, total) {
+          if (current > 0 && total > 0 && current < total) {
+            setMeter(0.85 + 0.15 * current / total);
+          }
+        },
+      });
+      gate.hidden = true;
+      poster.hidden = true;
+      tools.hidden = !!document.pointerLockElement;
+      canvas.focus();
+    } catch (err) {
+      remember((err && err.stack) || err);
+      fail('The game could not start: ' + (err && err.message ? err.message : String(err)), 'Reload and try again');
+    }
+  }
+  play.addEventListener('click', start);
+
+  // When this page is republished while someone is playing, the viewer reloads it at a quiet
+  // moment. Remember that a game was running and go straight back into it.
+  const hot = window.claude && window.claude.hot;
+  try {
+    if (hot && typeof hot.snapshot === 'function') {
+      hot.snapshot(function () { return { playing: running }; });
+    }
+  } catch (e) { /* this viewer keeps no state across updates */ }
+  function resume(data) {
+    if (data && data.playing) start();
+  }
+  try {
+    if (hot && typeof hot.ready === 'function') hot.ready(resume);
+    else resume(hot && hot.data);
+  } catch (e) { /* the Play button still works */ }
+
+  // The corner buttons stay out of the way while the game has the mouse.
+  document.addEventListener('pointerlockchange', function () {
+    if (!gate.hidden) return;
+    tools.hidden = !!document.pointerLockElement;
+  });
+
+  // Fullscreen is optional: hide the button where the browser or frame does not offer it.
+  fullscreenButton.hidden = !(document.fullscreenEnabled && stage.requestFullscreen);
+  fullscreenButton.addEventListener('click', function () {
+    const done = function () { canvas.focus(); };
+    if (document.fullscreenElement) {
+      document.exitFullscreen().then(done, done);
+    } else {
+      stage.requestFullscreen().then(done, function () {
+        fullscreenButton.hidden = true;
+        done();
+      });
+    }
+  });
+  document.addEventListener('fullscreenchange', function () {
+    fullscreenButton.textContent = document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen';
+  });
+
+  const sheetBody = document.getElementById('sheet-body');
+  document.getElementById('show-controls').addEventListener('click', function () {
+    if (!sheetBody.firstChild) {
+      const copy = document.getElementById('controls-slab').cloneNode(true);
+      copy.removeAttribute('id');
+      const title = copy.querySelector('h2');
+      if (title) title.id = 'sheet-title';
+      sheetBody.appendChild(copy);
+    }
+    sheet.hidden = false;
+    document.getElementById('close-sheet').focus();
+  });
+  function closeSheet() {
+    sheet.hidden = true;
+    canvas.focus();
+  }
+  document.getElementById('close-sheet').addEventListener('click', closeSheet);
+  sheet.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeSheet();
+  });
+})();
+</script>

@@ -1,0 +1,7 @@
+{
+	"schema_version": 1,
+	"id": "ancestry.neutral",
+	"type": "ancestry",
+	"display_name": "Unaligned",
+	"description": "Neutral placeholder ancestry. Grants no modifiers in the prototype."
+}
