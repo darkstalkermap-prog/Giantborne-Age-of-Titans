@@ -16,6 +16,12 @@ var immunity_s := 1.5
 var locked := false            ## true while the owner is staggered
 var immunity_left := 0.0
 var since_damage := 999.0
+## Poise damage taken during the owner's own attack RECOVERY phase is multiplied by this
+## (ogre and boss 3.5: the "recovery punish"). Applied by CombatEntity.
+var recovery_mult := 1.0
+## Stagger length when the attacker is at least twice the owner's height (< 0 = stagger_s), so
+## a grab after a heavy lands reliably. Chosen by CombatEntity via stagger_duration().
+var stagger_vs_larger_s := -1.0
 
 
 func configure(cfg: Dictionary, constitution := 10.0) -> void:
@@ -24,7 +30,26 @@ func configure(cfg: Dictionary, constitution := 10.0) -> void:
 	recover_delay_s = float(cfg.get("recover_delay_s", recover_delay_s))
 	stagger_s = float(cfg.get("stagger_s", stagger_s))
 	immunity_s = float(cfg.get("immunity_s", immunity_s))
+	recovery_mult = float(cfg.get("recovery_mult", recovery_mult))
+	stagger_vs_larger_s = float(cfg.get("stagger_vs_larger_s", stagger_vs_larger_s))
 	value = 0.0
+
+
+## Like configure() for a live meter (attribute changes): the accumulated value, the stagger
+## lock and the immunity timer are kept unless keep_value is false.
+func reconfigure(cfg: Dictionary, constitution: float, keep_value: bool = true) -> void:
+	var kept := value
+	configure(cfg, constitution)
+	if keep_value:
+		value = kept
+
+
+## The stagger a poise break causes: stagger_vs_larger_s when the attacker is at least twice
+## the owner's height and that value is set, otherwise stagger_s.
+func stagger_duration(attacker_is_twice_as_tall: bool) -> float:
+	if attacker_is_twice_as_tall and stagger_vs_larger_s >= 0.0:
+		return stagger_vs_larger_s
+	return stagger_s
 
 
 func is_immune() -> bool:

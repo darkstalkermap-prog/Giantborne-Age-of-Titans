@@ -3,8 +3,9 @@ extends RefCounted
 ## Pure hit resolution (spec sections 6 and 7).
 ##
 ## Order: dead target -> dodge invulnerability -> raw damage -> critical (x1.5 when eligible)
-## -> weak point (x1.25) -> typed mitigation (armor for physical, resistance for elemental;
-## armor never reduces elemental damage) -> parry / block / guard break -> round once.
+## -> weak point (x1.25) -> typed mitigation (armor_total for physical, resistance for elemental;
+## armor never reduces elemental damage) -> x damage_taken_mult (statuses) -> parry / block /
+## guard break -> round once.
 ## Nothing here mutates state; CombatEntity applies the returned HitResult.
 
 const EPSILON := 1e-6
@@ -36,10 +37,17 @@ static func mitigate(hit: HitEvent, defender: Combatant) -> Dictionary:
 			continue
 		all_immune = false
 		if t == "physical":
-			var armor := CombatRules.effective_armor(defender.armor, hit.flat_penetration)
+			# armor_total = base armor + status armor (Stone Skin); base armor is never mutated.
+			var armor := CombatRules.effective_armor(defender.armor_total(), hit.flat_penetration)
 			physical += CombatRules.physical_after_armor(portion, armor)
 		else:
 			elemental += CombatRules.elemental_after_resistance(portion, defender.resistance(t))
+	# Status damage-taken multipliers (barrier, bot assist, debug invulnerability) scale both typed
+	# portions before blocking and rounding. Exactly 1.0 without statuses (pinned numbers hold).
+	var taken := defender.damage_taken_mult()
+	if taken != 1.0:
+		physical *= taken
+		elemental *= taken
 	var tag_immune := false
 	for tag in hit.tags:
 		if defender.is_immune_to(tag):

@@ -11,6 +11,9 @@ extends Node
 ##     modifier is held those buttons do nothing else (LT+B never dodges, LT+Up never switches
 ##     camera, LT+RT never heavy attacks). All of it is remappable like any other binding.
 ## Tests and the autopilot drive the same path through the inject_* methods.
+## Debug builds only: F6 / F7 / F8 produce the edges debug_grow / debug_shrink / debug_xp
+## (PlayerGrowth and PlayerProgression consume them). "inventory" and "debug_checkpoint" get no
+## edge here: ScreenStack and main.gd read those actions themselves.
 
 enum Context { GAMEPLAY, MENU, TEXT }
 
@@ -26,6 +29,9 @@ const FLICK_MAX_TICKS := 6
 ## reaching FLICK_ON. First-person lock switches targets only on taps, because there the stick
 ## also looks around: a fast push that is then held is looking, not switching.
 const TAP_RETURN_TICKS := 15
+## Debug-build-only input actions -> router edges.
+const DEBUG_EDGES := {"debug_grow": &"debug_grow", "debug_shrink": &"debug_shrink",
+	"debug_xp": &"debug_xp"}
 
 var _edges: Array[StringName] = []
 var _look_delta := Vector2.ZERO
@@ -119,6 +125,11 @@ func _route(event: InputEvent, pad: bool) -> void:
 		if _edge(event, action_name) == 1:
 			_edges.append(simple[action_name])
 			handled = true
+	if OS.is_debug_build():
+		for action_name: String in DEBUG_EDGES:
+			if _edge(event, action_name) == 1:
+				_edges.append(DEBUG_EDGES[action_name])
+				handled = true
 	# Controller bindings of abilities and the ultimate are combos (handled above, only with the
 	# modifier held); here only keyboard/mouse bindings fire them directly.
 	if not pad:

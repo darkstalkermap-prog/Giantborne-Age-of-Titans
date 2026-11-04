@@ -1,10 +1,24 @@
 class_name TargetingRules
 extends RefCounted
-## Pure lock-on math (spec section 5).
+## Pure lock-on math (spec section 5) and the player's targeting eligibility.
 
 const W_ALIGNMENT := 0.55
 const W_PROXIMITY := 0.30
 const W_THREAT := 0.15
+
+
+## May the player lock, soft-target or hit with an area effect this entity (decision 17)?
+## True for team ENEMY and for team NEUTRAL without a faction (dummies, props); false for the
+## player's own team and for NEUTRAL faction members (villagers, neutral guards).
+static func player_may_target(e: CombatEntity) -> bool:
+	if e == null or not is_instance_valid(e):
+		return false
+	match e.team:
+		CombatEntity.Team.ENEMY:
+			return true
+		CombatEntity.Team.NEUTRAL:
+			return e.faction == ""
+	return false
 
 
 ## Q = 0.55 * alignment + 0.30 * proximity + 0.15 * threat, each term in 0..1.
