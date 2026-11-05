@@ -24,9 +24,9 @@ extends Node
 ##   * fights what engages it on the way: a light at an enemy in its path within reach, Footfall
 ##     when three or more enemies stand within its radius, and when it is stuck behind an enemy
 ##     it swings at it (otherwise it sidesteps);
-##   * when every breakable of the lap is broken (or skipped) it calls reset_breakables() and
-##     starts the next lap, so debris keeps flowing for the whole 300 s run (the pool saturates at
-##     40 pieces).
+##   * when every breakable of the lap is broken (or skipped) it brings the broken ones back (one per
+##     tick, so the reset itself never makes a slow tick) and starts the next lap, so debris keeps
+##     flowing for the whole 300 s run (the pool saturates at 40 pieces).
 ## result() reports the run (laps, breaks, respawns, active combatants, debris, deaths, the bot's
 ## inputs) with check_failures(): the scenario's own checks (the player never died, debris at
 ## most 40, at least 10 active combatants on average, and from 60 s every breakable broken at
@@ -56,6 +56,8 @@ const FOOTFALL_SLOT := 1
 const GROW_RETRY_TICKS := 30
 ## At most one swing at an enemy in its path per this many ticks.
 const SWING_GAP_TICKS := 60
+## A breakable whose spot stays occupied is put back anyway after the bot waited this long for it.
+const RESET_WAIT_TICKS := 300
 ## No progress over this many ticks while walking counts as stuck.
 const STUCK_TICKS := 30
 const STUCK_MOVE_M := 0.3
@@ -99,6 +101,8 @@ var _strafe_sign := 1.0
 var _light_damage := INF      # smallest light damage seen on a breakable (not a killing blow)
 var _last_swing_tick := -1000000
 var _last_grow_tick := -1000000
+var _reset_queue: Array = []  # Prop: broken breakables the bot brings back, one per tick
+var _reset_wait := 0          # ticks the bot has waited with nothing to break but queued resets
 var _rng := RandomNumberGenerator.new()
 
 
@@ -309,37 +313,55 @@ func _on_hit_resolved(_tick: int, r: HitResult) -> void:
 ## Replaces every broken breakable with a fresh copy at its place (world id "<original>.r<n>").
 ## One with a living actor standing on its spot waits for a later reset. Returns how many came back.
 func reset_breakables() -> int:
-	var parent := _arena().get_node_or_null("Breakables")
-	if parent == null:
-		return 0
 	var n := 0
 	for p: Prop in _props:
-		if p.node != null and is_instance_valid(p.node) and not p.node.destroyed:
-			continue
-		if _occupied(p.xform.origin):
-			continue
-		var packed := _scene(p.scene)
-		if packed == null:
-			continue
-		var fresh := packed.instantiate() as BreakableProp
-		if fresh == null:
-			continue
-		var old := p.node
-		p.generation += 1
-		fresh.world_id = "%s.r%d" % [p.base_id, p.generation]
-		fresh.transform = p.xform
-		fresh.set_meta("stop", p.stop)
-		fresh.set_meta("order", p.order)
-		if old != null and is_instance_valid(old):
-			fresh.loot_table = old.loot_table
-			parent.remove_child(old)
-			old.queue_free()
-		fresh.name = fresh.world_id.validate_node_name()
-		parent.add_child(fresh)
-		p.node = fresh
-		p.skipped_lap = -1
-		n += 1
+		if _is_broken(p) and _reset(p):
+			n += 1
 	return n
+
+
+func _is_broken(p: Prop) -> bool:
+	return p.node == null or not is_instance_valid(p.node) or p.node.destroyed
+
+
+## Puts a fresh copy in the place of broken `p` (false when its spot is occupied, unless `force`,
+## or when it cannot).
+func _reset(p: Prop, force := false) -> bool:
+	var parent := _arena().get_node_or_null("Breakables")
+	if parent == null or (not force and _occupied(p.xform.origin)):
+		return false
+	var packed := _scene(p.scene)
+	if packed == null:
+		return false
+	var fresh := packed.instantiate() as BreakableProp
+	if fresh == null:
+		return false
+	var old := p.node
+	p.generation += 1
+	fresh.world_id = "%s.r%d" % [p.base_id, p.generation]
+	fresh.transform = p.xform
+	fresh.set_meta("stop", p.stop)
+	fresh.set_meta("order", p.order)
+	if old != null and is_instance_valid(old):
+		fresh.loot_table = old.loot_table
+		parent.remove_child(old)
+		old.queue_free()
+	fresh.name = fresh.world_id.validate_node_name()
+	parent.add_child(fresh)
+	p.node = fresh
+	p.skipped_lap = -1
+	return true
+
+
+## The bot's lap reset, spread out: one queued breakable per tick. An occupied spot is retried,
+## and filled anyway once the bot has waited RESET_WAIT_TICKS for it with nothing else to break.
+func _reset_one() -> void:
+	if _reset_queue.is_empty():
+		_reset_wait = 0
+		return
+	var p: Prop = _reset_queue.pop_front()
+	if _is_broken(p) and not _reset(p, _reset_wait >= RESET_WAIT_TICKS):
+		_reset_queue.append(p)
 
 
 func _occupied(pos: Vector3) -> bool:
@@ -366,6 +388,7 @@ func _physics_process(_delta: float) -> void:
 			respawns += 1
 	if not bot_active:
 		return
+	_reset_one()
 	bot_ticks += 1
 	var active := active_count()
 	_active_sum += float(active)
@@ -440,13 +463,16 @@ func _bot_step() -> void:
 		return
 	var target := _current_target()
 	if target == null:
-		laps += 1
-		lap_seconds.append(snappedf(float(bot_ticks) / float(Sim.TICK_RATE), 0.01))
-		reset_breakables()
-		target = _current_target()
-		if target == null:
-			r.set_injected_move(Vector2.ZERO)
-			return
+		r.set_injected_move(Vector2.ZERO)
+		_reset_wait += 1
+		if _reset_queue.is_empty():
+			# The lap is done: bring the broken breakables back (one per tick) and start the next.
+			laps += 1
+			lap_seconds.append(snappedf(float(bot_ticks) / float(Sim.TICK_RATE), 0.01))
+			for p: Prop in _props:
+				if _is_broken(p):
+					_reset_queue.append(p)
+		return
 	if target != _target:
 		_target = target
 		_target_since = bot_ticks

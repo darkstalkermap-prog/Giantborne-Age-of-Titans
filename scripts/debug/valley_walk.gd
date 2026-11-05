@@ -166,7 +166,9 @@ func _layers() -> int:
 func _wait_for_navigation() -> void:
 	player.router.set_injected_move(Vector2.ZERO)
 	var map := level.nav_map()
-	var ready := NavigationServer3D.map_get_iteration_id(map) > 0
+	# The probe leaves its first ticks out (start-up): the LOD comparison starts after them.
+	var ready := NavigationServer3D.map_get_iteration_id(map) > 0 \
+		and (probe == null or probe.ticks_seen > probe.warmup_ticks)
 	if ready:
 		var first := _leg_target(0)
 		var path := NavigationServer3D.map_get_path(map, player.global_position, first, true, _layers())
