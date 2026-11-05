@@ -567,8 +567,9 @@ func _p04_ready() -> void:
 
 ## AI level of detail (plan §2.7.3; the EncounterDirector sets it by distance, P10a): 0 full
 ## rate; 1 perception 1 Hz, decisions 2 Hz, a re-path at most once per second and only after
-## a path failure; 2 dormant: process_mode DISABLED (Sim skips it), Visual/Body hidden and
-## Visual/LodProxy shown. May be called before the actor is ready.
+## a path failure; 2 dormant: process_mode DISABLED (Sim skips it; the body and hurtboxes
+## leave physics), its attack tokens released, Visual/Body hidden and Visual/LodProxy shown.
+## May be called before the actor is ready.
 func set_lod_tier(tier: int) -> void:
 	tier = clampi(tier, 0, 2)
 	if not is_node_ready():
@@ -582,6 +583,13 @@ func set_lod_tier(tier: int) -> void:
 	decision_interval = maxi(_base_decision_interval, TIER1_DECISION_INTERVAL) if tier == 1 \
 		else _base_decision_interval
 	_phase_offset = absi(hash(entity.entity_id)) % perception_interval
+	if tier == 2:
+		# A dormant actor gives its attack tokens back: it would otherwise hold one of the
+		# target's two slots for as long as it sleeps.
+		Sim.release_all_tokens(entity.entity_id)
+		brain.holds_token = false
+	# DISABLED also takes the body and its hurtboxes out of physics (CollisionObject3D
+	# disable_mode REMOVE) until the tier drops again.
 	process_mode = Node.PROCESS_MODE_DISABLED if tier == 2 else _base_process_mode
 	if _lod_body != null:
 		_lod_body.visible = tier != 2

@@ -109,6 +109,9 @@ func test_tier_2_is_dormant_and_shows_the_proxy() -> void:
 	await step_ticks(30)
 	assert_eq(s.brain.now, brain_tick, "Sim skips a dormant actor: its brain does not run")
 	assert_true(s.global_position.distance_to(at) < 0.01, "and it does not move")
+	var hurtbox := s.get_node("Hurtboxes/Torso") as Area3D
+	assert_false(PhysicsServer3D.body_get_space(s.get_rid()).is_valid(), "its body has left physics")
+	assert_false(PhysicsServer3D.area_get_space(hurtbox.get_rid()).is_valid(), "and so have its hurtboxes")
 	for e: EnemyActor in [s, w]:
 		e.set_lod_tier(0)
 		assert_true(e.can_process(), "%s: back to tier 0, processing again" % e.entity_id)
@@ -116,6 +119,20 @@ func test_tier_2_is_dormant_and_shows_the_proxy() -> void:
 		assert_false((e.get_node("Visual/LodProxy") as Node3D).visible, "%s: proxy hidden" % e.entity_id)
 	await step_ticks(12)
 	assert_true(s.brain.now > brain_tick, "the brain runs again")
+	assert_true(PhysicsServer3D.body_get_space(s.get_rid()).is_valid(), "the body is back in physics")
+	assert_true(PhysicsServer3D.area_get_space(hurtbox.get_rid()).is_valid(), "and its hurtboxes too")
+
+
+func test_going_dormant_gives_the_attack_token_back() -> void:
+	var s := spawn_soldier(Vector3(0, 0.05, -4), PI, "test.sleeper")
+	await step_ticks(1)
+	s.brain.target_id = "player"
+	assert_true(s._request_token(), "it takes one of the giant's tokens")
+	s.brain.holds_token = true
+	assert_true(Sim.token_holders("player").has("test.sleeper"), "holder")
+	s.set_lod_tier(2)
+	assert_false(Sim.token_holders("player").has("test.sleeper"), "a dormant actor holds no token")
+	assert_false(s.brain.holds_token, "and its brain knows it")
 
 
 func test_tier_set_before_ready_applies_on_ready() -> void:
