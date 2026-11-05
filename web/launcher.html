@@ -129,10 +129,11 @@ kbd {
 
 <main class="wrap">
   <header class="masthead">
-    <p class="eyebrow">Playable prototype &middot; milestone M1 combat sandbox &middot; build 0.1.0-m1</p>
+    <p class="eyebrow">Playable prototype &middot; work in progress toward the Valley &middot; build 0.2.0-m3</p>
     <h1><span class="name">Giantborn</span><span class="sub">Age of Titans</span></h1>
-    <p class="pitch">You are a <strong>12-foot juvenile giant</strong> in a 120 &times; 120 m test arena. Break the
-      fence, learn your club on the practice dummy, then go north and fight the soldier who patrols there.</p>
+    <p class="pitch">You are a <strong>12-foot juvenile giant</strong> in a 120 &times; 120 m test arena. Choose
+      Sandbox on the title screen, try seven new abilities on soldiers and a wolf pack, then grow at the shrine
+      to 18 and 26 feet and feel how the fight changes.</p>
   </header>
 
   <section class="stage" id="stage" aria-label="Game">
@@ -164,32 +165,35 @@ kbd {
           <tr><td>Sprint</td><td>hold <kbd>Shift</kbd></td></tr>
           <tr><td>Lock target / switch target</td><td><kbd>Tab</kbd> / wheel</td></tr>
           <tr><td>Third / first person</td><td><kbd>V</kbd></td></tr>
-          <tr><td>Heavy Footfall (ability slot 1)</td><td><kbd>1</kbd></td></tr>
+          <tr><td>Heavy Footfall, Sweeping Blow, Stone Skin</td><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td></tr>
+          <tr><td>Runic Bolt, Ancestral Mend, Thunder Roar</td><td><kbd>6</kbd> <kbd>7</kbd> <kbd>8</kbd></td></tr>
+          <tr><td>Titan Surge, when fury is full</td><td><kbd>R</kbd></td></tr>
+          <tr><td>Use the shrine</td><td><kbd>E</kbd></td></tr>
           <tr><td>Pause, settings, rebind keys</td><td><kbd>Esc</kbd></td></tr>
           <tr><td>Controls in the game</td><td><kbd>H</kbd></td></tr>
         </tbody>
       </table>
-      <p class="pad">Gamepad: sticks move and look, RB light, RT heavy, LB block, B dodge, A jump, LT&nbsp;+&nbsp;A Heavy Footfall, Start pauses.</p>
+      <p class="pad">Gamepad: sticks move and look, RB light, RT heavy, LB block, B dodge, A jump, X use. Abilities are LT&nbsp;+&nbsp;A/B/X/Y and LT&nbsp;+&nbsp;d-pad, Titan Surge is LT&nbsp;+&nbsp;RT, and Start pauses.</p>
     </div>
 
     <div class="slab">
       <h2>What to try</h2>
       <ol class="route">
+        <li>On the title screen choose <b>Sandbox</b>. New Game unlocks once the Valley is built.</li>
         <li>Hit the dummy ahead (armor 25). A light attack shows <span class="num">37</span>, a heavy <span class="num">66</span>, and three lights in a row chain to <span class="num">37 40 46</span>.</li>
-        <li>Stand next to it and press <kbd>1</kbd> for Heavy Footfall: a shock ring, <span class="num">44</span> damage and an 8&nbsp;s cooldown.</li>
-        <li>Press <kbd>V</kbd> for first person and swing while looking down.</li>
-        <li>Swing at the wall in the lane to your left: the dummy behind it must take nothing.</li>
-        <li>Break the fence on your right for <span class="num">+1</span> Wood Scrap.</li>
-        <li>Walk north, lock onto the soldier with <kbd>Tab</kbd>, block its sword, parry by tapping block just before it lands, and dodge through a swing.</li>
-        <li>Between strikes it raises its guard. Circle to its side or break the guard with heavy attacks.</li>
-        <li>Walk through the doorway, under the low arch and up the ramp in both camera modes.</li>
+        <li>Next to it, try <kbd>1</kbd> Heavy Footfall, <kbd>2</kbd> Sweeping Blow (a 120&deg; arc) and <kbd>3</kbd> Stone Skin (<span class="num">+30</span> armor for 6&nbsp;s).</li>
+        <li>Walk north, lock onto the soldier with <kbd>Tab</kbd> and fire <kbd>6</kbd> Runic Bolt. <kbd>8</kbd> Thunder Roar slows it and shakes its morale; <kbd>7</kbd> Ancestral Mend heals <span class="num">100</span> over 4&nbsp;s.</li>
+        <li>Block, parry by tapping block just before a hit lands, and dodge through a swing. Parries and kills fill fury fastest; at full fury press <kbd>R</kbd> for Titan Surge.</li>
+        <li>In the north-west corner a wolf pack circles and lunges. Dodge the lunge, then punish.</li>
+        <li>At the shrine west of where you start, press <kbd>E</kbd>, open Grow and grow to stage 2 (18&nbsp;ft), then stage 3 (26&nbsp;ft). Your reach, camera and the enemies' tactics change.</li>
+        <li>Break the fence, then walk the doorway, the low arch and the ramp at each size, in both camera modes (<kbd>V</kbd>).</li>
       </ol>
     </div>
 
     <div class="slab about">
       <h2>About this build</h2>
-      <p><b>What it is.</b> The first playable milestone of Giantborn: Age of Titans, built with Godot 4.6.3: one arena, one giant at stage 1 of 10, one enemy, a dummy and a breakable fence.</p>
-      <p><b>What it is not yet.</b> The art is placeholder boxes and there is no sound. Growth stages, grabs, more abilities and the valley come in later milestones.</p>
+      <p><b>What it is.</b> A work-in-progress build of Giantborn: Age of Titans (Godot 4.6.3): seven abilities plus the Titan Surge ultimate, soldiers and wolves whose morale and tactics react to your size, and growth to stage 3 at a shrine.</p>
+      <p><b>What it is not yet.</b> The art is placeholder boxes and there is no sound. Grab and throw, Boulder Hurl, weapons, and the Valley of Broken Kings with its quest line are being built now.</p>
       <p><b>If something goes wrong.</b> Esc opens the pause menu, where Restart sandbox resets everything. Settings are saved in this browser. Note what you did, what you expected and what happened.</p>
     </div>
   </section>
@@ -206,7 +210,7 @@ kbd {
 <script>
 (function () {
   // Byte counts of the current export (raw and packed as .txt), used for the progress bar.
-  const BUILD = { wasm: 37700666, pck: 370508, wasmPacked: 12528700, pckPacked: 321704 }; // set by tools/build_web.sh
+  const BUILD = { wasm: 37700666, pck: 723908, wasmPacked: 12528700, pckPacked: 661936 }; // set by tools/build_web.sh
 
   const stage = document.getElementById('stage');
   const poster = document.getElementById('poster');
