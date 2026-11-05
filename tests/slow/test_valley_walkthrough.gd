@@ -288,7 +288,10 @@ func _grow_at(world_id: String, stage: int) -> void:
 
 
 ## The elder's conversation through her talker (as E does), returning the running session.
+## A proximity activation spawns at most EncounterDirector.SPAWNS_PER_TICK members a tick (P17a,
+## the spawn hitch): the elder, the village folk's seventh member, can come a few ticks after it.
 func _talk_to_elder() -> DialogueSession:
+	await TestWait.until(self, func() -> bool: return director.spawned(ELDER) != null, 10)
 	var elder := director.spawned(ELDER)
 	assert_true(elder != null, "Elder Maren is in the village")
 	if elder == null:
