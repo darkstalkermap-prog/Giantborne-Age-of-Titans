@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "status.debug_invulnerable",
+	"type": "status_effect",
+	"display_name": "Debug invulnerability",
+	"hud_label": "INVULN",
+	"description": "Tooling only (P14): the stress scenario gives it to the player for the whole run so the giant survives twelve attackers; the Valley walk uses it too. Damage taken x0 (hits, poise and knockback still land). Hidden from the HUD; nothing in normal play applies it.",
+	"stacking": "refresh_no_stack",
+	"duration_s": 600.0,
+	"tick_s": 0,
+	"modifiers": {"damage_taken_mult": 0},
+	"tags": ["Buff"],
+	"hidden": true
+}

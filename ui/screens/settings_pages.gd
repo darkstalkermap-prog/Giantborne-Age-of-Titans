@@ -6,8 +6,8 @@ extends RefCounted
 ## column) or pad button / trigger (controller column) becomes the binding; Esc cancels.
 ##
 ## Settings rows apply live; sliders write the settings file when a drag ends (the screen calls
-## Settings.flush() on close for keyboard and pad slider changes). P14 adds the graphics preset
-## row and P16 the controller rows here.
+## Settings.flush() on close for keyboard and pad slider changes). P14 added the graphics preset
+## row (graphics_row); P16 adds the controller rows here.
 
 var _capture_action := ""
 var _capture_pad := false
@@ -37,6 +37,7 @@ func build_settings() -> Control:
 	slider_row(grid, "Controller vibration", "vibration", 0.0, 1.0, 0.05)
 	check_row(grid, "First-person lock aim assist", "fp_aim_assist")
 	check_row(grid, "Damage numbers", "damage_numbers")
+	graphics_row(grid)
 	grid.add_child(UiKit.label("Motion blur", 15))
 	var mb := CheckBox.new()
 	mb.button_pressed = false
@@ -89,6 +90,22 @@ static func option_row(grid: GridContainer, text: String, key: String, options: 
 			o.select(i)
 	o.item_selected.connect(func(i: int) -> void: Settings.set_value(key, options[i]))
 	grid.add_child(o)
+	return o
+
+
+## The graphics preset row (P14): Low (shorter shadows and scenery range, no MSAA: the
+## reference-PC measurement preset) or Medium. Changing it applies at once (LevelRoot listens).
+## The web build always runs Low and a --graphics flag fixes the preset for the run: the row then
+## shows the preset in effect, disabled, with the reason as its tooltip.
+static func graphics_row(grid: GridContainer) -> OptionButton:
+	var o := option_row(grid, "Graphics preset", "graphics_quality", Settings.GRAPHICS_QUALITIES)
+	o.tooltip_text = "Low: shorter shadow and scenery distances, no MSAA (the reference-PC preset). " \
+		+ "Medium: the full distances with MSAA. Each level's record sets the numbers."
+	var reason := Settings.graphics_lock_reason()
+	if reason != "":
+		o.select(maxi(0, Settings.GRAPHICS_QUALITIES.find(Settings.graphics_quality)))
+		o.disabled = true
+		o.tooltip_text = reason
 	return o
 
 

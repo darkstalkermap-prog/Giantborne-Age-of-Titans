@@ -10,10 +10,33 @@ extends Node
 ## Every tool run (--autoplay, --scenario) installs an ErrorCounter: the result carries
 ## "errors", "warnings" and "error_samples" (the first five), and the process exits with code
 ## EXIT_ERRORS when any engine or script error was logged during the run (0 otherwise).
+##
+## P14 scenarios (each in its own file; the Autopilot only dispatches, times and reports them):
+##   --scenario=stress       the stress route (StressScenario in scenes/test/stress_arena.tscn; run
+##                           with --level=res://scenes/test/stress_arena.tscn): the bot loops the
+##                           route for --autoplay seconds. --stress-stage=N grows the giant to N
+##                           first (default 2).
+##   --scenario=valley_walk  the Valley walk (ValleyWalk; run with --mode=valley --new-game): first
+##                           the AI LOD tier comparison (tiers 2, 1, 0) from the Cradle, then every
+##                           district at stage 1; the run ends when the walk does (--autoplay stays
+##                           the hard limit).
+##                           --walk-teleport skips the walking (stops and views only; for slow
+##                           software-rendered draw-call captures).
+## Both add a PerfProbe (as does --perf for any other run): "PERF_RESULT {json}" is printed before
+## AUTOPILOT_RESULT, whose "perf" key repeats the CPU-per-tick summary and the budget verdicts.
+## A scenario's own checks go to "scenario_failures"; any failure exits with EXIT_SCENARIO_FAILED
+## (errors still win: EXIT_ERRORS).
 
 const EXIT_OK := 0
 const EXIT_ERRORS := 1
+## P14: a scenario's own check failed (stress, valley_walk).
+const EXIT_SCENARIO_FAILED := 2
 const RESULT_SAMPLES := 5
+## The scenarios dispatched to their own files (P14).
+const SCENARIO_STRESS := "stress"
+const SCENARIO_VALLEY_WALK := "valley_walk"
+const STRESS_ARENA := "res://scenes/test/stress_arena.tscn"
+const VALLEY_LEVEL_ID := "level.valley"
 ## Soak target order (pick_soak_target, M2 gate): enemies the giant is already fighting (within
 ## ENGAGE_RADIUS_M of it) or that guard the M1 arena (within ARENA_RADIUS_M of its centre: the
 ## soldier's patrol) come first, then an intact breakable (the fence: the breakable, debris and
@@ -34,6 +57,8 @@ static var _step := 0
 static var _rng := RandomNumberGenerator.new()
 static var _error_counter: ErrorCounter = null
 static var _finished := false
+## Options of the P14 scenarios and the probe (parse_options()).
+static var _options: Dictionary = {}
 
 var player: GiantPlayer
 var _decision_left := 0.0
@@ -47,6 +72,10 @@ var _stuck_time := 0.0
 var _strafe_left := 0.0
 var _strafe_sign := 1.0
 var _shots: Array[String] = []
+var _probe: PerfProbe = null
+var _stress: StressScenario = null
+var _walk: ValleyWalk = null
+var _scenario_failures := PackedStringArray()
 
 
 func configure(seconds: float, scenario: String, capture_dir: String) -> void:
@@ -61,9 +90,30 @@ func configure(seconds: float, scenario: String, capture_dir: String) -> void:
 		"jumps": 0, "resets": 0, "player_deaths": 0, "soldier_kills": 0, "camera_toggles": 0,
 		"lock_presses": 0, "fence_breaks": 0, "hits_resolved": 0, "parries": 0,
 		"max_debris": 0, "rejections": 0, "enemy_kills": 0, "loot_awards": 0}
+	_options = parse_options(OS.get_cmdline_user_args())
 	# Count every engine/script error of the run (the logger lives as long as the process).
 	_error_counter = ErrorCounter.new()
 	OS.add_logger(_error_counter)
+
+
+## The P14 options of the user args: {"perf": bool (--perf), "stress_stage": int
+## (--stress-stage=N, default StressScenario.DEFAULT_STAGE), "walk_teleport": bool
+## (--walk-teleport)}.
+static func parse_options(args: PackedStringArray) -> Dictionary:
+	var out := {"perf": false, "stress_stage": StressScenario.DEFAULT_STAGE, "walk_teleport": false}
+	for arg in args:
+		if arg == "--perf":
+			out.perf = true
+		elif arg.begins_with("--stress-stage="):
+			out.stress_stage = clampi(int(arg.substr(15)), 1, 3)
+		elif arg == "--walk-teleport":
+			out.walk_teleport = true
+	return out
+
+
+## True for the scenarios that run their own driver and a PerfProbe.
+static func is_perf_scenario(scenario: String) -> bool:
+	return scenario == SCENARIO_STRESS or scenario == SCENARIO_VALLEY_WALK
 
 
 func _ready() -> void:
@@ -75,6 +125,11 @@ func _ready() -> void:
 	Events.object_destroyed.connect(_on_object_destroyed)
 	Events.action_rejected.connect(_on_action_rejected)
 	Events.loot_awarded.connect(_on_loot_awarded)
+	if is_perf_scenario(_scenario) or bool(_options.get("perf", false)):
+		_probe = PerfProbe.new()
+		_probe.name = "PerfProbe"
+		_probe.label = _scenario if _scenario != "" else "soak"
+		add_child(_probe)
 
 
 func _on_hit_resolved(_t: int, r: HitResult) -> void:
@@ -128,7 +183,44 @@ func _physics_process(dt: float) -> void:
 		if not _busy:
 			_run_capture(dt)
 		return
+	if _scenario == SCENARIO_STRESS:
+		_run_stress()
+		return
+	if _scenario == SCENARIO_VALLEY_WALK:
+		_run_valley_walk()
+		return
 	_run_soak(dt)
+
+
+# --------------------------------------------------------------------------- P14 scenarios
+
+## --scenario=stress: starts the arena's StressScenario bot once; it drives the player itself.
+func _run_stress() -> void:
+	if _stress != null:
+		return
+	_stress = get_tree().get_first_node_in_group(StressScenario.GROUP) as StressScenario
+	if _stress == null:
+		_scenario_failures.append("--scenario=stress needs the stress arena: add --level=%s" % STRESS_ARENA)
+		_finish()
+		return
+	_stress.start_bot(player, int(_options.get("stress_stage", StressScenario.DEFAULT_STAGE)))
+
+
+## --scenario=valley_walk: starts a ValleyWalk once; the run ends when the walk is done.
+func _run_valley_walk() -> void:
+	if _walk == null:
+		var lv := get_tree().get_first_node_in_group(LevelRoot.GROUP) as LevelRoot
+		if lv == null or lv.level_id != VALLEY_LEVEL_ID:
+			_scenario_failures.append("--scenario=valley_walk needs the Valley: add --mode=valley --new-game")
+			_finish()
+			return
+		_walk = ValleyWalk.new()
+		_walk.name = "ValleyWalk"
+		_walk.teleport_only = bool(_options.get("walk_teleport", false))
+		add_child(_walk)
+		_walk.start(player, lv, _probe)
+	if _walk.done:
+		_finish()
 
 
 # --------------------------------------------------------------------------- soak
@@ -295,6 +387,26 @@ func _finish() -> void:
 		OS.remove_logger(_error_counter)
 		_error_counter = null
 	var result := build_result(_stats, _elapsed, _frame_ms, _shots, counted)
+	var failures := _scenario_failures.duplicate()
+	if _stress != null:
+		_stress.stop_bot()
+		var sr := _stress.result(_elapsed)
+		failures.append_array(sr.check_failures)
+		result["stress"] = sr
+	if _walk != null:
+		var wr := _walk.result()
+		failures.append_array(wr.check_failures)
+		result["valley_walk"] = wr
+	if is_perf_scenario(_scenario):
+		result["scenario"] = _scenario
+		result["scenario_failures"] = failures
+		result["scenario_ok"] = failures.is_empty()
+	if _probe != null:
+		_probe.finish()
+		var perf := _probe.result()
+		print("PERF_RESULT " + JSON.stringify(perf))
+		result["perf"] = {"cpu_tick_ms": perf.cpu_tick_ms, "sim_ms": perf.sim_ms, "budgets": perf.budgets,
+			"quality": perf.quality}
 	print("AUTOPILOT_RESULT " + JSON.stringify(result))
 	get_tree().quit(exit_code(result))
 
@@ -319,11 +431,14 @@ static func build_result(stats: Dictionary, elapsed: float, frame_ms: Array, sho
 	return result
 
 
-## Process exit code for a result: EXIT_ERRORS when the run logged any error, else EXIT_OK.
-## (P14 and P17a add further codes for failed scenario checks.)
+## Process exit code for a result: EXIT_ERRORS when the run logged any error, else
+## EXIT_SCENARIO_FAILED when a scenario's own check failed ("scenario_ok" false), else EXIT_OK.
+## (P17a adds a code for its invariants.)
 static func exit_code(result: Dictionary) -> int:
 	if int(result.get("errors", 0)) > 0:
 		return EXIT_ERRORS
+	if result.has("scenario_ok") and not bool(result.scenario_ok):
+		return EXIT_SCENARIO_FAILED
 	return EXIT_OK
 
 
