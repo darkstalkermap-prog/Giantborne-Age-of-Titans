@@ -151,7 +151,7 @@ func test_weapon_schema_fields_and_checks() -> void:
 		var rec := good.duplicate(true)
 		rec.merge(c[0], true)
 		var errors: PackedStringArray = DataValidator.validate_record(rec, "bad.json").errors
-		assert_true(not errors.is_empty() and str(errors).contains(c[1]), "%s is refused (%s)" % [c[0], errors])
+		assert_true(not errors.is_empty() and "\n".join(errors).contains(c[1]), "%s is refused (%s)" % [c[0], errors])
 
 
 # --------------------------------------------------------------------------- equipping
