@@ -814,6 +814,298 @@ func _go_to(my_position: Vector3, point: Vector3) -> void:
 		move_speed = -1.0
 ## @anchor P07
 ## @anchor P09
+# --- ranged fighting shared by archers and mages (P09) ------------------------------------------
+# Plan §3.9, decisions 24 and 25. A ranged unit fights from a band of distances (tactics
+# preferred_min_m..preferred_max_m, centre to centre; x1.3 while outmatched) at a firing point it
+# holds: the actor's firing_point_resolver picks elevation or cover markers that see the target,
+# spread from the other ranged allies, else a point on a ring around the target (a pure ring
+# point when no actor installed one). It retreats to the band when the target comes closer,
+# answers up close with its close attack (the archer's kick, the mage's staff) holding one of the
+# two melee tokens, and shoots only when settled at its point, in the band, seeing the target,
+# holding one of the target's two ranged tokens and a launch slot. The ranged token goes back
+# when the shot's recovery is over (any state but ATTACK releases it). ArcherBrain and MageBrain
+# run _decide_ranged() from _decide_engaged() and their outmatched hooks.
+
+## Outmatched ranged units widen their band and keep farther apart (plan §3.9: x1.3, 10 m).
+const OUTMATCHED_BAND_MULT := 1.3
+const OUTMATCHED_SPREAD_M := 10.0
+## A unit this close to its firing point is settled there (it may shoot); it stops moving within
+## FIRING_ARRIVE_M and runs when farther than FIRING_RUN_M (or when retreating).
+const FIRING_SETTLE_M := 1.5
+const FIRING_ARRIVE_M := 0.6
+const FIRING_RUN_M := 4.0
+## A held firing point is checked again this often while the target is not seen from it.
+const FIRING_REPICK_S := 3.0
+## Shots are allowed this far outside the band; a held point this far out of it is replaced.
+const BAND_TOLERANCE_M := 0.75
+## Ring points (the pure fallback) sit this far inside the band.
+const RING_MARGIN_M := 1.0
+## A shot starts only when the target is within this angle of the unit's facing (the draw then
+## tracks it until the aim lock).
+const RANGED_FACING_DEG := 45.0
+
+## Engine-side helpers the ranged actor installs (EnemyActor.install_ranged_helpers; unit tests
+## leave them unset and pure fallbacks apply):
+## ranged_token_request() -> bool: one of the target's ranged tokens (target_id + ":ranged");
+var ranged_token_request := Callable()
+## ranged_token_release() -> void;
+var ranged_token_release := Callable()
+## launch_slot_request(action_id: String) -> bool: Sim.request_launch_slot for that shot;
+var launch_slot_request := Callable()
+## firing_point_resolver(my_position, target_pos, band: Vector2, spread_m: float, far: bool)
+## -> Vector3: the firing point to hold (Vector3.INF = none);
+var firing_point_resolver := Callable()
+## firing_point_release() -> void: the held point (and its marker) is given up;
+var firing_point_release := Callable()
+## action_ready(action_id: String) -> bool: its cooldown and costs allow it now (unset = always).
+var action_ready := Callable()
+
+## True from a granted ranged token until the shot's recovery is over.
+var holds_ranged_token := false
+## The firing point this unit holds (Vector3.INF = none).
+var firing_point := Vector3.INF
+## Who the last ally cast (the mage's barrier) is meant for: an ally's entity id, or this unit's.
+var ally_target_id := ""
+var _firing_tick := NO_TICK
+var _firing_blocked := false
+var _ranged_ids_cached := false
+var _ranged_attack_ids: Array[String] = []
+var _close_attack_ids: Array[String] = []
+var _ally_cast_ids: Array[String] = []
+
+
+## The band (flat, centre to centre) this unit fights from: tactics preferred_min_m ..
+## preferred_max_m, x OUTMATCHED_BAND_MULT when `outmatched`.
+func ranged_band(outmatched: bool = false) -> Vector2:
+	var b := Vector2(float(tactics.get("preferred_min_m", 0.0)), float(tactics.get("preferred_max_m", 0.0)))
+	return b * OUTMATCHED_BAND_MULT if outmatched else b
+
+
+## How far apart ranged allies keep: tactics.spread_m, at least OUTMATCHED_SPREAD_M when outmatched.
+func ranged_spread_m(outmatched: bool = false) -> float:
+	var s := float(tactics.get("spread_m", 0.0))
+	return maxf(s, OUTMATCHED_SPREAD_M) if outmatched else s
+
+
+## The record's shots: projectile attacks (they need a ranged token and a launch slot).
+func ranged_attacks() -> Array[String]:
+	_cache_ranged_ids()
+	return _ranged_attack_ids
+
+
+## The record's close attacks: every other attack with a hit (kick, staff strike).
+func close_attacks() -> Array[String]:
+	_cache_ranged_ids()
+	return _close_attack_ids
+
+
+## The record's casts on allies (targets_ally: the barrier).
+func ally_casts() -> Array[String]:
+	_cache_ranged_ids()
+	return _ally_cast_ids
+
+
+func _cache_ranged_ids() -> void:
+	if _ranged_ids_cached:
+		return
+	_ranged_ids_cached = true
+	for id: Variant in attacks:
+		var rec: Dictionary = GameData.get_record(str(id))
+		if bool(rec.get("targets_ally", false)):
+			_ally_cast_ids.append(str(id))
+		elif str(rec.get("hit_shape", "none")) == "projectile":
+			_ranged_attack_ids.append(str(id))
+		elif str(rec.get("hit_shape", "none")) != "none":
+			_close_attack_ids.append(str(id))
+
+
+## True while the state is one the ranged rules run (other states belong to other packages:
+## RETURN, P10a; STAND_DOWN, P11b).
+func is_ranged_state() -> bool:
+	return state in [AIState.APPROACH, AIState.ATTACK, AIState.RECOVER, AIState.REPOSITION, AIState.HOLD]
+
+
+func _action_ready(action_id: String) -> bool:
+	return action_ready.call(action_id) if action_ready.is_valid() else true
+
+
+## A ranged turn for `action_id`: one of the target's ranged tokens, then a launch slot. A refused
+## slot gives the token straight back (nothing waits holding it). Unset helpers grant.
+func _take_ranged_turn(action_id: String) -> bool:
+	var token_ok: bool = ranged_token_request.call() if ranged_token_request.is_valid() else true
+	if not token_ok:
+		return false
+	holds_ranged_token = true
+	var slot_ok: bool = launch_slot_request.call(action_id) if launch_slot_request.is_valid() else true
+	if not slot_ok:
+		_release_ranged()
+	return slot_ok
+
+
+func _release_ranged() -> void:
+	if holds_ranged_token:
+		holds_ranged_token = false
+		if ranged_token_release.is_valid():
+			ranged_token_release.call()
+
+
+func _drop_firing_point() -> void:
+	firing_point = Vector3.INF
+	_firing_tick = NO_TICK
+	if firing_point_release.is_valid():
+		firing_point_release.call()
+
+
+## The first close attack whose range band (from the target's capsule surface) holds `edge_m`.
+func _close_attack_for(edge_m: float) -> String:
+	for id in close_attacks():
+		var r: Vector2 = _attack_ranges.get(id, Vector2(0.0, INF))
+		if edge_m >= r.x - 1e-6 and edge_m <= r.y + 1e-6:
+			return id
+	return ""
+
+
+## Archetype hook: an attack that is not aimed at the target (the mage's barrier), or "".
+func _ranged_special_attack(_my_position: Vector3, _target_pos: Vector3, _distance: float) -> String:
+	return ""
+
+
+## Archetype hook: the shot to take now (default: the first ranged attack).
+func _ranged_shot() -> String:
+	var shots := ranged_attacks()
+	return shots[0] if not shots.is_empty() else ""
+
+
+## True when the unit stands at its firing point (or holds none).
+func is_settled(my_position: Vector3) -> bool:
+	return firing_point == Vector3.INF or _flat_distance(my_position, firing_point) <= FIRING_SETTLE_M
+
+
+## The engaged states of a ranged unit: APPROACH (hold a firing point in the band, retreat to it
+## when the target comes closer, strike up close, shoot when allowed), ATTACK (the shot, cast or
+## strike runs; afterwards a pause) and RECOVER (the pause; the unit keeps its band). `outmatched`
+## widens the band and the spread; `far` keeps the unit at the band's far edge (kiting).
+func _decide_ranged(my_position: Vector3, target_pos: Vector3, distance: float, seen: bool,
+		memory_ok: bool, target_alive: bool, request_token: Callable, release_token: Callable,
+		outmatched: bool, far: bool) -> void:
+	if not target_alive and perception.get("exists", false):
+		_release(release_token)
+		_release_ranged()
+		_drop_firing_point()
+		aware = false
+		_set_state(AIState.PATROL)
+		return
+	if not memory_ok:
+		_release(release_token)
+		_release_ranged()
+		_drop_firing_point()
+		investigating = true
+		aware = false
+		_set_state(AIState.ALERT)
+		return
+	face_point = target_pos
+	var band := ranged_band(outmatched)
+	var spread := ranged_spread_m(outmatched)
+	match state:
+		AIState.ATTACK:
+			_stop_moving()
+			if _attack_finished() and _in_state_s() > 0.05:
+				strike_ready_tick = now + _ticks(rng.randf_range(float(ai.get("strike_pause_min_s", 0.8)),
+					float(ai.get("strike_pause_max_s", 1.4))))
+				_release(release_token)
+				_release_ranged()
+				_set_state(AIState.RECOVER)
+			return
+		AIState.RECOVER:
+			_keep_band(my_position, target_pos, distance, band, spread, far)
+			if now >= strike_ready_tick:
+				_set_state(AIState.APPROACH)
+			return
+	if state != AIState.APPROACH:
+		_set_state(AIState.APPROACH)
+	if seen and now >= strike_ready_tick:
+		var edge := distance - float(perception.get("target_radius", 0.85))
+		var close := _close_attack_for(edge)
+		var facing_ok := absf(float(perception.get("facing_deg", 180.0))) <= ATTACK_FACING_DEG
+		if close != "" and facing_ok and _action_ready(close) and (holds_token or request_token.call()):
+			holds_token = true
+			attack_request = close
+			_stop_moving()
+			_set_state(AIState.ATTACK)
+			return
+		var special := _ranged_special_attack(my_position, target_pos, distance)
+		if special != "":
+			attack_request = special
+			_stop_moving()
+			_set_state(AIState.ATTACK)
+			return
+	_keep_band(my_position, target_pos, distance, band, spread, far)
+	if not seen or now < strike_ready_tick or not is_settled(my_position):
+		return
+	if distance < band.x - BAND_TOLERANCE_M or distance > band.y + BAND_TOLERANCE_M:
+		return
+	if absf(float(perception.get("facing_deg", 180.0))) > RANGED_FACING_DEG:
+		return
+	var shot := _ranged_shot()
+	if shot == "" or not _action_ready(shot) or not _take_ranged_turn(shot):
+		return
+	attack_request = shot
+	_stop_moving()
+	_set_state(AIState.ATTACK)
+
+
+## Keeps the unit at a firing point in the band: a new one when it holds none, when the target
+## moved it out of the band (or, kiting, into the band's near half), after a path failure, and
+## every FIRING_REPICK_S while the target is not seen; then it walks there (runs when far or
+## retreating), facing the target.
+func _keep_band(my_position: Vector3, target_pos: Vector3, distance: float, band: Vector2, spread: float,
+		far: bool) -> void:
+	var repick := firing_point == Vector3.INF or _firing_blocked
+	if not repick:
+		var pd := _flat_distance(firing_point, target_pos)
+		repick = pd < band.x - BAND_TOLERANCE_M or pd > band.y + BAND_TOLERANCE_M \
+			or (far and pd < (band.x + band.y) * 0.5)
+	if not repick and not bool(perception.get("visible", false)) and now - _firing_tick >= _ticks(FIRING_REPICK_S):
+		repick = true
+	if repick:
+		firing_point = _pick_firing_point(my_position, target_pos, distance, band, spread, far)
+		_firing_tick = now
+		_firing_blocked = false
+	var d := _flat_distance(my_position, firing_point) if firing_point != Vector3.INF else 0.0
+	if firing_point == Vector3.INF or d <= FIRING_ARRIVE_M:
+		_stop_moving()
+	else:
+		move_target = firing_point
+		move_speed = -1.0 if d > FIRING_RUN_M or distance < band.x else 0.0
+
+
+func _pick_firing_point(my_position: Vector3, target_pos: Vector3, distance: float, band: Vector2,
+		spread: float, far: bool) -> Vector3:
+	if firing_point_resolver.is_valid():
+		return firing_point_resolver.call(my_position, target_pos, band, spread, far)
+	return ring_point(my_position, target_pos, distance, band, far)
+
+
+## The pure fallback firing point: on the ring around the target in this unit's direction, at its
+## own distance clamped RING_MARGIN_M inside the band (at the far edge when `far`).
+static func ring_point(my_position: Vector3, target_pos: Vector3, distance: float, band: Vector2,
+		far: bool) -> Vector3:
+	var away := my_position - target_pos
+	away.y = 0.0
+	away = away.normalized() if away.length() > 0.1 else Vector3.BACK
+	var lo := band.x + RING_MARGIN_M
+	var hi := maxf(lo, band.y - RING_MARGIN_M)
+	var r := hi if far else clampf(distance, lo, hi)
+	return Vector3(target_pos.x + away.x * r, my_position.y, target_pos.z + away.z * r)
+
+
+## A path toward the firing point failed: pick another one (ranged states), otherwise the base rule.
+func _ranged_path_failed(my_position: Vector3) -> bool:
+	if not is_ranged_state():
+		return false
+	_firing_blocked = true
+	_stop_moving()
+	return true
 ## @anchor P10a
 ## @anchor P11a
 ## @anchor P11b
