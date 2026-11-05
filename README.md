@@ -131,7 +131,8 @@ weapon fits up to a stage: above it the HUD says it is too small until a forge r
 - Every enemy blow with a long windup shows a **telegraph** on the ground that fills as it winds up;
   archers and mages show an aim line; an arrow at the screen's edge warns of a threat you cannot see.
 - Growth adds health, reach and new tactics on both sides: at stage 2 soldiers hold formation and
-  brace; at stage 3 they break and flee. Village guards are neutral until you strike them twice.
+  brace; at stage 3 they break and flee. Thornwick's guards stay neutral unless you strike its
+  people twice within 30 s (the first blow is a warning).
 - Fury fills from basic attacks, parries and kills; at 100, Titan Surge adds 25 % damage and poise
   for 6 s.
 
@@ -198,8 +199,10 @@ godot --headless --path . --export-release "Windows Desktop" builds/windows/Gian
 godot --headless --path . --export-release "Linux" builds/linux/Giantborn.x86_64
 ```
 
-Windows also gets `Giantborn.console.exe`, which prints to the console (use it for the
-measurement runs). Release exports have no debug panel or debug keys.
+Run exports (and `tools/build_web.sh`) with plain `godot`, not `tools/gd.sh`: the export templates
+live in Godot's default data folder, which `gd.sh` replaces with the worktree's own. Windows also
+gets `Giantborn.console.exe`, which prints to the console (use it for the measurement runs). Release
+exports have no debug panel or debug keys.
 
 ### Browser build (the play link)
 
