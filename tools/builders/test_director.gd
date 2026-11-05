@@ -37,8 +37,9 @@ const NAV_HUMAN := {"layers": 1, "radius": 0.6, "height": 2.0, "cell": 0.3, "cel
 	"climb": 0.25, "slope": 35.0}
 
 ## [node name, size, centre, walkable top]: every solid box of the level; collision and
-## navigation both come from this one list. Walls and pillars give the navmesh no top face, so
-## it has no unreachable islands on them.
+## navigation both come from this one list. Walls and pillars are obstacles: no top face and a
+## projected obstruction over their footprint, so the navmesh has no unreachable islands on or
+## inside them (Recast rasterises surfaces: a closed box's inside would stay walkable).
 const BOXES := [
 	["Floor", Vector3(FLOOR_SIZE, 1, FLOOR_SIZE), Vector3(0, -0.5, 0), true],
 	["WallNorth", Vector3(124, 4, 2), Vector3(0, 2, -61), false],
@@ -179,7 +180,15 @@ static func bake_navmesh(agent: Dictionary, boxes: Array) -> NavigationMesh:
 	nm.cell_height = float(agent.cell_height)
 	var src := NavigationMeshSourceGeometryData3D.new()
 	for spec: Array in boxes:
-		src.add_faces(box_faces(spec[1], spec[2], spec.size() < 4 or bool(spec[3])), Transform3D.IDENTITY)
+		var size: Vector3 = spec[1]
+		var centre: Vector3 = spec[2]
+		var walkable_top := spec.size() < 4 or bool(spec[3])
+		src.add_faces(box_faces(size, centre, walkable_top), Transform3D.IDENTITY)
+		if not walkable_top:
+			var h := size * 0.5
+			src.add_projected_obstruction(PackedVector3Array([centre + Vector3(-h.x, 0, -h.z),
+				centre + Vector3(h.x, 0, -h.z), centre + Vector3(h.x, 0, h.z), centre + Vector3(-h.x, 0, h.z)]),
+				centre.y - h.y, size.y, false)
 	NavigationServer3D.bake_from_source_geometry_data(nm, src)
 	return nm
 

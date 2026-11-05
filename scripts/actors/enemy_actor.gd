@@ -1264,9 +1264,10 @@ func _restore_after_grab() -> void:
 # back to home_position, ignoring the player on the way: the brain is in RETURN and its
 # perception and decisions are paused (ai_enabled false until it is home - EnemyBrain.decide()
 # hands states it does not know to the archetype's _decide_engaged(), so RETURN is driven from
-# here, by a Sim PRE_ACTORS hook of its own, right after the director's). LEASH_HEAL_S after
-# the leash it is back at full health (stamina and poise reset too); once home (or dead) the
-# return ends and its AI resumes from IDLE, so it can engage again.
+# here, by a Sim PRE_ACTORS hook of its own, right after the director's). What it hears or is
+# hit by on the way is forgotten at once (handlers connected after the base ones). LEASH_HEAL_S
+# after the leash it is back at full health (stamina and poise reset too); once home (or dead)
+# the return ends and its AI resumes from IDLE, so it can engage again.
 
 ## Seconds after the leash began until the member is back at full health.
 const LEASH_HEAL_S := 6.0
@@ -1303,6 +1304,12 @@ func begin_leash_return() -> void:
 	request_repath()
 	_leash_hook_owner = RefCounted.new()
 	Sim.add_hook(Sim.Hook.PRE_ACTORS, _leash_hook_owner, _leash_step, LEASH_HOOK_ORDER)
+	# Run after _on_hit_taken / _on_any_ability_started (connected in _ready): undo what they
+	# taught the brain while it walks home.
+	if not entity.hit_taken.is_connected(_on_hit_while_returning):
+		entity.hit_taken.connect(_on_hit_while_returning)
+	if not Events.ability_started.is_connected(_on_noise_while_returning):
+		Events.ability_started.connect(_on_noise_while_returning)
 	_leash_step(Sim.tick)
 
 
@@ -1340,12 +1347,26 @@ func _end_leash_return(in_world: bool) -> void:
 	if _leash_hook_owner != null:
 		Sim.remove_hooks(_leash_hook_owner)
 		_leash_hook_owner = null
+	if entity != null and entity.hit_taken.is_connected(_on_hit_while_returning):
+		entity.hit_taken.disconnect(_on_hit_while_returning)
+	if Events.ability_started.is_connected(_on_noise_while_returning):
+		Events.ability_started.disconnect(_on_noise_while_returning)
 	var alive := entity != null and entity.combatant != null and entity.is_alive()
 	if in_world and alive and not _leash_healed:
 		_leash_heal()
 	ai_enabled = _leash_ai_was_enabled
 	if brain != null:
 		brain.end_return(Sim.tick, alive)
+
+
+func _on_hit_while_returning(_result: HitResult) -> void:
+	if _leash_returning and brain != null:
+		brain.return_step(Sim.tick, home_position)
+
+
+func _on_noise_while_returning(_tick: int, _actor_id: String, _action_id: String, _instance: int) -> void:
+	if _leash_returning and brain != null:
+		brain.return_step(Sim.tick, home_position)
 
 
 ## Full health (through CombatEntity.heal, so Events.healed shows it), full stamina, no poise
