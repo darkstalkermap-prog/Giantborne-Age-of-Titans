@@ -27,12 +27,12 @@ real-browser gates are **NOT RUN**: their scripts and commands are ready for the
 | Not available here | A Windows PC, a real GPU, a gamepad, human players, real desktop browsers |
 
 **What was actually run for this handoff** (not only code-reviewed): the whole check sequence with
-every scene rebuilt and the slow suites; the default suite alone (for its time budget); an assisted
-novice Valley run on the final code; the Linux, Windows and Web release exports; the Linux export
-headless (the 120 s soak and a whole assisted Valley run); a rendered screenshot tour of the Valley
-beside the bot; the web build in Chromium (boot, title, New Game, the save across a page reload,
-Continue, the mouse capture from the title). The balance matrices, the 30-minute run and the stress
-route were run by P17a and P17b on the same game code (§6.4).
+every scene rebuilt and the slow suites; the default suite alone (for its time budget); on the final
+code, an assisted novice Valley run, the 30-minute run and the stress route; the Linux, Windows and
+Web release exports; the Linux export headless (the 120 s soak and a whole assisted Valley run); a
+rendered screenshot tour of the Valley beside the bot; the web build in Chromium (boot, title, New
+Game, the save across a page reload, Continue, the mouse capture from the title). The balance
+matrices were run by P17a and P17b on the same game code (§6.4).
 
 ## 2. Changed files and the runnable project
 
@@ -120,7 +120,7 @@ part that only a real PC, pad, browser or person can confirm. **FAIL** = measure
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Launch without missing dependencies; move and attack; switch perspective; fight one enemy; block, parry, dodge; die and reset; break a fence | PASS | The M1 suites (all passing) and the 120 s soak (§6.1): attacks, blocks, dodges, camera toggles, kills, a reset, fence breaks, loot |
-| No crashes in a 10-minute run | PASS | 30 minutes of Valley play with 0 errors (P17b); a 451 s Valley run on the Linux release export (§6.3) |
+| No crashes in a 10-minute run | PASS | 30 minutes of Valley play with 0 errors on the final code (§6.2; P17b's run before it too); a 451 s Valley run on the Linux release export (§6.3) |
 | Inputs give feedback on the next physics tick | PASS | `test_input_feedback_on_next_tick` |
 
 ### 5.3 Combat correctness (spec §15)
@@ -166,8 +166,8 @@ part that only a real PC, pad, browser or person can confirm. **FAIL** = measure
 | A real reference PC recorded | NOT RUN | The owner's hardware is unknown; `docs/PERFORMANCE.md` has the blank table |
 | 1080p `low`: frame time p95 ≤ 16.7 ms, p99 < 33.3 ms, exported build | NOT RUN | Needs a real GPU; the commands are in `docs/PERFORMANCE.md` ("Commands": `Giantborn.console.exe`, the stress route and the Valley walk) |
 | GPU and CPU profiled separately | PARTIAL | PerfProbe reports GPU and CPU render times apart (N/A here: no GPU) and the simulation's CPU per tick (measured) |
-| Stress route: 12 combatants, 20 breakables, ≤ 40 debris, 5 minutes | PASS (frame time NOT RUN) | 300 s, `low`, headless (P17b): 12 active (mean 11.8), debris up to 40, 138 breakables broken, 0 errors; CPU per tick p50 2.27 / p95 3.72 / p99 5.12 ms |
-| Simulation CPU per tick p95 ≤ 8 ms (container, indicative) | PASS | Stress 3.72 ms; at most 6.37 ms in every run of P17b's final balance matrix; 5.8 ms over the 30-minute run; 6.01 ms in this package's run on the final code (§6.2) |
+| Stress route: 12 combatants, 20 breakables, ≤ 40 debris, 5 minutes | PASS (frame time NOT RUN) | 300 s, `low`, headless, on the final code (§6.2): 12 active (mean 11.8), all 20 breakables broken (138 breaks), debris up to 40, 0 deaths, 0 errors, 0 warnings; CPU per tick p50 2.22 / p95 3.69 / p99 5.13 ms (P17b's run: 2.27 / 3.72 / 5.12) |
+| Simulation CPU per tick p95 ≤ 8 ms (container, indicative) | PASS | On the final code (§6.2): stress 3.69 ms, 5.40 ms over the 30-minute run, 6.01 ms in the help_cache run; at most 6.37 ms in every run of P17b's final balance matrix (three runs at once) |
 | Distant actors drawn as a low-detail representation | PASS | AI tier 2 shows a one-box proxy (`test_blockers_lod`; the Valley walk's comparison: 12 proxies 262 draw calls, 12 rigs 653) |
 | A visible active-enemy budget | PASS | 12 (the director); at most 12 active and 12 hostiles within 40 m in every bot run (invariant) |
 | Draw calls ≤ 250 in any Valley view | **FAIL** with five or more enemies in view | The static world draws at most 93 per view at `low` (221 at `medium`); each full-rig enemy adds about 33, so the Valley walk peaks at 656 (p50 256) at `low`. Deferred (§7) |
@@ -180,7 +180,7 @@ part that only a real PC, pad, browser or person can confirm. **FAIL** = measure
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Three new players complete the tutorial encounter (2 of 3 unaided, naming heavy attacks, blocking and dodge timing); confusion, camera discomfort, accidental ability use and time to defeat recorded | NOT RUN | Needs people. `docs/USABILITY_SCRIPT.md`: the protocol (5 minutes of Sandbox, the first 10 Valley minutes), the observation sheet, the questionnaire |
-| A 30-minute Valley session with no crash, softlock, duplicated reward or unrecoverable targeting state | PASS (bot) | `tools/run_bots.sh --preset=stability` (P17b): 1,800 s simulated, three slices completed in a row (help_cache, help_ogre, intimidate), the fourth started; 0 errors, 0 breaches, 0 invariant failures, 0 duplicated rewards, 0 teleports; node count 5 s after each load 1,404 every time. A human session: NOT RUN |
+| A 30-minute Valley session with no crash, softlock, duplicated reward or unrecoverable targeting state | PASS (bot) | `tools/run_bots.sh --preset=stability` on the final code (§6.2): 1,800 s simulated, three slices completed in a row (help_cache, help_ogre, intimidate), the fourth (force) started; 0 errors, 0 warnings, 0 breaches, 0 invariant failures, 0 duplicated rewards, 0 teleports, 0 deaths; node count 5 s after each of the 4 loads 1,404 every time. P17b's run before it had the same result. A human session: NOT RUN |
 | Menus usable with a controller | PARTIAL | Every screen by synthetic pad events (`test_ui_focus`: title, pause, shrine, dialogue, inventory, attributes, forge, end); a real pad: NOT RUN (`docs/USABILITY_SCRIPT.md` §6 checklist) |
 | HUD readable at common resolutions | PASS | `test_hud_layout` at 1280 x 720 up to 2560 x 1440 (no overlapping panels; edge warnings clear of every panel) |
 
@@ -200,8 +200,9 @@ part that only a real PC, pad, browser or person can confirm. **FAIL** = measure
 
 ### 6.1 The check sequence on the final code
 
-`tools/check.sh --build --slow` on commit `400e974` (the last commit that changes the game; the
-commits after it change only documentation): **CHECK PASSED** in 2 min 58 s of wall time.
+`tools/check.sh --build --slow` on the tree of commit `400e974` (every change to the game is in or
+before it; the later commits change documentation and one comment in a tool script): **CHECK
+PASSED** in 2 min 58 s of wall time.
 
 - Import, then **every scene rebuilt** by the 17 builders (44 scenes and the four navmeshes): the
   rebuild left every committed file byte-identical (no diff), then import again.
@@ -217,7 +218,7 @@ this package (on a fresh import) had one failure, `test_world_props.test_a_broke
 (§7); it passed in the four full runs since (this check and the default suite alone included) and
 in six runs of its suite alone.
 
-### 6.2 Bot runs on the final code
+### 6.2 Bot runs, the 30-minute run and the stress route on the final code
 
 One assisted novice run of the help_cache outcome on the final code (`tools/run_bots.sh
 help_cache:novice:1:assist`, headless, `--fixed-fps 60`, 182 s of wall time):
@@ -229,6 +230,29 @@ help_cache:novice:1:assist`, headless, `--fixed-fps 60`, 182 s of wall time):
 Segments (raw minutes): the Hollow 0.5, the forest 1.3, the Grove 0.2, the village 2.2 (the quarry
 detour), the ruins 1.9, the boss 0.8, the return 1.7. The Linux export's run of the intimidate
 outcome is in §6.3; the rendered tour's help_cache run in §6.6.
+
+**The 30-minute run** (`tools/run_bots.sh --preset=stability`: `--bot-loop --bot-assist`, novice,
+help_cache first, `--autoplay=1800`; headless, 586 s of wall time): **passed**, exit 0.
+
+| Slice | Outcome | Simulated | Human estimate | Deaths | Duplicated rewards | Stuck events (all recovered) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | help_cache, completed | 520 s | 810 s | 0 | 0 | 0 |
+| 2 | help_ogre, completed | 519 s | 797 s | 0 | 0 | 2 |
+| 3 | intimidate, completed | 515 s | 754 s | 0 | 0 | 1 |
+| 4 | force, started (in the ruins' courtyard when the 1,800 s ran out) | 245 s | 389 s so far | 0 | 0 | 1 |
+
+Over the whole run: 1,800 s simulated, 4 level loads, **0 errors, 0 warnings, 0 breaches, 0
+invariant failures, 0 duplicated rewards, 0 teleports**; node count 5 s after each load 1,404 every
+time (no growth); every 60 s 1,411-2,187 as encounters spawn and despawn; static memory 113-135 MB
+(part of it the run's own per-tick samples); at most 12 active enemies; CPU per tick p50 2.92 /
+p95 5.40 / p99 7.16 ms, max 50.2 ms (a level load).
+
+**The stress route** (`docs/PERFORMANCE.md`, "Commands": `--level=res://scenes/test/stress_arena.tscn
+--scenario=stress --autoplay=300 --graphics=low`, headless, 79 s of wall time): exit 0, the
+scenario's own checks all passed. 300 s at stage 2, six laps; 12 combatants active (mean 11.8, never
+below 9; 12 respawns), all 20 breakables broken at least once (138 breaks), debris up to 40, 419
+hits resolved, 0 deaths, **0 errors, 0 warnings**; CPU per tick p50 2.22 / p95 3.69 / p99 5.13 ms
+(max 23.3 ms), the simulation alone p95 2.62 ms; nodes 1,220-1,245; static memory 101-104 MB.
 
 ### 6.3 The exports
 
@@ -258,7 +282,9 @@ The game's code and data at this handoff are those P17b measured, plus one HUD m
   in 0.54 of the stage-1 time.
 - **Assisted runs** (P17a, the M4 complete-loop gate): all four outcomes completed, 0 deaths,
   14-16 minutes of human estimate.
-- **The 30-minute run**, **the stress route**: §5.6-§5.7 above.
+- **The 30-minute run and the stress route** (P17b): both passed, as this package's runs on the
+  final code did (§6.2): three slices in a row with 0 errors and 1,404 nodes after every load; the
+  stress route at CPU per tick p95 3.72 ms.
 
 ### 6.5 The web build in Chromium
 
