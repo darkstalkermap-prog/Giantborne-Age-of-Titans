@@ -364,5 +364,54 @@ func _count_footfalls() -> void:
 	footfall.emit()
 
 ## @anchor P07
+# Grabbing, holding and throwing a body (P07). PlayerGrab.rig_state() writes "holding" (the held
+# body's attachment profile, "" when the hand is empty) and "grab_phase" ("reach", "hold",
+# "crush", "throw" or ""), and puts grab_pose() into "pose_override". The hand that holds - the
+# off hand, the club stays in the right; both hands for a two_hand hold in third person - points
+# at the socket where PlayerGrab places the held body, so the visible grip is the simulated one.
+# In first person the socket is low and to the left, so neither the arm nor the body covers the
+# crosshair.
+
+const GRAB_REACH_POSE := Vector2(-8.0, -20.0)        ## off arm at the end of a grab windup
+const THROW_RELEASE_POSE := Vector2(-6.0, 12.0)      ## off arm as a throw lets go
+const CRUSH_SHAKE_DEG := 2.5
+
+
+## (yaw, pitch) in degrees that point an arm from `shoulder` at `point` (both in actor space;
+## the inverse of AttackGeometry.local_direction).
+static func aim_pose(shoulder: Vector3, point: Vector3) -> Vector2:
+	var d := point - shoulder
+	if d.length_squared() < 1e-10:
+		return Vector2.ZERO
+	d = d.normalized()
+	return Vector2(rad_to_deg(atan2(d.x, -d.z)), rad_to_deg(asin(clampf(d.y, -1.0, 1.0))))
+
+
+## The arm poses of a grab phase, as a "pose_override": {"arm": weapon arm, "off": off arm,
+## "exact": false}. `socket` is the hand socket and `pivot` the weapon shoulder (the off shoulder
+## mirrors it), both in actor space; `phase` / `f` are the running action's phase and fraction;
+## `time_s` drives the crush's squeeze.
+##   reach  the off hand reaches forward over the windup
+##   hold   the off hand (two_hand: both hands) on the socket
+##   crush  the hold, squeezing
+##   throw  the hold while it winds back (the socket moves), then the arm follows through
+static func grab_pose(grab_phase: String, attach: String, socket: Vector3, pivot: Vector3,
+		idle_arm: Vector2, idle_off: Vector2, phase: int, f: float, time_s: float) -> Dictionary:
+	var off_shoulder := Vector3(-pivot.x, pivot.y, pivot.z)
+	var hold_off := aim_pose(off_shoulder, socket)
+	var hold_arm := aim_pose(pivot, socket) if attach == "two_hand" else idle_arm
+	var t := clampf(f, 0.0, 1.0)
+	match grab_phase:
+		"reach":
+			return {"arm": idle_arm, "off": idle_off.lerp(GRAB_REACH_POSE, 1.0 - (1.0 - t) * (1.0 - t)),
+				"exact": false}
+		"crush":
+			var shake := Vector2(sin(time_s * 55.0), cos(time_s * 47.0)) * CRUSH_SHAKE_DEG
+			return {"arm": hold_arm + shake * 0.5, "off": hold_off + shake, "exact": false}
+		"throw":
+			if attach == "" or phase == ActionDef.Phase.ACTIVE or phase == ActionDef.Phase.RECOVERY:
+				var settle := smoothstep(0.0, 1.0, t) if phase == ActionDef.Phase.RECOVERY else 0.0
+				return {"arm": idle_arm, "off": THROW_RELEASE_POSE.lerp(idle_off, settle), "exact": false}
+	return {"arm": hold_arm, "off": hold_off, "exact": false}
 
 ## @anchor P08
