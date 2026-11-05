@@ -28,11 +28,12 @@ real-browser gates are **NOT RUN**: their scripts and commands are ready for the
 
 **What was actually run for this handoff** (not only code-reviewed): the whole check sequence with
 every scene rebuilt and the slow suites; the default suite alone (for its time budget); on the final
-code, an assisted novice Valley run, the 30-minute run and the stress route; the Linux, Windows and
-Web release exports; the Linux export headless (the 120 s soak and a whole assisted Valley run); a
-rendered screenshot tour of the Valley beside the bot; the web build in Chromium (boot, title, New
-Game, the save across a page reload, Continue, the mouse capture from the title). The balance
-matrices were run by P17a and P17b on the same game code (§6.4).
+code, an assisted novice Valley run of each village outcome, the 30-minute run and the stress route;
+the Linux, Windows and Web release exports; the Linux export headless (the 120 s soak and a whole
+assisted Valley run); a rendered screenshot tour of the Valley beside the bot; the web build in
+Chromium (boot, title, New Game, the save across a page reload, Continue, the mouse capture from the
+title). P17b's balance matrix ran on the same game code (§6.4). P17a's runs came before P17b's
+tuning, so they are not evidence for this build.
 
 ## 2. Changed files and the runnable project
 
@@ -112,7 +113,7 @@ part that only a real PC, pad, browser or person can confirm. **FAIL** = measure
 | M1 Combat sandbox | Controls, both cameras, one enemy, damage and defence, breakable | PASS | `M1_HANDOFF.md`; all its tests still pass; the 120 s soak breaks fences and awards loot (§6.1) |
 | M2 Combat depth | Targeting, three-hit combo, four abilities, two enemy roles | PASS | `test_abilities_m2` (Footfall, Sweeping Blow, Stone Skin, Runic Bolt, plus Mend, Roar and Titan Surge: costs, cooldowns, statuses), `test_hostile_targeting`, `test_wolf` (lunge, flank, pack target switching, the light chain on a wolf at the giant's feet), the M1 combo and lock tests; the M2 review's two findings fixed |
 | M3 Scale proof | Three profiles, safe growth, grab/throw, persistent gate | PASS | `test_growth` (blocked growth changes nothing, no invalid spawn), `test_growth_route` (slow: the route at 3 sizes x 2 cameras), `test_grab_throw`, `test_boulder_hurl`, `test_save_load_world` (a cracked practice gate reloads cracked); the M3 review's finding fixed |
-| M4 Playable Valley | Complete loop, five roles, eight abilities, boss, save/load | PASS | `test_valley_walkthrough` (slow: the quest line for all four outcomes); the assisted novice bot completes all four outcomes (P17a) and this package's assisted help_cache run on the final code (§6.2); `test_boss`, `test_boss_arena`, `test_valley_boss`; `test_session_flow` (Continue restores the save exactly), `test_checkpoint_triggers`; the M4 review's two findings fixed |
+| M4 Playable Valley | Complete loop, five roles, eight abilities, boss, save/load | PASS | `test_valley_walkthrough` (slow: the quest line for all four outcomes); on the final code the assisted novice bot completes every village outcome, one run each (§6.2), and again help_ogre and intimidate in the 30-minute run (§6.2) and intimidate on the Linux export (§6.3); on the same game code the unassisted novice completes 17 of 18 runs (force 2 of 3) and the expert 4 of 4 (P17b's final batch, §6.4); `test_boss`, `test_boss_arena`, `test_valley_boss`; `test_session_flow` (Continue restores the save exactly), `test_checkpoint_triggers`; the M4 review's two findings fixed |
 | M5 Test and tune | Usability, performance, controller and stability gates pass | PARTIAL | Stability **PASS** (30-minute run); performance **PARTIAL** (simulation CPU met; draw calls not met with five or more enemies in view; frame and GPU times NOT RUN); controller **PARTIAL** (every menu by synthetic pad events; a real pad NOT RUN); usability **NOT RUN** (script delivered). Details below. |
 
 ### 5.2 First-delivery minimum pass (spec §15, still holding)
@@ -167,7 +168,7 @@ part that only a real PC, pad, browser or person can confirm. **FAIL** = measure
 | 1080p `low`: frame time p95 ≤ 16.7 ms, p99 < 33.3 ms, exported build | NOT RUN | Needs a real GPU; the commands are in `docs/PERFORMANCE.md` ("Commands": `Giantborn.console.exe`, the stress route and the Valley walk) |
 | GPU and CPU profiled separately | PARTIAL | PerfProbe reports GPU and CPU render times apart (N/A here: no GPU) and the simulation's CPU per tick (measured) |
 | Stress route: 12 combatants, 20 breakables, ≤ 40 debris, 5 minutes | PASS (frame time NOT RUN) | 300 s, `low`, headless, on the final code (§6.2): 12 active (mean 11.8), all 20 breakables broken (138 breaks), debris up to 40, 0 deaths, 0 errors, 0 warnings; CPU per tick p50 2.22 / p95 3.69 / p99 5.13 ms (P17b's run: 2.27 / 3.72 / 5.12) |
-| Simulation CPU per tick p95 ≤ 8 ms (container, indicative) | PASS | On the final code (§6.2): stress 3.69 ms, 5.40 ms over the 30-minute run, 6.01 ms in the help_cache run; at most 6.37 ms in every run of P17b's final balance matrix (three runs at once) |
+| Simulation CPU per tick p95 ≤ 8 ms (container, indicative) | PASS | On the final code (§6.2): stress 3.69 ms, 5.40 ms over the 30-minute run, 6.01 ms in the help_cache run alone, 5.39-5.88 ms in the four assisted runs (two at a time); at most 6.37 ms in every run of P17b's final balance matrix (three runs at once) |
 | Distant actors drawn as a low-detail representation | PASS | AI tier 2 shows a one-box proxy (`test_blockers_lod`; the Valley walk's comparison: 12 proxies 262 draw calls, 12 rigs 653) |
 | A visible active-enemy budget | PASS | 12 (the director); at most 12 active and 12 hostiles within 40 m in every bot run (invariant) |
 | Draw calls ≤ 250 in any Valley view | **FAIL** with five or more enemies in view | The static world draws at most 93 per view at `low` (221 at `medium`); each full-rig enemy adds about 33, so the Valley walk peaks at 656 (p50 256) at `low`. Deferred (§7) |
@@ -220,16 +221,31 @@ in six runs of its suite alone.
 
 ### 6.2 Bot runs, the 30-minute run and the stress route on the final code
 
-One assisted novice run of the help_cache outcome on the final code (`tools/run_bots.sh
-help_cache:novice:1:assist`, headless, `--fixed-fps 60`, 182 s of wall time):
+**The assisted novice in every village outcome** (`tools/run_bots.sh --preset=assisted`: novice,
+seed 1, `--bot-assist`; headless, `--fixed-fps 60`, two runs at a time, 149-182 s of wall time each;
+tag `ship_gate_assisted`, on `5622df5`). The Ship gate review added this batch; §6.4 says why.
 
-| Completed | Simulated | Human estimate | Deaths | Breaches | Invariant failures | Duplicated rewards | Teleports | Errors / warnings | Peak active / hostiles within 40 m | CPU per tick p50 / p95 / p99 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| yes (help_cache) | 520 s | 810 s (13.5 min) | 0 | 0 | 0 | 0 | 0 | 0 / 0 | 11 / 7 | 3.08 / 6.01 / 7.90 ms |
+| Outcome | Completed | Simulated | Human estimate | Deaths | Breaches | Invariant failures | Duplicated rewards | Teleports | Errors / warnings | Peak active / hostiles within 40 m | CPU per tick p50 / p95 / p99 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| help_cache | yes | 520 s | 810 s (13.5 min) | 0 | 0 | 0 | 0 | 0 | 0 / 0 | 11 / 7 | 2.98 / 5.84 / 7.95 ms |
+| help_ogre | yes | 458 s | 744 s (12.4 min) | 0 | 0 | 0 | 0 | 0 | 0 / 0 | 8 / 6 | 2.90 / 5.74 / 7.82 ms |
+| intimidate | yes | 451 s | 690 s (11.5 min) | 0 | 0 | 0 | 0 | 0 | 0 / 0 | 8 / 7 | 2.94 / 5.39 / 7.51 ms |
+| force | yes | 512 s | 720 s (12.0 min) | 0 | 0 | 0 | 0 | 0 | 0 / 0 | 12 / 11 | 3.26 / 5.88 / 7.91 ms |
 
-Segments (raw minutes): the Hollow 0.5, the forest 1.3, the Grove 0.2, the village 2.2 (the quarry
-detour), the ruins 1.9, the boss 0.8, the return 1.7. The Linux export's run of the intimidate
-outcome is in §6.3; the rendered tour's help_cache run in §6.6.
+Segments, in raw minutes:
+
+| Outcome | Hollow | Forest | Grove | Village | Ruins | Boss | Return |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| help_cache | 0.5 | 1.3 | 0.2 | 2.2 (the quarry detour) | 1.9 | 0.8 | 1.7 |
+| help_ogre | 0.5 | 1.3 | 0.2 | 1.5 (the field ogre) | 1.7 | 0.9 | 1.6 |
+| intimidate | 0.5 | 1.3 | 0.2 | 0.6 | 2.1 | 0.9 | 1.8 |
+| force | 0.5 | 1.3 | 0.2 | 0.8 | 1.8 | 1.0 | 3.0 (back through the hostile village) |
+
+Stuck events 0, 1, 2 and 0, each recovered without a teleport. A run from New Game repeats exactly
+with the same seed: this package's first help_cache run, alone (182 s of wall time), took the same
+course (520 s, 810 s, the same segments) at CPU per tick p50 3.08 / p95 6.01 / p99 7.90 ms, and the
+Linux export's intimidate run (§6.3) has this one's times. The rendered tour's help_cache run is in
+§6.6.
 
 **The 30-minute run** (`tools/run_bots.sh --preset=stability`: `--bot-loop --bot-assist`, novice,
 help_cache first, `--autoplay=1800`; headless, 586 s of wall time): **passed**, exit 0.
@@ -268,9 +284,10 @@ hits resolved, 0 deaths, **0 errors, 0 warnings**; CPU per tick p50 2.22 / p95 3
 - **Web** (`builds/web/`): `index.wasm` 37,700,666 bytes (12,528,700 packed), `index.pck` 2,356,808
   (1,680,132 packed); about 14 MB to download in all.
 
-### 6.4 Earlier measurements on the same game code (P17a, P17b)
+### 6.4 Earlier measurements: P17b's final batch, and P17a's runs from before P17b's tuning
 
-The game's code and data at this handoff are those P17b measured, plus one HUD message text (§7):
+The game's code and data at this handoff are those of P17b's `final` batch (the build at
+`25c1fb7`), plus one HUD message text (§6.6) and the version string:
 
 - **Balance** (P17b's `final` batch: 22 unassisted runs, plan §5.6): the novice completes 17 of 18
   (every help_cache, help_ogre and intimidate seed; two of three force seeds), median 1 death; the
@@ -280,11 +297,16 @@ The game's code and data at this handoff are those P17b measured, plus one HUD m
 - **Growth changes the fights** (median of the novice runs): soldiers hold formation 0 % of their
   engaged time at stage 1 and 58 % at stage 2, flee or rout 55 % at stage 3; a stage-2 soldier dies
   in 0.54 of the stage-1 time.
-- **Assisted runs** (P17a, the M4 complete-loop gate): all four outcomes completed, 0 deaths,
-  14-16 minutes of human estimate.
 - **The 30-minute run and the stress route** (P17b): both passed, as this package's runs on the
   final code did (§6.2): three slices in a row with 0 errors and 1,404 nodes after every load; the
   stress route at CPU per tick p95 3.72 ms.
+
+P17a measured an earlier build. After P17a's merge, P17b retuned the game: the Ogre King's slam (126
+to 101 damage) and combo, the ogre's smash, the soldiers' pause between strikes, the archer's shot
+and the brace counter (data); the swing's vertical aim; the director's budget for hostile factions;
+the props' merged meshes. P17a's assisted runs of the four outcomes (its M4 complete-loop gate: all
+completed, 0 deaths, 14-16 minutes of human estimate) therefore describe that earlier build, and
+the M4 gate no longer counts them. The assisted runs on the shipped game are in §6.2.
 
 ### 6.5 The web build in Chromium
 

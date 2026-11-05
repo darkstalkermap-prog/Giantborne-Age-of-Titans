@@ -182,9 +182,9 @@ prop was named by its district); the version `0.5.0-m5`. See [docs/systems/P18.m
 
 ## 3. Fixes from the milestone gate reviews
 
-Each milestone gate had an independent review. Every confirmed finding was fixed with a regression
-test, or handed to the package that owned the files through `docs/plans/FOLLOWUPS.md` (all closed
-or deferred there).
+Each milestone gate, and the Ship gate at the end, had an independent review. Every confirmed
+finding was fixed with a regression test, or handed to the package that owned the files through
+`docs/plans/FOLLOWUPS.md` (all closed or deferred there).
 
 | Gate | Finding | Fix |
 | --- | --- | --- |
@@ -193,6 +193,7 @@ or deferred there).
 | M3 | A released body counted as broken poise, so one stagger allowed endless re-grabs. | `PlayerGrab.has_broken_poise`: a release's recovery is not a poise break (P07). |
 | M4 | A tutorial prompt's fallback timeout lost its lesson (the quest stage could never complete). | A lesson stays open after its prompt is taken away (P13's tutorial director). |
 | M4 | Threat arrows and the objective marker drew under the TIP box and the hotbar. | Both overlays draw last and slide along the edge clear of every panel (`HudEdge`, P16). |
+| Ship | The handoff counted P17a's assisted runs of the four village outcomes as runs on the same game code, and as the M4 gate's evidence, but P17b retuned the game after them. | The four outcomes ran assisted on the final code (handoff §6.2, all completed) and the M4 row cites those runs; §1 and §6.4 say P17a's runs came before P17b's tuning (`test_ship_docs`). |
 
 ## 4. The plan's review log (plan §7)
 
