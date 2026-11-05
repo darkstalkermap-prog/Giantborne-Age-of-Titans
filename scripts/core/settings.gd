@@ -1,12 +1,26 @@
 extends Node
-## Player settings (autoload "Settings"): camera comfort, accessibility and input bindings.
+## Player settings (autoload "Settings"): camera comfort, accessibility, input bindings and the
+## graphics preset.
 ##
 ## Stored in user://settings.json through SaveIO (schema-versioned, atomic replace, one
 ## backup). Pass "--no-user-settings" after "--" on the command line (tests, soak runs) to
 ## ignore and never touch the user's file.
+##
+## Graphics preset (P14, plan §3.16): the setting "graphics_quality" is "low" or "medium" (the
+## desktop default). LevelRoot applies the level record's `render` preset for the quality in
+## effect, `graphics_quality` (Sun shadow distance, scenery visibility range, viewport MSAA). The
+## web build always runs "low", and the command-line flag --graphics=low|medium (after "--")
+## fixes the preset for one run without saving it (the reference-PC measurement uses
+## --graphics=low).
 
 const PATH := "user://settings.json"
 const SCHEMA_VERSION := 1
+## The graphics presets (the keys of a level record's `render`; plan §2.8.3).
+const GRAPHICS_QUALITIES := ["low", "medium"]
+const GRAPHICS_DEFAULT := "medium"
+## The web build (single-threaded: the play link) always runs this preset.
+const GRAPHICS_WEB := "low"
+const GRAPHICS_ARG := "--graphics="
 
 const DEFAULTS := {
 	"mouse_sensitivity": 0.12,        ## degrees of camera rotation per mouse pixel
@@ -22,6 +36,7 @@ const DEFAULTS := {
 	"vibration": 1.0,                 ## 0..1 controller rumble
 	"fp_aim_assist": true,            ## gentle first-person drift toward a locked target
 	"damage_numbers": true,
+	"graphics_quality": GRAPHICS_DEFAULT,   ## low | medium (P14); the web build always runs low
 	"bindings": {},                   ## action -> [event dicts]; replaces that action's defaults
 }
 const RANGES := {
@@ -29,7 +44,8 @@ const RANGES := {
 	"fov_deg": [60.0, 100.0], "camera_shake": [0.0, 1.0], "head_bob": [0.0, 1.0],
 	"hit_flash": [0.0, 1.0], "vibration": [0.0, 1.0],
 }
-const ENUMS := {"sprint_mode": ["hold", "toggle"], "lock_mode": ["toggle", "hold"]}
+const ENUMS := {"sprint_mode": ["hold", "toggle"], "lock_mode": ["toggle", "hold"],
+	"graphics_quality": GRAPHICS_QUALITIES}
 
 signal changed(key: String)
 
@@ -39,11 +55,24 @@ var persist := true
 var _unsaved := false   ## changed with save=false (live slider drags) and not yet written
 ## Session-only state that survives sandbox resets but is never written to disk.
 var session := {"camera_mode": 0}
+## The preset of --graphics=low|medium for this run ("" = none; never saved).
+var graphics_override := ""
+## The graphics preset in effect (read-only): "low" on the web, else the --graphics flag, else
+## the saved setting (resolve_graphics_quality).
+var graphics_quality: String:
+	get:
+		return resolve_graphics_quality(str(get_value("graphics_quality")), graphics_override,
+			OS.has_feature("web"))
 
 
 func _ready() -> void:
 	values = DEFAULTS.duplicate(true)
-	persist = not OS.get_cmdline_user_args().has("--no-user-settings")
+	var args := OS.get_cmdline_user_args()
+	persist = not args.has("--no-user-settings")
+	var graphics := parse_graphics_arg(args)
+	graphics_override = str(graphics.value)
+	if str(graphics.error) != "":
+		push_warning("[settings] " + str(graphics.error))
 	if persist:
 		load_settings()
 	apply_bindings()
@@ -184,3 +213,47 @@ func find_conflicts(action_name: String, ev: Dictionary) -> PackedStringArray:
 			if d == ev:
 				out.append(InputBindings.LABELS.get(other, other))
 	return out
+
+
+# --------------------------------------------------------------------------- graphics preset (P14)
+
+## The preset in effect for a saved value, a --graphics override ("" = none) and the platform:
+## the web build always runs GRAPHICS_WEB; a valid override wins over the saved value; an unknown
+## value falls back to GRAPHICS_DEFAULT.
+static func resolve_graphics_quality(saved: String, override: String, web: bool) -> String:
+	if web:
+		return GRAPHICS_WEB
+	if GRAPHICS_QUALITIES.has(override):
+		return override
+	if GRAPHICS_QUALITIES.has(saved):
+		return saved
+	return GRAPHICS_DEFAULT
+
+
+## The --graphics=low|medium option of the user args: {"value": "" | quality, "error": ""}. An
+## unknown value is an error message (the caller warns) and no override.
+static func parse_graphics_arg(args: PackedStringArray) -> Dictionary:
+	var out := {"value": "", "error": ""}
+	for arg in args:
+		if not arg.begins_with(GRAPHICS_ARG):
+			continue
+		var v := arg.substr(GRAPHICS_ARG.length()).strip_edges().to_lower()
+		if GRAPHICS_QUALITIES.has(v):
+			out.value = v
+			out.error = ""
+		else:
+			out.value = ""
+			out.error = "unknown %s%s (allowed: %s); the saved preset is used" % [GRAPHICS_ARG, v,
+				", ".join(PackedStringArray(GRAPHICS_QUALITIES))]
+	return out
+
+
+## Why the saved graphics setting does not decide the preset now ("" when it does): the web
+## build, or a --graphics flag. The settings page shows the row disabled with this text.
+func graphics_lock_reason() -> String:
+	if OS.has_feature("web"):
+		return "The web build always uses the Low preset."
+	if graphics_override != "":
+		return "Set to %s for this run by %s%s." % [graphics_override.capitalize(), GRAPHICS_ARG,
+			graphics_override]
+	return ""

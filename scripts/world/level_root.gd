@@ -16,18 +16,41 @@ extends Node3D
 ##
 ## Lookups are built once at _ready from the groups (descendants of this root only) and
 ## rebuilt when an id is not found, so nodes added later (tests) are found too.
+##
+## Graphics presets (P14, plan §3.16, §5.4): at _ready, and whenever the graphics setting
+## changes, the level record's `render` preset for the quality in effect is applied - the Sun's
+## directional_shadow_max_distance, visibility_range_end on every scenery geometry below this
+## root (groups SCENERY_GROUPS) and the viewport's 3D MSAA (put back when the level leaves the
+## tree). The quality is Settings.graphics_quality; on the web (or with force_web_for_tests) the
+## record's `web_overrides` decide instead: their `quality` (low) and `ai_tier1_m`, the distance
+## beyond which the EncounterDirector runs AI LOD tier 1 (its near_m: 30 m instead of 40 m).
 
 const GROUP := "level_root"
 ## Navigation layer bit -> the child of Navigation that holds it (plan §2.2).
 const NAV_REGION_NAMES := {1: "Human", 2: "Large", 4: "Giant", 8: "SmallGiant"}
+## Scenery geometry the preset's scenery_visibility_end_m applies to: "scenery" (any level) and
+## the Valley builder's "valley_scenery" (its tree MultiMeshes).
+const SCENERY_GROUPS := ["scenery", "valley_scenery"]
+## A preset's msaa (samples) -> Viewport.MSAA.
+const MSAA_MODES := {0: Viewport.MSAA_DISABLED, 2: Viewport.MSAA_2X, 4: Viewport.MSAA_4X, 8: Viewport.MSAA_8X}
+## The quality the web build runs when the record's web_overrides name none.
+const WEB_QUALITY := "low"
 
 ## The id of this level's `level` record (budget, AI LOD, districts, start checkpoint).
 @export var level_id := "level.valley"
+
+## Tests: behave as the web build (apply the record's web_overrides). Reset it after the test.
+static var force_web_for_tests := false
+
+## What apply_graphics() did last: {"quality", "web", "shadow_distance_m", "scenery_visibility_end_m",
+## "scenery_nodes", "msaa", "ai_tier1_m"} (only the keys it applied; {} before the first call).
+var applied_graphics: Dictionary = {}
 
 var _markers: Dictionary = {}       # marker_id -> LevelMarker
 var _checkpoints: Dictionary = {}   # checkpoint_id -> CheckpointMarker
 var _areas: Dictionary = {}         # area_id -> AreaTrigger
 var _player_ref: WeakRef = null
+var _msaa_before := -1              # the viewport's MSAA before this level changed it (-1: unchanged)
 
 
 func _enter_tree() -> void:
@@ -36,6 +59,13 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	rebuild_lookups()
+	apply_graphics()
+	if not Settings.changed.is_connected(_on_settings_changed):
+		Settings.changed.connect(_on_settings_changed)
+
+
+func _exit_tree() -> void:
+	_restore_msaa()
 
 
 ## The level record named by level_id ({} when there is none, e.g. a level without data).
@@ -193,3 +223,108 @@ func _lookup(table: Dictionary, id: String) -> Node:
 
 func _owns(n: Node) -> bool:
 	return n == self or is_ancestor_of(n)
+
+
+# --------------------------------------------------------------------------- graphics presets (P14)
+
+## True in the web build, or while force_web_for_tests is set.
+static func is_web() -> bool:
+	return OS.has_feature("web") or force_web_for_tests
+
+
+## The record's web_overrides ({} when it has none).
+func web_overrides() -> Dictionary:
+	var w: Variant = level_record().get("web_overrides", {})
+	return w if typeof(w) == TYPE_DICTIONARY else {}
+
+
+## The graphics quality this level runs: on the web the record's web_overrides.quality (default
+## low), else Settings.graphics_quality (the saved setting or the --graphics flag).
+func graphics_quality() -> String:
+	if is_web():
+		var q := str(web_overrides().get("quality", WEB_QUALITY))
+		return q if Settings.GRAPHICS_QUALITIES.has(q) else WEB_QUALITY
+	return Settings.graphics_quality
+
+
+## The record's render preset for `quality` ({} when the record has none).
+func render_preset(quality: String) -> Dictionary:
+	var render: Variant = level_record().get("render", {})
+	if typeof(render) != TYPE_DICTIONARY:
+		return {}
+	var preset: Variant = (render as Dictionary).get(quality, {})
+	return preset if typeof(preset) == TYPE_DICTIONARY else {}
+
+
+## Applies the render preset of graphics_quality() (and, on the web, the AI tier-1 distance of
+## web_overrides) and returns what it applied (also kept in applied_graphics). Safe to call
+## again: everything it sets is absolute. Called at _ready and on a graphics setting change.
+func apply_graphics() -> Dictionary:
+	var q := graphics_quality()
+	var out := {"quality": q, "web": is_web()}
+	var preset := render_preset(q)
+	if SchemaUtil.is_number(preset.get("shadow_distance_m")):
+		var sun := sun_light()
+		if sun != null:
+			sun.directional_shadow_max_distance = float(preset.shadow_distance_m)
+			out["shadow_distance_m"] = sun.directional_shadow_max_distance
+	if SchemaUtil.is_number(preset.get("scenery_visibility_end_m")):
+		var end := float(preset.scenery_visibility_end_m)
+		var nodes := scenery_nodes()
+		for g in nodes:
+			g.visibility_range_end = end
+		out["scenery_visibility_end_m"] = end
+		out["scenery_nodes"] = nodes.size()
+	if SchemaUtil.is_number(preset.get("msaa")) and is_inside_tree():
+		var mode: int = MSAA_MODES.get(int(preset.msaa), Viewport.MSAA_DISABLED)
+		var vp := get_viewport()
+		if _msaa_before < 0:
+			_msaa_before = vp.msaa_3d
+		vp.msaa_3d = mode as Viewport.MSAA
+		out["msaa"] = int(preset.msaa)
+	if is_web():
+		var tier1: Variant = web_overrides().get("ai_tier1_m")
+		var d := director()
+		if SchemaUtil.is_number(tier1) and d != null:
+			# The director's tier-0 radius: beyond it members run the reduced tier-1 rates.
+			d.near_m = minf(float(tier1), d.mid_m)
+			out["ai_tier1_m"] = d.near_m
+	applied_graphics = out
+	return out
+
+
+## The level's sun: the child named "Sun", else the first DirectionalLight3D below this root.
+func sun_light() -> DirectionalLight3D:
+	var sun := get_node_or_null("Sun") as DirectionalLight3D
+	if sun != null:
+		return sun
+	var found := find_children("*", "DirectionalLight3D", true, false)
+	return found[0] as DirectionalLight3D if not found.is_empty() else null
+
+
+## The scenery geometry below this root (members of SCENERY_GROUPS), each once.
+func scenery_nodes() -> Array[GeometryInstance3D]:
+	var out: Array[GeometryInstance3D] = []
+	if not is_inside_tree():
+		return out
+	for group: String in SCENERY_GROUPS:
+		for n in get_tree().get_nodes_in_group(group):
+			var g := n as GeometryInstance3D
+			if g != null and _owns(g) and not out.has(g):
+				out.append(g)
+	return out
+
+
+func _on_settings_changed(key: String) -> void:
+	if key == "graphics_quality" and is_inside_tree():
+		apply_graphics()
+
+
+## Puts the viewport's MSAA back as it was before this level changed it.
+func _restore_msaa() -> void:
+	if _msaa_before < 0:
+		return
+	var vp := get_viewport()
+	if vp != null:
+		vp.msaa_3d = _msaa_before as Viewport.MSAA
+	_msaa_before = -1
