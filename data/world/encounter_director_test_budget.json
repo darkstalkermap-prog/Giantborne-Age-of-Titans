@@ -1,0 +1,32 @@
+{
+	"schema_version": 1,
+	"id": "encounter.director_test_budget",
+	"type": "encounter",
+	"display_name": "Test budget (14 members)",
+	"level": "level.director_test",
+	"district": "",
+	"center_m": [0, 0, 15],
+	"activate_radius_m": 20,
+	"deactivate_radius_m": 45,
+	"leash_radius_m": 30,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "test.director.budget_w1", "definition": "enemy.wolf", "position_m": [-9, 0, 18], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_w2", "definition": "enemy.wolf", "position_m": [-6, 0, 18], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_w3", "definition": "enemy.wolf", "position_m": [-3, 0, 18], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_w4", "definition": "enemy.wolf", "position_m": [0, 0, 18], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_w5", "definition": "enemy.wolf", "position_m": [3, 0, 18], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_w6", "definition": "enemy.wolf", "position_m": [6, 0, 18], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_w7", "definition": "enemy.wolf", "position_m": [9, 0, 18], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_s1", "definition": "enemy.soldier", "position_m": [-9, 0, 12], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_s2", "definition": "enemy.soldier", "position_m": [-6, 0, 12], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_s3", "definition": "enemy.soldier", "position_m": [-3, 0, 12], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_s4", "definition": "enemy.soldier", "position_m": [0, 0, 12], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_s5", "definition": "enemy.soldier", "position_m": [3, 0, 12], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_s6", "definition": "enemy.soldier", "position_m": [6, 0, 12], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.budget_s7", "definition": "enemy.soldier", "position_m": [9, 0, 12], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

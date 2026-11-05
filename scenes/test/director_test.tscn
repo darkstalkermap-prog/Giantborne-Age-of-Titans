@@ -1,0 +1,345 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/level_root.gd" id="1_eea46"]
+[ext_resource type="Shader" path="res://assets/shaders/ground_checker.gdshader" id="2_49689"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+[ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="4_5575d"]
+[ext_resource type="Script" path="res://scripts/world/checkpoint_marker.gd" id="5_74fde"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="6_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="7_7ef4a"]
+[ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="8_b0840"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.45, 0.55, 0.68, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.6, 0.62, 0.68, 1)
+ambient_light_energy = 0.6
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(120, 1, 120)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3"]
+render_priority = 0
+shader = ExtResource("2_49689")
+shader_parameter/color_a = null
+shader_parameter/color_b = null
+shader_parameter/line_color = null
+shader_parameter/cell_size = null
+shader_parameter/line_width = null
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_4"]
+size = Vector2(120, 120)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(124, 4, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6"]
+albedo_color = Color(0.52, 0.52, 0.55, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(124, 4, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(124, 4, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(124, 4, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(2, 4, 124)
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(2, 4, 124)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_12"]
+size = Vector3(2, 4, 124)
+
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
+size = Vector3(2, 4, 124)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_14"]
+size = Vector3(3, 6, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_15"]
+albedo_color = Color(0.38, 0.38, 0.42, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_16"]
+size = Vector3(3, 6, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_17"]
+size = Vector3(3, 6, 3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_18"]
+size = Vector3(3, 6, 3)
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_19"]
+vertices = PackedVector3Array(-59.3, 0.5, -0.19999695, -22.099998, 0.5, -0.19999695, -21.8, 0.5, -2.2999992, -19.699997, 0.5, -59.3, -59.3, 0.5, -59.3, -19.699997, 0.5, -2.2999992, -17.599998, 0.5, -0.19999695, 17.800003, 0.5, -0.19999695, 17.800003, 0.5, -1.9999962, -17.899998, 0.5, -2.2999992, 19.900002, 0.5, -2.2999992, 19.900002, 0.5, -59.3, 22, 0.5, -2.2999992, 22.300003, 0.5, -0.19999695, 59.200005, 0.5, -0.19999695, 59.200005, 0.5, -59.3, -22.099998, 0.5, 1.9000015, -19.699997, 0.5, 2.2000046, -59.3, 0.5, 59.200005, -19.699997, 0.5, 59.200005, 17.800003, 0.5, 1.9000015, -17.599998, 0.5, 1.9000015, 19.900002, 0.5, 2.2000046, 19.900002, 0.5, 59.200005, 22, 0.5, 2.2000046, 59.200005, 0.5, 59.200005)
+polygons = [PackedInt32Array(1, 0, 2), PackedInt32Array(2, 0, 4), PackedInt32Array(2, 4, 3), PackedInt32Array(3, 5, 2), PackedInt32Array(8, 7, 6), PackedInt32Array(6, 9, 8), PackedInt32Array(8, 9, 10), PackedInt32Array(10, 9, 11), PackedInt32Array(11, 9, 3), PackedInt32Array(9, 5, 3), PackedInt32Array(13, 12, 14), PackedInt32Array(14, 12, 15), PackedInt32Array(15, 12, 11), PackedInt32Array(11, 12, 10), PackedInt32Array(0, 1, 16), PackedInt32Array(16, 17, 0), PackedInt32Array(0, 17, 19), PackedInt32Array(0, 19, 18), PackedInt32Array(21, 6, 20), PackedInt32Array(20, 6, 7), PackedInt32Array(20, 22, 21), PackedInt32Array(21, 22, 17), PackedInt32Array(17, 22, 23), PackedInt32Array(17, 23, 19), PackedInt32Array(13, 14, 24), PackedInt32Array(24, 14, 25), PackedInt32Array(24, 25, 23), PackedInt32Array(23, 22, 24)]
+cell_size = 0.3
+agent_height = 2.0
+agent_radius = 0.6
+agent_max_slope = 35.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_20"]
+size = Vector3(30, 8, 30)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_21"]
+height = 8.0
+radius = 12.0
+
+[node name="DirectorTestLevel" type="Node3D"]
+script = ExtResource("1_eea46")
+level_id = "level.director_test"
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8480481, 0.41758206, -0.32625088, 0, 0.6156615, 0.7880107, 0.52991927, -0.668271, 0.5221106, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_max_distance = 90.0
+
+[node name="World" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/Floor"]
+shape = SubResource("BoxShape3D_2")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+material_override = SubResource("ShaderMaterial_3")
+mesh = SubResource("PlaneMesh_4")
+
+[node name="WallNorth" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -61)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallNorth"]
+shape = SubResource("BoxShape3D_5")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallNorth"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_7")
+
+[node name="WallSouth" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 61)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallSouth"]
+shape = SubResource("BoxShape3D_8")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallSouth"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_9")
+
+[node name="WallEast" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 61, 2, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallEast"]
+shape = SubResource("BoxShape3D_10")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallEast"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_11")
+
+[node name="WallWest" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -61, 2, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallWest"]
+shape = SubResource("BoxShape3D_12")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallWest"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_13")
+
+[node name="PillarEast" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/PillarEast"]
+shape = SubResource("BoxShape3D_14")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/PillarEast"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_16")
+
+[node name="PillarWest" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 3, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/PillarWest"]
+shape = SubResource("BoxShape3D_17")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/PillarWest"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_18")
+
+[node name="Navigation" type="Node3D" parent="."]
+
+[node name="Human" type="NavigationRegion3D" parent="Navigation"]
+navigation_mesh = SubResource("NavigationMesh_19")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="test_marker_wolves" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 0, -30)
+script = ExtResource("3_acc12")
+marker_id = "test.marker.wolves"
+
+[node name="Cover" type="Node3D" parent="Markers"]
+
+[node name="test_marker_cover_1" type="Marker3D" parent="Markers/Cover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.5, 0, 3.5)
+script = ExtResource("3_acc12")
+marker_id = "test.marker.cover_1"
+kind = 1
+
+[node name="Formation" type="Node3D" parent="Markers"]
+
+[node name="test_marker_formation_1" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -20)
+script = ExtResource("3_acc12")
+marker_id = "test.marker.formation_1"
+kind = 3
+
+[node name="test_marker_formation_2" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, -20)
+script = ExtResource("3_acc12")
+marker_id = "test.marker.formation_2"
+kind = 3
+
+[node name="test_marker_formation_3" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -20)
+script = ExtResource("3_acc12")
+marker_id = "test.marker.formation_3"
+kind = 3
+
+[node name="Safe" type="Node3D" parent="Markers"]
+
+[node name="test_marker_safe_1" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0, 50)
+script = ExtResource("3_acc12")
+marker_id = "test.marker.safe_1"
+kind = 4
+
+[node name="BotRoute" type="Node3D" parent="Markers"]
+
+[node name="test_marker_bot_1" type="Marker3D" parent="Markers/BotRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 30)
+script = ExtResource("3_acc12")
+marker_id = "test.marker.bot_1"
+kind = 6
+
+[node name="Patrol" type="Node3D" parent="Markers"]
+
+[node name="test_patrol_soldiers" type="Node3D" parent="Markers/Patrol"]
+metadata/route_id = "test.patrol.soldiers"
+
+[node name="1" type="Marker3D" parent="Markers/Patrol/test_patrol_soldiers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -38)
+
+[node name="2" type="Marker3D" parent="Markers/Patrol/test_patrol_soldiers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -38)
+
+[node name="3" type="Marker3D" parent="Markers/Patrol/test_patrol_soldiers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, -24)
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="test_area_wolf_den" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 4, -30)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("4_5575d")
+area_id = "test.area.wolf_den"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/test_area_wolf_den"]
+shape = SubResource("BoxShape3D_20")
+
+[node name="test_area_camp" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 4, -30)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("4_5575d")
+area_id = "test.area.camp"
+once = true
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/test_area_camp"]
+shape = SubResource("CylinderShape3D_21")
+
+[node name="Checkpoints" type="Node3D" parent="."]
+
+[node name="CpStart" type="Marker3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 50)
+script = ExtResource("5_74fde")
+checkpoint_id = "test.director.cp_start"
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 50)
+
+[node name="Spawned" type="Node3D" parent="."]
+
+[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("6_627ae")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 50)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("7_7ef4a")
+
+[node name="EncounterDirector" type="Node" parent="."]
+script = ExtResource("8_b0840")
+
+[node name="Signs" type="Node3D" parent="."]
+
+[node name="SignWolves" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 4, -22)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "WOLVES: activate 25 m, leash 30 m"
+font_size = 64
+
+[node name="SignSoldiers" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 4, -22)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "SOLDIERS: commander, patrol, leash 40 m"
+font_size = 64
+
+[node name="SignBudget" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 19)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "BUDGET: 14 members, at most 12 alive"
+font_size = 64
+
+[node name="SignStart" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.55, 46)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "DIRECTOR TEST LEVEL (F3: director state)"
+font_size = 64

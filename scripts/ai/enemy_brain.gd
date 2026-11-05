@@ -1107,5 +1107,48 @@ func _ranged_path_failed(my_position: Vector3) -> bool:
 	_stop_moving()
 	return true
 ## @anchor P10a
+# --- leash return (P10a) ------------------------------------------------------------------------
+# RETURN: a leashed unit runs home and ignores every target on the way. EnemyActor's leash
+# return drives it (perception and decisions are paused meanwhile, so decide() never sees the
+# state): begin_return() when it starts, return_step() every tick, end_return() at home.
+
+## The unit starts walking home: target, awareness, attack request, formation slot and flight
+## are dropped (the actor gives its attack tokens back), state RETURN.
+func begin_return(tick: int) -> void:
+	now = tick
+	_leave_hold()
+	holds_token = false
+	_forget_target()
+	flee_point = Vector3.INF
+	_resume_after_stagger = -1
+	_set_state(AIState.RETURN)
+
+
+## One tick of the way home: run to `home`, facing the way it runs, still ignoring targets.
+func return_step(tick: int, home: Vector3) -> void:
+	now = tick
+	_forget_target()
+	if state != AIState.RETURN:
+		_set_state(AIState.RETURN)
+	move_target = home
+	move_speed = -1.0
+	face_point = Vector3.INF
+
+
+## Home (or dead): stop; IDLE, so patrol resumes and the unit may engage again; DEAD when it
+## died on the way. The old perception is dropped: the next perceive() starts afresh.
+func end_return(tick: int, alive: bool) -> void:
+	now = tick
+	_stop()
+	_forget_target()
+	perception = {}
+	_set_state(AIState.IDLE if alive else AIState.DEAD)
+
+
+func _forget_target() -> void:
+	aware = false
+	investigating = false
+	target_id = ""
+	attack_request = ""
 ## @anchor P11a
 ## @anchor P11b
