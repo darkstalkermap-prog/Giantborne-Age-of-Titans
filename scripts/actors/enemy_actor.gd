@@ -1143,7 +1143,7 @@ func on_grabbed(holder_id: String) -> void:
 	var anchor := grab_anchor_local()
 	grab_holder_id = holder_id
 	var vis := get_node_or_null("Visual")
-	_grab_saved = {"process_mode": process_mode, "lockable": entity.combatant.lockable,
+	_grab_saved = {"lockable": entity.combatant.lockable,
 		"visual_mode": vis.process_mode if vis != null else Node.PROCESS_MODE_INHERIT, "anchor": anchor}
 	Sim.release_all_tokens(entity.entity_id)
 	if brain != null:
@@ -1161,7 +1161,11 @@ func on_grabbed(holder_id: String) -> void:
 
 ## Places the held (or flying) body: the point `local_point` of this actor's own space (e.g.
 ## grab_anchor_local() or body_centre_local()) lands on `point`, the actor oriented by `basis`.
+## While it is held it stays out of the simulation even if its AI LOD tier changed meanwhile
+## (set_lod_tier would put it back).
 func carry(point: Vector3, basis: Basis, local_point: Vector3) -> void:
+	if grab_holder_id != "" and process_mode != Node.PROCESS_MODE_DISABLED:
+		process_mode = Node.PROCESS_MODE_DISABLED
 	global_transform = Transform3D(basis, point - basis * local_point)
 
 
@@ -1241,10 +1245,11 @@ func is_free_spot(feet: Vector3) -> bool:
 	return get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
 
 
+## Back into the simulation as its AI LOD tier says (dormant stays DISABLED).
 func _restore_after_grab() -> void:
 	if _grab_saved.is_empty():
 		return
-	process_mode = _grab_saved.process_mode
+	process_mode = Node.PROCESS_MODE_DISABLED if lod_tier >= 2 else _base_process_mode
 	if entity != null and entity.combatant != null:
 		entity.combatant.lockable = bool(_grab_saved.lockable)
 	var vis := get_node_or_null("Visual")

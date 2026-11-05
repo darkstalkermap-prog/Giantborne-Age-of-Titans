@@ -344,6 +344,12 @@ func test_the_held_body_sits_in_the_hand_out_of_the_simulation() -> void:
 	p.router.set_injected_move(Vector2.ZERO)
 	anchor = (s.get_node("Anchors/Grab") as Node3D).global_position
 	assert_true(anchor.distance_to(p.to_global(p.grab.socket_local())) < 0.01, "still in the hand after walking")
+	# An AI LOD change while held (the director, P10a) does not put it back into the simulation.
+	s.set_lod_tier(1)
+	await step_ticks(2)
+	assert_eq(s.process_mode, Node.PROCESS_MODE_DISABLED, "still out of the simulation after a LOD change")
+	anchor = (s.get_node("Anchors/Grab") as Node3D).global_position
+	assert_true(anchor.distance_to(p.to_global(p.grab.socket_local())) < 0.01, "and in the hand")
 	# The rig's off arm (it lerps into the pose) points at the socket, and its hand is there: the
 	# visible grip is the simulated one. The test resumes before this frame's _process, so the
 	# arm shows the previous tick's socket.
@@ -379,6 +385,7 @@ func test_the_held_body_sits_in_the_hand_out_of_the_simulation() -> void:
 	assert_eq(s.controller.state, CombatController.State.STAGGERED, "released into a 0.6 s stagger")
 	assert_true(s.controller.stagger_ticks_left <= 36, "0.6 s")
 	assert_eq(s.process_mode, Node.PROCESS_MODE_INHERIT, "back in the simulation")
+	assert_eq(s.lod_tier, 1, "at the LOD tier it was given meanwhile")
 	assert_true(s.entity.is_lockable(), "lockable again")
 	assert_near(p.motor.speed_mult(), 1.0, 1e-9, "full speed again")
 	assert_eq(p.controller.holding_id, "", "holding_id cleared")
