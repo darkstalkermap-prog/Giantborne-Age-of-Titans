@@ -317,7 +317,9 @@ func test_outmatched_thresholds() -> void:
 
 
 func test_formation_hold_slot_reach_and_hold_attack() -> void:
-	var b := _soldier()
+	# P11b gave the shipped soldier its brace as tactics.hold_attack; without one a holding unit
+	# strikes with its own attacks (the brace is checked below and in test_awe_brace).
+	var b := _soldier({"tactics": {"hold_attack": ""}})
 	var slot := Vector3(4, 0, -10)
 	var released := [0]
 	b.formation_resolver = func(_me: Vector3, _target: Vector3) -> Vector3: return slot
