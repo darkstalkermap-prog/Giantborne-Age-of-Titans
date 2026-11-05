@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "Ogre Smash",
 	"description": "The club driven into the ground: a pulse all round the ogre that matches its circle telegraph (r 3.5 m). Super armour through windup and strike; the long recovery is the punish window (plan section 4.4).",
-	"power": 50,
+	"power": 40,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,
