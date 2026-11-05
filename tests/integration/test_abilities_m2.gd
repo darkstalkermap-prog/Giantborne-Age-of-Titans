@@ -629,20 +629,26 @@ func _hud() -> Hud:
 	return hud
 
 
-## Every slot's shown reason is the reason preview_reason gives for that slot right now.
+## Every slot's shown reason is the reason preview_reason gives for that slot right now, with the
+## request parameters the player's components add (preview_params: P07's grab precheck on the
+## Crushing Grip and Boulder Hurl slots).
 func _check_hotbar(hud: Hud, p: GiantPlayer, label: String) -> void:
 	await get_tree().process_frame
 	hud.refresh()   # this tick's state (the HUD's own update ran a physics tick earlier)
 	for i in 9:
 		var ultimate := i == 8
-		var id := str(p.controller.loadout.get("ultimate" if ultimate else "slot_%d" % (i + 1), ""))
+		var key := "ultimate" if ultimate else "slot_%d" % (i + 1)
+		var id := str(p.controller.loadout.get(key, ""))
 		var state := hud.slot_state(i)
 		assert_eq(state.id, id, "%s: slot %d shows %s" % [label, i + 1, id])
 		if id == "":
 			assert_eq(state.reason, "", "%s: an empty slot has no reason" % label)
 			continue
-		var code := p.controller.preview_reason(&"ultimate", {}) if ultimate \
-			else p.controller.preview_reason(&"slot", {"slot": i + 1})
+		var params := {} if ultimate else {"slot": i + 1}
+		for comp: PlayerComponent in p.components():
+			if comp.has_method("preview_params"):
+				comp.call("preview_params", key, p.controller.library.get(id), params)
+		var code := p.controller.preview_reason(&"ultimate" if ultimate else &"slot", params)
 		assert_eq(state.reason_code, code, "%s: slot %d reason code = preview_reason" % [label, i + 1])
 		assert_eq(state.reason, Hud.reason_text(code, GameData.get_action(id)), "%s: slot %d text" % [label, i + 1])
 
