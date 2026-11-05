@@ -52,6 +52,8 @@ const OUTCOME_FLAG := "quest.village.outcome"
 const PROGRESSION_ID := "progression.default"
 const DEFAULT_PACING_LABEL := "Prototype pacing: accelerated quest XP"
 const MAX_HISTORY := 200
+## Shown when a talker's conversation cannot start (no record, or no entry holds).
+const NOTHING_TO_SAY := "They have nothing to say right now."
 ## A position lookup that found nothing is retried after this many ticks.
 const MISS_RETRY_TICKS := 60
 
@@ -345,6 +347,11 @@ func _complete_quest(rec: Dictionary, tick: int) -> void:
 	if typeof(flags) == TYPE_DICTIONARY:
 		for f: Variant in (flags as Dictionary).keys():
 			WorldState.try_set_flag(str(f), flags[f])
+	# GameSession checkpoints every main stage (quest_stage_changed); the main quest's end is one
+	# too, so the slice's completion is saved (in this tick's POST_RESOLVE drain, before the end
+	# screen opens, unless something blocks it).
+	if id == main_quest_id:
+		GameSession.request_checkpoint("quest_complete")
 
 
 func _abandon(rec: Dictionary, tick: int) -> void:
@@ -622,6 +629,8 @@ func _on_dialogue_requested(npc_id: String, dialogue_id: String) -> void:
 	var s := start_dialogue(dialogue_id, npc_id)
 	if s != null:
 		Events.ui_screen_requested.emit("dialogue", {"session": s, "npc_id": npc_id, "dialogue_id": dialogue_id})
+	else:
+		Events.hud_message.emit(NOTHING_TO_SAY, "info")
 
 
 # --------------------------------------------------------------------------- tutorial
