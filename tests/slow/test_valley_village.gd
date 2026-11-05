@@ -3,7 +3,8 @@ extends IntegrationSuite
 ## §4.3-4.4; slow, runs with --slow), all spawned by the EncounterDirector from data:
 ##   * encounter.village_guards: four guards at their village posts (valley.marker.guard_post_1..4,
 ##     claimed), the captain (commander) before the barricade and the archer on the watchtower - all
-##     neutral (team NEUTRAL, not targetable), holding, never aware (no checkpoint is deferred);
+##     neutral (team NEUTRAL, not targetable), holding, never aware (no checkpoint is deferred), and
+##     outside the active-combatant budget;
 ##   * encounter.village_folk (not budgeted): six villagers on the human navmesh and Elder Maren
 ##     with her NpcTalker (dialogue.elder);
 ##   * standing down sends every villager to a reachable cottage door (valley.marker.safe_house_*)
@@ -120,7 +121,7 @@ func test_the_village_spawns_from_data_neutral_and_calm() -> void:
 		assert_true(_on_human_navmesh(elder.global_position), "the elder stands on the human navmesh")
 	for b in GameSession.checkpoint_blockers():
 		assert_false(str(b).begins_with("aware:"), "no village member defers a checkpoint (%s)" % b)
-	assert_eq(d.active_combatant_count(), 6, "the six guards count toward the budget, the folk do not")
+	assert_eq(d.active_combatant_count(), 0, "neither the guards (a garrison, not combatants while neutral) nor the folk count toward the budget")
 
 
 func test_standing_down_shelters_the_folk_and_hostility_arms_the_guards() -> void:
