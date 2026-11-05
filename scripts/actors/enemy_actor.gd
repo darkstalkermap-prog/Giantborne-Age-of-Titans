@@ -1258,5 +1258,106 @@ func _restore_after_grab() -> void:
 	_grab_saved = {}
 ## @anchor P09
 ## @anchor P10a
+# --- leash return (P10a) ------------------------------------------------------------------------
+# The EncounterDirector calls begin_leash_return() on a member that strayed farther than its
+# encounter's leash radius from the centre (plan §3.10). The member drops its target and runs
+# back to home_position, ignoring the player on the way: the brain is in RETURN and its
+# perception and decisions are paused (ai_enabled false until it is home - EnemyBrain.decide()
+# hands states it does not know to the archetype's _decide_engaged(), so RETURN is driven from
+# here, by a Sim PRE_ACTORS hook of its own, right after the director's). LEASH_HEAL_S after
+# the leash it is back at full health (stamina and poise reset too); once home (or dead) the
+# return ends and its AI resumes from IDLE, so it can engage again.
+
+## Seconds after the leash began until the member is back at full health.
+const LEASH_HEAL_S := 6.0
+## The return ends this close to home_position (horizontal metres).
+const LEASH_ARRIVE_M := 1.5
+## PRE_ACTORS hook order of the return (after the EncounterDirector's 10).
+const LEASH_HOOK_ORDER := 12
+
+## Tick the current leash return began (-1 when it is not returning).
+var leash_started_tick := -1
+## How many leash returns this actor began (tests, debug).
+var leash_count := 0
+var _leash_returning := false
+var _leash_healed := false
+var _leash_ai_was_enabled := true
+var _leash_hook_owner: RefCounted = null
+
+
+## Starts the leash return (plan §2.7.3): drop the target and its attack tokens, run home to
+## home_position ignoring the player, regain full health LEASH_HEAL_S later, then resume the AI
+## at home. Nothing happens while dead or already returning.
+func begin_leash_return() -> void:
+	if _leash_returning or entity == null or not entity.is_alive() or brain == null:
+		return
+	_leash_returning = true
+	_leash_healed = false
+	leash_started_tick = Sim.tick
+	leash_count += 1
+	_leash_ai_was_enabled = ai_enabled
+	ai_enabled = false   # no perception, no decisions: it ignores targets until it is home
+	Sim.release_all_tokens(entity.entity_id)
+	_release_formation_marker()
+	brain.begin_return(Sim.tick)
+	request_repath()
+	_leash_hook_owner = RefCounted.new()
+	Sim.add_hook(Sim.Hook.PRE_ACTORS, _leash_hook_owner, _leash_step, LEASH_HOOK_ORDER)
+	_leash_step(Sim.tick)
+
+
+## True from begin_leash_return() until the member is home (or dead).
+func is_returning() -> bool:
+	return _leash_returning
+
+
+func _leash_step(tick: int) -> void:
+	if not _leash_returning:
+		return
+	if not is_inside_tree() or entity == null or entity.combatant == null:
+		_end_leash_return(false)   # despawned or unloaded: nothing left to walk home
+		return
+	if not entity.is_alive():
+		_end_leash_return(true)
+		return
+	if is_held():
+		return   # a giant holds it (P07): the return waits until it is put down
+	if not _leash_healed and tick - leash_started_tick >= ActionDef.seconds_to_ticks(LEASH_HEAL_S):
+		_leash_heal()
+	var to_home := Vector2(home_position.x - global_position.x, home_position.z - global_position.z)
+	if to_home.length() <= LEASH_ARRIVE_M:
+		_end_leash_return(true)
+		return
+	brain.return_step(tick, home_position)
+
+
+## Ends the return: the hook goes, a living member is healed (if the 6 s had not passed yet) and
+## its AI resumes from IDLE at home; a dead one's brain becomes DEAD. in_world: still in the
+## level (false when it left the tree: only the state is reset).
+func _end_leash_return(in_world: bool) -> void:
+	_leash_returning = false
+	leash_started_tick = -1
+	if _leash_hook_owner != null:
+		Sim.remove_hooks(_leash_hook_owner)
+		_leash_hook_owner = null
+	var alive := entity != null and entity.combatant != null and entity.is_alive()
+	if in_world and alive and not _leash_healed:
+		_leash_heal()
+	ai_enabled = _leash_ai_was_enabled
+	if brain != null:
+		brain.end_return(Sim.tick, alive)
+
+
+## Full health (through CombatEntity.heal, so Events.healed shows it), full stamina, no poise
+## damage.
+func _leash_heal() -> void:
+	_leash_healed = true
+	if entity == null or not entity.is_alive():
+		return
+	var pools := entity.combatant.pools
+	entity.heal(pools.health_max - pools.health, "leash")
+	pools.restore({"stamina": pools.stamina_max})
+	if not entity.combatant.poise.locked:
+		entity.combatant.poise.value = 0.0
 ## @anchor P11a
 ## @anchor P11b
