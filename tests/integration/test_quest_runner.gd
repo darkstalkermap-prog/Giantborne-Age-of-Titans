@@ -132,12 +132,12 @@ func test_stages_run_in_order_and_grant_their_rewards_once() -> void:
 	assert_eq(Quests.quest_state("quest.test_a"), Quests.INACTIVE, "evaluate_now does nothing while inactive")
 	Fx.activate(["quest.test_a"])
 	Quests.evaluate_now()
-	assert_eq(quest_events, ["started:quest.test_a", "stage:quest.test_a:one"], "auto_start: started at once")
+	assert_eq(quest_events, ["started:quest.test_a"], "auto_start: started at once (no stage change for the first stage)")
 	assert_eq(Quests.stage_of("quest.test_a"), "one", "stage one")
 	assert_eq(WorldState.get_flag("quest.test_a.stage"), "one", "kept in the quest's stage flag")
 	for i in 3:
 		Quests.evaluate_now()
-	assert_eq(quest_events.size(), 2, "re-evaluating changes nothing")
+	assert_eq(quest_events.size(), 1, "re-evaluating changes nothing")
 	WorldState.set_flag("test.flag.go", true)
 	await step_ticks(1)
 	assert_eq(Quests.stage_of("quest.test_a"), "two", "the hook evaluates on the next tick after a flag change")
@@ -159,8 +159,8 @@ func test_stages_run_in_order_and_grant_their_rewards_once() -> void:
 	assert_eq(WorldState.get_flag("quest.test_a.done"), true, "its done flag")
 	assert_eq(Quests.stage_of("quest.test_a"), "three", "the stage flag keeps the last stage")
 	assert_eq(WorldState.get_flag("test.flag.finished"), true, "on_complete_flags")
-	assert_eq(quest_events, ["started:quest.test_a", "stage:quest.test_a:one", "stage:quest.test_a:two",
-		"stage:quest.test_a:three", "completed:quest.test_a"], "the events in order")
+	assert_eq(quest_events, ["started:quest.test_a", "stage:quest.test_a:two", "stage:quest.test_a:three",
+		"completed:quest.test_a"], "the events in order")
 	assert_eq(xp_requests, [[10, "quest:quest.test_a:one"], [20, "quest:quest.test_a:two"],
 		[30, "quest:quest.test_a:three"]], "each stage's XP once")
 	assert_true(Quests.objectives().is_empty(), "no objective once complete")
@@ -204,7 +204,8 @@ func test_start_conditions_start_a_quest_and_abandon_when_ends_it_without_reward
 	WorldState.set_flag("quest.village.offer", "cache")
 	Quests.evaluate_now()
 	assert_eq(Quests.quest_state("quest.test_cache"), Quests.ACTIVE, "the offer starts it")
-	assert_eq(quest_events, ["started:quest.test_cache", "stage:quest.test_cache:get_cache"], "started")
+	assert_eq(quest_events, ["started:quest.test_cache"], "started")
+	assert_eq(Quests.stage_of("quest.test_cache"), "get_cache", "at its first stage")
 	WorldState.add_item("item.supply_cache", 1)
 	Quests.evaluate_now()
 	assert_eq(Quests.stage_of("quest.test_cache"), "return_cache", "the cache found")

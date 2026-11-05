@@ -14,12 +14,18 @@ static func install(records: Array) -> void:
 	Quests.tutorial.refresh_records()
 
 
-## Turns quests on (Quests.test_active) for these quest and prompt ids only; main_id names the
-## quest listed first (default: none of them is the main quest unless it is "quest.main").
+## An id no record has: an empty list scopes to it, so "no quests" (or "no prompts") really is none
+## (an empty scope would mean every record, the shipped ones included).
+const NONE := "test.none"
+
+
+## Turns quests on (Quests.test_active) for these quest and prompt ids only (an empty list: none);
+## main_id names the quest listed first (default: none of them is the main quest unless it is
+## "quest.main").
 static func activate(quest_ids: Array, prompt_ids: Array = [], main_id := "") -> void:
 	Quests.test_active = true
-	Quests.scope = PackedStringArray(quest_ids)
-	Quests.tutorial.scope = PackedStringArray(prompt_ids)
+	Quests.scope = PackedStringArray(quest_ids if not quest_ids.is_empty() else [NONE])
+	Quests.tutorial.scope = PackedStringArray(prompt_ids if not prompt_ids.is_empty() else [NONE])
 	if main_id != "":
 		Quests.main_quest_id = main_id
 	Quests.tutorial.refresh_records()

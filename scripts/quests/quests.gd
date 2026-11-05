@@ -12,7 +12,8 @@ extends Node
 ##   quest.<short id>.stage   the current stage id (the last one once complete)
 ##   quest.<short id>.done    true when complete, false when abandoned
 ## An auto_start quest starts at once (New Game); another starts the first time all its
-## start_conditions hold; abandon_when ends an active quest without rewards (quest_abandoned).
+## start_conditions hold (quest_started; its first stage is current); abandon_when ends an active
+## quest without rewards (quest_abandoned).
 ## A completed stage grants its rewards once, gated by try_set_flag("reward.<short id>.<stage>"):
 ## xp (Events.xp_award_requested(xp, "quest:<id>:<stage>")), items (WorldState.add_item) and
 ## set_flags (first write wins); then the next stage starts (quest_stage_changed; GameSession
@@ -290,13 +291,15 @@ func _step(rec: Dictionary, ctx: Dictionary, tick: int) -> bool:
 	return false
 
 
+## A quest starts at its first stage. Only quest_started announces it: quest_stage_changed is for
+## the stages that follow, so GameSession's quest.main checkpoints follow completed stages (New
+## Game, where quest.main starts, has just saved its own checkpoint).
 func _start(rec: Dictionary, tick: int) -> void:
 	var id := str(rec.id)
 	var first := str((_stages(rec)[0] as Dictionary).get("id", ""))
 	WorldState.set_flag(stage_flag(id), first)
 	_log(tick, id, "started", first)
 	Events.quest_started.emit(tick, id)
-	Events.quest_stage_changed.emit(tick, id, first)
 
 
 func _set_stage(quest_id: String, stage_id: String, tick: int) -> void:
