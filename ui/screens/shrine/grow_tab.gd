@@ -90,7 +90,8 @@ static func rows_for(s: Shrine, p: GiantPlayer) -> Array:
 	var need := int(prof.get("required_level", 1))
 	out.append({"id": "level", "met": level >= need,
 		"text": "Level %d%s" % [need, " (no level limit here)" if level >= 99 else " (you are level %d)" % level]})
-	var calm: bool = not p.entity.combatant.pools.in_combat()
+	# P16: the same gate as the growth itself (recent hits, or an aware enemy near the shrine).
+	var calm: bool = growth.combat_gate(s).ok
 	out.append({"id": "combat", "met": calm, "text": "Out of combat" if calm else PlayerGrowth.default_message("combat")})
 	var still: bool = p.controller.state == CombatController.State.LOCOMOTION and p.controller.holding_id == ""
 	out.append({"id": "busy", "met": still, "text": "Standing ready, hands free" if still else PlayerGrowth.default_message("busy")})

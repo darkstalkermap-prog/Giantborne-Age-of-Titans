@@ -11,6 +11,14 @@ extends PlayerComponent
 ## flies at. launch_offset_m is authored for the stage-1 giant and scales with k = height /
 ## 3.6576; "lock_or_camera" aims at the locked target's anchor, otherwise at the point under
 ## the crosshair (a camera ray up to the range).
+##
+## Range (P16, M2 review): a projectile slot aimed at a locked target its shot cannot reach (the
+## shot would fizzle at its range) is refused with "out_of_range" and spends nothing. The same
+## check is the slot's precheck in the HUD (preview_params) and in the request (handle_edge;
+## PlayerGrab's slots call range_reason too), so the hotbar's "Out of range" and the controller
+## never disagree.
+
+const OUT_OF_RANGE := "out_of_range"
 
 var runner: AttackRunner
 
@@ -95,6 +103,88 @@ func rig_state(out: Dictionary) -> void:
 
 
 # --------------------------------------------------------------------------- projectiles (P03)
+
+## Projectile slots go through here (after PlayerGrab, which takes Boulder Hurl and everything
+## while holding): the request carries range_reason as its precheck.
+func handle_edge(edge: StringName) -> bool:
+	var s := String(edge)
+	if edge != &"ultimate" and not s.begins_with("slot_"):
+		return false
+	var key := "ultimate" if edge == &"ultimate" else s
+	var def := _slot_action(key)
+	if def == null or def.hit_shape != "projectile":
+		return false
+	var params := {"precheck": range_reason.bind(def)}
+	if key == "ultimate":
+		player.controller.request(&"ultimate", params)
+	else:
+		params["slot"] = int(key.substr(5))
+		player.controller.request(&"slot", params)
+	return true
+
+
+## HUD hotbar (P03's hook): projectile slots get range_reason as their precheck, run after any
+## precheck another component added first.
+func preview_params(_slot_key: String, def: ActionDef, params: Dictionary) -> void:
+	if def == null or def.hit_shape != "projectile":
+		return
+	var mine := range_reason.bind(def)
+	var other: Variant = params.get("precheck")
+	if typeof(other) == TYPE_CALLABLE and (other as Callable).is_valid():
+		params["precheck"] = func() -> String:
+			var why := str((other as Callable).call())
+			return why if why != "" else str(mine.call())
+	else:
+		params["precheck"] = mine
+
+
+## "out_of_range" when projectile action `a` would fly at the locked target (aim lock_or_camera
+## or target) and could not reach it from its launch point: a straight shot farther than its
+## range plus its radius, an arc (aimed horizontally, clamped to its range) farther than its range
+## plus its splash or radius. "" otherwise (no lock, a dead target, camera or forward aim, or not
+## a projectile): an unlocked shot flies at the crosshair and is never refused.
+func range_reason(a: ActionDef) -> String:
+	if a == null or a.hit_shape != "projectile":
+		return ""
+	var spec := Projectile.spec_for(a)
+	if not (str(spec.aim) in ["lock_or_camera", "target"]):
+		return ""
+	var target := player.targeting.locked_entity() if player.targeting != null else null
+	if target == null or not target.is_alive():
+		return ""
+	return OUT_OF_RANGE if target_distance(a, target) > reach_of(spec) + 1e-4 else ""
+
+
+## The distance range_reason compares: the launch point to the target's anchor, horizontal for
+## an arc (arc_to_target with gravity), straight-line otherwise.
+func target_distance(a: ActionDef, target: CombatEntity) -> float:
+	var spec := Projectile.spec_for(a)
+	var offset: Vector3 = spec.launch_offset
+	var origin := player.to_global(offset * body_scale()) if offset != Vector3.INF \
+		else player.attack_origin_global()
+	var to := target.anchor_position() - origin
+	if _is_arc(spec):
+		to.y = 0.0
+	return to.length()
+
+
+## How far a shot of `spec` reaches toward a target: its range plus its radius (an arc: plus the
+## larger of its splash and its radius).
+static func reach_of(spec: Dictionary) -> float:
+	var extra := float(spec.radius_m)
+	if _is_arc(spec):
+		extra = maxf(extra, float(spec.impact_radius_m))
+	return float(spec.range_m) + extra
+
+
+static func _is_arc(spec: Dictionary) -> bool:
+	return bool(spec.arc_to_target) and float(spec.gravity_mps2) > 0.0
+
+
+func _slot_action(slot_key: String) -> ActionDef:
+	var id := str(player.controller.loadout.get(slot_key, ""))
+	return player.controller.library.get(id) if id != "" else null
+
 
 ## k: the giant's size relative to the stage-1 giant (launch offsets are authored for stage 1).
 func body_scale() -> float:

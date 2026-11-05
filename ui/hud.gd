@@ -91,6 +91,9 @@ func _on_action_rejected(_tick: int, actor_id: String, action_id: String, reason
 			show_message("%s needs %d fury" % [label, int(def.fury_cost) if def != null else 100], "warn")
 		"level_locked":
 			show_message("%s unlocks at level %d" % [label, def.unlock_level if def != null else 1], "warn")
+		"out_of_range":
+			show_message("%s: the target is out of range (%d m)" % [label,
+				roundi(float(Projectile.spec_for(def).range_m)) if def != null else 0], "warn")
 		"no_target":
 			show_message("No target for %s" % label, "warn")
 
@@ -214,6 +217,8 @@ func _make_slot(index: int) -> Dictionary:
 	reason.offset_top = 8
 	reason.offset_bottom = 22
 	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# P16: a reason wider than the slot ("Out of range") grows to both sides, staying centred.
+	reason.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	stack.add_child(reason)
 	# Selected target of projectile slots ("» Soldier" when locked, otherwise "aim"), above the slot.
 	var target := UiKit.label("", 10, UiKit.TEXT)
@@ -425,6 +430,17 @@ func show_message(text: String, kind: String = "info") -> void:
 		old.queue_free()
 
 
+## The message lines on screen now, oldest first (tests).
+func message_texts() -> PackedStringArray:
+	var out := PackedStringArray()
+	if _messages == null:
+		return out
+	for c in _messages.get_children():
+		if c is Label and not c.is_queued_for_deletion():
+			out.append((c as Label).text)
+	return out
+
+
 func _on_loot(_tick: int, _world_id: String, item_id: String, count: int, _who: String) -> void:
 	var item := GameData.get_record(item_id)
 	show_message("+%d %s" % [count, item.get("display_name", item_id)], "good")
@@ -553,7 +569,9 @@ func _preview_params(slot_key: String, def: ActionDef, providers: Array) -> Dict
 
 
 ## Hotbar text for a preview_reason code ("" = available): Dead, Stage N, Lv N, Cooldown,
-## Stamina, Essence, Fury, Busy, No target; anything else is shown capitalised.
+## Stamina, Essence, Fury, Busy, No target, Out of range (P16: a projectile locked beyond its
+## reach), and short texts for the grab codes (P16: P07's codes capitalised were too long for a
+## slot); anything else is shown capitalised.
 static func reason_text(code: String, def: ActionDef) -> String:
 	match code:
 		"":
@@ -574,8 +592,24 @@ static func reason_text(code: String, def: ActionDef) -> String:
 			return "Fury"
 		"busy", "airborne":
 			return "Busy"
-		"no_target", "no_grab_target":
+		"no_target", "no_grab_target", "nothing_in_reach":
 			return "No target"
+		"out_of_range":
+			return "Out of range"
+		"holding":
+			return "Hands full"
+		"not_holding":
+			return "Hand empty"
+		"not_staggered":
+			return "Stagger it"
+		"too_tall", "too_heavy_to_crush":
+			return "Too big"
+		"immune", "not_grabbable", "no_attach_profile":
+			return "No grip"
+		"no_los":
+			return "No sight"
+		"no_permission":
+			return "Too small"
 	return code.capitalize()
 
 

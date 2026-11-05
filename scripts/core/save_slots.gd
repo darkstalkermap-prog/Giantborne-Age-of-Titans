@@ -40,6 +40,10 @@ static func rejected_path(version: int) -> String:
 
 ## Writes `doc` (its schema_version set to SCHEMA_VERSION), creating the folder first.
 ## Returns {"ok", "message"}; the message names the problem when it failed.
+## P16 (M3 review): a main file written by a newer build is kept as its schemaN.rejected copy
+## before it is replaced (every path that writes - a checkpoint after --mode=valley --new-game
+## too - not only a read from the title), and the previous main file becomes the backup only when
+## it fully loads (validate() passes), so an invalid main never replaces the last good backup.
 static func write(doc: Dictionary) -> Dictionary:
 	var p := path()
 	var data := doc.duplicate(true)
@@ -49,10 +53,36 @@ static func write(doc: Dictionary) -> Dictionary:
 		var mk := DirAccess.make_dir_recursive_absolute(dir)
 		if mk != OK:
 			return {"ok": false, "message": "could not create %s (%s)" % [dir, error_string(mk)]}
-	var err := SaveIO.write_json(p, data)
+	keep_newer_main()
+	var err := SaveIO.write_json(p, data, loads)
 	if err != OK:
 		return {"ok": false, "message": "could not write %s (%s)" % [p.get_file(), error_string(err)]}
 	return {"ok": true, "message": ""}
+
+
+## SaveIO.write_json's backup check: true when `doc` would load (validate() finds nothing).
+static func loads(doc: Dictionary) -> bool:
+	return validate(doc).is_empty()
+
+
+## When the main file was written by a newer build (schema_version above SCHEMA_VERSION), copies it
+## to rejected_path() (unless an identical copy is there) and returns that path; "" otherwise.
+static func keep_newer_main() -> String:
+	var p := path()
+	if not FileAccess.file_exists(p):
+		return ""
+	var parsed := JsonIO.read_file(p)
+	if not parsed.ok or typeof(parsed.data) != TYPE_DICTIONARY:
+		return ""
+	var v: Variant = (parsed.data as Dictionary).get("schema_version")
+	if not SchemaUtil.is_number(v) or int(v) <= SCHEMA_VERSION:
+		return ""
+	var keep := rejected_path(int(v))
+	var main_text := FileAccess.get_file_as_string(p)
+	var kept_text := FileAccess.get_file_as_string(keep) if FileAccess.file_exists(keep) else ""
+	if main_text != kept_text:
+		DirAccess.copy_absolute(p, keep)
+	return keep
 
 
 ## Reads the slot. Returns {"ok", "data", "source": "main"|"backup"|"none", "message",
@@ -64,11 +94,9 @@ static func read() -> Dictionary:
 	var out := {"ok": false, "data": {}, "source": str(r.source), "message": str(r.message),
 		"future_version": int(r.get("future_version", 0)), "dropped": PackedStringArray()}
 	if int(out.future_version) > 0 and FileAccess.file_exists(p):
-		var keep := rejected_path(int(out.future_version))
-		var main_text := FileAccess.get_file_as_string(p)
-		var kept_text := FileAccess.get_file_as_string(keep) if FileAccess.file_exists(keep) else ""
-		if main_text != kept_text:
-			DirAccess.copy_absolute(p, keep)
+		var keep := keep_newer_main()
+		if keep == "":
+			keep = rejected_path(int(out.future_version))
 		out.message = _join(out.message, "It was kept as %s." % keep.get_file())
 	if not r.ok:
 		return out

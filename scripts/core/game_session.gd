@@ -85,6 +85,9 @@ var checkpoints_taken := 0
 var last_load_message := ""
 
 var _configured := false
+## The --level scene of the command line ("" = none). A Continue may replace level_override with
+## its save's scene; quitting to the title, the sandbox and a New Game go back to this one (P16).
+var _cli_level_override := ""
 var _pending: Dictionary = {}       ## {"reason", "respawn", "tick"} of the queued checkpoint
 var _load_reason := ""              ## why pending_restore is set: new_game|continue|death|debug|menu
 var _reload_floor: Dictionary = {}  ## death_reload_floor to apply on the next restore
@@ -173,6 +176,7 @@ func apply_args(o: Dictionary) -> void:
 	if level != "":
 		if ResourceLoader.exists(level):
 			level_override = level
+			_cli_level_override = level
 		else:
 			push_warning("GameSession: --level=%s does not exist; ignored" % level)
 	if str(o.get("unknown_mode", "")) != "":
@@ -307,12 +311,17 @@ func continue_valley() -> Dictionary:
 func start_sandbox() -> void:
 	mode = Mode.SANDBOX
 	_clear_session()
+	level_override = _cli_level_override
 	_reload_scene("sandbox")
 
 
+## Back to the title. A level a Continue loaded from its save (a test level's scene path) is
+## forgotten here (P16, M3 review): the Sandbox and New Game started from the title load their own
+## levels again (or the command line's --level).
 func go_to_title() -> void:
 	mode = Mode.TITLE
 	_clear_session()
+	level_override = _cli_level_override
 	_reload_scene("title")
 
 
@@ -624,18 +633,21 @@ func _writes_enabled() -> bool:
 
 ## Reloads the last checkpoint: its world and character come back and the scene reloads; the
 ## next on_level_ready puts the player at its respawn point. reason "death" applies the death
-## floor (decision 13); "continue", "debug" and "menu" restore it exactly.
+## floor (decision 13); "continue", "debug" and "menu" restore it exactly - unless the player is
+## dead when they are asked for (P16, M3 review: the pause menu's Load last checkpoint or F9 on
+## the death screen is a death reload too, so it gets the floor).
 func reload_checkpoint(reason: String) -> void:
 	if not checkpoints_enabled() or checkpoint_doc.is_empty():
 		Events.hud_message.emit("No checkpoint to load yet", "warn")
 		return
+	var dead := _player_dead()
 	var doc := checkpoint_doc
 	if not WorldState.from_save_dict(doc.get("world", {}) as Dictionary):
 		Events.hud_message.emit("The checkpoint's world state is damaged; it was not loaded", "bad")
 		return
 	character = (doc.get("character", {}) as Dictionary).duplicate(true)
 	respawn_id = str((doc.get("checkpoint", {}) as Dictionary).get("respawn", respawn_id))
-	_reload_floor = death_reload_floor() if reason == "death" else {}
+	_reload_floor = death_reload_floor() if reason == "death" or dead else {}
 	_pending = {}
 	stats.checkpoint_loads = int(stats.checkpoint_loads) + 1
 	pending_restore = true
@@ -779,6 +791,13 @@ func pending_checkpoint() -> Dictionary:
 	return _pending.duplicate()
 
 
+## True while the current level's player is dead (a reload from the menu or F9 then gets the
+## death floor).
+func _player_dead() -> bool:
+	var p := player()
+	return p != null and p.controller != null and p.controller.state == CombatController.State.DEAD
+
+
 func mode_name() -> String:
 	return MODE_NAMES[mode]
 
@@ -835,6 +854,7 @@ func debug_lines() -> PackedStringArray:
 func reset_for_tests() -> void:
 	mode = Mode.SANDBOX
 	level_override = ""
+	_cli_level_override = ""
 	character = {}
 	checkpoint_doc = {}
 	pending_restore = false
