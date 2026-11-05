@@ -29,7 +29,8 @@ mkdir -p "$OUT"
 for f in index.wasm index.pck; do
 	gzip -9 -n -c "$OUT/$f" | base64 | tr -d '\n' > "$OUT/$f.gz.b64.txt"
 done
-cp docs/screenshots/01_spawn_third_person.jpg "$OUT/poster.jpg"
+# The poster: the Valley at New Game (docs/screenshots/, rendered by tools/valley_tour.gd).
+cp docs/screenshots/01_hollow_start.jpg "$OUT/poster.jpg"
 
 size() { wc -c < "$1" | tr -d ' '; }
 wasm=$(size "$OUT/index.wasm")
