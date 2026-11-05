@@ -37,6 +37,16 @@ extends Node
 ## home_position, position and yaw (level space, lifted SPAWN_LIFT_M) and the LOD tier, then add
 ## it under LevelRoot/Spawned. Spawns happen only inside the director's own update (the Sim
 ## hook, or update_now()), never from a physics callback.
+##
+## The spawn hitch (P17a, FOLLOWUPS; P14 measured a 13-25 ms tick per activation and 100-150 ms
+## for the first load of an archetype's scene):
+##   * every scene the level's encounters can spawn is loaded when the encounters are read (at
+##     level load, under the loading frame) into a cache shared by every director of the process
+##     (static), so a death reload or a second level pays nothing again;
+##   * the Sim hook spawns at most spawns_per_tick (SPAWNS_PER_TICK) members per tick (about 3 ms
+##     each); members left over spawn on the following ticks (the encounter is active at once).
+##     update_now() and force_activate() - tests, tools and the boss arena, which want the members
+##     now - spawn without that limit; the budget holds either way.
 
 signal member_spawned(encounter_id: String, entity_id: String, node: Node3D)
 
@@ -52,6 +62,8 @@ const DEFAULT_CORPSE_FREE_S := 6.0
 const UNAWARE_DEACTIVATE_S := 10.0
 ## Spawned actors start this far above their data position (never inside the floor).
 const SPAWN_LIFT_M := 0.05
+## At most this many members spawn per tick from the Sim hook (the spawn hitch; P17a).
+const SPAWNS_PER_TICK := 2
 
 const DORMANT := "dormant"
 const ACTIVE := "active"
@@ -74,6 +86,9 @@ var corpse_free_s := DEFAULT_CORPSE_FREE_S
 var unaware_deactivate_s := UNAWARE_DEACTIVATE_S
 ## The highest active_combatant_count() seen after an update (tests, bot metrics).
 var peak_active := 0
+## Members the Sim hook spawns per tick at most (0 = no limit); update_now() and forced
+## activations ignore it.
+var spawns_per_tick := SPAWNS_PER_TICK
 
 var level: LevelRoot
 
@@ -82,8 +97,13 @@ var _order: PackedStringArray = PackedStringArray()
 var _members: Dictionary = {}      # entity id -> Member
 var _next_check_tick := -1
 var _dirty := false
-var _scenes: Dictionary = {}       # scene path -> PackedScene
 var _warned: Dictionary = {}
+var _spawn_quota := -1             # spawns left in this update (-1 = no limit)
+var _spawn_deferred := false       # a member waited for the quota (the next tick spawns it)
+
+## Scene path -> PackedScene (null when it does not load), shared by every director of the
+## process: preload_scenes() fills it at level load, so spawning never loads a scene.
+static var _scene_cache: Dictionary = {}
 
 
 class Encounter extends RefCounted:
@@ -202,10 +222,39 @@ func despawn(entity_id: String) -> void:
 
 
 ## Runs a full update now (tests, the bot): activation, spawns, leash, LOD, deactivation and
-## corpses, as the Sim hook does every check_ticks.
+## corpses, as the Sim hook does every check_ticks; every waiting member that fits the budget
+## spawns at once (no spawns_per_tick limit).
 func update_now() -> void:
 	_share_alerts(Sim.tick)
-	_update(Sim.tick)
+	_update(Sim.tick, 0)
+
+
+## The scene paths this level's encounters spawn (their definitions' scenes), sorted.
+func scene_paths() -> PackedStringArray:
+	var out := PackedStringArray()
+	for id in _order:
+		for m: Member in (_encounters[id] as Encounter).members:
+			var path := str(GameData.get_record(m.definition).get("scene", ""))
+			if path != "" and not out.has(path):
+				out.append(path)
+	out.sort()
+	return out
+
+
+## Loads every scene this level's encounters spawn into the shared cache (reload_encounters()
+## does it at level load). Returns how many it loaded now (0 when all were cached already).
+func preload_scenes() -> int:
+	var loaded := 0
+	for path in scene_paths():
+		if not _scene_cache.has(path):
+			_scene(path)
+			loaded += 1
+	return loaded
+
+
+## True when `path` is in the shared scene cache (tests).
+static func is_scene_cached(path: String) -> bool:
+	return _scene_cache.has(path) and _scene_cache[path] != null
 
 
 ## Ids of the encounters this director runs, in id order.
@@ -283,6 +332,7 @@ func reload_encounters() -> void:
 		_encounters[enc.id] = enc
 		_order.append(enc.id)
 	_order.sort()
+	preload_scenes()   # the spawn hitch (P17a): no scene loads when an encounter activates
 	for id in _order:
 		var enc: Encounter = _encounters[id]
 		if Waystone.flag_truthy(WorldState.get_flag(enc.flag)):
@@ -331,18 +381,26 @@ func _on_pre_actors(tick: int) -> void:
 		return
 	_share_alerts(tick)
 	if _dirty or tick >= _next_check_tick:
-		_update(tick)
+		_update(tick, spawns_per_tick)
 
 
-func _update(tick: int) -> void:
+## One update. quota > 0: at most that many members spawn in it (forced activations excepted);
+## members it leaves waiting spawn on the next tick (the update runs again then).
+func _update(tick: int, quota := 0) -> void:
 	_dirty = false
 	_next_check_tick = tick + maxi(1, check_ticks)
+	_spawn_quota = quota if quota > 0 else -1
+	_spawn_deferred = false
 	var player := _player()
 	var ppos := player.global_position if player != null else Vector3.INF
 	for id in _order:
 		var enc: Encounter = _encounters[id]
 		_refresh_nodes(enc)
 		_free_due_corpses(enc, tick)
+		var forced := enc.force_requested
+		var quota_left := _spawn_quota
+		if forced:
+			_spawn_quota = -1   # tests, tools and the boss arena want a forced encounter now
 		match enc.state:
 			DORMANT:
 				if enc.force_requested:
@@ -356,8 +414,13 @@ func _update(tick: int) -> void:
 				_update_active(enc, tick, ppos)
 			CLEARED:
 				_update_cleared(enc, ppos)
+		if forced:
+			_spawn_quota = quota_left
 		enc.force_requested = false
 	peak_active = maxi(peak_active, active_combatant_count())
+	_spawn_quota = -1
+	if _spawn_deferred:
+		_dirty = true   # the members left over spawn on the next tick
 
 
 ## True when every requires_flags flag is truthy and no forbids_flags flag is.
@@ -435,7 +498,8 @@ func _update_cleared(enc: Encounter, ppos: Vector3) -> void:
 
 
 ## Spawns the members still waiting, in spawn order, while the budget has room (members that do
-## not count toward it always spawn). Killed ones are skipped for good.
+## not count toward it always spawn) and the update's spawn quota lasts (the rest wait for the
+## next tick). Killed ones are skipped for good.
 func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
 	for m: Member in enc.members:
 		if m.status != UNSPAWNED:
@@ -445,7 +509,11 @@ func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
 			continue
 		if m.budgeted and active_combatant_count() >= max_active_enemies:
 			continue
-		_spawn(enc, m, tick, ppos)
+		if _spawn_quota == 0:
+			_spawn_deferred = true
+			continue
+		if _spawn(enc, m, tick, ppos) and _spawn_quota > 0:
+			_spawn_quota -= 1
 	if _all_dead(enc):
 		_check_cleared(enc, tick)
 
@@ -590,12 +658,13 @@ func _spawn(enc: Encounter, m: Member, tick: int, ppos: Vector3) -> bool:
 	return true
 
 
+## The PackedScene at `path` from the shared cache (loaded into it the first time).
 func _scene(path: String) -> PackedScene:
 	if path == "":
 		return null
-	if not _scenes.has(path):
-		_scenes[path] = load(path) as PackedScene if ResourceLoader.exists(path) else null
-	return _scenes[path]
+	if not _scene_cache.has(path):
+		_scene_cache[path] = load(path) as PackedScene if ResourceLoader.exists(path) else null
+	return _scene_cache[path]
 
 
 # --------------------------------------------------------------------------- deaths, routs, clearing

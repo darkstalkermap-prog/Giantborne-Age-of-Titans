@@ -28,6 +28,8 @@ extends Node
 ## The M1 sandbox (GameSession.SANDBOX_SCENE is the one loaded).
 const SANDBOX_SCENE := "res://scenes/world/sandbox_arena.tscn"
 const LOADING_TEXT := "Loading..."
+## The death screen ignores its confirm for this long after the death (handle_death_confirm).
+const DEATH_CONFIRM_DELAY_S := 1.0
 
 var hud: Hud
 var screen_stack: ScreenStack
@@ -204,8 +206,7 @@ func _input(event: InputEvent) -> void:
 	InputBindings.note_device(event)
 	if screen_stack == null or not _in_level:
 		return
-	if is_death_confirm(event) and not _screen_open() and _player_dead():
-		_confirm_death()
+	if handle_death_confirm(event, get_tree().get_first_node_in_group("player") as GiantPlayer, _screen_open()):
 		get_viewport().set_input_as_handled()
 		return
 	if autopilot != null or DisplayServer.get_name() == "headless":
@@ -231,6 +232,34 @@ static func is_death_confirm(event: InputEvent) -> bool:
 		return key.pressed and not key.echo and key.keycode in [KEY_ENTER, KEY_KP_ENTER]
 	var pad := event as InputEventJoypadButton
 	return pad != null and pad.pressed and pad.button_index == JOY_BUTTON_A
+
+
+## The death screen's confirm (Enter / pad A) while `player` is dead and no screen is open: once
+## the death screen has shown for DEATH_CONFIRM_DELAY_S it loads the last checkpoint (or restarts
+## the sandbox); before that the press is swallowed and does nothing (P17a, M4 review: a player
+## mashing pad A - jump - or LT+A - Heavy Footfall - at the moment of death skipped the death
+## screen). True when the event was such a confirm (used or ignored), so _input consumes it.
+func handle_death_confirm(event: InputEvent, player: GiantPlayer, screen_open: bool) -> bool:
+	if screen_open or not is_death_confirm(event) or not is_dead(player):
+		return false
+	if death_confirm_ready(player, Sim.tick):
+		_confirm_death()
+	return true
+
+
+static func is_dead(player: GiantPlayer) -> bool:
+	return player != null and is_instance_valid(player) and player.controller != null \
+		and player.controller.state == CombatController.State.DEAD
+
+
+## True when the death screen of a dead `player` accepts its confirm at `now_tick`: at least
+## DEATH_CONFIRM_DELAY_S (in simulation ticks) after the death (CombatEntity.died_tick; a death
+## without a recorded tick is ready at once, so the screen can never lock).
+static func death_confirm_ready(player: GiantPlayer, now_tick: int) -> bool:
+	if not is_dead(player):
+		return false
+	var died := player.entity.died_tick if player.entity != null else -1
+	return died < 0 or now_tick - died >= ActionDef.seconds_to_ticks(DEATH_CONFIRM_DELAY_S)
 
 
 ## Death confirm: load the last checkpoint where checkpoints exist, else restart the sandbox.

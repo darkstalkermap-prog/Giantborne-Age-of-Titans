@@ -61,11 +61,17 @@ func _ready() -> void:
 		for path in list_suites(dir_path):
 			if filter != "" and not path.contains(filter):
 				continue
-			var script: GDScript = load(path)
-			if script == null:
-				total_failures.append("%s: failed to load (parse error?)" % path)
+			var made := instantiate_suite(path)
+			if made.suite == null:
+				# A suite that does not compile is a failure of its own, never a stall (P17a,
+				# FOLLOWUPS): its parse errors are reported with it, not with the next test.
+				suites += 1
+				total_failures.append(str(made.error))
+				for err in _logger.take():
+					total_failures.append("%s: engine/script error: %s" % [path, err])
+				print("  %-40s FAILED TO LOAD" % path.get_file().get_basename())
 				continue
-			var suite: TestSuite = script.new()
+			var suite: TestSuite = made.suite
 			suite.name = path.get_file().get_basename()
 			add_child(suite)
 			suites += 1
@@ -99,6 +105,25 @@ func _ready() -> void:
 	print("RESULT: %d suites, %d checks, %d failures" % [suites, total_checks, total_failures.size()])
 	OS.remove_logger(_logger)
 	get_tree().quit(1 if not total_failures.is_empty() else 0)
+
+
+## The suite in the script at `path`, ready to add: {"suite": TestSuite, "error": ""}, or
+## {"suite": null, "error": "<path>: <why>"} when the script does not load, does not compile (a
+## parse error: GDScript.can_instantiate() is false, and new() would fail) or is not a TestSuite.
+## The runner used to call new() on a broken script; the error stopped its coroutine and the run
+## stalled until check.sh's time limit (P17a, FOLLOWUPS).
+static func instantiate_suite(path: String) -> Dictionary:
+	var script := load(path) as GDScript
+	if script == null:
+		return {"suite": null, "error": "%s: failed to load" % path}
+	if not script.can_instantiate():
+		return {"suite": null, "error": "%s: does not compile (parse error)" % path}
+	var instance: Variant = script.new()
+	if not (instance is TestSuite):
+		if instance is Node:
+			(instance as Node).free()
+		return {"suite": null, "error": "%s: is not a TestSuite" % path}
+	return {"suite": instance, "error": ""}
 
 
 ## test_*.gd files directly in dir_path (no recursion), sorted. A missing folder is empty.
