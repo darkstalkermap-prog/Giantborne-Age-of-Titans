@@ -1,0 +1,141 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/forge.gd" id="1_f9160"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(4.2, 1.6, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(1.8, 4.8, 1.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
+albedo_color = Color(0.3, 0.29, 0.28, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(4.2, 1.6, 3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(4.4, 0.25, 3.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(1.8, 4.8, 1.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7"]
+albedo_color = Color(1, 0.45, 0.12, 1)
+roughness = 0.4
+emission_enabled = true
+emission = Color(1, 0.42, 0.1, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(2.6, 0.3, 1.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(1.2, 0.8, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(1.4, 1.1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
+size = Vector3(2.4, 0.5, 0.9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
+size = Vector3(1.4, 1.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13"]
+albedo_color = Color(0.2, 0.21, 0.23, 1)
+metallic = 0.6
+roughness = 0.45
+
+[sub_resource type="BoxMesh" id="BoxMesh_14"]
+size = Vector3(0.9, 0.3, 0.7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_15"]
+size = Vector3(2.4, 0.5, 0.9)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_16"]
+top_radius = 0.05
+bottom_radius = 0.42
+height = 1.1
+radial_segments = 8
+
+[node name="Forge" type="Node3D"]
+script = ExtResource("1_f9160")
+world_id = "valley.ruins.giantforge"
+display_name = "Giantforge"
+requires_flags = PackedStringArray()
+prompt = "Reforge"
+radius_m = 4.5
+priority = 45
+
+[node name="Hearth" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
+collision_mask = 0
+
+[node name="Base" type="CollisionShape3D" parent="Hearth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Chimney" type="CollisionShape3D" parent="Hearth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0.5)
+shape = SubResource("BoxShape3D_2")
+
+[node name="BaseMesh" type="MeshInstance3D" parent="Hearth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_4")
+
+[node name="Lip" type="MeshInstance3D" parent="Hearth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.72, 0)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_5")
+
+[node name="ChimneyMesh" type="MeshInstance3D" parent="Hearth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0.5)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_6")
+
+[node name="Fire" type="Node3D" parent="Hearth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, -0.3)
+
+[node name="Coals" type="MeshInstance3D" parent="Hearth/Fire"]
+material_override = SubResource("StandardMaterial3D_7")
+mesh = SubResource("BoxMesh_8")
+
+[node name="Flame" type="MeshInstance3D" parent="Hearth/Fire"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.1)
+material_override = SubResource("StandardMaterial3D_7")
+mesh = SubResource("BoxMesh_9")
+
+[node name="Anvil" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.8)
+collision_mask = 0
+
+[node name="Block" type="CollisionShape3D" parent="Anvil"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+shape = SubResource("BoxShape3D_10")
+
+[node name="Top" type="CollisionShape3D" parent="Anvil"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+shape = SubResource("BoxShape3D_11")
+
+[node name="BlockMesh" type="MeshInstance3D" parent="Anvil"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_12")
+
+[node name="Waist" type="MeshInstance3D" parent="Anvil"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+material_override = SubResource("StandardMaterial3D_13")
+mesh = SubResource("BoxMesh_14")
+
+[node name="TopMesh" type="MeshInstance3D" parent="Anvil"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+material_override = SubResource("StandardMaterial3D_13")
+mesh = SubResource("BoxMesh_15")
+
+[node name="Horn" type="MeshInstance3D" parent="Anvil"]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 1.65, 1.35, 0)
+material_override = SubResource("StandardMaterial3D_13")
+mesh = SubResource("CylinderMesh_16")
