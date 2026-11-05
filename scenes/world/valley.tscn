@@ -25,18 +25,22 @@
 [ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="23_960f4"]
 [ext_resource type="PackedScene" path="res://scenes/world/weapon_rack.tscn" id="24_2400b"]
 [ext_resource type="Script" path="res://scripts/world/weapon_rack.gd" id="25_9d4a3"]
-[ext_resource type="PackedScene" path="res://scenes/world/tree_small.tscn" id="26_46f38"]
-[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="27_f6def"]
-[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="28_e36fc"]
-[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="29_add9b"]
-[ext_resource type="PackedScene" path="res://scenes/world/practice_dummy.tscn" id="30_92864"]
-[ext_resource type="Script" path="res://scripts/actors/practice_dummy.gd" id="31_238a0"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="32_acc12"]
-[ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="33_5575d"]
-[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="34_627ae"]
-[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="35_7ef4a"]
-[ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="36_b0840"]
-[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="37_ce070"]
+[ext_resource type="PackedScene" path="res://scenes/world/item_pickup.tscn" id="26_ddeb9"]
+[ext_resource type="Script" path="res://scripts/world/item_pickup.gd" id="27_3b229"]
+[ext_resource type="PackedScene" path="res://scenes/world/forge.tscn" id="28_34b2a"]
+[ext_resource type="Script" path="res://scripts/world/forge.gd" id="29_f9160"]
+[ext_resource type="PackedScene" path="res://scenes/world/tree_small.tscn" id="30_46f38"]
+[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="31_f6def"]
+[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="32_e36fc"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="33_add9b"]
+[ext_resource type="PackedScene" path="res://scenes/world/practice_dummy.tscn" id="34_92864"]
+[ext_resource type="Script" path="res://scripts/actors/practice_dummy.gd" id="35_238a0"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="36_acc12"]
+[ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="37_5575d"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="38_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="39_7ef4a"]
+[ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="40_b0840"]
+[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="41_ce070"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -423,6 +427,7 @@ collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.quarry.chest"
+loot_table = "loot.crate_quarry"
 
 [node name="valley_ruins_armory_crate" type="StaticBody3D" parent="Props" instance=ExtResource("23_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 172, 0, -98)
@@ -430,6 +435,7 @@ collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.ruins.armory_crate"
+loot_table = "loot.crate_armory"
 
 [node name="valley_kingsfall_oak" type="Node3D" parent="Props" instance=ExtResource("18_20cb3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 175, 0, 45)
@@ -455,84 +461,126 @@ prompt = "Take"
 radius_m = 3.0
 priority = 45
 
-[node name="valley_forest_tree_01" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_quarry_cache" type="Node3D" parent="Props" instance=ExtResource("26_ddeb9")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -158)
+script = ExtResource("27_3b229")
+world_id = "valley.quarry.cache"
+item_id = "item.supply_cache"
+prompt = "Take"
+radius_m = 3.0
+priority = 45
+
+[node name="valley_barrow_crown" type="Node3D" parent="Props" instance=ExtResource("26_ddeb9")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 0.12, -172)
+script = ExtResource("27_3b229")
+world_id = "valley.barrow.crown"
+item_id = "item.crown_first_king"
+set_flag = "slice.crown_claimed"
+prompt = "Take"
+radius_m = 3.0
+priority = 45
+
+[node name="valley_village_forge" type="Node3D" parent="Props" instance=ExtResource("28_34b2a")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 40, 0, 2)
+script = ExtResource("29_f9160")
+world_id = "valley.village.forge"
+display_name = "Thornwick Smithy"
+requires_flags = PackedStringArray()
+requires_flag_values = {
+"quest.village.outcome": ["help_cache", "help_ogre"]
+}
+prompt = "Reforge"
+radius_m = 4.5
+priority = 45
+
+[node name="valley_ruins_giantforge" type="Node3D" parent="Props" instance=ExtResource("28_34b2a")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 175, 0, -104)
+script = ExtResource("29_f9160")
+world_id = "valley.ruins.giantforge"
+display_name = "The Giantforge"
+requires_flags = PackedStringArray()
+prompt = "Reforge"
+radius_m = 4.5
+priority = 45
+
+[node name="valley_forest_tree_01" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -131, 0, 86)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.forest.tree_01"
 
-[node name="valley_forest_tree_02" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_forest_tree_02" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(0.79863554, 0, 0.601815, 0, 1, 0, -0.601815, 0, 0.79863554, -149, 0, 74)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.forest.tree_02"
 
-[node name="valley_forest_tree_03" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_forest_tree_03" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(0.2756374, 0, 0.9612617, 0, 1, 0, -0.9612617, 0, 0.2756374, -127, 0, 36.7)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.forest.tree_03"
 
-[node name="valley_forest_tree_04" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_forest_tree_04" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(-0.35836795, 0, 0.93358046, 0, 1, 0, -0.93358046, 0, -0.35836795, -134.2, 0, 15)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.forest.tree_04"
 
-[node name="valley_forest_tree_05" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_forest_tree_05" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(-0.84804803, 0, 0.5299193, 0, 1, 0, -0.5299193, 0, -0.84804803, -110.3, 0, 11.7)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.forest.tree_05"
 
-[node name="valley_forest_tree_06" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_forest_tree_06" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(-0.9961947, 0, -0.08715581, 0, 1, 0, 0.08715581, 0, -0.9961947, -118.6, 0, -8.3)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.forest.tree_06"
 
-[node name="valley_forest_tree_07" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_forest_tree_07" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(-0.7431448, 0, -0.6691306, 0, 1, 0, 0.6691306, 0, -0.7431448, -108.7, 0, -23.2)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.forest.tree_07"
 
-[node name="valley_forest_tree_08" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_forest_tree_08" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(-0.19080885, 0, -0.9816272, 0, 1, 0, 0.9816272, 0, -0.19080885, -84.8, 0, -26.6)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.forest.tree_08"
 
-[node name="valley_forest_tree_09" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_forest_tree_09" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(0.438371, 0, -0.8987941, 0, 1, 0, 0.8987941, 0, 0.438371, -86.5, 0, -54.7)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.forest.tree_09"
 
-[node name="valley_forest_tree_10" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_forest_tree_10" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(0.8910065, 0, -0.45399052, 0, 1, 0, 0.45399052, 0, 0.8910065, -63.8, 0, -53.5)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.forest.tree_10"
 
-[node name="valley_forest_tree_11" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_forest_tree_11" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, -66.4, 0, -76.4)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("15_5fc47")
 world_id = "valley.forest.tree_11"
 
-[node name="valley_forest_tree_12" type="StaticBody3D" parent="Props" instance=ExtResource("26_46f38")]
+[node name="valley_forest_tree_12" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
 transform = Transform3D(0.6819984, 0, 0.7313537, 0, 1, 0, -0.7313537, 0, 0.6819984, -53.6, 0, -63.6)
 collision_layer = 16
 collision_mask = 0
@@ -541,36 +589,36 @@ world_id = "valley.forest.tree_12"
 
 [node name="Shrines" type="Node3D" parent="."]
 
-[node name="valley_shrine_hollow" type="Node3D" parent="Shrines" instance=ExtResource("27_f6def")]
+[node name="valley_shrine_hollow" type="Node3D" parent="Shrines" instance=ExtResource("31_f6def")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -130, 0, 145)
-script = ExtResource("28_e36fc")
+script = ExtResource("32_e36fc")
 world_id = "valley.shrine.hollow"
 shrine_id = "shrine.hollow"
 prompt = "Rest"
 radius_m = 4.0
 priority = 40
 
-[node name="valley_shrine_grove" type="Node3D" parent="Shrines" instance=ExtResource("27_f6def")]
+[node name="valley_shrine_grove" type="Node3D" parent="Shrines" instance=ExtResource("31_f6def")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 0, -70)
-script = ExtResource("28_e36fc")
+script = ExtResource("32_e36fc")
 world_id = "valley.shrine.grove"
 shrine_id = "shrine.grove"
 prompt = "Rest"
 radius_m = 4.0
 priority = 40
 
-[node name="valley_shrine_thornwick" type="Node3D" parent="Shrines" instance=ExtResource("27_f6def")]
+[node name="valley_shrine_thornwick" type="Node3D" parent="Shrines" instance=ExtResource("31_f6def")]
 transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 14, 0, -26)
-script = ExtResource("28_e36fc")
+script = ExtResource("32_e36fc")
 world_id = "valley.shrine.thornwick"
 shrine_id = "shrine.thornwick"
 prompt = "Rest"
 radius_m = 4.0
 priority = 40
 
-[node name="valley_shrine_kingsfall" type="Node3D" parent="Shrines" instance=ExtResource("27_f6def")]
+[node name="valley_shrine_kingsfall" type="Node3D" parent="Shrines" instance=ExtResource("31_f6def")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 55)
-script = ExtResource("28_e36fc")
+script = ExtResource("32_e36fc")
 world_id = "valley.shrine.kingsfall"
 shrine_id = "shrine.kingsfall"
 prompt = "Rest"
@@ -581,7 +629,7 @@ priority = 40
 
 [node name="valley_cp_forest_road" type="Marker3D" parent="Waystones"]
 transform = Transform3D(0.8290376, 0, -0.5591929, 0, 1, 0, 0.5591929, 0, 0.8290376, -140, 0.05, 38)
-script = ExtResource("29_add9b")
+script = ExtResource("33_add9b")
 requires_flags = PackedStringArray("encounter.forest_wolves_a.cleared")
 checkpoint_id = "valley.cp.forest_road"
 
@@ -609,7 +657,7 @@ mesh = SubResource("BoxMesh_8")
 
 [node name="valley_cp_ruins_gate" type="Marker3D" parent="Waystones"]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 134, 0.05, -18)
-script = ExtResource("29_add9b")
+script = ExtResource("33_add9b")
 requires_flags = PackedStringArray("world.ruins.gate_broken")
 checkpoint_id = "valley.cp.ruins_gate"
 
@@ -637,7 +685,7 @@ mesh = SubResource("BoxMesh_12")
 
 [node name="valley_cp_barrow_gap" type="Marker3D" parent="Waystones"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0.05, -122)
-script = ExtResource("29_add9b")
+script = ExtResource("33_add9b")
 requires_flags = PackedStringArray("world.forest.deadfall_broken")
 checkpoint_id = "valley.cp.barrow_gap"
 
@@ -665,18 +713,18 @@ mesh = SubResource("BoxMesh_16")
 
 [node name="Dummies" type="Node3D" parent="."]
 
-[node name="valley_hollow_dummy_1" type="StaticBody3D" parent="Dummies" instance=ExtResource("30_92864")]
+[node name="valley_hollow_dummy_1" type="StaticBody3D" parent="Dummies" instance=ExtResource("34_92864")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -118, 0, 160)
 collision_layer = 2
 collision_mask = 0
-script = ExtResource("31_238a0")
+script = ExtResource("35_238a0")
 entity_id = "valley.hollow.dummy_1"
 
-[node name="valley_hollow_dummy_2" type="StaticBody3D" parent="Dummies" instance=ExtResource("30_92864")]
+[node name="valley_hollow_dummy_2" type="StaticBody3D" parent="Dummies" instance=ExtResource("34_92864")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -112, 0, 150)
 collision_layer = 2
 collision_mask = 0
-script = ExtResource("31_238a0")
+script = ExtResource("35_238a0")
 entity_id = "valley.hollow.dummy_2"
 
 [node name="Markers" type="Node3D" parent="."]
@@ -685,184 +733,184 @@ entity_id = "valley.hollow.dummy_2"
 
 [node name="valley_marker_dummies" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -115, 0, 155)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.dummies"
 
 [node name="valley_marker_sparring_post" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -108, 0, 160)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.sparring_post"
 
 [node name="valley_marker_forest_trail" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -140, 0, 108)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.forest_trail"
 
 [node name="valley_marker_wolves_a" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -142, 0, 55)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.wolves_a"
 
 [node name="valley_marker_hunters" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, 10)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.hunters"
 
 [node name="valley_marker_ogre_clearing" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, -35)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ogre_clearing"
 
 [node name="valley_marker_grove_shrine" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 0, -76.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.grove_shrine"
 
 [node name="valley_marker_cairn" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42, 6, -88)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.cairn"
 
 [node name="valley_marker_village_gate" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -40)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.village_gate"
 
 [node name="valley_marker_elder" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, -40)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.elder"
 
 [node name="valley_marker_quarry_cache" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -154)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.quarry_cache"
 
 [node name="valley_marker_field_ogre" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, 55)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.field_ogre"
 
 [node name="valley_marker_bridge" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106, 0, -20)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.bridge"
 
 [node name="valley_marker_practice_gate" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 118, 0, -20)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.practice_gate"
 
 [node name="valley_marker_ruins_courtyard" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 0, -50)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ruins_courtyard"
 
 [node name="valley_marker_causeway" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 155, 0, 15)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.causeway"
 
 [node name="valley_marker_kingsfall_shrine" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 48.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.kingsfall_shrine"
 
 [node name="valley_marker_arena_center" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 135)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.arena_center"
 
 [node name="valley_marker_kingsfall_oak" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 175, 0, 39)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.kingsfall_oak"
 
 [node name="valley_marker_deadfall" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0, -104)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.deadfall"
 
 [node name="valley_marker_crown" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 0, -170)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.crown"
 
 [node name="Formation" type="Node3D" parent="Markers"]
 
 [node name="valley_marker_guard_post_1" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0, -28)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.guard_post_1"
 kind = 3
 faction = "village"
 
 [node name="valley_marker_guard_post_2" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0, -12)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.guard_post_2"
 kind = 3
 faction = "village"
 
 [node name="valley_marker_guard_post_3" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0, -26)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.guard_post_3"
 kind = 3
 faction = "village"
 
 [node name="valley_marker_guard_post_4" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0, -14)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.guard_post_4"
 kind = 3
 faction = "village"
 
 [node name="valley_marker_road_line_1" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -46)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.road_line_1"
 kind = 3
 
 [node name="valley_marker_road_line_2" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -52)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.road_line_2"
 kind = 3
 
 [node name="valley_marker_quarry_line_1" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0, -138)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.quarry_line_1"
 kind = 3
 
 [node name="valley_marker_quarry_line_2" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -136)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.quarry_line_2"
 kind = 3
 
 [node name="valley_marker_quarry_line_3" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 0, -138)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.quarry_line_3"
 kind = 3
 
 [node name="valley_marker_ruins_line_1" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 137, 0, -27)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ruins_line_1"
 kind = 3
 
 [node name="valley_marker_ruins_line_2" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 137, 0, -13)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ruins_line_2"
 kind = 3
 
 [node name="valley_marker_ruins_line_3" type="Marker3D" parent="Markers/Formation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 0, -40)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ruins_line_3"
 kind = 3
 
@@ -870,37 +918,37 @@ kind = 3
 
 [node name="valley_marker_safe_house_1" type="Marker3D" parent="Markers/Safe"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, -39.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.safe_house_1"
 kind = 4
 
 [node name="valley_marker_safe_house_2" type="Marker3D" parent="Markers/Safe"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, -39.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.safe_house_2"
 kind = 4
 
 [node name="valley_marker_safe_house_3" type="Marker3D" parent="Markers/Safe"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -3.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.safe_house_3"
 kind = 4
 
 [node name="valley_marker_safe_house_4" type="Marker3D" parent="Markers/Safe"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, -5.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.safe_house_4"
 kind = 4
 
 [node name="valley_marker_safe_house_5" type="Marker3D" parent="Markers/Safe"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, 0.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.safe_house_5"
 kind = 4
 
 [node name="valley_marker_safe_house_6" type="Marker3D" parent="Markers/Safe"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 69.5, 0, 0.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.safe_house_6"
 kind = 4
 
@@ -908,31 +956,31 @@ kind = 4
 
 [node name="valley_marker_tower" type="Marker3D" parent="Markers/Elevation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75, 6, -40)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.tower"
 kind = 2
 
 [node name="valley_marker_quarry_ledge" type="Marker3D" parent="Markers/Elevation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 5, -165)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.quarry_ledge"
 kind = 2
 
 [node name="valley_marker_ruins_wall_w" type="Marker3D" parent="Markers/Elevation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 140, 5, -80)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ruins_wall_w"
 kind = 2
 
 [node name="valley_marker_ruins_wall_e" type="Marker3D" parent="Markers/Elevation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 180, 5, -20)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ruins_wall_e"
 kind = 2
 
 [node name="valley_marker_ruins_gate_wall" type="Marker3D" parent="Markers/Elevation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 6, -34)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ruins_gate_wall"
 kind = 2
 
@@ -940,37 +988,37 @@ kind = 2
 
 [node name="valley_marker_ruins_cover_1" type="Marker3D" parent="Markers/Cover"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, -68.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ruins_cover_1"
 kind = 1
 
 [node name="valley_marker_ruins_cover_2" type="Marker3D" parent="Markers/Cover"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 170, 0, -62.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ruins_cover_2"
 kind = 1
 
 [node name="valley_marker_ruins_cover_3" type="Marker3D" parent="Markers/Cover"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 142.5, 0, -36)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ruins_cover_3"
 kind = 1
 
 [node name="valley_marker_ruins_cover_4" type="Marker3D" parent="Markers/Cover"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 174.5, 0, -36)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.ruins_cover_4"
 kind = 1
 
 [node name="valley_marker_quarry_cover_1" type="Marker3D" parent="Markers/Cover"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, -148.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.quarry_cover_1"
 kind = 1
 
 [node name="valley_marker_quarry_cover_2" type="Marker3D" parent="Markers/Cover"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0, -152.5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.quarry_cover_2"
 kind = 1
 
@@ -978,55 +1026,55 @@ kind = 1
 
 [node name="valley_marker_bot_route_village_1" type="Marker3D" parent="Markers/BotRoute"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -40)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.bot_route_village_1"
 kind = 6
 
 [node name="valley_marker_bot_route_village_2" type="Marker3D" parent="Markers/BotRoute"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, -20)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.bot_route_village_2"
 kind = 6
 
 [node name="valley_marker_bot_route_village_3" type="Marker3D" parent="Markers/BotRoute"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85, 0, -20)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.bot_route_village_3"
 kind = 6
 
 [node name="valley_marker_bot_route_village_4" type="Marker3D" parent="Markers/BotRoute"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106, 0, -20)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.bot_route_village_4"
 kind = 6
 
 [node name="valley_marker_bot_route_ruins_1" type="Marker3D" parent="Markers/BotRoute"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 118, 0, -20)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.bot_route_ruins_1"
 kind = 6
 
 [node name="valley_marker_bot_route_ruins_2" type="Marker3D" parent="Markers/BotRoute"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 140, 0, -20)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.bot_route_ruins_2"
 kind = 6
 
 [node name="valley_marker_bot_route_ruins_3" type="Marker3D" parent="Markers/BotRoute"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 155, 0, -5)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.bot_route_ruins_3"
 kind = 6
 
 [node name="valley_marker_bot_route_ruins_4" type="Marker3D" parent="Markers/BotRoute"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 155, 0, 15)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.bot_route_ruins_4"
 kind = 6
 
 [node name="valley_marker_bot_route_ruins_5" type="Marker3D" parent="Markers/BotRoute"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 40)
-script = ExtResource("32_acc12")
+script = ExtResource("36_acc12")
 marker_id = "valley.marker.bot_route_ruins_5"
 kind = 6
 
@@ -1078,7 +1126,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -150, 0, 170)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.hollow_start"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_hollow_start"]
@@ -1090,7 +1138,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -115, 0, 155)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.hollow_dummies"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_hollow_dummies"]
@@ -1102,7 +1150,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -140, 0, 95)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.forest_edge"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_forest_edge"]
@@ -1114,7 +1162,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, 10)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.forest_hunters"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_forest_hunters"]
@@ -1126,7 +1174,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, -35)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.ogre_clearing"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_ogre_clearing"]
@@ -1138,7 +1186,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 0, -75)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.grove"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_grove"]
@@ -1150,7 +1198,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -40)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.village"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_village"]
@@ -1162,7 +1210,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -110)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.quarry"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_quarry"]
@@ -1174,7 +1222,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, 15)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.fields"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_fields"]
@@ -1186,7 +1234,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 118, 0, -20)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.ruins_approach"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_ruins_approach"]
@@ -1198,7 +1246,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 0, -50)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.ruins_courtyard"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_ruins_courtyard"]
@@ -1210,7 +1258,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 155, 0, 15)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.causeway"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_causeway"]
@@ -1222,7 +1270,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 97.8)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.arena_engage"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_arena_engage"]
@@ -1234,7 +1282,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 0, -160)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("33_5575d")
+script = ExtResource("37_5575d")
 area_id = "valley.area.barrow"
 
 [node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_barrow"]
@@ -1455,14 +1503,14 @@ transform = Transform3D(0.948876, 0, -0.31564903, 0, 1, 0, 0.31564903, 0, 0.9488
 
 [node name="Spawned" type="Node3D" parent="."]
 
-[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("34_627ae")]
+[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("38_627ae")]
 transform = Transform3D(0.948876, 0, -0.31564903, 0, 1, 0, 0.31564903, 0, 0.948876, -150, 0.05, 170)
 collision_layer = 2
 collision_mask = 51
-script = ExtResource("35_7ef4a")
+script = ExtResource("39_7ef4a")
 
 [node name="EncounterDirector" type="Node" parent="."]
-script = ExtResource("36_b0840")
+script = ExtResource("40_b0840")
 
 [node name="DebrisPool" type="Node3D" parent="."]
-script = ExtResource("37_ce070")
+script = ExtResource("41_ce070")
