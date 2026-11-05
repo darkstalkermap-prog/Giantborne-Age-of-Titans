@@ -161,6 +161,10 @@ static func fields() -> Dictionary:
 	})
 
 	## @anchor P09
+	# A cast on an ally (the mage's barrier, plan §3.9): it has no hit (hit_shape "none"); when it
+	# enters ACTIVE its on_hit_statuses land on the ally the caster's brain picked, or on the
+	# caster itself (EnemyActor.apply_ally_cast).
+	f.merge({"targets_ally": U.bool_field()})
 
 	## @anchor P11a
 
@@ -258,6 +262,12 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.errors.append("%s: a 'grab' block needs hit_shape 'grab'" % ctx)
 
 	## @anchor P09
+	if bool(d.get("targets_ally", false)):
+		if str(d.get("hit_shape", "none")) != "none":
+			out.errors.append("%s: a targets_ally cast has no hit: hit_shape must be 'none'" % ctx)
+		var p09_statuses: Variant = d.get("on_hit_statuses")
+		if typeof(p09_statuses) != TYPE_ARRAY or (p09_statuses as Array).is_empty():
+			out.errors.append("%s: a targets_ally cast needs on_hit_statuses (what lands on the ally)" % ctx)
 
 	## @anchor P11a
 
