@@ -392,22 +392,24 @@ func ready_slot(action_id: String) -> String:
 	if key == "":
 		return ""
 	if not affordable(GameData.get_action(action_id)):
-		return ""   # P17b: it would leave too little stamina for a dodge
+		return ""   # P17b: the expert's dodge reserve
 	return key if slot_reason(key) == "" else ""
 
 
-## P17b: the stamina a dodge costs (the loadout's dodge), which the bot keeps in reserve.
+## P17b: the stamina a dodge costs (the loadout's dodge), which the expert keeps in reserve.
 func dodge_reserve() -> float:
 	var d := _loadout_action(&"dodge")
 	return d.stamina_cost if d != null else 0.0
 
 
-## P17b: whether spending `a`'s stamina leaves enough for a dodge (stamina reserve). Both skills keep
-## it: the bot's attacks used to spend the stamina its planned dodges needed - replaying the
-## expert's six deaths at the Ogre King, ten of eleven slam dodges were refused for "stamina" with 0
-## left. Actions that cost no stamina are always affordable.
+## P17b: whether spending `a`'s stamina leaves enough for a dodge (the expert's stamina reserve).
+## The expert keeps it: the bot's attacks used to spend the stamina its planned dodges needed -
+## replaying the expert's six deaths at the Ogre King, ten of eleven slam dodges were refused for
+## "stamina" with 0 left, so the skill ceiling was not one. The novice spends its stamina as it
+## likes (a reserve made it wait out whole ogre fights between blows): running dry and finding the
+## dodge refused is a novice's mistake. Actions that cost no stamina are always affordable.
 func affordable(a: ActionDef) -> bool:
-	if a == null or a.stamina_cost <= 0.0:
+	if skill != EXPERT or a == null or a.stamina_cost <= 0.0:
 		return true
 	return player.entity.combatant.pools.stamina - a.stamina_cost >= dodge_reserve()
 
@@ -541,7 +543,7 @@ func fight(tick: int, t: EnemyActor) -> void:
 		or (t.controller != null and t.controller.phase() == ActionDef.Phase.RECOVERY and t.is_in_group(OgreBoss.GROUP))
 	var light_lands := _in_band(light_band, dist)
 	var heavy_lands := _in_band(heavy_band, dist)
-	# P17b: keep a dodge's stamina, and start no heavy that a planned dodge would have to wait for.
+	# P17b: the expert keeps a dodge's stamina; neither starts a heavy a planned dodge would wait for.
 	var heavy_ok := affordable(_loadout_action(&"heavy")) and not dodge_planned_within(tick, HEAVY_COMMIT_TICKS)
 	var light_ok := affordable(_loadout_action(&"light"))
 	if heavy_lands and heavy_ok and (heavy or not light_lands) and c.preview_reason(&"heavy") == "":
