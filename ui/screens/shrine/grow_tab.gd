@@ -41,6 +41,11 @@ func first_focus() -> Control:
 	return grow_button if grow_button != null and not grow_button.disabled else null
 
 
+## The Grow button (P16; left out of the focus while it is disabled).
+func focus_rows() -> Array:
+	return [[grow_button]]
+
+
 func refresh() -> void:
 	var s := shrine()
 	var p := player()

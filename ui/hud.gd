@@ -9,8 +9,24 @@ extends Control
 ## gets, so the HUD can never disagree with the controller. A player component may add request
 ## parameters for a slot (a grab's precheck, P07) with preview_params(slot_key, def, params);
 ## the HUD passes them to preview_reason.
+##
+## P16 (UX pass):
+## - Glyphs follow the last input device (InputBindings.last_device_is_pad): each hotbar slot shows
+##   that device's binding large and the other one small; the mode line, the lock hint and the
+##   F1 overlay name the device's buttons; the "click the game" hint only shows for a mouse player.
+## - The F1 controls overlay is built from the live loadout (help_rows: movement and combat, every
+##   filled slot and the ultimate, interact, inventory, pause, the overlay itself) as a table with a
+##   keyboard and a controller column, the column of the device in use highlighted.
+## - Layout: layout_regions(view) lists every fixed HUD region (this node's and each widget's) for a
+##   screen size; at 1280 x 720 and 1920 x 1080 none overlap except where designed (test_hud_layout).
+##   While the boss bar shows, the target frame of another locked target sits below it.
 
 const MESSAGE_LIFETIME := 2.6
+## The target frame's top edge, and its top edge while the boss bar shows (below the bar's 58).
+const TARGET_FRAME_TOP := 14.0
+const TARGET_FRAME_TOP_UNDER_BOSS := 64.0
+const TARGET_FRAME_HEIGHT := 60.0
+const HELP_TITLE := "CONTROLS  (rebind in Pause > Controls)"
 
 var player: GiantPlayer
 var _bars: Dictionary = {}
@@ -28,9 +44,15 @@ var _death: Control
 var _death_hint: Label
 var _help: PanelContainer
 var _help_label: Label
+var _help_grid: GridContainer
+var _help_rows: Array = []                 ## the rows shown now (help_rows())
+var _help_signature := ""                  ## _help_key() when the overlay was built
 var _mode_label: Label
 var _loot_label: Label
+var _hotbar: HBoxContainer
+var _resources_panel: PanelContainer
 var _labels_dirty := true
+var _device_serial := -1
 var _slot_states: Array[Dictionary] = []   ## per slot: {"id", "reason_code", "reason", "target"}
 var _last_message := ""
 var _last_message_time := -10.0
@@ -108,6 +130,7 @@ func _build_resources() -> void:
 	p.offset_left = 16
 	p.offset_right = 340
 	add_child(p)
+	_resources_panel = p
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 5)
 	p.add_child(v)
@@ -149,11 +172,12 @@ func _build_hotbar() -> void:
 	h.offset_bottom = -16
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(h)
+	_hotbar = h
 	for i in 9:
 		var slot := _make_slot(i)
 		h.add_child(slot.root)
 		_slots.append(slot)
-		_slot_states.append({"id": "", "reason_code": "", "reason": "", "target": ""})
+		_slot_states.append({"id": "", "reason_code": "", "reason": "", "target": "", "key": "", "alt_key": ""})
 	_loot_label = UiKit.label("", 13, UiKit.MUTED)
 	_loot_label.anchor_left = 1.0
 	_loot_label.anchor_right = 1.0
@@ -266,8 +290,8 @@ func _build_target_frame() -> void:
 	_target_frame.anchor_right = 0.5
 	_target_frame.offset_left = -170
 	_target_frame.offset_right = 170
-	_target_frame.offset_top = 14
-	_target_frame.offset_bottom = 74
+	_target_frame.offset_top = TARGET_FRAME_TOP
+	_target_frame.offset_bottom = TARGET_FRAME_TOP + TARGET_FRAME_HEIGHT
 	_target_frame.visible = false
 	add_child(_target_frame)
 	var v := VBoxContainer.new()
@@ -338,7 +362,7 @@ func death_hint_text() -> String:
 
 
 func _build_help() -> void:
-	_help = UiKit.panel(Color(0.05, 0.06, 0.08, 0.92))
+	_help = UiKit.panel(Color(0.05, 0.06, 0.08, 0.94))
 	_help.anchor_left = 0.5
 	_help.anchor_right = 0.5
 	_help.anchor_top = 0.5
@@ -347,64 +371,119 @@ func _build_help() -> void:
 	_help.offset_right = 330
 	_help.offset_top = -270
 	_help.offset_bottom = 270
+	_help.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_help.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_help.visible = false
 	add_child(_help)
-	_help_label = UiKit.label("", 14)
-	_help.add_child(_help_label)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
+	_help.add_child(v)
+	_help_label = UiKit.label(HELP_TITLE, 16)
+	v.add_child(_help_label)
+	_help_grid = GridContainer.new()
+	_help_grid.columns = 3
+	_help_grid.add_theme_constant_override("h_separation", 18)
+	_help_grid.add_theme_constant_override("v_separation", 1)
+	v.add_child(_help_grid)
 
 
 func toggle_help() -> void:
 	_help.visible = not _help.visible
 	if _help.visible:
-		_help_label.text = _controls_text()
+		_rebuild_help()
 
 
-func _controls_text() -> String:
-	var rows := [
-		["Move / look", "move_forward", "WASD + mouse; left / right stick"],
-		["Light attack (3-hit chain)", "attack_light", ""],
-		["Heavy attack", "heavy_modifier", "hold with light attack; pad RT"],
-		["Block (tap = parry window)", "block", ""],
-		["Dodge", "dodge", ""],
-		["Jump", "jump", ""],
-		["Sprint", "sprint", ""],
-		["Lock target / switch", "lock_target", "wheel or right-stick flick while locked"],
-		["Camera mode", "camera_toggle", "wheel zooms when not locked"],
-	]
-	rows.append_array(_ability_rows())
-	rows.append_array([
-		["Pause / settings / rebind", "pause", ""],
-		["Controls overlay", "help", ""],
-	])
-	var lines := PackedStringArray(["CONTROLS  (rebind in Pause > Controls)", ""])
-	for r: Array in rows:
-		var kb := InputBindings.describe_action(r[1], false)
-		var pad := InputBindings.describe_action(r[1], true)
-		var extra := ("   (%s)" % r[2]) if r[2] != "" else ""
-		lines.append("%-30s %s  |  %s%s" % [r[0], kb, pad, extra])
-	if OS.is_debug_build():
-		lines.append("")
-		lines.append("Debug: F3 panel, F5 reset sandbox, F9 reload checkpoint")
-	if OS.has_feature("web"):
-		lines.append("")
-		lines.append("Browser: the first Esc frees the mouse and pauses; click the game to resume.")
-	return "\n".join(lines)
+## True while the F1 controls overlay is open.
+func help_visible() -> bool:
+	return _help != null and _help.visible
 
 
-## One help row per filled hotbar slot of the current loadout, then the ultimate.
-func _ability_rows() -> Array:
-	var rows: Array = []
+## The controls overlay's rows for the current loadout (P16): [action label, keyboard / mouse,
+## controller]. Movement and combat first, then interact, every filled slot and the ultimate, the
+## inventory, pause and the overlay itself.
+func help_rows() -> Array:
 	var loadout: Dictionary = player.controller.loadout if player != null and is_instance_valid(player) else {}
+	return help_rows_for(loadout)
+
+
+## help_rows() for a controller loadout (slot_1..slot_8, ultimate -> action id).
+static func help_rows_for(loadout: Dictionary) -> Array:
+	var rows: Array = [
+		["Move", _move_keys(), "Left stick"],
+		["Look / aim", "Mouse", "Right stick"],
+		_help_row("Light attack (3-hit chain)", "attack_light"),
+		["Heavy attack", TutorialText.label_for("heavy_attack", false), TutorialText.label_for("heavy_attack", true)],
+		_help_row("Block (tap to parry)", "block"),
+		_help_row("Dodge", "dodge"),
+		_help_row("Jump", "jump"),
+		_help_row("Sprint", "sprint"),
+		_help_row("Lock target", "lock_target"),
+		["Switch target (locked)", "%s / %s" % [InputBindings.describe_action("target_prev", false),
+			InputBindings.describe_action("target_next", false)], "Flick the right stick"],
+		_help_row("Camera: first / third person", "camera_toggle"),
+		_help_row("Interact / grab / talk", "interact"),
+	]
 	for i in 8:
 		var id := str(loadout.get("slot_%d" % (i + 1), ""))
 		var def := GameData.get_action(id) if id != "" else null
 		if def != null:
-			rows.append(["%s (slot %d)" % [def.display_name, i + 1], "ability_%d" % (i + 1), ""])
+			rows.append(_help_row("%s (slot %d)" % [def.display_name, i + 1], "ability_%d" % (i + 1)))
 	var ult_id := str(loadout.get("ultimate", ""))
 	var ult := GameData.get_action(ult_id) if ult_id != "" else null
-	rows.append(["Ultimate: %s" % ult.display_name if ult != null else "Ultimate", "ultimate",
-		("%d fury" % int(ult.fury_cost)) if ult != null else "none equipped"])
+	rows.append(_help_row("Ultimate: %s (%d fury)" % [ult.display_name, int(ult.fury_cost)] if ult != null
+		else "Ultimate (none equipped)", "ultimate"))
+	rows.append(_help_row("Inventory", "inventory"))
+	rows.append(_help_row("Pause / settings / rebind", "pause"))
+	rows.append(_help_row("This overlay", "help"))
 	return rows
+
+
+static func _help_row(label: String, action_name: String) -> Array:
+	return [label, InputBindings.describe_action(action_name, false), InputBindings.describe_action(action_name, true)]
+
+
+static func _move_keys() -> String:
+	var keys := PackedStringArray()
+	for a: String in ["move_forward", "move_left", "move_back", "move_right"]:
+		keys.append(InputBindings.describe_action(a, false))
+	return " ".join(keys)
+
+
+## The overlay as plain text, one row per line (tests, logs).
+func help_text() -> String:
+	var lines := PackedStringArray([HELP_TITLE])
+	for r: Array in _help_rows:
+		lines.append("%s: %s | %s" % [r[0], r[1], r[2]])
+	return "\n".join(lines)
+
+
+func _rebuild_help() -> void:
+	_help_rows = help_rows()
+	for c in _help_grid.get_children():
+		_help_grid.remove_child(c)
+		c.queue_free()
+	var pad := InputBindings.last_device_is_pad()
+	var on := UiKit.TEXT
+	var off := UiKit.MUTED
+	for h: Array in [["Action", on], ["Keyboard / mouse", off if pad else on], ["Controller", on if pad else off]]:
+		_help_grid.add_child(UiKit.label(str(h[0]), 14, Color(0.55, 0.85, 1.0) if h[1] == on else off))
+	for r: Array in _help_rows:
+		_help_grid.add_child(UiKit.label(str(r[0]), 13, on))
+		_help_grid.add_child(UiKit.label(str(r[1]), 13, off if pad else on))
+		_help_grid.add_child(UiKit.label(str(r[2]), 13, on if pad else off))
+	var notes := PackedStringArray()
+	if OS.is_debug_build():
+		notes.append("Debug: F3 panel, F5 reset sandbox, F6 / F7 grow / shrink, F8 +100 XP, F9 reload checkpoint")
+	if OS.has_feature("web"):
+		notes.append("Browser: the first Esc frees the mouse and pauses; click the game to resume.")
+	_help_label.text = HELP_TITLE + ("\n" + "\n".join(notes) if not notes.is_empty() else "")
+	_help_signature = _help_key()
+
+
+## What the open overlay depends on: the loadout and the device the prompts follow.
+func _help_key() -> String:
+	var loadout: Dictionary = player.controller.loadout if player != null and is_instance_valid(player) else {}
+	return "%s|%d" % [str(loadout), InputBindings.device_serial]
 
 
 func show_message(text: String, kind: String = "info") -> void:
@@ -449,9 +528,27 @@ func _on_loot(_tick: int, _world_id: String, item_id: String, count: int, _who: 
 func _refresh_mode_label() -> void:
 	if player == null:
 		return
-	_mode_label.text = "%s  [%s]   Stage %d   |   F1 or H: controls" % [
-		"First person" if player.camera_rig.is_first_person() else "Third person",
-		InputBindings.describe_action("camera_toggle", false), player.growth_stage]
+	_mode_label.text = mode_line(player.camera_rig.is_first_person(), player.growth_stage,
+		InputBindings.last_device_is_pad())
+
+
+## The line under the resource bars (P16: the buttons of the device in use): "Third person  [V]
+## Stage 1   |   F1 / H: controls" on a keyboard, "Third person  [Up]   Stage 1   |   Start:
+## menu and controls" on a pad (the overlay has no pad button; the pause menu lists the controls).
+static func mode_line(first_person: bool, stage: int, pad: bool) -> String:
+	var camera := "First person" if first_person else "Third person"
+	if pad:
+		var toggle := InputBindings.short_pad_label("camera_toggle")
+		var menu := InputBindings.short_pad_label("pause")
+		return "%s  [%s]   Stage %d   |   %s: menu and controls" % [camera, toggle if toggle != "" else "-",
+			stage, menu if menu != "" else "Start"]
+	return "%s  [%s]   Stage %d   |   %s: controls" % [camera, InputBindings.describe_action("camera_toggle", false),
+		stage, InputBindings.describe_action("help", false)]
+
+
+## The mode line shown now (tests).
+func mode_line_text() -> String:
+	return _mode_label.text if _mode_label != null else ""
 
 
 func _process(delta: float) -> void:
@@ -461,18 +558,26 @@ func _process(delta: float) -> void:
 		if player == null:
 			return
 		_refresh_mode_label()
+	if InputBindings.device_serial != _device_serial:
+		_device_serial = InputBindings.device_serial
+		_labels_dirty = true
+		_refresh_mode_label()
 	_update_resources()
 	_update_hotbar()
 	_update_target()
 	_update_messages()
+	if _help.visible and _help_key() != _help_signature:
+		_rebuild_help()
 	var dead := player.controller.state == CombatController.State.DEAD
 	if dead and not _death.visible:
 		_death_hint.text = death_hint(GameSession.checkpoints_enabled(), OS.is_debug_build())
 	_death.visible = dead
 	_crosshair.visible = not _death.visible
-	# Without a captured mouse there is no mouse look; tell the player how to get it back.
+	# Without a captured mouse there is no mouse look; tell the player how to get it back (P16:
+	# not a controller player, whose right stick looks around anyway).
 	_capture_hint.visible = not _death.visible and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED \
-		and DisplayServer.get_name() != "headless" and not get_tree().paused
+		and DisplayServer.get_name() != "headless" and not get_tree().paused \
+		and not InputBindings.last_device_is_pad()
 	var parts := PackedStringArray()
 	for item_id: String in WorldState.inventory:
 		parts.append("%s x%d" % [GameData.get_record(item_id).get("display_name", item_id), WorldState.inventory[item_id]])
@@ -517,9 +622,11 @@ func _update_slots(c: CombatController, _pools: ResourcePool) -> void:
 		var id := str(c.loadout.get("ultimate" if is_ultimate else "slot_%d" % (i + 1), ""))
 		var def: ActionDef = c.library.get(id) if id != "" else null
 		if _labels_dirty:
-			var action_name := "ultimate" if is_ultimate else "ability_%d" % (i + 1)
-			(slot.key as Label).text = InputBindings.describe_action(action_name, false)
-			(slot.pad as Label).text = InputBindings.short_pad_label(action_name)
+			var keys := slot_keys(i, InputBindings.last_device_is_pad())
+			(slot.key as Label).text = keys[0]
+			(slot.pad as Label).text = keys[1]
+		var key_text := (slot.key as Label).text
+		var alt_text := (slot.pad as Label).text
 		var root: PanelContainer = slot.root
 		if def == null:
 			(slot.title as Label).text = "ULT" if is_ultimate else ""
@@ -529,7 +636,8 @@ func _update_slots(c: CombatController, _pools: ResourcePool) -> void:
 			(slot.target as Label).text = ""
 			(slot.cooldown as ColorRect).offset_top = 0
 			root.modulate = Color(1, 1, 1, 0.45)
-			_slot_states[i] = {"id": "", "reason_code": "", "reason": "", "target": ""}
+			_slot_states[i] = {"id": "", "reason_code": "", "reason": "", "target": "", "key": key_text,
+				"alt_key": alt_text}
 			continue
 		root.modulate = Color.WHITE
 		(slot.title as Label).text = def.hotbar_label
@@ -555,7 +663,20 @@ func _update_slots(c: CombatController, _pools: ResourcePool) -> void:
 			var locked := player.locked_entity()
 			target = ("» %s" % locked.display_name()) if locked != null and locked.is_alive() else "aim"
 		(slot.target as Label).text = target
-		_slot_states[i] = {"id": def.id, "reason_code": code, "reason": reason, "target": target}
+		_slot_states[i] = {"id": def.id, "reason_code": code, "reason": reason, "target": target,
+			"key": key_text, "alt_key": alt_text}
+
+
+## A hotbar slot's two key labels (P16): [the binding of the device the prompts follow (large,
+## top left), the other device's (small, top right)]. index 0-7 = slots 1-8, 8 = the ultimate.
+## Keyboard: ["6", "LT+Rt"]; pad: ["LT+Rt", "6"] (a slot without a pad binding keeps its key).
+static func slot_keys(index: int, pad: bool) -> Array[String]:
+	var action_name := "ultimate" if index == 8 else "ability_%d" % (index + 1)
+	var kb := InputBindings.describe_action(action_name, false)
+	var combo := InputBindings.short_pad_label(action_name)
+	if pad and combo != "":
+		return [combo, kb] as Array[String]
+	return [kb, combo] as Array[String]
 
 
 ## Request parameters for a slot's preview: {"slot": n} for slots 1-8, {} for the ultimate,
@@ -628,12 +749,17 @@ func _update_target() -> void:
 		_target_frame.visible = false
 		_marker.visible = false
 		return
-	# P11a: while the boss bar shows the locked boss, its bar replaces the target frame.
+	# P11a: while the boss bar shows the locked boss, its bar replaces the target frame. P16: while
+	# it shows another (engaged) boss, the frame of the locked target sits below the bar.
 	_target_frame.visible = not boss_bar_shows(target)
+	var top := TARGET_FRAME_TOP_UNDER_BOSS if boss_bar_visible() else TARGET_FRAME_TOP
+	if _target_frame.offset_top != top:
+		_target_frame.offset_top = top
+		_target_frame.offset_bottom = top + TARGET_FRAME_HEIGHT
 	_target_name.text = "%s   %d m" % [target.display_name(), int(player.global_position.distance_to(target.actor.global_position))]
 	var p := target.combatant.pools
 	_target_bar.value = p.health / maxf(p.health_max, 0.001)
-	_target_hint.text = "LOCKED  -  %s / %s to switch" % [InputBindings.describe_action("target_prev", false), "right stick"]
+	_target_hint.text = lock_hint(InputBindings.last_device_is_pad())
 	# P11a: the marker sits on the lock point the camera frames (a knee of a much taller target).
 	var anchor := target.lock_anchor_position(float(player.profile.get("height_m", 3.66)))
 	if cam != null and not cam.is_position_behind(anchor):
@@ -650,9 +776,54 @@ func boss_bar_shows(target: CombatEntity) -> bool:
 	return bar != null and bar.has_method("shows_entity") and bool(bar.call("shows_entity", target))
 
 
+## True while the boss bar widget shows any boss (P16: the target frame then sits below it).
+func boss_bar_visible() -> bool:
+	var bar := get_node_or_null("BossBar")
+	return bar != null and bar.has_method("bar_visible") and bool(bar.call("bar_visible"))
+
+
+## The target frame's hint (P16: the device in use): "LOCKED  -  Wheel Up / Wheel Down to switch",
+## "LOCKED  -  flick the right stick to switch".
+static func lock_hint(pad: bool) -> String:
+	if pad:
+		return "LOCKED  -  flick the right stick to switch"
+	return "LOCKED  -  %s / %s to switch" % [InputBindings.describe_action("target_prev", false),
+		InputBindings.describe_action("target_next", false)]
+
+
 ## True while the lock-on target frame is showing (tests).
 func target_frame_visible() -> bool:
 	return _target_frame != null and _target_frame.visible
+
+
+## The target frame's rect in this HUD (tests: it moves below the boss bar).
+func target_frame_rect() -> Rect2:
+	return _target_frame.get_rect() if _target_frame != null else Rect2()
+
+
+## The HUD's fixed screen regions for a `view`-sized screen (P16 layout check): name -> Rect2,
+## this node's (resources, hotbar with its key, target and reason lines, loot, capture hint,
+## messages, the target frame at both of its heights) and every widget's (HudWidget.layout_regions).
+## Full-screen overlays that draw at points (crosshair, lock marker, threat arrows, objective
+## marker), the death and help overlays and the F3 debug panel are not regions.
+func layout_regions(view: Vector2) -> Dictionary:
+	var out := {
+		"resources": HudWidget.anchored_rect(_resources_panel, view),
+		"hotbar": HudWidget.anchored_rect(_hotbar, view).grow_individual(10.0, 16.0, 10.0, 16.0),
+		"loot": HudWidget.anchored_rect(_loot_label, view),
+		"capture_hint": HudWidget.anchored_rect(_capture_hint, view),
+		"messages": HudWidget.anchored_rect(_messages, view),
+	}
+	var frame := HudWidget.anchored_rect(_target_frame, view)
+	out["target_frame"] = Rect2(frame.position.x, TARGET_FRAME_TOP, frame.size.x, TARGET_FRAME_HEIGHT)
+	out["target_frame_under_boss_bar"] = Rect2(frame.position.x, TARGET_FRAME_TOP_UNDER_BOSS, frame.size.x,
+		TARGET_FRAME_HEIGHT)
+	for c in get_children():
+		if c is HudWidget:
+			var regions: Dictionary = (c as HudWidget).layout_regions(view)
+			for key: String in regions:
+				out[key] = regions[key]
+	return out
 
 
 ## The screen point the lock marker is centred on (Vector2.INF while it is hidden; tests).

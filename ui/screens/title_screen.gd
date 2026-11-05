@@ -15,6 +15,10 @@ extends UiScreen
 ##
 ## The screen does not pause the game (nothing runs under it) and never closes on Esc / pad B:
 ## cancel() only leaves the Settings or Controls page.
+##
+## Pad and keyboard (P16; the play link opens here): the menu is one column and a page is Back
+## followed by its rows (focus_rows), wrapping at both ends; the first focus is Continue, New Game
+## or Sandbox on the menu and Back on a page. Disabled entries are skipped.
 
 const VALLEY_MISSING := "Valley not built yet"
 const PAGES := ["Settings", "Controls"]
@@ -22,6 +26,8 @@ const PAGES := ["Settings", "Controls"]
 var _new_game: Button
 var _continue: Button
 var _sandbox: Button
+var _settings_button: Button
+var _controls_button: Button
 var _quit: Button
 var _menu: VBoxContainer
 var _page_box: VBoxContainer
@@ -65,8 +71,8 @@ func _ready() -> void:
 	_new_game = _menu_button("New Game", _on_new_game)
 	_continue = _menu_button("Continue", _on_continue)
 	_sandbox = _menu_button("Sandbox", _on_sandbox)
-	_menu_button("Settings", _show_page.bind("Settings"))
-	_menu_button("Controls", _show_page.bind("Controls"))
+	_settings_button = _menu_button("Settings", _show_page.bind("Settings"))
+	_controls_button = _menu_button("Controls", _show_page.bind("Controls"))
 	_quit = _menu_button("Quit", _on_quit)
 	_quit.visible = not OS.has_feature("web")
 	_page_box = VBoxContainer.new()
@@ -113,12 +119,27 @@ func pauses_game() -> bool:
 	return false
 
 
-## Continue when it is available, else New Game, else Sandbox.
+## Continue when it is available, else New Game, else Sandbox; Back on a page.
 func first_focus() -> Control:
+	if current_page() != "":
+		return _back
 	for b: Button in [_continue, _new_game, _sandbox]:
 		if b != null and not b.disabled and b.visible:
 			return b
 	return _sandbox
+
+
+## The menu column, or Back and the page's rows (P16).
+func focus_rows() -> Array:
+	match current_page():
+		"Settings":
+			return [[_back]] + _settings_pages.settings_rows()
+		"Controls":
+			return [[_back]] + _settings_pages.controls_rows()
+	var rows: Array = []
+	for b: Button in [_new_game, _continue, _sandbox, _settings_button, _controls_button, _quit]:
+		rows.append([b])
+	return rows
 
 
 func on_open() -> void:
@@ -165,6 +186,8 @@ func refresh() -> void:
 	_continue.disabled = not can_continue
 	_note.text = "" if valley else VALLEY_MISSING
 	_save_label.text = save_text
+	if is_inside_tree():
+		refresh_focus()
 
 
 ## A short line about a save document: "Saved game: level 3, stage 2, at valley.shrine.grove,
@@ -216,7 +239,14 @@ func settings_pages() -> SettingsPages:
 	return _settings_pages
 
 
+## Shows a page ("Settings", "Controls") or the menu (""). Leaving a page puts the focus back on
+## its menu entry; opening one focuses Back.
+func show_page(page_name: String) -> void:
+	_show_page(page_name)
+
+
 func _show_page(page_name: String) -> void:
+	var left := current_page()
 	_settings_pages.cancel_capture()
 	for key: String in _pages:
 		(_pages[key] as Control).visible = key == page_name
@@ -226,9 +256,16 @@ func _show_page(page_name: String) -> void:
 		_settings_pages.refresh_bindings()
 	if not is_inside_tree():
 		return
+	refresh_focus()
 	var f: Control = first_focus() if page_name == "" else _back
-	if f != null and f.is_visible_in_tree():
+	if page_name == "" and left != "":
+		f = _settings_button if left == "Settings" else _controls_button
+	if UiNav.focusable(f):
 		f.grab_focus()
+
+
+func _process(_delta: float) -> void:
+	_settings_pages.update_capture()
 
 
 # --------------------------------------------------------------------------- actions

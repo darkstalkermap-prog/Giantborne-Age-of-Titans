@@ -73,6 +73,11 @@ func first_focus() -> Control:
 	return continue_button
 
 
+## Continue exploring, then Quit to title, wrapping (P16).
+func focus_rows() -> Array:
+	return [[continue_button], [quit_button]]
+
+
 ## The village outcome line ("Thornwick: you drove off the ogre").
 static func outcome_line(outcome: String) -> String:
 	return str(OUTCOME_LINES.get(outcome, NO_OUTCOME_LINE))

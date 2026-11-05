@@ -11,6 +11,7 @@ extends UiScreen
 ##     full-game feature").
 ## In combat (ResourcePool.in_combat()) it refuses to open: "Not during combat" as a HUD warning,
 ## and the screen closes itself at once. args: {"player": GiantPlayer} (else group "player").
+## P16: focus rows Attributes, every Equip button, Close (wrapping); the list scrolls with the focus.
 
 const COMBAT_MESSAGE := "Not during combat"
 
@@ -25,6 +26,7 @@ var attributes_button: Button
 var close_button: Button
 ## Equip buttons by weapon id (tests press them).
 var equip_buttons: Dictionary = {}
+var _equip_order: Array[Button] = []   ## the Equip buttons in weapon order (P16 focus rows)
 
 
 func _ready() -> void:
@@ -64,6 +66,7 @@ func _ready() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
 	v.add_child(scroll)
 	var body := VBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -130,6 +133,7 @@ func refresh() -> void:
 		_weapons.remove_child(c)
 		c.queue_free()
 	equip_buttons.clear()
+	_equip_order.clear()
 	for row: Dictionary in weapon_rows():
 		var h := HBoxContainer.new()
 		h.add_theme_constant_override("separation", 10)
@@ -142,9 +146,22 @@ func refresh() -> void:
 			b.pressed.connect(_on_equip.bind(str(row.id)))
 			h.add_child(b)
 			equip_buttons[str(row.id)] = b
+			_equip_order.append(b)
 		_weapons.add_child(h)
 	_loadout.text = loadout_text()
 	_talents.text = talent_text()
+	if is_inside_tree():
+		refresh_focus()
+
+
+## Attributes, every Equip button (weapon order), Close (P16).
+func focus_rows() -> Array:
+	var rows: Array = [[attributes_button]]
+	for b: Button in _equip_order:
+		if is_instance_valid(b) and not b.is_queued_for_deletion():
+			rows.append([b])
+	rows.append([close_button])
+	return rows
 
 
 # --------------------------------------------------------------------------- content

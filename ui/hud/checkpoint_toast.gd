@@ -82,3 +82,7 @@ func _process(delta: float) -> void:
 		_panel.visible = false
 	elif _left < FADE_S:
 		_panel.modulate.a = _left / FADE_S
+
+
+func layout_regions(view: Vector2) -> Dictionary:
+	return {"checkpoint_toast": anchored_rect(_panel, view)}

@@ -71,3 +71,7 @@ func _process(delta: float) -> void:
 		_gain_left -= minf(delta, 0.1)
 		_text += "   +%d" % _gain
 	_label.text = _text
+
+
+func layout_regions(view: Vector2) -> Dictionary:
+	return {"xp_bar": anchored_rect(_bar, view)}

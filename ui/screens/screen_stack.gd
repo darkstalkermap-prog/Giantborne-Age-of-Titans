@@ -13,6 +13,11 @@ extends Control
 ## open, a HOTKEYS action opens its screen. Gameplay asks for screens with
 ## Events.ui_screen_requested(screen, args), opened deferred. SCREENS is pre-declared: a path
 ## whose file does not exist yet opens nothing, silently.
+##
+## Pad and keyboard (P16): the stack adds pad A / B to ui_accept / ui_cancel (UiNav), wires the
+## top screen's focus rows when it opens or comes back on top (and once more on the next frame,
+## after the layout ran), puts a lost focus back every frame, and shows a footer hint ("A: select
+## B: back" or "Enter: select Esc: back", by the last device) while any screen is open.
 
 const GROUP := "screen_stack"
 ## Every planned screen; a missing file is skipped (its package has not landed yet).
@@ -34,6 +39,8 @@ var _opened_ms: Dictionary = {}       ## screen -> Time.get_ticks_msec() when it
 var _menu_context := false            ## this stack set InputRouter MENU
 var _paused := false                  ## this stack paused the tree
 var _last_input_was_click := false
+var _hint: Label                      ## the footer hint (P16), the stack's last child
+var _hint_serial := -1
 
 
 func _ready() -> void:
@@ -42,6 +49,43 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	Events.ui_screen_requested.connect(_on_screen_requested)
+	UiNav.ensure_pad_actions()
+	_hint = UiKit.label("", 13, UiKit.MUTED)
+	_hint.name = "NavHint"
+	_hint.anchor_left = 0.5
+	_hint.anchor_right = 0.5
+	_hint.anchor_top = 1.0
+	_hint.anchor_bottom = 1.0
+	_hint.offset_left = -360
+	_hint.offset_right = 360
+	_hint.offset_top = -30
+	_hint.offset_bottom = -8
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_hint.visible = false
+	add_child(_hint)
+
+
+## The footer hint shown now ("" while no screen is open).
+func hint_text() -> String:
+	return _hint.text if _hint != null and _hint.visible else ""
+
+
+## Every frame (also while paused): the top screen's deferred focus wiring, a lost focus put
+## back, and the footer hint for the last device.
+func _process(_delta: float) -> void:
+	var t := top()
+	if _hint != null:
+		_hint.visible = t != null
+		if t != null and InputBindings.device_serial != _hint_serial:
+			_hint_serial = InputBindings.device_serial
+			_hint.text = UiNav.hint_text(InputBindings.last_device_is_pad())
+	if t == null or not is_instance_valid(t) or not t.is_inside_tree():
+		return
+	if t.focus_dirty:
+		t.focus_dirty = false
+		UiNav.link_rows(t.focus_rows())
+	UiNav.keep_focus(t)
 
 
 func _exit_tree() -> void:
@@ -83,6 +127,8 @@ func push(screen: UiScreen) -> void:
 	elif screen.get_parent() != self:
 		screen.reparent(self)
 	move_child(screen, -1)
+	if _hint != null:
+		move_child(_hint, -1)   # the footer hint stays above every screen
 	_screens.append(screen)
 	_opened_ms[screen] = Time.get_ticks_msec()
 	screen.visible = true
@@ -210,8 +256,9 @@ func _recapture_mouse() -> void:
 
 func _focus_top() -> void:
 	var t := top()
-	if t == null:
+	if t == null or not is_instance_valid(t) or t.is_queued_for_deletion():
 		return
+	t.refresh_focus()   # P16: wire its focus rows (wrap-around) before the focus lands
 	var f := t.first_focus()
 	if f != null and is_instance_valid(f) and f.is_inside_tree() and f.is_visible_in_tree():
 		f.grab_focus()

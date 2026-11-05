@@ -5,10 +5,27 @@ extends UiScreen
 ## and holds an AttributePanel: allocation with a derived preview, the ancestry line ("Ancestry:
 ## Unaligned — no modifiers in the prototype"), the talent points. Close (or Esc / pad B) closes it.
 ## args: {"player": GiantPlayer} (else the first node in group "player").
+## P16: the panel's rows ([-, +] per attribute, Confirm and Reset), then Close, rewired whenever the
+## panel refreshes.
 
 var player: GiantPlayer
 var panel_ui: AttributePanel
 var _close: Button
+
+
+func focus_rows() -> Array:
+	var rows: Array = panel_ui.focus_rows() if panel_ui != null else []
+	rows.append([_close])
+	return rows
+
+
+func close_button() -> Button:
+	return _close
+
+
+func _on_panel_refreshed() -> void:
+	if is_inside_tree() and is_open():
+		refresh_focus()
 
 
 func _ready() -> void:
@@ -42,6 +59,7 @@ func _ready() -> void:
 	_close = UiKit.button("Close", 18)
 	_close.pressed.connect(cancel)
 	v.add_child(_close)
+	panel_ui.refreshed.connect(_on_panel_refreshed)
 
 
 ## "Level 3   XP 268 (18 / 200 to level 4)" for the giant's progression ("" without one).
@@ -56,9 +74,13 @@ static func level_line(p: GiantPlayer) -> String:
 		int(progress[1]), int(prog.level) + 1]
 
 
+## The first + that can take a point (the panel's first focus), else Close (P16: with no points to
+## spend every panel button is disabled).
 func first_focus() -> Control:
 	var f := panel_ui.first_focus() if panel_ui != null else null
-	return f if f != null else _close
+	if f == null or (f is BaseButton and (f as BaseButton).disabled):
+		return _close
+	return f
 
 
 func on_open() -> void:

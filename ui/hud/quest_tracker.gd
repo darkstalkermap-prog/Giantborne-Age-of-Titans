@@ -117,3 +117,7 @@ func visible_text() -> String:
 		if l.visible and l.text != "":
 			parts.append(l.text)
 	return "\n".join(parts)
+
+
+func layout_regions(view: Vector2) -> Dictionary:
+	return {"quest_tracker": anchored_rect(_panel, view)}

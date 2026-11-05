@@ -8,16 +8,24 @@ extends UiScreen
 ## title screen); rebinding captures the next key or mouse button (keyboard column) or pad
 ## button / trigger (controller column), Esc cancels a capture.
 ##
+## Pad and keyboard (P16): the page tabs are one row and every item of the shown page follows
+## (focus_rows); up / down, left / right and Tab wrap around; pad LB / RB switch pages. The first
+## focus is Resume on the main page and the page's tab on the others.
+##
 ## open(), close() and is_open() keep their M1 meaning: inside a stack they defer to it; a
 ## PauseMenu used on its own (no stack) pauses and unpauses the game itself, as in M1.
 
+const PAGES := ["Main", "Settings", "Controls"]
+
 var _root_panel: PanelContainer
 var _pages: Dictionary = {}
+var _tab_buttons: Dictionary = {}     ## page name -> its tab Button
 var _status: Label
 var _resume: Button
 var _load_checkpoint: Button
 var _restart: Button
 var _quit_title: Button
+var _quit: Button
 var _settings_pages := SettingsPages.new()
 
 
@@ -46,10 +54,11 @@ func _ready() -> void:
 	var tabs := HBoxContainer.new()
 	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(tabs)
-	for page_name: String in ["Main", "Settings", "Controls"]:
+	for page_name: String in PAGES:
 		var b := UiKit.button(page_name, 16)
 		b.pressed.connect(_show_page.bind(page_name))
 		tabs.add_child(b)
+		_tab_buttons[page_name] = b
 	var holder := MarginContainer.new()
 	holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(holder)
@@ -68,8 +77,26 @@ func _ready() -> void:
 
 # --------------------------------------------------------------------------- UiScreen
 
+## Resume on the main page, the page's own tab on Settings and Controls.
 func first_focus() -> Control:
-	return _resume
+	var page := current_page()
+	if page == "" or page == "Main":
+		return _resume
+	return _tab_buttons.get(page)
+
+
+## The page tabs, then the shown page's items (P16).
+func focus_rows() -> Array:
+	var rows: Array = [PAGES.map(func(p: String) -> Control: return _tab_buttons.get(p))]
+	match current_page():
+		"Settings":
+			rows.append_array(_settings_pages.settings_rows())
+		"Controls":
+			rows.append_array(_settings_pages.controls_rows())
+		_:
+			for b: Button in [_resume, _load_checkpoint, _restart, _quit_title, _quit]:
+				rows.append([b])
+	return rows
 
 
 func on_open() -> void:
@@ -129,11 +156,37 @@ func settings_pages() -> SettingsPages:
 	return _settings_pages
 
 
+## The tab button of a page ("Main", "Settings", "Controls"), or null (tests).
+func tab_button(page_name: String) -> Button:
+	return _tab_buttons.get(page_name)
+
+
+## Shows a page (its tab, LB / RB, tests). A rebinding capture in progress is cancelled.
+func show_page(page_name: String) -> void:
+	_show_page(page_name)
+
+
 func _show_page(page_name: String) -> void:
+	if not _pages.has(page_name):
+		return
+	_settings_pages.cancel_capture()
 	for key: String in _pages:
 		(_pages[key] as Control).visible = key == page_name
 	if page_name == "Controls":
 		_settings_pages.refresh_bindings()
+	if not is_inside_tree():
+		return
+	var tab: Button = _tab_buttons.get(page_name)
+	var owner := UiNav.focus_owner(self)
+	refresh_focus()
+	# Moving to another page keeps the focus on its tab (pad: the tab row stays where it was);
+	# the main page starts on Resume.
+	if owner != null and owner == tab:
+		tab.grab_focus()
+	else:
+		var f := first_focus()
+		if UiNav.focusable(f):
+			f.grab_focus()
 
 
 func _build_main() -> Control:
@@ -152,10 +205,10 @@ func _build_main() -> Control:
 	_quit_title = UiKit.button("Quit to title", 20)
 	_quit_title.pressed.connect(_on_quit_title)
 	v.add_child(_quit_title)
-	var quit := UiKit.button("Quit to desktop", 20)
-	quit.pressed.connect(_on_quit)
-	quit.visible = not OS.has_feature("web")  # a browser tab is closed by the browser
-	v.add_child(quit)
+	_quit = UiKit.button("Quit to desktop", 20)
+	_quit.pressed.connect(_on_quit)
+	_quit.visible = not OS.has_feature("web")  # a browser tab is closed by the browser
+	v.add_child(_quit)
 	var info := UiKit.label("Giantborn: Age of Titans  -  prototype %s  -  Godot %s" % [
 		ProjectSettings.get_setting("application/config/version"), Engine.get_version_info().string], 12, UiKit.MUTED)
 	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -172,6 +225,8 @@ func refresh_items() -> void:
 	_load_checkpoint.visible = GameSession.checkpoints_enabled()
 	_load_checkpoint.disabled = not GameSession.has_checkpoint()
 	_restart.visible = not GameSession.is_valley()
+	if is_inside_tree():
+		refresh_focus()
 
 
 ## The main page's visible items, top to bottom (tests).
@@ -185,7 +240,7 @@ func item_labels() -> PackedStringArray:
 
 ## The main page button with this text, or null.
 func item(label: String) -> Button:
-	for b: Button in [_resume, _load_checkpoint, _restart, _quit_title]:
+	for b: Button in [_resume, _load_checkpoint, _restart, _quit_title, _quit]:
 		if b != null and b.text == label:
 			return b
 	return null
@@ -215,8 +270,28 @@ func _on_quit() -> void:
 	get_tree().quit()
 
 
+func _process(_delta: float) -> void:
+	if visible:
+		_settings_pages.update_capture()
+
+
 func _input(event: InputEvent) -> void:
 	if not visible or not _settings_pages.is_capturing():
 		return
 	if _settings_pages.handle_input(event):
 		get_viewport().set_input_as_handled()
+
+
+## Pad LB / RB: the previous / next page (P16).
+func _unhandled_input(event: InputEvent) -> void:
+	if not visible or not is_open() or (stack != null and stack.top() != self):
+		return
+	var step := UiNav.page_step(event)
+	if step == 0:
+		return
+	var i := PAGES.find(current_page())
+	_show_page(PAGES[(i + step + PAGES.size()) % PAGES.size()])
+	var tab: Button = _tab_buttons.get(current_page())
+	if UiNav.focusable(tab):
+		tab.grab_focus()
+	get_viewport().set_input_as_handled()
