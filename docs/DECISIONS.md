@@ -194,6 +194,7 @@ finding was fixed with a regression test, or handed to the package that owned th
 | M4 | A tutorial prompt's fallback timeout lost its lesson (the quest stage could never complete). | A lesson stays open after its prompt is taken away (P13's tutorial director). |
 | M4 | Threat arrows and the objective marker drew under the TIP box and the hotbar. | Both overlays draw last and slide along the edge clear of every panel (`HudEdge`, P16). |
 | Ship | The handoff counted P17a's assisted runs of the four village outcomes as runs on the same game code, and as the M4 gate's evidence, but P17b retuned the game after them. | The four outcomes ran assisted on the final code (handoff §6.2, all completed) and the M4 row cites those runs; §1 and §6.4 say P17a's runs came before P17b's tuning (`test_ship_docs`). |
+| Ship | The owner's spec names the AI tools it was written for and drawn from; the repository is meant to name no AI product or model. | One recorded exception: `GIANTBORN_SPEC_V2.md` stays verbatim, and its source note says so. No other file names an AI product or model. The hosting platform's own names are allowed, since they name no product or model: the claude.ai play link, the launcher's `claude:viewport-fit-sides` meta tag and `window.claude` hook, and the integration branch. `test_ship_docs` checks every text file in the repository. The owner may still redact the spec instead; the test's exception then goes. |
 
 ## 4. The plan's review log (plan §7)
 
