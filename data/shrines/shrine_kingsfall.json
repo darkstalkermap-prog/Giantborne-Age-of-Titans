@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "shrine.kingsfall",
+	"type": "shrine",
+	"display_name": "Kingsfall Shrine",
+	"description": "Outside the Ogre King's arena. Grows the giant to stage 3 (level 5) once the king has fallen.",
+	"allows_growth": true,
+	"max_stage": 3,
+	"growth_requires_flags": ["world.ogre_king.defeated"],
+	"growth_locked_message": "The Ogre King still rules Kingsfall. The shrine will not answer while he lives.",
+	"checkpoint": true,
+	"rest_heals": true,
+	"first_activation_rest": true,
+	"loadout": true,
+	"attributes": true,
+	"activation_radius_m": 14
+}

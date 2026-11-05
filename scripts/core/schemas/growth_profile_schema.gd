@@ -37,6 +37,31 @@ static func fields() -> Dictionary:
 		"unlocks": {"t": "array", "items": "string", "items_ref": "action"},
 	}
 	## @anchor P05
+	# Growth stages 1-3 (plan §2.8.2, values in §4.8). All optional; code defaults in brackets.
+	f.merge({
+		# Scale of the weapon's length and hit radius at this stage [1]; P08 caps it at the
+		# weapon's fit stage.
+		"weapon_scale": U.pos(),
+		# Grab reach (melee reach + 0.5 m) and the lunge of the grab windup [0] (P07 uses them).
+		"grab_reach_m": U.pos(),
+		"grab_lunge_m": U.num(0.0),
+		# The heaviest mass class this stage can grab [small] and the attachment profiles it
+		# supports [torso_fist, scruff].
+		"grab_capacity": U.str_field(false, DataValidator.MASS_CLASSES),
+		"grab_attach": U.enum_array(DataValidator.GRAB_ATTACH),
+		# Extra maxima over the player record's resources, e.g. {"health": 150, "stamina": 10}.
+		"resource_bonus": {"t": "dict", "keys_enum": ["health", "stamina", "essence"], "values": U.num(0.0)},
+		# Downward tilt of the player's weapon arcs, in both the sweep and the rig [0].
+		"arc_pitch_offset_deg": U.num(-30.0, 0.0),
+		# roll (stage 1) or sidestep (a slower lateral rig pose; same timing) [roll].
+		"dodge_style": U.str_field(false, DataValidator.DODGE_STYLES),
+		# Multiplies the lock-on camera's orbit distances [1].
+		"camera_orbit_scale": U.pos(),
+		# Navigation layers of this stage: 8 small giant (4 m alleys), 4 giant [4].
+		"nav_layers": U.int_field(1, 255),
+		# Camera shake added on each footfall, scaled by the camera_shake setting [0].
+		"footstep_shake": U.num(0.0, 1.0),
+	})
 
 	return f
 

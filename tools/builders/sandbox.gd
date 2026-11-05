@@ -11,6 +11,11 @@ const SOLDIER := "res://scenes/enemies/soldier.tscn"
 const WOLF := "res://scenes/enemies/wolf.tscn"
 const FENCE := "res://scenes/world/fence_wood.tscn"
 const DUMMY := "res://scenes/world/practice_dummy.tscn"
+const SHRINE := "res://scenes/world/shrine.tscn"
+## The sandbox shrine (P05): grows to stage 3 with no other requirement. It faces the player's
+## spawn (east), so its growth pad is at (-33.5, 0, 40); its 14 m activation radius stays
+## clear of the obstacle route and the soak's targets.
+const SHRINE_POS := Vector3(-40, 0, 40)
 
 ## The wolf pack in the north-west corner, more than 40 m from every feature of the obstacle
 ## route (tests/integration/test_obstacle_route.gd), the dummies and the soldier's patrol.
@@ -175,7 +180,23 @@ static func build_arena(kit: SceneKit) -> Node:
 	signs.add_child(kit.sign("SOLDIER PATROL", Vector3(0, 4.0, -18)))
 	root.add_child(signs)
 	_add_wolves(kit, root, signs)
+	_add_shrine(kit, nav, signs)
 	return root
+
+
+## One shrine (sandbox.shrine, record shrine.sandbox) west of the spawn (P05).
+static func _add_shrine(kit: SceneKit, parent: Node3D, signs: Node3D) -> void:
+	if not ResourceLoader.exists(kit.output_path(SHRINE)):
+		print("sandbox: skipped the shrine (%s not built yet)" % SHRINE)
+		return
+	var shrine: Node3D = kit.instance(SHRINE)
+	shrine.name = "Shrine"
+	shrine.position = SHRINE_POS
+	shrine.rotation_degrees = Vector3(0, -90, 0)
+	shrine.set("world_id", "sandbox.shrine")
+	shrine.set("shrine_id", "shrine.sandbox")
+	parent.add_child(shrine)
+	signs.add_child(kit.sign("SHRINE: rest and grow (stages 1-3)", SHRINE_POS + Vector3(0, 6.2, 0)))
 
 
 ## Three wolves (sandbox.wolf_1..3) on one patrol in the north-west corner (P04).

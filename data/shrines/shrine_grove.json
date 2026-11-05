@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"id": "shrine.grove",
+	"type": "shrine",
+	"display_name": "Grove Shrine",
+	"description": "At the end of the forest road. Grows the giant to stage 2 (level 3).",
+	"allows_growth": true,
+	"max_stage": 2,
+	"growth_requires_flags": [],
+	"checkpoint": true,
+	"rest_heals": true,
+	"first_activation_rest": true,
+	"loadout": true,
+	"attributes": true,
+	"activation_radius_m": 14
+}

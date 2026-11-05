@@ -56,9 +56,12 @@ func on_action_started(action: ActionDef, _instance_id: int) -> void:
 
 ## Weapon segment (shoulder-side end, tip) in world space at fraction f of the action's arc.
 ## The rig poses the arm with the same AttackGeometry, so the visible swing is the tested one.
+## The growth profile's arc_pitch_offset_deg (0 / -6 / -12) tilts every arc downward, so a big
+## giant still reaches soldiers and wolves at its feet (decision 5); the rig adds the same tilt
+## (rig state "arc_pitch_offset_deg").
 func weapon_segment_global(action: ActionDef, f: float) -> PackedVector3Array:
 	var ang := AttackGeometry.arc_point(action, f)
-	var dir := AttackGeometry.local_direction(ang.x, ang.y)
+	var dir := AttackGeometry.local_direction(ang.x, ang.y + arc_pitch_offset_deg())
 	var seg := AttackGeometry.segment_local(player.weapon_pivot, dir, player.arm_length,
 		player.arm_length + player.weapon_length)
 	return PackedVector3Array([player.to_global(seg[0]), player.to_global(seg[1])])
@@ -66,6 +69,15 @@ func weapon_segment_global(action: ActionDef, f: float) -> PackedVector3Array:
 
 func run_hit_queries(tick: int) -> void:
 	runner.run(tick)
+
+
+## The current growth stage's downward tilt of the weapon arcs (degrees, <= 0).
+func arc_pitch_offset_deg() -> float:
+	return float(player.profile.get("arc_pitch_offset_deg", 0.0))
+
+
+func rig_state(out: Dictionary) -> void:
+	out["arc_pitch_offset_deg"] = arc_pitch_offset_deg()
 
 
 # --------------------------------------------------------------------------- projectiles (P03)

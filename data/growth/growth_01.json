@@ -26,6 +26,17 @@
 	"weapon_pivot_m": [0.82, 2.9, 0.0],
 	"attack_origin_m": [0.0, 2.6, 0.0],
 	"arm_length_m": 1.5,
+	"weapon_scale": 1.0,
+	"grab_reach_m": 4.0,
+	"grab_lunge_m": 2.0,
+	"grab_capacity": "small",
+	"grab_attach": ["torso_fist", "scruff"],
+	"resource_bonus": {},
+	"arc_pitch_offset_deg": 0,
+	"dodge_style": "roll",
+	"camera_orbit_scale": 1.0,
+	"nav_layers": 8,
+	"footstep_shake": 0.0,
 	"interaction_permissions": ["grab_small"],
 	"unlocks": []
 }
