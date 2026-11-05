@@ -76,6 +76,11 @@ const RETRACE_S := 12.0
 ## How long the bot stands at an encounter whose living members are all out of its reach (fleeing,
 ## elevated, unreachable) before it takes the stage's other way on (P17b).
 const STALL_WALK_ON_S := 8.0
+## A fight that has taken no health off its target for CHASE_GIVE_UP_S (a stage-3 giant chasing a
+## harassing wolf that keeps out of reach) is given up: the bot leaves that enemy alone for
+## CHASE_IGNORE_S and goes on with its objective, as a person would stop chasing (P17b).
+const CHASE_GIVE_UP_S := 20.0
+const CHASE_IGNORE_S := 30.0
 const ELDER := "valley.village.elder"
 const ELDER_DIALOGUE := "dialogue.elder"
 const BARRICADE := "valley.village.barricade"
@@ -132,6 +137,8 @@ var combat: BotCombat
 var task: Dictionary = {}
 var mode := "other"
 var _stall_since := -1   ## the tick an encounter task first found nothing to reach; -1 when it did
+var _chase := {"id": "", "health": 0.0, "since": -1}   ## the fight being watched for progress
+var _ignored := {}       ## entity id -> the tick until which the bot leaves that enemy alone
 
 ## The run's metrics (BotCombat reads them through the bot).
 var metrics: RunMetrics:
@@ -404,6 +411,8 @@ func _allocate_points() -> void:
 
 func _plan(tick: int) -> void:
 	var fight_target := _fight_target()
+	if fight_target != null and _chase_futile(fight_target, tick):
+		fight_target = _fight_target()
 	if fight_target != null:
 		task = {"kind": "fight", "target": fight_target}
 		_stall_since = -1
@@ -411,14 +420,36 @@ func _plan(tick: int) -> void:
 	task = _objective_task(tick)
 
 
+## True (and the enemy is left alone for CHASE_IGNORE_S) when the bot has fought `t` for
+## CHASE_GIVE_UP_S without taking any health off it. Never for the boss.
+func _chase_futile(t: EnemyActor, tick: int) -> bool:
+	if t.entity == null or t.is_in_group(OgreBoss.GROUP):
+		return false
+	var id := t.entity.entity_id
+	var hp := t.entity.combatant.pools.health
+	if id != str(_chase.id) or hp < float(_chase.health) - 0.5:
+		_chase = {"id": id, "health": hp, "since": tick}
+		return false
+	if tick - int(_chase.since) < ActionDef.seconds_to_ticks(CHASE_GIVE_UP_S):
+		return false
+	_ignored[id] = tick + ActionDef.seconds_to_ticks(CHASE_IGNORE_S)
+	_chase = {"id": "", "health": 0.0, "since": -1}
+	run.metrics.note(tick, "gave up chasing %s" % id)
+	return true
+
+
+func _is_ignored(e: EnemyActor) -> bool:
+	return e.entity != null and int(_ignored.get(e.entity.entity_id, -1)) > Sim.tick
+
+
 ## A hostile to fight now: the nearest aware threat the giant can reach, or an elevated one a
-## ranged ability can reach now. null when there is none.
+## ranged ability can reach now (none the bot gave up on). null when there is none.
 func _fight_target() -> EnemyActor:
 	var preferred: Node3D = null
 	var t: Dictionary = task
 	if str(t.get("kind", "")) in ["kill", "fight"] and t.get("target") is EnemyActor:
 		preferred = t.target
-	var cands := combat.threats(combat.engage_radius())
+	var cands := combat.threats(combat.engage_radius()).filter(func(e: EnemyActor) -> bool: return not _is_ignored(e))
 	var best: EnemyActor = null
 	for e in cands:
 		if combat.is_elevated(e):
@@ -427,7 +458,7 @@ func _fight_target() -> EnemyActor:
 			continue
 		best = e
 		break
-	if preferred is EnemyActor and combat.is_threat(preferred as EnemyActor):
+	if preferred is EnemyActor and combat.is_threat(preferred as EnemyActor) and not _is_ignored(preferred as EnemyActor):
 		var p := preferred as EnemyActor
 		if best == null or best == p or p.global_position.distance_to(player.global_position) < 8.0 \
 				or best.global_position.distance_to(player.global_position) > 5.0:
@@ -593,7 +624,8 @@ func _encounter_task(encounter_id: String, fallback: Vector3) -> Dictionary:
 	var best: EnemyActor = null
 	var best_d := INF
 	for e in alive:
-		if combat.is_elevated(e) or e.brain == null or e.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]:
+		if combat.is_elevated(e) or e.brain == null or e.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED] \
+				or _is_ignored(e):
 			continue
 		var d := e.global_position.distance_to(player.global_position)
 		if d < best_d and (d < 8.0 or reachable(e.global_position, 3.5)):
