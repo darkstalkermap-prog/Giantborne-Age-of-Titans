@@ -36,6 +36,12 @@ const SWORD_RACK_POS := Vector3(-6, 0, 52)
 const HAMMER_RACK_POS := Vector3(6, 0, 52)
 const OAK_POS := Vector3(-50, 0, 52)
 const BUSH_POSITIONS := [Vector3(-12, 0, 48), Vector3(12, 0, 48)]
+## P11b: the sparring post (block, parry and dodge practice) west of the test wall, near the
+## wall dummy and on the way to the shrine: more than 9 m from every leg of the obstacle route
+## (tests/integration/test_obstacle_route.gd) and 20 m from the soak's paths. It is not in the
+## "enemies" group, so the soak never takes it for an enemy to kill.
+const POST_SCENE := "res://scenes/enemies/sparring_post.tscn"
+const POST_POS := Vector3(-22, 0.05, 40)
 
 
 static func build_all(kit: SceneKit) -> void:
@@ -196,7 +202,22 @@ static func build_arena(kit: SceneKit) -> Node:
 	_add_wolves(kit, root, signs)
 	_add_shrine(kit, nav, signs)
 	_add_world_props(kit, nav, root, signs)
+	_add_sparring_post(kit, root, signs)
 	return root
+
+
+## The sparring post (sandbox.sparring_post, P11b) beside the dummies; it swings every 3 s while
+## the giant stands within 4 m.
+static func _add_sparring_post(kit: SceneKit, root: Node3D, signs: Node3D) -> void:
+	if not ResourceLoader.exists(kit.output_path(POST_SCENE)):
+		print("sandbox: skipped the sparring post (%s not built yet)" % POST_SCENE)
+		return
+	var post: Node3D = kit.instance(POST_SCENE)
+	post.name = "SparringPost"
+	post.position = POST_POS
+	post.set("entity_id", "sandbox.sparring_post")
+	root.add_child(post)
+	signs.add_child(kit.sign("SPARRING POST: block, parry, dodge", POST_POS + Vector3(0, 3.2, 0)))
 
 
 ## The practice gate, the sword and hammer racks, the ancient oak and two bushes (P08). Obstacles

@@ -105,6 +105,8 @@ func perceive(tick: int, snapshot: Dictionary) -> void:
 	if state == AIState.ROUTED:
 		aware = false   # out of the fight for good (P04): never defers a checkpoint again
 		return
+	if _p11b_perceive(tick, snapshot):
+		return   # P11b: awe; a faction member at peace watches without becoming aware
 	if snapshot.get("exists", false) and snapshot.get("alive", false) and snapshot.get("visible", false):
 		target_id = snapshot.target_id
 		last_known = snapshot.position
@@ -123,6 +125,8 @@ func on_noise(tick: int, position: Vector3, source_id: String, certain: bool) ->
 		if state == AIState.ROUTED and certain:
 			_reflee_from = position   # a routed unit that is hit flees again (P04)
 		return
+	if _p11b_heard_in_peace(tick, position, source_id, certain):
+		return   # P11b: a faction member at peace notes it and stays calm
 	last_known = position
 	target_id = source_id
 	if certain:
@@ -172,6 +176,8 @@ func decide(tick: int, p_controller_state: int, my_position: Vector3, request_to
 		else:
 			_set_state(AIState.APPROACH if aware else AIState.PATROL)
 	_recover_morale()
+	if _p11b_decide(my_position, release_token):
+		return   # P11b: neutral (HOLD) and stood-down (STAND_DOWN) faction members
 	if not (state in [AIState.FLEE, AIState.ROUTED]) and not ignores_morale \
 			and morale < float(ai.get("flee_morale", 25.0)) and aware:
 		_release(release_token)
@@ -1432,3 +1438,162 @@ func sequence_path_failed() -> bool:
 	_stop_moving()
 	return true
 ## @anchor P11b
+# --- faction members at peace, and awe (P11b) ---------------------------------------------------
+# Plan §3.13 designs 2, 3 and 5. A unit with a faction (Thornwick's guards) follows its faction's
+# standing, which the actor passes in with set_faction_mode() (EnemyActor's P11b section):
+#   ""            hostile, or no faction: the normal AI;
+#   "neutral"     HOLD at its post (post_resolver: a formation marker of its faction beside its
+#                 home, else home), facing the giant while it sees it (guard up: the actor's
+#                 is_guarding), no attacks, no tokens, never aware - so it never defers a checkpoint,
+#                 never alerts its encounter and is never leashed;
+#   "stood_down"  STAND_DOWN: walks to its post, guard down, faces the way its post faces; never
+#                 aware, no attacks.
+# Noises and blows do not wake a unit at peace (the faction's standing decides, FactionState);
+# a blow only turns it toward the attacker. Morale still recovers; a unit at peace never flees.
+# Awe (decision 26): the first time a unit perceives a target at least tactics.awe_ratio times
+# its own height it loses tactics.awe_morale_loss morale, once per life (source "awe", applied as
+# given: never x1.5). A stage-3 giant (7.92 m) awes soldiers (1.8 m: 4.4 >= 4.0); stage 2 does not.
+
+## A unit at peace stands within POST_ARRIVE_M of its post; it walks back once farther than
+## POST_LEAVE_M (hysteresis, as HOLD's).
+const POST_ARRIVE_M := 0.4
+const POST_LEAVE_M := 1.0
+## The post is asked for again this often (a claimed marker can be freed by a death).
+const POST_REFRESH_S := 1.0
+
+## "" (normal AI), "neutral" or "stood_down" (set_faction_mode).
+var faction_mode := ""
+## post_resolver() -> {"post": Vector3, "face": Vector3}: where a faction member stands at peace
+## and a point to face there (Vector3.INF = keep its facing). The actor installs it; without one
+## the unit stays where it was when it made peace.
+var post_resolver := Callable()
+## True once awe cost this unit morale (once per life).
+var awed := false
+var _post: Dictionary = {}
+var _post_tick := NO_TICK
+var _post_moving := false
+
+
+## Switches the faction behaviour: "" (hostile: the normal AI), "neutral" or "stood_down".
+## Making peace drops the target, awareness, tokens (the actor gives them back), a formation
+## slot and any flight, and holds (or stands down) from the next decision. Leaving peace returns
+## to IDLE, from where a noise - the actor reports the giant - wakes the normal AI.
+func set_faction_mode(mode: String, tick: int = -1) -> void:
+	if tick >= 0:
+		now = tick
+	if mode == faction_mode:
+		return
+	faction_mode = mode
+	_post = {}
+	_post_tick = NO_TICK
+	_post_moving = true
+	if mode == "":
+		if state in [AIState.HOLD, AIState.STAND_DOWN]:
+			_set_state(AIState.IDLE)
+		return
+	_leave_hold()
+	holds_token = false
+	_forget_target()
+	flee_point = Vector3.INF
+	_resume_after_stagger = -1
+	_stop()
+	if state != AIState.DEAD:
+		_set_state(AIState.HOLD if mode == "neutral" else AIState.STAND_DOWN)
+
+
+## True while the unit is a faction member at peace (neutral or stood down).
+func at_peace() -> bool:
+	return faction_mode != ""
+
+
+## The post a unit at peace holds ({} before its first decision at peace).
+func peace_post() -> Dictionary:
+	return _post.duplicate()
+
+
+## perceive(): awe for every unit; a unit at peace remembers where the target is (to face it)
+## and stays unaware. True when it handled the perception.
+func _p11b_perceive(tick: int, snapshot: Dictionary) -> bool:
+	_check_awe(snapshot)
+	if faction_mode == "":
+		return false
+	if snapshot.get("exists", false) and snapshot.get("alive", false) and snapshot.get("visible", false):
+		target_id = str(snapshot.get("target_id", ""))
+		last_known = snapshot.get("position", last_known)
+		last_seen_tick = tick
+	aware = false
+	return true
+
+
+## Awe: the first perception of a target at least tactics.awe_ratio times this unit's height
+## costs tactics.awe_morale_loss morale, once per life.
+func _check_awe(snapshot: Dictionary) -> void:
+	if awed or ignores_morale or state == AIState.DEAD:
+		return
+	var ratio := float(tactics.get("awe_ratio", 0.0))
+	var loss := float(tactics.get("awe_morale_loss", 0.0))
+	if ratio <= 0.0 or loss <= 0.0:
+		return
+	if not (snapshot.get("exists", false) and snapshot.get("alive", false) and snapshot.get("visible", false)):
+		return
+	if size_ratio() < ratio - 1e-6:
+		return
+	awed = true
+	on_morale_delta(-loss, "awe", now)
+
+
+## on_noise() at peace: a blow turns the unit toward the attacker; nothing makes it aware.
+func _p11b_heard_in_peace(tick: int, position: Vector3, source_id: String, certain: bool) -> bool:
+	if faction_mode == "":
+		return false
+	if certain:
+		last_known = position
+		target_id = source_id
+		last_seen_tick = tick
+	aware = false
+	return true
+
+
+## decide() at peace: walk to the post, then hold it (HOLD: facing the target while it is seen,
+## otherwise the post's facing) or stand down (STAND_DOWN: the post's facing). True when handled.
+func _p11b_decide(my_position: Vector3, release_token: Callable) -> bool:
+	if faction_mode == "":
+		return false
+	_release(release_token)
+	aware = false
+	attack_request = ""
+	var post := _current_post(my_position)
+	var at: Vector3 = post.get("post", my_position)
+	var d := _flat_distance(my_position, at)
+	if d > POST_LEAVE_M:
+		_post_moving = true
+	if _post_moving and d > POST_ARRIVE_M:
+		move_target = at
+		move_speed = 0.0
+	else:
+		_post_moving = false
+		_stop_moving()
+	var face: Vector3 = post.get("face", Vector3.INF)
+	if faction_mode == "neutral":
+		_set_state(AIState.HOLD)
+		var watching := last_seen_tick > NO_TICK and now - last_seen_tick <= _ticks(float(ai.get("memory_s", 3.0)))
+		if watching:
+			face_point = last_known
+		else:
+			face_point = Vector3.INF if _post_moving else face
+	else:
+		_set_state(AIState.STAND_DOWN)
+		face_point = Vector3.INF if _post_moving else face
+	return true
+
+
+func _current_post(my_position: Vector3) -> Dictionary:
+	if not _post.is_empty() and now - _post_tick < _ticks(POST_REFRESH_S):
+		return _post
+	_post_tick = now
+	var resolved: Variant = post_resolver.call() if post_resolver.is_valid() else null
+	if typeof(resolved) == TYPE_DICTIONARY and (resolved as Dictionary).has("post"):
+		_post = resolved
+	elif _post.is_empty():
+		_post = {"post": my_position, "face": Vector3.INF}
+	return _post

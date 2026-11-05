@@ -22,6 +22,8 @@
 [ext_resource type="Script" path="res://scripts/actors/wolf_enemy.gd" id="20_d2eb1"]
 [ext_resource type="PackedScene" path="res://scenes/world/bush.tscn" id="21_fe2ad"]
 [ext_resource type="Script" path="res://scripts/world/cosmetic_prop.gd" id="22_7bfd3"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/sparring_post.tscn" id="23_c7730"]
+[ext_resource type="Script" path="res://scripts/actors/sparring_post.gd" id="24_25eb3"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.33, 0.5, 0.78, 1)
@@ -637,6 +639,16 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "ANCIENT OAK: uproot it at stage 3 (E)"
 font_size = 64
 
+[node name="Sign_Sparring" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 3.25, 40)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "SPARRING POST: block, parry, dodge"
+font_size = 64
+
 [node name="WolfPatrol" type="Node3D" parent="."]
 
 [node name="P1" type="Marker3D" parent="WolfPatrol"]
@@ -682,3 +694,10 @@ script = ExtResource("22_7bfd3")
 [node name="Bush02" type="Node3D" parent="." instance=ExtResource("21_fe2ad")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 48)
 script = ExtResource("22_7bfd3")
+
+[node name="SparringPost" type="CharacterBody3D" parent="." instance=ExtResource("23_c7730")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0.05, 40)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("24_25eb3")
+entity_id = "sandbox.sparring_post"

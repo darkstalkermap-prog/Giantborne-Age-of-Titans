@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "encounter.hollow_sparring",
+	"type": "encounter",
+	"display_name": "Hollow sparring post",
+	"description": "The sparring post in Giant's Hollow: block, parry and dodge practice beside the dummies. Unkillable, never aware, not budgeted (plan sections 3.13, 4.3, 4.4).",
+	"level": "level.valley",
+	"district": "hollow",
+	"center_m": [-108, 0, 165],
+	"activate_radius_m": 40,
+	"deactivate_radius_m": 90,
+	"leash_radius_m": 0,
+	"alert_group": false,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "valley.hollow.sparring_post", "definition": "enemy.sparring_post", "position_m": [-108, 0, 165], "yaw_deg": 90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

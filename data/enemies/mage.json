@@ -56,6 +56,8 @@
 		"spread_m": 6,
 		"cover_search_radius_m": 25,
 		"launch_gap_s": 1.0,
+		"awe_ratio": 4.0,
+		"awe_morale_loss": 35,
 		"barrier_range_m": 12
 	},
 	"threat": 0.8,

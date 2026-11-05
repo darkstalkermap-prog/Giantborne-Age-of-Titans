@@ -116,6 +116,7 @@ func _ready() -> void:
 	Events.ability_started.connect(_on_any_ability_started)
 	Events.entity_died.connect(_on_any_entity_died)
 	_p04_ready()
+	_p11b_ready()
 	Sim.register_actor(entity.entity_id, self)
 
 
@@ -416,6 +417,8 @@ func weapon_hit_radius() -> float:
 # --------------------------------------------------------------------------- defence and death
 
 func is_guarding() -> bool:
+	if at_peace():
+		return _guarding_at_peace()   # P11b: a neutral guard keeps its guard up, a stood-down one lowers it
 	return _is_guarding()
 
 
@@ -1854,3 +1857,125 @@ func queue_chain_next() -> void:
 	if controller.library.has(a.chain_next):
 		controller.request(&"attack", {"action_id": a.chain_next})
 ## @anchor P11b
+# --- faction members: standing, posts, guard (P11b) ----------------------------------------------
+# Plan §3.13 designs 2 and 3, decision 17. An enemy with a `faction` (Thornwick's guards and tower
+# archer: "village") follows its faction's standing (FactionState: WorldState flags, announced as
+# Events.faction_changed). Read once when it enters the tree - so a member spawned after the village
+# turned hostile spawns hostile - and again on every faction_changed of its faction:
+#   neutral / warned  team NEUTRAL (TargetingRules: not lockable, area effects skip it, it cannot
+#                     hurt the player), brain mode "neutral": HOLD at its post, guard up while it
+#                     watches the giant, no attacks, never aware;
+#   stood_down        team NEUTRAL, brain mode "stood_down": walks to its post, guard down;
+#   hostile           team ENEMY (lockable), the normal AI - and, when it turns hostile in front of
+#                     the giant, it is told where the giant is at once (a certain noise).
+# Its post is the nearest free formation marker of its own faction within FACTION_POST_RADIUS_M of
+# its home (claimed with P04's formation_holder meta, so a hostile member's formation keeps it),
+# else its home; it faces the way it faced when it entered the tree. An actor without a faction
+# is unchanged (faction_standing "").
+
+## A member's post is a formation marker of its faction this close to its home position.
+const FACTION_POST_RADIUS_M := 6.0
+
+## "" (no faction) or the standing it acts on: "neutral", "warned", "stood_down", "hostile".
+var faction_standing := ""
+var _home_yaw := 0.0
+
+
+func _p11b_ready() -> void:
+	_home_yaw = rotation.y
+	if faction == "" or brain == null:
+		return
+	brain.post_resolver = faction_post
+	if not Events.faction_changed.is_connected(_on_faction_changed):
+		Events.faction_changed.connect(_on_faction_changed)
+	FactionState.hub()
+	_apply_standing(FactionState.standing(faction), false)
+
+
+## True while this actor is a faction member at peace (neutral, warned or stood down).
+func at_peace() -> bool:
+	return faction_standing in ["neutral", "warned", "stood_down"]
+
+
+func _on_faction_changed(_tick: int, changed_faction: String, _state: String) -> void:
+	if changed_faction != faction or entity == null or entity.combatant == null or brain == null:
+		return
+	_apply_standing(FactionState.standing(faction), true)
+
+
+## Applies a standing (see the section notes). alert: a member that turns hostile now is told
+## where the giant is.
+func _apply_standing(standing: String, alert: bool) -> void:
+	if standing == faction_standing:
+		return
+	faction_standing = standing
+	if standing == "hostile":
+		entity.team = CombatEntity.Team.ENEMY
+		brain.set_faction_mode("", Sim.tick)
+		if alert and entity.is_alive() and not is_returning():
+			var t := _target()
+			if t != null and t.is_alive() and is_instance_valid(t.actor):
+				brain.on_noise(Sim.tick, t.actor.global_position, t.entity_id, true)
+		return
+	entity.team = CombatEntity.Team.NEUTRAL
+	Sim.release_all_tokens(entity.entity_id)
+	brain.set_faction_mode("stood_down" if standing == "stood_down" else "neutral", Sim.tick)
+
+
+## brain.post_resolver: where this member stands at peace - its claimed formation marker of its
+## own faction near home, else home - and a point to face there (along its home facing).
+func faction_post() -> Dictionary:
+	var post := home_position
+	var m := formation_marker()
+	if m == null or not m.is_inside_tree() or not _is_own_post(m):
+		if m != null:
+			_release_formation_marker()
+		m = _claim_faction_post()
+	if m != null:
+		post = m.global_position
+	var forward := Vector3(-sin(_home_yaw), 0.0, -cos(_home_yaw))
+	return {"post": post, "face": post + forward * 10.0}
+
+
+func _is_own_post(m: Node3D) -> bool:
+	var f: Variant = m.get("faction")
+	return typeof(f) == TYPE_STRING and f == faction \
+		and _flat_len(m.global_position - home_position) <= FACTION_POST_RADIUS_M + 1e-3
+
+
+## The nearest free formation marker of this actor's faction (not "") within
+## FACTION_POST_RADIUS_M of home, claimed; null when there is none.
+func _claim_faction_post() -> Node3D:
+	var best: Node3D = null
+	var best_d := FACTION_POST_RADIUS_M + 1e-3
+	for n in get_tree().get_nodes_in_group(FORMATION_GROUP):
+		var m := n as Node3D
+		if m == null or not m.is_inside_tree() or not _is_own_post(m):
+			continue
+		var holder := str(m.get_meta(FORMATION_HOLDER_META, ""))
+		if holder != "" and holder != entity.entity_id:
+			var h := Sim.get_entity(holder)
+			if h != null and h.is_alive():
+				continue
+		var d := _flat_len(m.global_position - home_position)
+		if d < best_d:
+			best = m
+			best_d = d
+	if best != null:
+		best.set_meta(FORMATION_HOLDER_META, entity.entity_id)
+		_formation_marker = best
+	return best
+
+
+## A member at peace: a neutral (or warned) one keeps its guard up while it watches the giant
+## (HOLD, not acting, a guard record and the stamina for it); a stood-down one lowers it.
+func _guarding_at_peace() -> bool:
+	if faction_standing == "stood_down" or controller == null or brain == null:
+		return false
+	var guard: Dictionary = record.get("guard", {})
+	if guard.is_empty() or controller.state != CombatController.State.LOCOMOTION \
+			or brain.state != EnemyBrain.AIState.HOLD:
+		return false
+	if Sim.tick - brain.last_seen_tick > ActionDef.seconds_to_ticks(float(record.get("ai", {}).get("memory_s", 3.0))):
+		return false
+	return entity.combatant.pools.stamina >= float(guard.get("min_stamina", 0.0))

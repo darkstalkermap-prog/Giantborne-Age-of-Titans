@@ -126,6 +126,15 @@ static func fields() -> Dictionary:
 			"enter_action": U.ref("action", false, true)}}}}})
 
 	## @anchor P11b
+	# Training devices (P11b, plan §3.13 design 6): `unkillable` keeps the health at 1 or more (the
+	# sparring post then resets to full); archetype "training" needs the `training` block: it swings
+	# every swing_interval_s while a target stands within trigger_radius_m (centre to centre).
+	f.merge({
+		"unkillable": U.bool_field(),
+		"training": {"t": "dict", "fields": {
+			"swing_interval_s": U.pos(true),
+			"trigger_radius_m": U.pos(true)}},
+	})
 
 	## @anchor P12
 	# What a kill by the player drops, once per entity id (PlayerProgression, P12); a spawn's
@@ -209,6 +218,13 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 						out.errors.append("%s: sequence entry '%s' is not one of the phase's attacks" % [pctx, entry])
 
 	## @anchor P11b
+	# A training device needs its training block; awe needs a loss to apply.
+	if str(d.get("archetype", "")) == "training" and typeof(d.get("training")) != TYPE_DICTIONARY:
+		out.errors.append("%s: archetype 'training' needs a 'training' block (swing_interval_s, trigger_radius_m)" % ctx)
+	if typeof(tactics) == TYPE_DICTIONARY and U.is_number(tactics.get("awe_ratio")) \
+			and float(tactics.awe_ratio) > 0.0 and not (U.is_number(tactics.get("awe_morale_loss")) \
+			and float(tactics.awe_morale_loss) > 0.0):
+		out.warnings.append("%s: tactics.awe_ratio is set but awe_morale_loss is not: awe costs nothing" % ctx)
 
 	## @anchor P12
 
