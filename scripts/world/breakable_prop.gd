@@ -12,6 +12,9 @@ extends StaticBody3D
 ## enables_nav_links, and (structural props) emits object_stage_changed. The last stage is the
 ## destruction: object_destroyed once, on_destroyed_flags (first write wins), the record's XP
 ## when the player broke it (Events.xp_award_requested), loot once per world id, debris.
+## Loot (P12): the record's inline `loot` list plus a roll of its loot table - this instance's
+## `loot_table` export when set (a placed quarry chest or armory crate), else the record's
+## `loot_table` (Loot.roll) - all inside the one WorldState.try_award_loot(world_id).
 ##
 ## Gating (accepts_hit): a hit is refused (CombatEntity's IMMUNE "not_permitted") when the prop
 ## is already broken or opened, `protected`, the hit's category is not accepted, it lacks a
@@ -44,6 +47,8 @@ const BREAKABLE_STAGES := [
 ]
 
 @export var world_id := ""
+## Per-instance loot table override (P12); "" = the record's loot_table.
+@export var loot_table := ""
 
 @onready var entity: CombatEntity = $CombatEntity
 
@@ -263,6 +268,12 @@ func on_entity_died(killer_id: String) -> void:
 			var count := int(loot.get("count", 1))
 			WorldState.add_item(item, count, "loot")
 			Events.loot_awarded.emit(Sim.tick, world_id, item, count, killer_id)
+		Loot.give(world_id, Loot.roll(loot_table_id()), killer_id)
+
+
+## The loot table this prop rolls when it breaks: its own `loot_table`, else the record's ("" = none).
+func loot_table_id() -> String:
+	return loot_table if loot_table != "" else str(record.get("loot_table", ""))
 
 
 # --------------------------------------------------------------------------- opening
