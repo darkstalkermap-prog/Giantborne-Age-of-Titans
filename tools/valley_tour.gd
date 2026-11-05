@@ -5,9 +5,10 @@ extends SceneTree
 ## telegraph aimed at the giant (each enemy attack once or twice, part-way through its windup), grabs
 ## and throws, Boulder Hurl, growth, arriving in each district, the practice gate cracking, the boss,
 ## the tree, the Deadfall, a level-up and the end screen; plus one every --tour-every seconds.
-## It changes nothing in the game: it listens to Events and reads the viewport. The one exception is
-## the end: when the slice completes it stops the Autopilot and the bot (process mode DISABLED), so
-## the end screen is drawn instead of the run quitting at once, saves that shot and quits.
+## It changes nothing in the game's state: it listens to Events, reads the viewport and keeps the
+## mouse captured as a player's would be (the HUD otherwise asks for a click). At the end, when the
+## slice completes, it stops the Autopilot and the bot (process mode DISABLED), so the end screen is
+## drawn instead of the run quitting at once, saves that shot and quits.
 ##
 ##   xvfb-run -a -s "-screen 0 1280x720x24" tools/gd.sh --path . --resolution 1280x720 \
 ##     --audio-driver Dummy -s res://tools/valley_tour.gd -- --no-user-settings \
