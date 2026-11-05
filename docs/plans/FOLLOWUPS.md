@@ -9,8 +9,8 @@ its own work and reports it.
 | Item | Owner | Notes |
 | --- | --- | --- |
 | Runic Bolt locked onto a target beyond 25 m fizzles, while the hotbar shows it as ready and names the target. The hotbar should show "Out of range" (or the cast should not be accepted). | P16 (UX pass) | `scripts/actors/player/player_attack.gd`, the hotbar's `preview_reason` path |
-| Titan Surge's +25% poise damage does not apply to the poise damage that the player's parry deals. | P11a (owns `combat_entity.gd` in W6) | `scripts/combat/combat_entity.gd` |
-| Wolves never show status tints (for example Thunder Roar's slow), because `QuadrupedRig` is not an `ActorRig` and HitFeedback only tints `ActorRig`s. | P09 (telegraph visuals) | `scripts/presentation/hit_feedback.gd`, `scripts/presentation/quadruped_rig.gd` |
+| ~~Titan Surge's +25% poise damage does not apply to the poise damage that the player's parry deals.~~ **Fixed in P11a** (regression test: 40 rising to 50 poise). | P11a | `scripts/combat/combat_entity.gd` |
+| ~~Wolves never show status tints (for example Thunder Roar's slow), because `QuadrupedRig` is not an `ActorRig` and HitFeedback only tints `ActorRig`s.~~ **Fixed in P09** (regression test in test_telegraphs). | P09 | `scripts/presentation/hit_feedback.gd`, `scripts/presentation/quadruped_rig.gd` |
 
 ## From the M3 gate review (wave 3)
 
@@ -23,3 +23,11 @@ its own work and reports it.
 | `--mode=valley --new-game` overwrites a newer build's save without keeping the rejected copy (the title screen path keeps it). | P16 | `scripts/core/game_session.gd` |
 | Loading a checkpoint from the pause menu (or F9) while dead skips the death floor (60% health, full stamina). | P16 | `scripts/core/game_session.gd` |
 | Quit to title keeps `level_override` from a Continue, so Sandbox and New Game then load the saved test level. | P16 | `scripts/core/game_session.gd` |
+
+## From the wave 6 merge
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| The boss bar (P11a, top centre, x -320..320, y 14..58) overlaps the quest tracker region (P13, x -356..-16, y 14..132) by 36 px at 1280 px width. Lay them out so neither covers the other at 1280x720 and larger. | P16 | `ui/hud/boss_bar.gd`, `ui/hud/quest_tracker.gd` |
+| `tests/test_runner.gd` stalls instead of failing when a suite has a parse error (it calls `new()` on the broken script); only check.sh's time limit ends it. Make a suite that fails to load count as a failure. | P17a | `tests/test_runner.gd` |
+| P10b's slow `test_valley_walk.test_forest_encounters_spawn_from_data` checks the navmesh 3 ticks after load and may flake under load. Make it wait with `ValleyProbe.wait_for_navigation`. | P15 | `tests/slow/test_valley_walk.gd` |
