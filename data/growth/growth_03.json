@@ -33,6 +33,7 @@
 	"grab_attach": ["torso_fist", "scruff", "two_hand"],
 	"resource_bonus": {"health": 300, "stamina": 20},
 	"arc_pitch_offset_deg": -12,
+	"arc_pitch_offsets_deg": {"ability.light_1": -16},
 	"dodge_style": "sidestep",
 	"camera_orbit_scale": 2.17,
 	"nav_layers": 4,
