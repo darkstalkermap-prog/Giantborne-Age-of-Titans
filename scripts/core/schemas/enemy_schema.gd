@@ -66,6 +66,41 @@ static func fields() -> Dictionary:
 		"xp_reward": U.int_field(0),
 	}
 	## @anchor P04
+	# The scene an EncounterDirector instances (must exist), body mass for grabs, status
+	# immunities, caster essence and regen, navigation layers, morale immunity (bosses), and
+	# the tactics block read by the archetype brains (plan §2.8.2).
+	f.merge({
+		"scene": U.str_field(),
+		"mass_class": U.str_field(false, DataValidator.MASS_CLASSES),
+		"status_immunities": U.enum_array(DataValidator.STATUS_TAGS),
+		"essence": U.num(0.0),
+		"regen": {"t": "dict", "fields": {
+			"stamina_per_s": U.num(0.0), "stamina_delay_s": U.num(0.0),
+			"essence_per_s": U.num(0.0), "essence_delay_s": U.num(0.0),
+			"fury_decay_per_s": U.num(0.0), "fury_decay_delay_s": U.num(0.0)}},
+		"nav_layers": U.int_field(1, 255),
+		"ignores_morale": U.bool_field(),
+		"tactics": {"t": "dict", "fields": {
+			"preferred_min_m": U.num(0.0), "preferred_max_m": U.num(0.0),
+			"outmatched_ratio": U.num(0.0),
+			"outmatched_behavior": U.str_field(false, DataValidator.OUTMATCHED_BEHAVIORS),
+			"spread_m": U.num(0.0), "flank_angle_deg": U.num(0.0, 180.0), "lunge_range_m": U.num(0.0),
+			"cover_search_radius_m": U.num(0.0), "launch_gap_s": U.num(0.0),
+			"barrier_range_m": U.num(0.0), "charge_min_range_m": U.num(0.0),
+			"commander_bonus_morale": U.num(0.0), "formation_spacing_m": U.num(0.0),
+			"hold_attack": U.ref("action", false, true),
+			"awe_ratio": U.num(0.0), "awe_morale_loss": U.num(0.0)}},
+	})
+	(f.ai.fields as Dictionary).merge({
+		"awareness_radius_m": U.num(0.0),
+		"ally_death_radius_m": U.num(0.0),
+		"morale_debounce_s": U.num(0.0),
+		"flee_distance_m": U.num(0.0),
+		"corpse_linger_s": U.num(0.0),
+		"regroup_needs_leader": U.bool_field(),
+		"leader_radius_m": U.num(0.0),
+		"rout_after_s": U.num(0.0),
+	})
 
 	## @anchor P07
 
@@ -94,6 +129,24 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		if float(ai.strike_pause_min_s) > float(ai.strike_pause_max_s):
 			out.errors.append("%s: ai.strike_pause_min_s must be <= ai.strike_pause_max_s" % ctx)
 	## @anchor P04
+	var scene: Variant = d.get("scene")
+	if typeof(scene) == TYPE_STRING:
+		if not (scene.begins_with("res://scenes/") and scene.ends_with(".tscn")):
+			out.errors.append("%s: scene '%s' must be a res://scenes/....tscn path" % [ctx, scene])
+		elif not ResourceLoader.exists(scene):
+			out.errors.append("%s: scene '%s' does not exist (run tools/build_scenes)" % [ctx, scene])
+	if typeof(ai) == TYPE_DICTIONARY and U.is_number(ai.get("flee_morale")) \
+			and U.is_number(ai.get("regroup_morale")) and float(ai.flee_morale) > float(ai.regroup_morale):
+		out.errors.append("%s: ai.flee_morale must be <= ai.regroup_morale" % ctx)
+	var tactics: Variant = d.get("tactics")
+	if typeof(tactics) == TYPE_DICTIONARY:
+		if U.is_number(tactics.get("preferred_min_m")) and U.is_number(tactics.get("preferred_max_m")) \
+				and float(tactics.preferred_min_m) > float(tactics.preferred_max_m):
+			out.errors.append("%s: tactics.preferred_min_m must be <= tactics.preferred_max_m" % ctx)
+		var behavior := str(tactics.get("outmatched_behavior", "none"))
+		if behavior != "none" and not (U.is_number(tactics.get("outmatched_ratio")) \
+				and float(tactics.outmatched_ratio) > 0.0):
+			out.errors.append("%s: tactics.outmatched_behavior '%s' needs an outmatched_ratio > 0" % [ctx, behavior])
 
 	## @anchor P07
 

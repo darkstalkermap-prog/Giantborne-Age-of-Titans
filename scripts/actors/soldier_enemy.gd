@@ -1,7 +1,8 @@
 class_name SoldierEnemy
 extends EnemyActor
 ## Human-sized melee enemy: the shared EnemyActor glue with a SoldierBrain and a frontal guard.
-## Perception at 5 Hz, decisions at 10 Hz, movement and hit queries every tick.
+## Perception at 5 Hz, decisions at 10 Hz, movement and hit queries every tick. Outmatched by a
+## giant (tactics.outmatched_ratio 2.5) it holds formation (EnemyBrain HOLD).
 
 
 func _make_brain() -> EnemyBrain:
@@ -11,12 +12,13 @@ func _make_brain() -> EnemyBrain:
 ## Soldiers "guard the front" (spec 10): while aware and not attacking they hold a frontal
 ## guard that blocks with the normal block rules and their own stamina. Flank them, or break
 ## the guard with heavy attacks (a broken guard staggers them). They turn slower while guarding.
+## Outmatched soldiers holding formation (HOLD) keep the guard up too (decision 26).
 func _is_guarding() -> bool:
 	var guard: Dictionary = record.get("guard", {})
 	if guard.is_empty() or controller.state != CombatController.State.LOCOMOTION or not brain.aware:
 		return false
 	if not (brain.state in [SoldierBrain.AIState.ALERT, SoldierBrain.AIState.APPROACH,
-			SoldierBrain.AIState.RECOVER, SoldierBrain.AIState.REPOSITION]):
+			SoldierBrain.AIState.RECOVER, SoldierBrain.AIState.REPOSITION, SoldierBrain.AIState.HOLD]):
 		return false
 	return entity.combatant.pools.stamina >= float(guard.get("min_stamina", 0.0))
 

@@ -122,6 +122,27 @@ static func fields() -> Dictionary:
 	})
 
 	## @anchor P04
+	# Scripted actor motion during one phase (wolf lunge, boss charge, grab lunge), the
+	# telegraph EnemyActor announces on WINDUP, and the range band brains pick attacks by
+	# (measured from the target's capsule surface).
+	f.merge({
+		"motion": {"t": "dict", "fields": {
+			"phase": U.str_field(true, DataValidator.PHASES),
+			"speed_mps": U.pos(true),
+			"max_distance_m": U.pos(),
+			"stop_on_wall": U.bool_field(),
+			"on_wall_action": U.ref("action", false, true),
+			"steer_deg_s": U.num(0.0),
+			"approach_stop_m": U.num(0.0)}},
+		"telegraph": {"t": "dict", "fields": {
+			"shape": U.str_field(true, DataValidator.TELEGRAPH_SHAPES),
+			"radius_m": U.pos(),
+			"length_m": U.pos(),
+			"width_m": U.pos(),
+			"arc_deg": {"t": "number", "gt": 0.0, "max": 360.0}}},
+		"ai_min_range_m": U.num(0.0),
+		"ai_max_range_m": U.pos(),
+	})
 
 	## @anchor P07
 
@@ -201,6 +222,20 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 				out.errors.append("%s.radius_by_stage_m[%d]: must be > 0 (got %s)" % [ctx, p03_i, p03_radii[p03_i]])
 
 	## @anchor P04
+	if str(d.get("hit_shape", "")) == "body_sweep" and not d.has("motion"):
+		out.errors.append("%s: hit_shape 'body_sweep' requires a 'motion'" % ctx)
+	var telegraph: Variant = d.get("telegraph")
+	if typeof(telegraph) == TYPE_DICTIONARY:
+		match str(telegraph.get("shape", "")):
+			"line":
+				U.require(telegraph, ["length_m"], ctx + ".telegraph", out, "a line telegraph")
+			"circle":
+				U.require(telegraph, ["radius_m"], ctx + ".telegraph", out, "a circle telegraph")
+			"cone":
+				U.require(telegraph, ["radius_m", "arc_deg"], ctx + ".telegraph", out, "a cone telegraph")
+	if U.is_number(d.get("ai_min_range_m")) and U.is_number(d.get("ai_max_range_m")) \
+			and float(d.ai_min_range_m) > float(d.ai_max_range_m):
+		out.errors.append("%s: ai_min_range_m must be <= ai_max_range_m" % ctx)
 
 	## @anchor P07
 

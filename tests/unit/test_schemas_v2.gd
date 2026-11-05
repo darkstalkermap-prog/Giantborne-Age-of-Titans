@@ -245,6 +245,7 @@ func test_light_without_basic_attack_warns() -> void:
 
 func test_untelegraphed_enemy_attack_warns() -> void:
 	var chop: Dictionary = (GameData.get_record("ability.soldier_chop") as Dictionary).duplicate(true)
+	chop.erase("telegraph")   # P04 gave the shipped chop its telegraph; the test needs one without
 	var slow_chop := chop.duplicate(true)
 	slow_chop["id"] = "ability.test_chop"   # enemy_attack, windup 0.85 s
 	var quick := chop.duplicate(true)

@@ -15,9 +15,8 @@ const ROUTE := [
 
 func _run_route(first_person: bool) -> Dictionary:
 	var arena: Node3D = (load(ARENA) as PackedScene).instantiate()
+	TestSpawn.disable_all_ai(arena)   # the soldier and the wolf pack stay put
 	world.add_child(arena)
-	var soldier := arena.get_node("Soldier01") as SoldierEnemy
-	soldier.ai_enabled = false
 	var p := arena.get_node("Player") as GiantPlayer
 	p.router.use_injection = true
 	await step_ticks(5)
