@@ -13,7 +13,8 @@
 	"resistances": {},
 	"immunities": [],
 	"attributes": {"strength": 10, "endurance": 10, "dexterity": 10, "intellect": 10, "willpower": 10, "constitution": 10},
-	"poise": {"threshold": 40, "recover_per_s": 20, "recover_delay_s": 3.0, "stagger_s": 1.0, "immunity_s": 1.5},
+	"poise": {"threshold": 40, "recover_per_s": 20, "recover_delay_s": 3.0, "stagger_s": 1.0, "immunity_s": 1.5,
+		"stagger_vs_larger_s": 1.5},
 	"stability": 1.0,
 	"walk_speed_mps": 1.6,
 	"run_speed_mps": 3.6,
@@ -65,5 +66,6 @@
 	"crit_chance": 0.0,
 	"xp_reward": 20,
 	"mass_class": "small",
+	"grab_attach": "torso_fist",
 	"nav_layers": 1
 }

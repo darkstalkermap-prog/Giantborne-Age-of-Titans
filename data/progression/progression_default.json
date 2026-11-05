@@ -11,7 +11,8 @@
 	"prototype_xp_label": "Prototype pacing: accelerated quest XP",
 	"death_reload_floor": {"health": 0.6, "stamina": 1.0, "essence": 0.5},
 	"ability_library": ["ability.heavy_footfall", "ability.sweeping_blow", "ability.stone_skin",
-		"ability.runic_bolt", "ability.ancestral_mend", "ability.thunder_roar", "ability.titan_surge"],
+		"ability.crushing_grip", "ability.boulder_hurl", "ability.runic_bolt", "ability.ancestral_mend",
+		"ability.thunder_roar", "ability.titan_surge"],
 	"new_game": {
 		"level": 1,
 		"growth_profile": "growth.01",

@@ -17,6 +17,7 @@
 	"crit_chance": 0.05,
 	"crit_multiplier": 1.5,
 	"stability": 1.0,
+	"mass_class": "large",
 	"loadout": {
 		"light_chain": "ability.light_1",
 		"heavy": "ability.heavy_1",
@@ -24,8 +25,8 @@
 		"block": "action.block",
 		"jump": "action.jump",
 		"sprint": "action.sprint",
-		"slots": ["ability.heavy_footfall", "ability.sweeping_blow", "ability.stone_skin", "", "",
-			"ability.runic_bolt", "ability.ancestral_mend", "ability.thunder_roar"],
+		"slots": ["ability.heavy_footfall", "ability.sweeping_blow", "ability.stone_skin", "ability.crushing_grip",
+			"ability.boulder_hurl", "ability.runic_bolt", "ability.ancestral_mend", "ability.thunder_roar"],
 		"ultimate": "ability.titan_surge"
 	}
 }

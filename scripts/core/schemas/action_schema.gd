@@ -149,6 +149,16 @@ static func fields() -> Dictionary:
 	(f.arc.fields as Dictionary)["pitch_mid_deg"] = U.num(-89.0, 89.0)
 
 	## @anchor P07
+	# Grab actions (hit_shape "grab", run in EXECUTING; PlayerGrab): "hold" lifts the target,
+	# "crush" also squeezes it with the action's hit, then lets go when release_after is set.
+	# max_mass caps what this action works on below the stage's grab_capacity (Crushing Grip:
+	# small, so a stage-3 giant can lift an ogre but not crush it).
+	f.merge({
+		"grab": {"t": "dict", "fields": {
+			"mode": U.str_field(true, ["hold", "crush"]),
+			"release_after": U.bool_field(),
+			"max_mass": U.str_field(false, DataValidator.MASS_CLASSES)}},
+	})
 
 	## @anchor P09
 
@@ -242,6 +252,10 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.errors.append("%s: ai_min_range_m must be <= ai_max_range_m" % ctx)
 
 	## @anchor P07
+	if str(d.get("hit_shape", "")) == "grab":
+		U.require(d, ["grab"], ctx, out, "hit_shape 'grab'")
+	elif d.has("grab"):
+		out.errors.append("%s: a 'grab' block needs hit_shape 'grab'" % ctx)
 
 	## @anchor P09
 
