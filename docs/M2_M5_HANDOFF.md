@@ -10,7 +10,7 @@ document provides each for milestones M2 to M5 (the M0/M1 handoff is
 village outcomes, on top of the M1 combat sandbox (which is still there). A bot that plays the whole
 slice finishes it: the assisted novice in every outcome, the unassisted novice in 17 of 18 runs and
 the expert in 4 of 4; a 30-minute run had no crash, softlock, duplicated reward or stuck targeting.
-The final check rebuilds every scene (no diff) and passes 103 suites with 13,617 checks and 0
+The final check rebuilds every scene (no diff) and passes 104 suites with 13,660 checks and 0
 failures, then a 120 s soak with 0 errors. Everything was measured in a Linux container without a
 GPU, a gamepad, a Windows PC or a human player, so the usability, real-controller, reference-PC and
 real-browser gates are **NOT RUN**: their scripts and commands are ready for the owner (§5).
@@ -51,7 +51,7 @@ about 840 files changed, about 96,500 lines added and 3,800 removed, in about 21
 | `data/` | 152 validated JSON records in 18 folders (M1: 23) |
 | `scenes/` | 44 generated scenes: the giant, 7 enemies, 2 NPCs, 16 world props and the sandbox, the Valley and its 8 districts, 7 test levels; `assets/nav/` holds the Valley's 4 navmeshes |
 | `tools/` | 17 scene builders, `SceneKit`, the Valley layout table, `gd.sh`, `check.sh`, `run_tests.sh`, `run_bots.sh`, `bot_report.py`, `build_web.sh`, the screenshot tours, the draw-call probe |
-| `tests/` | 103 suites (31 unit, 59 integration, 13 slow), about 27,900 lines, and their support helpers (M1: 15 suites) |
+| `tests/` | 104 suites (32 unit, 59 integration, 13 slow), about 28,100 lines, and their support helpers (M1: 15 suites) |
 | `docs/` | This handoff, README, ARCHITECTURE, DECISIONS, HOW_IT_PLAYS, PERFORMANCE, USABILITY_SCRIPT, BALANCE_LOG, the plan, its follow-ups, one system doc per package, screenshots |
 | `web/launcher.html` | The play link's page |
 
@@ -201,23 +201,29 @@ part that only a real PC, pad, browser or person can confirm. **FAIL** = measure
 
 ### 6.1 The check sequence on the final code
 
-`tools/check.sh --build --slow` on the tree of commit `400e974` (every change to the game is in or
-before it; the later commits change documentation and one comment in a tool script): **CHECK
-PASSED** in 2 min 58 s of wall time.
+`tools/check.sh --build --slow` at the Ship gate, on the tree of commit `6fd50b2`: **CHECK PASSED**
+in 2 min 53 s of wall time. Every change to the game is in `400e974` or before it; the later commits
+change documentation and one comment in a tool script, and add the Ship gate's documentation suite
+`test_ship_docs`.
 
 - Import, then **every scene rebuilt** by the 17 builders (44 scenes and the four navmeshes): the
   rebuild left every committed file byte-identical (no diff), then import again.
-- **103 suites, 13,617 checks, 0 failures**: the default suite 90 suites, 11,072 checks, 58.7 s
-  summed; the slow suites 13 suites, 2,545 checks, 73.5 s summed (the walkthrough of all four
-  outcomes 18.0 s, the 3-size route, the Valley boss, flee, clearance, stress and bot smoke tests).
+- **104 suites, 13,660 checks, 0 failures**: the default suite 91 suites, 11,115 checks, 58.9 s
+  summed; the slow suites 13 suites, 2,545 checks, 69.9 s summed (the walkthrough of all four
+  outcomes 16.6 s, the 3-size route, the Valley boss, flee, clearance, stress and bot smoke tests).
 - **The 120 s soak** (`--autoplay=120`, seeded): exit 0, **0 errors, 0 warnings**; attacks 41, hits
   resolved 33, enemy kills 4, fence breaks 2, debris max 10, loot awards 2, resets 1.
 
-**The default suite alone** on the final code (commit `28496a1`, for the plan's 75 s budget): 90
-suites, 11,072 checks, 0 failures, 58.4 s summed, **60.2 s of wall time**. The first full run of
-this package (on a fresh import) had one failure, `test_world_props.test_a_broken_gate_opens_its_nav_link`
-(§7); it passed in the four full runs since (this check and the default suite alone included) and
-in six runs of its suite alone.
+This package's own run of the sequence, on `400e974`, passed the same way in 2 min 58 s: 103 suites,
+13,617 checks (the default suite 90 suites, 11,072 checks, 58.7 s summed; the slow suites 13
+suites, 2,545 checks, 73.5 s summed) and the same soak.
+
+**The default suite alone** on the final code (commit `6fd50b2`, for the plan's 75 s budget): 91
+suites, 11,115 checks, 0 failures, 60.2 s summed, **62.0 s of wall time** (this package's run on
+`28496a1`: 90 suites, 58.4 s summed, 60.2 s of wall time). The first full run of this package (on a
+fresh import) had one failure, `test_world_props.test_a_broken_gate_opens_its_nav_link` (§7). It
+passed in every full run since (four in this package, two at the Ship gate) and in six runs of its
+suite alone.
 
 ### 6.2 Bot runs, the 30-minute run and the stress route on the final code
 
@@ -346,7 +352,7 @@ fight and turned Thornwick hostile on a help path (recorded for the next milesto
 | A yard north of Thornwick's square is outside the giant's navigation | Minor | The bot backs out along its breadcrumbs; a player can walk out (P17a) |
 | Soldiers fleeing together through an opened gate can jam on its narrow path | Minor | No agent avoidance (P15) |
 | The title's save line names the checkpoint by its id ("at valley.shrine.hollow") | Cosmetic | Seen in the web check |
-| `test_world_props.test_a_broken_gate_opens_its_nav_link` failed once | Test flake | In the first full run on this branch (a fresh import): the path never crossed the opened link within 3 s (Godot's asynchronous navigation map). It passed in the four full runs since (the final check included) and in six runs of its suite alone. P08 records the same race (its decision 17). |
+| `test_world_props.test_a_broken_gate_opens_its_nav_link` failed once | Test flake | In the first full run on this branch (a fresh import): the path never crossed the opened link within 3 s (Godot's asynchronous navigation map). It passed in every full run since (four in this package, two at the Ship gate, the final check included) and in six runs of its suite alone. P08 records the same race (its decision 17). |
 | Placeholder art, no audio, physics interpolation off, text button glyphs | By design | README §9 |
 | Human, real-pad, reference-PC and real-browser gates | NOT RUN | §5 |
 
