@@ -73,6 +73,9 @@ const CRUMB_EVERY_TICKS := 30
 const CRUMB_SPACING_M := 1.5
 const CRUMBS_KEPT := 48
 const RETRACE_S := 12.0
+## How long the bot stands at an encounter whose living members are all out of its reach (fleeing,
+## elevated, unreachable) before it takes the stage's other way on (P17b).
+const STALL_WALK_ON_S := 8.0
 const ELDER := "valley.village.elder"
 const ELDER_DIALOGUE := "dialogue.elder"
 const BARRICADE := "valley.village.barricade"
@@ -128,6 +131,7 @@ var director: EncounterDirector
 var combat: BotCombat
 var task: Dictionary = {}
 var mode := "other"
+var _stall_since := -1   ## the tick an encounter task first found nothing to reach; -1 when it did
 
 ## The run's metrics (BotCombat reads them through the bot).
 var metrics: RunMetrics:
@@ -402,6 +406,7 @@ func _plan(tick: int) -> void:
 	var fight_target := _fight_target()
 	if fight_target != null:
 		task = {"kind": "fight", "target": fight_target}
+		_stall_since = -1
 		return
 	task = _objective_task(tick)
 
@@ -475,7 +480,12 @@ func _task_for(o: Dictionary, _tick: int) -> Dictionary:
 		"go":
 			return {"kind": "go", "pos": _go_goal(o), "radius": 2.0}
 		"fight_encounter":
-			return _encounter_task(target, pos)
+			var fight := _encounter_task(target, pos)
+			# The garrison's last members are out of reach (on a terrace, fleeing) and the giant stands
+			# at the encounter: it walks on to the stage's other way out (the courtyard's causeway).
+			if _stalled(fight) and _first_area(_stage_condition(o)) != "":
+				return {"kind": "go", "pos": _go_goal(o), "radius": 2.0, "why": "walk on: the rest is out of reach"}
+			return fight
 		"kill":
 			if str(hint.get("rest_first", "")) != "" and not run.rested_for_boss:
 				var rest := _rest_task(str(hint.rest_first), true)
@@ -522,7 +532,9 @@ func _task_for(o: Dictionary, _tick: int) -> Dictionary:
 			var enc := str(hint.get("encounter", ""))
 			if enc != "" and director != null and director.encounter_state(enc) == EncounterDirector.ACTIVE \
 					and _encounter_alive(enc).size() > 0 and node.global_position.distance_to(player.global_position) < 40.0:
-				return _encounter_task(enc, pos)
+				var guard := _encounter_task(enc, pos)
+				if not _stalled(guard):
+					return guard
 			return {"kind": "interact", "target": node}
 		"talk":
 			return {"kind": "talk", "npc": target, "dialogue": str(hint.get("dialogue", "")),
@@ -532,10 +544,26 @@ func _task_for(o: Dictionary, _tick: int) -> Dictionary:
 	return {"kind": "go", "pos": pos, "radius": 3.0}
 
 
+## True once an encounter task has found nothing to reach for STALL_WALK_ON_S (P17b: the bot stood
+## at the courtyard while its last soldiers held a terrace, or at the barrow while the wardens' wolves
+## fled, until the stage's watchdog ended the run).
+func _stalled(t: Dictionary) -> bool:
+	if not bool(t.get("stalled", false)):
+		_stall_since = -1
+		return false
+	if _stall_since < 0:
+		_stall_since = Sim.tick
+	return Sim.tick - _stall_since >= ActionDef.seconds_to_ticks(STALL_WALK_ON_S)
+
+
+func _stage_condition(o: Dictionary) -> Variant:
+	return Quests.stage_record(Quests.quest_record(str(o.quest_id)), str(o.stage_id)).get("complete_when")
+
+
 ## Where a "go" objective is: the area its condition waits for (entering it completes the stage),
 ## else its marker.
 func _go_goal(o: Dictionary) -> Vector3:
-	var cond: Variant = Quests.stage_record(Quests.quest_record(str(o.quest_id)), str(o.stage_id)).get("complete_when")
+	var cond: Variant = _stage_condition(o)
 	var area := _first_area(cond)
 	if area != "" and level != null:
 		var a := level.area(area)
@@ -559,7 +587,7 @@ static func _first_area(cond: Variant) -> String:
 
 
 ## Fight an encounter: its nearest living member (the director spawns it near the giant), else go to
-## where it is.
+## where it is ("stalled" once the giant stands there and every living member is out of reach).
 func _encounter_task(encounter_id: String, fallback: Vector3) -> Dictionary:
 	var alive := _encounter_alive(encounter_id)
 	var best: EnemyActor = null
@@ -581,7 +609,8 @@ func _encounter_task(encounter_id: String, fallback: Vector3) -> Dictionary:
 	if director != null and director.encounter_state(encounter_id) == EncounterDirector.ACTIVE \
 			and alive.is_empty() and center.distance_to(player.global_position) < 12.0:
 		return {"kind": "wait", "why": "encounter %s: nothing left to reach" % encounter_id}
-	return {"kind": "go", "pos": center, "radius": 6.0}
+	return {"kind": "go", "pos": center, "radius": 6.0,
+		"stalled": not alive.is_empty() and center.distance_to(player.global_position) < 6.0}
 
 
 func _encounter_alive(encounter_id: String) -> Array[EnemyActor]:

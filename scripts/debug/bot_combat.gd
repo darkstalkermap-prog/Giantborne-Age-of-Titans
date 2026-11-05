@@ -37,17 +37,23 @@ const DODGE_LEAD_TICKS := 10
 const BLOCK_HOLD_TICKS := 16
 const EXPERT_WATCH_M := 12.0
 ## P17b: a heavy commits the giant until 0.25 s into its recovery (its dodge cancel), about 57 ticks;
-## no heavy starts when a planned dodge falls inside that (the dodge would come too late).
+## no heavy starts when a planned dodge against a blow from within HEAVY_COMMIT_RANGE_M (a slam, a
+## combo, a charge, a lunge) falls inside that: the dodge would come too late. A shot from farther
+## off does not hold the heavy back (the heavy lands, the arrow is taken): with every planned dodge
+## counted, archers and mages kept the bot from breaking a guard for whole fights.
 const HEAVY_COMMIT_TICKS := 60
+const HEAVY_COMMIT_RANGE_M := 10.0
 ## Hostile, aware enemies this far (by stage) pull the bot into a fight.
 const ENGAGE_RADIUS_M := [16.0, 22.0, 28.0]
 ## A target this much higher than the giant's feet is out of melee reach (an archer on a wall).
 const ELEVATED_M := 2.5
 ## Targets narrower than this get the reach band (BotCombat.reach_band); larger ones the reach.
 const SMALL_TARGET_RADIUS_M := 0.8
-## How far into the light's reach band (0 = its near edge, 1 = its far edge) the bot stands against a
-## man-sized target (P17b: 0.8, the plan's "approach to 0.8 x reach"; P17a used 0.45).
-const STANDOFF_IN_BAND := 0.8
+## Where the bot stands against a man-sized target: the plan's "approach to 0.8 x reach" (§5.1) from
+## the giant's centre plus half the target's radius, kept inside the light's band (P17b: 3.0 / 4.0 /
+## 5.4 m by stage against a soldier; P17a stood 0.45 into the band, about 2.9 m at stage 2 when the
+## fixed tilt stopped the band at 4 m; 0.8 into the aimed band put it on the brace counter's 4.2 m).
+const STANDOFF_REACH := 0.8
 const BOSS_ID := "valley.arena.ogre_king"
 const RUNIC_BOLT := "ability.runic_bolt"
 const BOULDER_HURL := "ability.boulder_hurl"
@@ -414,10 +420,15 @@ func affordable(a: ActionDef) -> bool:
 	return player.entity.combatant.pools.stamina - a.stamina_cost >= dodge_reserve()
 
 
-## P17b: true when a planned dodge falls within `ticks` from now.
+## P17b: true when a dodge planned against a blow from within HEAVY_COMMIT_RANGE_M falls within
+## `ticks` from now.
 func dodge_planned_within(tick: int, ticks: int) -> bool:
 	for re: Dictionary in _reactions:
-		if str(re.kind).begins_with("dodge") and int(re.at) - tick <= ticks:
+		if not str(re.kind).begins_with("dodge") or int(re.at) - tick > ticks:
+			continue
+		var actor := (re.actor as WeakRef).get_ref() as Node3D
+		if actor == null or not is_instance_valid(actor) \
+				or _flat(actor.global_position - player.global_position).length() <= HEAVY_COMMIT_RANGE_M:
 			return true
 	return false
 
@@ -486,12 +497,10 @@ func fight(tick: int, t: EnemyActor) -> void:
 	var reach := float(player.profile.get("melee_reach_m", 3.5))
 	var t_radius := EnemyActor.entity_radius(t.entity) if t.entity != null else 0.5
 	var t_height := t.entity.combatant.height_m if t.entity != null and t.entity.combatant != null else 1.8
-	# A man-sized target (soldiers, archers, mages, wolves): stand where the swings land (the
-	# weapon's arc at this stage, with this weapon, on this target's size, over the tilts its vertical
-	# aim may take), STANDOFF_IN_BAND into the light's band (P17b: the plan's "0.8 x reach" now that
-	# aimed swings reach about the reach; it was 0.45 while the fixed tilt stopped them short), and
-	# back off when near its inner edge. A large one (ogres, the King: hurtboxes high on a broad
-	# body): by the reach, as before.
+	# A man-sized target (soldiers, archers, mages, wolves): stand at the plan's 0.8 x reach where the
+	# swings land (the light's band: the weapon's arc at this stage, with this weapon, on this
+	# target's size, over the tilts its vertical aim may take), and back off when near the band's
+	# inner edge. A large one (ogres, the King: hurtboxes high on a broad body): by the reach.
 	var small := t_radius < SMALL_TARGET_RADIUS_M
 	var light_band := reach_band(_loadout_action(&"light"), t_radius, t_height) if small else Vector2.ZERO
 	var heavy_band := reach_band(_loadout_action(&"heavy"), t_radius, t_height) if small else Vector2.ZERO
@@ -500,7 +509,7 @@ func fight(tick: int, t: EnemyActor) -> void:
 		want = reach * 0.9 + t_radius * 0.5
 	var too_close := 0.0
 	if light_band != Vector2.ZERO:
-		want = lerpf(light_band.x, light_band.y, STANDOFF_IN_BAND)
+		want = clampf(reach * STANDOFF_REACH + t_radius * 0.5, light_band.x + 0.25, light_band.y)
 		too_close = light_band.x + 0.25
 	var busy := defend_busy(tick)
 	if not busy and _abilities(tick, t, dist):
