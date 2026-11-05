@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"id": "weapon.club_reinforced",
+	"type": "weapon",
+	"family": "club",
+	"display_name": "Reinforced Club",
+	"damage_multiplier": 1.15,
+	"length_m": 1.85,
+	"hit_radius_m": 0.45,
+	"description": "The Oak Club, reforged with iron bands to fit a full-grown giant.",
+	"scales_with_growth": true,
+	"fit_max_stage": 3,
+	"visual_shape": "club",
+	"light_chain": "ability.light_1",
+	"heavy": "ability.heavy_1"
+}

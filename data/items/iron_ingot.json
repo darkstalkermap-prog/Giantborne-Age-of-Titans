@@ -1,0 +1,8 @@
+{
+	"schema_version": 1,
+	"id": "item.iron_ingot",
+	"type": "item",
+	"display_name": "Iron Ingot",
+	"description": "A bar of good iron. A forge needs two to reforge a weapon so it fits a bigger giant.",
+	"stack_max": 99
+}

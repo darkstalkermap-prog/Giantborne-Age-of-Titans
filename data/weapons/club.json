@@ -6,5 +6,11 @@
 	"display_name": "Oak Club",
 	"damage_multiplier": 1.0,
 	"length_m": 1.85,
-	"hit_radius_m": 0.45
+	"hit_radius_m": 0.45,
+	"scales_with_growth": true,
+	"fit_max_stage": 2,
+	"visual_shape": "club",
+	"light_chain": "ability.light_1",
+	"heavy": "ability.heavy_1",
+	"upgrade": {"to": "weapon.club_reinforced", "cost": [{"item": "item.iron_ingot", "count": 2}]}
 }
