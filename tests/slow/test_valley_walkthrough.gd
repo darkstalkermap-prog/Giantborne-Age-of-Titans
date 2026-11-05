@@ -26,7 +26,6 @@ extends IntegrationSuite
 ## is about the quest line, not the fights; P17a's bot plays those), the village's guards and
 ## people keep theirs, so their standing (neutral, stood down, hostile) plays out for real.
 
-const VILLAGE_FOLK := "encounter.village_folk"
 const ELDER := "valley.village.elder"
 const KING := "valley.arena.ogre_king"
 const MAIN_STAGES := ["leave_hollow", "wolves", "ogre", "grove", "hurl", "to_village", "village", "bridge", "gate",

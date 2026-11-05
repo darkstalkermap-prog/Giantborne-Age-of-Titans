@@ -9,6 +9,7 @@ extends IntegrationSuite
 ##   * the corridor is at least 8 m wide: horizontal rays at right angles to the path, at the
 ##     knee and at the shoulder, reach at least 8 m between the walls on the two sides (the
 ##     plan's "required corridors are >= 8 m wide").
+## Also: every spawn point of the shipped encounters stands on its definition's navigation layer.
 
 const STAGE3_RADIUS := 1.65
 const STAGE3_HEIGHT := 7.92
@@ -96,6 +97,28 @@ func test_the_return_leg_fits_a_stage_3_giant() -> void:
 		assert_eq(narrow, PackedStringArray(), "%s: the corridor is at least 8 m wide (narrow at %s)" % [what, narrow])
 	print("    valley: the stage-3 return leg: %.0f m of giant paths, %d samples" % [total_m, samples])
 	assert_true(total_m > 300.0, "a return leg of several hundred metres (%.0f m)" % total_m)
+
+
+## Every spawn point of the shipped encounters (not only the plan's: P10b's smoke test checks
+## those) stands on its definition's navigation layer - the village captain beside the barricade's
+## road and the ambush's archer on the watchtower included.
+func test_every_encounter_spawn_stands_on_its_navigation_layer() -> void:
+	level = ValleyProbe.instance(true)
+	world.add_child(level)
+	assert_true(await ValleyProbe.wait_for_navigation(self, level), "navigation ready")
+	var checked := 0
+	for rec: Dictionary in GameData.records_of_type("encounter"):
+		if str(rec.get("level", "")) != "level.valley":
+			continue
+		for sp: Dictionary in rec.get("spawns", []):
+			var layers := int(GameData.get_record(str(sp.definition)).get("nav_layers", 1))
+			var layer := layers & -layers
+			var at := ValleyProbe.v3(sp.position_m)
+			var on := NavigationServer3D.region_get_closest_point(level.nav_region(layer), at)
+			assert_true(ValleyProbe.flat(on, at) < 0.3 and absf(on.y - at.y) < 1.0,
+				"%s (%s) stands on nav layer %d (closest %s)" % [sp.entity_id, rec.id, layer, on])
+			checked += 1
+	assert_true(checked >= 50, "every spawn of the Valley's encounters (%d)" % checked)
 
 
 ## Points every SAMPLE_M along `path` with the path's direction there: [[point, dir], ...].
