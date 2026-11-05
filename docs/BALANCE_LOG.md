@@ -160,4 +160,63 @@ Commits `80dc086` (bot) and `322de67` (data).
 
 No test pins either number.
 
-*Results: pending (matrix `iter2`).*
+| Skill | Policy | Completed | Human est. median (min) | Raw median (min) | Deaths median (boss) | Max deaths in another segment |
+| --- | --- | --- | --- | --- | --- | --- |
+| novice | force | 2 / 3 | 16.0 | 12.1 | 1 (0) | 1 |
+| novice | help_cache | 5 / 5 | 16.6 | 11.1 | 1 (0) | 1 |
+| novice | help_ogre | 5 / 5 | 16.1 | 10.6 | 1 (0) | 1 |
+| novice | intimidate | 5 / 5 | 12.9 | 8.7 | 0 (0) | 0 |
+| expert | force | 1 / 1 | 21.8 | 17.9 | 1 (0) | 1 |
+| expert | help_cache | 1 / 1 | 18.3 | 13.2 | 0 (0) | 0 |
+| expert | help_ogre | 1 / 1 | 18.1 | 13.4 | 0 (0) | 0 |
+| expert | intimidate | 1 / 1 | 17.7 | 13.5 | 1 (0) | 1 |
+
+- Completed novice runs 12 -> 17 of 18; **the expert completes all four policies with 0-1 deaths**
+  (it died twice in all four runs: an arrow and a brace).
+- **The forest settled**: its novice deaths 13 -> 5 (a wolf 3, the smash 2) and no forest timeout;
+  the segment's damage 1.62 -> 1.39 x maximum health.
+- Novice deaths 24 -> 18: the brace 7, archer shots 3, wolves 3, the ogre's smash 2, the King 2, a
+  mage bolt 1; by segment: ruins 11, forest 5, boss 2. One run (intimidate seed 5) died twice at the
+  King before beating him; the others won the first attempt with 1-29 % of their health left
+  (median 18 %).
+- The one novice that did not finish (force seed 3) stood at the barrow for 240 s: it gave up on the
+  two harassing wolves in turn (every 20 s) but each came back after the 30 s it left them alone, so
+  the crown was never reached. The bot now leaves a given-up enemy alone for 90 s (commit `25c1fb7`,
+  measured by the confirmation matrix below).
+- Growth: HOLD 58 % at stage 2, FLEE or ROUTED 55 % at stage 3, time-to-kill ratio 0.54 (all three
+  targets met). CPU per tick p95: median 5.74 ms, max 6.86 ms. Off-camera hits: median 27 %.
+
+**No third tuning iteration.** What is still off target is either a property of the bot (the boss
+race above; Sweeping Blow, which the bot's ability rules rarely reach because Heavy Footfall comes
+first; the off-camera share, which counts the archers and mages behind the giant's back that the
+novice cannot see by design) or pacing that only content could add: the human estimate is 15-16
+minutes against 20-30 because the bot neither explores nor learns, and the Hollow, the forest and
+the Grove, where a first-time player spends that time, are floors in the estimate
+(`docs/HOW_IT_PLAYS.md`). The segment damage targets (0.6 x maximum health in the forest and the
+ruins) are missed by the novice model's design: it takes a quarter of the blockable blows and 30 % of
+the dodgeable ones whole, so damage piles up in long fights while deaths, the measure that matters
+to a player, stay at about one a run.
+
+## Confirmation (tag `final`)
+
+The build of commit `25c1fb7`: iteration 2's game, the bot leaving a given-up enemy alone for 90 s.
+
+| Skill | Policy | Completed | Human est. median (min) | Raw median (min) | Deaths median (boss) | Max deaths in another segment |
+| --- | --- | --- | --- | --- | --- | --- |
+| novice | force | 2 / 3 | 16.6 | 12.7 | 2 (0) | 1 |
+| novice | help_cache | 5 / 5 | 16.5 | 11.0 | 1 (0) | 1 |
+| novice | help_ogre | 5 / 5 | 15.6 | 10.3 | 1 (0) | 1 |
+| novice | intimidate | 5 / 5 | 12.9 | 8.7 | 0 (0) | 0 |
+| expert | force | 1 / 1 | 20.3 | 16.6 | 1 (0) | 1 |
+| expert | help_cache | 1 / 1 | 18.3 | 13.2 | 0 (0) | 0 |
+| expert | help_ogre | 1 / 1 | 18.1 | 13.4 | 0 (0) | 0 |
+| expert | intimidate | 1 / 1 | 18.0 | 13.7 | 1 (0) | 1 |
+
+- The force seed-3 run that stalled at the barrow in `iter2` now gets past it and, on this
+  trajectory, runs out of the Deadfall stage's 240 s on the return leg instead (the village's guards
+  and militia and the return patrol on the road; 2,460 damage taken in the stage). The other 21
+  runs finish in both batches; ten are identical, eleven took another path where a chase was given
+  up (deaths the same in all but two: help_cache seed 5 3 -> 1, intimidate seed 5 3 -> 4).
+- Novice deaths 19: the brace 6, archer shots 4, wolves 3, the ogre's smash 2, the King 3 (two
+  runs), a mage bolt 1; by segment: ruins 10, forest 5, boss 3, return 1.
+- The §5.6 targets, met and missed, are tabled in `docs/HOW_IT_PLAYS.md`.

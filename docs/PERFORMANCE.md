@@ -12,7 +12,7 @@ reference-PC commands below.
 | --- | --- | --- | --- |
 | Frame time | p95 <= 16.7 ms, p99 < 33.3 ms at 1080p, `--graphics=low` (spec) | Reference PC, exported build: owner | **NOT RUN** |
 | GPU render time | Reported separately from CPU (spec §16) | Reference PC: owner. The container has no GPU (software rendering only) | **NOT RUN** |
-| Sim CPU per tick | p95 <= 8 ms in the stress route and the Valley | Container (indicative) and PC | Container: 4.88 ms (stress), 3.37 ms (Valley walk): **met** |
+| Sim CPU per tick | p95 <= 8 ms in the stress route and the Valley | Container (indicative) and PC | Container: 4.88 ms (stress), 3.37 ms (Valley walk): **met**; after P17b 3.72 ms (stress), at most 6.37 ms in every run of the final balance matrix (three runs at once) and 5.77 ms over the 30-minute run: **met** |
 | Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered; `tools/draw_call_probe.tscn` (the static world) | P17b (container, software GL): the static world at most 93 per view at `low` and 221 at `medium` (was 402 / 584): **met**; with enemies in view the walk's p50 is 256 and its largest view 656 at `low` (was 608 / 1,354): **not met** while about five or more full-rig enemies are in view (about 33 draw calls each; see "Draw calls after P17b") |
 | Distant actors | Tier 2 shows a one-box proxy | P04 test; the Valley walk's LOD comparison | Met: every distant member shows its proxy at tier 2 |
 | Active combatants | <= 12 (the director's budget) | P10a tests; P17a bot invariant | 12 in the stress route (its own spawner) and in the Valley walk |
@@ -186,6 +186,22 @@ Debris: max 40, p95 35, mean 8.2 pieces. Nodes 1431-1455 (no growth over the run
 97-100 MB, no orphan nodes. 7 laps (lap ends at 42.4, 85.5, 129.8, 170.0, 210.7, 254.8, 297.1 s),
 140 breakables broken, 11 combatants respawned, 409 hits resolved, 0 errors, the giant never died.
 The slowest tick (26.5 ms at tick 2794) is one of the few above 16 ms.
+
+### Stress route after P17b, 300 s, `--graphics=low` (headless)
+
+The same command on P17b's final build (merged props, the swing's vertical aim, the faction budget,
+the tuned data):
+
+| Metric | p50 | p95 | p99 | max |
+| --- | --- | --- | --- | --- |
+| CPU per tick (ms) | 2.27 | 3.72 | 5.12 | 32.1 |
+| `Sim.step` (ms) | 1.55 | 2.63 | 3.67 | 31.2 |
+| Idle callbacks per frame (ms) | 1.46 | 2.44 | 3.18 | 45.8 |
+
+Active combatants: mean 11.79 (min 9, max 12). Debris: max 40, p95 32. Nodes 1,220-1,245 (fewer:
+the merged props), static memory 101-104 MB, no orphan nodes. 138 breakables broken, 97 loot
+awards, 419 hits resolved, 0 errors. The two slowest ticks (32.1 and 26.7 ms) are the only ones above
+16 ms.
 
 ### Stress route, rendered (Xvfb, `--graphics=low`, 45 s)
 
