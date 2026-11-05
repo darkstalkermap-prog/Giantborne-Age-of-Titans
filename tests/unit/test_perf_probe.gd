@@ -113,3 +113,22 @@ func test_live_capture() -> void:
 	assert_eq(PerfProbe.debris_count(get_tree()), 0, "no debris pool here")
 	probe.queue_free()
 	await step_ticks(1)
+
+
+func test_autopilot_scenario_options_and_exit_codes() -> void:
+	var none := Autopilot.parse_options(PackedStringArray(["--autoplay=60"]))
+	assert_eq(none, {"perf": false, "stress_stage": StressScenario.DEFAULT_STAGE, "walk_teleport": false},
+		"defaults: no probe, stage 2, walking")
+	var opts := Autopilot.parse_options(PackedStringArray(["--perf", "--stress-stage=1", "--walk-teleport"]))
+	assert_true(bool(opts.perf) and int(opts.stress_stage) == 1 and bool(opts.walk_teleport), "every option read")
+	assert_eq(int(Autopilot.parse_options(PackedStringArray(["--stress-stage=9"])).stress_stage), 3,
+		"the stage is clamped to the profiles that exist")
+	assert_true(Autopilot.is_perf_scenario("stress") and Autopilot.is_perf_scenario("valley_walk"),
+		"the two P14 scenarios add a probe")
+	assert_false(Autopilot.is_perf_scenario("capture") or Autopilot.is_perf_scenario(""), "the others do not")
+	assert_eq(Autopilot.exit_code({"errors": 0, "scenario_ok": true}), Autopilot.EXIT_OK, "a passed scenario exits 0")
+	assert_eq(Autopilot.exit_code({"errors": 0, "scenario_ok": false}), Autopilot.EXIT_SCENARIO_FAILED,
+		"a failed scenario check exits 2")
+	assert_eq(Autopilot.EXIT_SCENARIO_FAILED, 2, "code 2")
+	assert_eq(Autopilot.exit_code({"errors": 3, "scenario_ok": false}), Autopilot.EXIT_ERRORS, "errors still win (1)")
+	assert_eq(Autopilot.exit_code({"errors": 0}), Autopilot.EXIT_OK, "a soak without a scenario exits 0")

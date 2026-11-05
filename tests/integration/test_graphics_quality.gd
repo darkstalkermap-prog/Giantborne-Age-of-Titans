@@ -33,13 +33,13 @@ func after_each() -> void:
 
 ## A small LevelRoot for `level_id`: a Sun (shadows to 90 m), one tree MeshInstance3D in group
 ## "scenery", one MultiMeshInstance3D in "valley_scenery", optionally an EncounterDirector.
-func _level(level_id := LEVEL_ID, with_director := true) -> LevelRoot:
+func _level(level_id := LEVEL_ID, with_director := true, sun_shadows := true) -> LevelRoot:
 	var lv := LevelRoot.new()
 	lv.name = "GraphicsTestLevel"
 	lv.level_id = level_id
 	var sun := DirectionalLight3D.new()
 	sun.name = "Sun"
-	sun.shadow_enabled = true
+	sun.shadow_enabled = sun_shadows
 	sun.directional_shadow_max_distance = 90.0
 	lv.add_child(sun)
 	var tree := MeshInstance3D.new()
@@ -206,6 +206,21 @@ func test_level_records_carry_the_presets() -> void:
 		var web: Dictionary = rec.get("web_overrides", {})
 		assert_eq(str(web.get("quality", "")), "low", "%s: the web build runs low" % id)
 		assert_near(float(web.get("ai_tier1_m", 0.0)), 30.0, 0.001, "%s: web AI tier 1 from 30 m" % id)
+	# shadow_distance_m 0 switches the sun's shadows off; a positive distance switches them back on.
+	var lv := _level(LEVEL_ID, false)
+	await step_ticks(1)
+	var patch := {"render": {"low": {"shadow_distance_m": 0}}}
+	TestFixtures.record_override(LEVEL_ID, patch)
+	Settings.set_value("graphics_quality", "low", false)
+	assert_false(_sun(lv).shadow_enabled, "low with shadow distance 0: no sun shadows")
+	assert_near(float(lv.applied_graphics.get("shadow_distance_m", -1.0)), 0.0, 0.001, "reported as 0")
+	Settings.set_value("graphics_quality", "medium", false)
+	assert_true(_sun(lv).shadow_enabled, "medium: the shadows are back")
+	assert_near(_sun(lv).directional_shadow_max_distance, 120.0, 0.001, "to 120 m")
+	var unlit := _level(LEVEL_ID, false, false)
+	await step_ticks(1)
+	assert_false(_sun(unlit).shadow_enabled, "a sun built without shadows never gets them")
+	assert_near(_sun(unlit).directional_shadow_max_distance, 120.0, 0.001, "though its distance follows the preset")
 	# A level without a record (or without presets) applies nothing and does not fail.
 	var bare := _level("level.no_such_level", false)
 	await step_ticks(1)

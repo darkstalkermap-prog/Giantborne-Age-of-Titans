@@ -63,7 +63,8 @@ const PAN_TICKS := 120
 const NAV_WAIT_TICKS := 240
 const LOD_SETTLE_TICKS := 20
 const LOD_SAMPLE_TICKS := 60
-## The director distances that put every member at tier 0 during the comparison.
+## A director distance beyond the map: near_m and mid_m set to it put every member on tier 0;
+## mid_m alone (near_m 0), on tier 1.
 const LOD_OFF_M := 100000.0
 
 var teleport_only := false
@@ -95,7 +96,6 @@ var _was_dead := false
 var _districts: Dictionary = {}
 var _lod_members: Array = []
 var _lod_saved := {}
-var _lod_phase := ""
 
 
 func start(p: GiantPlayer, lv: LevelRoot, perf: PerfProbe = null) -> void:
@@ -394,8 +394,8 @@ func _distant_dormant_members(d: EncounterDirector) -> Array:
 			if n == null or not is_instance_valid(n) or d.member_status(m) != EncounterDirector.SPAWNED:
 				continue
 			var e: Variant = n.get("entity")
-			if not (e is CombatEntity) or not (e as CombatEntity).is_alive():
-				continue
+			if not (e is CombatEntity) or not (e as CombatEntity).is_alive() or not ("lod_tier" in n):
+				continue   # an actor without AI LOD (an NPC that is not an EnemyActor) is not compared
 			if int(n.get("lod_tier")) == 2 and _flat(n.global_position, ppos) > d.mid_m:
 				out.append(n)
 	return out

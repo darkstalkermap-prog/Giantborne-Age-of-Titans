@@ -19,7 +19,8 @@ extends Node3D
 ##
 ## Graphics presets (P14, plan §3.16, §5.4): at _ready, and whenever the graphics setting
 ## changes, the level record's `render` preset for the quality in effect is applied - the Sun's
-## directional_shadow_max_distance, visibility_range_end on every scenery geometry below this
+## directional_shadow_max_distance (0 switches its shadows off; a sun built without shadows never
+## gets them), visibility_range_end on every scenery geometry below this
 ## root (groups SCENERY_GROUPS) and the viewport's 3D MSAA (put back when the level leaves the
 ## tree). The quality is Settings.graphics_quality; on the web (or with force_web_for_tests) the
 ## record's `web_overrides` decide instead: their `quality` (low) and `ai_tier1_m`, the distance
@@ -51,6 +52,7 @@ var _checkpoints: Dictionary = {}   # checkpoint_id -> CheckpointMarker
 var _areas: Dictionary = {}         # area_id -> AreaTrigger
 var _player_ref: WeakRef = null
 var _msaa_before := -1              # the viewport's MSAA before this level changed it (-1: unchanged)
+var _sun_shadows := -1              # whether the scene's sun cast shadows before the first preset (-1: unread)
 
 
 func _enter_tree() -> void:
@@ -266,8 +268,14 @@ func apply_graphics() -> Dictionary:
 	if SchemaUtil.is_number(preset.get("shadow_distance_m")):
 		var sun := sun_light()
 		if sun != null:
-			sun.directional_shadow_max_distance = float(preset.shadow_distance_m)
-			out["shadow_distance_m"] = sun.directional_shadow_max_distance
+			# 0 turns the sun's shadows off (they roughly double a Valley view's draw calls).
+			var dist := float(preset.shadow_distance_m)
+			if _sun_shadows < 0:
+				_sun_shadows = 1 if sun.shadow_enabled else 0
+			sun.shadow_enabled = dist > 0.0 and _sun_shadows == 1
+			if dist > 0.0:
+				sun.directional_shadow_max_distance = dist
+			out["shadow_distance_m"] = dist
 	if SchemaUtil.is_number(preset.get("scenery_visibility_end_m")):
 		var end := float(preset.scenery_visibility_end_m)
 		var nodes := scenery_nodes()
