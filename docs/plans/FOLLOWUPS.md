@@ -8,7 +8,7 @@ its own work and reports it.
 
 | Item | Owner | Notes |
 | --- | --- | --- |
-| Runic Bolt locked onto a target beyond 25 m fizzles, while the hotbar shows it as ready and names the target. The hotbar should show "Out of range" (or the cast should not be accepted). | P16 (UX pass) | `scripts/actors/player/player_attack.gd`, the hotbar's `preview_reason` path |
+| ~~Runic Bolt locked onto a target beyond 25 m fizzles, while the hotbar shows it as ready and names the target. The hotbar should show "Out of range" (or the cast should not be accepted).~~ **Fixed in P16.** | P16 (UX pass) | `scripts/actors/player/player_attack.gd`, the hotbar's `preview_reason` path |
 | ~~Titan Surge's +25% poise damage does not apply to the poise damage that the player's parry deals.~~ **Fixed in P11a** (regression test: 40 rising to 50 poise). | P11a | `scripts/combat/combat_entity.gd` |
 | ~~Wolves never show status tints (for example Thunder Roar's slow), because `QuadrupedRig` is not an `ActorRig` and HitFeedback only tints `ActorRig`s.~~ **Fixed in P09** (regression test in test_telegraphs). | P09 | `scripts/presentation/hit_feedback.gd`, `scripts/presentation/quadruped_rig.gd` |
 
