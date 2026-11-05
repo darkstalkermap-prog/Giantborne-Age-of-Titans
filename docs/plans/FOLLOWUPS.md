@@ -46,3 +46,10 @@ its own work and reports it.
 | Taking the crown while enemies are aware defers the slice-completion checkpoint; choosing "Quit to title" on the end screen then loses that save. Take (or force) the completion checkpoint before the end screen can quit. | P17a | `scripts/quests/quests.gd`, `scripts/core/game_session.gd` |
 | Pad A on the death screen confirms at once, so a player mashing jump or LT+A (Heavy Footfall) skips the death screen. Ignore confirm input for a short delay after death (or require a fresh press). | P17a | `scripts/main.gd` |
 | The force branch's return leg puts 16 hostile combatants around the giant (guards turned hostile plus the ambush), above the 12-active budget. Bring it within budget or make the budget hold for faction members. | P17b | `data/world/encounter_village_guards.json`, `scripts/world/encounter_director.gd` |
+
+## For shipping
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| The play link (artifact version 3) shows a Valley screenshot as its poster, but `tools/build_web.sh` still copies the M1 sandbox shot `docs/screenshots/01_spawn_third_person.jpg` to `poster.jpg`. Refresh `docs/screenshots/` with Valley shots and point the build script at the new poster. | P18 | `tools/build_web.sh`, `docs/screenshots/` |
+| Web performance is unmeasured on real hardware. In this container the Valley renders at about 1.7 fps through Chromium's software WebGL (SwiftShader) with the CPU shared with other work, which says nothing about a real GPU. Record the web checklist in `docs/PERFORMANCE.md` as NOT RUN unless a real browser is available. | P18 | `docs/PERFORMANCE.md` |
