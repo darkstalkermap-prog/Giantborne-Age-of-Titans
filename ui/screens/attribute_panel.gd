@@ -11,6 +11,9 @@ extends VBoxContainer
 ## the tree; refresh() re-reads everything. Tests use add_point / remove_point / confirm / reset and
 ## the text getters.
 
+## After a successful confirm() (the points were spent): hosts refresh what they show.
+signal allocated(result: Dictionary)
+
 var player: GiantPlayer
 ## attribute -> points planned (not spent yet).
 var pending: Dictionary = {}
@@ -136,6 +139,8 @@ func confirm() -> Dictionary:
 	if out.ok:
 		pending.clear()
 	refresh()
+	if out.ok:
+		allocated.emit(out)
 	return out
 
 

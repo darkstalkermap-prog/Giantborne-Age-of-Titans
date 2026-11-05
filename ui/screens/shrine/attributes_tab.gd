@@ -18,7 +18,14 @@ func available() -> bool:
 func _ready() -> void:
 	panel_ui = AttributePanel.new()
 	panel_ui.setup(player())
+	panel_ui.allocated.connect(_on_allocated)
 	add_child(panel_ui)
+
+
+## Spent points change the maxima: the screen's header and the other tabs refresh.
+func _on_allocated(_result: Dictionary) -> void:
+	if screen != null:
+		screen.notify_changed()
 
 
 func first_focus() -> Control:
@@ -36,6 +43,4 @@ func spend(delta: Dictionary) -> Dictionary:
 	for key: Variant in delta:
 		for i in int(delta[key]):
 			panel_ui.add_point(str(key))
-	var out := panel_ui.confirm()
-	screen.notify_changed()
-	return out
+	return panel_ui.confirm()
