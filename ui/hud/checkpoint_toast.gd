@@ -1,13 +1,14 @@
 extends HudWidget
 ## Checkpoint toast (plan §2.10.1; P06): a short line top-left, (12..352, 52..80) above the
 ## debug panel, for every Events.checkpoint_saved and checkpoint_loaded: "Checkpoint saved",
-## "Checkpoint reached (saving is off for this run)", "Checkpoint NOT saved: ... - play
-## continues" (a write failure, in the warning colour), "Checkpoint loaded". It shows for
-## SHOW_S and fades over FADE_S; the HUD is paused with the game, so it waits while a screen is
-## open.
+## "Checkpoint (saving is off)", "Checkpoint (kept in memory)" (a test level in the sandbox),
+## "Checkpoint NOT saved (play continues)" (a write failure, in the warning colour; GameSession
+## also posts the reason as a HUD message), "Checkpoint loaded". It shows for SHOW_S and fades
+## over FADE_S; the HUD is paused with the game, so it waits while a screen is open.
 
 const SHOW_S := 2.6
 const FADE_S := 0.5
+const MAX_FRAME_S := 0.1
 
 var _panel: PanelContainer
 var _label: Label
@@ -35,10 +36,10 @@ func _ready() -> void:
 ## The toast text for checkpoint_saved(ok, message): "" message = written.
 static func saved_text(ok: bool, message: String) -> String:
 	if not ok:
-		return "Checkpoint NOT saved: %s - play continues" % message
+		return "Checkpoint NOT saved (play continues)"
 	if message == "":
 		return "Checkpoint saved"
-	return "Checkpoint reached (%s)" % message
+	return "Checkpoint (%s)" % message
 
 
 ## The toast text for checkpoint_loaded(source): continue | death | debug | menu | load.
@@ -75,7 +76,8 @@ func _on_checkpoint_loaded(_tick: int, _checkpoint_id: String, source: String) -
 func _process(delta: float) -> void:
 	if not _panel.visible:
 		return
-	_left -= delta
+	# A long frame (the level load right after a checkpoint_loaded) must not eat the display time.
+	_left -= minf(delta, MAX_FRAME_S)
 	if _left <= 0.0:
 		_panel.visible = false
 	elif _left < FADE_S:

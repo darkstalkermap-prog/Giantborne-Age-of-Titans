@@ -17,6 +17,7 @@ var level: FlowTestLevel
 var player: GiantPlayer
 var saved: Array = []     ## [checkpoint_id, ok, message]
 var loaded: Array = []    ## [checkpoint_id, source]
+var notices: Array[String] = []   ## Events.hud_message texts
 var layer: CanvasLayer
 var stack: ScreenStack
 
@@ -25,8 +26,10 @@ func before_each() -> void:
 	await super()
 	saved.clear()
 	loaded.clear()
+	notices.clear()
 	Events.checkpoint_saved.connect(_on_saved)
 	Events.checkpoint_loaded.connect(_on_loaded)
+	Events.hud_message.connect(_on_notice)
 	layer = CanvasLayer.new()
 	layer.layer = 10
 	world.add_child(layer)
@@ -36,7 +39,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
-	for sig: Signal in [Events.checkpoint_saved, Events.checkpoint_loaded]:
+	for sig: Signal in [Events.checkpoint_saved, Events.checkpoint_loaded, Events.hud_message]:
 		for c: Dictionary in sig.get_connections():
 			if (c.callable as Callable).get_object() == self:
 				sig.disconnect(c.callable)
@@ -55,6 +58,10 @@ func _on_saved(_tick: int, checkpoint_id: String, ok: bool, message: String) -> 
 
 func _on_loaded(_tick: int, checkpoint_id: String, source: String) -> void:
 	loaded.append([checkpoint_id, source])
+
+
+func _on_notice(text: String, _kind: String) -> void:
+	notices.append(text)
 
 
 ## Instantiates the flow level and calls on_level_ready, as main.gd does after a (re)load.
@@ -171,17 +178,21 @@ func test_continue_from_the_title_restores_the_save_exactly() -> void:
 	assert_eq(GameSession.scene_reloads.back(), "title", "a reload into the title")
 	assert_false(WorldState.has_flag("test.saved_flag"), "the title starts from a clean world")
 	await _unload_level()
+	# A fresh start has no --level: the save itself names its level (the flow test level here).
+	GameSession.level_override = ""
 	var title := stack.open("title") as TitleScreen
 	assert_true(title != null, "the title screen opens")
 	assert_false(get_tree().paused, "it does not pause")
 	var state := title.state()
-	assert_true(state["continue"], "Continue is enabled: the save loads")
+	assert_false(state.new_game, "New Game still needs the Valley")
+	assert_true(state["continue"], "Continue is enabled: the save loads and its level exists")
 	assert_true(str(state.save).contains("test.cp_b"), "and describes it: %s" % state.save)
 	assert_eq(title.first_focus(), title.button("Continue"), "Continue has the focus")
 	title.button("Continue").pressed.emit()
 	assert_true(GameSession.last_mode_result.ok, "Continue started: %s" % GameSession.last_mode_result)
 	assert_eq(GameSession.scene_reloads.back(), "continue", "a reload into the save")
 	assert_true(GameSession.is_valley() and GameSession.pending_restore, "the Valley mode with a pending restore")
+	assert_eq(GameSession.level_scene_path(), FLOW, "the save's level is loaded")
 	assert_eq(WorldState.get_flag("test.saved_flag"), "yes", "the world came back")
 	stack.close_all()
 	_load_level()
@@ -328,6 +339,9 @@ func test_a_failed_write_warns_and_play_continues() -> void:
 	var toast := hud.get_node_or_null("CheckpointToast")
 	assert_true(toast != null, "the HUD has the checkpoint toast")
 	assert_true(str(toast.call("visible_text")).contains("NOT saved"), "a warning in the HUD: %s" % toast.call("visible_text"))
+	var warned := notices.filter(func(t: String) -> bool: return t.begins_with("Checkpoint not saved: could not"))
+	assert_eq(warned.size(), 1, "and a HUD message with the reason: %s" % [notices])
+	assert_true(str(warned[0]).ends_with("Play continues.") if not warned.is_empty() else false, "saying play continues")
 	assert_true(GameSession.has_checkpoint(), "the checkpoint still lives in memory")
 	Events.checkpoint_reached.emit(Sim.tick, "test.cp_b", "waystone")
 	await step_ticks(2)
@@ -347,8 +361,7 @@ func test_the_checkpoint_toast_and_the_death_hint() -> void:
 	await step_ticks(2)
 	var toast := hud.get_node_or_null("CheckpointToast")
 	assert_true(toast != null and toast is HudWidget, "the toast widget comes from the HUD registry")
-	assert_eq(str(toast.call("visible_text")), "Checkpoint reached (this level keeps checkpoints in memory)",
-		"the level-start checkpoint was shown")
+	assert_eq(str(toast.call("visible_text")), "Checkpoint (kept in memory)", "the level-start checkpoint was shown")
 	Events.checkpoint_saved.emit(Sim.tick, "test.cp_b", true, "")
 	assert_eq(str(toast.call("visible_text")), "Checkpoint saved", "a written checkpoint")
 	Events.checkpoint_loaded.emit(Sim.tick, "test.cp_b", "death")

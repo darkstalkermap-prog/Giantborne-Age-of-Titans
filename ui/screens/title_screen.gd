@@ -176,7 +176,8 @@ static func describe_save(doc: Dictionary) -> String:
 		parts.append("at %s" % cp.respawn)
 	var when := int(doc.get("saved_at_unix", 0))
 	if when > 0:
-		parts.append(Time.get_datetime_string_from_unix_time(when, true).substr(0, 16))
+		var local := when + int(Time.get_time_zone_from_system().get("bias", 0)) * 60
+		parts.append(Time.get_datetime_string_from_unix_time(local, true).substr(0, 16))
 	return "Saved game: " + ", ".join(parts)
 
 

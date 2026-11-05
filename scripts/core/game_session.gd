@@ -50,7 +50,10 @@ const HOOK_ORDER := 200
 const TEST_SAVE_PATH := "user://test_saves/valley_1.json"
 const DEFAULT_DEATH_FLOOR := {"health": 0.6, "stamina": 1.0, "essence": 0.5}
 const VALLEY_MISSING := "Valley not built yet"
-const NO_SAVING := "saving is off for this run"
+## checkpoint_saved messages for a checkpoint that was taken but not written.
+const NO_SAVING := "saving is off"
+const MEMORY_ONLY := "kept in memory"
+const MAX_RELOAD_LOG := 64
 
 var mode: int = Mode.SANDBOX
 ## A scene that replaces the mode's level (--level=res://...tscn; tests).
@@ -267,14 +270,16 @@ func change_mode(mode_name: String, options: Dictionary = {}) -> Dictionary:
 			start_sandbox()
 			return {"ok": true, "message": ""}
 		"valley":
-			if not valley_available():
-				return {"ok": false, "message": VALLEY_MISSING}
+			# Continue needs the save's level (a --level test scene can stand in for the Valley);
+			# New Game needs the Valley (or the --level scene).
 			if bool(options.get("continue", false)):
 				return continue_valley()
 			if not bool(options.get("new_game", false)):
 				var r := continue_valley()
 				if r.ok:
 					return r
+			if not valley_available():
+				return {"ok": false, "message": VALLEY_MISSING}
 			start_new_valley()
 			return {"ok": true, "message": ""}
 	return {"ok": false, "message": "Unknown mode '%s'" % mode_name}
@@ -335,7 +340,7 @@ func _begin_new_valley() -> void:
 
 func _begin_continue() -> Dictionary:
 	if not persist:
-		return {"ok": false, "message": "Continue is off: %s." % NO_SAVING}
+		return {"ok": false, "message": "Continue is off: saving is off for this run."}
 	var read := SaveSlots.read()
 	if not read.ok:
 		return {"ok": false, "message": str(read.message) if str(read.message) != "" else "No saved game yet."}
@@ -377,6 +382,8 @@ func _clear_session() -> void:
 
 func _reload_scene(reason: String) -> void:
 	scene_reloads.append(reason)
+	if scene_reloads.size() > MAX_RELOAD_LOG:
+		scene_reloads.remove_at(0)
 	if not allow_scene_reload or _reload_queued or not is_inside_tree():
 		return
 	_reload_queued = true
@@ -602,8 +609,9 @@ func _commit_checkpoint(reason: String, respawn: String) -> Dictionary:
 		result.message = str(w.message)
 		if not w.ok:
 			push_warning("GameSession: checkpoint not saved: %s" % w.message)
+			Events.hud_message.emit("Checkpoint not saved: %s. Play continues." % w.message, "warn")
 	else:
-		result.message = NO_SAVING if is_valley() else "this level keeps checkpoints in memory"
+		result.message = NO_SAVING if is_valley() else MEMORY_ONLY
 	Events.checkpoint_saved.emit(Sim.tick, respawn_id, bool(result.ok), str(result.message))
 	return result
 
