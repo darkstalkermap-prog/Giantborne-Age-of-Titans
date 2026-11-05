@@ -25,6 +25,9 @@ const MAX_LEVEL := 99
 const COUNTER_KEYS := ["xp", "unspent_attribute_points", "talent_points"]
 const ID_LIST_KEYS := ["weapons_owned", "known_abilities", "level_exempt"]
 const RESOURCE_KEYS := ["health", "stamina", "essence", "fury"]
+## The keys PlayerProgression (P12) applies and captures; "xp" is the total XP earned.
+const PROGRESSION_KEYS := ["level", "xp", "unspent_attribute_points", "talent_points", "attributes",
+	"level_exempt", "ancestry"]
 
 
 ## The Valley's starting character: the player record's body and attributes with the
@@ -237,6 +240,24 @@ static func validate(d: Dictionary) -> PackedStringArray:
 				if not SchemaUtil.is_number(v) or float(v) < 0.0:
 					errors.append("character.resources.%s: must be a number >= 0" % key)
 	return errors
+
+
+# --------------------------------------------------------------------------- progression (P12)
+
+## True for a character without level gating: level 99 (MAX_LEVEL), the sandbox giant's and the
+## tools'. PlayerProgression then keeps controller.level at 99 and derives the shown level from XP.
+static func is_ungated(d: Dictionary) -> bool:
+	return SchemaUtil.is_number(d.get("level")) and int(d.level) >= MAX_LEVEL
+
+
+## The progression part of `d` (the PROGRESSION_KEYS present in it), a copy: what the bot and the
+## tests compare across a reload.
+static func progression_part(d: Dictionary) -> Dictionary:
+	var out := {}
+	for key: String in PROGRESSION_KEYS:
+		if d.has(key):
+			out[key] = d[key].duplicate(true) if typeof(d[key]) in [TYPE_DICTIONARY, TYPE_ARRAY] else d[key]
+	return out
 
 
 # --------------------------------------------------------------------------- helpers

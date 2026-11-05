@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "loot.ogre_king",
+	"type": "loot_table",
+	"display_name": "Ogre King",
+	"description": "The Ogre King's trophy tusk and the iron he hoarded (one of the Valley's five ingots).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [{"item": "item.ogre_tusk", "count": 1}, {"item": "item.iron_ingot", "count": 1}]
+}

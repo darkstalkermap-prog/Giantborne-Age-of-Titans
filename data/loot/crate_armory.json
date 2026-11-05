@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "loot.crate_armory",
+	"type": "loot_table",
+	"display_name": "Ruins armory crate",
+	"description": "The armory crate beside the Giantforge: one iron ingot.",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [{"item": "item.iron_ingot", "count": 1}]
+}

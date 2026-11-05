@@ -55,6 +55,12 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			ctx, int(d.required_stage), int(d.fit_max_stage)])
 
 	## @anchor P12
+	# The forge's one upgrade interaction (P12) always costs something. The cross-record rules
+	# (the upgraded weapon fits at least as high and has no upgrade of its own) run in the
+	# GameData post-pass (Progression.data_errors).
+	if typeof(p08_upgrade) == TYPE_DICTIONARY and typeof(p08_upgrade.get("cost")) == TYPE_ARRAY \
+			and (p08_upgrade.cost as Array).is_empty():
+		out.errors.append("%s.upgrade.cost: must list at least one item" % ctx)
 
 	pass
 

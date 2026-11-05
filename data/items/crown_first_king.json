@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "item.crown_first_king",
+	"type": "item",
+	"display_name": "Crown of the First King",
+	"description": "The iron crown of the first giant king, taken from his barrow. The end of the road.",
+	"stack_max": 1,
+	"category": "quest",
+	"quest_item": true
+}

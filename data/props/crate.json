@@ -9,7 +9,7 @@
 	"armor": 0,
 	"accepted_attack_categories": ["melee", "ability", "projectile"],
 	"min_growth_stage": 1,
-	"loot": [{"item": "item.iron_ingot", "count": 1}],
+	"loot_table": "loot.crate_quarry",
 	"debris_count": 6,
 	"debris_length_m": 1.5,
 	"debris_layout": "pile",

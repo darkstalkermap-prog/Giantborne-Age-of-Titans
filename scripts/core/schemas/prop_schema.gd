@@ -55,6 +55,9 @@ static func fields() -> Dictionary:
 	})
 
 	## @anchor P12
+	# A loot table rolled once per world id when the prop breaks (P12), beside the inline `loot`;
+	# a placed prop's own loot_table (BreakableProp.loot_table) overrides it.
+	f.merge({"loot_table": U.ref("loot_table", false, true)})
 
 	return f
 
@@ -106,6 +109,8 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 				out.errors.append("%s.damage_stages[%d]: the last stage must remove the collision" % [ctx, p08_list.size() - 1])
 
 	## @anchor P12
+	if str(d.get("loot_table", "")) != "" and p08_category == "cosmetic":
+		out.errors.append("%s: loot_table is not for cosmetic props (they never break)" % ctx)
 
 	pass
 

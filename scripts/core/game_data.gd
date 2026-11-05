@@ -95,6 +95,9 @@ func _post_pass() -> void:
 		errors.append_array(DataValidator.SCHEMAS["encounter"].cross_record_errors(records, record_paths))
 
 	## @anchor P12
+	# Progression (P12): the ability library holds abilities and ultimates; a forge upgrade fits at
+	# least as high as its source and is one step (the upgraded weapon has no upgrade of its own).
+	errors.append_array(Progression.data_errors(records, record_paths))
 
 	pass
 
