@@ -19,14 +19,17 @@ extends Node
 ## out. In order: a fight when aware hostile enemies are near (BotCombat; elevated or unreachable
 ## ones are left alone), the Hollow's optional tutorial (bounded by TUTORIAL_BUDGET_S), errands
 ## (rest when hurt or before the boss, reforge at an open forge with two iron, the armory's sword
-## and crate, the quarry chest), the village policy at the `village` stage, else quest.main's
-## stage `bot` hint: go | fight_encounter | kill | grow | hurl_at | break | interact | talk.
+## and crate, the quarry chest; each given up after ERRAND_GIVE_UP_S), the village policy at the
+## `village` stage, else quest.main's stage `bot` hint: go | fight_encounter | kill | grow |
+## hurl_at | break | interact | talk (a hurt giant rests before a kill).
 ##
 ## Movement follows a navigation path on the giant's current layers (NavigationServer3D.map_get_path
 ## with player.nav_layers), re-planned every REPATH_S or when the giant strays OFF_PATH_M off it.
 ## Stuck (the distance to the goal has not dropped by STUCK_PROGRESS_M in STUCK_S while
-## traversing): sidestep and jump, then re-plan, then the bot_route_points fallback, then a
-## teleport to the next path point (recorded); one more is a breach.
+## traversing): sidestep and jump, then re-plan (or, when no path leads on from where the giant
+## stands but one does from where it was - a pocket of the navmesh it walked into while fighting -
+## a walk back along its breadcrumbs), then the bot_route_points fallback, then a teleport to the
+## next path point (recorded); one more is a breach.
 ##
 ## Watchdogs: OBJECTIVE_TIMEOUT_S per quest.main stage (BOSS_TIMEOUT_S for the boss), at most
 ## MAX_DEATHS_PER_OBJECTIVE deaths on one stage (unassisted runs), and stuck. A breach runs
