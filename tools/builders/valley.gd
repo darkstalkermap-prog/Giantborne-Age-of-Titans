@@ -14,7 +14,7 @@ extends RefCounted
 ##   * scenes/world/valley.tscn - the root: LevelRoot (level.valley), Environment (depth fog from
 ##     120 m), Sun, Districts/<id>, Navigation/{Human,Large,Giant,SmallGiant}, Props, Shrines,
 ##     Waystones, Dummies, Markers/<Kind>/<marker>, Markers/Patrol/<route>/<n>, Triggers/<area>,
-##     Kingsfall/{ArenaGate,Pillars}, Signs, Spawns/PlayerSpawn, Spawned, Player,
+##     Kingsfall/{ArenaGate,Pillars,BossArena}, Signs, Spawns/PlayerSpawn, Spawned, Player,
 ##     EncounterDirector and DebrisPool.
 ## Runs after the player, prop, shrine and world-prop builders (tools/build_scenes.gd BUILDERS).
 ##
@@ -40,6 +40,7 @@ const S_MARKER := "res://scripts/world/level_marker.gd"
 const S_TRIGGER := "res://scripts/world/area_trigger.gd"
 const S_WAYSTONE := "res://scripts/world/waystone.gd"
 const S_DEBRIS := "res://scripts/world/debris_pool.gd"
+const S_BOSS_ARENA := "res://scripts/world/boss_arena.gd"   # P11a
 const GIANT := "res://scenes/player/giant.tscn"
 const SHRINE := "res://scenes/world/shrine.tscn"
 const DUMMY := "res://scenes/world/practice_dummy.tscn"
@@ -838,8 +839,11 @@ static func _triggers(kit: SceneKit, layout: Dictionary) -> Node3D:
 	return triggers
 
 
-## Kingsfall/ArenaGate (a StaticBody3D on WORLD, hidden, its collision disabled: P11a closes it on
-## valley.area.arena_engage) and Kingsfall/Pillars/Pillar1..4 (WORLD boxes at the pillar radius).
+## Kingsfall/ArenaGate (a StaticBody3D on WORLD, hidden, its collision disabled: BossArena closes
+## it on valley.area.arena_engage), Kingsfall/Pillars/Pillar1..4 (WORLD boxes at the pillar
+## radius) and Kingsfall/BossArena (P11a: the arena's script at its centre, wired to the gate, the
+## pillars and the engage trigger by the layout's arena.boss_arena; no collision, so the
+## navigation bake does not change).
 static func _kingsfall(kit: SceneKit, a: Dictionary) -> Node3D:
 	var kf := kit.n3("Kingsfall")
 	if a.is_empty():
@@ -877,6 +881,17 @@ static func _kingsfall(kit: SceneKit, a: Dictionary) -> Node3D:
 		pillars.add_child(kit.static_box("Pillar%d" % (i + 1), psize, pos + Vector3.UP * psize.y * 0.5,
 			_mat_key(kit, str(a.get("pillar_mat", "stone")))))
 	kf.add_child(pillars)
+	var ba: Variant = a.get("boss_arena")
+	if typeof(ba) == TYPE_DICTIONARY and ResourceLoader.exists(S_BOSS_ARENA):
+		var ante: Array = ba.get("antechamber", [c.x, c.z, c.x, c.z])
+		var arena := kit.n3("BossArena", c)
+		kit.scripted(arena, S_BOSS_ARENA, {"boss_id": str(ba.boss), "encounter_id": str(ba.get("encounter", "")),
+			"engage_area_id": str(ba.engage_area), "gate_path": NodePath("../ArenaGate"),
+			"pillars_path": NodePath("../Pillars"), "inner_radius_m": float(ba.get("inner_radius", 40.0)),
+			"antechamber_rect": Rect2(float(ante[0]) - c.x, float(ante[1]) - c.z, float(ante[2]) - float(ante[0]),
+				float(ante[3]) - float(ante[1])),
+			"defeated_flag": str(ba.get("defeated_flag", "world.ogre_king.defeated"))})
+		kf.add_child(arena)
 	return kf
 
 

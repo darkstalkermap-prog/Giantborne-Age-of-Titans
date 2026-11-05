@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "encounter.forest_ogre",
+	"type": "encounter",
+	"display_name": "Forest ogre",
+	"description": "The mandatory ogre blocking the forest trail at the ogre clearing, with two wolves (plan section 4.4): super armour and the recovery punish. quest.main's 'ogre' stage needs valley.forest.ogre killed.",
+	"level": "level.valley",
+	"district": "forest",
+	"center_m": [-90, 0, -35],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 120,
+	"leash_radius_m": 45,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.forest.ogre", "definition": "enemy.ogre", "position_m": [-88, 0, -38], "yaw_deg": 135,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.forest.ogre_wolf_1", "definition": "enemy.wolf", "position_m": [-98, 0, -30], "yaw_deg": 135,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.forest.ogre_wolf_2", "definition": "enemy.wolf", "position_m": [-82, 0, -28], "yaw_deg": 135,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}
