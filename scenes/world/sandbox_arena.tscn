@@ -8,13 +8,20 @@
 [ext_resource type="Script" path="res://scripts/actors/practice_dummy.gd" id="6_238a0"]
 [ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="7_f6def"]
 [ext_resource type="Script" path="res://scripts/world/shrine.gd" id="8_e36fc"]
-[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="9_627ae"]
-[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="10_7ef4a"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/soldier.tscn" id="11_7b3a0"]
-[ext_resource type="Script" path="res://scripts/actors/soldier_enemy.gd" id="12_8053b"]
-[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="13_ce070"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/wolf.tscn" id="14_382cf"]
-[ext_resource type="Script" path="res://scripts/actors/wolf_enemy.gd" id="15_d2eb1"]
+[ext_resource type="PackedScene" path="res://scenes/world/gate_practice.tscn" id="9_f1734"]
+[ext_resource type="PackedScene" path="res://scenes/world/weapon_rack.tscn" id="10_2400b"]
+[ext_resource type="Script" path="res://scripts/world/weapon_rack.gd" id="11_9d4a3"]
+[ext_resource type="PackedScene" path="res://scenes/world/ancient_oak.tscn" id="12_20cb3"]
+[ext_resource type="Script" path="res://scripts/world/uproot_tree.gd" id="13_24bad"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="14_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="15_7ef4a"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/soldier.tscn" id="16_7b3a0"]
+[ext_resource type="Script" path="res://scripts/actors/soldier_enemy.gd" id="17_8053b"]
+[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="18_ce070"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/wolf.tscn" id="19_382cf"]
+[ext_resource type="Script" path="res://scripts/actors/wolf_enemy.gd" id="20_d2eb1"]
+[ext_resource type="PackedScene" path="res://scenes/world/bush.tscn" id="21_fe2ad"]
+[ext_resource type="Script" path="res://scripts/world/cosmetic_prop.gd" id="22_7bfd3"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.33, 0.5, 0.78, 1)
@@ -444,6 +451,37 @@ prompt = "Rest"
 radius_m = 4.0
 priority = 40
 
+[node name="PracticeGate" type="StaticBody3D" parent="Navigation" instance=ExtResource("9_f1734")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 44, 0, 40)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("4_5fc47")
+world_id = "sandbox.gate_01"
+
+[node name="SwordRack" type="Node3D" parent="Navigation" instance=ExtResource("10_2400b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 52)
+script = ExtResource("11_9d4a3")
+world_id = "sandbox.sword_rack"
+prompt = "Take"
+radius_m = 3.0
+priority = 45
+
+[node name="HammerRack" type="Node3D" parent="Navigation" instance=ExtResource("10_2400b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 52)
+script = ExtResource("11_9d4a3")
+world_id = "sandbox.hammer_rack"
+weapon_id = "weapon.hammer"
+prompt = "Take"
+radius_m = 3.0
+priority = 45
+
+[node name="AncientOak" type="Node3D" parent="Navigation" instance=ExtResource("12_20cb3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0, 52)
+script = ExtResource("13_24bad")
+world_id = "sandbox.oak_01"
+prompt = "Uproot"
+priority = 45
+
 [node name="Spawns" type="Node3D" parent="."]
 
 [node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
@@ -460,22 +498,22 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, -22)
 [node name="P3" type="Marker3D" parent="PatrolRoute"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0, -22)
 
-[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("9_627ae")]
+[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("14_627ae")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 40)
 collision_layer = 2
 collision_mask = 51
-script = ExtResource("10_7ef4a")
+script = ExtResource("15_7ef4a")
 
-[node name="Soldier01" type="CharacterBody3D" parent="." instance=ExtResource("11_7b3a0")]
+[node name="Soldier01" type="CharacterBody3D" parent="." instance=ExtResource("16_7b3a0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -12)
 collision_layer = 2
 collision_mask = 51
-script = ExtResource("12_8053b")
+script = ExtResource("17_8053b")
 entity_id = "soldier_01"
 patrol_route = NodePath("../PatrolRoute")
 
 [node name="DebrisPool" type="Node3D" parent="."]
-script = ExtResource("13_ce070")
+script = ExtResource("18_ce070")
 
 [node name="Signs" type="Node3D" parent="."]
 
@@ -569,6 +607,36 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "SHRINE: rest and grow (stages 1-3)"
 font_size = 64
 
+[node name="@Label3D@2" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 7.6, 40)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "PRACTICE GATE: cracks, then breaks"
+font_size = 64
+
+[node name="Sign_Weapon" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 52)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "WEAPON RACKS: sword, hammer (E)"
+font_size = 64
+
+[node name="Sign_Ancient" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 4, 50)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "ANCIENT OAK: uproot it at stage 3 (E)"
+font_size = 64
+
 [node name="WolfPatrol" type="Node3D" parent="."]
 
 [node name="P1" type="Marker3D" parent="WolfPatrol"]
@@ -583,26 +651,34 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 0, -54)
 [node name="P4" type="Marker3D" parent="WolfPatrol"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54, 0, -44)
 
-[node name="Wolf01" type="CharacterBody3D" parent="." instance=ExtResource("14_382cf")]
+[node name="Wolf01" type="CharacterBody3D" parent="." instance=ExtResource("19_382cf")]
 transform = Transform3D(0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, 0.70710677, -46, 0.05, -40)
 collision_layer = 2
 collision_mask = 51
-script = ExtResource("15_d2eb1")
+script = ExtResource("20_d2eb1")
 entity_id = "sandbox.wolf_1"
 patrol_route = NodePath("../WolfPatrol")
 
-[node name="Wolf02" type="CharacterBody3D" parent="." instance=ExtResource("14_382cf")]
+[node name="Wolf02" type="CharacterBody3D" parent="." instance=ExtResource("19_382cf")]
 transform = Transform3D(0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, 0.70710677, -41, 0.05, -46)
 collision_layer = 2
 collision_mask = 51
-script = ExtResource("15_d2eb1")
+script = ExtResource("20_d2eb1")
 entity_id = "sandbox.wolf_2"
 patrol_route = NodePath("../WolfPatrol")
 
-[node name="Wolf03" type="CharacterBody3D" parent="." instance=ExtResource("14_382cf")]
+[node name="Wolf03" type="CharacterBody3D" parent="." instance=ExtResource("19_382cf")]
 transform = Transform3D(0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, 0.70710677, -50, 0.05, -47)
 collision_layer = 2
 collision_mask = 51
-script = ExtResource("15_d2eb1")
+script = ExtResource("20_d2eb1")
 entity_id = "sandbox.wolf_3"
 patrol_route = NodePath("../WolfPatrol")
+
+[node name="Bush01" type="Node3D" parent="." instance=ExtResource("21_fe2ad")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, 48)
+script = ExtResource("22_7bfd3")
+
+[node name="Bush02" type="Node3D" parent="." instance=ExtResource("21_fe2ad")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 48)
+script = ExtResource("22_7bfd3")

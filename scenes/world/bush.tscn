@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/cosmetic_prop.gd" id="1_7bfd3"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.25, 0.42, 0.2, 1)
+roughness = 0.95
+
+[sub_resource type="SphereMesh" id="SphereMesh_2"]
+radius = 0.75
+height = 1.5
+radial_segments = 10
+rings = 6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
+albedo_color = Color(0.17, 0.32, 0.16, 1)
+roughness = 0.95
+
+[sub_resource type="SphereMesh" id="SphereMesh_4"]
+radius = 0.55
+height = 1.1
+radial_segments = 10
+rings = 6
+
+[sub_resource type="SphereMesh" id="SphereMesh_5"]
+radial_segments = 10
+rings = 6
+
+[node name="Bush" type="Node3D"]
+script = ExtResource("1_7bfd3")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Leaves0" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+material_override = SubResource("StandardMaterial3D_1")
+mesh = SubResource("SphereMesh_2")
+
+[node name="Leaves1" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0.5, 0.2)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("SphereMesh_4")
+
+[node name="Leaves2" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.45, -0.25)
+material_override = SubResource("StandardMaterial3D_1")
+mesh = SubResource("SphereMesh_5")
