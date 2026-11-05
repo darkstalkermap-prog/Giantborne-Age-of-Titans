@@ -21,6 +21,15 @@ extends RefCounted
 ##   "timeout", sets_flag untouched. Every dismissal sets the seen flag (a `once` prompt never
 ##   shows again). Counting starts when the prompt is shown. A prompt whose flag dismissal already
 ##   holds is not shown: it is marked seen and done at once.
+## - Open lessons (M4 gate): a fallback takes the prompt away, not its lesson. While a prompt is
+##   seen but its sets_flag is not set (a fallback dismissed it) and its dismissal is an action,
+##   an event or a flag, the director keeps counting that dismissal without showing the prompt -
+##   on from the prompt's progress when it went - and sets sets_flag once the player has done it
+##   (no tutorial_shown / tutorial_dismissed). So what waits for the lesson's flag still follows
+##   when the player does it later: quest.tutorial's awaken (two camera toggles) and spar
+##   (tutorial.block.done, tutorial.dodge.done), tutorial.dodge's requires_flags, the dummies'
+##   chain of flag triggers. The counts are level memory (reset() clears them, like hits_on); the
+##   open lessons follow the saved flags.
 ## - tutorial_shown(tick, id) and tutorial_dismissed(tick, id, reason) are emitted; `changed`
 ##   fires on both. The HUD widget resolves {placeholders} (TutorialText).
 
@@ -29,6 +38,8 @@ signal changed
 ## How long an event trigger keeps a prompt pending while another prompt is showing.
 const EVENT_PENDING_S := 6.0
 const TICKS_PER_S := 60
+## Dismissal kinds that teach something the player does (a lesson that can stay open).
+const LESSON_KINDS := ["action_kind", "action_id", "event", "flag"]
 
 ## The prompt on screen: {"id", "text", "priority", "shown_tick", "progress", "needed",
 ## "dismiss", "sets_flag", "once"}, or {} when none is shown.
@@ -45,6 +56,7 @@ var scope := PackedStringArray()
 
 var _pending: Dictionary = {}   ## prompt id -> tick its event trigger fired
 var _armed: Dictionary = {}     ## once=false prompts: shown again only after their state trigger went false
+var _lesson_counts: Dictionary = {}   ## open lessons: prompt id -> matching actions or events so far
 var _cache: Array = []
 var _cache_tick := -1
 
@@ -54,12 +66,14 @@ func setup(context: Callable, player: Callable) -> void:
 	player_provider = player
 
 
-## Forgets the prompt on screen and the pending ones without setting any flag (a new level, a
-## reload, tests). A prompt that was showing will show again when its trigger holds.
+## Forgets the prompt on screen, the pending ones and the open lessons' counts without setting any
+## flag (a new level, a reload, tests). A prompt that was showing will show again when its trigger
+## holds; an open lesson stays open (its flags) and counts again from zero.
 func reset() -> void:
 	current = {}
 	_pending.clear()
 	_armed.clear()
+	_lesson_counts.clear()
 	_cache_tick = -1
 
 
@@ -96,9 +110,36 @@ func pending_ids() -> PackedStringArray:
 	return ids
 
 
+## True while a prompt's lesson is open: the prompt was seen but its sets_flag is not set (a
+## fallback took it away), and its dismissal is something the player does (LESSON_KINDS).
+static func lesson_open(rec: Dictionary, flags: Dictionary) -> bool:
+	var sets := str(rec.get("sets_flag", ""))
+	if sets == "" or QuestConditions.truthy(flags.get(sets)) \
+			or not QuestConditions.truthy(flags.get(seen_flag(str(rec.get("id", ""))))):
+		return false
+	var d: Variant = rec.get("dismiss")
+	return typeof(d) == TYPE_DICTIONARY and LESSON_KINDS.has(str((d as Dictionary).get("type", "")))
+
+
+## Ids of the open lessons now (tests, debug).
+func open_lesson_ids() -> PackedStringArray:
+	var ids := PackedStringArray()
+	var flags: Dictionary = _context().get("flags", {})
+	for rec: Dictionary in prompts():
+		if lesson_open(rec, flags):
+			ids.append(str(rec.get("id", "")))
+	return ids
+
+
+## How many of an open lesson's actions or events were counted (0 when none or not open).
+func lesson_count(prompt_id: String) -> int:
+	return int(_lesson_counts.get(prompt_id, 0))
+
+
 func update(tick: int) -> void:
 	if not current.is_empty():
 		_check_dismiss(tick)
+	_check_flag_lessons()
 	if not current.is_empty():
 		return
 	for id: Variant in _pending.keys():
@@ -229,25 +270,26 @@ static func event_matches(spec: Dictionary, event_name: String, info: Dictionary
 
 
 ## A TUTORIAL_EVENTS event happened (info: see Quests' handlers). It counts toward the shown
-## prompt's dismissal and makes event-triggered prompts pending.
+## prompt's dismissal and the open lessons', and makes event-triggered prompts pending.
 func on_event(event_name: String, info: Dictionary, tick: int) -> void:
-	if not current.is_empty():
-		var d: Dictionary = current.dismiss
-		var matched := false
-		match str(d.get("type", "")):
-			"event":
-				matched = event_matches(d, event_name, info)
-			"action_kind":
-				matched = event_name == "ability_started" and str(info.get("actor", "")) == _player_id() \
-					and str(info.get("action_kind", "")) == str(d.get("action_kind", ""))
-			"action_id":
-				matched = event_name == "ability_started" and str(info.get("actor", "")) == _player_id() \
-					and str(info.get("action_id", "")) == str(d.get("action_id", ""))
-		if matched:
-			current.progress = int(current.progress) + 1
-			if int(current.progress) >= int(current.needed):
-				dismiss("done", tick)
+	var shown_id := str(current.get("id", ""))
+	if not current.is_empty() and dismiss_matches(current.dismiss, event_name, info):
+		current.progress = int(current.progress) + 1
+		if int(current.progress) >= int(current.needed):
+			dismiss("done", tick)
 	var ctx: Dictionary = {}
+	for rec: Dictionary in prompts():
+		var d: Variant = rec.get("dismiss")
+		var lesson_id := str(rec.get("id", ""))
+		if lesson_id == shown_id or typeof(d) != TYPE_DICTIONARY or not dismiss_matches(d, event_name, info):
+			continue
+		if ctx.is_empty():
+			ctx = _context()
+		if not lesson_open(rec, ctx.get("flags", {})):
+			continue
+		_lesson_counts[lesson_id] = int(_lesson_counts.get(lesson_id, 0)) + 1
+		if int(_lesson_counts[lesson_id]) >= maxi(1, int((d as Dictionary).get("count", 1))):
+			_learn_late(rec)
 	for rec: Dictionary in prompts():
 		var trig: Variant = rec.get("trigger")
 		if typeof(trig) != TYPE_DICTIONARY or str(trig.get("type", "")) != "event" \
@@ -262,13 +304,32 @@ func on_event(event_name: String, info: Dictionary, tick: int) -> void:
 			_pending[id] = tick
 
 
+## Whether an event counts toward a dismissal: an `event` dismissal's matching event (its
+## filters), or the player's own ability_started of an action_kind / action_id dismissal's kind or
+## id. Timeouts and flags count no events.
+func dismiss_matches(d: Dictionary, event_name: String, info: Dictionary) -> bool:
+	match str(d.get("type", "")):
+		"event":
+			return event_matches(d, event_name, info)
+		"action_kind":
+			return event_name == "ability_started" and str(info.get("actor", "")) == _player_id() \
+				and str(info.get("action_kind", "")) == str(d.get("action_kind", ""))
+		"action_id":
+			return event_name == "ability_started" and str(info.get("actor", "")) == _player_id() \
+				and str(info.get("action_id", "")) == str(d.get("action_id", ""))
+	return false
+
+
 ## Takes the shown prompt away: the seen flag, sets_flag when reason is "done",
-## tutorial_dismissed.
+## tutorial_dismissed. Any other reason (a fallback) leaves its lesson open, counted on from the
+## prompt's progress.
 func dismiss(reason: String, tick: int) -> void:
 	if current.is_empty():
 		return
 	var id := str(current.id)
 	var sets := str(current.get("sets_flag", ""))
+	if reason != "done" and int(current.get("progress", 0)) > 0:
+		_lesson_counts[id] = int(current.progress)
 	current = {}
 	WorldState.try_set_flag(seen_flag(id), true)
 	if reason == "done" and sets != "":
@@ -324,6 +385,31 @@ func _complete_silently(rec: Dictionary) -> void:
 	var sets := str(rec.get("sets_flag", ""))
 	if sets != "":
 		WorldState.try_set_flag(sets, true)
+
+
+## Open lessons taught by a flag: learnt once the flag holds (the shown prompt checks its own).
+func _check_flag_lessons() -> void:
+	var shown_id := str(current.get("id", ""))
+	var flags: Dictionary = {}
+	var have_flags := false
+	for rec: Dictionary in prompts():
+		var d: Variant = rec.get("dismiss")
+		if typeof(d) != TYPE_DICTIONARY or str((d as Dictionary).get("type", "")) != "flag" \
+				or str(rec.get("id", "")) == shown_id:
+			continue
+		if not have_flags:
+			flags = _context().get("flags", {})
+			have_flags = true
+		if lesson_open(rec, flags) and QuestConditions.flag_matches(flags.get(str((d as Dictionary).get("flag", ""))), d):
+			_learn_late(rec)
+
+
+## An open lesson the player did after all: its sets_flag. The prompt stays seen and is not shown
+## again; nothing is emitted but the flag's change (quests and flag triggers follow it).
+func _learn_late(rec: Dictionary) -> void:
+	var id := str(rec.get("id", ""))
+	_lesson_counts.erase(id)
+	WorldState.try_set_flag(str(rec.get("sets_flag", "")), true)
 
 
 static func _ranks_higher(a: Dictionary, b: Dictionary) -> bool:

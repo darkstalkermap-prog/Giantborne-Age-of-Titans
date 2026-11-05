@@ -7,6 +7,10 @@ extends IntegrationSuite
 ## a time; an entered trigger is presence and combines with min_stage after growing inside the
 ## area; timeouts (the lesson) and timeout fallbacks (no lesson); once=false prompts come back on a
 ## new edge; event filters; the HUD widget resolves {placeholders} for the device.
+## M4 gate: a fallback takes the prompt away, not its lesson - real camera toggles and light attacks
+## after it, a block and a dodge after theirs (event lessons with a dependent prompt), and a flag
+## lesson still set the lesson's flag, so a quest stage waiting for it completes and a prompt that
+## needs it follows; the prompt itself never shows again.
 
 const Fx := preload("res://tests/support/quest_fixtures.gd")
 
@@ -222,6 +226,150 @@ func test_timeouts_and_timeout_fallbacks() -> void:
 	assert_eq(dismissed[-1], ["tutorial.test_grab", "timeout"], "a fallback timeout dismisses it as timeout")
 	assert_false(WorldState.has_flag("tutorial.test_grab.done"), "without the lesson's flag")
 	assert_eq(WorldState.get_flag("tutorial.test_grab.seen"), true, "but seen")
+
+
+## M4 gate: the camera lesson after its fallback (the Hollow's awaken stage, 45 s in the Valley):
+## a toggle made while the prompt showed still counts, the second one after the fallback teaches
+## it; the stage waiting for the flag completes once and the prompt waiting for it follows.
+func test_a_lesson_still_counts_after_its_fallback_took_the_prompt_away() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0))
+	Fx.install([
+		Fx.prompt("tutorial.test_camera", Fx.flag_cond("test.flag.cradle"),
+			{"type": "event", "event": "camera_mode_changed", "count": 2, "timeout_s": 0.5}, {"priority": 10}),
+		Fx.prompt("tutorial.test_after", Fx.flag_cond("tutorial.test_camera.done"),
+			{"type": "timeout", "timeout_s": 0.2}, {"priority": 5}),
+		Fx.quest("quest.test_hollow", [
+			Fx.stage("awaken", Fx.flag_cond("tutorial.test_camera.done"), 10),
+			Fx.stage("train", Fx.flag_cond("test.flag.never"), 10)])])
+	Fx.activate(["quest.test_hollow"], ["tutorial.test_camera", "tutorial.test_after"])
+	WorldState.set_flag("test.flag.cradle", true)
+	await step_ticks(2)
+	assert_eq(_current_id(), "tutorial.test_camera", "shown")
+	assert_eq(Quests.stage_of("quest.test_hollow"), "awaken", "the stage waits for the lesson")
+	p.router.inject_edge(&"camera_toggle")
+	await step_ticks(3)
+	assert_eq(int(Quests.current_tutorial().progress), 1, "one real toggle counted while it shows")
+	await step_ticks(30)
+	assert_eq(_current_id(), "", "the fallback took it away")
+	assert_eq(dismissed, [["tutorial.test_camera", "timeout"]], "as a timeout")
+	assert_false(WorldState.has_flag("tutorial.test_camera.done"), "the lesson is not done")
+	assert_eq(Quests.tutorial.open_lesson_ids(), PackedStringArray(["tutorial.test_camera"]), "it stays open")
+	assert_eq(Quests.tutorial.lesson_count("tutorial.test_camera"), 1, "with the toggle made while it showed")
+	Events.ability_started.emit(Sim.tick, "player", "ability.light_1", 1)
+	Events.lock_target_changed.emit("player", "test.dummy", "press")
+	assert_eq(Quests.tutorial.lesson_count("tutorial.test_camera"), 1, "other events count nothing")
+	await step_ticks(20)
+	assert_eq(Quests.stage_of("quest.test_hollow"), "awaken", "the stage still waits")
+	assert_eq(shown, ["tutorial.test_camera"], "and nothing that needs the lesson shows")
+	p.router.inject_edge(&"camera_toggle")
+	await step_ticks(3)
+	assert_eq(WorldState.get_flag("tutorial.test_camera.done"), true, "a real toggle after the fallback teaches it")
+	assert_eq(Quests.tutorial.open_lesson_ids(), PackedStringArray(), "the lesson is closed")
+	assert_eq(Quests.tutorial.lesson_count("tutorial.test_camera"), 0, "its count gone")
+	await TestWait.until(self, func() -> bool: return Quests.stage_of("quest.test_hollow") == "train", 30)
+	assert_eq(Quests.stage_of("quest.test_hollow"), "train", "the stage waiting for it completes")
+	var rewards := Quests.history.filter(func(h: Dictionary) -> bool: return h.quest_id == "quest.test_hollow" and h.event == "reward")
+	assert_eq(rewards.size(), 1, "rewarded once")
+	await TestWait.until(self, func() -> bool: return _current_id() == "tutorial.test_after", 10)
+	assert_eq(_current_id(), "tutorial.test_after", "the prompt waiting for its flag follows")
+	assert_eq(shown, ["tutorial.test_camera", "tutorial.test_after"], "the taught prompt never shows again")
+	assert_eq(dismissed, [["tutorial.test_camera", "timeout"]], "and nothing is dismissed twice")
+	p.router.inject_edge(&"camera_toggle")
+	await step_ticks(3)
+	assert_eq(Quests.tutorial.lesson_count("tutorial.test_camera"), 0, "a taught lesson counts no more")
+
+
+## M4 gate: the Hollow's other lessons after their fallbacks - light attacks (an action lesson,
+## its count restarting after a reload), a block that unlocks the dodge prompt (which requires it)
+## and a dodge (event lessons on hit outcomes, the spar stage needs both), and a flag lesson. A
+## plain timeout prompt (its time is its lesson) and a lesson done in time are never open.
+func test_action_event_and_flag_lessons_stay_open_after_their_fallbacks() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)   # faces -Z: its light attacks miss the soldier behind
+	var s := spawn_soldier(Vector3(0, 0.05, 3), 0.0)
+	var telegraph := {"type": "event", "event": "telegraph_started", "target": "player"}
+	Fx.install([
+		Fx.prompt("tutorial.test_light", Fx.flag_cond("test.flag.dummies"),
+			{"type": "action_kind", "action_kind": "light", "count": 2, "timeout_s": 0.3}),
+		Fx.prompt("tutorial.test_block", telegraph.merged({"action_tags_any": ["Parryable"]}),
+			{"type": "event", "event": "hit_resolved", "defender": "player", "outcome_in": ["blocked", "parried"],
+				"timeout_s": 0.3}, {"priority": 30}),
+		Fx.prompt("tutorial.test_dodge", telegraph,
+			{"type": "event", "event": "hit_resolved", "defender": "player", "outcome_in": ["evaded"], "timeout_s": 0.3},
+			{"priority": 30, "requires_flags": ["tutorial.test_block.done"]}),
+		Fx.prompt("tutorial.test_flag", Fx.flag_cond("test.flag.ask"),
+			{"type": "flag", "flag": "test.flag.answer", "timeout_s": 0.3}),
+		Fx.prompt("tutorial.test_guard", Fx.flag_cond("test.flag.guard"), {"type": "timeout", "timeout_s": 0.3}),
+		Fx.quest("quest.test_spar", [Fx.stage("spar", {"type": "all", "of": [
+			Fx.flag_cond("tutorial.test_block.done"), Fx.flag_cond("tutorial.test_dodge.done")]}, 10)])])
+	Fx.activate(["quest.test_spar"], ["tutorial.test_light", "tutorial.test_block", "tutorial.test_dodge",
+		"tutorial.test_flag", "tutorial.test_guard"])
+	await step_ticks(2)
+	# Light attacks: one counts, a reload forgets it, two more teach the lesson.
+	WorldState.set_flag("test.flag.dummies", true)
+	await step_ticks(2)
+	assert_eq(_current_id(), "tutorial.test_light", "the light prompt")
+	await step_ticks(20)
+	assert_eq(dismissed[-1], ["tutorial.test_light", "timeout"], "its fallback")
+	p.router.inject_light_attack()
+	await step_ticks(14)
+	assert_eq(Quests.tutorial.lesson_count("tutorial.test_light"), 1, "a real light attack after it counts")
+	Events.ability_started.emit(Sim.tick, "soldier_01", "ability.light_1", 7)
+	assert_eq(Quests.tutorial.lesson_count("tutorial.test_light"), 1, "another actor's does not")
+	Quests.tutorial.reset()
+	assert_eq(Quests.tutorial.lesson_count("tutorial.test_light"), 0, "a reload forgets the count")
+	assert_true(Quests.tutorial.open_lesson_ids().has("tutorial.test_light"), "not the open lesson")
+	await TestWait.until(self, func() -> bool: return p.controller.action == null, 90)
+	p.router.inject_light_attack()
+	await step_ticks(14)
+	assert_false(WorldState.has_flag("tutorial.test_light.done"), "one light is not two")
+	p.router.inject_light_attack()
+	await TestWait.until(self, func() -> bool: return WorldState.get_flag("tutorial.test_light.done") == true, 90)
+	assert_eq(WorldState.get_flag("tutorial.test_light.done"), true, "two real light attacks teach it")
+	# The block: shown on a real chop at the giant, its fallback passes, a block later teaches it.
+	await TestWait.until(self, func() -> bool: return p.controller.action == null, 90)
+	s.brain.target_id = "player"
+	s.controller.request(&"attack", {"action_id": "ability.soldier_chop"})
+	await step_ticks(2)
+	assert_eq(_current_id(), "tutorial.test_block", "a chop at the giant shows the block prompt")
+	await TestWait.until(self, func() -> bool: return _current_id() == "", 40)
+	assert_eq(dismissed[-1], ["tutorial.test_block", "timeout"], "its fallback")
+	await TestWait.until(self, func() -> bool: return s.controller.action == null, 120)
+	assert_false(WorldState.has_flag("tutorial.test_block.done"), "the chop that landed taught nothing")
+	_hit("soldier_01", "player", HitResult.Outcome.HIT)
+	_hit("player", "soldier_01", HitResult.Outcome.BLOCKED)
+	assert_false(WorldState.has_flag("tutorial.test_block.done"), "a hit taken or a block by someone else neither")
+	s.controller.request(&"attack", {"action_id": "ability.soldier_chop"})
+	await step_ticks(2)
+	assert_eq(_current_id(), "", "the dodge prompt needs the block lesson")
+	_hit("soldier_01", "player", HitResult.Outcome.BLOCKED)
+	assert_eq(WorldState.get_flag("tutorial.test_block.done"), true, "a block after the fallback teaches it")
+	await TestWait.until(self, func() -> bool: return s.controller.action == null, 120)
+	assert_eq(Quests.stage_of("quest.test_spar"), "spar", "the spar stage needs the dodge too")
+	s.controller.request(&"attack", {"action_id": "ability.soldier_chop"})
+	await step_ticks(2)
+	assert_eq(_current_id(), "tutorial.test_dodge", "the next chop shows the dodge prompt it unlocked")
+	await TestWait.until(self, func() -> bool: return _current_id() == "", 40)
+	assert_eq(dismissed[-1], ["tutorial.test_dodge", "timeout"], "its fallback passes too")
+	_hit("soldier_01", "player", HitResult.Outcome.EVADED)
+	assert_eq(WorldState.get_flag("tutorial.test_dodge.done"), true, "a dodge after it teaches it")
+	await TestWait.until(self, func() -> bool: return Quests.is_complete("quest.test_spar"), 30)
+	assert_true(Quests.is_complete("quest.test_spar"), "both lessons done late: the spar stage completes")
+	# A flag lesson: done once its flag holds.
+	WorldState.set_flag("test.flag.ask", true)
+	await step_ticks(2)
+	assert_eq(_current_id(), "tutorial.test_flag", "the flag prompt")
+	await step_ticks(20)
+	assert_eq(dismissed[-1], ["tutorial.test_flag", "timeout"], "its fallback")
+	WorldState.set_flag("test.flag.answer", true)
+	await step_ticks(1)
+	assert_eq(WorldState.get_flag("tutorial.test_flag.done"), true, "its flag after the fallback teaches it")
+	# A timeout prompt's time is its lesson: done, never open.
+	WorldState.set_flag("test.flag.guard", true)
+	await step_ticks(22)
+	assert_eq(dismissed[-1], ["tutorial.test_guard", "done"], "a timeout prompt is done by its time")
+	assert_eq(Quests.tutorial.open_lesson_ids(), PackedStringArray(), "no lesson stays open")
+	assert_eq(shown, ["tutorial.test_light", "tutorial.test_block", "tutorial.test_dodge", "tutorial.test_flag",
+		"tutorial.test_guard"], "each prompt shown once")
 
 
 func test_once_false_prompts_come_back_on_a_new_edge() -> void:

@@ -21,7 +21,10 @@ extends IntegrationSuite
 ##     king stays dead, the giant comes back at stage 3 at the Kingsfall shrine).
 ## The help_cache run also plays the optional Hollow tutorial with the real controls (camera
 ## toggles, attacks on the dummies, a block and a dodge against the sparring post) through the
-## shipped prompts; the other runs leave it, and it is abandoned once the giant grows.
+## shipped prompts; the other runs leave it, and it is abandoned once the giant grows. Two more
+## runs (M4 gate) let the shipped prompts' 45 s fallbacks pass first - the camera prompt at the
+## Cradle, the block and dodge prompts at the post - and check that the lessons done afterwards
+## still complete awaken and spar.
 ## Spawned enemies outside the village faction get their AI switched off as they spawn (the walk
 ## is about the quest line, not the fights; P17a's bot plays those), the village's guards and
 ## people keep theirs, so their standing (neutral, stood down, hostile) plays out for real.
@@ -366,34 +369,7 @@ func _hollow_tutorial() -> void:
 	assert_eq(WorldState.get_flag("tutorial.camera.done"), true, "two camera toggles teach it")
 	await TestWait.until(self, func() -> bool: return Quests.stage_of("quest.tutorial") == "train", 30)
 	assert_eq(Quests.stage_of("quest.tutorial"), "train", "awaken done")
-	# The dummies: three lights, a heavy and Heavy Footfall on dummy 1, then a lock.
-	var dummy := level.get_node("Dummies/valley_hollow_dummy_1") as Node3D
-	var front := dummy.global_position + Vector3(2.8, 0, 0)
-	await _go(front, PI * 0.5, 6)
-	player.camera_rig.yaw = player.facing_yaw
-	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.light", 30)
-	assert_eq(str(Quests.current_tutorial().get("id", "")), "tutorial.light", "the light prompt at the dummies")
-	for edge: StringName in [&"light", &"light", &"light"]:
-		player.router.inject_edge(edge)
-		await step_ticks(26)
-	await step_ticks(30)
-	assert_eq(WorldState.get_flag("tutorial.light.done"), true, "three lights teach it")
-	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.heavy", 30)
-	player.router.inject_edge(&"heavy")
-	await step_ticks(90)
-	assert_eq(WorldState.get_flag("tutorial.heavy.done"), true, "a heavy teaches the heavy")
-	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.footfall", 30)
-	player.router.inject_edge(&"slot_1")
-	await step_ticks(70)
-	assert_eq(WorldState.get_flag("tutorial.footfall.done"), true, "Heavy Footfall teaches itself")
-	await TestWait.until(self, func() -> bool: return Quests.stage_of("quest.tutorial") == "spar", 30)
-	assert_eq(Quests.stage_of("quest.tutorial"), "spar", "the dummies took light x3, a heavy and Footfall")
-	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.lock", 30)
-	player.router.inject_edge(&"lock_press")
-	await step_ticks(6)
-	assert_eq(WorldState.get_flag("tutorial.lock.done"), true, "locking on teaches the lock")
-	player.router.inject_edge(&"lock_press")
-	await step_ticks(4)
+	await _hollow_dummies()
 	# The sparring post: a held block, then a roll through the swing.
 	var post := director.spawned("valley.hollow.sparring_post") as SparringPost
 	assert_true(post != null, "the Hollow's sparring post is up")
@@ -424,6 +400,53 @@ func _hollow_tutorial() -> void:
 	await TestWait.until(self, func() -> bool: return Quests.is_complete("quest.tutorial"), 30)
 	assert_true(Quests.is_complete("quest.tutorial"), "the Hollow's tutorial is complete")
 	await _go(at + Vector3(0, 0, 8), 0.0, 2)
+
+
+## The Hollow's dummies with the real controls (quest.tutorial at train): three lights, a heavy and
+## Heavy Footfall on dummy 1 through their prompts (train completes: spar), then the lock prompt
+## and a lock (released again).
+func _hollow_dummies() -> void:
+	var dummy := level.get_node("Dummies/valley_hollow_dummy_1") as Node3D
+	var front := dummy.global_position + Vector3(2.8, 0, 0)
+	await _go(front, PI * 0.5, 6)
+	player.camera_rig.yaw = player.facing_yaw
+	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.light", 30)
+	assert_eq(str(Quests.current_tutorial().get("id", "")), "tutorial.light", "the light prompt at the dummies")
+	for edge: StringName in [&"light", &"light", &"light"]:
+		player.router.inject_edge(edge)
+		await step_ticks(26)
+	await step_ticks(30)
+	assert_eq(WorldState.get_flag("tutorial.light.done"), true, "three lights teach it")
+	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.heavy", 30)
+	player.router.inject_edge(&"heavy")
+	await step_ticks(90)
+	assert_eq(WorldState.get_flag("tutorial.heavy.done"), true, "a heavy teaches the heavy")
+	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.footfall", 30)
+	player.router.inject_edge(&"slot_1")
+	await step_ticks(70)
+	assert_eq(WorldState.get_flag("tutorial.footfall.done"), true, "Heavy Footfall teaches itself")
+	await TestWait.until(self, func() -> bool: return Quests.stage_of("quest.tutorial") == "spar", 30)
+	assert_eq(Quests.stage_of("quest.tutorial"), "spar", "the dummies took light x3, a heavy and Footfall")
+	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.lock", 30)
+	player.router.inject_edge(&"lock_press")
+	await step_ticks(6)
+	assert_eq(WorldState.get_flag("tutorial.lock.done"), true, "locking on teaches the lock")
+	player.router.inject_edge(&"lock_press")
+	await step_ticks(4)
+
+
+## Waits out a shown prompt's fallback (its 45 s) and checks that it went without its lesson.
+func _let_the_fallback_pass(prompt_id: String) -> void:
+	var dismissed: Array = []
+	var record := func(_tick: int, id: String, reason: String) -> void: dismissed.append([id, reason])
+	Events.tutorial_dismissed.connect(record)
+	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) != prompt_id,
+		46 * 60)
+	Events.tutorial_dismissed.disconnect(record)
+	assert_eq(dismissed, [[prompt_id, "timeout"]], "%s: its fallback took it away" % prompt_id)
+	var lesson := str(GameData.get_record(prompt_id).get("sets_flag", ""))
+	assert_false(WorldState.has_flag(lesson), "%s: its lesson is not done" % prompt_id)
+	assert_true(Quests.tutorial.open_lesson_ids().has(prompt_id), "%s: the lesson stays open" % prompt_id)
 
 
 ## Ticks until the post's current swing becomes active (99 when it is not winding up).
@@ -915,3 +938,90 @@ func test_force_the_smashed_barricade() -> void:
 	await _assert_the_end("force")
 	assert_false(WorldState.has_flag("reward.village.help"), "no help reward")
 	assert_false(WorldState.has_flag("reward.village.intimidate"), "no intimidation reward")
+
+
+# --------------------------------------------------------------------------- the Hollow's fallbacks
+
+## M4 gate: a giant that looks around for 45 s at the Cradle first. The camera prompt's fallback
+## takes it away, but its lesson stays open: two camera toggles later still complete awaken (the
+## tracker moves on to the dummies, 10 XP once). Before the fix the stage stayed at awaken until
+## the tutorial was abandoned at the Grove.
+func test_the_camera_lesson_still_counts_after_its_fallback() -> void:
+	await _new_game()
+	assert_eq(Quests.stage_of("quest.tutorial"), "awaken", "the tutorial starts with New Game")
+	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.camera", 30)
+	assert_eq(str(Quests.current_tutorial().get("id", "")), "tutorial.camera", "the camera prompt shows at the Cradle")
+	await _let_the_fallback_pass("tutorial.camera")
+	await step_ticks(30)
+	assert_eq(Quests.stage_of("quest.tutorial"), "awaken", "after 45 s the stage still waits for the lesson")
+	var xp := int(player.progression.xp)
+	for i in 2:
+		player.router.inject_edge(&"camera_toggle")
+		await step_ticks(4)
+	assert_eq(WorldState.get_flag("tutorial.camera.done"), true, "two toggles after the fallback teach it")
+	await TestWait.until(self, func() -> bool: return Quests.stage_of("quest.tutorial") == "train", 30)
+	assert_eq(Quests.stage_of("quest.tutorial"), "train", "awaken completes")
+	assert_true(str(Quests.objective_for("quest.tutorial").get("text", "")).begins_with("Strike the practice dummies"),
+		"the tracker moves on to the dummies")
+	assert_eq(int(player.progression.xp), xp + 10, "its 10 XP")
+	assert_eq(Quests.tutorial.shown_ids.count("tutorial.camera"), 1, "the camera prompt never shows again")
+	await _hollow_dummies()
+	assert_eq(Quests.stage_of("quest.tutorial"), "spar", "the dummies follow as usual")
+
+
+## M4 gate: the sparring post's lessons after their fallbacks. The block prompt shows at the
+## post's first swing and the giant steps out of reach until its fallback passes; back at the
+## post, a block teaches it (the dodge prompt, which requires it, then shows at the next swing);
+## the dodge prompt's fallback passes too, and a roll through a later swing still completes spar.
+func test_the_block_and_dodge_lessons_still_count_after_their_fallbacks() -> void:
+	await _new_game()
+	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.camera", 30)
+	for i in 2:
+		player.router.inject_edge(&"camera_toggle")
+		await step_ticks(4)
+	await TestWait.until(self, func() -> bool: return Quests.stage_of("quest.tutorial") == "train", 30)
+	await _hollow_dummies()
+	var post := director.spawned("valley.hollow.sparring_post") as SparringPost
+	assert_true(post != null, "the Hollow's sparring post is up")
+	if post == null:
+		return
+	var at := post.global_position + Vector3(0, 0, 3.2)
+	var away := at + Vector3(0, 0, 8)
+	await _go(at, 0.0, 2)
+	player.camera_rig.yaw = 0.0
+	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.block", 300)
+	assert_eq(str(Quests.current_tutorial().get("id", "")), "tutorial.block", "the post's swing shows the block prompt")
+	await _go(away, 0.0, 2)
+	await _let_the_fallback_pass("tutorial.block")
+	assert_eq(Quests.stage_of("quest.tutorial"), "spar", "spar waits for both lessons")
+	await _go(at, 0.0, 2)
+	player.camera_rig.yaw = 0.0
+	var blocked: bool = await TestWait.until(self, func() -> bool:
+		if post.controller.state == CombatController.State.ATTACKING:
+			player.router.set_injected_hold(&"block", true)
+			player.router.inject_edge(&"block_press")
+		return WorldState.get_flag("tutorial.block.done") == true, 600)
+	player.router.set_injected_hold(&"block", false)
+	player.router.inject_edge(&"block_release")
+	assert_true(blocked, "a block against the post after the fallback teaches blocking")
+	await TestWait.until(self, func() -> bool: return str(Quests.current_tutorial().get("id", "")) == "tutorial.dodge", 400)
+	assert_eq(str(Quests.current_tutorial().get("id", "")), "tutorial.dodge", "the dodge prompt it unlocks shows at a swing")
+	await _go(away, 0.0, 2)
+	await _let_the_fallback_pass("tutorial.dodge")
+	assert_eq(Quests.stage_of("quest.tutorial"), "spar", "spar still waits for the dodge")
+	await _go(at, 0.0, 2)
+	player.camera_rig.yaw = 0.0
+	# The roll's invulnerability runs from 0.10 s to 0.30 s into it (action.dodge): roll 10 ticks
+	# before the swing lands.
+	var dodged: bool = await TestWait.until(self, func() -> bool:
+		if _post_strikes_in(post) == 10:
+			player.router.set_injected_move(Vector2(0, 1))
+			player.router.inject_edge(&"dodge")
+		return WorldState.get_flag("tutorial.dodge.done") == true, 900)
+	player.router.set_injected_move(Vector2.ZERO)
+	assert_true(dodged, "a roll through the swing after the fallback teaches the dodge")
+	await TestWait.until(self, func() -> bool: return Quests.is_complete("quest.tutorial"), 30)
+	assert_true(Quests.is_complete("quest.tutorial"), "the Hollow's tutorial is complete")
+	assert_eq(Quests.tutorial.shown_ids.count("tutorial.block"), 1, "the block prompt showed once")
+	assert_eq(Quests.tutorial.shown_ids.count("tutorial.dodge"), 1, "the dodge prompt showed once")
+	await _go(away, 0.0, 2)
