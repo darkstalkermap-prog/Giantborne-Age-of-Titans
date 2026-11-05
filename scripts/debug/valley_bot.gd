@@ -60,6 +60,10 @@ const TUTORIAL_BUDGET_S := 120.0
 const SCREEN_CLOSE_AFTER_S := 0.25
 const REST_BELOW_HEALTH := 0.45
 const ERRAND_RADIUS_M := 70.0
+const ERRAND_GIVE_UP_S := 45.0
+const GAVE_UP := 1 << 30
+const BREAK_SWINGS_PER_STEP := 3
+const BREAK_STEP_M := 0.8
 const ELDER := "valley.village.elder"
 const ELDER_DIALOGUE := "dialogue.elder"
 const BARRICADE := "valley.village.barricade"
@@ -80,6 +84,7 @@ class Run extends RefCounted:
 	var assist := false
 	var loop := false
 	var seed_value := 0
+	var trace_ticks := 0
 	var rng: RandomNumberGenerator
 	var metrics: RunMetrics
 	var finished := false
@@ -142,6 +147,12 @@ var _spar_lead := 10
 var _screen_seen_ms := -1
 var _reach_cache: Dictionary = {}
 var _last_steer_tick := -1
+var _break_id := 0              ## the prop being broken (instance id)
+var _break_health := -1.0       ## its health when a blow last landed (or when the task began)
+var _break_swings := 0          ## blows since its health last dropped
+var _break_swing_tick := -1000
+var _break_closer := 0.0        ## metres closer than the reach suggests (blows that did not land)
+var _errand_ticks: Dictionary = {}   ## errand -> ticks spent on it (this level load)
 
 
 ## Starts a run (once per process; later calls keep the running one). options: "policy", "skill",
@@ -160,6 +171,7 @@ static func configure(options: Dictionary) -> Run:
 	run.assist = bool(options.get("assist", false))
 	run.loop = bool(options.get("loop", false))
 	run.seed_value = int(options.get("seed", 0))
+	run.trace_ticks = ActionDef.seconds_to_ticks(float(options.get("trace_s", 0.0))) if float(options.get("trace_s", 0.0)) > 0.0 else 0
 	run.rng = Sim.rng_for("bot")
 	run.rng.seed = hash("bot:%d" % run.seed_value)
 	run.metrics = _new_metrics()
@@ -201,6 +213,8 @@ static func parse_options(args: PackedStringArray) -> Dictionary:
 			out.loop = true
 		elif arg.begins_with("--bot-seed="):
 			out.seed = int(arg.substr(11))
+		elif arg.begins_with("--bot-trace="):
+			out.trace_s = float(arg.substr(12))
 	return out
 
 
@@ -290,6 +304,8 @@ func _physics_process(_delta: float) -> void:
 		_plan(tick)
 	_act(tick, defending)
 	_watchdogs(tick)
+	if run.trace_ticks > 0 and tick % run.trace_ticks == 0:
+		print(trace_line(tick))
 
 
 func _slice_done() -> bool:
@@ -393,7 +409,7 @@ func _fight_target() -> EnemyActor:
 			continue
 		best = e
 		break
-	if preferred is EnemyActor and combat._fightable(preferred as EnemyActor):
+	if preferred is EnemyActor and combat.is_threat(preferred as EnemyActor):
 		var p := preferred as EnemyActor
 		if best == null or best == p or p.global_position.distance_to(player.global_position) < 8.0 \
 				or best.global_position.distance_to(player.global_position) > 5.0:
@@ -584,26 +600,50 @@ func _tutorial_task() -> Dictionary:
 func _errand_task(stage: String) -> Dictionary:
 	if combat.threats(combat.engage_radius()).size() > 0:
 		return {}
+	var t := {}
 	var pools := player.entity.combatant.pools
 	if pools.health < pools.health_max * REST_BELOW_HEALTH:
 		var s := _nearest_shrine(ERRAND_RADIUS_M)
 		if s != null:
-			return {"kind": "rest", "shrine": s, "boss": false}
-	var forge := _forge_errand()
-	if not forge.is_empty():
-		return forge
+			t = _errand({"kind": "rest", "shrine": s, "boss": false, "errand": "rest"})
+			if not t.is_empty():
+				return t
+	t = _forge_errand()
+	if not t.is_empty():
+		t.errand = "reforge"
+		t = _errand(t)
+		if not t.is_empty():
+			return t
 	if stage in ["courtyard", "causeway", "boss", "grow3", "tree", "deadfall", "crown"]:
 		var rack := _prop("valley.ruins.sword_rack") as WeaponRack
 		if rack != null and not rack.taken and player.equipment != null and not player.equipment.owns("weapon.sword") \
 				and not player.equipment.owns("weapon.sword_reinforced") and _near(rack, ERRAND_RADIUS_M):
-			return {"kind": "interact", "target": rack, "errand": "sword"}
+			t = _errand({"kind": "interact", "target": rack, "errand": "sword"})
+			if not t.is_empty():
+				return t
 		var crate := _prop("valley.ruins.armory_crate") as BreakableProp
 		if crate != null and not crate.destroyed and _near(crate, ERRAND_RADIUS_M):
-			return {"kind": "break", "target": crate, "weapon": "", "encounter": "", "errand": "armory crate"}
+			t = _errand({"kind": "break", "target": crate, "weapon": "", "encounter": "", "errand": "armory crate"})
+			if not t.is_empty():
+				return t
 	var chest := _prop("valley.quarry.chest") as BreakableProp
 	if chest != null and not chest.destroyed and _near(chest, 25.0):
-		return {"kind": "break", "target": chest, "weapon": "", "encounter": "", "errand": "quarry chest"}
+		return _errand({"kind": "break", "target": chest, "weapon": "", "encounter": "", "errand": "quarry chest"})
 	return {}
+
+
+## `t`, unless the bot has spent ERRAND_GIVE_UP_S on that errand in this level load without getting
+## it done: then {} (the errand is skipped from then on, noted once). A rest or reforge that is done
+## starts its count again.
+func _errand(t: Dictionary) -> Dictionary:
+	var key := str(t.get("errand", ""))
+	var spent := int(_errand_ticks.get(key, 0))
+	if spent >= ActionDef.seconds_to_ticks(ERRAND_GIVE_UP_S):
+		if spent < GAVE_UP:
+			_errand_ticks[key] = GAVE_UP
+			run.metrics.note(Sim.tick, "errand given up after %d s: %s" % [int(ERRAND_GIVE_UP_S), key])
+		return {}
+	return t
 
 
 ## Two iron and a weapon that can be reforged (the best base weapon owned), at an open forge near.
@@ -710,6 +750,8 @@ func _act(tick: int, defending: bool) -> void:
 			if t is EnemyActor and combat._fightable(t as EnemyActor):
 				mode = "combat"
 				combat.fight(tick, t as EnemyActor)
+				if combat.target != null and combat.target != t:
+					task.target = combat.target   # the lock chose another threat close by
 			else:
 				stop_moving()
 		"go":
@@ -738,6 +780,9 @@ func _act(tick: int, defending: bool) -> void:
 			stop_moving()
 	if str(task.get("kind", "")).begins_with("tutorial"):
 		run.tutorial_ticks += 1
+	var errand := str(task.get("errand", ""))
+	if errand != "" and int(_errand_ticks.get(errand, 0)) < GAVE_UP:
+		_errand_ticks[errand] = int(_errand_ticks.get(errand, 0)) + 1
 	_equip_best()
 
 
@@ -808,15 +853,26 @@ func _act_break(tick: int, defending: bool) -> void:
 	var weapon := str(task.get("weapon", ""))
 	if weapon != "" and player.equipment != null and player.equipment.weapon_id() != weapon and player.equipment.owns(weapon):
 		player.equipment.equip_weapon(weapon)
+	# A blow that does not land (a low crate under the swing, a wall's edge) moves the giant closer:
+	# BREAK_STEP_M after every BREAK_SWINGS_PER_STEP blows that took nothing off the prop.
+	var e := prop.get_node_or_null("CombatEntity") as CombatEntity
+	var health := e.combatant.pools.health if e != null and e.combatant != null else 0.0
+	if prop.get_instance_id() != _break_id:
+		_break_id = prop.get_instance_id()
+		_break_health = health
+		_break_swings = 0
+		_break_closer = 0.0
+	elif health < _break_health - 0.01:
+		_break_health = health
+		_break_swings = 0
 	var reach := float(player.profile.get("melee_reach_m", 3.5))
 	var gap := _prop_gap(prop)
-	if gap > reach * 0.6:
-		_act_go(tick, _approach_point(prop, reach * 0.4), 0.8)
+	if gap > maxf(0.3, reach * 0.6 - _break_closer):
+		_act_go(tick, _approach_point(prop, maxf(0.1, reach * 0.4 - _break_closer)), 0.8)
 		return
 	stop_moving()
 	mode = "combat"
 	var c := player.controller
-	var e := prop.get_node_or_null("CombatEntity") as CombatEntity
 	if e != null and e.combatant.lockable:
 		var locked := player.targeting.locked_entity()
 		if locked != e:
@@ -831,12 +887,17 @@ func _act_break(tick: int, defending: bool) -> void:
 		if player.targeting.locked_entity() != null:
 			player.router.inject_edge(&"lock_press")
 		player.camera_rig.yaw = TargetingRules.yaw_of(_flat(prop.global_position - player.global_position))
-	if defending or c.state != CombatController.State.LOCOMOTION:
+	if defending or c.state != CombatController.State.LOCOMOTION or tick - _break_swing_tick < 12:
 		return
-	if c.preview_reason(&"heavy") == "":
-		player.router.inject_edge(&"heavy")
-	elif c.preview_reason(&"light") == "":
-		player.router.inject_edge(&"light")
+	var edge := &"heavy" if c.preview_reason(&"heavy") == "" else (&"light" if c.preview_reason(&"light") == "" else &"")
+	if edge == &"":
+		return
+	player.router.inject_edge(edge)
+	_break_swing_tick = tick
+	_break_swings += 1
+	if _break_swings >= BREAK_SWINGS_PER_STEP:
+		_break_swings = 0
+		_break_closer = minf(_break_closer + BREAK_STEP_M, reach)
 
 
 ## Interactables (pickups, racks, the oak) through the real interact edge: walk close, face it,
@@ -916,6 +977,7 @@ func _act_rest(tick: int) -> void:
 	if bool(task.get("boss", false)):
 		run.rested_for_boss = true
 	run.metrics.note(tick, "rest at %s: %s" % [s.world_id, r.get("ok", false)])
+	_errand_ticks.erase(str(task.get("errand", "")))
 	task = {}
 	_next_plan_tick = tick
 
@@ -933,6 +995,7 @@ func _act_upgrade(tick: int) -> void:
 	var r := f.upgrade(player)
 	run.metrics.note_screen("forge")
 	run.metrics.note(tick, "reforge %s at %s: %s" % [base, f.world_id, r.get("ok", false)])
+	_errand_ticks.erase(str(task.get("errand", "")))
 	task = {}
 	_next_plan_tick = tick
 
@@ -1201,6 +1264,32 @@ func _watchdogs(tick: int) -> void:
 	var limit := BOSS_TIMEOUT_S if key.ends_with(":boss") else OBJECTIVE_TIMEOUT_S
 	if run.obj_ticks > ActionDef.seconds_to_ticks(limit):
 		_breach("timeout", "%s took more than %d s (tick %d)" % [key, int(limit), tick])
+
+
+## One line of what the bot is doing (--bot-trace=S prints one every S simulated seconds): the task,
+## the giant (position, health, controller state, lock) and a fight's target.
+func trace_line(tick: int) -> String:
+	var pools := player.entity.combatant.pools
+	var locked := player.targeting.locked_entity()
+	var line := "[valley_bot trace] %.1f s  %s  task %s  giant %s hp %.0f/%.0f %s lock %s" % [
+		float(tick - run.started_tick) / 60.0, run.obj_key, str(task.get("kind", "")) + (
+			" (%s)" % task.why if task.has("why") else ""), _v(player.global_position), pools.health,
+		pools.health_max, CombatController.State.keys()[player.controller.state],
+		locked.entity_id if locked != null else "-"]
+	var t: Variant = task.get("target")
+	if t is Node3D and is_instance_valid(t):
+		var n := t as Node3D
+		var tid := str(n.get("world_id")) if "world_id" in n else (str(n.get("entity_id")) if "entity_id" in n else str(n.name))
+		line += "  target %s at %s (%.1f m)" % [tid, _v(n.global_position),
+			_flat_dist(n.global_position, player.global_position)]
+		if n is EnemyActor and (n as EnemyActor).entity != null:
+			var e := n as EnemyActor
+			line += " hp %.0f %s %s%s" % [e.entity.combatant.pools.health,
+				CombatController.State.keys()[e.controller.state] if e.controller != null else "?",
+				EnemyBrain.AIState.keys()[e.brain.state] if e.brain != null else "?", " guarding" if e.is_guarding() else ""]
+	elif task.has("pos"):
+		line += "  to %s" % _v(task.pos)
+	return line
 
 
 ## A watchdog breach: the diagnosis, then the end of a single run, or (loop) a checkpoint reload.

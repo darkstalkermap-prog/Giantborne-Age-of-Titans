@@ -307,16 +307,7 @@ func threats(radius: float, include_elevated := true) -> Array[EnemyActor]:
 	var pos := player.global_position
 	for n in player.get_tree().get_nodes_in_group("enemies"):
 		var e := n as EnemyActor
-		if e == null or not e.is_inside_tree() or e.entity == null or not e.entity.is_alive():
-			continue
-		if e.entity.team != CombatEntity.Team.ENEMY or e.brain == null:
-			continue
-		if not TargetingRules.player_may_target(e.entity):
-			continue
-		if e.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED, EnemyBrain.AIState.RETURN]:
-			continue
-		var engaged := e.brain.aware or e.brain.target_id == player.entity.entity_id
-		if not engaged:
+		if not is_threat(e):
 			continue
 		if _flat(e.global_position - pos).length() > radius:
 			continue
@@ -326,6 +317,18 @@ func threats(radius: float, include_elevated := true) -> Array[EnemyActor]:
 	out.sort_custom(func(a: EnemyActor, b: EnemyActor) -> bool:
 		return a.global_position.distance_squared_to(pos) < b.global_position.distance_squared_to(pos))
 	return out
+
+
+## A hostile enemy (team ENEMY, alive, targetable) engaged with the giant (aware of it or after it)
+## and not fleeing, routed or walking home.
+func is_threat(e: EnemyActor) -> bool:
+	if e == null or not is_instance_valid(e) or not e.is_inside_tree() or e.entity == null or not e.entity.is_alive():
+		return false
+	if e.entity.team != CombatEntity.Team.ENEMY or e.brain == null or not TargetingRules.player_may_target(e.entity):
+		return false
+	if e.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED, EnemyBrain.AIState.RETURN]:
+		return false
+	return e.brain.aware or e.brain.target_id == player.entity.entity_id
 
 
 func is_elevated(e: Node3D) -> bool:
@@ -432,7 +435,10 @@ func fight(tick: int, t: EnemyActor) -> void:
 	if holding:
 		_throw(tick)
 		return
-	_ensure_lock(tick, t)
+	# The giant's blows go where the lock points: a different threat already locked and close is
+	# the one fought (a throw locks the next enemy, for one).
+	t = _ensure_lock(tick, t)
+	target = t
 	var to := _flat(t.global_position - player.global_position)
 	var dist := to.length()
 	if bot != null and bot.metrics != null:
@@ -499,24 +505,27 @@ static func _chain_window(c: CombatController) -> bool:
 
 
 ## Locks `t` when nothing (or a dead target) is locked: the camera turns to it, then the lock key.
-func _ensure_lock(tick: int, t: EnemyActor) -> void:
-	if tick < _lock_wait_until:
-		return
+## Returns the enemy to fight: the one locked when that is another threat close by on the giant's
+## level (kept rather than toggling the lock each time the nearest enemy changes; the blows go
+## where the lock points), else `t`.
+func _ensure_lock(tick: int, t: EnemyActor) -> EnemyActor:
 	var locked := player.targeting.locked_entity()
 	if locked != null and locked.is_alive():
 		if locked == t.entity:
-			return
-		# Locked on something else: keep it while it is a threat nearby, else switch.
+			return t
 		var other := locked.actor as EnemyActor
-		if other != null and _fightable(other) and other.global_position.distance_to(player.global_position) < 10.0 \
-				and not t.is_in_group(OgreBoss.GROUP):
-			return
-		player.router.inject_edge(&"lock_press")   # toggle off
-		_lock_wait_until = tick + 2
-		return
-	player.camera_rig.yaw = TargetingRules.yaw_of(_flat(t.global_position - player.global_position))
-	player.router.inject_edge(&"lock_press")
-	_lock_wait_until = tick + 8
+		if other != null and is_threat(other) and other.global_position.distance_to(player.global_position) < 10.0 \
+				and not t.is_in_group(OgreBoss.GROUP) and not is_elevated(other):
+			return other
+		if tick >= _lock_wait_until:
+			player.router.inject_edge(&"lock_press")   # toggle off, then lock `t`
+			_lock_wait_until = tick + 2
+		return t
+	if tick >= _lock_wait_until:
+		player.camera_rig.yaw = TargetingRules.yaw_of(_flat(t.global_position - player.global_position))
+		player.router.inject_edge(&"lock_press")
+		_lock_wait_until = tick + 8
+	return t
 
 
 ## Holding a body: lock another enemy if there is one, then throw it (light).
