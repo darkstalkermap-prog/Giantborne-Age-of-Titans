@@ -1,0 +1,418 @@
+[gd_scene format=3]
+
+[ext_resource type="Shader" path="res://assets/shaders/ground_checker.gdshader" id="1_49689"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(88, 1, 75)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(88, 1, 105)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(29, 15, 25)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(41, 15, 25)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(8, 15, 83)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+size = Vector3(88, 30, 23)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(2, 15, 31)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(2, 15, 43)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_9"]
+size = Vector3(2, 15, 30)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(2, 15, 11.001876)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_11"]
+height = 9.82
+radius = 0.47
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_12"]
+height = 10.06
+radius = 0.51
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_13"]
+height = 10.54
+radius = 0.59
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_14"]
+height = 9.76
+radius = 0.46
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_15"]
+height = 10.18
+radius = 0.53
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_16"]
+height = 10.48
+radius = 0.58
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_17"]
+height = 10.36
+radius = 0.56
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_18"]
+size = Vector3(0.6, 12, 108.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_19"]
+size = Vector3(0.6, 12, 25)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_20"]
+albedo_color = Color(0.46, 0.43, 0.38, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="BoxMesh_21"]
+
+[sub_resource type="MultiMesh" id="MultiMesh_22"]
+transform_format = 1
+instance_count = 1
+mesh = SubResource("BoxMesh_21")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_23"]
+albedo_color = Color(0.38, 0.38, 0.42, 1)
+roughness = 0.9
+
+[sub_resource type="MultiMesh" id="MultiMesh_24"]
+transform_format = 1
+instance_count = 34
+mesh = SubResource("BoxMesh_21")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_25"]
+render_priority = 0
+shader = ExtResource("1_49689")
+shader_parameter/color_a = null
+shader_parameter/color_b = null
+shader_parameter/line_color = null
+shader_parameter/cell_size = 8.0
+shader_parameter/line_width = null
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_26"]
+size = Vector2(1, 1)
+
+[sub_resource type="MultiMesh" id="MultiMesh_27"]
+transform_format = 1
+instance_count = 1
+mesh = SubResource("PlaneMesh_26")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_28"]
+render_priority = 0
+shader = ExtResource("1_49689")
+shader_parameter/color_a = null
+shader_parameter/color_b = null
+shader_parameter/line_color = null
+shader_parameter/cell_size = 4.0
+shader_parameter/line_width = null
+
+[sub_resource type="MultiMesh" id="MultiMesh_29"]
+transform_format = 1
+instance_count = 1
+mesh = SubResource("PlaneMesh_26")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_30"]
+albedo_color = Color(0.55, 0.47, 0.35, 1)
+
+[sub_resource type="MultiMesh" id="MultiMesh_31"]
+transform_format = 1
+instance_count = 3
+mesh = SubResource("PlaneMesh_26")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_32"]
+albedo_color = Color(0.2, 0.38, 0.55, 1)
+metallic = 0.1
+roughness = 0.15
+
+[sub_resource type="MultiMesh" id="MultiMesh_33"]
+transform_format = 1
+instance_count = 3
+mesh = SubResource("PlaneMesh_26")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_34"]
+albedo_color = Color(0.16, 0.31, 0.15, 1)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_35"]
+top_radius = 0.0
+height = 1.0
+radial_segments = 8
+rings = 1
+
+[sub_resource type="MultiMesh" id="MultiMesh_36"]
+transform_format = 1
+instance_count = 13
+mesh = SubResource("CylinderMesh_35")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_37"]
+albedo_color = Color(0.24, 0.4, 0.19, 1)
+roughness = 0.95
+
+[sub_resource type="MultiMesh" id="MultiMesh_38"]
+transform_format = 1
+instance_count = 3
+mesh = SubResource("CylinderMesh_35")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_39"]
+albedo_color = Color(0.33, 0.24, 0.16, 1)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_40"]
+height = 1.0
+radial_segments = 10
+rings = 1
+
+[sub_resource type="MultiMesh" id="MultiMesh_41"]
+transform_format = 1
+instance_count = 8
+mesh = SubResource("CylinderMesh_40")
+
+[node name="kingsfall" type="Node3D"]
+
+[node name="Collision" type="StaticBody3D" parent="."]
+collision_mask = 0
+
+[node name="Kingsfall" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 156, -0.5, 57.5)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Arena" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 156, -0.5, 147.5)
+shape = SubResource("BoxShape3D_2")
+
+[node name="KingsfallFillNw" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 126.5, 7.5, 81.5)
+shape = SubResource("BoxShape3D_3")
+
+[node name="KingsfallFillNe" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 179.5, 7.5, 81.5)
+shape = SubResource("BoxShape3D_4")
+
+[node name="KingsfallFillE" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 196, 7.5, 135.5)
+shape = SubResource("BoxShape3D_5")
+
+[node name="KingsfallFillS" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 156, 15, 188.5)
+shape = SubResource("BoxShape3D_6")
+
+[node name="ArenaFrontW" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 127.5, 7.5, 68)
+shape = SubResource("BoxShape3D_7")
+
+[node name="ArenaFrontE" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 178.5, 7.5, 68)
+shape = SubResource("BoxShape3D_8")
+
+[node name="AntechamberW" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 142, 7.5, 82)
+shape = SubResource("BoxShape3D_9")
+
+[node name="AntechamberE" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 158, 7.5, 82)
+shape = SubResource("BoxShape3D_9")
+
+[node name="ArenaWall00" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.27786648, 0, -0.96061975, 0, 1, 0, 0.96061975, 0, -0.2778665, 161.3237, 7.5, 95.85264)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall01" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.48080665, 0, -0.87682664, 0, 1, 0, 0.87682664, 0, -0.48080665, 169.59393, 7.5, 99.26739)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall02" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.6605685, 0, -0.7507658, 0, 1, 0, 0.7507658, 0, -0.6605685, 176.91962, 7.5, 104.404655)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall03" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.80848783, 0, -0.5885129, 0, 1, 0, 0.5885129, 0, -0.80848783, 182.94763, 7.5, 111.01679)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall04" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.9174322, 0, -0.39789224, 0, 1, 0, 0.39789224, 0, -0.9174322, 187.38739, 7.5, 118.78505)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall05" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.982152, 0, -0.18808924, 0, 1, 0, 0.18808924, 0, -0.982152, 190.02486, 7.5, 127.33497)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall06" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.9995262, 0, 0.030780135, 0, 1, 0, -0.030780135, 0, -0.9995262, 190.73288, 7.5, 136.2544)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall07" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.9687174, 0, 0.24816658, 0, 1, 0, -0.24816658, 0, -0.9687174, 189.47736, 7.5, 145.11334)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall08" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.89121085, 0, 0.45358926, 0, 1, 0, -0.45358926, 0, -0.89121085, 186.3188, 7.5, 153.48477)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall09" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.7707424, 0, 0.6371469, 0, 1, 0, -0.6371469, 0, -0.7707424, 181.40945, 7.5, 160.96512)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall10" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.6131197, 0, 0.78999007, 0, 1, 0, -0.78999007, 0, -0.6131197, 174.98601, 7.5, 167.19382)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall11" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.42594248, 0, 0.9047502, 0, 1, 0, -0.9047502, 0, -0.42594248, 167.3581, 7.5, 171.87057)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall12" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-0.21823156, 0, 0.975897, 0, 1, 0, -0.975897, 0, -0.21823156, 158.8934, 7.5, 174.76996)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall13" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 150, 7.5, 175.7522)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall14" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.21823147, 0, 0.975897, 0, 1, 0, -0.975897, 0, 0.21823147, 141.1066, 7.5, 174.76996)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall15" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.42594275, 0, 0.90475017, 0, 1, 0, -0.90475017, 0, 0.42594275, 132.64192, 7.5, 171.87057)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall16" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.61311996, 0, 0.7899898, 0, 1, 0, -0.7899898, 0, 0.61311996, 125.01399, 7.5, 167.19382)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall17" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.7707425, 0, 0.63714683, 0, 1, 0, -0.63714683, 0, 0.7707425, 118.59054, 7.5, 160.96512)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall18" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.8912103, 0, 0.4535904, 0, 1, 0, -0.4535904, 0, 0.8912103, 113.6812, 7.5, 153.48477)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall19" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.96871734, 0, 0.2481667, 0, 1, 0, -0.2481667, 0, 0.96871734, 110.52264, 7.5, 145.11334)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall20" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.9995262, 0, 0.030780023, 0, 1, 0, -0.030780023, 0, 0.9995262, 109.26711, 7.5, 136.2544)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall21" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.9821521, 0, -0.18808848, 0, 1, 0, 0.18808848, 0, 0.9821521, 109.97514, 7.5, 127.33497)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall22" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.9174327, 0, -0.39789099, 0, 1, 0, 0.39789099, 0, 0.9174327, 112.61261, 7.5, 118.78505)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall23" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.8084875, 0, -0.58851343, 0, 1, 0, 0.58851343, 0, 0.8084875, 117.05235, 7.5, 111.01679)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall24" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.6605689, 0, -0.75076544, 0, 1, 0, 0.75076544, 0, 0.6605689, 123.08037, 7.5, 104.404655)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall25" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.48080677, 0, -0.8768266, 0, 1, 0, 0.8768266, 0, 0.48080677, 130.40607, 7.5, 99.26739)
+shape = SubResource("BoxShape3D_10")
+
+[node name="ArenaWall26" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.2778665, 0, -0.9606197, 0, 1, 0, 0.96061975, 0, 0.2778665, 138.6763, 7.5, 95.85264)
+shape = SubResource("BoxShape3D_10")
+
+[node name="Tree161" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 122.9, 4.91, 57.5)
+shape = SubResource("CylinderShape3D_11")
+
+[node name="Tree162" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 120.5, 5.03, 26.3)
+shape = SubResource("CylinderShape3D_12")
+
+[node name="Tree163" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 124.2, 5.27, 38.4)
+shape = SubResource("CylinderShape3D_13")
+
+[node name="Tree164" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 114.5, 4.88, 42.2)
+shape = SubResource("CylinderShape3D_14")
+
+[node name="Tree165" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 195.9, 5.09, 45.5)
+shape = SubResource("CylinderShape3D_15")
+
+[node name="Tree166" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 184.3, 5.24, 25)
+shape = SubResource("CylinderShape3D_16")
+
+[node name="Tree167" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 184.2, 5.03, 50.1)
+shape = SubResource("CylinderShape3D_12")
+
+[node name="Tree168" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 196, 5.18, 27.1)
+shape = SubResource("CylinderShape3D_17")
+
+[node name="Blockers" type="StaticBody3D" parent="."]
+collision_layer = 32
+collision_mask = 0
+
+[node name="BankES" type="CollisionShape3D" parent="Blockers"]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 112, 6, 40.75)
+shape = SubResource("BoxShape3D_18")
+
+[node name="BankEFar" type="CollisionShape3D" parent="Blockers"]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 112, 6, 187.5)
+shape = SubResource("BoxShape3D_19")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("StandardMaterial3D_20")
+multimesh = SubResource("MultiMesh_22")
+
+[node name="StoneDark_Box" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("StandardMaterial3D_23")
+multimesh = SubResource("MultiMesh_24")
+
+[node name="Grass_Plane" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("ShaderMaterial_25")
+cast_shadow = 0
+multimesh = SubResource("MultiMesh_27")
+
+[node name="Pavement_Plane" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("ShaderMaterial_28")
+cast_shadow = 0
+multimesh = SubResource("MultiMesh_29")
+
+[node name="Road_Plane" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("StandardMaterial3D_30")
+cast_shadow = 0
+multimesh = SubResource("MultiMesh_31")
+
+[node name="Water_Plane" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("StandardMaterial3D_32")
+cast_shadow = 0
+multimesh = SubResource("MultiMesh_33")
+
+[node name="Scenery" type="Node3D" parent="."]
+
+[node name="LeavesDark_Cone" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+material_override = SubResource("StandardMaterial3D_34")
+visibility_range_end = 220.0
+multimesh = SubResource("MultiMesh_36")
+
+[node name="Leaves_Cone" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+material_override = SubResource("StandardMaterial3D_37")
+visibility_range_end = 220.0
+multimesh = SubResource("MultiMesh_38")
+
+[node name="Bark_Cyl" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+material_override = SubResource("StandardMaterial3D_39")
+visibility_range_end = 220.0
+multimesh = SubResource("MultiMesh_41")

@@ -1,0 +1,260 @@
+[gd_scene format=3]
+
+[ext_resource type="Shader" path="res://assets/shaders/ground_checker.gdshader" id="1_49689"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(20, 1, 22)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(12, 1, 400)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(88, 1, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(190, 1, 100)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(90, 1, 88)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+size = Vector3(420, 30, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(10, 30, 400)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(190, 30, 100)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_9"]
+size = Vector3(175, 46, 56)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(90, 30, 65)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
+size = Vector3(76, 44, 46)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_12"]
+size = Vector3(88, 30, 90)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_13"]
+size = Vector3(76, 42, 66)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_14"]
+size = Vector3(33, 30, 23)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_15"]
+size = Vector3(12, 30, 22)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_16"]
+height = 10.3
+radius = 0.55
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_17"]
+albedo_color = Color(0.36, 0.34, 0.31, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="BoxMesh_18"]
+
+[sub_resource type="MultiMesh" id="MultiMesh_19"]
+transform_format = 1
+instance_count = 3
+mesh = SubResource("BoxMesh_18")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_20"]
+albedo_color = Color(0.46, 0.43, 0.38, 1)
+roughness = 0.95
+
+[sub_resource type="MultiMesh" id="MultiMesh_21"]
+transform_format = 1
+instance_count = 9
+mesh = SubResource("BoxMesh_18")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_22"]
+render_priority = 0
+shader = ExtResource("1_49689")
+shader_parameter/color_a = null
+shader_parameter/color_b = null
+shader_parameter/line_color = null
+shader_parameter/cell_size = 8.0
+shader_parameter/line_width = null
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_23"]
+size = Vector2(1, 1)
+
+[sub_resource type="MultiMesh" id="MultiMesh_24"]
+transform_format = 1
+instance_count = 2
+mesh = SubResource("PlaneMesh_23")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_25"]
+render_priority = 0
+shader = ExtResource("1_49689")
+shader_parameter/color_a = null
+shader_parameter/color_b = null
+shader_parameter/line_color = null
+shader_parameter/cell_size = 8.0
+shader_parameter/line_width = null
+
+[sub_resource type="MultiMesh" id="MultiMesh_26"]
+transform_format = 1
+instance_count = 2
+mesh = SubResource("PlaneMesh_23")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_27"]
+render_priority = 0
+shader = ExtResource("1_49689")
+shader_parameter/color_a = null
+shader_parameter/color_b = null
+shader_parameter/line_color = null
+shader_parameter/cell_size = 8.0
+shader_parameter/line_width = null
+
+[sub_resource type="MultiMesh" id="MultiMesh_28"]
+transform_format = 1
+instance_count = 1
+mesh = SubResource("PlaneMesh_23")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_29"]
+albedo_color = Color(0.16, 0.31, 0.15, 1)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_30"]
+top_radius = 0.0
+height = 1.0
+radial_segments = 8
+rings = 1
+
+[sub_resource type="MultiMesh" id="MultiMesh_31"]
+transform_format = 1
+instance_count = 2
+mesh = SubResource("CylinderMesh_30")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_32"]
+albedo_color = Color(0.33, 0.24, 0.16, 1)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_33"]
+height = 1.0
+radial_segments = 10
+rings = 1
+
+[sub_resource type="MultiMesh" id="MultiMesh_34"]
+transform_format = 1
+instance_count = 1
+mesh = SubResource("CylinderMesh_33")
+
+[node name="hills" type="Node3D"]
+
+[node name="Collision" type="StaticBody3D" parent="."]
+collision_mask = 0
+
+[node name="ForestCorner" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -0.5, -101)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Riverbed" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106, -0.5, 0)
+shape = SubResource("BoxShape3D_2")
+
+[node name="RuinsNorth" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 156, -0.5, -175)
+shape = SubResource("BoxShape3D_3")
+
+[node name="HillsSouth" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -0.5, 150)
+shape = SubResource("BoxShape3D_4")
+
+[node name="HillsNw" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -155, -0.5, -156)
+shape = SubResource("BoxShape3D_5")
+
+[node name="EdgeN" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, -205)
+shape = SubResource("BoxShape3D_6")
+
+[node name="EdgeS" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, 205)
+shape = SubResource("BoxShape3D_6")
+
+[node name="EdgeW" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -205, 15, 0)
+shape = SubResource("BoxShape3D_7")
+
+[node name="EdgeE" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 205, 15, 0)
+shape = SubResource("BoxShape3D_7")
+
+[node name="HillsSouth2" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 15, 150)
+shape = SubResource("BoxShape3D_8")
+
+[node name="HillsSouthCrest" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 23, 168)
+shape = SubResource("BoxShape3D_9")
+
+[node name="HillsNw2" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -155, 15, -167.5)
+shape = SubResource("BoxShape3D_10")
+
+[node name="HillsNwCrest" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -158, 22, -173)
+shape = SubResource("BoxShape3D_11")
+
+[node name="HillsNe" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 156, 15, -155)
+shape = SubResource("BoxShape3D_12")
+
+[node name="HillsNeCrest" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 21, -163)
+shape = SubResource("BoxShape3D_13")
+
+[node name="ForestNorthE" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.5, 15, -123.5)
+shape = SubResource("BoxShape3D_14")
+
+[node name="ForestCornerE" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 15, -101)
+shape = SubResource("BoxShape3D_15")
+
+[node name="Tree169" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.9, 5.15, -95.7)
+shape = SubResource("CylinderShape3D_16")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="CliffDark_Box" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("StandardMaterial3D_17")
+multimesh = SubResource("MultiMesh_19")
+
+[node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("StandardMaterial3D_20")
+multimesh = SubResource("MultiMesh_21")
+
+[node name="Dirt_Plane" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("ShaderMaterial_22")
+cast_shadow = 0
+multimesh = SubResource("MultiMesh_24")
+
+[node name="ForestFloor_Plane" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("ShaderMaterial_25")
+cast_shadow = 0
+multimesh = SubResource("MultiMesh_26")
+
+[node name="Grass_Plane" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("ShaderMaterial_27")
+cast_shadow = 0
+multimesh = SubResource("MultiMesh_28")
+
+[node name="Scenery" type="Node3D" parent="."]
+
+[node name="LeavesDark_Cone" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+material_override = SubResource("StandardMaterial3D_29")
+visibility_range_end = 220.0
+multimesh = SubResource("MultiMesh_31")
+
+[node name="Bark_Cyl" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+material_override = SubResource("StandardMaterial3D_32")
+visibility_range_end = 220.0
+multimesh = SubResource("MultiMesh_34")

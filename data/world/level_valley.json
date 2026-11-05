@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "level.valley",
+	"type": "level",
+	"display_name": "Valley of Broken Kings",
+	"description": "The 400 x 400 m Valley (plan section 4): seven districts around a river, built by tools/builders/valley.gd from tools/data/valley_layout.json, with four offline-baked navigation layers. New Game starts at the Cradle in Giant's Hollow.",
+	"scene": "res://scenes/world/valley.tscn",
+	"start_checkpoint": "valley.shrine.hollow",
+	"max_active_enemies": 12,
+	"lod": {"near_m": 40, "mid_m": 90, "check_ticks": 30, "corpse_free_s": 6},
+	"render": {
+		"low": {"shadow_distance_m": 60, "scenery_visibility_end_m": 160, "msaa": 0},
+		"medium": {"shadow_distance_m": 120, "scenery_visibility_end_m": 220, "msaa": 2}
+	},
+	"web_overrides": {"quality": "low", "ai_tier1_m": 30},
+	"districts": [
+		{"id": "hollow", "display_name": "Giant's Hollow", "min_m": [-200, 0, 100], "max_m": [-90, 0, 200]},
+		{"id": "forest", "display_name": "Old Wood", "min_m": [-200, 0, -130], "max_m": [-30, 0, 100]},
+		{"id": "barrow", "display_name": "Barrow of the First King", "min_m": [-110, 0, -200], "max_m": [-10, 0, -130]},
+		{"id": "village", "display_name": "Thornwick village and fields", "min_m": [-30, 0, -90], "max_m": [100, 0, 100]},
+		{"id": "quarry", "display_name": "Raider Quarry", "min_m": [-10, 0, -200], "max_m": [100, 0, -90]},
+		{"id": "ruins", "display_name": "Ruins of the Broken Kings", "min_m": [100, 0, -150], "max_m": [200, 0, 20]},
+		{"id": "kingsfall", "display_name": "Kingsfall", "min_m": [100, 0, 20], "max_m": [200, 0, 200]}
+	]
+}

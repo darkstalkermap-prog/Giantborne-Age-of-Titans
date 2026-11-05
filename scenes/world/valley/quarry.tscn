@@ -1,0 +1,173 @@
+[gd_scene format=3]
+
+[ext_resource type="Shader" path="res://assets/shaders/ground_checker.gdshader" id="1_49689"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(110, 1, 110)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(20, 30, 110)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(25, 24, 35)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(55, 24, 35)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(60, 30, 25)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+size = Vector3(30, 30, 75)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(16, 5, 22)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(6, 1, 14.866069)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_9"]
+size = Vector3(6, 2.8, 4.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(3, 1.2, 1.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
+size = Vector3(0.6, 12, 173.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_12"]
+albedo_color = Color(0.46, 0.43, 0.38, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
+
+[sub_resource type="MultiMesh" id="MultiMesh_14"]
+transform_format = 1
+instance_count = 9
+mesh = SubResource("BoxMesh_13")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_15"]
+albedo_color = Color(0.66, 0.56, 0.38, 1)
+roughness = 0.95
+
+[sub_resource type="MultiMesh" id="MultiMesh_16"]
+transform_format = 1
+instance_count = 2
+mesh = SubResource("BoxMesh_13")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_17"]
+render_priority = 0
+shader = ExtResource("1_49689")
+shader_parameter/color_a = null
+shader_parameter/color_b = null
+shader_parameter/line_color = null
+shader_parameter/cell_size = 8.0
+shader_parameter/line_width = null
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_18"]
+size = Vector2(1, 1)
+
+[sub_resource type="MultiMesh" id="MultiMesh_19"]
+transform_format = 1
+instance_count = 1
+mesh = SubResource("PlaneMesh_18")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_20"]
+albedo_color = Color(0.55, 0.47, 0.35, 1)
+
+[sub_resource type="MultiMesh" id="MultiMesh_21"]
+transform_format = 1
+instance_count = 2
+mesh = SubResource("PlaneMesh_18")
+
+[sub_resource type="PrismMesh" id="PrismMesh_22"]
+
+[sub_resource type="MultiMesh" id="MultiMesh_23"]
+transform_format = 1
+instance_count = 2
+mesh = SubResource("PrismMesh_22")
+
+[node name="quarry" type="Node3D"]
+
+[node name="Collision" type="StaticBody3D" parent="."]
+collision_mask = 0
+
+[node name="Quarry" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, -0.5, -145)
+shape = SubResource("BoxShape3D_1")
+
+[node name="QuarryW" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, -145)
+shape = SubResource("BoxShape3D_2")
+
+[node name="QuarryNw" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.5, 12, -107.5)
+shape = SubResource("BoxShape3D_3")
+
+[node name="QuarryNe" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72.5, 12, -107.5)
+shape = SubResource("BoxShape3D_4")
+
+[node name="QuarryS" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 15, -187.5)
+shape = SubResource("BoxShape3D_5")
+
+[node name="QuarryE" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85, 15, -162.5)
+shape = SubResource("BoxShape3D_6")
+
+[node name="QuarryLedge" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 2.5, -164)
+shape = SubResource("BoxShape3D_7")
+
+[node name="QuarryLedgeRamp" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(-1, -2.940346e-08, -8.23297e-08, 0, 0.94174194, -0.33633637, 8.742278e-08, -0.33633637, -0.94174194, 13, 2.029129, -181.83183)
+shape = SubResource("BoxShape3D_8")
+
+[node name="RaiderTent1" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.9848078, 0, 0.1736482, 0, 1, 0, -0.1736482, 0, 0.9848078, 58, 1.4, -138)
+shape = SubResource("BoxShape3D_9")
+
+[node name="RaiderTent2" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(0.9659259, 0, -0.25881907, 0, 1, 0, 0.25881907, 0, 0.9659258, 62, 1.4, -158)
+shape = SubResource("BoxShape3D_9")
+
+[node name="QuarryRock1" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.6, -146)
+shape = SubResource("BoxShape3D_10")
+
+[node name="QuarryRock2" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.6, -150)
+shape = SubResource("BoxShape3D_10")
+
+[node name="Blockers" type="StaticBody3D" parent="."]
+collision_layer = 32
+collision_mask = 0
+
+[node name="BankWN" type="CollisionShape3D" parent="Blockers"]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 100, 6, -113.25)
+shape = SubResource("BoxShape3D_11")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("StandardMaterial3D_12")
+multimesh = SubResource("MultiMesh_14")
+
+[node name="Sack_Box" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("StandardMaterial3D_15")
+multimesh = SubResource("MultiMesh_16")
+
+[node name="Dirt_Plane" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("ShaderMaterial_17")
+cast_shadow = 0
+multimesh = SubResource("MultiMesh_19")
+
+[node name="Road_Plane" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("StandardMaterial3D_20")
+cast_shadow = 0
+multimesh = SubResource("MultiMesh_21")
+
+[node name="Sack_Prism" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("StandardMaterial3D_15")
+multimesh = SubResource("MultiMesh_23")

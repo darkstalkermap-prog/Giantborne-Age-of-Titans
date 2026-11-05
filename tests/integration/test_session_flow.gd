@@ -4,7 +4,7 @@ extends IntegrationSuite
 ## checkpoint and puts the player at the respawn marker; a checkpoint holding 15 % health
 ## reloads at 60 % with full stamina after a death, and Continue from the title restores 15 %
 ## exactly; a fence broken before the checkpoint stays broken with no second loot. Also: the
-## title screen (New Game -> pending restore, Continue, Valley not built yet), unknown ids in a
+## title screen (New Game -> pending restore, Continue, the Valley present or not), unknown ids in a
 ## save, the command-line modes (--autoplay still boots the sandbox), the pause menu and the
 ## death hint by mode, the checkpoint toast and a failed write.
 ##
@@ -184,7 +184,7 @@ func test_continue_from_the_title_restores_the_save_exactly() -> void:
 	assert_true(title != null, "the title screen opens")
 	assert_false(get_tree().paused, "it does not pause")
 	var state := title.state()
-	assert_false(state.new_game, "New Game still needs the Valley")
+	assert_true(state.new_game, "New Game is enabled: the Valley exists (P10b)")
 	assert_true(state["continue"], "Continue is enabled: the save loads and its level exists")
 	assert_true(str(state.save).contains("test.cp_b"), "and describes it: %s" % state.save)
 	assert_eq(title.first_focus(), title.button("Continue"), "Continue has the focus")
@@ -236,9 +236,27 @@ func test_new_game_from_the_title_takes_the_pending_restore_path() -> void:
 	assert_false(SaveSlots.exists(), "nothing on disk")
 
 
-func test_the_title_without_the_valley() -> void:
+func test_the_title_with_the_valley() -> void:
 	GameSession.mode = GameSession.Mode.TITLE
-	assert_false(GameSession.valley_available(), "no level.valley yet (P10b)")
+	assert_true(GameSession.valley_available(), "level.valley and its scene exist (P10b)")
+	var title := stack.open("title") as TitleScreen
+	var state := title.state()
+	assert_true(state.new_game, "New Game enabled")
+	assert_false(state["continue"], "Continue disabled (saving is off, no save is read)")
+	assert_eq(state.note, "", "no note")
+	title.button("New Game").pressed.emit()
+	assert_true(GameSession.last_mode_result.ok, "New Game starts")
+	assert_eq(GameSession.scene_reloads, ["new_game"] as Array[String], "a reload into a new game")
+	assert_true(GameSession.is_valley() and GameSession.pending_restore, "the Valley mode with a pending restore")
+	assert_eq(GameSession.level_scene_path(), "res://scenes/world/valley.tscn", "the Valley scene is loaded")
+	stack.close_all()
+
+
+func test_the_title_without_the_valley() -> void:
+	# The Valley exists since P10b: hide its scene to keep the fallback covered.
+	TestFixtures.record_override("level.valley", {"scene": "res://scenes/world/no_such_valley.tscn"})
+	GameSession.mode = GameSession.Mode.TITLE
+	assert_false(GameSession.valley_available(), "no Valley scene")
 	var title := stack.open("title") as TitleScreen
 	var state := title.state()
 	assert_false(state.new_game, "New Game disabled")
@@ -428,6 +446,11 @@ func test_command_line_modes_keep_the_m1_tools_working() -> void:
 	assert_true(GameSession.persist, "saving on")
 	assert_eq(GameSession.scene_reloads.size(), 0, "applying arguments never reloads (main is not loaded yet)")
 	GameSession.reset_for_tests()
+	GameSession.apply_args(GameSession.parse_args(PackedStringArray(["--mode=valley", "--no-user-settings"])))
+	assert_true(GameSession.is_valley() and GameSession.pending_restore, "--mode=valley with no save starts a new game (P10b)")
+	assert_eq(GameSession.level_scene_path(), "res://scenes/world/valley.tscn", "in the Valley")
+	GameSession.reset_for_tests()
+	TestFixtures.record_override("level.valley", {"scene": "res://scenes/world/no_such_valley.tscn"})
 	GameSession.apply_args(GameSession.parse_args(PackedStringArray(["--mode=valley", "--no-user-settings"])))
 	assert_eq(GameSession.mode, GameSession.Mode.TITLE, "without the Valley --mode=valley falls back to the title")
 
