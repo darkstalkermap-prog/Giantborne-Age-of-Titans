@@ -1257,6 +1257,423 @@ func _restore_after_grab() -> void:
 		vis.process_mode = _grab_saved.visual_mode
 	_grab_saved = {}
 ## @anchor P09
+# --- committed aim and ranged fighting (P09) ------------------------------------------------------
+# Decision 24: a ranged actor tracks its target only during the first tracking_fraction of a
+# projectile action's windup. At that tick (aim_lock_tick) it stores the target's anchor in
+# runner.aim_point and stops turning; the projectile flies to the stored point (P03's aim
+# "target"), so a sidestep after the lock dodges it. current_aim_point() is what the aim line
+# shows: the live anchor before the lock, the stored point after it.
+# Ranged archetypes (ArcherEnemy, MageEnemy) call update_ranged_aim() from their _update_facing()
+# and install_ranged_helpers() on their brain (EnemyBrain's P09 section): the ranged token pool
+# (decision 25: at most MAX_RANGED_HOLDERS ranged attackers per target, separate from the two
+# melee tokens), staggered launch slots, and the firing-point search (elevation, then cover
+# markers in the band with line of sight to the target, spread from the other ranged allies;
+# otherwise a point on a ring around the target). apply_ally_cast() lands a targets_ally cast
+# (the mage's barrier) on the ally the brain picked.
+
+const RANGED_GROUP := "ranged_enemies"
+const ELEVATION_GROUP := "ai_elevation_points"
+const COVER_GROUP := "ai_cover_points"
+## Ranged tokens live under target_id + this suffix in Sim's token table (plan §2.5).
+const RANGED_TOKEN_SUFFIX := ":ranged"
+const MAX_RANGED_HOLDERS := 2
+## Other ranged enemies this close are the allies a firing point keeps its spread from; the list
+## is refreshed once per second.
+const RANGED_ALLY_RADIUS_M := 40.0
+const RANGED_ALLY_REFRESH_TICKS := 60
+## A marker a ranged unit fires from carries this meta (its entity id) while it holds it.
+const FIRING_POINT_META := &"firing_point_holder"
+## Ring points sit this far inside the band, and are turned in these steps (each way) until one
+## is reachable, sees the target and keeps the spread.
+const RING_BAND_MARGIN_M := 1.0
+const RING_STEP_DEG := 20.0
+const RING_STEPS := 4
+
+## The firing point this unit holds (Vector3.INF when none); ranged allies keep their spread from
+## it as well as from the unit itself.
+var firing_point := Vector3.INF
+var _firing_marker: Node3D
+var _aim_instance := -1
+var _aim_locked_point := Vector3.INF
+var _ranged_token_key := ""
+var _ranged_allies: Array = []
+var _ranged_allies_tick := -1000000
+
+
+## Installs this actor's engine-side ranged helpers on brain `b` (ranged archetypes call it from
+## _make_brain()): ranged tokens, launch slots, the firing-point search, action readiness.
+func install_ranged_helpers(b: EnemyBrain) -> void:
+	b.ranged_token_request = _request_ranged_token
+	b.ranged_token_release = _release_ranged_token
+	b.launch_slot_request = _request_launch_slot
+	b.firing_point_resolver = _resolve_firing_point
+	b.firing_point_release = release_firing_point
+	b.action_ready = action_ready
+
+
+## The tick of `a`'s windup (controller.elapsed) at which a ranged actor commits its aim: the
+## same tracking_fraction x windup at which every enemy stops turning.
+static func aim_lock_tick(a: ActionDef) -> int:
+	return int(a.windup_ticks * a.tracking_fraction)
+
+
+## The point a drawn shot will fly to (plan §2.7.3; Vector3.INF when none): while a projectile
+## action is in its windup or active phase, the target's live anchor until the aim lock and the
+## stored point after it.
+func current_aim_point() -> Vector3:
+	if controller == null or controller.action == null or controller.action.hit_shape != "projectile":
+		return Vector3.INF
+	var phase := controller.phase()
+	if phase != ActionDef.Phase.WINDUP and phase != ActionDef.Phase.ACTIVE:
+		return Vector3.INF
+	if _aim_instance == controller.instance_id and _aim_locked_point != Vector3.INF:
+		return _aim_locked_point
+	var t := _aim_target()
+	return t.anchor_position() if t != null else Vector3.INF
+
+
+## True once the running projectile action's aim is committed.
+func aim_locked() -> bool:
+	return controller != null and controller.action != null and _aim_instance == controller.instance_id \
+		and _aim_locked_point != Vector3.INF
+
+
+## Where a projectile action of this actor starts (the aim line starts there): launch_offset_m in
+## the actor's own space, else its attack origin (as AttackRunner.default_launch does).
+func launch_point_global(a: ActionDef) -> Vector3:
+	var offset: Vector3 = Projectile.spec_for(a).launch_offset
+	return to_global(offset) if offset != Vector3.INF else attack_origin_global()
+
+
+## Facing and the aim lock of a ranged archetype for this tick (its _update_facing calls it):
+## during a projectile action's windup it turns toward its target until aim_lock_tick, stores the
+## target's anchor in runner.aim_point there and stops turning; it never turns in the active and
+## recovery phases (committed). Returns false when no projectile action runs, so the base facing
+## applies.
+func update_ranged_aim(dt: float) -> bool:
+	var a := controller.action
+	if a == null or a.hit_shape != "projectile" \
+			or not (controller.state in [CombatController.State.ATTACKING, CombatController.State.CASTING]):
+		return false
+	if _aim_instance != controller.instance_id:
+		_aim_instance = controller.instance_id
+		_aim_locked_point = Vector3.INF
+	if controller.phase() == ActionDef.Phase.WINDUP and _aim_locked_point == Vector3.INF:
+		var t := _aim_target()
+		if t != null and controller.elapsed >= aim_lock_tick(a):
+			_aim_locked_point = t.anchor_position()
+			runner.aim_point = _aim_locked_point
+		elif t != null:
+			var step := deg_to_rad(_turn_rate_deg_s()) * dt
+			facing_yaw = wrapf(facing_yaw + clampf(TargetingRules.yaw_delta(facing_yaw,
+				_yaw_to(t.actor.global_position)), -step, step), -PI, PI)
+	rotation.y = facing_yaw
+	return true
+
+
+## The entity a ranged actor aims at: its brain's target, else the first PLAYER-team entity.
+func _aim_target() -> CombatEntity:
+	var t: CombatEntity = null
+	if brain != null and brain.target_id != "":
+		t = Sim.get_entity(brain.target_id)
+	if t == null or not is_instance_valid(t.actor):
+		t = _target()
+	return t
+
+
+## Whether `action_id` could start now as far as its cooldown and costs go (brain.action_ready).
+func action_ready(action_id: String) -> bool:
+	var a := GameData.get_action(action_id)
+	if a == null or controller == null or not controller.library.has(action_id):
+		return false
+	var pools := entity.combatant.pools
+	return controller.cooldowns.is_ready(action_id, Sim.tick) and pools.can_spend_stamina(a.stamina_cost) \
+		and a.essence_cost <= pools.essence + 1e-6 and a.fury_cost <= pools.fury + 1e-6
+
+
+# ---- ranged tokens and launch slots
+
+## The ranged token key of a target: target_id + RANGED_TOKEN_SUFFIX (plan §2.5).
+static func ranged_token_key(target_id: String) -> String:
+	return target_id + RANGED_TOKEN_SUFFIX
+
+
+func _request_ranged_token() -> bool:
+	if brain == null or brain.target_id == "":
+		return false
+	var key := ranged_token_key(brain.target_id)
+	if _ranged_token_key != "" and _ranged_token_key != key:
+		_release_ranged_token()
+	var ok := Sim.request_token(key, entity.entity_id, MAX_RANGED_HOLDERS)
+	if ok:
+		_ranged_token_key = key
+	return ok
+
+
+func _release_ranged_token() -> void:
+	if _ranged_token_key != "":
+		Sim.release_token(_ranged_token_key, entity.entity_id)
+		_ranged_token_key = ""
+
+
+## A launch slot at the brain's target for `action_id` (Sim.request_launch_slot; spec 10's
+## staggered launches): granted when launch_gap_ticks(action_id) passed since the last one.
+func _request_launch_slot(action_id: String) -> bool:
+	if brain == null or brain.target_id == "":
+		return false
+	return Sim.request_launch_slot(brain.target_id, entity.entity_id, launch_gap_ticks(action_id))
+
+
+## Ticks between two launch slots at one target for `action_id`: tactics.launch_gap_s, plus how
+## much shorter this action's windup is than the longest ranged windup any enemy uses. A slot is
+## taken when the draw starts and the launch comes one windup later, so with mixed windups
+## (archer 0.9 s, mage 1.0 s) the launches themselves stay at least launch_gap_s apart.
+func launch_gap_ticks(action_id: String) -> int:
+	var gap := ActionDef.seconds_to_ticks(float(_tactics().get("launch_gap_s", 1.0)))
+	var a := GameData.get_action(action_id)
+	var own := a.windup_ticks if a != null else 0
+	return gap + maxi(0, max_ranged_windup_ticks() - own)
+
+
+## The longest windup of a projectile attack in any enemy record (archer 54, mage 60 ticks).
+static func max_ranged_windup_ticks() -> int:
+	var most := 0
+	for rec: Dictionary in GameData.records_of_type("enemy"):
+		for id: Variant in rec.get("attacks", []):
+			var a := GameData.get_action(str(id))
+			if a != null and a.hit_shape == "projectile":
+				most = maxi(most, a.windup_ticks)
+	return most
+
+
+func _tactics() -> Dictionary:
+	var t: Variant = record.get("tactics", {})
+	return t if typeof(t) == TYPE_DICTIONARY else {}
+
+
+# ---- firing points
+
+## The other living ranged enemies of this team within RANGED_ALLY_RADIUS_M (group
+## ranged_enemies), cached for RANGED_ALLY_REFRESH_TICKS.
+func ranged_allies() -> Array:
+	if Sim.tick - _ranged_allies_tick < RANGED_ALLY_REFRESH_TICKS:
+		return _ranged_allies
+	_ranged_allies_tick = Sim.tick
+	_ranged_allies = []
+	for n in get_tree().get_nodes_in_group(RANGED_GROUP):
+		var other := n as EnemyActor
+		if other == null or other == self or other.entity == null or other.entity.combatant == null:
+			continue
+		if other.entity.team != entity.team or not other.entity.is_alive():
+			continue
+		if other.global_position.distance_to(global_position) <= RANGED_ALLY_RADIUS_M:
+			_ranged_allies.append(other)
+	return _ranged_allies
+
+
+## brain.firing_point_resolver (plan §3.9): the nearest free elevation marker (group
+## ai_elevation_points), else cover marker (ai_cover_points), within
+## tactics.cover_search_radius_m of the unit, whose flat distance to the target lies in `band`,
+## that sees the target and lies at least `spread_m` from every other ranged ally and the point
+## it holds; the marker is claimed. Otherwise a point on a ring around the target - at the unit's
+## own distance clamped into the band, or at the band's far edge when `far` (kiting) - in the
+## unit's own direction, turned in RING_STEP_DEG steps until it is reachable, sees the target and
+## keeps the spread (the first reachable one when none does).
+func _resolve_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2, spread_m: float,
+		far: bool) -> Vector3:
+	_release_firing_marker()
+	var target := _aim_target()
+	var allies := ranged_allies()
+	var marker := _pick_firing_marker(my_position, target_pos, band, spread_m, target, allies)
+	if marker != null:
+		marker.set_meta(FIRING_POINT_META, entity.entity_id)
+		_firing_marker = marker
+		firing_point = marker.global_position
+	else:
+		firing_point = _ring_firing_point(my_position, target_pos, band, spread_m, far, target, allies)
+	return firing_point
+
+
+## Gives up the held firing point and its marker (brain.firing_point_release; death, exit).
+func release_firing_point() -> void:
+	_release_firing_marker()
+	firing_point = Vector3.INF
+
+
+## The marker this unit fires from (null when it holds none).
+func firing_marker() -> Node3D:
+	return _firing_marker if _firing_marker != null and is_instance_valid(_firing_marker) else null
+
+
+## Everything a ranged unit holds for a target - tokens, its marker and point - goes back (death,
+## scene exit).
+func release_ranged_claims() -> void:
+	if entity != null:
+		Sim.release_all_tokens(entity.entity_id)
+	_ranged_token_key = ""
+	release_firing_point()
+
+
+func _release_firing_marker() -> void:
+	if _firing_marker != null and is_instance_valid(_firing_marker) and entity != null \
+			and str(_firing_marker.get_meta(FIRING_POINT_META, "")) == entity.entity_id:
+		_firing_marker.remove_meta(FIRING_POINT_META)
+	_firing_marker = null
+
+
+func _pick_firing_marker(my_position: Vector3, target_pos: Vector3, band: Vector2, spread_m: float,
+		target: CombatEntity, allies: Array) -> Node3D:
+	var search := float(_tactics().get("cover_search_radius_m", 25.0))
+	for group: String in [ELEVATION_GROUP, COVER_GROUP]:
+		var best: Node3D = null
+		var best_d := INF
+		for n in get_tree().get_nodes_in_group(group):
+			var m := n as Node3D
+			if m == null or not m.is_inside_tree() or not _marker_free(m):
+				continue
+			var f: Variant = m.get("faction")
+			if typeof(f) == TYPE_STRING and f != "" and f != faction:
+				continue
+			var p := m.global_position
+			var d := _flat_len(p - my_position)
+			var td := _flat_len(p - target_pos)
+			if d > search or d >= best_d or td < band.x or td > band.y:
+				continue
+			if _crowded(p, spread_m, allies) or not _sees_target_from(p, target):
+				continue
+			best = m
+			best_d = d
+		if best != null:
+			return best
+	return null
+
+
+func _marker_free(m: Node) -> bool:
+	var holder := str(m.get_meta(FIRING_POINT_META, ""))
+	if holder == "" or (entity != null and holder == entity.entity_id):
+		return true
+	var h := Sim.get_entity(holder)
+	return h == null or not h.is_alive()
+
+
+## True when `p` is closer than `spread_m` (flat) to a living ranged ally or the point it holds.
+func _crowded(p: Vector3, spread_m: float, allies: Array) -> bool:
+	if spread_m <= 0.0:
+		return false
+	for a: Variant in allies:
+		var other := a as EnemyActor
+		if other == null or not is_instance_valid(other) or not other.is_inside_tree() \
+				or other.entity == null or not other.entity.is_alive():
+			continue
+		if _flat_len(other.global_position - p) < spread_m:
+			return true
+		if other.firing_point != Vector3.INF and _flat_len(other.firing_point - p) < spread_m:
+			return true
+	return false
+
+
+## Whether a unit standing at `p` could shoot `target` from there: the line from its shot's
+## launch height (the lowest launch offset of its projectile attacks; its eye without one) to the
+## target's anchor is clear of SIGHT_MASK, so cover it stands behind is lower than its bow. True
+## without a target.
+func _sees_target_from(p: Vector3, target: CombatEntity) -> bool:
+	if target == null or not is_instance_valid(target.actor):
+		return true
+	var from := p + Vector3.UP * _shot_height()
+	return HitQueryAdapter.line_clear(get_world_3d().direct_space_state, from, target.anchor_position(),
+		SIGHT_MASK, target.occlusion_rids)
+
+
+## The height above its feet a ranged unit's shots leave from (see _sees_target_from).
+func _shot_height() -> float:
+	var h := entity.combatant.height_m * 0.92
+	for id: Variant in record.get("attacks", []):
+		var a := GameData.get_action(str(id))
+		if a != null and a.hit_shape == "projectile":
+			var off: Vector3 = Projectile.spec_for(a).launch_offset
+			if off != Vector3.INF:
+				h = minf(h, off.y)
+	return h
+
+
+func _ring_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2, spread_m: float,
+		far: bool, target: CombatEntity, allies: Array) -> Vector3:
+	var away := my_position - target_pos
+	away.y = 0.0
+	var dist := away.length()
+	if dist < 0.1:
+		away = Vector3(global_transform.basis.z.x, 0.0, global_transform.basis.z.z)
+	away = away.normalized() if away.length() > 1e-4 else Vector3.BACK
+	var lo := band.x + RING_BAND_MARGIN_M
+	var hi := maxf(lo, band.y - RING_BAND_MARGIN_M)
+	var r := hi if far else clampf(dist, lo, hi)
+	var fallback := Vector3.INF
+	for i in RING_STEPS * 2 + 1:
+		var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)   # 0, 1, -1, 2, -2, ...
+		var desired := target_pos + away.rotated(Vector3.UP, deg_to_rad(RING_STEP_DEG * k)) * r
+		desired.y = my_position.y
+		var p := _walkable_point(my_position, desired)
+		if p == Vector3.INF:
+			continue
+		var td := _flat_len(p - target_pos)
+		if td < band.x or td > band.y:
+			continue   # the navmesh snapped it out of the band
+		if fallback == Vector3.INF:
+			fallback = p
+		if _crowded(p, spread_m, allies) or not _sees_target_from(p, target):
+			continue
+		return p
+	if fallback != Vector3.INF:
+		return fallback
+	return Vector3(target_pos.x + away.x * r, my_position.y, target_pos.z + away.z * r)
+
+
+## `desired` made walkable: on a navmesh, its closest point on this actor's layer when a path
+## reaches it (the flee rules, P04); without one, `desired` when a ray from the actor reaches it
+## past walls and blockers. Vector3.INF when it cannot be reached.
+func _walkable_point(from: Vector3, desired: Vector3) -> Vector3:
+	var map := get_world_3d().navigation_map
+	var region := nav_region_for_layers()
+	if region.is_valid() and NavigationServer3D.map_get_iteration_id(map) > 0:
+		return _reachable_point(map, from, NavigationServer3D.region_get_closest_point(region, desired),
+			int(agent.navigation_layers))
+	var lift := Vector3.UP * 0.5
+	if HitQueryAdapter.line_clear(get_world_3d().direct_space_state, from + lift, desired + lift,
+			SIGHT_MASK | LAYER_BLOCKER, entity.occlusion_rids):
+		return desired
+	return Vector3.INF
+
+
+# ---- casts on allies
+
+## A targets_ally cast entering ACTIVE (the mage's barrier): its on_hit_statuses land on
+## brain.ally_target_id when that ally is alive, of this team and within 1.5 x
+## tactics.barrier_range_m (it may have moved during the cast), otherwise on the caster itself.
+## ability_effect "self_buff" shows it at the receiver. Returns the receiver (null when nothing
+## was applied).
+func apply_ally_cast(a: ActionDef) -> CombatEntity:
+	var receiver := entity
+	var id := brain.ally_target_id if brain != null else ""
+	if id != "" and id != entity.entity_id:
+		var e := Sim.get_entity(id)
+		var reach := float(_tactics().get("barrier_range_m", 12.0)) * 1.5
+		if e != null and e.is_alive() and is_instance_valid(e.actor) and e.team == entity.team \
+				and e.actor.global_position.distance_to(global_position) <= reach:
+			receiver = e
+	var applied := false
+	var list: Variant = a.param("on_hit_statuses", [])
+	if typeof(list) == TYPE_ARRAY:
+		for entry: Variant in list:
+			if typeof(entry) != TYPE_DICTIONARY:
+				continue
+			if receiver.apply_status(str(entry.get("status", "")), float(entry.get("magnitude", NAN)),
+					float(entry.get("duration_s", -1.0)), entity.entity_id):
+				applied = true
+	if not applied:
+		return null
+	Events.ability_effect.emit(Sim.tick, entity.entity_id, a.id, "self_buff", receiver.actor.global_position,
+		0.0, facing_yaw, 0.0)
+	return receiver
 ## @anchor P10a
 ## @anchor P11a
 ## @anchor P11b

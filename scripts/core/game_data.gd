@@ -81,6 +81,7 @@ func _post_pass() -> void:
 	var telegraph_problems := _untelegraphed_enemy_attacks()
 	var telegraph_is_error := false
 	## @anchor P09
+	telegraph_is_error = true   # P09: decision 25 is enforced (telegraph decals and threat arrows ship)
 
 	if telegraph_is_error:
 		errors.append_array(telegraph_problems)

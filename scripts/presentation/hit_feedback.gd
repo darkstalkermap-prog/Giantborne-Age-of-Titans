@@ -18,9 +18,11 @@ const BUFF_LIFETIME := 0.6
 ## windup tick keeps it up and it disappears soon after the throw.
 const AIM_PREVIEW_HOLD := 0.2
 ## Status id -> rig tint (alpha = strength), in priority order: the first active one shows.
+## P09: the mage's barrier (a ward on an enemy outranks its slow).
 const STATUS_TINTS := [
 	["status.titan_surge", Color(1.0, 0.55, 0.2, 0.30)],
 	["status.stone_skin", Color(0.62, 0.58, 0.50, 0.45)],
+	["status.barrier", Color(0.78, 0.58, 1.0, 0.45)],
 	["status.slow", Color(0.45, 0.70, 1.0, 0.35)],
 	["status.mend", Color(0.45, 1.0, 0.50, 0.30)],
 ]
@@ -299,12 +301,13 @@ func _on_status_expired(_tick: int, entity_id: String, _status_id: String) -> vo
 	_refresh_tint(entity_id)
 
 
-## The first STATUS_TINTS entry the entity has, on its ActorRig (actors without a rig: none).
+## The first STATUS_TINTS entry the entity has, on the rig tint_target() finds (actors without
+## one: none).
 func _refresh_tint(entity_id: String) -> void:
 	var e := Sim.get_entity(entity_id)
-	if e == null or e.actor == null:
+	if e == null or e.actor == null or not is_instance_valid(e.actor):
 		return
-	var rig := e.actor.get("rig") as ActorRig
+	var rig := tint_target(e.actor)
 	if rig == null:
 		return
 	var tint := Color(0.0, 0.0, 0.0, 0.0)
@@ -312,7 +315,20 @@ func _refresh_tint(entity_id: String) -> void:
 		if e.combatant.statuses.has(str(entry[0])):
 			tint = entry[1]
 			break
-	rig.set_status_tint(tint)
+	rig.call("set_status_tint", tint)
+
+
+## The rig that shows an actor's status tint: its `rig` (an ActorRig: the giant, soldiers,
+## archers, mages) or else its Visual child when that rig has set_status_tint() - the wolf's
+## QuadrupedRig is not an ActorRig (FOLLOWUPS, M2 gate: wolves showed no tint). Null when none.
+static func tint_target(actor: Node) -> Object:
+	var rig: Variant = actor.get("rig")
+	if rig is Object and is_instance_valid(rig) and (rig as Object).has_method("set_status_tint"):
+		return rig
+	var visual := actor.get_node_or_null("Visual")
+	if visual != null and visual.has_method("set_status_tint"):
+		return visual
+	return null
 
 
 func _spark(point: Vector3) -> void:

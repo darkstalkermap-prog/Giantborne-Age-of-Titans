@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "status.barrier",
+	"type": "status_effect",
+	"display_name": "Barrier",
+	"description": "A mage's ward: damage taken is halved for 5 s.",
+	"hud_label": "WARD",
+	"stacking": "refresh_no_stack",
+	"duration_s": 5.0,
+	"tick_s": 0,
+	"modifiers": {"damage_taken_mult": 0.5},
+	"tags": ["Buff", "Barrier"],
+	"hidden": false
+}

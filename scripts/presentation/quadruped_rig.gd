@@ -4,7 +4,8 @@ extends Node3D
 ## pairs, the head raised in a windup and snapped down when the jaws close, the body stretched
 ## low during a lunge, a wobble while staggered, a roll onto the side when dead, a swaying tail
 ## and hit flashes. Reads actor.get_rig_state() (the ActorRig keys, plus "lunging"). Purely
-## presentational: never changes gameplay state.
+## presentational: never changes gameplay state. set_status_tint() keeps a status colour on the
+## materials like ActorRig's (HitFeedback, P09: a slowed wolf shows it); flashes play on top.
 
 @export var body_path: NodePath
 @export var head_path: NodePath
@@ -133,10 +134,29 @@ func _update_body(s: Dictionary, state: int, phase: int, delta: float) -> void:
 	body.position = body.position.lerp(target_pos, k)
 
 
-func _update_flash(delta: float) -> void:
-	if _flash <= 0.0 and _flash_applied <= 0.0:
+var _tint := Color(0.0, 0.0, 0.0, 0.0)   ## rgb = status colour, a = strength (0 = none)
+var _tint_dirty := false
+
+
+## A lasting status colour (alpha = strength, 0 removes it), e.g. blue while slowed (P09).
+func set_status_tint(color: Color) -> void:
+	if color.is_equal_approx(_tint):
 		return
+	_tint = color
+	_tint_dirty = true
+
+
+func status_tint() -> Color:
+	return _tint
+
+
+func _update_flash(delta: float) -> void:
+	if _flash <= 0.0 and _flash_applied <= 0.0 and not _tint_dirty:
+		return
+	_tint_dirty = false
 	_flash = maxf(0.0, _flash - delta * 6.0)
+	var tint_rgb := Color(_tint.r, _tint.g, _tint.b)
 	for i in _materials.size():
-		_materials[i].albedo_color = _base_colors[i].lerp(_flash_color, _flash * 0.85)
+		var base := _base_colors[i].lerp(tint_rgb, clampf(_tint.a, 0.0, 1.0))
+		_materials[i].albedo_color = base.lerp(_flash_color, _flash * 0.85)
 	_flash_applied = _flash
