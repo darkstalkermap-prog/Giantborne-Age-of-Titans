@@ -16,9 +16,10 @@ extends Node
 ##                           with --level=res://scenes/test/stress_arena.tscn): the bot loops the
 ##                           route for --autoplay seconds. --stress-stage=N grows the giant to N
 ##                           first (default 2).
-##   --scenario=valley_walk  the Valley walk (ValleyWalk; run with --mode=valley --new-game): every
-##                           district at stage 1, then the LOD tier-2 draw-call comparison; the run
-##                           ends when the walk does (--autoplay stays the hard limit).
+##   --scenario=valley_walk  the Valley walk (ValleyWalk; run with --mode=valley --new-game): first
+##                           the AI LOD tier comparison (tiers 2, 1, 0) from the Cradle, then every
+##                           district at stage 1; the run ends when the walk does (--autoplay stays
+##                           the hard limit).
 ##                           --walk-teleport skips the walking (stops and views only; for slow
 ##                           software-rendered draw-call captures).
 ## Both add a PerfProbe (as does --perf for any other run): "PERF_RESULT {json}" is printed before

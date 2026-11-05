@@ -12,8 +12,8 @@ reference-PC commands below.
 | --- | --- | --- | --- |
 | Frame time | p95 <= 16.7 ms, p99 < 33.3 ms at 1080p, `--graphics=low` (spec) | Reference PC, exported build: owner | **NOT RUN** |
 | GPU render time | Reported separately from CPU (spec §16) | Reference PC: owner. The container has no GPU (software rendering only) | **NOT RUN** |
-| Sim CPU per tick | p95 <= 8 ms in the stress route and the Valley | Container (indicative) and PC | Container: {{STRESS_TICK_P95}} ms (stress), {{WALK_TICK_P95}} ms (Valley walk): **met** |
-| Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered | Container (software GL, low): max {{WALK_DC_MAX}}, p50 {{WALK_DC_P50}}: **not met** (see findings) |
+| Sim CPU per tick | p95 <= 8 ms in the stress route and the Valley | Container (indicative) and PC | Container: 4.88 ms (stress), 3.37 ms (Valley walk): **met** |
+| Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered | Container (software GL, low): max 1,084, p50 493: **not met** (see findings) |
 | Distant actors | Tier 2 shows a one-box proxy | P04 test; the Valley walk's LOD comparison | Met: every distant member shows its proxy at tier 2 |
 | Active combatants | <= 12 (the director's budget) | P10a tests; P17a bot invariant | 12 in the stress route (its own spawner) and in the Valley walk |
 | Valley load | <= 3 s headless, <= 6 s web | P10b slow test; P18 browser | Headless about 0.3 s (P10b); web **NOT RUN** (P18) |
@@ -170,11 +170,15 @@ renderer the game ships with). Every run used `--fixed-fps 60` (one tick per fra
 
 | Metric | p50 | p95 | p99 | max |
 | --- | --- | --- | --- | --- |
-| CPU per tick (ms) | {{S_T50}} | {{S_T95}} | {{S_T99}} | {{S_TMAX}} |
-| `Sim.step` (ms) | {{S_S50}} | {{S_S95}} | {{S_S99}} | {{S_SMAX}} |
-| Idle callbacks per frame (ms) | {{S_I50}} | {{S_I95}} | {{S_I99}} | {{S_IMAX}} |
+| CPU per tick (ms) | 2.81 | 4.88 | 6.91 | 26.5 |
+| `Sim.step` (ms) | 1.93 | 3.44 | 4.83 | 25.4 |
+| Idle callbacks per frame (ms) | 1.72 | 2.85 | 3.91 | 15.2 |
 
-{{S_TEXT}}
+Active combatants: mean 11.82 (min 9, max 12; a slot is empty for 5 s after a death or rout).
+Debris: max 40, p95 35, mean 8.2 pieces. Nodes 1431-1455 (no growth over the run), static memory
+97-100 MB, no orphan nodes. 7 laps (lap ends at 42.4, 85.5, 129.8, 170.0, 210.7, 254.8, 297.1 s),
+140 breakables broken, 11 combatants respawned, 409 hits resolved, 0 errors, the giant never died.
+The slowest tick (26.5 ms at tick 2794) is one of the few above 16 ms.
 
 ### Stress route, rendered (Xvfb, `--graphics=low`, 45 s)
 
@@ -209,17 +213,20 @@ combatants up to 12 (the LOD comparison) and up to 9 while walking.
 | 0: full rate, full rig | 2.79 / 5.21 ms | 1.85 ms | 846 |
 
 Every member showed its proxy at tier 2 and its body at tiers 1 and 0. The proxy saves about
-1.3 ms per tick and 251 draw calls (about 21 per member) for these twelve.
+1.3 ms per tick and 251 draw calls at `low` (about 21 per member; 449 at `medium`, whose longer
+shadows also draw the rigs' shadows) for these twelve.
 
 ### Valley draw calls (Xvfb; the teleport walk: every stop and a full turn of the camera)
 
 | Preset | p50 | p95 | p99 | max |
 | --- | --- | --- | --- | --- |
 | `low` | 493 | 849 | 957 | 1,084 |
-| `medium` | {{M_50}} | {{M_95}} | {{M_99}} | {{M_MAX}} |
+| `medium` | 657 | 1,135 | 1,236 | 1,398 |
 
 Largest view per district (`low`): Old Wood 1,084, Barrow 908, Kingsfall 874, Ruins 845, Thornwick
-780, Quarry 762, Hollow 745. (Up to twelve enemies were spawned during this capture.)
+780, Quarry 762, Hollow 745. `medium` (shadows to 120 m, scenery to 220 m) costs about a third more
+than `low`. (The twelve members of the LOD comparison stay spawned during most of this short
+capture, so these views include distant enemies.)
 
 What the draw calls are made of, at six viewpoints with no actors (`low` shadow distance, 60 m):
 
@@ -243,7 +250,7 @@ What the draw calls are made of, at six viewpoints with no actors (`low` shadow 
 
 ## Findings and recommendations
 
-1. **Sim CPU per tick is within its budget** in the container: p95 {{S_T95}} ms in the stress route
+1. **Sim CPU per tick is within its budget** in the container: p95 4.88 ms in the stress route
    (twelve engaged combatants, debris at its cap) and 3.37 ms on the Valley walk, against 8 ms, in a
    debug build. Real-PC numbers: NOT RUN.
 2. **Draw calls are 2-4 times over the 250 budget** in the Valley (p50 493, max 1,084 at `low`) and the
@@ -272,7 +279,7 @@ What the draw calls are made of, at six viewpoints with no actors (`low` shadow 
    changed no constant: near 40 m, mid 90 m, a 30-tick check, a budget of 12 (CPU per tick stays well
    inside its budget with all twelve engaged).
 5. **Debris** reaches its cap of 40 in bursts (a dense corner breaking) and averages 8 pieces; with
-   twelve combatants the stress route stays at {{S_T95}} ms p95.
+   twelve combatants the stress route stays at 4.88 ms p95.
 6. **Measuring.** `Performance.TIME_PHYSICS_PROCESS` and `TIME_PROCESS` are per-second maxima in
    Godot 4.6, not per-frame values (see PerfProbe); compare runs by `cpu_tick_ms`.
 
