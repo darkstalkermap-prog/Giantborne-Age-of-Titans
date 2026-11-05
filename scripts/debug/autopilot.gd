@@ -76,6 +76,8 @@ static var _error_counter: ErrorCounter = null
 static var _finished := false
 ## Options of the P14 scenarios and the probe (parse_options()).
 static var _options: Dictionary = {}
+## P17a: the Valley bot run's PerfProbe (under the tree root: it outlives level loads).
+static var _valley_probe: PerfProbe = null
 
 var player: GiantPlayer
 var _decision_left := 0.0
@@ -146,10 +148,19 @@ func _ready() -> void:
 	Events.action_rejected.connect(_on_action_rejected)
 	Events.loot_awarded.connect(_on_loot_awarded)
 	if is_perf_scenario(_scenario) or bool(_options.get("perf", false)):
-		_probe = PerfProbe.new()
-		_probe.name = "PerfProbe"
-		_probe.label = _scenario if _scenario != "" else "soak"
-		add_child(_probe)
+		if _scenario == SCENARIO_VALLEY and is_instance_valid(_valley_probe):
+			_probe = _valley_probe   # P17a: one probe for the whole bot run, across level loads
+		else:
+			_probe = PerfProbe.new()
+			_probe.name = "PerfProbe"
+			_probe.label = _scenario if _scenario != "" else "soak"
+			if _scenario == SCENARIO_VALLEY:
+				# A death, a checkpoint load or a loop's new game replaces this node with the level;
+				# the probe stays (under the root) so PERF_RESULT covers the whole run.
+				_valley_probe = _probe
+				get_tree().root.add_child.call_deferred(_probe)
+			else:
+				add_child(_probe)
 
 
 func _on_hit_resolved(_t: int, r: HitResult) -> void:

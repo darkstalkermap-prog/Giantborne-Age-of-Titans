@@ -148,7 +148,10 @@ for exit_file in sorted(glob.glob(os.path.join(out, "*.exit"))):
     breaches = vb.get("breaches", [])
     objectives = vb.get("objectives", [])
     last_obj = objectives[-1]["id"] if objectives else ""
-    rows.append([name, code, wall, str(vb.get("completed", "")), "%.0f" % float(vb.get("simulated_s", 0) or 0),
+    loop = bool(vb.get("bot", {}).get("loop", False))
+    # A loop run's metrics restart with each new game: its simulated time is the Autopilot's.
+    sim = res.get("simulated_s", 0) if loop else vb.get("simulated_s", 0)
+    rows.append([name, code, wall, str(vb.get("completed", "")), "%.0f" % float(sim or 0),
         "%.0f" % float(vb.get("human_estimate_s", 0) or 0), str(len(vb.get("deaths", []))),
         str(len(breaches)), ",".join(sorted({b.get("classification", "?") for b in breaches})),
         str(len(vb.get("invariant_failures", []))), str(res.get("errors", "?")),

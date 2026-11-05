@@ -1414,7 +1414,11 @@ func _on_slice_complete(tick: int) -> void:
 	run.metrics.disconnect_events()
 	run.run_index += 1
 	run.policy = POLICIES[(POLICIES.find(run.options.get("policy", "help_cache")) + run.run_index) % POLICIES.size()]
+	var before := run.metrics
 	run.metrics = _new_metrics()
+	# Node counts span the whole loop: node growth is judged across the new games.
+	run.metrics.node_samples = before.node_samples
+	run.metrics.load_samples = before.load_samples
 	run.metrics.connect_events()
 	run.metrics.on_new_game(tick)
 	run.obj_key = ""
