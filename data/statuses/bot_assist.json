@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "status.bot_assist",
+	"type": "status_effect",
+	"display_name": "Bot assist",
+	"hud_label": "ASSIST",
+	"description": "Tooling only (P17a, decision 30): the Valley bot's assisted mode (--bot-assist) gives it to the giant after every load, so the stability and softlock runs never depend on combat skill. Damage taken x0.25 (hits, poise and knockback still land; deaths still count). Hidden from the HUD; nothing in normal play applies it.",
+	"stacking": "refresh_no_stack",
+	"duration_s": 600.0,
+	"tick_s": 0,
+	"modifiers": {"damage_taken_mult": 0.25},
+	"tags": ["Buff"],
+	"hidden": true
+}

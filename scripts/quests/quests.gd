@@ -352,9 +352,11 @@ func _complete_quest(rec: Dictionary, tick: int) -> void:
 			WorldState.try_set_flag(str(f), flags[f])
 	# GameSession checkpoints every main stage (quest_stage_changed); the main quest's end is one
 	# too, so the slice's completion is saved (in this tick's POST_RESOLVE drain, before the end
-	# screen opens, unless something blocks it).
+	# screen opens). It is a completion checkpoint (P17a, M4 review): aware enemies do not hold it
+	# back - the crown can be taken with the wardens still about - and a quit to the title from
+	# the end screen commits it if anything else still holds it.
 	if id == main_quest_id:
-		GameSession.request_checkpoint("quest_complete")
+		GameSession.request_checkpoint("quest_complete", "", true)
 
 
 func _abandon(rec: Dictionary, tick: int) -> void:

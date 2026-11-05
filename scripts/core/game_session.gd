@@ -319,10 +319,22 @@ func start_sandbox() -> void:
 ## forgotten here (P16, M3 review): the Sandbox and New Game started from the title load their own
 ## levels again (or the command line's --level).
 func go_to_title() -> void:
+	_commit_pending_completion()
 	mode = Mode.TITLE
 	_clear_session()
 	level_override = _cli_level_override
 	_reload_scene("title")
+
+
+## The slice's completion checkpoint, if it still waits (something other than an aware enemy held
+## it back), is committed before a quit to the title clears the session (P17a, M4 review: Quit to
+## title on the end screen lost it). A dead giant is never saved.
+func _commit_pending_completion() -> void:
+	if _pending.is_empty() or not bool(_pending.get("completion", false)) or not checkpoints_enabled():
+		return
+	if _player_dead():
+		return
+	_commit_checkpoint(str(_pending.reason), str(_pending.respawn))
 
 
 ## A sandbox reset (death restart, F5, the pause menu, the autopilot): forget every world change
@@ -526,32 +538,41 @@ func _start_checkpoint(level: Node) -> String:
 ## Queues a checkpoint, taken in POST_RESOLVE as soon as checkpoint_blockers() is empty. One
 ## request is pending at a time: a later one replaces the reason and, when it names a respawn,
 ## the respawn. Ignored where checkpoints are off (the sandbox).
-func request_checkpoint(reason: String, respawn: String = "") -> void:
+## completion (P17a, M4 review): the slice's completion (Quests, when quest.main ends). It does
+## not wait for aware enemies - the crown can be taken with the Barrow's wardens still about, and
+## the end screen that opens next offers Quit to title - and a quit to the title commits it if it
+## is still pending (go_to_title), so the completed slice is never lost. It stays set on the
+## pending request until that is taken.
+func request_checkpoint(reason: String, respawn: String = "", completion := false) -> void:
 	if not checkpoints_enabled():
 		return
 	if _pending.is_empty():
-		_pending = {"reason": reason, "respawn": respawn, "tick": Sim.tick}
+		_pending = {"reason": reason, "respawn": respawn, "tick": Sim.tick, "completion": completion}
 		return
 	_pending.reason = reason
 	if respawn != "":
 		_pending.respawn = respawn
+	if completion:
+		_pending["completion"] = true
 
 
 ## Takes a checkpoint now when allowed, otherwise queues it (deferred). respawn "" keeps the
-## current respawn point. Returns {"ok", "message", "deferred"}.
-func take_checkpoint(reason: String, respawn: String = "") -> Dictionary:
+## current respawn point; completion: see request_checkpoint. Returns {"ok", "message",
+## "deferred"}.
+func take_checkpoint(reason: String, respawn: String = "", completion := false) -> Dictionary:
 	if not checkpoints_enabled():
 		return {"ok": false, "message": "no checkpoints here", "deferred": false}
-	var blockers := checkpoint_blockers()
+	var blockers := checkpoint_blockers(completion)
 	if not blockers.is_empty():
-		request_checkpoint(reason, respawn)
+		request_checkpoint(reason, respawn, completion)
 		return {"ok": false, "message": "deferred: " + ", ".join(blockers), "deferred": true}
 	return _commit_checkpoint(reason, respawn)
 
 
 ## Why a checkpoint must wait now ([] = it may be taken): dead, grabbed, executing, holding,
-## screen, aware:<enemy id> (an aware enemy within 40 m), no_player.
-func checkpoint_blockers() -> PackedStringArray:
+## screen, aware:<enemy id> (an aware enemy within 40 m), no_player. ignore_aware: leave the
+## aware enemies out (the slice's completion checkpoint).
+func checkpoint_blockers(ignore_aware := false) -> PackedStringArray:
 	var out := PackedStringArray()
 	var p := player()
 	if p == null or p.controller == null:
@@ -568,6 +589,8 @@ func checkpoint_blockers() -> PackedStringArray:
 		out.append("holding")
 	if _modal_screen_open():
 		out.append("screen")
+	if ignore_aware:
+		return out
 	for n in get_tree().get_nodes_in_group("enemies"):
 		var enemy := n as Node3D
 		if enemy == null or not enemy.is_inside_tree():
@@ -664,7 +687,7 @@ func _on_post_resolve(_tick: int) -> void:
 		stats.play_time_s = float(stats.play_time_s) + Sim.DT
 	if _pending.is_empty():
 		return
-	if checkpoint_blockers().is_empty():
+	if checkpoint_blockers(bool(_pending.get("completion", false))).is_empty():
 		_commit_checkpoint(str(_pending.reason), str(_pending.respawn))
 
 
@@ -786,7 +809,7 @@ func player() -> GiantPlayer:
 	return get_tree().get_first_node_in_group("player") as GiantPlayer
 
 
-## The queued checkpoint ({"reason", "respawn", "tick"}) or {} when none waits.
+## The queued checkpoint ({"reason", "respawn", "tick", "completion"}) or {} when none waits.
 func pending_checkpoint() -> Dictionary:
 	return _pending.duplicate()
 
