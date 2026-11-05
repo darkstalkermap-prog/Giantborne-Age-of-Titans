@@ -197,7 +197,7 @@
 		{"name": "field_barley_2", "shape": "plane", "pos": [64, 0.03, 30], "size": [30, 1, 18], "mat": "field"},
 		{"name": "field_barley_3", "shape": "plane", "pos": [72, 0.03, 80], "size": [34, 1, 18], "mat": "field"}
 	],
-	"arena": {"center": [150, 135], "wall_radius": 41, "wall_t": 2, "wall_h": 15, "segments": 27, "entrance_half_width": 7, "mat": "stone_dark", "district": "kingsfall", "pillar_radius": 22, "pillar_size": [3, 15, 3], "pillar_angles": [45, 135, 225, 315], "pillar_mat": "stone", "gate": {"pos": [150, 0, 94.6], "size": [14, 15, 2], "mat": "iron"}},
+	"arena": {"center": [150, 135], "wall_radius": 41, "wall_t": 2, "wall_h": 15, "segments": 27, "entrance_half_width": 7, "mat": "stone_dark", "district": "kingsfall", "pillar_radius": 22, "pillar_size": [3, 15, 3], "pillar_angles": [45, 135, 225, 315], "pillar_mat": "stone", "gate": {"pos": [150, 0, 94.6], "size": [14, 15, 2], "mat": "iron"}, "boss_arena": {"boss": "valley.arena.ogre_king", "encounter": "encounter.kingsfall_boss", "engage_area": "valley.area.arena_engage", "inner_radius": 40, "antechamber": [143, 68, 157, 96], "defeated_flag": "world.ogre_king.defeated"}},
 	"props": [
 		{"scene": "fence_wood", "world_id": "valley.hollow.fence_pen", "pos": [-105, 0, 135], "yaw": 90},
 		{"scene": "cairn", "world_id": "valley.grove.cairn", "pos": [-42, 6, -88], "yaw": 0},

@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "weapon.ogre_club",
+	"type": "weapon",
+	"family": "club",
+	"display_name": "Ogre Club",
+	"description": "A stripped tree limb. The ogre's strikes are ground pulses (smash, sweep); the club is their visual and its multiplier stays 1.0.",
+	"damage_multiplier": 1.0,
+	"length_m": 1.6,
+	"hit_radius_m": 0.4,
+	"visual_shape": "club"
+}

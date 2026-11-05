@@ -37,10 +37,11 @@
 [ext_resource type="Script" path="res://scripts/actors/practice_dummy.gd" id="35_238a0"]
 [ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="36_acc12"]
 [ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="37_5575d"]
-[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="38_627ae"]
-[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="39_7ef4a"]
-[ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="40_b0840"]
-[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="41_ce070"]
+[ext_resource type="Script" path="res://scripts/world/boss_arena.gd" id="38_af80f"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="39_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="40_7ef4a"]
+[ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="41_b0840"]
+[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="42_ce070"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -1404,6 +1405,11 @@ shape = SubResource("BoxShape3D_50")
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("BoxMesh_51")
 
+[node name="BossArena" type="Node3D" parent="Kingsfall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 135)
+script = ExtResource("38_af80f")
+antechamber_rect = Rect2(-7, -67, 14, 28)
+
 [node name="Signs" type="Node3D" parent="."]
 
 [node name="SignGiant\'s" type="Label3D" parent="Signs"]
@@ -1503,14 +1509,14 @@ transform = Transform3D(0.948876, 0, -0.31564903, 0, 1, 0, 0.31564903, 0, 0.9488
 
 [node name="Spawned" type="Node3D" parent="."]
 
-[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("38_627ae")]
+[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("39_627ae")]
 transform = Transform3D(0.948876, 0, -0.31564903, 0, 1, 0, 0.31564903, 0, 0.948876, -150, 0.05, 170)
 collision_layer = 2
 collision_mask = 51
-script = ExtResource("39_7ef4a")
+script = ExtResource("40_7ef4a")
 
 [node name="EncounterDirector" type="Node" parent="."]
-script = ExtResource("40_b0840")
+script = ExtResource("41_b0840")
 
 [node name="DebrisPool" type="Node3D" parent="."]
-script = ExtResource("41_ce070")
+script = ExtResource("42_ce070")

@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "encounter.kingsfall_boss",
+	"type": "encounter",
+	"display_name": "The Ogre King",
+	"description": "The boss in the Kingsfall arena (plan sections 3.12, 4.4): no leash (the arena gate holds the fight, Kingsfall/BossArena); never again once world.ogre_king.defeated is set. It faces the arena's entrance.",
+	"level": "level.valley",
+	"district": "kingsfall",
+	"center_m": [150, 0, 140],
+	"activate_radius_m": 70,
+	"deactivate_radius_m": 150,
+	"leash_radius_m": 0,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": ["world.ogre_king.defeated"],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.arena.ogre_king", "definition": "enemy.ogre_king", "position_m": [150, 0, 150], "yaw_deg": 0,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

@@ -1798,4 +1798,59 @@ func _leash_heal() -> void:
 	if not entity.combatant.poise.locked:
 		entity.combatant.poise.value = 0.0
 ## @anchor P11a
+# --- boss phases and attack chains (P11a) --------------------------------------------------------
+# A boss archetype (OgreBoss) wires these from its own _ready() and sim_step() (plan §3.12):
+# install_boss_hooks() connects the brain's boss_phase_entered, so each new phase is announced
+# once (Events.boss_phase_changed) and its enter_action is forced (controller.force_action: the
+# Ogre King's roar); update_boss_phase() feeds the brain the health fraction every tick;
+# queue_chain_next() lets an enemy action with chain_next run straight into its follow-up (the
+# boss's two-hit combo): during the action's recovery the follow-up is requested every tick, so
+# the controller's input buffer starts it on the very tick the action ends, while a stagger, a
+# death or a forced action (each clears the buffer) cancels it.
+
+## How many boss phases this actor announced (tests, debug).
+var phase_changes := 0
+
+
+## Connects the brain's boss phases to this actor and adds every phase action (attacks,
+## sequence, enter_action) to the controller's library.
+func install_boss_hooks() -> void:
+	if brain == null or controller == null:
+		return
+	if not brain.boss_phase_entered.is_connected(_on_boss_phase_entered):
+		brain.boss_phase_entered.connect(_on_boss_phase_entered)
+	for p: Dictionary in brain.boss_phases:
+		var ids: Array = (p.get("attacks", []) as Array) + (p.get("sequence", []) as Array)
+		ids.append(str(p.get("enter_action", "")))
+		for id: Variant in ids:
+			var def := GameData.get_action(str(id))
+			if def != null and not controller.library.has(def.id):
+				controller.add_action(def)
+
+
+## Feeds the brain this actor's health fraction (a boss phase may begin). Living actors only.
+func update_boss_phase() -> void:
+	if brain == null or not brain.has_boss_phases() or entity == null or not entity.is_alive():
+		return
+	brain.update_boss_phase(entity.combatant.pools.ratio("health"), Sim.tick)
+
+
+func _on_boss_phase_entered(phase: int, _phase_id: String, enter_action: String) -> void:
+	phase_changes += 1
+	Events.boss_phase_changed.emit(Sim.tick, entity.entity_id, phase)
+	var def := GameData.get_action(enter_action)
+	if def != null and entity.is_alive():
+		controller.force_action(def)
+
+
+## Requests the running action's chain_next during its recovery (see above). Call it once per
+## tick, after sim_step's own work.
+func queue_chain_next() -> void:
+	var a := controller.action if controller != null else null
+	if a == null or a.chain_next == "" or controller.phase() != ActionDef.Phase.RECOVERY:
+		return
+	if controller.state != CombatController.State.ATTACKING and controller.state != CombatController.State.CASTING:
+		return
+	if controller.library.has(a.chain_next):
+		controller.request(&"attack", {"action_id": a.chain_next})
 ## @anchor P11b

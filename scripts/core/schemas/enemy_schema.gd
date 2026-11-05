@@ -113,6 +113,17 @@ static func fields() -> Dictionary:
 	## @anchor P10a
 
 	## @anchor P11a
+	# Boss phases (plan §2.8.2, §3.12): by descending health_frac_below; a phase applies at or
+	# below its fraction and phases only advance. A phase with a sequence cycles it in order (the
+	# weights are then ignored); enter_action is forced when the phase begins (the Ogre King's roar).
+	f.merge({"boss": {"t": "dict", "fields": {
+		"phases": {"t": "array", "req": true, "items": "dict", "item_fields": {
+			"id": U.str_field(true),
+			"health_frac_below": U.num(0.0, 1.0, true),
+			"attacks": {"t": "array", "req": true, "items": "string", "items_ref": "action"},
+			"attack_weights": {"t": "array", "items": "number"},
+			"sequence": {"t": "array", "items": "string", "items_ref": "action"},
+			"enter_action": U.ref("action", false, true)}}}}})
 
 	## @anchor P11b
 
@@ -162,6 +173,40 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor P10a
 
 	## @anchor P11a
+	# Boss phases: at least one; sorted by descending health_frac_below; unique ids; weights match
+	# their attacks; every sequence entry is one of the phase's attacks.
+	var p11a_boss: Variant = d.get("boss")
+	if typeof(p11a_boss) == TYPE_DICTIONARY and typeof(p11a_boss.get("phases")) == TYPE_ARRAY:
+		var p11a_phases: Array = p11a_boss.phases
+		if p11a_phases.is_empty():
+			out.errors.append("%s.boss.phases: must list at least one phase" % ctx)
+		var p11a_last := INF
+		var p11a_ids := {}
+		for i in p11a_phases.size():
+			var ph: Variant = p11a_phases[i]
+			if typeof(ph) != TYPE_DICTIONARY:
+				continue
+			var pctx := "%s.boss.phases[%d]" % [ctx, i]
+			if U.is_number(ph.get("health_frac_below")):
+				if float(ph.health_frac_below) >= p11a_last:
+					out.errors.append("%s: phases must be sorted by descending health_frac_below" % pctx)
+				p11a_last = float(ph.health_frac_below)
+			var pid := str(ph.get("id", ""))
+			if p11a_ids.has(pid):
+				out.errors.append("%s: duplicate phase id '%s'" % [pctx, pid])
+			p11a_ids[pid] = true
+			var p_attacks: Variant = ph.get("attacks")
+			if typeof(p_attacks) != TYPE_ARRAY:
+				continue
+			if (p_attacks as Array).is_empty():
+				out.errors.append("%s: attacks must list at least one action" % pctx)
+			if typeof(ph.get("attack_weights")) == TYPE_ARRAY \
+					and (ph.attack_weights as Array).size() != (p_attacks as Array).size():
+				out.errors.append("%s: attack_weights must have one entry per attack" % pctx)
+			if typeof(ph.get("sequence")) == TYPE_ARRAY:
+				for entry: Variant in ph.sequence:
+					if typeof(entry) == TYPE_STRING and not (p_attacks as Array).has(entry):
+						out.errors.append("%s: sequence entry '%s' is not one of the phase's attacks" % [pctx, entry])
 
 	## @anchor P11b
 

@@ -1151,4 +1151,284 @@ func _forget_target() -> void:
 	target_id = ""
 	attack_request = ""
 ## @anchor P11a
+# --- boss phases and attack sequences (P11a) -----------------------------------------------------
+# Plan §3.12 and §2.8.2: an enemy record's `boss` block lists phases by descending
+# health_frac_below; a phase applies at or below its fraction, and phases only ever advance
+# (update_boss_phase: a healed boss never returns to an earlier phase's behaviour). A phase's
+# `sequence` is cycled in order and its weights are ignored; without one, the phase's attacks are
+# a weighted pick. _decide_sequence() runs the engaged states of such a brain: it strikes with the
+# current sequence entry when the target lies inside that action's ai band (ai_min_range_m ..
+# ai_max_range_m, from the target's capsule surface, as every band) and the entry's facing rule
+# allows it; otherwise it closes in or backs off for at most SEQUENCE_PATIENCE_S and then skips the
+# entry (a target far beyond the band is simply walked up to: nothing is skipped on the way in).
+# Every consumed entry (struck or skipped) is one decision of sequence_log. OgreBossBrain
+# runs it; boss_phase_entered reaches the actor (EnemyActor.install_boss_hooks), which announces
+# the phase and forces its enter_action.
+
+## A new boss phase began: its number (1-based), the record's phase id and its enter_action ("").
+signal boss_phase_entered(phase: int, phase_id: String, enter_action: String)
+
+## How long an out-of-band sequence entry is chased (closing in or backing off) before it is skipped.
+const SEQUENCE_PATIENCE_S := 2.0
+## The facing a sequence entry needs before it starts, by its telegraph shape: a circle hits all
+## round (no facing), a line (the charge, which turns during its windup) 45 degrees, a cone or an
+## attack without a telegraph ATTACK_FACING_DEG.
+const SEQUENCE_LINE_FACING_DEG := 45.0
+## Closing-in and backing-off goals sit this far inside an entry's band.
+const SEQUENCE_BAND_MARGIN_M := 1.0
+## Patience only runs while the target is at most this far beyond an entry's band; farther off the
+## brain is simply closing in (a boss walking up to the giant skips nothing).
+const SEQUENCE_CHASE_M := 6.0
+## Entries kept in sequence_log.
+const SEQUENCE_LOG_SIZE := 64
+
+## The record's boss phases, by descending health_frac_below ([] for an ordinary enemy).
+var boss_phases: Array = []
+## The current phase (0-based index into boss_phases); it never decreases.
+var phase_index := 0
+## How far the current phase's sequence has got (entries consumed in this phase).
+var sequence_index := 0
+## The decisions taken by the sequence, oldest first: the action id of each entry it struck with,
+## "skip:<action id>" for each entry it skipped (tests, debug).
+var sequence_log: Array[String] = []
+var _entry_since := NO_TICK
+var _own_radius_m := 0.0
+var _weighted_pick := ""
+
+
+## Reads the record's boss phases (archetype brains call it from _init): sorted by descending
+## health_frac_below, the range bands of every phase attack cached, the first phase current.
+func init_boss_phases(record: Dictionary) -> void:
+	boss_phases = []
+	var boss: Variant = record.get("boss")
+	if typeof(boss) == TYPE_DICTIONARY and typeof(boss.get("phases")) == TYPE_ARRAY:
+		for p: Variant in boss.phases:
+			if typeof(p) == TYPE_DICTIONARY:
+				boss_phases.append(p)
+	boss_phases.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return float(a.get("health_frac_below", 1.0)) > float(b.get("health_frac_below", 1.0)))
+	for p: Dictionary in boss_phases:
+		for key: String in ["attacks", "sequence"]:
+			for id: Variant in p.get(key, []):
+				if not _attack_ranges.has(str(id)):
+					_cache_attack_range(str(id))
+	phase_index = 0
+	sequence_index = 0
+	_entry_since = NO_TICK
+	_own_radius_m = float(record.get("capsule_radius_m", 0.4))
+
+
+func has_boss_phases() -> bool:
+	return not boss_phases.is_empty()
+
+
+## The current boss phase, 1-based (0 for an enemy without phases).
+func boss_phase() -> int:
+	return phase_index + 1 if has_boss_phases() else 0
+
+
+func boss_phase_count() -> int:
+	return boss_phases.size()
+
+
+## The current phase's record ({} without phases).
+func phase_record() -> Dictionary:
+	return boss_phases[phase_index] if has_boss_phases() else {}
+
+
+## The current phase's attacks (the record's attacks without phases).
+func phase_attacks() -> Array:
+	return phase_record().get("attacks", attacks) if has_boss_phases() else attacks
+
+
+## The current phase's sequence ([] when it has none).
+func phase_sequence() -> Array:
+	var s: Variant = phase_record().get("sequence", [])
+	return s if typeof(s) == TYPE_ARRAY else []
+
+
+## Advances the boss phase for a health fraction (0..1): the deepest phase whose
+## health_frac_below the fraction is at or below. Phases never go back, so each is entered at most
+## once. On a change the sequence restarts, a pending request is dropped, the brain waits in
+## ATTACK for the phase's enter_action (the actor forces it) and boss_phase_entered is emitted.
+## Returns the newly entered phase (1-based), or 0. tick < 0 keeps the brain's last tick.
+func update_boss_phase(health_frac: float, tick: int = -1) -> int:
+	if not has_boss_phases() or state == AIState.DEAD:
+		return 0
+	if tick >= 0:
+		now = tick
+	var deepest := phase_index
+	for i in range(phase_index + 1, boss_phases.size()):
+		if health_frac <= float((boss_phases[i] as Dictionary).get("health_frac_below", 0.0)) + 1e-6:
+			deepest = i
+	if deepest == phase_index:
+		return 0
+	phase_index = deepest
+	sequence_index = 0
+	_entry_since = NO_TICK
+	_weighted_pick = ""
+	attack_request = ""
+	var p: Dictionary = boss_phases[phase_index]
+	var enter := str(p.get("enter_action", ""))
+	if enter != "":
+		_stop_moving()
+		_set_state(AIState.ATTACK)   # wait for the forced enter action, then pause and go on
+	boss_phase_entered.emit(phase_index + 1, str(p.get("id", "")), enter)
+	return phase_index + 1
+
+
+## The sequence entry the brain works on now ("" when the phase has no sequence).
+func current_sequence_entry() -> String:
+	var seq := phase_sequence()
+	if seq.is_empty():
+		return ""
+	return str(seq[sequence_index % seq.size()])
+
+
+## Consumes the current sequence entry: struck with (performed) or skipped.
+func advance_sequence(performed: bool) -> void:
+	var id := current_sequence_entry()
+	if id == "":
+		return
+	sequence_log.append(id if performed else "skip:" + id)
+	while sequence_log.size() > SEQUENCE_LOG_SIZE:
+		sequence_log.pop_front()
+	sequence_index += 1
+	_entry_since = NO_TICK
+
+
+## The attack the current phase would pick now: its sequence entry, otherwise a weighted pick
+## (own RNG) among its attacks.
+func choose_phase_attack() -> String:
+	var id := current_sequence_entry()
+	if id != "":
+		return id
+	var list := phase_attacks()
+	if list.is_empty():
+		return ""
+	var weights: Variant = phase_record().get("attack_weights", attack_weights)
+	if typeof(weights) != TYPE_ARRAY or (weights as Array).size() != list.size():
+		return str(list[0])
+	var total := 0.0
+	for w: Variant in weights:
+		total += float(w)
+	var roll := rng.randf() * total
+	for i in list.size():
+		roll -= float(weights[i])
+		if roll <= 0.0:
+			return str(list[i])
+	return str(list[list.size() - 1])
+
+
+## The ai band of an action (from the target's capsule surface; Vector2(0, INF) without one).
+func sequence_band(action_id: String) -> Vector2:
+	if not _attack_ranges.has(action_id):
+		_cache_attack_range(action_id)
+	return _attack_ranges.get(action_id, Vector2(0.0, INF))
+
+
+## The facing (degrees either side) an action needs before it starts: 180 for a circle telegraph,
+## SEQUENCE_LINE_FACING_DEG for a line, otherwise ATTACK_FACING_DEG.
+static func entry_facing_deg(action_id: String) -> float:
+	var t: Variant = GameData.get_record(action_id).get("telegraph")
+	if typeof(t) == TYPE_DICTIONARY:
+		match str(t.get("shape", "")):
+			"circle":
+				return 180.0
+			"line":
+				return SEQUENCE_LINE_FACING_DEG
+	return ATTACK_FACING_DEG
+
+
+## The engaged states of a sequence brain (boss phases): APPROACH works the current entry (strike
+## inside its band with a token, else close in or back off, skipped after SEQUENCE_PATIENCE_S),
+## ATTACK waits for the strike (and any chained follow-up or forced action) to end, RECOVER pauses
+## ai.strike_pause_min_s..max_s. Any other engaged state is treated as APPROACH.
+func _decide_sequence(my_position: Vector3, target_pos: Vector3, distance: float, seen: bool,
+		memory_ok: bool, target_alive: bool, request_token: Callable, release_token: Callable) -> void:
+	if state == AIState.ATTACK:
+		face_point = target_pos
+		_stop_moving()
+		if _attack_finished() and _in_state_s() > 0.05:
+			strike_ready_tick = now + _ticks(rng.randf_range(float(ai.get("strike_pause_min_s", 0.5)),
+				float(ai.get("strike_pause_max_s", 1.0))))
+			_set_state(AIState.RECOVER)
+		return
+	if not target_alive and perception.get("exists", false):
+		_release(release_token)
+		aware = false
+		_set_state(AIState.PATROL)
+		return
+	if not memory_ok:
+		_release(release_token)
+		investigating = true
+		aware = false
+		_set_state(AIState.ALERT)
+		return
+	face_point = target_pos
+	if state == AIState.RECOVER:
+		_stop_moving()
+		if now >= strike_ready_tick:
+			_release(release_token)
+			_set_state(AIState.APPROACH)
+		return
+	if state != AIState.APPROACH:
+		_set_state(AIState.APPROACH)
+	var id := current_sequence_entry()
+	if id == "":
+		# A phase without a sequence: one weighted pick, kept until it is struck with.
+		if _weighted_pick == "":
+			_weighted_pick = choose_phase_attack()
+		id = _weighted_pick
+	if id == "":
+		_stop_moving()
+		return
+	var band := sequence_band(id)
+	var radius := float(perception.get("target_radius", 0.85))
+	var edge := distance - radius
+	var away := my_position - target_pos
+	away.y = 0.0
+	away = away.normalized() if away.length() > 0.1 else Vector3.BACK
+	if edge > band.y:
+		# Close in to just inside the band (never into the target's capsule).
+		var goal := maxf(maxf(band.x, band.y - SEQUENCE_BAND_MARGIN_M), _own_radius_m + 0.25)
+		move_target = target_pos + away * (radius + goal)
+		move_speed = -1.0
+	elif edge < band.x:
+		move_target = target_pos + away * (radius + band.x + SEQUENCE_BAND_MARGIN_M)
+		move_speed = -1.0
+	else:
+		_stop_moving()
+		_entry_since = NO_TICK
+		var facing_ok := absf(float(perception.get("facing_deg", 180.0))) <= entry_facing_deg(id)
+		if seen and facing_ok and now >= strike_ready_tick and (holds_token or request_token.call()):
+			holds_token = true
+			attack_request = id
+			_weighted_pick = ""
+			if current_sequence_entry() != "":
+				advance_sequence(true)
+			_set_state(AIState.ATTACK)
+		return
+	# Out of the entry's band: chase it for at most SEQUENCE_PATIENCE_S, then skip it. A target
+	# farther than SEQUENCE_CHASE_M beyond the band is just walked up to: nothing is skipped on the
+	# way in.
+	if current_sequence_entry() == "":
+		return
+	if edge > band.y + SEQUENCE_CHASE_M:
+		_entry_since = NO_TICK
+		return
+	if _entry_since == NO_TICK:
+		_entry_since = now
+	elif now - _entry_since >= _ticks(SEQUENCE_PATIENCE_S):
+		advance_sequence(false)
+
+
+## A path failure while chasing a sequence entry's band skips the entry (its range cannot be
+## reached from here). Returns true when it handled the failure.
+func sequence_path_failed() -> bool:
+	if state != AIState.APPROACH or current_sequence_entry() == "" or _entry_since == NO_TICK:
+		return false
+	advance_sequence(false)
+	_stop_moving()
+	return true
 ## @anchor P11b
