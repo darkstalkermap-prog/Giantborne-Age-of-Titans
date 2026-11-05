@@ -26,15 +26,32 @@ extends Node
 ## AUTOPILOT_RESULT, whose "perf" key repeats the CPU-per-tick summary and the budget verdicts.
 ## A scenario's own checks go to "scenario_failures"; any failure exits with EXIT_SCENARIO_FAILED
 ## (errors still win: EXIT_ERRORS).
+##
+## P17a: --scenario=valley  the Valley bot (ValleyBot; run with --mode=valley --new-game): it plays
+##                          the quest line until the slice is complete (or, with --bot-loop, until
+##                          --autoplay ends, starting a new game with the next village policy after
+##                          each completion). Options: --bot-village=help_cache|help_ogre|intimidate|
+##                          force, --bot-skill=novice|expert, --bot-assist, --bot-loop, --bot-seed=N.
+##                          It adds a PerfProbe; AUTOPILOT_RESULT's "valley_bot" key holds the run's
+##                          metrics (plan §5.1). Exit codes: EXIT_SCENARIO_FAILED (2) on a watchdog
+##                          breach (a loop run: only on a world_blocked one), EXIT_INVARIANT (3) on an
+##                          invariant failure; errors still win (EXIT_ERRORS). The Autopilot runs
+##                          PROCESS_MODE_ALWAYS for it (the bot closes pausing screens itself), and
+##                          --autoplay counts simulated (unpaused) seconds as everywhere else.
 
 const EXIT_OK := 0
 const EXIT_ERRORS := 1
-## P14: a scenario's own check failed (stress, valley_walk).
+## P14: a scenario's own check failed (stress, valley_walk); P17a: a Valley bot watchdog breach.
 const EXIT_SCENARIO_FAILED := 2
+## P17a: a Valley bot invariant failed (plan §5.2).
+const EXIT_INVARIANT := 3
 const RESULT_SAMPLES := 5
 ## The scenarios dispatched to their own files (P14).
 const SCENARIO_STRESS := "stress"
 const SCENARIO_VALLEY_WALK := "valley_walk"
+## P17a: the Valley bot.
+const SCENARIO_VALLEY := "valley"
+const VALLEY_NEEDED := "--scenario=valley needs the Valley: add --mode=valley --new-game"
 const STRESS_ARENA := "res://scenes/test/stress_arena.tscn"
 const VALLEY_LEVEL_ID := "level.valley"
 ## Soak target order (pick_soak_target, M2 gate): enemies the giant is already fighting (within
@@ -75,6 +92,7 @@ var _shots: Array[String] = []
 var _probe: PerfProbe = null
 var _stress: StressScenario = null
 var _walk: ValleyWalk = null
+var _bot: ValleyBot = null
 var _scenario_failures := PackedStringArray()
 
 
@@ -94,6 +112,8 @@ func configure(seconds: float, scenario: String, capture_dir: String) -> void:
 	# Count every engine/script error of the run (the logger lives as long as the process).
 	_error_counter = ErrorCounter.new()
 	OS.add_logger(_error_counter)
+	if _scenario == SCENARIO_VALLEY:
+		ValleyBot.configure(ValleyBot.parse_options(OS.get_cmdline_user_args()))
 
 
 ## The P14 options of the user args: {"perf": bool (--perf), "stress_stage": int
@@ -113,11 +133,11 @@ static func parse_options(args: PackedStringArray) -> Dictionary:
 
 ## True for the scenarios that run their own driver and a PerfProbe.
 static func is_perf_scenario(scenario: String) -> bool:
-	return scenario == SCENARIO_STRESS or scenario == SCENARIO_VALLEY_WALK
+	return scenario == SCENARIO_STRESS or scenario == SCENARIO_VALLEY_WALK or scenario == SCENARIO_VALLEY
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario == "capture" else Node.PROCESS_MODE_PAUSABLE
+	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_VALLEY] else Node.PROCESS_MODE_PAUSABLE
 	# Method callables (not lambdas): they disconnect automatically when this node is freed
 	# by a sandbox reset, so counts are never duplicated.
 	Events.hit_resolved.connect(_on_hit_resolved)
@@ -164,12 +184,18 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(dt: float) -> void:
+	if _scenario == SCENARIO_VALLEY and _bot == null:
+		_start_valley_bot()
 	if get_tree().paused and _scenario != "capture":
 		return
 	_elapsed += dt
 	_stats.ticks += 1
 	if _duration > 0.0 and _elapsed >= _duration:
 		_finish()
+		return
+	if _scenario == SCENARIO_VALLEY:
+		if ValleyBot.run != null and ValleyBot.run.finished:
+			_finish()
 		return
 	if player == null or not is_instance_valid(player):
 		player = get_tree().get_first_node_in_group("player") as GiantPlayer
@@ -190,6 +216,24 @@ func _physics_process(dt: float) -> void:
 		_run_valley_walk()
 		return
 	_run_soak(dt)
+
+
+# --------------------------------------------------------------------------- P17a: the Valley bot
+
+## --scenario=valley: one ValleyBot per level (its run lives in ValleyBot.run, a static, so deaths,
+## checkpoint loads and new games keep it); it needs the Valley (or a level with a LevelRoot).
+func _start_valley_bot() -> void:
+	if not is_inside_tree():
+		return
+	var lv := get_tree().get_first_node_in_group(LevelRoot.GROUP) as LevelRoot
+	if lv == null:
+		if _stats.ticks > 120 and not _scenario_failures.has(VALLEY_NEEDED):
+			_scenario_failures.append(VALLEY_NEEDED)
+			_finish()
+		return
+	_bot = ValleyBot.new()
+	_bot.name = "ValleyBot"
+	add_child(_bot)
 
 
 # --------------------------------------------------------------------------- P14 scenarios
@@ -397,6 +441,11 @@ func _finish() -> void:
 		var wr := _walk.result()
 		failures.append_array(wr.check_failures)
 		result["valley_walk"] = wr
+	if _scenario == SCENARIO_VALLEY and ValleyBot.run != null:
+		var vb := ValleyBot.result(Sim.tick)
+		result["valley_bot"] = vb
+		failures.append_array(valley_failures(vb))
+		result["invariants_ok"] = (vb.get("invariant_failures", []) as Array).is_empty()
 	if is_perf_scenario(_scenario):
 		result["scenario"] = _scenario
 		result["scenario_failures"] = failures
@@ -408,7 +457,31 @@ func _finish() -> void:
 		result["perf"] = {"cpu_tick_ms": perf.cpu_tick_ms, "sim_ms": perf.sim_ms, "budgets": perf.budgets,
 			"quality": perf.quality}
 	print("AUTOPILOT_RESULT " + JSON.stringify(result))
+	write_result_file(result_file_arg(OS.get_cmdline_user_args()), result)
 	get_tree().quit(exit_code(result))
+
+
+## P17a: --result-file=<path> (user:// or absolute): where the run also writes its result as JSON
+## (tools/run_bots.sh). "" when not given.
+static func result_file_arg(args: PackedStringArray) -> String:
+	for arg in args:
+		if arg.begins_with("--result-file="):
+			return arg.substr(14).strip_edges()
+	return ""
+
+
+## Writes `result` as JSON to `path` (folders made); nothing for "". False when it cannot.
+static func write_result_file(path: String, result: Dictionary) -> bool:
+	if path == "":
+		return false
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f == null:
+		push_warning("Autopilot: cannot write %s" % path)
+		return false
+	f.store_string(JSON.stringify(result, "\t"))
+	f.close()
+	return true
 
 
 ## The AUTOPILOT_RESULT dictionary: the run's stats, timing, shots and the error counts
@@ -431,15 +504,34 @@ static func build_result(stats: Dictionary, elapsed: float, frame_ms: Array, sho
 	return result
 
 
-## Process exit code for a result: EXIT_ERRORS when the run logged any error, else
-## EXIT_SCENARIO_FAILED when a scenario's own check failed ("scenario_ok" false), else EXIT_OK.
-## (P17a adds a code for its invariants.)
+## Process exit code for a result: EXIT_ERRORS when the run logged any error, else EXIT_INVARIANT
+## when a Valley bot invariant failed ("invariants_ok" false), else EXIT_SCENARIO_FAILED when a
+## scenario's own check failed ("scenario_ok" false), else EXIT_OK.
 static func exit_code(result: Dictionary) -> int:
 	if int(result.get("errors", 0)) > 0:
 		return EXIT_ERRORS
+	if result.has("invariants_ok") and not bool(result.invariants_ok):
+		return EXIT_INVARIANT
 	if result.has("scenario_ok") and not bool(result.scenario_ok):
 		return EXIT_SCENARIO_FAILED
 	return EXIT_OK
+
+
+## The Valley bot's scenario failures: a single run fails on any watchdog breach (and on not
+## completing the slice before --autoplay ends); a loop run (the stability run) only on a
+## world_blocked breach (a softlock) - bot_failed breaches are reported, not failures (plan §5.2).
+static func valley_failures(vb: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	var loop := bool((vb.get("bot", {}) as Dictionary).get("loop", false))
+	for b: Dictionary in vb.get("breaches", []):
+		if loop and str(b.get("classification", "")) != BotDiagnosis.WORLD_BLOCKED:
+			continue
+		out.append("breach %s on %s: %s (%s)" % [b.get("reason", "?"), b.get("objective", "?"),
+			b.get("detail", ""), b.get("classification", "?")])
+	if not loop and not bool(vb.get("completed", false)) and (vb.get("breaches", []) as Array).is_empty() \
+			and (vb.get("invariant_failures", []) as Array).is_empty():
+		out.append("the slice was not completed before --autoplay ended")
+	return out
 
 
 # --------------------------------------------------------------------------- screenshot tour
