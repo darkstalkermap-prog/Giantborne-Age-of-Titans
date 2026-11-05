@@ -1,11 +1,12 @@
 class_name PauseMenu
 extends UiScreen
-## Pause menu (Esc / Start): resume, settings, control rebinding, restart, quit. A UiScreen
-## (P03): the ScreenStack opens it as SCREENS["pause"], pauses the tree and sets the MENU input
-## context while it is open, and Esc / pad B (cancel) resumes. The Settings and Controls pages
-## come from SettingsPages (shared with the title screen); rebinding captures the next key or
-## mouse button (keyboard column) or pad button / trigger (controller column), Esc cancels a
-## capture.
+## Pause menu (Esc / Start). A UiScreen (P03): the ScreenStack opens it as SCREENS["pause"],
+## pauses the tree and sets the MENU input context while it is open, and Esc / pad B (cancel)
+## resumes. The main page depends on the mode (P06): Resume, Load last checkpoint (where
+## checkpoints exist), Restart sandbox (outside the Valley), Quit to title, Quit to desktop
+## (not on the web). The Settings and Controls pages come from SettingsPages (shared with the
+## title screen); rebinding captures the next key or mouse button (keyboard column) or pad
+## button / trigger (controller column), Esc cancels a capture.
 ##
 ## open(), close() and is_open() keep their M1 meaning: inside a stack they defer to it; a
 ## PauseMenu used on its own (no stack) pauses and unpauses the game itself, as in M1.
@@ -14,6 +15,9 @@ var _root_panel: PanelContainer
 var _pages: Dictionary = {}
 var _status: Label
 var _resume: Button
+var _load_checkpoint: Button
+var _restart: Button
+var _quit_title: Button
 var _settings_pages := SettingsPages.new()
 
 
@@ -70,6 +74,7 @@ func first_focus() -> Control:
 
 func on_open() -> void:
 	_status.text = Settings.load_message
+	refresh_items()
 	_show_page("Main")
 
 
@@ -138,9 +143,15 @@ func _build_main() -> Control:
 	_resume = UiKit.button("Resume", 20)
 	_resume.pressed.connect(_on_resume)
 	v.add_child(_resume)
-	var restart := UiKit.button("Restart sandbox", 20)
-	restart.pressed.connect(_on_restart)
-	v.add_child(restart)
+	_load_checkpoint = UiKit.button("Load last checkpoint", 20)
+	_load_checkpoint.pressed.connect(_on_load_checkpoint)
+	v.add_child(_load_checkpoint)
+	_restart = UiKit.button("Restart sandbox", 20)
+	_restart.pressed.connect(_on_restart)
+	v.add_child(_restart)
+	_quit_title = UiKit.button("Quit to title", 20)
+	_quit_title.pressed.connect(_on_quit_title)
+	v.add_child(_quit_title)
 	var quit := UiKit.button("Quit to desktop", 20)
 	quit.pressed.connect(_on_quit)
 	quit.visible = not OS.has_feature("web")  # a browser tab is closed by the browser
@@ -149,16 +160,54 @@ func _build_main() -> Control:
 		ProjectSettings.get_setting("application/config/version"), Engine.get_version_info().string], 12, UiKit.MUTED)
 	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(info)
+	refresh_items()
 	return v
+
+
+## Shows the mode's items (GameSession): Load last checkpoint where checkpoints exist (disabled
+## until one was taken), Restart sandbox outside the Valley.
+func refresh_items() -> void:
+	if _load_checkpoint == null:
+		return
+	_load_checkpoint.visible = GameSession.checkpoints_enabled()
+	_load_checkpoint.disabled = not GameSession.has_checkpoint()
+	_restart.visible = not GameSession.is_valley()
+
+
+## The main page's visible items, top to bottom (tests).
+func item_labels() -> PackedStringArray:
+	var out := PackedStringArray()
+	for b: Button in [_resume, _load_checkpoint, _restart, _quit_title]:
+		if b != null and b.visible:
+			out.append(b.text)
+	return out
+
+
+## The main page button with this text, or null.
+func item(label: String) -> Button:
+	for b: Button in [_resume, _load_checkpoint, _restart, _quit_title]:
+		if b != null and b.text == label:
+			return b
+	return null
 
 
 func _on_resume() -> void:
 	close()
 
 
+func _on_load_checkpoint() -> void:
+	close()
+	Events.reload_checkpoint_requested.emit("menu")
+
+
 func _on_restart() -> void:
 	close()
 	Events.sandbox_reset_requested.emit("menu_restart")
+
+
+func _on_quit_title() -> void:
+	close()
+	Events.mode_change_requested.emit("title", {})
 
 
 func _on_quit() -> void:

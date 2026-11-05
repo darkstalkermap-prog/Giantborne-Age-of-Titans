@@ -25,6 +25,7 @@ var _target_bar: ProgressBar
 var _target_hint: Label
 var _messages: VBoxContainer
 var _death: Control
+var _death_hint: Label
 var _help: PanelContainer
 var _help_label: Label
 var _mode_label: Label
@@ -309,12 +310,26 @@ func _build_death() -> void:
 	var title := UiKit.label("DEFEATED", 48, UiKit.BAD)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(title)
-	var hint_text := "Press Enter to restart the sandbox"
-	if OS.is_debug_build():
-		hint_text += "   |   F5 debug reset"
-	var hint := UiKit.label(hint_text, 18)
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(hint)
+	_death_hint = UiKit.label(death_hint(false, OS.is_debug_build()), 18)
+	_death_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(_death_hint)
+
+
+## The death overlay's hint (P06): where checkpoints exist (the Valley, a test level) the
+## confirm loads the last checkpoint, elsewhere it restarts the sandbox (main.gd handles the
+## keys: Enter or pad A).
+static func death_hint(checkpoints: bool, debug_build: bool) -> String:
+	if checkpoints:
+		return "Enter / A: load last checkpoint"
+	var text := "Press Enter / A to restart the sandbox"
+	if debug_build:
+		text += "   |   F5 debug reset"
+	return text
+
+
+## The death overlay's hint text right now (tests).
+func death_hint_text() -> String:
+	return _death_hint.text if _death_hint != null else ""
 
 
 func _build_help() -> void:
@@ -364,7 +379,7 @@ func _controls_text() -> String:
 		lines.append("%-30s %s  |  %s%s" % [r[0], kb, pad, extra])
 	if OS.is_debug_build():
 		lines.append("")
-		lines.append("Debug: F3 panel, F5 reset sandbox")
+		lines.append("Debug: F3 panel, F5 reset sandbox, F9 reload checkpoint")
 	if OS.has_feature("web"):
 		lines.append("")
 		lines.append("Browser: the first Esc frees the mouse and pauses; click the game to resume.")
@@ -434,7 +449,10 @@ func _process(delta: float) -> void:
 	_update_hotbar()
 	_update_target()
 	_update_messages()
-	_death.visible = player.controller.state == CombatController.State.DEAD
+	var dead := player.controller.state == CombatController.State.DEAD
+	if dead and not _death.visible:
+		_death_hint.text = death_hint(GameSession.checkpoints_enabled(), OS.is_debug_build())
+	_death.visible = dead
 	_crosshair.visible = not _death.visible
 	# Without a captured mouse there is no mouse look; tell the player how to get it back.
 	_capture_hint.visible = not _death.visible and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED \
