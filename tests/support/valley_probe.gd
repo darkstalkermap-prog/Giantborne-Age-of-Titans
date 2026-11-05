@@ -109,8 +109,9 @@ static func settle(suite: TestSuite, level: LevelRoot, from: Vector3, to: Vector
 
 
 ## Walks `p` along the waypoints of `points` (a navigation path) with the stick, looking along
-## each segment. Returns {"reached": waypoints reached, "total", "ticks", "stuck_at"}.
-static func walk(suite: TestSuite, p: GiantPlayer, points: PackedVector3Array, timeout_per_waypoint := 900) -> Dictionary:
+## each segment; a waypoint must be reached within 5 s plus 0.5 s per metre of its segment.
+## Returns {"reached": waypoints reached, "total", "ticks", "stuck_at"}.
+static func walk(suite: TestSuite, p: GiantPlayer, points: PackedVector3Array) -> Dictionary:
 	var out := {"reached": 0, "total": 0, "ticks": 0, "stuck_at": Vector3.INF}
 	var waypoints: Array[Vector3] = []
 	for q in points:
@@ -124,7 +125,7 @@ static func walk(suite: TestSuite, p: GiantPlayer, points: PackedVector3Array, t
 		seg.y = 0.0
 		prev = wp
 		var ok := false
-		for i in timeout_per_waypoint:
+		for i in 300 + int(seg.length() * 30.0):
 			var to := wp - p.global_position
 			to.y = 0.0
 			if to.length() < WAYPOINT_M:

@@ -945,6 +945,7 @@ static func bake_layer(spec: Dictionary, src: NavigationMeshSourceGeometryData3D
 	nm.cell_size = float(spec.cell)
 	nm.cell_height = CELL_HEIGHT
 	nm.region_min_size = REGION_MIN_SIZE
+	nm.edge_max_error = 2.0
 	nm.filter_baking_aabb = BAKE_AABB
 	NavigationServer3D.bake_from_source_geometry_data(nm, src)
 	return nm
@@ -993,7 +994,11 @@ static func solid_faces(s: Dictionary, top: bool) -> PackedVector3Array:
 	return out
 
 
-const CYL_SIDES := 8
+## Sides of a cylinder's navigation outline (inscribed in its collision circle; the agent radius
+## covers the difference). Few sides keep the polygon count of the wooded districts down: every
+## unreachable-target path query searches its whole connected area, and Godot 4.6.3 logs an error
+## when such a search pops more than path_search_max_polygons (4096) polygons.
+const CYL_SIDES := 6
 
 
 static func cylinder_faces(centre: Vector3, r: float, h: float, top: bool) -> PackedVector3Array:

@@ -121,7 +121,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 2.5, -164)
 shape = SubResource("BoxShape3D_7")
 
 [node name="QuarryLedgeRamp" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(-1, -2.940346e-08, -8.23297e-08, 0, 0.94174194, -0.33633637, 8.742278e-08, -0.33633637, -0.94174194, 13, 2.029129, -181.83183)
+transform = Transform3D(1, 0, 0, 0, 0.94174194, -0.33633637, 0, 0.33633637, 0.94174194, 13, 2.029129, -146.16817)
 shape = SubResource("BoxShape3D_8")
 
 [node name="RaiderTent1" type="CollisionShape3D" parent="Collision"]

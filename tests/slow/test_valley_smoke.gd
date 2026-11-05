@@ -249,6 +249,77 @@ func test_paths_on_every_layer() -> void:
 		await ValleyProbe.set_links(self, lv, false, [id])
 
 
+## A path query to an unreachable target searches the whole connected area. Godot 4.6.3 logs "It's
+## not expect to not find the most reachable polygons" (and returns a bad path) when such a search
+## pops path_search_max_polygons (4096, what map_get_path and the agents use) polygons, so the
+## navmeshes stay well below it: queries from every corner of the west side to targets behind the
+## closed gates, on every layer, must finish within 3500 polygons (the runner fails on the error).
+func test_unreachable_queries_stay_within_the_search_limit() -> void:
+	var lv := _add_valley()
+	assert_true(await ValleyProbe.wait_for_navigation(self, lv), "navigation ready")
+	for r in lv.get_node("Navigation").get_children():
+		print("    %s navmesh: %d polygons" % [r.name, (r as NavigationRegion3D).navigation_mesh.get_polygon_count()])
+	var starts := [Vector3(-150, 0, 170), Vector3(-190, 0, 190), Vector3(-185, 0, -100), Vector3(-180, 0, 80),
+		Vector3(-60, 0, -76), Vector3(45, 0, -20), Vector3(40, 0, -160), Vector3(90, 0, 90), Vector3(-25, 0, 90),
+		Vector3(95, 0, -85), Vector3(-115, 0, 155)]
+	var targets := [Vector3(150, 0, 48.5), Vector3(150, 0, 135), Vector3(158, 0, -50), Vector3(-55, 0, -160)]
+	var queries := 0
+	for limit: int in [3500, 4096]:
+		for from: Vector3 in starts:
+			for to: Vector3 in targets:
+				for layer: int in ValleyProbe.ALL_LAYERS:
+					var q := NavigationPathQueryParameters3D.new()
+					q.map = lv.nav_map()
+					q.start_position = from
+					q.target_position = to
+					q.navigation_layers = layer
+					q.path_search_max_polygons = limit
+					var res := NavigationPathQueryResult3D.new()
+					NavigationServer3D.query_path(q, res)
+					var p := res.get_path()
+					queries += 1
+					assert_true(p.size() > 0 and ValleyProbe.flat(p[p.size() - 1], to) > 2.0,
+						"%s -> %s on layer %d ends short of the closed gates" % [from, to, layer])
+	print("    valley: %d unreachable queries within 3500 / 4096 polygons" % queries)
+
+
+## Every spawn point of plan §4.4 (this package's encounters and the later ones of P11a, P11b and
+## P15) stands on its archetype's navigation layer: humans and wolves on layer 1 (archers on wall
+## walks, the tower and the quarry ledge too), ogres on layer 2, the Ogre King on layer 4.
+const PLANNED_SPAWNS := [
+	["sparring post", Vector3(-108, 0, 165), 1],
+	["wolves A", Vector3(-150, 0, 50), 1], ["wolves A", Vector3(-136, 0, 48), 1], ["wolves A", Vector3(-145, 0, 62), 1],
+	["hunters", Vector3(-125, 0, 5), 1], ["hunters", Vector3(-114, 0, 4), 1], ["hunters", Vector3(-118, 0, 16), 1],
+	["forest ogre", Vector3(-88, 0, -38), 2], ["forest ogre's wolf", Vector3(-98, 0, -30), 1], ["forest ogre's wolf", Vector3(-82, 0, -28), 1],
+	["road patrol", Vector3(-12, 0, -52), 1], ["road patrol", Vector3(-4, 0, -48), 1], ["road patrol mage", Vector3(-8, 0, -58), 1],
+	["guard", Vector3(60, 0, -28), 1], ["guard", Vector3(60, 0, -12), 1], ["guard", Vector3(88, 0, -26), 1],
+	["guard", Vector3(88, 0, -14), 1], ["captain", Vector3(92, 0, -20), 1], ["tower archer", Vector3(75, 6, -40), 1],
+	["elder", Vector3(35, 0, -42), 1],
+	["raider", Vector3(30, 0, -140), 1], ["raider", Vector3(50, 0, -140), 1], ["raider", Vector3(35, 0, -155), 1],
+	["raider", Vector3(48, 0, -158), 1], ["raider archer", Vector3(25, 5, -165), 1], ["raider mage", Vector3(45, 0, -170), 1],
+	["field ogre", Vector3(42, 0, 58), 2], ["field wolf", Vector3(32, 0, 50), 1], ["field wolf", Vector3(50, 0, 48), 1],
+	["gate soldier", Vector3(132, 0, -30), 1], ["gate soldier", Vector3(132, 0, -10), 1], ["gate archer", Vector3(128, 6, -34), 1],
+	["courtyard soldier", Vector3(150, 0, -45), 1], ["courtyard soldier", Vector3(165, 0, -40), 1],
+	["sergeant", Vector3(160, 0, -60), 1], ["courtyard archer", Vector3(140, 5, -80), 1], ["courtyard mage", Vector3(158, 0, -70), 1],
+	["Ogre King", Vector3(150, 0, 150), 4],
+	["return patrol", Vector3(102, 0, -24), 1], ["return patrol", Vector3(106, 0, -20), 1], ["return patrol", Vector3(110, 0, -16), 1],
+	["return archer", Vector3(116, 0, -26), 1], ["return mage", Vector3(116, 0, -14), 1],
+	["ambush", Vector3(40, 0, -25), 1], ["ambush", Vector3(50, 0, -15), 1], ["ambush", Vector3(45, 0, -28), 1], ["ambush", Vector3(38, 0, -14), 1],
+	["warden ogre", Vector3(-55, 0, -160), 2], ["warden wolf", Vector3(-65, 0, -165), 1], ["warden wolf", Vector3(-45, 0, -165), 1],
+	["warden wolf", Vector3(-55, 0, -150), 1],
+]
+
+
+func test_planned_spawn_points_stand_on_navigation() -> void:
+	var lv := _add_valley()
+	assert_true(await ValleyProbe.wait_for_navigation(self, lv), "navigation ready")
+	for e: Array in PLANNED_SPAWNS:
+		var at: Vector3 = e[1]
+		var on := NavigationServer3D.region_get_closest_point(lv.nav_region(int(e[2])), at)
+		assert_true(ValleyProbe.flat(on, at) < 0.3 and absf(on.y - at.y) < 1.0,
+			"the %s spawn %s stands on nav layer %d (closest %s)" % [e[0], at, e[2], on])
+
+
 ## Shrine pads, waystones and the objective markers a giant walks to, by id -> position.
 func _giant_targets(lv: LevelRoot) -> Dictionary:
 	var out := {}
