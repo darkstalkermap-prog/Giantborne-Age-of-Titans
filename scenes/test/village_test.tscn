@@ -1,0 +1,480 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/level_root.gd" id="1_eea46"]
+[ext_resource type="Shader" path="res://assets/shaders/ground_checker.gdshader" id="2_49689"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/villager.tscn" id="4_74372"]
+[ext_resource type="Script" path="res://scripts/actors/civilian.gd" id="5_8a1f5"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/elder.tscn" id="6_a80bf"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/soldier.tscn" id="7_7b3a0"]
+[ext_resource type="Script" path="res://scripts/actors/soldier_enemy.gd" id="8_8053b"]
+[ext_resource type="Script" path="res://scripts/world/checkpoint_marker.gd" id="9_74fde"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="10_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="11_7ef4a"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.45, 0.55, 0.68, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.6, 0.62, 0.68, 1)
+ambient_light_energy = 0.6
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(80, 1, 80)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3"]
+render_priority = 0
+shader = ExtResource("2_49689")
+shader_parameter/color_a = null
+shader_parameter/color_b = null
+shader_parameter/line_color = null
+shader_parameter/cell_size = null
+shader_parameter/line_width = null
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_4"]
+size = Vector2(80, 80)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(84, 4, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6"]
+albedo_color = Color(0.52, 0.52, 0.55, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(84, 4, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(84, 4, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(84, 4, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(2, 4, 84)
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(2, 4, 84)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_12"]
+size = Vector3(2, 4, 84)
+
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
+size = Vector3(2, 4, 84)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_14"]
+size = Vector3(8, 4, 6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_15"]
+albedo_color = Color(0.86, 0.82, 0.72, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="BoxMesh_16"]
+size = Vector3(8, 4, 6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_17"]
+albedo_color = Color(0.55, 0.4, 0.22, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="BoxMesh_18"]
+size = Vector3(8.6, 0.4, 6.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_19"]
+size = Vector3(8, 4, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_20"]
+size = Vector3(8, 4, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_21"]
+size = Vector3(8.6, 0.4, 6.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_22"]
+size = Vector3(8, 4, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_23"]
+size = Vector3(8, 4, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_24"]
+size = Vector3(8.6, 0.4, 6.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_25"]
+size = Vector3(8, 4, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_26"]
+size = Vector3(8, 4, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_27"]
+size = Vector3(8.6, 0.4, 6.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_28"]
+size = Vector3(6.2, 3, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_29"]
+albedo_color = Color(0.36, 0.25, 0.15, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_30"]
+size = Vector3(6.2, 3, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_31"]
+size = Vector3(6.2, 3, 0.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_32"]
+size = Vector3(6.2, 3, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_33"]
+size = Vector3(0.6, 3, 6.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_34"]
+size = Vector3(0.6, 3, 6.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_35"]
+size = Vector3(0.6, 3, 6.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_36"]
+size = Vector3(0.6, 3, 6.2)
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_37"]
+vertices = PackedVector3Array(-14.4, 0.5, -11.699999, -5.699997, 0.5, -11.699999, -4.199997, 0.5, -18.599998, -4.199997, 0.5, -25.5, -3.5999985, 0.5, -26.4, -1.7999992, 0.5, -26.4, -2.0999985, 0.5, -39.3, -39.3, 0.5, -39.3, -39.3, 0.5, -9, -14.699999, 0.5, -9, 1.800003, 0.5, -26.4, 2.1000023, 0.5, -39.3, 4.200001, 0.5, -18.599998, 6, 0.5, -11.699999, 14.400002, 0.5, -11.699999, 4.200001, 0.5, -25.5, 3.6000023, 0.5, -26.4, 39.300003, 0.5, -9, 39.300003, 0.5, -39.3, 14.700001, 0.5, -9, -2.0999985, 0.5, -24.3, -2.0999985, 0.5, -19.8, 2.4000015, 0.5, -19.8, 2.4000015, 0.5, -24.3, -3.5999985, 0.5, -17.699999, -5.0999985, 0.5, -11.4, 3.6000023, 0.5, -17.699999, 5.4000015, 0.5, -11.4, -5.0999985, 0.5, -4.5, 5.4000015, 0.5, -4.5, -39.3, 0.5, -6.8999977, -14.699999, 0.5, -6.8999977, 14.700001, 0.5, -6.8999977, 39.300003, 0.5, -6.8999977, -14.699999, 0.5, 4.5, -11.999998, 0.5, 4.200001, -11.999998, 0.5, -4.199997, -14.699999, 0.5, -4.5, -39.3, 0.5, 6.9000015, -14.699999, 0.5, 6.9000015, 14.400002, 0.5, -4.199997, 12.000004, 0.5, -4.199997, 12.000004, 0.5, 4.200001, 14.400002, 0.5, 4.200001, 14.700001, 0.5, 6.9000015, 39.300003, 0.5, 6.9000015, 5.700001, 0.5, 4.200001, -5.3999977, 0.5, 4.200001, -5.0999985, 0.5, 9.300003, 5.4000015, 0.5, 9.300003, -39.3, 0.5, 9.000004, -14.699999, 0.5, 9.000004, 14.700001, 0.5, 9.000004, 39.300003, 0.5, 9.000004, -14.699999, 0.5, 11.400002, -11.999998, 0.5, 11.700001, -39.3, 0.5, 39.300003, -11.999998, 0.5, 39.300003, 14.400002, 0.5, 11.700001, 12.000004, 0.5, 39.300003, 39.300003, 0.5, 39.300003, 12.000004, 0.5, 11.700001, 5.700001, 0.5, 11.700001, -5.3999977, 0.5, 11.700001, -7.799999, 0.5, 39.300003, 8.100002, 0.5, 39.300003, 8.100002, 0.5, 11.700001, -7.799999, 0.5, 11.700001)
+polygons = [PackedInt32Array(2, 1, 3), PackedInt32Array(3, 1, 0), PackedInt32Array(6, 5, 4), PackedInt32Array(4, 3, 6), PackedInt32Array(6, 3, 0), PackedInt32Array(6, 0, 8), PackedInt32Array(6, 8, 7), PackedInt32Array(0, 9, 8), PackedInt32Array(5, 6, 10), PackedInt32Array(10, 6, 11), PackedInt32Array(13, 12, 14), PackedInt32Array(14, 12, 15), PackedInt32Array(16, 10, 11), PackedInt32Array(16, 11, 15), PackedInt32Array(15, 11, 14), PackedInt32Array(14, 11, 17), PackedInt32Array(17, 11, 18), PackedInt32Array(17, 19, 14), PackedInt32Array(23, 22, 20), PackedInt32Array(20, 22, 21), PackedInt32Array(25, 1, 24), PackedInt32Array(24, 1, 2), PackedInt32Array(27, 26, 13), PackedInt32Array(13, 26, 12), PackedInt32Array(24, 26, 25), PackedInt32Array(25, 26, 27), PackedInt32Array(25, 27, 29), PackedInt32Array(25, 29, 28), PackedInt32Array(8, 9, 30), PackedInt32Array(30, 9, 31), PackedInt32Array(19, 17, 32), PackedInt32Array(32, 17, 33), PackedInt32Array(35, 34, 36), PackedInt32Array(36, 34, 37), PackedInt32Array(37, 34, 38), PackedInt32Array(37, 38, 30), PackedInt32Array(30, 31, 37), PackedInt32Array(34, 39, 38), PackedInt32Array(43, 42, 40), PackedInt32Array(40, 42, 41), PackedInt32Array(40, 32, 43), PackedInt32Array(43, 32, 44), PackedInt32Array(44, 32, 33), PackedInt32Array(44, 33, 45), PackedInt32Array(42, 46, 41), PackedInt32Array(41, 46, 29), PackedInt32Array(48, 47, 49), PackedInt32Array(49, 47, 46), PackedInt32Array(46, 47, 28), PackedInt32Array(46, 28, 29), PackedInt32Array(35, 36, 47), PackedInt32Array(47, 36, 28), PackedInt32Array(38, 39, 50), PackedInt32Array(50, 39, 51), PackedInt32Array(44, 45, 52), PackedInt32Array(52, 45, 53), PackedInt32Array(50, 51, 54), PackedInt32Array(54, 55, 50), PackedInt32Array(50, 55, 57), PackedInt32Array(50, 57, 56), PackedInt32Array(52, 53, 58), PackedInt32Array(58, 53, 60), PackedInt32Array(58, 60, 59), PackedInt32Array(59, 61, 58), PackedInt32Array(49, 62, 48), PackedInt32Array(48, 62, 63), PackedInt32Array(63, 62, 65), PackedInt32Array(63, 65, 64), PackedInt32Array(62, 66, 65), PackedInt32Array(64, 67, 63), PackedInt32Array(55, 67, 57), PackedInt32Array(57, 67, 64), PackedInt32Array(66, 61, 65), PackedInt32Array(65, 61, 59)]
+cell_size = 0.3
+agent_height = 2.0
+agent_radius = 0.6
+agent_max_slope = 35.0
+
+[node name="VillageTestLevel" type="Node3D"]
+script = ExtResource("1_eea46")
+level_id = "level.village_test"
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8480481, 0.41758206, -0.32625088, 0, 0.6156615, 0.7880107, 0.52991927, -0.668271, 0.5221106, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_max_distance = 90.0
+
+[node name="World" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/Floor"]
+shape = SubResource("BoxShape3D_2")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+material_override = SubResource("ShaderMaterial_3")
+mesh = SubResource("PlaneMesh_4")
+
+[node name="WallNorth" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -41)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallNorth"]
+shape = SubResource("BoxShape3D_5")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallNorth"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_7")
+
+[node name="WallSouth" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 41)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallSouth"]
+shape = SubResource("BoxShape3D_8")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallSouth"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_9")
+
+[node name="WallEast" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 2, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallEast"]
+shape = SubResource("BoxShape3D_10")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallEast"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_11")
+
+[node name="WallWest" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41, 2, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallWest"]
+shape = SubResource("BoxShape3D_12")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallWest"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_13")
+
+[node name="CottageNW" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2, -8)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/CottageNW"]
+shape = SubResource("BoxShape3D_14")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/CottageNW"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_16")
+
+[node name="Roof" type="MeshInstance3D" parent="World/CottageNW"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+material_override = SubResource("StandardMaterial3D_17")
+mesh = SubResource("BoxMesh_18")
+
+[node name="CottageNE" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, -8)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/CottageNE"]
+shape = SubResource("BoxShape3D_19")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/CottageNE"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_20")
+
+[node name="Roof" type="MeshInstance3D" parent="World/CottageNE"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+material_override = SubResource("StandardMaterial3D_17")
+mesh = SubResource("BoxMesh_21")
+
+[node name="CottageSW" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2, 8)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/CottageSW"]
+shape = SubResource("BoxShape3D_22")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/CottageSW"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_23")
+
+[node name="Roof" type="MeshInstance3D" parent="World/CottageSW"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+material_override = SubResource("StandardMaterial3D_17")
+mesh = SubResource("BoxMesh_24")
+
+[node name="CottageSE" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, 8)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/CottageSE"]
+shape = SubResource("BoxShape3D_25")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/CottageSE"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_26")
+
+[node name="Roof" type="MeshInstance3D" parent="World/CottageSE"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+material_override = SubResource("StandardMaterial3D_17")
+mesh = SubResource("BoxMesh_27")
+
+[node name="YardNorth" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -25.3)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/YardNorth"]
+shape = SubResource("BoxShape3D_28")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/YardNorth"]
+material_override = SubResource("StandardMaterial3D_29")
+mesh = SubResource("BoxMesh_30")
+
+[node name="YardSouth" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -18.7)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/YardSouth"]
+shape = SubResource("BoxShape3D_31")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/YardSouth"]
+material_override = SubResource("StandardMaterial3D_29")
+mesh = SubResource("BoxMesh_32")
+
+[node name="YardEast" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.3, 1.5, -22)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/YardEast"]
+shape = SubResource("BoxShape3D_33")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/YardEast"]
+material_override = SubResource("StandardMaterial3D_29")
+mesh = SubResource("BoxMesh_34")
+
+[node name="YardWest" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.3, 1.5, -22)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/YardWest"]
+shape = SubResource("BoxShape3D_35")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/YardWest"]
+material_override = SubResource("StandardMaterial3D_29")
+mesh = SubResource("BoxMesh_36")
+
+[node name="Navigation" type="Node3D" parent="."]
+
+[node name="Human" type="NavigationRegion3D" parent="Navigation"]
+navigation_mesh = SubResource("NavigationMesh_37")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Safe" type="Node3D" parent="Markers"]
+
+[node name="test_village_safe_nw" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -8)
+script = ExtResource("3_acc12")
+marker_id = "test.village.safe_nw"
+kind = 4
+
+[node name="test_village_safe_ne" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -8)
+script = ExtResource("3_acc12")
+marker_id = "test.village.safe_ne"
+kind = 4
+
+[node name="test_village_safe_sw" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 8)
+script = ExtResource("3_acc12")
+marker_id = "test.village.safe_sw"
+kind = 4
+
+[node name="test_village_safe_se" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 8)
+script = ExtResource("3_acc12")
+marker_id = "test.village.safe_se"
+kind = 4
+
+[node name="test_village_safe_yard" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22)
+script = ExtResource("3_acc12")
+marker_id = "test.village.safe_yard"
+kind = 4
+
+[node name="Formation" type="Node3D" parent="Markers"]
+
+[node name="test_village_guard_post_1" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 18)
+script = ExtResource("3_acc12")
+marker_id = "test.village.guard_post_1"
+kind = 3
+faction = "village"
+
+[node name="test_village_guard_post_2" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 18)
+script = ExtResource("3_acc12")
+marker_id = "test.village.guard_post_2"
+kind = 3
+faction = "village"
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="test_village_elder" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+script = ExtResource("3_acc12")
+marker_id = "test.village.elder"
+
+[node name="Folk" type="Node3D" parent="."]
+
+[node name="Villager1" type="CharacterBody3D" parent="Folk" instance=ExtResource("4_74372")]
+transform = Transform3D(0.8660254, 0, 0.5, 0, 1, 0, -0.5, 0, 0.8660254, -2, 0.05, -3)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("5_8a1f5")
+entity_id = "test.village.villager_1"
+
+[node name="Villager2" type="CharacterBody3D" parent="Folk" instance=ExtResource("4_74372")]
+transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, 2, 0.05, -3)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("5_8a1f5")
+entity_id = "test.village.villager_2"
+
+[node name="Villager3" type="CharacterBody3D" parent="Folk" instance=ExtResource("4_74372")]
+transform = Transform3D(-0.9396926, 0, 0.3420202, 0, 1, 0, -0.3420202, 0, -0.9396926, -1.5, 0.05, 3.5)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("5_8a1f5")
+entity_id = "test.village.villager_3"
+
+[node name="Villager4" type="CharacterBody3D" parent="Folk" instance=ExtResource("4_74372")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -16.5)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("5_8a1f5")
+entity_id = "test.village.villager_4"
+
+[node name="Elder" type="CharacterBody3D" parent="Folk" instance=ExtResource("6_a80bf")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0.05, -6)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("5_8a1f5")
+entity_id = "test.village.elder"
+
+[node name="Guards" type="Node3D" parent="."]
+
+[node name="Guard1" type="CharacterBody3D" parent="Guards" instance=ExtResource("7_7b3a0")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -6, 0.05, 18)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("8_8053b")
+entity_id = "test.village.guard_1"
+faction = "village"
+
+[node name="Guard2" type="CharacterBody3D" parent="Guards" instance=ExtResource("7_7b3a0")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6, 0.05, 18)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("8_8053b")
+entity_id = "test.village.guard_2"
+faction = "village"
+
+[node name="Checkpoints" type="Node3D" parent="."]
+
+[node name="CpStart" type="Marker3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 30)
+script = ExtResource("9_74fde")
+checkpoint_id = "test.village.cp_start"
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 30)
+
+[node name="Spawned" type="Node3D" parent="."]
+
+[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("10_627ae")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 30)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("11_7ef4a")
+
+[node name="Signs" type="Node3D" parent="."]
+
+[node name="SignStart" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.55, 26)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "VILLAGE TEST: neutral guards, villagers, the elder"
+font_size = 64
+
+[node name="SignYard" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -22)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "WALLED YARD: a shelter no path reaches"
+font_size = 64

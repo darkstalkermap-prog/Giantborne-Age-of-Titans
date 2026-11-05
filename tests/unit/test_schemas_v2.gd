@@ -267,6 +267,7 @@ func test_untelegraphed_enemy_attack_warns() -> void:
 	_write("d.json", player_cast)
 	_write("e.json", enemy)
 	_write("f.json", GameData.get_record("weapon.soldier_sword"))
+	_write("g.json", GameData.get_record("ability.soldier_brace"))   # the soldier's hold_attack (P11b)
 	_loaded_tmp = true
 	GameData.load_all(TMP_DATA, false)
 	# A warning until P09 turns the same finding into an error: accept it in either list.

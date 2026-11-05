@@ -58,7 +58,10 @@
 	"tactics": {
 		"outmatched_ratio": 2.5,
 		"outmatched_behavior": "formation",
-		"formation_spacing_m": 3.0
+		"formation_spacing_m": 3.0,
+		"hold_attack": "ability.soldier_brace",
+		"awe_ratio": 4.0,
+		"awe_morale_loss": 35
 	},
 	"threat": 0.6,
 	"lockable": true,

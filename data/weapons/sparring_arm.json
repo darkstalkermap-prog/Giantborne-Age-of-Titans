@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "weapon.sparring_arm",
+	"type": "weapon",
+	"family": "natural",
+	"display_name": "Padded Arm",
+	"description": "The sparring post's swinging arms (its swing is a pulse round the post; the weapon only completes the record).",
+	"damage_multiplier": 1.0,
+	"length_m": 1.4,
+	"hit_radius_m": 0.15,
+	"visual_shape": "none"
+}

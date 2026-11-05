@@ -1,0 +1,31 @@
+{
+	"schema_version": 1,
+	"id": "encounter.village_guards",
+	"type": "encounter",
+	"display_name": "Thornwick's guards",
+	"description": "Four guards at their posts by the square and the barricade, their captain (the commander) before the carts and an archer on the watchtower; faction village. Neutral until provoked: they hold their posts facing the giant and never strike; a second offence within 30 s (or the smashed barricade) turns them hostile, intimidation stands them down (plan sections 3.13, 4.4, 4.6). Not budgeted: a standing garrison, not combatants while neutral; budgeted, the six would hold half of the 12 slots across the east of the Valley (P11b doc, decision 17).",
+	"level": "level.valley",
+	"district": "village",
+	"center_m": [70, 0, -20],
+	"activate_radius_m": 90,
+	"deactivate_radius_m": 150,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "valley.village.guard_1", "definition": "enemy.soldier", "position_m": [60, 0, -28], "yaw_deg": 90,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.guard_2", "definition": "enemy.soldier", "position_m": [60, 0, -12], "yaw_deg": 90,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.guard_3", "definition": "enemy.soldier", "position_m": [88, 0, -26], "yaw_deg": 90,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.guard_4", "definition": "enemy.soldier", "position_m": [88, 0, -14], "yaw_deg": 90,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.captain", "definition": "enemy.soldier", "position_m": [92, 0, -20], "yaw_deg": 90,
+			"patrol": "", "faction": "village", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.tower_archer", "definition": "enemy.archer", "position_m": [75, 6, -40], "yaw_deg": 90,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}
