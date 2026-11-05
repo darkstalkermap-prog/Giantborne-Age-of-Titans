@@ -490,4 +490,10 @@ func test_hud_prompts_follow_the_device() -> void:
 	labels = hud.help_rows().map(func(r: Array) -> String: return str(r[0]))
 	assert_false(labels.has("Runic Bolt (slot 6)"), "built from the live loadout")
 	assert_false(hud.help_text().contains("Runic Bolt"), "the open overlay follows the change")
+	assert_true(hud.help_text().contains("Inventory: %s |" % InputBindings.describe_action("inventory", false)),
+		"the inventory row names its key")
+	Settings.set_action_binding("inventory", false, {"key": "J"})
+	await get_tree().process_frame
+	assert_true(hud.help_text().contains("Inventory: J |"), "and follows a rebinding while open")
+	Settings.reset_bindings()
 	hud.toggle_help()

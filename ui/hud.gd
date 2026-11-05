@@ -481,10 +481,11 @@ func _rebuild_help() -> void:
 	_help_signature = _help_key()
 
 
-## What the open overlay depends on: the loadout and the device the prompts follow.
+## What the open overlay depends on: the loadout, the saved bindings and the device the prompts
+## follow.
 func _help_key() -> String:
 	var loadout: Dictionary = player.controller.loadout if player != null and is_instance_valid(player) else {}
-	return "%s|%d" % [str(loadout), InputBindings.device_serial]
+	return "%s|%s|%d" % [str(loadout), str(Settings.values.get("bindings", {})), InputBindings.device_serial]
 
 
 func show_message(text: String, kind: String = "info") -> void:
