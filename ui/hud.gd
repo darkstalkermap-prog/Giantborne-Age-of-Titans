@@ -91,7 +91,19 @@ func _on_settings_changed(key: String) -> void:
 
 
 func _on_object_destroyed(_tick: int, world_id: String, _by: String) -> void:
-	show_message("Destroyed: %s" % world_id.get_slice(".", 1).replace("_", " "), "info")
+	show_message("Destroyed: %s" % destroyed_name(world_id), "info")
+
+
+## The name a destroyed prop's message shows (P18): its record's display name ("Practice Gate"),
+## else the last part of its world id ("valley.forest.fence_pen" -> "fence pen"). The M1 text took
+## the id's second part, which in the Valley is the district ("Destroyed: ruins").
+func destroyed_name(world_id: String) -> String:
+	for n in get_tree().get_nodes_in_group("breakables"):
+		if str(n.get("world_id")) == world_id:
+			var rec: Variant = n.get("record")
+			if rec is Dictionary and str((rec as Dictionary).get("display_name", "")) != "":
+				return str((rec as Dictionary).display_name)
+	return world_id.get_slice(".", world_id.get_slice_count(".") - 1).replace("_", " ")
 
 
 func _on_camera_mode_changed(_mode: int) -> void:
