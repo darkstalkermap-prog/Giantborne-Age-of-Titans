@@ -422,7 +422,7 @@ func test_the_slam_ignores_a_block_and_the_combo_is_blocked() -> void:
 		assert_true(combo[0].health_damage < 76, "for less (%d)" % combo[0].health_damage)
 
 
-func test_a_parry_staggers_through_poise_and_titan_surge_adds_to_it() -> void:
+func test_the_combo_is_parried_and_titan_surge_adds_to_the_parry_poise() -> void:
 	# The combo can be parried; the parry's 40 poise counts x1.25 under Titan Surge (P11a, the M2
 	# gate follow-up: the surge's poise bonus never reached the parry before).
 	for surged: bool in [false, true]:
@@ -506,6 +506,24 @@ func test_a_charge_without_a_wall_ends_on_its_cap_with_the_short_recovery() -> v
 	assert_eq(k.cap_stops, 1, "counted as a cap stop")
 	assert_eq(k.wall_stops, 0, "not a wall stop")
 	assert_eq(k.collision_mask, SceneKit.ACTOR_MASK, "it collides with actors again after the run")
+
+
+func test_a_leash_return_takes_the_movement_back_from_a_charge() -> void:
+	# The wave rule for an archetype overriding _custom_movement: false while is_returning(), so
+	# the base steering walks it home (the boss encounter has no leash; this guards the seam).
+	add_box(Vector3(300, 1, 300), Vector3(0, -0.5, 0))
+	var k := _king(Vector3(0, 0.05, 60), "test.king_leash", false, 0.0)
+	await step_ticks(3)
+	k.brain.face_point = Vector3(0, 0, -100)
+	k.controller.request(&"attack", {"action_id": CHARGE})
+	var charge := GameData.get_action(CHARGE)
+	await step_ticks(charge.windup_ticks + 6)
+	assert_true(k.is_charging(), "running")
+	assert_true(k._custom_movement(1.0 / 60.0), "the charge drives its movement")
+	k.home_position = Vector3(0, 0, 120)
+	k.begin_leash_return()
+	assert_true(k.is_returning(), "leashed")
+	assert_false(k._custom_movement(1.0 / 60.0), "returning: the base steering moves it")
 
 
 func test_a_charge_hits_the_giant_once_through_its_block_and_shoves_it_aside() -> void:

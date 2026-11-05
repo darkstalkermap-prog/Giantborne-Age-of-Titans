@@ -82,13 +82,15 @@ func _turn_rate_deg_s() -> float:
 
 
 ## While a charge runs its body ignores other actors (WORLD, breakables and blockers still stop
-## it), so it ends against stone, never on the giant; then the base motion runs.
+## it), so it ends against stone, never on the giant; then the base motion runs. Never true while
+## the king walks home on a leash (the base steering moves it then; its encounter has no leash).
 func _custom_movement(dt: float) -> bool:
 	if _base_collision_mask >= 0:
 		var want := _base_collision_mask & ~HitQueryAdapter.LAYER_ACTORS if is_charging() else _base_collision_mask
 		if collision_mask != want:
 			collision_mask = want
-	return super(dt)
+	var moved: bool = super(dt)
+	return moved and not is_returning()
 
 
 ## Counts how the last charge ended (wall_stops: its motion ended against a wall; cap_stops: its
