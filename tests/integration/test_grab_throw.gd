@@ -589,6 +589,26 @@ func test_scene_unload_while_holding_releases_without_errors() -> void:
 	await step_ticks(2)
 	assert_eq(ended.back()[3], "unloaded", "grab_ended unloaded")
 	assert_ne_grabbed(s)
+	# A whole level unloads while holding: its children leave the tree before it (the held enemy,
+	# added after the giant, even before the giant), and nothing logs an error.
+	var level := Node3D.new()
+	world.add_child(level)
+	var g: GiantPlayer = (load(GIANT) as PackedScene).instantiate()
+	g.position = Vector3(-6, 0.05, 0)
+	level.add_child(g)
+	g.router.use_injection = true
+	var h: SoldierEnemy = (load(SOLDIER) as PackedScene).instantiate()
+	h.entity_id = "test.unload_level"
+	h.ai_enabled = false
+	h.position = Vector3(-6, 0.05, -3.0)
+	level.add_child(h)
+	await TestWait.until(self, func() -> bool: return g.is_on_floor(), 30)
+	assert_true(await _grab(g, h), "grabbed in the level")
+	ended.clear()
+	level.queue_free()
+	await step_ticks(2)
+	assert_eq(ended.size(), 1, "one grab_ended")
+	assert_eq(ended.back()[3] if not ended.is_empty() else "", "unloaded", "reason unloaded")
 	# A flying body when its whole level goes away: no errors (the after_each frees the world).
 	var q := await _giant(1, Vector3(6, 0.05, 0))
 	var t := _soldier_at(Vector3(6, 0.05, -3.0), "test.unload_2")
@@ -598,3 +618,44 @@ func test_scene_unload_while_holding_releases_without_errors() -> void:
 	q.router.inject_light_attack()
 	await TestWait.until(self, func() -> bool: return not q.grab.is_holding(), 40)
 	assert_true(t.is_held(), "in flight")
+
+
+# --------------------------------------------------------------------------- wolves and walls
+
+## Wolves are lifted by the scruff: the grab point (Anchors/Grab, the neck) in the hand, the wolf
+## hanging nose up, its QuadrupedRig still animating; a drop puts it on its feet in a free spot.
+func test_a_wolf_is_lifted_by_the_scruff() -> void:
+	var p := await _giant(1)
+	var w := TestSpawn.enemy(world, WOLF, Vector3(0, 0.05, -3.0), "test.scruffed", false, PI)
+	await step_ticks(1)
+	assert_true(await _grab(p, w), "grabbed the staggered wolf")
+	await step_ticks(1)
+	assert_eq(p.grab.held_attach(), "scruff", "by the scruff")
+	var anchor := (w.get_node("Anchors/Grab") as Node3D).global_position
+	assert_true(anchor.distance_to(p.to_global(p.grab.socket_local())) < 0.01, "its scruff is in the hand")
+	var nose := -w.global_transform.basis.z
+	assert_true(nose.y > 0.6, "it hangs nose up (%.2f)" % nose.y)
+	assert_eq(w.get_node("Visual").process_mode, Node.PROCESS_MODE_PAUSABLE, "its rig keeps animating")
+	assert_true(p.grab.drop(), "put down")
+	assert_eq(w.get_node("Visual").process_mode, Node.PROCESS_MODE_INHERIT, "the rig follows the actor again")
+	await TestWait.until(self, func() -> bool: return w.is_on_floor(), 60)
+	assert_true(w.is_on_floor() and _spot_is_free(w), "on its feet in a free spot")
+	assert_near(absf(w.global_transform.basis.y.dot(Vector3.UP)), 1.0, 1e-3, "upright")
+
+
+## The hand can reach into a wall (the held body has no collision while held); putting it down
+## there finds the nearest free spot beside the giant instead, never inside the wall.
+func test_a_body_held_into_a_wall_is_put_down_outside_it() -> void:
+	var p := await _giant(1)
+	var s := _soldier_at(Vector3(0, 0.05, -3.0), "test.walled")
+	await step_ticks(1)
+	assert_true(await _grab(p, s), "grabbed")
+	await _wait_free(p)
+	add_box(Vector3(6, 5, 2.0), Vector3(-1.0, 2.5, -2.6))   # a wall where the hand is
+	await step_ticks(2)
+	assert_false(s.is_free_spot(s.global_position), "the held body is inside the wall now")
+	assert_true(p.grab.drop(), "put down")
+	assert_true(_spot_is_free(s), "outside the wall")
+	await TestWait.until(self, func() -> bool: return s.is_on_floor(), 60)
+	assert_true(s.is_on_floor() and _spot_is_free(s), "standing in a free spot")
+	assert_true(s.global_position.z > -1.6 or s.global_position.z < -3.6, "not in the wall's depth (z %.2f)" % s.global_position.z)

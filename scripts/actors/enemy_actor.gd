@@ -1173,13 +1173,14 @@ func carry(point: Vector3, basis: Basis, local_point: Vector3) -> void:
 func on_released(reason: String, fallbacks: Array = []) -> void:
 	if grab_holder_id == "":
 		return
-	var yaw := global_transform.basis.get_euler().y
-	var spot := global_position
-	if is_inside_tree():
-		spot = release_position(global_position, fallbacks)
+	# A level unloading takes its children out of the tree first: then only the state is restored.
+	var inside := is_inside_tree()
+	var yaw := global_transform.basis.get_euler().y if inside else rotation.y
+	if inside:
+		var spot := release_position(global_position, fallbacks)
+		global_transform = Transform3D(Basis(Vector3.UP, yaw), spot)
 	_restore_after_grab()
 	grab_holder_id = ""
-	global_transform = Transform3D(Basis(Vector3.UP, yaw), spot)
 	facing_yaw = wrapf(yaw, -PI, PI)
 	velocity = Vector3.ZERO
 	move_velocity = Vector3.ZERO
