@@ -320,3 +320,27 @@ func test_a_waystone_needs_its_flag_and_fires_once_per_load() -> void:
 	var ok: bool = await TestWait.until(self, func() -> bool: return way2.is_reached(), 40)
 	assert_true(ok, "the 2 Hz check reaches it again in the new load")
 	assert_eq(reached.size(), 2, "once per load")
+
+
+func test_the_flow_test_level_layout() -> void:
+	var text := FileAccess.get_file_as_string(FLOW)
+	assert_true(text.length() > 0, "the generated scene is committed")
+	assert_false(text.contains("unique_id="), "without node unique_id attributes (SceneKit.save)")
+	_load_level(false)
+	assert_eq(level.level_id, "test.flow", "level id")
+	assert_eq(level.start_checkpoint, "test.cp_a", "start checkpoint")
+	var ids := PackedStringArray()
+	for n in get_tree().get_nodes_in_group("checkpoints"):
+		if level.is_ancestor_of(n):
+			ids.append((n as CheckpointMarker).checkpoint_id)
+	ids.sort()
+	assert_eq(ids, PackedStringArray(["test.cp_a", "test.cp_b", "test.cp_way"]), "two markers and the waystone")
+	var way := level.get_node("Waystones/CpWay") as Waystone
+	assert_true(way.get_node("Stone").position.z >= 3.0, "the stone stands behind the respawn point")
+	var fence := level.get_node("Fence") as BreakableProp
+	assert_eq(fence.world_id, "test.flow_fence", "the fence's world id")
+	assert_true(level.has_node("Spawns/StubEnemy"), "the stub enemy spawn point")
+	assert_true(level.stub_spawn_position().distance_to(player.global_position) > 40.0,
+		"far enough from the player that a stub there never defers a checkpoint")
+	assert_true(player.global_position.distance_to((level.get_node("Checkpoints/CpA") as Node3D).global_position) < 0.01,
+		"the Player stands on the start checkpoint")

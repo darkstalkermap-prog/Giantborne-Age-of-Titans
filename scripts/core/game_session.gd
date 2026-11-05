@@ -181,18 +181,18 @@ func apply_args(o: Dictionary) -> void:
 		"sandbox":
 			mode = Mode.SANDBOX
 		"valley":
-			if not valley_available():
-				push_warning("GameSession: %s (no level.valley scene); showing the title" % VALLEY_MISSING)
-				mode = Mode.TITLE
-			elif bool(o.get("new_game", false)):
-				_begin_new_valley()
-			elif bool(o.get("continue", false)):
+			# Continue needs the save's level; New Game needs the Valley (or the --level scene).
+			if bool(o.get("continue", false)):
 				var r := _begin_continue()
 				if not r.ok:
 					push_warning("GameSession: --continue failed (%s); showing the title" % r.message)
 					mode = Mode.TITLE
-			elif not _begin_continue().ok:
-				_begin_new_valley()
+			elif bool(o.get("new_game", false)) or not _begin_continue().ok:
+				if valley_available():
+					_begin_new_valley()
+				else:
+					push_warning("GameSession: %s (no level.valley scene); showing the title" % VALLEY_MISSING)
+					mode = Mode.TITLE
 		_:
 			mode = Mode.TITLE
 

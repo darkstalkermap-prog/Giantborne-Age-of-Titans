@@ -430,3 +430,22 @@ func test_command_line_modes_keep_the_m1_tools_working() -> void:
 	GameSession.reset_for_tests()
 	GameSession.apply_args(GameSession.parse_args(PackedStringArray(["--mode=valley", "--no-user-settings"])))
 	assert_eq(GameSession.mode, GameSession.Mode.TITLE, "without the Valley --mode=valley falls back to the title")
+
+
+func test_continue_from_the_command_line() -> void:
+	GameSession.persist = true
+	_start_new_game_on_the_flow_level()
+	Events.checkpoint_reached.emit(Sim.tick, "test.cp_b", "waystone")
+	await step_ticks(2)
+	await _unload_level()
+	GameSession.go_to_title()
+	GameSession.level_override = ""
+	GameSession.scene_reloads.clear()
+	GameSession.apply_args(GameSession.parse_args(PackedStringArray(["--mode=valley", "--continue"])))
+	assert_true(GameSession.is_valley() and GameSession.pending_restore, "--mode=valley --continue loads the save")
+	assert_eq(GameSession.level_scene_path(), FLOW, "the save's own level, without --level")
+	assert_eq(GameSession.respawn_id, "test.cp_b", "at its respawn point")
+	assert_eq(GameSession.scene_reloads.size(), 0, "no reload at start-up")
+	GameSession.reset_for_tests()
+	GameSession.apply_args(GameSession.parse_args(PackedStringArray(["--mode=valley", "--continue"])))
+	assert_eq(GameSession.mode, GameSession.Mode.TITLE, "--continue without a save falls back to the title")

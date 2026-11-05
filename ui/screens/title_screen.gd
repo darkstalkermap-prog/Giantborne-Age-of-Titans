@@ -94,7 +94,8 @@ func _ready() -> void:
 		ProjectSettings.get_setting("application/config/version"), Engine.get_version_info().string], 12, UiKit.MUTED)
 	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(info)
-	refresh()
+	if stack == null:
+		refresh()   # inside a stack, on_open() refreshes
 
 
 func _menu_button(text: String, handler: Callable) -> Button:
