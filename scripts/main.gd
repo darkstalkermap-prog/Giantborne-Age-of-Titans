@@ -111,6 +111,7 @@ func _build_level() -> void:
 	feedback.name = "HitFeedback"
 	feedback.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(feedback)
+	add_child(TelegraphVisuals.new())   # P09: telegraph decals, aim lines (threat arrows: a HUD widget)
 	hud = Hud.new()
 	hud.name = "Hud"
 	hud.process_mode = Node.PROCESS_MODE_PAUSABLE
