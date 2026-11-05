@@ -246,7 +246,12 @@ func _sense() -> Dictionary:
 	return snapshot
 
 
+## The global-bus handlers below return at once out of the tree (P17a: the director takes a
+## despawned member out of the tree and frees it at the end of the frame; a giant's ability started
+## later in the same tick reached it and read its global position).
 func _on_any_ability_started(_tick: int, actor_id: String, _action_id: String, _instance: int) -> void:
+	if not is_inside_tree():
+		return
 	var src := Sim.get_entity(actor_id)
 	if src == null or src == entity or not CombatEntity.can_damage(entity.team, src.team):
 		return
@@ -262,7 +267,7 @@ func _on_hit_taken(result: HitResult) -> void:
 
 
 func _on_any_entity_died(tick: int, id: String, _killer: String) -> void:
-	if id == entity.entity_id or not entity.is_alive():
+	if not is_inside_tree() or id == entity.entity_id or not entity.is_alive():
 		return
 	var other := Sim.get_entity(id)
 	if other == null or other.team != entity.team or other.actor == null:
@@ -1785,7 +1790,7 @@ func _on_hit_while_returning(_result: HitResult) -> void:
 
 
 func _on_noise_while_returning(_tick: int, _actor_id: String, _action_id: String, _instance: int) -> void:
-	if _leash_returning and brain != null:
+	if _leash_returning and brain != null and is_inside_tree():
 		brain.return_step(Sim.tick, home_position)
 
 
@@ -1898,7 +1903,7 @@ func at_peace() -> bool:
 
 
 func _on_faction_changed(_tick: int, changed_faction: String, _state: String) -> void:
-	if changed_faction != faction or entity == null or entity.combatant == null or brain == null:
+	if not is_inside_tree() or changed_faction != faction or entity == null or entity.combatant == null or brain == null:
 		return
 	_apply_standing(FactionState.standing(faction), true)
 

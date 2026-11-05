@@ -262,3 +262,36 @@ func test_the_death_screen_ignores_its_confirm_for_a_second() -> void:
 	assert_eq(resets, ["restart_after_death"] as Array[String], "confirms once (the sandbox restarts)")
 	assert_eq(MainScript.DEATH_CONFIRM_DELAY_S, 1.0, "the delay is a second")
 	m.free()
+
+
+# --------------------------------------------------------------------------- found by the Valley bot
+
+## The Valley bot (an intimidate run, on its way back to the Deadfall): the director takes a
+## despawned member out of the tree and frees it at the end of the frame; the giant's ability that
+## started later in the same tick reached the member's ability_started handler, which read its
+## global position out of the tree (an engine error). The global-bus handlers now return out of the
+## tree.
+func test_a_member_out_of_the_tree_ignores_the_global_events() -> void:
+	level = (load(DIRECTOR_LEVEL) as PackedScene).instantiate() as LevelRoot
+	world.add_child(level)
+	var lv := level as LevelRoot
+	var d := lv.director()
+	d.member_spawned.connect(_on_member_spawned)
+	var p := lv.player()
+	p.router.use_injection = true
+	await step_ticks(2)
+	d.force_activate(SOLDIERS)
+	d.update_now()
+	assert_eq(spawn_ticks.size(), 3, "three soldiers")
+	if spawn_ticks.size() < 3:
+		return
+	var gone := d.spawned(str(spawn_ticks[0][1])) as EnemyActor
+	var other := str(spawn_ticks[1][1])
+	assert_true(gone != null and gone.is_inside_tree(), "a soldier")
+	TestRunner.take_logged_errors()
+	gone.get_parent().remove_child(gone)   # as the director's despawn does, before the free
+	Events.ability_started.emit(Sim.tick, p.entity.entity_id, "ability.heavy_footfall", 4242)
+	Events.entity_died.emit(Sim.tick, other, p.entity.entity_id)
+	Events.faction_changed.emit(Sim.tick, "faction.test", "hostile")
+	assert_eq(TestRunner.take_logged_errors(), [] as Array[String], "no engine error from the member out of the tree")
+	gone.queue_free()
