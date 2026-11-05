@@ -18,7 +18,7 @@ const SHRINE := "res://scenes/world/shrine.tscn"
 const SHRINE_POS := Vector3(-40, 0, 40)
 
 ## The wolf pack in the north-west corner, more than 40 m from every feature of the obstacle
-## route (tests/integration/test_obstacle_route.gd), the dummies and the soldier's patrol.
+## route (tests/slow/test_obstacle_route.gd), the dummies and the soldier's patrol.
 const WOLF_SPAWNS := [Vector3(-46, 0.05, -40), Vector3(-41, 0.05, -46), Vector3(-50, 0.05, -47)]
 const WOLF_PATROL := [Vector3(-45, 0, -36), Vector3(-34, 0, -48), Vector3(-48, 0, -54),
 	Vector3(-54, 0, -44)]
@@ -38,7 +38,7 @@ const OAK_POS := Vector3(-50, 0, 52)
 const BUSH_POSITIONS := [Vector3(-12, 0, 48), Vector3(12, 0, 48)]
 ## P11b: the sparring post (block, parry and dodge practice) west of the test wall, near the
 ## wall dummy and on the way to the shrine: more than 9 m from every leg of the obstacle route
-## (tests/integration/test_obstacle_route.gd) and 20 m from the soak's paths. It is not in the
+## (tests/slow/test_obstacle_route.gd) and 20 m from the soak's paths. It is not in the
 ## "enemies" group, so the soak never takes it for an enemy to kill.
 const POST_SCENE := "res://scenes/enemies/sparring_post.tscn"
 const POST_POS := Vector3(-22, 0.05, 40)
