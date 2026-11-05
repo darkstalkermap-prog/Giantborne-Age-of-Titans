@@ -1,0 +1,114 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="1_5fc47"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.4, 1.2, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(1.5, 1.2, 1.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
+albedo_color = Color(0.5, 0.36, 0.22, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(1.4, 1.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5"]
+albedo_color = Color(0.36, 0.25, 0.15, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(1.44, 0.12, 1.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(1.44, 0.12, 1.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(1.3, 0.08, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(1.3, 0.08, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(1.3, 0.08, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(1.3, 0.08, 0.3)
+
+[node name="Crate" type="StaticBody3D"]
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("1_5fc47")
+world_id = "valley.quarry.chest"
+
+[node name="CombatEntity" type="Node" parent="."]
+script = ExtResource("2_c8050")
+entity_id = "valley.quarry.chest"
+definition_id = "prop.crate"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="."]
+
+[node name="Center" type="Marker3D" parent="Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+
+[node name="BlockCrate" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Hurtboxes" type="Node3D" parent="."]
+
+[node name="Body" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+shape = SubResource("BoxShape3D_2")
+
+[node name="Intact" type="Node3D" parent="."]
+
+[node name="Box" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_4")
+
+[node name="Slat0" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_6")
+
+[node name="Slat1" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_7")
+
+[node name="Broken" type="Node3D" parent="."]
+visible = false
+
+[node name="Plank0" type="MeshInstance3D" parent="Broken"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.05, -0.3)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_8")
+
+[node name="Plank1" type="MeshInstance3D" parent="Broken"]
+transform = Transform3D(0.76604444, 0, 0.6427876, 0, 1, 0, -0.6427876, 0, 0.76604444, -0.15, 0.05, 0.3)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_9")
+
+[node name="Plank2" type="MeshInstance3D" parent="Broken"]
+transform = Transform3D(0.17364822, 0, 0.9848077, 0, 1, 0, -0.9848077, 0, 0.17364822, 0.2, 0.05, -0.3)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_10")
+
+[node name="Plank3" type="MeshInstance3D" parent="Broken"]
+transform = Transform3D(-0.50000006, 0, 0.8660254, 0, 1, 0, -0.8660254, 0, -0.50000006, 0.55, 0.05, 0.3)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_11")

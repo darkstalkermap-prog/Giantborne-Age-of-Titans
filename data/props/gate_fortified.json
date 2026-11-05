@@ -1,0 +1,26 @@
+{
+	"schema_version": 1,
+	"id": "prop.gate_fortified",
+	"type": "prop",
+	"category": "structural",
+	"display_name": "Citadel Gate",
+	"height_m": 12.0,
+	"health": 2000,
+	"armor": 40,
+	"accepted_attack_categories": ["melee", "ability", "projectile", "siege"],
+	"min_growth_stage": 4,
+	"description": "The sealed citadel of the Broken Kings: only a stage-4 giant could breach it.",
+	"requires_permission": "gate_breach",
+	"locked_message": "Fortified gates can be breached at stage 4.",
+	"damage_stages": [
+		{"id": "intact", "at_or_below_frac": 1.0, "visual": "Intact"},
+		{"id": "breached", "at_or_below_frac": 0.0, "visual": "Breached", "removes_collision": true, "enables_nav_links": true}
+	],
+	"debris_count": 16,
+	"debris_length_m": 12,
+	"debris_layout": "line",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

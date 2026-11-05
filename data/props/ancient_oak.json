@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "prop.ancient_oak",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Ancient Oak",
+	"height_m": 14.0,
+	"health": 1000,
+	"armor": 0,
+	"accepted_attack_categories": [],
+	"min_growth_stage": 3,
+	"description": "An ancient oak. A stage-3 giant can tear it from the ground and wield it.",
+	"requires_permission": "tree_weapon",
+	"uproot_weapon": "weapon.tree_oak",
+	"locked_message": "Too small to uproot this oak (stage 3).",
+	"debris_count": 0,
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

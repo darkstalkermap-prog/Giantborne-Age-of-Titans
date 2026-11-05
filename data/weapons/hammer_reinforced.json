@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"id": "weapon.hammer_reinforced",
+	"type": "weapon",
+	"family": "hammer",
+	"display_name": "Warmaul",
+	"damage_multiplier": 1.35,
+	"length_m": 1.5,
+	"hit_radius_m": 0.5,
+	"description": "The Raider's Maul, reforged to fit a full-grown giant.",
+	"scales_with_growth": true,
+	"fit_max_stage": 3,
+	"visual_shape": "hammer",
+	"light_chain": "ability.hammer_light_1",
+	"heavy": "ability.hammer_heavy"
+}

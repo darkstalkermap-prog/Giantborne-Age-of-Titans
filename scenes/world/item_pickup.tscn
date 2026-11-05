@@ -1,0 +1,64 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/item_pickup.gd" id="1_3b229"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.5, 0.36, 0.22, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(1, 0.55, 0.7)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
+albedo_color = Color(0.36, 0.25, 0.15, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(1.04, 0.18, 0.74)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5"]
+albedo_color = Color(0.3, 0.31, 0.34, 1)
+metallic = 0.5
+roughness = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.12, 0.76, 0.76)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7"]
+albedo_color = Color(1, 0.85, 0.35, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(1, 0.78, 0.3, 1)
+emission_energy_multiplier = 1.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.3, 0.3, 0.3)
+
+[node name="ItemPickup" type="Node3D"]
+script = ExtResource("1_3b229")
+world_id = "valley.quarry.cache"
+prompt = "Take"
+radius_m = 3.0
+priority = 45
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Chest" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28, 0)
+material_override = SubResource("StandardMaterial3D_1")
+mesh = SubResource("BoxMesh_2")
+
+[node name="Lid" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.64, 0)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_4")
+
+[node name="Band" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_6")
+
+[node name="Glow" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+material_override = SubResource("StandardMaterial3D_7")
+mesh = SubResource("BoxMesh_8")

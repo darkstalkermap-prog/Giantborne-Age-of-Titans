@@ -16,6 +16,24 @@ static func fields() -> Dictionary:
 		"hit_radius_m": U.pos(true),
 	}
 	## @anchor P08
+	# Weapons with fit stages (P08, plan §2.8.2, decision 3): a weapon follows the giant's growth
+	# up to fit_max_stage (10 = never capped); scales_with_growth false = a fixed real size (the
+	# tree). light_chain / heavy are the moveset it puts into the loadout; upgrade is what a
+	# forge (P12) reforges it into.
+	f.merge({
+		"scales_with_growth": U.bool_field(),
+		"fit_max_stage": U.int_field(1, 10),
+		"light_chain": U.ref("action"),
+		"heavy": U.ref("action"),
+		"required_stage": U.int_field(1, 10),
+		"required_permission": U.str_field(false, DataValidator.INTERACTION_PERMISSIONS),
+		"tags": U.enum_array(DataValidator.TAGS),
+		"visual_shape": U.str_field(false, ["club", "sword", "hammer", "tree", "bow", "staff", "none"]),
+		"upgrade": {"t": "dict", "fields": {
+			"to": U.ref("weapon", true),
+			"cost": {"t": "array", "req": true, "items": "dict", "item_fields": {
+				"item": U.ref("item", true), "count": U.int_field(1, null, true)}}}},
+	})
 
 	## @anchor P12
 
@@ -24,6 +42,17 @@ static func fields() -> Dictionary:
 
 static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor P08
+	# The cross-record rule (an upgrade.to weapon fits at least as high as its source) needs both
+	# records: PlayerEquipment.upgrade_problems(records) checks it (test_weapons runs it on the
+	# shipped data); P12 can call it from the GameData post-pass at its anchor.
+	var p08_upgrade: Variant = d.get("upgrade")
+	if typeof(p08_upgrade) == TYPE_DICTIONARY and str(p08_upgrade.get("to", "")) == str(d.get("id", "")) \
+			and str(d.get("id", "")) != "":
+		out.errors.append("%s.upgrade.to: a weapon cannot upgrade into itself" % ctx)
+	if U.is_number(d.get("required_stage")) and U.is_number(d.get("fit_max_stage")) \
+			and bool(d.get("scales_with_growth", true)) and int(d.required_stage) > int(d.fit_max_stage):
+		out.errors.append("%s: required_stage %d is above fit_max_stage %d (it would never fit)" % [
+			ctx, int(d.required_stage), int(d.fit_max_stage)])
 
 	## @anchor P12
 

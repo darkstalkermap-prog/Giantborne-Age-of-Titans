@@ -1,0 +1,229 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="1_5fc47"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(14, 6, 2.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(14, 6, 3.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
+albedo_color = Color(0.33, 0.24, 0.16, 1)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.55
+bottom_radius = 0.605
+height = 14.5
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_5"]
+top_radius = 0.52
+bottom_radius = 0.572
+height = 13.9
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_6"]
+top_radius = 0.49
+bottom_radius = 0.539
+height = 14.5
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_7"]
+top_radius = 0.55
+bottom_radius = 0.605
+height = 13.9
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_8"]
+top_radius = 0.52
+bottom_radius = 0.572
+height = 14.5
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_9"]
+top_radius = 0.49
+bottom_radius = 0.539
+height = 13.9
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_10"]
+top_radius = 0.55
+bottom_radius = 0.605
+height = 14.5
+radial_segments = 8
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(0.2, 2.6, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
+size = Vector3(0.2, 2.6, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
+size = Vector3(0.2, 2.6, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_14"]
+size = Vector3(0.2, 2.6, 0.2)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_15"]
+bottom_radius = 0.55
+height = 3.2
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_16"]
+bottom_radius = 0.55
+height = 3.2
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_17"]
+bottom_radius = 0.55
+height = 3.2
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_18"]
+bottom_radius = 0.55
+height = 3.2
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_19"]
+bottom_radius = 0.55
+height = 3.2
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_20"]
+bottom_radius = 0.55
+height = 3.2
+radial_segments = 8
+
+[node name="Deadfall" type="StaticBody3D"]
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("1_5fc47")
+world_id = "valley.forest.deadfall"
+
+[node name="CombatEntity" type="Node" parent="."]
+script = ExtResource("2_c8050")
+entity_id = "valley.forest.deadfall"
+definition_id = "prop.deadfall"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="."]
+
+[node name="Center" type="Marker3D" parent="Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="BlockLogs" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Hurtboxes" type="Node3D" parent="."]
+
+[node name="Body" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+shape = SubResource("BoxShape3D_2")
+
+[node name="Intact" type="Node3D" parent="."]
+
+[node name="Log0" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(-4.328599e-08, -0.99026805, 0.1391731, 1, -4.371139e-08, 0, 6.0834497e-09, 0.1391731, 0.99026805, 0.3, 0.55, -0.15)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_4")
+
+[node name="Log1" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(-4.3545054e-08, -0.9961947, -0.08715574, 1, -4.371139e-08, 0, -3.8096983e-09, -0.08715574, 0.9961947, -0.3, 1.37, 0)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_5")
+
+[node name="Log2" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(-4.2412974e-08, -0.9702957, 0.2419219, 1, -4.371139e-08, 0, 1.0574742e-08, 0.2419219, 0.9702957, 0.3, 2.19, 0.15)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_6")
+
+[node name="Log3" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(-4.328599e-08, -0.99026805, -0.1391731, 1, -4.371139e-08, 0, -6.0834497e-09, -0.1391731, 0.99026805, -0.3, 3.01, -0.15)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_7")
+
+[node name="Log4" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(-4.2908287e-08, -0.98162717, 0.190809, 1, -4.371139e-08, 0, 8.3405265e-09, 0.190809, 0.98162717, 0.3, 3.83, 0)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_8")
+
+[node name="Log5" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(-4.368476e-08, -0.99939084, -0.034899496, 1, -4.371139e-08, 0, -1.5255054e-09, -0.034899496, 0.99939084, -0.3, 4.65, 0.15)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_9")
+
+[node name="Log6" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(-4.328599e-08, -0.99026805, 0.1391731, 1, -4.371139e-08, 0, 6.0834497e-09, 0.1391731, 0.99026805, 0.3, 5.47, -0.15)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_10")
+
+[node name="Branch0" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(0.90630776, -0.42261827, 0, 0.42261827, 0.90630776, 0, 0, 0, 1, -5, 5.8, 0.3)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_11")
+
+[node name="Branch1" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(0.90630776, 0.42261827, 0, -0.42261827, 0.90630776, 0, 0, 0, 1, -1.7, 5.8, 0.3)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_12")
+
+[node name="Branch2" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(0.90630776, -0.42261827, 0, 0.42261827, 0.90630776, 0, 0, 0, 1, 1.6, 5.8, 0.3)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_13")
+
+[node name="Branch3" type="MeshInstance3D" parent="Intact"]
+transform = Transform3D(0.90630776, 0.42261827, 0, -0.42261827, 0.90630776, 0, 0, 0, 1, 4.9, 5.8, 0.3)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_14")
+
+[node name="Broken" type="Node3D" parent="."]
+visible = false
+
+[node name="Piece0" type="MeshInstance3D" parent="Broken"]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, -6, 0.5, -1.6)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_15")
+
+[node name="Piece1" type="MeshInstance3D" parent="Broken"]
+transform = Transform3D(-3.5806274e-08, -0.81915206, 0.57357645, 1, -4.371139e-08, 0, 2.5071824e-08, 0.57357645, 0.81915206, -3.6, 0.5, 0)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_16")
+
+[node name="Piece2" type="MeshInstance3D" parent="Broken"]
+transform = Transform3D(-1.4950176e-08, -0.34202015, 0.9396926, 1, -4.371139e-08, 0, 4.1075268e-08, 0.9396926, 0.34202015, -1.2, 0.5, 1.6)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_17")
+
+[node name="Piece3" type="MeshInstance3D" parent="Broken"]
+transform = Transform3D(1.131334e-08, 0.25881904, 0.9659258, 1, -4.371139e-08, 0, 4.222196e-08, 0.9659258, -0.25881904, 1.2, 0.5, -1.6)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_18")
+
+[node name="Piece4" type="MeshInstance3D" parent="Broken"]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 3.6, 0.5, 0)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_19")
+
+[node name="Piece5" type="MeshInstance3D" parent="Broken"]
+transform = Transform3D(-3.5806274e-08, -0.81915206, 0.57357645, 1, -4.371139e-08, 0, 2.5071824e-08, 0.57357645, 0.81915206, 6, 0.5, 1.6)
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("CylinderMesh_20")
+
+[node name="NavLinkThrough" type="NavigationLink3D" parent="."]
+enabled = false
+navigation_layers = 15
+start_position = Vector3(0, 0, 4)
+end_position = Vector3(0, 0, -4)

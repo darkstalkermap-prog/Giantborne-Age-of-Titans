@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/weapon_rack.gd" id="1_9d4a3"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.8, 2.4, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
+albedo_color = Color(0.36, 0.25, 0.15, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.2, 2.4, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.2, 2.4, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(1.9, 0.18, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6"]
+albedo_color = Color(0.55, 0.38, 0.22, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(1.6, 0.14, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(1.9, 0.2, 0.9)
+
+[node name="WeaponRack" type="Node3D"]
+script = ExtResource("1_9d4a3")
+world_id = "valley.ruins.sword_rack"
+prompt = "Take"
+radius_m = 3.0
+priority = 45
+
+[node name="Frame" type="StaticBody3D" parent="."]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0.25)
+shape = SubResource("BoxShape3D_1")
+
+[node name="PostL" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 1.2, 0.25)
+material_override = SubResource("StandardMaterial3D_2")
+mesh = SubResource("BoxMesh_3")
+
+[node name="PostR" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 1.2, 0.25)
+material_override = SubResource("StandardMaterial3D_2")
+mesh = SubResource("BoxMesh_4")
+
+[node name="Top" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.35, 0.25)
+material_override = SubResource("StandardMaterial3D_2")
+mesh = SubResource("BoxMesh_5")
+
+[node name="Rest" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0.1)
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_7")
+
+[node name="Foot" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0.1)
+material_override = SubResource("StandardMaterial3D_2")
+mesh = SubResource("BoxMesh_8")
+
+[node name="Display" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, -0.15)

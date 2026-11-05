@@ -23,6 +23,20 @@ const WOLF_SPAWNS := [Vector3(-46, 0.05, -40), Vector3(-41, 0.05, -46), Vector3(
 const WOLF_PATROL := [Vector3(-45, 0, -36), Vector3(-34, 0, -48), Vector3(-48, 0, -54),
 	Vector3(-54, 0, -44)]
 
+## P08's world props. The practice gate (sandbox.gate_01, structural: cracks at 50 %) stands in
+## the open east of the fence, across the soak's way from the fence toward the arena's east side;
+## it comes after the fence in the tree, so the soak still breaks the fence first. Two weapon
+## racks behind the spawn, an ancient oak near the shrine (uproot at stage 3) and two bushes.
+const GATE_SCENE := "res://scenes/world/gate_practice.tscn"
+const RACK_SCENE := "res://scenes/world/weapon_rack.tscn"
+const OAK_SCENE := "res://scenes/world/ancient_oak.tscn"
+const BUSH_SCENE := "res://scenes/world/bush.tscn"
+const GATE_POS := Vector3(44, 0, 40)
+const SWORD_RACK_POS := Vector3(-6, 0, 52)
+const HAMMER_RACK_POS := Vector3(6, 0, 52)
+const OAK_POS := Vector3(-50, 0, 52)
+const BUSH_POSITIONS := [Vector3(-12, 0, 48), Vector3(12, 0, 48)]
+
 
 static func build_all(kit: SceneKit) -> void:
 	var root := build_arena(kit)
@@ -181,7 +195,44 @@ static func build_arena(kit: SceneKit) -> Node:
 	root.add_child(signs)
 	_add_wolves(kit, root, signs)
 	_add_shrine(kit, nav, signs)
+	_add_world_props(kit, nav, root, signs)
 	return root
+
+
+## The practice gate, the sword and hammer racks, the ancient oak and two bushes (P08). Obstacles
+## go under Navigation (baked; the gate's break re-bakes the sandbox), the bushes under the root.
+static func _add_world_props(kit: SceneKit, nav: Node3D, root: Node3D, signs: Node3D) -> void:
+	for path: String in [GATE_SCENE, RACK_SCENE, OAK_SCENE, BUSH_SCENE]:
+		if not ResourceLoader.exists(kit.output_path(path)):
+			print("sandbox: skipped the world props (%s not built yet)" % path)
+			return
+	var gate: Node3D = kit.instance(GATE_SCENE)
+	gate.name = "PracticeGate"
+	gate.position = GATE_POS
+	gate.rotation_degrees = Vector3(0, 90, 0)
+	gate.set("world_id", "sandbox.gate_01")
+	nav.add_child(gate)
+	signs.add_child(kit.sign("PRACTICE GATE: cracks, then breaks", GATE_POS + Vector3(0, 7.6, 0)))
+	for spec: Array in [["SwordRack", "sandbox.sword_rack", "weapon.sword", SWORD_RACK_POS],
+			["HammerRack", "sandbox.hammer_rack", "weapon.hammer", HAMMER_RACK_POS]]:
+		var rack: Node3D = kit.instance(RACK_SCENE)
+		rack.name = spec[0]
+		rack.position = spec[3]
+		rack.set("world_id", spec[1])
+		rack.set("weapon_id", spec[2])
+		nav.add_child(rack)
+	signs.add_child(kit.sign("WEAPON RACKS: sword, hammer (E)", Vector3(0, 3.4, 52)))
+	var oak: Node3D = kit.instance(OAK_SCENE)
+	oak.name = "AncientOak"
+	oak.position = OAK_POS
+	oak.set("world_id", "sandbox.oak_01")
+	nav.add_child(oak)
+	signs.add_child(kit.sign("ANCIENT OAK: uproot it at stage 3 (E)", OAK_POS + Vector3(0, 4.0, -2.0)))
+	for i in BUSH_POSITIONS.size():
+		var bush: Node3D = kit.instance(BUSH_SCENE)
+		bush.name = "Bush%02d" % (i + 1)
+		bush.position = BUSH_POSITIONS[i]
+		root.add_child(bush)
 
 
 ## One shrine (sandbox.shrine, record shrine.sandbox) west of the spawn (P05).

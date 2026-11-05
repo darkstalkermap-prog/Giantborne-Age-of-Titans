@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "prop.cairn",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Watch Cairn",
+	"height_m": 3.0,
+	"health": 60,
+	"armor": 0,
+	"accepted_attack_categories": ["projectile"],
+	"min_growth_stage": 1,
+	"locked_message": "Only a hurled boulder can topple the cairn.",
+	"debris_count": 8,
+	"debris_length_m": 3,
+	"debris_layout": "pile",
+	"lockable": true,
+	"grants_fury": false,
+	"threat": 0.05,
+	"stability": 100.0
+}
