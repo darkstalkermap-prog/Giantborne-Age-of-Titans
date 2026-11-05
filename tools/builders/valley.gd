@@ -6,7 +6,10 @@ extends RefCounted
 ##     Collision (one StaticBody3D on WORLD with a CollisionShape3D per element), Blockers (one
 ##     StaticBody3D on the blockers layer: the invisible river banks and bridge rails), Visual (one
 ##     MultiMeshInstance3D per material and unit mesh) and Scenery (the trees' MultiMeshes, with
-##     visibility_range_end 220 m, group "valley_scenery");
+##     visibility_range_end 220 m, group "valley_scenery"); P15's dressing adds barley rows (Visual),
+##     visual-only trees on the cliff tops (Scenery: the district's own tree MultiMeshes) and
+##     Dressing (a CosmeticField: the district's bushes, banners and sheaves, three MultiMeshes
+##     made at runtime, reacting like CosmeticProps; layout "dressing");
 ##   * assets/nav/valley_{human,large,giant,small_giant}.res - the four navigation meshes (nav
 ##     layers 1/2/4/8, plan §2.2), baked here, offline, from the very elements the collision comes
 ##     from (plus the solid shapes of every placed prop, shrine, waystone and dummy) and saved
@@ -41,6 +44,7 @@ const S_TRIGGER := "res://scripts/world/area_trigger.gd"
 const S_WAYSTONE := "res://scripts/world/waystone.gd"
 const S_DEBRIS := "res://scripts/world/debris_pool.gd"
 const S_BOSS_ARENA := "res://scripts/world/boss_arena.gd"   # P11a
+const S_COSMETIC_FIELD := "res://scripts/world/cosmetic_field.gd"   # P15
 const GIANT := "res://scenes/player/giant.tscn"
 const SHRINE := "res://scenes/world/shrine.tscn"
 const DUMMY := "res://scenes/world/practice_dummy.tscn"
@@ -265,6 +269,20 @@ static func collect(layout: Dictionary) -> Dictionary:
 	var trees: Array = layout.get("scenery_trees", [])
 	for i in trees.size():
 		_tree(geo, i, trees[i])
+	# P15 dressing: barley rows (visual), ridge trees on the cliff tops (visual), and the cosmetic
+	# props batched per district (CosmeticField).
+	for f: Dictionary in layout.get("barley_rows", []):
+		_barley_rows(geo, f)
+	var ridge_index := trees.size()
+	for r: Dictionary in layout.get("ridge_trees", []):
+		ridge_index = _ridge_trees(geo, r, ridge_index)
+	geo["dressing"] = {}
+	for d: Dictionary in layout.get("dressing", []):
+		var at := _v3(d.pos)
+		var district := _district_of(geo, d, at)
+		if not (geo.dressing as Dictionary).has(district):
+			geo.dressing[district] = []
+		(geo.dressing[district] as Array).append(d)
 	return geo
 
 
@@ -410,6 +428,71 @@ static func _tree(geo: Dictionary, i: int, t: Array) -> void:
 		Vector3(x, h * 0.62 + h * 0.2, z)), "leaves_dark", true, true)
 
 
+## Barley rows over a field (visual only, no shadow; the giant walks through them): boxes of
+## the field's width along x, `spacing` apart in z, `w` wide and `h` tall.
+static func _barley_rows(geo: Dictionary, f: Dictionary) -> void:
+	var r := _rect(f)
+	var spacing := float(f.get("spacing", 2.4))
+	var w := float(f.get("w", 0.8))
+	var h := float(f.get("h", 0.9))
+	var z := r.position.y + spacing * 0.5
+	var i := 0
+	while z <= r.end.y - spacing * 0.25:
+		var centre := Vector3(r.get_center().x, h * 0.5, z)
+		var e := {"name": f.name, "district": f.get("district", ""), "_centre": centre}
+		_visual(geo, e, "%s_row_%02d" % [f.name, i], "box", Transform3D(Basis.from_scale(Vector3(r.size.x - 1.0, h, w)),
+			centre), str(f.get("mat", "field")), false, false)
+		z += spacing
+		i += 1
+
+
+## Trees on a cliff top (visual only: no trunk collision, outside the navigation), `count` of them
+## at seeded places in the rectangle at height `y`, drawn with the district's own tree MultiMeshes
+## (the layout names a district that has scenery trees, so no draw call is added). Returns the
+## next tree index (it picks the crown material, as for the scenery trees).
+static func _ridge_trees(geo: Dictionary, r: Dictionary, index: int) -> int:
+	var rect := _rect(r)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(str(r.name))
+	var y := float(r.get("y", 0.0))
+	var district := str(r.get("district", ""))
+	for k in int(r.get("count", 0)):
+		var x := rng.randf_range(rect.position.x, rect.end.x)
+		var z := rng.randf_range(rect.position.y, rect.end.y)
+		var radius := rng.randf_range(0.45, 0.7)
+		var h := 7.0 + 6.0 * radius
+		var e := {"name": "ridge_tree_%03d" % index, "district": district}
+		_visual(geo, e, "Ridge%03d_trunk" % index, "cyl", Transform3D(Basis.from_scale(Vector3(radius * 2, h, radius * 2)),
+			Vector3(x, y + h * 0.5, z)), "bark", true, true)
+		var crown := 2.4 + 2.6 * radius
+		_visual(geo, e, "Ridge%03d_a" % index, "cone", Transform3D(Basis.from_scale(Vector3(crown * 2, h * 0.55, crown * 2)),
+			Vector3(x, y + h * 0.3 + h * 0.275, z)), "leaves_dark" if index % 3 != 0 else "leaves", true, true)
+		_visual(geo, e, "Ridge%03d_b" % index, "cone", Transform3D(Basis.from_scale(Vector3(crown * 1.4, h * 0.4, crown * 1.4)),
+			Vector3(x, y + h * 0.62 + h * 0.2, z)), "leaves_dark", true, true)
+		index += 1
+	return index
+
+
+## A district's cosmetic dressing: one CosmeticField (its items' kinds, transforms and cloth
+## tints; the field makes its three MultiMeshes at runtime), or null when it has none.
+static func _dressing(kit: SceneKit, items: Array) -> Node3D:
+	if items.is_empty() or not ResourceLoader.exists(S_COSMETIC_FIELD):
+		return null
+	var kinds := PackedStringArray()
+	var xforms: Array[Transform3D] = []
+	var tints := PackedColorArray()
+	for d: Dictionary in items:
+		kinds.append(str(d.kind))
+		var s := float(d.get("scale", 1.0))
+		xforms.append(Transform3D(Basis(Vector3.UP, deg_to_rad(float(d.get("yaw", 0.0)))) * Basis.from_scale(Vector3.ONE * s),
+			_v3(d.pos)))
+		var t: Variant = d.get("tint")
+		tints.append(Color(float(t[0]), float(t[1]), float(t[2])) if typeof(t) == TYPE_ARRAY else Color(0, 0, 0, 0))
+	var field := kit.n3("Dressing")
+	kit.scripted(field, S_COSMETIC_FIELD, {"kinds": kinds, "transforms": xforms, "tints": tints})
+	return field
+
+
 # --------------------------------------------------------------------------- district sub-scenes
 
 ## One district: Collision (WORLD), Blockers, Visual and Scenery (MultiMeshes), all in level space.
@@ -479,6 +562,9 @@ static func build_district(kit: SceneKit, id: String, geo: Dictionary) -> Node:
 		root.add_child(scenery)
 	else:
 		scenery.free()
+	var dressing := _dressing(kit, (geo.get("dressing", {}) as Dictionary).get(id, []))
+	if dressing != null:
+		root.add_child(dressing)
 	return root
 
 

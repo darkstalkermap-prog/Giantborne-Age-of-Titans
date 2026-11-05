@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "prop.barley_sheaf",
+	"type": "prop",
+	"category": "cosmetic",
+	"display_name": "Barley Sheaf",
+	"height_m": 1.4,
+	"health": 1,
+	"accepted_attack_categories": [],
+	"description": "Cosmetic: a sheaf of Thornwick's barley. It sways when something passes and flattens under a big giant's foot. Never saved. Drawn batched with the district's other dressing (scripts/world/cosmetic_field.gd).",
+	"react_radius_m": 1.2
+}

@@ -1502,6 +1502,26 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "BARROW OF THE FIRST KING"
 font_size = 64
 
+[node name="SignPrototype" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -156, 4.5, 160)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "PROTOTYPE PACING: ACCELERATED QUEST XP"
+font_size = 64
+
+[node name="SignSealed" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 183, 7, -60)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "SEALED — STAGE 4"
+font_size = 64
+
 [node name="Spawns" type="Node3D" parent="."]
 
 [node name="PlayerSpawn" type="Marker3D" parent="Spawns"]

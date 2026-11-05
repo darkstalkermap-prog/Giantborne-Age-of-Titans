@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Shader" path="res://assets/shaders/ground_checker.gdshader" id="1_49689"]
+[ext_resource type="Script" path="res://scripts/world/cosmetic_field.gd" id="2_fd773"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(88, 1, 170)
@@ -283,3 +284,9 @@ multimesh = SubResource("MultiMesh_34")
 material_override = SubResource("StandardMaterial3D_35")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_36")
+
+[node name="Dressing" type="Node3D" parent="."]
+script = ExtResource("2_fd773")
+kinds = PackedStringArray("banner", "banner", "banner", "banner", "banner", "banner")
+transforms = Array[Transform3D]([Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 127.5, 0, -60), Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 127.5, 0, -90), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 145, 0, -107.5), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 0, -107.5), Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 187.5, 0, -67), Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 187.5, 0, -53)])
+tints = PackedColorArray(0.62, 0.14, 0.13, 1, 0.62, 0.14, 0.13, 1, 0.62, 0.14, 0.13, 1, 0.62, 0.14, 0.13, 1, 0.62, 0.14, 0.13, 1, 0.62, 0.14, 0.13, 1)
