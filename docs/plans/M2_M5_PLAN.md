@@ -227,7 +227,7 @@ P02's anchor test (`tests/unit/test_anchors.gd`) reads this table from `tests/su
 
 ### 1.6 Test budget, slow tests and global state
 
-- The default suite must stay under **45 s**; it takes about 7 s today. Each package reports its added runtime in its system doc.
+- The default suite must stay under **75 s** (raised from 45 s after wave 4, when it reached about 47 s); it took about 7 s at M1. Each package reports its added runtime in its system doc.
 - Long suites (the 3-size route, Valley load, walkthroughs, stress smoke and bot smoke) go in `tests/slow/` and run only with `--slow` (runner support from P02). The slow total stays under 6 minutes.
 - New global state is reset through `ResetHooks` (P02, §2.13), never by editing `tests/integration_suite.gd`: P06 provides `GameSession.reset_for_tests()`, P13 `Quests.reset_for_tests()`, P02 `TestFixtures.restore_all()` and P03 `ScreenStack.close_all_static()`. `WorldState.clear()` already covers deltas, inventory and flags (P01). `Sim.clear_pending()` also clears launch slots (P01). `Sim.reseed()` reseeds every RNG stream (P01).
 - New helpers go in `tests/support/*.gd` (static functions), not in `integration_suite.gd`.
