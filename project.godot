@@ -8,8 +8,8 @@ config_version=5
 [application]
 
 config/name="Giantborn: Age of Titans"
-config/description="Low-poly combat sandbox prototype (milestones M0/M1)."
-config/version="0.2.0-m3"
+config/description="Low-poly action-RPG prototype: the Valley of Broken Kings slice (milestones M0-M5)."
+config/version="0.5.0-m5"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
