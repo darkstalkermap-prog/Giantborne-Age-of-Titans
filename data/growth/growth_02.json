@@ -26,6 +26,17 @@
 	"weapon_pivot_m": [1.23, 4.35, 0.0],
 	"attack_origin_m": [0.0, 3.9, 0.0],
 	"arm_length_m": 2.25,
+	"weapon_scale": 1.5,
+	"grab_reach_m": 5.3,
+	"grab_lunge_m": 2.7,
+	"grab_capacity": "small",
+	"grab_attach": ["torso_fist", "scruff"],
+	"resource_bonus": {"health": 150, "stamina": 10},
+	"arc_pitch_offset_deg": -8,
+	"dodge_style": "sidestep",
+	"camera_orbit_scale": 1.5,
+	"nav_layers": 4,
+	"footstep_shake": 0.05,
 	"interaction_permissions": ["grab_small", "throw_boulder"],
 	"unlocks": []
 }

@@ -56,9 +56,12 @@ func on_action_started(action: ActionDef, _instance_id: int) -> void:
 
 ## Weapon segment (shoulder-side end, tip) in world space at fraction f of the action's arc.
 ## The rig poses the arm with the same AttackGeometry, so the visible swing is the tested one.
+## The growth profile's arc pitch offset (arc_pitch_offset_for) tilts the arc downward, so a big
+## giant still reaches soldiers and wolves at its feet (decision 5); the rig adds the same tilt
+## (rig state "arc_pitch_offset_deg").
 func weapon_segment_global(action: ActionDef, f: float) -> PackedVector3Array:
 	var ang := AttackGeometry.arc_point(action, f)
-	var dir := AttackGeometry.local_direction(ang.x, ang.y)
+	var dir := AttackGeometry.local_direction(ang.x, ang.y + arc_pitch_offset_for(action))
 	var seg := AttackGeometry.segment_local(player.weapon_pivot, dir, player.arm_length,
 		player.arm_length + player.weapon_length)
 	return PackedVector3Array([player.to_global(seg[0]), player.to_global(seg[1])])
@@ -66,6 +69,29 @@ func weapon_segment_global(action: ActionDef, f: float) -> PackedVector3Array:
 
 func run_hit_queries(tick: int) -> void:
 	runner.run(tick)
+
+
+## The current growth stage's downward tilt of the weapon arcs (degrees, <= 0).
+func arc_pitch_offset_deg() -> float:
+	return float(player.profile.get("arc_pitch_offset_deg", 0.0))
+
+
+## The tilt of `action`'s arc at the current stage: the profile's arc_pitch_offsets_deg entry
+## for the action, else its arc_pitch_offset_deg.
+func arc_pitch_offset_for(action: ActionDef) -> float:
+	return offset_for(player.profile, action.id if action != null else "")
+
+
+## arc_pitch_offsets_deg[action_id] of `profile` when present, else arc_pitch_offset_deg (0).
+static func offset_for(profile: Dictionary, action_id: String) -> float:
+	var per_action: Variant = profile.get("arc_pitch_offsets_deg")
+	if typeof(per_action) == TYPE_DICTIONARY and (per_action as Dictionary).has(action_id):
+		return float(per_action[action_id])
+	return float(profile.get("arc_pitch_offset_deg", 0.0))
+
+
+func rig_state(out: Dictionary) -> void:
+	out["arc_pitch_offset_deg"] = arc_pitch_offset_for(player.controller.action)
 
 
 # --------------------------------------------------------------------------- projectiles (P03)

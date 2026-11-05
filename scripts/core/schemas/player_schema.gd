@@ -43,6 +43,12 @@ static func fields() -> Dictionary:
 			"ultimate": U.ref("action", false, true)}},
 	}
 	## @anchor P05
+	# P05: the giant's mass class [large] (grabs and throws compare mass classes) and the status
+	# tags it is immune to.
+	f.merge({
+		"mass_class": U.str_field(false, DataValidator.MASS_CLASSES),
+		"status_immunities": U.enum_array(DataValidator.STATUS_TAGS),
+	})
 
 	return f
 

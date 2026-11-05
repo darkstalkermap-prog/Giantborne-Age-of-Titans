@@ -66,6 +66,10 @@ var weapon_radius := 0.45
 var stats := {"attacks": 0, "hits_landed": 0, "deaths": 0, "parries": 0, "kills": 0}
 ## Abilities this character has learned (save data); the loadout slots draw from them.
 var known_abilities: Array[String] = []
+## Navigation layers of the current growth stage (P05): 8 small giant (stage 1, fits the 4 m
+## alleys), 4 giant (stages 2-3). The giant has no NavigationAgent3D; the Valley bot and the
+## clearance checks path with these layers.
+var nav_layers := 4
 
 ## Components that always exist (typed) ...
 var motor: PlayerMotor
@@ -98,6 +102,9 @@ func _ready() -> void:
 	profile = GameData.get_record(str(record.get("growth_profile", "growth.01")))
 	weapon = GameData.get_record(str(record.get("weapon", "weapon.club")))
 	growth_stage = int(profile.get("stage", 1))
+	nav_layers = int(profile.get("nav_layers", 4))
+	# The player schema's default mass class is "large" (Combatant's generic default is small).
+	entity.combatant.mass_class = str(record.get("mass_class", "large"))
 	_build_controller()
 	router = InputRouter.new()
 	router.name = "InputRouter"
@@ -402,16 +409,20 @@ func set_loadout_slot(slot_key: String, action_id: String) -> void:
 	controller.loadout[slot_key] = action_id
 
 
-## Swaps the growth profile record and tells every component (geometry, lock range, ...).
-## Gating, clearance, height, camera framing and resource rescaling are PlayerGrowth's job
-## (P05); this only re-applies what the components and the capsule read from the profile.
+## Swaps the growth profile record and re-applies everything that follows it, in one tick: the
+## stage (controller gating), capsule and floor snap, the camera (apply_profile keeps the zoom
+## fraction), the navigation layers, then every component (geometry, lock range; PlayerGrowth:
+## height, resource maxima with fractions kept, body scale, hurtboxes and anchors), then the
+## rig's shoulder pivot. Gating, clearance, unlocks and Events.growth_changed are
+## PlayerGrowth.grow_to's (P05); this is the mechanical part it shares with save restores.
 func set_profile(new_profile: Dictionary) -> void:
 	var old := profile
 	profile = new_profile
 	growth_stage = int(new_profile.get("stage", growth_stage))
-	controller.growth_stage = growth_stage
+	controller.set_growth_stage(growth_stage)
+	nav_layers = int(new_profile.get("nav_layers", 4))
 	_apply_profile()
-	camera_rig.profile = new_profile
+	camera_rig.apply_profile(new_profile)
 	for c in _components:
 		c.on_profile_changed(old, new_profile)
 	rig.set_weapon_pivot(weapon_pivot)

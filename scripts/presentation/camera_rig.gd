@@ -7,6 +7,12 @@ extends Node3D
 ## and on to the desired camera position; the arm retracts instantly at obstacles and
 ## restores smoothly. First person sits at 92% of the giant's height with the head hidden
 ## (render layer 2 is culled). Shake and head bob are independently scalable in Settings.
+##
+## Growth (P05): apply_profile() switches to another stage's profile, keeping the zoom fraction
+## between the stage's zoom limits and never snapping the arm (it restores at RESTORE_SPEED).
+## The lock orbit distances scale with the profile's camera_orbit_scale. In third person the
+## camera also hides render layer 2 (head, chest, belt) while the arm is retracted so far that
+## the giant's own head would cover the screen centre (hides_head()).
 
 enum Mode { THIRD_PERSON, FIRST_PERSON }
 
@@ -23,6 +29,16 @@ const LOCK_ORBIT_DEG := 32.0        ## side orbit so a small, close target is no
 const FP_ASSIST_DEG_S := 20.0
 const FP_ASSIST_CONE_DEG := 25.0
 const FP_HIDDEN_LAYER := 2           ## render layer bit for head geometry
+const LOCK_ORBIT_FAR_M := 12.0       ## the lock orbit ramps in between these target distances,
+const LOCK_ORBIT_NEAR_M := 3.0       ## times the profile's camera_orbit_scale
+## Third person hides layer 2 while the arm is shorter than this times the capsule radius (a
+## wall right behind the giant) ...
+const HEAD_HIDE_ARM_RADII := 1.2
+## ... or while the screen-centre ray passes closer than this times the capsule radius beside
+## the pivot (the camera is pressed close behind the head, e.g. under a low ceiling).
+const HEAD_CLEAR_RADII := 0.5
+const CULL_ALL := 0xFFFFF
+const CULL_NO_HEAD := 0xFFFFF & ~(1 << (FP_HIDDEN_LAYER - 1))
 
 var mode: int = Mode.THIRD_PERSON
 var yaw := 0.0                       ## radians, Godot convention (0 faces -Z)
@@ -33,6 +49,9 @@ var desired_distance := 6.5
 var current_distance := 6.5
 var lock_target: CombatEntity = null
 var obstructed := false
+## True while third person hides render layer 2 (see hides_head()); always false in first
+## person, where layer 2 is hidden anyway.
+var head_hidden := false
 var _shake := 0.0
 var _time := 0.0
 var _bob_phase := 0.0
@@ -68,11 +87,12 @@ func toggle_mode() -> void:
 func set_mode(new_mode: int, announce := true) -> void:
 	mode = new_mode
 	Settings.session["camera_mode"] = mode
+	head_hidden = false
 	if mode == Mode.FIRST_PERSON:
-		camera.cull_mask = 0xFFFFF & ~(1 << (FP_HIDDEN_LAYER - 1))
+		camera.cull_mask = CULL_NO_HEAD
 		pitch = clampf(pitch, deg_to_rad(FP_PITCH_MIN), deg_to_rad(FP_PITCH_MAX))
 	else:
-		camera.cull_mask = 0xFFFFF
+		camera.cull_mask = CULL_ALL
 		pitch = clampf(pitch, deg_to_rad(TP_PITCH_MIN), deg_to_rad(TP_PITCH_MAX))
 		current_distance = 0.5  # grow out smoothly instead of popping through geometry
 	if announce:
@@ -83,6 +103,53 @@ func zoom(step: int) -> void:
 	var lo := float(profile.get("camera_zoom_min_m", desired_distance))
 	var hi := float(profile.get("camera_zoom_max_m", desired_distance))
 	desired_distance = clampf(desired_distance + 0.75 * step, lo, hi)
+
+
+## Switches to another growth stage's profile (P05). The zoom keeps its fraction between the
+## old and the new stage's zoom limits; current_distance is never snapped: the arm grows out
+## (or is cut by the next sweep) on its own. Everything else is read from the profile live.
+func apply_profile(new_profile: Dictionary) -> void:
+	desired_distance = zoomed_distance(profile, new_profile, desired_distance)
+	profile = new_profile
+
+
+## The camera distance on `to` that keeps the zoom fraction `distance` has between the zoom
+## limits of `from` (an empty or degenerate `from` uses `to`'s camera_distance_m).
+static func zoomed_distance(from: Dictionary, to: Dictionary, distance: float) -> float:
+	var to_default := float(to.get("camera_distance_m", distance))
+	var lo := float(to.get("camera_zoom_min_m", to_default))
+	var hi := float(to.get("camera_zoom_max_m", to_default))
+	if from.is_empty():
+		return clampf(to_default, minf(lo, hi), maxf(lo, hi))
+	var from_lo := float(from.get("camera_zoom_min_m", distance))
+	var from_hi := float(from.get("camera_zoom_max_m", distance))
+	if from_hi - from_lo < 1e-6:
+		return clampf(to_default, minf(lo, hi), maxf(lo, hi))
+	var t := clampf((distance - from_lo) / (from_hi - from_lo), 0.0, 1.0)
+	return lerpf(lo, hi, t)
+
+
+## The side orbit (radians) of the third-person lock on a small target `dist` metres away: none
+## beyond LOCK_ORBIT_FAR_M x orbit_scale, LOCK_ORBIT_DEG within LOCK_ORBIT_NEAR_M x orbit_scale
+## (the profile's camera_orbit_scale, so a bigger giant starts orbiting farther out).
+static func lock_orbit_rad(dist: float, orbit_scale: float) -> float:
+	var s := maxf(orbit_scale, 0.01)
+	return deg_to_rad(LOCK_ORBIT_DEG) * clampf(inverse_lerp(LOCK_ORBIT_FAR_M * s, LOCK_ORBIT_NEAR_M * s, dist), 0.0, 1.0)
+
+
+## Third person: hide render layer 2 (head, chest, belt) while the arm is shorter than
+## HEAD_HIDE_ARM_RADII x the capsule radius, or while the screen-centre ray passes closer than
+## HEAD_CLEAR_RADII x the capsule radius beside the pivot. The camera always looks along the
+## arm's backward axis, so its centre ray passes the pivot's height at a sideways distance of
+## shoulder_offset x arm / full_arm; the pivot sits in the head, so below that distance the
+## back of the head covers the crosshair.
+static func hides_head(arm_m: float, full_arm_m: float, shoulder_offset_m: float,
+		capsule_radius_m: float) -> bool:
+	if arm_m < HEAD_HIDE_ARM_RADII * capsule_radius_m:
+		return true
+	if full_arm_m < 1e-6:
+		return false
+	return absf(shoulder_offset_m) * arm_m / full_arm_m < HEAD_CLEAR_RADII * capsule_radius_m
 
 
 func add_shake(amount: float) -> void:
@@ -145,9 +212,7 @@ func _frame_lock_target(delta: float) -> void:
 	to_target.y = 0.0
 	var dist := to_target.length()
 	var small := lock_target.combatant.height_m < float(profile.get("height_m", 3.66)) * 0.7
-	var orbit := 0.0
-	if small:
-		orbit = deg_to_rad(LOCK_ORBIT_DEG) * clampf(inverse_lerp(12.0, 3.0, dist), 0.0, 1.0)
+	var orbit := lock_orbit_rad(dist, float(profile.get("camera_orbit_scale", 1.0))) if small else 0.0
 	if dist > 0.1:
 		var want_yaw := TargetingRules.yaw_of(to_target) + orbit
 		yaw = lerp_angle(yaw, want_yaw, 1.0 - exp(-8.0 * delta))
@@ -193,7 +258,8 @@ func _update_transform(delta: float) -> void:
 		# never exceeds the swept safe length, so the camera cannot enter geometry.
 		var pivot := player.global_position + Vector3.UP * float(profile.get("camera_pivot_height_m", 3.3))
 		var right := Vector3(cos(yaw), 0.0, -sin(yaw))
-		var desired := pivot + right * float(profile.get("camera_shoulder_offset_m", 0.85)) + basis.z * desired_distance
+		var shoulder := float(profile.get("camera_shoulder_offset_m", 0.85))
+		var desired := pivot + right * shoulder + basis.z * desired_distance
 		var arm := desired - pivot
 		var arm_length := arm.length()
 		var space := player.get_world_3d().direct_space_state
@@ -204,6 +270,10 @@ func _update_transform(delta: float) -> void:
 		else:
 			current_distance = move_toward(current_distance, safe_length, RESTORE_SPEED * delta)
 		global_transform = Transform3D(basis, pivot + arm / maxf(arm_length, 0.001) * current_distance)
+		var hide := hides_head(current_distance, arm_length, shoulder, float(profile.get("capsule_radius_m", 0.85)))
+		if hide != head_hidden:
+			head_hidden = hide
+			camera.cull_mask = CULL_NO_HEAD if hide else CULL_ALL
 	_apply_shake(delta)
 
 

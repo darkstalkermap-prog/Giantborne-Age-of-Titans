@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"id": "shrine.thornwick",
+	"type": "shrine",
+	"display_name": "Thornwick Shrine",
+	"description": "Just inside Thornwick's west gate: rest and save, but no growth.",
+	"allows_growth": false,
+	"max_stage": 2,
+	"growth_requires_flags": [],
+	"checkpoint": true,
+	"rest_heals": true,
+	"first_activation_rest": true,
+	"loadout": true,
+	"attributes": true,
+	"activation_radius_m": 14
+}

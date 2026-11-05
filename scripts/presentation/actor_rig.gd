@@ -58,12 +58,17 @@ func _ready() -> void:
 	_make_materials_unique(self)
 
 
-## Places the weapon shoulder exactly where the data says the hit sweep pivots.
+## Places the weapon shoulder exactly where the data says the hit sweep pivots. `pivot_local`
+## is in the actor's space; the shoulders live in the (scaled) Body, so it is divided by the
+## body scale (P05).
 func set_weapon_pivot(pivot_local: Vector3) -> void:
+	_pivot_local = pivot_local
+	_pivot_set = true
+	var p := pivot_local / body_scale
 	if weapon_arm != null:
-		weapon_arm.position = pivot_local
+		weapon_arm.position = p
 	if off_arm != null:
-		off_arm.position = Vector3(-pivot_local.x, pivot_local.y, pivot_local.z)
+		off_arm.position = Vector3(-p.x, p.y, p.z)
 
 
 func flash(strength: float, color := Color(1.0, 0.95, 0.85)) -> void:
@@ -117,6 +122,8 @@ func _process(delta: float) -> void:
 		twist = deg_to_rad(pose[2])
 	elif action != null and action.hit_shape == "weapon_arc":
 		arm = AttackGeometry.pose_for(action, phase, f, idle_arm_pose)
+		# P05: the growth stage's downward arc tilt, exact during ACTIVE like the hit sweep.
+		arm.y += float(s.get("arc_pitch_offset_deg", 0.0)) * arc_offset_weight(phase, f)
 		exact = phase == ActionDef.Phase.ACTIVE
 		off = off_idle_pose + Vector2(0.0, 30.0)
 		twist = -deg_to_rad(arm.x) * 0.3
@@ -142,11 +149,13 @@ func _process(delta: float) -> void:
 		arm = block_pose
 		off = off_block_pose
 	elif state == CombatController.State.DODGING:
-		arm = Vector2(25.0, -50.0)
-		off = Vector2(-25.0, -50.0)
+		var dodge_arms := dodge_arm_pose(str(s.get("dodge_style", "roll")))
+		arm = dodge_arms[0]
+		off = dodge_arms[1]
 	var moving := speed > 0.3 and state in [CombatController.State.LOCOMOTION, CombatController.State.BLOCKING]
 	if moving:
-		_walk_phase += delta * speed / stride_length_m * PI
+		_walk_phase += delta * speed / (stride_length_m * body_scale) * PI
+		_count_footfalls()
 	var swing := sin(_walk_phase) * clampf(speed / 5.0, 0.0, 1.2) if moving else 0.0
 	if state == CombatController.State.LOCOMOTION and action == null:
 		arm.y += swing * 16.0
@@ -176,19 +185,21 @@ func _update_body(s: Dictionary, delta: float) -> void:
 		_fall = move_toward(_fall, 1.0, delta * 1.6)
 		var e := _fall * _fall * (3.0 - 2.0 * _fall)
 		body.rotation = Vector3(-e * PI * 0.48, 0.0, 0.0)
-		body.position = Vector3(0.0, -e * 0.15, e * 0.4)
+		body.position = Vector3(0.0, -e * 0.15, e * 0.4) * body_scale
 		return
 	_fall = 0.0
 	var target_rot := Vector3.ZERO
+	var rate := 18.0
 	if s.get("staggered", false):
 		_stagger_time += delta
 		target_rot = Vector3(0.14 + sin(_stagger_time * 16.0) * 0.06, 0.0, sin(_stagger_time * 9.0) * 0.05)
 	else:
 		_stagger_time = 0.0
 		if s.get("dodging", false):
-			var d: Vector3 = s.get("dodge_local", Vector3.ZERO)
-			target_rot = Vector3(-d.z * 0.25, 0.0, -d.x * 0.25)
-	body.rotation = body.rotation.lerp(target_rot, 1.0 - exp(-18.0 * delta))
+			var lean := dodge_lean(str(s.get("dodge_style", "roll")), s.get("dodge_local", Vector3.ZERO))
+			target_rot = lean[0]
+			rate = lean[1]
+	body.rotation = body.rotation.lerp(target_rot, 1.0 - exp(-rate * delta))
 	body.position = body.position.lerp(Vector3.ZERO, 1.0 - exp(-18.0 * delta))
 
 
@@ -285,6 +296,72 @@ func ability_pose(action: ActionDef, phase: int, f: float) -> Array:
 # weapon record.
 
 ## @anchor P05
+# Growth (P05). The giant's Visual/Body is scaled uniformly by k = height / 3.6576, so the
+# authored stage-1 rig keeps exactly the profile's proportions: the pivots in data are divided
+# by k (set_weapon_pivot), and the club mesh (1.85 m in Body space) scales to the profile's
+# weapon_scale. Collision never uses node scale (PlayerGrowth resizes the shapes). Rig-state
+# keys read here: "arc_pitch_offset_deg" (the stage's downward arc tilt, added to the weapon
+# arm exactly as the hit sweep adds it) and "dodge_style" (roll | sidestep).
+
+## Emitted on every footfall of the walk cycle (each half stride); the giant shakes its camera
+## on it at stage 2 and above (presentation only).
+signal footfall
+
+var body_scale := 1.0
+var footfalls := 0                 ## footfalls counted so far (tests, debug)
+var _pivot_local := Vector3.ZERO   ## the last set_weapon_pivot argument (actor space)
+var _pivot_set := false
+var _last_step := 0
+
+
+## Scales Visual/Body uniformly by k and re-places the shoulders (pivots stay in actor space).
+func set_body_scale(k: float) -> void:
+	body_scale = maxf(k, 0.01)
+	if body != null:
+		body.scale = Vector3.ONE * body_scale
+	if _pivot_set:
+		set_weapon_pivot(_pivot_local)
+
+
+## How much of the arc pitch offset the weapon arm shows at `phase` / fraction `f`: all of it
+## during ACTIVE (the swept arc), easing in over the windup and out over the recovery, so the
+## arm never jumps at the start or the end of a swing.
+static func arc_offset_weight(phase: int, f: float) -> float:
+	match phase:
+		ActionDef.Phase.WINDUP:
+			return clampf(f, 0.0, 1.0)
+		ActionDef.Phase.ACTIVE:
+			return 1.0
+		ActionDef.Phase.RECOVERY:
+			return 1.0 - smoothstep(0.0, 1.0, clampf(f, 0.0, 1.0))
+	return 0.0
+
+
+## Arm poses (weapon arm, off arm) while dodging: arms tucked for the stage-1 roll, held lower
+## and wider for the heavier sidestep of stages 2-3.
+static func dodge_arm_pose(style: String) -> Array:
+	if style == "sidestep":
+		return [Vector2(35.0, -62.0), Vector2(-35.0, -62.0)]
+	return [Vector2(25.0, -50.0), Vector2(-25.0, -50.0)]
+
+
+## Body lean while dodging toward `dodge_local` (actor space) and how fast it is reached:
+## [rotation: Vector3, rate: float]. The roll pitches into the direction of travel; the
+## sidestep mostly leans sideways, less and more slowly (the same i-frames and distance).
+static func dodge_lean(style: String, dodge_local: Vector3) -> Array:
+	if style == "sidestep":
+		return [Vector3(-dodge_local.z * 0.08, 0.0, -dodge_local.x * 0.14), 8.0]
+	return [Vector3(-dodge_local.z * 0.25, 0.0, -dodge_local.x * 0.25), 18.0]
+
+
+## Emits `footfall` once for every half stride (pi of walk phase) since the last call.
+func _count_footfalls() -> void:
+	var step := int(floor(_walk_phase / PI))
+	if step == _last_step:
+		return
+	_last_step = step
+	footfalls += 1
+	footfall.emit()
 
 ## @anchor P07
 
