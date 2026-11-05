@@ -1068,6 +1068,194 @@ func _note_token_request(target_id: String, granted: bool) -> void:
 			waiters.erase(id)
 	target.set_meta(TOKEN_WAITERS_META, waiters)
 ## @anchor P07
+# --- grabs (P07) --------------------------------------------------------------------------------
+# A giant holds this enemy (PlayerGrab, plan §3.7): on_grabbed() takes it out of the simulation
+# (process mode DISABLED: Sim skips it, so no AI and no movement, and its body and hurtboxes leave
+# physics, so nothing collides with or hits the held body), the holder places it every tick with
+# carry() so that its Anchors/Grab sits in the hand, and on_released() sets it down upright at a
+# validated spot and hands it back to its controller (GRABBED -> STAGGERED RELEASE_RECOVERY_S).
+# A thrown body is carried the same way by the projectile system until it comes down. Its rig
+# keeps animating while held (Visual is PAUSABLE meanwhile).
+
+## Where the holder's hand grips the enemy (the scene's marker; plan §2.12).
+const GRAB_ANCHOR_PATH := "Anchors/Grab"
+## Stagger after a release (thrown, dropped, crushed, interrupted, timeout ...).
+const RELEASE_RECOVERY_S := 0.6
+## A release spot must fit the record's capsule, lifted this far off its floor, clear of
+## RELEASE_MASK (world, actors, breakables and blockers).
+const RELEASE_LIFT_M := 0.05
+const RELEASE_MASK := HitQueryAdapter.LAYER_WORLD | HitQueryAdapter.LAYER_ACTORS \
+	| HitQueryAdapter.LAYER_BREAKABLE | LAYER_BLOCKER
+## The floor under a release spot is searched this far down.
+const RELEASE_FLOOR_SEARCH_M := 30.0
+
+## Who holds (or threw) this enemy; "" when it is free. Kept through a throw until it lands, and
+## through its death in the hand (controller.held_by is cleared by kill()).
+var grab_holder_id := ""
+var _grab_saved: Dictionary = {}
+
+
+## The record's attachment profile (decision 16): torso_fist, scruff, two_hand, or none (it
+## cannot be held at all).
+func grab_attach() -> String:
+	return str(record.get("grab_attach", "none"))
+
+
+## False while dead, already held or flying, dormant (LOD tier 2) or outside the tree. The other
+## grab rules (reach, sight, size, mass, immunity, attachment, broken poise) are the holder's
+## (PlayerGrab.check_target). Archetypes override this for scripted moments.
+func can_be_grabbed() -> bool:
+	return is_inside_tree() and entity != null and entity.is_alive() and grab_holder_id == "" \
+		and controller != null and controller.state != CombatController.State.GRABBED \
+		and lod_tier < 2 and process_mode != Node.PROCESS_MODE_DISABLED
+
+
+## True from on_grabbed() until on_released() (also while it flies after a throw).
+func is_held() -> bool:
+	return grab_holder_id != ""
+
+
+## The grab point in this actor's own space: Anchors/Grab, else the torso anchor, else 60 % of
+## its height.
+func grab_anchor_local() -> Vector3:
+	if _grab_saved.has("anchor"):
+		return _grab_saved.anchor
+	var a := get_node_or_null(GRAB_ANCHOR_PATH) as Node3D
+	if a == null:
+		a = get_node_or_null("Anchors/Torso") as Node3D
+	if a != null:
+		return to_local(a.global_position)
+	return Vector3.UP * float(record.get("height_m", 1.8)) * 0.6
+
+
+## The middle of the body in this actor's own space (a thrown body rides its projectile there).
+func body_centre_local() -> Vector3:
+	return Vector3.UP * float(record.get("height_m", 1.8)) * 0.5
+
+
+## `holder_id` grabbed this enemy; its controller is already GRABBED (enter_grabbed). Until
+## on_released() it is out of the simulation: Sim skips it (no perception, decisions or
+## movement), its body and hurtboxes leave physics, its attack tokens go back and it cannot be
+## locked. Only carry() moves it.
+func on_grabbed(holder_id: String) -> void:
+	if grab_holder_id != "":
+		return
+	var anchor := grab_anchor_local()
+	grab_holder_id = holder_id
+	var vis := get_node_or_null("Visual")
+	_grab_saved = {"lockable": entity.combatant.lockable,
+		"visual_mode": vis.process_mode if vis != null else Node.PROCESS_MODE_INHERIT, "anchor": anchor}
+	Sim.release_all_tokens(entity.entity_id)
+	if brain != null:
+		brain.holds_token = false
+		brain.attack_request = ""
+	entity.combatant.lockable = false
+	velocity = Vector3.ZERO
+	move_velocity = Vector3.ZERO
+	knockback_velocity = Vector3.ZERO
+	_motion_instance = -1
+	process_mode = Node.PROCESS_MODE_DISABLED
+	if vis != null:
+		vis.process_mode = Node.PROCESS_MODE_PAUSABLE   # the rig keeps animating in the hand
+
+
+## Places the held (or flying) body: the point `local_point` of this actor's own space (e.g.
+## grab_anchor_local() or body_centre_local()) lands on `point`, the actor oriented by `basis`.
+## While it is held it stays out of the simulation even if its AI LOD tier changed meanwhile
+## (set_lod_tier would put it back).
+func carry(point: Vector3, basis: Basis, local_point: Vector3) -> void:
+	if grab_holder_id != "" and process_mode != Node.PROCESS_MODE_DISABLED:
+		process_mode = Node.PROCESS_MODE_DISABLED
+	global_transform = Transform3D(basis, point - basis * local_point)
+
+
+## The holder let go (reason: thrown, dropped, crushed, interrupted, holder_died, target_died,
+## timeout, unloaded). The body is set down upright, facing where it faced, at
+## release_position(where it is, fallbacks), is back in the simulation, and its controller goes
+## GRABBED -> STAGGERED RELEASE_RECOVERY_S (a dead body only drops). Nothing happens unless it
+## is held.
+func on_released(reason: String, fallbacks: Array = []) -> void:
+	if grab_holder_id == "":
+		return
+	# A level unloading takes its children out of the tree first: then only the state is restored.
+	var inside := is_inside_tree()
+	var yaw := global_transform.basis.get_euler().y if inside else rotation.y
+	if inside:
+		var spot := release_position(global_position, fallbacks)
+		global_transform = Transform3D(Basis(Vector3.UP, yaw), spot)
+	_restore_after_grab()
+	grab_holder_id = ""
+	facing_yaw = wrapf(yaw, -PI, PI)
+	velocity = Vector3.ZERO
+	move_velocity = Vector3.ZERO
+	knockback_velocity = Vector3.ZERO
+	request_repath()
+	controller.release_grabbed(reason, RELEASE_RECOVERY_S)
+
+
+## Where a released body goes: the first of `desired` (its root, i.e. its feet, possibly in the
+## air) and then `fallbacks` whose floor leaves room for its capsule (is_free_spot). From a free
+## spot in the air it drops onto that floor by itself; a blocked one is set onto the floor of
+## the next candidate. When nothing fits, the last fallback (the holder's own position, outside
+## every wall) on its floor, else `desired`.
+func release_position(desired: Vector3, fallbacks: Array) -> Vector3:
+	var candidates: Array = [desired]
+	candidates.append_array(fallbacks)
+	for c: Vector3 in candidates:
+		var floor_pos := floor_below(c)
+		if floor_pos == Vector3.INF or not is_free_spot(floor_pos):
+			continue
+		if c.y > floor_pos.y + 0.02 and is_free_spot(c):
+			return c
+		return floor_pos
+	if not fallbacks.is_empty():
+		var last: Vector3 = fallbacks.back()
+		var f := floor_below(last)
+		return f if f != Vector3.INF else last
+	return desired
+
+
+## The floor under `point`: a ray from 0.75 x this enemy's height above it down
+## RELEASE_FLOOR_SEARCH_M (world and breakables). Vector3.INF when there is none.
+func floor_below(point: Vector3) -> Vector3:
+	var h := float(record.get("height_m", 1.8))
+	var from := point + Vector3.UP * (h * 0.75)
+	var q := PhysicsRayQueryParameters3D.create(from, point + Vector3.DOWN * RELEASE_FLOOR_SEARCH_M,
+		HitQueryAdapter.OCCLUDER_MASK, [get_rid()])
+	q.collide_with_areas = false
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	return hit.position if not hit.is_empty() else Vector3.INF
+
+
+## True when this enemy's capsule (record radius and height) standing at `feet`, lifted
+## RELEASE_LIFT_M, overlaps nothing on RELEASE_MASK (its own body excluded).
+func is_free_spot(feet: Vector3) -> bool:
+	var r := float(record.get("capsule_radius_m", 0.35))
+	var h := maxf(float(record.get("height_m", 1.8)), 2.0 * r)
+	var cap := CapsuleShape3D.new()
+	cap.radius = r
+	cap.height = h
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = cap
+	q.transform = Transform3D(Basis(), feet + Vector3.UP * (h * 0.5 + RELEASE_LIFT_M))
+	q.collision_mask = RELEASE_MASK
+	q.collide_with_areas = false
+	q.collide_with_bodies = true
+	q.exclude = [get_rid()]
+	return get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
+
+
+## Back into the simulation as its AI LOD tier says (dormant stays DISABLED).
+func _restore_after_grab() -> void:
+	if _grab_saved.is_empty():
+		return
+	process_mode = Node.PROCESS_MODE_DISABLED if lod_tier >= 2 else _base_process_mode
+	if entity != null and entity.combatant != null:
+		entity.combatant.lockable = bool(_grab_saved.lockable)
+	var vis := get_node_or_null("Visual")
+	if vis != null:
+		vis.process_mode = _grab_saved.visual_mode
+	_grab_saved = {}
 ## @anchor P09
 ## @anchor P10a
 ## @anchor P11a

@@ -492,6 +492,9 @@ func test_growth_unlocks_are_learned_slotted_and_announced_once() -> void:
 	TestFixtures.record_override("growth.02", {"unlocks": ["ability.test_growth_unlock", "ability.runic_bolt"]})
 	var s := _shrine(Vector3(0, 0, -12))
 	var p := await _grounded_player(Vector3(0, 0.05, 0))
+	# Since P07 the sandbox giant has all eight slots filled (Crushing Grip 4, Boulder Hurl 5):
+	# empty one, so the auto-slot has somewhere to go.
+	p.set_loadout_slot("slot_5", "")
 	var id := "ability.test_growth_unlock"
 	var slot := PlayerGrowth.first_empty_slot(p.controller.loadout)
 	assert_true(slot != "", "the sandbox loadout has an empty slot (%s)" % slot)

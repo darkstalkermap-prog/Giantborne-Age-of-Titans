@@ -38,5 +38,5 @@
 	"nav_layers": 4,
 	"footstep_shake": 0.05,
 	"interaction_permissions": ["grab_small", "throw_boulder"],
-	"unlocks": []
+	"unlocks": ["ability.boulder_hurl"]
 }

@@ -112,6 +112,9 @@ anchor_path = NodePath("../Anchors/Torso")
 [node name="Torso" type="Marker3D" parent="Anchors"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
 
+[node name="Grab" type="Marker3D" parent="Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+
 [node name="Hurtboxes" type="Node3D" parent="."]
 
 [node name="Head" type="Area3D" parent="Hurtboxes"]

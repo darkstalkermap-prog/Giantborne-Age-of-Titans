@@ -103,6 +103,10 @@ static func fields() -> Dictionary:
 	})
 
 	## @anchor P07
+	# How a giant's hand holds this enemy [none = it cannot be grabbed]: torso_fist (soldiers,
+	# archers, mages), scruff (wolves), two_hand (ogres, stage 3). The grab point is the scene's
+	# Anchors/Grab marker.
+	f.merge({"grab_attach": U.str_field(false, DataValidator.GRAB_ATTACH)})
 
 	## @anchor P09
 

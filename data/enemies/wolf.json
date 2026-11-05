@@ -56,5 +56,6 @@
 	"crit_chance": 0.0,
 	"xp_reward": 15,
 	"mass_class": "small",
+	"grab_attach": "scruff",
 	"nav_layers": 1
 }

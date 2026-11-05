@@ -321,5 +321,137 @@ func _material(kind: String) -> Material:
 # bodies riding a projectile (held_entity_id) and Boulder Hurl; P09 enemy volleys.
 
 ## @anchor P07
+# --- thrown bodies (P07) -------------------------------------------------------------------------
+# A throw (ability.throw_held, visual thrown_body) launches an ordinary projectile from the held
+# body's centre; PlayerGrab then hands the body over with carry_body(). The projectile carries
+# held_entity_id: every tick the body rides it (centred on it, tumbling head over heels), the
+# body itself is never one of the throw's hits (it is listed in hit_entities, so neither the
+# sweep nor the splash touches it), and the throw's hits on whatever it meets are ordinary
+# HitFactory hits. When the projectile ends the body is released at a validated spot where it
+# came down (EnemyActor.on_released "thrown", with fallbacks stepping back along the flight to
+# the throw), and an impact also queues the landing hit on the body (pulse id + LANDING_PULSE_OFFSET).
+
+## Pulse id offset of the landing hit on the thrown body (direct hits use the projectile id, the
+## splash SPLASH_PULSE_OFFSET).
+const LANDING_PULSE_OFFSET := 2000000
+## How fast a flying body tumbles (degrees per second).
+const THROWN_SPIN_DEG_S := 420.0
+## Release fallbacks step back along the flight this far apart, this many times.
+const LANDING_STEP_BACK_M := 0.5
+const LANDING_STEPS_BACK := 6
+## The projectile is at least this much wider than the body it carries.
+const CARRY_RADIUS_MARGIN_M := 0.25
+
+var _carried: Dictionary = {}   ## projectile id -> {"origin": Vector3, "holder": String}
+
+
+## Makes projectile `projectile_id` carry the held body of entity `entity_id`, thrown by
+## `holder_id` (EnemyActor.carry / on_released). The body is kept out of the projectile's own
+## hits, and the projectile is at least as wide as the body. False when either is unknown.
+func carry_body(projectile_id: int, entity_id: String, holder_id: String) -> bool:
+	var p := get_projectile(projectile_id)
+	var e := Sim.get_entity(entity_id)
+	if p == null or p.ended or e == null or not is_instance_valid(e.actor) or not (e.actor is EnemyActor):
+		return false
+	p.held_entity_id = entity_id
+	if not p.hit_entities.has(entity_id):
+		p.hit_entities.append(entity_id)
+	p.radius = maxf(p.radius, EnemyActor.entity_radius(e) + CARRY_RADIUS_MARGIN_M)
+	_carried[p.id] = {"origin": p.position, "holder": holder_id}
+	if not projectile_moved.is_connected(_on_carried_moved):
+		projectile_moved.connect(_on_carried_moved)
+	if not projectile_ended.is_connected(_on_carried_ended):
+		projectile_ended.connect(_on_carried_ended)
+	_place_carried(p)
+	return true
+
+
+## How many projectiles carry a body now (tests, debug).
+func carried_count() -> int:
+	return _carried.size()
+
+
+## Ends a projectile at once without an impact, hits or events beyond projectile_ended
+## ("discarded"): a throw whose body slipped out of the hand before it left.
+func discard(projectile_id: int) -> void:
+	var p := get_projectile(projectile_id)
+	if p != null:
+		_end(p, "discarded")
+
+
+func _on_carried_moved(p: Projectile) -> void:
+	if p.held_entity_id != "":
+		_place_carried(p)
+
+
+## The body rides the projectile: its centre on the projectile, facing along the flight and
+## turning head over heels.
+func _place_carried(p: Projectile) -> void:
+	var actor := _carried_actor(p)
+	if actor == null:
+		return
+	var spin := deg_to_rad(THROWN_SPIN_DEG_S) * p.age_ticks * Sim.DT
+	var basis := Basis(Vector3.UP, _flight_yaw(p, actor)) * Basis(Vector3.RIGHT, -spin)
+	actor.carry(p.position, basis, actor.body_centre_local())
+
+
+func _on_carried_ended(p: Projectile, reason: String) -> void:
+	if p.held_entity_id == "":
+		return
+	var info: Dictionary = _carried.get(p.id, {})
+	_carried.erase(p.id)
+	var actor := _carried_actor(p)
+	if actor == null:
+		return
+	var e := actor.entity
+	var centre := actor.body_centre_local()
+	var yaw := _flight_yaw(p, actor)
+	actor.carry(p.position, Basis(Vector3.UP, yaw), centre)   # upright, facing along the flight
+	actor.on_released("thrown", _landing_fallbacks(p, info, actor.global_position, centre))
+	if reason == "impact":
+		_landing_hit(p, e, info, Sim.tick)
+
+
+## The EnemyActor riding projectile `p`, or null (unknown, freed or not an enemy).
+static func _carried_actor(p: Projectile) -> EnemyActor:
+	var e := Sim.get_entity(p.held_entity_id)
+	if e == null or not is_instance_valid(e.actor):
+		return null
+	return e.actor as EnemyActor
+
+
+static func _flight_yaw(p: Projectile, actor: Node3D) -> float:
+	var flat := Vector3(p.velocity.x, 0.0, p.velocity.z)
+	return TargetingRules.yaw_of(flat) if flat.length_squared() > 1e-6 else actor.rotation.y
+
+
+## Release spots after the landing point: back along the flight, then where it was thrown from,
+## then the thrower's own position (always outside the world's walls).
+func _landing_fallbacks(p: Projectile, info: Dictionary, root: Vector3, centre: Vector3) -> Array:
+	var out: Array = []
+	var back := -Vector3(p.velocity.x, 0.0, p.velocity.z)
+	if back.length_squared() > 1e-6:
+		back = back.normalized()
+		for i in range(1, LANDING_STEPS_BACK + 1):
+			out.append(root + back * LANDING_STEP_BACK_M * i)
+	if info.has("origin"):
+		out.append((info.origin as Vector3) - centre)
+	var holder := Sim.get_entity(str(info.get("holder", "")))
+	if holder != null and is_instance_valid(holder.actor):
+		out.append(holder.actor.global_position)
+	return out
+
+
+## The landing: the throw's own action hits the body it carried (an ordinary HitFactory hit with
+## the projectile's frozen context), coming from where it was thrown, so any knockback carries
+## it on along the flight.
+func _landing_hit(p: Projectile, e: CombatEntity, info: Dictionary, tick: int) -> void:
+	if not e.is_alive() or p.ctx == null or p.action == null or p.owner == null \
+			or not is_instance_valid(p.owner):
+		return
+	p.ctx.attacker_position = info.get("origin", p.position)
+	p.ctx.area_effect = false
+	HitFactory.queue(p.ctx, p.action, [{"entity": e, "hurtbox": null, "point": e.anchor_position(),
+		"substep": 0, "distance": 0.0, "weak_point": false}], p.id + LANDING_PULSE_OFFSET, tick)
 
 ## @anchor P09
