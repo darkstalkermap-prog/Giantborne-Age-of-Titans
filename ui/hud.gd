@@ -20,6 +20,9 @@ extends Control
 ## - Layout: layout_regions(view) lists every fixed HUD region (this node's and each widget's) for a
 ##   screen size; at 1280 x 720 and 1920 x 1080 none overlap except where designed (test_hud_layout).
 ##   While the boss bar shows, the target frame of another locked target sits below it.
+## M4 gate: the edge overlays (threat arrows, objective marker) are the last widgets, so they draw
+## over every panel (under the death and help overlays), and they slide along the screen edge clear
+## of the panels drawn now (overlay_keep_out, HudEdge.clear_of).
 
 const MESSAGE_LIFETIME := 2.6
 ## The target frame's top edge, and its top edge while the boss bar shows (below the bar's 58).
@@ -826,6 +829,37 @@ func layout_regions(view: Vector2) -> Dictionary:
 			for key: String in regions:
 				out[key] = regions[key]
 	return out
+
+
+## The fixed panels drawn now - visible, with something in them - as rects on a `view`-sized screen
+## (M4 gate): what the edge overlays (threat arrows, the off-screen objective marker) keep clear of
+## through HudEdge.clear_of. Each is its layout region (layout_regions); the target frame's is where
+## it is now (below the boss bar or not). An empty message stack, loot line or status row is none.
+func overlay_keep_out(view: Vector2) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var regions := layout_regions(view)
+	var controls := layout_controls()
+	for key: String in controls:
+		var c := controls[key] as Control
+		if c == null or not c.is_visible_in_tree() or not _shows_something(c):
+			continue
+		if key == "target_frame":
+			out.append(HudWidget.anchored_rect(c, view))
+		elif regions.has(key):
+			out.append(regions[key])
+	return out
+
+
+## False for a label without text and a box without a visible child (nothing drawn there now).
+static func _shows_something(c: Control) -> bool:
+	if c is Label:
+		return (c as Label).text != ""
+	if c is BoxContainer:
+		for child in c.get_children():
+			if child is CanvasItem and (child as CanvasItem).visible:
+				return true
+		return false
+	return true
 
 
 ## The Controls behind the regions that have one (tests compare their drawn rects with

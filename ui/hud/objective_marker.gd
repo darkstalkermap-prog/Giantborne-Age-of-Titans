@@ -5,12 +5,19 @@ extends HudWidget
 ## clamped to a rectangle INSET_PX inside the screen edge, in its direction (behind the camera
 ## and straight ahead/behind: the bottom edge). Hidden while quests are inactive, without an
 ## objective position, or within HIDE_WITHIN_M. Full-rect overlay that draws only the marker.
+## M4 gate: drawn over every panel (the last widgets but the threat arrows), and a clamped marker
+## that would sit on a fixed panel drawn now (the tutorial prompt, the hotbar, the tracker, ...;
+## Hud.overlay_keep_out) slides along the edge until the diamond, its arrow and its distance clear
+## it (HudEdge.clear_of): still INSET_PX inside the edge, still pointing at the objective.
 ## Read API: placement_now(), visible_text(); the geometry is static (placement, edge_point).
 
 const INSET_PX := 36.0
 const HALF_SIZE_PX := 11.0
 const HIDE_WITHIN_M := 3.0
 const COLOR := Color(1.0, 0.82, 0.30)
+## What the marker covers around its point: the diamond (and outline), the off-screen arrow in any
+## direction (to HALF_SIZE_PX + 9 px) and the 80 x 18 px distance label under the diamond.
+const FOOTPRINT := Rect2(-40.0, -22.0, 80.0, 53.0)
 
 var _place: Dictionary = {}
 var _label: Label
@@ -49,7 +56,10 @@ func _compute() -> Dictionary:
 	flat.y = 0.0
 	if flat.length() < HIDE_WITHIN_M:
 		return {}
-	var out := placement(p.camera_rig.camera, pos, get_viewport_rect().size, INSET_PX)
+	var view := get_viewport_rect().size
+	var out := placement(p.camera_rig.camera, pos, view, INSET_PX)
+	if not bool(out.on_screen) and hud != null and is_instance_valid(hud):
+		out.position = HudEdge.clear_of(out.position, view, INSET_PX, FOOTPRINT, hud.overlay_keep_out(view))
 	out["distance"] = flat.length()
 	out["target"] = pos
 	return out
@@ -57,8 +67,10 @@ func _compute() -> Dictionary:
 
 ## Where the marker for `point` goes on a `view`-sized screen seen by `cam`: {"position" (px),
 ## "on_screen" (inside the inset rectangle), "direction" (unit, x right / y down; zero when on
-## screen)}. Off screen or behind the camera it sits on the rectangle INSET px inside the edge.
-static func placement(cam: Camera3D, point: Vector3, view: Vector2, inset: float) -> Dictionary:
+## screen)}. Off screen or behind the camera it sits on the rectangle INSET px inside the edge,
+## slid along it clear of the `keep_out` rects (the HUD's panels drawn now; none: the plain edge
+## point).
+static func placement(cam: Camera3D, point: Vector3, view: Vector2, inset: float, keep_out: Array = []) -> Dictionary:
 	var rect := Rect2(Vector2(inset, inset), view - Vector2(inset, inset) * 2.0)
 	if not cam.is_position_behind(point):
 		var sp := cam.unproject_position(point)
@@ -66,22 +78,19 @@ static func placement(cam: Camera3D, point: Vector3, view: Vector2, inset: float
 			return {"position": sp, "on_screen": true, "direction": Vector2.ZERO}
 		var d := sp - view * 0.5
 		var dir := d.normalized() if d.length_squared() > 1e-6 else Vector2(0.0, 1.0)
-		return {"position": edge_point(view, dir, inset), "on_screen": false, "direction": dir}
+		return {"position": HudEdge.clear_of(edge_point(view, dir, inset), view, inset, FOOTPRINT, keep_out),
+			"on_screen": false, "direction": dir}
 	var local := cam.global_transform.affine_inverse() * point
 	var back := Vector2(local.x, -local.y)
 	var bdir := back.normalized() if back.length_squared() > 1e-8 else Vector2(0.0, 1.0)
-	return {"position": edge_point(view, bdir, inset), "on_screen": false, "direction": bdir}
+	return {"position": HudEdge.clear_of(edge_point(view, bdir, inset), view, inset, FOOTPRINT, keep_out),
+		"on_screen": false, "direction": bdir}
 
 
 ## Where a ray from the centre of a `view`-sized screen along `dir` meets the rectangle `inset`
 ## pixels inside its edge.
 static func edge_point(view: Vector2, dir: Vector2, inset: float) -> Vector2:
-	var c := view * 0.5
-	var h := Vector2(maxf(c.x - inset, 0.0), maxf(c.y - inset, 0.0))
-	var tx := h.x / absf(dir.x) if absf(dir.x) > 1e-6 else INF
-	var ty := h.y / absf(dir.y) if absf(dir.y) > 1e-6 else INF
-	var t := minf(tx, ty)
-	return c if is_inf(t) else c + dir * t
+	return HudEdge.edge_point(view, dir, inset)
 
 
 ## "86 m" (whole metres).

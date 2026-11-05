@@ -6,7 +6,11 @@ extends HudWidget
 ## (MIN_ALPHA -> 1) and goes with the telegraph (TelegraphVisuals.is_live: the actor left that
 ## action's WINDUP / ACTIVE). Casts on allies (targets_ally: the barrier) threaten nobody and get
 ## none. Full-rect overlay that draws nothing else; reads state, never changes it.
-## Read API: arrows() (computed now), visible_count().
+## M4 gate: the last HUD widget (it draws over every panel), and a tip that would put the arrow on
+## a fixed panel drawn now (the tutorial prompt, the hotbar, the tracker, the boss bar, ...;
+## Hud.overlay_keep_out) slides along the edge until the arrow clears it (HudEdge.clear_of): still
+## EDGE_INSET_PX inside the edge, still pointing at the threat.
+## Read API: arrows() (computed now), visible_count(); geometry: tip_for(), footprint().
 
 const EDGE_INSET_PX := 24.0
 const ARROW_LENGTH_PX := 26.0
@@ -40,7 +44,7 @@ func _process(_delta: float) -> void:
 	queue_redraw()
 
 
-## The arrows to draw now: [{"actor_id", "action_id", "position" (the tip, px), "direction"
+## The arrows to draw now: [{"actor_id", "action_id", "position" (the tip, px; tip_for), "direction"
 ## (unit, screen space: x right, y down), "alpha"}] for every live player-aimed telegraph whose
 ## attacker is off screen or behind the camera.
 func arrows() -> Array:
@@ -48,6 +52,8 @@ func arrows() -> Array:
 	var p := player()
 	var cam: Camera3D = p.camera_rig.camera if p != null and p.camera_rig != null else null
 	var view := get_viewport_rect().size
+	var keep_out: Array = []
+	var have_keep_out := false
 	for actor_id: String in _records.keys():
 		var rec: Dictionary = _records[actor_id]
 		if not TelegraphVisuals.is_live(rec):
@@ -58,9 +64,12 @@ func arrows() -> Array:
 		var origin := TelegraphVisuals.origin_of(rec)
 		if not offscreen(cam, origin, view):
 			continue
+		if not have_keep_out:
+			keep_out = hud.overlay_keep_out(view) if hud != null and is_instance_valid(hud) else []
+			have_keep_out = true
 		var dir := screen_direction(cam, origin)
 		out.append({"actor_id": actor_id, "action_id": rec.action_id,
-			"position": edge_point(view, dir, EDGE_INSET_PX), "direction": dir,
+			"position": tip_for(view, dir, keep_out), "direction": dir,
 			"alpha": lerpf(MIN_ALPHA, 1.0, TelegraphVisuals.progress(rec))})
 	return out
 
@@ -90,11 +99,21 @@ static func screen_direction(cam: Camera3D, point: Vector3) -> Vector2:
 ## Where a ray from the centre of a `view`-sized screen along `dir` meets the rectangle `inset`
 ## pixels inside its edge.
 static func edge_point(view: Vector2, dir: Vector2, inset: float) -> Vector2:
-	var c := view * 0.5
-	var h := Vector2(maxf(c.x - inset, 0.0), maxf(c.y - inset, 0.0))
-	var tx := h.x / absf(dir.x) if absf(dir.x) > 1e-6 else INF
-	var ty := h.y / absf(dir.y) if absf(dir.y) > 1e-6 else INF
-	return c + dir * minf(tx, ty)
+	return HudEdge.edge_point(view, dir, inset)
+
+
+## The tip of an arrow pointing along `dir` on a `view`-sized screen: EDGE_INSET_PX inside the
+## edge, slid along it (HudEdge.clear_of) until the whole arrow clears the `keep_out` rects (the
+## HUD's panels drawn now, Hud.overlay_keep_out; none: the plain edge point).
+static func tip_for(view: Vector2, dir: Vector2, keep_out: Array = []) -> Vector2:
+	return HudEdge.clear_of(edge_point(view, dir, EDGE_INSET_PX), view, EDGE_INSET_PX, footprint(dir), keep_out)
+
+
+## What an arrow pointing along `dir` covers, relative to its tip: its triangle and outline.
+static func footprint(dir: Vector2) -> Rect2:
+	var side := Vector2(-dir.y, dir.x) * (ARROW_WIDTH_PX * 0.5)
+	var back := -dir * ARROW_LENGTH_PX
+	return Rect2().expand(back + side).expand(back - side).grow(1.5)
 
 
 func _draw() -> void:
