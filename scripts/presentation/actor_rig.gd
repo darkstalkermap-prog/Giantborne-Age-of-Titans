@@ -366,3 +366,40 @@ func _count_footfalls() -> void:
 ## @anchor P07
 
 ## @anchor P08
+# Weapon visuals (P08). PlayerEquipment builds the mesh of the equipped weapon (WeaponVisuals) and
+# hands it to set_weapon_visual(): it goes under the weapon arm at the hand, replaces (hides) the
+# generated Club mesh, and its materials join the rig's flash and status-tint list (the previous
+# weapon's leave it). The caller sets the node's scale (effective_weapon_scale / body_scale) and,
+# for the tree, idle_arm_pose.
+
+var weapon_visual: Node3D = null
+
+
+## Puts `node` ("Weapon") in the weapon hand at `hand_offset` (weapon-arm space) instead of the
+## current weapon mesh; null puts the generated Club back.
+func set_weapon_visual(node: Node3D, hand_offset := Vector3(0.0, 0.0, -1.5)) -> void:
+	if weapon_visual != null and is_instance_valid(weapon_visual):
+		_forget_materials(weapon_visual)
+		if weapon_visual.get_parent() != null:
+			weapon_visual.get_parent().remove_child(weapon_visual)
+		weapon_visual.queue_free()
+	weapon_visual = node
+	var club := weapon_arm.get_node_or_null("Club") as Node3D if weapon_arm != null else null
+	if club != null:
+		club.visible = node == null
+	if node == null or weapon_arm == null:
+		return
+	node.position = hand_offset
+	weapon_arm.add_child(node)
+	_make_materials_unique(node)
+	_tint_dirty = true
+
+
+func _forget_materials(node: Node) -> void:
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			var idx := _materials.find((child as MeshInstance3D).material_override as StandardMaterial3D)
+			if idx >= 0:
+				_materials.remove_at(idx)
+				_base_colors.remove_at(idx)
+		_forget_materials(child)

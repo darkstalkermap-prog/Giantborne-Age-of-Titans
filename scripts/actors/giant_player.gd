@@ -373,9 +373,12 @@ func current_growth_stage() -> int:
 	return growth_stage
 
 
-## Scale applied to the weapon's length and hit radius: the profile's weapon_scale (1.0 when
-## the profile has none). P08 caps it at the weapon's fit stage.
+## Scale applied to the weapon's length and hit radius: the equipment's effective weapon scale
+## (P08: the profile's weapon_scale capped at the weapon's fit stage, 1.0 for fixed-size weapons),
+## else the profile's weapon_scale (1.0 when the profile has none).
 func current_weapon_scale() -> float:
+	if equipment != null and equipment.has_method("effective_weapon_scale"):
+		return float(equipment.effective_weapon_scale())
 	return float(profile.get("weapon_scale", 1.0))
 
 
