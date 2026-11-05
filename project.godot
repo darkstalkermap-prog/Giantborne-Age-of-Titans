@@ -21,6 +21,7 @@ GameData="*res://scripts/core/game_data.gd"
 Settings="*res://scripts/core/settings.gd"
 WorldState="*res://scripts/core/world_state.gd"
 GameSession="*res://scripts/core/game_session.gd"
+Quests="*res://scripts/quests/quests.gd"
 Sim="*res://scripts/core/sim.gd"
 
 [display]
