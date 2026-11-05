@@ -2,7 +2,8 @@
 # The definition-of-done sequence of the M2-M5 plan (§1.1), failing on the first bad step:
 #   1. import   2. build scenes (only with --only=... or --build)   3. import again
 #   4. full test suite (plus the slow suites with --slow; it also parses every script)
-#   5. 120 s autoplay with 0 errors
+#   5. 120 s autoplay with 0 errors; a soak of 120 s or more must also break a fence, fill the
+#      debris pool and award loot (the M1 breakable path stays covered; M2 gate)
 #
 # Usage: tools/check.sh [--slow] [--only=<builder>[,<builder>]] [--build] [--autoplay=SECONDS]
 #   --only=...    rebuild the named scene builders (before P04's builder split: all of them)
@@ -26,7 +27,7 @@ for arg in "$@"; do
 		--only=*) BUILD="$arg" ;;
 		--build) BUILD="all" ;;
 		--autoplay=*) AUTOPLAY="${arg#--autoplay=}" ;;
-		-h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+		-h|--help) sed -n '2,14p' "$0"; exit 0 ;;
 		*) echo "check.sh: unknown option '$arg'" >&2; exit 2 ;;
 	esac
 done
@@ -98,6 +99,14 @@ if [ "$AUTOPLAY" != "0" ]; then
 	[ "$AUTO_EXIT" = "0" ] || fail "autoplay exited with $AUTO_EXIT" "$LOGS/autoplay.log"
 	[ -n "$RESULT_LINE" ] || fail "autoplay printed no AUTOPILOT_RESULT" "$LOGS/autoplay.log"
 	echo "$RESULT_LINE" | grep -q '"errors":0[,}]' || fail "autoplay logged errors" "$LOGS/autoplay.log"
+	# Coverage: the seeded sandbox soak must keep exercising the breakable, the debris pool and
+	# loot. (After P04 added the wolf pack it silently stopped breaking the fence.)
+	if [ "$AUTOPLAY" -ge 120 ] 2>/dev/null; then
+		for key in fence_breaks max_debris loot_awards; do
+			value="$(echo "$RESULT_LINE" | grep -o "\"$key\":[0-9]*" | head -n 1 | cut -d: -f2)"
+			[ "${value:-0}" -ge 1 ] || fail "the soak no longer covers the breakable path (${key}: ${value:-missing})" "$LOGS/autoplay.log"
+		done
+	fi
 fi
 
 echo "CHECK PASSED"

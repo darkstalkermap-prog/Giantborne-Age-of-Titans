@@ -14,6 +14,14 @@ extends Node
 const EXIT_OK := 0
 const EXIT_ERRORS := 1
 const RESULT_SAMPLES := 5
+## Soak target order (pick_soak_target, M2 gate): enemies the giant is already fighting (within
+## ENGAGE_RADIUS_M of it) or that guard the M1 arena (within ARENA_RADIUS_M of its centre: the
+## soldier's patrol) come first, then an intact breakable (the fence: the breakable, debris and
+## loot path of the M1 soak), then any other living enemy (the P04 wolf pack in the far corner),
+## then a dummy. Without it the bot crossed to the wolves as soon as the soldier died, and the
+## fence was never broken again.
+const ENGAGE_RADIUS_M := 10.0
+const ARENA_RADIUS_M := 40.0
 
 static var _started := false
 static var _elapsed := 0.0
@@ -52,7 +60,7 @@ func configure(seconds: float, scenario: String, capture_dir: String) -> void:
 	_stats = {"ticks": 0, "attacks": 0, "heavies": 0, "dodges": 0, "blocks": 0, "footfalls": 0,
 		"jumps": 0, "resets": 0, "player_deaths": 0, "soldier_kills": 0, "camera_toggles": 0,
 		"lock_presses": 0, "fence_breaks": 0, "hits_resolved": 0, "parries": 0,
-		"max_debris": 0, "rejections": 0, "enemy_kills": 0}
+		"max_debris": 0, "rejections": 0, "enemy_kills": 0, "loot_awards": 0}
 	# Count every engine/script error of the run (the logger lives as long as the process).
 	_error_counter = ErrorCounter.new()
 	OS.add_logger(_error_counter)
@@ -66,6 +74,7 @@ func _ready() -> void:
 	Events.entity_died.connect(_on_entity_died)
 	Events.object_destroyed.connect(_on_object_destroyed)
 	Events.action_rejected.connect(_on_action_rejected)
+	Events.loot_awarded.connect(_on_loot_awarded)
 
 
 func _on_hit_resolved(_t: int, r: HitResult) -> void:
@@ -88,6 +97,10 @@ func _on_object_destroyed(_t: int, _id: String, _by: String) -> void:
 
 func _on_action_rejected(_t: int, _a: String, _id: String, _r: String) -> void:
 	_stats.rejections += 1
+
+
+func _on_loot_awarded(_t: int, _world_id: String, _item: String, _count: int, _recipient: String) -> void:
+	_stats.loot_awards += 1
 
 
 func _process(delta: float) -> void:
@@ -120,13 +133,60 @@ func _physics_process(dt: float) -> void:
 
 # --------------------------------------------------------------------------- soak
 
-## First living enemy of any archetype (duck typed: an "enemies" node with a CombatEntity).
-func _alive_enemy() -> Node3D:
+## Every living enemy of any archetype (duck typed: an "enemies" node with a CombatEntity).
+func _alive_enemies() -> Array[Node3D]:
+	var out: Array[Node3D] = []
 	for n in get_tree().get_nodes_in_group("enemies"):
 		var e: Variant = n.get("entity")
 		if n is Node3D and e is CombatEntity and (e as CombatEntity).is_alive():
+			out.append(n)
+	return out
+
+
+## The first breakable that is still intact, or null.
+func _intact_breakable() -> Node3D:
+	for n in get_tree().get_nodes_in_group("breakables"):
+		if n is BreakableProp and not (n as BreakableProp).destroyed:
 			return n
 	return null
+
+
+## The arena's centre: the sandbox root's position (the world origin without one).
+func _arena_centre() -> Vector3:
+	var arena := get_tree().get_first_node_in_group("sandbox") as Node3D
+	return arena.global_position if arena != null else Vector3.ZERO
+
+
+## The soak's target (order: see ENGAGE_RADIUS_M): the nearest living enemy within
+## ENGAGE_RADIUS_M of the giant or ARENA_RADIUS_M of the arena centre, else the intact
+## breakable, else the nearest other living enemy, else the dummy (null when there is none).
+## `enemies` holds living enemies only; distances are measured on the ground plane.
+static func pick_soak_target(giant_pos: Vector3, centre: Vector3, enemies: Array, breakable: Node3D,
+		dummy: Node3D) -> Node3D:
+	var near: Node3D = null
+	var far: Node3D = null
+	var near_d := INF
+	var far_d := INF
+	for n: Node3D in enemies:
+		var d := _flat_distance(giant_pos, n.global_position)
+		if d <= ENGAGE_RADIUS_M or _flat_distance(centre, n.global_position) <= ARENA_RADIUS_M:
+			if d < near_d:
+				near = n
+				near_d = d
+		elif d < far_d:
+			far = n
+			far_d = d
+	if near != null:
+		return near
+	if breakable != null:
+		return breakable
+	if far != null:
+		return far
+	return dummy
+
+
+static func _flat_distance(a: Vector3, b: Vector3) -> float:
+	return Vector2(a.x - b.x, a.z - b.z).length()
 
 
 func _face(point: Vector3, dt: float, rate := 6.0) -> float:
@@ -148,17 +208,16 @@ func _run_soak(dt: float) -> void:
 			_stats.resets += 1
 			Events.sandbox_reset_requested.emit("autopilot_after_death")
 		return
-	var enemy := _alive_enemy()
-	var target: Node3D = enemy
-	if enemy == null:
+	var enemies := _alive_enemies()
+	if enemies.is_empty():
 		_no_enemy_time += dt
 		if _no_enemy_time > 12.0:
 			_no_enemy_time = -1000.0
 			_stats.resets += 1
 			Events.sandbox_reset_requested.emit("autopilot_respawn_soldier")
 			return
-		var fence := get_tree().get_first_node_in_group("breakables") as BreakableProp
-		target = fence if fence != null and not fence.destroyed else get_tree().get_first_node_in_group("dummies") as Node3D
+	var target := pick_soak_target(player.global_position, _arena_centre(), enemies,
+		_intact_breakable(), get_tree().get_first_node_in_group("dummies") as Node3D)
 	if target == null:
 		return
 	var dist := _face(target.global_position, dt)
