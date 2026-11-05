@@ -84,7 +84,20 @@ func cancel() -> void:
 
 ## Rebuilds the speaker, the line and the choice buttons from the session.
 func refresh() -> void:
+	_update_lines()
+	_rebuild_choices()
+
+
+func _update_lines() -> void:
 	if _text == null:
+		return
+	var live := session != null and session.is_active()
+	_speaker.text = session.speaker() if live else ""
+	_text.text = session.text() if live else ""
+
+
+func _rebuild_choices() -> void:
+	if _choices == null:
 		return
 	for b in choice_buttons:
 		if is_instance_valid(b):
@@ -92,11 +105,7 @@ func refresh() -> void:
 			b.queue_free()
 	choice_buttons.clear()
 	if session == null or not session.is_active():
-		_speaker.text = ""
-		_text.text = ""
 		return
-	_speaker.text = session.speaker()
-	_text.text = session.text()
 	for c: Dictionary in session.choices():
 		var b := UiKit.button(choice_label(int(c.index), str(c.text)), 17)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -123,7 +132,14 @@ func press_choice(index: int) -> Dictionary:
 	if not session.is_active():
 		_close_deferred({"ended": true, "outcome": str(r.get("outcome", ""))})
 	else:
-		refresh()
+		# The line changes at once; the buttons (one of which may be emitting `pressed` right now)
+		# are disabled and rebuilt at the end of the frame, so a double press cannot pick a choice
+		# of the next node.
+		_update_lines()
+		for b in choice_buttons:
+			if is_instance_valid(b):
+				b.disabled = true
+		_rebuild_choices.call_deferred()
 	return r
 
 
@@ -136,7 +152,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var n := choice_key(k.keycode)
 	if n < 0:
 		n = choice_key(k.physical_keycode)
-	if n >= 0 and n < choice_buttons.size():
+	if n >= 0 and n < choice_buttons.size() and not choice_buttons[n].disabled:
 		press_choice(n)
 		get_viewport().set_input_as_handled()
 

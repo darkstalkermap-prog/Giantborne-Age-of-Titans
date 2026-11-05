@@ -110,6 +110,7 @@ func test_e_next_to_a_talker_opens_the_dialogue_screen_on_its_session() -> void:
 	await _press_key(KEY_1)
 	assert_true(stack.is_open("dialogue"), "the tale goes on")
 	assert_eq(screen.visible_text(), "Old Tomas: He was the first of us to grow.", "the next line")
+	assert_eq(screen.choice_texts(), PackedStringArray(["1. Thank you."]), "its choices")
 	assert_eq(p.progression.xp, 25, "the reward's XP reached the giant")
 	assert_true(p.known_abilities.has("ability.stone_skin"), "the ability was taught through its progression")
 	assert_eq(p.progression.learned, [{"id": "ability.stone_skin", "slot": "slot_3", "source": "reward"}],
