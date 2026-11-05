@@ -157,6 +157,9 @@ func test_stage_3_walks_the_return_leg() -> void:
 func test_forest_encounters_spawn_from_data() -> void:
 	var lv := _add_valley(false)
 	await step_ticks(2)
+	# The navigation map is built asynchronously and the spawns are checked against the navmesh
+	# below: wait until it answers (three ticks lost that race under load; FOLLOWUPS, P15).
+	assert_true(await ValleyProbe.wait_for_navigation(self, lv), "navigation ready")
 	var d := lv.director()
 	assert_true(d != null, "the EncounterDirector")
 	for id: String in ["encounter.forest_wolves_a", "encounter.forest_hunters", "encounter.road_patrol"]:
