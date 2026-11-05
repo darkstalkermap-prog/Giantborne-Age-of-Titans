@@ -13,7 +13,7 @@ reference-PC commands below.
 | Frame time | p95 <= 16.7 ms, p99 < 33.3 ms at 1080p, `--graphics=low` (spec) | Reference PC, exported build: owner | **NOT RUN** |
 | GPU render time | Reported separately from CPU (spec §16) | Reference PC: owner. The container has no GPU (software rendering only) | **NOT RUN** |
 | Sim CPU per tick | p95 <= 8 ms in the stress route and the Valley | Container (indicative) and PC | Container: 4.88 ms (stress), 3.37 ms (Valley walk): **met** |
-| Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered | Container (software GL, low): max 1,084, p50 493: **not met** (see findings) |
+| Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered; `tools/draw_call_probe.tscn` (the static world) | P17b (container, software GL): the static world at most 93 per view at `low` and 221 at `medium` (was 402 / 584): **met**; with enemies in view the walk's p50 is 256 and its largest view 656 at `low` (was 608 / 1,354): **not met** while about five or more full-rig enemies are in view (about 33 draw calls each; see "Draw calls after P17b") |
 | Distant actors | Tier 2 shows a one-box proxy | P04 test; the Valley walk's LOD comparison | Met: every distant member shows its proxy at tier 2 |
 | Active combatants | <= 12 (the director's budget) | P10a tests; P17a bot invariant | 12 in the stress route (its own spawner) and in the Valley walk |
 | Valley load | <= 3 s headless, <= 6 s web | P10b slow test; P18 browser | Headless about 0.3 s (P10b); web **NOT RUN** (P18) |
@@ -103,12 +103,15 @@ setting (Settings page: "Graphics preset"):
 
 | Preset | Sun shadow distance | Scenery visible to | MSAA | Used by |
 | --- | --- | --- | --- | --- |
-| `low` | 60 m | 160 m | off | `--graphics=low`; always on the web |
+| `low` | 60 m (the Valley and the stress arena: off since P17b) | 160 m | off | `--graphics=low`; always on the web |
 | `medium` | 120 m | 220 m | 2x | the desktop default |
 
 On the web (`OS.has_feature("web")`) the record's `web_overrides` force `low` and run AI LOD tier 1
-from 30 m instead of 40 m. A preset's `shadow_distance_m` of 0 switches the sun's shadows off (not
-used by any preset yet; see the findings). The sandbox (not a `LevelRoot` level) has no presets.
+from 30 m instead of 40 m. A preset's `shadow_distance_m` of 0 switches the sun's shadows off: since
+P17b the Valley's and the stress arena's `low` preset do (they doubled every view's draw calls), so
+the web build has no sun shadows; the director test level keeps 60 m. The props' merged meshes are
+in the `scenery` group (P17b), so the preset's scenery distance hides them far off too. The
+sandbox (not a `LevelRoot` level) has no presets.
 
 ## Commands
 
@@ -123,7 +126,9 @@ tools/gd.sh --headless --path . --fixed-fps 60 -- --no-user-settings \
   --mode=valley --new-game --scenario=valley_walk --autoplay=900 --graphics=low
 ```
 
-Container, draw calls (software OpenGL under Xvfb; render times are the CPU's, not a GPU's):
+Container, draw calls (software OpenGL under Xvfb; render times are the CPU's, not a GPU's); the
+last command (P17b) is the static world alone - the Valley without its director and its giant,
+seen from the walk's stops in eight directions, with each group hidden in turn:
 
 ```
 xvfb-run -a -s "-screen 0 640x360x24" tools/gd.sh --path . --fixed-fps 60 --resolution 640x360 \
@@ -132,6 +137,8 @@ xvfb-run -a -s "-screen 0 640x360x24" tools/gd.sh --path . --fixed-fps 60 --reso
 xvfb-run -a -s "-screen 0 640x360x24" tools/gd.sh --path . --fixed-fps 60 --resolution 640x360 \
   --audio-driver Dummy -- --no-user-settings --level=res://scenes/test/stress_arena.tscn \
   --scenario=stress --graphics=low --autoplay=45
+xvfb-run -a -s "-screen 0 640x360x24" tools/gd.sh --path . --resolution 640x360 \
+  --audio-driver Dummy res://tools/draw_call_probe.tscn -- --no-user-settings --q=low
 ```
 
 Reference PC (owner), the exported Windows build, **without** `--fixed-fps` so frame times are
@@ -239,6 +246,62 @@ What the draw calls are made of, at six viewpoints with no actors (`low` shadow 
 | Courtyard | 263 | 69 | 71 | 260 | 206 | 60 |
 | Kingsfall | 112 | 36 | 84 | 88 | 86 | 62 |
 
+### Draw calls after P17b (FOLLOWUPS: batch the props and scenery, cut shadows at `low`)
+
+P17b's changes (all builders and data; no game code):
+
+- **Props merged.** Every prop builder (`world_props.gd`, the fence in `props.gd`, `shrine.gd`,
+  `forge.gd`) merges each visual group of its scene - a breakable's `Intact` / `Broken`, the practice
+  gate's `Frame` / `Intact` / `Cracked` / `Broken`, a `Visual`, a static body's meshes - into one
+  mesh with one surface per material (`SceneKit.merge_meshes`); the groups still show and hide as
+  before. The practice gate went from 42 mesh nodes to 4, a pine from 7 to 2. The arena gate's
+  eleven iron bars are one mesh. The practice dummy keeps its parts (it flashes each material).
+- **Props are scenery.** The merged meshes are in the `scenery` group, so the level's preset hides
+  them beyond its scenery distance (160 m `low`, 220 m `medium`), as it does the trees.
+- **No sun shadows at `low`** (`render.low.shadow_distance_m` 0 in `level.valley` and
+  `level.stress_arena`): they doubled every view.
+- **Two shadow splits** for the Valley's sun (was four): every caster is drawn once per split it
+  touches (this only matters at `medium`).
+
+The static world alone (`tools/draw_call_probe.tscn`: no director, no giant, no HUD; the largest of
+eight directions at each of the walk's 16 stops), at the base of P17b and after it:
+
+| Preset | Before (largest / smallest stop) | After (largest / smallest stop) |
+| --- | --- | --- |
+| `low` | 402 / 284 | 93 / 68 |
+| `medium` | 584 / 416 | 221 / 156 |
+
+What remains at `low` in the largest view (the Barrow's crown, 93): the district geometry about 47,
+the props in range about 21, shrines, waystones, signs and the dummies a few each.
+
+The Valley walk (P14's tool, `--walk-teleport`, all of it: the views include the encounters the walk
+passes and, during the LOD comparison, twelve distant members), before and after:
+
+| Preset | p50 | p95 | p99 | max |
+| --- | --- | --- | --- | --- |
+| `low` before | 608 | 1,027 | 1,171 | 1,354 |
+| `low` after | 256 | 653 | 656 | 656 |
+| `medium` before | 718 | 1,290 | 1,624 | 1,847 |
+| `medium` after | 449 | 821 | 1,012 | 1,164 |
+
+(The "before" walks are on this branch's base, with P15's encounters, so they are higher than P14's
+first numbers above.) Largest view per district after, `low`: Hollow 249, Old Wood 349, Thornwick
+485, Quarry 464, Barrow 483, Ruins 577, Kingsfall 483; the LOD comparison's twelve members at tier
+2 (one-box proxies) 262, at tiers 1 and 0 (full rigs) 653. In steps at `low` (walk p50 / max):
+merged props 481 / 1,191, then no sun shadows 275 / 732, then props as scenery 256 / 656.
+
+The stress arena rendered, `low`, 45 s: p50 295, p95 396, max 449 (was 860 / 1,319 / 1,515).
+
+**What is left is the actors.** A full-rig enemy costs about 33 draw calls at `low` and 37 at
+`medium` (a rig is 15-30 mesh parts; the LOD comparison: twelve rigs 653 against twelve proxies 262),
+the giant about the same. With the static world under 100 at `low`, a view stays under 250 with up
+to about four enemies in full rig; the quarry raiders, the courtyard garrison or the return patrol
+in one view exceed it. The rigs are animated per part and tint and flash per material, so they
+were not merged. The next step (for P18 or later): a visual level of detail by distance for rigs -
+the renderer's `visibility_range_end` on a rig's parts and `visibility_range_begin` on a one-box
+proxy, from about 45 m - which needs `EnemyActor.set_lod_tier` to leave the proxy to the renderer at
+tiers 0 and 1.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
@@ -253,18 +316,25 @@ What the draw calls are made of, at six viewpoints with no actors (`low` shadow 
 1. **Sim CPU per tick is within its budget** in the container: p95 4.88 ms in the stress route
    (twelve engaged combatants, debris at its cap) and 3.37 ms on the Valley walk, against 8 ms, in a
    debug build. Real-PC numbers: NOT RUN.
-2. **Draw calls are 2-4 times over the 250 budget** in the Valley (p50 493, max 1,084 at `low`) and the
-   stress arena (p50 860). Draw calls do not depend on the GPU, so this holds on the reference PC.
+2. **Draw calls (P17b: the static world is within budget; the actors are not).** See "Draw calls
+   after P17b": the props are merged and faded with the scenery and `low` has no sun shadows, so a
+   static view costs at most 93 draw calls at `low` and 221 at `medium`; the walk is at p50 256,
+   max 656 at `low`. Views with about five or more full-rig enemies exceed 250 (about 33 each).
+   P14's original finding follows. **Draw calls were 2-4 times over the 250 budget** in the Valley
+   (p50 493, max 1,084 at `low`) and the stress arena (p50 860). Draw calls do not depend on the
+   GPU, so this holds on the reference PC.
    What makes them: the props (each prop scene is several meshes: posts, rails, leaves, stones,
    frames) and the sun's shadows, which roughly double every view; the scenery trees (MultiMeshes)
    and the district geometry are small. Twelve full enemy rigs add about 250. Recommendations, in
    order of effect, for the owners of the presets (P17b, P18) and the builders (P08's props, P15's
    dressing):
    - turn the sun's shadows off in the `low` preset: `render.low.shadow_distance_m: 0` in the level
-     records (supported since P14; it changes the look, so it is the tuning owner's call);
+     records (supported since P14; it changes the look, so it is the tuning owner's call) - **done
+     in P17b**;
    - build each prop's visuals as one mesh per material and stage (merge the boxes of fences, gates,
-     carts and houses) or as MultiMeshes for repeated props;
-   - switch `cast_shadow` off on small props and decor, and give small props a visibility range.
+     carts and houses) or as MultiMeshes for repeated props - **done in P17b** (one mesh per group);
+   - switch `cast_shadow` off on small props and decor, and give small props a visibility range -
+     P17b gave every prop the scenery's range instead (its shadows go with the `low` preset).
 3. **Encounter spawn hitch.** An encounter activation instances its members in one tick: 13-25 ms per
    activation in the container, and the first spawn of an enemy kind also loads its scene during play
    (loading alone: wolf 124, soldier 104, archer 135, mage 105, ogre 97, Ogre King 152 ms); the walk's
