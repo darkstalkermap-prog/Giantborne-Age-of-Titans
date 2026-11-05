@@ -73,6 +73,16 @@ const CRUMB_EVERY_TICKS := 30
 const CRUMB_SPACING_M := 1.5
 const CRUMBS_KEPT := 48
 const RETRACE_S := 12.0
+## How long the bot stands at an encounter whose living members are all out of its reach (fleeing,
+## elevated, unreachable) before it takes the stage's other way on (P17b).
+const STALL_WALK_ON_S := 8.0
+## A fight that has taken no health off its target for CHASE_GIVE_UP_S (a stage-3 giant chasing a
+## harassing wolf that keeps out of reach) is given up: the bot leaves that enemy alone for
+## CHASE_IGNORE_S and goes on with its objective, as a person would stop chasing (P17b). Long enough
+## to give up on two such wolves in turn and still reach the objective (with 30 s the barrow's two
+## wolves took turns until the crown stage's watchdog).
+const CHASE_GIVE_UP_S := 20.0
+const CHASE_IGNORE_S := 90.0
 const ELDER := "valley.village.elder"
 const ELDER_DIALOGUE := "dialogue.elder"
 const BARRICADE := "valley.village.barricade"
@@ -128,6 +138,9 @@ var director: EncounterDirector
 var combat: BotCombat
 var task: Dictionary = {}
 var mode := "other"
+var _stall_since := -1   ## the tick an encounter task first found nothing to reach; -1 when it did
+var _chase := {"id": "", "health": 0.0, "since": -1}   ## the fight being watched for progress
+var _ignored := {}       ## entity id -> the tick until which the bot leaves that enemy alone
 
 ## The run's metrics (BotCombat reads them through the bot).
 var metrics: RunMetrics:
@@ -400,20 +413,45 @@ func _allocate_points() -> void:
 
 func _plan(tick: int) -> void:
 	var fight_target := _fight_target()
+	if fight_target != null and _chase_futile(fight_target, tick):
+		fight_target = _fight_target()
 	if fight_target != null:
 		task = {"kind": "fight", "target": fight_target}
+		_stall_since = -1
 		return
 	task = _objective_task(tick)
 
 
+## True (and the enemy is left alone for CHASE_IGNORE_S) when the bot has fought `t` for
+## CHASE_GIVE_UP_S without taking any health off it. Never for the boss.
+func _chase_futile(t: EnemyActor, tick: int) -> bool:
+	if t.entity == null or t.is_in_group(OgreBoss.GROUP):
+		return false
+	var id := t.entity.entity_id
+	var hp := t.entity.combatant.pools.health
+	if id != str(_chase.id) or hp < float(_chase.health) - 0.5:
+		_chase = {"id": id, "health": hp, "since": tick}
+		return false
+	if tick - int(_chase.since) < ActionDef.seconds_to_ticks(CHASE_GIVE_UP_S):
+		return false
+	_ignored[id] = tick + ActionDef.seconds_to_ticks(CHASE_IGNORE_S)
+	_chase = {"id": "", "health": 0.0, "since": -1}
+	run.metrics.note(tick, "gave up chasing %s" % id)
+	return true
+
+
+func _is_ignored(e: EnemyActor) -> bool:
+	return e.entity != null and int(_ignored.get(e.entity.entity_id, -1)) > Sim.tick
+
+
 ## A hostile to fight now: the nearest aware threat the giant can reach, or an elevated one a
-## ranged ability can reach now. null when there is none.
+## ranged ability can reach now (none the bot gave up on). null when there is none.
 func _fight_target() -> EnemyActor:
 	var preferred: Node3D = null
 	var t: Dictionary = task
 	if str(t.get("kind", "")) in ["kill", "fight"] and t.get("target") is EnemyActor:
 		preferred = t.target
-	var cands := combat.threats(combat.engage_radius())
+	var cands := combat.threats(combat.engage_radius()).filter(func(e: EnemyActor) -> bool: return not _is_ignored(e))
 	var best: EnemyActor = null
 	for e in cands:
 		if combat.is_elevated(e):
@@ -422,7 +460,7 @@ func _fight_target() -> EnemyActor:
 			continue
 		best = e
 		break
-	if preferred is EnemyActor and combat.is_threat(preferred as EnemyActor):
+	if preferred is EnemyActor and combat.is_threat(preferred as EnemyActor) and not _is_ignored(preferred as EnemyActor):
 		var p := preferred as EnemyActor
 		if best == null or best == p or p.global_position.distance_to(player.global_position) < 8.0 \
 				or best.global_position.distance_to(player.global_position) > 5.0:
@@ -475,7 +513,12 @@ func _task_for(o: Dictionary, _tick: int) -> Dictionary:
 		"go":
 			return {"kind": "go", "pos": _go_goal(o), "radius": 2.0}
 		"fight_encounter":
-			return _encounter_task(target, pos)
+			var fight := _encounter_task(target, pos)
+			# The garrison's last members are out of reach (on a terrace, fleeing) and the giant stands
+			# at the encounter: it walks on to the stage's other way out (the courtyard's causeway).
+			if _stalled(fight) and _first_area(_stage_condition(o)) != "":
+				return {"kind": "go", "pos": _go_goal(o), "radius": 2.0, "why": "walk on: the rest is out of reach"}
+			return fight
 		"kill":
 			if str(hint.get("rest_first", "")) != "" and not run.rested_for_boss:
 				var rest := _rest_task(str(hint.rest_first), true)
@@ -522,7 +565,9 @@ func _task_for(o: Dictionary, _tick: int) -> Dictionary:
 			var enc := str(hint.get("encounter", ""))
 			if enc != "" and director != null and director.encounter_state(enc) == EncounterDirector.ACTIVE \
 					and _encounter_alive(enc).size() > 0 and node.global_position.distance_to(player.global_position) < 40.0:
-				return _encounter_task(enc, pos)
+				var guard := _encounter_task(enc, pos)
+				if not _stalled(guard):
+					return guard
 			return {"kind": "interact", "target": node}
 		"talk":
 			return {"kind": "talk", "npc": target, "dialogue": str(hint.get("dialogue", "")),
@@ -532,10 +577,26 @@ func _task_for(o: Dictionary, _tick: int) -> Dictionary:
 	return {"kind": "go", "pos": pos, "radius": 3.0}
 
 
+## True once an encounter task has found nothing to reach for STALL_WALK_ON_S (P17b: the bot stood
+## at the courtyard while its last soldiers held a terrace, or at the barrow while the wardens' wolves
+## fled, until the stage's watchdog ended the run).
+func _stalled(t: Dictionary) -> bool:
+	if not bool(t.get("stalled", false)):
+		_stall_since = -1
+		return false
+	if _stall_since < 0:
+		_stall_since = Sim.tick
+	return Sim.tick - _stall_since >= ActionDef.seconds_to_ticks(STALL_WALK_ON_S)
+
+
+func _stage_condition(o: Dictionary) -> Variant:
+	return Quests.stage_record(Quests.quest_record(str(o.quest_id)), str(o.stage_id)).get("complete_when")
+
+
 ## Where a "go" objective is: the area its condition waits for (entering it completes the stage),
 ## else its marker.
 func _go_goal(o: Dictionary) -> Vector3:
-	var cond: Variant = Quests.stage_record(Quests.quest_record(str(o.quest_id)), str(o.stage_id)).get("complete_when")
+	var cond: Variant = _stage_condition(o)
 	var area := _first_area(cond)
 	if area != "" and level != null:
 		var a := level.area(area)
@@ -559,13 +620,14 @@ static func _first_area(cond: Variant) -> String:
 
 
 ## Fight an encounter: its nearest living member (the director spawns it near the giant), else go to
-## where it is.
+## where it is ("stalled" once the giant stands there and every living member is out of reach).
 func _encounter_task(encounter_id: String, fallback: Vector3) -> Dictionary:
 	var alive := _encounter_alive(encounter_id)
 	var best: EnemyActor = null
 	var best_d := INF
 	for e in alive:
-		if combat.is_elevated(e) or e.brain == null or e.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]:
+		if combat.is_elevated(e) or e.brain == null or e.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED] \
+				or _is_ignored(e):
 			continue
 		var d := e.global_position.distance_to(player.global_position)
 		if d < best_d and (d < 8.0 or reachable(e.global_position, 3.5)):
@@ -581,7 +643,8 @@ func _encounter_task(encounter_id: String, fallback: Vector3) -> Dictionary:
 	if director != null and director.encounter_state(encounter_id) == EncounterDirector.ACTIVE \
 			and alive.is_empty() and center.distance_to(player.global_position) < 12.0:
 		return {"kind": "wait", "why": "encounter %s: nothing left to reach" % encounter_id}
-	return {"kind": "go", "pos": center, "radius": 6.0}
+	return {"kind": "go", "pos": center, "radius": 6.0,
+		"stalled": not alive.is_empty() and center.distance_to(player.global_position) < 6.0}
 
 
 func _encounter_alive(encounter_id: String) -> Array[EnemyActor]:

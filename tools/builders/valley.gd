@@ -796,6 +796,10 @@ static func _add_environment(root: Node3D) -> void:
 	sun.rotation_degrees = Vector3(-50, -35, 0)
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 120.0
+	# P17b (draw calls): two shadow splits instead of four - every caster is drawn once per split it
+	# touches; the medium preset's static views went from up to 279 draw calls to 221 (the low preset
+	# has no sun shadows at all: render.low.shadow_distance_m 0).
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	root.add_child(sun)
 
 
@@ -954,6 +958,7 @@ static func _kingsfall(kit: SceneKit, a: Dictionary) -> Node3D:
 		bars.add_child(kit.box("Bar%d" % i, Vector3(0.35, gsize.y, 0.35), Vector3(x, gsize.y * 0.5, 0), "valley_iron"))
 	for j in 3:
 		bars.add_child(kit.box("Cross%d" % j, Vector3(gsize.x, 0.3, 0.45), Vector3(0, 2.5 + 5.0 * j, 0), "valley_iron"))
+	kit.merge_meshes(bars)   # P17b (draw calls): eleven iron boxes, one mesh
 	gate.add_child(bars)
 	gate.visible = false
 	kf.add_child(gate)

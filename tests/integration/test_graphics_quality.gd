@@ -193,6 +193,10 @@ func test_the_web_build_runs_low_with_nearer_ai_tier_1() -> void:
 
 
 func test_level_records_carry_the_presets() -> void:
+	# P17b (FOLLOWUPS, draw calls): the Valley's low preset has no sun shadows (shadow distance 0;
+	# they doubled every view's draw calls), and the stress arena's matches it; the director test
+	# level keeps the plan's 60 m, so the positive path stays covered.
+	var low_shadows := {"level.valley": 0.0, "level.director_test": 60.0, "level.stress_arena": 0.0}
 	for id: String in ["level.valley", "level.director_test", "level.stress_arena"]:
 		var rec := GameData.get_record(id)
 		if id == "level.stress_arena" and rec.is_empty():
@@ -200,7 +204,7 @@ func test_level_records_carry_the_presets() -> void:
 		assert_eq(str(rec.get("type", "")), "level", "%s exists" % id)
 		var render: Dictionary = rec.get("render", {})
 		assert_eq(_numbers(render.get("low", {})), {"msaa": 0.0, "scenery_visibility_end_m": 160.0,
-			"shadow_distance_m": 60.0}, "%s: the low preset (plan §5.4)" % id)
+			"shadow_distance_m": low_shadows[id]}, "%s: the low preset (plan §5.4; P17b)" % id)
 		assert_eq(_numbers(render.get("medium", {})), {"msaa": 2.0, "scenery_visibility_end_m": 220.0,
 			"shadow_distance_m": 120.0}, "%s: the medium preset" % id)
 		var web: Dictionary = rec.get("web_overrides", {})

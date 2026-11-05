@@ -17,10 +17,38 @@ extends PlayerComponent
 ## check is the slot's precheck in the HUD (preview_params) and in the request (handle_edge;
 ## PlayerGrab's slots call range_reason too), so the hotbar's "Out of range" and the controller
 ## never disagree.
+##
+## Vertical aim (P17b, the balance pass): a weapon swing tilts up toward the giant's target when the
+## stage's default tilt (arc_pitch_offset_deg, which brings the arcs down to the giant's feet:
+## decision 5) would pass over it. When a swing starts, its target is the hard lock, else the soft
+## target in front (PlayerTargeting.soft_target, the yaw nudge's pick). The default tilt stays when
+## its sweep passes through the core of the target's body (within the weapon's radius plus
+## AIM_CORE of the target's: hurtboxes are narrower than the capsule); otherwise the swing takes the
+## tilt, in AIM_STEP_DEG steps from the default up to AIM_MAX_OFFSET_DEG, whose sweep passes closest
+## to the target's axis (AttackGeometry, the target taken straight ahead at its distance and
+## height), as long as that one reaches the body at all; else the default. Without a target, or
+## when the default already reaches it, the swing is unchanged (a wolf at the feet is hit as before).
+## The rig draws the same tilt (rig_state).
+## With it a light reaches about the §4.8 table's distances against a soldier: 3.5 m at stage 1,
+## about 5 m at stage 2, about 7 m with a reforged weapon at stage 3, where the fixed downward tilt
+## stopped short at about 3.3 / 4.0 / 3.5 m (P17a's measurement), so stages 2 and 3 never felt their
+## reach and a stage-2 giant could not strike a holding soldier from beyond its spear.
 
 const OUT_OF_RANGE := "out_of_range"
+## Vertical aim (P17b): the lift step and the highest tilt an aimed swing may take (degrees; the
+## stage's default tilt is the lowest).
+const AIM_STEP_DEG := 2.0
+const AIM_MAX_OFFSET_DEG := 16.0
+## The share of the target's radius an aimed swing wants to pass within (its body's core).
+const AIM_CORE := 0.5
+## Arc samples of the aim's reach test (as BotCombat.reach_band).
+const AIM_SAMPLES := 25
 
 var runner: AttackRunner
+## The aimed tilt of the swing running now (instance id, action id, degrees); -1 = none.
+var _aim_instance := -1
+var _aim_action := ""
+var _aim_offset := 0.0
 
 
 func setup(p: GiantPlayer) -> void:
@@ -56,10 +84,11 @@ func on_weapon_changed(_weapon: Dictionary) -> void:
 	runner.reset()
 
 
-func on_action_started(action: ActionDef, _instance_id: int) -> void:
+func on_action_started(action: ActionDef, instance_id: int) -> void:
 	if action.kind in ["light", "heavy", "ability", "ultimate"]:
 		runner.prev_segment = PackedVector3Array()
 		player.stats.attacks += 1
+	_start_aim(action, instance_id)
 
 
 ## Weapon segment (shoulder-side end, tip) in world space at fraction f of the action's arc.
@@ -84,10 +113,97 @@ func arc_pitch_offset_deg() -> float:
 	return float(player.profile.get("arc_pitch_offset_deg", 0.0))
 
 
-## The tilt of `action`'s arc at the current stage: the profile's arc_pitch_offsets_deg entry
-## for the action, else its arc_pitch_offset_deg.
+## The tilt of `action`'s arc now: the aimed tilt while that swing runs (vertical aim, P17b), else
+## the stage's default - the profile's arc_pitch_offsets_deg entry for the action, else its
+## arc_pitch_offset_deg.
 func arc_pitch_offset_for(action: ActionDef) -> float:
+	if action != null and _aim_instance >= 0 and action.id == _aim_action \
+			and player.controller.action == action and player.controller.instance_id == _aim_instance:
+		return _aim_offset
 	return offset_for(player.profile, action.id if action != null else "")
+
+
+# --------------------------------------------------------------------------- vertical aim (P17b)
+
+## The range of tilts an aimed swing of `action` may take now: Vector2(default, highest).
+func aim_offset_range(action: ActionDef) -> Vector2:
+	var default := offset_for(player.profile, action.id if action != null else "")
+	return Vector2(default, maxf(default, AIM_MAX_OFFSET_DEG))
+
+
+## What a swing aims at: the hard lock (alive), else the soft target in front, else null.
+func aim_target() -> CombatEntity:
+	if player.targeting == null:
+		return null
+	var locked := player.targeting.locked_entity()
+	if locked != null and locked.is_alive() and locked.actor != null and is_instance_valid(locked.actor):
+		return locked
+	if not player.is_inside_tree():
+		return null
+	var soft: Array = player.targeting.soft_target(player.facing_yaw)
+	return soft[0] as CombatEntity if not soft.is_empty() else null
+
+
+## The tilt for a swing of `action` at a target `distance` m away (horizontally, centre to centre),
+## its feet `base_y` m above the giant's, of radius `t_radius` and height `t_height`: the default
+## when its sweep passes through the target's core, else the tilt whose sweep passes closest to the
+## target's axis if that one reaches its body, else the default.
+func aimed_offset(action: ActionDef, distance: float, base_y: float, t_radius: float, t_height: float) -> float:
+	var r := aim_offset_range(action)
+	var wr := float(player.weapon_hit_radius())
+	if closest_approach(action, r.x, distance, base_y, t_height) <= wr + t_radius * AIM_CORE:
+		return r.x
+	var best := r.x
+	var best_m := INF
+	var off := r.x
+	while off <= r.y + 1e-4:
+		var m := closest_approach(action, off, distance, base_y, t_height)
+		if m < best_m - 1e-4:
+			best_m = m
+			best = off
+		off += AIM_STEP_DEG
+	return best if best_m <= wr + t_radius else r.x
+
+
+## True when `action`'s weapon arc, tilted by `offset_deg`, passes within the weapon's radius plus
+## `t_radius` of a target's axis straight ahead (from its feet to its height, `distance` m in front).
+func sweep_reaches(action: ActionDef, offset_deg: float, distance: float, base_y: float, t_radius: float,
+		t_height: float) -> bool:
+	return closest_approach(action, offset_deg, distance, base_y, t_height) \
+		<= float(player.weapon_hit_radius()) + t_radius
+
+
+## How close (m) the weapon segment of `action`'s arc, tilted by `offset_deg`, passes to the axis of a
+## target straight ahead `distance` m away (from base_y + 0.05 to base_y + t_height), sampled at
+## AIM_SAMPLES points of the arc; INF without an arc.
+func closest_approach(action: ActionDef, offset_deg: float, distance: float, base_y: float, t_height: float) -> float:
+	if action == null or action.arc.is_empty():
+		return INF
+	var a := Vector3(0.0, base_y + 0.05, -distance)
+	var b := Vector3(0.0, base_y + maxf(0.2, t_height), -distance)
+	var best := INF
+	for i in AIM_SAMPLES:
+		var ang := AttackGeometry.arc_point(action, float(i) / float(AIM_SAMPLES - 1))
+		var dir := AttackGeometry.local_direction(ang.x, ang.y + offset_deg)
+		var seg := AttackGeometry.segment_local(player.weapon_pivot, dir, player.arm_length,
+			player.arm_length + player.weapon_length)
+		var pts := Geometry3D.get_closest_points_between_segments(seg[0], seg[1], a, b)
+		best = minf(best, pts[0].distance_to(pts[1]))
+	return best
+
+
+func _start_aim(action: ActionDef, instance_id: int) -> void:
+	_aim_instance = -1
+	if action == null or action.hit_shape != "weapon_arc" or action.arc.is_empty():
+		return
+	var t := aim_target()
+	if t == null:
+		return
+	var rel := player.global_transform.affine_inverse() * (t.actor as Node3D).global_position
+	var radius := EnemyActor.entity_radius(t)
+	_aim_offset = aimed_offset(action, Vector2(rel.x, rel.z).length(), rel.y, radius, t.combatant.height_m)
+	_aim_action = action.id
+	_aim_instance = instance_id
 
 
 ## arc_pitch_offsets_deg[action_id] of `profile` when present, else arc_pitch_offset_deg (0).

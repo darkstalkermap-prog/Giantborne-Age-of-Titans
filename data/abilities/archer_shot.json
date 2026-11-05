@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "Aimed Shot",
 	"description": "Draws for 0.9 s with an aim line, tracks the target for the first 60 % of the draw, then commits: the arrow flies at the point stored at that moment (decision 24), so a sidestep after the lock dodges it.",
-	"power": 22,
+	"power": 18,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

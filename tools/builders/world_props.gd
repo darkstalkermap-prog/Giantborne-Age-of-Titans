@@ -25,22 +25,37 @@ const S_PICKUP := "res://scripts/world/item_pickup.gd"
 const DIR := "res://scenes/world/"
 ## Every nav layer (human 1, large 2, giant 4, small giant 8) may use an opened passage.
 const ALL_NAV_LAYERS := 15
+## The groups of a prop's merged meshes (P17b): LevelRoot's scenery group, so the level's graphics
+## preset (scenery_visibility_end_m: 160 m low, 220 m medium in the Valley) hides them far off.
+const PROP_GROUPS := ["scenery"]
 
 
 static func build_all(kit: SceneKit) -> void:
 	_materials(kit)
-	kit.save(build_gate_practice(kit), DIR + "gate_practice.tscn")
-	kit.save(build_gate_fortified(kit), DIR + "gate_fortified.tscn")
-	kit.save(build_tree_small(kit), DIR + "tree_small.tscn")
-	kit.save(build_ancient_oak(kit), DIR + "ancient_oak.tscn")
-	kit.save(build_deadfall(kit), DIR + "deadfall.tscn")
-	kit.save(build_cart_barricade(kit), DIR + "cart_barricade.tscn")
-	kit.save(build_cairn(kit), DIR + "cairn.tscn")
-	kit.save(build_crate(kit), DIR + "crate.tscn")
-	kit.save(build_weapon_rack(kit), DIR + "weapon_rack.tscn")
-	kit.save(build_item_pickup(kit), DIR + "item_pickup.tscn")
-	kit.save(build_bush(kit), DIR + "bush.tscn")
-	kit.save(build_banner(kit), DIR + "banner.tscn")
+	kit.save(batched(kit, build_gate_practice(kit)), DIR + "gate_practice.tscn")
+	kit.save(batched(kit, build_gate_fortified(kit)), DIR + "gate_fortified.tscn")
+	kit.save(batched(kit, build_tree_small(kit)), DIR + "tree_small.tscn")
+	kit.save(batched(kit, build_ancient_oak(kit)), DIR + "ancient_oak.tscn")
+	kit.save(batched(kit, build_deadfall(kit)), DIR + "deadfall.tscn")
+	kit.save(batched(kit, build_cart_barricade(kit)), DIR + "cart_barricade.tscn")
+	kit.save(batched(kit, build_cairn(kit)), DIR + "cairn.tscn")
+	kit.save(batched(kit, build_crate(kit)), DIR + "crate.tscn")
+	kit.save(batched(kit, build_weapon_rack(kit)), DIR + "weapon_rack.tscn")
+	kit.save(batched(kit, build_item_pickup(kit)), DIR + "item_pickup.tscn")
+	kit.save(batched(kit, build_bush(kit)), DIR + "bush.tscn")
+	kit.save(batched(kit, build_banner(kit)), DIR + "banner.tscn")
+
+
+## P17b (draw calls): every visual group of a prop (Frame, Intact, Cracked, Broken, Visual, a
+## static body's meshes) merged into one mesh with a surface per material (SceneKit.merge_meshes),
+## each group on its own so the stage visuals still show and hide as before; the merged meshes are
+## level scenery (PROP_GROUPS: the graphics preset's scenery distance hides them far off). Returns
+## `root`.
+static func batched(kit: SceneKit, root: Node) -> Node:
+	for child in root.get_children():
+		if child.get_script() == null and (child.get_class() == "Node3D" or child is StaticBody3D):
+			kit.merge_meshes(child as Node3D, PackedStringArray(), PackedStringArray(PROP_GROUPS))
+	return root
 
 
 static func _materials(kit: SceneKit) -> void:

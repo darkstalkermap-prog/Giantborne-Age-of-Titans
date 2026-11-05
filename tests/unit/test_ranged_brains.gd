@@ -92,8 +92,8 @@ func test_archer_record() -> void:
 	assert_eq(str(r.grab_attach), "torso_fist", "grabbed by the torso")
 	assert_eq(int(r.nav_layers), 1, "human nav layer")
 	var shot := GameData.get_action("ability.archer_shot")
-	assert_eq([shot.power, shot.windup_ticks, shot.active_ticks, shot.recovery_ticks], [22.0, 54, 3, 36],
-		"shot 22 (0.90 / 0.05 / 0.60 s)")
+	assert_eq([shot.power, shot.windup_ticks, shot.active_ticks, shot.recovery_ticks], [18.0, 54, 3, 36],
+		"shot 18 (22 before P17b's tuning; 0.90 / 0.05 / 0.60 s)")
 	assert_eq(shot.hit_shape, "projectile", "a projectile")
 	assert_near(shot.tracking_fraction, 0.6, 1e-6, "aim lock at 60 %")
 	var spec := Projectile.spec_for(shot)

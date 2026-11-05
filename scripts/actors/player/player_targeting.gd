@@ -76,11 +76,21 @@ func soft_target_offset(base_yaw: float) -> float:
 	var action := player.controller.action
 	if action == null or action.soft_target_max_deg <= 0.0:
 		return 0.0
+	var best: Array = soft_target(base_yaw)
+	if best.is_empty():
+		return 0.0
 	var max_rad := deg_to_rad(action.soft_target_max_deg)
+	return clampf(float(best[1]), -max_rad, max_rad)
+
+
+## The soft target in front of `base_yaw`: [CombatEntity, yaw delta (radians)] of the best-scoring
+## targetable, lockable, visible enemy within the stage's melee reach + 1.5 m and
+## SOFT_TARGET_CONE_DEG, or [] (soft_target_offset's pick; PlayerAttack's vertical aim, P17b).
+func soft_target(base_yaw: float) -> Array:
 	var reach := float(player.profile.get("melee_reach_m", 3.5)) + 1.5
 	var base_dir := Vector3(-sin(base_yaw), 0.0, -cos(base_yaw))
 	var best_score := -1.0
-	var best_offset := 0.0
+	var best: Array = []
 	var space := player.get_world_3d().direct_space_state
 	var from := player.global_position + Vector3.UP * player.attack_origin.y
 	for e: CombatEntity in Sim.entities():
@@ -101,8 +111,8 @@ func soft_target_offset(base_yaw: float) -> float:
 		var q := TargetingRules.score(base_dir, to, dist, reach, e.combatant.threat)
 		if q > best_score:
 			best_score = q
-			best_offset = clampf(delta, -max_rad, max_rad)
-	return best_offset
+			best = [e, delta]
+	return best
 
 
 # --------------------------------------------------------------------------- input

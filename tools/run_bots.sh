@@ -20,7 +20,9 @@
 #   --dry-run            print the commands only
 #   --summary            only print the summary table of an existing --tag
 # Exit code: 0 when every run exited 0, 1 otherwise. Start it with run_in_background (or nohup) for
-# long matrices: a balance matrix takes 20-25 minutes of wall time at 3 jobs.
+# long matrices: a balance matrix takes 25-35 minutes of wall time at 3 jobs.
+# The Markdown tables of a batch (P17b; docs/HOW_IT_PLAYS.md, docs/BALANCE_LOG.md):
+#   python3 tools/bot_report.py .userdata/godot/app_userdata/<project>/bot_runs/<tag> [section ...]
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"

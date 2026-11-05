@@ -23,7 +23,13 @@ extends Node
 ##
 ## The budget: at most max_active_enemies living, non-routed members of budgeted encounters
 ## (counts_toward_budget) whose definition is an enemy record exist at once; NPC spawns never
-## count. Members that do not fit wait and spawn as soon as room frees up.
+## count. Members that do not fit wait and spawn as soon as room frees up. A faction's armed
+## members count too while their faction is hostile to the giant (P17b, FOLLOWUPS: the force
+## branch's return leg put Thornwick's six guards, turned hostile, beside the ambush and the return
+## patrol - 16 combatants): a neutral garrison (counts_toward_budget false) costs nothing, but once
+## FactionState.is_hostile(its faction) its living members are combatants like any other, and
+## the members of other encounters wait for room while they fight. A member that was already in
+## the world when its faction turned is not removed (it is in the fight); new spawns wait instead.
 ##
 ## Persistence: a death of a member with persist_death is recorded (WorldState.record_killed),
 ## so it never spawns again. An encounter is cleared when every member is dead or routed: the
@@ -133,6 +139,8 @@ class Member extends RefCounted:
 	var spawn: Dictionary = {}
 	var definition := ""
 	var budgeted := true
+	var enemy_def := false         # the definition is an enemy record (NPCs never count)
+	var faction := ""              # the spawn's faction ("" = always hostile)
 	var status := "unspawned"
 	var node: Node3D = null
 	var routed := false
@@ -180,14 +188,21 @@ func encounter_state(encounter_id: String) -> String:
 	return enc.state if enc != null else ""
 
 
-## Living, non-routed spawned members of budgeted encounters whose definition is an enemy.
+## Living, non-routed spawned members that count toward the budget (counts()): members of
+## budgeted encounters whose definition is an enemy, and the armed members of a hostile faction.
 func active_combatant_count() -> int:
 	var n := 0
 	for id in _order:
 		for m: Member in (_encounters[id] as Encounter).members:
-			if m.budgeted and m.status == SPAWNED and not m.routed and _alive(m.node):
+			if m.status == SPAWNED and not m.routed and counts(m) and _alive(m.node):
 				n += 1
 	return n
+
+
+## Whether `m` counts toward the budget now: a member of a budgeted encounter whose definition is
+## an enemy, or an enemy-definition member whose faction is hostile to the giant (P17b).
+static func counts(m: Member) -> bool:
+	return m.budgeted or (m.enemy_def and m.faction != "" and FactionState.is_hostile(m.faction))
 
 
 ## Activates an encounter at the next update regardless of the player's distance and its flags
@@ -322,7 +337,9 @@ func reload_encounters() -> void:
 			m.spawn = s
 			m.definition = str(s.get("definition", ""))
 			var def := GameData.get_record(m.definition)
-			m.budgeted = enc.counts_budget and str(def.get("type", "")) == "enemy"
+			m.enemy_def = str(def.get("type", "")) == "enemy"
+			m.budgeted = enc.counts_budget and m.enemy_def
+			m.faction = str(s.get("faction", ""))
 			if WorldState.is_killed(m.entity_id):
 				m.status = DEAD
 			if m.entity_id == "" or _members.has(m.entity_id):
@@ -507,7 +524,7 @@ func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
 		if WorldState.is_killed(m.entity_id):
 			m.status = DEAD
 			continue
-		if m.budgeted and active_combatant_count() >= max_active_enemies:
+		if counts(m) and active_combatant_count() >= max_active_enemies:
 			continue
 		if _spawn_quota == 0:
 			_spawn_deferred = true
@@ -526,7 +543,7 @@ func _can_activate(enc: Encounter) -> bool:
 		if WorldState.is_killed(m.entity_id):
 			continue
 		waiting = true
-		if not m.budgeted:
+		if not counts(m):
 			return true
 	return waiting and active_combatant_count() < max_active_enemies
 

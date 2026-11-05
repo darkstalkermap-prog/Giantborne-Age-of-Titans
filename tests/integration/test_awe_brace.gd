@@ -139,7 +139,7 @@ func test_a_holding_soldier_braces_against_a_giant_stepping_into_reach() -> void
 	for r in hits_on("player"):
 		if r.event.action_id == BRACE:
 			assert_eq(r.outcome, HitResult.Outcome.HIT, "a hit")
-			assert_eq(r.health_damage, 35, "35 damage (30 x 1.15 = 34.5, armour 0)")
+			assert_eq(r.health_damage, 28, "28 damage (24 x 1.15 = 27.6, armour 0; 35 before P17b's tuning)")
 
 
 func test_a_light_swing_from_the_edge_of_reach_does_not_trigger_the_brace() -> void:

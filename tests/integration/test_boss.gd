@@ -183,7 +183,7 @@ func test_every_boss_and_ogre_attack_is_telegraphed_behind_a_long_windup() -> vo
 	assert_near(float(GameData.get_action(CHARGE).active_ticks) / 60.0, 6.0, 1e-6, "a charge runs at most 6 s")
 	assert_eq(str(GameData.get_action(SLAM).param("telegraph").shape), "circle", "slam: circle")
 	assert_near(float(GameData.get_action(SLAM).param("telegraph").radius_m), 5.0, 1e-6, "r 5")
-	assert_near(float(GameData.get_action(SLAM).windup_ticks) / 60.0, 1.3, 1e-6, "1.3 s windup")
+	assert_near(float(GameData.get_action(SLAM).windup_ticks) / 60.0, 1.5, 1e-6, "1.5 s windup (1.3 s before P17b's tuning)")
 	assert_eq(str(GameData.get_action(CHARGE).param("telegraph").shape), "line", "charge: line")
 	assert_eq(str(GameData.get_action(COMBO_1).param("telegraph").shape), "cone", "combo: cone")
 	assert_eq(str(GameData.get_action(ROAR).param("telegraph").shape), "circle", "roar: circle")
@@ -369,12 +369,12 @@ func test_the_combo_chains_into_its_second_blow() -> void:
 	assert_eq(first.size(), 1, "the first blow hit the stage-2 giant")
 	assert_eq(second.size(), 1, "and the second")
 	if first.size() == 1 and second.size() == 1:
-		assert_eq(first[0].health_damage, 76, "combo 1: 76 (plan §4.4)")
-		assert_eq(second[0].health_damage, 92, "combo 2: 92 (plan §4.4)")
+		assert_eq(first[0].health_damage, 67, "combo 1: 67 (76 in plan §4.4; P17b, docs/BALANCE_LOG.md)")
+		assert_eq(second[0].health_damage, 77, "combo 2: 77 (92 in plan §4.4; P17b)")
 	assert_true(p.entity.is_alive(), "the giant lives")
 
 
-func test_the_slam_deals_126_to_a_stage_2_giant() -> void:
+func test_the_slam_deals_101_to_a_stage_2_giant() -> void:
 	var p := await _giant(2, Vector3(0, 0.05, 0))
 	assert_near(p.entity.combatant.armor_total(), 0.0, 1e-6, "armor 0")
 	# The king faces away (yaw 0, -Z): the giant stands behind it, and the slam hits all round.
@@ -386,7 +386,7 @@ func test_the_slam_deals_126_to_a_stage_2_giant() -> void:
 	assert_eq(on.size(), 1, "the slam hit the giant behind the king, once")
 	if on.size() == 1:
 		assert_eq(on[0].outcome, HitResult.Outcome.HIT, "a hit")
-		assert_near(float(on[0].health_damage), 126.0, 1.0, "126 +/- 1 (plan §4.4)")
+		assert_near(float(on[0].health_damage), 101.0, 1.0, "101 +/- 1 (126 in plan §4.4; P17b, docs/BALANCE_LOG.md)")
 
 
 func test_the_slam_ignores_a_block_and_the_combo_is_blocked() -> void:
@@ -404,7 +404,7 @@ func test_the_slam_ignores_a_block_and_the_combo_is_blocked() -> void:
 	assert_eq(slam.size(), 1, "the slam lands")
 	if slam.size() == 1:
 		assert_eq(slam[0].outcome, HitResult.Outcome.HIT, "through the block")
-		assert_near(float(slam[0].health_damage), 126.0, 1.0, "at full damage")
+		assert_near(float(slam[0].health_damage), 101.0, 1.0, "at full damage")
 	await TestWait.until(self, func() -> bool: return k.controller.action == null, 200)
 	await step_ticks(10)
 	p.global_position = Vector3(0, 0.05, 0)   # the slam knocked it back out of the combo's reach
@@ -419,7 +419,7 @@ func test_the_slam_ignores_a_block_and_the_combo_is_blocked() -> void:
 	assert_eq(combo.size(), 1, "the combo lands")
 	if combo.size() == 1:
 		assert_eq(combo[0].outcome, HitResult.Outcome.BLOCKED, "the combo is blocked")
-		assert_true(combo[0].health_damage < 76, "for less (%d)" % combo[0].health_damage)
+		assert_true(combo[0].health_damage < 67, "for less (%d)" % combo[0].health_damage)
 
 
 func test_the_combo_is_parried_and_titan_surge_adds_to_the_parry_poise() -> void:
