@@ -70,6 +70,7 @@ var _hold_started := -1
 var _last_light_tick := -100
 var _connected := false
 var _ability_log: Array = []
+var _bands: Dictionary = {}     ## reach_band cache
 
 
 func setup(p_bot: Variant, p_player: GiantPlayer, p_skill: String, p_rng: RandomNumberGenerator) -> void:
@@ -445,8 +446,18 @@ func fight(tick: int, t: EnemyActor) -> void:
 		bot.metrics.note_engagement(dist)
 	var reach := float(player.profile.get("melee_reach_m", 3.5))
 	var t_radius := EnemyActor.entity_radius(t.entity) if t.entity != null else 0.5
+	var t_height := t.entity.combatant.height_m if t.entity != null and t.entity.combatant != null else 1.8
+	# Where the swings land (the weapon's arc at this stage, with this weapon, on this target's
+	# size): stand a little short of the middle of the light's band (its far edge is optimistic);
+	# back off when near its inner edge (a long weapon passes over a target at the giant's feet).
+	var light_band := reach_band(_loadout_action(&"light"), t_radius, t_height)
+	var heavy_band := reach_band(_loadout_action(&"heavy"), t_radius, t_height)
 	var want := maxf(1.0, reach * 0.8 + t_radius * 0.5)
-	if t.is_in_group(OgreBoss.GROUP):
+	var too_close := 0.0
+	if light_band != Vector2.ZERO:
+		want = lerpf(light_band.x, light_band.y, 0.45)
+		too_close = light_band.x + 0.25
+	elif t.is_in_group(OgreBoss.GROUP):
 		want = reach * 0.9 + t_radius * 0.5
 	var busy := defend_busy(tick)
 	if not busy and _abilities(tick, t, dist):
@@ -461,6 +472,10 @@ func fight(tick: int, t: EnemyActor) -> void:
 	if dist > want:
 		if bot != null:
 			bot.steer_toward(t.global_position, dist > 10.0)
+		return
+	if too_close > 1.0 and dist < too_close and not busy and c.state == CombatController.State.LOCOMOTION:
+		if bot != null:
+			bot.steer_world(-to.normalized(), false)   # step back into the swing's reach
 		return
 	if bot != null:
 		bot.stop_moving()
@@ -483,12 +498,62 @@ func fight(tick: int, t: EnemyActor) -> void:
 			return
 	var heavy := t.is_guarding() or (t.controller != null and t.controller.state == CombatController.State.STAGGERED) \
 		or (t.controller != null and t.controller.phase() == ActionDef.Phase.RECOVERY and t.is_in_group(OgreBoss.GROUP))
-	if heavy and c.preview_reason(&"heavy") == "":
+	var light_lands := _in_band(light_band, dist)
+	var heavy_lands := _in_band(heavy_band, dist)
+	if heavy_lands and (heavy or not light_lands) and c.preview_reason(&"heavy") == "":
 		r.inject_edge(&"heavy")
 		return
-	if c.preview_reason(&"light") in ["", "busy"]:
+	if light_lands and c.preview_reason(&"light") in ["", "busy"]:
 		r.inject_edge(&"light")
 		_last_light_tick = tick
+
+
+## The loadout's action for `kind` (light: the chain's first; heavy).
+func _loadout_action(kind: StringName) -> ActionDef:
+	var c := player.controller
+	return c.library.get(str(c.loadout.get(String(kind), ""))) as ActionDef
+
+
+## True when `dist` is within `band` (with 0.3 m of slack), or when the band is unknown.
+static func _in_band(band: Vector2, dist: float) -> bool:
+	return band == Vector2.ZERO or (dist >= band.x - 0.3 and dist <= band.y + 0.3)
+
+
+## The distances (centre to centre, straight ahead) at which `action`'s weapon arc lands on a target
+## of radius `t_radius` and height `t_height`, from the swing's geometry at the giant's stage and
+## weapon now (AttackGeometry, as PlayerAttack sweeps it): Vector2(nearest, farthest), or
+## Vector2.ZERO when it is not a weapon arc or lands nowhere within 14 m. Cached.
+func reach_band(action: ActionDef, t_radius: float, t_height: float) -> Vector2:
+	if action == null or action.hit_shape != "weapon_arc" or action.arc.is_empty() or player.attack == null:
+		return Vector2.ZERO
+	var key := "%d|%s|%.2f|%.2f|%.2f|%.1f|%.1f" % [player.current_growth_stage(), action.id, player.arm_length,
+		player.weapon_length, float(player.weapon_hit_radius()), t_radius, t_height]
+	if _bands.has(key):
+		return _bands[key]
+	var pitch := float(player.attack.arc_pitch_offset_for(action))
+	var segs: Array = []
+	for i in 25:
+		var ang := AttackGeometry.arc_point(action, float(i) / 24.0)
+		var dir := AttackGeometry.local_direction(ang.x, ang.y + pitch)
+		segs.append(AttackGeometry.segment_local(player.weapon_pivot, dir, player.arm_length,
+			player.arm_length + player.weapon_length))
+	var hit := float(player.weapon_hit_radius()) + t_radius
+	var lo := INF
+	var hi := -INF
+	var d := 0.5
+	while d <= 14.0:
+		var a := Vector3(0, 0.05, -d)
+		var b := Vector3(0, maxf(0.2, t_height), -d)
+		for seg: PackedVector3Array in segs:
+			var pts := Geometry3D.get_closest_points_between_segments(seg[0], seg[1], a, b)
+			if pts[0].distance_to(pts[1]) <= hit:
+				lo = minf(lo, d)
+				hi = maxf(hi, d)
+				break
+		d += 0.25
+	var band := Vector2(lo, hi) if lo <= hi else Vector2.ZERO
+	_bands[key] = band
+	return band
 
 
 func defend_busy(tick: int) -> bool:

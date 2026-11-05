@@ -64,6 +64,10 @@ const ERRAND_GIVE_UP_S := 45.0
 const GAVE_UP := 1 << 30
 const BREAK_SWINGS_PER_STEP := 3
 const BREAK_STEP_M := 0.8
+const CRUMB_EVERY_TICKS := 30
+const CRUMB_SPACING_M := 1.5
+const CRUMBS_KEPT := 48
+const RETRACE_S := 12.0
 const ELDER := "valley.village.elder"
 const ELDER_DIALOGUE := "dialogue.elder"
 const BARRICADE := "valley.village.barricade"
@@ -153,6 +157,9 @@ var _break_swings := 0          ## blows since its health last dropped
 var _break_swing_tick := -1000
 var _break_closer := 0.0        ## metres closer than the reach suggests (blows that did not land)
 var _errand_ticks: Dictionary = {}   ## errand -> ticks spent on it (this level load)
+var _crumbs := PackedVector3Array()   ## where the giant has been (every CRUMB_SPACING_M, newest last)
+var _retrace := PackedVector3Array()  ## breadcrumbs to walk back through, next first
+var _retrace_until := -1
 
 
 ## Starts a run (once per process; later calls keep the running one). options: "policy", "skill",
@@ -303,6 +310,7 @@ func _physics_process(_delta: float) -> void:
 		_next_plan_tick = tick + PLAN_EVERY_TICKS
 		_plan(tick)
 	_act(tick, defending)
+	_note_crumb(tick)
 	_watchdogs(tick)
 	if run.trace_ticks > 0 and tick % run.trace_ticks == 0:
 		print(trace_line(tick))
@@ -744,6 +752,19 @@ func _act(tick: int, defending: bool) -> void:
 		mode = "traverse"
 		steer_world(_unstick_dir, false)
 		return
+	if not _retrace.is_empty():
+		if tick < _retrace_until and kind != "fight":
+			mode = "traverse"
+			while not _retrace.is_empty() and _flat_dist(_retrace[0], player.global_position) < WAYPOINT_M:
+				_retrace.remove_at(0)
+			if not _retrace.is_empty():
+				steer_world(_flat(_retrace[0] - player.global_position).normalized(), false)
+				return
+		# Back where a path leads on (or the retrace ran out): plan again from here.
+		_retrace = PackedVector3Array()
+		_path = PackedVector3Array()
+		_stuck_best = INF
+		_stuck_since = tick
 	match kind:
 		"fight":
 			var t: Variant = task.get("target")
@@ -1000,8 +1021,9 @@ func _act_upgrade(tick: int) -> void:
 	_next_plan_tick = tick
 
 
-## The best weapon owned: the tree at stage 3 (the Deadfall needs it; it hits hardest), else a
-## reforged weapon, else the sword, else the club.
+## The weapon for the task: the one a prop needs (the Deadfall: the oak), else the best one-handed
+## weapon owned (a reforged weapon, else the sword, else the club), else the oak. The oak's swing
+## passes over a wolf or a soldier at the giant's feet, so fights use the smaller weapons.
 func _equip_best() -> void:
 	var eq = player.equipment
 	if eq == null or player.controller.state != CombatController.State.LOCOMOTION:
@@ -1009,13 +1031,16 @@ func _equip_best() -> void:
 	if str(task.get("kind", "")) == "upgrade":
 		return
 	var want := ""
-	if eq.owns(TREE_WEAPON) and player.current_growth_stage() >= 3:
-		want = TREE_WEAPON
+	var needed := str(task.get("weapon", ""))
+	if needed != "" and eq.owns(needed):
+		want = needed
 	else:
 		for id: String in WEAPON_ORDER:
 			if eq.owns(id):
 				want = id
 				break
+	if want == "" and eq.owns(TREE_WEAPON) and player.current_growth_stage() >= 3:
+		want = TREE_WEAPON
 	if want != "" and eq.weapon_id() != want:
 		eq.equip_weapon(want)
 
@@ -1209,7 +1234,15 @@ func _track_stuck(tick: int, goal: Vector3) -> void:
 			_unstick_until = tick + 60
 			player.router.inject_edge(&"jump")
 		2:
-			how = "replan"
+			# Walked into a pocket the navmesh does not join (chasing an enemy between houses: the
+			# giant fits through gaps the bake closed)? Walk back the way it came first.
+			var back := _retrace_route(goal)
+			if not back.is_empty():
+				how = "retrace"
+				_retrace = back
+				_retrace_until = tick + ActionDef.seconds_to_ticks(RETRACE_S)
+			else:
+				how = "replan"
 			_path = PackedVector3Array()
 		3:
 			how = "route_points"
@@ -1230,6 +1263,36 @@ func _track_stuck(tick: int, goal: Vector3) -> void:
 	run.metrics.note_stuck(tick, player.global_position, run.obj_key, how)
 	if run.stuck_level > 4:
 		_breach("stuck", "no progress toward %s after every recovery" % [_v(goal)], goal)
+
+
+## A breadcrumb every CRUMB_EVERY_TICKS when the giant has moved CRUMB_SPACING_M since the last one.
+func _note_crumb(tick: int) -> void:
+	if tick % CRUMB_EVERY_TICKS != 0:
+		return
+	var p := player.global_position
+	if _crumbs.is_empty() or _flat_dist(_crumbs[_crumbs.size() - 1], p) >= CRUMB_SPACING_M:
+		_crumbs.append(p)
+		if _crumbs.size() > CRUMBS_KEPT:
+			_crumbs.remove_at(0)
+
+
+## The way back to the joined navmesh: when no path on the giant's layers leads from where it stands
+## to `goal`, the breadcrumbs back to the newest one from which a path does (next first); [] when a
+## path leads on from here, or from none of them.
+func _retrace_route(goal: Vector3) -> PackedVector3Array:
+	var map := level.nav_map()
+	var snapped := BotDiagnosis.snap_to_layer(level, goal, player.nav_layers)
+	if BotDiagnosis.reaches(map, player.global_position, snapped, player.nav_layers):
+		return PackedVector3Array()
+	var route := PackedVector3Array()
+	for i in range(_crumbs.size() - 1, -1, -1):
+		var c := _crumbs[i]
+		route.append(c)
+		if _flat_dist(c, player.global_position) < CRUMB_SPACING_M:
+			continue
+		if BotDiagnosis.reaches(map, c, snapped, player.nav_layers):
+			return route
+	return PackedVector3Array()
 
 
 ## The bot_route_points marker that is nearer the goal than the giant and nearest to the giant.
@@ -1305,7 +1368,7 @@ func _breach(reason: String, detail: String, goal := Vector3.INF) -> void:
 			radius = 8.0
 		"go":
 			g = _go_goal(o) if not g.is_finite() else g
-	var diag := BotDiagnosis.diagnose(o, player, level, reason, g, radius)
+	var diag := BotDiagnosis.diagnose(o, player, level, reason, g, radius, _crumbs)
 	diag["detail"] = detail
 	diag["task"] = str(task.get("kind", ""))
 	diag["policy"] = run.policy

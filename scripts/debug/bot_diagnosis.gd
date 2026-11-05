@@ -40,8 +40,11 @@ const NODE_GROWTH_FRACTION := 0.10
 ## The diagnosis of a breach: {"reason", "objective", "classification", "path", "condition",
 ## "evidence": [lines]}. goal: where the objective is (Vector3.INF: its position); use_radius: how
 ## near the giant must come (snapped goals farther than this from the objective are off its layer).
+## came_from: where the giant was before (the bot's breadcrumbs): no path from where it stands but
+## one from where it was means it left the joined navmesh (a pocket the bake did not connect, which
+## the giant still fits into) - the way back exists, so that is the bot's failure, not a softlock.
 static func diagnose(objective: Dictionary, player: GiantPlayer, level: LevelRoot, reason: String,
-		goal := Vector3.INF, use_radius := REACH_TOLERANCE_M) -> Dictionary:
+		goal := Vector3.INF, use_radius := REACH_TOLERANCE_M, came_from := PackedVector3Array()) -> Dictionary:
 	var out := {"reason": reason, "objective": "%s:%s" % [objective.get("quest_id", "?"), objective.get("stage_id", "?")],
 		"tick": Sim.tick, "classification": BOT_FAILED, "evidence": []}
 	var where := goal
@@ -55,19 +58,29 @@ static func diagnose(objective: Dictionary, player: GiantPlayer, level: LevelRoo
 	var path := {}
 	if where.is_finite():
 		path = path_check(player, level, where, use_radius)
+		if not bool(path.get("reachable", true)) and not came_from.is_empty():
+			var earlier := reachable_from_any(level, came_from, where, player.nav_layers, use_radius)
+			if earlier.is_finite():
+				path["reachable_from_earlier"] = _v(earlier)
 	else:
 		path = {"reachable": true, "note": "the objective has no position (a state to reach, not a place)"}
 	out["path"] = path
 	var cond := condition_check(_condition_of(objective), player, level)
 	out["condition"] = cond
 	if not bool(path.get("reachable", true)):
-		out.classification = WORLD_BLOCKED
-		(out.evidence as Array).append("no path on layers %d to %s" % [player.nav_layers, _v(where)])
+		if path.has("reachable_from_earlier"):
+			(out.evidence as Array).append(("no path on layers %d from where the giant stands to %s, but there is one " \
+				+ "from %s where it was earlier: it left the joined navmesh (a pocket the bake did not connect)") % [
+				player.nav_layers, _v(where), path.reachable_from_earlier])
+		else:
+			out.classification = WORLD_BLOCKED
+			(out.evidence as Array).append("no path on layers %d to %s" % [player.nav_layers, _v(where)])
 	if not bool(cond.get("satisfiable", true)):
 		out.classification = WORLD_BLOCKED
 		(out.evidence as Array).append("condition cannot hold: %s" % cond.get("why", ""))
 	if str(out.classification) == BOT_FAILED:
-		(out.evidence as Array).append("a path exists and the condition can still hold: the bot failed")
+		(out.evidence as Array).append("a path exists%s and the condition can still hold: the bot failed" % (
+			" (from where the giant was)" if path.has("reachable_from_earlier") else ""))
 	return out
 
 
@@ -108,6 +121,20 @@ static func path_check(player: GiantPlayer, level: LevelRoot, goal: Vector3, use
 				out.reachable = true
 				return out
 	return out
+
+
+## The newest of `points` from which a path on `layers` reaches `goal` (snapped to the layer, within
+## `use_radius`), else Vector3.INF.
+static func reachable_from_any(level: LevelRoot, points: PackedVector3Array, goal: Vector3, layers: int,
+		use_radius := REACH_TOLERANCE_M) -> Vector3:
+	var map := level.nav_map()
+	var snapped := snap_to_layer(level, goal, layers)
+	if not snapped.is_finite() or _flat(snapped, goal) > use_radius + 1e-3:
+		return Vector3.INF
+	for i in range(points.size() - 1, -1, -1):
+		if reaches(map, points[i], snapped, layers):
+			return points[i]
+	return Vector3.INF
 
 
 ## The point of the giant's layer nearest `pos` (the lowest set bit's region), else `pos`.

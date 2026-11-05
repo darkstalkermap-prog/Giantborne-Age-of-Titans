@@ -186,6 +186,23 @@ func test_the_diagnosis_tells_a_softlock_from_a_bot_failure() -> void:
 	assert_eq(str(d.classification), BotDiagnosis.WORLD_BLOCKED, "without the link the marker is unreachable: a softlock")
 	assert_false(bool(d.path.reachable), "no path")
 	assert_true(str(d.evidence).contains("no path"), "the evidence says so (%s)" % [d.evidence])
+	# A giant that walked into a pocket the navmesh does not join (it fits through gaps the bake
+	# closed): no path from where it stands, but one from where it was. Not a softlock.
+	var came_from := PackedVector3Array([ISLAND_B + Vector3(-3, 0, 1), ISLAND_A + Vector3(1.5, 0, 0)])
+	d = BotDiagnosis.diagnose(far, p, lv, "stuck", Vector3.INF, 3.0, came_from)
+	assert_eq(str(d.classification), BotDiagnosis.BOT_FAILED, "a path from where it was: the bot failed (%s)" % [d.evidence])
+	assert_true(str(d.evidence).contains("left the joined navmesh"), "the evidence says why (%s)" % [d.evidence])
+	assert_eq(d.path.get("reachable_from_earlier"), [22.0, 0.0, 6.0], "from the breadcrumb on the far island")
+	# The bot's way out: its breadcrumbs back to the newest one from which a path leads on.
+	var b := ValleyBot.new()
+	b.level = lv
+	b.player = p
+	b._crumbs = came_from
+	var back := b._retrace_route(ISLAND_B + Vector3(2, 0, 0))
+	assert_eq(back, PackedVector3Array([ISLAND_A + Vector3(1.5, 0, 0), ISLAND_B + Vector3(-3, 0, 1)]),
+		"back through the breadcrumbs, newest first, to one with a path")
+	assert_eq(b._retrace_route(ISLAND_A + Vector3(3, 0, 3)), PackedVector3Array(), "none needed where a path leads on")
+	b.free()
 	var off := {"quest_id": "quest.test", "stage_id": "off", "position": Vector3(15, 0, 40)}
 	d = BotDiagnosis.diagnose(off, p, lv, "timeout")
 	assert_eq(str(d.classification), BotDiagnosis.WORLD_BLOCKED, "a marker off every navmesh is unreachable")
@@ -207,6 +224,8 @@ func test_options_exit_codes_and_invariants() -> void:
 	assert_eq(o, {"policy": "help_cache", "skill": "novice", "assist": false, "loop": false, "seed": 0}, "the defaults")
 	o = ValleyBot.parse_options(PackedStringArray(["--bot-village=bribe", "--bot-skill=godlike"]))
 	assert_eq([o.policy, o.skill], ["help_cache", "novice"], "unknown values fall back")
+	assert_eq(float(ValleyBot.parse_options(PackedStringArray(["--bot-trace=2.5"])).get("trace_s", 0.0)), 2.5,
+		"--bot-trace=S")
 	assert_eq(Autopilot.exit_code({"errors": 0, "invariants_ok": false, "scenario_ok": false}), Autopilot.EXIT_INVARIANT,
 		"an invariant failure exits 3")
 	assert_eq(Autopilot.exit_code({"errors": 2, "invariants_ok": false}), Autopilot.EXIT_ERRORS, "errors still win")
@@ -237,6 +256,15 @@ func test_options_exit_codes_and_invariants() -> void:
 	var metrics := RunMetrics.new()
 	var fails := BotDiagnosis.check_invariants(get_tree(), p, null, metrics, 0)
 	assert_true(fails.is_empty(), "a calm scene holds every invariant (%s)" % [fails])
+	# Where the bot stands to fight: the band where the weapon's arc lands on the target's size.
+	var bc := BotCombat.new()
+	bc.setup(null, p, BotCombat.NOVICE, RandomNumberGenerator.new())
+	var light := bc.reach_band(bc._loadout_action(&"light"), 0.4, 1.8)
+	assert_true(light.x > 0.0 and light.x < 1.5 and light.y > 2.5 and light.y < 4.5,
+		"a stage-1 club's light lands on a soldier from about 0.5 to 3.3 m (%s)" % light)
+	assert_true(bc.reach_band(bc._loadout_action(&"heavy"), 0.4, 1.8).y >= light.y, "the heavy reaches as far or farther")
+	assert_eq(bc.reach_band(null, 0.4, 1.8), Vector2.ZERO, "no action, no band")
+	bc.teardown()
 	p.lock.target_id = "test.p17a.gone"
 	fails = BotDiagnosis.check_invariants(get_tree(), p, null, metrics, 0)
 	assert_true(fails.size() == 1 and fails[0].contains("lock target test.p17a.gone"), "a lock on nothing fails (%s)" % [fails])
