@@ -167,7 +167,8 @@ func react(i: int, source: Vector3, strength: float) -> void:
 		var away := item_position(i) - source
 		away.y = 0.0
 		var axis := Vector3.UP.cross(away.normalized()) if away.length_squared() > 1e-6 else Vector3.RIGHT
-		_wobble_axis[i] = (global_basis.inverse() * axis).normalized()
+		# The tilt axis in the item's own frame (it is yawed and scaled within the field).
+		_wobble_axis[i] = (transforms[i].basis.inverse() * (global_basis.inverse() * axis)).normalized()
 		_wobble_amp[i] = deg_to_rad(10.0 + 14.0 * clampf(strength, 0.0, 1.0))
 		_wobble_t[i] = 0.0
 	_dirty = true
