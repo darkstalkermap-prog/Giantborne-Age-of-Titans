@@ -9,7 +9,7 @@ config_version=5
 
 config/name="Giantborn: Age of Titans"
 config/description="Low-poly combat sandbox prototype (milestones M0/M1)."
-config/version="0.1.0-m1"
+config/version="0.2.0-m3"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
@@ -20,6 +20,7 @@ Events="*res://scripts/core/events.gd"
 GameData="*res://scripts/core/game_data.gd"
 Settings="*res://scripts/core/settings.gd"
 WorldState="*res://scripts/core/world_state.gd"
+GameSession="*res://scripts/core/game_session.gd"
 Sim="*res://scripts/core/sim.gd"
 
 [display]
