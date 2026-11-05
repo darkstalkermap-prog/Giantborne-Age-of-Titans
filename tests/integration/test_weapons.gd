@@ -395,9 +395,10 @@ func test_equipment_state_round_trips_silently() -> void:
 
 # --------------------------------------------------------------------------- first person
 
-## First person at stage 3 with the sword, the hammer and the tree in turn, through a light chain
-## entered with the router: the crosshair probe never reports more than 30 consecutive ticks in
-## which the giant's own meshes (its weapon included) are the first thing the centre ray meets.
+## First person at stage 3 with the sword, the hammer and the tree in turn (and the full-size
+## reforged sword and maul), through a light chain entered with the router, looking ahead and
+## 25 degrees down: the crosshair probe never reports more than 30 consecutive ticks in which the
+## giant's own meshes (its weapon included) are the first thing the centre ray meets.
 func test_first_person_light_chains_keep_the_crosshair_clear_at_stage_3() -> void:
 	var p := await _grounded_player()
 	p.entity.combatant.unkillable = true
@@ -405,11 +406,11 @@ func test_first_person_light_chains_keep_the_crosshair_clear_at_stage_3() -> voi
 	p.router.inject_edge(&"camera_toggle")
 	await step_ticks(2)
 	assert_true(p.camera_rig.is_first_person(), "first person")
-	for id: String in ["weapon.sword", "weapon.hammer", "weapon.tree_oak"]:
+	for id: String in ["weapon.sword", "weapon.hammer", "weapon.tree_oak", "weapon.sword_reinforced", "weapon.hammer_reinforced"]:
 		assert_true(_equip(p, id).ok, "%s equipped" % id)
 		await step_ticks(2)
 		var probe := CrosshairProbe.new(p.camera_rig.camera, [p])
-		var chain := 3 if id == "weapon.sword" else 2
+		var chain := 3 if id.begins_with("weapon.sword") else 2
 		for pitch_deg: float in [0.0, -25.0]:
 			p.camera_rig.pitch = deg_to_rad(pitch_deg)
 			for i in chain:
