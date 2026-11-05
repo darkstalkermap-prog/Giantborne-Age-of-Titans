@@ -38,8 +38,9 @@ extends Node
 ## those maxima. The largest values seen are reported as engine_physics_max_ms and
 ## engine_process_max_ms.
 ##
-## `section` (set by the scenario; valley_walk sets the district) also files cpu_tick_ms,
-## frame_ms, draw_calls and active_combatants per section ("sections" in the result).
+## `section` (set by the scenario; valley_walk sets the district) also files cpu_tick_ms, sim_ms,
+## frame_ms, draw_calls and active_combatants per section ("sections" in the result), and the
+## SPIKES_KEPT slowest ticks are listed with their tick and section ("cpu_tick_spikes").
 ## hits_resolved is counted from Events.hit_resolved; a scenario may add its own `counters` and
 ## `context` keys.
 
@@ -61,7 +62,9 @@ const NA := "N/A"
 const TICK_METRICS := ["cpu_tick_ms", "sim_ms", "active_combatants", "debris"]
 const FRAME_METRICS := ["idle_ms", "frame_ms", "gpu_render_ms", "cpu_render_ms", "draw_calls",
 	"render_objects", "primitives", "nodes", "objects", "orphan_nodes", "memory_static_mb"]
-const SECTION_METRICS := ["cpu_tick_ms", "frame_ms", "draw_calls", "active_combatants"]
+const SECTION_METRICS := ["cpu_tick_ms", "sim_ms", "frame_ms", "draw_calls", "active_combatants"]
+## The slowest ticks kept for the report (tick, ms, section).
+const SPIKES_KEPT := 5
 
 ## A name for the run ("stress", "valley_walk", "soak").
 var label := ""
@@ -91,6 +94,7 @@ var _engine_physics_max_ms := 0.0
 var _engine_process_max_ms := 0.0
 var _delta_min := INF
 var _delta_max := -INF
+var _spikes: Array = []   # the SPIKES_KEPT slowest ticks: {"tick", "ms", "section"}, slowest first
 
 
 ## Closes a measurement span at its priority: Sim.step's end (physics) or the idle step's end.
@@ -186,7 +190,9 @@ func _close_tick(now_usec: int) -> void:
 	ticks_seen += 1
 	if ticks_seen <= warmup_ticks:
 		return
-	add_sample("cpu_tick_ms", float(now_usec - _t_tick) / 1000.0)
+	var ms := float(now_usec - _t_tick) / 1000.0
+	add_sample("cpu_tick_ms", ms)
+	_note_spike(ms)
 	if _sim_us >= 0:
 		add_sample("sim_ms", float(_sim_us) / 1000.0)
 	if is_inside_tree():
@@ -199,12 +205,12 @@ func _sample_frame(delta: float) -> void:
 	_delta_min = minf(_delta_min, delta)
 	_delta_max = maxf(_delta_max, delta)
 	fixed_fps = frames_seen > 1 and _delta_max - _delta_min < 1e-9
+	if ticks_seen <= warmup_ticks:
+		return
 	_engine_physics_max_ms = maxf(_engine_physics_max_ms,
 		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0)
 	_engine_process_max_ms = maxf(_engine_process_max_ms,
 		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0)
-	if ticks_seen <= warmup_ticks:
-		return
 	add_sample("frame_ms", delta * 1000.0)
 	if not headless:
 		add_sample("gpu_render_ms", RenderingServer.viewport_get_measured_render_time_gpu(_vp_rid))
@@ -219,6 +225,15 @@ func _sample_frame(delta: float) -> void:
 	add_sample("objects", Performance.get_monitor(Performance.OBJECT_COUNT))
 	add_sample("orphan_nodes", Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))
 	add_sample("memory_static_mb", Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0)
+
+
+func _note_spike(ms: float) -> void:
+	if _spikes.size() >= SPIKES_KEPT and ms <= float(_spikes.back().ms):
+		return
+	_spikes.append({"tick": Sim.tick, "ms": snappedf(ms, 0.001), "section": section})
+	_spikes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a.ms) > float(b.ms))
+	if _spikes.size() > SPIKES_KEPT:
+		_spikes.resize(SPIKES_KEPT)
 
 
 ## Adds one sample of `metric` (also to the current section for SECTION_METRICS).
@@ -265,6 +280,7 @@ func result() -> Dictionary:
 	for metric: String in TICK_METRICS + FRAME_METRICS:
 		out[metric] = metric_summary(metric)
 	out["counters"] = counters.duplicate()
+	out["cpu_tick_spikes"] = _spikes.duplicate(true)
 	out["engine_physics_max_ms"] = snappedf(_engine_physics_max_ms, 0.001)
 	out["engine_process_max_ms"] = snappedf(_engine_process_max_ms, 0.001)
 	var secs := {}
