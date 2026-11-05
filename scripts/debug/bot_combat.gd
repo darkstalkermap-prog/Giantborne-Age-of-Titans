@@ -36,12 +36,18 @@ const PARRY_LEAD_TICKS := 6
 const DODGE_LEAD_TICKS := 10
 const BLOCK_HOLD_TICKS := 16
 const EXPERT_WATCH_M := 12.0
+## P17b: a heavy commits the giant until 0.25 s into its recovery (its dodge cancel), about 57 ticks;
+## no heavy starts when a planned dodge falls inside that (the dodge would come too late).
+const HEAVY_COMMIT_TICKS := 60
 ## Hostile, aware enemies this far (by stage) pull the bot into a fight.
 const ENGAGE_RADIUS_M := [16.0, 22.0, 28.0]
 ## A target this much higher than the giant's feet is out of melee reach (an archer on a wall).
 const ELEVATED_M := 2.5
 ## Targets narrower than this get the reach band (BotCombat.reach_band); larger ones the reach.
 const SMALL_TARGET_RADIUS_M := 0.8
+## How far into the light's reach band (0 = its near edge, 1 = its far edge) the bot stands against a
+## man-sized target (P17b: 0.8, the plan's "approach to 0.8 x reach"; P17a used 0.45).
+const STANDOFF_IN_BAND := 0.8
 const BOSS_ID := "valley.arena.ogre_king"
 const RUNIC_BOLT := "ability.runic_bolt"
 const BOULDER_HURL := "ability.boulder_hurl"
@@ -385,7 +391,33 @@ func ready_slot(action_id: String) -> String:
 	var key := slot_of(action_id)
 	if key == "":
 		return ""
+	if not affordable(GameData.get_action(action_id)):
+		return ""   # P17b: it would leave too little stamina for a dodge
 	return key if slot_reason(key) == "" else ""
+
+
+## P17b: the stamina a dodge costs (the loadout's dodge), which the bot keeps in reserve.
+func dodge_reserve() -> float:
+	var d := _loadout_action(&"dodge")
+	return d.stamina_cost if d != null else 0.0
+
+
+## P17b: whether spending `a`'s stamina leaves enough for a dodge (stamina reserve). Both skills keep
+## it: the bot's attacks used to spend the stamina its planned dodges needed - replaying the
+## expert's six deaths at the Ogre King, ten of eleven slam dodges were refused for "stamina" with 0
+## left. Actions that cost no stamina are always affordable.
+func affordable(a: ActionDef) -> bool:
+	if a == null or a.stamina_cost <= 0.0:
+		return true
+	return player.entity.combatant.pools.stamina - a.stamina_cost >= dodge_reserve()
+
+
+## P17b: true when a planned dodge falls within `ticks` from now.
+func dodge_planned_within(tick: int, ticks: int) -> bool:
+	for re: Dictionary in _reactions:
+		if str(re.kind).begins_with("dodge") and int(re.at) - tick <= ticks:
+			return true
+	return false
 
 
 ## Why the slot's request would be refused now ("" = it would be accepted), with the components'
@@ -453,9 +485,11 @@ func fight(tick: int, t: EnemyActor) -> void:
 	var t_radius := EnemyActor.entity_radius(t.entity) if t.entity != null else 0.5
 	var t_height := t.entity.combatant.height_m if t.entity != null and t.entity.combatant != null else 1.8
 	# A man-sized target (soldiers, archers, mages, wolves): stand where the swings land (the
-	# weapon's arc at this stage, with this weapon, on this target's size), a little short of the
-	# middle of the light's band (its far edge is optimistic), and back off when near its inner edge.
-	# A large one (ogres, the King: hurtboxes high on a broad body): by the reach, as before.
+	# weapon's arc at this stage, with this weapon, on this target's size, over the tilts its vertical
+	# aim may take), STANDOFF_IN_BAND into the light's band (P17b: the plan's "0.8 x reach" now that
+	# aimed swings reach about the reach; it was 0.45 while the fixed tilt stopped them short), and
+	# back off when near its inner edge. A large one (ogres, the King: hurtboxes high on a broad
+	# body): by the reach, as before.
 	var small := t_radius < SMALL_TARGET_RADIUS_M
 	var light_band := reach_band(_loadout_action(&"light"), t_radius, t_height) if small else Vector2.ZERO
 	var heavy_band := reach_band(_loadout_action(&"heavy"), t_radius, t_height) if small else Vector2.ZERO
@@ -464,7 +498,7 @@ func fight(tick: int, t: EnemyActor) -> void:
 		want = reach * 0.9 + t_radius * 0.5
 	var too_close := 0.0
 	if light_band != Vector2.ZERO:
-		want = lerpf(light_band.x, light_band.y, 0.45)
+		want = lerpf(light_band.x, light_band.y, STANDOFF_IN_BAND)
 		too_close = light_band.x + 0.25
 	var busy := defend_busy(tick)
 	if not busy and _abilities(tick, t, dist):
@@ -507,10 +541,13 @@ func fight(tick: int, t: EnemyActor) -> void:
 		or (t.controller != null and t.controller.phase() == ActionDef.Phase.RECOVERY and t.is_in_group(OgreBoss.GROUP))
 	var light_lands := _in_band(light_band, dist)
 	var heavy_lands := _in_band(heavy_band, dist)
-	if heavy_lands and (heavy or not light_lands) and c.preview_reason(&"heavy") == "":
+	# P17b: keep a dodge's stamina, and start no heavy that a planned dodge would have to wait for.
+	var heavy_ok := affordable(_loadout_action(&"heavy")) and not dodge_planned_within(tick, HEAVY_COMMIT_TICKS)
+	var light_ok := affordable(_loadout_action(&"light"))
+	if heavy_lands and heavy_ok and (heavy or not light_lands) and c.preview_reason(&"heavy") == "":
 		r.inject_edge(&"heavy")
 		return
-	if light_lands and c.preview_reason(&"light") in ["", "busy"]:
+	if light_lands and light_ok and c.preview_reason(&"light") in ["", "busy"]:
 		r.inject_edge(&"light")
 		_last_light_tick = tick
 
@@ -528,23 +565,31 @@ static func _in_band(band: Vector2, dist: float) -> bool:
 
 ## The distances (centre to centre, straight ahead) at which `action`'s weapon arc lands on a target
 ## of radius `t_radius` and height `t_height`, from the swing's geometry at the giant's stage and
-## weapon now (AttackGeometry, as PlayerAttack sweeps it): Vector2(nearest, farthest), or
+## weapon now (AttackGeometry, as PlayerAttack sweeps it), over every tilt the swing's vertical aim
+## may take at a target (PlayerAttack.aim_offset_range, P17b): Vector2(nearest, farthest), or
 ## Vector2.ZERO when it is not a weapon arc or lands nowhere within 14 m. Cached.
 func reach_band(action: ActionDef, t_radius: float, t_height: float) -> Vector2:
 	if action == null or action.hit_shape != "weapon_arc" or action.arc.is_empty() or player.attack == null:
 		return Vector2.ZERO
-	var key := "%d|%s|%.2f|%.2f|%.2f|%.1f|%.1f" % [player.current_growth_stage(), action.id, player.arm_length,
-		player.weapon_length, float(player.weapon_hit_radius()), t_radius, t_height]
+	var tilts := Vector2(player.attack.arc_pitch_offset_for(action), player.attack.arc_pitch_offset_for(action))
+	if player.attack.has_method("aim_offset_range"):
+		tilts = player.attack.aim_offset_range(action)
+	var key := "%d|%s|%.2f|%.2f|%.2f|%.1f|%.1f|%.1f|%.1f" % [player.current_growth_stage(), action.id,
+		player.arm_length, player.weapon_length, float(player.weapon_hit_radius()), t_radius, t_height, tilts.x, tilts.y]
 	if _bands.has(key):
 		return _bands[key]
-	var pitch := float(player.attack.arc_pitch_offset_for(action))
 	var segs: Array = []
-	for i in 25:
-		var ang := AttackGeometry.arc_point(action, float(i) / 24.0)
-		var dir := AttackGeometry.local_direction(ang.x, ang.y + pitch)
-		segs.append(AttackGeometry.segment_local(player.weapon_pivot, dir, player.arm_length,
-			player.arm_length + player.weapon_length))
-	var hit := float(player.weapon_hit_radius()) + t_radius
+	var pitch := tilts.x
+	while pitch <= tilts.y + 1e-4:
+		for i in 25:
+			var ang := AttackGeometry.arc_point(action, float(i) / 24.0)
+			var dir := AttackGeometry.local_direction(ang.x, ang.y + pitch)
+			segs.append(AttackGeometry.segment_local(player.weapon_pivot, dir, player.arm_length,
+				player.arm_length + player.weapon_length))
+		pitch += 2.0
+	# Where the swings land: through the core of the target's body (PlayerAttack.AIM_CORE of its
+	# radius, as the aim wants it), not the edge of its capsule (its hurtboxes are narrower).
+	var hit := float(player.weapon_hit_radius()) + t_radius * PlayerAttack.AIM_CORE
 	var lo := INF
 	var hi := -INF
 	var d := 0.5
