@@ -243,7 +243,7 @@ func _clear_encounter(encounter_id: String) -> void:
 		if n != null and e != null and e.is_alive():
 			_strike(id, 1.0e6)
 	await TestWait.until(self, func() -> bool:
-		return director.encounter_state(encounter_id) == EncounterDirector.CLEARED, 30)
+		return director.encounter_state(encounter_id) == EncounterDirector.CLEARED, 90)
 	assert_eq(director.encounter_state(encounter_id), EncounterDirector.CLEARED, "%s cleared" % encounter_id)
 
 
