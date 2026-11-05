@@ -364,6 +364,13 @@ func test_the_held_body_sits_in_the_hand_out_of_the_simulation() -> void:
 	var hud_params := {"slot": 1}
 	p.grab.preview_params("slot_1", action("ability.heavy_footfall"), hud_params)
 	assert_eq(p.controller.preview_reason(&"slot", hud_params), "holding", "the hotbar shows it too")
+	# Another component's precheck on the same slot runs first; an empty answer falls through.
+	var earlier := {"slot": 1, "precheck": func() -> String: return "no_target"}
+	p.grab.preview_params("slot_1", action("ability.heavy_footfall"), earlier)
+	assert_eq(p.controller.preview_reason(&"slot", earlier), "no_target", "an earlier precheck's reason wins")
+	earlier = {"slot": 1, "precheck": func() -> String: return ""}
+	p.grab.preview_params("slot_1", action("ability.heavy_footfall"), earlier)
+	assert_eq(p.controller.preview_reason(&"slot", earlier), "holding", "then this component's")
 	# E puts it down in front, upright, staggered 0.6 s, back in the simulation.
 	p.router.inject_edge(&"interact")
 	await step_ticks(1)

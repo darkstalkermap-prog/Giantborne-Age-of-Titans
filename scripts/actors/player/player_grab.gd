@@ -383,10 +383,18 @@ func handles_slot(slot_key: String) -> bool:
 
 
 ## HUD hotbar (P03's hook): the slot's precheck, from the cached candidates (no physics
-## queries outside the simulation tick).
+## queries outside the simulation tick). A precheck another component already added runs first.
 func preview_params(slot_key: String, def: ActionDef, params: Dictionary) -> void:
-	if def != null and handles_slot(slot_key):
-		params["precheck"] = _preview_precheck.bind(def.id)
+	if def == null or not handles_slot(slot_key):
+		return
+	var mine := _preview_precheck.bind(def.id)
+	var other: Variant = params.get("precheck")
+	if typeof(other) == TYPE_CALLABLE and (other as Callable).is_valid():
+		params["precheck"] = func() -> String:
+			var why := str((other as Callable).call())
+			return why if why != "" else str(mine.call())
+	else:
+		params["precheck"] = mine
 
 
 func pre_actions(_intents: Dictionary, _dt: float) -> void:
