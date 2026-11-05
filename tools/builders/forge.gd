@@ -16,7 +16,11 @@ const PATH := "res://scenes/world/forge.tscn"
 
 static func build_all(kit: SceneKit) -> void:
 	_materials(kit)
-	kit.save(build_forge(kit), PATH)
+	# P17b (draw calls): the hearth, the fire and the anvil as one mesh per material
+	# (SceneKit.merge_meshes); the collision shapes stay on their static bodies.
+	var forge := build_forge(kit)
+	kit.merge_meshes(forge as Node3D, PackedStringArray(), PackedStringArray(["scenery"]))
+	kit.save(forge, PATH)
 
 
 static func _materials(kit: SceneKit) -> void:

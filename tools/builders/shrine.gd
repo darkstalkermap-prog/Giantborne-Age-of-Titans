@@ -15,7 +15,11 @@ const PAD_Z := -6.5
 
 
 static func build_all(kit: SceneKit) -> void:
-	kit.save(build_shrine(kit), PATH)
+	# P17b (draw calls): the stone, the dais and the cap as one mesh per material (SceneKit.merge_meshes);
+	# Visual/Glow (lit by Shrine on activation) and the name sign stay as they are.
+	var shrine := build_shrine(kit)
+	kit.merge_meshes(shrine as Node3D, PackedStringArray(["Glow"]), PackedStringArray(["scenery"]))
+	kit.save(shrine, PATH)
 
 
 static func _materials(kit: SceneKit) -> void:

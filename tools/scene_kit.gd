@@ -347,3 +347,104 @@ func marker(node_name: String, pos := Vector3.ZERO) -> Marker3D:
 func combat_entity(entity_id: String, definition_id: String, team: int, anchor := "../Anchors/Torso") -> Node:
 	return scripted(Node.new(), S_ENTITY, {"name": "CombatEntity", "entity_id": entity_id,
 		"definition_id": definition_id, "team": team, "anchor_path": NodePath(anchor)})
+
+
+# --------------------------------------------------------------------------- batching (P17b)
+
+## Merges the static meshes below `container` into as few draw calls as their looks allow (P17b,
+## FOLLOWUPS: the Valley drew 500-1,350 calls per view, most of them props built from one box per
+## plank). Every visible MeshInstance3D reached through unscripted Node3D groups and static bodies
+## (not through nodes named in `keep`, hidden ones, scripted ones or other node types) becomes
+## part of one ArrayMesh, one surface per material, on a single MeshInstance3D "Merged" per
+## (shadow casting, render layers, visibility range) under `container`; SurfaceTool.append_from
+## bakes each part's transform (normals included). The merged parts are freed, and so are the
+## plain Node3D groups they leave empty. Visibility toggles stay what they were: a breakable's
+## Intact / Broken (and a structural prop's stage visuals) are merged one container each. Each
+## merged mesh joins `add_groups` (persistent; the prop builders pass LevelRoot's "scenery", so a level's
+## graphics preset fades them out with its scenery). Returns how many meshes were merged (0 when
+## fewer than two qualify: nothing changes).
+func merge_meshes(container: Node3D, keep: PackedStringArray = PackedStringArray(),
+		add_groups: PackedStringArray = PackedStringArray()) -> int:
+	var found: Array = []   # [MeshInstance3D, Transform3D in container space]
+	_collect_meshes(container, Transform3D.IDENTITY, keep, found)
+	if found.size() < 2:
+		return 0
+	var groups := {}        # instance key -> {"mi": template, "mats": {mat key: [Material, parts]}, "order"}
+	var group_order: Array = []
+	for f: Array in found:
+		var mi := f[0] as MeshInstance3D
+		var key := "%d|%d|%.2f|%.2f" % [mi.cast_shadow, mi.layers, mi.visibility_range_begin, mi.visibility_range_end]
+		if not groups.has(key):
+			groups[key] = {"mi": mi, "mats": {}, "order": []}
+			group_order.append(key)
+		var g: Dictionary = groups[key]
+		var mat := _part_material(mi)
+		var mkey := mat.resource_path if mat.resource_path != "" else str(mat.get_instance_id())
+		if not (g.mats as Dictionary).has(mkey):
+			g.mats[mkey] = [mat, []]
+			(g.order as Array).append(mkey)
+		(g.mats[mkey][1] as Array).append(f)
+	var n := 0
+	for gi in group_order.size():
+		var g: Dictionary = groups[group_order[gi]]
+		var mesh := ArrayMesh.new()
+		for mkey: String in g.order:
+			var entry: Array = g.mats[mkey]
+			var st := SurfaceTool.new()
+			for part: Array in entry[1]:
+				st.append_from((part[0] as MeshInstance3D).mesh, 0, part[1])
+				n += 1
+			st.commit(mesh)
+			mesh.surface_set_material(mesh.get_surface_count() - 1, entry[0])
+		var template := g.mi as MeshInstance3D
+		var merged := MeshInstance3D.new()
+		merged.name = "Merged" if gi == 0 else "Merged%d" % (gi + 1)
+		merged.mesh = mesh
+		merged.cast_shadow = template.cast_shadow
+		merged.layers = template.layers
+		merged.visibility_range_begin = template.visibility_range_begin
+		merged.visibility_range_end = template.visibility_range_end
+		for group: String in add_groups:
+			merged.add_to_group(group, true)
+		container.add_child(merged)
+	for f: Array in found:
+		var part := f[0] as MeshInstance3D
+		var parent := part.get_parent()
+		parent.remove_child(part)
+		part.free()
+		_prune_empty(parent, container)
+	return n
+
+
+## A part's material: its material_override, else its surface override, else its mesh's own.
+static func _part_material(mi: MeshInstance3D) -> Material:
+	if mi.material_override != null:
+		return mi.material_override
+	var m := mi.get_surface_override_material(0)
+	return m if m != null else mi.mesh.surface_get_material(0)
+
+
+func _collect_meshes(node: Node, xf: Transform3D, keep: PackedStringArray, out: Array) -> void:
+	for child in node.get_children():
+		if not (child is Node3D) or child.get_script() != null or keep.has(String(child.name)) \
+				or not (child as Node3D).visible:
+			continue
+		var cxf := xf * (child as Node3D).transform
+		if child is MeshInstance3D:
+			var mi := child as MeshInstance3D
+			if mi.mesh != null and mi.mesh.get_surface_count() == 1 and mi.get_child_count() == 0 \
+					and _part_material(mi) != null:
+				out.append([mi, cxf])
+		elif child.get_class() == "Node3D" or child is StaticBody3D:
+			_collect_meshes(child, cxf, keep, out)
+
+
+## Frees `node` and its plain Node3D ancestors below `container` once they have no children left.
+func _prune_empty(node: Node, container: Node) -> void:
+	var n := node
+	while n != null and n != container and n.get_class() == "Node3D" and n.get_child_count() == 0 \
+			and n.get_script() == null:
+		var parent := n.get_parent()
+		parent.remove_child(n)
+		n.free()
+		n = parent

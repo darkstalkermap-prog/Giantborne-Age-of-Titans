@@ -9,7 +9,7 @@
 	"max_active_enemies": 12,
 	"lod": {"near_m": 40, "mid_m": 90, "check_ticks": 30, "corpse_free_s": 6},
 	"render": {
-		"low": {"shadow_distance_m": 60, "scenery_visibility_end_m": 160, "msaa": 0},
+		"low": {"shadow_distance_m": 0, "scenery_visibility_end_m": 160, "msaa": 0},
 		"medium": {"shadow_distance_m": 120, "scenery_visibility_end_m": 220, "msaa": 2}
 	},
 	"web_overrides": {"quality": "low", "ai_tier1_m": 30},

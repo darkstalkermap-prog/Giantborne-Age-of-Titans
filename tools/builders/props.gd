@@ -10,7 +10,13 @@ const FENCE_PATH := "res://scenes/world/fence_wood.tscn"
 
 static func build_all(kit: SceneKit) -> void:
 	kit.save(build_dummy(kit), DUMMY_PATH)
-	kit.save(build_fence(kit), FENCE_PATH)
+	# P17b (draw calls): the fence's posts and rails as one mesh per material (SceneKit.merge_meshes),
+	# its Intact and Broken groups merged apart so they still show and hide as before. The dummy
+	# keeps its parts (PracticeDummy flashes the materials of each).
+	var fence := build_fence(kit)
+	for group: String in ["Intact", "Broken"]:
+		kit.merge_meshes(fence.get_node(group) as Node3D, PackedStringArray(), PackedStringArray(["scenery"]))
+	kit.save(fence, FENCE_PATH)
 
 
 static func build_dummy(kit: SceneKit) -> Node:
