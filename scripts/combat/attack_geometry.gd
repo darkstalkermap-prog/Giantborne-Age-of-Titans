@@ -14,12 +14,20 @@ static func local_direction(yaw_deg: float, pitch_deg: float) -> Vector3:
 	return Vector3(sin(y) * cos(p), sin(p), -cos(y) * cos(p))
 
 
-## (yaw, pitch) along the active arc, f in 0..1.
+## (yaw, pitch) along the active arc, f in 0..1. Yaw is linear in f. Pitch is linear from
+## pitch_start_deg to pitch_end_deg, unless the arc has pitch_mid_deg: then it follows the
+## quadratic through the start, pitch_mid_deg at f = 0.5 and the end, so a swing can dip through
+## the front (where a small target stands at the giant's feet) and rise again toward its far
+## end (where a tall target stands farther from the shoulder).
 static func arc_point(action: ActionDef, f: float) -> Vector2:
 	var arc := action.arc
-	return Vector2(
-		lerpf(float(arc.get("yaw_start_deg", 0.0)), float(arc.get("yaw_end_deg", 0.0)), f),
-		lerpf(float(arc.get("pitch_start_deg", 0.0)), float(arc.get("pitch_end_deg", 0.0)), f))
+	var p0 := float(arc.get("pitch_start_deg", 0.0))
+	var p1 := float(arc.get("pitch_end_deg", 0.0))
+	var pitch := lerpf(p0, p1, f)
+	if arc.has("pitch_mid_deg"):
+		var pm := float(arc.pitch_mid_deg)
+		pitch = p0 * (1.0 - f) * (1.0 - 2.0 * f) + pm * 4.0 * f * (1.0 - f) + p1 * f * (2.0 * f - 1.0)
+	return Vector2(lerpf(float(arc.get("yaw_start_deg", 0.0)), float(arc.get("yaw_end_deg", 0.0)), f), pitch)
 
 
 ## Arm pose for presentation at any point of an action's timeline.
@@ -38,7 +46,7 @@ static func pose_for(action: ActionDef, phase: int, phase_fraction: float, idle:
 				return idle.lerp(windup, 1.0 - (1.0 - t) * (1.0 - t))
 			return windup.lerp(start, (f - 0.75) / 0.25)
 		ActionDef.Phase.ACTIVE:
-			return start.lerp(finish, f)
+			return arc_point(action, f)
 		ActionDef.Phase.RECOVERY:
 			return finish.lerp(idle, smoothstep(0.0, 1.0, f))
 	return idle

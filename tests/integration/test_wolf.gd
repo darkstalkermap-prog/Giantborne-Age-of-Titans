@@ -254,3 +254,96 @@ func test_outmatched_wolf_harasses_from_behind() -> void:
 	for a in attack_angles:
 		assert_true(absf(a) > 100.0, "only from behind (attacked at %.0f degrees)" % a)
 	assert_true(retreated, "and backs off about 8 m after an attack")
+
+
+# --------------------------------------------------------------------------- M2 gate: punishing a wolf
+
+## Where a lunge that reaches a stage-1 giant stops (its approach_stop_m capsule gap): about
+## 1.3 m from the giant's centre.
+const LUNGE_STOP_M := 1.3
+## Straight ahead and 15 degrees to either side of the giant's facing (+ = right).
+const BEARINGS_DEG := [-15.0, 0.0, 15.0]
+
+
+func _bearing_point(bearing_deg: float, d: float) -> Vector3:
+	var t := deg_to_rad(bearing_deg)
+	return Vector3(d * sin(t), 0.05, -d * cos(t))
+
+
+func _side(bearing_deg: float) -> String:
+	if is_zero_approx(bearing_deg):
+		return "straight ahead"
+	return "%.0f degrees to the %s" % [absf(bearing_deg), "right" if bearing_deg > 0.0 else "left"]
+
+
+## Every stage-1 light and the heavy, each started on its own from the same stance, lands on a
+## 0.9 m wolf standing where a lunge stops and at 0.6 x the stage-1 melee reach (2.1 m), on both
+## sides of the giant's facing. (The M1 arcs swept over a wolf there: light 2 never landed.)
+func test_stage_1_attacks_reach_a_wolf_on_both_sides() -> void:
+	var reach := float(GameData.get_record("growth.01").melee_reach_m)
+	var n := 0
+	for attack_id: String in ["ability.light_1", "ability.light_2", "ability.light_3", "ability.heavy_1"]:
+		var a := GameData.get_action(attack_id)
+		for d: float in [LUNGE_STOP_M, 0.6 * reach]:
+			for bearing: float in BEARINGS_DEG:
+				n += 1
+				var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+				var pos := _bearing_point(bearing, d)
+				var id := "test.wolf_reach_%d" % n
+				var w := _wolf(pos, id, false, yaw_towards(pos, Vector3.ZERO))
+				w.entity.combatant.unkillable = true
+				await step_ticks(3)
+				assert_eq(p.controller.request(&"attack", {"action_id": attack_id}), CombatController.Verdict.ACCEPT,
+					"%s starts" % attack_id)
+				await step_ticks(a.windup_ticks + a.active_ticks + 2)
+				var landed := 0
+				for r in hits_on(id):
+					if r.event.action_id == attack_id:
+						landed += 1
+				assert_eq(landed, 1, "%s lands on a wolf %.1f m away, %s" % [attack_id, d, _side(bearing)])
+				p.queue_free()
+				w.queue_free()
+				await step_ticks(2)
+
+
+## "Dodge then punish", without the dodge: a wolf that lunges at a stage-1 giant stops at its
+## feet. The light chain started in the wolf's 0.9 s recovery lands its first two blows inside
+## that window and all three connect, whether the wolf came from straight ahead or 15 degrees to
+## either side.
+func test_a_wolf_that_lunged_is_punished_by_the_light_chain() -> void:
+	var lunge := GameData.get_action("ability.wolf_lunge")
+	var n := 0
+	for bearing: float in BEARINGS_DEG:
+		n += 1
+		var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+		p.entity.combatant.unkillable = true
+		var pos := _bearing_point(bearing, 4.0)
+		var id := "test.wolf_punished_%d" % n
+		var w := _wolf(pos, id, false, yaw_towards(pos, Vector3.ZERO))
+		w.entity.combatant.unkillable = true
+		await step_ticks(3)
+		w.brain.target_id = "player"
+		w.controller.request(&"attack", {"action_id": "ability.wolf_lunge"})
+		var recovering: bool = await TestWait.until(self, func() -> bool:
+			return w.controller.phase() == ActionDef.Phase.RECOVERY, lunge.windup_ticks + lunge.active_ticks + 5)
+		assert_true(recovering, "the lunge from %s ends in its recovery" % _side(bearing))
+		var stop := Vector2(w.global_position.x - p.global_position.x, w.global_position.z - p.global_position.z).length()
+		assert_true(stop < LUNGE_STOP_M + 0.15, "it stopped at the giant's feet (%.2f m)" % stop)
+		var window_end := Sim.tick + lunge.recovery_ticks
+		for i in 3:
+			var light_id := "ability.light_%d" % (i + 1)
+			p.router.inject_light_attack()
+			var swung: bool = await TestWait.until(self, func() -> bool:
+				return p.controller.action != null and p.controller.action.id == light_id \
+					and p.controller.phase() == ActionDef.Phase.RECOVERY, 60)
+			assert_true(swung, "%s ran (wolf from %s)" % [light_id, _side(bearing)])
+		var hit_tick := {}
+		for r in hits_on(id):
+			hit_tick[r.event.action_id] = r.event.tick
+		for light_id: String in ["ability.light_1", "ability.light_2"]:
+			assert_true(hit_tick.has(light_id) and int(hit_tick[light_id]) <= window_end,
+				"%s lands in the recovery window (wolf from %s; hits %s)" % [light_id, _side(bearing), hit_tick])
+		assert_true(hit_tick.has("ability.light_3"), "and the combo's third blow connects (wolf from %s)" % _side(bearing))
+		p.queue_free()
+		w.queue_free()
+		await step_ticks(2)

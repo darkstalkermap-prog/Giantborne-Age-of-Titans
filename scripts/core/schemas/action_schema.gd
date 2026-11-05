@@ -143,6 +143,10 @@ static func fields() -> Dictionary:
 		"ai_min_range_m": U.num(0.0),
 		"ai_max_range_m": U.pos(),
 	})
+	# M2 gate: the pitch at the middle of a weapon arc (AttackGeometry.arc_point: the quadratic
+	# through start, middle and end), so the stage-1 light chain dips low enough for a wolf at
+	# the giant's feet while its far ends still reach a soldier.
+	(f.arc.fields as Dictionary)["pitch_mid_deg"] = U.num(-89.0, 89.0)
 
 	## @anchor P07
 

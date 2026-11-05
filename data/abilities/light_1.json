@@ -21,7 +21,7 @@
 	"chain_next": "ability.light_2",
 	"chain_window_s": 0.35,
 	"hit_shape": "weapon_arc",
-	"arc": {"windup_yaw_deg": 95, "windup_pitch_deg": 20, "yaw_start_deg": 75, "yaw_end_deg": -60, "pitch_start_deg": -15, "pitch_end_deg": -38},
+	"arc": {"windup_yaw_deg": 95, "windup_pitch_deg": 20, "yaw_start_deg": 75, "yaw_end_deg": -60, "pitch_start_deg": -15, "pitch_mid_deg": -40, "pitch_end_deg": -30},
 	"cancels": [{"into": ["light", "dodge", "block"], "phase": "recovery", "after_s": 0.0}],
 	"movement": {"windup_speed_mult": 0.3, "active_speed_mult": 0.15, "recovery_speed_mult": 0.35},
 	"knockback_impulse": 2.0,
