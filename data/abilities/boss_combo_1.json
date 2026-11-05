@@ -5,7 +5,7 @@
 	"kind": "enemy_attack",
 	"display_name": "Royal Combo",
 	"description": "The Ogre King's first blow of two: a 120-degree sector in front (cone telegraph, r 6.5 m), blockable and parryable; it chains into boss_combo_2 (plan sections 3.12, 4.4).",
-	"power": 45,
+	"power": 40,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
 	"stamina_cost": 0,

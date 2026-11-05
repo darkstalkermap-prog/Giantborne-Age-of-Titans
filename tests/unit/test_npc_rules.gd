@@ -73,7 +73,7 @@ func test_the_enemy_training_block() -> void:
 	var brace := GameData.get_action("ability.soldier_brace")
 	assert_true(brace != null, "the brace exists")
 	if brace != null:
-		assert_eq(brace.power, 30.0, "P30")
+		assert_eq(brace.power, 24.0, "P24 (P30 before P17b's tuning)")
 		assert_eq([brace.windup_ticks, brace.active_ticks, brace.recovery_ticks], [48, 9, 42], "0.8 / 0.15 / 0.7 s")
 		assert_eq(brace.poise_damage, 30.0, "poise 30")
 		assert_near(float(brace.param("ai_max_range_m")), 3.0, 1e-6, "3.0 m (+ the target's radius)")
