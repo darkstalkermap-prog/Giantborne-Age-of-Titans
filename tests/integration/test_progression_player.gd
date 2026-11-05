@@ -383,5 +383,10 @@ func test_f8_adds_100_xp_and_the_save_keys_round_trip() -> void:
 	assert_eq([q.progression.level, q.progression.xp, q.progression.unspent_attribute_points,
 		q.progression.talent_points], [2, 100, 3, 1], "and the same after JSON")
 	assert_eq(q.capture_character_state().attributes, out.attributes, "attributes round-trip")
+	assert_eq(CharacterState.progression_part(q.capture_character_state()), CharacterState.progression_part(out),
+		"every progression key round-trips through JSON")
+	assert_eq(CharacterState.progression_part({"xp": 5, "loadout": {}}), {"xp": 5}, "progression_part keeps only those keys")
+	assert_false(CharacterState.is_ungated(out), "level 2 is gated")
+	assert_true(CharacterState.is_ungated({"level": 99}), "level 99 is not")
 	assert_eq(xp_events.size(), 1, "a restore emits no XP")
 	assert_eq(level_events.size(), 1, "and no level change")

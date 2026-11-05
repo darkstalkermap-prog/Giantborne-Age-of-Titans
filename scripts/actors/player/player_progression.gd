@@ -388,9 +388,8 @@ func apply_state(state: Dictionary) -> void:
 				exempt[str(id)] = true
 		player.controller.level_exempt = exempt
 	if SchemaUtil.is_number(state.get("level")):
-		var l := int(state.level)
-		gated = l < UNGATED_LEVEL
-		level = clampi(l, 1, Progression.level_cap()) if gated else Progression.level_for_xp(xp)
+		gated = not CharacterState.is_ungated(state)
+		level = clampi(int(state.level), 1, Progression.level_cap()) if gated else Progression.level_for_xp(xp)
 		_push_level()
 	elif not gated:
 		level = Progression.level_for_xp(xp)

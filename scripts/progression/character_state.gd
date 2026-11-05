@@ -250,18 +250,8 @@ static func is_ungated(d: Dictionary) -> bool:
 	return SchemaUtil.is_number(d.get("level")) and int(d.level) >= MAX_LEVEL
 
 
-## The six attributes of `d` as whole numbers; missing ones from its player record, then 10.
-static func attributes_of(d: Dictionary) -> Dictionary:
-	var rec := GameData.get_record(str(d.get("definition_id", DEFAULT_DEFINITION)))
-	var rec_attrs: Dictionary = rec.get("attributes", {}) if typeof(rec.get("attributes")) == TYPE_DICTIONARY else {}
-	var raw: Dictionary = d.attributes if typeof(d.get("attributes")) == TYPE_DICTIONARY else {}
-	var out := {}
-	for key: String in Combatant.ATTRIBUTE_KEYS:
-		out[key] = _whole(raw.get(key, rec_attrs.get(key, 10)), _whole(rec_attrs.get(key, 10), 10))
-	return out
-
-
-## The progression part of `d` (PROGRESSION_KEYS present in it), a copy.
+## The progression part of `d` (the PROGRESSION_KEYS present in it), a copy: what the bot and the
+## tests compare across a reload.
 static func progression_part(d: Dictionary) -> Dictionary:
 	var out := {}
 	for key: String in PROGRESSION_KEYS:
