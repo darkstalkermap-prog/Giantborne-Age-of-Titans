@@ -184,8 +184,13 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(dt: float) -> void:
-	if _scenario == SCENARIO_VALLEY and _bot == null:
-		_start_valley_bot()
+	if _scenario == SCENARIO_VALLEY:
+		if _bot == null:
+			_start_valley_bot()
+		# The run may end while a pausing screen is up (the end screen after the crown).
+		if ValleyBot.run != null and ValleyBot.run.finished:
+			_finish()
+			return
 	if get_tree().paused and _scenario != "capture":
 		return
 	_elapsed += dt
@@ -194,8 +199,6 @@ func _physics_process(dt: float) -> void:
 		_finish()
 		return
 	if _scenario == SCENARIO_VALLEY:
-		if ValleyBot.run != null and ValleyBot.run.finished:
-			_finish()
 		return
 	if player == null or not is_instance_valid(player):
 		player = get_tree().get_first_node_in_group("player") as GiantPlayer

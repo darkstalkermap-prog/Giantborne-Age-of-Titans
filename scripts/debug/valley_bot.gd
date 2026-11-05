@@ -302,16 +302,24 @@ func _slice_done() -> bool:
 ## by accident, ... The bot closes any of them after SCREEN_CLOSE_AFTER_S (real time) and notes it.
 func _handle_screens() -> void:
 	var open := false
+	var open_s := 0.0
 	var names := PackedStringArray()
 	for n in get_tree().get_nodes_in_group(ScreenStack.GROUP):
 		var s := n as ScreenStack
 		if s != null and s.any_open():
 			open = true
+			open_s = maxf(open_s, s.open_seconds())
 			var t := s.top()
 			if t != null and t.get_script() != null:
 				names.append(str(t.get_script().resource_path.get_file().get_basename()))
 	if not open:
 		_screen_seen_ms = -1
+		return
+	# The invariant (plan §5.2) is checked here too: while a screen pauses the game no tick runs.
+	if open_s > BotDiagnosis.MAX_SCREEN_OPEN_S:
+		run.invariant_failures.append({"tick": Sim.tick, "failure": "a pausing screen (%s) has been open %.1f s" % [
+			",".join(names), open_s]})
+		_finish("invariant")
 		return
 	if _screen_seen_ms < 0:
 		_screen_seen_ms = Time.get_ticks_msec()
@@ -1340,19 +1348,29 @@ func _near(n: Node3D, radius: float) -> bool:
 
 
 ## How far the giant's capsule is from the prop's collision: a ray from the giant toward the prop's
-## centre, a metre up, to the first breakable or world surface (the centre itself when nothing is
-## hit), minus the capsule radius.
+## centre, a metre up, to the prop's own surface (the centre itself when the ray meets none of the
+## prop's shapes within 25 m), minus the capsule radius.
 func _prop_gap(prop: Node3D) -> float:
 	var capsule := float(player.profile.get("capsule_radius_m", 0.85))
 	var from := player.global_position + Vector3.UP * 1.0
 	var to := prop.global_position + Vector3.UP * 1.0
 	var flat := _flat_dist(from, to)
-	var q := PhysicsRayQueryParameters3D.create(from, Vector3(to.x, from.y, to.z),
-		HitQueryAdapter.LAYER_BREAKABLE | HitQueryAdapter.LAYER_WORLD, [player.get_rid()])
-	q.collide_with_areas = false
-	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
-	if not hit.is_empty():
-		flat = minf(flat, _flat_dist(from, hit.position))
+	if flat > 25.0:
+		return flat - capsule
+	var exclude: Array[RID] = [player.get_rid()]
+	var space := player.get_world_3d().direct_space_state
+	for i in 4:
+		var q := PhysicsRayQueryParameters3D.create(from, Vector3(to.x, from.y, to.z),
+			HitQueryAdapter.LAYER_BREAKABLE | HitQueryAdapter.LAYER_WORLD, exclude)
+		q.collide_with_areas = false
+		var hit := space.intersect_ray(q)
+		if hit.is_empty():
+			break
+		var col := hit.collider as Node
+		if col != null and (col == prop or prop.is_ancestor_of(col)):
+			flat = minf(flat, _flat_dist(from, hit.position))
+			break
+		exclude.append(hit.rid)   # something else in the way: look past it
 	return flat - capsule
 
 
