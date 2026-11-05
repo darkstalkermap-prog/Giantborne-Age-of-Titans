@@ -23,7 +23,7 @@ static func fields() -> Dictionary:
 
 static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor P12
-	if bool(d.get("quest_item", false)) and not str(d.get("category", "material")) in ["quest", "key"]:
+	if typeof(d.get("quest_item")) == TYPE_BOOL and d.quest_item and not str(d.get("category", "material")) in ["quest", "key"]:
 		out.warnings.append("%s: a quest_item is usually of category quest or key (got %s)" % [
 			ctx, str(d.get("category", "material"))])
 
