@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.attributes",
+	"type": "tutorial_prompt",
+	"description": "Attribute points, from level 2, out of combat.",
+	"text": "You have attribute points. Rest at a shrine or open the inventory ({inventory}) to spend them.",
+	"trigger": {"type": "level", "level": 2},
+	"dismiss": {"type": "event", "event": "attributes_changed", "timeout_s": 20},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 5,
+	"once": true,
+	"defer_in_combat": true,
+	"sets_flag": "tutorial.attributes.done"
+}

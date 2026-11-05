@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "encounter.return_patrol",
+	"type": "encounter",
+	"display_name": "Return patrol",
+	"description": "A patrol that marches onto the King's Bridge once the Ogre King has fallen (plan section 4.4): three soldiers on the deck (the middle one their commander), an archer and a mage at the bridgehead, facing the ruins. The stage-3 return leg's showcase: a stage-3 giant awes them (4x their height), so one Thunder Roar or one death breaks and scatters them. They stand on the only crossing, so the patrol cannot be bypassed.",
+	"level": "level.valley",
+	"district": "ruins",
+	"center_m": [106, 0, -20],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 120,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": ["world.ogre_king.defeated"],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.ruins.patrol_1", "definition": "enemy.soldier", "position_m": [102, 0, -24], "yaw_deg": -90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.ruins.patrol_captain", "definition": "enemy.soldier", "position_m": [106, 0, -20], "yaw_deg": -90,
+			"patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.ruins.patrol_2", "definition": "enemy.soldier", "position_m": [110, 0, -16], "yaw_deg": -90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.ruins.patrol_archer", "definition": "enemy.archer", "position_m": [116, 0, -26], "yaw_deg": -90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.ruins.patrol_mage", "definition": "enemy.mage", "position_m": [116, 0, -14], "yaw_deg": -90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

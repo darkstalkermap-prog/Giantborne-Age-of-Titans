@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.boss_charge",
+	"type": "tutorial_prompt",
+	"description": "The Ogre King's second phase (it roars, then charges).",
+	"text": "It will charge. Dodge sideways and let it hit the wall or a pillar.",
+	"trigger": {"type": "event", "event": "boss_phase_changed", "phase": 2},
+	"dismiss": {"type": "timeout", "timeout_s": 8},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 50,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.boss_charge.done"
+}

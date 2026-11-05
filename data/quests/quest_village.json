@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "quest.village",
+	"type": "quest",
+	"display_name": "Thornwick's Bridge",
+	"description": "The village choice (plan section 4.6): meet Elder Maren, then help Thornwick (the stolen cache: quest.village_cache; the field ogre: quest.village_ogre), intimidate them (stage 2 or more) or smash the cart barricade (force). Ends on any outcome (quest.village.outcome). It starts when the giant comes through the west gate, or as soon as the elder has been met or an outcome is set some other way (a giant that went round the palisade).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{"type": "any", "of": [
+			{"type": "entered", "area": "valley.area.village"},
+			{"type": "flag", "flag": "dialogue.elder.met"},
+			{"type": "flag", "flag": "quest.village.outcome"}]}
+	],
+	"abandon_when": null,
+	"stages": [
+		{"id": "meet", "objective": "Speak with Elder Maren",
+			"complete_when": {"type": "any", "of": [
+				{"type": "flag", "flag": "dialogue.elder.met"},
+				{"type": "flag", "flag": "quest.village.outcome"}]},
+			"marker": "valley.marker.elder", "xp": 0, "items": [], "set_flags": {},
+			"bot": {"action": "talk", "target": "valley.village.elder", "dialogue": "dialogue.elder"}},
+		{"id": "resolve", "objective": "Help Thornwick, or make them open the bridge",
+			"complete_when": {"type": "flag", "flag": "quest.village.outcome"},
+			"marker": "valley.marker.elder", "xp": 0, "items": [], "set_flags": {},
+			"bot": {"action": "talk", "target": "valley.village.elder", "dialogue": "dialogue.elder"}}
+	],
+	"on_complete_flags": {}
+}

@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.shrine",
+	"type": "tutorial_prompt",
+	"description": "Shrines, on the first activation of one.",
+	"text": "Shrines heal you and save your progress. Press {interact} to rest, change abilities or grow.",
+	"trigger": {"type": "event", "event": "shrine_activated"},
+	"dismiss": {"type": "event", "event": "interacted", "interact_prefix": "valley.shrine.", "timeout_s": 15},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 15,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.shrine.done"
+}
