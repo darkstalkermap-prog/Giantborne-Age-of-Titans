@@ -119,5 +119,5 @@ func visible_text() -> String:
 	return "\n".join(parts)
 
 
-func layout_regions(view: Vector2) -> Dictionary:
-	return {"quest_tracker": anchored_rect(_panel, view)}
+func layout_controls() -> Dictionary:
+	return {"quest_tracker": _panel}

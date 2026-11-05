@@ -166,8 +166,9 @@ func _build_hotbar() -> void:
 	h.anchor_right = 0.5
 	h.anchor_top = 1.0
 	h.anchor_bottom = 1.0
-	h.offset_left = -284
-	h.offset_right = 284
+	# 9 slots of 58 px and 8 gaps of 6 px: 570 px (P16: the old 568 let the row grow 2 px right).
+	h.offset_left = -285
+	h.offset_right = 285
 	h.offset_top = -92
 	h.offset_bottom = -16
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -823,6 +824,17 @@ func layout_regions(view: Vector2) -> Dictionary:
 			var regions: Dictionary = (c as HudWidget).layout_regions(view)
 			for key: String in regions:
 				out[key] = regions[key]
+	return out
+
+
+## The Controls behind the regions that have one (tests compare their drawn rects with
+## layout_regions at the real screen size): the HUD's panels and every widget's.
+func layout_controls() -> Dictionary:
+	var out := {"resources": _resources_panel, "hotbar": _hotbar, "loot": _loot_label,
+		"capture_hint": _capture_hint, "messages": _messages, "target_frame": _target_frame}
+	for c in get_children():
+		if c is HudWidget:
+			out.merge((c as HudWidget).layout_controls(), true)
 	return out
 
 

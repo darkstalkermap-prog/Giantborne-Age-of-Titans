@@ -66,5 +66,5 @@ func visible_text() -> String:
 	return _text
 
 
-func layout_regions(view: Vector2) -> Dictionary:
-	return {"status_row": anchored_rect(_row, view)}
+func layout_controls() -> Dictionary:
+	return {"status_row": _row}

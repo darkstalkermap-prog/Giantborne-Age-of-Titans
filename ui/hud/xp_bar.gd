@@ -73,5 +73,5 @@ func _process(delta: float) -> void:
 	_label.text = _text
 
 
-func layout_regions(view: Vector2) -> Dictionary:
-	return {"xp_bar": anchored_rect(_bar, view)}
+func layout_controls() -> Dictionary:
+	return {"xp_bar": _bar}

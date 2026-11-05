@@ -59,5 +59,5 @@ func shown_id() -> String:
 	return _id if _panel != null and _panel.visible else ""
 
 
-func layout_regions(view: Vector2) -> Dictionary:
-	return {"tutorial_prompt": anchored_rect(_panel, view)}
+func layout_controls() -> Dictionary:
+	return {"tutorial_prompt": _panel}

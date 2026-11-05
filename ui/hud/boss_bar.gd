@@ -108,8 +108,8 @@ func bar_visible() -> bool:
 	return _panel != null and _panel.visible
 
 
-func layout_regions(view: Vector2) -> Dictionary:
-	return {"boss_bar": anchored_rect(_panel, view)}
+func layout_controls() -> Dictionary:
+	return {"boss_bar": _panel}
 
 
 ## What the bar shows ("" while hidden): "Ogre King  1210 / 1500  phase 1/2".

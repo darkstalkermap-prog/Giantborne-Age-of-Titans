@@ -61,5 +61,5 @@ func visible_text() -> String:
 	return _label.text if _panel != null and _panel.visible else ""
 
 
-func layout_regions(view: Vector2) -> Dictionary:
-	return {"interact_prompt": anchored_rect(_panel, view)}
+func layout_controls() -> Dictionary:
+	return {"interact_prompt": _panel}

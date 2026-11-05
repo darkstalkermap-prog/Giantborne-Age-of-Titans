@@ -73,8 +73,8 @@ func pending_count() -> int:
 	return _queue.size()
 
 
-func layout_regions(view: Vector2) -> Dictionary:
-	return {"ability_notice": anchored_rect(_panel, view)}
+func layout_controls() -> Dictionary:
+	return {"ability_notice": _panel}
 
 
 func _on_ability_learned(_tick: int, action_id: String, slot_key: String) -> void:
