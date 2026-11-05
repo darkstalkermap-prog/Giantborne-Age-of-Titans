@@ -299,20 +299,28 @@ func test_phase_1_alternates_and_phase_2_charges_every_third_decision() -> void:
 
 func test_an_entry_out_of_reach_is_chased_then_skipped() -> void:
 	var b := OgreBossBrain.new("test.king_brain2", GameData.get_record("enemy.ogre_king"), 5)
-	b.perceive(10, _snap(4.5))
+	b.perceive(10, _snap(25.0))
 	b.decide(10, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
 	b.decide(60, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
 	assert_eq(b.state, S.APPROACH, "engaged")
-	b.decide(66, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
+	# Walking up to a giant 25 m away skips nothing, however long it takes.
+	for t in range(66, 66 + 6 * 40, 6):
+		b.perceive(t, _snap(25.0))
+		b.decide(t, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
+	assert_true(b.move_target != Vector3.INF and b.move_target.z < 0.0, "it closes in")
+	assert_eq(b.current_sequence_entry(), COMBO_1, "4 s on the way in and the combo is still next")
+	assert_true(b.sequence_log.is_empty(), "nothing skipped")
+	b.perceive(306, _snap(4.5))
+	b.decide(306, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
 	assert_eq(b.attack_request, COMBO_1, "the combo reaches 4.5 m")
 	b.attack_request = ""
-	b.decide(72, CS.ATTACKING, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
-	b.decide(108, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
+	b.decide(312, CS.ATTACKING, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
+	b.decide(348, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
 	assert_eq(b.state, S.RECOVER, "a pause after the strike")
 	# The slam (band 0..3.5 m) is next; the giant stays 4.5 m away.
-	var t := 150
+	var t := 390
 	var chased := false
-	while t < 150 + 6 * 30 and b.current_sequence_entry() == SLAM:
+	while t < 390 + 6 * 30 and b.current_sequence_entry() == SLAM:
 		b.perceive(t, _snap(4.5))
 		b.decide(t, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
 		if b.move_target != Vector3.INF and b.move_target.z < 0.0:
@@ -321,18 +329,18 @@ func test_an_entry_out_of_reach_is_chased_then_skipped() -> void:
 		t += 6
 	assert_true(chased, "it closes in on the giant")
 	assert_eq(b.current_sequence_entry(), COMBO_1, "then the slam is skipped")
-	assert_true(t - 150 >= 120 and t - 150 <= 150, "after about 2 s (%d ticks)" % (t - 150))
+	assert_true(t - 390 >= 120 and t - 390 <= 150, "after about 2 s (%d ticks)" % (t - 390))
 	assert_eq(b.sequence_log.back(), "skip:" + SLAM, "logged as a skip")
 	# The charge (8 m and more) backs off from a giant too close.
-	b.update_boss_phase(0.4, 400)
+	b.update_boss_phase(0.4, 700)
 	b.sequence_index = 2
 	b.state = S.APPROACH
-	b.perceive(410, _snap(3.0))
-	b.decide(410, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
+	b.perceive(710, _snap(3.0))
+	b.decide(710, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
 	assert_eq(b.current_sequence_entry(), CHARGE, "the charge is current")
 	assert_true(b.move_target != Vector3.INF and b.move_target.z > 0.0, "it backs away from the giant")
-	b.perceive(416, _snap(9.0))
-	b.decide(416, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
+	b.perceive(716, _snap(9.0))
+	b.decide(716, CS.LOCOMOTION, Vector3.ZERO, func() -> bool: return true, func() -> void: pass)
 	assert_eq(b.attack_request, CHARGE, "and charges from 9 m")
 
 

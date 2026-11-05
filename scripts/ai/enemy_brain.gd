@@ -1160,7 +1160,8 @@ func _forget_target() -> void:
 # current sequence entry when the target lies inside that action's ai band (ai_min_range_m ..
 # ai_max_range_m, from the target's capsule surface, as every band) and the entry's facing rule
 # allows it; otherwise it closes in or backs off for at most SEQUENCE_PATIENCE_S and then skips the
-# entry. Every consumed entry (struck or skipped) is one decision of sequence_log. OgreBossBrain
+# entry (a target far beyond the band is simply walked up to: nothing is skipped on the way in).
+# Every consumed entry (struck or skipped) is one decision of sequence_log. OgreBossBrain
 # runs it; boss_phase_entered reaches the actor (EnemyActor.install_boss_hooks), which announces
 # the phase and forces its enter_action.
 
@@ -1175,6 +1176,9 @@ const SEQUENCE_PATIENCE_S := 2.0
 const SEQUENCE_LINE_FACING_DEG := 45.0
 ## Closing-in and backing-off goals sit this far inside an entry's band.
 const SEQUENCE_BAND_MARGIN_M := 1.0
+## Patience only runs while the target is at most this far beyond an entry's band; farther off the
+## brain is simply closing in (a boss walking up to the giant skips nothing).
+const SEQUENCE_CHASE_M := 6.0
 ## Entries kept in sequence_log.
 const SEQUENCE_LOG_SIZE := 64
 
@@ -1405,8 +1409,13 @@ func _decide_sequence(my_position: Vector3, target_pos: Vector3, distance: float
 				advance_sequence(true)
 			_set_state(AIState.ATTACK)
 		return
-	# Out of the entry's band: chase it for at most SEQUENCE_PATIENCE_S, then skip it.
+	# Out of the entry's band: chase it for at most SEQUENCE_PATIENCE_S, then skip it. A target
+	# farther than SEQUENCE_CHASE_M beyond the band is just walked up to: nothing is skipped on the
+	# way in.
 	if current_sequence_entry() == "":
+		return
+	if edge > band.y + SEQUENCE_CHASE_M:
+		_entry_since = NO_TICK
 		return
 	if _entry_since == NO_TICK:
 		_entry_since = now
