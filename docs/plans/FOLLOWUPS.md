@@ -31,3 +31,10 @@ its own work and reports it.
 | The boss bar (P11a, top centre, x -320..320, y 14..58) overlaps the quest tracker region (P13, x -356..-16, y 14..132) by 36 px at 1280 px width. Lay them out so neither covers the other at 1280x720 and larger. | P16 | `ui/hud/boss_bar.gd`, `ui/hud/quest_tracker.gd` |
 | `tests/test_runner.gd` stalls instead of failing when a suite has a parse error (it calls `new()` on the broken script); only check.sh's time limit ends it. Make a suite that fails to load count as a failure. | P17a | `tests/test_runner.gd` |
 | P10b's slow `test_valley_walk.test_forest_encounters_spawn_from_data` checks the navmesh 3 ticks after load and may flake under load. Make it wait with `ValleyProbe.wait_for_navigation`. | P15 | `tests/slow/test_valley_walk.gd` |
+
+## From the wave 7 merge (P14 measurements)
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| Valley draw calls are far over the §5.4 budget of 250 per view: low preset p50 493 / max 1,084, medium p50 657 / max 1,398 (stress arena p50 860). Batch static props and scenery per district (MultiMesh or merged meshes), and cut or drop shadows at the low preset. P15 must not add unbatched dressing; P17b owns the reduction. | P17b (P15: do not make it worse) | `tools/builders/valley.gd`, `data/world/level_valley.json`, `docs/PERFORMANCE.md` |
+| Encounter activation causes a 13-25 ms tick, and the first load of an archetype's scene costs about 100-150 ms (one forced activation of four kinds took 387 ms). Preload every archetype scene the level's encounters use at level load, and spread spawns over several ticks. | P17a | `scripts/world/encounter_director.gd`, `scripts/world/level_root.gd` |
