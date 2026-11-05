@@ -6,6 +6,62 @@ extends Node
 ## a keyboard) and by turning the camera like a mouse would - never by editing combat state.
 ## State lives in static variables so a run survives sandbox resets (scene reloads).
 ## Prints one "AUTOPILOT_RESULT {json}" line, then quits.
+##
+## Every tool run (--autoplay, --scenario) installs an ErrorCounter: the result carries
+## "errors", "warnings" and "error_samples" (the first five), and the process exits with code
+## EXIT_ERRORS when any engine or script error was logged during the run (0 otherwise).
+##
+## P14 scenarios (each in its own file; the Autopilot only dispatches, times and reports them):
+##   --scenario=stress       the stress route (StressScenario in scenes/test/stress_arena.tscn; run
+##                           with --level=res://scenes/test/stress_arena.tscn): the bot loops the
+##                           route for --autoplay seconds. --stress-stage=N grows the giant to N
+##                           first (default 2).
+##   --scenario=valley_walk  the Valley walk (ValleyWalk; run with --mode=valley --new-game): first
+##                           the AI LOD tier comparison (tiers 2, 1, 0) from the Cradle, then every
+##                           district at stage 1; the run ends when the walk does (--autoplay stays
+##                           the hard limit).
+##                           --walk-teleport skips the walking (stops and views only; for slow
+##                           software-rendered draw-call captures).
+## Both add a PerfProbe (as does --perf for any other run): "PERF_RESULT {json}" is printed before
+## AUTOPILOT_RESULT, whose "perf" key repeats the CPU-per-tick summary and the budget verdicts.
+## A scenario's own checks go to "scenario_failures"; any failure exits with EXIT_SCENARIO_FAILED
+## (errors still win: EXIT_ERRORS).
+##
+## P17a: --scenario=valley  the Valley bot (ValleyBot; run with --mode=valley --new-game): it plays
+##                          the quest line until the slice is complete (or, with --bot-loop, until
+##                          --autoplay ends, starting a new game with the next village policy after
+##                          each completion). Options: --bot-village=help_cache|help_ogre|intimidate|
+##                          force, --bot-skill=novice|expert, --bot-assist, --bot-loop, --bot-seed=N.
+##                          It adds a PerfProbe; AUTOPILOT_RESULT's "valley_bot" key holds the run's
+##                          metrics (plan §5.1). Exit codes: EXIT_SCENARIO_FAILED (2) on a watchdog
+##                          breach (a loop run: only on a world_blocked one), EXIT_INVARIANT (3) on an
+##                          invariant failure; errors still win (EXIT_ERRORS). The Autopilot runs
+##                          PROCESS_MODE_ALWAYS for it (the bot closes pausing screens itself), and
+##                          --autoplay counts simulated (unpaused) seconds as everywhere else.
+
+const EXIT_OK := 0
+const EXIT_ERRORS := 1
+## P14: a scenario's own check failed (stress, valley_walk); P17a: a Valley bot watchdog breach.
+const EXIT_SCENARIO_FAILED := 2
+## P17a: a Valley bot invariant failed (plan §5.2).
+const EXIT_INVARIANT := 3
+const RESULT_SAMPLES := 5
+## The scenarios dispatched to their own files (P14).
+const SCENARIO_STRESS := "stress"
+const SCENARIO_VALLEY_WALK := "valley_walk"
+## P17a: the Valley bot.
+const SCENARIO_VALLEY := "valley"
+const VALLEY_NEEDED := "--scenario=valley needs the Valley: add --mode=valley --new-game"
+const STRESS_ARENA := "res://scenes/test/stress_arena.tscn"
+const VALLEY_LEVEL_ID := "level.valley"
+## Soak target order (pick_soak_target, M2 gate): enemies the giant is already fighting (within
+## ENGAGE_RADIUS_M of it) or that guard the M1 arena (within ARENA_RADIUS_M of its centre: the
+## soldier's patrol) come first, then an intact breakable (the fence: the breakable, debris and
+## loot path of the M1 soak), then any other living enemy (the P04 wolf pack in the far corner),
+## then a dummy. Without it the bot crossed to the wolves as soon as the soldier died, and the
+## fence was never broken again.
+const ENGAGE_RADIUS_M := 10.0
+const ARENA_RADIUS_M := 40.0
 
 static var _started := false
 static var _elapsed := 0.0
@@ -16,19 +72,30 @@ static var _stats: Dictionary = {}
 static var _frame_ms: Array[float] = []
 static var _step := 0
 static var _rng := RandomNumberGenerator.new()
+static var _error_counter: ErrorCounter = null
+static var _finished := false
+## Options of the P14 scenarios and the probe (parse_options()).
+static var _options: Dictionary = {}
+## P17a: the Valley bot run's PerfProbe (under the tree root: it outlives level loads).
+static var _valley_probe: PerfProbe = null
 
 var player: GiantPlayer
 var _decision_left := 0.0
 var _block_left := 0.0
 var _heavy_pending := false
 var _dead_time := 0.0
-var _no_soldier_time := 0.0
+var _no_enemy_time := 0.0
 var _step_time := 0.0
 var _busy := false
 var _stuck_time := 0.0
 var _strafe_left := 0.0
 var _strafe_sign := 1.0
 var _shots: Array[String] = []
+var _probe: PerfProbe = null
+var _stress: StressScenario = null
+var _walk: ValleyWalk = null
+var _bot: ValleyBot = null
+var _scenario_failures := PackedStringArray()
 
 
 func configure(seconds: float, scenario: String, capture_dir: String) -> void:
@@ -42,17 +109,58 @@ func configure(seconds: float, scenario: String, capture_dir: String) -> void:
 	_stats = {"ticks": 0, "attacks": 0, "heavies": 0, "dodges": 0, "blocks": 0, "footfalls": 0,
 		"jumps": 0, "resets": 0, "player_deaths": 0, "soldier_kills": 0, "camera_toggles": 0,
 		"lock_presses": 0, "fence_breaks": 0, "hits_resolved": 0, "parries": 0,
-		"max_debris": 0, "rejections": 0}
+		"max_debris": 0, "rejections": 0, "enemy_kills": 0, "loot_awards": 0}
+	_options = parse_options(OS.get_cmdline_user_args())
+	# Count every engine/script error of the run (the logger lives as long as the process).
+	_error_counter = ErrorCounter.new()
+	OS.add_logger(_error_counter)
+	if _scenario == SCENARIO_VALLEY:
+		ValleyBot.configure(ValleyBot.parse_options(OS.get_cmdline_user_args()))
+
+
+## The P14 options of the user args: {"perf": bool (--perf), "stress_stage": int
+## (--stress-stage=N, default StressScenario.DEFAULT_STAGE), "walk_teleport": bool
+## (--walk-teleport)}.
+static func parse_options(args: PackedStringArray) -> Dictionary:
+	var out := {"perf": false, "stress_stage": StressScenario.DEFAULT_STAGE, "walk_teleport": false}
+	for arg in args:
+		if arg == "--perf":
+			out.perf = true
+		elif arg.begins_with("--stress-stage="):
+			out.stress_stage = clampi(int(arg.substr(15)), 1, 3)
+		elif arg == "--walk-teleport":
+			out.walk_teleport = true
+	return out
+
+
+## True for the scenarios that run their own driver and a PerfProbe.
+static func is_perf_scenario(scenario: String) -> bool:
+	return scenario == SCENARIO_STRESS or scenario == SCENARIO_VALLEY_WALK or scenario == SCENARIO_VALLEY
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario == "capture" else Node.PROCESS_MODE_PAUSABLE
+	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_VALLEY] else Node.PROCESS_MODE_PAUSABLE
 	# Method callables (not lambdas): they disconnect automatically when this node is freed
 	# by a sandbox reset, so counts are never duplicated.
 	Events.hit_resolved.connect(_on_hit_resolved)
 	Events.entity_died.connect(_on_entity_died)
 	Events.object_destroyed.connect(_on_object_destroyed)
 	Events.action_rejected.connect(_on_action_rejected)
+	Events.loot_awarded.connect(_on_loot_awarded)
+	if is_perf_scenario(_scenario) or bool(_options.get("perf", false)):
+		if _scenario == SCENARIO_VALLEY and is_instance_valid(_valley_probe):
+			_probe = _valley_probe   # P17a: one probe for the whole bot run, across level loads
+		else:
+			_probe = PerfProbe.new()
+			_probe.name = "PerfProbe"
+			_probe.label = _scenario if _scenario != "" else "soak"
+			if _scenario == SCENARIO_VALLEY:
+				# A death, a checkpoint load or a loop's new game replaces this node with the level;
+				# the probe stays (under the root) so PERF_RESULT covers the whole run.
+				_valley_probe = _probe
+				get_tree().root.add_child.call_deferred(_probe)
+			else:
+				add_child(_probe)
 
 
 func _on_hit_resolved(_t: int, r: HitResult) -> void:
@@ -64,6 +172,9 @@ func _on_hit_resolved(_t: int, r: HitResult) -> void:
 func _on_entity_died(_t: int, id: String, _k: String) -> void:
 	if id.begins_with("soldier"):
 		_stats.soldier_kills += 1
+	var e := Sim.get_entity(id)
+	if e != null and e.actor != null and e.actor.is_in_group("enemies"):
+		_stats.enemy_kills += 1
 
 
 func _on_object_destroyed(_t: int, _id: String, _by: String) -> void:
@@ -74,18 +185,31 @@ func _on_action_rejected(_t: int, _a: String, _id: String, _r: String) -> void:
 	_stats.rejections += 1
 
 
+func _on_loot_awarded(_t: int, _world_id: String, _item: String, _count: int, _recipient: String) -> void:
+	_stats.loot_awards += 1
+
+
 func _process(delta: float) -> void:
 	if _frame_ms.size() < 200000:
 		_frame_ms.append(delta * 1000.0)
 
 
 func _physics_process(dt: float) -> void:
+	if _scenario == SCENARIO_VALLEY:
+		if _bot == null:
+			_start_valley_bot()
+		# The run may end while a pausing screen is up (the end screen after the crown).
+		if ValleyBot.run != null and ValleyBot.run.finished:
+			_finish()
+			return
 	if get_tree().paused and _scenario != "capture":
 		return
 	_elapsed += dt
 	_stats.ticks += 1
 	if _duration > 0.0 and _elapsed >= _duration:
 		_finish()
+		return
+	if _scenario == SCENARIO_VALLEY:
 		return
 	if player == null or not is_instance_valid(player):
 		player = get_tree().get_first_node_in_group("player") as GiantPlayer
@@ -99,17 +223,120 @@ func _physics_process(dt: float) -> void:
 		if not _busy:
 			_run_capture(dt)
 		return
+	if _scenario == SCENARIO_STRESS:
+		_run_stress()
+		return
+	if _scenario == SCENARIO_VALLEY_WALK:
+		_run_valley_walk()
+		return
 	_run_soak(dt)
+
+
+# --------------------------------------------------------------------------- P17a: the Valley bot
+
+## --scenario=valley: one ValleyBot per level (its run lives in ValleyBot.run, a static, so deaths,
+## checkpoint loads and new games keep it); it needs the Valley (or a level with a LevelRoot).
+func _start_valley_bot() -> void:
+	if not is_inside_tree():
+		return
+	var lv := get_tree().get_first_node_in_group(LevelRoot.GROUP) as LevelRoot
+	if lv == null:
+		if _stats.ticks > 120 and not _scenario_failures.has(VALLEY_NEEDED):
+			_scenario_failures.append(VALLEY_NEEDED)
+			_finish()
+		return
+	_bot = ValleyBot.new()
+	_bot.name = "ValleyBot"
+	add_child(_bot)
+
+
+# --------------------------------------------------------------------------- P14 scenarios
+
+## --scenario=stress: starts the arena's StressScenario bot once; it drives the player itself.
+func _run_stress() -> void:
+	if _stress != null:
+		return
+	_stress = get_tree().get_first_node_in_group(StressScenario.GROUP) as StressScenario
+	if _stress == null:
+		_scenario_failures.append("--scenario=stress needs the stress arena: add --level=%s" % STRESS_ARENA)
+		_finish()
+		return
+	_stress.start_bot(player, int(_options.get("stress_stage", StressScenario.DEFAULT_STAGE)))
+
+
+## --scenario=valley_walk: starts a ValleyWalk once; the run ends when the walk is done.
+func _run_valley_walk() -> void:
+	if _walk == null:
+		var lv := get_tree().get_first_node_in_group(LevelRoot.GROUP) as LevelRoot
+		if lv == null or lv.level_id != VALLEY_LEVEL_ID:
+			_scenario_failures.append("--scenario=valley_walk needs the Valley: add --mode=valley --new-game")
+			_finish()
+			return
+		_walk = ValleyWalk.new()
+		_walk.name = "ValleyWalk"
+		_walk.teleport_only = bool(_options.get("walk_teleport", false))
+		add_child(_walk)
+		_walk.start(player, lv, _probe)
+	if _walk.done:
+		_finish()
 
 
 # --------------------------------------------------------------------------- soak
 
-func _alive_soldier() -> SoldierEnemy:
+## Every living enemy of any archetype (duck typed: an "enemies" node with a CombatEntity).
+func _alive_enemies() -> Array[Node3D]:
+	var out: Array[Node3D] = []
 	for n in get_tree().get_nodes_in_group("enemies"):
-		var s := n as SoldierEnemy
-		if s != null and s.entity.is_alive():
-			return s
+		var e: Variant = n.get("entity")
+		if n is Node3D and e is CombatEntity and (e as CombatEntity).is_alive():
+			out.append(n)
+	return out
+
+
+## The first breakable that is still intact, or null.
+func _intact_breakable() -> Node3D:
+	for n in get_tree().get_nodes_in_group("breakables"):
+		if n is BreakableProp and not (n as BreakableProp).destroyed:
+			return n
 	return null
+
+
+## The arena's centre: the sandbox root's position (the world origin without one).
+func _arena_centre() -> Vector3:
+	var arena := get_tree().get_first_node_in_group("sandbox") as Node3D
+	return arena.global_position if arena != null else Vector3.ZERO
+
+
+## The soak's target (order: see ENGAGE_RADIUS_M): the nearest living enemy within
+## ENGAGE_RADIUS_M of the giant or ARENA_RADIUS_M of the arena centre, else the intact
+## breakable, else the nearest other living enemy, else the dummy (null when there is none).
+## `enemies` holds living enemies only; distances are measured on the ground plane.
+static func pick_soak_target(giant_pos: Vector3, centre: Vector3, enemies: Array, breakable: Node3D,
+		dummy: Node3D) -> Node3D:
+	var near: Node3D = null
+	var far: Node3D = null
+	var near_d := INF
+	var far_d := INF
+	for n: Node3D in enemies:
+		var d := _flat_distance(giant_pos, n.global_position)
+		if d <= ENGAGE_RADIUS_M or _flat_distance(centre, n.global_position) <= ARENA_RADIUS_M:
+			if d < near_d:
+				near = n
+				near_d = d
+		elif d < far_d:
+			far = n
+			far_d = d
+	if near != null:
+		return near
+	if breakable != null:
+		return breakable
+	if far != null:
+		return far
+	return dummy
+
+
+static func _flat_distance(a: Vector3, b: Vector3) -> float:
+	return Vector2(a.x - b.x, a.z - b.z).length()
 
 
 func _face(point: Vector3, dt: float, rate := 6.0) -> float:
@@ -131,17 +358,16 @@ func _run_soak(dt: float) -> void:
 			_stats.resets += 1
 			Events.sandbox_reset_requested.emit("autopilot_after_death")
 		return
-	var soldier := _alive_soldier()
-	var target: Node3D = soldier
-	if soldier == null:
-		_no_soldier_time += dt
-		if _no_soldier_time > 12.0:
-			_no_soldier_time = -1000.0
+	var enemies := _alive_enemies()
+	if enemies.is_empty():
+		_no_enemy_time += dt
+		if _no_enemy_time > 12.0:
+			_no_enemy_time = -1000.0
 			_stats.resets += 1
 			Events.sandbox_reset_requested.emit("autopilot_respawn_soldier")
 			return
-		var fence := get_tree().get_first_node_in_group("breakables") as BreakableProp
-		target = fence if fence != null and not fence.destroyed else get_tree().get_first_node_in_group("dummies") as Node3D
+	var target := pick_soak_target(player.global_position, _arena_centre(), enemies,
+		_intact_breakable(), get_tree().get_first_node_in_group("dummies") as Node3D)
 	if target == null:
 		return
 	var dist := _face(target.global_position, dt)
@@ -210,18 +436,116 @@ func _run_soak(dt: float) -> void:
 
 
 func _finish() -> void:
-	var sorted := _frame_ms.duplicate()
+	if _finished:
+		return
+	_finished = true
+	var counted := {}
+	if _error_counter != null:
+		counted = _error_counter.take()
+		OS.remove_logger(_error_counter)
+		_error_counter = null
+	var result := build_result(_stats, _elapsed, _frame_ms, _shots, counted)
+	var failures := _scenario_failures.duplicate()
+	if _stress != null:
+		_stress.stop_bot()
+		var sr := _stress.result(_elapsed)
+		failures.append_array(sr.check_failures)
+		result["stress"] = sr
+	if _walk != null:
+		var wr := _walk.result()
+		failures.append_array(wr.check_failures)
+		result["valley_walk"] = wr
+	if _scenario == SCENARIO_VALLEY and ValleyBot.run != null:
+		var vb := ValleyBot.result(Sim.tick)
+		result["valley_bot"] = vb
+		failures.append_array(valley_failures(vb))
+		result["invariants_ok"] = (vb.get("invariant_failures", []) as Array).is_empty()
+	if is_perf_scenario(_scenario):
+		result["scenario"] = _scenario
+		result["scenario_failures"] = failures
+		result["scenario_ok"] = failures.is_empty()
+	if _probe != null:
+		_probe.finish()
+		var perf := _probe.result()
+		print("PERF_RESULT " + JSON.stringify(perf))
+		result["perf"] = {"cpu_tick_ms": perf.cpu_tick_ms, "sim_ms": perf.sim_ms, "budgets": perf.budgets,
+			"quality": perf.quality}
+	print("AUTOPILOT_RESULT " + JSON.stringify(result))
+	write_result_file(result_file_arg(OS.get_cmdline_user_args()), result)
+	get_tree().quit(exit_code(result))
+
+
+## P17a: --result-file=<path> (user:// or absolute): where the run also writes its result as JSON
+## (tools/run_bots.sh). "" when not given.
+static func result_file_arg(args: PackedStringArray) -> String:
+	for arg in args:
+		if arg.begins_with("--result-file="):
+			return arg.substr(14).strip_edges()
+	return ""
+
+
+## Writes `result` as JSON to `path` (folders made); nothing for "". False when it cannot.
+static func write_result_file(path: String, result: Dictionary) -> bool:
+	if path == "":
+		return false
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f == null:
+		push_warning("Autopilot: cannot write %s" % path)
+		return false
+	f.store_string(JSON.stringify(result, "\t"))
+	f.close()
+	return true
+
+
+## The AUTOPILOT_RESULT dictionary: the run's stats, timing, shots and the error counts
+## (`counted` is an ErrorCounter.take() result; {} counts as no errors).
+static func build_result(stats: Dictionary, elapsed: float, frame_ms: Array, shots: Array,
+		counted: Dictionary) -> Dictionary:
+	var sorted := frame_ms.duplicate()
 	sorted.sort()
-	var result := _stats.duplicate()
-	result["simulated_s"] = snappedf(_elapsed, 0.01)
+	var result := stats.duplicate()
+	result["simulated_s"] = snappedf(elapsed, 0.01)
 	result["frames"] = sorted.size()
 	if not sorted.is_empty():
 		result["frame_ms_p50"] = snappedf(sorted[int(sorted.size() * 0.5)], 0.01)
 		result["frame_ms_p95"] = snappedf(sorted[int((sorted.size() - 1) * 0.95)], 0.01)
 		result["frame_ms_p99"] = snappedf(sorted[int((sorted.size() - 1) * 0.99)], 0.01)
-	result["shots"] = _shots
-	print("AUTOPILOT_RESULT " + JSON.stringify(result))
-	get_tree().quit(0)
+	result["shots"] = shots
+	result["errors"] = int(counted.get("errors", 0))
+	result["warnings"] = int(counted.get("warnings", 0))
+	result["error_samples"] = (counted.get("error_samples", []) as Array).slice(0, RESULT_SAMPLES)
+	return result
+
+
+## Process exit code for a result: EXIT_ERRORS when the run logged any error, else EXIT_INVARIANT
+## when a Valley bot invariant failed ("invariants_ok" false), else EXIT_SCENARIO_FAILED when a
+## scenario's own check failed ("scenario_ok" false), else EXIT_OK.
+static func exit_code(result: Dictionary) -> int:
+	if int(result.get("errors", 0)) > 0:
+		return EXIT_ERRORS
+	if result.has("invariants_ok") and not bool(result.invariants_ok):
+		return EXIT_INVARIANT
+	if result.has("scenario_ok") and not bool(result.scenario_ok):
+		return EXIT_SCENARIO_FAILED
+	return EXIT_OK
+
+
+## The Valley bot's scenario failures: a single run fails on any watchdog breach (and on not
+## completing the slice before --autoplay ends); a loop run (the stability run) only on a
+## world_blocked breach (a softlock) - bot_failed breaches are reported, not failures (plan §5.2).
+static func valley_failures(vb: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	var loop := bool((vb.get("bot", {}) as Dictionary).get("loop", false))
+	for b: Dictionary in vb.get("breaches", []):
+		if loop and str(b.get("classification", "")) != BotDiagnosis.WORLD_BLOCKED:
+			continue
+		out.append("breach %s on %s: %s (%s)" % [b.get("reason", "?"), b.get("objective", "?"),
+			b.get("detail", ""), b.get("classification", "?")])
+	if not loop and not bool(vb.get("completed", false)) and (vb.get("breaches", []) as Array).is_empty() \
+			and (vb.get("invariant_failures", []) as Array).is_empty():
+		out.append("the slice was not completed before --autoplay ended")
+	return out
 
 
 # --------------------------------------------------------------------------- screenshot tour

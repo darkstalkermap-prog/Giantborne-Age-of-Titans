@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "prop.crate",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Supply Crate",
+	"height_m": 1.2,
+	"health": 40,
+	"armor": 0,
+	"accepted_attack_categories": ["melee", "ability", "projectile"],
+	"min_growth_stage": 1,
+	"loot_table": "loot.crate_quarry",
+	"debris_count": 6,
+	"debris_length_m": 1.5,
+	"debris_layout": "pile",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

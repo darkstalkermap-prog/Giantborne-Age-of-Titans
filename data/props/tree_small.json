@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "prop.tree_small",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Pine",
+	"height_m": 7.0,
+	"health": 90,
+	"armor": 0,
+	"accepted_attack_categories": ["melee", "ability", "projectile"],
+	"min_growth_stage": 1,
+	"description": "A forest pine a giant can fell.",
+	"debris_count": 6,
+	"debris_length_m": 6,
+	"debris_layout": "line",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

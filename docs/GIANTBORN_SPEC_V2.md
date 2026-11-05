@@ -4,7 +4,10 @@ Version 2.0 | November 4, 2026 | Low-poly prototype first
 
 > Source: the project owner's handoff document (`Giantborn_Claude_Build_Prompt.pdf`), kept here
 > verbatim as the design reference for every milestone. Implementation decisions that refine
-> or interpret it are recorded in [DECISIONS.md](DECISIONS.md).
+> or interpret it are recorded in [DECISIONS.md](DECISIONS.md). The document names the AI tools
+> it was written for and drawn from. It is the only file in the repository that does: a recorded
+> exception, so that the owner's text stays verbatim ([DECISIONS.md](DECISIONS.md) §3, the Ship
+> gate).
 
 ## 1. START HERE - PROMPT FOR CLAUDE
 You are my game development partner. Build Giantborn: Age of Titans from the specification below. Begin with a small, playable, low-poly 3D combat prototype in Godot using GDScript. Use a stable Godot version supported by your available tools, record the exact version, and keep the project compatible with it. If you cannot run Godot, say so clearly, supply the complete project and exact local run instructions, and distinguish code review from actual runtime testing. Do not claim that the game works unless you tested it.

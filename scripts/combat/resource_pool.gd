@@ -28,6 +28,9 @@ var since_stamina_spend := 999.0
 var since_essence_spend := 999.0
 var since_combat := 999.0
 
+## Multiplies every fury gain. Maintained by Combatant from its statuses (Titan Surge = 0).
+var fury_gain_mult := 1.0
+
 
 func configure(resources: Dictionary, regen: Dictionary) -> void:
 	health_max = float(resources.get("health", health_max))
@@ -88,8 +91,10 @@ func spend_fury(amount: float) -> bool:
 	return true
 
 
+## Every fury award goes through here (basic attacks, parries, kills), so one multiplier
+## (fury_gain_mult) gates them all.
 func add_fury(amount: float) -> void:
-	fury = clampf(fury + amount, 0.0, fury_max)
+	fury = clampf(fury + amount * fury_gain_mult, 0.0, fury_max)
 
 
 func damage_health(amount: float) -> void:
@@ -119,6 +124,54 @@ func tick(dt: float, stamina_regen_allowed: bool) -> void:
 		essence = minf(essence_max, essence + essence_regen_per_s * dt)
 	if since_combat >= fury_decay_delay_s - TIME_EPSILON:
 		fury = maxf(0.0, fury - fury_decay_per_s * dt)
+
+
+## New maxima ({"health", "stamina", "essence", "fury_max"}; missing keys keep theirs).
+## Health, stamina and essence keep their current fraction (growth never heals or hurts);
+## fury is absolute and only clamped. A pool whose old maximum was 0 starts full.
+func rescale(new_max: Dictionary) -> void:
+	if new_max.has("health"):
+		var r := _fraction(health, health_max)
+		health_max = maxf(0.0, float(new_max.health))
+		health = health_max * r
+	if new_max.has("stamina"):
+		var r := _fraction(stamina, stamina_max)
+		stamina_max = maxf(0.0, float(new_max.stamina))
+		stamina = stamina_max * r
+	if new_max.has("essence"):
+		var r := _fraction(essence, essence_max)
+		essence_max = maxf(0.0, float(new_max.essence))
+		essence = essence_max * r
+	if new_max.has("fury_max"):
+		fury_max = maxf(0.0, float(new_max.fury_max))
+	fury = clampf(fury, 0.0, fury_max)
+
+
+static func _fraction(value: float, maximum: float) -> float:
+	if maximum <= 0.0:
+		return 1.0
+	return clampf(value / maximum, 0.0, 1.0)
+
+
+## Current values, for saves and checkpoints.
+func snapshot() -> Dictionary:
+	return {"health": health, "stamina": stamina, "essence": essence, "fury": fury}
+
+
+## Restores saved values (missing keys keep theirs), clamped to 0..max. Regeneration timers are
+## set as if the owner had been idle (999 s), so regen and fury decay resume normally.
+func restore(values: Dictionary) -> void:
+	if values.has("health"):
+		health = clampf(float(values.health), 0.0, health_max)
+	if values.has("stamina"):
+		stamina = clampf(float(values.stamina), 0.0, stamina_max)
+	if values.has("essence"):
+		essence = clampf(float(values.essence), 0.0, essence_max)
+	if values.has("fury"):
+		fury = clampf(float(values.fury), 0.0, fury_max)
+	since_stamina_spend = 999.0
+	since_essence_spend = 999.0
+	since_combat = 999.0
 
 
 func ratio(name: String) -> float:

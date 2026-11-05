@@ -1,0 +1,33 @@
+{
+	"schema_version": 1,
+	"id": "encounter.village_folk",
+	"type": "encounter",
+	"display_name": "Thornwick's people",
+	"description": "Six villagers round the square and Elder Maren by her house (faction village; not budgeted). Villagers flee to the cottage doors (valley.marker.safe_house_1..6) and hide; the elder stays to talk (plan sections 3.13, 4.4).",
+	"level": "level.valley",
+	"district": "village",
+	"center_m": [40, 0, -20],
+	"activate_radius_m": 100,
+	"deactivate_radius_m": 160,
+	"leash_radius_m": 0,
+	"alert_group": false,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "valley.village.villager_1", "definition": "npc.villager", "position_m": [40, 0, -24], "yaw_deg": -60,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.villager_2", "definition": "npc.villager", "position_m": [50, 0, -24], "yaw_deg": 60,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.villager_3", "definition": "npc.villager", "position_m": [52, 0, -17], "yaw_deg": 120,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.villager_4", "definition": "npc.villager", "position_m": [38, 0, -16], "yaw_deg": -120,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.villager_5", "definition": "npc.villager", "position_m": [45, 0, -28], "yaw_deg": 0,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.villager_6", "definition": "npc.villager", "position_m": [46, 0, -12], "yaw_deg": 180,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.elder", "definition": "npc.elder", "position_m": [35, 0, -42], "yaw_deg": 180,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "weapon.king_club",
+	"type": "weapon",
+	"family": "club",
+	"display_name": "The King's Cudgel",
+	"description": "The Ogre King's gold-banded cudgel (plan section 4.4: multiplier 1.0 in the worked boss numbers).",
+	"damage_multiplier": 1.0,
+	"length_m": 4.0,
+	"hit_radius_m": 0.9,
+	"visual_shape": "club"
+}

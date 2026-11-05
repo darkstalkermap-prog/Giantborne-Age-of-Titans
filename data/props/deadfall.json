@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "prop.deadfall",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Deadfall",
+	"height_m": 6.0,
+	"health": 300,
+	"armor": 0,
+	"accepted_attack_categories": ["melee", "ability"],
+	"min_growth_stage": 3,
+	"required_tags": ["TreeWeapon"],
+	"locked_message": "A wall of fallen trunks. Your hands can't move it - a tree-sized weapon could smash through.",
+	"on_destroyed_flags": {"world.forest.deadfall_broken": true},
+	"debris_count": 12,
+	"debris_length_m": 14,
+	"debris_layout": "pile",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

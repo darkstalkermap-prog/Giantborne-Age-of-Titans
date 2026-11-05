@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "encounter.ruins_gate",
+	"type": "encounter",
+	"display_name": "Practice-gate garrison",
+	"description": "The garrison of the ruins' practice gate (plan section 4.4): two soldiers inside the gate and an archer on the wall walk beside it (valley.marker.ruins_gate_wall), all facing the gate and the bridge (west). With the courtyard's garrison it makes the main fortress fight (eight active).",
+	"level": "level.valley",
+	"district": "ruins",
+	"center_m": [130, 0, -20],
+	"activate_radius_m": 50,
+	"deactivate_radius_m": 110,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.ruins.gate_soldier_1", "definition": "enemy.soldier", "position_m": [132, 0, -30], "yaw_deg": 90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.ruins.gate_soldier_2", "definition": "enemy.soldier", "position_m": [132, 0, -10], "yaw_deg": 90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.ruins.gate_archer", "definition": "enemy.archer", "position_m": [128, 6, -34], "yaw_deg": 90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

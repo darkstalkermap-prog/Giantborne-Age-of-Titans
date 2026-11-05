@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "encounter.ruins_courtyard",
+	"type": "encounter",
+	"display_name": "Courtyard garrison",
+	"description": "The main fortress fight in the ruins' courtyard (plan section 4.4): three soldiers led by their sergeant (the commander), an archer on the west terrace (valley.marker.ruins_wall_w) and a mage at the back; with the practice-gate garrison eight are active. They face the practice gate; the 55 m leash stops them short of the causeway (z 5), so nothing follows the giant into Kingsfall. quest.main's courtyard stage waits for this encounter's cleared flag (or the causeway).",
+	"level": "level.valley",
+	"district": "ruins",
+	"center_m": [158, 0, -50],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 120,
+	"leash_radius_m": 55,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.ruins.soldier_1", "definition": "enemy.soldier", "position_m": [150, 0, -45], "yaw_deg": 120,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.ruins.soldier_2", "definition": "enemy.soldier", "position_m": [165, 0, -40], "yaw_deg": 120,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.ruins.sergeant", "definition": "enemy.soldier", "position_m": [160, 0, -60], "yaw_deg": 120,
+			"patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.ruins.archer", "definition": "enemy.archer", "position_m": [140, 5, -80], "yaw_deg": 150,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.ruins.mage", "definition": "enemy.mage", "position_m": [158, 0, -70], "yaw_deg": 120,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

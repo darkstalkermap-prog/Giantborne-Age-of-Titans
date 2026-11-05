@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "loot.crate_quarry",
+	"type": "loot_table",
+	"display_name": "Quarry chest",
+	"description": "The raiders' chest in the quarry pit: one iron ingot. Also the default of prop.crate.",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [{"item": "item.iron_ingot", "count": 1}]
+}

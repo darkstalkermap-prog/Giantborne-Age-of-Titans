@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.light",
+	"type": "tutorial_prompt",
+	"description": "Light attacks at the practice dummies (quest.tutorial's train stage).",
+	"text": "Strike with {light_attack}. Press it again to chain up to three blows.",
+	"trigger": {"type": "entered", "area": "valley.area.hollow_dummies"},
+	"dismiss": {"type": "action_kind", "action_kind": "light", "count": 3, "timeout_s": 60},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 10,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.light.done"
+}

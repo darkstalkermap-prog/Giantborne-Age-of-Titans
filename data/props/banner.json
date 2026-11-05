@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "prop.banner",
+	"type": "prop",
+	"category": "cosmetic",
+	"display_name": "Banner",
+	"height_m": 4.0,
+	"health": 1,
+	"accepted_attack_categories": [],
+	"description": "Cosmetic: it flutters when a pulse or a giant passes. Never saved.",
+	"react_radius_m": 1.8
+}

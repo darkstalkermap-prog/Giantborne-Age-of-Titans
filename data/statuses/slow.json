@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "status.slow",
+	"type": "status_effect",
+	"display_name": "Slowed",
+	"hud_label": "SLOW",
+	"stacking": "strongest_wins",
+	"duration_s": 3.0,
+	"tick_s": 0,
+	"magnitude_key": "slow_fraction",
+	"default_magnitude": 0.3,
+	"modifiers": {"slow_fraction": 0.3},
+	"tags": ["Debuff", "Slow"],
+	"hidden": false
+}

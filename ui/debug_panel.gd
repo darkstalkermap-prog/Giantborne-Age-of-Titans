@@ -3,8 +3,13 @@ extends PanelContainer
 ## F3 debug panel (debug builds only): simulation tick, frame time (avg / p95 / p99), player
 ## state, stage, resources, attack id, queued action, target, camera, AI state, debris and
 ## pending hits. Exported release builds never show it.
+##
+## Enemies are duck typed (any "enemies" node with get_debug_info()), nearest first, at most
+## MAX_ENEMY_LINES of them. Any node in the group "debug_info_providers" adds its
+## debug_lines() -> PackedStringArray (director, quests, checkpoints, ...).
 
 const SAMPLE_COUNT := 300
+const MAX_ENEMY_LINES := 6
 
 var _label: Label
 var _frame_ms: Array[float] = []
@@ -52,6 +57,11 @@ func _process(delta: float) -> void:
 	if _accum < 0.1:
 		return
 	_accum = 0.0
+	_label.text = "\n".join(build_lines())
+
+
+## The panel's text, one entry per line (tests read it without waiting for a refresh).
+func build_lines() -> PackedStringArray:
 	var fs := frame_stats()
 	var lines := PackedStringArray()
 	lines.append("tick %d   fps %d   frame ms avg %.1f  p95 %.1f  p99 %.1f" % [Sim.tick,
@@ -65,16 +75,42 @@ func _process(delta: float) -> void:
 			d.stage, d.health, d.stamina, d.essence, d.fury, d.poise, d.invulnerable, d.parry_window])
 		lines.append("        target=%s  camera=%s  sprint=%s  pos=(%.1f, %.1f, %.1f)" % [
 			d.target if d.target != "" else "-", d.camera, d.sprinting, d.position.x, d.position.y, d.position.z])
-	for e in get_tree().get_nodes_in_group("enemies"):
-		var s := e as SoldierEnemy
-		if s == null:
-			continue
-		var a := s.get_debug_info()
-		lines.append("%s  AI=%s  combat=%s  action=%s  H %.0f  S %.0f  poise %.0f  guard=%s  token=%s  path_fail=%d" % [
-			s.entity.entity_id, a.ai, a.combat, a.action if a.action != "" else "-", a.health, a.stamina,
-			a.poise, a.guard, a.token, a.path_failures])
+	lines.append_array(enemy_lines(player))
+	for n in get_tree().get_nodes_in_group("debug_info_providers"):
+		if n.has_method("debug_lines"):
+			lines.append_array(PackedStringArray(n.call("debug_lines")))
 	var pool := get_tree().get_first_node_in_group("debris_pool") as DebrisPool
 	var debris := pool.active_count() if pool != null else 0
 	lines.append("entities %d  debris %d/%d  pending hits %d  world deltas %d" % [Sim.entities().size(),
 		debris, DebrisPool.MAX_ACTIVE, Sim.pending_hit_count(), WorldState.deltas.size()])
-	_label.text = "\n".join(lines)
+	return lines
+
+
+## One line per enemy (any archetype with get_debug_info()), nearest to `player` first, capped
+## at MAX_ENEMY_LINES plus a "+N more" line.
+func enemy_lines(player: Node3D) -> PackedStringArray:
+	var found: Array = []
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e is Node3D and e.has_method("get_debug_info"):
+			var dist := 0.0
+			if player != null:
+				dist = (e as Node3D).global_position.distance_to(player.global_position)
+			found.append([dist, str(e.name), e])
+	found.sort_custom(func(a: Array, b: Array) -> bool:
+		return a[0] < b[0] if not is_equal_approx(a[0], b[0]) else a[1] < b[1])
+	var out := PackedStringArray()
+	for i in mini(found.size(), MAX_ENEMY_LINES):
+		var node: Node = found[i][2]
+		var a: Dictionary = node.call("get_debug_info")
+		var id := str(a.get("id", ""))
+		if id == "":
+			id = str(node.name)
+		var action := str(a.get("action", ""))
+		out.append("%s  AI=%s  combat=%s  action=%s  H %.0f  S %.0f  poise %.0f  guard=%s  token=%s  path_fail=%d" % [
+			id, a.get("ai", "-"), a.get("combat", "-"), action if action != "" else "-",
+			float(a.get("health", 0.0)), float(a.get("stamina", 0.0)), float(a.get("poise", 0.0)),
+			a.get("guard", false), a.get("token", false), int(a.get("path_failures", 0))])
+	if found.size() > MAX_ENEMY_LINES:
+		out.append("... +%d more enemies" % (found.size() - MAX_ENEMY_LINES))
+	return out
+

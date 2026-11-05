@@ -1,0 +1,1472 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/world/level_root.gd" id="1_eea46"]
+[ext_resource type="PackedScene" path="res://scenes/world/valley/hollow.tscn" id="2_07c2e"]
+[ext_resource type="PackedScene" path="res://scenes/world/valley/forest.tscn" id="3_e9c38"]
+[ext_resource type="PackedScene" path="res://scenes/world/valley/barrow.tscn" id="4_180f7"]
+[ext_resource type="PackedScene" path="res://scenes/world/valley/village.tscn" id="5_8d220"]
+[ext_resource type="PackedScene" path="res://scenes/world/valley/quarry.tscn" id="6_c2713"]
+[ext_resource type="PackedScene" path="res://scenes/world/valley/ruins.tscn" id="7_656f0"]
+[ext_resource type="PackedScene" path="res://scenes/world/valley/kingsfall.tscn" id="8_432ab"]
+[ext_resource type="PackedScene" path="res://scenes/world/valley/hills.tscn" id="9_122f3"]
+[ext_resource type="NavigationMesh" path="res://assets/nav/valley_human.res" id="10_88954"]
+[ext_resource type="NavigationMesh" path="res://assets/nav/valley_large.res" id="11_3697a"]
+[ext_resource type="NavigationMesh" path="res://assets/nav/valley_giant.res" id="12_10822"]
+[ext_resource type="NavigationMesh" path="res://assets/nav/valley_small_giant.res" id="13_43fed"]
+[ext_resource type="PackedScene" path="res://scenes/world/fence_wood.tscn" id="14_24ab9"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="15_5fc47"]
+[ext_resource type="PackedScene" path="res://scenes/world/cairn.tscn" id="16_4deb6"]
+[ext_resource type="PackedScene" path="res://scenes/world/deadfall.tscn" id="17_62b64"]
+[ext_resource type="PackedScene" path="res://scenes/world/ancient_oak.tscn" id="18_20cb3"]
+[ext_resource type="Script" path="res://scripts/world/uproot_tree.gd" id="19_24bad"]
+[ext_resource type="PackedScene" path="res://scenes/world/cart_barricade.tscn" id="20_a609d"]
+[ext_resource type="PackedScene" path="res://scenes/world/gate_practice.tscn" id="21_f1734"]
+[ext_resource type="PackedScene" path="res://scenes/world/gate_fortified.tscn" id="22_66b76"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="23_960f4"]
+[ext_resource type="PackedScene" path="res://scenes/world/weapon_rack.tscn" id="24_2400b"]
+[ext_resource type="Script" path="res://scripts/world/weapon_rack.gd" id="25_9d4a3"]
+[ext_resource type="PackedScene" path="res://scenes/world/item_pickup.tscn" id="26_ddeb9"]
+[ext_resource type="Script" path="res://scripts/world/item_pickup.gd" id="27_3b229"]
+[ext_resource type="PackedScene" path="res://scenes/world/forge.tscn" id="28_34b2a"]
+[ext_resource type="Script" path="res://scripts/world/forge.gd" id="29_f9160"]
+[ext_resource type="PackedScene" path="res://scenes/world/tree_small.tscn" id="30_46f38"]
+[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="31_f6def"]
+[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="32_e36fc"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="33_add9b"]
+[ext_resource type="PackedScene" path="res://scenes/world/practice_dummy.tscn" id="34_92864"]
+[ext_resource type="Script" path="res://scripts/actors/practice_dummy.gd" id="35_238a0"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="36_acc12"]
+[ext_resource type="Script" path="res://scripts/world/area_trigger.gd" id="37_5575d"]
+[ext_resource type="Script" path="res://scripts/world/boss_arena.gd" id="38_af80f"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="39_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="40_7ef4a"]
+[ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="41_b0840"]
+[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="42_ce070"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.56, 0.64, 0.74, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.64, 0.7, 1)
+ambient_light_energy = 0.6
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.56, 0.64, 0.74, 1)
+fog_density = 1.0
+fog_depth_begin = 120.0
+fog_depth_end = 300.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(1.2, 4, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
+albedo_color = Color(0.38, 0.38, 0.42, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(1.2, 4, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5"]
+albedo_color = Color(0.52, 0.52, 0.55, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(1.6, 0.4, 1.6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.4, 0.8, 1, 1)
+emission_energy_multiplier = 1.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.6, 0.6, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_9"]
+size = Vector3(1.2, 4, 1.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(1.2, 4, 1.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(1.6, 0.4, 1.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
+size = Vector3(0.6, 0.6, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_13"]
+size = Vector3(1.2, 4, 1.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_14"]
+size = Vector3(1.2, 4, 1.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_15"]
+size = Vector3(1.6, 0.4, 1.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_16"]
+size = Vector3(0.6, 0.6, 0.6)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_17"]
+height = 14.0
+radius = 15.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_18"]
+height = 14.0
+radius = 15.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_19"]
+size = Vector3(14, 14, 8)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_20"]
+height = 14.0
+radius = 30.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_21"]
+height = 14.0
+radius = 25.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_22"]
+height = 14.0
+radius = 30.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_23"]
+size = Vector3(14, 14, 14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_24"]
+size = Vector3(10, 14, 14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_25"]
+size = Vector3(14, 14, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_26"]
+size = Vector3(10, 14, 14)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_27"]
+height = 16.0
+radius = 35.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_28"]
+size = Vector3(12, 14, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_29"]
+size = Vector3(14, 16, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_30"]
+size = Vector3(60, 16, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_31"]
+size = Vector3(14, 15, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_32"]
+albedo_color = Color(0.3, 0.31, 0.34, 1)
+metallic = 0.5
+roughness = 0.5
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_33"]
+_surfaces = [{
+"aabb": AABB(-7, 0, -0.225, 14, 15, 0.45),
+"attribute_data": PackedByteArray("AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/"),
+"format": 34359742487,
+"index_count": 396,
+"index_data": PackedByteArray("AAACAAQAAgAGAAQAAQADAAUAAwAHAAUACAAKAAwACgAOAAwACQALAA0ACwAPAA0AEAASABQAEgAWABQAEQATABUAEwAXABUAGAAaABwAGgAeABwAGQAbAB0AGwAfAB0AIAAiACQAIgAmACQAIQAjACUAIwAnACUAKAAqACwAKgAuACwAKQArAC0AKwAvAC0AMAAyADQAMgA2ADQAMQAzADUAMwA3ADUAOAA6ADwAOgA+ADwAOQA7AD0AOwA/AD0AQABCAEQAQgBGAEQAQQBDAEUAQwBHAEUASABKAEwASgBOAEwASQBLAE0ASwBPAE0AUABSAFQAUgBWAFQAUQBTAFUAUwBXAFUAWABaAFwAWgBeAFwAWQBbAF0AWwBfAF0AYABiAGQAYgBmAGQAYQBjAGUAYwBnAGUAaABqAGwAagBuAGwAaQBrAG0AawBvAG0AcAByAHQAcgB2AHQAcQBzAHUAcwB3AHUAeAB6AHwAegB+AHwAeQB7AH0AewB/AH0AgACCAIQAggCGAIQAgQCDAIUAgwCHAIUAiACKAIwAigCOAIwAiQCLAI0AiwCPAI0AkACSAJQAkgCWAJQAkQCTAJUAkwCXAJUAmACaAJwAmgCeAJwAmQCbAJ0AmwCfAJ0AoACiAKQAogCmAKQAoQCjAKUAowCnAKUAqACqAKwAqgCuAKwAqQCrAK0AqwCvAK0AsACyALQAsgC2ALQAsQCzALUAswC3ALUAuAC6ALwAugC+ALwAuQC7AL0AuwC/AL0AwADCAMQAwgDGAMQAwQDDAMUAwwDHAMUAyADKAMwAygDOAMwAyQDLAM0AywDPAM0A0ADSANQA0gDWANQA0QDTANUA0wDXANUA2ADaANwA2gDeANwA2QDbAN0A2wDfAN0A4ADiAOQA4gDmAOQA4QDjAOUA4wDnAOUA6ADqAOwA6gDuAOwA6QDrAO0A6wDvAO0A8ADyAPQA8gD2APQA8QDzAPUA8wD3APUA+AD6APwA+gD+APwA+QD7AP0A+wD/AP0AAAECAQQBAgEGAQQBAQEDAQUBAwEHAQUB"),
+"material": SubResource("StandardMaterial3D_32"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 264,
+"vertex_data": PackedByteArray("Z2bSwAAAcEEzMzM+MzPHwAAAcEEzMzO+MzPHwAAAcEEzMzM+Z2bSwAAAcEEzMzO+Z2bSwAAAAAAzMzM+MzPHwAAAAAAzMzO+MzPHwAAAAAAzMzM+Z2bSwAAAAAAzMzO+MzPHwAAAcEEzMzM+Z2bSwAAAcEEzMzO+MzPHwAAAcEEzMzO+Z2bSwAAAcEEzMzM+MzPHwAAAAAAzMzM+Z2bSwAAAAAAzMzO+MzPHwAAAAAAzMzO+Z2bSwAAAAAAzMzM+MzPHwAAAcEEzMzM+Z2bSwAAAAAAzMzM+Z2bSwAAAcEEzMzM+MzPHwAAAAAAzMzM+MzPHwAAAcEEzMzO+Z2bSwAAAAAAzMzO+Z2bSwAAAcEEzMzO+MzPHwAAAAAAzMzO+v+KXwAAAcEEzMzM+i6+MwAAAcEEzMzO+i6+MwAAAcEEzMzM+v+KXwAAAcEEzMzO+v+KXwAAAAAAzMzM+i6+MwAAAAAAzMzO+i6+MwAAAAAAzMzM+v+KXwAAAAAAzMzO+i6+MwAAAcEEzMzM+v+KXwAAAcEEzMzO+i6+MwAAAcEEzMzO+v+KXwAAAcEEzMzM+i6+MwAAAAAAzMzM+v+KXwAAAAAAzMzO+i6+MwAAAAAAzMzO+v+KXwAAAAAAzMzM+i6+MwAAAcEEzMzM+v+KXwAAAAAAzMzM+v+KXwAAAcEEzMzM+i6+MwAAAAAAzMzM+i6+MwAAAcEEzMzO+v+KXwAAAAAAzMzO+v+KXwAAAcEEzMzO+i6+MwAAAAAAzMzO+LL46wAAAcEEzMzM+xlckwAAAcEEzMzO+xlckwAAAcEEzMzM+LL46wAAAcEEzMzO+LL46wAAAAAAzMzM+xlckwAAAAAAzMzO+xlckwAAAAAAzMzM+LL46wAAAAAAzMzO+xlckwAAAcEEzMzM+LL46wAAAcEEzMzO+xlckwAAAcEEzMzO+LL46wAAAcEEzMzM+xlckwAAAAAAzMzM+LL46wAAAAAAzMzO+xlckwAAAAAAzMzO+LL46wAAAAAAzMzM+xlckwAAAcEEzMzM+LL46wAAAAAAzMzM+LL46wAAAcEEzMzM+xlckwAAAAAAzMzM+xlckwAAAcEEzMzO+LL46wAAAAAAzMzO+LL46wAAAcEEzMzO+xlckwAAAAAAzMzO+t22LvwAAcEEzMzM+1EE9vwAAcEEzMzO+1EE9vwAAcEEzMzM+t22LvwAAcEEzMzO+t22LvwAAAAAzMzM+1EE9vwAAAAAzMzO+1EE9vwAAAAAzMzM+t22LvwAAAAAzMzO+1EE9vwAAcEEzMzM+t22LvwAAcEEzMzO+1EE9vwAAcEEzMzO+t22LvwAAcEEzMzM+1EE9vwAAAAAzMzM+t22LvwAAAAAzMzO+1EE9vwAAAAAzMzO+t22LvwAAAAAzMzM+1EE9vwAAcEEzMzM+t22LvwAAAAAzMzM+t22LvwAAcEEzMzM+1EE9vwAAAAAzMzM+1EE9vwAAcEEzMzO+t22LvwAAAAAzMzO+t22LvwAAcEEzMzO+1EE9vwAAAAAzMzO+1EE9PwAAcEEzMzM+t22LPwAAcEEzMzO+t22LPwAAcEEzMzM+1EE9PwAAcEEzMzO+1EE9PwAAAAAzMzM+t22LPwAAAAAzMzO+t22LPwAAAAAzMzM+1EE9PwAAAAAzMzO+t22LPwAAcEEzMzM+1EE9PwAAcEEzMzO+t22LPwAAcEEzMzO+1EE9PwAAcEEzMzM+t22LPwAAAAAzMzM+1EE9PwAAAAAzMzO+t22LPwAAAAAzMzO+1EE9PwAAAAAzMzM+t22LPwAAcEEzMzM+1EE9PwAAAAAzMzM+1EE9PwAAcEEzMzM+t22LPwAAAAAzMzM+t22LPwAAcEEzMzO+1EE9PwAAAAAzMzO+1EE9PwAAcEEzMzO+t22LPwAAAAAzMzO+xlckQAAAcEEzMzM+LL46QAAAcEEzMzO+LL46QAAAcEEzMzM+xlckQAAAcEEzMzO+xlckQAAAAAAzMzM+LL46QAAAAAAzMzO+LL46QAAAAAAzMzM+xlckQAAAAAAzMzO+LL46QAAAcEEzMzM+xlckQAAAcEEzMzO+LL46QAAAcEEzMzO+xlckQAAAcEEzMzM+LL46QAAAAAAzMzM+xlckQAAAAAAzMzO+LL46QAAAAAAzMzO+xlckQAAAAAAzMzM+LL46QAAAcEEzMzM+xlckQAAAAAAzMzM+xlckQAAAcEEzMzM+LL46QAAAAAAzMzM+LL46QAAAcEEzMzO+xlckQAAAAAAzMzO+xlckQAAAcEEzMzO+LL46QAAAAAAzMzO+i6+MQAAAcEEzMzM+v+KXQAAAcEEzMzO+v+KXQAAAcEEzMzM+i6+MQAAAcEEzMzO+i6+MQAAAAAAzMzM+v+KXQAAAAAAzMzO+v+KXQAAAAAAzMzM+i6+MQAAAAAAzMzO+v+KXQAAAcEEzMzM+i6+MQAAAcEEzMzO+v+KXQAAAcEEzMzO+i6+MQAAAcEEzMzM+v+KXQAAAAAAzMzM+i6+MQAAAAAAzMzO+v+KXQAAAAAAzMzO+i6+MQAAAAAAzMzM+v+KXQAAAcEEzMzM+i6+MQAAAAAAzMzM+i6+MQAAAcEEzMzM+v+KXQAAAAAAzMzM+v+KXQAAAcEEzMzO+i6+MQAAAAAAzMzO+i6+MQAAAcEEzMzO+v+KXQAAAAAAzMzO+MzPHQAAAcEEzMzM+Z2bSQAAAcEEzMzO+Z2bSQAAAcEEzMzM+MzPHQAAAcEEzMzO+MzPHQAAAAAAzMzM+Z2bSQAAAAAAzMzO+Z2bSQAAAAAAzMzM+MzPHQAAAAAAzMzO+Z2bSQAAAcEEzMzM+MzPHQAAAcEEzMzO+Z2bSQAAAcEEzMzO+MzPHQAAAcEEzMzM+Z2bSQAAAAAAzMzM+MzPHQAAAAAAzMzO+Z2bSQAAAAAAzMzO+MzPHQAAAAAAzMzM+Z2bSQAAAcEEzMzM+MzPHQAAAAAAzMzM+MzPHQAAAcEEzMzM+Z2bSQAAAAAAzMzM+Z2bSQAAAcEEzMzO+MzPHQAAAAAAzMzO+MzPHQAAAcEEzMzO+Z2bSQAAAAAAzMzO+AADgwJqZKUBmZmY+AADgQJqZKUBmZma+AADgQJqZKUBmZmY+AADgwJqZKUBmZma+AADgwGZmFkBmZmY+AADgQGZmFkBmZma+AADgQGZmFkBmZmY+AADgwGZmFkBmZma+AADgQJqZKUBmZmY+AADgwJqZKUBmZma+AADgQJqZKUBmZma+AADgwJqZKUBmZmY+AADgQGZmFkBmZmY+AADgwGZmFkBmZma+AADgQGZmFkBmZma+AADgwGZmFkBmZmY+AADgQJqZKUBmZmY+AADgwGZmFkBmZmY+AADgwJqZKUBmZmY+AADgQGZmFkBmZmY+AADgQJqZKUBmZma+AADgwGZmFkBmZma+AADgwJqZKUBmZma+AADgQGZmFkBmZma+AADgwM3M9EBmZmY+AADgQM3M9EBmZma+AADgQM3M9EBmZmY+AADgwM3M9EBmZma+AADgwDMz60BmZmY+AADgQDMz60BmZma+AADgQDMz60BmZmY+AADgwDMz60BmZma+AADgQM3M9EBmZmY+AADgwM3M9EBmZma+AADgQM3M9EBmZma+AADgwM3M9EBmZmY+AADgQDMz60BmZmY+AADgwDMz60BmZma+AADgQDMz60BmZma+AADgwDMz60BmZmY+AADgQM3M9EBmZmY+AADgwDMz60BmZmY+AADgwM3M9EBmZmY+AADgQDMz60BmZmY+AADgQM3M9EBmZma+AADgwDMz60BmZma+AADgwM3M9EBmZma+AADgQDMz60BmZma+AADgwGZmSkFmZmY+AADgQGZmSkFmZma+AADgQGZmSkFmZmY+AADgwGZmSkFmZma+AADgwJqZRUFmZmY+AADgQJqZRUFmZma+AADgQJqZRUFmZmY+AADgwJqZRUFmZma+AADgQGZmSkFmZmY+AADgwGZmSkFmZma+AADgQGZmSkFmZma+AADgwGZmSkFmZmY+AADgQJqZRUFmZmY+AADgwJqZRUFmZma+AADgQJqZRUFmZma+AADgwJqZRUFmZmY+AADgQGZmSkFmZmY+AADgwJqZRUFmZmY+AADgwGZmSkFmZmY+AADgQJqZRUFmZmY+AADgQGZmSkFmZma+AADgwJqZRUFmZma+AADgwGZmSkFmZma+AADgQJqZRUFmZma+/3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+/")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_34"]
+size = Vector3(3, 15, 3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_35"]
+size = Vector3(3, 15, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_36"]
+size = Vector3(3, 15, 3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_37"]
+size = Vector3(3, 15, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_38"]
+size = Vector3(3, 15, 3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_39"]
+size = Vector3(3, 15, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_40"]
+size = Vector3(3, 15, 3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_41"]
+size = Vector3(3, 15, 3)
+
+[node name="Valley" type="Node3D"]
+script = ExtResource("1_eea46")
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.81915206, 0.43938506, -0.36868784, 0, 0.64278764, 0.76604444, 0.57357645, -0.62750685, 0.5265408, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_mode = 1
+directional_shadow_max_distance = 120.0
+
+[node name="Districts" type="Node3D" parent="."]
+
+[node name="hollow" type="Node3D" parent="Districts" instance=ExtResource("2_07c2e")]
+
+[node name="forest" type="Node3D" parent="Districts" instance=ExtResource("3_e9c38")]
+
+[node name="barrow" type="Node3D" parent="Districts" instance=ExtResource("4_180f7")]
+
+[node name="village" type="Node3D" parent="Districts" instance=ExtResource("5_8d220")]
+
+[node name="quarry" type="Node3D" parent="Districts" instance=ExtResource("6_c2713")]
+
+[node name="ruins" type="Node3D" parent="Districts" instance=ExtResource("7_656f0")]
+
+[node name="kingsfall" type="Node3D" parent="Districts" instance=ExtResource("8_432ab")]
+
+[node name="hills" type="Node3D" parent="Districts" instance=ExtResource("9_122f3")]
+
+[node name="Navigation" type="Node3D" parent="."]
+
+[node name="Human" type="NavigationRegion3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
+navigation_mesh = ExtResource("10_88954")
+use_edge_connections = false
+
+[node name="Large" type="NavigationRegion3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.35, 0)
+navigation_mesh = ExtResource("11_3697a")
+use_edge_connections = false
+navigation_layers = 2
+
+[node name="Giant" type="NavigationRegion3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+navigation_mesh = ExtResource("12_10822")
+use_edge_connections = false
+navigation_layers = 4
+
+[node name="SmallGiant" type="NavigationRegion3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+navigation_mesh = ExtResource("13_43fed")
+use_edge_connections = false
+navigation_layers = 8
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="valley_hollow_fence_pen" type="StaticBody3D" parent="Props" instance=ExtResource("14_24ab9")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -105, 0, 135)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.hollow.fence_pen"
+
+[node name="valley_grove_cairn" type="StaticBody3D" parent="Props" instance=ExtResource("16_4deb6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42, 6, -88)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.grove.cairn"
+
+[node name="valley_forest_deadfall" type="StaticBody3D" parent="Props" instance=ExtResource("17_62b64")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0, -112)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.deadfall"
+
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/valley_forest_deadfall"]
+enabled = false
+start_position = Vector3(0, 0.35, 4.4)
+end_position = Vector3(0, 0.35, -4.4)
+
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/valley_forest_deadfall"]
+enabled = false
+navigation_layers = 2
+start_position = Vector3(0, 0.15, 4.4)
+end_position = Vector3(0, 0.15, -4.4)
+
+[node name="NavLinkGiant" type="NavigationLink3D" parent="Props/valley_forest_deadfall"]
+enabled = false
+navigation_layers = 4
+start_position = Vector3(0, 0, 4.4)
+end_position = Vector3(0, 0, -4.4)
+
+[node name="NavLinkSmallGiant" type="NavigationLink3D" parent="Props/valley_forest_deadfall"]
+enabled = false
+navigation_layers = 8
+start_position = Vector3(0, 0.25, 4.4)
+end_position = Vector3(0, 0.25, -4.4)
+
+[node name="valley_forest_oak_barrow" type="Node3D" parent="Props" instance=ExtResource("18_20cb3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, -110)
+script = ExtResource("19_24bad")
+world_id = "valley.forest.oak_barrow"
+prompt = "Uproot"
+priority = 45
+
+[node name="valley_village_fence_01" type="StaticBody3D" parent="Props" instance=ExtResource("14_24ab9")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 10)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.village.fence_01"
+
+[node name="valley_village_fence_02" type="StaticBody3D" parent="Props" instance=ExtResource("14_24ab9")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70, 0, 10)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.village.fence_02"
+
+[node name="valley_village_fence_03" type="StaticBody3D" parent="Props" instance=ExtResource("14_24ab9")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 5, 0, -10)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.village.fence_03"
+
+[node name="valley_village_fence_04" type="StaticBody3D" parent="Props" instance=ExtResource("14_24ab9")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, -50)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.village.fence_04"
+
+[node name="valley_village_barricade" type="StaticBody3D" parent="Props" instance=ExtResource("20_a609d")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 96, 0, -20)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.village.barricade"
+
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/valley_village_barricade"]
+enabled = false
+start_position = Vector3(0, 0.35, 4.2)
+end_position = Vector3(0, 0.35, -4.2)
+
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/valley_village_barricade"]
+enabled = false
+navigation_layers = 2
+start_position = Vector3(0, 0.15, 4.2)
+end_position = Vector3(0, 0.15, -4.2)
+
+[node name="NavLinkGiant" type="NavigationLink3D" parent="Props/valley_village_barricade"]
+enabled = false
+navigation_layers = 4
+start_position = Vector3(0, 0, 4.2)
+end_position = Vector3(0, 0, -4.2)
+
+[node name="NavLinkSmallGiant" type="NavigationLink3D" parent="Props/valley_village_barricade"]
+enabled = false
+navigation_layers = 8
+start_position = Vector3(0, 0.25, 4.2)
+end_position = Vector3(0, 0.25, -4.2)
+
+[node name="valley_ruins_practice_gate" type="StaticBody3D" parent="Props" instance=ExtResource("21_f1734")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 125, 0, -20)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.ruins.practice_gate"
+
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/valley_ruins_practice_gate"]
+enabled = false
+start_position = Vector3(0, 0.35, 3.4)
+end_position = Vector3(0, 0.35, -3.4)
+
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/valley_ruins_practice_gate"]
+enabled = false
+navigation_layers = 2
+start_position = Vector3(0, 0.15, 3.4)
+end_position = Vector3(0, 0.15, -3.4)
+
+[node name="NavLinkGiant" type="NavigationLink3D" parent="Props/valley_ruins_practice_gate"]
+enabled = false
+navigation_layers = 4
+start_position = Vector3(0, 0, 3.4)
+end_position = Vector3(0, 0, -3.4)
+
+[node name="NavLinkSmallGiant" type="NavigationLink3D" parent="Props/valley_ruins_practice_gate"]
+enabled = false
+navigation_layers = 8
+start_position = Vector3(0, 0.25, 3.4)
+end_position = Vector3(0, 0.25, -3.4)
+
+[node name="valley_ruins_citadel_gate" type="StaticBody3D" parent="Props" instance=ExtResource("22_66b76")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 190, 0, -60)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.ruins.citadel_gate"
+
+[node name="valley_quarry_chest" type="StaticBody3D" parent="Props" instance=ExtResource("23_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -165)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.quarry.chest"
+loot_table = "loot.crate_quarry"
+
+[node name="valley_ruins_armory_crate" type="StaticBody3D" parent="Props" instance=ExtResource("23_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 172, 0, -98)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.ruins.armory_crate"
+loot_table = "loot.crate_armory"
+
+[node name="valley_kingsfall_oak" type="Node3D" parent="Props" instance=ExtResource("18_20cb3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 175, 0, 45)
+script = ExtResource("19_24bad")
+world_id = "valley.kingsfall.oak"
+prompt = "Uproot"
+priority = 45
+
+[node name="valley_quarry_hammer_rack" type="Node3D" parent="Props" instance=ExtResource("24_2400b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 0, -166)
+script = ExtResource("25_9d4a3")
+world_id = "valley.quarry.hammer_rack"
+weapon_id = "weapon.hammer"
+prompt = "Take"
+radius_m = 3.0
+priority = 45
+
+[node name="valley_ruins_sword_rack" type="Node3D" parent="Props" instance=ExtResource("24_2400b")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 180, 0, -100)
+script = ExtResource("25_9d4a3")
+world_id = "valley.ruins.sword_rack"
+prompt = "Take"
+radius_m = 3.0
+priority = 45
+
+[node name="valley_quarry_cache" type="Node3D" parent="Props" instance=ExtResource("26_ddeb9")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -158)
+script = ExtResource("27_3b229")
+world_id = "valley.quarry.cache"
+item_id = "item.supply_cache"
+prompt = "Take"
+radius_m = 3.0
+priority = 45
+
+[node name="valley_barrow_crown" type="Node3D" parent="Props" instance=ExtResource("26_ddeb9")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 0.12, -172)
+script = ExtResource("27_3b229")
+world_id = "valley.barrow.crown"
+item_id = "item.crown_first_king"
+set_flag = "slice.crown_claimed"
+prompt = "Take"
+radius_m = 3.0
+priority = 45
+
+[node name="valley_village_forge" type="Node3D" parent="Props" instance=ExtResource("28_34b2a")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 40, 0, 2)
+script = ExtResource("29_f9160")
+world_id = "valley.village.forge"
+display_name = "Thornwick Smithy"
+requires_flags = PackedStringArray()
+requires_flag_values = {
+"quest.village.outcome": ["help_cache", "help_ogre"]
+}
+prompt = "Reforge"
+radius_m = 4.5
+priority = 45
+
+[node name="valley_ruins_giantforge" type="Node3D" parent="Props" instance=ExtResource("28_34b2a")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 175, 0, -104)
+script = ExtResource("29_f9160")
+world_id = "valley.ruins.giantforge"
+display_name = "The Giantforge"
+requires_flags = PackedStringArray()
+prompt = "Reforge"
+radius_m = 4.5
+priority = 45
+
+[node name="valley_forest_tree_01" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -131, 0, 86)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_01"
+
+[node name="valley_forest_tree_02" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(0.79863554, 0, 0.601815, 0, 1, 0, -0.601815, 0, 0.79863554, -149, 0, 74)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_02"
+
+[node name="valley_forest_tree_03" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(0.2756374, 0, 0.9612617, 0, 1, 0, -0.9612617, 0, 0.2756374, -127, 0, 36.7)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_03"
+
+[node name="valley_forest_tree_04" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(-0.35836795, 0, 0.93358046, 0, 1, 0, -0.93358046, 0, -0.35836795, -134.2, 0, 15)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_04"
+
+[node name="valley_forest_tree_05" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(-0.84804803, 0, 0.5299193, 0, 1, 0, -0.5299193, 0, -0.84804803, -110.3, 0, 11.7)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_05"
+
+[node name="valley_forest_tree_06" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(-0.9961947, 0, -0.08715581, 0, 1, 0, 0.08715581, 0, -0.9961947, -118.6, 0, -8.3)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_06"
+
+[node name="valley_forest_tree_07" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(-0.7431448, 0, -0.6691306, 0, 1, 0, 0.6691306, 0, -0.7431448, -108.7, 0, -23.2)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_07"
+
+[node name="valley_forest_tree_08" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(-0.19080885, 0, -0.9816272, 0, 1, 0, 0.9816272, 0, -0.19080885, -84.8, 0, -26.6)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_08"
+
+[node name="valley_forest_tree_09" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(0.438371, 0, -0.8987941, 0, 1, 0, 0.8987941, 0, 0.438371, -86.5, 0, -54.7)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_09"
+
+[node name="valley_forest_tree_10" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(0.8910065, 0, -0.45399052, 0, 1, 0, 0.45399052, 0, 0.8910065, -63.8, 0, -53.5)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_10"
+
+[node name="valley_forest_tree_11" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, -66.4, 0, -76.4)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_11"
+
+[node name="valley_forest_tree_12" type="StaticBody3D" parent="Props" instance=ExtResource("30_46f38")]
+transform = Transform3D(0.6819984, 0, 0.7313537, 0, 1, 0, -0.7313537, 0, 0.6819984, -53.6, 0, -63.6)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("15_5fc47")
+world_id = "valley.forest.tree_12"
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="valley_shrine_hollow" type="Node3D" parent="Shrines" instance=ExtResource("31_f6def")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -130, 0, 145)
+script = ExtResource("32_e36fc")
+world_id = "valley.shrine.hollow"
+shrine_id = "shrine.hollow"
+prompt = "Rest"
+radius_m = 4.0
+priority = 40
+
+[node name="valley_shrine_grove" type="Node3D" parent="Shrines" instance=ExtResource("31_f6def")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 0, -70)
+script = ExtResource("32_e36fc")
+world_id = "valley.shrine.grove"
+shrine_id = "shrine.grove"
+prompt = "Rest"
+radius_m = 4.0
+priority = 40
+
+[node name="valley_shrine_thornwick" type="Node3D" parent="Shrines" instance=ExtResource("31_f6def")]
+transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 14, 0, -26)
+script = ExtResource("32_e36fc")
+world_id = "valley.shrine.thornwick"
+shrine_id = "shrine.thornwick"
+prompt = "Rest"
+radius_m = 4.0
+priority = 40
+
+[node name="valley_shrine_kingsfall" type="Node3D" parent="Shrines" instance=ExtResource("31_f6def")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 55)
+script = ExtResource("32_e36fc")
+world_id = "valley.shrine.kingsfall"
+shrine_id = "shrine.kingsfall"
+prompt = "Rest"
+radius_m = 4.0
+priority = 40
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="valley_cp_forest_road" type="Marker3D" parent="Waystones"]
+transform = Transform3D(0.8290376, 0, -0.5591929, 0, 1, 0, 0.5591929, 0, 0.8290376, -140, 0.05, 38)
+script = ExtResource("33_add9b")
+requires_flags = PackedStringArray("encounter.forest_wolves_a.cleared")
+checkpoint_id = "valley.cp.forest_road"
+
+[node name="Stone" type="StaticBody3D" parent="Waystones/valley_cp_forest_road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 2, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Waystones/valley_cp_forest_road/Stone"]
+shape = SubResource("BoxShape3D_2")
+
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/valley_cp_forest_road/Stone"]
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_4")
+
+[node name="Cap" type="MeshInstance3D" parent="Waystones/valley_cp_forest_road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 4.2, 0)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_6")
+
+[node name="Glow" type="MeshInstance3D" parent="Waystones/valley_cp_forest_road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 4.8, 0)
+visible = false
+material_override = SubResource("StandardMaterial3D_7")
+mesh = SubResource("BoxMesh_8")
+
+[node name="valley_cp_ruins_gate" type="Marker3D" parent="Waystones"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 134, 0.05, -18)
+script = ExtResource("33_add9b")
+requires_flags = PackedStringArray("world.ruins.gate_broken")
+checkpoint_id = "valley.cp.ruins_gate"
+
+[node name="Stone" type="StaticBody3D" parent="Waystones/valley_cp_ruins_gate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Waystones/valley_cp_ruins_gate/Stone"]
+shape = SubResource("BoxShape3D_9")
+
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/valley_cp_ruins_gate/Stone"]
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_10")
+
+[node name="Cap" type="MeshInstance3D" parent="Waystones/valley_cp_ruins_gate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 4.2, 0)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_11")
+
+[node name="Glow" type="MeshInstance3D" parent="Waystones/valley_cp_ruins_gate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 4.8, 0)
+visible = false
+material_override = SubResource("StandardMaterial3D_7")
+mesh = SubResource("BoxMesh_12")
+
+[node name="valley_cp_barrow_gap" type="Marker3D" parent="Waystones"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0.05, -122)
+script = ExtResource("33_add9b")
+requires_flags = PackedStringArray("world.forest.deadfall_broken")
+checkpoint_id = "valley.cp.barrow_gap"
+
+[node name="Stone" type="StaticBody3D" parent="Waystones/valley_cp_barrow_gap"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 2, 2)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Waystones/valley_cp_barrow_gap/Stone"]
+shape = SubResource("BoxShape3D_13")
+
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/valley_cp_barrow_gap/Stone"]
+material_override = SubResource("StandardMaterial3D_3")
+mesh = SubResource("BoxMesh_14")
+
+[node name="Cap" type="MeshInstance3D" parent="Waystones/valley_cp_barrow_gap"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 4.2, 2)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_15")
+
+[node name="Glow" type="MeshInstance3D" parent="Waystones/valley_cp_barrow_gap"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 4.8, 2)
+visible = false
+material_override = SubResource("StandardMaterial3D_7")
+mesh = SubResource("BoxMesh_16")
+
+[node name="Dummies" type="Node3D" parent="."]
+
+[node name="valley_hollow_dummy_1" type="StaticBody3D" parent="Dummies" instance=ExtResource("34_92864")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -118, 0, 160)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("35_238a0")
+entity_id = "valley.hollow.dummy_1"
+
+[node name="valley_hollow_dummy_2" type="StaticBody3D" parent="Dummies" instance=ExtResource("34_92864")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -112, 0, 150)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("35_238a0")
+entity_id = "valley.hollow.dummy_2"
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="valley_marker_dummies" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -115, 0, 155)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.dummies"
+
+[node name="valley_marker_sparring_post" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -108, 0, 160)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.sparring_post"
+
+[node name="valley_marker_forest_trail" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -140, 0, 108)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.forest_trail"
+
+[node name="valley_marker_wolves_a" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -142, 0, 55)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.wolves_a"
+
+[node name="valley_marker_hunters" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, 10)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.hunters"
+
+[node name="valley_marker_ogre_clearing" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, -35)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ogre_clearing"
+
+[node name="valley_marker_grove_shrine" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 0, -76.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.grove_shrine"
+
+[node name="valley_marker_cairn" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42, 6, -88)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.cairn"
+
+[node name="valley_marker_village_gate" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -40)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.village_gate"
+
+[node name="valley_marker_elder" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, -40)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.elder"
+
+[node name="valley_marker_quarry_cache" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -154)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.quarry_cache"
+
+[node name="valley_marker_field_ogre" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, 55)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.field_ogre"
+
+[node name="valley_marker_bridge" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106, 0, -20)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.bridge"
+
+[node name="valley_marker_practice_gate" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 118, 0, -20)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.practice_gate"
+
+[node name="valley_marker_ruins_courtyard" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 0, -50)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ruins_courtyard"
+
+[node name="valley_marker_causeway" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 155, 0, 15)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.causeway"
+
+[node name="valley_marker_kingsfall_shrine" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 48.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.kingsfall_shrine"
+
+[node name="valley_marker_arena_center" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 135)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.arena_center"
+
+[node name="valley_marker_kingsfall_oak" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 175, 0, 39)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.kingsfall_oak"
+
+[node name="valley_marker_deadfall" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0, -104)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.deadfall"
+
+[node name="valley_marker_crown" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 0, -170)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.crown"
+
+[node name="Formation" type="Node3D" parent="Markers"]
+
+[node name="valley_marker_guard_post_1" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0, -28)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.guard_post_1"
+kind = 3
+faction = "village"
+
+[node name="valley_marker_guard_post_2" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0, -12)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.guard_post_2"
+kind = 3
+faction = "village"
+
+[node name="valley_marker_guard_post_3" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0, -26)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.guard_post_3"
+kind = 3
+faction = "village"
+
+[node name="valley_marker_guard_post_4" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0, -14)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.guard_post_4"
+kind = 3
+faction = "village"
+
+[node name="valley_marker_road_line_1" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -46)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.road_line_1"
+kind = 3
+
+[node name="valley_marker_road_line_2" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -52)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.road_line_2"
+kind = 3
+
+[node name="valley_marker_quarry_line_1" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0, -138)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.quarry_line_1"
+kind = 3
+
+[node name="valley_marker_quarry_line_2" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -136)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.quarry_line_2"
+kind = 3
+
+[node name="valley_marker_quarry_line_3" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 0, -138)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.quarry_line_3"
+kind = 3
+
+[node name="valley_marker_ruins_line_1" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 137, 0, -27)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ruins_line_1"
+kind = 3
+
+[node name="valley_marker_ruins_line_2" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 137, 0, -13)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ruins_line_2"
+kind = 3
+
+[node name="valley_marker_ruins_line_3" type="Marker3D" parent="Markers/Formation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 0, -40)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ruins_line_3"
+kind = 3
+
+[node name="Safe" type="Node3D" parent="Markers"]
+
+[node name="valley_marker_safe_house_1" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, -39.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.safe_house_1"
+kind = 4
+
+[node name="valley_marker_safe_house_2" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, -39.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.safe_house_2"
+kind = 4
+
+[node name="valley_marker_safe_house_3" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -3.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.safe_house_3"
+kind = 4
+
+[node name="valley_marker_safe_house_4" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, -5.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.safe_house_4"
+kind = 4
+
+[node name="valley_marker_safe_house_5" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, 0.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.safe_house_5"
+kind = 4
+
+[node name="valley_marker_safe_house_6" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 69.5, 0, 0.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.safe_house_6"
+kind = 4
+
+[node name="Elevation" type="Node3D" parent="Markers"]
+
+[node name="valley_marker_tower" type="Marker3D" parent="Markers/Elevation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75, 6, -40)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.tower"
+kind = 2
+
+[node name="valley_marker_quarry_ledge" type="Marker3D" parent="Markers/Elevation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 5, -165)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.quarry_ledge"
+kind = 2
+
+[node name="valley_marker_ruins_wall_w" type="Marker3D" parent="Markers/Elevation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 140, 5, -80)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ruins_wall_w"
+kind = 2
+
+[node name="valley_marker_ruins_wall_e" type="Marker3D" parent="Markers/Elevation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 180, 5, -20)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ruins_wall_e"
+kind = 2
+
+[node name="valley_marker_ruins_gate_wall" type="Marker3D" parent="Markers/Elevation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 6, -34)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ruins_gate_wall"
+kind = 2
+
+[node name="Cover" type="Node3D" parent="Markers"]
+
+[node name="valley_marker_ruins_cover_1" type="Marker3D" parent="Markers/Cover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, -68.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ruins_cover_1"
+kind = 1
+
+[node name="valley_marker_ruins_cover_2" type="Marker3D" parent="Markers/Cover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 170, 0, -62.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ruins_cover_2"
+kind = 1
+
+[node name="valley_marker_ruins_cover_3" type="Marker3D" parent="Markers/Cover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 142.5, 0, -36)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ruins_cover_3"
+kind = 1
+
+[node name="valley_marker_ruins_cover_4" type="Marker3D" parent="Markers/Cover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 174.5, 0, -36)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.ruins_cover_4"
+kind = 1
+
+[node name="valley_marker_quarry_cover_1" type="Marker3D" parent="Markers/Cover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, -148.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.quarry_cover_1"
+kind = 1
+
+[node name="valley_marker_quarry_cover_2" type="Marker3D" parent="Markers/Cover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0, -152.5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.quarry_cover_2"
+kind = 1
+
+[node name="BotRoute" type="Node3D" parent="Markers"]
+
+[node name="valley_marker_bot_route_village_1" type="Marker3D" parent="Markers/BotRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -40)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.bot_route_village_1"
+kind = 6
+
+[node name="valley_marker_bot_route_village_2" type="Marker3D" parent="Markers/BotRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, -20)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.bot_route_village_2"
+kind = 6
+
+[node name="valley_marker_bot_route_village_3" type="Marker3D" parent="Markers/BotRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85, 0, -20)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.bot_route_village_3"
+kind = 6
+
+[node name="valley_marker_bot_route_village_4" type="Marker3D" parent="Markers/BotRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106, 0, -20)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.bot_route_village_4"
+kind = 6
+
+[node name="valley_marker_bot_route_ruins_1" type="Marker3D" parent="Markers/BotRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 118, 0, -20)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.bot_route_ruins_1"
+kind = 6
+
+[node name="valley_marker_bot_route_ruins_2" type="Marker3D" parent="Markers/BotRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 140, 0, -20)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.bot_route_ruins_2"
+kind = 6
+
+[node name="valley_marker_bot_route_ruins_3" type="Marker3D" parent="Markers/BotRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 155, 0, -5)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.bot_route_ruins_3"
+kind = 6
+
+[node name="valley_marker_bot_route_ruins_4" type="Marker3D" parent="Markers/BotRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 155, 0, 15)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.bot_route_ruins_4"
+kind = 6
+
+[node name="valley_marker_bot_route_ruins_5" type="Marker3D" parent="Markers/BotRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 40)
+script = ExtResource("36_acc12")
+marker_id = "valley.marker.bot_route_ruins_5"
+kind = 6
+
+[node name="Patrol" type="Node3D" parent="Markers"]
+
+[node name="valley_patrol_wolves_a" type="Node3D" parent="Markers/Patrol"]
+metadata/route_id = "valley.patrol.wolves_a"
+
+[node name="1" type="Marker3D" parent="Markers/Patrol/valley_patrol_wolves_a"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -150, 0, 47)
+
+[node name="2" type="Marker3D" parent="Markers/Patrol/valley_patrol_wolves_a"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -134, 0, 46)
+
+[node name="3" type="Marker3D" parent="Markers/Patrol/valley_patrol_wolves_a"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -134, 0, 63)
+
+[node name="4" type="Marker3D" parent="Markers/Patrol/valley_patrol_wolves_a"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -150, 0, 63)
+
+[node name="valley_patrol_road" type="Node3D" parent="Markers/Patrol"]
+metadata/route_id = "valley.patrol.road"
+
+[node name="1" type="Marker3D" parent="Markers/Patrol/valley_patrol_road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0, -55)
+
+[node name="2" type="Marker3D" parent="Markers/Patrol/valley_patrol_road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -46)
+
+[node name="valley_patrol_quarry" type="Node3D" parent="Markers/Patrol"]
+metadata/route_id = "valley.patrol.quarry"
+
+[node name="1" type="Marker3D" parent="Markers/Patrol/valley_patrol_quarry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -145)
+
+[node name="2" type="Marker3D" parent="Markers/Patrol/valley_patrol_quarry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0, -145)
+
+[node name="3" type="Marker3D" parent="Markers/Patrol/valley_patrol_quarry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0, -135)
+
+[node name="4" type="Marker3D" parent="Markers/Patrol/valley_patrol_quarry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -135)
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="valley_area_hollow_start" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -150, 0, 170)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.hollow_start"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_hollow_start"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+shape = SubResource("CylinderShape3D_17")
+
+[node name="valley_area_hollow_dummies" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -115, 0, 155)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.hollow_dummies"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_hollow_dummies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+shape = SubResource("CylinderShape3D_18")
+
+[node name="valley_area_forest_edge" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -140, 0, 95)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.forest_edge"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_forest_edge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+shape = SubResource("BoxShape3D_19")
+
+[node name="valley_area_forest_hunters" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, 10)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.forest_hunters"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_forest_hunters"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+shape = SubResource("CylinderShape3D_20")
+
+[node name="valley_area_ogre_clearing" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, -35)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.ogre_clearing"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_ogre_clearing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+shape = SubResource("CylinderShape3D_21")
+
+[node name="valley_area_grove" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 0, -75)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.grove"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_grove"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+shape = SubResource("CylinderShape3D_22")
+
+[node name="valley_area_village" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -40)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.village"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_village"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+shape = SubResource("BoxShape3D_23")
+
+[node name="valley_area_quarry" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -110)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.quarry"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_quarry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+shape = SubResource("BoxShape3D_24")
+
+[node name="valley_area_fields" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, 15)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.fields"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_fields"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+shape = SubResource("BoxShape3D_25")
+
+[node name="valley_area_ruins_approach" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 118, 0, -20)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.ruins_approach"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_ruins_approach"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+shape = SubResource("BoxShape3D_26")
+
+[node name="valley_area_ruins_courtyard" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 0, -50)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.ruins_courtyard"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_ruins_courtyard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
+shape = SubResource("CylinderShape3D_27")
+
+[node name="valley_area_causeway" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 155, 0, 15)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.causeway"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_causeway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+shape = SubResource("BoxShape3D_28")
+
+[node name="valley_area_arena_engage" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 97.8)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.arena_engage"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_arena_engage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
+shape = SubResource("BoxShape3D_29")
+
+[node name="valley_area_barrow" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 0, -160)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("37_5575d")
+area_id = "valley.area.barrow"
+
+[node name="Shape" type="CollisionShape3D" parent="Triggers/valley_area_barrow"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
+shape = SubResource("BoxShape3D_30")
+
+[node name="Kingsfall" type="Node3D" parent="."]
+
+[node name="ArenaGate" type="StaticBody3D" parent="Kingsfall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 94.6)
+visible = false
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Kingsfall/ArenaGate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.5, 0)
+shape = SubResource("BoxShape3D_31")
+disabled = true
+
+[node name="Bars" type="Node3D" parent="Kingsfall/ArenaGate"]
+
+[node name="Merged" type="MeshInstance3D" parent="Kingsfall/ArenaGate/Bars"]
+mesh = SubResource("ArrayMesh_33")
+
+[node name="Pillars" type="Node3D" parent="Kingsfall"]
+
+[node name="Pillar1" type="StaticBody3D" parent="Kingsfall/Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 165.55635, 7.5, 150.55635)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Kingsfall/Pillars/Pillar1"]
+shape = SubResource("BoxShape3D_34")
+
+[node name="Mesh" type="MeshInstance3D" parent="Kingsfall/Pillars/Pillar1"]
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_35")
+
+[node name="Pillar2" type="StaticBody3D" parent="Kingsfall/Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 134.44365, 7.5, 150.55635)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Kingsfall/Pillars/Pillar2"]
+shape = SubResource("BoxShape3D_36")
+
+[node name="Mesh" type="MeshInstance3D" parent="Kingsfall/Pillars/Pillar2"]
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_37")
+
+[node name="Pillar3" type="StaticBody3D" parent="Kingsfall/Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 134.44365, 7.5, 119.44365)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Kingsfall/Pillars/Pillar3"]
+shape = SubResource("BoxShape3D_38")
+
+[node name="Mesh" type="MeshInstance3D" parent="Kingsfall/Pillars/Pillar3"]
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_39")
+
+[node name="Pillar4" type="StaticBody3D" parent="Kingsfall/Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 165.55635, 7.5, 119.44365)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Kingsfall/Pillars/Pillar4"]
+shape = SubResource("BoxShape3D_40")
+
+[node name="Mesh" type="MeshInstance3D" parent="Kingsfall/Pillars/Pillar4"]
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_41")
+
+[node name="BossArena" type="Node3D" parent="Kingsfall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 135)
+script = ExtResource("38_af80f")
+antechamber_rect = Rect2(-7, -67, 14, 28)
+
+[node name="Signs" type="Node3D" parent="."]
+
+[node name="SignGiant\'s" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -146, 5, 158)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "GIANT'S HOLLOW"
+font_size = 64
+
+[node name="SignOld" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -140, 5.5, 118)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "OLD WOOD - north"
+font_size = 64
+
+[node name="SignThe" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -66, 5.5, -64)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "THE GROVE"
+font_size = 64
+
+[node name="SignThornwick" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 6, -40)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "THORNWICK"
+font_size = 64
+
+[node name="SignRaider" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 6, -96)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "RAIDER QUARRY"
+font_size = 64
+
+[node name="SignKing\'s" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 94, 6, -28)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "KING'S BRIDGE"
+font_size = 64
+
+[node name="SignRuins" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 118, 7, -31)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "RUINS OF THE BROKEN KINGS"
+font_size = 64
+
+[node name="SignKingsfall" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 7, 26)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "KINGSFALL"
+font_size = 64
+
+[node name="SignBarrow" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 6, -128)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "BARROW OF THE FIRST KING"
+font_size = 64
+
+[node name="SignPrototype" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -156, 4.5, 160)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "PROTOTYPE PACING: ACCELERATED QUEST XP"
+font_size = 64
+
+[node name="SignSealed" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 183, 7, -60)
+visibility_range_begin = 7.0
+visibility_range_end = 60.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "SEALED — STAGE 4"
+font_size = 64
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+transform = Transform3D(0.948876, 0, -0.31564903, 0, 1, 0, 0.31564903, 0, 0.948876, -150, 0.05, 170)
+
+[node name="Spawned" type="Node3D" parent="."]
+
+[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("39_627ae")]
+transform = Transform3D(0.948876, 0, -0.31564903, 0, 1, 0, 0.31564903, 0, 0.948876, -150, 0.05, 170)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("40_7ef4a")
+
+[node name="EncounterDirector" type="Node" parent="."]
+script = ExtResource("41_b0840")
+
+[node name="DebrisPool" type="Node3D" parent="."]
+script = ExtResource("42_ce070")

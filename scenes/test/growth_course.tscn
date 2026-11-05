@@ -1,0 +1,429 @@
+[gd_scene format=3]
+
+[ext_resource type="Shader" path="res://assets/shaders/ground_checker.gdshader" id="1_49689"]
+[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="2_f6def"]
+[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="3_e36fc"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="4_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="5_7ef4a"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
+sky_top_color = Color(0.33, 0.5, 0.78, 1)
+sky_horizon_color = Color(0.72, 0.78, 0.86, 1)
+ground_bottom_color = Color(0.22, 0.22, 0.2, 1)
+ground_horizon_color = Color(0.62, 0.64, 0.62, 1)
+
+[sub_resource type="Sky" id="Sky_2"]
+sky_material = SubResource("ProceduralSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_3"]
+background_mode = 2
+sky = SubResource("Sky_2")
+ambient_light_source = 2
+ambient_light_color = Color(0.6, 0.62, 0.68, 1)
+ambient_light_energy = 0.55
+tonemap_mode = 2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(90, 1, 200)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_5"]
+render_priority = 0
+shader = ExtResource("1_49689")
+shader_parameter/color_a = null
+shader_parameter/color_b = null
+shader_parameter/line_color = null
+shader_parameter/cell_size = null
+shader_parameter/line_width = null
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_6"]
+size = Vector2(90, 200)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(17.5, 14, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8"]
+albedo_color = Color(0.52, 0.52, 0.55, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(17.5, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(17.5, 14, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(17.5, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_12"]
+size = Vector3(5, 4.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
+size = Vector3(5, 4.5, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_14"]
+size = Vector3(1, 9.6, 10)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_15"]
+albedo_color = Color(0.38, 0.38, 0.42, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_16"]
+size = Vector3(1, 9.6, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_17"]
+size = Vector3(1, 9.6, 10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_18"]
+size = Vector3(1, 9.6, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_19"]
+size = Vector3(10, 1, 10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_20"]
+size = Vector3(10, 1, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_21"]
+size = Vector3(10, 0.4, 11.695217)
+
+[sub_resource type="BoxMesh" id="BoxMesh_22"]
+size = Vector3(10, 0.4, 11.695217)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_23"]
+size = Vector3(10, 4, 12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_24"]
+size = Vector3(10, 4, 12)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_25"]
+size = Vector3(10, 0.4, 11.695217)
+
+[sub_resource type="BoxMesh" id="BoxMesh_26"]
+size = Vector3(10, 0.4, 11.695217)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_27"]
+size = Vector3(1, 12, 26)
+
+[sub_resource type="BoxMesh" id="BoxMesh_28"]
+size = Vector3(1, 12, 26)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_29"]
+size = Vector3(1, 6.6, 10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_30"]
+size = Vector3(1, 6.6, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_31"]
+size = Vector3(10, 6.6, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_32"]
+size = Vector3(10, 6.6, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_33"]
+size = Vector3(10, 6.6, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_34"]
+size = Vector3(10, 6.6, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_35"]
+size = Vector3(10, 0.6, 10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_36"]
+size = Vector3(10, 0.6, 10)
+
+[node name="GrowthCourse" type="Node3D"]
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_3")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8480481, 0.41758206, -0.32625088, 0, 0.6156615, 0.7880107, 0.52991927, -0.668271, 0.5221106, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_max_distance = 90.0
+
+[node name="Ground" type="StaticBody3D" parent="."]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -45)
+shape = SubResource("BoxShape3D_4")
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -45)
+material_override = SubResource("ShaderMaterial_5")
+mesh = SubResource("PlaneMesh_6")
+
+[node name="Features" type="Node3D" parent="."]
+
+[node name="DoorwayLeft" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.25, 7, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/DoorwayLeft"]
+shape = SubResource("BoxShape3D_7")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/DoorwayLeft"]
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_9")
+
+[node name="DoorwayRight" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.25, 7, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/DoorwayRight"]
+shape = SubResource("BoxShape3D_10")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/DoorwayRight"]
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_11")
+
+[node name="DoorwayLintel" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.75, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/DoorwayLintel"]
+shape = SubResource("BoxShape3D_12")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/DoorwayLintel"]
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_13")
+
+[node name="PassageWallW" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 4.8, -25)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/PassageWallW"]
+shape = SubResource("BoxShape3D_14")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/PassageWallW"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_16")
+
+[node name="PassageWallE" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 4.8, -25)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/PassageWallE"]
+shape = SubResource("BoxShape3D_17")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/PassageWallE"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_18")
+
+[node name="PassageRoof" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.1, -25)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/PassageRoof"]
+shape = SubResource("BoxShape3D_19")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/PassageRoof"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_20")
+
+[node name="RampUp" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 0.9396926, -0.34202012, 0, 0.34202012, 0.9396926, 0, 1.8120614, -45.56336)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/RampUp"]
+shape = SubResource("BoxShape3D_21")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/RampUp"]
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_22")
+
+[node name="Platform" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -57)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/Platform"]
+shape = SubResource("BoxShape3D_23")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/Platform"]
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_24")
+
+[node name="RampDown" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 0.9396926, 0.34202012, 0, -0.34202012, 0.9396926, 0, 1.8120614, -68.42655)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/RampDown"]
+shape = SubResource("BoxShape3D_25")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/RampDown"]
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_26")
+
+[node name="LaneWall" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 6, -95)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/LaneWall"]
+shape = SubResource("BoxShape3D_27")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/LaneWall"]
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_28")
+
+[node name="TrapBack" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.5, 3.3, 25)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/TrapBack"]
+shape = SubResource("BoxShape3D_29")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/TrapBack"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_30")
+
+[node name="TrapSideN" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.3, 20.5)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/TrapSideN"]
+shape = SubResource("BoxShape3D_31")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/TrapSideN"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_32")
+
+[node name="TrapSideS" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.3, 29.5)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/TrapSideS"]
+shape = SubResource("BoxShape3D_33")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/TrapSideS"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_34")
+
+[node name="TrapRoof" type="StaticBody3D" parent="Features"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 6.3, 25)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Features/TrapRoof"]
+shape = SubResource("BoxShape3D_35")
+
+[node name="Mesh" type="MeshInstance3D" parent="Features/TrapRoof"]
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_36")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="TrapPoint" type="Marker3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 25)
+
+[node name="OpenPoint" type="Marker3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 25)
+
+[node name="PassagePoint" type="Marker3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -25)
+
+[node name="WallLanePoint" type="Marker3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -95)
+
+[node name="Route" type="Node3D" parent="."]
+
+[node name="WP01" type="Marker3D" parent="Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10)
+
+[node name="WP02" type="Marker3D" parent="Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8)
+
+[node name="WP03" type="Marker3D" parent="Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -16)
+
+[node name="WP04" type="Marker3D" parent="Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -25)
+
+[node name="WP05" type="Marker3D" parent="Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -36)
+
+[node name="WP06" type="Marker3D" parent="Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -56)
+
+[node name="WP07" type="Marker3D" parent="Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -61)
+
+[node name="WP08" type="Marker3D" parent="Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -78)
+
+[node name="WP09" type="Marker3D" parent="Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -84)
+
+[node name="WP10" type="Marker3D" parent="Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -106)
+
+[node name="WP11" type="Marker3D" parent="Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -118)
+
+[node name="Shrine" type="Node3D" parent="." instance=ExtResource("2_f6def")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -16, 0, 25)
+script = ExtResource("3_e36fc")
+world_id = "test.course.shrine"
+prompt = "Rest"
+radius_m = 4.0
+priority = 40
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 25)
+
+[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("4_627ae")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 25)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("5_7ef4a")
+
+[node name="Signs" type="Node3D" parent="."]
+
+[node name="Sign_Doorway" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, 1)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "DOORWAY 5 x 9.5 m"
+font_size = 64
+
+[node name="Sign_Low" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.5, -19.4)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "LOW PASSAGE 8.6 m"
+font_size = 64
+
+[node name="Sign_Ramp" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 6, -46)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "RAMP 20 deg / 4 m"
+font_size = 64
+
+[node name="Sign_Wall" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 13, -82)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "WALL LANE"
+font_size = 64
+
+[node name="Sign_Growth" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 7.5, 25)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "GROWTH TRAP 6 m"
+font_size = 64

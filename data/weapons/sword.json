@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "weapon.sword",
+	"type": "weapon",
+	"family": "sword",
+	"display_name": "Kingsguard Sword",
+	"damage_multiplier": 0.95,
+	"length_m": 1.6,
+	"hit_radius_m": 0.3,
+	"description": "A giant's blade from the ruins' armory: a fast chain, light on poise.",
+	"scales_with_growth": true,
+	"fit_max_stage": 2,
+	"visual_shape": "sword",
+	"light_chain": "ability.sword_light_1",
+	"heavy": "ability.sword_heavy",
+	"upgrade": {"to": "weapon.sword_reinforced", "cost": [{"item": "item.iron_ingot", "count": 2}]}
+}

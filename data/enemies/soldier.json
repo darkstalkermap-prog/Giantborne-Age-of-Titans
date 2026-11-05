@@ -4,6 +4,7 @@
 	"type": "enemy",
 	"archetype": "soldier",
 	"display_name": "Soldier",
+	"scene": "res://scenes/enemies/soldier.tscn",
 	"height_m": 1.8,
 	"capsule_radius_m": 0.35,
 	"health": 220,
@@ -12,7 +13,8 @@
 	"resistances": {},
 	"immunities": [],
 	"attributes": {"strength": 10, "endurance": 10, "dexterity": 10, "intellect": 10, "willpower": 10, "constitution": 10},
-	"poise": {"threshold": 40, "recover_per_s": 20, "recover_delay_s": 3.0, "stagger_s": 1.0, "immunity_s": 1.5},
+	"poise": {"threshold": 40, "recover_per_s": 20, "recover_delay_s": 3.0, "stagger_s": 1.0, "immunity_s": 1.5,
+		"stagger_vs_larger_s": 1.5},
 	"stability": 1.0,
 	"walk_speed_mps": 1.6,
 	"run_speed_mps": 3.6,
@@ -44,8 +46,8 @@
 		"attack_range_m": 1.2,
 		"engage_distance_m": 1.0,
 		"reposition_radius_m": 5.0,
-		"strike_pause_min_s": 0.8,
-		"strike_pause_max_s": 1.4,
+		"strike_pause_min_s": 1.2,
+		"strike_pause_max_s": 1.8,
 		"path_fail_s": 2.0,
 		"patrol_wait_s": 1.5,
 		"max_attackers": 2,
@@ -53,8 +55,20 @@
 		"regroup_morale": 45
 	},
 	"morale": 70,
+	"tactics": {
+		"outmatched_ratio": 2.5,
+		"outmatched_behavior": "formation",
+		"formation_spacing_m": 3.0,
+		"hold_attack": "ability.soldier_brace",
+		"awe_ratio": 4.0,
+		"awe_morale_loss": 35
+	},
 	"threat": 0.6,
 	"lockable": true,
 	"grants_fury": true,
-	"crit_chance": 0.0
+	"crit_chance": 0.0,
+	"xp_reward": 20,
+	"mass_class": "small",
+	"grab_attach": "torso_fist",
+	"nav_layers": 1
 }

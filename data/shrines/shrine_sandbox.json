@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"id": "shrine.sandbox",
+	"type": "shrine",
+	"display_name": "Sandbox Shrine",
+	"description": "The combat sandbox's shrine: rest, and grow to any stage up to 3 with no other requirement.",
+	"allows_growth": true,
+	"max_stage": 3,
+	"growth_requires_flags": [],
+	"checkpoint": true,
+	"rest_heals": true,
+	"first_activation_rest": true,
+	"loadout": true,
+	"attributes": true,
+	"activation_radius_m": 14
+}

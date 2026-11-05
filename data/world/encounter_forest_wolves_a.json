@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "encounter.forest_wolves_a",
+	"type": "encounter",
+	"display_name": "Wolf pack A",
+	"description": "The first fight, on the forest road north of the canyon: dodge the lunge, then punish (plan section 4.4).",
+	"level": "level.valley",
+	"district": "forest",
+	"center_m": [-142, 0, 55],
+	"activate_radius_m": 55,
+	"deactivate_radius_m": 110,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.forest.wolf_a1", "definition": "enemy.wolf", "position_m": [-150, 0, 50], "yaw_deg": 180,
+			"patrol": "valley.patrol.wolves_a", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.forest.wolf_a2", "definition": "enemy.wolf", "position_m": [-136, 0, 48], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.forest.wolf_a3", "definition": "enemy.wolf", "position_m": [-145, 0, 62], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

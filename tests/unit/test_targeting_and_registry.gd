@@ -108,3 +108,33 @@ func test_attack_geometry() -> void:
 	assert_true(b.y.is_equal_approx(Vector3(1, 1, 0).normalized()), "capsule axis aligned")
 	assert_near(b.determinant(), 1.0, 1e-5, "right-handed orthonormal basis")
 	assert_near(TargetingRules.yaw_of(Vector3(-1, 0, 0)), PI / 2.0, 1e-6, "yaw convention")
+
+
+## M2 gate: an arc with pitch_mid_deg follows the quadratic through its start, middle and end
+## pitch (so a swing can dip through the front), the rig poses the arm on the same curve, and an
+## arc without it stays linear. The schema accepts the key within -89..89 degrees.
+func test_attack_geometry_mid_pitch() -> void:
+	var arc := {"windup_yaw_deg": 90, "windup_pitch_deg": 20, "yaw_start_deg": 60, "yaw_end_deg": -60,
+		"pitch_start_deg": -10, "pitch_end_deg": -30}
+	var linear := ActionDef.from_dict({"id": "ability.arc_linear", "arc": arc})
+	var mid_arc := arc.duplicate()
+	mid_arc["pitch_mid_deg"] = -40
+	var dipped := ActionDef.from_dict({"id": "ability.arc_mid", "arc": mid_arc})
+	assert_true(AttackGeometry.arc_point(linear, 0.25).is_equal_approx(Vector2(30.0, -15.0)), "no mid key: linear")
+	for spec: Array in [[0.0, Vector2(60.0, -10.0)], [0.5, Vector2(0.0, -40.0)], [1.0, Vector2(-60.0, -30.0)]]:
+		assert_true(AttackGeometry.arc_point(dipped, spec[0]).is_equal_approx(spec[1]),
+			"the mid-pitch arc passes through %s at f=%.1f (got %s)" % [spec[1], spec[0], AttackGeometry.arc_point(dipped, spec[0])])
+	assert_near(AttackGeometry.arc_point(dipped, 0.25).x, 30.0, 1e-4, "yaw stays linear")
+	assert_true(AttackGeometry.arc_point(dipped, 0.6).y < -40.0, "the dip bottoms out after the middle when the end is lower")
+	for f: float in [0.0, 0.2, 0.5, 0.8, 1.0]:
+		assert_true(AttackGeometry.pose_for(dipped, ActionDef.Phase.ACTIVE, f, Vector2.ZERO).is_equal_approx(
+			AttackGeometry.arc_point(dipped, f)), "the rig's active pose is the swept arc at f=%.1f" % f)
+		assert_true(AttackGeometry.pose_for(linear, ActionDef.Phase.ACTIVE, f, Vector2.ZERO).is_equal_approx(
+			AttackGeometry.arc_point(linear, f)), "also without a mid key at f=%.1f" % f)
+	var rec: Dictionary = GameData.get_record("ability.light_1").duplicate(true)
+	rec["id"] = "ability.arc_probe"
+	assert_eq(DataValidator.validate_record(rec, "probe.json").errors, PackedStringArray(),
+		"the shipped light 1 (with pitch_mid_deg) validates")
+	(rec.arc as Dictionary)["pitch_mid_deg"] = -95
+	assert_true("\n".join(DataValidator.validate_record(rec, "probe.json").errors).contains("pitch_mid_deg: must be >= -89"),
+		"pitch_mid_deg is range checked")

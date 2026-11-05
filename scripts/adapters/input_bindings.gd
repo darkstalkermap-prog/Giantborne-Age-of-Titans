@@ -11,6 +11,7 @@ const ACTIONS := [
 	"ability_1", "ability_2", "ability_3", "ability_4",
 	"ability_5", "ability_6", "ability_7", "ability_8",
 	"ability_modifier", "ultimate", "pause", "help", "debug_panel", "debug_reset",
+	"inventory", "debug_grow", "debug_shrink", "debug_xp", "debug_checkpoint",
 ]
 
 ## Actions whose controller binding is a combo with "ability_modifier" (LT by default).
@@ -30,6 +31,8 @@ const LABELS := {
 	"ability_6": "Ability 6", "ability_7": "Ability 7", "ability_8": "Ability 8",
 	"ability_modifier": "Ability modifier (pad)", "ultimate": "Ultimate", "pause": "Pause menu",
 	"help": "Controls overlay", "debug_panel": "Debug panel", "debug_reset": "Debug reset",
+	"inventory": "Inventory", "debug_grow": "Debug grow", "debug_shrink": "Debug shrink",
+	"debug_xp": "Debug +100 XP", "debug_checkpoint": "Debug reload checkpoint",
 }
 
 const MOUSE_BUTTONS := {"left": 1, "right": 2, "middle": 3, "wheel_up": 4, "wheel_down": 5,
@@ -230,3 +233,90 @@ static func short_pad(d: Dictionary) -> String:
 		var stick := "LS" if str(d.joy_axis).begins_with("left") else "RS"
 		return "%s%s%s" % [stick, str(d.joy_axis).right(1).to_upper(), "+" if float(d.get("dir", 1)) > 0 else "-"]
 	return ""
+
+
+# --------------------------------------------------------------------------- last device (P16)
+# The device the player used last decides which glyphs the prompts show (plan §3.18): pad names
+# after a controller button, or a stick or trigger pushed past DEVICE_AXIS_THRESHOLD; keyboard
+# and mouse names after a key, a mouse button or a mouse movement of at least
+# DEVICE_MOUSE_MOTION_PX. main.gd feeds every input event to note_device(); the HUD prompts, the
+# tutorial texts, the hotbar keys and the menus read last_device_is_pad(). The "Button prompts"
+# setting (prompt_mode: auto | keyboard | pad) can pin the answer.
+
+## Analog input below this does not count as using the pad (stick drift, resting triggers).
+const DEVICE_AXIS_THRESHOLD := 0.5
+## Mouse movement below this (pixels per event) does not count as using the mouse.
+const DEVICE_MOUSE_MOTION_PX := 6.0
+const PROMPT_MODES := ["auto", "keyboard", "pad"]
+
+## The last device noted (true = a pad).
+static var _last_pad := false
+## "auto" follows the last device; "keyboard" and "pad" pin the prompts (Settings "prompt_device").
+static var prompt_mode := "auto"
+## Grows whenever last_device_is_pad() may have changed: readers cache labels and compare it.
+static var device_serial := 0
+
+
+## Notes the device of an input event. Returns true when the device changed. Releases, small
+## analog movements and other event kinds change nothing.
+static func note_device(event: InputEvent) -> bool:
+	var pad: bool
+	if event is InputEventJoypadButton:
+		if not (event as InputEventJoypadButton).pressed:
+			return false
+		pad = true
+	elif event is InputEventJoypadMotion:
+		if absf((event as InputEventJoypadMotion).axis_value) < DEVICE_AXIS_THRESHOLD:
+			return false
+		pad = true
+	elif event is InputEventKey:
+		if not (event as InputEventKey).pressed:
+			return false
+		pad = false
+	elif event is InputEventMouseButton:
+		if not (event as InputEventMouseButton).pressed:
+			return false
+		pad = false
+	elif event is InputEventMouseMotion:
+		if (event as InputEventMouseMotion).relative.length() < DEVICE_MOUSE_MOTION_PX:
+			return false
+		pad = false
+	else:
+		return false
+	if pad == _last_pad:
+		return false
+	_last_pad = pad
+	device_serial += 1
+	return true
+
+
+## True when the prompts should show pad buttons: the last device noted was a pad, unless the
+## prompt mode pins keyboard or pad.
+static func last_device_is_pad() -> bool:
+	match prompt_mode:
+		"pad":
+			return true
+		"keyboard":
+			return false
+	return _last_pad
+
+
+## Sets the prompt mode (Settings "prompt_device"); an unknown value means "auto".
+static func set_prompt_mode(mode: String) -> void:
+	var m := mode if PROMPT_MODES.has(mode) else "auto"
+	if m != prompt_mode:
+		prompt_mode = m
+		device_serial += 1
+
+
+## Forgets the device history (tests): keyboard and mouse, prompt mode "auto".
+static func reset_device(pad := false) -> void:
+	if _last_pad != pad or prompt_mode != "auto":
+		device_serial += 1
+	_last_pad = pad
+	prompt_mode = "auto"
+
+
+## The name of `action_name`'s binding for the device the prompts follow now (describe_action).
+static func describe_for_last_device(action_name: String) -> String:
+	return describe_action(action_name, last_device_is_pad())

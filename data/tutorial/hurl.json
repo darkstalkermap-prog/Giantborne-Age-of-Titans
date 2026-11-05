@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.hurl",
+	"type": "tutorial_prompt",
+	"description": "Boulder Hurl at the Grove's watch cairn, once the giant has grown there (stage 2).",
+	"text": "Lock on to the cairn ({lock_target}) and hurl a boulder ({slot_5}). First person ({camera_toggle}) helps you aim.",
+	"trigger": {"type": "entered", "area": "valley.area.grove"},
+	"dismiss": {"type": "action_id", "action_id": "ability.boulder_hurl", "timeout_s": 60},
+	"requires_flags": [],
+	"min_stage": 2,
+	"priority": 25,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.hurl.done"
+}

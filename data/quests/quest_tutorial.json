@@ -1,0 +1,31 @@
+{
+	"schema_version": 1,
+	"id": "quest.tutorial",
+	"type": "quest",
+	"display_name": "Giant's Hollow",
+	"description": "The optional tutorial in Giant's Hollow (plan section 4.5, decision 28): both cameras, the practice dummies (light x3, heavy, Heavy Footfall) and the sparring post (block or parry, then dodge). It never blocks quest.main. Its stages complete from the tutorial prompts' lessons (tutorial.camera.done, tutorial.block.done, tutorial.dodge.done) and the player's blows on the dummies. Once the giant has grown at the Grove the Hollow's lessons are over: an unfinished tutorial is abandoned (no reward), so it never lingers in the tracker.",
+	"prototype_pacing": true,
+	"auto_start": true,
+	"start_conditions": [],
+	"abandon_when": {"type": "stage_at_least", "stage": 2},
+	"stages": [
+		{"id": "awaken", "objective": "Look through the giant's eyes (V), then step back",
+			"complete_when": {"type": "flag", "flag": "tutorial.camera.done"},
+			"marker": "", "xp": 10, "items": [], "set_flags": {},
+			"bot": {"action": "wait", "camera_toggles": 2}},
+		{"id": "train", "objective": "Strike the practice dummies: light x3, heavy, Heavy Footfall",
+			"complete_when": {"type": "all", "of": [
+				{"type": "hits_on", "targets": ["valley.hollow.dummy_1", "valley.hollow.dummy_2"], "count": 3, "action_kind": "light"},
+				{"type": "hits_on", "targets": ["valley.hollow.dummy_1", "valley.hollow.dummy_2"], "count": 1, "action_kind": "heavy"},
+				{"type": "hits_on", "targets": ["valley.hollow.dummy_1", "valley.hollow.dummy_2"], "count": 1, "action_id": "ability.heavy_footfall"}]},
+			"marker": "valley.marker.dummies", "xp": 10, "items": [], "set_flags": {},
+			"bot": {"action": "attack", "target": "valley.hollow.dummy_1"}},
+		{"id": "spar", "objective": "Block, parry and dodge the sparring post",
+			"complete_when": {"type": "all", "of": [
+				{"type": "flag", "flag": "tutorial.block.done"},
+				{"type": "flag", "flag": "tutorial.dodge.done"}]},
+			"marker": "valley.marker.sparring_post", "xp": 10, "items": [], "set_flags": {},
+			"bot": {"action": "attack", "target": "valley.hollow.sparring_post"}}
+	],
+	"on_complete_flags": {}
+}

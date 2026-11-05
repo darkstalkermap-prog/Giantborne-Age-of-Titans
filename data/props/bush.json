@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "prop.bush",
+	"type": "prop",
+	"category": "cosmetic",
+	"display_name": "Bush",
+	"height_m": 1.2,
+	"health": 1,
+	"accepted_attack_categories": [],
+	"description": "Cosmetic: it rustles when something passes and flattens under a big giant's foot. Never saved.",
+	"react_radius_m": 1.4
+}

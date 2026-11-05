@@ -8,8 +8,8 @@ config_version=5
 [application]
 
 config/name="Giantborn: Age of Titans"
-config/description="Low-poly combat sandbox prototype (milestones M0/M1)."
-config/version="0.1.0-m1"
+config/description="Low-poly action-RPG prototype: the Valley of Broken Kings slice (milestones M0-M5)."
+config/version="0.5.0-m5"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
@@ -20,6 +20,8 @@ Events="*res://scripts/core/events.gd"
 GameData="*res://scripts/core/game_data.gd"
 Settings="*res://scripts/core/settings.gd"
 WorldState="*res://scripts/core/world_state.gd"
+GameSession="*res://scripts/core/game_session.gd"
+Quests="*res://scripts/quests/quests.gd"
 Sim="*res://scripts/core/sim.gd"
 
 [display]
@@ -38,6 +40,7 @@ window/stretch/aspect="expand"
 3d_physics/layer_3="hurtboxes"
 3d_physics/layer_4="debris"
 3d_physics/layer_5="breakables"
+3d_physics/layer_6="blockers"
 
 [physics]
 

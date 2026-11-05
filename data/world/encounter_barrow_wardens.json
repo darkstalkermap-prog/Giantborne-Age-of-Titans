@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "encounter.barrow_wardens",
+	"type": "encounter",
+	"display_name": "Barrow wardens",
+	"description": "The First King's wardens in the Barrow courtyard, there once the Ogre King has fallen (plan section 4.4): an ogre and three wolves between the Deadfall gap and the crown. The stage-3 showcase: two heavies stagger the ogre (its recovery punish), then grab it with both hands and throw it into the wolves.",
+	"level": "level.valley",
+	"district": "barrow",
+	"center_m": [-55, 0, -162],
+	"activate_radius_m": 50,
+	"deactivate_radius_m": 110,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": ["world.ogre_king.defeated"],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.barrow.warden_ogre", "definition": "enemy.ogre", "position_m": [-55, 0, -160], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.barrow.warden_wolf_1", "definition": "enemy.wolf", "position_m": [-65, 0, -165], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.barrow.warden_wolf_2", "definition": "enemy.wolf", "position_m": [-45, 0, -165], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.barrow.warden_wolf_3", "definition": "enemy.wolf", "position_m": [-55, 0, -150], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

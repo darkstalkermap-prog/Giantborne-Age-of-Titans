@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "weapon.hammer",
+	"type": "weapon",
+	"family": "hammer",
+	"display_name": "Raider's Maul",
+	"damage_multiplier": 1.2,
+	"length_m": 1.5,
+	"hit_radius_m": 0.5,
+	"description": "A quarry maul: a slow two-blow chain and a crushing, poise-breaking slam.",
+	"scales_with_growth": true,
+	"fit_max_stage": 2,
+	"visual_shape": "hammer",
+	"light_chain": "ability.hammer_light_1",
+	"heavy": "ability.hammer_heavy",
+	"upgrade": {"to": "weapon.hammer_reinforced", "cost": [{"item": "item.iron_ingot", "count": 2}]}
+}

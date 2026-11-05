@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "loot.raider",
+	"type": "loot_table",
+	"display_name": "Quarry raider",
+	"description": "What a quarry raider carries: splintered timber from the camp (never iron; the Valley's iron is counted in plan section 4.7).",
+	"rolls": 1,
+	"entries": [
+		{"item": "item.wood_scrap", "count": 1, "weight": 3},
+		{"item": "item.wood_scrap", "count": 2, "weight": 1}
+	]
+}

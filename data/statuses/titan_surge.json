@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"id": "status.titan_surge",
+	"type": "status_effect",
+	"display_name": "Titan Surge",
+	"hud_label": "SURGE",
+	"stacking": "refresh_no_stack",
+	"duration_s": 6.0,
+	"tick_s": 0,
+	"modifiers": {"outgoing_damage_mult": 1.25, "outgoing_poise_mult": 1.25, "fury_gain_mult": 0.0},
+	"tags": ["Buff", "Ultimate"],
+	"hidden": false
+}

@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "weapon.tree_oak",
+	"type": "weapon",
+	"family": "tree",
+	"display_name": "Uprooted Oak",
+	"damage_multiplier": 1.4,
+	"length_m": 7.5,
+	"hit_radius_m": 0.9,
+	"description": "An ancient oak torn from the ground: wide sweeps that smash what hands cannot move.",
+	"scales_with_growth": false,
+	"required_stage": 3,
+	"required_permission": "tree_weapon",
+	"tags": ["TreeWeapon"],
+	"visual_shape": "tree",
+	"light_chain": "ability.tree_light_1",
+	"heavy": "ability.tree_heavy"
+}

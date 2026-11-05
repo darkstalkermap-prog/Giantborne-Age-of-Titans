@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "encounter.village_ambush",
+	"type": "encounter",
+	"display_name": "Thornwick's ambush",
+	"description": "The force outcome's consequence (plan sections 4.4, 4.6, decision 11): once the village is hostile (the smashed barricade or two offences) and the Ogre King has fallen, Thornwick's militia waits in the square for the giant's return leg - four soldiers and an archer on the watchtower (beside the guards' tower post). Faction village, so they follow the village's standing (always hostile when they spawn).",
+	"level": "level.valley",
+	"district": "village",
+	"center_m": [45, 0, -20],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 120,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": ["faction.village.hostile", "world.ogre_king.defeated"],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.village.ambush_1", "definition": "enemy.soldier", "position_m": [40, 0, -25], "yaw_deg": -90,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.ambush_2", "definition": "enemy.soldier", "position_m": [50, 0, -15], "yaw_deg": -90,
+			"patrol": "", "faction": "village", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.ambush_3", "definition": "enemy.soldier", "position_m": [45, 0, -28], "yaw_deg": -90,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.ambush_4", "definition": "enemy.soldier", "position_m": [38, 0, -14], "yaw_deg": -90,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.ambush_archer", "definition": "enemy.archer", "position_m": [76.2, 6, -38.8], "yaw_deg": -90,
+			"patrol": "", "faction": "village", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

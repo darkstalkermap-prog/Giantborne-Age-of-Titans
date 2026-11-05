@@ -1,0 +1,186 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/flow_test_level.gd" id="1_6c505"]
+[ext_resource type="Shader" path="res://assets/shaders/ground_checker.gdshader" id="2_49689"]
+[ext_resource type="Script" path="res://scripts/world/checkpoint_marker.gd" id="3_74fde"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="4_add9b"]
+[ext_resource type="PackedScene" path="res://scenes/world/fence_wood.tscn" id="5_24ab9"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="6_5fc47"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="7_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="8_7ef4a"]
+[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="9_ce070"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.45, 0.55, 0.68, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.6, 0.62, 0.68, 1)
+ambient_light_energy = 0.6
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(80, 1, 80)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3"]
+render_priority = 0
+shader = ExtResource("2_49689")
+shader_parameter/color_a = null
+shader_parameter/color_b = null
+shader_parameter/line_color = null
+shader_parameter/cell_size = null
+shader_parameter/line_width = null
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_4"]
+size = Vector2(80, 80)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(1.2, 4, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6"]
+albedo_color = Color(0.38, 0.38, 0.42, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(1.2, 4, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(0.6, 0.6, 0.6)
+
+[node name="FlowTestLevel" type="Node3D"]
+script = ExtResource("1_6c505")
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8480481, 0.41758206, -0.32625088, 0, 0.6156615, 0.7880107, 0.52991927, -0.668271, 0.5221106, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_max_distance = 80.0
+
+[node name="Ground" type="StaticBody3D" parent="."]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_2")
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground"]
+material_override = SubResource("ShaderMaterial_3")
+mesh = SubResource("PlaneMesh_4")
+
+[node name="Checkpoints" type="Node3D" parent="."]
+
+[node name="CpA" type="Marker3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 20)
+script = ExtResource("3_74fde")
+checkpoint_id = "test.cp_a"
+
+[node name="CpB" type="Marker3D" parent="Checkpoints"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 24, 0.05, -4)
+script = ExtResource("3_74fde")
+checkpoint_id = "test.cp_b"
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="CpWay" type="Marker3D" parent="Waystones"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0.05, -4)
+script = ExtResource("4_add9b")
+radius_m = 6.0
+requires_flags = PackedStringArray("test.way_open")
+checkpoint_id = "test.cp_way"
+
+[node name="Stone" type="StaticBody3D" parent="Waystones/CpWay"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 4)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Waystones/CpWay/Stone"]
+shape = SubResource("BoxShape3D_5")
+
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/CpWay/Stone"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_7")
+
+[node name="Glow" type="MeshInstance3D" parent="Waystones/CpWay"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 4)
+visible = false
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_9")
+
+[node name="Fence" type="StaticBody3D" parent="." instance=ExtResource("5_24ab9")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 8, 0, 12)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("6_5fc47")
+world_id = "test.flow_fence"
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 20)
+
+[node name="StubEnemy" type="Marker3D" parent="Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -24)
+
+[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("7_627ae")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 20)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("8_7ef4a")
+
+[node name="DebrisPool" type="Node3D" parent="."]
+script = ExtResource("9_ce070")
+
+[node name="Signs" type="Node3D" parent="."]
+
+[node name="SignCpA" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 17)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "CHECKPOINT test.cp_a (start)"
+font_size = 64
+
+[node name="SignCpB" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 4.25, -4)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "CHECKPOINT test.cp_b"
+font_size = 64
+
+[node name="SignWaystone" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 6.05, 0)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "WAYSTONE test.cp_way (needs test.way_open)"
+font_size = 64
+
+[node name="SignFence" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2.6, 12)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "FENCE test.flow_fence"
+font_size = 64
+
+[node name="SignStub" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.05, -24)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "STUB ENEMY SPAWN"
+font_size = 64

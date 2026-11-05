@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "encounter.director_test_wolves",
+	"type": "encounter",
+	"display_name": "Test wolves",
+	"level": "level.director_test",
+	"district": "west",
+	"center_m": [-35, 0, -30],
+	"activate_radius_m": 25,
+	"deactivate_radius_m": 50,
+	"leash_radius_m": 30,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "test.director.wolf_1", "definition": "enemy.wolf", "position_m": [-38, 0, -28], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.wolf_2", "definition": "enemy.wolf", "position_m": [-32, 0, -28], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.wolf_3", "definition": "enemy.wolf", "position_m": [-35, 0, -33], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

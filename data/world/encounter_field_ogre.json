@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "encounter.field_ogre",
+	"type": "encounter",
+	"display_name": "Field ogre",
+	"description": "The ogre trampling Thornwick's barley, with two wolves (plan section 4.4): help path B (quest.village_ogre needs valley.fields.ogre killed); the wolves harass a stage-2 giant.",
+	"level": "level.valley",
+	"district": "village",
+	"center_m": [40, 0, 55],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 120,
+	"leash_radius_m": 45,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.fields.ogre", "definition": "enemy.ogre", "position_m": [42, 0, 58], "yaw_deg": 0,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.fields.wolf_1", "definition": "enemy.wolf", "position_m": [32, 0, 50], "yaw_deg": 0,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.fields.wolf_2", "definition": "enemy.wolf", "position_m": [50, 0, 48], "yaw_deg": 0,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

@@ -1,0 +1,283 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/wolf_enemy.gd" id="1_d2eb1"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
+[ext_resource type="Script" path="res://scripts/presentation/quadruped_rig.gd" id="4_83e02"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.4
+height = 0.9
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_2"]
+radius = 0.18
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(0.42, 0.42, 0.95)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(0.38, 0.34, 0.85)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5"]
+albedo_color = Color(0.43, 0.41, 0.38, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.36, 0.34, 0.86)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(0.4, 0.4, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8"]
+albedo_color = Color(0.21, 0.19, 0.18, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(0.42, 0.18, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(0.26, 0.24, 0.26)
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(0.14, 0.12, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
+size = Vector3(0.12, 0.05, 0.18)
+
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
+size = Vector3(0.06, 0.12, 0.05)
+
+[sub_resource type="BoxMesh" id="BoxMesh_14"]
+size = Vector3(0.06, 0.12, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_15"]
+albedo_color = Color(0.95, 0.74, 0.22, 1)
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_16"]
+size = Vector3(0.04, 0.04, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_17"]
+size = Vector3(0.04, 0.04, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_18"]
+size = Vector3(0.09, 0.09, 0.44)
+
+[sub_resource type="BoxMesh" id="BoxMesh_19"]
+size = Vector3(0.1, 0.4, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_20"]
+size = Vector3(0.12, 0.06, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_21"]
+size = Vector3(0.1, 0.4, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_22"]
+size = Vector3(0.12, 0.06, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_23"]
+size = Vector3(0.1, 0.4, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_24"]
+size = Vector3(0.12, 0.06, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_25"]
+size = Vector3(0.1, 0.4, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_26"]
+size = Vector3(0.12, 0.06, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_27"]
+size = Vector3(0.42, 0.62, 1)
+
+[node name="Wolf" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("1_d2eb1")
+entity_id = "wolf_01"
+
+[node name="BodyShape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="CombatEntity" type="Node" parent="."]
+script = ExtResource("2_c8050")
+entity_id = "wolf_01"
+definition_id = "enemy.wolf"
+team = 2
+anchor_path = NodePath("../Anchors/Torso")
+
+[node name="Anchors" type="Node3D" parent="."]
+
+[node name="Torso" type="Marker3D" parent="Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+
+[node name="Grab" type="Marker3D" parent="Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.74, -0.3)
+
+[node name="Hurtboxes" type="Node3D" parent="."]
+
+[node name="Head" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.64, -0.55)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "head"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Head"]
+shape = SubResource("SphereShape3D_2")
+
+[node name="Body" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+shape = SubResource("BoxShape3D_3")
+
+[node name="Legs" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_129e0")
+region = "legs"
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Legs"]
+shape = SubResource("BoxShape3D_4")
+
+[node name="NavAgent" type="NavigationAgent3D" parent="."]
+
+[node name="Visual" type="Node3D" parent="."]
+script = ExtResource("4_83e02")
+body_path = NodePath("Body")
+head_path = NodePath("Body/Head")
+tail_path = NodePath("Body/Tail")
+leg_fl_path = NodePath("Body/LegFL")
+leg_fr_path = NodePath("Body/LegFR")
+leg_bl_path = NodePath("Body/LegBL")
+leg_br_path = NodePath("Body/LegBR")
+
+[node name="Body" type="Node3D" parent="Visual"]
+
+[node name="Torso" type="MeshInstance3D" parent="Visual/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0.04)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_6")
+
+[node name="Chest" type="MeshInstance3D" parent="Visual/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.56, -0.3)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_7")
+
+[node name="Ruff" type="MeshInstance3D" parent="Visual/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.74, -0.34)
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_9")
+
+[node name="Head" type="Node3D" parent="Visual/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.64, -0.44)
+
+[node name="Skull" type="MeshInstance3D" parent="Visual/Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, -0.1)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_10")
+
+[node name="Snout" type="MeshInstance3D" parent="Visual/Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, -0.32)
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_11")
+
+[node name="Jaw" type="MeshInstance3D" parent="Visual/Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.09, -0.29)
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_12")
+
+[node name="EarL" type="MeshInstance3D" parent="Visual/Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.2, -0.04)
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_13")
+
+[node name="EarR" type="MeshInstance3D" parent="Visual/Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.2, -0.04)
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_14")
+
+[node name="EyeL" type="MeshInstance3D" parent="Visual/Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, 0.08, -0.23)
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_16")
+
+[node name="EyeR" type="MeshInstance3D" parent="Visual/Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07, 0.08, -0.23)
+material_override = SubResource("StandardMaterial3D_15")
+mesh = SubResource("BoxMesh_17")
+
+[node name="Tail" type="Node3D" parent="Visual/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.64, 0.46)
+
+[node name="Brush" type="MeshInstance3D" parent="Visual/Body/Tail"]
+transform = Transform3D(1, 0, 0, 0, 0.9396926, -0.34202012, 0, 0.34202012, 0.9396926, 0, -0.07, 0.2)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_18")
+
+[node name="LegFL" type="Node3D" parent="Visual/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 0.42, -0.3)
+
+[node name="Leg" type="MeshInstance3D" parent="Visual/Body/LegFL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_19")
+
+[node name="Paw" type="MeshInstance3D" parent="Visual/Body/LegFL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.39, -0.03)
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_20")
+
+[node name="LegFR" type="Node3D" parent="Visual/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 0.42, -0.3)
+
+[node name="Leg" type="MeshInstance3D" parent="Visual/Body/LegFR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_21")
+
+[node name="Paw" type="MeshInstance3D" parent="Visual/Body/LegFR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.39, -0.03)
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_22")
+
+[node name="LegBL" type="Node3D" parent="Visual/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 0.42, 0.3)
+
+[node name="Leg" type="MeshInstance3D" parent="Visual/Body/LegBL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_23")
+
+[node name="Paw" type="MeshInstance3D" parent="Visual/Body/LegBL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.39, -0.03)
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_24")
+
+[node name="LegBR" type="Node3D" parent="Visual/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 0.42, 0.3)
+
+[node name="Leg" type="MeshInstance3D" parent="Visual/Body/LegBR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_25")
+
+[node name="Paw" type="MeshInstance3D" parent="Visual/Body/LegBR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.39, -0.03)
+material_override = SubResource("StandardMaterial3D_8")
+mesh = SubResource("BoxMesh_26")
+
+[node name="LodProxy" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36, 0)
+visible = false
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("BoxMesh_27")

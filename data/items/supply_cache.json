@@ -1,0 +1,10 @@
+{
+	"schema_version": 1,
+	"id": "item.supply_cache",
+	"type": "item",
+	"display_name": "Thornwick Supply Cache",
+	"description": "Thornwick's winter stores, taken by the quarry raiders. Elder Maren wants them back.",
+	"stack_max": 1,
+	"category": "quest",
+	"quest_item": true
+}

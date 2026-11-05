@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"id": "status.stone_skin",
+	"type": "status_effect",
+	"display_name": "Stone Skin",
+	"hud_label": "SKIN",
+	"stacking": "refresh_no_stack",
+	"duration_s": 6.0,
+	"tick_s": 0,
+	"modifiers": {"armor_flat": 30},
+	"tags": ["Buff"],
+	"hidden": false
+}

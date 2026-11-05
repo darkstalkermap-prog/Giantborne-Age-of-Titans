@@ -2,6 +2,8 @@ extends IntegrationSuite
 ## Fixed obstacle route through the real sandbox (narrow doorway, low 4.2 m arch, 20 degree
 ## ramp onto a platform, past the test wall) in both camera modes. Checks that the giant
 ## fits and that the camera never ends up inside world geometry.
+## Slow suite since P17b (about 9 s; it was 2.6 s at M1 and grew with the sandbox): the default
+## suite's 75 s budget. tools/check.sh --slow still runs it.
 
 const ARENA := "res://scenes/world/sandbox_arena.tscn"
 const ROUTE := [
@@ -15,9 +17,8 @@ const ROUTE := [
 
 func _run_route(first_person: bool) -> Dictionary:
 	var arena: Node3D = (load(ARENA) as PackedScene).instantiate()
+	TestSpawn.disable_all_ai(arena)   # the soldier and the wolf pack stay put
 	world.add_child(arena)
-	var soldier := arena.get_node("Soldier01") as SoldierEnemy
-	soldier.ai_enabled = false
 	var p := arena.get_node("Player") as GiantPlayer
 	p.router.use_injection = true
 	await step_ticks(5)

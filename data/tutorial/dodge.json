@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.dodge",
+	"type": "tutorial_prompt",
+	"description": "Dodging through a blow, after the block lesson (the other half of quest.tutorial's spar stage). EVADED needs the giant inside the strike when it lands: roll into or through the sparring post's swing.",
+	"text": "Dodge with {dodge} as the strike lands: for a moment nothing can touch you.",
+	"trigger": {"type": "event", "event": "telegraph_started", "target": "player"},
+	"dismiss": {"type": "event", "event": "hit_resolved", "defender": "player", "outcome_in": ["evaded"], "timeout_s": 45},
+	"requires_flags": ["tutorial.block.done"],
+	"min_stage": 1,
+	"priority": 30,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.dodge.done"
+}

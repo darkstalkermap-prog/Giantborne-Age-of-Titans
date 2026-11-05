@@ -129,18 +129,19 @@ kbd {
 
 <main class="wrap">
   <header class="masthead">
-    <p class="eyebrow">Playable prototype &middot; milestone M1 combat sandbox &middot; build 0.1.0-m1</p>
+    <p class="eyebrow">Playable prototype &middot; the Valley of Broken Kings &middot; build 0.5.0-m5</p>
     <h1><span class="name">Giantborn</span><span class="sub">Age of Titans</span></h1>
-    <p class="pitch">You are a <strong>12-foot juvenile giant</strong> in a 120 &times; 120 m test arena. Break the
-      fence, learn your club on the practice dummy, then go north and fight the soldier who patrols there.</p>
+    <p class="pitch">You wake as a <strong>12-foot juvenile giant</strong> in Giant's Hollow. Cross the Valley of
+      Broken Kings: wolves and an ogre in the Old Wood, a village you can help, cow or force, a ruined fortress,
+      and the Ogre King at Kingsfall. Grow at shrines to 18 and then 26 feet along the way. About 20&ndash;30 minutes.</p>
   </header>
 
   <section class="stage" id="stage" aria-label="Game">
-    <img class="poster" id="poster" src="poster.jpg" alt="The giant standing in the sandbox arena, with the practice dummy ahead and a wooden fence to the right">
+    <img class="poster" id="poster" src="poster.jpg" alt="The giant in Giant's Hollow at the start of the Valley, with the trail, pine trees and practice dummies ahead">
     <canvas id="game-canvas" tabindex="0" hidden></canvas>
     <div class="gate" id="gate">
       <button class="play" id="play" type="button">Play in browser</button>
-      <p class="gate-note" id="gate-note">About 12 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
+      <p class="gate-note" id="gate-note">About 14 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
       <div class="meter" id="meter" hidden><div class="meter-fill" id="meter-fill"></div></div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <details class="detail" id="detail" hidden><summary>Technical details</summary><pre id="detail-text"></pre></details>
@@ -164,33 +165,36 @@ kbd {
           <tr><td>Sprint</td><td>hold <kbd>Shift</kbd></td></tr>
           <tr><td>Lock target / switch target</td><td><kbd>Tab</kbd> / wheel</td></tr>
           <tr><td>Third / first person</td><td><kbd>V</kbd></td></tr>
-          <tr><td>Heavy Footfall (ability slot 1)</td><td><kbd>1</kbd></td></tr>
+          <tr><td>Abilities (more unlock as you level and grow)</td><td><kbd>1</kbd> &ndash; <kbd>8</kbd></td></tr>
+          <tr><td>Titan Surge, when fury is full</td><td><kbd>R</kbd></td></tr>
+          <tr><td>Talk, grab, pick up, use a shrine</td><td><kbd>E</kbd></td></tr>
+          <tr><td>Inventory and attributes</td><td><kbd>I</kbd></td></tr>
           <tr><td>Pause, settings, rebind keys</td><td><kbd>Esc</kbd></td></tr>
           <tr><td>Controls in the game</td><td><kbd>H</kbd></td></tr>
         </tbody>
       </table>
-      <p class="pad">Gamepad: sticks move and look, RB light, RT heavy, LB block, B dodge, A jump, LT&nbsp;+&nbsp;A Heavy Footfall, Start pauses.</p>
+      <p class="pad">Gamepad: sticks move and look, RB light, RT heavy, LB block, B dodge, A jump, X use. Abilities are LT&nbsp;+&nbsp;A/B/X/Y and LT&nbsp;+&nbsp;d-pad, Titan Surge is LT&nbsp;+&nbsp;RT, Back opens the inventory and Start pauses.</p>
     </div>
 
     <div class="slab">
       <h2>What to try</h2>
       <ol class="route">
-        <li>Hit the dummy ahead (armor 25). A light attack shows <span class="num">37</span>, a heavy <span class="num">66</span>, and three lights in a row chain to <span class="num">37 40 46</span>.</li>
-        <li>Stand next to it and press <kbd>1</kbd> for Heavy Footfall: a shock ring, <span class="num">44</span> damage and an 8&nbsp;s cooldown.</li>
-        <li>Press <kbd>V</kbd> for first person and swing while looking down.</li>
-        <li>Swing at the wall in the lane to your left: the dummy behind it must take nothing.</li>
-        <li>Break the fence on your right for <span class="num">+1</span> Wood Scrap.</li>
-        <li>Walk north, lock onto the soldier with <kbd>Tab</kbd>, block its sword, parry by tapping block just before it lands, and dodge through a swing.</li>
-        <li>Between strikes it raises its guard. Circle to its side or break the guard with heavy attacks.</li>
-        <li>Walk through the doorway, under the low arch and up the ramp in both camera modes.</li>
+        <li>Choose <b>New Game</b>. The quest tracker (top right) and the diamond marker show where to go next.</li>
+        <li>In Giant's Hollow, try both cameras (<kbd>V</kbd>), hit the dummies, and spar at the post to learn block, parry and dodge.</li>
+        <li>In the Old Wood, wolves circle and lunge: dodge, then punish. Stagger a soldier with a heavy attack, grab it with <kbd>E</kbd> and throw it. The ogre's strikes are slow; hit it during its recovery.</li>
+        <li>At level 3, press <kbd>E</kbd> at the Grove Shrine and grow to 18&nbsp;ft. Boulder Hurl unlocks: lock on to the watch cairn on the ledge and throw one.</li>
+        <li>At Thornwick, talk to Elder Maren with <kbd>E</kbd>. Help her, intimidate her guards, or force your way through; each choice changes your reward and the road ahead.</li>
+        <li>Break the practice gate into the ruins, then face the Ogre King at Kingsfall. Below half health it charges: make it hit a pillar, then punish.</li>
+        <li>Grow to 26&nbsp;ft, uproot a tree to use as a club, and smash the Deadfall you passed earlier.</li>
+        <li>Death returns you to the last shrine or waystone. Progress is saved in this browser, so <b>Continue</b> picks up where you left off. <b>Sandbox</b> is still there for practice.</li>
       </ol>
     </div>
 
     <div class="slab about">
       <h2>About this build</h2>
-      <p><b>What it is.</b> The first playable milestone of Giantborn: Age of Titans, built with Godot 4.6.3: one arena, one giant at stage 1 of 10, one enemy, a dummy and a breakable fence.</p>
-      <p><b>What it is not yet.</b> The art is placeholder boxes and there is no sound. Growth stages, grabs, more abilities and the valley come in later milestones.</p>
-      <p><b>If something goes wrong.</b> Esc opens the pause menu, where Restart sandbox resets everything. Settings are saved in this browser. Note what you did, what you expected and what happened.</p>
+      <p><b>What it is.</b> The Valley of Broken Kings slice of Giantborn: Age of Titans (Godot 4.6.3): growth to stage 3, five enemy types and an ogre boss, eight abilities plus Titan Surge, grab and throw, four weapons, quests with a village choice, and checkpoint saves.</p>
+      <p><b>What it is not yet.</b> The art is placeholder boxes and there is no sound. A playtest bot has finished the slice under every village choice and the balance has had a first pass, but no new player has tried it yet, so expect rough edges. The browser version runs on one thread: expect slow frames on weaker computers.</p>
+      <p><b>If something goes wrong.</b> Esc opens the pause menu, where you can load the last checkpoint or quit to the title. Settings and your saved game stay in this browser. Note what you did, what you expected and what happened.</p>
     </div>
   </section>
 </main>
@@ -206,7 +210,7 @@ kbd {
 <script>
 (function () {
   // Byte counts of the current export (raw and packed as .txt), used for the progress bar.
-  const BUILD = { wasm: 37700666, pck: 370508, wasmPacked: 12528700, pckPacked: 321704 }; // set by tools/build_web.sh
+  const BUILD = { wasm: 37700666, pck: 2356840, wasmPacked: 12528700, pckPacked: 1680156 }; // set by tools/build_web.sh
 
   const stage = document.getElementById('stage');
   const poster = document.getElementById('poster');

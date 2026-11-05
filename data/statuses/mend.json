@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"id": "status.mend",
+	"type": "status_effect",
+	"display_name": "Ancestral Mend",
+	"hud_label": "MEND",
+	"stacking": "refresh_no_stack",
+	"duration_s": 4.0,
+	"tick_s": 0.5,
+	"modifiers": {"heal_per_tick": 12.5},
+	"tags": ["Buff", "Heal"],
+	"hidden": false
+}
