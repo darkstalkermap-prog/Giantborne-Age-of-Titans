@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.ogre_tusk",
+	"type": "item",
+	"display_name": "Ogre King's Tusk",
+	"description": "A tusk as long as a man, broken from the Ogre King's jaw. Proof of the fight.",
+	"stack_max": 1,
+	"category": "trophy"
+}

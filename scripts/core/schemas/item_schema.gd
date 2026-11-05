@@ -11,12 +11,21 @@ const U := preload("res://scripts/core/schemas/schema_util.gd")
 static func fields() -> Dictionary:
 	var f := {"stack_max": U.int_field(1)}
 	## @anchor P12
+	# Items (P12, plan §2.8.2): the inventory groups them by category (material: iron, wood;
+	# quest: the supply cache, the crown; trophy: the ogre tusk; key), and tags quest items.
+	f.merge({
+		"category": U.str_field(false, DataValidator.ITEM_CATEGORIES),
+		"quest_item": U.bool_field(),
+	})
 
 	return f
 
 
 static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor P12
+	if bool(d.get("quest_item", false)) and not str(d.get("category", "material")) in ["quest", "key"]:
+		out.warnings.append("%s: a quest_item is usually of category quest or key (got %s)" % [
+			ctx, str(d.get("category", "material"))])
 
 	pass
 

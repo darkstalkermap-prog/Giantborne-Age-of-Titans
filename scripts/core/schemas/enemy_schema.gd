@@ -117,6 +117,9 @@ static func fields() -> Dictionary:
 	## @anchor P11b
 
 	## @anchor P12
+	# What a kill by the player drops, once per entity id (PlayerProgression, P12); a spawn's
+	# own loot_table (EnemyActor.loot_table, set by the director) overrides it.
+	f.merge({"loot_table": U.ref("loot_table", false, true)})
 
 	return f
 
