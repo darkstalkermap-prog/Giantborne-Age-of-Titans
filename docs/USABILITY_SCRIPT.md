@@ -36,7 +36,7 @@ Hollow (`quest.main` stage `wolves`). The Sandbox has its own sparring post for 
 - **Build.** A Windows export (`Giantborn.exe`) or the editor's run of `main.tscn`. Note the build
   version shown on the title screen (bottom line) on the sheet.
 - **Fresh state.** Delete the save and settings so every player starts the same way:
-  `%APPDATA%\Godot\app_userdata\Giantborn\saves\` and `settings.json` (Windows), or start with
+  `%APPDATA%\Godot\app_userdata\Giantborn- Age of Titans\saves\` and `settings.json` (Windows), or start with
   `-- --save-dir=user://usability_<name>` for a separate slot per player.
 - **Devices.** A mouse and keyboard, and an Xbox-layout controller (XInput) plugged in before the
   game starts. Ask each player which they prefer; aim for at least one controller player among the

@@ -16,9 +16,9 @@ reference-PC commands below.
 | Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered; `tools/draw_call_probe.tscn` (the static world) | P17b (container, software GL): the static world at most 93 per view at `low` and 221 at `medium` (was 402 / 584): **met**; with enemies in view the walk's p50 is 256 and its largest view 656 at `low` (was 608 / 1,354): **not met** while about five or more full-rig enemies are in view (about 33 draw calls each; see "Draw calls after P17b") |
 | Distant actors | Tier 2 shows a one-box proxy | P04 test; the Valley walk's LOD comparison | Met: every distant member shows its proxy at tier 2 |
 | Active combatants | <= 12 (the director's budget) | P10a tests; P17a bot invariant | 12 in the stress route (its own spawner) and in the Valley walk |
-| Valley load | <= 3 s headless, <= 6 s web | P10b slow test; P18 browser | Headless about 0.3 s (P10b); web **NOT RUN** (P18) |
+| Valley load | <= 3 s headless, <= 6 s web | P10b slow test; P18 browser | Headless about 0.3 s (P10b); web in a real browser **NOT RUN**. P18, Chromium with software WebGL on the container's shared CPU (indicative only): New Game to the first checkpoint stored in IndexedDB 14.2 s |
 | Navmesh files | <= 100 KB each | P10b test | Met (15-19 KB) |
-| Web `.pck` | <= 4 MB packed | P18 | **NOT RUN** (P18) |
+| Web `.pck` | <= 4 MB packed | P18 | **Met**: `index.pck` 2,356,808 bytes, 1,260,098 gzipped, 1,680,132 as shipped (gzip + base64) |
 
 ## The tools
 
@@ -318,6 +318,12 @@ the renderer's `visibility_range_end` on a rig's parts and `visibility_range_beg
 proxy, from about 45 m - which needs `EnemyActor.set_lod_tier` to leave the proxy to the renderer at
 tiers 0 and 1.
 
+P18 left this for the next milestone and records it as a known limitation (`docs/M2_M5_HANDOFF.md`
+§7): it changes three actor files, needs a distance per archetype (the 8.5 m Ogre King must not turn
+into a box inside its own arena), can only be judged rendered, and would not help the dense fights,
+whose enemies are all close; for those a rig must cost fewer draw calls itself (its parts are
+animated, tinted and flashed one by one today).
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
@@ -369,17 +375,26 @@ tiers 0 and 1.
 6. **Measuring.** `Performance.TIME_PHYSICS_PROCESS` and `TIME_PROCESS` are per-second maxima in
    Godot 4.6, not per-frame values (see PerfProbe); compare runs by `cpu_tick_ms`.
 
-## Web build checklist (P18; NOT RUN here)
+## Web build checklist (P18: Chromium with software WebGL; real browsers NOT RUN)
 
 The play link is the single-threaded web export (`tools/build_web.sh`, `web_nothreads_release`).
+P18 served `builds/web/` locally and drove `play.html` with Playwright's Chromium 153 using
+SwiftShader (software WebGL) on the container's shared CPU: headless for the boot, New Game, the
+save and Continue, headed under Xvfb for the mouse capture. Frame times and load times there say
+nothing about a real GPU; they are listed only to show the build works.
 
-- [ ] The build runs the `low` preset whatever the saved setting says: the Settings page shows
-      "Graphics preset: Low", disabled, with "The web build always uses the Low preset."
-- [ ] AI tier 1 starts at 30 m (`level.valley` `web_overrides.ai_tier1_m`).
-- [ ] The Valley loads in at most 6 s behind the "Loading..." frame (plan §5.4).
-- [ ] Walk the Cradle -> forest trail -> Grove and the village square with the browser's frame meter
-      (Chrome DevTools > Rendering > Frame rendering stats): note the frame time and any hitches,
-      especially when an encounter first appears (see the spawn hitch below).
-- [ ] The packed `.pck` is at most 4 MB (plan §5.4).
-- [ ] No errors in the browser console during 5 minutes of play.
-- [ ] Record the browser, the machine and the numbers in this file.
+| Check | P18 in the container | Real browser |
+| --- | --- | --- |
+| The page fits without a sideways scroll | Met at 1280 px (scroll width = client width) | NOT RUN |
+| Play downloads, unpacks and starts the engine | Met: the engine started 5.7 s after Play (4.6 s after a reload); about 14 MB to download | NOT RUN |
+| The title screen, then New Game into the Valley | Met: the title shows build 0.5.0-m5; New Game reaches the Hollow, its first checkpoint stored after 14.2 s | NOT RUN |
+| The Valley loads in at most 6 s behind the "Loading..." frame (plan §5.4) | Not judged (software rendering; 14.2 s includes the storage sync) | NOT RUN |
+| The save survives a page reload (IndexedDB) | Met: `/userfs/godot/app_userdata/Giantborn- Age of Titans/saves/valley_1.json` is in IndexedDB before and after the reload; the title then offers Continue ("Saved game: level 1, stage 1 ...") and Continue loads the Valley at the Hollow Shrine | NOT RUN |
+| The title's button that starts a mode takes the mouse (pointer lock inside the click) | Met (headed): no lock on the title or after a click on Settings; locked after the New Game click and in the Valley; Esc releases it | NOT RUN |
+| The build runs the `low` preset whatever the saved setting says | Met: the Valley renders without sun shadows (the `low` preset); `test_graphics_quality` covers the web forcing `low` over a `medium` setting (the Settings row's lock is tested under `--graphics`) | NOT RUN |
+| AI tier 1 starts at 30 m (`level.valley` `web_overrides.ai_tier1_m`) | Covered by `test_graphics_quality` (forced web) | NOT RUN |
+| The packed `.pck` is at most 4 MB (plan §5.4) | Met: 1.26 MB gzipped, 1.68 MB as shipped | - |
+| No errors in the browser console | Met headless (0 through boot, New Game, walking, reload and Continue); headed: one "404 (File not found)" with no failed request of the page itself (most likely the browser's own favicon request) | NOT RUN |
+| Walk the Cradle -> forest trail -> Grove and the village square with the browser's frame meter (Chrome DevTools > Rendering > Frame rendering stats): frame time and hitches, especially when an encounter first appears | NOT RUN (software WebGL here: about 2 frames a second) | NOT RUN |
+| A gamepad inside the page (browsers expose a pad after its first button press) | NOT RUN | NOT RUN |
+| Record the browser, the machine and the numbers in this file | Above | Owner |

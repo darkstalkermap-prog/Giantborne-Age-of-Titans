@@ -177,8 +177,8 @@ content was added to pad it. The Ogre King keeps 1,500 health.
 
 **P18 Ship.** A Valley screenshot tour that runs beside the bot (`tools/valley_tour.gd`; P17b's
 optional capture scenario was not built); the actors' draw calls documented as a known limitation
-instead of a late renderer change; the version `0.5.0-m5`. See
-[docs/systems/P18.md](systems/P18.md).
+instead of a late renderer change; one HUD message fixed that the tour's shots showed (a destroyed
+prop was named by its district); the version `0.5.0-m5`. See [docs/systems/P18.md](systems/P18.md).
 
 ## 3. Fixes from the milestone gate reviews
 
