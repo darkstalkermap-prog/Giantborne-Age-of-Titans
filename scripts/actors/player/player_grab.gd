@@ -13,7 +13,8 @@ extends PlayerComponent
 ##   immune              "Grab" is in its immunities (the Ogre King)
 ##   no_attach_profile   its grab_attach is "none" or not one of the stage's grab_attach
 ##   not_grabbable       actor.can_be_grabbed() is false (dead, already held, dormant)
-##   not_staggered       a living target must be STAGGERED (its poise is broken)
+##   not_staggered       a living target must be STAGGERED with its poise broken: the short
+##                       recovery a release leaves is not (has_broken_poise)
 ## Every grab is a controller request with this check as its precheck, so a refused grab spends
 ## nothing and reports its code (request_rejected, Events.action_rejected and a HUD warning). The
 ## check runs again when the hand closes on the first active tick, with the reach alone.
@@ -49,6 +50,11 @@ const REASONS := ["nothing_in_reach", "no_los", "too_tall", "too_heavy", "too_he
 	"no_attach_profile", "not_grabbable", "not_staggered"]
 ## The other refusals of this component's prechecks.
 const OTHER_REASONS := ["holding", "not_holding", "no_permission"]
+## The reasons a hold ends with (plan §2.4 grab_ended). EnemyActor.on_released hands the reason to
+## CombatController.release_grabbed, so the 0.6 s STAGGERED recovery of a released body carries it
+## as its stagger_reason: that recovery is not a broken poise (has_broken_poise).
+const RELEASE_REASONS := ["thrown", "dropped", "crushed", "interrupted", "holder_died", "target_died",
+	"timeout", "unloaded"]
 const LUNGE_STOP_FRACTION := 0.8
 const HOLD_SPEED_MULT := 0.6
 const HOLD_TIMEOUT_S := 5.0
@@ -237,10 +243,21 @@ func check_target(target: CombatEntity, mode := "hold", max_mass := "", max_dist
 		return "no_attach_profile"
 	if not bool(target.actor.call("can_be_grabbed")):
 		return "not_grabbable"
-	if target.is_alive() and (target.controller == null
-			or target.controller.state != CombatController.State.STAGGERED):
+	if target.is_alive() and not has_broken_poise(target):
 		return "not_staggered"
 	return ""
+
+
+## True while `e` is STAGGERED because its poise broke (spec §8: a living target needs that to be
+## grabbed): any stagger but the recovery a grab release leaves (its stagger_reason is one of
+## RELEASE_REASONS). A body put down, thrown, crushed or let go after the timeout cannot be
+## grabbed again until a new blow breaks its poise, and its poise meter ignores poise damage through
+## that recovery and the immunity after it, so no hold chains into the next for free.
+static func has_broken_poise(e: CombatEntity) -> bool:
+	if e == null or e.controller == null:
+		return false
+	var c := e.controller
+	return c.state == CombatController.State.STAGGERED and not RELEASE_REASONS.has(c.stagger_reason)
 
 
 ## Why this component refuses `def` now ("" = no objection). While holding: everything but a
@@ -330,7 +347,8 @@ func drop() -> bool:
 ## Lets go (reason: dropped, crushed, interrupted, holder_died, target_died, timeout, unloaded;
 ## "thrown" when the projectile system took the body). The body is set down where it is held,
 ## else beside the giant (front, left, right, behind) or on the giant's own spot
-## (EnemyActor.on_released). Emits grab_ended.
+## (EnemyActor.on_released), staggered 0.6 s: a recovery that does not make it grabbable again
+## (has_broken_poise; `reason` is one of RELEASE_REASONS). Emits grab_ended.
 func release(reason: String) -> void:
 	if _target == null:
 		return

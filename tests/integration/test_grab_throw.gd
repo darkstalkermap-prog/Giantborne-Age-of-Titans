@@ -93,9 +93,10 @@ func _stagger(e: EnemyActor, seconds := 2.0) -> void:
 	e.entity.stagger(seconds, "test")
 
 
-## Grabs `e` (staggered first): the request, then the windup until the hand closes.
+## Grabs `e` (staggered first unless its poise is broken already; a release's recovery is not):
+## the request, then the windup until the hand closes.
 func _grab(p: GiantPlayer, e: EnemyActor) -> bool:
-	if e.controller.state != CombatController.State.STAGGERED:
+	if not PlayerGrab.has_broken_poise(e.entity):
 		_stagger(e, 3.0)
 	if p.grab.try_grab() != CombatController.Verdict.ACCEPT:
 		return false
@@ -609,6 +610,126 @@ func test_stage_3_grabs_and_throws_an_ogre_the_stage_2_giant_cannot() -> void:
 	await step_ticks(1)
 	assert_eq(_hits_from("test.ogre", THROW_ID).size(), 1, "and takes its landing hit")
 	assert_ne_grabbed(ogre)
+
+
+# --------------------------------------------------------------------------- re-grabs
+
+## Spec §8: a living target needs broken poise, and the 0.6 s stagger a released body recovers in
+## is not one. Put down, then E at once: refused with not_staggered (nothing spent, no prompt, the
+## hand stays empty), and no blow breaks its poise through that recovery and the immunity after
+## it. Only a new poise break makes it grabbable again. (M3 gate: E at once closed the hand again,
+## so one poise break held a soldier forever.)
+func test_a_body_put_down_needs_a_new_poise_break() -> void:
+	var p := await _giant(1)
+	var s := _soldier_at(Vector3(0, 0.05, -3.0), "test.regrab")
+	await step_ticks(1)
+	assert_true(await _grab(p, s), "grabbed")
+	await _wait_free(p)
+	assert_true(p.grab.drop(), "put down")
+	assert_eq(s.controller.state, CombatController.State.STAGGERED, "it recovers in a 0.6 s stagger")
+	assert_eq(s.controller.stagger_reason, "dropped", "the release's stagger")
+	assert_false(PlayerGrab.has_broken_poise(s.entity), "which is not a broken poise")
+	grabs.clear()
+	_expect_refusal(p, "not_staggered", "a body just put down")
+	messages.clear()
+	p.router.inject_edge(&"interact")
+	await step_ticks(1)
+	assert_eq(p.controller.last_reject_reason, "not_staggered", "E at once is refused")
+	assert_true(messages.has(PlayerGrab.reason_text("not_staggered")), "and the HUD says why: %s" % [messages])
+	await step_ticks(24)
+	assert_eq(s.controller.state, CombatController.State.STAGGERED, "still in its recovery")
+	assert_false(p.grab.is_holding(), "the hand stays empty")
+	assert_eq(grabs.size(), 0, "no grab_started")
+	assert_true(s.controller.state != CombatController.State.GRABBED, "the soldier is not GRABBED")
+	p.interact.refresh()
+	assert_false(p.interact.current_prompt().begins_with("Grab"), "no grab prompt (%s)" % p.interact.current_prompt())
+	# No blow breaks its poise through the recovery and the immunity after it.
+	var poise := s.entity.combatant.poise
+	s.entity.apply_poise_damage(1000.0, "poise_broken")
+	assert_eq(s.controller.stagger_reason, "dropped", "a blow during the recovery breaks nothing")
+	await TestWait.until(self, func() -> bool: return s.controller.state == CombatController.State.LOCOMOTION, 30)
+	assert_eq(s.controller.state, CombatController.State.LOCOMOTION, "recovered")
+	assert_true(poise.is_immune(), "then briefly immune to poise damage")
+	s.entity.apply_poise_damage(1000.0, "poise_broken")
+	assert_eq(s.controller.state, CombatController.State.LOCOMOTION, "a blow during the immunity breaks nothing")
+	_expect_refusal(p, "not_staggered", "a recovered body")
+	# A new poise break: E grabs it again.
+	await TestWait.until(self, func() -> bool: return not poise.is_immune(), 120)
+	s.entity.apply_poise_damage(1000.0, "poise_broken")
+	assert_eq(s.controller.state, CombatController.State.STAGGERED, "a new poise break staggers it")
+	assert_true(PlayerGrab.has_broken_poise(s.entity), "its poise is broken")
+	assert_eq(str(p.grab.find_candidate("hold").reason), "", "and it can be grabbed again")
+	p.router.inject_edge(&"interact")
+	assert_true(await TestWait.until(self, func() -> bool: return p.grab.is_holding(), 40), "E grabs it")
+	assert_eq(grabs.size(), 1, "grab_started once")
+
+
+## Every other release leaves a body that cannot be grabbed until its poise breaks again: a hold
+## that timed out (else HOLD_TIMEOUT_S protected nothing), a crush (Crushing Grip lets go after it;
+## from an empty hand it cannot take the body back either) and a throw (released where it lands;
+## the landing hit breaks no poise through the recovery).
+func test_timed_out_crushed_and_thrown_bodies_are_not_grabbable() -> void:
+	var p := await _giant(1)
+	var s := _soldier_at(Vector3(0, 0.05, -3.0), "test.released")
+	await step_ticks(1)
+	p.grab.hold_timeout_s = 0.5
+	assert_true(await _grab(p, s), "grabbed")
+	await TestWait.until(self, func() -> bool: return not p.grab.is_holding(), 60)
+	assert_eq(ended.back()[3], "timeout", "the hold timed out")
+	assert_eq(s.controller.state, CombatController.State.STAGGERED, "released into its recovery")
+	grabs.clear()
+	_expect_refusal(p, "not_staggered", "a body the hold timed out on")
+	p.grab.hold_timeout_s = PlayerGrab.HOLD_TIMEOUT_S
+	# Crushed.
+	_stagger(s, 3.0)   # a new poise break
+	assert_true(await _grab(p, s), "grabbed after a new stagger")
+	await _wait_free(p)
+	p.router.inject_edge(&"slot_4")
+	assert_true(await TestWait.until(self, func() -> bool: return not p.grab.is_holding(), 40), "crushed")
+	assert_eq(ended.back()[3], "crushed", "and let go")
+	assert_eq(s.controller.state, CombatController.State.STAGGERED, "released into its recovery")
+	assert_eq(p.grab.check_target(s.entity), "not_staggered", "a crushed body cannot be grabbed")
+	assert_eq(str(p.grab.find_candidate("hold").reason), "not_staggered", "nor held")
+	assert_eq(p.grab.ability_reason(action(GRIP_ID)), "not_staggered", "nor crushed again from an empty hand")
+	# Thrown.
+	await _wait_free(p)
+	_stagger(s, 3.0)
+	assert_true(await _grab(p, s), "grabbed after a new stagger")
+	await _wait_free(p)
+	p.camera_rig.pitch = deg_to_rad(-20.0)   # it comes down on the floor nearby
+	p.router.inject_light_attack()
+	assert_true(await TestWait.until(self, func() -> bool: return not p.grab.is_holding(), 40), "thrown")
+	assert_true(await TestWait.until(self, func() -> bool: return not s.is_held(), 120), "it lands")
+	assert_true(s.entity.is_alive(), "alive")
+	assert_eq(s.controller.state, CombatController.State.STAGGERED, "released into its recovery")
+	assert_eq(p.grab.check_target(s.entity, "hold", "", 1000.0), "not_staggered", "a thrown body cannot be grabbed where it lands")
+	await step_ticks(2)
+	assert_eq(_hits_from("test.released", THROW_ID).size(), 1, "its landing hit resolved")
+	assert_eq(p.grab.check_target(s.entity, "hold", "", 1000.0), "not_staggered", "which breaks no poise")
+
+
+## The rule for every release reason, the plan's §2.4 grab_ended list written out here (so
+## RELEASE_REASONS cannot lose one unnoticed): a release leaves a recovery, never a broken poise;
+## a real stagger (a poise or guard break, a parry, the tests' stand-in) is one.
+func test_every_release_reason_leaves_a_recovery_not_a_broken_poise() -> void:
+	var p := await _giant(1)
+	var s := _soldier_at(Vector3(0, 0.05, -3.0), "test.reasons")
+	await step_ticks(1)
+	var c := s.controller
+	assert_false(PlayerGrab.has_broken_poise(null), "nothing: no broken poise")
+	assert_false(PlayerGrab.has_broken_poise(s.entity), "a soldier in locomotion: none")
+	for reason: String in ["thrown", "dropped", "crushed", "interrupted", "holder_died", "target_died",
+			"timeout", "unloaded"]:
+		assert_true(PlayerGrab.RELEASE_REASONS.has(reason), "%s is a release reason" % reason)
+		assert_true(c.enter_grabbed("test.holder"), "%s: held" % reason)
+		c.release_grabbed(reason, EnemyActor.RELEASE_RECOVERY_S)
+		assert_eq(c.state, CombatController.State.STAGGERED, "%s: released into its recovery" % reason)
+		assert_false(PlayerGrab.has_broken_poise(s.entity), "%s: not a broken poise" % reason)
+		assert_eq(p.grab.check_target(s.entity), "not_staggered", "%s: not grabbable" % reason)
+	for reason: String in ["poise_broken", "guard_broken", "parried", "test"]:
+		assert_true(c.apply_stagger(1.0, reason), "%s: staggered" % reason)
+		assert_true(PlayerGrab.has_broken_poise(s.entity), "%s: a broken poise" % reason)
+		assert_eq(p.grab.check_target(s.entity), "", "%s: grabbable" % reason)
 
 
 # --------------------------------------------------------------------------- unload
