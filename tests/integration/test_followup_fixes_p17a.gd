@@ -10,6 +10,9 @@ extends IntegrationSuite
 ##     else still holds it back.
 ##   * Pad A on the death screen confirmed at once, so a player mashing jump (or LT+A, Heavy
 ##     Footfall) skipped the death screen; the confirm now waits a second after the death.
+## And one bug the Valley bot found: an encounter member the director had taken out of the tree
+## (freed at the end of the frame) read its global position when a giant's ability started in the
+## same tick (an engine error); EnemyActor's global-bus handlers now return out of the tree.
 
 const FLOW := "res://scenes/test/flow_test_level.tscn"
 const DIRECTOR_LEVEL := "res://scenes/test/director_test.tscn"

@@ -478,10 +478,15 @@ func _task_for(o: Dictionary, _tick: int) -> Dictionary:
 				var rest := _rest_task(str(hint.rest_first), true)
 				if not rest.is_empty():
 					return rest
-			# A hurt giant rests before a kill objective (the forest ogre) when a shrine is in reach.
+			# A hurt giant rests before a kill objective (the forest ogre) at a shrine in reach on
+			# its own side of the target (not one it would have to walk past the target to reach).
 			var pools := player.entity.combatant.pools
-			if pools.health < pools.health_max * KILL_REST_BELOW_HEALTH:
-				var s := _nearest_shrine(KILL_REST_RADIUS_M)
+			var where: Vector3 = pos
+			var tn := _entity_node(target)
+			if tn != null:
+				where = tn.global_position
+			if pools.health < pools.health_max * KILL_REST_BELOW_HEALTH and where.is_finite():
+				var s := _nearest_shrine(KILL_REST_RADIUS_M, where)
 				if s != null:
 					return {"kind": "rest", "shrine": s, "boss": false}
 			var node := _entity_node(target)
@@ -694,12 +699,16 @@ func _rest_task(shrine_id: String, boss: bool) -> Dictionary:
 	return {"kind": "rest", "shrine": s, "boss": boss}
 
 
-func _nearest_shrine(radius: float) -> Shrine:
+## The nearest shrine within `radius` the giant can reach; with `away_from` (a danger), only one
+## farther from it than the giant is.
+func _nearest_shrine(radius: float, away_from := Vector3.INF) -> Shrine:
 	var best: Shrine = null
 	var best_d := radius
 	for n in get_tree().get_nodes_in_group(Shrine.GROUP):
 		var s := n as Shrine
 		if s == null or not level.is_ancestor_of(s):
+			continue
+		if away_from.is_finite() and _flat_dist(s.global_position, away_from) <= _flat_dist(player.global_position, away_from):
 			continue
 		var d := s.global_position.distance_to(player.global_position)
 		if d < best_d and reachable(s.global_position, s.activation_radius_m()):
