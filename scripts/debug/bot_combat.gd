@@ -40,6 +40,8 @@ const EXPERT_WATCH_M := 12.0
 const ENGAGE_RADIUS_M := [16.0, 22.0, 28.0]
 ## A target this much higher than the giant's feet is out of melee reach (an archer on a wall).
 const ELEVATED_M := 2.5
+## Targets narrower than this get the reach band (BotCombat.reach_band); larger ones the reach.
+const SMALL_TARGET_RADIUS_M := 0.8
 const BOSS_ID := "valley.arena.ogre_king"
 const RUNIC_BOLT := "ability.runic_bolt"
 const BOULDER_HURL := "ability.boulder_hurl"
@@ -447,18 +449,20 @@ func fight(tick: int, t: EnemyActor) -> void:
 	var reach := float(player.profile.get("melee_reach_m", 3.5))
 	var t_radius := EnemyActor.entity_radius(t.entity) if t.entity != null else 0.5
 	var t_height := t.entity.combatant.height_m if t.entity != null and t.entity.combatant != null else 1.8
-	# Where the swings land (the weapon's arc at this stage, with this weapon, on this target's
-	# size): stand a little short of the middle of the light's band (its far edge is optimistic);
-	# back off when near its inner edge (a long weapon passes over a target at the giant's feet).
-	var light_band := reach_band(_loadout_action(&"light"), t_radius, t_height)
-	var heavy_band := reach_band(_loadout_action(&"heavy"), t_radius, t_height)
+	# A man-sized target (soldiers, archers, mages, wolves): stand where the swings land (the
+	# weapon's arc at this stage, with this weapon, on this target's size), a little short of the
+	# middle of the light's band (its far edge is optimistic), and back off when near its inner edge.
+	# A large one (ogres, the King: hurtboxes high on a broad body): by the reach, as before.
+	var small := t_radius < SMALL_TARGET_RADIUS_M
+	var light_band := reach_band(_loadout_action(&"light"), t_radius, t_height) if small else Vector2.ZERO
+	var heavy_band := reach_band(_loadout_action(&"heavy"), t_radius, t_height) if small else Vector2.ZERO
 	var want := maxf(1.0, reach * 0.8 + t_radius * 0.5)
+	if t.is_in_group(OgreBoss.GROUP):
+		want = reach * 0.9 + t_radius * 0.5
 	var too_close := 0.0
 	if light_band != Vector2.ZERO:
 		want = lerpf(light_band.x, light_band.y, 0.45)
 		too_close = light_band.x + 0.25
-	elif t.is_in_group(OgreBoss.GROUP):
-		want = reach * 0.9 + t_radius * 0.5
 	var busy := defend_busy(tick)
 	if not busy and _abilities(tick, t, dist):
 		return
