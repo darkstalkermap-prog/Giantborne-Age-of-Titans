@@ -269,6 +269,9 @@ func test_attachment_and_crush_limits_by_stage() -> void:
 ## giant twice the soldier's height lasts 1.5 s and the lunge covers the knockback, so the hand
 ## closes inside it, at stages 1, 2 and 3.
 func test_heavy_then_e_grabs_a_soldier_at_every_stage() -> void:
+	# P08 caps weapons at their fit stage; this test needs the full-size club's heavy at stage 3
+	# (as P05's growth tests do).
+	TestFixtures.record_override("weapon.club", {"fit_max_stage": 3})
 	for stage in [1, 2, 3]:
 		grabs.clear()
 		var p := await _giant(stage)
