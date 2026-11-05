@@ -16,6 +16,7 @@ var growth_events: Array[Array] = []
 var blocked_events: Array[Array] = []
 var learned_events: Array[Array] = []
 var messages: Array[String] = []
+var loadout_events := 0
 
 
 func before_each() -> void:
@@ -24,16 +25,19 @@ func before_each() -> void:
 	blocked_events.clear()
 	learned_events.clear()
 	messages.clear()
+	loadout_events = 0
 	# P08 caps weapons at their fit stage; these tests measure the full-size club at stage 3.
 	TestFixtures.record_override("weapon.club", {"fit_max_stage": 3})
 	Events.growth_changed.connect(_on_growth)
 	Events.growth_blocked.connect(_on_blocked)
 	Events.ability_learned.connect(_on_learned)
 	Events.hud_message.connect(_on_message)
+	Events.loadout_changed.connect(_on_loadout)
 
 
 func after_each() -> void:
-	for sig: Signal in [Events.growth_changed, Events.growth_blocked, Events.ability_learned, Events.hud_message]:
+	for sig: Signal in [Events.growth_changed, Events.growth_blocked, Events.ability_learned, Events.hud_message,
+			Events.loadout_changed]:
 		for c: Dictionary in sig.get_connections():
 			if (c.callable as Callable).get_object() == self:
 				sig.disconnect(c.callable)
@@ -55,6 +59,10 @@ func _on_learned(_t: int, action_id: String, slot_key: String) -> void:
 
 func _on_message(text: String, _kind: String) -> void:
 	messages.append(text)
+
+
+func _on_loadout(_t: int, _id: String) -> void:
+	loadout_events += 1
 
 
 func _shrine(pos: Vector3, world_id := "test.shrine", shrine_id := "shrine.sandbox") -> Shrine:
@@ -205,12 +213,14 @@ func test_blocked_growth_in_the_trap_changes_nothing() -> void:
 	p.router.use_injection = true
 	var shrine := course.get_node("Shrine") as Shrine
 	await step_ticks(4)
-	assert_true(shrine.grow(p, 2).ok, "stage 2 in the open")
 	var trap := (course.get_node("Markers/TrapPoint") as Node3D).global_position
 	p.global_position = trap + Vector3(0, 0.05, 0)
 	p.velocity = Vector3.ZERO
 	await step_ticks(20)
 	assert_true(p.is_on_floor(), "standing in the trap alcove (6 m ceiling)")
+	var two := shrine.grow(p, 2)
+	assert_true(two.ok, "a 5.49 m stage-2 giant still fits under the 6 m ceiling (%s)" % two.message)
+	await step_ticks(10)
 	growth_events.clear()
 	var before := body_fields(p)
 	var r := shrine.grow(p, 3)
@@ -493,6 +503,7 @@ func test_growth_unlocks_are_learned_slotted_and_announced_once() -> void:
 	assert_eq(str(p.controller.loadout[slot]), id, "put into the first empty slot")
 	assert_eq(learned_events, [[id, slot]], "ability_learned once; Runic Bolt was known and slotted already")
 	assert_eq(r.summary.learned, [{"id": id, "slot": slot}], "the growth summary lists it")
+	assert_eq(loadout_events, 1, "loadout_changed for the auto-slot")
 	assert_true(", ".join(r.summary.lines).contains("Test Unlock"), "by name")
 	assert_true(s.grow(p, 3).ok, "grow on")
 	assert_true(p.growth.debug_set_stage(1).ok, "shrink")
@@ -549,3 +560,31 @@ func test_growth_stage_round_trips_through_the_character_state() -> void:
 	assert_eq(learned_events.size(), 0, "and teaches nothing")
 	assert_eq(q.nav_layers, 4, "nav layers follow the restored stage")
 	assert_eq(int(q.capture_character_state().growth_stage), 3, "and capture reports it")
+
+
+## The rig shows the tilted arc: during the ACTIVE phase of a stage-3 light 1 (tilt -16) and
+## heavy (tilt -12), the weapon arm points exactly along the swept weapon segment, and the
+## scaled shoulder sits on the profile's pivot.
+func test_the_rig_shows_the_tilted_arc_at_stage_3() -> void:
+	var p := await _grounded_player(Vector3(0, 0.05, 0))
+	assert_true(p.growth.debug_set_stage(3).ok, "stage 3")
+	await step_ticks(3)
+	var shoulder := p.get_node("Visual/Body/ShoulderR") as Node3D
+	assert_true(shoulder.global_position.is_equal_approx(p.to_global(p.weapon_pivot)), "the shoulder is on the pivot")
+	for attack_id: String in ["ability.light_1", "ability.heavy_1"]:
+		var a := GameData.get_action(attack_id)
+		p.entity.combatant.pools.stamina = p.entity.combatant.pools.stamina_max
+		p.controller.request(&"attack", {"action_id": attack_id})
+		var active: bool = await TestWait.until(self, func() -> bool:
+			return p.controller.phase() == ActionDef.Phase.ACTIVE and p.controller.elapsed > a.windup_ticks + 2, 60)
+		assert_true(active, "%s is active" % attack_id)
+		# The test resumes on process_frame, before the nodes' _process: the rig still shows the
+		# previous tick, whose arc fraction is active_fraction_prev().
+		var seg := p.weapon_segment_global(a, p.controller.active_fraction_prev())
+		var swept := (seg[1] - seg[0]).normalized()
+		var arm := -shoulder.global_transform.basis.z.normalized()
+		assert_true(rad_to_deg(arm.angle_to(swept)) < 1.0, "%s: the arm points along the swept segment (%.2f degrees off)" % [
+			attack_id, rad_to_deg(arm.angle_to(swept))])
+		assert_near(float(p.get_rig_state().arc_pitch_offset_deg), PlayerAttack.offset_for(p.profile, attack_id), 1e-9,
+			"%s: the rig reads the action's tilt" % attack_id)
+		await TestWait.until(self, func() -> bool: return p.controller.action == null, 90)

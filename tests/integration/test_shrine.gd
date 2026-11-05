@@ -148,7 +148,8 @@ func test_first_activation_heals_and_emits_once_per_load() -> void:
 
 
 func test_no_free_rest_without_first_activation_rest_and_no_checkpoint_when_off() -> void:
-	TestFixtures.record_override("shrine.thornwick", {"first_activation_rest": false, "checkpoint": false})
+	TestFixtures.record_override("shrine.thornwick", {"first_activation_rest": false, "checkpoint": false,
+		"rest_heals": false})
 	var s := _shrine(Vector3(0, 0, -10), "test.quiet", "shrine.thornwick")
 	var p := await _grounded_player(Vector3(0, 0.05, 0))
 	var pools := p.entity.combatant.pools
@@ -158,6 +159,10 @@ func test_no_free_rest_without_first_activation_rest_and_no_checkpoint_when_off(
 	assert_near(pools.health, 0.3 * pools.health_max, 1e-3, "no free Rest")
 	assert_eq(reached.size(), 0, "no checkpoint_reached")
 	assert_eq(activated, ["test.quiet"], "shrine_activated still fires")
+	var r := s.rest(p)
+	assert_true(r.ok, "resting is allowed")
+	assert_near(pools.health, 0.3 * pools.health_max, 1e-3, "but rest_heals false restores nothing")
+	assert_eq(rested, ["test.quiet"], "shrine_rested still fires (a checkpoint for GameSession)")
 
 
 func test_rest_heals_clears_debuffs_and_keeps_cooldowns_and_fury() -> void:
