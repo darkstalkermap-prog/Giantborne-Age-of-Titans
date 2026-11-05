@@ -59,6 +59,8 @@ const DEATH_WAIT_S := 1.5
 const TUTORIAL_BUDGET_S := 120.0
 const SCREEN_CLOSE_AFTER_S := 0.25
 const REST_BELOW_HEALTH := 0.45
+const KILL_REST_BELOW_HEALTH := 0.5
+const KILL_REST_RADIUS_M := 250.0
 const ERRAND_RADIUS_M := 70.0
 const ERRAND_GIVE_UP_S := 45.0
 const GAVE_UP := 1 << 30
@@ -476,6 +478,12 @@ func _task_for(o: Dictionary, _tick: int) -> Dictionary:
 				var rest := _rest_task(str(hint.rest_first), true)
 				if not rest.is_empty():
 					return rest
+			# A hurt giant rests before a kill objective (the forest ogre) when a shrine is in reach.
+			var pools := player.entity.combatant.pools
+			if pools.health < pools.health_max * KILL_REST_BELOW_HEALTH:
+				var s := _nearest_shrine(KILL_REST_RADIUS_M)
+				if s != null:
+					return {"kind": "rest", "shrine": s, "boss": false}
 			var node := _entity_node(target)
 			if node is EnemyActor and (node as EnemyActor).entity.is_alive():
 				return {"kind": "fight", "target": node}

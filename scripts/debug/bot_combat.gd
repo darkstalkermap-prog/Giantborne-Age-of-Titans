@@ -196,11 +196,14 @@ func _add_reaction(at: int, kind: String, actor: Node3D, why: String) -> void:
 ## Expert perception: every enemy within EXPERT_WATCH_M (or any distance for shots and charges)
 ## winding up an attack at the giant gets a reaction once per swing, from its controller phase.
 func _expert_watch(tick: int) -> void:
-	for n in player.get_tree().get_nodes_in_group("enemies"):
+	var tree := player.get_tree()
+	# The Hollow's sparring post is not an "enemy" (it never dies) but swings at the giant all the same.
+	for n in tree.get_nodes_in_group("enemies") + tree.get_nodes_in_group(SparringPost.GROUP):
 		var e := n as EnemyActor
 		if e == null or not e.is_inside_tree() or e.entity == null or not e.entity.is_alive() or e.controller == null:
 			continue
-		if e.entity.team != CombatEntity.Team.ENEMY or e.brain == null or e.brain.target_id != player.entity.entity_id:
+		if (e.entity.team != CombatEntity.Team.ENEMY and not (e is SparringPost)) or e.brain == null \
+				or e.brain.target_id != player.entity.entity_id:
 			continue
 		var c := e.controller
 		if c.action == null or c.phase() != ActionDef.Phase.WINDUP or not c.action.is_attack():
