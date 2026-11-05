@@ -26,6 +26,8 @@ static func build_soldier(kit: SceneKit) -> Node:
 	root.add_child(kit.combat_entity("soldier_01", "enemy.soldier", 2))
 	var anchors := kit.n3("Anchors")
 	anchors.add_child(kit.marker("Torso", Vector3(0, 1.15, 0)))
+	# P07: where a giant's fist closes around the soldier (attachment profile torso_fist).
+	anchors.add_child(kit.marker("Grab", Vector3(0, 1.2, 0)))
 	root.add_child(anchors)
 	var hb := kit.n3("Hurtboxes")
 	var head_shape := SphereShape3D.new()

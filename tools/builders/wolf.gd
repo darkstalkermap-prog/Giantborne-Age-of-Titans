@@ -31,6 +31,8 @@ static func build_wolf(kit: SceneKit) -> Node:
 	root.add_child(kit.combat_entity("wolf_01", "enemy.wolf", 2))
 	var anchors := kit.n3("Anchors")
 	anchors.add_child(kit.marker("Torso", Vector3(0, 0.55, 0)))
+	# P07: the scruff of the neck, where a giant's hand lifts the wolf (attachment profile scruff).
+	anchors.add_child(kit.marker("Grab", Vector3(0, 0.74, -0.3)))
 	root.add_child(anchors)
 	var hb := kit.n3("Hurtboxes")
 	var head_shape := SphereShape3D.new()
