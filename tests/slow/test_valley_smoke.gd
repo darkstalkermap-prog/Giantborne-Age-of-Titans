@@ -310,6 +310,20 @@ const PLANNED_SPAWNS := [
 ]
 
 
+## Thornwick's 4 m side alleys between cottages (plan §4.2): stage-1 shortcuts, on the small-giant
+## and human layers only; the giant layer keeps to the 12 m streets.
+func test_village_alleys_are_stage_1_shortcuts() -> void:
+	var lv := _add_valley()
+	assert_true(await ValleyProbe.wait_for_navigation(self, lv), "navigation ready")
+	for alley: Vector3 in [Vector3(58, 0, -39), Vector3(64, 0, -32.5), Vector3(18, 0, -8), Vector3(64, 0, -4),
+			Vector3(22, 0, -45.5)]:
+		for layer: int in [ValleyProbe.SMALL_GIANT, ValleyProbe.HUMAN]:
+			var on := NavigationServer3D.region_get_closest_point(lv.nav_region(layer), alley)
+			assert_true(ValleyProbe.flat(on, alley) < 0.3, "the alley at %s is on nav layer %d" % [alley, layer])
+		var giant := NavigationServer3D.region_get_closest_point(lv.nav_region(ValleyProbe.GIANT), alley)
+		assert_true(ValleyProbe.flat(giant, alley) > 1.5, "but not on the giant layer (closest %s)" % giant)
+
+
 func test_planned_spawn_points_stand_on_navigation() -> void:
 	var lv := _add_valley()
 	assert_true(await ValleyProbe.wait_for_navigation(self, lv), "navigation ready")

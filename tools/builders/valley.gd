@@ -80,6 +80,9 @@ const CELL_HEIGHT := 0.25
 const MAX_SLOPE_DEG := 35.0
 ## Islands smaller than this many cells squared are dropped by the bake (Recast min region area).
 const REGION_MIN_SIZE := 8.0
+## Contour simplification, in cells (Recast's default is 1.3): coarser outlines round the trees
+## keep the polygon count, and with it the cost of whole-area path searches, down (see CYL_SIDES).
+const EDGE_MAX_ERROR := 2.0
 ## The bake's fixed bounds: the map plus the inner half of the edge ring, from the bottom of the
 ## ground (-1 m), so the voxel grid (and with it the navmesh height) never shifts with the content.
 const BAKE_AABB := AABB(Vector3(-205, -1, -205), Vector3(410, 61, 410))
@@ -99,9 +102,6 @@ const SKY := Color(0.56, 0.64, 0.74)
 const MARKER_KINDS := {"objective": [0, "Objective"], "cover": [1, "Cover"], "elevation": [2, "Elevation"],
 	"formation": [3, "Formation"], "safe": [4, "Safe"], "patrol": [5, "PatrolPoints"], "bot_route": [6, "BotRoute"]}
 
-## Unit meshes the visuals scale (MultiMesh instance transforms carry the size).
-const MESH_KINDS := ["box", "cyl", "cone", "prism", "plane"]
-
 const LAYER_WORLD := 1
 const LAYER_BLOCKER := 32
 
@@ -118,7 +118,7 @@ static func build_all(kit: SceneKit) -> void:
 		district_ids.append(str(d.id))
 	for id: String in district_ids:
 		kit.save(build_district(kit, id, geo), DISTRICT_DIR + id + ".tscn")
-	var root := build_root(kit, layout, district_ids)
+	var root := build_root(kit, layout, district_ids, geo)
 	if root != null:
 		kit.save(root, ROOT_PATH)
 
@@ -194,7 +194,8 @@ static func _mat_key(kit: SceneKit, mat_name: String) -> String:
 ##   "solids": {district, name, shape ("box"|"cyl"), xform (centre and rotation), size (box size;
 ##     cylinder: diameter, height, diameter), mat, layer (WORLD|BLOCKER), visible, scenery,
 ##     nav ("ground"|"obstacle"|"walkable"|"ramp")}
-##   "visuals": {district, name, kind (MESH_KINDS), xform (with the scale), mat, scenery, shadow}
+##   "visuals": {district, name, kind ("box"|"cyl"|"cone"|"prism"|"plane": a unit mesh), xform (with the
+##     scale), mat, scenery, shadow}
 ##   "nav_blocks": [Rect2] (x, z): areas the bake removes (the river)
 static func collect(layout: Dictionary) -> Dictionary:
 	var geo := {"solids": [], "visuals": [], "nav_blocks": [], "districts": layout.get("districts", [])}
@@ -556,7 +557,7 @@ static func _unit_meshes() -> Dictionary:
 
 # --------------------------------------------------------------------------- the root scene
 
-static func build_root(kit: SceneKit, layout: Dictionary, district_ids: Array) -> Node:
+static func build_root(kit: SceneKit, layout: Dictionary, district_ids: Array, geo: Dictionary) -> Node:
 	var player: Node3D = kit.instance(GIANT)
 	if player == null:
 		push_error("valley: build the player scene first")
@@ -628,7 +629,6 @@ static func build_root(kit: SceneKit, layout: Dictionary, district_ids: Array) -
 	for container: Node in [props, shrines, waystones, dummies, kingsfall]:
 		_collect_static_shapes(container, root, extra)
 	var nav := kit.n3("Navigation")
-	var geo := collect(layout)
 	var src := nav_source(geo, extra)
 	for spec: Dictionary in NAV_LAYERS:
 		var region := NavigationRegion3D.new()
@@ -961,7 +961,7 @@ static func bake_layer(spec: Dictionary, src: NavigationMeshSourceGeometryData3D
 	nm.cell_size = float(spec.cell)
 	nm.cell_height = CELL_HEIGHT
 	nm.region_min_size = REGION_MIN_SIZE
-	nm.edge_max_error = 2.0
+	nm.edge_max_error = EDGE_MAX_ERROR
 	nm.filter_baking_aabb = BAKE_AABB
 	NavigationServer3D.bake_from_source_geometry_data(nm, src)
 	return nm

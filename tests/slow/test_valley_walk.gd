@@ -13,11 +13,25 @@ extends IntegrationSuite
 ##     road patrol's flag gate).
 
 var level: LevelRoot
+var areas: Array[String] = []
 
 
 func before_each() -> void:
 	await super()
 	level = null
+	areas.clear()
+	Events.area_entered.connect(_on_area_entered)
+
+
+func after_each() -> void:
+	if Events.area_entered.is_connected(_on_area_entered):
+		Events.area_entered.disconnect(_on_area_entered)
+	await super()
+
+
+func _on_area_entered(_tick: int, area_id: String, _entity_id: String) -> void:
+	if not areas.has(area_id):
+		areas.append(area_id)
 
 
 func _add_valley(no_director := true) -> LevelRoot:
@@ -109,6 +123,8 @@ func test_walk_from_the_cradle_to_the_grove() -> void:
 	assert_true(ValleyProbe.flat(p.global_position, grove) < 2.0, "at the Grove Shrine's pad (%s)" % p.global_position)
 	assert_true(p.global_position.y > -0.5, "never fell through the ground")
 	assert_eq(lv.district_at(p.global_position), "forest", "in the Old Wood")
+	for id: String in ["valley.area.forest_edge", "valley.area.grove"]:
+		assert_true(areas.has(id), "the walk entered %s (entered: %s)" % [id, areas])
 
 
 func test_stage_3_walks_the_return_leg() -> void:
@@ -134,6 +150,8 @@ func test_stage_3_walks_the_return_leg() -> void:
 	assert_eq(r.reached, r.total, "every waypoint reached (stuck at %s)" % r.stuck_at)
 	assert_true(ValleyProbe.flat(p.global_position, square) < 2.0, "in the square (%s)" % p.global_position)
 	assert_eq(lv.district_at(p.global_position), "village", "back in Thornwick")
+	for id: String in ["valley.area.causeway", "valley.area.ruins_approach"]:
+		assert_true(areas.has(id), "the return leg entered %s (entered: %s)" % [id, areas])
 
 
 func test_forest_encounters_spawn_from_data() -> void:
