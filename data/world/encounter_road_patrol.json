@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "encounter.road_patrol",
+	"type": "encounter",
+	"display_name": "Road patrol",
+	"description": "After the growth at the Grove: two outmatched soldiers hold a line at the road_line markers and brace, and the first mage is met alone (plan section 4.4).",
+	"level": "level.valley",
+	"district": "village",
+	"center_m": [-8, 0, -50],
+	"activate_radius_m": 45,
+	"deactivate_radius_m": 100,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": ["reward.main.grove"],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.village.road_soldier_1", "definition": "enemy.soldier", "position_m": [-12, 0, -52], "yaw_deg": 70,
+			"patrol": "valley.patrol.road", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.road_soldier_2", "definition": "enemy.soldier", "position_m": [-4, 0, -48], "yaw_deg": 70,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.village.road_mage", "definition": "enemy.mage", "position_m": [-8, 0, -58], "yaw_deg": 70,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

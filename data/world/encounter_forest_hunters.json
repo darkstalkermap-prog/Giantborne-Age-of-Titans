@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "encounter.forest_hunters",
+	"type": "encounter",
+	"display_name": "Forest hunters",
+	"description": "Two stage-1 soldiers and a wolf at the hunters' camp on the road bend: guards, turns, two tokens, and the grab tutorial (plan section 4.4).",
+	"level": "level.valley",
+	"district": "forest",
+	"center_m": [-120, 0, 10],
+	"activate_radius_m": 50,
+	"deactivate_radius_m": 110,
+	"leash_radius_m": 45,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.forest.hunter_1", "definition": "enemy.soldier", "position_m": [-125, 0, 5], "yaw_deg": 150,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.forest.hunter_2", "definition": "enemy.soldier", "position_m": [-114, 0, 4], "yaw_deg": 150,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.forest.hunter_wolf", "definition": "enemy.wolf", "position_m": [-118, 0, 16], "yaw_deg": 150,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}
