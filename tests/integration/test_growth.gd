@@ -156,6 +156,7 @@ func test_growth_keeps_fractions_and_updates_every_field() -> void:
 	var s := _shrine(Vector3(0, 0, -12))
 	var p := await _grounded_player(Vector3(0, 0.05, 0))
 	_check_stage_fields(p, 1)
+	assert_eq(p.entity.combatant.mass_class, "large", "the giant is a large mass (the player schema's default)")
 	var pools := p.entity.combatant.pools
 	pools.health = 0.4 * pools.health_max
 	pools.stamina = 0.5 * pools.stamina_max
@@ -391,3 +392,160 @@ func test_a_lunging_wolf_is_punished_by_the_light_chain_at_stages_2_and_3() -> v
 		p.queue_free()
 		w.queue_free()
 		await step_ticks(2)
+
+
+# --------------------------------------------------------------------------- camera
+
+## Footstep shake goes through camera_rig.add_shake, which the camera_shake setting scales:
+## with the setting at 0 the camera's local transform stays identity while a stage-3 giant
+## walks; at 1 it does not. A stage-1 giant (footstep_shake 0) never shakes.
+func test_footstep_shake_follows_the_camera_shake_setting() -> void:
+	var p := await _grounded_player(Vector3(0, 0.05, 30))
+	var shaken_stage_1 := await _walk_and_count_shake(p, 1.0, 90)
+	assert_eq(shaken_stage_1, 0, "stage 1 (footstep_shake 0) never shakes the camera")
+	assert_true(p.growth.debug_set_stage(3).ok, "stage 3")
+	await step_ticks(20)
+	var steps_before := p.rig.footfalls
+	var shaken_off := await _walk_and_count_shake(p, 0.0, 150)
+	assert_true(p.rig.footfalls > steps_before, "the stage-3 giant took steps (%d)" % (p.rig.footfalls - steps_before))
+	assert_eq(shaken_off, 0, "camera_shake 0: the camera's local transform stays identity")
+	var shaken_on := await _walk_and_count_shake(p, 1.0, 150)
+	assert_true(shaken_on > 0, "camera_shake 1: footfalls shake the camera (%d frames)" % shaken_on)
+
+
+func _walk_and_count_shake(p: GiantPlayer, setting: float, ticks: int) -> int:
+	Settings.values["camera_shake"] = setting
+	var shaken := 0
+	p.camera_rig.yaw = 0.0
+	p.router.set_injected_move(Vector2(0, 1))
+	for i in ticks:
+		await step_ticks(1)
+		if not p.camera_rig.camera.transform.is_equal_approx(Transform3D.IDENTITY):
+			shaken += 1
+	p.router.set_injected_move(Vector2.ZERO)
+	await step_ticks(30)
+	return shaken
+
+
+## A wall right behind the giant cuts the third-person arm below 1.2 x the capsule radius: the
+## camera then hides render layer 2 (head, chest, belt), as first person does, and shows it
+## again once the arm grows back out.
+func test_camera_hides_the_head_while_the_arm_is_pressed_short() -> void:
+	var p := await _grounded_player(Vector3(0, 0.05, 0))
+	await step_ticks(60)
+	var head := p.get_node("Visual/Body/Torso/Head") as MeshInstance3D
+	var cam := p.camera_rig.camera
+	assert_false(p.camera_rig.head_hidden, "an open view shows the head")
+	assert_true((head.layers & cam.cull_mask) != 0, "the head is drawn")
+	var wall := add_box(Vector3(10, 10, 1), Vector3(0, 5, 1.6))   # the camera sits behind (+Z)
+	await step_ticks(3)
+	assert_true(p.camera_rig.current_distance < 1.2 * 0.85, "the arm is pressed short (%.2f m)" % p.camera_rig.current_distance)
+	assert_true(p.camera_rig.head_hidden, "the camera hides the head")
+	assert_eq(head.layers & cam.cull_mask, 0, "the head is not drawn")
+	var arm := p.get_node("Visual/Body/ShoulderR/Forearm") as MeshInstance3D
+	assert_true((arm.layers & cam.cull_mask) != 0, "the arms stay drawn")
+	wall.queue_free()
+	await step_ticks(90)
+	assert_false(p.camera_rig.head_hidden, "the arm grew back: the head shows again (arm %.2f m)" % p.camera_rig.current_distance)
+	assert_true((head.layers & cam.cull_mask) != 0, "drawn again")
+
+
+## Growth keeps the camera's zoom fraction and never snaps the arm: right after growing, the
+## arm is still the old length and then grows out at the restore speed.
+func test_camera_zoom_fraction_kept_and_arm_never_snaps() -> void:
+	var s := _shrine(Vector3(0, 0, -12))
+	var p := await _grounded_player(Vector3(0, 0.05, 0))
+	await step_ticks(60)
+	p.camera_rig.zoom(1)
+	p.camera_rig.zoom(1)
+	await step_ticks(60)
+	var g1 := _profile(1)
+	var g2 := _profile(2)
+	var frac := (p.camera_rig.desired_distance - float(g1.camera_zoom_min_m)) / (float(g1.camera_zoom_max_m) - float(g1.camera_zoom_min_m))
+	var arm_before := p.camera_rig.current_distance
+	assert_true(s.grow(p, 2).ok, "grow")
+	assert_near(p.camera_rig.current_distance, arm_before, 1e-6, "the arm is not snapped by the growth")
+	assert_near(p.camera_rig.desired_distance,
+		lerpf(float(g2.camera_zoom_min_m), float(g2.camera_zoom_max_m), frac), 1e-4, "the zoom fraction is kept")
+	await step_ticks(10)
+	var mid := p.camera_rig.current_distance
+	assert_true(mid > arm_before and mid < p.camera_rig.desired_distance, "the arm grows out smoothly (%.2f m)" % mid)
+
+
+# --------------------------------------------------------------------------- unlocks, keys, state
+
+func test_growth_unlocks_are_learned_slotted_and_announced_once() -> void:
+	var rec := GameData.get_record("ability.stone_skin").duplicate(true)
+	rec["id"] = "ability.test_growth_unlock"
+	rec["display_name"] = "Test Unlock"
+	TestFixtures.record_override("ability.test_growth_unlock", rec)
+	TestFixtures.record_override("growth.02", {"unlocks": ["ability.test_growth_unlock", "ability.runic_bolt"]})
+	var s := _shrine(Vector3(0, 0, -12))
+	var p := await _grounded_player(Vector3(0, 0.05, 0))
+	var id := "ability.test_growth_unlock"
+	var slot := PlayerGrowth.first_empty_slot(p.controller.loadout)
+	assert_true(slot != "", "the sandbox loadout has an empty slot (%s)" % slot)
+	assert_false(p.known_abilities.has(id), "not known before growing")
+	var r := s.grow(p, 2)
+	assert_true(r.ok, "grow")
+	assert_true(p.known_abilities.has(id), "learned")
+	assert_true(p.controller.library.has(id), "in the controller's library")
+	assert_eq(str(p.controller.loadout[slot]), id, "put into the first empty slot")
+	assert_eq(learned_events, [[id, slot]], "ability_learned once; Runic Bolt was known and slotted already")
+	assert_eq(r.summary.learned, [{"id": id, "slot": slot}], "the growth summary lists it")
+	assert_true(", ".join(r.summary.lines).contains("Test Unlock"), "by name")
+	assert_true(s.grow(p, 3).ok, "grow on")
+	assert_true(p.growth.debug_set_stage(1).ok, "shrink")
+	assert_true(p.known_abilities.has(id), "shrinking keeps what was learned")
+	assert_true(p.growth.debug_set_stage(2).ok, "grow again")
+	assert_eq(learned_events.size(), 1, "never learned twice")
+
+
+func test_debug_keys_grow_and_shrink() -> void:
+	var p := await _grounded_player(Vector3(0, 0.05, 0))
+	for expected in [2, 3]:
+		p.router.inject_edge(&"debug_grow")
+		await step_ticks(2)
+		assert_eq(p.growth_stage, expected, "F6 grows to stage %d" % expected)
+		assert_true(messages.has("DEBUG: stage %d" % expected), "and says so")
+	p.router.inject_edge(&"debug_grow")
+	await step_ticks(2)
+	assert_eq(p.growth_stage, 3, "no stage 4 profile: stays stage 3")
+	assert_eq(blocked_events.back()[1], "no_profile", "growth_blocked no_profile")
+	for expected in [2, 1]:
+		p.router.inject_edge(&"debug_shrink")
+		await step_ticks(2)
+		assert_eq(p.growth_stage, expected, "F7 shrinks to stage %d" % expected)
+	p.router.inject_edge(&"debug_shrink")
+	await step_ticks(2)
+	assert_eq(p.growth_stage, 1, "nothing below stage 1")
+	assert_eq(growth_events, [["player", 1, 2], ["player", 2, 3], ["player", 3, 2], ["player", 2, 1]],
+		"growth_changed for every change and none for the refusals")
+	p.entity.combatant.pools.mark_combat()
+	p.router.inject_edge(&"debug_grow")
+	await step_ticks(2)
+	assert_eq(p.growth_stage, 2, "the debug key ignores the combat gate")
+
+
+func test_growth_stage_round_trips_through_the_character_state() -> void:
+	var s := _shrine(Vector3(0, 0, -12))
+	var p := await _grounded_player(Vector3(0, 0.05, 0))
+	assert_true(s.grow(p, 2).ok, "grow")
+	var out := p.capture_character_state()
+	assert_eq(int(out.growth_stage), 2, "capture writes growth_stage")
+	p.queue_free()
+	await step_ticks(2)
+	var q := await _grounded_player(Vector3(8, 0.05, 0))
+	growth_events.clear()
+	learned_events.clear()
+	q.apply_character_state({"growth_stage": 3, "resources": {"health": 700.0, "stamina": 50.0,
+		"essence": 20.0, "fury": 0.0}})
+	assert_eq(q.growth_stage, 3, "the saved stage is restored")
+	var pools := q.entity.combatant.pools
+	assert_near(pools.health_max, 800.0, 1e-4, "with the stage-3 maxima")
+	assert_near(pools.health, 700.0, 1e-4, "and the saved resources applied after it (absolute)")
+	assert_near(pools.stamina, 50.0, 1e-4, "stamina")
+	assert_eq(growth_events.size(), 0, "a restore is silent: no growth_changed (no checkpoint, no notice)")
+	assert_eq(learned_events.size(), 0, "and teaches nothing")
+	assert_eq(q.nav_layers, 4, "nav layers follow the restored stage")
+	assert_eq(int(q.capture_character_state().growth_stage), 3, "and capture reports it")

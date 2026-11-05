@@ -129,6 +129,14 @@ static func zoomed_distance(from: Dictionary, to: Dictionary, distance: float) -
 	return lerpf(lo, hi, t)
 
 
+## The side orbit (radians) of the third-person lock on a small target `dist` metres away: none
+## beyond LOCK_ORBIT_FAR_M x orbit_scale, LOCK_ORBIT_DEG within LOCK_ORBIT_NEAR_M x orbit_scale
+## (the profile's camera_orbit_scale, so a bigger giant starts orbiting farther out).
+static func lock_orbit_rad(dist: float, orbit_scale: float) -> float:
+	var s := maxf(orbit_scale, 0.01)
+	return deg_to_rad(LOCK_ORBIT_DEG) * clampf(inverse_lerp(LOCK_ORBIT_FAR_M * s, LOCK_ORBIT_NEAR_M * s, dist), 0.0, 1.0)
+
+
 ## Third person: hide render layer 2 (head, chest, belt) while the arm is shorter than
 ## HEAD_HIDE_ARM_RADII x the capsule radius, or while the screen-centre ray passes closer than
 ## HEAD_CLEAR_RADII x the capsule radius beside the pivot. The camera always looks along the
@@ -204,10 +212,7 @@ func _frame_lock_target(delta: float) -> void:
 	to_target.y = 0.0
 	var dist := to_target.length()
 	var small := lock_target.combatant.height_m < float(profile.get("height_m", 3.66)) * 0.7
-	var orbit := 0.0
-	if small:
-		var s := float(profile.get("camera_orbit_scale", 1.0))
-		orbit = deg_to_rad(LOCK_ORBIT_DEG) * clampf(inverse_lerp(LOCK_ORBIT_FAR_M * s, LOCK_ORBIT_NEAR_M * s, dist), 0.0, 1.0)
+	var orbit := lock_orbit_rad(dist, float(profile.get("camera_orbit_scale", 1.0))) if small else 0.0
 	if dist > 0.1:
 		var want_yaw := TargetingRules.yaw_of(to_target) + orbit
 		yaw = lerp_angle(yaw, want_yaw, 1.0 - exp(-8.0 * delta))
