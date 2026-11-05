@@ -568,7 +568,9 @@ func _attach_target(target: CombatEntity, a: ActionDef) -> bool:
 
 ## The "grab" hit shape (AttackRunner; every ACTIVE tick of a grab action): the hand closes on the
 ## first one. A crush then squeezes the held body with the action's own hit (HitFactory) and lets
-## go when grab.release_after is set.
+## go when grab.release_after is set. A hand that closes on nothing - the recheck at attachment
+## fails, or the target died or vanished during the windup - gives back what the request spent
+## (refund_closed_on_nothing).
 func _run_grab_shape(a: ActionDef, tick: int) -> void:
 	if not player.controller.is_first_active_tick():
 		return
@@ -577,11 +579,32 @@ func _run_grab_shape(a: ActionDef, tick: int) -> void:
 	_pending = null
 	if not is_holding():
 		if target == null or not is_instance_valid(target) or not _attach_target(target, a):
+			refund_closed_on_nothing(a)
 			return
 	elif target != _target:
+		refund_closed_on_nothing(a)
 		return
 	if is_crush(a):
 		_crush(a, tick)
+
+
+## Spec §15 "invalid grabs spend nothing" (P16, M3 review): a grab or crush whose hand closed on
+## nothing gets back the stamina, essence and fury its request spent, and its cooldown is over
+## (restarted as if it had begun cooldown_s ago). Crushing Grip pays 20 stamina and a 10 s
+## cooldown on accept; a target that left the reach during the windup no longer costs them.
+func refund_closed_on_nothing(a: ActionDef) -> void:
+	if a == null:
+		return
+	var pools := player.entity.combatant.pools
+	if a.stamina_cost > 0.0:
+		pools.stamina = minf(pools.stamina_max, pools.stamina + a.stamina_cost)
+	if a.essence_cost > 0.0:
+		pools.essence = minf(pools.essence_max, pools.essence + a.essence_cost)
+	if a.fury_cost > 0.0:
+		pools.fury = minf(pools.fury_max, pools.fury + a.fury_cost)
+	if a.cooldown_s > 0.0:
+		var c := player.controller
+		c.cooldowns.start(a.id, a.cooldown_s, c.now - int(roundf(a.cooldown_s * Cooldowns.TICK_RATE)))
 
 
 func _crush(a: ActionDef, tick: int) -> void:
@@ -742,8 +765,15 @@ func _throw_precheck() -> String:
 	return "" if is_holding() else "not_holding"
 
 
+## A slot's request precheck: PlayerAttack's range check first (a projectile slot - Boulder Hurl -
+## locked on a target beyond its reach; P16), then ability_reason, in the HUD's order (the
+## hotbar chains PlayerAttack's preview precheck before this component's).
 func _slot_precheck(slot_key: String) -> String:
-	return ability_reason(_slot_action(slot_key))
+	var def := _slot_action(slot_key)
+	var why := ""
+	if player.attack != null and player.attack.has_method("range_reason"):
+		why = str(player.attack.range_reason(def))
+	return why if why != "" else ability_reason(def)
 
 
 ## The hotbar's version: the cached candidates, and an empty reach is the HUD's "no_grab_target"

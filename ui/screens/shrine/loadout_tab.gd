@@ -4,10 +4,14 @@ extends ShrineTab
 ## PlayerProgression.set_slot(slot, id, shrine): allowed only at a shrine whose record has loadout
 ## true, outside combat; an ability already in another slot swaps places. Shown when the record
 ## allows it and the giant has a progression component.
+##
+## P16: one focus row per slot list (slot 1 to 8, then the ultimate); the slot titles name the
+## key or the pad combo of the device used last ("Slot 6 [6]" / "Slot 6 [LT+Rt]").
 
 const EMPTY_LABEL := "(empty)"
 
 var _rows: Dictionary = {}    ## slot key -> OptionButton
+var _titles: Dictionary = {}  ## slot key -> its title Label
 var _info: Label
 var _result: Label
 var _first: Control = null
@@ -33,9 +37,10 @@ func _ready() -> void:
 	grid.add_theme_constant_override("v_separation", 4)
 	add_child(grid)
 	for key: String in GiantPlayer.SLOT_KEYS:
-		var label := UiKit.label(slot_title(key), 15)
+		var label := UiKit.label(slot_title(key, InputBindings.last_device_is_pad()), 15)
 		label.custom_minimum_size = Vector2(150, 0)
 		grid.add_child(label)
+		_titles[key] = label
 		var opt := OptionButton.new()
 		opt.custom_minimum_size = Vector2(260, 0)
 		opt.focus_mode = Control.FOCUS_ALL
@@ -49,20 +54,38 @@ func _ready() -> void:
 	add_child(_result)
 
 
-## "Slot 6 [6]" / "Ultimate [R]".
-static func slot_title(key: String) -> String:
+## "Slot 6 [6]" / "Ultimate [R]"; with pad (P16) the pad combo: "Slot 6 [LT+Rt]" / "Ultimate
+## [LT+RT]" (the key when the slot has no pad binding).
+static func slot_title(key: String, pad := false) -> String:
 	var title := "Ultimate" if key == "ultimate" else "Slot %s" % key.trim_prefix("slot_")
-	return "%s [%s]" % [title, Progression.slot_key_label(key)]
+	var label := Progression.slot_key_label(key)
+	if pad:
+		var combo := InputBindings.short_pad_label("ultimate" if key == "ultimate" else key.replace("slot_", "ability_"))
+		if combo != "":
+			label = combo
+	return "%s [%s]" % [title, label]
 
 
 func first_focus() -> Control:
 	return _first
 
 
+## One row per slot list, slot 1 to 8 then the ultimate (P16).
+func focus_rows() -> Array:
+	var rows: Array = []
+	for key: String in GiantPlayer.SLOT_KEYS:
+		if _rows.has(key):
+			rows.append([_rows[key]])
+	return rows
+
+
 func refresh() -> void:
 	var p := player()
 	if p == null or p.progression == null or _rows.is_empty():
 		return
+	var pad := InputBindings.last_device_is_pad()
+	for key: String in _titles:
+		(_titles[key] as Label).text = slot_title(key, pad)
 	for key: String in GiantPlayer.SLOT_KEYS:
 		var opt: OptionButton = _rows[key]
 		opt.clear()

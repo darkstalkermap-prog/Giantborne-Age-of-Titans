@@ -12,9 +12,11 @@ extends PlayerComponent
 ##   level       controller.level < the profile's required_level (99 = gating off)
 ##   busy        not standing in LOCOMOTION on the floor (attacking, dodging, staggered, ...)
 ##   holding     controller.holding_id is set (a grabbed body in hand)
-##   combat      pools.in_combat(): a hit was exchanged in the last 10 s
-##   clearance   the new capsule overlaps WORLD | BREAKABLE | BLOCKER, or something is above
-##               the head up to the new height (check_clearance)
+##   combat      pools.in_combat(): a hit was exchanged in the last 10 s; or a living enemy that
+##               is aware of the giant stands within the shrine's activation radius (P16)
+##   clearance   the new capsule overlaps WORLD | BREAKABLE | BLOCKER | ACTORS (P16: a dummy, an
+##               enemy, an NPC), or something is above the head up to the new height
+##               (check_clearance)
 ## The debug path (debug_set_stage) skips shrine_max, flags, level and combat.
 ##
 ## A growth that passes is applied in one tick, through GiantPlayer.set_profile: the stage
@@ -32,8 +34,13 @@ extends PlayerComponent
 ## rig's stride adds the profile's footstep_shake to the camera at stage 2 and above.
 
 const STATE_KEY := "growth_stage"
-## Physics layers a growing capsule may not overlap: world, breakables and blockers.
-const CLEARANCE_MASK := HitQueryAdapter.LAYER_WORLD | HitQueryAdapter.LAYER_BREAKABLE | 32
+## Physics layers a growing capsule may not overlap: world, breakables, blockers and (P16, M3
+## review) actors - the giant must not grow into a dummy, an enemy or an NPC. Corpses clear their
+## layer, and the giant's own body is excluded.
+const CLEARANCE_MASK := HitQueryAdapter.LAYER_WORLD | HitQueryAdapter.LAYER_BREAKABLE | 32 \
+	| HitQueryAdapter.LAYER_ACTORS
+## The combat gate's radius around a shrine without an activation_radius_m (P16).
+const DEFAULT_SHRINE_RADIUS_M := 14.0
 ## The clearance capsule is lifted this far off the floor so the floor itself never counts.
 const CLEARANCE_LIFT_M := 0.05
 const REASONS := ["no_profile", "already", "shrine_max", "flags", "level", "busy", "holding",
@@ -125,9 +132,51 @@ func check_growth(target: int, shrine: Node) -> Dictionary:
 	var state := _check_state()
 	if not state.ok:
 		return state
-	if player.entity.combatant.pools.in_combat():
-		return result_fail("combat")
+	var combat := combat_gate(shrine)
+	if not combat.ok:
+		return combat
 	return check_clearance(prof)
+
+
+## The combat gate of a shrine growth (P16, M3 review: "Enemies are near" now means it): {ok,
+## reason "combat", message} while a hit was exchanged in the last 10 s (pools.in_combat()) or
+## while aware_enemies_near(shrine) is not empty. Changes nothing.
+func combat_gate(shrine: Node) -> Dictionary:
+	if player.entity.combatant.pools.in_combat() or not aware_enemies_near(shrine).is_empty():
+		return result_fail("combat")
+	return result_ok()
+
+
+## The entity ids of living enemies (group "enemies") whose brain is aware of the giant
+## (EnemyBrain.aware, as GameSession's checkpoint deferral reads it) within the shrine's activation
+## radius of the shrine, horizontally; without a shrine, within DEFAULT_SHRINE_RADIUS_M of the giant.
+## Faction members at peace and the sparring post are never aware, so they never count.
+func aware_enemies_near(shrine: Node) -> PackedStringArray:
+	var out := PackedStringArray()
+	if not player.is_inside_tree():
+		return out
+	var center := player.global_position
+	var radius := DEFAULT_SHRINE_RADIUS_M
+	if shrine is Node3D and is_instance_valid(shrine) and (shrine as Node3D).is_inside_tree():
+		center = (shrine as Node3D).global_position
+		if shrine.has_method("activation_radius_m"):
+			radius = float(shrine.call("activation_radius_m"))
+		else:
+			radius = float(shrine_record(shrine).get("activation_radius_m", DEFAULT_SHRINE_RADIUS_M))
+	for n in player.get_tree().get_nodes_in_group("enemies"):
+		var enemy := n as Node3D
+		if enemy == null or not enemy.is_inside_tree():
+			continue
+		var e: Variant = enemy.get("entity")
+		if e is CombatEntity and not (e as CombatEntity).is_alive():
+			continue
+		var brain: Variant = enemy.get("brain")
+		if brain == null or not (brain is Object) or not ("aware" in brain) or not bool(brain.get("aware")):
+			continue
+		var d := enemy.global_position - center
+		if Vector2(d.x, d.z).length() <= radius:
+			out.append(str(enemy.get("entity_id")))
+	return out
 
 
 ## Clearance for `profile` at the giant's position (plan §3.5 design 2): a capsule of the new
@@ -152,7 +201,7 @@ func check_clearance(profile: Dictionary) -> Dictionary:
 	q.exclude = [player.get_rid()]
 	var hits := space.intersect_shape(q, 1)
 	if not hits.is_empty():
-		var out := result_fail("clearance")
+		var out := result_fail("clearance", _blocker_message(hits[0]))
 		out["blocker"] = _collider_name(hits[0])
 		return out
 	var head := player.global_position + Vector3.UP * float(player.profile.get("capsule_total_height_m", 3.66))
@@ -492,6 +541,17 @@ func _blocked(check: Dictionary) -> void:
 static func _collider_name(hit: Dictionary) -> String:
 	var n: Variant = hit.get("collider")
 	return (n as Node).name if n is Node else ""
+
+
+## The clearance refusal for a hit: an actor in the way is named ("Soldier is in the way. Step
+## into the open to grow."); anything else keeps the default text ("" = default).
+static func _blocker_message(hit: Dictionary) -> String:
+	var n: Variant = hit.get("collider")
+	if not (n is CollisionObject3D) or ((n as CollisionObject3D).collision_layer & HitQueryAdapter.LAYER_ACTORS) == 0:
+		return ""
+	var e: Variant = (n as Node).get("entity")
+	var label := (e as CombatEntity).display_name() if e is CombatEntity else str((n as Node).name)
+	return "%s is in the way. Step into the open to grow." % label
 
 
 # --------------------------------------------------------------------------- summary

@@ -45,6 +45,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused = false
 	InputRouter.set_context(InputRouter.Context.GAMEPLAY)
+	UiNav.ensure_pad_actions()   # P16: pad A / B accept and cancel in every menu
 	_layer = CanvasLayer.new()
 	_layer.layer = 10
 	add_child(_layer)
@@ -197,8 +198,10 @@ func _unhandled_input(event: InputEvent) -> void:
 ## swing, no block); this runs in _input because the input router consumes mouse buttons as
 ## attacks in _unhandled_input, so a handler there never saw the click. Browsers grant pointer
 ## lock only inside a click, so in the web build this click is how the player starts
-## controlling the camera.
+## controlling the camera. Every event first tells InputBindings which device the player is using
+## (P16: the prompts and menus show that device's buttons), in every mode, the title included.
 func _input(event: InputEvent) -> void:
+	InputBindings.note_device(event)
 	if screen_stack == null or not _in_level:
 		return
 	if is_death_confirm(event) and not _screen_open() and _player_dead():

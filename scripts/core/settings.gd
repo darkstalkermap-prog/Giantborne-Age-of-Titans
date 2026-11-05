@@ -12,6 +12,10 @@ extends Node
 ## web build always runs "low", and the command-line flag --graphics=low|medium (after "--")
 ## fixes the preset for one run without saving it (the reference-PC measurement uses
 ## --graphics=low).
+##
+## Button prompts (P16): "prompt_device" is "auto" (prompts name the buttons of the device used
+## last), "keyboard" or "pad"; apply_bindings() and set_value() hand it to
+## InputBindings.set_prompt_mode.
 
 const PATH := "user://settings.json"
 const SCHEMA_VERSION := 1
@@ -37,6 +41,7 @@ const DEFAULTS := {
 	"fp_aim_assist": true,            ## gentle first-person drift toward a locked target
 	"damage_numbers": true,
 	"graphics_quality": GRAPHICS_DEFAULT,   ## low | medium (P14); the web build always runs low
+	"prompt_device": "auto",          ## auto | keyboard | pad: the buttons prompts name (P16)
 	"bindings": {},                   ## action -> [event dicts]; replaces that action's defaults
 }
 const RANGES := {
@@ -44,8 +49,10 @@ const RANGES := {
 	"fov_deg": [60.0, 100.0], "camera_shake": [0.0, 1.0], "head_bob": [0.0, 1.0],
 	"hit_flash": [0.0, 1.0], "vibration": [0.0, 1.0],
 }
+## The "Button prompts" choices (P16; InputBindings.PROMPT_MODES).
+const PROMPT_DEVICES := ["auto", "keyboard", "pad"]
 const ENUMS := {"sprint_mode": ["hold", "toggle"], "lock_mode": ["toggle", "hold"],
-	"graphics_quality": GRAPHICS_QUALITIES}
+	"graphics_quality": GRAPHICS_QUALITIES, "prompt_device": PROMPT_DEVICES}
 
 signal changed(key: String)
 
@@ -157,6 +164,8 @@ func set_value(key: String, v: Variant, save := true) -> void:
 	if RANGES.has(key):
 		v = clampf(float(v), RANGES[key][0], RANGES[key][1])
 	values[key] = v
+	if key == "prompt_device":
+		InputBindings.set_prompt_mode(str(v))
 	changed.emit(key)
 	if save:
 		save_settings()
@@ -175,8 +184,11 @@ func _notification(what: int) -> void:
 		flush()
 
 
+## Rebuilds the input map from the default bindings and the saved overrides, and (P16) sets the
+## prompt mode of the "Button prompts" setting.
 func apply_bindings() -> void:
 	InputBindings.apply(GameData.get_record("input.default"), values.get("bindings", {}))
+	InputBindings.set_prompt_mode(str(get_value("prompt_device")))
 
 
 ## Replaces the keyboard/mouse half (pad=false) or the controller half (pad=true) of an

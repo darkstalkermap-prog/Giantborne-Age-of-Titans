@@ -6,6 +6,8 @@ extends UiScreen
 ## it fits), the cost against what the giant carries, and a Reforge button enabled only when
 ## Forge.can_upgrade passes; pressing it calls Forge.upgrade (the one upgrade interaction) and shows
 ## the result. Leave (or Esc / pad B) closes it. args: {"forge": Forge, "player": GiantPlayer}.
+## P16: focus rows Reforge (left out while disabled) and Leave, wrapping; after a reforge the
+## focus moves to Leave.
 
 var forge: Forge
 var player: GiantPlayer
@@ -68,7 +70,18 @@ func first_focus() -> Control:
 	return reforge_button if reforge_button != null and not reforge_button.disabled else leave_button
 
 
+## Reforge (left out while disabled), then Leave (P16).
+func focus_rows() -> Array:
+	return [[reforge_button], [leave_button]]
+
+
 func refresh() -> void:
+	_refresh_content()
+	if is_inside_tree():
+		refresh_focus()
+
+
+func _refresh_content() -> void:
 	if _info == null:
 		return
 	for c in _cost.get_children():

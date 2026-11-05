@@ -1,15 +1,21 @@
 extends HudWidget
-## The boss bar (plan §2.10.1, §3.12; P11a): top-centre, (-320..320, 14..58). The boss's name, a
-## wide health bar with a notch at each later phase's health threshold, and one pip per phase
-## (filled up to the current one). It follows the boss of the last Events.boss_engaged while that
-## boss lives; otherwise a locked target in group "bosses". Hud hides its own target frame while
-## this bar shows the locked target (Hud.boss_bar_shows). Reads state; never changes gameplay.
-## Read API for tests: shows_entity(e), current_boss(), visible_text(), phase_pips().
+## The boss bar (plan §2.10.1, §3.12; P11a): top-centre, (-HALF_WIDTH..HALF_WIDTH, 14..58). The
+## boss's name, a wide health bar with a notch at each later phase's health threshold, and one pip
+## per phase (filled up to the current one). It follows the boss of the last Events.boss_engaged
+## while that boss lives; otherwise a locked target in group "bosses". Hud hides its own target
+## frame while this bar shows the locked target (Hud.boss_bar_shows), and moves the frame of
+## another locked target below the bar (P16). Reads state; never changes gameplay.
+## Read API for tests: shows_entity(e), current_boss(), visible_text(), phase_pips(), bar_visible().
+##
+## P16 (FOLLOWUPS, wave 6 merge): the plan's 640 px bar overlapped the quest tracker (top right,
+## 340 px wide) by 36 px at 1280 px; at 540 px (HALF_WIDTH 270) it keeps a 14 px gap from the
+## tracker at 1280 x 720 and more at any wider screen, and clears the checkpoint toast (top left).
 
 const PIP_FILLED := Color(0.95, 0.72, 0.30)
 const PIP_EMPTY := Color(0.30, 0.30, 0.34)
 const BAR_COLOR := Color(0.72, 0.16, 0.14)
 const MAX_PIPS := 6
+const HALF_WIDTH := 270.0
 
 var _panel: PanelContainer
 var _name: Label
@@ -25,8 +31,8 @@ func _ready() -> void:
 	_panel = UiKit.panel(Color(0.06, 0.05, 0.06, 0.84))
 	_panel.anchor_left = 0.5
 	_panel.anchor_right = 0.5
-	_panel.offset_left = -320
-	_panel.offset_right = 320
+	_panel.offset_left = -HALF_WIDTH
+	_panel.offset_right = HALF_WIDTH
 	_panel.offset_top = 14
 	_panel.offset_bottom = 58
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -95,6 +101,15 @@ func current_boss() -> CombatEntity:
 ## True while the bar shows `e` (Hud hides its target frame then).
 func shows_entity(e: CombatEntity) -> bool:
 	return e != null and e == current_boss()
+
+
+## True while the bar is on screen (P16: Hud puts the target frame below it then).
+func bar_visible() -> bool:
+	return _panel != null and _panel.visible
+
+
+func layout_controls() -> Dictionary:
+	return {"boss_bar": _panel}
 
 
 ## What the bar shows ("" while hidden): "Ogre King  1210 / 1500  phase 1/2".

@@ -36,6 +36,13 @@ func first_focus() -> Control:
 	return null
 
 
+## The tab's controls in focus order (P16): rows, top to bottom, each an Array of Controls left to
+## right. ShrineScreen puts them between its tab buttons and Leave. Default: first_focus() alone.
+func focus_rows() -> Array:
+	var f := first_focus()
+	return [[f]] if f != null else []
+
+
 func shrine() -> Shrine:
 	return screen.shrine if screen != null else null
 

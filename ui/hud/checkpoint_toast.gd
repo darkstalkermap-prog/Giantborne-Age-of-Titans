@@ -1,5 +1,5 @@
 extends HudWidget
-## Checkpoint toast (plan §2.10.1; P06): a short line top-left, (12..352, 52..80) above the
+## Checkpoint toast (plan §2.10.1; P06): a short line top-left, (12..352, 52..86) above the
 ## debug panel, for every Events.checkpoint_saved and checkpoint_loaded: "Checkpoint saved",
 ## "Checkpoint (saving is off)", "Checkpoint (kept in memory)" (a test level in the sandbox),
 ## "Checkpoint NOT saved (play continues)" (a write failure, in the warning colour; GameSession
@@ -21,7 +21,7 @@ func _ready() -> void:
 	_panel.offset_left = 12
 	_panel.offset_right = 352
 	_panel.offset_top = 52
-	_panel.offset_bottom = 80
+	_panel.offset_bottom = 86   # P16: the 15 pt line and the panel margins need 34 px (it grew past 80)
 	add_child(_panel)
 	_label = UiKit.label("", 15, UiKit.GOOD)
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -82,3 +82,7 @@ func _process(delta: float) -> void:
 		_panel.visible = false
 	elif _left < FADE_S:
 		_panel.modulate.a = _left / FADE_S
+
+
+func layout_controls() -> Dictionary:
+	return {"checkpoint_toast": _panel}

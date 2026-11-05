@@ -1,16 +1,16 @@
 extends HudWidget
 ## The tutorial prompt (plan §2.10.1, §3.15 design 5; P13): left-centre, (16..396, -70..70 around
 ## the vertical centre). The prompt the tutorial director shows now (Quests.current_tutorial()),
-## its {placeholders} resolved to key or button names for the last input device (TutorialText):
-## pad names after a controller input, keyboard and mouse otherwise (P16 refines the device
-## tracking). Hidden while no prompt is shown. Read API: visible_text(), shown_id().
+## its {placeholders} resolved to key or button names for the device the prompts follow (P16:
+## InputBindings.last_device_is_pad - the last device used, or the "Button prompts" setting); the
+## text follows a device switch at once. Hidden while no prompt is shown. Read API:
+## visible_text(), shown_id().
 
 const TITLE := "TIP"
 
 var _panel: PanelContainer
 var _title: Label
 var _label: Label
-var _pad := false
 var _id := ""
 
 
@@ -38,16 +38,6 @@ func _ready() -> void:
 	_panel.visible = false
 
 
-func _input(event: InputEvent) -> void:
-	if event is InputEventJoypadButton:
-		_pad = true
-	elif event is InputEventJoypadMotion:
-		if absf((event as InputEventJoypadMotion).axis_value) > 0.5:
-			_pad = true
-	elif event is InputEventKey or event is InputEventMouseButton:
-		_pad = false
-
-
 func _process(_delta: float) -> void:
 	var t: Dictionary = Quests.current_tutorial() if Quests.is_active() else {}
 	if t.is_empty():
@@ -55,7 +45,7 @@ func _process(_delta: float) -> void:
 		_id = ""
 		return
 	_id = str(t.get("id", ""))
-	_label.text = TutorialText.resolve(str(t.get("text", "")), _pad)
+	_label.text = TutorialText.resolve(str(t.get("text", "")), InputBindings.last_device_is_pad())
 	_panel.visible = true
 
 
@@ -67,3 +57,7 @@ func visible_text() -> String:
 ## The id of the prompt shown now ("" while hidden).
 func shown_id() -> String:
 	return _id if _panel != null and _panel.visible else ""
+
+
+func layout_controls() -> Dictionary:
+	return {"tutorial_prompt": _panel}

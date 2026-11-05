@@ -8,6 +8,8 @@ extends UiScreen
 ## (the session ends). It is only a view: the choices are DialogueSession.choose(), which the
 ## Valley bot and tests call directly without the screen. args: {"session"} (else
 ## Quests.dialogue).
+## P16: the choices are one focus column that wraps (pad D-pad / stick, keyboard arrows); after a
+## choice the rebuilt buttons are wired again and the first one takes the focus.
 
 const MAX_KEYED_CHOICES := 4
 
@@ -77,6 +79,15 @@ func first_focus() -> Control:
 	return choice_buttons[0] if not choice_buttons.is_empty() else null
 
 
+## One row per choice, top to bottom (P16).
+func focus_rows() -> Array:
+	var rows: Array = []
+	for b in choice_buttons:
+		if is_instance_valid(b):
+			rows.append([b])
+	return rows
+
+
 ## Esc / pad B: leave the conversation without choosing.
 func cancel() -> void:
 	close({"cancelled": true})
@@ -113,6 +124,7 @@ func _rebuild_choices() -> void:
 		_choices.add_child(b)
 		choice_buttons.append(b)
 	if is_open():
+		refresh_focus()
 		var f := first_focus()
 		if f != null and f.is_visible_in_tree():
 			f.grab_focus()

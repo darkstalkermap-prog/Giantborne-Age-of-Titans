@@ -64,3 +64,7 @@ static func chip_text(row: Dictionary) -> String:
 ## What the row shows right now ("" when no status is active).
 func visible_text() -> String:
 	return _text
+
+
+func layout_controls() -> Dictionary:
+	return {"status_row": _row}

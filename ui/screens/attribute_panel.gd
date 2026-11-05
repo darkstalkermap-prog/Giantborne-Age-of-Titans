@@ -10,9 +10,14 @@ extends VBoxContainer
 ## Reads and changes the game only through player.progression. Call setup(player) before it enters
 ## the tree; refresh() re-reads everything. Tests use add_point / remove_point / confirm / reset and
 ## the text getters.
+##
+## P16: focus_rows() gives the hosts their pad rows ([-, +] per attribute, then [Confirm, Reset]);
+## `refreshed` tells them to rewire after a planned point disabled or enabled a button.
 
 ## After a successful confirm() (the points were spent): hosts refresh what they show.
 signal allocated(result: Dictionary)
+## After every refresh() (P16): which buttons work may have changed.
+signal refreshed
 
 var player: GiantPlayer
 ## attribute -> points planned (not spent yet).
@@ -171,6 +176,25 @@ func refresh() -> void:
 	reset_button.disabled = planned_total() <= 0
 	_ancestry.text = str(prog.ancestry_line())
 	_talents.text = "Talent points: %d (talent trees are a full-game feature)" % int(prog.talent_points)
+	refreshed.emit()
+
+
+## The panel's controls in pad focus order (P16): [-, +] for each attribute, then [Confirm, Reset].
+func focus_rows() -> Array:
+	var rows: Array = []
+	for key: String in Progression.ATTRIBUTE_KEYS:
+		if _rows.has(key):
+			rows.append([_rows[key].minus, _rows[key].plus])
+	if confirm_button != null:
+		rows.append([confirm_button, reset_button])
+	return rows
+
+
+## The [-] and [+] buttons of an attribute (tests): {"minus", "plus"} ({} for an unknown key).
+func buttons_of(key: String) -> Dictionary:
+	if not _rows.has(key):
+		return {}
+	return {"minus": _rows[key].minus, "plus": _rows[key].plus}
 
 
 ## "Health 530 -> 545   Stamina ..." (now -> with the planned points; a value without a change

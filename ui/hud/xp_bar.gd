@@ -71,3 +71,7 @@ func _process(delta: float) -> void:
 		_gain_left -= minf(delta, 0.1)
 		_text += "   +%d" % _gain
 	_label.text = _text
+
+
+func layout_controls() -> Dictionary:
+	return {"xp_bar": _bar}

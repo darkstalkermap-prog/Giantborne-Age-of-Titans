@@ -8,6 +8,9 @@ extends UiScreen
 ##
 ## TABS is pre-declared: P12 adds the Loadout and Attributes tabs by creating their files
 ## (ShrineTab subclasses), without editing this list.
+##
+## Pad and keyboard (P16): the tab buttons are one row, the shown tab's focus_rows() follow, then
+## Leave; every direction wraps. Opening a tab focuses its first control; pad LB / RB switch tabs.
 
 ## [title, path]; a missing file is skipped (its package has not landed yet).
 const TABS := [
@@ -101,9 +104,30 @@ static func _make_tab(path: String) -> ShrineTab:
 func first_focus() -> Control:
 	if _current >= 0 and _current < tabs.size():
 		var f := tabs[_current].first_focus()
-		if f != null:
+		if UiNav.focusable(f):
 			return f
+		if _current < _buttons.size():
+			return _buttons[_current]
 	return _buttons[0] if not _buttons.is_empty() else _leave
+
+
+## The tab buttons, the shown tab's rows, then Leave (P16).
+func focus_rows() -> Array:
+	var rows: Array = [_buttons.duplicate()]
+	var t := current_tab()
+	if t != null:
+		rows.append_array(t.focus_rows())
+	rows.append([_leave])
+	return rows
+
+
+## The tab buttons in TABS order (tests).
+func tab_buttons() -> Array[Button]:
+	return _buttons.duplicate()
+
+
+func leave_button() -> Button:
+	return _leave
 
 
 func on_open() -> void:
@@ -118,7 +142,9 @@ func show_tab(index: int) -> void:
 	for i in tabs.size():
 		tabs[i].visible = i == index
 	tabs[index].refresh()
-	var f := tabs[index].first_focus()
+	if is_inside_tree():
+		refresh_focus()
+	var f := first_focus()
 	if f != null and f.is_inside_tree() and f.is_visible_in_tree():
 		f.grab_focus()
 
@@ -135,7 +161,8 @@ func current_tab() -> ShrineTab:
 	return tabs[_current] if _current >= 0 and _current < tabs.size() else null
 
 
-## A tab changed the game (rested, grew, ...): refresh the header and every tab.
+## A tab changed the game (rested, grew, ...): refresh the header and every tab, then the focus
+## rows (a button may have been disabled).
 func notify_changed() -> void:
 	if _header != null and player != null and is_instance_valid(player):
 		var pools := player.entity.combatant.pools
@@ -143,3 +170,16 @@ func notify_changed() -> void:
 			str(player.profile.get("display_name", "")), roundi(pools.health), roundi(pools.health_max)]
 	for t in tabs:
 		t.refresh()
+	if is_inside_tree():
+		refresh_focus()
+
+
+## Pad LB / RB: the previous / next tab (P16).
+func _unhandled_input(event: InputEvent) -> void:
+	if tabs.is_empty() or not is_open() or stack.top() != self:
+		return
+	var step := UiNav.page_step(event)
+	if step == 0:
+		return
+	show_tab((_current + step + tabs.size()) % tabs.size())
+	get_viewport().set_input_as_handled()

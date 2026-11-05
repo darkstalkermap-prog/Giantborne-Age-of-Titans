@@ -8,11 +8,11 @@ extends RefCounted
 const WIDGETS := [
 	"res://ui/hud/interact_prompt.gd",   # P02  centre, y +100..+136 below the crosshair
 	"res://ui/hud/status_row.gd",        # P03  bottom-left, (16..340, -196..-170)
-	"res://ui/hud/checkpoint_toast.gd",  # P06  top-left under the debug panel line, (12..352, 52..80)
+	"res://ui/hud/checkpoint_toast.gd",  # P06  top-left under the debug panel line, (12..352, 52..86) (P16; was 52..80)
 	"res://ui/hud/threat_arrows.gd",     # P09  full-rect overlay; draws only edge arrows (24 px inside the edge)
 	"res://ui/hud/xp_bar.gd",            # P12  bottom-left, (16..340, -166..-152), "Lv 3  120 / 200 XP"
-	"res://ui/hud/ability_notice.gd",    # P12  centre, (-260..260, -250..-212); "New ability: Runic Bolt [6]", out of combat
-	"res://ui/hud/boss_bar.gd",          # P11a top-centre, (-320..320, 14..58); Hud hides its target frame for bosses
+	"res://ui/hud/ability_notice.gd",    # P12  top-centre, (-260..260, 132..170) (P16; was -250..-212 from the bottom); "New ability: Runic Bolt [6]", out of combat
+	"res://ui/hud/boss_bar.gd",          # P11a top-centre, (-270..270, 14..58) (P16; was -320..320); Hud hides its target frame for bosses
 	"res://ui/hud/quest_tracker.gd",     # P13  top-right, (-356..-16, 14..132)
 	"res://ui/hud/objective_marker.gd",  # P13  projected marker + edge clamp + distance
 	"res://ui/hud/tutorial_prompt.gd",   # P13  left-centre, (16..396, -70..70 around vertical centre)

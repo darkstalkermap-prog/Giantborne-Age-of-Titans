@@ -8,9 +8,14 @@ extends RefCounted
 ## valid copy for that window.
 ## Read: try the main file, fall back to the backup with a clear message, and reject files
 ## written by a newer schema version instead of guessing.
+##
+## `loads` (optional, P16): Callable(data: Dictionary) -> bool, the caller's full check of a
+## document. The previous main file becomes the backup only when it parses, has a supported
+## schema_version AND `loads` accepts it, so a schema-valid but otherwise broken main file never
+## replaces the last good backup (the save slot passes SaveSlots.validate).
 
 
-static func write_json(path: String, data: Dictionary) -> Error:
+static func write_json(path: String, data: Dictionary, loads := Callable()) -> Error:
 	var text := JSON.stringify(data, "\t", true)
 	var tmp := path + ".tmp"
 	var file := FileAccess.open(tmp, FileAccess.WRITE)
@@ -24,9 +29,12 @@ static func write_json(path: String, data: Dictionary) -> Error:
 		DirAccess.remove_absolute(tmp)
 		return ERR_FILE_CORRUPT
 	if FileAccess.file_exists(path):
-		# Only a previous file that this build could itself load becomes the backup; a corrupt
-		# or newer-version main file must never overwrite the last good backup.
+		# Only a previous file that this build could itself load becomes the backup; a corrupt,
+		# newer-version or (with `loads`) invalid main file must never overwrite the last good
+		# backup.
 		var previous := _try_load(path, int(data.get("schema_version", 1)))
+		if previous.ok and loads.is_valid() and not bool(loads.call(previous.data)):
+			previous.ok = false
 		if previous.ok:
 			var copy_err := DirAccess.copy_absolute(path, path + ".bak")
 			if copy_err != OK:
