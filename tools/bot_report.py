@@ -5,7 +5,7 @@
 
 <batch dir> is a tools/run_bots.sh folder, user://bot_runs/<tag>/ (in this worktree:
 .userdata/godot/app_userdata/<project>/bot_runs/<tag>/). Sections (all when none is named):
-summary runs segments deaths growth abilities perf stuck targets. Every number is read from the runs'
+summary runs segments deaths growth abilities perf stuck states targets. Every number is read from the runs'
 AUTOPILOT_RESULT files (<run>.json) except two estimates, both marked where they are printed:
 - a segment's damage as a share of maximum health uses the giant's maximum health at the segment's
   end, rebuilt from the run's XP timeline and growth ticks the way the bot spends its points
@@ -121,6 +121,7 @@ def run_row(path):
         "teleports": vb.get("teleports"), "invariant_failures": len(vb.get("invariant_failures", [])),
         "level": vb.get("level"), "growth_ticks": growth, "stuck": len(vb.get("stuck_events", [])),
         "stuck_events": vb.get("stuck_events", []),
+        "ai_states": ai, "ttk_all": vb.get("ttk", {}),
     }
 
 
@@ -285,6 +286,30 @@ def targets_table(rows):
     return "\n".join(lines)
 
 
+def states_table(rows):
+    """The AI-state histogram per growth stage (plan §5.7's growth evidence): for each archetype the
+    share of its engaged time in each state, pooled over the novice runs, and its median time-to-kill."""
+    novice = [r for r in rows if r["skill"] == "novice"]
+    states = ["Approach", "Attack", "Recover", "Staggered", "Hold", "Reposition", "Flee", "Routed"]
+    out = ["| Stage | Archetype | Engaged (s, all runs) | " + " | ".join(states) + " | Time-to-kill median (s) |",
+           "| --- | --- | --- | " + " | ".join("---" for _ in states) + " | --- |"]
+    for stage in ["1", "2", "3"]:
+        pooled = collections.defaultdict(collections.Counter)
+        for r in novice:
+            for arch, st in r["ai_states"].get(stage, {}).items():
+                for k, v in st.items():
+                    pooled[arch][k] += v
+        for arch in sorted(pooled):
+            c = pooled[arch]
+            eng = c.get("engaged", 0.0)
+            if eng <= 0:
+                continue
+            ttk = med([r["ttk_all"].get(arch, {}).get(stage, {}).get("mean_s") for r in novice])
+            out.append("| %s | %s | %.0f | %s | %s |" % (stage, arch, eng, " | ".join(
+                ("%.0f %%" % (100.0 * c.get(k, 0.0) / eng)) if c.get(k, 0.0) > 0 else "-" for k in states), fmt(ttk)))
+    return "\n".join(out)
+
+
 def stuck_table(rows, cell=20.0):
     """The stuck-event heatmap: events per 20 m cell of the Valley (x, z of the cell's centre), with
     the objectives the bot was on and how it got out (replan, retrace, teleport)."""
@@ -306,7 +331,8 @@ def stuck_table(rows, cell=20.0):
 
 
 SECTIONS = {"summary": summary_table, "runs": runs_table, "segments": segments_table, "deaths": deaths_table,
-            "growth": growth_table, "abilities": abilities_table, "perf": perf_table, "stuck": stuck_table, "targets": targets_table}
+            "growth": growth_table, "abilities": abilities_table, "perf": perf_table, "stuck": stuck_table, "states": states_table,
+            "targets": targets_table}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

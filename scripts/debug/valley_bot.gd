@@ -78,9 +78,11 @@ const RETRACE_S := 12.0
 const STALL_WALK_ON_S := 8.0
 ## A fight that has taken no health off its target for CHASE_GIVE_UP_S (a stage-3 giant chasing a
 ## harassing wolf that keeps out of reach) is given up: the bot leaves that enemy alone for
-## CHASE_IGNORE_S and goes on with its objective, as a person would stop chasing (P17b).
+## CHASE_IGNORE_S and goes on with its objective, as a person would stop chasing (P17b). Long enough
+## to give up on two such wolves in turn and still reach the objective (with 30 s the barrow's two
+## wolves took turns until the crown stage's watchdog).
 const CHASE_GIVE_UP_S := 20.0
-const CHASE_IGNORE_S := 30.0
+const CHASE_IGNORE_S := 90.0
 const ELDER := "valley.village.elder"
 const ELDER_DIALOGUE := "dialogue.elder"
 const BARRICADE := "valley.village.barricade"
