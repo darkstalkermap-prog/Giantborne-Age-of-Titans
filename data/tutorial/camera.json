@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.camera",
+	"type": "tutorial_prompt",
+	"description": "Both cameras: the giant's eyes and the view from behind (plan section 4.5). Shown at the Cradle where New Game wakes the giant; two camera toggles teach it (tutorial.camera.done: quest.tutorial's awaken stage). A 45 s fallback lets the next lesson through.",
+	"text": "Press {camera_toggle} to see through the giant's eyes. Press it again to step back.",
+	"trigger": {"type": "entered", "area": "valley.area.hollow_start"},
+	"dismiss": {"type": "event", "event": "camera_mode_changed", "count": 2, "timeout_s": 45},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 10,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.camera.done"
+}

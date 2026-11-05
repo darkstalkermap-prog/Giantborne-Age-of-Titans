@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "quest.village_cache",
+	"type": "quest",
+	"display_name": "The Stolen Cache",
+	"description": "Help path A (plan section 4.6): the elder asked for Thornwick's winter cache back from the raiders in the quarry. Starts when the offer is 'cache'; the reward (120 XP, 2 iron, Ancestral Mend) is the elder's (dialogue.elder, once-flag reward.village.help). get_cache also accepts the later state (the cache handed over), because stages are checked in order. Abandoned without reward when the village's outcome is set to anything else.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{"type": "flag", "flag": "quest.village.offer", "equals": "cache"}
+	],
+	"abandon_when": {"type": "all", "of": [
+		{"type": "flag", "flag": "quest.village.outcome"},
+		{"type": "not", "of": {"type": "flag", "flag": "quest.village.outcome", "equals": "help_cache"}}]},
+	"stages": [
+		{"id": "get_cache", "objective": "Recover the stolen supplies from the Raider Quarry",
+			"complete_when": {"type": "any", "of": [
+				{"type": "has_item", "item": "item.supply_cache", "count": 1},
+				{"type": "flag", "flag": "quest.village.outcome", "equals": "help_cache"}]},
+			"marker": "valley.marker.quarry_cache", "xp": 0, "items": [], "set_flags": {},
+			"bot": {"action": "interact", "target": "valley.quarry.cache", "encounter": "encounter.quarry_raiders"}},
+		{"id": "return_cache", "objective": "Bring the supplies to Elder Maren",
+			"complete_when": {"type": "flag", "flag": "quest.village.outcome", "equals": "help_cache"},
+			"marker": "valley.marker.elder", "xp": 0, "items": [], "set_flags": {},
+			"bot": {"action": "talk", "target": "valley.village.elder", "dialogue": "dialogue.elder", "outcome": "help_cache"}}
+	],
+	"on_complete_flags": {}
+}

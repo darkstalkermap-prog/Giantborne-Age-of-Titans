@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.grab",
+	"type": "tutorial_prompt",
+	"description": "The grab: a staggered, grabbable enemy within 6 m (typically a hunter after a heavy).",
+	"text": "Staggered! Press {interact} to grab it, then {light_attack} to throw.",
+	"trigger": {"type": "event", "event": "staggered", "near_player_m": 6, "grabbable": true},
+	"dismiss": {"type": "event", "event": "grab_started", "timeout_s": 15},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 40,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.grab.done"
+}

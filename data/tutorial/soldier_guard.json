@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.soldier_guard",
+	"type": "tutorial_prompt",
+	"description": "The forest hunters: the first soldiers, met at stage 1.",
+	"text": "Soldiers guard their front. Circle behind them, or break the guard with {heavy_attack}.",
+	"trigger": {"type": "entered", "area": "valley.area.forest_hunters"},
+	"dismiss": {"type": "timeout", "timeout_s": 10},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 20,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.soldier_guard.done"
+}

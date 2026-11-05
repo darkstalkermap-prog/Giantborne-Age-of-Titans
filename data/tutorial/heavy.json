@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.heavy",
+	"type": "tutorial_prompt",
+	"description": "The heavy attack, right after the light lesson.",
+	"text": "{heavy_attack} is a slower, harder blow that breaks guards and staggers.",
+	"trigger": {"type": "flag", "flag": "tutorial.light.done"},
+	"dismiss": {"type": "action_kind", "action_kind": "heavy", "timeout_s": 60},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 10,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.heavy.done"
+}

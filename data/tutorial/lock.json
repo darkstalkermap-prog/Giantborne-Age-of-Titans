@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.lock",
+	"type": "tutorial_prompt",
+	"description": "Lock-on, after the Footfall lesson.",
+	"text": "Press {lock_target} to lock on. Flick or scroll to switch targets.",
+	"trigger": {"type": "flag", "flag": "tutorial.footfall.done"},
+	"dismiss": {"type": "event", "event": "lock_target_changed", "actor": "player", "non_empty": true, "timeout_s": 60},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 10,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.lock.done"
+}

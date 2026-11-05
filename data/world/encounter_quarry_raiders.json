@@ -1,0 +1,31 @@
+{
+	"schema_version": 1,
+	"id": "encounter.quarry_raiders",
+	"type": "encounter",
+	"display_name": "Quarry raiders",
+	"description": "The raiders who stole Thornwick's winter cache, camped in the Raider Quarry pit (plan section 4.4): four soldiers led by their captain (the commander), an archer on the ledge and a mage at the back. Help path A: the supply cache (valley.quarry.cache) lies in their camp. They face the ravine; the soldiers form a line at valley.marker.quarry_line_1..3 against a grown giant. Each soldier carries loot.raider (wood scrap, never iron).",
+	"level": "level.valley",
+	"district": "quarry",
+	"center_m": [40, 0, -145],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 120,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "valley.quarry.raider_1", "definition": "enemy.soldier", "position_m": [30, 0, -140], "yaw_deg": 180,
+			"patrol": "valley.patrol.quarry", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "loot.raider"},
+		{"entity_id": "valley.quarry.raider_2", "definition": "enemy.soldier", "position_m": [50, 0, -140], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "loot.raider"},
+		{"entity_id": "valley.quarry.raider_captain", "definition": "enemy.soldier", "position_m": [35, 0, -155], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": "loot.raider"},
+		{"entity_id": "valley.quarry.raider_3", "definition": "enemy.soldier", "position_m": [48, 0, -158], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "loot.raider"},
+		{"entity_id": "valley.quarry.archer", "definition": "enemy.archer", "position_m": [25, 5, -165], "yaw_deg": 150,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "valley.quarry.mage", "definition": "enemy.mage", "position_m": [45, 0, -170], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

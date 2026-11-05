@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.footfall",
+	"type": "tutorial_prompt",
+	"description": "Heavy Footfall (slot 1), after the heavy lesson.",
+	"text": "Stamp with {slot_1}: Heavy Footfall hits everything around you.",
+	"trigger": {"type": "flag", "flag": "tutorial.heavy.done"},
+	"dismiss": {"type": "action_id", "action_id": "ability.heavy_footfall", "timeout_s": 60},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 10,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.footfall.done"
+}

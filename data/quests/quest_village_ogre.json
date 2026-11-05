@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "quest.village_ogre",
+	"type": "quest",
+	"display_name": "The Ogre in the Barley",
+	"description": "Help path B (plan section 4.6): the elder asked the giant to drive the ogre (valley.fields.ogre) out of the south fields. Starts when the offer is 'ogre'; the reward (120 XP, 2 iron, Ancestral Mend) is the elder's (dialogue.elder, once-flag reward.village.help). Abandoned without reward when the village's outcome is set to anything else.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{"type": "flag", "flag": "quest.village.offer", "equals": "ogre"}
+	],
+	"abandon_when": {"type": "all", "of": [
+		{"type": "flag", "flag": "quest.village.outcome"},
+		{"type": "not", "of": {"type": "flag", "flag": "quest.village.outcome", "equals": "help_ogre"}}]},
+	"stages": [
+		{"id": "kill_field_ogre", "objective": "Drive the ogre out of Thornwick's fields",
+			"complete_when": {"type": "any", "of": [
+				{"type": "killed", "targets": ["valley.fields.ogre"]},
+				{"type": "flag", "flag": "quest.village.outcome", "equals": "help_ogre"}]},
+			"marker": "valley.marker.field_ogre", "xp": 0, "items": [], "set_flags": {},
+			"bot": {"action": "kill", "target": "valley.fields.ogre", "encounter": "encounter.field_ogre"}},
+		{"id": "report", "objective": "Tell Elder Maren the fields are safe",
+			"complete_when": {"type": "flag", "flag": "quest.village.outcome", "equals": "help_ogre"},
+			"marker": "valley.marker.elder", "xp": 0, "items": [], "set_flags": {},
+			"bot": {"action": "talk", "target": "valley.village.elder", "dialogue": "dialogue.elder", "outcome": "help_ogre"}}
+	],
+	"on_complete_flags": {}
+}
