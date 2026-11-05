@@ -389,17 +389,18 @@ static func aim_pose(shoulder: Vector3, point: Vector3) -> Vector2:
 
 ## The arm poses of a grab phase, as a "pose_override": {"arm": weapon arm, "off": off arm,
 ## "exact": false}. `socket` is the hand socket and `pivot` the weapon shoulder (the off shoulder
-## mirrors it), both in actor space; `phase` / `f` are the running action's phase and fraction;
-## `time_s` drives the crush's squeeze.
+## mirrors it), both in actor space; `two_hands` puts the weapon hand on the socket too (a two_hand
+## hold in third person; in first person every hold is the off hand's, low and to the left);
+## `phase` / `f` are the running action's phase and fraction; `time_s` drives the squeeze.
 ##   reach  the off hand reaches forward over the windup
-##   hold   the off hand (two_hand: both hands) on the socket
+##   hold   the off hand (two hands: both) on the socket
 ##   crush  the hold, squeezing
 ##   throw  the hold while it winds back (the socket moves), then the arm follows through
-static func grab_pose(grab_phase: String, attach: String, socket: Vector3, pivot: Vector3,
+static func grab_pose(grab_phase: String, two_hands: bool, socket: Vector3, pivot: Vector3,
 		idle_arm: Vector2, idle_off: Vector2, phase: int, f: float, time_s: float) -> Dictionary:
 	var off_shoulder := Vector3(-pivot.x, pivot.y, pivot.z)
 	var hold_off := aim_pose(off_shoulder, socket)
-	var hold_arm := aim_pose(pivot, socket) if attach == "two_hand" else idle_arm
+	var hold_arm := aim_pose(pivot, socket) if two_hands else idle_arm
 	var t := clampf(f, 0.0, 1.0)
 	match grab_phase:
 		"reach":
@@ -409,7 +410,7 @@ static func grab_pose(grab_phase: String, attach: String, socket: Vector3, pivot
 			var shake := Vector2(sin(time_s * 55.0), cos(time_s * 47.0)) * CRUSH_SHAKE_DEG
 			return {"arm": hold_arm + shake * 0.5, "off": hold_off + shake, "exact": false}
 		"throw":
-			if attach == "" or phase == ActionDef.Phase.ACTIVE or phase == ActionDef.Phase.RECOVERY:
+			if phase == ActionDef.Phase.ACTIVE or phase == ActionDef.Phase.RECOVERY:
 				var settle := smoothstep(0.0, 1.0, t) if phase == ActionDef.Phase.RECOVERY else 0.0
 				return {"arm": idle_arm, "off": THROW_RELEASE_POSE.lerp(idle_off, settle), "exact": false}
 	return {"arm": hold_arm, "off": hold_off, "exact": false}

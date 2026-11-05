@@ -463,7 +463,8 @@ func rig_state(out: Dictionary) -> void:
 	out["grab_phase"] = phase
 	if phase == "" or player.rig == null:
 		return
-	out["pose_override"] = ActorRig.grab_pose(phase, held_attach(), socket_local(), player.weapon_pivot,
+	var two_hands := held_attach() == "two_hand" and not player.camera_rig.is_first_person()
+	out["pose_override"] = ActorRig.grab_pose(phase, two_hands, socket_local(), player.weapon_pivot,
 		player.rig.idle_arm_pose, player.rig.off_idle_pose, c.phase(), c.phase_fraction(),
 		float(Sim.tick) * Sim.DT)
 
