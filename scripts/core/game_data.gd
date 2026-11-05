@@ -87,6 +87,11 @@ func _post_pass() -> void:
 	else:
 		warnings.append_array(telegraph_problems)
 	## @anchor P10a
+	# Encounters (P10a): a spawn entity_id belongs to one encounter only ("Duplicate spawn
+	# entity_id '...'"), a spawn's definition is an enemy or npc record, and an encounter's
+	# district is one of its level's districts (encounter_schema.gd cross_record_errors).
+	if DataValidator.SCHEMAS.has("encounter"):
+		errors.append_array(DataValidator.SCHEMAS["encounter"].cross_record_errors(records, record_paths))
 
 	## @anchor P12
 

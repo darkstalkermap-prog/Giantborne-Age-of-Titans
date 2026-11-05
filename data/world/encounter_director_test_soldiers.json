@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "encounter.director_test_soldiers",
+	"type": "encounter",
+	"display_name": "Test soldiers",
+	"level": "level.director_test",
+	"district": "east",
+	"center_m": [35, 0, -30],
+	"activate_radius_m": 25,
+	"deactivate_radius_m": 80,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "test.director.soldier_1", "definition": "enemy.soldier", "position_m": [32, 0, -32], "yaw_deg": 180,
+			"patrol": "test.patrol.soldiers", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.soldier_2", "definition": "enemy.soldier", "position_m": [35, 0, -28], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "test.director.soldier_3", "definition": "enemy.soldier", "position_m": [38, 0, -32], "yaw_deg": 180,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}
