@@ -20,19 +20,21 @@ const TEST_PATH := "res://scenes/test/ranged_test.tscn"
 const GIANT := "res://scenes/player/giant.tscn"
 const SOLDIER := "res://scenes/enemies/soldier.tscn"
 
-## The ranged test level's layout (also read by tests).
-const PLAYER_POS := Vector3(0, 0.05, 14)
-const PLATFORM_CENTER := Vector3(-16, 1.0, -22)
+## The ranged test level's layout (also read by tests). The enemies face the giant (+Z).
+const PLAYER_POS := Vector3(0, 0.05, 4)
+const PLATFORM_CENTER := Vector3(-14, 1.0, -8)
 const PLATFORM_SIZE := Vector3(6, 2, 6)
-const RAMP_LOW_Z := -9.0                      ## the ramp runs from here (ground) to the platform's edge
-const ELEVATION_POINT := Vector3(-16, 2.0, -22)
-const COVER_WALLS := [Vector3(10, 0.8, -10), Vector3(20, 0.8, -2)]
-const COVER_POINTS := [Vector3(10, 0.05, -11.2), Vector3(20, 0.05, -3.2)]
-const SIGHT_WALL := Vector3(-2, 2.5, -4)
+const RAMP_LOW_Z := -21.0                     ## the ramp runs from here (ground) up to the platform's north edge
+const ELEVATION_POINT := Vector3(-14, 2.0, -8)
+const COVER_WALLS := [Vector3(10, 0.55, -6), Vector3(20, 0.55, 0)]
+const COVER_WALL_SIZE := Vector3(4, 1.1, 0.6)   ## lower than an archer's bow (1.45 m)
+const COVER_POINTS := [Vector3(10, 0.05, -7.2), Vector3(20, 0.05, -1.2)]
+const SIGHT_WALL := Vector3(-4, 2.5, -24)
 const SIGHT_WALL_SIZE := Vector3(8, 5, 0.8)
-const ARCHER_SPAWNS := [Vector3(-8, 0.05, -16), Vector3(12, 0.05, -18)]
-const MAGE_SPAWN := Vector3(2, 0.05, -20)
-const SOLDIER_SPAWN := Vector3(4, 0.05, -15)
+const ARCHER_SPAWNS := [Vector3(-8, 0.05, -14), Vector3(12, 0.05, -16)]
+const MAGE_SPAWN := Vector3(4, 0.05, -18)
+const SOLDIER_SPAWN := Vector3(6, 0.05, -13)
+const ENEMY_YAW_DEG := 180.0
 
 
 static func build_all(kit: SceneKit) -> void:
@@ -230,14 +232,17 @@ static func build_test_level(kit: SceneKit) -> Node:
 		a.name = "Archer%02d" % (i + 1)
 		a.set("entity_id", "ranged_test.archer_%d" % (i + 1))
 		a.position = ARCHER_SPAWNS[i]
+		a.rotation_degrees = Vector3(0, ENEMY_YAW_DEG, 0)
 		enemies.add_child(a)
 	mage.name = "Mage01"
 	mage.set("entity_id", "ranged_test.mage_1")
 	mage.position = MAGE_SPAWN
+	mage.rotation_degrees = Vector3(0, ENEMY_YAW_DEG, 0)
 	enemies.add_child(mage)
 	soldier.name = "Soldier01"
 	soldier.set("entity_id", "ranged_test.soldier_1")
 	soldier.position = SOLDIER_SPAWN
+	soldier.rotation_degrees = Vector3(0, ENEMY_YAW_DEG, 0)
 	enemies.add_child(soldier)
 	root.add_child(enemies)
 
@@ -267,19 +272,28 @@ static func _solids() -> Array:
 		"mat": "stone"})
 	out.append({"name": "Platform", "size": PLATFORM_SIZE, "xform": Transform3D(Basis(), PLATFORM_CENTER),
 		"mat": "stone_dark"})
-	# The ramp: its top face runs from the ground at z = RAMP_LOW_Z up to the platform's near edge.
-	var top_z := PLATFORM_CENTER.z + PLATFORM_SIZE.z * 0.5
+	# The ramp: its top face runs from the ground at z = RAMP_LOW_Z up to the platform's edge
+	# that faces it.
 	var rise := PLATFORM_CENTER.y + PLATFORM_SIZE.y * 0.5
-	var run := RAMP_LOW_Z - top_z
-	var length := sqrt(run * run + rise * rise)
-	var angle := atan2(rise, run)
+	var edge_z := PLATFORM_CENTER.z + signf(RAMP_LOW_Z - PLATFORM_CENTER.z) * PLATFORM_SIZE.z * 0.5
+	var high := Vector3(PLATFORM_CENTER.x, rise, edge_z)
+	var low := Vector3(PLATFORM_CENTER.x, 0.0, RAMP_LOW_Z)
 	var thickness := 0.4
-	var basis := Basis(Vector3.RIGHT, angle)
-	var mid := Vector3(PLATFORM_CENTER.x, rise * 0.5, (RAMP_LOW_Z + top_z) * 0.5)
-	out.append({"name": "Ramp", "size": Vector3(4, thickness, length),
+	var width := 4.0
+	var length := high.distance_to(low)
+	var mid := (high + low) * 0.5
+	var basis := Basis.looking_at((high - low).normalized(), Vector3.UP)   # -Z runs up the slope
+	out.append({"name": "Ramp", "size": Vector3(width, thickness, length),
 		"xform": Transform3D(basis, mid - basis.y * (thickness * 0.5)), "mat": "stone"})
+	# Rails along both sides, 1 m above the ramp: the only way up is its front (the navmesh would
+	# otherwise step onto the ramp's low sides, a ledge a capsule cannot climb).
+	var rail := Vector3(0.2, 1.4, length)
+	for side: float in [-1.0, 1.0]:
+		out.append({"name": "RampRail%s" % ("L" if side < 0.0 else "R"), "size": rail,
+			"xform": Transform3D(basis, mid + basis.x * (side * (width + rail.x) * 0.5)
+				+ basis.y * (rail.y * 0.5 - thickness)), "mat": "wood_dark"})
 	for i in COVER_WALLS.size():
-		out.append({"name": "CoverWall%d" % (i + 1), "size": Vector3(4, 1.6, 0.6),
+		out.append({"name": "CoverWall%d" % (i + 1), "size": COVER_WALL_SIZE,
 			"xform": Transform3D(Basis(), COVER_WALLS[i]), "mat": "wood_dark"})
 	out.append({"name": "SightWall", "size": SIGHT_WALL_SIZE, "xform": Transform3D(Basis(), SIGHT_WALL),
 		"mat": "stone_dark"})

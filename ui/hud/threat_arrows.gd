@@ -29,7 +29,7 @@ func _on_telegraph_started(_tick: int, actor_id: String, action_id: String, targ
 	if p == null or p.entity == null or target_id != p.entity.entity_id:
 		return
 	var a := GameData.get_action(action_id)
-	if a != null and bool(a.param("targets_ally", false)):
+	if a != null and is_same(a.param("targets_ally", false), true):
 		return
 	_records[actor_id] = TelegraphVisuals.make_record(actor_id, action_id, target_id, shape, origin, yaw,
 		radius, length, duration_s)

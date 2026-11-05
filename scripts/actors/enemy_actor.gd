@@ -1572,14 +1572,28 @@ func _crowded(p: Vector3, spread_m: float, allies: Array) -> bool:
 	return false
 
 
-## Whether a unit standing at `p` would see `target` (its eye height to the target's anchor,
-## through SIGHT_MASK). True without a target.
+## Whether a unit standing at `p` could shoot `target` from there: the line from its shot's
+## launch height (the lowest launch offset of its projectile attacks; its eye without one) to the
+## target's anchor is clear of SIGHT_MASK, so cover it stands behind is lower than its bow. True
+## without a target.
 func _sees_target_from(p: Vector3, target: CombatEntity) -> bool:
 	if target == null or not is_instance_valid(target.actor):
 		return true
-	var eye := p + Vector3.UP * entity.combatant.height_m * 0.92
-	return HitQueryAdapter.line_clear(get_world_3d().direct_space_state, eye, target.anchor_position(),
+	var from := p + Vector3.UP * _shot_height()
+	return HitQueryAdapter.line_clear(get_world_3d().direct_space_state, from, target.anchor_position(),
 		SIGHT_MASK, target.occlusion_rids)
+
+
+## The height above its feet a ranged unit's shots leave from (see _sees_target_from).
+func _shot_height() -> float:
+	var h := entity.combatant.height_m * 0.92
+	for id: Variant in record.get("attacks", []):
+		var a := GameData.get_action(str(id))
+		if a != null and a.hit_shape == "projectile":
+			var off: Vector3 = Projectile.spec_for(a).launch_offset
+			if off != Vector3.INF:
+				h = minf(h, off.y)
+	return h
 
 
 func _ring_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2, spread_m: float,

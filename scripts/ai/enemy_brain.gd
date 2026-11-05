@@ -911,7 +911,7 @@ func _cache_ranged_ids() -> void:
 	_ranged_ids_cached = true
 	for id: Variant in attacks:
 		var rec: Dictionary = GameData.get_record(str(id))
-		if bool(rec.get("targets_ally", false)):
+		if is_same(rec.get("targets_ally", false), true):
 			_ally_cast_ids.append(str(id))
 		elif str(rec.get("hit_shape", "none")) == "projectile":
 			_ranged_attack_ids.append(str(id))

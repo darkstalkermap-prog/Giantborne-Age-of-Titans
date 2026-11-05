@@ -18,8 +18,8 @@ ambient_light_color = Color(0.6, 0.62, 0.68, 1)
 ambient_light_energy = 0.6
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_2"]
-vertices = PackedVector3Array(-19.5, 0.5, -25.25, -17.25, 0.5, -25.5, -17.25, 0.5, -59.5, -59.5, 0.5, -59.5, -59.5, 0.5, -23.25, -19.5, 0.5, -23.25, -14.5, 0.5, -25.5, -14.5, 0.5, -59.5, -12.25, 0.5, -25.25, -12.25, 0.5, -19, 8, 0.5, -11, 12.25, 0.5, -11, 12.25, 0.5, -59.5, 12.75, 0.5, -10.75, 12.75, 0.5, -9.5, 18, 0.5, -3, 22.5, 0.5, -3, 59.5, 0.5, -2, 59.5, 0.5, -59.5, 22.75, 0.5, -2, -17.5, 2.5, -19.25, -14.5, 2.5, -19.25, -13.5, 2.5, -19.5, -13.5, 2.5, -24.5, -18.5, 2.5, -24.5, -18.5, 2.5, -19.5, -17.5, 1.25, -13, -14.5, 1.25, -13, -59.5, 0.5, -20.5, -19.5, 0.5, -20.5, -18.5, 0.5, -13, -18.5, 0.5, -18.25, -19.5, 0.5, -18.5, -59.5, 0.5, -13, 2.75, 0.5, -4.5, 8, 0.5, -9, 7.5, 0.5, -9.25, 2.5, 0.5, -5, -13.25, 0.5, -11, -13.75, 0.75, -10.75, -6.5, 0.5, -4.5, -6.25, 0.5, -5, 7.5, 0.5, -10.75, -13.25, 0.5, -18.25, -14.5, 0.75, -11, -17.5, 0.75, -11, -4.25, 0.5, 59.5, -4.25, 0.5, -3, -6.25, 0.5, -3, -18.5, 0.5, -11, -59.5, 0.5, 59.5, 2.5, 0.5, -3, 17.5, 0.5, -1.25, 17.5, 0.5, -2.75, 12.5, 0.5, -9, 0.5, 0.5, -3, 0.5, 0.5, 59.5, 20, 0.5, 59.5, 20, 0.5, -1, 22.5, 0.5, -1, 59.5, 0.5, 59.5)
-polygons = [PackedInt32Array(1, 0, 2), PackedInt32Array(2, 0, 3), PackedInt32Array(3, 0, 4), PackedInt32Array(0, 5, 4), PackedInt32Array(2, 7, 1), PackedInt32Array(1, 7, 6), PackedInt32Array(10, 9, 8), PackedInt32Array(10, 8, 11), PackedInt32Array(11, 8, 7), PackedInt32Array(11, 7, 12), PackedInt32Array(7, 8, 6), PackedInt32Array(14, 13, 15), PackedInt32Array(15, 13, 16), PackedInt32Array(13, 11, 17), PackedInt32Array(17, 11, 12), PackedInt32Array(17, 12, 18), PackedInt32Array(17, 19, 16), PackedInt32Array(13, 17, 16), PackedInt32Array(20, 25, 21), PackedInt32Array(21, 25, 22), PackedInt32Array(22, 25, 24), PackedInt32Array(22, 24, 23), PackedInt32Array(20, 21, 26), PackedInt32Array(26, 21, 27), PackedInt32Array(4, 5, 28), PackedInt32Array(28, 5, 29), PackedInt32Array(31, 30, 32), PackedInt32Array(32, 30, 33), PackedInt32Array(32, 33, 28), PackedInt32Array(28, 29, 32), PackedInt32Array(37, 36, 34), PackedInt32Array(34, 36, 35), PackedInt32Array(41, 40, 38), PackedInt32Array(38, 40, 39), PackedInt32Array(36, 37, 42), PackedInt32Array(42, 37, 41), PackedInt32Array(43, 9, 38), PackedInt32Array(38, 9, 41), PackedInt32Array(41, 9, 42), PackedInt32Array(42, 9, 10), PackedInt32Array(45, 26, 44), PackedInt32Array(44, 26, 27), PackedInt32Array(48, 47, 46), PackedInt32Array(45, 44, 39), PackedInt32Array(49, 45, 39), PackedInt32Array(39, 40, 48), PackedInt32Array(39, 48, 49), PackedInt32Array(49, 48, 33), PackedInt32Array(33, 48, 46), PackedInt32Array(33, 46, 50), PackedInt32Array(33, 30, 49), PackedInt32Array(34, 35, 51), PackedInt32Array(51, 35, 54), PackedInt32Array(51, 54, 53), PackedInt32Array(51, 53, 52), PackedInt32Array(53, 54, 15), PackedInt32Array(15, 54, 14), PackedInt32Array(51, 52, 55), PackedInt32Array(55, 52, 56), PackedInt32Array(56, 52, 57), PackedInt32Array(52, 58, 57), PackedInt32Array(47, 55, 46), PackedInt32Array(46, 55, 56), PackedInt32Array(19, 17, 59), PackedInt32Array(59, 17, 60), PackedInt32Array(59, 60, 57), PackedInt32Array(57, 58, 59)]
+vertices = PackedVector3Array(-16.75, 0.5, -21.5, -15.75, 0.5, -21.75, -15.25, 0.5, -59.5, -59.5, 0.5, -59.5, -59.5, 0.5, -20.25, -16.75, 0.5, -20, -15.25, 0.5, -21.5, -15.25, 0.75, -19.75, -12.5, 0.75, -19.75, -12.5, 0.5, -21.5, -8.25, 0.5, -25, -6.25, 0.5, -25, -6.25, 0.5, -59.5, -11.75, 0.5, -21.75, -8.5, 0.5, -23.5, -1.5, 0.5, -25, -1.5, 0.5, -59.5, 12.75, 0.5, -5.25, 17.5, 0.5, -0.5, 17.75, 0.5, -1, 12.5, 0.5, -7, 22.5, 0.5, -1, 0.5, 0.5, -25, 0.75, 0.5, -23.5, 8, 0.5, -7, 22.75, 0.5, 0, 59.5, 0.5, 0, 59.5, 0.5, -59.5, -11.25, 0.5, -21.5, -8.25, 0.5, -23, -10.25, 0.5, -6, 7.5, 0.5, -6, 7.5, 0.5, -6.5, 0.5, 0.5, -23, -10.25, 0.5, -11.25, -11.25, 0.5, -11.5, -17.5, 0.5, -11.25, -16.75, 0.5, -11.5, -59.5, 0.5, -9.25, -17.5, 0.5, -9.25, -11.5, 2.5, -5.5, -11.5, 2.5, -10.5, -12.5, 2.5, -10.75, -15.25, 2.5, -10.75, -16.5, 2.5, -10.5, -16.5, 2.5, -5.5, -59.5, 0.5, -6.5, -17.5, 0.5, -6.5, -17.5, 0.5, -4.5, -15.75, 0.5, -4.25, -59.5, 0.5, 59.5, -16, 0.5, 59.5, 17.75, 0.5, 1, 7.75, 0.5, -5, 20, 0.5, 59.5, 20, 0.5, 1, -10.25, 0.5, -4.75, -10.75, 0.5, -4.25, -12.25, 0.5, -4.25, -12, 0.5, 59.5, 22.5, 0.5, 1, 59.5, 0.5, 59.5)
+polygons = [PackedInt32Array(1, 0, 2), PackedInt32Array(2, 0, 3), PackedInt32Array(3, 0, 4), PackedInt32Array(0, 5, 4), PackedInt32Array(9, 8, 6), PackedInt32Array(6, 8, 7), PackedInt32Array(12, 11, 10), PackedInt32Array(6, 1, 9), PackedInt32Array(9, 1, 13), PackedInt32Array(14, 13, 10), PackedInt32Array(10, 13, 1), PackedInt32Array(10, 1, 2), PackedInt32Array(10, 2, 12), PackedInt32Array(12, 16, 11), PackedInt32Array(11, 16, 15), PackedInt32Array(19, 18, 17), PackedInt32Array(17, 20, 19), PackedInt32Array(19, 20, 21), PackedInt32Array(22, 15, 16), PackedInt32Array(23, 22, 24), PackedInt32Array(24, 22, 20), PackedInt32Array(26, 25, 21), PackedInt32Array(20, 22, 21), PackedInt32Array(21, 22, 16), PackedInt32Array(21, 16, 26), PackedInt32Array(26, 16, 27), PackedInt32Array(29, 28, 14), PackedInt32Array(14, 28, 13), PackedInt32Array(31, 30, 32), PackedInt32Array(32, 30, 34), PackedInt32Array(32, 34, 33), PackedInt32Array(35, 28, 34), PackedInt32Array(34, 28, 29), PackedInt32Array(34, 29, 33), PackedInt32Array(23, 24, 33), PackedInt32Array(33, 24, 32), PackedInt32Array(37, 36, 5), PackedInt32Array(5, 36, 4), PackedInt32Array(4, 36, 38), PackedInt32Array(36, 39, 38), PackedInt32Array(42, 41, 43), PackedInt32Array(43, 41, 44), PackedInt32Array(44, 41, 40), PackedInt32Array(44, 40, 45), PackedInt32Array(42, 43, 8), PackedInt32Array(8, 43, 7), PackedInt32Array(38, 39, 46), PackedInt32Array(46, 39, 47), PackedInt32Array(46, 47, 48), PackedInt32Array(48, 49, 46), PackedInt32Array(46, 49, 51), PackedInt32Array(46, 51, 50), PackedInt32Array(18, 52, 17), PackedInt32Array(17, 52, 53), PackedInt32Array(52, 55, 54), PackedInt32Array(30, 31, 56), PackedInt32Array(56, 31, 53), PackedInt32Array(57, 52, 58), PackedInt32Array(58, 52, 59), PackedInt32Array(59, 52, 54), PackedInt32Array(56, 53, 57), PackedInt32Array(57, 53, 52), PackedInt32Array(49, 58, 51), PackedInt32Array(51, 58, 59), PackedInt32Array(25, 26, 60), PackedInt32Array(60, 26, 61), PackedInt32Array(60, 61, 54), PackedInt32Array(54, 55, 60)]
 agent_height = 2.0
 agent_max_slope = 35.0
 
@@ -59,25 +59,37 @@ roughness = 0.9
 size = Vector3(4, 0.4, 10.198039)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_12"]
-size = Vector3(4, 1.6, 0.6)
+size = Vector3(0.2, 1.4, 10.198039)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13"]
 albedo_color = Color(0.36, 0.25, 0.15, 1)
 roughness = 0.9
 
 [sub_resource type="BoxMesh" id="BoxMesh_14"]
-size = Vector3(4, 1.6, 0.6)
+size = Vector3(0.2, 1.4, 10.198039)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_15"]
-size = Vector3(4, 1.6, 0.6)
+size = Vector3(0.2, 1.4, 10.198039)
 
 [sub_resource type="BoxMesh" id="BoxMesh_16"]
-size = Vector3(4, 1.6, 0.6)
+size = Vector3(0.2, 1.4, 10.198039)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_17"]
-size = Vector3(8, 5, 0.8)
+size = Vector3(4, 1.1, 0.6)
 
 [sub_resource type="BoxMesh" id="BoxMesh_18"]
+size = Vector3(4, 1.1, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_19"]
+size = Vector3(4, 1.1, 0.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_20"]
+size = Vector3(4, 1.1, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_21"]
+size = Vector3(8, 5, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_22"]
 size = Vector3(8, 5, 0.8)
 
 [node name="RangedTest" type="Node3D"]
@@ -108,7 +120,7 @@ material_override = SubResource("ShaderMaterial_4")
 mesh = SubResource("PlaneMesh_5")
 
 [node name="Platform" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 1, -22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 1, -8)
 collision_mask = 0
 
 [node name="Shape" type="CollisionShape3D" parent="Geometry/Platform"]
@@ -119,7 +131,7 @@ material_override = SubResource("StandardMaterial3D_7")
 mesh = SubResource("BoxMesh_8")
 
 [node name="Ramp" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 0.9805807, -0.19611613, 0, 0.19611613, 0.9805807, -16, 0.80388385, -14.039224)
+transform = Transform3D(-1, 0, 0, 0, 0.9805807, -0.19611613, 0, -0.19611613, -0.9805807, -14, 0.80388385, -15.960776)
 collision_mask = 0
 
 [node name="Shape" type="CollisionShape3D" parent="Geometry/Ramp"]
@@ -129,75 +141,97 @@ shape = SubResource("BoxShape3D_9")
 material_override = SubResource("StandardMaterial3D_10")
 mesh = SubResource("BoxMesh_11")
 
-[node name="CoverWall1" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.8, -10)
+[node name="RampRailL" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(-1, 0, 0, 0, 0.9805807, -0.19611613, 0, -0.19611613, -0.9805807, -11.9, 1.2941742, -16.058834)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CoverWall1"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/RampRailL"]
 shape = SubResource("BoxShape3D_12")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/CoverWall1"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/RampRailL"]
 material_override = SubResource("StandardMaterial3D_13")
 mesh = SubResource("BoxMesh_14")
 
-[node name="CoverWall2" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.8, -2)
+[node name="RampRailR" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(-1, 0, 0, 0, 0.9805807, -0.19611613, 0, -0.19611613, -0.9805807, -16.1, 1.2941742, -16.058834)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CoverWall2"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/RampRailR"]
 shape = SubResource("BoxShape3D_15")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/CoverWall2"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/RampRailR"]
 material_override = SubResource("StandardMaterial3D_13")
 mesh = SubResource("BoxMesh_16")
 
+[node name="CoverWall1" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.55, -6)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CoverWall1"]
+shape = SubResource("BoxShape3D_17")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CoverWall1"]
+material_override = SubResource("StandardMaterial3D_13")
+mesh = SubResource("BoxMesh_18")
+
+[node name="CoverWall2" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.55, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CoverWall2"]
+shape = SubResource("BoxShape3D_19")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CoverWall2"]
+material_override = SubResource("StandardMaterial3D_13")
+mesh = SubResource("BoxMesh_20")
+
 [node name="SightWall" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.5, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 2.5, -24)
 collision_mask = 0
 
 [node name="Shape" type="CollisionShape3D" parent="Geometry/SightWall"]
-shape = SubResource("BoxShape3D_17")
+shape = SubResource("BoxShape3D_21")
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/SightWall"]
 material_override = SubResource("StandardMaterial3D_7")
-mesh = SubResource("BoxMesh_18")
+mesh = SubResource("BoxMesh_22")
 
 [node name="Markers" type="Node3D" parent="."]
 
 [node name="ElevationPlatform" type="Marker3D" parent="Markers" groups=["ai_elevation_points"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 2, -22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 2, -8)
 
 [node name="Cover1" type="Marker3D" parent="Markers" groups=["ai_cover_points"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.05, -11.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.05, -7.2)
 
 [node name="Cover2" type="Marker3D" parent="Markers" groups=["ai_cover_points"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.05, -3.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.05, -1.2)
 
 [node name="Enemies" type="Node3D" parent="."]
 
 [node name="Archer01" type="CharacterBody3D" parent="Enemies" instance=ExtResource("2_016f5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.05, -16)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -8, 0.05, -14)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("3_14211")
 entity_id = "ranged_test.archer_1"
 
 [node name="Archer02" type="CharacterBody3D" parent="Enemies" instance=ExtResource("2_016f5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.05, -18)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 12, 0.05, -16)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("3_14211")
 entity_id = "ranged_test.archer_2"
 
 [node name="Mage01" type="CharacterBody3D" parent="Enemies" instance=ExtResource("4_681e0")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.05, -20)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 4, 0.05, -18)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("5_7d1ac")
 entity_id = "ranged_test.mage_1"
 
 [node name="Soldier01" type="CharacterBody3D" parent="Enemies" instance=ExtResource("6_7b3a0")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.05, -15)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6, 0.05, -13)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("7_8053b")
@@ -206,10 +240,10 @@ entity_id = "ranged_test.soldier_1"
 [node name="Spawns" type="Node3D" parent="."]
 
 [node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 14)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 4)
 
 [node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("8_627ae")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 14)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 4)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("9_7ef4a")
@@ -217,7 +251,7 @@ script = ExtResource("9_7ef4a")
 [node name="Signs" type="Node3D" parent="."]
 
 [node name="SignPlatform" type="Label3D" parent="Signs"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 5.2, -22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 5.2, -8)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
 pixel_size = 0.006
@@ -227,7 +261,7 @@ text = "ELEVATION (archers climb the ramp)"
 font_size = 64
 
 [node name="SignCover" type="Label3D" parent="Signs"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.05, -11.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.05, -7.2)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
 pixel_size = 0.006
@@ -237,7 +271,7 @@ text = "COVER POINTS"
 font_size = 64
 
 [node name="SignWall" type="Label3D" parent="Signs"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 5.9, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 5.9, -24)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
 pixel_size = 0.006
@@ -247,7 +281,7 @@ text = "SIGHT WALL"
 font_size = 64
 
 [node name="SignStart" type="Label3D" parent="Signs"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.05, 10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.05, 0)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
 pixel_size = 0.006

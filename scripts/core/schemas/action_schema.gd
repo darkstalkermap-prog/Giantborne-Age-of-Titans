@@ -262,7 +262,7 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.errors.append("%s: a 'grab' block needs hit_shape 'grab'" % ctx)
 
 	## @anchor P09
-	if bool(d.get("targets_ally", false)):
+	if is_same(d.get("targets_ally", false), true):
 		if str(d.get("hit_shape", "none")) != "none":
 			out.errors.append("%s: a targets_ally cast has no hit: hit_shape must be 'none'" % ctx)
 		var p09_statuses: Variant = d.get("on_hit_statuses")

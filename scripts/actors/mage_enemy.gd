@@ -59,7 +59,7 @@ func _sense_extra(snapshot: Dictionary) -> void:
 
 
 func _on_mage_phase_entered(action: ActionDef, _instance_id: int, phase: int) -> void:
-	if phase == ActionDef.Phase.ACTIVE and action != null and bool(action.param("targets_ally", false)):
+	if phase == ActionDef.Phase.ACTIVE and action != null and is_same(action.param("targets_ally", false), true):
 		apply_ally_cast(action)
 
 
