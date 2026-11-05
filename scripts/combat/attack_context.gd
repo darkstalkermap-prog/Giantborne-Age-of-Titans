@@ -16,11 +16,18 @@ var growth_stage := 1
 var attacker_position := Vector3.ZERO
 ## Dedup registry for this attack: controller.hit_registry, or a projectile's own.
 var registry: HitRegistry
-## True for area pulses (cylinder pulses here; sector pulses and splash from P03). P02 never
-## filters on it: HitFactory.skip_candidate returns false until P03 fills it in.
+## True for area pulses (cylinder and sector pulses, projectile splash): the player's area
+## effects skip entities the player may not target (HitFactory.skip_candidate).
 var area_effect := false
 
 ## @anchor P03
+## Projectiles (P03): set on a projectile's snapshot; HitFactory copies them into every hit.
+var from_projectile := false
+var projectile_id := 0
+## Outgoing multipliers frozen when a projectile is launched, so a bolt keeps the Titan Surge it
+## was fired with. NAN = read the attacker's statuses when the hit is built (melee, pulses).
+var outgoing_damage_mult := NAN
+var outgoing_poise_mult := NAN
 ## @anchor P07
 
 

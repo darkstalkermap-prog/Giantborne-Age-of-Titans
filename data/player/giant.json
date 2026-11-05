@@ -24,7 +24,8 @@
 		"block": "action.block",
 		"jump": "action.jump",
 		"sprint": "action.sprint",
-		"slots": ["ability.heavy_footfall", "", "", "", "", "", "", ""],
-		"ultimate": ""
+		"slots": ["ability.heavy_footfall", "ability.sweeping_blow", "ability.stone_skin", "", "",
+			"ability.runic_bolt", "ability.ancestral_mend", "ability.thunder_roar"],
+		"ultimate": "ability.titan_surge"
 	}
 }

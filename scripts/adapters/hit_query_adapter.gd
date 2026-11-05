@@ -87,6 +87,70 @@ static func cylinder_pulse(space: PhysicsDirectSpaceState3D, attacker: CombatEnt
 	return out
 
 
+## Sphere swept from `from` to `to` (projectiles): the sweep_capsule rules for a moving ball.
+## Positions are sub-stepped at most 0.75 * radius apart (at most MAX_SUBSTEPS + 1 positions,
+## the start included), so a fast projectile never tunnels through a hurtbox. A hurtbox counts
+## only when the line from the sphere's centre to the hurtbox centre is clear of world
+## occluders, and only once per sweep (its earliest sub-step). Returns candidates
+## {"entity", "hurtbox", "point" (the sphere centre at contact), "substep", "distance" (from
+## `from` to the hurtbox centre), "weak_point"}, filtered by team like sweep_capsule.
+static func sweep_sphere(space: PhysicsDirectSpaceState3D, attacker: CombatEntity, from: Vector3,
+		to: Vector3, radius: float) -> Array:
+	var out: Array = []
+	var travel := from.distance_to(to)
+	var steps := clampi(int(ceilf(travel / maxf(radius * 0.75, 0.05))), 1, MAX_SUBSTEPS)
+	var shape := SphereShape3D.new()
+	shape.radius = radius
+	var params := PhysicsShapeQueryParameters3D.new()
+	params.collide_with_areas = true
+	params.collide_with_bodies = false
+	params.collision_mask = LAYER_HURTBOX
+	params.shape = shape
+	var seen := {}
+	for i in range(0, steps + 1):
+		var p := from.lerp(to, float(i) / steps)
+		params.transform = Transform3D(Basis(), p)
+		for r: Dictionary in intersect_all(space, params):
+			var hb := r.get("collider") as Hurtbox
+			if hb == null or hb.entity == null or seen.has(hb.get_instance_id()):
+				continue
+			var target := hb.entity
+			if target == attacker or (attacker != null and not CombatEntity.can_damage(attacker.team, target.team)):
+				continue
+			var center := hb.global_position
+			if not line_clear(space, p, center, OCCLUDER_MASK, target.occlusion_rids):
+				continue
+			seen[hb.get_instance_id()] = true
+			out.append({"entity": target, "hurtbox": hb, "point": p, "substep": i,
+				"distance": from.distance_to(center), "weak_point": hb.weak_point})
+	return out
+
+
+## First contact of a sphere moving from `from` to `to` with world occluders (WORLD and
+## BREAKABLE). {} when the path is clear; otherwise {"fraction": the safe fraction 0..1,
+## "position": the sphere's centre where it first touches}. A sphere that starts inside
+## geometry reports fraction 0.
+static func sphere_contact(space: PhysicsDirectSpaceState3D, from: Vector3, to: Vector3,
+		radius: float, exclude: Array[RID] = []) -> Dictionary:
+	if from.distance_squared_to(to) < 1e-10:
+		return {}
+	var shape := SphereShape3D.new()
+	shape.radius = radius
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = shape
+	q.transform = Transform3D(Basis(), from)
+	q.motion = to - from
+	q.collision_mask = OCCLUDER_MASK
+	q.collide_with_areas = false
+	q.collide_with_bodies = true
+	q.exclude = exclude
+	var r := space.cast_motion(q)
+	if r.size() < 2 or float(r[1]) >= 1.0:
+		return {}
+	var f := clampf(float(r[0]), 0.0, 1.0)
+	return {"fraction": f, "position": from.lerp(to, f)}
+
+
 ## intersect_shape that grows its result buffer until nothing is cut off.
 static func intersect_all(space: PhysicsDirectSpaceState3D, params: PhysicsShapeQueryParameters3D) -> Array:
 	var cap := INITIAL_BUFFER
