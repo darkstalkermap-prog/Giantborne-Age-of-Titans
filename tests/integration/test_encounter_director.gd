@@ -299,6 +299,29 @@ func test_kills_persist_and_cleared_encounters_stay_cleared() -> void:
 	assert_eq(cleared.size(), 1, "and no second encounter_cleared")
 
 
+# --------------------------------------------------------------------------- with the real AI
+
+func test_spawned_wolves_engage_and_their_deaths_clear_the_encounter() -> void:
+	await _load_level(true)
+	_teleport(WOLVES_CENTER + Vector3(0, 0.05, 18))   # in front of the pack, inside its radius
+	player.facing_yaw = 0.0
+	director.update_now()
+	assert_eq(director.encounter_state(WOLVES), EncounterDirector.ACTIVE, "the player walked in")
+	var attacking: bool = await TestWait.until(self, func() -> bool:
+		return started.any(func(x: String) -> bool: return x.begins_with("test.director.wolf_")), 240)
+	assert_true(attacking, "the spawned wolves notice the giant and attack")
+	for id in director.members_of(WOLVES):
+		assert_true(_enemy(id).brain.aware, "%s is aware (seen or shared)" % id)
+	var lines := director.debug_lines()
+	assert_true(lines.size() >= 2 and lines[0].begins_with("DIRECTOR level.director_test  combatants 3/12"),
+		"the F3 line (%s)" % lines[0])
+	assert_true(lines[1].contains(WOLVES), "and the active encounter's line")
+	for id in director.members_of(WOLVES):
+		await _kill(id)
+	assert_eq(director.encounter_state(WOLVES), EncounterDirector.CLEARED, "all dead: cleared")
+	assert_eq(cleared, [WOLVES] as Array[String], "encounter_cleared once")
+
+
 # --------------------------------------------------------------------------- leash
 
 func test_leash_return_walks_home_ignoring_the_player() -> void:
@@ -378,6 +401,20 @@ func test_lod_tiers_follow_the_distance() -> void:
 	for w in wolves:
 		assert_eq(w.lod_tier, 0, "%s: engaged (the alert group shares awareness) keeps tier 0" % w.entity_id)
 		assert_true(w.can_process(), "%s processes again" % w.entity_id)
+	# A held body (P07) keeps its tier and stays out of the simulation until it is released.
+	for w in wolves:
+		w.brain.aware = false
+	var held := wolves[2]
+	assert_true(held.controller.enter_grabbed("player"), "grabbed")
+	held.on_grabbed("player")
+	_teleport(Vector3(-35, 0.05, 30))
+	director.update_now()
+	assert_eq(wolves[0].lod_tier, 1, "a free wolf drops to tier 1")
+	assert_eq(held.lod_tier, 0, "the held one keeps its tier")
+	assert_false(held.can_process(), "and stays out of the simulation")
+	held.on_released("dropped")
+	director.update_now()
+	assert_eq(held.lod_tier, 1, "released, it follows the distance again")
 	assert_eq(director.lod_tier_for(Vector3.ZERO, Vector3(0, 0, 40), false), 0, "40 m: tier 0")
 	assert_eq(director.lod_tier_for(Vector3.ZERO, Vector3(0, 0, 40.5), false), 1, "just beyond: tier 1")
 	assert_eq(director.lod_tier_for(Vector3.ZERO, Vector3(0, 0, 90.5), false), 2, "beyond 90 m: tier 2")

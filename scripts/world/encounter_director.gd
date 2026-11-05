@@ -472,7 +472,7 @@ func _check_leash(enc: Encounter, tick: int) -> void:
 		var n := m.node
 		if not n.has_method("begin_leash_return"):
 			continue
-		if (n.has_method("is_held") and n.call("is_held")) or (n.has_method("is_returning") and n.call("is_returning")):
+		if _held(n) or _returning(n):
 			continue
 		var brain: Variant = n.get("brain")
 		if brain is EnemyBrain and (brain as EnemyBrain).state in [EnemyBrain.AIState.FLEE,
@@ -483,9 +483,11 @@ func _check_leash(enc: Encounter, tick: int) -> void:
 			Events.encounter_leashed.emit(tick, enc.id, m.entity_id)
 
 
+## Held or flying bodies (P07) keep their tier until they are released: their holder keeps them
+## out of the simulation meanwhile.
 func _apply_lod(enc: Encounter, ppos: Vector3) -> void:
 	for m: Member in enc.members:
-		if m.status != SPAWNED or not _alive(m.node) or not m.node.has_method("set_lod_tier"):
+		if m.status != SPAWNED or not _alive(m.node) or not m.node.has_method("set_lod_tier") or _held(m.node):
 			continue
 		m.node.call("set_lod_tier", lod_tier_for(m.node.global_position, ppos, _engaged(m.node)))
 
@@ -523,7 +525,7 @@ func _share_alerts(tick: int) -> void:
 		var target := source.target_id if source.target_id != "" else "player"
 		for m: Member in enc.members:
 			var b := _brain_of(m)
-			if b == null or b.aware or _returning(m.node) or b.state in [EnemyBrain.AIState.FLEE,
+			if b == null or b.aware or _returning(m.node) or _held(m.node) or b.state in [EnemyBrain.AIState.FLEE,
 					EnemyBrain.AIState.ROUTED, EnemyBrain.AIState.DEAD, EnemyBrain.AIState.RETURN]:
 				continue
 			b.on_noise(tick, source.last_known, target, true)
@@ -722,6 +724,11 @@ static func _engaged(n: Node3D) -> bool:
 
 static func _returning(n: Node3D) -> bool:
 	return n != null and n.has_method("is_returning") and bool(n.call("is_returning"))
+
+
+## True while a giant holds (or has thrown) the actor (P07).
+static func _held(n: Node3D) -> bool:
+	return n != null and n.has_method("is_held") and bool(n.call("is_held"))
 
 
 static func _alive(n: Node3D) -> bool:
