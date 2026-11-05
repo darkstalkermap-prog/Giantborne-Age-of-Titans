@@ -598,8 +598,10 @@ func _release_fallbacks(t: CombatEntity) -> Array:
 	return [p + fwd * d, p - right * d, p + right * d, p - fwd * d, p]
 
 
-## True when a pending checkpoint waits only because of this hold (GameSession's blockers are the
-## hold itself and the held enemy's own awareness): then the hold gives way.
+## True when a pending checkpoint waits for nothing but this hold (GameSession's blockers are
+## exactly ["holding"]): then the hold gives way. While anything else blocks it (an aware enemy
+## within 40 m - usually the held one itself - a screen, the grab's own action) letting go would
+## not let the checkpoint happen, so the hold goes on.
 func _checkpoint_waits_for_hold() -> bool:
 	var gs := player.get_node_or_null("/root/GameSession")
 	if gs == null or not gs.has_method("checkpoint_blockers") or not gs.has_method("pending_checkpoint"):
@@ -610,12 +612,7 @@ func _checkpoint_waits_for_hold() -> bool:
 	if typeof(pending) != TYPE_DICTIONARY or (pending as Dictionary).is_empty():
 		return false
 	var blockers: PackedStringArray = gs.call("checkpoint_blockers")
-	if not blockers.has("holding"):
-		return false
-	for b: String in blockers:
-		if b != "holding" and b != "aware:%s" % _target_id:
-			return false
-	return true
+	return blockers.size() == 1 and blockers[0] == "holding"
 
 
 # --------------------------------------------------------------------------- lunge and queue

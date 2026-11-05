@@ -341,6 +341,16 @@ func test_the_held_body_sits_in_the_hand_out_of_the_simulation() -> void:
 	p.router.set_injected_move(Vector2.ZERO)
 	anchor = (s.get_node("Anchors/Grab") as Node3D).global_position
 	assert_true(anchor.distance_to(p.to_global(p.grab.socket_local())) < 0.01, "still in the hand after walking")
+	# The rig's off arm (it lerps into the pose) points at the socket, and its hand is there: the
+	# visible grip is the simulated one. The test resumes before this frame's _process, so the
+	# arm shows the previous tick's socket.
+	await step_ticks(10)
+	var shoulder := p.get_node("Visual/Body/ShoulderL") as Node3D
+	var arm := -shoulder.global_transform.basis.z.normalized()
+	var to_socket := (p.to_global(p.grab.socket_local()) - shoulder.global_position).normalized()
+	assert_true(rad_to_deg(arm.angle_to(to_socket)) < 3.0, "the off arm points at the socket (%.1f degrees off)" % rad_to_deg(arm.angle_to(to_socket)))
+	var hand := (p.get_node("Visual/Body/ShoulderL/Hand") as Node3D).global_position
+	assert_true(hand.distance_to(p.to_global(p.grab.socket_local())) < 0.25, "the hand is at the socket (%.2f m)" % hand.distance_to(p.to_global(p.grab.socket_local())))
 	# Other abilities wait for an empty hand; Crushing Grip does not.
 	rejected.clear()
 	p.router.inject_edge(&"slot_1")
@@ -449,15 +459,21 @@ func test_growth_and_checkpoints_refused_by_a_hold_let_go() -> void:
 	assert_false(p.grab.is_holding(), "and the hold lets go")
 	assert_eq(ended.back()[3], "interrupted", "grab_ended interrupted")
 	assert_true(p.growth.debug_set_stage(2).ok, "the next growth works")
-	# A checkpoint that waits only for the hold.
+	# A pending checkpoint: while the held enemy is aware (it blocks the checkpoint by itself) the
+	# hold goes on; once the hold is the only thing the checkpoint waits for, it lets go.
 	var t := _soldier_at(Vector3(0, 0.05, -4.5), "test.saver")
 	await step_ticks(1)
 	assert_true(await _grab(p, t), "grabbed at stage 2")
 	await _wait_free(p)
+	t.brain.aware = true
 	GameSession.test_checkpoints = true
 	GameSession.request_checkpoint("test")
+	await step_ticks(3)
+	assert_eq(GameSession.checkpoint_blockers(), PackedStringArray(["holding", "aware:test.saver"]), "two blockers")
+	assert_true(p.grab.is_holding(), "dropping an aware enemy would not help: the hold goes on")
+	t.brain.aware = false
 	await step_ticks(2)
-	assert_false(p.grab.is_holding(), "a pending checkpoint makes the hold let go")
+	assert_false(p.grab.is_holding(), "the checkpoint waits only for the hold: it lets go")
 	assert_eq(ended.back()[3], "interrupted", "grab_ended interrupted")
 	await step_ticks(2)
 	assert_true(GameSession.pending_checkpoint().is_empty(), "and the checkpoint is taken")
