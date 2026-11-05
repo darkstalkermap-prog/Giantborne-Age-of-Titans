@@ -594,17 +594,38 @@ func _update_target() -> void:
 		_target_frame.visible = false
 		_marker.visible = false
 		return
-	_target_frame.visible = true
+	# P11a: while the boss bar shows the locked boss, its bar replaces the target frame.
+	_target_frame.visible = not boss_bar_shows(target)
 	_target_name.text = "%s   %d m" % [target.display_name(), int(player.global_position.distance_to(target.actor.global_position))]
 	var p := target.combatant.pools
 	_target_bar.value = p.health / maxf(p.health_max, 0.001)
 	_target_hint.text = "LOCKED  -  %s / %s to switch" % [InputBindings.describe_action("target_prev", false), "right stick"]
-	var anchor := target.anchor_position()
+	# P11a: the marker sits on the lock point the camera frames (a knee of a much taller target).
+	var anchor := target.lock_anchor_position(float(player.profile.get("height_m", 3.66)))
 	if cam != null and not cam.is_position_behind(anchor):
 		_marker.visible = true
 		_marker.position = cam.unproject_position(anchor) - Vector2(16, 16)
 	else:
 		_marker.visible = false
+
+
+## True while the boss bar widget (ui/hud/boss_bar.gd, P11a) shows `target` (P11a: the target
+## frame is hidden then, so the boss's health is not shown twice).
+func boss_bar_shows(target: CombatEntity) -> bool:
+	var bar := get_node_or_null("BossBar")
+	return bar != null and bar.has_method("shows_entity") and bool(bar.call("shows_entity", target))
+
+
+## True while the lock-on target frame is showing (tests).
+func target_frame_visible() -> bool:
+	return _target_frame != null and _target_frame.visible
+
+
+## The screen point the lock marker is centred on (Vector2.INF while it is hidden; tests).
+func lock_marker_point() -> Vector2:
+	if _marker == null or not _marker.visible:
+		return Vector2.INF
+	return _marker.position + Vector2(16, 16)
 
 
 func _update_messages() -> void:

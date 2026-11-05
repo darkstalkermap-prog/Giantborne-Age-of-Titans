@@ -44,13 +44,15 @@ func eye() -> Vector3:
 		* float(player.profile.get("eye_height_ratio", 0.92))
 
 
+## Line of sight from the eye to the target's lock point (P11a: the same anchor the camera frames).
 func is_visible(target: CombatEntity) -> bool:
 	var space := player.get_world_3d().direct_space_state
-	return HitQueryAdapter.line_clear(space, eye(), target.anchor_position(),
+	return HitQueryAdapter.line_clear(space, eye(), lock_point(target),
 		HitQueryAdapter.LAYER_WORLD, target.occlusion_rids)
 
 
-## Lock candidate snapshots for LockOnTracker (see its header for the keys).
+## Lock candidate snapshots for LockOnTracker (see its header for the keys). Direction, distance
+## and the screen position are taken at each target's lock point (P11a).
 func gather_candidates(with_screen: bool) -> Array:
 	var out: Array = []
 	var from := eye()
@@ -58,7 +60,7 @@ func gather_candidates(with_screen: bool) -> Array:
 	for e: CombatEntity in Sim.entities():
 		if not may_target(e) or not e.combatant.lockable:
 			continue
-		var anchor := e.anchor_position()
+		var anchor := lock_point(e)
 		var c := {"id": e.entity_id, "direction": anchor - from, "distance": from.distance_to(anchor),
 			"threat": e.combatant.threat, "alive": e.is_alive(), "lockable": e.combatant.lockable,
 			"visible": is_visible(e)}
@@ -169,8 +171,9 @@ func switch_target(direction: int) -> void:
 	# If the current target is behind the camera (first-person free look), switch relative to
 	# the screen centre instead of doing nothing.
 	var screen := cam.get_viewport().get_visible_rect().size * 0.5
-	if not cam.is_position_behind(current.anchor_position()):
-		screen = cam.unproject_position(current.anchor_position())
+	var current_point := lock_point(current)
+	if not cam.is_position_behind(current_point):
+		screen = cam.unproject_position(current_point)
 	if player.lock.switch_target(direction, gather_candidates(true), screen,
 			player.camera_rig.aim_forward(), Sim.tick / 60.0):
 		sync_lock(player.lock.target_id, "switched")
@@ -195,7 +198,7 @@ func maintain_lock(dt: float) -> void:
 	if t != null:
 		info["alive"] = t.is_alive()
 		info["lockable"] = t.combatant.lockable
-		info["distance"] = eye().distance_to(t.anchor_position())
+		info["distance"] = eye().distance_to(lock_point(t))
 		info["visible"] = is_visible(t)
 	var reason := lock.update(dt, info)
 	if reason != "":
@@ -212,3 +215,16 @@ func on_any_entity_died(id: String) -> void:
 
 ## @anchor P03
 ## @anchor P11a
+# --- lock anchors (P11a) -------------------------------------------------------------------------
+# Plan §3.12 design 3: lock framing (CameraRig.lock_focus_point), the lock's line of sight, the
+# candidates' direction, distance and screen position, and the HUD's lock marker all use one
+# point - a knee of a target at least 1.3 x as tall as the giant (the Ogre King), else its torso.
+
+## The giant's height for the lock anchor rule (its current profile).
+func viewer_height() -> float:
+	return float(player.profile.get("height_m", player.entity.combatant.height_m))
+
+
+## The point lock-on aims at on `e`: CombatEntity.lock_anchor_position(viewer_height()).
+func lock_point(e: CombatEntity) -> Vector3:
+	return e.lock_anchor_position(viewer_height())

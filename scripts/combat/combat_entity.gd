@@ -16,6 +16,10 @@ extends Node
 ##
 ## Statuses: apply_status() / heal() change state and then emit status_applied / healed; the
 ## Sim status pass calls tick_statuses() for every entity in id order after hit resolution.
+##
+## Lock anchors (P11a): lock_anchors() lists Anchors/{Torso,KneeL,KneeR} where the actor has
+## them; lock_anchor_position(viewer_height) is what lock framing, lock line of sight and the
+## HUD's lock marker aim at (a knee of a target much taller than the viewer, else the torso).
 
 enum Team { NEUTRAL, PLAYER, ENEMY }
 
@@ -116,6 +120,51 @@ func display_name() -> String:
 	return combatant.display_name
 
 
+# --------------------------------------------------------------------------- lock anchors (P11a)
+
+## The Anchors/<name> nodes lock-on may frame (plan §3.12 design 3, spec 5): the torso, then the
+## knees of a large target (the ogre, the Ogre King). Every one belongs to this one entity, so
+## whichever is framed, the hits land on the one health pool.
+const LOCK_ANCHOR_NAMES := ["Torso", "KneeL", "KneeR"]
+## A target at least this many times the viewer's height is framed at its lowest lock anchor.
+const LOW_ANCHOR_HEIGHT_RATIO := 1.3
+
+var _lock_anchors: Array[Node3D] = []
+
+
+## This entity's lock anchors: its anchor (the torso) first, then those Anchors/<name> of
+## LOCK_ANCHOR_NAMES the actor has. Empty only for an entity without any anchor.
+func lock_anchors() -> Array[Node3D]:
+	for a in _lock_anchors:
+		if not is_instance_valid(a):
+			_lock_anchors.clear()
+			break
+	if _lock_anchors.is_empty() and actor != null:
+		if anchor != null:
+			_lock_anchors.append(anchor)
+		for anchor_name: String in LOCK_ANCHOR_NAMES:
+			var n := actor.get_node_or_null(NodePath("Anchors/" + anchor_name)) as Node3D
+			if n != null and not _lock_anchors.has(n):
+				_lock_anchors.append(n)
+	return _lock_anchors
+
+
+## The point lock framing, the lock's line of sight and the HUD's lock marker use for a viewer
+## `viewer_height` metres tall: the lowest lock anchor (a knee) when this entity is at least
+## LOW_ANCHOR_HEIGHT_RATIO times as tall as the viewer - so the camera never looks steeply up
+## at the 8.5 m Ogre King - otherwise anchor_position() (the torso).
+func lock_anchor_position(viewer_height: float) -> Vector3:
+	if viewer_height > 0.0 and combatant != null \
+			and combatant.height_m >= LOW_ANCHOR_HEIGHT_RATIO * viewer_height - 1e-6:
+		var low: Node3D = null
+		for a in lock_anchors():
+			if low == null or a.global_position.y < low.global_position.y - 1e-4:
+				low = a
+		if low != null:
+			return low.global_position
+	return anchor_position()
+
+
 # --------------------------------------------------------------------------- hits
 
 func build_defense_state() -> DefenseState:
@@ -157,6 +206,10 @@ func _apply(result: HitResult, attacker: CombatEntity) -> void:
 		HitResult.Outcome.PARRIED:
 			pools.spend_stamina(result.stamina_damage)
 			pools.add_fury(float(combatant.fury_gain.get("parry", 0.0)))
+			# The parrier's outgoing poise buffs (Titan Surge +25 %) apply to the poise its parry
+			# deals, as they do to its blows; the result reports what was applied (P11a, M2 gate
+			# follow-up).
+			result.attacker_poise_damage *= combatant.outgoing_poise_mult()
 			if attacker != null:
 				attacker.apply_poise_damage(result.attacker_poise_damage, "parried")
 		HitResult.Outcome.BLOCKED:

@@ -202,12 +202,13 @@ func _apply_look(delta: float) -> void:
 	yaw = wrapf(yaw, -PI, PI)
 
 
-## Third-person lock: keep player and target framed, aiming at the target's torso anchor
-## (never steeply up at a large target's head). A target much smaller than the giant and
-## close to it would hide behind the giant's own body, so the camera orbits to the shoulder
-## side and may look further down.
+## Third-person lock: keep player and target framed, aiming at lock_focus_point() - the
+## target's torso, or a knee of a target much taller than the giant (P11a), so the camera never
+## looks steeply up at a large target's head. A target much smaller than the giant and close to
+## it would hide behind the giant's own body, so the camera orbits to the shoulder side and may
+## look further down.
 func _frame_lock_target(delta: float) -> void:
-	var anchor := lock_target.anchor_position()
+	var anchor := lock_focus_point()
 	var to_target := anchor - player.global_position
 	to_target.y = 0.0
 	var dist := to_target.length()
@@ -225,9 +226,18 @@ func _frame_lock_target(delta: float) -> void:
 	pitch = lerp_angle(pitch, want_pitch, 1.0 - exp(-6.0 * delta))
 
 
+## The point the lock frames on lock_target (P11a): CombatEntity.lock_anchor_position for this
+## profile's height - a knee anchor of a target at least 1.3 x the giant's height (the Ogre King
+## at stages 1 and 2), otherwise its torso. Vector3.INF without a lock target.
+func lock_focus_point() -> Vector3:
+	if lock_target == null or not is_instance_valid(lock_target) or lock_target.combatant == null:
+		return Vector3.INF
+	return lock_target.lock_anchor_position(float(profile.get("height_m", 3.66)))
+
+
 ## Optional gentle first-person drift toward a locked target (never forced rotation).
 func _fp_aim_assist(delta: float) -> void:
-	var to_target := lock_target.anchor_position() - camera.global_position
+	var to_target := lock_focus_point() - camera.global_position
 	to_target.y = 0.0
 	if to_target.length_squared() < 0.01:
 		return

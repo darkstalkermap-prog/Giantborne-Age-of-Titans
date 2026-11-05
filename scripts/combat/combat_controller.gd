@@ -593,13 +593,15 @@ func on_block_impact(failed_parry: bool) -> void:
 
 
 ## Hard stagger: interrupts ordinary attacks and casts. No refund for interrupted actions.
-## Actions authored with interrupt_policy "super_armor" keep running (the poise meter still
-## resets); returns false in that case. Returns false while GRABBED (only the holder's release
-## or death leaves GRABBED).
+## Actions authored with interrupt_policy "super_armor" keep running through their windup and
+## active phases (the poise meter still resets); returns false in that case. Their recovery is
+## the punish window (P11a: the ogre's recovery punish), where a hard stagger interrupts them
+## like any action. Returns false while GRABBED (only the holder's release or death leaves
+## GRABBED).
 func apply_stagger(seconds: float, reason: String) -> bool:
 	if state == State.DEAD or state == State.GRABBED:
 		return false
-	if action != null and action.interrupt_policy == "super_armor":
+	if action != null and action.interrupt_policy == "super_armor" and phase() != ActionDef.Phase.RECOVERY:
 		combatant.poise.value = 0.0
 		return false
 	if action != null:
