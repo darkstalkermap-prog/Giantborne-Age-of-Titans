@@ -162,9 +162,10 @@ static func _materials(kit: SceneKit) -> void:
 static func _ground_mat(kit: SceneKit, mat_name: String, a: Color, b: Color, line: Color, cell: float) -> void:
 	var m := ShaderMaterial.new()
 	m.shader = load("res://assets/shaders/ground_checker.gdshader")
-	m.set_shader_parameter("color_a", Vector3(a.r, a.g, a.b))
-	m.set_shader_parameter("color_b", Vector3(b.r, b.g, b.b))
-	m.set_shader_parameter("line_color", Vector3(line.r, line.g, line.b))
+	# Colours, not Vector3s: the uniforms are source_color vec3s (a Vector3 would be saved as null).
+	m.set_shader_parameter("color_a", a)
+	m.set_shader_parameter("color_b", b)
+	m.set_shader_parameter("line_color", line)
 	m.set_shader_parameter("cell_size", cell)
 	if kit.out_root == "":
 		ResourceSaver.save(m, "%s/%s.tres" % [SceneKit.MAT_DIR, mat_name], ResourceSaver.FLAG_CHANGE_PATH)
@@ -460,8 +461,7 @@ static func build_district(kit: SceneKit, id: String, geo: Dictionary) -> Node:
 		mm.mesh = meshes[parts[0]]
 		var list: Array = buckets[key]
 		mm.instance_count = list.size()
-		for i in list.size():
-			mm.set_instance_transform(i, list[i])
+		mm.buffer = multimesh_buffer(list)
 		mmi.multimesh = mm
 		mmi.material_override = _mat(kit, parts[1])
 		if parts[3] == "0":
@@ -478,6 +478,22 @@ static func build_district(kit: SceneKit, id: String, geo: Dictionary) -> Node:
 	else:
 		scenery.free()
 	return root
+
+
+## The MultiMesh buffer of `xforms` (TRANSFORM_3D: per instance the three rows of the 3 x 4
+## matrix). Written as a whole because the headless (dummy) renderer the builders run on keeps a
+## buffer set this way but drops set_instance_transform(), so the transforms would not be saved.
+static func multimesh_buffer(xforms: Array) -> PackedFloat32Array:
+	var buf := PackedFloat32Array()
+	buf.resize(xforms.size() * 12)
+	var i := 0
+	for t: Transform3D in xforms:
+		var b := t.basis
+		var o := t.origin
+		for v: float in [b.x.x, b.y.x, b.z.x, o.x, b.x.y, b.y.y, b.z.y, o.y, b.x.z, b.y.z, b.z.z, o.z]:
+			buf[i] = v
+			i += 1
+	return buf
 
 
 static func _bucket(buckets: Dictionary, kind: String, mat: String, scenery: bool, shadow: bool) -> Array:
