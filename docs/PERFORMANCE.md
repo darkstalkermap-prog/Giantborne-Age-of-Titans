@@ -13,7 +13,7 @@ reference-PC commands below.
 | Frame time | p95 <= 16.7 ms, p99 < 33.3 ms at 1080p, `--graphics=low` (spec) | Reference PC, exported build: owner | **NOT RUN** |
 | GPU render time | Reported separately from CPU (spec §16) | Reference PC: owner. The container has no GPU (software rendering only) | **NOT RUN** |
 | Sim CPU per tick | p95 <= 8 ms in the stress route and the Valley | Container (indicative) and PC | Container: 4.88 ms (stress), 3.37 ms (Valley walk): **met**; after P17b 3.72 ms (stress), at most 6.37 ms in every run of the final balance matrix (three runs at once) and 5.77 ms over the 30-minute run: **met**; P18 on the final code 3.69 ms (stress) and 5.40 ms over the 30-minute run: **met** |
-| Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered; `tools/draw_call_probe.tscn` (the static world) | P17b (container, software GL): the static world at most 93 per view at `low` and 221 at `medium` (was 402 / 584): **met**; with enemies in view the walk's p50 is 256 and its largest view 656 at `low` (was 608 / 1,354): **not met** while about five or more full-rig enemies are in view (about 33 draw calls each; see "Draw calls after P17b") |
+| Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered; `tools/draw_call_probe.tscn` (the static world) | P17b (container, software GL): the static world at most 93 per view at `low` and 221 at `medium` (was 402 / 584): **met**; with enemies in view the walk's p50 is 256 and its largest view 656 at `low` (was 608 / 1,354): **not met** while about five or more full-rig enemies are in view (about 33 draw calls each; see "Draw calls after P17b"). After P22, re-measured at the M6 gate: the walk's p50 201, p95 251, max 268; the largest view of five districts 253-268: **not met by 4-18 draw calls** (a measured miss: "Draw calls at the M6 gate") |
 | Distant actors | Tier 2 shows a one-box proxy | P04 test; the Valley walk's LOD comparison | Met: every distant member shows its proxy at tier 2 |
 | Active combatants | <= 12 (the director's budget) | P10a tests; P17a bot invariant | 12 in the stress route (its own spawner) and in the Valley walk |
 | Valley load | <= 3 s headless, <= 6 s web | P10b slow test; P18 browser | Headless about 0.3 s (P10b); web in a real browser **NOT RUN**. P18, Chromium with software WebGL on the container's shared CPU (indicative only): New Game to the first checkpoint stored in IndexedDB 14.2 s |
@@ -419,6 +419,31 @@ and 1, 251 at tier 2 (base 653 / 653 / 262): at that distance the renderer draws
   and the floor make the rest.
 - `medium` costs about a half more than `low` (shadows to 120 m, scenery to 220 m).
 
+### Draw calls at the M6 gate (a measured miss)
+
+The M6 gate asks for "rigs within the draw-call budget with five enemies in view" (P22's acceptance:
+"views with five enemies under 250"). The rendered walk at `low` on the gate's code (`9162ca1`; Xvfb
+640 x 360, `--walk-teleport --graphics=low --autoplay=900`; 2,182 frames, 0 errors) measures what P22
+did: p50 201, p95 251, p99 258, **max 268**. The largest view per district:
+
+| District | Largest view | What stands in it |
+| --- | --- | --- |
+| Thornwick | 268 | the guards, the captain, the tower archer and the folk: thirteen within 45 m |
+| Barrow | 263 | the wardens (the ogre and three wolves) beside the giant |
+| Quarry | 259 | the six raiders |
+| Ruins | 254 | the courtyard's five |
+| Old Wood | 253 | the hunters and the wolves |
+| Kingsfall | 249 | |
+| Hollow | 238 | |
+
+**Every actor's `render_lod_m` at 0.6 x on `low`** (tried at the gate, not kept): Thornwick 245, the Old
+Wood 248, the ruins 244 - but the Quarry 260 and the Barrow 263, whose enemies stand within the
+shorter distance anyway; the max stays 263 and people beyond 27 m become boxes. The views with five
+enemies close need cheaper near rigs (the weapon merged into its arm's mesh, a merged rest-pose mesh
+between the near and the box distance, or the crowd renderer's one MultiMesh per pose for humans not
+striking) or a cheaper HUD; `docs/plans/FOLLOWUPS.md` ("From the M6 gate review") hands it to P30, and
+P39's capture re-measures it.
+
 ### The streamed test world (P24a)
 
 The generated 4 x 4 test world (`tools/builders/test_world.gd`, 256 m chunks at 4 m), debug build.
@@ -567,3 +592,4 @@ nothing about a real GPU; they are listed only to show the build works.
 | Walk the Cradle -> forest trail -> Grove and the village square with the browser's frame meter (Chrome DevTools > Rendering > Frame rendering stats): frame time and hitches, especially when an encounter first appears | NOT RUN (software WebGL here: about 2 frames a second) | NOT RUN |
 | A gamepad inside the page (browsers expose a pad after its first button press) | NOT RUN | NOT RUN |
 | Record the browser, the machine and the numbers in this file | Above | Owner |
+| **M6: the web audio check's criterion** - no silent run over 50 ms in 60 s of the Hollow's music (`node tools/web/audio_check.mjs --strict`; P23) | **Not met here** (software WebGL: every run has 190-213 holes over 50 ms, the longest 241-618 ms, each placed on the main thread drawing a frame while the no-threads build's mixer waits; the default form passes those, under load it fails as well); the report now prints the criterion's verdict and a failed run keeps its trace | **NOT RUN** (a machine with a GPU: the owner, before M6 is declared passed) |
