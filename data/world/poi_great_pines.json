@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.great_pines",
+	"type": "poi",
+	"display_name": "The Great Pines",
+	"level": "level.world",
+	"region": "region.greywood",
+	"kind": "landmark",
+	"position_m": [-560, 28.6, -260],
+	"radius_m": 60,
+	"xp": 30,
+	"map_icon": "landmark",
+	"compass": true,
+	"landmark": "world.greywood.great_pine_1",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "Three pines fifty metres tall, seen from across the kingdom."
+}

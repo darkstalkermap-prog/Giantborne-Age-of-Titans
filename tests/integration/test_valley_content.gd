@@ -215,6 +215,10 @@ func _read_flags() -> Array:
 			for f: Variant in rec.get(key, []):
 				out.append([str(f), str(rec.id)])
 	for rec: Dictionary in _records("shrine"):
+		# the world's shrines (shrine.world_*, P25) are level.world's content: the world's packages
+		# write their flags (P29 the Kingsgate beacon's world.kingsgate.lit; test_world_data)
+		if str(rec.id).begins_with("shrine.world_"):
+			continue
 		for f: Variant in rec.get("growth_requires_flags", []):
 			out.append([str(f), str(rec.id)])
 	var scene := _scene()

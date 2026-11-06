@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "encounter.drowned_bell_robbers",
+	"type": "encounter",
+	"display_name": "Bell tower robbers",
+	"description": "P25 light content (plan M6-M9 §5.10): ruin robbers at the drowned bell tower; P35 keeps them.",
+	"level": "level.world",
+	"center_m": [-188, 2.4, -224],
+	"activate_radius_m": 80,
+	"deactivate_radius_m": 150,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.drowned.bell_robbers_robber_1", "definition": "enemy.soldier", "position_m": [-180, 5.1, -214], "yaw_deg": 200, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bell_robbers_robber_2", "definition": "enemy.soldier", "position_m": [-170, 5.4, -226], "yaw_deg": 220, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bell_robbers_robber_3", "definition": "enemy.soldier", "position_m": [-192, 5.1, -208], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bell_robbers_robber_4", "definition": "enemy.soldier", "position_m": [-176, 3.5, -236], "yaw_deg": 240, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bell_robbers_mage_1", "definition": "enemy.mage", "position_m": [-166, 8.7, -210], "yaw_deg": 210, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bell_robbers_mage_2", "definition": "enemy.mage", "position_m": [-160, 9.9, -222], "yaw_deg": 230, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

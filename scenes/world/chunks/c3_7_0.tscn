@@ -1,0 +1,129 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="1_727cc"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="3_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="4_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/checkpoint_marker.gd" id="5_74fde"]
+[ext_resource type="Script" path="res://scripts/world/level_exit.gd" id="6_a5c2b"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_1"]
+_surfaces = [{
+"aabb": AABB(-8.55, -0.5, -3.4784608, 17.1, 9, 6.9569216),
+"attribute_data": PackedByteArray("joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/8="),
+"format": 34359742479,
+"index_count": 252,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAdAB4AHAAeAB8AHwAeABkAHwAZABgAHgAdABoAHgAaABkAHQAcABsAHQAbABoAHAAfABgAHAAYABsAIAAhACIAIAAiACMAJAAlACYAJAAmACcAJwAmACEAJwAhACAAJgAlACIAJgAiACEAJQAkACMAJQAjACIAJAAnACAAJAAgACMAKAApACoAKAAqACsALAAtAC4ALAAuAC8ALwAuACkALwApACgALgAtACoALgAqACkALQAsACsALQArACoALAAvACgALAAoACsAMAAxADIAMAAyADMANAA1ADYANAA2ADcANwA2ADEANwAxADAANgA1ADIANgAyADEANQA0ADMANQAzADIANAA3ADAANAAwADMA"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 56,
+"vertex_data": PackedByteArray("AAAQQAAAgEAzM7O/zcwIQQAAgEAzM7O/zcwIQQAAgEAzM7M/AAAQQAAAgEAzM7M/AAAQQAAAAL8zM7M/zcwIQQAAAL8zM7M/zcwIQQAAAL8zM7O/AAAQQAAAAL8zM7O/aGbmvs3MnECery0/NDO7QM3MnECery0/NDO7QM3MnEAan15AaGbmvs3MnEAan15AaGbmvgAAAL8an15ANDO7QAAAAL8an15ANDO7QAAAAL+ery0/aGbmvgAAAL+ery0/NDO7wJqZuUCery0/aGbmPpqZuUCery0/aGbmPpqZuUAan15ANDO7wJqZuUAan15ANDO7wAAAAL8an15AaGbmPgAAAL8an15AaGbmPgAAAL+ery0/NDO7wAAAAL+ery0/zcwIwQAAgEAzM7O/AAAQwAAAgEAzM7O/AAAQwAAAgEAzM7M/zcwIwQAAgEAzM7M/zcwIwQAAAL8zM7M/AAAQwAAAAL8zM7M/AAAQwAAAAL8zM7O/zcwIwQAAAL8zM7O/NDO7wM3MnEAan17AaGbmPs3MnEAan17AaGbmPs3MnECery2/NDO7wM3MnECery2/NDO7wAAAAL+ery2/aGbmPgAAAL+ery2/aGbmPgAAAL8an17ANDO7wAAAAL8an17AaGbmvpqZuUAan17ANDO7QJqZuUAan17ANDO7QJqZuUCery2/aGbmvpqZuUCery2/aGbmvgAAAL+ery2/NDO7QAAAAL+ery2/NDO7QAAAAL8an17AaGbmvgAAAL8an17AzcyswAAACEGamRnAzcysQAAACEGamRnAzcysQAAACEGamRlAzcyswAAACEGamRlAzcyswAAAAL+amRlAzcysQAAAAL+amRlAzcysQAAAAL+amRnAzcyswAAAAL+amRnAMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(6.3, 4.5, 2.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(6.3, 5.4, 2.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(6.3, 6.3, 2.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(6.3, 4.5, 2.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+size = Vector3(6.3, 5.4, 2.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(6.3, 6.3, 2.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(10.8, 9, 4.8)
+
+[node name="Chunk_3_7_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_crownmarch_broken_stair_rubble" type="Node3D" parent="Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 216, 14, 168)
+script = ExtResource("1_727cc")
+hidden_when_flag = "world.citadel.breached"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_broken_stair_rubble"]
+mesh = SubResource("ArrayMesh_1")
+
+[node name="Body" type="StaticBody3D" parent="Props/world_crownmarch_broken_stair_rubble"]
+collision_mask = 0
+
+[node name="Shape0" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 1.75, 0)
+shape = SubResource("BoxShape3D_2")
+
+[node name="Shape1" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 2.2, 2.078461)
+shape = SubResource("BoxShape3D_3")
+
+[node name="Shape2" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7, 2.65, 2.078461)
+shape = SubResource("BoxShape3D_4")
+
+[node name="Shape3" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4, 1.75, 2.9391524e-16)
+shape = SubResource("BoxShape3D_5")
+
+[node name="Shape4" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7, 2.2, -2.078461)
+shape = SubResource("BoxShape3D_6")
+
+[node name="Shape5" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 2.65, -2.078461)
+shape = SubResource("BoxShape3D_7")
+
+[node name="Shape6" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+shape = SubResource("BoxShape3D_8")
+
+[node name="world_crownmarch_stair_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 201, 14, 136)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("4_5fc47")
+world_id = "world.crownmarch.stair_cache"
+loot_table = "loot.cache_broken_stair"
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="world_cp_broken_stair" type="Marker3D" parent="Waystones"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 216, 14.3, 136)
+script = ExtResource("5_74fde")
+checkpoint_id = "world.cp.broken_stair"
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="world_exit_broken_stair" type="Node3D" parent="Exits"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 216, 14, 158)
+script = ExtResource("6_a5c2b")
+exit_id = "world.exit.broken_stair"
+to_level = "level.valley"
+to_checkpoint = "valley.cp.citadel_stair"
+requires_flags = PackedStringArray("world.citadel.breached")
+locked_message = "Rubble chokes the old stair. It might be cleared from the Citadel's side."
+display_name = "The Broken Stair"
+interact_id = "world.exit.broken_stair"
+prompt = "Descend the Broken Stair"
+radius_m = 7.0
+priority = 40
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

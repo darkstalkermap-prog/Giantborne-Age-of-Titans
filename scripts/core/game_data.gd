@@ -137,6 +137,60 @@ func _post_pass() -> void:
 				record_paths.get(p24b_enc.id, "?"), p24b_enc.id, p24b_enc.get("level")])
 
 	## @anchor P25
+	# P25 (plan M6-M9 §2.7, §3.8): every POI's level and region exist, the region is of the POI's
+	# level and holds its position (within 64 m of its bounds: the rim's shelf and stair), and its
+	# landmark stands in the level's index (a prop, checkpoint, exit, marker or area); every prop an
+	# index marks quest-critical is indestructible; a level's regions are its own.
+	var p25_indexes := {}   # level id -> WorldIndex (or null)
+	for p25_level: Dictionary in records_of_type("level"):
+		var p25_path := str(p25_level.get("index", ""))
+		var p25_idx: WorldIndex = null
+		if p25_path != "" and ResourceLoader.exists(p25_path):
+			p25_idx = load(p25_path) as WorldIndex
+		p25_indexes[str(p25_level.get("id", ""))] = p25_idx
+		for p25_rid: Variant in p25_level.get("regions", []):
+			var p25_region := get_record(str(p25_rid))
+			if not p25_region.is_empty() and str(p25_region.get("level", "")) != str(p25_level.id):
+				errors.append("%s (%s): its region %s belongs to %s" % [record_paths.get(p25_level.id, "?"), p25_level.id,
+					p25_rid, p25_region.get("level", "")])
+		if p25_idx == null:
+			continue
+		for p25_pid: String in p25_idx.props:
+			var p25_prop: Dictionary = p25_idx.props[p25_pid]
+			if bool(p25_prop.get("quest_critical", false)) and not bool(p25_prop.get("indestructible", false)):
+				errors.append("%s (%s): the quest-critical prop %s is not indestructible" % [record_paths.get(p25_level.id, "?"),
+					p25_level.id, p25_pid])
+	for p25_poi: Dictionary in records_of_type("poi"):
+		var p25_ctx := "%s (%s)" % [record_paths.get(p25_poi.id, "?"), p25_poi.id]
+		var p25_level_id := str(p25_poi.get("level", ""))
+		if not records.has(p25_level_id):
+			errors.append("%s: its level %s does not exist" % [p25_ctx, p25_level_id])
+			continue
+		var p25_rid := str(p25_poi.get("region", ""))
+		if p25_rid != "":
+			var p25_region := get_record(p25_rid)
+			if p25_region.is_empty():
+				errors.append("%s: its region %s does not exist" % [p25_ctx, p25_rid])
+			elif str(p25_region.get("level", "")) != p25_level_id:
+				errors.append("%s: its region %s is not of %s" % [p25_ctx, p25_rid, p25_level_id])
+			elif DataValidator.SCHEMAS["region"].bounds_ok(p25_region.get("bounds_m")) and typeof(p25_poi.get("position_m")) == TYPE_ARRAY:
+				var p25_b: Array = p25_region.bounds_m
+				var p25_rect := Rect2(Vector2(float(p25_b[0][0]), float(p25_b[0][1])),
+					Vector2(float(p25_b[1][0]) - float(p25_b[0][0]), float(p25_b[1][1]) - float(p25_b[0][1]))).grow(64.0)
+				var p25_pos: Array = p25_poi.position_m
+				if not p25_rect.has_point(Vector2(float(p25_pos[0]), float(p25_pos[2]))):
+					errors.append("%s: its position (%s, %s) is outside its region %s" % [p25_ctx, p25_pos[0], p25_pos[2], p25_rid])
+		var p25_landmark := str(p25_poi.get("landmark", ""))
+		var p25_idx: WorldIndex = p25_indexes.get(p25_level_id)
+		if p25_landmark == "" or p25_idx == null:
+			continue
+		var p25_found := false
+		for p25_table: Dictionary in [p25_idx.props, p25_idx.checkpoints, p25_idx.exits, p25_idx.markers, p25_idx.areas]:
+			if p25_table.has(p25_landmark):
+				p25_found = true
+				break
+		if not p25_found:
+			errors.append("%s: its landmark %s is not in %s's index" % [p25_ctx, p25_landmark, p25_level_id])
 
 	## @anchor P26
 	# P26 (plan M6-M9 §2.9): the growth profiles form one chain - every stage from 1 to the highest has a

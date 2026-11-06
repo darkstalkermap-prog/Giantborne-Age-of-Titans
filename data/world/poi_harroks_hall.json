@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "poi.harroks_hall",
+	"type": "poi",
+	"display_name": "Harrok's Hall",
+	"level": "level.world",
+	"region": "region.stonehold",
+	"kind": "settlement",
+	"position_m": [-560, 82.3, -720],
+	"radius_m": 70,
+	"xp": 40,
+	"map_icon": "settlement",
+	"compass": true,
+	"landmark": "world.stonehold.harroks_hall",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"max_inner_stage": 6,
+	"green_m": [-560, 82.3, -690],
+	"note": "The rival clan's steading."
+}

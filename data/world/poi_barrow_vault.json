@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "poi.barrow_vault",
+	"type": "poi",
+	"display_name": "The Barrow Vault",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "secret",
+	"position_m": [-690, 22.0, 760],
+	"radius_m": 30,
+	"xp": 30,
+	"map_icon": "secret",
+	"compass": false,
+	"landmark": "world.crownmarch.barrow_vault",
+	"skyline": false,
+	"min_stage": 5,
+	"reveals_m": 0,
+	"seal": "world.crownmarch.barrow_vault_rockfall",
+	"note": "A barrow sealed behind a rockfall (heave, stage 5)."
+}

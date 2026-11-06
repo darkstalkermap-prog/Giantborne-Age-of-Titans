@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "poi.sunken_vault",
+	"type": "poi",
+	"display_name": "The Sunken Vault",
+	"level": "level.world",
+	"region": "region.drowned_steps",
+	"kind": "secret",
+	"position_m": [20, 5.0, 30],
+	"radius_m": 30,
+	"xp": 40,
+	"map_icon": "secret",
+	"compass": false,
+	"landmark": "world.drowned.sunken_vault",
+	"skyline": false,
+	"min_stage": 5,
+	"reveals_m": 0,
+	"seal": "world.drowned.vault_rockfall",
+	"note": "The drowned kings' vault under the causeway (heave the rockfall, stage 5)."
+}

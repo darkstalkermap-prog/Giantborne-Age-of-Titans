@@ -1,0 +1,62 @@
+{
+	"schema": "world_region_layout",
+	"region": "region.stonehold",
+	"description": "P25: the Stonehold Highlands' skeleton and light content (plan M6-M9 §5.4, §5.10): the Ironway's top, Skarn's three longhouses, the Standing Stones and their shrine, the Cairnlands' stacked cairns and the cairn that gives, the Giant's Stair with its stage-6 size gate, the Stair's head with its king and cairn, Harrok's Hall, the Moot battery's earthworks, the Moot's walled ring of stones with its stage-6 gate stones and the Stone Throne, waystones and caches. P36 brings the clans, Ulfra, Harrok, the battery and the siege of Skarn.",
+	"elements": [
+		{"kind": "column", "id": "world.stonehold.ironway_top_stone", "style": "slab", "pos": [742, -574], "points": [[742, -574]], "size": [4, 14], "poi": "poi.ironway_top", "landmark": true},
+		{"kind": "hall", "id": "world.stonehold.skarn_longhouse_1", "style": "longhouse", "pos": [405, -690], "yaw": 0, "size": [40, 15, 14], "poi": "poi.skarn", "landmark": true, "skyline": true, "quest_critical": true},
+		{"kind": "hall", "id": "world.stonehold.skarn_longhouse_2", "style": "longhouse", "pos": [468, -694], "yaw": 8, "size": [40, 15, 14]},
+		{"kind": "hall", "id": "world.stonehold.skarn_longhouse_3", "style": "longhouse", "pos": [440, -606], "yaw": -4, "size": [40, 15, 14]},
+		{"kind": "stone_circle", "id": "world.stonehold.standing_stones", "style": "trilithon", "pos": [-300, -600], "radius": 34, "count": 12, "size": [5, 16, 2.5], "poi": "poi.standing_stones", "landmark": true, "skyline": true},
+		{"kind": "column", "id": "world.stonehold.cairnlands", "style": "cairn_stack", "pos": [120, -580], "count": 14, "radius": 30, "size": [3.2, 5], "poi": "poi.cairnlands", "landmark": true},
+		{"kind": "stair_visual", "id": "world.stonehold.giants_stair", "pos": [0, -475], "from": [0, -424], "to": [0, -526], "width": 54, "steps": 12, "riser_m": 4.5, "poi": "poi.giants_stair", "landmark": true},
+		{"kind": "statue", "id": "world.stonehold.stair_king", "style": "standing", "pos": [8, -578], "yaw": 180, "size": [6, 18], "poi": "poi.stair_top", "landmark": true},
+		{"kind": "hall", "id": "world.stonehold.harroks_hall", "style": "longhouse", "pos": [-560, -724], "yaw": 0, "size": [52, 18, 18], "poi": "poi.harroks_hall", "landmark": true, "skyline": true, "quest_critical": true},
+		{"kind": "ruin", "id": "world.stonehold.battery_lines", "style": "earthwork", "pos": [-204, -668], "yaw": 25, "size": [30, 3, 8], "poi": "poi.moot_battery", "landmark": true},
+		{"kind": "ruin", "id": "world.stonehold.battery_lines_2", "style": "earthwork", "pos": [-170, -676], "yaw": -30, "size": [26, 3, 8]},
+		{"kind": "stone_circle", "id": "world.stonehold.moot_ring", "style": "ring_wall", "pos": [0, -745], "radius": 60, "count": 16, "size": [6, 15, 3], "gates": [129.3], "gate_m": 28, "wall_h": 9, "wall_t": 3, "poi": "poi.the_moot", "landmark": true, "skyline": true},
+		{"kind": "column", "id": "world.stonehold.moot_gate_stones", "style": "slab", "pos": [-40, -695], "points": [[-55.7, -707.8], [-25.4, -683.0]], "size": [5, 20]},
+		{"kind": "statue", "id": "world.stonehold.stone_throne", "style": "throne", "pos": [0, -800], "yaw": 0, "size": [8, 20], "quest_critical": true, "quest_target": true}
+	],
+	"shrines": [
+		{"id": "world.shrine.stones", "record": "shrine.world_stones", "pos": [-300, -600], "yaw": 180, "poi": "poi.standing_stones"}
+	],
+	"waystones": [
+		{"id": "world.cp.ironway_top", "display_name": "Ironway top waystone", "pos": [700, -576], "yaw": 180, "radius": 10, "stone": [-8, 0], "poi": "poi.ironway_top"},
+		{"id": "world.cp.skarn", "display_name": "Skarn waystone", "pos": [400, -600], "yaw": 90, "radius": 10, "stone": [0, 8], "poi": "poi.skarn"},
+		{"id": "world.cp.cairnlands", "display_name": "Cairnlands waystone", "pos": [96, -556], "yaw": 180, "radius": 10, "stone": [-7, 4], "poi": "poi.cairnlands"},
+		{"id": "world.cp.moot_foot", "display_name": "Moot foot waystone", "pos": [-70, -650], "yaw": 150, "radius": 10, "stone": [-8, 4], "poi": ""}
+	],
+	"size_gates": [
+		{"id": "world.gate.giants_stair", "min_stage": 6, "cue": "sfx.gate.stone", "message": "Each step is taller than a house. Only a giant of the old height can climb the Stair.",
+			"boxes": [[0, -425, 64, 40, 2, 0]], "gate_rect": [[-31, -527], [31, -426]], "visual": "stone"},
+		{"id": "world.gate.moot", "min_stage": 6, "cue": "sfx.gate.stone", "message": "The clans admit only a giant of the old height to the Moot.",
+			"boxes": [[-38.0, -698.6, 32, 24, 3, 140.7]], "gate_rect": [[-62, -722], [-16, -676]], "visual": "stone"}
+	],
+	"caches": [
+		{"id": "world.stonehold.ironway_top_cache", "pos": [736, -588], "loot": "loot.cache_ironway_top", "poi": "poi.ironway_top"},
+		{"id": "world.stonehold.stair_cache", "pos": [-34, -420], "loot": "loot.cache_giants_stair", "poi": "poi.giants_stair"},
+		{"id": "world.stonehold.stair_top_cache", "pos": [-16, -556], "loot": "loot.cache_stair_top", "poi": "poi.stair_top"},
+		{"id": "world.stonehold.harrok_cache", "pos": [-528, -700], "loot": "loot.cache_harroks_hall", "poi": "poi.harroks_hall"},
+		{"id": "world.stonehold.battery_cache", "pos": [-208, -628], "loot": "loot.cache_moot_battery", "poi": "poi.moot_battery"},
+		{"id": "world.stonehold.moot_cache", "pos": [26, -760], "loot": "loot.cache_the_moot", "poi": "poi.the_moot"}
+	],
+	"cairns": [
+		{"id": "world.stonehold.cairnlands_cairn", "dialogue": "dialogue.cairn_cairnlands", "pos": [130, -590], "yaw": 0, "poi": "poi.cairnlands"},
+		{"id": "world.stonehold.stair_top_cairn", "dialogue": "dialogue.cairn_stair_top", "pos": [14, -548], "yaw": 0, "poi": "poi.stair_top"}
+	],
+	"markers": [
+		{"id": "world.marker.standing_stones", "kind": "objective", "pos": [-300, -585]},
+		{"id": "world.marker.moot_gate", "kind": "objective", "pos": [-48, -688]},
+		{"id": "world.marker.moot_ring", "kind": "objective", "pos": [0, -745]},
+		{"id": "world.marker.stone_throne", "kind": "objective", "pos": [0, -786]}
+	],
+	"areas": [
+		{"id": "world.area.moot", "pos": [0, -745], "shape": "cylinder", "r": 56, "h": 40}
+	],
+	"scenery": [
+		{"mesh": "heather", "density": 0.0016, "spacing_m": 5, "scale": [0.8, 1.6], "solid": false},
+		{"mesh": "rock", "density": 0.0003, "spacing_m": 14, "scale": [0.8, 2.0], "solid": true},
+		{"mesh": "tree_pine", "density": 0.00008, "spacing_m": 20, "scale": [0.7, 1.0], "solid": true}
+	]
+}

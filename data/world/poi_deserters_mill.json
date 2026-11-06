@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.deserters_mill",
+	"type": "poi",
+	"display_name": "The Deserters' Mill",
+	"level": "level.world",
+	"region": "region.aldmere",
+	"kind": "landmark",
+	"position_m": [440, 23.1, 220],
+	"radius_m": 40,
+	"xp": 20,
+	"map_icon": "landmark",
+	"compass": true,
+	"landmark": "world.aldmere.deserters_mill",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A burned mill where deserters hide."
+}

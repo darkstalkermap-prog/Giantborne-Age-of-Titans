@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "region.greywood",
+	"type": "region",
+	"display_name": "The Greywood",
+	"description": "P25 (plan M6-M9 §2.7, §5.1): The Greywood of level.world; its bounds tile the interior with the other four regions.",
+	"level": "level.world",
+	"tier": 2,
+	"recommended_stage": [4, 5],
+	"bounds_m": [[-896, -440], [-320, 300]],
+	"surface": "soft",
+	"discover_xp": 40,
+	"map_tint": [0.33, 0.47, 0.33],
+	"fog_color": [0.52, 0.6, 0.55],
+	"skyline_tint": [0.22, 0.31, 0.24],
+	"m7_note": "The woodfolk and their troubles come with the next build."
+}

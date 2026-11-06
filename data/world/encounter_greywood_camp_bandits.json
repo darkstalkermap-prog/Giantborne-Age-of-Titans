@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "encounter.greywood_camp_bandits",
+	"type": "encounter",
+	"display_name": "Woodcutters' camp bandits",
+	"description": "P25 light content (plan M6-M9 §5.10): bandits in the wrecked woodcutters' camp (stages 3-4), two ogres for a bigger giant; P35 replaces them with trolls.",
+	"level": "level.world",
+	"center_m": [-420, 23.0, 220],
+	"activate_radius_m": 80,
+	"deactivate_radius_m": 150,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.greywood.camp_bandits_bandit_1", "definition": "enemy.soldier", "position_m": [-428, 23.0, 212], "yaw_deg": 90, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": "", "max_stage": 4},
+		{"entity_id": "world.greywood.camp_bandits_bandit_2", "definition": "enemy.soldier", "position_m": [-412, 23.0, 214], "yaw_deg": 270, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "max_stage": 4},
+		{"entity_id": "world.greywood.camp_bandits_bandit_3", "definition": "enemy.soldier", "position_m": [-424, 22.9, 230], "yaw_deg": 90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "max_stage": 4},
+		{"entity_id": "world.greywood.camp_bandits_bandit_4", "definition": "enemy.soldier", "position_m": [-408, 23.0, 228], "yaw_deg": 270, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "max_stage": 4},
+		{"entity_id": "world.greywood.camp_bandits_archer", "definition": "enemy.archer", "position_m": [-418, 22.8, 240], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "max_stage": 4},
+		{"entity_id": "world.greywood.camp_bandits_ogre_1", "definition": "enemy.ogre", "position_m": [-430, 23.0, 222], "yaw_deg": 90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 5},
+		{"entity_id": "world.greywood.camp_bandits_ogre_2", "definition": "enemy.ogre", "position_m": [-410, 23.0, 220], "yaw_deg": 270, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 5}
+	]
+}

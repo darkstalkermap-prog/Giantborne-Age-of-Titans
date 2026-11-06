@@ -111,6 +111,12 @@ static func fields() -> Dictionary:
 	}}
 
 	## @anchor P25
+	# P25 (plan M6-M9 §2.7, §5.10): a world's regions (region records, in the order of its region
+	# grid's 1-based indices) and the formation budget (members counted apart from the
+	# max_active_enemies combatants; the director reads it from P30 on), with its web override.
+	f["regions"] = U.ref_array("region")
+	f["max_formation_members"] = U.int_field(0, 256)
+	((f.web_overrides as Dictionary).fields as Dictionary)["max_formation_members"] = U.int_field(0, 256)
 
 	return f
 
@@ -232,6 +238,20 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			p24b_q.chase_distance_m, p24b_q.far_distance_m])
 
 	## @anchor P25
+	# P25: a region is listed once, and the web's formation budget is no bigger than the desktop's.
+	var p25_regions: Variant = d.get("regions")
+	if typeof(p25_regions) == TYPE_ARRAY:
+		var p25_seen := {}
+		for r: Variant in p25_regions:
+			if p25_seen.has(r):
+				out.errors.append("%s.regions: '%s' is listed twice" % [ctx, r])
+			p25_seen[r] = true
+	var p25_web: Variant = d.get("web_overrides")
+	if typeof(p25_web) == TYPE_DICTIONARY and U.is_number(p25_web.get("max_formation_members")) \
+			and U.is_number(d.get("max_formation_members")) \
+			and int(p25_web.max_formation_members) > int(d.max_formation_members):
+		out.errors.append("%s.web_overrides.max_formation_members (%s) must not exceed max_formation_members (%s)" % [
+			ctx, p25_web.max_formation_members, d.max_formation_members])
 
 
 static func required_ids() -> Dictionary:

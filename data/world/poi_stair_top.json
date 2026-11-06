@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.stair_top",
+	"type": "poi",
+	"display_name": "The Stair's Head",
+	"level": "level.world",
+	"region": "region.stonehold",
+	"kind": "vista",
+	"position_m": [0, 77.5, -540],
+	"radius_m": 40,
+	"xp": 30,
+	"map_icon": "vista",
+	"compass": true,
+	"landmark": "world.stonehold.stair_king",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 600,
+	"note": "The Stair's head and its stone king, looking out over the Mere."
+}

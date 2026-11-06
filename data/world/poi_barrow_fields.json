@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.barrow_fields",
+	"type": "poi",
+	"display_name": "The Barrow Fields",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "ruin",
+	"position_m": [-650, 8.9, 720],
+	"radius_m": 80,
+	"xp": 40,
+	"map_icon": "ruin",
+	"compass": true,
+	"landmark": "world.crownmarch.barrow_slabs",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "Grass mounds over old giant barrows, standing slabs and wolves among them."
+}

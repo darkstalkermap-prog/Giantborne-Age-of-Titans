@@ -1,0 +1,230 @@
+[gd_scene format=4]
+
+[ext_resource type="PackedScene" path="res://scenes/world/rockfall.tscn" id="1_dfd41"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="3_960f4"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="4_add9b"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="5_2c089"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="6_f30a1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.6, 5, 1.6)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_2"]
+_surfaces = [{
+"aabb": AABB(-1.1, -0.6, -1.1, 2.2, 6.1, 2.2),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/w=="),
+"format": 34359742479,
+"index_count": 72,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
+"material": ExtResource("5_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 16,
+"vertex_data": PackedByteArray("zcxMvwAAoEDNzEy/zcxMPwAAoEDNzEy/zcxMPwAAoEDNzEw/zcxMvwAAoEDNzEw/zcxMv5qZGb/NzEw/zcxMP5qZGb/NzEw/zcxMP5qZGb/NzEy/zcxMv5qZGb/NzEy/zcyMvwAAsEDNzIy/zcyMPwAAsEDNzIy/zcyMPwAAsEDNzIw/zcyMvwAAsEDNzIw/zcyMvwAAoEDNzIw/zcyMPwAAoEDNzIw/zcyMPwAAoEDNzIy/zcyMvwAAoEDNzIy/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao=")
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_3"]
+_surfaces = [{
+"aabb": AABB(-0.4, 5.6, -0.4, 0.8, 0.8000002, 0.8),
+"attribute_data": PackedByteArray("f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP8="),
+"format": 34359742479,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMA"),
+"material": ExtResource("5_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 8,
+"vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(16.553673, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(17.000006, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+size = Vector3(17.444508, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(17.000006, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(16.99999, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_9"]
+size = Vector3(16.979977, 18, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(16.979977, 18, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
+size = Vector3(16.979977, 18, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_12"]
+size = Vector3(16.979977, 18, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_13"]
+size = Vector3(16.979977, 18, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_14"]
+size = Vector3(16.979977, 18, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_15"]
+size = Vector3(16.979977, 18, 1)
+
+[node name="Chunk_4_4_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_drowned_vault_rockfall" type="StaticBody3D" parent="Props" instance=ExtResource("1_dfd41")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 5, 28)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.drowned.vault_rockfall"
+
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_drowned_vault_rockfall"]
+enabled = false
+start_position = Vector3(0, 0.0037565231, 5)
+end_position = Vector3(0, -0.22258091, -5)
+
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_drowned_vault_rockfall"]
+enabled = false
+navigation_layers = 2
+start_position = Vector3(0, 0.1500001, 6.5)
+end_position = Vector3(0, -1.1274999, -6.5)
+
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_drowned_vault_rockfall"]
+enabled = false
+navigation_layers = 16
+start_position = Vector3(0, 0, 12)
+end_position = Vector3(0, -8.043103, -15)
+
+[node name="world_drowned_causeway_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4.894, 82)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.drowned.causeway_cache"
+loot_table = "loot.cache_causeway"
+
+[node name="world_drowned_vault_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 5.0360003, 46)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.drowned.vault_cache"
+loot_table = "loot.cache_sunken_vault"
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="world_cp_mere_south" type="Marker3D" parent="Waystones"]
+transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, 78, 8.249, 182)
+script = ExtResource("4_add9b")
+requires_flags = PackedStringArray()
+display_name = "Mere south waystone"
+checkpoint_id = "world.cp.mere_south"
+
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_mere_south"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_mere_south/Stone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_mere_south/Stone"]
+mesh = SubResource("ArrayMesh_2")
+
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_mere_south"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 0)
+mesh = SubResource("ArrayMesh_3")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="world_gate_wend_deep_0" type="StaticBody3D" parent="SizeGates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.135708, 5.4198265, 224.68008)
+collision_layer = 64
+collision_mask = 0
+script = ExtResource("6_f30a1")
+gate_id = "world.gate.wend_deep"
+message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
+
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_0"]
+transform = Transform3D(-0.09891098, 0, -0.99509627, 0, 1, 0, 0.99509627, 0, -0.09891098, 0, 0, 0)
+shape = SubResource("BoxShape3D_4")
+
+[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_0"]
+transform = Transform3D(-0.06651879, 0, -0.99778515, 0, 1, 0, 0.99778515, 0, -0.06651879, -1.3013649, 0, 15.720978)
+shape = SubResource("BoxShape3D_5")
+
+[node name="world_gate_wend_deep_6" type="StaticBody3D" parent="SizeGates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.228624, 5.4036007, 222.57324)
+collision_layer = 64
+collision_mask = 0
+script = ExtResource("6_f30a1")
+gate_id = "world.gate.wend_deep"
+message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
+
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_6"]
+transform = Transform3D(-0.098118894, 0, -0.9951747, 0, 1, 0, 0.9951747, 0, -0.098118894, 0, 0, 0)
+shape = SubResource("BoxShape3D_6")
+
+[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_6"]
+transform = Transform3D(-0.06651903, 0, -0.99778515, 0, 1, 0, 0.99778515, 0, -0.06651903, -1.338911, -0.010559082, 16.164856)
+shape = SubResource("BoxShape3D_7")
+
+[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_6"]
+transform = Transform3D(-0.06651903, 0, -0.99778515, 0, 1, 0, 0.99778515, 0, -0.06651903, -2.4032154, -0.010559082, 32.129425)
+shape = SubResource("BoxShape3D_8")
+
+[node name="world_gate_mere_channel_1" type="StaticBody3D" parent="SizeGates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 93.53912, 5.433041, 8.049591)
+collision_layer = 128
+collision_mask = 0
+script = ExtResource("6_f30a1")
+gate_id = "world.gate.mere_channel"
+min_stage = 5
+message = "The channel is too deep. Grow to stage 5."
+
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_1"]
+transform = Transform3D(-0.87767905, 0, -0.47924885, 0, 1, 0, 0.47924885, 0, -0.87767905, 0, 0, 0)
+shape = SubResource("BoxShape3D_9")
+
+[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_1"]
+transform = Transform3D(-0.93694973, 0, -0.3494641, 0, 1, 0, 0.3494641, 0, -0.93694973, -14.498856, 0.0045986176, 6.6214066)
+shape = SubResource("BoxShape3D_10")
+
+[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_1"]
+transform = Transform3D(-0.97714686, 0, -0.21256524, 0, 1, 0, 0.21256524, 0, -0.97714686, -29.792469, 0.0016760826, 11.112015)
+shape = SubResource("BoxShape3D_11")
+
+[node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_1"]
+transform = Transform3D(-0.99745214, 0, -0.07133919, 0, 1, 0, 0.07133919, 0, -0.99745214, -45.569492, 0.0009589195, 13.380409)
+shape = SubResource("BoxShape3D_12")
+
+[node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_1"]
+transform = Transform3D(-0.99745214, 0, 0.07133919, 0, 1, 0, -0.07133919, 0, -0.99745214, -61.508755, 0.0009589195, 13.380409)
+shape = SubResource("BoxShape3D_13")
+
+[node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_1"]
+transform = Transform3D(-0.97714686, 0, 0.21256524, 0, 1, 0, -0.21256524, 0, -0.97714686, -77.28578, 0.0045986176, 11.112015)
+shape = SubResource("BoxShape3D_14")
+
+[node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_1"]
+transform = Transform3D(-0.93694973, 0, 0.3494641, 0, 1, 0, -0.3494641, 0, -0.93694973, -92.57939, 0.0045986176, 6.6214066)
+shape = SubResource("BoxShape3D_15")
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

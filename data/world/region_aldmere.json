@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "region.aldmere",
+	"type": "region",
+	"display_name": "The Aldmere March",
+	"description": "P25 (plan M6-M9 §2.7, §5.1): The Aldmere March of level.world; its bounds tile the interior with the other four regions.",
+	"level": "level.world",
+	"tier": 3,
+	"recommended_stage": [4, 5],
+	"bounds_m": [[300, -440], [896, 300]],
+	"surface": "soft",
+	"discover_xp": 40,
+	"map_tint": [0.6, 0.58, 0.4],
+	"fog_color": [0.66, 0.66, 0.6],
+	"skyline_tint": [0.4, 0.4, 0.27],
+	"m7_note": "Aldmere's army, its herald and the Iron Regiment come with the next build; the fort's gate stays shut until then."
+}

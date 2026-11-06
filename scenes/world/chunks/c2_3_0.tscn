@@ -1,0 +1,95 @@
+[gd_scene format=4]
+
+[ext_resource type="PackedScene" path="res://scenes/world/rockfall.tscn" id="1_dfd41"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="3_960f4"]
+[ext_resource type="Script" path="res://scripts/world/inscription.gd" id="4_dd8c0"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="5_2c089"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(3, 4, 3)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_2"]
+_surfaces = [{
+"aabb": AABB(-1.5, -0.4, -1.5874579, 3.133947, 4.4, 3.0674577),
+"attribute_data": PackedByteArray("f3x1/398df9/fHX/f3x1/398df9/fHX/f3x1/398df9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/398df9/fHX/f3x1/398df9/fHX/f3x1/398df9/fHX/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9/fHX/f3x1/398df9/fHX/f3x1/398df9/fHX/f3x1/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/"),
+"format": 34359742479,
+"index_count": 216,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAdAB4AHAAeAB8AHwAeABkAHwAZABgAHgAdABoAHgAaABkAHQAcABsAHQAbABoAHAAfABgAHAAYABsAIAAhACIAIAAiACMAJAAlACYAJAAmACcAJwAmACEAJwAhACAAJgAlACIAJgAiACEAJQAkACMAJQAjACIAJAAnACAAJAAgACMAKAApACoAKAAqACsALAAtAC4ALAAuAC8ALwAuACkALwApACgALgAtACoALgAqACkALQAsACsALQArACoALAAvACgALAAoACsA"),
+"material": ExtResource("5_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 48,
+"vertex_data": PackedByteArray("AADAvzQzMz8zM7O/AADAPzQzMz8zM7O/AADAPzQzMz8zM7M/AADAvzQzMz8zM7M/AADAv83MzL4zM7M/AADAP83MzL4zM7M/AADAP83MzL4zM7O/AADAv83MzL4zM7O/Saq8v5qZ2T/yUia/VTo8P5qZ2T/SMcu/KyXRP5qZ2T+gmgc/k0QTv5qZ2T+q1bs/k0QTvzQzMz+q1bs/KyXRPzQzMz+gmgc/VTo8PzQzMz/SMcu/Saq8vzQzMz/yUia/olanv2ZmJkCuNn29QB9NPGZmJkA727a/olanP2ZmJkDkdDa+QB9NvGZmJkDpIpg/QB9NvJqZ2T/pIpg/olanP5qZ2T/kdDa+QB9NPJqZ2T8727a/olanv5qZ2T+uNn295ow2v5mZWUDcmsg+XyR9vpmZWUCiZFK/qIJfP5mZWUDcmsi+tH3QPpmZWUCiZFI/tH3QPmZmJkCiZFI/qIJfP2ZmJkDcmsi+XyR9vmZmJkCiZFK/5ow2v2ZmJkDcmsg+IIfFvgAAgEBIGrU+mtLTvgAAgEByP+S+IIfFPgAAgEDsivK+mtLTPgAAgEDOzqY+mtLTPpqZWUDOzqY+IIfFPpqZWUDsivK+mtLTvpqZWUByP+S+IIfFvpqZWUBIGrU+zczMvgAAAEB7FK4/zczMPgAAAEB7FK4/zczMPgAAAECjcL0/zczMvgAAAECjcL0/zczMvjMzsz+jcL0/zczMPjMzsz+jcL0/zczMPjMzsz97FK4/zczMvjMzsz97FK4/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqpE6o74eV72qBdq3+gdQsoVawZG6oFhL1Ld6+KULdViX91tPTiwAbt12tCthFk0RpE/OByS5cBej0x53NPhJ3rxgSMC0T2jBqDkhR+dTR6aRPstgyKBd5dm3mDihMVt5pSVus0rQKiKRy8dXXghdaa2zytoRB2dio6chy0ewXovLDVeese5wLKTGHo/RfUqNn2DODddZLtPdbq7Fnj5M/bY+hl9GTjAYlNDawFKtd7mtoDk/Bn9Vkqo+LdBaFnfB0gZok7NJa5CiSyBQvt1WYKtrzAXoZSbJka3BS6B0VzPIMJsiTZIzO5pC4FM+aY85qtwyMBtsQ3a3q0FCYOWdJ8syM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
+}]
+
+[node name="Chunk_2_3_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_greywood_grove_rockfall" type="StaticBody3D" parent="Props" instance=ExtResource("1_dfd41")]
+transform = Transform3D(0.9252097, 0, 0.37945616, 0, 1, 0, -0.37945616, 0, 0.9252097, 7.299988, 27, 185.9)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.greywood.grove_rockfall"
+
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_greywood_grove_rockfall"]
+enabled = false
+start_position = Vector3(3.8146973e-06, 0.35000038, 5.0000153)
+end_position = Vector3(3.8146973e-06, 0.35000038, -4.9999847)
+
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_greywood_grove_rockfall"]
+enabled = false
+navigation_layers = 2
+start_position = Vector3(0, 0.14999962, 6.5000153)
+end_position = Vector3(7.6293945e-06, 0.14999962, -6.5)
+
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_greywood_grove_rockfall"]
+enabled = false
+navigation_layers = 16
+start_position = Vector3(3.8146973e-06, 0, 12)
+end_position = Vector3(0, 0, -11.999985)
+
+[node name="world_greywood_grove_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 27, 242)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.greywood.grove_cache"
+loot_table = "loot.cache_hidden_grove"
+
+[node name="world_greywood_grove_cairn" type="Node3D" parent="Props"]
+transform = Transform3D(0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, 0.70710677, 40, 27, 252)
+script = ExtResource("4_dd8c0")
+npc_id = "world.greywood.grove_cairn"
+dialogue_id = "dialogue.cairn_hidden_grove"
+prompt = "Read the cairn"
+radius_m = 4.0
+priority = 45
+
+[node name="Base" type="StaticBody3D" parent="Props/world_greywood_grove_cairn"]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_grove_cairn/Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Stones" type="MeshInstance3D" parent="Props/world_greywood_grove_cairn/Base"]
+mesh = SubResource("ArrayMesh_2")
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

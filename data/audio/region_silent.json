@@ -3,10 +3,11 @@
 	"type": "audio_region",
 	"id": "audio_region.silent",
 	"display_name": "Silent by decision",
-	"description": "P23: the levels and contexts that play no music or ambience by decision (plan section 2.5): the test levels (every level record under data/test is silent too) and the loading screen.",
+	"description": "P23: the levels and contexts that play no music or ambience by decision (plan section 2.5): the test levels (every level record under data/test is silent too) and the loading screen. level.world is silent until P28 gives the world its regions' music and ambience (P25 lists it; P28 removes it).",
 	"silent_levels": [
 		"level.stress_arena",
-		"level.director_test"
+		"level.director_test",
+		"level.world"
 	],
 	"silent_contexts": [
 		"loading"

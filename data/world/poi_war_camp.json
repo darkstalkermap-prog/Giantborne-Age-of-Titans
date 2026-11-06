@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.war_camp",
+	"type": "poi",
+	"display_name": "The War Camp",
+	"level": "level.world",
+	"region": "region.aldmere",
+	"kind": "camp",
+	"position_m": [520, 33.4, 120],
+	"radius_m": 80,
+	"xp": 30,
+	"map_icon": "camp",
+	"compass": true,
+	"landmark": "world.aldmere.war_camp",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "Aldmere's war camp: tents and engines under construction."
+}
