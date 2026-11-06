@@ -134,6 +134,11 @@ func test_stage_3_walks_the_return_leg() -> void:
 	p.router.use_injection = true
 	GameSession.place_player(p, Transform3D(Basis(Vector3.UP, PI), Vector3(155, 0.05, 25)))
 	await step_ticks(2)
+	# M6 gate: headless navigation syncs in the next step, so the wait above can end before the giant
+	# has landed from its spawn; growth needs it standing (PlayerGrowth refuses "busy" otherwise).
+	assert_true(await TestWait.until(self, func() -> bool:
+		return p.is_on_floor() and p.controller.state == CombatController.State.LOCOMOTION, 180),
+		"the giant stands at the causeway")
 	assert_true(bool(p.growth.debug_set_stage(3).ok), "the giant grows to stage 3 at the causeway")
 	await step_ticks(30)
 	assert_eq(int(p.profile.get("nav_layers", 0)), ValleyProbe.GIANT, "stage 3 paths on the giant layer")
