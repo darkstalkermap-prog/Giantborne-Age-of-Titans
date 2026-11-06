@@ -16,6 +16,13 @@ extends Node
 ## walking the player's footfall uses its ".cruise" variant at cruise_duck_db (back to the full cue
 ## in combat, on stopping, on a jump and on a stomp).
 ##
+## P21's rules (the W13 owner of this file; docs/systems/P21.md records why): a voiced body hit for
+## damage that neither kills nor staggers it calls "hurt" (at most once per HURT_GAP_S a body); a
+## voiceless body (voice "none": the sparring post) sounds its hits by material, as a prop does; an
+## enemy action whose id ends in "roar" voices the voice's roar call (else its attack call); and a
+## footfall within WET_MARGIN_M of the level's "Water_*" planes takes the surface the mix names for
+## the level's "water" (the Valley's river banks and the King's Bridge: wet).
+##
 ## Polled, not signalled (no actor code changes): enemy awareness edges every 0.25 s (unaware ->
 ## aware within alert_radius_m x scale: one alert bark per encounter per alert_gap_s), ranged aim
 ## commits every frame (a projectile action's windup passes tracking_fraction: sfx.threat.aim_lock),
@@ -76,6 +83,12 @@ const INTERACT_KINDS := {"ItemPickup": "pickup", "WeaponRack": "weapon", "Forge"
 const FACTION_CUES := {"warned": "sfx.voice.crowd.gasp", "hostile": "sfx.world.alarm_bell",
 	"stood_down": "sfx.voice.crowd.murmur", "reconciled": "sfx.voice.crowd.cheer"}
 const ENGINE_VISUALS := ["ballista_bolt", "catapult_stone", "engine"]
+## P21: a body hit for damage grunts at most once per this many seconds (not when the blow kills
+## it - its death call plays - or staggers it - its stagger call plays).
+const HURT_GAP_S := 0.6
+## P21: footfalls within this distance of the level's water (its "Water_*" visual planes) take the
+## surface the mix's level surfaces name for "water" (the Valley's river: "wet").
+const WET_MARGIN_M := 6.5
 
 var audio: Node = null
 ## Requests waiting for Audio's _process: [{"chain", "at", "opts"}].
@@ -89,6 +102,8 @@ var _gap: Dictionary = {}         ## throttle key -> clock time of the last cue
 var _aim_seen: Dictionary = {}    ## "<actor>:<instance>" -> true (aim-lock cues played)
 var _projectiles: Dictionary = {} ## projectile id -> visual
 var _wet: Dictionary = {}         ## entity id -> in deep water at the last poll
+var _water_rects: Array = []      ## Rect2 (x, z) of the level's water planes (P21)
+var _water_level := 0             ## instance id of the level node they were read from
 var _last_poll_s := -INF
 var _walk_since_s := -INF
 var _last_step_s := -INF
@@ -131,6 +146,8 @@ func reset() -> void:
 	_aim_seen.clear()
 	_projectiles.clear()
 	_wet.clear()
+	_water_rects.clear()
+	_water_level = 0
 	_last_poll_s = -INF
 	_walk_since_s = -INF
 	_last_step_s = -INF
@@ -321,7 +338,8 @@ func _on_hit_resolved(_tick: int, result: HitResult) -> void:
 	var prio := 90 if player_side else 70
 	match result.outcome:
 		HitResult.Outcome.HIT, HitResult.Outcome.GUARD_BROKEN:
-			if _is_prop(target):
+			if _is_prop(target) or (target != null and voice_of(target.definition_id) == "none"):
+				# props, and voiceless bodies such as the sparring post, sound like what they are made of (P21)
 				request(["sfx.hit.%s" % material_of(target.definition_id)], at,
 					{"priority": 60 if not player_side else prio, "reason": "hit_prop", "source_height_m": _height(target)})
 			else:
@@ -336,6 +354,12 @@ func _on_hit_resolved(_tick: int, result: HitResult) -> void:
 				var heavy := float(result.health_damage) >= HURT_HEAVY_FRACTION * target.combatant.pools.health_max
 				request(["sfx.player.hurt.heavy", "sfx.player.hurt"] if heavy else ["sfx.player.hurt"],
 					_chest(target), {"priority": 100, "reason": "hurt"})
+			elif target != null and not _is_prop(target) and result.health_damage > 0 and not result.killed \
+					and not result.poise_broken and result.stagger_s <= 0.0 \
+					and _throttle("hurt:" + target.entity_id, HURT_GAP_S):
+				# P21: every voice has a hurt call (§4.1 voices); a blow that kills or staggers is voiced
+				# by entity_died or staggered instead
+				_voice(target, "hurt", "hurt")
 		HitResult.Outcome.BLOCKED:
 			request(["sfx.block.player"] if _is_player(target) else ["sfx.block.guard"], _chest(target),
 				{"priority": 85, "reason": "block"})
@@ -378,7 +402,13 @@ func _on_ability_started(_tick: int, actor_id: String, action_id: String, _insta
 		_player_action(e, def)
 		return
 	if def.kind == "enemy_attack" or def.is_attack():
-		_voice(e, "attack", "attack")
+		# P21: an action named "..._roar" (the Ogre King's phase roar) voices a roar, else an attack call
+		if AudioMath.short_id(def.id).ends_with("roar"):
+			var chain := _voice_chain(e, "roar") + _voice_chain(e, "attack")
+			if not chain.is_empty():
+				request(chain, _chest(e), {"source_height_m": _height(e), "priority": 75, "reason": "roar"})
+		else:
+			_voice(e, "attack", "attack")
 		if def.hit_shape == "weapon_arc":
 			var weapon: Variant = e.actor.get("weapon")
 			var fam := str(SWING_FAMILIES.get(str((weapon as Dictionary).get("family", "")), "")) \
@@ -976,7 +1006,7 @@ func _player_footfall(p: GiantPlayer) -> void:
 		_walk_since_s = now   # stopped (or fighting): a new walk starts
 	_last_step_s = now
 	var pos := p.global_position
-	var surface := str(audio.call("surface_at", pos))
+	var surface := footfall_surface(pos)
 	if float(audio.call("water_depth_at", pos)) > 0.05:
 		surface = "wade"
 	var base := "sfx.step.giant_s%d.%s" % [clampi(p.growth_stage, 1, 10), surface]
@@ -994,11 +1024,64 @@ func _actor_footfall(e: CombatEntity, actor: Node3D) -> void:
 		return
 	var size := step_class_of(e.definition_id)
 	var pos := actor.global_position
-	var surface := str(audio.call("surface_at", pos))
+	var surface := footfall_surface(pos)
 	if size == "heavy" and float(audio.call("water_depth_at", pos)) > 0.05:
 		surface = "wade"
 	request(["sfx.step.%s.%s" % [size, surface]], pos, {"priority": 40, "reason": "step",
 		"source_height_m": _height(e)})
+
+
+## The surface a footfall at `pos` sounds on (P21): Audio.surface_at, unless the mix's surfaces
+## for this level name a "water" surface and the foot is within WET_MARGIN_M of the level's water
+## (its "Water_*" visual planes): the Valley's river banks and its crossing are wet.
+func footfall_surface(pos: Vector3) -> String:
+	var surface := str(audio.call("surface_at", pos))
+	var by_level: Variant = (_mix().get("surfaces", {}) as Dictionary).get(str(audio.get("level_id")), {})
+	if typeof(by_level) != TYPE_DICTIONARY or str((by_level as Dictionary).get("water", "")) == "":
+		return surface
+	var at := Vector2(pos.x, pos.z)
+	for r: Rect2 in water_rects():
+		if r.grow(WET_MARGIN_M).has_point(at):
+			return str(by_level.water)
+	return surface
+
+
+## The level's water as rectangles (x, z) from its "Water_*" visual planes (the Valley builder
+## draws each layout water rectangle as one instance of a unit plane), read once per level.
+func water_rects() -> Array:
+	var lv: Node = audio.call("level_node")
+	if lv == null:
+		return []
+	if lv.get_instance_id() == _water_level:
+		return _water_rects
+	_water_level = lv.get_instance_id()
+	_water_rects = []
+	for n in lv.find_children("Water_*", "MultiMeshInstance3D", true, false):
+		_water_rects.append_array(plane_rects(n as MultiMeshInstance3D))
+	return _water_rects
+
+
+## The (x, z) rectangles a MultiMeshInstance3D's instances of its mesh cover. The transforms come
+## from the MultiMesh's buffer (12 floats a 3D instance, row-major, then its colour and custom
+## data), which holds them on every renderer: the dummy renderer of headless runs answers every
+## get_instance_transform() with the identity.
+static func plane_rects(mmi: MultiMeshInstance3D) -> Array:
+	var out: Array = []
+	var mm := mmi.multimesh if mmi != null else null
+	if mm == null or mm.mesh == null or mm.transform_format != MultiMesh.TRANSFORM_3D:
+		return out
+	var unit := mm.mesh.get_aabb()
+	var buf := mm.buffer
+	var stride := 12 + (4 if mm.use_colors else 0) + (4 if mm.use_custom_data else 0)
+	for i in mm.instance_count:
+		var t := mm.get_instance_transform(i)
+		var b := i * stride
+		if buf.size() >= b + 12:
+			t = Transform3D(Vector3(buf[b], buf[b + 4], buf[b + 8]), Vector3(buf[b + 1], buf[b + 5], buf[b + 9]),
+				Vector3(buf[b + 2], buf[b + 6], buf[b + 10]), Vector3(buf[b + 3], buf[b + 7], buf[b + 11]))
+		var box: AABB = (mmi.global_transform * t) * unit
+		out.append(Rect2(box.position.x, box.position.z, box.size.x, box.size.z))
+	return out
 
 
 ## Starts the player's walk anew (tests: the cruise rule's clock).

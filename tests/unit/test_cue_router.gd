@@ -53,12 +53,21 @@ func test_every_m6_signal_is_routed_or_deliberately_silent() -> void:
 		assert_true(CueRouter.ROUTED_SIGNALS.has(sig), "%s (M7-M9) is routed when it exists" % sig)
 
 
+## P21 replaced the placeholder bank's sfx cues with the effect banks: specific cues resolve to
+## themselves, a missing subject or variant falls back along the chain to its parent and then to
+## the family's default, and the stingers still fall back to the placeholder until P23.
 func test_cues_fall_back_to_the_placeholder_bank() -> void:
-	assert_eq(str(Audio.resolve("sfx.hit.flesh.light").get("id", "")), "sfx.hit.default", "a hit resolves")
-	assert_eq(str(Audio.resolve("sfx.step.giant_s3.hard.cruise").get("id", "")), "sfx.step.default", "a footfall")
-	assert_eq(str(Audio.resolve("sfx.ui.lock_on").get("id", "")), "sfx.ui.default", "an interface cue")
-	assert_eq(str(Audio.resolve("mus.stinger.growth").get("id", "")), "mus.stinger.default", "a stinger")
+	assert_eq(str(Audio.resolve("sfx.hit.flesh.light").get("id", "")), "sfx.hit.flesh.light", "a hit resolves to itself")
+	assert_eq(str(Audio.resolve("sfx.hit.unobtainium.light").get("id", "")), "sfx.hit.default",
+		"an unknown material falls back to the family default")
+	assert_eq(str(Audio.resolve("sfx.step.giant_s3.hard.cruise").get("id", "")), "sfx.step.giant_s3.hard.cruise", "a footfall")
+	assert_eq(str(Audio.resolve("sfx.step.giant_s1.soft.cruise").get("id", "")), "sfx.step.giant_s1.soft",
+		"a missing variant falls back to its parent")
+	assert_eq(str(Audio.resolve("sfx.ui.lock_on").get("id", "")), "sfx.ui.lock_on", "an interface cue")
+	assert_eq(str(Audio.resolve("mus.stinger.growth").get("id", "")), "mus.stinger.default", "a stinger (placeholder until P23)")
 	assert_eq(str(Audio.resolve_chain(["sfx.ability.thunder_roar.roar", "sfx.voice.giant.roar"]).get("id", "")),
+		"sfx.ability.thunder_roar.roar", "the first candidate")
+	assert_eq(str(Audio.resolve_chain(["sfx.ability.unknown_ability.roar", "sfx.voice.unknown_voice.roar"]).get("id", "")),
 		"sfx.ability.default", "the first candidate's family default")
 	assert_true(Audio.resolve("nothing.at.all").is_empty(), "an unknown family resolves to nothing")
 	assert_true(Audio.has_cue("sfx.hit.default") and not Audio.has_cue("sfx.hit.flesh"), "has_cue is exact")
@@ -197,7 +206,7 @@ func test_variants_never_repeat_through_play() -> void:
 	for i in 12:
 		Audio.clock_s += 0.1
 		Audio.pool.stop_all()
-		var v := Audio.play("sfx.hit.default", Vector3.INF, {"reason": "test"})
+		var v := Audio.play("sfx.hit.flesh.light", Vector3.INF, {"reason": "test"})   # three variants (P21)
 		assert_true(v >= 0, "play %d" % i)
 		var f := str(Audio.cue_log().back().file)
 		assert_true(f != last, "no file twice in a row")

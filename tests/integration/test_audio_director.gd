@@ -162,6 +162,9 @@ func test_footfalls_use_the_stage_size_class_and_the_cruise_variant() -> void:
 			Events.area_pulse.emit(Sim.tick, p.entity.entity_id, "ability.heavy_footfall", p.global_position, 6.0)
 		await _drain()
 		Audio.clear_log()
+		# The Dummy driver plays in real time while the headless run is faster, so the earlier steps
+		# still hold the cue's voices (the giant's steps are capped at 2, plan §4.4; P21): free them.
+		Audio.pool.stop_all()
 		var full: bool = await TestWait.until(self, func() -> bool: return not _requested("sfx.step.").is_empty(), 60)
 		assert_true(full, "a footfall after the %s" % ev)
 		if full:
@@ -369,9 +372,11 @@ func test_the_loading_gate_holds_the_first_tick_until_audio_is_ready() -> void:
 	lv.free()
 	assert_eq(ResourceSaver.save(packed, GATE_SCENE), OK, "the gate's test level is saved")
 	GameSession.level_override = GATE_SCENE
-	Audio.registration_files_per_frame_cap = 2
 	var expected := Audio.sample_paths_for(LEVEL_ID).size()
 	assert_true(expected >= 5, "the level has samples to register (%d)" % expected)
+	# about 5 paused frames of registration, whatever the size of the shipped banks (P21 added 209 files)
+	var per_frame := maxi(2, ceili(expected / 5.0))
+	Audio.registration_files_per_frame_cap = per_frame
 	var tick0 := Sim.tick
 	var main := MainScript.new()
 	add_child(main)
@@ -383,7 +388,7 @@ func test_the_loading_gate_holds_the_first_tick_until_audio_is_ready() -> void:
 		held += 1
 		await get_tree().process_frame
 	assert_true(Audio.is_ready(), "every sample registered")
-	assert_true(held >= expected / 2 - 1, "the gate held for the registration (%d frames, %d files)" % [held, expected])
+	assert_true(held >= expected / per_frame - 1, "the gate held for the registration (%d frames, %d files)" % [held, expected])
 	assert_eq(int(Audio.stats.registered), expected, "each file registered once")
 	await get_tree().process_frame
 	await get_tree().process_frame
