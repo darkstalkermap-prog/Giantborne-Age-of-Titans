@@ -643,13 +643,25 @@ def boss_frenzy(rng: np.random.Generator) -> np.ndarray:
 # --------------------------------------------------------------------------- the build list
 
 
+# The build's pre-encoding budget estimate per cue (build_audio.estimate_bytes: KB of Ogg per second
+# besides the 3.7 KB of headers), calibrated on the encoded files (rounded up to 0.01): with the
+# measured import factor x1.11 the estimate stays within a few KB of the imported size.
+EST_KBPS = {
+    'boss_drums': 4.07, 'boss_frenzy': 4.37, 'boss_theme': 4.08, 'combat_brass': 4.09,
+    'combat_drums': 4.26, 'drone_ancient': 2.42, 'drone_calm': 3.07, 'drone_wild': 2.91,
+    'melody_ancient_a': 2.78, 'melody_ancient_b': 2.97, 'melody_ancient_c': 2.53,
+    'melody_calm_a': 2.46, 'melody_calm_b': 2.44, 'melody_calm_c': 2.22, 'melody_wild_a': 3.52,
+    'melody_wild_b': 3.53, 'melody_wild_c': 3.42, 'pulse': 4.36, 'title_theme': 3.87,
+}
+
+
 def _loop(name, func, seed, params, frame=ZONE_FRAME, bpm=ZONE_BPM, beats=ZONE_BEATS, quality=0, lufs=-20.0,
           est=3.2):
     """A music loop of the build: Ogg at 22.05 kHz mono, balanced by its K-weighted loudness
     (core.loudness_lufs) with its peak at most -3 dBFS."""
     return {"name": name, "path": _P + name + ".ogg", "seed": seed, "func": func, "params": params,
             "kind": "loop", "bpm": bpm, "beats": beats, "beats_per_bar": 4, "frame": frame, "quality": quality,
-            "rate": RATE, "norm": {"lufs": lufs, "max_peak_db": -3.0}, "est_kbps": est}
+            "rate": RATE, "norm": {"lufs": lufs, "max_peak_db": -3.0}, "est_kbps": EST_KBPS.get(name, est)}
 
 
 # Loudness of each stem (LUFS) before the layer volumes of its set and the Music bus: the explore

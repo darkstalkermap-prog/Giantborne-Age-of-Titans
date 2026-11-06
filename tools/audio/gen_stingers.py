@@ -229,10 +229,20 @@ def boss_ogre_king(rng: np.random.Generator) -> np.ndarray:
     return _finish(rng, buf, BOSS_INTRO_S + 0.12, rt60=1.6, wet=0.18, fade_s=0.25)
 
 
+# The build's pre-encoding budget estimate per cue (build_audio.estimate_bytes: KB of Ogg per second
+# besides the 3.7 KB of headers), calibrated on the encoded files (rounded up to 0.01): with the
+# measured import factor x1.11 the estimate stays within a few KB of the imported size.
+EST_KBPS = {
+    'boss_ogre_king': 4.29, 'combat_ancient': 4.61, 'combat_calm': 4.59, 'combat_wild': 4.55,
+    'death': 3.57, 'growth': 4.59, 'level_up': 4.31, 'prologue_end': 4.45, 'quest': 3.17,
+    'quest_complete': 4.52, 'victory': 4.31,
+}
+
+
 def _stinger(name, func, seed, seconds, lufs=-16.0):
     return {"name": name, "path": _P + name + ".ogg", "seed": seed, "func": func, "params": {},
             "kind": "oneshot", "quality": 2, "rate": RATE, "norm": {"lufs": lufs, "max_peak_db": -3.0},
-            "est_kbps": 4.6, "seconds_target": seconds}
+            "est_kbps": EST_KBPS.get(name, 4.6), "seconds_target": seconds}
 
 
 CUES = [

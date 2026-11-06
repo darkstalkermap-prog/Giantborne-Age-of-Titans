@@ -99,17 +99,29 @@ def spot(rng: np.random.Generator, kind: str) -> np.ndarray:
 SPOTS = ["lark", "cricket", "gust", "woodpecker", "owl", "crow", "creak_a", "creak_b", "howl", "dog", "hammer",
          "voice", "cart", "pebbles_a", "pebbles_b", "whistle", "clank", "birds_flush"]
 
+# The build's pre-encoding budget estimate per cue (build_audio.estimate_bytes: KB of Ogg per second
+# besides the 3.7 KB of headers), calibrated on the encoded files (rounded up to 0.01): with the
+# measured import factor x1.11 the estimate stays within a few KB of the imported size.
+EST_KBPS = {
+    'bed_forest': 5.14, 'bed_meadow': 4.96, 'bed_stone': 4.13, 'bed_village': 3.81, 'forge_fire': 3.11,
+    'river_loop': 3.87, 'spot_birds_flush': 3.38, 'spot_cart': 2.28, 'spot_clank': 1.57,
+    'spot_creak_a': 1.69, 'spot_creak_b': 1.21, 'spot_cricket': 0.87, 'spot_crow': 1.16,
+    'spot_dog': 1.79, 'spot_gust': 3.52, 'spot_hammer': 1.57, 'spot_howl': 1.2, 'spot_lark': 2.21,
+    'spot_owl': 1.77, 'spot_pebbles_a': 3.79, 'spot_pebbles_b': 3.34, 'spot_voice': 1.34,
+    'spot_whistle': 2.53, 'spot_woodpecker': 3.7,
+}
+
 CUES = []
 for _i, (_name, _func) in enumerate((("bed_meadow", bed_meadow), ("bed_forest", bed_forest),
                                       ("bed_village", bed_village), ("bed_stone", bed_stone))):
     CUES.append({"name": _name, "path": _P + _name + ".ogg", "seed": 232001 + _i, "func": _func, "params": {},
                  "kind": "loop", "quality": 0, "rate": RATE, "norm": {"lufs": -18.0, "max_peak_db": -3.0},
-                 "est_kbps": 5.5})
+                 "est_kbps": EST_KBPS.get(_name, 5.5)})
 for _i, (_name, _func) in enumerate((("river_loop", emitter_river), ("forge_fire", emitter_forge))):
     CUES.append({"name": _name, "path": _P + _name + ".ogg", "seed": 232011 + _i, "func": _func, "params": {},
                  "kind": "loop", "quality": 0, "rate": RATE, "norm": {"lufs": -18.0, "max_peak_db": -3.0},
-                 "est_kbps": 3.5})
+                 "est_kbps": EST_KBPS.get(_name, 3.5)})
 for _i, _kind in enumerate(SPOTS):
     CUES.append({"name": "spot_" + _kind, "path": _P + "spot_" + _kind + ".ogg", "seed": 232101 + _i, "func": spot,
                  "params": {"kind": _kind}, "kind": "oneshot", "quality": 0, "rate": RATE,
-                 "norm": {"peak_db": -3.0}, "est_kbps": 3.5})
+                 "norm": {"peak_db": -3.0}, "est_kbps": EST_KBPS.get("spot_" + _kind, 3.5)})
