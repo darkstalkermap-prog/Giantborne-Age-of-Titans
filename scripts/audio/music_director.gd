@@ -36,6 +36,8 @@ const VARIANT_FADE_S := 0.08
 const DEFAULT_LAYER_FADE_BEATS := 2.0
 const DEFAULT_CROSSFADE_BARS := 2
 const SILENT_DB := -80.0
+## The smallest volume change written to a playing player (set_volume).
+const VOLUME_STEP_DB := 0.01
 ## Brain states in which an aware enemy is "engaged" for the music (approach, attack, recover,
 ## reposition, hold - which covers a brace - and staggered).
 const ENGAGED_STATES := [EnemyBrain.AIState.APPROACH, EnemyBrain.AIState.ATTACK, EnemyBrain.AIState.RECOVER,
@@ -775,14 +777,23 @@ func _update_gains(delta: float) -> void:
 			var g := float(d.gains[stem]) * d.master
 			var p: AudioStreamPlayer = d.players[stem]
 			if is_instance_valid(p):
-				p.volume_db = (linear_to_db(g) + duck) if g > 0.0001 else SILENT_DB
+				set_volume(p, (linear_to_db(g) + duck) if g > 0.0001 else SILENT_DB)
 	for d: Deck in old_decks.duplicate():
 		if d.master <= 0.0001 and d.master_target <= 0.0:
 			d.free_players()
 			old_decks.erase(d)
 	if _stinger != null and _stinger.playing:
 		var cue: Dictionary = audio.call("resolve", _stinger_cue) if _stinger_cue != "" else {}
-		_stinger.volume_db = float(cue.get("volume_db", 0.0)) + _duck_db(false)
+		set_volume(_stinger, float(cue.get("volume_db", 0.0)) + _duck_db(false))
+
+
+## Sets a player's volume only when it changes by more than VOLUME_STEP_DB (P23). Every volume_db
+## set on a playing AudioStreamPlayer replaces its playback's bus details in the AudioServer (an
+## allocation the main thread frees a frame later; AudioDirector.mix_barrier), so a steady stem or
+## bed sets nothing and a fade sets at most once a frame.
+static func set_volume(p: Node, db: float) -> void:
+	if absf(float(p.get("volume_db")) - db) > VOLUME_STEP_DB:
+		p.set("volume_db", db)
 
 
 ## Lines for the F3 panel.

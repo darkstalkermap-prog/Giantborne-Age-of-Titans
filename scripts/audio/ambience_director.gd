@@ -284,7 +284,7 @@ func _update_volumes(delta: float) -> void:
 		if not is_instance_valid(p):
 			beds.erase(b)
 			continue
-		p.volume_db = (float(b.volume_db) + linear_to_db(float(b.gain)) + duck) if float(b.gain) > 0.0001 else SILENT_DB
+		MusicDirector.set_volume(p, (float(b.volume_db) + linear_to_db(float(b.gain)) + duck) if float(b.gain) > 0.0001 else SILENT_DB)
 		if float(b.gain) <= 0.0001 and float(b.target) <= 0.0:
 			_free_player(p)
 			beds.erase(b)
@@ -295,7 +295,7 @@ func _update_volumes(delta: float) -> void:
 		if not is_instance_valid(p3):
 			emitters.erase(key)
 			continue
-		p3.volume_db = (float(e.volume_db) + linear_to_db(float(e.gain)) + duck) if float(e.gain) > 0.0001 else SILENT_DB
+		MusicDirector.set_volume(p3, (float(e.volume_db) + linear_to_db(float(e.gain)) + duck) if float(e.gain) > 0.0001 else SILENT_DB)
 		if float(e.gain) <= 0.0001 and float(e.target) <= 0.0:
 			_free_player(p3)
 			emitters.erase(key)

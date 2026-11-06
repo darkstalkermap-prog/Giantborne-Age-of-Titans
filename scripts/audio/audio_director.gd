@@ -87,6 +87,8 @@ var missing: Dictionary = {}
 var stats := {}
 ## Tests: register at most this many files a frame (0 = only the time budget limits it).
 var registration_files_per_frame_cap := 0
+## Frames that passed the mixing barrier (mix_barrier(); tests).
+var mix_barriers := 0
 
 var _enabled_at_start := true
 var _cues: Dictionary = {}
@@ -577,6 +579,7 @@ func stats_summary() -> Dictionary:
 func _process(delta: float) -> void:
 	if not enabled:
 		return
+	mix_barrier()
 	clock_s += delta
 	frame += 1
 	_detect_level()
@@ -589,6 +592,27 @@ func _process(delta: float) -> void:
 		_last_zone_poll_s = clock_s
 		_poll_zone()
 	router.process_frame()
+
+
+## The mixing barrier (P23; FOLLOWUPS: the crash in the audio mixing thread), once a frame from
+## _process, before this frame's AudioServer.update().
+##
+## Godot 4.6.3 replaces a playback's bus details (AudioServer.set_playback_bus_volumes_linear: every
+## volume_db set on a playing AudioStreamPlayer, every mix of a playing AudioStreamPlayer3D's
+## panning) and frees the replaced details on the main thread in the second AudioServer.update()
+## after, about one frame later. The mixing thread loads a playback's details at each mix step and
+## then copies them without a lock; preempted between the load and the copy for longer than that
+## frame (an oversubscribed machine; a headless run at --fixed-fps draws thousands of frames a
+## second), it copies freed memory: a SIGSEGV in the StringName copy of AudioServer::_mix_step (the
+## two P22 bot crashes, the same addresses), a double free on the main thread, or a heap hang.
+## The drivers (Dummy, PulseAudio, ALSA, WASAPI) hold the driver lock for the whole mix, so taking
+## and releasing it here waits for a mix step that is still running: none that loaded details
+## before they were replaced can outlive their freeing in the next update(). Costs one mutex a
+## frame; it waits only while a mix step runs (docs/systems/P23.md, "The audio-thread crash").
+func mix_barrier() -> void:
+	AudioServer.lock()
+	AudioServer.unlock()
+	mix_barriers += 1
 
 
 func _input(event: InputEvent) -> void:
