@@ -2,7 +2,8 @@ extends IntegrationSuite
 ## P23 (plan M6-M9 §3.5 tests, §4.3): the Valley's score on its shipped records and Oggs, audio on.
 ##   - Giant's Hollow plays the calm set; its melody changes variant (or rests) only at the four-bar
 ##     segment boundaries, with the variant heard at the melody level and the others silent;
-##   - crossing 20 m into the Old Wood brings the wild set in at the calm set's next bar, and the
+##   - crossing 20 m into the Old Wood brings the wild set in at the calm set's next bar, at the
+##     calm set's position in the shared frame (its melody waiting for the next segment), and the
 ##     calm set is gone within its two crossfade bars;
 ##   - combat starts on a beat with the Wood's combat intro, its layers come in over two beats,
 ##     and the intro stinger ducks the stems by 8 dB until it has ended and released;
@@ -118,6 +119,10 @@ func test_the_hollows_melody_moves_at_segment_boundaries_and_the_wood_comes_in_a
 	assert_true(into_bar < 1.5 * FRAME, "at a bar of the calm set (%.3f s from it)" % into_bar)
 	var wild: MusicDirector.Deck = Audio.music.deck
 	assert_true(Audio.music.old_decks.has(calm), "the calm set fades out")
+	assert_near(Audio.music.deck_position(wild), Audio.music.deck_position(calm), 1e-3,
+		"the wild set starts where the calm set is: one frame, one harmony through the crossfade")
+	if fposmod(Audio.music.deck_position(wild), wild.segment_s) > MusicDirector.SEGMENT_ENTRY_S:
+		assert_eq(wild.melody_choice, "", "mid-phrase, its melody waits for the next segment boundary")
 	Audio.advance_for_tests(wild.bar_s, 0.05)
 	assert_true(Audio.music.old_decks.has(calm) and calm.master > 0.3 and calm.master < 0.7,
 		"half way through the two-bar crossfade after one bar (calm %.2f)" % calm.master)
@@ -185,6 +190,7 @@ func test_combat_starts_on_a_beat_and_the_kings_set_follows_his_intro() -> void:
 	assert_eq(Audio.music.state_name(), "boss", "the boss state")
 	var king: MusicDirector.Deck = Audio.music.deck
 	assert_near(king.bar_s, 4.0 * 60.0 / 104.0, 1e-6, "in its own frame at 104 BPM")
+	assert_true(Audio.music.deck_position(king) < 0.35, "from the top of its loop (another frame: no alignment)")
 	assert_true(Audio.active_ducks().has("boss"), "the fight ducks the ambience")
 	Audio.advance_for_tests(0.6, FRAME)
 	assert_true(Audio.music.old_decks.is_empty(), "the zone set is out after the 0.5 s crossfade")
@@ -227,6 +233,8 @@ func test_the_title_the_end_screens_and_the_sandbox_play_their_sets() -> void:
 	Audio.advance_for_tests(to_bar + 0.3, 0.05)
 	assert_eq(Audio.music.context, "end", "the end screen")
 	assert_eq(Audio.music.set_id(), "music.end", "its set at the title's next bar")
+	assert_near(Audio.music.deck_position(Audio.music.deck), Audio.music.deck_position(title), 1e-3,
+		"the theme carries on where the title's was")
 	var end_deck: MusicDirector.Deck = Audio.music.deck
 	Audio.music.on_campaign_completed()
 	Audio.advance_for_tests(0.3, FRAME)

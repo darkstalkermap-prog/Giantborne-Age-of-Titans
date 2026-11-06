@@ -203,8 +203,8 @@ Barrow and the ruins; Kingsfall and the Ogre King (both phases); the end screen.
 | 1 | The music sits under the effects: a hit, a footfall and a threat sting are always clearer than the melody. | | |
 | 2 | The ambience is felt more than heard: you notice it when it changes (the Hollow's wind to the Wood's leaves, Thornwick's murmur, the stone districts' cold wind), not while it plays. | | |
 | 3 | No district is clearly louder than the others (the beds are balanced at the same loudness; the stone bed has the deepest rumble). | | |
-| 4 | Combat lifts the level without a jump: the drums and brass come in over two beats, the combat intro plays once on the next beat, then the music sits about 4 dB higher than exploring. | | |
-| 5 | The Ogre King's music is the loudest of the score (1.5-2 dB over a district fight) and phase 2's string tremolo adds tension, not volume. | | |
+| 4 | Combat lifts the level without a jump: the drums and brass come in over two beats, the combat intro plays once on the next beat, then the music sits about 5 dB higher than exploring (danger, the pulse, is no louder than exploring). | | |
+| 5 | The Ogre King's music is as loud as a district fight and grows about 1.5 dB in phase 2: the string tremolo should add tension, not just volume. | | |
 | 6 | Stingers (level up, quest, growth, victory) duck the music by 8 dB and the music comes back within half a second after them; nothing stacks into a wall. | | |
 | 7 | The interface blips are quieter than the world and never startle. | | |
 
