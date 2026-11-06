@@ -210,7 +210,7 @@ kbd {
 <script>
 (function () {
   // Byte counts of the current export (raw and packed as .txt), used for the progress bar.
-  const BUILD = { wasm: 37700666, pck: 2356840, wasmPacked: 12528700, pckPacked: 1680156 }; // set by tools/build_web.sh
+  const BUILD = { wasm: 37700666, pck: 2646000, wasmPacked: 12528700, pckPacked: 2024528 }; // set by tools/build_web.sh
 
   const stage = document.getElementById('stage');
   const poster = document.getElementById('poster');
@@ -315,6 +315,23 @@ kbd {
     }
   }
 
+  // The page's ?args=a,b,c become the engine's command line (the web checks: P24a's stream check,
+  // P23's audio check). Each comma-separated item is one argument (URL-decoded). Without a "--"
+  // among them they are all the game's own arguments (OS.get_cmdline_user_args), as if typed
+  // after "--"; with one, the items before it go to the engine (--fixed-fps,60,--,--mode=world).
+  function launchArgs() {
+    let raw = null;
+    try {
+      raw = new URLSearchParams(window.location.search).get('args');
+    } catch (e) {
+      raw = null;
+    }
+    if (!raw) return [];
+    const list = raw.split(',').map(function (a) { return a.trim(); }).filter(function (a) { return a.length > 0; });
+    if (list.length === 0) return [];
+    return list.indexOf('--') >= 0 ? list : ['--'].concat(list);
+  }
+
   // Once the engine has begun loading it cannot be started twice in one page, so a retry reloads.
   let attempted = false;
   let running = false;
@@ -370,7 +387,7 @@ kbd {
     const engine = new Engine({
       canvas: canvas,
       executable: 'index',
-      args: [],
+      args: launchArgs(),
       canvasResizePolicy: 2,
       focusCanvas: true,
       ensureCrossOriginIsolationHeaders: false,
