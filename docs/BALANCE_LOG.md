@@ -297,3 +297,86 @@ or always loses at a given health) cannot be dialled to 1-2 deaths by a number. 
 and the boss items stay missed, as at the end of P17b; the off-camera share, Thornwick and the
 force branch's return leg are met.
 
+## M6 gate (wave 14): the Valley matrix after the gate's fixes (tag `m6gate_final`)
+
+**How it is measured.** As P22's: the M6-M9 matrix (novice and expert x {help_cache, help_ogre,
+intimidate, force} x seeds 1-3, 24 unassisted runs, three at a time: `tools/run_bots.sh
+--tag=m6gate_final --timeout=1500 --autoplay=2400 --jobs=3` with the 24 `policy:skill:seed` runs),
+plus `intimidate:expert:4`, `:5` and `:6` (three more seeds of the cell the gate's review found
+failing) and the plan's two assisted Thornwick runs (`help_cache:novice:1:assist`,
+`intimidate:novice:1:assist`): 29 runs on the gate's code (`013dd9c`), with nothing else running in
+the container. The review ran the same 24 + 2 runs on the merged wave (`17dbed3`); its numbers are
+quoted where it gave them.
+
+### What the gate changed that the bot sees
+
+- **Seeded runs replay exactly, with or without audio** (the review's finding 2): the loading gate
+  also waits for the level's navigation map, the autopilot and the bot do nothing while it holds,
+  and headless runs sync navigation on the main thread. Every run's timeline moved, so a seed here
+  is not the same run as that seed in an earlier batch: the tables compare cells, not runs.
+- **A wolf pack broken by a giant that outmatches it routs** instead of coming back to harass
+  (`tactics.outmatched_rout`; the wolf's ratio is 6, so from stage 2 on) (finding 4).
+- **The bot's stall at an encounter** (P17b: with every living member out of reach for 8 s it walks
+  on or takes its objective) now lasts while the giant stays within 15 m of the encounter, where a
+  dodge past 6 m restarted it (finding 4).
+- No balance number changed. The threat alerts' mix class (finding 3) is audio only.
+
+### The matrix
+
+| Skill | Policy | Completed: P22 -> review (`17dbed3`) -> gate | Human est. median (min), P22 -> gate | Deaths median (boss), P22 -> gate |
+| --- | --- | --- | --- | --- |
+| novice | force | 3 / 3 -> 3 / 3 -> 3 / 3 | 14.8 -> 15.2 | 0 (0) -> 0 (0) |
+| novice | help_cache | 3 / 3 -> 3 / 3 -> 3 / 3 | 15.7 -> 15.0 | 1 (0) -> 0 (0) |
+| novice | help_ogre | 3 / 3 -> 3 / 3 -> 3 / 3 | 15.0 -> 13.9 | 1 (0) -> 0 (0) |
+| novice | intimidate | 3 / 3 -> 3 / 3 -> 3 / 3 | 12.7 -> 12.7 | 1 (0) -> 0 (0) |
+| expert | force | 3 / 3 -> 3 / 3 -> 3 / 3 | 18.3 -> 18.4 | 0 (0) -> 0 (0) |
+| expert | help_cache | 3 / 3 -> 3 / 3 -> 3 / 3 | 17.2 -> 18.5 | 1 (0) -> 0 (0) |
+| expert | help_ogre | 3 / 3 -> 3 / 3 -> 3 / 3 | 18.0 -> 17.5 | 0 (0) -> 0 (0) |
+| expert | intimidate | 2 / 3 -> 1 / 3 -> **3 / 3** | 16.8 -> 16.4 | 0 (0) -> 0 (0) |
+
+### The review's finding 4: the expert's crown stage on the intimidate path
+
+| Measure (expert, intimidate, seeds 1-3) | Review (`17dbed3`) | Gate |
+| --- | --- | --- |
+| The crown stage (s; its watchdog is 240 s) | 225.4 / watchdog / watchdog | **55.1 / 39.6 / 55.4** |
+| "Gave up chasing" a Barrow warden wolf | 3-4 a run | 0 |
+| Aware wolves near the giant at stage 3 (s, all of a run's): outmatched (harassing) / in Flee | 505-634 / 161-231 | 64-125 / 48-72 |
+
+The review's base for comparison (`22ed6ca`, the same seeds): 156, 118 and 78 s. The novice's
+intimidate crown took 107 and 74 s in the review, 45-50 s here; the help paths' 35-56 s there,
+29-53 s here; the force runs' 50-99 s. Seeds 4 and 6 of the expert cell take the crown in 92.8 and
+48.3 s (seed 5 stopped earlier, below). The gate tier replays the pre-crown save with this bot
+(`tests/gate/test_barrow_crown.gd`): seeds 1 and 2 claim the crown in 90.2 and 85.7 s; with the
+wolves' rout but the bot's 6 m stall both ran out the 240 s, a lone unbroken wolf harassing the
+giant at the crown.
+
+### The plan's Valley items
+
+| Item (plan §3.4 design 9, design 8; §6.4) | Target | P22 | M6 gate |
+| --- | --- | --- | --- |
+| Off-camera hits (attacker outside the camera's view at its windup), median share of the hits taken | under 20 % | 16 % (max 37 %) | **20 %** (20.4 %, max 29.5 %): a miss by 0.4 points; the novice's runs 16.8 %, the expert's 20.9 % |
+| Thornwick hostile at the end of a help or intimidate run (`faction_hostile`) | never | never | **never** (18 unassisted runs and the two assisted runs; the six force runs end hostile, as that branch means) |
+| The novice's tries at the Ogre King (deaths there, median) | 1-2 deaths | 0 (one death in 12 runs) | 0 (one death in 12 runs) |
+| Damage per segment, forest (x maximum health, novice median) | <= 0.6 | 1.27 | 1.23 |
+| Damage per segment, ruins | <= 0.6 | 1.23 | 1.00 |
+| The force branch's return leg inside the 240 s watchdog | 3 of 3 | novice 3 / 3, expert 3 / 3 | novice 3 / 3, expert 3 / 3 (the Deadfall stage 80-124 s and 86-178 s) |
+| The expert on seeds 1-3 | 3 of 3 a policy, at most 2 deaths each | 11 / 12 completed | **12 / 12**, no death |
+
+- Novice deaths 6 (P22 9): the brace 2, an archer's shot 2, a mage's bolt 1, the King's combo 1; by
+  segment: ruins 5, boss 1. Expert deaths 0 (P22 6).
+- Growth (novice median): HOLD 56 % at stage 2, FLEE or ROUTED 52 % at stage 3 (P22 40 %; target
+  50 %), time-to-kill ratio 0.51. CPU per tick p95 median 3.63 ms, max 4.02 ms; 0 errors, 0
+  warnings, 0 invariant failures, 0 teleports; 21 stuck events, all recovered.
+- **Thornwick, assisted** (`help_cache:novice:1:assist`, `intimidate:novice:1:assist`): both
+  complete with 0 deaths, `faction_hostile` false, the village outcome as chosen, 0 errors and 0
+  warnings.
+- **The off-camera share** is reported as a miss (plan §6.4). Each run here is a new run (the
+  timelines moved) and a run's share spreads from 4 % to 30 %, so a 24-run median moves by a few
+  points between batches; the gate's changes do not reach the ranged units (the expert intimidate
+  cell's seeds 1-3 took the same hits, off camera and all, with and without the wolves' rout and the
+  bot's stall: 10 of 37, 14 of 96, 17 of 98). P39's loop measures it again at M9 (FOLLOWUPS).
+- **Seed 5 of the expert intimidate cell** (outside the plan's seeds) stopped in the forest at stage
+  1: `quest.main:ogre` ran past its 240 s watchdog (a death to a hunter's slash, a rest at the
+  Hollow's shrine, the forest's fight again), before the village - every policy of that seed plays
+  the same forest - and before any of the gate's changes act (the wolves are not outmatched at stage
+  1, and a kill objective never stalls). Recorded for P39 (FOLLOWUPS).

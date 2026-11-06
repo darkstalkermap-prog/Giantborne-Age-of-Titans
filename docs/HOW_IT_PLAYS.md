@@ -341,23 +341,32 @@ floors (§10).
 
 ## Known issues
 
-- **Pacing is short for the bot** (15-16 minutes of human estimate against 20-30); the estimate is a
-  floor for the Hollow, the forest and the Grove. Only a timed human run can say how short.
-- **The novice rarely needs a retry at the Ogre King** (target 1-2 deaths there): see above.
-- **Segment damage** is above the plan's 0.6 x maximum health in the forest and the ruins (about
-  1.4 and 1.1): the novice model takes many blows whole in long fights; deaths stay at about one a
-  run.
-- **Off-camera hits** are about a fifth to a quarter of the hits taken (target under 20 %): archers
-  and mages behind the giant.
-- **The force branch's return leg** is the slice's longest fight: one of the three force runs ran
-  out of the 240 s the bot's watchdog allows its Deadfall stage, fighting the village's guards, the
-  militia and the return patrol on the road west (the stage-3 soldiers hold formation there instead
-  of breaking). A person is not timed out; they will find it a long fight.
-- **The village yard's navmesh pocket** (x 62-72, z -50 to -35; P17a) is not fixed: the bot gets out
-  through its breadcrumbs, a person might have to back out.
-- **Draw calls with many enemies in view** exceed 250 (FOLLOWUPS row for P18 or later).
-- **The expert runs share seed 1**, so their four runs share one tutorial and one forest: the
-  expert is one sample up to the village.
+Updated at the M6 gate (wave 14) from its 24-run Valley matrix (`docs/BALANCE_LOG.md`, "M6 gate");
+the tables above are still P17b's (P39 re-runs this report, plan §6.5).
+
+- **Pacing is short for the bot** (about 14 minutes of human estimate against 20-30); the estimate
+  is a floor for the Hollow, the forest and the Grove. Only a timed human run can say how short.
+- **The novice rarely needs a retry at the Ogre King** (target 1-2 deaths there): one death at the
+  King in 12 novice runs.
+- **Segment damage** is above the plan's 0.6 x maximum health in the forest and the ruins (1.23 and
+  1.00, novice median): the novice model takes many blows whole in long fights; deaths stay at about
+  one a run or fewer (6 in 12 novice runs, 5 of them in the ruins). Longer pauses between enemy
+  strikes made it worse and were reverted (P22).
+- **Off-camera hits** are about a fifth of the hits taken: 20.4 % over the gate's 24 runs (the
+  novice's 16.8 %, the expert's 20.9 %; target under 20 %), mostly archers and mages behind the
+  giant. P22's ranged positioning brought it down from a quarter; the threat cues (P21, louder far
+  away since the gate) are for people - the bot does not hear them.
+- **Draw calls**: views at `low` with five or more enemies close (Thornwick's square, the Barrow's
+  wardens, the quarry's raiders, the courtyard) draw 253-268 calls against the 250 budget - a
+  measured miss handed to P30's crowd renderer and P39's capture (`docs/PERFORMANCE.md`, "Draw calls
+  at the M6 gate"; FOLLOWUPS).
+- **The expert's forest on seed 5** (outside the matrix's seeds 1-3) ran out the forest ogre stage's
+  watchdog once at the gate (FOLLOWUPS, for P39).
+- **No longer issues**: the village yard's navmesh pocket and Thornwick turning on the giant on a
+  help path (fixed in P22; Thornwick ended friendly in every help and intimidate run at the gate);
+  the force branch's return leg (inside its watchdog in all six force runs since P22); the experts'
+  shared seed (the matrix runs the expert on seeds 1-3); the expert's crown stage at the Barrow,
+  where a broken wolf pack kept coming back (the M6 gate: the expert completes 12 of 12).
 
 ## What to try first
 
