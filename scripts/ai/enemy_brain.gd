@@ -189,6 +189,8 @@ func decide(tick: int, p_controller_state: int, my_position: Vector3, request_to
 	var seen: bool = perception.get("visible", false)
 	var target_pos: Vector3 = perception.get("position", last_known) if seen else last_known
 	var distance: float = perception.get("distance", INF) if seen else _flat_distance(my_position, last_known)
+	if _p30_decide(my_position, memory_ok, target_alive, release_token):
+		return   # P30: a formation member holds its slot; an outmatched soldier joins a formation or flees
 	match state:
 		AIState.IDLE:
 			_stop()
@@ -476,6 +478,7 @@ func _cache_attack_range(id: String) -> void:
 func apply_morale(delta: float, reason: String, tick: int = -1) -> void:
 	if ignores_morale or state == AIState.DEAD or delta == 0.0:
 		return
+	delta = _p30_morale_scale(delta, reason)   # P30: a living banner halves awe and ally-death losses
 	var t := tick if tick >= 0 else now
 	var before := morale
 	morale = clampf(morale + delta, 0.0, 100.0)
@@ -1702,6 +1705,136 @@ func refresh_post() -> void:
 ## @anchor P24b
 
 ## @anchor P30
+# --- formation members, the banner's morale, joining (P30) -----------------------------------------
+# Plan M6-M9 §2.10, decision 19. Hook lines: decide() (_p30_decide, after the flight check, before
+# the state machine) and apply_morale() (_p30_morale_scale). The actor (EnemyActor's P30 section)
+# installs the resolvers and calls join_formation / leave_formation; the Formation sets
+# formation_hold, formation_braced and banner_alive at every update.
+#   * A member of an intact formation holds the slot formation_slot_resolver gives - walking to it
+#     (running when it is more than 4 m away) with HOLD's hysteresis - facing the point
+#     formation_face_resolver gives, and never asks for an attack of its own: the formation braces
+#     through it. A member of a broken formation fights on its own (the rules above).
+#   * While its banner lives a member loses half the morale of awe and ally deaths; its leader is the
+#     banner (the actor's has_leader), so it regroups to its slot once its morale passes
+#     ai.regroup_morale.
+#   * An outmatched soldier (behaviour "formation") outside any formation asks formation_joiner every
+#     JOIN_RETRY_S while aware; when no formation takes it and the giant is of stage
+#     JOIN_OR_FLEE_STAGE or more (perception's target_stage), it flees and routs at once (plan
+#     §5.14: single humans flee a stage-4 giant on sight); smaller giants leave it P04's line.
+
+const BANNER_LOSS_MULT := 0.5
+## The morale losses a living banner halves (P11b's awe and P04's ally deaths).
+const BANNER_HALVED_SOURCES := ["ally_died", "awe"]
+const JOIN_RETRY_S := 0.5
+const JOIN_OR_FLEE_STAGE := 4
+
+## The formation this unit belongs to ("" = none), whether it holds (formed, advancing, braced)
+## and is braced, whether its banner lives, and whether this unit is that banner.
+var formation_id := ""
+var formation_hold := false
+var formation_braced := false
+var banner_alive := false
+var is_banner := false
+## formation_slot_resolver() -> Vector3: where this member stands (INF = none);
+var formation_slot_resolver := Callable()
+## formation_face_resolver() -> Vector3: the point it faces (the threat, else ahead; INF = keep);
+var formation_face_resolver := Callable()
+## formation_joiner() -> bool: an outmatched soldier joins a formation now (true when taken).
+var formation_joiner := Callable()
+var _p30_join_tick := NO_TICK
+var _p30_slot_moving := false
+
+
+## The actor puts this unit in formation `id` (as its banner when `banner`). `fresh` (it spawned
+## into it): its morale becomes `morale_start`; otherwise it keeps its morale and recovers toward
+## the higher of its own and the formation's.
+func join_formation(id: String, banner: bool, morale_start: float, fresh: bool, tick: int = -1) -> void:
+	if tick >= 0:
+		now = tick
+	formation_id = id
+	is_banner = banner
+	_leave_hold()
+	if fresh:
+		morale = morale_start
+		start_morale = morale_start
+	else:
+		start_morale = maxf(start_morale, morale_start)
+	_p30_slot_moving = true
+
+
+## Out of its formation (dissolved, or broken away for good): the rules above again.
+func leave_formation() -> void:
+	formation_id = ""
+	formation_hold = false
+	formation_braced = false
+	banner_alive = false
+	is_banner = false
+	if state == AIState.HOLD and not _hold_mode:
+		_set_state(AIState.APPROACH if aware else AIState.IDLE)
+
+
+## Flight and rout now (EnemyActor.p30_force_rout: tests, scripted routs).
+func force_rout(tick: int = -1) -> void:
+	if tick >= 0:
+		now = tick
+	if state == AIState.DEAD or ignores_morale:
+		return
+	holds_token = false
+	attack_request = ""
+	_begin_flee()
+	_rout()
+
+
+func _p30_morale_scale(delta: float, reason: String) -> float:
+	if delta < 0.0 and banner_alive and formation_id != "" and not is_banner and BANNER_HALVED_SOURCES.has(reason):
+		return delta * BANNER_LOSS_MULT
+	return delta
+
+
+## decide(): true when it handled the decision (see the section notes).
+func _p30_decide(my_position: Vector3, memory_ok: bool, target_alive: bool, release_token: Callable) -> bool:
+	if state in [AIState.FLEE, AIState.ROUTED, AIState.DEAD, AIState.STAGGERED, AIState.RETURN] or faction_mode != "":
+		return false
+	if formation_id != "":
+		if not formation_hold:
+			return false
+		_p30_hold_slot(my_position, release_token)
+		return true
+	if not aware or not memory_ok or not target_alive or outmatched_behavior() != "formation":
+		return false
+	if formation_joiner.is_valid() and (_p30_join_tick == NO_TICK or now - _p30_join_tick >= _ticks(JOIN_RETRY_S)):
+		_p30_join_tick = now
+		if bool(formation_joiner.call()) and formation_id != "":
+			_p30_hold_slot(my_position, release_token)
+			return true
+	if int(perception.get("target_stage", 0)) >= JOIN_OR_FLEE_STAGE and not ignores_morale and not is_banner:
+		_release(release_token)
+		_begin_flee()
+		_rout()
+		return true
+	return false
+
+
+## A formation member's decision: walk to its slot (run when far), face the formation's point, no
+## attacks of its own; state HOLD.
+func _p30_hold_slot(my_position: Vector3, release_token: Callable) -> void:
+	_release(release_token)
+	attack_request = ""
+	if _hold_mode:
+		_leave_hold()
+	var slot: Vector3 = formation_slot_resolver.call() if formation_slot_resolver.is_valid() else Vector3.INF
+	var to_slot := _flat_distance(my_position, slot) if slot != Vector3.INF else 0.0
+	if to_slot > HOLD_LEAVE_M:
+		_p30_slot_moving = true
+	if _p30_slot_moving and to_slot > HOLD_ARRIVE_M:
+		move_target = slot
+		move_speed = -1.0 if to_slot > 4.0 else 0.0
+	else:
+		_p30_slot_moving = false
+		_stop_moving()
+	face_point = formation_face_resolver.call() if formation_face_resolver.is_valid() else Vector3.INF
+	if state != AIState.HOLD:
+		_set_state(AIState.HOLD)
 
 ## @anchor P32
 

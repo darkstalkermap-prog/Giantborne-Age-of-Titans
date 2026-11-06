@@ -77,6 +77,7 @@ func _ready() -> void:
 func set_render_lod(lod_m: float) -> void:
 	render_lod_m = maxf(0.0, lod_m)
 	far_proxy = RigPaint.apply_render_lod(self, body, render_lod_m)
+	_p30_apply_mid()   # P30: the merged rest-pose mesh at mid distance (low preset)
 
 
 ## Places the weapon shoulder exactly where the data says the hit sweep pivots. `pivot_local`
@@ -190,6 +191,7 @@ func _process(delta: float) -> void:
 		torso.rotation.y = lerpf(torso.rotation.y, twist, 1.0 - exp(-12.0 * delta))
 	_update_body(s, delta)
 	_update_flash(delta)
+	_p30_promote(s)   # P30: an acting rig keeps its full detail out to render_lod_m
 
 
 func _update_body(s: Dictionary, delta: float) -> void:
@@ -459,3 +461,34 @@ func set_weapon_visual(node: Node3D, hand_offset := Vector3(0.0, 0.0, -1.5)) -> 
 
 func _forget_materials(node: Node) -> void:
 	RigPaint.forget(node, _materials, _base_colors, _material_copies)
+
+
+# --- the mid distance (P30, FOLLOWUPS: Valley views at low under 250 draw calls) -------------------
+# Hook lines: set_render_lod (_p30_apply_mid) and _process (_p30_promote). At the `low` preset the
+# rig draws as one merged mesh of its rest pose between 0.45 x render_lod_m and render_lod_m
+# (RigPaint's mid distance); while it acts (an action, staggered, dead, held) it is promoted to its
+# full rig out to render_lod_m.
+
+## The rig's mid-distance mesh (null when none: not at `low`, or no render_lod_m).
+var mid_proxy: MeshInstance3D = null
+var _p30_promoted := false
+
+
+func _p30_apply_mid() -> void:
+	if render_lod_m > 0.0 and RigPaint.mid_lod_wanted(self):
+		var key := actor.scene_file_path if actor != null else ""
+		mid_proxy = RigPaint.apply_mid_lod(body, render_lod_m, _materials[0] if not _materials.is_empty() else null, key)
+		_p30_promoted = false
+	elif mid_proxy != null:
+		RigPaint.remove_mid_lod(body, render_lod_m)
+		mid_proxy = null
+
+
+func _p30_promote(s: Dictionary) -> void:
+	if mid_proxy == null:
+		return
+	var acting := s.get("action") != null or bool(s.get("staggered", false)) or bool(s.get("dead", false)) \
+		or (actor != null and actor.has_method("is_held") and bool(actor.call("is_held")))
+	if acting != _p30_promoted:
+		_p30_promoted = acting
+		RigPaint.set_mid_active(body, not acting, render_lod_m)

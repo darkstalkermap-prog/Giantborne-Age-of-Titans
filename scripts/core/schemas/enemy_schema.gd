@@ -158,6 +158,29 @@ static func fields() -> Dictionary:
 	})
 
 	## @anchor P30
+	# Formations and the target provider (P30, plan M6-M9 §2.10, decisions 19 and 20): a soldier's
+	# `role` in a formation (SOLDIER_ROLES; the pike, shield and banner records ship with P30);
+	# `targets`, whom the enemy fights besides the giant - NPCs of the listed factions (faction record
+	# ids) and intact props carrying one of the listed prop_tags - with `aggro_player_m`, how close a
+	# giant it has seen must be to come first (absent: any distance; without `targets` the giant is
+	# the only target, the M1-M5 rule); a guard that `breaks_on_tags` (a shield wall: heavies, stomps
+	# and sweeps break it whatever its stamina); a banner's `rally` (every interval_s, +morale to the
+	# members of its formation within radius_m, through its rally action).
+	f.merge({
+		"role": U.str_field(false, DataValidator.SOLDIER_ROLES),
+		"targets": {"t": "dict", "fields": {
+			"teams": {"t": "array", "items": "string", "items_enum": ["player"]},
+			"factions": U.ref_array("faction"),
+			"prop_tags": {"t": "array", "items": "string"},
+			"priority": U.str_field(false, ["nearest"]),
+			"aggro_player_m": U.pos()}},
+		"rally": {"t": "dict", "fields": {
+			"action": U.ref("action", true),
+			"interval_s": U.pos(true),
+			"morale": U.num(0.0, 100.0, true),
+			"radius_m": U.pos(true)}},
+	})
+	(f.guard.fields as Dictionary)["breaks_on_tags"] = U.enum_array(DataValidator.TAGS)
 
 	## @anchor P32
 
@@ -254,6 +277,22 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor P22
 
 	## @anchor P30
+	# P30: a banner rallies only as a banner; a target list names at least one kind of target, and
+	# its prop tags are plain lowercase words.
+	if typeof(d.get("rally")) == TYPE_DICTIONARY and str(d.get("role", "")) != "banner":
+		out.errors.append("%s: a rally block needs role 'banner'" % ctx)
+	var p30_targets: Variant = d.get("targets")
+	if typeof(p30_targets) == TYPE_DICTIONARY:
+		var p30_kinds := 0
+		for p30_key: String in ["teams", "factions", "prop_tags"]:
+			if typeof(p30_targets.get(p30_key)) == TYPE_ARRAY:
+				p30_kinds += (p30_targets[p30_key] as Array).size()
+		if p30_kinds == 0:
+			out.errors.append("%s.targets: names no team, faction or prop tag" % ctx)
+		if typeof(p30_targets.get("prop_tags")) == TYPE_ARRAY:
+			for p30_tag: Variant in p30_targets.prop_tags:
+				if typeof(p30_tag) != TYPE_STRING or RegEx.create_from_string("^[a-z][a-z0-9_]*$").search(p30_tag) == null:
+					out.errors.append("%s.targets.prop_tags: '%s' must be a plain lowercase word like 'house'" % [ctx, p30_tag])
 
 	## @anchor P32
 

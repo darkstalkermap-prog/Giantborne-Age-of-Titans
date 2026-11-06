@@ -230,6 +230,8 @@ func _frame_lock_target(delta: float) -> void:
 ## profile's height - a knee anchor of a target at least 1.3 x the giant's height (the Ogre King
 ## at stages 1 and 2), otherwise its torso. Vector3.INF without a lock target.
 func lock_focus_point() -> Vector3:
+	if p30_lock_group != null and not p30_lock_group.dissolved:
+		return p30_lock_group.anchor()   # P30: a locked formation is framed at its anchor
 	if lock_target == null or not is_instance_valid(lock_target) or lock_target.combatant == null:
 		return Vector3.INF
 	return lock_target.lock_anchor_position(float(profile.get("height_m", 3.66)))
@@ -356,3 +358,15 @@ func restore_speed() -> float:
 	return RESTORE_SPEED * maxf(1.0, desired_distance / RESTORE_REFERENCE_ARM_M)
 
 ## @anchor P30
+# A formation locked as a group (P30, plan M6-M9 §2.10, decision 19): PlayerTargeting keeps
+# lock_target on the formation's focus member (a CombatEntity, as everything else expects) and
+# sets p30_lock_group; lock_focus_point() (the hook at its start) frames the formation's anchor -
+# the front rank's centre at chest height - so the camera holds on the group, not on whichever
+# member is nearest at the moment.
+
+## The formation locked as a group (null for a single target or no lock).
+var p30_lock_group: Formation = null
+
+
+func p30_set_lock_group(f: Formation) -> void:
+	p30_lock_group = f

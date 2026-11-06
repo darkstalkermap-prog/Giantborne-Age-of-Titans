@@ -201,6 +201,10 @@ func _post_pass() -> void:
 	## @anchor P29
 
 	## @anchor P30
+	# P30 (plan M6-M9 §2.10, decision 19): a formation's banner spawn is a banner and its rank and file
+	# are not, and every cluster of encounters (centres within 150 m, at every giant stage) fits the
+	# level's max_formation_members on both platforms (FormationRules.cross_record_errors).
+	errors.append_array(FormationRules.cross_record_errors(records, record_paths))
 
 	## @anchor P31
 

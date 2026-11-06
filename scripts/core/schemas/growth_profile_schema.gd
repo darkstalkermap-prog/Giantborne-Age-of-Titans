@@ -82,6 +82,10 @@ static func fields() -> Dictionary:
 	})
 
 	## @anchor P30
+	# P30 (plan M6-M9 §2.9, decision 19): how lock-on treats groups at this stage. formation_lock
+	# folds each formation's rank-and-file into one lock candidate (its banner stays a candidate of
+	# its own); PlayerTargeting reads it (stages 4-6).
+	f["target_rules"] = {"t": "dict", "fields": {"formation_lock": U.bool_field()}}
 
 	return f
 

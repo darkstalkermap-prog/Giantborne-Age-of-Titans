@@ -57,6 +57,7 @@ func _init(p_actor: Node3D, p_entity: CombatEntity, p_controller: CombatControll
 	## @anchor P11a
 	# M6-M9 (P20): P30 band_pulse, P31 line_pulse, P32 engine launches, P34 the bosses' shapes.
 	## @anchor P30
+	register_shape("band_pulse", _run_band_pulse)   # P30: a formation's brace (see the P30 shapes below)
 	## @anchor P31
 	## @anchor P32
 	## @anchor P34
@@ -81,7 +82,7 @@ func run(tick: int) -> void:
 		return
 	var handler: Callable = _handlers.get(a.hit_shape, Callable())
 	if handler.is_valid():
-		handler.call(a, tick)
+		_p30_run(handler, a, tick)   # P30: the target provider's NPC or prop is hittable meanwhile
 
 
 ## The attack context for the action running now.
@@ -285,3 +286,95 @@ func _on_phase_entered(a: ActionDef, _instance_id: int, phase: int) -> void:
 	if applied:
 		Events.ability_effect.emit(Sim.tick, entity.entity_id, a.id, "self_buff", actor.global_position,
 			0.0, facing_yaw(), 0.0)
+
+
+# --------------------------------------------------------------------------- P30 shapes
+# Registered at the P30 anchor of _init; the hook in run() is _p30_run (plan M6-M9 §2.10).
+
+## P30 (decision 20): () -> CombatEntity - the NPC or prop an enemy's target provider fights now
+## (EnemyActor._p30_provider_target); null = none. The M1 team rule lets an enemy's hit queries
+## reach only the player, so for each hit query of this runner that one NEUTRAL entity counts as
+## a target (its team is the player's for the duration of the query, then restored). Unset: no
+## change.
+var provider_target := Callable()
+
+
+## run()'s call of a shape handler: plain, or with the provider's NPC or prop made hittable.
+func _p30_run(handler: Callable, a: ActionDef, tick: int) -> void:
+	var t: CombatEntity = provider_target.call() if provider_target.is_valid() else null
+	if t == null or t.team != CombatEntity.Team.NEUTRAL or not t.is_alive():
+		handler.call(a, tick)
+		return
+	t.team = CombatEntity.Team.PLAYER
+	handler.call(a, tick)
+	t.team = CombatEntity.Team.NEUTRAL
+
+
+## A formation's brace (P30, decision 19): on the first active tick, one band - a box along the
+## actor's band (EnemyActor.p30_brace_band(): its formation's front_band(), as wide as the front
+## rank and band depth deep, height_m tall, standing on the ground) - catches every hurtbox inside
+## it whose centre a clear line reaches from the front rank's chest height; one hit per target per
+## pulse (pulse id 1, the action's max_hits_per_target through the controller's registry). The hit
+## strikes as an attacker of the brace's height (the action's attacker_height_override_m when it
+## has one, else EnemyActor.p30_brace_height(), 5 m): poise and knockback treat it as coming from
+## a 5 m attacker, so pikes stagger a stage-4 giant's legs; the damage keeps the action's
+## size_policy. Emits ability_effect "band" (centre, half width, yaw, depth).
+func _run_band_pulse(a: ActionDef, tick: int) -> void:
+	if not controller.is_first_active_tick():
+		return
+	var band := band_of(a)
+	var height := a.height_m if a.height_m > 0.0 else 3.0
+	var yaw := float(band.yaw)
+	var center: Vector3 = band.center
+	var near: Vector3 = band.near
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(float(band.half_width) * 2.0, height, float(band.depth))
+	var params := PhysicsShapeQueryParameters3D.new()
+	params.collide_with_areas = true
+	params.collide_with_bodies = false
+	params.collision_mask = HitQueryAdapter.LAYER_HURTBOX
+	params.shape = shape
+	params.transform = Transform3D(Basis(Vector3.UP, yaw), Vector3(center.x, center.y + height * 0.5, center.z))
+	var space := actor.get_world_3d().direct_space_state
+	var los_from := near + Vector3.UP * 1.2
+	var cands: Array = []
+	for r: Dictionary in HitQueryAdapter.intersect_all(space, params):
+		var hb := r.get("collider") as Hurtbox
+		if hb == null or hb.entity == null:
+			continue
+		var target := hb.entity
+		if target == entity or not CombatEntity.can_damage(entity.team, target.team):
+			continue
+		var c := hb.global_position
+		if not HitQueryAdapter.line_clear(space, los_from, c, HitQueryAdapter.OCCLUDER_MASK, target.occlusion_rids):
+			continue
+		cands.append({"entity": target, "hurtbox": hb, "point": c, "substep": 0,
+			"distance": Vector2(c.x - near.x, c.z - near.z).length(), "weak_point": hb.weak_point})
+	var override := float(a.param("attacker_height_override_m", 0.0))
+	if override <= 0.0:
+		override = float(actor.call("p30_brace_height")) if actor.has_method("p30_brace_height") else 5.0
+	var ctx := context()
+	HitFactory.sort_candidates(cands)
+	for cand: Dictionary in cands:
+		var target: CombatEntity = cand.entity
+		if HitFactory.skip_candidate(ctx.entity, target, ctx.area_effect):
+			continue
+		if not ctx.registry.try_register(ctx.instance_id, 1, target.entity_id, a.max_hits_per_target):
+			continue
+		var e := HitFactory.build(ctx, a, cand, 1, tick)
+		e.attacker_height_m = maxf(e.attacker_height_m, override)
+		Sim.queue_hit(e)
+	Events.ability_effect.emit(tick, entity.entity_id, a.id, "band", center, float(band.half_width), yaw,
+		float(band.depth))
+
+
+## The band a band_pulse of this actor strikes: the actor's p30_brace_band() (its formation's front
+## band) when it has one, else a band in front of the actor as deep as the action's radius_m.
+func band_of(a: ActionDef) -> Dictionary:
+	if actor.has_method("p30_brace_band"):
+		return actor.call("p30_brace_band")
+	var depth := a.radius_m if a.radius_m > 0.0 else 4.0
+	var yaw := facing_yaw()
+	var fwd := Vector3(-sin(yaw), 0.0, -cos(yaw))
+	return {"center": actor.global_position + fwd * (depth * 0.5), "near": actor.global_position,
+		"half_width": 1.5, "depth": depth, "yaw": yaw}

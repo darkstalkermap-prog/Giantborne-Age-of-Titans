@@ -188,7 +188,7 @@ func _ends(rec: Dictionary) -> Array:
 		if end == Vector3.INF:
 			end = start + _forward(actor.global_rotation.y) * float(rec.length)
 		return [start, end]
-	if actor != null and not is_striking(rec):
+	if actor != null and not is_striking(rec) and not _p30_band(rec, actor):
 		# Ground decals follow the actor through the windup; the strike stays where it began.
 		rec["at"] = actor.global_position
 		rec["at_yaw"] = actor.global_rotation.y
@@ -322,6 +322,15 @@ func _fan_mesh(arc_deg: float) -> ArrayMesh:
 # Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
 
 ## @anchor P30
+# A formation's brace (P30, plan M6-M9 §2.10): its band telegraph is a line telegraph along the
+# formation's front rank - the event's origin is the front rank's centre, its radius half the rank's
+# width, its length the band's depth - announced once through the striker (EnemyActor). It stays
+# where the band lies instead of following the striker (the hook in _ends).
+
+## True when `rec` is a band telegraph (its action's hit shape is band_pulse): it keeps its origin.
+static func _p30_band(rec: Dictionary, _actor: Node3D) -> bool:
+	var a := GameData.get_action(str(rec.get("action_id", "")))
+	return a != null and a.hit_shape == "band_pulse"
 
 ## @anchor P31
 

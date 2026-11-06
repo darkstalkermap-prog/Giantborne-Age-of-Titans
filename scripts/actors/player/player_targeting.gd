@@ -31,6 +31,8 @@ func apply_lock_profile(profile: Dictionary) -> void:
 func locked_entity() -> CombatEntity:
 	if not player.lock.is_locked():
 		return null
+	if _p30_is_group(player.lock.target_id):
+		return _p30_locked_member()   # P30: a formation's focus member
 	return Sim.get_entity(player.lock.target_id)
 
 
@@ -54,6 +56,8 @@ func is_visible(target: CombatEntity) -> bool:
 ## Lock candidate snapshots for LockOnTracker (see its header for the keys). Direction, distance
 ## and the screen position are taken at each target's lock point (P11a).
 func gather_candidates(with_screen: bool) -> Array:
+	if _p30_formation_lock():
+		return _p30_gather(with_screen)   # P30: formations fold into one candidate each (stages 4-6)
 	var out: Array = []
 	var from := eye()
 	var cam := player.camera_rig.camera
@@ -182,6 +186,8 @@ func switch_target(direction: int) -> void:
 	# the screen centre instead of doing nothing.
 	var screen := cam.get_viewport().get_visible_rect().size * 0.5
 	var current_point := lock_point(current)
+	if _p30_is_group(player.lock.target_id) and _p30_group(player.lock.target_id) != null:
+		current_point = _p30_group(player.lock.target_id).anchor()   # P30: the group's own lock point
 	if not cam.is_position_behind(current_point):
 		screen = cam.unproject_position(current_point)
 	if player.lock.switch_target(direction, gather_candidates(true), screen,
@@ -196,12 +202,16 @@ func release_lock(reason: String) -> void:
 
 func sync_lock(id: String, reason: String) -> void:
 	player.camera_rig.lock_target = Sim.get_entity(id) if id != "" else null
+	_p30_sync_camera(id)   # P30: a group lock frames its formation's anchor on its focus member
 	Events.lock_target_changed.emit(player.entity.entity_id, id, reason)
 
 
 func maintain_lock(dt: float) -> void:
 	var lock := player.lock
 	if not lock.is_locked():
+		return
+	if _p30_is_group(lock.target_id):
+		_p30_maintain(dt)   # P30: a formation's lock holds while one of its members stands
 		return
 	var t := Sim.get_entity(lock.target_id)
 	var info := {"exists": t != null}
@@ -218,6 +228,7 @@ func maintain_lock(dt: float) -> void:
 func on_any_entity_died(id: String) -> void:
 	if id == player.lock.target_id:
 		release_lock("target_died")
+	_p30_on_any_entity_died(id)   # P30: a locked formation's last standing member died
 
 
 # --------------------------------------------------------------------------- package extensions
@@ -244,3 +255,178 @@ func lock_point(e: CombatEntity) -> Vector3:
 # Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
 
 ## @anchor P30
+# --- formations as lock groups (P30, plan M6-M9 §2.10, decision 19) ---------------------------------
+# Hook lines: locked_entity, gather_candidates, switch_target, sync_lock, maintain_lock and
+# on_any_entity_died. While the profile's target_rules.formation_lock holds (stages 4-6):
+#   * gather_candidates folds each formation's rank-and-file into one candidate "formation:<id>" -
+#     its anchor (Formation.anchor(): the front rank's centre at chest height) for direction,
+#     distance and screen, the highest member threat, visible when any of its nearest members is,
+#     alive while a member stands (living and not routed) - and keeps its banner as a candidate of
+#     its own (flagged "banner": the lock line's flag icon);
+#   * locked_entity() resolves the group to its focus member (Formation.focus_member of the giant's
+#     attack origin; a fleeing one when none stands), so the camera, the vertical aim and grabs keep
+#     receiving a CombatEntity; the camera frames the formation's anchor (CameraRig.p30_lock_group);
+#   * the group lock releases with "target_died" once no member is alive and not routed;
+#   * switching moves between formations, banners and single targets (one candidate list).
+# lock_label() is the HUD's lock line (P27 shows it): "Pike Regiment (8)", "⚑ Banner of the
+# Toll-Riders", or the target's name.
+
+const P30_GROUP_PREFIX := "formation:"
+## A group is visible when any of this many of its members nearest the giant is.
+const P30_VISIBLE_PROBES := 3
+
+
+## True for a group lock id ("formation:<formation id>").
+static func _p30_is_group(id: String) -> bool:
+	return id.begins_with(P30_GROUP_PREFIX)
+
+
+## The live formation a group id names (null when it is gone).
+func _p30_group(id: String) -> Formation:
+	if not _p30_is_group(id):
+		return null
+	var fid := id.trim_prefix(P30_GROUP_PREFIX)
+	for f in Formation.live():
+		if f.id == fid:
+			return f
+	return null
+
+
+## True while the giant's profile folds formations into lock groups (target_rules.formation_lock).
+func _p30_formation_lock() -> bool:
+	var rules: Variant = player.profile.get("target_rules", {})
+	return typeof(rules) == TYPE_DICTIONARY and bool((rules as Dictionary).get("formation_lock", false))
+
+
+## The giant's attack origin (the group's focus member is the one nearest it).
+func _p30_attack_origin() -> Vector3:
+	return player.global_position + Vector3.UP * player.attack_origin.y
+
+
+## The focus member of the locked group (null when none is left).
+func _p30_locked_member() -> CombatEntity:
+	var f := _p30_group(player.lock.target_id)
+	if f == null:
+		return null
+	var m := f.focus_member(_p30_attack_origin())
+	if m == null:
+		m = f.nearest_living(_p30_attack_origin())
+	return m.entity if m != null else null
+
+
+## The candidates with formations folded (see the section notes).
+func _p30_gather(with_screen: bool) -> Array:
+	var out: Array = []
+	var from := eye()
+	var cam := player.camera_rig.camera
+	var groups := {}   # formation id -> Formation
+	for e: CombatEntity in Sim.entities():
+		if not may_target(e) or not e.combatant.lockable:
+			continue
+		var actor := e.actor as EnemyActor
+		if actor != null and actor.formation != null and actor.formation_slot >= 0 and not actor.formation.dissolved:
+			groups[actor.formation.id] = actor.formation
+			continue
+		var anchor := lock_point(e)
+		var c := {"id": e.entity_id, "direction": anchor - from, "distance": from.distance_to(anchor),
+			"threat": e.combatant.threat, "alive": e.is_alive(), "lockable": e.combatant.lockable,
+			"visible": is_visible(e)}
+		if actor != null and actor.formation != null and actor.formation_slot == Formation.BANNER_SLOT:
+			c["banner"] = true
+		if with_screen and cam != null and not cam.is_position_behind(anchor):
+			c["screen"] = cam.unproject_position(anchor)
+		out.append(c)
+	var ids := groups.keys()
+	ids.sort()
+	for fid: String in ids:
+		var f: Formation = groups[fid]
+		var anchor := f.anchor()
+		var threat := 0.0
+		for m in f.members:
+			if is_instance_valid(m) and m.entity != null and m.entity.combatant != null:
+				threat = maxf(threat, m.entity.combatant.threat)
+		var c := {"id": P30_GROUP_PREFIX + fid, "direction": anchor - from, "distance": from.distance_to(anchor),
+			"threat": threat, "alive": f.living_count() > 0, "lockable": true, "visible": _p30_group_visible(f),
+			"group": true}
+		if with_screen and cam != null and not cam.is_position_behind(anchor):
+			c["screen"] = cam.unproject_position(anchor)
+		out.append(c)
+	return out
+
+
+## A group is visible when its anchor or one of its P30_VISIBLE_PROBES members nearest the giant is.
+func _p30_group_visible(f: Formation) -> bool:
+	var space := player.get_world_3d().direct_space_state
+	var from := eye()
+	if HitQueryAdapter.line_clear(space, from, f.anchor(), HitQueryAdapter.LAYER_WORLD, []):
+		return true
+	var near: Array = []
+	for m in f.members:
+		if is_instance_valid(m) and m.entity != null and m.entity.is_alive():
+			near.append(m)
+	near.sort_custom(func(a: EnemyActor, b: EnemyActor) -> bool:
+		return a.global_position.distance_squared_to(from) < b.global_position.distance_squared_to(from))
+	for i in mini(P30_VISIBLE_PROBES, near.size()):
+		if is_visible((near[i] as EnemyActor).entity):
+			return true
+	return false
+
+
+## sync_lock: a group lock points the camera at its focus member and frames its formation's anchor.
+func _p30_sync_camera(id: String) -> void:
+	var f := _p30_group(id)
+	player.camera_rig.call("p30_set_lock_group", f)
+	if f != null:
+		player.camera_rig.lock_target = _p30_locked_member()
+
+
+## maintain_lock for a group: the tracker's rules on the group (alive while a member stands, the
+## distance and line of sight to its anchor), the camera kept on the current focus member.
+func _p30_maintain(dt: float) -> void:
+	var lock := player.lock
+	var f := _p30_group(lock.target_id)
+	var info := {"exists": f != null}
+	if f != null:
+		info["alive"] = f.living_count() > 0
+		info["lockable"] = true
+		info["distance"] = eye().distance_to(f.anchor())
+		info["visible"] = _p30_group_visible(f)
+	var reason := lock.update(dt, info)
+	if reason != "":
+		sync_lock("", reason)
+		return
+	var member := _p30_locked_member()
+	if member != player.camera_rig.lock_target:
+		player.camera_rig.lock_target = member
+
+
+## on_any_entity_died: the locked group's last standing member died.
+func _p30_on_any_entity_died(_id: String) -> void:
+	if not player.lock.is_locked() or not _p30_is_group(player.lock.target_id):
+		return
+	var f := _p30_group(player.lock.target_id)
+	if f == null or f.living_count() == 0:
+		release_lock("target_died")
+
+
+## The lock line's text: a formation's "Pike Regiment (8)", a banner's "⚑ Banner of ...", else the
+## locked target's name ("" without a lock).
+func lock_label() -> String:
+	if not player.lock.is_locked():
+		return ""
+	var id := player.lock.target_id
+	if _p30_is_group(id):
+		var f := _p30_group(id)
+		return f.lock_label() if f != null else ""
+	var e := Sim.get_entity(id)
+	if e == null:
+		return ""
+	var actor := e.actor as EnemyActor
+	if actor != null and actor.formation != null and actor.formation_slot == Formation.BANNER_SLOT:
+		return actor.formation.banner_label()
+	return e.display_name()
+
+
+## True when the lock holds a formation group.
+func is_group_locked() -> bool:
+	return player.lock.is_locked() and _p30_is_group(player.lock.target_id)
