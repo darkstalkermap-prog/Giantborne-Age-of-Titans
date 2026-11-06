@@ -1,0 +1,476 @@
+{
+	"schema_version": 1,
+	"id": "audio_bank.steps",
+	"type": "audio_bank",
+	"display_name": "Footfalls",
+	"description": "P21 (section 4.1 family C): sfx.step.<size class>.<surface>[.cruise]: the giant by stage (class player: its own height scales the range), people, heavy bodies (size pitch; a far version) and paws, on soft, hard and wet ground; the stage-3 cruise variants have no debris tail. A size class without a surface's file falls back to its soft step (sfx.step.<class>).",
+	"cues": {
+		"sfx.step.default": {
+			"files": [
+				"res://assets/audio/sfx/steps/human_soft_1.wav",
+				"res://assets/audio/sfx/steps/human_soft_2.wav",
+				"res://assets/audio/sfx/steps/human_soft_3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human_step",
+			"volume_db": -10.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.07,
+			"size_pitch": false,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s1": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s1_soft_1.wav",
+				"res://assets/audio/sfx/steps/giant_s1_soft_2.wav",
+				"res://assets/audio/sfx/steps/giant_s1_soft_3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -18.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s1.hard": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s1_hard_1.wav",
+				"res://assets/audio/sfx/steps/giant_s1_hard_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -17.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s1.soft": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s1_soft_1.wav",
+				"res://assets/audio/sfx/steps/giant_s1_soft_2.wav",
+				"res://assets/audio/sfx/steps/giant_s1_soft_3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -18.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s1.wet": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s1_wet_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -21.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.07,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s2": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s2_soft_1.wav",
+				"res://assets/audio/sfx/steps/giant_s2_soft_2.wav",
+				"res://assets/audio/sfx/steps/giant_s2_soft_3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -19.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s2.hard": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s2_hard_1.wav",
+				"res://assets/audio/sfx/steps/giant_s2_hard_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -16.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s2.soft": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s2_soft_1.wav",
+				"res://assets/audio/sfx/steps/giant_s2_soft_2.wav",
+				"res://assets/audio/sfx/steps/giant_s2_soft_3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -19.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s2.wet": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s2_wet_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -22.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.07,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s3": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s3_soft_1.wav",
+				"res://assets/audio/sfx/steps/giant_s3_soft_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -20.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s3.hard": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s3_hard_1.wav",
+				"res://assets/audio/sfx/steps/giant_s3_hard_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -17.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s3.hard.cruise": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s3_hard_cruise_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -17.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 45,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s3.soft": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s3_soft_1.wav",
+				"res://assets/audio/sfx/steps/giant_s3_soft_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -20.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s3.soft.cruise": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s3_soft_cruise_1.wav",
+				"res://assets/audio/sfx/steps/giant_s3_soft_cruise_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -17.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 45,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.giant_s3.wet": {
+			"files": [
+				"res://assets/audio/sfx/steps/giant_s3_wet_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -21.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.07,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.heavy": {
+			"files": [
+				"res://assets/audio/sfx/steps/heavy_soft_1.wav",
+				"res://assets/audio/sfx/steps/heavy_soft_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "sfx.step.heavy.far",
+			"levels": []
+		},
+		"sfx.step.heavy.far": {
+			"files": [
+				"res://assets/audio/sfx/steps/heavy_far_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 40,
+			"priority": 35,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.heavy.hard": {
+			"files": [
+				"res://assets/audio/sfx/steps/heavy_hard_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "sfx.step.heavy.far",
+			"levels": []
+		},
+		"sfx.step.heavy.soft": {
+			"files": [
+				"res://assets/audio/sfx/steps/heavy_soft_1.wav",
+				"res://assets/audio/sfx/steps/heavy_soft_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "sfx.step.heavy.far",
+			"levels": []
+		},
+		"sfx.step.human": {
+			"files": [
+				"res://assets/audio/sfx/steps/human_soft_1.wav",
+				"res://assets/audio/sfx/steps/human_soft_2.wav",
+				"res://assets/audio/sfx/steps/human_soft_3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human_step",
+			"volume_db": -10.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.07,
+			"size_pitch": false,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.human.hard": {
+			"files": [
+				"res://assets/audio/sfx/steps/human_hard_1.wav",
+				"res://assets/audio/sfx/steps/human_hard_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human_step",
+			"volume_db": -7.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.07,
+			"size_pitch": false,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.human.soft": {
+			"files": [
+				"res://assets/audio/sfx/steps/human_soft_1.wav",
+				"res://assets/audio/sfx/steps/human_soft_2.wav",
+				"res://assets/audio/sfx/steps/human_soft_3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human_step",
+			"volume_db": -10.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.07,
+			"size_pitch": false,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.human.wet": {
+			"files": [
+				"res://assets/audio/sfx/steps/human_wet_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human_step",
+			"volume_db": -8.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.08,
+			"size_pitch": false,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.paw": {
+			"files": [
+				"res://assets/audio/sfx/steps/paw_soft_1.wav",
+				"res://assets/audio/sfx/steps/paw_soft_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "wolf",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.08,
+			"size_pitch": false,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.paw.hard": {
+			"files": [
+				"res://assets/audio/sfx/steps/paw_hard_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "wolf",
+			"volume_db": -6.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.08,
+			"size_pitch": false,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.paw.soft": {
+			"files": [
+				"res://assets/audio/sfx/steps/paw_soft_1.wav",
+				"res://assets/audio/sfx/steps/paw_soft_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "wolf",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.08,
+			"size_pitch": false,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "",
+			"levels": []
+		}
+	}
+}

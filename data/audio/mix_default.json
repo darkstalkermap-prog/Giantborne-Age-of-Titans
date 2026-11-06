@@ -3,7 +3,7 @@
 	"id": "audio_mix.default",
 	"type": "audio_mix",
 	"display_name": "Default mix",
-	"description": "P19: the mix of plan M6-M9 section 4.4 - bus levels, the voice pool (16 3D voices and 8 starts a frame on the web, where every sample play copies its buffer), the audibility classes (unit / max distance, scaled with the player's height / 3.6576, the threat class by its square root, the giant's own sounds by its own height), ducking, the material, voice, step and surface maps of every existing prop, enemy, NPC and district, the music's threat-weighted intensity, the threat sting's suppression and the footfall cruise rule.",
+	"description": "P19: the mix of plan M6-M9 section 4.4 - bus levels, the voice pool (16 3D voices and 8 starts a frame on the web, where every sample play copies its buffer), the audibility classes (unit / max distance, scaled with the player's height / 3.6576, the threat class by its square root, the giant's own sounds by its own height), ducking, the material, voice, step and surface maps of every existing prop, enemy, NPC and district, the music's threat-weighted intensity, the threat sting's suppression and the footfall cruise rule. P21: the effect banks fill every class, material, voice, step and surface; the Valley's surfaces add \"water\": \"wet\" - footfalls within reach of the river's water (its Water planes; the router's wet-ground rule) sound wet.",
 	"bus_db": {
 		"Music": -9,
 		"Ambience": -12,
@@ -135,7 +135,8 @@
 			"village": "soft",
 			"quarry": "hard",
 			"ruins": "hard",
-			"kingsfall": "hard"
+			"kingsfall": "hard",
+			"water": "wet"
 		},
 		"level.stress_arena": {
 			"arena": "hard"

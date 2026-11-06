@@ -1,0 +1,586 @@
+{
+	"schema_version": 1,
+	"id": "audio_bank.combat",
+	"type": "audio_bank",
+	"display_name": "Combat",
+	"description": "P21 (plan M6-M9 section 4.1 families A and B): hits on flesh, armour (from armour 20), wood, stone and iron, the critical accent, the immune deflection, the giant's block (non-positional: its own body) and an enemy guard, parries, guard breaks, clanks on stone, bodies falling by size (large and huge fall back to the stomp's far version), and swings by weapon family (blunt, blade, tree) and weight, the giant's dodges, guard and jump (non-positional). Family defaults point at the nearest generic sound.",
+	"cues": {
+		"sfx.block.default": {
+			"files": [
+				"res://assets/audio/sfx/combat/block_guard_1.wav",
+				"res://assets/audio/sfx/combat/block_guard_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 45,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.block.guard": {
+			"files": [
+				"res://assets/audio/sfx/combat/block_guard_1.wav",
+				"res://assets/audio/sfx/combat/block_guard_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 45,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.block.player": {
+			"files": [
+				"res://assets/audio/sfx/combat/block_player_1.wav",
+				"res://assets/audio/sfx/combat/block_player_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": 0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 50,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.block.raise": {
+			"files": [
+				"res://assets/audio/sfx/combat/block_raise_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.body.default": {
+			"files": [
+				"res://assets/audio/sfx/combat/body_fall_small_1.wav",
+				"res://assets/audio/sfx/combat/body_fall_small_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.body.fall.huge": {
+			"files": [
+				"res://assets/audio/sfx/combat/body_fall_huge_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 100,
+			"priority": 70,
+			"far": "sfx.impact.stomp.far",
+			"levels": []
+		},
+		"sfx.body.fall.large": {
+			"files": [
+				"res://assets/audio/sfx/combat/body_fall_large_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 65,
+			"far": "sfx.impact.stomp.far",
+			"levels": []
+		},
+		"sfx.body.fall.small": {
+			"files": [
+				"res://assets/audio/sfx/combat/body_fall_small_1.wav",
+				"res://assets/audio/sfx/combat/body_fall_small_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.clank.default": {
+			"files": [
+				"res://assets/audio/sfx/combat/clank_stone_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": false,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.clank.stone": {
+			"files": [
+				"res://assets/audio/sfx/combat/clank_stone_1.wav",
+				"res://assets/audio/sfx/combat/hit_stone_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -3.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": false,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.dodge.default": {
+			"files": [
+				"res://assets/audio/sfx/combat/dodge_sidestep_1.wav",
+				"res://assets/audio/sfx/combat/dodge_sidestep_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.dodge.roll": {
+			"files": [
+				"res://assets/audio/sfx/combat/dodge_roll_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.dodge.sidestep": {
+			"files": [
+				"res://assets/audio/sfx/combat/dodge_sidestep_1.wav",
+				"res://assets/audio/sfx/combat/dodge_sidestep_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.guard_break": {
+			"files": [
+				"res://assets/audio/sfx/combat/guard_break_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.hit.armor.heavy": {
+			"files": [
+				"res://assets/audio/sfx/combat/hit_armor_heavy_1.wav",
+				"res://assets/audio/sfx/combat/hit_armor_heavy_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": 1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 6,
+			"retrigger_ms": 45,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.hit.armor.light": {
+			"files": [
+				"res://assets/audio/sfx/combat/hit_armor_light_1.wav",
+				"res://assets/audio/sfx/combat/hit_armor_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"sfx.hit.crit": {
+			"files": [
+				"res://assets/audio/sfx/combat/hit_crit_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.hit.default": {
+			"files": [
+				"res://assets/audio/sfx/combat/hit_wood_1.wav",
+				"res://assets/audio/sfx/combat/hit_wood_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": true,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.hit.flesh.heavy": {
+			"files": [
+				"res://assets/audio/sfx/combat/hit_flesh_heavy_1.wav",
+				"res://assets/audio/sfx/combat/hit_flesh_heavy_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": 2.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 6,
+			"retrigger_ms": 45,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.hit.flesh.light": {
+			"files": [
+				"res://assets/audio/sfx/combat/hit_flesh_light_1.wav",
+				"res://assets/audio/sfx/combat/hit_flesh_light_2.wav",
+				"res://assets/audio/sfx/combat/hit_flesh_light_3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 8,
+			"retrigger_ms": 40,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"sfx.hit.immune": {
+			"files": [
+				"res://assets/audio/sfx/combat/hit_immune_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.hit.iron": {
+			"files": [
+				"res://assets/audio/sfx/combat/hit_armor_light_1.wav",
+				"res://assets/audio/sfx/combat/hit_armor_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -1.5,
+			"pitch": 1.12,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 40,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.hit.stone": {
+			"files": [
+				"res://assets/audio/sfx/combat/hit_stone_1.wav",
+				"res://assets/audio/sfx/combat/hit_stone_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.hit.wood": {
+			"files": [
+				"res://assets/audio/sfx/combat/hit_wood_1.wav",
+				"res://assets/audio/sfx/combat/hit_wood_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": 1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": true,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.jump": {
+			"files": [
+				"res://assets/audio/sfx/combat/jump_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.parry": {
+			"files": [
+				"res://assets/audio/sfx/combat/parry_1.wav",
+				"res://assets/audio/sfx/combat/parry_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -3.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.swing.blade.heavy": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blade_heavy_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.swing.blade.light": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blade_light_1.wav",
+				"res://assets/audio/sfx/combat/swing_blade_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -4.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.swing.blunt.heavy": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blunt_heavy_1.wav",
+				"res://assets/audio/sfx/combat/swing_blunt_heavy_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": 2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.swing.blunt.light": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blunt_light_1.wav",
+				"res://assets/audio/sfx/combat/swing_blunt_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.swing.default": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blunt_light_1.wav",
+				"res://assets/audio/sfx/combat/swing_blunt_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.swing.tree.heavy": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_tree_heavy_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": 0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.swing.tree.light": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_tree_light_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		}
+	}
+}
