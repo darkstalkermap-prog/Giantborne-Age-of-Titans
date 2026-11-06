@@ -12,18 +12,20 @@ reference-PC commands below.
 | --- | --- | --- | --- |
 | Frame time | p95 <= 16.7 ms, p99 < 33.3 ms at 1080p, `--graphics=low` (spec) | Reference PC, exported build: owner | **NOT RUN** |
 | GPU render time | Reported separately from CPU (spec §16) | Reference PC: owner. The container has no GPU (software rendering only) | **NOT RUN** |
-| Sim CPU per tick | p95 <= 8 ms in the stress route and the Valley | Container (indicative) and PC | Container: 4.88 ms (stress), 3.37 ms (Valley walk): **met**; after P17b 3.72 ms (stress), at most 6.37 ms in every run of the final balance matrix (three runs at once) and 5.77 ms over the 30-minute run: **met**; P18 on the final code 3.69 ms (stress) and 5.40 ms over the 30-minute run: **met** |
+| Sim CPU per tick | p95 <= 8 ms in the stress route and the Valley | Container (indicative) and PC | Container: 4.88 ms (stress), 3.37 ms (Valley walk): **met**; after P17b 3.72 ms (stress), at most 6.37 ms in every run of the final balance matrix (three runs at once) and 5.77 ms over the 30-minute run: **met**; P18 on the final code 3.69 ms (stress) and 5.40 ms over the 30-minute run: **met**; P24b's unreachable chase (20 humans chasing a giant in deep water, the throttle and the query budget) 3.9 ms: **met** |
 | Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered; `tools/draw_call_probe.tscn` (the static world) | P17b (container, software GL): the static world at most 93 per view at `low` and 221 at `medium` (was 402 / 584): **met**; with enemies in view the walk's p50 is 256 and its largest view 656 at `low` (was 608 / 1,354): **not met** while about five or more full-rig enemies are in view (about 33 draw calls each; see "Draw calls after P17b"). After P22, re-measured at the M6 gate: the walk's p50 201, p95 251, max 268; the largest view of five districts 253-268: **not met by 4-18 draw calls** (a measured miss: "Draw calls at the M6 gate") |
 | Distant actors | Tier 2 shows a one-box proxy | P04 test; the Valley walk's LOD comparison | Met: every distant member shows its proxy at tier 2 |
 | Active combatants | <= 12 (the director's budget) | P10a tests; P17a bot invariant | 12 in the stress route (its own spawner) and in the Valley walk |
 | Valley load | <= 3 s headless, <= 6 s web | P10b slow test; P18 browser | Headless about 0.3 s (P10b); web in a real browser **NOT RUN**. P18, Chromium with software WebGL on the container's shared CPU (indicative only): New Game to the first checkpoint stored in IndexedDB 14.2 s |
-| Navmesh files | <= 100 KB each | P10b test | Met (15-19 KB) |
+| Navmesh files | <= 100 KB each | P10b test | Met (15-19 KB); the streamed test world's (P24b) 0.9-16 KB each |
+| Path queries (P24b) | <= 8 a tick per level (`nav_query.queries_per_tick`); chases capped at 120 m, the bot and the director at 300 m, unlimited polygons; tier-0 re-paths at least 6 ticks apart and only after the goal moved 2 m (plan §2.8) | `tests/slow/test_unreachable_chase.gd` | At most 8 re-paths in a tick (twenty asking at once served 8, 8, 4), never two of one agent closer than 6 ticks without a failure: **met** |
+| Navigation readiness (P24b) | Deterministic runs: a chunk ready one tick after its last region add; world walks with AI identical run to run (decision 13) | `tests/integration/test_nav_maps.gd`; `tests/gate/test_world_determinism.gd` | One tick in every run; two traced world walks identical (with async iterations on they part by two ticks): **met** |
 | Web `.pck` | <= 4 MB packed | P18 | **Met**: `index.pck` 2,356,808 bytes, 1,260,098 gzipped, 1,680,132 as shipped (gzip + base64) |
 | Streaming work (P24a) | <= 4 ms a frame, every step under about 3 ms (plan §5.3) | `--scenario=world_walk` on the test world (`tests/slow/test_world_walk.gd`); the web stream check | Desktop at 16 m/s: p50 0.9, p99 3.5-3.9 ms (up to 6.5 while another agent's runs loaded the cores), max 4.4 ms; the heaviest steps 3.2 ms (the terrain mesh) and 3.5 ms (a town part): **met** (container, indicative). Web: p99 9.2 ms walking and 17.9 ms at 16 m/s (Chromium with software WebGL on loaded shared cores; every step's mean is under 3 ms, the peaks are the main thread preempted): **not met in this container**; real browsers **NOT RUN** |
 | Loaded margin, thrash, chunks (P24a) | >= 200 m to unloaded ground at 16 m/s; 0 reloads walking a border; <= 25 loaded | the same | 254.9 m, 0 thrash, at most 15 loaded (16 m/s, 2.9 km); 20 border walks load each chunk once: **met** |
 | Static world draw calls, streamed (P24a) | <= 40 per view at web `low`, and <= 25 more for breakable houses in a settlement view (plan §5.3) | Xvfb viewpoints on the test world | At most 35 static plus the 8 breakable houses at `low` (`medium`: at most 127 with shadows): **met** on the test world; P25 and the region packages re-measure the real one |
 | Web frames while streaming, with gameplay (P24a) | worst <= 45 ms, p99 <= 25 ms (indicative) | `tools/web/stream_check.mjs` on the `Web (test)` build | Chromium with software WebGL on the loaded container: page frames p50 433 / p99 1,733 / worst 4,350 ms walking at 1280 x 720 (250 / 1,683 / 3,633 ms at 640 x 360, 16 m/s): **not met (software rendering)**; the walks finished with 251.6 m and 246.9 m of margin, 0 thrash and 0 console errors while running. Real browsers **NOT RUN** |
-| World data (P24a, P24b) | <= 5.0 MB: chunks, navmeshes, index, map, skyline, chunk scenes (decision 8) | the test world's files, extrapolated to 64 chunks | Without navmeshes (P24b adds them): the test world 308,965 bytes; extrapolated to 64 chunks about 1.1 MB (chunks 0.91 MB with the border chunks at their share), so about 3.9 MB remain for the navmeshes and the map image: **on track** |
+| World data (P24a, P24b) | <= 5.0 MB: chunks, navmeshes, index, map, skyline, chunk scenes (decision 8) | the test world's files, extrapolated to 64 chunks | Without navmeshes (P24a): the test world 308,965 bytes; extrapolated to 64 chunks about 1.1 MB (chunks 0.91 MB with the border chunks at their share). The navmeshes (P24b: three lean layers and the gate regions, 29.2 KB a chunk): 467,751 bytes for the test world, about 1.55 MB for 64 chunks (the border chunks' rim halves have none). Together about 2.65 MB, about 3.0 MB with P25's map image: **on track** |
 
 ## The tools
 
@@ -515,6 +517,54 @@ core for a moment. The error at exit is the engine's audio teardown after the au
 ("Cannot read properties of null (reading 'currentTime')"); a player never quits the engine on the
 web, so the check lists such lines apart. The rendered walk's draw calls include the HUD and the
 gate guards.
+
+### Navigation in the streamed test world (P24b)
+
+Per-layer maps over the test world's lean per-chunk navmeshes (`tools/world/nav_bake.gd`; details in
+`docs/systems/P24b.md`). Container, headless, `--fixed-fps 60`, debug build (indicative).
+
+**Navmeshes** (16 chunks, 50 files, 467,751 bytes):
+
+| Layer | Polygons a chunk (mean, min-max) | Bytes a chunk (mean, min-max) |
+| --- | --- | --- |
+| human (1) | 1,318 (1,229-1,746) | 12,542 (11,641-16,010) |
+| large (2) | 1,019 (966-1,326) | 9,415 (8,923-11,657) |
+| titan (16) | 764 (582-886) | 7,164 (5,743-8,178) |
+| gate 4 (32: the ford, two chunks) | 37-39 | 875-936 |
+| **A chunk, all layers** | **3,106** | **29,234 (27,320-33,903; the town chunk the largest)** |
+
+**World data with the navmeshes** (decision 8): the table above (P24a) extrapolated about 1.1 MB without
+them; the navmeshes add 36 inner chunks at their mean of 31,025 bytes and the 28 border chunks at half
+(the rim, their outer half, has none): about 1.55 MB (2.0 MB with every chunk at the inner mean). The
+total is **about 2.65 MB**, about 3.0 MB with P25's map image (about 0.3 MB): **on track** for 5.0 MB.
+The test world's own files now: chunks 257,380, navmeshes 467,751, skyline 23,291, shared meshes
+13,205, index 4,630, props sub-scenes 11,776 bytes: 778,033 in all.
+
+**Path queries** (every chunk loaded; 40 seeded cross-chunk pairs per layer up to 150 m apart, the paths
+131-152 m long on average; ms a call, mean / max): `NavQuery.path` with the far cap (300 m) 1.48 / 2.32
+(human), 1.02 / 1.85 (large), 0.80 / 1.16 (titan); with the chase cap (120 m) 1.41 / 1.70, 0.98 / 1.25,
+0.75 / 1.09; `map_get_path`'s defaults 1.32 / 2.07, 0.90 / 1.72, 0.67 / 0.96; `closest_point` 1.72 /
+2.30, 1.21 / 1.35, 0.95 / 1.49. Corner to corner (about 1.1 km): the caps stop the search at 124-133 m
+(chase) and 320-326 m (far) in 1.0-2.2 ms; `map_get_path` ends 291-497 m short (its 4,096 polygons) in
+3.3-4.2 ms; unlimited polygons without a cap reach the goal in 3.7-6.7 ms.
+
+**Readiness and streaming**: a chunk is ready one tick after its last region add (async iterations off,
+every run); its three navmesh loads and three region adds run one a frame. The carried world walk at
+16 m/s (2,890 m) with them: streaming work per frame p50 0.63 / p99 3.62 / max 4.0 ms, 16 loads, 12
+unloads, 0 thrash, the least margin 253.3 m; a navmesh load 0.61 ms mean (1.02 max), a region add 0.05
+ms (0.08 max).
+
+**The unreachable chase** (`tests/slow/test_unreachable_chase.gd`: 20 soldiers chasing a giant that
+wades in the pond's 5 m deep water for 20 s): CPU per tick p50 2.3 / p95 **3.9** / p99 5.1 / max 8.5 ms
+(the budget p95 <= 8 ms met); 228 re-paths, at most 8 in a tick (twenty at once: 8, 8, 4), one agent's
+never closer than 6 ticks without a failure; the soldiers stood on the bank (the deepest 1.15 m of
+water). The tick that served eight re-paths at once took 8.5 ms: a full budget of eight human-layer
+queries costs about 6-12 ms, so the budget bounds the count, not the worst tick (P30 and P39 watch it).
+
+**Determinism** (`tests/gate/test_world_determinism.gd`): two world walks with AI on in two processes
+(the wolf pack chasing the giant over the x = -256 seam, six chunks with twenty navmeshes streaming in
+over x = 0) give identical AUTOPILOT_RESULT lines (timings aside) and 107 identical AI trace lines;
+with async iterations on, the walks part by two ticks.
 
 ## Reference PC results (owner: NOT RUN)
 

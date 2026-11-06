@@ -116,8 +116,8 @@ const LANDMARKS := [
 ## P24b: the gated ford - a channel of deep water along the segment FORD_A..FORD_B (world x, z),
 ## across the x = 256 seam: a flat bed FORD_BED_Y within FORD_HALF_M of the axis, banks rising to the
 ## ground over FORD_BANK_M (the noise fades out next to it, so no bank is steeper than about 27
-## degrees), water at FORD_WATER_Y. Titan polygons whose centre lies within FORD_GATE_M of the axis
-## are its gate region (FORD_GATE_BIT: stage 4 wades it).
+## degrees), water at FORD_WATER_Y. Titan polygons that touch ground within FORD_GATE_M of the axis
+## are its gate region (FORD_GATE_BIT: stage 4 wades it; NavBake.split_gates).
 const FORD_A := Vector2(150.0, -380.0)
 const FORD_B := Vector2(360.0, -380.0)
 const FORD_HALF_M := 10.0

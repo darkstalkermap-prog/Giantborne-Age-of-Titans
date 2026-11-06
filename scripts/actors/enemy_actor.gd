@@ -824,8 +824,9 @@ func _has_leader_now() -> bool:
 
 ## A reachable flee destination about `distance` m from `from`, away from `threat` (spec 15:
 ## fleeing enemies have a reachable destination). The closest point on this actor's own nav
-## layer - LevelRoot.nav_region(layer) when the level provides one (P10a), otherwise the map's
-## region on that layer - accepted only when a path on the actor's nav layers ends within
+## layer (NavQuery.closest_point, P24b: LevelRoot.nav_region(layer) when the level provides one
+## (P10a), otherwise the map's region on that layer; a streamed world's own map for the layer) -
+## accepted only when a path on the actor's nav layers ends within
 ## FLEE_PATH_END_M of it. When that point lies beyond a wall (the path stops short of it), the
 ## end of the path toward it is the candidate instead, checked the same way. A candidate must
 ## be at least half `distance` away and farther from the threat than `from`; directions are

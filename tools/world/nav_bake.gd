@@ -19,13 +19,13 @@ extends RefCounted
 ##
 ## Layers (plan §2.2): human (1), large (2) and titan (16). Water deeper than MAX_WADE_M is left
 ## out of the human and large meshes (a projected obstruction over every deep cell). The titan mesh
-## keeps the water bed walkable, and its polygons whose centre lies on gated ground (the builder's
-## gate_at: world x, z -> 0 or a gate bit, 32 / 64 / 128 for stages 4 / 5 / 6) become separate gate
-## navmeshes: one bake, split by polygon, so a gate region shares its border vertices with the
-## titan region exactly and the map joins them, while a query whose mask lacks the bit cannot
-## cross. Each navmesh is moved down by its layer's `lower_m` (the height Recast leaves its mesh
-## above flat ground less the layer's `above_m`, as the Valley builder lowers its regions), so the
-## same shift applies to every tile of a layer and seams stay exact.
+## keeps the water bed walkable, and its polygons that touch gated ground (the builder's gate_at:
+## world x, z -> 0 or a gate bit, 32 / 64 / 128 for stages 4 / 5 / 6, sampled over each polygon by
+## split_gates) become separate gate navmeshes: one bake, split by polygon, so a gate region shares
+## its border vertices with the titan region exactly and the map joins them, while a query whose
+## mask lacks the bit cannot cross. Each navmesh is moved down by its layer's `lower_m` (the height
+## Recast leaves its mesh above flat ground less the layer's `above_m`, as the Valley builder lowers
+## its regions), so the same shift applies to every tile of a layer and seams stay exact.
 
 ## The baked layers: bit, file name, agent radius / height / climb, cell size and height, the
 ## walkable slope, whether deep water is cut out (wade_limit), how far the mesh is moved down after
