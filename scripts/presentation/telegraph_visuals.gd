@@ -316,3 +316,15 @@ func _fan_mesh(arc_deg: float) -> ArrayMesh:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	_fans[key] = mesh
 	return mesh
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P30
+
+## @anchor P31
+
+## @anchor P32
+
+## @anchor P34

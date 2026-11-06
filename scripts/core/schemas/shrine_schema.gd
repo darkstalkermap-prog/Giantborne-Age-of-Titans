@@ -16,7 +16,7 @@ const U := preload("res://scripts/core/schemas/schema_util.gd")
 
 
 static func fields() -> Dictionary:
-	return {
+	var f := {
 		# Whether this shrine can make the giant grow at all, and up to which stage.
 		"allows_growth": U.bool_field(true),
 		"max_stage": U.int_field(1, 10, true),
@@ -34,6 +34,10 @@ static func fields() -> Dictionary:
 		# The shrine activates when the player comes this close (horizontal metres).
 		"activation_radius_m": U.pos(),
 	}
+	# M6-M9 (written by P20, plan M6-M9 §1.5): P26 adds growth_requires_conditions below.
+	## @anchor P26
+
+	return f
 
 
 static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
@@ -45,6 +49,8 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			i += 1
 		if not (flags as Array).is_empty() and d.get("allows_growth") == false:
 			out.warnings.append("%s: growth_requires_flags has no effect while allows_growth is false" % ctx)
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P26
 
 
 static func required_ids() -> Dictionary:

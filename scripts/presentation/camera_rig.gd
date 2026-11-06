@@ -311,3 +311,13 @@ func _apply_shake(delta: float) -> void:
 	else:
 		camera.transform = Transform3D.IDENTITY
 	_shake = maxf(0.0, _shake - delta * 1.8)
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P24a
+
+## @anchor P26
+
+## @anchor P30

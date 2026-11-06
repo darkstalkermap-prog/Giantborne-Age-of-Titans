@@ -59,6 +59,13 @@ static func fields() -> Dictionary:
 	# a placed prop's own loot_table (BreakableProp.loot_table) overrides it.
 	f.merge({"loot_table": U.ref("loot_table", false, true)})
 
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P26
+
+	## @anchor P30
+
+	## @anchor P32
+
 	return f
 
 
@@ -113,6 +120,13 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.errors.append("%s: loot_table is not for cosmetic props (they never break)" % ctx)
 
 	pass
+
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P26
+
+	## @anchor P30
+
+	## @anchor P32
 
 
 static func required_ids() -> Dictionary:

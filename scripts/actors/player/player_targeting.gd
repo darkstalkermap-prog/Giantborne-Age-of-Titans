@@ -238,3 +238,9 @@ func viewer_height() -> float:
 ## The point lock-on aims at on `e`: CombatEntity.lock_anchor_position(viewer_height()).
 func lock_point(e: CombatEntity) -> Vector3:
 	return e.lock_anchor_position(viewer_height())
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P30

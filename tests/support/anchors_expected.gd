@@ -13,10 +13,16 @@ const CREATORS := {
 	"P01": "res://scripts/core/schemas/schema_util.gd",
 	"P02": "",
 	"P03": "res://scripts/world/projectile_system.gd",
+	# M6-M9: P20 wrote every anchor of the M6-M9 plan's §1.5 table in W12 (and one in each new
+	# schema module of its own for the package that ships the first records).
+	"P20": "res://scripts/world/world_index.gd",
 }
 
 const EVENTS_PACKAGES := ["P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10a", "P10b",
 	"P11a", "P11b", "P12", "P13", "P14", "P15", "P16", "P17a", "P17b", "P18"]
+## The M6-M9 packages with an anchor in events.gd (plan M6-M9 §1.5: P21-P40, P24 split in two).
+const EVENTS_PACKAGES_M6 := ["P21", "P22", "P23", "P24a", "P24b", "P25", "P26", "P27", "P28", "P29",
+	"P30", "P31", "P32", "P33", "P34", "P35", "P36", "P37", "P38", "P39", "P40"]
 
 ## [file, creator, anchors]
 const TABLE := [
@@ -37,6 +43,40 @@ const TABLE := [
 	["res://scripts/actors/player/player_targeting.gd", "P02", ["P03", "P11a"]],
 	["res://scripts/presentation/actor_rig.gd", "P03", ["P05", "P07", "P08"]],
 	["res://scripts/world/projectile_system.gd", "P03", ["P07", "P09"]],
+	# M6-M9 (plan M6-M9 §1.5, written by P20)
+	["res://scripts/core/events.gd", "P20", EVENTS_PACKAGES_M6],
+	["res://scripts/actors/enemy_actor.gd", "P20", ["P22", "P24b", "P30", "P32", "P34", "P37"]],
+	["res://scripts/ai/enemy_brain.gd", "P20", ["P22", "P24b", "P30", "P32", "P34", "P37"]],
+	["res://scripts/actors/attack_runner.gd", "P20", ["P30", "P31", "P32", "P34"]],
+	["res://scripts/combat/hit_factory.gd", "P20", ["P32"]],
+	["res://scripts/world/projectile_system.gd", "P20", ["P31", "P32", "P34"]],
+	["res://scripts/presentation/telegraph_visuals.gd", "P20", ["P30", "P31", "P32", "P34"]],
+	["res://scripts/actors/player/player_targeting.gd", "P20", ["P30"]],
+	["res://scripts/world/encounter_director.gd", "P20", ["P24b", "P29", "P30", "P32", "P34", "P37"]],
+	["res://scripts/world/level_root.gd", "P20", ["P24a", "P24b", "P25", "P27"]],
+	["res://scripts/quests/quests.gd", "P20", ["P27", "P29", "P37"]],
+	["res://scripts/quests/quest_conditions.gd", "P20", ["P27", "P29", "P37"]],
+	["res://scripts/core/game_data.gd", "P20", ["P24a", "P24b", "P25", "P26", "P29", "P30", "P31", "P32",
+		"P33", "P34", "P37"]],
+	["res://scripts/core/schemas/action_schema.gd", "P20", ["P26", "P31", "P32", "P34"]],
+	["res://scripts/core/schemas/enemy_schema.gd", "P20", ["P22", "P30", "P32", "P34"]],
+	["res://scripts/core/schemas/prop_schema.gd", "P20", ["P26", "P30", "P32"]],
+	["res://scripts/core/schemas/weapon_schema.gd", "P20", ["P26", "P31", "P32"]],
+	["res://scripts/core/schemas/growth_profile_schema.gd", "P20", ["P26", "P30"]],
+	["res://scripts/core/schemas/encounter_schema.gd", "P20", ["P24b", "P29", "P30", "P37"]],
+	["res://scripts/core/schemas/level_schema.gd", "P20", ["P24a", "P24b", "P25"]],
+	["res://scripts/core/schemas/shrine_schema.gd", "P20", ["P26"]],
+	["res://scripts/core/schemas/item_schema.gd", "P20", ["P31", "P33"]],
+	["res://scripts/core/schemas/ancestry_schema.gd", "P20", ["P31", "P33"]],
+	["res://scripts/core/schemas/player_schema.gd", "P20", ["P31", "P33"]],
+	["res://scripts/presentation/camera_rig.gd", "P20", ["P24a", "P26", "P30"]],
+	# P20's own new schema modules: the packages that ship their first records.
+	["res://scripts/core/schemas/region_schema.gd", "P20", ["P25"]],
+	["res://scripts/core/schemas/poi_schema.gd", "P20", ["P25", "P27"]],
+	["res://scripts/core/schemas/faction_schema.gd", "P20", ["P22", "P29"]],
+	["res://scripts/core/schemas/talent_schema.gd", "P20", ["P33"]],
+	["res://scripts/core/schemas/wander_table_schema.gd", "P20", ["P37"]],
+	["res://scripts/core/schemas/world_event_schema.gd", "P20", ["P37"]],
 ]
 
 

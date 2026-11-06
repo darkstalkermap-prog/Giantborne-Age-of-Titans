@@ -142,6 +142,67 @@ signal slice_completed(tick: int)
 ## Gameplay (shrine, NPC, forge, end) asks the ScreenStack (P03) to open a screen, deferred.
 signal ui_screen_requested(screen: String, args: Dictionary)
 
+# --------------------------------------------------------------------------- campaign and world (M7-M9)
+# Every signal of the M6-M9 plan (section 2.4), declared up front by P20 so the packages that emit
+# them and listen to them never edit this block. Each one names its emitter ("Emitter:"); a
+# listener connects only to what exists (Audio checks Events.has_signal()). Later packages add a
+# signal nobody declared here directly below their own anchor at the end of the file.
+
+## A level change is asked for. reason: exit | fast_travel | debug | bot.
+## Emitter: LevelExit (P20; the Valley's exits P26), the map screen (P27), the bots (P38).
+## Listener: GameSession.travel_to.
+signal travel_requested(level_id: String, checkpoint_id: String, reason: String)
+## Emitter: GameSession (P20), after the destination's checkpoint, before the reload.
+## Listeners: Audio (fade), the HUD.
+signal level_leaving(tick: int, from_level: String, to_level: String, reason: String)
+## The level is ready: the ring loaded and the samples registered. reason: new_game | continue |
+## death | travel | fast_travel | debug. Emitter: GameSession (P20).
+## Listeners: Audio, Quests, Discovery, the tutorial, the bot.
+signal level_entered(tick: int, level_id: String, reason: String)
+## Emitter: ChunkStreamer (P24a). Listeners: Discovery, the skyline mask, debug.
+signal world_chunk_loaded(chunk_id: String)
+## Before any node of the chunk is freed. Emitter: ChunkStreamer (P24a).
+## Listener: the EncounterDirector (despawns the members standing in it).
+signal world_chunk_unloading(chunk_id: String)
+## Emitter: ChunkStreamer (P24a).
+signal world_chunk_unloaded(chunk_id: String)
+## Emitter: WorldRoot (P24a; 15 m hysteresis). Listeners: Audio, the region banner (P27), Quests.
+signal region_changed(tick: int, region_id: String, previous_id: String)
+## Emitter: Discovery (P27). Listeners: the HUD toast, the Audio stinger, Quests, bot metrics.
+signal poi_discovered(tick: int, poi_id: String)
+## Emitter: Quests (P27). Listeners: the objective marker, the compass, the tracker.
+signal quest_tracked(quest_id: String)
+## Emitter: SizeGate and stage-gated props (P26). Listeners: a HUD message, Audio (the gate's own
+## cue), the tutorial.
+signal size_gate_blocked(tick: int, gate_id: String, min_stage: int, message: String)
+## Emitter: BreakableProp trampling (P26). Listeners: Audio, FactionState (houses), metrics.
+signal trampled(tick: int, world_id: String, entity_id: String)
+## state: formed | advancing | braced | broken | routed | banner_fell.
+## Emitter: Formation (P30). Listeners: the HUD lock label, Audio, bot metrics, the tutorial.
+signal formation_changed(tick: int, formation_id: String, state: String)
+## Emitter: SiegeEngine (P32). Listeners: Audio, metrics.
+signal siege_engine_fired(tick: int, engine_id: String, action_id: String, target_id: String)
+## Emitter: SiegeEngine (P32). Listeners: Audio, metrics.
+signal siege_engine_crewed(tick: int, engine_id: String, crewed: bool)
+## An evolution replaced its base ability in a slot. Emitter: PlayerProgression (P31).
+## Listeners: the HUD notice, Audio, the tutorial.
+signal ability_evolved(tick: int, from_id: String, to_id: String, slot_key: String)
+## Emitter: PlayerProgression (P33). Listeners: the HUD, Audio, Quests.
+signal talent_learned(tick: int, talent_id: String)
+## Emitter: PlayerProgression (P33). Listeners: Quests, Audio, the HUD.
+signal ancestry_chosen(tick: int, ancestry_id: String)
+## Emitter: BattleBoss, RivalGiantBrain (P34). Listeners: Quests, Audio, the boss bar, the yield prompt.
+signal boss_yielded(tick: int, boss_id: String)
+## reason: left (the player left the arena; the boss resets) | fled (the Matriarch's drive-out).
+## Emitter: BossArena, BattleBoss, MatriarchBrain (P34). Listeners: Audio, the boss bar, Quests.
+signal boss_disengaged(tick: int, boss_id: String, reason: String)
+## Emitter: WanderDirector (P37). Listeners: metrics, debug.
+signal wander_spawned(tick: int, template_id: String, encounter_id: String)
+## Emitter: WorldEvent (P37). Listeners: Quests, the HUD, Audio.
+signal world_event_started(tick: int, event_id: String)
+## Emitter: WorldEvent (P37). Listeners: Quests, the HUD, Audio.
+signal world_event_ended(tick: int, event_id: String, outcome: String)
+
 # --------------------------------------------------------------------------- package anchors
 # A package that needs a signal nobody declared above adds it directly below its own anchor.
 
@@ -184,3 +245,47 @@ signal ui_screen_requested(screen: String, args: Dictionary)
 ## @anchor P17b
 
 ## @anchor P18
+
+# M6-M9 (written by P20, plan M6-M9 §1.5).
+
+## @anchor P21
+
+## @anchor P22
+
+## @anchor P23
+
+## @anchor P24a
+
+## @anchor P24b
+
+## @anchor P25
+
+## @anchor P26
+
+## @anchor P27
+
+## @anchor P28
+
+## @anchor P29
+
+## @anchor P30
+
+## @anchor P31
+
+## @anchor P32
+
+## @anchor P33
+
+## @anchor P34
+
+## @anchor P35
+
+## @anchor P36
+
+## @anchor P37
+
+## @anchor P38
+
+## @anchor P39
+
+## @anchor P40

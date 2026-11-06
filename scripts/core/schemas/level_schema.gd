@@ -30,7 +30,7 @@ static func fields() -> Dictionary:
 		"shadow_distance_m": U.num(0.0),
 		"scenery_visibility_end_m": U.num(0.0),
 		"msaa": U.int_field(0, 8)}}
-	return {
+	var f := {
 		# The scene main.gd instantiates for this level (must exist).
 		"scene": U.str_field(true),
 		# Where a New Game starts (a CheckpointMarker id in the scene).
@@ -55,6 +55,21 @@ static func fields() -> Dictionary:
 			"min_m": U.vec3(true),
 			"max_m": U.vec3(true)}},
 	}
+	# M6-M9 (P20, plan M6-M9 §2.6, §2.7): the level's world index (WorldIndex resource the builder
+	# writes; LevelRoot.index(), WorldIndex.for_level) and the nav layer the player falls back to
+	# when its growth profile's layer is not baked here (P24b reads it; the Valley gets 4 from P26).
+	f.merge({
+		"index": U.str_field(),
+		"player_nav_fallback": U.int_field(1, 255),
+	})
+	# Later packages add their fields (a render preset's: f.render.values.fields) below their anchor.
+	## @anchor P24a
+
+	## @anchor P24b
+
+	## @anchor P25
+
+	return f
 
 
 static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
@@ -100,6 +115,21 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			if _is_vec3(lo) and _is_vec3(hi):
 				if float(lo[0]) > float(hi[0]) or float(lo[2]) > float(hi[2]):
 					out.errors.append("%s: min_m must not exceed max_m in x and z" % dctx)
+	# M6-M9 (P20): the index is a generated resource that must exist.
+	var index: Variant = d.get("index")
+	if typeof(index) == TYPE_STRING and index != "":
+		if not (index.begins_with("res://assets/") and index.ends_with(".res")):
+			out.errors.append("%s: index '%s' must be a res://assets/....res path" % [ctx, index])
+		elif not ResourceLoader.exists(index):
+			out.errors.append("%s: index '%s' does not exist (run tools/build_scenes)" % [ctx, index])
+	var fallback: Variant = d.get("player_nav_fallback")
+	if U.is_number(fallback) and int(fallback) > 0 and (int(fallback) & (int(fallback) - 1)) != 0:
+		out.errors.append("%s: player_nav_fallback must be one nav layer bit (1, 2, 4, 8, 16, ...)" % ctx)
+	## @anchor P24a
+
+	## @anchor P24b
+
+	## @anchor P25
 
 
 static func required_ids() -> Dictionary:

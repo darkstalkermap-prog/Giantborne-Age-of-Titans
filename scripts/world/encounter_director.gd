@@ -855,3 +855,19 @@ func _warn_once(key: String, text: String) -> void:
 		return
 	_warned[key] = true
 	push_warning(text)
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P24b
+
+## @anchor P29
+
+## @anchor P30
+
+## @anchor P32
+
+## @anchor P34
+
+## @anchor P37

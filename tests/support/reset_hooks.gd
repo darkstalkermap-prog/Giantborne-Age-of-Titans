@@ -18,6 +18,7 @@ const BEFORE_EACH := [
 const AFTER_EACH := [
 	["script", "res://tests/support/test_fixtures.gd", "restore_all"],                    # P02
 	["script", "res://ui/screens/screen_stack.gd", "close_all_static", "screen left open"],  # P03
+	["script", "res://scripts/world/world_index.gd", "clear_cache"],                      # P20
 ]
 
 

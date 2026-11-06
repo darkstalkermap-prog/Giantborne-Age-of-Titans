@@ -18,6 +18,11 @@ static func fields() -> Dictionary:
 		"quest_item": U.bool_field(),
 	})
 
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P31
+
+	## @anchor P33
+
 	return f
 
 
@@ -28,6 +33,11 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			ctx, str(d.get("category", "material"))])
 
 	pass
+
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P31
+
+	## @anchor P33
 
 
 static func required_ids() -> Dictionary:

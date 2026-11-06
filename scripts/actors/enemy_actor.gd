@@ -1984,3 +1984,19 @@ func _guarding_at_peace() -> bool:
 	if Sim.tick - brain.last_seen_tick > ActionDef.seconds_to_ticks(float(record.get("ai", {}).get("memory_s", 3.0))):
 		return false
 	return entity.combatant.pools.stamina >= float(guard.get("min_stamina", 0.0))
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P22
+
+## @anchor P24b
+
+## @anchor P30
+
+## @anchor P32
+
+## @anchor P34
+
+## @anchor P37

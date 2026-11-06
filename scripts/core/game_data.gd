@@ -99,6 +99,29 @@ func _post_pass() -> void:
 	# least as high as its source and is one step (the upgraded weapon has no upgrade of its own).
 	errors.append_array(Progression.data_errors(records, record_paths))
 
+	# M6-M9 (written by P20, plan M6-M9 §1.5): the cross-record checks of later packages.
+	## @anchor P24a
+
+	## @anchor P24b
+
+	## @anchor P25
+
+	## @anchor P26
+
+	## @anchor P29
+
+	## @anchor P30
+
+	## @anchor P31
+
+	## @anchor P32
+
+	## @anchor P33
+
+	## @anchor P34
+
+	## @anchor P37
+
 	pass
 
 

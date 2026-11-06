@@ -14,6 +14,9 @@ extends RefCounted
 ##     layers 1/2/4/8, plan §2.2), baked here, offline, from the very elements the collision comes
 ##     from (plus the solid shapes of every placed prop, shrine, waystone and dummy) and saved
 ##     compressed; nothing bakes at runtime (the single-threaded web export);
+##   * assets/world/index_valley.res - the Valley's world index (P20, WorldIndex: checkpoints with
+##     display names and arrival limits, markers, areas, props, exits, districts, encounters and
+##     the road graph; build_index), read from the root scene before it is saved;
 ##   * scenes/world/valley.tscn - the root: LevelRoot (level.valley), Environment (depth fog from
 ##     120 m), Sun, Districts/<id>, Navigation/{Human,Large,Giant,SmallGiant}, Props, Shrines,
 ##     Waystones, Dummies, Markers/<Kind>/<marker>, Markers/Patrol/<route>/<n>, Triggers/<area>,
@@ -125,7 +128,98 @@ static func build_all(kit: SceneKit) -> void:
 		kit.save(build_district(kit, id, geo), DISTRICT_DIR + id + ".tscn")
 	var root := build_root(kit, layout, district_ids, geo)
 	if root != null:
+		# P20: the world index is read from the built root before the scene is saved (and freed).
+		save_index(kit, build_index(root, layout))
 		kit.save(root, ROOT_PATH)
+
+
+# --------------------------------------------------------------------------- the world index (P20)
+
+## The Valley's world index (P20, plan M6-M9 §2.6): every shrine (its record's name), waystone
+## (its layout display_name), marker, area, prop and exit of the built root in level space, the
+## level record's districts, the encounters of level.valley, the roads of the layout as a graph,
+## every checkpoint's arrival limit (the layout's max_stage, ANY_STAGE until P26 measures them) and
+## the map's bounds (the vector map: no picture).
+static func build_index(root: Node3D, layout: Dictionary) -> WorldIndex:
+	var idx := WorldIndex.build_from_scene(root, LEVEL_ID)
+	for entries: String in ["shrines", "waystones"]:
+		for e: Dictionary in layout.get(entries, []):
+			var id := str(e.get("world_id", e.get("id", "")))
+			if idx.checkpoints.has(id):
+				(idx.checkpoints[id] as Dictionary)["max_stage"] = int(e.get("max_stage", WorldIndex.ANY_STAGE))
+	add_roads(idx, layout.get("roads", []))
+	var hills: Dictionary = {}
+	for d: Dictionary in layout.get("districts", []):
+		if str(d.get("id", "")) == "hills":
+			hills = d
+	if not hills.is_empty():
+		idx.map_bounds = Rect2(float(hills.min[0]), float(hills.min[1]), float(hills.max[0]) - float(hills.min[0]),
+			float(hills.max[1]) - float(hills.min[1]))
+	return idx
+
+
+## The layout's roads as the index's road graph: each polyline's segments (its width; every stage),
+## nodes closer than 0.5 m merged, and each road end that is no node of another road joined to the
+## nearest node of another road within ROAD_LINK_M (the King's Bridge between the village road and
+## the bridgehead, the village square's ends).
+const ROAD_LINK_M := 15.0
+
+static func add_roads(idx: WorldIndex, roads: Array) -> void:
+	var road_nodes: Array = []   # per road: its node indices
+	var widths: Array = []
+	for r: Dictionary in roads:
+		var pts: Array = r.get("points", [])
+		var w := float(r.get("w", 10.0))
+		var nodes: Array = []
+		for i in pts.size() - 1:
+			var a := Vector3(float(pts[i][0]), 0.0, float(pts[i][1]))
+			var b := Vector3(float(pts[i + 1][0]), 0.0, float(pts[i + 1][1]))
+			idx.add_road(a, b, w)
+			nodes.append(idx.nearest_road_node(a))
+			nodes.append(idx.nearest_road_node(b))
+		road_nodes.append(nodes)
+		widths.append(w)
+	var all := idx.road_nodes()
+	for ri in road_nodes.size():
+		var own: Array = road_nodes[ri]
+		if own.is_empty():
+			continue
+		for end: int in [own[0], own[own.size() - 1]]:
+			var shared := false
+			for rj in road_nodes.size():
+				if rj != ri and (road_nodes[rj] as Array).has(end):
+					shared = true
+			if shared:
+				continue
+			var best := -1
+			var best_d := ROAD_LINK_M
+			var best_w := 0.0
+			for rj in road_nodes.size():
+				if rj == ri:
+					continue
+				for n: int in road_nodes[rj]:
+					var d := all[end].distance_to(all[n])
+					if d <= best_d:
+						best_d = d
+						best = n
+						best_w = minf(float(widths[ri]), float(widths[rj]))
+			if best >= 0:
+				idx.add_road(all[end], all[best], best_w)
+
+
+## Writes the index resource next to the navmeshes' world data (assets/world/index_valley.res).
+const INDEX_PATH := "res://assets/world/index_valley.res"
+
+static func save_index(kit: SceneKit, idx: WorldIndex) -> void:
+	var path := kit.output_path(INDEX_PATH)
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var err := ResourceSaver.save(idx, path)
+	if err != OK:
+		push_error("valley: could not save %s (error %d)" % [path, err])
+		return
+	print("valley: world index: %d checkpoints, %d markers, %d areas, %d props, %d encounters, %d road nodes, %d bytes" % [
+		idx.checkpoints.size(), idx.markers.size(), idx.areas.size(), idx.props.size(), idx.encounters.size(),
+		idx.road_nodes().size(), FileAccess.get_file_as_bytes(path).size()])
 
 
 ## The layout table ({} when it is missing or not a JSON object).
@@ -860,11 +954,13 @@ static func _coerce(current: Variant, v: Variant) -> Variant:
 
 
 ## A waystone (P06): the marker (the respawn point, facing along the road), its stone (WORLD) at
-## the layout's local "stone" offset, and the Glow shown while it is open.
+## the layout's local "stone" offset, and the Glow shown while it is open. P20: its layout
+## display_name ("Forest road waystone").
 static func _waystone(kit: SceneKit, w: Dictionary) -> Node3D:
 	var m := kit.scripted(kit.marker(str(w.id).validate_node_name(), _v3(w.pos)), S_WAYSTONE, {
 		"checkpoint_id": str(w.id), "radius_m": float(w.get("radius", 10.0)),
-		"requires_flags": PackedStringArray(w.get("requires_flags", []))}) as Node3D
+		"requires_flags": PackedStringArray(w.get("requires_flags", [])),
+		"display_name": str(w.get("display_name", ""))}) as Node3D
 	m.position.y = maxf(m.position.y, 0.05)
 	m.rotation.y = deg_to_rad(float(w.get("yaw", 0.0)))
 	var off := Vector3(float(w.stone[0]), 0.0, float(w.stone[1]))

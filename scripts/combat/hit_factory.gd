@@ -91,6 +91,8 @@ static func build(ctx: AttackContext, a: ActionDef, cand: Dictionary, pulse_id: 
 	e.projectile_id = ctx.projectile_id
 	e.area_effect = ctx.area_effect
 	## @anchor P07
+	# M6-M9 (P20): P32's size override (attacker_height_override_m) goes below its anchor.
+	## @anchor P32
 	return e
 
 

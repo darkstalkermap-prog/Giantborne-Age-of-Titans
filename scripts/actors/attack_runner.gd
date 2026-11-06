@@ -55,6 +55,11 @@ func _init(p_actor: Node3D, p_entity: CombatEntity, p_controller: CombatControll
 	## @anchor P07
 	## @anchor P09
 	## @anchor P11a
+	# M6-M9 (P20): P30 band_pulse, P31 line_pulse, P32 engine launches, P34 the bosses' shapes.
+	## @anchor P30
+	## @anchor P31
+	## @anchor P32
+	## @anchor P34
 
 
 ## handler(a: ActionDef, tick: int) runs every ACTIVE tick of an action with this hit_shape.

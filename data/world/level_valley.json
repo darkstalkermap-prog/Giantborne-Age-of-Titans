@@ -6,6 +6,7 @@
 	"description": "The 400 x 400 m Valley (plan section 4): seven districts around a river, built by tools/builders/valley.gd from tools/data/valley_layout.json, with four offline-baked navigation layers. New Game starts at the Cradle in Giant's Hollow.",
 	"scene": "res://scenes/world/valley.tscn",
 	"start_checkpoint": "valley.shrine.hollow",
+	"index": "res://assets/world/index_valley.res",
 	"max_active_enemies": 12,
 	"lod": {"near_m": 40, "mid_m": 90, "check_ticks": 30, "corpse_free_s": 6},
 	"render": {

@@ -2,8 +2,20 @@ extends Node
 ## Quests (autoload "Quests"; plan §3.15, §4.5, §4.6; after GameSession in the autoload order):
 ## data-driven quests, the active dialogue session, the tutorial director and the slice's end.
 ##
-## Active only in the Valley (GameSession.is_valley()) or while a test sets test_active; the
-## sandbox has no quests and no tutorial (decision 28). Dialogue works anywhere.
+## Active only in the campaign (GameSession.is_campaign(): the Valley and, P20, the world) or while
+## a test sets test_active; the sandbox has no quests and no tutorial (decision 28). Dialogue works
+## anywhere.
+##
+## P20 (plan M6-M9 §2.6, §2.12): quests run on every campaign level - a stage that names another
+## level's targets simply waits, and objective positions fall back to the level's world index when
+## the node is not loaded; a stage may name several `markers` (the objective lists them all, its
+## position is the one nearest the giant); `xp_floor_level` lifts a stage's XP award to at least
+## what reaches that level; `waiting_text` is carried for the journal (P27); the condition context
+## carries the campaign level, the giant's position, its ancestry and whether it was chosen
+## (count, quest_done, level_is, ancestry_is, ancestry_chosen); dialogue's attribute_points
+## effect adds unspent attribute points; and the M6-M9 tutorial events (poi_discovered,
+## region_changed, formation_changed, size_gate_blocked, level_entered, ability_evolved) reach the
+## tutorial director.
 ##
 ## Quests. `quest` records run in stage order, and every condition reads world state (kills,
 ## flags, destroyed objects, items, stage, level; §4.5), so a goal reached early completes as
@@ -133,12 +145,19 @@ func _listeners() -> Array:
 		[Events.attributes_changed, _on_attributes_changed],
 		[Events.shrine_activated, _on_shrine_activated],
 		[Events.encounter_activated, _on_encounter_activated],
+		# M6-M9 tutorial events (P20; plan M6-M9 §2.15 TUTORIAL_EVENTS)
+		[Events.poi_discovered, _on_poi_discovered],
+		[Events.region_changed, _on_region_changed],
+		[Events.formation_changed, _on_formation_changed],
+		[Events.size_gate_blocked, _on_size_gate_blocked],
+		[Events.level_entered, _on_level_entered],
+		[Events.ability_evolved, _on_ability_evolved],
 	]
 
 
-## True while quests and tutorials run: in the Valley, or when a test turned them on.
+## True while quests and tutorials run: in the campaign, or when a test turned them on.
 func is_active() -> bool:
-	return test_active or GameSession.is_valley()
+	return test_active or GameSession.is_campaign()
 
 
 # --------------------------------------------------------------------------- records and state
@@ -336,9 +355,28 @@ func _grant(rec: Dictionary, srec: Dictionary, tick: int) -> void:
 	if typeof(flags) == TYPE_DICTIONARY:
 		for f: Variant in (flags as Dictionary).keys():
 			WorldState.try_set_flag(str(f), flags[f])
-	var xp := int(srec.get("xp", 0))
+	var xp := stage_award(srec, current_xp())
 	if xp > 0:
 		Events.xp_award_requested.emit(xp, source)
+
+
+## The XP a completed stage awards to a character holding `xp_now` (P20): its `xp`, lifted by
+## `xp_floor_level` to at least the XP that reaches that level (plan M6-M9 decision 25: a level
+## never blocks the main thread).
+static func stage_award(srec: Dictionary, xp_now: int) -> int:
+	var xp := maxi(0, int(srec.get("xp", 0)))
+	var floor_level := int(srec.get("xp_floor_level", 0))
+	if floor_level > 1:
+		xp = maxi(xp, Progression.xp_for_level(floor_level) - xp_now)
+	return xp
+
+
+## The character's total XP now: the player's progression, else the session character's.
+func current_xp() -> int:
+	var p := _player_or_null()
+	if p != null and p.progression != null:
+		return int(p.progression.xp)
+	return maxi(0, int(GameSession.character.get("xp", 0)))
 
 
 func _complete_quest(rec: Dictionary, tick: int) -> void:
@@ -383,7 +421,26 @@ func condition_context() -> Dictionary:
 		"stage": _stage_of_player(p), "level": _level_of_player(p), "weapon": _weapon_of_player(p),
 		"inside": _inside_areas(), "entered": _entered, "died": _died, "destroyed": _destroyed,
 		"hits": _hits, "hit_kinds": _hit_kinds,
+		# P20 (plan M6-M9 §2.12)
+		"level_id": GameSession.current_level_id(),
+		"position": p.global_position if p != null and p.is_inside_tree() else Vector3.INF,
+		"ancestry": _ancestry_of_player(p), "ancestry_chosen": _ancestry_chosen_of_player(p),
 	}
+
+
+## The character's ancestry: the progression component's (live), else the session character's.
+static func _ancestry_of_player(p: GiantPlayer) -> String:
+	if p != null and p.progression != null:
+		return str(p.progression.ancestry)
+	return str(GameSession.character.get("ancestry", CharacterState.DEFAULT_ANCESTRY))
+
+
+## Whether the ancestry was chosen: a live `ancestry_chosen` on the progression component when a
+## package adds one (P33), else the session character's.
+static func _ancestry_chosen_of_player(p: GiantPlayer) -> bool:
+	if p != null and p.progression != null and "ancestry_chosen" in p.progression:
+		return bool(p.progression.get("ancestry_chosen"))
+	return bool(GameSession.character.get("ancestry_chosen", false))
 
 
 func _player_or_null() -> GiantPlayer:
@@ -509,17 +566,60 @@ func objective_for(quest_id: String) -> Dictionary:
 		return {}
 	var cond: Variant = srec.get("complete_when", {})
 	var targets := QuestConditions.targets_of(cond)
-	var marker := str(srec.get("marker", ""))
+	var markers := stage_markers(srec)
+	var marker := markers[0] if not markers.is_empty() else ""
+	var positions: Array = []
+	for m in markers:
+		var mp := objective_position(m)
+		if mp.is_finite():
+			positions.append(mp)
+	var position := objective_position(marker, targets)
+	if markers.size() > 1 and not positions.is_empty():
+		position = nearest_to_player(positions)
 	var bot: Dictionary = (srec.get("bot", {}) as Dictionary).duplicate(true) if typeof(srec.get("bot")) == TYPE_DICTIONARY else {}
 	return {"quest_id": quest_id, "stage_id": sid, "text": str(srec.get("objective", "")),
 		"kind": str(cond.get("type", "")) if typeof(cond) == TYPE_DICTIONARY else "",
-		"marker_id": marker, "position": objective_position(marker, targets), "targets": targets,
+		"marker_id": marker, "position": position, "targets": targets,
 		"bot": bot, "title": str(rec.get("display_name", quest_id)), "main": quest_id == main_quest_id,
-		"stage_index": _stage_index(rec, sid), "stage_count": _stages(rec).size()}
+		"stage_index": _stage_index(rec, sid), "stage_count": _stages(rec).size(),
+		# P20: every marker of a multi-marker stage and their known positions; the journal's text.
+		"markers": markers, "positions": positions, "waiting_text": str(srec.get("waiting_text", ""))}
+
+
+## A stage's marker ids: its `marker`, then its `markers` (P20), each once.
+static func stage_markers(srec: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	var m := str(srec.get("marker", ""))
+	if m != "":
+		out.append(m)
+	if typeof(srec.get("markers")) == TYPE_ARRAY:
+		for id: Variant in srec.markers:
+			var s := str(id)
+			if s != "" and not out.has(s):
+				out.append(s)
+	return out
+
+
+## The position in `positions` nearest the player on the ground plane (the first without one).
+func nearest_to_player(positions: Array) -> Vector3:
+	var p := _player_or_null()
+	if positions.is_empty():
+		return Vector3.INF
+	if p == null or not p.is_inside_tree():
+		return positions[0]
+	var best: Vector3 = positions[0]
+	var best_d := INF
+	for v: Vector3 in positions:
+		var d := Vector2(v.x - p.global_position.x, v.z - p.global_position.z).length_squared()
+		if d < best_d:
+			best_d = d
+			best = v
+	return best
 
 
 ## Where an objective is: its marker, else the first of its targets found in the level (a living
-## entity, an area trigger, a breakable prop). Vector3.INF when none is found.
+## entity, an area trigger, a breakable prop); P20: what is not loaded comes from the level's world
+## index (the marker's entry, else the first target it knows). Vector3.INF when none is found.
 func objective_position(marker_id: String, targets: PackedStringArray = PackedStringArray()) -> Vector3:
 	if marker_id != "":
 		var m := marker_position(marker_id)
@@ -535,7 +635,36 @@ func objective_position(marker_id: String, targets: PackedStringArray = PackedSt
 		var prop := _cached_position("prop:" + t)
 		if prop.is_finite():
 			return prop
+	var idx := level_index()
+	if idx != null:
+		var root := _level_root()
+		var offset := root.global_position if root != null and root.is_inside_tree() else Vector3.ZERO
+		if marker_id != "":
+			var im := idx.position_of(marker_id)
+			if im.is_finite():
+				return im + offset
+		for t in targets:
+			var it := idx.position_of(t)
+			if it.is_finite():
+				return it + offset
 	return Vector3.INF
+
+
+## The world index of the level being played (P20): the loaded LevelRoot's, else the campaign
+## level's; null when there is none.
+func level_index() -> WorldIndex:
+	var root := _level_root()
+	if root != null:
+		var idx := root.index()
+		if idx != null:
+			return idx
+	return WorldIndex.for_level(GameSession.current_level_id())
+
+
+func _level_root() -> LevelRoot:
+	if not is_inside_tree():
+		return null
+	return get_tree().get_first_node_in_group(LevelRoot.GROUP) as LevelRoot
 
 
 ## The position of the objective marker (LevelMarker) with this id, Vector3.INF when none.
@@ -601,6 +730,7 @@ func start_dialogue(dialogue_id: String, npc_id: String = "") -> DialogueSession
 		return null
 	var s := DialogueSession.new()
 	s.ended.connect(_on_session_ended)
+	s.attribute_granter = _grant_attribute_points
 	dialogue = s
 	if not s.begin(rec, npc_id, condition_context, _learn_ability):
 		s.ended.disconnect(_on_session_ended)
@@ -620,6 +750,20 @@ func _on_session_ended(session: DialogueSession) -> void:
 	if dialogue == session:
 		dialogue = null
 	_dirty = true
+
+
+## The dialogue effect attribute_points (P20): unspent points to the player's progression (else the
+## session character), attributes_changed and a HUD line.
+func _grant_attribute_points(points: int, _source: String) -> void:
+	if points <= 0:
+		return
+	var p := _player_or_null()
+	if p != null and p.progression != null:
+		p.progression.unspent_attribute_points += points
+	else:
+		GameSession.character["unspent_attribute_points"] = int(GameSession.character.get("unspent_attribute_points", 0)) + points
+	Events.attributes_changed.emit(Sim.tick)
+	Events.hud_message.emit("+%d attribute point%s" % [points, "" if points == 1 else "s"], "good")
 
 
 func _learn_ability(action_id: String, source: String) -> bool:
@@ -725,6 +869,34 @@ func _on_shrine_activated(tick: int, shrine_id: String) -> void:
 func _on_encounter_activated(tick: int, encounter_id: String) -> void:
 	_dirty = true
 	_tutorial_event("encounter_activated", {"encounter": encounter_id}, tick)
+
+
+# M6-M9 tutorial events (P20): each also re-evaluates the quests on the next tick.
+func _on_poi_discovered(tick: int, poi_id: String) -> void:
+	_dirty = true
+	_tutorial_event("poi_discovered", {"poi": poi_id}, tick)
+
+
+func _on_region_changed(tick: int, region_id: String, previous_id: String) -> void:
+	_dirty = true
+	_tutorial_event("region_changed", {"region": region_id, "previous": previous_id}, tick)
+
+
+func _on_formation_changed(tick: int, formation_id: String, state: String) -> void:
+	_tutorial_event("formation_changed", {"formation": formation_id, "state": state}, tick)
+
+
+func _on_size_gate_blocked(tick: int, gate_id: String, min_stage: int, message: String) -> void:
+	_tutorial_event("size_gate_blocked", {"gate": gate_id, "min_stage": min_stage, "message": message}, tick)
+
+
+func _on_level_entered(tick: int, level_id: String, reason: String) -> void:
+	_dirty = true
+	_tutorial_event("level_entered", {"level": level_id, "reason": reason}, tick)
+
+
+func _on_ability_evolved(tick: int, from_id: String, to_id: String, slot_key: String) -> void:
+	_tutorial_event("ability_evolved", {"from": from_id, "to": to_id, "slot": slot_key}, tick)
 
 
 # --------------------------------------------------------------------------- world events
@@ -858,3 +1030,13 @@ func reset_for_tests() -> void:
 	_reset_level_memory()
 	tutorial.shown_ids.clear()
 	history.clear()
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P27
+
+## @anchor P29
+
+## @anchor P37

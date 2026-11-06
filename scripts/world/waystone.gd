@@ -3,13 +3,16 @@ extends CheckpointMarker
 ## A waystone (plan §2.7.4, §4.3): a checkpoint only - no heal, no growth. It counts as reached
 ## when the player stands within radius_m of it (horizontally) while every requires_flags flag
 ## is truthy, and then emits Events.checkpoint_reached(tick, checkpoint_id, "waystone") once per
-## load (a reload makes a new waystone). GameSession takes the checkpoint, deferred while an
-## enemy nearby is aware of the player ("taken when out of combat"); the player respawns at the
-## marker's transform, so the builder puts the stone itself a few metres behind it.
+## level visit (P20, plan M6-M9 §2.6: GameSession.activated_this_visit / mark_activated, so a
+## streamed chunk that reloads never gives a second checkpoint; a reload or a travel is a new
+## visit). GameSession takes the checkpoint, deferred while an enemy nearby is aware of the
+## player ("taken when out of combat"); the player respawns at the marker's transform, so the
+## builder puts the stone itself a few metres behind it.
 ##
 ## It re-checks whenever one of its flags changes (Events.flag_changed) and twice a second (a
 ## Sim POST_RESOLVE hook, before GameSession's checkpoint drain). A child named "Glow" is shown
-## while the waystone is open (every flag truthy).
+## while the waystone is open (every flag truthy). display_name ("Forest road waystone", from the
+## layout) is what the world index, the title's save line and the checkpoint toast show.
 
 const CHECK_INTERVAL_TICKS := 30     ## 2 Hz
 const HOOK_ORDER := 190              ## POST_RESOLVE, before GameSession (200)
@@ -19,6 +22,8 @@ const GROUP := "waystones"
 @export var radius_m := 10.0
 ## Flags that must all be truthy before the waystone can be reached (e.g. an encounter cleared).
 @export var requires_flags := PackedStringArray()
+## The player-facing name (P20), e.g. "Forest road waystone".
+@export var display_name := ""
 
 var _reached := false
 
@@ -53,9 +58,13 @@ func player_inside(player: GiantPlayer) -> bool:
 
 
 ## Checks the waystone now; emits checkpoint_reached and returns true the first time it is
-## reached in this load.
+## reached in this level visit.
 func check() -> bool:
 	if _reached or not is_inside_tree() or not is_open():
+		return false
+	if checkpoint_id != "" and GameSession.activated_this_visit(checkpoint_id):
+		_reached = true
+		_update_visual()
 		return false
 	var player := GameSession.player()
 	if player == null or player.controller == null \
@@ -63,6 +72,7 @@ func check() -> bool:
 		return false
 	_reached = true
 	_update_visual()
+	GameSession.mark_activated(checkpoint_id)
 	Events.checkpoint_reached.emit(Sim.tick, checkpoint_id, "waystone")
 	return true
 

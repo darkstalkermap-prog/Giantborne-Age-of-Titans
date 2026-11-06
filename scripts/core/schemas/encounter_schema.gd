@@ -29,7 +29,7 @@ const DEFINITION_TYPES := ["enemy", "npc"]
 
 
 static func fields() -> Dictionary:
-	return {
+	var f := {
 		"level": U.ref("level", true),
 		"district": U.str_field(),
 		"center_m": U.vec3(true),
@@ -59,6 +59,23 @@ static func fields() -> Dictionary:
 			"persist_death": U.bool_field(),
 			"loot_table": U.ref("loot_table", false, true)}},
 	}
+	# M6-M9 (P20, plan M6-M9 §2.10, §2.12): `stand_down_when` is a quest condition; while it holds
+	# the encounter's members stand down (P29 implements it at its director anchor).
+	# `web_formation_scale` (0..1) scales each formation's files on the web (P30 applies it).
+	f.merge({
+		"stand_down_when": {"t": "any"},
+		"web_formation_scale": U.num(0.0, 1.0),
+	})
+	# Later packages add their fields (a spawn's fields: f.spawns.item_fields) below their anchor.
+	## @anchor P24b
+
+	## @anchor P29
+
+	## @anchor P30
+
+	## @anchor P37
+
+	return f
 
 
 static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
@@ -76,7 +93,22 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	if typeof(district) == TYPE_STRING and district != "" \
 			and RegEx.create_from_string(LEVEL.DISTRICT_ID_REGEX).search(district) == null:
 		out.errors.append("%s.district: '%s' must be a plain lowercase district id like 'forest'" % [ctx, district])
-	var spawns: Variant = d.get("spawns")
+	check_spawns(d.get("spawns"), ctx, out)
+	# M6-M9 (P20): stand_down_when is one condition (plan §2.12 shapes).
+	if d.has("stand_down_when") and d.stand_down_when != null:
+		U.check_condition(d.stand_down_when, ctx + ".stand_down_when", out)
+	## @anchor P24b
+
+	## @anchor P29
+
+	## @anchor P30
+
+	## @anchor P37
+
+
+## The spawn list: at least one member, ids unique within the encounter and in the id form, a
+## definition and a patrol id in the id form.
+static func check_spawns(spawns: Variant, ctx: String, out: Dictionary) -> void:
 	if typeof(spawns) != TYPE_ARRAY:
 		return
 	if (spawns as Array).is_empty():

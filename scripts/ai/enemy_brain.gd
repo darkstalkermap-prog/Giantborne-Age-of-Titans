@@ -1597,3 +1597,19 @@ func _current_post(my_position: Vector3) -> Dictionary:
 	elif _post.is_empty():
 		_post = {"post": my_position, "face": Vector3.INF}
 	return _post
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P22
+
+## @anchor P24b
+
+## @anchor P30
+
+## @anchor P32
+
+## @anchor P34
+
+## @anchor P37

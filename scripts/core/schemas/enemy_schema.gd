@@ -141,6 +141,15 @@ static func fields() -> Dictionary:
 	# own loot_table (EnemyActor.loot_table, set by the director) overrides it.
 	f.merge({"loot_table": U.ref("loot_table", false, true)})
 
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P22
+
+	## @anchor P30
+
+	## @anchor P32
+
+	## @anchor P34
+
 	return f
 
 
@@ -227,6 +236,15 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.warnings.append("%s: tactics.awe_ratio is set but awe_morale_loss is not: awe costs nothing" % ctx)
 
 	## @anchor P12
+
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P22
+
+	## @anchor P30
+
+	## @anchor P32
+
+	## @anchor P34
 
 
 static func required_ids() -> Dictionary:

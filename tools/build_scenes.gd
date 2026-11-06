@@ -23,14 +23,20 @@ const BUILDERS := [
 	"res://tools/builders/growth_course.gd",   # P05
 	"res://tools/builders/test_levels.gd",     # P06
 	"res://tools/builders/world_props.gd",     # P08
+	"res://tools/builders/world_props2.gd",    # P26: Kings' Door, Citadel hall, size gates, rockfall, great pine (M6-M9)
 	"res://tools/builders/ranged.gd",          # P09
 	"res://tools/builders/test_director.gd",   # P10a
 	"res://tools/builders/forge.gd",           # P12
 	"res://tools/builders/heavy.gd",           # P11a
 	"res://tools/builders/npcs.gd",            # P11b
+	"res://tools/builders/formations.gd",      # P30: pikes, shields, bannermen, crowd poses (M6-M9)
+	"res://tools/builders/siege.gd",           # P32: ballistae, catapults, cavalry (M6-M9)
+	"res://tools/builders/big.gd",             # P34: trolls, rival giants, the bosses (M6-M9)
 	"res://tools/builders/sandbox.gd",         # P04 (P05, P08 and P11b add to it)
-	"res://tools/builders/valley.gd",          # P10b
+	"res://tools/builders/valley.gd",          # P10b (P20 adds the world index; P22, P26 the layout)
 	"res://tools/builders/stress.gd",          # P14
+	"res://tools/builders/test_world.gd",      # P24a: the generated 4 x 4 test world (M6-M9)
+	"res://tools/builders/world.gd",           # P25: the 2 x 2 km world, its chunks and index (M6-M9)
 	"res://tools/builders/main.gd",            # P04
 ]
 

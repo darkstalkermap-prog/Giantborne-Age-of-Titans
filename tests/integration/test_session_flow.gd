@@ -186,7 +186,10 @@ func test_continue_from_the_title_restores_the_save_exactly() -> void:
 	var state := title.state()
 	assert_true(state.new_game, "New Game is enabled: the Valley exists (P10b)")
 	assert_true(state["continue"], "Continue is enabled: the save loads and its level exists")
-	assert_true(str(state.save).contains("test.cp_b"), "and describes it: %s" % state.save)
+	# P20: the save line names a checkpoint by its display name (the world index), never by its id;
+	# the flow level has no index, so it names the character only.
+	assert_true(str(state.save).begins_with("Saved game: level 1, stage 1"), "and describes it: %s" % state.save)
+	assert_false(str(state.save).contains("test.cp_b"), "without the checkpoint's id: %s" % state.save)
 	assert_eq(title.first_focus(), title.button("Continue"), "Continue has the focus")
 	title.button("Continue").pressed.emit()
 	assert_true(GameSession.last_mode_result.ok, "Continue started: %s" % GameSession.last_mode_result)

@@ -4,11 +4,14 @@ extends Interactable
 ## grows the giant. One record of type "shrine" (shrine_id) says what it offers; world_id is
 ## its placed, persistent id and its checkpoint id (valley.shrine.grove).
 ##
-## - Activation: the first time per load the player comes within the record's
+## - Activation: the first time per level visit the player comes within the record's
 ##   activation_radius_m (14), activate() runs: a free Rest when the record has
 ##   first_activation_rest, then checkpoint_reached(tick, world_id, "shrine") (records with
 ##   checkpoint) and shrine_activated(tick, world_id). It is polled from a Sim POST_RESOLVE hook,
-##   so it happens inside the deterministic tick.
+##   so it happens inside the deterministic tick. P20 (plan M6-M9 §2.6): "per visit", not per
+##   node - GameSession.activated_this_visit / mark_activated - so a shrine whose streamed chunk
+##   is freed and made again in the same visit gives no second free rest or checkpoint (a reload
+##   or a travel starts a new visit).
 ## - interact (E): emits ui_screen_requested("shrine", {"shrine": self, ...}); GameSession (P06)
 ##   takes a checkpoint before the ScreenStack opens the shrine screen.
 ## - rest(): health, stamina and essence to their maxima and debuffs (slows) removed; fury and
@@ -101,12 +104,20 @@ static func horizontal_distance(a: Vector3, b: Vector3) -> float:
 	return Vector2(a.x - b.x, a.z - b.z).length()
 
 
-## First activation per load: the free Rest (first_activation_rest), then checkpoint_reached
-## (records with checkpoint) and shrine_activated. Returns true only for that first call.
+## First activation per level visit: the free Rest (first_activation_rest), then
+## checkpoint_reached (records with checkpoint) and shrine_activated. Returns true only for that
+## first call; a shrine made again in the same visit (GameSession.activated_this_visit) only
+## lights its glow.
 func activate(player: GiantPlayer) -> bool:
 	if _activated:
 		return false
 	_activated = true
+	if world_id != "" and GameSession.activated_this_visit(world_id):
+		if _glow != null:
+			_glow.visible = true
+		return false
+	if world_id != "":
+		GameSession.mark_activated(world_id)
 	var rec := record()
 	if bool(rec.get("first_activation_rest", true)) and player != null:
 		_restore(player)

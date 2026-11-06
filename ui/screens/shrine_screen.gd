@@ -18,6 +18,8 @@ const TABS := [
 	["Grow", "res://ui/screens/shrine/grow_tab.gd"],               # P05
 	["Loadout", "res://ui/screens/shrine/loadout_tab.gd"],         # P12
 	["Attributes", "res://ui/screens/shrine/attributes_tab.gd"],   # P12
+	["Talents", "res://ui/screens/shrine/talents_tab.gd"],         # P33 (pre-declared by P20)
+	["Ancestry", "res://ui/screens/shrine/ancestry_tab.gd"],       # P33 (pre-declared by P20)
 ]
 
 var shrine: Shrine

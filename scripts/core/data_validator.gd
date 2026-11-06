@@ -46,6 +46,14 @@ const SCHEMA_PATHS := {
 	"dialogue": "res://scripts/core/schemas/dialogue_schema.gd",                # P13
 	"quest": "res://scripts/core/schemas/quest_schema.gd",                      # P13
 	"tutorial_prompt": "res://scripts/core/schemas/tutorial_prompt_schema.gd",  # P13
+	# M7-M9 (P20 writes the modules; the first records: P22 faction, P25 region and poi, P33
+	# talent, P37 wander_table and world_event).
+	"region": "res://scripts/core/schemas/region_schema.gd",                    # P20
+	"poi": "res://scripts/core/schemas/poi_schema.gd",                          # P20
+	"faction": "res://scripts/core/schemas/faction_schema.gd",                  # P20
+	"talent": "res://scripts/core/schemas/talent_schema.gd",                    # P20
+	"wander_table": "res://scripts/core/schemas/wander_table_schema.gd",        # P20
+	"world_event": "res://scripts/core/schemas/world_event_schema.gd",          # P20
 }
 
 ## type -> loaded schema module (GDScript), built once from the SCHEMA_PATHS files that exist.
@@ -55,6 +63,9 @@ static var RECORD_TYPES: Array = SCHEMAS.keys()
 
 # --------------------------------------------------------------------------- shared enums
 # Every value the M2-M5 plan needs is declared here now, so no later package edits an enum.
+# P20 added every value of the M6-M9 plan (its §2.15; the audio enums live in the audio schema
+# modules): each list's M6-M9 values follow its M2-M5 ones. A weapon's visual shapes are the
+# weapon schema's own list (P31 and P32 extend it at their anchors there).
 
 const DAMAGE_TYPES := ["physical", "fire", "frost", "lightning", "arcane", "poison"]
 const TAGS := ["Melee", "Ranged", "Magic", "Parryable", "Unparryable", "Unblockable", "Unavoidable",
@@ -64,42 +75,72 @@ const ACTION_KINDS := ["light", "heavy", "ability", "enemy_attack", "ultimate", 
 	"jump", "sprint"]
 const ATTACK_KINDS := ["light", "heavy", "ability", "enemy_attack", "ultimate"]
 const HIT_SHAPES := ["weapon_arc", "cylinder_pulse", "none", "sector_pulse", "projectile", "grab",
-	"body_sweep"]
+	"body_sweep",
+	"line_pulse", "band_pulse"]   # M6-M9: P31 / P32 lines, P30 a formation's brace band
 const ATTACK_CATEGORIES := ["melee", "ability", "projectile", "magic", "siege"]
 const PROP_CATEGORIES := ["cosmetic", "breakable", "structural", "training_target"]
-const ARCHETYPES := ["soldier", "archer", "mage", "wolf", "ogre", "boss", "training"]
+const ARCHETYPES := ["soldier", "archer", "mage", "wolf", "ogre", "boss", "training",
+	"troll", "rival_giant", "cavalry"]   # M6-M9: P34 trolls and rival giants, P32 cavalry
+## A soldier record's "role" in a formation or a siege crew (P30, P32).
+const SOLDIER_ROLES := ["line", "pike", "shield", "banner", "crew"]
 const WEAPON_FAMILIES := ["club", "sword", "hammer", "axe", "fists", "tree", "bow", "staff", "jaws",
 	"natural"]
 const ATTRIBUTES := ["strength", "endurance", "dexterity", "intellect", "willpower", "constitution"]
 const CANCEL_INTO := ["light", "heavy", "dodge", "block", "ability", "jump"]
 const PHASES := ["windup", "active", "recovery"]
-const SIZE_POLICIES := ["attacker_growth", "none"]
+const SIZE_POLICIES := ["attacker_growth", "none",
+	"fixed"]   # M6-M9
 const INTERRUPT_POLICIES := ["hard_stagger", "super_armor"]
 const INTERACTION_PERMISSIONS := ["grab_small", "throw_boulder", "tree_weapon", "gate_breach",
-	"formation_sweep", "siege_disruption", "monster_grapple", "titan_execution"]
+	"formation_sweep", "siege_disruption", "monster_grapple", "titan_execution",
+	"heave", "trample"]   # M6-M9: P26 (stage 5 heave, stage 4 trample)
 const STATUS_STACKING := ["refresh_no_stack", "strongest_wins", "independent"]
 const STATUS_MODIFIERS := ["armor_flat", "slow_fraction", "outgoing_damage_mult", "outgoing_poise_mult",
-	"fury_gain_mult", "heal_per_tick", "damage_taken_mult"]
-const STATUS_TAGS := ["Buff", "Debuff", "Slow", "Fear", "Heal", "Barrier", "Ultimate"]
+	"fury_gain_mult", "heal_per_tick", "damage_taken_mult",
+	# M6-M9: the talents' and ancestries' passives (P33, §5.12) use only these and the keys above.
+	"heal_received_mult", "stamina_cost_mult", "essence_cost_mult", "cooldown_mult", "poise_threshold_add",
+	"poise_damage_taken_mult", "grab_reach_add", "fury_on_kill_add", "move_speed_mult",
+	"elemental_resist_add", "health_add", "stamina_add", "essence_add", "heavy_damage_mult",
+	"throw_damage_mult", "magic_damage_mult"]
+const STATUS_TAGS := ["Buff", "Debuff", "Slow", "Fear", "Heal", "Barrier", "Ultimate",
+	"Burning", "Regeneration"]   # M6-M9: P34 (a troll regenerates unless it burns)
 const MASS_CLASSES := ["small", "medium", "large", "immovable"]
-const PROJECTILE_VISUALS := ["bolt", "boulder", "arrow", "thrown_body"]
+const PROJECTILE_VISUALS := ["bolt", "boulder", "arrow", "thrown_body",
+	"ballista_bolt", "catapult_stone", "rune_lance", "storm_bolt", "engine"]   # M6-M9: P31, P32
 const AIM_MODES := ["lock_or_camera", "camera", "target", "forward"]
 const TELEGRAPH_SHAPES := ["circle", "line", "cone"]
 const GRAB_ATTACH := ["none", "torso_fist", "scruff", "two_hand"]
-const OUTMATCHED_BEHAVIORS := ["none", "formation", "harass", "spread", "kite", "retreat"]
+const OUTMATCHED_BEHAVIORS := ["none", "formation", "harass", "spread", "kite", "retreat",
+	"crew", "charge"]   # M6-M9: P32 (siege crews, cavalry)
 const NPC_ROLES := ["civilian", "talker"]
 const ITEM_CATEGORIES := ["material", "quest", "trophy", "key"]
 const DODGE_STYLES := ["roll", "sidestep"]
 const CONDITION_TYPES := ["flag", "entered", "killed", "encounter_cleared", "destroyed", "has_item",
 	"hits_on", "stage_at_least", "level_at_least", "weapon_equipped", "dialogue_outcome", "all", "any",
-	"not"]
+	"not",
+	# M6-M9 (§2.12): P20 evaluates count, quest_done, level_is, ancestry_is and ancestry_chosen;
+	# discovered and region_entered (P27), event_done (P37) and near (P29) are evaluated below their
+	# packages' anchors in QuestConditions.
+	"count", "quest_done", "level_is", "discovered", "region_entered", "ancestry_is",
+	"ancestry_chosen", "event_done", "near"]
 const BOT_ACTIONS := ["go", "fight_encounter", "kill", "attack", "break", "hurl_at", "interact", "talk",
-	"grow", "rest", "equip", "wait"]
+	"grow", "rest", "equip", "wait",
+	"travel", "fast_travel", "discover", "breach", "protect", "duel", "choose_ancestry", "heave",
+	"burn"]   # M6-M9: the world bot's (P38)
 const TUTORIAL_TRIGGERS := ["entered", "flag", "level", "stage", "event"]
 const TUTORIAL_DISMISS := ["action_kind", "action_id", "event", "flag", "timeout"]
 const TUTORIAL_EVENTS := ["camera_mode_changed", "lock_target_changed", "ability_started",
 	"telegraph_started", "hit_resolved", "staggered", "grab_started", "boss_phase_changed", "interacted",
-	"attributes_changed", "shrine_activated", "encounter_activated"]
+	"attributes_changed", "shrine_activated", "encounter_activated",
+	"poi_discovered", "region_changed", "formation_changed", "size_gate_blocked", "level_entered",
+	"ability_evolved"]   # M6-M9 (Quests forwards each to the tutorial director)
+## A point of interest's kind (poi records, P25; §2.7).
+const POI_KINDS := ["settlement", "shrine", "waystone", "ruin", "landmark", "camp", "lair", "boss",
+	"forge", "gate", "vista", "exit", "secret"]
+## A faction's standing toward the giant at the start (faction records; §2.12).
+const FACTION_INITIAL := ["neutral", "hostile"]
+## A forge's tier: iron reinforces, titan also titanforges (P31; §2.11).
+const FORGE_TIERS := ["iron", "titan"]
 const ID_REGEX := "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
 
 
