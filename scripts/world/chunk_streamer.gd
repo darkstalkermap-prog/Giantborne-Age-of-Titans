@@ -526,6 +526,15 @@ func _unload_step() -> String:
 	return "unload"
 
 
+## The chunk being loaded is not in the tree until its mesh step: it goes with the streamer (a
+## level leaving, the game quitting) instead of being left behind.
+func _exit_tree() -> void:
+	if _loading != null and is_instance_valid(_loading) and not _loading.is_inside_tree():
+		_loading.settle()
+		_loading.free()
+		_loading = null
+
+
 ## Frees every chunk now (tests; a level leaving needs nothing: the chunks are its children).
 func clear() -> void:
 	for id: String in _loaded:

@@ -19,6 +19,11 @@ reference-PC commands below.
 | Valley load | <= 3 s headless, <= 6 s web | P10b slow test; P18 browser | Headless about 0.3 s (P10b); web in a real browser **NOT RUN**. P18, Chromium with software WebGL on the container's shared CPU (indicative only): New Game to the first checkpoint stored in IndexedDB 14.2 s |
 | Navmesh files | <= 100 KB each | P10b test | Met (15-19 KB) |
 | Web `.pck` | <= 4 MB packed | P18 | **Met**: `index.pck` 2,356,808 bytes, 1,260,098 gzipped, 1,680,132 as shipped (gzip + base64) |
+| Streaming work (P24a) | <= 4 ms a frame, every step under about 3 ms (plan §5.3) | `--scenario=world_walk` on the test world (`tests/slow/test_world_walk.gd`); the web stream check | Desktop at 16 m/s: p50 0.9, p99 3.5-3.9 ms (up to 6.5 while another agent's runs loaded the cores), max 4.4 ms; the heaviest steps 3.2 ms (the terrain mesh) and 3.5 ms (a town part): **met** (container, indicative). Web: p99 9.2 ms walking and 17.9 ms at 16 m/s (Chromium with software WebGL on loaded shared cores; every step's mean is under 3 ms, the peaks are the main thread preempted): **not met in this container**; real browsers **NOT RUN** |
+| Loaded margin, thrash, chunks (P24a) | >= 200 m to unloaded ground at 16 m/s; 0 reloads walking a border; <= 25 loaded | the same | 254.9 m, 0 thrash, at most 15 loaded (16 m/s, 2.9 km); 20 border walks load each chunk once: **met** |
+| Static world draw calls, streamed (P24a) | <= 40 per view at web `low`, and <= 25 more for breakable houses in a settlement view (plan §5.3) | Xvfb viewpoints on the test world | At most 35 static plus the 8 breakable houses at `low` (`medium`: at most 127 with shadows): **met** on the test world; P25 and the region packages re-measure the real one |
+| Web frames while streaming, with gameplay (P24a) | worst <= 45 ms, p99 <= 25 ms (indicative) | `tools/web/stream_check.mjs` on the `Web (test)` build | Chromium with software WebGL on the loaded container: page frames p50 433 / p99 1,733 / worst 4,350 ms walking at 1280 x 720 (250 / 1,683 / 3,633 ms at 640 x 360, 16 m/s): **not met (software rendering)**; the walks finished with 251.6 m and 246.9 m of margin, 0 thrash and 0 console errors while running. Real browsers **NOT RUN** |
+| World data (P24a, P24b) | <= 5.0 MB: chunks, navmeshes, index, map, skyline, chunk scenes (decision 8) | the test world's files, extrapolated to 64 chunks | Without navmeshes (P24b adds them): the test world 308,965 bytes; extrapolated to 64 chunks about 1.1 MB (chunks 0.91 MB with the border chunks at their share), so about 3.9 MB remain for the navmeshes and the map image: **on track** |
 
 ## The tools
 
@@ -96,6 +101,32 @@ legs behind the Deadfall, the cart barricade and the practice gate are teleporte
 bridge, the courtyard). Each leg ends with a full turn of the camera. The giant carries the same
 hidden invulnerability.
 
+### The world walk (`--scenario=world_walk`, P24a)
+
+On a streamed world (the test world: `--level=res://scenes/test/test_world.tscn`; the real one from
+P25: `--mode=world --new-game`) the giant follows a route - by default the level's `Markers/Route`
+(the test world's 2.9 km loop: four seam crossings round (-256, -256), the town's street, the east,
+the 35-degree plateau, the pond), or `--route=x:z;x:z;...` - sprinting with the stick, or carried at
+`--walk-speed=M` m/s (16: the stage-6 sprint, the streaming budget's case). It sets off once the
+starting ring is loaded and records, per tick, the margin to unloaded ground (the distance to the
+nearest chunk of the grid that is not loaded), the most chunks loaded, seam crossings, region
+changes and (walking) ticks with the feet under the ground; the streamer's statistics (loads,
+unloads, thrash, work per frame p50 / p99 / max, steps by kind) are reset when it sets off. The
+PerfProbe's sections are the chunks. `AUTOPILOT_RESULT`'s `world_walk` key is the report, with its
+check failures (margin under 200 m, thrash, more than 25 chunks, ticks under the terrain, the route
+not finished). Headless and `--fixed-fps` runs stream deterministically (a fixed step quota).
+
+### The web stream check (`tools/web/stream_check.mjs`, P24a)
+
+Serves a `Web (test)` build (`tools/build_web.sh --preset="Web (test)"`), opens
+`play.html?args=...` in headless Chromium (Playwright, software WebGL), presses Play and waits for
+the world walk's `AUTOPILOT_RESULT`. Frame times are the page's `requestAnimationFrame` intervals
+between the walk's `WORLD_WALK_START` and `WORLD_WALK_END` lines (the engine's own frame delta is
+capped at 8 physics ticks, 133 ms, so it cannot show a slower frame; it is reported beside them);
+it also reports the streaming numbers, the rendered draw calls, the console errors (0 wanted) and the
+failed requests. Exit code 0 when the walk finished without check failures and the console stayed
+clean; `--strict` also fails on the indicative frame budget.
+
 ### Graphics presets (`--graphics`, Settings, LevelRoot)
 
 The level record's `render` presets, applied by `LevelRoot` at load and on every change of the
@@ -166,6 +197,20 @@ Copy the `PERF_RESULT` lines (and `AUTOPILOT_RESULT`) into the table below. `sce
 the desktop exports (only `tests/` and `tools/` are excluded), so the stress arena loads there; the
 Web release leaves the test content out since P22 (`--preset="Web (test)"` of `tools/build_web.sh`
 keeps it).
+
+The streamed world (P24a): the world walk on the test world, headless (the streaming numbers) and
+under Xvfb (draw calls), and the web stream check (build the `Web (test)` export without
+`XDG_DATA_HOME`, so it finds the export templates):
+
+```
+tools/gd.sh --headless --path . --fixed-fps 60 -- --no-user-settings \
+  --level=res://scenes/test/test_world.tscn --scenario=world_walk --autoplay=900 --graphics=low --walk-speed=16
+xvfb-run -a -s "-screen 0 1280x720x24" tools/gd.sh --path . --fixed-fps 60 --resolution 1280x720 \
+  --audio-driver Dummy -- --no-user-settings --level=res://scenes/test/test_world.tscn \
+  --scenario=world_walk --graphics=low --autoplay=900 --walk-speed=16
+tools/build_web.sh --preset="Web (test)"
+node tools/web/stream_check.mjs --json=builds/stream_check.json
+```
 
 ## Container results
 
@@ -373,6 +418,78 @@ and 1, 251 at tier 2 (base 653 / 653 / 262): at that distance the renderer draws
   they are a minority of its view - twenty multi-part breakables, up to 40 debris pieces, the giant
   and the floor make the rest.
 - `medium` costs about a half more than `low` (shadows to 120 m, scenery to 220 m).
+
+### The streamed test world (P24a)
+
+The generated 4 x 4 test world (`tools/builders/test_world.gd`, 256 m chunks at 4 m), debug build.
+
+**The streaming walk, headless** (`--fixed-fps 60`, deterministic: 6 steps a frame), the default
+route (2.9 km): carried at 16 m/s, 180.7 s, 16 loads, 12 unloads, **0 thrash**, at most **15 chunks**
+loaded, the least margin to unloaded ground **254.9 m**, work per frame p50 0.9 / p99 3.9 / max
+4.4 ms. Walking it with the stick, AI on (the gate guards): 2,858 m in 452 s of game time, the same 16 loads
+and 12 unloads, 0 thrash, the least margin 255.5 m, 16 seam crossings, 0 stuck teleports, no tick
+with the feet under the ground (the worst 5.7 cm), 0 errors, work p99 5.3 ms and CPU per tick p95
+2.2 ms (both while another agent's runs loaded the 4 cores; the carried walk's p99 ranged from 3.5
+to 6.5 ms over repeated runs, so the slow test judges the better of two walks when the first is
+over 6 ms). Walking a border 20 times back and forth loads each of the 12 chunks of the two
+rings once (`unload_at` 2 instead of 3 would reload them: thrash in 3 walks). A zigzag through the
+6 x 6 tiny world keeps at most 25 loaded.
+
+**Steps by kind** (the most one step took; Xvfb, threaded loads, the town's chunk among them): the
+chunk data's load 0.07 ms (polled; the load runs on a worker thread), decode 0.79, a third of the
+terrain rows 1.44, the terrain mesh 3.18, the ground shape 1.10, the water 0.93, a scenery MultiMesh
+0.91, 16 solids 0.65, a props dependency 0.99, a props part's load 0.49 and its instancing 3.49 (a
+town part of 8 breakable houses and two gates).
+
+**Static draw calls** (Xvfb 1280 x 720, no director, no HUD, the giant's 8 included):
+
+| Viewpoint | `low` (terrain / scenery / props / skyline) | `medium` (shadows), before -> after |
+| --- | --- | --- |
+| West of the town, looking in | 51 (4 / 7 / 30 incl. 8 breakable houses / 2) | 170 -> 127 |
+| The 35-degree ramp | 24 (6 / 7 / 1 / 2) | 76 -> 64 |
+| The seam loop, the town 600 m off | 38 (8 / 11 / 8 / 2, water 1) | 117 -> 69 |
+| High over the south-west corner | 24 (7 / 5 / 9 / 2, water 1) | 65 -> 27 |
+
+The "before" is the first build (one material per colour, a tree as trunk and crown, a house as body
+and roof, the props drawn at any distance); after: one vertex-coloured material, every shared mesh
+one surface, the town's merged houses and walls as far scenery (drawn to the terrain's 700 m), the
+props' scenery meshes faded at the scenery distance, a square of four fences and four crates. The
+rendered world walk (the HUD and the three gate guards in view) runs at 160-207 draw calls at `low`
+(p50 169).
+
+**World data** (decision 8: <= 5.0 MB with the navmeshes, the map and the index):
+
+| Item | The test world (4 x 4 chunks) | Extrapolated to the world's 64 chunks (8 x 8) |
+| --- | --- | --- |
+| Chunk data (`chunks/c<x>_<z>.res`) | 16 files, 257,471 bytes: 16,092 a chunk on average (13,727 the flat town chunk to 17,107); the 16-bit heights alone 7,465 on average (4,573-8,501 compressed, 8,978 raw: 67 x 67 x 2), the scenery, solids and cells the rest | 36 inner chunks at 16,092 and the 28 border chunks at their share (their outer half is the rim: all the heights, half the rest, 11,779): **909,110 bytes**; all 64 at the average: 1,029,888 |
+| Skyline (`skyline.res`, `skyline_landmarks.res`) | 22,206 + 1,144 bytes (33 x 33 vertices; two landmarks) | about 86,000 (65 x 65 vertices) + about 7,000 (twelve landmarks) |
+| Shared meshes and the material (`shared/`) | 13,205 bytes (eight meshes) | grows with P25's species and buildings, not with the chunks |
+| World index (`index.res`) | 4,261 bytes | grows with the markers and points of interest (P25) |
+| Props sub-scenes | 10,678 bytes (the town 6,316 in two parts, the two landmarks, the breakable house) | about 50,000 for eight settlements |
+| **Total without navmeshes and the map image** | **308,965 bytes** | **about 1.1 MB**, leaving about 3.9 MB of the 5.0 MB for P24b's navmeshes (three layers a chunk) and P25's map image |
+
+**The web stream check** (the `Web (test)` export, `index.pck` 4,463,048 bytes, 3,721,508 as
+shipped; headless Chromium 153 (Playwright 1.63) with SwiftShader on the container's shared CPU, indicative only):
+
+| Run | Wall time (Play to the walk) | Page frames while walking p50 / p99 / worst | Margin, thrash, most loaded | Streaming work p50 / p99 / max | Draw calls p50 / max | Console errors |
+| --- | --- | --- | --- | --- | --- | --- |
+| Walking with the stick, AI on: the default route, 2,858 m in 452 s of game time, 1280 x 720 | 1,788 s (18.8 s) | 433 / 1,733 / 4,350 ms (**missed**, indicative) | 251.6 m, 0, 15 | 4.1 / 9.2 / 9.7 ms | 159 / 210 | 0 while running; 1 at exit (below) |
+| Carried at 16 m/s: 2,890 m in 181 s, 640 x 360 | 461 s (18.4 s) | 250 / 1,683 / 3,633 ms (**missed**) | 246.9 m, 0, 15 | 4.2 / 17.9 / 27.8 ms | 156 / 207 | 0 |
+
+Both walks finished with no check failure, no tick under the terrain and 0 errors counted by the
+game, 16 seam crossings each. The frame times are SwiftShader rasterising on the CPU (about 2-4
+frames a second; the engine's own frame delta stays at its 133 ms cap), measured while another
+agent's bot runs kept the container's 4 cores loaded (load average 10-14): they say nothing about a
+GPU, and the budget stays **NOT RUN** in a real browser. Most of a page frame is the fill: halving
+the canvas's width and height took the median from 433 to 250 ms. The streaming steps on the web
+(the 16 m/s run; mean / largest): the chunk data's load in its request step (a single-threaded web
+build loads it there) 2.6 / 17.5 ms, the terrain mesh 1.3 / 8.4, a props part's instancing 2.1 /
+5.8, the ground shape 1.1 / 5.1, the rows 1.05 / 3.8, a scenery MultiMesh 0.48 / 14.2, 16 solids
+0.46 / 24.7: the step means stay under 3 ms, and the largest values are the main thread losing its
+core for a moment. The error at exit is the engine's audio teardown after the autopilot quits it
+("Cannot read properties of null (reading 'currentTime')"); a player never quits the engine on the
+web, so the check lists such lines apart. The rendered walk's draw calls include the HUD and the
+gate guards.
 
 ## Reference PC results (owner: NOT RUN)
 

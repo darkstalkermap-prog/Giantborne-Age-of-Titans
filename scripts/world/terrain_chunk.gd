@@ -77,6 +77,8 @@ var _prop_i := 0
 var _prop_packed: PackedScene = null
 var _prop_deps := PackedStringArray()
 var _deps_checked := false
+## Threaded loads requested and not taken yet (settle() takes them).
+var _pending := PackedStringArray()
 
 
 ## Prepares the loader: the chunk `id`, its ChunkData file, the streamer that owns the shared
@@ -144,6 +146,7 @@ func _step() -> String:
 					push_error("TerrainChunk: cannot request %s (error %d)" % [data_path, err])
 					aborted = true
 					return ""
+				_pending.append(data_path)
 			stage = Stage.DATA
 			return "request"
 		Stage.DATA:
@@ -154,6 +157,7 @@ func _step() -> String:
 				if ResourceLoader.load_threaded_get_status(data_path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 					return "wait"
 				data = ResourceLoader.load_threaded_get(data_path) as ChunkData
+				_taken(data_path)
 			if data == null:
 				push_error("TerrainChunk: %s is not a ChunkData resource" % data_path)
 				aborted = true
@@ -225,10 +229,12 @@ func _step() -> String:
 					var dstatus := ResourceLoader.load_threaded_get_status(dep)
 					if dstatus == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 						ResourceLoader.load_threaded_request(dep, "", false, ResourceLoader.CACHE_MODE_REUSE)
+						_pending.append(dep)
 						dstatus = ResourceLoader.load_threaded_get_status(dep)
 					if dstatus == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 						return "wait"
 					res = ResourceLoader.load_threaded_get(dep)
+					_taken(dep)
 				if _streamer != null and res != null:
 					_streamer.call("keep_resource", dep, res)
 				_prop_deps.remove_at(0)
@@ -244,10 +250,12 @@ func _step() -> String:
 					var status := ResourceLoader.load_threaded_get_status(path)
 					if status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 						ResourceLoader.load_threaded_request(path, "PackedScene", false, ResourceLoader.CACHE_MODE_REUSE)
+						_pending.append(path)
 						status = ResourceLoader.load_threaded_get_status(path)
 					if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 						return "wait"
 					_prop_packed = ResourceLoader.load_threaded_get(path) as PackedScene
+					_taken(path)
 			stage = Stage.PROPS_ADD
 			return "props_load"
 		Stage.PROPS_ADD:
@@ -284,14 +292,34 @@ static func missing_dependencies(path: String) -> PackedStringArray:
 	return out
 
 
-## Stops a load in progress (the chunk left the ring): frees what was made.
+## Stops a load in progress (the chunk left the ring): frees what was made, at the end of the frame
+## whether it joined the tree or not (a bare free() on self does not compile in a web export).
 func abort() -> void:
 	aborted = true
 	_prop_packed = null
-	if is_inside_tree():
+	settle()
+	if not is_queued_for_deletion():
 		queue_free()
-	elif not is_queued_for_deletion():
-		free()
+
+
+## Takes every threaded load this chunk requested and has not taken yet (waiting for it), so no
+## loader thread still holds one when the chunk goes or the game quits.
+func settle() -> void:
+	for path in _pending:
+		if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			ResourceLoader.load_threaded_get(path)
+	_pending = PackedStringArray()
+
+
+func _taken(path: String) -> void:
+	var i := _pending.find(path)
+	if i >= 0:
+		_pending.remove_at(i)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		settle()
 
 
 # --------------------------------------------------------------------------- the steps

@@ -3,8 +3,8 @@ extends IntegrationSuite
 ## (tests/support/tiny_world.gd) - the step quota of deterministic streaming, nearest first, the
 ## ring following a moving focus, chunk_unloading before any node of the chunk is freed (and the
 ## Events), hysteresis (20 walks across a border load each chunk once: no thrash, where unloading
-## one ring nearer would thrash), at most 25 chunks loaded in a zigzag, and the starting ring's
-## progress.
+## one ring nearer would thrash), at most 25 chunks loaded in a zigzag, the starting ring's
+## progress, and a streamer leaving the tree taking the chunk it was loading with it.
 
 const GRID := Vector2i(6, 6)
 
@@ -191,6 +191,17 @@ func test_at_most_25_chunks_in_a_zigzag() -> void:
 	assert_true(worst <= 25, "never more than 25 loaded (%d)" % worst)
 	assert_true(worst > 9, "the zigzag keeps more than one ring (%d)" % worst)
 	assert_eq(s.max_loaded, worst, "max_loaded reports it")
+
+
+func test_a_streamer_leaving_frees_the_chunk_it_was_loading() -> void:
+	var s := _streamer(GRID, {"steps_per_frame_headless": 2})
+	s.focus(_center(s, 1, 1))
+	assert_eq(s.update(), 2, "two steps: the request and the data")
+	var c := s.get("_loading") as TerrainChunk
+	assert_true(c != null and not c.is_inside_tree(), "the chunk being loaded is not in the tree before its mesh")
+	world.remove_child(s)
+	assert_false(is_instance_valid(c), "the streamer leaving frees it (nothing left behind when a level goes or the game quits)")
+	s.free()
 
 
 func test_the_starting_ring_in_slices() -> void:

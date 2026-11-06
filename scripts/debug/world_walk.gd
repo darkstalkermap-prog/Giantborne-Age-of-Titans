@@ -16,6 +16,8 @@ extends Node
 ## The giant carries the hidden status.debug_invulnerable (as in the Valley walk): encounters it
 ## passes engage it, and a death would end the measurement.
 ##
+## It prints "WORLD_WALK_START {...}" when the walk sets off (after the starting ring) and
+## "WORLD_WALK_END {...}" when it ends: tools/web/stream_check.mjs times the page's frames between them.
 ## Per tick it records the margin to unloaded ground (the distance from the giant to the nearest grid
 ## chunk that is not loaded), the most chunks loaded, chunk and region changes, and (walking) ticks
 ## with the feet more than UNDER_TERRAIN_M under the ground; the probe's section is the chunk the
@@ -31,7 +33,9 @@ const STUCK_S := 5.0
 const MARGIN_REQUIRED_M := 200.0
 const MAX_LOADED := 25
 const UNDER_TERRAIN_M := 0.25
-const RING_WAIT_TICKS := 600
+## The longest the walk waits for the ring at its first point (a --route starting elsewhere on a slow
+## machine: about 9 chunks of steps at a few a frame) before it sets off anyway.
+const RING_WAIT_TICKS := 3600
 
 var done := false
 var player: GiantPlayer = null
@@ -163,11 +167,21 @@ func _physics_process(_delta: float) -> void:
 			_finish()
 			return
 		"wait_ring":
-			if world.is_ready() or _state_ticks > RING_WAIT_TICKS:
+			# The giant waits at the route's first point (the start, or where a --route begins: held
+			# there until the ring around it is loaded) before it sets off.
+			var first := route[0]
+			var ground := world.height_at(first)
+			var at := player.global_position
+			if Vector2(at.x - first.x, at.z - first.z).length() > WAYPOINT_M or not is_nan(ground) and at.y < ground - 1.0:
+				GameSession.place_player(player, Transform3D(Basis(Vector3.UP, player.facing_yaw),
+					Vector3(first.x, (ground + 0.3) if not is_nan(ground) else at.y, first.z)))
+			if world.streamer.ring_ready(first) and not is_nan(ground) or _state_ticks > RING_WAIT_TICKS:
 				if stage > 0 and player.growth != null and player.current_growth_stage() != stage:
 					player.growth.debug_set_stage(stage)
 				world.streamer.reset_stats()
 				_set_state("walk")
+				# The web stream check times the page's frames between these two lines.
+				print("WORLD_WALK_START %s" % JSON.stringify({"route_points": route.size(), "speed_mps": speed_mps}))
 			return
 	_keep_invulnerable()
 	ticks += 1
@@ -282,6 +296,7 @@ func _finish() -> void:
 	if done:
 		return
 	done = true
+	print("WORLD_WALK_END %s" % JSON.stringify({"finished": finished_route, "ticks": ticks}))
 	if player != null and is_instance_valid(player):
 		player.router.set_injected_move(Vector2.ZERO)
 		player.router.set_injected_hold(&"sprint", false)
