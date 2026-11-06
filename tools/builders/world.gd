@@ -59,8 +59,11 @@ const SEALS := {"rockfall": "res://scenes/world/rockfall.tscn", "toppled_statue"
 ## LevelMarker.Kind by name, and the Markers/<folder> each goes in.
 const MARKER_KINDS := {"objective": [0, "Objective"], "cover": [1, "Cover"], "elevation": [2, "Elevation"],
 	"formation": [3, "Formation"], "safe": [4, "Safe"], "patrol": [5, "Patrol"], "bot_route": [6, "BotRoute"]}
-## Per-layer link half lengths through a seal (beyond its block, onto each layer's navmesh).
-const SEAL_LINK_HALF_M := {1: 5.0, 2: 6.5, 16: 9.5}
+## Per-layer link half lengths through a seal (beyond its block and the layer's agent radius, onto
+## each layer's navmesh; the titan's reaches 4 m into a vault behind its rockfall). After the bake
+## snap_links moves each end on outward to its layer's navmesh, at most LINK_SEARCH_M.
+const SEAL_LINK_HALF_M := {1: 5.0, 2: 6.5, 16: 12.0}
+const LINK_SEARCH_M := 10.0
 const ADDED_META := &"world_added"
 ## The map's marks of scripted places: section -> [radius (m), palette colour].
 const MAP_MARKS := {"shrines": [7.0, "rune"], "waystones": [3.5, "stone_light"], "checkpoints": [3.5, "stone_light"],
@@ -218,6 +221,7 @@ static func build(kit: SceneKit, opts: Dictionary = {}) -> Dictionary:
 		var nms := NavBake.bake_chunk(field, d.origin, feats.chunk_m, near, water, feats.gate_at,
 			func(x: float, z: float) -> bool: return feats.walkable(x, z))
 		d.nav = NavBake.save_chunk(nms, NAV_DIR, d.chunk_id, kit.output_path)
+		snap_links(chunks[c].roots, nms)
 		var nbytes := 0
 		var polys := {}
 		for bit: int in d.nav:
@@ -683,6 +687,7 @@ static func _place_node(kit: SceneKit, it: Dictionary, section: String, ctx: Dic
 			s.set("world_id", id)
 			add_layer_links(s, SEAL_LINK_HALF_M)
 			s.transform = xf
+			ground_links(s, ctx.field)
 			return [s, "Props"]
 		"caches":
 			var cache := {"kind": "cache", "style": "crate"}
@@ -747,6 +752,119 @@ static func add_layer_links(prop: Node3D, halves: Dictionary) -> void:
 		link.enabled = false
 		link.set_meta(ADDED_META, true)
 		prop.add_child(link)
+
+
+## Puts the ends of a chunk's nav links (its props parts' NavigationLink3Ds: seals, gates) on their
+## layer's baked navmesh (a titan link: the titan mesh or a gate region's): each end moves outward
+## along the link until it stands over one of the layer's polygons (at most LINK_SEARCH_M), else back
+## toward the prop, and takes its height, so the link meets the mesh beyond the prop's eroded margin
+## (a rockfall on a barrow's flank, a vault's door over the Mere's deep channel).
+static func snap_links(roots: Array, nms: Dictionary) -> void:
+	var cache := {}   # layer -> [polygons as [PackedVector2Array, PackedVector3Array, Rect2]]
+	for root: Node3D in roots:
+		for link: NavigationLink3D in root.find_children("*", "NavigationLink3D", true, false):
+			var layer := int(link.navigation_layers)
+			if not nms.has(layer):
+				continue
+			if not cache.has(layer):
+				# the titan map holds the gate regions too: a titan link's end may stand on one
+				var polys := _mesh_polygons(nms[layer])
+				if layer == NavBake.TITAN_LAYER:
+					for bit: int in nms:
+						if bit > NavBake.TITAN_LAYER:
+							polys.append_array(_mesh_polygons(nms[bit]))
+				cache[layer] = polys
+			var xf := _relative(root, link)
+			var a := xf * link.start_position
+			var b := xf * link.end_position
+			var mid := (a + b) * 0.5
+			var half := a.distance_to(b) * 0.5
+			for end: String in ["start_position", "end_position"]:
+				var p := xf * (link.get(end) as Vector3)
+				var dir := Vector3(p.x - mid.x, 0.0, p.z - mid.z).normalized()
+				# outward first, then back toward the prop (no nearer than a third of the way in)
+				var hit := _over_mesh(cache[layer], p, dir, LINK_SEARCH_M)
+				if hit == Vector3.INF:
+					hit = _over_mesh(cache[layer], p, -dir, half * 0.66)
+				if hit != Vector3.INF:
+					link.set(end, xf.affine_inverse() * hit)
+
+
+## A navmesh's polygons: [[outline (x, z), vertices, bounds (x, z)]].
+static func _mesh_polygons(nm: NavigationMesh) -> Array:
+	var verts := nm.get_vertices()
+	var out: Array = []
+	for i in nm.get_polygon_count():
+		var outline := PackedVector2Array()
+		var v3 := PackedVector3Array()
+		for k in nm.get_polygon(i):
+			outline.append(Vector2(verts[k].x, verts[k].z))
+			v3.append(verts[k])
+		var r := Rect2(outline[0], Vector2.ZERO)
+		for q in outline:
+			r = r.expand(q)
+		out.append([outline, v3, r])
+	return out
+
+
+## The first point at or beyond p along dir (up to max_m, 0.5 m steps) over a polygon, on its
+## surface (Vector3.INF when none).
+static func _over_mesh(polys: Array, p: Vector3, dir: Vector3, max_m: float) -> Vector3:
+	var s := 0.0
+	while s <= max_m:
+		var q := Vector2(p.x + dir.x * s, p.z + dir.z * s)
+		for poly: Array in polys:
+			if not (poly[2] as Rect2).grow(0.01).has_point(q) or not Geometry2D.is_point_in_polygon(q, poly[0]):
+				continue
+			var v: PackedVector3Array = poly[1]
+			for k in range(1, v.size() - 1):
+				var t0 := Vector2(v[0].x, v[0].z)
+				var t1 := Vector2(v[k].x, v[k].z)
+				var t2 := Vector2(v[k + 1].x, v[k + 1].z)
+				if Geometry2D.point_is_inside_triangle(q, t0, t1, t2):
+					var w := _barycentric(q, t0, t1, t2)
+					return Vector3(q.x, v[0].y * w.x + v[k].y * w.y + v[k + 1].y * w.z, q.y)
+			return Vector3(q.x, v[0].y, q.y)
+		s += 0.5
+	return Vector3.INF
+
+
+static func _barycentric(p: Vector2, a: Vector2, b: Vector2, c: Vector2) -> Vector3:
+	var v0 := b - a
+	var v1 := c - a
+	var v2 := p - a
+	var den := v0.x * v1.y - v1.x * v0.y
+	if absf(den) < 1e-9:
+		return Vector3(1, 0, 0)
+	var v := (v2.x * v1.y - v1.x * v2.y) / den
+	var w := (v0.x * v2.y - v2.x * v0.y) / den
+	return Vector3(1.0 - v - w, v, w)
+
+
+## A node's transform relative to an ancestor.
+static func _relative(ancestor: Node, node: Node3D) -> Transform3D:
+	var xf := Transform3D.IDENTITY
+	var n: Node = node
+	while n != null and n != ancestor:
+		if n is Node3D:
+			xf = (n as Node3D).transform * xf
+		n = n.get_parent()
+	return xf
+
+
+## Puts the ends of a placed prop's links on the ground under them (the seal stands on one level,
+## a vault's floor or the shore beyond it may lie lower or higher), at each layer's height above it.
+static func ground_links(prop: Node3D, field: HeightField) -> void:
+	var xf := prop.transform
+	for spec: Dictionary in NavBake.LAYERS:
+		var link := prop.get_node_or_null("NavLink" + str(spec.name).capitalize()) as NavigationLink3D
+		if link == null:
+			continue
+		for end: String in ["start_position", "end_position"]:
+			var local: Vector3 = link.get(end)
+			var world := xf * Vector3(local.x, 0.0, local.z)
+			local.y = field.sample(world.x, world.z) - xf.origin.y + float(spec.above_m) + 0.2
+			link.set(end, local)
 
 
 ## A waystone (Waystone, a Marker3D): the marker where the giant respawns and, `stone` metres off,

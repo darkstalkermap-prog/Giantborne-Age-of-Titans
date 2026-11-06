@@ -36,20 +36,20 @@ world_id = "world.crownmarch.barrow_vault_rockfall"
 
 [node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_crownmarch_barrow_vault_rockfall"]
 enabled = false
-start_position = Vector3(0, 0.55, 5)
-end_position = Vector3(0, 0.55, -5)
+start_position = Vector3(0, 0.10400009, 5)
+end_position = Vector3(0, 0.10400009, -5)
 
 [node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_crownmarch_barrow_vault_rockfall"]
 enabled = false
 navigation_layers = 2
-start_position = Vector3(0, 0.35, 6.5)
-end_position = Vector3(0, 0.35, -6.5)
+start_position = Vector3(0, -0.34600067, 6.5)
+end_position = Vector3(0, -0.34600067, -6.5)
 
 [node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_crownmarch_barrow_vault_rockfall"]
 enabled = false
 navigation_layers = 16
-start_position = Vector3(0, 0.2, 9.5)
-end_position = Vector3(0, 0.2, -9.5)
+start_position = Vector3(0, -0.4960003, 12)
+end_position = Vector3(0, -0.9960003, -10)
 
 [node name="world_crownmarch_barrow_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 96, 7.948, 178)

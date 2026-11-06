@@ -17,7 +17,7 @@
 		{"kind": "green", "id": "world.crownmarch.millford_green", "pos": [-386, 646], "radius": 16},
 		{"kind": "tent", "id": "world.crownmarch.raiders_camp", "style": "raiders", "pos": [-118, 556], "count": 6, "radius": 18, "size": [5, 3.2, 6], "poi": "poi.raiders_hollow", "landmark": true},
 		{"kind": "column", "id": "world.crownmarch.barrow_slabs", "style": "slab", "pos": [-650, 718], "points": [[-670, 700], [-640, 712], [-616, 705], [-655, 742], [-692, 722], [-603, 732], [-628, 690]], "size": [3, 8], "poi": "poi.barrow_fields", "landmark": true},
-		{"kind": "ruin", "id": "world.crownmarch.barrow_vault", "style": "vault", "pos": [-690, 766], "yaw": 0, "size": [18, 12, 16], "thick": 1.5, "poi": "poi.barrow_vault"},
+		{"kind": "ruin", "id": "world.crownmarch.barrow_vault", "style": "vault", "pos": [-690, 767], "yaw": 0, "size": [22, 12, 19], "thick": 1.5, "door_m": 15, "poi": "poi.barrow_vault"},
 		{"kind": "wall", "id": "world.crownmarch.brannock_walls", "style": "stone", "pos": [60, 450], "points": [[-20, 385], [140, 385], [140, 515], [-20, 515], [-20, 385]], "height": 8, "thick": 2.5, "towers": true, "tower_d": 7, "gaps": [[60, 385, 18], [60, 515, 18]], "poi": "poi.brannock", "landmark": true, "skyline": true},
 		{"kind": "hall", "id": "world.crownmarch.edda_hall", "style": "hall", "pos": [102, 430], "yaw": 0, "size": [26, 12, 14], "quest_critical": true},
 		{"kind": "green", "id": "world.crownmarch.brannock_green", "pos": [60, 568], "radius": 24},

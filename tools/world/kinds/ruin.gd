@@ -4,7 +4,8 @@ extends RefCounted
 ##   "arch"      two posts under a lintel (the Kingsgate's old gate, the Hidden Grove's door)
 ##   "alcove"    three walls (open toward local -z): the pocket of a sealed place, its seal in the
 ##               opening (a rockfall, a toppled statue, a titan-tree)
-##   "vault"     an alcove with thick walls and a lintel (the sunken vault, the kings' armoury adit)
+##   "vault"     an alcove with thick walls and a lintel (the sunken vault, the kings' armoury adit),
+##               its front narrowed to a `door_m` door when given
 ##   "terrace"   a low retaining wall (the Sunken Steps' risers)
 ##   "rubble"    a heap of stones
 ##   "tunnel"    the dark mouth of a tunnel in a rock face (the Kings' Door tunnel on the shelf)
@@ -34,6 +35,13 @@ static func _pieces(el: Dictionary) -> Array:
 			if str(el.style) == "vault":
 				out.append(["box", Vector3(0, s.y, -s.z * 0.5), Vector3(s.x + thick, thick, thick), "stone_light", false])
 				out.append(["box", Vector3(0, -0.6, 0), Vector3(s.x - thick, 0.8, s.z - thick), "dark", false])
+				# `door_m`: the front narrows to a door that its seal (a rockfall) closes, while the
+				# chamber stays wide enough for a titan's navmesh (its 4 m radius all round)
+				var door := float(el.get("door_m", 0.0))
+				if door > 0.0:
+					var stub := (s.x - door) * 0.5
+					for side: float in [-1.0, 1.0]:
+						out.append(["box", Vector3(side * (s.x * 0.5 - stub * 0.5), -1, -s.z * 0.5), Vector3(stub, s.y + 1, thick), c, true])
 		"terrace":
 			out.append(["box", Vector3(0, -1.5, 0), Vector3(s.x, s.y + 1.5, t), "stone", false])
 			for k in int(s.x / 12.0):

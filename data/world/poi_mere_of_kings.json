@@ -6,7 +6,7 @@
 	"level": "level.world",
 	"region": "region.drowned_steps",
 	"kind": "vista",
-	"position_m": [0, -0.0, -40],
+	"position_m": [-20, 1.0, 20],
 	"radius_m": 150,
 	"xp": 30,
 	"map_icon": "vista",

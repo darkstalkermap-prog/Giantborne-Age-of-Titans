@@ -50,20 +50,20 @@ world_id = "world.aldmere.armoury_rockfall"
 
 [node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_aldmere_armoury_rockfall"]
 enabled = false
-start_position = Vector3(0, 0.55, 5)
-end_position = Vector3(0, 0.55, -5)
+start_position = Vector3(0, 0.16799927, 5)
+end_position = Vector3(0, 0.16799927, -5)
 
 [node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_aldmere_armoury_rockfall"]
 enabled = false
 navigation_layers = 2
-start_position = Vector3(0, 0.35, 6.5)
-end_position = Vector3(0, 0.35, -6.5)
+start_position = Vector3(0, -0.28199768, 6.5)
+end_position = Vector3(0, -0.6986656, -6.5)
 
 [node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_aldmere_armoury_rockfall"]
 enabled = false
 navigation_layers = 16
-start_position = Vector3(0, 0.2, 9.5)
-end_position = Vector3(0, 0.2, -9.5)
+start_position = Vector3(0, -0.4319992, 12)
+end_position = Vector3(0, -1.5129166, -12)
 
 [node name="world_aldmere_armoury_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 54.932, 228)

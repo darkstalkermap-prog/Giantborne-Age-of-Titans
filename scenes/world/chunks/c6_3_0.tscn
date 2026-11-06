@@ -50,20 +50,20 @@ indestructible = true
 
 [node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
 enabled = false
-start_position = Vector3(0, 0.55, 3.5)
-end_position = Vector3(0, 0.55, -3.5)
+start_position = Vector3(0, 0.27342987, 3.5)
+end_position = Vector3(0, 0.3016472, -3.5)
 
 [node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
 enabled = false
 navigation_layers = 2
-start_position = Vector3(0, 0.35, 4.5)
-end_position = Vector3(0, 0.35, -4.5)
+start_position = Vector3(0, -0.143116, 4.5)
+end_position = Vector3(0, 1.780941, -4.5)
 
 [node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
 enabled = false
 navigation_layers = 16
-start_position = Vector3(0, 0.2, 7)
-end_position = Vector3(0, 0.2, -7)
+start_position = Vector3(0, -0.3144989, 7)
+end_position = Vector3(0, 0.018302917, -7)
 
 [node name="Shrines" type="Node3D" parent="."]
 

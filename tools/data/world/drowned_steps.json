@@ -203,16 +203,17 @@
 			"style": "vault",
 			"pos": [
 				22,
-				41
+				40
 			],
 			"yaw": 0,
 			"size": [
-				20,
+				22,
 				14,
-				18
+				19
 			],
 			"thick": 1.5,
-			"poi": "poi.sunken_vault"
+			"poi": "poi.sunken_vault",
+			"door_m": 15
 		},
 		{
 			"kind": "tower",

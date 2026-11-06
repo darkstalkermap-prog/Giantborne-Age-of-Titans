@@ -14,8 +14,8 @@
 		{"kind": "hall", "id": "world.stonehold.harroks_hall", "style": "longhouse", "pos": [-560, -724], "yaw": 0, "size": [52, 18, 18], "poi": "poi.harroks_hall", "landmark": true, "skyline": true, "quest_critical": true},
 		{"kind": "ruin", "id": "world.stonehold.battery_lines", "style": "earthwork", "pos": [-204, -668], "yaw": 25, "size": [30, 3, 8], "poi": "poi.moot_battery", "landmark": true},
 		{"kind": "ruin", "id": "world.stonehold.battery_lines_2", "style": "earthwork", "pos": [-170, -676], "yaw": -30, "size": [26, 3, 8]},
-		{"kind": "stone_circle", "id": "world.stonehold.moot_ring", "style": "ring_wall", "pos": [0, -745], "radius": 60, "count": 16, "size": [6, 15, 3], "gates": [129.3], "gate_m": 18, "wall_h": 9, "wall_t": 3, "poi": "poi.the_moot", "landmark": true, "skyline": true},
-		{"kind": "column", "id": "world.stonehold.moot_gate_stones", "style": "slab", "pos": [-45, -690], "points": [[-53.5, -705.0], [-29.4, -685.4]], "size": [5, 20]},
+		{"kind": "stone_circle", "id": "world.stonehold.moot_ring", "style": "ring_wall", "pos": [0, -745], "radius": 60, "count": 16, "size": [6, 15, 3], "gates": [129.3], "gate_m": 28, "wall_h": 9, "wall_t": 3, "poi": "poi.the_moot", "landmark": true, "skyline": true},
+		{"kind": "column", "id": "world.stonehold.moot_gate_stones", "style": "slab", "pos": [-40, -695], "points": [[-55.7, -707.8], [-25.4, -683.0]], "size": [5, 20]},
 		{"kind": "statue", "id": "world.stonehold.stone_throne", "style": "throne", "pos": [0, -800], "yaw": 0, "size": [8, 20], "quest_critical": true, "quest_target": true}
 	],
 	"shrines": [
@@ -31,7 +31,7 @@
 		{"id": "world.gate.giants_stair", "min_stage": 6, "cue": "sfx.gate.stone", "message": "Each step is taller than a house. Only a giant of the old height can climb the Stair.",
 			"boxes": [[0, -425, 64, 40, 2, 0]], "gate_rect": [[-31, -527], [31, -426]], "visual": "stone"},
 		{"id": "world.gate.moot", "min_stage": 6, "cue": "sfx.gate.stone", "message": "The clans admit only a giant of the old height to the Moot.",
-			"boxes": [[-38.0, -698.6, 22, 24, 3, 140.7]], "gate_rect": [[-56, -718], [-22, -680]], "visual": "stone"}
+			"boxes": [[-38.0, -698.6, 32, 24, 3, 140.7]], "gate_rect": [[-62, -722], [-16, -676]], "visual": "stone"}
 	],
 	"caches": [
 		{"id": "world.stonehold.ironway_top_cache", "pos": [736, -588], "loot": "loot.cache_ironway_top", "poi": "poi.ironway_top"},

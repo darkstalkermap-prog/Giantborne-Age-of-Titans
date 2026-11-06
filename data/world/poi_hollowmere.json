@@ -6,7 +6,7 @@
 	"level": "level.world",
 	"region": "region.greywood",
 	"kind": "settlement",
-	"position_m": [-640, 18.3, -40],
+	"position_m": [-640, 17.7, -40],
 	"radius_m": 70,
 	"xp": 40,
 	"map_icon": "settlement",
@@ -16,6 +16,6 @@
 	"min_stage": 0,
 	"reveals_m": 0,
 	"max_inner_stage": 4,
-	"green_m": [-610, 24.9, 22],
+	"green_m": [-610, 27.0, 22],
 	"note": "The woodfolk's stilt village on the black pond."
 }

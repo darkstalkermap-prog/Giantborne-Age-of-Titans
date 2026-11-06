@@ -408,8 +408,8 @@
 			],
 			"rise_m": 16,
 			"half_m": 12,
-			"fall_m": 18,
-			"note": "Ballista Ridge over the King's Road; the eyrie ledge is on its north-east face."
+			"fall_m": 34,
+			"note": "Ballista Ridge over the King's Road: flanks of at most about 35 degrees, so its emplacements and the eyrie's foot are walked to."
 		},
 		{
 			"type": "ridge",

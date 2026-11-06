@@ -13,7 +13,7 @@
 		{"kind": "rock", "id": "world.aldmere.eyrie_spire", "style": "spire", "pos": [826, -4], "size": [8, 16], "poi": "poi.ridge_eyrie", "landmark": true},
 		{"kind": "house", "id": "world.aldmere.deserters_mill", "style": "burned", "pos": [440, 222], "yaw": 20, "size": [14, 8, 10], "poi": "poi.deserters_mill", "landmark": true},
 		{"kind": "statue", "id": "world.aldmere.ironway_king", "style": "standing", "pos": [768, -398], "yaw": 90, "size": [5, 15], "poi": "poi.ironway", "landmark": true},
-		{"kind": "ruin", "id": "world.aldmere.kings_armoury", "style": "vault", "pos": [600, -288], "yaw": 0, "size": [18, 12, 18], "thick": 1.5, "poi": "poi.kings_armoury"}
+		{"kind": "ruin", "id": "world.aldmere.kings_armoury", "style": "vault", "pos": [600, -286], "yaw": 0, "size": [22, 12, 19], "thick": 1.5, "door_m": 15, "poi": "poi.kings_armoury"}
 	],
 	"shrines": [
 		{"id": "world.shrine.aldmere", "record": "shrine.world_aldmere", "pos": [420, -40], "yaw": 0, "poi": "poi.aldmere_shrine"}

@@ -53,20 +53,20 @@ world_id = "world.greywood.old_root_tree"
 
 [node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_greywood_old_root_tree"]
 enabled = false
-start_position = Vector3(0, 0.55, 5)
-end_position = Vector3(0, 0.55, -5)
+start_position = Vector3(0, 0.27000046, 5)
+end_position = Vector3(0, 0.27000046, -5)
 
 [node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_greywood_old_root_tree"]
 enabled = false
 navigation_layers = 2
-start_position = Vector3(0, 0.35, 6.5)
-end_position = Vector3(0, 0.35, -6.5)
+start_position = Vector3(0, 0.069999695, 6.5000153)
+end_position = Vector3(0, 0.069999695, -6.5)
 
 [node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_greywood_old_root_tree"]
 enabled = false
 navigation_layers = 16
-start_position = Vector3(0, 0.2, 9.5)
-end_position = Vector3(0, 0.2, -9.5)
+start_position = Vector3(3.8146973e-06, -0.07999992, 12)
+end_position = Vector3(3.8146973e-06, -0.07999992, -18)
 
 [node name="world_greywood_old_root_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68, 22.08, 120)
