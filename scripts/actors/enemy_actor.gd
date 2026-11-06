@@ -2652,20 +2652,23 @@ func _p30_rig_state(s: Dictionary) -> Dictionary:
 
 # ---- shields
 
-## CombatEntity.receive_hit asks before resolving: every hit is accepted; the shield rule reads it.
+## CombatEntity.receive_hit asks before resolving: every hit is accepted; the shield rule reads it
+## (receive_hit builds the defence state right after this, in the same call).
 func accepts_hit(hit: HitEvent) -> bool:
 	_p30_incoming = hit
 	return true
 
 
 ## get_defense_state: a guarded hit that carries one of guard.breaks_on_tags breaks the guard (the
-## defence's stamina is 0 for it, so any impact is a guard break).
+## defence's stamina is 0 for it, so any impact is a guard break). The hit is used once.
 func _p30_defense(d: DefenseState) -> void:
+	var hit := _p30_incoming
+	_p30_incoming = null
 	var tags: Variant = (record.get("guard", {}) as Dictionary).get("breaks_on_tags")
-	if not d.blocking or typeof(tags) != TYPE_ARRAY or _p30_incoming == null or _p30_incoming.tick != Sim.tick:
+	if hit == null or not d.blocking or typeof(tags) != TYPE_ARRAY:
 		return
 	for tag: Variant in tags:
-		if _p30_incoming.has_tag(str(tag)):
+		if hit.has_tag(str(tag)):
 			d.stamina = 0.0
 			return
 

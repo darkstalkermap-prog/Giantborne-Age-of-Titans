@@ -280,6 +280,8 @@ func remove_member(actor: EnemyActor) -> void:
 		slot_of.erase(actor.entity_id)
 	if actor == _brace_holder:
 		_finish_brace()
+	if actor != null and is_instance_valid(actor):
+		actor.call("p30_leave_formation", self)
 
 
 func slot_taken(slot: int) -> bool:

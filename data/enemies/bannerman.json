@@ -5,7 +5,7 @@
 	"archetype": "soldier",
 	"role": "banner",
 	"display_name": "Bannerman",
-	"description": "A formation's banner (P30, plan M6-M9 sections 2.10 and 5.11): a 7 m pole with a 2.5 x 1.8 m flag, one rank behind the formation and its own lock candidate. Every 10 s it rallies (+10 morale to its formation's members within 15 m); while it lives its members lose half the morale of awe and ally deaths and regroup; its death is their commander's death. Drawn at full detail at any distance (render_lod_m 0).",
+	"description": "A formation's banner (P30, plan M6-M9 sections 2.10 and 5.11): a 7 m pole with a 2.5 x 1.8 m flag, one rank behind the formation and its own lock candidate (threat 0.55, below its rank's 0.6: the formation is locked first, the banner is a switch away). Every 10 s it rallies (+10 morale to its formation's members within 15 m); while it lives its members lose half the morale of awe and ally deaths and regroup; its death is their commander's death. Drawn at full detail at any distance (render_lod_m 0).",
 	"scene": "res://scenes/enemies/bannerman.tscn",
 	"render_lod_m": 0,
 	"height_m": 1.8,
@@ -55,7 +55,7 @@
 		"awe_ratio": 4.0,
 		"awe_morale_loss": 35
 	},
-	"threat": 0.7,
+	"threat": 0.55,
 	"lockable": true,
 	"grants_fury": true,
 	"crit_chance": 0.0,
