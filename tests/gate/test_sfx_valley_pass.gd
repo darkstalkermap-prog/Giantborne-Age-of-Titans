@@ -36,6 +36,8 @@ const HEARD := ["sfx.hit.", "sfx.voice.", "sfx.body.fall.", "sfx.break.", "sfx.c
 	"sfx.threat.aim_lock", "sfx.threat.sting"]
 const RAIDERS := "encounter.quarry_raiders"
 const RAIDERS_FIGHT_TICKS := 480
+## The longest wait for the ranged raiders' aim lock in front of the camera, then for a sting behind it.
+const RANGED_WAIT_TICKS := 900
 const WALK_TICKS := 360
 
 ## Effect cue id -> times played.
@@ -203,8 +205,9 @@ func _force_the_village(w: Variant) -> void:
 
 
 ## The quarry raiders (two soldiers, archers and a mage) against the stage-1 giant with their AI on
-## for RAIDERS_FIGHT_TICKS, the camera turned away from them (so blows come from behind it); then
-## they fall to the walkthrough's synthetic blows and the giant is made whole again.
+## for RAIDERS_FIGHT_TICKS, the camera turned away from them (so blows come from behind it), then
+## until the ranged raiders shoot from in front of the camera (P22) and, the camera turned away
+## from them, from behind it; then they fall to the walkthrough's synthetic blows and the giant is made whole again.
 func _raiders_fight(w: Variant) -> void:
 	var p: GiantPlayer = w.player
 	var d: EncounterDirector = w.director
@@ -232,6 +235,20 @@ func _raiders_fight(w: Variant) -> void:
 		var away := p.global_position - centre
 		p.camera_rig.yaw = TargetingRules.yaw_of(Vector3(away.x, 0, away.z))
 	await step_ticks(RAIDERS_FIGHT_TICKS)
+	# P22's ranged units take their firing points in front of the camera: once their aim locks are
+	# heard there, the camera turns away from them, so the next shot is drawn from behind it.
+	await TestWait.until(self, func() -> bool: return fight_cues.has("sfx.threat.aim_lock"), RANGED_WAIT_TICKS)
+	var ranged := Vector3.ZERO
+	var m := 0
+	for id in ids:
+		var e := d.spawned(id) as EnemyActor
+		if e != null and e.is_in_group(EnemyActor.RANGED_GROUP):
+			ranged += e.global_position
+			m += 1
+	if m > 0:
+		var from := p.global_position - ranged / float(m)
+		p.camera_rig.yaw = TargetingRules.yaw_of(Vector3(from.x, 0, from.z))
+	await TestWait.until(self, func() -> bool: return fight_cues.has("sfx.threat.sting"), RANGED_WAIT_TICKS)
 	_harvest()
 	await w._clear_encounter(RAIDERS)
 	p.entity.combatant.unkillable = false
