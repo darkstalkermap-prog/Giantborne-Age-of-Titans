@@ -70,6 +70,21 @@ static func level_at(distance: float, unit: float, max_distance: float, volume_d
 	return maxf(att, SILENT_DB)
 
 
+## The volume_db a cue of `volume_db` plays with at `distance` when its class has a level floor
+## (`floor_db`, audio_mix.classes.<class>.floor_db; M6 gate): raised so that level_at() reaches at
+## least volume_db + floor_db at the listener - the threat alerts (the sting, the aim lock) carry
+## to any distance in their range, and their position still pans them (decision 7). The 3D player
+## caps the attenuated level at max_db before the max_distance fade, so far out the floor gives way
+## to max_db plus the fade. Unchanged when the cue is already that loud or out of range.
+static func floored_volume(distance: float, unit: float, max_distance: float, volume_db: float,
+		floor_db: float, max_db := MAX_DB) -> float:
+	var level := level_at(distance, unit, max_distance, volume_db, max_db)
+	var target := volume_db + floor_db
+	if level <= SILENT_DB or level >= target:
+		return volume_db
+	return volume_db + (target - level)
+
+
 ## Pitch factor of a sound made by a body `height_m` tall: (3.6576 / height)^0.25, clamped
 ## 0.6-1.25, so bigger bodies sound lower.
 static func size_pitch(height_m: float) -> float:

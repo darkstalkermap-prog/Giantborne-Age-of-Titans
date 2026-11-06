@@ -9,7 +9,8 @@ extends RefCounted
 ##    "bus_db": {"Music": -9, "Ambience": -12, "SFX": -6, "UI": -10},
 ##    "pool": {"voices_3d": 24, "web_voices_3d": 16, "spot_voices": 2, "voices_2d": 8, "starts_per_frame": 16,
 ##             "web_starts_per_frame": 8, "min_level_db": -45, "register_ms_per_frame": 12},
-##    "classes": {"impact": {"unit_m": 5, "max_m": 40, "scaled": true}, "threat": {"unit_m": 8, "max_m": 80, "scaled": "sqrt"}},
+##    "classes": {"impact": {"unit_m": 5, "max_m": 40, "scaled": true}, "threat": {"unit_m": 8, "max_m": 80, "scaled": "sqrt"},
+##                "alert": {"unit_m": 20, "max_m": 200, "scaled": true, "floor_db": 0}},
 ##    "duck": {"stinger": {"Music": -8}, "pause": {"Music": -10}},
 ##    "materials": {"prop.fence_wood": "wood"}, "voices": {"enemy.wolf": "wolf"}, "steps": {"enemy.wolf": "paw"},
 ##    "surfaces": {"level.valley": {"hollow": "soft", "quarry": "hard"}},
@@ -23,8 +24,10 @@ const U := preload("res://scripts/core/schemas/schema_util.gd")
 
 ## The buses the Audio autoload makes at run time (all send to Master, no effects; decision 3).
 const BUSES := ["Music", "Ambience", "SFX", "UI"]
-## Audibility classes (§4.4): unit_size / max_distance per class, scaled with the player.
-const CLASSES := ["player", "human_step", "human", "impact", "wolf", "big", "giant", "boss", "threat", "spot"]
+## Audibility classes (§4.4): unit_size / max_distance per class, scaled with the player. M6 gate:
+## "alert" - the threat alerts (the sting, the aim lock), scaled like far_m and held up by a level
+## floor (floor_db) so a far or off-camera threat is heard over the combat layer.
+const CLASSES := ["player", "human_step", "human", "impact", "wolf", "big", "giant", "boss", "threat", "alert", "spot"]
 ## How a class follows the player's size: true (x distance scale), false, "sqrt" (x its square
 ## root), "own" (x the player's own height / 3.6576: the giant's own sounds).
 const SCALED_VALUES := [true, false, "sqrt", "own"]
@@ -111,8 +114,11 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 				out.errors.append("%s: expected an object, got %s" % [cctx, type_string(typeof(c))])
 				continue
 			for key: Variant in c:
-				if not (key in ["unit_m", "max_m", "scaled"]):
+				if not (key in ["unit_m", "max_m", "scaled", "floor_db"]):
 					out.errors.append("%s: unknown key '%s'" % [cctx, key])
+			# M6 gate: the most distance may take off a cue of the class (AudioMath.floored_volume).
+			if c.has("floor_db"):
+				U.check_value(c.floor_db, U.num(-60.0, 0.0), "%s.floor_db" % cctx, out)
 			for key: String in ["unit_m", "max_m"]:
 				if c.has(key):
 					U.check_value(c[key], U.pos(true), "%s.%s" % [cctx, key], out)

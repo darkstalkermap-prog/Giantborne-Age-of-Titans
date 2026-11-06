@@ -60,8 +60,9 @@ func test_a_chop_from_behind_logs_the_windup_and_the_sting_at_the_soldier() -> v
 		var node := Audio.pool.voice_node(int(sting[0].voice))
 		assert_true(node is AudioStreamPlayer3D, "a positional voice (directional)")
 		if node is AudioStreamPlayer3D:
-			var d := Audio.class_distances("threat")
-			assert_near((node as AudioStreamPlayer3D).unit_size, float(d.unit), 1e-4, "the threat class's unit size")
+			# M6 gate: the sting is a threat alert - the alert class (scaled like far_m, a level floor)
+			var d := Audio.class_distances("alert")
+			assert_near((node as AudioStreamPlayer3D).unit_size, float(d.unit), 1e-4, "the alert class's unit size")
 			assert_near((node as AudioStreamPlayer3D).max_distance, float(d.max), 1e-4, "and its range")
 	if windup.size() == 1:
 		assert_eq(int(windup[0].priority), 80, "a windup within 15 m takes priority 80")
@@ -83,6 +84,67 @@ func test_a_chop_in_view_and_near_has_no_sting_but_a_far_one_has() -> void:
 	await _telegraph(front, CHOP, "someone_else")
 	assert_eq(_logged("sfx.threat.windup.line").size() + _logged("sfx.threat.sting").size(), 0,
 		"a telegraph aimed at someone else is no threat to the giant")
+
+
+## M6 gate: the far sting fired where it was quietest - at 20 m (the far threshold at stage 1) the
+## threat class took 21 dB off it, 22 dB under the combat layer. The alerts now carry: wherever the
+## attacker stands within the alert class's range, the sting reaches the listener at its own level
+## (the class's floor), still panned toward the attacker, and the windup beside it keeps the threat
+## class's distance falloff.
+func test_a_far_stings_level_at_the_listener_holds_at_its_floor() -> void:
+	var p := spawn_player(Vector3.ZERO, 0.0)
+	var far_m := float(((Audio.mix.get("threat", {}) as Dictionary)).get("far_m", 20.0))
+	var at_threshold := spawn_soldier(Vector3(0, 0, -(far_m + 2.0)), PI, "t.threat_threshold")
+	var farther := spawn_soldier(Vector3(0, 0, -3.0 * far_m), PI, "t.threat_farther")
+	await step_ticks(3)
+	var floor_db := Audio.class_floor_db("alert")
+	assert_false(is_nan(floor_db), "the alert class has a level floor")
+	var sting_volume := float(Audio.resolve("sfx.threat.sting").get("volume_db", 0.0))
+	for attacker: SoldierEnemy in [at_threshold, farther]:
+		await _telegraph(attacker, CHOP, p.entity.entity_id)
+		var sting := _logged("sfx.threat.sting")
+		assert_eq(sting.size(), 1, "a sting for the chop %.0f m away (in view, beyond far_m)" % attacker.global_position.length())
+		if sting.size() != 1:
+			continue
+		var node := Audio.pool.voice_node(int(sting[0].voice)) as AudioStreamPlayer3D
+		assert_true(node != null, "on a positional voice")
+		if node == null:
+			continue
+		var d := Audio.listener_position().distance_to(node.global_position)
+		var level := AudioMath.level_at(d, node.unit_size, node.max_distance, node.volume_db)
+		var reachable := minf(sting_volume + floor_db,
+			AudioMath.MAX_DB + 20.0 * log(1.0 - d / node.max_distance) / log(10.0))
+		assert_true(level >= reachable - 0.05,
+			"the sting %.0f m away reaches the listener at %.1f dB (its floor: %.1f dB)" % [d, level, reachable])
+		var threat := Audio.class_distances("threat")
+		var unfloored := AudioMath.level_at(d, float(threat.unit), float(threat.max), sting_volume)
+		assert_true(level - unfloored >= 15.0,
+			"%.0f dB louder than the threat class left it (%.1f dB)" % [level - unfloored, unfloored])
+		var windup := _logged("sfx.threat.windup.line")
+		if windup.size() == 1:
+			var wnode := Audio.pool.voice_node(int(windup[0].voice)) as AudioStreamPlayer3D
+			assert_near(wnode.volume_db, float(Audio.resolve("sfx.threat.windup.line").get("volume_db", 0.0)), 1e-4,
+				"the windup keeps its own volume (the threat class falls off with distance)")
+
+
+func test_the_aim_lock_carries_like_the_sting() -> void:
+	var p := spawn_player(Vector3.ZERO, 0.0)
+	await step_ticks(2)
+	Audio.clock_s += 1.0
+	Audio.clear_log()
+	var floor_db := Audio.class_floor_db("alert")
+	var volume := float(Audio.resolve("sfx.threat.aim_lock").get("volume_db", 0.0))
+	var src := p.global_position + Vector3(0, 1.5, -45.0)
+	var v := Audio.play("sfx.threat.aim_lock", src, {"priority": 100, "reason": "aim_lock"})
+	assert_true(v >= 0, "the aim lock of an archer 45 m off plays")
+	var node := Audio.pool.voice_node(v) as AudioStreamPlayer3D
+	assert_true(node != null, "positionally")
+	if node == null:
+		return
+	var d := Audio.listener_position().distance_to(src)
+	var level := AudioMath.level_at(d, node.unit_size, node.max_distance, node.volume_db)
+	assert_true(level >= volume + floor_db - 3.0,
+		"it reaches the listener at %.1f dB (its own level %.1f, floor %.1f)" % [level, volume, floor_db])
 
 
 func test_a_chip_attack_from_behind_has_no_sting() -> void:

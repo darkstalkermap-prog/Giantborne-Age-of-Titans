@@ -3,7 +3,7 @@
 	"id": "audio_bank.threat",
 	"type": "audio_bank",
 	"display_name": "Threat cues",
-	"description": "P21 (decision 7, section 4.1 family F): windups by telegraph shape at the attacker, the off-camera sting (suppressed by audio_mix.sting) and the ranged aim lock: broadband, rising 2-8 kHz sweeps with a tick, kept apart from the impacts; the threat class carries farther (the square root of the distance scale).",
+	"description": "P21 (decision 7, section 4.1 family F): windups by telegraph shape at the attacker, the off-camera sting (suppressed by audio_mix.sting) and the ranged aim lock: broadband, rising 2-8 kHz sweeps with a tick, kept apart from the impacts; the threat class carries farther (the square root of the distance scale). M6 gate: the sting and the aim lock - the alerts - play in the mix's alert class, which holds them at their own level at any distance (a level floor; panned toward the attacker).",
 	"cues": {
 		"sfx.threat.aim_lock": {
 			"files": [
@@ -11,7 +11,7 @@
 			],
 			"bus": "SFX",
 			"spatial": true,
-			"class": "threat",
+			"class": "alert",
 			"volume_db": -3.0,
 			"pitch": 1.0,
 			"pitch_jitter": 0.02,
@@ -47,7 +47,7 @@
 			],
 			"bus": "SFX",
 			"spatial": true,
-			"class": "threat",
+			"class": "alert",
 			"volume_db": 1.5,
 			"pitch": 1.0,
 			"pitch_jitter": 0.02,

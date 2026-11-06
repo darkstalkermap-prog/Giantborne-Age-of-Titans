@@ -47,6 +47,42 @@ func test_logarithmic_curve_matches_the_measured_points() -> void:
 	assert_near(AudioMath.level_at(10.0, 10.0, 0.0, -6.0), -6.0, 0.01, "the cue's volume adds")
 
 
+## M6 gate: a class with a level floor (the threat alerts) is raised to it at any distance; the
+## player's max_db cap before the max_distance fade is the only limit, and nothing changes where
+## the cue is already that loud or out of range.
+func test_a_floored_cue_reaches_its_floor_at_any_distance() -> void:
+	var vol := 1.5
+	assert_near(AudioMath.floored_volume(5.0, 20.0, 200.0, vol, 0.0), vol, 1e-9, "a near cue keeps its volume")
+	for d: float in [20.0, 43.0, 60.0, 103.0, 150.0]:
+		var v := AudioMath.floored_volume(d, 20.0, 200.0, vol, 0.0)
+		var fade := 20.0 * log(1.0 - d / 200.0) / log(10.0)
+		var reachable := minf(vol, AudioMath.MAX_DB + fade)
+		assert_true(AudioMath.level_at(d, 20.0, 200.0, v) >= reachable - 1e-3,
+			"%.0f m: %.2f dB at the listener (floor %.2f)" % [d, AudioMath.level_at(d, 20.0, 200.0, v), reachable])
+		assert_true(v >= vol, "only ever raised (%.1f dB at %.0f m)" % [v, d])
+	var low := AudioMath.floored_volume(60.0, 20.0, 200.0, vol, -6.0)
+	assert_near(AudioMath.level_at(60.0, 20.0, 200.0, low), vol - 6.0, 1e-3, "a -6 dB floor holds 6 dB under")
+	assert_near(AudioMath.floored_volume(250.0, 20.0, 200.0, vol, 0.0), vol, 1e-9, "out of range: unchanged")
+	# The shipped alert class: at the far threshold (far_m x the scale) of every growth stage the sting
+	# reaches the listener within 1 dB of its own volume - 18-20 dB more than the threat class left it.
+	var mix := _mix()
+	var far_m := float(mix.threat.far_m)
+	var cue: Dictionary = (GameData.get_record("audio_bank.threat").cues as Dictionary)["sfx.threat.sting"]
+	assert_eq(str(cue.get("class", "")), "alert", "the sting plays in the alert class")
+	var alert: Dictionary = mix.classes.get(str(cue.get("class", "")), mix.classes.threat)
+	var sting := float(cue.volume_db)
+	for h: float in [3.6576, 5.49, 7.87, 10.97, 14.63, 18.90]:
+		var s := AudioMath.distance_scale(h)
+		var at := far_m * s
+		var dist := AudioMath.class_distances(alert, s, s)
+		var played := AudioMath.floored_volume(at, dist.x, dist.y, sting, float(alert.get("floor_db", -80.0)))
+		var level := AudioMath.level_at(at, dist.x, dist.y, played)
+		assert_true(level >= sting - 1.0, "a %.1f m giant: the sting %.0f m away at %.1f dB (its volume %.1f)" % [h, at, level, sting])
+		var threat := AudioMath.class_distances(mix.classes.threat, s, s)
+		assert_true(level - AudioMath.level_at(at, threat.x, threat.y, sting) >= 18.0,
+			"%.0f dB over the threat class's level there" % (level - AudioMath.level_at(at, threat.x, threat.y, sting)))
+
+
 func test_size_pitch_lowers_bigger_bodies() -> void:
 	assert_near(AudioMath.size_pitch(3.6576), 1.0, 1e-6, "the reference height")
 	assert_near(AudioMath.size_pitch(1.8), pow(3.6576 / 1.8, 0.25), 1e-6, "a soldier sounds higher")

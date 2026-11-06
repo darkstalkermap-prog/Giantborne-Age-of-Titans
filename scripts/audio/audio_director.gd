@@ -471,7 +471,8 @@ func play_request(chain: Array, at: Vector3, opts: Dictionary) -> int:
 	var volume := float(cue.get("volume_db", 0.0)) + float(opts.get("volume_db", 0.0))
 	var dist := Vector2(5.0, 40.0)
 	if spatial:
-		dist = _distances(str(cue.get("class", "spot" if kind == VoicePool.Kind.SPOT else "impact")))
+		var cls_name := str(cue.get("class", "spot" if kind == VoicePool.Kind.SPOT else "impact"))
+		dist = _distances(cls_name)
 		var d := listener_position().distance_to(at)
 		var far := str(cue.get("far", ""))
 		if far != "" and d > 0.5 * dist.y:
@@ -479,7 +480,12 @@ func play_request(chain: Array, at: Vector3, opts: Dictionary) -> int:
 			if not fc.is_empty():
 				cue = fc
 				volume = float(cue.get("volume_db", 0.0)) + float(opts.get("volume_db", 0.0))
-				dist = _distances(str(cue.get("class", "impact")))
+				cls_name = str(cue.get("class", "impact"))
+				dist = _distances(cls_name)
+		# M6 gate: a class with a level floor (the threat alerts) is raised to it at any distance.
+		var floor_db := class_floor_db(cls_name)
+		if not is_nan(floor_db):
+			volume = AudioMath.floored_volume(d, dist.x, dist.y, volume, floor_db)
 		if AudioMath.level_at(d, dist.x, dist.y, volume) < float((mix.get("pool", {}) as Dictionary).get("min_level_db", -45.0)):
 			stats.inaudible += 1
 			return -1
@@ -525,6 +531,15 @@ func _distances(cls_name: String) -> Vector2:
 func class_distances(cls_name: String) -> Dictionary:
 	var v := _distances(cls_name)
 	return {"unit": v.x, "max": v.y}
+
+
+## A class's level floor (audio_mix.classes.<class>.floor_db, M6 gate: the most distance takes off a
+## cue of the class; AudioMath.floored_volume), NAN when it has none.
+func class_floor_db(cls_name: String) -> float:
+	var cls: Variant = (mix.get("classes", {}) as Dictionary).get(cls_name)
+	if typeof(cls) == TYPE_DICTIONARY and (cls as Dictionary).has("floor_db"):
+		return float((cls as Dictionary).floor_db)
+	return NAN
 
 
 func log_cue(entry: Dictionary) -> void:
