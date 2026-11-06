@@ -42,7 +42,6 @@ const SAMPLE_EVERY_TICKS := 6           ## AI-state histogram sampling
 const NODE_SAMPLE_EVERY_TICKS := 3600   ## 60 s
 const LOAD_SAMPLE_DELAY_TICKS := 300    ## node count 5 s after a level load
 const HOSTILE_NEAR_M := 40.0
-const CAMERA_FALLBACK_HALF_FOV_DEG := 55.0
 
 var policy := ""
 var skill := ""
@@ -588,32 +587,15 @@ static func archetype_of(e: CombatEntity) -> String:
 	return a if a != "" else e.definition_id
 
 
-## True when `e`'s actor is in front of the giant's camera, inside its horizontal field of view.
+## True when `e`'s actor is in front of the giant's camera, inside its horizontal field of view
+## (P22: the test ranged units use for their off-camera aim, EnemyActor.in_camera_view).
 func on_camera(e: CombatEntity) -> bool:
 	if e == null or e.actor == null or _player == null or not is_instance_valid(_player):
 		return true
 	var rig := _player.camera_rig
 	if rig == null or rig.camera == null or not rig.camera.is_inside_tree():
 		return true
-	var cam := rig.camera
-	var to := (e.actor as Node3D).global_position - cam.global_position
-	to.y = 0.0
-	if to.length_squared() < 1e-4:
-		return true
-	var fwd := -cam.global_transform.basis.z
-	fwd.y = 0.0
-	if fwd.length_squared() < 1e-6:
-		return true
-	var half := deg_to_rad(CAMERA_FALLBACK_HALF_FOV_DEG)
-	if cam.fov > 1.0:
-		var aspect := 16.0 / 9.0
-		var vp := cam.get_viewport()
-		if vp != null:
-			var size := vp.get_visible_rect().size
-			if size.y > 1.0:
-				aspect = size.x / size.y
-		half = atan(tan(deg_to_rad(cam.fov) * 0.5) * aspect)
-	return absf(fwd.normalized().signed_angle_to(to.normalized(), Vector3.UP)) <= half
+	return EnemyActor.in_camera_view(rig.camera, (e.actor as Node3D).global_position)
 
 
 static func _mean(list: Array) -> float:
@@ -696,6 +678,9 @@ func result(tick: int) -> Dictionary:
 		"completed": completed,
 		"completed_s": snappedf(float(completed_tick - started_tick) * TICK_S, 0.01) if completed else -1.0,
 		"village_outcome": str(WorldState.get_flag("quest.village.outcome", "")),
+		# P22 (plan M6-M9 §3.4 design 4): Thornwick turned hostile in this run (by offences or the
+		# force branch's barricade); the help paths must end with it false.
+		"faction_hostile": FactionState.is_hostile("village"),
 		"flags_hash": flags_hash(),
 		"segments": seg_out,
 		"objectives": obj_out,
