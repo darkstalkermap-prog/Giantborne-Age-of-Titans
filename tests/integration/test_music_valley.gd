@@ -227,10 +227,14 @@ func test_the_title_the_end_screens_and_the_sandbox_play_their_sets() -> void:
 	Audio.advance_for_tests(to_bar + 0.3, 0.05)
 	assert_eq(Audio.music.context, "end", "the end screen")
 	assert_eq(Audio.music.set_id(), "music.end", "its set at the title's next bar")
+	var end_deck: MusicDirector.Deck = Audio.music.deck
 	Audio.music.on_campaign_completed()
 	Audio.advance_for_tests(0.3, FRAME)
 	assert_eq(Audio.music.context, "campaign_end", "the campaign's end")
-	assert_eq(Audio.music.set_id(), "music.end", "plays the end set (the title's horns over the calm pad)")
+	to_bar = AudioMath.seconds_to_boundary(Audio.music.deck_position(end_deck), end_deck.bar_s, end_deck.loop_s)
+	Audio.advance_for_tests(to_bar + 0.3, 0.05)
+	assert_eq(Audio.music.set_id(), "music.campaign_end", "its set from the score's stems at the next bar")
+	assert_eq(Audio.music.deck.players.size(), 3, "the horn choir, the stone choir and the brass far under them")
 	# the sandbox: the calm set and the meadow without a level record
 	Audio.music.reset()
 	Audio.music.clock_positions = true

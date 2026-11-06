@@ -4,7 +4,7 @@ extends TestSuite
 ## loads; effects are samplable, at most 2.0 s, neither clipped nor silent; loops repeat with an
 ## exact period (the second pass equals the first within 1e-4; here the shortest loop, every loop in
 ## tests/slow/test_music_loops.gd since P23's score); music stems last their set's loop to the
-## frame; the manifest matches the files; the size budget holds (Ogg sizes x 1.03 and the exact QOA
+## frame; the manifest matches the files; the size budget holds (Ogg sizes x 1.11 and the exact QOA
 ## formula for WAVs) and the registered seconds per level hold.
 
 const MIX_RATE := 44100.0
@@ -13,7 +13,9 @@ const BUDGET_M6_BYTES := 4.0 * 1024.0 * 1024.0
 const BUDGET_ALL_BYTES := 9.5 * 1024.0 * 1024.0
 const REGISTERED_CAP_S := {"level.valley": 110.0, "level.world": 170.0}
 const QOA_IMPORT_BYTES := 370
-const OGG_IMPORT_FACTOR := 1.03
+## P23: what Godot 4.6.3 makes of an Ogg on import (.oggvorbisstr), measured on the release pck: x1.107
+## over the score's 54 files (x1.07 for a 100 KB bed, x1.2 for a 5 KB spot); decision 8 assumed x1.03.
+const OGG_IMPORT_FACTOR := 1.11
 ## Frames skipped at the start of a pass (the resampler's interpolation latency, brief §3).
 const LATENCY_FRAMES := 16
 
@@ -192,7 +194,7 @@ func test_the_manifest_matches_the_files() -> void:
 
 
 ## The imported size of one manifest entry (plan §4.5): the exact QOA formula plus 370 bytes for a
-## WAV, the Ogg file x 1.03.
+## WAV, the Ogg file x 1.11.
 static func imported_bytes(e: Dictionary) -> float:
 	if str(e.kind) == "sfx":
 		var frames := int(e.frames)

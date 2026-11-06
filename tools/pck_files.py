@@ -4,6 +4,8 @@
 Usage:
   python3 tools/pck_files.py PCK                      print every packed path, one per line
   python3 tools/pck_files.py --check-no-test PCK      exit 1 when test content is packed
+  python3 tools/pck_files.py --audio-share PCK        print one AUDIO_SHARE line: the bytes of the
+                                                      imported audio (P23: build_web.sh prints it)
 
 Test content (plan M6-M9 decision 8, P22) is anything under scenes/test/, assets/test_world/ or
 data/test/: the Web preset excludes it, the Web (test) preset keeps it. A text scene the export
@@ -17,11 +19,19 @@ import sys
 
 MAGIC = 0x43504447  # "GDPC"
 TEST_PREFIXES = ("scenes/test/", "assets/test_world/", "data/test/")
+# Imported audio as the export packs it (.godot/imported/<file>-<hash>.<ext>): Ogg Vorbis streams
+# and sampled WAVs (QOA), plus the .import remaps under assets/audio/.
+AUDIO_EXTENSIONS = (".oggvorbisstr", ".sample", ".mp3str")
 PACK_DIR_ENCRYPTED = 1
 
 
 def packed_paths(path):
     """The paths packed in the .pck at `path` (without "res://")."""
+    return [name for name, _size in packed_entries(path)]
+
+
+def packed_entries(path):
+    """(path without "res://", size in bytes) of every file packed in the .pck at `path`."""
     with open(path, "rb") as f:
         data = f.read()
     start = data.find(struct.pack("<I", MAGIC))
@@ -47,11 +57,19 @@ def packed_paths(path):
         pos += 4
         name = data[pos:pos + length].rstrip(b"\0").decode("utf-8", "replace")
         pos += length
+        (_offset, size) = struct.unpack_from("<QQ", data, pos)
         pos += 8 + 8 + 16 + 4  # offset, size, md5, flags
         if name.startswith("res://"):
             name = name[len("res://"):]
-        out.append(name)
+        out.append((name, size))
     return out
+
+
+def audio_share(entries):
+    """(audio bytes, all bytes, audio files) of packed entries: the imported audio and the remaps
+    of assets/audio (P23)."""
+    audio = [(n, s) for n, s in entries if n.endswith(AUDIO_EXTENSIONS) or n.startswith("assets/audio/")]
+    return sum(s for _n, s in audio), sum(s for _n, s in entries), len(audio)
 
 
 def test_content(paths):
@@ -65,6 +83,11 @@ def main(argv):
     if len(args) != 1:
         sys.stderr.write(__doc__)
         return 2
+    if "--audio-share" in argv:
+        audio, total, files = audio_share(packed_entries(args[0]))
+        print("AUDIO_SHARE audio_bytes=%d pck_files_bytes=%d share=%.3f files=%d" % (
+            audio, total, audio / float(max(1, total)), files))
+        return 0
     paths = packed_paths(args[0])
     if not check:
         for p in paths:

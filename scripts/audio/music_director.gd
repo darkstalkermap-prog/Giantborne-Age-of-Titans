@@ -119,6 +119,10 @@ var _end_context := ""
 var _fading_to_silence := false
 var _zone_record_id := ""
 var _layers_override: Dictionary = {}
+## P23: with --audio-stats every set start prints one "AUDIO_MUSIC {json}" line (set, state,
+## context, the director's clock): the web audio check (tools/web/audio_check.mjs) reads the zone
+## set's start as the moment the giant stands in the Hollow.
+var _print_sets := false
 
 
 func setup(p_audio: Node) -> void:
@@ -130,6 +134,7 @@ func setup(p_audio: Node) -> void:
 	_stinger.bus = "Music"
 	_stinger.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_stinger)
+	_print_sets = OS.get_cmdline_user_args().has(AudioDirector.STATS_ARG)
 
 
 ## Back to silence at once: every deck and the stinger stopped, the state cleared (tests, reloads).
@@ -664,6 +669,9 @@ func _start_deck(set_id_value: String, fade_s: float) -> void:
 	d.last_pos = 0.0
 	audio.call("log_cue", {"cue": set_id_value, "requested": set_id_value, "bus": "Music", "pos": Vector3.INF,
 		"voice": -3, "priority": 0, "reason": state_name(), "file": ""})
+	if _print_sets:
+		print("AUDIO_MUSIC " + JSON.stringify({"set": set_id_value, "state": state_name(), "context": context,
+			"clock_s": snappedf(_now(), 0.01)}))
 
 
 func _zone_melody_override() -> Variant:

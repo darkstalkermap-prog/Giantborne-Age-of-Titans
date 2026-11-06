@@ -22,7 +22,7 @@ const DISTRICTS := {
 const CONTEXTS := {
 	"title": ["music.title", ""],
 	"end": ["music.end", ""],
-	"campaign_end": ["music.end", ""],
+	"campaign_end": ["music.campaign_end", ""],
 	"sandbox": ["music.valley_calm", "ambience.sandbox"],
 }
 const SILENT_CONTEXTS := ["loading"]

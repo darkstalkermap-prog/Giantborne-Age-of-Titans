@@ -1,0 +1,33 @@
+{
+	"schema_version": 1,
+	"id": "music.campaign_end",
+	"type": "music_set",
+	"display_name": "The Old Kingdom remembered",
+	"description": "P23: the campaign's end (the world's last screen, P36), from the score's existing stems: the title theme's horn choir over the ancient set's stone choir and bell, with the combat brass's ostinato far under them - the prologue's end screen grown into the whole story's.",
+	"bpm": 96,
+	"beats_per_bar": 4,
+	"bars": 12,
+	"frame": "zone_96",
+	"stems": {
+		"theme": "res://assets/audio/music/title_theme.ogg",
+		"drone": "res://assets/audio/music/drone_ancient.ogg",
+		"brass": "res://assets/audio/music/combat_brass.ogg"
+	},
+	"layers": {
+		"explore": {
+			"theme": -1,
+			"drone": -4,
+			"brass": -12
+		}
+	},
+	"silence": {
+		"after_explore_s": 240,
+		"length_s": [
+			45,
+			75
+		],
+		"fade_s": 8
+	},
+	"crossfade_bars": 2,
+	"layer_fade_beats": 2
+}

@@ -72,7 +72,8 @@ BUDGET_M6_BYTES = 4.0 * 1024 * 1024
 BUDGET_ALL_BYTES = 9.5 * 1024 * 1024
 REGISTERED_S_CAP = {"level.valley": 110.0, "level.world": 170.0}
 OGG_HEADER_BYTES = 3.7 * 1024
-OGG_IMPORT_FACTOR = 1.03
+OGG_IMPORT_FACTOR = 1.11   # P23: Godot 4.6.3 imports these Oggs at x1.107 (x1.07 for 100 KB beds, x1.2 for 5 KB spots;
+                           # measured in the release pck), not the x1.03 decision 8 assumed
 QOA_IMPORT_BYTES = 370
 # KB per second of Ogg by (quality, channels) when a cue gives no est_kbps (section 4.5 rates).
 OGG_KBPS = {(0, 1): 3.2, (1, 1): 4.0, (2, 1): 4.6, (0, 2): 5.5, (1, 2): 7.0, (2, 2): 8.5}
@@ -204,7 +205,7 @@ def estimate_bytes(e: dict) -> float:
 
 
 def imported_bytes(e: dict) -> float:
-    """The imported size of a built entry: the exact QOA formula for WAVs, the Ogg file x 1.03."""
+    """The imported size of a built entry: the exact QOA formula for WAVs, the Ogg file x 1.11."""
     if e["kind"] == "sfx":
         return qoa_bytes(int(e["frames"]), int(e["channels"])) + QOA_IMPORT_BYTES
     return float(e.get("size", 0)) * OGG_IMPORT_FACTOR if "size" in e else estimate_bytes(e)

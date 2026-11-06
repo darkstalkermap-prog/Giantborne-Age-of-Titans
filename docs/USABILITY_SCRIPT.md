@@ -10,6 +10,8 @@ about 30 minutes per player.
 | Real-controller checklist (§6 below) | **NOT RUN** (the owner runs it) |
 | Synthetic controller pass (every menu by pad events) | Automated: `tests/integration/test_ui_focus.gd` |
 | HUD layout at 1280 x 720 and 1920 x 1080 | Automated: `tests/integration/test_hud_layout.gd` |
+| Audio sheet (§8: the owner's listening pass, M6) | **NOT RUN** (the owner runs it) |
+| Music and ambience behaviour (layers, variants, rests, crossfades, ducks, beds, spots) | Automated: `tests/integration/test_music_valley.gd`, `test_ambience_valley.gd`, `test_audio_zones.gd`; the web build: `tools/web/audio_check.mjs` |
 
 The recommended owner checkpoints after waves 1 and 8 (plan §1.3) use the same sheets (§4 and §5).
 
@@ -42,8 +44,9 @@ Hollow (`quest.main` stage `wolves`). The Sandbox has its own sparring post for 
   game starts. Ask each player which they prefer; aim for at least one controller player among the
   three. The game switches its button prompts to whichever device was used last (Settings >
   Button prompts: Auto).
-- **Screen.** 1920 x 1080 if possible (the HUD is also checked at 1280 x 720). Sound is not part of
-  the prototype.
+- **Screen.** 1920 x 1080 if possible (the HUD is also checked at 1280 x 720).
+- **Sound.** On since M6 (headphones or speakers at a comfortable level; Settings > Audio at its
+  defaults). The usability sessions do not judge the sound; the owner's listening pass is §8.
 - **Recording.** Optional screen and face recording, only with consent. Keep a clock running from
   the moment the player first sees the title screen.
 - **Facilitator.** One person, seated behind the player, with this script printed. Do not explain
@@ -178,3 +181,67 @@ the OS driver). Tick each line; note the pad model and the OS.
   recurring failures before adding content.
 - Until the sessions run, the M5 usability and real-controller gates stay **NOT RUN** in the
   handoff (P18).
+
+## 8. Audio sheet (owner, M6)
+
+The owner's listening pass of the Valley's sound (plan M6-M9 §6.6, P23): once on headphones and
+once on laptop or desk speakers, at one fixed system volume, with Settings > Audio at its defaults
+(Master volume 100 %, Music 80 %, Ambience 80 %, Effects 100 %, Interface 80 %). Allow 30-40 minutes. Tick or note
+each line; the pieces are described in `docs/systems/P23.md` (music, stingers, ambience) and
+`docs/systems/P21.md` (effects). Every file also plays on its own from `assets/audio/`.
+
+**Where to listen.** Title (leave it for 4 minutes: the theme rests after 3); New Game; Giant's
+Hollow (stand still 2 minutes, then train at the dummies); north into the Old Wood (wolves); the
+Grove Shrine; Thornwick and the fields; the King's Bridge over the river; the Raider Quarry; the
+Barrow and the ruins; Kingsfall and the Ogre King (both phases); the end screen. The sandbox
+(Title > Sandbox) plays the Hollow's music over a meadow.
+
+### 8.1 Loudness balance
+
+| # | Check | Headphones | Speakers |
+| --- | --- | --- | --- |
+| 1 | The music sits under the effects: a hit, a footfall and a threat sting are always clearer than the melody. | | |
+| 2 | The ambience is felt more than heard: you notice it when it changes (the Hollow's wind to the Wood's leaves, Thornwick's murmur, the stone districts' cold wind), not while it plays. | | |
+| 3 | No district is clearly louder than the others (the beds are balanced at the same loudness; the stone bed has the deepest rumble). | | |
+| 4 | Combat lifts the level without a jump: the drums and brass come in over two beats, the combat intro plays once on the next beat, then the music sits about 4 dB higher than exploring. | | |
+| 5 | The Ogre King's music is the loudest of the score (1.5-2 dB over a district fight) and phase 2's string tremolo adds tension, not volume. | | |
+| 6 | Stingers (level up, quest, growth, victory) duck the music by 8 dB and the music comes back within half a second after them; nothing stacks into a wall. | | |
+| 7 | The interface blips are quieter than the world and never startle. | | |
+
+### 8.2 Harshness
+
+| # | Check | Headphones | Speakers |
+| --- | --- | --- | --- |
+| 8 | No piece is shrill or fizzy at your listening level: the flute's breath (the Old Wood), the cricket spot, the danger pulse's shaker, the boss frenzy's strings. Note the worst one. | | |
+| 9 | No click or thump where a loop wraps (the drones and beds loop every 30 s and 20 s) or where a melody switches variant (at 10 s, 20 s, 30 s). | | |
+| 10 | The low end is full on headphones and not boomy on speakers (taiko, the King's drums, the stone bed's rumble, the forge fire). | | |
+| 11 | Spots (lark, crow, owl, dog, hammer, cart, pebbles, howl) sound like part of the place at 10-35 m, not like effects next to you. | | |
+
+### 8.3 Threat readability
+
+| # | Check | Headphones | Speakers |
+| --- | --- | --- | --- |
+| 12 | With the music playing, a wolf lunge, an archer's draw and an ogre's windup from behind are heard and turned to in time (the off-camera sting cuts through the combat layer). | | |
+| 13 | The danger pulse (a frame-drum heartbeat) starts when something hostile has noticed you and you know why it started. | | |
+| 14 | The music does not tell you "combat" when nothing is attacking (after a fight it holds 6 s, then eases back to danger, then exploring). | | |
+
+### 8.4 Music fatigue
+
+| # | Check | Notes |
+| --- | --- | --- |
+| 15 | In the Hollow for 5 minutes: the lute melody rotates between its three variants, rests for one to three loops (30-90 s) between phrases, and never plays the same variant three times running. Does it stay pleasant or start to nag? | |
+| 16 | After 3 minutes of quiet exploring (no fight, no discovery) the music fades out for 1-2 minutes and comes back. Is the silence welcome, too early, too long? | |
+| 17 | The three districts sound like three places of one valley (the same chords and tempo; lute, low flute and horn melodies), not three unrelated pieces. Which set would you change first? | |
+| 18 | Crossing between districts the music changes at a bar line over two bars: smooth, or noticeable? | |
+| 19 | The title theme (four minutes on the title screen) and the end screen: fitting, or does the title loop wear? | |
+
+### 8.5 Focus and the web
+
+| # | Check | Notes |
+| --- | --- | --- |
+| 20 | Alt-tab away (desktop) or switch to another browser tab (web): the sound fades out within a fifth of a second and comes back when you return (Settings > Mute when unfocused). | |
+| 21 | Web: the first click on the page starts the sound (the launcher resumes the browser's audio); no sound before it, no crackle after it on a mid-range laptop. | |
+| 22 | Web: music keeps playing without gaps while the frame rate drops (heavy fights in the forest). Note any gap. | |
+
+Write the results under the session in `docs/USABILITY_RESULTS.md` and turn every "change this"
+into a follow-up for the sound packages (P21 effects, P23 music and ambience, P28 the world's).

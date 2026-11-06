@@ -3,14 +3,14 @@
 	"type": "audio_region",
 	"id": "audio_region.context_campaign_end",
 	"display_name": "The campaign's end",
-	"description": "P23: the world's end screen (P36): the prologue's end music until P28 adds music.campaign_end.",
+	"description": "P23: the campaign's end (P36's last screen): music.campaign_end, made from the score's existing stems.",
 	"level": "",
 	"districts": [],
 	"regions": [],
 	"pois": [],
 	"context": "campaign_end",
 	"boss": "",
-	"music": "music.end",
+	"music": "music.campaign_end",
 	"ambience": "",
 	"priority": 0
 }

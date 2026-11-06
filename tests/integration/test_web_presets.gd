@@ -5,7 +5,8 @@ extends TestSuite
 ##   * a "Web (test)" preset keeps them (the streaming checks), with the release's options, into
 ##     builds/web_test/; the desktop presets keep them (the stress route's owner commands);
 ##   * today's test-only records live in data/test/ (and nowhere else);
-##   * the launcher passes ?args=a,b,c to the engine.
+##   * the launcher passes ?args=a,b,c to the engine;
+##   * (P23) the launcher joins a multi-part pck and resumes a suspended AudioContext on a press.
 
 const PRESETS := "res://export_presets.cfg"
 const LAUNCHER := "res://web/launcher.html"
@@ -94,5 +95,22 @@ func test_the_launcher_passes_args_to_the_engine() -> void:
 	assert_true(html.contains("raw.split(',')"), "comma-separated")
 	assert_true(html.contains("args: launchArgs()"), "handed to the Engine's args")
 	assert_true(html.contains("['--'].concat(list)"), "the game's own arguments by default (after --)")
-	var re := RegEx.create_from_string("const BUILD = \\{ wasm: \\d+, pck: \\d+, wasmPacked: \\d+, pckPacked: \\d+ \\}; // set by tools/build_web.sh")
+	# P23: the BUILD line also carries the packed pck's part count (the multi-part pck).
+	var re := RegEx.create_from_string("const BUILD = \\{ wasm: \\d+, pck: \\d+, wasmPacked: \\d+, pckPacked: \\d+, pckParts: \\d+ \\}; // set by tools/build_web.sh")
 	assert_true(re.search(html) != null, "the BUILD line build_web.sh keeps in step")
+
+
+## P23 (plan M6-M9 §3.5): the launcher downloads a multi-part pck in order under one meter and joins
+## its text, resumes a suspended AudioContext on the first press, and says "Sound on".
+func test_the_launcher_joins_pck_parts_and_resumes_the_sound() -> void:
+	var html := FileAccess.get_file_as_string(LAUNCHER)
+	assert_true(html.contains("'index.pck': { urls: pckUrls(BUILD.pckParts)"), "the pck's parts from the BUILD line")
+	assert_true(html.contains("urls.push('index.pck.gz.b64.' + i + '.txt')"), "named index.pck.gz.b64.<n>.txt")
+	assert_true(html.contains("if (n === 1) return ['index.pck.gz.b64.txt'];"), "one part keeps its plain name")
+	assert_true(html.contains("for (const url of entry.urls)"), "downloaded in order")
+	assert_true(html.contains("await new Blob(chunks).text()"), "the text of every part joined before decoding")
+	assert_true(html.contains("window.addEventListener('pointerdown', resumeAudio, true);")
+		and html.contains("window.addEventListener('keydown', resumeAudio, true);"), "the first press resumes the sound")
+	assert_true(html.contains("if (ctx.state === 'suspended') ctx.resume()"), "only suspended contexts")
+	assert_true(html.contains("<b>Sound on.</b>"), "the page's notes say Sound on")
+	assert_false(html.contains("there is no sound"), "and no longer that there is none")
