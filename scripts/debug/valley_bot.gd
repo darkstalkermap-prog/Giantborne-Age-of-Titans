@@ -76,6 +76,10 @@ const RETRACE_S := 12.0
 ## How long the bot stands at an encounter whose living members are all out of its reach (fleeing,
 ## elevated, unreachable) before it takes the stage's other way on (P17b).
 const STALL_WALK_ON_S := 8.0
+## The stall's wait starts this close to an encounter's centre and lasts while the giant stays within
+## STALL_KEEP_M of it (M6 gate).
+const STALL_START_M := 6.0
+const STALL_KEEP_M := 15.0
 ## A fight that has taken no health off its target for CHASE_GIVE_UP_S (a stage-3 giant chasing a
 ## harassing wolf that keeps out of reach) is given up: the bot leaves that enemy alone for
 ## CHASE_IGNORE_S and goes on with its objective, as a person would stop chasing (P17b). Long enough
@@ -643,8 +647,13 @@ func _encounter_task(encounter_id: String, fallback: Vector3) -> Dictionary:
 	if director != null and director.encounter_state(encounter_id) == EncounterDirector.ACTIVE \
 			and alive.is_empty() and center.distance_to(player.global_position) < 12.0:
 		return {"kind": "wait", "why": "encounter %s: nothing left to reach" % encounter_id}
-	return {"kind": "go", "pos": center, "radius": 6.0,
-		"stalled": not alive.is_empty() and center.distance_to(player.global_position) < 6.0}
+	# The wait starts within STALL_START_M of the centre and goes on while the giant stays within
+	# STALL_KEEP_M (M6 gate: a wolf harassing from behind kept pushing the dodging giant a metre or two
+	# past 6 m, the wait restarted every few seconds, and the crown stage ran out its watchdog with the
+	# crown in reach).
+	var stall_m := STALL_KEEP_M if _stall_since >= 0 else STALL_START_M
+	return {"kind": "go", "pos": center, "radius": STALL_START_M,
+		"stalled": not alive.is_empty() and center.distance_to(player.global_position) < stall_m}
 
 
 func _encounter_alive(encounter_id: String) -> Array[EnemyActor]:
