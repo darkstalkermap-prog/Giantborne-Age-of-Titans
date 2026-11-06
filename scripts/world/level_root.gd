@@ -36,6 +36,13 @@ const SCENERY_GROUPS := ["scenery", "valley_scenery"]
 const MSAA_MODES := {0: Viewport.MSAA_DISABLED, 2: Viewport.MSAA_2X, 4: Viewport.MSAA_4X, 8: Viewport.MSAA_8X}
 ## The quality the web build runs when the record's web_overrides name none.
 const WEB_QUALITY := "low"
+## Level-wide nodes later packages own, created at run time so no builder needs them (P20, plan
+## M6-M9 §2.6): [node name, script path, the level ids it serves]. _ready makes each one whose
+## script exists for this level (a missing script is skipped silently), as a child of this root.
+const RUNTIME_NODES := [
+	["Discovery", "res://scripts/world/discovery.gd", ["level.valley", "level.world"]],   # P27
+	["WanderDirector", "res://scripts/world/wander_director.gd", ["level.world"]],         # P37
+]
 
 ## The id of this level's `level` record (budget, AI LOD, districts, start checkpoint).
 @export var level_id := "level.valley"
@@ -64,6 +71,7 @@ func _ready() -> void:
 	apply_graphics()
 	if not Settings.changed.is_connected(_on_settings_changed):
 		Settings.changed.connect(_on_settings_changed)
+	create_runtime_nodes()
 
 
 func _exit_tree() -> void:
@@ -74,6 +82,43 @@ func _exit_tree() -> void:
 func level_record() -> Dictionary:
 	var rec := GameData.get_record(level_id)
 	return rec if str(rec.get("type", "")) == "level" else {}
+
+
+## This level's world index (P20, plan M6-M9 §2.6): positions, display names and arrival limits
+## of its checkpoints, markers, areas, POIs, exits, encounters and quest props, also for nodes that
+## are not loaded. null when the level has none (WorldIndex.for_level; cached).
+func index() -> WorldIndex:
+	return WorldIndex.for_level(level_id)
+
+
+## The navigation layer the player uses here when its growth profile's layer is not baked in this
+## level: the record's player_nav_fallback (P20 declares it; the Valley's 4 comes with P26, the
+## world's 16 with P25); 0 when the record has none.
+func player_nav_fallback() -> int:
+	return int(level_record().get("player_nav_fallback", 0))
+
+
+## Makes the RUNTIME_NODES this level serves whose scripts exist (once: a node of that name
+## already below this root is kept). Returns the nodes made now.
+func create_runtime_nodes() -> Array[Node]:
+	var made: Array[Node] = []
+	for entry: Array in RUNTIME_NODES:
+		var node_name := str(entry[0])
+		var path := str(entry[1])
+		var levels: Array = entry[2]
+		if not levels.has(level_id) or has_node(NodePath(node_name)) or not ResourceLoader.exists(path):
+			continue
+		var script := load(path) as Script
+		if script == null:
+			continue
+		var n: Variant = script.new()
+		if not (n is Node):
+			push_warning("LevelRoot: runtime node %s (%s) is not a Node" % [node_name, path])
+			continue
+		(n as Node).name = node_name
+		add_child(n as Node)
+		made.append(n as Node)
+	return made
 
 
 ## Re-reads the groups (called at _ready and when a lookup misses).
@@ -336,3 +381,17 @@ func _restore_msaa() -> void:
 	if vp != null:
 		vp.msaa_3d = _msaa_before as Viewport.MSAA
 	_msaa_before = -1
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor
+# (P24a: streaming hooks of WorldRoot's base; P24b: nav_map(layer), nav_layers(), NavQuery
+# settings; P25: regions; P27: discovery and map lookups).
+
+## @anchor P24a
+
+## @anchor P24b
+
+## @anchor P25
+
+## @anchor P27

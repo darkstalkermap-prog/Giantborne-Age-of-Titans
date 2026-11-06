@@ -614,6 +614,7 @@ priority = 40
 transform = Transform3D(0.8290376, 0, -0.5591929, 0, 1, 0, 0.5591929, 0, 0.8290376, -140, 0.05, 38)
 script = ExtResource("33_add9b")
 requires_flags = PackedStringArray("encounter.forest_wolves_a.cleared")
+display_name = "Forest road waystone"
 checkpoint_id = "valley.cp.forest_road"
 
 [node name="Stone" type="StaticBody3D" parent="Waystones/valley_cp_forest_road"]
@@ -642,6 +643,7 @@ mesh = SubResource("BoxMesh_8")
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 134, 0.05, -18)
 script = ExtResource("33_add9b")
 requires_flags = PackedStringArray("world.ruins.gate_broken")
+display_name = "Ruins gate waystone"
 checkpoint_id = "valley.cp.ruins_gate"
 
 [node name="Stone" type="StaticBody3D" parent="Waystones/valley_cp_ruins_gate"]
@@ -670,6 +672,7 @@ mesh = SubResource("BoxMesh_12")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0.05, -122)
 script = ExtResource("33_add9b")
 requires_flags = PackedStringArray("world.forest.deadfall_broken")
+display_name = "Barrow gap waystone"
 checkpoint_id = "valley.cp.barrow_gap"
 
 [node name="Stone" type="StaticBody3D" parent="Waystones/valley_cp_barrow_gap"]

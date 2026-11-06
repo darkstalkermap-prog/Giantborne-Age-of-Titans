@@ -233,15 +233,15 @@
 		{"scene": "tree_small", "world_id": "valley.forest.tree_12", "pos": [-53.6, 0, -63.6], "yaw": 47}
 	],
 	"shrines": [
-		{"world_id": "valley.shrine.hollow", "record": "shrine.hollow", "pos": [-130, 0, 145], "yaw": 90},
-		{"world_id": "valley.shrine.grove", "record": "shrine.grove", "pos": [-60, 0, -70], "yaw": 0},
-		{"world_id": "valley.shrine.thornwick", "record": "shrine.thornwick", "pos": [14, 0, -26], "yaw": -45},
-		{"world_id": "valley.shrine.kingsfall", "record": "shrine.kingsfall", "pos": [150, 0, 55], "yaw": 0}
+		{"world_id": "valley.shrine.hollow", "record": "shrine.hollow", "pos": [-130, 0, 145], "yaw": 90, "max_stage": 10},
+		{"world_id": "valley.shrine.grove", "record": "shrine.grove", "pos": [-60, 0, -70], "yaw": 0, "max_stage": 10},
+		{"world_id": "valley.shrine.thornwick", "record": "shrine.thornwick", "pos": [14, 0, -26], "yaw": -45, "max_stage": 10},
+		{"world_id": "valley.shrine.kingsfall", "record": "shrine.kingsfall", "pos": [150, 0, 55], "yaw": 0, "max_stage": 10}
 	],
 	"waystones": [
-		{"id": "valley.cp.forest_road", "pos": [-140, 0, 38], "yaw": -34, "radius": 10, "requires_flags": ["encounter.forest_wolves_a.cleared"], "stone": [9.5, 0]},
-		{"id": "valley.cp.ruins_gate", "pos": [134, 0, -18], "yaw": -90, "radius": 10, "requires_flags": ["world.ruins.gate_broken"], "stone": [-7, 0]},
-		{"id": "valley.cp.barrow_gap", "pos": [-50, 0, -122], "yaw": 0, "radius": 10, "requires_flags": ["world.forest.deadfall_broken"], "stone": [5.4, 2]}
+		{"id": "valley.cp.forest_road", "display_name": "Forest road waystone", "pos": [-140, 0, 38], "yaw": -34, "radius": 10, "requires_flags": ["encounter.forest_wolves_a.cleared"], "stone": [9.5, 0], "max_stage": 10},
+		{"id": "valley.cp.ruins_gate", "display_name": "Ruins gate waystone", "pos": [134, 0, -18], "yaw": -90, "radius": 10, "requires_flags": ["world.ruins.gate_broken"], "stone": [-7, 0], "max_stage": 10},
+		{"id": "valley.cp.barrow_gap", "display_name": "Barrow gap waystone", "pos": [-50, 0, -122], "yaw": 0, "radius": 10, "requires_flags": ["world.forest.deadfall_broken"], "stone": [5.4, 2], "max_stage": 10}
 	],
 	"dummies": [
 		{"entity_id": "valley.hollow.dummy_1", "pos": [-118, 0, 160], "yaw": 90},
