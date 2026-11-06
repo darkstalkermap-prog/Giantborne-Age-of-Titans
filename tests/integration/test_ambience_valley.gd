@@ -32,7 +32,15 @@ func after_each() -> void:
 	await super()
 
 
+## The Valley's samples, loaded once for the run: each test's registration (the loading gate the
+## zone music waits for) then finds them in the resource cache instead of reading ~200 files again.
+static var _held: Array = []
+
+
 func _valley(at: Vector3) -> GiantPlayer:
+	if _held.is_empty():
+		for path in Audio.sample_paths_for(VALLEY):
+			_held.append(load(path))
 	var lv := LevelRoot.new()
 	lv.name = "Valley"
 	lv.level_id = VALLEY
