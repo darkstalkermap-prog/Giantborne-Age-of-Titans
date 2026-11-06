@@ -47,9 +47,12 @@ const LEVEL_GROUP := "level_root"
 const SANDBOX_GROUP := "sandbox"
 ## The level key of the sandbox (it has no level record).
 const SANDBOX_LEVEL := "sandbox"
-## Levels and contexts with no music or ambience by decision (P23's coverage test reads them).
+## Levels and contexts with no music or ambience by decision (P23's coverage test reads them,
+## with the silent list record data/audio/region_silent.json: silent_levels(), silent_contexts()).
 const SILENT_LEVELS := ["level.stress_arena", "level.director_test"]
 const SILENT_CONTEXTS := ["loading"]
+## Test-only records live here (P22); a level whose record does is silent (is_silent_level()).
+const TEST_DATA_DIR := "res://data/test/"
 const FOCUS_MUTE_DB := -80.0
 const FOCUS_RAMP_S := 0.2
 const LISTENER_HEIGHT_FACTOR := 0.8
@@ -806,10 +809,39 @@ func current_region() -> Dictionary:
 	return _zone_record
 
 
+## The levels that play no music or ambience by decision: SILENT_LEVELS and the silent list
+## record's silent_levels (data/audio/region_silent.json, P23).
+func silent_levels() -> PackedStringArray:
+	var out := PackedStringArray(SILENT_LEVELS)
+	for rec: Dictionary in GameData.records_of_type("audio_region"):
+		for lv: Variant in rec.get("silent_levels", []):
+			if not out.has(str(lv)):
+				out.append(str(lv))
+	return out
+
+
+## The contexts that play nothing by decision (SILENT_CONTEXTS and the silent list's).
+func silent_contexts() -> PackedStringArray:
+	var out := PackedStringArray(SILENT_CONTEXTS)
+	for rec: Dictionary in GameData.records_of_type("audio_region"):
+		for c: Variant in rec.get("silent_contexts", []):
+			if not out.has(str(c)):
+				out.append(str(c))
+	return out
+
+
+## True for a level silent by decision: in the silent list, or test content (a level record that
+## lives under data/test/, which the web release leaves out: P22's test levels, P24a's test world).
+func is_silent_level(level: String) -> bool:
+	if silent_levels().has(level):
+		return true
+	return str(GameData.record_paths.get(level, "")).begins_with(TEST_DATA_DIR)
+
+
 func _poll_zone() -> void:
 	var p := player()
 	var lv := level_node()
-	if p == null or lv == null or level_id == SANDBOX_LEVEL or SILENT_LEVELS.has(level_id):
+	if p == null or lv == null or level_id == SANDBOX_LEVEL or is_silent_level(level_id):
 		_zone_record = {}
 		return
 	var pos := p.global_position

@@ -1,0 +1,41 @@
+{
+	"schema_version": 1,
+	"id": "ambience.meadow",
+	"type": "ambience_set",
+	"display_name": "Giant's Hollow",
+	"description": "P23: wind breathing in gusts over the grass and crickets; now and then a lark, a burst of crickets, a gust. The lark falls silent for a while after a giant's step close by (and the birds take flight).",
+	"beds": [
+		{
+			"cue": "amb.bed_meadow",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.lark",
+			"weight": 3,
+			"flush": true
+		},
+		{
+			"cue": "amb.cricket",
+			"weight": 2
+		},
+		{
+			"cue": "amb.gust",
+			"weight": 2
+		}
+	],
+	"spot_interval_s": [
+		5,
+		12
+	],
+	"spot_distance_m": [
+		10,
+		28
+	],
+	"reactions": {
+		"flush_radius_m": 40,
+		"flush_s": 8,
+		"flush_cue": "amb.birds_flush"
+	}
+}

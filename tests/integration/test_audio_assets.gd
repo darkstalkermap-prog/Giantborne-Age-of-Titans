@@ -2,9 +2,10 @@ extends TestSuite
 ## P19 (plan M6-M9 §3.1 asset tests, §4.5, decision 8): the generated audio, checked offline with
 ## AudioStreamPlayback.mix_audio (no driver, no real time): every file a bank or a set names
 ## loads; effects are samplable, at most 2.0 s, neither clipped nor silent; loops repeat with an
-## exact period (the second pass equals the first within 1e-4); music stems last their set's loop
-## to the frame; the manifest matches the files; the size budget holds (Ogg sizes x 1.03 and the
-## exact QOA formula for WAVs) and the registered seconds per level hold.
+## exact period (the second pass equals the first within 1e-4; here the shortest loop, every loop in
+## tests/slow/test_music_loops.gd since P23's score); music stems last their set's loop to the
+## frame; the manifest matches the files; the size budget holds (Ogg sizes x 1.03 and the exact QOA
+## formula for WAVs) and the registered seconds per level hold.
 
 const MIX_RATE := 44100.0
 const SFX_MAX_S := 2.0
@@ -15,6 +16,15 @@ const QOA_IMPORT_BYTES := 370
 const OGG_IMPORT_FACTOR := 1.03
 ## Frames skipped at the start of a pass (the resampler's interpolation latency, brief §3).
 const LATENCY_FRAMES := 16
+
+## P23: the streams this suite loaded, kept for its later tests (each file loads once per run).
+var _loaded := {}
+
+
+func _load(path: String) -> AudioStream:
+	if not _loaded.has(path):
+		_loaded[path] = load(path)
+	return _loaded[path] as AudioStream
 
 
 ## Renders `seconds` of `stream` offline at the mix rate.
@@ -54,9 +64,9 @@ func _referenced_files() -> Dictionary:
 
 func test_every_referenced_file_loads() -> void:
 	var files := _referenced_files()
-	assert_true(files.size() >= 8, "the placeholder bank names its files (%d)" % files.size())
+	assert_true(files.size() >= 250, "the banks and sets name their files (%d)" % files.size())
 	for path: String in files:
-		var s := load(path) as AudioStream
+		var s := _load(path)
 		assert_true(s != null, "%s loads (%s)" % [path, files[path]])
 		if path.ends_with(".wav"):
 			assert_true(s is AudioStreamWAV, "%s is a WAV sample" % path)
@@ -70,38 +80,59 @@ func test_effects_are_samplable_short_and_neither_clipped_nor_silent() -> void:
 		if not path.ends_with(".wav"):
 			continue
 		n += 1
-		var s := load(path) as AudioStreamWAV
+		var s := _load(path) as AudioStreamWAV
 		assert_true(s.can_be_sampled(), "%s can be a web sample" % path)
 		assert_true(s.get_length() <= SFX_MAX_S + 1e-6, "%s is at most 2.0 s (%.3f)" % [path, s.get_length()])
 		assert_eq(s.loop_mode, AudioStreamWAV.LOOP_DISABLED, "%s is a one-shot" % path)
 		var p := peak(render(s, s.get_length()))
 		assert_true(p < 1.0, "%s does not clip (%.3f)" % [path, p])
 		assert_true(p > 0.001, "%s is not silent (%.4f)" % [path, p])
-	assert_true(n >= 7, "every placeholder effect checked")
+	assert_true(n >= 200, "every effect checked (%d)" % n)
 
 
+## Whether `out` (two passes of a loop of `period` output frames, from the start) repeats exactly:
+## [the largest difference between the passes past the resampler's latency, the first pass's peak].
+static func pass_difference(out: PackedVector2Array, period: int) -> Vector2:
+	var worst := 0.0
+	var p := 0.0
+	for i in range(LATENCY_FRAMES, period):
+		var a := out[i]
+		var b := out[i + period]
+		worst = maxf(worst, maxf(absf(a.x - b.x), absf(a.y - b.y)))
+		p = maxf(p, maxf(absf(a.x), absf(a.y)))
+	return Vector2(worst, p)
+
+
+## The loop entries of the manifest, shortest first (path order between equals).
+static func loop_paths() -> PackedStringArray:
+	var files: Dictionary = AudioMath.manifest().get("files", {})
+	var paths: Array = []
+	for path: String in files:
+		if bool((files[path] as Dictionary).get("loop", false)):
+			paths.append(path)
+	paths.sort_custom(func(a: String, b: String) -> bool:
+		var fa := int(files[a].frames) / float(files[a].rate)
+		var fb := int(files[b].frames) / float(files[b].rate)
+		return fa < fb if not is_equal_approx(fa, fb) else a < b)
+	return PackedStringArray(paths)
+
+
+## P23: the default suite renders the shortest loop over two periods (a 10 s emitter); the slow tier
+## (tests/slow/test_music_loops.gd) renders every loop and stem the same way, about 8 s.
 func test_loops_repeat_with_an_exact_period() -> void:
 	var manifest := AudioMath.manifest()
-	var loops := 0
-	for path: String in manifest.get("files", {}):
-		var e: Dictionary = manifest.files[path]
-		if not bool(e.get("loop", false)):
-			continue
-		loops += 1
-		var s := load(path) as AudioStreamOggVorbis
-		s.loop = true
-		var period := int(round(float(e.frames) / float(e.rate) * MIX_RATE))
-		assert_near(s.get_length(), float(e.frames) / float(e.rate), 1.0 / float(e.rate), "%s lasts its frames" % path)
-		var out := render(s, 2.0 * period / MIX_RATE + 0.05)
-		var worst := 0.0
-		for i in range(LATENCY_FRAMES, period):
-			var a := out[i]
-			var b := out[i + period]
-			worst = maxf(worst, maxf(absf(a.x - b.x), absf(a.y - b.y)))
-		assert_true(worst < 1e-4, "%s: the second pass equals the first (largest difference %s)" % [path, str(worst)])
-		var p := peak(out)
-		assert_true(p < 1.0 and p > 0.01, "%s is neither clipped nor silent (%.3f)" % [path, p])
-	assert_true(loops >= 1, "the placeholder bed is a loop")
+	var paths := loop_paths()
+	assert_true(paths.size() >= 25, "the score's stems, beds and emitters are loops (%d)" % paths.size())
+	var path := paths[0]
+	var e: Dictionary = manifest.files[path]
+	var s := _load(path) as AudioStreamOggVorbis
+	s.loop = true
+	var period := int(round(float(e.frames) / float(e.rate) * MIX_RATE))
+	assert_near(s.get_length(), float(e.frames) / float(e.rate), 1.0 / float(e.rate), "%s lasts its frames" % path)
+	var out := render(s, 2.0 * period / MIX_RATE + 0.05)
+	var d := pass_difference(out, period)
+	assert_true(d.x < 1e-4, "%s: the second pass equals the first (largest difference %s)" % [path, str(d.x)])
+	assert_true(d.y < 1.0 and d.y > 0.01, "%s is neither clipped nor silent (%.3f)" % [path, d.y])
 
 
 func test_one_shot_oggs_end() -> void:
@@ -110,7 +141,7 @@ func test_one_shot_oggs_end() -> void:
 		var e: Dictionary = manifest.files[path]
 		if str(e.kind) != "oneshot":
 			continue
-		var s := load(path) as AudioStreamOggVorbis
+		var s := _load(path) as AudioStreamOggVorbis
 		s.loop = false
 		assert_near(s.get_length(), float(e.seconds), 0.01, "%s lasts its seconds" % path)
 
@@ -120,16 +151,19 @@ func test_stems_last_their_sets_loop_to_the_frame() -> void:
 	for rec: Dictionary in sets:
 		var want := AudioMath.loop_seconds(float(rec.bpm), int(rec.beats_per_bar), int(rec.bars))
 		for stem: String in rec.stems:
-			var s := load(str(rec.stems[stem])) as AudioStream
+			var s := _load(str(rec.stems[stem]))
 			var e := AudioMath.manifest_entry(str(rec.stems[stem]))
 			var rate := float(e.get("rate", 22050))
 			assert_near(s.get_length(), want, 1.0 / rate, "%s %s lasts the loop to the frame" % [rec.id, stem])
-	# the placeholder bed fits a 120 BPM 4/4 set of four bars exactly
-	var bed := load("res://assets/audio/placeholder/bed.ogg") as AudioStream
-	assert_near(bed.get_length(), AudioMath.loop_seconds(120.0, 4, 4), 1.0 / 22050.0, "the bed is 4 bars at 120 BPM")
-	var e := AudioMath.manifest_entry("res://assets/audio/placeholder/bed.ogg")
-	assert_eq(str(e.get("frame", "")), "test_120", "its frame is recorded")
-	assert_eq(int(e.get("beats", 0)), 16, "16 beats")
+	assert_true(sets.size() >= 6, "P23's sets ship (title, end, three zone sets, the Ogre King)")
+	# the zone frame's drone is 12 bars at 96 BPM exactly, the King's frame 12 bars at 104 BPM
+	var drone := _load("res://assets/audio/music/drone_calm.ogg")
+	assert_near(drone.get_length(), AudioMath.loop_seconds(96.0, 4, 12), 1.0 / 22050.0, "the drone is 12 bars at 96 BPM")
+	var e := AudioMath.manifest_entry("res://assets/audio/music/drone_calm.ogg")
+	assert_eq(str(e.get("frame", "")), "zone_96", "its frame is recorded")
+	assert_eq(int(e.get("beats", 0)), 48, "48 beats")
+	var boss := AudioMath.manifest_entry("res://assets/audio/music/boss_drums.ogg")
+	assert_eq(str(boss.get("frame", "")), "boss_104", "the King's stems have their own frame")
 
 
 func test_the_manifest_matches_the_files() -> void:

@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.silent",
+	"display_name": "Silent by decision",
+	"description": "P23: the levels and contexts that play no music or ambience by decision (plan section 2.5): the test levels (every level record under data/test is silent too) and the loading screen.",
+	"silent_levels": [
+		"level.stress_arena",
+		"level.director_test"
+	],
+	"silent_contexts": [
+		"loading"
+	]
+}

@@ -11,7 +11,8 @@ Every gen_<family>.py module beside this file exposes CUES, a list of dicts:
     params   the render's parameters (dict)     kind   "sfx" (16-bit WAV, imported as QOA) |
                                                        "loop" | "oneshot" (Ogg Vorbis)
     rate     22050 by default                   quality  libvorbis -q:a for Ogg (default 0)
-    norm     {"peak_db": x} or {"rms_db": x} (defaults: SFX peak -6 dBFS, music and spots -3)
+    norm     {"peak_db": x}, {"rms_db": x} or {"lufs": x} (K-weighted, gated loudness; P23's
+             music and ambience), with "max_peak_db" (defaults: SFX peak -6 dBFS, the rest -3)
     bpm, beats, beats_per_bar, frame            music loops (the loop must be exactly
                                                 beats x 60 / bpm seconds long)
     scope    "m6" (default) or "world"          est_kbps  Ogg size estimate (KB per second)
@@ -152,7 +153,9 @@ def render(fam: str, cue: dict) -> dict:
         x = x[:, 0]
     norm = dict(DEFAULT_NORM[cue["kind"]])
     norm.update(cue.get("norm", {}))
-    if "rms_db" in norm:
+    if "lufs" in norm:
+        x = core.normalize_lufs(x, rate, float(norm["lufs"]), float(norm.get("max_peak_db", -1.0)))
+    elif "rms_db" in norm:
         x = core.normalize_rms(x, float(norm["rms_db"]), float(norm.get("max_peak_db", -1.0)))
     else:
         x = core.normalize_peak(x, float(norm.get("peak_db", -6.0)))

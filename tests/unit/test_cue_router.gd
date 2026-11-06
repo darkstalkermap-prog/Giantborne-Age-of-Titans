@@ -1,6 +1,6 @@
 extends TestSuite
 ## P19 (plan M6-M9 §2.5, §3.1 design 2-3, §4.1): the router's conventions and requests, and the
-## voice pool's rules through Audio.play - cue fallback chains to the placeholder bank, voice,
+## voice pool's rules through Audio.play - cue fallback chains (to the family defaults), voice,
 ## material and step classes from the mix, the requests the handlers build, every M6 signal routed
 ## or deliberately silent, the retrigger guard, per-cue caps, voice stealing by priority and age,
 ## and variants that never repeat. Audio is enabled for these tests (the suite runs silent).
@@ -53,10 +53,10 @@ func test_every_m6_signal_is_routed_or_deliberately_silent() -> void:
 		assert_true(CueRouter.ROUTED_SIGNALS.has(sig), "%s (M7-M9) is routed when it exists" % sig)
 
 
-## P21 replaced the placeholder bank's sfx cues with the effect banks: specific cues resolve to
-## themselves, a missing subject or variant falls back along the chain to its parent and then to
-## the family's default, and the stingers still fall back to the placeholder until P23.
-func test_cues_fall_back_to_the_placeholder_bank() -> void:
+## P21 replaced the placeholder bank's sfx cues with the effect banks and P23 its stinger (the
+## placeholder bank is gone): specific cues resolve to themselves, a missing subject or variant
+## falls back along the chain to its parent and then to the family's default.
+func test_cues_fall_back_along_their_chains() -> void:
 	assert_eq(str(Audio.resolve("sfx.hit.flesh.light").get("id", "")), "sfx.hit.flesh.light", "a hit resolves to itself")
 	assert_eq(str(Audio.resolve("sfx.hit.unobtainium.light").get("id", "")), "sfx.hit.default",
 		"an unknown material falls back to the family default")
@@ -64,7 +64,8 @@ func test_cues_fall_back_to_the_placeholder_bank() -> void:
 	assert_eq(str(Audio.resolve("sfx.step.giant_s1.soft.cruise").get("id", "")), "sfx.step.giant_s1.soft",
 		"a missing variant falls back to its parent")
 	assert_eq(str(Audio.resolve("sfx.ui.lock_on").get("id", "")), "sfx.ui.lock_on", "an interface cue")
-	assert_eq(str(Audio.resolve("mus.stinger.growth").get("id", "")), "mus.stinger.default", "a stinger (placeholder until P23)")
+	assert_eq(str(Audio.resolve("mus.stinger.growth").get("id", "")), "mus.stinger.growth", "a stinger (P23)")
+	assert_true(Audio.resolve("mus.stinger.default").is_empty(), "no placeholder stinger is left (P23 deleted the bank)")
 	assert_eq(str(Audio.resolve_chain(["sfx.ability.thunder_roar.roar", "sfx.voice.giant.roar"]).get("id", "")),
 		"sfx.ability.thunder_roar.roar", "the first candidate")
 	assert_eq(str(Audio.resolve_chain(["sfx.ability.unknown_ability.roar", "sfx.voice.unknown_voice.roar"]).get("id", "")),
@@ -148,7 +149,7 @@ func test_handlers_build_their_requests() -> void:
 func test_stingers_play_on_the_music_bus() -> void:
 	_router()._on_level_changed(1, 1, 2)
 	_router()._on_quest_completed(1, "quest.main")
-	assert_true(Audio.music.stingers.has("mus.stinger.default"), "the level-up stinger played (placeholder)")
+	assert_true(Audio.music.stingers.has("mus.stinger.level_up"), "the level-up stinger played (P23)")
 	var log := Audio.cue_log()
 	assert_true(log.size() >= 1 and str(log[0].bus) == "Music" and str(log[0].requested) == "mus.stinger.level_up",
 		"logged on the Music bus as requested")
@@ -156,12 +157,14 @@ func test_stingers_play_on_the_music_bus() -> void:
 
 
 func _bank_with(cues: Dictionary) -> void:
-	Fx.record_override("audio_bank.placeholder", {"cues": cues})
+	Fx.record_override("audio_bank.test", {"schema_version": 1, "id": "audio_bank.test", "type": "audio_bank",
+		"cues": cues})
 	Audio.reload_catalog()
 
 
+## A test interface cue on one of P21's short interface sounds (the placeholder tones are gone).
 func _ui_cue(priority: int, max_voices: int, retrigger_ms: int) -> Dictionary:
-	return {"files": ["res://assets/audio/placeholder/tone_mid.wav"], "bus": "UI", "spatial": false,
+	return {"files": ["res://assets/audio/sfx/ui/close_1.wav"], "bus": "UI", "spatial": false,
 		"volume_db": -6.0, "priority": priority, "max_voices": max_voices, "retrigger_ms": retrigger_ms}
 
 

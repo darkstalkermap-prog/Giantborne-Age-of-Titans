@@ -11,7 +11,6 @@ const FORBIDDEN := ["PLAYBACK_TYPE_SAMPLE", "AudioStreamRandomizer", "AudioStrea
 	"AudioStreamInteractive", "AudioStreamSynchronized"]
 const AUDIO_DIR := "res://scripts/audio"
 const Fx := preload("res://tests/support/test_fixtures.gd")
-const BED := "res://assets/audio/placeholder/bed.ogg"
 
 
 func after_each() -> void:
@@ -103,19 +102,13 @@ func test_project_settings_and_formats() -> void:
 
 func test_every_music_and_ambience_player_is_a_stream() -> void:
 	Audio.enable_for_tests()
-	Fx.record_override("music.test_title", {"schema_version": 1, "type": "music_set", "bpm": 120, "beats_per_bar": 4,
-		"bars": 4, "frame": "test_120", "stems": {"drone": BED, "theme": BED}, "layers": {"explore": {"drone": 0}}})
-	Fx.record_override("ambience.test_title", {"schema_version": 1, "type": "ambience_set",
-		"beds": [{"cue": "amb.test_bed"}], "spots": [], "spot_interval_s": [1, 2], "spot_distance_m": [10, 20]})
-	Fx.record_override("audio_region.test_title", {"schema_version": 1, "type": "audio_region", "context": "title",
-		"music": "music.test_title", "ambience": "ambience.test_title"})
-	Fx.record_override("audio_bank.test", {"schema_version": 1, "type": "audio_bank", "cues": {
-		"amb.test_bed": {"files": [BED], "bus": "Ambience", "spatial": false}}})
+	# P23's title music (two stems) with the meadow's bed under it (the shipped title has no bed)
+	Fx.record_override("audio_region.context_title", {"ambience": "ambience.meadow"})
 	Audio.reload_catalog()
 	Audio.music.clock_positions = true
 	GameSession.mode = GameSession.Mode.TITLE
 	Audio.advance_for_tests(0.6)
-	Audio.music.play_stinger("mus.stinger.test", 50)
+	Audio.music.play_stinger("mus.stinger.quest", 50)
 	var players := _players(Audio)
 	var checked := 0
 	for p: Node in players:

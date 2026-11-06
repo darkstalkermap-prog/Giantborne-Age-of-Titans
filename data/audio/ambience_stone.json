@@ -1,0 +1,71 @@
+{
+	"schema_version": 1,
+	"id": "ambience.stone",
+	"type": "ambience_set",
+	"display_name": "The stone places",
+	"description": "P23: the Barrow, the Raider Quarry, the Ruins and Kingsfall: cold wind whistling through stone, drips, a deep rumble; pebbles slipping, a crow, a wind whistle, iron struck far off. Emitters: the river under the King's Bridge and the Giantforge's fire.",
+	"beds": [
+		{
+			"cue": "amb.bed_stone",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.pebbles_a",
+			"weight": 2
+		},
+		{
+			"cue": "amb.pebbles_b",
+			"weight": 2
+		},
+		{
+			"cue": "amb.crow",
+			"weight": 1,
+			"flush": true
+		},
+		{
+			"cue": "amb.whistle",
+			"weight": 2
+		},
+		{
+			"cue": "amb.clank",
+			"weight": 1
+		}
+	],
+	"spot_interval_s": [
+		5,
+		13
+	],
+	"spot_distance_m": [
+		14,
+		34
+	],
+	"emitters": [
+		{
+			"cue": "amb.river_loop",
+			"level": "level.valley",
+			"position_m": [
+				106,
+				0,
+				-20
+			],
+			"radius_m": 60
+		},
+		{
+			"cue": "amb.forge_fire",
+			"level": "level.valley",
+			"position_m": [
+				175,
+				0,
+				-104
+			],
+			"radius_m": 25
+		}
+	],
+	"reactions": {
+		"flush_radius_m": 40,
+		"flush_s": 8,
+		"flush_cue": "amb.birds_flush"
+	}
+}

@@ -92,9 +92,7 @@ func test_the_seven_banks_ship_and_hold_their_families() -> void:
 			for p: String in prefixes:
 				ok = ok or cue_id.begins_with(p)
 			assert_true(ok, "%s belongs in %s" % [cue_id, bank.id])
-	var placeholder: Dictionary = GameData.get_record("audio_bank.placeholder").get("cues", {})
-	for cue_id: String in placeholder:
-		assert_false(cue_id.begins_with("sfx."), "the placeholder bank no longer holds effects (%s)" % cue_id)
+	assert_false(GameData.has_record("audio_bank.placeholder"), "the placeholder bank is gone (P23 replaced its stinger)")
 
 
 func test_variants_buses_classes_and_spatial_use() -> void:

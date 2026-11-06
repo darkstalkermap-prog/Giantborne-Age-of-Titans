@@ -1,0 +1,185 @@
+{
+	"schema_version": 1,
+	"id": "audio_bank.stingers",
+	"type": "audio_bank",
+	"display_name": "Stingers",
+	"description": "P23 (section 4.1 family S): the score's stingers, one-shot Ogg streams on the Music bus that duck the stems for their length: growth, level up, victory, quest stage and completion, death, the prologue's end, the three Valley combat intros and the Ogre King's intro. Balanced at -16 LUFS (the quest call -17).",
+	"cues": {
+		"mus.stinger.growth": {
+			"files": [
+				"res://assets/audio/music/stinger_growth.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.level_up": {
+			"files": [
+				"res://assets/audio/music/stinger_level_up.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.victory": {
+			"files": [
+				"res://assets/audio/music/stinger_victory.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.quest": {
+			"files": [
+				"res://assets/audio/music/stinger_quest.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.quest_complete": {
+			"files": [
+				"res://assets/audio/music/stinger_quest_complete.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.death": {
+			"files": [
+				"res://assets/audio/music/stinger_death.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 100,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.prologue_end": {
+			"files": [
+				"res://assets/audio/music/stinger_prologue_end.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 100,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.combat_calm": {
+			"files": [
+				"res://assets/audio/music/stinger_combat_calm.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.combat_wild": {
+			"files": [
+				"res://assets/audio/music/stinger_combat_wild.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.combat_ancient": {
+			"files": [
+				"res://assets/audio/music/stinger_combat_ancient.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.boss_ogre_king": {
+			"files": [
+				"res://assets/audio/music/stinger_boss_ogre_king.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		}
+	}
+}

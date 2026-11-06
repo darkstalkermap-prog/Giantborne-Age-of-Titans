@@ -431,6 +431,65 @@ def normalize_rms(x: np.ndarray, target_db: float, max_peak_db: float = -1.0) ->
     return out
 
 
+# ITU-R BS.1770's K-weighting as the standard gives it at 48 kHz: the +4 dB high shelf (stage 1)
+# and the RLB high-pass (stage 2).
+_K_RATE = 48000.0
+_K_SHELF = ((1.53512485958697, -2.69169618940638, 1.19839281085285), (1.0, -1.69065929318241, 0.73248077421585))
+_K_HIGH_PASS = ((1.0, -2.0, 1.0), (1.0, -1.99004745483398, 0.99007225036621))
+
+
+def k_weighting(f: np.ndarray) -> np.ndarray:
+    """The magnitude of ITU-R BS.1770's K-weighting at frequencies f (Hz): the standard's two
+    48 kHz biquads (the high shelf and the RLB high-pass) evaluated at f, which is exact for every
+    f below 24 kHz, so for every rate the generators use (P23: music and ambience are balanced by
+    it; +0.69 dB at 997 Hz, so a full-scale 997 Hz sine in one channel reads -3.01 LUFS)."""
+    f = np.clip(np.asarray(f, dtype=np.float64), 0.0, _K_RATE / 2.0)
+    z1 = np.exp(-2j * np.pi * f / _K_RATE)
+    gain = np.ones(f.shape, dtype=np.complex128)
+    for b, a in (_K_SHELF, _K_HIGH_PASS):
+        gain *= (b[0] + b[1] * z1 + b[2] * z1 * z1) / (a[0] + a[1] * z1 + a[2] * z1 * z1)
+    return np.abs(gain)
+
+
+def loudness_lufs(x: np.ndarray, rate: int, block_s: float = 0.4) -> float:
+    """Integrated loudness in the manner of ITU-R BS.1770 (LUFS): K-weighting, 400 ms blocks with
+    75 % overlap, an absolute gate at -70 and a relative gate 10 LU under the gated mean; channel
+    powers summed. Silent input gives -120. Used to balance music stems and ambience by what is
+    heard while they sound (a sparse melody is measured by its notes, not its rests)."""
+    arr = np.asarray(x, dtype=np.float64)
+    chans = [arr] if arr.ndim == 1 else [arr[:, c] for c in range(arr.shape[1])]
+    power = None
+    for ch in chans:
+        k = fft_filter(ch, rate, k_weighting)
+        power = k * k if power is None else power + k * k
+    n = power.shape[0]
+    blk = max(1, min(n, n_frames(block_s, rate)))
+    hop = max(1, blk // 4)
+    c = np.concatenate([[0.0], np.cumsum(power)])
+    starts = np.arange(0, n - blk + 1, hop)
+    z = (c[starts + blk] - c[starts]) / blk
+    lk = -0.691 + 10.0 * np.log10(np.maximum(z, 1e-30))
+    keep = z[lk > -70.0]
+    if keep.size == 0:
+        return -120.0
+    rel = -0.691 + 10.0 * math.log10(float(np.mean(keep))) - 10.0
+    keep = z[(lk > -70.0) & (lk > rel)]
+    if keep.size == 0:
+        return -120.0
+    return -0.691 + 10.0 * math.log10(float(np.mean(keep)))
+
+
+def normalize_lufs(x: np.ndarray, rate: int, target: float, max_peak_db: float = -1.0) -> np.ndarray:
+    """Scales x so its loudness_lufs is `target`, but never past max_peak_db dBFS at the peak."""
+    current = loudness_lufs(x, rate)
+    if current <= -119.0:
+        return np.asarray(x, dtype=np.float64)
+    out = np.asarray(x, dtype=np.float64) * db_to_gain(target - current)
+    if peak(out) > db_to_gain(max_peak_db):
+        out = normalize_peak(out, max_peak_db)
+    return out
+
+
 def pan(mono: np.ndarray, position: float) -> np.ndarray:
     """Equal-power pan of a mono signal to stereo: position -1 (left) .. 1 (right)."""
     a = (max(-1.0, min(1.0, float(position))) + 1.0) * math.pi / 4.0
@@ -463,6 +522,8 @@ def check_signal(x: np.ndarray, rate: int, kind: str, loop: bool) -> list:
     point)."""
     problems = []
     arr = np.asarray(x, dtype=np.float64)
+    if not np.all(np.isfinite(arr)):
+        return ["not finite (NaN or infinite samples)"]
     p = peak(arr)
     if p >= 1.0:
         problems.append("clipping (peak %.3f)" % p)
