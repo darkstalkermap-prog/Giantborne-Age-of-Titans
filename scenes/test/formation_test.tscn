@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="5_627ae"]
 [ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="6_7ef4a"]
 [ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="7_b0840"]
+[ext_resource type="Script" path="res://scripts/debug/stress_scenario.gd" id="8_2b37b"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -219,6 +220,9 @@ script = ExtResource("6_7ef4a")
 
 [node name="EncounterDirector" type="Node" parent="."]
 script = ExtResource("7_b0840")
+
+[node name="StressScenario" type="Node" parent="."]
+script = ExtResource("8_2b37b")
 
 [node name="Signs" type="Node3D" parent="."]
 

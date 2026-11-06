@@ -13,10 +13,10 @@ extends RefCounted
 ##     arms are EnemyActor.BRACE_POSES, the ones a promoted member's rig takes;
 ##   * scenes/test/formation_test.tscn: a walled 440 x 160 m floor (level.formation_test, records in
 ##     data/test/) with a wall at z = -40 with a 6 m gate in its middle, three flee markers north of
-##     it, the human navmesh baked offline (TestDirector.bake_navmesh), the checkpoint, the player
-##     and the EncounterDirector. Its encounters (pikes and a shield wall in the west, the rout at
-##     the gate, the 40-member stress case in the east) wait for a flag nobody sets: tests and the
-##     stress scenario activate them.
+##     it, the human navmesh baked offline (TestDirector.bake_navmesh), the checkpoint, the player,
+##     the EncounterDirector and a StressScenario (the --stress-formations bot). Its encounters
+##     (pikes and a shield wall in the west, the rout at the gate, the 40-member stress case in the
+##     east) wait for a flag nobody sets: tests and the stress scenario activate them.
 ## Runs after the player builder (BUILDERS order in tools/build_scenes.gd).
 
 const S_SOLDIER := "res://scripts/actors/soldier_enemy.gd"
@@ -30,6 +30,7 @@ const S_LEVEL := "res://scripts/world/level_root.gd"
 const S_DIRECTOR := "res://scripts/world/encounter_director.gd"
 const S_MARKER := "res://scripts/world/level_marker.gd"
 const S_CHECKPOINT := "res://scripts/world/checkpoint_marker.gd"
+const S_STRESS := "res://scripts/debug/stress_scenario.gd"
 const GIANT := "res://scenes/player/giant.tscn"
 
 const POSES := ["hold", "brace", "advance", "flee"]
@@ -361,6 +362,11 @@ static func build_test_level(kit: SceneKit) -> Node:
 	director.name = "EncounterDirector"
 	kit.scripted(director, S_DIRECTOR)
 	root.add_child(director)
+	# the formation stress case's bot (--scenario=stress --stress-formations; idle otherwise)
+	var stress := Node.new()
+	stress.name = "StressScenario"
+	kit.scripted(stress, S_STRESS)
+	root.add_child(stress)
 
 	var signs := kit.n3("Signs")
 	for spec: Array in [["SignPikes", "PIKES and SHIELD WALL (tests activate them)", Vector3(-172, 4, 12)],
