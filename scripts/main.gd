@@ -5,7 +5,9 @@ extends Node
 ##   * sandbox and Valley: a "Loading..." label while the game is paused (no simulation tick
 ##     passes): one frame, then the level GameSession.level_scene_path() names, HitFeedback, the
 ##     HUD, the debug panel and the screen stack, then GameSession.on_level_ready(level, player)
-##     (respawn point and character state), then the autopilot when one was asked for; then the
+##     (respawn point and character state), then the autopilot when one was asked for; then (P24a)
+##     a streamed world's starting ring (hold_until_world_ready: ring slices with progress, at most
+##     WORLD_LOAD_LIMIT_S); then the
 ##     loading gate (P19): the tree stays paused behind "Loading..." until Audio.is_ready() - every
 ##     SFX sample of the level registered - so no sound plays before its sample exists and the
 ##     first play() never registers (plan M6-M9 §2.5, decision 2). Paused frames run no tick, so
@@ -33,6 +35,8 @@ const SANDBOX_SCENE := "res://scenes/world/sandbox_arena.tscn"
 const LOADING_TEXT := "Loading..."
 ## The death screen ignores its confirm for this long after the death (handle_death_confirm).
 const DEATH_CONFIRM_DELAY_S := 1.0
+## P24a: the longest the world's starting ring may keep the loading screen up (then a warning, and on).
+const WORLD_LOAD_LIMIT_S := 8.0
 
 var hud: Hud
 var screen_stack: ScreenStack
@@ -68,13 +72,16 @@ func _ready() -> void:
 	loading.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_layer.add_child(loading)
 	# "Loading..." while the tree is paused, so the simulation does not run a tick without the level
-	# (the seeded soak keeps its exact timeline): one frame, the level built behind it, then the
-	# audio loading gate.
+	# (the seeded soak keeps its exact timeline): one frame, the level built behind it, then (P24a)
+	# a streamed world's starting ring, then the audio loading gate.
 	get_tree().paused = true
 	await get_tree().process_frame
 	if not is_inside_tree():
 		return
 	_build_level()
+	await hold_until_world_ready(loading)
+	if not is_inside_tree():
+		return
 	await hold_until_audio_ready(loading)
 	if not is_inside_tree():
 		return
@@ -94,6 +101,35 @@ func hold_until_audio_ready(loading: Label) -> void:
 		if is_instance_valid(loading):
 			loading.text = "%s %d%%" % [LOADING_TEXT, int(float(audio.call("registration_progress")) * 100.0)]
 		await get_tree().process_frame
+
+
+## The world's loading screen (P24a, plan M6-M9 §2.8): a streamed level (one that answers
+## is_ready() and loading_progress(): WorldRoot) loads its starting ring behind "Loading..." while
+## the tree stays paused - one ring slice a frame (its streamer runs PROCESS_MODE_ALWAYS), the
+## percentage counting the ring and the sample registration together - for at most
+## WORLD_LOAD_LIMIT_S of wall time, then a warning and on (the chunk under the giant loads first).
+func hold_until_world_ready(loading: Label) -> void:
+	if level == null or not is_instance_valid(level) or not level.has_method("is_ready") \
+			or not level.has_method("loading_progress"):
+		return
+	var t0 := Time.get_ticks_msec()
+	while is_inside_tree() and is_instance_valid(level) and not bool(level.call("is_ready")):
+		var ring := float(level.call("loading_progress"))
+		if is_instance_valid(loading):
+			loading.text = "%s %d%%" % [LOADING_TEXT, int(world_loading_progress(ring) * 100.0)]
+		if Time.get_ticks_msec() - t0 > int(WORLD_LOAD_LIMIT_S * 1000.0):
+			push_warning("Giantborn: the world's starting ring was not ready after %.0f s; continuing" % WORLD_LOAD_LIMIT_S)
+			return
+		await get_tree().process_frame
+
+
+## The loading screen's progress while a world loads: its ring and the samples (Audio's
+## registration_progress, when the autoload has one) weigh the same.
+func world_loading_progress(ring: float) -> float:
+	var audio := get_node_or_null("/root/Audio")
+	if audio == null or not audio.has_method("registration_progress"):
+		return clampf(ring, 0.0, 1.0)
+	return clampf((ring + float(audio.call("registration_progress"))) * 0.5, 0.0, 1.0)
 
 
 ## True while a screen that pauses the game is open (the gate then leaves the pause to it).

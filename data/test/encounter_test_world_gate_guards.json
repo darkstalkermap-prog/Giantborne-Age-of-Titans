@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "encounter.test_world_gate_guards",
+	"type": "encounter",
+	"display_name": "Test world gate guards",
+	"description": "P24a: three soldiers inside the test world town's west gateway, so the world walk runs with AI on (they meet the giant on the street; without navmeshes, which P24b adds, they steer straight).",
+	"level": "level.test_world",
+	"center_m": [62, 14, 128],
+	"activate_radius_m": 70,
+	"deactivate_radius_m": 140,
+	"leash_radius_m": 45,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "test_world.town.guard_1", "definition": "enemy.soldier", "position_m": [60, 14, 116], "yaw_deg": 90,
+			"patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.town.guard_2", "definition": "enemy.soldier", "position_m": [64, 14, 140], "yaw_deg": 90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.town.guard_3", "definition": "enemy.soldier", "position_m": [70, 14, 128], "yaw_deg": 90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

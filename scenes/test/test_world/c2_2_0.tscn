@@ -1,0 +1,95 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/test/test_world/house_breakable.tscn" id="1_6a194"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
+[ext_resource type="PackedScene" path="res://scenes/world/gate_fortified.tscn" id="3_66b76"]
+
+[node name="Chunk_2_2_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="House1" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 14, 83)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "test_world.town.house_1"
+
+[node name="House2" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 14, 83)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "test_world.town.house_2"
+
+[node name="House3" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 14, 105)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "test_world.town.house_3"
+
+[node name="House4" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 14, 105)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "test_world.town.house_4"
+
+[node name="House5" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 14, 151)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "test_world.town.house_5"
+
+[node name="House6" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 14, 151)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "test_world.town.house_6"
+
+[node name="House7" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 14, 173)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "test_world.town.house_7"
+
+[node name="House8" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 126, 14, 173)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "test_world.town.house_8"
+
+[node name="GateNorth" type="StaticBody3D" parent="Props" instance=ExtResource("3_66b76")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 13.8, 58)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "test_world.town.gate_north"
+
+[node name="GateSouth" type="StaticBody3D" parent="Props" instance=ExtResource("3_66b76")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 128, 13.8, 198)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "test_world.town.gate_south"
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

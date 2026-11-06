@@ -38,6 +38,14 @@ extends Node
 ##                          invariant failure; errors still win (EXIT_ERRORS). The Autopilot runs
 ##                          PROCESS_MODE_ALWAYS for it (the bot closes pausing screens itself), and
 ##                          --autoplay counts simulated (unpaused) seconds as everywhere else.
+##
+## P24a: --scenario=world_walk  the streaming walk (WorldWalk) on a streamed world (WorldRoot: the
+##                          test world with --level=res://scenes/test/test_world.tscn; the real world
+##                          from P25 with --mode=world --new-game): the giant follows --route= (default
+##                          the level's Markers/Route), walking or carried at --walk-speed=M, grown
+##                          to --walk-stage=N, --walk-laps=N times; the run ends with the walk. It adds
+##                          a PerfProbe (sections: the chunk the giant is in); AUTOPILOT_RESULT's
+##                          "world_walk" key holds the walk's report and its check failures.
 
 const EXIT_OK := 0
 const EXIT_ERRORS := 1
@@ -51,6 +59,9 @@ const SCENARIO_STRESS := "stress"
 const SCENARIO_VALLEY_WALK := "valley_walk"
 ## P17a: the Valley bot.
 const SCENARIO_VALLEY := "valley"
+## P24a: the streaming walk.
+const SCENARIO_WORLD_WALK := "world_walk"
+const WORLD_WALK_NEEDED := "--scenario=world_walk needs a streamed world: add --level=res://scenes/test/test_world.tscn"
 const VALLEY_NEEDED := "--scenario=valley needs the Valley: add --mode=valley --new-game"
 const STRESS_ARENA := "res://scenes/test/stress_arena.tscn"
 const VALLEY_LEVEL_ID := "level.valley"
@@ -95,6 +106,7 @@ var _probe: PerfProbe = null
 var _stress: StressScenario = null
 var _walk: ValleyWalk = null
 var _bot: ValleyBot = null
+var _world_walk: WorldWalk = null
 var _scenario_failures := PackedStringArray()
 
 
@@ -135,7 +147,8 @@ static func parse_options(args: PackedStringArray) -> Dictionary:
 
 ## True for the scenarios that run their own driver and a PerfProbe.
 static func is_perf_scenario(scenario: String) -> bool:
-	return scenario == SCENARIO_STRESS or scenario == SCENARIO_VALLEY_WALK or scenario == SCENARIO_VALLEY
+	return scenario == SCENARIO_STRESS or scenario == SCENARIO_VALLEY_WALK or scenario == SCENARIO_VALLEY \
+		or scenario == SCENARIO_WORLD_WALK
 
 
 func _ready() -> void:
@@ -229,6 +242,9 @@ func _physics_process(dt: float) -> void:
 	if _scenario == SCENARIO_VALLEY_WALK:
 		_run_valley_walk()
 		return
+	if _scenario == SCENARIO_WORLD_WALK:
+		_run_world_walk()
+		return
 	_run_soak(dt)
 
 
@@ -278,6 +294,22 @@ func _run_valley_walk() -> void:
 		add_child(_walk)
 		_walk.start(player, lv, _probe)
 	if _walk.done:
+		_finish()
+
+
+## --scenario=world_walk (P24a): starts a WorldWalk once on the streamed world; the run ends with it.
+func _run_world_walk() -> void:
+	if _world_walk == null:
+		var w := get_tree().get_first_node_in_group(WorldRoot.WORLD_GROUP) as WorldRoot
+		if w == null:
+			_scenario_failures.append(WORLD_WALK_NEEDED)
+			_finish()
+			return
+		_world_walk = WorldWalk.new()
+		_world_walk.name = "WorldWalk"
+		add_child(_world_walk)
+		_world_walk.start(player, w, _probe, WorldWalk.parse_options(OS.get_cmdline_user_args()))
+	if _world_walk.done:
 		_finish()
 
 
@@ -455,6 +487,10 @@ func _finish() -> void:
 		var wr := _walk.result()
 		failures.append_array(wr.check_failures)
 		result["valley_walk"] = wr
+	if _world_walk != null:
+		var ww := _world_walk.result()
+		failures.append_array(ww.check_failures)
+		result["world_walk"] = ww
 	if _scenario == SCENARIO_VALLEY and ValleyBot.run != null:
 		var vb := ValleyBot.result(Sim.tick)
 		result["valley_bot"] = vb

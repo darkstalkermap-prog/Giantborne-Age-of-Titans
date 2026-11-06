@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
+height = 40.0
+radius = 6.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
+albedo_color = Color(0.5, 0.48, 0.46, 1)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 6.0
+bottom_radius = 6.0
+height = 40.0
+radial_segments = 8
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_4"]
+height = 9.0
+radius = 7.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5"]
+albedo_color = Color(0.45, 0.24, 0.16, 1)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_6"]
+top_radius = 0.0
+bottom_radius = 7.5
+height = 9.0
+radial_segments = 8
+
+[node name="Chunk_3_1_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="Watchtower" type="StaticBody3D" parent="Landmarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 124, 34.596, 128)
+collision_mask = 0
+
+[node name="Shape0" type="CollisionShape3D" parent="Landmarks/Watchtower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, 0)
+shape = SubResource("CylinderShape3D_1")
+
+[node name="Mesh0" type="MeshInstance3D" parent="Landmarks/Watchtower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, 0)
+material_override = SubResource("StandardMaterial3D_2")
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Shape2" type="CollisionShape3D" parent="Landmarks/Watchtower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 44.5, 0)
+shape = SubResource("CylinderShape3D_4")
+
+[node name="Mesh2" type="MeshInstance3D" parent="Landmarks/Watchtower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 44.5, 0)
+material_override = SubResource("StandardMaterial3D_5")
+mesh = SubResource("CylinderMesh_6")
+
+[node name="NavLinks" type="Node3D" parent="."]

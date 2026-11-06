@@ -1,0 +1,26 @@
+{
+	"schema_version": 1,
+	"id": "level.test_world",
+	"type": "level",
+	"display_name": "Streaming test world",
+	"description": "P24a: the generated 4 x 4 test world of 256 m chunks (tools/builders/test_world.gd) that proves streaming, seams, hysteresis, the skyline and a settlement-sized chunk before the real world exists. Run it with --level=res://scenes/test/test_world.tscn (the world walk: --scenario=world_walk). Test-only: the Web release leaves data/test out.",
+	"scene": "res://scenes/test/test_world.tscn",
+	"start_checkpoint": "test_world.cp.start",
+	"index": "res://assets/test_world/index.res",
+	"max_active_enemies": 12,
+	"lod": {"near_m": 40, "mid_m": 90, "check_ticks": 30, "corpse_free_s": 6},
+	"render": {
+		"low": {"shadow_distance_m": 0, "scenery_visibility_end_m": 220, "terrain_visibility_end_m": 700, "msaa": 0, "camera_far_m": 2400},
+		"medium": {"shadow_distance_m": 120, "scenery_visibility_end_m": 300, "terrain_visibility_end_m": 700, "msaa": 2, "camera_far_m": 2400}
+	},
+	"web_overrides": {"quality": "low", "ai_tier1_m": 30},
+	"world": {
+		"chunk_size_m": 256, "grid": [4, 4], "origin_m": [-512, 0, -512], "height_spacing_m": 4,
+		"load_ring": 1, "unload_at": 3, "budget_ms": 4.0, "steps_per_frame_headless": 6,
+		"chunk_dir": "res://assets/test_world/chunks", "nav_dir": "res://assets/test_world/nav",
+		"nav_layers": [1, 2, 16], "gate_bits": {"4": 32, "5": 64, "6": 128},
+		"fog_m": [400, 1800], "fog_max": 0.85, "water_level_m": 10.0,
+		"skyline": "res://assets/test_world/skyline.res", "skyline_landmarks": "res://assets/test_world/skyline_landmarks.res"
+	},
+	"districts": []
+}

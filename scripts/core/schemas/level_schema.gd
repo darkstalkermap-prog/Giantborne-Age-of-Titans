@@ -66,6 +66,34 @@ static func fields() -> Dictionary:
 	})
 	# Later packages add their fields (a render preset's: f.render.values.fields) below their anchor.
 	## @anchor P24a
+	# P24a (plan M6-M9 §2.7, decision 12): a render preset's terrain_visibility_end_m (a streamed
+	# chunk's terrain beyond it from the camera is not drawn: the skyline shows) and camera_far_m (the
+	# camera's far plane; 800 m when absent), and a streamed level's `world` block (the chunk grid, the
+	# streaming ring and budget, the chunk and navmesh folders, the nav layers and gate bits P24b uses,
+	# the depth fog, the water level and the skyline's two meshes; world_checks() below).
+	(((f.render as Dictionary).values as Dictionary).fields as Dictionary).merge({
+		"terrain_visibility_end_m": U.num(0.0),
+		"camera_far_m": U.pos(),
+	})
+	f["world"] = {"t": "dict", "fields": {
+		"chunk_size_m": U.pos(true),
+		"grid": {"t": "array", "req": true, "items": "int"},
+		"origin_m": U.vec3(true),
+		"height_spacing_m": U.pos(true),
+		"load_ring": U.int_field(0, 4, true),
+		"unload_at": U.int_field(1, 8, true),
+		"budget_ms": U.pos(true),
+		"steps_per_frame_headless": U.int_field(1, 64, true),
+		"chunk_dir": U.str_field(true),
+		"nav_dir": U.str_field(),
+		"nav_layers": {"t": "array", "items": "int"},
+		"gate_bits": {"t": "dict", "keys_enum": ["4", "5", "6", "7", "8", "9", "10"], "values": U.int_field(1)},
+		"fog_m": {"t": "array", "items": "number"},
+		"fog_max": U.num(0.0, 1.0),
+		"water_level_m": U.num(),
+		"skyline": U.str_field(),
+		"skyline_landmarks": U.str_field(),
+	}}
 
 	## @anchor P24b
 
@@ -128,6 +156,59 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	if U.is_number(fallback) and int(fallback) > 0 and (int(fallback) & (int(fallback) - 1)) != 0:
 		out.errors.append("%s: player_nav_fallback must be one nav layer bit (1, 2, 4, 8, 16, ...)" % ctx)
 	## @anchor P24a
+	# P24a: the far plane covers what the preset draws; a streamed level's world block (P24a's
+	# GameData post-pass checks that its chunk files exist).
+	var p24a_render: Variant = d.get("render")
+	var p24a_world: Variant = d.get("world")
+	if typeof(p24a_render) == TYPE_DICTIONARY:
+		for q: Variant in p24a_render:
+			var preset: Variant = p24a_render[q]
+			if typeof(preset) != TYPE_DICTIONARY:
+				continue
+			var far := float(preset.get("camera_far_m", 800.0)) if U.is_number(preset.get("camera_far_m", 800.0)) else 800.0
+			for key: String in ["terrain_visibility_end_m", "scenery_visibility_end_m"]:
+				if U.is_number(preset.get(key)) and float(preset[key]) > far:
+					out.errors.append("%s.render.%s: %s (%s m) is beyond camera_far_m (%s m)" % [ctx, q, key, preset[key], far])
+			if typeof(p24a_world) == TYPE_DICTIONARY and typeof(p24a_world.get("fog_m")) == TYPE_ARRAY \
+					and (p24a_world.fog_m as Array).size() == 2 and U.is_number(p24a_world.fog_m[1]) \
+					and float(p24a_world.fog_m[1]) > far:
+				out.errors.append("%s.render.%s: camera_far_m (%s m) must reach the world's fog end (%s m)" % [ctx, q,
+					far, p24a_world.fog_m[1]])
+	if typeof(p24a_world) == TYPE_DICTIONARY:
+		var wctx := ctx + ".world"
+		var w: Dictionary = p24a_world
+		var g: Variant = w.get("grid")
+		if typeof(g) == TYPE_ARRAY and ((g as Array).size() != 2 or not U.is_number(g[0]) or not U.is_number(g[1]) \
+				or int(g[0]) < 1 or int(g[1]) < 1):
+			out.errors.append("%s.grid: expected [columns, rows], each at least 1" % wctx)
+		if U.is_number(w.get("load_ring")) and U.is_number(w.get("unload_at")) \
+				and int(w.unload_at) < int(w.load_ring) + 2:
+			out.errors.append("%s: unload_at (%s) must be at least load_ring + 2 (%s): the streaming hysteresis" % [wctx,
+				w.unload_at, int(w.load_ring) + 2])
+		for key: String in ["chunk_dir", "nav_dir"]:
+			if typeof(w.get(key)) == TYPE_STRING and str(w[key]) != "" and not str(w[key]).begins_with("res://"):
+				out.errors.append("%s.%s: '%s' must be a res:// folder" % [wctx, key, w[key]])
+		for key: String in ["skyline", "skyline_landmarks"]:
+			var path: Variant = w.get(key)
+			if typeof(path) == TYPE_STRING and path != "":
+				if not (str(path).begins_with("res://") and str(path).ends_with(".res")):
+					out.errors.append("%s.%s: '%s' must be a res://....res path" % [wctx, key, path])
+				elif not ResourceLoader.exists(path):
+					out.errors.append("%s.%s: '%s' does not exist (run tools/build_scenes)" % [wctx, key, path])
+		var bits: Array = []
+		if typeof(w.get("nav_layers")) == TYPE_ARRAY:
+			bits.append_array(w.nav_layers)
+		if typeof(w.get("gate_bits")) == TYPE_DICTIONARY:
+			bits.append_array((w.gate_bits as Dictionary).values())
+		for b: Variant in bits:
+			if U.is_number(b) and (int(b) <= 0 or (int(b) & (int(b) - 1)) != 0):
+				out.errors.append("%s: navigation bit %s must be one bit (1, 2, 4, 8, 16, ...)" % [wctx, b])
+		var fog: Variant = w.get("fog_m")
+		if typeof(fog) == TYPE_ARRAY and ((fog as Array).size() != 2 or not U.is_number(fog[0]) or not U.is_number(fog[1]) \
+				or float(fog[0]) >= float(fog[1])):
+			out.errors.append("%s.fog_m: expected [from, to] metres with from < to" % wctx)
+		if typeof(d.get("index")) != TYPE_STRING or str(d.get("index")) == "":
+			out.errors.append("%s: a streamed level needs its world index ('index')" % ctx)
 
 	## @anchor P24b
 

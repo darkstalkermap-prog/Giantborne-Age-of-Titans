@@ -101,6 +101,23 @@ func _post_pass() -> void:
 
 	# M6-M9 (written by P20, plan M6-M9 §1.5): the cross-record checks of later packages.
 	## @anchor P24a
+	# P24a: a streamed level has the chunk data of every cell of its grid (tools/build_scenes writes
+	# them; a missing one would leave a hole the streamer cannot fill).
+	for p24a_level: Dictionary in records_of_type("level"):
+		var p24a_world: Variant = p24a_level.get("world")
+		if typeof(p24a_world) != TYPE_DICTIONARY or typeof(p24a_world.get("grid")) != TYPE_ARRAY \
+				or (p24a_world.grid as Array).size() != 2 or typeof(p24a_world.get("chunk_dir")) != TYPE_STRING:
+			continue
+		var p24a_missing := PackedStringArray()
+		for z in int(p24a_world.grid[1]):
+			for x in int(p24a_world.grid[0]):
+				var p24a_path := str(p24a_world.chunk_dir).path_join("c%d_%d.res" % [x, z])
+				if not ResourceLoader.exists(p24a_path):
+					p24a_missing.append("c%d_%d" % [x, z])
+		if not p24a_missing.is_empty():
+			errors.append("%s (%s): no chunk data for %d of its chunks in %s (%s%s; run tools/build_scenes)" % [
+				record_paths.get(p24a_level.id, "?"), p24a_level.id, p24a_missing.size(), p24a_world.chunk_dir,
+				", ".join(p24a_missing.slice(0, 6)), ", ..." if p24a_missing.size() > 6 else ""])
 
 	## @anchor P24b
 
