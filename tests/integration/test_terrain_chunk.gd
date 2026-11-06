@@ -2,7 +2,7 @@ extends IntegrationSuite
 ## P24a (plan M6-M9 §2.8, §3.6): one chunk of the test world built step by step - the steps and
 ## their order, a deterministic quota, the terrain mesh, the ground body under the giant's feet (a
 ## ray finds the same height as ChunkData), solids in bodies of 16, the scenery MultiMeshes, and the
-## town chunk's props parts (dependencies one a step, every part instanced).
+## town chunk's props parts (dependencies one a step, every part instanced) with its far scenery.
 
 const CHUNK_DIR := "res://assets/test_world/chunks"
 
@@ -88,6 +88,7 @@ func test_a_chunk_loads_in_small_steps() -> void:
 
 func test_the_town_chunk_streams_its_parts() -> void:
 	var s := _streamer()
+	s.scenery_visibility_end_m = 220.0
 	var r := _load(s, "c2_2")
 	var c: TerrainChunk = r[0]
 	var names: Array = r[1]
@@ -104,8 +105,28 @@ func test_the_town_chunk_streams_its_parts() -> void:
 	for b in get_tree().get_nodes_in_group("breakables"):
 		if c.is_ancestor_of(b):
 			breakables += 1
-	assert_true(breakables >= 8 + 2 + 12, "the houses, gates, fences and crates are breakables (%d)" % breakables)
+	assert_true(breakables >= 8 + 2 + 8, "the houses, gates, fences and crates are breakables (%d)" % breakables)
 	assert_true(c.props_root.find_child("House1", true, false) != null, "a breakable house")
+	# The merged houses and the walls are seen as far as the terrain; the trees and the props'
+	# merged meshes (group "scenery") fade at the scenery's distance.
+	var far_names: Array = []
+	for mmi in c.scenery_root.get_children():
+		var g := mmi as GeometryInstance3D
+		if g.is_in_group(TerrainChunk.TERRAIN_GROUP):
+			far_names.append(str(g.name))
+			assert_near(g.visibility_range_end, 700.0, 0.01, "%s is drawn as far as the terrain" % g.name)
+		else:
+			assert_near(g.visibility_range_end, 220.0, 0.01, "%s fades with the scenery" % g.name)
+	far_names.sort()
+	assert_eq(far_names, ["House", "Wall"], "the far scenery: the merged houses and the walls")
+	var in_group := 0
+	var faded := 0
+	for n in c.props_root.find_children("*", "GeometryInstance3D", true, false):
+		if n.is_in_group("scenery"):
+			in_group += 1
+			if is_equal_approx((n as GeometryInstance3D).visibility_range_end, 220.0):
+				faded += 1
+	assert_true(in_group > 0 and faded == in_group, "the props' scenery meshes fade too (%d of %d)" % [faded, in_group])
 	var deps := names.count("props_dep")
 	assert_true(deps <= 6, "dependencies one a step, only those not cached yet (%d)" % deps)
 	# A second load of the same chunk finds every dependency kept by the streamer.

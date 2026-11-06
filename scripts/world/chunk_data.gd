@@ -18,7 +18,7 @@ extends Resource
 ##
 ## Scenery: mesh key (the res:// path of a shared Mesh, loaded once per level) -> its MultiMesh
 ## buffer, 12 floats per instance (Transform3D rows: basis.x.x, basis.y.x, basis.z.x, origin.x,
-## then the y and z rows). Solids: [kind, x, y, z, sx, sy, sz, yaw] per solid (kind 0 a box of size
+## then the y and z rows); far_scenery names the keys drawn to the terrain's distance. Solids: [kind, x, y, z, sx, sy, sz, yaw] per solid (kind 0 a box of size
 ## sx x sy x sz, kind 1 a cylinder of diameter sx and height sy), centred at (x, y, z), turned by
 ## yaw (radians) about y. Water: [min_x, min_z, max_x, max_z, surface_y] per rectangle. Cells:
 ## region_cells is a 4 x 4 grid of 64 m cells (0 = no region, k = the level's region list[k - 1]),
@@ -52,6 +52,9 @@ const SOLID_CYLINDER := 1
 @export var height_step := 0.004
 ## Mesh key (res:// path of a shared Mesh) -> PackedFloat32Array (12 floats per instance).
 @export var scenery := {}
+## The scenery keys drawn as far as the terrain (the preset's terrain_visibility_end_m) instead of
+## the scenery's distance: a settlement's merged buildings and walls, seen from afar.
+@export var far_scenery := PackedStringArray()
 ## [kind, x, y, z, sx, sy, sz, yaw] x n (kind 0 box, 1 cylinder).
 @export var solids := PackedFloat32Array()
 ## [min_x, min_z, max_x, max_z, surface_y] x n.

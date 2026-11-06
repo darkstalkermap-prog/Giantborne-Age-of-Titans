@@ -9,81 +9,60 @@
 [node name="Props" type="Node3D" parent="."]
 
 [node name="Fence1" type="StaticBody3D" parent="Props" instance=ExtResource("1_24ab9")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 14, 166)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 162, 14, 166)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.fence_1"
 
 [node name="Fence2" type="StaticBody3D" parent="Props" instance=ExtResource("1_24ab9")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 166, 14, 166)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 170, 14, 166)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.fence_2"
 
 [node name="Fence3" type="StaticBody3D" parent="Props" instance=ExtResource("1_24ab9")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 174, 14, 166)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 162, 14, 180)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.fence_3"
 
 [node name="Fence4" type="StaticBody3D" parent="Props" instance=ExtResource("1_24ab9")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 14, 180)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 170, 14, 180)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.fence_4"
 
-[node name="Fence5" type="StaticBody3D" parent="Props" instance=ExtResource("1_24ab9")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 166, 14, 180)
-collision_layer = 16
-collision_mask = 0
-script = ExtResource("2_5fc47")
-world_id = "test_world.town.fence_5"
-
-[node name="Fence6" type="StaticBody3D" parent="Props" instance=ExtResource("1_24ab9")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 174, 14, 180)
-collision_layer = 16
-collision_mask = 0
-script = ExtResource("2_5fc47")
-world_id = "test_world.town.fence_6"
-
 [node name="Crate1" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 155, 14, 173)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 159.4, 14, 173)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.crate_1"
 
 [node name="Crate2" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 159.4, 14, 173)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 163.8, 14, 173)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.crate_2"
 
 [node name="Crate3" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 163.8, 14, 173)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 168.2, 14, 173)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.crate_3"
 
 [node name="Crate4" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 168.2, 14, 173)
-collision_layer = 16
-collision_mask = 0
-script = ExtResource("2_5fc47")
-world_id = "test_world.town.crate_4"
-
-[node name="Crate5" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 172.6, 14, 173)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
-world_id = "test_world.town.crate_5"
+world_id = "test_world.town.crate_4"
 
 [node name="Shrines" type="Node3D" parent="."]
 

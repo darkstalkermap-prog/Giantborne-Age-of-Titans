@@ -8,10 +8,10 @@ extends RefCounted
 ##     impassable rim beyond 448 m (and invisible walls at the world's edge, layer 6);
 ##   * the border rule: HeightField.relax_borders keeps every walkable face within 8 m of a chunk
 ##     border at 35 degrees or less (the build fails, naming the place, if it cannot);
-##   * per chunk up to 120 trees (Poisson disk, 9 m apart: a trunk solid plus trunk and crown
-##     instances), 60 saplings without collision and 16 rocks, kept off the route, the ramps, the
-##     town and the pond;
-##   * a Brannock-sized walled town in c2_2: 22 merged houses (two MultiMeshes) with their solids,
+##   * per chunk up to 120 trees (Poisson disk, 9 m apart: a trunk solid and an instance of the one
+##     tree mesh), 60 saplings without collision and 16 rocks, kept off the route, the ramps, the
+##     town and the pond - three MultiMeshes, three draw calls a chunk;
+##   * a Brannock-sized walled town in c2_2: 22 merged houses (one MultiMesh) with their solids,
 ##     walls, two open gateways on the street, two fortified gates, 8 breakable houses, fences and
 ##     crates - the scripted props split into sub-scenes of at most 150 nodes;
 ##   * two landmarks (a watchtower on the 30-degree plateau, a monolith on the 35-degree one) as
@@ -20,6 +20,9 @@ extends RefCounted
 ##     region grid: region.test_west for x < 0, region.test_east east of it), and the root scene
 ##     scenes/test/test_world.tscn (WorldRoot with Environment, Sun, Streamer, Skyline, Chunks,
 ##     Navigation, Bounds, Markers, Spawns, Spawned, Player, EncounterDirector, DebrisPool).
+## Every shared mesh (shared/: tree, sapling, rock, wall, house, rubble, tower, monolith) is one
+## vertex-coloured surface with the one material shared/mat_vertex.tres, so a MultiMesh or a prop's
+## mesh is one draw call.
 ## Outputs: assets/test_world/{chunks/c<x>_<z>.res, shared/*, skyline.res, skyline_landmarks.res,
 ## index.res}, scenes/test/test_world.tscn and scenes/test/test_world/ (the house prop and the props
 ## parts). P24b adds the navmeshes (assets/test_world/nav/).
@@ -78,6 +81,9 @@ const GATEWAY_M := 16.0
 const FORTIFIED_GAP_M := 18.0
 const HOUSE_SIZE := Vector3(10.0, 6.0, 8.0)
 const ROOF_H := 3.0
+## The square's breakables: fences in two rows, crates between them.
+const SQUARE_FENCES := 4
+const SQUARE_CRATES := 4
 ## The route the world walk follows by default (Markers/Route, test_world.route.NN): a loop with four
 ## seam crossings round (-256, -256), then through the town's gateways, round the east, over the
 ## 35-degree plateau and back past the pond. The seams test walks its first five points.
@@ -114,12 +120,23 @@ const CRATE := "res://scenes/world/crate.tscn"
 ## real world's house records come with P29.)
 const HOUSE_RECORD := "prop.fence_wood"
 
-const MATERIALS := {
+## The parts' colours: the vertex colours of the shared meshes and the landmarks' silhouettes.
+const COLORS := {
 	"bark": Color(0.33, 0.24, 0.16), "leaves": Color(0.2, 0.37, 0.18), "sapling": Color(0.3, 0.45, 0.2),
 	"rock": Color(0.47, 0.46, 0.43), "plaster": Color(0.78, 0.72, 0.6), "roof": Color(0.45, 0.24, 0.16),
 	"wall": Color(0.55, 0.53, 0.5), "tower": Color(0.5, 0.48, 0.46), "monolith": Color(0.34, 0.33, 0.36),
 	"rubble": Color(0.5, 0.45, 0.38),
 }
+## The one material of every shared mesh: vertex colours as the albedo.
+const VERTEX_MATERIAL := "res://assets/test_world/shared/mat_vertex.tres"
+## A tree at scale 1 (trunk and crown in one mesh; an instance scales it by TREE_SCALE, a little
+## taller or shorter, and turns it): the trunk's radius and height, the crown's radius, height and base.
+const TREE_TRUNK_R := 0.6
+const TREE_TRUNK_H := 10.0
+const TREE_CROWN_R := 3.3
+const TREE_CROWN_H := 9.0
+const TREE_CROWN_Y := 5.5
+const TREE_SCALE := Vector2(0.75, 1.2)
 
 static var _noise: FastNoiseLite = null
 
@@ -134,8 +151,7 @@ static func build_all(kit: SceneKit) -> void:
 
 ## Builds everything; {"ok", "message" (on failure), "summary"}.
 static func build(kit: SceneKit) -> Dictionary:
-	var mats := _materials(kit)
-	var meshes := _shared_meshes(kit, mats)
+	var meshes := _shared_meshes(kit)
 	var field := make_field()
 	var first := field_first()
 	var relax := field.relax_borders(first, int(CHUNK_M / SPACING), GRID, HeightField.BORDER_BAND_M,
@@ -143,7 +159,7 @@ static func build(kit: SceneKit) -> Dictionary:
 	if not bool(relax.ok):
 		return {"ok": false, "message": str(relax.message)}
 	field.quantise_all()
-	var house_scene := _save_house_scene(kit, mats)
+	var house_scene := _save_house_scene(kit, meshes)
 	if house_scene == "":
 		return {"ok": false, "message": "the breakable house scene was not saved"}
 	var trees := {}   # spatial hash: Vector2i(16 m cell) -> [Vector2]
@@ -158,8 +174,8 @@ static func build(kit: SceneKit) -> Dictionary:
 			d.region_cells = ChunkWriter.cells(d, ChunkData.REGION_CELLS, func(x: float, _z: float) -> int:
 				return region_index(x))
 			var counts := _scenery(d, field, meshes, trees)
-			_town(kit, d, field, meshes, mats)
-			var parts := _props(kit, d, field, mats, house_scene)
+			_town(d, meshes)
+			var parts := _props(kit, d, field, meshes)
 			if not bool(parts.ok):
 				return {"ok": false, "message": str(parts.message)}
 			if d.chunk_id == "c0_2":
@@ -308,90 +324,153 @@ static func region_index(x: float) -> int:
 	return 1 if x < 0.0 else 2
 
 
-# --------------------------------------------------------------------------- shared meshes, materials
+# --------------------------------------------------------------------------- shared meshes, the material
 
-static func _materials(kit: SceneKit) -> Dictionary:
-	var out := {}
+## The one material of the scenery, the houses, the walls and the landmarks (vertex colours as the
+## albedo, sRGB like the palette), so that every shared mesh is one surface and a chunk's MultiMesh
+## of it one draw call. Saved as VERTEX_MATERIAL.
+static func _vertex_material(kit: SceneKit) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.vertex_color_use_as_albedo = true
+	m.vertex_color_is_srgb = true
+	m.roughness = 0.95
 	DirAccess.make_dir_recursive_absolute(kit.output_path(SHARED_DIR))
-	for key: String in MATERIALS:
-		var m := StandardMaterial3D.new()
-		m.albedo_color = MATERIALS[key]
-		m.roughness = 0.95
-		var path := kit.output_path(SHARED_DIR + "mat_%s.tres" % key)
-		ResourceSaver.save(m, path, ResourceSaver.FLAG_CHANGE_PATH)
-		out[key] = m
-		kit.mats["tw_" + key] = m
-	return out
+	ResourceSaver.save(m, kit.output_path(VERTEX_MATERIAL), ResourceSaver.FLAG_CHANGE_PATH)
+	return m
 
 
-## Unit meshes (base at y 0): trunk (cylinder r 0.5, h 1), crown and sapling (cones), rock, house
-## body and wall (boxes), roof (a gable along x). Saved under SHARED_DIR; the chunks name them by path.
-static func _shared_meshes(kit: SceneKit, mats: Dictionary) -> Dictionary:
+## The shared meshes, one vertex-coloured surface each with VERTEX_MATERIAL, saved under SHARED_DIR
+## (the chunks name them by path, the scenes load them): "tree" (trunk and crown at scale 1),
+## "sapling", "rock" and "wall" (unit shapes, base at y 0), "house" (body and roof at full size),
+## "rubble" (a broken house), and each landmark's shape ("tower", "monolith"). Returns {key: path}.
+static func _shared_meshes(kit: SceneKit) -> Dictionary:
+	var mat := _vertex_material(kit)
+	var roof := Vector3(HOUSE_SIZE.x + 0.6, ROOF_H, HOUSE_SIZE.z + 0.6)
 	var specs := {
-		"tree_trunk": [_cylinder_st(6, 0.5, 0.5), "bark"],
-		"tree_crown": [_cylinder_st(7, 0.5, 0.0), "leaves"],
-		"sapling": [_cylinder_st(5, 0.5, 0.0), "sapling"],
-		"rock": [_box_st(), "rock"],
-		"house_body": [_box_st(), "plaster"],
-		"house_roof": [_roof_st(), "roof"],
-		"wall": [_box_st(), "wall"],
+		"tree": [[_cylinder_arrays(6, TREE_TRUNK_R, TREE_TRUNK_R, TREE_TRUNK_H), Vector3.ZERO, "bark"],
+			[_cylinder_arrays(7, TREE_CROWN_R, 0.0, TREE_CROWN_H), Vector3.UP * TREE_CROWN_Y, "leaves"]],
+		"sapling": [[_cylinder_arrays(5, 0.5, 0.0, 1.0), Vector3.ZERO, "sapling"]],
+		"rock": [[_box_arrays(Vector3.ONE, 0.7), Vector3.ZERO, "rock"]],
+		"wall": [[_box_arrays(Vector3.ONE), Vector3.ZERO, "wall"]],
+		"house": [[_box_arrays(HOUSE_SIZE), Vector3.ZERO, "plaster"], [_roof_arrays(roof), Vector3.UP * HOUSE_SIZE.y, "roof"]],
+		"rubble": [[_box_arrays(Vector3(HOUSE_SIZE.x, 1.4, HOUSE_SIZE.z), 0.8), Vector3.ZERO, "rubble"]],
 	}
+	for lm: Dictionary in LANDMARKS:
+		var parts: Array = []
+		for s: Dictionary in landmark_shapes(lm):
+			parts.append([_shape_arrays(s), s.position, str(s.mat)])
+		specs[str(lm.shape)] = parts
 	var out := {}
 	for key: String in specs:
-		var st: SurfaceTool = specs[key][0]
-		st.generate_normals()
-		var mesh := st.commit()
-		mesh.surface_set_material(0, mats[specs[key][1]])
+		var mesh := vertex_colored(specs[key])
+		mesh.surface_set_material(0, mat)
 		var path := SHARED_DIR + key + ".res"
 		ResourceSaver.save(mesh, kit.output_path(path), ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_COMPRESS)
 		out[key] = path
 	return out
 
 
-static func _box_st() -> SurfaceTool:
+## One surface of `parts` ([arrays, offset, colour key]): each part's triangles moved by its offset,
+## its normals, and its colour (COLORS) on every vertex.
+static func vertex_colored(parts: Array) -> ArrayMesh:
+	var verts := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var colors := PackedColorArray()
+	for part: Array in parts:
+		var arrays: Array = part[0]
+		var offset: Vector3 = part[1]
+		var color: Color = COLORS[str(part[2])]
+		var pv: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var pn: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var order := PackedInt32Array(arrays[Mesh.ARRAY_INDEX]) if arrays[Mesh.ARRAY_INDEX] != null \
+			else PackedInt32Array(range(pv.size()))
+		for i in order:
+			verts.append(pv[i] + offset)
+			normals.append(pn[i])
+			colors.append(color)
+	var arr := []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = verts
+	arr[Mesh.ARRAY_NORMAL] = normals
+	arr[Mesh.ARRAY_COLOR] = colors
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	return mesh
+
+
+## Triangles to mesh arrays with normals: flat faces (smooth group -1) unless `smooth`.
+static func _tri_arrays(tris: PackedVector3Array, smooth := PackedByteArray()) -> Array:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for k in tris.size():
+		st.set_smooth_group(1 if k / 3 < smooth.size() and smooth[k / 3] != 0 else -1)
+		st.add_vertex(tris[k])
+	st.generate_normals()
+	return st.commit_to_arrays()
+
+
+## A box of `size` with its base centred at the origin; the top face scaled by `top` (a rock's
+## frustum below 1).
+static func _box_arrays(size: Vector3, top := 1.0) -> Array:
 	var c: Array[Vector3] = []
 	for p: Vector3 in [Vector3(-0.5, 0, -0.5), Vector3(0.5, 0, -0.5), Vector3(0.5, 0, 0.5), Vector3(-0.5, 0, 0.5),
-			Vector3(-0.5, 1, -0.5), Vector3(0.5, 1, -0.5), Vector3(0.5, 1, 0.5), Vector3(-0.5, 1, 0.5)]:
-		c.append(p)
+			Vector3(-0.5 * top, 1, -0.5 * top), Vector3(0.5 * top, 1, -0.5 * top), Vector3(0.5 * top, 1, 0.5 * top),
+			Vector3(-0.5 * top, 1, 0.5 * top)]:
+		c.append(p * size)
+	var tris := PackedVector3Array()
 	for q: Array in [[4, 5, 6, 7], [3, 2, 1, 0], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]]:
 		for k: int in [q[0], q[1], q[2], q[0], q[2], q[3]]:
-			st.add_vertex(c[k])
-	return st
+			tris.append(c[k])
+	return _tri_arrays(tris)
 
 
-static func _roof_st() -> SurfaceTool:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var a := Vector3(-0.5, 0, -0.5)
-	var b := Vector3(0.5, 0, -0.5)
-	var c := Vector3(0.5, 0, 0.5)
-	var d := Vector3(-0.5, 0, 0.5)
-	var r0 := Vector3(-0.5, 1, 0)
-	var r1 := Vector3(0.5, 1, 0)
-	for v: Vector3 in [a, r0, r1, a, r1, b, d, c, r1, d, r1, r0, a, d, r0, b, r1, c]:
-		st.add_vertex(v)
-	return st
+## A gable roof of `size` (the ridge along x at the top, the eaves at y 0).
+static func _roof_arrays(size: Vector3) -> Array:
+	var a := Vector3(-0.5, 0, -0.5) * size
+	var b := Vector3(0.5, 0, -0.5) * size
+	var c := Vector3(0.5, 0, 0.5) * size
+	var d := Vector3(-0.5, 0, 0.5) * size
+	var r0 := Vector3(-0.5, 1, 0) * size
+	var r1 := Vector3(0.5, 1, 0) * size
+	return _tri_arrays(PackedVector3Array([a, r0, r1, a, r1, b, d, c, r1, d, r1, r0, a, d, r0, b, r1, c]))
 
 
-static func _cylinder_st(sides: int, r0: float, r1: float) -> SurfaceTool:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+## A cylinder (or a cone when r1 is 0) of `sides` sides, radius r0 at y 0 and r1 at y h: smooth
+## sides, a flat top.
+static func _cylinder_arrays(sides: int, r0: float, r1: float, h: float) -> Array:
+	var tris := PackedVector3Array()
+	var smooth := PackedByteArray()
 	for k in sides:
 		var a := TAU * float(k) / sides
 		var b := TAU * float(k + 1) / sides
 		var p0 := Vector3(cos(a) * r0, 0, sin(a) * r0)
 		var p1 := Vector3(cos(b) * r0, 0, sin(b) * r0)
-		var q0 := Vector3(cos(a) * r1, 1, sin(a) * r1)
-		var q1 := Vector3(cos(b) * r1, 1, sin(b) * r1)
+		var q0 := Vector3(cos(a) * r1, h, sin(a) * r1)
+		var q1 := Vector3(cos(b) * r1, h, sin(b) * r1)
 		if r1 <= 0.0:
-			for v: Vector3 in [p0, p1, q1]:
-				st.add_vertex(v)
+			tris.append_array(PackedVector3Array([p0, p1, q1]))
+			smooth.append(1)
 			continue
-		for v: Vector3 in [p0, p1, q1, p0, q1, q0, Vector3(0, 1, 0), q0, q1]:
-			st.add_vertex(v)
-	return st
+		tris.append_array(PackedVector3Array([p0, p1, q1, p0, q1, q0]))
+		smooth.append_array(PackedByteArray([1, 1]))
+	if r1 > 0.0:
+		for k in sides:
+			var a := TAU * float(k) / sides
+			var b := TAU * float(k + 1) / sides
+			tris.append_array(PackedVector3Array([Vector3(0, h, 0), Vector3(cos(a) * r1, h, sin(a) * r1),
+				Vector3(cos(b) * r1, h, sin(b) * r1)]))
+	return _tri_arrays(tris, smooth)
+
+
+## A landmark shape's arrays (base at y 0): "box", "cylinder" or "cone" of its size.
+static func _shape_arrays(s: Dictionary) -> Array:
+	var size: Vector3 = s.size
+	match str(s.shape):
+		"box":
+			return _box_arrays(size)
+		"cone":
+			return _cylinder_arrays(8, size.x * 0.5, 0.0, size.y)
+	return _cylinder_arrays(8, size.x * 0.5, size.x * 0.5, size.y)
 
 
 # --------------------------------------------------------------------------- scenery
@@ -442,12 +521,11 @@ static func _spaced(trees: Dictionary, p: Vector2) -> bool:
 	return true
 
 
-## Trees (a trunk solid, trunk and crown instances), saplings and rocks of one chunk.
+## Trees (a trunk solid and a tree instance), saplings and rocks of one chunk.
 static func _scenery(d: ChunkData, field: HeightField, meshes: Dictionary, trees: Dictionary) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED * 7919 + d.coords.x * 104729 + d.coords.y * 1299709
-	var trunks: Array = []
-	var crowns: Array = []
+	var tree_xforms: Array = []
 	var placed := 0
 	var tries := 0
 	while placed < TREES_PER_CHUNK and tries < 6000:
@@ -464,14 +542,12 @@ static func _scenery(d: ChunkData, field: HeightField, meshes: Dictionary, trees
 			trees[c] = []
 		(trees[c] as Array).append(p)
 		var y := field.sample(x, z)
-		var r := rng.randf_range(0.45, 0.75)
-		var th := rng.randf_range(7.0, 12.0)
-		var cr := rng.randf_range(2.6, 4.0)
-		var ch := rng.randf_range(7.0, 11.0)
-		trunks.append(Transform3D(Basis.from_scale(Vector3(2.0 * r, th, 2.0 * r)), Vector3(lx, y - 0.3, lz)))
-		crowns.append(Transform3D(Basis(Vector3.UP, rng.randf_range(-PI, PI)) * Basis.from_scale(Vector3(2.0 * cr, ch, 2.0 * cr)),
-			Vector3(lx, y + th * 0.55, lz)))
-		ChunkWriter.add_solid(d.solids, true, Vector3(lx, y - 0.3 + (th + 0.6) * 0.5, lz), Vector3(2.0 * r, th + 0.6, 0.0))
+		var sc := rng.randf_range(TREE_SCALE.x, TREE_SCALE.y)
+		var up := sc * rng.randf_range(0.9, 1.1)
+		tree_xforms.append(Transform3D(Basis(Vector3.UP, rng.randf_range(-PI, PI)) * Basis.from_scale(Vector3(sc, up, sc)),
+			Vector3(lx, y - 0.3, lz)))
+		var th := TREE_TRUNK_H * up
+		ChunkWriter.add_solid(d.solids, true, Vector3(lx, y - 0.3 + (th + 0.6) * 0.5, lz), Vector3(2.0 * TREE_TRUNK_R * sc, th + 0.6, 0.0))
 		placed += 1
 	var saplings: Array = []
 	tries = 0
@@ -500,9 +576,8 @@ static func _scenery(d: ChunkData, field: HeightField, meshes: Dictionary, trees
 		var y := field.sample(x, z) - 0.4
 		rocks.append(Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(size), Vector3(lx, y, lz)))
 		ChunkWriter.add_solid(d.solids, false, Vector3(lx, y + size.y * 0.5, lz), size, yaw)
-	if not trunks.is_empty():
-		d.scenery[meshes.tree_trunk] = ChunkWriter.xform_buffer(trunks)
-		d.scenery[meshes.tree_crown] = ChunkWriter.xform_buffer(crowns)
+	if not tree_xforms.is_empty():
+		d.scenery[meshes.tree] = ChunkWriter.xform_buffer(tree_xforms)
 	if not saplings.is_empty():
 		d.scenery[meshes.sapling] = ChunkWriter.xform_buffer(saplings)
 	if not rocks.is_empty():
@@ -543,14 +618,13 @@ static func breakable_slots() -> PackedInt32Array:
 	return PackedInt32Array([1, 6, 9, 14, 17, 22, 25, 28])
 
 
-## The town's static half in its chunk's data: the merged houses (body and roof instances with their
-## solids) and the walls (instances and solids), the gateways left open on the street and gaps for
-## the two fortified gates.
-static func _town(kit: SceneKit, d: ChunkData, _field: HeightField, meshes: Dictionary, _mats: Dictionary) -> void:
+## The town's static half in its chunk's data: the merged houses (instances of the one house mesh,
+## with their solids) and the walls (instances and solids), the gateways left open on the street and
+## gaps for the two fortified gates. Both keys are far_scenery: the town is seen from afar.
+static func _town(d: ChunkData, meshes: Dictionary) -> void:
 	if d.coords != _town_chunk():
 		return
-	var bodies: Array = []
-	var roofs: Array = []
+	var houses: Array = []
 	var slots := house_slots()
 	var breakable := breakable_slots()
 	for k in slots.size():
@@ -558,12 +632,10 @@ static func _town(kit: SceneKit, d: ChunkData, _field: HeightField, meshes: Dict
 			continue
 		var p: Vector2 = slots[k]
 		var local := Vector3(p.x - d.origin.x, PAD_Y, p.y - d.origin.z)
-		bodies.append(Transform3D(Basis.from_scale(HOUSE_SIZE), local))
-		roofs.append(Transform3D(Basis.from_scale(Vector3(HOUSE_SIZE.x + 0.6, ROOF_H, HOUSE_SIZE.z + 0.6)),
-			local + Vector3.UP * HOUSE_SIZE.y))
+		houses.append(Transform3D(Basis(), local))
 		ChunkWriter.add_solid(d.solids, false, local + Vector3.UP * HOUSE_SIZE.y * 0.5, HOUSE_SIZE)
-	d.scenery[meshes.house_body] = ChunkWriter.xform_buffer(bodies)
-	d.scenery[meshes.house_roof] = ChunkWriter.xform_buffer(roofs)
+	d.scenery[meshes.house] = ChunkWriter.xform_buffer(houses)
+	d.far_scenery.append(meshes.house)
 	var walls: Array = []
 	var r := wall_rect()
 	# North and south walls (along x), each with a gap for a fortified gate at the middle.
@@ -577,6 +649,7 @@ static func _town(kit: SceneKit, d: ChunkData, _field: HeightField, meshes: Dict
 		for seg: Vector2 in [Vector2(r.position.y, PAD_CENTER.y - gap), Vector2(PAD_CENTER.y + gap, r.end.y)]:
 			_wall(d, walls, Vector2(xw, seg.x), Vector2(xw, seg.y))
 	d.scenery[meshes.wall] = ChunkWriter.xform_buffer(walls)
+	d.far_scenery.append(meshes.wall)
 
 
 static func _wall(d: ChunkData, walls: Array, a: Vector2, b: Vector2) -> void:
@@ -592,9 +665,9 @@ static func _wall(d: ChunkData, walls: Array, a: Vector2, b: Vector2) -> void:
 # --------------------------------------------------------------------------- the scripted props (parts)
 
 ## The breakable house scene (HOUSE_RECORD; a placed copy sets world_id): BreakableProp on
-## the breakables layer, a CombatEntity, Intact (body and roof) / Broken (rubble), its block shape
-## and hurtbox.
-static func _save_house_scene(kit: SceneKit, _mats: Dictionary) -> String:
+## the breakables layer, a CombatEntity, Intact (the shared house mesh, one draw call) / Broken (the
+## shared rubble), its block shape and hurtbox.
+static func _save_house_scene(kit: SceneKit, meshes: Dictionary) -> String:
 	var root := StaticBody3D.new()
 	root.name = "HouseBreakable"
 	kit.scripted(root, S_BREAKABLE, {"world_id": ""})
@@ -613,28 +686,27 @@ static func _save_house_scene(kit: SceneKit, _mats: Dictionary) -> String:
 	hb.add_child(kit.hurtbox("Body", "body", kit.box_shape(HOUSE_SIZE + Vector3(0.4, 0.4, 0.4)), Vector3.UP * HOUSE_SIZE.y * 0.5))
 	root.add_child(hb)
 	var intact := kit.n3("Intact")
-	intact.add_child(kit.box("Walls", HOUSE_SIZE, Vector3.UP * HOUSE_SIZE.y * 0.5, "tw_plaster"))
-	var roof := MeshInstance3D.new()
-	roof.name = "Roof"
-	var roof_mesh := PrismMesh.new()
-	roof_mesh.size = Vector3(HOUSE_SIZE.z + 0.6, ROOF_H, HOUSE_SIZE.x + 0.6)
-	roof.mesh = roof_mesh
-	roof.material_override = kit.mats["tw_roof"]
-	roof.position = Vector3.UP * (HOUSE_SIZE.y + ROOF_H * 0.5)
-	roof.rotation.y = PI * 0.5
-	intact.add_child(roof)
+	intact.add_child(_shared_instance("House", meshes.house))
 	root.add_child(intact)
 	var broken := kit.n3("Broken")
-	broken.add_child(kit.box("Rubble", Vector3(HOUSE_SIZE.x, 1.4, HOUSE_SIZE.z), Vector3.UP * 0.7, "tw_rubble"))
+	broken.add_child(_shared_instance("Rubble", meshes.rubble))
 	broken.visible = false
 	root.add_child(broken)
 	return kit.save(root, HOUSE_SCENE)
 
 
+## A MeshInstance3D of a shared mesh (its own material, VERTEX_MATERIAL).
+static func _shared_instance(node_name: String, path: String) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.name = node_name
+	mi.mesh = load(path) as Mesh
+	return mi
+
+
 ## The chunk's scripted props: in the town chunk the 8 breakable houses, the two fortified gates and
 ## the fences and crates of the square; in a landmark's chunk the landmark (Landmarks). Split into
 ## parts of at most ChunkWriter.MAX_PART_NODES nodes, saved under PART_DIR and named in props_scenes.
-static func _props(kit: SceneKit, d: ChunkData, field: HeightField, _mats: Dictionary, _house_scene: String) -> Dictionary:
+static func _props(kit: SceneKit, d: ChunkData, field: HeightField, meshes: Dictionary) -> Dictionary:
 	var elements: Array = []
 	if d.coords == _town_chunk():
 		var slots := house_slots()
@@ -660,29 +732,32 @@ static func _props(kit: SceneKit, d: ChunkData, field: HeightField, _mats: Dicti
 			g.position = Vector3(PAD_CENTER.x - d.origin.x, PAD_Y - 0.2, float(gate[2]) - d.origin.z)
 			g.rotation.y = float(gate[3])
 			elements.append({"node": g, "container": "Props"})
-		# The square (the last two slots of the back row south of the street): two rows of three fences
-		# (8 m each, along x) with six crates between them.
+		# The square (the last two slots of the back row south of the street): two rows of two fences
+		# (8 m each, along x) with four crates between them - each two draw calls, within the
+		# settlement view's budget (plan §5.3).
 		var sq := square_center()
-		for k in 6:
+		for k in SQUARE_FENCES:
 			var f := kit.instance(FENCE) as Node3D
 			if f == null:
 				break
 			f.name = "Fence%d" % (k + 1)
 			f.set("world_id", "test_world.town.fence_%d" % (k + 1))
-			f.position = Vector3(sq.x - 8.0 + 8.0 * (k % 3) - d.origin.x, PAD_Y, sq.y + (-7.0 if k < 3 else 7.0) - d.origin.z)
+			var row := SQUARE_FENCES / 2
+			f.position = Vector3(sq.x - 4.0 * (row - 1) + 8.0 * (k % row) - d.origin.x, PAD_Y,
+				sq.y + (-7.0 if k < row else 7.0) - d.origin.z)
 			elements.append({"node": f, "container": "Props"})
-		for k in 6:
+		for k in SQUARE_CRATES:
 			var c := kit.instance(CRATE) as Node3D
 			if c == null:
 				break
 			c.name = "Crate%d" % (k + 1)
 			c.set("world_id", "test_world.town.crate_%d" % (k + 1))
-			c.position = Vector3(sq.x - 11.0 + 4.4 * k - d.origin.x, PAD_Y, sq.y - d.origin.z)
+			c.position = Vector3(sq.x - 2.2 * (SQUARE_CRATES - 1) + 4.4 * k - d.origin.x, PAD_Y, sq.y - d.origin.z)
 			elements.append({"node": c, "container": "Props"})
 	for lm: Dictionary in LANDMARKS:
 		if lm.chunk != d.coords:
 			continue
-		elements.append({"node": landmark_node(kit, lm, field, d.origin), "container": "Landmarks"})
+		elements.append({"node": landmark_node(kit, lm, field, d.origin, meshes), "container": "Landmarks"})
 	if elements.is_empty():
 		return {"ok": true}
 	var split := ChunkWriter.split_parts(elements)
@@ -700,9 +775,9 @@ static func _props(kit: SceneKit, d: ChunkData, field: HeightField, _mats: Dicti
 	return {"ok": true}
 
 
-## The real landmark of its chunk (a static body with its mesh): the watchtower (a 40 m round tower
-## with a roof) or the monolith (a 30 m standing stone).
-static func landmark_node(kit: SceneKit, lm: Dictionary, field: HeightField, chunk_origin: Vector3) -> Node3D:
+## The real landmark of its chunk (a static body with its shapes and its one shared mesh): the
+## watchtower (a 40 m round tower with a roof) or the monolith (a 30 m standing stone).
+static func landmark_node(kit: SceneKit, lm: Dictionary, field: HeightField, chunk_origin: Vector3, meshes: Dictionary) -> Node3D:
 	var p: Vector2 = lm.pos
 	var y := field.sample(p.x, p.y) - 0.5
 	var body := StaticBody3D.new()
@@ -713,32 +788,17 @@ static func landmark_node(kit: SceneKit, lm: Dictionary, field: HeightField, chu
 	for s: Dictionary in landmark_shapes(lm):
 		var size: Vector3 = s.size
 		var cs := CollisionShape3D.new()
-		var mi := MeshInstance3D.new()
-		match str(s.shape):
-			"box":
-				cs.shape = kit.box_shape(size)
-				var bm := BoxMesh.new()
-				bm.size = size
-				mi.mesh = bm
-			_:
-				var cyl := CylinderShape3D.new()
-				cyl.radius = size.x * 0.5
-				cyl.height = size.y
-				cs.shape = cyl
-				var cm := CylinderMesh.new()
-				cm.top_radius = 0.0 if str(s.shape) == "cone" else size.x * 0.5
-				cm.bottom_radius = size.x * 0.5
-				cm.height = size.y
-				cm.radial_segments = 8
-				mi.mesh = cm
-		var center := (s.position as Vector3) + Vector3.UP * size.y * 0.5
-		mi.position = center
-		mi.material_override = kit.mats["tw_" + str(s.mat)]
-		cs.position = center
-		mi.name = "Mesh%d" % body.get_child_count()
+		if str(s.shape) == "box":
+			cs.shape = kit.box_shape(size)
+		else:
+			var cyl := CylinderShape3D.new()
+			cyl.radius = size.x * 0.5
+			cyl.height = size.y
+			cs.shape = cyl
+		cs.position = (s.position as Vector3) + Vector3.UP * size.y * 0.5
 		cs.name = "Shape%d" % body.get_child_count()
 		body.add_child(cs)
-		body.add_child(mi)
+	body.add_child(_shared_instance("Mesh", meshes[str(lm.shape)]))
 	return body
 
 
@@ -764,7 +824,7 @@ static func _save_skyline(kit: SceneKit, field: HeightField) -> void:
 		var base := Vector3(p.x, field.sample(p.x, p.y) - 0.5, p.y)
 		for s: Dictionary in landmark_shapes(lm):
 			shapes.append({"shape": s.shape, "position": base + (s.position as Vector3), "size": s.size,
-				"color": MATERIALS[str(s.mat)]})
+				"color": COLORS[str(s.mat)]})
 	ResourceSaver.save(SkylineWriter.landmarks_mesh(shapes), kit.output_path(LANDMARKS_PATH), ResourceSaver.FLAG_COMPRESS)
 
 

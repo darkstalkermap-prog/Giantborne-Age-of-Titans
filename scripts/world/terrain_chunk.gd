@@ -10,10 +10,13 @@ extends Node3D
 ##             uniformly scaled by the spacing; the same triangles as the mesh)
 ##   Water     MeshInstance3D of the chunk's water rectangles (when it has any)
 ##   Scenery   one MultiMeshInstance3D per mesh key (shared meshes; group "scenery", so the preset's
-##             scenery_visibility_end_m hides them far off)
+##             scenery_visibility_end_m hides them far off - the data's far_scenery keys, a
+##             settlement's merged buildings, join group world_terrain and the terrain's distance)
 ##   Solids    StaticBody3Ds of at most SOLID_BATCH shapes each (a body is added whole, so the
 ##             physics server builds each compound once)
-##   Props     the props sub-scenes (settlements are several, each of at most 150 nodes), one per step
+##   Props     the props sub-scenes (settlements are several, each of at most 150 nodes), one per step;
+##             their meshes in group "scenery" (props' merged meshes) get the scenery distance as
+##             LevelRoot gives it to the scenery present at its start
 ##
 ## The steps (step() returns the name of the step it ran): "request" (ResourceLoader.
 ## load_threaded_request of the ChunkData), "data" (its threaded load polled - "wait" while it is
@@ -255,6 +258,7 @@ func _step() -> String:
 			if _prop_packed != null:
 				var inst := _prop_packed.instantiate()
 				if inst is Node3D:
+					_fade_scenery(inst)
 					props_root.add_child(inst)
 				elif inst != null:
 					inst.free()
@@ -401,10 +405,22 @@ func _make_scenery(key: String) -> void:
 	var mmi := MultiMeshInstance3D.new()
 	mmi.name = key.get_file().get_basename().to_pascal_case()
 	mmi.multimesh = mm
-	var vis := float(_streamer.get("scenery_visibility_end_m")) if _streamer != null else 0.0
+	var far := data.far_scenery.has(key)
+	var vis := float(_streamer.get("terrain_visibility_end_m" if far else "scenery_visibility_end_m")) if _streamer != null else 0.0
 	mmi.visibility_range_end = maxf(vis, 0.0)
-	mmi.add_to_group(SCENERY_GROUP)
+	mmi.add_to_group(TERRAIN_GROUP if far else SCENERY_GROUP)
 	scenery_root.add_child(mmi)
+
+
+## The scenery distance on the meshes of group "scenery" in a props sub-scene (LevelRoot gives it
+## to the scenery present when the level starts; a streamed sub-scene comes later).
+func _fade_scenery(node: Node) -> void:
+	var vis := float(_streamer.get("scenery_visibility_end_m")) if _streamer != null else 0.0
+	if vis <= 0.0:
+		return
+	for n in node.find_children("*", "GeometryInstance3D", true, false):
+		if n.is_in_group(SCENERY_GROUP):
+			(n as GeometryInstance3D).visibility_range_end = vis
 
 
 func _make_solids_batch(from: int, to: int) -> void:
