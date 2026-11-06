@@ -92,9 +92,12 @@ fi
 rm -rf "$OUT"
 mkdir -p "$OUT"
 # Godot must never import a build (P23): an earlier build's poster and icons would otherwise be
-# imported as textures and packed into the next build's pck.
-: > "$OUT/.gdignore"
-if [ -d builds ]; then : > builds/.gdignore; fi
+# imported as textures and packed into the next build's pck. builds/ is ignored as a whole; an
+# output folder elsewhere gets its own .gdignore.
+case "$OUT" in
+	builds/*) : > builds/.gdignore ;;
+	*) : > "$OUT/.gdignore" ;;
+esac
 "$GODOT" --headless --path . --export-release "$PRESET" "$OUT/index.html"
 for f in index.wasm index.pck; do
 	gzip -9 -n -c "$OUT/$f" | base64 | tr -d '\n' > "$OUT/$f.gz.b64.txt"
