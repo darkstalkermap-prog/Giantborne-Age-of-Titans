@@ -203,11 +203,26 @@ func _on_loot_awarded(_t: int, _world_id: String, _item: String, _count: int, _r
 
 
 func _process(delta: float) -> void:
+	if level_loading():
+		return
 	if _frame_ms.size() < 200000:
 		_frame_ms.append(delta * 1000.0)
 
 
+## True while main's loading gate holds the tree paused behind "Loading..." (main.gd is_loading();
+## false where no main is the parent). The autopilot does nothing meanwhile (M6 gate): the gate holds
+## for extra frames with audio on, and the Valley bot, started and bound in those paused frames (the
+## autopilot and the bot run PROCESS_MODE_ALWAYS), acted one tick earlier than in a silent run, so
+## every seeded Valley run diverged from its --no-audio twin. Now the bot starts on the first tick
+## after the gate in both, as the pausable soak always did.
+func level_loading() -> bool:
+	var main := get_parent()
+	return main != null and main.has_method("is_loading") and bool(main.call("is_loading"))
+
+
 func _physics_process(dt: float) -> void:
+	if level_loading():
+		return
 	if _scenario == SCENARIO_VALLEY:
 		if _bot == null:
 			_start_valley_bot()

@@ -10,8 +10,10 @@ extends Node
 ##     WORLD_LOAD_LIMIT_S); then the
 ##     loading gate (P19): the tree stays paused behind "Loading..." until Audio.is_ready() - every
 ##     SFX sample of the level registered - so no sound plays before its sample exists and the
-##     first play() never registers (plan M6-M9 §2.5, decision 2). Paused frames run no tick, so
-##     the seeded timeline is the same with audio on or off.
+##     first play() never registers (plan M6-M9 §2.5, decision 2); then (M6 gate) until the level's
+##     navigation map has synced (hold_until_navigation_ready). Paused frames run no tick, and
+##     the autopilot (and with it the Valley bot) does nothing while the gate holds (is_loading()),
+##     so the seeded timeline is the same with audio on or off.
 ## The ScreenStack (P03) handles pause / Esc itself (and every modal screen); focus loss and a
 ## lost pointer lock open the pause screen through it. main owns the global keys: controls
 ## overlay, debug panel, the debug reset (F5, sandbox only) and checkpoint reload (F9), and the
@@ -37,6 +39,9 @@ const LOADING_TEXT := "Loading..."
 const DEATH_CONFIRM_DELAY_S := 1.0
 ## P24a: the longest the world's starting ring may keep the loading screen up (then a warning, and on).
 const WORLD_LOAD_LIMIT_S := 8.0
+## M6 gate: the most frames the loading gate waits for the level's navigation map to sync (one
+## physics step in deterministic runs, where maps sync synchronously: Sim.make_navigation_synchronous).
+const NAVIGATION_WAIT_FRAMES := 120
 
 var hud: Hud
 var screen_stack: ScreenStack
@@ -48,6 +53,7 @@ var autopilot: Autopilot
 var _layer: CanvasLayer
 var _in_level := false
 var _was_captured := false
+var _loading := false
 
 
 func _ready() -> void:
@@ -74,20 +80,35 @@ func _ready() -> void:
 	# "Loading..." while the tree is paused, so the simulation does not run a tick without the level
 	# (the seeded soak keeps its exact timeline): one frame, the level built behind it, then (P24a)
 	# a streamed world's starting ring, then the audio loading gate.
+	_loading = true
 	get_tree().paused = true
 	await get_tree().process_frame
 	if not is_inside_tree():
 		return
 	_build_level()
+	var nav_built := navigation_iteration()
 	await hold_until_world_ready(loading)
 	if not is_inside_tree():
 		return
 	await hold_until_audio_ready(loading)
 	if not is_inside_tree():
 		return
+	await hold_until_navigation_ready(nav_built)
+	if not is_inside_tree():
+		return
 	loading.queue_free()
+	_loading = false
 	if not _pausing_screen_open():
 		get_tree().paused = false
+
+
+## True from the start of a level load until its loading gate lets the simulation run: the tree is
+## paused behind "Loading..." meanwhile, for one frame without audio and for as many frames as the
+## samples (and a world's starting ring) take with it. The autopilot does nothing while it is true
+## (M6 gate): a Valley bot that bound and planned during the gate's extra frames acted one tick
+## earlier with audio than without, and every seeded Valley run diverged (decision 1).
+func is_loading() -> bool:
+	return _loading
 
 
 ## The loading gate (P19, plan M6-M9 §2.5): waits, frame by frame with the tree paused, until the
@@ -100,6 +121,32 @@ func hold_until_audio_ready(loading: Label) -> void:
 	while is_inside_tree() and not bool(audio.call("is_ready")):
 		if is_instance_valid(loading):
 			loading.text = "%s %d%%" % [LOADING_TEXT, int(float(audio.call("registration_progress")) * 100.0)]
+		await get_tree().process_frame
+
+
+## The iteration id of the navigation map the level uses (the root viewport's world; 0 before its
+## first sync).
+func navigation_iteration() -> int:
+	var world := get_viewport().world_3d if get_viewport() != null else null
+	return NavigationServer3D.map_get_iteration_id(world.navigation_map) if world != null else 0
+
+
+## The navigation part of the loading gate (M6 gate): when the level has navigation regions, waits with
+## the tree paused until the map has synced at least once after the level was built (its iteration id
+## past `built_iteration`), for at most NAVIGATION_WAIT_FRAMES. The first tick then always finds the
+## level's navigation ready: before, it was ready at the first tick only when the audio gate had held
+## long enough for the map to sync (with audio on), while a silent run's first ticks steered without
+## it - and a seeded run's paths, and the whole run, diverged.
+func hold_until_navigation_ready(built_iteration: int) -> void:
+	var world := get_viewport().world_3d if get_viewport() != null else null
+	# The level's own regions (the map lists a region only after the sync that adds it).
+	if world == null or level == null or not is_instance_valid(level) \
+			or level.find_children("*", "NavigationRegion3D", true, false).is_empty():
+		return
+	var frames := 0
+	while is_inside_tree() and frames < NAVIGATION_WAIT_FRAMES \
+			and NavigationServer3D.map_get_iteration_id(world.navigation_map) <= built_iteration:
+		frames += 1
 		await get_tree().process_frame
 
 

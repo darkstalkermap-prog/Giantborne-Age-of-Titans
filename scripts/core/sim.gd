@@ -48,6 +48,30 @@ func _ready() -> void:
 	rng.seed = DEFAULT_SEED
 	if Engine.physics_ticks_per_second != TICK_RATE:
 		push_error("Sim: physics_ticks_per_second must be %d (is %d)" % [TICK_RATE, Engine.physics_ticks_per_second])
+	if deterministic_run():
+		make_navigation_synchronous(get_viewport())
+
+
+## True for a run that must replay tick for tick from its seed: a headless run (the tests, the
+## soaks, the bots) or one started with --deterministic-streaming (the same rule as
+## ChunkStreamer.deterministic).
+static func deterministic_run() -> bool:
+	return DisplayServer.get_name() == "headless" \
+		or OS.get_cmdline_user_args().has(ChunkStreamer.DETERMINISTIC_ARG)
+
+
+## Deterministic navigation (M6 gate; the rule plan M6-M9 decision 13 sets for the world): every
+## navigation map and region syncs in the physics step after it changes instead of on a worker
+## thread, so a map change (a level's regions added, a broken gate's link enabled) is usable at a
+## fixed tick, never at one that depends on the worker's wall time. With Godot's asynchronous
+## iterations, a Valley bot run's paths diverged after a reload or a link change whenever the main
+## thread took longer per frame - with the audio engine on, under load - from its twin. Maps and
+## regions made later take the project settings changed here; the viewport's own map is switched now.
+static func make_navigation_synchronous(viewport: Viewport) -> void:
+	ProjectSettings.set_setting("navigation/world/map_use_async_iterations", false)
+	ProjectSettings.set_setting("navigation/world/region_use_async_iterations", false)
+	if viewport != null and viewport.world_3d != null:
+		NavigationServer3D.map_set_use_async_iterations(viewport.world_3d.navigation_map, false)
 
 
 ## Reseeds `rng` and every named stream (stream seed = seed_value ^ hash(name)).
