@@ -41,6 +41,8 @@
 		{"id": "world.greywood.old_root_tree", "seal": "titan_tree", "pos": [-700, 120], "yaw": 10, "poi": "poi.old_root"}
 	],
 	"caches": [
+		{"id": "world.greywood.hollowmere_cache", "pos": [-600, -70], "loot": "loot.cache_hollowmere", "poi": "poi.hollowmere"},
+		{"id": "world.greywood.needle_cache", "pos": [-402, 64], "loot": "loot.cache_the_needle", "poi": "poi.the_needle"},
 		{"id": "world.greywood.grove_cache", "pos": [-494, -14], "loot": "loot.cache_hidden_grove", "poi": "poi.hidden_grove"},
 		{"id": "world.greywood.pines_cache", "pos": [-546, -252], "loot": "loot.cache_great_pines", "poi": "poi.great_pines"},
 		{"id": "world.greywood.old_root_cache", "pos": [-700, 120], "loot": "loot.cache_old_root", "poi": "poi.old_root", "under_seal": "world.greywood.old_root_tree"}

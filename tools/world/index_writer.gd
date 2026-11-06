@@ -6,9 +6,9 @@ extends RefCounted
 ##                kind, chunk, region, the layout's max_stage, fast travel for shrines and waystones)
 ##   markers, areas, exits   from the chunk parts (each with its chunk)
 ##   props        every scripted prop with a world id (seals, caches, cairns, gates, pines) and every
-##                static layout element with an id that is a landmark, a quest target or
-##                quest-critical: {"position", "chunk", "landmark", "quest_target", "quest_critical",
-##                "indestructible", "kind"}
+##                static layout element with an id: {"position", "chunk", "landmark", "quest_target",
+##                "quest_critical", "indestructible", "kind" (the element's kind, a seal's seal, else
+##                cache, cairn or great_pine)}
 ##   pois         from the poi records of level.world (position from the record, its chunk)
 ##   encounters   the encounter records of level.world (centre, chunk, faction)
 ##   roads        the staged road graph: a node every NODE_EVERY_M along every road (each polyline
@@ -26,6 +26,9 @@ const ROAD_LINK_M := 26.0
 ## A point within this of a road node needs no connector.
 const CONNECT_WITHIN_M := 30.0
 const CELL_M := 64.0
+## A scripted place's kind in the props table by its layout section (elements name their kind,
+## seals their seal: rockfall, toppled_statue, titan_tree, ledge).
+const SECTION_KINDS := {"caches": "cache", "cairns": "cairn", "pines": "great_pine"}
 
 
 ## The index of the built world: `root` holds every chunk part at its chunk origin (built in
@@ -61,7 +64,16 @@ static func build(root: Node3D, layout: Dictionary, feats: WorldFeatures, field:
 		e["quest_target"] = bool(it.get("quest_target", false))
 		e["quest_critical"] = bool(it.get("quest_critical", false))
 		e["indestructible"] = bool(it.get("indestructible", false))
-		e["kind"] = str(it.get("kind", it.get("seal", it.get("_section", ""))))
+		e["kind"] = str(it.get("kind", it.get("seal", SECTION_KINDS.get(str(it.get("_section", "")), ""))))
+	# the cairns (Inscriptions: talkers, no world_id on the node) by their layout entries
+	for it: Dictionary in items:
+		if str(it.get("_section", "")) != "cairns":
+			continue
+		var cp := WorldLayout.pos2(it)
+		var cpos := Vector3(cp.x, field.sample(cp.x, cp.y), cp.y)
+		idx.props[str(it.id)] = {"position": cpos, "chunk": feats.chunk_id_of(cp.x, cp.y), "landmark": false,
+			"quest_target": false, "quest_critical": false, "indestructible": true, "kind": "cairn",
+			"dialogue": str(it.get("dialogue", ""))}
 	for s: Dictionary in statics:
 		var el: Dictionary = s.el
 		var pos: Vector3 = s.position

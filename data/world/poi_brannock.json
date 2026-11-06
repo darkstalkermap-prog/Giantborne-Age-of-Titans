@@ -7,7 +7,7 @@
 	"region": "region.crownmarch",
 	"kind": "settlement",
 	"position_m": [60, 10.0, 450],
-	"radius_m": 90,
+	"radius_m": 100,
 	"xp": 40,
 	"map_icon": "settlement",
 	"compass": true,

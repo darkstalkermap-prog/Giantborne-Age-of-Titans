@@ -59,7 +59,7 @@
 		{"id": "world.crownmarch.raiders_cache", "pos": [-102, 562], "loot": "loot.cache_raiders_hollow", "poi": "poi.raiders_hollow"},
 		{"id": "world.crownmarch.barrow_cache", "pos": [-672, 690], "loot": "loot.cache_barrow_fields", "poi": "poi.barrow_fields"},
 		{"id": "world.crownmarch.vault_cache", "pos": [-690, 769], "loot": "loot.cache_barrow_vault", "poi": "poi.barrow_vault", "under_seal": "world.crownmarch.barrow_vault_rockfall"},
-		{"id": "world.crownmarch.bridge_cache", "pos": [84, 372], "loot": "loot.cache_brannock_bridge", "poi": "poi.brannock_bridge"},
+		{"id": "world.crownmarch.bridge_cache", "pos": [80, 362], "loot": "loot.cache_brannock_bridge", "poi": "poi.brannock_bridge"},
 		{"id": "world.crownmarch.kings_road_cache", "pos": [313, 322], "loot": "loot.cache_kings_road", "poi": "poi.kings_road"},
 		{"id": "world.crownmarch.toll_cache", "pos": [448, 322], "loot": "loot.cache_toll_fort", "poi": "poi.toll_fort"},
 		{"id": "world.crownmarch.watch_cache", "pos": [462, 752], "loot": "loot.cache_shepherds_watch", "poi": "poi.shepherds_watch"},

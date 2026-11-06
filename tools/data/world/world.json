@@ -777,10 +777,11 @@
 			"circle": [
 				-640,
 				-40,
-				75
+				46
 			],
 			"y": "auto",
-			"blend_m": 30
+			"blend_m": 20,
+			"note": "Hollowmere's pad round the black pond, kept clear of the Hidden Grove's ring (a pad reaching its wall would ramp up onto the ring's top)."
 		},
 		{
 			"type": "flatten",

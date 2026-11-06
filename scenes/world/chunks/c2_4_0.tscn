@@ -1,7 +1,9 @@
 [gd_scene format=4]
 
-[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="1_add9b"]
-[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="3_add9b"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="4_2c089"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(1.6, 5, 1.6)
@@ -13,7 +15,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 72,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
-"material": ExtResource("2_2c089"),
+"material": ExtResource("4_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 16,
@@ -27,7 +29,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 36,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMA"),
-"material": ExtResource("2_2c089"),
+"material": ExtResource("4_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 8,
@@ -38,13 +40,21 @@ _surfaces = [{
 
 [node name="Props" type="Node3D" parent="."]
 
+[node name="world_greywood_needle_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 110, 23.598, 64)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.greywood.needle_cache"
+loot_table = "loot.cache_the_needle"
+
 [node name="Shrines" type="Node3D" parent="."]
 
 [node name="Waystones" type="Node3D" parent="."]
 
 [node name="world_cp_needle" type="Marker3D" parent="Waystones"]
 transform = Transform3D(-0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, -0.70710677, 112, 23.855999, 100)
-script = ExtResource("1_add9b")
+script = ExtResource("3_add9b")
 requires_flags = PackedStringArray()
 display_name = "Needle waystone"
 checkpoint_id = "world.cp.needle"

@@ -7,7 +7,7 @@
 	"region": "region.greywood",
 	"kind": "gate",
 	"position_m": [-430, 27.0, 40],
-	"radius_m": 40,
+	"radius_m": 50,
 	"xp": 30,
 	"map_icon": "gate",
 	"compass": true,

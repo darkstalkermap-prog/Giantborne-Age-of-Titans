@@ -90,7 +90,7 @@ priority = 40
 [node name="Waystones" type="Node3D" parent="."]
 
 [node name="world_cp_hollowmere" type="Marker3D" parent="Waystones"]
-transform = Transform3D(-0.8660254, 0, 0.50000006, 0, 1, 0, -0.50000006, 0, -0.8660254, 178, 26.223999, 40)
+transform = Transform3D(-0.8660254, 0, 0.50000006, 0, 1, 0, -0.50000006, 0, -0.8660254, 178, 27.576, 40)
 script = ExtResource("6_add9b")
 requires_flags = PackedStringArray()
 display_name = "Hollowmere waystone"
@@ -116,7 +116,7 @@ mesh = SubResource("ArrayMesh_3")
 [node name="Objective" type="Node3D" parent="Markers"]
 
 [node name="world_marker_hollowmere_green" type="Marker3D" parent="Markers/Objective"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 25.054, 22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 27.199001, 22)
 script = ExtResource("8_acc12")
 marker_id = "world.marker.hollowmere_green"
 
