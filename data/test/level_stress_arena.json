@@ -14,6 +14,6 @@
 	},
 	"web_overrides": {"quality": "low", "ai_tier1_m": 30},
 	"districts": [
-		{"id": "arena", "display_name": "Stress arena", "min_m": [-80, 0, -80], "max_m": [80, 0, 80]}
+		{"id": "arena", "display_name": "Stress arena", "min_m": [-80, 0, -80], "max_m": [80, 0, 80], "surface": "hard"}
 	]
 }

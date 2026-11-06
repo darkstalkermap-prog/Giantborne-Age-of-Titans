@@ -309,7 +309,8 @@ func reset_for_tests() -> void:
 func reload_catalog() -> void:
 	_cues.clear()
 	_catalog_problems.clear()
-	mix = GameData.get_record(MIX_ID)
+	mix = GameData.get_record(MIX_ID).duplicate(true)
+	_merge_district_surfaces()
 	for bank: Dictionary in GameData.records_of_type("audio_bank"):
 		var cues: Variant = bank.get("cues")
 		if typeof(cues) != TYPE_DICTIONARY:
@@ -332,6 +333,24 @@ func reload_catalog() -> void:
 			for cue_id: String in set_cues(rec):
 				if resolve(cue_id).is_empty():
 					_catalog_problems.append("%s: cue %s resolves to nothing" % [rec.id, cue_id])
+
+
+
+## A level district's own `surface` (the test levels under data/test, which the shipped mix may
+## not name: the Web release leaves them out) fills the mix's surfaces map where the mix is silent
+## (wave 13).
+func _merge_district_surfaces() -> void:
+	var surfaces: Dictionary = mix.get("surfaces", {})
+	for lv: Dictionary in GameData.records_of_type("level"):
+		for d: Variant in lv.get("districts", []):
+			if typeof(d) != TYPE_DICTIONARY or str(d.get("surface", "")) == "":
+				continue
+			var by_level: Dictionary = surfaces.get(lv.id, {})
+			if not by_level.has(d.id):
+				by_level[d.id] = str(d.surface)
+			surfaces[lv.id] = by_level
+	if not mix.is_empty():
+		mix["surfaces"] = surfaces
 
 
 ## The cue ids a music or ambience set names (stingers, beds, spots, emitters, the flush cue).

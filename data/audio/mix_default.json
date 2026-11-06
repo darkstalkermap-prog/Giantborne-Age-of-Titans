@@ -138,13 +138,6 @@
 			"kingsfall": "hard",
 			"water": "wet"
 		},
-		"level.stress_arena": {
-			"arena": "hard"
-		},
-		"level.director_test": {
-			"west": "soft",
-			"east": "soft"
-		},
 		"sandbox": {}
 	},
 	"intensity": {

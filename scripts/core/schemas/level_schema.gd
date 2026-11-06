@@ -53,7 +53,9 @@ static func fields() -> Dictionary:
 			"id": U.str_field(true),
 			"display_name": U.str_field(),
 			"min_m": U.vec3(true),
-			"max_m": U.vec3(true)}},
+			"max_m": U.vec3(true),
+			# the district's footfall surface when audio_mix.default does not name it (test levels)
+			"surface": U.str_field(false, ["soft", "hard", "wet"])}},
 	}
 	# M6-M9 (P20, plan M6-M9 §2.6, §2.7): the level's world index (WorldIndex resource the builder
 	# writes; LevelRoot.index(), WorldIndex.for_level) and the nav layer the player falls back to
