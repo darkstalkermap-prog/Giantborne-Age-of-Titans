@@ -342,6 +342,7 @@ func apply_graphics() -> Dictionary:
 			# The director's tier-0 radius: beyond it members run the reduced tier-1 rates.
 			d.near_m = minf(float(tier1), d.mid_m)
 			out["ai_tier1_m"] = d.near_m
+	_p24a_apply_view(preset, out)   # P24a: camera_far_m and terrain_visibility_end_m (anchor P24a)
 	applied_graphics = out
 	return out
 
@@ -389,6 +390,54 @@ func _restore_msaa() -> void:
 # settings; P25: regions; P27: discovery and map lookups).
 
 ## @anchor P24a
+# --- view distances (P24a, plan M6-M9 §2.7, decision 12) ------------------------------------------
+# A render preset may name camera_far_m (the camera's far plane: 2,400 m in the world, so the fog
+# and the skyline can show the world to its edge; DEFAULT_CAMERA_FAR_M, today's 800 m, when absent)
+# and terrain_visibility_end_m (a streamed chunk's terrain beyond it from the camera is not drawn;
+# the skyline shows instead). apply_graphics() applies both with the rest of the preset: the far
+# plane to the player's CameraRig (which also asks camera_far_m() when it is set up), the
+# visibility range to every terrain mesh below this root (TERRAIN_GROUP; WorldRoot passes it on to
+# the chunks its streamer makes later).
+
+const DEFAULT_CAMERA_FAR_M := 800.0
+const TERRAIN_GROUP := "world_terrain"
+
+
+## The camera far plane of the render preset in effect (camera_far_m), else DEFAULT_CAMERA_FAR_M.
+func camera_far_m() -> float:
+	var v: Variant = render_preset(graphics_quality()).get("camera_far_m")
+	return float(v) if SchemaUtil.is_number(v) and float(v) > 0.0 else DEFAULT_CAMERA_FAR_M
+
+
+## terrain_visibility_end_m of the render preset in effect (0 = no limit).
+func terrain_visibility_end_m() -> float:
+	var v: Variant = render_preset(graphics_quality()).get("terrain_visibility_end_m")
+	return maxf(float(v), 0.0) if SchemaUtil.is_number(v) else 0.0
+
+
+## The terrain meshes below this root (TERRAIN_GROUP).
+func terrain_nodes() -> Array[GeometryInstance3D]:
+	var out: Array[GeometryInstance3D] = []
+	if not is_inside_tree():
+		return out
+	for n in get_tree().get_nodes_in_group(TERRAIN_GROUP):
+		var g := n as GeometryInstance3D
+		if g != null and _owns(g):
+			out.append(g)
+	return out
+
+
+func _p24a_apply_view(preset: Dictionary, out: Dictionary) -> void:
+	var far := camera_far_m()
+	var p := player()
+	if p != null and p.camera_rig != null and p.camera_rig.camera != null:
+		p.camera_rig.set_far_plane(far)
+	out["camera_far_m"] = far
+	if SchemaUtil.is_number(preset.get("terrain_visibility_end_m")):
+		var end := terrain_visibility_end_m()
+		for g in terrain_nodes():
+			g.visibility_range_end = end
+		out["terrain_visibility_end_m"] = end
 
 ## @anchor P24b
 

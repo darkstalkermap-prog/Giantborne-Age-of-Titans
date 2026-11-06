@@ -74,7 +74,7 @@ func setup(p_player: Node3D, p_profile: Dictionary) -> void:
 	current_distance = desired_distance
 	camera.fov = float(Settings.get_value("fov_deg"))
 	camera.near = 0.05
-	camera.far = 800.0
+	camera.far = level_far_plane_m()   # P24a: the level's camera_far_m (800 m unless its preset says)
 	camera.current = true
 	set_mode(int(Settings.session.get("camera_mode", Mode.THIRD_PERSON)), false)
 	_update_transform(0.0)
@@ -317,6 +317,27 @@ func _apply_shake(delta: float) -> void:
 # Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
 
 ## @anchor P24a
+# The far plane follows the level (P24a, plan M6-M9 §2.7, decision 12): 2,400 m in the world, so its
+# fog and skyline reach the edge; DEFAULT_FAR_M (800 m) where the level's preset names none.
+
+const DEFAULT_FAR_M := 800.0
+
+
+## The far plane of the level the giant stands in: the camera_far_m() of its nearest LevelRoot
+## ancestor (the render preset in effect), else DEFAULT_FAR_M.
+func level_far_plane_m() -> float:
+	var n: Node = player.get_parent() if player != null else get_parent()
+	while n != null:
+		if n.has_method("camera_far_m"):
+			return float(n.call("camera_far_m"))
+		n = n.get_parent()
+	return DEFAULT_FAR_M
+
+
+## Sets the camera's far plane (LevelRoot.apply_graphics, also on a graphics setting change).
+func set_far_plane(far_m: float) -> void:
+	if camera != null:
+		camera.far = maxf(far_m, camera.near + 1.0)
 
 ## @anchor P26
 

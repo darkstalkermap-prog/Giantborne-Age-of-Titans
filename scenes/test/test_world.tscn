@@ -1,0 +1,200 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/world_root.gd" id="1_ce812"]
+[ext_resource type="Script" path="res://scripts/world/chunk_streamer.gd" id="2_757f0"]
+[ext_resource type="Script" path="res://scripts/world/skyline.gd" id="3_3d2a6"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="4_acc12"]
+[ext_resource type="Script" path="res://scripts/world/checkpoint_marker.gd" id="5_74fde"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="6_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="7_7ef4a"]
+[ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="8_b0840"]
+[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="9_ce070"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.56, 0.64, 0.74, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.64, 0.7, 1)
+ambient_light_energy = 0.6
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.56, 0.64, 0.74, 1)
+fog_density = 1.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(1024, 400, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(1024, 400, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(2, 400, 1024)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(2, 400, 1024)
+
+[node name="TestWorld" type="Node3D"]
+script = ExtResource("1_ce812")
+level_id = "level.test_world"
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.81915206, 0.43938506, -0.36868784, 0, 0.64278764, 0.76604444, 0.57357645, -0.62750685, 0.5265408, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_mode = 1
+directional_shadow_max_distance = 120.0
+
+[node name="Streamer" type="Node" parent="."]
+script = ExtResource("2_757f0")
+
+[node name="Skyline" type="Node3D" parent="."]
+script = ExtResource("3_3d2a6")
+beacon_positions = PackedVector3Array(380, 84.096, -128)
+beacon_flags = PackedStringArray("test_world.beacon.lit")
+
+[node name="Chunks" type="Node3D" parent="."]
+
+[node name="Navigation" type="Node3D" parent="."]
+
+[node name="Bounds" type="StaticBody3D" parent="."]
+collision_layer = 32
+collision_mask = 0
+
+[node name="North" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, -513)
+shape = SubResource("BoxShape3D_2")
+
+[node name="South" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, 513)
+shape = SubResource("BoxShape3D_3")
+
+[node name="West" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -513, 100, 0)
+shape = SubResource("BoxShape3D_4")
+
+[node name="East" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 513, 100, 0)
+shape = SubResource("BoxShape3D_5")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Route" type="Node3D" parent="Markers"]
+
+[node name="WP01" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -300, 9.728, -300)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.01"
+kind = 6
+
+[node name="WP02" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -196, 11.208, -300)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.02"
+kind = 6
+
+[node name="WP03" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -196, 10.44, -196)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.03"
+kind = 6
+
+[node name="WP04" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -300, 10.292, -196)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.04"
+kind = 6
+
+[node name="WP05" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -300, 9.728, -300)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.05"
+kind = 6
+
+[node name="WP06" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -150, 14.372, -40)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.06"
+kind = 6
+
+[node name="WP07" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 11.316, 128)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.07"
+kind = 6
+
+[node name="WP08" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 14, 128)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.08"
+kind = 6
+
+[node name="WP09" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 232, 13.064, 128)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.09"
+kind = 6
+
+[node name="WP10" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 350, 12.402, 200)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.10"
+kind = 6
+
+[node name="WP11" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 350, 9.438, 380)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.11"
+kind = 6
+
+[node name="WP12" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 12.212, 400)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.12"
+kind = 6
+
+[node name="WP13" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 37.234, 350)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.13"
+kind = 6
+
+[node name="WP14" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -360, 12.132, 380)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.14"
+kind = 6
+
+[node name="WP15" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -300, 13.052, 40)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.15"
+kind = 6
+
+[node name="WP16" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -300, 9.728, -300)
+script = ExtResource("4_acc12")
+marker_id = "test_world.route.16"
+kind = 6
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="StartCheckpoint" type="Marker3D" parent="Spawns"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -300, 10.028, -300)
+script = ExtResource("5_74fde")
+checkpoint_id = "test_world.cp.start"
+
+[node name="Spawned" type="Node3D" parent="."]
+
+[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("6_627ae")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -300, 10.028, -300)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("7_7ef4a")
+
+[node name="EncounterDirector" type="Node" parent="."]
+script = ExtResource("8_b0840")
+
+[node name="DebrisPool" type="Node3D" parent="."]
+script = ExtResource("9_ce070")

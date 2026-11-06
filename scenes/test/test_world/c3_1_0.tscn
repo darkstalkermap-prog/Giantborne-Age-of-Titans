@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://assets/test_world/shared/tower.res" id="1_de242"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
+height = 40.0
+radius = 6.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_2"]
+height = 9.0
+radius = 7.5
+
+[node name="Chunk_3_1_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="Watchtower" type="StaticBody3D" parent="Landmarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 124, 34.596, 128)
+collision_mask = 0
+
+[node name="Shape0" type="CollisionShape3D" parent="Landmarks/Watchtower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, 0)
+shape = SubResource("CylinderShape3D_1")
+
+[node name="Shape1" type="CollisionShape3D" parent="Landmarks/Watchtower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 44.5, 0)
+shape = SubResource("CylinderShape3D_2")
+
+[node name="Mesh" type="MeshInstance3D" parent="Landmarks/Watchtower"]
+mesh = ExtResource("1_de242")
+
+[node name="NavLinks" type="Node3D" parent="."]
