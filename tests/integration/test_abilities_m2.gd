@@ -579,8 +579,11 @@ func test_footfall_radius_follows_the_growth_stage() -> void:
 	assert_near(p.attack.runner.pulse_radius(f), 4.0, 1e-9, "stage 2: 4 m")
 	p.growth_stage = 3
 	assert_near(p.attack.runner.pulse_radius(f), 5.0, 1e-9, "stage 3: 5 m")
+	# P26 (plan M6-M9 §2.9): the list runs to stage 6 now (6.5 / 8 / 9.5 m at stages 4-6).
+	p.growth_stage = 6
+	assert_near(p.attack.runner.pulse_radius(f), 9.5, 1e-9, "stage 6: 9.5 m")
 	p.growth_stage = 7
-	assert_near(p.attack.runner.pulse_radius(f), 5.0, 1e-9, "beyond the list: the last entry")
+	assert_near(p.attack.runner.pulse_radius(f), 9.5, 1e-9, "beyond the list: the last entry")
 	p.growth_stage = 1
 	assert_near(p.attack.runner.pulse_radius(action("ability.sweeping_blow")), 3.5, 1e-9,
 		"Sweeping Blow: the profile's melee reach")

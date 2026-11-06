@@ -1,15 +1,19 @@
 class_name EndScreen
 extends UiScreen
-## The end of the slice (plan §2.10.2, §3.15 design 6; P13): ScreenStack SCREENS["end"], requested
-## by Quests on Events.slice_completed (the Crown of the First King is claimed). It pauses the game
-## and shows the time played, deaths, level and growth stage, and how Thornwick's story ended (the
-## village outcome, decision 11), labelled as a vertical slice with prototype pacing (§6 risk 17).
-## "Continue exploring" closes it (play goes on); "Quit to title" asks GameSession for the title.
+## The end of the prologue (plan §2.10.2, §3.15 design 6; P13; P26: plan M6-M9 §5.6, decision 10):
+## ScreenStack SCREENS["end"], requested by Quests on Events.slice_completed (the Crown of the First
+## King is claimed). It pauses the game and shows "Prologue complete - the Valley of Broken Kings":
+## the time played, deaths, level and growth stage, and how Thornwick's story ended (the village
+## outcome, decision 11), with prototype pacing (§6 risk 17). "Continue" (focused) closes it - play
+## goes on, the Kings' Door behind the altar now open, and a HUD line points at it; "Quit to title"
+## asks GameSession for the title.
 ## args (Quests.end_summary()): {"time_s", "deaths", "level", "stage", "outcome"}; a missing key is
 ## read live (GameSession.stats, the player, the flag quest.village.outcome).
 
-const TITLE := "The Crown of the First King is yours"
-const SUBTITLE := "Giantborn - vertical slice, prototype pacing"
+const TITLE := "Prologue complete"
+const SUBTITLE := "The Valley of Broken Kings - prototype pacing"
+## The HUD line Continue leaves behind (the way on: the world's first stage names it too).
+const CONTINUE_HINT := "Behind the crown's altar, the Kings' Door stands open."
 const OUTCOME_LINES := {
 	"help_cache": "Thornwick: you returned their stolen cache",
 	"help_ogre": "Thornwick: you drove off the ogre",
@@ -50,7 +54,7 @@ func _ready() -> void:
 	_lines = VBoxContainer.new()
 	_lines.add_theme_constant_override("separation", 4)
 	v.add_child(_lines)
-	continue_button = UiKit.button("Continue exploring", 20)
+	continue_button = UiKit.button("Continue", 20)
 	continue_button.pressed.connect(press_continue)
 	v.add_child(continue_button)
 	quit_button = UiKit.button("Quit to title", 18)
@@ -73,7 +77,7 @@ func first_focus() -> Control:
 	return continue_button
 
 
-## Continue exploring, then Quit to title, wrapping (P16).
+## Continue, then Quit to title, wrapping (P16).
 func focus_rows() -> Array:
 	return [[continue_button], [quit_button]]
 
@@ -118,9 +122,10 @@ func visible_lines() -> PackedStringArray:
 	return _shown
 
 
-## "Continue exploring": back to the Valley.
+## "Continue": back to the Valley, its exit open (a HUD line points at the Kings' Door).
 func press_continue() -> void:
 	close({"continue": true})
+	Events.hud_message.emit(CONTINUE_HINT, "info")
 
 
 ## "Quit to title" (GameSession reloads into the title screen).
@@ -129,6 +134,6 @@ func press_quit() -> void:
 	Events.mode_change_requested.emit("title", {})
 
 
-## Esc / pad B is "Continue exploring".
+## Esc / pad B is "Continue".
 func cancel() -> void:
 	press_continue()
