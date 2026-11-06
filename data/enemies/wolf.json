@@ -49,7 +49,8 @@
 		"flank_angle_deg": 100,
 		"lunge_range_m": 5.5,
 		"outmatched_ratio": 6.0,
-		"outmatched_behavior": "harass"
+		"outmatched_behavior": "harass",
+		"outmatched_rout": true
 	},
 	"threat": 0.4,
 	"lockable": true,

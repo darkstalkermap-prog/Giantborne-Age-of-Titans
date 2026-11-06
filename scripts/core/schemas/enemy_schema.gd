@@ -148,10 +148,13 @@ static func fields() -> Dictionary:
 	# (plan M6-M9 §3.4 design 8): front_arc_deg - firing points within this arc around the camera's
 	# yaw (seen from the target) are taken first; off_camera_aim_s - the least windup of a shot
 	# drawn from outside the camera's view (the threat cue leads it).
+	# M6 gate: outmatched_rout - a unit the giant outmatches (outmatched_ratio) that would regroup
+	# after a flight routs instead (EnemyBrain.routs_when_outmatched; the wolves).
 	f.merge({"render_lod_m": U.num(0.0, 500.0)})
 	(f.tactics.fields as Dictionary).merge({
 		"front_arc_deg": U.num(0.0, 360.0),
 		"off_camera_aim_s": U.num(0.0, 5.0),
+		"outmatched_rout": U.bool_field(),
 	})
 
 	## @anchor P30

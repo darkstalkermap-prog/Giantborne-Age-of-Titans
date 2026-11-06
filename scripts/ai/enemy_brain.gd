@@ -773,16 +773,33 @@ func _decide_flee(my_position: Vector3, target_pos: Vector3, distance: float, se
 		_no_leader_since = now
 	if _in_state_s() >= MIN_FLEE_S and morale > float(ai.get("regroup_morale", 45.0)) \
 			and (leader or not needs_leader):
+		if routs_when_outmatched():
+			_rout()   # M6 gate: a broken pack does not come back to a giant that outmatches it
+			return
 		flee_point = Vector3.INF
 		_set_state(AIState.APPROACH if aware else AIState.ALERT)
 		return
 	if needs_leader and not leader \
 			and now - _no_leader_since >= _ticks(float(ai.get("rout_after_s", 20.0))):
-		_set_state(AIState.ROUTED)
-		aware = false
-		if not _routed_emitted:
-			_routed_emitted = true
-			routed.emit()
+		_rout()
+
+
+## M6 gate (the Barrow's wardens at stage 3): true when this unit would regroup but the giant
+## outmatches it (is_outmatched) and its record has tactics.outmatched_rout - it routs instead.
+## Wolves have it: broken by a stage-2 or stage-3 giant's roar or its blows, a harassing pack ran
+## twelve metres, came back as soon as its morale recovered and broke again, for minutes, while the
+## giant could neither catch nor end it (the expert bot's crown stage ran out its 240 s watchdog).
+func routs_when_outmatched() -> bool:
+	return bool(tactics.get("outmatched_rout", false)) and is_outmatched()
+
+
+## FLEE -> ROUTED: out of the fight for good (routed emitted once).
+func _rout() -> void:
+	_set_state(AIState.ROUTED)
+	aware = false
+	if not _routed_emitted:
+		_routed_emitted = true
+		routed.emit()
 
 
 ## ROUTED: stay at the flee point, attack nothing, flee again when hit. Never regroups.
