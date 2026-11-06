@@ -13,7 +13,7 @@ master and of the shipped file, and the tool versions it was built with.
 
 | Family | Generator | Seeds | Files | Built with (reference toolchain) |
 | --- | --- | --- | --- | --- |
-| Placeholder (the audio engine's test tones, test set and test bed; P19, replaced by P21 and P23) | `tools/audio/gen_placeholder.py` | 190101-190121 | `placeholder/*.wav`, `placeholder/bed.ogg` | Python 3.13.18, numpy 2.5.3, ffmpeg 6.1.1-3ubuntu5, libvorbis 1.3.7-1build3 |
+| Placeholder (the audio engine's four test tones, three-variant test set, test stinger and test bed, 111 KB; P19, replaced by P21 and P23) | `tools/audio/gen_placeholder.py` | 190101-190131 | `placeholder/*.wav`, `placeholder/stinger.ogg`, `placeholder/bed.ogg` | Python 3.13.18, numpy 2.5.3, ffmpeg 6.1.1-3ubuntu5, libvorbis 1.3.7-1build3 |
 
 The sound packages add their rows here (P21 the effects, P23 the score and ambience, P28 the
 world's families).

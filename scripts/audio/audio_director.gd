@@ -55,6 +55,8 @@ const FOCUS_RAMP_S := 0.2
 const LISTENER_HEIGHT_FACTOR := 0.8
 const ZONE_HYSTERESIS_M := 15.0
 const ZONE_POLL_S := 0.25
+## At exit: the longest wait for the mixing thread to drop the stopped playbacks.
+const RELEASE_WAIT_MS := 250
 ## Settings key -> bus.
 const VOLUME_KEYS := {"volume_master": "Master", "volume_music": "Music", "volume_ambience": "Ambience",
 	"volume_sfx": "SFX", "volume_ui": "UI"}
@@ -121,6 +123,47 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if enabled and OS.get_cmdline_user_args().has(STATS_ARG):
 		print("AUDIO_STATS " + JSON.stringify(stats_summary()))
+	_release_playbacks()
+
+
+## At exit (the autoload leaves the tree only when the process ends): stops every player of the
+## engine and waits, at most RELEASE_WAIT_MS, until the mixing thread has dropped their playbacks.
+## Godot frees a stopped playback on the audio thread's next mix steps; a process that quits
+## before them (the soak's quit() while sounds play) would keep each playback and its stream alive
+## at exit ("ObjectDB instances leaked", "resources still in use").
+func _release_playbacks() -> void:
+	var held: Array = []
+	for p: Node in _players_under(self):
+		if bool(p.call("has_stream_playback")):
+			held.append(p.call("get_stream_playback"))
+		p.call("stop")
+	if held.is_empty():
+		return
+	held.append(RefCounted.new())   # a probe held by this array alone: the count to wait for
+	var deadline := Time.get_ticks_msec() + RELEASE_WAIT_MS
+	while Time.get_ticks_msec() < deadline:
+		var alone := _ref_count(held, held.size() - 1)
+		var waiting := false
+		for i in held.size() - 1:
+			if _ref_count(held, i) > alone:
+				waiting = true
+				break
+		if not waiting:
+			return
+		OS.delay_msec(5)
+
+
+static func _ref_count(list: Array, i: int) -> int:
+	return (list[i] as RefCounted).get_reference_count()
+
+
+static func _players_under(node: Node) -> Array:
+	var out: Array = []
+	for c in node.get_children():
+		if c is AudioStreamPlayer or c is AudioStreamPlayer3D:
+			out.append(c)
+		out.append_array(_players_under(c))
+	return out
 
 
 # --------------------------------------------------------------------------- enable / disable

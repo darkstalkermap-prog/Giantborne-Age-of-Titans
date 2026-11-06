@@ -406,7 +406,7 @@ func _player_action(e: CombatEntity, def: ActionDef) -> void:
 		"block":
 			request(["sfx.block.raise"], pivot, {"priority": 85, "reason": "block_raise"})
 		"jump":
-			_walk_since_s = -INF
+			_walk_since_s = _now()   # a jump: back to the full footfall (a new walk starts)
 			request(["sfx.jump"], _position(e), {"priority": 90, "reason": "jump"})
 		"ability", "ultimate":
 			var short := AudioMath.short_id(def.id)
@@ -420,7 +420,7 @@ func _on_area_pulse(_tick: int, actor_id: String, action_id: String, center: Vec
 	request(["sfx.ability.%s.impact" % short, "sfx.impact.stomp"], center,
 		{"priority": 90 if _is_player(e) else 80, "reason": "pulse", "source_height_m": _height(e)})
 	if _is_player(e):
-		_walk_since_s = -INF   # a stomp: back to the full footfall
+		_walk_since_s = _now()   # a stomp: back to the full footfall (a new walk starts)
 		if audio.get("ambience") != null:
 			audio.ambience.on_giant_impact(center)
 

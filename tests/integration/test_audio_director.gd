@@ -153,6 +153,20 @@ func test_footfalls_use_the_stage_size_class_and_the_cruise_variant() -> void:
 		assert_eq(str(c.requested), "sfx.step.giant_s1.soft.cruise", "the cruise variant after 10 s")
 		assert_eq(int(c.priority), 45, "at the cruise priority")
 		assert_eq(str(c.reason), "cruise", "a cruising step")
+	# A jump and a stomp end the cruise: the next footfall is the full cue again (a new walk starts).
+	for ev: String in ["jump", "stomp"]:
+		Audio.router.set_walk_started(10.5)
+		if ev == "jump":
+			Events.ability_started.emit(Sim.tick, p.entity.entity_id, "action.jump", Sim.new_instance_id())
+		else:
+			Events.area_pulse.emit(Sim.tick, p.entity.entity_id, "ability.heavy_footfall", p.global_position, 6.0)
+		await _drain()
+		Audio.clear_log()
+		var full: bool = await TestWait.until(self, func() -> bool: return not _requested("sfx.step.").is_empty(), 60)
+		assert_true(full, "a footfall after the %s" % ev)
+		if full:
+			assert_eq(str(_requested("sfx.step.")[0].requested), "sfx.step.giant_s1.soft",
+				"the full footfall after a %s" % ev)
 	p.router.set_injected_move(Vector2.ZERO)
 
 

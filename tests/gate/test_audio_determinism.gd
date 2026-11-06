@@ -4,7 +4,8 @@ extends TestSuite
 ## prints one AUDIO_STATS line at exit, proving that it played) and with --no-audio - and the two
 ## AUTOPILOT_RESULT lines must be byte-identical: the engine never touches Sim.rng or the global
 ## RNG, never emits a gameplay signal, and the loading gate's extra paused frames run no
-## simulation tick. Gate tier: tools/check.sh --gate (about 30 s).
+## simulation tick. The audio run also exits cleanly: no playback, stream or ObjectDB entry is left
+## at exit. Gate tier: tools/check.sh --gate (about 30 s).
 
 const SOAK_S := 120
 const RESULT_PREFIX := "AUTOPILOT_RESULT "
@@ -41,6 +42,10 @@ func test_the_seeded_soak_is_identical_with_and_without_audio() -> void:
 		"no errors or warnings with audio")
 	assert_eq(str(on.result), str(off.result), "AUTOPILOT_RESULT byte-identical with and without audio")
 	assert_eq(str(off.stats), "", "the silent soak played nothing (no stats line)")
+	# Quitting while sounds play leaves nothing behind (Audio stops its players at exit and waits
+	# for the mixing thread to drop their playbacks).
+	for marker: String in ["instances leaked at exit", "still in use at exit"]:
+		assert_false(str(on.output).contains(marker), "the audio run exits cleanly (no \"%s\")" % marker)
 	var stats: Variant = JSON.parse_string(str(on.stats))
 	assert_true(typeof(stats) == TYPE_DICTIONARY, "the audio run printed its stats: %s" % str(on.stats).left(200))
 	if typeof(stats) == TYPE_DICTIONARY:
