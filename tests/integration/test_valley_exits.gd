@@ -5,7 +5,7 @@ extends IntegrationSuite
 ## shelf; the Citadel Gate refuses a stage-3 giant with its message and falls to a stage-4 one,
 ## setting world.citadel.breached; the hoard pays titan iron x2 and the Kings' Annals; the hall pays
 ## 150 XP once; the stair leaves for the world's Broken Stair; the end screen says "Prologue
-## complete" and Continue points at the door.
+## complete" and Continue points at the door; the First King's vault waits behind a heave rockfall.
 
 const KINGS_DOOR := "res://scenes/world/kings_door.tscn"
 const GATE := "res://scenes/world/gate_fortified.tscn"
@@ -201,3 +201,21 @@ func test_the_end_screen_says_prologue_complete_and_continues() -> void:
 	screen.press_continue()
 	assert_false(stack.any_open(), "Continue closes it")
 	assert_true(messages.has([EndScreen.CONTINUE_HINT, "info"]), "and points at the open door")
+
+
+## The First King's vault (a layout check): its rockfall - a heave prop a stage-5 giant moves
+## (test_trample heaves one) - stands across the vault's mouth in the Barrow's west cliff, with the
+## Old Kings' cairn, the iron and the epitaph behind it, and the Kings' Door's approach nearby.
+func test_the_first_kings_vault_waits_behind_a_heave_rockfall() -> void:
+	var rock := _entry("props", "valley.barrow.vault_rockfall")
+	assert_eq(str(rock.get("scene", "")), "rockfall", "a rockfall")
+	assert_eq(str(GameData.get_record("prop.rockfall").get("requires_permission", "")), "heave", "heaved, not broken")
+	assert_eq(PlayerGrowth.stage_for_permission("heave"), 5, "by a stage-5 giant")
+	var mouth := ValleyProbe.v3(rock.pos)
+	for id in ["valley.barrow.vault_cairn", "valley.barrow.vault_iron", "valley.barrow.vault_epitaph"]:
+		var e := _entry("props", id)
+		var at := ValleyProbe.v3(e.get("pos", [0, 0, 0]))
+		assert_true(at.x < mouth.x and at.x > -101.0 and at.z > -183.0 and at.z < -167.0,
+			"%s is inside the vault, behind the rockfall (%s)" % [id, at])
+	var door := ValleyProbe.v3(_entry("exits", "valley.exit.kings_door").pos)
+	assert_true(ValleyProbe.flat(mouth, door) < 40.0, "near the Kings' Door (%.0f m)" % ValleyProbe.flat(mouth, door))
