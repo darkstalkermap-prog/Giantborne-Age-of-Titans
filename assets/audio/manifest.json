@@ -73,6 +73,24 @@
    "seed": 190113,
    "size": 8864
   },
+  "res://assets/audio/placeholder/stinger.ogg": {
+   "channels": 1,
+   "family": "placeholder",
+   "file_hash": "908627ab43355e3392c170115d3a0a61da6c60a7d2253168cdf7adf3751503be",
+   "frames": 22050,
+   "function": "stinger",
+   "generator": "gen_placeholder",
+   "kind": "oneshot",
+   "loop": false,
+   "master_hash": "25504bd2e7e273c72da6426b9de584ef98d28cecacda452b73639ef5349d488c",
+   "params_hash": "aaa84a910f89de365362a35250473319df439a4ab878df4d1fdcf1929a6b1baa",
+   "quality": 2.0,
+   "rate": 22050,
+   "scope": "m6",
+   "seconds": 1.0,
+   "seed": 190131,
+   "size": 8218
+  },
   "res://assets/audio/placeholder/tone_high.wav": {
    "channels": 1,
    "family": "placeholder",

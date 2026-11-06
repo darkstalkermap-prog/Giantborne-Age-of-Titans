@@ -1,0 +1,180 @@
+{
+	"schema_version": 1,
+	"id": "audio_mix.default",
+	"type": "audio_mix",
+	"display_name": "Default mix",
+	"description": "P19: the mix of plan M6-M9 section 4.4 - bus levels, the voice pool (16 3D voices and 8 starts a frame on the web, where every sample play copies its buffer), the audibility classes (unit / max distance, scaled with the player's height / 3.6576, the threat class by its square root, the giant's own sounds by its own height), ducking, the material, voice, step and surface maps of every existing prop, enemy, NPC and district, the music's threat-weighted intensity, the threat sting's suppression and the footfall cruise rule.",
+	"bus_db": {
+		"Music": -9,
+		"Ambience": -12,
+		"SFX": -6,
+		"UI": -10
+	},
+	"pool": {
+		"voices_3d": 24,
+		"web_voices_3d": 16,
+		"spot_voices": 2,
+		"voices_2d": 8,
+		"starts_per_frame": 16,
+		"web_starts_per_frame": 8,
+		"min_level_db": -45,
+		"register_ms_per_frame": 12
+	},
+	"classes": {
+		"player": {
+			"unit_m": 6,
+			"max_m": 60,
+			"scaled": "own"
+		},
+		"human_step": {
+			"unit_m": 2,
+			"max_m": 15,
+			"scaled": true
+		},
+		"human": {
+			"unit_m": 4,
+			"max_m": 30,
+			"scaled": true
+		},
+		"impact": {
+			"unit_m": 5,
+			"max_m": 40,
+			"scaled": true
+		},
+		"wolf": {
+			"unit_m": 3,
+			"max_m": 22,
+			"scaled": true
+		},
+		"big": {
+			"unit_m": 8,
+			"max_m": 60,
+			"scaled": true
+		},
+		"giant": {
+			"unit_m": 15,
+			"max_m": 110,
+			"scaled": true
+		},
+		"boss": {
+			"unit_m": 30,
+			"max_m": 220,
+			"scaled": true
+		},
+		"threat": {
+			"unit_m": 8,
+			"max_m": 80,
+			"scaled": "sqrt"
+		},
+		"spot": {
+			"unit_m": 10,
+			"max_m": 74,
+			"scaled": true
+		}
+	},
+	"duck": {
+		"stinger": {
+			"Music": -8
+		},
+		"dialogue": {
+			"Music": -6,
+			"Ambience": -10
+		},
+		"pause": {
+			"Music": -10
+		},
+		"boss": {
+			"Ambience": -6
+		},
+		"combat": {
+			"Ambience": -4
+		}
+	},
+	"materials": {
+		"prop.ancient_oak": "wood",
+		"prop.banner": "cloth",
+		"prop.barley_sheaf": "foliage",
+		"prop.bush": "foliage",
+		"prop.cairn": "stone",
+		"prop.cart_barricade": "wood",
+		"prop.crate": "wood",
+		"prop.deadfall": "wood",
+		"prop.fence_wood": "wood",
+		"prop.gate_fortified": "stone",
+		"prop.gate_practice": "wood",
+		"prop.practice_dummy": "wood",
+		"prop.tree_small": "wood"
+	},
+	"voices": {
+		"enemy.archer": "human",
+		"enemy.mage": "human",
+		"enemy.ogre": "ogre",
+		"enemy.ogre_king": "ogre_king",
+		"enemy.soldier": "human",
+		"enemy.sparring_post": "none",
+		"enemy.wolf": "wolf",
+		"npc.elder": "elder",
+		"npc.villager": "human"
+	},
+	"steps": {
+		"enemy.archer": "human",
+		"enemy.mage": "human",
+		"enemy.ogre": "heavy",
+		"enemy.ogre_king": "heavy",
+		"enemy.soldier": "human",
+		"enemy.sparring_post": "human",
+		"enemy.wolf": "paw",
+		"npc.elder": "human",
+		"npc.villager": "human"
+	},
+	"surfaces": {
+		"level.valley": {
+			"hollow": "soft",
+			"forest": "soft",
+			"barrow": "hard",
+			"village": "soft",
+			"quarry": "hard",
+			"ruins": "hard",
+			"kingsfall": "hard"
+		},
+		"level.stress_arena": {
+			"arena": "hard"
+		},
+		"level.director_test": {
+			"west": "soft",
+			"east": "soft"
+		},
+		"sandbox": {}
+	},
+	"intensity": {
+		"combat_radius_m": 35,
+		"danger_radius_m": 70,
+		"danger_cap_m": 150,
+		"lesser_danger_m": 40,
+		"lesser_height_ratio": 0.3,
+		"combat_hold_s": 6,
+		"danger_hold_s": 8,
+		"hit_recent_s": 5,
+		"telegraph_recent_s": 3,
+		"poll_s": 0.25
+	},
+	"sting": {
+		"min_damage_fraction": 0.03,
+		"skip_at_poise_floor": true
+	},
+	"footfall": {
+		"cruise_after_s": 10,
+		"cruise_duck_db": -5,
+		"stop_gap_s": 0.9
+	},
+	"threat": {
+		"offscreen_fov_factor": 0.55,
+		"far_m": 20,
+		"windup_near_m": 15,
+		"alert_radius_m": 70,
+		"alert_gap_s": 4,
+		"flee_gap_s": 2,
+		"wall_merge_s": 0.5,
+		"denied_gap_s": 0.5
+	}
+}

@@ -1,5 +1,5 @@
-"""Placeholder sounds of the audio engine (P19): four test tones, one three-variant test set and one
-test bed, about 100 KB in all. The engine's placeholder bank (data/audio/bank_placeholder.json)
+"""Placeholder sounds of the audio engine (P19): four test tones, one three-variant test set, one
+test bed and a one-second test stinger, about 110 KB in all. The engine's placeholder bank (data/audio/bank_placeholder.json)
 points every family's default cue at them, so the Valley makes sounds before the sound packages
 land; the engine's tests use them as known signals. The sound packages replace them (P21 the
 effects, P23 the music and ambience) and P23 deletes them.
@@ -83,6 +83,20 @@ def burst(rng: np.random.Generator, seconds: float, centre: float, q: float) -> 
     return _dc_safe(x + 0.6 * knock)
 
 
+def stinger(rng: np.random.Generator, seconds: float, notes: list) -> np.ndarray:
+    """A short rising figure of filtered saw notes (a stinger-like one-shot for the music tests)."""
+    n = core.n_frames(seconds, RATE)
+    out = np.zeros(n)
+    step = n // (len(notes) + 1)
+    for i, note in enumerate(notes):
+        m = n - i * step
+        tone = core.saw(core.midi_hz(note), m, RATE) + 0.5 * core.saw(core.midi_hz(note) * 1.003, m, RATE)
+        tone = core.biquad(tone, core.biquad_coeffs("lowpass", 1800.0, 0.8, RATE))
+        core.mix_into(out, i * step, tone * core.adsr(m, RATE, 0.02, 0.15, 0.6, 0.25))
+    out += 0.003 * core.white(n, rng)
+    return _dc_safe(out, 0.05)
+
+
 def bed(rng: np.random.Generator, bpm: float, beats: int, pulse_hz: float) -> np.ndarray:
     """A seamless test bed: slowly moving low-passed pink noise with a soft pulse on every beat,
     exactly beats x 60 / bpm seconds long (circular filtering and wrapping keep the seam clean)."""
@@ -117,6 +131,8 @@ CUES = [
      "params": {"seconds": 0.20, "centre": 520.0, "q": 3.0}},
     {"name": "set_a3", "path": _P + "set_a3.wav", "seed": 190113, "func": burst, "kind": "sfx",
      "params": {"seconds": 0.20, "centre": 360.0, "q": 3.0}},
+    {"name": "stinger", "path": _P + "stinger.ogg", "seed": 190131, "func": stinger, "kind": "oneshot",
+     "quality": 2, "params": {"seconds": 1.0, "notes": [50, 57, 62]}},
     {"name": "bed", "path": _P + "bed.ogg", "seed": 190121, "func": bed, "kind": "loop", "quality": 0,
      "params": {"bpm": BED_BPM, "beats": BED_BEATS, "pulse_hz": 82.0},
      "bpm": BED_BPM, "beats": BED_BEATS, "beats_per_bar": BED_BEATS_PER_BAR, "frame": "test_120",

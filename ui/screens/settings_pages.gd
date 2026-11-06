@@ -9,6 +9,10 @@ extends RefCounted
 ## Settings.flush() on close for keyboard and pad slider changes). P14 added the graphics preset
 ## row (graphics_row).
 ##
+## P19 (audio): the page opens with an Audio section - Master, Music, Ambience, Effects and
+## Interface volumes (0-100 %, applied live through Settings.changed) and "Mute when the window
+## loses focus" - then the camera, control and display rows.
+##
 ## P16 (pad and keyboard): settings_rows() and controls_rows() give the screens their focus rows
 ## (one row per setting; a keyboard and a controller binding button per action, then Reset); the
 ## scroll areas follow the focus. The controller row "Button prompts" (Auto / Keyboard and mouse /
@@ -20,6 +24,9 @@ const CAPTURE_TIMEOUT_S := 6.0
 ## The Button prompts row: [setting value, label].
 const PROMPT_OPTIONS := [["auto", "Auto (last device)"], ["keyboard", "Keyboard and mouse"],
 	["pad", "Controller"]]
+## P19: the Audio section's sliders: [label, setting key] (Settings volume_*, 0..1; 0 mutes).
+const AUDIO_SLIDERS := [["Master volume", "volume_master"], ["Music", "volume_music"],
+	["Ambience", "volume_ambience"], ["Effects", "volume_sfx"], ["Interface", "volume_ui"]]
 
 var _capture_action := ""
 var _capture_pad := false
@@ -42,6 +49,12 @@ func build_settings() -> Control:
 	grid.add_theme_constant_override("v_separation", 8)
 	scroll.add_child(grid)
 	_settings_rows.clear()
+	# P19: the Audio section first (five volumes and the focus mute; pad-navigable like every row).
+	section_header(grid, "Audio")
+	for entry: Array in AUDIO_SLIDERS:
+		_row(volume_row(grid, str(entry[0]), str(entry[1])))
+	_row(check_row(grid, "Mute when the window loses focus", "mute_when_unfocused"))
+	section_header(grid, "Camera, controls and display")
 	_row(slider_row(grid, "Mouse sensitivity", "mouse_sensitivity", 0.02, 0.6, 0.01))
 	_row(slider_row(grid, "Stick look speed", "stick_look_speed_deg_s", 60.0, 400.0, 5.0))
 	_row(check_row(grid, "Invert look Y", "invert_y"))
@@ -94,6 +107,39 @@ static func slider_row(grid: GridContainer, text: String, key: String, lo: float
 	h.add_child(value_label)
 	grid.add_child(h)
 	return s
+
+
+## A volume slider (P19): 0-100 % in steps of 5, applied live (the Audio autoload listens to
+## Settings.changed), written when the drag ends.
+static func volume_row(grid: GridContainer, text: String, key: String) -> HSlider:
+	grid.add_child(UiKit.label(text, 15))
+	var s := HSlider.new()
+	s.min_value = 0.0
+	s.max_value = 1.0
+	s.step = 0.05
+	s.value = float(Settings.get_value(key))
+	s.custom_minimum_size = Vector2(260, 24)
+	s.focus_mode = Control.FOCUS_ALL
+	var value_label := UiKit.label(volume_text(s.value), 13, UiKit.MUTED)
+	s.value_changed.connect(func(v: float) -> void:
+		Settings.set_value(key, v, false)
+		value_label.text = volume_text(v))
+	s.drag_ended.connect(func(_changed: bool) -> void: Settings.flush())
+	var h := HBoxContainer.new()
+	h.add_child(s)
+	h.add_child(value_label)
+	grid.add_child(h)
+	return s
+
+
+static func volume_text(v: float) -> String:
+	return "Off" if v <= 0.0001 else "%d %%" % int(round(v * 100.0))
+
+
+## A section title spanning the grid's two columns (not focusable).
+static func section_header(grid: GridContainer, text: String) -> void:
+	grid.add_child(UiKit.label(text, 17, UiKit.WARN))
+	grid.add_child(Control.new())
 
 
 static func check_row(grid: GridContainer, text: String, key: String) -> CheckBox:
