@@ -100,14 +100,19 @@ static func is_synced(level: Node, layers: int) -> bool:
 	return m.is_valid() and NavigationServer3D.map_get_iteration_id(m) > 0
 
 
+## True when the level has a region of `layers` (synced or not): the layer map's regions in a
+## streamed world; elsewhere LevelRoot.nav_region(the lowest bit), else a region of the map on them.
+static func has_regions(level: Node, layers: int) -> bool:
+	if uses_layer_maps(level):
+		var m := map_for(level, layers)
+		return m.is_valid() and not NavigationServer3D.map_get_regions(m).is_empty()
+	return _layer_region(level, layers).is_valid()
+
+
 ## True when there is navigation to ask on `layers`: a synced map that holds a region of them (a
 ## level without any - a bare test floor - steers without navigation).
 static func has_navigation(level: Node, layers: int) -> bool:
-	if not is_synced(level, layers):
-		return false
-	if uses_layer_maps(level):
-		return not NavigationServer3D.map_get_regions(map_for(level, layers)).is_empty()
-	return _layer_region(level, layers).is_valid()
+	return is_synced(level, layers) and has_regions(level, layers)
 
 
 # --------------------------------------------------------------------------- queries

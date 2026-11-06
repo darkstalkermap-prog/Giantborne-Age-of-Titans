@@ -23,8 +23,9 @@ extends Node
 ## `village` stage, else quest.main's stage `bot` hint: go | fight_encounter | kill | grow |
 ## hurl_at | break | interact | talk (a hurt giant rests before a kill).
 ##
-## Movement follows a navigation path on the giant's current layers (NavigationServer3D.map_get_path
-## with player.nav_layers), re-planned every REPATH_S or when the giant strays OFF_PATH_M off it.
+## Movement follows a navigation path on the giant's current layers (NavQuery.path with
+## player.nav_layers, P24b: the Valley's map_get_path parameters), re-planned every REPATH_S or when
+## the giant strays OFF_PATH_M off it.
 ## Stuck (the distance to the goal has not dropped by STUCK_PROGRESS_M in STUCK_S while
 ## traversing): sidestep and jump, then re-plan (or, when no path leads on from where the giant
 ## stands but one does from where it was - a pocket of the navmesh it walked into while fighting -
@@ -484,7 +485,7 @@ func reachable(pos: Vector3, tol := 3.0) -> bool:
 	var hit: Variant = _reach_cache.get(key)
 	if hit is Array and Sim.tick - int(hit[0]) < 60:
 		return bool(hit[1])
-	var ok := BotDiagnosis.reaches(level.nav_map(), player.global_position, pos, player.nav_layers, tol)
+	var ok := BotDiagnosis.reaches(level, player.global_position, pos, player.nav_layers, tol)
 	_reach_cache[key] = [Sim.tick, ok]
 	return ok
 
@@ -1238,7 +1239,7 @@ func steer_path(tick: int, goal: Vector3, sprint: bool) -> void:
 func _replan(tick: int, goal: Vector3) -> void:
 	_repath_tick = tick + ActionDef.seconds_to_ticks(REPATH_S)
 	_path_goal = goal
-	_path = NavigationServer3D.map_get_path(level.nav_map(), player.global_position, goal, true, player.nav_layers)
+	_path = NavQuery.path(level, player.global_position, goal, player.nav_layers, NavQuery.PURPOSE_FAR)
 	_path_index = 0
 	if _path.size() > 1:
 		_path_index = 1
@@ -1372,9 +1373,8 @@ func _note_crumb(tick: int) -> void:
 ## to `goal`, the breadcrumbs back to the newest one from which a path does (next first); [] when a
 ## path leads on from here, or from none of them.
 func _retrace_route(goal: Vector3) -> PackedVector3Array:
-	var map := level.nav_map()
 	var snapped := BotDiagnosis.snap_to_layer(level, goal, player.nav_layers)
-	if BotDiagnosis.reaches(map, player.global_position, snapped, player.nav_layers):
+	if BotDiagnosis.reaches(level, player.global_position, snapped, player.nav_layers):
 		return PackedVector3Array()
 	var route := PackedVector3Array()
 	for i in range(_crumbs.size() - 1, -1, -1):
@@ -1382,7 +1382,7 @@ func _retrace_route(goal: Vector3) -> PackedVector3Array:
 		route.append(c)
 		if _flat_dist(c, player.global_position) < CRUMB_SPACING_M:
 			continue
-		if BotDiagnosis.reaches(map, c, snapped, player.nav_layers):
+		if BotDiagnosis.reaches(level, c, snapped, player.nav_layers):
 			return route
 	return PackedVector3Array()
 

@@ -8,13 +8,17 @@ extends CharacterBody3D
 ## A CivilianBrain decides (IDLE -> FLEE -> SAFE): the giant rushing close, combat within 20 m,
 ## or its faction turning hostile or standing down sends a civilian to the nearest reachable safe
 ## marker (group "safe_markers", faction "" or its own): each candidate, nearest first, is snapped
-## to this actor's navmesh layer (LevelRoot.nav_region, the human layer) and accepted when a path
-## on its layers ends there (spec 15: reachable destinations). The agent gets that target once and
+## to this actor's navmesh layer (NavQuery.closest_point: the layer's own map in a streamed world,
+## LevelRoot.nav_region in the Valley; P24b) and accepted when a path on its layers ends there
+## (NavQuery.path; spec 15: reachable destinations). The agent gets that target once and
 ## re-paths only after a path failure (no progress for 2 s: the next candidate). At the marker the
 ## civilian takes shelter: it goes inside (hidden) and stops processing (process_mode DISABLED, so
 ## Sim skips it and its body leaves physics). A civilian spawned while its faction is already
 ## hostile or stood down is put straight into its shelter once the navigation map answers.
 ## A talker never flees; a `protected` npc refuses every hit (IMMUNE: still an offence).
+##
+## P24b: in a streamed world (a level with nav_query settings) the agent paths on its layer's own map
+## with unlimited polygons and the far distance cap (NavQuery), like every other query of this actor.
 ##
 ## Required children: CombatEntity (team NEUTRAL), NavAgent; Visual (ActorRig) with Body and
 ## LodProxy, Anchors/Torso, Hurtboxes/*. The elder also carries an NpcTalker (P13), which reads
@@ -92,6 +96,7 @@ func _ready() -> void:
 	agent.path_desired_distance = 0.6
 	agent.target_desired_distance = 0.5
 	agent.avoidance_enabled = false
+	_setup_world_agent()
 	_phase_offset = absi(hash(entity.entity_id)) % PERCEPTION_INTERVAL
 	_lod_body = get_node_or_null("Visual/Body") as Node3D
 	_lod_proxy = get_node_or_null("Visual/LodProxy") as Node3D
@@ -216,19 +221,20 @@ func _resolve_safe_point(from: Vector3, skip_failed: bool) -> Vector3:
 
 
 ## `target` as this civilian can reach it from `from`: on a navmesh, the closest point of its
-## layer's region (within MARKER_SNAP_M of the target) when a path on its layers ends within
-## REACH_END_M of it; Vector3.INF while the navigation map has not synchronised yet. Without any
-## navmesh: the target itself when a straight run there is clear of walls and blockers.
+## layer (NavQuery.closest_point, within MARKER_SNAP_M of the target) when a path on its layers
+## (NavQuery.path, the far purpose) ends within REACH_END_M of it; Vector3.INF while the navigation
+## map has not synchronised yet. Without any navmesh: the target itself when a straight run there is
+## clear of walls and blockers.
 func reachable_point(from: Vector3, target: Vector3) -> Vector3:
-	var map := get_world_3d().navigation_map
-	var region := nav_region()
-	if region.is_valid():
-		if NavigationServer3D.map_get_iteration_id(map) <= 0:
+	var level := nav_level()
+	var layers := int(agent.navigation_layers)
+	if NavQuery.has_regions(level, layers):
+		if not NavQuery.is_synced(level, layers):
 			return Vector3.INF
-		var snapped := NavigationServer3D.region_get_closest_point(region, target)
-		if _flat(snapped - target) > MARKER_SNAP_M:
+		var snapped := NavQuery.closest_point(level, target, layers)
+		if not snapped.is_finite() or _flat(snapped - target) > MARKER_SNAP_M:
 			return Vector3.INF
-		var path := NavigationServer3D.map_get_path(map, from, snapped, true, int(agent.navigation_layers))
+		var path := NavQuery.path(level, from, snapped, layers, NavQuery.PURPOSE_FAR)
 		if path.is_empty() or path[path.size() - 1].distance_to(snapped) > REACH_END_M:
 			return Vector3.INF
 		return snapped
@@ -239,19 +245,27 @@ func reachable_point(from: Vector3, target: Vector3) -> Vector3:
 	return Vector3.INF
 
 
-## The navigation region of this civilian's layer: LevelRoot.nav_region(lowest layer bit) when a
-## level provides one, otherwise the first region of its map on its layers. Invalid without one.
-func nav_region() -> RID:
+## The level this civilian asks for navigation (NavQuery): the level root of the tree, else the
+## civilian itself (a bare test world: its world's default map).
+func nav_level() -> Node:
+	var level := get_tree().get_first_node_in_group("level_root") if is_inside_tree() else null
+	return level if level != null else self
+
+
+## In a streamed world (nav_query settings), the agent paths on its layer's own map with
+## unlimited polygons and the far distance cap; elsewhere it keeps the world's map and today's
+## parameters.
+func _setup_world_agent() -> void:
+	var level := nav_level()
+	if NavQuery.settings(level).is_empty():
+		return
 	var layers := int(agent.navigation_layers)
-	var level := get_tree().get_first_node_in_group("level_root")
-	if level != null and level.has_method("nav_region"):
-		var r: Variant = level.call("nav_region", layers & -layers)
-		if r is RID and (r as RID).is_valid():
-			return r
-	for r: RID in NavigationServer3D.map_get_regions(get_world_3d().navigation_map):
-		if (NavigationServer3D.region_get_navigation_layers(r) & layers) != 0:
-			return r
-	return RID()
+	var m := NavQuery.map_for(level, layers)
+	if m.is_valid():
+		agent.set_navigation_map(m)
+	var p := NavQuery.params_for(level, NavQuery.PURPOSE_FAR)
+	agent.path_search_max_polygons = int(p.max_polygons)
+	agent.path_search_max_distance = float(p.max_distance)
 
 
 ## At the safe marker: it goes inside (hidden) and stops processing; Sim skips it from now on.
@@ -288,7 +302,7 @@ func _update_movement(dt: float, alive: bool) -> void:
 		var goal := brain.move_target
 		var flat_dist := _flat(goal - global_position)
 		var next := goal
-		if flat_dist > DIRECT_STEER_DISTANCE and NavigationServer3D.map_get_iteration_id(get_world_3d().navigation_map) > 0:
+		if flat_dist > DIRECT_STEER_DISTANCE and NavQuery.is_synced(nav_level(), int(agent.navigation_layers)):
 			if _nav_target == Vector3.INF or _nav_target.distance_to(goal) > 0.5:
 				agent.target_position = goal   # once per destination: re-path only after a failure
 				_nav_target = goal

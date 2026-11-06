@@ -120,6 +120,21 @@ func _post_pass() -> void:
 				", ".join(p24a_missing.slice(0, 6)), ", ..." if p24a_missing.size() > 6 else ""])
 
 	## @anchor P24b
+	# P24b (plan M6-M9 §2.8, decision 15): every encounter of a streamed level (a level record with a
+	# `world` block) has a leash, unless it is an arena boss's (`arena: true`, held by its arena's
+	# disengage rule): a member that followed the giant would otherwise walk off into ground that is
+	# about to unload.
+	var p24b_streamed := {}
+	for p24b_level: Dictionary in records_of_type("level"):
+		if typeof(p24b_level.get("world")) == TYPE_DICTIONARY:
+			p24b_streamed[str(p24b_level.get("id", ""))] = true
+	for p24b_enc: Dictionary in records_of_type("encounter"):
+		if not p24b_streamed.has(str(p24b_enc.get("level", ""))) or bool(p24b_enc.get("arena", false)):
+			continue
+		var p24b_leash: Variant = p24b_enc.get("leash_radius_m", 0.0)
+		if not SchemaUtil.is_number(p24b_leash) or float(p24b_leash) <= 0.0:
+			errors.append("%s (%s): an encounter of the streamed level %s needs a leash_radius_m (or arena: true)" % [
+				record_paths.get(p24b_enc.id, "?"), p24b_enc.id, p24b_enc.get("level")])
 
 	## @anchor P25
 

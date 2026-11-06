@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "encounter.test_world_wolves",
+	"type": "encounter",
+	"display_name": "Test world wolf pack",
+	"description": "P24b: a wolf pack across the x = -256 seam on the world walk's first loop (c0_1 and c1_1), so the walk meets AI that chases the giant across chunk borders on the human layer's per-chunk navmeshes. The fifth wolf runs with a giant of stage 2 or less only (max_stage).",
+	"level": "level.test_world",
+	"center_m": [-255, 10.65, -203],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 120,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "test_world.wolves.wolf_1", "definition": "enemy.wolf", "position_m": [-270, 10.5, -200], "yaw_deg": 90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.wolves.wolf_2", "definition": "enemy.wolf", "position_m": [-262, 10.5, -205], "yaw_deg": 90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.wolves.wolf_3", "definition": "enemy.wolf", "position_m": [-248, 10.95, -200], "yaw_deg": -90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.wolves.wolf_4", "definition": "enemy.wolf", "position_m": [-240, 10.85, -206], "yaw_deg": -90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.wolves.wolf_runt", "definition": "enemy.wolf", "position_m": [-255, 10.7, -196], "yaw_deg": 0,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "",
+			"max_stage": 2}
+	]
+}

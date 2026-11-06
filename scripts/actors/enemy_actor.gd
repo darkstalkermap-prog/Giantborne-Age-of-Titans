@@ -118,6 +118,7 @@ func _ready() -> void:
 	_p04_ready()
 	_p11b_ready()
 	_p22_ready()
+	_p24b_ready()
 	Sim.register_actor(entity.entity_id, self)
 
 
@@ -351,6 +352,7 @@ func _steer(dt: float) -> void:
 		var goal := brain.move_target
 		var flat_dist := Vector2(goal.x - global_position.x, goal.z - global_position.z).length()
 		var next := goal
+		var reach := goal   # P24b: in a streamed world, where the path to an unreachable goal ends
 		if flat_dist > DIRECT_STEER_DISTANCE:
 			if _wants_repath(goal):
 				agent.target_position = goal
@@ -358,13 +360,16 @@ func _steer(dt: float) -> void:
 				_note_repath()
 			if not agent.is_navigation_finished():
 				next = agent.get_next_path_position()
+			reach = _p24b_reach(goal)
+			if next == goal:
+				next = reach   # the path is done: on to the goal, or (unreachable) to the path's end
 			if Vector2(next.x - global_position.x, next.z - global_position.z).length() < 0.05:
-				next = goal  # no path data (no navmesh / not synced yet): steer directly
+				next = reach  # no path data (no navmesh / not synced yet): steer directly
 		var dir := next - global_position
 		dir.y = 0.0
 		if flat_dist > 0.25 and dir.length() > 0.01:
 			desired = dir.normalized() * speed * mult
-		_track_progress(goal, dt)
+		_track_progress(reach, dt)
 	else:
 		_progress_anchor = Vector3.INF
 		_progress_timer = 0.0
@@ -610,6 +615,8 @@ func set_lod_tier(tier: int) -> void:
 ## more than 0.5 m (M1). Tier 1: only when it has none (start, or after a path failure), at most
 ## once per TIER1_REPATH_TICKS.
 func _wants_repath(goal: Vector3) -> bool:
+	if _p24b_throttled():
+		return _p24b_wants_repath(goal)   # P24b: a streamed world's throttle and query budget
 	if lod_tier >= 1:
 		return _last_nav_target == Vector3.INF and Sim.tick - _last_repath_tick >= TIER1_REPATH_TICKS
 	return _last_nav_target == Vector3.INF or _last_nav_target.distance_to(goal) > 0.5
@@ -618,6 +625,8 @@ func _wants_repath(goal: Vector3) -> bool:
 func _note_repath() -> void:
 	repath_count += 1
 	_last_repath_tick = Sim.tick
+	if _p24b_throttled():
+		NavQuery.spend(nav_level())   # P24b: the agent's query counts against the tick's budget
 
 
 ## Drops the agent's target, as a path failure does: the next movement tick asks for a new path
@@ -827,17 +836,16 @@ func _resolve_flee_point(from: Vector3, threat: Vector3, distance: float) -> Vec
 	if away.length() < 0.1:
 		away = Vector3(global_transform.basis.z.x, 0.0, global_transform.basis.z.z)
 	away = away.normalized() if away.length() > 1e-4 else Vector3.BACK
-	var map := get_world_3d().navigation_map
-	var region := nav_region_for_layers()
-	var use_nav := region.is_valid() and NavigationServer3D.map_get_iteration_id(map) > 0
+	var level := nav_level()
 	var layers := int(agent.navigation_layers)
+	var use_nav := NavQuery.has_navigation(level, layers)   # P24b: every query through NavQuery
 	var space := get_world_3d().direct_space_state
 	var threat_dist := _flat_len(from - threat)
 	for i in FLEE_MAX_STEPS * 2 + 1:
 		var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)   # 0, 1, -1, 2, -2, ...
 		var desired := from + away.rotated(Vector3.UP, deg_to_rad(FLEE_STEP_DEG * k)) * distance
 		if use_nav:
-			var p := _reachable_point(map, from, NavigationServer3D.region_get_closest_point(region, desired), layers)
+			var p := _reachable_point(level, from, NavQuery.closest_point(level, desired, layers), layers)
 			if p == Vector3.INF or _flat_len(p - from) < distance * 0.5 or _flat_len(p - threat) <= threat_dist:
 				continue   # unreachable, snapped back toward us, or not away from the threat
 			return p
@@ -851,15 +859,18 @@ func _resolve_flee_point(from: Vector3, threat: Vector3, distance: float) -> Vec
 
 ## `p` when a path from `from` on `layers` ends within FLEE_PATH_END_M of it; otherwise the end
 ## of that path when the same check accepts it (p lies beyond a wall or on an unconnected
-## island); otherwise Vector3.INF.
-static func _reachable_point(map: RID, from: Vector3, p: Vector3, layers: int) -> Vector3:
-	var path := NavigationServer3D.map_get_path(map, from, p, true, layers)
+## island); otherwise Vector3.INF. P24b: the paths are NavQuery's (the level's map for the layer
+## and its chase parameters; the Valley's are map_get_path's).
+static func _reachable_point(level: Node, from: Vector3, p: Vector3, layers: int) -> Vector3:
+	if not p.is_finite():
+		return Vector3.INF
+	var path := NavQuery.path(level, from, p, layers)
 	if path.is_empty():
 		return Vector3.INF
 	var end := path[path.size() - 1]
 	if end.distance_to(p) <= FLEE_PATH_END_M:
 		return p
-	var check := NavigationServer3D.map_get_path(map, from, end, true, layers)
+	var check := NavQuery.path(level, from, end, layers)
 	if check.size() > 0 and check[check.size() - 1].distance_to(end) <= FLEE_PATH_END_M:
 		return end
 	return Vector3.INF
@@ -1641,11 +1652,10 @@ func _ring_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2
 ## reaches it (the flee rules, P04); without one, `desired` when a ray from the actor reaches it
 ## past walls and blockers. Vector3.INF when it cannot be reached.
 func _walkable_point(from: Vector3, desired: Vector3) -> Vector3:
-	var map := get_world_3d().navigation_map
-	var region := nav_region_for_layers()
-	if region.is_valid() and NavigationServer3D.map_get_iteration_id(map) > 0:
-		return _reachable_point(map, from, NavigationServer3D.region_get_closest_point(region, desired),
-			int(agent.navigation_layers))
+	var level := nav_level()
+	var layers := int(agent.navigation_layers)
+	if NavQuery.has_navigation(level, layers):   # P24b: through NavQuery
+		return _reachable_point(level, from, NavQuery.closest_point(level, desired, layers), layers)
 	var lift := Vector3.UP * 0.5
 	if HitQueryAdapter.line_clear(get_world_3d().direct_space_state, from + lift, desired + lift,
 			SIGHT_MASK | LAYER_BLOCKER, entity.occlusion_rids):
@@ -2238,6 +2248,89 @@ func _p22_faction_post() -> Dictionary:
 	return _p22_post_resolver.call() if _p22_post_resolver.is_valid() else {}
 
 ## @anchor P24b
+# --- navigation through NavQuery, the repath throttle, the chase goal (P24b) ----------------------
+# Plan M6-M9 §2.8, decision 13. Every navigation question goes through NavQuery on the level's map
+# for this actor's layer (nav_level(): the level root, else this actor's own world): flight and
+# reachability (_reachable_point, _walkable_point, flee points snapped with NavQuery.closest_point).
+# In a level with nav_query settings (a streamed world) also:
+#   * the agent paths on its layer's own map (NavigationAgent3D.set_navigation_map) with unlimited
+#     polygons and the chase distance cap;
+#   * tier-0 re-paths are throttled - at least repath_min_ticks apart and only when the goal moved
+#     repath_min_move_m - and wait for the tick's query budget (NavQuery.budget_left; each one is
+#     spent); a path failure still asks at once (within the budget);
+#   * the chase goal is snapped to the layer: the agent's query ends at the layer's point nearest the
+#     goal, and when that end lies more than REACH_SLACK_M from the goal (a giant wading deep water,
+#     out of the human layer) the actor stops there instead of steering on into the water, and its
+#     progress is measured to it (standing on the bank is not a path failure).
+# Without settings (the Valley, test levels) nothing changes: the default map, today's re-path rule
+# and parameters, the raw goal.
+
+## A path ending this far (horizontally) from its goal did not reach it: the actor stops at its end.
+const REACH_SLACK_M := 2.0
+
+var _p24b_level_ref: WeakRef = null
+var _p24b_settings := {}
+
+
+func _p24b_ready() -> void:
+	var level := nav_level()
+	_p24b_settings = NavQuery.settings(level)
+	if _p24b_settings.is_empty():
+		return
+	var layers := int(agent.navigation_layers)
+	var m := NavQuery.map_for(level, layers)
+	if m.is_valid():
+		agent.set_navigation_map(m)
+	var p := NavQuery.params_for(level, NavQuery.PURPOSE_CHASE)
+	agent.path_search_max_polygons = int(p.max_polygons)
+	agent.path_search_max_distance = float(p.max_distance)
+
+
+## The level this actor asks for navigation: the level root of the tree (as LevelRoot.nav_region
+## was found before), else the actor itself (a bare test world: its world's default map).
+func nav_level() -> Node:
+	if _p24b_level_ref != null:
+		var n := _p24b_level_ref.get_ref() as Node
+		if n != null and n.is_inside_tree():
+			return n
+	_p24b_level_ref = null
+	var level := get_tree().get_first_node_in_group("level_root") if is_inside_tree() else null
+	if level == null:
+		return self
+	_p24b_level_ref = weakref(level)
+	return level
+
+
+## True in a level with nav_query settings (the throttle, the budget and the chase goal apply).
+func _p24b_throttled() -> bool:
+	return not _p24b_settings.is_empty()
+
+
+## The streamed world's re-path rule (see the section notes). Tier 1 keeps P04's rule, within the
+## budget.
+func _p24b_wants_repath(goal: Vector3) -> bool:
+	if NavQuery.budget_left(nav_level()) <= 0:
+		return false
+	if lod_tier >= 1:
+		return _last_nav_target == Vector3.INF and Sim.tick - _last_repath_tick >= TIER1_REPATH_TICKS
+	if _last_nav_target == Vector3.INF:
+		return true
+	return Sim.tick - _last_repath_tick >= int(_p24b_settings.get("repath_min_ticks", 6)) \
+		and _last_nav_target.distance_to(goal) >= float(_p24b_settings.get("repath_min_move_m", 2.0))
+
+
+## Where steering and the progress check aim for `goal`: the goal itself, unless (streamed world)
+## the agent's path ends more than REACH_SLACK_M from it - then that end (the bank).
+func _p24b_reach(goal: Vector3) -> Vector3:
+	if not _p24b_throttled():
+		return goal
+	var res := agent.get_current_navigation_result()
+	if res == null or res.path.is_empty():
+		return goal
+	var end := agent.get_final_position()
+	if Vector2(end.x - goal.x, end.z - goal.z).length() > REACH_SLACK_M:
+		return end
+	return goal
 
 ## @anchor P30
 
