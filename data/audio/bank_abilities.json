@@ -307,6 +307,42 @@
 			"far": "",
 			"levels": []
 		},
+		"sfx.ability.pike_thrust.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blade_light_1.wav",
+				"res://assets/audio/sfx/combat/swing_blade_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -5.0,
+			"pitch": 0.75,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.shield_bash.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blunt_light_1.wav",
+				"res://assets/audio/sfx/combat/swing_blunt_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -1.5,
+			"pitch": 0.9,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
 		"sfx.ability.soldier_brace.sweep": {
 			"files": [
 				"res://assets/audio/sfx/combat/swing_blunt_light_1.wav",

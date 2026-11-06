@@ -119,6 +119,7 @@ func _ready() -> void:
 	_p11b_ready()
 	_p22_ready()
 	_p24b_ready()
+	_p30_ready()
 	Sim.register_actor(entity.entity_id, self)
 
 
@@ -200,6 +201,8 @@ func _release_token() -> void:
 
 
 func _target() -> CombatEntity:
+	if _p30_has_targets():
+		return _p30_target()   # P30: the record's target provider (NPCs and props besides the giant)
 	for e: CombatEntity in Sim.entities():
 		if e.team == CombatEntity.Team.PLAYER:
 			return e
@@ -244,6 +247,7 @@ func _sense() -> Dictionary:
 		"target_height": t.combatant.height_m, "target_stage": stage,
 		"target_state": t.controller.state if t.controller != null else -1,
 		"self_health_frac": entity.combatant.pools.ratio("health"), "has_leader": _has_leader_now()}
+	_p30_sense(snapshot, t)   # P30: an NPC or prop target's own radius; no awe or size tactics against it
 	_sense_extra(snapshot)
 	return snapshot
 
@@ -271,6 +275,8 @@ func _on_hit_taken(result: HitResult) -> void:
 func _on_any_entity_died(tick: int, id: String, _killer: String) -> void:
 	if not is_inside_tree() or id == entity.entity_id or not entity.is_alive():
 		return
+	if _p30_on_entity_died(tick, id):
+		return   # P30: its formation's banner fell (the commander's death for its members)
 	var other := Sim.get_entity(id)
 	if other == null or other.team != entity.team or other.actor == null:
 		return
@@ -446,6 +452,7 @@ func get_defense_state() -> DefenseState:
 	d.stamina = entity.combatant.pools.stamina
 	d.stability = entity.combatant.stability
 	d.apply_guard(record.get("guard", {}))
+	_p30_defense(d)   # P30: a shield's guard breaks on the hit tags of its record
 	return d
 
 
@@ -470,7 +477,7 @@ func flash(strength: float, color := Color(1.0, 0.95, 0.85)) -> void:
 
 
 func get_rig_state() -> Dictionary:
-	return {
+	return _p30_rig_state({   # P30: a braced formation member's brace pose
 		"state": controller.state,
 		"action": controller.action,
 		"phase": controller.phase(),
@@ -480,7 +487,7 @@ func get_rig_state() -> Dictionary:
 		"staggered": controller.state == CombatController.State.STAGGERED,
 		"dodging": false,
 		"guarding": is_guarding(),
-	}
+	})
 
 
 func get_debug_info() -> Dictionary:
@@ -744,6 +751,8 @@ static func entity_radius(t: CombatEntity) -> float:
 ## (radius_m, 0), line (width_m / 2, length_m), cone (radius_m, radius_m; arc_deg is in the
 ## action record). Duration = the windup.
 func _on_phase_entered(action: ActionDef, _instance_id: int, phase: int) -> void:
+	if _p30_on_phase_entered(action, phase):
+		return   # P30: a band brace's telegraph lies along its formation's front rank; a rally strikes
 	if phase != ActionDef.Phase.WINDUP or action == null:
 		return
 	var t: Variant = action.param("telegraph")
@@ -801,6 +810,8 @@ func _same_encounter(other: Node) -> bool:
 func _has_leader_now() -> bool:
 	if commander and entity.is_alive():
 		return true
+	if formation != null and formation.banner_id != "":
+		return _p30_has_leader()   # P30: a formation member's leader is its banner
 	var radius := float(record.get("ai", {}).get("leader_radius_m", 20.0))
 	var commander_alive := false
 	var ally_near := false
@@ -993,7 +1004,8 @@ func _line_members() -> Array:
 		if other == null or other.entity == null or other.entity.combatant == null:
 			continue
 		if other != self and (other.encounter_id != encounter_id or not other.entity.is_alive()
-				or other.entity.team != entity.team or other.formation_marker() != null):
+				or other.entity.team != entity.team or other.formation_marker() != null
+				or other.formation != null):   # P30: a formation's members hold its slots, not a line
 			continue
 		var t: Variant = other.record.get("tactics", {})
 		if other == self or (typeof(t) == TYPE_DICTIONARY and str(t.get("outmatched_behavior", "")) == "formation"):
@@ -2342,6 +2354,483 @@ func _p24b_reach(goal: Vector3) -> Vector3:
 	return goal
 
 ## @anchor P30
+# --- formations, the banner, shields and the target provider (P30) --------------------------------
+# Plan M6-M9 §2.10, decisions 19 and 20. Hook lines elsewhere in this file: _ready (_p30_ready),
+# _target (the provider), _sense (_p30_sense), _on_any_entity_died, get_defense_state, get_rig_state,
+# _on_phase_entered, _has_leader_now and _line_members.
+#   * A formation member (Formation.add_member -> p30_join_formation) has `formation`, `formation_id`
+#     (the music director counts formation members as threats) and `formation_slot` (-1: its banner).
+#     Its brain holds the slot the formation gives (formation_slot_resolver), faces the giant, and
+#     never strikes on its own while the formation is intact: the formation's brace runs through
+#     p30_run_action on its striker. While the banner lives the member loses half the morale of awe
+#     and ally deaths and regroups to its slot (its leader is the banner: _p30_has_leader); the
+#     banner's death is its commander's death (_p30_on_entity_died). Routed members run to the
+#     formation's flee points or fan (_p30_rout_point), so a breached gate does not jam. A braced
+#     member shows the brace pose (get_rig_state's pose_override).
+#   * The banner's record `rally` (role banner) runs every interval_s (Formation._rally_step); when
+#     its action strikes, the members within radius_m gain morale (p30_rally).
+#   * A shield (guard.breaks_on_tags): a guarded hit carrying one of those tags (heavies, stomps,
+#     sweeps) breaks the guard whatever its stamina - accepts_hit() notes every incoming hit for
+#     get_defense_state().
+#   * Joining: an outmatched soldier (behaviour "formation") outside a formation takes the free slot
+#     of the nearest intact formation of its faction within Formation.JOIN_RADIUS_M while the
+#     director's formation cap allows (_p30_try_join, asked by the brain); without one, a giant of
+#     stage JOIN_OR_FLEE_STAGE or more makes it flee (EnemyBrain), a smaller one leaves it P04's line.
+#   * The target provider (record `targets`): _target() is the giant while it is seen (or this unit is
+#     aware of it) within aggro_player_m, else the nearest living NPC of the listed factions or intact
+#     prop with a listed prop tag within sight range and in sight. The runner makes that NPC or prop
+#     hittable during this unit's hit queries (AttackRunner.provider_target: the M1 team rule lets an
+#     enemy hit only the player); the perception gives it its own radius and no size (no awe, no
+#     outmatched tactics against a house). Without `targets` nothing changes.
+
+## At this stage or more, an outmatched soldier that finds no formation to join flees (plan §5.14:
+## at stage 4 single humans flee; smaller giants keep P04's lines).
+const JOIN_OR_FLEE_STAGE := 4
+## Arm poses (yaw, pitch in degrees: weapon arm, off arm) of a braced member, by role: the pike
+## levelled at the giant's legs (the pike lies along the weapon arm), the shield raised, a line's
+## blades low. The crowd renderer's brace meshes are built from the same table
+## (tools/builders/formations.gd).
+const BRACE_POSES := {
+	"pike": [Vector2(0.0, -8.0), Vector2(-14.0, -20.0)],
+	"shield": [Vector2(18.0, -35.0), Vector2(4.0, 6.0)],
+	"line": [Vector2(-8.0, -24.0), Vector2(-12.0, -70.0)],
+}
+
+## The formation this unit belongs to (null when none), its id ("" = none: the music director's
+## test) and its slot (Formation.BANNER_SLOT for the banner, -2 when none).
+var formation: Formation = null
+var formation_id := ""
+var formation_slot := -2
+## The last formation it belonged to (its flee points serve a rout after the formation dissolved).
+var _p30_last_formation: Formation = null
+var _p30_incoming: HitEvent = null
+var _p30_target_tick := -1
+var _p30_target_ref: WeakRef = null
+var _p30_extents := {}   # entity id -> Vector3 (half extents of its hurtboxes in its own frame)
+
+
+func _p30_ready() -> void:
+	if brain == null:
+		return
+	brain.formation_slot_resolver = _p30_slot_point
+	brain.formation_face_resolver = _p30_face_point
+	brain.formation_joiner = _p30_try_join
+	var p04_flee := brain.flee_resolver
+	brain.flee_resolver = func(from: Vector3, threat: Vector3, distance: float) -> Vector3:
+		var p := _p30_rout_point(from, threat)
+		if p != Vector3.INF:
+			return p
+		return p04_flee.call(from, threat, distance) if p04_flee.is_valid() else Vector3.INF
+	brain.routed.connect(_p30_on_routed)
+	var rally: Variant = record.get("rally")
+	if typeof(rally) == TYPE_DICTIONARY:
+		_p30_add_action(str(rally.get("action", "")))
+	if _p30_has_targets():
+		runner.provider_target = _p30_provider_target
+
+
+func _p30_add_action(action_id: String) -> void:
+	var a := GameData.get_action(action_id)
+	if a != null and controller != null and not controller.library.has(a.id):
+		controller.add_action(a)
+
+
+## The record's role ("" = none).
+func role() -> String:
+	return str(record.get("role", ""))
+
+
+# ---- formation membership (Formation calls these)
+
+## `f` takes this unit into `slot` (Formation.BANNER_SLOT: its banner). `fresh`: it joins as it
+## spawns (its morale becomes the formation's morale_start); a soldier joining mid-fight keeps its
+## morale (it rises to morale_start as it recovers).
+func p30_join_formation(f: Formation, slot: int, fresh := true) -> void:
+	formation = f
+	formation_id = f.id
+	formation_slot = slot
+	_p30_last_formation = f
+	_release_formation_marker()
+	if f.brace_action != "":
+		_p30_add_action(f.brace_action)
+	if brain == null:
+		return
+	brain.join_formation(f.id, slot == Formation.BANNER_SLOT, f.morale_start, fresh, Sim.tick)
+	p30_formation_update(f)
+
+
+## `f` lets this unit go (its encounter deactivated, or it left for good).
+func p30_leave_formation(f: Formation) -> void:
+	if formation != f:
+		return
+	formation = null
+	formation_id = ""
+	formation_slot = -2
+	if brain != null:
+		brain.leave_formation()
+
+
+## Every formation update: what the brain needs to know (intact, braced, the banner alive).
+func p30_formation_update(f: Formation) -> void:
+	if brain == null or formation != f:
+		return
+	brain.formation_hold = f.is_intact()
+	brain.formation_braced = f.state == "braced"
+	brain.banner_alive = f.banner_alive()
+
+
+## Starts `action_id` now (the formation's brace on its striker, the banner's rally): true when the
+## controller took it.
+func p30_run_action(action_id: String) -> bool:
+	if controller == null or entity == null or not entity.is_alive() or not controller.library.has(action_id):
+		return false
+	if controller.state != CombatController.State.LOCOMOTION:
+		return false
+	controller.request(&"attack", {"action_id": action_id})
+	return controller.action != null and controller.action.id == action_id
+
+
+## True when this unit can start a formation action now: alive, free (locomotion), awake (AI LOD
+## tier below 2), not held, not walking home.
+func p30_can_act() -> bool:
+	return entity != null and entity.is_alive() and controller != null \
+		and controller.state == CombatController.State.LOCOMOTION and not is_held() and lod_tier < 2 \
+		and not is_returning() and process_mode != Node.PROCESS_MODE_DISABLED and is_inside_tree()
+
+
+## The band a band_pulse of this unit strikes (AttackRunner): its formation's front band, else a
+## band in front of the unit as wide as three files and as deep as the running action's radius.
+func p30_brace_band() -> Dictionary:
+	if formation != null:
+		return formation.front_band()
+	var depth := 6.0
+	if controller != null and controller.action != null and controller.action.radius_m > 0.0:
+		depth = controller.action.radius_m
+	var fwd := Formation.forward_of(facing_yaw)
+	return {"center": global_position + fwd * (depth * 0.5), "near": global_position, "half_width": 2.4,
+		"depth": depth, "yaw": facing_yaw}
+
+
+## The height a band_pulse of this unit strikes as (poise and knockback): its formation's
+## brace_height_m, else Formation.DEFAULT_BRACE_HEIGHT_M.
+func p30_brace_height() -> float:
+	return formation.brace_height_m if formation != null else Formation.DEFAULT_BRACE_HEIGHT_M
+
+
+## The banner's rally strikes: +morale to the members of its formation within the radius (record
+## `rally`). Returns how many it reached.
+func p30_rally() -> int:
+	var rally: Variant = record.get("rally")
+	if formation == null or typeof(rally) != TYPE_DICTIONARY:
+		return 0
+	var n := formation.rally(global_position, float(rally.get("morale", 10.0)), float(rally.get("radius_m", 15.0)))
+	Events.ability_effect.emit(Sim.tick, entity.entity_id, str(rally.get("action", "")), "cast",
+		global_position, float(rally.get("radius_m", 15.0)), facing_yaw, 0.0)
+	return n
+
+
+## Routs now (tests, scripted events): flight, then the rout, to the formation's flee points.
+func p30_force_rout() -> void:
+	if brain == null or entity == null or not entity.is_alive():
+		return
+	Sim.release_all_tokens(entity.entity_id)
+	brain.force_rout(Sim.tick)
+
+
+func _p30_slot_point() -> Vector3:
+	return formation.slot_position(formation_slot) if formation != null else Vector3.INF
+
+
+## What a member faces: the threat while the formation knows it, else straight ahead of its slot.
+func _p30_face_point() -> Vector3:
+	if formation == null:
+		return Vector3.INF
+	if formation.threat_pos != Vector3.INF:
+		return formation.threat_pos
+	return formation.slot_position(formation_slot) + Formation.forward_of(formation.facing_yaw) * 10.0
+
+
+## A formation member's leader is its banner (the banner leads itself). Its formation must have one.
+func _p30_has_leader() -> bool:
+	if formation_slot == Formation.BANNER_SLOT:
+		return entity.is_alive()
+	return formation.banner_alive()
+
+
+## Events.entity_died: this member's banner fell - its commander's death (-25, x1.5 while
+## outmatched, debounced like P04's). True when handled (the base adds no ally death on top).
+func _p30_on_entity_died(tick: int, id: String) -> bool:
+	if formation == null or formation.banner_id == "" or id != formation.banner_id \
+			or formation_slot == Formation.BANNER_SLOT or brain == null:
+		return false
+	brain.on_commander_died(tick)
+	return true
+
+
+## The nearest intact formation of this unit's faction within JOIN_RADIUS_M with a free slot takes
+## it, while the level's director allows another formation member (brain.formation_joiner).
+func _p30_try_join() -> bool:
+	if formation != null:
+		return true
+	if entity == null or not entity.is_alive() or not is_inside_tree():
+		return false
+	var director := get_tree().get_first_node_in_group(EncounterDirector.GROUP) as EncounterDirector
+	if director != null and not director.p30_formation_room():
+		return false
+	var best: Formation = null
+	var best_d := Formation.JOIN_RADIUS_M
+	for f in Formation.live():
+		if not f.is_intact() or f.faction != faction or f.free_slots().is_empty():
+			continue
+		var d := _flat_len(f.anchor() - global_position)
+		if d <= best_d:
+			best = f
+			best_d = d
+	return best != null and best.try_join(self)
+
+
+## brain.routed: a member of a formation runs to its formation's flee point (or fan).
+func _p30_on_routed() -> void:
+	if brain == null:
+		return
+	var p := _p30_rout_point(global_position, brain.last_known)
+	if p != Vector3.INF:
+		brain.flee_point = p
+
+
+## Where a routed member of a formation runs (brain.flee_resolver while routed): the formation's
+## flee point or fan point of its slot (Formation.rout_point), made reachable on its navigation
+## layer. Vector3.INF for anyone else (P04's flight applies).
+func _p30_rout_point(from: Vector3, threat: Vector3) -> Vector3:
+	var f := formation if formation != null else _p30_last_formation
+	if f == null or brain == null or brain.state != EnemyBrain.AIState.ROUTED:
+		return Vector3.INF
+	var index := formation_slot if formation_slot >= 0 else absi(hash(entity.entity_id))
+	var p := f.rout_point(from, threat, index)
+	var level := nav_level()
+	var layers := int(agent.navigation_layers)
+	if NavQuery.has_navigation(level, layers):
+		var r := _reachable_point(level, from, NavQuery.closest_point(level, p, layers), layers)
+		return r if r != Vector3.INF else Vector3.INF
+	return Vector3(p.x, from.y, p.z)
+
+
+# ---- the brace's telegraph, the rally, the pose
+
+## controller.phase_entered: a band_pulse's windup announces one telegraph along the band (a line
+## telegraph from the front rank's centre, as wide as the rank, as deep as the band) instead of
+## the base's at the striker (returns true); a rally action's strike rallies.
+func _p30_on_phase_entered(action: ActionDef, phase: int) -> bool:
+	if action == null:
+		return false
+	if action.hit_shape == "band_pulse":
+		if phase == ActionDef.Phase.WINDUP:
+			var band := p30_brace_band()
+			Events.telegraph_started.emit(Sim.tick, entity.entity_id, action.id, brain.target_id if brain != null else "",
+				"line", band.near, float(band.yaw), float(band.half_width), float(band.depth),
+				float(action.windup_ticks) / Sim.TICK_RATE)
+		return true
+	var rally: Variant = record.get("rally")
+	if phase == ActionDef.Phase.ACTIVE and typeof(rally) == TYPE_DICTIONARY and action.id == str(rally.get("action", "")):
+		p30_rally()
+	return false
+
+
+## get_rig_state: a member of an intact formation that is braced (or running the brace) shows its
+## role's brace pose.
+func _p30_rig_state(s: Dictionary) -> Dictionary:
+	if formation == null or formation_slot == Formation.BANNER_SLOT or not formation.is_intact():
+		return s
+	if bool(s.get("dead", false)) or bool(s.get("staggered", false)):
+		return s
+	var a := controller.action if controller != null else null
+	if (a == null and formation.state == "braced") or (a != null and a.hit_shape == "band_pulse"):
+		var pose: Variant = BRACE_POSES.get(role() if BRACE_POSES.has(role()) else "line")
+		s["pose_override"] = {"arm": pose[0], "off": pose[1], "exact": false}
+	return s
+
+
+# ---- shields
+
+## CombatEntity.receive_hit asks before resolving: every hit is accepted; the shield rule reads it.
+func accepts_hit(hit: HitEvent) -> bool:
+	_p30_incoming = hit
+	return true
+
+
+## get_defense_state: a guarded hit that carries one of guard.breaks_on_tags breaks the guard (the
+## defence's stamina is 0 for it, so any impact is a guard break).
+func _p30_defense(d: DefenseState) -> void:
+	var tags: Variant = (record.get("guard", {}) as Dictionary).get("breaks_on_tags")
+	if not d.blocking or typeof(tags) != TYPE_ARRAY or _p30_incoming == null or _p30_incoming.tick != Sim.tick:
+		return
+	for tag: Variant in tags:
+		if _p30_incoming.has_tag(str(tag)):
+			d.stamina = 0.0
+			return
+
+
+# ---- the target provider
+
+func _p30_has_targets() -> bool:
+	return typeof(record.get("targets")) == TYPE_DICTIONARY
+
+
+## The provider's choice this tick (see the section notes; once per tick). A changed choice gives
+## back the attack tokens held on the old one.
+func _p30_target() -> CombatEntity:
+	var cached: CombatEntity = _p30_target_ref.get_ref() as CombatEntity if _p30_target_ref != null else null
+	if _p30_target_tick == Sim.tick and cached != null and is_instance_valid(cached):
+		return cached
+	_p30_target_tick = Sim.tick
+	var t: Dictionary = record.targets
+	var teams: Array = t.get("teams", ["player"])
+	var player: CombatEntity = null
+	if teams.has("player"):
+		for e: CombatEntity in Sim.entities():
+			if e.team == CombatEntity.Team.PLAYER:
+				player = e
+				break
+	var pick: CombatEntity = null
+	if player != null and player.is_alive() and _p30_player_engaged(player, t):
+		pick = player
+	else:
+		pick = _p30_nearest_target(t)
+		if pick == null:
+			pick = player
+	if pick != cached and cached != null and entity != null:
+		Sim.release_all_tokens(entity.entity_id)
+		if brain != null:
+			brain.holds_token = false
+	_p30_target_ref = weakref(pick) if pick != null else null
+	return pick
+
+
+## True when the giant comes first: within aggro_player_m (when set) and either this unit is aware
+## of it or sees it now (sight range, its view cone or the aware radius, a clear line).
+func _p30_player_engaged(player: CombatEntity, t: Dictionary) -> bool:
+	var to := player.actor.global_position - global_position
+	to.y = 0.0
+	var dist := to.length()
+	if t.has("aggro_player_m") and dist > float(t.aggro_player_m):
+		return false
+	if brain != null and brain.aware and brain.target_id == player.entity_id:
+		return true
+	var ai: Dictionary = record.get("ai", {})
+	if dist > float(ai.get("sight_range_m", 25.0)):
+		return false
+	var fwd := -global_transform.basis.z
+	var facing_deg := rad_to_deg(Vector3(fwd.x, 0.0, fwd.z).signed_angle_to(to, Vector3.UP)) if dist > 0.01 else 0.0
+	if absf(facing_deg) > float(ai.get("sight_half_angle_deg", 75.0)) \
+			and dist > float(ai.get("awareness_radius_m", AWARE_ALL_AROUND_M)):
+		return false
+	var eye := global_position + Vector3.UP * entity.combatant.height_m * 0.92
+	return HitQueryAdapter.line_clear(get_world_3d().direct_space_state, eye, player.anchor_position(), SIGHT_MASK,
+		player.occlusion_rids)
+
+
+## The nearest living NPC of the record's factions or intact prop with one of its prop_tags,
+## within sight range and in sight; null when none.
+func _p30_nearest_target(t: Dictionary) -> CombatEntity:
+	var range_m := float((record.get("ai", {}) as Dictionary).get("sight_range_m", 25.0))
+	var space := get_world_3d().direct_space_state
+	var eye := global_position + Vector3.UP * entity.combatant.height_m * 0.92
+	var best: CombatEntity = null
+	var best_d := range_m
+	for e: CombatEntity in Sim.entities():
+		if e == entity or e.team != CombatEntity.Team.NEUTRAL or not e.is_alive() or not is_instance_valid(e.actor):
+			continue
+		if not _p30_allowed(e, t):
+			continue
+		var d := _flat_len(e.actor.global_position - global_position)
+		if d > best_d:
+			continue
+		if not HitQueryAdapter.line_clear(space, eye, e.anchor_position(), SIGHT_MASK, e.occlusion_rids):
+			continue
+		best = e
+		best_d = d
+	return best
+
+
+## True when `e` (a NEUTRAL entity) is one the record's targets name: a member of a listed faction
+## (record ids "faction.<short>"; members carry the short name) or a prop with a listed tag.
+func _p30_allowed(e: CombatEntity, t: Dictionary) -> bool:
+	if e.faction != "":
+		for f: Variant in t.get("factions", []):
+			if str(f).trim_prefix("faction.") == e.faction:
+				return true
+		return false
+	var tags := FactionState.prop_tags(e)
+	for tag: Variant in t.get("prop_tags", []):
+		if tags.has(str(tag)):
+			return true
+	return false
+
+
+## AttackRunner.provider_target: the NPC or prop this unit fights now (its brain's target when the
+## provider allows it), else null.
+func _p30_provider_target() -> CombatEntity:
+	if brain == null or brain.target_id == "" or not _p30_has_targets():
+		return null
+	var e := Sim.get_entity(brain.target_id)
+	if e == null or e.team != CombatEntity.Team.NEUTRAL or not e.is_alive():
+		return null
+	return e if _p30_allowed(e, record.targets) else null
+
+
+## _sense: a target that is not the giant gets its own radius toward this unit and no size (the
+## brain's awe and outmatched tactics are for giants).
+func _p30_sense(snapshot: Dictionary, t: CombatEntity) -> void:
+	if t == null or t.team == CombatEntity.Team.PLAYER:
+		return
+	snapshot["target_radius"] = _p30_target_radius(t)
+	snapshot["target_height"] = float(record.get("height_m", 1.8))
+	snapshot["target_stage"] = 0
+
+
+## How far from `t`'s origin its edge lies toward this unit: an actor's capsule radius; a prop's
+## hurtbox box (in its own frame) along the direction to this unit.
+func _p30_target_radius(t: CombatEntity) -> float:
+	var rec := GameData.get_record(t.definition_id)
+	if str(rec.get("type", "")) != "prop":
+		return float(rec.get("capsule_radius_m", 0.4))
+	var half: Vector3 = _p30_extents.get(t.entity_id, Vector3.INF)
+	if half == Vector3.INF:
+		half = _p30_half_extents(t)
+		_p30_extents[t.entity_id] = half
+	var local := t.actor.global_transform.basis.inverse() * (global_position - t.actor.global_position)
+	var d := Vector2(local.x, local.z)
+	if d.length() < 1e-3:
+		return maxf(half.x, half.z)
+	d = d.normalized()
+	var rx := half.x / absf(d.x) if absf(d.x) > 1e-4 else INF
+	var rz := half.z / absf(d.y) if absf(d.y) > 1e-4 else INF
+	return clampf(minf(rx, rz), 0.2, 30.0)
+
+
+## Half extents (x, y, z in the prop's own frame) of the union of `t`'s hurtbox shapes, about its
+## origin (0.5 m each way without any).
+static func _p30_half_extents(t: CombatEntity) -> Vector3:
+	var box := AABB()
+	var first := true
+	var inv := t.actor.global_transform.affine_inverse()
+	for hb in t.hurtboxes:
+		if not is_instance_valid(hb):
+			continue
+		for child in hb.get_children():
+			var cs := child as CollisionShape3D
+			if cs == null or cs.shape == null:
+				continue
+			var aabb := cs.shape.get_debug_mesh().get_aabb()
+			var xf := inv * cs.global_transform
+			var local := xf * aabb
+			box = local if first else box.merge(local)
+			first = false
+	if first:
+		return Vector3(0.5, 0.5, 0.5)
+	var far := Vector3(maxf(absf(box.position.x), absf(box.end.x)), maxf(absf(box.position.y), absf(box.end.y)),
+		maxf(absf(box.position.z), absf(box.end.z)))
+	return far
 
 ## @anchor P32
 

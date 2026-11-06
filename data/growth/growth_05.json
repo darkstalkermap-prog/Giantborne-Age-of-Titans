@@ -40,5 +40,6 @@
 	"nav_query_mask": 112,
 	"footstep_shake": 0.24,
 	"interaction_permissions": ["grab_small", "throw_boulder", "tree_weapon", "gate_breach", "trample", "formation_sweep", "heave"],
+	"target_rules": {"formation_lock": true},
 	"unlocks": []
 }

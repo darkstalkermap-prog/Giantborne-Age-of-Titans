@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "level.formation_test",
+	"type": "level",
+	"display_name": "Formation test level",
+	"description": "P30: formations proven on a walled 440 x 160 m floor - a pike regiment (x -190) and a shield wall (x -155) in the west, a pike line 10 m south of a 6 m gate in a wall with flee points beyond it in the middle, and the 40-member stress case in the east (x 160): no two clusters within 150 m, so each fits the formation caps. Its encounters wait for test.formation.manual (never set): tests and the stress scenario activate them.",
+	"scene": "res://scenes/test/formation_test.tscn",
+	"start_checkpoint": "test.formation.cp_start",
+	"max_active_enemies": 12,
+	"lod": {"near_m": 60, "mid_m": 120, "check_ticks": 30, "corpse_free_s": 6},
+	"render": {
+		"low": {"shadow_distance_m": 0, "scenery_visibility_end_m": 220, "msaa": 0},
+		"medium": {"shadow_distance_m": 120, "scenery_visibility_end_m": 260, "msaa": 2}
+	},
+	"web_overrides": {"quality": "low", "ai_tier1_m": 30},
+	"districts": [
+		{"id": "field", "display_name": "Formation field", "min_m": [-220, 0, -80], "max_m": [220, 0, 80], "surface": "soft"}
+	]
+}

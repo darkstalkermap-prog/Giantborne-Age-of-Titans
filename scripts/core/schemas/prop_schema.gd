@@ -70,6 +70,10 @@ static func fields() -> Dictionary:
 	})
 
 	## @anchor P30
+	# P30 (plan M6-M9 §2.10, decision 20): what the prop is, for the target providers of enemy records
+	# (targets.prop_tags: raiders attack props tagged "house") and for FactionState's offences (P22:
+	# damage to a faction's "house" or "engine"): plain lowercase words - house, wall, engine, fence.
+	f["prop_tags"] = {"t": "array", "items": "string"}
 
 	## @anchor P32
 
@@ -142,6 +146,11 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.errors.append("%s: a heaved prop must accept the melee category (the heave hit)" % ctx)
 
 	## @anchor P30
+	var p30_tags: Variant = d.get("prop_tags")
+	if typeof(p30_tags) == TYPE_ARRAY:
+		for p30_tag: Variant in p30_tags:
+			if typeof(p30_tag) != TYPE_STRING or RegEx.create_from_string("^[a-z][a-z0-9_]*$").search(p30_tag) == null:
+				out.errors.append("%s.prop_tags: '%s' must be a plain lowercase word like 'house'" % [ctx, p30_tag])
 
 	## @anchor P32
 

@@ -81,6 +81,50 @@ static func fields() -> Dictionary:
 	## @anchor P29
 
 	## @anchor P30
+	# P30 (plan M6-M9 §2.10, decision 19): `formations`, organised groups of the encounter's members
+	# (scripts/ai/formation.gd; the director owns one Formation per entry): `id` (unique in the
+	# encounter; the formation's id is "<encounter short id>.<id>"), `kind` (line | pike | shield |
+	# crew), `display_name` (the lock line's name; by kind when absent), `banner` (the entity id of
+	# the spawn carrying its banner, slot -1), `banner_name`, `banner_color` (its flag, RGB 0..1),
+	# `min_stage` / `max_stage` (the giant's stages it forms at: its members sit other activations
+	# out), `ranks` x `files` slots `rank_spacing_m` / `file_spacing_m` apart around one pivot,
+	# `facing` ("threat": it turns toward the giant at turn_deg_s once aware; "fixed"), `yaw_deg` (its
+	# facing until then; default its first spawn's yaw), `advance_mps` (how fast it advances on the
+	# giant; 0 = it holds its ground) within `advance_m` of its home, `brace_m` (it braces when the
+	# giant is this close to its front rank) with `brace_action` (a band_pulse action its focus
+	# member runs: one band along the front rank) and `brace_height_m` (the size the brace strikes
+	# with: poise and knockback treat it as an attacker this tall; default 5.0), `morale_start` (its
+	# members' morale; default 90) and `flee_points` (marker ids its routed members spread over;
+	# without them, points 30-60 m away over a 140-degree fan). A spawn's `formation` names its
+	# formation and `slot` its place: 0 .. ranks x files - 1, rank-major from the front rank's left
+	# file; -1 is the banner.
+	f["formations"] = {"t": "array", "items": "dict", "item_fields": {
+		"id": U.str_field(true),
+		"kind": U.str_field(true, ["line", "pike", "shield", "crew"]),
+		"display_name": U.str_field(),
+		"banner": U.str_field(),
+		"banner_name": U.str_field(),
+		"banner_color": U.vec3(),
+		"min_stage": U.int_field(0, 10),
+		"max_stage": U.int_field(0, 10),
+		"ranks": U.int_field(1, 8, true),
+		"files": U.int_field(1, 16, true),
+		"rank_spacing_m": U.pos(true),
+		"file_spacing_m": U.pos(true),
+		"facing": U.str_field(false, ["threat", "fixed"]),
+		"yaw_deg": U.num(-360.0, 360.0),
+		"turn_deg_s": U.pos(),
+		"advance_mps": U.num(0.0, 10.0),
+		"advance_m": U.num(0.0),
+		"brace_m": U.num(0.0, 30.0),
+		"brace_action": U.ref("action", false, true),
+		"brace_height_m": U.pos(),
+		"morale_start": U.num(0.0, 100.0),
+		"flee_points": {"t": "array", "items": "string"}}}
+	(((f.spawns as Dictionary).item_fields) as Dictionary).merge({
+		"formation": U.str_field(),
+		"slot": U.int_field(-1, 255),
+	})
 
 	## @anchor P37
 
@@ -119,6 +163,9 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor P29
 
 	## @anchor P30
+	# P30: the formations and their members within the encounter (FormationRules.record_errors: unique
+	# plain ids, a stage range that is not empty, every member's formation and slot, one banner).
+	out.errors.append_array(FormationRules.record_errors(d, ctx))
 
 	## @anchor P37
 

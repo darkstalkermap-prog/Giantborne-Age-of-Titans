@@ -207,6 +207,8 @@ func active_combatant_count() -> int:
 ## Whether `m` counts toward the budget now: a member of a budgeted encounter whose definition is
 ## an enemy, or an enemy-definition member whose faction is hostile to the giant (P17b).
 static func counts(m: Member) -> bool:
+	if _p30_formation_member(m):
+		return false   # P30: formation members count against max_formation_members instead
 	return m.budgeted or (m.enemy_def and m.faction != "" and FactionState.is_hostile(m.faction))
 
 
@@ -307,6 +309,7 @@ func spawn_count(entity_id: String) -> int:
 ## Re-reads the level record and this level's encounter records (and WorldState: kills and
 ## cleared flags). Everything spawned so far is freed first.
 func reload_encounters() -> void:
+	_p30_clear()   # P30: every formation goes with its members
 	for id in _order:
 		for m: Member in (_encounters[id] as Encounter).members:
 			if m.node != null and is_instance_valid(m.node):
@@ -393,6 +396,7 @@ func debug_lines() -> PackedStringArray:
 		lines.append("  %s: %d up, %d waiting, %d dead, %d routed%s" % [id, tally[SPAWNED],
 			int(tally[UNSPAWNED]) + int(tally[DESPAWNED]), tally[DEAD], routed,
 			"  (alert)" if Sim.tick - enc.last_aware_tick <= 1 else ""])
+	lines.append_array(_p30_debug_lines())   # P30: the formations
 	return lines
 
 
@@ -404,6 +408,7 @@ func _on_pre_actors(tick: int) -> void:
 	_share_alerts(tick)
 	if _dirty or tick >= _next_check_tick:
 		_update(tick, spawns_per_tick)
+	_p30_tick(tick)   # P30: the formations' updates (10 Hz)
 
 
 ## One update. quota > 0: at most that many members spawn in it (forced activations excepted);
@@ -468,6 +473,7 @@ func _activate(enc: Encounter, tick: int, ppos: Vector3) -> void:
 		if m.status == DESPAWNED:
 			m.status = UNSPAWNED
 	_p24b_filter_stage(enc)   # P24b: spawn entries outside the giant's stage sit this activation out
+	_p30_activate(enc)   # P30: its formations (their stage range and the web's compositions)
 	_spawn_waiting(enc, tick, ppos)
 	Events.encounter_activated.emit(tick, enc.id)
 
@@ -510,6 +516,7 @@ func _deactivate(enc: Encounter) -> void:
 			DESPAWNED:
 				m.status = UNSPAWNED
 	enc.state = DORMANT
+	_p30_deactivate(enc)   # P30: its formations dissolve with it
 
 
 ## A cleared encounter's routed survivors are freed once the player is beyond the deactivate
@@ -536,6 +543,8 @@ func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
 			continue
 		if _p24b_skipped.has(m.entity_id):
 			continue   # P24b: not at this stage
+		if _p30_waits_for_room(m):
+			continue   # P30: the level's formation members are at max_formation_members
 		if counts(m) and active_combatant_count() >= max_active_enemies:
 			continue
 		if _spawn_quota == 0:
@@ -1020,6 +1029,259 @@ func spend_nav_queries(n := 1) -> void:
 ## @anchor P29
 
 ## @anchor P30
+# --- formations (P30, plan M6-M9 §2.10, decision 19) -----------------------------------------------
+# Hook lines: _on_pre_actors (_p30_tick), _activate (_p30_activate), counts(), _spawn_waiting,
+# _deactivate, reload_encounters and debug_lines.
+#   * At each activation every `formations` entry of the encounter whose stage range admits the
+#     giant's stage becomes a Formation (Formation.from_record), placed where its members' spawn
+#     points say (the pivot that best fits their slots, the entry's yaw_deg or its first member's);
+#     a formation outside the stage range sits the activation out with its members (P24b's skip set).
+#     On the web (LevelRoot.is_web) each formation keeps round(members x web_formation_scale) of its
+#     rank-and-file, the front rank first, and its banner (Formation.web_kept_slots); the rest sit out.
+#   * Spawned members join their formation in their slot (member_spawned); a CrowdRenderer per
+#     formation draws its members (group crowd_renderers).
+#   * Formation members never count toward max_active_enemies (counts()): they count toward the level
+#     record's max_formation_members (default 40; on the web its web_overrides' value, default 20),
+#     and a member waits to spawn while the level has that many (soldiers joining a formation ask
+#     p30_formation_room()).
+#   * Ten times a second (Formation.UPDATE_TICKS) every formation of a live, active encounter updates
+#     with the giant as its threat; a deactivation dissolves the encounter's formations.
+
+const P30_DEFAULT_FORMATION_CAP := 40
+const P30_DEFAULT_WEB_FORMATION_CAP := 20
+
+## The level's cap on formation members (from the level record, the web's when on the web).
+var max_formation_members := P30_DEFAULT_FORMATION_CAP
+var _p30_formations := {}        # formation id -> Formation (of active encounters)
+var _p30_by_encounter := {}      # encounter id -> PackedStringArray of formation ids
+var _p30_member_slot := {}       # entity id -> [formation id, slot]
+var _p30_renderers := {}         # formation id -> CrowdRenderer
+var _p30_cap_loaded := false
+
+
+## The live formations of this director, by id.
+func formations() -> Array[Formation]:
+	var out: Array[Formation] = []
+	var ids := _p30_formations.keys()
+	ids.sort()
+	for id: String in ids:
+		out.append(_p30_formations[id])
+	return out
+
+
+## The formation with this id (null when none is live).
+func formation(formation_id: String) -> Formation:
+	return _p30_formations.get(formation_id)
+
+
+## The crowd renderer of a formation (null when none).
+func crowd_renderer(formation_id: String) -> CrowdRenderer:
+	var r: Variant = _p30_renderers.get(formation_id)
+	return r if r != null and is_instance_valid(r) else null
+
+
+## True when one more formation member fits the level's cap (a soldier joining a formation).
+func p30_formation_room() -> bool:
+	_p30_load_cap()
+	return formation_member_count() < max_formation_members
+
+
+## Living, spawned formation members of every encounter (joined soldiers included).
+func formation_member_count() -> int:
+	var n := 0
+	for id in _order:
+		for m: Member in (_encounters[id] as Encounter).members:
+			if m.status == SPAWNED and _alive(m.node) and _p30_formation_member(m):
+				n += 1
+	return n
+
+
+## A member of a formation: its spawn names one, or it joined one.
+static func _p30_formation_member(m: Member) -> bool:
+	if str(m.spawn.get("formation", "")) != "":
+		return true
+	return m.node != null and is_instance_valid(m.node) and m.node.get("formation") != null
+
+
+func _p30_waits_for_room(m: Member) -> bool:
+	if str(m.spawn.get("formation", "")) == "":
+		return false
+	_p30_load_cap()
+	return formation_member_count() >= max_formation_members
+
+
+func _p30_load_cap() -> void:
+	if _p30_cap_loaded or level == null:
+		return
+	_p30_cap_loaded = true
+	var rec := level.level_record()
+	max_formation_members = int(rec.get("max_formation_members", P30_DEFAULT_FORMATION_CAP))
+	if LevelRoot.is_web():
+		max_formation_members = int(level.web_overrides().get("max_formation_members", P30_DEFAULT_WEB_FORMATION_CAP))
+
+
+func _p30_activate(enc: Encounter) -> void:
+	_p30_dissolve_encounter(enc.id)
+	var forms: Variant = enc.record.get("formations")
+	if typeof(forms) != TYPE_ARRAY or (forms as Array).is_empty():
+		return
+	_p30_load_cap()
+	if not member_spawned.is_connected(_p30_on_member_spawned):
+		member_spawned.connect(_p30_on_member_spawned)
+	var stage := _p24b_player_stage()
+	var scale := clampf(float(enc.record.get("web_formation_scale", 1.0)), 0.0, 1.0)
+	var origin := level.global_transform if level.is_inside_tree() else level.transform
+	var ids := PackedStringArray()
+	for rec: Variant in forms:
+		if typeof(rec) != TYPE_DICTIONARY:
+			continue
+		var local := str(rec.get("id", ""))
+		var members: Array = []
+		for m: Member in enc.members:
+			if str(m.spawn.get("formation", "")) == local:
+				members.append(m)
+		if not stage_allows(rec, stage):
+			for m: Member in members:
+				if m.status == UNSPAWNED:
+					_p24b_skipped[m.entity_id] = true
+			continue
+		var keep := []
+		for m: Member in members:
+			keep.append(int(m.spawn.get("slot", 0)))
+		if LevelRoot.is_web() and scale < 1.0:
+			keep = Formation.web_kept_slots(keep, scale)
+		var f := Formation.from_record(enc.id, rec)
+		f.level = level
+		f.budget_left = nav_budget_left
+		f.spend_budget = spend_nav_queries
+		_p30_place(f, rec, members, origin)
+		for m: Member in members:
+			var slot := int(m.spawn.get("slot", 0))
+			if not keep.has(slot):
+				if m.status == UNSPAWNED:
+					_p24b_skipped[m.entity_id] = true
+				continue
+			_p30_member_slot[m.entity_id] = [f.id, slot]
+		_p30_formations[f.id] = f
+		ids.append(f.id)
+	_p30_by_encounter[enc.id] = ids
+
+
+## The formation's home: the pivot that best fits its rank-and-file's spawn points to their slots
+## (the mean of each spawn point minus its slot's offset), facing the entry's yaw_deg, else its
+## first member's spawn yaw.
+func _p30_place(f: Formation, rec: Dictionary, members: Array, origin: Transform3D) -> void:
+	var yaw := f.home_yaw
+	if not rec.has("yaw_deg"):
+		for m: Member in members:
+			if int(m.spawn.get("slot", 0)) != Formation.BANNER_SLOT:
+				yaw = deg_to_rad(float(m.spawn.get("yaw_deg", 0.0)))
+				break
+	yaw += origin.basis.get_euler().y
+	f.facing_yaw = yaw
+	var sum := Vector3.ZERO
+	var n := 0
+	for m: Member in members:
+		var slot := int(m.spawn.get("slot", 0))
+		if slot == Formation.BANNER_SLOT:
+			continue
+		var at := origin * _vec3(m.spawn.get("position_m"))
+		sum += at - Basis(Vector3.UP, yaw) * f.slot_local(slot)
+		n += 1
+	var pivot := sum / float(n) if n > 0 else origin * _p30_enc_center(f.encounter_id)
+	f.place(pivot, yaw)
+	for id: String in f.flee_point_ids:
+		var p := _p30_marker_position(id)
+		if p != Vector3.INF:
+			f.flee_points.append(p)
+
+
+func _p30_enc_center(encounter_id: String) -> Vector3:
+	var enc: Encounter = _encounters.get(encounter_id)
+	return _vec3(enc.record.get("center_m")) if enc != null else Vector3.ZERO
+
+
+## A marker's position: the level's LevelMarker, else the level's world index (the world's markers
+## of unloaded chunks); Vector3.INF when unknown.
+func _p30_marker_position(id: String) -> Vector3:
+	var m := level.marker(id) if level != null else null
+	if m != null and m.is_inside_tree():
+		return m.global_position
+	var index: WorldIndex = level.index() if level != null and level.has_method("index") else null
+	return index.position_of(id) if index != null else Vector3.INF
+
+
+func _p30_on_member_spawned(_encounter_id: String, entity_id: String, node: Node3D) -> void:
+	var info: Variant = _p30_member_slot.get(entity_id)
+	if info == null or not (node is EnemyActor):
+		return
+	var f: Formation = _p30_formations.get(str(info[0]))
+	if f == null or f.dissolved:
+		return
+	f.add_member(node as EnemyActor, int(info[1]))
+	_p30_ensure_renderer(f)
+
+
+func _p30_ensure_renderer(f: Formation) -> void:
+	if crowd_renderer(f.id) != null or level == null:
+		return
+	var r := CrowdRenderer.new()
+	r.name = ("Crowd_" + f.id).validate_node_name()
+	r.formation = f
+	level.spawn_parent().add_child(r)
+	_p30_renderers[f.id] = r
+
+
+func _p30_tick(tick: int) -> void:
+	if _p30_formations.is_empty() or tick % Formation.UPDATE_TICKS != 0:
+		return
+	var player := _player()
+	for enc_id: String in _p30_by_encounter.keys():
+		var enc: Encounter = _encounters.get(enc_id)
+		if enc == null or enc.state == DORMANT or not _p24b_live(enc):
+			continue
+		for fid: String in _p30_by_encounter[enc_id]:
+			var f: Formation = _p30_formations.get(fid)
+			if f != null:
+				f.update(tick, player)
+
+
+func _p30_deactivate(enc: Encounter) -> void:
+	_p30_dissolve_encounter(enc.id)
+
+
+func _p30_dissolve_encounter(enc_id: String) -> void:
+	for fid: String in _p30_by_encounter.get(enc_id, PackedStringArray()):
+		var f: Formation = _p30_formations.get(fid)
+		if f != null:
+			f.dissolve()
+		_p30_formations.erase(fid)
+		var r := crowd_renderer(fid)
+		if r != null:
+			r.release_all()
+			r.queue_free()
+		_p30_renderers.erase(fid)
+		for eid: String in _p30_member_slot.keys():
+			if str(_p30_member_slot[eid][0]) == fid:
+				_p30_member_slot.erase(eid)
+	_p30_by_encounter.erase(enc_id)
+
+
+func _p30_clear() -> void:
+	for enc_id: String in _p30_by_encounter.keys():
+		_p30_dissolve_encounter(enc_id)
+	_p30_formations.clear()
+	_p30_member_slot.clear()
+	_p30_cap_loaded = false
+
+
+func _p30_debug_lines() -> PackedStringArray:
+	var out := PackedStringArray()
+	for f in formations():
+		out.append(f.debug_line())
+	if not _p30_formations.is_empty():
+		out.append("  formation members %d/%d" % [formation_member_count(), max_formation_members])
+	return out
 
 ## @anchor P32
 
