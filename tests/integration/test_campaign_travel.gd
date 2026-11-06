@@ -320,6 +320,25 @@ func test_travel_is_refused_with_its_reason() -> void:
 		"no travel outside the campaign")
 
 
+func test_a_new_game_starts_at_the_start_checkpoint_given() -> void:
+	# --mode=world --new-game --start=<checkpoint>: the giant starts there, from the index when the
+	# checkpoint's node is not loaded.
+	GameSession.start_world_for_tests("test.b.near")
+	GameSession.level_id = LEVEL_B
+	var b := _make_level(LEVEL_B, [["test.b.arrive", Vector3(40, 0.05, 10), PI / 2]], [])
+	var p := _player_in(b, Vector3(0, 0.05, 0))
+	GameSession.on_level_ready(b, p)
+	assert_eq(GameSession.respawn_id, "test.b.near", "the start checkpoint is the respawn")
+	assert_near(_flat(p.global_position, Vector3(50, 0, 10)), 0.0, 0.01, "the giant starts at its index position")
+	assert_eq(str(GameSession.checkpoint_doc.checkpoint.respawn), "test.b.near", "the first checkpoint is taken there")
+	assert_eq(entered.back(), [LEVEL_B, "new_game"], "level_entered(new_game)")
+	assert_true(bool(GameSession.progress.prologue_complete), "a world start has finished the prologue")
+	# Every load is entered: the sandbox's too (reason debug).
+	GameSession.mode = GameSession.Mode.SANDBOX
+	GameSession.on_level_ready(b, p)
+	assert_eq(entered.back(), [GameSession.SANDBOX_SCENE, "debug"], "a sandbox load is entered as debug")
+
+
 # --------------------------------------------------------------------------- respawns
 
 func test_a_respawn_blocker_moves_the_respawn_to_the_nearest_unblocked_checkpoint() -> void:

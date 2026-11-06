@@ -623,7 +623,8 @@ func _clear_reload_queued() -> void:
 ## `character`, then the death floor after a death. A New Game keeps the scene's Player position
 ## (or goes to the --start checkpoint) and takes the first checkpoint. A checkpointed level started
 ## without a session document (a test level in the sandbox) takes a first in-memory checkpoint.
-## level_entered follows once the level and the samples are ready.
+## level_entered follows once the level and the samples are ready (every load with a player: the
+## sandbox's and a reset's with reason "debug").
 func on_level_ready(level: Node, player: GiantPlayer) -> void:
 	_level_ref = weakref(level) if level != null else null
 	_player_ref = weakref(player) if player != null else null
@@ -669,6 +670,9 @@ func on_level_ready(level: Node, player: GiantPlayer) -> void:
 		if respawn_id == "":
 			respawn_id = _start_checkpoint(level)
 		_commit_checkpoint("level_start", "")
+		_request_level_entered(level, "debug")
+	else:
+		# Any other load (the sandbox, a reset, a test level's later loads) is entered too.
 		_request_level_entered(level, "debug")
 
 
