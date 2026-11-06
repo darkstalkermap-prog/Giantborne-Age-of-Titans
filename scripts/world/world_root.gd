@@ -15,6 +15,11 @@ extends LevelRoot
 ## Events.region_changed(tick, region, previous) once the player is REGION_HYSTERESIS_M inside a new
 ## region (the first region is announced at once, previous "").
 ##
+## Navigation (P24b, plan M6-M9 §2.8): the streamer's NavMaps keep one map per layer of the world
+## block's nav_layers; nav_map(layer) answers with them (gate bits: the titan map) and nav_layers()
+## lists them, so NavQuery, the actors' agents and the director ask the right map. A world without
+## nav layers (P24a's tiny test worlds) answers as a LevelRoot does.
+##
 ## Lookups for the loaded ground: height_at() (the triangles the giant stands on), surface_at()
 ## (soft / hard / wet), water_at() (a water surface height), all NaN or "" where no chunk is
 ## loaded; region_at() from the world index's region grid (any distance). is_ready() / loading_
@@ -141,6 +146,23 @@ func loading_progress() -> float:
 	if streamer == null:
 		return 1.0
 	return streamer.load_ring_slice(ring_center())
+
+
+# --------------------------------------------------------------------------- navigation (P24b)
+
+## The map of nav layer `layer` (0 = the human layer; a gate bit: the titan map); invalid for a
+## layer the world has no map for. Without nav layers: LevelRoot's (the default map).
+func nav_map(layer := 0) -> RID:
+	if streamer == null or streamer.nav_maps == null or not streamer.nav_maps.has_maps():
+		return super(layer)
+	return streamer.nav_maps.map_for(layer)
+
+
+## The world block's nav layers ([1, 2, 16]); LevelRoot's without them.
+func nav_layers() -> PackedInt32Array:
+	if streamer == null or streamer.nav_maps == null or not streamer.nav_maps.has_maps():
+		return super()
+	return streamer.nav_maps.layers.duplicate()
 
 
 # --------------------------------------------------------------------------- lookups

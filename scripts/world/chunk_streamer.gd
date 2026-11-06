@@ -24,8 +24,18 @@ extends Node
 ## unloads, steps, the most chunks ever loaded and the work per frame (p50 / p99 / max, frames that
 ## did work only).
 ##
-## Navigation (P24b) extends the steps (a navmesh's load and its region's add in different frames)
-## and is_ready() (every layer map's iteration past the chunk's last region add).
+## Navigation (P24b; plan M6-M9 §2.8, decision 13): the streamer owns the level's NavMaps (one map
+## per layer of the world block's nav_layers; the gate_bits' regions join the titan map). Once a
+## chunk's own steps are done, its NavigationLink3Ds (in its props sub-scenes) join their layer's map
+## and each navmesh of its ChunkData.nav (bit -> res:// path, ascending) takes two steps in two
+## frames: "nav_load" (deterministic: a synchronous load; else "nav_request", a threaded request,
+## then "nav_load" taking it, "wait" meanwhile) and "nav_add" (its region on the layer's map) - each
+## one alone in its frame (a navmesh load is up to 7.4 ms on the web, a region add rebuilds the map:
+## brief §3.5), except in the loading screen's ring slices. Only then is the chunk loaded
+## (chunk_loaded). is_ready() also waits until every map the chunk changed has synced past its last
+## change (NavMaps.chunk_ready: one physics step in deterministic streaming, where every map and
+## region syncs with async iterations off). An unload frees the chunk's regions with its props; an
+## abandoned load frees what it added; the maps go with the streamer.
 
 signal chunk_loaded(chunk_id: String)
 ## Before any node of the chunk is freed.
@@ -44,12 +54,22 @@ const DEFAULTS := {"chunk_size_m": 256.0, "grid": [8, 8], "origin_m": [-1024.0, 
 	"height_spacing_m": 4.0, "load_ring": 1, "unload_at": 3, "budget_ms": 4.0, "steps_per_frame_headless": 6,
 	"chunk_dir": "", "nav_dir": ""}
 const DETERMINISTIC_ARG := "--deterministic-streaming"
+## P24b: the layer the titan gate regions join (plan §2.2), and the steps that run alone in a frame
+## besides TerrainChunk.HEAVY_STEPS.
+const TITAN_LAYER := 16
+const NAV_HEAVY_STEPS := ["nav_request", "nav_load", "nav_add"]
 const TERRAIN_ROUGHNESS := 1.0
 const WATER_COLOR := Color(0.2, 0.33, 0.42, 0.78)
 
 ## Fixed step quota per frame and no clock (headless runs, tests); P24b also turns navigation's
-## async iterations off when this is set.
-var deterministic := false
+## async iterations off on every layer map and streamed region when this is set.
+var deterministic := false:
+	set(value):
+		deterministic = value
+		if nav_maps != null and value:
+			nav_maps.set_deterministic(true)
+## The level's navigation maps (P24b; null before configure()).
+var nav_maps: NavMaps = null
 var configured := false
 var chunk_size := 256.0
 var grid := Vector2i(8, 8)
@@ -93,6 +113,9 @@ var _unloaded_at := {}            # id -> _clock at its last unload
 var _work_us := PackedInt64Array()
 var _step_us := {}                # step name -> [count, total us, max us]
 var _dirty := true
+## P24b: the loading chunk's navigation steps once its own are done ([{"bit", "path", "mesh",
+## "requested"}], ascending bits; null while its own steps run).
+var _nav_jobs: Variant = null
 
 
 func _enter_tree() -> void:
@@ -127,7 +150,17 @@ func configure(cfg: Dictionary, root: Node3D) -> void:
 		chunks_parent = Node3D.new()
 		chunks_parent.name = "Chunks"
 		root.add_child(chunks_parent)
-	deterministic = DisplayServer.get_name() == "headless" or OS.get_cmdline_user_args().has(DETERMINISTIC_ARG)
+	if nav_maps != null:
+		nav_maps.free_all()
+	nav_maps = NavMaps.new()
+	var gates: Array = []
+	var gb: Variant = c.get("gate_bits", {})
+	if typeof(gb) == TYPE_DICTIONARY:
+		gates = (gb as Dictionary).values()
+	var nl: Variant = c.get("nav_layers", [])
+	var det := DisplayServer.get_name() == "headless" or OS.get_cmdline_user_args().has(DETERMINISTIC_ARG)
+	nav_maps.setup(nl if typeof(nl) == TYPE_ARRAY else [], gates, TITAN_LAYER, det)
+	deterministic = det
 	configured = true
 	_dirty = true
 
@@ -200,10 +233,10 @@ func is_loaded(chunk_id: String) -> bool:
 	return n != null and is_instance_valid(n)
 
 
-## True when the chunk is loaded and usable (P24b adds: every nav region added and every layer
-## map's iteration past that add).
+## True when the chunk is loaded and usable: every nav region added (it is loaded only then) and
+## every map it changed synced past that change (P24b).
 func is_ready(chunk_id: String) -> bool:
-	return is_loaded(chunk_id)
+	return is_loaded(chunk_id) and (nav_maps == null or nav_maps.chunk_ready(chunk_id))
 
 
 ## The loaded chunk's node (null when it is not loaded).
@@ -285,7 +318,8 @@ func stats() -> Dictionary:
 		"work_ms_p50": snappedf(sorted[int(n * 0.5)] / 1000.0, 0.001) if n > 0 else 0.0,
 		"work_ms_p99": snappedf(sorted[int((n - 1) * 0.99)] / 1000.0, 0.001) if n > 0 else 0.0,
 		"work_ms_max": snappedf(sorted[n - 1] / 1000.0, 0.001) if n > 0 else 0.0,
-		"deterministic": deterministic, "steps_by_kind": step_breakdown()}
+		"deterministic": deterministic, "steps_by_kind": step_breakdown(),
+		"nav": nav_maps.stats() if nav_maps != null else {}}
 
 
 ## Per step kind: {"n", "total_ms", "max_ms"} (the work's breakdown; the heaviest single steps).
@@ -392,7 +426,7 @@ func update(ring := false) -> int:
 		var row: Array = _step_us.get(what, [0, 0, 0])
 		_step_us[what] = [int(row[0]) + 1, int(row[1]) + us, maxi(int(row[2]), us)]
 		n += 1
-		if not ring and TerrainChunk.HEAVY_STEPS.has(what):
+		if not ring and (TerrainChunk.HEAVY_STEPS.has(what) or NAV_HEAVY_STEPS.has(what)):
 			break
 	if n > 0:
 		steps += n
@@ -416,9 +450,10 @@ func _refresh() -> void:
 	for id: String in gone:
 		_unloading.append({"id": id, "node": _loaded[id], "stage": 0})
 		_loaded.erase(id)
-	# A load in progress that is already that far is abandoned.
+	# A load in progress that is already that far is abandoned (with the regions it added).
 	if _loading != null and is_instance_valid(_loading) \
 			and chebyshev(ChunkData.coords_for(_loading.chunk_id), fc) >= unload_at:
+		_abandon_nav(_loading.chunk_id)
 		_loading.abort()
 		_loading = null
 		aborted_loads += 1
@@ -450,11 +485,14 @@ func _sorted_by_distance(ids: PackedStringArray, pos: Vector3) -> PackedStringAr
 	return out
 
 
-## True when the next step is a heavy one (the loading chunk's, when no unload goes first).
+## True when the next step is a heavy one (the loading chunk's, when no unload goes first; every
+## navigation step is).
 func _next_is_heavy() -> bool:
 	if not _unloading.is_empty():
 		return false
-	return _loading != null and is_instance_valid(_loading) and _loading.next_is_heavy()
+	if _loading == null or not is_instance_valid(_loading):
+		return false
+	return _nav_jobs != null or _loading.next_is_heavy()
 
 
 ## Runs one step: an unload first, else the loading chunk's next step, else the next queued
@@ -478,9 +516,19 @@ func _one_step() -> String:
 		if _loading == null:
 			return ""
 	var chunk := _loading
+	if _nav_jobs != null:
+		# P24b: the chunk's own steps are done; its navigation follows, one step at a time.
+		var nav_what := _nav_step(chunk)
+		if (_nav_jobs as Array).is_empty():
+			_nav_jobs = null
+			_finish_load(chunk)
+		return nav_what if nav_what != "" else "done"
 	var what := chunk.step()
 	if chunk.done:
-		_finish_load(chunk)
+		_nav_begin(chunk)
+		if (_nav_jobs as Array).is_empty():
+			_nav_jobs = null
+			_finish_load(chunk)
 		return what if what != "" else "done"
 	if chunk.aborted:
 		_loading = null
@@ -514,6 +562,8 @@ func _unload_step() -> String:
 		Events.world_chunk_unloading.emit(id)
 		if node != null and is_instance_valid(node):
 			(node as TerrainChunk).free_props()
+		if nav_maps != null:
+			nav_maps.remove_chunk(id)   # P24b: the regions go with the props
 		return "unload_props"
 	_unloading.remove_at(0)
 	if node != null and is_instance_valid(node):
@@ -527,12 +577,16 @@ func _unload_step() -> String:
 
 
 ## The chunk being loaded is not in the tree until its mesh step: it goes with the streamer (a
-## level leaving, the game quitting) instead of being left behind.
+## level leaving, the game quitting) instead of being left behind. P24b: so do the navigation maps
+## and their regions (a navmesh load still in flight is taken first).
 func _exit_tree() -> void:
+	_settle_nav()
 	if _loading != null and is_instance_valid(_loading) and not _loading.is_inside_tree():
 		_loading.settle()
 		_loading.free()
 		_loading = null
+	if nav_maps != null:
+		nav_maps.free_all()   # P24b: the maps and every region go with the streamer
 
 
 ## Frees every chunk now (tests; a level leaving needs nothing: the chunks are its children).
@@ -547,9 +601,88 @@ func clear() -> void:
 			(u.node as Node).queue_free()
 	_unloading.clear()
 	if _loading != null and is_instance_valid(_loading):
+		_abandon_nav(_loading.chunk_id)
 		_loading.abort()
 	_loading = null
+	if nav_maps != null:
+		nav_maps.remove_all_chunks()
 	_queue = PackedStringArray()
 	_focus = Vector3.INF
 	_focus_cell = Vector2i(-1000000, -1000000)
 	_dirty = true
+
+
+# --------------------------------------------------------------------------- navigation (P24b)
+
+## The loading chunk's own steps are done: its links join their layer's maps now, and its navmeshes
+## (ChunkData.nav, ascending bits) become the jobs of the next steps.
+func _nav_begin(chunk: TerrainChunk) -> void:
+	var jobs: Array = []
+	if nav_maps != null and nav_maps.has_maps() and chunk.data != null:
+		if chunk.props_root != null and is_instance_valid(chunk.props_root):
+			for n in chunk.props_root.find_children("*", "NavigationLink3D", true, false):
+				nav_maps.assign_link(chunk.chunk_id, n as NavigationLink3D)
+		var bits: Array = chunk.data.nav.keys()
+		bits.sort()
+		for b: Variant in bits:
+			var bit := int(b)
+			if nav_maps.layer_of(bit) > 0:
+				jobs.append({"bit": bit, "path": str(chunk.data.nav[b]), "mesh": null, "requested": false})
+	_nav_jobs = jobs
+
+
+## One navigation step of the loading chunk: its next navmesh's load (or threaded request), else its
+## region's add. "wait" while a threaded load runs.
+func _nav_step(chunk: TerrainChunk) -> String:
+	var jobs: Array = _nav_jobs
+	if jobs.is_empty():
+		return ""
+	var job: Dictionary = jobs[0]
+	var path := str(job.path)
+	if job.mesh == null:
+		if not ResourceLoader.exists(path):
+			push_error("ChunkStreamer: %s names a missing navmesh %s" % [chunk.chunk_id, path])
+			jobs.remove_at(0)
+			return "nav_load"
+		if deterministic:
+			job.mesh = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REUSE) as NavigationMesh
+			if job.mesh == null:
+				push_error("ChunkStreamer: %s is not a NavigationMesh" % path)
+				jobs.remove_at(0)
+			return "nav_load"
+		if not bool(job.requested):
+			job.requested = true
+			if ResourceLoader.load_threaded_request(path, "", false, ResourceLoader.CACHE_MODE_REUSE) != OK:
+				push_error("ChunkStreamer: cannot request navmesh %s" % path)
+				jobs.remove_at(0)
+			return "nav_request"
+		if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			return "wait"
+		job.mesh = ResourceLoader.load_threaded_get(path) as NavigationMesh
+		job.requested = false
+		if job.mesh == null:
+			push_error("ChunkStreamer: %s is not a NavigationMesh" % path)
+			jobs.remove_at(0)
+		return "nav_load"
+	nav_maps.add_region(chunk.chunk_id, int(job.bit), job.mesh as NavigationMesh, Transform3D(Basis(), chunk.data.origin))
+	jobs.remove_at(0)
+	return "nav_add"
+
+
+## Takes a threaded navmesh load still in flight (a load abandoned, the streamer leaving).
+func _settle_nav() -> void:
+	if _nav_jobs == null:
+		return
+	for job: Dictionary in _nav_jobs:
+		if bool(job.requested) and ResourceLoader.load_threaded_get_status(str(job.path)) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			ResourceLoader.load_threaded_get(str(job.path))
+			job.requested = false
+
+
+## An abandoned load: its threaded navmesh load taken, its regions freed, no jobs left.
+func _abandon_nav(chunk_id: String) -> void:
+	_settle_nav()
+	_nav_jobs = null
+	if nav_maps != null:
+		nav_maps.remove_chunk(chunk_id)
+

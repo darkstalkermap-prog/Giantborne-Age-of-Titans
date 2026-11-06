@@ -71,12 +71,46 @@ collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.gate_north"
 
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/GateNorth"]
+enabled = false
+start_position = Vector3(0, 0.55, 3.5)
+end_position = Vector3(0, 0.55, -3.5)
+
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/GateNorth"]
+enabled = false
+navigation_layers = 2
+start_position = Vector3(0, 0.35, 4.5)
+end_position = Vector3(0, 0.35, -4.5)
+
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/GateNorth"]
+enabled = false
+navigation_layers = 16
+start_position = Vector3(0, 0.2, 7)
+end_position = Vector3(0, 0.2, -7)
+
 [node name="GateSouth" type="StaticBody3D" parent="Props" instance=ExtResource("3_66b76")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 128, 13.8, 198)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.gate_south"
+
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/GateSouth"]
+enabled = false
+start_position = Vector3(0, 0.55, 3.5)
+end_position = Vector3(0, 0.55, -3.5)
+
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/GateSouth"]
+enabled = false
+navigation_layers = 2
+start_position = Vector3(0, 0.35, 4.5)
+end_position = Vector3(0, 0.35, -4.5)
+
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/GateSouth"]
+enabled = false
+navigation_layers = 16
+start_position = Vector3(0, 0.2, 7)
+end_position = Vector3(0, 0.2, -7)
 
 [node name="Shrines" type="Node3D" parent="."]
 

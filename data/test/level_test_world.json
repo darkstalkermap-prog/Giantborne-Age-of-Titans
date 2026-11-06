@@ -22,5 +22,8 @@
 		"fog_m": [400, 1800], "fog_max": 0.85, "water_level_m": 10.0,
 		"skyline": "res://assets/test_world/skyline.res", "skyline_landmarks": "res://assets/test_world/skyline_landmarks.res"
 	},
+	"nav_query": {"max_polygons": 0, "chase_distance_m": 120, "far_distance_m": 300, "repath_min_ticks": 6,
+		"repath_min_move_m": 2.0, "queries_per_tick": 8},
+	"player_nav_fallback": 16,
 	"districts": []
 }
