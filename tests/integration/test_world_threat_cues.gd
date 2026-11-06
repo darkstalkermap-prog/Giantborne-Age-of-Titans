@@ -12,7 +12,9 @@ extends IntegrationSuite
 ##   * the two nearest advancing formations march (the march loop at each one's anchor, following
 ##     it); one that braces or dissolves fades out and the next takes its place;
 ##   * a size gate answers with its own cue where the giant touched it (a stage-gated prop by what
-##     it is made of).
+##     it is made of);
+##   * a cavalry charge swells at the rider (an action tagged Charge from a cavalry archetype), who
+##     calls as a horse before any record names its voice.
 
 const WORLD := "level.world"
 const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
@@ -384,3 +386,29 @@ func test_a_size_gate_answers_with_its_own_cue_where_the_giant_touched_it() -> v
 			assert_true((logged[0].pos as Vector3).distance_to(answers[cue]) < 0.01,
 				"%s where the giant touched it, else at the gate (%s)" % [cue, logged[0].pos])
 	assert_eq(_requested("sfx.gate.default").size(), 0, "every gate found its own cue")
+
+
+# --------------------------------------------------------------------------- the cavalry
+
+func test_a_cavalry_charge_swells_at_the_rider_who_calls_as_a_horse() -> void:
+	# a rider before P32's records: the soldier's body and numbers, the cavalry archetype
+	var rider_rec := GameData.get_record("enemy.soldier").duplicate(true)
+	rider_rec["id"] = "enemy.test_rider"
+	rider_rec["archetype"] = "cavalry"
+	TestFixtures.record_override("enemy.test_rider", rider_rec)
+	TestFixtures.record_override("ability.test_charge", {"type": "action", "kind": "enemy_attack",
+		"hit_shape": "body_sweep", "power": 60, "tags": ["Charge"]})
+	var _held := load(IntegrationSuite.SOLDIER)   # held: each spawn's load() then finds it in the cache
+	var rider := TestSpawn.stub_enemy(world, Vector3(0, 0, -12), "test.rider_1", false, "enemy.test_rider")
+	TestSpawn.stub_enemy(world, Vector3(6, 0, -12), "test.footman_1")
+	await step_ticks(1)
+	Audio.clear_log()
+	Events.ability_started.emit(Sim.tick, "test.rider_1", "ability.test_charge", 1)
+	Events.ability_started.emit(Sim.tick, "test.footman_1", "ability.test_charge", 2)
+	Audio.advance_for_tests(0.05, 0.05)
+	var swell := _logged("sfx.cavalry.charge")
+	assert_eq(swell.size(), 1, "one gallop swell, the rider's: a footman's charge has none (%s)" % [Audio.logged_cues()])
+	if swell.size() == 1:
+		assert_true((swell[0].pos as Vector3).distance_to(rider.global_position) < 4.0, "at the rider")
+	assert_eq(_logged("sfx.voice.horse.attack").size(), 1, "the rider calls as a horse (by its archetype)")
+	assert_eq(_logged("sfx.voice.human.attack").size(), 1, "the footman as a human")
