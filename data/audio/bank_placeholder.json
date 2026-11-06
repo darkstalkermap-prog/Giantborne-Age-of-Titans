@@ -3,7 +3,7 @@
 	"id": "audio_bank.placeholder",
 	"type": "audio_bank",
 	"display_name": "Placeholder cues",
-	"description": "P19: one default cue per family of the cue map (plan M6-M9 section 4.1), so every router row plays a placeholder before the sound packages land. Each request falls back sfx.<family>.<subject>.<variant> -> sfx.<family>.<subject> -> sfx.<family>.default, so a package that adds a specific cue replaces the placeholder for it. P21 (effects) and P23 (stingers, ambience) replace these; P23 deletes the bank and assets/audio/placeholder/.",
+	"description": "P19: one default cue per family of the cue map (plan M6-M9 section 4.1), so every router row plays a placeholder before the sound packages land (the threat sting has its own, so it is never taken for its windup by the retrigger guard). Each request falls back sfx.<family>.<subject>.<variant> -> sfx.<family>.<subject> -> sfx.<family>.default, so a package that adds a specific cue replaces the placeholder for it. P21 (effects) and P23 (stingers, ambience) replace these; P23 deletes the bank and assets/audio/placeholder/.",
 	"cues": {
 		"sfx.hit.default": {
 			"files": [
@@ -308,6 +308,23 @@
 			"volume_db": -6.0,
 			"pitch": 1.0,
 			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 100,
+			"far": "",
+			"levels": []
+		},
+		"sfx.threat.sting": {
+			"files": [
+				"res://assets/audio/placeholder/tone_high.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "threat",
+			"volume_db": -4.0,
+			"pitch": 1.25,
+			"pitch_jitter": 0.0,
 			"size_pitch": false,
 			"max_voices": 2,
 			"retrigger_ms": 60,

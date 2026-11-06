@@ -1,0 +1,189 @@
+extends TestSuite
+## P19 (plan M6-M9 §3.1 asset tests, §4.5, decision 8): the generated audio, checked offline with
+## AudioStreamPlayback.mix_audio (no driver, no real time): every file a bank or a set names
+## loads; effects are samplable, at most 2.0 s, neither clipped nor silent; loops repeat with an
+## exact period (the second pass equals the first within 1e-4); music stems last their set's loop
+## to the frame; the manifest matches the files; the size budget holds (Ogg sizes x 1.03 and the
+## exact QOA formula for WAVs) and the registered seconds per level hold.
+
+const MIX_RATE := 44100.0
+const SFX_MAX_S := 2.0
+const BUDGET_M6_BYTES := 4.0 * 1024.0 * 1024.0
+const BUDGET_ALL_BYTES := 9.5 * 1024.0 * 1024.0
+const REGISTERED_CAP_S := {"level.valley": 110.0, "level.world": 170.0}
+const QOA_IMPORT_BYTES := 370
+const OGG_IMPORT_FACTOR := 1.03
+## Frames skipped at the start of a pass (the resampler's interpolation latency, brief §3).
+const LATENCY_FRAMES := 16
+
+
+## Renders `seconds` of `stream` offline at the mix rate.
+static func render(stream: AudioStream, seconds: float) -> PackedVector2Array:
+	var pb := stream.instantiate_playback()
+	pb.start(0.0)
+	var out := PackedVector2Array()
+	var total := int(seconds * MIX_RATE)
+	while out.size() < total:
+		var chunk := pb.mix_audio(1.0, mini(4096, total - out.size()))
+		if chunk.is_empty():
+			break   # a one-shot ended (mix_audio may return fewer frames than asked)
+		out.append_array(chunk)
+	pb.stop()
+	return out
+
+
+static func peak(frames: PackedVector2Array) -> float:
+	var p := 0.0
+	for f in frames:
+		p = maxf(p, maxf(absf(f.x), absf(f.y)))
+	return p
+
+
+## Every audio file the data names: bank cue files, set stems.
+func _referenced_files() -> Dictionary:
+	var out := {}
+	for bank: Dictionary in GameData.records_of_type("audio_bank"):
+		for cue_id: String in bank.cues:
+			for f: Variant in (bank.cues[cue_id] as Dictionary).get("files", []):
+				out[str(f)] = "%s %s" % [bank.id, cue_id]
+	for rec: Dictionary in GameData.records_of_type("music_set"):
+		for stem: String in rec.get("stems", {}):
+			out[str(rec.stems[stem])] = "%s %s" % [rec.id, stem]
+	return out
+
+
+func test_every_referenced_file_loads() -> void:
+	var files := _referenced_files()
+	assert_true(files.size() >= 8, "the placeholder bank names its files (%d)" % files.size())
+	for path: String in files:
+		var s := load(path) as AudioStream
+		assert_true(s != null, "%s loads (%s)" % [path, files[path]])
+		if path.ends_with(".wav"):
+			assert_true(s is AudioStreamWAV, "%s is a WAV sample" % path)
+		else:
+			assert_true(s is AudioStreamOggVorbis, "%s is an Ogg stream" % path)
+
+
+func test_effects_are_samplable_short_and_neither_clipped_nor_silent() -> void:
+	var n := 0
+	for path: String in _referenced_files():
+		if not path.ends_with(".wav"):
+			continue
+		n += 1
+		var s := load(path) as AudioStreamWAV
+		assert_true(s.can_be_sampled(), "%s can be a web sample" % path)
+		assert_true(s.get_length() <= SFX_MAX_S + 1e-6, "%s is at most 2.0 s (%.3f)" % [path, s.get_length()])
+		assert_eq(s.loop_mode, AudioStreamWAV.LOOP_DISABLED, "%s is a one-shot" % path)
+		var p := peak(render(s, s.get_length()))
+		assert_true(p < 1.0, "%s does not clip (%.3f)" % [path, p])
+		assert_true(p > 0.001, "%s is not silent (%.4f)" % [path, p])
+	assert_true(n >= 7, "every placeholder effect checked")
+
+
+func test_loops_repeat_with_an_exact_period() -> void:
+	var manifest := AudioMath.manifest()
+	var loops := 0
+	for path: String in manifest.get("files", {}):
+		var e: Dictionary = manifest.files[path]
+		if not bool(e.get("loop", false)):
+			continue
+		loops += 1
+		var s := load(path) as AudioStreamOggVorbis
+		s.loop = true
+		var period := int(round(float(e.frames) / float(e.rate) * MIX_RATE))
+		assert_near(s.get_length(), float(e.frames) / float(e.rate), 1.0 / float(e.rate), "%s lasts its frames" % path)
+		var out := render(s, 2.0 * period / MIX_RATE + 0.05)
+		var worst := 0.0
+		for i in range(LATENCY_FRAMES, period):
+			var a := out[i]
+			var b := out[i + period]
+			worst = maxf(worst, maxf(absf(a.x - b.x), absf(a.y - b.y)))
+		assert_true(worst < 1e-4, "%s: the second pass equals the first (largest difference %s)" % [path, str(worst)])
+		var p := peak(out)
+		assert_true(p < 1.0 and p > 0.01, "%s is neither clipped nor silent (%.3f)" % [path, p])
+	assert_true(loops >= 1, "the placeholder bed is a loop")
+
+
+func test_one_shot_oggs_end() -> void:
+	var manifest := AudioMath.manifest()
+	for path: String in manifest.get("files", {}):
+		var e: Dictionary = manifest.files[path]
+		if str(e.kind) != "oneshot":
+			continue
+		var s := load(path) as AudioStreamOggVorbis
+		s.loop = false
+		assert_near(s.get_length(), float(e.seconds), 0.01, "%s lasts its seconds" % path)
+
+
+func test_stems_last_their_sets_loop_to_the_frame() -> void:
+	var sets := GameData.records_of_type("music_set")
+	for rec: Dictionary in sets:
+		var want := AudioMath.loop_seconds(float(rec.bpm), int(rec.beats_per_bar), int(rec.bars))
+		for stem: String in rec.stems:
+			var s := load(str(rec.stems[stem])) as AudioStream
+			var e := AudioMath.manifest_entry(str(rec.stems[stem]))
+			var rate := float(e.get("rate", 22050))
+			assert_near(s.get_length(), want, 1.0 / rate, "%s %s lasts the loop to the frame" % [rec.id, stem])
+	# the placeholder bed fits a 120 BPM 4/4 set of four bars exactly
+	var bed := load("res://assets/audio/placeholder/bed.ogg") as AudioStream
+	assert_near(bed.get_length(), AudioMath.loop_seconds(120.0, 4, 4), 1.0 / 22050.0, "the bed is 4 bars at 120 BPM")
+	var e := AudioMath.manifest_entry("res://assets/audio/placeholder/bed.ogg")
+	assert_eq(str(e.get("frame", "")), "test_120", "its frame is recorded")
+	assert_eq(int(e.get("beats", 0)), 16, "16 beats")
+
+
+func test_the_manifest_matches_the_files() -> void:
+	var manifest := AudioMath.manifest()
+	var files: Dictionary = manifest.get("files", {})
+	assert_true(files.size() >= 9, "every generated file is listed")
+	for key: String in ["python", "numpy", "ffmpeg", "libvorbis"]:
+		assert_true(str((manifest.get("tools", {}) as Dictionary).get(key, "")) != "", "the %s version is recorded" % key)
+	for path: String in files:
+		var e: Dictionary = files[path]
+		assert_true(FileAccess.file_exists(path), "%s exists" % path)
+		var bytes := FileAccess.get_file_as_bytes(path)
+		assert_eq(bytes.size(), int(e.size), "%s has the recorded size" % path)
+		var hc := HashingContext.new()
+		hc.start(HashingContext.HASH_SHA256)
+		hc.update(bytes)
+		assert_eq(hc.finish().hex_encode(), str(e.file_hash), "%s has the recorded hash" % path)
+		for key: String in ["family", "generator", "function", "seed", "params_hash", "frames", "rate", "channels",
+				"master_hash", "kind"]:
+			assert_true(e.has(key), "%s records %s" % [path, key])
+	var listed := {}
+	for path: String in files:
+		listed[path] = true
+	for path: String in _referenced_files():
+		assert_true(listed.has(path), "%s was generated (it is in the manifest)" % path)
+
+
+## The imported size of one manifest entry (plan §4.5): the exact QOA formula plus 370 bytes for a
+## WAV, the Ogg file x 1.03.
+static func imported_bytes(e: Dictionary) -> float:
+	if str(e.kind) == "sfx":
+		var frames := int(e.frames)
+		var per := 8 + 24 * ceili(frames / 5120.0) + 8 * ceili(frames / 20.0)
+		return float(int(e.channels) * per + QOA_IMPORT_BYTES)
+	return float(e.size) * OGG_IMPORT_FACTOR
+
+
+func test_size_budget_and_registered_seconds_hold() -> void:
+	var files: Dictionary = AudioMath.manifest().get("files", {})
+	var m6 := 0.0
+	var all := 0.0
+	for path: String in files:
+		var b := imported_bytes(files[path])
+		all += b
+		if str((files[path] as Dictionary).get("scope", "m6")) == "m6":
+			m6 += b
+	assert_true(m6 <= BUDGET_M6_BYTES, "M6 audio within 4.0 MB (%.3f MB)" % (m6 / 1048576.0))
+	assert_true(all <= BUDGET_ALL_BYTES, "all audio within 9.5 MB (%.3f MB)" % (all / 1048576.0))
+	assert_eq(imported_bytes({"kind": "sfx", "frames": 4410, "channels": 1}), float(8 + 24 + 8 * 221 + 370),
+		"the QOA arithmetic")
+	for level: String in REGISTERED_CAP_S:
+		var seconds := 0.0
+		for path in Audio.sample_paths_for(level):
+			seconds += float(AudioMath.manifest_entry(path).get("seconds", 0.0))
+		assert_true(seconds <= float(REGISTERED_CAP_S[level]), "%s registers %.1f s of samples (cap %.0f s)" % [
+			level, seconds, REGISTERED_CAP_S[level]])
+		assert_true(seconds > 0.0, "%s registers the global cues" % level)

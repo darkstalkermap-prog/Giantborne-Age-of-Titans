@@ -85,8 +85,6 @@ var missing: Dictionary = {}
 var stats := {}
 ## Tests: register at most this many files a frame (0 = only the time budget limits it).
 var registration_files_per_frame_cap := 0
-## Tests: the next level detected registers even cues it registered before.
-var force_registration_for_tests := false
 
 var _enabled_at_start := true
 var _cues: Dictionary = {}
@@ -216,7 +214,6 @@ func _reset_state() -> void:
 	_player_cache = null
 	_player_frame = -1
 	registration_files_per_frame_cap = 0
-	force_registration_for_tests = false
 	_zero_stats()
 
 
@@ -589,6 +586,8 @@ func _detect_level() -> void:
 ## The SFX sample files a level registers: every WAV of a cue with no `levels`, then of the cues
 ## whose `levels` name the level (in cue id order).
 func sample_paths_for(level: String) -> PackedStringArray:
+	if _cues.is_empty():
+		reload_catalog()
 	var out := PackedStringArray()
 	var ids := _cues.keys()
 	ids.sort()
@@ -617,9 +616,8 @@ func _begin_registration(level: String) -> void:
 			_streams.erase(path)   # freed with its last user: the web sample goes with it
 	_reg_queue.clear()
 	for path in needed:
-		if force_registration_for_tests or not _registered.has(path):
+		if not _registered.has(path):
 			_reg_queue.append(path)
-	force_registration_for_tests = false
 	_reg_total = _reg_queue.size()
 
 
