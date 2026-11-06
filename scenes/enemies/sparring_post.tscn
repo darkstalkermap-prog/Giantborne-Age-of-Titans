@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=4]
 
 [ext_resource type="Script" path="res://scripts/actors/sparring_post.gd" id="1_25eb3"]
 [ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
@@ -66,8 +66,24 @@ size = Vector3(0.3, 0.3, 0.3)
 [sub_resource type="BoxMesh" id="BoxMesh_17"]
 size = Vector3(0.3, 0.3, 0.3)
 
-[sub_resource type="BoxMesh" id="BoxMesh_18"]
-size = Vector3(0.6, 2.2, 0.6)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_18"]
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+roughness = 0.85
+emission_enabled = true
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_19"]
+_surfaces = [{
+"aabb": AABB(-0.3, -1.1, -0.3, 0.6, 2.2, 0.6),
+"attribute_data": PackedByteArray("k2tC/5NrQv+Ta0L/k2tC/5NrQv+Ta0L/k2tC/5NrQv+Ta0L/k2tC/5NrQv+Ta0L/k2tC/5NrQv+Ta0L/k2tC/5NrQv+Ta0L/k2tC/5NrQv+Ta0L/k2tC/5NrQv+Ta0L/"),
+"format": 34359742479,
+"index_count": 36,
+"index_data": PackedByteArray("AAACAAQAAgAGAAQAAQADAAUAAwAHAAUACAAKAAwACgAOAAwACQALAA0ACwAPAA0AEAASABQAEgAWABQAEQATABUAEwAXABUA"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("mpmZvs3MjD+amZk+mpmZPs3MjD+amZm+mpmZPs3MjD+amZk+mpmZvs3MjD+amZm+mpmZvs3MjL+amZk+mpmZPs3MjL+amZm+mpmZPs3MjL+amZk+mpmZvs3MjL+amZm+mpmZPs3MjD+amZk+mpmZvs3MjD+amZm+mpmZPs3MjD+amZm+mpmZvs3MjD+amZk+mpmZPs3MjL+amZk+mpmZvs3MjL+amZm+mpmZPs3MjL+amZm+mpmZvs3MjL+amZk+mpmZPs3MjD+amZk+mpmZvs3MjL+amZk+mpmZvs3MjD+amZk+mpmZPs3MjL+amZk+mpmZPs3MjD+amZm+mpmZvs3MjL+amZm+mpmZvs3MjD+amZm+mpmZPs3MjL+amZm+/3//fwCAAID//////38AgP9//38AgACA//////9/AID/f/9/AIAAgP//////fwCA/3//fwCAAID//////38AgP//AIAAgP+/AAAAgP9//7///wCAAID/vwAAAID/f/+///8AgACA/78AAACA/3//v///AIAAgP+/AAAAgP9//78AgP//AAD/vwCAAAAAAP+/AID//wAA/78AgAAAAAD/vwCA//8AAP+/AIAAAAAA/78AgP//AAD/vwCAAAAAAP+/")
+}]
 
 [node name="SparringPost" type="CharacterBody3D"]
 collision_layer = 2
@@ -175,5 +191,5 @@ mesh = SubResource("BoxMesh_17")
 [node name="LodProxy" type="MeshInstance3D" parent="Visual"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 visible = false
-material_override = SubResource("StandardMaterial3D_6")
-mesh = SubResource("BoxMesh_18")
+material_override = SubResource("StandardMaterial3D_18")
+mesh = SubResource("ArrayMesh_19")

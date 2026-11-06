@@ -839,14 +839,14 @@ kind = 3
 faction = "village"
 
 [node name="valley_marker_guard_post_3" type="Marker3D" parent="Markers/Formation"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0, -26)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73.5, 0, -30)
 script = ExtResource("36_acc12")
 marker_id = "valley.marker.guard_post_3"
 kind = 3
 faction = "village"
 
 [node name="valley_marker_guard_post_4" type="Marker3D" parent="Markers/Formation"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0, -14)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73.5, 0, -10)
 script = ExtResource("36_acc12")
 marker_id = "valley.marker.guard_post_4"
 kind = 3

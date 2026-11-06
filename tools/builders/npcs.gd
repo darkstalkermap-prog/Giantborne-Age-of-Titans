@@ -23,6 +23,10 @@ const GIANT := "res://scenes/player/giant.tscn"
 const SOLDIER := "res://scenes/enemies/soldier.tscn"
 const BUILDER_DIRECTOR := "res://tools/builders/test_director.gd"
 
+## P22: the distance at which a person's rig gives way to its one-box proxy (plan §3.4 design 2:
+## villagers 45 m; ActorRig.set_render_lod).
+const PEOPLE_RENDER_LOD_M := 45.0
+
 ## Palette additions (name -> [albedo, roughness]).
 const MATERIALS := {
 	"villager_tunic": [Color(0.42, 0.50, 0.30), 0.9],
@@ -157,7 +161,10 @@ static func _person(kit: SceneKit, node_name: String, entity_id: String, definit
 		"off_arm_path": NodePath("Body/ShoulderL"), "leg_left_path": NodePath("Body/HipL"),
 		"leg_right_path": NodePath("Body/HipR"), "torso_path": NodePath("Body/Torso"),
 		"body_path": NodePath("Body"), "stride_length_m": 0.8, "leg_swing_rad": 0.6,
-		"idle_arm_pose": Vector2(8, -82), "off_idle_pose": Vector2(-8, -82)})
+		"idle_arm_pose": Vector2(8, -82), "off_idle_pose": Vector2(-8, -82),
+		# P22: people swap their rig for the one-box proxy by distance (an npc record has no
+		# render_lod_m; enemies take theirs from their record).
+		"render_lod_m": PEOPLE_RENDER_LOD_M})
 	var body := kit.n3("Body")
 	visual.add_child(body)
 	for side in [-1.0, 1.0]:
@@ -188,6 +195,9 @@ static func _person(kit: SceneKit, node_name: String, entity_id: String, definit
 			staff.rotation_degrees = Vector3(-90, 0, 0)
 			shoulder.add_child(staff)
 		body.add_child(shoulder)
+	# P22 (decision 9): one vertex-coloured mesh per pivot (the elder's staff is her arm's): 5 meshes,
+	# was 12.
+	kit.merge_rig(body)
 	visual.add_child(kit.lod_proxy(Vector3(0.45, 1.7, 0.3), Vector3(0, 0.85, 0), palette.tunic))
 	root.add_child(visual)
 	return root

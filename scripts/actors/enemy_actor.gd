@@ -117,6 +117,7 @@ func _ready() -> void:
 	Events.entity_died.connect(_on_any_entity_died)
 	_p04_ready()
 	_p11b_ready()
+	_p22_ready()
 	Sim.register_actor(entity.entity_id, self)
 
 
@@ -1990,6 +1991,251 @@ func _guarding_at_peace() -> bool:
 # Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
 
 ## @anchor P22
+# --- the distance LOD, a guard's step-back and ranged positioning (P22) --------------------------
+# Plan M6-M9 §3.4 designs 2, 4 and 8.
+#   * Distance LOD (decision 9): the record's render_lod_m goes to the rig (ActorRig, or the wolf's
+#     QuadrupedRig): at AI LOD tiers 0 and 1 the renderer swaps the rig for a copy of its one-box
+#     proxy under Visual/Body by distance (RigPaint). set_lod_tier is unchanged: tier 2 still hides
+#     Visual/Body and shows Visual/LodProxy.
+#   * A faction member at peace steps back STEP_BACK_M from an enemy that comes within
+#     FactionState.STEP_BACK_TRIGGER_M of it (FactionState's hook calls faction_step_back), so a
+#     fight beside Thornwick's guards does not put them under the giant's blows; it walks back to
+#     its post once no enemy has been near for STEP_BACK_HOLD_S.
+#   * Ranged units (tactics.front_arc_deg): a new firing point is taken in front of the giant's
+#     camera when one exists - a marker, else a ring point, whose bearing from the target lies
+#     within front_arc_deg / 2 of the camera's yaw - before the P09 search; and a shot drawn from
+#     outside the camera's view (in_camera_view: the horizontal field of view, as RunMetrics counts
+#     the off-camera share) runs a copy of the shot whose windup is at least
+#     tactics.off_camera_aim_s (the threat cue leads it).
+
+const STEP_BACK_M := 10.0
+const STEP_BACK_HOLD_S := 2.0
+## A ranged unit's camera checks fall back to this half field of view when the camera reports none.
+const CAMERA_FALLBACK_HALF_FOV_DEG := 55.0
+
+## Where a member at peace stands back from a nearby fight (Vector3.INF = not stepping back).
+var step_back_point := Vector3.INF
+var _step_back_from := Vector3.INF
+var _step_back_tick := -1000000
+var _p22_post_resolver := Callable()
+
+
+func _p22_ready() -> void:
+	var visual := get_node_or_null("Visual")
+	if visual != null and visual.has_method("set_render_lod"):
+		visual.call("set_render_lod", float(record.get("render_lod_m", 0.0)))
+	if brain == null:
+		return
+	if brain.post_resolver.is_valid():
+		_p22_post_resolver = brain.post_resolver
+		brain.post_resolver = _p22_faction_post
+	if brain.firing_point_resolver.is_valid():
+		var p09_resolver := brain.firing_point_resolver
+		brain.firing_point_resolver = func(my_position: Vector3, target_pos: Vector3, band: Vector2,
+				spread_m: float, far: bool) -> Vector3:
+			var p := front_arc_firing_point(my_position, target_pos, band, spread_m, far)
+			return p if p != Vector3.INF else p09_resolver.call(my_position, target_pos, band, spread_m, far)
+		brain.view_probe = camera_view
+		brain.shot_preparer = prepare_shot
+
+
+## The record's render_lod_m (0 = never).
+func render_lod_m() -> float:
+	return float(record.get("render_lod_m", 0.0))
+
+
+# ---- the camera
+
+## The giant's camera (its CameraRig's Camera3D), or null.
+func _player_camera() -> Camera3D:
+	var p := get_tree().get_first_node_in_group("player") if is_inside_tree() else null
+	if p == null:
+		return null
+	var rig: Variant = p.get("camera_rig")
+	if not (rig is Node) or not is_instance_valid(rig):
+		return null
+	var cam: Variant = (rig as Node).get("camera")
+	return cam as Camera3D if cam is Camera3D and (cam as Camera3D).is_inside_tree() else null
+
+
+## The giant's camera as ranged positioning sees it (brain.view_probe): {"yaw": its horizontal
+## facing (Godot yaw, 0 = -Z), "on_camera": this unit inside its horizontal field of view}; {}
+## without a camera.
+func camera_view() -> Dictionary:
+	var cam := _player_camera()
+	if cam == null:
+		return {}
+	var fwd := -cam.global_transform.basis.z
+	fwd.y = 0.0
+	if fwd.length_squared() < 1e-6:
+		return {}
+	return {"yaw": TargetingRules.yaw_of(fwd), "on_camera": in_camera_view(cam, global_position)}
+
+
+## True when `pos` lies inside `cam`'s horizontal field of view (flat; the half angle from its fov
+## and the viewport's aspect, else CAMERA_FALLBACK_HALF_FOV_DEG). RunMetrics counts a hit as
+## "off camera" with the same test.
+static func in_camera_view(cam: Camera3D, pos: Vector3) -> bool:
+	if cam == null:
+		return true
+	var to := pos - cam.global_position
+	to.y = 0.0
+	if to.length_squared() < 1e-4:
+		return true
+	var fwd := -cam.global_transform.basis.z
+	fwd.y = 0.0
+	if fwd.length_squared() < 1e-6:
+		return true
+	var half := deg_to_rad(CAMERA_FALLBACK_HALF_FOV_DEG)
+	if cam.fov > 1.0:
+		var aspect := 16.0 / 9.0
+		var vp := cam.get_viewport()
+		if vp != null:
+			var size := vp.get_visible_rect().size
+			if size.y > 1.0:
+				aspect = size.x / size.y
+		half = atan(tan(deg_to_rad(cam.fov) * 0.5) * aspect)
+	return absf(fwd.normalized().signed_angle_to(to.normalized(), Vector3.UP)) <= half
+
+
+# ---- ranged positioning
+
+## A firing point in front of the camera (see the section notes): the nearest free elevation, then
+## cover marker within tactics.cover_search_radius_m that lies in the band and the front arc, sees
+## the target and keeps the spread (claimed); else a ring point in the arc - at this unit's own
+## distance clamped into the band, or the band's far edge when `far` - starting from the arc
+## direction nearest this unit's bearing and turning in RING_STEP_DEG steps inside the arc.
+## Vector3.INF when the record has no front_arc_deg, there is no camera, or nothing in the arc
+## works (the P09 search then runs).
+func front_arc_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2, spread_m: float,
+		far: bool) -> Vector3:
+	var arc := float(_tactics().get("front_arc_deg", 0.0))
+	var view := camera_view()
+	if arc <= 0.0 or view.is_empty():
+		return Vector3.INF
+	var yaw := float(view.yaw)
+	_release_firing_marker()
+	var target := _aim_target()
+	var allies := ranged_allies()
+	var search := float(_tactics().get("cover_search_radius_m", 25.0))
+	for group: String in [ELEVATION_GROUP, COVER_GROUP]:
+		var best: Node3D = null
+		var best_d := INF
+		for n in get_tree().get_nodes_in_group(group):
+			var m := n as Node3D
+			if m == null or not m.is_inside_tree() or not _marker_free(m):
+				continue
+			var f: Variant = m.get("faction")
+			if typeof(f) == TYPE_STRING and f != "" and f != faction:
+				continue
+			var p := m.global_position
+			var d := _flat_len(p - my_position)
+			var td := _flat_len(p - target_pos)
+			if d > search or d >= best_d or td < band.x or td > band.y:
+				continue
+			if not EnemyBrain.in_front_arc(p, target_pos, yaw, arc) or _crowded(p, spread_m, allies) \
+					or not _sees_target_from(p, target):
+				continue
+			best = m
+			best_d = d
+		if best != null:
+			best.set_meta(FIRING_POINT_META, entity.entity_id)
+			_firing_marker = best
+			firing_point = best.global_position
+			return firing_point
+	var away := my_position - target_pos
+	away.y = 0.0
+	var dist := away.length()
+	var half := deg_to_rad(arc) * 0.5
+	var own_yaw := TargetingRules.yaw_of(away) if dist > 0.1 else yaw
+	var start := yaw + clampf(angle_difference(yaw, own_yaw), -half, half)
+	var lo := band.x + RING_BAND_MARGIN_M
+	var hi := maxf(lo, band.y - RING_BAND_MARGIN_M)
+	var r := hi if far else clampf(dist, lo, hi)
+	var steps := int(floor(rad_to_deg(half) * 2.0 / RING_STEP_DEG))
+	for i in steps * 2 + 1:
+		var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)   # 0, 1, -1, 2, -2, ...
+		var a := start + deg_to_rad(RING_STEP_DEG * k)
+		if absf(angle_difference(yaw, a)) > half + 1e-4:
+			continue
+		var desired := target_pos + Vector3(-sin(a), 0.0, -cos(a)) * r
+		desired.y = my_position.y
+		var p := _walkable_point(my_position, desired)
+		if p == Vector3.INF:
+			continue
+		var td := _flat_len(p - target_pos)
+		if td < band.x or td > band.y or not EnemyBrain.in_front_arc(p, target_pos, yaw, arc):
+			continue
+		if _crowded(p, spread_m, allies) or not _sees_target_from(p, target):
+			continue
+		firing_point = p
+		return p
+	return Vector3.INF
+
+
+## Before a shot starts (brain.shot_preparer): drawn from outside the camera's view, the controller
+## runs a copy of `shot_id` whose windup is at least tactics.off_camera_aim_s (the aim still locks
+## at its tracking_fraction); otherwise the record's own. The action id stays the same (cooldowns,
+## cues, metrics).
+func prepare_shot(shot_id: String, off_camera: bool) -> void:
+	if controller == null or not controller.library.has(shot_id):
+		return
+	var base := GameData.get_action(shot_id)
+	if base == null:
+		return
+	var aim_s := float(_tactics().get("off_camera_aim_s", 0.0))
+	var windup_s := float(base.params.get("windup_s", 0.0))
+	if not off_camera or aim_s <= windup_s + 1e-6:
+		controller.library[shot_id] = base
+		return
+	var rec: Dictionary = base.params.duplicate(true)
+	rec["windup_s"] = aim_s
+	controller.library[shot_id] = ActionDef.from_dict(rec)
+
+
+# ---- a member at peace steps back from a fight
+
+## FactionState's hook: an enemy at `threat` is within its trigger distance of this member at
+## peace. It steps STEP_BACK_M away from it (a reachable point, P04's flee search), re-aimed when
+## the threat moved more than 3 m, and the post it holds becomes that point.
+func faction_step_back(threat: Vector3) -> void:
+	_step_back_tick = Sim.tick
+	if step_back_point != Vector3.INF and _step_back_from != Vector3.INF \
+			and _flat_len(threat - _step_back_from) < 3.0:
+		return
+	var p := _resolve_flee_point(global_position, threat, STEP_BACK_M)
+	if p == Vector3.INF:
+		return
+	step_back_point = p
+	_step_back_from = threat
+	if brain != null:
+		brain.refresh_post()
+
+
+## FactionState's hook: no enemy is near; after STEP_BACK_HOLD_S the member walks back to its post.
+func faction_step_back_clear() -> void:
+	if step_back_point == Vector3.INF:
+		return
+	if Sim.tick - _step_back_tick < ActionDef.seconds_to_ticks(STEP_BACK_HOLD_S):
+		return
+	step_back_point = Vector3.INF
+	_step_back_from = Vector3.INF
+	if brain != null:
+		brain.refresh_post()
+
+
+## True while this actor is a faction member that is not hostile: at peace (neutral, warned, stood
+## down) or reconciled (P22: FactionState's "reconciled" standing, which members treat as neutral).
+func member_at_peace() -> bool:
+	return faction != "" and faction_standing != "" and faction_standing != "hostile"
+
+
+## brain.post_resolver while at peace: the step-back point (facing the fight) while stepping back,
+## else the P11b post.
+func _p22_faction_post() -> Dictionary:
+	if step_back_point != Vector3.INF and member_at_peace():
+		return {"post": step_back_point, "face": _step_back_from}
+	return _p22_post_resolver.call() if _p22_post_resolver.is_valid() else {}
 
 ## @anchor P24b
 

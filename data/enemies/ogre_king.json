@@ -6,6 +6,7 @@
 	"display_name": "Ogre King",
 	"description": "The Valley boss (spec 10, decision 27, plan sections 3.12, 4.4): 8.5 m, 1,500 health, poise 150 (x3.5 in its recoveries). Phase 1 strictly alternates the two-hit combo and the slam; at 50 % a forced roar begins phase 2, which adds the charge every third decision. Immune to Grab and Fear; ignores morale.",
 	"scene": "res://scenes/enemies/ogre_king.tscn",
+	"render_lod_m": 0,
 	"height_m": 8.5,
 	"capsule_radius_m": 2.0,
 	"health": 1500,
