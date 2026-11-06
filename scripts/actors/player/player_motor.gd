@@ -4,6 +4,10 @@ extends PlayerComponent
 ## M1 GiantPlayer). Reads intents and the controller, writes the actor's shared body state
 ## (facing_yaw, sprinting, move_velocity, knockback_velocity, dodge_direction) and moves the
 ## CharacterBody3D once per tick.
+##
+## Trampling (P26, plan M6-M9 §2.9): after each move, every BreakableProp the body slid against that
+## the giant's stage tramples (its record's trample_stage) gets one trample hit and breaks - fences
+## and palisades under a stage-4 giant's feet; the next tick walks on through.
 
 const GRAVITY := 22.0
 const KNOCKBACK_DECEL := 28.0
@@ -185,6 +189,20 @@ func update_movement(intents: Dictionary, dt: float) -> void:
 	player.velocity.x = player.move_velocity.x + player.knockback_velocity.x
 	player.velocity.z = player.move_velocity.z + player.knockback_velocity.z
 	player.move_and_slide()
+	if not dead:
+		trample_contacts()
+
+
+## P26: one trample hit on each prop the body slid against this tick that its stage tramples.
+## Returns how many it trampled.
+func trample_contacts() -> int:
+	var count := 0
+	var stage := player.growth_stage
+	for i in player.get_slide_collision_count():
+		var prop := player.get_slide_collision(i).get_collider() as BreakableProp
+		if prop != null and prop.can_trample(stage) and prop.trample(player):
+			count += 1
+	return count
 
 
 ## Ease-out burst that covers exactly dodge_distance_m over the dodge's movement ticks.
