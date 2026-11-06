@@ -1205,9 +1205,22 @@ def boss_harrok(rng: np.random.Generator) -> np.ndarray:
 
 # --------------------------------------------------------------------------- the build list
 
-# The build's pre-encoding budget estimate per cue (KB of Ogg per second besides the headers), the
-# P23 rates by kind until the encoded files calibrate them.
-EST_KBPS = {}
+# The build's pre-encoding budget estimate per cue (KB of Ogg per second besides the headers),
+# calibrated on the encoded files (plan section 4.5): the estimate before encoding matches them.
+EST_KBPS = {
+    'drone_deepwood': 2.23, 'drone_high': 3.1, 'drone_march': 3.48, 'drone_martial': 3.2, 'drone_water': 3.06,
+    'harrok_choir': 3.01, 'harrok_drums': 3.72, 'harrok_horns': 3.12, 'matriarch_drums': 4.11,
+    'matriarch_growl': 2.52, 'matriarch_howl': 4.05, 'melody_bells_a': 2.79, 'melody_bells_b': 3.02,
+    'melody_bells_c': 2.2, 'melody_fanfare_a': 2.84, 'melody_fanfare_b': 2.88, 'melody_fanfare_c': 2.22,
+    'melody_fiddle_a': 3.25, 'melody_fiddle_b': 3.08, 'melody_fiddle_c': 2.98, 'melody_horn_a': 3.61,
+    'melody_horn_b': 3.53, 'melody_horn_c': 3.42, 'melody_reed_a': 3.33, 'melody_reed_b': 3.57,
+    'melody_reed_c': 2.92, 'regiment_brass': 3.87, 'regiment_drums': 4.19, 'regiment_fifes': 3.78,
+    'snare_martial': 4.23, 'stinger_ancestry': 3.74, 'stinger_boss_harrok': 4.04,
+    'stinger_boss_matriarch': 3.87, 'stinger_boss_regiment': 4.69, 'stinger_combat_aldmere': 4.67,
+    'stinger_combat_crownmarch': 4.51, 'stinger_combat_drowned_steps': 4.44, 'stinger_combat_greywood': 4.46,
+    'stinger_combat_stonehold': 4.52, 'stinger_crowned': 4.44, 'stinger_discovery': 4.06, 'stinger_rout': 4.66,
+    'stinger_world_reveal': 4.35, 'stinger_yield': 4.7,
+}
 
 
 def _loop(name, func, seed, params, frame=ZONE_FRAME, bpm=ZONE_BPM, beats=ZONE_BEATS, beats_per_bar=4, quality=0,

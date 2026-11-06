@@ -56,7 +56,7 @@ static func melody_variants() -> Dictionary:
 
 func test_every_world_loop_repeats_and_wraps_without_a_click() -> void:
 	var entries := world_loops()
-	assert_true(entries.size() >= 46, "31 stems, eleven beds and five loops (%d)" % entries.size())
+	assert_true(entries.size() >= 46, "30 stems, eleven beds and five loops (%d)" % entries.size())
 	var variants := melody_variants()
 	assert_eq(variants.size(), 15, "five regions' three melody variants")
 	var boundaries := 0

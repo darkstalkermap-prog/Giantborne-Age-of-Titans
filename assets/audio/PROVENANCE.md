@@ -23,6 +23,9 @@ master and of the shipped file, and the tool versions it was built with.
 | Music (P23, the score: the zone frame's drones - a warm pad, a dark pad with wind, a stone choir with a bell - and nine melody variants on lute, breathy flute and horn written by the seeded phrase writer from one motif per set; the shared danger pulse, combat drums and brass; the title theme's horn choir; the Ogre King's drums, ostinato and phase-2 frenzy in their own frame) | `tools/audio/gen_music.py` | 230001-230032 | `music/{drone,melody,pulse,combat,title,boss}_*.ogg` (19 loops, 1.99 MB; zone frame 30.0 s, the King's 27.69 s) | Python 3.13.18, numpy 2.5.3, ffmpeg 6.1.1-3ubuntu5, libvorbis 1.3.7-1build3 |
 | Stingers (P23: growth, level up, victory, quest and quest complete, death, the prologue's end, the three combat intros and the Ogre King's one-bar intro) | `tools/audio/gen_stingers.py` | 231001-231021 | `music/stinger_*.ogg` (11 one-shots, 0.27 MB) | Python 3.13.18, numpy 2.5.3, ffmpeg 6.1.1-3ubuntu5, libvorbis 1.3.7-1build3 |
 | Ambience (P23: four 20 s beds - meadow, forest, village, stone - of wind, insects, leaves, murmur, hens, whistles, drips and rumble; the river and the forge fire emitters; 18 spots from larks and crickets to pebble falls and the flush of birds) | `tools/audio/gen_ambience.py` | 232001-232118 | `ambience/bed_*.ogg` (4, stereo), `ambience/{river_loop,forge_fire}.ogg`, `ambience/spot_*.ogg` (18; 0.58 MB in all) | Python 3.13.18, numpy 2.5.3, ffmpeg 6.1.1-3ubuntu5, libvorbis 1.3.7-1build3 |
+| World music (P28: the five regions' drones in the zone frame - open fifths on strings and a soft organ, a dark low choir, a glassy pad, a soft brass pad, a wide choir - and fifteen melody variants on a bowed fiddle, a double reed, struck bells, trumpet calls and an enormous low horn, written by the phrase writer from one motif per region; Aldmere's field-drum snare; the Iron Regiment's, the Troll Matriarch's and Harrok's drums, themes and phase layers in their own frames; fourteen stingers: a discovery, the world's reveal, a yield, an ancestry, the crowning, a rout, the five regions' combat intros and the three bosses' intros) | `tools/audio/gen_world_music.py` | 280001-280123 | `music/world/*.ogg` (30 loops, 2.80 MB; 14 stingers, 0.32 MB) | Python 3.13.18, numpy 2.5.3, ffmpeg 6.1.1-3ubuntu5, libvorbis 1.3.7-1build3 |
+| World ambience (P28: five 20 s region beds - farmland, deep pine wood, lake, long grass with far drums, high wind - and six 15 s place beds - a market town, a camp, the giants' hearth, the troll den, the Titan's Bones, the Moot's humming stones; the formations' march, Hollowmere's pond, the lake shore, the falls and the town well as 10 s loops; 20 spots from cattle and a far bell to a whelp's mewl and a bone rattle) | `tools/audio/gen_world_ambience.py` | 281001-281120 | `ambience/world/*.ogg` (16 loops, 20 spots; 1.09 MB) | Python 3.13.18, numpy 2.5.3, ffmpeg 6.1.1-3ubuntu5, libvorbis 1.3.7-1build3 |
+| World effects (P28, families C to H for M7-M9: the giant's steps at stages 4-6 and its wading, heavy bodies wading, hooves, wet paws; the troll's, the Matriarch's, the rival giants', the dire wolf's and the horse's calls, the big voices' far versions, a crowd routing and a crew abandoning its engine; the formation's wall and the incoming whistle; the size gates' water, stone and timber, splashes, a trample, the town bell, the war horn, exits and inscriptions; the formation's brace, broken horn and fallen banner; the ballista's and the catapult's release, the cavalry's swell, burning and a troll's regrowth; the earthquake's crack, the charge, the stone ward, the regrowth, lightning, the ballista bolt's whirr; fast travel) | `tools/audio/gen_world_sfx.py` | 282001-282601 | `sfx/world/{steps,voices,threat,objects,abilities,ui}/*.wav` (98, 69.0 s; 0.62 MB imported) | Python 3.13.18, numpy 2.5.3 |
 
 The P21 families share the synthesis library `tools/audio/synth/` (`fx.py`: vectorised filters, an
 STFT time-varying filter, modal synthesis, grains, echoes, far versions and the finishing every
@@ -39,6 +42,15 @@ leaves, murmur, hens, whistles, drips, water and fire, and the spot one-shots). 
 ambience are balanced by K-weighted loudness (`core.loudness_lufs`, ITU-R BS.1770 with its gates)
 rather than by RMS. The placeholder family P19 shipped for the engine's tests (seeds
 190101-190131) was deleted with P23's score, as the plan asks.
+
+P28's three world families use the same library and add their own instruments inside their
+modules (a bowed fiddle, a shawm-like double reed, a trumpet, an enormous low horn, struck bells,
+a field snare, rolls and a bass drum; lapping water, far drums, canvas, hammers, giants' murmur,
+a cave's breath, a choir's hum and carts for the beds). Their effects live in subfolders of
+`sfx/world/` beside P21's world family (whose files stay at its top level). The world's banks also
+reuse existing files at another pitch where a new sample would add nothing (the stage evolutions'
+abilities, the engines' projectiles, three spots): those cues name the existing files and add no
+bytes.
 
 ## What is committed
 

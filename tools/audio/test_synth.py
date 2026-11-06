@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests of the audio generation pipeline (tools/audio/): the synthesis core, the writers, the
 encoder's bit-exactness and decoded length, the manifest and the generators' declarations; the
-score's loudness measure, phrase writer and loops (P23).
+score's loudness measure, phrase writer and loops (P23); the world's families (P28).
 
     python3 tools/audio/test_synth.py        (exit 0 when every test passes)
 
@@ -323,6 +323,70 @@ class ScoreTests(unittest.TestCase):
             steps = np.abs(np.diff(x))
             # the wrap from the last frame to the first is an ordinary step of the noise
             self.assertLessEqual(abs(float(x[0] - x[-1])), float(np.max(steps)), color)
+
+
+class WorldTests(unittest.TestCase):
+    """P28: the world's families - the regions' melodies fit the scheduler, the bosses' frames are
+    whole bars of their own tempo, every world cue is the world's (scope, folder, seed range), its
+    effects are short enough to play as samples, and the budgets hold by the build's arithmetic."""
+
+    FOLDERS = {"world_music": "res://assets/audio/music/world/",
+               "world_ambience": "res://assets/audio/ambience/world/",
+               "world_sfx": "res://assets/audio/sfx/world/"}
+
+    def test_the_regions_melody_variants_fit_the_scheduler(self):
+        import gen_world_music as W
+        for region in W.REGIONS:
+            variants = []
+            for v in ("a", "b", "c"):
+                notes = W.melody_notes(region, v)
+                self.assertGreater(len(notes), 4, region + v)
+                # every phrase starts after its segment's downbeat and ends before its last half beat
+                self.assertEqual(mus.check_phrases(notes, W.SEGMENT_BEATS), [], region + v)
+                self.assertTrue(all(0.0 <= b < W.ZONE_BEATS for b, *_rest in notes), region + v)
+                variants.append(tuple(notes))
+            self.assertEqual(len(set(variants)), 3, region + ": three different variants")
+
+    def test_the_boss_frames_are_whole_bars_of_their_tempo(self):
+        import gen_world_music as W
+        self.assertEqual(W.ZONE_FRAME, "zone_96")
+        self.assertEqual(mus.frames(W.REGIMENT_BEATS * mus.beat_s(W.REGIMENT_BPM)), 567000)
+        self.assertEqual(mus.frames(W.MATRIARCH_BEATS * mus.beat_s(W.MATRIARCH_BPM)), 504000)
+        self.assertEqual(mus.frames(W.HARROK_BEATS * mus.beat_s(W.HARROK_BPM)), 588000)
+        self.assertEqual(W.MATRIARCH_BEATS % W.MATRIARCH_BEATS_PER_BAR, 0)
+        self.assertEqual(len({W.REGIMENT_FRAME, W.MATRIARCH_FRAME, W.HARROK_FRAME, W.ZONE_FRAME}), 4)
+
+    def test_every_world_cue_is_the_worlds(self):
+        paths = set()
+        for fam, folder in self.FOLDERS.items():
+            cues = [c for _f, _m, c in build_audio.collect({fam})]
+            self.assertGreater(len(cues), 10, fam)
+            seeds = [c["seed"] for c in cues]
+            self.assertEqual(len(seeds), len(set(seeds)), fam + ": one seed a file")
+            for c in cues:
+                self.assertEqual(c.get("scope"), "world", c["name"])
+                self.assertTrue(c["path"].startswith(folder), c["path"])
+                self.assertTrue(280000 <= c["seed"] < 283000, "%s: seed %d" % (c["name"], c["seed"]))
+                self.assertNotIn(c["path"], paths)
+                paths.add(c["path"])
+
+    def test_the_worlds_effects_are_samples_and_the_budgets_hold(self):
+        files = manifest.load(build_audio.ROOT).get("files", {})
+        sfx = [e for e in files.values() if e.get("family") == "world_sfx"]
+        self.assertGreater(len(sfx), 90)
+        for e in sfx:
+            self.assertEqual(e["kind"], "sfx")
+            self.assertLessEqual(float(e["seconds"]), 2.0)
+        _lines, problems = build_audio.budget_report(files, build_audio.ROOT, actual=True)
+        self.assertEqual(problems, [])
+        world = sum(build_audio.imported_bytes(e) for e in files.values() if e.get("scope") == "world")
+        self.assertLessEqual(world, 5.5 * 1048576.0, "the world adds at most 5.5 MB")
+        reg = build_audio.registered_seconds(files, build_audio.ROOT)
+        self.assertLessEqual(reg["level.world"], 170.0)
+        self.assertLessEqual(reg["level.valley"], 110.0)
+        # the estimate before encoding (the calibrated rates) is the build's within 1 %
+        est = sum(build_audio.estimate_bytes(e) for e in files.values() if e.get("scope") == "world")
+        self.assertLess(abs(est - world) / world, 0.01)
 
 
 if __name__ == "__main__":

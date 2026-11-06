@@ -677,7 +677,18 @@ def spot(rng: np.random.Generator, kind: str) -> np.ndarray:
 
 # --------------------------------------------------------------------------- the build list
 
-EST_KBPS = {}
+# The build's pre-encoding budget estimate per cue (KB of Ogg per second besides the headers),
+# calibrated on the encoded files (plan section 4.5): the estimate before encoding matches them.
+EST_KBPS = {
+    'bed_bones': 3.01, 'bed_camp': 3.37, 'bed_cave': 3.26, 'bed_deepwood': 5.04, 'bed_farmland': 5.03,
+    'bed_grassland': 5.02, 'bed_hearth': 3.35, 'bed_highland': 4.28, 'bed_lake': 4.72, 'bed_moot': 3.64,
+    'bed_town': 2.89, 'falls_loop': 3.93, 'march_loop': 3.1, 'pond_loop': 3.52, 'shore_loop': 2.75,
+    'spot_bone_rattle': 3.96, 'spot_branch_crack': 3.37, 'spot_cattle': 1.59, 'spot_eagle': 1.28,
+    'spot_far_bell': 1.53, 'spot_flag_snap': 3.35, 'spot_giant_horn_far': 2.18, 'spot_giant_laugh': 1.65,
+    'spot_gull': 1.31, 'spot_hawker': 1.52, 'spot_horse': 2.35, 'spot_log_split': 2.92, 'spot_orders': 1.59,
+    'spot_pine_wind': 3.65, 'spot_saw': 3.26, 'spot_shutters': 2.07, 'spot_stone_hum': 3.2,
+    'spot_troll_far': 1.65, 'spot_water_birds': 1.19, 'spot_whelp': 2.02, 'well_loop': 2.8,
+}
 
 CUES = []
 for _i, (_name, _func) in enumerate((("bed_farmland", bed_farmland), ("bed_deepwood", bed_deepwood),
