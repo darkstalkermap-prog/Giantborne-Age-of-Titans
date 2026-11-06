@@ -174,6 +174,9 @@ func test_files_are_generated_mono_and_short() -> void:
 		assert_eq(str(e.kind), "sfx", "%s is a sample" % path)
 		assert_eq(int(e.channels), 1, "%s is mono" % path)
 		assert_true(float(e.seconds) <= SFX_MAX_S + 1e-6, "%s is at most 2.0 s (%.2f)" % [path, float(e.seconds)])
+		if str(e.family) == "threat":
+			assert_true(float(e.seconds) >= 0.2 and float(e.seconds) <= 0.6, "%s, a threat cue, lasts 0.2-0.6 s (%.2f)" % [
+				path, float(e.seconds)])
 		var metal := false
 		for m: String in METAL_FILES:
 			metal = metal or path.get_file().begins_with(m)

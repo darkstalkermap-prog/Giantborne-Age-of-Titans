@@ -2100,19 +2100,19 @@
   "res://assets/audio/sfx/threat/aim_lock_1.wav": {
    "channels": 1,
    "family": "threat",
-   "file_hash": "630f56243cf8986e90c7961a8f662848f4edd07c17138758db9c3895da4d41e7",
-   "frames": 4126,
+   "file_hash": "c42ae729498fb114823606fdf519370c3c1f466ac779ac92b5eefd75487b544c",
+   "frames": 5627,
    "function": "aim_lock",
    "generator": "gen_threat",
    "kind": "sfx",
    "loop": false,
-   "master_hash": "630f56243cf8986e90c7961a8f662848f4edd07c17138758db9c3895da4d41e7",
-   "params_hash": "d6c8feb7fc415dda2bb3203d7b401039c239a695b0fc2477af0cb6bd21ccb989",
+   "master_hash": "c42ae729498fb114823606fdf519370c3c1f466ac779ac92b5eefd75487b544c",
+   "params_hash": "2cd47e060a21cda8be61290d05301d9d34d6591b30ee2b366e0a75aed476e358",
    "rate": 22050,
    "scope": "m6",
-   "seconds": 0.18712,
+   "seconds": 0.255193,
    "seed": 214041,
-   "size": 8296
+   "size": 11298
   },
   "res://assets/audio/sfx/threat/sting_1.wav": {
    "channels": 1,

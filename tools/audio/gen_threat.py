@@ -80,13 +80,13 @@ def sting(rng, rate, variant, seconds):
 
 
 def aim_lock(rng, rate, variant, seconds):
-    """A ranged attacker's aim committed: a two-tone mechanical tick (the second higher and
-    louder), with a faint ratchet between them."""
+    """A ranged attacker's aim committed: a two-tone mechanical tick (the second higher, louder
+    and ringing a little longer: the lock), with a faint ratchet between them."""
     n = fx.frames(seconds, rate)
     x = np.zeros(n)
-    for at, f, g in ((0.0, 2600.0, 0.6), (0.07, 3900.0, 1.0)):
+    for at, f, g, tau in ((0.0, 2600.0, 0.6, 0.018), (0.07, 3900.0, 1.0, 0.03)):
         m = n - fx.frames(at, rate)
-        tone = (core.sine(f, m, rate) + 0.3 * core.sine(f * 2.01, m, rate)) * fx.env_ad(m, rate, 0.0008, 0.018)
+        tone = (core.sine(f, m, rate) + 0.3 * core.sine(f * 2.01, m, rate)) * fx.env_ad(m, rate, 0.0008, tau)
         clk = ins.burst(rng, m, rate, 2500.0, 9500.0, 0.0001, 0.0015, "white")
         core.mix_into(x, fx.frames(at, rate), tone + 0.6 * _norm(clk) * 0.5, g)
     ratchet = ins.crackle(rng, n, rate, 0.012, 0.05, 300.0, 3000.0, 8000.0)
@@ -100,5 +100,5 @@ CUES = (
     + V(FAMILY, "windup_circle", windup, 214011, 2, {"seconds": 0.45, "shape": "circle"})
     + V(FAMILY, "windup_cone", windup, 214021, 2, {"seconds": 0.34, "shape": "cone"})
     + V(FAMILY, "sting", sting, 214031, 2, {"seconds": 0.3})
-    + V(FAMILY, "aim_lock", aim_lock, 214041, 1, {"seconds": 0.2})
+    + V(FAMILY, "aim_lock", aim_lock, 214041, 1, {"seconds": 0.26})
 )
