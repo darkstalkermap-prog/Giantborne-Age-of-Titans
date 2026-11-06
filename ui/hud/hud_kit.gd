@@ -206,7 +206,7 @@ static func draw_text(ci: CanvasItem, pos: Vector2, text: String, size: int, col
 ## What would break the HUD's batching below `root` ([] = nothing): a StyleBoxFlat (a polygon), a
 ## label with an outline (two glyph textures) or a shadow outline, a clipping control, or a drawn
 ## item left on the default z layer (it would draw over the death and help overlays and the text).
-## test_hud_draw_rules checks the live HUD with it.
+## test_hud_layout (test_the_hud_keeps_the_batching_rules) checks the live HUD with it.
 static func batch_breakers(root: Node) -> PackedStringArray:
 	var out := PackedStringArray()
 	_scan(root, root, out)

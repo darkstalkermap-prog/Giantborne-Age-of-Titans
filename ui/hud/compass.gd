@@ -1,3 +1,4 @@
+class_name HudCompass
 extends HudWidget
 ## The compass (P27; plan M6-M9 §2.14, §3.10 design 3): a heading strip at the top centre,
 ## (-HALF_WIDTH..HALF_WIDTH, 4..28), turned with the camera: ticks every 15 degrees and N, E, S, W,

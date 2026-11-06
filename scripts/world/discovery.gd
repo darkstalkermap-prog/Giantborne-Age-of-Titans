@@ -50,7 +50,7 @@ var pois: Dictionary = {}
 ## The chunk grid (chunk_grid(); {} for a level without chunks: the Valley).
 var grid: Dictionary = {}
 ## What this node found, in order (tests, bot metrics): {"tick", "id", "how" (visit | reveal |
-## region | sealed), "xp"}.
+## region | sealed), "xp"}; a reveal also names its vista ("by").
 var found_log: Array = []
 
 var _ids: PackedStringArray = []
@@ -139,7 +139,8 @@ func discover(poi_id: String, tick: int = Sim.tick, how := "visit") -> bool:
 
 
 ## Marks every other non-secret POI within `radius` of `center` as revealed (known on the map and
-## the compass; no XP, no event) and every chunk within it as seen. Returns the POIs revealed now.
+## the compass; no XP, no event; logged with "by": `except`, the vista) and every chunk within it as
+## seen. Returns the POIs revealed now.
 func reveal_around(center: Vector3, radius: float, except := "") -> PackedStringArray:
 	var out := PackedStringArray()
 	for id in _ids:
@@ -148,7 +149,7 @@ func reveal_around(center: Vector3, radius: float, except := "") -> PackedString
 			continue
 		if flat_distance(center, info.position) <= radius:
 			WorldState.set_flag(discovered_flag(id), REVEALED)
-			found_log.append({"tick": Sim.tick, "id": id, "how": "reveal", "xp": 0})
+			found_log.append({"tick": Sim.tick, "id": id, "how": "reveal", "xp": 0, "by": except})
 			out.append(id)
 	for chunk in chunks_within(grid, center, radius):
 		WorldState.try_set_flag(seen_flag(chunk), true)

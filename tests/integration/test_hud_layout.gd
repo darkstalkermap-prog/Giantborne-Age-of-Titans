@@ -15,6 +15,12 @@ extends IntegrationSuite
 ## threats 80-120 degrees to the left that the TIP box covered and the ones behind that sat on the
 ## hotbar, with the giant's real camera, and the live widgets with a real archer's shot from behind
 ## and an objective behind and to the left.
+## P27: the compass (top centre), the region banner (below the ability notice) and the discovery toast
+## (under the checkpoint toast) are regions too, at every size; and the whole HUD keeps HudKit's
+## batching rules (FOLLOWUPS: the HUD cost about 117-120 draw calls of every Valley view) - no
+## StyleBoxFlat, outline, shadow outline or clipping under it, every panel and text on an absolute
+## layer under the modal screens - with every part built; the lock line turns a formation's banner
+## mark into a drawn flag.
 
 const KING := "res://scenes/enemies/ogre_king.tscn"
 const ARCHER := "res://scenes/enemies/archer.tscn"
@@ -25,7 +31,7 @@ const SIZES := [Vector2(1280, 720), Vector2(1920, 1080), Vector2(1366, 768), Vec
 	Vector2(2560, 1440)]
 const REGIONS := ["resources", "hotbar", "loot", "capture_hint", "messages", "target_frame",
 	"target_frame_under_boss_bar", "interact_prompt", "status_row", "checkpoint_toast", "xp_bar",
-	"ability_notice", "boss_bar", "quest_tracker", "tutorial_prompt"]
+	"ability_notice", "boss_bar", "quest_tracker", "tutorial_prompt", "compass", "region_banner", "discovery_toast"]
 ## Pairs allowed to overlap (sorted names): the frame's two heights, and the frame at the top with
 ## the bar (never both on screen: the frame moves down or hides while the bar shows).
 const DESIGNED := [["boss_bar", "target_frame"], ["target_frame", "target_frame_under_boss_bar"]]
@@ -90,7 +96,7 @@ func test_the_regions_are_where_the_panels_are_drawn() -> void:
 	var controls := hud.layout_controls()
 	for region: String in ["resources", "hotbar", "loot", "capture_hint", "messages", "target_frame",
 			"interact_prompt", "status_row", "checkpoint_toast", "xp_bar", "ability_notice", "boss_bar",
-			"quest_tracker", "tutorial_prompt"]:
+			"quest_tracker", "tutorial_prompt", "compass", "region_banner", "discovery_toast"]:
 		assert_true(controls.has(region), "%s has a control" % region)
 		if not controls.has(region):
 			continue
@@ -129,6 +135,47 @@ func test_the_target_frame_moves_below_the_boss_bar() -> void:
 		await get_tree().process_frame
 	assert_false(hud.boss_bar_visible(), "defeated: the bar hides")
 	assert_near(hud.target_frame_rect().position.y, Hud.TARGET_FRAME_TOP, 0.5, "and the frame goes back up")
+
+
+## P27: the batching rules over the whole HUD with every part built and showing - a giant's hotbar
+## and target frame, a message, the help overlay, the compass, a region banner and a discovery toast -
+## and the lock line.
+func test_the_hud_keeps_the_batching_rules() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	spawn_soldier(Vector3(0, 0.05, -8), 0.0, "test.soldier_batches")
+	var hud := _hud()
+	hud.player = p
+	await step_ticks(2)
+	p.camera_rig.yaw = 0.0
+	p.targeting.try_lock()
+	hud.show_message("Tracking: The Main Thread", "info")
+	hud.toggle_help()
+	hud.get_node("RegionBanner").call("show_region", "region.greywood", 1)
+	hud.get_node("DiscoveryToast").call("push", "Discovered: Hollowmere  +40 XP", Color.WHITE)
+	for i in 2:
+		await get_tree().process_frame
+	assert_true(hud.help_visible() and hud.target_frame_visible(), "the help overlay and the target frame show")
+	assert_true(str(hud.get_node("RegionBanner").call("visible_text")).begins_with("THE GREYWOOD | Recommended stage"),
+		"the region banner shows (%s)" % hud.get_node("RegionBanner").call("visible_text"))
+	assert_true(bool(hud.get_node("RegionBanner").call("warns")), "below the recommended stage: the warning colour")
+	assert_eq(hud.get_node("DiscoveryToast").call("visible_text"), "Discovered: Hollowmere  +40 XP", "the discovery toast shows")
+	assert_eq(HudKit.batch_breakers(hud), PackedStringArray(), "nothing under the HUD breaks its batches")
+	var probe := Control.new()
+	var outlined := Label.new()
+	outlined.add_theme_constant_override("outline_size", 2)
+	probe.add_child(outlined)
+	var flat := PanelContainer.new()
+	flat.add_theme_stylebox_override("panel", StyleBoxFlat.new())
+	probe.add_child(flat)
+	assert_eq(HudKit.batch_breakers(probe).size(), 4,
+		"the rules catch an outlined label and a StyleBoxFlat panel, each on the default layer (%s)" % HudKit.batch_breakers(probe))
+	probe.free()
+	hud.toggle_help()
+	assert_eq(hud.lock_line_now(), {"text": hud.lock_line_now().get("text", "?"), "banner": false}, "a soldier's lock line has no flag")
+	assert_true(str(hud.lock_line_now().get("text", "")).begins_with("Soldier"), "and names it (%s)" % hud.lock_line_now())
+	assert_eq(Hud.lock_line("%s Pike block (6)" % Hud.BANNER_MARK), {"text": "Pike block (6)", "banner": true},
+		"a formation's banner mark becomes the drawn flag")
+	assert_eq(Hud.lock_line(" Ogre "), {"text": "Ogre", "banner": false}, "any other label is kept")
 
 
 # --------------------------------------------------------------------------- edge overlays (M4 gate)

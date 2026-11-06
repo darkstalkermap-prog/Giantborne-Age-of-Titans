@@ -112,8 +112,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-## Tracks the next active quest (Quests.track_next) and shows "Following: <quest>" (only one quest:
-## "Following: <quest> (no other quest)"). Returns the line shown ("" when no quest is active).
+## Tracks the next active quest (Quests.track_next) and shows "Tracking: <quest>" (only one quest:
+## "Tracking: <quest> (no other quest)"). Returns the line shown ("" when no quest is active).
 func track_next_now() -> String:
 	if not Quests.is_active():
 		return ""
@@ -122,7 +122,7 @@ func track_next_now() -> String:
 	if id == "":
 		return ""
 	var title := str(Quests.quest_record(id).get("display_name", id))
-	var text := "Following: %s" % title + ("" if id != before else " (no other quest)")
+	var text := "Tracking: %s" % title + ("" if id != before else " (no other quest)")
 	show_message(text, "info")
 	return text
 

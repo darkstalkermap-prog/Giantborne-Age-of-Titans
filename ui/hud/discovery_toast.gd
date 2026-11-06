@@ -72,7 +72,7 @@ func _on_poi_discovered(_tick: int, poi_id: String) -> void:
 	var d := Discovery.of_tree(get_tree()) if is_inside_tree() else null
 	if d != null:
 		for e: Dictionary in d.found_log:
-			if str(e.how) == "reveal" and int(e.tick) == Sim.tick:
+			if str(e.how) == "reveal" and str(e.get("by", "")) == poi_id:
 				revealed += 1
 	push(line_for(poi_id, revealed), FOUND)
 
