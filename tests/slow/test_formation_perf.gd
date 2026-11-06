@@ -9,7 +9,10 @@ extends IntegrationSuite
 ##   * CPU per tick p95 <= 5 ms headless (PerfProbe's cpu_tick_ms over 4 s after its warm-up);
 ##   * rendered, the 40 members cost <= 120 draw calls with their six nearest promoted each
 ##     (tests/support/formation_draw_probe.gd in a child process under Xvfb, the gl_compatibility
-##     renderer; skipped with a note without xvfb-run).
+##     renderer; skipped with a note without xvfb-run);
+##   * the mid distance (FOLLOWUPS, the Valley's views at `low`): at `low` a soldier's rig draws as
+##     one merged rest-pose mesh from 0.45 x render_lod_m, as its full rig again while it acts, and
+##     not at all at `medium`.
 
 const LEVEL := "res://scenes/test/formation_test.tscn"
 const STRESS := "encounter.formation_test_stress"
@@ -107,3 +110,40 @@ func test_forty_members_draw_at_most_120_calls() -> void:
 	assert_true(far < near, "fewer with nobody promoted (%d)" % far)
 	print("    test_formation_perf: 40 members draw %d calls near a stage-4 giant (12 promoted), %d far (none), %d as 40 rigs; %s" % [
 		near, far, rigs, str(r.get("adapter", "?"))])
+
+
+func test_at_low_a_rig_draws_one_rest_pose_mesh_at_mid_distance_and_its_full_rig_while_it_acts() -> void:
+	var saved := Settings.graphics_override
+	Settings.graphics_override = "low"
+	var lv := LevelRoot.new()
+	lv.name = "MidLodLevel"
+	lv.level_id = "level.formation_test"
+	world.add_child(lv)
+	var s := TestSpawn.enemy(lv, "res://scenes/enemies/soldier.tscn", Vector3(0, 0.05, -6), "test.mid_soldier", false)
+	await step_ticks(1)
+	await get_tree().process_frame
+	var rig := s.rig
+	var lod := float(s.record.get("render_lod_m", 0.0))
+	var mid := rig.mid_proxy
+	assert_true(mid != null and mid.get_parent() == rig.body, "at low the rig has its mid-distance mesh under Body")
+	if mid == null:
+		Settings.graphics_override = saved
+		return
+	assert_eq(mid.mesh.get_surface_count(), 1, "one surface: one draw call")
+	assert_near(mid.visibility_range_begin, lod * RigPaint.MID_FRACTION - RigPaint.RENDER_LOD_MARGIN_M, 0.01, "from 0.45 x render_lod_m")
+	assert_near(mid.visibility_range_end, lod + RigPaint.RENDER_LOD_MARGIN_M, 0.01, "to render_lod_m")
+	var part := rig.body.get_node("Torso/Mesh") as GeometryInstance3D
+	assert_near(part.visibility_range_end, lod * RigPaint.MID_FRACTION + RigPaint.RENDER_LOD_MARGIN_M, 0.01,
+		"the rig's parts end at the mid distance")
+	assert_true(rig.far_proxy != null and rig.far_proxy.visibility_range_begin > mid.visibility_range_begin,
+		"the one-box proxy still takes over beyond")
+	s.controller.request(&"attack", {"action_id": "ability.soldier_slash"})
+	await get_tree().process_frame
+	assert_near(part.visibility_range_end, lod + RigPaint.RENDER_LOD_MARGIN_M, 0.01, "acting: the full rig out to render_lod_m")
+	assert_false(mid.visible, "and no mid mesh")
+	var other := TestSpawn.enemy(lv, "res://scenes/enemies/soldier.tscn", Vector3(4, 0.05, -6), "test.mid_soldier_2", false)
+	assert_true(rig.mid_proxy.mesh == other.rig.mid_proxy.mesh, "the rest-pose mesh is shared by the scene's instances")
+	Settings.graphics_override = "medium"
+	var med := TestSpawn.enemy(lv, "res://scenes/enemies/soldier.tscn", Vector3(8, 0.05, -6), "test.mid_soldier_3", false)
+	assert_true(med.rig.mid_proxy == null, "at medium there is none")
+	Settings.graphics_override = saved
