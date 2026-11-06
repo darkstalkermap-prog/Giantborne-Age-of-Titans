@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.kings_annals",
+	"type": "item",
+	"display_name": "The Kings' Annals",
+	"description": "The chronicle of the Broken Kings, kept in their sealed Citadel: who ruled the Old Kingdom beyond the Kings' Door, and how the giants lost it.",
+	"stack_max": 1,
+	"category": "trophy"
+}

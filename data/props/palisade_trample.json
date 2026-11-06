@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "prop.palisade_trample",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Palisade",
+	"height_m": 3.5,
+	"health": 240,
+	"armor": 10,
+	"accepted_attack_categories": ["melee", "ability", "projectile", "siege"],
+	"description": "A stake fence in front of fields and camps: a stage-4 giant walks through it as if it were straw.",
+	"trample_stage": 4,
+	"debris_count": 10,
+	"debris_length_m": 10,
+	"debris_layout": "line",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

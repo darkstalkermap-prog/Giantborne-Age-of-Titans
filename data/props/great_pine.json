@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "prop.great_pine",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Great Pine",
+	"height_m": 50.0,
+	"health": 3000,
+	"armor": 0,
+	"accepted_attack_categories": [],
+	"min_growth_stage": 4,
+	"description": "One of the Greywood's three great pines, fifty metres of grey timber: the tree weapon of a giant of stage 4 or more (the Greywood's package makes it uprootable; the weapon comes with the stage movesets).",
+	"requires_permission": "tree_weapon",
+	"locked_message": "Too small to uproot a great pine (stage 4).",
+	"debris_count": 0,
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

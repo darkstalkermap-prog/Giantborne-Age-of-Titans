@@ -1,0 +1,40 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="1_f30a1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(12, 8, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
+albedo_color = Color(0.46, 0.34, 0.21, 1)
+roughness = 0.9
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_3"]
+_surfaces = [{
+"aabb": AABB(-6, 1.7, -0.3, 12, 3.1000001, 0.6),
+"attribute_data": PackedByteArray("AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/"),
+"format": 34359742487,
+"index_count": 72,
+"index_data": PackedByteArray("AAACAAQAAgAGAAQAAQADAAUAAwAHAAUACAAKAAwACgAOAAwACQALAA0ACwAPAA0AEAASABQAEgAWABQAEQATABUAEwAXABUAGAAaABwAGgAeABwAGQAbAB0AGwAfAB0AIAAiACQAIgAmACQAIQAjACUAIwAnACUAKAAqACwAKgAuACwAKQArAC0AKwAvAC0A"),
+"material": SubResource("StandardMaterial3D_2"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 48,
+"vertex_data": PackedByteArray("AADAwDMzE0CamZk+AADAQDMzE0CamZm+AADAQDMzE0CamZk+AADAwDMzE0CamZm+AADAwJqZ2T+amZk+AADAQJqZ2T+amZm+AADAQJqZ2T+amZk+AADAwJqZ2T+amZm+AADAQDMzE0CamZk+AADAwDMzE0CamZm+AADAQDMzE0CamZm+AADAwDMzE0CamZk+AADAQJqZ2T+amZk+AADAwJqZ2T+amZm+AADAQJqZ2T+amZm+AADAwJqZ2T+amZk+AADAQDMzE0CamZk+AADAwJqZ2T+amZk+AADAwDMzE0CamZk+AADAQJqZ2T+amZk+AADAQDMzE0CamZm+AADAwJqZ2T+amZm+AADAwDMzE0CamZm+AADAQJqZ2T+amZm+AADAwJqZmUCamZk+AADAQJqZmUCamZm+AADAQJqZmUCamZk+AADAwJqZmUCamZm+AADAwGZmhkCamZk+AADAQGZmhkCamZm+AADAQGZmhkCamZk+AADAwGZmhkCamZm+AADAQJqZmUCamZk+AADAwJqZmUCamZm+AADAQJqZmUCamZm+AADAwJqZmUCamZk+AADAQGZmhkCamZk+AADAwGZmhkCamZm+AADAQGZmhkCamZm+AADAwGZmhkCamZk+AADAQJqZmUCamZk+AADAwGZmhkCamZk+AADAwJqZmUCamZk+AADAQGZmhkCamZk+AADAQJqZmUCamZm+AADAwGZmhkCamZm+AADAwJqZmUCamZm+AADAQGZmhkCamZm+/3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+/")
+}]
+
+[node name="SizeGate" type="StaticBody3D"]
+collision_layer = 64
+collision_mask = 0
+script = ExtResource("1_f30a1")
+gate_id = "test.gate.timber"
+cue = "sfx.gate.timber"
+
+[node name="Wall" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Merged" type="MeshInstance3D" parent="Visual" groups=["scenery"]]
+mesh = SubResource("ArrayMesh_3")

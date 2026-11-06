@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.first_king_epitaph",
+	"type": "item",
+	"display_name": "The First King's Epitaph",
+	"description": "A slate from the First King's sealed vault, cut with the names of the giant-kings who came after him and a line for the one still to come.",
+	"stack_max": 1,
+	"category": "trophy"
+}

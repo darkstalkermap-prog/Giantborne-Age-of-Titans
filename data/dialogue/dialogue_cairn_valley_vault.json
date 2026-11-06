@@ -1,0 +1,55 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.cairn_valley_vault",
+	"type": "dialogue",
+	"speaker": "Old Kings' Cairn",
+	"description": "The fourteenth Old Kings' cairn (plan M6-M9 decision 33), in the First King's sealed vault behind the Barrow's rockfall (a stage-5 heave, P26): reading it once gives one attribute point (once-flag reward.cairn.valley_vault).",
+	"entries": [
+		{
+			"node": "read",
+			"conditions": [
+				{
+					"type": "flag",
+					"flag": "reward.cairn.valley_vault"
+				}
+			]
+		},
+		{
+			"node": "cairn",
+			"conditions": []
+		}
+	],
+	"nodes": [
+		{
+			"id": "cairn",
+			"text": "Stones stacked by giant hands, older than the Barrow. On the topmost the First King's mark, and words cut for whoever grew tall enough to move the rock: 'Stand as I stood.'",
+			"choices": [
+				{
+					"text": "[Lay a hand on the stones] (+1 attribute point)",
+					"next": "",
+					"effects": {
+						"attribute_points": 1,
+						"once_flag": "reward.cairn.valley_vault",
+						"set_flags": {
+							"world.valley.vault_cairn_read": true
+						}
+					}
+				},
+				{
+					"text": "Leave the stones be.",
+					"next": ""
+				}
+			]
+		},
+		{
+			"id": "read",
+			"text": "The First King's cairn. Its strength is already in you.",
+			"choices": [
+				{
+					"text": "[Leave]",
+					"next": ""
+				}
+			]
+		}
+	]
+}

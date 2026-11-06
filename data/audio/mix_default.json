@@ -108,7 +108,13 @@
 		"prop.fence_wood": "wood",
 		"prop.gate_fortified": "stone",
 		"prop.gate_practice": "wood",
+		"prop.great_pine": "wood",
+		"prop.kings_door": "stone",
+		"prop.palisade_trample": "wood",
 		"prop.practice_dummy": "wood",
+		"prop.rockfall": "stone",
+		"prop.titan_tree": "wood",
+		"prop.toppled_statue": "stone",
 		"prop.tree_small": "wood"
 	},
 	"voices": {

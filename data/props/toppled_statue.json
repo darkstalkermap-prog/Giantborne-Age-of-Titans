@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "prop.toppled_statue",
+	"type": "prop",
+	"category": "structural",
+	"display_name": "Toppled statue",
+	"height_m": 5.0,
+	"health": 800,
+	"armor": 50,
+	"accepted_attack_categories": ["melee", "ability"],
+	"description": "A giant-king's statue lying on its face over something it hides. A stage-5 giant heaves it aside.",
+	"requires_permission": "heave",
+	"locked_message": "It will not move. Grow to stage 5.",
+	"damage_stages": [
+		{"id": "fallen", "at_or_below_frac": 1.0, "visual": "Intact"},
+		{"id": "heaved", "at_or_below_frac": 0.0, "visual": "Heaved", "removes_collision": true, "enables_nav_links": true}
+	],
+	"debris_count": 8,
+	"debris_length_m": 10,
+	"debris_layout": "pile",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}
