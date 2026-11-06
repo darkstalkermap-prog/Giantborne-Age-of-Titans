@@ -554,6 +554,21 @@ every run); its three navmesh loads and three region adds run one a frame. The c
 unloads, 0 thrash, the least margin 253.3 m; a navmesh load 0.61 ms mean (1.02 max), a region add 0.05
 ms (0.08 max).
 
+The default route walked with the stick, AI on (the wolf pack, the band and the pond watch meet it:
+on average 6.2 active combatants, at most 12): 2,858.6 m in 452.3 s of game time, 16 loads, 12
+unloads, 0 thrash, at most 15 loaded, the least margin 254.5 m, 16 seam crossings, no stuck teleport,
+no tick under the terrain; streaming work p50 0.62 / p99 2.87 / max 3.58 ms; CPU per tick p50 1.06 /
+p95 1.78 / p99 2.96 / max 19.4 ms (an encounter spawning its members in one tick); 0 errors, 0
+warnings.
+
+**On the web** (the `Web (test)` build, `tools/web/stream_check.mjs` on the gate test's chase route
+at 640 x 360; headless Chromium with SwiftShader on the container's shared CPU, indicative only): 326 m
+in 53.2 s of game time with the pack chasing, 5 loads, 0 thrash, the least margin 242.8 m, 0 console
+errors; streaming work p50 0.8 / p99 6.0 / max 7.4 ms; a navmesh's request step (the single-threaded
+web build loads it there) 1.5 ms mean / 6.0 max, taking it 0.05 / 0.2, a region add 0.07 / 0.2; CPU per
+tick p50 1.2 / p95 3.2 / p99 6.1 / max 28.8 ms; page frames p50 100 / p99 183 / worst 267 ms (software
+rendering: they say nothing of a GPU; real browsers **NOT RUN**).
+
 **The unreachable chase** (`tests/slow/test_unreachable_chase.gd`: 20 soldiers chasing a giant that
 wades in the pond's 5 m deep water for 20 s): CPU per tick p50 2.3 / p95 **3.9** / p99 5.1 / max 8.5 ms
 (the budget p95 <= 8 ms met); 228 re-paths, at most 8 in a tick (twenty at once: 8, 8, 4), one agent's
