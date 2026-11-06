@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "faction.test_town",
+	"type": "faction",
+	"display_name": "Test Town",
+	"description": "Test only (P22, tests/integration/test_faction_records.gd): a town whose civilians give way to a giant at peace with it, that takes three offences within 10 s to turn hostile.",
+	"initial": "neutral",
+	"offences_to_hostile": 3,
+	"offence_window_s": 10,
+	"civilians_give_way": true,
+	"give_way_m": 3.0,
+	"warn_text": "The test town's folk scatter from your feet.",
+	"hostile_text": "The test town takes up arms.",
+	"reconciled_text": "The test town forgives you."
+}
