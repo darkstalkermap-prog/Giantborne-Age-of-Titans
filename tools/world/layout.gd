@@ -58,14 +58,15 @@ static var _kinds: Dictionary = {}
 ## The merged layout: {"world": world.json, "regions": {region short: table}, "items": [every
 ## element and place with "_region" and "_section"], "errors": PackedStringArray}.
 static func load_all(dir := DATA_DIR) -> Dictionary:
-	var out := {"world": WorldFeatures.load_json(dir.path_join(WORLD_FILE)), "regions": {}, "items": [],
-		"errors": PackedStringArray()}
+	var out := {"world": WorldFeatures.load_json(dir.path_join(WORLD_FILE)), "regions": {}, "items": []}
+	var errors := PackedStringArray()
 	var seen := {}
+	var id_re := RegEx.create_from_string(ID_REGEX)
 	for r: String in REGION_FILES:
 		var path := dir.path_join(r + ".json")
 		var t := WorldFeatures.load_json(path)
 		if t.is_empty():
-			(out.errors as PackedStringArray).append("%s is missing or not a JSON object" % path)
+			errors.append("%s is missing or not a JSON object" % path)
 			continue
 		out.regions[r] = t
 		for section: String in SECTIONS:
@@ -77,14 +78,15 @@ static func load_all(dir := DATA_DIR) -> Dictionary:
 				if id == "":
 					continue
 				if seen.has(id):
-					(out.errors as PackedStringArray).append("duplicate id '%s' (%s and %s)" % [id, seen[id], r])
+					errors.append("duplicate id '%s' (%s and %s)" % [id, seen[id], r])
 				seen[id] = r
-				if RegEx.create_from_string(ID_REGEX).search(id) == null:
-					(out.errors as PackedStringArray).append("%s: '%s' is not an id (a.b.c)" % [r, id])
+				if id_re.search(id) == null:
+					errors.append("%s: '%s' is not an id (a.b.c)" % [r, id])
 	for item: Dictionary in out.items:
 		if str(item._section) == "elements" and not has_kind(str(item.get("kind", ""))):
-			(out.errors as PackedStringArray).append("%s: unknown element kind '%s' (no %s%s.gd)" % [item.get("id", item._region),
+			errors.append("%s: unknown element kind '%s' (no %s%s.gd)" % [item.get("id", item._region),
 				item.get("kind", ""), KINDS_DIR, item.get("kind", "")])
+	out["errors"] = errors
 	return out
 
 

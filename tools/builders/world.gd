@@ -88,12 +88,12 @@ static func build_all(kit: SceneKit) -> void:
 
 ## {"chunks": PackedStringArray of the requested chunk ids} from --chunks=a,b.
 static func parse_args(args: PackedStringArray) -> Dictionary:
-	var out := {"chunks": PackedStringArray()}
+	var chunks := PackedStringArray()
 	for a in args:
 		if a.begins_with("--chunks="):
 			for c in a.trim_prefix("--chunks=").split(",", false):
-				(out.chunks as PackedStringArray).append(c.strip_edges())
-	return out
+				chunks.append(c.strip_edges())
+	return {"chunks": chunks}
 
 
 ## The chunks a --chunks= list rebuilds: each named chunk and its eight neighbours (in the grid),

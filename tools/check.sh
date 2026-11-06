@@ -8,9 +8,14 @@
 #      debris pool and award loot (the M1 breakable path stays covered; M2 gate)
 #
 # Usage: tools/check.sh [--slow] [--gate] [--audio] [--only=<builder>[,<builder>]] [--build]
-#                       [--autoplay=SECONDS]
+#                       [--build-args=<args>] [--autoplay=SECONDS]
 #   --only=...    rebuild the named scene builders (before P04's builder split: all of them)
 #   --build       rebuild every scene
+#   --build-args=...  extra arguments for the builders, after "--" (P25: --build-args=--chunks=c2_6,c3_6
+#                 makes the world builder rebuild those chunks and their eight neighbours); a build
+#                 that ran the world builder is followed by the world's seam check on the chunks it
+#                 rebuilt (tools/world/seam_check.gd: heights equal across the seams, no walkable border
+#                 face over 35 degrees)
 #   --autoplay=S  soak length in seconds (default 120; 0 skips the soak)
 #   --slow        also run tests/slow (the tier's budget: 8 minutes)
 #   --gate        also run tests/gate (walkthroughs, oath combinations, boss runs, soaks; P19)
@@ -32,6 +37,7 @@ SLOW=0
 GATE=0
 AUDIO=0
 BUILD=""
+BUILD_EXTRA=""
 AUTOPLAY=120
 for arg in "$@"; do
 	case "$arg" in
@@ -40,8 +46,9 @@ for arg in "$@"; do
 		--audio) AUDIO=1 ;;
 		--only=*) BUILD="$arg" ;;
 		--build) BUILD="all" ;;
+		--build-args=*) BUILD_EXTRA="${arg#--build-args=}" ;;
 		--autoplay=*) AUTOPLAY="${arg#--autoplay=}" ;;
-		-h|--help) sed -n '2,25p' "$0"; exit 0 ;;
+		-h|--help) sed -n '2,28p' "$0"; exit 0 ;;
 		*) echo "check.sh: unknown option '$arg'" >&2; exit 2 ;;
 	esac
 done
@@ -75,15 +82,32 @@ run_limited 600 "$GD" --headless --path . --import >"$LOGS/import1.log" 2>&1 \
 	|| fail "import exited with $?" "$LOGS/import1.log"
 
 if [ -n "$BUILD" ]; then
-	step "build scenes (${BUILD})"
+	step "build scenes (${BUILD}${BUILD_EXTRA:+ $BUILD_EXTRA})"
 	BUILD_ARGS=()
 	if [ "$BUILD" != "all" ]; then
 		BUILD_ARGS=(-- "$BUILD")
 	fi
-	run_limited 900 "$GD" --headless --path . res://tools/build_scenes.tscn ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"} \
+	if [ -n "$BUILD_EXTRA" ]; then
+		[ ${#BUILD_ARGS[@]} -eq 0 ] && BUILD_ARGS=(--)
+		# shellcheck disable=SC2206
+		BUILD_ARGS+=($BUILD_EXTRA)
+	fi
+	# P25: the world builder needs about a minute (several on a slow machine): the limit is 1,500 s.
+	run_limited 1500 "$GD" --headless --path . res://tools/build_scenes.tscn ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"} \
 		>"$LOGS/build.log" 2>&1 || fail "scene build exited with $?" "$LOGS/build.log"
 	if grep -E "SCRIPT ERROR|^ERROR" "$LOGS/build.log" >/dev/null; then
 		fail "errors while building scenes" "$LOGS/build.log"
+	fi
+	# P25: the world's seams, on the chunks the world builder rebuilt (all without --chunks=).
+	if grep -q "^build_scenes: world -> " "$LOGS/build.log"; then
+		SEAM_ARGS=()
+		for a in $BUILD_EXTRA; do
+			case "$a" in --chunks=*) SEAM_ARGS=(-- "$a") ;; esac
+		done
+		step "world seam check${SEAM_ARGS[1]:+ (${SEAM_ARGS[1]})}"
+		run_limited 600 "$GD" --headless --path . -s res://tools/world/seam_check.gd ${SEAM_ARGS[@]+"${SEAM_ARGS[@]}"} \
+			>"$LOGS/seam_check.log" 2>&1 || fail "the world's seam check failed" "$LOGS/seam_check.log"
+		grep -m1 "^SEAM_CHECK" "$LOGS/seam_check.log"
 	fi
 fi
 
