@@ -1,5 +1,7 @@
 [gd_scene format=4]
 
+[ext_resource type="Script" path="res://scripts/world/scenery_prop.gd" id="1_31e43"]
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(7, 1.6, 4)
 
@@ -68,6 +70,8 @@ _surfaces = [{
 }]
 
 [node name="CitadelHoard" type="Node3D"]
+script = ExtResource("1_31e43")
+world_id = "valley.citadel.hoard"
 
 [node name="Pile" type="StaticBody3D" parent="."]
 collision_mask = 0

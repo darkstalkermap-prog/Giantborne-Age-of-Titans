@@ -10,8 +10,9 @@ extends RefCounted
 ##   palisade_trample  a 10 m stake fence a stage-4 giant walks through (trample_stage 4)
 ##   great_pine        a 50 m pine of the Greywood (Trunk on WORLD + Visual, the UprootTree layout; the
 ##                     Greywood's package makes it uprootable once the pine weapon exists)
-##   citadel_hoard     the Hoard of the Broken Kings' heap (gold, chests, the annals' lectern; a low
-##                     WORLD body): dressing for the Citadel's hall, whose pickups are placed apart
+##   citadel_hoard     the Hoard of the Broken Kings' heap (a SceneryProp with a world_id; gold, chests,
+##                     the annals' lectern on a low WORLD body): the Citadel hall's dressing, whose
+##                     pickups are placed apart
 ##   old_kings_cairn   an Old Kings' cairn (NpcTalker: its dialogue gives one attribute point once)
 ##   size_gate_water, size_gate_stone, size_gate_timber
 ##                     a SizeGate wall (12 x 8 x 1 m) with the look of its kind: deep water, a step
@@ -25,6 +26,7 @@ const S_BREAKABLE := "res://scripts/world/breakable_prop.gd"
 const S_HEAVE := "res://scripts/world/heave_point.gd"
 const S_SIZE_GATE := "res://scripts/world/size_gate.gd"
 const S_TALKER := "res://scripts/world/npc_talker.gd"
+const S_SCENERY := "res://scripts/world/scenery_prop.gd"
 const DIR := "res://scenes/world/"
 ## Every nav layer of the Valley (human 1, large 2, giant 4, small giant 8) and the world's titan (16).
 const ALL_NAV_LAYERS := 31
@@ -357,6 +359,7 @@ static func build_great_pine(kit: SceneKit) -> Node:
 ## on a low WORLD body (7 x 1.6 x 4 m). Dressing only: the hall's pickups carry the rewards.
 static func build_citadel_hoard(kit: SceneKit) -> Node:
 	var root := kit.n3("CitadelHoard")
+	kit.scripted(root, S_SCENERY, {"world_id": "valley.citadel.hoard"})
 	var body := StaticBody3D.new()
 	body.name = "Pile"
 	body.collision_layer = SceneKit.L_WORLD
