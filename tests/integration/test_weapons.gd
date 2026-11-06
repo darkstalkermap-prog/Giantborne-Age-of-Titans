@@ -96,7 +96,8 @@ func test_shipped_weapons_fit_stages_and_movesets() -> void:
 		assert_true(bool(rec.get("scales_with_growth", true)), "%s grows with the giant" % id)
 		var up: Dictionary = rec.get("upgrade", {})
 		var to := GameData.get_record(str(up.get("to", "")))
-		assert_eq(int(to.get("fit_max_stage", 10)), 3, "%s reforges into %s, which fits stage 3" % [id, up.get("to")])
+		# P26 (plan M6-M9 decision 24): a reinforced weapon fits stage 6 (it fitted stage 3 in M5).
+		assert_eq(int(to.get("fit_max_stage", 10)), 6, "%s reforges into %s, which fits stage 6" % [id, up.get("to")])
 		assert_true(float(to.damage_multiplier) > float(rec.damage_multiplier), "and hits harder")
 		var cost: Array = up.get("cost", [])
 		assert_true(cost.size() == 1 and str(cost[0].item) == "item.iron_ingot" and int(cost[0].count) == 2,

@@ -170,6 +170,10 @@ static func fields() -> Dictionary:
 
 	# M6-M9 (written by P20, plan M6-M9 §1.5).
 	## @anchor P26
+	# P26 (plan M6-M9 §2.9): a projectile's range per growth stage (index = stage - 1; the last entry
+	# beyond the list), in place of projectile.range_m: Boulder Hurl reaches 25 m at stages 1-3 and
+	# 32 / 38 / 44 m at stages 4-6 (PlayerAttack's range check and launch).
+	f.merge({"range_by_stage_m": {"t": "array", "items": "number"}})
 
 	## @anchor P31
 
@@ -282,6 +286,16 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 
 	# M6-M9 (written by P20, plan M6-M9 §1.5).
 	## @anchor P26
+	var p26_ranges: Variant = d.get("range_by_stage_m")
+	if typeof(p26_ranges) == TYPE_ARRAY:
+		var p26_list: Array = p26_ranges
+		if p26_list.is_empty():
+			out.errors.append("%s.range_by_stage_m: must list at least one range" % ctx)
+		for p26_i in p26_list.size():
+			if U.is_number(p26_list[p26_i]) and float(p26_list[p26_i]) <= 0.0:
+				out.errors.append("%s.range_by_stage_m[%d]: must be > 0 (got %s)" % [ctx, p26_i, p26_list[p26_i]])
+		if str(d.get("hit_shape", "")) != "projectile":
+			out.errors.append("%s: range_by_stage_m is for projectiles (hit_shape 'projectile')" % ctx)
 
 	## @anchor P31
 

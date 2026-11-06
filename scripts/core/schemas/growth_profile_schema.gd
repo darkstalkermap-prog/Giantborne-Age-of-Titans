@@ -69,6 +69,17 @@ static func fields() -> Dictionary:
 
 	# M6-M9 (written by P20, plan M6-M9 §1.5).
 	## @anchor P26
+	# Growth stages 4-6 and size gates (P26, plan M6-M9 §2.2, §2.9). Optional; PlayerGrowth computes
+	# the same values from the stage when a profile has none.
+	f.merge({
+		# The size-gate physics layers this stage still collides with: layers 7-9 (64 size_gate_4,
+		# 128 size_gate_5, 256 size_gate_6) of every gate above the stage - stages 1-3: 448, stage 4:
+		# 384, stage 5: 256, stage 6: 0. The giant's collision mask is ACTOR_MASK | size_gate_mask.
+		"size_gate_mask": U.int_field(0, 448),
+		# The titan navigation layer's query mask in the world: 16 | 32 (stage >= 4) | 64 (>= 5) |
+		# 128 (>= 6) (PlayerGrowth.nav_query_mask; the world bot and P24b's queries).
+		"nav_query_mask": U.int_field(1, 255),
+	})
 
 	## @anchor P30
 
@@ -93,6 +104,15 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 
 	# M6-M9 (written by P20, plan M6-M9 §1.5).
 	## @anchor P26
+	# Only the size-gate layers (7-9) in size_gate_mask, and the titan layer (16) with its gate bits
+	# (32, 64, 128) in nav_query_mask. Whether they match the stage is GameData's cross-record check.
+	if U.is_number(d.get("size_gate_mask")) and (int(d.size_gate_mask) & ~448) != 0:
+		out.errors.append("%s.size_gate_mask: only the size-gate layers 64, 128 and 256 (got %d)" % [ctx,
+			int(d.size_gate_mask)])
+	if U.is_number(d.get("nav_query_mask")) and ((int(d.nav_query_mask) & ~240) != 0 \
+			or (int(d.nav_query_mask) & 16) == 0):
+		out.errors.append("%s.nav_query_mask: the titan layer 16 with its gate bits 32, 64, 128 (got %d)" % [
+			ctx, int(d.nav_query_mask)])
 
 	## @anchor P30
 

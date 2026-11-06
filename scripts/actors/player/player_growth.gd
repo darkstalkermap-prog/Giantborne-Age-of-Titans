@@ -1,7 +1,7 @@
 class_name PlayerGrowth
 extends PlayerComponent
-## Growth stages 1-3 (spec §9, plan §3.5): safe growth at shrines, and the F6 / F7 debug
-## grow and shrink keys.
+## Growth stages 1-6 (spec §9, plan §3.5; stages 4-6 and size gates: plan M6-M9 §2.9, P26): safe
+## growth at shrines, and the F6 / F7 debug grow and shrink keys.
 ##
 ## A growth is checked first and changes nothing when any check fails (growth_blocked, a HUD
 ## warning, the reason code and message in the result). The checks, in order:
@@ -9,6 +9,9 @@ extends PlayerComponent
 ##   already     the giant is already that stage (shrines only grow)
 ##   shrine_max  no shrine, the shrine cannot grow anyone, or not that far (record max_stage)
 ##   flags       a growth_requires_flags flag of the shrine is not set (Kingsfall: the boss)
+##   conditions  a growth_requires_conditions condition of the shrine does not hold (P26: a world
+##               shrine waits for world.kingsgate.lit or a count of oaths); the message is the
+##               condition's growth_conditions_text entry, so it names the missing one
 ##   level       controller.level < the profile's required_level (99 = gating off)
 ##   busy        not standing in LOCOMOTION on the floor (attacking, dodging, staggered, ...)
 ##   holding     controller.holding_id is set (a grabbed body in hand)
@@ -32,6 +35,14 @@ extends PlayerComponent
 ## Save state: "growth_stage" (apply_state restores it silently: no events, no unlocks; the
 ## saved loadout and resources are applied after it). Footstep shake: each footfall of the
 ## rig's stride adds the profile's footstep_shake to the camera at stage 2 and above.
+##
+## Size gates and navigation (P26, plan M6-M9 §2.2): every profile change also sets the giant's
+## collision mask to ACTOR_MASK | size_gate_mask() - the invisible size-gate walls of physics layers
+## 7-9 stop a giant below their stage (stages 1-3 collide with all three, stage 6 with none) - and
+## its navigation layers to effective_nav_layers(): the profile's layer when the level bakes it,
+## else the level record's player_nav_fallback (the Valley has no titan layer 16, so stages 4-6
+## path on its giant layer 4). nav_query_mask() is the titan layer's query mask in the world (16 |
+## the gate bits up to the stage).
 
 const STATE_KEY := "growth_stage"
 ## Physics layers a growing capsule may not overlap: world, breakables, blockers and (P16, M3
@@ -43,19 +54,32 @@ const CLEARANCE_MASK := HitQueryAdapter.LAYER_WORLD | HitQueryAdapter.LAYER_BREA
 const DEFAULT_SHRINE_RADIUS_M := 14.0
 ## The clearance capsule is lifted this far off the floor so the floor itself never counts.
 const CLEARANCE_LIFT_M := 0.05
-const REASONS := ["no_profile", "already", "shrine_max", "flags", "level", "busy", "holding",
-	"combat", "clearance"]
+const REASONS := ["no_profile", "already", "shrine_max", "flags", "conditions", "level", "busy",
+	"holding", "combat", "clearance"]
 ## Player-facing names of the interaction permissions a stage adds (Grow tab summary).
 const PERMISSION_TEXT := {
 	"grab_small": "Grab and throw staggered soldiers and wolves",
 	"throw_boulder": "Hurl boulders and smash barricades",
 	"tree_weapon": "Uproot ancient oaks and wield them",
 	"gate_breach": "Breach fortified gates",
+	"trample": "Trample fences and palisades underfoot",
 	"formation_sweep": "Sweep through soldier formations",
+	"heave": "Heave rockfalls, fallen titan-trees and toppled statues aside",
 	"siege_disruption": "Wreck siege engines",
 	"monster_grapple": "Grapple great monsters",
 	"titan_execution": "Execute titans",
 }
+## P26 (plan M6-M9 §2.2): the physics layer of the size-gate walls each gate stage puts up (7: 64,
+## 8: 128, 9: 256) and the titan navigation layer's gate bit of the same stage (32, 64, 128).
+const SIZE_GATE_LAYERS := {4: 64, 5: 128, 6: 256}
+const TITAN_LAYER := 16
+const TITAN_GATE_BITS := {4: 32, 5: 64, 6: 128}
+## Every actor body's mask without the size gates (SceneKit.ACTOR_MASK: world, actors, breakables,
+## blockers).
+const ACTOR_MASK := HitQueryAdapter.LAYER_WORLD | HitQueryAdapter.LAYER_ACTORS \
+	| HitQueryAdapter.LAYER_BREAKABLE | 32
+## The size-gate layers together (layers 7-9).
+const ALL_SIZE_GATES := 448
 
 ## The result of the last grow_to / debug_set_stage (the Grow tab shows it).
 var last_result: Dictionary = {}
@@ -126,6 +150,9 @@ func check_growth(target: int, shrine: Node) -> Dictionary:
 	var gate := shrine_gate(target, shrine_record(shrine), Callable(WorldState, "get_flag"))
 	if not gate.ok:
 		return gate
+	var conds := conditions_gate(shrine_record(shrine), Quests.condition_context())
+	if not conds.ok:
+		return conds
 	var level := level_gate(prof, player.controller.level)
 	if not level.ok:
 		return level
@@ -181,8 +208,10 @@ func aware_enemies_near(shrine: Node) -> PackedStringArray:
 
 ## Clearance for `profile` at the giant's position (plan §3.5 design 2): a capsule of the new
 ## radius and height lifted CLEARANCE_LIFT_M off the floor must overlap nothing on
-## CLEARANCE_MASK (the giant's own body excluded), and an upward ray from the current head to
-## the new head height must be clear. {ok, reason, message, "blocker": node name or ""}.
+## CLEARANCE_MASK plus the size-gate walls the new stage still collides with (P26: a giant may not
+## grow into a gate wall it could not leave) (the giant's own body excluded), and an upward ray
+## from the current head to the new head height must be clear. {ok, reason, message, "blocker":
+## node name or ""}.
 func check_clearance(profile: Dictionary) -> Dictionary:
 	if profile.is_empty():
 		return result_fail("no_profile")
@@ -195,7 +224,7 @@ func check_clearance(profile: Dictionary) -> Dictionary:
 	var q := PhysicsShapeQueryParameters3D.new()
 	q.shape = cap
 	q.transform = Transform3D(Basis(), player.global_position + Vector3.UP * (cap.height * 0.5 + CLEARANCE_LIFT_M))
-	q.collision_mask = CLEARANCE_MASK
+	q.collision_mask = CLEARANCE_MASK | size_gate_mask_of(profile)
 	q.collide_with_areas = false
 	q.collide_with_bodies = true
 	q.exclude = [player.get_rid()]
@@ -364,13 +393,171 @@ func rig_state(out: Dictionary) -> void:
 
 
 func debug_info(out: Dictionary) -> void:
-	out["growth"] = "%s  k %.2f  nav %d" % [str(player.profile.get("id", "?")),
-		body_scale_for(player.profile), player.nav_layers]
+	out["growth"] = "%s  k %.2f  nav %d  gates %d  titan %d" % [str(player.profile.get("id", "?")),
+		body_scale_for(player.profile), player.nav_layers, size_gate_mask(), nav_query_mask()]
+
+
+# --------------------------------------------------------------------------- size gates and navigation (P26)
+
+## The size-gate layers a giant of `stage` still collides with: every gate above its stage (stages
+## 1-3: 448, stage 4: 384, stage 5: 256, stage 6 and beyond: 0).
+static func size_gate_mask_for_stage(stage: int) -> int:
+	var mask := 0
+	for gate: int in SIZE_GATE_LAYERS:
+		if stage < gate:
+			mask |= int(SIZE_GATE_LAYERS[gate])
+	return mask
+
+
+## The titan layer's query mask for a giant of `stage`: 16 and the gate bit of every gate stage it
+## has reached (stages 1-3: 16, stage 4: 48, stage 5: 112, stage 6 and beyond: 240).
+static func nav_query_mask_for_stage(stage: int) -> int:
+	var mask := TITAN_LAYER
+	for gate: int in TITAN_GATE_BITS:
+		if stage >= gate:
+			mask |= int(TITAN_GATE_BITS[gate])
+	return mask
+
+
+## A profile's size_gate_mask, else the one of its stage.
+static func size_gate_mask_of(profile: Dictionary) -> int:
+	if profile.has("size_gate_mask"):
+		return int(profile.size_gate_mask)
+	return size_gate_mask_for_stage(int(profile.get("stage", 1)))
+
+
+## A profile's nav_query_mask, else the one of its stage.
+static func nav_query_mask_of(profile: Dictionary) -> int:
+	if profile.has("nav_query_mask"):
+		return int(profile.nav_query_mask)
+	return nav_query_mask_for_stage(int(profile.get("stage", 1)))
+
+
+## The size-gate walls the giant collides with now (layers 7-9 above its stage).
+func size_gate_mask() -> int:
+	return size_gate_mask_of(player.profile)
+
+
+## The titan layer's query mask of the giant now (plan M6-M9 §2.2: 16 | 32 | 64 | 128 by stage).
+func nav_query_mask() -> int:
+	return nav_query_mask_of(player.profile)
+
+
+## The giant's body mask for `profile`: every actor's mask plus the size gates above its stage.
+static func collision_mask_for(profile: Dictionary) -> int:
+	return ACTOR_MASK | size_gate_mask_of(profile)
+
+
+## GameData's cross-record check of the growth profiles (P26, anchor P26 of the post-pass): one
+## profile per stage from 1 to the highest, no stage twice; each stage taller, with a capsule at
+## least as wide and as tall and a required level no lower than the stage before, keeping every
+## interaction permission of the stage before; and a profile's size_gate_mask and nav_query_mask,
+## when it has them, those of its stage. `paths` maps record ids to files (messages).
+static func profile_chain_errors(profiles: Array, paths: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	var by_stage := {}
+	for rec: Dictionary in profiles:
+		var st := int(rec.get("stage", 0))
+		var where := "%s (%s)" % [paths.get(rec.get("id", ""), "?"), rec.get("id", "?")]
+		if by_stage.has(st):
+			out.append("%s: a second growth profile for stage %d (%s has it)" % [where, st, (by_stage[st] as Dictionary).get("id", "?")])
+			continue
+		by_stage[st] = rec
+		if rec.has("size_gate_mask") and int(rec.size_gate_mask) != size_gate_mask_for_stage(st):
+			out.append("%s: size_gate_mask %d is not stage %d's (%d: the gate layers above it)" % [where,
+				int(rec.size_gate_mask), st, size_gate_mask_for_stage(st)])
+		if rec.has("nav_query_mask") and int(rec.nav_query_mask) != nav_query_mask_for_stage(st):
+			out.append("%s: nav_query_mask %d is not stage %d's (%d: the titan layer and its gates up to it)" % [where,
+				int(rec.nav_query_mask), st, nav_query_mask_for_stage(st)])
+	if by_stage.is_empty():
+		return out
+	var top := 0
+	for st: int in by_stage:
+		top = maxi(top, st)
+	for st in range(1, top + 1):
+		if not by_stage.has(st):
+			out.append("growth profiles: no profile for stage %d (stages 1-%d must all have one)" % [st, top])
+			continue
+		if st == 1 or not by_stage.has(st - 1):
+			continue
+		var a: Dictionary = by_stage[st - 1]
+		var b: Dictionary = by_stage[st]
+		var where := "%s (%s)" % [paths.get(b.get("id", ""), "?"), b.get("id", "?")]
+		if float(b.get("height_m", 0.0)) <= float(a.get("height_m", 0.0)):
+			out.append("%s: stage %d is not taller than stage %d" % [where, st, st - 1])
+		for key: String in ["capsule_radius_m", "capsule_total_height_m"]:
+			if float(b.get(key, 0.0)) < float(a.get(key, 0.0)):
+				out.append("%s: %s shrinks from stage %d" % [where, key, st - 1])
+		if int(b.get("required_level", 1)) < int(a.get("required_level", 1)):
+			out.append("%s: required_level %d is below stage %d's %d" % [where, int(b.get("required_level", 1)),
+				st - 1, int(a.get("required_level", 1))])
+		var kept: Variant = b.get("interaction_permissions", [])
+		for perm: Variant in a.get("interaction_permissions", []):
+			if typeof(kept) != TYPE_ARRAY or not (kept as Array).has(perm):
+				out.append("%s: loses the interaction permission '%s' of stage %d" % [where, perm, st - 1])
+	return out
+
+
+## The lowest stage whose profile grants `permission` (0 when none does): the stage a gated prop
+## names in its size_gate_blocked event and its messages.
+static func stage_for_permission(permission: String) -> int:
+	var best := 0
+	for rec: Dictionary in GameData.records_of_type("growth_profile"):
+		var perms: Variant = rec.get("interaction_permissions", [])
+		var st := int(rec.get("stage", 0))
+		if typeof(perms) == TYPE_ARRAY and (perms as Array).has(permission) and (best == 0 or st < best):
+			best = st
+	return best
+
+
+## The navigation layers the giant paths with in its level: the profile's nav_layers when the level
+## bakes that layer (or the giant is in no level with navigation), else the level record's
+## player_nav_fallback (the Valley: 4 for stages 4-6, whose titan layer it does not have).
+func effective_nav_layers(profile: Dictionary) -> int:
+	var want := int(profile.get("nav_layers", 4))
+	var level := _level_root()
+	if level == null:
+		return want
+	var have := level_nav_layers(level)
+	if have == 0 or (have & want) != 0:
+		return want
+	var fallback := int(level.call("player_nav_fallback")) if level.has_method("player_nav_fallback") else 0
+	return fallback if fallback > 0 else want
+
+
+## The navigation layers a level bakes: its record's world.nav_layers (a streamed level), else the
+## layers of the NavigationRegion3D nodes under its Navigation node (the Valley: 1 | 2 | 4 | 8).
+static func level_nav_layers(level: Node) -> int:
+	var bits := 0
+	var rec: Variant = level.call("level_record") if level.has_method("level_record") else {}
+	if typeof(rec) == TYPE_DICTIONARY and typeof((rec as Dictionary).get("world")) == TYPE_DICTIONARY:
+		var layers: Variant = (rec.world as Dictionary).get("nav_layers")
+		if typeof(layers) == TYPE_ARRAY:
+			for b: Variant in layers:
+				bits |= int(b)
+			return bits
+	var nav := level.get_node_or_null("Navigation")
+	if nav != null:
+		for child in nav.get_children():
+			if child is NavigationRegion3D:
+				bits |= (child as NavigationRegion3D).navigation_layers
+	return bits
+
+
+## The LevelRoot the giant stands in (its nearest ancestor that answers player_nav_fallback), or null.
+func _level_root() -> Node:
+	var n: Node = player.get_parent() if player != null else null
+	while n != null:
+		if n.has_method("player_nav_fallback"):
+			return n
+		n = n.get_parent()
+	return null
 
 
 # --------------------------------------------------------------------------- body
 
-## Height, growth bonus (fractions kept), rig scale and collision sizes for `profile`.
+## Height, growth bonus (fractions kept), rig scale and collision sizes for `profile`; the body's
+## size-gate mask and the navigation layers of the level (P26).
 func _sync_body(profile: Dictionary) -> void:
 	var c := player.entity.combatant
 	c.set_height(float(profile.get("height_m", c.height_m)))
@@ -380,6 +567,8 @@ func _sync_body(profile: Dictionary) -> void:
 	if player.rig != null and player.rig.has_method("set_body_scale"):
 		player.rig.set_body_scale(k)
 	_resize_body(k)
+	player.collision_mask = collision_mask_for(profile)
+	player.nav_layers = effective_nav_layers(profile)
 
 
 ## Remembers every hurtbox area, hurtbox shape and anchor as authored (the scene is the
@@ -482,6 +671,28 @@ static func shrine_gate(target: int, rec: Dictionary, get_flag: Callable) -> Dic
 	return result_ok()
 
 
+## P26 (plan M6-M9 §2.9): every growth_requires_conditions entry of the shrine record `rec` must hold
+## in the quest context `ctx` (QuestConditions, the shapes of quests and dialogue). The refusal
+## names the first one that does not: its growth_conditions_text entry, else the record's
+## growth_locked_message, else the default text. {ok, reason "conditions", message}.
+static func conditions_gate(rec: Dictionary, ctx: Dictionary) -> Dictionary:
+	var conds: Variant = rec.get("growth_requires_conditions", [])
+	if typeof(conds) != TYPE_ARRAY:
+		return result_ok()
+	var texts: Variant = rec.get("growth_conditions_text", [])
+	var list: Array = conds
+	for i in list.size():
+		if QuestConditions.holds(list[i], ctx):
+			continue
+		var text := ""
+		if typeof(texts) == TYPE_ARRAY and i < (texts as Array).size():
+			text = str(texts[i])
+		if text == "":
+			text = str(rec.get("growth_locked_message", ""))
+		return result_fail("conditions", text)
+	return result_ok()
+
+
 ## Level gate: the profile's required_level against the character level (99 = gating off).
 static func level_gate(prof: Dictionary, level: int) -> Dictionary:
 	var need := int(prof.get("required_level", 1))
@@ -520,6 +731,8 @@ static func default_message(reason: String) -> String:
 			return "This shrine cannot make you grow."
 		"flags":
 			return "Something still binds this shrine's power."
+		"conditions":
+			return "The shrine waits for a deed not yet done."
 		"level":
 			return "You are not experienced enough to grow yet."
 		"busy":
@@ -569,6 +782,14 @@ static func change_summary(old_profile: Dictionary, new_profile: Dictionary, old
 			gained.append(str(perm))
 	var new_stage := int(new_profile.get("stage", 1))
 	var fit := int(weapon.get("fit_max_stage", 10))
+	# P26: the size gates the new body no longer collides with (their stages).
+	var gates_passed: Array = []
+	var old_gates := size_gate_mask_of(old_profile) if not old_profile.is_empty() else ALL_SIZE_GATES
+	var new_gates := size_gate_mask_of(new_profile)
+	for gate: int in SIZE_GATE_LAYERS:
+		var bit := int(SIZE_GATE_LAYERS[gate])
+		if (old_gates & bit) != 0 and (new_gates & bit) == 0:
+			gates_passed.append(gate)
 	var s := {
 		"stage": [int(old_profile.get("stage", 1)), new_stage],
 		"height_m": [float(old_profile.get("height_m", 0.0)), float(new_profile.get("height_m", 0.0))],
@@ -580,6 +801,7 @@ static func change_summary(old_profile: Dictionary, new_profile: Dictionary, old
 		"learned": learned.duplicate(true),
 		"weapon_too_small": fit < new_stage,
 		"weapon": str(weapon.get("display_name", weapon.get("id", ""))),
+		"size_gates": gates_passed,
 	}
 	s["lines"] = summary_lines(s)
 	return s
@@ -595,6 +817,8 @@ static func summary_lines(s: Dictionary) -> PackedStringArray:
 		roundi(float(s.stamina_max[0])), roundi(float(s.stamina_max[1]))])
 	for perm: String in s.permissions:
 		lines.append("New: %s" % str(PERMISSION_TEXT.get(perm, perm.capitalize())))
+	for gate: Variant in s.get("size_gates", []):
+		lines.append("New: deep water and passes that stop giants below stage %d no longer stop you" % int(gate))
 	for entry: Dictionary in s.learned:
 		var def := GameData.get_action(str(entry.id))
 		var label := def.display_name if def != null else str(entry.id)

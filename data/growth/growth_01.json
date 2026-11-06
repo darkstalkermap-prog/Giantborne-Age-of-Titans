@@ -36,6 +36,8 @@
 	"dodge_style": "roll",
 	"camera_orbit_scale": 1.0,
 	"nav_layers": 8,
+	"size_gate_mask": 448,
+	"nav_query_mask": 16,
 	"footstep_shake": 0.0,
 	"interaction_permissions": ["grab_small"],
 	"unlocks": []

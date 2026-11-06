@@ -5,7 +5,7 @@
 	"kind": "ability",
 	"display_name": "Boulder Hurl",
 	"hotbar_label": "HURL",
-	"description": "Rip a rock from the ground and hurl it on an arc (25 m) at the locked target or the crosshair; it splashes 1.5 m. A projectile, so it topples what only projectiles can (the watch cairn).",
+	"description": "Rip a rock from the ground and hurl it on an arc (25 m; 32 / 38 / 44 m at stages 4-6) at the locked target or the crosshair; it splashes 1.5 m. A projectile, so it topples what only projectiles can (the watch cairn).",
 	"power": 40,
 	"damage_type": "physical",
 	"ability_multiplier": 1.6,
@@ -24,6 +24,7 @@
 	"hit_shape": "projectile",
 	"projectile": {"speed_mps": 28, "radius_m": 0.6, "range_m": 25, "gravity_mps2": 9.8, "aim": "lock_or_camera",
 		"arc_to_target": true, "launch_offset_m": [0.7, 3.2, -0.6], "visual": "boulder", "impact_radius_m": 1.5},
+	"range_by_stage_m": [25, 25, 25, 32, 38, 44],
 	"movement": {"windup_speed_mult": 0.2, "active_speed_mult": 0.2, "recovery_speed_mult": 0.5},
 	"unlock_stage": 2,
 	"unlock_level": 3
