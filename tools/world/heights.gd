@@ -25,6 +25,9 @@ const BORDER_BAND_M := 8.0
 ## stays at the limit, and quantising to 4 mm moves a 4 m face by at most about 0.04 degrees.
 const SLOPE_EPS_DEG := 0.05
 const RELAX_MAX_ITERATIONS := 400
+## The relaxation gives up when the number of faces over the rule has not fallen for this many
+## iterations (a ramp steeper than the rule: smoothing cannot bend a plane).
+const RELAX_STALL_ITERATIONS := 25
 
 var origin := Vector2.ZERO
 var spacing := 4.0
@@ -170,17 +173,27 @@ func border_report(first: Vector2i, cells: int, chunks: Vector2i, band_m := BORD
 
 ## Smooths the walkable samples within band_m of a chunk border (each moved to the mean of its four
 ## neighbours, the band's faces over max_deg first) until no band face is steeper than max_deg.
-## A slope that smoothing cannot bring down (a long ramp steeper than the rule) fails:
-## {"ok": false, "message" naming the place}. {"ok": true, "iterations", "deg"} otherwise.
+## A slope that smoothing cannot bring down (a long ramp steeper than the rule: the count of faces
+## over it stops falling for RELAX_STALL_ITERATIONS) fails: {"ok": false, "message" naming the
+## place}. {"ok": true, "iterations", "deg"} otherwise.
 func relax_borders(first: Vector2i, cells: int, chunks: Vector2i, band_m := BORDER_BAND_M,
-		max_deg := BORDER_MAX_DEG, walkable := Callable()) -> Dictionary:
+		max_deg := BORDER_MAX_DEG, walkable := Callable(), stall_after := RELAX_STALL_ITERATIONS) -> Dictionary:
 	var xs := border_lines(first.x, cells, chunks.x)
 	var zs := border_lines(first.y, cells, chunks.y)
 	var band := int(ceil(band_m / spacing))
+	var best_over := 1 << 30
+	var stalled := 0
 	for it in RELAX_MAX_ITERATIONS:
 		var report := border_report(first, cells, chunks, band_m, max_deg, walkable)
 		if int(report.cells) == 0:
 			return {"ok": true, "iterations": it, "deg": report.deg}
+		if int(report.cells) < best_over:
+			best_over = int(report.cells)
+			stalled = 0
+		else:
+			stalled += 1
+			if stalled >= stall_after:
+				break
 		var moved := {}
 		for j in range(1, size.y - 2):
 			var near_z := _near(j, zs, band)
@@ -198,6 +211,6 @@ func relax_borders(first: Vector2i, cells: int, chunks: Vector2i, band_m := BORD
 		for c: Vector2i in moved:
 			set_at(c.x, c.y, float(moved[c]))
 	var last := border_report(first, cells, chunks, band_m, max_deg, walkable)
-	return {"ok": false, "iterations": RELAX_MAX_ITERATIONS, "deg": last.deg,
+	return {"ok": false, "iterations": RELAX_MAX_ITERATIONS if stalled < stall_after else -1, "deg": last.deg,
 		"message": "a chunk border near (%.0f, %.0f) is still %.1f degrees steep (the rule is %.0f within %.0f m of a border)" % [
 			float(last.x), float(last.z), float(last.deg), max_deg, band_m]}

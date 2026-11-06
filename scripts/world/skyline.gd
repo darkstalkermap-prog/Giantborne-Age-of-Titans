@@ -39,6 +39,8 @@ var material: ShaderMaterial = null
 var _image: Image = null
 var _texture: ImageTexture = null
 
+static var _globals_added := false
+
 
 func _ready() -> void:
 	if not Events.flag_changed.is_connected(_on_flag_changed):
@@ -46,17 +48,26 @@ func _ready() -> void:
 	update_beacons()
 
 
-## Registers the three global shader parameters when missing (before the shader is first loaded).
+## Registers the three global shader parameters once per process (before the shader is first
+## loaded), unless the project settings declare them (shader_globals/<name>). The renderer's own
+## list of globals is an editor-only query, so the registration is remembered here.
 static func ensure_globals() -> void:
-	var have := RenderingServer.global_shader_parameter_get_list()
-	if not have.has(PARAM_MASK):
+	if _globals_added:
+		return
+	_globals_added = true
+	if not ProjectSettings.has_setting("shader_globals/" + PARAM_MASK):
 		var img := Image.create(1, 1, false, Image.FORMAT_R8)
 		RenderingServer.global_shader_parameter_add(PARAM_MASK, RenderingServer.GLOBAL_VAR_TYPE_SAMPLER2D,
 			ImageTexture.create_from_image(img))
-	if not have.has(PARAM_ORIGIN):
+	if not ProjectSettings.has_setting("shader_globals/" + PARAM_ORIGIN):
 		RenderingServer.global_shader_parameter_add(PARAM_ORIGIN, RenderingServer.GLOBAL_VAR_TYPE_VEC2, Vector2.ZERO)
-	if not have.has(PARAM_CHUNK):
+	if not ProjectSettings.has_setting("shader_globals/" + PARAM_CHUNK):
 		RenderingServer.global_shader_parameter_add(PARAM_CHUNK, RenderingServer.GLOBAL_VAR_TYPE_FLOAT, 256.0)
+
+
+## True once ensure_globals() registered the parameters in this process.
+static func globals_registered() -> bool:
+	return _globals_added
 
 
 ## Builds the drawn meshes (either may be null) for a grid of `p_grid` chunks of `p_chunk` metres

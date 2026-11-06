@@ -17,7 +17,8 @@ extends Node3D
 ##
 ## The steps (step() returns the name of the step it ran): "request" (ResourceLoader.
 ## load_threaded_request of the ChunkData), "data" (its threaded load polled - "wait" while it is
-## still loading; in deterministic streaming the load is taken at once), "decode" (16-bit heights to
+## still loading; deterministic streaming loads it in this step instead, with no worker thread to
+## wait for, so headless runs stream the same way every time), "decode" (16-bit heights to
 ## floats, cell colours), "rows" (about ROW_VERTICES vertices of the terrain arrays a step), "mesh"
 ## (the ArrayMesh; the chunk joins the tree here), "ground", "water", "scenery" (one key a step),
 ## "solids" (one batch a step), "props_dep" (one not yet cached dependency of a sub-scene: a
@@ -134,18 +135,22 @@ func _step() -> String:
 				push_error("TerrainChunk: %s has no chunk data (%s)" % [chunk_id, data_path])
 				aborted = true
 				return ""
-			var err := ResourceLoader.load_threaded_request(data_path, "", false, ResourceLoader.CACHE_MODE_REUSE)
-			if err != OK:
-				push_error("TerrainChunk: cannot request %s (error %d)" % [data_path, err])
-				aborted = true
-				return ""
+			if not _deterministic():
+				var err := ResourceLoader.load_threaded_request(data_path, "", false, ResourceLoader.CACHE_MODE_REUSE)
+				if err != OK:
+					push_error("TerrainChunk: cannot request %s (error %d)" % [data_path, err])
+					aborted = true
+					return ""
 			stage = Stage.DATA
 			return "request"
 		Stage.DATA:
-			if not _deterministic() \
-					and ResourceLoader.load_threaded_get_status(data_path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-				return "wait"
-			data = ResourceLoader.load_threaded_get(data_path) as ChunkData
+			if _deterministic():
+				# Deterministic streaming takes the load in this step (no worker thread to wait for).
+				data = ResourceLoader.load(data_path, "", ResourceLoader.CACHE_MODE_REUSE) as ChunkData
+			else:
+				if ResourceLoader.load_threaded_get_status(data_path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+					return "wait"
+				data = ResourceLoader.load_threaded_get(data_path) as ChunkData
 			if data == null:
 				push_error("TerrainChunk: %s is not a ChunkData resource" % data_path)
 				aborted = true
@@ -210,13 +215,17 @@ func _step() -> String:
 				# One dependency of the part a step (a building or gate scene, a script), kept by the
 				# streamer for the level's life, so the part itself then loads in a fraction of the time.
 				var dep := _prop_deps[0]
-				var dstatus := ResourceLoader.load_threaded_get_status(dep)
-				if dstatus == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
-					ResourceLoader.load_threaded_request(dep, "", false, ResourceLoader.CACHE_MODE_REUSE)
-					dstatus = ResourceLoader.load_threaded_get_status(dep)
-				if not _deterministic() and dstatus == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-					return "wait"
-				var res := ResourceLoader.load_threaded_get(dep)
+				var res: Resource = null
+				if _deterministic():
+					res = ResourceLoader.load(dep, "", ResourceLoader.CACHE_MODE_REUSE)
+				else:
+					var dstatus := ResourceLoader.load_threaded_get_status(dep)
+					if dstatus == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+						ResourceLoader.load_threaded_request(dep, "", false, ResourceLoader.CACHE_MODE_REUSE)
+						dstatus = ResourceLoader.load_threaded_get_status(dep)
+					if dstatus == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+						return "wait"
+					res = ResourceLoader.load_threaded_get(dep)
 				if _streamer != null and res != null:
 					_streamer.call("keep_resource", dep, res)
 				_prop_deps.remove_at(0)
@@ -226,13 +235,16 @@ func _step() -> String:
 					push_error("TerrainChunk: %s names a missing props scene %s" % [chunk_id, path])
 					_prop_i += 1
 					return "props_load"
-				var status := ResourceLoader.load_threaded_get_status(path)
-				if status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
-					ResourceLoader.load_threaded_request(path, "PackedScene", false, ResourceLoader.CACHE_MODE_REUSE)
-					status = ResourceLoader.load_threaded_get_status(path)
-				if not _deterministic() and status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-					return "wait"
-				_prop_packed = ResourceLoader.load_threaded_get(path) as PackedScene
+				if _deterministic():
+					_prop_packed = ResourceLoader.load(path, "PackedScene", ResourceLoader.CACHE_MODE_REUSE) as PackedScene
+				else:
+					var status := ResourceLoader.load_threaded_get_status(path)
+					if status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+						ResourceLoader.load_threaded_request(path, "PackedScene", false, ResourceLoader.CACHE_MODE_REUSE)
+						status = ResourceLoader.load_threaded_get_status(path)
+					if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+						return "wait"
+					_prop_packed = ResourceLoader.load_threaded_get(path) as PackedScene
 			stage = Stage.PROPS_ADD
 			return "props_load"
 		Stage.PROPS_ADD:
@@ -282,9 +294,19 @@ func abort() -> void:
 
 func _decode() -> void:
 	_heights = data.decode_heights()
-	var hr := data.height_range()
-	height_lo = hr.x
-	height_hi = hr.y
+	var m := data.inner()
+	var lo := INF
+	var hi := -INF
+	for j in m:
+		var row := (j + 1) * data.samples + 1
+		for i in m:
+			var h := _heights[row + i]
+			if h < lo:
+				lo = h
+			if h > hi:
+				hi = h
+	height_lo = lo if lo != INF else 0.0
+	height_hi = hi if hi != -INF else 0.0
 	_arrays = new_terrain_arrays(data.inner())
 	_cell_colors = cell_colors(data, _region_tints())
 	position = data.origin
@@ -439,17 +461,22 @@ static func new_terrain_arrays(m: int) -> Dictionary:
 static func cell_colors(d: ChunkData, region_tints: Dictionary) -> Array[Color]:
 	var out: Array[Color] = []
 	var n := ChunkData.SURFACE_CELLS
-	var cell := d.size_m / n
+	var rn := ChunkData.REGION_CELLS
+	var per := n / rn
+	var surf := d.surface_cells
+	var regs := d.region_cells
+	var has_surf := surf.size() >= n * n
+	var has_regs := regs.size() >= rn * rn and not region_tints.is_empty()
+	out.resize(n * n)
 	for j in n:
 		for i in n:
-			var x := (i + 0.5) * cell
-			var z := (j + 0.5) * cell
-			var s := maxi(d.surface_at_local(x, z), 0)
-			var c: Color = SURFACE_COLORS[mini(s, SURFACE_COLORS.size() - 1)]
-			var r := d.region_index_at_local(x, z)
-			if region_tints.has(r):
-				c = c.lerp(region_tints[r], REGION_TINT_MIX)
-			out.append(c)
+			var s := mini(int(surf[j * n + i]), SURFACE_COLORS.size() - 1) if has_surf else 0
+			var c: Color = SURFACE_COLORS[s]
+			if has_regs:
+				var r := int(regs[(j / per) * rn + i / per])
+				if region_tints.has(r):
+					c = c.lerp(region_tints[r], REGION_TINT_MIX)
+			out[j * n + i] = c
 	return out
 
 
