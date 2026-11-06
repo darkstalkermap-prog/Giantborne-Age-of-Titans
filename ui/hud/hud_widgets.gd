@@ -13,13 +13,13 @@ const WIDGETS := [
 	"res://ui/hud/status_row.gd",        # P03  bottom-left, (16..340, -196..-170)
 	"res://ui/hud/checkpoint_toast.gd",  # P06  top-left under the debug panel line, (12..352, 52..86) (P16; was 52..80)
 	"res://ui/hud/xp_bar.gd",            # P12  bottom-left, (16..340, -166..-152), "Lv 3  120 / 200 XP"
-	"res://ui/hud/ability_notice.gd",    # P12  top-centre, (-260..260, 132..170) (P16; was -250..-212 from the bottom); "New ability: Runic Bolt [6]", out of combat
-	"res://ui/hud/boss_bar.gd",          # P11a top-centre, (-270..270, 14..58) (P16; was -320..320); Hud hides its target frame for bosses
+	"res://ui/hud/ability_notice.gd",    # P12  top-centre, (-260..260, 162..200) (P27; P16 132..170; was -250..-212 from the bottom); "New ability: Runic Bolt [6]", out of combat
+	"res://ui/hud/boss_bar.gd",          # P11a top-centre, (-270..270, 44..88) (P27: under the compass; P16 14..58, was -320..320); Hud hides its target frame for bosses
 	"res://ui/hud/quest_tracker.gd",     # P13  top-right, (-356..-16, 14..132)
 	"res://ui/hud/tutorial_prompt.gd",   # P13  left-centre, (16..396, -70..70 around vertical centre)
 	# M6-M9 (pre-declared by P20, plan M6-M9 §2.14; below the two edge overlays):
-	"res://ui/hud/compass.gd",           # P27  top-centre, (-300..300, 4..28)
-	"res://ui/hud/region_banner.gd",     # P27  centre, (-320..320, 150..196), 3 s
+	"res://ui/hud/compass.gd",           # P27  top-centre, (-270..270, 4..28) (the plan's -300..300 met the tracker at 1280 px)
+	"res://ui/hud/region_banner.gd",     # P27  top-centre, (-320..320, 206..252), 3 s (the plan's 150..196 met the ability notice)
 	"res://ui/hud/discovery_toast.gd",   # P27  top-left under the checkpoint toast, (12..352, 92..126)
 	"res://ui/hud/objective_marker.gd",  # P13  projected marker + edge clamp (36 px inside the edge, clear of the panels) + distance
 	"res://ui/hud/threat_arrows.gd",     # P09  full-rect overlay; draws only edge arrows (24 px inside the edge, clear of the panels)

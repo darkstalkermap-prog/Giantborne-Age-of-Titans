@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.compass",
+	"type": "tutorial_prompt",
+	"description": "P27: the compass and the tracked quest, after the map's lesson.",
+	"text": "The compass at the top points the way: gold for your quest, marks for places you know, ? for something unexplored nearby. {track_next} changes the quest you follow; the journal ({journal}) lists them all.",
+	"trigger": {"type": "flag", "flag": "tutorial.map.seen"},
+	"dismiss": {"type": "timeout", "timeout_s": 14},
+	"requires_flags": ["progress.world_entered"],
+	"min_stage": 1,
+	"priority": 7,
+	"once": true,
+	"defer_in_combat": true,
+	"sets_flag": "tutorial.compass.done"
+}

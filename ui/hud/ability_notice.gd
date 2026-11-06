@@ -9,8 +9,12 @@ extends HudWidget
 ## above the hotbar, (-260..260, -250..-212), overlapped the interact prompt (centre +100..+136) at
 ## 720 px high, and a growth at a shrine shows both at once (Boulder Hurl is learned while "Rest at
 ## the shrine" is on screen). The [key] names the pad combo while the prompts follow a controller.
+## P27 (plan M6-M9 §2.14): (-260..260, 162..200), 30 px lower, under the compass, the target frame
+## and the boss bar that moved down with it; drawn by HudKit's rules (one batch of rectangles).
 
 const SHOW_S := 3.0
+## The panel's top edge (P27: 132 + 30).
+const TOP := 162.0
 const FADE_S := 0.5
 const MAX_FRAME_S := 0.1
 
@@ -22,18 +26,17 @@ var _left := 0.0
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_panel = UiKit.panel(Color(0.08, 0.07, 0.03, 0.88))
+	_panel = HudKit.panel(Color(0.08, 0.07, 0.03, 0.88))
 	_panel.anchor_left = 0.5
 	_panel.anchor_right = 0.5
 	_panel.offset_left = -260
 	_panel.offset_right = 260
-	_panel.offset_top = 132
-	_panel.offset_bottom = 170
+	_panel.offset_top = TOP
+	_panel.offset_bottom = TOP + 38
 	add_child(_panel)
-	_label = UiKit.label("", 19, Color(1.0, 0.86, 0.45))
+	_label = HudKit.label("", HudKit.BIG, Color(1.0, 0.86, 0.45))
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_label.clip_text = true
 	_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_panel.add_child(_label)
 	_panel.visible = false

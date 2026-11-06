@@ -5,10 +5,15 @@ extends HudWidget
 ## Hollow tutorial). For a few seconds after quest or dialogue XP it adds "+110 XP - Prototype
 ## pacing: accelerated quest XP" (decision 7). Hidden while quests are inactive (the sandbox) or
 ## nothing is tracked. Read API: lines_now(), visible_text().
+## P27 (plan M6-M9 §2.12, §3.10 design 4): the first line follows the tracked quest
+## (Quests.tracked_id(): the main quest unless the player tracks another with T / D-pad Left or the
+## journal); the second is then the main quest, else the first other quest. Drawn by HudKit's rules
+## (no clipping: the lines trim with an ellipsis and the panel fits its region).
 
 const PACING_SHOW_S := 4.0
 const MAX_FRAME_S := 0.1
 const GOLD := Color(1.0, 0.86, 0.45)
+const COMPLETE_TEXT := "Complete. The valley is yours to explore."
 
 var _panel: PanelContainer
 var _main_title: Label
@@ -22,52 +27,66 @@ var _lines: Dictionary = {}
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_panel = UiKit.panel(Color(0.05, 0.06, 0.08, 0.72))
+	_panel = HudKit.panel(Color(0.05, 0.06, 0.08, 0.72))
 	_panel.anchor_left = 1.0
 	_panel.anchor_right = 1.0
 	_panel.offset_left = -356
 	_panel.offset_right = -16
 	_panel.offset_top = 14
 	_panel.offset_bottom = 132
-	_panel.clip_contents = true
 	add_child(_panel)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 1)
+	v.add_theme_constant_override("separation", 0)
 	_panel.add_child(v)
-	_main_title = _line(v, 12, GOLD)
-	_main_text = _line(v, 15, UiKit.TEXT, 2)
-	_side_title = _line(v, 12, UiKit.MUTED)
-	_side_text = _line(v, 13, UiKit.TEXT, 1)
-	_pacing = _line(v, 11, GOLD)
+	_main_title = _line(v, HudKit.SMALL, GOLD)
+	_main_text = _line(v, HudKit.TEXT, UiKit.TEXT, 2)
+	_side_title = _line(v, HudKit.SMALL, UiKit.MUTED)
+	_side_text = _line(v, HudKit.TEXT, UiKit.TEXT, 1)
+	_pacing = _line(v, HudKit.SMALL, GOLD)
 	_panel.visible = false
 	Events.xp_gained.connect(_on_xp_gained)
 
 
 func _line(parent: Control, size: int, color: Color, max_lines := 1) -> Label:
-	var l := UiKit.label("", size, color)
+	var l := HudKit.label("", size, color)
 	l.custom_minimum_size = Vector2(324, 0)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if max_lines > 1 else TextServer.AUTOWRAP_OFF
 	l.max_lines_visible = max_lines
-	l.clip_text = max_lines == 1
+	l.add_theme_constant_override("line_spacing", 0)
 	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	parent.add_child(l)
 	return l
 
 
-## What the tracker shows for a list of objectives (Quests.objectives(): main first) and whether
-## the main quest is complete: {"main_title", "main_text", "side_title", "side_text"} ("" = none).
-static func lines_for(objectives: Array, main_done := false, main_title := "") -> Dictionary:
+## What the tracker shows for a list of objectives (Quests.objectives(): main first), whether the
+## main quest is complete and (P27) the tracked quest: {"main_title", "main_text", "side_title",
+## "side_text"} ("" = none). The first line is the tracked quest's objective (else the main
+## quest's; else, the main quest done, COMPLETE_TEXT); the second the main quest's when another is
+## tracked, else the first other quest's.
+static func lines_for(objectives: Array, main_done := false, main_title := "", tracked_id := "") -> Dictionary:
 	var out := {"main_title": "", "main_text": "", "side_title": "", "side_text": ""}
-	var side: Dictionary = {}
+	var main: Dictionary = {}
+	var tracked: Dictionary = {}
 	for o: Dictionary in objectives:
-		if bool(o.get("main", false)) and out.main_text == "":
-			out.main_title = str(o.get("title", ""))
-			out.main_text = str(o.get("text", ""))
-		elif not bool(o.get("main", false)) and side.is_empty():
-			side = o
-	if out.main_text == "" and main_done:
+		if main.is_empty() and bool(o.get("main", false)):
+			main = o
+		if tracked.is_empty() and tracked_id != "" and str(o.get("quest_id", "")) == tracked_id:
+			tracked = o
+	var first: Dictionary = tracked if not tracked.is_empty() else main
+	if not first.is_empty():
+		out.main_title = str(first.get("title", ""))
+		out.main_text = str(first.get("text", ""))
+	elif main_done:
 		out.main_title = main_title
-		out.main_text = "Complete. The valley is yours to explore."
+		out.main_text = COMPLETE_TEXT
+	var side: Dictionary = {}
+	if not first.is_empty() and not is_same(first, main) and not main.is_empty():
+		side = main
+	else:
+		for o: Dictionary in objectives:
+			if not bool(o.get("main", false)) and not is_same(o, first):
+				side = o
+				break
 	if not side.is_empty():
 		out.side_title = str(side.get("title", ""))
 		out.side_text = str(side.get("text", ""))
@@ -88,7 +107,7 @@ func _process(delta: float) -> void:
 		return
 	var main_rec := Quests.quest_record(Quests.main_quest_id)
 	_lines = lines_for(Quests.objectives(), Quests.is_complete(Quests.main_quest_id),
-		str(main_rec.get("display_name", "")))
+		str(main_rec.get("display_name", "")), Quests.tracked_id())
 	_main_title.text = str(_lines.main_title)
 	_main_text.text = str(_lines.main_text)
 	_side_title.text = str(_lines.side_title)

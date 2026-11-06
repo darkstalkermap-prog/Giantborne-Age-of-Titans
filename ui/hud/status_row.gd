@@ -24,9 +24,9 @@ func _ready() -> void:
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_row)
 	for i in MAX_CHIPS:
-		var chip := UiKit.panel(Color(0.05, 0.06, 0.08, 0.78))
+		var chip := HudKit.panel(Color(0.05, 0.06, 0.08, 0.78))
 		chip.visible = false
-		var label := UiKit.label("", 12)
+		var label := HudKit.label("", HudKit.SMALL)
 		chip.add_child(label)
 		_row.add_child(chip)
 		_chips.append(chip)

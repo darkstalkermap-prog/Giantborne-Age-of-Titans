@@ -30,6 +30,10 @@ const OFF_PATH := ["encounter.hollow_sparring", "encounter.village_guards", "enc
 const PROMPTS := ["tutorial.camera", "tutorial.light", "tutorial.heavy", "tutorial.footfall", "tutorial.lock",
 	"tutorial.block", "tutorial.dodge", "tutorial.shrine", "tutorial.soldier_guard", "tutorial.grab",
 	"tutorial.hurl", "tutorial.attributes", "tutorial.boss_charge"]
+## The world's prompts (P27, plan M6-M9 §3.10: data/tutorial/{map,compass,fast_travel,discovery,size_gate,
+## sealed_place}.json): each waits for progress.world_entered, so none shows in a first Valley run.
+const WORLD_PROMPTS := ["tutorial.map", "tutorial.compass", "tutorial.fast_travel", "tutorial.discovery",
+	"tutorial.size_gate", "tutorial.sealed_place"]
 const QUESTS := ["quest.main", "quest.tutorial", "quest.village", "quest.village_cache", "quest.village_ogre"]
 
 static var _index: Dictionary = {}
@@ -178,6 +182,11 @@ func _written_flags() -> Dictionary:
 	if not (scene.arena as Dictionary).is_empty():
 		w[str(scene.arena.flag)] = true
 	w[UprootTree.TAKEN_FLAG] = true
+	# Flags code writes for the world's prompts: GameSession (P20) on entering the world, Discovery and
+	# the map screen (P27).
+	w["progress.world_entered"] = true
+	w[Discovery.SEALED_COUNT_FLAG] = true
+	w[Discovery.MAP_OPENED_FLAG] = true
 	return w
 
 
@@ -250,8 +259,12 @@ func test_every_id_in_the_scene_is_unique_and_the_content_is_shipped() -> void:
 		prompt_ids.append(str(rec.id))
 	prompt_ids.sort()
 	var expected := PROMPTS.duplicate()
+	expected.append_array(WORLD_PROMPTS)
 	expected.sort()
-	assert_eq(prompt_ids, expected, "the 13 tutorial prompts of plan §4.5")
+	assert_eq(prompt_ids, expected, "the 13 tutorial prompts of plan §4.5 and the world's six (P27)")
+	for id: String in WORLD_PROMPTS:
+		assert_true((GameData.get_record(id).get("requires_flags", []) as Array).has("progress.world_entered"),
+			"%s waits for the world" % id)
 	var ids := {}
 	for rec: Dictionary in _valley_encounters():
 		for sp: Dictionary in rec.get("spawns", []):

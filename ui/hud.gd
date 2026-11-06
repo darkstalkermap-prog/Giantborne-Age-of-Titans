@@ -23,13 +23,29 @@ extends Control
 ## M4 gate: the edge overlays (threat arrows, objective marker) are the last widgets, so they draw
 ## over every panel (under the death and help overlays), and they slide along the screen edge clear
 ## of the panels drawn now (overlay_keep_out, HudEdge.clear_of).
+##
+## P27 (plan M6-M9 §2.14, §3.10; FOLLOWUPS: the HUD's draw calls):
+## - Every part is drawn by HudKit's rules - panels and bars as rectangles, text with a drop shadow
+##   and no outline in three sizes, nothing clipped, absolute z layers (the HUD itself on
+##   HudKit.Z_BACK, so whatever its widgets add without a layer of their own joins the rectangles) -
+##   so a view's HUD costs one batch of rectangles and one per text size, not about 120 draw calls.
+## - The compass sits at the top centre (4..28), so the target frame and the boss bar sit 30 px lower
+##   (44..104; 94..154 under the bar) and the ability notice at 162..200.
+## - The lock line shows PlayerTargeting.lock_label() (P30): "Pike Regiment (8)" for a formation, a
+##   drawn flag before "Banner of the Toll-Riders" for its banner (the label's "⚑" is not in the
+##   HUD's font), else the target's name; with the distance.
+## - track_next (T / D-pad Left) tracks the next active quest (Quests.track_next) and says which.
 
 const MESSAGE_LIFETIME := 2.6
-## The target frame's top edge, and its top edge while the boss bar shows (below the bar's 58).
-const TARGET_FRAME_TOP := 14.0
-const TARGET_FRAME_TOP_UNDER_BOSS := 64.0
+## The target frame's top edge, and its top edge while the boss bar shows (below the bar's 88).
+## P27: 30 px lower than P16's 14 / 64, under the compass.
+const TARGET_FRAME_TOP := 44.0
+const TARGET_FRAME_TOP_UNDER_BOSS := 94.0
 const TARGET_FRAME_HEIGHT := 60.0
 const HELP_TITLE := "CONTROLS  (rebind in Pause > Controls)"
+## The banner mark P30's lock_label() puts before a banner's name (drawn as a flag instead).
+const BANNER_MARK := "⚑"
+const BANNER_FLAG_COLOR := Color(0.95, 0.72, 0.30)
 
 var player: GiantPlayer
 var _bars: Dictionary = {}
@@ -40,6 +56,7 @@ var _capture_hint: PanelContainer
 var _marker: Control
 var _target_frame: PanelContainer
 var _target_name: Label
+var _target_flag: Control
 var _target_bar: ProgressBar
 var _target_hint: Label
 var _messages: VBoxContainer
@@ -65,6 +82,8 @@ var _time := 0.0
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# P27: the HUD's base layer; every child that names no layer of its own draws with the rectangles.
+	HudKit.set_z(self, HudKit.Z_BACK)
 	_build_resources()
 	_build_hotbar()
 	_build_center()
@@ -82,6 +101,30 @@ func _ready() -> void:
 	Events.growth_changed.connect(_on_growth_changed)
 	Events.action_rejected.connect(_on_action_rejected)
 	Settings.changed.connect(_on_settings_changed)
+
+
+## P27: track_next (T / D-pad Left without LT) follows the next active quest and says which.
+func _unhandled_input(event: InputEvent) -> void:
+	if not InputMap.has_action("track_next") or not event.is_action_pressed("track_next"):
+		return
+	var text := track_next_now()
+	if text != "":
+		get_viewport().set_input_as_handled()
+
+
+## Tracks the next active quest (Quests.track_next) and shows "Following: <quest>" (only one quest:
+## "Following: <quest> (no other quest)"). Returns the line shown ("" when no quest is active).
+func track_next_now() -> String:
+	if not Quests.is_active():
+		return ""
+	var before := Quests.tracked_id()
+	var id := Quests.track_next()
+	if id == "":
+		return ""
+	var title := str(Quests.quest_record(id).get("display_name", id))
+	var text := "Following: %s" % title + ("" if id != before else " (no other quest)")
+	show_message(text, "info")
+	return text
 
 
 func _on_settings_changed(key: String) -> void:
@@ -136,7 +179,7 @@ func _on_action_rejected(_tick: int, actor_id: String, action_id: String, reason
 
 
 func _build_resources() -> void:
-	var p := UiKit.panel()
+	var p := HudKit.panel()
 	p.position = Vector2(16, 0)
 	p.anchor_top = 1.0
 	p.anchor_bottom = 1.0
@@ -152,16 +195,16 @@ func _build_resources() -> void:
 	for spec: Array in [["health", "Health", UiKit.HEALTH, 18], ["stamina", "Stamina", UiKit.STAMINA, 14],
 			["essence", "Essence", UiKit.ESSENCE, 10], ["fury", "Fury", UiKit.FURY, 10]]:
 		var row := HBoxContainer.new()
-		var name_label := UiKit.label(spec[1], 13, UiKit.MUTED)
+		var name_label := HudKit.label(spec[1], HudKit.TEXT, UiKit.MUTED)
 		name_label.custom_minimum_size = Vector2(62, 0)
 		row.add_child(name_label)
 		var stack := Control.new()
 		stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		stack.custom_minimum_size = Vector2(0, spec[3])
-		var b := UiKit.bar(spec[2], spec[3])
+		var b := HudKit.bar(spec[2], spec[3])
 		b.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		stack.add_child(b)
-		var value := UiKit.label("", 11)
+		var value := HudKit.label("", HudKit.SMALL)
 		value.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -170,7 +213,8 @@ func _build_resources() -> void:
 		v.add_child(row)
 		_bars[spec[0]] = b
 		_bar_labels[spec[0]] = value
-	_mode_label = UiKit.label("", 12, UiKit.MUTED)
+	_mode_label = HudKit.label("", HudKit.SMALL, UiKit.MUTED)
+	_mode_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	v.add_child(_mode_label)
 
 
@@ -194,7 +238,8 @@ func _build_hotbar() -> void:
 		h.add_child(slot.root)
 		_slots.append(slot)
 		_slot_states.append({"id": "", "reason_code": "", "reason": "", "target": "", "key": "", "alt_key": ""})
-	_loot_label = UiKit.label("", 13, UiKit.MUTED)
+	_loot_label = HudKit.label("", HudKit.TEXT, UiKit.MUTED)
+	_loot_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_loot_label.anchor_left = 1.0
 	_loot_label.anchor_right = 1.0
 	_loot_label.anchor_top = 1.0
@@ -210,47 +255,47 @@ func _build_hotbar() -> void:
 func _make_slot(index: int) -> Dictionary:
 	var root := PanelContainer.new()
 	root.custom_minimum_size = Vector2(58, 60)
-	root.add_theme_stylebox_override("panel", UiKit.box(UiKit.BG, 6))
+	root.add_theme_stylebox_override("panel", HudKit.box(UiKit.BG))
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	HudKit.set_z(root, HudKit.Z_BACK)
 	var stack := Control.new()
 	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(stack)
-	var cooldown := ColorRect.new()
-	cooldown.color = Color(0, 0, 0, 0.6)
+	var cooldown := HudKit.rect(Color(0, 0, 0, 0.6))
 	cooldown.anchor_right = 1.0
 	cooldown.anchor_top = 1.0
 	cooldown.anchor_bottom = 1.0
-	cooldown.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stack.add_child(cooldown)
-	var key := UiKit.label("", 12, UiKit.TEXT)
+	var key := HudKit.label("", HudKit.SMALL, UiKit.TEXT)
 	key.position = Vector2(0, -4)
 	stack.add_child(key)
-	var pad := UiKit.label("", 8, UiKit.MUTED)
+	var pad := HudKit.label("", HudKit.SMALL, UiKit.MUTED)
 	pad.anchor_left = 1.0
 	pad.anchor_right = 1.0
 	pad.offset_left = -40
-	pad.offset_top = -2
+	pad.offset_top = -4
 	pad.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	stack.add_child(pad)
-	var title := UiKit.label("", 9)
+	var title := HudKit.label("", HudKit.SMALL)
 	title.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.clip_text = true
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	stack.add_child(title)
-	var cost := UiKit.label("", 9, UiKit.STAMINA)
+	var cost := HudKit.label("", HudKit.SMALL, UiKit.STAMINA)
 	cost.anchor_top = 1.0
 	cost.anchor_bottom = 1.0
 	cost.anchor_right = 1.0
-	cost.offset_top = -13
+	cost.offset_top = -14
 	cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cost.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	stack.add_child(cost)
-	var timer := UiKit.label("", 18)
+	var timer := HudKit.label("", HudKit.BIG)
 	timer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	timer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	timer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	stack.add_child(timer)
-	var reason := UiKit.label("", 10, UiKit.BAD)
+	var reason := HudKit.label("", HudKit.SMALL, UiKit.BAD)
 	reason.anchor_top = 1.0
 	reason.anchor_bottom = 1.0
 	reason.anchor_right = 1.0
@@ -261,14 +306,13 @@ func _make_slot(index: int) -> Dictionary:
 	reason.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	stack.add_child(reason)
 	# Selected target of projectile slots ("» Soldier" when locked, otherwise "aim"), above the slot.
-	var target := UiKit.label("", 10, UiKit.TEXT)
+	var target := HudKit.label("", HudKit.SMALL, UiKit.TEXT)
 	target.anchor_right = 1.0
 	target.offset_left = -10
 	target.offset_right = 10
 	target.offset_top = -16
 	target.offset_bottom = -4
 	target.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	target.clip_text = true
 	target.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	stack.add_child(target)
 	return {"root": root, "cooldown": cooldown, "key": key, "pad": pad, "title": title, "cost": cost,
@@ -276,7 +320,7 @@ func _make_slot(index: int) -> Dictionary:
 
 
 func _build_center() -> void:
-	_capture_hint = UiKit.panel(Color(0.05, 0.06, 0.08, 0.85))
+	_capture_hint = HudKit.panel(Color(0.05, 0.06, 0.08, 0.85))
 	_capture_hint.anchor_left = 0.5
 	_capture_hint.anchor_right = 0.5
 	_capture_hint.anchor_top = 0.5
@@ -285,7 +329,7 @@ func _build_center() -> void:
 	_capture_hint.offset_right = 190
 	_capture_hint.offset_top = 40
 	_capture_hint.offset_bottom = 84
-	var hint := UiKit.label("Click the game to control the camera", 17)
+	var hint := HudKit.label("Click the game to control the camera", HudKit.BIG)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_capture_hint.add_child(hint)
 	_capture_hint.visible = false
@@ -301,7 +345,7 @@ func _build_center() -> void:
 
 
 func _build_target_frame() -> void:
-	_target_frame = UiKit.panel()
+	_target_frame = HudKit.panel()
 	_target_frame.anchor_left = 0.5
 	_target_frame.anchor_right = 0.5
 	_target_frame.offset_left = -170
@@ -311,14 +355,27 @@ func _build_target_frame() -> void:
 	_target_frame.visible = false
 	add_child(_target_frame)
 	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 2)
 	_target_frame.add_child(v)
-	_target_name = UiKit.label("", 15)
+	# P27: the lock line - a drawn flag before a banner's name (BannerFlag), then the label.
+	var line := HBoxContainer.new()
+	line.alignment = BoxContainer.ALIGNMENT_CENTER
+	line.add_theme_constant_override("separation", 6)
+	v.add_child(line)
+	_target_flag = BannerFlag.new()
+	_target_flag.custom_minimum_size = Vector2(12, 16)
+	_target_flag.visible = false
+	line.add_child(_target_flag)
+	_target_name = HudKit.label("", HudKit.TEXT)
 	_target_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(_target_name)
-	_target_bar = UiKit.bar(UiKit.HEALTH, 10)
+	_target_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_target_name.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	line.add_child(_target_name)
+	_target_bar = HudKit.bar(UiKit.HEALTH, 10)
 	v.add_child(_target_bar)
-	_target_hint = UiKit.label("", 11, UiKit.MUTED)
+	_target_hint = HudKit.label("", HudKit.SMALL, UiKit.MUTED)
 	_target_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_target_hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	v.add_child(_target_hint)
 
 
@@ -343,6 +400,7 @@ func _build_death() -> void:
 	_death.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_death.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_death.visible = false
+	HudKit.set_z(_death, HudKit.Z_DEATH)
 	add_child(_death)
 	var v := VBoxContainer.new()
 	v.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -352,10 +410,10 @@ func _build_death() -> void:
 	v.offset_bottom = 60
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	_death.add_child(v)
-	var title := UiKit.label("DEFEATED", 48, UiKit.BAD)
+	var title := HudKit.label("DEFEATED", 48, UiKit.BAD, HudKit.Z_DEATH_TEXT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(title)
-	_death_hint = UiKit.label(death_hint(false, OS.is_debug_build()), 18)
+	_death_hint = HudKit.label(death_hint(false, OS.is_debug_build()), HudKit.BIG, UiKit.TEXT, HudKit.Z_DEATH_TEXT)
 	_death_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(_death_hint)
 
@@ -378,7 +436,8 @@ func death_hint_text() -> String:
 
 
 func _build_help() -> void:
-	_help = UiKit.panel(Color(0.05, 0.06, 0.08, 0.94))
+	_help = HudKit.panel(Color(0.05, 0.06, 0.08, 0.94))
+	HudKit.set_z(_help, HudKit.Z_HELP)
 	_help.anchor_left = 0.5
 	_help.anchor_right = 0.5
 	_help.anchor_top = 0.5
@@ -394,7 +453,7 @@ func _build_help() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
 	_help.add_child(v)
-	_help_label = UiKit.label(HELP_TITLE, 16)
+	_help_label = HudKit.label(HELP_TITLE, HudKit.TEXT, UiKit.TEXT, HudKit.Z_HELP_TEXT)
 	v.add_child(_help_label)
 	_help_grid = GridContainer.new()
 	_help_grid.columns = 3
@@ -449,6 +508,11 @@ static func help_rows_for(loadout: Dictionary) -> Array:
 	rows.append(_help_row("Ultimate: %s (%d fury)" % [ult.display_name, int(ult.fury_cost)] if ult != null
 		else "Ultimate (none equipped)", "ultimate"))
 	rows.append(_help_row("Inventory", "inventory"))
+	# P27: the map (with its pin), the journal and the tracked quest.
+	rows.append(_help_row("Map", "map"))
+	rows.append(_help_row("Map: pin here / clear the pin", "map_pin"))
+	rows.append(_help_row("Journal", "journal"))
+	rows.append(_help_row("Follow the next quest", "track_next"))
 	rows.append(_help_row("Pause / settings / rebind", "pause"))
 	rows.append(_help_row("This overlay", "help"))
 	return rows
@@ -482,11 +546,12 @@ func _rebuild_help() -> void:
 	var on := UiKit.TEXT
 	var off := UiKit.MUTED
 	for h: Array in [["Action", on], ["Keyboard / mouse", off if pad else on], ["Controller", on if pad else off]]:
-		_help_grid.add_child(UiKit.label(str(h[0]), 14, Color(0.55, 0.85, 1.0) if h[1] == on else off))
+		_help_grid.add_child(HudKit.label(str(h[0]), HudKit.TEXT, Color(0.55, 0.85, 1.0) if h[1] == on else off,
+			HudKit.Z_HELP_TEXT))
 	for r: Array in _help_rows:
-		_help_grid.add_child(UiKit.label(str(r[0]), 13, on))
-		_help_grid.add_child(UiKit.label(str(r[1]), 13, off if pad else on))
-		_help_grid.add_child(UiKit.label(str(r[2]), 13, on if pad else off))
+		_help_grid.add_child(HudKit.label(str(r[0]), HudKit.TEXT, on, HudKit.Z_HELP_TEXT))
+		_help_grid.add_child(HudKit.label(str(r[1]), HudKit.TEXT, off if pad else on, HudKit.Z_HELP_TEXT))
+		_help_grid.add_child(HudKit.label(str(r[2]), HudKit.TEXT, on if pad else off, HudKit.Z_HELP_TEXT))
 	var notes := PackedStringArray()
 	if OS.is_debug_build():
 		notes.append("Debug: F3 panel, F5 reset sandbox, F6 / F7 grow / shrink, F8 +100 XP, F9 reload checkpoint")
@@ -516,8 +581,9 @@ func show_message(text: String, kind: String = "info") -> void:
 			color = UiKit.BAD
 		"good":
 			color = UiKit.GOOD
-	var l := UiKit.label(text, 17, color)
+	var l := HudKit.label(text, HudKit.BIG, color)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	l.set_meta("born", _time)
 	_messages.add_child(l)
 	while _messages.get_child_count() > 3:
@@ -773,7 +839,11 @@ func _update_target() -> void:
 	if _target_frame.offset_top != top:
 		_target_frame.offset_top = top
 		_target_frame.offset_bottom = top + TARGET_FRAME_HEIGHT
-	_target_name.text = "%s   %d m" % [target.display_name(), int(player.global_position.distance_to(target.actor.global_position))]
+	# P27: the lock line - PlayerTargeting.lock_label() (P30: a formation's name and count, a banner's
+	# name after a drawn flag), else the target's name; then the distance.
+	var line := lock_line(_lock_label(target))
+	_target_flag.visible = bool(line.banner)
+	_target_name.text = "%s   %d m" % [str(line.text), int(player.global_position.distance_to(target.actor.global_position))]
 	var p := target.combatant.pools
 	_target_bar.value = p.health / maxf(p.health_max, 0.001)
 	_target_hint.text = lock_hint(InputBindings.last_device_is_pad())
@@ -784,6 +854,32 @@ func _update_target() -> void:
 		_marker.position = cam.unproject_position(anchor) - Vector2(16, 16)
 	else:
 		_marker.visible = false
+
+
+## The lock label of the player's lock (PlayerTargeting.lock_label, P30), else `target`'s name.
+func _lock_label(target: CombatEntity) -> String:
+	if player.targeting != null and player.targeting.has_method("lock_label"):
+		var label := str(player.targeting.call("lock_label"))
+		if label != "":
+			return label
+	return target.display_name()
+
+
+## The lock line for a lock label (P27): {"text", "banner"} - a banner's mark (BANNER_MARK) becomes
+## a drawn flag ("banner": true) and leaves the text: "⚑ Banner of the Toll-Riders" ->
+## {"text": "Banner of the Toll-Riders", "banner": true}.
+static func lock_line(label: String) -> Dictionary:
+	var t := label.strip_edges()
+	if t.begins_with(BANNER_MARK):
+		return {"text": t.trim_prefix(BANNER_MARK).strip_edges(), "banner": true}
+	return {"text": t, "banner": false}
+
+
+## The lock line shown now: {"text" (with the distance), "banner"} ({} while no frame shows; tests).
+func lock_line_now() -> Dictionary:
+	if _target_frame == null or not _target_frame.visible:
+		return {}
+	return {"text": _target_name.text, "banner": _target_flag.visible}
 
 
 ## True while the boss bar widget (ui/hud/boss_bar.gd, P11a) shows `target` (P11a: the target
@@ -900,18 +996,27 @@ func _update_messages() -> void:
 			child.queue_free()
 
 
+## P27: rectangles only (a dot and four ticks), so the crosshair joins the HUD's batch of rectangles
+## (its circle and ring were two draw calls of their own every frame).
 class Crosshair:
 	extends Control
 
-	func _process(_delta: float) -> void:
-		queue_redraw()
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_RESIZED:
+			queue_redraw()
 
 	func _draw() -> void:
-		var c := size * 0.5
-		draw_circle(c, 3.0, Color(1, 1, 1, 0.85))
-		draw_arc(c, 9.0, 0.0, TAU, 24, Color(0, 0, 0, 0.45), 1.5)
+		var c := (size * 0.5).round()
+		var shade := Color(0, 0, 0, 0.45)
+		HudKit.draw_dot(self, c, 2.5, shade)
+		HudKit.draw_dot(self, c, 1.5, Color(1, 1, 1, 0.9))
+		for d: Vector2 in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+			var mid := c + d * 9.0
+			var half := Vector2(absf(d.y), absf(d.x)) * 0.75 + Vector2(absf(d.x), absf(d.y)) * 2.0
+			draw_rect(Rect2(mid - half, half * 2.0), shade)
 
 
+## P27: the lock diamond as four turned rectangles and a dot (it was a polyline and a circle).
 class LockMarker:
 	extends Control
 
@@ -920,6 +1025,15 @@ class LockMarker:
 
 	func _draw() -> void:
 		var c := Vector2(16, 16)
-		var pts := PackedVector2Array([c + Vector2(0, -13), c + Vector2(13, 0), c + Vector2(0, 13), c + Vector2(-13, 0), c + Vector2(0, -13)])
-		draw_polyline(pts, Color(1.0, 0.35, 0.25), 2.5)
-		draw_circle(c, 2.5, Color(1.0, 0.35, 0.25))
+		HudKit.draw_diamond_outline(self, c, 13.0, Color(1.0, 0.35, 0.25), 2.5)
+		HudKit.draw_dot(self, c, 2.0, Color(1.0, 0.35, 0.25))
+
+
+## P27: the banner's flag before its name on the lock line: a pole and a flag (two rectangles).
+class BannerFlag:
+	extends Control
+
+	func _draw() -> void:
+		var h := size.y
+		draw_rect(Rect2(1, 1, 2, h - 2), Color(0.85, 0.8, 0.7))
+		draw_rect(Rect2(3, 2, size.x - 4, h * 0.45), Hud.BANNER_FLAG_COLOR)

@@ -489,3 +489,9 @@ func nav_query_settings() -> Dictionary:
 ## @anchor P25
 
 ## @anchor P27
+# --- discovery and the map (P27, plan M6-M9 §3.10) ------------------------------------------------
+# The level's Discovery runtime node (RUNTIME_NODES) and what the map screen draws of this level.
+
+## The level's Discovery node (null where the level has none: the sandbox, test levels).
+func discovery() -> Discovery:
+	return get_node_or_null("Discovery") as Discovery

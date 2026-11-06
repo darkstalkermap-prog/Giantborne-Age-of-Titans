@@ -15,7 +15,7 @@ var _gain_left := 0.0
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_bar = UiKit.bar(Color(0.86, 0.74, 0.30), 14)
+	_bar = HudKit.bar(Color(0.86, 0.74, 0.30), 14)
 	_bar.anchor_top = 1.0
 	_bar.anchor_bottom = 1.0
 	_bar.offset_left = 16
@@ -23,11 +23,11 @@ func _ready() -> void:
 	_bar.offset_top = -166
 	_bar.offset_bottom = -152
 	add_child(_bar)
-	_label = UiKit.label("", 11)
+	_label = HudKit.label("", HudKit.SMALL)
 	_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_label.offset_left = 6
-	_label.clip_text = true
+	_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_bar.add_child(_label)
 	_bar.visible = false
 	Events.xp_gained.connect(_on_xp_gained)

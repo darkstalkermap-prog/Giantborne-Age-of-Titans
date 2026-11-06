@@ -543,11 +543,16 @@ func objectives() -> Array:
 		var o := objective_for(id)
 		if not o.is_empty():
 			out.append(o)
+	_p27_mark_tracked(out)   # P27: "tracked" on each
 	return out
 
 
-## The first objective of objectives() ({} when no quest is active).
+## The first objective of objectives() ({} when no quest is active). P27: the tracked quest's
+## objective (Quests.tracked_id(): the main quest unless the player tracks another).
 func current_objective() -> Dictionary:
+	var tracked := _p27_tracked_objective()
+	if not tracked.is_empty():
+		return tracked
 	for id in active_quest_ids():
 		var o := objective_for(id)
 		if not o.is_empty():
@@ -1030,12 +1035,104 @@ func reset_for_tests() -> void:
 	_reset_level_memory()
 	tutorial.shown_ids.clear()
 	history.clear()
+	_p27_reset()
 
 
 # --------------------------------------------------------------------------- package anchors (M6-M9)
 # Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
 
 ## @anchor P27
+# --- the tracked quest (P27; plan M6-M9 §2.12, §3.10 design 4) -------------------------------------
+# The objective marker, the compass and the tracker follow one quest: tracked_quest_id while that
+# quest is active, else the main quest while it is active, else the first active quest
+# (tracked_id()). GameSession saves tracked_quest_id as progress.tracked_quest and puts it back on
+# load (P20), so it survives a save, a death and a fast travel. track_next() (T / D-pad Left) cycles
+# the active quests in tracker order; the journal's "Track" calls track(). current_objective() is the
+# tracked quest's (one hook line), objectives() marks it ("tracked"), and while another quest is
+# tracked the main quest's current markers are the compass's leads (at most LEAD_LIMIT: the oath
+# leads of the main thread's multi-marker stage, P29).
+
+## The most leads the compass shows (plan §2.14: up to 3 oath leads).
+const LEAD_LIMIT := 3
+
+## The quest the player chose to follow ("" = none chosen: the main quest leads). Saved by GameSession.
+var tracked_quest_id := ""
+
+
+## Tracks an active quest: tracked_quest_id and Events.quest_tracked. False when it is not active.
+func track(quest_id: String) -> bool:
+	if quest_id == "" or quest_state(quest_id) != ACTIVE:
+		return false
+	var changed := tracked_id() != quest_id or tracked_quest_id != quest_id
+	tracked_quest_id = quest_id
+	if changed:
+		Events.quest_tracked.emit(quest_id)
+	return true
+
+
+## Tracks the next active quest in tracker order (main first), wrapping; returns it ("" when no
+## quest is active).
+func track_next() -> String:
+	var ids := active_quest_ids()
+	if ids.is_empty():
+		return ""
+	var i := ids.find(tracked_id())
+	var next := ids[(i + 1) % ids.size()]
+	track(next)
+	return next
+
+
+## The quest followed now: tracked_quest_id while active, else the main quest while active, else the
+## first active quest ("" when none is active).
+func tracked_id() -> String:
+	var ids := active_quest_ids()
+	if tracked_quest_id != "" and ids.has(tracked_quest_id):
+		return tracked_quest_id
+	if ids.has(main_quest_id):
+		return main_quest_id
+	return ids[0] if not ids.is_empty() else ""
+
+
+## The tracked quest's objective (objective_for; {} when no quest is active).
+func tracked_objective() -> Dictionary:
+	var id := tracked_id()
+	return objective_for(id) if id != "" else {}
+
+
+## The compass's leads while another quest is tracked: the main quest's current markers that have
+## a position, at most LEAD_LIMIT: [{"marker_id", "position"}] ([] while the main quest is the
+## tracked one or is not active).
+func leads() -> Array:
+	var out: Array = []
+	var tracked := tracked_id()
+	if tracked == "" or tracked == main_quest_id or quest_state(main_quest_id) != ACTIVE:
+		return out
+	var o := objective_for(main_quest_id)
+	var markers: PackedStringArray = o.get("markers", PackedStringArray())
+	for m in markers:
+		if out.size() >= LEAD_LIMIT:
+			break
+		var pos := objective_position(m)
+		if pos.is_finite():
+			out.append({"marker_id": m, "position": pos})
+	return out
+
+
+## objectives() hook: marks the tracked quest's objective ("tracked": true, the others false).
+func _p27_mark_tracked(objs: Array) -> void:
+	var tracked := tracked_id()
+	for o: Dictionary in objs:
+		o["tracked"] = str(o.get("quest_id", "")) == tracked
+
+
+## current_objective() hook: the tracked quest's objective, {} when it has none.
+func _p27_tracked_objective() -> Dictionary:
+	return tracked_objective()
+
+
+## reset_for_tests() hook.
+func _p27_reset() -> void:
+	tracked_quest_id = ""
 
 ## @anchor P29
 

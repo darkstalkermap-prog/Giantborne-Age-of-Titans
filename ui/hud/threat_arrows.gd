@@ -11,6 +11,9 @@ extends HudWidget
 ## Hud.overlay_keep_out) slides along the edge until the arrow clears it (HudEdge.clear_of): still
 ## EDGE_INSET_PX inside the edge, still pointing at the threat.
 ## Read API: arrows() (computed now), visible_count(); geometry: tip_for(), footprint().
+## P27: drawn by HudKit's rules - each arrow a dark rhombus with the coloured one inside, turned
+## rectangles on the edge-overlay layer (HudKit.Z_OVERLAY: over every panel and its text) - so all
+## the arrows on screen are one batch (they were a polygon and a polyline each).
 
 const EDGE_INSET_PX := 24.0
 const ARROW_LENGTH_PX := 26.0
@@ -24,6 +27,7 @@ var _arrows: Array = []
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	HudKit.set_z(self, HudKit.Z_OVERLAY)
 	Events.telegraph_started.connect(_on_telegraph_started)
 
 
@@ -120,11 +124,7 @@ func _draw() -> void:
 	for a: Dictionary in _arrows:
 		var tip: Vector2 = a.position
 		var dir: Vector2 = a.direction
-		var side := Vector2(-dir.y, dir.x)
-		var back := tip - dir * ARROW_LENGTH_PX
-		var pts := PackedVector2Array([tip, back + side * (ARROW_WIDTH_PX * 0.5), back - side * (ARROW_WIDTH_PX * 0.5)])
 		var alpha := float(a.alpha)
-		draw_colored_polygon(pts, Color(COLOR.r, COLOR.g, COLOR.b, alpha))
-		var outline := pts.duplicate()
-		outline.append(tip)
-		draw_polyline(outline, Color(0.0, 0.0, 0.0, alpha * 0.6), 1.5)
+		HudKit.draw_pointer(self, tip + dir * 1.5, dir, ARROW_LENGTH_PX + 3.0, ARROW_WIDTH_PX + 3.0,
+			Color(0.0, 0.0, 0.0, alpha * 0.6))
+		HudKit.draw_pointer(self, tip, dir, ARROW_LENGTH_PX, ARROW_WIDTH_PX, Color(COLOR.r, COLOR.g, COLOR.b, alpha))

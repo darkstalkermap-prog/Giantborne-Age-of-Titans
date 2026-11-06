@@ -149,6 +149,10 @@ static func holds(c: Variant, ctx: Dictionary) -> bool:
 		# A later package adds the branch of its own condition type directly below its anchor:
 		# discovered and region_entered (P27), near (P29), event_done (P37).
 		## @anchor P27
+		"discovered":
+			return discovered_holds(ctx, str(d.get("poi", "")))
+		"region_entered":
+			return region_entered_holds(ctx, str(d.get("region", "")))
 		## @anchor P29
 		## @anchor P37
 	return false
@@ -292,6 +296,24 @@ static func outcome_flag(dialogue_id: String, outcome: String) -> String:
 # Helpers of the condition types above go directly below their package's anchor (plan §1.5).
 
 ## @anchor P27
+# discovered {poi} and region_entered {region} (P27; plan M6-M9 §2.12): Discovery's flags, read
+# from the context's flags so the evaluation stays pure.
+
+## The record id without its type prefix ("poi.hollowmere" -> "hollowmere").
+static func short_of(id: String) -> String:
+	var dot := id.find(".")
+	return id.substr(dot + 1) if dot >= 0 else id
+
+
+## discovered {poi}: the giant found the POI (discovered.<short> is true; a vista's "revealed",
+## which only puts it on the map, does not count).
+static func discovered_holds(ctx: Dictionary, poi: String) -> bool:
+	return poi != "" and same_value((ctx.get("flags", {}) as Dictionary).get("discovered." + short_of(poi)), true)
+
+
+## region_entered {region}: the giant has entered the region (region.<short>.entered).
+static func region_entered_holds(ctx: Dictionary, region: String) -> bool:
+	return region != "" and truthy((ctx.get("flags", {}) as Dictionary).get("region.%s.entered" % short_of(region)))
 
 ## @anchor P29
 

@@ -16,21 +16,20 @@ var _id := ""
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_panel = UiKit.panel(Color(0.05, 0.07, 0.09, 0.82))
+	_panel = HudKit.panel(Color(0.05, 0.07, 0.09, 0.82))
 	_panel.anchor_top = 0.5
 	_panel.anchor_bottom = 0.5
 	_panel.offset_left = 16
 	_panel.offset_right = 396
 	_panel.offset_top = -70
 	_panel.offset_bottom = 70
-	_panel.clip_contents = true
 	add_child(_panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 4)
 	_panel.add_child(v)
-	_title = UiKit.label(TITLE, 12, Color(0.55, 0.85, 1.0))
+	_title = HudKit.label(TITLE, HudKit.SMALL, Color(0.55, 0.85, 1.0))
 	v.add_child(_title)
-	_label = UiKit.label("", 16)
+	_label = HudKit.label("", HudKit.TEXT)
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label.custom_minimum_size = Vector2(364, 0)
 	_label.max_lines_visible = 5

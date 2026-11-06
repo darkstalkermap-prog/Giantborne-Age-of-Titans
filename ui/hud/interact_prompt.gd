@@ -10,7 +10,11 @@ var _label: Label
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_panel = UiKit.panel(Color(0.05, 0.06, 0.08, 0.78))
+	_panel = HudKit.panel(Color(0.05, 0.06, 0.08, 0.78))
+	# P27: the 18 px line in its 36 px region (4 px margins, not 6)
+	var box := _panel.get_theme_stylebox("panel")
+	box.content_margin_top = 4
+	box.content_margin_bottom = 4
 	_panel.anchor_left = 0.5
 	_panel.anchor_right = 0.5
 	_panel.anchor_top = 0.5
@@ -20,10 +24,9 @@ func _ready() -> void:
 	_panel.offset_top = 100
 	_panel.offset_bottom = 136
 	add_child(_panel)
-	_label = UiKit.label("", 17)
+	_label = HudKit.label("", HudKit.BIG)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_label.clip_text = true
 	_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_panel.add_child(_label)
 	_panel.visible = false
