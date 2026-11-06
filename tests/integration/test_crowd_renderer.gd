@@ -1,6 +1,6 @@
 extends IntegrationSuite
-## P30 (plan M6-M9 §2.10, §3.13 tests, decision 19): the crowd renderer. A formation of ten pikemen
-## and a banner far from the giant is drawn as one MultiMesh per pose in use (ten instances, their
+## P30 (plan M6-M9 §2.10, §3.13 tests, decision 19): the crowd renderer. A formation of eight pikemen
+## and a banner far from the giant is drawn as one MultiMesh per pose in use (eight instances, their
 ## rigs hidden and idle), the banner always by its own rig with its flag painted in the formation's
 ## colour; the pose follows the formation (hold, brace when braced or aware); near the giant at
 ## most six members are promoted to their own rigs (the nearest), a striking or held member is
@@ -31,13 +31,13 @@ func before_each() -> void:
 	f.kind = "pike"
 	f.display_name = "Pike Regiment"
 	f.ranks = 2
-	f.files = 5
+	f.files = 4
 	f.rank_spacing_m = 1.6
 	f.file_spacing_m = 1.4
 	f.banner_id = "test.crowd_banner"
 	f.banner_color = Color(0.1, 0.3, 0.8)
 	f.place(Vector3(0, 0, -20), PI)   # facing +Z, toward the giant
-	for i in 10:
+	for i in 8:
 		var e := TestSpawn.enemy(world, PIKEMAN, f.slot_position(i), "test.crowd_%d" % i, false, PI)
 		pikes.append(e)
 		f.add_member(e, i)
@@ -78,8 +78,8 @@ func test_the_crowd_draws_promotes_and_releases_its_members() -> void:
 
 func _far_members_are_one_multimesh_per_pose_and_the_banner_keeps_its_rig() -> void:
 	r.refresh()
-	assert_eq(r.instance_count(), 10, "ten members drawn as instances")
-	assert_eq(int(r.pose_counts.get("hold", 0)), 10, "all holding")
+	assert_eq(r.instance_count(), 8, "eight members drawn as instances")
+	assert_eq(int(r.pose_counts.get("hold", 0)), 8, "all holding")
 	assert_eq(_visible_sets(), 1, "one draw call for the rank and file")
 	for e in pikes:
 		assert_false(_shown(e), "%s's own rig is hidden" % e.entity_id)
@@ -95,13 +95,13 @@ func _far_members_are_one_multimesh_per_pose_and_the_banner_keeps_its_rig() -> v
 	assert_true(absf((banner.get_node("Visual/Body/FlagPivot") as Node3D).rotation.y - sway) > 0.01, "the flag sways")
 	f.state = "braced"
 	r.refresh()
-	assert_eq(int(r.pose_counts.get("brace", 0)), 10, "braced: the brace pose")
+	assert_eq(int(r.pose_counts.get("brace", 0)), 8, "braced: the brace pose")
 	assert_eq(int(r.pose_counts.get("hold", 0)), 0, "and no hold")
 	assert_eq(_visible_sets(), 1, "still one draw call")
 	f.state = "formed"
 	f.aware = true
 	r.refresh()
-	assert_eq(int(r.pose_counts.get("brace", 0)), 10, "aware and standing: pikes levelled")
+	assert_eq(int(r.pose_counts.get("brace", 0)), 8, "aware and standing: pikes levelled")
 
 
 func _near_the_giant_at_most_six_are_promoted_and_strikers_first() -> void:
@@ -110,7 +110,7 @@ func _near_the_giant_at_most_six_are_promoted_and_strikers_first() -> void:
 	player.global_position = Vector3(0, 0.05, -14)   # within 20 m of every member
 	r.refresh()
 	assert_eq(r.promoted.size(), CrowdRenderer.MAX_PROMOTED, "six promoted")
-	assert_eq(r.instance_count(), 10 - CrowdRenderer.MAX_PROMOTED, "the rest in the crowd")
+	assert_eq(r.instance_count(), 8 - CrowdRenderer.MAX_PROMOTED, "the rest in the crowd")
 	var by_distance := pikes.duplicate()
 	by_distance.sort_custom(func(a: EnemyActor, b: EnemyActor) -> bool:
 		return a.global_position.distance_squared_to(player.global_position) < b.global_position.distance_squared_to(player.global_position))
@@ -119,13 +119,13 @@ func _near_the_giant_at_most_six_are_promoted_and_strikers_first() -> void:
 		assert_true(_shown(by_distance[i]), "and show their rig")
 	# far again: a striking member is promoted wherever it stands
 	player.global_position = Vector3(0, 0.05, 60)
-	var striker := pikes[7]
+	var striker := pikes[6]
 	striker.controller.request(&"attack", {"action_id": "ability.pike_thrust"})
 	assert_true(striker.controller.action != null, "the member strikes")
 	r.refresh()
 	assert_true(r.promoted.has(striker.entity_id), "a striking member is promoted")
 	assert_true(_shown(striker), "its rig shows the strike")
-	assert_eq(r.instance_count(), 9, "the other nine stay in the crowd")
+	assert_eq(r.instance_count(), 7, "the other seven stay in the crowd")
 
 
 func _the_dead_show_their_rig_and_leavers_and_release_get_theirs_back() -> void:

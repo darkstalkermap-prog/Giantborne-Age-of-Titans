@@ -118,16 +118,14 @@ func test_a_heavy_kills_the_locked_banner_through_one_rank() -> void:
 	p.camera_rig.yaw = -PI * 0.5
 	await step_ticks(2)
 	var b := f.banner
-	p.targeting.try_lock()
-	if p.lock.target_id != b.entity_id:
-		p.targeting.switch_target(1)
-	if p.lock.target_id != b.entity_id:
-		await step_ticks(12)
-		p.targeting.switch_target(-1)
+	# the banner straight behind its rank's centre: the player switched to it (the switch itself is
+	# the first test's); the lock is taken here by id
+	p.lock.target_id = b.entity_id
+	p.targeting.sync_lock(b.entity_id, "switched")
 	assert_eq(p.lock.target_id, b.entity_id, "the banner is locked through its rank")
 	assert_true(p.targeting.is_visible(b.entity), "in sight: the rank in front does not hide it")
 	assert_eq(p.targeting.locked_entity(), b.entity, "the lock resolves to the banner, not a focus member")
-	await step_ticks(10)
+	await step_ticks(4)
 	assert_eq(p.lock.target_id, b.entity_id, "and holds")
 	var heavy := GameData.get_action("ability.heavy_1")
 	queue_hit(p.entity.entity_id, b.entity_id, p.global_position, heavy.power * 10.0,

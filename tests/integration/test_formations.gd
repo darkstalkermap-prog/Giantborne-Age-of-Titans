@@ -59,11 +59,13 @@ func _formation(id: String, pivot: Vector3, files: int, ranks: int, count: int, 
 	return f
 
 
-## A stage-4 giant at `pos`, facing -Z.
+## A stage-4 giant at `pos`, facing -Z (its profile set directly: the growth path is P05's).
 func _stage_4_giant(pos: Vector3) -> GiantPlayer:
 	var p := spawn_player(pos, 0.0)
-	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
-	assert_true(bool(p.growth.debug_set_stage(4).ok), "a stage-4 giant")
+	for rec: Dictionary in GameData.records_of_type("growth_profile"):
+		if int(rec.get("stage", 0)) == 4:
+			p.set_profile(rec)
+	assert_eq(int(p.current_growth_stage()), 4, "a stage-4 giant")
 	return p
 
 
