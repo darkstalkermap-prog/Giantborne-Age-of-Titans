@@ -104,3 +104,9 @@ func test_gate_layers_and_who_collides_with_them() -> void:
 	var grown := stone.sense_area().get_child(0) as CollisionShape3D
 	assert_true((grown.shape as BoxShape3D).size.is_equal_approx(Vector3(13, 9, 2)), "grown 0.5 m on every side")
 	assert_true(stone.passes(6) and not stone.passes(5), "passes(6), not passes(5)")
+	# A gate a streamed chunk takes out and puts back keeps watching (its tick hook follows the tree).
+	var hooks := Sim.hook_count(Sim.Hook.POST_RESOLVE)
+	world.remove_child(stone)
+	assert_eq(Sim.hook_count(Sim.Hook.POST_RESOLVE), hooks - 1, "out of the tree: no tick hook")
+	world.add_child(stone)
+	assert_eq(Sim.hook_count(Sim.Hook.POST_RESOLVE), hooks, "back in the tree: its hook again")

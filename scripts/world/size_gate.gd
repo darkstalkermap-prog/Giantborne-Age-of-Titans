@@ -59,17 +59,19 @@ var _last_tick := -1000000
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_ENTER_TREE:
 		add_to_group(GROUP)
+		# Every time it enters the tree (a streamed chunk may take it out and put it back).
+		Sim.add_hook(Sim.Hook.POST_RESOLVE, self, _on_sim_tick, HOOK_ORDER)
 
 
 func _ready() -> void:
 	collision_layer = layer_for_stage(min_stage)
 	collision_mask = 0
 	_build_sense()
-	Sim.add_hook(Sim.Hook.POST_RESOLVE, self, _on_sim_tick, HOOK_ORDER)
 
 
 func _exit_tree() -> void:
 	Sim.remove_hooks(self)
+	_player = null
 
 
 ## The size-gate physics layer of a gate for `stage` (stages below 4 use layer 7, above 6 layer 9).
