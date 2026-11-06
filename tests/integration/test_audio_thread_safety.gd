@@ -18,23 +18,27 @@ func after_each() -> void:
 
 
 ## A helper thread holds the driver's lock, as the mixing thread does for the whole of a mix step:
-## the engine's frame must wait for it before it goes on (and so before AudioServer.update()).
+## the engine's frame must wait for it before it goes on (and so before AudioServer.update()). The
+## frame may not return before the helper has let go of the lock, whatever the machine's load.
 func test_a_frame_waits_for_a_running_mix_step() -> void:
 	var locked := Semaphore.new()
+	var times := {}
 	var holder := Thread.new()
 	holder.start(func() -> void:
 		AudioServer.lock()
 		locked.post()
 		OS.delay_msec(HOLD_MS)
+		times["released"] = Time.get_ticks_usec()
 		AudioServer.unlock())
 	locked.wait()
 	var before := Audio.mix_barriers
-	var t0 := Time.get_ticks_usec()
 	Audio._process(1.0 / 60.0)
-	var waited_ms := float(Time.get_ticks_usec() - t0) / 1000.0
+	var returned := Time.get_ticks_usec()
 	holder.wait_to_finish()
 	assert_eq(Audio.mix_barriers, before + 1, "one barrier a frame")
-	assert_true(waited_ms >= HOLD_MS * 0.6, "the frame waited for the mix step holding the lock (%.1f ms)" % waited_ms)
+	assert_true(returned >= int(times.get("released", 0)),
+		"the frame waited for the mix step holding the lock (it returned %.1f ms after the release)" % [
+			float(returned - int(times.get("released", 0))) / 1000.0])
 
 
 ## Without a running mix step the barrier costs nothing noticeable.
