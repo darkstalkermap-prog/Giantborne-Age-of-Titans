@@ -53,7 +53,9 @@ extends Node
 ##     (default 4) plays sfx.voice.crowd.gasp toward the giant and sfx.world.town_bell at its POI,
 ##     once a level visit, unless its faction is warned or hostile;
 ##   * the campaign's completion (flag campaign.completed: flag_changed is a state signal) plays
-##     the crowned stinger and the campaign's end context.
+##     the crowned stinger and the campaign's end context;
+##   * a world event's alarm horn sounds at its record's `centre_m` (the world_event schema's
+##     spelling; an encounter's `center_m` is read too).
 
 const MIX := preload("res://scripts/core/schemas/audio_mix_schema.gd")
 
@@ -1313,10 +1315,12 @@ func _on_ancestry_chosen(..._args: Array) -> void:
 	audio.music.play_stinger("mus.stinger.ancestry", 80)
 
 
+## The alarm horn at the event's centre (P28: the world_event schema names it `centre_m`; an
+## encounter's `center_m` is accepted too), else at the giant.
 func _on_world_event_started(...args: Array) -> void:
 	var event_id := str(_arg(args, 1))
 	var rec := GameData.get_record(event_id)
-	var c: Variant = rec.get("center_m")
+	var c: Variant = rec.get("centre_m", rec.get("center_m"))
 	var at := Vector3(float(c[0]), float(c[1]), float(c[2])) if typeof(c) == TYPE_ARRAY and (c as Array).size() == 3 \
 		else _player_pos()
 	request(["sfx.world.horn_alarm"], at, {"priority": 70, "reason": "world_event"})

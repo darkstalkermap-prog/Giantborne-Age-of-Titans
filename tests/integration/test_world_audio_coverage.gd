@@ -311,12 +311,16 @@ func _check_voices_and_cues() -> void:
 	# nothing missing, nothing from a family default
 	Audio.clear_log()
 	Audio.missing.clear()
+	# a world event's record names its centre `centre_m` (the world_event schema): the horn sounds there
+	var raid_centre := Vector3(30, 2, -40)
+	TestFixtures.record_override("event.test_raid", {"type": "world_event", "level": WORLD,
+		"centre_m": [raid_centre.x, raid_centre.y, raid_centre.z]})
 	Audio.router.call("_on_travel_requested", WORLD, "world.cp.millford", "fast_travel")   # (GameSession travels on the event)
 	Events.formation_changed.emit(Sim.tick, "test.formation", "braced")
 	Events.formation_changed.emit(Sim.tick, "test.formation", "routed")
 	Events.siege_engine_fired.emit(Sim.tick, "test.catapult_1", "ability.test", "")
 	Events.siege_engine_crewed.emit(Sim.tick, "test.catapult_1", false)
-	Events.world_event_started.emit(Sim.tick, "event.test")
+	Events.world_event_started.emit(Sim.tick, "event.test_raid")
 	Events.size_gate_blocked.emit(Sim.tick, "world.gate.unknown", 4, "")
 	Events.trampled.emit(Sim.tick, "world.prop.unknown", "")
 	Events.ancestry_chosen.emit(Sim.tick, "ancestry.test")
@@ -325,6 +329,9 @@ func _check_voices_and_cues() -> void:
 	for want: String in ["sfx.ui.travel", "sfx.formation.brace", "sfx.voice.crowd.flee", "sfx.siege.catapult.fire",
 			"sfx.voice.crowd.abandon", "sfx.world.horn_alarm", "sfx.gate.stone", "sfx.trample"]:
 		assert_true(logged.has(want), "%s plays (%s)" % [want, logged])
+	for e: Dictionary in Audio.cue_log():
+		if str(e.cue) == "sfx.world.horn_alarm":
+			assert_true((e.pos as Vector3).distance_to(raid_centre) < 0.01, "the alarm horn at the event's centre (%s)" % e.pos)
 	assert_true(Audio.music.stinger_playing(), "the stingers play (%s)" % [Audio.music.stingers])
 	assert_true(Audio.missing.is_empty(), "nothing missing (%s)" % [Audio.missing])
 
