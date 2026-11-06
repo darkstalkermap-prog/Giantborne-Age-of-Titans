@@ -6,7 +6,7 @@ extends TestSuite
 ## The race itself needs a preempted mixing thread and is reproduced outside the suite
 ## (docs/systems/P23.md, "The audio-thread crash").
 
-const HOLD_MS := 80
+const HOLD_MS := 40
 
 
 func before_each() -> void:

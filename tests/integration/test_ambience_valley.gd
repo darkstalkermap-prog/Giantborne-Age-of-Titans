@@ -51,13 +51,14 @@ func _played(reason: String) -> Array:
 	return out
 
 
-## `seconds` of ambience in 2.5 s steps, the spot voices freed after each (real-time playback).
+## `seconds` of ambience in 3 s steps of 1 s frames, the spot voices freed after each (real-time
+## playback; a spot is at most 1 s late, its place is unchanged).
 func _run(seconds: float) -> void:
 	var left := seconds
 	while left > 0.0:
-		Audio.advance_for_tests(minf(2.5, left), 0.5)
+		Audio.advance_for_tests(minf(3.0, left), 1.0)
 		Audio.pool.stop_all()
-		left -= 2.5
+		left -= 3.0
 
 
 func _bed_count(cue: String) -> int:

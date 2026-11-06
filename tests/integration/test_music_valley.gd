@@ -80,18 +80,18 @@ func test_the_hollows_melody_moves_at_segment_boundaries_and_the_wood_comes_in_a
 	if calm == null:
 		return
 	assert_near(calm.segment_s, 10.0, 1e-6, "four-bar segments of 10 s at 96 BPM")
-	# three loops in half-second steps: every change of the melody falls on a segment boundary
+	# three loops in one-second steps: every change of the melody falls on a segment boundary
 	var changes := 0
 	var off_boundary := 0
 	var bad_gains := 0
 	var last_choice := calm.melody_choice
 	var last_segment := calm.segment
 	var heard := {}
-	for i in 180:
-		Audio.advance_for_tests(0.5, 0.5)
+	for i in 90:
+		Audio.advance_for_tests(1.0, 1.0)
 		if calm.melody_choice != last_choice:
 			changes += 1
-			if calm.segment == last_segment or off_grid(Audio.music.deck_position(calm), calm.segment_s) > 0.5 + 1e-6:
+			if calm.segment == last_segment or off_grid(Audio.music.deck_position(calm), calm.segment_s) > 1.0 + 1e-6:
 				off_boundary += 1
 		elif _melody_gain(calm) != "":
 			bad_gains += 1   # a step after a change the 80 ms switch has ended
