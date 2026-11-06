@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "status.bulwark",
+	"type": "status_effect",
+	"display_name": "Bulwark",
+	"hud_label": "BULWARK",
+	"stacking": "refresh_no_stack",
+	"duration_s": 5.0,
+	"tick_s": 0,
+	"magnitude_key": "",
+	"modifiers": {"damage_taken_mult": 0.4},
+	"tags": ["Buff", "Barrier"],
+	"hidden": false
+}

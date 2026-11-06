@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "weapon.club_titan",
+	"type": "weapon",
+	"family": "club",
+	"display_name": "Titanforged Club",
+	"damage_multiplier": 1.35,
+	"length_m": 1.85,
+	"hit_radius_m": 0.45,
+	"description": "The Reinforced Club, titanforged with dark titan iron. Its heavy blows deal a quarter more poise to soldiers standing in formation.",
+	"scales_with_growth": true,
+	"fit_max_stage": 6,
+	"visual_shape": "club",
+	"light_chain": "ability.light_1",
+	"heavy": "ability.heavy_1",
+	"stage_movesets": {"4": {"light_chain": "ability.club_great_light_1", "heavy": "ability.club_great_heavy"}},
+	"perk": {"kind": "formation_poise", "poise_mult": 1.25, "text": "Heavies deal +25% poise to formation members"}
+}

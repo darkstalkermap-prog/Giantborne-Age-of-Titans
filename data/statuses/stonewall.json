@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "status.stonewall_stance",
+	"type": "status_effect",
+	"display_name": "Stonewall Stance",
+	"hud_label": "STONEWALL",
+	"stacking": "refresh_no_stack",
+	"duration_s": 6.0,
+	"tick_s": 0,
+	"magnitude_key": "",
+	"modifiers": {"damage_taken_mult": 0.6, "move_speed_mult": 0.7, "poise_damage_taken_mult": 0.0},
+	"tags": ["Buff"],
+	"hidden": false
+}

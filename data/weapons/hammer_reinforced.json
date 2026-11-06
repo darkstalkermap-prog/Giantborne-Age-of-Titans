@@ -5,13 +5,14 @@
 	"family": "hammer",
 	"display_name": "Warmaul",
 	"damage_multiplier": 1.35,
-	"length_m": 1.5,
-	"hit_radius_m": 0.5,
-	"description": "The Raider's Maul, reforged to fit a full-grown giant.",
+	"length_m": 1.8,
+	"hit_radius_m": 0.55,
+	"description": "The Raider's Maul, reforged on a longer haft to fit a full-grown giant.",
 	"scales_with_growth": true,
 	"fit_max_stage": 6,
 	"visual_shape": "hammer",
 	"light_chain": "ability.hammer_light_1",
 	"heavy": "ability.hammer_heavy",
-	"stage_movesets": {"4": {"light_chain": "ability.hammer_great_light_1", "heavy": "ability.hammer_great_heavy"}}
+	"stage_movesets": {"4": {"light_chain": "ability.hammer_great_light_1", "heavy": "ability.hammer_great_heavy"}},
+	"upgrade": {"to": "weapon.hammer_titan", "cost": [{"item": "item.titan_iron", "count": 2}, {"item": "item.iron_ingot", "count": 2}], "forge_tier": "titan"}
 }

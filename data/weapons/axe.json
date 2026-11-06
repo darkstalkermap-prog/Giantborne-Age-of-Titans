@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "weapon.axe",
+	"type": "weapon",
+	"family": "axe",
+	"display_name": "Woodcutter's Greataxe",
+	"damage_multiplier": 1.25,
+	"length_m": 1.9,
+	"hit_radius_m": 0.45,
+	"description": "A giant's felling axe from the Woodcutters' camp: wide 140-degree cleaves that bite through 15 armour.",
+	"scales_with_growth": true,
+	"fit_max_stage": 6,
+	"visual_shape": "axe",
+	"light_chain": "ability.axe_light_1",
+	"heavy": "ability.axe_heavy",
+	"stage_movesets": {"4": {"light_chain": "ability.axe_great_light_1", "heavy": "ability.axe_great_heavy"}},
+	"upgrade": {"to": "weapon.axe_titan", "cost": [{"item": "item.titan_iron", "count": 2}, {"item": "item.iron_ingot", "count": 2}], "forge_tier": "titan"}
+}

@@ -13,5 +13,6 @@
 	"visual_shape": "club",
 	"light_chain": "ability.light_1",
 	"heavy": "ability.heavy_1",
-	"stage_movesets": {"4": {"light_chain": "ability.club_great_light_1", "heavy": "ability.club_great_heavy"}}
+	"stage_movesets": {"4": {"light_chain": "ability.club_great_light_1", "heavy": "ability.club_great_heavy"}},
+	"upgrade": {"to": "weapon.club_titan", "cost": [{"item": "item.titan_iron", "count": 2}, {"item": "item.iron_ingot", "count": 2}], "forge_tier": "titan"}
 }
