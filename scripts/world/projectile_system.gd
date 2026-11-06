@@ -455,3 +455,13 @@ func _landing_hit(p: Projectile, e: CombatEntity, info: Dictionary, tick: int) -
 		"substep": 0, "distance": 0.0, "weak_point": false}], p.id + LANDING_PULSE_OFFSET, tick)
 
 ## @anchor P09
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P31
+
+## @anchor P32
+
+## @anchor P34

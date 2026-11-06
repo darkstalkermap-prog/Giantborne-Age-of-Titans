@@ -37,6 +37,13 @@ static func fields() -> Dictionary:
 
 	## @anchor P12
 
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P26
+
+	## @anchor P31
+
+	## @anchor P32
+
 	return f
 
 
@@ -63,6 +70,13 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.errors.append("%s.upgrade.cost: must list at least one item" % ctx)
 
 	pass
+
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P26
+
+	## @anchor P31
+
+	## @anchor P32
 
 
 static func required_ids() -> Dictionary:

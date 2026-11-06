@@ -50,6 +50,11 @@ static func fields() -> Dictionary:
 		"status_immunities": U.enum_array(DataValidator.STATUS_TAGS),
 	})
 
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P31
+
+	## @anchor P33
+
 	return f
 
 
@@ -59,6 +64,11 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		if (loadout.slots as Array).size() != 8:
 			out.errors.append("%s: loadout.slots must have exactly 8 entries (empty string = empty slot)" % ctx)
 	## @anchor P05
+
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P31
+
+	## @anchor P33
 
 
 static func required_ids() -> Dictionary:

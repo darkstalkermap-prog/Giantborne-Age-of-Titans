@@ -30,6 +30,26 @@ static func fields() -> Dictionary:
 			"ultimate": U.ref("action", false, true),
 			"known_abilities": U.ref_array("action"),
 		}},
+		# P20 (plan M6-M9 §2.6): the character, inventory and flags of a campaign started in the
+		# world (--mode=world, the title's "Skip to the Old Kingdom", tests, the world bot): the
+		# Valley's worst guaranteed outcome (force). CharacterState.world_start builds on new_game.
+		"world_start": {"t": "dict", "fields": {
+			"level": U.int_field(1, 20, true),
+			"xp": U.int_field(0, null, true),
+			"unspent_attribute_points": U.int_field(0),
+			"talent_points": U.int_field(0),
+			"attributes": {"t": "dict", "keys_enum": DataValidator.ATTRIBUTES, "values": U.num(0.0)},
+			"growth_profile": U.ref("growth_profile", true),
+			"weapon": U.ref("weapon", true),
+			"weapons_owned": U.ref_array("weapon"),
+			"ancestry": U.ref("ancestry"),
+			"slots": U.ref_array("action", true, true),
+			"ultimate": U.ref("action", false, true),
+			"known_abilities": U.ref_array("action"),
+			"inventory": {"t": "array", "items": "dict", "item_fields": {
+				"item": U.ref("item", true), "count": U.int_field(1, 999, true)}},
+			"flags": {"t": "dict"},
+		}},
 	}
 
 
@@ -50,6 +70,17 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	if typeof(new_game) == TYPE_DICTIONARY and typeof(new_game.get("slots")) == TYPE_ARRAY:
 		if (new_game.slots as Array).size() != 8:
 			out.errors.append("%s: new_game.slots must have exactly 8 entries (empty string = empty slot)" % ctx)
+	var ws: Variant = d.get("world_start")
+	if typeof(ws) == TYPE_DICTIONARY:
+		if typeof(ws.get("slots")) == TYPE_ARRAY and (ws.slots as Array).size() != 8:
+			out.errors.append("%s: world_start.slots must have exactly 8 entries (empty string = empty slot)" % ctx)
+		var flags: Variant = ws.get("flags")
+		if typeof(flags) == TYPE_DICTIONARY:
+			for k: Variant in flags:
+				U.check_flag_id(k, "%s.world_start.flags.%s" % [ctx, k], out)
+				var t := typeof(flags[k])
+				if t != TYPE_BOOL and t != TYPE_INT and t != TYPE_FLOAT and t != TYPE_STRING:
+					out.errors.append("%s.world_start.flags.%s: a flag value must be true/false, a number or a string" % [ctx, k])
 
 
 static func required_ids() -> Dictionary:

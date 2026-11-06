@@ -249,6 +249,9 @@ static func check_conditions(v: Variant, ctx: String, out: Dictionary) -> void:
 ##   hits_on {targets, count, action_kind?, action_id?} | stage_at_least {stage} |
 ##   level_at_least {level} | weapon_equipped {weapon} | dialogue_outcome {dialogue, outcome} |
 ##   all / any {of: [conditions]} | not {of: condition}
+## M6-M9 (P20, plan §2.12): count {n, of: [conditions]} | quest_done {quest} | level_is {level} |
+##   discovered {poi} | region_entered {region} | ancestry_is {ancestry} | ancestry_chosen {} |
+##   event_done {event, outcome?} | near {target, radius_m}
 ## Flag ids, area ids, world ids and target entity ids are checked against the id regex;
 ## items, weapons, actions, encounters and dialogues are record references.
 static func check_condition(c: Variant, ctx: String, out: Dictionary) -> void:
@@ -291,6 +294,28 @@ static func check_condition(c: Variant, ctx: String, out: Dictionary) -> void:
 			schema = {"dialogue": ref("dialogue", true), "outcome": str_field(true)}
 		"all", "any", "not":
 			special = ["of"]
+		# M6-M9 (P20 declares every shape of plan §2.12; the packages named in QuestConditions
+		# evaluate theirs).
+		"count":
+			schema = {"n": int_field(1, null, true)}
+			special = ["of"]
+		"quest_done":
+			schema = {"quest": ref("quest", true)}
+		"level_is":
+			schema = {"level": ref("level", true)}
+		"discovered":
+			schema = {"poi": ref("poi", true)}
+		"region_entered":
+			schema = {"region": ref("region", true)}
+		"ancestry_is":
+			schema = {"ancestry": ref("ancestry", true)}
+		"ancestry_chosen":
+			pass
+		"event_done":
+			schema = {"event": ref("world_event", true), "outcome": str_field()}
+		"near":
+			schema = {"radius_m": pos(true)}
+			special = ["target"]
 	for k: Variant in d.keys():
 		if k != "type" and not schema.has(k) and not special.has(k):
 			out.errors.append("%s: unknown key '%s'" % [ctx, k])
@@ -311,7 +336,7 @@ static func check_condition(c: Variant, ctx: String, out: Dictionary) -> void:
 		match k:
 			"flag":
 				check_flag_id(d[k], kctx, out)
-			"area", "world_id":
+			"area", "world_id", "target":
 				check_id_string(d[k], kctx, out)
 			"targets":
 				if typeof(d[k]) != TYPE_ARRAY:
@@ -328,3 +353,7 @@ static func check_condition(c: Variant, ctx: String, out: Dictionary) -> void:
 					check_condition(d[k], kctx, out)
 				else:
 					check_conditions(d[k], kctx, out)
+					if type_value == "count" and typeof(d[k]) == TYPE_ARRAY and is_number(d.get("n")) \
+							and int(d.n) > (d[k] as Array).size():
+						out.errors.append("%s: n (%d) is more than the %d conditions listed" % [ctx, int(d.n),
+							(d[k] as Array).size()])

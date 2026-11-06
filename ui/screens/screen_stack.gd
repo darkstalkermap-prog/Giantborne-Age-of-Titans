@@ -30,9 +30,15 @@ const SCREENS := {
 	"attributes": "res://ui/screens/attributes_screen.gd",     # P12
 	"forge": "res://ui/screens/forge_screen.gd",               # P12
 	"end": "res://ui/screens/end_screen.gd",                   # P13
+	# M6-M9 (pre-declared by P20, plan M6-M9 §2.14)
+	"map": "res://ui/screens/map_screen.gd",                   # P27
+	"journal": "res://ui/screens/journal_screen.gd",           # P27
+	"ancestry": "res://ui/screens/ancestry_screen.gd",         # P33
+	"yield": "res://ui/screens/yield_prompt.gd",               # P34
 }
-## Input action -> screen, used only while no screen is open.
-const HOTKEYS := {"inventory": "inventory"}
+## Input action -> screen, used only while no screen is open (an action not in the InputMap yet -
+## map and journal until P27 binds them - is skipped).
+const HOTKEYS := {"inventory": "inventory", "map": "map", "journal": "journal"}
 
 var _screens: Array[UiScreen] = []
 var _opened_ms: Dictionary = {}       ## screen -> Time.get_ticks_msec() when it opened

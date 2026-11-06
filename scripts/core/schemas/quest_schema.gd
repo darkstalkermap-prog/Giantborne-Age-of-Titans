@@ -51,7 +51,13 @@ static func fields() -> Dictionary:
 			"objective": U.str_field(true),
 			"complete_when": {"t": "any", "req": true},
 			"marker": U.str_field(),
+			# P20 (plan M6-M9 §2.6): several marker or POI ids (the compass shows them all).
+			"markers": {"t": "array", "items": "string"},
 			"xp": U.int_field(0, 100000),
+			# P20: on completion award max(xp, the XP that reaches this level).
+			"xp_floor_level": U.int_field(1, 20),
+			# P20: the journal's line while the stage waits for something ("Waiting: stage 5").
+			"waiting_text": U.str_field(),
 			"items": DIALOGUE.item_list(),
 			"set_flags": {"t": "dict"},
 			"bot": {"t": "dict"}}},
@@ -95,6 +101,12 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		var marker: Variant = s.get("marker", "")
 		if typeof(marker) == TYPE_STRING and marker != "":
 			U.check_id_string(marker, sctx + ".marker", out)
+		var markers: Variant = s.get("markers")
+		if typeof(markers) == TYPE_ARRAY:
+			var j := 0
+			for m: Variant in markers:
+				U.check_id_string(m, "%s.markers[%d]" % [sctx, j], out)
+				j += 1
 		DIALOGUE.check_flag_map(s.get("set_flags"), sctx + ".set_flags", out)
 		var bot: Variant = s.get("bot")
 		if typeof(bot) == TYPE_DICTIONARY:

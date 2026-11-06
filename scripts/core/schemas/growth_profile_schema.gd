@@ -67,6 +67,11 @@ static func fields() -> Dictionary:
 		"footstep_shake": U.num(0.0, 1.0),
 	})
 
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P26
+
+	## @anchor P30
+
 	return f
 
 
@@ -85,6 +90,11 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		for key: Variant in per_action:
 			# The keys are action ids: checked against the loaded records like any reference.
 			out.refs.append({"ctx": "%s.arc_pitch_offsets_deg" % ctx, "id": str(key), "type": "action"})
+
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P26
+
+	## @anchor P30
 
 
 static func required_ids() -> Dictionary:
