@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/test/test_world.tscn" id="1_world"]
+[ext_resource type="Script" path="res://tests/support/world_ai_trace.gd" id="2_trace"]
+
+[node name="TestWorld" instance=ExtResource("1_world")]
+
+[node name="AiTrace" type="Node" parent="."]
+script = ExtResource("2_trace")
