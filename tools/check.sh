@@ -1,14 +1,24 @@
 #!/usr/bin/env bash
 # The definition-of-done sequence of the M2-M5 plan (§1.1), failing on the first bad step:
 #   1. import   2. build scenes (only with --only=... or --build)   3. import again
-#   4. full test suite (plus the slow suites with --slow; it also parses every script)
+#   4. full test suite, silent (--no-audio; audio suites switch audio on for their own tests),
+#      plus the slow suites with --slow and the gate tier with --gate; it also parses every script;
+#      the suite times are printed and kept in .userdata/check/suite_times.txt
 #   5. 120 s autoplay with 0 errors; a soak of 120 s or more must also break a fence, fill the
 #      debris pool and award loot (the M1 breakable path stays covered; M2 gate)
 #
-# Usage: tools/check.sh [--slow] [--only=<builder>[,<builder>]] [--build] [--autoplay=SECONDS]
+# Usage: tools/check.sh [--slow] [--gate] [--audio] [--only=<builder>[,<builder>]] [--build]
+#                       [--autoplay=SECONDS]
 #   --only=...    rebuild the named scene builders (before P04's builder split: all of them)
 #   --build       rebuild every scene
 #   --autoplay=S  soak length in seconds (default 120; 0 skips the soak)
+#   --slow        also run tests/slow (the tier's budget: 8 minutes)
+#   --gate        also run tests/gate (walkthroughs, oath combinations, boss runs, soaks; P19)
+#   --audio       before the suites: the audio pipeline's own tests (tools/audio/test_synth.py)
+#                 and build_audio.py --verify (every master and every Ogg regenerated into a
+#                 temporary folder and compared with assets/audio/manifest.json, bit-exact on the
+#                 reference toolchain); skipped with a note when python3, numpy or ffmpeg with
+#                 libvorbis is missing. The audio asset suites run in the default suite (P19).
 # Every Godot call goes through tools/gd.sh (this worktree's own user:// folder). Logs of the
 # last run are kept in .userdata/check/.
 set -uo pipefail
@@ -19,15 +29,19 @@ LOGS="${GB_USERDATA:-$ROOT/.userdata}/check"
 mkdir -p "$LOGS"
 
 SLOW=0
+GATE=0
+AUDIO=0
 BUILD=""
 AUTOPLAY=120
 for arg in "$@"; do
 	case "$arg" in
 		--slow) SLOW=1 ;;
+		--gate) GATE=1 ;;
+		--audio) AUDIO=1 ;;
 		--only=*) BUILD="$arg" ;;
 		--build) BUILD="all" ;;
 		--autoplay=*) AUTOPLAY="${arg#--autoplay=}" ;;
-		-h|--help) sed -n '2,14p' "$0"; exit 0 ;;
+		-h|--help) sed -n '2,25p' "$0"; exit 0 ;;
 		*) echo "check.sh: unknown option '$arg'" >&2; exit 2 ;;
 	esac
 done
@@ -77,17 +91,57 @@ step "import (register new classes and resources)"
 run_limited 600 "$GD" --headless --path . --import >"$LOGS/import2.log" 2>&1 \
 	|| fail "second import exited with $?" "$LOGS/import2.log"
 
-TEST_ARGS=(-- --no-user-settings)
+# P19: the audio pipeline (generators, bit-exact regeneration, budgets) before the suites.
+if [ "$AUDIO" = "1" ]; then
+	if ! command -v python3 >/dev/null 2>&1; then
+		echo "== audio: SKIPPED (python3 is not installed; the generators need Python 3 and numpy)"
+	elif ! python3 -c "import numpy" >/dev/null 2>&1; then
+		echo "== audio: SKIPPED (numpy is not installed)"
+	elif ! command -v ffmpeg >/dev/null 2>&1 || ! ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libvorbis; then
+		echo "== audio: SKIPPED (ffmpeg with the libvorbis encoder is not installed)"
+	else
+		step "audio pipeline tests (tools/audio/test_synth.py)"
+		run_limited 600 python3 tools/audio/test_synth.py >"$LOGS/audio_synth.log" 2>&1 \
+			|| fail "the audio pipeline's tests failed" "$LOGS/audio_synth.log"
+		step "audio regeneration (build_audio.py --verify)"
+		run_limited 1800 python3 tools/audio/build_audio.py --verify >"$LOGS/audio_verify.log" 2>&1
+		VERIFY_EXIT=$?
+		grep -E "^(AUDIO VERIFY|TOOLCHAIN DIFFERS|CONTENT DIFFERS|SHIPPED FILE)" "$LOGS/audio_verify.log" | head -n 40
+		[ "$VERIFY_EXIT" = "0" ] || fail "audio regeneration is not bit-exact" "$LOGS/audio_verify.log"
+		run_limited 300 python3 tools/audio/build_audio.py --budget >"$LOGS/audio_budget.log" 2>&1 \
+			|| fail "the audio is over its budget (decision 8)" "$LOGS/audio_budget.log"
+		grep -E "imported size|registered SFX" "$LOGS/audio_budget.log"
+	fi
+fi
+
+TEST_ARGS=(-- --no-user-settings --no-audio)
+TIERS="tests"
 if [ "$SLOW" = "1" ]; then
 	TEST_ARGS+=(--slow)
+	TIERS="$TIERS, slow suites"
 fi
-if [ "$SLOW" = "1" ]; then step "tests (with the slow suites)"; else step "tests"; fi
-run_limited 1800 "$GD" --headless --path . --fixed-fps 60 res://tests/run_tests.tscn "${TEST_ARGS[@]}" \
+if [ "$GATE" = "1" ]; then
+	TEST_ARGS+=(--gate)
+	TIERS="$TIERS, gate suites"
+fi
+step "$TIERS"
+run_limited 3600 "$GD" --headless --path . --fixed-fps 60 res://tests/run_tests.tscn "${TEST_ARGS[@]}" \
 	>"$LOGS/tests.log" 2>&1
 TEST_EXIT=$?
-grep -E "^RESULT:|^FAIL" "$LOGS/tests.log" | head -n 60
+grep -E "^RESULT:|^FAIL|^TIMES:" "$LOGS/tests.log" | head -n 60
 [ "$TEST_EXIT" = "0" ] || fail "tests exited with $TEST_EXIT" "$LOGS/tests.log"
 grep -q "^RESULT: .* 0 failures" "$LOGS/tests.log" || fail "no passing RESULT line" "$LOGS/tests.log"
+# The suite times (decision 34: default under 75 s, slow under 8 minutes, gate under 50 minutes),
+# kept for the wave merge's record.
+TIMES_LINE="$(grep -m1 "^TIMES:" "$LOGS/tests.log" || true)"
+if [ -n "$TIMES_LINE" ]; then
+	echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $(git rev-parse --short HEAD 2>/dev/null || echo '?') $TIMES_LINE" \
+		>>"$LOGS/suite_times.txt"
+	DEFAULT_S="$(echo "$TIMES_LINE" | sed -E 's/^TIMES: default ([0-9.]+) s.*/\1/')"
+	if awk "BEGIN { exit !($DEFAULT_S > 75) }" 2>/dev/null; then
+		echo "WARNING: the default suite took ${DEFAULT_S} s, over its 75 s budget (decision 34)"
+	fi
+fi
 
 if [ "$AUTOPLAY" != "0" ]; then
 	step "autoplay ${AUTOPLAY} s"

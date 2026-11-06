@@ -33,6 +33,11 @@ const SCHEMA_PATHS := {
 	"input_bindings": "res://scripts/core/schemas/input_bindings_schema.gd",    # P01
 	"status_effect": "res://scripts/core/schemas/status_effect_schema.gd",      # P01
 	"progression": "res://scripts/core/schemas/progression_schema.gd",          # P01
+	"audio_bank": "res://scripts/core/schemas/audio_bank_schema.gd",            # P19
+	"audio_mix": "res://scripts/core/schemas/audio_mix_schema.gd",              # P19
+	"music_set": "res://scripts/core/schemas/music_set_schema.gd",              # P19
+	"ambience_set": "res://scripts/core/schemas/ambience_set_schema.gd",        # P19
+	"audio_region": "res://scripts/core/schemas/audio_region_schema.gd",        # P19
 	"shrine": "res://scripts/core/schemas/shrine_schema.gd",                    # P05
 	"encounter": "res://scripts/core/schemas/encounter_schema.gd",              # P10a
 	"level": "res://scripts/core/schemas/level_schema.gd",                      # P10a

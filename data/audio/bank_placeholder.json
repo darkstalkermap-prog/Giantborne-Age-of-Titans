@@ -1,0 +1,525 @@
+{
+	"schema_version": 1,
+	"id": "audio_bank.placeholder",
+	"type": "audio_bank",
+	"display_name": "Placeholder cues",
+	"description": "P19: one default cue per family of the cue map (plan M6-M9 section 4.1), so every router row plays a placeholder before the sound packages land (the threat sting has its own, so it is never taken for its windup by the retrigger guard). Each request falls back sfx.<family>.<subject>.<variant> -> sfx.<family>.<subject> -> sfx.<family>.default, so a package that adds a specific cue replaces the placeholder for it. P21 (effects) and P23 (stingers, ambience) replace these; P23 deletes the bank and assets/audio/placeholder/.",
+	"cues": {
+		"sfx.hit.default": {
+			"files": [
+				"res://assets/audio/placeholder/set_a1.wav",
+				"res://assets/audio/placeholder/set_a2.wav",
+				"res://assets/audio/placeholder/set_a3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": true,
+			"max_voices": 8,
+			"retrigger_ms": 45,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"sfx.block.default": {
+			"files": [
+				"res://assets/audio/placeholder/set_a1.wav",
+				"res://assets/audio/placeholder/set_a2.wav",
+				"res://assets/audio/placeholder/set_a3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -4.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 45,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.parry.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_high.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -4.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.guard_break.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_low.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.clank.default": {
+			"files": [
+				"res://assets/audio/placeholder/set_a2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.swing.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_sweep.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -8.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.dodge.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_sweep.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -8.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.jump.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_low.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -8.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.step.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_low.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human_step",
+			"volume_db": -12.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.08,
+			"size_pitch": true,
+			"max_voices": 6,
+			"retrigger_ms": 40,
+			"priority": 40,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_sweep.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.impact.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_low.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -4.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.projectile.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_sweep.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -8.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.08,
+			"size_pitch": false,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.status.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_mid.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -10.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.grab.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_low.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.voice.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_mid.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -14.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.12,
+			"size_pitch": true,
+			"max_voices": 6,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.player.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_low.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "player",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 100,
+			"far": "",
+			"levels": []
+		},
+		"sfx.body.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_low.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.threat.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_high.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "threat",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 100,
+			"far": "",
+			"levels": []
+		},
+		"sfx.threat.sting": {
+			"files": [
+				"res://assets/audio/placeholder/tone_high.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "threat",
+			"volume_db": -4.0,
+			"pitch": 1.25,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 100,
+			"far": "",
+			"levels": []
+		},
+		"sfx.crack.default": {
+			"files": [
+				"res://assets/audio/placeholder/set_a3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.break.default": {
+			"files": [
+				"res://assets/audio/placeholder/set_a1.wav",
+				"res://assets/audio/placeholder/set_a2.wav",
+				"res://assets/audio/placeholder/set_a3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -4.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.world.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_mid.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -8.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 4,
+			"retrigger_ms": 60,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.cavalry.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_sweep.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -8.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.troll.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_low.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -8.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.gate.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_low.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.trample.default": {
+			"files": [
+				"res://assets/audio/placeholder/set_a1.wav",
+				"res://assets/audio/placeholder/set_a2.wav",
+				"res://assets/audio/placeholder/set_a3.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 4,
+			"retrigger_ms": 50,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.formation.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_low.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.siege.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_low.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 95,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ui.default": {
+			"files": [
+				"res://assets/audio/placeholder/tone_mid.wav"
+			],
+			"bus": "UI",
+			"spatial": false,
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 4,
+			"retrigger_ms": 40,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.default": {
+			"files": [
+				"res://assets/audio/placeholder/stinger.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": -4.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		}
+	}
+}

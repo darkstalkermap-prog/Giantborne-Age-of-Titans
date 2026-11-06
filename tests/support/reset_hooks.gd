@@ -11,6 +11,7 @@ extends RefCounted
 ## leftovers it had to clean up), e.g. a screen a test forgot to close.
 
 const BEFORE_EACH := [
+	["autoload", "Audio", "reset_for_tests"],         # P19 (first: stop every voice, clear the cue log)
 	["autoload", "GameSession", "reset_for_tests"],   # P06
 	["autoload", "Quests", "reset_for_tests"],        # P13
 ]

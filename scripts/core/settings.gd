@@ -1,6 +1,6 @@
 extends Node
-## Player settings (autoload "Settings"): camera comfort, accessibility, input bindings and the
-## graphics preset.
+## Player settings (autoload "Settings"): camera comfort, accessibility, input bindings, the
+## graphics preset and (P19) the audio volumes and focus mute.
 ##
 ## Stored in user://settings.json through SaveIO (schema-versioned, atomic replace, one
 ## backup). Pass "--no-user-settings" after "--" on the command line (tests, soak runs) to
@@ -43,11 +43,22 @@ const DEFAULTS := {
 	"graphics_quality": GRAPHICS_DEFAULT,   ## low | medium (P14); the web build always runs low
 	"prompt_device": "auto",          ## auto | keyboard | pad: the buttons prompts name (P16)
 	"bindings": {},                   ## action -> [event dicts]; replaces that action's defaults
+	# Audio (P19, plan M6-M9 §2.5): 0..1 on top of the mix's bus levels (0 mutes), applied by the
+	# Audio autoload with AudioServer bus volumes; Master ramps to -80 dB while the window is
+	# unfocused (or the browser tab hidden) when mute_when_unfocused is on.
+	"volume_master": 1.0,
+	"volume_music": 0.8,
+	"volume_ambience": 0.8,
+	"volume_sfx": 1.0,
+	"volume_ui": 0.8,
+	"mute_when_unfocused": true,
 }
 const RANGES := {
 	"mouse_sensitivity": [0.02, 0.6], "stick_look_speed_deg_s": [60.0, 400.0],
 	"fov_deg": [60.0, 100.0], "camera_shake": [0.0, 1.0], "head_bob": [0.0, 1.0],
 	"hit_flash": [0.0, 1.0], "vibration": [0.0, 1.0],
+	"volume_master": [0.0, 1.0], "volume_music": [0.0, 1.0], "volume_ambience": [0.0, 1.0],
+	"volume_sfx": [0.0, 1.0], "volume_ui": [0.0, 1.0],
 }
 ## The "Button prompts" choices (P16; InputBindings.PROMPT_MODES).
 const PROMPT_DEVICES := ["auto", "keyboard", "pad"]

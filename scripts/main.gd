@@ -2,11 +2,14 @@ extends Node
 ## Entry scene. Refuses to start on invalid data (shows every validation error); otherwise it
 ## builds what GameSession.mode asks for (plan §2.9, §3.6):
 ##   * title: the screen stack with the title screen only (no level, no HUD);
-##   * sandbox and Valley: a "Loading..." label for one frame (the game is paused meanwhile, so
-##     no simulation tick passes), then the level GameSession.level_scene_path() names,
-##     HitFeedback, the HUD, the debug panel and the screen stack, then
-##     GameSession.on_level_ready(level, player) (respawn point and character state), then the
-##     autopilot when one was asked for.
+##   * sandbox and Valley: a "Loading..." label while the game is paused (no simulation tick
+##     passes): one frame, then the level GameSession.level_scene_path() names, HitFeedback, the
+##     HUD, the debug panel and the screen stack, then GameSession.on_level_ready(level, player)
+##     (respawn point and character state), then the autopilot when one was asked for; then the
+##     loading gate (P19): the tree stays paused behind "Loading..." until Audio.is_ready() - every
+##     SFX sample of the level registered - so no sound plays before its sample exists and the
+##     first play() never registers (plan M6-M9 §2.5, decision 2). Paused frames run no tick, so
+##     the seeded timeline is the same with audio on or off.
 ## The ScreenStack (P03) handles pause / Esc itself (and every modal screen); focus loss and a
 ## lost pointer lock open the pause screen through it. main owns the global keys: controls
 ## overlay, debug panel, the debug reset (F5, sandbox only) and checkpoint reload (F9), and the
@@ -59,19 +62,49 @@ func _ready() -> void:
 		_build_title()
 		return
 	var loading := UiKit.label(LOADING_TEXT, 30)
+	loading.process_mode = Node.PROCESS_MODE_ALWAYS
 	loading.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	loading.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	loading.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_layer.add_child(loading)
-	# One frame of "Loading...". The tree stays paused meanwhile, so the simulation does not run
-	# a tick without the level (the seeded soak keeps its exact timeline).
+	# "Loading..." while the tree is paused, so the simulation does not run a tick without the level
+	# (the seeded soak keeps its exact timeline): one frame, the level built behind it, then the
+	# audio loading gate.
 	get_tree().paused = true
 	await get_tree().process_frame
 	if not is_inside_tree():
 		return
-	loading.queue_free()
-	get_tree().paused = false
 	_build_level()
+	await hold_until_audio_ready(loading)
+	if not is_inside_tree():
+		return
+	loading.queue_free()
+	if not _pausing_screen_open():
+		get_tree().paused = false
+
+
+## The loading gate (P19, plan M6-M9 §2.5): waits, frame by frame with the tree paused, until the
+## Audio autoload has registered every sample of the level (Audio.is_ready(); true at once without
+## audio), showing the registration progress on the loading label.
+func hold_until_audio_ready(loading: Label) -> void:
+	var audio := get_node_or_null("/root/Audio")
+	if audio == null or not audio.has_method("is_ready"):
+		return
+	while is_inside_tree() and not bool(audio.call("is_ready")):
+		if is_instance_valid(loading):
+			loading.text = "%s %d%%" % [LOADING_TEXT, int(float(audio.call("registration_progress")) * 100.0)]
+		await get_tree().process_frame
+
+
+## True while a screen that pauses the game is open (the gate then leaves the pause to it).
+func _pausing_screen_open() -> bool:
+	if screen_stack == null:
+		return false
+	for child in screen_stack.get_children():
+		var s := child as UiScreen
+		if s != null and screen_stack.has_screen(s) and s.pauses_game():
+			return true
+	return false
 
 
 func _show_data_errors(layer: CanvasLayer) -> void:
