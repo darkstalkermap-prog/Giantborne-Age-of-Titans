@@ -168,6 +168,19 @@ static func closest_point(level: Node, pos: Vector3, layers: int) -> Vector3:
 	return NavigationServer3D.region_get_closest_point(region, pos)
 
 
+## Makes a NavigationAgent3D's waypoint check horizontal for its current waypoint: sets the agent's
+## path_height_offset to that waypoint's height over `origin` (the agent's parent, at its feet). The
+## agent advances past a waypoint when its parent stands within path_desired_distance of it in 3D, and
+## a lean navmesh lies up to 1.3 m off rolling terrain (brief §5.1): a soldier whose waypoint was
+## 0.75 m over its feet (path_desired_distance 0.6) never reached it and stood under it (measured at
+## the test world's x = 0 band). Streamed worlds call it every movement tick before
+## is_navigation_finished() and get_next_path_position(); the Valley's agents keep the offset 0.
+static func level_waypoint(agent: NavigationAgent3D, origin: Vector3) -> void:
+	var p := agent.get_current_navigation_path()
+	var i := agent.get_current_navigation_path_index()
+	agent.path_height_offset = p[i].y - origin.y if i >= 0 and i < p.size() else 0.0
+
+
 ## True when a path on `layers` from `from` ends within `tolerance` m (horizontally) of `to`.
 static func reaches(level: Node, from: Vector3, to: Vector3, layers: int, tolerance := 1.0,
 		purpose := PURPOSE_FAR) -> bool:

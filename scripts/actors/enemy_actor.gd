@@ -358,6 +358,7 @@ func _steer(dt: float) -> void:
 				agent.target_position = goal
 				_last_nav_target = goal
 				_note_repath()
+			_p24b_level_waypoint()
 			if not agent.is_navigation_finished():
 				next = agent.get_next_path_position()
 			reach = _p24b_reach(goal)
@@ -2317,6 +2318,13 @@ func _p24b_wants_repath(goal: Vector3) -> bool:
 		return true
 	return Sim.tick - _last_repath_tick >= int(_p24b_settings.get("repath_min_ticks", 6)) \
 		and _last_nav_target.distance_to(goal) >= float(_p24b_settings.get("repath_min_move_m", 2.0))
+
+
+## Streamed world: the agent's waypoint check is horizontal (NavQuery.level_waypoint - a lean
+## navmesh lies up to 1.3 m off the terrain, more than the agent's 0.6 m waypoint distance).
+func _p24b_level_waypoint() -> void:
+	if _p24b_throttled():
+		NavQuery.level_waypoint(agent, global_position)
 
 
 ## Where steering and the progress check aim for `goal`: the goal itself, unless (streamed world)

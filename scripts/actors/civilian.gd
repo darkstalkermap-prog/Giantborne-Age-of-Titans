@@ -73,6 +73,7 @@ var _phase_offset := 0
 var _progress_anchor := Vector3.INF
 var _progress_timer := 0.0
 var _nav_target := Vector3.INF
+var _world_agent := false   # P24b: the agent paths on a streamed world's layer map (_setup_world_agent)
 var _shelter_at_once := false
 var _pending_lod := -1
 var _lod_body: Node3D
@@ -259,6 +260,7 @@ func _setup_world_agent() -> void:
 	var level := nav_level()
 	if NavQuery.settings(level).is_empty():
 		return
+	_world_agent = true
 	var layers := int(agent.navigation_layers)
 	var m := NavQuery.map_for(level, layers)
 	if m.is_valid():
@@ -306,6 +308,8 @@ func _update_movement(dt: float, alive: bool) -> void:
 			if _nav_target == Vector3.INF or _nav_target.distance_to(goal) > 0.5:
 				agent.target_position = goal   # once per destination: re-path only after a failure
 				_nav_target = goal
+			if _world_agent:
+				NavQuery.level_waypoint(agent, global_position)   # P24b: lean navmeshes lie off the ground
 			if not agent.is_navigation_finished():
 				next = agent.get_next_path_position()
 			if _flat(next - global_position) < 0.05:
