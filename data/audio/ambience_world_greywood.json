@@ -1,0 +1,62 @@
+{
+	"schema_version": 1,
+	"id": "ambience.greywood",
+	"type": "ambience_set",
+	"display_name": "The Greywood",
+	"description": "P28: the Greywood: a low wind in the pines, the needles' hiss, a deep forest hum; a troll grunting far off, an owl, a woodpecker, a branch cracking, wind through the pine tops. Emitter: Hollowmere's black pond (frogs, plops). Birds fall silent after a giant's step close by.",
+	"beds": [
+		{
+			"cue": "amb.bed_deepwood",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.troll_far",
+			"weight": 1
+		},
+		{
+			"cue": "amb.owl",
+			"weight": 2,
+			"flush": true
+		},
+		{
+			"cue": "amb.woodpecker",
+			"weight": 1,
+			"flush": true
+		},
+		{
+			"cue": "amb.branch_crack",
+			"weight": 2
+		},
+		{
+			"cue": "amb.pine_wind",
+			"weight": 2
+		}
+	],
+	"spot_interval_s": [
+		5,
+		12
+	],
+	"spot_distance_m": [
+		14,
+		34
+	],
+	"emitters": [
+		{
+			"cue": "amb.pond_loop",
+			"level": "level.world",
+			"position_m": [
+				-640,
+				17,
+				-46
+			],
+			"radius_m": 50
+		}
+	],
+	"reactions": {
+		"flush_radius_m": 40,
+		"flush_s": 8,
+		"flush_cue": "amb.birds_flush"
+	}
+}

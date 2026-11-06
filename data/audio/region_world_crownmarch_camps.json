@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_crownmarch_camps",
+	"display_name": "The toll fort and the raiders' hollow",
+	"description": "P28: the toll-riders' fort and the raiders' hollow keep the Crownmarch's music over the camp bed.",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.toll_fort",
+		"poi.raiders_hollow"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.crownmarch",
+	"ambience": "ambience.camp",
+	"priority": 10
+}

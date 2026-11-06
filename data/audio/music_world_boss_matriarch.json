@@ -1,0 +1,34 @@
+{
+	"schema_version": 1,
+	"id": "music.boss_matriarch",
+	"type": "music_set",
+	"display_name": "The Troll Matriarch",
+	"description": "P28: the Troll Matriarch's fight (enemy.troll_matriarch), in its own frame (a heavy 6/8: 84 dotted-quarter beats a minute, two to a bar, sixteen bars, 22.9 s): wild drums and a growl drone grinding a semitone over D; from phase 2 a howling wail. Enters after its one-bar intro stinger.",
+	"bpm": 84,
+	"beats_per_bar": 2,
+	"bars": 16,
+	"frame": "boss_84_68",
+	"stems": {
+		"drums": "res://assets/audio/music/world/matriarch_drums.ogg",
+		"theme": "res://assets/audio/music/world/matriarch_growl.ogg",
+		"howl": "res://assets/audio/music/world/matriarch_howl.ogg"
+	},
+	"layers": {
+		"explore": {
+			"drums": 0,
+			"theme": -2
+		},
+		"combat": {
+			"drums": 0,
+			"theme": -2
+		}
+	},
+	"phase_layers": {
+		"2": {
+			"howl": 0
+		}
+	},
+	"intro": "mus.stinger.boss_matriarch",
+	"crossfade_bars": 1,
+	"layer_fade_beats": 2
+}

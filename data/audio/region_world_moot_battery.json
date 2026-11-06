@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_moot_battery",
+	"display_name": "The Moot battery",
+	"description": "P28: the hired battery under the Moot keeps the Stonehold's music over the camp bed.",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.moot_battery"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.stonehold",
+	"ambience": "ambience.camp",
+	"priority": 10
+}

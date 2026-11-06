@@ -1,0 +1,33 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_brannock",
+	"display_name": "Brannock",
+	"description": "P28: Brannock keeps the Crownmarch's music with the melody at -6 dB and longer rests (plan section 4.3), over the town's bed; a stage 4+ giant entering it while the town is friendly hears a gasp and the town bell once a visit.",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.brannock"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.crownmarch",
+	"ambience": "ambience.town",
+	"priority": 10,
+	"arrival": {
+		"faction": "faction.brannock"
+	},
+	"layers": {
+		"explore": {
+			"drone": 0,
+			"melody": -6
+		}
+	},
+	"melody": {
+		"rest_loops": [
+			2,
+			4
+		]
+	}
+}

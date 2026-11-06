@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_harroks_hall",
+	"display_name": "Harrok's Hall",
+	"description": "P28: the rival clan's hall keeps the Stonehold's music over the giants' hearth.",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.harroks_hall"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.stonehold",
+	"ambience": "ambience.hearth",
+	"priority": 10
+}

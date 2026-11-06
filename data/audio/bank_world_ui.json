@@ -1,0 +1,59 @@
+{
+	"schema_version": 1,
+	"id": "audio_bank.world_ui",
+	"type": "audio_bank",
+	"display_name": "World interface",
+	"description": "P28 (section 4.1 family H, M7-M9): fast travel (a rush and a two-note chime), and the equip touches of the axe and the fists (P21's sword and default touches, pitched).",
+	"cues": {
+		"sfx.ui.equip.axe": {
+			"files": [
+				"res://assets/audio/sfx/ui/equip_sword_1.wav"
+			],
+			"bus": "UI",
+			"spatial": false,
+			"volume_db": -6.5,
+			"pitch": 0.85,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 60,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ui.equip.fists": {
+			"files": [
+				"res://assets/audio/sfx/ui/equip_1.wav"
+			],
+			"bus": "UI",
+			"spatial": false,
+			"volume_db": -1.5,
+			"pitch": 1.1,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 60,
+			"priority": 50,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ui.travel": {
+			"files": [
+				"res://assets/audio/sfx/world/ui/travel_1.wav"
+			],
+			"bus": "UI",
+			"spatial": false,
+			"volume_db": -11.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 50,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		}
+	}
+}

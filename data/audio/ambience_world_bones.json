@@ -1,0 +1,43 @@
+{
+	"schema_version": 1,
+	"id": "ambience.bones",
+	"type": "ambience_set",
+	"display_name": "The Titan's Bones",
+	"description": "P28: the Titan's Bones: wind through the ribs and a low hum; creaks of old bone, a wind whistle. Emitter: the Titan Forge's fire in the ribs (it always plays: no flag says the forge is lit before P35 brings it).",
+	"beds": [
+		{
+			"cue": "amb.bed_bones",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.bone_creak",
+			"weight": 3
+		},
+		{
+			"cue": "amb.whistle",
+			"weight": 1
+		}
+	],
+	"spot_interval_s": [
+		6,
+		14
+	],
+	"spot_distance_m": [
+		14,
+		34
+	],
+	"emitters": [
+		{
+			"cue": "amb.forge_fire",
+			"level": "level.world",
+			"position_m": [
+				220,
+				17,
+				-260
+			],
+			"radius_m": 30
+		}
+	]
+}

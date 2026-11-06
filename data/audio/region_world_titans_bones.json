@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_titans_bones",
+	"display_name": "The Titan's Bones",
+	"description": "P28: the Titan's Bones (and the shoulder's cache) keep the Drowned Steps' music over the bones' bed and the Titan Forge's fire.",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.titans_bones",
+		"poi.bones_shoulder"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.drowned_steps",
+	"ambience": "ambience.bones",
+	"priority": 10
+}

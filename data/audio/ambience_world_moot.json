@@ -1,0 +1,31 @@
+{
+	"schema_version": 1,
+	"id": "ambience.moot",
+	"type": "ambience_set",
+	"display_name": "The Moot",
+	"description": "P28: the Moot: wind over the ring and a choir humming in the stones; the stones' hum, a giant's horn far off.",
+	"beds": [
+		{
+			"cue": "amb.bed_moot",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.stone_hum",
+			"weight": 2
+		},
+		{
+			"cue": "amb.giant_horn_far",
+			"weight": 1
+		}
+	],
+	"spot_interval_s": [
+		7,
+		16
+	],
+	"spot_distance_m": [
+		16,
+		40
+	]
+}

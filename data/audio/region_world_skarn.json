@@ -1,0 +1,30 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_skarn",
+	"display_name": "Skarn Steading",
+	"description": "P28: Skarn keeps the Stonehold's music with the melody at -6 dB and longer rests (plan section 4.3), over the giants' hearth.",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.skarn"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.stonehold",
+	"ambience": "ambience.hearth",
+	"priority": 10,
+	"layers": {
+		"explore": {
+			"drone": 0,
+			"melody": -6
+		}
+	},
+	"melody": {
+		"rest_loops": [
+			2,
+			4
+		]
+	}
+}

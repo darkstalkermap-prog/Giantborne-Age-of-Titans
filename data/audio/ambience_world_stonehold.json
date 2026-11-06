@@ -1,0 +1,45 @@
+{
+	"schema_version": 1,
+	"id": "ambience.stonehold",
+	"type": "ambience_set",
+	"display_name": "The Stonehold Highlands",
+	"description": "P28: the Stonehold: a high wind gusting and whistling through stone, a far rumble; an eagle, a rockfall, a giant's horn far off, the standing stones' hum. No emitter of its own (the plan's Highland Falls is not in the world: the falls loop plays at the Wend Falls); the steadings' hearths are their places' emitters. The eagle falls silent after a giant's step close by.",
+	"beds": [
+		{
+			"cue": "amb.bed_highland",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.eagle",
+			"weight": 2,
+			"flush": true
+		},
+		{
+			"cue": "amb.rockfall",
+			"weight": 2
+		},
+		{
+			"cue": "amb.giant_horn_far",
+			"weight": 1
+		},
+		{
+			"cue": "amb.stone_hum",
+			"weight": 1
+		}
+	],
+	"spot_interval_s": [
+		6,
+		14
+	],
+	"spot_distance_m": [
+		16,
+		40
+	],
+	"reactions": {
+		"flush_radius_m": 40,
+		"flush_s": 8,
+		"flush_cue": "amb.birds_flush"
+	}
+}

@@ -1,0 +1,57 @@
+{
+	"schema_version": 1,
+	"id": "ambience.camp",
+	"type": "ambience_set",
+	"display_name": "The camps",
+	"description": "P28: a camp's place bed (the war camp, Fort Aldmere and the ballista ridge, the toll fort, the raiders' hollow, the Moot battery): drums at practice, canvas, hammers; orders shouted, horses, a saw. Emitters: the forges of the war camp and the toll fort.",
+	"beds": [
+		{
+			"cue": "amb.bed_camp",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.orders",
+			"weight": 2
+		},
+		{
+			"cue": "amb.horse",
+			"weight": 2
+		},
+		{
+			"cue": "amb.saw",
+			"weight": 1
+		}
+	],
+	"spot_interval_s": [
+		5,
+		12
+	],
+	"spot_distance_m": [
+		12,
+		30
+	],
+	"emitters": [
+		{
+			"cue": "amb.forge_fire",
+			"level": "level.world",
+			"position_m": [
+				520,
+				33,
+				120
+			],
+			"radius_m": 30
+		},
+		{
+			"cue": "amb.forge_fire",
+			"level": "level.world",
+			"position_m": [
+				460,
+				12,
+				330
+			],
+			"radius_m": 25
+		}
+	]
+}

@@ -1,0 +1,77 @@
+{
+	"schema_version": 1,
+	"id": "ambience.town",
+	"type": "ambience_set",
+	"display_name": "Brannock and Millford",
+	"description": "P28: a town's place bed: the murmur of a market, carts, a smithy's hammer; a hawker calling, a dog, shutters banging. Emitters: the town wells, the Wend under Brannock Bridge and the Millrace.",
+	"beds": [
+		{
+			"cue": "amb.bed_town",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.hawker",
+			"weight": 2
+		},
+		{
+			"cue": "amb.dog",
+			"weight": 2
+		},
+		{
+			"cue": "amb.shutters",
+			"weight": 1
+		}
+	],
+	"spot_interval_s": [
+		5,
+		12
+	],
+	"spot_distance_m": [
+		12,
+		30
+	],
+	"emitters": [
+		{
+			"cue": "amb.well_loop",
+			"level": "level.world",
+			"position_m": [
+				60,
+				10,
+				450
+			],
+			"radius_m": 30
+		},
+		{
+			"cue": "amb.well_loop",
+			"level": "level.world",
+			"position_m": [
+				-386,
+				8,
+				646
+			],
+			"radius_m": 30
+		},
+		{
+			"cue": "amb.river_loop",
+			"level": "level.world",
+			"position_m": [
+				60,
+				8,
+				344
+			],
+			"radius_m": 60
+		},
+		{
+			"cue": "amb.river_loop",
+			"level": "level.world",
+			"position_m": [
+				-338,
+				6,
+				662
+			],
+			"radius_m": 40
+		}
+	]
+}

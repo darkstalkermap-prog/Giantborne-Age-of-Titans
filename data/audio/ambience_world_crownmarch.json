@@ -1,0 +1,81 @@
+{
+	"schema_version": 1,
+	"id": "ambience.crownmarch",
+	"type": "ambience_set",
+	"display_name": "The Crownmarch",
+	"description": "P28: the Crownmarch's fields: a light wind over the crops, crickets, the crops rustling; larks, cattle lowing, a mill wheel's creak, a bell far off with no church under it. Emitters: the Wend under Brannock Bridge, the Millrace at Millford's mill, the Wend Falls. Larks fall silent after a giant's step close by.",
+	"beds": [
+		{
+			"cue": "amb.bed_farmland",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.lark",
+			"weight": 3,
+			"flush": true
+		},
+		{
+			"cue": "amb.cattle",
+			"weight": 2
+		},
+		{
+			"cue": "amb.mill_wheel",
+			"weight": 1
+		},
+		{
+			"cue": "amb.far_bell",
+			"weight": 1
+		},
+		{
+			"cue": "amb.gust",
+			"weight": 1
+		}
+	],
+	"spot_interval_s": [
+		5,
+		12
+	],
+	"spot_distance_m": [
+		14,
+		34
+	],
+	"emitters": [
+		{
+			"cue": "amb.river_loop",
+			"level": "level.world",
+			"position_m": [
+				60,
+				8,
+				344
+			],
+			"radius_m": 60
+		},
+		{
+			"cue": "amb.river_loop",
+			"level": "level.world",
+			"position_m": [
+				-338,
+				6,
+				662
+			],
+			"radius_m": 40
+		},
+		{
+			"cue": "amb.falls_loop",
+			"level": "level.world",
+			"position_m": [
+				928,
+				10,
+				561
+			],
+			"radius_m": 90
+		}
+	],
+	"reactions": {
+		"flush_radius_m": 40,
+		"flush_s": 8,
+		"flush_cue": "amb.birds_flush"
+	}
+}
