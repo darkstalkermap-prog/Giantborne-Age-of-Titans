@@ -20,7 +20,10 @@ extends IntegrationSuite
 ## A checkpoint's limit is the highest stage that passes all three (3 when stage 4 fails: the Valley's
 ## shrines never grow a giant beyond 3). The test asserts that the layout's max_stage of every
 ## checkpoint - and so the index's, which travel and respawns read - is that measured limit, and prints
-## the table (docs/systems/P26.md). It also records the overlap sampling of the M5 brief's three routes
+## the table (docs/systems/P26.md). A stage-6 giant then really walks two stretches where the brief's
+## strict sampling overlaps most (the Hollow's exit; the Grove through Thornwick's gate and lanes to the
+## ruins gate),
+## its own capsule never inside the world. It also records the overlap sampling of the M5 brief's three routes
 ## (Hollow -> Grove, Hollow -> Thornwick, Thornwick -> Kingsfall) at stages 3-6: the brief's strict
 ## count (the capsule lifted 0.05 m on the path itself) and the corridor count above.
 
@@ -273,3 +276,32 @@ func test_the_m5_routes_overlap_sampling_at_stages_3_to_6() -> void:
 			if stage == 3:
 				assert_true(float(s.length) > 100.0, "%s: %.0f m" % [r[0], s.length])
 		print("    revisit route %s: %s" % [r[0], ", ".join(cells)])
+
+
+## The corridor probe against the real thing: a stage-6 giant (3.7 m capsule) walks the Hollow's exit
+## to the forest road waystone and from the Grove through Thornwick's gate and lanes to the ruins gate
+## waystone - where the strict sampling overlaps most - on the giant-layer path (waypoints within 1.2 m plus the 1.7 m it
+## stands further from walls than the path's 2.0 m agent), its own capsule never inside the world.
+func test_a_stage_6_giant_walks_the_valleys_narrowest_stretches() -> void:
+	level = await _revisit_valley()
+	var lv := level
+	var p := lv.get_node("Player") as GiantPlayer
+	p.router.use_injection = true
+	var walker: GDScript = load("res://tests/slow/test_citadel_breach.gd")
+	for leg: Array in [["valley.shrine.hollow", "valley.cp.forest_road"], ["valley.shrine.grove", "valley.cp.ruins_gate"]]:
+		GameSession.place_player(p, _checkpoint_transform(lv, str(leg[0])))
+		await TestWait.until(self, func() -> bool: return p.is_on_floor(), 60)
+		await step_ticks(1)
+		var grown: Dictionary = p.growth.debug_set_stage(6)
+		assert_true(grown.ok or p.growth_stage == 6, "%s: a stage-6 giant (%s)" % [leg[0], grown.get("reason", "")])
+		await step_ticks(2)
+		var to := _checkpoint_transform(lv, str(leg[1])).origin
+		var path := ValleyProbe.path(lv, p.global_position, to, ValleyProbe.GIANT)
+		var prof: Dictionary = p.growth.profile_for_stage(6)
+		var strict := _swept(lv, prof, p.global_position, to)
+		var r: Dictionary = await walker.walk_sampled(self, p, path, 1.2 + float(prof.capsule_radius_m) - NAV_RADIUS_M)
+		print("    revisit walk at stage 6: %s -> %s: %.0f m, %d of %d waypoints, %d clearance samples, %d overlaps (strict sampling %d of %d)" % [
+			leg[0], leg[1], r.metres, r.reached, r.total, r.samples, r.overlaps, strict.strict, strict.samples])
+		assert_eq(int(r.reached), int(r.total), "%s -> %s: walked at stage 6 (stuck at %s)" % [leg[0], leg[1], r.stuck_at])
+		assert_eq(int(r.overlaps), 0, "%s -> %s: the capsule never inside the world (%s)" % [leg[0], leg[1], r.first])
+		assert_true(int(strict.strict) > 0, "%s -> %s: a stretch the strict sampling flags (%d)" % [leg[0], leg[1], strict.strict])
