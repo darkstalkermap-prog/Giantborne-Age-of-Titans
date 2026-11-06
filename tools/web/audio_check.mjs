@@ -28,6 +28,13 @@
 //     needs no network).
 // It prints one AUDIO_CHECK {json} line and exits 0 when everything holds (1 otherwise, 2 for a usage
 // error). The P23 runs (the release and the forced two-part build) are in docs/systems/P23.md.
+// The plan's criterion (M6 gate) is the strict one - no silent run over 50 ms in 60 s of the
+// Hollow's music: every report says whether it held ("criterion"), and a default run that passes on
+// holes it places on the main thread ends "OK (the plan's criterion NOT MET: ...)", never a bare OK.
+// When a run fails - a timeout waiting for the title or the Hollow included - the --json file still
+// gets the trace so far (the page's frames, long tasks and driver reads are logged from the page's
+// load, not only while the recorder is armed), the page's state (the music marks, the AudioContext's
+// state, the launcher's status line) and the last CONSOLE_TAIL console lines, which are printed too.
 //
 // Usage (from the project folder, after tools/build_web.sh):
 //   node tools/web/audio_check.mjs [--build=builds/web] [--args=a,b,...] [--route=R] [--music-s=60]
@@ -61,6 +68,8 @@ const SILENCE_PEAK = 1e-4;
 const PLACE_TOLERANCE_MS = 35;
 // Holes this close together are one stall of the mixer (a sample voice sounded between them).
 const MERGE_GAP_MS = 12;
+// The page's last console lines kept for a failure's report (M6 gate).
+const CONSOLE_TAIL = 200;
 
 function parseArgs(argv) {
   const opts = {
@@ -489,7 +498,9 @@ registerProcessor('check-recorder', CheckRecorder);
   // The page's frame clock: the time of every requestAnimationFrame while the recorder is armed (the
   // engine's main loop is a requestAnimationFrame callback too: an interval is one engine frame).
   A.frames = [];
-  A.frameClock = false;
+  // On from the page's load (M6 gate: a run that times out before the music is armed still has its
+  // frames, long tasks and driver reads in the report); arm() starts them afresh for the music.
+  A.frameClock = true;
   const tick = (t) => {
     if (A.frameClock && A.frames.length < 100000) A.frames.push(t);
     requestAnimationFrame(tick);
@@ -531,6 +542,10 @@ function replay(file) {
     console.error(`audio_check: ${file} holds no trace`);
     process.exit(2);
   }
+  if (t.partial) {
+    console.error(`audio_check: ${file} holds a failed run's partial trace (no music was recorded): see its failure_state and console_tail`);
+    process.exit(2);
+  }
   const placed = placeHoles(t.holes, t.service || [], t.arm, t.disarm, t.quantum_ms);
   console.log(`audio_check: ${file}: ${placed.holes} hole(s) over ${HOLE_MAX_MS} ms, ${placed.while_unserved} while the main thread left the mixer unserved, ${placed.elsewhere.length} otherwise`);
   for (const e of placed.elsewhere.slice(0, 10)) console.log(`    ${e.ms} ms at ${e.page_s} s`);
@@ -569,6 +584,7 @@ async function main() {
     args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
   });
   const page = await browser.newPage({ viewport: { width, height } });
+  const started = Date.now();
   await page.addInitScript(instrument, { silencePeak: SILENCE_PEAK, holeMs: HOLE_MAX_MS });
   const external = [];
   await page.route((u) => !u.href.startsWith(origin), (route) => {
@@ -579,19 +595,25 @@ async function main() {
   const errors = [];
   const failedRequests = [];
   const musicLines = [];
+  const consoleTail = [];
   page.on('console', (msg) => {
     const text = msg.text();
     if (msg.type() === 'error') errors.push(text);
     if (text.startsWith('AUDIO_MUSIC ')) musicLines.push(text);
+    consoleTail.push(`[${Math.round((Date.now() - started) / 100) / 10} s ${msg.type()}] ${text}`);
+    if (consoleTail.length > CONSOLE_TAIL) consoleTail.shift();
   });
-  page.on('pageerror', (err) => errors.push(`page error: ${err.message}`));
+  page.on('pageerror', (err) => {
+    errors.push(`page error: ${err.message}`);
+    consoleTail.push(`[${Math.round((Date.now() - started) / 100) / 10} s pageerror] ${err.message}`);
+    if (consoleTail.length > CONSOLE_TAIL) consoleTail.shift();
+  });
   page.on('requestfailed', (req) => {
     const why = req.failure() ? req.failure().errorText : 'failed';
     if (why !== 'net::ERR_ABORTED') failedRequests.push(`${req.url()} (${why})`);
   });
   page.on('response', (res) => { if (res.status() >= 400) failedRequests.push(`${res.url()} (${res.status()})`); });
 
-  const started = Date.now();
   const deadline = started + opts.timeoutS * 1000;
   const marks = () => page.evaluate(() => window.__audioCheck.marks.slice());
   const waitFor = async (what, test, step = 250) => {
@@ -669,6 +691,12 @@ async function main() {
         service: state.service, holes: s.holes || [],
       };
       report.strict = opts.strict;
+      // The plan's criterion (M6 gate): no silent run over HOLE_MAX_MS in the music at all.
+      report.criterion = {
+        hole_max_ms: HOLE_MAX_MS, met: report.music.longest_silence_ms <= HOLE_MAX_MS,
+        holes: report.music.silent_runs_over_50_ms, longest_silence_ms: report.music.longest_silence_ms,
+        mode: opts.strict ? 'strict' : 'default (holes placed on the main thread pass)',
+      };
       if (report.music.longest_silence_ms > HOLE_MAX_MS) {
         if (opts.strict) problems.push(`a ${report.music.longest_silence_ms} ms hole in the music`);
         if (placed.elsewhere.length > 0) {
@@ -688,8 +716,38 @@ async function main() {
     report.contexts = state.contexts;
   } catch (e) {
     problems.push(String(e && e.message ? e.message : e));
+    // M6 gate: what the page was doing when the run gave up (a timeout waiting for the title's or
+    // the Hollow's music left no trace before): its state, and the trace logged since its load.
+    const snap = await page.evaluate(() => {
+      const A = window.__audioCheck;
+      if (!A) return null;
+      const c = A.ctx();
+      const status = document.querySelector('#status, .status, #progress-text, #status-text');
+      return {
+        marks: A.marks.slice(), log: A.log.slice(0, 50), contexts: A.ctxs.length,
+        ctx: c ? { state: c.state, rate: c.sampleRate, current_time: c.currentTime } : null,
+        recorder: A.rec.stats || null, driver_watched: A.driverWatched, first_sound: A.firstSound,
+        frames: A.frames.slice(-4000), tasks: A.tasks.slice(-2000), service: A.service.slice(-20000),
+        page_ms: performance.now(), title: document.title, status_text: status ? status.textContent : null,
+        canvas: !!document.querySelector('#game-canvas'),
+      };
+    }).catch((err) => ({ unavailable: String(err && err.message ? err.message : err) }));
+    report.failure_state = snap ? {
+      marks: snap.marks, log: snap.log, contexts: snap.contexts, context: snap.ctx, recorder: snap.recorder,
+      driver_watched: snap.driver_watched, first_sound: snap.first_sound, page_s: snap.page_ms !== undefined
+        ? Math.round(snap.page_ms / 100) / 10 : null, title: snap.title, status_text: snap.status_text,
+      canvas: snap.canvas, unavailable: snap.unavailable,
+    } : null;
+    if (snap && Array.isArray(snap.frames)) {
+      const bufferMs = streamBufferMs(snap.ctx && snap.ctx.rate ? snap.ctx.rate : 44100);
+      report.failure_state.page_frames = frameStats(snap.frames, bufferMs);
+      report.failure_state.long_tasks = taskStats(snap.tasks, snap.frames.length ? snap.frames[0] : 0, snap.page_ms);
+      report.failure_state.driver = { watched: snap.driver_watched, ...serviceStats(snap.service, bufferMs) };
+      if (trace === null) trace = { frames: snap.frames, tasks: snap.tasks, service: snap.service, holes: [], partial: true };
+    }
   }
   report.wall_s = Math.round((Date.now() - started) / 100) / 10;
+  report.console_tail = problems.length > 0 ? consoleTail.slice() : consoleTail.slice(-20);
   await browser.close();
   server.close();
   report.console_errors = errors;
@@ -702,18 +760,42 @@ async function main() {
   if (opts.json) writeFileSync(opts.json, JSON.stringify({ ...report, trace }, null, 2) + '\n');
   const m = report.music || {};
   const mbs = (b) => (typeof b === 'number' ? (b / 1048576).toFixed(1) : 'N/A');
-  console.log(`audio_check: ${report.parts} pck part(s); the Hollow plays ${report.hollow_set || '?'}; sound ${report.sound_after_hollow_s} s after it; context ${report.context ? report.context.state : '?'} at ${report.context ? report.context.rate : '?'} Hz`);
-  console.log(`  music for ${m.seconds} s: longest silence ${m.longest_silence_ms} ms (limit ${HOLE_MAX_MS}), runs over 50 ms ${m.silent_runs_over_50_ms} (${m.holes_while_unserved} while the main thread left the mixer unserved, ${(m.holes_elsewhere || []).length} otherwise${report.strict ? '' : '; --strict fails every one'}), peak ${m.peak}`);
-  const pf = report.page_frames || {};
-  const lt = report.long_tasks || {};
-  const dv = report.driver || {};
-  console.log(`  main thread: ${lt.n} long tasks (p50 ${lt.p50_ms} ms, longest ${lt.max_ms} ms, ${typeof lt.busy_share === 'number' ? Math.round(lt.busy_share * 100) : '?'} % of the time); page frames: ${pf.n}, p50 ${pf.p50_ms} ms, p95 ${pf.p95_ms} ms, longest ${pf.max_ms} ms; the driver's reads ${dv.watched ? `${dv.reads}, longest gap ${dv.longest_gap_ms} ms, ${dv.gaps_over_buffer} gaps over the ${pf.buffer_ms} ms stream buffer` : 'not seen'}`);
+  console.log(`audio_check: ${report.parts} pck part(s); the Hollow plays ${report.hollow_set || '?'}; sound ${report.sound_after_hollow_s !== undefined && report.sound_after_hollow_s !== null ? `${report.sound_after_hollow_s} s after it` : 'not measured'}; context ${report.context ? report.context.state : '?'} at ${report.context ? report.context.rate : '?'} Hz`);
+  if (report.music) {
+    console.log(`  music for ${m.seconds} s: longest silence ${m.longest_silence_ms} ms (limit ${HOLE_MAX_MS}), runs over 50 ms ${m.silent_runs_over_50_ms} (${m.holes_while_unserved} while the main thread left the mixer unserved, ${(m.holes_elsewhere || []).length} otherwise${report.strict ? '' : '; --strict fails every one'}), peak ${m.peak}`);
+  } else {
+    console.log('  music: not measured (the run ended before the recorder was armed)');
+  }
+  // The music window's clocks, or (a failed run) the clocks logged from the page's load.
+  const fsx = report.failure_state || {};
+  const pf = report.page_frames || fsx.page_frames || {};
+  const lt = report.long_tasks || fsx.long_tasks || {};
+  const dv = report.driver || fsx.driver || {};
+  if (pf.n !== undefined) {
+    console.log(`  main thread${report.page_frames ? '' : ' (since the page loaded)'}: ${lt.n} long tasks (p50 ${lt.p50_ms} ms, longest ${lt.max_ms} ms, ${typeof lt.busy_share === 'number' ? Math.round(lt.busy_share * 100) : '?'} % of the time); page frames: ${pf.n}, p50 ${pf.p50_ms} ms, p95 ${pf.p95_ms} ms, longest ${pf.max_ms} ms; the driver's reads ${dv.watched ? `${dv.reads}, longest gap ${dv.longest_gap_ms} ms, ${dv.gaps_over_buffer} gaps over the ${pf.buffer_ms} ms stream buffer` : 'not seen'}`);
+  }
   console.log(`  samples: peak live ${mbs(report.samples && report.samples.peak_live_bytes)} MB (cap ${mbs(capBytes)} MB = ${registeredS} s x 353 KB + 12 MB), copies playing at most ${mbs(report.samples && report.samples.peak_playing_copy_bytes)} MB`);
   console.log(`  console errors ${errors.length}, failed requests ${failedRequests.length}, external requests answered empty ${external.length}, wall ${report.wall_s} s`);
   for (const e of errors.slice(0, 10)) console.log(`    error: ${e}`);
   for (const r of failedRequests.slice(0, 10)) console.log(`    request: ${r}`);
-  console.log(`AUDIO_CHECK ${JSON.stringify(report)}`);
-  console.log(report.ok ? 'audio_check: OK' : `audio_check: FAILED - ${problems.join('; ')}`);
+  const crit = report.criterion;
+  console.log(`  the plan's criterion (no silent run over ${HOLE_MAX_MS} ms in ${opts.musicS} s of music): ${crit ? (crit.met ? 'MET' : `NOT MET (${crit.holes} hole(s), the longest ${crit.longest_silence_ms} ms)`) : 'NOT MEASURED'}`);
+  if (problems.length > 0) {
+    console.log(`  the page's last ${Math.min(30, consoleTail.length)} console lines:`);
+    for (const line of consoleTail.slice(-30)) console.log(`    ${line}`);
+    if (report.failure_state) {
+      const fs = report.failure_state;
+      console.log(`  the page when it gave up: ${fs.unavailable ? `unavailable (${fs.unavailable})` : `context ${fs.context ? `${fs.context.state} at ${fs.context.current_time} s` : 'none'}, music marks ${(fs.marks || []).map((x) => `${x.set || '?'}/${x.state || '?'}`).join(', ') || 'none'}, status "${fs.status_text || ''}", ${fs.page_frames ? `${fs.page_frames.n} frames (longest ${fs.page_frames.max_ms} ms), ${fs.long_tasks.n} long tasks` : 'no frames'}`}`);
+    }
+  }
+  console.log(`AUDIO_CHECK ${JSON.stringify({ ...report, console_tail: report.console_tail.slice(-20) })}`);
+  if (report.ok) {
+    console.log(crit && !crit.met
+      ? `audio_check: OK (the plan's criterion NOT MET: ${crit.holes} hole(s) over ${HOLE_MAX_MS} ms, every one placed on the main thread; run --strict on a machine with a GPU for the gate)`
+      : 'audio_check: OK');
+  } else {
+    console.log(`audio_check: FAILED - ${problems.join('; ')}`);
+  }
   process.exit(report.ok ? 0 : 1);
 }
 
