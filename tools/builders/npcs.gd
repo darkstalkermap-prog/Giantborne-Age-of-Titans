@@ -196,7 +196,7 @@ static func _person(kit: SceneKit, node_name: String, entity_id: String, definit
 			shoulder.add_child(staff)
 		body.add_child(shoulder)
 	# P22 (decision 9): one vertex-coloured mesh per pivot (the elder's staff is her arm's): 5 meshes,
-	# was 12.
+	# was 12 (the elder 14).
 	kit.merge_rig(body)
 	visual.add_child(kit.lod_proxy(Vector3(0.45, 1.7, 0.3), Vector3(0, 0.85, 0), palette.tunic))
 	root.add_child(visual)
