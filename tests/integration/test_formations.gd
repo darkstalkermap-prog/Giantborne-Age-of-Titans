@@ -107,11 +107,13 @@ func test_the_banner_halves_losses_and_its_death_breaks_morale_for_members_only(
 	assert_near(m.brain.morale, before - 10.0, 0.01, "without its banner a member loses the whole")
 
 
-func test_a_braced_front_rank_strikes_once_per_pulse_with_one_token_and_one_band() -> void:
-	# a quicker brace than the shipped one (the default tier's time budget): the counts are the test
-	TestFixtures.record_override("ability.formation_brace_pike", {"windup_s": 0.2, "recovery_s": 0.2})
+## One stage-4 giant for both (the default tier's time budget): the brace of a front rank of five,
+## then the back rank's free slots take a joiner.
+func test_the_brace_then_joining_and_fleeing_at_stage_4() -> void:
+	# a quicker brace than the shipped one (the time budget): the counts are the test
+	TestFixtures.record_override("ability.formation_brace_pike", {"windup_s": 0.1, "recovery_s": 0.05})
 	var p := await _stage_4_giant(Vector3(0, 0.05, 6))
-	var f := _formation("test.brace", Vector3(0, 0, 0), 5, 1, 5, false)
+	var f := _formation("test.brace", Vector3(0, 0, 0), 5, 2, 5, false)   # the back rank free
 	for e: EnemyActor in f.members:
 		e.brain.aware = true
 	var pid := p.entity.entity_id
@@ -131,7 +133,7 @@ func test_a_braced_front_rank_strikes_once_per_pulse_with_one_token_and_one_band
 	var brace_hits := 0
 	var most_tokens := 0
 	var token_after := -1
-	for i in 36:
+	for i in 26:
 		await step_ticks(1)
 		if i % Formation.UPDATE_TICKS == 0:
 			_update(f, p)
@@ -154,6 +156,7 @@ func test_a_braced_front_rank_strikes_once_per_pulse_with_one_token_and_one_band
 	for e: EnemyActor in f.members:
 		if e != striker:
 			assert_true(e.controller.action == null, "%s only poses" % e.entity_id)
+	await _join_or_flee(p, f)
 
 
 func test_shields_block_lights_and_break_on_heavies_stomps_and_sweeps() -> void:
@@ -177,9 +180,11 @@ func test_shields_block_lights_and_break_on_heavies_stomps_and_sweeps() -> void:
 			HitResult.OUTCOME_NAMES[cases[i][2]]])
 
 
-func test_outmatched_soldiers_join_a_formation_within_40_m_or_flee() -> void:
-	var p := await _stage_4_giant(Vector3(0, 0.05, 30))
-	var f := _formation("test.join", Vector3(0, 0, 0), 3, 1, 2, false)
+## At stage 4 an outmatched soldier joins `f` (its back rank free) within 40 m; one with no
+## formation in reach flees and routs.
+func _join_or_flee(p: GiantPlayer, f: Formation) -> void:
+	p.global_position = Vector3(0, 0.05, 30)
+	p.velocity = Vector3.ZERO
 	var joiner := TestSpawn.enemy(world, PIKEMAN, Vector3(15, 0.05, 5), "test.joiner", true)
 	var loner := TestSpawn.enemy(world, PIKEMAN, Vector3(60, 0.05, 40), "test.loner", true)
 	await step_ticks(2)
@@ -190,7 +195,7 @@ func test_outmatched_soldiers_join_a_formation_within_40_m_or_flee() -> void:
 		if i % Formation.UPDATE_TICKS == 0:
 			_update(f, p)
 	assert_eq(joiner.formation, f, "the soldier 15 m away joined the formation")
-	assert_eq(f.slot_for(joiner), 2, "in its free slot")
+	assert_eq(f.slot_for(joiner), 5, "in the first free slot (the back rank's left file)")
 	assert_near(joiner.brain.morale, float(joiner.record.get("morale", 90)), 15.0, "keeping its own morale")
 	assert_true(loner.formation == null, "the one 60 m away found none")
 	assert_true(loner.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED],

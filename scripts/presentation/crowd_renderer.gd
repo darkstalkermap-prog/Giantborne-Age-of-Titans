@@ -77,7 +77,7 @@ func refresh() -> void:
 			continue
 		gone[m.entity_id] = true
 		if not _has_poses(m) or _dead(m):
-			_show(m, true)
+			_show(m)
 			continue
 		if _urgent(m):
 			urgent.append(m)
@@ -104,7 +104,7 @@ func refresh() -> void:
 		for m: EnemyActor in list:
 			if slots > 0:
 				slots -= 1
-				_show(m, false)
+				_show(m)
 				promoted[m.entity_id] = true
 			else:
 				crowd.append(m)
@@ -113,7 +113,7 @@ func refresh() -> void:
 		var pose := pose_for(m)
 		var mi := m.get_node_or_null(NodePath("%s/%s" % [POSES_PATH, pose])) as MeshInstance3D
 		if mi == null or mi.mesh == null:
-			_show(m, false)
+			_show(m)
 			continue
 		_hide(m)
 		crowded[m.entity_id] = true
@@ -209,9 +209,8 @@ func _clear_sets() -> void:
 	pose_counts.clear()
 
 
-## A member's own rig is shown (promoted, dead or without crowd poses); `count` is unused bookkeeping
-## kept for clarity of the call sites.
-func _show(m: EnemyActor, _always: bool) -> void:
+## A member's own rig is shown again (promoted, dead, without crowd poses, or left).
+func _show(m: EnemyActor) -> void:
 	if _hidden.has(m.entity_id):
 		_set_rig(m, true)
 		_hidden.erase(m.entity_id)

@@ -92,6 +92,7 @@ func test_a_formation_is_one_candidate_with_its_banner_and_resolves_to_its_neare
 	await step_ticks(12)   # the switch debounce (0.2 s)
 	p.targeting.switch_target(-1)
 	assert_eq(p.lock.target_id, "formation:test.lock", "and back to the formation")
+	await _banner_through_its_rank()
 	# two rout, three die: no member alive and not routed - the lock lets go
 	(f.members[0] as EnemyActor).p30_force_rout()
 	(f.members[1] as EnemyActor).p30_force_rout()
@@ -106,24 +107,22 @@ func test_a_formation_is_one_candidate_with_its_banner_and_resolves_to_its_neare
 	lone.queue_free()
 
 
-## The banner stays a target through its rank: locked from in front of the formation it is in
-## sight (soldiers never block the lock), the lock resolves to the banner itself (not the group's
-## focus), it holds over time, and a heavy kills it. (The hit is the stage-4 heavy's event through
-## the real resolution; a club heavy at stage 4 lands about 3 m in front of the giant, so landing a
-## swing on human-sized targets beyond that is P31's stage movesets.)
-func test_a_heavy_kills_the_locked_banner_through_one_rank() -> void:
-	# the formation faces -X, toward the giant; its banner stands 1.6 m behind the rank, at x = 0
-	await _setup(4, Vector3(-9.5, 0.05, 0), Vector3(-1.6, 0, 0))
+## The banner stays a target through its rank: the giant west of the formation (which faces it, -X),
+## the middle member straight between them; locked, the banner is in sight (soldiers never block the
+## lock), the lock resolves to the banner itself (not the group's focus) and holds, and a heavy kills
+## it. (The hit is the stage-4 heavy's event through the real resolution: a club heavy at stage 4
+## lands about 3 m in front of the giant, so a swing landing on human-sized targets beyond that is
+## P31's stage movesets.)
+func _banner_through_its_rank() -> void:
+	p.global_position = Vector3(-9.5, 0.05, 0)
+	p.velocity = Vector3.ZERO
 	p.rotation.y = -PI * 0.5      # the giant faces +X
 	p.camera_rig.yaw = -PI * 0.5
-	await step_ticks(2)
+	await step_ticks(1)
 	var b := f.banner
-	# the banner straight behind its rank's centre: the player switched to it (the switch itself is
-	# the first test's); the lock is taken here by id
-	p.lock.target_id = b.entity_id
+	p.lock.target_id = b.entity_id   # the player switched to it (the switch itself is checked above)
 	p.targeting.sync_lock(b.entity_id, "switched")
-	assert_eq(p.lock.target_id, b.entity_id, "the banner is locked through its rank")
-	assert_true(p.targeting.is_visible(b.entity), "in sight: the rank in front does not hide it")
+	assert_true(p.targeting.is_visible(b.entity), "the banner is in sight through the rank in front of it")
 	assert_eq(p.targeting.locked_entity(), b.entity, "the lock resolves to the banner, not a focus member")
 	await step_ticks(4)
 	assert_eq(p.lock.target_id, b.entity_id, "and holds")
@@ -134,3 +133,10 @@ func test_a_heavy_kills_the_locked_banner_through_one_rank() -> void:
 	assert_false(b.entity.is_alive(), "a heavy kills the banner")
 	assert_eq(p.lock.target_id, "", "its lock ends with it")
 	assert_false(f.banner_alive(), "the formation has lost its banner")
+	# the group lock again for what follows
+	p.global_position = Vector3(0, 0.05, 24)
+	p.rotation.y = 0.0
+	p.camera_rig.yaw = 0.0
+	await step_ticks(1)
+	p.targeting.try_lock()
+	assert_eq(p.lock.target_id, "formation:test.lock", "the formation locked again")

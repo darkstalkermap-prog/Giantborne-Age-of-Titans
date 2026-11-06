@@ -446,6 +446,42 @@ between the near and the box distance, or the crowd renderer's one MultiMesh per
 striking) or a cheaper HUD; `docs/plans/FOLLOWUPS.md` ("From the M6 gate review") hands it to P30, and
 P39's capture re-measures it.
 
+### Draw calls after P30 (the mid distance; formations)
+
+FOLLOWUPS' M6-gate row ("Valley views at `low` still pass 250 draw calls") went to P30. At `low` a
+rig now draws as one merged mesh of its rest pose from 0.45 x `render_lod_m` to `render_lod_m`
+(`RigPaint`'s `MidProxy`: a soldier costs one draw call from 20 m instead of six) and as its full rig
+again while it acts (an action, staggered, dead or held). The rendered Valley walk at `low` (Xvfb
+640 x 360, `--walk-teleport --graphics=low --autoplay=900`, 2,182 frames, 0 errors), the largest view
+by section, on P30's base and with the mid distance:
+
+| Section | P30's base | With the mid distance |
+| --- | --- | --- |
+| Thornwick | 270 | 245 |
+| Ruins | 256 | 246 |
+| Old Wood | 257 | 252 |
+| Quarry | 259 | 257 |
+| Barrow | 266 | 266 |
+| Kingsfall | 252 | 252 |
+| Hollow | 242 | 242 |
+| LOD comparison (25 members, all encounters forced, one fixed view) | 252-255 | 252-255 |
+| All frames | max 270, p50 205, p95 255 | max 266, p50 203, p95 255 |
+
+0.3 x `render_lod_m` (tried, not kept) gave the Quarry 251 and changed nothing else of note. **Still
+over the budget**: the Barrow (the wardens close beside the giant and acting, so on their full rigs),
+the Quarry, the Old Wood, Kingsfall and the LOD comparison's view, where the 25 members are 25
+one-box far proxies. A decomposition at P30's base put the HUD at about 117-120 draw calls of every
+view, nearly half of the 250: a cheaper HUD (P27's, W17) and the far proxies batched into one
+MultiMesh per archetype (about 20 fewer in the LOD view) are the next steps; P39's capture
+re-measures.
+
+**Formations** (`tests/slow/test_formation_perf.gd`; Xvfb 640 x 360, llvmpipe, the `low` look): the
+formation stress case's 40 members (two pike regiments of nineteen and a banner each) cost 90 draw
+calls seen from a stage-4 giant 9 m away with the twelve nearest promoted to their own rigs (at
+stage 4 everyone is within the 60 m promotion radius), 10 with nobody promoted (the two crowds and
+the two banners), and 244 drawn as forty rigs. Headless, the same 40 at AI tier 0 cost 3.5-4.3 ms
+per tick at p95 (budget 5 ms); the `--stress-formations` scenario, 40 s: p95 3.69 ms.
+
 ### The streamed test world (P24a)
 
 The generated 4 x 4 test world (`tools/builders/test_world.gd`, 256 m chunks at 4 m), debug build.
