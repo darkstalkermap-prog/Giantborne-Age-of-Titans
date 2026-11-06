@@ -14,8 +14,9 @@ extends RefCounted
 ##      great pines, markers, areas, flag-shown elements) in props sub-scenes of at most 150 nodes;
 ##   3. navigation: NavBake per chunk and layer (human, large, titan; titan gate regions from
 ##      WorldFeatures.gate_at: the Wend's bed 32, the Mere's channel 64, the Giant's Stair and the
-##      Moot's gate 128) with its own and its eight neighbours' obstacles; size gates are never
-##      obstacles (the gate regions carry them); the rim has none;
+##      Moot's gate 128, their rectangles drawn in by GATE_GRAZE_M) with its own and its eight
+##      neighbours' obstacles; size gates are never obstacles (the gate regions carry them); the
+##      rim has none;
 ##   4. the skyline (the coarse terrain coloured by the regions' skyline tints, the merged
 ##      silhouettes of the skyline landmarks, the beacon columns), the world index
 ##      (tools/world/index_writer.gd), the map picture (tools/world/map_render.gd) and the root scene
@@ -77,6 +78,13 @@ const GRID_M := 8.0
 const MIN_ROAD_M := 12.0
 ## River size-gate walls: one box per piece of this length along each bank.
 const GATE_PIECE_M := 16.0
+## A size gate's rectangle gates the titan navmesh's polygons that reach more than this far into it
+## (NavBake gates every polygon gate_at marks anywhere). Recast's long lowland triangles that only
+## graze a rectangle's edge stay open - at the Giant's Stair's foot, slivers under 5 m deep had
+## gated 3,700 m2 of open ground and the stair's cache with it - while every polygon of the gated
+## ground itself (the stair's ramp, the Moot's gateway) reaches much deeper. A stage-4 path can end
+## at most this far past a gate's line, behind its wall, and never cross it.
+const GATE_GRAZE_M := 6.0
 
 static var _report: Dictionary = {}
 
@@ -296,14 +304,16 @@ static func layout_checks(layout: Dictionary, feats: WorldFeatures) -> PackedStr
 	return out
 
 
-## The size gates' titan gate rectangles (the Giant's Stair, the Moot's gate) into the features.
+## The size gates' titan gate rectangles (the Giant's Stair, the Moot's gate) into the features,
+## each drawn in by GATE_GRAZE_M.
 static func _gate_rects(feats: WorldFeatures, layout: Dictionary) -> void:
 	feats.gate_rects.clear()
 	for it: Dictionary in layout.items:
 		if str(it._section) != "size_gates" or not it.has("gate_rect"):
 			continue
 		var bit := {4: 32, 5: 64, 6: 128}.get(int(it.min_stage), 128) as int
-		feats.gate_rects.append({"rect": WorldFeatures.rect_of(it.gate_rect), "bit": bit, "id": str(it.id)})
+		var r := WorldFeatures.rect_of(it.gate_rect).grow(-GATE_GRAZE_M)
+		feats.gate_rects.append({"rect": r, "bit": bit, "id": str(it.id)})
 
 
 # --------------------------------------------------------------------------- shared meshes

@@ -6,6 +6,12 @@ extends IntegrationSuite
 ## checkpoint (world.cp.kingsgate_shelf) at the stage it needs: 4 unless its POI needs more, the
 ## sealed places' caches through their seals at 5 or 6. The Needle's side is walked: a stage-3 giant
 ## goes through the 5 m slot into the Hidden Grove on the streamed world (WorldWalk, the stick).
+## Below their stage the gates hold: the Moot's ring and the Giant's Stair (a stage-5 giant goes
+## round by the Ironway), and the vaults while their rockfalls stand.
+##
+## Every interactable of the region tables (caches, cairns, seals, great pines) is reached too, at
+## the stage its POI or its own record needs (the builder check of §3.8, run here: the navigation
+## server's maps are a test's, not the offline bake's).
 ##
 ## Exceptions by design (M7): Fort Aldmere's bailey stays shut behind its indestructible gate until
 ## P36 (its green outside the gate is checked instead), and the two ledge caches (the Titan's
@@ -36,6 +42,10 @@ const INSIDE_M := 6.0
 const NEEDLE_ROUTE := [Vector2(-398, 76), Vector2(-412, 60), Vector2(-436, 36), Vector2(-458, 14), Vector2(-476, -4)]
 const GROVE_CENTRE := Vector2(-480, -10)
 const GROVE_FLOOR_R := 42.0
+## The region tables and their sections of interactables (each entry's "poi" and "requires_stage").
+const LAYOUT_DIR := "res://tools/data/world/"
+const LAYOUT_REGIONS := ["crownmarch", "greywood", "drowned_steps", "aldmere", "stonehold"]
+const INTERACTABLES := ["caches", "cairns", "secrets", "pines"]
 
 var _nav: NavMaps = null
 var _links: Array = []
@@ -101,9 +111,8 @@ static func _local_to(ancestor: Node3D, node: Node3D) -> Transform3D:
 	return xf
 
 
-## [reached, the path's end] from the start to `to` with the titan mask of `stage`: the path ends
-## within `within` metres of `to` on the ground plane.
-func _reach(from: Vector3, to: Vector3, stage: int, within := REACH_M) -> Array:
+## The titan path from `from` to `to` with the mask of `stage`.
+func _path(from: Vector3, to: Vector3, stage: int) -> PackedVector3Array:
 	# the world's queries search every polygon (NavQuery, max_polygons 0): map_get_path stops at
 	# 4,096 and a kingdom-long path needs more
 	var q := NavigationPathQueryParameters3D.new()
@@ -115,12 +124,29 @@ func _reach(from: Vector3, to: Vector3, stage: int, within := REACH_M) -> Array:
 	q.path_search_max_distance = 0.0
 	var res := NavigationPathQueryResult3D.new()
 	NavigationServer3D.query_path(q, res)
-	var path := res.path
+	return res.path
+
+
+## [reached, the path's end] from the start to `to` with the titan mask of `stage`: the path ends
+## within `within` metres of `to` on the ground plane.
+func _reach(from: Vector3, to: Vector3, stage: int, within := REACH_M) -> Array:
+	var path := _path(from, to, stage)
 	if path.is_empty():
 		return [false, Vector3.INF]
 	var end := path[path.size() - 1]
 	var ok := Vector2(end.x - to.x, end.z - to.z).length() <= within and absf(end.y - to.y) <= REACH_UP_M
 	return [ok, end]
+
+
+## The length of the titan path from `from` to `to` at `stage` (INF when it does not reach `to`).
+func _length(from: Vector3, to: Vector3, stage: int) -> float:
+	var path := _path(from, to, stage)
+	if path.is_empty() or not bool(_reach(from, to, stage)[0]):
+		return INF
+	var m := 0.0
+	for i in range(1, path.size()):
+		m += path[i - 1].distance_to(path[i])
+	return m
 
 
 func test_every_place_is_reachable_on_the_titan_layer_at_its_stage() -> void:
@@ -129,6 +155,7 @@ func test_every_place_is_reachable_on_the_titan_layer_at_its_stage() -> void:
 	var start := idx.position_of(START)
 	assert_true(start != Vector3.INF, "the start checkpoint is in the index")
 	var targets := {}   # name -> [position, stage]
+	var poi_stage := {}   # POI id -> the stage it needs (4 at least)
 	for id: String in idx.checkpoints:
 		targets[id] = [idx.checkpoints[id].position, 4]
 	for id: String in idx.exits:
@@ -137,6 +164,7 @@ func test_every_place_is_reachable_on_the_titan_layer_at_its_stage() -> void:
 		if str(poi.get("level", "")) != LEVEL:
 			continue
 		var stage := maxi(4, int(poi.get("min_stage", 0)))
+		poi_stage[str(poi.id)] = stage
 		if poi.has("green_m"):
 			var g: Array = poi.green_m
 			targets[str(poi.id) + " green"] = [Vector3(float(g[0]), float(g[1]), float(g[2])), stage]
@@ -150,6 +178,21 @@ func test_every_place_is_reachable_on_the_titan_layer_at_its_stage() -> void:
 		targets[str(poi.id)] = [idx.pois[str(poi.id)].position, stage]
 	for id: String in SEALED:
 		targets[id] = [idx.props[id].position, int(SEALED[id]), INSIDE_M if VAULTS.has(id) else REACH_M]
+	var interactables := 0
+	for region: String in LAYOUT_REGIONS:
+		var table: Variant = JSON.parse_string(FileAccess.get_file_as_string(LAYOUT_DIR + region + ".json"))
+		assert_true(typeof(table) == TYPE_DICTIONARY, "the %s table reads" % region)
+		if typeof(table) != TYPE_DICTIONARY:
+			continue
+		for section: String in INTERACTABLES:
+			for it: Dictionary in (table as Dictionary).get(section, []):
+				var id := str(it.id)
+				interactables += 1
+				if targets.has(id):
+					continue
+				var stage := maxi(int(poi_stage.get(str(it.get("poi", "")), 4)), int(it.get("requires_stage", 4)))
+				targets[id] = [idx.position_of(id), stage]
+	assert_true(interactables >= 45, "the caches, cairns, seals and great pines are among them (%d)" % interactables)
 	var failures := PackedStringArray()
 	for name: String in targets:
 		var t: Array = targets[name]
@@ -167,6 +210,14 @@ func test_the_gates_hold_below_their_stage() -> void:
 	# the Moot's ring: its gate stones admit a giant of stage 6 only
 	assert_false(bool(_reach(start, idx.position_of("world.marker.stone_throne"), 5)[0]), "the Stone Throne is out of reach at stage 5")
 	assert_true(bool(_reach(start, idx.position_of("world.marker.stone_throne"), 6)[0]), "and in reach at stage 6")
+	# the Giant's Stair: a stage-6 giant climbs it; below stage 6 the way up is the Ironway's
+	var foot: Vector3 = idx.pois["poi.giants_stair"].position
+	var top: Vector3 = idx.pois["poi.stair_top"].position
+	var climb := _length(foot, top, 6)
+	var round_way := _length(foot, top, 5)
+	assert_true(climb < 250.0, "a stage-6 giant climbs the Giant's Stair (%.0f m)" % climb)
+	assert_true(round_way > 4.0 * climb, "a stage-5 giant goes round by the Ironway (%.0f m)" % round_way)
+	print("    test_world_reachability: the Giant's Stair climbed in %.0f m at stage 6, %.0f m round at stage 5" % [climb, round_way])
 	# the sealed vaults stay shut while their seals hold (links closed: nothing but the open maps)
 	for l: RID in _links:
 		NavigationServer3D.link_set_enabled(l, false)

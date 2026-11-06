@@ -26,7 +26,7 @@ reference-PC commands below.
 | Static world draw calls, streamed (P24a) | <= 40 per view at web `low`, and <= 25 more for breakable houses in a settlement view (plan §5.3) | Xvfb viewpoints on the test world | At most 35 static plus the 8 breakable houses at `low` (`medium`: at most 127 with shadows): **met** on the test world; P25 and the region packages re-measure the real one |
 | Web frames while streaming, with gameplay (P24a) | worst <= 45 ms, p99 <= 25 ms (indicative) | `tools/web/stream_check.mjs` on the `Web (test)` build | Chromium with software WebGL on the loaded container: page frames p50 433 / p99 1,733 / worst 4,350 ms walking at 1280 x 720 (250 / 1,683 / 3,633 ms at 640 x 360, 16 m/s): **not met (software rendering)**; the walks finished with 251.6 m and 246.9 m of margin, 0 thrash and 0 console errors while running. Real browsers **NOT RUN** |
 | World data (P24a, P24b) | <= 5.0 MB: chunks, navmeshes, index, map, skyline, chunk scenes (decision 8) | the test world's files, extrapolated to 64 chunks | Without navmeshes (P24a): the test world 308,965 bytes; extrapolated to 64 chunks about 1.1 MB (chunks 0.91 MB with the border chunks at their share). The navmeshes (P24b: three lean layers and the gate regions, 29.2 KB a chunk): 467,751 bytes for the test world, about 1.55 MB for 64 chunks (the border chunks' rim halves have none). Together about 2.65 MB, about 3.0 MB with P25's map image: **on track** |
-| World data (P25: the real world) | <= 5.0 MB (decision 8) | `tests/integration/test_world_data.gd` (the files) | **2,390,415 bytes: met** (chunk data 0.83 MB, navmeshes 0.93 MB, structures 0.14 MB, props scenes 0.19 MB, skyline 0.15 MB, index 68 KB, map 52 KB); the release pck's world share 2.38 MB (24.8 %) |
+| World data (P25: the real world) | <= 5.0 MB (decision 8) | `tests/integration/test_world_data.gd` (the files) | **2,390,369 bytes: met** (chunk data 0.83 MB, navmeshes 0.93 MB, structures 0.14 MB, props scenes 0.19 MB, skyline 0.15 MB, index 68 KB, map 52 KB); the release pck's world share 2.37 MB (24.6 %) |
 | Map picture (P25) | <= 300 KB, 1,024 x 1,024 (plan §3.8) | `tests/integration/test_world_data.gd` | 52,433 bytes: **met** |
 | Static world draw calls, the real world (P25) | <= 40 per view at `low` at the Kingsgate shelf and the six settlements (plan §3.8) | `tests/slow/test_world_build.gd` (Xvfb, `tests/support/world_draw_probe.gd`) | At most 33 (Skarn; the shelf 30, Hollowmere 31, Brannock 28, Millford 27, Fort Aldmere 23, Harrok's Hall 19), with the giant in view 8 more: **met**; the breakable houses' share comes with P29 |
 
@@ -592,14 +592,16 @@ two builds write the same bytes. Container, indicative.
 | Item | Bytes | Notes |
 | --- | --- | --- |
 | Chunk data (`assets/world/chunks/`) | 831,880 | 64 files, 7.2-23.5 KB (the Greywood's dense chunks the largest) |
-| Navmeshes (`assets/world/nav/`) | 933,490 | 206 files: human 38,153, large 28,218, titan 22,455 polygons; gate regions 574; at most 4,305 polygons in a chunk (c2_2, the Greywood) |
+| Navmeshes (`assets/world/nav/`) | 933,444 | 206 files: human 38,153, large 28,218, titan 22,487 polygons; gate regions 542; at most 4,305 polygons in a chunk (c2_2, the Greywood) |
 | Structures (`assets/world/structures/`) | 143,236 | 35 merged vertex-coloured meshes, 14,720 triangles |
 | Props scenes (`scenes/world/chunks/`) | 193,634 | 36 parts of at most 150 nodes |
 | Skyline, landmarks, index, map, shared, root scene | 287,175 | 86,117 + 66,831 + 68,144 + 52,433 + 9,078 + 5,572 |
-| **Total** | **2,390,415** | the 5.0 MB budget: met |
+| **Total** | **2,390,369** | the 5.0 MB budget: met |
 
-The release web export (`tools/build_web.sh`, preset Web): `index.pck` 9,781,768 bytes, 7,355,030
-gzipped, 9.35 MB as shipped; the world's files are 2,381,060 bytes of it (24.8 %), the audio 43 %.
+The release web export (`tools/build_web.sh`, preset Web): `index.pck` 9,781,704 bytes, 7,355,066
+gzipped, 9.35 MB as shipped; the world's generated files (`assets/world/`, the chunk parts and
+`world.tscn` as exported, the map's texture) are 2,365,395 bytes of its 9,601,570 bytes of packed
+files (24.6 %), the audio 43 %.
 The shipped pck is over the 7.5 MB M6 budget the script still applies (the M7 budget is 21 MB).
 
 **Static draw calls** (Xvfb 640 x 360, `low`, no director, the stage-3 camera turned through four

@@ -2,8 +2,9 @@ extends TestSuite
 ## P25 (plan M6-M9 §2.7, §3.8, §5): the world's data - level.world and its five regions tiling the
 ## interior, the 48 POIs (their regions, landmarks inside their radii, the nine sealed places and
 ## their seals), the five world shrines, the 17 waystones, the caches' loot and the seven cairns,
-## the index (region grid, staged road graph), the chunk files, the map picture and the world's data
-## budget. Files and records only (no scene is loaded): the default tier's budget.
+## the index (region grid, staged road graph), the chunk files, the map picture, the world's data
+## budget and the flag-shown elements (the Broken Stair's rubble; FlagVisibility on bare nodes).
+## Files and records only (no scene is instanced): the default tier's budget.
 
 const LEVEL := "level.world"
 const INDEX := "res://assets/world/index_world.res"
@@ -284,3 +285,42 @@ func test_the_map_picture_and_the_data_budget() -> void:
 			if not f.ends_with(".import") and not f.ends_with(".uid"):
 				total += FileAccess.get_file_as_bytes(dir.path_join(f)).size()
 	assert_true(total > 1024 * 1024 and total <= DATA_BUDGET, "the world's data is at most 5.0 MB (%.2f MB)" % (total / 1048576.0))
+
+
+# --------------------------------------------------------------------------- flag-shown elements
+
+func test_a_flag_shows_or_hides_a_layout_element() -> void:
+	# the Broken Stair's rubble (c3_7's props part) stands until the Citadel is breached
+	var part := load("res://scenes/world/chunks/c3_7_0.tscn") as PackedScene
+	var state := part.get_state()
+	var found := ""
+	for i in state.get_node_count():
+		for p in state.get_node_property_count(i):
+			if str(state.get_node_property_name(i, p)) == "hidden_when_flag":
+				found = str(state.get_node_property_value(i, p))
+	assert_eq(found, "world.citadel.breached", "the Broken Stair's rubble hides once the Citadel is breached")
+	# FlagVisibility: shown, hidden by its flag with its collision off, shown again when it clears
+	var flag := "test.p25.rubble_cleared"
+	var holder := FlagVisibility.new()
+	holder.hidden_when_flag = flag
+	var body := StaticBody3D.new()
+	body.collision_layer = 1
+	body.collision_mask = 2
+	holder.add_child(body)
+	add_child(holder)
+	assert_true(holder.visible and body.collision_layer == 1, "shown while the flag is unset")
+	WorldState.set_flag(flag, true)
+	assert_false(holder.visible, "hidden once the flag is set")
+	assert_eq([body.collision_layer, body.collision_mask], [0, 0], "and its collision off")
+	WorldState.set_flag(flag, false)
+	assert_true(holder.visible, "shown again when the flag clears")
+	assert_eq([body.collision_layer, body.collision_mask], [1, 2], "with its collision back")
+	var shown := FlagVisibility.new()
+	shown.visible_when_flag = flag
+	add_child(shown)
+	assert_false(shown.visible, "a visible_when_flag element waits for its flag")
+	WorldState.set_flag(flag, true)
+	assert_true(shown.visible, "and appears with it")
+	holder.free()
+	shown.free()
+	WorldState.flags.erase(flag)
