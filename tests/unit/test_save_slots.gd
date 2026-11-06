@@ -126,15 +126,17 @@ func test_invalid_content_also_falls_back_to_the_backup() -> void:
 func test_future_version_is_rejected_kept_and_never_becomes_the_backup() -> void:
 	assert_true(SaveSlots.write(_doc(400.0)).ok, "first save")
 	assert_true(SaveSlots.write(_doc(300.0)).ok, "second save: backup = first")
-	var newer := JSON.stringify({"schema_version": 2, "note": "written by a newer build"})
+	# P20: the build's own version is 2 (save schema 2), so "a newer build" writes SCHEMA_VERSION + 1.
+	var future := SaveSlots.SCHEMA_VERSION + 1
+	var newer := JSON.stringify({"schema_version": future, "note": "written by a newer build"})
 	_write_text(TEST_PATH, newer)
 	var r := SaveSlots.read()
-	assert_eq(int(r.future_version), 2, "the newer version is reported")
-	var kept := SaveSlots.rejected_path(2)
-	assert_eq(kept, "user://test_saves/valley_1.schema2.rejected.json", "kept beside the slot")
+	assert_eq(int(r.future_version), future, "the newer version is reported")
+	var kept := SaveSlots.rejected_path(future)
+	assert_eq(kept, "user://test_saves/valley_1.schema%d.rejected.json" % future, "kept beside the slot")
 	assert_true(FileAccess.file_exists(kept), "the newer file is kept")
 	assert_eq(FileAccess.get_file_as_string(kept), newer, "unchanged")
-	assert_true(str(r.message).contains("newer") and str(r.message).contains("valley_1.schema2.rejected.json"),
+	assert_true(str(r.message).contains("newer") and str(r.message).contains("valley_1.schema%d.rejected.json" % future),
 		"the message says so: %s" % r.message)
 	assert_true(r.ok and r.source == "backup", "the older backup still loads")
 	assert_near(float(r.data.character.resources.health), 400.0, 1e-6, "it is the first save")
@@ -186,7 +188,7 @@ func test_validate_names_the_problems() -> void:
 	for want in ["world.schema_version", "world.flags", "checkpoint.respawn", "stats"]:
 		assert_true(bad.contains(want), "reports %s (%s)" % [want, bad])
 	doc = _doc()
-	doc.schema_version = 2
+	doc.schema_version = SaveSlots.SCHEMA_VERSION + 1   # P20: 2 is this build's own version now
 	assert_true("\n".join(SaveSlots.validate(doc)).contains("schema_version"), "a newer document is not valid here")
 
 

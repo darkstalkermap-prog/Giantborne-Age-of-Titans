@@ -10,6 +10,8 @@ extends UiScreen
 ## Quests.dialogue).
 ## P16: the choices are one focus column that wraps (pad D-pad / stick, keyboard arrows); after a
 ## choice the rebuilt buttons are wired again and the first one takes the focus.
+## P20: a locked choice (DialogueSession: failing conditions with a locked_text) is a greyed,
+## disabled button that names its reason - "Swear the peace (Return when you stand at stage 5)".
 
 const MAX_KEYED_CHOICES := 4
 
@@ -118,8 +120,12 @@ func _rebuild_choices() -> void:
 	if session == null or not session.is_active():
 		return
 	for c: Dictionary in session.choices():
-		var b := UiKit.button(choice_label(int(c.index), str(c.text)), 17)
+		var text := str(c.text)
+		if bool(c.get("locked", false)):
+			text = "%s (%s)" % [text, str(c.get("locked_text", ""))]
+		var b := UiKit.button(choice_label(int(c.index), text), 17)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.disabled = bool(c.get("locked", false))
 		b.pressed.connect(press_choice.bind(int(c.index)))
 		_choices.add_child(b)
 		choice_buttons.append(b)

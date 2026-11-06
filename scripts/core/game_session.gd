@@ -6,28 +6,52 @@ extends Node
 ##
 ## Modes. TITLE shows the title screen only. SANDBOX loads the M1 sandbox (or the --level
 ## scene) with the player record as it is; resets clear the world (WorldState.clear) and reload.
-## VALLEY loads the Valley (or the --level scene) with `character` applied; it never clears the
-## world on death but reloads the last checkpoint. Every mode change and reload is a reload of
-## main.tscn: main.gd builds what `mode` asks for and calls on_level_ready(level, player).
+## VALLEY is the campaign (P20, plan M6-M9 decision 11: the Valley and the world; is_campaign()
+## is its alias): it loads the campaign level `level_id` (or the --level scene) with `character`
+## applied; it never clears the world on death but reloads the last checkpoint. Every mode change
+## and reload is a reload of main.tscn: main.gd builds what `mode` asks for and calls
+## on_level_ready(level, player).
 ##
-## Checkpoints exist only when checkpoints_enabled() (the Valley, or a test level that sets
+## Checkpoints exist only when checkpoints_enabled() (the campaign, or a test level that sets
 ## test_checkpoints). Triggers (GameSession listens to the events; nothing calls it directly):
 ##   checkpoint_reached (a shrine's first activation, a waystone)   -> respawn: that marker
 ##   shrine_activated, shrine_rested, ui_screen_requested("shrine")  -> respawn: that shrine
 ##   growth_changed for the player beside a shrine                   -> respawn: that shrine
-##   boss_defeated                                                   -> respawn: valley.shrine.kingsfall
+##   boss_defeated (in the Valley)                                   -> respawn: valley.shrine.kingsfall
 ##   quest_stage_changed for quest.main                              -> respawn unchanged
 ## A request waits (one pending request; a later one replaces the reason and keeps the newest
 ## respawn) while checkpoint_blockers() is not empty: the player is dead, grabbed, executing or
 ## holding something, a modal screen is open, or an enemy within 40 m is aware of the player.
 ## It is retried every tick from a Sim POST_RESOLVE hook (order 200). The shrine screen's
-## checkpoint is taken at once, before the screen opens. Only the Valley writes the save slot
-## (and only with `persist`); a test level's checkpoints in the sandbox stay in memory.
+## checkpoint is taken at once, before the screen opens. Only the campaign writes the save slot
+## (and only with `persist`); a test level's checkpoints in the sandbox stay in memory. A reached
+## checkpoint also sets the flag visited.<checkpoint id> (fast travel and respawns, P20).
 ##
-## Death in the Valley: main shows "Enter / A: load last checkpoint" and emits
+## Death in the campaign: main shows "Enter / A: load last checkpoint" and emits
 ## reload_checkpoint_requested("death"): the checkpoint's world and character come back, the
 ## resources are raised to progression.default.death_reload_floor (health 60 %, stamina 100 %,
 ## essence 50 %; fury 0), and the scene reloads. Continue restores a save exactly.
+##
+## The campaign across levels (P20, plan M6-M9 §2.6):
+##   * travel_to(level, checkpoint, reason) - from a LevelExit (Events.travel_requested), the map
+##     (fast travel, P27) or the bots - commits a checkpoint document whose "level" is the
+##     destination and whose respawn is the destination's checkpoint, emits level_leaving and
+##     reloads main.tscn. It is refused with a reason: the checkpoint blockers (an exit ignores
+##     aware enemies; fast travel ignores the map screen it comes from), a destination whose index
+##     max_stage is below the giant's stage, and for fast travel a checkpoint not yet visited or
+##     whose requires_flags do not hold.
+##   * respawn_transform(id): the checkpoint's node when it is loaded, else its world index entry
+##     (WorldIndex), so a respawn in a streamed-out chunk still lands. respawn_checkpoint(): the
+##     saved respawn unless a blocker refuses it (built in: its index max_stage below the stage;
+##     registered: register_respawn_blocker), else the nearest visited, unblocked checkpoint.
+##   * activated_this_visit / mark_activated: shrines and waystones activate once per level visit
+##     (a load of a level is a visit), not once per node.
+##   * level_entered(tick, level, reason) once the level is ready (its is_ready() when it has one,
+##     and Audio.is_ready() when the Audio autoload has one).
+##   * progress: {"prologue_complete", "world_entered", "levels_visited", "tracked_quest"} in the
+##     save (schema 2); the tracked quest is Quests.tracked_quest_id once P27 adds it.
+##   * --mode=world starts the campaign in level.world with progression.default's world_start
+##     character, inventory and flags; --start=<checkpoint> starts a New Game at that checkpoint.
 ##
 ## Tests: reset_for_tests() (ResetHooks.BEFORE_EACH) puts the session in the sandbox, turns
 ## writes off, points SaveSlots at user://test_saves/ and replaces scene reloads with a log
@@ -36,12 +60,19 @@ extends Node
 enum Mode { TITLE, SANDBOX, VALLEY }
 
 const MODE_NAMES := ["title", "sandbox", "valley"]
+## The --mode values (P20: "world" starts the campaign in level.world from world_start).
+const CLI_MODES := ["title", "sandbox", "valley", "world"]
 const SANDBOX_SCENE := "res://scenes/world/sandbox_arena.tscn"
 const VALLEY_LEVEL_ID := "level.valley"
+## The open world's level record (P25 ships it; P20 plans for it).
+const WORLD_LEVEL_ID := "level.world"
 const PROGRESSION_ID := "progression.default"
 const PLAYER_ID := "player.giant"
 const MAIN_QUEST_ID := "quest.main"
 const KINGSFALL_RESPAWN := "valley.shrine.kingsfall"
+## Where a save from a level this build does not have continues in the Valley (P26 places it;
+## until then the Valley's start checkpoint is used).
+const VALLEY_RETURN_CHECKPOINT := "valley.cp.kings_door"
 ## An aware enemy this close to the player defers a checkpoint (decision 13).
 const AWARE_BLOCK_RADIUS_M := 40.0
 ## growth_changed counts as "growth at a shrine" when a shrine is at most this far away.
@@ -50,14 +81,32 @@ const HOOK_ORDER := 200
 const TEST_SAVE_PATH := "user://test_saves/valley_1.json"
 const DEFAULT_DEATH_FLOOR := {"health": 0.6, "stamina": 1.0, "essence": 0.5}
 const VALLEY_MISSING := "Valley not built yet"
+const WORLD_MISSING := "The Old Kingdom is not in this build"
 ## checkpoint_saved messages for a checkpoint that was taken but not written.
 const NO_SAVING := "saving is off"
 const MEMORY_ONLY := "kept in memory"
 const MAX_RELOAD_LOG := 64
+## travel_to's reasons (Events.travel_requested).
+const TRAVEL_REASONS := ["exit", "fast_travel", "debug", "bot"]
+## level_entered's reasons.
+const ENTER_REASONS := ["new_game", "continue", "death", "travel", "fast_travel", "debug"]
+## The refusal of a checkpoint above its arrival limit (plan M6-M9 §2.6).
+const NARROW_PATHS := "The old paths here are too narrow for you now."
+const NOT_VISITED := "You have not been there yet."
+const NOT_OPEN := "The way there is not open yet."
+const UNKNOWN_PLACE := "That place is not on the map."
+## The flag of a reached checkpoint (fast-travel eligibility, the respawn fallback).
+const VISITED_PREFIX := "visited."
+## level_entered waits at most this many frames for the level and the samples (then it is sent
+## anyway, with a warning, so a stuck loader never hides the event).
+const ENTER_WAIT_FRAMES := 1200
 
 var mode: int = Mode.SANDBOX
 ## A scene that replaces the mode's level (--level=res://...tscn; tests).
 var level_override := ""
+## The campaign level being played (the save's "level"): a level record id, or a test level's
+## scene path. "" outside the campaign.
+var level_id := ""
 ## The live character state (CharacterState): applied by on_level_ready, refreshed from the
 ## player at every checkpoint.
 var character: Dictionary = {}
@@ -72,29 +121,47 @@ var respawn_id := ""
 ## A test level opts in to checkpoints outside the Valley (its root sets this while it exists).
 var test_checkpoints := false
 var stats := {"deaths": 0, "checkpoint_loads": 0, "play_time_s": 0.0}
+## The campaign's progress (save schema 2): prologue_complete, world_entered, levels_visited,
+## tracked_quest.
+var progress: Dictionary = {}
 
 ## False in tests: reloads are only logged in scene_reloads (the test runner is the scene).
 var allow_scene_reload := true
-## The reason of every scene reload requested (new_game, continue, death, title, ...).
+## The reason of every scene reload requested (new_game, continue, death, title, travel, ...).
 var scene_reloads: Array[String] = []
 ## The result of the last mode_change_requested ({"ok", "message"}); the title screen reads it.
 var last_mode_result: Dictionary = {}
+## The result of the last travel_requested ({"ok", "message"}).
+var last_travel_result: Dictionary = {}
 ## How many checkpoints were committed (this process).
 var checkpoints_taken := 0
 ## The message of the last Continue read ("Recovered ...", dropped ids), "" when clean.
 var last_load_message := ""
+## level_entered events sent (this process): [{"tick", "level", "reason"}] (tests, debug).
+var entered_log: Array = []
 
 var _configured := false
 ## The --level scene of the command line ("" = none). A Continue may replace level_override with
 ## its save's scene; quitting to the title, the sandbox and a New Game go back to this one (P16).
 var _cli_level_override := ""
+## The --start checkpoint of the command line ("" = none).
+var _cli_start := ""
 var _pending: Dictionary = {}       ## {"reason", "respawn", "tick"} of the queued checkpoint
-var _load_reason := ""              ## why pending_restore is set: new_game|continue|death|debug|menu
+var _load_reason := ""              ## why pending_restore is set: new_game|continue|death|debug|menu|travel|fast_travel
 var _reload_floor: Dictionary = {}  ## death_reload_floor to apply on the next restore
 var _restoring := false             ## inside on_level_ready (growth events there are not growth)
 var _reload_queued := false
 var _player_ref: WeakRef = null
 var _level_ref: WeakRef = null
+## A New Game starts at this checkpoint instead of the scene's Player node ("" = none).
+var _start_override := ""
+## Checkpoints (shrines, waystones) activated during this level visit.
+var _visit_activated: Dictionary = {}
+## Callable(checkpoint_id: String) -> String, "" = fine (register_respawn_blocker).
+var _respawn_blockers: Array[Callable] = []
+## The level_entered waiting for its level and the samples: {"level": WeakRef, "level_id",
+## "reason", "frames"}; {} when none waits.
+var _entering: Dictionary = {}
 
 
 func _ready() -> void:
@@ -110,6 +177,7 @@ func _ready() -> void:
 	Events.reload_checkpoint_requested.connect(_on_reload_checkpoint_requested)
 	Events.mode_change_requested.connect(_on_mode_change_requested)
 	Events.entity_died.connect(_on_entity_died)
+	Events.travel_requested.connect(_on_travel_requested)
 	Sim.add_hook(Sim.Hook.POST_RESOLVE, self, _on_post_resolve, HOOK_ORDER)
 
 
@@ -124,20 +192,23 @@ func configure_from_args(args: PackedStringArray) -> void:
 
 
 ## The session options in `args` (the user args after "--"):
-##   --mode=title|sandbox|valley   default title; without --mode: valley with --new-game or
+##   --mode=title|sandbox|valley|world  default title; without --mode: valley with --new-game or
 ##                                 --continue, else sandbox when --autoplay, --scenario or --level
-##                                 is given (so the M1 tools keep booting the sandbox)
+##                                 is given (so the M1 tools keep booting the sandbox). world (P20)
+##                                 is the campaign starting in level.world from world_start.
 ##   --new-game / --continue       how --mode=valley starts (neither: continue when a save
-##                                 loads, else a new game)
+##                                 loads, else a new game); --mode=world --continue continues
+##   --start=<checkpoint id>       a New Game starts at that checkpoint (debug, tests, web checks)
 ##   --level=res://...tscn         the level scene to load instead of the mode's own
 ##   --save-dir=user://...         the folder of the save slot (keeps saving on with
 ##                                 --no-user-settings)
 ##   --no-user-settings            no writes to the player's files (persist false)
-## Returns {"mode", "mode_given", "new_game", "continue", "level", "save_dir",
+## Returns {"mode", "mode_given", "new_game", "continue", "level", "save_dir", "start",
 ## "no_user_settings", "tool_run", "persist", "unknown_mode"}.
 static func parse_args(args: PackedStringArray) -> Dictionary:
 	var out := {"mode": "title", "mode_given": false, "new_game": false, "continue": false,
-		"level": "", "save_dir": "", "no_user_settings": false, "tool_run": false, "unknown_mode": ""}
+		"level": "", "save_dir": "", "start": "", "no_user_settings": false, "tool_run": false,
+		"unknown_mode": ""}
 	for arg in args:
 		if arg.begins_with("--mode="):
 			out.mode = arg.substr(7).strip_edges().to_lower()
@@ -150,6 +221,8 @@ static func parse_args(args: PackedStringArray) -> Dictionary:
 			out.level = arg.substr(8).strip_edges()
 		elif arg.begins_with("--save-dir="):
 			out.save_dir = arg.substr(11).strip_edges()
+		elif arg.begins_with("--start="):
+			out.start = arg.substr(8).strip_edges()
 		elif arg == "--no-user-settings":
 			out.no_user_settings = true
 		elif arg.begins_with("--autoplay=") or arg.begins_with("--scenario="):
@@ -159,7 +232,7 @@ static func parse_args(args: PackedStringArray) -> Dictionary:
 			out.mode = "valley"
 		elif out.tool_run or out.level != "":
 			out.mode = "sandbox"
-	if not (str(out.mode) in MODE_NAMES):
+	if not (str(out.mode) in CLI_MODES):
 		out.unknown_mode = out.mode
 		out.mode = "title"
 	out["persist"] = not out.no_user_settings or out.save_dir != ""
@@ -179,8 +252,9 @@ func apply_args(o: Dictionary) -> void:
 			_cli_level_override = level
 		else:
 			push_warning("GameSession: --level=%s does not exist; ignored" % level)
+	_cli_start = str(o.get("start", ""))
 	if str(o.get("unknown_mode", "")) != "":
-		push_warning("GameSession: unknown --mode=%s (title | sandbox | valley); showing the title" % o.unknown_mode)
+		push_warning("GameSession: unknown --mode=%s (title | sandbox | valley | world); showing the title" % o.unknown_mode)
 	match str(o.get("mode", "title")):
 		"sandbox":
 			mode = Mode.SANDBOX
@@ -193,18 +267,29 @@ func apply_args(o: Dictionary) -> void:
 					mode = Mode.TITLE
 			elif bool(o.get("new_game", false)) or not _begin_continue().ok:
 				if valley_available():
-					_begin_new_valley()
+					_begin_new_valley(_cli_start)
 				else:
 					push_warning("GameSession: %s (no level.valley scene); showing the title" % VALLEY_MISSING)
 					mode = Mode.TITLE
+		"world":
+			if bool(o.get("continue", false)):
+				var r := _begin_continue()
+				if not r.ok:
+					push_warning("GameSession: --continue failed (%s); showing the title" % r.message)
+					mode = Mode.TITLE
+			elif world_available():
+				_begin_new_world(_cli_start)
+			else:
+				push_warning("GameSession: %s (no level.world scene); showing the title" % WORLD_MISSING)
+				mode = Mode.TITLE
 		_:
 			mode = Mode.TITLE
 
 
 # --------------------------------------------------------------------------- modes and levels
 
-## The scene main.gd loads for the current mode ("" for the title, or when the Valley does not
-## exist yet).
+## The scene main.gd loads for the current mode ("" for the title, or when the level does not
+## exist yet): the --level / test scene, the sandbox, or the campaign level's scene.
 func level_scene_path() -> String:
 	if level_override != "":
 		return level_override
@@ -212,7 +297,7 @@ func level_scene_path() -> String:
 		Mode.SANDBOX:
 			return SANDBOX_SCENE
 		Mode.VALLEY:
-			return scene_for_level(VALLEY_LEVEL_ID)
+			return scene_for_level(level_id if level_id != "" else VALLEY_LEVEL_ID)
 	return ""
 
 
@@ -220,8 +305,13 @@ func is_valley() -> bool:
 	return mode == Mode.VALLEY
 
 
+## The campaign (the Valley and the world): an alias of is_valley() (P20, decision 11).
+func is_campaign() -> bool:
+	return is_valley()
+
+
 func checkpoints_enabled() -> bool:
-	return is_valley() or test_checkpoints
+	return is_campaign() or test_checkpoints
 
 
 ## True when New Game can start: the Valley scene (or the --level scene) exists.
@@ -230,31 +320,58 @@ func valley_available() -> bool:
 	return path != "" and ResourceLoader.exists(path)
 
 
+## True when the world can start (--mode=world, the title's skip-prologue choice): the
+## level.world record's scene exists (or the --level scene stands in for it).
+func world_available() -> bool:
+	var path := level_override if level_override != "" else scene_for_level(WORLD_LEVEL_ID)
+	return path != "" and ResourceLoader.exists(path)
+
+
 ## The scene of a save's "level": a res:// scene path itself, or a level record's scene.
-func scene_for_level(level_id: String) -> String:
-	if level_id.begins_with("res://"):
-		return level_id
-	var rec := GameData.get_record(level_id)
+func scene_for_level(p_level_id: String) -> String:
+	if p_level_id.begins_with("res://"):
+		return p_level_id
+	var rec := GameData.get_record(p_level_id)
 	return str(rec.get("scene", "")) if str(rec.get("type", "")) == "level" else ""
 
 
-## True when a save document's level can be loaded by this build.
+## True when a save document's level can be loaded by this build: its scene exists, or it names a
+## campaign level record this build lacks while the Valley exists (Continue then falls back to the
+## Valley with a message, P20).
 func save_level_available(doc: Dictionary) -> bool:
-	var scene := scene_for_level(str(doc.get("level", VALLEY_LEVEL_ID)))
-	return scene != "" and ResourceLoader.exists(scene)
+	var lv := str(doc.get("level", VALLEY_LEVEL_ID))
+	var scene := scene_for_level(lv)
+	if scene != "" and ResourceLoader.exists(scene):
+		return true
+	return _falls_back_to_valley(lv)
+
+
+## A level record id (not a scene path) whose scene this build lacks, with the Valley present.
+func _falls_back_to_valley(p_level_id: String) -> bool:
+	if p_level_id.begins_with("res://") or p_level_id == VALLEY_LEVEL_ID:
+		return false
+	var valley := scene_for_level(VALLEY_LEVEL_ID)
+	return valley != "" and ResourceLoader.exists(valley)
 
 
 func has_checkpoint() -> bool:
 	return not checkpoint_doc.is_empty()
 
 
-## The level id written into save documents: the --level scene, the Valley's record id, or the
-## loaded level's scene path.
+## The campaign level being played (level_id); "" outside the campaign (P20).
 func current_level_id() -> String:
+	return level_id if is_campaign() else ""
+
+
+## The level id written into save documents: the campaign's level_id, else (a test level in the
+## sandbox) the --level scene or the loaded level's scene path.
+func save_level_id() -> String:
+	if is_campaign():
+		if level_id != "":
+			return level_id
+		return level_override if level_override != "" else VALLEY_LEVEL_ID
 	if level_override != "":
 		return level_override
-	if is_valley():
-		return VALLEY_LEVEL_ID
 	var level := _level()
 	if level != null and level.scene_file_path != "":
 		return level.scene_file_path
@@ -263,7 +380,8 @@ func current_level_id() -> String:
 
 ## Title and pause screens emit Events.mode_change_requested(mode, options); this is what it
 ## does. mode: "title" | "sandbox" | "valley" (options: {"new_game": true} or
-## {"continue": true}; neither = continue when a save loads, else a new game).
+## {"continue": true}; neither = continue when a save loads, else a new game) | "world" (P20: a
+## New Game from world_start in level.world - the title's "Skip to the Old Kingdom").
 ## Returns {"ok", "message"}.
 func change_mode(mode_name: String, options: Dictionary = {}) -> Dictionary:
 	match mode_name:
@@ -286,6 +404,11 @@ func change_mode(mode_name: String, options: Dictionary = {}) -> Dictionary:
 				return {"ok": false, "message": VALLEY_MISSING}
 			start_new_valley()
 			return {"ok": true, "message": ""}
+		"world":
+			if not world_available():
+				return {"ok": false, "message": WORLD_MISSING}
+			start_new_world(str(options.get("start", "")))
+			return {"ok": true, "message": ""}
 	return {"ok": false, "message": "Unknown mode '%s'" % mode_name}
 
 
@@ -297,6 +420,25 @@ func start_new_valley() -> void:
 		push_warning("GameSession: %s" % VALLEY_MISSING)
 		return
 	_begin_new_valley()
+	_reload_scene("new_game")
+
+
+## New Game in the world (P20, plan M6-M9 §2.6): the campaign starts in level.world with
+## progression.default's world_start character, inventory and flags (the Valley's worst
+## guaranteed outcome), at `start_checkpoint` or the world's start checkpoint.
+func start_new_world(start_checkpoint := "") -> void:
+	if not world_available():
+		push_warning("GameSession: %s" % WORLD_MISSING)
+		return
+	_begin_new_world(start_checkpoint)
+	_reload_scene("new_game")
+
+
+## --mode=world --new-game [--start=<checkpoint>] for tests (P20): the session is set up exactly as
+## the command line would; the reload is only logged in tests, which build their level and call
+## on_level_ready themselves. The world level does not need to exist (tests stub its record).
+func start_world_for_tests(start_checkpoint := "") -> void:
+	_begin_new_world(start_checkpoint)
 	_reload_scene("new_game")
 
 
@@ -344,19 +486,45 @@ func restart_sandbox(reason: String) -> void:
 	_reload_scene(reason)
 
 
-func _begin_new_valley() -> void:
+func _begin_new_valley(start_checkpoint := "") -> void:
 	mode = Mode.VALLEY
 	WorldState.clear()
 	Sim.clear_pending()
 	character = CharacterState.new_game(GameData.get_record(PROGRESSION_ID), GameData.get_record(PLAYER_ID))
+	level_id = level_override if level_override != "" else VALLEY_LEVEL_ID
+	_reset_campaign_state()
+	_start_override = start_checkpoint
+
+
+## The world's New Game: world_start's character, inventory and flags (a bulk load: no events).
+func _begin_new_world(start_checkpoint := "") -> void:
+	mode = Mode.VALLEY
+	WorldState.clear()
+	Sim.clear_pending()
+	var prog := GameData.get_record(PROGRESSION_ID)
+	character = CharacterState.world_start(prog, GameData.get_record(PLAYER_ID))
+	var ws: Dictionary = prog.get("world_start", {}) if typeof(prog.get("world_start")) == TYPE_DICTIONARY else {}
+	WorldState.from_save_dict({"schema_version": WorldState.SCHEMA_VERSION, "deltas": {},
+		"inventory": CharacterState.inventory_of(ws.get("inventory", [])),
+		"flags": (ws.get("flags", {}) as Dictionary).duplicate(true) if typeof(ws.get("flags")) == TYPE_DICTIONARY else {}})
+	level_id = level_override if level_override != "" else WORLD_LEVEL_ID
+	_reset_campaign_state()
+	progress.prologue_complete = true
+	_start_override = start_checkpoint
+
+
+## The campaign's per-game state before a New Game's first load.
+func _reset_campaign_state() -> void:
 	checkpoint_doc = {}
 	respawn_id = ""
 	stats = _zero_stats()
+	progress = default_progress()
 	_pending = {}
 	_reload_floor = {}
 	last_load_message = ""
 	pending_restore = true
 	_load_reason = "new_game"
+	_start_override = ""
 
 
 func _begin_continue() -> Dictionary:
@@ -366,26 +534,50 @@ func _begin_continue() -> Dictionary:
 	if not read.ok:
 		return {"ok": false, "message": str(read.message) if str(read.message) != "" else "No saved game yet."}
 	var doc: Dictionary = read.data
-	var level_id := str(doc.get("level", VALLEY_LEVEL_ID))
+	var saved_level := str(doc.get("level", VALLEY_LEVEL_ID))
 	if not save_level_available(doc):
-		return {"ok": false, "message": "The saved level is not in this build (%s)." % level_id}
+		return {"ok": false, "message": "The saved level is not in this build (%s)." % saved_level}
 	var world: Dictionary = doc.get("world", {})
 	if not WorldState.from_save_dict(world):
 		return {"ok": false, "message": "The save's world state could not be loaded."}
-	level_override = level_id if level_id.begins_with("res://") else ""
+	var message := str(read.message)
+	var target := saved_level
+	var respawn := str((doc.get("checkpoint", {}) as Dictionary).get("respawn", ""))
+	var scene := scene_for_level(saved_level)
+	if scene == "" or not ResourceLoader.exists(scene):
+		# A campaign level this build does not have (a newer build's world): the Valley instead.
+		target = VALLEY_LEVEL_ID
+		respawn = _valley_return_checkpoint()
+		message = _join_message(message, "%s (%s): you continue in the Valley." % [WORLD_MISSING, saved_level])
+		doc = doc.duplicate(true)
+		doc["level"] = VALLEY_LEVEL_ID
+		(doc["checkpoint"] as Dictionary)["respawn"] = respawn
+	level_override = target if target.begins_with("res://") else ""
+	level_id = target
 	mode = Mode.VALLEY
 	character = (doc.character as Dictionary).duplicate(true)
 	checkpoint_doc = doc
-	respawn_id = str((doc.get("checkpoint", {}) as Dictionary).get("respawn", ""))
+	respawn_id = respawn
 	stats = _stats_from(doc.get("stats", {}))
 	stats.checkpoint_loads = int(stats.checkpoint_loads) + 1
+	progress = progress_from(doc.get("progress", {}))
 	_pending = {}
 	_reload_floor = {}
-	last_load_message = str(read.message)
+	_start_override = ""
+	last_load_message = message
 	pending_restore = true
 	_load_reason = "continue"
 	Sim.clear_pending()
-	return {"ok": true, "message": str(read.message)}
+	return {"ok": true, "message": message}
+
+
+## Where a fall-back to the Valley puts the player: its return checkpoint when the Valley's index
+## has it (P26), else the Valley's start checkpoint.
+func _valley_return_checkpoint() -> String:
+	var idx := WorldIndex.for_level(VALLEY_LEVEL_ID)
+	if idx != null and idx.has_checkpoint(VALLEY_RETURN_CHECKPOINT):
+		return VALLEY_RETURN_CHECKPOINT
+	return str(GameData.get_record(VALLEY_LEVEL_ID).get("start_checkpoint", ""))
 
 
 func _clear_session() -> void:
@@ -396,9 +588,13 @@ func _clear_session() -> void:
 	respawn_id = ""
 	pending_restore = false
 	stats = _zero_stats()
+	progress = {}
+	level_id = ""
 	_pending = {}
 	_load_reason = ""
 	_reload_floor = {}
+	_start_override = ""
+	_visit_activated.clear()
 
 
 func _reload_scene(reason: String) -> void:
@@ -421,14 +617,17 @@ func _clear_reload_queued() -> void:
 
 # --------------------------------------------------------------------------- level start
 
-## main.gd calls this after it added the level, the HUD and the screen stack. With a pending
-## restore it moves the player to the respawn marker (position, spawn_transform, facing and the
-## camera yaw), applies `character`, then the death floor after a death. A New Game keeps the
-## scene's Player position and takes the first checkpoint. A checkpointed level started without
-## a session document (a test level in the sandbox) takes a first in-memory checkpoint.
+## main.gd calls this after it added the level, the HUD and the screen stack. A level load starts
+## a new level visit (activated_this_visit is cleared). With a pending restore it moves the player
+## to the respawn point (respawn_checkpoint(): the node, else the level's world index), applies
+## `character`, then the death floor after a death. A New Game keeps the scene's Player position
+## (or goes to the --start checkpoint) and takes the first checkpoint. A checkpointed level started
+## without a session document (a test level in the sandbox) takes a first in-memory checkpoint.
+## level_entered follows once the level and the samples are ready.
 func on_level_ready(level: Node, player: GiantPlayer) -> void:
 	_level_ref = weakref(level) if level != null else null
 	_player_ref = weakref(player) if player != null else null
+	_visit_activated.clear()
 	if player == null:
 		return
 	if pending_restore:
@@ -436,10 +635,20 @@ func on_level_ready(level: Node, player: GiantPlayer) -> void:
 		var reason := _load_reason
 		_load_reason = ""
 		_restoring = true
-		if reason != "new_game":
-			var marker := find_checkpoint(respawn_id)
-			if marker != null:
-				place_player(player, marker.spawn_transform())
+		if reason == "new_game":
+			if _start_override != "":
+				var start := respawn_transform(_start_override)
+				if start.origin.is_finite():
+					place_player(player, start)
+				respawn_id = _start_override
+				_start_override = ""
+		else:
+			var allowed := respawn_checkpoint()
+			if allowed != respawn_id and allowed != "":
+				respawn_id = allowed
+			var t := respawn_transform(respawn_id)
+			if t.origin.is_finite():
+				place_player(player, t)
 		player.apply_character_state(character)
 		_apply_level_exempt(player, character)
 		if not _reload_floor.is_empty():
@@ -447,16 +656,20 @@ func on_level_ready(level: Node, player: GiantPlayer) -> void:
 			_reload_floor = {}
 		character = CharacterState.normalize(player.capture_character_state())
 		_restoring = false
+		_note_level_visit()
+		_restore_tracked_quest()
 		if reason == "new_game":
 			if respawn_id == "":
 				respawn_id = _start_checkpoint(level)
 			_commit_checkpoint("new_game", "")
 		else:
 			Events.checkpoint_loaded.emit(Sim.tick, respawn_id, reason if reason != "" else "load")
+		_request_level_entered(level, reason)
 	elif checkpoints_enabled() and checkpoint_doc.is_empty():
 		if respawn_id == "":
 			respawn_id = _start_checkpoint(level)
 		_commit_checkpoint("level_start", "")
+		_request_level_entered(level, "debug")
 
 
 ## The CheckpointMarker (or Waystone, or shrine SpawnPoint) with this id, or null.
@@ -469,6 +682,294 @@ func find_checkpoint(checkpoint_id: String) -> CheckpointMarker:
 			return m
 	return null
 
+
+## Where a respawn at `checkpoint_id` puts the player (P20): the checkpoint node's
+## spawn_transform() when it is loaded, else the current level's world index entry (position and
+## yaw). A Transform3D with an INF origin when neither knows it (the player then stays where the
+## scene put it).
+func respawn_transform(checkpoint_id: String) -> Transform3D:
+	var marker := find_checkpoint(checkpoint_id)
+	if marker != null:
+		return marker.spawn_transform()
+	var idx := WorldIndex.for_level(save_level_id())
+	if idx != null:
+		return idx.spawn_transform(checkpoint_id)
+	return Transform3D(Basis(), Vector3.INF)
+
+
+## The checkpoint a load respawns at (P20): the saved respawn unless a blocker refuses it, else
+## the nearest visited (flag visited.<id>) unblocked checkpoint of the level's index, else its
+## start checkpoint when unblocked, else the nearest unblocked one; the saved respawn when every
+## checkpoint is refused (or the level has no index).
+func respawn_checkpoint() -> String:
+	if respawn_id == "" or respawn_blocker(respawn_id) == "":
+		return respawn_id
+	var idx := WorldIndex.for_level(save_level_id())
+	if idx == null:
+		return respawn_id
+	var origin := idx.position_of(respawn_id)
+	var best_visited := ""
+	var best_visited_d := INF
+	var best_any := ""
+	var best_any_d := INF
+	for id in idx.checkpoint_ids():
+		if id == respawn_id or respawn_blocker(id) != "":
+			continue
+		var p := idx.position_of(id)
+		var d := p.distance_to(origin) if origin.is_finite() else 0.0
+		if QuestConditions.truthy(WorldState.get_flag(VISITED_PREFIX + id)) and d < best_visited_d:
+			best_visited = id
+			best_visited_d = d
+		if d < best_any_d:
+			best_any = id
+			best_any_d = d
+	if best_visited != "":
+		return best_visited
+	var start := str(level_record().get("start_checkpoint", ""))
+	if start != "" and start != respawn_id and idx.has_checkpoint(start) and respawn_blocker(start) == "":
+		return start
+	return best_any if best_any != "" else respawn_id
+
+
+## Why a respawn at `checkpoint_id` is refused ("" = it is fine): its index max_stage below the
+## character's stage (built in), else the first registered blocker's reason.
+func respawn_blocker(checkpoint_id: String) -> String:
+	var idx := WorldIndex.for_level(save_level_id())
+	if idx != null and idx.has_checkpoint(checkpoint_id) and idx.max_stage_of(checkpoint_id) < current_stage():
+		return NARROW_PATHS
+	for i in range(_respawn_blockers.size() - 1, -1, -1):
+		var b: Callable = _respawn_blockers[i]
+		if not b.is_valid():
+			_respawn_blockers.remove_at(i)
+			continue
+		var why := str(b.call(checkpoint_id))
+		if why != "":
+			return why
+	return ""
+
+
+## Adds a respawn blocker: Callable(checkpoint_id: String) -> String (a reason, "" = fine). P29
+## refuses checkpoints with hostile guards within 120 m, P37 those near an active world event.
+## Blockers whose object is freed are dropped.
+func register_respawn_blocker(blocker: Callable) -> void:
+	if blocker.is_valid() and not _respawn_blockers.has(blocker):
+		_respawn_blockers.append(blocker)
+
+
+func unregister_respawn_blocker(blocker: Callable) -> void:
+	_respawn_blockers.erase(blocker)
+
+
+## The growth stage that arrival limits compare: the live player's, else the character's.
+func current_stage() -> int:
+	var p := player()
+	if p != null:
+		return p.current_growth_stage()
+	return maxi(1, int(character.get("growth_stage", 1)))
+
+
+## The level record of the campaign level ({} for a test level's scene path or outside it).
+func level_record() -> Dictionary:
+	var rec := GameData.get_record(save_level_id())
+	return rec if str(rec.get("type", "")) == "level" else {}
+
+
+# --------------------------------------------------------------------------- visits
+
+## True when a shrine or waystone with this checkpoint id was activated during this level visit
+## (P20): a node made again (a streamed chunk reloading) gives no second rest or checkpoint.
+func activated_this_visit(checkpoint_id: String) -> bool:
+	return checkpoint_id != "" and _visit_activated.has(checkpoint_id)
+
+
+func mark_activated(checkpoint_id: String) -> void:
+	if checkpoint_id != "":
+		_visit_activated[checkpoint_id] = true
+
+
+## The campaign's bookkeeping when a level loads: levels_visited, world_entered (and the flag
+## progress.world_entered) when the level is the world.
+func _note_level_visit() -> void:
+	if not is_campaign() or level_id == "":
+		return
+	if progress.is_empty():
+		progress = default_progress()
+	var visited: Array = progress.levels_visited
+	if not visited.has(level_id):
+		visited.append(level_id)
+	if level_id == WORLD_LEVEL_ID:
+		progress.world_entered = true
+		WorldState.try_set_flag("progress.world_entered", true)
+
+
+## Asks for level_entered: at once when the level (its is_ready(), when it has one) and the
+## samples (Audio.is_ready(), when the autoload has it) are ready, else on a later frame.
+func _request_level_entered(level: Node, reason: String) -> void:
+	var r := reason
+	if r == "menu" or r == "" or r == "load":
+		r = "continue"
+	if not ENTER_REASONS.has(r):
+		r = "debug"
+	_entering = {"level": weakref(level) if level != null else null, "level_id": save_level_id(),
+		"reason": r, "frames": 0}
+	if _entry_ready():
+		_emit_level_entered()
+	elif is_inside_tree() and not get_tree().process_frame.is_connected(_poll_level_entered):
+		get_tree().process_frame.connect(_poll_level_entered)
+
+
+func _entry_ready() -> bool:
+	var ref: Variant = _entering.get("level")
+	var level: Object = (ref as WeakRef).get_ref() if ref is WeakRef else null
+	if level != null and is_instance_valid(level) and level.has_method("is_ready") and not bool(level.call("is_ready")):
+		return false
+	var audio := get_node_or_null("/root/Audio")
+	if audio != null and audio.has_method("is_ready") and not bool(audio.call("is_ready")):
+		return false
+	return true
+
+
+func _poll_level_entered() -> void:
+	if _entering.is_empty():
+		_stop_polling_entered()
+		return
+	_entering.frames = int(_entering.frames) + 1
+	var ref: Variant = _entering.get("level")
+	var level: Object = (ref as WeakRef).get_ref() if ref is WeakRef else null
+	if level == null or not is_instance_valid(level):
+		_entering = {}
+		_stop_polling_entered()
+		return
+	if _entry_ready() or int(_entering.frames) >= ENTER_WAIT_FRAMES:
+		if int(_entering.frames) >= ENTER_WAIT_FRAMES:
+			push_warning("GameSession: level_entered sent after %d frames without the level or the samples ready" % ENTER_WAIT_FRAMES)
+		_emit_level_entered()
+
+
+func _emit_level_entered() -> void:
+	_stop_polling_entered()
+	var e := _entering
+	_entering = {}
+	if e.is_empty():
+		return
+	entered_log.append({"tick": Sim.tick, "level": str(e.level_id), "reason": str(e.reason)})
+	if entered_log.size() > MAX_RELOAD_LOG:
+		entered_log.remove_at(0)
+	Events.level_entered.emit(Sim.tick, str(e.level_id), str(e.reason))
+
+
+func _stop_polling_entered() -> void:
+	if is_inside_tree() and get_tree().process_frame.is_connected(_poll_level_entered):
+		get_tree().process_frame.disconnect(_poll_level_entered)
+
+
+## True while a level_entered waits for its level or the samples.
+func level_entered_pending() -> bool:
+	return not _entering.is_empty()
+
+
+# --------------------------------------------------------------------------- travel
+
+## Leaves the current campaign level for `p_level_id`, arriving at `checkpoint_id` (P20, plan
+## M6-M9 §2.6). reason: exit (a LevelExit) | fast_travel (the map, P27) | debug | bot. Refused
+## ({"ok": false, "message"}) outside the campaign; for a level this build does not have; with
+## the checkpoint blockers (an exit ignores aware enemies, fast travel ignores the open screen it
+## comes from); when the destination's index does not know the checkpoint or its max_stage is
+## below the giant's stage; and for fast travel when the checkpoint was not visited, is not a fast
+## travel point, or its requires_flags do not hold. Otherwise commits a checkpoint document whose
+## level is the destination and whose respawn is the checkpoint (with its index position), emits
+## level_leaving and reloads main.tscn; the next on_level_ready puts the player there with the
+## character, flags and world deltas intact. {"ok": true, "message": ""}.
+func travel_to(p_level_id: String, checkpoint_id: String, reason: String) -> Dictionary:
+	if not is_campaign():
+		return {"ok": false, "message": "There is nowhere to travel from here."}
+	var why := travel_refusal(p_level_id, checkpoint_id, reason)
+	if why != "":
+		return {"ok": false, "message": why}
+	var from := level_id
+	level_id = p_level_id
+	level_override = p_level_id if p_level_id.begins_with("res://") else ""
+	_pending = {}
+	_commit_checkpoint("travel" if reason == "exit" else reason, checkpoint_id)
+	Events.level_leaving.emit(Sim.tick, from, p_level_id, reason)
+	_load_reason = "fast_travel" if reason == "fast_travel" else "travel"
+	_reload_floor = {}
+	pending_restore = true
+	stats.checkpoint_loads = int(stats.checkpoint_loads) + 1
+	Sim.clear_pending()
+	_reload_scene(_load_reason)
+	return {"ok": true, "message": ""}
+
+
+## Why travel_to would refuse now ("" = it would go). See travel_to.
+func travel_refusal(p_level_id: String, checkpoint_id: String, reason: String) -> String:
+	if not TRAVEL_REASONS.has(reason):
+		return "Unknown travel reason '%s'." % reason
+	var scene := scene_for_level(p_level_id)
+	if scene == "" or not ResourceLoader.exists(scene):
+		return "That land is not in this build."
+	var blockers := travel_blockers(reason)
+	if not blockers.is_empty():
+		return blocker_text(blockers)
+	var idx := WorldIndex.for_level(p_level_id)
+	if idx != null and checkpoint_id != "":
+		if not idx.has_checkpoint(checkpoint_id):
+			return UNKNOWN_PLACE
+		if idx.max_stage_of(checkpoint_id) < current_stage():
+			return NARROW_PATHS
+	if reason == "fast_travel":
+		if not QuestConditions.truthy(WorldState.get_flag(VISITED_PREFIX + checkpoint_id)):
+			return NOT_VISITED
+		var entry := idx.checkpoint(checkpoint_id) if idx != null else {}
+		if not entry.is_empty() and not bool(entry.get("fast_travel", true)):
+			return NOT_OPEN
+		for f: Variant in entry.get("requires_flags", PackedStringArray()):
+			if not QuestConditions.truthy(WorldState.get_flag(str(f))):
+				return NOT_OPEN
+	return ""
+
+
+## The checkpoint blockers that hold a travel back: all of them, but an exit never waits for
+## aware enemies and fast travel never for the screen it is chosen from.
+func travel_blockers(reason: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	for b in checkpoint_blockers(reason == "exit"):
+		if reason == "fast_travel" and b == "screen":
+			continue
+		out.append(b)
+	return out
+
+
+## A player-facing line for checkpoint_blockers() codes (the first one decides).
+static func blocker_text(blockers: PackedStringArray) -> String:
+	if blockers.is_empty():
+		return ""
+	var b := blockers[0]
+	if b.begins_with("aware:"):
+		return "Not while enemies are close."
+	match b:
+		"dead":
+			return "The dead cannot travel."
+		"grabbed":
+			return "Not while you are held."
+		"executing":
+			return "Not in the middle of a blow."
+		"holding":
+			return "Put down what you are holding first."
+		"screen":
+			return "Close the menu first."
+		"no_player":
+			return "There is no giant to travel."
+	return "You cannot travel now."
+
+
+func _on_travel_requested(p_level_id: String, checkpoint_id: String, reason: String) -> void:
+	last_travel_result = travel_to(p_level_id, checkpoint_id, reason)
+	if not bool(last_travel_result.ok):
+		Events.hud_message.emit(str(last_travel_result.message), "warn")
+
+
+# --------------------------------------------------------------------------- level start helpers
 
 ## Puts the player at `t` (position and yaw) as if it had spawned there.
 static func place_player(player: GiantPlayer, t: Transform3D) -> void:
@@ -571,7 +1072,7 @@ func take_checkpoint(reason: String, respawn: String = "", completion := false) 
 
 ## Why a checkpoint must wait now ([] = it may be taken): dead, grabbed, executing, holding,
 ## screen, aware:<enemy id> (an aware enemy within 40 m), no_player. ignore_aware: leave the
-## aware enemies out (the slice's completion checkpoint).
+## aware enemies out (the slice's completion checkpoint, an exit).
 func checkpoint_blockers(ignore_aware := false) -> PackedStringArray:
 	var out := PackedStringArray()
 	var p := player()
@@ -607,22 +1108,46 @@ func checkpoint_blockers(ignore_aware := false) -> PackedStringArray:
 
 
 ## The document a checkpoint stores (and writes): the character (refreshed from the player when
-## there is one), the world, the respawn point, the reason and the session stats.
+## there is one), the world, the level and the respawn point (with its position and yaw, P20),
+## the reason, the campaign's progress and the session stats.
 func snapshot_document(reason: String) -> Dictionary:
 	var p := player()
 	if p != null and not _restoring:
 		character = CharacterState.normalize(p.capture_character_state())
+	var lv := save_level_id()
+	var cp := {"respawn": respawn_id, "reason": reason}
+	var where := _checkpoint_place(lv, respawn_id)
+	if not where.is_empty():
+		cp["position"] = [where.position.x, where.position.y, where.position.z]
+		cp["yaw"] = float(where.yaw)
 	return {
 		"schema_version": SaveSlots.SCHEMA_VERSION,
 		"build_version": str(ProjectSettings.get_setting("application/config/version", "")),
 		"saved_at_unix": int(Time.get_unix_time_from_system()),
 		"slot": SaveSlots.SLOT,
-		"level": current_level_id(),
-		"checkpoint": {"respawn": respawn_id, "reason": reason},
+		"level": lv,
+		"checkpoint": cp,
 		"character": character.duplicate(true),
 		"world": WorldState.to_save_dict(),
+		"progress": _progress_snapshot(),
 		"stats": stats.duplicate(true),
 	}
+
+
+## {"position": Vector3, "yaw": float} of a checkpoint of `lv`: its index entry, else its node when
+## that level is the loaded one; {} when neither knows it.
+func _checkpoint_place(lv: String, checkpoint_id: String) -> Dictionary:
+	if checkpoint_id == "":
+		return {}
+	var idx := WorldIndex.for_level(lv)
+	if idx != null and idx.has_checkpoint(checkpoint_id):
+		var e := idx.checkpoint(checkpoint_id)
+		return {"position": e.position, "yaw": float(e.get("yaw", 0.0))}
+	var marker := find_checkpoint(checkpoint_id)
+	if marker != null and lv == save_level_id():
+		var t := marker.spawn_transform()
+		return {"position": t.origin, "yaw": t.basis.get_euler().y}
+	return {}
 
 
 func _commit_checkpoint(reason: String, respawn: String) -> Dictionary:
@@ -643,22 +1168,23 @@ func _commit_checkpoint(reason: String, respawn: String) -> Dictionary:
 			push_warning("GameSession: checkpoint not saved: %s" % w.message)
 			Events.hud_message.emit("Checkpoint not saved: %s. Play continues." % w.message, "warn")
 	else:
-		result.message = NO_SAVING if is_valley() else MEMORY_ONLY
+		result.message = NO_SAVING if is_campaign() else MEMORY_ONLY
 	Events.checkpoint_saved.emit(Sim.tick, respawn_id, bool(result.ok), str(result.message))
 	return result
 
 
-## The Valley writes the slot (with persist); test levels in the sandbox never do, so they can
+## The campaign writes the slot (with persist); test levels in the sandbox never do, so they can
 ## never overwrite the player's save.
 func _writes_enabled() -> bool:
-	return persist and is_valley()
+	return persist and is_campaign()
 
 
 ## Reloads the last checkpoint: its world and character come back and the scene reloads; the
 ## next on_level_ready puts the player at its respawn point. reason "death" applies the death
 ## floor (decision 13); "continue", "debug" and "menu" restore it exactly - unless the player is
 ## dead when they are asked for (P16, M3 review: the pause menu's Load last checkpoint or F9 on
-## the death screen is a death reload too, so it gets the floor).
+## the death screen is a death reload too, so it gets the floor). The checkpoint's level loads
+## (P20: it can be another level than the one on screen only after a travel's checkpoint).
 func reload_checkpoint(reason: String) -> void:
 	if not checkpoints_enabled() or checkpoint_doc.is_empty():
 		Events.hud_message.emit("No checkpoint to load yet", "warn")
@@ -670,6 +1196,10 @@ func reload_checkpoint(reason: String) -> void:
 		return
 	character = (doc.get("character", {}) as Dictionary).duplicate(true)
 	respawn_id = str((doc.get("checkpoint", {}) as Dictionary).get("respawn", respawn_id))
+	if is_campaign() and typeof(doc.get("level")) == TYPE_STRING and str(doc.level) != "":
+		level_id = str(doc.level)
+	if typeof(doc.get("progress")) == TYPE_DICTIONARY:
+		progress = progress_from(doc.progress)
 	_reload_floor = death_reload_floor() if reason == "death" or dead else {}
 	_pending = {}
 	stats.checkpoint_loads = int(stats.checkpoint_loads) + 1
@@ -691,9 +1221,60 @@ func _on_post_resolve(_tick: int) -> void:
 		_commit_checkpoint(str(_pending.reason), str(_pending.respawn))
 
 
+# --------------------------------------------------------------------------- progress (P20)
+
+## A new game's progress.
+static func default_progress() -> Dictionary:
+	return {"prologue_complete": false, "world_entered": false, "levels_visited": [], "tracked_quest": ""}
+
+
+## A save's progress block, normalised (missing or mistyped keys get their defaults).
+static func progress_from(raw: Variant) -> Dictionary:
+	var out := default_progress()
+	if typeof(raw) != TYPE_DICTIONARY:
+		return out
+	var d: Dictionary = raw
+	for key: String in ["prologue_complete", "world_entered"]:
+		if typeof(d.get(key)) == TYPE_BOOL:
+			out[key] = d[key]
+	if typeof(d.get("levels_visited")) == TYPE_ARRAY:
+		var visited: Array = []
+		for v: Variant in d.levels_visited:
+			if typeof(v) == TYPE_STRING and str(v) != "" and not visited.has(str(v)):
+				visited.append(str(v))
+		out.levels_visited = visited
+	if typeof(d.get("tracked_quest")) == TYPE_STRING:
+		out.tracked_quest = str(d.tracked_quest)
+	return out
+
+
+## The progress block a checkpoint writes: the prologue is complete once slice.completed holds;
+## the tracked quest is Quests.tracked_quest_id when the property exists (P27).
+func _progress_snapshot() -> Dictionary:
+	var out := progress_from(progress)
+	if QuestConditions.truthy(WorldState.get_flag("slice.completed")):
+		out.prologue_complete = true
+	if level_id == WORLD_LEVEL_ID:
+		out.world_entered = true
+	var quests := get_node_or_null("/root/Quests")
+	if quests != null and "tracked_quest_id" in quests:
+		out.tracked_quest = str(quests.get("tracked_quest_id"))
+	progress = out.duplicate(true)
+	return out
+
+
+## Puts the saved tracked quest back into Quests.tracked_quest_id when the property exists (P27).
+func _restore_tracked_quest() -> void:
+	var quests := get_node_or_null("/root/Quests")
+	if quests != null and "tracked_quest_id" in quests and typeof(progress.get("tracked_quest")) == TYPE_STRING:
+		quests.set("tracked_quest_id", str(progress.tracked_quest))
+
+
 # --------------------------------------------------------------------------- triggers
 
 func _on_checkpoint_reached(_tick: int, checkpoint_id: String, kind: String) -> void:
+	if checkpoints_enabled() and checkpoint_id != "":
+		WorldState.try_set_flag(VISITED_PREFIX + checkpoint_id, true)
 	request_checkpoint("waystone" if kind == "waystone" else "shrine_reached", checkpoint_id)
 
 
@@ -731,8 +1312,12 @@ func _on_growth_changed(_tick: int, entity_id: String, _old_stage: int, _new_sta
 	request_checkpoint("growth", shrine_node_respawn(shrine))
 
 
+## The Ogre King's death moves the respawn to the Kingsfall shrine - but not on another campaign
+## level (P20: a world boss keeps the respawn; test levels keep today's rule).
 func _on_boss_defeated(_tick: int, _boss_id: String) -> void:
-	request_checkpoint("boss_defeated", KINGSFALL_RESPAWN)
+	var other_level := is_campaign() and level_id != "" and level_id != VALLEY_LEVEL_ID \
+		and not level_id.begins_with("res://")
+	request_checkpoint("boss_defeated", "" if other_level else KINGSFALL_RESPAWN)
 
 
 func _on_quest_stage_changed(_tick: int, quest_id: String, _stage_id: String) -> void:
@@ -814,6 +1399,26 @@ func pending_checkpoint() -> Dictionary:
 	return _pending.duplicate()
 
 
+## The display name of a checkpoint of the current (or the given) level (P20): its world index
+## entry's, else its node's (a shrine's record name, a waystone's display_name); "" when unknown.
+func checkpoint_display_name(checkpoint_id: String, p_level_id := "") -> String:
+	if checkpoint_id == "":
+		return ""
+	var lv := p_level_id if p_level_id != "" else save_level_id()
+	var title := WorldIndex.display_name_in(lv, checkpoint_id)
+	if title != "":
+		return title
+	var marker := find_checkpoint(checkpoint_id)
+	if marker == null:
+		return ""
+	if marker is Waystone and (marker as Waystone).display_name != "":
+		return (marker as Waystone).display_name
+	var parent := marker.get_parent()
+	if parent is Shrine:
+		return (parent as Shrine).display_name()
+	return ""
+
+
 ## True while the current level's player is dead (a reload from the menu or F9 then gets the
 ## death floor).
 func _player_dead() -> bool:
@@ -857,12 +1462,20 @@ static func _stats_from(raw: Variant) -> Dictionary:
 	return out
 
 
+static func _join_message(a: String, b: String) -> String:
+	if a == "":
+		return b
+	if b == "":
+		return a
+	return a + " " + b
+
+
 ## Lines for the F3 debug panel (group debug_info_providers).
 func debug_lines() -> PackedStringArray:
 	var lines := PackedStringArray()
 	var pending := ("  pending %s" % _pending.reason) if not _pending.is_empty() else ""
-	lines.append("SESSION %s  level %s  respawn %s  checkpoints %s%s" % [mode_name(),
-		level_scene_path().get_file(), respawn_id if respawn_id != "" else "-",
+	lines.append("SESSION %s  level %s (%s)  respawn %s  checkpoints %s%s" % [mode_name(),
+		level_scene_path().get_file(), level_id if level_id != "" else "-", respawn_id if respawn_id != "" else "-",
 		"on" if checkpoints_enabled() else "off", pending])
 	if checkpoints_enabled():
 		var blockers := checkpoint_blockers()
@@ -878,6 +1491,8 @@ func reset_for_tests() -> void:
 	mode = Mode.SANDBOX
 	level_override = ""
 	_cli_level_override = ""
+	_cli_start = ""
+	level_id = ""
 	character = {}
 	checkpoint_doc = {}
 	pending_restore = false
@@ -885,11 +1500,14 @@ func reset_for_tests() -> void:
 	respawn_id = ""
 	test_checkpoints = false
 	stats = _zero_stats()
+	progress = {}
 	allow_scene_reload = false
 	scene_reloads.clear()
 	last_mode_result = {}
+	last_travel_result = {}
 	checkpoints_taken = 0
 	last_load_message = ""
+	entered_log.clear()
 	_pending = {}
 	_load_reason = ""
 	_reload_floor = {}
@@ -897,5 +1515,10 @@ func reset_for_tests() -> void:
 	_reload_queued = false
 	_player_ref = null
 	_level_ref = null
+	_start_override = ""
+	_visit_activated.clear()
+	_respawn_blockers.clear()
+	_entering = {}
+	_stop_polling_entered()
 	SaveSlots.path_override = TEST_SAVE_PATH
 	SaveSlots.delete_slot(true)

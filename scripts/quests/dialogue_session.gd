@@ -21,6 +21,12 @@ extends RefCounted
 ##     give_items, xp, learn_abilities   the rewards (they require a once_flag): items into the
 ##                    inventory, Events.xp_award_requested(xp, "dialogue:<id>"), and each ability
 ##                    through the learner (the player's progression.learn_ability(id, "reward"))
+##     attribute_points  (P20, a reward too) unspent attribute points added to the character
+##                    through the attribute granter (Quests: the player's progression)
+## - P20 (plan M6-M9 §2.12): a choice whose conditions fail (or whose take_items are not held)
+##   but that has a `locked_text` is still listed, after the available ones, with "locked": true
+##   and its reason ("Return when you stand at stage 5"); the screen shows it greyed and choose()
+##   refuses it ("locked"). A node whose only choices are locked still offers [Leave] first.
 ## - end(reason) stops it once: dialogue_ended and the `ended` signal (Quests clears
 ##   Quests.dialogue on it).
 
@@ -47,6 +53,9 @@ var context_provider := Callable()
 ## (action_id: String, source: String) -> bool: teaches an ability; the player in group "player"
 ## (its progression component) when not set.
 var learner := Callable()
+## (points: int, source: String) -> void: adds unspent attribute points (P20); the player in group
+## "player" (its progression component), else the session character, when not set.
+var attribute_granter := Callable()
 
 
 ## Starts the conversation of `rec` with `p_npc_id`. False (and nothing emitted) when no entry
@@ -118,24 +127,39 @@ func context() -> Dictionary:
 
 
 ## The choices that may be taken now: [{"index", "source_index", "text", "next", "outcome",
-## "implicit"}] ("index" is what choose() takes; "source_index" the choice's place in the node).
-## A node without one offers a single implicit LEAVE_TEXT choice that ends the conversation.
+## "implicit", "locked", "locked_text"}] ("index" is what choose() takes; "source_index" the
+## choice's place in the node). A node without one offers a single implicit LEAVE_TEXT choice that
+## ends the conversation. Locked choices (P20: failing conditions and a locked_text) follow, with
+## "locked": true.
 func choices() -> Array:
 	var out: Array = []
 	if not active:
 		return out
 	var ctx := context()
+	var locked: Array = []
 	var raw: Variant = node().get("choices", [])
 	if typeof(raw) == TYPE_ARRAY:
 		var j := 0
 		for c: Variant in raw:
-			if typeof(c) == TYPE_DICTIONARY and _available(c, ctx):
+			if typeof(c) == TYPE_DICTIONARY:
 				var effects: Dictionary = c.get("effects", {}) if typeof(c.get("effects")) == TYPE_DICTIONARY else {}
-				out.append({"index": out.size(), "source_index": j, "text": str(c.get("text", "")),
-					"next": str(c.get("next", "")), "outcome": str(effects.get("outcome", "")), "implicit": false})
+				var entry := {"index": 0, "source_index": j, "text": str(c.get("text", "")),
+					"next": str(c.get("next", "")), "outcome": str(effects.get("outcome", "")), "implicit": false,
+					"locked": false, "locked_text": ""}
+				if _available(c, ctx):
+					entry.index = out.size()
+					out.append(entry)
+				elif str(c.get("locked_text", "")) != "":
+					entry.locked = true
+					entry.locked_text = str(c.locked_text)
+					locked.append(entry)
 			j += 1
 	if out.is_empty():
-		out.append({"index": 0, "source_index": -1, "text": LEAVE_TEXT, "next": "", "outcome": "", "implicit": true})
+		out.append({"index": 0, "source_index": -1, "text": LEAVE_TEXT, "next": "", "outcome": "", "implicit": true,
+			"locked": false, "locked_text": ""})
+	for entry: Dictionary in locked:
+		entry.index = out.size()
+		out.append(entry)
 	return out
 
 
@@ -151,10 +175,10 @@ static func _available(c: Dictionary, ctx: Dictionary) -> bool:
 	return true
 
 
-## The index (into choices()) of the choice whose outcome is `outcome`, or -1.
+## The index (into choices()) of the available choice whose outcome is `outcome`, or -1.
 func find_choice(outcome: String) -> int:
 	for c: Dictionary in choices():
-		if str(c.outcome) == outcome and outcome != "":
+		if str(c.outcome) == outcome and outcome != "" and not bool(c.get("locked", false)):
 			return int(c.index)
 	return -1
 
@@ -181,6 +205,9 @@ func choose(i: int) -> Dictionary:
 		last_result = {"ok": false, "reason": "no_such_choice", "ended": false}
 		return last_result
 	var c: Dictionary = vis[i]
+	if bool(c.get("locked", false)):
+		last_result = {"ok": false, "reason": "locked", "ended": false, "locked_text": str(c.locked_text)}
+		return last_result
 	if bool(c.implicit):
 		history.append({"node": node_id, "text": str(c.text), "outcome": "", "granted": false})
 		end("left")
@@ -231,7 +258,26 @@ func _apply(effects: Dictionary) -> bool:
 		Events.xp_award_requested.emit(xp, source)
 	for id: Variant in _list(effects.get("learn_abilities")):
 		_learn(str(id))
+	var points := int(effects.get("attribute_points", 0))
+	if points > 0:
+		_grant_attribute_points(points, source)
 	return true
+
+
+## Adds unspent attribute points (P20): the attribute granter, else the player's progression,
+## else the session character.
+func _grant_attribute_points(points: int, source: String) -> void:
+	if attribute_granter.is_valid():
+		attribute_granter.call(points, source)
+		return
+	var tree := Engine.get_main_loop() as SceneTree
+	var p: Node = tree.get_first_node_in_group("player") if tree != null else null
+	if p != null and "progression" in p and p.get("progression") != null:
+		var prog: Object = p.get("progression")
+		prog.set("unspent_attribute_points", int(prog.get("unspent_attribute_points")) + points)
+	else:
+		GameSession.character["unspent_attribute_points"] = int(GameSession.character.get("unspent_attribute_points", 0)) + points
+	Events.attributes_changed.emit(Sim.tick)
 
 
 func _learn(action_id: String) -> bool:

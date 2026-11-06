@@ -1,0 +1,289 @@
+{
+	"build_version": "0.5.0-m5",
+	"character": {
+		"ancestry": "ancestry.neutral",
+		"attributes": {
+			"constitution": 10,
+			"dexterity": 10,
+			"endurance": 19,
+			"intellect": 10,
+			"strength": 19,
+			"willpower": 10
+		},
+		"definition_id": "player.giant",
+		"growth_stage": 3,
+		"id": "char.valley_1",
+		"known_abilities": [
+			"ability.heavy_footfall",
+			"ability.sweeping_blow",
+			"ability.stone_skin",
+			"ability.crushing_grip",
+			"ability.runic_bolt",
+			"ability.boulder_hurl",
+			"ability.ancestral_mend",
+			"ability.thunder_roar",
+			"ability.titan_surge"
+		],
+		"level": 7,
+		"level_exempt": [],
+		"loadout": {
+			"slots": [
+				"ability.heavy_footfall",
+				"ability.sweeping_blow",
+				"ability.stone_skin",
+				"ability.crushing_grip",
+				"ability.boulder_hurl",
+				"ability.runic_bolt",
+				"ability.ancestral_mend",
+				"ability.thunder_roar"
+			],
+			"ultimate": "ability.titan_surge"
+		},
+		"resources": {
+			"essence": 100.0,
+			"fury": 57.0833333333334,
+			"health": 889.0,
+			"stamina": 110.833333333333
+		},
+		"talent_points": 6,
+		"unspent_attribute_points": 0,
+		"weapon": "weapon.club_reinforced",
+		"weapons_owned": [
+			"weapon.club_reinforced",
+			"weapon.sword_reinforced",
+			"weapon.tree_oak"
+		],
+		"xp": 1660
+	},
+	"checkpoint": {
+		"reason": "quest_complete",
+		"respawn": "valley.cp.barrow_gap"
+	},
+	"level": "level.valley",
+	"saved_at_unix": 1793944397,
+	"schema_version": 1,
+	"slot": "valley_1",
+	"stats": {
+		"checkpoint_loads": 0,
+		"deaths": 0,
+		"play_time_s": 520.466666666522
+	},
+	"world": {
+		"deltas": {
+			"valley.arena.ogre_king": {
+				"killed": true,
+				"loot_awarded": true
+			},
+			"valley.barrow.crown": {
+				"taken": true
+			},
+			"valley.barrow.warden_ogre": {
+				"killed": true
+			},
+			"valley.barrow.warden_wolf_2": {
+				"killed": true
+			},
+			"valley.barrow.warden_wolf_3": {
+				"killed": true
+			},
+			"valley.forest.deadfall": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"valley.forest.hunter_1": {
+				"killed": true
+			},
+			"valley.forest.hunter_2": {
+				"killed": true
+			},
+			"valley.forest.hunter_wolf": {
+				"killed": true
+			},
+			"valley.forest.ogre": {
+				"killed": true
+			},
+			"valley.forest.ogre_wolf_1": {
+				"killed": true
+			},
+			"valley.forest.ogre_wolf_2": {
+				"killed": true
+			},
+			"valley.forest.tree_02": {
+				"damage_stage": 0,
+				"health": 33.0
+			},
+			"valley.forest.wolf_a1": {
+				"killed": true
+			},
+			"valley.forest.wolf_a2": {
+				"killed": true
+			},
+			"valley.forest.wolf_a3": {
+				"killed": true
+			},
+			"valley.grove.cairn": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"valley.kingsfall.oak": {
+				"damage_stage": 1,
+				"destroyed": true
+			},
+			"valley.quarry.cache": {
+				"taken": true
+			},
+			"valley.quarry.chest": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"valley.quarry.raider_2": {
+				"killed": true,
+				"loot_awarded": true
+			},
+			"valley.quarry.raider_3": {
+				"killed": true,
+				"loot_awarded": true
+			},
+			"valley.quarry.raider_captain": {
+				"killed": true,
+				"loot_awarded": true
+			},
+			"valley.ruins.armory_crate": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"valley.ruins.gate_soldier_1": {
+				"killed": true
+			},
+			"valley.ruins.gate_soldier_2": {
+				"killed": true
+			},
+			"valley.ruins.mage": {
+				"killed": true
+			},
+			"valley.ruins.patrol_mage": {
+				"killed": true
+			},
+			"valley.ruins.practice_gate": {
+				"damage_stage": 2,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"valley.ruins.sergeant": {
+				"killed": true
+			},
+			"valley.ruins.soldier_2": {
+				"killed": true
+			},
+			"valley.ruins.sword_rack": {
+				"taken": true
+			},
+			"valley.village.barricade": {
+				"opened": true
+			},
+			"valley.village.road_mage": {
+				"killed": true
+			},
+			"valley.village.road_soldier_1": {
+				"killed": true
+			},
+			"valley.village.road_soldier_2": {
+				"killed": true
+			}
+		},
+		"flags": {
+			"dialogue.elder.met": true,
+			"dialogue.elder.outcome.help_cache": true,
+			"dialogue.elder.outcome.offer_cache": true,
+			"encounter.forest_hunters.cleared": true,
+			"encounter.forest_ogre.cleared": true,
+			"encounter.forest_wolves_a.cleared": true,
+			"encounter.kingsfall_boss.cleared": true,
+			"encounter.quarry_raiders.cleared": true,
+			"encounter.road_patrol.cleared": true,
+			"encounter.ruins_courtyard.cleared": true,
+			"faction.village.gate_open": true,
+			"quest.main.done": true,
+			"quest.main.stage": "crown",
+			"quest.tutorial.done": true,
+			"quest.tutorial.stage": "spar",
+			"quest.village.done": true,
+			"quest.village.offer": "cache",
+			"quest.village.outcome": "help_cache",
+			"quest.village.stage": "resolve",
+			"quest.village_cache.done": true,
+			"quest.village_cache.stage": "return_cache",
+			"reward.main.boss": true,
+			"reward.main.bridge": true,
+			"reward.main.causeway": true,
+			"reward.main.courtyard": true,
+			"reward.main.crown": true,
+			"reward.main.deadfall": true,
+			"reward.main.gate": true,
+			"reward.main.grove": true,
+			"reward.main.grow3": true,
+			"reward.main.hurl": true,
+			"reward.main.leave_hollow": true,
+			"reward.main.ogre": true,
+			"reward.main.to_village": true,
+			"reward.main.tree": true,
+			"reward.main.village": true,
+			"reward.main.wolves": true,
+			"reward.tutorial.awaken": true,
+			"reward.tutorial.spar": true,
+			"reward.tutorial.train": true,
+			"reward.village.help": true,
+			"reward.village.meet": true,
+			"reward.village.resolve": true,
+			"reward.village_cache.get_cache": true,
+			"reward.village_cache.return_cache": true,
+			"slice.completed": true,
+			"slice.crown_claimed": true,
+			"tutorial.attributes.done": true,
+			"tutorial.attributes.seen": true,
+			"tutorial.block.done": true,
+			"tutorial.block.seen": true,
+			"tutorial.boss_charge.done": true,
+			"tutorial.boss_charge.seen": true,
+			"tutorial.camera.done": true,
+			"tutorial.camera.seen": true,
+			"tutorial.dodge.done": true,
+			"tutorial.dodge.seen": true,
+			"tutorial.footfall.done": true,
+			"tutorial.footfall.seen": true,
+			"tutorial.grab.done": true,
+			"tutorial.grab.seen": true,
+			"tutorial.heavy.done": true,
+			"tutorial.heavy.seen": true,
+			"tutorial.hurl.done": true,
+			"tutorial.hurl.seen": true,
+			"tutorial.light.done": true,
+			"tutorial.light.seen": true,
+			"tutorial.lock.done": true,
+			"tutorial.lock.seen": true,
+			"tutorial.shrine.seen": true,
+			"tutorial.soldier_guard.done": true,
+			"tutorial.soldier_guard.seen": true,
+			"world.forest.deadfall_broken": true,
+			"world.ogre_king.defeated": true,
+			"world.ruins.gate_broken": true,
+			"world.tree_weapon_taken": true
+		},
+		"inventory": {
+			"item.crown_first_king": 1,
+			"item.iron_ingot": 1,
+			"item.ogre_tusk": 1,
+			"item.wood_scrap": 5
+		},
+		"schema_version": 2
+	}
+}
