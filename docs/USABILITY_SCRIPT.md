@@ -12,6 +12,7 @@ about 30 minutes per player.
 | HUD layout at 1280 x 720 and 1920 x 1080 | Automated: `tests/integration/test_hud_layout.gd` |
 | Audio sheet (§8: the owner's listening pass, M6) | **NOT RUN** (the owner runs it) |
 | Music and ambience behaviour (layers, variants, rests, crossfades, ducks, beds, spots) | Automated: `tests/integration/test_music_valley.gd`, `test_ambience_valley.gd`, `test_audio_zones.gd`; the web build: `tools/web/audio_check.mjs` |
+| World sheet (§9: finding the way - the map, pins, the compass, fast travel, sealed places; M7) | **NOT RUN** (the owner runs it); the rules automated: `tests/integration/test_map_screen.gd`, `test_compass.gd`, `test_discovery.gd`, `test_fast_travel.gd`, `test_tracked_quest.gd`, `test_journal.gd` |
 
 The recommended owner checkpoints after waves 1 and 8 (plan §1.3) use the same sheets (§4 and §5).
 
@@ -245,3 +246,32 @@ Barrow and the ruins; Kingsfall and the Ogre King (both phases); the end screen.
 
 Write the results under the session in `docs/USABILITY_RESULTS.md` and turn every "change this"
 into a follow-up for the sound packages (P21 effects, P23 music and ambience, P28 the world's).
+
+## 9. World sheet: finding the way (owner, M7)
+
+The open world's wayfinding (plan M6-M9 §3.10, P27; `docs/systems/P27.md`): the map, pins, the
+compass, discovery, fast travel, the tracked quest, the journal and sealed places. Run it twice -
+once with a pad, once with the mouse and keyboard - about 20 minutes each, with a new player if one
+is at hand (the facilitator rules of §3 apply: no help beyond the game's own prompts). Start in the
+Old Kingdom: `Giantborn.exe -- --mode=world --new-game`, or on the title New Game > "Skip to the Old
+Kingdom" with a save that finished the prologue. Tick each line for each device; note what confused.
+
+| # | Check | Pad | Mouse and keyboard |
+| --- | --- | --- | --- |
+| 1 | Soon after arriving a TIP names the map's button; the map opens (M / D-pad Down), pauses the game, and the TIP goes away. | | |
+| 2 | The map reads at a glance: where you stand and face (the white arrow), places found (bright squares) and seen from a vista (dim), waystones and shrines (blue; bright once reached), exits, sealed places (a lock and "Stage N"), the pin (red), the quest's gold diamonds; land not yet seen lies under a dark fog. | | |
+| 3 | Moving around the map: D-pad / left stick between places, right stick pans, LB / RB zoom, A chooses, Y pins, B closes - or arrows between places, W A S D or dragging pans, the wheel or - / = zooms, Enter chooses, P or a right click pins, Esc or M closes. The panel lists the controls of the device in use. | | |
+| 4 | A place chosen: its name, its region with the recommended stages (orange when you are below them), and what it is (reached or not, found, seen from afar, sealed with its stage). | | |
+| 5 | Pin a spot and close the map: the compass shows the red pin; it is still there after loading the game again; Clear pin removes it. | | |
+| 6 | The compass (top centre) turns with the camera: N E S W, gold diamonds for the quest you track (several when a step has several places), marks for the nearest known places, "?" for something unexplored nearby (a landmark on the skyline from farther away). Ask what each mark means. | | |
+| 7 | Walking into a new place: "Discovered: <name> +XP" shows top left once; from a vista the places around appear on the map and the line says how many. | | |
+| 8 | Crossing into a region: its name shows top centre with "Recommended stage N-M", in orange when you are below it. | | |
+| 9 | Fast travel: on the map, a waystone you reached > Travel: the game loads and you stand there. Try one you have not reached ("You have not been there yet.") and with an enemy hunting you close by ("Not while enemies are close."): is the reason clear, and where did the player look for it? | | |
+| 10 | T / D-pad Left: "Tracking: <quest>" shows; the tracker's first line, the compass's diamonds and the objective marker follow it. | | |
+| 11 | The journal (J / D-pad Right): quests with their step, objective and region; waiting quests say what they wait for; completed quests; oaths; sealed places with the stage they need; each region's note. Track from the journal (D-pad and A, or a click) changes the followed quest. | | |
+| 12 | A sealed place seen for the first time: a TIP explains it, "Sealed: <name> (grow to stage N)" shows, the map marks it with a lock and the journal lists it. | | |
+| 13 | With LT held, the D-pad still fires slots 5-8 and never opens the map or the journal or changes the tracked quest. | | |
+| 14 | Ask: "Where would you go next, and how would you get there?" The player answers from the map and the compass alone. | | |
+
+Write the results under the session in `docs/USABILITY_RESULTS.md`; every line two or more players
+miss becomes a follow-up for P27's screens and widgets in `docs/plans/FOLLOWUPS.md`.

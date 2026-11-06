@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.map",
+	"type": "tutorial_prompt",
+	"description": "P27: the map, when the giant first stands in the Old Kingdom.",
+	"text": "The Old Kingdom is wide. Open the map with {map}: it shows the places you have found, your quest and the waystones you can travel to. {map_pin} pins a spot on it.",
+	"trigger": {"type": "event", "event": "level_entered"},
+	"dismiss": {"type": "flag", "flag": "map.opened", "timeout_s": 25},
+	"requires_flags": ["progress.world_entered"],
+	"min_stage": 1,
+	"priority": 8,
+	"once": true,
+	"defer_in_combat": true,
+	"sets_flag": "tutorial.map.done"
+}

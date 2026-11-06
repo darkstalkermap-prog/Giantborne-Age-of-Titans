@@ -20,15 +20,14 @@ var _left := 0.0
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_panel = UiKit.panel(Color(0.05, 0.06, 0.08, 0.82))
+	_panel = HudKit.panel(Color(0.05, 0.06, 0.08, 0.82))
 	_panel.offset_left = 12
 	_panel.offset_right = 352
 	_panel.offset_top = 52
 	_panel.offset_bottom = 86   # P16: the 15 pt line and the panel margins need 34 px (it grew past 80)
 	add_child(_panel)
-	_label = UiKit.label("", 15, UiKit.GOOD)
+	_label = HudKit.label("", HudKit.TEXT, UiKit.GOOD)
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_label.clip_text = true
 	_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_panel.add_child(_label)
 	_panel.visible = false

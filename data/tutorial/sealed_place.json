@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.sealed_place",
+	"type": "tutorial_prompt",
+	"description": "P27: the first sealed place seen (Discovery counts them in sealed.seen_count).",
+	"text": "A sealed place: something lies behind it, but only a bigger giant can open it. The map marks it with a lock and the journal ({journal}) lists the stage it needs.",
+	"trigger": {"type": "flag", "flag": "sealed.seen_count", "at_least": 1},
+	"dismiss": {"type": "timeout", "timeout_s": 12},
+	"requires_flags": ["progress.world_entered"],
+	"min_stage": 1,
+	"priority": 7,
+	"once": true,
+	"defer_in_combat": true,
+	"sets_flag": "tutorial.sealed_place.done"
+}

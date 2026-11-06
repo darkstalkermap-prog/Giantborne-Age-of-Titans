@@ -1,0 +1,140 @@
+extends IntegrationSuite
+## P27 (plan M6-M9 §2.12, §3.10 design 4): the tracked quest. track() and track_next() cycle the
+## active quests (main first) with Events.quest_tracked; current_objective() and objectives()'
+## "tracked" follow it, the tracker's first line and the objective marker too; a multi-marker stage
+## gives every marker to the compass (three diamonds) and, while another quest is tracked, the main
+## quest's markers are its leads (at most three); the tracked quest survives a save (Continue) and a
+## fast travel (GameSession's progress.tracked_quest, P20).
+
+const Fx := preload("res://tests/support/quest_fixtures.gd")
+const Wux := preload("res://tests/support/world_ux_fixtures.gd")
+const Tracker := preload("res://ui/hud/quest_tracker.gd")
+
+var tracked_events: Array[String] = []
+
+
+func before_each() -> void:
+	await super()
+	tracked_events.clear()
+	Events.quest_tracked.connect(_on_tracked)
+
+
+func after_each() -> void:
+	if Events.quest_tracked.is_connected(_on_tracked):
+		Events.quest_tracked.disconnect(_on_tracked)
+	await super()
+
+
+func _on_tracked(quest_id: String) -> void:
+	tracked_events.append(quest_id)
+
+
+func _marker(id: String, pos: Vector3) -> LevelMarker:
+	var m := LevelMarker.new()
+	m.marker_id = id
+	m.position = pos
+	world.add_child(m)
+	return m
+
+
+## Three quests: the main one on a stage with three markers (the oath leads), two side quests with one.
+func _quests() -> void:
+	Fx.install([
+		Fx.quest("quest.test_main", [Fx.stage("oaths", Fx.flag_cond("test.flag.never"), 0,
+			{"objective": "Choose an oath", "markers": ["test.m.lead_a", "test.m.lead_b", "test.m.lead_c"]})],
+			{"display_name": "The Main Thread"}),
+		Fx.quest("quest.test_side_a", [Fx.stage("go", Fx.flag_cond("test.flag.never"), 0,
+			{"objective": "Go to A", "marker": "test.m.side_a"})], {"display_name": "Side A"}),
+		Fx.quest("quest.test_side_b", [Fx.stage("go", Fx.flag_cond("test.flag.never"), 0,
+			{"objective": "Go to B", "marker": "test.m.side_b", "waiting_text": "Waiting: stage 5"})],
+			{"display_name": "Side B"}),
+	])
+	Fx.activate(["quest.test_main", "quest.test_side_a", "quest.test_side_b"], [], "quest.test_main")
+
+
+func test_track_cycles_and_everything_follows() -> void:
+	_quests()
+	for m: Array in [["test.m.lead_a", Vector3(0, 1, -40)], ["test.m.lead_b", Vector3(30, 1, -30)],
+			["test.m.lead_c", Vector3(-30, 1, -30)], ["test.m.side_a", Vector3(40, 1, 0)], ["test.m.side_b", Vector3(-40, 1, 0)]]:
+		_marker(m[0], m[1])
+	await step_ticks(2)
+	Quests.refresh_positions()
+	assert_eq(Array(Quests.active_quest_ids()), ["quest.test_main", "quest.test_side_b", "quest.test_side_a"],
+		"three active quests, main first")
+	assert_eq(Quests.tracked_id(), "quest.test_main", "the main quest leads by default")
+	assert_eq(str(Quests.current_objective().quest_id), "quest.test_main", "and the objective is its")
+	var positions: Array = Quests.tracked_objective().positions
+	assert_eq(positions.size(), 3, "a multi-marker stage gives all three markers")
+	var diamonds := HudCompass.markers_for(Vector3.ZERO, 0.0, {}, {}, HudCompass.objective_positions(Quests.tracked_objective()),
+		Quests.leads(), Vector2.INF)
+	assert_eq(diamonds.filter(func(m: Dictionary) -> bool: return m.kind == "objective").size(), 3,
+		"the compass shows three diamonds")
+	assert_eq(Quests.leads(), [], "no leads while the main quest is tracked")
+	var order: Array = []
+	for i in 3:
+		order.append(Quests.track_next())
+	assert_eq(order, ["quest.test_side_b", "quest.test_side_a", "quest.test_main"], "track_next cycles in tracker order and wraps")
+	assert_eq(tracked_events, order, "quest_tracked for each")
+	assert_true(Quests.track("quest.test_side_a"), "track() an active quest")
+	assert_false(Quests.track("quest.test_nothing"), "but not an unknown one")
+	assert_eq(str(Quests.current_objective().quest_id), "quest.test_side_a", "the objective follows the tracked quest")
+	assert_true((Quests.current_objective().position as Vector3).is_equal_approx(Vector3(40, 1, 0)), "its marker")
+	var marked: Array = Quests.objectives().map(func(o: Dictionary) -> Array: return [o.quest_id, o.tracked])
+	assert_eq(marked, [["quest.test_main", false], ["quest.test_side_b", false], ["quest.test_side_a", true]],
+		"objectives() marks the tracked one")
+	assert_eq(Quests.leads().size(), 3, "the main quest's three markers are the leads")
+	var lines: Dictionary = Tracker.lines_for(Quests.objectives(), false, "", Quests.tracked_id())
+	assert_eq([lines.main_title, lines.main_text, lines.side_title], ["Side A", "Go to A", "The Main Thread"],
+		"the tracker leads with the tracked quest, then the main one")
+	WorldState.set_flag(Quests.done_flag("quest.test_side_a"), true)
+	assert_eq(Quests.tracked_id(), "quest.test_main", "a finished tracked quest hands back to the main quest")
+	# the HUD: the objective marker and T
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	WorldState.flags.erase(Quests.done_flag("quest.test_side_a"))
+	Quests.track("quest.test_main")
+	var layer := CanvasLayer.new()
+	world.add_child(layer)
+	var hud := Hud.new()
+	layer.add_child(hud)
+	await get_tree().process_frame
+	assert_eq(hud.track_next_now(), "Tracking: Side B", "T tracks the next quest and says so")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var place: Dictionary = hud.get_node("ObjectiveMarker").call("placement_now")
+	assert_false(place.is_empty(), "the objective marker shows")
+	if not place.is_empty():
+		assert_true((place.target as Vector3).is_equal_approx(Vector3(-40, 1, 0)), "at the tracked quest's marker")
+	assert_true(hud.message_texts().has("Tracking: Side B"), "the HUD line")
+	p.queue_free()
+
+
+func test_the_tracked_quest_survives_a_save_and_a_fast_travel() -> void:
+	Wux.install()
+	GameSession.persist = true
+	GameSession.level_override = ""
+	GameSession.start_world_for_tests("test.p27.cp_start")
+	GameSession.level_id = Wux.LEVEL
+	var p := spawn_player(Vector3(0, 0.05, 150), 0.0)
+	GameSession.on_level_ready(world, p)
+	_quests()
+	await step_ticks(1)
+	Quests.track("quest.test_side_a")
+	var c := GameSession.take_checkpoint("test")
+	assert_true(bool(c.get("ok", false)), "a checkpoint is written (%s)" % c)
+	assert_eq(str(GameSession.checkpoint_doc.progress.tracked_quest), "quest.test_side_a", "it holds the tracked quest")
+	# quit and Continue: a fresh Quests state, the save's progress back
+	Quests.tracked_quest_id = ""
+	GameSession.progress = {}
+	assert_true(bool(GameSession.continue_valley().ok), "Continue reads the save")
+	GameSession.on_level_ready(world, p)
+	assert_eq(Quests.tracked_quest_id, "quest.test_side_a", "the tracked quest is back after Continue")
+	assert_eq(Quests.tracked_id(), "quest.test_side_a", "and followed")
+	# a fast travel: the checkpoint at the destination carries it over the reload
+	WorldState.set_flag("visited.test.p27.cp_far", true)
+	var t := GameSession.travel_to(Wux.LEVEL, "test.p27.cp_far", "fast_travel")
+	assert_true(bool(t.ok), "the fast travel goes (%s)" % t)
+	assert_eq(GameSession.scene_reloads.back(), "fast_travel", "a reload")
+	Quests.tracked_quest_id = ""
+	GameSession.on_level_ready(world, p)
+	assert_eq(Quests.tracked_quest_id, "quest.test_side_a", "the tracked quest survives the fast travel")
+	assert_eq(GameSession.respawn_id, "test.p27.cp_far", "at the destination")

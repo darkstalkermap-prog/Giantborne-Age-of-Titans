@@ -13,7 +13,7 @@ reference-PC commands below.
 | Frame time | p95 <= 16.7 ms, p99 < 33.3 ms at 1080p, `--graphics=low` (spec) | Reference PC, exported build: owner | **NOT RUN** |
 | GPU render time | Reported separately from CPU (spec §16) | Reference PC: owner. The container has no GPU (software rendering only) | **NOT RUN** |
 | Sim CPU per tick | p95 <= 8 ms in the stress route and the Valley | Container (indicative) and PC | Container: 4.88 ms (stress), 3.37 ms (Valley walk): **met**; after P17b 3.72 ms (stress), at most 6.37 ms in every run of the final balance matrix (three runs at once) and 5.77 ms over the 30-minute run: **met**; P18 on the final code 3.69 ms (stress) and 5.40 ms over the 30-minute run: **met**; P24b's unreachable chase (20 humans chasing a giant in deep water, the throttle and the query budget) 3.9 ms: **met** |
-| Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered; `tools/draw_call_probe.tscn` (the static world) | P17b (container, software GL): the static world at most 93 per view at `low` and 221 at `medium` (was 402 / 584): **met**; with enemies in view the walk's p50 is 256 and its largest view 656 at `low` (was 608 / 1,354): **not met** while about five or more full-rig enemies are in view (about 33 draw calls each; see "Draw calls after P17b"). After P22, re-measured at the M6 gate: the walk's p50 201, p95 251, max 268; the largest view of five districts 253-268: **not met by 4-18 draw calls** (a measured miss: "Draw calls at the M6 gate") |
+| Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered; `tools/draw_call_probe.tscn` (the static world) | P17b (container, software GL): the static world at most 93 per view at `low` and 221 at `medium` (was 402 / 584): **met**; with enemies in view the walk's p50 is 256 and its largest view 656 at `low` (was 608 / 1,354): **not met** while about five or more full-rig enemies are in view (about 33 draw calls each; see "Draw calls after P17b"). After P22, re-measured at the M6 gate: the walk's p50 201, p95 251, max 268; the largest view of five districts 253-268: **not met by 4-18 draw calls** (a measured miss: "Draw calls at the M6 gate"). After P27 (the HUD batched: about 10 draw calls a view instead of about 120): the walk's p50 93, p95 143, max 154, every view at least 96 under: **met** ("Draw calls after P27") |
 | Distant actors | Tier 2 shows a one-box proxy | P04 test; the Valley walk's LOD comparison | Met: every distant member shows its proxy at tier 2 |
 | Active combatants | <= 12 (the director's budget) | P10a tests; P17a bot invariant | 12 in the stress route (its own spawner) and in the Valley walk |
 | Valley load | <= 3 s headless, <= 6 s web | P10b slow test; P18 browser | Headless about 0.3 s (P10b); web in a real browser **NOT RUN**. P18, Chromium with software WebGL on the container's shared CPU (indicative only): New Game to the first checkpoint stored in IndexedDB 14.2 s |
@@ -485,6 +485,38 @@ stage 4 everyone is within the 60 m promotion radius), 10 with nobody promoted (
 the two banners), and 244 drawn as forty rigs. Headless, the same 40 at AI tier 0 cost 3.5-4.3 ms
 per tick at p95 (budget 5 ms); the `--stress-formations` scenario, 40 s: p95 3.69 ms.
 
+### Draw calls after P27 (the HUD)
+
+FOLLOWUPS' row ("Valley views at `low` still pass 250 draw calls") went on to P27 for the HUD, about
+117-120 draw calls of every view at P30's base. Measured under Xvfb with llvmpipe, Godot 4.6's
+Compatibility canvas renderer draws a run of the same kind of command with the same texture as one
+batch: a `StyleBoxFlat` (a triangle array), `draw_circle` and coloured polygons never batch, a
+Label's outline glyphs use another texture than its fill glyphs, each font size has its own glyph
+texture, and a clip rectangle starts a new batch, while plain rectangles (rotated too) and shadowed
+text without an outline batch. P27's `HudKit` (`ui/hud/hud_kit.gd`, `docs/systems/P27.md`) draws
+every panel, bar and shape as rectangles and every text with a drop shadow in one of four sizes, never
+clips, and sorts the HUD into absolute z layers (all rectangles, then each text size, then the edge
+overlays, the death and the help overlays), so a view's HUD is one batch of rectangles plus one per
+text size on screen; `tests/integration/test_hud_layout.gd` checks the rules on the live HUD
+(`HudKit.batch_breakers`). The rendered Valley walk at `low` (Xvfb 640 x 360,
+`--walk-teleport --graphics=low --autoplay=900`, 2,182 frames, 0 errors), the largest view by section:
+
+| Section | P27's base (P30 merged) | After P27 | After P27, the HUD hidden (measurement only) |
+| --- | --- | --- | --- |
+| Barrow | 266 | **154** | 144 |
+| Quarry | 257 | **148** | 138 |
+| Kingsfall | 252 | **143** | 129 |
+| Old Wood | 252 | **142** | 132 |
+| Ruins | 246 | **137** | 127 |
+| Thornwick | 245 | **135** | 125 |
+| Hollow | 242 | **133** | 123 |
+| LOD comparison (25 members, all encounters forced, one fixed view) | 252-255 | **143-147** | 133 |
+| All frames | max 266, p50 203, p95 255 | **max 154, p50 93, p95 143** | max 144, p50 82, p95 133 |
+
+The HUD now costs about 10 draw calls a view (14 with the most text sizes on screen), so every view
+of the walk is under the 250 budget by at least 96: **met** in the container. The far proxies
+(25 one-box proxies in the LOD view) and P39's capture on real hardware remain as they were.
+
 ### The streamed test world (P24a)
 
 The generated 4 x 4 test world (`tools/builders/test_world.gd`, 256 m chunks at 4 m), debug build.
@@ -672,9 +704,11 @@ ms (the max is the first load of a props dependency, the shrine scene), CPU per 
 1. **Sim CPU per tick is within its budget** in the container: p95 4.88 ms in the stress route
    (twelve engaged combatants, debris at its cap) and 3.37 ms on the Valley walk, against 8 ms, in a
    debug build. Real-PC numbers: NOT RUN.
-2. **Draw calls (P22: the actors are merged and fade to boxes by distance).** See "Draw calls after
-   P22": a rig costs about 6 draw calls, and beyond its record's distance one; the Valley walk at
-   `low` is at p50 201, p95 251, max 268 (Thornwick's square with thirteen people). Before P22 (P17b):
+2. **Draw calls (P27: the HUD batched; P22: the actors are merged and fade to boxes by distance).**
+   See "Draw calls after P27": the HUD costs about 10 draw calls a view instead of about 120, and the
+   Valley walk at `low` is at p50 93, p95 143, max 154 - under the budget everywhere. Before it, "Draw
+   calls after P22": a rig costs about 6 draw calls, and beyond its record's distance one; the Valley
+   walk at `low` was at p50 201, p95 251, max 268 (Thornwick's square with thirteen people). Before P22 (P17b):
    the props are merged and faded with the scenery and `low` has no sun shadows, so a
    static view costs at most 93 draw calls at `low` and 221 at `medium`; the walk was at p50 256,
    max 656 at `low`, views with about five or more full-rig enemies over 250 (about 33 each).

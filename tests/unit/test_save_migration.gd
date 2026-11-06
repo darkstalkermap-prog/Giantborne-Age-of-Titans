@@ -132,8 +132,10 @@ func test_a_schema_2_save_round_trips_with_its_tracked_quest() -> void:
 		GameData.get_record("player.giant"))
 	GameSession.respawn_id = "valley.shrine.grove"
 	GameSession.progress = GameSession.default_progress()
-	GameSession.progress.tracked_quest = "quest.village"
 	GameSession.progress.levels_visited = ["level.valley"]
+	# P27: the snapshot takes the tracked quest from Quests.tracked_quest_id (the save's source since
+	# the property exists).
+	Quests.tracked_quest_id = "quest.village"
 	WorldState.set_flag("test.p20.round_trip", 7)
 	WorldState.add_item("item.iron_ingot", 2, "test")
 	var doc := GameSession.snapshot_document("test")

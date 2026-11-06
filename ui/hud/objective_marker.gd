@@ -10,6 +10,11 @@ extends HudWidget
 ## Hud.overlay_keep_out) slides along the edge until the diamond, its arrow and its distance clear
 ## it (HudEdge.clear_of): still INSET_PX inside the edge, still pointing at the objective.
 ## Read API: placement_now(), visible_text(); the geometry is static (placement, edge_point).
+## P27: it follows the tracked quest (Quests.current_objective(): the tracked quest's objective; for
+## a multi-marker stage the marker nearest the giant, while the compass shows them all), and it is
+## drawn by HudKit's rules: the diamond, its outline and the off-screen arrow are turned rectangles
+## on the edge-overlay layer (HudKit.Z_OVERLAY, over every panel and its text), the distance a
+## shadowed label on the layer above.
 
 const INSET_PX := 36.0
 const HALF_SIZE_PX := 11.0
@@ -25,7 +30,8 @@ var _label: Label
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_label = UiKit.label("", 13, COLOR)
+	HudKit.set_z(self, HudKit.Z_OVERLAY)
+	_label = HudKit.label("", HudKit.TEXT, COLOR, HudKit.Z_OVERLAY_TEXT)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.size = Vector2(80, 18)
 	_label.visible = false
@@ -113,15 +119,9 @@ func _draw() -> void:
 		return
 	var c: Vector2 = _place.position
 	var r := HALF_SIZE_PX
-	var pts := PackedVector2Array([c + Vector2(0, -r), c + Vector2(r, 0), c + Vector2(0, r), c + Vector2(-r, 0)])
-	draw_colored_polygon(pts, Color(COLOR.r, COLOR.g, COLOR.b, 0.35))
-	var outline := pts.duplicate()
-	outline.append(pts[0])
-	draw_polyline(outline, COLOR, 2.0)
-	draw_circle(c, 2.0, COLOR)
+	HudKit.draw_diamond(self, c, r, Color(COLOR.r, COLOR.g, COLOR.b, 0.35))
+	HudKit.draw_diamond_outline(self, c, r, COLOR, 2.0)
+	HudKit.draw_dot(self, c, 2.0, COLOR)
 	if not bool(_place.on_screen):
 		var dir: Vector2 = _place.direction
-		var tip := c + dir * (r + 9.0)
-		var side := Vector2(-dir.y, dir.x)
-		draw_colored_polygon(PackedVector2Array([tip, c + dir * (r + 2.0) + side * 5.0,
-			c + dir * (r + 2.0) - side * 5.0]), COLOR)
+		HudKit.draw_pointer(self, c + dir * (r + 9.0), dir, 9.0, 10.0, COLOR)

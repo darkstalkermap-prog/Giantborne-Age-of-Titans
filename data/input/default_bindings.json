@@ -41,7 +41,11 @@
 		"debug_grow": [{"key": "F6"}],
 		"debug_shrink": [{"key": "F7"}],
 		"debug_xp": [{"key": "F8"}],
-		"debug_checkpoint": [{"key": "F9"}]
+		"debug_checkpoint": [{"key": "F9"}],
+		"map": [{"key": "M"}, {"joy_button": "dpad_down"}],
+		"journal": [{"key": "J"}, {"joy_button": "dpad_right"}],
+		"track_next": [{"key": "T"}, {"joy_button": "dpad_left"}],
+		"map_pin": [{"key": "P"}, {"joy_button": "y"}]
 	},
 	"deadzones": {"default": 0.2, "attack_heavy": 0.5, "ability_modifier": 0.5}
 }
