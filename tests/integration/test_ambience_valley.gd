@@ -37,6 +37,7 @@ func after_each() -> void:
 static var _held: Array = []
 
 
+## The Valley's level root (its record's districts) and the giant at `at`, the zone's sets started.
 func _valley(at: Vector3) -> GiantPlayer:
 	if _held.is_empty():
 		for path in Audio.sample_paths_for(VALLEY):

@@ -32,13 +32,13 @@ func after_each() -> void:
 	await super()
 
 
-## The Valley's level root (no scene: its record's districts are what the audio reads) and the
-## giant at `at`; the samples registered and the zone's set started.
 ## The Valley's samples, loaded once for the run: each test's registration (the loading gate the
 ## zone music waits for) then finds them in the resource cache instead of reading ~200 files again.
 static var _held: Array = []
 
 
+## The Valley's level root (no scene: its record's districts are what the audio reads) and the
+## giant at `at`; the samples registered and the zone's set started.
 func _valley(at: Vector3) -> GiantPlayer:
 	if _held.is_empty():
 		for path in Audio.sample_paths_for(VALLEY):
