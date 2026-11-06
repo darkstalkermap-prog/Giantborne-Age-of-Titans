@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.ironway_top",
+	"type": "poi",
+	"display_name": "The Ironway Top",
+	"level": "level.world",
+	"region": "region.stonehold",
+	"kind": "vista",
+	"position_m": [720, 73.7, -540],
+	"radius_m": 50,
+	"xp": 30,
+	"map_icon": "vista",
+	"compass": true,
+	"landmark": "world.stonehold.ironway_top_stone",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 600,
+	"note": "The head of the Ironway: the whole kingdom below."
+}

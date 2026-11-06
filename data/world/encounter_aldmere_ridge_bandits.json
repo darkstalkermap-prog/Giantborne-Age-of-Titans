@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "encounter.aldmere_ridge_bandits",
+	"type": "encounter",
+	"display_name": "Ballista Ridge bandits",
+	"description": "P25 light content (plan M6-M9 §5.10): toll-riders holding Ballista Ridge's empty emplacements; P36 brings the ballistae.",
+	"level": "level.world",
+	"center_m": [772, 61.0, 30],
+	"activate_radius_m": 80,
+	"deactivate_radius_m": 150,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.aldmere.ridge_bandits_rider_1", "definition": "enemy.soldier", "position_m": [764, 60.0, 38], "yaw_deg": 225, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.ridge_bandits_rider_2", "definition": "enemy.soldier", "position_m": [778, 59.2, 42], "yaw_deg": 225, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.ridge_bandits_rider_3", "definition": "enemy.soldier", "position_m": [760, 59.6, 26], "yaw_deg": 225, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.ridge_bandits_rider_4", "definition": "enemy.soldier", "position_m": [774, 62.2, 20], "yaw_deg": 225, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.ridge_bandits_archer_1", "definition": "enemy.archer", "position_m": [788, 60.4, 30], "yaw_deg": 225, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.ridge_bandits_archer_2", "definition": "enemy.archer", "position_m": [784, 62.6, 14], "yaw_deg": 225, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

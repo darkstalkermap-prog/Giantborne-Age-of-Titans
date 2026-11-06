@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "poi.brannock",
+	"type": "poi",
+	"display_name": "Brannock",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "settlement",
+	"position_m": [60, 10.0, 450],
+	"radius_m": 90,
+	"xp": 40,
+	"map_icon": "settlement",
+	"compass": true,
+	"landmark": "world.crownmarch.brannock_walls",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"max_inner_stage": 4,
+	"green_m": [60, 10.0, 565],
+	"note": "A walled market town on the Wend; its giants' green lies outside the south gate."
+}

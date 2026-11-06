@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.titans_bones",
+	"type": "poi",
+	"display_name": "The Titan's Bones",
+	"level": "level.world",
+	"region": "region.drowned_steps",
+	"kind": "landmark",
+	"position_m": [220, 16.7, -260],
+	"radius_m": 80,
+	"xp": 50,
+	"map_icon": "landmark",
+	"compass": true,
+	"landmark": "world.drowned.titans_bones",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The skeleton of a titan 120 m long, ribs like a hall's beams."
+}

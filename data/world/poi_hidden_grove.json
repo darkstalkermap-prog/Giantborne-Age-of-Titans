@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.hidden_grove",
+	"type": "poi",
+	"display_name": "The Hidden Grove",
+	"level": "level.world",
+	"region": "region.greywood",
+	"kind": "ruin",
+	"position_m": [-480, 27.0, -10],
+	"radius_m": 40,
+	"xp": 60,
+	"map_icon": "ruin",
+	"compass": true,
+	"landmark": "world.greywood.grove_stones",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A ring valley beyond the Needle, or beyond the north ridge's rockfall for a giant of stage 5."
+}

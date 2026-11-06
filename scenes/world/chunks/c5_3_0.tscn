@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="1_f6def"]
+[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="2_e36fc"]
+
+[node name="Chunk_5_3_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="world_shrine_aldmere" type="Node3D" parent="Shrines" instance=ExtResource("1_f6def")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 164, 41.66, 216)
+script = ExtResource("2_e36fc")
+world_id = "world.shrine.aldmere"
+shrine_id = "shrine.world_aldmere"
+prompt = "Rest"
+radius_m = 4.0
+priority = 40
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

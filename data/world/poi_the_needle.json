@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.the_needle",
+	"type": "poi",
+	"display_name": "The Needle",
+	"level": "level.world",
+	"region": "region.greywood",
+	"kind": "gate",
+	"position_m": [-430, 27.0, 40],
+	"radius_m": 40,
+	"xp": 30,
+	"map_icon": "gate",
+	"compass": true,
+	"landmark": "world.greywood.needle_wall_west",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A slot canyon 5 m wide through the grove's ridge: it fits a giant of stage 3 or 4, no bigger."
+}

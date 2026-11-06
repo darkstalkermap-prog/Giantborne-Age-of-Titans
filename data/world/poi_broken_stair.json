@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.broken_stair",
+	"type": "poi",
+	"display_name": "The Broken Stair",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "exit",
+	"position_m": [-40, 11.5, 890],
+	"radius_m": 40,
+	"xp": 30,
+	"map_icon": "exit",
+	"compass": true,
+	"landmark": "world.crownmarch.broken_stair_tunnel",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A rubble-sealed stair down to the Valley's Citadel; it opens once the Citadel is breached."
+}

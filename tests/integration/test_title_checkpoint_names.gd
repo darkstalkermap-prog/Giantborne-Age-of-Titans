@@ -9,6 +9,8 @@ extends IntegrationSuite
 
 const FIXTURE_DIR := "res://tests/fixtures/saves/"
 const STAND_IN := "res://scenes/test/flow_test_level.tscn"
+## A level.world scene that does not exist: a build without the world (P25 ships the world).
+const NO_WORLD_SCENE := "res://scenes/world/no_such_world.tscn"
 const SHRINE_SCENE := "res://scenes/world/shrine.tscn"
 const TOAST := preload("res://ui/hud/checkpoint_toast.gd")
 
@@ -137,8 +139,9 @@ func test_the_toast_names_the_checkpoint() -> void:
 func test_skip_is_offered_only_for_a_finished_prologue_while_the_world_exists() -> void:
 	_write_save(_fixture("v1_force_complete"))
 	assert_true(TitleScreen.save_finished_prologue(SaveSlots.read().data), "the completed save finished the prologue")
+	TestFixtures.record_override(GameSession.WORLD_LEVEL_ID, {"scene": NO_WORLD_SCENE})
 	var title := _title()
-	assert_false(GameSession.world_available(), "no world in this build")
+	assert_false(GameSession.world_available(), "no world in this build (simulated)")
 	assert_false(title.skip_available(), "so no skip")
 	title.button("New Game").pressed.emit()
 	assert_false(title.state().skip_choice, "New Game only asks to replace the save")

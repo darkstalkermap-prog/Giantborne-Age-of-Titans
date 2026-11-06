@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "poi.bones_shoulder",
+	"type": "poi",
+	"display_name": "The Titan's Shoulder",
+	"level": "level.world",
+	"region": "region.drowned_steps",
+	"kind": "secret",
+	"position_m": [250, 16.7, -300],
+	"radius_m": 25,
+	"xp": 30,
+	"map_icon": "secret",
+	"compass": false,
+	"landmark": "world.drowned.titan_shoulder",
+	"skyline": false,
+	"min_stage": 6,
+	"reveals_m": 0,
+	"seal": "world.drowned.shoulder_cache",
+	"note": "A chest on the Titan's shoulder, out of reach below stage 6."
+}

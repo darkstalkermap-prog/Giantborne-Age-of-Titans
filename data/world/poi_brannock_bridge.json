@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.brannock_bridge",
+	"type": "poi",
+	"display_name": "Brannock Bridge",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "landmark",
+	"position_m": [60, 10.5, 345],
+	"radius_m": 30,
+	"xp": 10,
+	"map_icon": "landmark",
+	"compass": true,
+	"landmark": "world.crownmarch.brannock_bridge",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The only crossing of the Wend for a giant still small enough to need one."
+}

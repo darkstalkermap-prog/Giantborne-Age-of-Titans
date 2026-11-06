@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.cairn_hidden_grove",
+	"type": "dialogue",
+	"speaker": "Old Kings' Cairn",
+	"description": "An Old Kings' cairn at the Hidden Grove (plan M6-M9 §5.4, decision 33): reading it once gives one attribute point (once-flag reward.cairn.hidden_grove).",
+	"entries": [
+		{"node": "read", "conditions": [{"type": "flag", "flag": "reward.cairn.hidden_grove"}]},
+		{"node": "cairn", "conditions": []}
+	],
+	"nodes": [
+		{"id": "cairn", "text": "A cairn grown over with moss in the hidden grove. Under the moss: 'The small find this place. Remember being small.'", "choices": [{"text": "[Lay a hand on the stones] (+1 attribute point)", "next": "", "effects": {"attribute_points": 1, "once_flag": "reward.cairn.hidden_grove"}}, {"text": "Leave the stones be.", "next": ""}]},
+		{"id": "read", "text": "An Old Kings' cairn. Its strength is already in you.", "choices": [{"text": "[Leave]", "next": ""}]}
+	]
+}

@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "poi.kingsgate_statue",
+	"type": "poi",
+	"display_name": "The Toppled King",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "secret",
+	"position_m": [-345, 11.0, 790],
+	"radius_m": 25,
+	"xp": 20,
+	"map_icon": "secret",
+	"compass": false,
+	"landmark": "world.crownmarch.kingsgate_statue",
+	"skyline": false,
+	"min_stage": 5,
+	"reveals_m": 0,
+	"seal": "world.crownmarch.kingsgate_statue",
+	"note": "A toppled king's statue: heave it (stage 5) for what lies beneath."
+}

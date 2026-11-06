@@ -19,6 +19,8 @@ extends IntegrationSuite
 const LEVEL_A := "level.test_p20_a"
 const LEVEL_B := "level.test_p20_b"
 const STAND_IN := "res://scenes/test/flow_test_level.tscn"
+## A level.world scene that does not exist: a build without the world (P25 ships the world).
+const NO_WORLD_SCENE := "res://scenes/world/no_such_world.tscn"
 const GATED_LEVEL_SOURCE := "extends LevelRoot\nvar ready_now := false\nfunc is_ready() -> bool:\n\treturn ready_now\n"
 
 ## A modal screen that does not pause the game (the map screen fast travel is chosen on, P27).
@@ -400,8 +402,10 @@ func test_continue_on_a_world_save() -> void:
 	assert_eq(GameSession.level_scene_path(), STAND_IN, "its scene")
 	assert_eq(GameSession.respawn_id, "world.cp.kingsgate_shelf", "at the saved checkpoint")
 	assert_true(bool(GameSession.progress.world_entered), "the world was entered")
-	# The same save in a build without the world: back to the Valley, with a message.
+	# The same save in a build without the world (simulated: P25 ships it): back to the Valley,
+	# with a message.
 	TestFixtures.restore_all()
+	TestFixtures.record_override(GameSession.WORLD_LEVEL_ID, {"scene": NO_WORLD_SCENE})
 	GameSession.reset_for_tests()
 	GameSession.persist = true
 	assert_true(SaveSlots.write(_world_save("level.world", "world.cp.kingsgate_shelf")).ok, "written again")

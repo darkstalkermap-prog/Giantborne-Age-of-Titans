@@ -1,0 +1,104 @@
+[gd_scene format=4]
+
+[ext_resource type="PackedScene" path="res://scenes/world/gate_fortified.tscn" id="1_66b76"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="3_add9b"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="4_2c089"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.6, 5, 1.6)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_2"]
+_surfaces = [{
+"aabb": AABB(-1.1, -0.6, -1.1, 2.2, 6.1, 2.2),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/w=="),
+"format": 34359742479,
+"index_count": 72,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 16,
+"vertex_data": PackedByteArray("zcxMvwAAoEDNzEy/zcxMPwAAoEDNzEy/zcxMPwAAoEDNzEw/zcxMvwAAoEDNzEw/zcxMv5qZGb/NzEw/zcxMP5qZGb/NzEw/zcxMP5qZGb/NzEy/zcxMv5qZGb/NzEy/zcyMvwAAsEDNzIy/zcyMPwAAsEDNzIy/zcyMPwAAsEDNzIw/zcyMvwAAsEDNzIw/zcyMvwAAoEDNzIw/zcyMPwAAoEDNzIw/zcyMPwAAoEDNzIy/zcyMvwAAoEDNzIy/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao=")
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_3"]
+_surfaces = [{
+"aabb": AABB(-0.4, 5.6, -0.4, 0.8, 0.8000002, 0.8),
+"attribute_data": PackedByteArray("f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP8="),
+"format": 34359742479,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 8,
+"vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
+
+[node name="Chunk_6_3_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_aldmere_fort_gate" type="StaticBody3D" parent="Props" instance=ExtResource("1_66b76")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138, 58.0645, 161)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.aldmere.fort_gate"
+indestructible = true
+
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
+enabled = false
+start_position = Vector3(0, 0.55, 3.5)
+end_position = Vector3(0, 0.55, -3.5)
+
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
+enabled = false
+navigation_layers = 2
+start_position = Vector3(0, 0.35, 4.5)
+end_position = Vector3(0, 0.35, -4.5)
+
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
+enabled = false
+navigation_layers = 16
+start_position = Vector3(0, 0.2, 7)
+end_position = Vector3(0, 0.2, -7)
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="world_cp_fort_gate" type="Marker3D" parent="Waystones"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138, 55.7445, 201)
+script = ExtResource("3_add9b")
+requires_flags = PackedStringArray()
+display_name = "Fort gate waystone"
+checkpoint_id = "world.cp.fort_gate"
+
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_fort_gate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -0.3, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_fort_gate/Stone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_fort_gate/Stone"]
+mesh = SubResource("ArrayMesh_2")
+
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_fort_gate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -0.3, 0)
+mesh = SubResource("ArrayMesh_3")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

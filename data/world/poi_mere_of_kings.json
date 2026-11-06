@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.mere_of_kings",
+	"type": "poi",
+	"display_name": "The Mere of Kings",
+	"level": "level.world",
+	"region": "region.drowned_steps",
+	"kind": "vista",
+	"position_m": [0, -0.0, -40],
+	"radius_m": 150,
+	"xp": 30,
+	"map_icon": "vista",
+	"compass": true,
+	"landmark": "world.drowned.mere_columns",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The drowned lake of the old kings, its colonnade standing in the water."
+}

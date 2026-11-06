@@ -1,0 +1,1823 @@
+{
+	"schema": "world_layout",
+	"description": "P25 (plan M6-M9 \u00a75.1-\u00a75.5): the frame, terrain, water, roads and skyline landmarks of the 2 x 2 km Old Kingdom. tools/builders/world.gd reads this table and the five region files beside it; tools/world/features.gd turns the features into heights (in this order), tools/world/layout.gd the region elements into chunk content. Positions are [x, z] metres in the world level (x west -> east, z north -> south); heights are metres. Deviations from the plan's coordinates are listed in docs/systems/P25.md.",
+	"frame": {
+		"level_id": "level.world",
+		"grid": [
+			8,
+			8
+		],
+		"chunk_m": 256,
+		"origin_m": [
+			-1024,
+			-1024
+		],
+		"spacing_m": 4,
+		"seed": 2516,
+		"interior_m": 896,
+		"water_level_m": 4.0,
+		"floor_m": 5.0
+	},
+	"noise": {
+		"frequency": 0.0019231,
+		"octaves": 4,
+		"gain": 0.5,
+		"lacunarity": 2.0
+	},
+	"base_blend_m": 120,
+	"regions": [
+		{
+			"id": "region.crownmarch",
+			"rect": [
+				[
+					-896,
+					300
+				],
+				[
+					896,
+					896
+				]
+			],
+			"base_m": 10,
+			"noise_m": 6,
+			"zone": "low",
+			"surface": "soft",
+			"skyline_tint": [
+				0.36,
+				0.42,
+				0.26
+			]
+		},
+		{
+			"id": "region.greywood",
+			"rect": [
+				[
+					-896,
+					-440
+				],
+				[
+					-320,
+					300
+				]
+			],
+			"base_m": 24,
+			"noise_m": 12,
+			"zone": "low",
+			"surface": "soft",
+			"skyline_tint": [
+				0.22,
+				0.31,
+				0.24
+			]
+		},
+		{
+			"id": "region.drowned_steps",
+			"rect": [
+				[
+					-320,
+					-440
+				],
+				[
+					300,
+					300
+				]
+			],
+			"base_m": 7,
+			"noise_m": 5,
+			"zone": "low",
+			"surface": "wet",
+			"skyline_tint": [
+				0.33,
+				0.38,
+				0.34
+			]
+		},
+		{
+			"id": "region.aldmere",
+			"rect": [
+				[
+					300,
+					-440
+				],
+				[
+					896,
+					300
+				]
+			],
+			"base_m": 24,
+			"noise_m": 6,
+			"zone": "low",
+			"surface": "soft",
+			"skyline_tint": [
+				0.4,
+				0.4,
+				0.27
+			]
+		},
+		{
+			"id": "region.stonehold",
+			"rect": [
+				[
+					-896,
+					-896
+				],
+				[
+					896,
+					-440
+				]
+			],
+			"base_m": 78,
+			"noise_m": 12,
+			"zone": "high",
+			"surface": "hard",
+			"skyline_tint": [
+				0.4,
+				0.39,
+				0.36
+			]
+		}
+	],
+	"cliff_band": {
+		"id": "highland_wall",
+		"x": [
+			-896,
+			896
+		],
+		"z": [
+			-470,
+			-430
+		],
+		"face": [
+			-458,
+			-442
+		],
+		"note": "The highland wall: the Stonehold's plateau (zone high) above the lowlands (zone low), a 16 m cliff face inside the band (slopes far over 60 degrees). The Ironway and the Giant's Stair ramps below cut it."
+	},
+	"rim": {
+		"from_m": 896,
+		"run_m": 128,
+		"top_m": 160,
+		"noise_m": 14,
+		"notches": [
+			{
+				"id": "kingsgate_shelf",
+				"rect": [
+					[
+						-335,
+						892
+					],
+					[
+						-265,
+						945
+					]
+				],
+				"floor_m": 46,
+				"wall_m": 5,
+				"walkable": true
+			},
+			{
+				"id": "broken_stair",
+				"rect": [
+					[
+						-62,
+						892
+					],
+					[
+						-18,
+						942
+					]
+				],
+				"floor_m": 14,
+				"wall_m": 5,
+				"walkable": true
+			},
+			{
+				"id": "wend_gap",
+				"rect": [
+					[
+						880,
+						528
+					],
+					[
+						1000,
+						592
+					]
+				],
+				"floor_m": 10,
+				"wall_m": 8,
+				"walkable": false
+			}
+		],
+		"note": "Beyond |x| or |z| = 896 the ground rises to about 160 m over 128 m: no navmesh, blocker walls along the walkable edge (the world scene's Bounds). Notches: the Kingsgate shelf (cut into the rim spur), the Broken Stair and the Wend's gap."
+	},
+	"features": [
+		{
+			"type": "tilt",
+			"id": "drowned_foothills",
+			"rect": [
+				[
+					-320,
+					-440
+				],
+				[
+					300,
+					-150
+				]
+			],
+			"from_z": -190,
+			"to_z": -430,
+			"add_m": 24,
+			"note": "The Drowned Steps rise north of the Mere toward the highland wall (the Giant's Stair's foot stands about 30 m up).",
+			"zone": "low"
+		},
+		{
+			"type": "hill",
+			"id": "fort_hill",
+			"rect": [
+				[
+					555,
+					-250
+				],
+				[
+					745,
+					-90
+				]
+			],
+			"top_m": 60,
+			"apron_m": 300,
+			"profile": "linear",
+			"note": "Fort Aldmere's hill: a 200 x 170 m top at 60 m and a long apron, so the King's Road climbs it at about 11 %."
+		},
+		{
+			"type": "hill",
+			"id": "kingsgate_spur",
+			"rect": [
+				[
+					-370,
+					870
+				],
+				[
+					-230,
+					975
+				]
+			],
+			"top_m": 64,
+			"apron_m": 55,
+			"profile": "smooth",
+			"note": "The rim spur the Kingsgate shelf is cut into.",
+			"mode": "max"
+		},
+		{
+			"type": "hill",
+			"id": "shepherds_hill",
+			"circle": [
+				480,
+				760,
+				34
+			],
+			"rise_m": 20,
+			"apron_m": 95,
+			"profile": "smooth"
+		},
+		{
+			"type": "hill",
+			"id": "standing_stones_crest",
+			"circle": [
+				-300,
+				-600,
+				55
+			],
+			"top_m": 96,
+			"apron_m": 110,
+			"profile": "smooth"
+		},
+		{
+			"type": "hill",
+			"id": "moot_rise",
+			"circle": [
+				0,
+				-745,
+				78
+			],
+			"top_m": 95,
+			"apron_m": 90,
+			"profile": "smooth"
+		},
+		{
+			"type": "hill",
+			"id": "great_pines_knoll",
+			"circle": [
+				-560,
+				-260,
+				45
+			],
+			"rise_m": 7,
+			"apron_m": 60,
+			"profile": "smooth"
+		},
+		{
+			"type": "hill",
+			"id": "barrow_vault_mound",
+			"circle": [
+				-690,
+				768,
+				18
+			],
+			"rise_m": 14,
+			"apron_m": 30,
+			"profile": "smooth"
+		},
+		{
+			"type": "mounds",
+			"id": "barrow_mounds",
+			"rise_m": 5,
+			"radius_m": 16,
+			"points": [
+				[
+					-700,
+					700
+				],
+				[
+					-648,
+					690
+				],
+				[
+					-615,
+					728
+				],
+				[
+					-662,
+					742
+				],
+				[
+					-725,
+					730
+				],
+				[
+					-600,
+					690
+				]
+			]
+		},
+		{
+			"type": "ridge",
+			"id": "northwest_ridge",
+			"points": [
+				[
+					-900,
+					-240
+				],
+				[
+					-835,
+					-300
+				],
+				[
+					-760,
+					-385
+				],
+				[
+					-690,
+					-430
+				],
+				[
+					-620,
+					-445
+				]
+			],
+			"rise_m": 24,
+			"half_m": 26,
+			"fall_m": 46,
+			"note": "The Greywood's north-west ridge (to about 45-55 m); the Troll Den's bowl is cut into its south flank."
+		},
+		{
+			"type": "ridge",
+			"id": "ballista_ridge",
+			"points": [
+				[
+					728,
+					78
+				],
+				[
+					785,
+					22
+				],
+				[
+					842,
+					-40
+				]
+			],
+			"rise_m": 16,
+			"half_m": 12,
+			"fall_m": 18,
+			"note": "Ballista Ridge over the King's Road; the eyrie ledge is on its north-east face."
+		},
+		{
+			"type": "ridge",
+			"id": "greywood_east_ridge",
+			"points": [
+				[
+					-372,
+					-380
+				],
+				[
+					-395,
+					-250
+				],
+				[
+					-380,
+					-150
+				]
+			],
+			"rise_m": 14,
+			"half_m": 16,
+			"fall_m": 40
+		},
+		{
+			"type": "bowl",
+			"id": "troll_den",
+			"circle": [
+				-760,
+				-330,
+				46
+			],
+			"floor_m": 27,
+			"wall_m": 14,
+			"mouth": [
+				-705,
+				-290
+			],
+			"mouth_half_m": 22,
+			"note": "The Troll Den: a cave-mouth bowl (r 45 m) in the north-west ridge, open to the south-east (the checkpoint side)."
+		},
+		{
+			"type": "ring_ridge",
+			"id": "hidden_grove",
+			"center": [
+				-480,
+				-10
+			],
+			"floor_r": 42,
+			"inner_r": 48,
+			"outer_r": 82,
+			"outer_wall_m": 14,
+			"top_m": 50,
+			"floor_m": 27,
+			"cuts": [
+				{
+					"id": "the_needle",
+					"to": [
+						-415,
+						55
+					],
+					"half_m": 9,
+					"note": "The Needle's trench: two rock walls (the layout's needle walls) leave a 5.0 m slot."
+				},
+				{
+					"id": "north_ridge_rockfall",
+					"to": [
+						-512,
+						-88
+					],
+					"half_m": 7,
+					"note": "The north ridge's rockfall (heave, stage 5) fills this cut."
+				}
+			],
+			"note": "The Hidden Grove: a 45 m ring ridge around a hidden floor, entered by the Needle (stages 3-4) or through the north ridge's rockfall (stage 5)."
+		},
+		{
+			"type": "trench",
+			"id": "raiders_hollow",
+			"points": [
+				[
+					-175,
+					548
+				],
+				[
+					-118,
+					556
+				],
+				[
+					-62,
+					566
+				]
+			],
+			"depth_m": 6,
+			"half_m": 22,
+			"wall_m": 20,
+			"note": "The Raiders' Hollow: a ravine camp below the fields."
+		},
+		{
+			"type": "rim"
+		},
+		{
+			"type": "flatten",
+			"id": "stair_top",
+			"circle": [
+				0,
+				-562,
+				26
+			],
+			"y": "auto",
+			"blend_m": 20
+		},
+		{
+			"type": "flatten",
+			"id": "ironway_top",
+			"circle": [
+				720,
+				-575,
+				34
+			],
+			"y": "auto",
+			"blend_m": 24
+		},
+		{
+			"type": "ramp",
+			"id": "ironway",
+			"from": [
+				720,
+				-392
+			],
+			"to": [
+				720,
+				-556
+			],
+			"from_y": "auto",
+			"to_y": "auto",
+			"half_m": 30,
+			"side_m": 14,
+			"note": "The Ironway: the highlands' long road up through the wall (12-13 degrees, 60 m wide)."
+		},
+		{
+			"type": "ramp",
+			"id": "giants_stair",
+			"from": [
+				0,
+				-421
+			],
+			"to": [
+				0,
+				-528
+			],
+			"from_y": "auto",
+			"to_y": "auto",
+			"half_m": 30,
+			"side_m": 8,
+			"note": "The Giant's Stair: a 25 degree ramp with stair visuals; a size_gate_6 wall at its foot and titan gate-6 regions on it."
+		},
+		{
+			"type": "ramp",
+			"id": "kingsgate_ramp",
+			"from": [
+				-300,
+				780
+			],
+			"to": [
+				-300,
+				902
+			],
+			"from_y": 12,
+			"to_y": 46,
+			"half_m": 16,
+			"side_m": 50,
+			"note": "The shelf's ramp: 120 m at 15.6 degrees from the shelf down to Kingsgate."
+		},
+		{
+			"type": "flatten",
+			"id": "kingsgate_shelf",
+			"rect": [
+				[
+					-335,
+					897
+				],
+				[
+					-265,
+					945
+				]
+			],
+			"y": 46,
+			"blend_m": 0
+		},
+		{
+			"type": "flatten",
+			"id": "fort_top",
+			"rect": [
+				[
+					555,
+					-250
+				],
+				[
+					745,
+					-90
+				]
+			],
+			"y": 60,
+			"blend_m": 0
+		},
+		{
+			"type": "flatten",
+			"id": "moot_ring",
+			"circle": [
+				0,
+				-745,
+				72
+			],
+			"y": 95,
+			"blend_m": 10
+		},
+		{
+			"type": "flatten",
+			"id": "skarn",
+			"rect": [
+				[
+					360,
+					-720
+				],
+				[
+					520,
+					-600
+				]
+			],
+			"y": 76,
+			"blend_m": 30
+		},
+		{
+			"type": "flatten",
+			"id": "harroks_hall",
+			"rect": [
+				[
+					-615,
+					-755
+				],
+				[
+					-505,
+					-685
+				]
+			],
+			"y": "auto",
+			"blend_m": 30
+		},
+		{
+			"type": "flatten",
+			"id": "moot_battery",
+			"circle": [
+				-190,
+				-640,
+				40
+			],
+			"y": "auto",
+			"blend_m": 24
+		},
+		{
+			"type": "flatten",
+			"id": "cairnlands",
+			"circle": [
+				120,
+				-580,
+				40
+			],
+			"y": "auto",
+			"blend_m": 30
+		},
+		{
+			"type": "flatten",
+			"id": "brannock",
+			"rect": [
+				[
+					-30,
+					375
+				],
+				[
+					150,
+					525
+				]
+			],
+			"y": 10,
+			"blend_m": 26
+		},
+		{
+			"type": "flatten",
+			"id": "brannock_green",
+			"circle": [
+				60,
+				565,
+				32
+			],
+			"y": 10,
+			"blend_m": 20
+		},
+		{
+			"type": "flatten",
+			"id": "millford",
+			"rect": [
+				[
+					-440,
+					595
+				],
+				[
+					-320,
+					685
+				]
+			],
+			"y": "auto",
+			"blend_m": 30
+		},
+		{
+			"type": "flatten",
+			"id": "kingsgate",
+			"circle": [
+				-300,
+				770,
+				36
+			],
+			"y": 12,
+			"blend_m": 30
+		},
+		{
+			"type": "flatten",
+			"id": "toll_fort",
+			"rect": [
+				[
+					420,
+					295
+				],
+				[
+					500,
+					385
+				]
+			],
+			"y": "auto",
+			"blend_m": 24
+		},
+		{
+			"type": "flatten",
+			"id": "war_camp",
+			"circle": [
+				520,
+				120,
+				70
+			],
+			"y": "auto",
+			"blend_m": 30
+		},
+		{
+			"type": "flatten",
+			"id": "woodcutters_camp",
+			"circle": [
+				-420,
+				220,
+				40
+			],
+			"y": "auto",
+			"blend_m": 24
+		},
+		{
+			"type": "flatten",
+			"id": "hollowmere",
+			"circle": [
+				-640,
+				-40,
+				75
+			],
+			"y": "auto",
+			"blend_m": 30
+		},
+		{
+			"type": "flatten",
+			"id": "titans_bones",
+			"circle": [
+				220,
+				-262,
+				75
+			],
+			"y": "auto",
+			"blend_m": 30
+		},
+		{
+			"type": "flatten",
+			"id": "aldmere_shrine",
+			"circle": [
+				420,
+				-40,
+				26
+			],
+			"y": "auto",
+			"blend_m": 20
+		},
+		{
+			"type": "flatten",
+			"id": "deserters_mill",
+			"circle": [
+				440,
+				220,
+				26
+			],
+			"y": "auto",
+			"blend_m": 20
+		},
+		{
+			"type": "flatten",
+			"id": "greywood_shrine",
+			"circle": [
+				-540,
+				110,
+				26
+			],
+			"y": "auto",
+			"blend_m": 20
+		},
+		{
+			"type": "flatten",
+			"id": "standing_stones",
+			"circle": [
+				-300,
+				-600,
+				42
+			],
+			"y": "auto",
+			"blend_m": 16
+		},
+		{
+			"type": "flatten",
+			"id": "barrow_vault_site",
+			"circle": [
+				-690,
+				762,
+				14
+			],
+			"y": "auto",
+			"blend_m": 12
+		},
+		{
+			"type": "flatten",
+			"id": "kings_armoury_site",
+			"circle": [
+				600,
+				-292,
+				15
+			],
+			"y": "auto",
+			"blend_m": 14
+		},
+		{
+			"type": "flatten",
+			"id": "kingsgate_statue_site",
+			"circle": [
+				-345,
+				790,
+				14
+			],
+			"y": "auto",
+			"blend_m": 10
+		},
+		{
+			"type": "flatten",
+			"id": "old_root_site",
+			"circle": [
+				-700,
+				120,
+				18
+			],
+			"y": "auto",
+			"blend_m": 12
+		},
+		{
+			"type": "flatten",
+			"id": "bell_tower_shore",
+			"circle": [
+				-180,
+				-205,
+				16
+			],
+			"y": "auto",
+			"blend_m": 10
+		},
+		{
+			"type": "terraces",
+			"id": "sunken_steps",
+			"rect": [
+				[
+					-250,
+					18
+				],
+				[
+					-110,
+					190
+				]
+			],
+			"axis": "z",
+			"steps": [
+				[
+					150,
+					190,
+					15.0
+				],
+				[
+					118,
+					150,
+					12.5
+				],
+				[
+					86,
+					118,
+					10.0
+				],
+				[
+					54,
+					86,
+					7.5
+				],
+				[
+					18,
+					54,
+					5.0
+				]
+			],
+			"riser_m": 8,
+			"blend_m": 24,
+			"note": "The Sunken Steps: five giant terraces stepping north into the Mere (2.5 m risers, each a 8 m ramp a giant walks)."
+		},
+		{
+			"type": "basin",
+			"id": "mere",
+			"ellipse": [
+				0,
+				-40,
+				190,
+				150
+			],
+			"bed_m": 1.0,
+			"edge_from": 0.84,
+			"edge_y": 4.7,
+			"shore_m": 34,
+			"surface_m": 4.0,
+			"note": "The Mere of Kings: shallows 3 m deep (any giant wades; humans and wolves stay out)."
+		},
+		{
+			"type": "channel",
+			"id": "deep_channel",
+			"center": [
+				40,
+				-90
+			],
+			"within": "mere",
+			"profile": [
+				[
+					0,
+					8.6
+				],
+				[
+					48,
+					8.0
+				],
+				[
+					80,
+					-8.0
+				],
+				[
+					93,
+					-8.0
+				],
+				[
+					116,
+					1.0
+				]
+			],
+			"gate_r": [
+				58,
+				112
+			],
+			"gate_bit": 64,
+			"note": "The island (r about 55, 8 m) inside the deep channel (bed -8 m): titan gate-5 regions over r 58-112 and a size_gate_5 ring at its outer edge."
+		},
+		{
+			"type": "ramp",
+			"id": "causeway",
+			"from": [
+				16,
+				120
+			],
+			"to": [
+				22,
+				30
+			],
+			"from_y": 5.2,
+			"to_y": 5.0,
+			"half_m": 8,
+			"side_m": 5,
+			"note": "The causeway from the south shore to the sunken vault (16 m wide at 5 m); beyond the vault it is broken."
+		},
+		{
+			"type": "basin",
+			"id": "bell_pool",
+			"ellipse": [
+				-200,
+				-240,
+				30,
+				30
+			],
+			"bed_m": 2.2,
+			"edge_from": 0.6,
+			"edge_y": 4.7,
+			"shore_m": 16,
+			"surface_m": 4.0,
+			"note": "The pool round the drowned bell tower."
+		},
+		{
+			"type": "basin",
+			"id": "hollowmere_pond",
+			"ellipse": [
+				-640,
+				-46,
+				34,
+				30
+			],
+			"bed_m": -3.0,
+			"edge_from": 0.55,
+			"edge_y": 0.6,
+			"shore_m": 14,
+			"surface_m": -0.3,
+			"relative": true,
+			"note": "Hollowmere's black pond: 3 m deep below the settlement's ground (heights relative to the pad)."
+		},
+		{
+			"type": "river",
+			"id": "wend",
+			"points": [
+				[
+					30,
+					96
+				],
+				[
+					30,
+					152
+				],
+				[
+					22,
+					230
+				],
+				[
+					18,
+					290
+				],
+				[
+					32,
+					328
+				],
+				[
+					60,
+					343
+				],
+				[
+					128,
+					343
+				],
+				[
+					190,
+					356
+				],
+				[
+					268,
+					396
+				],
+				[
+					450,
+					468
+				],
+				[
+					700,
+					520
+				],
+				[
+					896,
+					560
+				],
+				[
+					990,
+					562
+				]
+			],
+			"bed_m": -2.0,
+			"head_bed_m": 1.2,
+			"head_m": [
+				70,
+				125
+			],
+			"half_bed_m": 3,
+			"bank_m": 26,
+			"surface_m": 4.0,
+			"gate_from_m": 120,
+			"gate_d_m": 13,
+			"gate_bit": 32,
+			"wall_d_m": 12.5,
+			"bridges": [
+				{
+					"id": "brannock_bridge",
+					"rect": [
+						[
+							52,
+							318
+						],
+						[
+							68,
+							370
+						]
+					]
+				}
+			],
+			"note": "The Wend: from the Mere's shallow outlet (a ford where the Mere Road crosses) to the east rim, 6 m deep and about 30 m wide; size_gate_4 walls on both banks and titan gate-4 regions on its bed from 120 m on, except at Brannock Bridge."
+		},
+		{
+			"type": "ramp",
+			"id": "brannock_bridge",
+			"from": [
+				60,
+				318
+			],
+			"to": [
+				60,
+				372
+			],
+			"from_y": 10.6,
+			"to_y": 10.6,
+			"half_m": 7,
+			"side_m": 2,
+			"note": "Brannock Bridge's deck: the only stage-3 crossing of the deep Wend (the bridge visual stands over it)."
+		},
+		{
+			"type": "roads"
+		}
+	],
+	"roads": [
+		{
+			"id": "shelf_ramp",
+			"name": "The Kingsgate ramp",
+			"width_m": 30,
+			"carve": false,
+			"points": [
+				[
+					-300,
+					902
+				],
+				[
+					-300,
+					780
+				]
+			]
+		},
+		{
+			"id": "kings_road",
+			"name": "The King's Road",
+			"width_m": 18,
+			"points": [
+				[
+					-300,
+					780
+				],
+				[
+					-220,
+					712
+				],
+				[
+					-250,
+					640
+				],
+				[
+					-150,
+					638
+				],
+				[
+					-60,
+					582
+				],
+				[
+					60,
+					528
+				],
+				[
+					60,
+					450
+				],
+				[
+					60,
+					380
+				],
+				[
+					60,
+					343
+				],
+				[
+					60,
+					312
+				],
+				[
+					130,
+					300
+				],
+				[
+					200,
+					312
+				],
+				[
+					330,
+					335
+				],
+				[
+					420,
+					372
+				],
+				[
+					500,
+					372
+				],
+				[
+					548,
+					322
+				],
+				[
+					545,
+					232
+				],
+				[
+					522,
+					160
+				],
+				[
+					520,
+					120
+				],
+				[
+					578,
+					32
+				],
+				[
+					622,
+					-40
+				],
+				[
+					650,
+					-88
+				]
+			]
+		},
+		{
+			"id": "millford_spur",
+			"name": "Millford lane",
+			"width_m": 14,
+			"points": [
+				[
+					-250,
+					640
+				],
+				[
+					-318,
+					640
+				],
+				[
+					-380,
+					640
+				]
+			]
+		},
+		{
+			"id": "woodway",
+			"name": "The Woodway",
+			"width_m": 14,
+			"points": [
+				[
+					-380,
+					640
+				],
+				[
+					-430,
+					540
+				],
+				[
+					-470,
+					420
+				],
+				[
+					-452,
+					300
+				],
+				[
+					-420,
+					222
+				],
+				[
+					-478,
+					162
+				],
+				[
+					-540,
+					112
+				],
+				[
+					-582,
+					62
+				],
+				[
+					-604,
+					28
+				]
+			]
+		},
+		{
+			"id": "needle_path",
+			"name": "The Needle path",
+			"width_m": 12,
+			"points": [
+				[
+					-472,
+					154
+				],
+				[
+					-438,
+					124
+				],
+				[
+					-405,
+					98
+				],
+				[
+					-398,
+					72
+				]
+			]
+		},
+		{
+			"id": "mere_road",
+			"name": "The Mere Road",
+			"width_m": 14,
+			"points": [
+				[
+					60,
+					312
+				],
+				[
+					86,
+					268
+				],
+				[
+					86,
+					212
+				],
+				[
+					62,
+					172
+				],
+				[
+					30,
+					150
+				],
+				[
+					-60,
+					152
+				],
+				[
+					-128,
+					150
+				],
+				[
+					-180,
+					192
+				]
+			]
+		},
+		{
+			"id": "mere_road_east",
+			"name": "The Mere Road",
+			"width_m": 14,
+			"points": [
+				[
+					62,
+					172
+				],
+				[
+					130,
+					122
+				],
+				[
+					200,
+					42
+				],
+				[
+					226,
+					-40
+				],
+				[
+					236,
+					-150
+				],
+				[
+					262,
+					-215
+				],
+				[
+					262,
+					-310
+				],
+				[
+					150,
+					-350
+				],
+				[
+					60,
+					-398
+				],
+				[
+					0,
+					-421
+				]
+			]
+		},
+		{
+			"id": "ironway",
+			"name": "The Ironway",
+			"width_m": 16,
+			"points": [
+				[
+					650,
+					-88
+				],
+				[
+					700,
+					-66
+				],
+				[
+					792,
+					-118
+				],
+				[
+					792,
+					-300
+				],
+				[
+					720,
+					-392
+				]
+			]
+		},
+		{
+			"id": "stair_road",
+			"name": "The Stair Road",
+			"width_m": 14,
+			"points": [
+				[
+					-70,
+					-660
+				],
+				[
+					-30,
+					-600
+				],
+				[
+					0,
+					-545
+				],
+				[
+					0,
+					-530
+				]
+			]
+		},
+		{
+			"id": "watch_lane",
+			"name": "Watch lane",
+			"width_m": 12,
+			"points": [
+				[
+					60,
+					528
+				],
+				[
+					200,
+					600
+				],
+				[
+					350,
+					700
+				],
+				[
+					462,
+					752
+				]
+			]
+		},
+		{
+			"id": "barrow_lane",
+			"name": "Barrow lane",
+			"width_m": 12,
+			"points": [
+				[
+					-380,
+					640
+				],
+				[
+					-500,
+					688
+				],
+				[
+					-628,
+					712
+				]
+			]
+		},
+		{
+			"id": "stair_lane",
+			"name": "Broken Stair lane",
+			"width_m": 12,
+			"points": [
+				[
+					-300,
+					780
+				],
+				[
+					-170,
+					842
+				],
+				[
+					-40,
+					884
+				]
+			]
+		},
+		{
+			"id": "falls_lane",
+			"name": "Falls lane",
+			"width_m": 12,
+			"points": [
+				[
+					462,
+					752
+				],
+				[
+					640,
+					690
+				],
+				[
+					800,
+					632
+				],
+				[
+					862,
+					600
+				]
+			]
+		},
+		{
+			"id": "ironway_high",
+			"name": "The Ironway",
+			"width_m": 16,
+			"points": [
+				[
+					720,
+					-556
+				],
+				[
+					600,
+					-602
+				],
+				[
+					520,
+					-632
+				],
+				[
+					440,
+					-640
+				],
+				[
+					300,
+					-668
+				],
+				[
+					100,
+					-680
+				],
+				[
+					-70,
+					-660
+				],
+				[
+					-190,
+					-640
+				],
+				[
+					-300,
+					-662
+				],
+				[
+					-430,
+					-672
+				],
+				[
+					-560,
+					-700
+				]
+			]
+		},
+		{
+			"id": "ironway_ramp",
+			"name": "The Ironway",
+			"width_m": 60,
+			"carve": false,
+			"points": [
+				[
+					720,
+					-392
+				],
+				[
+					720,
+					-556
+				]
+			]
+		},
+		{
+			"id": "giants_stair",
+			"name": "The Giant's Stair",
+			"width_m": 60,
+			"carve": false,
+			"min_stage": 6,
+			"points": [
+				[
+					0,
+					-421
+				],
+				[
+					0,
+					-530
+				]
+			]
+		},
+		{
+			"id": "hollowmere_ride",
+			"name": "Hollowmere ride",
+			"width_m": 24,
+			"carve": false,
+			"ride": true,
+			"points": [
+				[
+					-604,
+					28
+				],
+				[
+					-650,
+					42
+				],
+				[
+					-730,
+					12
+				],
+				[
+					-736,
+					-110
+				],
+				[
+					-700,
+					-200
+				],
+				[
+					-600,
+					-252
+				]
+			]
+		},
+		{
+			"id": "den_ride",
+			"name": "Den ride",
+			"width_m": 24,
+			"carve": false,
+			"ride": true,
+			"points": [
+				[
+					-600,
+					-252
+				],
+				[
+					-652,
+					-276
+				],
+				[
+					-705,
+					-290
+				]
+			]
+		},
+		{
+			"id": "grove_ride",
+			"name": "Grove ride",
+			"width_m": 20,
+			"carve": false,
+			"ride": true,
+			"points": [
+				[
+					-512,
+					-92
+				],
+				[
+					-540,
+					-170
+				],
+				[
+					-592,
+					-244
+				]
+			]
+		},
+		{
+			"id": "old_root_ride",
+			"name": "Old root ride",
+			"width_m": 20,
+			"carve": false,
+			"ride": true,
+			"points": [
+				[
+					-582,
+					62
+				],
+				[
+					-640,
+					95
+				],
+				[
+					-688,
+					116
+				]
+			]
+		}
+	],
+	"road_rules": {
+		"grade_max": 0.12,
+		"smooth_m": 40,
+		"blend_m": 12,
+		"sample_m": 4,
+		"node_every_m": 40
+	},
+	"beacons": [
+		{
+			"id": "world.crownmarch.kingsgate_beacon",
+			"flag": "world.kingsgate.lit",
+			"top": [
+				-255,
+				750
+			],
+			"above_m": 31
+		},
+		{
+			"id": "world.crownmarch.watch_beacon",
+			"flag": "world.shepherds_watch.lit",
+			"top": [
+				472,
+				770
+			],
+			"above_m": 15
+		}
+	],
+	"index_edges": [
+		{
+			"id": "the_needle",
+			"note": "The Needle's slot: no titan navmesh (5.0 m); the world bot walks it in a straight line at stages 3-4.",
+			"direct": true,
+			"max_stage": 4,
+			"width_m": 5,
+			"points": [
+				[
+					-398,
+					72
+				],
+				[
+					-406,
+					64
+				],
+				[
+					-449,
+					21
+				],
+				[
+					-480,
+					-10
+				]
+			]
+		},
+		{
+			"id": "grove_rockfall",
+			"note": "The Hidden Grove's north-ridge rockfall (heave, stage 5).",
+			"min_stage": 5,
+			"width_m": 14,
+			"points": [
+				[
+					-480,
+					-10
+				],
+				[
+					-505,
+					-70
+				],
+				[
+					-512,
+					-92
+				]
+			]
+		}
+	]
+}

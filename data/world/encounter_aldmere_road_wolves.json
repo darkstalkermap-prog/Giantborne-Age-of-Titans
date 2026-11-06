@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.aldmere_road_wolves",
+	"type": "encounter",
+	"display_name": "Aldmere road wolves",
+	"description": "P25 light content (plan M6-M9 §5.10): a wolf pack on the King's Road below the war camp; P36 replaces it.",
+	"level": "level.world",
+	"center_m": [560, 27.4, 200],
+	"activate_radius_m": 80,
+	"deactivate_radius_m": 150,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.aldmere.road_wolves_wolf_1", "definition": "enemy.wolf", "position_m": [552, 30.8, 194], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.road_wolves_wolf_2", "definition": "enemy.wolf", "position_m": [566, 29.5, 192], "yaw_deg": 20, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.road_wolves_wolf_3", "definition": "enemy.wolf", "position_m": [556, 25.3, 208], "yaw_deg": 340, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.road_wolves_wolf_4", "definition": "enemy.wolf", "position_m": [570, 24.6, 206], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

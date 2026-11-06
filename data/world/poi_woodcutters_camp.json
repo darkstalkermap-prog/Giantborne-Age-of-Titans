@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.woodcutters_camp",
+	"type": "poi",
+	"display_name": "The Woodcutters' Camp",
+	"level": "level.world",
+	"region": "region.greywood",
+	"kind": "camp",
+	"position_m": [-420, 23.0, 220],
+	"radius_m": 50,
+	"xp": 30,
+	"map_icon": "camp",
+	"compass": true,
+	"landmark": "world.greywood.woodcutters_camp",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A wrecked camp of woodcutters, held by bandits."
+}

@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.troll_den",
+	"type": "poi",
+	"display_name": "The Troll Den",
+	"level": "level.world",
+	"region": "region.greywood",
+	"kind": "lair",
+	"position_m": [-760, 27.0, -330],
+	"radius_m": 70,
+	"xp": 40,
+	"map_icon": "lair",
+	"compass": true,
+	"landmark": "world.greywood.troll_den_wall",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A cave-mouth bowl in the north-west ridge."
+}

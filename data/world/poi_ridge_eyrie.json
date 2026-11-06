@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "poi.ridge_eyrie",
+	"type": "poi",
+	"display_name": "The Ridge Eyrie",
+	"level": "level.world",
+	"region": "region.aldmere",
+	"kind": "secret",
+	"position_m": [810, 63.6, -10],
+	"radius_m": 25,
+	"xp": 30,
+	"map_icon": "secret",
+	"compass": false,
+	"landmark": "world.aldmere.eyrie_spire",
+	"skyline": false,
+	"min_stage": 6,
+	"reveals_m": 0,
+	"seal": "world.aldmere.eyrie_cache",
+	"note": "A ledge on the ridge's spire, out of reach below stage 6."
+}

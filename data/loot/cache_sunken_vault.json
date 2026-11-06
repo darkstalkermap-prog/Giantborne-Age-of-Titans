@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "loot.cache_sunken_vault",
+	"type": "loot_table",
+	"display_name": "The drowned kings' vault",
+	"description": "P25 (plan M6-M9 §5.4, §5.8): the cache at poi.sunken_vault - 2 iron, once (the cache's world id pays once).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{"item": "item.iron_ingot", "count": 2}
+	]
+}

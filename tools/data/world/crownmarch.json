@@ -1,0 +1,86 @@
+{
+	"schema": "world_region_layout",
+	"region": "region.crownmarch",
+	"description": "P25: the Crownmarch's skeleton (plan M6-M9 §5.4): the arrival on the Kingsgate shelf, Kingsgate's shrine and beacon, the Broken Stair, the POI landmarks, Brannock's walls, hall and green, Brannock Bridge, the toll-riders' palisade, Shepherd's Watch, the Wend Falls, waystones, caches, the two unsealed cairns and the seals of the two sealed places. P29 adds the settlements' detail, the people, the quests and the encounters.",
+	"elements": [
+		{"kind": "ruin", "id": "world.crownmarch.kings_door_tunnel", "style": "tunnel", "pos": [-300, 943], "yaw": 0, "size": [14, 16, 6], "poi": "poi.kingsgate_shelf", "landmark": true, "quest_critical": true},
+		{"kind": "ruin", "id": "world.crownmarch.kingsgate_arch", "style": "arch", "pos": [-300, 806], "yaw": 0, "size": [38, 15, 4], "thick": 3},
+		{"kind": "beacon", "id": "world.crownmarch.kingsgate_beacon", "pos": [-255, 750], "size": [8, 31], "poi": "poi.kingsgate_beacon", "landmark": true, "skyline": true, "quest_critical": true, "quest_target": true},
+		{"kind": "ruin", "id": "world.crownmarch.broken_stair_tunnel", "style": "tunnel", "pos": [-40, 944], "yaw": 0, "size": [14, 12, 6], "poi": "poi.broken_stair", "landmark": true},
+		{"kind": "stair_visual", "id": "world.crownmarch.broken_stair_steps", "pos": [-40, 918], "from": [-40, 900], "to": [-40, 936], "width": 22, "steps": 6, "riser_m": 1.2},
+		{"kind": "ruin", "id": "world.crownmarch.broken_stair_rubble", "style": "rubble", "pos": [-40, 936], "size": [18, 9, 8], "hidden_when_flag": "world.citadel.breached"},
+		{"kind": "hall", "id": "world.crownmarch.millford_mill", "style": "mill", "pos": [-338, 662], "yaw": 90, "size": [14, 9, 10], "poi": "poi.millford", "landmark": true},
+		{"kind": "house", "id": "world.crownmarch.millford_barn", "style": "stone", "pos": [-414, 616], "yaw": 0, "size": [16, 7, 10]},
+		{"kind": "field", "id": "world.crownmarch.millford_field_1", "pos": [-430, 690], "yaw": 0, "size": [56, 0.6, 36], "style": "wheat"},
+		{"kind": "field", "id": "world.crownmarch.millford_field_2", "pos": [-330, 705], "yaw": 10, "size": [60, 0.6, 30], "style": "barley"},
+		{"kind": "field", "id": "world.crownmarch.millford_field_3", "pos": [-445, 575], "yaw": -5, "size": [50, 0.6, 34], "style": "green"},
+		{"kind": "green", "id": "world.crownmarch.millford_green", "pos": [-386, 646], "radius": 16},
+		{"kind": "tent", "id": "world.crownmarch.raiders_camp", "style": "raiders", "pos": [-118, 556], "count": 6, "radius": 18, "size": [5, 3.2, 6], "poi": "poi.raiders_hollow", "landmark": true},
+		{"kind": "column", "id": "world.crownmarch.barrow_slabs", "style": "slab", "pos": [-650, 718], "points": [[-670, 700], [-640, 712], [-616, 705], [-655, 742], [-692, 722], [-603, 732], [-628, 690]], "size": [3, 8], "poi": "poi.barrow_fields", "landmark": true},
+		{"kind": "ruin", "id": "world.crownmarch.barrow_vault", "style": "vault", "pos": [-690, 766], "yaw": 0, "size": [18, 12, 16], "thick": 1.5, "poi": "poi.barrow_vault"},
+		{"kind": "wall", "id": "world.crownmarch.brannock_walls", "style": "stone", "pos": [60, 450], "points": [[-20, 385], [140, 385], [140, 515], [-20, 515], [-20, 385]], "height": 8, "thick": 2.5, "towers": true, "tower_d": 7, "gaps": [[60, 385, 18], [60, 515, 18]], "poi": "poi.brannock", "landmark": true, "skyline": true},
+		{"kind": "hall", "id": "world.crownmarch.edda_hall", "style": "hall", "pos": [102, 430], "yaw": 0, "size": [26, 12, 14], "quest_critical": true},
+		{"kind": "green", "id": "world.crownmarch.brannock_green", "pos": [60, 568], "radius": 24},
+		{"kind": "bridge", "id": "world.crownmarch.brannock_bridge", "pos": [60, 344], "yaw": 0, "size": [12, 50], "drop_m": 9, "poi": "poi.brannock_bridge", "landmark": true, "quest_critical": true},
+		{"kind": "column", "id": "world.crownmarch.kings_road_milestone", "style": "slab", "pos": [292, 346], "points": [[292, 346]], "size": [2, 4]},
+		{"kind": "palisade", "id": "world.crownmarch.toll_palisade", "pos": [460, 330], "points": [[430, 305], [490, 305], [490, 355], [430, 355], [430, 305]], "height": 6, "gaps": [[460, 355, 18]], "poi": "poi.toll_fort", "landmark": true},
+		{"kind": "tower", "id": "world.crownmarch.toll_watchtower", "style": "watch", "pos": [480, 315], "size": [5, 13]},
+		{"kind": "beacon", "id": "world.crownmarch.watch_beacon", "pos": [472, 770], "size": [6, 15], "poi": "poi.shepherds_watch", "landmark": true, "skyline": true, "quest_critical": true, "quest_target": true},
+		{"kind": "falls", "id": "world.crownmarch.wend_falls", "pos": [928, 561], "yaw": 90, "size": [40, 26], "poi": "poi.wend_falls", "landmark": true}
+	],
+	"shrines": [
+		{"id": "world.shrine.kingsgate", "record": "shrine.world_kingsgate", "pos": [-300, 770], "yaw": 0, "poi": "poi.kingsgate_shrine", "max_stage": 10}
+	],
+	"waystones": [
+		{"id": "world.cp.kingsgate_shelf", "display_name": "Kingsgate shelf waystone", "pos": [-300, 916], "yaw": -14, "radius": 12, "stone": [9, 6], "poi": "poi.kingsgate_shelf"},
+		{"id": "world.cp.millford", "display_name": "Millford waystone", "pos": [-350, 600], "yaw": 0, "radius": 10, "stone": [8, 3], "poi": "poi.millford"},
+		{"id": "world.cp.brannock", "display_name": "Brannock waystone", "pos": [60, 546], "yaw": 0, "radius": 10, "stone": [12, 0], "poi": "poi.brannock"},
+		{"id": "world.cp.kings_road", "display_name": "King's Road waystone", "pos": [300, 340], "yaw": 90, "radius": 10, "stone": [0, 9], "poi": "poi.kings_road"},
+		{"id": "world.cp.shepherds_watch", "display_name": "Shepherd's Watch waystone", "pos": [492, 750], "yaw": -30, "radius": 10, "stone": [7, 5], "poi": "poi.shepherds_watch"}
+	],
+	"checkpoints": [
+		{"id": "world.cp.broken_stair", "display_name": "The Broken Stair", "pos": [-40, 904], "yaw": 0, "note": "The arrival from the Valley's Citadel stair (valley.exit.citadel_stair); no waystone, so no fast travel."}
+	],
+	"exits": [
+		{"id": "world.exit.kingsgate", "display_name": "The Kings' Door", "pos": [-300, 933], "yaw": 0, "to_level": "level.valley", "to_checkpoint": "valley.cp.kings_door", "requires_flags": [], "locked_message": "", "prompt": "Enter the Kings' Door tunnel", "radius": 9},
+		{"id": "world.exit.broken_stair", "display_name": "The Broken Stair", "pos": [-40, 926], "yaw": 0, "to_level": "level.valley", "to_checkpoint": "valley.cp.citadel_stair", "requires_flags": ["world.citadel.breached"], "locked_message": "Rubble chokes the old stair. It might be cleared from the Citadel's side.", "prompt": "Descend the Broken Stair", "radius": 7}
+	],
+	"size_gates": [
+		{"id": "world.gate.wend_deep", "along": "river", "min_stage": 4, "cue": "sfx.gate.water", "height_m": 14, "message": "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."}
+	],
+	"secrets": [
+		{"id": "world.crownmarch.kingsgate_statue", "seal": "toppled_statue", "pos": [-345, 790], "yaw": 15, "poi": "poi.kingsgate_statue"},
+		{"id": "world.crownmarch.barrow_vault_rockfall", "seal": "rockfall", "pos": [-690, 755], "yaw": 0, "poi": "poi.barrow_vault"}
+	],
+	"caches": [
+		{"id": "world.crownmarch.shelf_cache", "pos": [-322, 922], "loot": "loot.cache_kingsgate_shelf", "poi": "poi.kingsgate_shelf"},
+		{"id": "world.crownmarch.statue_cache", "pos": [-345, 790], "loot": "loot.cache_kingsgate_statue", "poi": "poi.kingsgate_statue", "under_seal": "world.crownmarch.kingsgate_statue"},
+		{"id": "world.crownmarch.stair_cache", "pos": [-55, 904], "loot": "loot.cache_broken_stair", "poi": "poi.broken_stair"},
+		{"id": "world.crownmarch.raiders_cache", "pos": [-102, 562], "loot": "loot.cache_raiders_hollow", "poi": "poi.raiders_hollow"},
+		{"id": "world.crownmarch.barrow_cache", "pos": [-672, 690], "loot": "loot.cache_barrow_fields", "poi": "poi.barrow_fields"},
+		{"id": "world.crownmarch.vault_cache", "pos": [-690, 769], "loot": "loot.cache_barrow_vault", "poi": "poi.barrow_vault", "under_seal": "world.crownmarch.barrow_vault_rockfall"},
+		{"id": "world.crownmarch.bridge_cache", "pos": [84, 372], "loot": "loot.cache_brannock_bridge", "poi": "poi.brannock_bridge"},
+		{"id": "world.crownmarch.kings_road_cache", "pos": [313, 322], "loot": "loot.cache_kings_road", "poi": "poi.kings_road"},
+		{"id": "world.crownmarch.toll_cache", "pos": [448, 322], "loot": "loot.cache_toll_fort", "poi": "poi.toll_fort"},
+		{"id": "world.crownmarch.watch_cache", "pos": [462, 752], "loot": "loot.cache_shepherds_watch", "poi": "poi.shepherds_watch"},
+		{"id": "world.crownmarch.falls_cache", "pos": [848, 606], "loot": "loot.cache_wend_falls", "poi": "poi.wend_falls"}
+	],
+	"cairns": [
+		{"id": "world.crownmarch.barrow_cairn", "dialogue": "dialogue.cairn_barrow_fields", "pos": [-640, 726], "yaw": 180, "poi": "poi.barrow_fields"},
+		{"id": "world.crownmarch.falls_cairn", "dialogue": "dialogue.cairn_wend_falls", "pos": [864, 598], "yaw": 90, "poi": "poi.wend_falls"}
+	],
+	"markers": [
+		{"id": "world.marker.kingsgate_beacon", "kind": "objective", "pos": [-262, 764]},
+		{"id": "world.marker.kingsgate_shrine", "kind": "objective", "pos": [-300, 778]},
+		{"id": "world.marker.brannock_green", "kind": "objective", "pos": [60, 568]},
+		{"id": "world.marker.millford_mill_safe", "kind": "safe", "pos": [-326, 676]},
+		{"id": "world.marker.millford_barn_safe", "kind": "safe", "pos": [-414, 630]},
+		{"id": "world.marker.brannock_hall_safe", "kind": "safe", "pos": [102, 445]},
+		{"id": "world.marker.brannock_market_safe", "kind": "safe", "pos": [38, 462]}
+	],
+	"scenery": [
+		{"mesh": "tree_broadleaf", "density": 0.00042, "spacing_m": 14, "scale": [0.85, 1.35], "solid": true},
+		{"mesh": "bush", "density": 0.0006, "spacing_m": 6, "scale": [0.8, 1.4], "solid": false},
+		{"mesh": "rock", "density": 0.00008, "spacing_m": 20, "scale": [0.8, 1.6], "solid": true}
+	]
+}

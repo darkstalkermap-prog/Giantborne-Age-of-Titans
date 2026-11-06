@@ -1,0 +1,60 @@
+{
+	"schema": "world_region_layout",
+	"region": "region.greywood",
+	"description": "P25: the Greywood's skeleton and light content (plan M6-M9 §5.4, §5.10): Hollowmere's hall, stilt huts, pond and green, the Greywood shrine, the Needle's 5.0 m slot, the Hidden Grove with its cairn and its north-ridge rockfall, the woodcutters' camp, the three great pines, the Troll Den's bowl and back wall, the old root's fallen titan-tree, waystones and caches. P35 brings the woodfolk, the trolls, the Matriarch and the region's quests.",
+	"elements": [
+		{"kind": "hall", "id": "world.greywood.hollowmere_hall", "style": "hall", "pos": [-608, -98], "yaw": 0, "size": [30, 11, 12], "poi": "poi.hollowmere", "landmark": true, "skyline": true, "quest_critical": true},
+		{"kind": "house", "id": "world.greywood.hollowmere_hut_1", "style": "stilt", "pos": [-684, -66], "yaw": 60, "size": [7, 4, 6]},
+		{"kind": "house", "id": "world.greywood.hollowmere_hut_2", "style": "stilt", "pos": [-690, -30], "yaw": 95, "size": [7, 4, 6]},
+		{"kind": "house", "id": "world.greywood.hollowmere_hut_3", "style": "stilt", "pos": [-676, 4], "yaw": 130, "size": [7, 4, 6]},
+		{"kind": "house", "id": "world.greywood.hollowmere_hut_4", "style": "stilt", "pos": [-644, 16], "yaw": 175, "size": [7, 4, 6]},
+		{"kind": "house", "id": "world.greywood.hollowmere_hut_5", "style": "stilt", "pos": [-604, -12], "yaw": 230, "size": [7, 4, 6]},
+		{"kind": "house", "id": "world.greywood.hollowmere_hut_6", "style": "stilt", "pos": [-594, -48], "yaw": 265, "size": [7, 4, 6]},
+		{"kind": "house", "id": "world.greywood.hollowmere_hut_7", "style": "stilt", "pos": [-660, -92], "yaw": 20, "size": [7, 4, 6]},
+		{"kind": "house", "id": "world.greywood.hollowmere_hut_8", "style": "stilt", "pos": [-700, -96], "yaw": 40, "size": [7, 4, 6]},
+		{"kind": "house", "id": "world.greywood.hollowmere_hut_9", "style": "stilt", "pos": [-574, -84], "yaw": 290, "size": [7, 4, 6]},
+		{"kind": "pier", "id": "world.greywood.hollowmere_pier", "pos": [-640, -12], "yaw": 0, "size": [3, 14], "deck_m": 0.8},
+		{"kind": "green", "id": "world.greywood.hollowmere_green", "pos": [-610, 22], "radius": 18},
+		{"kind": "rock", "id": "world.greywood.needle_wall_west", "style": "wall", "pos": [-432.6, 45.8], "yaw": -45, "size": [64, 26, 7], "poi": "poi.the_needle", "landmark": true},
+		{"kind": "rock", "id": "world.greywood.needle_wall_east", "style": "wall", "pos": [-424.2, 37.4], "yaw": -45, "size": [64, 26, 7]},
+		{"kind": "column", "id": "world.greywood.grove_stones", "style": "slab", "pos": [-480, -10], "points": [[-500, -24], [-462, -28], [-458, 8], [-498, 12], [-480, 20]], "size": [3, 9], "poi": "poi.hidden_grove", "landmark": true},
+		{"kind": "tent", "id": "world.greywood.woodcutters_camp", "style": "camp", "pos": [-420, 220], "count": 5, "radius": 16, "size": [5, 3.5, 6], "poi": "poi.woodcutters_camp", "landmark": true},
+		{"kind": "column", "id": "world.greywood.woodcutters_logs", "style": "stump", "pos": [-436, 236], "points": [[-436, 236], [-440, 240], [-400, 236]], "size": [2.4, 3]},
+		{"kind": "rock", "id": "world.greywood.troll_den_wall", "style": "wall", "pos": [-792, -352], "yaw": -34, "size": [34, 24, 8], "poi": "poi.troll_den", "landmark": true},
+		{"kind": "column", "id": "world.greywood.troll_den_bones", "style": "nest", "pos": [-760, -330], "points": [[-776, -322], [-748, -344], [-766, -350]], "size": [6, 3], "no_solids": true}
+	],
+	"pines": [
+		{"id": "world.greywood.great_pine_1", "pos": [-575, -268], "yaw": 0, "poi": "poi.great_pines", "landmark": true, "skyline": true},
+		{"id": "world.greywood.great_pine_2", "pos": [-548, -276], "yaw": 40, "poi": "poi.great_pines"},
+		{"id": "world.greywood.great_pine_3", "pos": [-562, -240], "yaw": 80, "poi": "poi.great_pines"}
+	],
+	"shrines": [
+		{"id": "world.shrine.greywood", "record": "shrine.world_greywood", "pos": [-540, 110], "yaw": 30, "poi": "poi.greywood_shrine"}
+	],
+	"waystones": [
+		{"id": "world.cp.hollowmere", "display_name": "Hollowmere waystone", "pos": [-590, 40], "yaw": 150, "radius": 10, "stone": [8, 0], "poi": "poi.hollowmere"},
+		{"id": "world.cp.needle", "display_name": "Needle waystone", "pos": [-400, 100], "yaw": 135, "radius": 10, "stone": [9, 0], "poi": "poi.the_needle"},
+		{"id": "world.cp.troll_den", "display_name": "Troll Den waystone", "pos": [-705, -290], "yaw": 125, "radius": 10, "stone": [8, 4], "poi": "poi.troll_den"}
+	],
+	"secrets": [
+		{"id": "world.greywood.grove_rockfall", "seal": "rockfall", "pos": [-504.7, -70.1], "yaw": 22.3, "poi": "poi.hidden_grove", "note": "The Hidden Grove's second key: the north ridge's rockfall (heave, stage 5)."},
+		{"id": "world.greywood.old_root_tree", "seal": "titan_tree", "pos": [-700, 120], "yaw": 10, "poi": "poi.old_root"}
+	],
+	"caches": [
+		{"id": "world.greywood.grove_cache", "pos": [-494, -14], "loot": "loot.cache_hidden_grove", "poi": "poi.hidden_grove"},
+		{"id": "world.greywood.pines_cache", "pos": [-546, -252], "loot": "loot.cache_great_pines", "poi": "poi.great_pines"},
+		{"id": "world.greywood.old_root_cache", "pos": [-700, 120], "loot": "loot.cache_old_root", "poi": "poi.old_root", "under_seal": "world.greywood.old_root_tree"}
+	],
+	"cairns": [
+		{"id": "world.greywood.grove_cairn", "dialogue": "dialogue.cairn_hidden_grove", "pos": [-472, -4], "yaw": 45, "poi": "poi.hidden_grove"}
+	],
+	"markers": [
+		{"id": "world.marker.hollowmere_green", "kind": "objective", "pos": [-610, 22]},
+		{"id": "world.marker.hollowmere_hall_safe", "kind": "safe", "pos": [-608, -84]}
+	],
+	"scenery": [
+		{"mesh": "tree_pine", "density": 0.0024, "spacing_m": 9, "scale": [0.8, 1.35], "solid": true},
+		{"mesh": "sapling", "density": 0.0016, "spacing_m": 4, "scale": [0.7, 1.3], "solid": false},
+		{"mesh": "log", "density": 0.00012, "spacing_m": 18, "scale": [0.8, 1.3], "solid": false}
+	]
+}

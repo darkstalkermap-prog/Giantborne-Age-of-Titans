@@ -14,6 +14,9 @@ const KING := "valley.arena.ogre_king"
 const GATE_PROP := "prop.gate_practice"
 const BARRICADE_PROP := "prop.cart_barricade"
 const STAND_IN := "res://scenes/test/flow_test_level.tscn"
+## A level.world scene that does not exist: a build without the world (P25 ships the world, so the
+## tests of the refusal simulate its absence).
+const NO_WORLD_SCENE := "res://scenes/world/no_such_world.tscn"
 
 
 func before_each() -> void:
@@ -175,7 +178,9 @@ func test_start_world_for_tests_sets_up_the_campaign_in_the_world() -> void:
 
 
 func test_the_world_mode_needs_the_world_level() -> void:
-	assert_false(GameSession.world_available(), "this build has no level.world scene yet")
+	assert_true(GameSession.world_available(), "this build has the world (P25)")
+	TestFixtures.record_override(GameSession.WORLD_LEVEL_ID, {"scene": NO_WORLD_SCENE})
+	assert_false(GameSession.world_available(), "a build without the level.world scene (simulated)")
 	var r := GameSession.change_mode("world")
 	assert_false(r.ok, "--mode=world / Skip refuse without it")
 	assert_eq(str(r.message), GameSession.WORLD_MISSING, "and say why")

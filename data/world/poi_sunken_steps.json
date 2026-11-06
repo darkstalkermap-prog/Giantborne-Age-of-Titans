@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.sunken_steps",
+	"type": "poi",
+	"display_name": "The Sunken Steps",
+	"level": "level.world",
+	"region": "region.drowned_steps",
+	"kind": "ruin",
+	"position_m": [-180, 12.1, 120],
+	"radius_m": 70,
+	"xp": 30,
+	"map_icon": "ruin",
+	"compass": true,
+	"landmark": "world.drowned.steps_terrace_1",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "Giant terraces stepping down into the Mere."
+}

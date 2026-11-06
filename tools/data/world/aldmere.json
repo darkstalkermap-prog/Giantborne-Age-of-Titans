@@ -1,0 +1,45 @@
+{
+	"schema": "world_region_layout",
+	"region": "region.aldmere",
+	"description": "P25: the Aldmere March's skeleton and light content (plan M6-M9 §5.4, §5.10): Fort Aldmere's walls, towers and keep with its main gate shut and indestructible (P36 makes it the real gate), the war camp's tents and engine frames, Ballista Ridge's emplacements and the eyrie's ledge, the Aldmere shrine, the deserters' burned mill and its cairn, the Ironway's foot, the kings' armoury behind its adit's rockfall, waystones and caches. P36 brings Aldmere's army, the herald, the engines and the Iron Regiment.",
+	"elements": [
+		{"kind": "wall", "id": "world.aldmere.fort_walls", "style": "stone", "pos": [650, -170], "points": [[560, -245], [740, -245], [740, -95], [560, -95], [560, -245]], "height": 12, "thick": 3, "towers": true, "tower_d": 9, "gaps": [[650, -95, 18]], "poi": "poi.fort_aldmere", "landmark": true, "skyline": true},
+		{"kind": "hall", "id": "world.aldmere.fort_keep", "style": "keep", "pos": [650, -214], "yaw": 0, "size": [30, 26, 24]},
+		{"kind": "gate_prop", "id": "world.aldmere.fort_gate", "style": "fortified", "pos": [650, -95], "yaw": 0, "indestructible": true, "quest_critical": true, "quest_target": true},
+		{"kind": "tent", "id": "world.aldmere.war_camp", "style": "war", "pos": [520, 120], "count": 22, "radius": 52, "engines": 4, "size": [5, 3.6, 7], "poi": "poi.war_camp", "landmark": true},
+		{"kind": "ruin", "id": "world.aldmere.ridge_emplacement_1", "style": "earthwork", "pos": [770, 36], "yaw": 45, "size": [18, 2.6, 7], "poi": "poi.ballista_ridge", "landmark": true},
+		{"kind": "ruin", "id": "world.aldmere.ridge_emplacement_2", "style": "earthwork", "pos": [792, 12], "yaw": 45, "size": [18, 2.6, 7]},
+		{"kind": "ruin", "id": "world.aldmere.ridge_emplacement_3", "style": "earthwork", "pos": [814, -14], "yaw": 45, "size": [18, 2.6, 7]},
+		{"kind": "rock", "id": "world.aldmere.eyrie_spire", "style": "spire", "pos": [826, -4], "size": [8, 16], "poi": "poi.ridge_eyrie", "landmark": true},
+		{"kind": "house", "id": "world.aldmere.deserters_mill", "style": "burned", "pos": [440, 222], "yaw": 20, "size": [14, 8, 10], "poi": "poi.deserters_mill", "landmark": true},
+		{"kind": "statue", "id": "world.aldmere.ironway_king", "style": "standing", "pos": [768, -398], "yaw": 90, "size": [5, 15], "poi": "poi.ironway", "landmark": true},
+		{"kind": "ruin", "id": "world.aldmere.kings_armoury", "style": "vault", "pos": [600, -288], "yaw": 0, "size": [18, 12, 18], "thick": 1.5, "poi": "poi.kings_armoury"}
+	],
+	"shrines": [
+		{"id": "world.shrine.aldmere", "record": "shrine.world_aldmere", "pos": [420, -40], "yaw": 0, "poi": "poi.aldmere_shrine"}
+	],
+	"waystones": [
+		{"id": "world.cp.aldmere_road", "display_name": "Aldmere road waystone", "pos": [470, 60], "yaw": -40, "radius": 10, "stone": [8, 3], "poi": ""},
+		{"id": "world.cp.fort_gate", "display_name": "Fort gate waystone", "pos": [650, -55], "yaw": 0, "radius": 10, "stone": [12, 0], "poi": "poi.fort_aldmere"},
+		{"id": "world.cp.ironway", "display_name": "Ironway waystone", "pos": [700, -380], "yaw": 0, "radius": 10, "stone": [-10, 0], "poi": "poi.ironway"}
+	],
+	"secrets": [
+		{"id": "world.aldmere.armoury_rockfall", "seal": "rockfall", "pos": [600, -298], "yaw": 0, "poi": "poi.kings_armoury"},
+		{"id": "world.aldmere.eyrie_cache", "seal": "ledge", "pos": [818, -10], "poi": "poi.ridge_eyrie", "item": "item.iron_ingot", "count": 1, "requires_stage": 6, "ledge_m": 16}
+	],
+	"caches": [
+		{"id": "world.aldmere.war_camp_cache", "pos": [478, 162], "loot": "loot.cache_war_camp", "poi": "poi.war_camp"},
+		{"id": "world.aldmere.armoury_cache", "pos": [600, -284], "loot": "loot.cache_kings_armoury", "poi": "poi.kings_armoury"}
+	],
+	"cairns": [
+		{"id": "world.aldmere.mill_cairn", "dialogue": "dialogue.cairn_deserters_mill", "pos": [454, 236], "yaw": 200, "poi": "poi.deserters_mill"}
+	],
+	"markers": [
+		{"id": "world.marker.war_camp_edge", "kind": "objective", "pos": [500, 190]}
+	],
+	"scenery": [
+		{"mesh": "tree_broadleaf", "density": 0.00028, "spacing_m": 16, "scale": [0.9, 1.4], "solid": true},
+		{"mesh": "bush", "density": 0.0005, "spacing_m": 6, "scale": [0.8, 1.3], "solid": false},
+		{"mesh": "rock", "density": 0.0001, "spacing_m": 20, "scale": [0.8, 1.5], "solid": true}
+	]
+}

@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="1_f6def"]
+[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="2_e36fc"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+
+[node name="Chunk_2_1_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="world_shrine_stones" type="Node3D" parent="Shrines" instance=ExtResource("1_f6def")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 212, 96, 168)
+script = ExtResource("2_e36fc")
+world_id = "world.shrine.stones"
+shrine_id = "shrine.world_stones"
+prompt = "Rest"
+radius_m = 4.0
+priority = 40
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="world_marker_standing_stones" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 212, 96.2, 183)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.standing_stones"
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

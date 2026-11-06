@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.ancestral_circle",
+	"type": "poi",
+	"display_name": "The Ancestral Circle",
+	"level": "level.world",
+	"region": "region.drowned_steps",
+	"kind": "ruin",
+	"position_m": [40, 8.6, -90],
+	"radius_m": 55,
+	"xp": 60,
+	"map_icon": "ruin",
+	"compass": true,
+	"landmark": "world.drowned.ancestral_circle",
+	"skyline": false,
+	"min_stage": 5,
+	"reveals_m": 0,
+	"note": "The island's circle of stones: a giant of stage 5 wades the deep channel to it."
+}

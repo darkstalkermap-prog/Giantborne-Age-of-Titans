@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.bell_tower",
+	"type": "poi",
+	"display_name": "The Drowned Bell Tower",
+	"level": "level.world",
+	"region": "region.drowned_steps",
+	"kind": "ruin",
+	"position_m": [-200, 2.2, -240],
+	"radius_m": 50,
+	"xp": 30,
+	"map_icon": "ruin",
+	"compass": true,
+	"landmark": "world.drowned.bell_tower",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A bell tower standing in the shallows of the north-west shore."
+}

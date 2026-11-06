@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.kingsgate_beacon",
+	"type": "poi",
+	"display_name": "The Kingsgate Beacon",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "landmark",
+	"position_m": [-255, 11.2, 750],
+	"radius_m": 30,
+	"xp": 20,
+	"map_icon": "landmark",
+	"compass": true,
+	"landmark": "world.crownmarch.kingsgate_beacon",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The beacon tower over Kingsgate: relit, it burns as a column the whole kingdom sees."
+}

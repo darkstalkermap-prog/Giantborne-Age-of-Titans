@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"id": "shrine.world_aldmere",
+	"type": "shrine",
+	"display_name": "Aldmere Shrine",
+	"description": "The shrine by the road to Aldmere (plan M6-M9 §5.4): grows the giant to stage 5 (its oath condition comes with P29).",
+	"allows_growth": true,
+	"max_stage": 5,
+	"growth_requires_flags": [],
+	"checkpoint": true,
+	"rest_heals": true,
+	"first_activation_rest": true,
+	"loadout": true,
+	"attributes": true,
+	"activation_radius_m": 14
+}

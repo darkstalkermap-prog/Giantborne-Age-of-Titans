@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.cairn_deserters_mill",
+	"type": "dialogue",
+	"speaker": "Old Kings' Cairn",
+	"description": "An Old Kings' cairn at the deserters' mill (plan M6-M9 §5.4, decision 33): reading it once gives one attribute point (once-flag reward.cairn.deserters_mill).",
+	"entries": [
+		{"node": "read", "conditions": [{"type": "flag", "flag": "reward.cairn.deserters_mill"}]},
+		{"node": "cairn", "conditions": []}
+	],
+	"nodes": [
+		{"id": "cairn", "text": "A cairn by the burned mill, older than the mill by a thousand years. 'Armies pass. Stones stay.'", "choices": [{"text": "[Lay a hand on the stones] (+1 attribute point)", "next": "", "effects": {"attribute_points": 1, "once_flag": "reward.cairn.deserters_mill"}}, {"text": "Leave the stones be.", "next": ""}]},
+		{"id": "read", "text": "An Old Kings' cairn. Its strength is already in you.", "choices": [{"text": "[Leave]", "next": ""}]}
+	]
+}

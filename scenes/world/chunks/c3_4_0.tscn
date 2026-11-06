@@ -1,0 +1,68 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
+[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="3_f6def"]
+[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="4_e36fc"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="5_f30a1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(16.979977, 18, 1)
+
+[node name="Chunk_3_4_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_drowned_mere_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 4.764, 110)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.drowned.mere_cache"
+loot_table = "loot.cache_mere_of_kings"
+
+[node name="world_drowned_steps_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106, 10, 100)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.drowned.steps_cache"
+loot_table = "loot.cache_sunken_steps"
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="world_shrine_steps" type="Node3D" parent="Shrines" instance=ExtResource("3_f6def")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 15, 168)
+script = ExtResource("4_e36fc")
+world_id = "world.shrine.steps"
+shrine_id = "shrine.world_steps"
+prompt = "Rest"
+radius_m = 4.0
+priority = 40
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="world_gate_mere_channel_2" type="StaticBody3D" parent="SizeGates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 242.46088, 5.433041, 8.049591)
+collision_layer = 128
+collision_mask = 0
+script = ExtResource("5_f30a1")
+gate_id = "world.gate.mere_channel"
+min_stage = 5
+message = "The channel is too deep. Grow to stage 5."
+
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_2"]
+transform = Transform3D(-0.87767905, 0, 0.47924885, 0, 1, 0, -0.47924885, 0, -0.87767905, 0, 0, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "poi.old_root",
+	"type": "poi",
+	"display_name": "The Old Root",
+	"level": "level.world",
+	"region": "region.greywood",
+	"kind": "secret",
+	"position_m": [-700, 22.1, 120],
+	"radius_m": 30,
+	"xp": 30,
+	"map_icon": "secret",
+	"compass": false,
+	"landmark": "world.greywood.old_root_tree",
+	"skyline": false,
+	"min_stage": 5,
+	"reveals_m": 0,
+	"seal": "world.greywood.old_root_tree",
+	"note": "A hollow under a fallen titan-tree (heave, stage 5)."
+}

@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "poi.fort_aldmere",
+	"type": "poi",
+	"display_name": "Fort Aldmere",
+	"level": "level.world",
+	"region": "region.aldmere",
+	"kind": "settlement",
+	"position_m": [650, 60.0, -170],
+	"radius_m": 110,
+	"xp": 50,
+	"map_icon": "settlement",
+	"compass": true,
+	"landmark": "world.aldmere.fort_walls",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"max_inner_stage": 4,
+	"green_m": [650, 55.8, -62],
+	"note": "Aldmere's stone fortress on its hill; in this build its gate stays shut."
+}

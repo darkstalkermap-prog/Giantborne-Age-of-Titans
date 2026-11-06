@@ -1,0 +1,52 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/world/item_pickup.gd" id="1_3b229"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_1"]
+_surfaces = [{
+"aabb": AABB(-1.25, 16, -2.35, 2.5, 1.7999992, 1.6999999),
+"attribute_data": PackedByteArray("TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I//YqD3/2Kg9/9ioPf/YqD3/2Kg9/9ioPf/YqD3/2Kg9/w=="),
+"format": 34359742479,
+"index_count": 72,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 16,
+"vertex_data": PackedByteArray("mpmZvzMzi0EzMxPAmpmZPzMzi0EzMxPAmpmZPzMzi0EzMzO/mpmZvzMzi0EzMzO/mpmZvwAAgEEzMzO/mpmZPwAAgEEzMzO/mpmZPwAAgEEzMxPAmpmZvwAAgEEzMxPAAACgv2ZmjkFmZhbAAACgP2ZmjkFmZhbAAACgP2ZmjkFmZia/AACgv2ZmjkFmZia/AACgvzMzi0FmZia/AACgPzMzi0FmZia/AACgPzMzi0FmZhbAAACgvzMzi0FmZhbAMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao=")
+}]
+
+[node name="Chunk_7_3_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_aldmere_eyrie_cache" type="Node3D" parent="Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 62.956, 246)
+script = ExtResource("1_3b229")
+world_id = "world.aldmere.eyrie_cache"
+radius_m = 6.0
+priority = 45
+requires_stage = 6
+stage_message = "Out of reach. Grow to stage 6."
+
+[node name="Visual" type="Node3D" parent="Props/world_aldmere_eyrie_cache"]
+
+[node name="Chest" type="MeshInstance3D" parent="Props/world_aldmere_eyrie_cache/Visual"]
+mesh = SubResource("ArrayMesh_1")
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]
