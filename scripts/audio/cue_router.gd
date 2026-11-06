@@ -117,7 +117,8 @@ const WET_MARGIN_M := 6.5
 const ARCHETYPE_VOICES := {"troll": "troll", "troll_matriarch": "matriarch", "matriarch": "matriarch",
 	"rival_giant": "giant", "cavalry": "horse", "dire_wolf": "dire_wolf"}
 ## P28: the voice of a record by its short id when neither the mix nor its archetype names one.
-const SHORT_ID_VOICES := {"troll_matriarch": "matriarch", "harrok": "giant", "ulfra": "giant"}
+const SHORT_ID_VOICES := {"troll_matriarch": "matriarch", "harrok": "giant", "ulfra": "giant", "rival_giant": "giant",
+	"cavalry": "horse"}
 ## P28: projectile visuals that fly indirect fire (a rising whistle at the landing circle).
 const INDIRECT_VISUALS := ["catapult_stone"]
 ## P28: an indirect shot's telegraph is remembered this long for its launch.
@@ -695,17 +696,17 @@ func _nearest_member(faction: String) -> Vector3:
 
 func _on_telegraph_started(_tick: int, actor_id: String, action_id: String, target_id: String, shape: String,
 		origin: Vector3, _yaw: float, radius: float, _length: float, _duration_s: float) -> void:
+	var def := GameData.get_action(action_id)
+	# P28: an indirect shot's telegraph is its landing circle (the whistle plays there at the launch)
+	if is_indirect(def):
+		_landings[actor_id] = {"pos": origin, "radius": radius, "s": _now()}
 	var p := _player()
 	if p == null or p.entity == null:
 		return
 	var attacker := _entity(actor_id)
-	var def := GameData.get_action(action_id)
 	var src := _chest(attacker) if attacker != null else origin
 	if src == Vector3.INF:
 		src = origin
-	# P28: an indirect shot's telegraph is its landing circle (the whistle plays there at the launch)
-	if is_indirect(def):
-		_landings[actor_id] = {"pos": origin, "radius": radius, "s": _now()}
 	# a formation's band brace: one wall cue per formation per brace cycle
 	if def != null and def.hit_shape == "band_pulse":
 		var fid := _formation_of(attacker, actor_id)
