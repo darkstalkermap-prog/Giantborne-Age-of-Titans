@@ -98,11 +98,11 @@ func player_nav_fallback() -> int:
 	return int(level_record().get("player_nav_fallback", 0))
 
 
-## Makes the RUNTIME_NODES this level serves whose scripts exist (once: a node of that name
-## already below this root is kept). Returns the nodes made now.
-func create_runtime_nodes() -> Array[Node]:
+## Makes the RUNTIME_NODES (or `entries`, tests) this level serves whose scripts exist (once: a
+## node of that name already below this root is kept). Returns the nodes made now.
+func create_runtime_nodes(entries: Array = RUNTIME_NODES) -> Array[Node]:
 	var made: Array[Node] = []
-	for entry: Array in RUNTIME_NODES:
+	for entry: Array in entries:
 		var node_name := str(entry[0])
 		var path := str(entry[1])
 		var levels: Array = entry[2]

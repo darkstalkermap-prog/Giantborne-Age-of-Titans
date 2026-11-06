@@ -297,9 +297,12 @@ func _adjacency_table() -> Dictionary:
 	return _adjacency
 
 
-## Adds an edge between two positions (merging nodes closer than merge_m). Builders and tests.
+## Adds an edge between two positions (merging nodes closer than merge_m). Builders and tests. A
+## segment shorter than merge_m adds nothing (no stray node).
 func add_road(a: Vector3, b: Vector3, width: float, min_stage := 0, max_stage := ANY_STAGE,
 		direct := false, merge_m := 0.5) -> void:
+	if a.distance_to(b) <= merge_m:
+		return
 	var ia := _road_node(a, merge_m)
 	var ib := _road_node(b, merge_m)
 	if ia == ib:

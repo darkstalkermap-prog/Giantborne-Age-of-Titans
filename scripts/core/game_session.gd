@@ -1144,10 +1144,24 @@ func _checkpoint_place(lv: String, checkpoint_id: String) -> Dictionary:
 		var e := idx.checkpoint(checkpoint_id)
 		return {"position": e.position, "yaw": float(e.get("yaw", 0.0))}
 	var marker := find_checkpoint(checkpoint_id)
-	if marker != null and lv == save_level_id():
+	if marker != null and _is_loaded_level(lv):
 		var t := marker.spawn_transform()
 		return {"position": t.origin, "yaw": t.basis.get_euler().y}
 	return {}
+
+
+## True when `lv` is the level on screen: its root's level_id or scene path (a travel's destination
+## is not, so a checkpoint node of the level being left never gives the arrival its position).
+## True when there is no level root to ask (tests that call on_level_ready without one).
+func _is_loaded_level(lv: String) -> bool:
+	var level := _level()
+	if level == null:
+		return true
+	if level.scene_file_path != "" and level.scene_file_path == lv:
+		return true
+	if "level_id" in level and str(level.get("level_id")) != "":
+		return str(level.get("level_id")) == lv
+	return lv == save_level_id() and level.scene_file_path == ""
 
 
 func _commit_checkpoint(reason: String, respawn: String) -> Dictionary:

@@ -128,7 +128,8 @@ static func read() -> Dictionary:
 		out.source = "backup"
 		out.message = _join(out.message, "%s is invalid (%s). Recovered the previous valid copy from %s.bak." % [
 			p.get_file(), problems[0], p.get_file()])
-	if str(out.source) == "backup":
+	# A damaged main file (not one a newer build wrote: its message says so) leads with the plain line.
+	if str(out.source) == "backup" and int(out.future_version) == 0:
 		out.message = _join(RECOVERED_TEXT, str(out.message))
 	var clean := sanitize(data)
 	out.ok = true
