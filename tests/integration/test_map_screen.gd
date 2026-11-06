@@ -7,7 +7,8 @@ extends IntegrationSuite
 ## stage; the pin written and cleared ([x, z, level]); the three zoom levels and panning; the
 ## Valley's vector map and the world's picture; and the screen with a pad: D-pad between places, A
 ## on a place says why it cannot be travelled to, Y pins, B closes - and M closes it from a keyboard;
-## the panel lists the controls of the device in use.
+## the panel lists the controls of the device in use. The pad's D-pad opens the map and the journal
+## and tracks the next quest only without LT: with LT held it stays ability slots 6-8.
 
 const Fx := preload("res://tests/support/world_ux_fixtures.gd")
 
@@ -170,3 +171,39 @@ func test_the_map_with_a_pad() -> void:
 	Input.parse_input_event(key)
 	await get_tree().process_frame
 	assert_false(stack.is_open("map"), "M closes it again")
+
+
+## Plan §2.14: map, journal and track_next are D-pad Down, Right and Left "without LT". With LT held
+## those presses are ability slots 6-8, which the giant's InputRouter takes before the screen stack
+## and the HUD see them: main.gd adds its UI layer (the HUD, the stack) before the level, and Godot
+## hands unhandled input to the last node in the tree first. This world is built in the same order:
+## the layer (before_each), then the router.
+func test_lt_keeps_the_d_pad_for_the_abilities() -> void:
+	QuestFixtures.install([
+		QuestFixtures.quest("quest.test_main", [QuestFixtures.stage("go", QuestFixtures.flag_cond("test.flag.never"))]),
+		QuestFixtures.quest("quest.test_side", [QuestFixtures.stage("go", QuestFixtures.flag_cond("test.flag.never"))]),
+	])
+	QuestFixtures.activate(["quest.test_main", "quest.test_side"], [], "quest.test_main")
+	stack.get_parent().add_child(Hud.new())
+	var router := InputRouter.new()
+	world.add_child(router)
+	await step_ticks(2)
+	assert_true(stack.get_parent().get_index() < router.get_index(), "the UI layer comes before the router, as in main.gd")
+	assert_eq(Quests.tracked_id(), "quest.test_main", "the main quest is followed")
+	Input.action_press("ability_modifier")
+	for b: JoyButton in [JOY_BUTTON_DPAD_RIGHT, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_LEFT]:
+		await _pad(b)
+	Input.action_release("ability_modifier")
+	assert_eq(router.consume().edges, [&"slot_6", &"slot_7", &"slot_8"] as Array,
+		"LT + D-pad Right / Down / Left: ability slots 6, 7 and 8")
+	assert_false(stack.any_open(), "neither the map nor the journal opened")
+	assert_eq(Quests.tracked_id(), "quest.test_main", "and the tracked quest stayed")
+	await _pad(JOY_BUTTON_DPAD_LEFT)
+	assert_eq(Quests.tracked_id(), "quest.test_side", "D-pad Left alone tracks the next quest")
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	assert_true(stack.is_open("map"), "D-pad Down alone opens the map")
+	stack.close_all()
+	await get_tree().process_frame
+	await _pad(JOY_BUTTON_DPAD_RIGHT)
+	assert_true(stack.is_open("journal"), "D-pad Right alone opens the journal")
+	assert_eq(router.consume().edges, [] as Array, "and none of them fired an ability")
