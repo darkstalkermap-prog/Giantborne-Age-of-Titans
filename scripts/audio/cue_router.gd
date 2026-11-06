@@ -33,6 +33,29 @@ extends Node
 ## M7-M9 signals (P20 declares them; P28 tests their rows) are connected only when
 ## Events.has_signal(name) holds; their handlers take their arguments as one array, so a
 ## signature refined later cannot break the connection.
+##
+## P28's rules (the W17 owner of this file; docs/systems/P28.md records why):
+##   * voices: a record the mix does not name takes its voice from its archetype (troll, cavalry ->
+##     horse, rival_giant -> giant, ...) or from its short id when that is a voice (dire_wolf), so
+##     the M7-M9 creatures find their calls before their records reach audio_mix.voices; a giant
+##     that is not the player bellows (sfx.voice.giant.bellow) where the player roars;
+##   * a formation's brace: one wall cue per formation per brace cycle (the band telegraph of its
+##     striker, merged within wall_merge_s); its members' own footfalls stay silent while it holds
+##     its slots (formed, advancing, braced): the ambience director's march loop is their sound;
+##     formation cues sound at the formation's anchor (Formation.live());
+##   * an indirect shot (an action with param "indirect", or a projectile visual of
+##     INDIRECT_VISUALS: the catapult's stone): its telegraph's circle is the landing point; at the
+##     launch, sfx.threat.incoming is scheduled at the landing circle so that it ends as the shot
+##     lands (flight time from the launch velocity), and dropped if the shot lands early;
+##   * size gates sound their own cue (SizeGate.cue) at the point the giant touched
+##     (SizeGate.last_contact); a stage-gated prop by its material, a ledge as stone;
+##   * a friendly settlement (an audio_region with `arrival`) entered by a giant of its min_stage
+##     (default 4) plays sfx.voice.crowd.gasp toward the giant and sfx.world.town_bell at its POI,
+##     once a level visit, unless its faction is warned or hostile;
+##   * the campaign's completion (flag campaign.completed: flag_changed is a state signal) plays
+##     the crowned stinger and the campaign's end context.
+
+const MIX := preload("res://scripts/core/schemas/audio_mix_schema.gd")
 
 ## Every Events signal the router handles (P21's coverage test: each signal is here or silent).
 const ROUTED_SIGNALS := ["hit_resolved", "attack_clanked", "ability_started", "action_rejected",
@@ -57,8 +80,9 @@ const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gain
 	"dialogue_requested", "dialogue_ended", "tutorial_dismissed", "quest_abandoned", "quest_tracked",
 	"wander_spawned", "world_chunk_loaded", "world_chunk_unloading", "world_chunk_unloaded",
 	"sandbox_reset_requested"]
-## Silent signals the router still listens to for state (dialogue_ended lifts the dialogue duck).
-const STATE_SIGNALS := ["dialogue_ended"]
+## Silent signals the router still listens to for state (dialogue_ended lifts the dialogue duck;
+## P28: flag_changed for the campaign's completion, which the music carries).
+const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]
 ## The signals whose handlers take one array (declared by P20 in W12 and later packages).
 const VARIADIC_SIGNALS := ["poi_discovered", "region_changed", "level_leaving", "level_entered",
 	"travel_requested", "size_gate_blocked", "trampled", "formation_changed", "siege_engine_fired",
@@ -89,6 +113,23 @@ const HURT_GAP_S := 0.6
 ## P21: footfalls within this distance of the level's water (its "Water_*" visual planes) take the
 ## surface the mix's level surfaces name for "water" (the Valley's river: "wet").
 const WET_MARGIN_M := 6.5
+## P28: the voice of a record the mix does not name, by its archetype.
+const ARCHETYPE_VOICES := {"troll": "troll", "troll_matriarch": "matriarch", "matriarch": "matriarch",
+	"rival_giant": "giant", "cavalry": "horse", "dire_wolf": "dire_wolf"}
+## P28: the voice of a record by its short id when neither the mix nor its archetype names one.
+const SHORT_ID_VOICES := {"troll_matriarch": "matriarch", "harrok": "giant", "ulfra": "giant"}
+## P28: projectile visuals that fly indirect fire (a rising whistle at the landing circle).
+const INDIRECT_VISUALS := ["catapult_stone"]
+## P28: an indirect shot's telegraph is remembered this long for its launch.
+const LANDING_MEMORY_S := 15.0
+## P28: the incoming whistle sounds this high over the landing circle.
+const INCOMING_HEIGHT_M := 1.0
+## P28: a size gate's kind by the material of a stage-gated prop.
+const GATE_KINDS := {"wood": "timber", "foliage": "timber", "cloth": "timber", "stone": "stone", "iron": "stone"}
+## P28: the friendly-settlement arrival - the stage it needs by default, and how far toward the
+## settlement from the giant the crowd's gasp sounds.
+const ARRIVAL_MIN_STAGE := 4
+const ARRIVAL_GASP_M := 25.0
 
 var audio: Node = null
 ## Requests waiting for Audio's _process: [{"chain", "at", "opts"}].
@@ -109,6 +150,13 @@ var _walk_since_s := -INF
 var _last_step_s := -INF
 var _screen_cue_s := -INF
 var _dialogue_open := false
+## P28: an indirect shot's landing circle by its shooter: actor id -> {"pos", "radius", "s"}.
+var _landings: Dictionary = {}
+## P28: requests due later (the incoming whistle): [{"due_s", "chain", "at", "opts", "projectile"}].
+var _scheduled: Array = []
+## P28: the friendly settlements already announced this level visit (audio_region ids).
+var _arrived: Dictionary = {}
+var _arrival_zone := ""
 
 
 func setup(p_audio: Node) -> void:
@@ -153,6 +201,10 @@ func reset() -> void:
 	_last_step_s = -INF
 	_screen_cue_s = -INF
 	_dialogue_open = false
+	_landings.clear()
+	_scheduled.clear()
+	_arrived.clear()
+	_arrival_zone = ""
 
 
 func dialogue_open() -> bool:
@@ -180,7 +232,7 @@ func request(chain: Array, at: Vector3, opts: Dictionary = {}) -> void:
 	queue.append({"chain": chain, "at": at, "opts": opts})
 
 
-## Called by Audio every frame: the polls, then every queued request.
+## Called by Audio every frame: the polls, the requests that came due, then every queued request.
 func process_frame() -> void:
 	var now := _now()
 	_poll_aim_locks()
@@ -188,6 +240,8 @@ func process_frame() -> void:
 		_last_poll_s = now
 		_poll_awareness()
 		_poll_water()
+		_poll_arrival()
+	_release_scheduled(now)
 	var q := queue
 	queue = []
 	for r: Dictionary in q:
@@ -248,10 +302,27 @@ static func _chest(e: CombatEntity) -> Vector3:
 	return p + Vector3.UP * _height(e) * 0.6 if p != Vector3.INF else p
 
 
-## The record's voice (audio_mix.voices; default "human").
+## The record's voice: audio_mix.voices; else (P28) by its archetype (ARCHETYPE_VOICES) or its
+## short id (a voice's own name, or SHORT_ID_VOICES); default "human".
 func voice_of(definition_id: String) -> String:
 	var voices: Dictionary = _mix().get("voices", {})
-	return str(voices.get(definition_id, "human"))
+	if voices.has(definition_id):
+		return str(voices[definition_id])
+	return fallback_voice(definition_id)
+
+
+## P28: the voice of a record the mix does not name (the M7-M9 creatures until their records
+## join audio_mix.voices).
+static func fallback_voice(definition_id: String) -> String:
+	var arch := str(GameData.get_record(definition_id).get("archetype", ""))
+	if ARCHETYPE_VOICES.has(arch):
+		return str(ARCHETYPE_VOICES[arch])
+	var short := AudioMath.short_id(definition_id)
+	if SHORT_ID_VOICES.has(short):
+		return str(SHORT_ID_VOICES[short])
+	if short in MIX.VOICES and short != "none":
+		return short
+	return "human"
 
 
 ## The record's material (audio_mix.materials; default "wood").
@@ -280,7 +351,15 @@ func _voice_chain(e: CombatEntity, call: String) -> Array:
 	var v := voice_of(e.definition_id) if e != null else "human"
 	if v == "none":
 		return []
-	return ["sfx.voice.%s.%s" % [v, call]]
+	return ["sfx.voice.%s.%s" % [v, voice_call(v, call, _is_player(e))]]
+
+
+## P28: the call a voice makes: a giant that is not the player bellows where the player roars
+## (sfx.voice.giant.roar is the player's own, non-positional roar).
+static func voice_call(voice: String, call: String, is_player: bool) -> String:
+	if call == "roar" and voice == "giant" and not is_player:
+		return "bellow"
+	return call
 
 
 ## Queues a voice call of entity `e` (nothing for a voiceless body).
@@ -468,7 +547,7 @@ func _on_ability_effect(_tick: int, actor_id: String, action_id: String, kind: S
 	if kind == "roar" and e != null:
 		var v := "giant" if _is_player(e) else voice_of(e.definition_id)
 		if v != "none":
-			chain.append("sfx.voice.%s.roar" % v)
+			chain.append("sfx.voice.%s.%s" % [v, voice_call(v, "roar", _is_player(e))])
 	request(chain, at, {"priority": 90 if _is_player(e) else 75, "reason": "effect", "source_height_m": _height(e)})
 
 
@@ -494,19 +573,22 @@ func _on_status_expired(_tick: int, entity_id: String, status_id: String) -> voi
 		request(["sfx.status.%s.off" % AudioMath.short_id(status_id)], _chest(e), {"priority": 80, "reason": "status_off"})
 
 
-func _on_projectile_spawned(_tick: int, projectile_id: int, owner_id: String, _action_id: String,
-		position: Vector3, _velocity: Vector3, visual: String) -> void:
+func _on_projectile_spawned(_tick: int, projectile_id: int, owner_id: String, action_id: String,
+		position: Vector3, velocity: Vector3, visual: String) -> void:
 	_projectiles[projectile_id] = visual
 	if _projectiles.size() > 256:
 		_projectiles.erase(_projectiles.keys()[0])
 	var e := _entity(owner_id)
 	var prio := 90 if _is_player(e) else (95 if ENGINE_VISUALS.has(visual) else 70)
 	request(["sfx.projectile.%s.launch" % visual], position, {"priority": prio, "reason": "launch"})
+	if not _is_player(e) and (INDIRECT_VISUALS.has(visual) or is_indirect(GameData.get_action(action_id))):
+		_schedule_incoming(projectile_id, owner_id, action_id, position, velocity)
 
 
 func _on_projectile_impact(_tick: int, projectile_id: int, position: Vector3, hit_entity_id: String) -> void:
 	var visual := str(_projectiles.get(projectile_id, ""))
 	_projectiles.erase(projectile_id)
+	_drop_scheduled(projectile_id)
 	if hit_entity_id != "" or visual == "":
 		return   # a hit on an entity sounds through hit_resolved
 	request(["sfx.impact.%s" % visual], position, {"priority": 70, "reason": "impact"})
@@ -612,7 +694,7 @@ func _nearest_member(faction: String) -> Vector3:
 # --------------------------------------------------------------------------- F threat cues
 
 func _on_telegraph_started(_tick: int, actor_id: String, action_id: String, target_id: String, shape: String,
-		origin: Vector3, _yaw: float, _radius: float, _length: float, _duration_s: float) -> void:
+		origin: Vector3, _yaw: float, radius: float, _length: float, _duration_s: float) -> void:
 	var p := _player()
 	if p == null or p.entity == null:
 		return
@@ -621,6 +703,9 @@ func _on_telegraph_started(_tick: int, actor_id: String, action_id: String, targ
 	var src := _chest(attacker) if attacker != null else origin
 	if src == Vector3.INF:
 		src = origin
+	# P28: an indirect shot's telegraph is its landing circle (the whistle plays there at the launch)
+	if is_indirect(def):
+		_landings[actor_id] = {"pos": origin, "radius": radius, "s": _now()}
 	# a formation's band brace: one wall cue per formation per brace cycle
 	if def != null and def.hit_shape == "band_pulse":
 		var fid := _formation_of(attacker, actor_id)
@@ -635,8 +720,6 @@ func _on_telegraph_started(_tick: int, actor_id: String, action_id: String, targ
 	var dist := src.distance_to(p.global_position)
 	var prio := 80 if dist <= _threat_cfg("windup_near_m") * scale else 70
 	request(["sfx.threat.windup.%s" % shape], src, {"priority": prio, "reason": "windup"})
-	if def != null and bool(def.param("indirect", false)):
-		request(["sfx.threat.incoming"], origin, {"priority": 100, "reason": "incoming"})
 	if threat_wants_sting(src, dist, scale):
 		var opts := {"priority": 100, "reason": "sting", "max_health": p.entity.combatant.pools.health_max,
 			"expected_damage": INF, "poise_ratio": 1.0}
@@ -1022,6 +1105,9 @@ func _player_footfall(p: GiantPlayer) -> void:
 func _actor_footfall(e: CombatEntity, actor: Node3D) -> void:
 	if not e.is_alive():
 		return
+	var f: Variant = actor.get("formation")
+	if f is Formation and (f as Formation).is_intact():
+		return   # P28: a formation holding its slots marches as one (the ambience's march loop)
 	var size := step_class_of(e.definition_id)
 	var pos := actor.global_position
 	var surface := footfall_surface(pos)
@@ -1109,10 +1195,16 @@ func _on_region_changed(..._args: Array) -> void:
 
 func _on_level_leaving(..._args: Array) -> void:
 	audio.music.fade_to_silence(MusicDirector.LEVEL_FADE_S)
+	_arrived.clear()
+	_arrival_zone = ""
+	_landings.clear()
+	_scheduled.clear()
 
 
 func _on_level_entered(..._args: Array) -> void:
 	audio.music.note_event()
+	_arrived.clear()
+	_arrival_zone = ""
 
 
 func _on_travel_requested(...args: Array) -> void:
@@ -1120,14 +1212,35 @@ func _on_travel_requested(...args: Array) -> void:
 		_ui("sfx.ui.travel", "travel")
 
 
+## P28: the gate's own cue (SizeGate.cue) at the point the giant touched (last_contact); a
+## stage-gated prop answers by its material (wood: timber), a ledge (an interactable) as stone.
 func _on_size_gate_blocked(...args: Array) -> void:
 	var gate_id := str(_arg(args, 1))
+	var res := size_gate_cue(gate_id)
+	request([str(res.cue), "sfx.gate.default"], res.at, {"priority": 60, "reason": "size_gate"})
+
+
+## {"cue", "at"} of a size gate's refusal (see _on_size_gate_blocked).
+func size_gate_cue(gate_id: String) -> Dictionary:
+	for n in audio.get_tree().get_nodes_in_group("size_gates"):
+		if not (n is Node3D) or str(n.get("gate_id")) != gate_id or not (n as Node3D).is_inside_tree():
+			continue
+		var cue := str(n.get("cue"))
+		var contact: Variant = n.get("last_contact")
+		var at: Vector3 = contact if typeof(contact) == TYPE_VECTOR3 and contact != Vector3.INF \
+			else (n as Node3D).global_position
+		return {"cue": cue if cue.begins_with("sfx.gate.") else "sfx.gate.stone", "at": at}
 	var kind := "stone"
-	var n := _node_by_id(gate_id)
-	if n != null and typeof(n.get("material")) == TYPE_STRING:
-		kind = str(n.get("material"))
-	request(["sfx.gate.%s" % kind], _node_position(gate_id) if n != null else _player_pos(),
-		{"priority": 60, "reason": "size_gate"})
+	var e := _entity(gate_id)
+	if e != null and _is_prop(e):
+		kind = str(GATE_KINDS.get(material_of(e.definition_id), "stone"))
+	else:
+		var node := _node_by_id(gate_id)
+		var pid: Variant = node.get("prop_id") if node != null else null
+		if typeof(pid) == TYPE_STRING and str(pid) != "":
+			kind = str(GATE_KINDS.get(material_of(str(pid)), "stone"))
+	var at := _node_position(gate_id)
+	return {"cue": "sfx.gate.%s" % kind, "at": at if at != Vector3.INF else _player_pos()}
 
 
 func _on_trampled(...args: Array) -> void:
@@ -1153,8 +1266,12 @@ func _on_formation_changed(...args: Array) -> void:
 			audio.music.play_stinger("mus.stinger.rout", 70)
 
 
-## A formation's anchor: the mean position of the enemies carrying its formation_id.
+## A formation's anchor (P28: the live Formation's anchor(), the front rank's centre at chest
+## height), else the mean position of the enemies carrying its formation_id.
 func _formation_anchor(fid: String) -> Vector3:
+	for f: Formation in Formation.live():
+		if f.id == fid:
+			return f.anchor()
 	var sum := Vector3.ZERO
 	var n := 0
 	for node in audio.get_tree().get_nodes_in_group("enemies"):
@@ -1211,3 +1328,130 @@ func _on_world_event_ended(...args: Array) -> void:
 	var defended := str(rec.get("success_outcome", rec.get("defended_outcome", "defended")))
 	if outcome == defended:
 		audio.music.play_stinger("mus.stinger.quest_complete", 70)
+
+
+## P28 (a state signal): the campaign's completion plays the crowned stinger and turns the music to
+## the campaign's end context.
+func _on_flag_changed(_tick: int, flag_id: String, value: Variant) -> void:
+	if flag_id == "campaign.completed" and FactionState.truthy(value) and audio.get("music") != null:
+		audio.music.on_campaign_completed()
+
+
+# --------------------------------------------------------------------------- P28: indirect fire
+
+## True for an indirect shot's action: param "indirect", or a projectile of INDIRECT_VISUALS.
+static func is_indirect(def: ActionDef) -> bool:
+	if def == null:
+		return false
+	if bool(def.param("indirect", false)):
+		return true
+	return def.hit_shape == "projectile" and INDIRECT_VISUALS.has(str(Projectile.spec_for(def).visual))
+
+
+## Schedules the incoming whistle of an indirect shot launched at `from` with `velocity`: at its
+## telegraphed landing circle (else where its arc meets the launch height), starting so that it
+## ends as the shot lands.
+func _schedule_incoming(projectile_id: int, owner_id: String, action_id: String, from: Vector3,
+		velocity: Vector3) -> void:
+	var now := _now()
+	var landing := Vector3.INF
+	var mark: Dictionary = _landings.get(owner_id, {})
+	if not mark.is_empty() and now - float(mark.get("s", -INF)) <= LANDING_MEMORY_S:
+		landing = mark.pos
+	_landings.erase(owner_id)
+	var gravity := float(Projectile.spec_for(GameData.get_action(action_id)).gravity_mps2)
+	var flight := flight_seconds(from, velocity, landing, gravity)
+	if flight <= 0.0:
+		return
+	if landing == Vector3.INF:
+		landing = from + Vector3(velocity.x, 0.0, velocity.z) * flight
+	var length := cue_seconds("sfx.threat.incoming")
+	_scheduled.append({"due_s": now + maxf(flight - length, 0.0), "chain": ["sfx.threat.incoming"],
+		"at": landing + Vector3.UP * INCOMING_HEIGHT_M, "projectile": projectile_id, "land_s": now + flight,
+		"opts": {"priority": 100, "reason": "incoming"}})
+
+
+## Seconds an arc launched at `from` with `velocity` takes to reach `landing` (horizontally), or
+## without a landing point to come back down to the launch height under `gravity` (0 if never).
+static func flight_seconds(from: Vector3, velocity: Vector3, landing: Vector3, gravity: float) -> float:
+	var hv := Vector2(velocity.x, velocity.z).length()
+	if landing != Vector3.INF and hv > 0.01:
+		return Vector2(landing.x - from.x, landing.z - from.z).length() / hv
+	if gravity > 0.0 and velocity.y > 0.0:
+		return 2.0 * velocity.y / gravity
+	return 0.0
+
+
+## The length of a cue's first file (0 when it does not resolve).
+func cue_seconds(cue_id: String) -> float:
+	var cue: Dictionary = audio.call("resolve", cue_id)
+	var files: Array = cue.get("files", [])
+	if files.is_empty():
+		return 0.0
+	var stream := audio.call("load_stream", str(files[0])) as AudioStream
+	return stream.get_length() if stream != null else 0.0
+
+
+func _release_scheduled(now: float) -> void:
+	if _scheduled.is_empty():
+		return
+	var keep: Array = []
+	for r: Dictionary in _scheduled:
+		if now + 1e-6 >= float(r.due_s):
+			request(r.chain, r.at, r.opts)
+		else:
+			keep.append(r)
+	_scheduled = keep
+
+
+func _drop_scheduled(projectile_id: int) -> void:
+	var keep: Array = []
+	for r: Dictionary in _scheduled:
+		if int(r.get("projectile", -1)) != projectile_id:
+			keep.append(r)
+	_scheduled = keep
+
+
+## The requests waiting for their time (tests, the F3 panel).
+func scheduled() -> Array:
+	return _scheduled.duplicate(true)
+
+
+# --------------------------------------------------------------------------- P28: arrivals
+
+## A friendly settlement entered: when the giant's audio zone becomes a record with `arrival` and
+## the giant stands at its min_stage or above, the crowd gasps toward the giant and the town bell
+## rings at the record's POI - once a level visit, and not while its faction is warned or hostile.
+func _poll_arrival() -> void:
+	var rec: Dictionary = audio.call("current_region")
+	var zone := str(rec.get("id", ""))
+	if zone == _arrival_zone:
+		return
+	_arrival_zone = zone
+	var arrival: Variant = rec.get("arrival")
+	if typeof(arrival) != TYPE_DICTIONARY or _arrived.has(zone):
+		return
+	var p := _player()
+	if p == null or p.growth_stage < int((arrival as Dictionary).get("min_stage", ARRIVAL_MIN_STAGE)):
+		return
+	var faction := str((arrival as Dictionary).get("faction", ""))
+	if faction != "":
+		var short := faction.trim_prefix(FactionState.RECORD_PREFIX)
+		if FactionState.is_hostile(short) or FactionState.is_warned(short):
+			return
+	_arrived[zone] = true
+	var centre := _player_pos()
+	for poi: Variant in rec.get("pois", []):
+		var c: Variant = GameData.get_record(str(poi)).get("position_m")
+		if typeof(c) == TYPE_ARRAY and (c as Array).size() == 3:
+			centre = Vector3(float(c[0]), float(c[1]), float(c[2]))
+			break
+	var ppos := _player_pos()
+	var toward := ppos + (centre - ppos).limit_length(ARRIVAL_GASP_M) if ppos != Vector3.INF else centre
+	request(["sfx.voice.crowd.gasp"], toward + Vector3.UP * 1.5, {"priority": 70, "reason": "arrival"})
+	request(["sfx.world.town_bell"], centre + Vector3.UP * 8.0, {"priority": 70, "reason": "arrival"})
+
+
+## The settlements announced this level visit (tests).
+func arrivals() -> PackedStringArray:
+	return PackedStringArray(_arrived.keys())

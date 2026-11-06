@@ -24,6 +24,12 @@ extends Node
 ## waits combat_hold_s, leaving danger danger_hold_s.
 ##
 ## The director uses only its own RandomNumberGenerator; nothing here touches the simulation.
+##
+## P28: a place's audio_region may keep its region's set with other melody rules (Brannock,
+## Hollowmere, Skarn: longer rests): when the zone record changes but the set stays, the scheduler's
+## rules are set again from the set's melody block and the new record's `melody` override (the
+## layer override follows the record every poll already). The campaign's completion
+## (on_campaign_completed) plays the crowned stinger before the campaign's end context.
 
 enum State { SILENT, CONTEXT, ZONE, BOSS }
 const STATE_NAMES := ["silent", "context", "zone", "boss"]
@@ -121,6 +127,8 @@ var _end_context := ""
 var _fading_to_silence := false
 var _zone_record_id := ""
 var _layers_override: Dictionary = {}
+## P28: the zone record whose melody rules the scheduler follows ("" = the set's own).
+var _melody_rules_record := ""
 ## P23: with --audio-stats every set start prints one "AUDIO_MUSIC {json}" line (set, state,
 ## context, the director's clock): the web audio check (tools/web/audio_check.mjs) reads the zone
 ## set's start as the moment the giant stands in the Hollow.
@@ -170,6 +178,7 @@ func reset() -> void:
 	_fading_to_silence = false
 	_zone_record_id = ""
 	_layers_override = {}
+	_melody_rules_record = ""
 	scheduler = MelodyScheduler.new()
 	rng.seed = hash("audio.music")
 	clock_positions = false
@@ -276,9 +285,10 @@ func on_slice_completed() -> void:
 	play_stinger("mus.stinger.prologue_end", 100)
 
 
-## The world's end (P36): the campaign_end context.
+## The world's end (P36): the crowned stinger (P28), then the campaign_end context.
 func on_campaign_completed() -> void:
 	_end_context = "campaign_end"
+	play_stinger("mus.stinger.crowned", 95)
 
 
 ## Every deck fades out over `seconds`, then silence (level_leaving: 1 s; death: 1.5 s). With
@@ -384,6 +394,8 @@ func _poll(now: float, cfg: Dictionary) -> void:
 				note_event()
 	if state == State.ZONE or state == State.BOSS:
 		_update_intensity(now, cfg)
+	if state == State.ZONE and deck != null and pending.is_empty() and _zone_record_id != _melody_rules_record:
+		refresh_melody_rules()
 	if deck != null and (state == State.ZONE or state == State.CONTEXT):
 		if scheduler.update(now, intensity == AudioMath.EXPLORE):
 			pass   # the silence starts: _target_db() fades every stem over fade_s
@@ -672,6 +684,7 @@ func _start_deck(set_id_value: String, fade_s: float) -> void:
 		segs, rng, _now())
 	if typeof(_zone_melody_override()) == TYPE_DICTIONARY:
 		_apply_melody_override(_zone_melody_override())
+	_melody_rules_record = _zone_record_id if state == State.ZONE else ""
 	d.segment = AudioMath.segment_index(from, d.segment_s)
 	var into_segment := from - d.segment * d.segment_s
 	if into_segment <= SEGMENT_ENTRY_S:
@@ -700,6 +713,23 @@ func _zone_melody_override() -> Variant:
 		return null
 	var rec := GameData.get_record(_zone_record_id)
 	return rec.get("melody") if typeof(rec.get("melody")) == TYPE_DICTIONARY else null
+
+
+## P28: the scheduler's rules again for the zone record now (the set's melody block, then the
+## record's override), keeping its state: a place inside a region that keeps the region's set.
+func refresh_melody_rules() -> void:
+	_melody_rules_record = _zone_record_id
+	if deck == null:
+		return
+	var melody: Dictionary = deck.rec.get("melody", {}) if typeof(deck.rec.get("melody")) == TYPE_DICTIONARY else {}
+	scheduler.play_loops = MelodyScheduler._range(melody.get("play_loops"), Vector2i(1, 2))
+	scheduler.rest_loops = MelodyScheduler._range(melody.get("rest_loops"), Vector2i(1, 3))
+	scheduler.max_repeat = maxi(1, int(melody.get("max_repeat", 2)))
+	scheduler.min_phrase_gap_s = float(melody.get("min_phrase_gap_s", 60.0))
+	scheduler.rest_weight = clampf(float(melody.get("rest_weight", MelodyScheduler.DEFAULT_REST_WEIGHT)), 0.0, 1.0)
+	var o: Variant = _zone_melody_override()
+	if typeof(o) == TYPE_DICTIONARY:
+		_apply_melody_override(o)
 
 
 func _apply_melody_override(m: Dictionary) -> void:

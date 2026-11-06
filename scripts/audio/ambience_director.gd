@@ -15,6 +15,13 @@ extends Node
 ##             radius play (3D streams), the others stop.
 ## Ducks (audio_mix.duck: dialogue, boss, combat) lower the beds, the emitters and the spots.
 ## It uses only its own RandomNumberGenerator.
+##
+## P28: a bed or an emitter that the new set shares with the old one keeps playing through a zone
+## change (an emitter is the same when its cue and position are; a bed when its cue is), instead of
+## cross-fading against itself; and the formations march: of the formations advancing (Formation's
+## live registry, state "advancing") within MARCH_REACH_M x the distance scale, the nearest
+## MAX_MARCHES each carry MARCH_CUE at their anchor (a 3D stream that follows it, priority 75 in
+## its bank), fading in and out over EMITTER_FADE_S; nothing in a level that is silent by decision.
 
 const BED_FADE_S := 3.0
 const EMITTER_FADE_S := 1.0
@@ -23,6 +30,10 @@ const DEFAULT_SPOT_INTERVAL_S := Vector2(6.0, 14.0)
 const DEFAULT_SPOT_DISTANCE_M := Vector2(15.0, 40.0)
 const SILENT_DB := -80.0
 const POLL_S := 0.25
+## P28: the formations' march loop, at most this many at once, within this reach (x the scale).
+const MARCH_CUE := "amb.march_loop"
+const MAX_MARCHES := 2
+const MARCH_REACH_M := 120.0
 
 var audio: Node = null
 var set_id := ""
@@ -35,6 +46,9 @@ var emitters: Dictionary = {}
 var spots_played: Array = []
 var flushed_until_s := -INF
 var flushes := 0
+## P28: march emitters playing or fading: formation id -> {"player", "formation", "gain", "target",
+## "volume_db"} (weak: a dissolved formation's loop fades out).
+var marches: Dictionary = {}
 
 var _next_spot_s := INF
 var _last_poll_s := -INF
@@ -53,6 +67,9 @@ func reset() -> void:
 	for k: String in emitters:
 		_free_player(emitters[k].player)
 	emitters.clear()
+	for k: String in marches:
+		_free_player(marches[k].player)
+	marches.clear()
 	spots_played.clear()
 	set_id = ""
 	_rec = {}
@@ -89,6 +106,7 @@ func _poll(now: float) -> void:
 	if want != set_id:
 		_switch(want, now)
 	_update_emitters()
+	_update_marches()
 
 
 ## The ambience_set for where the giant is: the context's (title, end, sandbox) or the zone's.
@@ -120,6 +138,16 @@ func _switch(new_set: String, now: float) -> void:
 		var cue: Dictionary = audio.call("resolve", str(bed.get("cue", "")))
 		if cue.is_empty():
 			audio.call("note_missing", str(bed.get("cue", "")))
+			continue
+		var kept := false
+		for b: Dictionary in beds:
+			if str(b.cue) == str(cue.id) and is_instance_valid(b.player):
+				# P28: the old set's bed is this set's too: it plays on (at this set's level)
+				b.target = 1.0
+				b.volume_db = float(cue.get("volume_db", 0.0)) + float(bed.get("volume_db", 0.0))
+				kept = true
+				break
+		if kept:
 			continue
 		var stream := _loop_stream(cue)
 		if stream == null:
@@ -235,7 +263,7 @@ func _update_emitters() -> void:
 			var pos := Vector3(float(p[0]), float(p[1]), float(p[2]))
 			var d := centre.distance_to(pos)
 			if d <= float(e.get("radius_m", 0.0)):
-				near.append({"key": "%s#%d" % [e.get("cue", ""), i], "d": d, "e": e, "pos": pos})
+				near.append({"key": emitter_key(str(e.get("cue", "")), pos), "d": d, "e": e, "pos": pos})
 		near.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.d < b.d)
 		for k in mini(MAX_EMITTERS, near.size()):
 			wanted[near[k].key] = near[k]
@@ -271,6 +299,73 @@ func _update_emitters() -> void:
 			"volume_db": float(cue.get("volume_db", 0.0)) + float(w.e.get("volume_db", 0.0)), "position": w.pos}
 
 
+## P28: an emitter's identity across sets: its cue and its position (to the decimetre).
+static func emitter_key(cue_id: String, pos: Vector3) -> String:
+	return "%s@%d,%d,%d" % [cue_id, roundi(pos.x * 10.0), roundi(pos.y * 10.0), roundi(pos.z * 10.0)]
+
+
+## P28: the march loops - the nearest MAX_MARCHES advancing formations within MARCH_REACH_M x the
+## distance scale of the listener carry MARCH_CUE at their anchor; the others fade out.
+func _update_marches() -> void:
+	var wanted := {}
+	var level_id := str(audio.get("level_id"))
+	if level_id != "" and level_id != AudioDirector.SANDBOX_LEVEL and not bool(audio.call("is_silent_level", level_id)) \
+			and not bool(audio.call("level_loading")):
+		var centre: Vector3 = audio.call("listener_position")
+		var reach := MARCH_REACH_M * float(audio.call("distance_scale"))
+		var near: Array = []
+		for f: Formation in Formation.live():
+			if f.state != "advancing" or f.living_count() <= 0:
+				continue
+			var d := centre.distance_to(f.anchor())
+			if d <= reach:
+				near.append({"f": f, "d": d})
+		near.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.d < b.d)
+		for k in mini(MAX_MARCHES, near.size()):
+			wanted[(near[k].f as Formation).id] = near[k].f
+	for fid: String in marches.keys():
+		if not wanted.has(fid):
+			marches[fid].target = 0.0
+	for fid: String in wanted:
+		if marches.has(fid):
+			marches[fid].target = 1.0
+			continue
+		var cue: Dictionary = audio.call("resolve", MARCH_CUE)
+		if cue.is_empty():
+			audio.call("note_missing", MARCH_CUE)
+			return
+		var stream := _loop_stream(cue)
+		if stream == null:
+			return
+		var f: Formation = wanted[fid]
+		var player := AudioStreamPlayer3D.new()
+		player.name = "March_%d" % marches.size()
+		VoicePool.configure_3d(player)
+		player.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
+		player.bus = "Ambience"
+		var cls: Dictionary = audio.call("class_distances", str(cue.get("class", "big")))
+		player.unit_size = float(cls.get("unit", 8.0))
+		player.max_distance = float(cls.get("max", 60.0))
+		player.stream = stream
+		player.volume_db = SILENT_DB
+		add_child(player)
+		player.global_position = f.anchor()
+		player.play()
+		marches[fid] = {"player": player, "formation": weakref(f), "gain": 0.0, "target": 1.0,
+			"volume_db": float(cue.get("volume_db", 0.0))}
+		audio.call("log_cue", {"cue": str(cue.id), "requested": MARCH_CUE, "bus": "Ambience", "pos": f.anchor(),
+			"voice": -5, "priority": int(cue.get("priority", 75)), "reason": "march", "file": str((cue.files as Array)[0])})
+
+
+## The formations whose march plays now (tests, the F3 panel).
+func march_ids() -> PackedStringArray:
+	var out := PackedStringArray()
+	for fid: String in marches:
+		if float(marches[fid].target) > 0.0:
+			out.append(fid)
+	return out
+
+
 ## The Ambience duck of the active reasons (audio_mix.duck: dialogue, boss, combat).
 func duck_db() -> float:
 	return AudioMath.duck_db((audio.get("mix") as Dictionary).get("duck", {}), audio.call("active_ducks"), "Ambience")
@@ -299,6 +394,22 @@ func _update_volumes(delta: float) -> void:
 		if float(e.gain) <= 0.0001 and float(e.target) <= 0.0:
 			_free_player(p3)
 			emitters.erase(key)
+	for fid: String in marches.keys():
+		var m: Dictionary = marches[fid]
+		var f := (m.formation as WeakRef).get_ref() as Formation
+		if f == null or f.dissolved:
+			m.target = 0.0
+		var pm: AudioStreamPlayer3D = m.player
+		if not is_instance_valid(pm):
+			marches.erase(fid)
+			continue
+		if f != null and pm.is_inside_tree():
+			pm.global_position = f.anchor()   # it marches with the formation
+		m.gain = move_toward(float(m.gain), float(m.target), delta / EMITTER_FADE_S)
+		MusicDirector.set_volume(pm, (float(m.volume_db) + linear_to_db(float(m.gain)) + duck) if float(m.gain) > 0.0001 else SILENT_DB)
+		if float(m.gain) <= 0.0001 and float(m.target) <= 0.0:
+			_free_player(pm)
+			marches.erase(fid)
 
 
 func bed_cues() -> PackedStringArray:
@@ -311,7 +422,7 @@ func bed_cues() -> PackedStringArray:
 
 func debug_lines() -> PackedStringArray:
 	var out := PackedStringArray()
-	out.append("AMBIENCE %s  beds %s  emitters %d  spots %d%s" % [set_id if set_id != "" else "-",
-		",".join(bed_cues()) if not bed_cues().is_empty() else "-", emitters.size(), spots_played.size(),
-		"  flushed" if _now() < flushed_until_s else ""])
+	out.append("AMBIENCE %s  beds %s  emitters %d  marches %d  spots %d%s" % [set_id if set_id != "" else "-",
+		",".join(bed_cues()) if not bed_cues().is_empty() else "-", emitters.size(), march_ids().size(),
+		spots_played.size(), "  flushed" if _now() < flushed_until_s else ""])
 	return out
