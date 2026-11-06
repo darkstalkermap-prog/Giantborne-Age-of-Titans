@@ -1603,6 +1603,84 @@ func _current_post(my_position: Vector3) -> Dictionary:
 # Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
 
 ## @anchor P22
+# --- ranged units keep to the camera's side; posts asked again (P22) -----------------------------
+# Plan M6-M9 §3.4 design 8 (the M5 off-camera share: 22-24 % of hits against a target under 20 %).
+# A ranged unit with tactics.front_arc_deg prefers firing points in front of the giant's camera
+# (the actor's resolver, EnemyActor.front_arc_firing_point). keep_front_arc() lets it give up a held
+# point that left the arc - at most every FRONT_ARC_REPICK_S, and only once the camera has turned
+# FRONT_ARC_REPICK_YAW_DEG since its last pick (so a point with no better place in the arc is not
+# searched again and again) - and prepare_ranged_shot() tells the actor whether a shot is drawn
+# from outside the camera's view (its windup then lasts tactics.off_camera_aim_s).
+
+const FRONT_ARC_REPICK_S := 3.0
+const FRONT_ARC_REPICK_YAW_DEG := 20.0
+
+## view_probe() -> {"yaw": the giant's camera yaw, "on_camera": this unit in its view} ({} = no
+## camera). The actor installs it (EnemyActor.camera_view); unset, nothing changes.
+var view_probe := Callable()
+## shot_preparer(shot_id: String, off_camera: bool) -> void: the actor readies the shot's windup
+## (EnemyActor.prepare_shot).
+var shot_preparer := Callable()
+var _arc_pick_tick := NO_TICK
+var _arc_pick_yaw := INF
+
+
+## True when `point`, seen from `target_pos`, lies within `arc_deg` / 2 of `cam_yaw`: the camera
+## looks over the target toward it, so it is on screen. Pure.
+static func in_front_arc(point: Vector3, target_pos: Vector3, cam_yaw: float, arc_deg: float) -> bool:
+	var d := point - target_pos
+	d.y = 0.0
+	if d.length_squared() < 1e-4:
+		return true
+	return absf(angle_difference(cam_yaw, TargetingRules.yaw_of(d))) <= deg_to_rad(arc_deg) * 0.5 + 1e-4
+
+
+## The giant's camera as the actor reports it ({} without one or without a probe).
+func camera_view() -> Dictionary:
+	var v: Variant = view_probe.call() if view_probe.is_valid() else {}
+	return v if typeof(v) == TYPE_DICTIONARY else {}
+
+
+## Before `shot_id` starts: the actor learns whether it is drawn from outside the camera's view.
+func prepare_ranged_shot(shot_id: String) -> void:
+	if shot_id == "" or not shot_preparer.is_valid():
+		return
+	var view := camera_view()
+	shot_preparer.call(shot_id, not view.is_empty() and not bool(view.get("on_camera", true)))
+
+
+## After decide() (ranged brains): a new firing point remembers the camera's yaw; a held point
+## outside the front arc is given up (the next decision picks again, in the arc when it can) - not
+## during a shot, at most every FRONT_ARC_REPICK_S, and only when the camera turned since the pick.
+## `before` is the firing point before decide().
+func keep_front_arc(before: Vector3) -> void:
+	var arc := float(tactics.get("front_arc_deg", 0.0))
+	if arc <= 0.0:
+		return
+	var view := camera_view()
+	if view.is_empty():
+		return
+	var yaw := float(view.get("yaw", 0.0))
+	if firing_point != before:
+		if firing_point != Vector3.INF:
+			_arc_pick_tick = now
+			_arc_pick_yaw = yaw
+		return
+	if firing_point == Vector3.INF or not (state in [AIState.APPROACH, AIState.RECOVER]):
+		return
+	if now - _arc_pick_tick < _ticks(FRONT_ARC_REPICK_S) or in_front_arc(firing_point, last_known, yaw, arc):
+		return
+	if _arc_pick_yaw != INF and absf(rad_to_deg(angle_difference(_arc_pick_yaw, yaw))) < FRONT_ARC_REPICK_YAW_DEG:
+		return
+	_drop_firing_point()
+	_arc_pick_tick = now
+	_arc_pick_yaw = yaw
+
+
+## Asks the post_resolver again at the next decision (a member at peace stepping back from a
+## fight, or back to its post: EnemyActor's P22 section).
+func refresh_post() -> void:
+	_post_tick = NO_TICK
 
 ## @anchor P24b
 

@@ -106,7 +106,11 @@
 		{"name": "bank_e_s", "from": [112, -13.5], "to": [112, 95], "h": 12, "t": 0.6},
 		{"name": "bank_e_far", "from": [112, 175], "to": [112, 200], "h": 12, "t": 0.6},
 		{"name": "bridge_rail_n", "from": [99.7, -26.5], "to": [112.3, -26.5], "h": 12, "t": 0.6},
-		{"name": "bridge_rail_s", "from": [99.7, -13.5], "to": [112.3, -13.5], "h": 12, "t": 0.6}
+		{"name": "bridge_rail_s", "from": [99.7, -13.5], "to": [112.3, -13.5], "h": 12, "t": 0.6},
+		{"name": "yard_fill_w", "from": [67.25, -50], "to": [67.25, -33.5], "h": 12, "t": 10.5,
+			"note": "P22: fills the village yard between cottage_03, cottage_04, cottage_05, the watchtower and the north palisade (FOLLOWUPS / HOW_IT_PLAYS: the giant layer's navmesh had an island there whose 3-4 m ways in a stage-2 or stage-3 giant walks through but no path leads out of)"},
+		{"name": "yard_fill_n", "from": [75, -50], "to": [75, -42.5], "h": 12, "t": 5,
+			"note": "P22: the yard's strip north of the watchtower"}
 	],
 	"water": [
 		{"name": "river_n", "min": [100, -200], "max": [112, -26.2]},
@@ -271,8 +275,8 @@
 		{"id": "valley.marker.crown", "kind": "objective", "pos": [-55, 0, -170]},
 		{"id": "valley.marker.guard_post_1", "kind": "formation", "pos": [60, 0, -28], "faction": "village"},
 		{"id": "valley.marker.guard_post_2", "kind": "formation", "pos": [60, 0, -12], "faction": "village"},
-		{"id": "valley.marker.guard_post_3", "kind": "formation", "pos": [88, 0, -26], "faction": "village"},
-		{"id": "valley.marker.guard_post_4", "kind": "formation", "pos": [88, 0, -14], "faction": "village"},
+		{"id": "valley.marker.guard_post_3", "kind": "formation", "pos": [73.5, 0, -30], "faction": "village"},
+		{"id": "valley.marker.guard_post_4", "kind": "formation", "pos": [73.5, 0, -10], "faction": "village"},
 		{"id": "valley.marker.road_line_1", "kind": "formation", "pos": [-12, 0, -46]},
 		{"id": "valley.marker.road_line_2", "kind": "formation", "pos": [-4, 0, -52]},
 		{"id": "valley.marker.quarry_line_1", "kind": "formation", "pos": [32, 0, -138]},

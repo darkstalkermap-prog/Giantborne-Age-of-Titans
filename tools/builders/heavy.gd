@@ -167,6 +167,8 @@ static func build_ogre(kit: SceneKit) -> Node:
 	var parts := _ogre_body(kit, "Ogre", S_OGRE, "ogre_01", "enemy.ogre", 1.0, 0.9, "ogre_skin", "ogre_hide", true)
 	var torso: Node3D = parts.torso
 	torso.add_child(kit.box("Strap", Vector3(0.18, 1.2, 1.18), Vector3(0.3, 0.9, 0.0), "ogre_hide"))
+	# P22 (decision 9): one vertex-coloured mesh per pivot, the club its own: 6 meshes, was 21.
+	kit.merge_rig(parts.body, {"ShoulderR": [["Weapon", ["Club"]]]})
 	return parts.root
 
 
@@ -185,6 +187,8 @@ static func build_king(kit: SceneKit) -> Node:
 			"king_gold"))
 	var hand: Node3D = parts.right
 	hand.add_child(kit.box("ClubBand", Vector3(0.66, 0.66, 0.2) * s, Vector3(0, 0, -2.4) * s, "king_gold"))
+	# P22 (decision 9): one vertex-coloured mesh per pivot, the banded club its own: 6 meshes, was 30.
+	kit.merge_rig(parts.body, {"ShoulderR": [["Weapon", ["Club", "ClubBand"]]]})
 	return parts.root
 
 

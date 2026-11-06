@@ -163,7 +163,9 @@ frame time the budget judges; `cpu_tick_ms` is the simulation's share. The stres
 the Valley walk ends on its own after about 3 minutes.
 
 Copy the `PERF_RESULT` lines (and `AUTOPILOT_RESULT`) into the table below. `scenes/test/` ships in
-exported builds (only `tests/` and `tools/` are excluded), so the stress arena loads there.
+the desktop exports (only `tests/` and `tools/` are excluded), so the stress arena loads there; the
+Web release leaves the test content out since P22 (`--preset="Web (test)"` of `tools/build_web.sh`
+keeps it).
 
 ## Container results
 
@@ -324,6 +326,54 @@ into a box inside its own arena), can only be judged rendered, and would not hel
 whose enemies are all close; for those a rig must cost fewer draw calls itself (its parts are
 animated, tinted and flashed one by one today).
 
+### Draw calls after P22 (merged rigs and the distance LOD)
+
+P22 (plan M6-M9 §3.4 designs 1 and 2, decision 9) did what the paragraph above asks for:
+
+- **Merged rigs.** Every rig is one vertex-coloured mesh per animated pivot plus its weapon, all
+  with one material per actor (a flash is its emission, a tint multiplies its albedo):
+  `SceneKit.merge_rig`. Meshes under `Visual/Body`: soldier 16 -> 6, wolf 19 -> 7, archer 19 -> 6,
+  mage 16 -> 7, ogre 23 -> 6, Ogre King 31 -> 6, villager 12 -> 5, elder 14 -> 5, the giant
+  19 -> 8 (its chest, belt and head stay apart for first person).
+- **A distance level of detail by record** (`render_lod_m`: soldier, archer, mage and people 45 m,
+  wolf 40 m, ogre 70 m, the Ogre King never): beyond it the renderer draws a copy of the actor's
+  one-box proxy instead of its rig (`visibility_range_end` / `_begin` with a 10 m overlap), at AI
+  LOD tiers 0 and 1; tier 2 is unchanged.
+
+The stress arena's twelve combatants (4 soldiers, 3 wolves, 2 archers, a mage, 2 ogres) all in view
+at full detail, `low`'s look, measured by `tests/support/rig_draw_probe.gd` (the slow suite
+`test_rig_draw_calls` runs it under Xvfb):
+
+| Build | Draw calls for the twelve | Per combatant |
+| --- | --- | --- |
+| Base of P22 (`ae6e143`) | 221 | 18.4 |
+| P22 | 77 | 6.4 |
+
+The same commands as above (Xvfb, `--fixed-fps 60`, 640 x 360), base and P22 in one session:
+
+| Run | p50 | p95 | p99 | max |
+| --- | --- | --- | --- | --- |
+| Valley walk, `low`, base | 256 | 653 | 656 | 656 |
+| Valley walk, `low`, P22 | 201 | 251 | 258 | 268 |
+| Valley walk, `medium`, base | 449 | 821 | 1,012 | 1,164 |
+| Valley walk, `medium`, P22 | 317 | 412 | 443 | 473 |
+| Stress arena, `low`, 45 s, base | 295 | 396 | - | 449 |
+| Stress arena, `low`, 45 s, P22 | 227 | 281 | - | 317 |
+
+Largest view per district after P22, `low`: Hollow 238, Old Wood 253, Thornwick 268, Quarry 259,
+Barrow 263, Ruins 254, Kingsfall 249 (base: 249, 349, 485, 464, 483, 577, 483). The LOD comparison's
+twelve dormant members (beyond the director's 90 m) now cost the same at every tier: 248 at tiers 0
+and 1, 251 at tier 2 (base 653 / 653 / 262): at that distance the renderer draws their boxes anyway.
+
+- **The Valley at `low` is at the 250 budget**: half the walk's views under 201, 95 % under 251; the
+  largest is Thornwick's square (268), where the six villagers, the elder, the four guards, the
+  captain and the tower archer stand within 45 m together. CPU per tick p95 on the rendered walk
+  4.3 ms (base 4.1 ms; the software renderer shares the CPU).
+- **The stress arena's p50 drops 23 %, not the plan's 40 %**: its twelve rigs drop 65 % (above), but
+  they are a minority of its view - twenty multi-part breakables, up to 40 debris pieces, the giant
+  and the floor make the rest.
+- `medium` costs about a half more than `low` (shadows to 120 m, scenery to 220 m).
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
@@ -338,10 +388,12 @@ animated, tinted and flashed one by one today).
 1. **Sim CPU per tick is within its budget** in the container: p95 4.88 ms in the stress route
    (twelve engaged combatants, debris at its cap) and 3.37 ms on the Valley walk, against 8 ms, in a
    debug build. Real-PC numbers: NOT RUN.
-2. **Draw calls (P17b: the static world is within budget; the actors are not).** See "Draw calls
-   after P17b": the props are merged and faded with the scenery and `low` has no sun shadows, so a
-   static view costs at most 93 draw calls at `low` and 221 at `medium`; the walk is at p50 256,
-   max 656 at `low`. Views with about five or more full-rig enemies exceed 250 (about 33 each).
+2. **Draw calls (P22: the actors are merged and fade to boxes by distance).** See "Draw calls after
+   P22": a rig costs about 6 draw calls, and beyond its record's distance one; the Valley walk at
+   `low` is at p50 201, p95 251, max 268 (Thornwick's square with thirteen people). Before P22 (P17b):
+   the props are merged and faded with the scenery and `low` has no sun shadows, so a
+   static view costs at most 93 draw calls at `low` and 221 at `medium`; the walk was at p50 256,
+   max 656 at `low`, views with about five or more full-rig enemies over 250 (about 33 each).
    P14's original finding follows. **Draw calls were 2-4 times over the 250 budget** in the Valley
    (p50 493, max 1,084 at `low`) and the stress arena (p50 860). Draw calls do not depend on the
    GPU, so this holds on the reference PC.

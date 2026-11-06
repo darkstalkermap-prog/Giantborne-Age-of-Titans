@@ -240,35 +240,44 @@ func test_a_broken_gate_opens_its_nav_link() -> void:
 	var g := (load(PRACTICE) as PackedScene).instantiate() as BreakableProp
 	g.world_id = "test.nav_gate"
 	region.add_child(g)
+	var map := world.get_world_3d().navigation_map
+	var added_at := NavigationServer3D.map_get_iteration_id(map)
 	world.add_child(region)
 	await step_ticks(2)
-	var map := region.get_world_3d().navigation_map
 	var from := Vector3(0, 0, 70)
 	var to := Vector3(0, 0, 50)
 	var direct := from.distance_to(to)
 	assert_false(g.nav_links_enabled(), "the intact gate's link is closed")
-	var before := await _path_length(map, from, to, false)
+	var before := await _path_length(map, from, to, added_at, false)
 	assert_true(before < 0.0 or before > 2.0 * direct,
 		"before the break there is no way across (%.1f m vs %.1f direct)" % [before, direct])
+	var intact_at := NavigationServer3D.map_get_iteration_id(map)
 	queue_hit("tester", "test.nav_gate", Vector3(0, 1, 64), 1000.0)
 	await step_ticks(2)
 	assert_true(g.destroyed and g.nav_links_enabled(), "the gate broke and enabled its link")
-	var after := await _path_length(map, from, to, true)
+	var after := await _path_length(map, from, to, intact_at, true)
 	assert_true(after > 0.0 and after < 2.0 * direct,
 		"after the break the path crosses it (%.1f m < 2 x %.1f)" % [after, direct])
 	region.queue_free()
 	await step_ticks(2)
 
 
-## The length of the map's path from `from` to `to`, -1 when it does not reach `to`. Map
-## iterations sync asynchronously, so it first waits until the region is in the map (the closest
-## point to `from` is on it); with `expect_reach` it keeps polling (enabling a link takes a map
-## iteration) until the path reaches `to`, at most 3 s.
-func _path_length(map: RID, from: Vector3, to: Vector3, expect_reach: bool) -> float:
+## The length of the map's path from `from` to `to`, -1 when it does not reach `to`. P22 (the
+## nav-link flake, plan M6-M9 §3.4 design 10): map iterations sync asynchronously, so it waits
+## for the map, not for a time - until an iteration later than `since` (the iteration id before
+## the change) is published with the region in it (the closest point to `from` is on it); with
+## `expect_reach` it keeps waiting while the path does not reach `to` and fewer than two later
+## iterations are out (the first may have been built before the link changed). MAX_SYNC_TICKS is
+## only a safety net against a map that never synchronizes.
+const MAX_SYNC_TICKS := 1200
+
+
+func _path_length(map: RID, from: Vector3, to: Vector3, since: int, expect_reach: bool) -> float:
 	var length := -1.0
-	for i in 180:
+	for i in MAX_SYNC_TICKS:
 		await step_ticks(1)
-		if NavigationServer3D.map_get_closest_point(map, from).distance_to(from) > 1.0:
+		var iteration := NavigationServer3D.map_get_iteration_id(map)
+		if iteration <= since or NavigationServer3D.map_get_closest_point(map, from).distance_to(from) > 1.0:
 			continue
 		var path := NavigationServer3D.map_get_path(map, from, to, true)
 		length = -1.0
@@ -276,7 +285,7 @@ func _path_length(map: RID, from: Vector3, to: Vector3, expect_reach: bool) -> f
 			length = 0.0
 			for j in range(1, path.size()):
 				length += path[j - 1].distance_to(path[j])
-		if not expect_reach or length > 0.0:
+		if not expect_reach or length > 0.0 or iteration >= since + 2:
 			return length
 	return length
 

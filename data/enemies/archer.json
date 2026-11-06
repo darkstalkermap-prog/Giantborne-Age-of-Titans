@@ -5,6 +5,7 @@
 	"archetype": "archer",
 	"display_name": "Archer",
 	"scene": "res://scenes/enemies/archer.tscn",
+	"render_lod_m": 45,
 	"description": "Keeps 12-20 m from the giant (15.6-26 m and spread 10 m apart once outmatched), seeks authored elevation and cover with line of sight, retreats when the giant closes in and kicks at its shins. Counterplay: pressure it or throw something at it.",
 	"height_m": 1.8,
 	"capsule_radius_m": 0.35,
@@ -54,6 +55,8 @@
 		"spread_m": 6,
 		"cover_search_radius_m": 25,
 		"launch_gap_s": 1.0,
+		"front_arc_deg": 150,
+		"off_camera_aim_s": 1.2,
 		"awe_ratio": 4.0,
 		"awe_morale_loss": 35
 	},

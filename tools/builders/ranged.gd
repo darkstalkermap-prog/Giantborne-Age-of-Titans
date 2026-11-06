@@ -134,6 +134,8 @@ static func build_archer(kit: SceneKit) -> Node:
 	hand.add_child(kit.box("LimbLower", Vector3(0.05, 0.06, 0.62), Vector3(0, -0.3, -0.56), "bow_wood"))
 	(hand.get_node("LimbLower") as Node3D).basis = Basis(Vector3.RIGHT, deg_to_rad(90.0))
 	hand.add_child(kit.box("String", Vector3(0.01, 1.2, 0.01), Vector3(0, 0, -0.44), "soldier_skin"))
+	# P22 (decision 9): one vertex-coloured mesh per pivot, the bow its own: 6 meshes, was 17.
+	kit.merge_rig(parts.body, {"ShoulderR": [["Weapon", ["Grip", "LimbUpper", "LimbLower", "String"]]]})
 	return parts.root
 
 
@@ -147,6 +149,9 @@ static func build_mage(kit: SceneKit) -> Node:
 	var hand: Node3D = parts.right
 	hand.add_child(kit.box("Staff", Vector3(0.06, 0.06, 1.3), Vector3(0, 0, -0.5 - 0.65), "bow_wood"))
 	hand.add_child(kit.sphere("Gem", 0.1, Vector3(0, 0, -1.82), "staff_gem"))
+	# P22 (decision 9): one vertex-coloured mesh per pivot (the robe hanging from the body is the
+	# body's), the staff its own: 7 meshes, was 14.
+	kit.merge_rig(parts.body, {"ShoulderR": [["Weapon", ["Staff", "Gem"]]]})
 	return parts.root
 
 

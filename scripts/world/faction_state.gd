@@ -1,93 +1,173 @@
 class_name FactionState
 extends RefCounted
-## The standing of a faction toward the giant (plan §3.13 design 2, decision 17): Thornwick's
-## guards and villagers ("village") are neutral until the giant offends them, turn hostile on a
-## second offence within OFFENCE_WINDOW_S, or stand down when intimidated.
+## The standing of each faction toward the giant (plan M2-M5 §3.13 design 2, decision 17;
+## generalised to faction records by P22, plan M6-M9 §2.12 and §3.4 design 6, decision 31).
 ##
-## The standing lives in WorldState flags, so checkpoints save it and reloads restore it:
-##   faction.<f>.warned      set (overwritten) by every first offence
-##   faction.<f>.hostile     try_set: a second offence within 30 s, or the cart barricade smashed
-##                           (prop.cart_barricade's on_destroyed_flags; only the barricade sets
-##                           quest.village.outcome = "force" - hostility never does)
-##   faction.<f>.stood_down  try_set by the elder's intimidation choice (P15's dialogue data)
-## Hostility wins over standing down (standing()).
+## A faction is a record "faction.<short>" (data/world/faction_<short>.json; members carry the short
+## name: an actor's `faction` "village" is faction.village, Thornwick): its texts, how many offences
+## within how many seconds turn it hostile, its initial disposition and its manners toward a giant.
+## A faction without a record (tests) keeps the M5 rules and the generic texts.
 ##
-## The static helpers read the flags. One shared hub (hub(), created by the first faction member
-## that needs it, kept for the whole run) does the bookkeeping:
-##   * Events.hit_resolved -> an offence: a direct (not area-effect) blow of a PLAYER-team
-##     attacker that connected (HIT, BLOCKED, PARRIED, IMMUNE or GUARD_BROKEN) with a member of a
-##     faction that is not hostile. One blow (attack instance) counts once, however many members it
-##     hits. Area effects never reach faction members (HitFactory.skip_candidate, P03).
-##   * Sim POST_RESOLVE, order 150: the offences of the tick in order. The first one, or one more
-##     than 30 s after the previous, warns: set_flag(warned), faction_changed(..., "warned") and the
-##     HUD line of TEXTS ("Thornwick's people cower. Strike again and they will fight you."). One within 30 s of the previous turns the faction hostile (try_set).
-##     Offences older than 30 s are forgotten; without the warned flag (a new game, a test) there is
-##     no previous offence.
-##   * Events.flag_changed: faction.<f>.hostile / .stood_down becoming truthy (from any writer)
-##     is announced in that POST_RESOLVE pass as faction_changed(tick, f, "hostile" | "stood_down"),
-##     with a HUD line. Guards (EnemyActor, P11b) and civilians (Civilian) listen to it; actors
-##     spawned later read the flags.
+## The standing lives in WorldState flags under the record's flag_prefix (default the record id,
+## so faction.village.<state>), so checkpoints save it and reloads restore it:
+##   warned      set (overwritten) by every offence that does not turn the faction hostile
+##   hostile     try_set: offences_to_hostile offences (default 2) within offence_window_s (30 s) of
+##               each other, or another writer (the cart barricade's on_destroyed_flags; only the
+##               barricade sets quest.village.outcome = "force" - hostility never does)
+##   stood_down  try_set by an intimidation (the elder's dialogue, P15's data)
+##   reconciled  set by reconcile(): the giant paid or did an errand (the faction record's
+##               `reconcile` names the talker and the price; P29 ships the first one)
+## standing(): reconciled wins over hostile, which wins over stood_down; a record whose `initial` is
+## "hostile" (the toll-riders) is hostile from the start until it is reconciled. An offence against
+## a reconciled faction is counted again: turning hostile clears `reconciled`.
+##
+## Offences (offended_faction): a direct (not area-effect) blow of a PLAYER-team attacker that
+## connected (HIT, BLOCKED, PARRIED, IMMUNE or GUARD_BROKEN) with a member of a faction that is not
+## hostile (area effects never reach members: HitFactory.skip_candidate); and, since P22, any damage
+## the player deals - blows, abilities, trampling - to a prop that belongs to a faction and is tagged
+## "house" or "engine" (prop_owner / prop_tags: the prop's `faction` / `prop_tags` property, its
+## node meta of those names, or the prop record's prop_tags). One blow (attack instance) counts once,
+## however many members or props it hits.
+##
+## One shared hub (hub(), created by the first faction member that needs it, kept for the whole run):
+##   * Events.hit_resolved -> pending offences;
+##   * Sim POST_RESOLVE, order 150: the offences of the tick in order: the hostile rule above, else a
+##     warning (set_flag(warned), faction_changed(..., "warned") and the record's warn_text); then
+##     the announcements: faction.<f>.hostile / .stood_down / .reconciled becoming truthy (from any
+##     writer) is announced as faction_changed(tick, f, state) with the record's text. Guards
+##     (EnemyActor, P11b) and civilians (Civilian) listen; actors spawned later read the flags;
+##   * every STEP_BACK_CHECK_TICKS (P22, Thornwick): a member at peace (an EnemyActor with a faction
+##     that is not hostile) with a living enemy (team ENEMY) within STEP_BACK_TRIGGER_M steps back
+##     from it (EnemyActor.faction_step_back), so a fight beside the guards does not draw the giant's
+##     blows onto them.
 
 const HOOK_ORDER := 150
-## A second offence within this many seconds of the previous one turns the faction hostile.
+const RECORD_PREFIX := "faction."
+## M5 defaults (a faction without a record, or a record without the key).
 const OFFENCE_WINDOW_S := 30.0
+const OFFENCES_TO_HOSTILE := 2
 ## The outcomes of a blow that make it an offence: it connected (EVADED and IGNORED do not).
 const OFFENCE_OUTCOMES := [HitResult.Outcome.HIT, HitResult.Outcome.BLOCKED, HitResult.Outcome.PARRIED,
 	HitResult.Outcome.IMMUNE, HitResult.Outcome.GUARD_BROKEN]
-## The flags of a faction's standing (faction.<f>.<state>) that are announced when they are set.
-const ANNOUNCED := ["hostile", "stood_down"]
-## The HUD line of each announced standing, per faction ("" = any other faction).
-const TEXTS := {
-	"village": {"warned": "Thornwick's people cower. Strike again and they will fight you.",
-		"hostile": "Thornwick turns on you: its guards will fight.",
-		"stood_down": "Thornwick's guards stand down."},
-	"": {"warned": "They cower. Strike again and they will fight you.",
-		"hostile": "They turn on you.", "stood_down": "They stand down."},
-}
-const KINDS := {"warned": "warn", "hostile": "bad", "stood_down": "info"}
+## Prop tags whose damage offends the prop's faction.
+const OFFENDED_PROP_TAGS := ["house", "engine"]
+## The states announced when their flag becomes truthy.
+const ANNOUNCED := ["hostile", "stood_down", "reconciled"]
+## The record keys of each state's HUD line.
+const TEXT_KEYS := {"warned": "warn_text", "hostile": "hostile_text", "stood_down": "stood_down_text",
+	"reconciled": "reconciled_text"}
+## The HUD lines of a faction without a record (or a record without the text).
+const FALLBACK_TEXTS := {"warned": "They cower. Strike again and they will fight you.",
+	"hostile": "They turn on you.", "stood_down": "They stand down.", "reconciled": "They forgive you."}
+const KINDS := {"warned": "warn", "hostile": "bad", "stood_down": "info", "reconciled": "good"}
 ## Offences kept in history (tests, debug).
 const HISTORY_SIZE := 32
 const NO_TICK := -1000000000
+## P22 (Thornwick): members at peace step back from an enemy this close (checked every
+## STEP_BACK_CHECK_TICKS); they go back once none is within STEP_BACK_RELEASE_M.
+const STEP_BACK_TRIGGER_M := 12.0
+const STEP_BACK_RELEASE_M := 14.0
+const STEP_BACK_CHECK_TICKS := 15
+const MEMBER_GROUP := "enemies"
 
 static var _hub: FactionState = null
 
 ## Offences handled so far, oldest first: {"tick", "faction", "target", "outcome", "action", "result"}
 ## (result: "warned" | "hostile").
 var history: Array = []
-var _last_offence: Dictionary = {}   # faction -> tick of its last offence
+## Step-backs started (tests, debug): [tick, member entity id, enemy entity id].
+var step_backs: Array = []
+var _offences: Dictionary = {}       # faction -> [ticks of its recent offences]
 var _pending: Array = []             # offences of this tick, handled in POST_RESOLVE
 var _announce: Array = []            # [faction, state] to announce in POST_RESOLVE
 var _counted: Dictionary = {}        # attack instance id -> tick (one offence per blow)
 
 
+# --------------------------------------------------------------------------- records (static)
+
+## The faction record of a member's short name ("village" -> faction.village), or {}.
+static func record_for(faction: String) -> Dictionary:
+	if faction == "":
+		return {}
+	var rec: Dictionary = GameData.get_record(RECORD_PREFIX + faction)
+	return rec if str(rec.get("type", "")) == "faction" else {}
+
+
+## The short names of every faction record ("village", ...), sorted.
+static func known_factions() -> PackedStringArray:
+	var out := PackedStringArray()
+	for rec: Dictionary in GameData.records_of_type("faction"):
+		var id := str(rec.get("id", ""))
+		if id.begins_with(RECORD_PREFIX):
+			out.append(id.substr(RECORD_PREFIX.length()))
+	out.sort()
+	return out
+
+
+## Direct offences within the window that turn the faction hostile (record, else 2).
+static func offences_to_hostile(faction: String) -> int:
+	return maxi(1, int(record_for(faction).get("offences_to_hostile", OFFENCES_TO_HOSTILE)))
+
+
+## The window (s) within which offences count together (record, else 30).
+static func offence_window_s(faction: String) -> float:
+	return float(record_for(faction).get("offence_window_s", OFFENCE_WINDOW_S))
+
+
+## "neutral" or "hostile": how the faction meets a giant before anything happened.
+static func initial(faction: String) -> String:
+	return str(record_for(faction).get("initial", "neutral"))
+
+
+## How far (m, plus the giant's height) its civilians step out of a giant's way instead of fleeing;
+## 0 when they flee (no record, civilians_give_way false: Thornwick).
+static func give_way_m(faction: String) -> float:
+	var rec := record_for(faction)
+	if not bool(rec.get("civilians_give_way", false)):
+		return 0.0
+	return maxf(0.5, float(rec.get("give_way_m", 3.0)))
+
+
 # --------------------------------------------------------------------------- flags (static)
 
-## "faction.<faction>.<state>", e.g. faction.village.hostile.
+## The flag of one of a faction's states: <flag_prefix>.<state> (faction.village.hostile).
 static func flag_id(faction: String, state: String) -> String:
-	return "faction.%s.%s" % [faction, state]
+	var prefix := str(record_for(faction).get("flag_prefix", RECORD_PREFIX + faction))
+	return "%s.%s" % [prefix, state]
 
 
 static func flag_set(faction: String, state: String) -> bool:
 	return faction != "" and truthy(WorldState.get_flag(flag_id(faction, state)))
 
 
+static func is_reconciled(faction: String) -> bool:
+	return flag_set(faction, "reconciled")
+
+
+## Hostile now: its hostile flag, or a hostile initial disposition - unless reconciled.
 static func is_hostile(faction: String) -> bool:
-	return flag_set(faction, "hostile")
+	if faction == "" or is_reconciled(faction):
+		return false
+	return flag_set(faction, "hostile") or initial(faction) == "hostile"
 
 
+## Stood down (and not reconciled since).
 static func is_stood_down(faction: String) -> bool:
-	return flag_set(faction, "stood_down")
+	return flag_set(faction, "stood_down") and not is_reconciled(faction)
 
 
 static func is_warned(faction: String) -> bool:
 	return flag_set(faction, "warned")
 
 
-## What a member of `faction` acts on now: "hostile" (it wins over standing down), "stood_down",
-## "warned" or "neutral". "" for no faction (always hostile, never a member).
+## What a member of `faction` acts on now: "reconciled" (it wins over hostile), "hostile" (it wins
+## over standing down), "stood_down", "warned" or "neutral". "" for no faction (always hostile,
+## never a member). Members treat "reconciled" like "neutral": at peace, holding their posts.
 static func standing(faction: String) -> String:
 	if faction == "":
 		return ""
+	if is_reconciled(faction):
+		return "reconciled"
 	if is_hostile(faction):
 		return "hostile"
 	if is_stood_down(faction):
@@ -110,30 +190,80 @@ static func truthy(v: Variant) -> bool:
 	return true
 
 
-## The faction a hit offends, or "" (see the class notes): a direct blow of a PLAYER-team attacker
-## that connected with a living or protected member of a faction that is not hostile.
+# --------------------------------------------------------------------------- offences (static)
+
+## The faction a hit offends, or "" (see the class notes): a member's faction for a direct blow that
+## connected, a prop's faction for the player's damage to its house or engine.
 static func offended_faction(result: HitResult) -> String:
-	if result == null or result.event == null or not OFFENCE_OUTCOMES.has(result.outcome):
+	if result == null or result.event == null:
 		return ""
 	var hit := result.event
-	if hit.area_effect:
-		return ""
 	var attacker := Sim.get_entity(hit.attacker_id)
 	if attacker == null or attacker.team != CombatEntity.Team.PLAYER:
 		return ""
 	var target := Sim.get_entity(hit.target_id)
-	if target == null or target.faction == "" or is_hostile(target.faction):
+	if target == null:
 		return ""
-	return target.faction
+	if target.faction != "":
+		if hit.area_effect or not OFFENCE_OUTCOMES.has(result.outcome) or is_hostile(target.faction):
+			return ""
+		return target.faction
+	var owner := prop_owner(target)
+	if owner == "" or is_hostile(owner) or result.health_damage <= 0:
+		return ""
+	for tag: String in prop_tags(target):
+		if OFFENDED_PROP_TAGS.has(tag):
+			return owner
+	return ""
 
 
-## The outcome of an offence at `tick` after one at `last_tick` (NO_TICK = none): "hostile" when
-## the faction was already warned and the previous offence lies at most `window_ticks` back,
-## otherwise "warned" (pure: the rule the hub applies).
+## The faction a prop belongs to: its actor's `faction` property (a string), else its node meta
+## "faction"; "" for none. (A prop's CombatEntity keeps no faction, so the giant may still lock it
+## and its area effects still reach it: TargetingRules.)
+static func prop_owner(target: CombatEntity) -> String:
+	if target == null or not is_instance_valid(target.actor):
+		return ""
+	var f: Variant = target.actor.get("faction")
+	if typeof(f) == TYPE_STRING and f != "":
+		return f
+	return str(target.actor.get_meta(&"faction", ""))
+
+
+## A prop's tags: its actor's `prop_tags` property, else its node meta "prop_tags", else its
+## record's prop_tags.
+static func prop_tags(target: CombatEntity) -> PackedStringArray:
+	if target == null or not is_instance_valid(target.actor):
+		return PackedStringArray()
+	for v: Variant in [target.actor.get("prop_tags"), target.actor.get_meta(&"prop_tags", null),
+			GameData.get_record(target.definition_id).get("prop_tags", null)]:
+		if v is Array or v is PackedStringArray:
+			return PackedStringArray(v)
+	return PackedStringArray()
+
+
+## The outcome of an offence at `tick` after one at `last_tick` (NO_TICK = none), M5's two-offence
+## rule: "hostile" when the faction was already warned and the previous offence lies at most
+## `window_ticks` back, otherwise "warned" (pure).
 static func offence_result(warned: bool, last_tick: int, tick: int, window_ticks: int) -> String:
-	if warned and last_tick != NO_TICK and tick - last_tick <= window_ticks:
+	return offence_result_n(warned, [] if last_tick == NO_TICK else [last_tick], tick, window_ticks, 2)
+
+
+## The outcome of an offence at `tick` given the ticks of the earlier ones (`recent`, oldest first):
+## "hostile" when the faction was already warned and this offence makes `needed` in a row, each at
+## most `window_ticks` after the one before; otherwise "warned" (pure). needed 1: always hostile.
+static func offence_result_n(warned: bool, recent: Array, tick: int, window_ticks: int, needed: int) -> String:
+	if needed <= 1:
 		return "hostile"
-	return "warned"
+	if not warned:
+		return "warned"
+	var chain := 1
+	var later := tick
+	for i in range(recent.size() - 1, -1, -1):
+		if later - int(recent[i]) > window_ticks:
+			break
+		chain += 1
+		later = int(recent[i])
+	return "hostile" if chain >= needed else "warned"
 
 
 # --------------------------------------------------------------------------- the hub
@@ -150,20 +280,31 @@ static func hub() -> FactionState:
 static func reset_for_tests() -> void:
 	if _hub != null:
 		_hub.history.clear()
-		_hub._last_offence.clear()
+		_hub.step_backs.clear()
+		_hub._offences.clear()
 		_hub._pending.clear()
 		_hub._announce.clear()
 		_hub._counted.clear()
 
 
+## Reconciles the giant with `faction` (a reconcile dialogue choice, P29): sets
+## <prefix>.reconciled, announced with the record's reconciled_text in the next POST_RESOLVE.
+static func reconcile(faction: String) -> void:
+	if faction == "":
+		return
+	hub()
+	WorldState.set_flag(flag_id(faction, "reconciled"), true)
+
+
 ## The tick of `faction`'s last offence (NO_TICK = none).
 func last_offence_tick(faction: String) -> int:
-	return int(_last_offence.get(faction, NO_TICK))
+	var list: Array = _offences.get(faction, [])
+	return int(list[-1]) if not list.is_empty() else NO_TICK
 
 
 ## Moves `faction`'s last offence to `tick` (tests: "40 s ago" without simulating 40 s).
 func set_last_offence_tick(faction: String, tick: int) -> void:
-	_last_offence[faction] = tick
+	_offences[faction] = [tick]
 
 
 func _install() -> void:
@@ -185,10 +326,30 @@ func _on_hit_resolved(tick: int, result: HitResult) -> void:
 
 
 func _on_flag_changed(_tick: int, id: String, value: Variant) -> void:
-	var parts := id.split(".")
-	if parts.size() != 3 or parts[0] != "faction" or not ANNOUNCED.has(parts[2]) or not truthy(value):
+	if not truthy(value):
 		return
-	_announce.append([parts[1], parts[2]])
+	var dot := id.rfind(".")
+	if dot <= 0:
+		return
+	var state := id.substr(dot + 1)
+	if not ANNOUNCED.has(state):
+		return
+	var faction := faction_of_prefix(id.substr(0, dot))
+	if faction != "":
+		_announce.append([faction, state])
+
+
+## The faction whose flags live under `prefix` ("faction.village" -> "village"): a record whose
+## flag_prefix it is, else faction.<short>; "" otherwise.
+static func faction_of_prefix(prefix: String) -> String:
+	for rec: Dictionary in GameData.records_of_type("faction"):
+		var id := str(rec.get("id", ""))
+		if str(rec.get("flag_prefix", id)) == prefix and id.begins_with(RECORD_PREFIX):
+			return id.substr(RECORD_PREFIX.length())
+	var parts := prefix.split(".")
+	if parts.size() == 2 and parts[0] == "faction" and parts[1] != "":
+		return parts[1]
+	return ""
 
 
 func _on_post_resolve(tick: int) -> void:
@@ -206,6 +367,8 @@ func _on_post_resolve(tick: int) -> void:
 		for blow: Variant in _counted.keys():
 			if tick - int(_counted[blow]) > 60:
 				_counted.erase(blow)
+	if tick % STEP_BACK_CHECK_TICKS == 0:
+		_check_step_backs(tick)
 
 
 func _apply_offence(o: Dictionary) -> void:
@@ -213,17 +376,25 @@ func _apply_offence(o: Dictionary) -> void:
 	if is_hostile(faction):
 		return   # an earlier offence of this pass (or the barricade) already turned it
 	var tick := int(o.tick)
-	var result := offence_result(is_warned(faction), last_offence_tick(faction), tick,
-		ActionDef.seconds_to_ticks(OFFENCE_WINDOW_S))
-	_last_offence[faction] = tick
+	var window := ActionDef.seconds_to_ticks(offence_window_s(faction))
+	var recent: Array = _offences.get(faction, [])
+	var result := offence_result_n(is_warned(faction), recent, tick, window, offences_to_hostile(faction))
+	recent.append(tick)
+	while recent.size() > 16:
+		recent.pop_front()
+	_offences[faction] = recent
 	var entry := o.duplicate()
 	entry["result"] = result
 	history.append(entry)
 	while history.size() > HISTORY_SIZE:
 		history.pop_front()
 	if result == "hostile":
-		WorldState.try_set_flag(flag_id(faction, "hostile"), true)   # announced through flag_changed
-		return
+		var was_reconciled := is_reconciled(faction)
+		if was_reconciled:
+			WorldState.set_flag(flag_id(faction, "reconciled"), false)
+		if not WorldState.try_set_flag(flag_id(faction, "hostile"), true) and was_reconciled:
+			_announce.append([faction, "hostile"])   # the flag was already set: announce it here
+		return   # otherwise announced through flag_changed
 	WorldState.set_flag(flag_id(faction, "warned"), true)
 	_emit_standing(tick, faction, "warned")
 
@@ -235,7 +406,48 @@ func _emit_standing(tick: int, faction: String, state: String) -> void:
 		Events.hud_message.emit(text, str(KINDS.get(state, "info")))
 
 
-## The HUD line announcing `state` for `faction` ("" when there is none).
+## The HUD line announcing `state` for `faction`: the record's text, else the generic one.
 static func text_for(faction: String, state: String) -> String:
-	var texts: Dictionary = TEXTS.get(faction, TEXTS[""])
-	return str(texts.get(state, ""))
+	var rec := record_for(faction)
+	var key := str(TEXT_KEYS.get(state, ""))
+	if key != "" and str(rec.get(key, "")) != "":
+		return str(rec[key])
+	return str(FALLBACK_TEXTS.get(state, ""))
+
+
+# --------------------------------------------------------------------------- stepping back (P22)
+
+## Every member at peace with a living enemy within STEP_BACK_TRIGGER_M steps back from the nearest
+## one; a member whose nearest enemy is farther than STEP_BACK_RELEASE_M is told the fight moved off.
+func _check_step_backs(tick: int) -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	var members: Array = []
+	var enemies: Array = []
+	for n in tree.get_nodes_in_group(MEMBER_GROUP):
+		var a := n as EnemyActor
+		if a == null or not a.is_inside_tree() or a.entity == null or a.entity.combatant == null \
+				or not a.entity.is_alive():
+			continue
+		if a.member_at_peace():
+			members.append(a)
+		elif a.entity.team == CombatEntity.Team.ENEMY:
+			enemies.append(a)
+	if members.is_empty():
+		return
+	for m: EnemyActor in members:
+		var nearest: EnemyActor = null
+		var best := INF
+		for e: EnemyActor in enemies:
+			var d := Vector2(e.global_position.x - m.global_position.x,
+				e.global_position.z - m.global_position.z).length()
+			if d < best:
+				best = d
+				nearest = e
+		if nearest != null and best <= STEP_BACK_TRIGGER_M:
+			if m.step_back_point == Vector3.INF:
+				step_backs.append([tick, m.entity_id, nearest.entity_id])
+			m.faction_step_back(nearest.global_position)
+		elif nearest == null or best > STEP_BACK_RELEASE_M:
+			m.faction_step_back_clear()

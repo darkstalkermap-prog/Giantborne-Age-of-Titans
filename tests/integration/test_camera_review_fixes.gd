@@ -30,7 +30,8 @@ func test_first_person_hides_the_giants_torso() -> void:
 	for path in ["Visual/Body/Torso/Chest", "Visual/Body/Torso/Belt", "Visual/Body/Torso/Head"]:
 		var mi := p.get_node(path) as MeshInstance3D
 		assert_eq(mi.layers & mask, 0, "%s is not drawn in first person" % path.get_file())
-	var arm := p.get_node("Visual/Body/ShoulderR/Forearm") as MeshInstance3D
+	# P22: the arm's boxes are one merged mesh ("Mesh") on render layer 1.
+	var arm := p.get_node("Visual/Body/ShoulderR/Mesh") as MeshInstance3D
 	assert_true((arm.layers & mask) != 0, "the arm (hand/weapon representation) stays visible")
 
 

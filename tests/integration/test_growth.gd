@@ -452,7 +452,7 @@ func test_camera_hides_the_head_while_the_arm_is_pressed_short() -> void:
 	assert_true(p.camera_rig.current_distance < 1.2 * 0.85, "the arm is pressed short (%.2f m)" % p.camera_rig.current_distance)
 	assert_true(p.camera_rig.head_hidden, "the camera hides the head")
 	assert_eq(head.layers & cam.cull_mask, 0, "the head is not drawn")
-	var arm := p.get_node("Visual/Body/ShoulderR/Forearm") as MeshInstance3D
+	var arm := p.get_node("Visual/Body/ShoulderR/Mesh") as MeshInstance3D   # P22: the merged arm
 	assert_true((arm.layers & cam.cull_mask) != 0, "the arms stay drawn")
 	wall.queue_free()
 	await step_ticks(90)

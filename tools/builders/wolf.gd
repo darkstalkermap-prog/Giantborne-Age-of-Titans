@@ -75,6 +75,9 @@ static func build_wolf(kit: SceneKit) -> Node:
 		hip.add_child(kit.box("Leg", Vector3(0.1, 0.4, 0.1), Vector3(0, -0.2, 0), "wolf_fur"))
 		hip.add_child(kit.box("Paw", Vector3(0.12, 0.06, 0.15), Vector3(0, -0.39, -0.03), "wolf_dark"))
 		body.add_child(hip)
+	# P22 (decision 9): one vertex-coloured mesh per animated part - the body, the head, the tail
+	# and each leg: 7 meshes, was 18.
+	kit.merge_rig(body)
 	# AI LOD tier 2 shows this single box instead of the rig (EnemyActor.set_lod_tier).
 	visual.add_child(kit.lod_proxy(Vector3(0.42, 0.62, 1.0), Vector3(0, 0.36, 0), "wolf_fur"))
 	root.add_child(visual)

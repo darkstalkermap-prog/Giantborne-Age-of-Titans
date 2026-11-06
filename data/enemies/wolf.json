@@ -5,6 +5,7 @@
 	"archetype": "wolf",
 	"display_name": "Wolf",
 	"scene": "res://scenes/enemies/wolf.tscn",
+	"render_lod_m": 40,
 	"height_m": 0.9,
 	"capsule_radius_m": 0.4,
 	"health": 90,

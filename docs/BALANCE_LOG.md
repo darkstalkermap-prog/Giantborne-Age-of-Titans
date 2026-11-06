@@ -220,3 +220,80 @@ The build of commit `25c1fb7`: iteration 2's game, the bot leaving a given-up en
 - Novice deaths 19: the brace 6, archer shots 4, wolves 3, the ogre's smash 2, the King 3 (two
   runs), a mage bolt 1; by segment: ruins 10, forest 5, boss 3, return 1.
 - The §5.6 targets, met and missed, are tabled in `docs/HOW_IT_PLAYS.md`.
+
+## P22 (wave 13): the Valley items after P22 (tags `p22_base`, `p22_after`, `p22_iter1`)
+
+**How it is measured.** The M6-M9 matrix (plan §6.4): novice and expert x {help_cache, help_ogre,
+intimidate, force} x seeds 1-3, 24 unassisted runs, three at a time (`tools/run_bots.sh --tag=<tag>
+--timeout=1500 --autoplay=2400 --jobs=3` with the 24 `policy:skill:seed` runs), on P22's base
+(`ae6e143`, tag `p22_base`) and on P22's build (`p22_after`), in the development container while
+the other lane worked beside it. One `p22_after` run (intimidate novice seed 3) crashed in the
+audio mixing thread at the Grove (FOLLOWUPS, "From P22"); it was run again with the same seed and
+finished; that rerun is in the tables. The plan's targets: plan §3.4 design 9.
+
+### What P22 changed that the bot sees
+
+No balance number: the guard posts and the step-back (Thornwick), the yard fill, the ranged units'
+front arc and off-camera aim time (`tactics.front_arc_deg` 150, `off_camera_aim_s` 1.2), the merged
+rigs and the distance LOD.
+
+| Skill | Policy | Completed, base -> P22 | Human est. median (min), base -> P22 | Deaths median (boss), base -> P22 |
+| --- | --- | --- | --- | --- |
+| novice | force | 3 / 3 -> 3 / 3 | 14.2 -> 14.8 | 1 (0) -> 0 (0) |
+| novice | help_cache | 3 / 3 -> 3 / 3 | 14.9 -> 15.7 | 1 (0) -> 1 (0) |
+| novice | help_ogre | 3 / 3 -> 3 / 3 | 14.7 -> 15.0 | 1 (0) -> 1 (0) |
+| novice | intimidate | 2 / 3 -> 3 / 3 | 13.9 -> 12.7 | 1 (0) -> 1 (0) |
+| expert | force | 1 / 3 -> 3 / 3 | 19.1 -> 18.3 | 1 (0) -> 0 (0) |
+| expert | help_cache | 3 / 3 -> 3 / 3 | 19.0 -> 17.2 | 1 (0) -> 1 (0) |
+| expert | help_ogre | 3 / 3 -> 3 / 3 | 20.3 -> 18.0 | 1 (0) -> 0 (0) |
+| expert | intimidate | 3 / 3 -> 2 / 3 | 19.3 -> 16.8 | 3 (0) -> 0 (0) |
+
+| Item (plan §3.4 design 9, design 8) | Target | Base | P22 |
+| --- | --- | --- | --- |
+| Off-camera hits (attacker outside the camera's view at its windup), median share of the hits taken | under 20 % | 25 % (max 38 %) | **16 %** (max 37 %) |
+| Thornwick hostile at the end of a help or intimidate run (`faction_hostile`) | never | (not recorded) | **never** (18 unassisted runs and the two assisted runs below) |
+| The novice's tries at the Ogre King (deaths there, median) | 1-2 deaths | 0 | 0 (one death in 12 runs) |
+| Damage per segment, forest (x maximum health, novice median) | <= 0.6 | 1.27 | 1.27 (no ranged enemy there: unchanged) |
+| Damage per segment, ruins | <= 0.6 | 1.00 | 1.23 |
+| The force branch's return leg inside the 240 s watchdog | 3 of 3 | novice 3 / 3, expert 1 / 3 | **novice 3 / 3, expert 3 / 3** |
+| The expert on seeds 1-3 | runs | 10 / 12 completed | 11 / 12 completed (intimidate seed 3: the crown stage's watchdog) |
+
+- Novice deaths 9 at P22 (base 9): wolves' lunges 4, the brace 2, a mage bolt 1, the King's slam 1,
+  an archer's shot 1; by segment: forest 4, ruins 4, boss 1. Expert deaths 6 (base 14).
+- Growth (novice median): HOLD 57 % at stage 2, FLEE or ROUTED 40 % at stage 3 (base 40 %; target
+  50 %), time-to-kill ratio 0.56. CPU per tick p95 median 4.59 ms, max 7.81 ms; 0 errors, 0
+  invariant failures.
+- **Thornwick, assisted** (the plan's check: `help_cache:novice:1:assist`,
+  `intimidate:novice:1:assist`, tag `p22_assisted`): both complete with 0 deaths, `faction_hostile`
+  false, the village outcome as chosen, 0 errors and 0 warnings.
+
+### Iteration 1 (tag `p22_iter1`, reverted)
+
+| Change | Before -> after | Why |
+| --- | --- | --- |
+| `enemy.ogre` strike pause | 0.6-1.2 -> 1.2-1.8 s | The forest's damage: the ogre's smash and sweep come back to back |
+| `enemy.wolf` strike pause | 0.6-1.2 -> 1.0-1.6 s | Wolves' lunges were 4 of the 9 novice deaths |
+| `enemy.soldier` strike pause | 1.2-1.8 -> 1.6-2.2 s | The ruins' damage: the brace counter follows the same pause |
+| `enemy.archer` strike pause | 0.6-1.2 -> 1.0-1.6 s | The courtyard's terrace archer shoots through the whole fight |
+
+The novice half of the matrix answered it (11 runs; one crashed in the audio thread like the one
+above; the expert half was stopped):
+
+| Measure | P22 | Iteration 1 |
+| --- | --- | --- |
+| Forest damage per seed (novice, seeds 1 / 2 / 3) | 694 / 522 / 1,022 | 776 / 740 / 1,055-1,581 |
+| Forest damage / maximum health, median | 1.27 | 1.42 |
+| Forest deaths (novice runs) | 4 | 6 |
+| Runs stopped by the forest's 240 s watchdog | 0 | 2 (help_cache novice seed 3, help_cache expert seed 1) |
+| Ruins damage / maximum health, median | 1.23 | 1.15 |
+
+Slower enemies make longer fights, not cheaper ones: the novice model takes the same share of the
+blows whole, and the openings it punishes come less often, so the forest's fights ran longer and
+cost more, and two of them ran out of the stage's 240 s. **Reverted** (the records keep P17b's
+pauses). No second iteration: the remaining levers are the attacks' damage, which the novice
+model's design (it takes a quarter of the blockable blows and 30 % of the dodgeable ones whole,
+P17b) would need halved to reach 0.6, and the boss race P17b measured (the bot either always wins
+or always loses at a given health) cannot be dialled to 1-2 deaths by a number. The segment damage
+and the boss items stay missed, as at the end of P17b; the off-camera share, Thornwick and the
+force branch's return leg are met.
+
