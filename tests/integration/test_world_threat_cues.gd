@@ -8,10 +8,17 @@ extends IntegrationSuite
 ##   * a stage-6 giant among fleeing soldiers keeps the music at explore, and a soldier's chop at it
 ##     plays no sting;
 ##   * a stomp near birds flushes them (the Crownmarch's larks), once; wading logs `wade`
-##     footfalls from the world's water and a splash on entering it.
+##     footfalls from the world's water and a splash on entering it;
+##   * the two nearest advancing formations march (the march loop at each one's anchor, following
+##     it); one that braces or dissolves fades out and the next takes its place;
+##   * a size gate answers with its own cue where the giant touched it (a stage-gated prop by what
+##     it is made of).
 
 const WORLD := "level.world"
 const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
+const GATE_WATER := "res://scenes/world/size_gate_water.tscn"
+const GATE_STONE := "res://scenes/world/size_gate_stone.tscn"
+const TITAN_TREE := "res://scenes/world/titan_tree.tscn"
 const BRACE := "ability.formation_brace_pike"
 const CATAPULT := "ability.test_catapult_stone"
 const CHOP := "ability.soldier_chop"
@@ -41,6 +48,14 @@ class WorldStub extends LevelRoot:
 
 	func create_runtime_nodes(_entries: Array = RUNTIME_NODES) -> Array[Node]:
 		return []
+
+
+## A formation without bodies, for the march emitters: `standing` of its members stand.
+class MarchingFormation extends Formation:
+	var standing := 8
+
+	func living_count() -> int:
+		return standing
 
 
 func before_each() -> void:
@@ -287,3 +302,85 @@ func test_a_stomp_near_birds_flushes_them_and_wading_logs_wade_footfalls_and_a_s
 		assert_eq(str(e.requested), "sfx.step.giant_s4.wade", "wading")
 		assert_eq(str(Audio.resolve(str(e.cue)).get("bank", "")), "audio_bank.world_steps", "the world's wading step")
 	assert_eq(_logged("sfx.world.splash.large").size(), 0, "one splash for one entry")
+
+
+# --------------------------------------------------------------------------- the march, the gates
+
+func _column(id: String, pivot: Vector3) -> MarchingFormation:
+	var f := MarchingFormation.new()
+	f.id = id
+	f.kind = "pike"
+	f.ranks = 2
+	f.files = 4
+	f.place(pivot, 0.0)
+	f.state = "advancing"
+	Formation.register(f)
+	return f
+
+
+func _marching() -> Array:
+	var ids := Array(Audio.ambience.march_ids())
+	ids.sort()
+	return ids
+
+
+func test_the_two_nearest_advancing_formations_march_at_their_anchors() -> void:
+	_world("region.crownmarch")
+	_giant(FIELDS, 4)
+	var near := _column("test.column_near", FIELDS + Vector3(0, 0, -40))
+	var mid := _column("test.column_mid", FIELDS + Vector3(30, 0, -60))
+	var far := _column("test.column_far", FIELDS + Vector3(-50, 0, -90))
+	Audio.clear_log()
+	Audio.advance_for_tests(0.5, 0.25)
+	assert_eq(_marching(), ["test.column_mid", "test.column_near"], "the two nearest of three columns march")
+	var started := Audio.cue_log().filter(func(e: Dictionary) -> bool: return str(e.reason) == "march")
+	assert_eq(started.size(), 2, "two march loops")
+	for e: Dictionary in started:
+		assert_eq([str(e.requested), str(e.bus), int(e.priority)], ["amb.march_loop", "Ambience", 75],
+			"the march loop on the Ambience bus at the march emitters' priority")
+	# the loop marches with its formation, a stream at its anchor
+	near.pivot += Vector3(0, 0, 6)
+	Audio.advance_for_tests(0.1, 0.05)
+	var loop: AudioStreamPlayer3D = Audio.ambience.marches["test.column_near"].player
+	assert_true(loop.global_position.distance_to(near.anchor()) < 0.01, "at the formation's anchor as it moves")
+	assert_eq(loop.playback_type, AudioServer.PLAYBACK_TYPE_STREAM, "a stream (loops are never samples)")
+	# the nearest braces: its march fades out and the third column's takes its place
+	near.state = "braced"
+	Audio.advance_for_tests(0.5, 0.25)
+	assert_eq(_marching(), ["test.column_far", "test.column_mid"], "a braced formation no longer marches")
+	Audio.advance_for_tests(1.0, 0.25)
+	assert_false(Audio.ambience.marches.has("test.column_near"), "its loop faded out and was freed")
+	# a dissolved formation (its encounter gone) fades out too
+	mid.dissolve()
+	Audio.advance_for_tests(1.25, 0.25)
+	assert_eq(_marching(), ["test.column_far"], "the dissolved column's march stops")
+	assert_false(Audio.ambience.marches.has("test.column_mid"), "and is freed")
+	assert_true(far.living_count() > 0, "the last column marches on")
+
+
+func test_a_size_gate_answers_with_its_own_cue_where_the_giant_touched_it() -> void:
+	var water := (load(GATE_WATER) as PackedScene).instantiate() as SizeGate
+	water.position = Vector3(0, 0, -20)
+	world.add_child(water)
+	water.last_contact = Vector3(3, 1, -19.5)   # (the gate keeps it when the giant touches it: test_size_gates)
+	var stone := (load(GATE_STONE) as PackedScene).instantiate() as SizeGate
+	stone.position = Vector3(20, 0, -20)
+	world.add_child(stone)
+	var tree := (load(TITAN_TREE) as PackedScene).instantiate() as BreakableProp
+	tree.world_id = "test.titan_tree"
+	tree.position = Vector3(-20, 0, -20)
+	world.add_child(tree)
+	Audio.clear_log()
+	Events.size_gate_blocked.emit(Sim.tick, water.gate_id, water.min_stage, water.message)
+	Events.size_gate_blocked.emit(Sim.tick, stone.gate_id, stone.min_stage, stone.message)
+	Events.size_gate_blocked.emit(Sim.tick, tree.world_id, 5, "")   # a heave refused (BreakableProp)
+	Audio.advance_for_tests(0.05, 0.05)
+	var answers := {"sfx.gate.water": water.last_contact, "sfx.gate.stone": stone.global_position,
+		"sfx.gate.timber": tree.global_position}
+	for cue: String in answers:
+		var logged := _logged(cue)
+		assert_eq(logged.size(), 1, "%s answers once (%s)" % [cue, Audio.logged_cues()])
+		if logged.size() == 1:
+			assert_true((logged[0].pos as Vector3).distance_to(answers[cue]) < 0.01,
+				"%s where the giant touched it, else at the gate (%s)" % [cue, logged[0].pos])
+	assert_eq(_requested("sfx.gate.default").size(), 0, "every gate found its own cue")
