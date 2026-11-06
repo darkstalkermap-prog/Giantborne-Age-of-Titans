@@ -61,6 +61,8 @@ const MAX_WADE_M := 1.0
 const WATER_CELL_M := 2.0
 ## Sides of a cylinder obstacle's outline.
 const CYL_SIDES := 8
+## A polygon's edges are sampled this often for gated ground (split_gates).
+const GATE_SAMPLE_M := 2.0
 
 
 ## The layer spec of bit `layer` ({} when it is not a baked layer).
@@ -360,20 +362,20 @@ static func bake_layer(spec: Dictionary, src: NavigationMeshSourceGeometryData3D
 	return nm
 
 
-## The polygons of `nm` split by gate: gate_at (Callable(world_x, world_z) -> int: 0, or a gate
-## bit) at each polygon's centre (chunk-local + origin). Returns {bit: NavigationMesh} with the
-## ungated part under `base_bit`; parts without polygons are left out. Every part keeps the bake
-## settings and its own copy of the vertices it uses (shared border vertices stay identical).
+## The polygons of `nm` split by gate: a polygon belongs to a gate region when gate_at
+## (Callable(world_x, world_z) -> int: 0, or a gate bit) marks any of its sample points - its centre,
+## its corners and points every GATE_SAMPLE_M along its edges (chunk-local + origin) - the highest
+## bit found wins. So every polygon that touches gated ground is gated: Recast's long thin polygons
+## along a tile border reach from a bank into the water, and one left in the ungated part would let
+## a query without the bit cross. Returns {bit: NavigationMesh} with the ungated part under
+## `base_bit`; parts without polygons are left out. Every part keeps the bake settings and its own
+## copy of the vertices it uses (shared border vertices stay identical).
 static func split_gates(nm: NavigationMesh, spec: Dictionary, origin: Vector3, gate_at: Callable, base_bit: int) -> Dictionary:
 	var verts := nm.get_vertices()
 	var groups := {}   # bit -> Array of polygons (PackedInt32Array)
 	for p in nm.get_polygon_count():
 		var poly := nm.get_polygon(p)
-		var c := Vector3.ZERO
-		for idx in poly:
-			c += verts[idx]
-		c /= maxf(1.0, float(poly.size()))
-		var bit := int(gate_at.call(c.x + origin.x, c.z + origin.z)) if gate_at.is_valid() else 0
+		var bit := polygon_gate(verts, poly, origin, gate_at) if gate_at.is_valid() else 0
 		var key := bit if bit > 0 else base_bit
 		if not groups.has(key):
 			groups[key] = []
@@ -398,6 +400,22 @@ static func split_gates(nm: NavigationMesh, spec: Dictionary, origin: Vector3, g
 		part.set_vertices(pv)
 		out[key] = part
 	return out
+
+
+## The highest gate bit gate_at marks at a polygon's sample points (see split_gates); 0 for none.
+static func polygon_gate(verts: PackedVector3Array, poly: PackedInt32Array, origin: Vector3, gate_at: Callable) -> int:
+	var best := 0
+	var c := Vector3.ZERO
+	for k in poly.size():
+		var a := verts[poly[k]]
+		var b := verts[poly[(k + 1) % poly.size()]]
+		c += a
+		var steps := maxi(1, int(ceilf(Vector2(b.x - a.x, b.z - a.z).length() / GATE_SAMPLE_M)))
+		for i in steps:
+			var q := a.lerp(b, float(i) / float(steps))
+			best = maxi(best, int(gate_at.call(q.x + origin.x, q.z + origin.z)))
+	c /= maxf(1.0, float(poly.size()))
+	return maxi(best, int(gate_at.call(c.x + origin.x, c.z + origin.z)))
 
 
 ## Every navmesh of one chunk: {bit: NavigationMesh} for the human (1), large (2) and titan (16)
