@@ -4,7 +4,8 @@ extends TestSuite
 ## heights are equal across every seam (each chunk's apron holds its neighbour's border samples);
 ## no walkable face within 8 m of a chunk border is steeper than 35 degrees (cliffs and the rim
 ## excepted, the builder's rule); the world scene names the streamer, the skyline, the bounds and the
-## giant at the start checkpoint; --chunks= rebuilds a chunk with its eight neighbours; and, rendered
+## giant at the start checkpoint; --chunks= rebuilds a chunk with its eight neighbours; a size gate's
+## rectangle is drawn in by 6 m for the titan split (a narrow one keeps its middle); and, rendered
 ## in a child process under Xvfb (tests/support/world_draw_probe.gd), the static world draws at most
 ## 40 draw calls at `low` from the Kingsgate shelf and the six settlements' greens (skipped with a
 ## note without xvfb-run).
@@ -159,6 +160,10 @@ func test_the_world_scene_and_the_chunk_rebuild() -> void:
 	assert_eq(corner.size(), 8, "a corner chunk has three neighbours")
 	assert_eq(builder.call("parse_args", PackedStringArray(["--chunks=c2_6,c3_6"])), {"chunks": PackedStringArray(["c2_6", "c3_6"])},
 		"--chunks= after --")
+	# a size gate's rectangle for the titan split: drawn in by 6 m, a narrow one keeping its middle 4 m
+	assert_eq(builder.call("drawn_in", Rect2(-31, -527, 62, 101)), Rect2(-25, -521, 50, 89),
+		"the Giant's Stair's rectangle drawn in by 6 m")
+	assert_eq(builder.call("drawn_in", Rect2(0, 0, 10, 40)), Rect2(3, 6, 4, 28), "a 10 m gate keeps its middle 4 m")
 
 
 static func _have(tool: String) -> bool:

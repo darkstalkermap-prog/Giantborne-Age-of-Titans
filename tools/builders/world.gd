@@ -85,6 +85,9 @@ const GATE_PIECE_M := 16.0
 ## ground itself (the stair's ramp, the Moot's gateway) reaches much deeper. A stage-4 path can end
 ## at most this far past a gate's line, behind its wall, and never cross it.
 const GATE_GRAZE_M := 6.0
+## A narrow size gate keeps at least this much of its rectangle across when drawn in, so it still
+## gates the polygons through its middle.
+const GATE_CORE_M := 4.0
 
 static var _report: Dictionary = {}
 
@@ -305,15 +308,22 @@ static func layout_checks(layout: Dictionary, feats: WorldFeatures) -> PackedStr
 
 
 ## The size gates' titan gate rectangles (the Giant's Stair, the Moot's gate) into the features,
-## each drawn in by GATE_GRAZE_M.
+## each drawn in by GATE_GRAZE_M (keeping GATE_CORE_M of a narrow one).
 static func _gate_rects(feats: WorldFeatures, layout: Dictionary) -> void:
 	feats.gate_rects.clear()
 	for it: Dictionary in layout.items:
 		if str(it._section) != "size_gates" or not it.has("gate_rect"):
 			continue
 		var bit := {4: 32, 5: 64, 6: 128}.get(int(it.min_stage), 128) as int
-		var r := WorldFeatures.rect_of(it.gate_rect).grow(-GATE_GRAZE_M)
-		feats.gate_rects.append({"rect": r, "bit": bit, "id": str(it.id)})
+		feats.gate_rects.append({"rect": drawn_in(WorldFeatures.rect_of(it.gate_rect)), "bit": bit, "id": str(it.id)})
+
+
+## A size gate's rectangle drawn in by GATE_GRAZE_M on every side, keeping at least GATE_CORE_M
+## across in each direction.
+static func drawn_in(r: Rect2) -> Rect2:
+	var gx := clampf((r.size.x - GATE_CORE_M) * 0.5, 0.0, GATE_GRAZE_M)
+	var gz := clampf((r.size.y - GATE_CORE_M) * 0.5, 0.0, GATE_GRAZE_M)
+	return r.grow_individual(-gx, -gz, -gx, -gz)
 
 
 # --------------------------------------------------------------------------- shared meshes

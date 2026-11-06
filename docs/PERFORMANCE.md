@@ -595,7 +595,7 @@ two builds write the same bytes. Container, indicative.
 | Navmeshes (`assets/world/nav/`) | 933,444 | 206 files: human 38,153, large 28,218, titan 22,487 polygons; gate regions 542; at most 4,305 polygons in a chunk (c2_2, the Greywood) |
 | Structures (`assets/world/structures/`) | 143,236 | 35 merged vertex-coloured meshes, 14,720 triangles |
 | Props scenes (`scenes/world/chunks/`) | 193,634 | 36 parts of at most 150 nodes |
-| Skyline, landmarks, index, map, shared, root scene | 287,175 | 86,117 + 66,831 + 68,144 + 52,433 + 9,078 + 5,572 |
+| Skyline, landmarks, index, map, shared, root scene | 288,175 | 86,117 + 66,831 + 68,144 + 52,433 + 9,078 + 5,572 |
 | **Total** | **2,390,369** | the 5.0 MB budget: met |
 
 The release web export (`tools/build_web.sh`, preset Web): `index.pck` 9,781,704 bytes, 7,355,066
