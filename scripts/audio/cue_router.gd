@@ -16,6 +16,13 @@ extends Node
 ## walking the player's footfall uses its ".cruise" variant at cruise_duck_db (back to the full cue
 ## in combat, on stopping, on a jump and on a stomp).
 ##
+## P21's rules (the W13 owner of this file; docs/systems/P21.md records why): a voiced body hit for
+## damage that neither kills nor staggers it calls "hurt" (at most once per HURT_GAP_S a body); a
+## voiceless body (voice "none": the sparring post) sounds its hits by material, as a prop does; an
+## enemy action whose id ends in "roar" voices the voice's roar call (else its attack call); and a
+## footfall within WET_MARGIN_M of the level's "Water_*" planes takes the surface the mix names for
+## the level's "water" (the Valley's river banks and the King's Bridge: wet).
+##
 ## Polled, not signalled (no actor code changes): enemy awareness edges every 0.25 s (unaware ->
 ## aware within alert_radius_m x scale: one alert bark per encounter per alert_gap_s), ranged aim
 ## commits every frame (a projectile action's windup passes tracking_fraction: sfx.threat.aim_lock),
@@ -1050,15 +1057,31 @@ func water_rects() -> Array:
 	_water_level = lv.get_instance_id()
 	_water_rects = []
 	for n in lv.find_children("Water_*", "MultiMeshInstance3D", true, false):
-		var mmi := n as MultiMeshInstance3D
-		var mm := mmi.multimesh
-		if mm == null or mm.mesh == null:
-			continue
-		var unit := mm.mesh.get_aabb()
-		for i in mm.instance_count:
-			var box: AABB = (mmi.global_transform * mm.get_instance_transform(i)) * unit
-			_water_rects.append(Rect2(box.position.x, box.position.z, box.size.x, box.size.z))
+		_water_rects.append_array(plane_rects(n as MultiMeshInstance3D))
 	return _water_rects
+
+
+## The (x, z) rectangles a MultiMeshInstance3D's instances of its mesh cover. The transforms come
+## from the MultiMesh's buffer (12 floats a 3D instance, row-major, then its colour and custom
+## data), which holds them on every renderer: the dummy renderer of headless runs answers every
+## get_instance_transform() with the identity.
+static func plane_rects(mmi: MultiMeshInstance3D) -> Array:
+	var out: Array = []
+	var mm := mmi.multimesh if mmi != null else null
+	if mm == null or mm.mesh == null or mm.transform_format != MultiMesh.TRANSFORM_3D:
+		return out
+	var unit := mm.mesh.get_aabb()
+	var buf := mm.buffer
+	var stride := 12 + (4 if mm.use_colors else 0) + (4 if mm.use_custom_data else 0)
+	for i in mm.instance_count:
+		var t := mm.get_instance_transform(i)
+		var b := i * stride
+		if buf.size() >= b + 12:
+			t = Transform3D(Vector3(buf[b], buf[b + 4], buf[b + 8]), Vector3(buf[b + 1], buf[b + 5], buf[b + 9]),
+				Vector3(buf[b + 2], buf[b + 6], buf[b + 10]), Vector3(buf[b + 3], buf[b + 7], buf[b + 11]))
+		var box: AABB = (mmi.global_transform * t) * unit
+		out.append(Rect2(box.position.x, box.position.z, box.size.x, box.size.z))
+	return out
 
 
 ## Starts the player's walk anew (tests: the cruise rule's clock).

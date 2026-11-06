@@ -244,6 +244,33 @@ func test_every_m6_request_of_the_router_resolves() -> void:
 			_resolves([far], "%s's far version" % cue_id, true)
 
 
+## The wet-ground rule reads a level's water from its "Water_*" planes: each instance of the unit
+## plane, by the MultiMesh's buffer (headless runs answer no instance transform), placed by the node.
+func test_the_wet_rule_reads_the_water_planes() -> void:
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	var plane := PlaneMesh.new()
+	plane.size = Vector2.ONE
+	mm.mesh = plane
+	mm.instance_count = 2
+	mm.buffer = PackedFloat32Array([12, 0, 0, 106, 0, 1, 0, 0.05, 0, 0, 20, -40,
+		8, 0, 0, 104, 0, 1, 0, 0.05, 0, 0, 10, 30])
+	var water := MultiMeshInstance3D.new()
+	water.name = "Water_Plane"
+	water.multimesh = mm
+	water.position = Vector3(1, 0, 0)
+	world.add_child(water)
+	var rects := CueRouter.plane_rects(water)
+	assert_eq(rects.size(), 2, "one rectangle a plane")
+	if rects.size() == 2:
+		for pair: Array in [[rects[0], Rect2(101, -50, 12, 20)], [rects[1], Rect2(101, 25, 8, 10)]]:
+			var r: Rect2 = pair[0]
+			var want: Rect2 = pair[1]
+			assert_true(r.position.distance_to(want.position) < 1e-3 and r.size.distance_to(want.size) < 1e-3,
+				"the plane covers %s (got %s)" % [want, r])
+	assert_eq(Audio.router.water_rects(), [], "no level: no water")
+
+
 # --------------------------------------------------------------------------- real events through the router
 
 ## Lets the router drain its queue, then records the cues started (cue -> requested) and frees
