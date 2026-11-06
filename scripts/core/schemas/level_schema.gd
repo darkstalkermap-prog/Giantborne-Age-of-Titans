@@ -96,6 +96,19 @@ static func fields() -> Dictionary:
 	}}
 
 	## @anchor P24b
+	# P24b (plan M6-M9 §2.7, §2.8, decision 13): the level's navigation queries (NavQuery): unlimited
+	# polygons (max_polygons 0) with a distance cap by purpose (chase_distance_m for chases,
+	# far_distance_m for the bot and the director), the tier-0 re-path throttle (at least
+	# repath_min_ticks apart and only when the goal moved repath_min_move_m) and the per-tick query
+	# budget (queries_per_tick). Absent: today's queries (map_get_path's parameters) - the Valley.
+	f["nav_query"] = {"t": "dict", "fields": {
+		"max_polygons": U.int_field(0, 1000000, true),
+		"chase_distance_m": U.pos(true),
+		"far_distance_m": U.pos(true),
+		"repath_min_ticks": U.int_field(0, 600, true),
+		"repath_min_move_m": U.num(0.0, null, true),
+		"queries_per_tick": U.int_field(0, 1000, true),
+	}}
 
 	## @anchor P25
 
@@ -211,6 +224,12 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			out.errors.append("%s: a streamed level needs its world index ('index')" % ctx)
 
 	## @anchor P24b
+	# P24b: a chase never searches farther than the bot and the director do.
+	var p24b_q: Variant = d.get("nav_query")
+	if typeof(p24b_q) == TYPE_DICTIONARY and U.is_number(p24b_q.get("chase_distance_m")) \
+			and U.is_number(p24b_q.get("far_distance_m")) and float(p24b_q.chase_distance_m) > float(p24b_q.far_distance_m):
+		out.errors.append("%s.nav_query: chase_distance_m (%s) must not exceed far_distance_m (%s)" % [ctx,
+			p24b_q.chase_distance_m, p24b_q.far_distance_m])
 
 	## @anchor P25
 

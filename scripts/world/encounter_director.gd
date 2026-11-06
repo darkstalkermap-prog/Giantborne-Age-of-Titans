@@ -44,6 +44,11 @@ extends Node
 ## it under LevelRoot/Spawned. Spawns happen only inside the director's own update (the Sim
 ## hook, or update_now()), never from a physics callback.
 ##
+## A streamed world (P24b, below its anchor): only encounters whose chunk is loaded and ready update,
+## members in an unloading chunk are despawned (encounters centred there deactivate), spawns wait for
+## a ready chunk, spawn entries filter by the giant's stage (min_stage / max_stage, at activation),
+## and the director's own path queries share NavQuery's per-tick budget.
+##
 ## The spawn hitch (P17a, FOLLOWUPS; P14 measured a 13-25 ms tick per activation and 100-150 ms
 ## for the first load of an archetype's scene):
 ##   * every scene the level's encounters can spawn is loaded when the encounters are read (at
@@ -410,8 +415,11 @@ func _update(tick: int, quota := 0) -> void:
 	_spawn_deferred = false
 	var player := _player()
 	var ppos := player.global_position if player != null else Vector3.INF
+	_p24b_bind()
 	for id in _order:
 		var enc: Encounter = _encounters[id]
+		if not _p24b_live(enc):
+			continue   # P24b: its chunk is not loaded and ready (a forced activation waits for it)
 		_refresh_nodes(enc)
 		_free_due_corpses(enc, tick)
 		var forced := enc.force_requested
@@ -459,6 +467,7 @@ func _activate(enc: Encounter, tick: int, ppos: Vector3) -> void:
 	for m: Member in enc.members:
 		if m.status == DESPAWNED:
 			m.status = UNSPAWNED
+	_p24b_filter_stage(enc)   # P24b: spawn entries outside the giant's stage sit this activation out
 	_spawn_waiting(enc, tick, ppos)
 	Events.encounter_activated.emit(tick, enc.id)
 
@@ -487,6 +496,7 @@ func _update_active(enc: Encounter, tick: int, ppos: Vector3) -> void:
 ## activation. Corpses are freed too.
 func _deactivate(enc: Encounter) -> void:
 	for m: Member in enc.members:
+		_p24b_skipped.erase(m.entity_id)   # P24b: the next activation filters by the stage afresh
 		match m.status:
 			SPAWNED:
 				_free_node(m.node)
@@ -524,6 +534,8 @@ func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
 		if WorldState.is_killed(m.entity_id):
 			m.status = DEAD
 			continue
+		if _p24b_skipped.has(m.entity_id):
+			continue   # P24b: not at this stage
 		if counts(m) and active_combatant_count() >= max_active_enemies:
 			continue
 		if _spawn_quota == 0:
@@ -542,6 +554,8 @@ func _can_activate(enc: Encounter) -> bool:
 			continue
 		if WorldState.is_killed(m.entity_id):
 			continue
+		if not _p24b_stage_allows(m):
+			continue   # P24b: a member of another stage does not make the encounter worth activating
 		waiting = true
 		if not counts(m):
 			return true
@@ -623,6 +637,8 @@ func _share_alerts(tick: int) -> void:
 func _spawn(enc: Encounter, m: Member, tick: int, ppos: Vector3) -> bool:
 	if level == null or not level.is_inside_tree():
 		return false
+	if not _p24b_spawn_ground_ready(m):
+		return false   # P24b: never on a chunk that is not loaded and ready (it waits for the next update)
 	if Sim.get_entity(m.entity_id) != null:
 		# An earlier instance has not left the tree yet (or a placed actor uses this id).
 		_warn_once("busy:" + m.entity_id, "EncounterDirector: '%s' is still in the world; spawn retried later" % m.entity_id)
@@ -712,7 +728,7 @@ func _check_cleared(enc: Encounter, tick: int) -> void:
 	if enc.state == CLEARED or enc.cleared_emitted:
 		return
 	for m: Member in enc.members:
-		if m.status == DEAD:
+		if m.status == DEAD or _p24b_skipped.has(m.entity_id):
 			continue
 		if m.status == SPAWNED and m.routed and _alive(m.node):
 			continue
@@ -861,6 +877,145 @@ func _warn_once(key: String, text: String) -> void:
 # Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
 
 ## @anchor P24b
+# --- the director in a streamed world (P24b, plan M6-M9 §2.8, decision 15) ------------------------
+# On a level with a ChunkStreamer (WorldRoot):
+#   * an encounter's chunk is the chunk of its centre (encounter_chunk()); it updates - activates,
+#     spawns, leashes, sets LOD, deactivates - only while that chunk is loaded and ready
+#     (ChunkStreamer.is_ready: its navigation synced), and a forced activation waits for it;
+#   * when a chunk unloads (the streamer's chunk_unloading, before any node of it is freed) every
+#     living member standing in it is despawned - not killed: it comes back at home, at full health,
+#     on its encounter's next activation - and every active encounter centred in it deactivates;
+#   * a member spawns only when the chunk under its spawn point is loaded and ready (else it waits);
+#   * spawn entries may carry min_stage / max_stage: at each activation the members outside the
+#     giant's stage sit it out (they do not spawn, nor keep the encounter from being cleared);
+#   * the director's own path queries (P30's formation pivots, P37's wander anchors) ask
+#     nav_budget_left() and spend_nav_queries() - NavQuery's per-tick budget, shared with the actors -
+#     the rest waiting a tick.
+# Elsewhere (the Valley, test levels) every encounter is live and nothing changes; the stage filter
+# applies wherever entries carry the keys.
+
+var _p24b_skipped := {}       # entity id -> true: a member its entry's stage range keeps out of this activation
+var _p24b_chunks := {}        # encounter id -> chunk id ("" outside the grid)
+var _p24b_streamer: ChunkStreamer = null
+
+
+## The streamer of this director's level (null when the level is not streamed).
+func _p24b_level_streamer() -> ChunkStreamer:
+	var s: Variant = level.get("streamer") if level != null else null
+	return s as ChunkStreamer if s is ChunkStreamer and (s as ChunkStreamer).configured else null
+
+
+## Connects to the level's streamer once it is configured (WorldRoot configures it after this
+## director's _ready).
+func _p24b_bind() -> void:
+	var s := _p24b_level_streamer()
+	if s == _p24b_streamer:
+		return
+	if _p24b_streamer != null and is_instance_valid(_p24b_streamer) \
+			and _p24b_streamer.chunk_unloading.is_connected(_p24b_on_chunk_unloading):
+		_p24b_streamer.chunk_unloading.disconnect(_p24b_on_chunk_unloading)
+	_p24b_streamer = s
+	_p24b_chunks.clear()
+	if s != null and not s.chunk_unloading.is_connected(_p24b_on_chunk_unloading):
+		s.chunk_unloading.connect(_p24b_on_chunk_unloading)
+
+
+## The chunk of an encounter's centre ("" outside a streamed level's grid, or not streamed).
+func encounter_chunk(encounter_id: String) -> String:
+	var enc: Encounter = _encounters.get(encounter_id)
+	var s := _p24b_level_streamer()
+	if enc == null or s == null:
+		return ""
+	if not _p24b_chunks.has(encounter_id):
+		_p24b_chunks[encounter_id] = s.chunk_at(enc.center)
+	return str(_p24b_chunks[encounter_id])
+
+
+## True when the encounter may update: always on a level that is not streamed; else while its
+## chunk is loaded and ready.
+func _p24b_live(enc: Encounter) -> bool:
+	var s := _p24b_level_streamer()
+	if s == null:
+		return true
+	var c := encounter_chunk(enc.id)
+	return c != "" and s.is_ready(c)
+
+
+## True when the ground under a member's spawn point is loaded and ready (or the level is not
+## streamed).
+func _p24b_spawn_ground_ready(m: Member) -> bool:
+	var s := _p24b_level_streamer()
+	if s == null:
+		return true
+	var at := level.global_transform * _vec3(m.spawn.get("position_m"))
+	var c := s.chunk_at(at)
+	return c != "" and s.is_ready(c)
+
+
+## A chunk is about to unload: despawn every living member standing in it and deactivate every
+## active encounter centred in it (their other members are freed too and come back at home).
+func _p24b_on_chunk_unloading(chunk_id: String) -> void:
+	var s := _p24b_level_streamer()
+	if s == null:
+		return
+	for id in _order:
+		var enc: Encounter = _encounters[id]
+		if enc.state == ACTIVE and encounter_chunk(id) == chunk_id:
+			_deactivate(enc)
+			continue
+		for m: Member in enc.members:
+			if m.status == SPAWNED and _alive(m.node) and s.chunk_at(m.node.global_position) == chunk_id:
+				despawn(m.entity_id)
+	_dirty = true
+
+
+## The giant's growth stage (0 when there is no player: nothing is filtered).
+func _p24b_player_stage() -> int:
+	var p := _player()
+	if p != null and p.has_method("current_growth_stage"):
+		return int(p.call("current_growth_stage"))
+	return 0
+
+
+## True when a member's spawn entry admits the giant's stage (min_stage / max_stage; absent = any).
+func _p24b_stage_allows(m: Member) -> bool:
+	return stage_allows(m.spawn, _p24b_player_stage())
+
+
+## True when a spawn entry admits `stage` (stage 0, no player, admits everything).
+static func stage_allows(spawn: Dictionary, stage: int) -> bool:
+	if stage <= 0:
+		return true
+	if SchemaUtil.is_number(spawn.get("min_stage")) and stage < int(spawn.min_stage):
+		return false
+	if SchemaUtil.is_number(spawn.get("max_stage")) and stage > int(spawn.max_stage):
+		return false
+	return true
+
+
+## At activation: the members whose entries exclude the giant's stage sit this activation out.
+func _p24b_filter_stage(enc: Encounter) -> void:
+	var stage := _p24b_player_stage()
+	for m: Member in enc.members:
+		if stage_allows(m.spawn, stage):
+			_p24b_skipped.erase(m.entity_id)
+		elif m.status == UNSPAWNED:
+			_p24b_skipped[m.entity_id] = true
+
+
+## True when a member sits the current activation out (its stage range; tests, debug).
+func stage_skipped(entity_id: String) -> bool:
+	return _p24b_skipped.has(entity_id)
+
+
+## Path queries left this tick for the director (NavQuery's budget of the level).
+func nav_budget_left() -> int:
+	return NavQuery.budget_left(level)
+
+
+## Counts the director's own path queries against the tick's budget.
+func spend_nav_queries(n := 1) -> void:
+	NavQuery.spend(level, n)
 
 ## @anchor P29
 

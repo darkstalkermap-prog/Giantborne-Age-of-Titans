@@ -25,7 +25,19 @@ extends RefCounted
 ## mesh is one draw call.
 ## Outputs: assets/test_world/{chunks/c<x>_<z>.res, shared/*, skyline.res, skyline_landmarks.res,
 ## index.res}, scenes/test/test_world.tscn and scenes/test/test_world/ (the house prop and the props
-## parts). P24b adds the navmeshes (assets/test_world/nav/).
+## parts).
+## P24b (plan M6-M9 §3.7, decision 13) adds the navigation:
+##   * a gated ford: a channel of deep water (FORD_*) across the x = 256 seam in the north-east
+##     (c2_0 / c3_0), its bed walkable for the titan layer only as a gate-4 region (bit 32): a
+##     stage-3 titan mask must go round its ends, a stage-4 one wades straight across; humans and
+##     large units never enter water deeper than 1 m (the pond's and the ford's);
+##   * the town's two fortified gates carry one closed NavLink per layer (NavLinkHuman, NavLinkLarge,
+##     NavLinkTitan), opened when a gate breaks (BreakableProp), joined to their layer's map when the
+##     chunk streams in;
+##   * per chunk, one lean navmesh per layer (human 1, large 2, titan 16) and the ford's gate region,
+##     baked by tools/world/nav_bake.gd from the chunk's terrain with its own and its eight
+##     neighbours' obstacles (solids and the props' collision shapes), the rim left out
+##     (assets/test_world/nav/c<x>_<z>_<layer>.res, named in each ChunkData's `nav`).
 
 const LEVEL_ID := "level.test_world"
 const SCENE_PATH := "res://scenes/test/test_world.tscn"
@@ -36,6 +48,8 @@ const SHARED_DIR := "res://assets/test_world/shared/"
 const INDEX_PATH := "res://assets/test_world/index.res"
 const SKYLINE_PATH := "res://assets/test_world/skyline.res"
 const LANDMARKS_PATH := "res://assets/test_world/skyline_landmarks.res"
+## P24b: the navmeshes (NavBake.nav_path names them).
+const NAV_DIR := "res://assets/test_world/nav"
 
 const GRID := Vector2i(4, 4)
 const CHUNK_M := 256.0
@@ -99,6 +113,24 @@ const LANDMARKS := [
 	{"id": "test_world.landmark.watchtower", "chunk": Vector2i(3, 1), "pos": Vector2(380.0, -128.0), "shape": "tower"},
 	{"id": "test_world.landmark.monolith", "chunk": Vector2i(1, 3), "pos": Vector2(-128.0, 380.0), "shape": "monolith"},
 ]
+## P24b: the gated ford - a channel of deep water along the segment FORD_A..FORD_B (world x, z),
+## across the x = 256 seam: a flat bed FORD_BED_Y within FORD_HALF_M of the axis, banks rising to the
+## ground over FORD_BANK_M (the noise fades out next to it, so no bank is steeper than about 27
+## degrees), water at FORD_WATER_Y. Titan polygons that touch ground within FORD_GATE_M of the axis
+## are its gate region (FORD_GATE_BIT: stage 4 wades it; NavBake.split_gates).
+const FORD_A := Vector2(150.0, -380.0)
+const FORD_B := Vector2(360.0, -380.0)
+const FORD_HALF_M := 10.0
+const FORD_BANK_M := 24.0
+const FORD_BED_Y := 4.0
+const FORD_WATER_Y := 10.0
+const FORD_GATE_M := 18.0
+const FORD_GATE_BIT := 32
+## P24b: the town gates' links through the gate (local z), one per layer: half lengths reach the
+## layer's navmesh on both sides (the gate and its towers erode each mesh by the agent radius).
+const GATE_LINK_HALF_M := {1: 3.5, 2: 4.5, 16: 7.0}
+## Marks a node the builder adds under an instanced scene (owned by the part when it is saved).
+const ADDED_META := &"test_world_added"
 const BEACON_FLAG := "test_world.beacon.lit"
 const START_CHECKPOINT := "test_world.cp.start"
 const SKY := Color(0.56, 0.64, 0.74)
@@ -164,7 +196,10 @@ static func build(kit: SceneKit) -> Dictionary:
 		return {"ok": false, "message": "the breakable house scene was not saved"}
 	var trees := {}   # spatial hash: Vector2i(16 m cell) -> [Vector2]
 	var summary := {"chunks": 0, "trees": 0, "saplings": 0, "rocks": 0, "solids": 0, "parts": 0,
-		"relax_iterations": relax.iterations, "border_deg": snappedf(float(relax.deg), 0.01), "chunk_bytes": {}}
+		"relax_iterations": relax.iterations, "border_deg": snappedf(float(relax.deg), 0.01), "chunk_bytes": {},
+		"nav_bytes": {}, "nav_polygons": {}}
+	var datas := {}       # coords -> ChunkData (saved once its navmeshes are baked)
+	var obstacles := {}   # coords -> [obstacle] (world space: its solids and its props' shapes; P24b)
 	for cz in GRID.y:
 		for cx in GRID.x:
 			var c := Vector2i(cx, cz)
@@ -175,23 +210,47 @@ static func build(kit: SceneKit) -> Dictionary:
 				return region_index(x))
 			var counts := _scenery(d, field, meshes, trees)
 			_town(d, meshes)
-			var parts := _props(kit, d, field, meshes)
+			var shapes: Array = []
+			var parts := _props(kit, d, field, meshes, shapes)
 			if not bool(parts.ok):
 				return {"ok": false, "message": str(parts.message)}
-			if d.chunk_id == "c0_2":
-				var local := Rect2(POND_CENTER.x - POND_R - d.origin.x, POND_CENTER.y - POND_R - d.origin.z,
-					2.0 * POND_R, 2.0 * POND_R)
-				ChunkWriter.add_water(d.water, local, WATER_Y)
-			var path := kit.output_path(CHUNK_DIR + d.chunk_id + ".res")
-			var err := ChunkWriter.save(d, path)
-			if err != OK:
-				return {"ok": false, "message": "could not save %s (error %d)" % [path, err]}
+			for w: Dictionary in water_world():
+				var local := (w.rect as Rect2).intersection(Rect2(d.origin.x, d.origin.z, CHUNK_M, CHUNK_M))
+				if local.size.x > 0.0 and local.size.y > 0.0:
+					ChunkWriter.add_water(d.water, Rect2(local.position - Vector2(d.origin.x, d.origin.z), local.size),
+						float(w.surface_y))
+			shapes.append_array(NavBake.chunk_obstacles(d))
+			obstacles[c] = shapes
+			datas[c] = d
 			summary.chunks = int(summary.chunks) + 1
 			summary.trees = int(summary.trees) + int(counts.trees)
 			summary.saplings = int(summary.saplings) + int(counts.saplings)
 			summary.rocks = int(summary.rocks) + int(counts.rocks)
 			summary.solids = int(summary.solids) + d.solids.size() / ChunkData.SOLID_STRIDE
 			summary.parts = int(summary.parts) + d.props_scenes.size()
+	# P24b: every chunk's navmeshes, from its terrain and its own and its eight neighbours' obstacles.
+	for cz in GRID.y:
+		for cx in GRID.x:
+			var c := Vector2i(cx, cz)
+			var d: ChunkData = datas[c]
+			var near: Array = []
+			for dz in range(-1, 2):
+				for dx in range(-1, 2):
+					near.append_array(obstacles.get(c + Vector2i(dx, dz), []))
+			var nms := NavBake.bake_chunk(field, d.origin, CHUNK_M, near, water_world(), ford_gate, walkable)
+			d.nav = NavBake.save_chunk(nms, NAV_DIR, d.chunk_id, kit.output_path)
+			var nbytes := 0
+			for bit: int in d.nav:
+				nbytes += FileAccess.get_file_as_bytes(kit.output_path(str(d.nav[bit]))).size()
+			(summary.nav_bytes as Dictionary)[d.chunk_id] = nbytes
+			var polys := {}
+			for bit: int in nms:
+				polys[bit] = (nms[bit] as NavigationMesh).get_polygon_count()
+			(summary.nav_polygons as Dictionary)[d.chunk_id] = polys
+			var path := kit.output_path(CHUNK_DIR + d.chunk_id + ".res")
+			var err := ChunkWriter.save(d, path)
+			if err != OK:
+				return {"ok": false, "message": "could not save %s (error %d)" % [path, err]}
 			(summary.chunk_bytes as Dictionary)[d.chunk_id] = FileAccess.get_file_as_bytes(path).size()
 	_save_skyline(kit, field)
 	var root := build_root(kit, field)
@@ -289,12 +348,40 @@ static func height(x: float, z: float) -> float:
 	keep *= 1.0 - pad
 	var pd := _pond_d(x, z)
 	keep *= _smooth(POND_R + 10.0, POND_R + 30.0, pd)
+	var fd := ford_distance(x, z)
+	keep *= _smooth(FORD_HALF_M + FORD_BANK_M, FORD_HALF_M + FORD_BANK_M + 30.0, fd)
 	var y := BASE_M + noise().get_noise_2d(x, z) * NOISE_AMP_M * keep
 	for r: Dictionary in RAMPS:
 		y += ramp_offset(r, x, z)
 	y = lerpf(y, PAD_Y, pad)
 	y -= POND_DEPTH_M * (1.0 - _smooth(POND_R * 0.35, POND_R, pd))
+	y = lerpf(y, FORD_BED_Y, 1.0 - _smooth(FORD_HALF_M, FORD_HALF_M + FORD_BANK_M, fd))
 	return y + rim(x, z)
+
+
+## P24b: the horizontal distance from (x, z) to the ford's axis (the segment FORD_A..FORD_B).
+static func ford_distance(x: float, z: float) -> float:
+	var p := Vector2(x, z)
+	var ab := FORD_B - FORD_A
+	var t := clampf((p - FORD_A).dot(ab) / ab.length_squared(), 0.0, 1.0)
+	return p.distance_to(FORD_A + ab * t)
+
+
+## P24b: the gate bit of the ground at (x, z) (NavBake's gate_at): the ford's bed is a gate-4
+## region of the titan layer; 0 elsewhere.
+static func ford_gate(x: float, z: float) -> int:
+	return FORD_GATE_BIT if ford_distance(x, z) < FORD_GATE_M else 0
+
+
+## P24b: the world's water, world space ([{"rect": Rect2 (x, z), "surface_y"}]): the pond and the
+## ford (each chunk keeps its share in its ChunkData's water; NavBake cuts the deep cells out of the
+## human and large meshes).
+static func water_world() -> Array:
+	var reach := FORD_HALF_M + FORD_BANK_M
+	return [
+		{"rect": Rect2(POND_CENTER.x - POND_R, POND_CENTER.y - POND_R, 2.0 * POND_R, 2.0 * POND_R), "surface_y": WATER_Y},
+		{"rect": Rect2(FORD_A.x - reach, FORD_A.y - reach, FORD_B.x - FORD_A.x + 2.0 * reach, 2.0 * reach), "surface_y": FORD_WATER_Y},
+	]
 
 
 ## The border rule applies to walkable ground: everything inside the rim.
@@ -311,7 +398,7 @@ static func slope_at(field: HeightField, x: float, z: float) -> float:
 
 ## Surface cells: wet by the pond, hard in the town, on the rim and on steep ground, soft elsewhere.
 static func surface_kind(field: HeightField, x: float, z: float) -> int:
-	if _pond_d(x, z) < POND_R + 6.0:
+	if _pond_d(x, z) < POND_R + 6.0 or ford_distance(x, z) < FORD_HALF_M + FORD_BANK_M:
 		return ChunkData.SURFACE_WET
 	if pad_weight(x, z) > 0.99 or not walkable(x, z) or slope_at(field, x, z) > 24.0:
 		return ChunkData.SURFACE_HARD
@@ -492,6 +579,8 @@ static func route_distance(x: float, z: float) -> float:
 ## the route corridor, the landmarks and steep ground.
 static func scenery_free(field: HeightField, x: float, z: float, route_m: float) -> bool:
 	if pad_weight(x, z) > 0.0 or _pond_d(x, z) < POND_R + 8.0 or maxf(absf(x), absf(z)) > RIM_FROM_M - 8.0:
+		return false
+	if ford_distance(x, z) < FORD_HALF_M + FORD_BANK_M + 8.0:
 		return false
 	for r: Dictionary in RAMPS:
 		var uv := _uv(r, x, z)
@@ -706,7 +795,7 @@ static func _shared_instance(node_name: String, path: String) -> MeshInstance3D:
 ## The chunk's scripted props: in the town chunk the 8 breakable houses, the two fortified gates and
 ## the fences and crates of the square; in a landmark's chunk the landmark (Landmarks). Split into
 ## parts of at most ChunkWriter.MAX_PART_NODES nodes, saved under PART_DIR and named in props_scenes.
-static func _props(kit: SceneKit, d: ChunkData, field: HeightField, meshes: Dictionary) -> Dictionary:
+static func _props(kit: SceneKit, d: ChunkData, field: HeightField, meshes: Dictionary, shapes: Array = []) -> Dictionary:
 	var elements: Array = []
 	if d.coords == _town_chunk():
 		var slots := house_slots()
@@ -731,6 +820,7 @@ static func _props(kit: SceneKit, d: ChunkData, field: HeightField, meshes: Dict
 			g.set("world_id", str(gate[1]))
 			g.position = Vector3(PAD_CENTER.x - d.origin.x, PAD_Y - 0.2, float(gate[2]) - d.origin.z)
 			g.rotation.y = float(gate[3])
+			add_gate_links(g)
 			elements.append({"node": g, "container": "Props"})
 		# The square (the last two slots of the back row south of the street): two rows of two fences
 		# (8 m each, along x) with four crates between them - each two draw calls, within the
@@ -760,6 +850,11 @@ static func _props(kit: SceneKit, d: ChunkData, field: HeightField, meshes: Dict
 		elements.append({"node": landmark_node(kit, lm, field, d.origin, meshes), "container": "Landmarks"})
 	if elements.is_empty():
 		return {"ok": true}
+	# P24b: every element's collision shapes are navigation obstacles (world space) - the gates closed.
+	var chunk_xform := Transform3D(Basis(), d.origin)
+	for e: Dictionary in elements:
+		var node := e.node as Node3D
+		NavBake.static_shapes(node, chunk_xform * node.transform, shapes)
 	var split := ChunkWriter.split_parts(elements)
 	if not bool(split.ok):
 		for e: Dictionary in elements:
@@ -768,11 +863,35 @@ static func _props(kit: SceneKit, d: ChunkData, field: HeightField, meshes: Dict
 	var parts: Array = split.parts
 	for i in parts.size():
 		var root := ChunkWriter.part_scene(d.coords, i, parts[i])
+		# P24b: the links added under an instanced gate are saved with the part (SceneKit.own does
+		# not reach into instances).
+		for n in root.find_children("*", "NavigationLink3D", true, false):
+			if n.has_meta(ADDED_META):
+				n.remove_meta(ADDED_META)
+				n.owner = root
 		var path := ChunkWriter.part_path(PART_DIR, d.coords, i)
 		if kit.save(root, path) == "":
 			return {"ok": false, "message": "could not save %s" % path}
 		d.props_scenes.append(path)
 	return {"ok": true}
+
+
+## P24b: one closed NavigationLink3D per layer through a fortified gate (local z, at the height the
+## layer's navmesh lies over flat ground): NavLinkHuman, NavLinkLarge, NavLinkTitan. BreakableProp
+## opens every NavLink* child when the gate breaks; the streamer puts each on its layer's map.
+static func add_gate_links(gate: Node3D) -> void:
+	for spec: Dictionary in NavBake.LAYERS:
+		var layer := int(spec.layer)
+		var half := float(GATE_LINK_HALF_M.get(layer, 4.0))
+		var link := NavigationLink3D.new()
+		link.name = "NavLink" + str(spec.name).capitalize()
+		link.start_position = Vector3(0.0, float(spec.above_m) + 0.2, half)
+		link.end_position = Vector3(0.0, float(spec.above_m) + 0.2, -half)
+		link.bidirectional = true
+		link.navigation_layers = layer
+		link.enabled = false
+		link.set_meta(ADDED_META, true)
+		gate.add_child(link)
 
 
 ## The real landmark of its chunk (a static body with its shapes and its one shared mesh): the

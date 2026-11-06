@@ -98,7 +98,6 @@ static func _condition_of(objective: Dictionary) -> Variant:
 ## count as open. {"reachable", "direct", "via_link", "from", "goal", "snapped", "snap_gap_m",
 ## "layers"}.
 static func path_check(player: GiantPlayer, level: LevelRoot, goal: Vector3, use_radius := REACH_TOLERANCE_M) -> Dictionary:
-	var map := level.nav_map()
 	var layers := player.nav_layers
 	var from := player.global_position
 	var snapped := snap_to_layer(level, goal, layers)
@@ -108,7 +107,7 @@ static func path_check(player: GiantPlayer, level: LevelRoot, goal: Vector3, use
 	if not snapped.is_finite() or gap > use_radius + 1e-3:
 		out["note"] = "the objective is %.1f m from the nearest point of the giant's layer" % gap
 		return out
-	if reaches(map, from, snapped, layers):
+	if reaches(level, from, snapped, layers):
 		out.direct = true
 		out.reachable = true
 		return out
@@ -116,7 +115,7 @@ static func path_check(player: GiantPlayer, level: LevelRoot, goal: Vector3, use
 		var a := link.to_global(link.start_position)
 		var b := link.to_global(link.end_position)
 		for pair: Array in [[a, b], [b, a]]:
-			if reaches(map, from, pair[0], layers, LINK_TOLERANCE_M) and reaches(map, pair[1], snapped, layers):
+			if reaches(level, from, pair[0], layers, LINK_TOLERANCE_M) and reaches(level, pair[1], snapped, layers):
 				out.via_link = str(link.get_path())
 				out.reachable = true
 				return out
@@ -127,32 +126,26 @@ static func path_check(player: GiantPlayer, level: LevelRoot, goal: Vector3, use
 ## `use_radius`), else Vector3.INF.
 static func reachable_from_any(level: LevelRoot, points: PackedVector3Array, goal: Vector3, layers: int,
 		use_radius := REACH_TOLERANCE_M) -> Vector3:
-	var map := level.nav_map()
 	var snapped := snap_to_layer(level, goal, layers)
 	if not snapped.is_finite() or _flat(snapped, goal) > use_radius + 1e-3:
 		return Vector3.INF
 	for i in range(points.size() - 1, -1, -1):
-		if reaches(map, points[i], snapped, layers):
+		if reaches(level, points[i], snapped, layers):
 			return points[i]
 	return Vector3.INF
 
 
-## The point of the giant's layer nearest `pos` (the lowest set bit's region), else `pos`.
+## The point of the giant's layer nearest `pos` (NavQuery.closest_point: the lowest set bit's
+## region here, the layer's own map in a streamed world), else `pos`.
 static func snap_to_layer(level: LevelRoot, pos: Vector3, layers: int) -> Vector3:
-	var bit := 1
-	while bit <= 255 and (layers & bit) == 0:
-		bit <<= 1
-	var region := level.nav_region(bit)
-	if not region.is_valid():
-		return pos
-	return NavigationServer3D.region_get_closest_point(region, pos)
+	var p := NavQuery.closest_point(level, pos, layers)
+	return p if p.is_finite() else pos
 
 
-## True when a path on `layers` from `a` ends within `tolerance` m of `b` (horizontally).
-static func reaches(map: RID, a: Vector3, b: Vector3, layers: int, tolerance := REACH_TOLERANCE_M) -> bool:
-	if not map.is_valid():
-		return false
-	var p := NavigationServer3D.map_get_path(map, a, b, true, layers)
+## True when a path on `layers` from `a` ends within `tolerance` m of `b` (horizontally): a
+## NavQuery path on the level's map for the layers (the far purpose).
+static func reaches(level: LevelRoot, a: Vector3, b: Vector3, layers: int, tolerance := REACH_TOLERANCE_M) -> bool:
+	var p := NavQuery.path(level, a, b, layers, NavQuery.PURPOSE_FAR)
 	return p.size() > 0 and _flat(p[p.size() - 1], b) <= tolerance
 
 

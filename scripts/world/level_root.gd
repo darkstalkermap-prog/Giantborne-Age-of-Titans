@@ -220,8 +220,12 @@ func player() -> GiantPlayer:
 	return fallback
 
 
-## The navigation map of this level's world (an invalid RID outside the tree).
-func nav_map() -> RID:
+## The navigation map of nav layer `layer` (0 = the human layer's): here the world's default map for
+## every layer (an invalid RID outside the tree). A streamed world keeps one map per layer
+## (WorldRoot, P24b; NavQuery and the actors ask through it).
+func nav_map(layer := 0) -> RID:
+	if layer < 0:
+		return RID()
 	return get_world_3d().navigation_map if is_inside_tree() else RID()
 
 
@@ -440,6 +444,47 @@ func _p24a_apply_view(preset: Dictionary, out: Dictionary) -> void:
 		out["terrain_visibility_end_m"] = end
 
 ## @anchor P24b
+# --- navigation by layer (P24b, plan M6-M9 §2.8, decision 13) -------------------------------------
+# nav_map(layer) (above: the default map for every layer here; WorldRoot's own map per layer),
+# nav_layers() (the layers this level has navigation for), nav_layer_for(layers) (the layer a giant
+# whose growth profile names `layers` uses here: its own when the level has it, else the record's
+# player_nav_fallback) and nav_query_settings() (the record's nav_query block: NavQuery's parameters,
+# the repath throttle and the per-tick query budget; {} keeps today's queries, so the Valley's paths
+# do not change).
+
+## The single nav layer bits this level has navigation for, ascending: the layers of its
+## Navigation regions here ([1, 2, 4, 8] in the Valley); a streamed world's world.nav_layers.
+func nav_layers() -> PackedInt32Array:
+	var bits := 0
+	var nav := get_node_or_null("Navigation")
+	if nav != null:
+		for r in nav.find_children("*", "NavigationRegion3D", true, false):
+			bits |= int((r as NavigationRegion3D).navigation_layers)
+	var out := PackedInt32Array()
+	var bit := 1
+	while bit <= bits and bit > 0:
+		if (bits & bit) != 0:
+			out.append(bit)
+		bit <<= 1
+	return out
+
+
+## The layer a giant whose growth profile names `layers` paths on here: the lowest of `layers` the
+## level has (nav_layers()), else the record's player_nav_fallback (the Valley's 4 for stages 4-6
+## from P26, the world's 16 for stage 3), else `layers` unchanged.
+func nav_layer_for(layers: int) -> int:
+	for bit in nav_layers():
+		if (layers & bit) != 0:
+			return bit
+	var fallback := player_nav_fallback()
+	return fallback if fallback > 0 else layers
+
+
+## The record's nav_query block ({} when it has none: NavQuery then uses map_get_path's parameters,
+## and actors keep today's re-path rule).
+func nav_query_settings() -> Dictionary:
+	var q: Variant = level_record().get("nav_query")
+	return (q as Dictionary).duplicate() if typeof(q) == TYPE_DICTIONARY else {}
 
 ## @anchor P25
 

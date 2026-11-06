@@ -68,6 +68,15 @@ static func fields() -> Dictionary:
 	})
 	# Later packages add their fields (a spawn's fields: f.spawns.item_fields) below their anchor.
 	## @anchor P24b
+	# P24b (plan M6-M9 §2.8, decision 15): `arena` (an arena boss's encounter: held by its arena and
+	# its disengage rule, the one kind of world encounter that needs no leash - GameData's leash rule)
+	# and a spawn entry's `min_stage` / `max_stage` (the giant's growth stages it spawns at; checked at
+	# each activation; absent = any).
+	f["arena"] = U.bool_field()
+	(((f.spawns as Dictionary).item_fields) as Dictionary).merge({
+		"min_stage": U.int_field(0, 10),
+		"max_stage": U.int_field(0, 10),
+	})
 
 	## @anchor P29
 
@@ -98,6 +107,14 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	if d.has("stand_down_when") and d.stand_down_when != null:
 		U.check_condition(d.stand_down_when, ctx + ".stand_down_when", out)
 	## @anchor P24b
+	# P24b: a spawn's stage range is not empty.
+	var p24b_spawns: Variant = d.get("spawns")
+	if typeof(p24b_spawns) == TYPE_ARRAY:
+		for i in (p24b_spawns as Array).size():
+			var sp: Variant = p24b_spawns[i]
+			if typeof(sp) == TYPE_DICTIONARY and U.is_number(sp.get("min_stage")) and U.is_number(sp.get("max_stage")) \
+					and int(sp.min_stage) > int(sp.max_stage):
+				out.errors.append("%s.spawns[%d]: min_stage (%s) is above max_stage (%s)" % [ctx, i, sp.min_stage, sp.max_stage])
 
 	## @anchor P29
 

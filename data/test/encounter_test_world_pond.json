@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "encounter.test_world_pond",
+	"type": "encounter",
+	"display_name": "Test world pond watch",
+	"description": "P24b: soldiers on the pond's east bank in c0_2, beside the world walk's route: a giant that wades into the deep water (over 1 m deep: no human navmesh) is chased to the bank, where they stand instead of walking in (the chase goal snapped to the human layer).",
+	"level": "level.test_world",
+	"center_m": [-317, 12, 130],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 120,
+	"leash_radius_m": 45,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "test_world.pond.soldier_1", "definition": "enemy.soldier", "position_m": [-318, 11.65, 150], "yaw_deg": -90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.pond.soldier_2", "definition": "enemy.soldier", "position_m": [-312, 12.05, 130], "yaw_deg": -90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.pond.soldier_3", "definition": "enemy.soldier", "position_m": [-322, 12.05, 110], "yaw_deg": -90,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}
