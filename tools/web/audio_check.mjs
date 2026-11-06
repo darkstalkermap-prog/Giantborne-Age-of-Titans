@@ -35,6 +35,8 @@
 // gets the trace so far (the page's frames, long tasks and driver reads are logged from the page's
 // load, not only while the recorder is armed), the page's state (the music marks, the AudioContext's
 // state, the launcher's status line) and the last CONSOLE_TAIL console lines, which are printed too.
+// Its own test: node tools/web/test_audio_check.mjs (a stub launcher, no build: a timeout's report,
+// the criterion met, and holes the main thread explains passing the default check but not --strict).
 //
 // Usage (from the project folder, after tools/build_web.sh):
 //   node tools/web/audio_check.mjs [--build=builds/web] [--args=a,b,...] [--route=R] [--music-s=60]
