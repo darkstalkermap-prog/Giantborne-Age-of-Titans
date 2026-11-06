@@ -33,9 +33,13 @@ const DEATH_FADE_S := 1.5
 const BOSS_XFADE_S := 0.5
 const START_FADE_S := 1.0
 const VARIANT_FADE_S := 0.08
+## P23: a set that starts this close after a segment boundary still plays that segment's melody.
+const SEGMENT_ENTRY_S := 0.1
 const DEFAULT_LAYER_FADE_BEATS := 2.0
 const DEFAULT_CROSSFADE_BARS := 2
 const SILENT_DB := -80.0
+## The smallest volume change written to a playing player (set_volume).
+const VOLUME_STEP_DB := 0.01
 ## Brain states in which an aware enemy is "engaged" for the music (approach, attack, recover,
 ## reposition, hold - which covers a brace - and staggered).
 const ENGAGED_STATES := [EnemyBrain.AIState.APPROACH, EnemyBrain.AIState.ATTACK, EnemyBrain.AIState.RECOVER,
@@ -117,6 +121,10 @@ var _end_context := ""
 var _fading_to_silence := false
 var _zone_record_id := ""
 var _layers_override: Dictionary = {}
+## P23: with --audio-stats every set start prints one "AUDIO_MUSIC {json}" line (set, state,
+## context, the director's clock): the web audio check (tools/web/audio_check.mjs) reads the zone
+## set's start as the moment the giant stands in the Hollow.
+var _print_sets := false
 
 
 func setup(p_audio: Node) -> void:
@@ -128,6 +136,7 @@ func setup(p_audio: Node) -> void:
 	_stinger.bus = "Music"
 	_stinger.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_stinger)
+	_print_sets = OS.get_cmdline_user_args().has(AudioDirector.STATS_ARG)
 
 
 ## Back to silence at once: every deck and the stinger stopped, the state cleared (tests, reloads).
@@ -618,6 +627,12 @@ func _start_deck(set_id_value: String, fade_s: float) -> void:
 	d.loop_s = AudioMath.loop_seconds(float(rec.get("bpm", 96)), int(rec.get("beats_per_bar", 4)), int(rec.get("bars", 1)))
 	var melody: Dictionary = rec.get("melody", {}) if typeof(rec.get("melody")) == TYPE_DICTIONARY else {}
 	d.segment_s = d.bar_s * float(melody.get("segment_bars", rec.get("bars", 1)))
+	# P23: a set of the playing set's frame (the zone sets, the title and the end screens share
+	# zone_96 and its chords) starts where the playing set is, so the harmony carries on through the
+	# crossfade instead of jumping back to bar 1; its melody waits for the next segment boundary.
+	var from := 0.0
+	if aligned_with(deck, d):
+		from = fposmod(deck_position(deck), d.loop_s)
 	var stems: Dictionary = rec.get("stems", {})
 	for stem: String in stems:
 		if d.lead == "":
@@ -638,8 +653,8 @@ func _start_deck(set_id_value: String, fade_s: float) -> void:
 		d.players[stem] = player
 		d.gains[stem] = 0.0
 	for stem: String in d.players:
-		(d.players[stem] as AudioStreamPlayer).play()
-	d.started_s = _now()
+		(d.players[stem] as AudioStreamPlayer).play(from)
+	d.started_s = _now() - from
 	var xfade := fade_s
 	if xfade < 0.0:
 		xfade = d.bar_s * float(rec.get("crossfade_bars", DEFAULT_CROSSFADE_BARS)) if deck != null else START_FADE_S
@@ -657,11 +672,27 @@ func _start_deck(set_id_value: String, fade_s: float) -> void:
 		segs, rng, _now())
 	if typeof(_zone_melody_override()) == TYPE_DICTIONARY:
 		_apply_melody_override(_zone_melody_override())
-	d.segment = 0
-	d.melody_choice = scheduler.next_segment(_now(), 0)
-	d.last_pos = 0.0
+	d.segment = AudioMath.segment_index(from, d.segment_s)
+	var into_segment := from - d.segment * d.segment_s
+	if into_segment <= SEGMENT_ENTRY_S:
+		d.melody_choice = scheduler.next_segment(_now(), d.segment)
+	else:
+		d.melody_choice = MelodyScheduler.REST   # mid-phrase: the melody waits for the next segment
+	d.last_pos = from
 	audio.call("log_cue", {"cue": set_id_value, "requested": set_id_value, "bus": "Music", "pos": Vector3.INF,
 		"voice": -3, "priority": 0, "reason": state_name(), "file": ""})
+	if _print_sets:
+		print("AUDIO_MUSIC " + JSON.stringify({"set": set_id_value, "state": state_name(), "context": context,
+			"clock_s": snappedf(_now(), 0.01)}))
+
+
+## True when `next` (a deck about to start) should start at `current`'s position: both in the same
+## frame (the record's `frame`, e.g. zone_96) with loops of the same length, neither a boss set.
+static func aligned_with(current: Deck, next: Deck) -> bool:
+	if current == null or next == null or current.boss or next.boss:
+		return false
+	var f := str(next.rec.get("frame", ""))
+	return f != "" and f == str(current.rec.get("frame", "")) and absf(current.loop_s - next.loop_s) < 1e-6
 
 
 func _zone_melody_override() -> Variant:
@@ -775,14 +806,23 @@ func _update_gains(delta: float) -> void:
 			var g := float(d.gains[stem]) * d.master
 			var p: AudioStreamPlayer = d.players[stem]
 			if is_instance_valid(p):
-				p.volume_db = (linear_to_db(g) + duck) if g > 0.0001 else SILENT_DB
+				set_volume(p, (linear_to_db(g) + duck) if g > 0.0001 else SILENT_DB)
 	for d: Deck in old_decks.duplicate():
 		if d.master <= 0.0001 and d.master_target <= 0.0:
 			d.free_players()
 			old_decks.erase(d)
 	if _stinger != null and _stinger.playing:
 		var cue: Dictionary = audio.call("resolve", _stinger_cue) if _stinger_cue != "" else {}
-		_stinger.volume_db = float(cue.get("volume_db", 0.0)) + _duck_db(false)
+		set_volume(_stinger, float(cue.get("volume_db", 0.0)) + _duck_db(false))
+
+
+## Sets a player's volume only when it changes by more than VOLUME_STEP_DB (P23). Every volume_db
+## set on a playing AudioStreamPlayer replaces its playback's bus details in the AudioServer (an
+## allocation the main thread frees a frame later; AudioDirector.mix_barrier), so a steady stem or
+## bed sets nothing and a fade sets at most once a frame.
+static func set_volume(p: Node, db: float) -> void:
+	if absf(float(p.get("volume_db")) - db) > VOLUME_STEP_DB:
+		p.set("volume_db", db)
 
 
 ## Lines for the F3 panel.

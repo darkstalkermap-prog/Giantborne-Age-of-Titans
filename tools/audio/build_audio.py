@@ -11,7 +11,8 @@ Every gen_<family>.py module beside this file exposes CUES, a list of dicts:
     params   the render's parameters (dict)     kind   "sfx" (16-bit WAV, imported as QOA) |
                                                        "loop" | "oneshot" (Ogg Vorbis)
     rate     22050 by default                   quality  libvorbis -q:a for Ogg (default 0)
-    norm     {"peak_db": x} or {"rms_db": x} (defaults: SFX peak -6 dBFS, music and spots -3)
+    norm     {"peak_db": x}, {"rms_db": x} or {"lufs": x} (K-weighted, gated loudness; P23's
+             music and ambience), with "max_peak_db" (defaults: SFX peak -6 dBFS, the rest -3)
     bpm, beats, beats_per_bar, frame            music loops (the loop must be exactly
                                                 beats x 60 / bpm seconds long)
     scope    "m6" (default) or "world"          est_kbps  Ogg size estimate (KB per second)
@@ -71,7 +72,8 @@ BUDGET_M6_BYTES = 4.0 * 1024 * 1024
 BUDGET_ALL_BYTES = 9.5 * 1024 * 1024
 REGISTERED_S_CAP = {"level.valley": 110.0, "level.world": 170.0}
 OGG_HEADER_BYTES = 3.7 * 1024
-OGG_IMPORT_FACTOR = 1.03
+OGG_IMPORT_FACTOR = 1.11   # P23: Godot 4.6.3 imports these Oggs at x1.107 (x1.07 for 100 KB beds, x1.2 for 5 KB spots;
+                           # measured in the release pck), not the x1.03 decision 8 assumed
 QOA_IMPORT_BYTES = 370
 # KB per second of Ogg by (quality, channels) when a cue gives no est_kbps (section 4.5 rates).
 OGG_KBPS = {(0, 1): 3.2, (1, 1): 4.0, (2, 1): 4.6, (0, 2): 5.5, (1, 2): 7.0, (2, 2): 8.5}
@@ -152,7 +154,9 @@ def render(fam: str, cue: dict) -> dict:
         x = x[:, 0]
     norm = dict(DEFAULT_NORM[cue["kind"]])
     norm.update(cue.get("norm", {}))
-    if "rms_db" in norm:
+    if "lufs" in norm:
+        x = core.normalize_lufs(x, rate, float(norm["lufs"]), float(norm.get("max_peak_db", -1.0)))
+    elif "rms_db" in norm:
         x = core.normalize_rms(x, float(norm["rms_db"]), float(norm.get("max_peak_db", -1.0)))
     else:
         x = core.normalize_peak(x, float(norm.get("peak_db", -6.0)))
@@ -201,7 +205,7 @@ def estimate_bytes(e: dict) -> float:
 
 
 def imported_bytes(e: dict) -> float:
-    """The imported size of a built entry: the exact QOA formula for WAVs, the Ogg file x 1.03."""
+    """The imported size of a built entry: the exact QOA formula for WAVs, the Ogg file x 1.11."""
     if e["kind"] == "sfx":
         return qoa_bytes(int(e["frames"]), int(e["channels"])) + QOA_IMPORT_BYTES
     return float(e.get("size", 0)) * OGG_IMPORT_FACTOR if "size" in e else estimate_bytes(e)

@@ -9,8 +9,12 @@ extends IntegrationSuite
 
 const Fx := preload("res://tests/support/test_fixtures.gd")
 const MainScript := preload("res://scripts/main.gd")
-const BED := "res://assets/audio/placeholder/bed.ogg"
-const STINGER := "res://assets/audio/placeholder/stinger.ogg"
+## P23's assets stand in for the placeholder bed and stinger these tests used (P23 deleted them):
+## zone-frame stems (D dorian, 96 BPM, twelve bars of 30 s), the King's frame (104 BPM, twelve bars
+## of 27.7 s), the King's one-bar intro (2.43 s) and the calm combat intro.
+const MUSIC := "res://assets/audio/music/"
+const AMB := "res://assets/audio/ambience/"
+const INTRO_S := 2.43
 const LEVEL_ID := "level.test_audio"
 const GATE_SCENE := "user://test_audio_gate_level.tscn"
 
@@ -28,24 +32,29 @@ func after_each() -> void:
 # --------------------------------------------------------------------------- fixtures
 
 ## Test records: a level with one district, a zone set (drone, two melody variants, pulse, drums),
-## a boss set with a phase layer, a title set, an ambience set and the cues they name.
+## a boss set with a phase layer, a title set (it replaces the shipped title context's music), an
+## ambience set and the cues they name.
 func _install_music() -> void:
 	Fx.record_override(LEVEL_ID, {"schema_version": 1, "type": "level", "scene": "", "start_checkpoint": "",
 		"districts": [{"id": "arena", "display_name": "Arena", "min_m": [-60, 0, -60], "max_m": [60, 0, 60]}]})
 	var zone_layers := {"explore": {"drone": 0, "melody": -2}, "danger": {"drone": 0, "melody": -9, "pulse": -3},
 		"combat": {"drone": -4, "melody": -10, "pulse": -5, "drums": 0}}
-	Fx.record_override("music.test_zone", {"schema_version": 1, "type": "music_set", "bpm": 120, "beats_per_bar": 4,
-		"bars": 4, "frame": "test_120",
-		"stems": {"drone": BED, "melody_a": BED, "melody_b": BED, "pulse": BED, "drums": BED}, "layers": zone_layers,
-		"melody": {"variants": ["melody_a", "melody_b"], "segment_bars": 2, "play_loops": [1, 2], "rest_loops": [1, 3],
+	Fx.record_override("music.test_zone", {"schema_version": 1, "type": "music_set", "bpm": 96, "beats_per_bar": 4,
+		"bars": 12, "frame": "zone_96",
+		"stems": {"drone": MUSIC + "drone_calm.ogg", "melody_a": MUSIC + "melody_calm_a.ogg",
+			"melody_b": MUSIC + "melody_calm_b.ogg", "pulse": MUSIC + "pulse.ogg", "drums": MUSIC + "combat_drums.ogg"},
+		"layers": zone_layers,
+		"melody": {"variants": ["melody_a", "melody_b"], "segment_bars": 4, "play_loops": [1, 2], "rest_loops": [1, 3],
 			"max_repeat": 2, "min_phrase_gap_s": 60},
 		"combat_intro": "mus.stinger.test_combat", "crossfade_bars": 1, "layer_fade_beats": 2})
-	Fx.record_override("music.test_boss", {"schema_version": 1, "type": "music_set", "bpm": 120, "beats_per_bar": 4,
-		"bars": 4, "frame": "test_120", "stems": {"drums": BED, "theme": BED, "frenzy": BED},
-		"layers": {"combat": {"drums": 0, "theme": -2}}, "phase_layers": {"2": {"frenzy": 0}},
+	Fx.record_override("music.test_boss", {"schema_version": 1, "type": "music_set", "bpm": 104, "beats_per_bar": 4,
+		"bars": 12, "frame": "boss_104", "stems": {"drums": MUSIC + "boss_drums.ogg", "theme": MUSIC + "boss_theme.ogg",
+			"frenzy": MUSIC + "boss_frenzy.ogg"},
+		"layers": {"explore": {"drums": 0, "theme": -2}, "combat": {"drums": 0, "theme": -2}},
+		"phase_layers": {"2": {"frenzy": 0}},
 		"intro": "mus.stinger.test_intro", "crossfade_bars": 1, "layer_fade_beats": 2})
-	Fx.record_override("music.test_title", {"schema_version": 1, "type": "music_set", "bpm": 120, "beats_per_bar": 4,
-		"bars": 4, "frame": "test_120", "stems": {"drone": BED, "theme": BED},
+	Fx.record_override("music.test_title", {"schema_version": 1, "type": "music_set", "bpm": 96, "beats_per_bar": 4,
+		"bars": 12, "frame": "zone_96", "stems": {"drone": MUSIC + "drone_ancient.ogg", "theme": MUSIC + "title_theme.ogg"},
 		"layers": {"explore": {"drone": 0, "theme": -3}}})
 	Fx.record_override("ambience.test_zone", {"schema_version": 1, "type": "ambience_set",
 		"beds": [{"cue": "amb.test_bed", "volume_db": 0}], "spots": [{"cue": "amb.test_spot", "weight": 1, "flush": true}],
@@ -56,11 +65,14 @@ func _install_music() -> void:
 		"priority": 0})
 	Fx.record_override("audio_region.test_boss", {"schema_version": 1, "type": "audio_region", "level": "",
 		"context": "", "boss": "test.boss_x", "music": "music.test_boss", "ambience": "", "priority": 0})
-	Fx.record_override("audio_region.test_title", {"schema_version": 1, "type": "audio_region", "level": "",
+	Fx.record_override("audio_region.context_title", {"schema_version": 1, "type": "audio_region", "level": "",
 		"context": "title", "boss": "", "music": "music.test_title", "ambience": "", "priority": 0})
 	Fx.record_override("audio_bank.test", {"schema_version": 1, "type": "audio_bank", "cues": {
-		"amb.test_bed": {"files": [BED], "bus": "Ambience", "spatial": false, "volume_db": 0.0},
-		"amb.test_spot": {"files": [STINGER], "bus": "Ambience", "class": "spot", "volume_db": 0.0, "retrigger_ms": 0}}})
+		"amb.test_bed": {"files": [AMB + "bed_meadow.ogg"], "bus": "Ambience", "spatial": false, "volume_db": 0.0},
+		"amb.test_spot": {"files": [AMB + "spot_lark.ogg"], "bus": "Ambience", "class": "spot", "volume_db": 0.0,
+			"retrigger_ms": 0},
+		"mus.stinger.test_intro": {"files": [MUSIC + "stinger_boss_ogre_king.ogg"], "bus": "Music", "spatial": false},
+		"mus.stinger.test_combat": {"files": [MUSIC + "stinger_combat_calm.ogg"], "bus": "Music", "spatial": false}}})
 	Audio.reload_catalog()
 	Audio.music.clock_positions = true
 
@@ -249,9 +261,9 @@ func test_zone_music_boss_set_after_its_intro_and_a_phase_layer_at_the_next_bar(
 	assert_eq(str(bed_player.bus), "Ambience", "on the Ambience bus")
 	Events.boss_engaged.emit(Sim.tick, "test.boss_x")
 	await _drain()
-	assert_true(Audio.music.stingers.has("mus.stinger.default"), "the intro stinger plays (placeholder)")
-	Audio.advance_for_tests(0.5)
-	assert_eq(Audio.music.set_id(), "music.test_zone", "the zone set holds through the 1 s intro")
+	assert_true(Audio.music.stingers.has("mus.stinger.test_intro"), "the intro stinger plays")
+	Audio.advance_for_tests(INTRO_S - 0.3)
+	assert_eq(Audio.music.set_id(), "music.test_zone", "the zone set holds through the one-bar intro")
 	Audio.advance_for_tests(0.6)
 	assert_eq(Audio.music.set_id(), "music.test_boss", "the boss set after its intro")
 	assert_eq(Audio.music.state_name(), "boss", "the boss state")
@@ -273,7 +285,7 @@ func test_zone_music_boss_set_after_its_intro_and_a_phase_layer_at_the_next_bar(
 	await _drain()
 	Audio.advance_for_tests(0.2)
 	assert_eq(Audio.music.state_name(), "zone", "back to the zone after the victory")
-	assert_true(Audio.music.stingers.has("mus.stinger.default") and str(Audio.cue_log().back().requested) != "",
+	assert_true(Audio.music.stingers.has("mus.stinger.victory") and str(Audio.cue_log().back().requested) != "",
 		"the victory stinger")
 	Audio.advance_for_tests(0.6)
 	assert_eq(Audio.music.set_id(), "music.test_zone", "the zone's set again")
@@ -328,8 +340,8 @@ func test_a_pausing_screen_pauses_effects_and_ducks_the_music() -> void:
 	assert_eq(Audio.music.set_id(), "music.test_zone", "zone music plays")
 	var drone: AudioStreamPlayer = Audio.music.deck.players.drone
 	var before := drone.volume_db
-	# a long effect (the 0.35 s sweep at a quarter speed lasts 1.4 s), so it still plays when the menu opens
-	Fx.record_override("audio_bank.test", {"cues": {"sfx.swing.test_long": {"files": ["res://assets/audio/placeholder/tone_sweep.wav"],
+	# a long effect (the 0.72 s tree swing at a quarter speed lasts 2.9 s), so it still plays when the menu opens
+	Fx.record_override("audio_bank.test", {"cues": {"sfx.swing.test_long": {"files": ["res://assets/audio/sfx/combat/swing_tree_heavy_1.wav"],
 		"bus": "SFX", "class": "impact", "pitch": 0.25, "volume_db": 0.0}}})
 	Audio.reload_catalog()
 	var v := Audio.play("sfx.swing.test_long", p.global_position + Vector3(2, 1, 0), {"reason": "test"})

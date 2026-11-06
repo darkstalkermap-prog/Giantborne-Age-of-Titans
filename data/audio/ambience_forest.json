@@ -1,0 +1,55 @@
+{
+	"schema_version": 1,
+	"id": "ambience.forest",
+	"type": "ambience_set",
+	"display_name": "Old Wood",
+	"description": "P23: leaves rustling in waves over a low wind in the canopy; a woodpecker, an owl, a crow, old trees creaking, a wolf howling far off. Birds fall silent after a giant's step close by.",
+	"beds": [
+		{
+			"cue": "amb.bed_forest",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.woodpecker",
+			"weight": 2,
+			"flush": true
+		},
+		{
+			"cue": "amb.owl",
+			"weight": 1,
+			"flush": true
+		},
+		{
+			"cue": "amb.crow",
+			"weight": 2,
+			"flush": true
+		},
+		{
+			"cue": "amb.creak_a",
+			"weight": 2
+		},
+		{
+			"cue": "amb.creak_b",
+			"weight": 2
+		},
+		{
+			"cue": "amb.howl",
+			"weight": 1
+		}
+	],
+	"spot_interval_s": [
+		4,
+		11
+	],
+	"spot_distance_m": [
+		12,
+		30
+	],
+	"reactions": {
+		"flush_radius_m": 40,
+		"flush_s": 8,
+		"flush_cue": "amb.birds_flush"
+	}
+}

@@ -4,8 +4,10 @@ extends TestSuite
 ## stems whose length is not the set's loop, a stem shared across frames, and the other mistakes
 ## its rules name. The audio types are registered right after "progression" (§1.6).
 
-const BED := "res://assets/audio/placeholder/bed.ogg"
-const TONE := "res://assets/audio/placeholder/tone_mid.wav"
+## P23's calm drone (30 s: twelve bars at 96 BPM, frame zone_96) and one of P21's interface sounds
+## (the placeholder bed and tones these tests used are gone).
+const BED := "res://assets/audio/music/drone_calm.ogg"
+const TONE := "res://assets/audio/sfx/ui/close_1.wav"
 const AUDIO_TYPES := ["audio_bank", "audio_mix", "music_set", "ambience_set", "audio_region"]
 
 
@@ -24,10 +26,10 @@ func _bank(cues: Dictionary) -> Dictionary:
 
 
 func _music_set(overrides: Dictionary = {}) -> Dictionary:
-	var rec := {"schema_version": 1, "id": "music.test", "type": "music_set", "bpm": 120, "beats_per_bar": 4,
-		"bars": 4, "frame": "test_120", "stems": {"drone": BED, "melody_a": BED, "melody_b": BED},
+	var rec := {"schema_version": 1, "id": "music.test", "type": "music_set", "bpm": 96, "beats_per_bar": 4,
+		"bars": 12, "frame": "zone_96", "stems": {"drone": BED, "melody_a": BED, "melody_b": BED},
 		"layers": {"explore": {"drone": 0, "melody": -2}},
-		"melody": {"variants": ["melody_a", "melody_b"], "segment_bars": 2, "play_loops": [1, 2],
+		"melody": {"variants": ["melody_a", "melody_b"], "segment_bars": 4, "play_loops": [1, 2],
 			"rest_loops": [1, 3], "max_repeat": 2, "min_phrase_gap_s": 60},
 		"silence": {"after_explore_s": 180, "length_s": [60, 120], "fade_s": 8},
 		"combat_intro": "", "intro": "", "phase_layers": {}, "crossfade_bars": 2, "layer_fade_beats": 2}
@@ -50,7 +52,7 @@ func test_shipped_audio_records_validate() -> void:
 		for rec: Dictionary in GameData.records_of_type(t):
 			found += 1
 			assert_eq(_errors(rec), "", "%s validates" % rec.id)
-	assert_true(found >= 2, "the placeholder bank and the default mix ship")
+	assert_true(found >= 20, "the banks, the default mix, P23's sets and regions ship")
 	assert_true(GameData.has_record("audio_mix.default"), "the default mix is a required record")
 	assert_true(DataValidator.required_records().has("audio_mix.default"), "required by the engine")
 
@@ -116,9 +118,9 @@ func test_mix_rules() -> void:
 
 
 func test_music_set_rules() -> void:
-	assert_eq(_errors(_music_set()), "", "a valid set: the 8 s bed is 4 bars at 120 BPM")
-	assert_true(_errors(_music_set({"bars": 2})).contains("but the set's loop is"), "unequal stem lengths")
-	assert_true(_errors(_music_set({"frame": "zone_96"})).contains("belongs to the frame test_120"),
+	assert_eq(_errors(_music_set()), "", "a valid set: the 30 s drone is 12 bars at 96 BPM")
+	assert_true(_errors(_music_set({"bars": 8})).contains("but the set's loop is"), "unequal stem lengths")
+	assert_true(_errors(_music_set({"frame": "boss_104"})).contains("belongs to the frame zone_96"),
 		"a stem shared across frames")
 	var bad_layer := _music_set()
 	bad_layer.layers["combat"] = {"drums": 0}
@@ -129,10 +131,10 @@ func test_music_set_rules() -> void:
 	var bad_variant := _music_set()
 	bad_variant.melody.variants = ["melody_a", "melody_z"]
 	assert_true(_errors(bad_variant).contains("'melody_z' is not a stem"), "variants are stems")
-	assert_true(_errors(_music_set({"stems": {"drone": "res://assets/audio/placeholder/tone_low.wav"}})).contains("res:// Ogg"),
+	assert_true(_errors(_music_set({"stems": {"drone": TONE}})).contains("res:// Ogg"),
 		"stems are Ogg")
 	var bad_segment := _music_set()
-	bad_segment.melody.segment_bars = 3
+	bad_segment.melody.segment_bars = 5
 	assert_true(_errors(bad_segment).contains("does not divide"), "segments divide the loop")
 	var bad_rest := _music_set()
 	bad_rest.melody.rest_loops = [3, 1]
@@ -188,3 +190,19 @@ func test_audio_region_rules() -> void:
 	bad_district.districts = ["Old Wood"]
 	bad_district.music = "music.nowhere"
 	assert_true(_errors(bad_district).contains("must be a plain word"), "district ids")
+
+
+## P23: the silent list is an audio_region of its own (data/audio/region_silent.json) that names
+## only silent_levels and silent_contexts.
+func test_the_silent_list_record() -> void:
+	var silent := {"schema_version": 1, "id": "audio_region.silent_test", "type": "audio_region",
+		"silent_levels": ["level.stress_arena"], "silent_contexts": ["loading"]}
+	assert_eq(_errors(silent), "", "a silent list needs no music, ambience, level or context")
+	var mixed := silent.duplicate(true)
+	mixed["music"] = "music.title"
+	assert_true(_errors(mixed).contains("a silent list (silent_levels / silent_contexts) names no music"),
+		"a silent list plays nothing")
+	var bad := silent.duplicate(true)
+	bad.silent_contexts = ["Loading Screen"]
+	assert_true(_errors(bad).contains("must be a plain word"), "silent contexts are plain words")
+	assert_true(GameData.has_record("audio_region.silent"), "the silent list ships")

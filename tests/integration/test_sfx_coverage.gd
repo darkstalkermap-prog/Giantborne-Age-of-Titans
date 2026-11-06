@@ -344,7 +344,7 @@ func test_real_events_play_effect_cues_with_nothing_missing() -> void:
 	assert_true(played.size() >= 30, "the events played their cues (%d)" % played.size())
 	for cue_id: String in played:
 		if cue_id.begins_with("mus."):
-			continue   # stingers: the placeholder until P23
+			continue   # stingers: P23's bank (audio_bank.stingers), not an effect bank
 		assert_true(P21_BANKS.has(str(Audio.resolve(cue_id).get("bank", ""))), "%s (asked as %s) comes from an effect bank" % [
 			cue_id, played[cue_id]])
 	for expected: String in ["sfx.voice.human.hurt", "sfx.hit.wood", "sfx.player.hurt", "sfx.swing.blunt.light",

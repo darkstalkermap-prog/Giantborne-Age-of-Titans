@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests of the audio generation pipeline (tools/audio/): the synthesis core, the writers, the
-encoder's bit-exactness and decoded length, the manifest and the generators' declarations.
+encoder's bit-exactness and decoded length, the manifest and the generators' declarations; the
+score's loudness measure, phrase writer and loops (P23).
 
     python3 tools/audio/test_synth.py        (exit 0 when every test passes)
 
@@ -34,7 +35,9 @@ import numpy as np  # noqa: E402
 import build_audio  # noqa: E402
 import encode  # noqa: E402
 import manifest  # noqa: E402
+from synth import ambience as amb  # noqa: E402
 from synth import core  # noqa: E402
+from synth import music as mus  # noqa: E402
 
 RATE = core.DEFAULT_RATE
 
@@ -246,6 +249,80 @@ class PipelineTests(unittest.TestCase):
         doc = manifest.load(build_audio.ROOT)
         paths = {c["path"] for _f, _m, c in build_audio.collect(None)}
         self.assertEqual(set(doc.get("files", {})), paths)
+
+
+class ScoreTests(unittest.TestCase):
+    """P23: the loudness the score and ambience are balanced by, the phrase writer's variants and
+    the frames the loops are cut to."""
+
+    def test_loudness_follows_bs1770(self):
+        t = np.arange(RATE * 4) / RATE
+        tone = np.sin(2.0 * np.pi * 997.0 * t)
+        # the standard's calibration: a full-scale 997 Hz sine in one channel reads -3.01 LUFS
+        self.assertAlmostEqual(core.loudness_lufs(tone, RATE), -3.01, delta=0.02)
+        self.assertAlmostEqual(core.loudness_lufs(np.stack([tone, tone], axis=1), RATE), 0.0, delta=0.02)
+        # the gates: silence after the tone does not lower its loudness
+        quiet = tone * 0.25
+        padded = np.concatenate([quiet, np.zeros(RATE * 4)])
+        self.assertAlmostEqual(core.loudness_lufs(padded, RATE), core.loudness_lufs(quiet, RATE), delta=0.2)
+        self.assertEqual(core.loudness_lufs(np.zeros(RATE), RATE), -120.0)
+        # the K-weighting: a 100 Hz tone reads quieter than a 2 kHz tone of the same level
+        low = core.loudness_lufs(np.sin(2.0 * np.pi * 100.0 * t), RATE)
+        high = core.loudness_lufs(np.sin(2.0 * np.pi * 2000.0 * t), RATE)
+        self.assertGreater(high - low, 3.0)
+
+    def test_normalize_lufs_meets_its_target_under_the_peak_cap(self):
+        n = core.normalize_lufs(core.white(RATE * 3, core.cue_rng(5)) * 0.1, RATE, -20.0, -1.0)
+        self.assertAlmostEqual(core.loudness_lufs(n, RATE), -20.0, places=6)
+        capped = core.normalize_lufs(n, RATE, -2.0, -6.0)
+        self.assertLessEqual(core.peak_db(capped), -6.0 + 1e-9)
+        self.assertEqual(core.normalize_lufs(np.zeros(100), RATE, -20.0).tolist(), [0.0] * 100)
+
+    def test_melody_variants_fit_the_scheduler(self):
+        import gen_music
+        for set_name in ("calm", "wild", "ancient"):
+            variants = []
+            for v in ("a", "b", "c"):
+                notes = gen_music.melody_notes(set_name, v)
+                self.assertGreater(len(notes), 8, set_name + v)
+                # every phrase starts after its segment's downbeat and ends before its last half beat
+                self.assertEqual(mus.check_phrases(notes, gen_music.SEGMENT_BEATS), [], set_name + v)
+                self.assertTrue(all(0.0 <= b < gen_music.ZONE_BEATS for b, *_rest in notes), set_name + v)
+                variants.append(tuple(notes))
+            self.assertEqual(len(set(variants)), 3, set_name + ": three different variants")
+
+    def test_ornaments_are_seeded_and_keep_the_segment_edges(self):
+        import gen_music
+        notes = gen_music.melody_notes("wild", "a")
+        a = mus.ornament(notes, core.cue_rng(11), prob=0.6, style="turn")
+        b = mus.ornament(notes, core.cue_rng(11), prob=0.6, style="turn")
+        self.assertEqual(a, b)
+        self.assertGreater(len(a), len(notes))
+        self.assertEqual(mus.check_phrases([n[:4] for n in a], gen_music.SEGMENT_BEATS), [])
+        self.assertTrue(mus.check_phrases([(0.0, 1.0, 0, 0)], 16), "a note on the downbeat is reported")
+
+    def test_check_phrases_finds_a_note_ringing_into_the_next_segment(self):
+        self.assertTrue(mus.check_phrases([(14.0, 2.0, 0, 0)], 16))
+        self.assertEqual(mus.check_phrases([(14.0, 1.5, 0, 0)], 16), [])
+
+    def test_the_frames_are_whole_bars(self):
+        import gen_music
+        self.assertEqual(mus.frames(gen_music.ZONE_BEATS * mus.beat_s(gen_music.ZONE_BPM)), 661500)
+        self.assertEqual(mus.frames(gen_music.BOSS_BEATS * mus.beat_s(gen_music.BOSS_BPM)), 610615)
+        self.assertEqual(mus.degree_midi(0), 62)           # D4
+        self.assertEqual(mus.degree_midi(5), 71)           # the dorian B natural
+        self.assertEqual(mus.degree_midi(5, mus.AEOLIAN), 70)
+        self.assertEqual(mus.degree_midi(-1), 60)          # C4, the step below
+
+    def test_loop_noise_is_circular(self):
+        n = RATE * 2
+        for color in ("white", "pink", "brown"):
+            x = amb.loop_noise(n, core.cue_rng(21), 200.0, 2000.0, color)
+            self.assertEqual(x.shape[0], n)
+            self.assertAlmostEqual(core.rms(x), 1.0, places=6)
+            steps = np.abs(np.diff(x))
+            # the wrap from the last frame to the first is an ordinary step of the noise
+            self.assertLessEqual(abs(float(x[0] - x[-1])), float(np.max(steps)), color)
 
 
 if __name__ == "__main__":

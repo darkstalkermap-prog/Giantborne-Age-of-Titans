@@ -1,0 +1,67 @@
+{
+	"schema_version": 1,
+	"id": "music.valley_wild",
+	"type": "music_set",
+	"display_name": "The Old Wood",
+	"description": "P23: the Old Wood and the Raider Quarry. A dark pad with the chords' sevenths and a breathing wind over the zone frame's harmony, and three low breathy flute melodies from one motif - a falling third and a turn through the dorian B, D-C-A, (B-A) G-A-F; the shared danger and combat stems; the wild combat intro.",
+	"bpm": 96,
+	"beats_per_bar": 4,
+	"bars": 12,
+	"frame": "zone_96",
+	"stems": {
+		"drone": "res://assets/audio/music/drone_wild.ogg",
+		"melody_a": "res://assets/audio/music/melody_wild_a.ogg",
+		"melody_b": "res://assets/audio/music/melody_wild_b.ogg",
+		"melody_c": "res://assets/audio/music/melody_wild_c.ogg",
+		"pulse": "res://assets/audio/music/pulse.ogg",
+		"drums": "res://assets/audio/music/combat_drums.ogg",
+		"brass": "res://assets/audio/music/combat_brass.ogg"
+	},
+	"layers": {
+		"explore": {
+			"drone": 0,
+			"melody": -2
+		},
+		"danger": {
+			"drone": 0,
+			"melody": -9,
+			"pulse": -3
+		},
+		"combat": {
+			"drone": -4,
+			"melody": -10,
+			"pulse": -5,
+			"drums": 0,
+			"brass": -2
+		}
+	},
+	"melody": {
+		"variants": [
+			"melody_a",
+			"melody_b",
+			"melody_c"
+		],
+		"segment_bars": 4,
+		"play_loops": [
+			1,
+			2
+		],
+		"rest_loops": [
+			1,
+			3
+		],
+		"max_repeat": 2,
+		"min_phrase_gap_s": 60
+	},
+	"silence": {
+		"after_explore_s": 180,
+		"length_s": [
+			60,
+			120
+		],
+		"fade_s": 8
+	},
+	"combat_intro": "mus.stinger.combat_wild",
+	"crossfade_bars": 2,
+	"layer_fade_beats": 2
+}

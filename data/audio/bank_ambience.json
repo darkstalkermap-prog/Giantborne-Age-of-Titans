@@ -1,0 +1,413 @@
+{
+	"schema_version": 1,
+	"id": "audio_bank.ambience",
+	"type": "audio_bank",
+	"display_name": "Ambience",
+	"description": "P23 (section 4.3's ambience map): the Valley's four beds (stereo Ogg loops, non-positional), its spots (mono Ogg one-shots through the two spot voices, class spot) with volumes balanced from each spot's measured loudness, the birds' flush, and the emitter loops of the river under the King's Bridge (class giant) and the Giantforge's fire (class big). Every cue is an Ogg stream on the Ambience bus (decision 2).",
+	"cues": {
+		"amb.bed_meadow": {
+			"files": [
+				"res://assets/audio/ambience/bed_meadow.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 0,
+			"priority": 10,
+			"far": "",
+			"levels": []
+		},
+		"amb.bed_forest": {
+			"files": [
+				"res://assets/audio/ambience/bed_forest.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 0,
+			"priority": 10,
+			"far": "",
+			"levels": []
+		},
+		"amb.bed_village": {
+			"files": [
+				"res://assets/audio/ambience/bed_village.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 0,
+			"priority": 10,
+			"far": "",
+			"levels": []
+		},
+		"amb.bed_stone": {
+			"files": [
+				"res://assets/audio/ambience/bed_stone.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 0,
+			"priority": 10,
+			"far": "",
+			"levels": []
+		},
+		"amb.river_loop": {
+			"files": [
+				"res://assets/audio/ambience/river_loop.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 0,
+			"priority": 30,
+			"far": "",
+			"levels": [],
+			"class": "giant"
+		},
+		"amb.forge_fire": {
+			"files": [
+				"res://assets/audio/ambience/forge_fire.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 0,
+			"priority": 30,
+			"far": "",
+			"levels": [],
+			"class": "big"
+		},
+		"amb.lark": {
+			"files": [
+				"res://assets/audio/ambience/spot_lark.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": -2.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.cricket": {
+			"files": [
+				"res://assets/audio/ambience/spot_cricket.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.gust": {
+			"files": [
+				"res://assets/audio/ambience/spot_gust.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": 1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.woodpecker": {
+			"files": [
+				"res://assets/audio/ambience/spot_woodpecker.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": 2.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.owl": {
+			"files": [
+				"res://assets/audio/ambience/spot_owl.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.crow": {
+			"files": [
+				"res://assets/audio/ambience/spot_crow.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.creak_a": {
+			"files": [
+				"res://assets/audio/ambience/spot_creak_a.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": 6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.creak_b": {
+			"files": [
+				"res://assets/audio/ambience/spot_creak_b.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": 6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.howl": {
+			"files": [
+				"res://assets/audio/ambience/spot_howl.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.dog": {
+			"files": [
+				"res://assets/audio/ambience/spot_dog.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": -0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.hammer": {
+			"files": [
+				"res://assets/audio/ambience/spot_hammer.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": 4.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.voice": {
+			"files": [
+				"res://assets/audio/ambience/spot_voice.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": -2.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.cart": {
+			"files": [
+				"res://assets/audio/ambience/spot_cart.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.pebbles_a": {
+			"files": [
+				"res://assets/audio/ambience/spot_pebbles_a.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": 2.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.pebbles_b": {
+			"files": [
+				"res://assets/audio/ambience/spot_pebbles_b.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": 2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.whistle": {
+			"files": [
+				"res://assets/audio/ambience/spot_whistle.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.clank": {
+			"files": [
+				"res://assets/audio/ambience/spot_clank.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": 4.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 20,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		},
+		"amb.birds_flush": {
+			"files": [
+				"res://assets/audio/ambience/spot_birds_flush.ogg"
+			],
+			"bus": "Ambience",
+			"spatial": true,
+			"volume_db": 0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 25,
+			"far": "",
+			"levels": [],
+			"class": "spot"
+		}
+	}
+}

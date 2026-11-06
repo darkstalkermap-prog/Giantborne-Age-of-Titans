@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.valley_boss",
+	"display_name": "The Ogre King",
+	"description": "P23: boss_engaged for the Ogre King switches to his set (after the intro stinger); boss_defeated plays the victory stinger and returns to the zone.",
+	"level": "",
+	"districts": [],
+	"regions": [],
+	"pois": [],
+	"context": "",
+	"boss": "enemy.ogre_king",
+	"music": "music.boss_ogre_king",
+	"ambience": "",
+	"priority": 0
+}

@@ -47,9 +47,12 @@ const LEVEL_GROUP := "level_root"
 const SANDBOX_GROUP := "sandbox"
 ## The level key of the sandbox (it has no level record).
 const SANDBOX_LEVEL := "sandbox"
-## Levels and contexts with no music or ambience by decision (P23's coverage test reads them).
+## Levels and contexts with no music or ambience by decision (P23's coverage test reads them,
+## with the silent list record data/audio/region_silent.json: silent_levels(), silent_contexts()).
 const SILENT_LEVELS := ["level.stress_arena", "level.director_test"]
 const SILENT_CONTEXTS := ["loading"]
+## Test-only records live here (P22); a level whose record does is silent (is_silent_level()).
+const TEST_DATA_DIR := "res://data/test/"
 const FOCUS_MUTE_DB := -80.0
 const FOCUS_RAMP_S := 0.2
 const LISTENER_HEIGHT_FACTOR := 0.8
@@ -87,6 +90,8 @@ var missing: Dictionary = {}
 var stats := {}
 ## Tests: register at most this many files a frame (0 = only the time budget limits it).
 var registration_files_per_frame_cap := 0
+## Frames that passed the mixing barrier (mix_barrier(); tests).
+var mix_barriers := 0
 
 var _enabled_at_start := true
 var _cues: Dictionary = {}
@@ -577,6 +582,7 @@ func stats_summary() -> Dictionary:
 func _process(delta: float) -> void:
 	if not enabled:
 		return
+	mix_barrier()
 	clock_s += delta
 	frame += 1
 	_detect_level()
@@ -589,6 +595,27 @@ func _process(delta: float) -> void:
 		_last_zone_poll_s = clock_s
 		_poll_zone()
 	router.process_frame()
+
+
+## The mixing barrier (P23; FOLLOWUPS: the crash in the audio mixing thread), once a frame from
+## _process, before this frame's AudioServer.update().
+##
+## Godot 4.6.3 replaces a playback's bus details (AudioServer.set_playback_bus_volumes_linear: every
+## volume_db set on a playing AudioStreamPlayer, every mix of a playing AudioStreamPlayer3D's
+## panning) and frees the replaced details on the main thread in the second AudioServer.update()
+## after, about one frame later. The mixing thread loads a playback's details at each mix step and
+## then copies them without a lock; preempted between the load and the copy for longer than that
+## frame (an oversubscribed machine; a headless run at --fixed-fps draws thousands of frames a
+## second), it copies freed memory: a SIGSEGV in the StringName copy of AudioServer::_mix_step (the
+## two P22 bot crashes, the same addresses), a double free on the main thread, or a heap hang.
+## The drivers (Dummy, PulseAudio, ALSA, WASAPI) hold the driver lock for the whole mix, so taking
+## and releasing it here waits for a mix step that is still running: none that loaded details
+## before they were replaced can outlive their freeing in the next update(). Costs one mutex a
+## frame; it waits only while a mix step runs (docs/systems/P23.md, "The audio-thread crash").
+func mix_barrier() -> void:
+	AudioServer.lock()
+	AudioServer.unlock()
+	mix_barriers += 1
 
 
 func _input(event: InputEvent) -> void:
@@ -782,10 +809,39 @@ func current_region() -> Dictionary:
 	return _zone_record
 
 
+## The levels that play no music or ambience by decision: SILENT_LEVELS and the silent list
+## record's silent_levels (data/audio/region_silent.json, P23).
+func silent_levels() -> PackedStringArray:
+	var out := PackedStringArray(SILENT_LEVELS)
+	for rec: Dictionary in GameData.records_of_type("audio_region"):
+		for lv: Variant in rec.get("silent_levels", []):
+			if not out.has(str(lv)):
+				out.append(str(lv))
+	return out
+
+
+## The contexts that play nothing by decision (SILENT_CONTEXTS and the silent list's).
+func silent_contexts() -> PackedStringArray:
+	var out := PackedStringArray(SILENT_CONTEXTS)
+	for rec: Dictionary in GameData.records_of_type("audio_region"):
+		for c: Variant in rec.get("silent_contexts", []):
+			if not out.has(str(c)):
+				out.append(str(c))
+	return out
+
+
+## True for a level silent by decision: in the silent list, or test content (a level record that
+## lives under data/test/, which the web release leaves out: P22's test levels, P24a's test world).
+func is_silent_level(level: String) -> bool:
+	if silent_levels().has(level):
+		return true
+	return str(GameData.record_paths.get(level, "")).begins_with(TEST_DATA_DIR)
+
+
 func _poll_zone() -> void:
 	var p := player()
 	var lv := level_node()
-	if p == null or lv == null or level_id == SANDBOX_LEVEL or SILENT_LEVELS.has(level_id):
+	if p == null or lv == null or level_id == SANDBOX_LEVEL or is_silent_level(level_id):
 		_zone_record = {}
 		return
 	var pos := p.global_position

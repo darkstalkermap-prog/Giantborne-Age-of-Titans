@@ -193,7 +193,8 @@ kbd {
     <div class="slab about">
       <h2>About this build</h2>
       <p><b>What it is.</b> The Valley of Broken Kings slice of Giantborn: Age of Titans (Godot 4.6.3): growth to stage 3, five enemy types and an ogre boss, eight abilities plus Titan Surge, grab and throw, four weapons, quests with a village choice, and checkpoint saves.</p>
-      <p><b>What it is not yet.</b> The art is placeholder boxes and there is no sound. A playtest bot has finished the slice under every village choice and the balance has had a first pass, but no new player has tried it yet, so expect rough edges. The browser version runs on one thread: expect slow frames on weaker computers.</p>
+      <p><b>Sound on.</b> The Valley has its own score, ambience and sound effects: music that follows the district and the fight, wind and birds that answer your steps, threats you can hear coming. Browsers start a page's sound only after a click or a key press, so if you hear nothing, click the game once. The volumes are in Settings, and the sound mutes while the tab is hidden.</p>
+      <p><b>What it is not yet.</b> The art is placeholder boxes. A playtest bot has finished the slice under every village choice and the balance has had a first pass, but no new player has tried it yet, so expect rough edges. The browser version runs on one thread: expect slow frames on weaker computers.</p>
       <p><b>If something goes wrong.</b> Esc opens the pause menu, where you can load the last checkpoint or quit to the title. Settings and your saved game stay in this browser. Note what you did, what you expected and what happened.</p>
     </div>
   </section>
@@ -209,8 +210,9 @@ kbd {
 <script src="index.js"></script>
 <script>
 (function () {
-  // Byte counts of the current export (raw and packed as .txt), used for the progress bar.
-  const BUILD = { wasm: 37700666, pck: 2932980, wasmPacked: 12528700, pckPacked: 2405816 }; // set by tools/build_web.sh
+  // Byte counts of the current export (raw and packed as .txt), used for the progress bar, and the
+  // number of parts the packed pck ships in.
+  const BUILD = { wasm: 37700666, pck: 6914092, wasmPacked: 12528700, pckPacked: 6745528, pckParts: 1 }; // set by tools/build_web.sh
 
   const stage = document.getElementById('stage');
   const poster = document.getElementById('poster');
@@ -253,10 +255,19 @@ kbd {
   // The page host serves text files up to 16 MB but no archives or large binaries, and the
   // engine is 36 MB. So the build ships index.wasm and index.pck gzipped and base64-encoded as
   // .txt files: download them here with progress, unpack them in the browser, and hand Godot
-  // ordinary responses.
+  // ordinary responses. A packed pck over 15 MB ships in parts (index.pck.gz.b64.1.txt, .2.txt,
+  // ...: tools/build_web.sh): they download in order under the one progress meter and their text
+  // is joined before it is unpacked.
+  function pckUrls(parts) {
+    const n = Math.max(1, Math.floor(Number(parts) || 1));
+    if (n === 1) return ['index.pck.gz.b64.txt'];
+    const urls = [];
+    for (let i = 1; i <= n; i++) urls.push('index.pck.gz.b64.' + i + '.txt');
+    return urls;
+  }
   const PACKED = {
-    'index.wasm': { url: 'index.wasm.gz.b64.txt', type: 'application/wasm' },
-    'index.pck': { url: 'index.pck.gz.b64.txt', type: 'application/octet-stream' },
+    'index.wasm': { urls: ['index.wasm.gz.b64.txt'], type: 'application/wasm' },
+    'index.pck': { urls: pckUrls(BUILD.pckParts), type: 'application/octet-stream' },
   };
   const packedTotal = BUILD.wasmPacked + BUILD.pckPacked;
   let packedReceived = 0;
@@ -271,19 +282,21 @@ kbd {
   }
 
   async function fetchPacked(entry) {
-    const res = await realFetch(entry.url);
-    if (!res.ok) {
-      throw new Error('The game files could not be downloaded (HTTP ' + res.status + ').');
-    }
-    const reader = res.body.getReader();
     const chunks = [];
-    for (;;) {
-      const step = await reader.read();
-      if (step.done) break;
-      chunks.push(step.value);
-      packedReceived += step.value.length;
-      setMeter(0.85 * Math.min(1, packedReceived / packedTotal));
-      setStatus('Downloading the game ' + mb(Math.min(packedReceived, packedTotal)) + ' / ' + mb(packedTotal) + ' MB');
+    for (const url of entry.urls) {
+      const res = await realFetch(url);
+      if (!res.ok) {
+        throw new Error('The game files could not be downloaded (HTTP ' + res.status + ').');
+      }
+      const reader = res.body.getReader();
+      for (;;) {
+        const step = await reader.read();
+        if (step.done) break;
+        chunks.push(step.value);
+        packedReceived += step.value.length;
+        setMeter(0.85 * Math.min(1, packedReceived / packedTotal));
+        setStatus('Downloading the game ' + mb(Math.min(packedReceived, packedTotal)) + ' / ' + mb(packedTotal) + ' MB');
+      }
     }
     const text = (await new Blob(chunks).text()).replace(/[^A-Za-z0-9+/=]/g, '');
     const gz = decodeBase64(text);
@@ -303,6 +316,32 @@ kbd {
     const match = /(?:^|\/)(index\.(?:wasm|pck))(?:\?|$)/.exec(url);
     return match ? fetchPacked(PACKED[match[1]]) : realFetch(input, init);
   };
+
+  // Sound: a browser keeps an AudioContext suspended until the page is pressed when it was made
+  // outside a press, and the engine makes its own only after the download. Every click or key
+  // press on the page resumes the contexts that are suspended (the first press after the engine
+  // has made its context does it); the engine resumes its own on input too.
+  const audioContexts = [];
+  const NativeAudioContext = window.AudioContext || window.webkitAudioContext;
+  if (typeof NativeAudioContext === 'function') {
+    try {
+      const TrackedAudioContext = class extends NativeAudioContext {
+        constructor(options) {
+          super(options);
+          audioContexts.push(this);
+        }
+      };
+      window.AudioContext = TrackedAudioContext;
+      if (window.webkitAudioContext) window.webkitAudioContext = TrackedAudioContext;
+    } catch (e) { /* the engine makes an ordinary one and resumes it on input itself */ }
+  }
+  function resumeAudio() {
+    for (const ctx of audioContexts) {
+      if (ctx.state === 'suspended') ctx.resume().catch(function () { /* the next press */ });
+    }
+  }
+  window.addEventListener('pointerdown', resumeAudio, true);
+  window.addEventListener('keydown', resumeAudio, true);
 
   // The smallest valid WebAssembly module: if this does not compile, the engine cannot either.
   function wasmProblem() {
