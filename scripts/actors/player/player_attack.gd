@@ -16,7 +16,9 @@ extends PlayerComponent
 ## shot would fizzle at its range) is refused with "out_of_range" and spends nothing. The same
 ## check is the slot's precheck in the HUD (preview_params) and in the request (handle_edge;
 ## PlayerGrab's slots call range_reason too), so the hotbar's "Out of range" and the controller
-## never disagree.
+## never disagree. P26 (plan M6-M9 §2.9): an action's range_by_stage_m gives its range at the
+## giant's stage (Boulder Hurl: 25 m at stages 1-3, 32 / 38 / 44 m at stages 4-6); range_reason
+## checks it, and resolve_launch writes it into the spec the runner launches with (stage_spec).
 ##
 ## Vertical aim (P17b, the balance pass): a weapon swing tilts up toward the giant's target when the
 ## stage's default tilt (arc_pitch_offset_deg, which brings the arcs down to the giant's feet:
@@ -262,7 +264,7 @@ func preview_params(_slot_key: String, def: ActionDef, params: Dictionary) -> vo
 func range_reason(a: ActionDef) -> String:
 	if a == null or a.hit_shape != "projectile":
 		return ""
-	var spec := Projectile.spec_for(a)
+	var spec := stage_spec(a)
 	if not (str(spec.aim) in ["lock_or_camera", "target"]):
 		return ""
 	var target := player.targeting.locked_entity() if player.targeting != null else null
@@ -302,6 +304,23 @@ func _slot_action(slot_key: String) -> ActionDef:
 	return player.controller.library.get(id) if id != "" else null
 
 
+## P26: the range of projectile action `a` at the giant's stage: range_by_stage_m[stage - 1] (the
+## last entry beyond the list), else `fallback` (the projectile's range_m).
+func stage_range(a: ActionDef, fallback: float) -> float:
+	var by_stage: Variant = a.param("range_by_stage_m") if a != null else null
+	if typeof(by_stage) != TYPE_ARRAY or (by_stage as Array).is_empty():
+		return fallback
+	var list: Array = by_stage
+	return float(list[clampi(player.growth_stage - 1, 0, list.size() - 1)])
+
+
+## P26: the projectile spec of `a` (Projectile.spec_for) with the stage's range.
+func stage_spec(a: ActionDef) -> Dictionary:
+	var spec := Projectile.spec_for(a)
+	spec["range_m"] = stage_range(a, float(spec.range_m))
+	return spec
+
+
 ## k: the giant's size relative to the stage-1 giant (launch offsets are authored for stage 1).
 func body_scale() -> float:
 	return float(player.profile.get("height_m", CombatRules.REFERENCE_HEIGHT_M)) \
@@ -309,8 +328,11 @@ func body_scale() -> float:
 
 
 ## AttackRunner.launch_resolver: {"origin": launch_offset_m x k in the giant's space (or the
-## attack origin), "aim": aim_point_for(spec, origin)}.
-func resolve_launch(_a: ActionDef, spec: Dictionary) -> Dictionary:
+## attack origin), "aim": aim_point_for(spec, origin)}. P26: the stage's range (range_by_stage_m)
+## goes into `spec` itself - the runner's own copy, which it launches with right after (the arc's
+## range clamp) and PlayerGrab's landing preview reads - so the shot flies as far as the check says.
+func resolve_launch(a: ActionDef, spec: Dictionary) -> Dictionary:
+	spec["range_m"] = stage_range(a, float(spec.get("range_m", 25.0)))
 	var offset: Vector3 = spec.get("launch_offset", Vector3.INF)
 	var origin := player.to_global(offset * body_scale()) if offset != Vector3.INF \
 		else player.attack_origin_global()

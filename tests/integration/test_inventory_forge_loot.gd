@@ -142,7 +142,8 @@ func test_the_forge_screen_through_the_interact_key() -> void:
 	if screen == null:
 		return
 	assert_true(get_tree().paused, "it pauses the game")
-	assert_eq(screen.info_text(), "Oak Club -> Reinforced Club: x1.15 damage, fits a stage-3 giant.", "the offer")
+	# P26 (plan M6-M9 decision 24): the reinforced club fits stage 6 (stage 3 in M5).
+	assert_eq(screen.info_text(), "Oak Club -> Reinforced Club: x1.15 damage, fits a stage-6 giant.", "the offer")
 	assert_true(screen.reforge_button.disabled, "Reforge is disabled without iron")
 	assert_true(screen.status_text().contains("Iron Ingot"), "and says why")
 	WorldState.add_item("item.iron_ingot", 2, "test")

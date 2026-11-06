@@ -492,7 +492,8 @@ func test_the_roads_pass_every_checkpoint_on_the_critical_path() -> void:
 		points[id] = [scene.shrines[id].pos, float(GameData.get_record(str(scene.shrines[id].record)).get("activation_radius_m", 14.0))]
 	for id: String in scene.waystones:
 		points[id] = [scene.waystones[id].pos, float(scene.waystones[id].radius)]
-	assert_eq(points.size(), 7, "four shrines and three waystones")
+	# P26 (plan M6-M9 §5.6): the Kings' Door's and the Citadel stair's waystones join the M5 three.
+	assert_eq(points.size(), 9, "four shrines and five waystones")
 	for id: String in points:
 		var best := INF
 		for road: Dictionary in roads:

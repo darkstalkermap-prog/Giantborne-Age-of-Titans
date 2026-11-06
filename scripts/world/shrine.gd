@@ -17,7 +17,9 @@ extends Interactable
 ## - rest(): health, stamina and essence to their maxima and debuffs (slows) removed; fury and
 ##   cooldowns are kept. Emits shrine_rested.
 ## - can_grow() / grow(): the Grow tab and the Valley bot; they wrap PlayerGrowth.check_growth
-##   and grow_to with this shrine's gates (allows_growth, max_stage, growth_requires_flags).
+##   and grow_to with this shrine's gates (allows_growth, max_stage, growth_requires_flags, and P26's
+##   growth_requires_conditions: a world shrine waits for world.kingsgate.lit or a count of oaths;
+##   growth_waiting_text() is the line it shows meanwhile).
 ## Children: SpawnPoint (a CheckpointMarker whose checkpoint_id is set to world_id) and
 ## GrowthPad (a Marker3D at an open spot with stage-3 clearance). Group "shrines".
 
@@ -184,6 +186,13 @@ func grow(player: GiantPlayer, target: int) -> Dictionary:
 	if player == null or player.growth == null:
 		return {"ok": false, "reason": "no_profile", "message": "Nothing here can grow."}
 	return player.growth.grow_to(target, self, "shrine")
+
+
+## P26 (plan M6-M9 §2.9): while one of the record's growth_requires_conditions does not hold, the
+## refusal growing here would give (its growth_conditions_text line); "" when they all hold.
+func growth_waiting_text() -> String:
+	var r := PlayerGrowth.conditions_gate(record(), Quests.condition_context())
+	return "" if bool(r.ok) else str(r.message)
 
 
 ## The next stage this shrine offers the player (its stage + 1), or 0 when it offers none

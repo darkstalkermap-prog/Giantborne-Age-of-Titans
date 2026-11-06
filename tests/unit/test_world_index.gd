@@ -15,7 +15,11 @@ const FENCE_SCENE := "res://scenes/world/fence_wood.tscn"
 const SHRINES := {"valley.shrine.hollow": "Hollow Shrine", "valley.shrine.grove": "Grove Shrine",
 	"valley.shrine.thornwick": "Thornwick Shrine", "valley.shrine.kingsfall": "Kingsfall Shrine"}
 const WAYSTONES := {"valley.cp.forest_road": "Forest road waystone", "valley.cp.ruins_gate": "Ruins gate waystone",
-	"valley.cp.barrow_gap": "Barrow gap waystone"}
+	"valley.cp.barrow_gap": "Barrow gap waystone", "valley.cp.kings_door": "Kings' Door waystone",
+	"valley.cp.citadel_stair": "Citadel stair waystone"}
+## P26 (plan M6-M9 §5.6): the layout the Valley's index is built from, with every checkpoint's
+## measured max_stage.
+const LAYOUT := "res://tools/data/valley_layout.json"
 
 
 func after_each() -> void:
@@ -48,7 +52,12 @@ static func _conditions(c: Variant, out: Array) -> void:
 func test_the_valley_index_names_its_shrines_and_waystones() -> void:
 	var idx := _valley()
 	assert_eq(idx.level_id, VALLEY, "the index knows its level")
-	assert_eq(idx.checkpoint_ids().size(), SHRINES.size() + WAYSTONES.size(), "four shrines and three waystones")
+	assert_eq(idx.checkpoint_ids().size(), SHRINES.size() + WAYSTONES.size(), "four shrines and five waystones")
+	var layout: Variant = JSON.parse_string(FileAccess.get_file_as_string(LAYOUT))
+	var limits := {}
+	for list: String in ["shrines", "waystones"]:
+		for e: Dictionary in (layout as Dictionary).get(list, []):
+			limits[str(e.get("world_id", e.get("id", "")))] = int(e.get("max_stage", WorldIndex.ANY_STAGE))
 	for id: String in SHRINES:
 		var e := idx.checkpoint(id)
 		assert_eq(str(e.get("display_name", "")), SHRINES[id], "%s takes its record's name" % id)
@@ -64,7 +73,10 @@ func test_the_valley_index_names_its_shrines_and_waystones() -> void:
 	for id in idx.checkpoint_ids():
 		var e := idx.checkpoint(id)
 		assert_true((e.position as Vector3).is_finite(), "%s has a position" % id)
-		assert_eq(idx.max_stage_of(id), WorldIndex.ANY_STAGE, "%s: every Valley checkpoint takes any stage (placeholder 10)" % id)
+		# P26 measured them (tests/slow/test_valley_revisits.gd): the index carries the layout's limit.
+		assert_eq(idx.max_stage_of(id), int(limits.get(id, -1)), "%s: the layout's measured max_stage" % id)
+		assert_true(idx.max_stage_of(id) >= 3 and idx.max_stage_of(id) <= 6,
+			"%s: a Valley checkpoint takes stages 1-3 at least and 6 at most (%d)" % [id, idx.max_stage_of(id)])
 		assert_true(bool(e.fast_travel), "%s is a fast travel point" % id)
 		assert_true(str(e.district) != "", "%s lies in a district (%s)" % [id, e.district])
 		var t := idx.spawn_transform(id)

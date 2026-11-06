@@ -46,6 +46,9 @@ window/stretch/aspect="expand"
 3d_physics/layer_4="debris"
 3d_physics/layer_5="breakables"
 3d_physics/layer_6="blockers"
+3d_physics/layer_7="size_gate_4"
+3d_physics/layer_8="size_gate_5"
+3d_physics/layer_9="size_gate_6"
 
 [physics]
 

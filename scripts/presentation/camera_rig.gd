@@ -278,7 +278,7 @@ func _update_transform(delta: float) -> void:
 		if safe_length < current_distance or delta <= 0.0:
 			current_distance = safe_length
 		else:
-			current_distance = move_toward(current_distance, safe_length, RESTORE_SPEED * delta)
+			current_distance = move_toward(current_distance, safe_length, restore_speed() * delta)   # P26
 		global_transform = Transform3D(basis, pivot + arm / maxf(arm_length, 0.001) * current_distance)
 		var hide := hides_head(current_distance, arm_length, shoulder, float(profile.get("capsule_radius_m", 0.85)))
 		if hide != head_hidden:
@@ -340,5 +340,19 @@ func set_far_plane(far_m: float) -> void:
 		camera.far = maxf(far_m, camera.near + 1.0)
 
 ## @anchor P26
+# Stages 4-6 (P26, plan M6-M9 §2.9): the third-person arm reaches 32 m (stage 6's zoom limit). The
+# existing sphere sweep keeps every length out of the world, the streamed terrain included (its
+# height-map bodies are on the world layer: a camera pitched up behind a stage-6 giant stops at the
+# ground instead of going under it). An arm that long restores faster: restore_speed() scales
+# RESTORE_SPEED with the wanted arm beyond RESTORE_REFERENCE_ARM_M (stage 3's zoom limit), so stages
+# 1-3 are unchanged and a 23.5 m stage-6 arm comes back in about two seconds instead of four.
+
+const RESTORE_REFERENCE_ARM_M := 16.0
+const MAX_ARM_M := 32.0
+
+
+## The speed (m/s) the arm extends back at after an obstruction clears or the mode changes.
+func restore_speed() -> float:
+	return RESTORE_SPEED * maxf(1.0, desired_distance / RESTORE_REFERENCE_ARM_M)
 
 ## @anchor P30

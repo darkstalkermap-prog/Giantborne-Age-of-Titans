@@ -32,8 +32,12 @@ func test_actor_bodies_stop_at_a_blocker_wall() -> void:
 	plain.position = Vector3(2, 0.05, -2)
 	world.add_child(plain)
 	await step_ticks(2)
-	for body: CollisionObject3D in [p, s, w]:
+	for body: CollisionObject3D in [s, w]:
 		assert_eq(body.collision_mask, SceneKit.ACTOR_MASK, "%s uses ACTOR_MASK (51)" % body.name)
+	# P26 (plan M6-M9 §2.2): the giant also collides with the size-gate walls above its stage (layers
+	# 7-9: 448 at stage 1); the actor layers stay ACTOR_MASK.
+	assert_eq(p.collision_mask, SceneKit.ACTOR_MASK | PlayerGrowth.size_gate_mask_for_stage(1),
+		"%s uses ACTOR_MASK (51) and the size gates above stage 1 (448)" % p.name)
 	s.brain.move_target = Vector3(4, 0, -14)
 	w.brain.move_target = Vector3(-4, 0, -14)
 	w.brain.move_speed = -1.0

@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="1_f30a1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(12, 8, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
+albedo_color = Color(0.36, 0.35, 0.33, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(12, 6, 2)
+
+[node name="SizeGate" type="StaticBody3D"]
+collision_layer = 256
+collision_mask = 0
+script = ExtResource("1_f30a1")
+gate_id = "test.gate.stone"
+min_stage = 6
+cue = "sfx.gate.stone"
+
+[node name="Wall" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Step" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -1)
+material_override = SubResource("StandardMaterial3D_2")
+mesh = SubResource("BoxMesh_3")

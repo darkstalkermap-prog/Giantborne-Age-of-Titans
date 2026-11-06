@@ -39,6 +39,11 @@ static func fields() -> Dictionary:
 
 	# M6-M9 (written by P20, plan M6-M9 §1.5).
 	## @anchor P26
+	# P26 (plan M6-M9 §2.9, §2.11): the moveset a weapon swings from a growth stage on, {"4":
+	# {"light_chain": id, "heavy": id}} - the highest key at or below the giant's stage wins, used only
+	# while the weapon fits the stage (PlayerEquipment). The ids name P31's stage movesets: an id with
+	# no action record yet falls back to the weapon's own light_chain / heavy (no reference check).
+	f.merge({"stage_movesets": {"t": "dict"}})
 
 	## @anchor P31
 
@@ -73,6 +78,26 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 
 	# M6-M9 (written by P20, plan M6-M9 §1.5).
 	## @anchor P26
+	var p26_sets: Variant = d.get("stage_movesets")
+	if typeof(p26_sets) == TYPE_DICTIONARY:
+		var p26_fit := int(d.get("fit_max_stage", 10)) if U.is_number(d.get("fit_max_stage")) else 10
+		for p26_key: Variant in p26_sets:
+			var p26_ctx := "%s.stage_movesets.%s" % [ctx, p26_key]
+			var p26_stage := int(str(p26_key)) if str(p26_key).is_valid_int() else -1
+			if p26_stage < 1 or p26_stage > 10:
+				out.errors.append("%s: the key must be a growth stage 1-10" % p26_ctx)
+			elif bool(d.get("scales_with_growth", true)) and p26_stage > p26_fit:
+				out.errors.append("%s: stage %d is above fit_max_stage %d (it would never be used)" % [p26_ctx,
+					p26_stage, p26_fit])
+			var p26_set: Variant = p26_sets[p26_key]
+			if typeof(p26_set) != TYPE_DICTIONARY or (p26_set as Dictionary).is_empty():
+				out.errors.append("%s: expected {\"light_chain\": id, \"heavy\": id}" % p26_ctx)
+				continue
+			for p26_slot: Variant in p26_set:
+				if not str(p26_slot) in ["light_chain", "heavy"]:
+					out.errors.append("%s: unknown key '%s' (allowed: light_chain, heavy)" % [p26_ctx, p26_slot])
+				else:
+					U.check_id_string(p26_set[p26_slot], "%s.%s" % [p26_ctx, p26_slot], out)
 
 	## @anchor P31
 

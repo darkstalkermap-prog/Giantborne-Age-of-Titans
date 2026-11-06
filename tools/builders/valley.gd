@@ -20,8 +20,12 @@ extends RefCounted
 ##   * scenes/world/valley.tscn - the root: LevelRoot (level.valley), Environment (depth fog from
 ##     120 m), Sun, Districts/<id>, Navigation/{Human,Large,Giant,SmallGiant}, Props, Shrines,
 ##     Waystones, Dummies, Markers/<Kind>/<marker>, Markers/Patrol/<route>/<n>, Triggers/<area>,
-##     Kingsfall/{ArenaGate,Pillars,BossArena}, Signs, Spawns/PlayerSpawn, Spawned, Player,
-##     EncounterDirector and DebrisPool.
+##     Kingsfall/{ArenaGate,Pillars,BossArena}, Exits/<exit> (P26), Signs, Spawns/PlayerSpawn,
+##     Spawned, Player, EncounterDirector and DebrisPool.
+## P26 (plan M6-M9 §5.6): the layout's "exits" become LevelExits (the Kings' Door behind the crown's
+## altar, the Citadel's stair); a trigger with "reward_xp" is a RewardArea (the Citadel's hall pays
+## 150 XP once); the bake reaches the hall cut through the east edge (BAKE_AABB); the index takes
+## every checkpoint's measured max_stage from the layout.
 ## Runs after the player, prop, shrine and world-prop builders (tools/build_scenes.gd BUILDERS).
 ##
 ## Navigation layers and links. NavigationServer3D connects each end of a NavigationLink3D to the
@@ -48,6 +52,8 @@ const S_WAYSTONE := "res://scripts/world/waystone.gd"
 const S_DEBRIS := "res://scripts/world/debris_pool.gd"
 const S_BOSS_ARENA := "res://scripts/world/boss_arena.gd"   # P11a
 const S_COSMETIC_FIELD := "res://scripts/world/cosmetic_field.gd"   # P15
+const S_REWARD_AREA := "res://scripts/world/reward_area.gd"   # P26
+const S_LEVEL_EXIT := "res://scripts/world/level_exit.gd"   # P20 (the Valley's exits: P26)
 const GIANT := "res://scenes/player/giant.tscn"
 const SHRINE := "res://scenes/world/shrine.tscn"
 const DUMMY := "res://scenes/world/practice_dummy.tscn"
@@ -68,6 +74,15 @@ const PROP_SCENES := {
 	"bush": "res://scenes/world/bush.tscn",
 	"banner": "res://scenes/world/banner.tscn",
 	"forge": "res://scenes/world/forge.tscn",
+	# P26 (tools/builders/world_props2.gd)
+	"kings_door": "res://scenes/world/kings_door.tscn",
+	"rockfall": "res://scenes/world/rockfall.tscn",
+	"titan_tree": "res://scenes/world/titan_tree.tscn",
+	"toppled_statue": "res://scenes/world/toppled_statue.tscn",
+	"palisade_trample": "res://scenes/world/palisade_trample.tscn",
+	"great_pine": "res://scenes/world/great_pine.tscn",
+	"citadel_hoard": "res://scenes/world/citadel_hoard.tscn",
+	"old_kings_cairn": "res://scenes/world/old_kings_cairn.tscn",
 }
 
 ## The four navigation layers (plan §2.2). "above": the height of the layer's navmesh over the
@@ -93,7 +108,9 @@ const REGION_MIN_SIZE := 8.0
 const EDGE_MAX_ERROR := 2.0
 ## The bake's fixed bounds: the map plus the inner half of the edge ring, from the bottom of the
 ## ground (-1 m), so the voxel grid (and with it the navmesh height) never shifts with the content.
-const BAKE_AABB := AABB(Vector3(-205, -1, -205), Vector3(410, 61, 410))
+## P26: 10 m wider to the east (to x 215), over the Citadel's hall cut into the east edge (x 191-208);
+## the minimum corner - the voxel grid's origin - stays where it was.
+const BAKE_AABB := AABB(Vector3(-205, -1, -205), Vector3(420, 61, 410))
 ## Where Recast puts a navmesh over a flat walking surface (two cell heights up); the builder
 ## measures it after each bake and moves the region so the layer ends up "above" the ground.
 const EXPECTED_SURFACE_OFFSET := 0.5
@@ -138,7 +155,8 @@ static func build_all(kit: SceneKit) -> void:
 ## The Valley's world index (P20, plan M6-M9 §2.6): every shrine (its record's name), waystone
 ## (its layout display_name), marker, area, prop and exit of the built root in level space, the
 ## level record's districts, the encounters of level.valley, the roads of the layout as a graph,
-## every checkpoint's arrival limit (the layout's max_stage, ANY_STAGE until P26 measures them) and
+## every checkpoint's arrival limit (the layout's max_stage, which tests/slow/test_valley_revisits.gd
+## measures; ANY_STAGE where the layout has none) and
 ## the map's bounds (the vector map: no picture).
 static func build_index(root: Node3D, layout: Dictionary) -> WorldIndex:
 	var idx := WorldIndex.build_from_scene(root, LEVEL_ID)
@@ -802,6 +820,7 @@ static func build_root(kit: SceneKit, layout: Dictionary, district_ids: Array, g
 
 	root.add_child(_markers(kit, layout))
 	root.add_child(_triggers(kit, layout))
+	root.add_child(_exits(kit, layout))
 	var kingsfall := _kingsfall(kit, layout.get("arena", {}))
 	root.add_child(kingsfall)
 
@@ -995,7 +1014,8 @@ static func _markers(kit: SceneKit, layout: Dictionary) -> Node3D:
 	return markers
 
 
-## Triggers/<area> (AreaTrigger): a cylinder or a box standing on the ground at "pos".
+## Triggers/<area> (AreaTrigger): a cylinder or a box standing on the ground at "pos". P26: a trigger
+## with "reward_xp" is a RewardArea (its XP once, guarded by "reward_flag").
 static func _triggers(kit: SceneKit, layout: Dictionary) -> Node3D:
 	var triggers := kit.n3("Triggers")
 	for t: Dictionary in layout.get("triggers", []):
@@ -1003,7 +1023,12 @@ static func _triggers(kit: SceneKit, layout: Dictionary) -> Node3D:
 		a.name = str(t.id).validate_node_name()
 		a.position = _v3(t.pos)
 		a.rotation.y = deg_to_rad(float(t.get("yaw", 0.0)))
-		kit.scripted(a, S_TRIGGER, {"area_id": str(t.id), "once": bool(t.get("once", false))})
+		if int(t.get("reward_xp", 0)) > 0 and ResourceLoader.exists(S_REWARD_AREA):
+			kit.scripted(a, S_REWARD_AREA, {"area_id": str(t.id), "once": bool(t.get("once", false)),
+				"reward_xp": int(t.reward_xp), "reward_flag": str(t.get("reward_flag", "")),
+				"reward_message": str(t.get("reward_message", ""))})
+		else:
+			kit.scripted(a, S_TRIGGER, {"area_id": str(t.id), "once": bool(t.get("once", false))})
 		a.collision_layer = 0
 		a.collision_mask = SceneKit.L_ACTORS
 		a.monitoring = true
@@ -1023,6 +1048,21 @@ static func _triggers(kit: SceneKit, layout: Dictionary) -> Node3D:
 		a.add_child(cs)
 		triggers.add_child(a)
 	return triggers
+
+
+## Exits/<exit> (P26): a LevelExit per layout "exits" entry - an interaction (E) that travels to its
+## level's checkpoint while its requires_flags hold, else shows its locked_message (P20's LevelExit).
+static func _exits(kit: SceneKit, layout: Dictionary) -> Node3D:
+	var exits := kit.n3("Exits")
+	for x: Dictionary in layout.get("exits", []):
+		var e := kit.scripted(kit.n3(str(x.id).validate_node_name(), _v3(x.pos)), S_LEVEL_EXIT, {
+			"exit_id": str(x.id), "interact_id": str(x.id), "to_level": str(x.to_level),
+			"to_checkpoint": str(x.to_checkpoint), "requires_flags": PackedStringArray(x.get("requires_flags", [])),
+			"locked_message": str(x.get("locked_message", "The way is shut.")), "display_name": str(x.get("display_name", "")),
+			"prompt": str(x.get("prompt", "Step through")), "radius_m": float(x.get("radius", 4.0)), "priority": 40}) as Node3D
+		e.rotation.y = deg_to_rad(float(x.get("yaw", 0.0)))
+		exits.add_child(e)
+	return exits
 
 
 ## Kingsfall/ArenaGate (a StaticBody3D on WORLD, hidden, its collision disabled: BossArena closes

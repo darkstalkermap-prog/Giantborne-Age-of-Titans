@@ -113,6 +113,12 @@ func use_candidate(cand: Dictionary) -> void:
 		var it := node as Interactable
 		if it == null:
 			return
+		# P26: an interactable above the giant's stage (a ledge) refuses with its stage reason.
+		var too_small := it.stage_reason(player.growth_stage)
+		if too_small != "":
+			Events.hud_message.emit(too_small, "warn")
+			Events.size_gate_blocked.emit(Sim.tick, it.interact_id, it.requires_stage, too_small)
+			return
 		if not it.can_interact(player):
 			var reason := it.blocked_reason(player)
 			if reason != "":

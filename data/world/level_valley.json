@@ -7,6 +7,7 @@
 	"scene": "res://scenes/world/valley.tscn",
 	"start_checkpoint": "valley.shrine.hollow",
 	"index": "res://assets/world/index_valley.res",
+	"player_nav_fallback": 4,
 	"max_active_enemies": 12,
 	"lod": {"near_m": 40, "mid_m": 90, "check_ticks": 30, "corpse_free_s": 6},
 	"render": {

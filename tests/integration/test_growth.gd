@@ -517,24 +517,31 @@ func test_growth_unlocks_are_learned_slotted_and_announced_once() -> void:
 
 func test_debug_keys_grow_and_shrink() -> void:
 	var p := await _grounded_player(Vector3(0, 0.05, 0))
-	for expected in [2, 3]:
+	# P26 (plan M6-M9 §2.9): the profiles now reach stage 6 (stage 3 was the last in M5).
+	var top: int = p.growth.max_stage()
+	assert_eq(top, 6, "profiles for stages 1-6")
+	for expected in range(2, top + 1):
 		p.router.inject_edge(&"debug_grow")
 		await step_ticks(2)
 		assert_eq(p.growth_stage, expected, "F6 grows to stage %d" % expected)
 		assert_true(messages.has("DEBUG: stage %d" % expected), "and says so")
 	p.router.inject_edge(&"debug_grow")
 	await step_ticks(2)
-	assert_eq(p.growth_stage, 3, "no stage 4 profile: stays stage 3")
+	assert_eq(p.growth_stage, top, "no stage %d profile: stays stage %d" % [top + 1, top])
 	assert_eq(blocked_events.back()[1], "no_profile", "growth_blocked no_profile")
-	for expected in [2, 1]:
+	for expected in range(top - 1, 0, -1):
 		p.router.inject_edge(&"debug_shrink")
 		await step_ticks(2)
 		assert_eq(p.growth_stage, expected, "F7 shrinks to stage %d" % expected)
 	p.router.inject_edge(&"debug_shrink")
 	await step_ticks(2)
 	assert_eq(p.growth_stage, 1, "nothing below stage 1")
-	assert_eq(growth_events, [["player", 1, 2], ["player", 2, 3], ["player", 3, 2], ["player", 2, 1]],
-		"growth_changed for every change and none for the refusals")
+	var changes: Array = []
+	for st in range(1, top):
+		changes.append(["player", st, st + 1])
+	for st in range(top, 1, -1):
+		changes.append(["player", st, st - 1])
+	assert_eq(growth_events, changes, "growth_changed for every change and none for the refusals")
 	p.entity.combatant.pools.mark_combat()
 	p.router.inject_edge(&"debug_grow")
 	await step_ticks(2)

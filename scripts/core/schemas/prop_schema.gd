@@ -61,6 +61,13 @@ static func fields() -> Dictionary:
 
 	# M6-M9 (written by P20, plan M6-M9 §1.5).
 	## @anchor P26
+	# Size gates (P26, plan M6-M9 §2.9): the stage whose giant tramples the prop by walking into it
+	# (0 = never; fences and palisades 4), and props no hit breaks (quest-critical: the Kings' Door,
+	# Brannock Bridge, the beacons - a placement can also set BreakableProp.indestructible).
+	f.merge({
+		"trample_stage": U.int_field(0, 10),
+		"indestructible": U.bool_field(),
+	})
 
 	## @anchor P30
 
@@ -123,6 +130,16 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 
 	# M6-M9 (written by P20, plan M6-M9 §1.5).
 	## @anchor P26
+	if int(d.get("trample_stage", 0)) > 0 and not p08_category in ["breakable", "structural"]:
+		out.errors.append("%s: trample_stage is for breakable and structural props" % ctx)
+	if int(d.get("trample_stage", 0)) > 0 and bool(d.get("indestructible", false)):
+		out.errors.append("%s: an indestructible prop cannot be trampled" % ctx)
+	if int(d.get("trample_stage", 0)) > 0 and typeof(d.get("accepted_attack_categories")) == TYPE_ARRAY \
+			and not (d.accepted_attack_categories as Array).has("melee"):
+		out.errors.append("%s: a trampled prop must accept the melee category (the trample hit)" % ctx)
+	if str(d.get("requires_permission", "")) == "heave" and typeof(d.get("accepted_attack_categories")) == TYPE_ARRAY \
+			and not (d.accepted_attack_categories as Array).has("melee"):
+		out.errors.append("%s: a heaved prop must accept the melee category (the heave hit)" % ctx)
 
 	## @anchor P30
 

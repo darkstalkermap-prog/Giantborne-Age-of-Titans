@@ -6,67 +6,76 @@
 size = Vector3(100, 1, 88)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2"]
-size = Vector3(25, 30, 65)
+size = Vector3(25, 30, 17)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3"]
-size = Vector3(15, 30, 65)
+size = Vector3(25, 30, 32)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_4"]
-size = Vector3(60, 30, 15)
+size = Vector3(9, 30, 16)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5"]
-size = Vector3(1.5, 4, 16)
+size = Vector3(15, 30, 65)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_6"]
-size = Vector3(8, 3, 3)
+size = Vector3(23, 30, 15)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(1.5, 4, 16)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(8, 3, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_9"]
 size = Vector3(1.6, 7, 1.6)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(14, 12, 14)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_11"]
 albedo_color = Color(0.46, 0.43, 0.38, 1)
 roughness = 0.95
 
-[sub_resource type="BoxMesh" id="BoxMesh_9"]
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
 
-[sub_resource type="MultiMesh" id="MultiMesh_10"]
+[sub_resource type="MultiMesh" id="MultiMesh_13"]
 transform_format = 1
-instance_count = 3
-mesh = SubResource("BoxMesh_9")
-buffer = PackedFloat32Array(25, 0, 0, -97.5, 0, 30, 0, 15, 0, 0, 65, -167.5, 15, 0, 0, -17.5, 0, 30, 0, 15, 0, 0, 65, -167.5, 60, 0, 0, -55, 0, 30, 0, 15, 0, 0, 15, -192.5)
+instance_count = 7
+mesh = SubResource("BoxMesh_12")
+buffer = PackedFloat32Array(25, 0, 0, -97.5, 0, 30, 0, 15, 0, 0, 17, -191.5, 25, 0, 0, -97.5, 0, 30, 0, 15, 0, 0, 32, -151, 9, 0, 0, -105.5, 0, 30, 0, 15, 0, 0, 16, -175, 15, 0, 0, -17.5, 0, 30, 0, 15, 0, 0, 65, -167.5, 23, 0, 0, -73.5, 0, 30, 0, 15, 0, 0, 15, -192.5, 23, 0, 0, -36.5, 0, 30, 0, 15, 0, 0, 15, -192.5, 14, 0, 0, -55, 0, 12, 0, 24, 0, 0, 14, -193)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_11"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_14"]
 albedo_color = Color(0.38, 0.38, 0.42, 1)
 roughness = 0.9
 
-[sub_resource type="MultiMesh" id="MultiMesh_12"]
+[sub_resource type="MultiMesh" id="MultiMesh_15"]
 transform_format = 1
 instance_count = 4
-mesh = SubResource("BoxMesh_9")
+mesh = SubResource("BoxMesh_12")
 buffer = PackedFloat32Array(-6.556708e-08, 0, -16, -76, 0, 4, 0, 2, 1.5, 0, -6.993822e-07, -150, -6.556708e-08, 0, -16, -34, 0, 4, 0, 2, 1.5, 0, -6.993822e-07, -150, 1.6, 0, 0, -62, 0, 7, 0, 3.5, 0, 0, 1.6, -180, 1.6, 0, 0, -48, 0, 7, 0, 3.5, 0, 0, 1.6, -180)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_16"]
 albedo_color = Color(0.52, 0.52, 0.55, 1)
 roughness = 0.9
 
-[sub_resource type="MultiMesh" id="MultiMesh_14"]
+[sub_resource type="MultiMesh" id="MultiMesh_17"]
 transform_format = 1
 instance_count = 1
-mesh = SubResource("BoxMesh_9")
+mesh = SubResource("BoxMesh_12")
 buffer = PackedFloat32Array(8, 0, 0, -55, 0, 3, 0, 1.5, 0, 0, 3, -180)
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_15"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_18"]
 height = 1.0
 radial_segments = 10
 rings = 1
 
-[sub_resource type="MultiMesh" id="MultiMesh_16"]
+[sub_resource type="MultiMesh" id="MultiMesh_19"]
 transform_format = 1
 instance_count = 1
-mesh = SubResource("CylinderMesh_15")
+mesh = SubResource("CylinderMesh_18")
 buffer = PackedFloat32Array(5, 0, 0, -55, 0, 0.12, 0, 0.06, 0, 0, 5, -172)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_17"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_20"]
 render_priority = 0
 shader = ExtResource("1_49689")
 shader_parameter/color_a = Color(0.49, 0.43, 0.33, 1)
@@ -75,22 +84,22 @@ shader_parameter/line_color = Color(0.39, 0.34, 0.27, 1)
 shader_parameter/cell_size = 8.0
 shader_parameter/line_width = null
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_18"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_21"]
 size = Vector2(1, 1)
 
-[sub_resource type="MultiMesh" id="MultiMesh_19"]
+[sub_resource type="MultiMesh" id="MultiMesh_22"]
 transform_format = 1
 instance_count = 1
-mesh = SubResource("PlaneMesh_18")
+mesh = SubResource("PlaneMesh_21")
 buffer = PackedFloat32Array(100, 0, 0, -60, 0, 1, 0, 0, 0, 0, 88, -156)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_20"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_23"]
 albedo_color = Color(0.55, 0.47, 0.35, 1)
 
-[sub_resource type="MultiMesh" id="MultiMesh_21"]
+[sub_resource type="MultiMesh" id="MultiMesh_24"]
 transform_format = 1
 instance_count = 2
-mesh = SubResource("PlaneMesh_18")
+mesh = SubResource("PlaneMesh_21")
 buffer = PackedFloat32Array(11.766968, 0, 6.176697, -52.5, 0, 1, 0, 0.02, -2.3533936, 0, 30.883486, -147.5, 12, 0, 0, -55, 0, 1, 0, 0.02, 0, 0, 18, -166)
 
 [node name="barrow" type="Node3D"]
@@ -102,62 +111,78 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, -0.5, -156)
 shape = SubResource("BoxShape3D_1")
 
-[node name="BarrowW" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -97.5, 15, -167.5)
+[node name="BarrowWN" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -97.5, 15, -191.5)
 shape = SubResource("BoxShape3D_2")
+
+[node name="BarrowWS" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -97.5, 15, -151)
+shape = SubResource("BoxShape3D_3")
+
+[node name="BarrowVaultBack" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -105.5, 15, -175)
+shape = SubResource("BoxShape3D_4")
 
 [node name="BarrowE" type="CollisionShape3D" parent="Collision"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.5, 15, -167.5)
-shape = SubResource("BoxShape3D_3")
+shape = SubResource("BoxShape3D_5")
 
-[node name="BarrowN" type="CollisionShape3D" parent="Collision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 15, -192.5)
-shape = SubResource("BoxShape3D_4")
+[node name="BarrowNW" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -73.5, 15, -192.5)
+shape = SubResource("BoxShape3D_6")
+
+[node name="BarrowNE" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.5, 15, -192.5)
+shape = SubResource("BoxShape3D_6")
 
 [node name="BarrowWallW" type="CollisionShape3D" parent="Collision"]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -76, 2, -150)
-shape = SubResource("BoxShape3D_5")
+shape = SubResource("BoxShape3D_7")
 
 [node name="BarrowWallE" type="CollisionShape3D" parent="Collision"]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -34, 2, -150)
-shape = SubResource("BoxShape3D_5")
+shape = SubResource("BoxShape3D_7")
 
 [node name="CrownAltar" type="CollisionShape3D" parent="Collision"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 1.5, -180)
-shape = SubResource("BoxShape3D_6")
+shape = SubResource("BoxShape3D_8")
 
 [node name="CrownAltarPillarW" type="CollisionShape3D" parent="Collision"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -62, 3.5, -180)
-shape = SubResource("BoxShape3D_7")
+shape = SubResource("BoxShape3D_9")
 
 [node name="CrownAltarPillarE" type="CollisionShape3D" parent="Collision"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 3.5, -180)
-shape = SubResource("BoxShape3D_7")
+shape = SubResource("BoxShape3D_9")
+
+[node name="KingsDoorRock" type="CollisionShape3D" parent="Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 24, -193)
+shape = SubResource("BoxShape3D_10")
 
 [node name="Visual" type="Node3D" parent="."]
 
 [node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual"]
-material_override = SubResource("StandardMaterial3D_8")
-multimesh = SubResource("MultiMesh_10")
+material_override = SubResource("StandardMaterial3D_11")
+multimesh = SubResource("MultiMesh_13")
 
 [node name="StoneDark_Box" type="MultiMeshInstance3D" parent="Visual"]
-material_override = SubResource("StandardMaterial3D_11")
-multimesh = SubResource("MultiMesh_12")
+material_override = SubResource("StandardMaterial3D_14")
+multimesh = SubResource("MultiMesh_15")
 
 [node name="Stone_Box" type="MultiMeshInstance3D" parent="Visual"]
-material_override = SubResource("StandardMaterial3D_13")
-multimesh = SubResource("MultiMesh_14")
+material_override = SubResource("StandardMaterial3D_16")
+multimesh = SubResource("MultiMesh_17")
 
 [node name="Stone_Cyl" type="MultiMeshInstance3D" parent="Visual"]
-material_override = SubResource("StandardMaterial3D_13")
-multimesh = SubResource("MultiMesh_16")
-
-[node name="Dirt_Plane" type="MultiMeshInstance3D" parent="Visual"]
-material_override = SubResource("ShaderMaterial_17")
-cast_shadow = 0
+material_override = SubResource("StandardMaterial3D_16")
 multimesh = SubResource("MultiMesh_19")
 
-[node name="Road_Plane" type="MultiMeshInstance3D" parent="Visual"]
-material_override = SubResource("StandardMaterial3D_20")
+[node name="Dirt_Plane" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("ShaderMaterial_20")
 cast_shadow = 0
-multimesh = SubResource("MultiMesh_21")
+multimesh = SubResource("MultiMesh_22")
+
+[node name="Road_Plane" type="MultiMeshInstance3D" parent="Visual"]
+material_override = SubResource("StandardMaterial3D_23")
+cast_shadow = 0
+multimesh = SubResource("MultiMesh_24")

@@ -9,8 +9,9 @@
 	"hit_radius_m": 0.3,
 	"description": "The Kingsguard Sword, reforged to fit a full-grown giant.",
 	"scales_with_growth": true,
-	"fit_max_stage": 3,
+	"fit_max_stage": 6,
 	"visual_shape": "sword",
 	"light_chain": "ability.sword_light_1",
-	"heavy": "ability.sword_heavy"
+	"heavy": "ability.sword_heavy",
+	"stage_movesets": {"4": {"light_chain": "ability.sword_great_light_1", "heavy": "ability.sword_great_heavy"}}
 }

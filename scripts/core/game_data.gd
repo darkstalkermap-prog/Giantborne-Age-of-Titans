@@ -139,6 +139,10 @@ func _post_pass() -> void:
 	## @anchor P25
 
 	## @anchor P26
+	# P26 (plan M6-M9 §2.9): the growth profiles form one chain - every stage from 1 to the highest has a
+	# profile, each taller and wider than the one before, at a level no lower, keeping every interaction
+	# permission of the stage before - and each profile's size masks are its stage's.
+	errors.append_array(PlayerGrowth.profile_chain_errors(records_of_type("growth_profile"), record_paths))
 
 	## @anchor P29
 
