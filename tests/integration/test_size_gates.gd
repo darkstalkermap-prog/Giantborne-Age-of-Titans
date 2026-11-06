@@ -2,8 +2,9 @@ extends IntegrationSuite
 ## Size gates (P26, plan M6-M9 §2.9, §5.5, decision 18): a SizeGate wall stops a giant below its
 ## min_stage - only the giant's body collides with the gate layers 7-9, and only below their stage -
 ## and says why once per 4 s (Events.size_gate_blocked with the gate's id, stage and message, a HUD
-## warning, the contact point for the gate's cue); a giant of the stage walks through it. The camera,
-## attack occluders, enemies and the growth clearance never see the walls.
+## warning, the contact point for the gate's cue); a giant of the stage walks through it; an
+## interaction with requires_stage refuses a smaller giant the same way. The camera, attack
+## occluders, enemies and the growth clearance never see the walls.
 
 const WATER := "res://scenes/world/size_gate_water.tscn"
 const STONE := "res://scenes/world/size_gate_stone.tscn"
@@ -72,6 +73,16 @@ func test_a_stage_3_giant_is_stopped_and_a_stage_4_giant_walks_through() -> void
 	p.router.set_injected_move(Vector2.ZERO)
 	assert_true(through, "a stage-4 giant walks through (z %.2f)" % p.global_position.z)
 	assert_eq(blocked.size(), 1, "and is never refused")
+	# A stage-gated interaction (a ledge only a stage-6 giant reaches): E refuses with its reason.
+	var ledge := Interactable.new()
+	ledge.interact_id = "test.ledge"
+	ledge.requires_stage = 6
+	world.add_child(ledge)
+	p.interact.use_candidate({"node": ledge, "id": "test.ledge"})
+	var out_of_reach := "Out of reach. Grow to stage 6."
+	assert_eq(blocked.back(), ["test.ledge", 6, out_of_reach], "a stage-4 giant is told to grow to 6")
+	assert_true(warnings.has(out_of_reach), "on the HUD")
+	assert_eq(ledge.stage_reason(6), "", "a stage-6 giant reaches it")
 
 
 func test_gate_layers_and_who_collides_with_them() -> void:
