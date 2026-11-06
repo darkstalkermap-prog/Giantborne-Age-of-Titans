@@ -36,7 +36,8 @@ const HEARD := ["sfx.hit.", "sfx.voice.", "sfx.body.fall.", "sfx.break.", "sfx.c
 	"sfx.threat.aim_lock", "sfx.threat.sting"]
 const RAIDERS := "encounter.quarry_raiders"
 const RAIDERS_FIGHT_TICKS := 480
-## The longest wait for the ranged raiders' aim lock in front of the camera, then for a sting behind it.
+## The longest wait for the ranged raiders' aim lock and shot in front of the camera, then for a sting
+## behind it.
 const RANGED_WAIT_TICKS := 900
 const WALK_TICKS := 360
 
@@ -236,8 +237,10 @@ func _raiders_fight(w: Variant) -> void:
 		p.camera_rig.yaw = TargetingRules.yaw_of(Vector3(away.x, 0, away.z))
 	await step_ticks(RAIDERS_FIGHT_TICKS)
 	# P22's ranged units take their firing points in front of the camera: once their aim locks are
-	# heard there, the camera turns away from them, so the next shot is drawn from behind it.
-	await TestWait.until(self, func() -> bool: return fight_cues.has("sfx.threat.aim_lock"), RANGED_WAIT_TICKS)
+	# heard there and a shot has left, the camera turns away from them, so the next shot is drawn
+	# from behind it.
+	await TestWait.until(self, func() -> bool:
+		return fight_cues.has("sfx.threat.aim_lock") and _heard("sfx.ability."), RANGED_WAIT_TICKS)
 	var ranged := Vector3.ZERO
 	var m := 0
 	for id in ids:
