@@ -15,6 +15,10 @@ extends RefCounted
 ## Optional overrides for a place inside a region (P28: settlements keep their region's music with
 ## the melody quieter and longer rests): `layers` (intensity -> stem or "melody" -> dB, merged over
 ## the set's layers) and `melody` (keys of the set's melody block, e.g. {"rest_loops": [2, 4]}).
+## Optional `arrival` (P28) marks a friendly settlement: a giant of at least `min_stage` (default 4)
+## whose audio zone becomes this record hears a crowd gasp and the town bell once a level visit,
+## unless `faction` (a faction id, checked by name only: the settlements' factions arrive with
+## their packages) is warned or hostile, e.g. {"faction": "faction.brannock"}.
 ## Every level record and every context maps to a record or is silent by decision (P23's coverage
 ## test): the silent list is a record of its own, data/audio/region_silent.json, carrying only
 ## `silent_levels` (level ids) and `silent_contexts` (context names such as "loading"); every level
@@ -47,6 +51,9 @@ static func fields() -> Dictionary:
 			"max_repeat": U.int_field(1, 16),
 			"min_phrase_gap_s": U.num(0.0, 3600.0),
 			"rest_weight": U.num(0.0, 1.0)}},
+		"arrival": {"t": "dict", "fields": {
+			"faction": U.str_field(),
+			"min_stage": U.int_field(1, 10)}},
 	}
 
 
@@ -94,6 +101,9 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		U.check_id_string(boss, ctx + ".boss", out)
 	elif level == "":
 		out.errors.append("%s: needs a level (or a context, or a boss)" % ctx)
+	var arrival: Variant = d.get("arrival")
+	if typeof(arrival) == TYPE_DICTIONARY and str(arrival.get("faction", "")) != "":
+		U.check_id_string(str(arrival.faction), ctx + ".arrival.faction", out)
 	var melody: Variant = d.get("melody")
 	if typeof(melody) == TYPE_DICTIONARY:
 		for key: String in ["play_loops", "rest_loops"]:

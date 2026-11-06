@@ -1,0 +1,51 @@
+{
+	"schema_version": 1,
+	"id": "ambience.aldmere",
+	"type": "ambience_set",
+	"display_name": "The Aldmere March",
+	"description": "P28: Aldmere: wind in the long grass, crickets, war drums far off; a horse, smithing, orders shouted, a flag snapping. Emitter: the war camp's forge.",
+	"beds": [
+		{
+			"cue": "amb.bed_grassland",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.horse",
+			"weight": 2
+		},
+		{
+			"cue": "amb.hammer",
+			"weight": 2
+		},
+		{
+			"cue": "amb.orders",
+			"weight": 2
+		},
+		{
+			"cue": "amb.flag_snap",
+			"weight": 2
+		}
+	],
+	"spot_interval_s": [
+		5,
+		12
+	],
+	"spot_distance_m": [
+		14,
+		34
+	],
+	"emitters": [
+		{
+			"cue": "amb.forge_fire",
+			"level": "level.world",
+			"position_m": [
+				520,
+				33,
+				120
+			],
+			"radius_m": 30
+		}
+	]
+}

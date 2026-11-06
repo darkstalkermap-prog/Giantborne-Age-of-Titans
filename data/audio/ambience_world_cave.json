@@ -1,0 +1,31 @@
+{
+	"schema_version": 1,
+	"id": "ambience.cave",
+	"type": "ambience_set",
+	"display_name": "The Troll Den",
+	"description": "P28: the Troll Den: drips in the dark and a slow breath; a whelp's mewl, a bone rattling.",
+	"beds": [
+		{
+			"cue": "amb.bed_cave",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.whelp",
+			"weight": 2
+		},
+		{
+			"cue": "amb.bone_rattle",
+			"weight": 2
+		}
+	],
+	"spot_interval_s": [
+		6,
+		14
+	],
+	"spot_distance_m": [
+		10,
+		26
+	]
+}

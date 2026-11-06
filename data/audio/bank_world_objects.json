@@ -1,0 +1,455 @@
+{
+	"schema_version": 1,
+	"id": "audio_bank.world_objects",
+	"type": "audio_bank",
+	"display_name": "World objects",
+	"description": "P28 (section 4.1 family G, M7-M9): the size gates' answers at the contact point (water, stone, timber; stone and timber also register in the Valley, whose gates use them), splashes, a trample, the town bell of a friendly settlement's arrival, the war horn of a world event, an exit and an inscription; the formation's brace, its broken horn and the banner's fall; the ballista's and the catapult's release; the cavalry's gallop swell; burning and a troll's regrowth.",
+	"cues": {
+		"sfx.cavalry.charge": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/cavalry_charge_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 500,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.formation.banner_fall": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/formation_banner_fall_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.formation.brace": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/formation_brace_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -4.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.formation.default": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/formation_brace_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -4.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.formation.horn_broken": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/formation_horn_broken_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -4.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.02,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.gate.default": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/gate_stone_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -4.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.valley",
+				"level.world"
+			]
+		},
+		"sfx.gate.stone": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/gate_stone_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -4.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.valley",
+				"level.world"
+			]
+		},
+		"sfx.gate.timber": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/gate_timber_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.valley",
+				"level.world"
+			]
+		},
+		"sfx.gate.water": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/gate_water_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -7.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.siege.ballista.fire": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/siege_ballista_fire_1.wav",
+				"res://assets/audio/sfx/world/objects/siege_ballista_fire_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 150,
+			"priority": 95,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.siege.catapult.fire": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/siege_catapult_fire_1.wav",
+				"res://assets/audio/sfx/world/objects/siege_catapult_fire_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 150,
+			"priority": 95,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.siege.default": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/siege_ballista_fire_1.wav",
+				"res://assets/audio/sfx/world/objects/siege_ballista_fire_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 150,
+			"priority": 95,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.status.burning": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/status_burning_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -5.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.trample": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/trample_1.wav",
+				"res://assets/audio/sfx/world/objects/trample_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.troll.default": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/troll_regrow_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -4.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 500,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.troll.regrow": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/troll_regrow_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -4.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 500,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.world.horn_alarm": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/horn_alarm_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -3.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 1000,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.world.interact.exit": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/interact_exit_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -4.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.world.interact.inscription": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/interact_inscription_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -5.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.world.splash": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/splash_large_1.wav",
+				"res://assets/audio/sfx/world/objects/splash_large_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 100,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.world.splash.large": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/splash_large_1.wav",
+				"res://assets/audio/sfx/world/objects/splash_large_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 100,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.world.splash.small": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/splash_small_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "impact",
+			"volume_db": -0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": true,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.world.town_bell": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/town_bell_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -5.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 1000,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		}
+	}
+}

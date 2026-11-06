@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_greywood",
+	"display_name": "The Greywood",
+	"description": "P28: the world's Greywood region (plan section 4.3).",
+	"level": "level.world",
+	"districts": [],
+	"regions": [
+		"region.greywood"
+	],
+	"pois": [],
+	"context": "",
+	"boss": "",
+	"music": "music.greywood",
+	"ambience": "ambience.greywood",
+	"priority": 0
+}

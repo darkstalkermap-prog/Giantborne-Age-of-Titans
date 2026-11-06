@@ -16,7 +16,11 @@ extends IntegrationSuite
 ##     router, resolve with nothing missing and nothing from the placeholder bank.
 
 const P21_BANKS := ["audio_bank.combat", "audio_bank.abilities", "audio_bank.steps", "audio_bank.voices",
-	"audio_bank.threat", "audio_bank.world", "audio_bank.ui"]
+	"audio_bank.threat", "audio_bank.world", "audio_bank.ui",
+	# P28: the world's effect banks are effect banks too (the M7-M9 cues; a wet step or a far call
+	# of the M6 content may now resolve to them: the heavy and paw wet steps, the far voices)
+	"audio_bank.world_steps", "audio_bank.world_voices", "audio_bank.world_threat", "audio_bank.world_objects",
+	"audio_bank.world_abilities", "audio_bank.world_ui"]
 ## Node's own signals (not game events).
 const CALLS := ["alert", "attack", "hurt", "stagger", "death"]
 

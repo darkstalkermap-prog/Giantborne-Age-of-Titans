@@ -1,0 +1,233 @@
+{
+	"schema_version": 1,
+	"id": "audio_bank.world_stingers",
+	"type": "audio_bank",
+	"display_name": "World stingers",
+	"description": "P28 (section 4.1 family S, M7-M9): the world's stingers, one-shot Ogg streams on the Music bus that duck the stems for their length: a discovery, the world's reveal from a vista, a boss's yield, an ancestry chosen, the crown won at the campaign's end, a formation's rout; the five regions' combat intros and the three bosses' intros (one bar in their sets' own tempo). Balanced at -16 LUFS like P23's.",
+	"cues": {
+		"mus.stinger.ancestry": {
+			"files": [
+				"res://assets/audio/music/world/stinger_ancestry.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.boss_harrok": {
+			"files": [
+				"res://assets/audio/music/world/stinger_boss_harrok.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.boss_matriarch": {
+			"files": [
+				"res://assets/audio/music/world/stinger_boss_matriarch.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.boss_regiment": {
+			"files": [
+				"res://assets/audio/music/world/stinger_boss_regiment.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.combat_aldmere": {
+			"files": [
+				"res://assets/audio/music/world/stinger_combat_aldmere.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.combat_crownmarch": {
+			"files": [
+				"res://assets/audio/music/world/stinger_combat_crownmarch.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.combat_drowned_steps": {
+			"files": [
+				"res://assets/audio/music/world/stinger_combat_drowned_steps.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.combat_greywood": {
+			"files": [
+				"res://assets/audio/music/world/stinger_combat_greywood.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.combat_stonehold": {
+			"files": [
+				"res://assets/audio/music/world/stinger_combat_stonehold.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.crowned": {
+			"files": [
+				"res://assets/audio/music/world/stinger_crowned.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 95,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.discovery": {
+			"files": [
+				"res://assets/audio/music/world/stinger_discovery.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.rout": {
+			"files": [
+				"res://assets/audio/music/world/stinger_rout.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.world_reveal": {
+			"files": [
+				"res://assets/audio/music/world/stinger_world_reveal.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 75,
+			"far": "",
+			"levels": []
+		},
+		"mus.stinger.yield": {
+			"files": [
+				"res://assets/audio/music/world/stinger_yield.ogg"
+			],
+			"bus": "Music",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		}
+	}
+}

@@ -236,13 +236,36 @@ Barrow and the ruins; Kingsfall and the Ogre King (both phases); the end screen.
 | 18 | Crossing between districts the music changes at a bar line over two bars: smooth, or noticeable? | |
 | 19 | The title theme (four minutes on the title screen) and the end screen: fitting, or does the title loop wear? | |
 
-### 8.5 Focus and the web
+### 8.5 The world (M7)
+
+The world's sound (P28; the pieces are described in `docs/systems/P28.md`). **Where to listen:**
+down from the Kingsgate shelf into the Crownmarch's fields; Brannock at stage 4 (enter, leave,
+enter again), Brannock Bridge over the Wend, Millford's mill race, the Wend Falls; the Greywood
+(Hollowmere's pond, the Troll Den); the Drowned Steps (the Mere's shore, wading, the Titan's
+Bones); Aldmere (the war camp's forge, a pike formation marching and bracing); the Stonehold
+(Skarn's hearths, the Moot). Use F6/F7 (debug growth) for stages 4-6.
 
 | # | Check | Notes |
 | --- | --- | --- |
-| 20 | Alt-tab away (desktop) or switch to another browser tab (web): the sound fades out within a fifth of a second and comes back when you return (Settings > Mute when unfocused). | |
-| 21 | Web: the first click on the page starts the sound (the launcher resumes the browser's audio); no sound before it, no crackle after it on a mid-range laptop. | |
-| 22 | Web: music keeps playing without gaps while the frame rate drops (heavy fights in the forest). Note any gap. | |
+| 20 | Each region sounds like its own place in one kingdom: the Crownmarch's fiddle over open fifths, the Greywood's reed over a dark choir, the Drowned Steps' bells over a glassy pad, Aldmere's trumpet calls (and a field drum in combat), the Stonehold's enormous horn over a wide choir - on the Valley's chords and tempo. Which set would you change first? | |
+| 21 | Crossing a region line the music changes at a bar line over two bars and the beds over three seconds; Brannock, Hollowmere and Skarn keep their region's music with the melody quieter and resting longer; the Moot plays only its drone until Harrok. Smooth, or noticeable? | |
+| 22 | Entering Brannock (or Millford, Hollowmere) at stage 4 or more: one gasp of the crowd and the town bell, once a visit, not again when you step out and back in. Welcome, or too much? | |
+| 23 | The place beds fit their places and none is louder than the region around it: the town's market, carts and smithy; the camp's drums, canvas and hammers; the giants' hearth and deep voices; the den's drips and slow breath; the wind through the Titan's ribs; the Moot's humming stones. | |
+| 24 | The emitters sit where they are and fade with distance, without a seam: the Wend under Brannock Bridge, the Millrace, the Wend Falls, Hollowmere's pond (frogs), the Mere's shore, the war camp's forge, Skarn's hearths, the Titan Forge in the Bones. | |
+| 25 | A pike formation advancing is one march (stomps in step, a field drum) that moves with it, not thirty scattered footsteps; when it braces you hear one low wall rumble per brace, not one per pike. | |
+| 26 | Wading the Wend or the Mere: heavy wet steps and one splash on entering deep water, no splash spam at the bank. | |
+| 27 | At stage 6 among fleeing soldiers the music stays at exploring (no pulse, no sting); a formation or a troll still raises it. | |
+| 28 | The giant's stage 4-6 footfalls grow heavier and lower with each stage and soften on long walks; a size gate answers with water, stone or timber where you touched it. | |
+| 29 | The world's stingers: a discovery's bells, the world's reveal from the Kingsgate shelf and the Stair's head, a rout's brass flourish (fleeing armies sound triumphant). Note any that feels too big or too small. | |
+| 30 | Later content (M8-M9, as it arrives): the troll's grunts and roar, the dire wolf, the cavalry's gallop swell and the horse, the rival giants' bellow (not the player's roar), the Matriarch, a catapult's release at the engine and its rising whistle ending where the stone lands, the bosses' music, the crowning. | |
+
+### 8.6 Focus and the web
+
+| # | Check | Notes |
+| --- | --- | --- |
+| 31 | Alt-tab away (desktop) or switch to another browser tab (web): the sound fades out within a fifth of a second and comes back when you return (Settings > Mute when unfocused). | |
+| 32 | Web: the first click on the page starts the sound (the launcher resumes the browser's audio); no sound before it, no crackle after it on a mid-range laptop. | |
+| 33 | Web: music keeps playing without gaps while the frame rate drops (heavy fights in the forest, a formation fight in the world). Note any gap. | |
 
 Write the results under the session in `docs/USABILITY_RESULTS.md` and turn every "change this"
 into a follow-up for the sound packages (P21 effects, P23 music and ambience, P28 the world's).

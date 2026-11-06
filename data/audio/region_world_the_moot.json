@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_the_moot",
+	"display_name": "The Moot",
+	"description": "P28: the Moot plays the Stonehold's drone alone (the melody silenced while exploring and in danger) until Harrok engages and his set takes over (plan section 4.3).",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.the_moot"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.stonehold",
+	"ambience": "ambience.moot",
+	"priority": 10,
+	"layers": {
+		"explore": {
+			"drone": 0,
+			"melody": -80
+		},
+		"danger": {
+			"drone": 0,
+			"melody": -80,
+			"pulse": -3
+		}
+	}
+}

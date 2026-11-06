@@ -13,7 +13,8 @@ extends TestSuite
 ##   - every zone melody variant is quiet (40 dB under its own level) for 40 ms around each segment
 ##     boundary, where the melody scheduler switches variants (the 80 ms switch never cuts a note).
 ## The default suite renders only the shortest loop (test_audio_assets); this tier renders all of
-## them, about 6 s.
+## them, about 6 s. P28: the world's loops (manifest scope "world") are rendered by
+## test_world_music_loops, so this suite keeps to the M6 loops it was written for.
 
 const MIX_RATE := 44100.0
 ## Frames skipped at the start of a pass (the resampler's interpolation latency).
@@ -53,12 +54,12 @@ static func window_rms(out: PackedVector2Array, from: int, to: int) -> float:
 	return sqrt(sum / maxf(1.0, float(to - from)))
 
 
-## Every loop entry of the manifest, path -> entry.
+## Every M6 loop entry of the manifest, path -> entry (P28: the world's are test_world_music_loops').
 static func loops() -> Dictionary:
 	var out := {}
 	var files: Dictionary = AudioMath.manifest().get("files", {})
 	for path: String in files:
-		if bool((files[path] as Dictionary).get("loop", false)):
+		if bool((files[path] as Dictionary).get("loop", false)) and str((files[path] as Dictionary).get("scope", "m6")) != "world":
 			out[path] = files[path]
 	return out
 
@@ -141,6 +142,8 @@ func test_melody_variants_are_quiet_at_their_segment_boundaries() -> void:
 		var loop_s := AudioMath.loop_seconds(float(rec.bpm), int(rec.beats_per_bar), int(rec.bars))
 		for variant: String in melody.variants:
 			var path := str(rec.stems[variant])
+			if str(AudioMath.manifest_entry(path).get("scope", "m6")) == "world":
+				continue   # P28: the world's variants are test_world_music_loops'
 			var s := load(path) as AudioStreamOggVorbis
 			s.loop = true
 			var period := int(round(loop_s * MIX_RATE))

@@ -1,0 +1,73 @@
+{
+	"schema_version": 1,
+	"id": "ambience.hearth",
+	"type": "ambience_set",
+	"display_name": "The giants' hearths",
+	"description": "P28: a steading's place bed (Skarn, Harrok's Hall): a great hearth fire and the deep voices of giants; a giant's laugh, a log split. Emitters: the longhouses' hearths.",
+	"beds": [
+		{
+			"cue": "amb.bed_hearth",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.giant_laugh",
+			"weight": 2
+		},
+		{
+			"cue": "amb.log_split",
+			"weight": 2
+		}
+	],
+	"spot_interval_s": [
+		6,
+		14
+	],
+	"spot_distance_m": [
+		14,
+		34
+	],
+	"emitters": [
+		{
+			"cue": "amb.forge_fire",
+			"level": "level.world",
+			"position_m": [
+				405,
+				76,
+				-690
+			],
+			"radius_m": 35
+		},
+		{
+			"cue": "amb.forge_fire",
+			"level": "level.world",
+			"position_m": [
+				468,
+				76,
+				-694
+			],
+			"radius_m": 35
+		},
+		{
+			"cue": "amb.forge_fire",
+			"level": "level.world",
+			"position_m": [
+				440,
+				76,
+				-606
+			],
+			"radius_m": 35
+		},
+		{
+			"cue": "amb.forge_fire",
+			"level": "level.world",
+			"position_m": [
+				-560,
+				82,
+				-724
+			],
+			"radius_m": 40
+		}
+	]
+}

@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_crownmarch",
+	"display_name": "The Crownmarch",
+	"description": "P28: the world's Crownmarch region (plan section 4.3).",
+	"level": "level.world",
+	"districts": [],
+	"regions": [
+		"region.crownmarch"
+	],
+	"pois": [],
+	"context": "",
+	"boss": "",
+	"music": "music.crownmarch",
+	"ambience": "ambience.crownmarch",
+	"priority": 0
+}

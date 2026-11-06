@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_troll_den",
+	"display_name": "The Troll Den",
+	"description": "P28: the Troll Den keeps the Greywood's music over the den's bed.",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.troll_den"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.greywood",
+	"ambience": "ambience.cave",
+	"priority": 10
+}

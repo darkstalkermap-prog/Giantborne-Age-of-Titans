@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_boss_harrok",
+	"display_name": "Harrok",
+	"description": "P28: boss_engaged for enemy.harrok switches to its set (after the intro stinger); boss_defeated plays the victory stinger, boss_yielded and a flight the yield stinger, and the music returns to the zone.",
+	"level": "",
+	"districts": [],
+	"regions": [],
+	"pois": [],
+	"context": "",
+	"boss": "enemy.harrok",
+	"music": "music.boss_harrok",
+	"ambience": "",
+	"priority": 0
+}
