@@ -74,6 +74,8 @@ var _result: Label
 var _tabs: HBoxContainer
 var _press_pos := Vector2.INF
 var _dragging := false
+var _hint: Label
+var _hint_serial := -1
 
 
 func _ready() -> void:
@@ -130,6 +132,13 @@ func _ready() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(spacer)
+	# The controls, for the device in use, above the buttons (the stack's footer hint owns the
+	# bottom line).
+	_hint = UiKit.label(_hint_text(InputBindings.last_device_is_pad()), 12, UiKit.MUTED)
+	_hint.name = "Hint"
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint_serial = InputBindings.device_serial
+	v.add_child(_hint)
 	travel_button = UiKit.button("Travel", 18)
 	travel_button.pressed.connect(_on_travel_pressed)
 	v.add_child(travel_button)
@@ -142,16 +151,6 @@ func _ready() -> void:
 	close_button = UiKit.button("Close", 16)
 	close_button.pressed.connect(cancel)
 	v.add_child(close_button)
-	var hint := UiKit.label(_hint_text(InputBindings.last_device_is_pad()), 12, UiKit.MUTED)
-	hint.name = "Hint"
-	hint.anchor_top = 1.0
-	hint.anchor_bottom = 1.0
-	hint.anchor_right = 1.0
-	hint.offset_left = MARGIN
-	hint.offset_top = -MARGIN - 16.0
-	hint.offset_bottom = -MARGIN + 2.0
-	hint.offset_right = -MARGIN
-	add_child(hint)
 	var first := str(args.get("level", ""))
 	show_level(first if first != "" else GameSession.current_level_id())
 
@@ -172,10 +171,16 @@ func first_focus() -> Control:
 	return close_button
 
 
+## The controls line of the panel (the pad's or the keyboard and mouse's).
 static func _hint_text(pad: bool) -> String:
 	if pad:
-		return "D-pad / left stick: places   Right stick: pan   LB / RB: zoom   Y: pin   A: choose   B: close"
-	return "Arrows: places   W A S D / drag: pan   Wheel or - / =: zoom   P or right click: pin   Enter: choose   Esc / M: close"
+		return "D-pad / left stick: places\nRight stick: pan   LB / RB: zoom\nA: choose   Y: pin   B: close"
+	return "Arrows: places   Enter: choose\nW A S D or drag: pan\nWheel or - / =: zoom\nP or right click: pin   Esc / M: close"
+
+
+## The controls the panel shows now (tests).
+func hint_text() -> String:
+	return _hint.text if _hint != null else ""
 
 
 # --------------------------------------------------------------------------- levels and entries
@@ -382,13 +387,7 @@ func _root_offset() -> Vector3:
 
 ## The pin on the shown level (Vector2.INF when there is none or it is on another level).
 func pin_point() -> Vector2:
-	var v: Variant = WorldState.get_flag(Discovery.PIN_FLAG, "")
-	var pin := Discovery.pin_of(WorldState.flags)
-	if not pin.is_finite():
-		return Vector2.INF
-	if typeof(v) == TYPE_ARRAY and (v as Array).size() >= 3 and str(v[2]) != "" and str(v[2]) != _level:
-		return Vector2.INF
-	return pin
+	return Discovery.pin_on(WorldState.flags, _level)
 
 
 ## The tracked quest's objective points on the shown level (the level being played only).
@@ -700,6 +699,9 @@ func panel_text() -> String:
 func _process(delta: float) -> void:
 	if not is_inside_tree() or stack == null or stack.top() != self:
 		return
+	if _hint != null and InputBindings.device_serial != _hint_serial:
+		_hint_serial = InputBindings.device_serial
+		_hint.text = _hint_text(InputBindings.last_device_is_pad())
 	var v := Vector2(Input.get_axis("look_left", "look_right"), Input.get_axis("look_up", "look_down"))
 	if v.length() < STICK_DEADZONE:
 		v = Vector2.ZERO

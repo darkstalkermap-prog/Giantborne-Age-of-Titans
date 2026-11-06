@@ -512,7 +512,7 @@ static func help_rows_for(loadout: Dictionary) -> Array:
 	rows.append(_help_row("Map", "map"))
 	rows.append(_help_row("Map: pin here / clear the pin", "map_pin"))
 	rows.append(_help_row("Journal", "journal"))
-	rows.append(_help_row("Follow the next quest", "track_next"))
+	rows.append(_help_row("Track the next quest", "track_next"))
 	rows.append(_help_row("Pause / settings / rebind", "pause"))
 	rows.append(_help_row("This overlay", "help"))
 	return rows

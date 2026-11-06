@@ -36,7 +36,7 @@ const DEFAULT_REVEAL_M := 400.0
 ## The value a vista writes to discovered.<poi>: known, not yet found.
 const REVEALED := "revealed"
 const XP_SOURCE_PREFIX := "discovery:"
-## The flag of the map pin: [x, z] (level space) or "" (none). The map screen writes it.
+## The flag of the map pin: [x, z, level id] (level space) or "" (none). The map screen writes it.
 const PIN_FLAG := "map.pin"
 ## How many sealed places were seen (an int, overwritten; the sealed-place tutorial's trigger).
 const SEALED_COUNT_FLAG := "sealed.seen_count"
@@ -234,6 +234,18 @@ static func pin_of(flags: Dictionary) -> Vector2:
 			and v.size() >= 2 and SchemaUtil.is_number(v[0]) and SchemaUtil.is_number(v[1]):
 		return Vector2(float(v[0]), float(v[1]))
 	return Vector2.INF
+
+
+## The pin on a level: pin_of() when it was placed on `p_level_id` (or names no level), else
+## Vector2.INF - a pin placed on another level's map shows neither on this level's map nor on its
+## compass.
+static func pin_on(flags: Dictionary, p_level_id: String) -> Vector2:
+	var pin := pin_of(flags)
+	var v: Variant = flags.get(PIN_FLAG, "")
+	if pin.is_finite() and typeof(v) == TYPE_ARRAY and (v as Array).size() >= 3 and str(v[2]) != "" \
+			and str(v[2]) != p_level_id:
+		return Vector2.INF
+	return pin
 
 
 ## Distance on the ground plane.

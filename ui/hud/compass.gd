@@ -12,7 +12,7 @@ extends HudWidget
 ##     colour;
 ##   * undiscovered POIs as "?": within UNKNOWN_M, or within SKYLINE_UNKNOWN_M when their landmark is
 ##     on the skyline (at most MAX_POIS, nearest first);
-##   * the map pin (map.pin) as a red pin, at any distance.
+##   * the map pin (map.pin) as a red pin, at any distance, on the level it was placed on.
 ## Hidden where the level has no world index (the sandbox, the title) and while the HUD is hidden.
 ## Drawn by HudKit's rules: every mark a rectangle on the HUD's rectangle layer, the letters and "?"
 ## shadowed text on the small text layer.
@@ -92,11 +92,16 @@ func _process(_delta: float) -> void:
 		_pois_level = level_id
 		var d := Discovery.of_tree(get_tree())
 		_pois = d.pois if d != null and d.level_id == level_id else Discovery.poi_table(level_id)
-	var pos := p.global_position - _root_offset()
+	var offset := _root_offset()
+	var pos := p.global_position - offset
 	_heading = heading_of(p.camera_rig.yaw)
 	var objective := Quests.tracked_objective() if Quests.is_active() else {}
-	_markers = markers_for(pos, _heading, _pois, WorldState.flags, objective_positions(objective, _root_offset()),
-		Quests.leads() if Quests.is_active() else [], Discovery.pin_of(WorldState.flags))
+	var leads: Array = []
+	if Quests.is_active():
+		for l: Dictionary in Quests.leads():
+			leads.append({"marker_id": l.marker_id, "position": (l.position as Vector3) - offset})
+	_markers = markers_for(pos, _heading, _pois, WorldState.flags, objective_positions(objective, offset), leads,
+		Discovery.pin_on(WorldState.flags, level_id))
 	_strip.queue_redraw()
 	_letters.queue_redraw()
 

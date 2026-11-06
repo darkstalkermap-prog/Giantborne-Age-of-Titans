@@ -6,7 +6,8 @@ extends IntegrationSuite
 ## lock and their stage, a shrine POI shown by its shrine; the region lines with the recommended
 ## stage; the pin written and cleared ([x, z, level]); the three zoom levels and panning; the
 ## Valley's vector map and the world's picture; and the screen with a pad: D-pad between places, A
-## on a place says why it cannot be travelled to, Y pins, B closes - and M closes it from a keyboard.
+## on a place says why it cannot be travelled to, Y pins, B closes - and M closes it from a keyboard;
+## the panel lists the controls of the device in use.
 
 const Fx := preload("res://tests/support/world_ux_fixtures.gd")
 
@@ -29,15 +30,18 @@ func after_each() -> void:
 		stack.close_all()
 	get_tree().paused = false
 	InputRouter.set_context(InputRouter.Context.GAMEPLAY)
+	InputBindings.reset_device()
 	await super()
 
 
+## One press and release of a pad button; the device is noted as main.gd's _input does in the game.
 func _pad(button: JoyButton) -> void:
 	for pressed in [true, false]:
 		var e := InputEventJoypadButton.new()
 		e.button_index = button
 		e.pressed = pressed
 		e.device = 0
+		InputBindings.note_device(e)
 		Input.parse_input_event(e)
 		await get_tree().process_frame
 	await get_tree().process_frame
@@ -94,6 +98,8 @@ func test_the_screen_pin_zoom_and_pan() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	assert_eq(map.shown_level(), Fx.LEVEL, "the level asked for")
+	assert_true(map.hint_text().contains("P or right click: pin") and map.hint_text().contains("Esc / M: close"),
+		"the panel lists the keyboard and mouse controls (%s)" % map.hint_text())
 	assert_eq(_ids(map.entries()), ["test.p27.cp_narrow", "test.p27.cp_start"], "the two visited stones")
 	assert_true(map.select("test.p27.cp_start"), "a place is selected")
 	assert_true(map.panel_text().contains("Start stone") and map.panel_text().contains("Visited"), "the panel names it (%s)" % map.panel_text())
@@ -117,6 +123,9 @@ func test_the_screen_pin_zoom_and_pan() -> void:
 	var at := map.pin_here()
 	assert_true(at.is_equal_approx(map.map_center()), "with nothing chosen the pin goes to the centre")
 	assert_true(map.show_level("level.valley"), "the Valley's map")
+	assert_false(map.pin_point().is_finite(), "the pin stays on its own level's map")
+	assert_true(Discovery.pin_on(WorldState.flags, Fx.LEVEL).is_finite() and not Discovery.pin_on(WorldState.flags,
+		"level.valley").is_finite(), "and its compass: pin_on() reads it on its level only")
 	assert_true(MapScreen.map_bounds_for(WorldIndex.for_level("level.valley")).encloses(Rect2(-200, -200, 400, 400)),
 		"its vector map covers the districts")
 	assert_true(map.entries().any(func(e: Dictionary) -> bool: return e.id == "valley.shrine.hollow"),
@@ -142,6 +151,7 @@ func test_the_map_with_a_pad() -> void:
 	await _pad(JOY_BUTTON_DPAD_RIGHT)
 	assert_eq(map.selected_id(), "test.p27.cp_start", "D-pad Right moves to the place on the right")
 	assert_true(map.icon("test.p27.cp_start").has_focus(), "with the focus")
+	assert_true(map.hint_text().contains("A: choose   Y: pin   B: close"), "the panel lists the pad's controls now")
 	await _pad(JOY_BUTTON_A)
 	assert_true(map.panel_text().contains("no giant"), "A on a stone it cannot travel to says why (%s)" % map.panel_text())
 	await _pad(JOY_BUTTON_Y)
