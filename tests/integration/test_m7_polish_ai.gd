@@ -5,7 +5,10 @@ extends IntegrationSuite
 ##     routed for good: once they regroup (above ai.regroup_morale, their banner their leader) it forms
 ##     again and they hold their slots (they used to come back as loose soldiers - no brace, no slot -
 ##     under a formation stuck in "routed"); it still routs for good when every member routed, or when
-##     none stands and its banner is dead.
+##     none stands and its banner is dead;
+##   * a civilian whose safe-point search stopped for the tick's path-query budget asks again at its
+##     next decision - not after REPICK_S, as when nowhere is reachable - and the resumed search is the
+##     same choice (picks counts choices); the world's half is in the slow suite (Brannock's folk).
 
 const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
 const BANNERMAN := "res://scenes/enemies/bannerman.tscn"
@@ -124,3 +127,30 @@ func test_a_formation_whose_banner_fell_routs_when_none_stands() -> void:
 			fleeing += 1
 	assert_eq(fleeing, 3, "all three fled (%s)" % _states(f))
 	assert_true(seen.has("routed") and f.state == "routed", "none stands and no banner leads them back: routed (%s)" % [seen])
+
+
+# --------------------------------------------------------------------------- civilians: a search waits for the budget
+
+func test_a_civilians_safe_point_search_that_waits_for_the_budget_resumes_as_the_same_choice() -> void:
+	var b := CivilianBrain.new("test.polish.villager", GameData.get_record("npc.villager"))
+	var calls: Array = []
+	b.safe_resolver = func(_from: Vector3, skip_failed: bool) -> Vector3:
+		calls.append(skip_failed)
+		if calls.size() < 3:
+			b.nav_search_pending = true   # the actor's search stopped for the tick's budget
+			return Vector3.INF
+		return Vector3(10, 0, 0)
+	b.start_fleeing("hostile")
+	b.decide(6, Vector3.ZERO, true)
+	assert_true(b.nav_search_pending and b.destination == Vector3.INF, "the search waits for the budget")
+	assert_eq(b.move_target, Vector3.INF, "standing meanwhile")
+	b.decide(7, Vector3.ZERO, true)   # the actor decides again the next tick while a search waits
+	assert_eq(calls.size(), 2, "it resumes at once, not REPICK_S later")
+	b.decide(8, Vector3.ZERO, true)
+	assert_eq(b.destination, Vector3(10, 0, 0), "and finds its shelter")
+	assert_false(b.nav_search_pending, "nothing waits any more")
+	assert_eq(b.picks, 1, "one choice, though it took three ticks")
+	assert_eq(calls, [false, false, false], "the same search, never a skip")
+	b.on_path_failed(Vector3(4, 0, 0))
+	assert_eq(b.picks, 2, "a path failure is a new choice")
+	assert_eq(calls[-1], true, "skipping the failed shelter")

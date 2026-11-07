@@ -20,6 +20,16 @@ extends CharacterBody3D
 ## P24b: in a streamed world (a level with nav_query settings) the agent paths on its layer's own map
 ## with unlimited polygons and the far distance cap (NavQuery), like every other query of this actor.
 ##
+## M7 polish: there its safe-point search keeps NavQuery's per-tick budget, as the enemies' firing-
+## point, flee and rout searches do (EnemyActor's P24b section): each marker tried - a closest point
+## and a path, SEARCH_CANDIDATE_QUERIES - waits until the level's budget_left() has them and this
+## civilian's share of the tick (SEARCH_QUERIES_PER_TICK, one marker) allows; otherwise the search
+## stops at that marker, brain.nav_search_pending says so, and the next tick resumes it there. Its
+## agent's path to the chosen marker (one query) waits for the budget too and is counted. A town's
+## folk fleeing at once (Brannock's eight villagers when it turns hostile; Millford's in P37's raid)
+## used to search every marker in the same tick, outside the budget: 16 queries NavQuery counted and 8
+## agent paths it did not, with all eight deciding in one tick.
+##
 ## Required children: CombatEntity (team NEUTRAL), NavAgent; Visual (ActorRig) with Body and
 ## LodProxy, Anchors/Torso, Hurtboxes/*. The elder also carries an NpcTalker (P13), which reads
 ## this actor's `entity_id` and its record's `dialogue`.
@@ -38,6 +48,13 @@ const MARKER_SNAP_M := 2.0
 const REACH_END_M := 1.0
 const SIGHT_MASK := HitQueryAdapter.LAYER_WORLD | HitQueryAdapter.LAYER_BREAKABLE
 const LAYER_BLOCKER := 32
+## M7 polish (the header): a safe marker tried costs this many path queries (its closest point and a
+## path), and one civilian's search tries at most one marker a tick...
+const SEARCH_CANDIDATE_QUERIES := 2
+const SEARCH_QUERIES_PER_TICK := 2
+## ... and resumes at the marker it stopped at when asked again within this many ticks (the next tick
+## asks: the actor decides again while a search waits); later it starts anew.
+const SEARCH_RESUME_TICKS := 30
 
 ## Stable id of this placed or spawned person (unique per level).
 @export var entity_id := ""
@@ -78,6 +95,14 @@ var _shelter_at_once := false
 var _pending_lod := -1
 var _lod_body: Node3D
 var _lod_proxy: Node3D
+## M7 polish: the safe-point search in progress (its markers, nearest first, and where it stopped for
+## the budget), what this civilian's searches spent this tick, and the most they spent in one tick.
+var _search_markers: Array = []
+var _search_next := 0
+var _search_stop_tick := -1000000
+var _search_spent_tick := -1
+var _search_spent := 0
+var search_queries_peak := 0
 
 
 func _ready() -> void:
@@ -127,8 +152,8 @@ func sim_step(tick: int, dt: float) -> void:
 	var alive := entity.is_alive()
 	if ai_enabled and alive and (tick + _phase_offset) % PERCEPTION_INTERVAL == 0:
 		brain.perceive(tick, _sense())
-	if ai_enabled and (not alive or (tick + _phase_offset) % DECISION_INTERVAL == 0):
-		brain.decide(tick, global_position, alive)
+	if ai_enabled and (not alive or (tick + _phase_offset) % DECISION_INTERVAL == 0 or brain.nav_search_pending):
+		brain.decide(tick, global_position, alive)   # M7 polish: a search waiting for the budget resumes the next tick
 	if brain.state == CivilianBrain.State.FLEE and _shelter_at_once and brain.destination != Vector3.INF:
 		global_position = brain.destination   # already in hiding when the level loaded
 		brain.decide(tick, global_position, alive)
@@ -197,10 +222,42 @@ func _listening() -> bool:
 
 ## brain.safe_resolver: the nearest reachable safe marker point from `from` (Vector3.INF when
 ## none is reachable). skip_failed: the marker it ran to could not be reached; never again.
+## In a streamed world the markers are tried within the tick's path-query budget (M7 polish, the
+## header): a search that stops for it returns Vector3.INF with brain.nav_search_pending set, and
+## resumes at that marker when asked again (the next tick) within SEARCH_RESUME_TICKS.
 func _resolve_safe_point(from: Vector3, skip_failed: bool) -> Vector3:
 	if skip_failed and safe_marker != null and not _failed_markers.has(safe_marker):
 		_failed_markers.append(safe_marker)
 	safe_marker = null
+	var start := 0
+	if not skip_failed and not _search_markers.is_empty() and Sim.tick - _search_stop_tick <= SEARCH_RESUME_TICKS:
+		start = _search_next   # the search stopped there for the budget: it goes on
+	else:
+		_search_markers = _safe_markers(from)
+	for i in range(start, _search_markers.size()):
+		var m := _search_markers[i] as Node3D
+		if m == null or not is_instance_valid(m) or not m.is_inside_tree() or _failed_markers.has(m):
+			continue
+		if not _search_affords():
+			_search_next = i
+			_search_stop_tick = Sim.tick
+			if brain != null:
+				brain.nav_search_pending = true
+			return Vector3.INF
+		var q0 := NavQuery.queries_total
+		var p := reachable_point(from, m.global_position)
+		_search_spend(q0)
+		if p == Vector3.INF:
+			continue
+		_search_markers.clear()
+		safe_marker = m
+		return p
+	_search_markers.clear()
+	return Vector3.INF
+
+
+## The safe markers this civilian may use (faction "" or its own, not failed), nearest `from` first.
+func _safe_markers(from: Vector3) -> Array:
 	var candidates: Array = []
 	for n in get_tree().get_nodes_in_group(SAFE_GROUP):
 		var m := n as Node3D
@@ -212,13 +269,31 @@ func _resolve_safe_point(from: Vector3, skip_failed: bool) -> Vector3:
 		candidates.append(m)
 	candidates.sort_custom(func(a: Node3D, b: Node3D) -> bool:
 		return _flat(a.global_position - from) < _flat(b.global_position - from))
-	for m: Node3D in candidates:
-		var p := reachable_point(from, m.global_position)
-		if p == Vector3.INF:
-			continue
-		safe_marker = m
-		return p
-	return Vector3.INF
+	return candidates
+
+
+## True when one more safe marker may be tried this tick: always without nav_query settings; in a
+## streamed world when the level's budget has SEARCH_CANDIDATE_QUERIES left and this civilian's
+## searches spent at most SEARCH_QUERIES_PER_TICK - SEARCH_CANDIDATE_QUERIES this tick (M7 polish).
+func _search_affords() -> bool:
+	if not _world_agent:
+		return true
+	_search_roll()
+	return _search_spent + SEARCH_CANDIDATE_QUERIES <= SEARCH_QUERIES_PER_TICK \
+		and NavQuery.budget_left(nav_level()) >= SEARCH_CANDIDATE_QUERIES
+
+
+## Counts what one marker's try spent (NavQuery.queries_total when it began).
+func _search_spend(queries_before: int) -> void:
+	_search_roll()
+	_search_spent += NavQuery.queries_total - queries_before
+	search_queries_peak = maxi(search_queries_peak, _search_spent)
+
+
+func _search_roll() -> void:
+	if _search_spent_tick != Sim.tick:
+		_search_spent_tick = Sim.tick
+		_search_spent = 0
 
 
 ## `target` as this civilian can reach it from `from`: on a navmesh, the closest point of its
@@ -244,6 +319,12 @@ func reachable_point(from: Vector3, target: Vector3) -> Vector3:
 			SIGHT_MASK | LAYER_BLOCKER, entity.occlusion_rids):
 		return Vector3(target.x, from.y, target.z)
 	return Vector3.INF
+
+
+## True when the agent may ask for its path now: always without nav_query settings; in a streamed
+## world while the tick's budget has a query left (M7 polish: it is counted, as an enemy's re-path).
+func _agent_path_affords() -> bool:
+	return not _world_agent or NavQuery.budget_left(nav_level()) > 0
 
 
 ## The level this civilian asks for navigation (NavQuery): the level root of the tree, else the
@@ -304,21 +385,29 @@ func _update_movement(dt: float, alive: bool) -> void:
 		var goal := brain.move_target
 		var flat_dist := _flat(goal - global_position)
 		var next := goal
+		var waiting := false
 		if flat_dist > DIRECT_STEER_DISTANCE and NavQuery.is_synced(nav_level(), int(agent.navigation_layers)):
 			if _nav_target == Vector3.INF or _nav_target.distance_to(goal) > 0.5:
-				agent.target_position = goal   # once per destination: re-path only after a failure
-				_nav_target = goal
-			if _world_agent:
-				NavQuery.level_waypoint(agent, global_position)   # P24b: lean navmeshes lie off the ground
-			if not agent.is_navigation_finished():
-				next = agent.get_next_path_position()
-			if _flat(next - global_position) < 0.05:
-				next = goal   # no path data: steer directly
+				if _agent_path_affords():
+					agent.target_position = goal   # once per destination: re-path only after a failure
+					_nav_target = goal
+					if _world_agent:
+						NavQuery.spend(nav_level())   # M7 polish: the agent's path counts against the tick's budget
+				else:
+					waiting = true   # M7 polish: the path waits for the tick's budget; it stands meanwhile
+			if not waiting:
+				if _world_agent:
+					NavQuery.level_waypoint(agent, global_position)   # P24b: lean navmeshes lie off the ground
+				if not agent.is_navigation_finished():
+					next = agent.get_next_path_position()
+				if _flat(next - global_position) < 0.05:
+					next = goal   # no path data: steer directly
 		var dir := next - global_position
 		dir.y = 0.0
-		if flat_dist > 0.1 and dir.length() > 0.01:
+		if not waiting and flat_dist > 0.1 and dir.length() > 0.01:
 			desired = dir.normalized() * speed
-		_track_progress(goal, dt)
+		if not waiting:
+			_track_progress(goal, dt)
 	else:
 		_progress_anchor = Vector3.INF
 		_progress_timer = 0.0

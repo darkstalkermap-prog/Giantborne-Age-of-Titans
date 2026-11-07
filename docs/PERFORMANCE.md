@@ -746,6 +746,23 @@ The gate's searches within the path-query budget (`docs/systems/P24b.md`, "M7 ga
 desktop side: the reviewer's world walk at stage 4 past the Raiders' Hollow to Brannock (headless)
 went from `cpu_tick_ms` max 36.1 to 10.4-14.0 ms (two runs) and p99 7.4 to 5.6-5.7 ms.
 
+### The M7 polish (lane B): civilians within the path-query budget
+
+A town's folk fleeing at once (`docs/systems/P24b.md`, "M7 polish"): Brannock turned hostile with a
+stage-4 giant on its street and all eight villagers deciding in the same tick (the worst their
+decision phases allow), headless, the slow suite's measurement
+(`tools/gd.sh --headless --path . --fixed-fps 60 res://tests/run_tests.tscn -- --no-user-settings
+--no-audio --slow --filter=test_m7_polish_world`):
+
+| | Path queries in the worst tick | Ticks over the budget of 8 | The actors' phase, worst tick | Every villager in shelter |
+| --- | --- | --- | --- | --- |
+| Before (two runs) | 16 counted by NavQuery + 8 agent paths it did not count (24) | 1 | 7.9-8.4 ms | yes, the last after 16.7 s |
+| After (three runs) | 8, the agent paths counted | 0 | 3.6-8.4 ms (noisy: the container) | yes, the last after 16.7 s |
+
+With the villagers' natural decision phases the same flight spent at most 6 counted queries a tick
+before the change. P37's Millford raid and P39's performance capture re-measure with raiders in the
+town.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
