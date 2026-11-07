@@ -24,7 +24,7 @@
 	"uses_weapon": false,
 	"crit_eligible": false,
 	"hit_shape": "body_sweep",
-	"motion": {"phase": "active", "speed_mps": 24.0, "max_distance_m": 12.0, "stop_on_wall": true},
+	"motion": {"phase": "active", "speed_mps": 26.0, "max_distance_m": 12.0, "stop_on_wall": true},
 	"movement": {"windup_speed_mult": 0.0, "active_speed_mult": 0.0, "recovery_speed_mult": 0.2},
 	"knockback_impulse": 8.0,
 	"knockback_max_speed": 12.0,

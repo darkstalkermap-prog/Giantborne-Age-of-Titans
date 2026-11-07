@@ -8,6 +8,12 @@ extends TestSuite
 const LIBRARY_ORDER := ["ability.heavy_footfall", "ability.sweeping_blow", "ability.stone_skin",
 	"ability.crushing_grip", "ability.boulder_hurl", "ability.runic_bolt", "ability.ancestral_mend",
 	"ability.thunder_roar", "ability.titan_surge"]
+## P31 (plan M6-M9 §5.12): the library goes on after the Valley's eight and the ultimate with the
+## evolutions and the talent and ancestry abilities (Rampart Grip is P32's).
+const P31_LIBRARY_TAIL := ["ability.titan_stomp", "ability.earthquake", "ability.crag_hurl",
+	"ability.formation_sweep", "ability.titan_roar", "ability.shoulder_charge", "ability.cleave_of_ages",
+	"ability.bulwark", "ability.stonewall_stance", "ability.rune_lance", "ability.primal_regrowth",
+	"ability.storm_call", "ability.bedrock_ward", "ability.thunderhead", "ability.wild_surge"]
 
 
 func _validate(rec: Dictionary) -> Dictionary:
@@ -127,7 +133,10 @@ func test_derived_preview_follows_the_attribute_rules() -> void:
 
 func test_newly_met_abilities_and_auto_slots() -> void:
 	var lib := Progression.library()
-	assert_eq(lib, LIBRARY_ORDER, "the library lists the eight abilities and the ultimate in slot order")
+	assert_eq(lib.slice(0, LIBRARY_ORDER.size()), LIBRARY_ORDER,
+		"the library lists the eight abilities and the ultimate in slot order")
+	assert_eq(lib.slice(LIBRARY_ORDER.size()), P31_LIBRARY_TAIL,
+		"P31: then the evolutions and the talent and ancestry abilities")
 	var known := ["ability.heavy_footfall", "ability.sweeping_blow"]
 	assert_eq(Progression.newly_met(lib, known, 1, 1), PackedStringArray(), "nothing new at level 1")
 	assert_eq(Progression.newly_met(lib, known, 2, 1), PackedStringArray(["ability.stone_skin", "ability.crushing_grip"]),
@@ -260,12 +269,20 @@ func test_loot_table_refs_on_enemies_props_and_the_weapon_cost_rule() -> void:
 func test_progression_post_pass() -> void:
 	assert_eq(Progression.data_errors(GameData.records, GameData.record_paths), PackedStringArray(),
 		"the shipped data passes the progression post-pass")
+	# P31 (plan M6-M9 §2.11) lifts the one-step rule: refits form chains (base -> reinforced ->
+	# titanforged), which never loop and never need an iron forge after a titan one.
 	var records := GameData.records.duplicate()
-	var chained: Dictionary = (records["weapon.club_reinforced"] as Dictionary).duplicate(true)
-	chained["upgrade"] = {"to": "weapon.hammer_reinforced", "cost": [{"item": "item.iron_ingot", "count": 2}]}
-	records["weapon.club_reinforced"] = chained
-	assert_true("\n".join(Progression.data_errors(records)).contains("has an upgrade of its own"),
-		"a reforged weapon cannot be reforged again")
+	var looped: Dictionary = (records["weapon.club_titan"] as Dictionary).duplicate(true)
+	looped["upgrade"] = {"to": "weapon.club", "cost": [{"item": "item.iron_ingot", "count": 2}], "forge_tier": "titan"}
+	records["weapon.club_titan"] = looped
+	assert_true("\n".join(Progression.data_errors(records)).contains("its refit chain comes back to"),
+		"a refit chain never loops")
+	records = GameData.records.duplicate()
+	var backwards: Dictionary = (records["weapon.club_titan"] as Dictionary).duplicate(true)
+	backwards["upgrade"] = {"to": "weapon.hammer_titan", "cost": [{"item": "item.iron_ingot", "count": 2}]}
+	records["weapon.club_titan"] = backwards
+	assert_true("\n".join(Progression.data_errors(records)).contains("needs a titan forge before an iron one"),
+		"a chain never steps down from a titan forge to an iron one")
 	records = GameData.records.duplicate()
 	var shrunk: Dictionary = (records["weapon.club_reinforced"] as Dictionary).duplicate(true)
 	shrunk["fit_max_stage"] = 1

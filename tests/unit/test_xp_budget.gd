@@ -94,12 +94,17 @@ func _growth_level(stage: int) -> int:
 
 
 ## The highest unlock_level of the progression's ability library (the last abilities, L4).
+## The highest unlock level among the Valley's library abilities. P31 (plan M6-M9 §5.12) adds the
+## open world's to the library: the stage 4-6 evolutions and the talent and ancestry abilities, which
+## a Valley budget never reaches, so only the abilities of stages 1-3 that no talent or ancestry
+## grants count here.
 func _last_ability_level() -> int:
 	var top := 1
 	for id: Variant in Progression.library():
 		var a := GameData.get_action(str(id))
-		if a != null:
-			top = maxi(top, int(GameData.get_record(str(id)).get("unlock_level", 1)))
+		var rec := GameData.get_record(str(id))
+		if a != null and int(rec.get("unlock_stage", 1)) <= 3 and str(rec.get("granted_by", "")) == "":
+			top = maxi(top, int(rec.get("unlock_level", 1)))
 	return top
 
 

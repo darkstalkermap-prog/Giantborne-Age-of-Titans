@@ -59,6 +59,7 @@ func _init(p_actor: Node3D, p_entity: CombatEntity, p_controller: CombatControll
 	## @anchor P30
 	register_shape("band_pulse", _run_band_pulse)   # P30: a formation's brace (see the P30 shapes below)
 	## @anchor P31
+	_p31_setup()   # P31: line_pulse, the titanforged perks on the weapon arc, the casts' effects (below)
 	## @anchor P32
 	## @anchor P34
 
@@ -154,7 +155,7 @@ func pulse_radius(a: ActionDef) -> float:
 	if str(a.param("radius_from", "fixed")) == "melee_reach":
 		var reach := _melee_reach()
 		if reach > 0.0:
-			return reach
+			return reach * float(a.param("radius_scale", 1.0))   # P31: Titan Stomp 0.9, Formation Sweep 1.2
 	var by_stage: Variant = a.param("radius_by_stage_m")
 	if typeof(by_stage) == TYPE_ARRAY and not (by_stage as Array).is_empty():
 		var list: Array = by_stage
@@ -378,3 +379,257 @@ func band_of(a: ActionDef) -> Dictionary:
 	var fwd := Vector3(-sin(yaw), 0.0, -cos(yaw))
 	return {"center": actor.global_position + fwd * (depth * 0.5), "near": actor.global_position,
 		"half_width": 1.5, "depth": depth, "yaw": yaw}
+
+
+# --------------------------------------------------------------------------- P31 shapes and casts
+# Set up at the P31 anchor of _init (plan M6-M9 §2.11, §5.12): Earthquake's line_pulse; the weapon
+# arc of a titanforged weapon with a perk (the plain P02 sweep otherwise); and the effects a cast
+# brings when it enters ACTIVE (fury, a heal sized by the maximum health, cleared slows) or ends its
+# active phase (the titanforged maul's shockwave).
+
+## Earthquake's line of this action instance: {"instance", "origin" (the feet when the strike began),
+## "yaw"} - the crack runs where the giant faced at its first active tick.
+var _p31_line := {}
+## The swing instance whose pierce (the titanforged sword) already struck its second target.
+var _p31_pierced_instance := -1
+
+
+func _p31_setup() -> void:
+	register_shape("line_pulse", _run_line_pulse)
+	register_shape("weapon_arc", _p31_run_weapon_arc)
+	if controller != null:
+		controller.phase_entered.connect(_p31_on_phase_entered)
+
+
+## The `count` pulse centres of a line_pulse action `a` struck from `origin` facing `yaw` (on the
+## ground: origin's height), from line.start_m to line.length_m ahead.
+static func line_pulse_points(a: ActionDef, origin: Vector3, yaw: float) -> PackedVector3Array:
+	var line: Dictionary = a.param("line", {}) if a != null else {}
+	var count := maxi(1, int(line.get("count", 1)))
+	var start := float(line.get("start_m", 0.0))
+	var length := float(line.get("length_m", start))
+	var fwd := Vector3(-sin(yaw), 0.0, -cos(yaw))
+	var out := PackedVector3Array()
+	for i in count:
+		var d := start if count == 1 else lerpf(start, length, float(i) / float(count - 1))
+		out.append(origin + fwd * d)
+	return out
+
+
+## The ticks between a line_pulse action's pulses (line.interval_s rounded to ticks, at least 1).
+static func line_pulse_interval(a: ActionDef) -> int:
+	var line: Dictionary = a.param("line", {}) if a != null else {}
+	return maxi(1, ActionDef.seconds_to_ticks(float(line.get("interval_s", 0.0))))
+
+
+## Earthquake (hit shape line_pulse): from the first active tick, every line_pulse_interval ticks one
+## cylinder pulse (line.radius_m, line.height_m or height_m) at the next point of the line - pulse id
+## i + 1, line of sight from the crack itself (0.8 m above it), an area effect - until line.count
+## pulses have struck. Each pulse emits area_pulse (feedback, the impact cue).
+func _run_line_pulse(a: ActionDef, tick: int) -> void:
+	if controller.is_first_active_tick() or int(_p31_line.get("instance", -1)) != controller.instance_id:
+		_p31_line = {"instance": controller.instance_id, "origin": actor.global_position, "yaw": facing_yaw()}
+	var j := controller.elapsed - a.windup_ticks
+	var interval := line_pulse_interval(a)
+	if j < 0 or j % interval != 0:
+		return
+	var points := line_pulse_points(a, _p31_line.origin, float(_p31_line.yaw))
+	var i := j / interval
+	if i >= points.size():
+		return
+	var line: Dictionary = a.param("line", {})
+	var radius := float(line.get("radius_m", 3.0))
+	var height := float(line.get("height_m", a.height_m if a.height_m > 0.0 else 4.0))
+	var point: Vector3 = points[i]
+	var space := actor.get_world_3d().direct_space_state
+	var cands := HitQueryAdapter.cylinder_pulse(space, entity, point + Vector3.UP * (height * 0.5), radius,
+		height, point + Vector3.UP * 0.8)
+	var ctx := context()
+	ctx.area_effect = true
+	HitFactory.queue(ctx, a, cands, i + 1, tick)
+	Events.area_pulse.emit(tick, entity.entity_id, a.id, point, radius)
+
+
+## The perk of the actor's weapon that changes this weapon blow's hits ({} = none): the titanforged
+## club's formation poise on Heavy blows, the sword's pierce on its listed light 3s, the axe's flat
+## penetration on every blow. The maul's shockwave comes after the swing (_p31_on_phase_entered).
+func p31_perk_for(a: ActionDef) -> Dictionary:
+	if a == null or not a.uses_weapon:
+		return {}
+	var w: Variant = actor.current_weapon() if actor.has_method("current_weapon") else {}
+	if typeof(w) != TYPE_DICTIONARY or typeof((w as Dictionary).get("perk")) != TYPE_DICTIONARY:
+		return {}
+	var perk: Dictionary = w.perk
+	match str(perk.get("kind", "")):
+		"formation_poise":
+			return perk if a.has_tag("Heavy") else {}
+		"pierce":
+			return perk if (perk.get("actions", []) as Array).has(a.id) else {}
+		"flat_penetration":
+			return perk
+	return {}
+
+
+## The weapon arc (P02's sweep) of a blow a perk changes: the same swept capsule, occlusion,
+## dedupe and clank, with the perk applied to each hit it builds; any other blow is P02's sweep.
+func _p31_run_weapon_arc(a: ActionDef, tick: int) -> void:
+	var perk := p31_perk_for(a)
+	if perk.is_empty():
+		_run_weapon_arc(a, tick)
+		return
+	var space := actor.get_world_3d().direct_space_state
+	var origin: Vector3 = actor.attack_origin_global()
+	var cur: PackedVector3Array = actor.weapon_segment_global(a, controller.active_fraction())
+	var prev := prev_segment
+	if prev.size() != 2:
+		prev = actor.weapon_segment_global(a, controller.active_fraction_prev())
+	var cands := HitQueryAdapter.sweep_capsule(space, entity, origin, prev[0], prev[1],
+		cur[0], cur[1], float(actor.weapon_hit_radius()))
+	prev_segment = cur
+	var ctx := context()
+	HitFactory.sort_candidates(cands)
+	for cand: Dictionary in cands:
+		var target: CombatEntity = cand.entity
+		if HitFactory.skip_candidate(ctx.entity, target, ctx.area_effect):
+			continue
+		if not ctx.registry.try_register(ctx.instance_id, 0, target.entity_id, a.max_hits_per_target):
+			continue
+		var e := HitFactory.build(ctx, a, cand, 0, tick)
+		p31_apply_perk(perk, e, target)
+		Sim.queue_hit(e)
+		if str(perk.get("kind", "")) == "pierce" and _p31_pierced_instance != ctx.instance_id:
+			_p31_pierce(perk, a, ctx, target, tick)
+	if emit_clank and _clanked_instance != controller.instance_id:
+		var wall := HitQueryAdapter.first_world_hit(space, origin, cur[1], [])
+		if not wall.is_empty():
+			_clanked_instance = controller.instance_id
+			Events.attack_clanked.emit(tick, entity.entity_id, controller.instance_id, wall.position)
+
+
+## Applies a perk to one built hit on `target`: formation_poise multiplies the poise of a blow on a
+## formation member (EnemyActor.formation_id); flat_penetration adds armour penetration.
+static func p31_apply_perk(perk: Dictionary, e: HitEvent, target: CombatEntity) -> void:
+	match str(perk.get("kind", "")):
+		"formation_poise":
+			if p31_in_formation(target):
+				e.poise_damage *= float(perk.get("poise_mult", 1.0))
+		"flat_penetration":
+			e.flat_penetration += float(perk.get("flat_penetration", 0.0))
+
+
+## True when `target` stands in a formation (P30: an EnemyActor whose formation_id is set).
+static func p31_in_formation(target: CombatEntity) -> bool:
+	if target == null or target.actor == null or not is_instance_valid(target.actor):
+		return false
+	var fid: Variant = target.actor.get("formation_id")
+	return typeof(fid) == TYPE_STRING and str(fid) != ""
+
+
+## The titanforged sword's pierce: the blow that struck `first` runs on into the nearest other foe
+## standing in line behind it - beyond it along the line from the attacker through it, at most
+## perk.range_m x the attacker's body scale farther, within its radius plus the weapon's of that line
+## - once per swing (pulse id 2, the same registry).
+func _p31_pierce(perk: Dictionary, a: ActionDef, ctx: AttackContext, first: CombatEntity, tick: int) -> void:
+	if first.actor == null or not is_instance_valid(first.actor):
+		return
+	var from := actor.global_position
+	var to: Vector3 = (first.actor as Node3D).global_position - from
+	to.y = 0.0
+	if to.length_squared() < 1e-6:
+		return
+	var dir := to.normalized()
+	var start := to.length()
+	var reach := float(perk.get("range_m", 1.5)) * _p31_body_scale()
+	var best: CombatEntity = null
+	var best_s := INF
+	for e: CombatEntity in Sim.entities():
+		if e == entity or e == first or not e.is_alive() or e.actor == null or not is_instance_valid(e.actor) \
+				or not CombatEntity.can_damage(entity.team, e.team):
+			continue
+		var rel: Vector3 = (e.actor as Node3D).global_position - from
+		rel.y = 0.0
+		var s := rel.dot(dir) - start
+		var side := (rel - dir * rel.dot(dir)).length()
+		if s <= 0.0 or s > reach or side > EnemyActor.entity_radius(e) + float(actor.weapon_hit_radius()):
+			continue
+		if s < best_s:
+			best_s = s
+			best = e
+	if best == null or not ctx.registry.try_register(ctx.instance_id, 2, best.entity_id, a.max_hits_per_target):
+		return
+	_p31_pierced_instance = ctx.instance_id
+	var e := HitFactory.build(ctx, a, {"entity": best, "hurtbox": null, "point": best.anchor_position(),
+		"substep": 0, "distance": start + best_s, "weak_point": false}, 2, tick)
+	Sim.queue_hit(e)
+
+
+## The actor's size relative to the stage-1 giant (its growth profile's height, else its combatant's).
+func _p31_body_scale() -> float:
+	var profile: Variant = actor.get("profile")
+	if typeof(profile) == TYPE_DICTIONARY and (profile as Dictionary).has("height_m"):
+		return float(profile.height_m) / CombatRules.REFERENCE_HEIGHT_M
+	return entity.combatant.height_m / CombatRules.REFERENCE_HEIGHT_M if entity != null else 1.0
+
+
+## A cast's own effects when it enters ACTIVE (after any self_statuses): fury_on_cast (Wild Surge),
+## heal_over_time (Primal Regrowth: the status's heal_per_tick sized so its periodic heals add up to
+## max_health_fraction of the maximum health) and clears_status_tags (the caster's statuses with
+## those tags end: slows). When a Heavy blow of a weapon with the heavy_shockwave perk (the
+## titanforged maul) leaves ACTIVE, the shockwave strikes where its head came down.
+func _p31_on_phase_entered(a: ActionDef, _instance_id: int, phase: int) -> void:
+	if a == null or entity == null:
+		return
+	if phase == ActionDef.Phase.ACTIVE:
+		_p31_cast_effects(a)
+	elif phase == ActionDef.Phase.RECOVERY and a.uses_weapon and a.has_tag("Heavy"):
+		var w: Variant = actor.current_weapon() if actor.has_method("current_weapon") else {}
+		var perk: Variant = (w as Dictionary).get("perk") if typeof(w) == TYPE_DICTIONARY else null
+		if typeof(perk) == TYPE_DICTIONARY and str(perk.get("kind", "")) == "heavy_shockwave":
+			_p31_shockwave(a, perk, Sim.tick)
+
+
+func _p31_cast_effects(a: ActionDef) -> void:
+	var fury := float(a.param("fury_on_cast", 0.0))
+	if fury > 0.0:
+		entity.combatant.pools.add_fury(fury)
+	var hot: Variant = a.param("heal_over_time")
+	if typeof(hot) == TYPE_DICTIONARY:
+		var def := GameData.get_status(str(hot.get("status", "")))
+		if def != null and def.tick_ticks > 0:
+			var heals := maxi(1, int(def.duration_ticks / def.tick_ticks))
+			var amount := float(hot.get("max_health_fraction", 0.0)) * entity.combatant.pools.health_max
+			entity.apply_status(def.id, amount / heals, -1.0, entity.entity_id)
+	var tags: Variant = a.param("clears_status_tags")
+	if typeof(tags) == TYPE_ARRAY and not (tags as Array).is_empty():
+		var statuses := entity.combatant.statuses
+		for sid in statuses.active_ids():
+			var sdef := GameData.get_status(sid)
+			if sdef == null:
+				continue
+			for t: Variant in tags:
+				if sdef.has_tag(str(t)):
+					statuses.remove(sid)
+					Events.status_expired.emit(Sim.tick, entity.entity_id, sid)
+					break
+
+
+## The titanforged maul's shockwave: a cylinder pulse of perk.radius_m on the ground under the
+## weapon's head at the end of the heavy's arc, power_mult x the heavy's power, an area effect
+## (pulse id 3; the blow's own targets are not struck twice).
+func _p31_shockwave(a: ActionDef, perk: Dictionary, tick: int) -> void:
+	var seg: PackedVector3Array = actor.weapon_segment_global(a, 1.0)
+	var at := Vector3(seg[1].x, actor.global_position.y, seg[1].z)
+	var radius := float(perk.get("radius_m", 3.0))
+	var space := actor.get_world_3d().direct_space_state
+	var cands := HitQueryAdapter.cylinder_pulse(space, entity, at + Vector3.UP * 1.5, radius, 3.0,
+		at + Vector3.UP * 0.8)
+	var wave := ActionDef.from_dict(a.params.merged({"power": a.power * float(perk.get("power_mult", 0.5)),
+		"tags": ["Melee", "AoE", "Unparryable"]}, true))
+	var ctx := context()
+	ctx.area_effect = true
+	ctx.attacker_position = at
+	for c: Dictionary in cands:
+		if controller.hit_registry.hits_for(ctx.instance_id, 0, (c.entity as CombatEntity).entity_id) > 0:
+			continue
+		HitFactory.queue(ctx, wave, [c], 3, tick)
+	Events.area_pulse.emit(tick, entity.entity_id, a.id, at, radius)

@@ -27,10 +27,11 @@ func test_moveset_for_picks_the_highest_stage_key_that_fits() -> void:
 	small.fit_max_stage = 3
 	assert_eq(PlayerEquipment.moveset_for(small, 4).light_chain, "ability.light_1", "too small for stage 4: its own moveset")
 	var missing := rec.duplicate(true)
-	missing.stage_movesets = {"4": {"light_chain": "ability.club_great_light_1", "heavy": "ability.club_great_heavy"}}
+	# P31 ships the club's great moveset, so the missing ids are ones no record will ever have.
+	missing.stage_movesets = {"4": {"light_chain": "ability.test_no_such_light", "heavy": "ability.test_no_such_heavy"}}
 	var mm := PlayerEquipment.moveset_for(missing, 4)
 	assert_eq([mm.light_chain, mm.heavy, mm.stage], ["ability.light_1", "ability.heavy_1", 0],
-		"ids with no action record fall back to the weapon's moveset (P31 ships them)")
+		"ids with no action record fall back to the weapon's moveset")
 	for id in ["weapon.club_reinforced", "weapon.sword_reinforced", "weapon.hammer_reinforced"]:
 		var r := GameData.get_record(id)
 		assert_eq(int(r.get("fit_max_stage", 0)), 6, "%s fits stage 6" % id)

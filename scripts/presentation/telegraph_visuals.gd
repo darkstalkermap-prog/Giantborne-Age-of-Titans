@@ -188,7 +188,7 @@ func _ends(rec: Dictionary) -> Array:
 		if end == Vector3.INF:
 			end = start + _forward(actor.global_rotation.y) * float(rec.length)
 		return [start, end]
-	if actor != null and not is_striking(rec) and not _p30_band(rec, actor):
+	if actor != null and not is_striking(rec) and not _p30_band(rec, actor) and not _p31_at_target(rec):
 		# Ground decals follow the actor through the windup; the strike stays where it began.
 		rec["at"] = actor.global_position
 		rec["at_yaw"] = actor.global_rotation.y
@@ -263,6 +263,7 @@ func _draw_record(actor_id: String, rec: Dictionary) -> void:
 			var filled := maxf(length * fill, 0.01)
 			fill_mi.global_transform = Transform3D(turn * Basis.from_scale(Vector3(width * 0.8,
 				DECAL_THICKNESS_M * 1.5, filled)), at + fwd * (filled * 0.5) + Vector3.UP * 0.005)
+	_p31_restyle(rec, base, fill_mi, flash)   # P31: the giant's own telegraphs (a crack, its colours)
 
 
 func _view_for(actor_id: String) -> Dictionary:
@@ -333,6 +334,93 @@ static func _p30_band(rec: Dictionary, _actor: Node3D) -> bool:
 	return a != null and a.hit_shape == "band_pulse"
 
 ## @anchor P31
+# The giant's own telegraphs (P31, plan M6-M9 §5.12): PlayerAttack announces an ability's telegraph
+# like an enemy's - Earthquake's line along its facing, Storm Call's circle on the lock target. They
+# are drawn in the giant's colours (never the threat red), a line as a jagged ground crack; a
+# telegraph whose action says `at: "target"` follows its target through the windup (the hook in
+# _ends) and stays where the strike falls.
+
+const P31_BASE_COLOR := Color(0.95, 0.70, 0.28, 0.22)
+const P31_FILL_COLOR := Color(1.0, 0.80, 0.40, 0.55)
+const P31_FLASH_COLOR := Color(1.0, 0.97, 0.80, 0.85)
+const P31_CRACK_SEGMENTS := 14
+
+var _p31_crack: ArrayMesh
+
+
+## True when `rec`'s action is telegraphed at its target (telegraph.at "target"): until the strike
+## begins the decal stands on the target (it keeps its last place once the target is gone).
+func _p31_at_target(rec: Dictionary) -> bool:
+	var a := GameData.get_action(str(rec.get("action_id", "")))
+	var t: Variant = a.param("telegraph") if a != null else null
+	if typeof(t) != TYPE_DICTIONARY or str((t as Dictionary).get("at", "actor")) != "target":
+		return false
+	var target := Sim.get_entity(str(rec.get("target_id", "")))
+	if target != null and is_instance_valid(target.actor) and target.is_alive():
+		rec["at"] = (target.actor as Node3D).global_position
+	return true
+
+
+## True when the record is the giant's own telegraph.
+static func p31_is_players(rec: Dictionary) -> bool:
+	var e := Sim.get_entity(str(rec.get("actor_id", "")))
+	return e != null and is_instance_valid(e.actor) and e.actor is GiantPlayer
+
+
+## The giant's own ground telegraphs: its colours, and a crack instead of a strip for a line.
+func _p31_restyle(rec: Dictionary, base: MeshInstance3D, fill_mi: MeshInstance3D, flash: bool) -> void:
+	if bool(rec.aim_line) or not p31_is_players(rec):
+		return
+	base.material_override = _p31_material("p31_base", P31_BASE_COLOR)
+	fill_mi.material_override = _p31_material("p31_flash", P31_FLASH_COLOR) if flash \
+		else _p31_material("p31_fill", P31_FILL_COLOR)
+	if not (str(rec.shape) in ["circle", "cone"]):
+		base.mesh = _p31_crack_mesh()
+		fill_mi.mesh = base.mesh
+
+
+func _p31_material(key: String, color: Color) -> Material:
+	if not _materials.has(key):
+		var m := StandardMaterial3D.new()
+		m.albedo_color = color
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_materials[key] = m
+	return _materials[key]
+
+
+## A flat jagged crack one unit long (local z -0.5 .. 0.5) and one unit wide at most, with a short
+## branch every few segments (scaled like the strip it replaces).
+func _p31_crack_mesh() -> ArrayMesh:
+	if _p31_crack != null:
+		return _p31_crack
+	var verts := PackedVector3Array()
+	var prev_l := Vector3.ZERO
+	var prev_r := Vector3.ZERO
+	for i in P31_CRACK_SEGMENTS + 1:
+		var f := float(i) / P31_CRACK_SEGMENTS
+		var z := 0.5 - f
+		var x := 0.22 * sin(f * 23.0) * (0.4 + 0.6 * f)
+		var half := 0.10 + 0.22 * absf(sin(f * 9.0 + 0.7))
+		var l := Vector3(x - half, 0.0, z)
+		var r := Vector3(x + half, 0.0, z)
+		if i > 0:
+			verts.append_array(PackedVector3Array([prev_l, prev_r, r, prev_l, r, l]))
+			if i % 3 == 0:
+				var side := 1.0 if i % 2 == 0 else -1.0
+				var root := Vector3(x, 0.0, z)
+				verts.append_array(PackedVector3Array([root + Vector3(0.0, 0.0, 0.03), root - Vector3(0.0, 0.0, 0.03),
+					root + Vector3(side * 0.48, 0.0, -0.05)]))
+		prev_l = l
+		prev_r = r
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	_p31_crack = ArrayMesh.new()
+	_p31_crack.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return _p31_crack
+
 
 ## @anchor P32
 

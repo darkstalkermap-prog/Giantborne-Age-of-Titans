@@ -258,6 +258,7 @@ func _move_visual(p: Projectile) -> void:
 		var dir := p.velocity.normalized()
 		basis = Basis.looking_at(dir, Vector3.UP if absf(dir.y) < 0.99 else Vector3.RIGHT) \
 			* Basis.from_scale(Vector3(p.radius, p.radius, p.radius * (2.5 if p.visual == "bolt" else 1.0)))
+	basis = _p31_visual_basis(p, basis)   # P31: the rune lance and the storm bolt fly along their path
 	mi.global_transform = Transform3D(basis, p.position)
 
 
@@ -293,6 +294,7 @@ func _make_visual(kind: String) -> MeshInstance3D:
 			ball.radial_segments = 12
 			ball.rings = 6
 			mi.mesh = ball
+	_p31_visual(mi, kind)   # P31: rune_lance, storm_bolt
 	mi.material_override = _material(kind)
 	add_child(mi)
 	return mi
@@ -461,6 +463,39 @@ func _landing_hit(p: Projectile, e: CombatEntity, info: Dictionary, tick: int) -
 # Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
 
 ## @anchor P31
+## P31 (plan M6-M9 §5.12): Rune Lance's long violet lance and Storm Call's falling lightning streak,
+## unit meshes stretched along the flight path (scaled by the projectile radius when shown).
+const P31_VISUALS := {
+	"rune_lance": {"size": Vector3(1.2, 1.2, 10.0), "albedo": Color(0.72, 0.55, 1.0), "emission": Color(0.55, 0.35, 1.0)},
+	"storm_bolt": {"size": Vector3(1.0, 1.0, 14.0), "albedo": Color(0.95, 0.97, 1.0), "emission": Color(0.75, 0.85, 1.0)},
+}
+
+
+## Gives a P31 visual kind its mesh and (once) its glowing material; other kinds are left as made.
+func _p31_visual(mi: MeshInstance3D, kind: String) -> void:
+	var spec: Dictionary = P31_VISUALS.get(kind, {})
+	if spec.is_empty():
+		return
+	var box := BoxMesh.new()
+	box.size = spec.size
+	mi.mesh = box
+	if not _materials.has(kind):
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.albedo_color = spec.albedo
+		m.emission_enabled = true
+		m.emission = spec.emission
+		_materials[kind] = m
+
+
+## A P31 visual points along the projectile's velocity (the lance flies point first; the bolt falls
+## as a streak); other kinds keep `basis`.
+func _p31_visual_basis(p: Projectile, basis: Basis) -> Basis:
+	if not P31_VISUALS.has(p.visual) or p.velocity.length_squared() < 1e-6:
+		return basis
+	var dir := p.velocity.normalized()
+	return Basis.looking_at(dir, Vector3.UP if absf(dir.y) < 0.99 else Vector3.RIGHT) * Basis.from_scale(Vector3.ONE * p.radius)
+
 
 ## @anchor P32
 
