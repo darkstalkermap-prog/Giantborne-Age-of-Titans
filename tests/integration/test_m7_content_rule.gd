@@ -70,7 +70,9 @@ func test_every_region_has_encounters_and_caches_or_cairns() -> void:
 
 
 func test_the_light_encounters_use_existing_archetypes_within_the_rules() -> void:
-	var light := _of_level("encounter")
+	# The light content of the four regions P25 ships (the Crownmarch's settlements, talkers and
+	# formation fights are P29's: tests/integration/test_crownmarch_content.gd).
+	var light := _of_level("encounter").filter(func(r: Dictionary) -> bool: return LIGHT_REGIONS.has(_region_of(_xz(r.center_m))))
 	assert_true(light.size() >= 8, "two light encounters in each of four regions (%d)" % light.size())
 	for enc: Dictionary in light:
 		var id := str(enc.id)

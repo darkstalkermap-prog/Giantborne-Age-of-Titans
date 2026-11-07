@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "encounter.crownmarch_kingsgate_scouts",
+	"type": "encounter",
+	"display_name": "Toll-rider scouts on the beacon hill",
+	"description": "P29 (plan M6-M9 §5.7, §5.10): four toll-rider soldiers and an archer holding the Kingsgate beacon's hill (faction toll_riders, hostile from the start). Clearing them (encounter.crownmarch_kingsgate_scouts.cleared) lets the giant relight the beacon (quest.world_main's beacon stage). Fought at stage 3 (world_start).",
+	"level": "level.world",
+	"center_m": [-240, 10.89, 730],
+	"activate_radius_m": 110,
+	"deactivate_radius_m": 180,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.crownmarch.scout_1", "definition": "enemy.soldier", "position_m": [-245, 10.98, 735], "yaw_deg": 0, "patrol": "", "faction": "toll_riders", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.scout_2", "definition": "enemy.soldier", "position_m": [-232, 10.8, 728], "yaw_deg": 0, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.scout_3", "definition": "enemy.soldier", "position_m": [-250, 10.77, 722], "yaw_deg": 0, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.scout_4", "definition": "enemy.soldier", "position_m": [-236, 10.73, 742], "yaw_deg": 0, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.scout_archer", "definition": "enemy.archer", "position_m": [-228, 10.65, 738], "yaw_deg": 0, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

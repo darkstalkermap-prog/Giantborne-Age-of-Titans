@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "prop.gatehouse_brannock",
+	"type": "prop",
+	"category": "structural",
+	"display_name": "Brannock's South Gatehouse",
+	"height_m": 13.0,
+	"health": 1400,
+	"armor": 30,
+	"accepted_attack_categories": ["melee", "ability", "projectile", "siege"],
+	"min_growth_stage": 4,
+	"requires_permission": "gate_breach",
+	"description": "P29 (plan M6-M9 §5.7, §5.9): the two towers of Brannock's south gate, whose gateway stays open whole or broken. Smashing them is the march oath's force path: the town turns hostile and the gate stays broken on site.",
+	"locked_message": "Brannock's gatehouse is too strong for you yet (stage 4).",
+	"xp_reward": 50,
+	"on_destroyed_flags": {"world.brannock.gate_broken": true, "faction.brannock.hostile": true},
+	"damage_stages": [
+		{"id": "intact", "at_or_below_frac": 1.0, "visual": "Intact"},
+		{"id": "broken", "at_or_below_frac": 0.0, "visual": "Broken", "removes_collision": true}
+	],
+	"debris_count": 16,
+	"debris_length_m": 18,
+	"debris_layout": "line",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

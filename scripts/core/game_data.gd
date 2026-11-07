@@ -199,6 +199,11 @@ func _post_pass() -> void:
 	errors.append_array(PlayerGrowth.profile_chain_errors(records_of_type("growth_profile"), record_paths))
 
 	## @anchor P29
+	# P29 (plan M6-M9 decision 26, §2.12, §5.9): every oath quest present (quest.oath_<x>) has a
+	# resolution that can be won as the first oath at stage 4, and every faction's reconciliation is
+	# offered by a dialogue choice (outcome reconcile_<short>) that takes its cost (OathRules).
+	errors.append_array(OathRules.first_oath_errors(records, record_paths))
+	errors.append_array(OathRules.reconcile_errors(records, record_paths))
 
 	## @anchor P30
 	# P30 (plan M6-M9 §2.10, decision 19): a formation's banner spawn is a banner and its rank and file

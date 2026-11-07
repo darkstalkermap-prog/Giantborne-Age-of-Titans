@@ -16,6 +16,9 @@ extends TestSuite
 ##   * introductions: the first critical-path encounter with a mage has no archer, the first
 ##     soldiers are the forest hunters, met at stage 1;
 ##   * the tutorial prompts and the village choice (decision 11).
+## The world's quests, dialogue and prompts (P27, P29 on) name the world's places and flags: a
+## reference resolves in the Valley's scene or in the world (WorldContent: the world's index, its
+## encounters' spawns and the flags its encounters, factions, beacons and breakable sites write).
 
 const VALLEY := "res://scenes/world/valley.tscn"
 const LAYOUT := "res://tools/data/valley_layout.json"
@@ -31,9 +34,11 @@ const PROMPTS := ["tutorial.camera", "tutorial.light", "tutorial.heavy", "tutori
 	"tutorial.block", "tutorial.dodge", "tutorial.shrine", "tutorial.soldier_guard", "tutorial.grab",
 	"tutorial.hurl", "tutorial.attributes", "tutorial.boss_charge"]
 ## The world's prompts (P27, plan M6-M9 §3.10: data/tutorial/{map,compass,fast_travel,discovery,size_gate,
-## sealed_place}.json): each waits for progress.world_entered, so none shows in a first Valley run.
+## sealed_place}.json; P29, §3.12: {world_arrival,stage4_humans,formations}.json): each waits for
+## progress.world_entered, so none shows in a first Valley run.
 const WORLD_PROMPTS := ["tutorial.map", "tutorial.compass", "tutorial.fast_travel", "tutorial.discovery",
-	"tutorial.size_gate", "tutorial.sealed_place"]
+	"tutorial.size_gate", "tutorial.sealed_place", "tutorial.world_arrival", "tutorial.stage4_humans",
+	"tutorial.formations"]
 const QUESTS := ["quest.main", "quest.tutorial", "quest.village", "quest.village_cache", "quest.village_ogre"]
 
 static var _index: Dictionary = {}
@@ -46,7 +51,7 @@ func _scene() -> Dictionary:
 	if not _index.is_empty():
 		return _index
 	var idx := {"markers": {}, "areas": {}, "props": {}, "shrines": {}, "waystones": {}, "dummies": {},
-		"patrols": {}, "arena": {}, "duplicates": []}
+		"patrols": {}, "arena": {}, "exits": {}, "duplicates": []}
 	var root := (load(VALLEY) as PackedScene).instantiate()
 	_walk(root, Transform3D.IDENTITY, idx)
 	root.free()
@@ -74,6 +79,8 @@ func _walk(n: Node, parent: Transform3D, idx: Dictionary) -> void:
 		_put(idx, "markers", m.marker_id, {"pos": xf.origin, "kind": m.kind, "faction": m.faction})
 	elif n is AreaTrigger:
 		_put(idx, "areas", (n as AreaTrigger).area_id, {"pos": xf.origin})
+	elif n is LevelExit:
+		_put(idx, "exits", (n as LevelExit).exit_id, {"pos": xf.origin})
 	elif n is PracticeDummy:
 		_put(idx, "dummies", str(n.get("entity_id")), {"pos": xf.origin})
 	elif n is BossArena:
@@ -187,6 +194,8 @@ func _written_flags() -> Dictionary:
 	w["progress.world_entered"] = true
 	w[Discovery.SEALED_COUNT_FLAG] = true
 	w[Discovery.MAP_OPENED_FLAG] = true
+	# The world's writers besides the records (P29): its encounters, factions, beacons and breakable sites.
+	w.merge(WorldContent.written_flags())
 	return w
 
 
@@ -261,7 +270,7 @@ func test_every_id_in_the_scene_is_unique_and_the_content_is_shipped() -> void:
 	var expected := PROMPTS.duplicate()
 	expected.append_array(WORLD_PROMPTS)
 	expected.sort()
-	assert_eq(prompt_ids, expected, "the 13 tutorial prompts of plan §4.5 and the world's six (P27)")
+	assert_eq(prompt_ids, expected, "the 13 tutorial prompts of plan §4.5 and the world's nine (P27, P29)")
 	for id: String in WORLD_PROMPTS:
 		assert_true((GameData.get_record(id).get("requires_flags", []) as Array).has("progress.world_entered"),
 			"%s waits for the world" % id)
@@ -281,11 +290,14 @@ func test_every_reference_resolves() -> void:
 	var scene := _scene()
 	var spawns := _spawns()
 	var known_targets := {}
-	for d: Dictionary in [scene.markers, scene.props, scene.shrines, scene.waystones, scene.areas, scene.dummies, spawns]:
+	for d: Dictionary in [scene.markers, scene.props, scene.shrines, scene.waystones, scene.areas, scene.dummies,
+			scene.exits, spawns]:
 		for id: String in d:
 			known_targets[id] = true
 	for rec: Dictionary in _valley_encounters():
 		known_targets[str(rec.id)] = true
+	var world := WorldContent.places()
+	known_targets.merge(world)
 	# Quests: markers, conditions and bot hints.
 	for rec: Dictionary in _records("quest"):
 		var conds: Array = []
@@ -293,8 +305,8 @@ func test_every_reference_resolves() -> void:
 		_conditions(rec.get("abandon_when"), conds)
 		for s: Dictionary in rec.get("stages", []):
 			var where := "%s.%s" % [rec.id, s.id]
-			if str(s.get("marker", "")) != "":
-				assert_true((scene.markers as Dictionary).has(str(s.marker)), "%s: marker %s" % [where, s.marker])
+			for m: String in Quests.stage_markers(s):
+				assert_true((scene.markers as Dictionary).has(m) or world.has(m), "%s: marker %s" % [where, m])
 			_conditions(s.get("complete_when"), conds)
 			var bot: Dictionary = s.get("bot", {})
 			if str(bot.get("target", "")) != "":
@@ -364,21 +376,27 @@ func test_every_reference_resolves() -> void:
 
 
 func _check_condition(c: Dictionary, where: String, scene: Dictionary, spawns: Dictionary) -> void:
+	var world := WorldContent.places()
 	match str(c.get("type", "")):
 		"entered":
-			assert_true((scene.areas as Dictionary).has(str(c.area)), "%s: area %s" % [where, c.area])
+			assert_true((scene.areas as Dictionary).has(str(c.area)) or world.has(str(c.area)), "%s: area %s" % [where, c.area])
 		"killed":
 			for t: Variant in c.get("targets", []):
-				assert_true(spawns.has(str(t)), "%s: kill target %s is a spawn" % [where, t])
+				assert_true(spawns.has(str(t)) or world.has(str(t)), "%s: kill target %s is a spawn" % [where, t])
 		"hits_on":
 			for t: Variant in c.get("targets", []):
-				assert_true(spawns.has(str(t)) or (scene.dummies as Dictionary).has(str(t)), "%s: hits_on target %s" % [where, t])
+				assert_true(spawns.has(str(t)) or (scene.dummies as Dictionary).has(str(t)) or world.has(str(t)),
+					"%s: hits_on target %s" % [where, t])
+		"near":
+			var target := str(c.get("target", ""))
+			assert_true((scene.markers as Dictionary).has(target) or (scene.props as Dictionary).has(target)
+				or world.has(target), "%s: near target %s" % [where, target])
 			if c.has("action_id"):
 				assert_true(GameData.get_action(str(c.action_id)) != null, "%s: action %s" % [where, c.action_id])
 		"encounter_cleared":
 			assert_eq(str(GameData.get_record(str(c.encounter)).get("type", "")), "encounter", "%s: encounter %s" % [where, c.encounter])
 		"destroyed":
-			assert_true((scene.props as Dictionary).has(str(c.world_id)), "%s: prop %s" % [where, c.world_id])
+			assert_true((scene.props as Dictionary).has(str(c.world_id)) or world.has(str(c.world_id)), "%s: prop %s" % [where, c.world_id])
 		"has_item":
 			assert_eq(str(GameData.get_record(str(c.item)).get("type", "")), "item", "%s: item %s" % [where, c.item])
 		"weapon_equipped":

@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "quest.barrow_fields",
+	"type": "quest",
+	"display_name": "Wolves in the Barrow Fields",
+	"description": "P29 (plan M6-M9 §5.7): Millford's shepherds lost sheep to the wolves denning in the Barrow Fields (Reeve Tamsin asks; the quest also starts when the giant finds the fields). Clear the pack and its barrow-warden ogre: 120 XP, the barrow-king's arm-ring (a trophy) and 1 iron.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "any", "of": [
+		{"type": "dialogue_outcome", "dialogue": "dialogue.reeve_tamsin", "outcome": "barrow"},
+		{"type": "discovered", "poi": "poi.barrow_fields"}]}],
+	"abandon_when": null,
+	"tracker_priority": 10,
+	"stages": [
+		{"id": "wolves", "objective": "Clear the wolves and their ogre warden from the Barrow Fields",
+			"complete_when": {"type": "encounter_cleared", "encounter": "encounter.crownmarch_barrow_wolves"},
+			"marker": "world.marker.barrow_fields", "xp": 120,
+			"items": [{"item": "item.barrow_arm_ring", "count": 1}, {"item": "item.iron_ingot", "count": 1}], "set_flags": {},
+			"bot": {"action": "fight_encounter", "target": "encounter.crownmarch_barrow_wolves"}}
+	],
+	"on_complete_flags": {}
+}

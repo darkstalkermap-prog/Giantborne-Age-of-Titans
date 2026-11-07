@@ -3,7 +3,7 @@
 	"id": "shrine.world_stones",
 	"type": "shrine",
 	"display_name": "Shrine of the Standing Stones",
-	"description": "The shrine inside the Standing Stones (plan M6-M9 §5.4): grows the giant to stage 6 (its two-oath condition comes with P29).",
+	"description": "The shrine inside the Standing Stones (plan M6-M9 §5.4): grows the giant to stage 6. P29: it grows the giant to stage 6 once two of the three oaths are won (decision 17).",
 	"allows_growth": true,
 	"max_stage": 6,
 	"growth_requires_flags": [],
@@ -12,5 +12,7 @@
 	"first_activation_rest": true,
 	"loadout": true,
 	"attributes": true,
-	"activation_radius_m": 14
+	"activation_radius_m": 14,
+	"growth_requires_conditions": [{"type": "count", "n": 2, "of": [{"type": "flag", "flag": "oath.march.done"}, {"type": "flag", "flag": "oath.wood.done"}, {"type": "flag", "flag": "oath.crown.done"}]}],
+	"growth_conditions_text": ["Win the oaths of two of the three powers first."]
 }

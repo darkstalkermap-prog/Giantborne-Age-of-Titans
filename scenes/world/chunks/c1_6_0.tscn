@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="3_960f4"]
 [ext_resource type="Script" path="res://scripts/world/inscription.gd" id="4_dd8c0"]
 [ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="5_2c089"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="6_acc12"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(3, 4, 3)
@@ -83,6 +84,13 @@ mesh = SubResource("ArrayMesh_2")
 [node name="Waystones" type="Node3D" parent="."]
 
 [node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="world_marker_barrow_fields" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 118, 10.202001, 188)
+script = ExtResource("6_acc12")
+marker_id = "world.marker.barrow_fields"
 
 [node name="Triggers" type="Node3D" parent="."]
 

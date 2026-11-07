@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "prop.house_town",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "House",
+	"height_m": 7.0,
+	"health": 300,
+	"armor": 10,
+	"accepted_attack_categories": ["melee", "ability", "projectile", "magic", "siege"],
+	"description": "P29 (plan M6-M9 §2.12, §5.4, decision 31): a house of a Crownmarch settlement - Brannock's eight along its main street, Millford's seven. Placed with the town's faction and the tag house (the world builder's breakable_site kind), so damaging one is an offence against the town (FactionState) and raiders can target it (P30's target provider, P37's raid). A stage-5 giant walking into one crushes it (trample_stage 5); a stage-4 giant fits the streets.",
+	"trample_stage": 5,
+	"prop_tags": ["house"],
+	"debris_count": 10,
+	"debris_length_m": 9,
+	"debris_layout": "pile",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

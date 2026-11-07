@@ -266,6 +266,7 @@ func _on_post_resolve(tick: int) -> void:
 func _evaluate(tick: int) -> void:
 	_dirty = false
 	_last_eval_tick = tick
+	_p29_follow_main()   # P29: quest.world_main leads once the Valley's main quest is done
 	var p := _player_or_null()
 	if p != null and p.entity != null and not p.entity.is_alive():
 		return
@@ -425,6 +426,7 @@ func condition_context() -> Dictionary:
 		"level_id": GameSession.current_level_id(),
 		"position": p.global_position if p != null and p.is_inside_tree() else Vector3.INF,
 		"ancestry": _ancestry_of_player(p), "ancestry_chosen": _ancestry_chosen_of_player(p),
+		"position_of": _p29_position_of,   # P29: the near condition's target positions
 	}
 
 
@@ -1135,5 +1137,49 @@ func _p27_reset() -> void:
 	tracked_quest_id = ""
 
 ## @anchor P29
+# --- the world's main thread and the near condition (P29; plan M6-M9 §2.12, §5.7) -------------------
+# Two hook lines: _evaluate() calls _p29_follow_main() first, and condition_context() gives the near
+# condition its target lookup (_p29_position_of).
+#   * The main quest: quest.main (the Valley) until quest.world_main ("The Crown Unclaimed", started
+#     by slice.completed) has started while quest.main is not active - after the crown, or after the
+#     title's skip from world_start, where quest.main never ran. Then quest.world_main is the main
+#     quest: listed and tracked first, its multi-marker `oaths` stage giving the compass its three oath
+#     leads, its end the campaign's completion checkpoint. A test that points main_quest_id at a
+#     fixture keeps it.
+#   * near {target, radius_m}: the target's position is objective_position(target) - a live marker,
+#     area or prop, else the level's world index (markers, areas, props, checkpoints, POIs, exits,
+#     encounter centres).
+
+const WORLD_MAIN_QUEST_ID := "quest.world_main"
+
+
+## Makes quest.world_main the main quest once it has started while the Valley's is not active, and
+## quest.main otherwise; a main quest a test chose is left alone.
+func _p29_follow_main() -> void:
+	if main_quest_id != MAIN_QUEST_ID and main_quest_id != WORLD_MAIN_QUEST_ID:
+		return
+	var world_state := quest_state(WORLD_MAIN_QUEST_ID) if _p29_has_world_main() else INACTIVE
+	main_quest_id = p29_main_for(quest_state(MAIN_QUEST_ID), world_state)
+
+
+## The main quest for the two main quests' states (pure): quest.world_main once it has started while
+## quest.main is not active, else quest.main.
+static func p29_main_for(valley_main_state: String, world_main_state: String) -> String:
+	if world_main_state != INACTIVE and valley_main_state != ACTIVE:
+		return WORLD_MAIN_QUEST_ID
+	return MAIN_QUEST_ID
+
+
+func _p29_has_world_main() -> bool:
+	if scope.size() > 0 and not scope.has(WORLD_MAIN_QUEST_ID):
+		return false
+	return not quest_record(WORLD_MAIN_QUEST_ID).is_empty()
+
+
+## The position of a near condition's target (QuestConditions.near): objective_position(id) - a live
+## marker, area or prop, else the level's world index; Vector3.INF when nothing knows it.
+func _p29_position_of(id: String) -> Vector3:
+	return objective_position(id)
+
 
 ## @anchor P37

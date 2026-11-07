@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="1_f30a1"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="1_acc12"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="2_f30a1"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(17.000006, 14, 1)
@@ -69,6 +70,14 @@ size = Vector3(17.000006, 14, 1)
 
 [node name="Markers" type="Node3D" parent="."]
 
+[node name="Patrol" type="Node3D" parent="Markers"]
+
+[node name="world_marker_toll_flee_e" type="Marker3D" parent="Markers/Patrol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 12.839, 76)
+script = ExtResource("1_acc12")
+marker_id = "world.marker.toll_flee_e"
+kind = 5
+
 [node name="Triggers" type="Node3D" parent="."]
 
 [node name="Exits" type="Node3D" parent="."]
@@ -79,7 +88,7 @@ size = Vector3(17.000006, 14, 1)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.533936, 7.4334025, 214.11151)
 collision_layer = 64
 collision_mask = 0
-script = ExtResource("1_f30a1")
+script = ExtResource("2_f30a1")
 gate_id = "world.gate.wend_deep"
 message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
 
@@ -139,7 +148,7 @@ shape = SubResource("BoxShape3D_13")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.442932, 7.710262, 238.58765)
 collision_layer = 64
 collision_mask = 0
-script = ExtResource("1_f30a1")
+script = ExtResource("2_f30a1")
 gate_id = "world.gate.wend_deep"
 message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
 

@@ -5,9 +5,11 @@ extends TestSuite
 ## layout name, and knows every marker, area, prop, encounter and district the quests name, and the
 ## roads; lookups, the region grid, A* routes with stage limits, the cache and build_from_scene work
 ## on indexes built in code; Quests.objective_position falls back to the index when a marker is not
-## loaded (freed with its chunk).
+## loaded (freed with its chunk). The world's quests (P29) name places of both levels: each is checked
+## in its own level's index.
 
 const VALLEY := "level.valley"
+const WORLD := "level.world"
 const TEST_LEVEL := "level.test_p20_index"
 const SHRINE_SCENE := "res://scenes/world/shrine.tscn"
 const FENCE_SCENE := "res://scenes/world/fence_wood.tscn"
@@ -32,6 +34,18 @@ func _valley() -> WorldIndex:
 	var idx := WorldIndex.for_level(VALLEY)
 	assert_true(idx != null, "level.valley names its index and the file exists")
 	return idx
+
+
+## The index of the level a quest's place `id` is in (P29: the world's quests name places of both
+## levels - a "world." id or an encounter whose record is the world's is checked in the world's index).
+func _index_of_place(id: String) -> WorldIndex:
+	var level := VALLEY
+	if id.begins_with("world."):
+		level = WORLD
+	elif GameData.has_record(id):
+		level = str(GameData.get_record(id).get("level", VALLEY))
+	var idx := WorldIndex.for_level(level)
+	return idx if idx != null else WorldIndex.new()
 
 
 ## Every condition of `c` and below it (all / any / not / count).
@@ -95,20 +109,20 @@ func test_the_valley_index_knows_every_place_the_quests_name() -> void:
 		for s: Dictionary in rec.get("stages", []):
 			for m in Quests.stage_markers(s):
 				named += 1
-				assert_true(idx.position_of(m).is_finite(), "%s/%s: marker %s" % [rec.id, s.id, m])
+				assert_true(_index_of_place(m).position_of(m).is_finite(), "%s/%s: marker %s" % [rec.id, s.id, m])
 			var conds: Array = []
 			_conditions(s.get("complete_when"), conds)
 			for c: Dictionary in conds:
 				match str(c.get("type", "")):
 					"entered":
 						named += 1
-						assert_true(idx.areas.has(str(c.area)), "%s/%s: area %s" % [rec.id, s.id, c.area])
+						assert_true(_index_of_place(str(c.area)).areas.has(str(c.area)), "%s/%s: area %s" % [rec.id, s.id, c.area])
 					"destroyed":
 						named += 1
-						assert_true(idx.props.has(str(c.world_id)), "%s/%s: prop %s" % [rec.id, s.id, c.world_id])
+						assert_true(_index_of_place(str(c.world_id)).props.has(str(c.world_id)), "%s/%s: prop %s" % [rec.id, s.id, c.world_id])
 					"encounter_cleared":
 						named += 1
-						assert_true(idx.position_of(str(c.encounter)).is_finite(), "%s/%s: encounter %s" % [rec.id, s.id, c.encounter])
+						assert_true(_index_of_place(str(c.encounter)).position_of(str(c.encounter)).is_finite(), "%s/%s: encounter %s" % [rec.id, s.id, c.encounter])
 	assert_true(named >= 30, "the quests name %d places" % named)
 	for id in GameData.ids_of_type("encounter"):
 		if str(GameData.get_record(id).get("level", "")) == VALLEY:

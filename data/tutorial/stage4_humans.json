@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.stage4_humans",
+	"type": "tutorial_prompt",
+	"description": "P29 (plan M6-M9 §5.14): what changes at stage 4 - lone humans flee, formations hold, towns meet the giant on their greens, gates can be breached.",
+	"text": "At this size lone soldiers break and run from you, and townsfolk step out of your way. Formations hold together: they lock as one target. Fortified gates and boulders now give way to your blows, and the deep Wend is only knee-deep.",
+	"trigger": {"type": "stage", "stage": 4},
+	"dismiss": {"type": "timeout", "timeout_s": 14},
+	"requires_flags": ["progress.world_entered"],
+	"min_stage": 4,
+	"priority": 11,
+	"once": true,
+	"defer_in_combat": true,
+	"sets_flag": "tutorial.stage4_humans.done"
+}

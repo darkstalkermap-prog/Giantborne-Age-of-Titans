@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "faction.aldmere",
+	"type": "faction",
+	"display_name": "Aldmere",
+	"description": "P29 (plan M6-M9 §2.12, §5.9, decision 31): the kingdom of Aldmere - its war camp, the Ballista Ridge and Fort Aldmere (members carry faction \"aldmere\"; P36 places them). Wary but at peace until the giant offends it: two offences within 30 s (a blow on its soldiers, damage to its engines) turn it hostile. Its own toll-riders are another faction (faction.toll_riders): breaking the toll fort does not void a parley with Aldmere.",
+	"flag_prefix": "faction.aldmere",
+	"initial": "neutral",
+	"offences_to_hostile": 2,
+	"offence_window_s": 30,
+	"civilians_give_way": false,
+	"give_way_m": 3.0,
+	"warn_text": "Aldmere's soldiers close ranks. Strike again and the kingdom is at war with you.",
+	"hostile_text": "Aldmere's war horns answer: the kingdom is at war with you.",
+	"stood_down_text": "Aldmere's soldiers ground their pikes.",
+	"reconciled_text": "Aldmere accepts your peace."
+}

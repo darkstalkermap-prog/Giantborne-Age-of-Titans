@@ -40,6 +40,18 @@ extends RefCounted
 ##     that is not hostile) with a living enemy (team ENEMY) within STEP_BACK_TRIGGER_M steps back
 ##     from it (EnemyActor.faction_step_back), so a fight beside the guards does not draw the giant's
 ##     blows onto them.
+##
+## P29 (plan M6-M9 §2.6, §2.12, §5.9; the W18 owner of this file):
+##   * reconciliation by dialogue: a choice whose outcome is "reconcile_<short>" (the faction record's
+##     `reconcile` talker offers it, paying its cost with take_items) calls reconcile(<short>) - every
+##     time it is chosen, so a town that turned hostile again can be reconciled again (the choice's
+##     set_flags would only write the flag once);
+##   * the respawn blocker (respawn_refusal, which each level's EncounterDirector registers with
+##     GameSession): a checkpoint is refused while a faction whose record has `respawn_guard_m` (P29's
+##     field: Brannock and Millford, 120 m) is hostile and one of its armed members - a living spawn of
+##     an enemy record in one of the level's encounters that is not cleared - stands within that
+##     distance of it, so a death at Brannock never respawns the giant at the feet of the guards that
+##     killed it (GameSession then picks the nearest visited checkpoint that is not refused).
 
 const HOOK_ORDER := 150
 const RECORD_PREFIX := "faction."
@@ -234,7 +246,10 @@ static func prop_owner(target: CombatEntity) -> String:
 static func prop_tags(target: CombatEntity) -> PackedStringArray:
 	if target == null or not is_instance_valid(target.actor):
 		return PackedStringArray()
-	for v: Variant in [target.actor.get("prop_tags"), target.actor.get_meta(&"prop_tags", null),
+	# P29: has_meta first - get_meta() with a null default still errors when the meta is missing
+	# (a faction's gatehouse carries its faction but no tags).
+	var meta: Variant = target.actor.get_meta(&"prop_tags") if target.actor.has_meta(&"prop_tags") else null
+	for v: Variant in [target.actor.get("prop_tags"), meta,
 			GameData.get_record(target.definition_id).get("prop_tags", null)]:
 		if v is Array or v is PackedStringArray:
 			return PackedStringArray(v)
@@ -310,6 +325,7 @@ func set_last_offence_tick(faction: String, tick: int) -> void:
 func _install() -> void:
 	Events.hit_resolved.connect(_on_hit_resolved)
 	Events.flag_changed.connect(_on_flag_changed)
+	Events.dialogue_outcome.connect(_on_dialogue_outcome)   # P29: reconciliation
 	Sim.add_hook(Sim.Hook.POST_RESOLVE, self, _on_post_resolve, HOOK_ORDER)
 
 
@@ -451,3 +467,74 @@ func _check_step_backs(tick: int) -> void:
 			m.faction_step_back(nearest.global_position)
 		elif nearest == null or best > STEP_BACK_RELEASE_M:
 			m.faction_step_back_clear()
+
+
+# --------------------------------------------------------------------------- P29: reconcile, respawns
+
+## A dialogue choice's outcome that reconciles a faction: "reconcile_<short>" (reconcile_brannock).
+const RECONCILE_OUTCOME_PREFIX := "reconcile_"
+## A respawn refused by a hostile faction's guards (its display name).
+const RESPAWN_REFUSED_TEXT := "%s's guards hold the ground there."
+
+
+## The faction a reconcile outcome names ("" for any other outcome, or an unknown faction).
+static func reconcile_outcome_faction(outcome: String) -> String:
+	if not outcome.begins_with(RECONCILE_OUTCOME_PREFIX):
+		return ""
+	var short := outcome.substr(RECONCILE_OUTCOME_PREFIX.length())
+	return short if not record_for(short).is_empty() else ""
+
+
+func _on_dialogue_outcome(_tick: int, _dialogue_id: String, outcome: String) -> void:
+	var faction := reconcile_outcome_faction(outcome)
+	if faction != "":
+		reconcile(faction)
+
+
+## How far (m) a hostile faction's armed members keep a respawn away (its record's respawn_guard_m;
+## 0 = the faction does not block respawns).
+static func respawn_guard_m(faction: String) -> float:
+	return maxf(0.0, float(record_for(faction).get("respawn_guard_m", 0.0)))
+
+
+## The respawn blocker (GameSession.register_respawn_blocker): why a respawn at `checkpoint_id` of the
+## save's level is refused now ("" = fine) - see the class notes.
+static func respawn_refusal(checkpoint_id: String) -> String:
+	var level_id := GameSession.save_level_id()
+	var idx := WorldIndex.for_level(level_id)
+	if idx == null or not idx.has_checkpoint(checkpoint_id):
+		return ""
+	var at := idx.position_of(checkpoint_id)
+	if not at.is_finite():
+		return ""
+	for faction in known_factions():
+		var guard_m := respawn_guard_m(faction)
+		if guard_m <= 0.0 or not is_hostile(faction):
+			continue
+		if not armed_members_near(level_id, faction, at, guard_m).is_empty():
+			return RESPAWN_REFUSED_TEXT % str(record_for(faction).get("display_name", faction.capitalize()))
+	return ""
+
+
+## The entity ids of `faction`'s armed members on `level_id` that may stand within `radius_m` of
+## `at` (horizontally, by their spawn points): spawns of enemy records in the level's encounters
+## that are not cleared and that were not killed (pure data: the members need not be loaded).
+static func armed_members_near(level_id: String, faction: String, at: Vector3, radius_m: float) -> PackedStringArray:
+	var out := PackedStringArray()
+	for enc: Dictionary in GameData.records_of_type("encounter"):
+		if str(enc.get("level", "")) != level_id:
+			continue
+		if truthy(WorldState.get_flag(QuestConditions.encounter_flag(str(enc.get("id", ""))))):
+			continue
+		for sp: Variant in enc.get("spawns", []):
+			if typeof(sp) != TYPE_DICTIONARY or str(sp.get("faction", "")) != faction:
+				continue
+			var def := GameData.get_record(str(sp.get("definition", "")))
+			if str(def.get("type", "")) != "enemy" or WorldState.is_killed(str(sp.get("entity_id", ""))):
+				continue
+			var p: Variant = sp.get("position_m")
+			if typeof(p) != TYPE_ARRAY or (p as Array).size() < 3:
+				continue
+			if Vector2(float(p[0]) - at.x, float(p[2]) - at.z).length() <= radius_m:
+				out.append(str(sp.get("entity_id", "")))
+	return out
