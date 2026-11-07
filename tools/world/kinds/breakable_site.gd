@@ -160,10 +160,10 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	root.add_child(hb)
 	var mat: Material = ctx.get("mat")
 	var intact := kit.n3("Intact")
-	intact.add_child(L.parts_node("Mesh", d.intact, mat))
+	intact.add_child(_scenery(L.parts_node("Mesh", d.intact, mat)))
 	root.add_child(intact)
 	var broken := kit.n3("Broken")
-	broken.add_child(L.parts_node("Mesh", d.broken, mat))
+	broken.add_child(_scenery(L.parts_node("Mesh", d.broken, mat)))
 	broken.visible = false
 	root.add_child(broken)
 	if bool(d.links):
@@ -179,3 +179,10 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 			link.enabled = false
 			root.add_child(link)
 	return root
+
+
+## A visual in the scenery group (saved with the scene): it fades out beyond the preset's scenery
+## distance like the other props of its chunk (TerrainChunk, LevelRoot; 220 m at low).
+static func _scenery(n: Node3D) -> Node3D:
+	n.add_to_group(TerrainChunk.SCENERY_GROUP, true)
+	return n

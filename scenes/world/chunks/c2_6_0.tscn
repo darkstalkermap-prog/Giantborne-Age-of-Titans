@@ -365,13 +365,13 @@ shape = SubResource("BoxShape3D_2")
 
 [node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_1"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_1/Intact"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_1/Intact" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_3")
 
 [node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_1"]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_1/Broken"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_1/Broken" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
 [node name="world_crownmarch_millford_house_2" type="StaticBody3D" parent="Props"]
@@ -413,13 +413,13 @@ shape = SubResource("BoxShape3D_6")
 
 [node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_2"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_2/Intact"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_2/Intact" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_7")
 
 [node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_2"]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_2/Broken"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_2/Broken" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_8")
 
 [node name="world_crownmarch_millford_house_3" type="StaticBody3D" parent="Props"]
@@ -461,13 +461,13 @@ shape = SubResource("BoxShape3D_10")
 
 [node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_3"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_3/Intact"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_3/Intact" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_11")
 
 [node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_3"]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_3/Broken"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_3/Broken" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_12")
 
 [node name="world_crownmarch_millford_house_4" type="StaticBody3D" parent="Props"]
@@ -509,13 +509,13 @@ shape = SubResource("BoxShape3D_14")
 
 [node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_4"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_4/Intact"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_4/Intact" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_15")
 
 [node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_4"]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_4/Broken"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_4/Broken" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_16")
 
 [node name="world_crownmarch_millford_house_5" type="StaticBody3D" parent="Props"]
@@ -557,13 +557,13 @@ shape = SubResource("BoxShape3D_18")
 
 [node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_5"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_5/Intact"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_5/Intact" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_19")
 
 [node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_5"]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_5/Broken"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_5/Broken" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_20")
 
 [node name="world_crownmarch_millford_house_6" type="StaticBody3D" parent="Props"]
@@ -605,13 +605,13 @@ shape = SubResource("BoxShape3D_22")
 
 [node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_6"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_6/Intact"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_6/Intact" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_23")
 
 [node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_6"]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_6/Broken"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_6/Broken" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_24")
 
 [node name="world_crownmarch_millford_house_7" type="StaticBody3D" parent="Props"]
@@ -653,13 +653,13 @@ shape = SubResource("BoxShape3D_26")
 
 [node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_7"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_7/Intact"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_7/Intact" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_27")
 
 [node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_7"]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_7/Broken"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_7/Broken" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_28")
 
 [node name="world_crownmarch_millrace_dam" type="StaticBody3D" parent="Props"]
@@ -699,13 +699,13 @@ shape = SubResource("BoxShape3D_30")
 
 [node name="Intact" type="Node3D" parent="Props/world_crownmarch_millrace_dam"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millrace_dam/Intact"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millrace_dam/Intact" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_31")
 
 [node name="Broken" type="Node3D" parent="Props/world_crownmarch_millrace_dam"]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millrace_dam/Broken"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millrace_dam/Broken" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_32")
 
 [node name="Shrines" type="Node3D" parent="."]

@@ -63,4 +63,6 @@ static func solids(el: Dictionary, _ctx: Dictionary) -> Array:
 
 
 static func build(_kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
-	return L.parts_node("Dressing", parts(el, ctx))
+	var n := L.parts_node("Dressing", parts(el, ctx))
+	n.add_to_group(TerrainChunk.SCENERY_GROUP, true)   # fades with its chunk's scenery
+	return n

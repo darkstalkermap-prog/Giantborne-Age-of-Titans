@@ -246,7 +246,10 @@ static func prop_owner(target: CombatEntity) -> String:
 static func prop_tags(target: CombatEntity) -> PackedStringArray:
 	if target == null or not is_instance_valid(target.actor):
 		return PackedStringArray()
-	for v: Variant in [target.actor.get("prop_tags"), target.actor.get_meta(&"prop_tags", null),
+	# P29: has_meta first - get_meta() with a null default still errors when the meta is missing
+	# (a faction's gatehouse carries its faction but no tags).
+	var meta: Variant = target.actor.get_meta(&"prop_tags") if target.actor.has_meta(&"prop_tags") else null
+	for v: Variant in [target.actor.get("prop_tags"), meta,
 			GameData.get_record(target.definition_id).get("prop_tags", null)]:
 		if v is Array or v is PackedStringArray:
 			return PackedStringArray(v)

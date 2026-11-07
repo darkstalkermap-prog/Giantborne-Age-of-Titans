@@ -232,13 +232,13 @@ shape = SubResource("BoxShape3D_4")
 
 [node name="Intact" type="Node3D" parent="Props/world_crownmarch_toll_gate"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_gate/Intact"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_gate/Intact" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")
 
 [node name="Broken" type="Node3D" parent="Props/world_crownmarch_toll_gate"]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_gate/Broken"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_gate/Broken" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_6")
 
 [node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_crownmarch_toll_gate"]

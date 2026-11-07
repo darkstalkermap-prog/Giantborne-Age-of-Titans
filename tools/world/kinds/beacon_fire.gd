@@ -40,5 +40,6 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	var fire := L.parts_node("Fire", flames(), ctx.get("mat"))
 	fire.position = Vector3(0, float(el.get("fire_y", 30.0)), 0)
 	fire.visible = false
+	fire.add_to_group(TerrainChunk.SCENERY_GROUP, true)   # far off, the skyline's light column shows it
 	n.add_child(fire)
 	return n

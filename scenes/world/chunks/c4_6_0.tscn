@@ -175,13 +175,13 @@ shape = SubResource("BoxShape3D_3")
 
 [node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_south_gate"]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_south_gate/Intact"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_south_gate/Intact" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
 [node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_south_gate"]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_south_gate/Broken"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_south_gate/Broken" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")
 
 [node name="world_crownmarch_brannock_giant_banner_1" type="Node3D" parent="Props"]

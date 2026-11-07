@@ -40,7 +40,7 @@ prompt = "Relight the beacon"
 radius_m = 9.0
 priority = 35
 
-[node name="Fire" type="MeshInstance3D" parent="Props/world_crownmarch_kingsgate_beacon_fire"]
+[node name="Fire" type="MeshInstance3D" parent="Props/world_crownmarch_kingsgate_beacon_fire" groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 32.5, 0)
 visible = false
 mesh = SubResource("ArrayMesh_1")
