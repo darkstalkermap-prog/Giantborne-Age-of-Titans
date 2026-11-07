@@ -6,7 +6,8 @@ extends TestSuite
 ##     builds/web_test/; the desktop presets keep them (the stress route's owner commands);
 ##   * today's test-only records live in data/test/ (and nowhere else);
 ##   * the launcher passes ?args=a,b,c to the engine;
-##   * (P23) the launcher joins a multi-part pck and resumes a suspended AudioContext on a press.
+##   * (P23) the launcher joins a multi-part pck and resumes a suspended AudioContext on a press;
+##   * (M7 release) the launcher offers an open-world start (--mode=world) that asks twice.
 
 const PRESETS := "res://export_presets.cfg"
 const LAUNCHER := "res://web/launcher.html"
@@ -114,3 +115,17 @@ func test_the_launcher_joins_pck_parts_and_resumes_the_sound() -> void:
 	assert_true(html.contains("if (ctx.state === 'suspended') ctx.resume()"), "only suspended contexts")
 	assert_true(html.contains("<b>Sound on.</b>"), "the page's notes say Sound on")
 	assert_false(html.contains("there is no sound"), "and no longer that there is none")
+
+
+## The M7 release (plan M6-M9 §6.6: "the world opens after the Valley"): beside Play, the launcher
+## starts a new game in the open world (--mode=world, GameSession's world start) on a second press,
+## since it replaces the saved game; Play and the page's ?args= are unchanged.
+func test_the_launcher_offers_the_open_world_start() -> void:
+	var html := FileAccess.get_file_as_string(LAUNCHER)
+	assert_true(html.contains("id=\"play-world\""), "a second start button")
+	assert_true(html.contains("start(['--', '--mode=world']);"), "it starts the engine with --mode=world")
+	assert_true(html.contains("if (startArgs) return startArgs;"), "through launchArgs(), which keeps ?args= otherwise")
+	assert_true(html.contains("worldTimer = setTimeout(disarmWorld, 6000);"), "the first press only arms it")
+	assert_true(html.contains("It replaces a game saved in this browser."), "the note says it replaces the saved game")
+	assert_true(html.contains("play.addEventListener('click', function () { start(); });"), "Play keeps the page's arguments")
+	assert_true(GameSession.CLI_MODES.has("world"), "GameSession knows --mode=world")

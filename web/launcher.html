@@ -66,6 +66,14 @@ h1 .sub { font-family: var(--smallcaps); font-weight: 500; font-size: clamp(1.1r
 .play:hover { transform: translateY(-1px); box-shadow: 0 0 0 9px rgba(227, 146, 63, 0.22), 0 14px 34px rgba(0, 0, 0, 0.5); }
 .play:focus-visible { outline: 3px solid var(--bone); outline-offset: 4px; }
 .gate-note { margin: 0; max-width: 44ch; font-size: 0.95rem; color: var(--bone); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+.play-alt {
+  font: 500 1rem/1.2 var(--body); color: var(--bone); background: rgba(16, 19, 16, 0.72);
+  border: 1px solid var(--moss); border-radius: 999px; padding: 0.6rem 1.3rem; cursor: pointer;
+}
+.play-alt:hover { background: rgba(26, 31, 26, 0.9); }
+.play-alt:focus-visible { outline: 3px solid var(--bone); outline-offset: 3px; }
+.play-alt.armed { border-color: var(--ember); color: var(--ember); }
+.alt-note { margin: -0.4rem 0 0; max-width: 46ch; font-size: 0.85rem; color: var(--dim); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
 .meter { width: min(22rem, 80vw); height: 8px; border-radius: 999px; background: rgba(236, 229, 211, 0.15); overflow: hidden; }
 .meter-fill { height: 100%; width: 0%; background: var(--moss); transition: width 160ms linear; }
 .status { margin: 0; min-height: 1.5em; font-family: var(--mono); font-size: 0.85rem; color: var(--bone); font-variant-numeric: tabular-nums; }
@@ -129,11 +137,14 @@ kbd {
 
 <main class="wrap">
   <header class="masthead">
-    <p class="eyebrow">Playable prototype &middot; the Valley of Broken Kings, now with sound and music &middot; build 0.6.0-m6</p>
+    <p class="eyebrow">Playable prototype &middot; the world opens after the Valley &middot; build 0.7.0-m7</p>
     <h1><span class="name">Giantborn</span><span class="sub">Age of Titans</span></h1>
-    <p class="pitch">You wake as a <strong>12-foot juvenile giant</strong> in Giant's Hollow. Cross the Valley of
-      Broken Kings: wolves and an ogre in the Old Wood, a village you can help, cow or force, a ruined fortress,
-      and the Ogre King at Kingsfall. Grow at shrines to 18 and then 26 feet along the way. About 20&ndash;30 minutes.</p>
+    <p class="pitch">You wake as a <strong>12-foot juvenile giant</strong> in Giant's Hollow. The Valley of Broken
+      Kings is your tutorial: wolves and an ogre in the Old Wood, a village you can help, cow or force, and the
+      Ogre King at Kingsfall, growing to 18 and then 26 feet at its shrines (about 20&ndash;30 minutes). Then the
+      Kings' Door opens onto <strong>the Old Kingdom</strong>, an open world of five regions, two kilometres
+      across, where you grow to 36 and 48 feet, towns react to your size, pikes and shield walls hold the
+      roads, and oaths are won by help, fear or force.</p>
   </header>
 
   <section class="stage" id="stage" aria-label="Game">
@@ -141,7 +152,9 @@ kbd {
     <canvas id="game-canvas" tabindex="0" hidden></canvas>
     <div class="gate" id="gate">
       <button class="play" id="play" type="button">Play in browser</button>
-      <p class="gate-note" id="gate-note">About 20 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
+      <p class="gate-note" id="gate-note">About 30 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
+      <button class="play-alt" id="play-world" type="button">Start in the open world</button>
+      <p class="alt-note" id="world-note">Skips the Valley: a new game on the Kingsgate shelf as the 26-foot giant who took the crown. It replaces a game saved in this browser.</p>
       <div class="meter" id="meter" hidden><div class="meter-fill" id="meter-fill"></div></div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <details class="detail" id="detail" hidden><summary>Technical details</summary><pre id="detail-text"></pre></details>
@@ -169,32 +182,36 @@ kbd {
           <tr><td>Titan Surge, when fury is full</td><td><kbd>R</kbd></td></tr>
           <tr><td>Talk, grab, pick up, use a shrine</td><td><kbd>E</kbd></td></tr>
           <tr><td>Inventory and attributes</td><td><kbd>I</kbd></td></tr>
+          <tr><td>Map / journal</td><td><kbd>M</kbd> / <kbd>J</kbd></td></tr>
+          <tr><td>Track the next quest / pin the map</td><td><kbd>T</kbd> / <kbd>P</kbd></td></tr>
           <tr><td>Pause, settings, rebind keys</td><td><kbd>Esc</kbd></td></tr>
           <tr><td>Controls in the game</td><td><kbd>H</kbd></td></tr>
         </tbody>
       </table>
-      <p class="pad">Gamepad: sticks move and look, RB light, RT heavy, LB block, B dodge, A jump, X use. Abilities are LT&nbsp;+&nbsp;A/B/X/Y and LT&nbsp;+&nbsp;d-pad, Titan Surge is LT&nbsp;+&nbsp;RT, Back opens the inventory and Start pauses.</p>
+      <p class="pad">Gamepad: sticks move and look, RB light, RT heavy, LB block, B dodge, A jump, X use. Abilities are LT&nbsp;+&nbsp;A/B/X/Y and LT&nbsp;+&nbsp;d-pad, Titan Surge is LT&nbsp;+&nbsp;RT, Back opens the inventory and Start pauses. On its own the d-pad opens the map (down) and the journal (right) and tracks the next quest (left).</p>
     </div>
 
     <div class="slab">
       <h2>What to try</h2>
       <ol class="route">
-        <li>Choose <b>New Game</b>. The quest tracker (top right) and the diamond marker show where to go next.</li>
-        <li>In Giant's Hollow, try both cameras (<kbd>V</kbd>), hit the dummies, and spar at the post to learn block, parry and dodge.</li>
-        <li>In the Old Wood, wolves circle and lunge: dodge, then punish. Stagger a soldier with a heavy attack, grab it with <kbd>E</kbd> and throw it. The ogre's strikes are slow; hit it during its recovery.</li>
-        <li>At level 3, press <kbd>E</kbd> at the Grove Shrine and grow to 18&nbsp;ft. Boulder Hurl unlocks: lock on to the watch cairn on the ledge and throw one.</li>
-        <li>At Thornwick, talk to Elder Maren with <kbd>E</kbd>. Help her, intimidate her guards, or force your way through; each choice changes your reward and the road ahead.</li>
-        <li>Break the practice gate into the ruins, then face the Ogre King at Kingsfall. Below half health it charges: make it hit a pillar, then punish.</li>
-        <li>Grow to 26&nbsp;ft, uproot a tree to use as a club, and smash the Deadfall you passed earlier.</li>
+        <li>Choose <b>New Game</b>. The quest tracker (top right) and the diamond marker show the way. In Giant's Hollow, try both cameras (<kbd>V</kbd>) and spar at the post to learn block, parry and dodge.</li>
+        <li>In the Old Wood, wolves circle and lunge: dodge, then punish. Stagger a soldier with a heavy attack, grab it with <kbd>E</kbd> and throw it.</li>
+        <li>Grow to 18&nbsp;ft at the Grove Shrine, choose how to deal with Elder Maren at Thornwick, break into the ruins and face the Ogre King at Kingsfall. Below half health it charges: make it hit a pillar, then punish.</li>
+        <li>Take the crown and walk through the Kings' Door: the Old Kingdom opens below the Kingsgate shelf. <b>Start in the open world</b> begins here.</li>
+        <li>Drive the scouts off the beacon hill and relight the Kingsgate beacon. The Kingsgate shrine then grows you to 36&nbsp;ft, and Heavy Footfall and Boulder Hurl become Titan Stomp and Crag Hurl.</li>
+        <li>Open the map (<kbd>M</kbd>): it fills in as you explore, the waystones and shrines you have visited are fast-travel points, and <kbd>P</kbd> pins a spot for the compass. The journal (<kbd>J</kbd>) lists your quests; <kbd>T</kbd> tracks the next one.</li>
+        <li>In Brannock, swear the march oath by helping its people, cowing them or breaking the gatehouse; the town remembers which. Pikes at the King's Road toll fort and a shield wall in the Raiders' Hollow brace together as you close: step out of the band drawn on the ground, then go for the banner.</li>
+        <li>Off the road: pay, cow or breach the toll; the ogre pair in the Barrow Fields; Millford's millrace; the Shepherd's Watch beacon; and back in the Valley, the sealed Citadel that only a 36-foot giant can breach. Your first oath lets the shrines of the Greywood, the Sunken Steps and Aldmere grow you to 48&nbsp;ft.</li>
         <li>Death returns you to the last shrine or waystone. Progress is saved in this browser, so <b>Continue</b> picks up where you left off. <b>Sandbox</b> is still there for practice.</li>
       </ol>
     </div>
 
     <div class="slab about">
       <h2>About this build</h2>
-      <p><b>What it is.</b> The Valley of Broken Kings slice of Giantborn: Age of Titans (Godot 4.6.3): growth to stage 3, five enemy types and an ogre boss, eight abilities plus Titan Surge, grab and throw, four weapons, quests with a village choice, and checkpoint saves.</p>
-      <p><b>Sound on.</b> The Valley has its own score, ambience and sound effects: music that follows the district and the fight, wind and birds that answer your steps, threats you can hear coming. Browsers start a page's sound only after a click or a key press, so if you hear nothing, click the game once. The volumes are in Settings, and the sound mutes while the tab is hidden.</p>
-      <p><b>What it is not yet.</b> The art is placeholder boxes. A playtest bot has finished the slice under every village choice and the balance has had a first pass, but no new player has tried it yet, so expect rough edges. The browser version runs on one thread: expect slow frames on weaker computers.</p>
+      <p><b>What it is.</b> Giantborn: Age of Titans (Godot 4.6.3): the Valley of Broken Kings as the tutorial, then the Old Kingdom, a streamed open world of five regions with a map, a compass, discovery and fast travel. Growth to 48&nbsp;ft, abilities that evolve as you grow, formations with banners, towns that react to your size, and the Crownmarch's quests and Brannock's oath.</p>
+      <p><b>Sound on.</b> The Valley, every region and every town have their own score and ambience: music that follows the place and the fight, and threats you can hear coming. Browsers start a page's sound only after a click or a key press, so if you hear nothing, click the game once. The volumes are in Settings, and the sound mutes while the tab is hidden.</p>
+      <p><b>What it is not yet.</b> The art is placeholder boxes. The Crownmarch is the one region with all its content; the other four have their landmarks, shrines, waystones, caches and first encounters. The main quest pauses after Brannock's oath, because it needs two of the three oaths. Bots have played the Valley and walked the world, but no new player has tried the world yet, so expect rough edges. The browser version runs on one thread: expect slow frames on weaker computers.</p>
+      <p><b>The next build.</b> The other two oaths and the finale, with the Greywood, the Drowned Steps, Aldmere and the Stonehold filled in; growth to 62&nbsp;ft; siege engines and cavalry; talents and ancestries; trolls, dire wolves and rival giants; three bosses; and a world that moves on its own, with wandering bands and events such as a raid on Millford.</p>
       <p><b>If something goes wrong.</b> Esc opens the pause menu, where you can load the last checkpoint or quit to the title. Settings and your saved game stay in this browser. Note what you did, what you expected and what happened.</p>
     </div>
   </section>
@@ -220,6 +237,8 @@ kbd {
   const gate = document.getElementById('gate');
   const play = document.getElementById('play');
   const gateNote = document.getElementById('gate-note');
+  const playWorld = document.getElementById('play-world');
+  const worldNote = document.getElementById('world-note');
   const meter = document.getElementById('meter');
   const meterFill = document.getElementById('meter-fill');
   const statusEl = document.getElementById('status');
@@ -358,7 +377,9 @@ kbd {
   // P23's audio check). Each comma-separated item is one argument (URL-decoded). Without a "--"
   // among them they are all the game's own arguments (OS.get_cmdline_user_args), as if typed
   // after "--"; with one, the items before it go to the engine (--fixed-fps,60,--,--mode=world).
+  let startArgs = null;
   function launchArgs() {
+    if (startArgs) return startArgs;
     let raw = null;
     try {
       raw = new URLSearchParams(window.location.search).get('args');
@@ -391,10 +412,15 @@ kbd {
     }
     play.hidden = !retryLabel;
     if (retryLabel) play.textContent = retryLabel;
+    playWorld.hidden = true;
+    worldNote.hidden = true;
   }
 
-  async function start() {
+  // engineArgs: the engine's command line for this start (the open-world start passes its own);
+  // otherwise launchArgs() reads the page's ?args=.
+  async function start(engineArgs) {
     if (running) return;
+    startArgs = Array.isArray(engineArgs) ? engineArgs : null;
     if (attempted) {
       location.reload();
       return;
@@ -417,6 +443,8 @@ kbd {
     attempted = true;
     running = true;
     play.hidden = true;
+    playWorld.hidden = true;
+    worldNote.hidden = true;
     detail.hidden = true;
     meter.hidden = false;
     setMeter(0);
@@ -462,7 +490,30 @@ kbd {
       fail('The game could not start: ' + (err && err.message ? err.message : String(err)), 'Reload and try again');
     }
   }
-  play.addEventListener('click', start);
+  play.addEventListener('click', function () { start(); });
+
+  // The open-world start (--mode=world: a new game from the world's start, past the Valley)
+  // replaces the game saved in this browser, so it asks twice: the first press arms it for a few
+  // seconds, the second starts. No browser dialog, which a framed page may not be allowed to show.
+  const WORLD_LABEL = playWorld.textContent;
+  let worldTimer = 0;
+  function disarmWorld() {
+    worldTimer = 0;
+    playWorld.classList.remove('armed');
+    playWorld.textContent = WORLD_LABEL;
+  }
+  playWorld.addEventListener('click', function () {
+    if (running) return;
+    if (!worldTimer) {
+      playWorld.classList.add('armed');
+      playWorld.textContent = 'Press again to start a new game in the open world';
+      worldTimer = setTimeout(disarmWorld, 6000);
+      return;
+    }
+    clearTimeout(worldTimer);
+    disarmWorld();
+    start(['--', '--mode=world']);
+  });
 
   // When this page is republished while someone is playing, the viewer reloads it at a quiet
   // moment. Remember that a game was running and go straight back into it.

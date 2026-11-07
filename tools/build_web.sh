@@ -79,7 +79,7 @@ OUT="${OUT:-$DEFAULT_OUT}"
 RELEASE=0
 if [ "$PRESET" = "Web" ] && [ "$OUT" = "builds/web" ] && [ -z "$PARTS" ]; then RELEASE=1; fi
 
-# The milestone's budget for the shipped index.pck (decision 8), from config/version (0.6.0-m6).
+# The milestone's budget for the shipped index.pck (decision 8), from config/version (0.7.0-m7: 21 MB).
 if [ -z "$BUDGET_MB" ]; then
 	MILESTONE="$(sed -n 's/^config\/version="[^"]*-m\([0-9]*\)"$/\1/p' project.godot | head -n 1)"
 	MILESTONE="${MILESTONE:-6}"
