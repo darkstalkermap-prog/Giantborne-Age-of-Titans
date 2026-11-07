@@ -527,8 +527,9 @@ static func p31_in_formation(target: CombatEntity) -> bool:
 
 ## The titanforged sword's pierce: the blow that struck `first` runs on into the nearest other foe
 ## standing in line behind it - beyond it along the line from the attacker through it, at most
-## perk.range_m x the attacker's body scale farther, within its radius plus the weapon's of that line
-## - once per swing (pulse id 2, the same registry).
+## perk.range_m (stage-1 metres, scaled like the weapon: _p31_perk_scale) farther, within its radius
+## plus the weapon's of that line, and not struck by the swing itself - once per swing (its hit event
+## carries pulse id 2; it is registered as the swing's own, so the sweep never strikes it again).
 func _p31_pierce(perk: Dictionary, a: ActionDef, ctx: AttackContext, first: CombatEntity, tick: int) -> void:
 	if first.actor == null or not is_instance_valid(first.actor):
 		return
@@ -539,12 +540,13 @@ func _p31_pierce(perk: Dictionary, a: ActionDef, ctx: AttackContext, first: Comb
 		return
 	var dir := to.normalized()
 	var start := to.length()
-	var reach := float(perk.get("range_m", 1.5)) * _p31_body_scale()
+	var reach := float(perk.get("range_m", 1.5)) * _p31_perk_scale()
 	var best: CombatEntity = null
 	var best_s := INF
 	for e: CombatEntity in Sim.entities():
 		if e == entity or e == first or not e.is_alive() or e.actor == null or not is_instance_valid(e.actor) \
-				or not CombatEntity.can_damage(entity.team, e.team):
+				or not CombatEntity.can_damage(entity.team, e.team) \
+				or controller.hit_registry.hits_for(ctx.instance_id, 0, e.entity_id) > 0:
 			continue
 		var rel: Vector3 = (e.actor as Node3D).global_position - from
 		rel.y = 0.0
@@ -555,7 +557,8 @@ func _p31_pierce(perk: Dictionary, a: ActionDef, ctx: AttackContext, first: Comb
 		if s < best_s:
 			best_s = s
 			best = e
-	if best == null or not ctx.registry.try_register(ctx.instance_id, 2, best.entity_id, a.max_hits_per_target):
+	# Registered as the swing's own hit (pulse 0), so the rest of the sweep never strikes it again.
+	if best == null or not ctx.registry.try_register(ctx.instance_id, 0, best.entity_id, a.max_hits_per_target):
 		return
 	_p31_pierced_instance = ctx.instance_id
 	var e := HitFactory.build(ctx, a, {"entity": best, "hurtbox": null, "point": best.anchor_position(),
@@ -563,11 +566,12 @@ func _p31_pierce(perk: Dictionary, a: ActionDef, ctx: AttackContext, first: Comb
 	Sim.queue_hit(e)
 
 
-## The actor's size relative to the stage-1 giant (its growth profile's height, else its combatant's).
-func _p31_body_scale() -> float:
-	var profile: Variant = actor.get("profile")
-	if typeof(profile) == TYPE_DICTIONARY and (profile as Dictionary).has("height_m"):
-		return float(profile.height_m) / CombatRules.REFERENCE_HEIGHT_M
+## How a perk's distances (authored for the stage-1 weapon) scale now: the weapon's own scale (the
+## giant's current_weapon_scale: x3 at stage 4, x5.17 at stage 6), else the actor's size relative to
+## the stage-1 giant.
+func _p31_perk_scale() -> float:
+	if actor.has_method("current_weapon_scale"):
+		return maxf(1.0, float(actor.call("current_weapon_scale")))
 	return entity.combatant.height_m / CombatRules.REFERENCE_HEIGHT_M if entity != null else 1.0
 
 
@@ -613,13 +617,13 @@ func _p31_cast_effects(a: ActionDef) -> void:
 					break
 
 
-## The titanforged maul's shockwave: a cylinder pulse of perk.radius_m on the ground under the
-## weapon's head at the end of the heavy's arc, power_mult x the heavy's power, an area effect
-## (pulse id 3; the blow's own targets are not struck twice).
+## The titanforged maul's shockwave: a cylinder pulse of perk.radius_m (stage-1 metres, scaled like
+## the weapon) on the ground under the weapon's head at the end of the heavy's arc, power_mult x the
+## heavy's power, an area effect (pulse id 3; the blow's own targets are not struck twice).
 func _p31_shockwave(a: ActionDef, perk: Dictionary, tick: int) -> void:
 	var seg: PackedVector3Array = actor.weapon_segment_global(a, 1.0)
 	var at := Vector3(seg[1].x, actor.global_position.y, seg[1].z)
-	var radius := float(perk.get("radius_m", 3.0))
+	var radius := p31_shockwave_radius(perk)
 	var space := actor.get_world_3d().direct_space_state
 	var cands := HitQueryAdapter.cylinder_pulse(space, entity, at + Vector3.UP * 1.5, radius, 3.0,
 		at + Vector3.UP * 0.8)
@@ -633,3 +637,8 @@ func _p31_shockwave(a: ActionDef, perk: Dictionary, tick: int) -> void:
 			continue
 		HitFactory.queue(ctx, wave, [c], 3, tick)
 	Events.area_pulse.emit(tick, entity.entity_id, a.id, at, radius)
+
+
+## The radius of the maul's shockwave now (perk.radius_m x the weapon's scale).
+func p31_shockwave_radius(perk: Dictionary) -> float:
+	return float(perk.get("radius_m", 3.0)) * _p31_perk_scale()

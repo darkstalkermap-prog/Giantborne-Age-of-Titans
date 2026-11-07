@@ -6,7 +6,10 @@ extends IntegrationSuite
 ## + 0.3 m to 0.9 x the stage's melee reach, at stages 4, 5 and 6. Real swings on the integration
 ## floor, third person, no lock (the swing's own vertical aim picks the soft target ahead); the
 ## targets are reused and put back in place before every swing, and the giant's recovery is cut short
-## (controller.recovery_scale) so the 400-odd swings fit the slow tier's budget.
+## (controller.recovery_scale) so the 400-odd swings fit the slow tier's budget. The titanforged perks in
+## real stage-4 swings: the sword's light 3 runs on into a soldier standing in line behind the one it
+## strikes; the maul's heavy shockwave strikes a soldier its swing never touches; the club's heavy deals
+## a formation member +25 % poise.
 
 const WOLF := "res://scenes/enemies/wolf.tscn"
 const WEAPONS := ["weapon.club_reinforced", "weapon.sword_reinforced", "weapon.hammer_reinforced", "weapon.axe",
@@ -107,3 +110,79 @@ func test_every_stage_4_to_6_weapon_lands_its_moveset_from_contact_to_0_9_reach(
 	assert_eq(misses, [], "every blow lands once (%d of %d missed)" % [misses.size(), swings])
 	soldier.queue_free()
 	wolf.queue_free()
+
+
+## One swing of `attack_id` at whatever stands ahead (no repositioning); the hits it made, by target.
+func _swing_at(p: GiantPlayer, attack_id: String) -> Dictionary:
+	p.camera_rig.yaw = 0.0
+	p.facing_yaw = 0.0
+	p.entity.combatant.pools.stamina = p.entity.combatant.pools.stamina_max
+	await step_ticks(2)
+	var start := hits.size()
+	var a := GameData.get_action(attack_id)
+	assert_eq(p.controller.request(&"attack", {"action_id": attack_id}), CombatController.Verdict.ACCEPT, "%s starts" % attack_id)
+	await TestWait.until(self, func() -> bool: return p.controller.state == CombatController.State.LOCOMOTION, 180)
+	var out := {}
+	for i in range(start, hits.size()):
+		var r: HitResult = hits[i]
+		if r.event.action_id == attack_id:
+			out[r.event.target_id] = (out.get(r.event.target_id, []) as Array) + [r.event]
+	return out
+
+
+func test_titanforged_perks_in_real_stage_4_swings() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0))
+	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
+	p.entity.combatant.unkillable = true
+	assert_true(bool(p.growth.debug_set_stage(4).ok), "stage 4")
+	await step_ticks(2)
+	var contact := float(p.profile.capsule_radius_m) + 0.35
+	# The sword's light 3 strikes the near soldier and runs on into the one behind it.
+	p.equipment.grant_weapon("weapon.sword_titan", true)
+	await step_ticks(1)
+	var near := spawn_soldier(Vector3(0, 0.05, -(contact + 0.3)), 0.0, "test.pierce_near")
+	var behind := spawn_soldier(Vector3(0, 0.05, -(contact + 0.3) - 4.0), 0.0, "test.pierce_behind")
+	for s: SoldierEnemy in [near, behind]:
+		s.entity.combatant.unkillable = true
+	var light3 := str(attacks_of("weapon.sword_titan", 4)[2])
+	assert_eq(light3, "ability.sword_great_light_3", "the stage-4 light 3")
+	var struck := await _swing_at(p, light3)
+	assert_eq((struck.get("test.pierce_near", []) as Array).size(), 1, "the light 3 strikes the near soldier")
+	var pierced: Array = struck.get("test.pierce_behind", [])
+	assert_eq(pierced.size(), 1, "and pierces the one behind it once (%s)" % [struck.keys()])
+	assert_true(pierced.size() == 1 and (pierced[0] as HitEvent).pulse_id == 2, "with the pierce's pulse id")
+	near.queue_free()
+	behind.queue_free()
+	await step_ticks(1)
+	# The maul's heavy: a shockwave where its head comes down strikes a soldier the swing never touches.
+	p.equipment.grant_weapon("weapon.hammer_titan", true)
+	await step_ticks(1)
+	var heavy := GameData.get_action(str(attacks_of("weapon.hammer_titan", 4).back()))
+	var tip: Vector3 = p.weapon_segment_global(heavy, 1.0)[1]
+	var radius := p.attack.runner.p31_shockwave_radius(GameData.get_record("weapon.hammer_titan").perk)
+	var aside := spawn_soldier(Vector3(tip.x + radius * 0.6, 0.05, tip.z), 0.0, "test.shockwave")
+	aside.entity.combatant.unkillable = true
+	struck = await _swing_at(p, heavy.id)
+	var waves: Array = struck.get("test.shockwave", [])
+	assert_eq(waves.size(), 1, "the shockwave (r %.1f m) strikes a soldier %.1f m from the head" % [radius, radius * 0.6])
+	assert_true(waves.size() == 1 and (waves[0] as HitEvent).pulse_id == 3, "with the shockwave's pulse id")
+	aside.queue_free()
+	await step_ticks(1)
+	# The club's heavy: +25 % poise on a formation member.
+	p.equipment.grant_weapon("weapon.club_titan", true)
+	await step_ticks(1)
+	var club_heavy := str(attacks_of("weapon.club_titan", 4).back())
+	var poise := {}
+	for ranked: bool in [false, true]:
+		var t := spawn_soldier(Vector3(0, 0.05, -(contact + 1.0)), 0.0, "test.poise_%s" % ranked)
+		t.entity.combatant.unkillable = true
+		if ranked:
+			t.formation_id = "test.formation"
+		struck = await _swing_at(p, club_heavy)
+		var on: Array = struck.get(t.entity_id, [])
+		assert_eq(on.size(), 1, "the club's heavy strikes the %s" % ("formation member" if ranked else "loner"))
+		poise[ranked] = (on[0] as HitEvent).poise_damage if on.size() == 1 else 0.0
+		t.queue_free()
+		await step_ticks(1)
+	assert_near(float(poise[true]), 1.25 * float(poise[false]), 1e-3,
+		"+25 %% poise on the formation member (%.1f vs %.1f)" % [poise[true], poise[false]])
