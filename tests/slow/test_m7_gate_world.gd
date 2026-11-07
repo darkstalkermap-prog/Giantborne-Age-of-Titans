@@ -13,7 +13,8 @@ extends IntegrationSuite
 ##     (each spent 32-34 queries in one tick, 17-27 ms, every 1-3 s: the target was out of reach and every
 ##     candidate of the front-arc and ring searches was tried, then tried again at the next decision);
 ##     and a firing-point search with nothing to find spreads its candidates over ticks, one a tick,
-##     waits while the level's budget is spent, and ends.
+##     waits while the level's budget is spent, and ends - through a ranged unit's own chain too (the
+##     front arc, then the ring), and a routed member's flight resumes after its rout point failed.
 
 const SCENE := "res://scenes/world/world.tscn"
 const FORT := "encounter.crownmarch_toll_fort"
@@ -295,3 +296,119 @@ func test_a_firing_point_search_with_nothing_to_find_spreads_over_ticks_and_ends
 			break
 	assert_true(finished and calls > 1, "the search resumed over %d ticks and ended" % calls)
 	assert_true(calls <= EnemyActor.RING_STEPS * 2 + 1, "one candidate a tick: at most %d ticks (%d)" % [EnemyActor.RING_STEPS * 2 + 1, calls])
+
+
+## The archer's own resolver chain (brain.firing_point_resolver: P22's front arc, then P09's markers
+## and ring): a front arc that ends with nothing hands over to the ring, which resumes over the next
+## ticks - the arc is not searched again meanwhile (it used to start anew at every call and overwrite
+## the ring's place, so the ring never ran and the search never ended).
+func test_a_ranged_units_chain_of_searches_goes_on_from_the_front_arc_to_the_ring_and_ends() -> void:
+	var w: WorldRoot = await _world(Vector2(-110.0, 520.0))
+	var p := w.player()
+	_stage_4(p)
+	p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+	var d := w.director()
+	for i in 20:
+		await step_ticks(30)
+		if d.spawned(RANGED[1]) != null:
+			break
+	var a := d.spawned(RANGED[1]) as EnemyActor
+	assert_true(a != null, "the Hollow's second archer is in the world")
+	if a == null:
+		return
+	a.ai_enabled = false   # the test asks it directly
+	var target := Vector3(-120.0, 2.8, 560.0)   # the camp's centre: in reach of its leash
+	var band := Vector2(0.0, 0.5)               # no snapped candidate lies in it: every one fails
+	# the giant's camera looks from the target toward the archer: the arc's candidates lie in front of it
+	p.camera_rig.yaw = TargetingRules.yaw_of(Vector3(a.global_position.x - target.x, 0.0, a.global_position.z - target.z))
+	await step_ticks(2)
+	assert_false(a.camera_view().is_empty(), "the giant's camera is there: the front arc searches first")
+	var resolver: Callable = a.brain.firing_point_resolver
+	var stages := {}
+	var calls := 0
+	var finished := false
+	var r := Vector3.ZERO
+	for i in 120:
+		await step_ticks(1)
+		if NavQuery.budget_left(w) < EnemyActor.SEARCH_CANDIDATE_QUERIES:
+			continue   # the camp's other members spent this tick's budget: the search would only wait
+		var q0 := NavQuery.queries_total
+		a.brain.nav_search_pending = false
+		r = resolver.call(a.global_position, target, band, 0.0, false)
+		calls += 1
+		var spent := NavQuery.queries_total - q0
+		assert_true(spent <= EnemyActor.SEARCH_QUERIES_PER_TICK, "call %d spent %d queries" % [calls, spent])
+		var key := String(a.get("_search_key"))
+		if key != "":
+			stages[key] = int(stages.get(key, 0)) + 1
+		if not a.brain.nav_search_pending or calls >= 60:
+			finished = not a.brain.nav_search_pending
+			break
+	print("    the chain ended after %d calls (%s): %s" % [calls, str(stages), str(r)])
+	assert_true(stages.has("firing_arc"), "the front arc searched over several ticks (%s)" % str(stages))
+	assert_true(stages.has("firing_ring"), "then the ring did (%s)" % str(stages))
+	assert_true(finished, "and the search ended (%d calls)" % calls)
+	assert_eq(r, Vector3.INF, "with nothing in the band: no firing point (it holds, and waits FIRING_REPICK_S)")
+	var arc_steps := int(floor(float((a.call("_tactics") as Dictionary).get("front_arc_deg", 0.0)) / EnemyActor.RING_STEP_DEG))
+	assert_true(calls <= arc_steps * 2 + 1 + EnemyActor.RING_STEPS * 2 + 1,
+		"one candidate a tick: at most every arc and ring candidate once (%d calls)" % calls)
+
+
+## P30's flee resolver chains the formation's rout point and P04's flight: once the rout point found
+## nowhere reachable and the flight it fell back to stopped for the budget, the flight resumes where it
+## stopped - the rout point is not asked again meanwhile (it would spend the tick's share first, every
+## time, and the flight would never go on). A real navmesh always gives the rout point a reachable
+## point (a partial path's end), so the test marks its failure (_p30_rout_failed) itself.
+func test_a_routed_members_flight_resumes_after_its_rout_point_failed() -> void:
+	var w: WorldRoot = await _world(Vector2(60.0, 640.0))
+	var p := w.player()
+	_stage_4(p)
+	p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+	await _go(w, Vector2(-84.9 + 16.0, 568.0))   # before the shield wall's front rank
+	var d := w.director()
+	var f: Formation = null
+	for i in 30:
+		await step_ticks(30)
+		f = d.formation(Formation.formation_id(RAIDERS, "shields"))
+		if f != null and not f.all_members().is_empty():
+			break
+	assert_true(f != null and not f.all_members().is_empty(), "the Raiders' shield wall formed")
+	if f == null or f.all_members().is_empty():
+		return
+	var m := f.all_members()[0] as EnemyActor
+	m.ai_enabled = false   # the test asks it directly
+	m.brain.call("_rout")
+	assert_eq(m.brain.state, EnemyBrain.AIState.ROUTED, "the member routed")
+	var threat := p.global_position
+	var dist := float(m.brain.ai.get("flee_distance_m", 12.0))
+	# its flight stops at its first candidate: the level's budget all but spent this tick
+	await step_ticks(1)
+	NavQuery.spend(w, NavQuery.budget_left(w) - 2)
+	m.brain.nav_search_pending = false
+	assert_eq(m.call("_resolve_flee_point", m.global_position, threat, dist), Vector3.INF, "no flight point yet")
+	assert_true(m.brain.nav_search_pending and m.search_resuming("flee"), "the flight waits for the budget")
+	m.set("_p30_rout_failed", true)   # the rout point it fell back from found nowhere reachable
+	var calls := 0
+	var finished := false
+	var keys := {}
+	for i in 60:
+		await step_ticks(1)
+		if NavQuery.budget_left(w) < EnemyActor.SEARCH_CANDIDATE_QUERIES:
+			continue   # the fight spent this tick's budget: the flight would only wait
+		var q0 := NavQuery.queries_total
+		m.brain.nav_search_pending = false
+		var r: Vector3 = m.brain.flee_resolver.call(m.global_position, threat, dist)
+		calls += 1
+		assert_true(NavQuery.queries_total - q0 <= EnemyActor.SEARCH_QUERIES_PER_TICK, "call %d spent %d queries" % [calls, NavQuery.queries_total - q0])
+		var key := String(m.get("_search_key"))
+		keys[key] = true
+		if calls == 1:
+			assert_true(key != "flee" or int(m.get("_search_next")) > 0, "the flight went on from where it stopped (%s at %d)" % [key, int(m.get("_search_next"))])
+		if not m.brain.nav_search_pending:
+			finished = true
+			print("    the routed member's flight ended after %d call(s): %s" % [calls, str(r)])
+			break
+		if calls >= 30:
+			break
+	assert_false(keys.has("rout"), "the rout point was not asked again while the flight resumed (%s)" % str(keys))
+	assert_true(finished and calls <= EnemyActor.FLEE_MAX_STEPS * 2 + 1, "and the flight ended within its candidates (%d calls)" % calls)

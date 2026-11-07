@@ -2078,9 +2078,11 @@ func _p22_ready() -> void:
 		var p09_resolver := brain.firing_point_resolver
 		brain.firing_point_resolver = func(my_position: Vector3, target_pos: Vector3, band: Vector2,
 				spread_m: float, far: bool) -> Vector3:
-			var p := front_arc_firing_point(my_position, target_pos, band, spread_m, far)
-			if p != Vector3.INF or brain.nav_search_pending:
-				return p   # M7 gate: a front-arc search waiting for the budget resumes next decision
+			# M7 gate: while P09's ring search resumes, the front arc already ended with nothing
+			if not search_resuming("firing_ring"):
+				var p := front_arc_firing_point(my_position, target_pos, band, spread_m, far)
+				if p != Vector3.INF or brain.nav_search_pending:
+					return p   # M7 gate: a front-arc search waiting for the budget resumes next decision
 			return p09_resolver.call(my_position, target_pos, band, spread_m, far)
 		brain.view_probe = camera_view
 		brain.shot_preparer = prepare_shot
@@ -2419,9 +2421,16 @@ var search_queries_peak := 0
 ## The candidate search `key` ("firing_arc", "firing_ring", "flee", "rout") starts from: the one it
 ## stopped at when asked again soon, else the first.
 func _search_start(key: String) -> int:
-	if _search_key == key and Sim.tick - _search_stop_tick <= SEARCH_RESUME_TICKS:
-		return _search_next
-	return 0
+	return _search_next if search_resuming(key) else 0
+
+
+## True while search `key` waits to resume (it stopped for the budget at most SEARCH_RESUME_TICKS
+## ago). A resolver that chains searches skips the stages before it meanwhile: they ended without a
+## point in this round, and searching them again would spend the tick's share and overwrite where
+## `key` stopped, so it would never end (P22's front arc before P09's ring; P30's rout point before
+## P04's flight, see _p30_rout_failed).
+func search_resuming(key: String) -> bool:
+	return _search_key == key and Sim.tick - _search_stop_tick <= SEARCH_RESUME_TICKS
 
 
 ## True when one more candidate fits this tick: always without nav_query settings; in a streamed
@@ -2542,6 +2551,10 @@ var _p30_extents := {}   # entity id -> Vector3 (half extents of its hurtboxes i
 ## M7 gate: the band a running band_pulse strikes, taken when its windup began - the band its
 ## telegraph shows ({"instance": the action's instance id, "band": the band}; {} when none).
 var _p30_frozen_band := {}
+## M7 gate: the rout point's last try found nowhere reachable, so the flee resolver fell back to P04's
+## flight; while that search resumes for the budget (search_resuming("flee")) the rout point is not
+## tried again - it would spend the tick's share before the flight's next candidate every time.
+var _p30_rout_failed := false
 
 
 func _p30_ready() -> void:
@@ -2552,9 +2565,10 @@ func _p30_ready() -> void:
 	brain.formation_joiner = _p30_try_join
 	var p04_flee := brain.flee_resolver
 	brain.flee_resolver = func(from: Vector3, threat: Vector3, distance: float) -> Vector3:
-		var p := _p30_rout_point(from, threat)
-		if p != Vector3.INF or brain.nav_search_pending:
-			return p   # M7 gate: a rout point waiting for the budget is asked for again next decision
+		if not (_p30_rout_failed and search_resuming("flee")):   # M7 gate: see _p30_rout_failed
+			var p := _p30_rout_point(from, threat)
+			if p != Vector3.INF or brain.nav_search_pending:
+				return p   # M7 gate: a rout point waiting for the budget is asked for again next decision
 		return p04_flee.call(from, threat, distance) if p04_flee.is_valid() else Vector3.INF
 	brain.routed.connect(_p30_on_routed)
 	var rally: Variant = record.get("rally")
@@ -2748,6 +2762,7 @@ func _p30_on_routed() -> void:
 ## flee point or fan point of its slot (Formation.rout_point), made reachable on its navigation
 ## layer. Vector3.INF for anyone else (P04's flight applies).
 func _p30_rout_point(from: Vector3, threat: Vector3) -> Vector3:
+	_p30_rout_failed = false
 	var f := formation if formation != null else _p30_last_formation
 	if f == null or brain == null or brain.state != EnemyBrain.AIState.ROUTED:
 		return Vector3.INF
@@ -2762,7 +2777,8 @@ func _p30_rout_point(from: Vector3, threat: Vector3) -> Vector3:
 		var q0 := NavQuery.queries_total
 		var r := _reachable_point(level, from, NavQuery.closest_point(level, p, layers), layers)
 		_search_spend(q0)
-		return r if r != Vector3.INF else Vector3.INF
+		_p30_rout_failed = r == Vector3.INF
+		return r
 	return Vector3(p.x, from.y, p.z)
 
 

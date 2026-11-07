@@ -744,7 +744,7 @@ engine's own frames sat at their 133 ms cap.
 
 The gate's searches within the path-query budget (`docs/systems/P24b.md`, "M7 gate") are on the
 desktop side: the reviewer's world walk at stage 4 past the Raiders' Hollow to Brannock (headless)
-went from `cpu_tick_ms` max 36.1 to 11.2 ms and p99 7.4 to 5.2 ms.
+went from `cpu_tick_ms` max 36.1 to 10.4-14.0 ms (two runs) and p99 7.4 to 5.6-5.7 ms.
 
 ## Reference PC results (owner: NOT RUN)
 
