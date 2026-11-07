@@ -4,7 +4,8 @@ extends IntegrationSuite
 ## level.test_p27_b) and to the Valley's index. The map's Travel (MapScreen.travel_selected,
 ## Events.travel_requested with "fast_travel") is refused with GameSession's reason, which the panel
 ## shows: a stone not visited, a max_stage below the giant's stage, requires_flags that do not hold,
-## an aware enemy within 40 m, a place that is no waystone or shrine; and goes otherwise - a
+## an aware enemy within 40 m, a place that is no waystone or shrine, a stone a respawn blocker
+## refuses (M7 gate: hostile guards near it - judged in the destination's level); and goes otherwise - a
 ## checkpoint at the destination, a reload, and the next level start puts the giant there - the open
 ## map never holding it back. A pad: A on a visited stone puts the focus on Travel, A again goes.
 
@@ -123,3 +124,40 @@ func test_travel_here_to_the_other_level_and_to_the_valley() -> void:
 	assert_true(bool(r.ok), "travel to the Valley (%s)" % r)
 	assert_eq([GameSession.level_id, GameSession.respawn_id], ["level.valley", "valley.shrine.hollow"], "to its shrine")
 	assert_eq(GameSession.scene_reloads.back(), "fast_travel", "a reload into the Valley")
+
+
+## M7 gate: arriving by fast travel is a respawn there, so a stone a registered respawn blocker refuses
+## (P29: a hostile town's guards near it) is refused at the map with the blocker's reason - Travel off,
+## the reason on the panel, no reload - and the blocker judges the destination's level, not the one
+## the giant stands in. (The stone used to be offered; the reload then woke the giant silently at the
+## stone it had left.)
+func test_a_stone_a_respawn_blocker_refuses_is_refused_with_its_reason() -> void:
+	for id: String in ["test.p27.cp_start", "test.p27.cp_far"]:
+		WorldState.set_flag(GameSession.VISITED_PREFIX + id, true)
+	var held := "Test guards hold the ground there."
+	var blocker := func(id: String) -> String:
+		return held if id == "test.p27.cp_far" and GameSession.respawn_blocker_level() == LEVEL_B else ""
+	GameSession.register_respawn_blocker(blocker)
+	var map := stack.open("map", {"level": Fx.LEVEL}) as MapScreen
+	var reloads := GameSession.scene_reloads.size()
+	assert_true(map.select("test.p27.cp_far"), "the far stone of this level")
+	assert_eq(map.travel_refusal_for("test.p27.cp_far"), "", "this level's far stone is not refused: the blocker judges level B")
+	(GameSession.progress.levels_visited as Array).append(LEVEL_B)
+	assert_true(map.show_level(LEVEL_B), "the other level's map")
+	assert_true(map.select("test.p27.cp_far"), "its far stone")
+	assert_eq(map.travel_refusal_for("test.p27.cp_far"), held, "refused with the blocker's reason, judged in level B")
+	assert_true(map.travel_button.disabled, "Travel is off")
+	assert_eq(map.travel_selected(), {"ok": false, "message": held}, "Travel is refused with the reason")
+	assert_true(map.panel_text().contains(held), "which the panel shows (%s)" % map.panel_text())
+	assert_eq(GameSession.travel_to(LEVEL_B, "test.p27.cp_far", "fast_travel"), {"ok": false, "message": held},
+		"travel_to refuses it too")
+	assert_eq(GameSession.scene_reloads.size(), reloads, "no reload")
+	assert_eq(GameSession.respawn_blocker_level(), Fx.LEVEL, "afterwards the blockers judge the save's level again")
+	stack.close_all()
+	assert_eq(GameSession.travel_refusal(LEVEL_B, "test.p27.cp_far", "exit"), "", "an exit is a door, not a respawn: not refused")
+	GameSession.unregister_respawn_blocker(blocker)
+	map = stack.open("map", {"level": LEVEL_B}) as MapScreen
+	assert_true(map.select("test.p27.cp_far"), "level B's far stone again")
+	assert_eq(map.travel_refusal_for("test.p27.cp_far"), "", "without the blocker it goes")
+	assert_true(bool(map.travel_selected().ok), "and travels")
+	assert_eq([GameSession.level_id, GameSession.respawn_id], [LEVEL_B, "test.p27.cp_far"], "to the stone")

@@ -7,18 +7,27 @@ extends IntegrationSuite
 ##     the director leashed the front rank the moment it advanced; the director leaves a member of
 ##     an intact formation to its formation and leashes the members of a broken one like any other;
 ##     and an advancing formation stops inside its brace distance and braces, never in the half
-##     metre outside it (where it used to stand "formed" before a still giant).
+##     metre outside it (where it used to stand "formed" before a still giant);
+##   * fast travel and the respawn blockers: Brannock's waystone, while the town is hostile and its
+##     guards stand near it, is refused to fast travel with the guards' reason - from the world and
+##     from the Valley (the blockers judge the destination's level) - and a load whose respawn a
+##     blocker moves says why and where the giant wakes (HUD and last_load_message), never silently.
+##     (test_fast_travel has the map's half on its stub levels.)
 
 const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
 const DIRECTOR_LEVEL := "res://scenes/test/director_test.tscn"
 const LEASH_ENC := "encounter.m7gate_leash_wall"
 const LEASH_CENTER := Vector3(-30, 0, 30)
 const LEASH_M := 15.0
+const WORLD := "level.world"
+const BRANNOCK_CP := "world.cp.brannock"
+const KINGS_ROAD_CP := "world.cp.kings_road"
 
 
 func after_each() -> void:
 	for f in Formation.live():
 		f.dissolve()
+	FactionState.reset_for_tests()
 	await super()
 
 
@@ -195,3 +204,46 @@ func test_an_advancing_formation_stops_inside_its_brace_distance_and_braces() ->
 	assert_true(f.front_gap(p.global_position) <= f.brace_m, "inside its brace distance (%.2f m)" % f.front_gap(p.global_position))
 	assert_true(f.front_gap(p.global_position) > f.brace_m - Formation.ADVANCE_SLACK_M - 0.3,
 		"and no deeper than the slack (%.2f m)" % f.front_gap(p.global_position))
+
+
+# --------------------------------------------------------------------------- fast travel and the respawn blockers
+
+func test_a_hostile_brannocks_waystone_is_refused_to_fast_travel_and_a_moved_respawn_says_why() -> void:
+	FactionState.reset_for_tests()
+	GameSession.start_world_for_tests(KINGS_ROAD_CP)
+	GameSession.level_id = WORLD
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	GameSession.on_level_ready(world, p)
+	assert_eq(GameSession.respawn_id, KINGS_ROAD_CP, "the giant starts at the King's Road waystone")
+	var blocker := func(id: String) -> String: return FactionState.respawn_refusal(id)
+	GameSession.register_respawn_blocker(blocker)
+	for id: String in [BRANNOCK_CP, KINGS_ROAD_CP]:
+		WorldState.set_flag(GameSession.VISITED_PREFIX + id, true)
+	assert_eq(GameSession.travel_refusal(WORLD, BRANNOCK_CP, "fast_travel"), "", "at peace Brannock's stone is open")
+	WorldState.set_flag(FactionState.flag_id("brannock", "hostile"), true)   # the town sworn by force
+	var held := "Brannock's guards hold the ground there."
+	assert_eq(GameSession.respawn_blocker(BRANNOCK_CP), held, "hostile: its guards refuse a respawn there")
+	assert_eq(GameSession.travel_refusal(WORLD, BRANNOCK_CP, "fast_travel"), held,
+		"and fast travel there is refused with their reason (it was offered, and the reload woke the giant at the King's Road)")
+	assert_eq(GameSession.travel_to(WORLD, BRANNOCK_CP, "fast_travel"), {"ok": false, "message": held}, "travel_to refuses it")
+	assert_eq(GameSession.travel_refusal(WORLD, KINGS_ROAD_CP, "fast_travel"), "", "the King's Road stays open")
+	# from the Valley the guards are judged in the world, the destination's level
+	GameSession.level_id = "level.valley"
+	assert_eq(GameSession.respawn_blocker_level(), "level.valley", "standing in the Valley")
+	assert_eq(GameSession.travel_refusal(WORLD, BRANNOCK_CP, "fast_travel"), held, "refused from the Valley too")
+	GameSession.level_id = WORLD
+	# a load whose respawn the guards refuse wakes the giant elsewhere and says so
+	var lines: Array[String] = []
+	var on_message := func(text: String, _kind: String) -> void: lines.append(text)
+	Events.hud_message.connect(on_message)
+	assert_true(bool(GameSession.travel_to(WORLD, BRANNOCK_CP, "debug").ok), "a debug travel (no fast-travel rule) to the stone")
+	GameSession.last_load_message = ""
+	GameSession.on_level_ready(world, p)
+	Events.hud_message.disconnect(on_message)
+	assert_eq(GameSession.respawn_id, KINGS_ROAD_CP, "the load wakes the giant at the nearest visited open stone")
+	var where := GameSession.checkpoint_display_name(KINGS_ROAD_CP, WORLD)
+	assert_true(where != "", "which has a name (%s)" % where)
+	var expected := "%s You wake at the %s." % [held, where]
+	assert_true(lines.has(expected), "the HUD says why and where (%s)" % [lines])
+	assert_eq(GameSession.last_load_message, expected, "and so does last_load_message")
+	GameSession.unregister_respawn_blocker(blocker)

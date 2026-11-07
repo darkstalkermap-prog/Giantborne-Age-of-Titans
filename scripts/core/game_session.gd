@@ -38,12 +38,14 @@ extends Node
 ##     destination and whose respawn is the destination's checkpoint, emits level_leaving and
 ##     reloads main.tscn. It is refused with a reason: the checkpoint blockers (an exit ignores
 ##     aware enemies; fast travel ignores the map screen it comes from), a destination whose index
-##     max_stage is below the giant's stage, and for fast travel a checkpoint not yet visited or
-##     whose requires_flags do not hold.
+##     max_stage is below the giant's stage, and for fast travel a checkpoint not yet visited, whose
+##     requires_flags do not hold, or (M7 gate) whose respawn blockers refuse it - arriving is a
+##     respawn there.
 ##   * respawn_transform(id): the checkpoint's node when it is loaded, else its world index entry
 ##     (WorldIndex), so a respawn in a streamed-out chunk still lands. respawn_checkpoint(): the
 ##     saved respawn unless a blocker refuses it (built in: its index max_stage below the stage;
-##     registered: register_respawn_blocker), else the nearest visited, unblocked checkpoint.
+##     registered: register_respawn_blocker), else the nearest visited, unblocked checkpoint; a
+##     load that moves the respawn so says why and where on the HUD (M7 gate).
 ##   * activated_this_visit / mark_activated: shrines and waystones activate once per level visit
 ##     (a load of a level is a visit), not once per node.
 ##   * level_entered(tick, level, reason) once the level is ready (its is_ready() when it has one,
@@ -159,6 +161,9 @@ var _start_override := ""
 var _visit_activated: Dictionary = {}
 ## Callable(checkpoint_id: String) -> String, "" = fine (register_respawn_blocker).
 var _respawn_blockers: Array[Callable] = []
+## The level whose checkpoint the respawn blockers judge while respawn_blocker() asks them for
+## another level than the save's (a fast travel's destination); "" = the save's level.
+var _blocker_level := ""
 ## The level_entered waiting for its level and the samples: {"level": WeakRef, "level_id",
 ## "reason", "frames"}; {} when none waits.
 var _entering: Dictionary = {}
@@ -646,6 +651,7 @@ func on_level_ready(level: Node, player: GiantPlayer) -> void:
 		else:
 			var allowed := respawn_checkpoint()
 			if allowed != respawn_id and allowed != "":
+				_note_respawn_moved(respawn_id, allowed)
 				respawn_id = allowed
 			var t := respawn_transform(respawn_id)
 			if t.origin.is_finite():
@@ -736,20 +742,48 @@ func respawn_checkpoint() -> String:
 
 
 ## Why a respawn at `checkpoint_id` is refused ("" = it is fine): its index max_stage below the
-## character's stage (built in), else the first registered blocker's reason.
-func respawn_blocker(checkpoint_id: String) -> String:
-	var idx := WorldIndex.for_level(save_level_id())
+## character's stage (built in), else the first registered blocker's reason. The checkpoint is the
+## save's level's, or `p_level_id`'s when given (a fast travel's destination: the registered blockers
+## judge that level meanwhile - respawn_blocker_level()).
+func respawn_blocker(checkpoint_id: String, p_level_id := "") -> String:
+	var lv := p_level_id if p_level_id != "" else save_level_id()
+	var idx := WorldIndex.for_level(lv)
 	if idx != null and idx.has_checkpoint(checkpoint_id) and idx.max_stage_of(checkpoint_id) < current_stage():
 		return NARROW_PATHS
+	var previous := _blocker_level
+	_blocker_level = lv
+	var why := ""
 	for i in range(_respawn_blockers.size() - 1, -1, -1):
 		var b: Callable = _respawn_blockers[i]
 		if not b.is_valid():
 			_respawn_blockers.remove_at(i)
 			continue
-		var why := str(b.call(checkpoint_id))
+		why = str(b.call(checkpoint_id))
 		if why != "":
-			return why
-	return ""
+			break
+	_blocker_level = previous
+	return why
+
+
+## The level whose checkpoint a registered respawn blocker is asked about: the save's level, or the
+## level respawn_blocker() was given (a fast travel's destination). Blockers read it instead of
+## save_level_id() (FactionState.respawn_refusal).
+func respawn_blocker_level() -> String:
+	return _blocker_level if _blocker_level != "" else save_level_id()
+
+
+## M7 gate: a load whose saved respawn a blocker refused moves the giant to `to_id` (on_level_ready)
+## and says so - why and where it wakes - on the HUD and in last_load_message, never silently.
+func _note_respawn_moved(from_id: String, to_id: String) -> void:
+	var why := respawn_blocker(from_id)
+	var where := checkpoint_display_name(to_id)
+	if where == "":
+		where = "another resting place"
+	elif not where.begins_with("The "):
+		where = "the " + where
+	var line := "%s You wake at %s." % [why if why != "" else "You cannot wake there now.", where]
+	last_load_message = _join_message(last_load_message, line)
+	Events.hud_message.emit(line, "warn")
 
 
 ## Adds a respawn blocker: Callable(checkpoint_id: String) -> String (a reason, "" = fine). P29
@@ -930,6 +964,12 @@ func travel_refusal(p_level_id: String, checkpoint_id: String, reason: String) -
 		for f: Variant in entry.get("requires_flags", PackedStringArray()):
 			if not QuestConditions.truthy(WorldState.get_flag(str(f))):
 				return NOT_OPEN
+		# M7 gate: arriving is a respawn there, so a stone its respawn blockers refuse (hostile
+		# guards near it, P29) is refused here with their reason - the map shows it and keeps Travel
+		# off - instead of a reload that silently woke the giant at another stone.
+		var held := respawn_blocker(checkpoint_id, p_level_id)
+		if held != "":
+			return held
 	return ""
 
 
@@ -1536,6 +1576,7 @@ func reset_for_tests() -> void:
 	_start_override = ""
 	_visit_activated.clear()
 	_respawn_blockers.clear()
+	_blocker_level = ""
 	_entering = {}
 	_stop_polling_entered()
 	SaveSlots.path_override = TEST_SAVE_PATH

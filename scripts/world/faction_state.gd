@@ -498,9 +498,10 @@ static func respawn_guard_m(faction: String) -> float:
 
 
 ## The respawn blocker (GameSession.register_respawn_blocker): why a respawn at `checkpoint_id` of the
-## save's level is refused now ("" = fine) - see the class notes.
+## level the session asks about (GameSession.respawn_blocker_level(): the save's level, or a fast
+## travel's destination) is refused now ("" = fine) - see the class notes.
 static func respawn_refusal(checkpoint_id: String) -> String:
-	var level_id := GameSession.save_level_id()
+	var level_id := GameSession.respawn_blocker_level()
 	var idx := WorldIndex.for_level(level_id)
 	if idx == null or not idx.has_checkpoint(checkpoint_id):
 		return ""
