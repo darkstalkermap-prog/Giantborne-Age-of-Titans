@@ -204,6 +204,8 @@ static func library(rec: Dictionary = {}) -> Array:
 
 ## The abilities of `lib` (in its order) a character of `level` and growth `stage` meets and does
 ## not know yet: unlock_level <= level and unlock_stage <= stage (ActionDefs from GameData).
+## P31: abilities granted by a talent or an ancestry (granted_by) are learned only through their
+## grant, never met; evolutions are met like any other (their unlock_stage, at their unlock_level).
 static func newly_met(lib: Array, known: Array, level: int, stage: int) -> PackedStringArray:
 	var out := PackedStringArray()
 	for id_v: Variant in lib:
@@ -211,17 +213,85 @@ static func newly_met(lib: Array, known: Array, level: int, stage: int) -> Packe
 		if id == "" or known.has(id) or out.has(id):
 			continue
 		var def := GameData.get_action(id)
-		if def == null or not LEARNABLE_KINDS.has(def.kind):
+		if def == null or not LEARNABLE_KINDS.has(def.kind) or granted_by(id) != "":
 			continue
 		if def.unlock_level <= level and def.unlock_stage <= stage:
 			out.append(id)
 	return out
 
 
+# --------------------------------------------------------------------------- evolutions (P31)
+
+## The ability `id` evolves from ("" when it is no evolution).
+static func base_of(id: String) -> String:
+	var def := GameData.get_action(id)
+	return str(def.param("evolves_from", "")) if def != null else ""
+
+
+## The first ability of `id`'s evolution chain (Earthquake -> Titan Stomp -> Heavy Footfall): the
+## one whose slot the whole chain shares. `id` itself when it evolves from nothing.
+static func root_of(id: String) -> String:
+	var cur := id
+	var guard := 0
+	while guard < 16:
+		var base := base_of(cur)
+		if base == "" or GameData.get_action(base) == null:
+			return cur
+		cur = base
+		guard += 1
+	return cur
+
+
+## "talent", "ancestry" or "" (granted_by of the action record).
+static func granted_by(id: String) -> String:
+	var def := GameData.get_action(id)
+	return str(def.param("granted_by", "")) if def != null else ""
+
+
+## The known abilities that evolve from `base` (direct evolutions only), in `known` order.
+static func evolutions_known(base: String, known: Array) -> PackedStringArray:
+	var out := PackedStringArray()
+	for id_v: Variant in known:
+		if base != "" and base_of(str(id_v)) == base:
+			out.append(str(id_v))
+	return out
+
+
+## The library's evolutions a character of `level` at growth `stage` meets and does not know yet,
+## in the order they must be learned (by unlock_stage, then library order), so that a chain grown
+## through in one step evolves link by link (Footfall -> Titan Stomp -> Earthquake). `extra` adds
+## ids met the same way that are not in the library (a growth profile's unlocks).
+static func evolutions_met(lib: Array, known: Array, level: int, stage: int, extra: Array = []) -> PackedStringArray:
+	var ids: Array = lib.duplicate()
+	for id_v: Variant in extra:
+		if not ids.has(id_v):
+			ids.append(id_v)
+	var found: Array = []
+	for i in ids.size():
+		var id := str(ids[i])
+		if id == "" or known.has(id) or base_of(id) == "":
+			continue
+		var def := GameData.get_action(id)
+		if def == null or not LEARNABLE_KINDS.has(def.kind) or def.unlock_level > level or def.unlock_stage > stage:
+			continue
+		found.append([def.unlock_stage, i, id])
+	found.sort()
+	var out := PackedStringArray()
+	for f: Array in found:
+		if not out.has(str(f[2])):
+			out.append(str(f[2]))
+	return out
+
+
 ## The slot an ability belongs in (plan §4.7): "ultimate" for an ultimate; otherwise slot_N, N its
 ## position among the library's non-ultimate abilities (Footfall 1, Sweep 2, Stone Skin 3, Grip 4,
 ## Boulder Hurl 5, Runic Bolt 6, Mend 7, Roar 8); "" when it is not in the library (or beyond 8).
+## P31: an evolution belongs in the slot of its chain's first ability (Titan Stomp and Earthquake in
+## Footfall's slot 1).
 static func preferred_slot(id: String, lib: Array) -> String:
+	var root := root_of(id)
+	if root != id:
+		return preferred_slot(root, lib)
 	var def := GameData.get_action(id)
 	if def != null and def.kind == "ultimate":
 		return "ultimate"
@@ -269,8 +339,10 @@ static func slot_key_label(slot_key: String) -> String:
 
 ## Cross-record checks of the progression data (GameData post-pass, P12 anchor):
 ##   * every ability_library entry is an action of kind ability or ultimate;
-##   * every weapon upgrade fits at least as high as its source (PlayerEquipment.upgrade_problems)
-##     and is one step: the upgraded weapon has no upgrade of its own (the slice has one upgrade).
+##   * every weapon upgrade fits at least as high as its source (PlayerEquipment.upgrade_problems);
+##   * P31 (decision 24): refits form chains (base -> reinforced -> titanforged): the M2-M5 rule
+##     that an upgraded weapon has no upgrade of its own is lifted; a chain never comes back to a
+##     weapon it passed (refit_chain_errors).
 static func data_errors(records: Dictionary, record_paths: Dictionary = {}) -> PackedStringArray:
 	var out := PackedStringArray()
 	var rec: Dictionary = records.get(RECORD_ID, {})
@@ -284,17 +356,114 @@ static func data_errors(records: Dictionary, record_paths: Dictionary = {}) -> P
 				out.append("%s (%s): ability_library entry '%s' is a %s action, not an ability or ultimate" % [
 					record_paths.get(RECORD_ID, "?"), RECORD_ID, str(id_v), str(a.get("kind", ""))])
 	out.append_array(PlayerEquipment.upgrade_problems(records))
+	out.append_array(refit_chain_errors(records, record_paths))
+	return out
+
+
+## P31 (decision 24): every refit chain ends - following upgrade.to from any weapon never comes back
+## to a weapon already passed - and its forge tiers never step back (iron steps, then titan steps).
+static func refit_chain_errors(records: Dictionary, record_paths: Dictionary = {}) -> PackedStringArray:
+	var out := PackedStringArray()
 	var ids := records.keys()
 	ids.sort()
 	for id: Variant in ids:
 		var w: Dictionary = records[id]
 		if str(w.get("type", "")) != "weapon" or typeof(w.get("upgrade")) != TYPE_DICTIONARY:
 			continue
-		var to_id := str((w.upgrade as Dictionary).get("to", ""))
-		var to: Dictionary = records.get(to_id, {})
-		if str(to.get("type", "")) == "weapon" and typeof(to.get("upgrade")) == TYPE_DICTIONARY:
-			out.append("%s (%s): upgrade.to %s has an upgrade of its own (the forge reforges a weapon once)" % [
-				record_paths.get(id, "?"), id, to_id])
+		var seen := [str(id)]
+		var cur: Dictionary = w
+		var tier_rank := 0
+		while typeof(cur.get("upgrade")) == TYPE_DICTIONARY:
+			var step: Dictionary = cur.upgrade
+			var rank := FORGE_TIER_RANK.get(str(step.get("forge_tier", "iron")), 0) as int
+			if rank < tier_rank:
+				out.append("%s (%s): its refit chain needs a titan forge before an iron one (at %s)" % [
+					record_paths.get(id, "?"), id, str(cur.get("id", ""))])
+				break
+			tier_rank = rank
+			var to_id := str(step.get("to", ""))
+			if seen.has(to_id):
+				out.append("%s (%s): its refit chain comes back to %s" % [record_paths.get(id, "?"), id, to_id])
+				break
+			seen.append(to_id)
+			cur = records.get(to_id, {})
+			if str(cur.get("type", "")) != "weapon":
+				break   # a missing or mistyped reference is a validation error already
+	return out
+
+
+## The rank of a forge tier: an iron forge (0) reinforces; a titan forge (1) also titanforges.
+const FORGE_TIER_RANK := {"iron": 0, "titan": 1}
+
+
+## P31 (GameData post-pass, anchor P31; plan M6-M9 §2.11): every evolution evolves from an existing
+## ability or ultimate of its own kind, at a later growth stage, through a chain that ends (no
+## ability evolves back into itself); an evolution in the library has its chain's first ability in
+## the library too, so that the two share one slot (preferred_slot follows the chain).
+static func evolution_errors(records: Dictionary, record_paths: Dictionary = {}) -> PackedStringArray:
+	var out := PackedStringArray()
+	var lib: Array = (records.get(RECORD_ID, {}) as Dictionary).get("ability_library", [])
+	var ids := records.keys()
+	ids.sort()
+	for id: Variant in ids:
+		var a: Dictionary = records[id]
+		if str(a.get("type", "")) != "action" or str(a.get("evolves_from", "")) == "":
+			continue
+		var ctx := "%s (%s)" % [record_paths.get(id, "?"), id]
+		var base_id := str(a.evolves_from)
+		var base: Dictionary = records.get(base_id, {})
+		if str(base.get("type", "")) != "action":
+			continue   # a missing or mistyped reference is a validation error already
+		if not LEARNABLE_KINDS.has(str(base.get("kind", ""))) or str(base.get("kind", "")) != str(a.get("kind", "")):
+			out.append("%s: evolves_from %s, a %s action (an evolution replaces an %s of its own kind)" % [
+				ctx, base_id, str(base.get("kind", "")), str(a.get("kind", ""))])
+		if int(a.get("unlock_stage", 1)) <= int(base.get("unlock_stage", 1)):
+			out.append("%s: unlock_stage %d is not above its base %s's (%d): an evolution comes with a later stage" % [
+				ctx, int(a.get("unlock_stage", 1)), base_id, int(base.get("unlock_stage", 1))])
+		var seen := [str(id)]
+		var cur := base_id
+		var root := str(id)
+		while cur != "":
+			if seen.has(cur):
+				out.append("%s: its evolution chain comes back to %s" % [ctx, cur])
+				break
+			seen.append(cur)
+			root = cur
+			cur = str((records.get(cur, {}) as Dictionary).get("evolves_from", ""))
+		if lib.has(id) and not lib.has(root):
+			out.append("%s: in the ability library without its chain's first ability %s (they share a slot)" % [ctx, root])
+	return out
+
+
+## P31 (GameData post-pass, anchor P31; decision 24): every weapon the giant can carry past stage 3
+## - a weapon with a moveset (light_chain) that grows with the giant and fits stage 4 or more -
+## swings a stage 4-6 moveset: a stage_movesets entry at stage 4 or below whose light_chain and heavy
+## are actions, unless the weapon is a stage 4-6 weapon itself (required_stage 4 or more: its own
+## moveset is its stage moveset, the great pine).
+static func stage_moveset_errors(records: Dictionary, record_paths: Dictionary = {}) -> PackedStringArray:
+	var out := PackedStringArray()
+	var ids := records.keys()
+	ids.sort()
+	for id: Variant in ids:
+		var w: Dictionary = records[id]
+		if str(w.get("type", "")) != "weapon" or str(w.get("light_chain", "")) == "" \
+				or not bool(w.get("scales_with_growth", true)) or int(w.get("fit_max_stage", 10)) < 4 \
+				or int(w.get("required_stage", 1)) >= 4:
+			continue
+		var sets: Variant = w.get("stage_movesets")
+		var ok := false
+		if typeof(sets) == TYPE_DICTIONARY:
+			for key: Variant in sets:
+				var entry: Variant = sets[key]
+				if not str(key).is_valid_int() or int(str(key)) > 4 or typeof(entry) != TYPE_DICTIONARY:
+					continue
+				var light: Dictionary = records.get(str(entry.get("light_chain", "")), {})
+				var heavy: Dictionary = records.get(str(entry.get("heavy", "")), {})
+				if str(light.get("type", "")) == "action" and str(heavy.get("type", "")) == "action":
+					ok = true
+		if not ok:
+			out.append("%s (%s): it fits stage %d but names no stage 4-6 moveset (stage_movesets {\"4\": {\"light_chain\", \"heavy\"}} of existing actions)" % [
+				record_paths.get(id, "?"), id, int(w.get("fit_max_stage", 10))])
 	return out
 
 

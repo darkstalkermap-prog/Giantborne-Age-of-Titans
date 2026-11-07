@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "weapon.tree_pine",
+	"type": "weapon",
+	"family": "tree",
+	"display_name": "Uprooted Great Pine",
+	"damage_multiplier": 1.5,
+	"length_m": 3.6,
+	"hit_radius_m": 0.4,
+	"description": "One of the Greywood's great pines, torn from the ground by a giant of stage 4 or more: it grows with you to stage 6.",
+	"scales_with_growth": true,
+	"fit_max_stage": 6,
+	"required_stage": 4,
+	"required_permission": "tree_weapon",
+	"tags": ["TreeWeapon"],
+	"visual_shape": "pine",
+	"light_chain": "ability.pine_light_1",
+	"heavy": "ability.pine_heavy"
+}

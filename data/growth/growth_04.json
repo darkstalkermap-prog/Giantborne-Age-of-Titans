@@ -41,5 +41,5 @@
 	"footstep_shake": 0.18,
 	"interaction_permissions": ["grab_small", "throw_boulder", "tree_weapon", "gate_breach", "trample"],
 	"target_rules": {"formation_lock": true},
-	"unlocks": []
+	"unlocks": ["ability.titan_stomp", "ability.crag_hurl"]
 }

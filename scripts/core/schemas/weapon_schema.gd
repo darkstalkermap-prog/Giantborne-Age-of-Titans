@@ -46,6 +46,27 @@ static func fields() -> Dictionary:
 	f.merge({"stage_movesets": {"t": "dict"}})
 
 	## @anchor P31
+	# P31 (plan M6-M9 §2.11, §5.12, decision 24): the axe and the great pine have meshes of their own;
+	# a refit step names the forge tier it needs (iron: base -> reinforced at any forge; titan:
+	# reinforced -> titanforged at a titan forge); a titanforged weapon carries one perk:
+	#   formation_poise   its Heavy blows deal poise_mult x poise to formation members (the club)
+	#   pierce            the light 3 of `actions` also strikes the next foe in line within range_m
+	#                     beyond the one it hit (the sword)
+	#   heavy_shockwave   its heavies end in a radius_m shockwave (power_mult x the heavy) where the
+	#                     head lands (the hammer)
+	# (range_m and radius_m are stage-1 metres: they grow with the weapon's scale, x3 at stage 4.)
+	#   flat_penetration  its blows ignore that much more armour (the axe)
+	(f.visual_shape.enum as Array).append_array(["axe", "pine"])
+	(f.upgrade.fields as Dictionary)["forge_tier"] = U.str_field(false, DataValidator.FORGE_TIERS)
+	f.merge({"perk": {"t": "dict", "fields": {
+		"kind": U.str_field(true, ["formation_poise", "pierce", "heavy_shockwave", "flat_penetration"]),
+		"text": U.str_field(),
+		"poise_mult": U.pos(),
+		"actions": U.ref_array("action"),
+		"range_m": U.pos(),
+		"radius_m": U.pos(),
+		"power_mult": U.pos(),
+		"flat_penetration": U.num(0.0)}}})
 
 	## @anchor P32
 
@@ -100,6 +121,12 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 					U.check_id_string(p26_set[p26_slot], "%s.%s" % [p26_ctx, p26_slot], out)
 
 	## @anchor P31
+	var p31_perk: Variant = d.get("perk")
+	if typeof(p31_perk) == TYPE_DICTIONARY:
+		var p31_needs: Array = {"formation_poise": ["poise_mult"], "pierce": ["actions", "range_m"],
+			"heavy_shockwave": ["radius_m", "power_mult"], "flat_penetration": ["flat_penetration"]}.get(
+			str(p31_perk.get("kind", "")), [])
+		U.require(p31_perk, p31_needs, ctx + ".perk", out, "a %s perk" % str(p31_perk.get("kind", "")))
 
 	## @anchor P32
 

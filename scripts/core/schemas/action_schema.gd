@@ -176,6 +176,52 @@ static func fields() -> Dictionary:
 	f.merge({"range_by_stage_m": {"t": "array", "items": "number"}})
 
 	## @anchor P31
+	# P31 (plan M6-M9 §2.11, §5.12): stage evolutions, talent and ancestry abilities, Earthquake's
+	# line of pulses, Storm Call's strike from above its target, and the casts' own effects.
+	f.merge({
+		# The ability this one evolves from: learned on reaching its unlock_stage (at or above its
+		# unlock_level), it takes the base's slot and its place in the known list; the base stays
+		# known (listed, no longer slotted). Cooldowns stay per id.
+		"evolves_from": U.ref("action"),
+		# Where an ability comes from: "talent" or "ancestry" abilities are learned only through
+		# their grant (P33), never by a level-up or a growth.
+		"granted_by": U.str_field(false, ["", "talent", "ancestry"]),
+		# A multiplier on radius_from "melee_reach" (Titan Stomp 0.9, Formation Sweep 1.2).
+		"radius_scale": U.pos(),
+		# hit_shape "line_pulse" (Earthquake): `count` cylinder pulses of `radius_m` along the
+		# facing, the first `start_m` ahead and the last `length_m` ahead, `interval_s` apart from
+		# the first active tick (rounded to ticks), each its own pulse id (1..count).
+		"line": {"t": "dict", "fields": {
+			"count": U.int_field(1, 32, true),
+			"length_m": U.pos(true),
+			"start_m": U.num(0.0),
+			"interval_s": U.num(0.0),
+			"radius_m": U.pos(true),
+			"height_m": U.pos()}},
+		# Fury the caster gains when the cast enters ACTIVE (Wild Surge +30).
+		"fury_on_cast": U.num(0.0),
+		# A heal over time sized by the caster's maximum health (Primal Regrowth: 20 % over 6 s):
+		# `status` (heal_per_tick is its magnitude key) gets max_health_fraction x the maximum,
+		# spread over its periodic ticks.
+		"heal_over_time": {"t": "dict", "fields": {
+			"status": U.ref("status_effect", true),
+			"max_health_fraction": {"t": "number", "gt": 0.0, "max": 1.0, "req": true}}},
+		# The caster's statuses with any of these tags end when the cast enters ACTIVE (Primal
+		# Regrowth clears slows).
+		"clears_status_tags": U.enum_array(DataValidator.STATUS_TAGS),
+		# A fixed-length stagger on every target of these archetypes the action hits (Thunderhead:
+		# 1.5 s on humans); an empty list = every target.
+		"on_hit_stagger": {"t": "dict", "fields": {
+			"seconds": U.pos(true),
+			"archetypes": U.enum_array(DataValidator.ARCHETYPES)}},
+	})
+	# Projectiles may start above their aim point (Storm Call's bolt falls on its target) ...
+	(f.projectile.fields as Dictionary).merge({
+		"launch_from": U.str_field(false, ["actor", "above_target"]),
+		"launch_height_m": U.pos(),
+	})
+	# ... and a player's telegraph may lie at its target instead of at the caster (Storm Call).
+	(f.telegraph.fields as Dictionary)["at"] = U.str_field(false, ["actor", "target"])
 
 	## @anchor P32
 
@@ -298,6 +344,23 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			out.errors.append("%s: range_by_stage_m is for projectiles (hit_shape 'projectile')" % ctx)
 
 	## @anchor P31
+	if str(d.get("hit_shape", "")) == "line_pulse":
+		U.require(d, ["line"], ctx, out, "hit_shape 'line_pulse'")
+		var p31_line: Variant = d.get("line")
+		if typeof(p31_line) == TYPE_DICTIONARY and U.is_number(p31_line.get("length_m")) \
+				and U.is_number(p31_line.get("start_m", 0.0)) \
+				and float(p31_line.get("start_m", 0.0)) > float(p31_line.length_m):
+			out.errors.append("%s.line: start_m must not be beyond length_m" % ctx)
+	elif d.has("line"):
+		out.errors.append("%s: a 'line' block needs hit_shape 'line_pulse'" % ctx)
+	if typeof(d.get("evolves_from")) == TYPE_STRING and str(d.evolves_from) != "" \
+			and str(d.evolves_from) == str(d.get("id", "")):
+		out.errors.append("%s.evolves_from: an ability cannot evolve from itself" % ctx)
+	if d.has("radius_scale") and str(d.get("radius_from", "fixed")) != "melee_reach":
+		out.errors.append("%s: radius_scale scales radius_from 'melee_reach' only" % ctx)
+	var p31_granted := str(d.get("granted_by", ""))
+	if p31_granted != "" and str(d.get("evolves_from", "")) != "":
+		out.errors.append("%s: a %s ability is granted, not evolved (evolves_from)" % [ctx, p31_granted])
 
 	## @anchor P32
 

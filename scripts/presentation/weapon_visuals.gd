@@ -10,6 +10,12 @@ extends RefCounted
 ## wide iron head), tree (a trunk with branches and a canopy at the far end; the canopy is on render
 ## layer 2, which the camera hides in first person). A reinforced weapon (id ending in
 ## "_reinforced") gets iron bands. Presentation only.
+##
+## P31 (plan M6-M9 §5.12): axe (a long haft with a broad bearded iron head on one side and a back
+## spike) and pine (the Greywood's uprooted great pine: a tapering trunk, a root ball at the grip and
+## tiers of needles toward the far end, hidden in first person like the tree's canopy, and carried
+## raised like the tree). A titanforged weapon (id ending in "_titan") gets dark titan-iron bands with
+## a glowing rune line.
 
 const NODE_NAME := "Weapon"
 const FP_HIDDEN_LAYER := 2
@@ -23,6 +29,9 @@ const COLORS := {
 	"iron": [Color(0.32, 0.33, 0.36), 0.5, 0.5],
 	"bark": [Color(0.36, 0.26, 0.17), 0.95, 0.0],
 	"leaves": [Color(0.27, 0.43, 0.20), 0.95, 0.0],
+	"needles": [Color(0.16, 0.30, 0.17), 0.95, 0.0],   # P31: the great pine
+	"titan": [Color(0.20, 0.22, 0.27), 0.4, 0.75],     # P31: titan iron
+	"rune": [Color(0.55, 0.85, 1.0), 0.3, 0.0],        # P31: the titanforged rune line (glows)
 }
 
 static var _materials := {}
@@ -36,6 +45,9 @@ static func material(mat_name: String) -> StandardMaterial3D:
 		m.roughness = spec[1]
 		if float(spec[2]) > 0.0:
 			m.metallic = spec[2]
+		if mat_name == "rune":
+			m.emission_enabled = true
+			m.emission = spec[0]
 		_materials[mat_name] = m
 	return _materials[mat_name]
 
@@ -56,10 +68,16 @@ static func build(rec: Dictionary) -> Node3D:
 			pass
 		"club":
 			_club(root, length)
+		"axe":
+			_axe(root, length)   # P31
+		"pine":
+			_pine(root, length)   # P31
 		_:
 			_staff(root, length)
 	if is_reinforced(rec):
 		_reinforce(root, shape_of(rec), length)
+	if is_titanforged(rec):
+		_titanforge(root, shape_of(rec), length)   # P31
 	return root
 
 
@@ -84,7 +102,7 @@ static func shape_of(rec: Dictionary) -> String:
 	if shape != "":
 		return shape
 	match str(rec.get("family", "")):
-		"sword", "hammer", "tree", "bow", "staff":
+		"sword", "hammer", "tree", "bow", "staff", "axe":
 			return str(rec.family)
 	return "club"
 
@@ -95,7 +113,7 @@ static func is_reinforced(rec: Dictionary) -> bool:
 
 ## The arm's rest pose for this weapon, or Vector2.INF for the rig's own.
 static func idle_pose(rec: Dictionary) -> Vector2:
-	return TREE_IDLE_POSE if shape_of(rec) == "tree" else Vector2.INF
+	return TREE_IDLE_POSE if shape_of(rec) in ["tree", "pine"] else Vector2.INF
 
 
 ## How far the tip is from the grip in the node's own space (the meshes' extent along -Z).
@@ -217,3 +235,52 @@ static func _sphere(node_name: String, r: float, pos: Vector3, mat: String) -> M
 	mi.position = pos
 	mi.material_override = material(mat)
 	return mi
+
+
+# --------------------------------------------------------------------------- P31: axe, great pine, titanforged
+
+## True for a titanforged weapon (id ending in "_titan").
+static func is_titanforged(rec: Dictionary) -> bool:
+	return str(rec.get("id", "")).ends_with("_titan")
+
+
+## A felling axe: a haft along -Z, a broad bearded head to the right (+X) near the far end, an iron
+## cap and a back spike to the left.
+static func _axe(root: Node3D, length: float) -> void:
+	root.add_child(_cyl("Haft", 0.055, length, Vector3(0, 0, -length * 0.5), "wood", 0.065))
+	var head_z := -(length - 0.28)
+	root.add_child(_box("Cheek", Vector3(0.22, 0.12, 0.36), Vector3(0.06, 0, head_z), "iron"))
+	var blade := _box("Blade", Vector3(0.5, 0.05, 0.62), Vector3(0.38, 0, head_z + 0.04), "steel")
+	root.add_child(blade)
+	var beard := _box("Beard", Vector3(0.22, 0.05, 0.3), Vector3(0.5, 0, head_z + 0.36), "steel")
+	beard.rotation_degrees = Vector3(0, -28, 0)
+	root.add_child(beard)
+	root.add_child(_box("Spike", Vector3(0.26, 0.07, 0.1), Vector3(-0.2, 0, head_z), "iron"))
+	root.add_child(_cyl("Cap", 0.07, 0.08, Vector3(0, 0, -length + 0.04), "iron"))
+
+
+## The great pine: a tapering trunk (thick at the grip), a root ball behind the grip and three tiers
+## of needles toward the far end (layer FP_HIDDEN_LAYER, like the tree's canopy).
+static func _pine(root: Node3D, length: float) -> void:
+	root.add_child(_cyl("Trunk", 0.16, length, Vector3(0, 0, -length * 0.5), "bark", 0.44))
+	root.add_child(_sphere("Roots", 0.6, Vector3(0, 0, 0.3), "bark"))
+	for i in 3:
+		var tier_len := length * (0.30 - 0.01 * i)
+		var z := -length * (0.40 + 0.16 * i) - tier_len * 0.5   # the last tier ends at the tip
+		var cone := _cyl("Needles%d" % i, 0.05, tier_len, Vector3(0, 0, z), "needles", length * (0.2 - 0.04 * i))
+		cone.layers = FP_HIDDEN_LAYER
+		root.add_child(cone)
+
+
+## Titan-iron bands (two, a third on the axe's head) with a glowing rune line along the weapon.
+static func _titanforge(root: Node3D, shape: String, length: float) -> void:
+	var radius := {"club": 0.27, "hammer": 0.1, "sword": 0.11, "axe": 0.1}.get(shape, 0.12) as float
+	for i in 2:
+		var f := 0.35 + 0.3 * i
+		var r := lerpf(0.11, radius, f) + 0.03 if shape == "club" else radius
+		root.add_child(_cyl("TitanBand%d" % i, r, 0.1, Vector3(0, 0, -length * f), "titan"))
+	if shape == "axe":
+		root.add_child(_box("TitanEdge", Vector3(0.08, 0.06, 0.64), Vector3(0.64, 0, -(length - 0.32)), "titan"))
+	var rune_len := length * 0.5
+	root.add_child(_box("Rune", Vector3(0.03, 0.03, rune_len), Vector3(0, radius * 0.8 if shape == "club" else 0.06,
+		-length * 0.3 - rune_len * 0.5), "rune"))

@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "weapon.hammer_titan",
+	"type": "weapon",
+	"family": "hammer",
+	"display_name": "Titanforged Warmaul",
+	"damage_multiplier": 1.55,
+	"length_m": 1.8,
+	"hit_radius_m": 0.55,
+	"description": "The Warmaul, titanforged with dark titan iron. Where its heavy slam lands the ground heaves in a 3 m shockwave.",
+	"scales_with_growth": true,
+	"fit_max_stage": 6,
+	"visual_shape": "hammer",
+	"light_chain": "ability.hammer_light_1",
+	"heavy": "ability.hammer_heavy",
+	"stage_movesets": {"4": {"light_chain": "ability.hammer_great_light_1", "heavy": "ability.hammer_great_heavy"}},
+	"perk": {"kind": "heavy_shockwave", "radius_m": 3.0, "power_mult": 0.5, "text": "The heavy adds a 3 m shockwave"}
+}

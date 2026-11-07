@@ -34,10 +34,21 @@ extends PlayerComponent
 ##   unspent_attribute_points, talent_points, attributes, level_exempt and ancestry. A restore is
 ##   silent. known_abilities and the loadout are GiantPlayer's core keys (it applies them after
 ##   the components); this component learns into the same list.
+## - Stage evolutions (P31, plan M6-M9 §2.11, decision 23): an evolution (an ability with
+##   evolves_from: Titan Stomp, Crag Hurl at stage 4, Formation Sweep, Titan Roar at 5, Earthquake at
+##   6) is learned on reaching its unlock_stage at or above its unlock_level - through the library
+##   like any ability, or through its growth profile's unlocks - and replaces its base: it goes into
+##   the base's slot and the base's place in known_abilities, the base stays known (listed: the
+##   shrine shows it evolved and no longer offers it for a slot), Events.ability_learned (the slot)
+##   and Events.ability_evolved(tick, base, evolution, slot) are emitted. Cooldowns stay per id. A
+##   gated giant's growth learns its stage's evolutions when the profile changes (on_profile_changed:
+##   before PlayerGrowth's unlocks, which then find them known) and announces them with the growth
+##   (growth_changed; a restore drops the announcements); an evolution another path taught (an
+##   ungated debug growth's unlocks, a reward) takes its base's slot at the next growth or level.
 
 const UNGATED_LEVEL := CharacterState.MAX_LEVEL
 const DEBUG_XP := 100
-const SLOT_REASONS := ["no_shrine", "combat", "unknown_slot", "not_known", "wrong_kind"]
+const SLOT_REASONS := ["no_shrine", "combat", "unknown_slot", "not_known", "wrong_kind", "evolved"]
 const ANCESTRY_NOTE := "no modifiers in the prototype"
 
 var level := 1
@@ -52,6 +63,9 @@ var gated := false
 var last_result: Dictionary = {}
 ## Every ability this component taught, oldest first: [{"id", "slot", "source"}].
 var learned: Array = []
+## P31: evolutions learned when the profile changed, announced with the growth
+## ([{"id", "base", "slot"}]); a restore or a profile swap without a growth drops them.
+var _pending_evolutions: Array = []
 
 
 func setup(p: GiantPlayer) -> void:
@@ -209,6 +223,7 @@ func _on_entity_died(_tick: int, entity_id: String, killer_id: String) -> void:
 func _on_growth_changed(_tick: int, entity_id: String, old_stage: int, new_stage: int) -> void:
 	if player != null and is_instance_valid(player) and entity_id == player.entity.entity_id \
 			and new_stage > old_stage:
+		_announce_pending("growth")
 		_learn_met("growth")
 
 
@@ -217,41 +232,161 @@ func _on_growth_changed(_tick: int, entity_id: String, old_stage: int, new_stage
 ## Teaches `id` (an ability or ultimate) now: known, in the library, level_exempt when its
 ## unlock_level is above the character level, auto-slotted, ability_learned (and loadout_changed
 ## when slotted). False (nothing changes) when it is already known or not a learnable action.
-## Dialogue and quest rewards call it with source "reward".
+## Dialogue and quest rewards call it with source "reward". P31: an evolution takes its base's slot
+## and place in the known list and also emits ability_evolved (when the base was known).
 func learn_ability(id: String, source: String) -> bool:
 	var def := GameData.get_action(id)
 	if def == null or not Progression.LEARNABLE_KINDS.has(def.kind) or knows(id):
 		return false
-	player.known_abilities.append(id)
-	player.ensure_action(id)
-	var c := player.controller
-	if def.unlock_level > level:
-		c.level_exempt[id] = true
-	var slot := ""
-	if not _is_slotted(id):
-		slot = Progression.auto_slot(c.loadout, id, library())
-		if slot != "":
-			player.set_loadout_slot(slot, id)
-			Events.loadout_changed.emit(Sim.tick, player.entity.entity_id)
-	learned.append({"id": id, "slot": slot, "source": source})
-	Events.ability_learned.emit(Sim.tick, id, slot)
+	var r := _take(id, def)
+	_announce(id, r, source)
 	return true
 
 
-## Learns every ability of the library the giant meets now and does not know. Returns their ids.
+## Learns every ability of the library the giant meets now and does not know - its evolutions first,
+## chain link by chain link - then lets any evolution taught another way take its base's slot.
+## Returns the ids learned.
 func _learn_met(source: String) -> Array:
 	var out: Array = []
+	for id in Progression.evolutions_met(library(), player.known_abilities, level, player.growth_stage):
+		if learn_ability(id, source):
+			out.append(id)
 	for id in Progression.newly_met(library(), player.known_abilities, level, player.growth_stage):
 		if learn_ability(id, source):
 			out.append(id)
+	_evolve_known()
 	return out
 
 
 func _is_slotted(id: String) -> bool:
+	return _slot_of(id) != ""
+
+
+## The slot key holding `id` ("" = none).
+func _slot_of(id: String) -> String:
+	if id == "":
+		return ""
 	for key: String in GiantPlayer.SLOT_KEYS:
 		if str(player.controller.loadout.get(key, "")) == id:
-			return true
-	return false
+			return key
+	return ""
+
+
+# --------------------------------------------------------------------------- evolutions (P31)
+
+## Makes `id` known and slotted, silently: an evolution of a known base takes the base's place in
+## known_abilities (the base moves one on, still known) and the base's slot - once the giant's stage
+## allows it; one learned earlier (a reward) is only known until then (_evolve_known moves it in).
+## Anything else is appended and auto-slotted (Progression.auto_slot). Returns {"slot" (the key or
+## ""), "base" (the known base it replaced, "" = none), "changed" (the loadout changed)}.
+func _take(id: String, def: ActionDef) -> Dictionary:
+	var base := Progression.base_of(id)
+	var known := player.known_abilities
+	var at := known.find(base) if base != "" else -1
+	var waits := at >= 0 and def.unlock_stage > player.growth_stage
+	if at >= 0 and not waits:
+		known.insert(at, id)
+	else:
+		known.append(id)
+	player.ensure_action(id)
+	var c := player.controller
+	if def.unlock_level > level:
+		c.level_exempt[id] = true
+	var slot := _slot_of(id)
+	var changed := false
+	var base_slot := _slot_of(base) if at >= 0 and not waits else ""
+	if base_slot != "":
+		if slot != "" and slot != base_slot:
+			player.set_loadout_slot(slot, "")
+		player.set_loadout_slot(base_slot, id)
+		slot = base_slot
+		changed = true
+	elif slot == "" and not waits:
+		slot = Progression.auto_slot(c.loadout, id, library())
+		if slot != "":
+			player.set_loadout_slot(slot, id)
+			changed = true
+	return {"slot": slot, "base": base if at >= 0 and not waits else "", "changed": changed}
+
+
+## The events of an ability `_take` taught: loadout_changed (when slotted), ability_learned, and
+## ability_evolved for an evolution of a known base.
+func _announce(id: String, r: Dictionary, source: String) -> void:
+	if bool(r.get("changed", false)):
+		Events.loadout_changed.emit(Sim.tick, player.entity.entity_id)
+	learned.append({"id": id, "slot": str(r.get("slot", "")), "source": source})
+	Events.ability_learned.emit(Sim.tick, id, str(r.get("slot", "")))
+	if str(r.get("base", "")) != "":
+		Events.ability_evolved.emit(Sim.tick, str(r.base), id, str(r.get("slot", "")))
+
+
+func _announce_pending(source: String) -> void:
+	var pending := _pending_evolutions
+	_pending_evolutions = []
+	for p: Dictionary in pending:
+		if knows(str(p.id)):
+			_announce(str(p.id), p, source)
+
+
+## An evolution the giant knows and may use (its stage reached, its level reached or exempt or
+## gating off) whose base still holds a slot - taught by a growth profile's unlocks (PlayerGrowth
+## puts those into the first empty slot) or a reward - moves into its base's slot (and out of any
+## other), takes the base's place in known_abilities and is announced with ability_evolved. Returns
+## the ids moved.
+func _evolve_known() -> Array:
+	var out: Array = []
+	for id: String in player.known_abilities.duplicate():
+		var base := Progression.base_of(id)
+		var base_slot := _slot_of(base)
+		var def := GameData.get_action(id)
+		if base_slot == "" or def == null or def.unlock_stage > player.growth_stage:
+			continue
+		if gated and def.unlock_level > level and not player.controller.level_exempt.has(id):
+			continue
+		var slot := _slot_of(id)
+		if slot != "":
+			player.set_loadout_slot(slot, "")
+		player.set_loadout_slot(base_slot, id)
+		var known := player.known_abilities
+		known.erase(id)
+		known.insert(maxi(0, known.find(base)), id)
+		Events.loadout_changed.emit(Sim.tick, player.entity.entity_id)
+		Events.ability_evolved.emit(Sim.tick, base, id, base_slot)
+		out.append(id)
+	return out
+
+
+## The known ability `id` has evolved into ("" = none): a known evolution of it that the giant's stage
+## allows (one taught early waits for its stage). The base stays known and listed; its slot is the
+## evolution's.
+func evolved_into(id: String) -> String:
+	for ev in Progression.evolutions_known(id, player.known_abilities):
+		var def := GameData.get_action(ev)
+		if def != null and def.unlock_stage <= player.growth_stage:
+			return ev
+	return ""
+
+
+## A growth of a gated giant learns the stage's evolutions as the profile changes - before
+## PlayerGrowth applies the profile's unlocks, which then find them known and leave their slots
+## alone - and keeps their announcements for growth_changed. Profile swaps that shrink, or of an
+## ungated giant (the sandbox, tests that set a profile), learn nothing here.
+func on_profile_changed(old_profile: Dictionary, new_profile: Dictionary) -> void:
+	var new_stage := int(new_profile.get("stage", 1))
+	if not gated or new_stage <= int(old_profile.get("stage", 1)):
+		return
+	var unlocks: Variant = new_profile.get("unlocks", [])
+	var extra: Array = unlocks if typeof(unlocks) == TYPE_ARRAY else []
+	for id in Progression.evolutions_met(library(), player.known_abilities, level, new_stage, extra):
+		var def := GameData.get_action(id)
+		if def != null and not knows(id):
+			_pending_evolutions.append(_take(id, def).merged({"id": id}))
+
+
+## A profile swap without a growth (a test, a restore) drops the announcements it queued.
+func post_movement(_tick: int, _dt: float) -> void:
+	if not _pending_evolutions.is_empty():
+		_pending_evolutions.clear()
 
 
 # --------------------------------------------------------------------------- attributes
@@ -300,7 +435,8 @@ func can_change_loadout(shrine: Node) -> Dictionary:
 
 
 ## The ids that may go into `slot_key`: "" (empty) first, then the known abilities of the right
-## kind (ultimates only in "ultimate"), in library order, then any others known.
+## kind (ultimates only in "ultimate"), in library order, then any others known. P31: an ability
+## that has evolved (Heavy Footfall once Titan Stomp is known) is no longer offered.
 func slot_options(slot_key: String) -> PackedStringArray:
 	var out := PackedStringArray([""])
 	var ordered: Array = library()
@@ -309,7 +445,7 @@ func slot_options(slot_key: String) -> PackedStringArray:
 			ordered.append(id)
 	for id_v: Variant in ordered:
 		var id := str(id_v)
-		if not knows(id) or out.has(id):
+		if not knows(id) or out.has(id) or evolved_into(id) != "":
 			continue
 		var def := GameData.get_action(id)
 		if def == null or not Progression.LEARNABLE_KINDS.has(def.kind):
@@ -338,6 +474,12 @@ func set_slot(slot_key: String, action_id: String, shrine: Node) -> Dictionary:
 		if (def.kind == "ultimate") != (slot_key == "ultimate"):
 			last_result = _fail("wrong_kind", "Only an ultimate goes into the ultimate slot." if slot_key == "ultimate"
 				else "An ultimate goes into the ultimate slot.")
+			return last_result
+		var evolved := evolved_into(action_id)
+		if evolved != "":
+			var ev_def := GameData.get_action(evolved)
+			last_result = _fail("evolved", "%s has evolved into %s." % [def.display_name,
+				ev_def.display_name if ev_def != null else evolved])
 			return last_result
 	var loadout := player.controller.loadout
 	var previous := str(loadout.get(slot_key, ""))
@@ -370,6 +512,7 @@ func handle_edge(edge: StringName) -> bool:
 ## Applies the progression keys of a character (silently: no events, no notices). A level of 99
 ## turns gating off (the level shown then follows the XP); any other level turns it on.
 func apply_state(state: Dictionary) -> void:
+	_pending_evolutions.clear()   # P31: a restore announces nothing (its loadout follows the save)
 	var anc: Variant = state.get("ancestry")
 	if typeof(anc) == TYPE_STRING and str(GameData.get_record(str(anc)).get("type", "")) == "ancestry":
 		ancestry = str(anc)

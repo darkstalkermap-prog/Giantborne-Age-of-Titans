@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "status.primal_regrowth",
+	"type": "status_effect",
+	"display_name": "Primal Regrowth",
+	"hud_label": "REGROW",
+	"stacking": "strongest_wins",
+	"duration_s": 6.0,
+	"tick_s": 0.5,
+	"magnitude_key": "heal_per_tick",
+	"default_magnitude": 0.0,
+	"modifiers": {"heal_per_tick": 0.0},
+	"tags": ["Buff", "Heal"],
+	"hidden": false
+}

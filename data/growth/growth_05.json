@@ -41,5 +41,5 @@
 	"footstep_shake": 0.24,
 	"interaction_permissions": ["grab_small", "throw_boulder", "tree_weapon", "gate_breach", "trample", "formation_sweep", "heave"],
 	"target_rules": {"formation_lock": true},
-	"unlocks": []
+	"unlocks": ["ability.formation_sweep", "ability.titan_roar"]
 }

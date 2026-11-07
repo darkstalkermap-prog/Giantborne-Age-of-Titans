@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "weapon.axe_titan",
+	"type": "weapon",
+	"family": "axe",
+	"display_name": "Titanforged Greataxe",
+	"damage_multiplier": 1.5,
+	"length_m": 1.9,
+	"hit_radius_m": 0.45,
+	"description": "The Woodcutter's Greataxe, titanforged with dark titan iron: its edge bites through 10 more armour.",
+	"scales_with_growth": true,
+	"fit_max_stage": 6,
+	"visual_shape": "axe",
+	"light_chain": "ability.axe_light_1",
+	"heavy": "ability.axe_heavy",
+	"stage_movesets": {"4": {"light_chain": "ability.axe_great_light_1", "heavy": "ability.axe_great_heavy"}},
+	"perk": {"kind": "flat_penetration", "flat_penetration": 10, "text": "+10 flat penetration"}
+}

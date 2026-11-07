@@ -212,6 +212,12 @@ func _post_pass() -> void:
 	errors.append_array(FormationRules.cross_record_errors(records, record_paths))
 
 	## @anchor P31
+	# P31 (plan M6-M9 §2.11, decisions 23 and 24): evolution chains end, evolve from an existing ability
+	# of their kind at a later stage and share their first ability's slot; refit chains fit at least as
+	# high at each step and never loop (Progression.data_errors, P12's anchor); every weapon that fits a
+	# stage-4 giant names its stage 4-6 moveset.
+	errors.append_array(Progression.evolution_errors(records, record_paths))
+	errors.append_array(Progression.stage_moveset_errors(records, record_paths))
 
 	## @anchor P32
 
