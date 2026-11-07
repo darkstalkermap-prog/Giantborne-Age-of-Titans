@@ -12,19 +12,38 @@
 //     loaded, the least margin to unloaded ground (>= 200 m), the walk's own check failures;
 //   * draw calls (rendered: the PerfProbe's per frame), the console errors while the game runs (0
 //     wanted; what the page reports while the engine shuts down after the result is listed apart:
-//     a player never quits the engine on the web) and the failed requests.
-// The P24a run and the M7 gate's (on the real world: --world) are recorded in docs/PERFORMANCE.md.
+//     a player never quits the engine on the web) and the failed requests;
+//   * with --audio (M7 gate; plan §1.3, §6.6: "stream_check.mjs on the real world with the audio
+//     recorder, across a region border for 60 s, no music gap over 50 ms"): audio_check.mjs's
+//     recorder (tools/web/audio_recorder.mjs) on the game's output from the walk's start - once the
+//     world's music plays - to its end: the music's holes over 50 ms, each placed on the main
+//     thread's clock (a hole the main thread explains passes the default check; --strict fails every
+//     one), the seconds recorded (>= --music-s), the region borders crossed while recording (the
+//     music sets that followed one another, >= --min-borders) and the peak live sample bytes against
+//     the level's registered seconds x 353 KB + 12 MB.
+// The P24a run and the M7 gate's (on the real world: --world --audio) are recorded in
+// docs/PERFORMANCE.md, with the gate's command.
 //
-// Usage (from the project folder, after tools/build_web.sh --preset="Web (test)"):
+// Usage (from the project folder, after tools/build_web.sh: the release takes the world's arguments;
+// the test world needs --preset="Web (test)"):
 //   node tools/web/stream_check.mjs [--build=builds/web_test] [--level=res://scenes/test/test_world.tscn]
-//        [--world] [--route=x:z;x:z;...] [--walk-speed=M] [--laps=N] [--autoplay=S] [--size=WxH]
-//        [--timeout-s=S] [--json=FILE] [--strict] [--headed]
+//        [--world] [--route=x:z;x:z;...] [--walk-speed=M] [--walk-stage=N] [--laps=N] [--autoplay=S]
+//        [--size=WxH] [--audio] [--music-s=60] [--min-borders=N] [--registered-s=S] [--timeout-s=S]
+//        [--json=FILE] [--strict] [--headed]
 //   --world        the real world (--mode=world --new-game; from P25) instead of --level
 //   --walk-speed   carry the giant at M m/s instead of walking it (16: the stage-6 sprint case)
+//   --walk-stage   grow the giant to stage N before the walk
 //   --size         the browser viewport (default 1280x720)
-//   --strict       also fail (exit 1) when the indicative frame budget is missed
+//   --audio        record the music during the walk (above); --music-s the seconds wanted (default 60),
+//                  --min-borders the region borders to cross while recording (default 1),
+//                  --registered-s the level's registered sample seconds (default: computed from the
+//                  banks and assets/audio/manifest.json for level.world, or the --level's record)
+//   --strict       also fail (exit 1) when the indicative frame budget is missed, and (--audio) on
+//                  every hole in the music over 50 ms (for a machine with a GPU)
+//   --json         the report (with --audio, the recording's trace too: --replay it with audio_check.mjs)
 // Exit code: 0 when the run reported, the walk finished without check failures and the console
-// had no errors (and, with --strict, the frame budget held); 1 otherwise; 2 for a usage error.
+// had no errors (and, with --strict, the frame budget held; with --audio, the recording held); 1
+// otherwise; 2 for a usage error.
 // Needs Playwright (the "playwright" package: PLAYWRIGHT_MODULE, NODE_PATH or
 // /opt/node-tools/node_modules) and its Chromium (PLAYWRIGHT_BROWSERS_PATH, default /opt/pw-browsers
 // when that folder exists). Software WebGL (SwiftShader) is all a GPU-less machine has: its frame
@@ -34,6 +53,10 @@ import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { extname, join, normalize, resolve, sep } from 'node:path';
+import {
+  BYTES_PER_REGISTERED_S, HOLE_MAX_MS, LIVE_HEADROOM_BYTES, SILENCE_PEAK, analyseRecording, instrument, levelIdForScene,
+  readRecording, registeredSeconds,
+} from './audio_recorder.mjs';
 
 const BUDGET_WORST_MS = 45;
 const BUDGET_P99_MS = 25;
@@ -42,8 +65,8 @@ const MARGIN_REQUIRED_M = 200;
 function parseArgs(argv) {
   const opts = {
     build: 'builds/web_test', level: 'res://scenes/test/test_world.tscn', world: false, route: '',
-    walkSpeed: '', laps: '', autoplay: 1200, size: '1280x720', timeoutS: 3600, json: '', strict: false,
-    headed: false,
+    walkSpeed: '', walkStage: '', laps: '', autoplay: 1200, size: '1280x720', timeoutS: 3600, json: '', strict: false,
+    headed: false, audio: false, musicS: 60, minBorders: null, registeredS: null,
   };
   for (const arg of argv) {
     const [key, ...rest] = arg.split('=');
@@ -54,6 +77,11 @@ function parseArgs(argv) {
       case '--world': opts.world = true; break;
       case '--route': opts.route = value; break;
       case '--walk-speed': opts.walkSpeed = value; break;
+      case '--walk-stage': opts.walkStage = value; break;
+      case '--audio': opts.audio = true; break;
+      case '--music-s': opts.musicS = Number(value); break;
+      case '--min-borders': opts.minBorders = Number(value); break;
+      case '--registered-s': opts.registeredS = Number(value); break;
       case '--laps': opts.laps = value; break;
       case '--autoplay': opts.autoplay = Number(value); break;
       case '--size': opts.size = value; break;
@@ -62,7 +90,8 @@ function parseArgs(argv) {
       case '--strict': opts.strict = true; break;
       case '--headed': opts.headed = true; break;
       case '-h': case '--help':
-        console.log(readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(1, 30).join('\n'));
+        console.log(readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(1).filter((l, i, all) =>
+          all.slice(0, i + 1).every((x) => x.startsWith('//'))).join('\n'));
         process.exit(0);
         break;
       default:
@@ -74,6 +103,12 @@ function parseArgs(argv) {
     console.error('stream_check: --size wants WxH');
     process.exit(2);
   }
+  if (!(opts.musicS > 0) || (opts.minBorders !== null && !(opts.minBorders >= 0))
+      || (opts.registeredS !== null && !(opts.registeredS >= 0)) || (opts.walkStage !== '' && !/^[1-6]$/.test(opts.walkStage))) {
+    console.error('stream_check: --music-s wants a positive number, --min-borders and --registered-s numbers >= 0, --walk-stage 1-6');
+    process.exit(2);
+  }
+  if (opts.minBorders === null) opts.minBorders = opts.audio ? 1 : 0;
   return opts;
 }
 
@@ -100,7 +135,9 @@ function engineArgs(opts) {
   args.push('--scenario=world_walk', `--autoplay=${opts.autoplay}`);
   if (opts.route) args.push(`--route=${opts.route}`);
   if (opts.walkSpeed) args.push(`--walk-speed=${opts.walkSpeed}`);
+  if (opts.walkStage) args.push(`--walk-stage=${opts.walkStage}`);
   if (opts.laps) args.push(`--walk-laps=${opts.laps}`);
+  if (opts.audio) args.push('--audio-stats');   // the music director prints its AUDIO_MUSIC marks
   for (const a of args) {
     if (a.includes(',')) {
       console.error(`stream_check: an engine argument may not hold a comma: ${a}`);
@@ -202,6 +239,21 @@ async function main() {
       log(...items);
     };
   });
+  // --audio: audio_check.mjs's recorder, armed by the page itself at the walk's start once the
+  // world's music plays (a zone-state AUDIO_MUSIC mark) and disarmed at its end.
+  if (opts.audio) {
+    await page.addInitScript(instrument, {
+      silencePeak: SILENCE_PEAK, holeMs: HOLE_MAX_MS, autoArm: { start: 'WORLD_WALK_START', end: 'WORLD_WALK_END' },
+    });
+  }
+  // The page's requests to other hosts (its web fonts) are answered empty: the check needs no network.
+  const origin = `http://127.0.0.1:${port}`;
+  const external = [];
+  await page.route((u) => !u.href.startsWith(origin), (route) => {
+    external.push(route.request().url());
+    const css = route.request().resourceType() === 'stylesheet';
+    return route.fulfill({ status: 200, contentType: css ? 'text/css' : 'application/octet-stream', body: '' });
+  });
   const errors = [];
   // The autopilot quits the engine after its result; what the page reports while the engine shuts
   // down (a player never quits the engine on the web) is listed apart and does not fail the check.
@@ -249,6 +301,7 @@ async function main() {
   if (result !== null) await new Promise((ok) => setTimeout(ok, 3000));
   const rafFrames = await page.evaluate(() => window.__frames.slice());
   const walkStart = await page.evaluate(() => window.__walkStart);
+  const recording = opts.audio ? await readRecording(page).catch((e) => ({ unreadable: String(e && e.message ? e.message : e) })) : null;
   await browser.close();
   server.close();
 
@@ -298,9 +351,17 @@ async function main() {
     if (report.budget.worst_ms.verdict !== 'PASS') problems.push(`worst frame ${report.worst_frame_ms} ms > ${BUDGET_WORST_MS} ms`);
     if (report.budget.p99_ms.verdict !== 'PASS') problems.push(`p99 frame ${report.p99_frame_ms} ms > ${BUDGET_P99_MS} ms`);
   }
+  report.external_requests_answered_empty = external.length;
+  let trace = null;
+  if (opts.audio) {
+    const audio = audioReport(recording, opts, walk);
+    report.audio = audio.report;
+    trace = audio.trace;
+    problems.push(...audio.problems);
+  }
   report.problems = problems;
   report.ok = problems.length === 0;
-  if (opts.json) writeFileSync(opts.json, JSON.stringify(report, null, 2) + '\n');
+  if (opts.json) writeFileSync(opts.json, JSON.stringify(trace ? { ...report, trace } : report, null, 2) + '\n');
 
   const f = (x) => (typeof x === 'number' ? x.toFixed(1) : 'N/A');
   console.log(`stream_check: ${report.walk.mode || '?'} walk of ${f(walk.metres)} m in ${f(walk.seconds)} s of game time, ${report.wall_s} s of wall time (${report.renderer}, ${report.quality}, ${opts.size})`);
@@ -311,9 +372,77 @@ async function main() {
   for (const e of errors.slice(0, 10)) console.log(`    error: ${e}`);
   for (const e of exitErrors.slice(0, 10)) console.log(`    at exit (not counted): ${e}`);
   for (const r of failedRequests.slice(0, 10)) console.log(`    request: ${r}`);
+  const crit = report.audio ? report.audio.criterion : null;
+  if (report.audio) {
+    const a = report.audio;
+    const m = a.music || {};
+    const mbs = (b) => (typeof b === 'number' ? (b / 1048576).toFixed(1) : 'N/A');
+    console.log(`  audio: ${a.music ? `music for ${m.seconds} s across ${a.borders} region border(s) (${a.sets.join(' -> ') || 'no set'}): longest silence ${m.longest_silence_ms} ms (limit ${HOLE_MAX_MS}), runs over 50 ms ${m.silent_runs_over_50_ms} (${m.holes_while_unserved} while the main thread left the mixer unserved, ${(m.holes_elsewhere || []).length} otherwise${opts.strict ? '' : '; --strict fails every one'})` : 'not recorded'}`);
+    if (a.long_tasks) console.log(`  audio, main thread: ${a.long_tasks.n} long tasks (longest ${a.long_tasks.max_ms} ms); the driver's reads ${a.driver && a.driver.watched ? `${a.driver.reads}, longest gap ${a.driver.longest_gap_ms} ms` : 'not seen'}`);
+    console.log(`  audio, samples: peak live ${mbs(a.samples.peak_live_bytes)} MB (cap ${mbs(a.cap_bytes)} MB = ${a.registered_s} s x 353 KB + 12 MB)`);
+    console.log(`  the plan's criterion (no silent run over ${HOLE_MAX_MS} ms in ${opts.musicS} s of music across a region border): ${crit ? (crit.met ? 'MET' : `NOT MET (${crit.holes} hole(s), the longest ${crit.longest_silence_ms} ms)`) : 'NOT MEASURED'}`);
+  }
   console.log(`STREAM_CHECK ${JSON.stringify(report)}`);
-  console.log(report.ok ? 'stream_check: OK' : `stream_check: FAILED - ${problems.join('; ')}`);
+  if (report.ok) {
+    console.log(crit && !crit.met
+      ? `stream_check: OK (the plan's audio criterion NOT MET: ${crit.holes} hole(s) over ${HOLE_MAX_MS} ms, every one placed on the main thread; run --strict on a machine with a GPU for the gate)`
+      : 'stream_check: OK');
+  } else {
+    console.log(`stream_check: FAILED - ${problems.join('; ')}`);
+  }
   process.exit(report.ok ? 0 : 1);
+}
+
+// --audio: the recording against the plan's criterion (audio_recorder.mjs's analysis), the region
+// borders crossed while it ran (zone-state music sets that followed one another between the arm and
+// the disarm, counting the set playing at the arm) and the live sample bytes against the cap.
+// Returns { report, trace, problems }.
+function audioReport(state, opts, walk) {
+  const problems = [];
+  const level = opts.world ? 'level.world' : levelIdForScene(opts.level);
+  const registeredS = opts.registeredS !== null ? opts.registeredS : (level ? registeredSeconds(level) : 0);
+  const capBytes = Math.round(registeredS * BYTES_PER_REGISTERED_S + LIVE_HEADROOM_BYTES);
+  const report = { level, registered_s: registeredS, cap_bytes: capBytes, strict: opts.strict, music_s_wanted: opts.musicS,
+    min_borders: opts.minBorders, borders: 0, sets: [], region_changes_on_walk: (walk.region_changes || []).length };
+  if (!state || state.unreadable) {
+    problems.push(`the recording could not be read${state && state.unreadable ? ` (${state.unreadable})` : ''}`);
+    return { report, trace: null, problems };
+  }
+  report.samples = { peak_live_bytes: state.peakLiveBytes, peak_playing_copy_bytes: state.peakPlayingBytes,
+    buffers_created: state.buffersCreated, sources_started: state.sourcesStarted };
+  report.context = state.ctx;
+  report.auto = state.auto;
+  if (state.peakLiveBytes > capBytes) problems.push(`peak live sample bytes ${state.peakLiveBytes} > ${capBytes}`);
+  if (!state.auto || !state.auto.armed) {
+    problems.push('the recorder never armed (no zone music once the walk set off)');
+    report.music_marks = (state.marks || []).map((m) => ({ set: m.set, state: m.state }));
+    return { report, trace: null, problems };
+  }
+  const t0 = state.auto.armed_ms;
+  const rec = analyseRecording(state, { musicS: opts.musicS, strict: opts.strict, t0 });
+  problems.push(...rec.problems);
+  if (rec.music) {
+    report.music = rec.music;
+    report.page_frames = rec.page_frames;
+    report.long_tasks = rec.long_tasks;
+    report.driver = rec.driver;
+    report.criterion = { ...rec.criterion, borders: 0 };
+  }
+  const from = state.armRef ? state.armRef.page_ms : t0;
+  const to = state.disarmRef ? state.disarmRef.page_ms : state.wall_ms;
+  const zone = (state.marks || []).filter((m) => m.state === 'zone' && typeof m.page_ms === 'number');
+  const before = zone.filter((m) => m.page_ms <= from);
+  const sets = before.length ? [before[before.length - 1].set] : [];
+  for (const m of zone) {
+    if (m.page_ms > from && m.page_ms <= to && m.set !== sets[sets.length - 1]) sets.push(m.set);
+  }
+  report.sets = sets;
+  report.borders = Math.max(0, sets.length - 1);
+  if (report.criterion) report.criterion.borders = report.borders;
+  if (report.borders < opts.minBorders) {
+    problems.push(`the recording crossed ${report.borders} region border(s), fewer than ${opts.minBorders} (sets: ${sets.join(' -> ') || 'none'})`);
+  }
+  return { report, trace: rec.music ? rec.trace : null, problems };
 }
 
 main().catch((e) => {
