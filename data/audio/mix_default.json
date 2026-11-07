@@ -108,8 +108,12 @@
 		"prop.fence_wood": "wood",
 		"prop.gate_fortified": "stone",
 		"prop.gate_practice": "wood",
+		"prop.gate_toll": "wood",
+		"prop.gatehouse_brannock": "stone",
 		"prop.great_pine": "wood",
+		"prop.house_town": "wood",
 		"prop.kings_door": "stone",
+		"prop.millrace_dam": "stone",
 		"prop.palisade_trample": "wood",
 		"prop.practice_dummy": "wood",
 		"prop.rockfall": "stone",
@@ -128,7 +132,10 @@
 		"enemy.soldier": "human",
 		"enemy.sparring_post": "none",
 		"enemy.wolf": "wolf",
+		"npc.edda": "elder",
 		"npc.elder": "elder",
+		"npc.reeve_tamsin": "human",
+		"npc.toll_captain": "human",
 		"npc.villager": "human"
 	},
 	"steps": {
@@ -142,7 +149,10 @@
 		"enemy.soldier": "human",
 		"enemy.sparring_post": "human",
 		"enemy.wolf": "paw",
+		"npc.edda": "human",
 		"npc.elder": "human",
+		"npc.reeve_tamsin": "human",
+		"npc.toll_captain": "human",
 		"npc.villager": "human"
 	},
 	"surfaces": {

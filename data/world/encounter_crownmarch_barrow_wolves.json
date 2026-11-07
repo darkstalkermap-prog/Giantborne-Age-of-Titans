@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "encounter.crownmarch_barrow_wolves",
+	"type": "encounter",
+	"display_name": "The barrow wolves and their warden",
+	"description": "P29 (plan M6-M9 §5.7, §5.10): five wolves denning among the Barrow Fields' mounds with an ogre barrow-warden; a second ogre for a stage-4 giant. Clearing them is quest.barrow_fields (Reeve Tamsin's shepherds).",
+	"level": "level.world",
+	"center_m": [-650, 8.95, 720],
+	"activate_radius_m": 100,
+	"deactivate_radius_m": 170,
+	"leash_radius_m": 55,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.crownmarch.barrow_wolf_1", "definition": "enemy.wolf", "position_m": [-655, 8.83, 715], "yaw_deg": 90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.barrow_wolf_2", "definition": "enemy.wolf", "position_m": [-648, 8.98, 722], "yaw_deg": 120, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.barrow_wolf_3", "definition": "enemy.wolf", "position_m": [-665, 8.73, 728], "yaw_deg": 60, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.barrow_wolf_4", "definition": "enemy.wolf", "position_m": [-645, 8.86, 705], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.barrow_wolf_5", "definition": "enemy.wolf", "position_m": [-630, 8.46, 715], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.barrow_warden", "definition": "enemy.ogre", "position_m": [-660, 8.64, 710], "yaw_deg": 60, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.barrow_warden_2", "definition": "enemy.ogre", "position_m": [-635, 8.91, 735], "yaw_deg": -60, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 4}
+	]
+}

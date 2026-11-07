@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.kingsgate_beacon",
+	"type": "dialogue",
+	"speaker": "The Kingsgate beacon",
+	"description": "P29 (plan M6-M9 §5.7): the short scene when the giant relights the Kingsgate beacon (BeaconFire's scene_dialogue): from the fire the three powers of the Old Kingdom are in view - Brannock, the Greywood's woodfolk and Aldmere - and the oaths that lead to the Stone Throne.",
+	"entries": [
+		{"node": "lit", "conditions": []}
+	],
+	"nodes": [
+		{"id": "lit", "text": "The old fire catches and roars up the tower. Below it the Old Kingdom wakes: bells in Brannock on the Wend, where Marchwarden Edda keeps the March; silence under the grey pines of the Greywood, where the woodfolk fear their trolls; drums in Aldmere's war camp below its fortress. Each power will swear to a giant who earns it. Win two of their oaths, and the giant clans of the Stonehold must hear you at the Moot.",
+			"choices": [{"text": "Go down to the shrine.", "next": ""}]}
+	]
+}

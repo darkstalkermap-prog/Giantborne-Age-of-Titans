@@ -1,0 +1,194 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="4_f30a1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(17.000006, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(21.882208, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(16.999998, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(25.09328, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+size = Vector3(16.999996, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_9"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(14.337985, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_12"]
+size = Vector3(16.999994, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_13"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_14"]
+size = Vector3(13.537439, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_15"]
+size = Vector3(17.000006, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_16"]
+size = Vector3(17.000006, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_17"]
+size = Vector3(16.999992, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_18"]
+size = Vector3(17.000006, 14, 1)
+
+[node name="Chunk_4_5_1" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_crownmarch_bridge_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 7.826, 106)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_5fc47")
+world_id = "world.crownmarch.bridge_cache"
+loot_table = "loot.cache_brannock_bridge"
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Safe" type="Node3D" parent="Markers"]
+
+[node name="world_marker_brannock_hall_safe" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 102, 10.2, 189)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.brannock_hall_safe"
+kind = 4
+
+[node name="world_marker_brannock_market_safe" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 10.2, 206)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.brannock_market_safe"
+kind = 4
+
+[node name="world_marker_brannock_west_safe" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 10.2, 199)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.brannock_west_safe"
+kind = 4
+
+[node name="world_marker_brannock_north_safe" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 10.2, 152)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.brannock_north_safe"
+kind = 4
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="world_gate_wend_deep_7" type="StaticBody3D" parent="SizeGates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.7611046, 5.441289, 14.667236)
+collision_layer = 64
+collision_mask = 0
+script = ExtResource("4_f30a1")
+gate_id = "world.gate.wend_deep"
+message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
+
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(-0.06651903, 0, -0.99778515, 0, 1, 0, 0.99778515, 0, -0.06651903, 0, 0, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.0923511, 0, -0.9957265, 0, 1, 0, 0.9957265, 0, 0.0923511, 0.43209505, 0.24233723, 18.378754)
+shape = SubResource("BoxShape3D_2")
+
+[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.34570542, 0, -0.9383431, 0, 1, 0, 0.9383431, 0, 0.34570542, 4.1619854, 0.7141695, 36.281982)
+shape = SubResource("BoxShape3D_3")
+
+[node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.3457052, 0, -0.93834317, 0, 1, 0, 0.93834317, 0, 0.3457052, 9.69327, 1.0763149, 51.29547)
+shape = SubResource("BoxShape3D_4")
+
+[node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.75962377, 0, -0.65036273, 0, 1, 0, 0.65036273, 0, 0.75962377, 21.609827, 1.1567831, 66.6369)
+shape = SubResource("BoxShape3D_5")
+
+[node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.8814799, 0, -0.47222146, 0, 1, 0, 0.47222146, 0, 0.8814799, 37.81258, 1.2128444, 78.24936)
+shape = SubResource("BoxShape3D_6")
+
+[node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 74.434845, 1.371212, 84.83276)
+shape = SubResource("BoxShape3D_7")
+
+[node name="Wall7" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 90.434845, 1.522789, 84.83276)
+shape = SubResource("BoxShape3D_8")
+
+[node name="Wall8" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106.434845, 1.6099849, 84.83276)
+shape = SubResource("BoxShape3D_9")
+
+[node name="Wall9" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.99258655, 0, -0.12153963, 0, 1, 0, 0.12153963, 0, 0.99258655, 121.0544, 1.7419696, 85.64331)
+shape = SubResource("BoxShape3D_10")
+
+[node name="Wall10" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.97871685, 0, -0.20521544, 0, 1, 0, 0.20521544, 0, 0.97871685, 135.5037, 1.6674542, 88.09558)
+shape = SubResource("BoxShape3D_11")
+
+[node name="Wall11" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.9787172, 0, -0.20521362, 0, 1, 0, 0.20521362, 0, 0.9787172, 151.16315, 1.6674542, 91.37903)
+shape = SubResource("BoxShape3D_12")
+
+[node name="Wall12" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.97871685, 0, -0.20521544, 0, 1, 0, 0.20521544, 0, 0.97871685, 166.82263, 1.971663, 94.662445)
+shape = SubResource("BoxShape3D_13")
+
+[node name="Wall13" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.9288367, 0, -0.37048945, 0, 1, 0, 0.37048945, 0, 0.9288367, 180.47498, 2.1494374, 98.62665)
+shape = SubResource("BoxShape3D_14")
+
+[node name="Wall14" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.8898179, 0, -0.45631585, 0, 1, 0, 0.45631585, 0, 0.8898179, 193.41614, 2.1494374, 104.59967)
+shape = SubResource("BoxShape3D_15")
+
+[node name="Wall15" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.88981694, 0, -0.45631772, 0, 1, 0, 0.45631772, 0, 0.88981694, 207.65323, 2.199936, 111.90076)
+shape = SubResource("BoxShape3D_16")
+
+[node name="Wall16" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.8898177, 0, -0.4563162, 0, 1, 0, 0.4563162, 0, 0.8898177, 221.89029, 2.1143618, 119.20184)
+shape = SubResource("BoxShape3D_17")
+
+[node name="Wall17" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
+transform = Transform3D(0.8898179, 0, -0.45631585, 0, 1, 0, 0.45631585, 0, 0.8898179, 236.12738, 2.1143618, 126.50287)
+shape = SubResource("BoxShape3D_18")
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

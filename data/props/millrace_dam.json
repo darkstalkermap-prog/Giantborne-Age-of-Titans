@@ -1,0 +1,26 @@
+{
+	"schema_version": 1,
+	"id": "prop.millrace_dam",
+	"type": "prop",
+	"category": "structural",
+	"display_name": "Millrace Dam",
+	"height_m": 6.0,
+	"health": 700,
+	"armor": 40,
+	"accepted_attack_categories": ["melee", "ability", "siege"],
+	"min_growth_stage": 4,
+	"description": "P29 (plan M6-M9 §5.5, §5.7): boulders a flood rolled into the Millrace above Millford. A stage-4 giant smashes them aside (quest.millrace); a smaller one cannot move them.",
+	"locked_message": "The boulder will not budge. Grow to stage 4.",
+	"on_destroyed_flags": {"world.millrace.cleared": true},
+	"damage_stages": [
+		{"id": "blocked", "at_or_below_frac": 1.0, "visual": "Intact"},
+		{"id": "cleared", "at_or_below_frac": 0.0, "visual": "Broken", "removes_collision": true}
+	],
+	"debris_count": 10,
+	"debris_length_m": 12,
+	"debris_layout": "pile",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "npc.edda",
+	"type": "npc",
+	"role": "talker",
+	"display_name": "Marchwarden Edda",
+	"description": "P29 (plan M6-M9 §5.4, §5.7, §2.12): Brannock's marchwarden, who keeps the town and the March's roads. At stage 4 or less she meets the giant inside the south gate; a bigger giant she meets on the giants' green outside it (the director moves her: the town's POI has max_inner_stage 4). Protected: every blow is refused (still an offence).",
+	"scene": "res://scenes/npcs/elder.tscn",
+	"height_m": 1.7,
+	"capsule_radius_m": 0.3,
+	"health": 60,
+	"armor": 0,
+	"walk_speed_mps": 1.2,
+	"run_speed_mps": 2.8,
+	"flee_trigger_radius_m": 0,
+	"protected": true,
+	"dialogue": "dialogue.edda",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"nav_layers": 1,
+	"grab_attach": "none"
+}

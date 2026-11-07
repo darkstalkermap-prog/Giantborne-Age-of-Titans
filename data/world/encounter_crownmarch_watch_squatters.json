@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.crownmarch_watch_squatters",
+	"type": "encounter",
+	"display_name": "Squatters at Shepherd's Watch",
+	"description": "P29 (plan M6-M9 §5.7, §5.10): three soldiers and an archer squatting at the cold watch beacon; clearing them lets the giant relight it (quest.watch_beacon). No faction: always hostile.",
+	"level": "level.world",
+	"center_m": [480, 27.98, 760],
+	"activate_radius_m": 90,
+	"deactivate_radius_m": 160,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.crownmarch.squatter_1", "definition": "enemy.soldier", "position_m": [460, 27.04, 760], "yaw_deg": -90, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.squatter_2", "definition": "enemy.soldier", "position_m": [490, 28.88, 772], "yaw_deg": 90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.squatter_3", "definition": "enemy.soldier", "position_m": [480, 26.01, 745], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.squatter_archer", "definition": "enemy.archer", "position_m": [495, 28.81, 768], "yaw_deg": 90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

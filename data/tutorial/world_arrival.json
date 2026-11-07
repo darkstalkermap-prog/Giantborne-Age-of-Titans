@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.world_arrival",
+	"type": "tutorial_prompt",
+	"description": "P29 (plan M6-M9 §5.7, §5.15): the first steps out of the Kings' Door onto the Kingsgate shelf - what to do first in the Old Kingdom.",
+	"text": "The Old Kingdom lies open below. Toll-riders hold the Kingsgate beacon's hill: drive them off and relight it, and the Kingsgate shrine will let you grow. Your quest and its marker point the way.",
+	"trigger": {"type": "event", "event": "level_entered"},
+	"dismiss": {"type": "flag", "flag": "world.kingsgate.lit", "timeout_s": 20},
+	"requires_flags": ["progress.world_entered"],
+	"min_stage": 1,
+	"priority": 12,
+	"once": true,
+	"defer_in_combat": true,
+	"sets_flag": "tutorial.world_arrival.done"
+}

@@ -1,0 +1,36 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.reeve_tamsin",
+	"type": "dialogue",
+	"speaker": "Reeve Tamsin",
+	"description": "P29 (plan M6-M9 §5.7, §5.9): Millford's reeve. She asks about the Barrow Fields' wolves (outcome barrow: starts quest.barrow_fields) and the dammed Millrace (outcome millrace: starts quest.millrace), and thanks the giant once either is done. Hostile, she takes 2 iron to make good the damage (outcome reconcile_millford).",
+	"entries": [
+		{"node": "hostile", "conditions": [{"type": "flag", "flag": "faction.millford.hostile"},
+			{"type": "not", "of": {"type": "flag", "flag": "faction.millford.reconciled"}}]},
+		{"node": "thanks", "conditions": [{"type": "any", "of": [
+			{"type": "quest_done", "quest": "quest.barrow_fields"}, {"type": "quest_done", "quest": "quest.millrace"}]}]},
+		{"node": "greet", "conditions": []}
+	],
+	"nodes": [
+		{"id": "greet", "text": "A giant in Millford... Mind the houses, please. I'm Tamsin, reeve here. We're millers and shepherds - we want no trouble.",
+			"choices": [
+				{"text": "Is something troubling Millford?", "next": "troubles"},
+				{"text": "Farewell.", "next": ""}]},
+		{"id": "troubles", "text": "Wolves out of the Barrow Fields take our sheep, and an old ogre runs with them. And the flood rolled boulders into the Millrace above us: the mill stands still.",
+			"choices": [
+				{"text": "I'll deal with the wolves.", "next": "", "effects": {"outcome": "barrow"}},
+				{"text": "I'll clear the Millrace.", "next": "", "effects": {"outcome": "millrace"}},
+				{"text": "We'll see.", "next": ""}]},
+		{"id": "thanks", "text": "Millford is in your debt, giant. The sheep sleep easy and the wheel turns.",
+			"choices": [
+				{"text": "Is there more trouble?", "next": "troubles"},
+				{"text": "Farewell.", "next": ""}]},
+		{"id": "hostile", "text": "Get away from Millford! Haven't you done enough?",
+			"choices": [
+				{"text": "Make good the damage. (2 iron)", "next": "reconciled",
+					"conditions": [{"type": "has_item", "item": "item.iron_ingot", "count": 2}], "locked_text": "You need 2 iron",
+					"effects": {"take_items": [{"item": "item.iron_ingot", "count": 2}], "outcome": "reconcile_millford"}},
+				{"text": "Leave.", "next": ""}]},
+		{"id": "reconciled", "text": "...Very well. Millford forgives you. Mind the houses."}
+	]
+}

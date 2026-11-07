@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"id": "loot.beacon_cache",
+	"type": "loot_table",
+	"display_name": "Kingsgate beacon cache",
+	"description": "P29 (plan M6-M9 §5.4, §5.8, decision 32): the cache the beacon-keepers left under the Kingsgate beacon, opened when the giant relights it - 1 titan iron and 2 iron, once (the beacon fire's world id). It pays the reinforcement at the Kingsgate anvil on every path.",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{"item": "item.titan_iron", "count": 1},
+		{"item": "item.iron_ingot", "count": 2}
+	]
+}

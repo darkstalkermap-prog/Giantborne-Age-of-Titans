@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "faction.millford",
+	"type": "faction",
+	"display_name": "Millford",
+	"description": "P29 (plan M6-M9 §2.12, §5.9, decision 31): the open hamlet on the Millrace - its millers, farmers, two militiamen and Reeve Tamsin (members carry faction \"millford\"). Neutral until offended (two offences within 30 s, a blow on its people or damage to its houses); its folk step aside for a giant at peace with them. Hostile, its militia fight and a respawn at its waystone moves away while they stand within 120 m; Tamsin reconciles the hamlet for 2 iron. P37's raid targets its houses and people.",
+	"flag_prefix": "faction.millford",
+	"initial": "neutral",
+	"offences_to_hostile": 2,
+	"offence_window_s": 30,
+	"civilians_give_way": true,
+	"give_way_m": 3.0,
+	"respawn_guard_m": 120,
+	"reconcile": {"talker": "world.crownmarch.reeve_tamsin", "cost": [{"item": "item.iron_ingot", "count": 2}],
+		"text": "Make good the damage (2 iron)"},
+	"warn_text": "Millford's folk run from your feet. Do that again and the hamlet will stand against you.",
+	"hostile_text": "Millford's horn sounds: the hamlet turns against you.",
+	"stood_down_text": "Millford's militia lay down their spears.",
+	"reconciled_text": "Millford forgives you; the mill turns again."
+}

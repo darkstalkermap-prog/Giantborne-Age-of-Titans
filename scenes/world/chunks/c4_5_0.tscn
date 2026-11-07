@@ -1,152 +1,814 @@
-[gd_scene format=3]
+[gd_scene format=4]
 
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
-[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="4_f30a1"]
+[ext_resource type="PackedScene" path="res://scenes/world/forge.tscn" id="1_34b2a"]
+[ext_resource type="Script" path="res://scripts/world/town_forge.gd" id="2_30029"]
+[ext_resource type="Script" path="res://scripts/world/flag_visibility.gd" id="3_727cc"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="4_2c089"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="5_5fc47"]
+[ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="6_c8050"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="7_129e0"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="8_f30a1"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(16.999992, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_1"]
+_surfaces = [{
+"aabb": AABB(-0.29999995, -0.5, -0.25, 4.6000004, 16.55, 0.5),
+"attribute_data": PackedByteArray("TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/zNmP/8zZj//M2Y//zNmP/8zZj//M2Y//zNmP/8zZj//TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/8="),
+"format": 34359742479,
+"index_count": 144,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAADAAIAAQAFAAYAAQAGAAIABAACAAYABQAHAAgABQAIAAYABAAGAAgABwAJAAoABwAKAAgABAAIAAoACQALAAwACQAMAAoABAAKAAwACwANAA4ACwAOAAwABAAMAA4ADQAPABAADQAQAA4ABAAOABAADwARABIADwASABAABAAQABIAEwAUABUAEwAVABYAFwAYABkAFwAZABoAGgAZABQAGgAUABMAGQAYABUAGQAVABQAGAAXABYAGAAWABUAFwAaABMAFwATABYAGwAcAB0AGwAdAB4AHwAgACEAHwAhACIAIgAhABwAIgAcABsAIQAgAB0AIQAdABwAIAAfAB4AIAAeAB0AHwAiABsAHwAbAB4A"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 35,
+"vertex_data": PackedByteArray("AACAPgAAAL8AAAAA8wQ1PgAAAL/zBDU+8wQ1PgAAgEHzBDU+AACAPgAAgEEAAAAAAAAAAAAAgEEAAAAAMjGNIwAAAL8AAIA+MjGNIwAAgEEAAIA+8wQ1vgAAAL/zBDU+8wQ1vgAAgEHzBDU+AACAvgAAAL8yMQ0kAACAvgAAgEEyMQ0k8wQ1vgAAAL/zBDW+8wQ1vgAAgEHzBDW+yslTpAAAAL8AAIC+yslTpAAAgEEAAIC+8wQ1PgAAAL/zBDW+8wQ1PgAAgEHzBDW+AACAPgAAAL8yMY2kAACAPgAAgEEyMY2k0MxMPpmZeUGPwnW9ZmaGQJmZeUGPwnW9ZmaGQJmZeUGPwnU90MxMPpmZeUGPwnU90MxMPmZmJkGPwnU9ZmaGQGZmJkGPwnU9ZmaGQGZmJkGPwnW90MxMPmZmJkGPwnW9mJmZvmZmgEEAAAC+mpmJQGZmgEEAAAC+mpmJQGZmgEEAAAA+mJmZvmZmgEEAAAA+mJmZvs3MfEEAAAA+mpmJQM3MfEEAAAA+mpmJQM3MfEEAAAC+mJmZvs3MfEEAAAC+gdr/f5BeErkpt/9/aFaKpDmwPqvqR8zFRLN9t4tMxc7/f///AAD/v3hw/39Fj7CIgImqsVVb8aYpN/9/lqk/sHhbPqsgfl+eAACGj7lw8b4rO6qx92msqgAA1choVoqkPivEz2JE7qP//3fwRY+wiKoxfvYxOSGR//8pt5apP7DA1HjbeDtShP//fKVuoRK5kdyJvkGMq9IyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
-size = Vector3(17.000006, 14, 1)
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_2"]
+height = 16.0
+radius = 0.25
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
-size = Vector3(11.496695, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_3"]
+_surfaces = [{
+"aabb": AABB(-0.29999995, -0.5, -0.25, 4.6000004, 16.55, 0.5),
+"attribute_data": PackedByteArray("TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/zNmP/8zZj//M2Y//zNmP/8zZj//M2Y//zNmP/8zZj//TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/8="),
+"format": 34359742479,
+"index_count": 144,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAADAAIAAQAFAAYAAQAGAAIABAACAAYABQAHAAgABQAIAAYABAAGAAgABwAJAAoABwAKAAgABAAIAAoACQALAAwACQAMAAoABAAKAAwACwANAA4ACwAOAAwABAAMAA4ADQAPABAADQAQAA4ABAAOABAADwARABIADwASABAABAAQABIAEwAUABUAEwAVABYAFwAYABkAFwAZABoAGgAZABQAGgAUABMAGQAYABUAGQAVABQAGAAXABYAGAAWABUAFwAaABMAFwATABYAGwAcAB0AGwAdAB4AHwAgACEAHwAhACIAIgAhABwAIgAcABsAIQAgAB0AIQAdABwAIAAfAB4AIAAeAB0AHwAiABsAHwAbAB4A"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 35,
+"vertex_data": PackedByteArray("AACAPgAAAL8AAAAA8wQ1PgAAAL/zBDU+8wQ1PgAAgEHzBDU+AACAPgAAgEEAAAAAAAAAAAAAgEEAAAAAMjGNIwAAAL8AAIA+MjGNIwAAgEEAAIA+8wQ1vgAAAL/zBDU+8wQ1vgAAgEHzBDU+AACAvgAAAL8yMQ0kAACAvgAAgEEyMQ0k8wQ1vgAAAL/zBDW+8wQ1vgAAgEHzBDW+yslTpAAAAL8AAIC+yslTpAAAgEEAAIC+8wQ1PgAAAL/zBDW+8wQ1PgAAgEHzBDW+AACAPgAAAL8yMY2kAACAPgAAgEEyMY2k0MxMPpmZeUGPwnW9ZmaGQJmZeUGPwnW9ZmaGQJmZeUGPwnU90MxMPpmZeUGPwnU90MxMPmZmJkGPwnU9ZmaGQGZmJkGPwnU9ZmaGQGZmJkGPwnW90MxMPmZmJkGPwnW9mJmZvmZmgEEAAAC+mpmJQGZmgEEAAAC+mpmJQGZmgEEAAAA+mJmZvmZmgEEAAAA+mJmZvs3MfEEAAAA+mpmJQM3MfEEAAAA+mpmJQM3MfEEAAAC+mJmZvs3MfEEAAAC+gdr/f5BeErkpt/9/aFaKpDmwPqvqR8zFRLN9t4tMxc7/f///AAD/v3hw/39Fj7CIgImqsVVb8aYpN/9/lqk/sHhbPqsgfl+eAACGj7lw8b4rO6qx92msqgAA1choVoqkPivEz2JE7qP//3fwRY+wiKoxfvYxOSGR//8pt5apP7DA1HjbeDtShP//fKVuoRK5kdyJvkGMq9IyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
-size = Vector3(17, 14, 1)
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_4"]
+height = 16.0
+radius = 0.25
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5"]
-size = Vector3(16.999998, 14, 1)
+size = Vector3(10, 6.5, 8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_6"]
-size = Vector3(8.027238, 14, 1)
+size = Vector3(10.4, 6.5, 8.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
-size = Vector3(10.766165, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_7"]
+_surfaces = [{
+"aabb": AABB(-5.4, -0.5, -4.4, 10.8, 11, 8.8),
+"attribute_data": PackedByteArray("zLye/8y8nv/MvJ7/zLye/8y8nv/MvJ7/zLye/8y8nv+ojlH/qI5R/6iOUf+ojlH/qI5R/6iOUf9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8="),
+"format": 34359742479,
+"index_count": 162,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAAoADAAKAAkACAAMAAkACwAKAA0ADgAPABAADgAQABEAEgATABQAEgAUABUAFQAUAA8AFQAPAA4AFAATABAAFAAQAA8AEwASABEAEwARABAAEgAVAA4AEgAOABEAFgAXABgAFgAYABkAGgAbABwAGgAcAB0AHQAcABcAHQAXABYAHAAbABgAHAAYABcAGwAaABkAGwAZABgAGgAdABYAGgAWABkAHgAfACAAHgAgACEAIgAjACQAIgAkACUAJQAkAB8AJQAfAB4AJAAjACAAJAAgAB8AIwAiACEAIwAhACAAIgAlAB4AIgAeACEA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 38,
+"vertex_data": PackedByteArray("AACgwAAAwEAAAIDAAACgQAAAwEAAAIDAAACgQAAAwEAAAIBAAACgwAAAwEAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAzcyswAAAwEDNzIzAzcyswJqZGUEAAAAAzcysQJqZGUEAAAAAzcysQAAAwEDNzIzAzcyswAAAwEDNzIxAzcysQAAAwEDNzIxAMzMzv5qZGUDOzHxAMzMzP5qZGUDOzHxAMzMzP5qZGUDNzIRAMzMzv5qZGUDNzIRAMzMzvwAAAADNzIRAMzMzPwAAAADNzIRAMzMzPwAAAADOzHxAMzMzvwAAAADOzHxAzMwMQM3MbEBnZn5AmplZQM3MbEBnZn5AmplZQM3MbEAAAIRAzMwMQM3MbEAAAIRAzMwMQM3MLEAAAIRAmplZQM3MLEAAAIRAmplZQM3MLEBnZn5AzMwMQM3MLEBnZn5AzcxcwAAAKEFmZua+MzMjwAAAKEFmZua+MzMjwAAAKEFmZuY+zcxcwAAAKEFmZuY+zcxcwGZm5kBmZuY+MzMjwGZm5kBmZuY+MzMjwGZm5kBmZua+zcxcwGZm5kBmZua+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqo2hDkzjMyWePLI8MvdB9au/YEAfUiZ6ztNK2FbGhAbaDcyOIQhsJKQnKSw1Ck21xzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
-size = Vector3(17, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_8"]
+_surfaces = [{
+"aabb": AABB(-5, -0.5, -4, 10, 4.1, 8),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/"),
+"format": 34359742479,
+"index_count": 108,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AACgwGZmBkAAAIDAAACgQGZmBkAAAIDAAACgQGZmBkAAAIBAAACgwGZmBkAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAAAAgQGZmZkDNzIw/AABgQGZmZkDNzIw/AABgQGZmZkBmZgZAAAAgQGZmZkBmZgZAAAAgQAAAAABmZgZAAABgQAAAAABmZgZAAABgQAAAAADNzIw/AAAgQAAAAADNzIw/TzmZwMzMLEC6mR3A5GVWv8zMLEDRpUXAINZYvszMLEBPzVw/RDOFwMzMLEDWfr4/RDOFwGZmBkDWfr4/INZYvmZmBkBPzVw/5GVWv2ZmBkDRpUXATzmZwGZmBkC6mR3AMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqapCNTrH3UtgqV7eTuk7rbCExLhBtQVSGNBOaZ+hzoZ7l4VS/k02TwvdaKjtYNBIlZr9zXotv2+ApRIfaCiBT4ix")
+}]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_9"]
-size = Vector3(17, 14, 1)
+size = Vector3(10, 6.5, 8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_10"]
-size = Vector3(17, 14, 1)
+size = Vector3(10.4, 6.5, 8.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
-size = Vector3(19.495241, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_11"]
+_surfaces = [{
+"aabb": AABB(-5.4, -0.5, -4.4, 10.8, 11, 8.8),
+"attribute_data": PackedByteArray("zLye/8y8nv/MvJ7/zLye/8y8nv/MvJ7/zLye/8y8nv9/Py3/fz8t/38/Lf9/Py3/fz8t/38/Lf9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8="),
+"format": 34359742479,
+"index_count": 162,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAAoADAAKAAkACAAMAAkACwAKAA0ADgAPABAADgAQABEAEgATABQAEgAUABUAFQAUAA8AFQAPAA4AFAATABAAFAAQAA8AEwASABEAEwARABAAEgAVAA4AEgAOABEAFgAXABgAFgAYABkAGgAbABwAGgAcAB0AHQAcABcAHQAXABYAHAAbABgAHAAYABcAGwAaABkAGwAZABgAGgAdABYAGgAWABkAHgAfACAAHgAgACEAIgAjACQAIgAkACUAJQAkAB8AJQAfAB4AJAAjACAAJAAgAB8AIwAiACEAIwAhACAAIgAlAB4AIgAeACEA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 38,
+"vertex_data": PackedByteArray("AACgwAAAwEAAAIDAAACgQAAAwEAAAIDAAACgQAAAwEAAAIBAAACgwAAAwEAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAzcyswAAAwEDNzIzAzcyswJqZGUEAAAAAzcysQJqZGUEAAAAAzcysQAAAwEDNzIzAzcyswAAAwEDNzIxAzcysQAAAwEDNzIxAMzMzv5qZGUDOzHxAMzMzP5qZGUDOzHxAMzMzP5qZGUDNzIRAMzMzv5qZGUDNzIRAMzMzvwAAAADNzIRAMzMzPwAAAADNzIRAMzMzPwAAAADOzHxAMzMzvwAAAADOzHxAzMwMQM3MbEBnZn5AmplZQM3MbEBnZn5AmplZQM3MbEAAAIRAzMwMQM3MbEAAAIRAzMwMQM3MLEAAAIRAmplZQM3MLEAAAIRAmplZQM3MLEBnZn5AzMwMQM3MLEBnZn5AzcxcwAAAKEFmZua+MzMjwAAAKEFmZua+MzMjwAAAKEFmZuY+zcxcwAAAKEFmZuY+zcxcwGZm5kBmZuY+MzMjwGZm5kBmZuY+MzMjwGZm5kBmZua+zcxcwGZm5kBmZua+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqo2hDkzjMyWePLI8MvdB9au/YEAfUiZ6ztNK2FbGhAbaDcyOIQhsJKQnKSw1Ck21xzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_12"]
-size = Vector3(17, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_12"]
+_surfaces = [{
+"aabb": AABB(-5, -0.5, -4, 10, 4.1, 8),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/"),
+"format": 34359742479,
+"index_count": 108,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AACgwGZmBkAAAIDAAACgQGZmBkAAAIDAAACgQGZmBkAAAIBAAACgwGZmBkAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAAAAgQGZmZkDNzIw/AABgQGZmZkDNzIw/AABgQGZmZkBmZgZAAAAgQGZmZkBmZgZAAAAgQAAAAABmZgZAAABgQAAAAABmZgZAAABgQAAAAADNzIw/AAAgQAAAAADNzIw/TzmZwMzMLEC6mR3A5GVWv8zMLEDRpUXAINZYvszMLEBPzVw/RDOFwMzMLEDWfr4/RDOFwGZmBkDWfr4/INZYvmZmBkBPzVw/5GVWv2ZmBkDRpUXATzmZwGZmBkC6mR3AMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqapCNTrH3UtgqV7eTuk7rbCExLhBtQVSGNBOaZ+hzoZ7l4VS/k02TwvdaKjtYNBIlZr9zXotv2+ApRIfaCiBT4ix")
+}]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_13"]
-size = Vector3(16.999994, 14, 1)
+size = Vector3(10, 6.5, 8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_14"]
-size = Vector3(17, 14, 1)
+size = Vector3(10.4, 6.5, 8.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_15"]
-size = Vector3(20.193449, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_15"]
+_surfaces = [{
+"aabb": AABB(-5.4, -0.5, -4.4, 10.8, 11, 8.8),
+"attribute_data": PackedByteArray("zLye/8y8nv/MvJ7/zLye/8y8nv/MvJ7/zLye/8y8nv9RVF7/UVRe/1FUXv9RVF7/UVRe/1FUXv9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8="),
+"format": 34359742479,
+"index_count": 162,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAAoADAAKAAkACAAMAAkACwAKAA0ADgAPABAADgAQABEAEgATABQAEgAUABUAFQAUAA8AFQAPAA4AFAATABAAFAAQAA8AEwASABEAEwARABAAEgAVAA4AEgAOABEAFgAXABgAFgAYABkAGgAbABwAGgAcAB0AHQAcABcAHQAXABYAHAAbABgAHAAYABcAGwAaABkAGwAZABgAGgAdABYAGgAWABkAHgAfACAAHgAgACEAIgAjACQAIgAkACUAJQAkAB8AJQAfAB4AJAAjACAAJAAgAB8AIwAiACEAIwAhACAAIgAlAB4AIgAeACEA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 38,
+"vertex_data": PackedByteArray("AACgwAAAwEAAAIDAAACgQAAAwEAAAIDAAACgQAAAwEAAAIBAAACgwAAAwEAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAzcyswAAAwEDNzIzAzcyswJqZGUEAAAAAzcysQJqZGUEAAAAAzcysQAAAwEDNzIzAzcyswAAAwEDNzIxAzcysQAAAwEDNzIxAMzMzv5qZGUDOzHxAMzMzP5qZGUDOzHxAMzMzP5qZGUDNzIRAMzMzv5qZGUDNzIRAMzMzvwAAAADNzIRAMzMzPwAAAADNzIRAMzMzPwAAAADOzHxAMzMzvwAAAADOzHxAzMwMQM3MbEBnZn5AmplZQM3MbEBnZn5AmplZQM3MbEAAAIRAzMwMQM3MbEAAAIRAzMwMQM3MLEAAAIRAmplZQM3MLEAAAIRAmplZQM3MLEBnZn5AzMwMQM3MLEBnZn5AzcxcwAAAKEFmZua+MzMjwAAAKEFmZua+MzMjwAAAKEFmZuY+zcxcwAAAKEFmZuY+zcxcwGZm5kBmZuY+MzMjwGZm5kBmZuY+MzMjwGZm5kBmZua+zcxcwGZm5kBmZua+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqo2hDkzjMyWePLI8MvdB9au/YEAfUiZ6ztNK2FbGhAbaDcyOIQhsJKQnKSw1Ck21xzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_16"]
-size = Vector3(17.000006, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_16"]
+_surfaces = [{
+"aabb": AABB(-5, -0.5, -4, 10, 4.1, 8),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/"),
+"format": 34359742479,
+"index_count": 108,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AACgwGZmBkAAAIDAAACgQGZmBkAAAIDAAACgQGZmBkAAAIBAAACgwGZmBkAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAAAAgQGZmZkDNzIw/AABgQGZmZkDNzIw/AABgQGZmZkBmZgZAAAAgQGZmZkBmZgZAAAAgQAAAAABmZgZAAABgQAAAAABmZgZAAABgQAAAAADNzIw/AAAgQAAAAADNzIw/TzmZwMzMLEC6mR3A5GVWv8zMLEDRpUXAINZYvszMLEBPzVw/RDOFwMzMLEDWfr4/RDOFwGZmBkDWfr4/INZYvmZmBkBPzVw/5GVWv2ZmBkDRpUXATzmZwGZmBkC6mR3AMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqapCNTrH3UtgqV7eTuk7rbCExLhBtQVSGNBOaZ+hzoZ7l4VS/k02TwvdaKjtYNBIlZr9zXotv2+ApRIfaCiBT4ix")
+}]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_17"]
-size = Vector3(17.000006, 14, 1)
+size = Vector3(10, 6.5, 8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_18"]
-size = Vector3(16.999992, 14, 1)
+size = Vector3(10.4, 6.5, 8.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_19"]
-size = Vector3(16.999992, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_19"]
+_surfaces = [{
+"aabb": AABB(-5.4, -0.5, -4.4, 10.8, 11, 8.8),
+"attribute_data": PackedByteArray("zLye/8y8nv/MvJ7/zLye/8y8nv/MvJ7/zLye/8y8nv+ojlH/qI5R/6iOUf+ojlH/qI5R/6iOUf9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8="),
+"format": 34359742479,
+"index_count": 162,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAAoADAAKAAkACAAMAAkACwAKAA0ADgAPABAADgAQABEAEgATABQAEgAUABUAFQAUAA8AFQAPAA4AFAATABAAFAAQAA8AEwASABEAEwARABAAEgAVAA4AEgAOABEAFgAXABgAFgAYABkAGgAbABwAGgAcAB0AHQAcABcAHQAXABYAHAAbABgAHAAYABcAGwAaABkAGwAZABgAGgAdABYAGgAWABkAHgAfACAAHgAgACEAIgAjACQAIgAkACUAJQAkAB8AJQAfAB4AJAAjACAAJAAgAB8AIwAiACEAIwAhACAAIgAlAB4AIgAeACEA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 38,
+"vertex_data": PackedByteArray("AACgwAAAwEAAAIDAAACgQAAAwEAAAIDAAACgQAAAwEAAAIBAAACgwAAAwEAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAzcyswAAAwEDNzIzAzcyswJqZGUEAAAAAzcysQJqZGUEAAAAAzcysQAAAwEDNzIzAzcyswAAAwEDNzIxAzcysQAAAwEDNzIxAMzMzv5qZGUDOzHxAMzMzP5qZGUDOzHxAMzMzP5qZGUDNzIRAMzMzv5qZGUDNzIRAMzMzvwAAAADNzIRAMzMzPwAAAADNzIRAMzMzPwAAAADOzHxAMzMzvwAAAADOzHxAzMwMQM3MbEBnZn5AmplZQM3MbEBnZn5AmplZQM3MbEAAAIRAzMwMQM3MbEAAAIRAzMwMQM3MLEAAAIRAmplZQM3MLEAAAIRAmplZQM3MLEBnZn5AzMwMQM3MLEBnZn5AzcxcwAAAKEFmZua+MzMjwAAAKEFmZua+MzMjwAAAKEFmZuY+zcxcwAAAKEFmZuY+zcxcwGZm5kBmZuY+MzMjwGZm5kBmZuY+MzMjwGZm5kBmZua+zcxcwGZm5kBmZua+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqo2hDkzjMyWePLI8MvdB9au/YEAfUiZ6ztNK2FbGhAbaDcyOIQhsJKQnKSw1Ck21xzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_20"]
-size = Vector3(17.000006, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_20"]
+_surfaces = [{
+"aabb": AABB(-5, -0.5, -4, 10, 4.1, 8),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/"),
+"format": 34359742479,
+"index_count": 108,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AACgwGZmBkAAAIDAAACgQGZmBkAAAIDAAACgQGZmBkAAAIBAAACgwGZmBkAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAAAAgQGZmZkDNzIw/AABgQGZmZkDNzIw/AABgQGZmZkBmZgZAAAAgQGZmZkBmZgZAAAAgQAAAAABmZgZAAABgQAAAAABmZgZAAABgQAAAAADNzIw/AAAgQAAAAADNzIw/TzmZwMzMLEC6mR3A5GVWv8zMLEDRpUXAINZYvszMLEBPzVw/RDOFwMzMLEDWfr4/RDOFwGZmBkDWfr4/INZYvmZmBkBPzVw/5GVWv2ZmBkDRpUXATzmZwGZmBkC6mR3AMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqapCNTrH3UtgqV7eTuk7rbCExLhBtQVSGNBOaZ+hzoZ7l4VS/k02TwvdaKjtYNBIlZr9zXotv2+ApRIfaCiBT4ix")
+}]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_21"]
-size = Vector3(21.882208, 14, 1)
+size = Vector3(10, 6.5, 8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_22"]
-size = Vector3(17, 14, 1)
+size = Vector3(10.4, 6.5, 8.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_23"]
-size = Vector3(16.999998, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_23"]
+_surfaces = [{
+"aabb": AABB(-5.4, -0.5, -4.4, 10.8, 11, 8.8),
+"attribute_data": PackedByteArray("zLye/8y8nv/MvJ7/zLye/8y8nv/MvJ7/zLye/8y8nv9/Py3/fz8t/38/Lf9/Py3/fz8t/38/Lf9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8="),
+"format": 34359742479,
+"index_count": 162,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAAoADAAKAAkACAAMAAkACwAKAA0ADgAPABAADgAQABEAEgATABQAEgAUABUAFQAUAA8AFQAPAA4AFAATABAAFAAQAA8AEwASABEAEwARABAAEgAVAA4AEgAOABEAFgAXABgAFgAYABkAGgAbABwAGgAcAB0AHQAcABcAHQAXABYAHAAbABgAHAAYABcAGwAaABkAGwAZABgAGgAdABYAGgAWABkAHgAfACAAHgAgACEAIgAjACQAIgAkACUAJQAkAB8AJQAfAB4AJAAjACAAJAAgAB8AIwAiACEAIwAhACAAIgAlAB4AIgAeACEA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 38,
+"vertex_data": PackedByteArray("AACgwAAAwEAAAIDAAACgQAAAwEAAAIDAAACgQAAAwEAAAIBAAACgwAAAwEAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAzcyswAAAwEDNzIzAzcyswJqZGUEAAAAAzcysQJqZGUEAAAAAzcysQAAAwEDNzIzAzcyswAAAwEDNzIxAzcysQAAAwEDNzIxAMzMzv5qZGUDOzHxAMzMzP5qZGUDOzHxAMzMzP5qZGUDNzIRAMzMzv5qZGUDNzIRAMzMzvwAAAADNzIRAMzMzPwAAAADNzIRAMzMzPwAAAADOzHxAMzMzvwAAAADOzHxAzMwMQM3MbEBnZn5AmplZQM3MbEBnZn5AmplZQM3MbEAAAIRAzMwMQM3MbEAAAIRAzMwMQM3MLEAAAIRAmplZQM3MLEAAAIRAmplZQM3MLEBnZn5AzMwMQM3MLEBnZn5AzcxcwAAAKEFmZua+MzMjwAAAKEFmZua+MzMjwAAAKEFmZuY+zcxcwAAAKEFmZuY+zcxcwGZm5kBmZuY+MzMjwGZm5kBmZuY+MzMjwGZm5kBmZua+zcxcwGZm5kBmZua+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqo2hDkzjMyWePLI8MvdB9au/YEAfUiZ6ztNK2FbGhAbaDcyOIQhsJKQnKSw1Ck21xzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_24"]
-size = Vector3(25.09328, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_24"]
+_surfaces = [{
+"aabb": AABB(-5, -0.5, -4, 10, 4.1, 8),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/"),
+"format": 34359742479,
+"index_count": 108,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AACgwGZmBkAAAIDAAACgQGZmBkAAAIDAAACgQGZmBkAAAIBAAACgwGZmBkAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAAAAgQGZmZkDNzIw/AABgQGZmZkDNzIw/AABgQGZmZkBmZgZAAAAgQGZmZkBmZgZAAAAgQAAAAABmZgZAAABgQAAAAABmZgZAAABgQAAAAADNzIw/AAAgQAAAAADNzIw/TzmZwMzMLEC6mR3A5GVWv8zMLEDRpUXAINZYvszMLEBPzVw/RDOFwMzMLEDWfr4/RDOFwGZmBkDWfr4/INZYvmZmBkBPzVw/5GVWv2ZmBkDRpUXATzmZwGZmBkC6mR3AMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqapCNTrH3UtgqV7eTuk7rbCExLhBtQVSGNBOaZ+hzoZ7l4VS/k02TwvdaKjtYNBIlZr9zXotv2+ApRIfaCiBT4ix")
+}]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_25"]
-size = Vector3(16.999996, 14, 1)
+size = Vector3(10, 6.5, 8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_26"]
-size = Vector3(17, 14, 1)
+size = Vector3(10.4, 6.5, 8.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_27"]
-size = Vector3(17, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_27"]
+_surfaces = [{
+"aabb": AABB(-5.4, -0.5, -4.4, 10.8, 11, 8.8),
+"attribute_data": PackedByteArray("zLye/8y8nv/MvJ7/zLye/8y8nv/MvJ7/zLye/8y8nv+ojlH/qI5R/6iOUf+ojlH/qI5R/6iOUf9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8="),
+"format": 34359742479,
+"index_count": 162,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAAoADAAKAAkACAAMAAkACwAKAA0ADgAPABAADgAQABEAEgATABQAEgAUABUAFQAUAA8AFQAPAA4AFAATABAAFAAQAA8AEwASABEAEwARABAAEgAVAA4AEgAOABEAFgAXABgAFgAYABkAGgAbABwAGgAcAB0AHQAcABcAHQAXABYAHAAbABgAHAAYABcAGwAaABkAGwAZABgAGgAdABYAGgAWABkAHgAfACAAHgAgACEAIgAjACQAIgAkACUAJQAkAB8AJQAfAB4AJAAjACAAJAAgAB8AIwAiACEAIwAhACAAIgAlAB4AIgAeACEA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 38,
+"vertex_data": PackedByteArray("AACgwAAAwEAAAIDAAACgQAAAwEAAAIDAAACgQAAAwEAAAIBAAACgwAAAwEAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAzcyswAAAwEDNzIzAzcyswJqZGUEAAAAAzcysQJqZGUEAAAAAzcysQAAAwEDNzIzAzcyswAAAwEDNzIxAzcysQAAAwEDNzIxAMzMzv5qZGUDOzHxAMzMzP5qZGUDOzHxAMzMzP5qZGUDNzIRAMzMzv5qZGUDNzIRAMzMzvwAAAADNzIRAMzMzPwAAAADNzIRAMzMzPwAAAADOzHxAMzMzvwAAAADOzHxAzMwMQM3MbEBnZn5AmplZQM3MbEBnZn5AmplZQM3MbEAAAIRAzMwMQM3MbEAAAIRAzMwMQM3MLEAAAIRAmplZQM3MLEAAAIRAmplZQM3MLEBnZn5AzMwMQM3MLEBnZn5AzcxcwAAAKEFmZua+MzMjwAAAKEFmZua+MzMjwAAAKEFmZuY+zcxcwAAAKEFmZuY+zcxcwGZm5kBmZuY+MzMjwGZm5kBmZuY+MzMjwGZm5kBmZua+zcxcwGZm5kBmZua+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqo2hDkzjMyWePLI8MvdB9au/YEAfUiZ6ztNK2FbGhAbaDcyOIQhsJKQnKSw1Ck21xzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_28"]
-size = Vector3(17, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_28"]
+_surfaces = [{
+"aabb": AABB(-5, -0.5, -4, 10, 4.1, 8),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/"),
+"format": 34359742479,
+"index_count": 108,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AACgwGZmBkAAAIDAAACgQGZmBkAAAIDAAACgQGZmBkAAAIBAAACgwGZmBkAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAAAAgQGZmZkDNzIw/AABgQGZmZkDNzIw/AABgQGZmZkBmZgZAAAAgQGZmZkBmZgZAAAAgQAAAAABmZgZAAABgQAAAAABmZgZAAABgQAAAAADNzIw/AAAgQAAAAADNzIw/TzmZwMzMLEC6mR3A5GVWv8zMLEDRpUXAINZYvszMLEBPzVw/RDOFwMzMLEDWfr4/RDOFwGZmBkDWfr4/INZYvmZmBkBPzVw/5GVWv2ZmBkDRpUXATzmZwGZmBkC6mR3AMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqapCNTrH3UtgqV7eTuk7rbCExLhBtQVSGNBOaZ+hzoZ7l4VS/k02TwvdaKjtYNBIlZr9zXotv2+ApRIfaCiBT4ix")
+}]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_29"]
-size = Vector3(14.337985, 14, 1)
+size = Vector3(10, 6.5, 8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_30"]
-size = Vector3(17, 14, 1)
+size = Vector3(10.4, 6.5, 8.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_31"]
-size = Vector3(16.999994, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_31"]
+_surfaces = [{
+"aabb": AABB(-5.4, -0.5, -4.4, 10.8, 11, 8.8),
+"attribute_data": PackedByteArray("zLye/8y8nv/MvJ7/zLye/8y8nv/MvJ7/zLye/8y8nv9/Py3/fz8t/38/Lf9/Py3/fz8t/38/Lf9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8="),
+"format": 34359742479,
+"index_count": 162,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAAoADAAKAAkACAAMAAkACwAKAA0ADgAPABAADgAQABEAEgATABQAEgAUABUAFQAUAA8AFQAPAA4AFAATABAAFAAQAA8AEwASABEAEwARABAAEgAVAA4AEgAOABEAFgAXABgAFgAYABkAGgAbABwAGgAcAB0AHQAcABcAHQAXABYAHAAbABgAHAAYABcAGwAaABkAGwAZABgAGgAdABYAGgAWABkAHgAfACAAHgAgACEAIgAjACQAIgAkACUAJQAkAB8AJQAfAB4AJAAjACAAJAAgAB8AIwAiACEAIwAhACAAIgAlAB4AIgAeACEA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 38,
+"vertex_data": PackedByteArray("AACgwAAAwEAAAIDAAACgQAAAwEAAAIDAAACgQAAAwEAAAIBAAACgwAAAwEAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAzcyswAAAwEDNzIzAzcyswJqZGUEAAAAAzcysQJqZGUEAAAAAzcysQAAAwEDNzIzAzcyswAAAwEDNzIxAzcysQAAAwEDNzIxAMzMzv5qZGUDOzHxAMzMzP5qZGUDOzHxAMzMzP5qZGUDNzIRAMzMzv5qZGUDNzIRAMzMzvwAAAADNzIRAMzMzPwAAAADNzIRAMzMzPwAAAADOzHxAMzMzvwAAAADOzHxAzMwMQM3MbEBnZn5AmplZQM3MbEBnZn5AmplZQM3MbEAAAIRAzMwMQM3MbEAAAIRAzMwMQM3MLEAAAIRAmplZQM3MLEAAAIRAmplZQM3MLEBnZn5AzMwMQM3MLEBnZn5AzcxcwAAAKEFmZua+MzMjwAAAKEFmZua+MzMjwAAAKEFmZuY+zcxcwAAAKEFmZuY+zcxcwGZm5kBmZuY+MzMjwGZm5kBmZuY+MzMjwGZm5kBmZua+zcxcwGZm5kBmZua+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqo2hDkzjMyWePLI8MvdB9au/YEAfUiZ6ztNK2FbGhAbaDcyOIQhsJKQnKSw1Ck21xzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_32"]
-size = Vector3(17, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_32"]
+_surfaces = [{
+"aabb": AABB(-5, -0.5, -4, 10, 4.1, 8),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/"),
+"format": 34359742479,
+"index_count": 108,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AACgwGZmBkAAAIDAAACgQGZmBkAAAIDAAACgQGZmBkAAAIBAAACgwGZmBkAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAAAAgQGZmZkDNzIw/AABgQGZmZkDNzIw/AABgQGZmZkBmZgZAAAAgQGZmZkBmZgZAAAAgQAAAAABmZgZAAABgQAAAAABmZgZAAABgQAAAAADNzIw/AAAgQAAAAADNzIw/TzmZwMzMLEC6mR3A5GVWv8zMLEDRpUXAINZYvszMLEBPzVw/RDOFwMzMLEDWfr4/RDOFwGZmBkDWfr4/INZYvmZmBkBPzVw/5GVWv2ZmBkDRpUXATzmZwGZmBkC6mR3AMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqapCNTrH3UtgqV7eTuk7rbCExLhBtQVSGNBOaZ+hzoZ7l4VS/k02TwvdaKjtYNBIlZr9zXotv2+ApRIfaCiBT4ix")
+}]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_33"]
-size = Vector3(13.537439, 14, 1)
+size = Vector3(10, 6.5, 8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_34"]
-size = Vector3(17.000006, 14, 1)
+size = Vector3(10.4, 6.5, 8.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_35"]
-size = Vector3(17.000006, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_35"]
+_surfaces = [{
+"aabb": AABB(-5.4, -0.5, -4.4, 10.8, 11, 8.8),
+"attribute_data": PackedByteArray("zLye/8y8nv/MvJ7/zLye/8y8nv/MvJ7/zLye/8y8nv9RVF7/UVRe/1FUXv9RVF7/UVRe/1FUXv9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8="),
+"format": 34359742479,
+"index_count": 162,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAAoADAAKAAkACAAMAAkACwAKAA0ADgAPABAADgAQABEAEgATABQAEgAUABUAFQAUAA8AFQAPAA4AFAATABAAFAAQAA8AEwASABEAEwARABAAEgAVAA4AEgAOABEAFgAXABgAFgAYABkAGgAbABwAGgAcAB0AHQAcABcAHQAXABYAHAAbABgAHAAYABcAGwAaABkAGwAZABgAGgAdABYAGgAWABkAHgAfACAAHgAgACEAIgAjACQAIgAkACUAJQAkAB8AJQAfAB4AJAAjACAAJAAgAB8AIwAiACEAIwAhACAAIgAlAB4AIgAeACEA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 38,
+"vertex_data": PackedByteArray("AACgwAAAwEAAAIDAAACgQAAAwEAAAIDAAACgQAAAwEAAAIBAAACgwAAAwEAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAzcyswAAAwEDNzIzAzcyswJqZGUEAAAAAzcysQJqZGUEAAAAAzcysQAAAwEDNzIzAzcyswAAAwEDNzIxAzcysQAAAwEDNzIxAMzMzv5qZGUDOzHxAMzMzP5qZGUDOzHxAMzMzP5qZGUDNzIRAMzMzv5qZGUDNzIRAMzMzvwAAAADNzIRAMzMzPwAAAADNzIRAMzMzPwAAAADOzHxAMzMzvwAAAADOzHxAzMwMQM3MbEBnZn5AmplZQM3MbEBnZn5AmplZQM3MbEAAAIRAzMwMQM3MbEAAAIRAzMwMQM3MLEAAAIRAmplZQM3MLEAAAIRAmplZQM3MLEBnZn5AzMwMQM3MLEBnZn5AzcxcwAAAKEFmZua+MzMjwAAAKEFmZua+MzMjwAAAKEFmZuY+zcxcwAAAKEFmZuY+zcxcwGZm5kBmZuY+MzMjwGZm5kBmZuY+MzMjwGZm5kBmZua+zcxcwGZm5kBmZua+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqo2hDkzjMyWePLI8MvdB9au/YEAfUiZ6ztNK2FbGhAbaDcyOIQhsJKQnKSw1Ck21xzIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_36"]
-size = Vector3(16.999992, 14, 1)
+[sub_resource type="ArrayMesh" id="ArrayMesh_36"]
+_surfaces = [{
+"aabb": AABB(-5, -0.5, -4, 10, 4.1, 8),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/"),
+"format": 34359742479,
+"index_count": 108,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AACgwGZmBkAAAIDAAACgQGZmBkAAAIDAAACgQGZmBkAAAIBAAACgwGZmBkAAAIBAAACgwAAAAL8AAIBAAACgQAAAAL8AAIBAAACgQAAAAL8AAIDAAACgwAAAAL8AAIDAAAAgQGZmZkDNzIw/AABgQGZmZkDNzIw/AABgQGZmZkBmZgZAAAAgQGZmZkBmZgZAAAAgQAAAAABmZgZAAABgQAAAAABmZgZAAABgQAAAAADNzIw/AAAgQAAAAADNzIw/TzmZwMzMLEC6mR3A5GVWv8zMLEDRpUXAINZYvszMLEBPzVw/RDOFwMzMLEDWfr4/RDOFwGZmBkDWfr4/INZYvmZmBkBPzVw/5GVWv2ZmBkDRpUXATzmZwGZmBkC6mR3AMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqapCNTrH3UtgqV7eTuk7rbCExLhBtQVSGNBOaZ+hzoZ7l4VS/k02TwvdaKjtYNBIlZr9zXotv2+ApRIfaCiBT4ix")
+}]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_37"]
+size = Vector3(16.999992, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_38"]
 size = Vector3(17.000006, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_39"]
+size = Vector3(11.496695, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_40"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_41"]
+size = Vector3(16.999998, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_42"]
+size = Vector3(8.027238, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_43"]
+size = Vector3(10.766165, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_44"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_45"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_46"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_47"]
+size = Vector3(19.495241, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_48"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_49"]
+size = Vector3(16.999994, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_50"]
+size = Vector3(17, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_51"]
+size = Vector3(20.193449, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_52"]
+size = Vector3(17.000006, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_53"]
+size = Vector3(17.000006, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_54"]
+size = Vector3(16.999992, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_55"]
+size = Vector3(16.999992, 14, 1)
 
 [node name="Chunk_4_5_0" type="Node3D"]
 
 [node name="Props" type="Node3D" parent="."]
 
-[node name="world_crownmarch_bridge_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 7.826, 106)
+[node name="world_crownmarch_brannock_forge" type="Node3D" parent="Props" instance=ExtResource("1_34b2a")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 12, 10, 214)
+script = ExtResource("2_30029")
+faction = "brannock"
+hostile_message = "Brannock's smith has barred the forge against you."
+world_id = "world.crownmarch.brannock_forge"
+display_name = "Brannock smithy"
+requires_flags = PackedStringArray()
+prompt = "Reforge"
+radius_m = 6.0
+priority = 45
+
+[node name="world_crownmarch_brannock_giant_banner_3" type="Node3D" parent="Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 10.06, 123)
+script = ExtResource("3_727cc")
+visible_when_flag = "faction.brannock.allied"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_giant_banner_3"]
+mesh = SubResource("ArrayMesh_1")
+
+[node name="Body" type="StaticBody3D" parent="Props/world_crownmarch_brannock_giant_banner_3"]
+collision_mask = 0
+
+[node name="Shape0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_giant_banner_3/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
+shape = SubResource("CylinderShape3D_2")
+
+[node name="world_crownmarch_brannock_giant_banner_4" type="Node3D" parent="Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 10.06, 123)
+script = ExtResource("3_727cc")
+visible_when_flag = "faction.brannock.allied"
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_giant_banner_4"]
+mesh = SubResource("ArrayMesh_3")
+
+[node name="Body" type="StaticBody3D" parent="Props/world_crownmarch_brannock_giant_banner_4"]
+collision_mask = 0
+
+[node name="Shape0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_giant_banner_4/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
+shape = SubResource("CylinderShape3D_4")
+
+[node name="world_crownmarch_brannock_house_1" type="StaticBody3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 38, 10.002, 142)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("2_5fc47")
-world_id = "world.crownmarch.bridge_cache"
-loot_table = "loot.cache_brannock_bridge"
+script = ExtResource("5_5fc47")
+world_id = "world.crownmarch.brannock_house_1"
+metadata/faction = "brannock"
+metadata/prop_tags = PackedStringArray("house")
+
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_1"]
+script = ExtResource("6_c8050")
+entity_id = "world.crownmarch.brannock_house_1"
+definition_id = "prop.house_town"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_1"]
+
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_1/Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+shape = SubResource("BoxShape3D_5")
+
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_1"]
+
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_1/Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("7_129e0")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_1/Hurtboxes/Body"]
+shape = SubResource("BoxShape3D_6")
+
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_1"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_1/Intact"]
+mesh = SubResource("ArrayMesh_7")
+
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_1"]
+visible = false
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_1/Broken"]
+mesh = SubResource("ArrayMesh_8")
+
+[node name="world_crownmarch_brannock_house_2" type="StaticBody3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 38, 10, 162)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("5_5fc47")
+world_id = "world.crownmarch.brannock_house_2"
+metadata/faction = "brannock"
+metadata/prop_tags = PackedStringArray("house")
+
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_2"]
+script = ExtResource("6_c8050")
+entity_id = "world.crownmarch.brannock_house_2"
+definition_id = "prop.house_town"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_2"]
+
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_2/Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+shape = SubResource("BoxShape3D_9")
+
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_2"]
+
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_2/Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("7_129e0")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_2/Hurtboxes/Body"]
+shape = SubResource("BoxShape3D_10")
+
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_2"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_2/Intact"]
+mesh = SubResource("ArrayMesh_11")
+
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_2"]
+visible = false
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_2/Broken"]
+mesh = SubResource("ArrayMesh_12")
+
+[node name="world_crownmarch_brannock_house_3" type="StaticBody3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 38, 10, 222)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("5_5fc47")
+world_id = "world.crownmarch.brannock_house_3"
+metadata/faction = "brannock"
+metadata/prop_tags = PackedStringArray("house")
+
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_3"]
+script = ExtResource("6_c8050")
+entity_id = "world.crownmarch.brannock_house_3"
+definition_id = "prop.house_town"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_3"]
+
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_3/Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+shape = SubResource("BoxShape3D_13")
+
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_3"]
+
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_3/Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("7_129e0")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_3/Hurtboxes/Body"]
+shape = SubResource("BoxShape3D_14")
+
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_3"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_3/Intact"]
+mesh = SubResource("ArrayMesh_15")
+
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_3"]
+visible = false
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_3/Broken"]
+mesh = SubResource("ArrayMesh_16")
+
+[node name="world_crownmarch_brannock_house_4" type="StaticBody3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 38, 10, 242)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("5_5fc47")
+world_id = "world.crownmarch.brannock_house_4"
+metadata/faction = "brannock"
+metadata/prop_tags = PackedStringArray("house")
+
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_4"]
+script = ExtResource("6_c8050")
+entity_id = "world.crownmarch.brannock_house_4"
+definition_id = "prop.house_town"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_4"]
+
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_4/Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+shape = SubResource("BoxShape3D_17")
+
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_4"]
+
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_4/Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("7_129e0")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_4/Hurtboxes/Body"]
+shape = SubResource("BoxShape3D_18")
+
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_4"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_4/Intact"]
+mesh = SubResource("ArrayMesh_19")
+
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_4"]
+visible = false
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_4/Broken"]
+mesh = SubResource("ArrayMesh_20")
+
+[node name="world_crownmarch_brannock_house_5" type="StaticBody3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 82, 10.002, 142)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("5_5fc47")
+world_id = "world.crownmarch.brannock_house_5"
+metadata/faction = "brannock"
+metadata/prop_tags = PackedStringArray("house")
+
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_5"]
+script = ExtResource("6_c8050")
+entity_id = "world.crownmarch.brannock_house_5"
+definition_id = "prop.house_town"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_5"]
+
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_5/Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+shape = SubResource("BoxShape3D_21")
+
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_5"]
+
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_5/Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("7_129e0")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_5/Hurtboxes/Body"]
+shape = SubResource("BoxShape3D_22")
+
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_5"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_5/Intact"]
+mesh = SubResource("ArrayMesh_23")
+
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_5"]
+visible = false
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_5/Broken"]
+mesh = SubResource("ArrayMesh_24")
+
+[node name="world_crownmarch_brannock_house_6" type="StaticBody3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 82, 10, 199)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("5_5fc47")
+world_id = "world.crownmarch.brannock_house_6"
+metadata/faction = "brannock"
+metadata/prop_tags = PackedStringArray("house")
+
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_6"]
+script = ExtResource("6_c8050")
+entity_id = "world.crownmarch.brannock_house_6"
+definition_id = "prop.house_town"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_6"]
+
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_6/Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+shape = SubResource("BoxShape3D_25")
+
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_6"]
+
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_6/Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("7_129e0")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_6/Hurtboxes/Body"]
+shape = SubResource("BoxShape3D_26")
+
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_6"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_6/Intact"]
+mesh = SubResource("ArrayMesh_27")
+
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_6"]
+visible = false
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_6/Broken"]
+mesh = SubResource("ArrayMesh_28")
+
+[node name="world_crownmarch_brannock_house_7" type="StaticBody3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 82, 10, 222)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("5_5fc47")
+world_id = "world.crownmarch.brannock_house_7"
+metadata/faction = "brannock"
+metadata/prop_tags = PackedStringArray("house")
+
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_7"]
+script = ExtResource("6_c8050")
+entity_id = "world.crownmarch.brannock_house_7"
+definition_id = "prop.house_town"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_7"]
+
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_7/Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+shape = SubResource("BoxShape3D_29")
+
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_7"]
+
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_7/Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("7_129e0")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_7/Hurtboxes/Body"]
+shape = SubResource("BoxShape3D_30")
+
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_7"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_7/Intact"]
+mesh = SubResource("ArrayMesh_31")
+
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_7"]
+visible = false
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_7/Broken"]
+mesh = SubResource("ArrayMesh_32")
+
+[node name="world_crownmarch_brannock_house_8" type="StaticBody3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 82, 10, 242)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("5_5fc47")
+world_id = "world.crownmarch.brannock_house_8"
+metadata/faction = "brannock"
+metadata/prop_tags = PackedStringArray("house")
+
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_8"]
+script = ExtResource("6_c8050")
+entity_id = "world.crownmarch.brannock_house_8"
+definition_id = "prop.house_town"
+anchor_path = NodePath("../Anchors/Center")
+
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_8"]
+
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_8/Anchors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+shape = SubResource("BoxShape3D_33")
+
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_8"]
+
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_8/Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("7_129e0")
+region = "body"
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_8/Hurtboxes/Body"]
+shape = SubResource("BoxShape3D_34")
+
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_8"]
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_8/Intact"]
+mesh = SubResource("ArrayMesh_35")
+
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_8"]
+visible = false
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_8/Broken"]
+mesh = SubResource("ArrayMesh_36")
 
 [node name="Shrines" type="Node3D" parent="."]
 
 [node name="Waystones" type="Node3D" parent="."]
 
 [node name="Markers" type="Node3D" parent="."]
-
-[node name="Safe" type="Node3D" parent="Markers"]
-
-[node name="world_marker_brannock_hall_safe" type="Marker3D" parent="Markers/Safe"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 102, 10.2, 189)
-script = ExtResource("3_acc12")
-marker_id = "world.marker.brannock_hall_safe"
-kind = 4
-
-[node name="world_marker_brannock_market_safe" type="Marker3D" parent="Markers/Safe"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 10.2, 206)
-script = ExtResource("3_acc12")
-marker_id = "world.marker.brannock_market_safe"
-kind = 4
 
 [node name="Triggers" type="Node3D" parent="."]
 
@@ -158,165 +820,85 @@ kind = 4
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.77004, 5.439489, 0.3656311)
 collision_layer = 64
 collision_mask = 0
-script = ExtResource("4_f30a1")
+script = ExtResource("8_f30a1")
 gate_id = "world.gate.wend_deep"
 message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
 
 [node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(-0.06651927, 0, -0.99778515, 0, 1, 0, 0.99778515, 0, -0.06651927, 0, 0, 0)
-shape = SubResource("BoxShape3D_1")
+shape = SubResource("BoxShape3D_37")
 
 [node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(-0.06651891, 0, -0.99778515, 0, 1, 0, 0.99778515, 0, -0.06651891, -1.0643044, 0.103358746, 15.964569)
-shape = SubResource("BoxShape3D_2")
+shape = SubResource("BoxShape3D_38")
 
 [node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.042150598, 0, -0.9991113, 0, 1, 0, 0.9991113, 0, 0.042150598, -1.3752365, 0.39147997, 29.190521)
-shape = SubResource("BoxShape3D_3")
+shape = SubResource("BoxShape3D_39")
 
 [node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.34570554, 0, -0.93834305, 0, 1, 0, 0.93834305, 0, 0.34570554, 1.6116295, 0.5538435, 41.94095)
-shape = SubResource("BoxShape3D_4")
+shape = SubResource("BoxShape3D_40")
 
 [node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.34570533, 0, -0.9383431, 0, 1, 0, 0.9383431, 0, 0.34570533, 7.1429176, 0.07445288, 56.954437)
-shape = SubResource("BoxShape3D_5")
+shape = SubResource("BoxShape3D_41")
 
 [node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.9461448, 0, -0.32374376, 0, 1, 0, 0.32374376, 0, 0.9461448, 13.232952, 0.07445288, 65.598694)
-shape = SubResource("BoxShape3D_6")
+shape = SubResource("BoxShape3D_42")
 
 [node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.9998701, 0, 0.016114736, 0, 1, 0, -0.016114736, 0, 0.9998701, 35.54347, 2.7522187, 74.21304)
-shape = SubResource("BoxShape3D_7")
+shape = SubResource("BoxShape3D_43")
 
 [node name="Wall7" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.425915, 1.305398, 74.13437)
-shape = SubResource("BoxShape3D_8")
+shape = SubResource("BoxShape3D_44")
 
 [node name="Wall8" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.42592, 1.305398, 74.13437)
-shape = SubResource("BoxShape3D_9")
+shape = SubResource("BoxShape3D_45")
 
 [node name="Wall9" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80.42592, 1.4273777, 74.13437)
-shape = SubResource("BoxShape3D_10")
+shape = SubResource("BoxShape3D_46")
 
 [node name="Wall10" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.9932002, 0, -0.11641905, 0, 1, 0, 0.11641905, 0, 0.9932002, 97.61066, 1.5173101, 75.21097)
-shape = SubResource("BoxShape3D_11")
+shape = SubResource("BoxShape3D_47")
 
 [node name="Wall11" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.97871685, 0, -0.20521544, 0, 1, 0, 0.20521544, 0, 0.97871685, 114.62514, 1.5529895, 77.92929)
-shape = SubResource("BoxShape3D_12")
+shape = SubResource("BoxShape3D_48")
 
 [node name="Wall12" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.9787172, 0, -0.20521362, 0, 1, 0, 0.20521362, 0, 0.9787172, 130.28459, 1.634901, 81.21274)
-shape = SubResource("BoxShape3D_13")
+shape = SubResource("BoxShape3D_49")
 
 [node name="Wall13" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.97871685, 0, -0.20521544, 0, 1, 0, 0.20521544, 0, 0.97871685, 145.94408, 1.6978946, 84.496155)
-shape = SubResource("BoxShape3D_14")
+shape = SubResource("BoxShape3D_50")
 
 [node name="Wall14" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.9337973, 0, -0.35780242, 0, 1, 0, 0.35780242, 0, 0.9337973, 162.7352, 1.7837577, 89.571625)
-shape = SubResource("BoxShape3D_15")
+shape = SubResource("BoxShape3D_51")
 
 [node name="Wall15" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.8898179, 0, -0.45631585, 0, 1, 0, 0.45631585, 0, 0.8898179, 178.81514, 2.0285468, 96.65585)
-shape = SubResource("BoxShape3D_16")
+shape = SubResource("BoxShape3D_52")
 
 [node name="Wall16" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.88981694, 0, -0.45631772, 0, 1, 0, 0.45631772, 0, 0.88981694, 193.05223, 1.9562097, 103.95694)
-shape = SubResource("BoxShape3D_17")
+shape = SubResource("BoxShape3D_53")
 
 [node name="Wall17" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.8898177, 0, -0.4563162, 0, 1, 0, 0.4563162, 0, 0.8898177, 207.28929, 1.9562097, 111.258026)
-shape = SubResource("BoxShape3D_18")
+shape = SubResource("BoxShape3D_54")
 
 [node name="Wall18" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
 transform = Transform3D(0.8898177, 0, -0.4563162, 0, 1, 0, 0.4563162, 0, 0.8898177, 221.52638, 2.2387204, 118.55905)
-shape = SubResource("BoxShape3D_19")
-
-[node name="world_gate_wend_deep_7" type="StaticBody3D" parent="SizeGates"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.7611046, 5.441289, 14.667236)
-collision_layer = 64
-collision_mask = 0
-script = ExtResource("4_f30a1")
-gate_id = "world.gate.wend_deep"
-message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
-
-[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(-0.06651903, 0, -0.99778515, 0, 1, 0, 0.99778515, 0, -0.06651903, 0, 0, 0)
-shape = SubResource("BoxShape3D_20")
-
-[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.0923511, 0, -0.9957265, 0, 1, 0, 0.9957265, 0, 0.0923511, 0.43209505, 0.24233723, 18.378754)
-shape = SubResource("BoxShape3D_21")
-
-[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.34570542, 0, -0.9383431, 0, 1, 0, 0.9383431, 0, 0.34570542, 4.1619854, 0.7141695, 36.281982)
-shape = SubResource("BoxShape3D_22")
-
-[node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.3457052, 0, -0.93834317, 0, 1, 0, 0.93834317, 0, 0.3457052, 9.69327, 1.0763149, 51.29547)
-shape = SubResource("BoxShape3D_23")
-
-[node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.75962377, 0, -0.65036273, 0, 1, 0, 0.65036273, 0, 0.75962377, 21.609827, 1.1567831, 66.6369)
-shape = SubResource("BoxShape3D_24")
-
-[node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.8814799, 0, -0.47222146, 0, 1, 0, 0.47222146, 0, 0.8814799, 37.81258, 1.2128444, 78.24936)
-shape = SubResource("BoxShape3D_25")
-
-[node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 74.434845, 1.371212, 84.83276)
-shape = SubResource("BoxShape3D_26")
-
-[node name="Wall7" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 90.434845, 1.522789, 84.83276)
-shape = SubResource("BoxShape3D_27")
-
-[node name="Wall8" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106.434845, 1.6099849, 84.83276)
-shape = SubResource("BoxShape3D_28")
-
-[node name="Wall9" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.99258655, 0, -0.12153963, 0, 1, 0, 0.12153963, 0, 0.99258655, 121.0544, 1.7419696, 85.64331)
-shape = SubResource("BoxShape3D_29")
-
-[node name="Wall10" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.97871685, 0, -0.20521544, 0, 1, 0, 0.20521544, 0, 0.97871685, 135.5037, 1.6674542, 88.09558)
-shape = SubResource("BoxShape3D_30")
-
-[node name="Wall11" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.9787172, 0, -0.20521362, 0, 1, 0, 0.20521362, 0, 0.9787172, 151.16315, 1.6674542, 91.37903)
-shape = SubResource("BoxShape3D_31")
-
-[node name="Wall12" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.97871685, 0, -0.20521544, 0, 1, 0, 0.20521544, 0, 0.97871685, 166.82263, 1.971663, 94.662445)
-shape = SubResource("BoxShape3D_32")
-
-[node name="Wall13" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.9288367, 0, -0.37048945, 0, 1, 0, 0.37048945, 0, 0.9288367, 180.47498, 2.1494374, 98.62665)
-shape = SubResource("BoxShape3D_33")
-
-[node name="Wall14" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.8898179, 0, -0.45631585, 0, 1, 0, 0.45631585, 0, 0.8898179, 193.41614, 2.1494374, 104.59967)
-shape = SubResource("BoxShape3D_34")
-
-[node name="Wall15" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.88981694, 0, -0.45631772, 0, 1, 0, 0.45631772, 0, 0.88981694, 207.65323, 2.199936, 111.90076)
-shape = SubResource("BoxShape3D_35")
-
-[node name="Wall16" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.8898177, 0, -0.4563162, 0, 1, 0, 0.4563162, 0, 0.8898177, 221.89029, 2.1143618, 119.20184)
-shape = SubResource("BoxShape3D_36")
-
-[node name="Wall17" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_7"]
-transform = Transform3D(0.8898179, 0, -0.45631585, 0, 1, 0, 0.45631585, 0, 0.8898179, 236.12738, 2.1143618, 126.50287)
-shape = SubResource("BoxShape3D_37")
+shape = SubResource("BoxShape3D_55")
 
 [node name="Landmarks" type="Node3D" parent="."]
 

@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "quest.sealed_citadel",
+	"type": "quest",
+	"display_name": "The Sealed Citadel",
+	"description": "P29 (plan M6-M9 §5.6, §5.7): a side quest of the Valley of Broken Kings that starts at stage 4 - a giant big enough to breach the Citadel Gate (fortified gates fall at stage 4). Breach it (150), then walk into the Hall of the Broken Kings (its area pays another 150 once): the hoard's titan iron x2 and the Kings' Annals, and the Citadel stair up to the world's Broken Stair (world.citadel.breached opens the world's rubble too).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "stage_at_least", "stage": 4}],
+	"abandon_when": null,
+	"tracker_priority": 20,
+	"stages": [
+		{"id": "breach", "objective": "Breach the sealed Citadel Gate in the Valley of Broken Kings",
+			"complete_when": {"type": "flag", "flag": "world.citadel.breached"},
+			"marker": "valley.marker.citadel_gate", "xp": 150, "items": [], "set_flags": {},
+			"bot": {"action": "breach", "target": "valley.ruins.citadel_gate"}},
+		{"id": "hall", "objective": "Enter the Hall of the Broken Kings",
+			"complete_when": {"type": "entered", "area": "valley.area.citadel_hall"},
+			"marker": "valley.marker.citadel_hall", "xp": 0, "items": [], "set_flags": {},
+			"bot": {"action": "go", "target": "valley.marker.citadel_hall"}}
+	],
+	"on_complete_flags": {}
+}
