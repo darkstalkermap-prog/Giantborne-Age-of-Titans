@@ -76,7 +76,13 @@ func test_every_fixture_migrates_and_validates_with_the_new_defaults() -> void:
 		expected["talents"] = []
 		expected["ancestry_chosen"] = false
 		assert_eq(m.character, expected, "%s: the character is the original plus talents [] and ancestry_chosen false" % f)
-		assert_eq(m.world, doc.world, "%s: the world block is untouched (already its own schema 2)" % f)
+		# M7 polish: the world block is the original plus the visited.<checkpoint> flags of the stones
+		# the save had reached (test_a_migrated_save_keeps_the_stones_it_had_reached); nothing else.
+		var world_rest: Dictionary = (m.world as Dictionary).duplicate(true)
+		for flag: Variant in (world_rest.flags as Dictionary).keys():
+			if str(flag).begins_with(GameSession.VISITED_PREFIX) and not (doc.world.flags as Dictionary).has(flag):
+				(world_rest.flags as Dictionary).erase(flag)
+		assert_eq(world_rest, doc.world, "%s: the world block is untouched but for the visited flags (already its own schema 2)" % f)
 		var complete := QuestConditions.truthy((doc.world.flags as Dictionary).get("slice.completed"))
 		assert_eq(m.progress, {"prologue_complete": complete, "world_entered": false,
 			"levels_visited": ["level.valley"], "tracked_quest": ""}, "%s: the progress block" % f)
@@ -91,6 +97,80 @@ func test_every_fixture_migrates_and_validates_with_the_new_defaults() -> void:
 	var chosen := _fixture("v1_force_complete")
 	chosen.character.ancestry = "ancestry.chosen_in_a_later_build"
 	assert_true(bool(SaveSlots.migrate(chosen).character.ancestry_chosen), "a non-neutral ancestry counts as chosen")
+
+
+# --------------------------------------------------------------------------- M7 polish: the stones reached
+
+## The Valley's checkpoints a schema 1 save proves the giant reached: the level's start, the respawn and
+## every stone within SaveSlots.VISIT_PROOF_M of the marker of a quest stage the save completed (its
+## objective was done there). A finished save stood at the crown's altar, 5 m from today's Kings' Door
+## waystone; nobody breached the Citadel before schema 2.
+const REACHED_COMPLETE := ["valley.shrine.hollow", "valley.cp.forest_road", "valley.shrine.grove",
+	"valley.cp.barrow_gap", "valley.shrine.thornwick", "valley.cp.ruins_gate", "valley.shrine.kingsfall",
+	"valley.cp.kings_door"]
+
+
+func _visited(doc: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	var flags: Dictionary = doc.world.flags
+	for f: Variant in flags:
+		if str(f).begins_with(GameSession.VISITED_PREFIX) and QuestConditions.truthy(flags[f]):
+			out.append(str(f).trim_prefix(GameSession.VISITED_PREFIX))
+	out.sort()
+	return out
+
+
+func test_a_migrated_save_keeps_the_stones_it_had_reached() -> void:
+	# The M7 gate review: schema 1 recorded no visited.<checkpoint> (P20 added the flag), so a migrated
+	# save continued with only its respawn visited and the map refused every other stone it had used
+	# ("You have not been there yet.").
+	var expected := PackedStringArray(REACHED_COMPLETE)
+	expected.sort()
+	for f: String in FIXTURES:
+		var doc := _fixture(f)
+		assert_eq(_visited(doc), PackedStringArray(), "%s: schema 1 has no visited flags" % f)
+		var m := SaveSlots.migrate(doc)
+		if f == "v1_pre_crown":
+			var before := expected.duplicate()
+			before.remove_at(before.find("valley.cp.kings_door"))
+			assert_eq(_visited(m), before, "%s: every stone but the Kings' Door (it never took the crown)" % f)
+		else:
+			assert_eq(_visited(m), expected, "%s: the eight stones its quests passed" % f)
+		assert_false(_visited(m).has("valley.cp.citadel_stair"), "%s: not the Citadel stair (never breached)" % f)
+		var world_after: Dictionary = (m.world as Dictionary).duplicate(true)
+		for id: String in _visited(m):
+			(world_after.flags as Dictionary).erase(GameSession.VISITED_PREFIX + id)
+		assert_eq(world_after, doc.world, "%s: nothing else in the world block changes" % f)
+		assert_eq(SaveSlots.migrate(m), m, "%s: a migrated save migrates to itself" % f)
+	# A stone whose own flags the save does not hold is not visited, even beside a finished stage.
+	var closed := _fixture("v1_force_complete")
+	(closed.world.flags as Dictionary).erase("encounter.forest_wolves_a.cleared")
+	assert_false(_visited(SaveSlots.migrate(closed)).has("valley.cp.forest_road"),
+		"the forest road waystone stays unvisited while its wolves are not cleared")
+	# A save that never left the Hollow: its start and its respawn only.
+	var early := _fixture("v1_pre_crown")
+	var kept := {}
+	for flag: Variant in (early.world.flags as Dictionary):
+		if str(flag).begins_with("tutorial."):
+			kept[flag] = early.world.flags[flag]
+	early.world.flags = kept
+	early.checkpoint.respawn = "valley.shrine.hollow"
+	assert_eq(_visited(SaveSlots.migrate(early)), PackedStringArray(["valley.shrine.hollow"]),
+		"a save in the Hollow knows only the Hollow's shrine")
+
+
+func test_a_continued_v1_save_may_fast_travel_to_the_stones_it_used() -> void:
+	# The finding's run: v1_force_complete continued - Kingsfall's shrine and the ruins gate waystone
+	# are no longer unvisited for GameSession.travel_refusal, which reads visited.<id>.
+	GameSession.persist = true
+	_write_text(SaveSlots.path(), _fixture_text("v1_force_complete"))
+	var r := GameSession.continue_valley()
+	assert_true(r.ok, "Continue works (%s)" % r.message)
+	for id: String in REACHED_COMPLETE:
+		assert_true(QuestConditions.truthy(WorldState.get_flag(GameSession.VISITED_PREFIX + id)),
+			"%s is visited after Continue" % id)
+	assert_false(QuestConditions.truthy(WorldState.get_flag(GameSession.VISITED_PREFIX + "valley.cp.citadel_stair")),
+		"the Citadel stair is not")
 
 
 func test_every_fixture_continues_into_its_character() -> void:
