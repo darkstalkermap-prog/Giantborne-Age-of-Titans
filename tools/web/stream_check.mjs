@@ -31,6 +31,10 @@
 //        [--size=WxH] [--audio] [--music-s=60] [--min-borders=N] [--registered-s=S] [--timeout-s=S]
 //        [--json=FILE] [--strict] [--headed]
 //   --world        the real world (--mode=world --new-game; from P25) instead of --level
+//   --route        the walk's waypoints; without it the level's own route (Markers/Route: the test
+//                  world's loop, and - M7 polish - the real world's walk_route from
+//                  tools/data/world/world.json: about 400 m, four region changes, three seams); a
+//                  level with no route is a usage error (exit 2)
 //   --walk-speed   carry the giant at M m/s instead of walking it (16: the stage-6 sprint case)
 //   --walk-stage   grow the giant to stage N before the walk
 //   --size         the browser viewport (default 1280x720)
@@ -43,7 +47,7 @@
 //   --json         the report (with --audio, the recording's trace too: --replay it with audio_check.mjs)
 // Exit code: 0 when the run reported, the walk finished without check failures and the console
 // had no errors (and, with --strict, the frame budget held; with --audio, the recording held); 1
-// otherwise; 2 for a usage error.
+// otherwise; 2 for a usage error (the walk's own too: no route to walk).
 // Needs Playwright (the "playwright" package: PLAYWRIGHT_MODULE, NODE_PATH or
 // /opt/node-tools/node_modules) and its Chromium (PLAYWRIGHT_BROWSERS_PATH, default /opt/pw-browsers
 // when that folder exists). Software WebGL (SwiftShader) is all a GPU-less machine has: its frame
@@ -332,6 +336,7 @@ async function main() {
       unloads: walk.unloads, thrash: walk.thrash, work_ms_p50: walk.work_ms_p50, work_ms_p99: walk.work_ms_p99,
       work_ms_max: walk.work_ms_max, seam_crossings: walk.seam_crossings, stuck_teleports: walk.stuck_teleports,
       under_terrain_ticks: walk.under_terrain_ticks, check_failures: walk.check_failures || [],
+      route_points: walk.route_points, region_changes: (walk.region_changes || []).length, usage_error: walk.usage_error || '',
       steps_by_kind: walk.streaming ? walk.streaming.steps_by_kind : null,
     },
     errors_counted_by_game: result ? result.errors : null,
@@ -383,6 +388,11 @@ async function main() {
     console.log(`  the plan's criterion (no silent run over ${HOLE_MAX_MS} ms in ${opts.musicS} s of music across a region border): ${crit ? (crit.met ? 'MET' : `NOT MET (${crit.holes} hole(s), the longest ${crit.longest_silence_ms} ms)`) : 'NOT MEASURED'}`);
   }
   console.log(`STREAM_CHECK ${JSON.stringify(report)}`);
+  if (walk.usage_error) {
+    // M7 polish: a walk with no route is the command's mistake, not a streaming failure.
+    console.error(`stream_check: ${walk.usage_error}`);
+    process.exit(2);
+  }
   if (report.ok) {
     console.log(crit && !crit.met
       ? `stream_check: OK (the plan's audio criterion NOT MET: ${crit.holes} hole(s) over ${HOLE_MAX_MS} ms, every one placed on the main thread; run --strict on a machine with a GPU for the gate)`

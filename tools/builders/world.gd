@@ -20,7 +20,7 @@ extends RefCounted
 ##   4. the skyline (the coarse terrain coloured by the regions' skyline tints, the merged
 ##      silhouettes of the skyline landmarks, the beacon columns), the world index
 ##      (tools/world/index_writer.gd), the map picture (tools/world/map_render.gd) and the root scene
-##      scenes/world/world.tscn.
+##      scenes/world/world.tscn (M7 polish: with Markers/Route, the world walk's default route).
 ##
 ## --chunks=c2_6,c3_6 (after "--" on the command line; tools/check.sh --build-args=...) rebuilds those
 ## chunks and their eight neighbours (their navmeshes see each other's obstacles and share border
@@ -288,9 +288,16 @@ static func last_report() -> Dictionary:
 # --------------------------------------------------------------------------- checks
 
 ## The layout's own rules: carved roads at least MIN_ROAD_M wide; every gap in a wall or palisade
-## a quest route passes is at least 16 m; every element, place and item inside the world.
+## a quest route passes is at least 16 m; every element, place and item inside the world; (M7
+## polish) the walk route's points on walkable ground inside it.
 static func layout_checks(layout: Dictionary, feats: WorldFeatures) -> PackedStringArray:
 	var out := PackedStringArray()
+	var walk: Variant = (layout.world.get("walk_route", {}) as Dictionary).get("points", [])
+	if typeof(walk) == TYPE_ARRAY:
+		for w: Variant in walk:
+			var wp := WorldFeatures.v2(w)
+			if not feats.walkable(wp.x, wp.y):
+				out.append("walk_route point %s is not on walkable ground" % wp)
 	for road: Dictionary in feats.roads:
 		if bool(road.carve) and float(road.width) < MIN_ROAD_M:
 			out.append("road %s is %.0f m wide (at least %.0f)" % [road.id, road.width, MIN_ROAD_M])
@@ -1197,6 +1204,11 @@ static func build_root(kit: SceneKit, feats: WorldFeatures, field: HeightField, 
 	root.add_child(kit.n3("Chunks"))
 	root.add_child(kit.n3("Navigation"))
 	root.add_child(_bounds(feats))
+	var route := walk_route(kit, layout, field)
+	if route != null:
+		var markers := kit.n3("Markers")
+		markers.add_child(route)
+		root.add_child(markers)
 	var spawns := kit.n3("Spawns")
 	var start := _start_transform(layout, field)
 	var spawn := kit.marker("PlayerSpawn", start.origin)
@@ -1217,6 +1229,21 @@ static func build_root(kit: SceneKit, feats: WorldFeatures, field: HeightField, 
 	kit.scripted(debris, S_DEBRIS)
 	root.add_child(debris)
 	return root
+
+
+## The world walk's default route (M7 polish): Markers/Route, one plain Marker3D per point of
+## world.json's walk_route on the ground (WP01, WP02, ...), which WorldWalk.level_route reads when
+## --scenario=world_walk has no --route= (the test world has its own). Plain markers: no LevelMarker,
+## so neither the level's marker lookups nor a bot's route points ever see them. null without one.
+static func walk_route(kit: SceneKit, layout: Dictionary, field: HeightField) -> Node3D:
+	var points: Variant = (layout.world.get("walk_route", {}) as Dictionary).get("points", [])
+	if typeof(points) != TYPE_ARRAY or (points as Array).size() < 2:
+		return null
+	var route := kit.n3("Route")
+	for i in (points as Array).size():
+		var p := WorldFeatures.v2(points[i])
+		route.add_child(kit.marker("WP%02d" % (i + 1), Vector3(p.x, field.sample(p.x, p.y), p.y)))
+	return route
 
 
 ## Where the giant stands when the scene loads: the start checkpoint (world.cp.kingsgate_shelf).
