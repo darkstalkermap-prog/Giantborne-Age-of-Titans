@@ -13,6 +13,10 @@ extends IntegrationSuite
 ##     from the Valley (the blockers judge the destination's level) - and a load whose respawn a
 ##     blocker moves says why and where the giant wakes (HUD and last_load_message), never silently.
 ##     (test_fast_travel has the map's half on its stub levels.)
+##   * the brace strikes where its telegraph was drawn: a 4-file pike rank braces at a stage-4 giant
+##     5 m ahead and draws its band; the giant side-steps clear of the drawn band while the rank
+##     turns after it during the 0.8 s windup; the band strikes along the drawn band (the brace's
+##     tracking_fraction is 0) and the giant is not struck (it was: the band turned with the rank).
 
 const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
 const DIRECTOR_LEVEL := "res://scenes/test/director_test.tscn"
@@ -247,3 +251,77 @@ func test_a_hostile_brannocks_waystone_is_refused_to_fast_travel_and_a_moved_res
 	assert_true(lines.has(expected), "the HUD says why and where (%s)" % [lines])
 	assert_eq(GameSession.last_load_message, expected, "and so does last_load_message")
 	GameSession.unregister_respawn_blocker(blocker)
+
+
+# --------------------------------------------------------------------------- the brace keeps its telegraphed band
+
+func test_the_brace_strikes_where_its_telegraph_was_drawn_and_misses_a_giant_that_stepped_clear() -> void:
+	var p := _stage_4_giant(Vector3(0, 0.05, 5.0))   # 5 m before the rank's centre
+	var f := Formation.new()
+	f.id = "test.m7gate.band"
+	f.kind = "pike"
+	f.ranks = 1
+	f.files = 4
+	f.file_spacing_m = 1.4
+	f.brace_m = 6.0
+	f.brace_action = "ability.formation_brace_pike"
+	f.turn_deg_s = 40.0
+	f.place(Vector3.ZERO, PI)   # facing +Z
+	Formation.register(f)
+	for i in 4:
+		f.add_member(TestSpawn.enemy(world, PIKEMAN, f.slot_position(i) + Vector3(0, 0.05, 0), "test.m7gate.band_%d" % i,
+			false, PI), i)
+	var telegraphs: Array = []
+	var bands: Array = []
+	var on_telegraph := func(_t: int, actor: String, action: String, _target: String, _shape: String, origin: Vector3,
+			yaw: float, half_width: float, depth: float, _duration: float) -> void:
+		if action == "ability.formation_brace_pike":
+			telegraphs.append([actor, origin, yaw, half_width, depth])
+	var on_effect := func(_t: int, actor: String, action: String, kind: String, center: Vector3, half_width: float,
+			yaw: float, depth: float) -> void:
+		if action == "ability.formation_brace_pike" and kind == "band":
+			bands.append([actor, center, yaw, half_width, depth])
+	Events.telegraph_started.connect(on_telegraph)
+	Events.ability_effect.connect(on_effect)
+	await step_ticks(1)
+	var pid := p.entity.entity_id
+	var hits_before := hits_on(pid).size()
+	# braced: the windup begins and the band is drawn
+	for i in 30:
+		_aware(f)
+		f.update(Sim.tick, p)
+		if not telegraphs.is_empty():
+			break
+		await step_ticks(1)
+	assert_eq(telegraphs.size(), 1, "the rank braced and drew its band")
+	if telegraphs.is_empty():
+		Events.telegraph_started.disconnect(on_telegraph)
+		Events.ability_effect.disconnect(on_effect)
+		return
+	var drawn: Array = telegraphs[0]
+	# the giant side-steps clear of the drawn band (its capsule 1 m beyond the band's side) while the
+	# rank keeps turning after it (40 degrees a second) through the windup
+	p.global_position = Vector3(6.0, 0.05, 4.0)
+	var radius := float(p.profile.get("capsule_radius_m", 2.2))
+	assert_near(6.0 - radius - float(drawn[3]), 1.0, 0.05, "the giant stands 1 m clear of the drawn band's side")
+	for i in 70:
+		_aware(f)
+		if i % Formation.UPDATE_TICKS == 0:
+			f.update(Sim.tick, p)
+		await step_ticks(1)
+		if not bands.is_empty():
+			break
+	await step_ticks(2)
+	Events.telegraph_started.disconnect(on_telegraph)
+	Events.ability_effect.disconnect(on_effect)
+	assert_true(absf(rad_to_deg(wrapf(f.facing_yaw - float(drawn[2]), -PI, PI))) > 10.0,
+		"the rank turned after the giant during the windup (%.1f -> %.1f degrees)" % [rad_to_deg(float(drawn[2])), rad_to_deg(f.facing_yaw)])
+	assert_eq(bands.size(), 1, "the band struck once")
+	if bands.size() == 1:
+		var struck: Array = bands[0]
+		assert_near(rad_to_deg(wrapf(float(struck[2]) - float(drawn[2]), -PI, PI)), 0.0, 1.0,
+			"along the drawn band's yaw (drawn %.1f, struck %.1f)" % [rad_to_deg(float(drawn[2])), rad_to_deg(float(struck[2]))])
+		var drawn_center: Vector3 = (drawn[1] as Vector3) + Formation.forward_of(float(drawn[2])) * (float(drawn[4]) * 0.5)
+		assert_true(Vector2((struck[1] as Vector3).x - drawn_center.x, (struck[1] as Vector3).z - drawn_center.z).length() < 0.01,
+			"centred where it was drawn (%s, drawn %s)" % [struck[1], drawn_center])
+	assert_eq(hits_on(pid).size() - hits_before, 0, "a giant standing clear of the drawn band is not struck")

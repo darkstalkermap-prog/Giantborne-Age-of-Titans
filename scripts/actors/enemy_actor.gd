@@ -750,8 +750,8 @@ static func entity_radius(t: CombatEntity) -> float:
 ## Events.telegraph_started with the brain's target. radius / length by shape: circle
 ## (radius_m, 0), line (width_m / 2, length_m), cone (radius_m, radius_m; arc_deg is in the
 ## action record). Duration = the windup.
-func _on_phase_entered(action: ActionDef, _instance_id: int, phase: int) -> void:
-	if _p30_on_phase_entered(action, phase):
+func _on_phase_entered(action: ActionDef, instance_id: int, phase: int) -> void:
+	if _p30_on_phase_entered(action, phase, instance_id):
 		return   # P30: a band brace's telegraph lies along its formation's front rank; a rally strikes
 	if phase != ActionDef.Phase.WINDUP or action == null:
 		return
@@ -2407,6 +2407,9 @@ var _p30_incoming: HitEvent = null
 var _p30_target_tick := -1
 var _p30_target_ref: WeakRef = null
 var _p30_extents := {}   # entity id -> Vector3 (half extents of its hurtboxes in its own frame)
+## M7 gate: the band a running band_pulse strikes, taken when its windup began - the band its
+## telegraph shows ({"instance": the action's instance id, "band": the band}; {} when none).
+var _p30_frozen_band := {}
 
 
 func _p30_ready() -> void:
@@ -2498,9 +2501,20 @@ func p30_can_act() -> bool:
 		and not is_returning() and process_mode != Node.PROCESS_MODE_DISABLED and is_inside_tree()
 
 
-## The band a band_pulse of this unit strikes (AttackRunner): its formation's front band, else a
-## band in front of the unit as wide as three files and as deep as the running action's radius.
+## The band a band_pulse of this unit strikes (AttackRunner): the band its telegraph showed when the
+## running action's windup began (M7 gate: the brace's tracking_fraction is 0 - the band no longer
+## turns and walks with the formation between the telegraph and the strike, so a giant that steps
+## out of the drawn band is not struck); else its formation's front band, else a band in front of
+## the unit as wide as three files and as deep as the running action's radius.
 func p30_brace_band() -> Dictionary:
+	if not _p30_frozen_band.is_empty() and controller != null and controller.action != null \
+			and controller.instance_id == int(_p30_frozen_band.instance):
+		return _p30_frozen_band.band
+	return _p30_live_band()
+
+
+## The band as the formation (or this unit) stands now (p30_brace_band without the freeze).
+func _p30_live_band() -> Dictionary:
 	if formation != null:
 		return formation.front_band()
 	var depth := 6.0
@@ -2619,13 +2633,16 @@ func _p30_rout_point(from: Vector3, threat: Vector3) -> Vector3:
 
 ## controller.phase_entered: a band_pulse's windup announces one telegraph along the band (a line
 ## telegraph from the front rank's centre, as wide as the rank, as deep as the band) instead of
-## the base's at the striker (returns true); a rally action's strike rallies.
-func _p30_on_phase_entered(action: ActionDef, phase: int) -> bool:
+## the base's at the striker (returns true), and keeps that band for the strike (p30_brace_band);
+## a rally action's strike rallies.
+func _p30_on_phase_entered(action: ActionDef, phase: int, instance_id: int = -1) -> bool:
 	if action == null:
 		return false
 	if action.hit_shape == "band_pulse":
 		if phase == ActionDef.Phase.WINDUP:
-			var band := p30_brace_band()
+			var band := _p30_live_band()
+			_p30_frozen_band = {"instance": instance_id if instance_id >= 0 else controller.instance_id,
+				"band": band.duplicate()}
 			Events.telegraph_started.emit(Sim.tick, entity.entity_id, action.id, brain.target_id if brain != null else "",
 				"line", band.near, float(band.yaw), float(band.half_width), float(band.depth),
 				float(action.windup_ticks) / Sim.TICK_RATE)

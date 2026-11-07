@@ -312,8 +312,9 @@ func _p30_run(handler: Callable, a: ActionDef, tick: int) -> void:
 
 
 ## A formation's brace (P30, decision 19): on the first active tick, one band - a box along the
-## actor's band (EnemyActor.p30_brace_band(): its formation's front_band(), as wide as the front
-## rank and band depth deep, height_m tall, standing on the ground) - catches every hurtbox inside
+## actor's band (EnemyActor.p30_brace_band(): its formation's front_band() as it stood when the windup
+## began and the telegraph was drawn - M7 gate - as wide as the front rank and band depth deep,
+## height_m tall, standing on the ground) - catches every hurtbox inside
 ## it whose centre a clear line reaches from the front rank's chest height; one hit per target per
 ## pulse (pulse id 1, the action's max_hits_per_target through the controller's registry). The hit
 ## strikes as an attacker of the brace's height (the action's attacker_height_override_m when it
@@ -370,7 +371,8 @@ func _run_band_pulse(a: ActionDef, tick: int) -> void:
 
 
 ## The band a band_pulse of this actor strikes: the actor's p30_brace_band() (its formation's front
-## band) when it has one, else a band in front of the actor as deep as the action's radius_m.
+## band, kept from the windup) when it has one, else a band in front of the actor as deep as the
+## action's radius_m.
 func band_of(a: ActionDef) -> Dictionary:
 	if actor.has_method("p30_brace_band"):
 		return actor.call("p30_brace_band")
