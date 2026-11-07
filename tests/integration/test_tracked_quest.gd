@@ -108,6 +108,50 @@ func test_track_cycles_and_everything_follows() -> void:
 	p.queue_free()
 
 
+func test_a_done_lead_leaves_the_objective_the_compass_and_the_leads() -> void:
+	# M7 polish (the M7 gate review): a multi-marker stage drops a marker once its markers_done_when
+	# condition holds - an oath lead once its oath is won - so the objective, its diamonds, the marker
+	# the giant is led to and the compass's leads never point at a finished lead.
+	Fx.install([
+		Fx.quest("quest.test_main", [Fx.stage("oaths", Fx.flag_cond("test.flag.never"), 0,
+			{"objective": "Choose an oath", "markers": ["test.m.lead_a", "test.m.lead_b", "test.m.lead_c"],
+				"markers_done_when": {"test.m.lead_a": Fx.flag_cond("test.oath.a"), "test.m.lead_b": Fx.flag_cond("test.oath.b")}})],
+			{"display_name": "The Main Thread"}),
+		Fx.quest("quest.test_side_a", [Fx.stage("go", Fx.flag_cond("test.flag.never"), 0,
+			{"objective": "Go to A", "marker": "test.m.side_a"})], {"display_name": "Side A"}),
+	])
+	Fx.activate(["quest.test_main", "quest.test_side_a"], [], "quest.test_main")
+	var lead_a := Vector3(0, 1, -40)
+	for m: Array in [["test.m.lead_a", lead_a], ["test.m.lead_b", Vector3(30, 1, -30)],
+			["test.m.lead_c", Vector3(-30, 1, -30)], ["test.m.side_a", Vector3(40, 1, 0)]]:
+		_marker(m[0], m[1])
+	var p := spawn_player(lead_a + Vector3(0, -0.95, 2), 0.0)
+	await step_ticks(2)
+	Quests.refresh_positions()
+	var diamonds := func() -> int:
+		return HudCompass.markers_for(Vector3.ZERO, 0.0, {}, {}, HudCompass.objective_positions(Quests.tracked_objective()),
+			[], Vector2.INF).filter(func(m: Dictionary) -> bool: return m.kind == "objective").size()
+	assert_eq(Array(Quests.tracked_objective().markers), ["test.m.lead_a", "test.m.lead_b", "test.m.lead_c"], "three leads open")
+	assert_eq(diamonds.call(), 3, "three diamonds")
+	assert_true((Quests.current_objective().position as Vector3).is_equal_approx(lead_a), "the giant at lead A is led to it")
+	WorldState.set_flag("test.oath.a", true)
+	var o := Quests.tracked_objective()
+	assert_eq(Array(o.markers), ["test.m.lead_b", "test.m.lead_c"], "lead A is done: two open")
+	assert_eq(diamonds.call(), 2, "two diamonds")
+	assert_false((o.position as Vector3).is_equal_approx(lead_a), "the marker no longer leads to A, though the giant stands there")
+	assert_eq(str(o.marker_id), "test.m.lead_b", "the first open lead names the objective")
+	Quests.track("quest.test_side_a")
+	assert_eq(Quests.leads().map(func(l: Dictionary) -> String: return str(l.marker_id)), ["test.m.lead_b", "test.m.lead_c"],
+		"the compass's leads are the open ones")
+	Quests.track("quest.test_main")
+	WorldState.set_flag("test.oath.b", true)
+	o = Quests.tracked_objective()
+	assert_eq(Array(o.markers), ["test.m.lead_c"], "lead C alone (it has no done condition)")
+	assert_true((o.position as Vector3).is_equal_approx(Vector3(-30, 1, -30)), "and the objective is it")
+	assert_eq(diamonds.call(), 1, "one diamond")
+	p.queue_free()
+
+
 func test_the_tracked_quest_survives_a_save_and_a_fast_travel() -> void:
 	Wux.install()
 	GameSession.persist = true

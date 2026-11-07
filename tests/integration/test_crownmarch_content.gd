@@ -167,6 +167,56 @@ func test_the_oaths_stage_leads_to_the_three_powers_and_the_march_opens_at_stage
 	assert_eq((objective.get("markers", []) as PackedStringArray).size(), 3, "the map's three oath markers")
 
 
+## The oath each of the oaths stage's leads belongs to (M7 polish).
+const LEAD_OATHS := {"world.marker.brannock_green": "oath.march.done", "world.marker.hollowmere_green": "oath.wood.done",
+	"world.marker.war_camp_edge": "oath.crown.done"}
+
+
+func test_a_won_oath_drops_its_lead_in_every_order() -> void:
+	# The M7 gate review: once Brannock's oath was won (oath.march.done) the oaths stage still pointed
+	# at Brannock's green - objective_for took the nearest of all three markers, so a giant at
+	# world.cp.brannock got (60, 10.2, 568) - and the compass kept its lead.
+	var oaths := WorldXp.stage("quest.world_main", "oaths")
+	var done_when: Dictionary = oaths.get("markers_done_when", {})
+	for m: String in LEAD_OATHS:
+		assert_eq(done_when.get(m, {}), {"type": "flag", "flag": LEAD_OATHS[m]}, "%s is done with %s" % [m, LEAD_OATHS[m]])
+	GameSession.mode = GameSession.Mode.VALLEY
+	GameSession.level_id = LEVEL
+	Quests.test_active = true
+	Quests.scope = PackedStringArray(["quest.world_main", "quest.oath_march"])
+	Quests.main_quest_id = "quest.world_main"
+	for won: String in LEAD_OATHS.values():
+		WorldState.clear()
+		WorldState.set_flag(Quests.stage_flag("quest.world_main"), "oaths")
+		WorldState.set_flag(Quests.stage_flag("quest.oath_march"), "meet")
+		WorldState.set_flag(won, true)
+		var open: Array = LEADS.filter(func(m: String) -> bool: return LEAD_OATHS[m] != won)
+		var objective: Dictionary = Quests.objective_for("quest.world_main")
+		assert_eq(Array(objective.get("markers", PackedStringArray())), open, "%s: the other two leads stay" % won)
+		assert_eq((objective.get("positions", []) as Array).size(), 2, "%s: two diamonds on the compass and the map" % won)
+		var gone := WorldXp.position_of(LEADS.filter(func(m: String) -> bool: return LEAD_OATHS[m] == won)[0])
+		assert_false((objective.position as Vector3).is_equal_approx(gone), "%s: the objective no longer points at its lead" % won)
+		for p: Vector3 in objective.get("positions", []):
+			assert_false(p.is_equal_approx(gone), "%s: no diamond at its lead" % won)
+		assert_true(Quests.track("quest.oath_march"), "%s: another quest tracked" % won)
+		assert_eq(Quests.leads().map(func(l: Dictionary) -> String: return str(l.marker_id)), open,
+			"%s: the compass's leads are the two oaths still open" % won)
+		Quests.tracked_quest_id = ""
+	# Every stage that counts the oaths' done flags drops each lead with its own oath (OathRules, run
+	# by GameData's post-pass): the shipped records pass; a lead without its condition fails.
+	assert_eq(OathRules.lead_errors(GameData.records), PackedStringArray(), "the shipped oaths stage keeps its leads right")
+	var records := GameData.records.duplicate()
+	var main: Dictionary = (records["quest.world_main"] as Dictionary).duplicate(true)
+	for s: Dictionary in main.stages:
+		if str(s.id) == "oaths":
+			(s.markers_done_when as Dictionary).erase("world.marker.war_camp_edge")
+	records["quest.world_main"] = main
+	var errors := OathRules.lead_errors(records)
+	assert_eq(errors.size(), 1, "a lead that outlives its oath is an error: %s" % [errors])
+	assert_true(errors.size() == 1 and errors[0].contains("world.marker.war_camp_edge") and errors[0].contains("oath.crown.done"),
+		"naming the lead and the oath it belongs to: %s" % [errors])
+
+
 func test_the_main_quest_follows_the_world_once_the_valley_is_done() -> void:
 	assert_eq(Quests.p29_main_for(Quests.ACTIVE, Quests.INACTIVE), "quest.main", "the Valley's quest while it runs")
 	assert_eq(Quests.p29_main_for(Quests.ACTIVE, Quests.ACTIVE), "quest.main", "even with the world's started")

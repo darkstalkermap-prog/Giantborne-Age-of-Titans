@@ -573,7 +573,7 @@ func objective_for(quest_id: String) -> Dictionary:
 		return {}
 	var cond: Variant = srec.get("complete_when", {})
 	var targets := QuestConditions.targets_of(cond)
-	var markers := stage_markers(srec)
+	var markers := open_markers(srec)   # M7 polish: a lead whose markers_done_when holds is dropped
 	var marker := markers[0] if not markers.is_empty() else ""
 	var positions: Array = []
 	for m in markers:
@@ -604,6 +604,31 @@ static func stage_markers(srec: Dictionary) -> PackedStringArray:
 			var s := str(id)
 			if s != "" and not out.has(s):
 				out.append(s)
+	return out
+
+
+## The stage's markers that still lead somewhere (M7 polish; the M7 gate review): stage_markers()
+## without each one whose `markers_done_when` condition holds now - an oath lead once its oath is
+## won - so the objective, its diamonds on the compass and the map, and the compass's leads never
+## point at a finished lead (the main thread's oaths stage kept sending a giant who had won
+## Brannock's oath back to Brannock's green).
+func open_markers(srec: Dictionary) -> PackedStringArray:
+	var done: Variant = srec.get("markers_done_when")
+	if typeof(done) != TYPE_DICTIONARY or (done as Dictionary).is_empty():
+		return stage_markers(srec)
+	return markers_open_in(srec, condition_context())
+
+
+## open_markers() for a condition context (pure): the stage's markers whose markers_done_when
+## condition does not hold in `ctx` (a marker without one is always open), in stage order.
+static func markers_open_in(srec: Dictionary, ctx: Dictionary) -> PackedStringArray:
+	var done: Variant = srec.get("markers_done_when")
+	var out := PackedStringArray()
+	for m in stage_markers(srec):
+		var c: Variant = (done as Dictionary).get(m) if typeof(done) == TYPE_DICTIONARY else null
+		if typeof(c) == TYPE_DICTIONARY and QuestConditions.holds(c, ctx):
+			continue
+		out.append(m)
 	return out
 
 
