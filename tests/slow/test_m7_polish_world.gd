@@ -7,7 +7,12 @@ extends IntegrationSuite
 ##     more than the eight queries NavQuery counts - each villager's safe-point search tries one marker
 ##     a tick within the budget and resumes at the next tick, and its agent's path waits for the budget
 ##     too - while every villager still reaches a safe point (they used to search every marker at once,
-##     outside the budget).
+##     outside the budget);
+##   * every chunk's navmeshes of every layer (the real world's and the test world's), loaded through
+##     NavMaps as the streamer loads them, merge on their layer maps without one edge error - each
+##     region on its own and all of a world's regions of a layer together, every seam with its
+##     neighbours (the human meshes of c4_1, c4_2, c5_2 and c6_6 had four each on every sync: the human
+##     map keyed its edges in 0.25 m cells; NavMaps now keys every map at its cell x 0.1).
 
 const SCENE := "res://scenes/world/world.tscn"
 const BRANNOCK := "encounter.crownmarch_brannock"
@@ -171,3 +176,73 @@ func test_brannocks_folk_flee_at_once_within_the_path_query_budget_and_reach_she
 		assert_eq(c.brain.picks, 1, "%s chose its shelter once" % c.entity_id)
 	assert_true(worst <= cap, "no tick spends more than the budget's %d queries (at most %d, %d ticks over)" % [cap, worst, over])
 	assert_true(peak <= Civilian.SEARCH_QUERIES_PER_TICK, "a villager's search tries one marker a tick (%d queries at most)" % peak)
+
+
+# --------------------------------------------------------------------------- B2: every chunk merges on its maps
+
+## The navmesh files of chunk `id` in `dir`: [bit, path] for every layer and gate bit that has one.
+static func _chunk_navmeshes(dir: String, id: String, bits: Array) -> Array:
+	var out: Array = []
+	for bit: int in bits:
+		var path := NavBake.nav_path(dir, id, bit)
+		if ResourceLoader.exists(path):
+			out.append([bit, path])
+	return out
+
+
+## Adds `ids`' navmeshes to a fresh NavMaps set up as the streamer's (deterministic) and waits for
+## them to sync; returns [the edge errors the syncs warned about, the regions added].
+func _merge(w: Dictionary, ids: Array) -> Array:
+	var size := float(w.chunk_size_m)
+	var origin := Vector3(float(w.origin_m[0]), 0.0, float(w.origin_m[2]))
+	var gates: Array = (w.get("gate_bits", {}) as Dictionary).values()
+	var bits: Array = (w.nav_layers as Array) + gates
+	var log := NavEdgeLog.new()
+	OS.add_logger(log)
+	var maps := NavMaps.new()
+	maps.setup(w.nav_layers, gates, NavBake.TITAN_LAYER, true)
+	var added := 0
+	for id: String in ids:
+		var c := ChunkData.coords_for(id)
+		var at := origin + Vector3(c.x * size, 0.0, c.y * size)
+		for entry: Array in _chunk_navmeshes(str(w.nav_dir), id, bits):
+			maps.add_region(id, int(entry[0]), load(str(entry[1])) as NavigationMesh, Transform3D(Basis(), at))
+			added += 1
+	var ready := false
+	for i in 12:
+		await step_ticks(1)
+		ready = ids.all(func(id: String) -> bool: return maps.chunk_ready(id))
+		if ready:
+			break
+	await step_ticks(1)
+	OS.remove_logger(log)
+	assert_true(ready, "%d chunk(s) synced" % ids.size())
+	maps.free_all()
+	return [log.edge_errors(), added]
+
+
+func test_every_chunks_navmeshes_merge_on_their_layer_maps_without_edge_errors() -> void:
+	for level_id: String in ["level.world", "level.test_world"]:
+		var w: Dictionary = GameData.get_record(level_id).get("world", {})
+		assert_false(w.is_empty(), "%s has a world block" % level_id)
+		if w.is_empty():
+			continue
+		var ids: Array = []
+		for z in int(w.grid[1]):
+			for x in int(w.grid[0]):
+				ids.append(ChunkData.id_for(Vector2i(x, z)))
+		var all: Array = await _merge(w, ids)
+		print("    %s: %d regions of %d chunks on their %d layer maps, %d edge errors" % [level_id, all[1], ids.size(),
+			(w.nav_layers as Array).size(), all[0]])
+		assert_true(int(all[1]) > ids.size(), "%s's navmeshes loaded (%d regions)" % [level_id, all[1]])
+		if int(all[0]) == 0:
+			assert_eq(int(all[0]), 0, "%s: every region and seam merges without an edge error" % level_id)
+			continue
+		# name the chunks: each alone
+		var bad := PackedStringArray()
+		for id: String in ids:
+			var alone: Array = await _merge(w, [id])
+			if int(alone[0]) > 0:
+				bad.append("%s (%d)" % [id, alone[0]])
+		fail("%s: %d edge errors on its layer maps; alone: %s (the rest are between neighbours)" % [level_id, all[0],
+			", ".join(bad) if not bad.is_empty() else "none"])

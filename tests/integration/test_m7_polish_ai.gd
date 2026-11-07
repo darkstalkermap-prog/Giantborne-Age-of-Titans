@@ -8,7 +8,11 @@ extends IntegrationSuite
 ##     none stands and its banner is dead;
 ##   * a civilian whose safe-point search stopped for the tick's path-query budget asks again at its
 ##     next decision - not after REPICK_S, as when nowhere is reachable - and the resumed search is the
-##     same choice (picks counts choices); the world's half is in the slow suite (Brannock's folk).
+##     same choice (picks counts choices); the world's half is in the slow suite (Brannock's folk);
+##   * a streamed world's layer map keys its edges at its cell x 0.1 (NavMaps.MERGE_RASTERIZER_SCALE)
+##     even with the engine's default cells (the human layer's 0.25 / 0.25, which Godot 4.6.3 left
+##     keyed at 0.25 m): a sliver triangle between two vertices 5 cm apart merges without an edge error;
+##     NavBake.edge_conflicts and weld_for_map key alike (the slow suite loads every chunk).
 
 const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
 const BANNERMAN := "res://scenes/enemies/bannerman.tscn"
@@ -154,3 +158,52 @@ func test_a_civilians_safe_point_search_that_waits_for_the_budget_resumes_as_the
 	b.on_path_failed(Vector3(4, 0, 0))
 	assert_eq(b.picks, 2, "a path failure is a new choice")
 	assert_eq(calls[-1], true, "skipping the failed shelter")
+	b.safe_resolver = Callable()   # the resolver holds the brain: break the cycle
+
+
+# --------------------------------------------------------------------------- the layer maps' edge keys
+
+## Two triangles joined by a sliver whose two near vertices (B and B', 5 cm apart) share a 0.25 m
+## cell: four edges on one key at 0.25 m, two keys of two edges at 0.025 m (the human meshes of c4_1,
+## c4_2, c5_2 and c6_6 had this, about 5-7 cm).
+static func _sliver_mesh() -> NavigationMesh:
+	var nm := NavBake.new_mesh(NavBake.spec_for(1))
+	nm.set_vertices(PackedVector3Array([Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(1, 0, 0.05), Vector3(0, 0, 2),
+		Vector3(2, 0, 2)]))
+	nm.add_polygon(PackedInt32Array([0, 1, 3]))
+	nm.add_polygon(PackedInt32Array([1, 2, 3]))
+	nm.add_polygon(PackedInt32Array([2, 4, 3]))
+	return nm
+
+
+func test_a_layer_map_keys_its_edges_at_a_tenth_of_its_cell_so_a_sliver_merges_cleanly() -> void:
+	var nm := _sliver_mesh()
+	assert_near(nm.cell_size, 0.25, 1e-6, "the human layer's cells are the engine's defaults (0.25)")
+	assert_near(nm.cell_height, 0.25, 1e-6, "(0.25 high)")
+	var cell := NavBake.merge_cell(nm)
+	assert_near(cell.x, 0.025, 1e-6, "the map's merge cell is the cell x 0.1")
+	assert_eq(NavBake.edge_conflicts(nm, Vector3.ZERO), [], "no edge key shared by more than two edges at 0.025 m")
+	var copy := nm.duplicate(true) as NavigationMesh
+	assert_eq(NavBake.weld_for_map(copy, Vector3.ZERO), 0, "nothing to weld at 0.025 m: the bake keeps its bytes")
+	# the old keying (0.25 m cells) saw the two vertices as one point: four edges on one key
+	var coarse := {}
+	for p in nm.get_polygon_count():
+		var poly := nm.get_polygon(p)
+		for e in poly.size():
+			var ka := Vector3i((nm.get_vertices()[poly[e]] / 0.25).floor())
+			var kb := Vector3i((nm.get_vertices()[poly[(e + 1) % poly.size()]] / 0.25).floor())
+			var ks := str([ka, kb]) if str(ka) < str(kb) else str([kb, ka])
+			coarse[ks] = int(coarse.get(ks, 0)) + 1
+	assert_eq(coarse.values().max(), 4, "in 0.25 m cells four edges shared one key (the review's edge errors)")
+	# the runtime: a map NavMaps set up merges it without an edge error
+	var log := NavEdgeLog.new()
+	OS.add_logger(log)
+	var maps := NavMaps.new()
+	maps.setup([1], [], 16, true)
+	maps.add_region("test.sliver", 1, nm, Transform3D(Basis(), Vector3(512.0, 10.0, -768.0)))
+	for i in 3:
+		await step_ticks(1)
+	assert_true(maps.chunk_ready("test.sliver"), "the region synced")
+	OS.remove_logger(log)
+	assert_eq(log.edge_errors(), 0, "a NavMaps layer map merges the sliver without an edge error")
+	maps.free_all()

@@ -763,6 +763,22 @@ With the villagers' natural decision phases the same flight spent at most 6 coun
 before the change. P37's Millford raid and P39's performance capture re-measure with raiders in the
 town.
 
+### The M7 polish (lane B): the human map's edge merge
+
+Every chunk's navmeshes of a layer on one map, as `NavMaps` sets it up (`docs/systems/P24b.md`, "M7
+polish"), the navigation server's own counts after one sync: the human map 70,841 edges, 45,021
+merged, 455 connections between regions and 16 edge errors (c4_1, c4_2, c5_2 and c6_6, four each)
+before the explicit merge scale; 70,849, 45,029, 455 and 0 after. The large (53,249 / 32,407 / 355)
+and titan maps (43,909 / 25,796 / 572, gate regions included) are the same either way, as are the
+test world's three. A carried walk at 16 m/s through the four chunks printed four edge-error warnings
+before (one per region sync) and none after:
+
+```
+tools/gd.sh --headless --path . --fixed-fps 60 -- --no-user-settings --no-audio --mode=world --new-game \
+  --scenario=world_walk --graphics=low --autoplay=1200 --walk-speed=16 \
+  "--route=-300:780;60:450;120:-350;150:-650;380:-400;620:600;200:330"
+```
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
