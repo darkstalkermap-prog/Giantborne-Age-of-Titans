@@ -105,9 +105,11 @@ static func sections() -> Dictionary:
 		var o := Quests.objective_for(id)
 		if o.is_empty():
 			continue
+		# M7 polish: an objective on another level names the door it leads through, not the door's region.
+		var via := str(o.get("via_text", ""))
 		var row := {"id": id, "title": str(o.get("title", id)), "text": str(o.get("text", "")),
 			"step": int(o.get("stage_index", 0)) + 1, "steps": int(o.get("stage_count", 1)),
-			"region": place_name(o.get("position", Vector3.INF), idx), "tracked": id == tracked}
+			"region": via if via != "" else place_name(o.get("position", Vector3.INF), idx), "tracked": id == tracked}
 		var waiting := str(o.get("waiting_text", ""))
 		if waiting != "":
 			row["waiting"] = waiting
