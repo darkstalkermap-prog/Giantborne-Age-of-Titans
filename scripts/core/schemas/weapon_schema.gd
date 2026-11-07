@@ -51,9 +51,10 @@ static func fields() -> Dictionary:
 	# reinforced -> titanforged at a titan forge); a titanforged weapon carries one perk:
 	#   formation_poise   its Heavy blows deal poise_mult x poise to formation members (the club)
 	#   pierce            the light 3 of `actions` also strikes the next foe in line within range_m
-	#                     (x the giant's body scale) beyond the one it hit (the sword)
+	#                     beyond the one it hit (the sword)
 	#   heavy_shockwave   its heavies end in a radius_m shockwave (power_mult x the heavy) where the
 	#                     head lands (the hammer)
+	# (range_m and radius_m are stage-1 metres: they grow with the weapon's scale, x3 at stage 4.)
 	#   flat_penetration  its blows ignore that much more armour (the axe)
 	(f.visual_shape.enum as Array).append_array(["axe", "pine"])
 	(f.upgrade.fields as Dictionary)["forge_tier"] = U.str_field(false, DataValidator.FORGE_TIERS)

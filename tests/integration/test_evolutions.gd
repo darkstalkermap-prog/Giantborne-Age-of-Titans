@@ -145,7 +145,14 @@ func test_evolutions_learned_at_their_stage_take_their_bases_slots() -> void:
 func test_an_ungated_growth_moves_the_unlocked_evolutions_into_their_bases_slots() -> void:
 	var p := spawn_player(Vector3(0, 0.05, 0))
 	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
-	assert_false(p.progression.is_gated(), "the sandbox giant is not gated")
+	var prog: PlayerProgression = p.progression
+	assert_false(prog.is_gated(), "the sandbox giant is not gated")
+	# Taught before its stage (a reward): known, but Footfall keeps its slot until stage 4.
+	assert_true(prog.learn_ability("ability.titan_stomp", "reward"), "Titan Stomp taught at stage 1")
+	assert_eq(_slot(p, "slot_1"), "ability.heavy_footfall", "Footfall keeps slot 1 below stage 4")
+	assert_eq(prog.evolved_into("ability.heavy_footfall"), "", "it has not evolved yet")
+	assert_true(prog.slot_options("slot_1").has("ability.heavy_footfall"), "and is still offered")
+	assert_eq(evolved, [], "nothing evolved")
 	await _grow(p, 4)
 	assert_eq([_slot(p, "slot_1"), _slot(p, "slot_5")], ["ability.titan_stomp", "ability.crag_hurl"],
 		"growth.04's unlocks take Footfall's and Hurl's slots")

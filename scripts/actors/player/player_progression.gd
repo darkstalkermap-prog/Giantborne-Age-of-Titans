@@ -274,15 +274,17 @@ func _slot_of(id: String) -> String:
 
 # --------------------------------------------------------------------------- evolutions (P31)
 
-## Makes `id` known and slotted, silently: an evolution takes its base's place in known_abilities
-## (the base moves one on, still known) and the base's slot; anything else is appended and
-## auto-slotted (Progression.auto_slot). Returns {"slot" (the key or ""), "base" (the known base it
-## replaced, "" = none), "changed" (the loadout changed)}.
+## Makes `id` known and slotted, silently: an evolution of a known base takes the base's place in
+## known_abilities (the base moves one on, still known) and the base's slot - once the giant's stage
+## allows it; one learned earlier (a reward) is only known until then (_evolve_known moves it in).
+## Anything else is appended and auto-slotted (Progression.auto_slot). Returns {"slot" (the key or
+## ""), "base" (the known base it replaced, "" = none), "changed" (the loadout changed)}.
 func _take(id: String, def: ActionDef) -> Dictionary:
 	var base := Progression.base_of(id)
 	var known := player.known_abilities
 	var at := known.find(base) if base != "" else -1
-	if at >= 0:
+	var waits := at >= 0 and def.unlock_stage > player.growth_stage
+	if at >= 0 and not waits:
 		known.insert(at, id)
 	else:
 		known.append(id)
@@ -292,19 +294,19 @@ func _take(id: String, def: ActionDef) -> Dictionary:
 		c.level_exempt[id] = true
 	var slot := _slot_of(id)
 	var changed := false
-	var base_slot := _slot_of(base) if at >= 0 else ""
+	var base_slot := _slot_of(base) if at >= 0 and not waits else ""
 	if base_slot != "":
 		if slot != "" and slot != base_slot:
 			player.set_loadout_slot(slot, "")
 		player.set_loadout_slot(base_slot, id)
 		slot = base_slot
 		changed = true
-	elif slot == "":
+	elif slot == "" and not waits:
 		slot = Progression.auto_slot(c.loadout, id, library())
 		if slot != "":
 			player.set_loadout_slot(slot, id)
 			changed = true
-	return {"slot": slot, "base": base if at >= 0 else "", "changed": changed}
+	return {"slot": slot, "base": base if at >= 0 and not waits else "", "changed": changed}
 
 
 ## The events of an ability `_take` taught: loadout_changed (when slotted), ability_learned, and
@@ -354,11 +356,15 @@ func _evolve_known() -> Array:
 	return out
 
 
-## The known ability `id` has evolved into ("" = none): the base stays known and listed, its slot
-## is the evolution's.
+## The known ability `id` has evolved into ("" = none): a known evolution of it that the giant's stage
+## allows (one taught early waits for its stage). The base stays known and listed; its slot is the
+## evolution's.
 func evolved_into(id: String) -> String:
-	var evolutions := Progression.evolutions_known(id, player.known_abilities)
-	return evolutions[0] if not evolutions.is_empty() else ""
+	for ev in Progression.evolutions_known(id, player.known_abilities):
+		var def := GameData.get_action(ev)
+		if def != null and def.unlock_stage <= player.growth_stage:
+			return ev
+	return ""
 
 
 ## A growth of a gated giant learns the stage's evolutions as the profile changes - before
@@ -439,7 +445,7 @@ func slot_options(slot_key: String) -> PackedStringArray:
 			ordered.append(id)
 	for id_v: Variant in ordered:
 		var id := str(id_v)
-		if not knows(id) or out.has(id) or Progression.is_superseded(id, player.known_abilities):
+		if not knows(id) or out.has(id) or evolved_into(id) != "":
 			continue
 		var def := GameData.get_action(id)
 		if def == null or not Progression.LEARNABLE_KINDS.has(def.kind):

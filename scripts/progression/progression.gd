@@ -257,12 +257,6 @@ static func evolutions_known(base: String, known: Array) -> PackedStringArray:
 	return out
 
 
-## True when a known ability has evolved from `id`: the base stays known (listed), but its slot
-## belongs to the evolution.
-static func is_superseded(id: String, known: Array) -> bool:
-	return not evolutions_known(id, known).is_empty()
-
-
 ## The library's evolutions a character of `level` at growth `stage` meets and does not know yet,
 ## in the order they must be learned (by unlock_stage, then library order), so that a chain grown
 ## through in one step evolves link by link (Footfall -> Titan Stomp -> Earthquake). `extra` adds
