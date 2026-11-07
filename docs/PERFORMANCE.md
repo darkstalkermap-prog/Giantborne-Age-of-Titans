@@ -132,6 +132,21 @@ it also reports the streaming numbers, the rendered draw calls, the console erro
 failed requests. Exit code 0 when the walk finished without check failures and the console stayed
 clean; `--strict` also fails on the indicative frame budget.
 
+Since the M7 gate, `--world` walks the real world (`--mode=world --new-game`; the release build takes
+its arguments) and `--audio` records the game's music during the walk with `audio_check.mjs`'s
+recorder (`tools/web/audio_recorder.mjs`, shared by both checks): it arms at the walk's start once
+zone music plays and disarms at its end, then reports the seconds of music recorded (at least
+`--music-s`, 60), the region borders crossed while recording (the music sets that followed one
+another, at least `--min-borders`, 1), every silent run over 50 ms placed on the main thread's clock
+(a hole the main thread explains passes the default form, `--strict` fails every one) and the peak
+live sample bytes against the level's registered seconds x 353 KB + 12 MB (`level.world` 167.81 s).
+The report prints the plan's criterion (no silent run over 50 ms in 60 s of music across a region
+border) as MET, NOT MET or NOT MEASURED, a default pass with holes ends "OK (the plan's audio
+criterion NOT MET ...)", and `--json` keeps the recording's trace for `audio_check.mjs --replay`.
+`--walk-stage=N` grows the giant before the walk. `tools/web/test_stream_check.mjs` tests the
+recorder's verdicts on a stub launcher (a border crossed in music; three slow frames; no border; no
+music).
+
 ### Graphics presets (`--graphics`, Settings, LevelRoot)
 
 The level record's `render` presets, applied by `LevelRoot` at load and on every change of the
@@ -216,6 +231,18 @@ xvfb-run -a -s "-screen 0 1280x720x24" tools/gd.sh --path . --fixed-fps 60 --res
 tools/build_web.sh --preset="Web (test)"
 node tools/web/stream_check.mjs --json=builds/stream_check.json
 ```
+
+The real world's music on the web (the M7 gate; the release build, without `XDG_DATA_HOME`): a walk
+from New Game's start on the Kingsgate shelf south into the Drowned Steps, west into the Greywood and
+north back into the Crownmarch, three region borders in about 100 s of music:
+
+```
+tools/build_web.sh --preset=Web --out=builds/web_m7
+node tools/web/stream_check.mjs --build=builds/web_m7 --world --audio --autoplay=1200 --timeout-s=1500 \
+  "--route=-200:360;-210:280;-250:220;-380:220;-452:300;-470:420" --json=builds/stream_audio_m7.json
+```
+
+On a machine with a GPU, add `--strict` (every hole over 50 ms fails).
 
 ## Container results
 
@@ -690,6 +717,35 @@ directions at each viewpoint, the most of the four; `tests/support/world_draw_pr
 of loaded ground ahead at the least, 0 thrash, streaming work per frame p50 0.42 / p99 3.3 / max 9.5
 ms (the max is the first load of a props dependency, the shrine scene), CPU per tick p95 1.8 ms.
 
+### The world's music on the web (the M7 gate)
+
+The release build of the gate's fixes (`tools/build_web.sh --preset=Web --out=builds/web_m7`:
+`index.pck` 16,172,712 bytes, 16,682,352 as shipped in two parts, the audio 60 % of its files) and
+`stream_check.mjs --world --audio` (the command under "Commands"), headless Chromium with SwiftShader
+on the container's 4 cores, alone in the container. Indicative: software WebGL.
+
+| Route (walked with the stick, AI on, 1280 x 720) | Music recorded, borders | Holes over 50 ms (longest) | Placed on the main thread | Page frames p50 / p99 / worst | Margin, thrash, most loaded | Streaming work max | Draw calls p50 / max | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **The gate's**: -200:360, -210:280, -250:220, -380:220, -452:300, -470:420 (506 m in 61 s of game time, 127 s of wall time; Play to the walk 28.5 s) | 98.5 s, 3 (Crownmarch -> Drowned Steps -> Greywood -> Crownmarch) | 301 (281.5 ms) | all 301 (458 long tasks, the longest 440 ms) | 217 / 317 / 450 ms | 223.7 m, 0, 16 | 5.3 ms | 39 / 57 | OK; the criterion NOT MET |
+| -200:360, -200:200, -380:200 (278 m in 28 s) | 42.5 s, 1 | 130 (261.2 ms) | all 130 | 200 / 267 / 383 ms | **199.9 m**, 0, 16 | 10.9 ms | 38 / 47 | failed: too short, and the margin |
+| The same, back north to -380:360 and -200:360 (674 m in 69 s) | 125.8 s, 3 | 397 (394.7 ms) | all 397 | 233 / 367 / 433 ms | **199.9 m**, 0, 16 | 4.6 ms | 40 / 52 | failed: the margin |
+
+The music played across every border with no hole the main thread does not explain: every silent run
+over 50 ms lies where the main thread was drawing a frame of 100-450 ms and the no-threads build's
+mixer waited for it, as on the Valley's (M6, `docs/systems/P23.md`). The default form therefore
+passes, and the plan's criterion (no silent run over 50 ms) is **NOT MET in this container**; the
+`--strict` form is for a machine with a GPU (**NOT RUN**, the owner's; `docs/plans/FOLLOWUPS.md`).
+The peak live sample bytes stayed at 57.2 MB of the world's 67.9 MB cap (167.81 registered seconds
+x 353 KB + 12 MB). The console stayed clean while the game ran (0 errors; the line at exit is the
+engine's audio teardown, as above). The other two routes came 199.9 m from unloaded ground (the
+walk check wants 200 m) after the walk's stuck-walk teleports (two on each, the same headless): a
+miss of the route, not of the music or the streaming work; the gate's route keeps 223.7 m. The
+engine's own frames sat at their 133 ms cap.
+
+The gate's searches within the path-query budget (`docs/systems/P24b.md`, "M7 gate") are on the
+desktop side: the reviewer's world walk at stage 4 past the Raiders' Hollow to Brannock (headless)
+went from `cpu_tick_ms` max 36.1 to 11.2 ms and p99 7.4 to 5.2 ms.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
@@ -769,3 +825,4 @@ nothing about a real GPU; they are listed only to show the build works.
 | A gamepad inside the page (browsers expose a pad after its first button press) | NOT RUN | NOT RUN |
 | Record the browser, the machine and the numbers in this file | Above | Owner |
 | **M6: the web audio check's criterion** - no silent run over 50 ms in 60 s of the Hollow's music (`node tools/web/audio_check.mjs --strict`; P23) | **Not met here** (software WebGL: every run has 166-213 holes over 50 ms, the longest 241-618 ms, each placed on the main thread drawing a frame while the no-threads build's mixer waits; the default form passes those, under load it fails as well, and of the gate's last two runs on its final release one failed it on a single 78 ms hole placed 1.7 ms past the tolerance); the report now prints the criterion's verdict and a failed run keeps its trace (`tools/web/test_audio_check.mjs`) | **NOT RUN** (a machine with a GPU: the owner, before M6 is declared passed) |
+| **M7: the world's music across a region border** - no silent run over 50 ms in 60 s of the world's music across a region border, on the release build (`node tools/web/stream_check.mjs --world --audio --strict`; the M7 gate) | **Not met here** (software WebGL: the gate's route had 98.5 s of music across three borders and 301 holes over 50 ms, the longest 281.5 ms, every one placed on the main thread drawing a frame while the no-threads build's mixer waited; the default form passes those; "The world's music on the web (the M7 gate)"); the recorder's verdicts are tested on a stub launcher (`tools/web/test_stream_check.mjs`) | **NOT RUN** (a machine with a GPU: the owner, before M7 is declared passed) |
