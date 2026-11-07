@@ -53,6 +53,11 @@ static func fields() -> Dictionary:
 	## @anchor P22
 
 	## @anchor P29
+	# P29 (plan M6-M9 §2.6, §5.9): a respawn at a checkpoint is refused while the faction is hostile
+	# and one of its armed members (an enemy spawn of a level encounter that is not cleared) stands
+	# within this many metres of it (FactionState.respawn_refusal; 0 or absent = never: the Valley's
+	# Thornwick keeps today's respawns). A settlement's guards: Brannock, Millford (120).
+	f["respawn_guard_m"] = U.num(0.0, 1000.0)
 
 	return f
 
@@ -70,6 +75,12 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	## @anchor P22
 
 	## @anchor P29
+	# P29: a reconcile block's talker is a world entity id, and its cost and text are the dialogue's:
+	# the talker's dialogue offers the choice whose outcome is "reconcile_<short>" (GameData's P29
+	# post-pass checks that some dialogue does).
+	var p29_rec: Variant = d.get("reconcile")
+	if typeof(p29_rec) == TYPE_DICTIONARY and typeof(p29_rec.get("cost")) == TYPE_ARRAY and (p29_rec.cost as Array).is_empty():
+		out.warnings.append("%s.reconcile: a reconciliation without a cost (an errand) needs its own dialogue choice" % ctx)
 
 
 static func required_ids() -> Dictionary:

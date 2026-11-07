@@ -175,6 +175,7 @@ func _exit_tree() -> void:
 func _ready() -> void:
 	level = _find_level()
 	reload_encounters()
+	_p29_ready()   # P29: stand-downs, provocation, talkers on greens, the respawn blocker
 
 
 # --------------------------------------------------------------------------- public API
@@ -409,6 +410,7 @@ func _on_pre_actors(tick: int) -> void:
 	if _dirty or tick >= _next_check_tick:
 		_update(tick, spawns_per_tick)
 	_p30_tick(tick)   # P30: the formations' updates (10 Hz)
+	_p29_tick(tick)   # P29: the encounters' stand_down_when
 
 
 ## One update. quota > 0: at most that many members spawn in it (forced activations excepted);
@@ -1027,6 +1029,171 @@ func spend_nav_queries(n := 1) -> void:
 	NavQuery.spend(level, n)
 
 ## @anchor P29
+# --- stand-downs, provocation, talkers on their greens, the respawn blocker (P29) -----------------
+# Plan M6-M9 §2.12, §5.9, decision 31. Hook lines: _ready (_p29_ready) and _on_pre_actors (_p29_tick).
+#   * stand_down_when (an encounter's quest condition, evaluated with Quests' context): while it holds
+#     - and the giant has not struck one of its members since it began to (the saved flag
+#     encounter.<short>.provoked) - every member of the encounter that belongs to a faction stands
+#     down whatever its faction's standing (EnemyActor's "stood_down": team NEUTRAL, at its post, guard
+#     down, never aware); once it stops holding they take their faction's standing again, alerted (the
+#     toll fort's riders, hostile by their faction, hold the road while the toll is pending, paid or
+#     cowed; Aldmere's fort gate for a parley token, P36). Checked at every update (check_ticks) and
+#     at once for a member that spawns; a faction event that resets a member is undone at the next.
+#   * provocation: a connecting blow of the giant on a member of an encounter standing down sets
+#     encounter.<short>.provoked; the next tick ends the stand-down (the blow itself is no faction
+#     offence: a hostile-by-default faction counts none).
+#   * talkers on their greens (§2.12): a talker (an npc record of role "talker") whose spawn point lies
+#     inside a settlement POI with max_inner_stage and green_m stands on that green while the giant's
+#     stage is above max_inner_stage: placed there when it spawns (its chunk loading, its encounter
+#     activating), and moved there when the giant grows past it while it is loaded (growth happens at
+#     shrines, far out of the settlements' sight).
+#   * the respawn blocker: FactionState.respawn_refusal joins GameSession's blockers while this level's
+#     director lives (its bound method; GameSession drops it once the director is freed).
+
+const P29_PROVOKED_FMT := "encounter.%s.provoked"
+
+## Encounters standing down now (encounter id -> true).
+var _p29_down := {}
+## A provocation was seen: the next tick re-evaluates the stand-downs.
+var _p29_dirty := false
+## Talkers placed on a green (entity id -> the green, global): tests, debug.
+var p29_on_green := {}
+
+
+## The flag a provoked encounter sets: encounter.<short id>.provoked.
+static func provoked_flag(encounter_id: String) -> String:
+	return P29_PROVOKED_FMT % encounter_id.trim_prefix("encounter.")
+
+
+func _p29_ready() -> void:
+	GameSession.register_respawn_blocker(_p29_respawn_blocker)
+	if not member_spawned.is_connected(_p29_on_member_spawned):
+		member_spawned.connect(_p29_on_member_spawned)
+	if not Events.hit_resolved.is_connected(_p29_on_hit_resolved):
+		Events.hit_resolved.connect(_p29_on_hit_resolved)
+	if not Events.growth_changed.is_connected(_p29_on_growth_changed):
+		Events.growth_changed.connect(_p29_on_growth_changed)
+
+
+func _p29_respawn_blocker(checkpoint_id: String) -> String:
+	return FactionState.respawn_refusal(checkpoint_id)
+
+
+func _p29_tick(tick: int) -> void:
+	if _p29_dirty or tick % maxi(1, check_ticks) == 0:
+		_p29_dirty = false
+		p29_update_stand_downs()
+
+
+## True when the encounter's stand_down_when holds now and it was not provoked.
+func p29_stands_down(encounter_id: String) -> bool:
+	var enc: Encounter = _encounters.get(encounter_id)
+	if enc == null or typeof(enc.record.get("stand_down_when")) != TYPE_DICTIONARY:
+		return false
+	if Waystone.flag_truthy(WorldState.get_flag(provoked_flag(encounter_id))):
+		return false
+	return QuestConditions.holds(enc.record.stand_down_when, Quests.condition_context())
+
+
+## True while the encounter's members stand down (as of the last evaluation).
+func p29_standing_down(encounter_id: String) -> bool:
+	return _p29_down.has(encounter_id)
+
+
+## Evaluates every stand_down_when now and stands its spawned faction members down or lets them go.
+func p29_update_stand_downs() -> void:
+	for id in _order:
+		var enc: Encounter = _encounters[id]
+		if typeof(enc.record.get("stand_down_when")) != TYPE_DICTIONARY:
+			continue
+		var was := _p29_down.has(id)
+		var down := enc.state == ACTIVE and p29_stands_down(id)
+		if down:
+			_p29_down[id] = true
+		else:
+			_p29_down.erase(id)
+		if not down and not was:
+			continue
+		for m: Member in enc.members:
+			if m.status == SPAWNED and _alive(m.node):
+				_p29_apply(m, down)
+
+
+## Stands a faction member down (down), or gives it its faction's standing back (alerted).
+func _p29_apply(m: Member, down: bool) -> void:
+	var n := m.node
+	if m.faction == "" or n == null or not n.has_method("_apply_standing"):
+		return
+	if down:
+		n.call("_apply_standing", "stood_down", false)
+	elif str(n.get("faction_standing")) == "stood_down":
+		n.call("_apply_standing", FactionState.standing(m.faction), true)
+
+
+func _p29_on_member_spawned(encounter_id: String, entity_id: String, node: Node3D) -> void:
+	var m: Member = _members.get(entity_id)
+	if m == null:
+		return
+	if p29_stands_down(encounter_id):
+		_p29_down[encounter_id] = true
+		_p29_apply(m, true)
+	_p29_place_talker(m, node)
+
+
+## A connecting blow of the giant on a member of an encounter standing down provokes it.
+func _p29_on_hit_resolved(_tick: int, result: HitResult) -> void:
+	if _p29_down.is_empty() or result == null or result.event == null:
+		return
+	var m: Member = _members.get(result.event.target_id)
+	if m == null or not _p29_down.has(m.encounter_id) or not FactionState.OFFENCE_OUTCOMES.has(result.outcome):
+		return
+	var attacker := Sim.get_entity(result.event.attacker_id)
+	if attacker == null or attacker.team != CombatEntity.Team.PLAYER:
+		return
+	WorldState.set_flag(provoked_flag(m.encounter_id), true)
+	_p29_dirty = true
+
+
+## The green a talker member stands on now (global; Vector3.INF when it keeps its spawn point): its
+## spawn point's settlement POI (kind settlement, max_inner_stage and green_m) when the giant's stage
+## is above max_inner_stage.
+func p29_green_for(m: Member) -> Vector3:
+	if m == null or str(GameData.get_record(m.definition).get("role", "")) != "talker" or level == null:
+		return Vector3.INF
+	var stage := _p24b_player_stage()
+	var at := _vec3(m.spawn.get("position_m"))
+	for poi: Dictionary in GameData.records_of_type("poi"):
+		if str(poi.get("level", "")) != level.level_id or str(poi.get("kind", "")) != "settlement":
+			continue
+		if not poi.has("max_inner_stage") or typeof(poi.get("green_m")) != TYPE_ARRAY:
+			continue
+		var c := _vec3(poi.get("position_m"))
+		if _flat_dist(at, c) > float(poi.get("radius_m", 0.0)) or stage <= int(poi.max_inner_stage):
+			continue
+		var origin := level.global_transform if level.is_inside_tree() else level.transform
+		return origin * _vec3(poi.green_m)
+	return Vector3.INF
+
+
+func _p29_place_talker(m: Member, node: Node3D) -> void:
+	var green := p29_green_for(m)
+	if green == Vector3.INF or node == null or not is_instance_valid(node):
+		return
+	node.global_position = green + Vector3.UP * SPAWN_LIFT_M
+	_set_if(node, "home_position", green)
+	p29_on_green[m.entity_id] = green
+
+
+## The giant grew: its loaded talkers walk out to their greens if it is now too big for their streets.
+func _p29_on_growth_changed(_tick: int, entity_id: String, _old_stage: int, _new_stage: int) -> void:
+	var p := _player()
+	var pe: Variant = p.get("entity") if p != null else null
+	if not (pe is CombatEntity) or (pe as CombatEntity).entity_id != entity_id:
+		return
+	for id in _order:
+		for m: Member in (_encounters[id] as Encounter).members:
+			if m.status == SPAWNED and _alive(m.node) and not p29_on_green.has(m.entity_id):
+				_p29_place_talker(m, m.node)
 
 ## @anchor P30
 # --- formations (P30, plan M6-M9 §2.10, decision 19) -----------------------------------------------

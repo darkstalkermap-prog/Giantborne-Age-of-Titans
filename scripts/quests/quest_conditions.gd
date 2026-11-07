@@ -154,6 +154,8 @@ static func holds(c: Variant, ctx: Dictionary) -> bool:
 		"region_entered":
 			return region_entered_holds(ctx, str(d.get("region", "")))
 		## @anchor P29
+		"near":
+			return near_holds(ctx, str(d.get("target", "")), float(d.get("radius_m", NEAR_DEFAULT_M)))
 		## @anchor P37
 	return false
 
@@ -316,5 +318,41 @@ static func region_entered_holds(ctx: Dictionary, region: String) -> bool:
 	return region != "" and truthy((ctx.get("flags", {}) as Dictionary).get("region.%s.entered" % short_of(region)))
 
 ## @anchor P29
+# near {target, radius_m} (P29; plan M6-M9 §2.12): the giant stands within radius_m (on the ground
+# plane) of the target - a marker, area, prop, checkpoint, POI or encounter of the level's world
+# index, or anything live. The evaluation stays pure: the context names the target's position, from
+# ctx.positions ({id: Vector3}: tests and tools), else ctx.position_of (a Callable(id) -> Vector3;
+# Quests.condition_context() gives Quests.objective_position: the live node, else the level's index).
+# It does not hold without the giant's position or the target's.
+
+## The radius of a near condition without radius_m (plan §2.12's example).
+const NEAR_DEFAULT_M := 150.0
+
+
+## The position the context gives a target id: ctx.positions[id], else ctx.position_of.call(id);
+## Vector3.INF when neither knows it.
+static func target_position(ctx: Dictionary, target: String) -> Vector3:
+	if target == "":
+		return Vector3.INF
+	var known: Variant = ctx.get("positions")
+	if typeof(known) == TYPE_DICTIONARY and typeof((known as Dictionary).get(target)) == TYPE_VECTOR3:
+		return (known as Dictionary)[target]
+	var lookup: Variant = ctx.get("position_of")
+	if lookup is Callable and (lookup as Callable).is_valid():
+		var p: Variant = (lookup as Callable).call(target)
+		if typeof(p) == TYPE_VECTOR3:
+			return p
+	return Vector3.INF
+
+
+## near {target, radius_m}: the giant within radius_m of the target (horizontally).
+static func near_holds(ctx: Dictionary, target: String, radius_m: float) -> bool:
+	var me: Variant = ctx.get("position", Vector3.INF)
+	if typeof(me) != TYPE_VECTOR3 or not (me as Vector3).is_finite():
+		return false
+	var at := target_position(ctx, target)
+	if not at.is_finite():
+		return false
+	return Vector2(at.x - (me as Vector3).x, at.z - (me as Vector3).z).length() <= maxf(0.0, radius_m)
 
 ## @anchor P37
