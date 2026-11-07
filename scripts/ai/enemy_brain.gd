@@ -822,7 +822,10 @@ func _pick_flee_point(my_position: Vector3, threat: Vector3) -> Vector3:
 	_flee_blocked = false
 	var dist := float(ai.get("flee_distance_m", 12.0))
 	if flee_resolver.is_valid():
+		nav_search_pending = false
 		var p: Vector3 = flee_resolver.call(my_position, threat, dist)
+		if p == Vector3.INF and nav_search_pending:
+			return Vector3.INF   # M7 gate: the search waits for the budget; asked again next decision
 		# Nowhere reachable to run to (cornered): stand rather than run into a wall.
 		return p if p != Vector3.INF else my_position
 	var away := my_position - threat
@@ -978,6 +981,7 @@ func _release_ranged() -> void:
 func _drop_firing_point() -> void:
 	firing_point = Vector3.INF
 	_firing_tick = NO_TICK
+	_firing_retry_tick = NO_TICK
 	if firing_point_release.is_valid():
 		firing_point_release.call()
 
@@ -1093,10 +1097,15 @@ func _keep_band(my_position: Vector3, target_pos: Vector3, distance: float, band
 			or (far and pd < (band.x + band.y) * 0.5)
 	if not repick and not bool(perception.get("visible", false)) and now - _firing_tick >= _ticks(FIRING_REPICK_S):
 		repick = true
+	if repick and firing_point == Vector3.INF and not _firing_blocked and _firing_retry_tick != NO_TICK \
+			and now < _firing_retry_tick:
+		repick = false   # M7 gate: the last search found nothing; hold until it may run again
 	if repick:
 		firing_point = _pick_firing_point(my_position, target_pos, distance, band, spread, far)
 		_firing_tick = now
 		_firing_blocked = false
+		_firing_retry_tick = now + _ticks(FIRING_REPICK_S) if firing_point == Vector3.INF and not nav_search_pending \
+			else NO_TICK
 	var d := _flat_distance(my_position, firing_point) if firing_point != Vector3.INF else 0.0
 	if firing_point == Vector3.INF or d <= FIRING_ARRIVE_M:
 		_stop_moving()
@@ -1108,6 +1117,7 @@ func _keep_band(my_position: Vector3, target_pos: Vector3, distance: float, band
 func _pick_firing_point(my_position: Vector3, target_pos: Vector3, distance: float, band: Vector2,
 		spread: float, far: bool) -> Vector3:
 	if firing_point_resolver.is_valid():
+		nav_search_pending = false
 		return firing_point_resolver.call(my_position, target_pos, band, spread, far)
 	return ring_point(my_position, target_pos, distance, band, far)
 
@@ -1703,6 +1713,19 @@ func refresh_post() -> void:
 	_post_tick = NO_TICK
 
 ## @anchor P24b
+# --- searches that wait for the path-query budget (M7 gate) ----------------------------------------
+# In a streamed world a firing-point, flee or rout search spends NavQuery's per-tick budget a
+# candidate at a time (EnemyActor's P24b section). A resolver that stopped for the budget returns
+# Vector3.INF and sets nav_search_pending: the brain then waits where it stands and asks again at its
+# next decision, where the search resumes - a flight is not taken for "cornered" meanwhile. A firing
+# point search that found nothing (not pending) waits FIRING_REPICK_S before the next one (it used to
+# run again at every decision: 32-34 queries a tick for a target 200 m away).
+
+## True when the last resolver call (firing point, flee or rout point) stopped for this tick's
+## path-query budget: it resumes at the next decision.
+var nav_search_pending := false
+## The firing point search found nothing: no new one before this tick (NO_TICK = none waits).
+var _firing_retry_tick := NO_TICK
 
 ## @anchor P30
 # --- formation members, the banner's morale, joining (P30) -----------------------------------------

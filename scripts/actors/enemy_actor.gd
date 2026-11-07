@@ -854,19 +854,26 @@ func _resolve_flee_point(from: Vector3, threat: Vector3, distance: float) -> Vec
 	var use_nav := NavQuery.has_navigation(level, layers)   # P24b: every query through NavQuery
 	var space := get_world_3d().direct_space_state
 	var threat_dist := _flat_len(from - threat)
-	for i in FLEE_MAX_STEPS * 2 + 1:
+	for i in range(_search_start("flee") if use_nav else 0, FLEE_MAX_STEPS * 2 + 1):
 		var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)   # 0, 1, -1, 2, -2, ...
 		var desired := from + away.rotated(Vector3.UP, deg_to_rad(FLEE_STEP_DEG * k)) * distance
 		if use_nav:
+			if not _search_affords():   # M7 gate: within the tick's path-query budget (P24b section)
+				_search_stop("flee", i)
+				return Vector3.INF
+			var q0 := NavQuery.queries_total
 			var p := _reachable_point(level, from, NavQuery.closest_point(level, desired, layers), layers)
+			_search_spend(q0)
 			if p == Vector3.INF or _flat_len(p - from) < distance * 0.5 or _flat_len(p - threat) <= threat_dist:
 				continue   # unreachable, snapped back toward us, or not away from the threat
+			_search_done("flee")
 			return p
 		else:
 			var lift := Vector3.UP * 0.5
 			if HitQueryAdapter.line_clear(space, from + lift, desired + lift, SIGHT_MASK | LAYER_BLOCKER,
 					entity.occlusion_rids):
 				return Vector3(desired.x, from.y, desired.z)
+	_search_done("flee")
 	return Vector3.INF
 
 
@@ -1516,6 +1523,9 @@ func ranged_allies() -> Array:
 func _resolve_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2, spread_m: float,
 		far: bool) -> Vector3:
 	_release_firing_marker()
+	if target_out_of_reach(my_position, target_pos, band):
+		firing_point = Vector3.INF   # M7 gate: nothing it could hold reaches the target (P24b section)
+		return firing_point
 	var target := _aim_target()
 	var allies := ranged_allies()
 	var marker := _pick_firing_marker(my_position, target_pos, band, spread_m, target, allies)
@@ -1641,12 +1651,19 @@ func _ring_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2
 	var lo := band.x + RING_BAND_MARGIN_M
 	var hi := maxf(lo, band.y - RING_BAND_MARGIN_M)
 	var r := hi if far else clampf(dist, lo, hi)
-	var fallback := Vector3.INF
-	for i in RING_STEPS * 2 + 1:
+	var start := _search_start("firing_ring")
+	var fallback := _search_fallback if start > 0 else Vector3.INF
+	for i in range(start, RING_STEPS * 2 + 1):
 		var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)   # 0, 1, -1, 2, -2, ...
 		var desired := target_pos + away.rotated(Vector3.UP, deg_to_rad(RING_STEP_DEG * k)) * r
 		desired.y = my_position.y
+		if not _search_affords():   # M7 gate: within the tick's path-query budget (P24b section)
+			_search_fallback = fallback
+			_search_stop("firing_ring", i)
+			return Vector3.INF
+		var q0 := NavQuery.queries_total
 		var p := _walkable_point(my_position, desired)
+		_search_spend(q0)
 		if p == Vector3.INF:
 			continue
 		var td := _flat_len(p - target_pos)
@@ -1656,9 +1673,13 @@ func _ring_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2
 			fallback = p
 		if _crowded(p, spread_m, allies) or not _sees_target_from(p, target):
 			continue
+		_search_done("firing_ring")
 		return p
+	_search_done("firing_ring")
 	if fallback != Vector3.INF:
 		return fallback
+	if _p24b_throttled():
+		return Vector3.INF   # M7 gate: no candidate is walkable - hold, and search again after FIRING_REPICK_S
 	return Vector3(target_pos.x + away.x * r, my_position.y, target_pos.z + away.z * r)
 
 
@@ -2058,7 +2079,9 @@ func _p22_ready() -> void:
 		brain.firing_point_resolver = func(my_position: Vector3, target_pos: Vector3, band: Vector2,
 				spread_m: float, far: bool) -> Vector3:
 			var p := front_arc_firing_point(my_position, target_pos, band, spread_m, far)
-			return p if p != Vector3.INF else p09_resolver.call(my_position, target_pos, band, spread_m, far)
+			if p != Vector3.INF or brain.nav_search_pending:
+				return p   # M7 gate: a front-arc search waiting for the budget resumes next decision
+			return p09_resolver.call(my_position, target_pos, band, spread_m, far)
 		brain.view_probe = camera_view
 		brain.shot_preparer = prepare_shot
 
@@ -2137,6 +2160,8 @@ func front_arc_firing_point(my_position: Vector3, target_pos: Vector3, band: Vec
 	var view := camera_view()
 	if arc <= 0.0 or view.is_empty():
 		return Vector3.INF
+	if target_out_of_reach(my_position, target_pos, band):
+		return Vector3.INF   # M7 gate: nothing it could hold reaches the target (P24b section)
 	var yaw := float(view.yaw)
 	_release_firing_marker()
 	var target := _aim_target()
@@ -2177,14 +2202,19 @@ func front_arc_firing_point(my_position: Vector3, target_pos: Vector3, band: Vec
 	var hi := maxf(lo, band.y - RING_BAND_MARGIN_M)
 	var r := hi if far else clampf(dist, lo, hi)
 	var steps := int(floor(rad_to_deg(half) * 2.0 / RING_STEP_DEG))
-	for i in steps * 2 + 1:
+	for i in range(_search_start("firing_arc"), steps * 2 + 1):
 		var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)   # 0, 1, -1, 2, -2, ...
 		var a := start + deg_to_rad(RING_STEP_DEG * k)
 		if absf(angle_difference(yaw, a)) > half + 1e-4:
 			continue
 		var desired := target_pos + Vector3(-sin(a), 0.0, -cos(a)) * r
 		desired.y = my_position.y
+		if not _search_affords():   # M7 gate: within the tick's path-query budget (P24b section)
+			_search_stop("firing_arc", i)
+			return Vector3.INF
+		var q0 := NavQuery.queries_total
 		var p := _walkable_point(my_position, desired)
+		_search_spend(q0)
 		if p == Vector3.INF:
 			continue
 		var td := _flat_len(p - target_pos)
@@ -2192,8 +2222,10 @@ func front_arc_firing_point(my_position: Vector3, target_pos: Vector3, band: Vec
 			continue
 		if _crowded(p, spread_m, allies) or not _sees_target_from(p, target):
 			continue
+		_search_done("firing_arc")
 		firing_point = p
 		return p
+	_search_done("firing_arc")
 	return Vector3.INF
 
 
@@ -2353,6 +2385,106 @@ func _p24b_reach(goal: Vector3) -> Vector3:
 		return end
 	return goal
 
+
+# ---- searches within the path-query budget (M7 gate)
+# A firing-point search (P09's ring, P22's front arc), a flee search (P04) and a rout point (P30) try
+# candidates - each a closest point and up to two paths (_walkable_point / _reachable_point). In a
+# streamed world (nav_query settings) they spend NavQuery's per-tick budget like a re-path does: a
+# candidate is tried only while the level's budget_left() and this actor's own share of the tick
+# (SEARCH_QUERIES_PER_TICK) allow it; otherwise the search stops where it is, brain.nav_search_pending
+# says so, and the brain's next decision resumes it at that candidate (within SEARCH_RESUME_TICKS).
+# The searches used to run every candidate at once: a raider archer or mage spent 32-34 queries in
+# one tick (17-27 ms) on a target 200 m away. Without settings (the Valley, test levels) the searches
+# run as before.
+
+## One candidate's path queries (its closest point and up to two paths), and the most one actor's
+## searches spend in a tick: one candidate a tick.
+const SEARCH_CANDIDATE_QUERIES := 3
+const SEARCH_QUERIES_PER_TICK := 3
+## A search stopped for the budget resumes at its candidate when it is asked again within this many
+## ticks (the brain asks at its next decision); later it starts anew.
+const SEARCH_RESUME_TICKS := 30
+
+var _search_key := ""
+var _search_next := 0
+var _search_stop_tick := -1000000
+var _search_spent_tick := -1
+var _search_spent := 0
+## The ring search's in-band fallback found before it stopped for the budget.
+var _search_fallback := Vector3.INF
+## The most path queries this actor's searches spent in one tick (tests, measurements).
+var search_queries_peak := 0
+
+
+## The candidate search `key` ("firing_arc", "firing_ring", "flee", "rout") starts from: the one it
+## stopped at when asked again soon, else the first.
+func _search_start(key: String) -> int:
+	if _search_key == key and Sim.tick - _search_stop_tick <= SEARCH_RESUME_TICKS:
+		return _search_next
+	return 0
+
+
+## True when one more candidate fits this tick: always without nav_query settings; in a streamed
+## world when the level's budget has SEARCH_CANDIDATE_QUERIES left and this actor's searches spent
+## at most SEARCH_QUERIES_PER_TICK - SEARCH_CANDIDATE_QUERIES this tick.
+func _search_affords() -> bool:
+	if not _p24b_throttled():
+		return true
+	_search_roll()
+	return _search_spent + SEARCH_CANDIDATE_QUERIES <= SEARCH_QUERIES_PER_TICK \
+		and NavQuery.budget_left(nav_level()) >= SEARCH_CANDIDATE_QUERIES
+
+
+## Counts what a candidate spent (NavQuery.queries_total when it began).
+func _search_spend(queries_before: int) -> void:
+	_search_roll()
+	_search_spent += NavQuery.queries_total - queries_before
+	search_queries_peak = maxi(search_queries_peak, _search_spent)
+
+
+func _search_roll() -> void:
+	if _search_spent_tick != Sim.tick:
+		_search_spent_tick = Sim.tick
+		_search_spent = 0
+
+
+## Search `key` stops at candidate `next` for the budget: brain.nav_search_pending, and it resumes there.
+func _search_stop(key: String, next: int) -> void:
+	_search_key = key
+	_search_next = next
+	_search_stop_tick = Sim.tick
+	if brain != null:
+		brain.nav_search_pending = true
+
+
+## Search `key` ended (found a point or tried every candidate): the next one starts anew.
+func _search_done(key: String) -> void:
+	if _search_key == key:
+		_search_key = ""
+		_search_next = 0
+
+
+## M7 gate: true in a streamed world when no firing point this unit could hold would have the target
+## in `band`: the target lies farther than the chase distance (the path cap: no candidate around it
+## can be reached) beyond the band from the unit, or farther than the band beyond the unit's
+## encounter leash (it would walk out of its leash and be sent home). The firing search is then
+## skipped - not a query - and the brain holds where it stands and asks again after FIRING_REPICK_S.
+func target_out_of_reach(my_position: Vector3, target_pos: Vector3, band: Vector2) -> bool:
+	if not _p24b_throttled():
+		return false
+	var chase := float(NavQuery.params_for(nav_level(), NavQuery.PURPOSE_CHASE).max_distance)
+	if chase > 0.0 and _flat_len(target_pos - my_position) - band.y > chase:
+		return true
+	if encounter_id == "":
+		return false
+	var rec := GameData.get_record(encounter_id)
+	var leash := float(rec.get("leash_radius_m", 0.0))
+	var c: Variant = rec.get("center_m")
+	if leash <= 0.0 or typeof(c) != TYPE_ARRAY or (c as Array).size() != 3:
+		return false
+	var centre := Vector3(float(c[0]), target_pos.y, float(c[2]))
+	return _flat_len(target_pos - centre) - leash > band.y + EnemyBrain.BAND_TOLERANCE_M
+
 ## @anchor P30
 # --- formations, the banner, shields and the target provider (P30) --------------------------------
 # Plan M6-M9 §2.10, decisions 19 and 20. Hook lines elsewhere in this file: _ready (_p30_ready),
@@ -2421,8 +2553,8 @@ func _p30_ready() -> void:
 	var p04_flee := brain.flee_resolver
 	brain.flee_resolver = func(from: Vector3, threat: Vector3, distance: float) -> Vector3:
 		var p := _p30_rout_point(from, threat)
-		if p != Vector3.INF:
-			return p
+		if p != Vector3.INF or brain.nav_search_pending:
+			return p   # M7 gate: a rout point waiting for the budget is asked for again next decision
 		return p04_flee.call(from, threat, distance) if p04_flee.is_valid() else Vector3.INF
 	brain.routed.connect(_p30_on_routed)
 	var rally: Variant = record.get("rally")
@@ -2624,7 +2756,12 @@ func _p30_rout_point(from: Vector3, threat: Vector3) -> Vector3:
 	var level := nav_level()
 	var layers := int(agent.navigation_layers)
 	if NavQuery.has_navigation(level, layers):
+		if not _search_affords():   # M7 gate: within the tick's path-query budget (P24b section)
+			_search_stop("rout", 0)
+			return Vector3.INF
+		var q0 := NavQuery.queries_total
 		var r := _reachable_point(level, from, NavQuery.closest_point(level, p, layers), layers)
+		_search_spend(q0)
 		return r if r != Vector3.INF else Vector3.INF
 	return Vector3(p.x, from.y, p.z)
 
