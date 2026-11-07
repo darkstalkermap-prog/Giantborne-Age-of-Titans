@@ -12,7 +12,8 @@ extends Node
 ##     encounter_activated;
 ##   * an active encounter spawns members still waiting for room in the budget, leashes members
 ##     farther than leash_radius_m from its centre (begin_leash_return() and encounter_leashed;
-##     they engage again once home), sets each member's AI LOD tier by distance to the player
+##     they engage again once home; members of an intact formation excepted - their formation holds
+##     them, see the P30 notes), sets each member's AI LOD tier by distance to the player
 ##     (tier 0 within lod.near_m, 1 within lod.mid_m, else 2; engaged members stay at tier 0),
 ##     and deactivates once the player is beyond deactivate_radius_m and no member has been aware
 ##     of the player for UNAWARE_DEACTIVATE_S: its living members are freed (not killed) and come
@@ -584,6 +585,8 @@ func _check_leash(enc: Encounter, tick: int) -> void:
 			continue
 		if _held(n) or _returning(n):
 			continue
+		if _p30_formation_holds(n):
+			continue   # M7 gate: its intact formation holds it in its slot, inside the leash
 		var brain: Variant = n.get("brain")
 		if brain is EnemyBrain and (brain as EnemyBrain).state in [EnemyBrain.AIState.FLEE,
 				EnemyBrain.AIState.ROUTED, EnemyBrain.AIState.DEAD, EnemyBrain.AIState.RETURN]:
@@ -1213,6 +1216,12 @@ func _p29_on_growth_changed(_tick: int, entity_id: String, _old_stage: int, _new
 #     p30_formation_room()).
 #   * Ten times a second (Formation.UPDATE_TICKS) every formation of a live, active encounter updates
 #     with the giant as its threat; a deactivation dissolves the encounter's formations.
+#   * The leash (M7 gate): a member of an intact formation (formed, advancing or braced) is never
+#     leashed - its formation holds it in its slot, and the data's rule (FormationRules.reach_m: every
+#     slot, wherever the pivot may advance and turn, inside the encounter's leash) keeps that slot in
+#     the leash. Leashing it sent it home through its own ranks while the formation still held the
+#     others: the toll fort's front rank stood in RETURN behind its rear rank and the pikes never
+#     braced. A member of a broken or routed formation is leashed like any other.
 
 const P30_DEFAULT_FORMATION_CAP := 40
 const P30_DEFAULT_WEB_FORMATION_CAP := 20
@@ -1261,6 +1270,12 @@ func formation_member_count() -> int:
 			if m.status == SPAWNED and _alive(m.node) and _p30_formation_member(m):
 				n += 1
 	return n
+
+
+## True when `n` stands in an intact formation (the leash leaves it to its formation; see the notes).
+static func _p30_formation_holds(n: Node) -> bool:
+	var f: Variant = n.get("formation") if n != null and is_instance_valid(n) else null
+	return f is Formation and (f as Formation).is_intact()
 
 
 ## A member of a formation: its spawn names one, or it joined one.

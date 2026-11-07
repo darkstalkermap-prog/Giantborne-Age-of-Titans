@@ -62,7 +62,10 @@ const FAN_POINTS := 5
 ## A pivot path is asked for again after this long, or when its goal moved this far.
 const PIVOT_REPATH_TICKS := 60
 const PIVOT_REPATH_MOVE_M := 2.0
-## The pivot stops advancing this far short of the brace distance (it braces, then holds).
+## The pivot stops advancing once the giant is this far inside the brace distance (it braces, then
+## holds). M7 gate: it stopped this far outside it - gap > brace_m + slack - and a giant standing in
+## that half metre was never braced against (the toll fort's pikes stood "formed" 6.6 m from a still
+## giant, brace_m 6).
 const ADVANCE_SLACK_M := 0.5
 ## Outmatched soldiers join a formation of their faction within this distance (EnemyActor, P30).
 const JOIN_RADIUS_M := 40.0
@@ -419,14 +422,10 @@ static func right_of(yaw: float) -> Vector3:
 	return Vector3(cos(yaw), 0.0, -sin(yaw))
 
 
-## Slot `slot`'s offset in the formation's own frame (x right, z back; see the class notes).
+## Slot `slot`'s offset in the formation's own frame (x right, z back; see the class notes). The
+## geometry is FormationRules.slot_offset's, which the data's leash check uses too.
 func slot_local(slot: int) -> Vector3:
-	if slot == BANNER_SLOT:
-		return Vector3(0.0, 0.0, (float(ranks - 1) * 0.5 + 1.0) * rank_spacing_m)
-	var r := slot / files
-	var f := slot % files
-	return Vector3((float(f) - float(files - 1) * 0.5) * file_spacing_m, 0.0,
-		(float(r) - float(ranks - 1) * 0.5) * rank_spacing_m)
+	return FormationRules.slot_offset(ranks, files, rank_spacing_m, file_spacing_m, slot)
 
 
 ## Where slot `slot` stands now (BANNER_SLOT: the banner's place behind the last rank).
@@ -568,7 +567,7 @@ func _decide_state() -> String:
 	var gap := front_gap(threat_pos)
 	if brace_action != "" and brace_m > 0.0 and gap <= brace_m and in_front(threat_pos, brace_m, _threat_radius()):
 		return "braced"
-	if advance_mps > 0.0 and _can_advance() and gap > brace_m + ADVANCE_SLACK_M:
+	if advance_mps > 0.0 and _can_advance() and gap > maxf(0.0, brace_m - ADVANCE_SLACK_M):
 		return "advancing"
 	return "formed"
 

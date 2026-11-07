@@ -17,7 +17,10 @@ const STAGES := 6
 ## The errors of an encounter record's formations (encounter_schema.gd calls it): ids unique plain
 ## words, a stage range that is not empty, a flee point list of ids; every spawn's formation is one
 ## of them, its slot inside the grid and not shared, the banner's slot -1 and named by its
-## formation's `banner`, at most one banner each; a formation needs at least one member.
+## formation's `banner`, at most one banner each; a formation needs at least one member. In an
+## encounter with a leash (M7 gate): an advancing formation (advance_mps > 0) names advance_m, and
+## every formation's reach (reach_m: its slots wherever its pivot may advance and turn) lies inside
+## the leash - otherwise the director would leash the members its formation leads out.
 static func record_errors(enc: Dictionary, ctx: String) -> PackedStringArray:
 	var errors := PackedStringArray()
 	var forms: Variant = enc.get("formations")
@@ -91,6 +94,95 @@ static func record_errors(enc: Dictionary, ctx: String) -> PackedStringArray:
 			errors.append("%s: formation '%s' names banner '%s', which is not its spawn with slot -1" % [ctx, fid, named])
 		if named == "" and banners.has(fid):
 			errors.append("%s: formation '%s' has a slot -1 spawn but names no banner" % [ctx, fid])
+	errors.append_array(_leash_errors(enc, by_id, ctx))
+	return errors
+
+
+# --------------------------------------------------------------------------- the leash (M7 gate)
+
+## Slot `slot`'s offset from its formation's pivot in the formation's own frame (x right, z back):
+## slot (rank r, file f) at x = (f - (files - 1) / 2) * file_spacing_m, z = (r - (ranks - 1) / 2) *
+## rank_spacing_m; the banner (BANNER_SLOT) one rank behind the last, centred. Formation.slot_local's
+## geometry. Pure.
+static func slot_offset(ranks: int, files: int, rank_spacing_m: float, file_spacing_m: float, slot: int) -> Vector3:
+	ranks = maxi(1, ranks)
+	files = maxi(1, files)
+	if slot == BANNER_SLOT:
+		return Vector3(0.0, 0.0, (float(ranks - 1) * 0.5 + 1.0) * rank_spacing_m)
+	var r := slot / files
+	var f := slot % files
+	return Vector3((float(f) - float(files - 1) * 0.5) * file_spacing_m, 0.0,
+		(float(r) - float(ranks - 1) * 0.5) * rank_spacing_m)
+
+
+## The farthest (horizontally) from its encounter's centre that a member of formation entry `f` can
+## stand in its slot: the formation's home pivot is placed as the director places it (the best fit of
+## its rank-and-file's spawn points to their slots, facing the entry's yaw_deg, else its first
+## member's yaw), the pivot may advance advance_m from there in any direction, and a formation that
+## faces the threat may turn every slot all round it. -1 when the formation has no placed member.
+## Pure (the record's numbers, with Formation.from_record's defaults).
+static func reach_m(enc: Dictionary, f: Dictionary) -> float:
+	var fid := str(f.get("id", ""))
+	var ranks := maxi(1, int(f.get("ranks", 1)))
+	var files := maxi(1, int(f.get("files", 1)))
+	var rank_sp := float(f.get("rank_spacing_m", 2.0))
+	var file_sp := float(f.get("file_spacing_m", 1.5))
+	var has_yaw := SchemaUtil.is_number(f.get("yaw_deg"))
+	var yaw := deg_to_rad(float(f.yaw_deg)) if has_yaw else 0.0
+	var slots: Array[int] = []
+	var points: Array[Vector3] = []
+	for s: Variant in enc.get("spawns", []):
+		if typeof(s) != TYPE_DICTIONARY or str(s.get("formation", "")) != fid or not SchemaUtil.is_number(s.get("slot")):
+			continue
+		var p: Variant = s.get("position_m")
+		if typeof(p) != TYPE_ARRAY or (p as Array).size() != 3:
+			continue
+		var slot := int(s.slot)
+		if not has_yaw and slot != BANNER_SLOT:
+			has_yaw = true
+			yaw = deg_to_rad(float(s.get("yaw_deg", 0.0)))
+		slots.append(slot)
+		points.append(Vector3(float(p[0]), float(p[1]), float(p[2])))
+	var sum := Vector3.ZERO
+	var n := 0
+	for i in slots.size():
+		if slots[i] != BANNER_SLOT:
+			sum += points[i] - Basis(Vector3.UP, yaw) * slot_offset(ranks, files, rank_sp, file_sp, slots[i])
+			n += 1
+	if n == 0:
+		return -1.0
+	var pivot := sum / float(n)
+	var center := _center(enc)
+	var flat := func(v: Vector3) -> float: return Vector2(v.x, v.z).length()
+	var advance := maxf(0.0, float(f.get("advance_m", 0.0))) if SchemaUtil.is_number(f.get("advance_m")) else 0.0
+	var turns := str(f.get("facing", "threat")) != "fixed"
+	var reach := 0.0
+	for slot: int in slots:
+		var off := slot_offset(ranks, files, rank_sp, file_sp, slot)
+		var d: float = (float(flat.call(pivot - center)) + float(flat.call(off))) if turns \
+			else float(flat.call(pivot + Basis(Vector3.UP, yaw) * off - center))
+		reach = maxf(reach, d + advance)
+	return reach
+
+
+## The leash rule of an encounter's formations (record_errors' last check; see there).
+static func _leash_errors(enc: Dictionary, by_id: Dictionary, ctx: String) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var leash: Variant = enc.get("leash_radius_m")
+	if not SchemaUtil.is_number(leash) or float(leash) <= 0.0:
+		return errors
+	for fid: String in by_id:
+		var f: Dictionary = by_id[fid]
+		var mps: Variant = f.get("advance_mps")
+		if SchemaUtil.is_number(mps) and float(mps) > 0.0 \
+				and not (SchemaUtil.is_number(f.get("advance_m")) and float(f.advance_m) > 0.0):
+			errors.append("%s: formation '%s' advances (advance_mps %s) without advance_m: it could walk out of the encounter's %s m leash" % [
+				ctx, fid, mps, leash])
+			continue
+		var reach := reach_m(enc, f)
+		if reach > float(leash) + 1e-3:
+			errors.append("%s: formation '%s' reaches %.1f m from the centre (its slots, turned, and advance_m %s), beyond the leash_radius_m %s: the director would leash the members it leads out (raise the leash, bring the formation nearer the centre or shorten advance_m)" % [
+				ctx, fid, reach, f.get("advance_m", 0), leash])
 	return errors
 
 

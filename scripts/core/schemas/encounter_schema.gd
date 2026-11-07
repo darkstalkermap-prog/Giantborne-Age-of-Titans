@@ -164,7 +164,8 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 
 	## @anchor P30
 	# P30: the formations and their members within the encounter (FormationRules.record_errors: unique
-	# plain ids, a stage range that is not empty, every member's formation and slot, one banner).
+	# plain ids, a stage range that is not empty, every member's formation and slot, one banner; M7
+	# gate: in a leashed encounter every formation's reach - slots plus advance_m - inside the leash).
 	out.errors.append_array(FormationRules.record_errors(d, ctx))
 
 	## @anchor P37
