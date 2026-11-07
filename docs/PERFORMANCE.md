@@ -766,11 +766,13 @@ town.
 ### The M7 polish (lane B): the human map's edge merge
 
 Every chunk's navmeshes of a layer on one map, as `NavMaps` sets it up (`docs/systems/P24b.md`, "M7
-polish"), the navigation server's own counts after one sync: the human map 70,841 edges, 45,021
+polish"), the navigation server's own counts after one sync: the human map 70,832 edges, 45,015
 merged, 455 connections between regions and 16 edge errors (c4_1, c4_2, c5_2 and c6_6, four each)
-before the explicit merge scale; 70,849, 45,029, 455 and 0 after. The large (53,249 / 32,407 / 355)
+before the explicit merge scale; 70,840, 45,023, 455 and 0 after. The large (53,251 / 32,408 / 355)
 and titan maps (43,909 / 25,796 / 572, gate regions included) are the same either way, as are the
-test world's three. A carried walk at 16 m/s through the four chunks printed four edge-error warnings
+test world's three. (Counted with the toll fort's tower on its new place, lane B's c5_5 rebuild; before
+it the human map had 70,841 / 45,021 edges with the default scale, 70,849 / 45,029 with the explicit
+one, the large map 53,249 / 32,407.) A carried walk at 16 m/s through the four chunks printed four edge-error warnings
 before (one per region sync) and none after:
 
 ```

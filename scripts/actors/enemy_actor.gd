@@ -1522,6 +1522,9 @@ func ranged_allies() -> Array:
 ## keeps the spread (the first reachable one when none does).
 func _resolve_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2, spread_m: float,
 		far: bool) -> Vector3:
+	var post := _post_firing_step()   # M7 polish: a unit on its post holds it (the posts below)
+	if post != 0:
+		return firing_point if post > 0 else Vector3.INF
 	_release_firing_marker()
 	if target_out_of_reach(my_position, target_pos, band):
 		firing_point = Vector3.INF   # M7 gate: nothing it could hold reaches the target (P24b section)
@@ -1681,6 +1684,141 @@ func _ring_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2
 	if _p24b_throttled():
 		return Vector3.INF   # M7 gate: no candidate is walkable - hold, and search again after FIRING_REPICK_S
 	return Vector3(target_pos.x + away.x * r, my_position.y, target_pos.z + away.z * r)
+
+
+## Firing-point resolvers' first step (P22's wrapper and _resolve_firing_point; M7 polish, the posts
+## below): 1 when this unit holds a post - firing_point is the post, its marker claimed - 0 when it
+## holds none (the searches run), -1 while that is not decided yet (it waits for the path-query budget:
+## brain.nav_search_pending).
+func _post_firing_step() -> int:
+	var s := _post_state()
+	if s < 0:
+		if brain != null:
+			brain.nav_search_pending = true
+		return -1
+	if s == 0:
+		return 0
+	if _firing_marker != _post:
+		_release_firing_marker()
+	_post.set_meta(FIRING_POINT_META, entity.entity_id)
+	_firing_marker = _post
+	firing_point = _post.global_position
+	return 1
+
+
+# ---- posts (M7 polish)
+# A ranged unit that spawned on an elevation marker its navigation layer does not reach - the top of a
+# world tower: the bake gives an obstacle's top no navmesh - holds that marker as its post. Its firing
+# point is always the post (no search, no path query), it shoots from there at whatever its shot
+# reaches (brain.post_band: 0 to the shot's range, centre to centre), it never kicks, a flight leaves
+# it cowering there and a faction's step-back does not move it. Walking to any other point would only
+# drop it off the tower: an agent standing off the navmesh paths from the ground below. (The toll
+# fort's watchtower archers came down, stood behind the closed gate, aware, and never fired: the M7
+# gate review's follow-up.) The check costs one closest-point query, once, within the tick's budget;
+# a unit spawned on no elevation marker - every unit but a tower's - costs none. Elevation markers the
+# navmesh reaches (the Valley's ledges, wall walks and its watchtower's top) are firing points as before.
+
+## The spawn lies this close (flat) to an elevation marker, and this close in height, to stand on it.
+const POST_SNAP_M := 1.5
+const POST_HEIGHT_M := 1.5
+## The marker is a post when its layer's nearest navmesh lies this far from it or more.
+const POST_CLEAR_M := 3.0
+## A unit this far below its post fell off it: it gives the post up and fights as any other.
+const POST_LOST_M := 4.0
+
+var _post: Node3D = null
+## -1: not decided yet; 0: no post; 1: a post (_post).
+var _post_decided := -1
+
+
+## True while this unit holds a post (see the section notes); decides it first if needed.
+func holds_post() -> bool:
+	return _post_state() > 0
+
+
+## The post this unit holds (null when none).
+func post_marker() -> Node3D:
+	return _post if _post_state() > 0 else null
+
+
+## 1: holds a post; 0: none; -1: not decided yet (the closest-point query waits for the budget).
+func _post_state() -> int:
+	if _post_decided == 1:
+		if _post == null or not is_instance_valid(_post) or not _post.is_inside_tree() \
+				or global_position.y < _post.global_position.y - POST_LOST_M:
+			_lose_post()   # its tower went with its chunk, or it fell off
+		return _post_decided
+	if _post_decided == 0:
+		return 0
+	var reach := _shot_reach()
+	var marker := _spawn_marker() if reach < INF else null   # a post is for a unit that shoots
+	if marker == null:
+		_post_decided = 0
+		return 0
+	var level := nav_level()
+	var layers := int(agent.navigation_layers)
+	if not NavQuery.has_regions(level, layers):
+		_post_decided = 0   # no navigation at all (a bare test floor): the ray rules apply, as before
+		return 0
+	if not NavQuery.is_synced(level, layers):
+		return -1   # its navigation is not in yet: decided once it is
+	if _p24b_throttled() and NavQuery.budget_left(level) < 1:
+		return -1
+	var near := NavQuery.closest_point(level, marker.global_position, layers)
+	if near.is_finite() and near.distance_to(marker.global_position) < POST_CLEAR_M:
+		_post_decided = 0   # the navmesh reaches it: an ordinary firing point
+		return 0
+	_post = marker
+	_post_decided = 1
+	if brain != null:
+		brain.post_band = Vector2(0.0, reach)
+	return 1
+
+
+## The free elevation marker (this unit's faction or none) this unit spawned on (null when none).
+func _spawn_marker() -> Node3D:
+	if not is_inside_tree():
+		return null
+	var best: Node3D = null
+	var best_d := POST_SNAP_M
+	for n in get_tree().get_nodes_in_group(ELEVATION_GROUP):
+		var m := n as Node3D
+		if m == null or not m.is_inside_tree() or not _marker_free(m):
+			continue
+		var f: Variant = m.get("faction")
+		if typeof(f) == TYPE_STRING and f != "" and f != faction:
+			continue
+		var d := _flat_len(m.global_position - home_position)
+		if d <= best_d and absf(m.global_position.y - home_position.y) <= POST_HEIGHT_M:
+			best = m
+			best_d = d
+	return best
+
+
+## A unit that lost its post (it fell, or the post left the tree) fights as any other from now on: it
+## looks for a firing point afresh.
+func _lose_post() -> void:
+	if _firing_marker != null and (not is_instance_valid(_firing_marker) or _firing_marker == _post):
+		_release_firing_marker()
+		firing_point = Vector3.INF
+	_post = null
+	_post_decided = 0
+	if brain != null:
+		brain.post_band = Vector2.ZERO
+		brain.firing_point = Vector3.INF
+
+
+## How far this unit's shots reach (flat, centre to centre): the shortest of its projectile attacks'
+## ai_max_range_m and projectile range_m; INF for a unit without one (it holds no post).
+func _shot_reach() -> float:
+	var reach := INF
+	for id: Variant in record.get("attacks", []):
+		var a := GameData.get_action(str(id))
+		if a == null or a.hit_shape != "projectile":
+			continue
+		var r := minf(float(a.params.get("ai_max_range_m", INF)), float(Projectile.spec_for(a).range_m))
+		reach = minf(reach, r)
+	return reach
 
 
 ## `desired` made walkable: on a navmesh, its closest point on this actor's layer when a path
@@ -2078,6 +2216,9 @@ func _p22_ready() -> void:
 		var p09_resolver := brain.firing_point_resolver
 		brain.firing_point_resolver = func(my_position: Vector3, target_pos: Vector3, band: Vector2,
 				spread_m: float, far: bool) -> Vector3:
+			var post := _post_firing_step()   # M7 polish: a unit on its post holds it (P09 section)
+			if post != 0:
+				return firing_point if post > 0 else Vector3.INF
 			# M7 gate: while P09's ring search resumes, the front arc already ended with nothing
 			if not search_resuming("firing_ring"):
 				var p := front_arc_firing_point(my_position, target_pos, band, spread_m, far)
@@ -2086,6 +2227,15 @@ func _p22_ready() -> void:
 			return p09_resolver.call(my_position, target_pos, band, spread_m, far)
 		brain.view_probe = camera_view
 		brain.shot_preparer = prepare_shot
+		if brain.flee_resolver.is_valid():
+			var p04_flee := brain.flee_resolver
+			brain.flee_resolver = func(from: Vector3, threat: Vector3, distance: float) -> Vector3:
+				var post := _post_state()   # M7 polish: on its post a fleeing unit cowers there (P09 section)
+				if post != 0:
+					if post < 0:
+						brain.nav_search_pending = true   # decided once the tick's budget allows
+					return Vector3.INF
+				return p04_flee.call(from, threat, distance)
 
 
 ## The record's render_lod_m (0 = never).
@@ -2257,6 +2407,8 @@ func prepare_shot(shot_id: String, off_camera: bool) -> void:
 ## peace. It steps STEP_BACK_M away from it (a reachable point, P04's flee search), re-aimed when
 ## the threat moved more than 3 m, and the post it holds becomes that point.
 func faction_step_back(threat: Vector3) -> void:
+	if _post_decided == 1:
+		return   # M7 polish: a unit on its post stays there (P09 section)
 	_step_back_tick = Sim.tick
 	if step_back_point != Vector3.INF and _step_back_from != Vector3.INF \
 			and _flat_len(threat - _step_back_from) < 3.0:

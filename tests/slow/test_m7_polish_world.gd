@@ -8,6 +8,11 @@ extends IntegrationSuite
 ##     a tick within the budget and resumes at the next tick, and its agent's path waits for the budget
 ##     too - while every villager still reaches a safe point (they used to search every marker at once,
 ##     outside the budget);
+##   * a defied toll fort's tower archers hold the gate tower and loose arrows at a stage-4 giant on the
+##     King's Road before the gate (they came down from the old watchtower at the fort's back - 54-70 m
+##     from the road, beyond their sight and their arrows - and stood behind the closed gate, aware and
+##     never firing): the tower stands on the palisade west of the gate, and an archer spawned on a
+##     tower top its navmesh does not reach holds it as its post, without a path query;
 ##   * every chunk's navmeshes of every layer (the real world's and the test world's), loaded through
 ##     NavMaps as the streamer loads them, merge on their layer maps without one edge error - each
 ##     region on its own and all of a world's regions of a layer together, every seam with its
@@ -176,6 +181,84 @@ func test_brannocks_folk_flee_at_once_within_the_path_query_budget_and_reach_she
 		assert_eq(c.brain.picks, 1, "%s chose its shelter once" % c.entity_id)
 	assert_true(worst <= cap, "no tick spends more than the budget's %d queries (at most %d, %d ticks over)" % [cap, worst, over])
 	assert_true(peak <= Civilian.SEARCH_QUERIES_PER_TICK, "a villager's search tries one marker a tick (%d queries at most)" % peak)
+
+
+# --------------------------------------------------------------------------- B3: the toll fort's tower archers
+
+const TOWER_ARCHERS := {"world.crownmarch.toll_archer_1": "world.marker.toll_tower_w",
+	"world.crownmarch.toll_archer_2": "world.marker.toll_tower_e"}
+## Where the giant stands: on the King's Road before the gate, about 22 m from the gate tower.
+const ROAD_SPOT := Vector2(455.0, 376.0)
+const TOWER_TICKS := 60 * 20
+
+
+func test_a_defied_toll_forts_tower_archers_hold_the_tower_and_shoot_a_stage_4_giant_on_the_road() -> void:
+	var w: WorldRoot = await _world(Vector2(460.0, 560.0))
+	var p := w.player()
+	_stage_4(p)
+	WorldState.set_flag("world.toll_fort.defied", true)   # "I pay no toll.": the stand-down ends
+	await _go(w, ROAD_SPOT)
+	var d := w.director()
+	var archers: Array[EnemyActor] = []
+	for i in 40:
+		await step_ticks(15)
+		archers.clear()
+		for id: String in TOWER_ARCHERS:
+			var a := d.spawned(id) as EnemyActor
+			if a != null:
+				archers.append(a)
+		if archers.size() == TOWER_ARCHERS.size():
+			break
+	assert_eq(archers.size(), TOWER_ARCHERS.size(), "the fort's two tower archers are in the world")
+	if archers.size() != TOWER_ARCHERS.size():
+		return
+	var shots := {}
+	var on_start := func(_t: int, actor: String, action: String, _i: int) -> void:
+		if action == "ability.archer_shot":
+			shots[actor] = int(shots.get(actor, 0)) + 1
+	Events.ability_started.connect(on_start)
+	var lowest := {}
+	var farthest := {}
+	var posts := {}
+	for i in TOWER_TICKS / 6:
+		await step_ticks(6)
+		for a in archers:
+			if not is_instance_valid(a) or not a.entity.is_alive():
+				continue
+			var post := a.post_marker()
+			if post != null:
+				posts[a.entity_id] = post
+			lowest[a.entity_id] = minf(float(lowest.get(a.entity_id, INF)), a.global_position.y)
+			if post != null:
+				farthest[a.entity_id] = maxf(float(farthest.get(a.entity_id, 0.0)),
+					Vector2(a.global_position.x - post.global_position.x, a.global_position.z - post.global_position.z).length())
+	Events.ability_started.disconnect(on_start)
+	var landed := {}
+	for r in hits_on(p.entity.entity_id):
+		if TOWER_ARCHERS.has(r.event.attacker_id) and r.event.action_id == "ability.archer_shot":
+			landed[r.event.attacker_id] = int(landed.get(r.event.attacker_id, 0)) + 1
+	var lines := PackedStringArray()
+	for a in archers:
+		var dist := Vector2(a.global_position.x - p.global_position.x, a.global_position.z - p.global_position.z).length()
+		lines.append("%s %s at %s (%.1f m from the giant): %d shots, %d hits, lowest y %.2f, %.2f m off its post, searches %d" % [
+			a.entity_id.get_slice(".", 2), a.brain.state_name(), a.global_position.snapped(Vector3(0.1, 0.1, 0.1)), dist,
+			int(shots.get(a.entity_id, 0)), int(landed.get(a.entity_id, 0)), float(lowest.get(a.entity_id, -1.0)),
+			float(farthest.get(a.entity_id, -1.0)), a.search_queries_peak])
+	print("    the gate tower against a stage-4 giant on the road: %s" % "; ".join(lines))
+	var hits_total := 0
+	for a in archers:
+		var post: Node3D = posts.get(a.entity_id)
+		assert_true(post != null, "%s holds a post" % a.entity_id)
+		if post == null:
+			continue
+		assert_eq(str(post.get("marker_id")), str(TOWER_ARCHERS[a.entity_id]), "%s holds the tower top it spawned on" % a.entity_id)
+		assert_true(float(lowest.get(a.entity_id, 0.0)) > post.global_position.y - 1.0,
+			"%s never left the tower (lowest y %.2f, the post at %.2f)" % [a.entity_id, lowest.get(a.entity_id, 0.0), post.global_position.y])
+		assert_true(float(farthest.get(a.entity_id, 0.0)) <= 1.0, "%s stayed at its post (%.2f m off)" % [a.entity_id, farthest.get(a.entity_id, 0.0)])
+		assert_true(int(shots.get(a.entity_id, 0)) >= 3, "%s loosed arrows at the giant on the road (%d)" % [a.entity_id, shots.get(a.entity_id, 0)])
+		assert_eq(a.search_queries_peak, 0, "%s never searched for a firing point (no path query)" % a.entity_id)
+		hits_total += int(landed.get(a.entity_id, 0))
+	assert_true(hits_total >= 1, "their arrows struck the giant (%d hits)" % hits_total)
 
 
 # --------------------------------------------------------------------------- B2: every chunk merges on its maps

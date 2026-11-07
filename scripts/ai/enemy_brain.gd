@@ -889,6 +889,11 @@ var firing_point_release := Callable()
 ## action_ready(action_id: String) -> bool: its cooldown and costs allow it now (unset = always).
 var action_ready := Callable()
 
+## M7 polish: the band of a unit holding a post (EnemyActor's posts, P09 section: a tower's top it
+## spawned on, which its navmesh does not reach) - Vector2(0, its shot's reach), centre to centre;
+## ZERO = none. On its post a unit keeps the post as its firing point (no search), shoots at whatever
+## that band holds, and never kicks.
+var post_band := Vector2.ZERO
 ## True from a granted ranged token until the shot's recovery is over.
 var holds_ranged_token := false
 ## The firing point this unit holds (Vector3.INF = none).
@@ -906,6 +911,8 @@ var _ally_cast_ids: Array[String] = []
 ## The band (flat, centre to centre) this unit fights from: tactics preferred_min_m ..
 ## preferred_max_m, x OUTMATCHED_BAND_MULT when `outmatched`.
 func ranged_band(outmatched: bool = false) -> Vector2:
+	if post_band != Vector2.ZERO:
+		return post_band   # M7 polish: on a post, whatever its shot reaches
 	var b := Vector2(float(tactics.get("preferred_min_m", 0.0)), float(tactics.get("preferred_max_m", 0.0)))
 	return b * OUTMATCHED_BAND_MULT if outmatched else b
 
@@ -1055,7 +1062,7 @@ func _decide_ranged(my_position: Vector3, target_pos: Vector3, distance: float, 
 		_set_state(AIState.APPROACH)
 	if seen and now >= strike_ready_tick:
 		var edge := distance - float(perception.get("target_radius", 0.85))
-		var close := _close_attack_for(edge)
+		var close := _close_attack_for(edge) if post_band == Vector2.ZERO else ""   # M7 polish: no kick from a post
 		var facing_ok := absf(float(perception.get("facing_deg", 180.0))) <= ATTACK_FACING_DEG
 		if close != "" and facing_ok and _action_ready(close) and (holds_token or request_token.call()):
 			holds_token = true
@@ -1100,6 +1107,8 @@ func _keep_band(my_position: Vector3, target_pos: Vector3, distance: float, band
 	if repick and firing_point == Vector3.INF and not _firing_blocked and _firing_retry_tick != NO_TICK \
 			and now < _firing_retry_tick:
 		repick = false   # M7 gate: the last search found nothing; hold until it may run again
+	if post_band != Vector2.ZERO and firing_point != Vector3.INF and not _firing_blocked:
+		repick = false   # M7 polish: a post is the one point it holds, whatever the target does
 	if repick:
 		firing_point = _pick_firing_point(my_position, target_pos, distance, band, spread, far)
 		_firing_tick = now
@@ -1685,8 +1694,8 @@ func prepare_ranged_shot(shot_id: String) -> void:
 ## `before` is the firing point before decide().
 func keep_front_arc(before: Vector3) -> void:
 	var arc := float(tactics.get("front_arc_deg", 0.0))
-	if arc <= 0.0:
-		return
+	if arc <= 0.0 or post_band != Vector2.ZERO:
+		return   # M7 polish: a unit on its post has no other point to go to
 	var view := camera_view()
 	if view.is_empty():
 		return

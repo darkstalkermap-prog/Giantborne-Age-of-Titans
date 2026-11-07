@@ -9,6 +9,10 @@ extends IntegrationSuite
 ##   * a civilian whose safe-point search stopped for the tick's path-query budget asks again at its
 ##     next decision - not after REPICK_S, as when nowhere is reachable - and the resumed search is the
 ##     same choice (picks counts choices); the world's half is in the slow suite (Brannock's folk);
+##   * posts: a ranged unit spawned on an elevation marker its navmesh does not reach (a tower's top)
+##     holds it - its firing point is the post without a search, its band is its shot's reach, it never
+##     kicks, a flight leaves it there - and gives it up once it falls off; a unit on a marker the
+##     navmesh reaches searches as before (the toll fort's tower archers on the real world: the slow suite);
 ##   * a streamed world's layer map keys its edges at its cell x 0.1 (NavMaps.MERGE_RASTERIZER_SCALE)
 ##     even with the engine's default cells (the human layer's 0.25 / 0.25, which Godot 4.6.3 left
 ##     keyed at 0.25 m): a sliver triangle between two vertices 5 cm apart merges without an edge error;
@@ -207,3 +211,84 @@ func test_a_layer_map_keys_its_edges_at_a_tenth_of_its_cell_so_a_sliver_merges_c
 	OS.remove_logger(log)
 	assert_eq(log.edge_errors(), 0, "a NavMaps layer map merges the sliver without an edge error")
 	maps.free_all()
+
+
+# --------------------------------------------------------------------------- posts: ranged units hold a tower
+
+const ARCHER := "res://scenes/enemies/archer.tscn"
+
+
+## A 60 x 60 m navmesh floor (two triangles at y 0.35) on the test world's default map.
+func _floor_navmesh() -> NavigationRegion3D:
+	var nm := NavigationMesh.new()
+	nm.set_vertices(PackedVector3Array([Vector3(-30, 0.35, -30), Vector3(30, 0.35, -30), Vector3(30, 0.35, 30),
+		Vector3(-30, 0.35, 30)]))
+	nm.add_polygon(PackedInt32Array([0, 1, 2]))
+	nm.add_polygon(PackedInt32Array([0, 2, 3]))
+	var region := NavigationRegion3D.new()
+	region.navigation_mesh = nm
+	region.navigation_layers = 1
+	world.add_child(region)
+	return region
+
+
+func _elevation_marker(at: Vector3) -> Marker3D:
+	var m := Marker3D.new()
+	m.position = at
+	world.add_child(m)
+	m.add_to_group(EnemyActor.ELEVATION_GROUP)
+	return m
+
+
+func test_a_ranged_unit_spawned_on_a_tower_top_holds_it_as_its_post() -> void:
+	_floor_navmesh()
+	add_box(Vector3(3, 8, 3), Vector3(10, 4, 0))   # a tower: a solid the navmesh does not cover
+	var top := _elevation_marker(Vector3(10, 8.2, 0))
+	var ground := _elevation_marker(Vector3(-10, 0.4, 0))   # a marker the navmesh reaches
+	spawn_player(Vector3(10, 0.05, 20), PI)
+	add_box(Vector3(3, 8, 3), Vector3(0, 4, -15))   # a second tower, a swordsman on its top
+	_elevation_marker(Vector3(0, 8.2, -15))
+	var on_tower := TestSpawn.enemy(world, ARCHER, Vector3(10, 8.05, 0), "test.polish.tower_archer", false)
+	var on_ground := TestSpawn.enemy(world, ARCHER, Vector3(-10, 0.05, 0), "test.polish.ground_archer", false)
+	var swordsman := TestSpawn.enemy(world, SOLDIER, Vector3(0, 8.05, -15), "test.polish.tower_soldier", false)
+	for i in 4:
+		await step_ticks(1)
+	assert_true(on_tower.holds_post(), "the archer on the tower's top holds it as its post (one closest-point check)")
+	assert_eq(on_tower.post_marker(), top, "the marker it spawned on")
+	assert_false(on_ground.holds_post(), "a marker the navmesh reaches is no post: it searches as before")
+	assert_true(on_ground.post_marker() == null and on_ground.brain.post_band == Vector2.ZERO, "(no post band)")
+	assert_false(swordsman.holds_post(), "a unit without a shot holds no post, even on a tower's top")
+	assert_eq(swordsman.brain.post_band, Vector2.ZERO, "(no post band for it either)")
+	var reach := float(GameData.get_record("ability.archer_shot").get("ai_max_range_m", 0.0))
+	assert_eq(on_tower.brain.post_band, Vector2(0.0, reach), "its band: anything its shot reaches (%.0f m)" % reach)
+	assert_eq(on_tower.brain.ranged_band(true), on_tower.brain.post_band, "outmatched or not")
+	# its firing point is the post, without a query
+	var q0 := NavQuery.queries_total
+	var target := Vector3(10, 0.05, 20)
+	var fp: Vector3 = on_tower.brain.firing_point_resolver.call(on_tower.global_position, target,
+		on_tower.brain.ranged_band(true), 10.0, false)
+	assert_eq(fp, top.global_position, "the resolver gives the post")
+	assert_eq(NavQuery.queries_total - q0, 0, "and asks the navigation nothing")
+	assert_eq(str(top.get_meta(EnemyActor.FIRING_POINT_META, "")), on_tower.entity_id, "the post is claimed")
+	# a flight leaves it cowering on its post (an agent off the navmesh would path from the ground below)
+	var flee: Vector3 = on_tower.brain.flee_resolver.call(on_tower.global_position, target, 12.0)
+	assert_eq(flee, Vector3.INF, "nowhere to run from its post: it stands there")
+	assert_true(on_ground.brain.flee_resolver.call(on_ground.global_position, target, 12.0) != Vector3.INF,
+		"the one on the ground flees as before")
+	# the brain keeps the post whatever the target does, and never kicks from it
+	on_tower.brain.firing_point = fp
+	on_tower.brain.perception = {"exists": true, "alive": true, "visible": true, "position": target, "distance": 0.5,
+		"target_radius": 2.2, "facing_deg": 0.0}
+	assert_eq(on_tower.brain.call("_close_attack_for", 0.1), "ability.archer_kick", "(the kick fits the range...)")
+	on_tower.brain.aware = true
+	on_tower.brain.state = EnemyBrain.AIState.APPROACH
+	on_tower.brain.call("_decide_ranged", on_tower.global_position, target, 0.5, true, true, true, func() -> bool: return true,
+		func() -> void: pass, true, false)
+	assert_true(on_tower.brain.attack_request != "ability.archer_kick", "(...but never from a post: %s)" % on_tower.brain.attack_request)
+	assert_eq(on_tower.brain.firing_point, top.global_position, "and it holds the post")
+	# a unit that falls off gives the post up and fights as any other
+	on_tower.global_position = Vector3(12, 0.05, 3)
+	assert_false(on_tower.holds_post(), "fallen off its tower: no post")
+	assert_eq(on_tower.brain.post_band, Vector2.ZERO, "its band is its own again")
+	assert_false(top.has_meta(EnemyActor.FIRING_POINT_META), "the post is free again")
+	assert_eq(on_tower.brain.firing_point, Vector3.INF, "and it looks for a firing point afresh")
