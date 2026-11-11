@@ -1113,6 +1113,35 @@ lane did not touch, took 12.6 s more, the lane's gate suites 4.8 s); the 120 s s
 broken, 2 loot awards, the debris pool at 10). The whole check took 17 min 29 s. No frame time or draw
 calls were re-measured: the lane changed no builder, layout, chunk, generated output or audio.
 
+### The M8 gate, fix-up round 2 (lane m8-fixup-2): the suites and the merge's check
+
+The re-audit's fix-up lane left this file to the merge (its merge notes), as round 1's did, so the merge
+records its suites from the merge's check, against fix-up round 1's merge (e3aa0ea). The fixes and their
+tests are in the "M8 gate" notes of `docs/systems/P27.md`, `P34.md`, `P36.md` and `P37.md` (N4.4: a world
+event left behind leads nothing after the campaign; N4.6: the way out to Harrok's challenge stone is the
+fight's ground).
+
+- **Default tier:** `test_world_events` (N4.4: 125 checks, 0.46 s; 105 and 0.33 s on the base) and
+  `test_boss_disengage` (N4.6: 53 checks, 0.91 s; 42 and 0.35 s): 31 checks and about 0.7 s more.
+- **Gate tier:** `test_stonehold_walkthrough` (N4.6, the walk from the ring to the challenge stone and
+  back: 104 checks, 21.9 s, and 22.1 s in the lane's check; 95 checks and 24.6 s in fix-up round 1's
+  merge's check): 9 checks more. No slow suite changed.
+
+The lane's check (`tools/check.sh --slow --gate` on its head, d05f9e9): 268 suites, 46,300 checks, 0
+failures; default 60.2 s, slow 239.8 s, gate 425.6 s; the 120 s soak with 0 errors (2 fences broken, 2 loot
+awards, the debris pool at 10).
+
+The merge's check (`tools/check.sh --build --slow --audio --gate` on the merge, 241bf80, after an import,
+a full build and an import of its own): both full builds (every builder, the world included) wrote the
+committed outputs byte for byte, so nothing was regenerated; the seam check passed (64 chunks, 112 seams);
+the audio pipeline's 35 tests passed and its 441 files regenerated bit-exact; 268 suites, 46,300 checks
+(fix-up round 1's merge: 268 and 46,260), 0 failures; default 65.0 s (fix-up round 1's merge: 58.1 s;
+budget 75 s: the merge's tree is the lane's head's, whose own check took 60.2 s, and the difference is
+spread over the suites, the most in `test_ship_docs`, 1.9 s against 0.4 s), slow 238.7 s (238.0 s; 8
+minutes), gate 414.5 s (468.4 s; 50 minutes); the 120 s soak with 0 errors (2 fences broken, 2 loot awards,
+the debris pool at 10). The whole check took 16 min 38 s. No frame time or draw calls were re-measured: the
+lane changed no builder, layout, chunk, generated output or audio.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
