@@ -3,9 +3,9 @@
 	"id": "dialogue.ferrywoman",
 	"type": "dialogue",
 	"speaker": "Wenna the ferrywoman",
-	"description": "P35 (plan M6-M9 §5.4, §5.7): Wenna, the last ferrywoman of the Mere, gives quest.drowned_bells (outcome bells) and tells where the five sunken bells hang; a Stoneblood giant hears of the drowned kings' blood. Once all five ring (quest.drowned_bells.done) she points to the Stoneknuckles on the rack at her landing.",
+	"description": "P35 (plan M6-M9 §5.4, §5.7): Wenna, the last ferrywoman of the Mere, gives quest.drowned_bells (outcome bells) and tells where the five sunken bells hang; a Stoneblood giant hears of the drowned kings' blood. Once all five ring (world.drowned.bells_rung) she points to the Stoneknuckles on the rack at her landing.",
 	"entries": [
-		{"node": "thanks", "conditions": [{"type": "flag", "flag": "quest.drowned_bells.done"}]},
+		{"node": "thanks", "conditions": [{"type": "flag", "flag": "world.drowned.bells_rung"}]},
 		{"node": "asked", "conditions": [{"type": "dialogue_outcome", "dialogue": "dialogue.ferrywoman", "outcome": "bells"}]},
 		{"node": "greet", "conditions": []}
 	],

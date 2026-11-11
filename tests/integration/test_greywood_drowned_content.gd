@@ -432,7 +432,9 @@ func test_the_bells_the_titan_forge_and_the_stoneknuckles() -> void:
 	f.free()
 	var rack := _element("world.drowned.stoneknuckles_rack")
 	assert_eq(str(rack.get("weapon", "")), "weapon.fists", "the Stoneknuckles wait on the ferrywoman's landing")
-	assert_eq(rack.get("requires_flags", []), ["quest.drowned_bells.done"], "for the giant who rang the five bells")
+	assert_eq(rack.get("requires_flags", []), ["world.drowned.bells_rung"], "for the giant who rang the five bells")
+	var ring: Dictionary = GameData.get_record("quest.drowned_bells").stages[0]
+	assert_true(bool(ring.set_flags.get("world.drowned.bells_rung", false)), "the five bells' stage sets the rack's flag")
 
 
 # --------------------------------------------------------------------------- Sedge on the green

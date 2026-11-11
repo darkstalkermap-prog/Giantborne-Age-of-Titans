@@ -24,7 +24,7 @@
 		{"kind": "forge_fire", "id": "world.drowned.titan_forge_fire", "pos": [233, -286], "yaw": 90, "flag": "world.titan_forge.lit", "requires_flags": ["encounter.drowned_bones_scavengers.cleared"], "display_name": "Titan Forge", "locked_message": "Scavengers still pick at the Titan's bones. Drive them off before you light the forge.", "loot": "loot.titan_bones", "lit_message": "The Titan Forge roars alight in the Titan's ribs: titan iron can be worked here now.", "fire_y": 1.8, "radius": 9, "quest_target": true},
 		{"kind": "brazier", "id": "world.drowned.bones_brazier", "pos": [214, -252]},
 		{"kind": "pier", "id": "world.drowned.ferry_landing", "pos": [-186, 18], "yaw": 180, "size": [4, 16], "deck_m": 0.8},
-		{"kind": "rack", "style": "reward", "id": "world.drowned.stoneknuckles_rack", "pos": [-204, 36], "yaw": 150, "weapon": "weapon.fists", "requires_flags": ["quest.drowned_bells.done"], "quest_target": true, "locked_message": "The ferrywoman keeps these gauntlets for the one who rings the Mere's five bells."}
+		{"kind": "rack", "style": "reward", "id": "world.drowned.stoneknuckles_rack", "pos": [-204, 36], "yaw": 150, "weapon": "weapon.fists", "requires_flags": ["world.drowned.bells_rung"], "quest_target": true, "locked_message": "The ferrywoman keeps these gauntlets for the one who rings the Mere's five bells."}
 	],
 	"shrines": [
 		{"id": "world.shrine.steps", "record": "shrine.world_steps", "pos": [-200, 168], "yaw": 0, "poi": "poi.sunken_steps"}

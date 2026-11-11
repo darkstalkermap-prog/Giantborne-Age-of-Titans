@@ -19,7 +19,7 @@ size = Vector3(16.979977, 18, 1)
 [node name="world_drowned_stoneknuckles_rack" type="Node3D" parent="Props" instance=ExtResource("1_2400b")]
 transform = Transform3D(-0.8660254, 0, 0.50000006, 0, 1, 0, -0.50000006, 0, -0.8660254, 52, 4.996, 36)
 script = ExtResource("2_0cdd4")
-requires_flags = PackedStringArray("quest.drowned_bells.done")
+requires_flags = PackedStringArray("world.drowned.bells_rung")
 locked_message = "The ferrywoman keeps these gauntlets for the one who rings the Mere's five bells."
 world_id = "world.drowned.stoneknuckles_rack"
 weapon_id = "weapon.fists"
