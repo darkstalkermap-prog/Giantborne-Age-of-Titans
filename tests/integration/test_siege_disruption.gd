@@ -140,8 +140,8 @@ func test_an_engine_is_refused_below_stage_6_and_while_crewed_then_seized_and_th
 	assert_near(p.grab.hold_limit_s(), 2.0, 1e-6, "held 2 s at most")
 	assert_eq(p.grab.throw_id(), THROW, "a light hurls it with the engine's throw")
 	crew.queue_free()   # (it ran: out of the lock's way)
-	# A soldier 16 m ahead, locked: the throw comes down on him.
-	var s := spawn_soldier(Vector3(0, 0.05, -16.0), 0.0, "test.p32_under", false)
+	# A soldier 13 m ahead, locked: the throw comes down on him.
+	var s := spawn_soldier(Vector3(0, 0.05, -13.0), 0.0, "test.p32_under", false)
 	await TestWait.until(self, func() -> bool:
 		return p.controller.state == CombatController.State.LOCOMOTION and p.controller.action == null, 60)
 	p.router.inject_edge(&"lock_press")

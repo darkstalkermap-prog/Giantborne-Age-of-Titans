@@ -88,7 +88,7 @@ func test_an_engine_fires_only_while_crewed_and_at_most_once_per_reload() -> voi
 	var p := spawn_player(Vector3(0, 0.05, 0))
 	p.entity.combatant.unkillable = true
 	var b := _engine(BALLISTA, "test.p32_ballista", Vector3(0, 0, -30))
-	await step_ticks(12)
+	await step_ticks(SiegeEngine.CREW_CHECK_TICKS + 2)
 	var waiting := b.reload_left
 	assert_eq(b.shots, 0, "no crew, no shot")
 	assert_false(b.crewed, "uncrewed")
@@ -170,8 +170,8 @@ func test_an_engines_fall_costs_its_side_20_morale_once_and_its_crew_flees() -> 
 	assert_near(out.brain.morale, float(before[out.entity_id]), 1e-3, "one 36 m off loses nothing")
 	assert_eq(crew.brain.state, EnemyBrain.AIState.ROUTED, "its crew runs and routs (%s)" % crew.brain.state_name())
 	assert_eq(crew.engine_id, "", "it serves no engine")
-	# The second engine falls 0.5 s later: within 2 s, so nobody loses morale again.
-	await step_ticks(28)
+	# The second engine falls a moment later: within 2 s, so nobody loses morale again.
+	await step_ticks(8)
 	_kill(e2.entity, p)
 	await step_ticks(2)
 	assert_true(e2.destroyed, "the catapult breaks")
