@@ -148,6 +148,22 @@ func test_the_rider_charges_wheels_away_past_the_giant_and_charges_again() -> vo
 		"and from inside the window again (%.1f m)" % edge2)
 	assert_false(token_in_wheel, "the attack token goes back before the wheel")
 	assert_eq(int(tokens.asked), 2, "one token asked for per charge")
+	# A start point it cannot reach turns its approach round the giant; it does not wheel.
+	var blocked := CavalryBrain.new("test.p32_blocked", rec, 3)
+	var from := Vector3(0, 0, 60)
+	var snap := {"exists": true, "target_id": "player", "alive": true, "position": giant, "distance": 60.0,
+		"visible": true, "facing_deg": 0.0, "target_radius": radius, "target_forward": Vector3.BACK,
+		"target_height": 10.9728, "target_stage": 4, "target_state": LOCO, "self_health_frac": 1.0, "has_leader": true}
+	blocked.perceive(t0, snap)
+	blocked.state = EnemyBrain.AIState.APPROACH
+	blocked.state_tick = t0
+	blocked.decide(t0 + 6, LOCO, from, req, rel)
+	var first := blocked.move_target
+	blocked.on_path_failed(from)
+	blocked.decide(t0 + 12, LOCO, from, req, rel)
+	assert_eq(blocked.state, EnemyBrain.AIState.APPROACH, "a blocked approach is no wheel")
+	var turned := rad_to_deg(Vector2(first.x, first.z).angle_to(Vector2(blocked.move_target.x, blocked.move_target.z)))
+	assert_near(absf(turned), CavalryBrain.BLOCKED_TURN_DEG, 0.5, "it turns its start point %.0f degrees round the giant" % turned)
 
 
 # --------------------------------------------------------------------------- the charge (physics)

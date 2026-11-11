@@ -72,7 +72,7 @@ const ENGINES := [
 ]
 const NAV_HUMAN := {"layers": 1, "radius": 0.6, "height": 2.0, "cell": 0.3, "cell_height": 0.25,
 	"climb": 0.25, "slope": 35.0}
-const NAV_LARGE := {"layers": 2, "radius": 1.5, "height": 6.0, "cell": 0.5, "cell_height": 0.5,
+const NAV_LARGE := {"layers": 2, "radius": 1.5, "height": 6.0, "cell": 0.5, "cell_height": 0.25,
 	"climb": 0.5, "slope": 35.0}
 
 
@@ -381,6 +381,10 @@ static func build_test_level(kit: SceneKit) -> Node:
 		world.add_child(body)
 	root.add_child(world)
 
+	# Both navmeshes keep a 0.25 m cell height (as the heavy builder's): the waypoints lie about 0.5 m over
+	# the floor, inside EnemyActor's path_desired_distance (0.6). A 0.5 m cell height put the large one
+	# 1 m up, and a rider's agent never reached its first waypoint (it rocked on the spot): this level
+	# has no nav_query settings, so NavQuery.level_waypoint does not level them.
 	var nav := kit.n3("Navigation")
 	for spec: Array in [["Human", NAV_HUMAN], ["Large", NAV_LARGE]]:
 		var region := NavigationRegion3D.new()

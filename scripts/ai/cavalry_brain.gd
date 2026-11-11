@@ -18,7 +18,9 @@ extends EnemyBrain
 ##     then, after RECHARGE_PAUSE_S, it approaches again from there: the re-charge.
 ## Caught close (inside the start window's near edge) it thrusts its lance when the lance fits the
 ## range and it faces the target (one of the target's tokens, then a pause in RECOVER), else it rides
-## out to its start point. Morale and flight are the base's (it flees at ai.flee_morale, 25).
+## out to its start point. A start point it cannot reach (the actor's path check: no progress for
+## ai.path_fail_s) turns its approach BLOCKED_TURN_DEG round the target, alternately to either side,
+## until a charge starts. Morale and flight are the base's (it flees at ai.flee_morale, 25).
 ## Outmatched (tactics.outmatched_ratio: every giant from stage 3) the cycle is its harass behaviour; it
 ## is the same cycle against a smaller one. A pure object like EnemyBrain: the actor feeds perception.
 
@@ -36,6 +38,8 @@ const WHEEL_MAX_S := 6.0
 const RECHARGE_PAUSE_S := 0.8
 ## While the wheel point search waits for the path-query budget the rider keeps riding this far ahead.
 const WHEEL_LEAD_M := 10.0
+## An unreachable start point turns the approach this far round the target.
+const BLOCKED_TURN_DEG := 60.0
 
 ## wheel_resolver(from: Vector3, threat: Vector3, dir: Vector3, distance: float) -> Vector3: a reachable
 ## point `distance` m from `threat` along `dir` (or near it); Vector3.INF when none - or, with
@@ -52,6 +56,8 @@ var _charge_dir := Vector3.ZERO
 var _wheel_distance := 0.0
 var _charge_id := ""
 var _lance_id := ""
+## Degrees the approach is turned round the target after blocked start points (0 once a charge starts).
+var _start_turn_deg := 0.0
 
 
 func _init(p_actor_id: String, record: Dictionary, seed_value: int) -> void:
@@ -152,6 +158,7 @@ func _approach(my_position: Vector3, target_pos: Vector3, distance: float, seen:
 				_charge_dir = _charge_dir.normalized() if _charge_dir.length_squared() > 1e-6 else Vector3.FORWARD
 				cycle = "charge"
 				charges += 1
+				_start_turn_deg = 0.0
 				_set_state(AIState.ATTACK)
 				_stop_moving()
 				return
@@ -161,6 +168,8 @@ func _approach(my_position: Vector3, target_pos: Vector3, distance: float, seen:
 	var away := Vector3(my_position.x - target_pos.x, 0.0, my_position.z - target_pos.z)
 	if away.length_squared() < 0.01:
 		away = Vector3.BACK
+	if _start_turn_deg != 0.0:
+		away = away.rotated(Vector3.UP, deg_to_rad(_start_turn_deg))
 	var start := clampf(CHARGE_START_M, radius + window.x + START_SLACK_M, radius + window.y - START_SLACK_M)
 	move_target = target_pos + away.normalized() * start
 	move_speed = -1.0
@@ -226,9 +235,16 @@ func _end_cycle(release_token: Callable) -> void:
 
 
 func on_path_failed(my_position: Vector3) -> void:
-	if state == AIState.REPOSITION:
-		_in_wheel_blocked(my_position)
-		return
+	match state:
+		AIState.REPOSITION:
+			_in_wheel_blocked(my_position)
+			return
+		AIState.APPROACH:
+			# The start point is out of reach: try another bearing (the base's answer, a REPOSITION, is
+			# this brain's wheel).
+			reposition_sign = -reposition_sign
+			_start_turn_deg = wrapf(_start_turn_deg + BLOCKED_TURN_DEG * reposition_sign, -180.0, 180.0)
+			return
 	super(my_position)
 
 
