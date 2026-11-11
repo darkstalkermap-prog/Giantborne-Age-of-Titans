@@ -140,25 +140,7 @@ func test_only_a_confirmed_strike_kills() -> void:
 	assert_eq(WorldState.get_flag("boss.corvane.outcome"), "slain", "slain")
 
 
-func test_harrok_struck_rises_to_fight_to_the_death() -> void:
-	spawn_player(Vector3(0, 0.05, 20), 0.0)
-	var h := _spawn(HARROK, "test.harrok", Vector3(0, 0.05, 0)) as RivalGiantEnemy
-	await step_ticks(2)
-	h.ai_enabled = true
-	h.p34_yield("honour")
-	assert_true(h.p34_decide("strike"), "Strike decided")
-	assert_false(h.yielded, "he rises")
-	assert_true(h.ai_enabled, "and fights")
-	assert_true(h.entity.combatant.lockable, "lockable again")
-	assert_false(h.entity.combatant.unkillable, "to the death")
-	_hit(h, 1.0e7)
-	await step_ticks(1)
-	assert_false(h.entity.is_alive(), "he can die now")
-	assert_false(h.yielded, "no second yield")
-	assert_eq(WorldState.get_flag("boss.harrok.outcome"), "slain", "slain")
-
-
-func test_poise_breaks_and_wildheart_challenge() -> void:
+func test_poise_breaks_wildheart_and_the_strike_that_lets_him_rise() -> void:
 	var p := spawn_player(Vector3(0, 0.05, 20), 0.0)
 	var h := _spawn(HARROK, "test.harrok", Vector3(0, 0.05, 0)) as RivalGiantEnemy
 	await step_ticks(2)
@@ -175,6 +157,19 @@ func test_poise_breaks_and_wildheart_challenge() -> void:
 	assert_true(h.yielded, "he kneels")
 	assert_eq(h.yield_reason, "honour", "for honour")
 	assert_true(h.entity.is_alive() and h.entity.combatant.pools.ratio("health") > 0.9, "unhurt")
+	# Struck, he rises to fight to the death.
+	h.ai_enabled = true
+	h.set("_p34_ai_before", true)
+	assert_true(h.p34_decide("strike"), "Strike decided")
+	assert_false(h.yielded, "he rises")
+	assert_true(h.ai_enabled, "and fights")
+	assert_true(h.entity.combatant.lockable, "lockable again")
+	assert_false(h.entity.combatant.unkillable, "to the death")
+	_hit(h, 1.0e7)
+	await step_ticks(1)
+	assert_false(h.entity.is_alive(), "he can die now")
+	assert_false(h.yielded, "no second yield")
+	assert_eq(WorldState.get_flag("boss.harrok.outcome"), "slain", "slain")
 
 
 func test_the_prompt_is_armed_late_and_esc_goes_back() -> void:
