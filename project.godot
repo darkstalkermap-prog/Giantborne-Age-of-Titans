@@ -8,8 +8,8 @@ config_version=5
 [application]
 
 config/name="Giantborn: Age of Titans"
-config/description="Low-poly action-RPG prototype: the Valley of Broken Kings slice (milestones M0-M5)."
-config/version="0.7.0-m7"
+config/description="Low-poly action-RPG prototype: the Valley of Broken Kings as the tutorial, then the Old Kingdom, a streamed open world of five regions with three oaths, three bosses and the Stone Throne, with sound and music (milestones M0-M8)."
+config/version="0.8.0-m8"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
