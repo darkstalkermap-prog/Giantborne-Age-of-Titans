@@ -12,6 +12,9 @@ extends IntegrationSuite
 ##     Corvane before their sworn lines - the herald mends it for 2 iron (faction.aldmere's reconcile).
 ##   * F34: the stage-6 Grow summary names what siege disruption unlocks - seizing a staggered or uncrewed
 ##     engine and hurling it - not "Wreck siege engines", which a giant of any stage can do with blows.
+##   * F42: every npc record of role "talker" is built from a scene that carries an NpcTalker, which
+##     names its npc and its record's dialogue once spawned as the director spawns it (Wenna the
+##     ferrywoman was built from villager.tscn, which has none: her dialogue could not be reached).
 
 const START_CP := "world.cp.kingsgate_shelf"
 const CROWN := "quest.oath_crown"
@@ -286,3 +289,45 @@ func test_the_stage_6_grow_summary_says_what_siege_disruption_unlocks() -> void:
 		var engine: Dictionary = GameData.get_record(id).get("engine", {})
 		assert_eq(int(engine.get("grab_stage", 0)), 6, "%s is seized from stage 6" % id)
 		assert_false(GameData.get_record(id).has("requires_stage"), "%s breaks under blows at any stage" % id)
+
+
+# --------------------------------------------------------------------------- F42
+
+## An npc record's scene spawned as EncounterDirector._spawn does: its CombatEntity's definition and
+## the actor's entity id set before it enters the tree.
+func _spawn_npc(definition: String, entity_id: String, at: Vector3) -> Node3D:
+	var node := (load(str(GameData.get_record(definition).get("scene", ""))) as PackedScene).instantiate() as Node3D
+	var ce := node.get_node_or_null("CombatEntity")
+	if ce != null and "definition_id" in ce:
+		ce.set("definition_id", definition)
+	node.set("entity_id", entity_id)
+	node.position = at
+	world.add_child(node)
+	return node
+
+
+static func _talker_of(node: Node) -> NpcTalker:
+	for n in node.find_children("*", "", true, false):
+		if n is NpcTalker:
+			return n
+	return null
+
+
+func test_every_talker_npc_is_built_from_a_scene_that_carries_an_npc_talker() -> void:
+	var talkers := GameData.records_of_type("npc").filter(func(r: Dictionary) -> bool: return str(r.get("role", "")) == "talker")
+	assert_true(talkers.size() >= 8, "the talkers ship (%d)" % talkers.size())
+	var lacking := PackedStringArray()
+	var i := 0
+	for rec: Dictionary in talkers:
+		i += 1
+		var id := "test.m8q.talker_%d" % i
+		var node := _spawn_npc(str(rec.id), id, Vector3(4.0 * i, 0.05, -10))
+		await step_ticks(1)
+		var t := _talker_of(node)
+		if t == null:
+			lacking.append("%s (%s)" % [rec.id, rec.scene])
+			continue
+		assert_eq(t.resolved_npc_id(), id, "%s's talker names its npc" % rec.id)
+		assert_eq(t.resolved_dialogue_id(), str(rec.get("dialogue", "")), "%s's talker runs its record's dialogue" % rec.id)
+		assert_false(t.dialogue_record().is_empty(), "%s's dialogue exists" % rec.id)
+	assert_eq(lacking, PackedStringArray(), "every talker can be talked to")
