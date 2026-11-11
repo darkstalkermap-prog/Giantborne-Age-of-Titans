@@ -30,6 +30,11 @@ extends EnemyBrain
 ## target comes within its start window. The war camp's riders, posted 60-68 m from the camp's centre
 ## under its 70 m leash, rode for a start point beyond it whenever the giant stood east of their pickets,
 ## were sent home by the leash, saw him again and rode out again: 60 leashes a minute and no charge.
+## It holds only while the target stands beyond its window from there; a point inside the leash from which
+## he is within the window is ridden to, and one that would leave him inside the window's near edge turns
+## the approach round him to a start point the leash allows (or, with none, closes in to lance reach) - see
+## _leashed_start. Held there, a rider stood beside the giant, out of lance reach and too close to
+## charge, for good.
 
 const CHARGE_TAG := "Charge"
 ## An approach aims at this centre distance from the target (inside the start window).
@@ -50,6 +55,9 @@ const BLOCKED_TURN_DEG := 60.0
 ## M8 screenshot pass (V3): a start point the leash brought inside it counts as reached this close (the
 ## horse runs at 13 m/s and stops within about 4 m): the rider holds there.
 const LEASH_HOLD_M := 5.0
+## M8 screenshot pass (V3): a start point the leash would leave too close to the target turns the approach
+## round him in steps this large (see _leashed_start).
+const LEASH_TURN_STEP_DEG := 30.0
 
 ## wheel_resolver(from: Vector3, threat: Vector3, dir: Vector3, distance: float) -> Vector3: a reachable
 ## point `distance` m from `threat` along `dir` (or near it); Vector3.INF when none - or, with
@@ -60,6 +68,8 @@ var wheel_resolver := Callable()
 var leash_clamp := Callable()
 ## True while the leash keeps the approach short of its start point (tests, debug).
 var held_by_leash := false
+## Degrees the leash turned the approach round the target this decision (0: not turned; tests, debug).
+var leash_turn_deg := 0.0
 ## "approach" | "charge" | "lance" | "wheel" (tests, debug).
 var cycle := "approach"
 ## Where the current wheel rides to (Vector3.INF until chosen).
@@ -191,16 +201,59 @@ func _approach(my_position: Vector3, target_pos: Vector3, distance: float, seen:
 	var start := clampf(CHARGE_START_M, radius + window.x + START_SLACK_M, radius + window.y - START_SLACK_M)
 	var point := target_pos + away.normalized() * start
 	held_by_leash = false
+	leash_turn_deg = 0.0
 	if leash_clamp.is_valid():
-		var inside: Vector3 = leash_clamp.call(point)
-		if _flat_distance(inside, point) > 0.01:
-			held_by_leash = true   # M8 screenshot pass (V3): no farther than the leash allows
-			if _flat_distance(my_position, inside) <= LEASH_HOLD_M:
-				_stop_moving()   # there: it holds, facing the target, until a charge fits
-				return
-			point = inside
+		point = _leashed_start(my_position, target_pos, away.normalized(), start, radius, window, lance_band.y)
+		if point == Vector3.INF:
+			_stop_moving()   # at the leash's edge: it holds, facing the target, until he comes within its window
+			return
 	move_target = point
 	move_speed = -1.0
+
+
+## M8 screenshot pass (V3): where an approach rides when its encounter has a leash (leash_clamp); its start
+## point is `start` m from the target on bearing `dir`. Vector3.INF = hold where it stands.
+##   * A start point inside the leash: it, unchanged.
+##   * Else the start point brought inside the leash, when the target is within the window from there (by
+##     START_SLACK_M): it rides there, and on to it (it never holds short of it).
+##   * Else, when the target stands beyond the window from there: it rides there and, once there (within
+##     LEASH_HOLD_M), holds, facing him, until he comes within its window.
+##   * Else - the target would be inside the window's near edge from there (he stands near the leash's edge
+##     on this side; the rider was sent home past him) - it turns its approach round him to the nearest
+##     bearing, alternately to either side and farther each time (LEASH_TURN_STEP_DEG; the side with more
+##     room first), whose start point, brought inside the leash, is within the window; with none (a leash too
+##     small for a charge) it closes in to lance reach. A rider held there stood beside the giant, facing
+##     him, out of lance reach and too close to charge, for good (the M8 screenshot pass's fix-up).
+func _leashed_start(my_position: Vector3, target_pos: Vector3, dir: Vector3, start: float, radius: float,
+		window: Vector2, lance_reach_m: float) -> Vector3:
+	var point := target_pos + dir * start
+	var inside: Vector3 = leash_clamp.call(point)
+	if _flat_distance(inside, point) <= 0.01:
+		return point
+	held_by_leash = true
+	var near_m := radius + window.x + START_SLACK_M
+	var far_m := radius + window.y - START_SLACK_M
+	var reach := _flat_distance(inside, target_pos)
+	if reach > far_m:
+		return Vector3.INF if _flat_distance(my_position, inside) <= LEASH_HOLD_M else inside
+	if reach >= near_m:
+		return inside
+	var steps := int(round(180.0 / LEASH_TURN_STEP_DEG))
+	for k in range(1, steps + 1):
+		var best := Vector3.INF
+		var best_reach := -1.0
+		for side: float in ([-1.0, 1.0] if k < steps else [1.0]):
+			var deg := side * k * LEASH_TURN_STEP_DEG
+			var q: Vector3 = leash_clamp.call(target_pos + dir.rotated(Vector3.UP, deg_to_rad(deg)) * start)
+			var r := _flat_distance(q, target_pos)
+			if r >= near_m and r <= far_m and r > best_reach + 0.01:
+				best = q
+				best_reach = r
+				leash_turn_deg = deg
+		if best != Vector3.INF:
+			return best
+	leash_turn_deg = 0.0
+	return leash_clamp.call(target_pos + dir * (radius + maxf(lance_reach_m, 0.0) * 0.5))
 
 
 ## ATTACK: the charge or the lance runs (the actor turns during its tracked windup); once it is over

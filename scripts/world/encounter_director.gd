@@ -636,6 +636,11 @@ func lod_tier_for(pos: Vector3, ppos: Vector3, engaged: bool) -> int:
 ## Alert groups share awareness (every tick): while one living member of an active alert-group
 ## encounter is aware of the player, each unaware one hears it (on_noise, certain) with what the
 ## aware one knows, and wakes to LOD tier 0. Returning (leashed) and routed members are left out.
+## M8 screenshot pass (V3): what the group shares is its freshest knowledge - the aware member that saw
+## the player last - not the first aware member's. A formation holding its slots and an engine's crew
+## stay aware with what they saw long ago: the war camp's Shield Wall, aware of where the giant stood
+## when he came into sight 40 m east of the pickets, sent that place to each rider home from its leash
+## while he fought among the pickets, and the rider rode for it with its back to him, 10 m away.
 func _share_alerts(tick: int) -> void:
 	for id in _order:
 		var enc: Encounter = _encounters[id]
@@ -644,9 +649,9 @@ func _share_alerts(tick: int) -> void:
 		var source: EnemyBrain = null
 		for m: Member in enc.members:
 			var b := _brain_of(m)
-			if b != null and b.aware and not _returning(m.node):
+			if b != null and b.aware and not _returning(m.node) \
+					and (source == null or b.last_seen_tick > source.last_seen_tick):
 				source = b
-				break
 		if source == null:
 			continue
 		enc.last_aware_tick = tick

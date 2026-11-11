@@ -13,6 +13,11 @@ extends IntegrationSuite
 ##     sent home, saw him again and rode out again (60 leashes in 60 s, no charge); now a rider rides for
 ##     its start point only as far as its leash allows (CavalryBrain.leash_clamp) and holds there facing
 ##     him, and charges once he comes within its start window.
+##   * The fix-up's case: the giant among the pickets, 8 m inside the middle rider's post. That rider stood
+##     beside him, out of lance reach and too close to charge, for good: the start point brought inside the
+##     leash was too close as well. Now its approach turns round him to a start point the leash allows - and
+##     a rider home from its leash learns his place from the alert group's freshest knowledge, not from the
+##     Shield Wall's view of where he first stood.
 
 const SCENE := "res://scenes/world/world.tscn"
 const GATE := "world.aldmere.fort_gate"
@@ -26,6 +31,9 @@ const CAMP_WATCH := Vector2(625, 118)
 const CAMP_FACING := Vector3(583, 0, 124)
 ## Where he walks to next: the pickets' riders' start window.
 const CAMP_CLOSE := Vector2(604, 119)
+## M8 screenshot pass fix-up: among the pickets, 8 m inside the middle rider's post (586, 120).
+const AMONG_PICKETS := Vector2(578, 120)
+const LANCE := "ability.cavalry_lance"
 
 var leashed: Array = []
 
@@ -250,5 +258,99 @@ func test_the_war_camps_riders_hold_their_pickets_and_charge_a_giant_in_reach() 
 	print("    the war camp: the giant walked to %s; %d charges after %.1f s" % [
 		Vector2(p.global_position.x, p.global_position.z).snapped(Vector2.ONE), _charges(riders) - before, (Sim.tick - t0) / 60.0])
 	assert_true(_charges(riders) > before, "a rider charges the giant at the pickets")
+	w.queue_free()
+	await step_ticks(2)
+
+
+## M8 screenshot pass fix-up (V3): the giant among the pickets. Aldmere at war, a stage-4 giant walks in
+## from 40 m east of the pickets and stands 8 m inside the middle one (camp_rider_2's post, 66 m from the
+## camp's centre, 4 m inside its 70 m leash). Two ways a rider stood beside him without attacking:
+##   * The middle rider, sent home there by the leash, 5.8 m off his surface: out of lance reach (3.2 m) and
+##     too close to charge (8 m), and the start point brought inside the leash, 1 m behind it, too close as
+##     well - it held there, facing him, for good (18.9 s of the 20). Now its approach turns round him to a
+##     start point the leash allows (CavalryBrain._leashed_start).
+##   * A rider home from its leash learned where he was from its alert group - the first aware member's
+##     knowledge, the Shield Wall's, holding its slots aware of where he stood when he came into sight 40 m
+##     east - and held at the leash's edge facing that place, its back to him 10 m away (4.7 s at a time).
+##     Now the group shares its freshest knowledge (EncounterDirector._share_alerts).
+## In 20 s there every rider charges or thrusts its lance, and none stands still beside him, between lance
+## reach and its window's near edge, for 2 s.
+func test_the_war_camps_riders_attack_a_giant_among_their_pickets() -> void:
+	WorldState.set_flag(FactionState.flag_id("aldmere", "hostile"), true)
+	var w := await _world(CAMP_WATCH, 4)
+	var p := w.player()
+	_face(p, CAMP_FACING)
+	var d := w.director()
+	await step_ticks(60)
+	var riders := _riders(d, CAMP)
+	assert_eq(riders.size(), 4, "the camp's four riders stand at their pickets")
+	var middle: CavalryEnemy = null
+	for r in riders:
+		if r.entity_id.ends_with("camp_rider_2"):
+			middle = r
+	# He walks in among the pickets, as a player would, and stands there.
+	var goal := Vector3(AMONG_PICKETS.x, 0, AMONG_PICKETS.y)
+	var t_walk := Sim.tick
+	while Sim.tick - t_walk < 20 * 60:
+		var to := goal - p.global_position
+		to.y = 0.0
+		if to.length() <= 1.0:
+			break
+		p.camera_rig.yaw = atan2(-to.x, -to.z)
+		p.router.injected_move = Vector2(0, 1)
+		await step_ticks(3)
+	p.router.injected_move = Vector2.ZERO
+	assert_true(_flat(p.global_position, goal) <= 1.5, "he walked in among the pickets (%s)" % p.global_position)
+	if middle != null:
+		print("    among the pickets after %.1f s: the middle rider %.1f m from its post, %s" % [
+			(Sim.tick - t_walk) / 60.0, _flat(middle.global_position, middle.home_position),
+			EnemyBrain.STATE_NAMES[middle.brain.state]])
+	var lances := {}
+	var on_ability := func(_t: int, actor_id: String, action_id: String, _instance: int) -> void:
+		if action_id == LANCE:
+			lances[actor_id] = int(lances.get(actor_id, 0)) + 1
+	Events.ability_started.connect(on_ability)
+	var charged_before := {}
+	for r in riders:
+		charged_before[r.entity_id] = r.charges_started
+	var radius := float(p.profile.get("capsule_radius_m", 0.85))
+	var window := middle.cavalry_brain().start_window() if middle != null else Vector2(8.0, 28.0)
+	var lance_m := 3.2
+	var stood := {}
+	var longest := {}
+	var t0 := Sim.tick
+	while Sim.tick - t0 < 20 * 60:
+		await step_ticks(6)
+		for r in riders:
+			if not is_instance_valid(r):
+				continue
+			var b := r.cavalry_brain()
+			var edge := _flat(r.global_position, p.global_position) - radius
+			var held := b.state == EnemyBrain.AIState.APPROACH and b.move_target == Vector3.INF \
+				and edge > lance_m and edge < window.x
+			stood[r.entity_id] = (float(stood.get(r.entity_id, 0.0)) + 0.1) if held else 0.0
+			longest[r.entity_id] = maxf(float(longest.get(r.entity_id, 0.0)), float(stood[r.entity_id]))
+	Events.ability_started.disconnect(on_ability)
+	var lines := PackedStringArray()
+	var idle := PackedStringArray()
+	var stuck := PackedStringArray()
+	for r in riders:
+		if not is_instance_valid(r):
+			continue
+		var rider := r.entity_id.get_slice(".", 2)
+		var n_charge := r.charges_started - int(charged_before.get(r.entity_id, 0))
+		var n_lance := int(lances.get(r.entity_id, 0))
+		var held_s := float(longest.get(r.entity_id, 0.0))
+		lines.append("%s %d charges, %d lances, %s, %.0f m from him, held beside him %.1f s at most" % [rider,
+			n_charge, n_lance, EnemyBrain.STATE_NAMES[r.brain.state],
+			_flat(r.global_position, p.global_position), held_s])
+		if n_charge + n_lance == 0:
+			idle.append(rider)
+		if held_s >= 2.0:
+			stuck.append("%s %.1f s" % [rider, held_s])
+	print("    the war camp, 20 s with the giant among the pickets: %s" % "; ".join(lines))
+	assert_eq(idle.size(), 0, "every rider charges or thrusts its lance (idle: %s)" % ", ".join(idle))
+	assert_eq(stuck.size(), 0, "no rider stands still beside him, out of lance reach and too close to charge (%s)"
+		% ", ".join(stuck))
 	w.queue_free()
 	await step_ticks(2)

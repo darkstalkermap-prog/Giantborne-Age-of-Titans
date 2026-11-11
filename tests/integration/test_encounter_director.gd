@@ -506,3 +506,32 @@ func test_alert_groups_share_awareness() -> void:
 	s1.brain.target_id = "player"
 	await step_ticks(2)
 	assert_false(_enemy("test.director.soldier_2").brain.aware, "no alert group: the others stay unaware")
+
+
+## M8 screenshot pass (V3): an alert group shares its freshest knowledge - the aware member that saw the
+## giant last - not its first aware member's. (At the war camp the Shield Wall, holding its slots aware of
+## where the giant stood when he came into sight, sent that place to each rider home from its leash while
+## he fought among the pickets; the rider rode for it with its back to him, 10 m away.)
+func test_an_alert_group_shares_its_freshest_knowledge() -> void:
+	await _load_level()
+	director.force_activate(WOLVES)
+	await step_ticks(2)
+	var stale := Vector3(-30, 0, -10)
+	var fresh := Vector3(-40, 0, -22)
+	var w1 := _enemy("test.director.wolf_1")
+	var w2 := _enemy("test.director.wolf_2")
+	var w3 := _enemy("test.director.wolf_3")
+	assert_false(w3.brain.aware, "wolf_3 starts unaware")
+	w1.brain.aware = true
+	w1.brain.target_id = "player"
+	w1.brain.last_known = stale
+	w1.brain.last_seen_tick = Sim.tick - 600   # first in the encounter's order; saw him 10 s ago
+	w2.brain.aware = true
+	w2.brain.target_id = "player"
+	w2.brain.last_known = fresh
+	w2.brain.last_seen_tick = Sim.tick         # saw him just now
+	await step_ticks(1)
+	assert_true(w3.brain.aware, "wolf_3 learned of the giant from its pack")
+	assert_true(w3.brain.last_known.distance_to(fresh) < 1e-3,
+		"wolf_3 knows what the wolf that saw him last knows (%s; the first aware wolf's is %s)" % [
+		w3.brain.last_known, stale])
