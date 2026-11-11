@@ -212,7 +212,9 @@ func _target() -> CombatEntity:
 
 ## Perception snapshot (5 Hz): range, view cone (360 degrees once aware and close), line of
 ## sight, plus what archetype tactics read about the target (its forward, size, growth stage,
-## combat state) and this enemy's own health fraction.
+## combat state) and this enemy's own health fraction. M8 gate (F36): "occluded" is true when the
+## target stands in sight range and in the view cone but the sight line is blocked (a trunk, a
+## pillar): the brain steps round it instead of waiting (EnemyBrain._regain_sight).
 func _sense() -> Dictionary:
 	var t := _target()
 	if t == null:
@@ -229,7 +231,8 @@ func _sense() -> Dictionary:
 	var in_cone := absf(facing_deg) <= float(ai.get("sight_half_angle_deg", 75.0)) \
 		or (brain.aware and dist <= float(ai.get("awareness_radius_m", AWARE_ALL_AROUND_M)))
 	var visible := false
-	if dist <= float(ai.get("sight_range_m", 25.0)) and in_cone:
+	var in_view := dist <= float(ai.get("sight_range_m", 25.0)) and in_cone
+	if in_view:
 		var eye := global_position + Vector3.UP * entity.combatant.height_m * 0.92
 		visible = HitQueryAdapter.line_clear(get_world_3d().direct_space_state, eye,
 			t.anchor_position(), SIGHT_MASK, t.occlusion_rids)
@@ -243,6 +246,7 @@ func _sense() -> Dictionary:
 	t_fwd.y = 0.0
 	var snapshot := {"exists": true, "target_id": t.entity_id, "alive": t.is_alive(),
 		"position": t.actor.global_position, "distance": dist, "visible": visible,
+		"occluded": in_view and not visible,
 		"facing_deg": facing_deg, "target_radius": radius,
 		"target_forward": t_fwd.normalized() if t_fwd.length_squared() > 1e-8 else Vector3.FORWARD,
 		"target_height": t.combatant.height_m, "target_stage": stage,
@@ -3518,7 +3522,9 @@ func p34_yield(reason: String) -> void:
 
 
 ## Makes this actor harmless at once: AI off, its action and buffer gone, tokens back, its shots and
-## hazards discarded, unlockable, the player's lock on it released (yield, stand-down).
+## hazards discarded, unlockable, the player's lock on it released, and (M8 gate F13) the giant's
+## hold on it ended - set down, so a yield's prompt never opens with the boss in the giant's hand and
+## nothing still is thrown as a body (yield, stand-down).
 func _p34_still(remember_ai: bool) -> void:
 	if remember_ai:
 		_p34_ai_before = ai_enabled
@@ -3540,6 +3546,8 @@ func _p34_still(remember_ai: bool) -> void:
 	var p := get_tree().get_first_node_in_group("player") as GiantPlayer
 	if p != null and p.targeting != null and p.lock.is_locked() and p.lock.target_id == entity.entity_id:
 		p.targeting.release_lock("boss_yielded")
+	if p != null and p.grab != null and p.grab.held_id() == entity.entity_id:
+		p.grab.release("interrupted")
 
 
 ## Ends every projectile this actor launched that is still in the air.
@@ -3607,6 +3615,9 @@ func p34_decide(outcome: String) -> bool:
 		var p := get_tree().get_first_node_in_group("player") as GiantPlayer
 		if p != null and brain != null:
 			brain.on_noise(Sim.tick, p.global_position, p.entity.entity_id, true)
+		# M8 gate (F11): the fight is on again under the id the yield ended it with - the boss bar
+		# drops its "yields", the boss music comes back (CueRouter: in the boss's current phase).
+		Events.boss_engaged.emit(Sim.tick, yield_boss_id())
 	else:
 		_p34_strike()
 	get_tree().call_group(BossArena.GROUP, "p34_on_yield_decided", entity.entity_id, outcome)

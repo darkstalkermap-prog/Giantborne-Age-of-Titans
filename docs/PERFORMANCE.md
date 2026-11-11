@@ -875,6 +875,18 @@ world rebuilt from both regions' layouts (a second build leaves the tree unchang
 chunks, 112 seams), 441 audio files bit-exact, 239 suites, 42,683 checks, 0 failures (default 56.2 s,
 slow 201.0 s, gate 376.8 s), the 120 s soak with 0 errors.
 
+### The M8 gate, lane m8y (boss actors and the yield prompt): the suites
+
+The lane added five suites and one test (`docs/systems/P34.md`, "M8 gate"): `test_yield_prompt_input`
+(0.10 s), `test_boss_no_grab` (0.19 s) and the F11 test in `test_yield_protocol` (0.15 s in all) in the
+default tier; `test_yield_prompt_mashing` (1.3 s), `test_yield_prompt_wall_clock` (9.7 s: the review's
+mashes in real time, by design) and `test_boss_sight` (3.3 s) in the slow tier. The lane's check
+(`tools/check.sh --slow --gate --audio`, on wave 21 with the lane's commits): 244 suites, 44,445 checks,
+0 failures; default 59.5 s (W21's merge: 56.2 s; budget 75 s), slow 221.7 s (201.0 s; 8 minutes), gate
+380.3 s (376.8 s; 50 minutes); the 120 s soak with 0 errors. No frame-time or draw-call measurement
+changes: the AI change (F36) acts only while a target in reach is hidden, and the 30 seeded boss runs
+never meet that case.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |

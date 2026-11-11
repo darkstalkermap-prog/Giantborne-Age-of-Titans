@@ -3,11 +3,11 @@
 	"id": "dialogue.yield_corvane",
 	"type": "dialogue",
 	"speaker": "Warlord Corvane",
-	"description": "P34 (plan M6-M9 section 2.10, 5.13): Corvane's yield - the yield protocol's two-choice prompt (ui/screens/yield_prompt.gd). Spare (outcome spare) or Strike, which asks again before it counts (outcome strike). Only these outcomes decide boss.corvane.outcome; the prompt cannot be left without one.",
+	"description": "P34 (plan M6-M9 section 2.10, 5.13): Corvane's yield - the yield protocol's two-choice prompt (ui/screens/yield_prompt.gd). Spare (outcome spare) or Strike, which asks again before it counts (outcome strike); the confirm line offers 'No - let me think again' first (M8 gate F7: Strike is never the first choice nor the default). Only these outcomes decide boss.corvane.outcome; the prompt cannot be left without one.",
 	"entries": [{"node": "yield", "conditions": []}],
 	"nodes": [
 		{"id": "yield", "text": "Enough! The Regiment is broken - I yield. Spare my men, giant, and Aldmere will remember it.", "choices": [{"text": "Spare him. Stand down, warlord.", "next": "spared", "effects": {"outcome": "spare"}}, {"text": "Strike him down.", "next": "confirm"}]},
-		{"id": "confirm", "text": "Corvane kneels on the keep's steps, his sword at your feet. Strike down a warlord who has yielded?", "choices": [{"text": "Strike. (There is no taking it back.)", "next": "struck", "effects": {"outcome": "strike"}}, {"text": "No - let me think again.", "next": "yield"}]},
+		{"id": "confirm", "text": "Corvane kneels on the keep's steps, his sword at your feet. Strike down a warlord who has yielded?", "choices": [{"text": "No - let me think again.", "next": "yield"}, {"text": "Strike. (There is no taking it back.)", "next": "struck", "effects": {"outcome": "strike"}}]},
 		{"id": "spared", "text": "Corvane lowers his head. \"Aldmere keeps its word, giant. The fort will not raise arms against you.\"", "choices": [{"text": "[Leave]", "next": ""}]},
 		{"id": "struck", "text": "The warlord does not rise again.", "choices": [{"text": "[Leave]", "next": ""}]}
 	]

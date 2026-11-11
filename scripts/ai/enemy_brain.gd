@@ -261,7 +261,9 @@ func _decide_engaged(my_position: Vector3, target_pos: Vector3, distance: float,
 			face_point = target_pos
 			var attack_range := float(ai.get("attack_range_m", 1.2)) + float(perception.get("target_radius", 0.85))
 			var facing_ok := absf(float(perception.get("facing_deg", 180.0))) <= ATTACK_FACING_DEG
-			if distance <= attack_range:
+			if distance <= attack_range and _sight_blocked(seen):
+				_regain_sight(my_position, target_pos)   # M8 gate (F36): no waiting for a sight line
+			elif distance <= attack_range:
 				_stop_moving()
 				if seen and now >= strike_ready_tick and facing_ok:
 					if holds_token or request_token.call():
@@ -1447,8 +1449,11 @@ func _decide_sequence(my_position: Vector3, target_pos: Vector3, distance: float
 		move_target = target_pos + away * (radius + band.x + SEQUENCE_BAND_MARGIN_M)
 		move_speed = -1.0
 	else:
-		_stop_moving()
 		_entry_since = NO_TICK
+		if _sight_blocked(seen):
+			_regain_sight(my_position, target_pos)   # M8 gate (F36): no waiting for a sight line
+			return
+		_stop_moving()
 		var facing_ok := absf(float(perception.get("facing_deg", 180.0))) <= entry_facing_deg(id)
 		if seen and facing_ok and now >= strike_ready_tick and (holds_token or request_token.call()):
 			holds_token = true
@@ -2002,5 +2007,46 @@ func _p32_decide(my_position: Vector3, memory_ok: bool, target_pos: Vector3, rel
 	return true
 
 ## @anchor P34
+# --- in reach but out of sight (M8 gate F36) -------------------------------------------------------
+# A brain whose target stands inside its reach (the melee approach's attack range, a sequence entry's
+# band) used to stop there and strike only once it could see the target. With something between its
+# eye and the target - a scenery trunk in the Troll Den, a pillar, a stone of the Moot - that never came
+# while blows kept its memory fresh: the Troll Matriarch stood still for a minute while the giant hit
+# her. Now, only in that case (perception "occluded": in sight range and in the view cone, the sight
+# line blocked), the brain walks round the target at its distance, the way reposition_sign says, and
+# turns back after SIGHT_SWEEP_S without sight; the moment it sees the target it stops and strikes as
+# before. A target out of the cone or out of range is not "occluded" (the brain turns to it, as ever).
+
+## Seconds a search for sight goes one way round before it tries the other.
+const SIGHT_SWEEP_S := 2.5
+## How far round the target (radians, at the brain's distance) the search's walk goal lies.
+const SIGHT_STEP_RAD := 0.6
+## A search that was not stepped for this long is a new one.
+const SIGHT_SEARCH_GAP_S := 0.5
+
+var _sight_search_tick := NO_TICK
+var _sight_step_tick := NO_TICK
+
+
+## True when the target is in sight range and in the view cone but hidden (perception "occluded") and
+## `seen` is false.
+func _sight_blocked(seen: bool) -> bool:
+	return not seen and bool(perception.get("occluded", false))
+
+
+## One step of the search for sight: a walk goal round `target_pos` at the current distance.
+func _regain_sight(my_position: Vector3, target_pos: Vector3) -> void:
+	if _sight_search_tick == NO_TICK or now - _sight_step_tick > _ticks(SIGHT_SEARCH_GAP_S):
+		_sight_search_tick = now
+	elif now - _sight_search_tick >= _ticks(SIGHT_SWEEP_S):
+		_sight_search_tick = now
+		reposition_sign = -reposition_sign   # still hidden: the other way round
+	_sight_step_tick = now
+	var offset := my_position - target_pos
+	offset.y = 0.0
+	if offset.length() < 0.1:
+		offset = Vector3.FORWARD
+	move_target = target_pos + offset.rotated(Vector3.UP, SIGHT_STEP_RAD * reposition_sign)
+	move_speed = 0.0   # walk
 
 ## @anchor P37

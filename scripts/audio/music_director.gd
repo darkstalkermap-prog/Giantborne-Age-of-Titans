@@ -231,14 +231,16 @@ func note_event() -> void:
 	scheduler.note_event(_now())
 
 
-func on_boss_engaged(id: String) -> void:
+## A boss fight begins (or, M8 gate F11, begins again after a yield decided as a fight): its intro, then
+## its set from `phase` (the phase the boss fights in now; 1 on a fresh engagement).
+func on_boss_engaged(id: String, phase := 1) -> void:
 	_engaged_bosses[id] = true
 	var rec := audio.call("boss_region", id) as Dictionary
 	var set_rec := _set_record(str(rec.get("music", "")))
 	if set_rec.is_empty():
 		return
 	boss_id = id
-	boss_phase = 1
+	boss_phase = maxi(1, phase)
 	var intro := str(set_rec.get("intro", ""))
 	var wait_s := 0.0
 	if intro != "":
