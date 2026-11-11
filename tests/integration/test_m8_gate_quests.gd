@@ -10,6 +10,8 @@ extends IntegrationSuite
 ##   * F6: a crown sworn in peace (the parley, or Corvane spared) gives up Ballista Ridge's errand (and a
 ##     ridge found afterwards starts none), and a peace broken afterwards is named by the herald and
 ##     Corvane before their sworn lines - the herald mends it for 2 iron (faction.aldmere's reconcile).
+##   * F34: the stage-6 Grow summary names what siege disruption unlocks - seizing a staggered or uncrewed
+##     engine and hurling it - not "Wreck siege engines", which a giant of any stage can do with blows.
 
 const START_CP := "world.cp.kingsgate_shelf"
 const CROWN := "quest.oath_crown"
@@ -264,3 +266,23 @@ func test_the_sabotage_and_the_struck_warlord_keep_aldmere_at_war() -> void:
 		if str(pair[1]) != "":
 			WorldState.set_flag("boss.corvane.outcome", pair[1])
 		assert_eq(_node_of("dialogue.herald", "world.aldmere.herald"), str(pair[2]), "%s: the herald's sworn line" % pair[0])
+
+
+# --------------------------------------------------------------------------- F34
+
+func test_the_stage_6_grow_summary_says_what_siege_disruption_unlocks() -> void:
+	var p5 := PlayerGrowth.find_profile(GameData.records_of_type("growth_profile"), 5)
+	var p6 := PlayerGrowth.find_profile(GameData.records_of_type("growth_profile"), 6)
+	var s := PlayerGrowth.change_summary(p5, p6, {}, {}, [], {})
+	assert_true((s.permissions as Array).has("siege_disruption"), "stage 6 adds siege disruption")
+	var lines := Array(s.lines).filter(func(l: String) -> bool: return l.to_lower().contains("siege engine"))
+	assert_eq(lines.size(), 1, "one line names it (%s)" % [s.lines])
+	var line: String = lines[0] if not lines.is_empty() else ""
+	assert_true(line.contains("Seize") and line.contains("staggered or uncrewed") and line.contains("hurl"),
+		"it says what stage 6 adds: seizing a staggered or uncrewed engine and hurling it (%s)" % line)
+	assert_false(line.contains("Wreck"), "not wrecking engines, which blows do at any stage")
+	# The engines' own refusal says the same two ways in (siege_engine.gd's crewed line).
+	for id: String in ["prop.siege_ballista", "prop.siege_catapult"]:
+		var engine: Dictionary = GameData.get_record(id).get("engine", {})
+		assert_eq(int(engine.get("grab_stage", 0)), 6, "%s is seized from stage 6" % id)
+		assert_false(GameData.get_record(id).has("requires_stage"), "%s breaks under blows at any stage" % id)
