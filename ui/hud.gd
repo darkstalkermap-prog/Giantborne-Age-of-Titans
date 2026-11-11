@@ -35,8 +35,23 @@ extends Control
 ##   drawn flag before "Banner of the Toll-Riders" for its banner (the label's "⚑" is not in the
 ##   HUD's font), else the target's name; with the distance.
 ## - track_next (T / D-pad Left) tracks the next active quest (Quests.track_next) and says which.
+##
+## M8 gate (F30, F44): the message line wraps. A message is MESSAGE_WIDTH wide at HudKit.BIG and
+## wraps at words onto up to MESSAGE_MAX_LINES lines (it was one line trimmed with an ellipsis, which
+## cut the guidance off most refusals: the Needle's pointer to the north ridge, how to burn a brood
+## nest); the box holds MESSAGE_MAX_LINES lines in all, so a new message drops the oldest until it
+## fits, and a message already shown is moved down instead of shown twice. A message stays for
+## message_lifetime(): MESSAGE_LIFETIME, longer for a long one (READ_CHARS_PER_S, at most
+## MESSAGE_MAX_LIFETIME). test_hud_messages shows every shipped refusal, size-gate and notice text.
 
 const MESSAGE_LIFETIME := 2.6
+## M8 gate (F30): the message box's width, the lines it holds (one message may use all of them), the
+## reading speed a long message's lifetime allows for, and the longest lifetime.
+const MESSAGE_WIDTH := 600.0
+const MESSAGE_MAX_LINES := 3
+const READ_CHARS_PER_S := 17.0
+const MESSAGE_MAX_LIFETIME := 9.0
+const MESSAGE_FADE_S := 0.5
 ## The target frame's top edge, and its top edge while the boss bar shows (below the bar's 88).
 ## P27: 30 px lower than P16's 14 / 64, under the compass.
 const TARGET_FRAME_TOP := 44.0
@@ -379,16 +394,20 @@ func _build_target_frame() -> void:
 	v.add_child(_target_hint)
 
 
+## M8 gate (F30): 90 px tall (it was 84, two short of three one-line messages), from 514 to 604 at
+## 720 px: MESSAGE_MAX_LINES lines of HudKit.BIG however they split between messages; it stays below
+## the interact prompt (460..496) and above the hotbar, and should it ever need more it grows upward.
 func _build_messages() -> void:
 	_messages = VBoxContainer.new()
 	_messages.anchor_left = 0.5
 	_messages.anchor_right = 0.5
 	_messages.anchor_top = 1.0
 	_messages.anchor_bottom = 1.0
-	_messages.offset_left = -300
-	_messages.offset_right = 300
-	_messages.offset_top = -200
+	_messages.offset_left = -MESSAGE_WIDTH * 0.5
+	_messages.offset_right = MESSAGE_WIDTH * 0.5
+	_messages.offset_top = -206
 	_messages.offset_bottom = -116
+	_messages.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_messages.alignment = BoxContainer.ALIGNMENT_END
 	_messages.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_messages)
@@ -581,15 +600,53 @@ func show_message(text: String, kind: String = "info") -> void:
 			color = UiKit.BAD
 		"good":
 			color = UiKit.GOOD
+	# M8 gate (F30): the same message again moves down (and lives on) instead of showing twice.
+	for c in _messages.get_children():
+		if c is Label and (c as Label).text == text:
+			_messages.remove_child(c)
+			c.queue_free()
+	var lines := message_line_count(text)
 	var l := HudKit.label(text, HudKit.BIG, color)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.max_lines_visible = MESSAGE_MAX_LINES
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS   # only past the last line it may show
 	l.set_meta("born", _time)
+	l.set_meta("life", message_lifetime(text))
+	l.set_meta("lines", mini(lines, MESSAGE_MAX_LINES))
 	_messages.add_child(l)
-	while _messages.get_child_count() > 3:
+	# The oldest go until the box's lines hold the newest whole.
+	while _messages.get_child_count() > 1 and _message_lines_shown() > MESSAGE_MAX_LINES:
 		var old := _messages.get_child(0)
 		_messages.remove_child(old)
 		old.queue_free()
+
+
+## M8 gate (F30): the lines `text` takes on the message line - wrapped at words at MESSAGE_WIDTH in
+## HudKit.BIG, as its label wraps it (at least 1).
+func message_line_count(text: String) -> int:
+	var font := get_theme_font("font", "Label")
+	if font == null or text == "":
+		return 1
+	var flags := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
+	var h := font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, MESSAGE_WIDTH, HudKit.BIG, -1,
+		flags).y
+	return maxi(1, roundi(h / maxf(font.get_height(HudKit.BIG), 1.0)))
+
+
+## M8 gate (F30): how long a message stays: MESSAGE_LIFETIME, or for a long one the time to read it
+## (READ_CHARS_PER_S after a second to notice it), at most MESSAGE_MAX_LIFETIME. Its last
+## MESSAGE_FADE_S fade.
+static func message_lifetime(text: String) -> float:
+	return clampf(1.0 + text.length() / READ_CHARS_PER_S, MESSAGE_LIFETIME, MESSAGE_MAX_LIFETIME)
+
+
+## The lines of the messages in the box now.
+func _message_lines_shown() -> int:
+	var n := 0
+	for c in _messages.get_children():
+		n += int(c.get_meta("lines", 1))
+	return n
 
 
 ## The message lines on screen now, oldest first (tests).
@@ -991,8 +1048,10 @@ func lock_marker_point() -> Vector2:
 func _update_messages() -> void:
 	for child in _messages.get_children():
 		var age := _time - float(child.get_meta("born", _time))
-		(child as Label).modulate.a = clampf((MESSAGE_LIFETIME - age) / 0.5, 0.0, 1.0)
-		if age > MESSAGE_LIFETIME:
+		var life := float(child.get_meta("life", MESSAGE_LIFETIME))
+		(child as Label).modulate.a = clampf((life - age) / MESSAGE_FADE_S, 0.0, 1.0)
+		if age > life:
+			_messages.remove_child(child)
 			child.queue_free()
 
 
