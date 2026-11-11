@@ -16,7 +16,8 @@ extends RefCounted
 ##                within ROAD_LINK_M, connectors from every POI, checkpoint, exit and green to the
 ##                nearest node (their min_stage from the POI that needs a stage), the layout's
 ##                extra edges (the Needle's direct edge with max_stage 4, the Grove's rockfall route
-##                with min_stage 5)
+##                with min_stage 5); each edge names its kind (M8 gate, F18: WorldIndex.ROAD_KIND_ROAD,
+##                _EXTRA, _JOIN, _CONNECTOR - the WanderDirector anchors wanderers on roads only)
 ##   region grid  64 m cells, each its region's 1-based index (the region tables' bounds)
 ##   map          map_image (the picture) and map_bounds (the world's rectangle)
 ## Tools only.
@@ -131,9 +132,9 @@ static func road_points(pts: PackedVector2Array, field: HeightField) -> PackedVe
 
 
 static func _add_polyline(idx: WorldIndex, pts: PackedVector3Array, width: float, min_stage: int, max_stage: int,
-		direct: bool) -> void:
+		direct: bool, kind := WorldIndex.ROAD_KIND_ROAD) -> void:
 	for k in pts.size() - 1:
-		idx.add_road(pts[k], pts[k + 1], width, min_stage, max_stage, direct, 0.5)
+		idx.add_road(pts[k], pts[k + 1], width, min_stage, max_stage, direct, 0.5, kind)
 
 
 static func _roads(idx: WorldIndex, layout: Dictionary, feats: WorldFeatures, field: HeightField) -> void:
@@ -150,7 +151,7 @@ static func _roads(idx: WorldIndex, layout: Dictionary, feats: WorldFeatures, fi
 			p2.append(Vector2(float(p[0]), float(p[1])))
 		var pts := road_points(p2, field)
 		_add_polyline(idx, pts, float(extra.get("width_m", 12.0)), int(extra.get("min_stage", 0)),
-			int(extra.get("max_stage", WorldIndex.ANY_STAGE)), bool(extra.get("direct", false)))
+			int(extra.get("max_stage", WorldIndex.ANY_STAGE)), bool(extra.get("direct", false)), WorldIndex.ROAD_KIND_EXTRA)
 		ends.append([pts[0], str(extra.get("id", ""))])
 		ends.append([pts[pts.size() - 1], str(extra.get("id", ""))])
 	# loose ends: joined to the nearest node within ROAD_LINK_M that is not right next to them
@@ -171,7 +172,7 @@ static func _roads(idx: WorldIndex, layout: Dictionary, feats: WorldFeatures, fi
 				best_d = d
 				best = i
 		if best >= 0:
-			idx.add_road(nodes[own], nodes[best], 10.0)
+			idx.add_road(nodes[own], nodes[best], 10.0, 0, WorldIndex.ANY_STAGE, false, 0.5, WorldIndex.ROAD_KIND_JOIN)
 	# connectors: every POI, checkpoint, exit and green to the nearest road node
 	var points: Array = []   # [position, min_stage]
 	for id: String in idx.pois:
@@ -192,7 +193,7 @@ static func _roads(idx: WorldIndex, layout: Dictionary, feats: WorldFeatures, fi
 		if Vector2(q.x - p.x, q.z - p.z).length() <= CONNECT_WITHIN_M:
 			continue
 		var line := road_points(PackedVector2Array([Vector2(q.x, q.z), Vector2(p.x, p.z)]), field)
-		_add_polyline(idx, line, 10.0, int(pt[1]), WorldIndex.ANY_STAGE, false)
+		_add_polyline(idx, line, 10.0, int(pt[1]), WorldIndex.ANY_STAGE, false, WorldIndex.ROAD_KIND_CONNECTOR)
 
 
 static func _degree(idx: WorldIndex, node: int) -> int:

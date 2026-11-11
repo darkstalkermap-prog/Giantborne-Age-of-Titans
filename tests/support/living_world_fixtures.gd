@@ -124,9 +124,16 @@ static func _template(id: String, centre: Array, members: Array, leash: float) -
 
 
 ## The tiny WorldRoot with the giant at `at` (on the ground), its EncounterDirector and WanderDirector, the
-## ring around the giant loaded (deterministic slices); the living world on (test_active), nothing in view.
-## Returns [root, wander director].
+## ring around the giant loaded (deterministic slices); the living world on (test_active), nothing in view;
+## the suite's floor taken away. Returns [root, wander director].
 static func make(parent: Node, at := GIANT_AT) -> Array:
+	# IntegrationSuite's own floor (a 120 m box, its top at y 0) stands over the tiny world's ground where
+	# that dips below 0 (its west half): only the tiny world's terrain is ground here (M8 gate, F18: the
+	# wanderers' footprint check sees any other body as an obstacle).
+	for n in parent.get_children():
+		if n is StaticBody3D:
+			parent.remove_child(n)
+			n.queue_free()
 	var root := TinyWorld.make_root(true, Vector3(at.x, height(at.x, at.z) + 0.3, at.z))
 	var director := EncounterDirector.new()
 	director.name = "EncounterDirector"

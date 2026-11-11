@@ -13,13 +13,19 @@ extends Node
 ## standings filter them (Brannock's militia while the town is hostile, Aldmere's cavalry while the
 ## kingdom is). At most max_active copies of a table live at once, and only when the director's budget
 ## has room for its combatants and the formation cap for its formation members. The copy stands at an
-## anchor (anchors "roads": a road node of the region; "markers", "pois": the region's markers or places)
-## min_distance_m..max_distance_m from the giant (on the ground plane), outside the camera's view (every
-## spawn point outside its frustum), with every spawn point on loaded, ready ground and the anchor on the
-## human navmesh (one query of NavQuery's per-tick budget), never inside a settlement, never within
-## ENCOUNTER_GAP_M of a placed encounter that is not cleared, COPY_GAP_M of another copy or EVENT_CLEAR_M
-## of a running world event. It faces along the road and its members walk the road's nodes within the
-## table's patrol_m of the anchor. An entry with a `route` (or a `path`) is a moving column: it is placed
+## anchor (anchors "roads": a road node of the region - M8 gate, F18: a node of a road's own polyline open
+## to every stage, never a place's connector, the layout's extra edges (the Needle's slot, the Grove's
+## rockfall route), a stage-limited or direct edge, within PLACE_CLEAR_M of a checkpoint, a POI's centre, a
+## cairn or a seal, or within a sealed place (a secret POI's radius + SEALED_MARGIN_M); "markers", "pois":
+## the region's markers or places) min_distance_m..max_distance_m from the giant (on the ground plane),
+## outside the camera's view (every spawn point outside its frustum), with every spawn point on loaded,
+## ready ground - and (M8 gate, F18) every member's body clear of static and prop geometry, out of deep
+## water and its own nav layer within its radius + NAV_MARGIN_M (footprint_problem; the nav part one query
+## of NavQuery's per-tick budget, with the anchor on the human navmesh within NAV_SNAP_M) - never inside a
+## settlement, never within ENCOUNTER_GAP_M of a placed encounter that is not cleared, COPY_GAP_M of another
+## copy or EVENT_CLEAR_M of a running world event. It faces along the road and its members walk the road's
+## nodes within the table's patrol_m of the anchor (on the same roads: never into a sealed place). An entry
+## with a `route` (or a `path`) is a moving column: it is placed
 ## on its route and marches along it (see the columns below), leaving the world at its end. Each spawn
 ## counts in the flag wander.<table short>.<entry>.spawns; a template's members pay their kill XP for the
 ## first xp_full_spawns (3) spawns of an entry only. A copy leaves the world when the giant leaves it
@@ -72,6 +78,24 @@ const EVENT_CLEAR_M := 120.0
 ## A wanderer's anchor must lie this close to the human navmesh.
 const NAV_SNAP_M := 4.0
 const NAV_LAYER := 1
+## M8 gate (F18): a wanderer's anchor keeps this far from a place its road passes - a checkpoint (shrine,
+## waystone), a POI's centre, a cairn, a seal (PLACE_PROP_KINDS) - and this far beyond a sealed place's
+## radius (a secret POI); no road node of a sealed place is anchor or patrol point.
+const PLACE_CLEAR_M := 30.0
+const SEALED_MARGIN_M := 10.0
+const PLACE_PROP_KINDS := ["cairn", "rockfall", "toppled_statue", "titan_tree", "ledge", "den_wall"]
+## M8 gate (F18): the footprint check. A member's body - a cylinder of its radius and height standing
+## BODY_LIFT_M over the ground - touches no static or prop geometry (world, breakables, blockers; the
+## terrain's heightmap is the ground itself); its own nav layer (its record's nav_layers) lies within its
+## radius + NAV_MARGIN_M on the ground plane and NAV_HEIGHT_M up or down (the chunks' own navmesh regions:
+## the whole footprint costs one query of the tick's budget); water over it is at most WATER_SHARE of its
+## height (a titan-layer giant wades).
+const BODY_LIFT_M := 0.35
+const BODY_MASK := 1 | 16 | 32   # HitQueryAdapter.LAYER_WORLD | LAYER_BREAKABLE | the blockers' layer (32)
+const NAV_MARGIN_M := 2.0
+const NAV_HEIGHT_M := 4.0
+const WATER_SHARE := 0.6
+const TITAN_LAYER := 16
 const DEFAULT_PATROL_M := 40.0
 const DEFAULT_INTERVAL_S := [60.0, 120.0]
 const DEFAULT_MIN_M := 120.0
@@ -85,6 +109,8 @@ const ROUTE_SAMPLE_M := 12.0
 ## The text of a respawn refused near a running event that names none.
 const RESPAWN_TEXT := "%s still rages there."
 const ABANDONED := "abandoned"
+## footprint_problem(): the tick's path-query budget is spent (the place waits).
+const BUSY := "busy"
 
 ## Tests: run outside the campaign (as Quests.test_active).
 static var test_active := false
@@ -112,8 +138,8 @@ var _table_state := {}     # table id -> {"next_tick": int}
 var _copies := {}          # copy id -> {"table", "entry", "template", "route": Route or null, "made_tick",
 							#  "active_seen": bool, "cleared_tick": int}
 var _counter := 0
-var _roads := {}           # region id -> PackedInt32Array of road node indices in it
-var _adjacent := {}        # road node index -> [[neighbour, length], ...]
+var _roads := {}           # region id -> PackedInt32Array of the road nodes a wanderer may stand on in it
+var _adjacent := {}        # road node index -> [[neighbour, length], ...] (the roads wanderers walk)
 var _dead := {}            # entity ids seen dying in this load (an event's people targets)
 var _removals := PackedStringArray()   # copies to remove at the next tick (from signal handlers)
 
@@ -413,11 +439,14 @@ func find_place(table: Dictionary, entry: Dictionary, tpl: Dictionary, from: Vec
 		var points := footprint(tpl, anchor, yaw)
 		if not _ground_ready(points) or _any_in_view(points):
 			continue
-		var snapped := _snap(anchor)
-		probes += 1
-		if not snapped.is_finite():
-			if probes >= 4:
-				break   # the tick's path-query budget is not ours to spend: try again later
+		var why := footprint_problem(tpl, anchor, points)
+		if why == BUSY:
+			break   # the tick's path-query budget is not ours to spend: the place waits
+		if why != "":
+			if why.begins_with("nav"):
+				probes += 1   # a query of the budget was spent on it
+				if probes >= 4:
+					break
 			continue
 		var h := _height(anchor)
 		if not is_nan(h):
@@ -441,6 +470,112 @@ static func footprint(tpl: Dictionary, anchor: Vector3, yaw: float) -> PackedVec
 		if typeof(s) == TYPE_DICTIONARY:
 			out.append(anchor + basis * (WorldEvent._vec3(s.get("position_m")) - c0))
 	return out
+
+
+## M8 gate (F18): why the copy of `tpl` with its centre at `anchor` and its spawns at `points` (footprint())
+## may not stand there now ("" = it may; BUSY = the tick's path-query budget is spent - ask again later):
+## "body:<entity id>" - a member's body would stand in static or prop geometry; "water:<entity id>" - in
+## water deeper than WATER_SHARE of its height; "nav:anchor" - the anchor more than NAV_SNAP_M off the human
+## navmesh; "nav:<entity id>" - a member's own nav layer more than its radius + NAV_MARGIN_M away (or
+## NAV_HEIGHT_M up or down). The ground under every point must be loaded (the caller checks it). The body
+## and water checks are physics and chunk queries; the nav ones cost one query of the tick's budget (each
+## point asks its own chunk's navmesh regions, never the whole map). A level without navigation skips them.
+func footprint_problem(tpl: Dictionary, anchor: Vector3, points: PackedVector3Array) -> String:
+	var spawns: Array = tpl.get("spawns", [])
+	var members: Array = []   # [entity id, definition record, point (level space, on the ground)]
+	for i in mini(spawns.size(), points.size()):
+		var sp: Variant = spawns[i]
+		if typeof(sp) != TYPE_DICTIONARY:
+			continue
+		var def := GameData.get_record(_member_definition(sp as Dictionary))
+		if str(def.get("type", "")) != "enemy":
+			continue
+		var at := points[i]
+		var h := _height(at)
+		if not is_nan(h):
+			at.y = h
+		members.append([str((sp as Dictionary).get("entity_id", "")), def, at])
+	for m: Array in members:
+		var why := _body_problem(m[1], m[2])
+		if why != "":
+			return "%s:%s" % [why, m[0]]
+	var s := _streamer()
+	if s == null or s.nav_maps == null or not NavQuery.has_navigation(level, NAV_LAYER):
+		return ""
+	if NavQuery.budget_left(level) <= 0:
+		return BUSY
+	NavQuery.spend(level)
+	var ground := anchor
+	var ah := _height(anchor)
+	if not is_nan(ah):
+		ground.y = ah
+	if not _near_nav(ground, NAV_LAYER, NAV_SNAP_M):
+		return "nav:anchor"
+	for m: Array in members:
+		var def: Dictionary = m[1]
+		if not _near_nav(m[2], int(def.get("nav_layers", NAV_LAYER)), float(def.get("capsule_radius_m", 0.5)) + NAV_MARGIN_M):
+			return "nav:%s" % m[0]
+	return ""
+
+
+## The record a spawn of a template comes into the world as (its `prefer` when that record exists).
+static func _member_definition(sp: Dictionary) -> String:
+	var prefer := str(sp.get("prefer", ""))
+	return prefer if prefer != "" and GameData.has_record(prefer) else str(sp.get("definition", ""))
+
+
+## "body" when a member of record `def` standing at `at` (level space, on the ground) would stand in static
+## or prop geometry, "water" when in water too deep for it, else "".
+func _body_problem(def: Dictionary, at: Vector3) -> String:
+	if level == null or not level.is_inside_tree():
+		return ""
+	var r := float(def.get("capsule_radius_m", 0.5))
+	var height := float(def.get("height_m", 1.8))
+	var g := _to_global(at)
+	if level.has_method("water_at") and (int(def.get("nav_layers", NAV_LAYER)) & TITAN_LAYER) == 0:
+		var water := float(level.call("water_at", g))
+		if not is_nan(water) and water - at.y > height * WATER_SHARE:
+			return "water"
+	var shape := CylinderShape3D.new()
+	shape.radius = r
+	shape.height = maxf(0.5, height - BODY_LIFT_M)
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = shape
+	q.collision_mask = BODY_MASK
+	q.collide_with_areas = false
+	q.transform = Transform3D(Basis(), g + Vector3.UP * (BODY_LIFT_M + shape.height * 0.5))
+	for hit: Dictionary in level.get_world_3d().direct_space_state.intersect_shape(q, 16):
+		var rid: RID = hit.get("rid", RID())
+		if rid.is_valid() and PhysicsServer3D.shape_get_type(PhysicsServer3D.body_get_shape(rid, int(hit.get("shape", 0)))) \
+				== PhysicsServer3D.SHAPE_HEIGHTMAP:
+			continue   # the terrain: the ground it stands on
+		return "body"
+	return ""
+
+
+## True when the navigation of `layers` (any of its bits) lies within `reach` of `at` (level space) on the
+## ground plane and NAV_HEIGHT_M up or down: the navmesh regions of the loaded, ready chunks within reach
+## (each chunk's own polygons; an empty region answers nothing).
+func _near_nav(at: Vector3, layers: int, reach: float) -> bool:
+	var s := _streamer()
+	if s == null or s.nav_maps == null:
+		return true
+	var g := _to_global(at)
+	var chunks := {}
+	for off: Vector2 in [Vector2.ZERO, Vector2(reach, 0), Vector2(-reach, 0), Vector2(0, reach), Vector2(0, -reach)]:
+		var c := s.chunk_at(g + Vector3(off.x, 0.0, off.y))
+		if c != "" and s.is_ready(c):
+			chunks[c] = true
+	for c: String in chunks:
+		for r: Dictionary in s.nav_maps.chunk_regions(c):
+			if (int(r.get("bit", 0)) & layers) == 0 or not (r.rid as RID).is_valid():
+				continue
+			if NavigationServer3D.region_get_closest_point_normal(r.rid, g).length_squared() < 1e-6:
+				continue   # a region without polygons
+			var q := NavigationServer3D.region_get_closest_point(r.rid, g)
+			if Vector2(q.x - g.x, q.z - g.z).length() <= reach and absf(q.y - g.y) <= NAV_HEIGHT_M:
+				return true
+	return false
 
 
 ## The road points a wanderer at road node `node` walks: the nodes reachable along the road within
@@ -1196,19 +1331,6 @@ func _to_global(p: Vector3) -> Vector3:
 	return level.global_transform * p if level != null and level.is_inside_tree() else p
 
 
-## The anchor on the human navmesh (within NAV_SNAP_M), or Vector3.INF - one query of the tick's budget
-## (none left: INF, and the place waits). A level without navigation takes the anchor as it is.
-func _snap(anchor: Vector3) -> Vector3:
-	if not NavQuery.has_navigation(level, NAV_LAYER):
-		return anchor
-	if NavQuery.budget_left(level) <= 0:
-		return Vector3.INF
-	var q := NavQuery.closest_point(level, _to_global(anchor), NAV_LAYER)
-	if not q.is_finite() or _flat(q - _to_global(anchor)) > NAV_SNAP_M:
-		return Vector3.INF
-	return q
-
-
 ## True when a living member of copy `id` stands in the camera's view.
 func copy_in_view(id: String) -> bool:
 	for n: Node3D in director.p37_living(id):
@@ -1264,7 +1386,12 @@ func _index_ids(table: String) -> PackedStringArray:
 	return out
 
 
-## The road nodes of each region and the road graph's neighbours (from the level's world index).
+## The roads wanderers stand and walk on (from the level's world index; M8 gate, F18): the edges a road's
+## own polyline drew or a loose road end's join, open to every stage and not direct - never a place's
+## connector (whose far end is the place itself), nor the layout's extra edges (the Needle's 5 m slot, the
+## Grove's rockfall route), nor an edge with an end in a sealed place (sealed_place_at). A wanderer stands
+## (anchor) only on a node of a road's polyline that keeps clear of the places it passes
+## (anchor_clear_of_places). The anchors of each region in _roads, the neighbours in _adjacent.
 func _build_roads() -> void:
 	_roads.clear()
 	_adjacent.clear()
@@ -1273,17 +1400,19 @@ func _build_roads() -> void:
 		return
 	var nodes := idx.road_nodes()
 	var edges := idx.road_edges()
+	var places := place_circles(idx)
+	var sealed := {}
 	for i in nodes.size():
-		var r := idx.region_at(nodes[i])
-		if r == "":
-			continue
-		var in_region: PackedInt32Array = _roads.get(r, PackedInt32Array())
-		in_region.append(i)
-		_roads[r] = in_region   # a packed array is a value: store it back
+		if sealed_place_at(places, nodes[i]):
+			sealed[i] = true
+	var on_road := {}
 	for k in range(edges.size() / 2):
 		var a := edges[2 * k]
 		var b := edges[2 * k + 1]
-		if a < 0 or b < 0 or a >= nodes.size() or b >= nodes.size():
+		if a < 0 or b < 0 or a >= nodes.size() or b >= nodes.size() or sealed.has(a) or sealed.has(b):
+			continue
+		var kind := idx.edge_kind(k)
+		if not idx.is_open_edge(k) or (kind != WorldIndex.ROAD_KIND_ROAD and kind != WorldIndex.ROAD_KIND_JOIN):
 			continue
 		var d := _flat(nodes[a] - nodes[b])
 		if not _adjacent.has(a):
@@ -1292,9 +1421,73 @@ func _build_roads() -> void:
 			_adjacent[b] = []
 		(_adjacent[a] as Array).append([b, d])
 		(_adjacent[b] as Array).append([a, d])
+		if kind == WorldIndex.ROAD_KIND_ROAD:
+			on_road[a] = true
+			on_road[b] = true
+	var ids := on_road.keys()
+	ids.sort()
+	for i: int in ids:
+		var r := idx.region_at(nodes[i])
+		if r == "" or not anchor_clear_of_places(places, nodes[i]):
+			continue
+		var in_region: PackedInt32Array = _roads.get(r, PackedInt32Array())
+		in_region.append(i)
+		_roads[r] = in_region   # a packed array is a value: store it back
 
 
-## The heading along the road at node `i` (toward its first neighbour).
+## The road nodes a wanderer of `region` may stand on (see _build_roads; tests, the gate's probe).
+func anchor_nodes(region: String) -> PackedInt32Array:
+	return _roads.get(region, PackedInt32Array())
+
+
+## M8 gate (F18): the places a wanderer keeps clear of, from the world index: [[centre (level space), radius,
+## sealed]] - each checkpoint (PLACE_CLEAR_M), each POI (a settlement its radius + SETTLEMENT_MARGIN_M, a
+## sealed place - kind secret - its radius + SEALED_MARGIN_M, any other PLACE_CLEAR_M about its centre),
+## each prop of PLACE_PROP_KINDS (cairns and seals: PLACE_CLEAR_M; a seal also seals what is near it).
+static func place_circles(idx: WorldIndex) -> Array:
+	var out: Array = []
+	if idx == null:
+		return out
+	for id: String in idx.checkpoints:
+		out.append([(idx.checkpoints[id] as Dictionary).position, PLACE_CLEAR_M, false])
+	for id: String in idx.pois:
+		var poi: Dictionary = idx.pois[id]
+		match str(poi.get("kind", "")):
+			"settlement":
+				out.append([poi.position, float(poi.get("radius", 0.0)) + SETTLEMENT_MARGIN_M, false])
+			"secret":
+				out.append([poi.position, float(poi.get("radius", 0.0)) + SEALED_MARGIN_M, true])
+			_:
+				out.append([poi.position, PLACE_CLEAR_M, false])
+	for id: String in idx.props:
+		var kind := str((idx.props[id] as Dictionary).get("kind", ""))
+		if PLACE_PROP_KINDS.has(kind):
+			out.append([(idx.props[id] as Dictionary).position, PLACE_CLEAR_M, kind != "cairn"])
+	return out
+
+
+## True when `p` (level space) lies in a sealed place of `places` (place_circles): no wanderer stands or walks
+## there.
+static func sealed_place_at(places: Array, p: Vector3) -> bool:
+	for c: Array in places:
+		if bool(c[2]) and _flat(p - (c[0] as Vector3)) <= float(c[1]):
+			return true
+	return false
+
+
+## True when `p` keeps clear of every place of `places` (place_circles): a wanderer's anchor.
+static func anchor_clear_of_places(places: Array, p: Vector3) -> bool:
+	for c: Array in places:
+		if _flat(p - (c[0] as Vector3)) <= float(c[1]):
+			return false
+	return true
+
+
+## The heading along the road at node `i` (toward its first neighbour on the roads wanderers walk).
+func road_yaw(i: int) -> float:
+	return _road_yaw(i)
+
+
 func _road_yaw(i: int) -> float:
 	var nb: Array = _adjacent.get(i, [])
 	var idx := _index()

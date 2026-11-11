@@ -22,8 +22,11 @@ extends Resource
 ##   props        world id -> {"position", "chunk"} (quest targets and destroyable landmarks)
 ##   districts    [{"id", "display_name", "min": Vector2 (x, z), "max": Vector2 (x, z)}] (the Valley)
 ##   roads        a graph: nodes (positions), edges (pairs of node indices), and per edge its width,
-##                min_stage and max_stage (the stages that may use it) and direct (1 = walk it in a
-##                straight line, e.g. the Needle, which has no titan navmesh)
+##                min_stage and max_stage (the stages that may use it), direct (1 = walk it in a
+##                straight line, e.g. the Needle, which has no titan navmesh) and kind (M8 gate, F18:
+##                what drew it - ROAD_KIND_ROAD a road's polyline, ROAD_KIND_EXTRA a layout's extra
+##                edge, ROAD_KIND_JOIN a loose road end joined to the next road, ROAD_KIND_CONNECTOR a
+##                place's link to its nearest road node; an index without kinds reads as roads)
 ##   region grid  region_at(): cell (x, z) of cell_m metres from grid_origin; a byte k > 0 is
 ##                region_ids[k - 1], 0 is no region
 ##   map_image    the map picture (res:// path; "" = a vector map from districts and roads) and
@@ -31,6 +34,11 @@ extends Resource
 
 ## An arrival limit that never refuses (every stage up to 10 may arrive).
 const ANY_STAGE := 10
+## M8 gate (F18): what drew a road edge (roads["kind"]; see the notes).
+const ROAD_KIND_ROAD := 0
+const ROAD_KIND_EXTRA := 1
+const ROAD_KIND_JOIN := 2
+const ROAD_KIND_CONNECTOR := 3
 ## The entry dictionaries position_of() searches, in order.
 const POSITION_TABLES := ["checkpoints", "markers", "areas", "pois", "exits", "props"]
 ## LevelMarker.Kind -> its name in the index.
@@ -46,7 +54,7 @@ const MARKER_KIND_NAMES := ["objective", "cover", "elevation", "formation", "saf
 @export var props := {}
 @export var districts := []
 @export var roads := {"nodes": PackedVector3Array(), "edges": PackedInt32Array(), "widths": PackedFloat32Array(),
-	"min_stage": PackedByteArray(), "max_stage": PackedByteArray(), "direct": PackedByteArray()}
+	"min_stage": PackedByteArray(), "max_stage": PackedByteArray(), "direct": PackedByteArray(), "kind": PackedByteArray()}
 @export var region_grid := PackedByteArray()
 @export var region_ids := PackedStringArray()
 @export var grid_origin := Vector2()
@@ -216,6 +224,28 @@ func nearest_road_node(pos: Vector3) -> int:
 	return best
 
 
+## M8 gate (F18): what drew road edge `e` (ROAD_KIND_*; an index written before the kinds: a road).
+func edge_kind(e: int) -> int:
+	var kinds: PackedByteArray = roads.get("kind", PackedByteArray())
+	return int(kinds[e]) if e >= 0 and e < kinds.size() else ROAD_KIND_ROAD
+
+
+## M8 gate (F18): true when road edge `e` is open to every stage (min_stage 0, max_stage ANY_STAGE) and
+## walked on the navmesh (not direct).
+func is_open_edge(e: int) -> bool:
+	var lo: PackedByteArray = roads.get("min_stage", PackedByteArray())
+	var hi: PackedByteArray = roads.get("max_stage", PackedByteArray())
+	var di: PackedByteArray = roads.get("direct", PackedByteArray())
+	var max_s := int(hi[e]) if e < hi.size() else ANY_STAGE
+	return (int(lo[e]) if e < lo.size() else 0) == 0 and (max_s <= 0 or max_s >= ANY_STAGE) \
+		and (int(di[e]) if e < di.size() else 0) == 0
+
+
+## M8 gate (F18): true when road edge `e` is a road's own polyline (ROAD_KIND_ROAD) and open (is_open_edge).
+func is_open_road(e: int) -> bool:
+	return edge_kind(e) == ROAD_KIND_ROAD and is_open_edge(e)
+
+
 ## True when road edge `e` may be used by a giant of `stage` (min_stage <= stage <= max_stage).
 func edge_allowed(e: int, stage: int) -> bool:
 	var lo: PackedByteArray = roads.get("min_stage", PackedByteArray())
@@ -298,9 +328,11 @@ func _adjacency_table() -> Dictionary:
 
 
 ## Adds an edge between two positions (merging nodes closer than merge_m). Builders and tests. A
-## segment shorter than merge_m adds nothing (no stray node).
+## segment shorter than merge_m adds nothing (no stray node). The per-edge arrays of the edges before it
+## that an index left short (one written before the kinds, a test's graph of nodes and edges) are padded
+## first with what an edge without them reads as: width 0, open to every stage, not direct, a road.
 func add_road(a: Vector3, b: Vector3, width: float, min_stage := 0, max_stage := ANY_STAGE,
-		direct := false, merge_m := 0.5) -> void:
+		direct := false, merge_m := 0.5, kind := ROAD_KIND_ROAD) -> void:
 	if a.distance_to(b) <= merge_m:
 		return
 	var ia := _road_node(a, merge_m)
@@ -308,21 +340,23 @@ func add_road(a: Vector3, b: Vector3, width: float, min_stage := 0, max_stage :=
 	if ia == ib:
 		return
 	var edges: PackedInt32Array = roads.get("edges", PackedInt32Array())
+	var before := edges.size() / 2
 	edges.append(ia)
 	edges.append(ib)
 	roads["edges"] = edges
 	var widths: PackedFloat32Array = roads.get("widths", PackedFloat32Array())
+	if widths.size() < before:
+		widths.resize(before)   # (resize zero-fills)
 	widths.append(width)
 	roads["widths"] = widths
-	for key: String in ["min_stage", "max_stage", "direct"]:
+	var pad := {"min_stage": 0, "max_stage": ANY_STAGE, "direct": 0, "kind": ROAD_KIND_ROAD}
+	var value := {"min_stage": clampi(min_stage, 0, 255), "max_stage": clampi(max_stage, 0, 255),
+		"direct": 1 if direct else 0, "kind": clampi(kind, 0, 255)}
+	for key: String in pad:
 		var arr: PackedByteArray = roads.get(key, PackedByteArray())
-		match key:
-			"min_stage":
-				arr.append(clampi(min_stage, 0, 255))
-			"max_stage":
-				arr.append(clampi(max_stage, 0, 255))
-			"direct":
-				arr.append(1 if direct else 0)
+		while arr.size() < before:
+			arr.append(int(pad[key]))
+		arr.append(int(value[key]))
 		roads[key] = arr
 	_adjacency.clear()
 
