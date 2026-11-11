@@ -1082,6 +1082,37 @@ lane's code (13.5 minutes): the siege and world builders wrote the same bytes as
 failures - default 59.0 s (the base 56.4), slow 227.5 s (211.8), gate 443.6 s (424.1) - and the 120 s
 autoplay had 0 errors.
 
+### The M8 gate, fix-up round 1 (lane m8-fixup-1): the suites and the merge's check
+
+The audit's fix-up lane left this file to the merge (its merge notes), so the merge records its suites from
+the merge's check, against round 3's merge (f231b95). The fixes and their tests are in the "M8 gate" and
+"Fix-up 1" notes of `docs/systems/P05.md`, `P11b.md`, `P13.md`, `P20.md`, `P34.md`, `P35.md`, `P36.md`
+and `P37.md`.
+
+- **Default tier:** `test_world_quest_saves` (new; N4.1, N4.2: 50 checks, 0.48 s) and the lane's tests in
+  eight suites - `test_checkpoint_triggers` (F38), `test_world_events` (N4.4, N4.8; F2's test now steps
+  past the director's own check), `test_m8_gate_quests` (N2.3, N3.2), `test_yield_prompt_input` (N3.1),
+  `test_wander_director` (N3.3), `test_civilians_factions` (N4.7), `test_boss_disengage` (N4.5, N4.6) and
+  `test_shrine` (F4): 171 checks and about 0.7 s more (3.25 s in all; the eight took 2.53 s on the base).
+- **Gate tier:** `test_den_checkpoints` (F38 with the whelps aware: 51 checks, 3.8 s; 22 checks and 1.8 s
+  on the base), `test_world_shrine_pads` (F4: 14 checks, 1.9 s; 7 and 0.8 s), `test_stonehold_walkthrough`
+  (N4.6: 95 checks, 24.6 s; 87 and 22.9 s) and `test_drowned_walkthrough` (N2.2: 50 checks, 4.4 s; 48 and
+  4.5 s): 46 checks and about 4.8 s more. No slow suite changed.
+
+The lane's check (`tools/check.sh --slow --gate` on its head, f5c6e4f, with another lane's check running on
+the machine): 268 suites, 46,260 checks, 0 failures; default 64.0 s, slow 235.0 s, gate 432.2 s; the 120 s
+soak with 0 errors.
+
+The merge's check (`tools/check.sh --build --slow --audio --gate` on the merge, 520a7c0, after an import,
+a full build and an import of its own): both full builds (every builder, the world included) wrote the
+committed outputs byte for byte, so nothing was regenerated; the seam check passed (64 chunks, 112 seams);
+the audio pipeline's 35 tests passed and its 441 files regenerated bit-exact; 268 suites, 46,260 checks
+(round 3's merge: 267 and 46,042), 0 failures; default 58.1 s (round 3's merge: 59.8 s; budget 75 s), slow
+238.0 s (236.1 s; 8 minutes), gate 468.4 s (436.0 s; 50 minutes: `test_valley_audio_determinism`, which the
+lane did not touch, took 12.6 s more, the lane's gate suites 4.8 s); the 120 s soak with 0 errors (2 fences
+broken, 2 loot awards, the debris pool at 10). The whole check took 17 min 29 s. No frame time or draw
+calls were re-measured: the lane changed no builder, layout, chunk, generated output or audio.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
