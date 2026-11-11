@@ -201,3 +201,40 @@ func test_the_bosss_own_talker_beyond_the_line_is_the_fights_ground() -> void:
 	assert_eq(gone, [[BB.DEN_ID, "left"]], "and the attempt resets")
 	Events.hud_message.disconnect(on_message)
 
+
+## M8 gate fix-up 1 (N4.5, the audit's play pass: the Iron Regiment's portcullis traps the giant in the
+## bailey - P36 shuts it on purpose - and nothing said so; its leaving lines were reached only by a teleport
+## out). Engaging the battle behind its gate tells the giant at once that there is no way out until it ends.
+func test_a_battle_behind_its_gate_says_there_is_no_way_out() -> void:
+	var lines: Array = []
+	var on_message := func(text: String, kind: String) -> void: lines.append([text, kind])
+	Events.hud_message.connect(on_message)
+	var bailey := (load("res://scenes/test/bailey_test.tscn") as PackedScene).instantiate() as Node3D
+	# The test bailey has no gate; give it the portcullis Fort Aldmere's battle shuts (a body and its shape,
+	# where the battle's gate_path looks).
+	var portcullis := StaticBody3D.new()
+	portcullis.name = "ArenaGate"
+	var shape := CollisionShape3D.new()
+	shape.name = "Shape"
+	var box := BoxShape3D.new()
+	box.size = Vector3(18, 13, 2)
+	shape.shape = box
+	portcullis.add_child(shape)
+	portcullis.position = Vector3(0, 6.5, 60)
+	bailey.add_child(portcullis)
+	(bailey.get_node("BattleBoss") as BattleBoss).gate_path = ^"../ArenaGate"   # Fort Aldmere's battle's default
+	world.add_child(bailey)
+	await step_ticks(2)
+	var bp := bailey.get_node("Player") as GiantPlayer
+	bp.router.use_injection = true
+	var battle := bailey.get_node("BattleBoss") as BattleBoss
+	assert_true(battle.gate != null, "the bailey's gate")
+	bp.global_position = Vector3(0, 0.05, 30)
+	lines.clear()
+	battle.engage()
+	await step_ticks(2)
+	assert_true(battle.is_gate_closed(), "the portcullis is down")
+	assert_true(lines.has(["The portcullis drops behind you: no way out until The Iron Regiment is beaten.", "warn"]),
+		"and the giant is told (%s)" % [lines])
+	Events.hud_message.disconnect(on_message)
+
