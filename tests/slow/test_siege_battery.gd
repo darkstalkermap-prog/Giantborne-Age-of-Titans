@@ -225,6 +225,7 @@ func test_a_battery_and_a_shield_wall_against_a_stage_6_giant_that_throws_their_
 		return true, 240)
 	assert_true(all_crewed, "every engine's crew stands by it")
 	# The battery opens up: every engine fires, the launches at the giant a second apart.
+	var opened := Sim.tick
 	var all_fired: bool = await TestWait.until(self, func() -> bool:
 		var by := {}
 		for f: Array in fired:
@@ -242,7 +243,8 @@ func test_a_battery_and_a_shield_wall_against_a_stage_6_giant_that_throws_their_
 	for i in range(1, at_giant.size()):
 		assert_true(int(at_giant[i]) - int(at_giant[i - 1]) >= gap,
 			"engine launches at the giant stay a second apart (%d ticks)" % (int(at_giant[i]) - int(at_giant[i - 1])))
-	print("    test_siege_battery: %d engine launches at the giant, by engine %s" % [at_giant.size(), by_engine])
+	print("    test_siege_battery: %d engine launches at the giant in %.1f s, by engine %s" % [at_giant.size(),
+		float(Sim.tick - opened) / Sim.TICK_RATE, by_engine])
 	# The giant kills the east ballista's crew, seizes it and hurls it at the east catapult.
 	var b2: SiegeEngine = engines["test.siege.ballista_2"]
 	var c2: SiegeEngine = engines["test.siege.catapult_2"]
