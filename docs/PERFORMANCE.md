@@ -124,6 +124,10 @@ unloads, thrash, work per frame p50 / p99 / max, steps by kind) are reset when i
 PerfProbe's sections are the chunks. `AUTOPILOT_RESULT`'s `world_walk` key is the report, with its
 check failures (margin under 200 m, thrash, more than 25 chunks, ticks under the terrain, the route
 not finished). Headless and `--fixed-fps` runs stream deterministically (a fixed step quota).
+`--walk-stage=N` grows the giant before it sets off (since the M8 gate the growth is asked again every
+15 ticks while the giant stands on the floor, for 600 ticks at most, and the walk does not set off at
+another stage: a giant that never reaches stage N fails it with "stage N not reached (...)",
+`stage_error`, alone in its check failures); `WORLD_WALK_START` and the report name the stage walked at.
 
 ### The web stream check (`tools/web/stream_check.mjs`, P24a)
 
