@@ -325,6 +325,60 @@ func test_an_event_left_behind_gives_the_tracker_back_until_it_is_in_play_again(
 	assert_eq(Quests.tracked_id(), "quest.test_fixup_main", "its end gives the tracker back")
 
 
+## M8 gate fix-up 2 (N4.4, the re-audit: after the end screen the campaign run's list began with Aldmere's
+## column, out of play). With no tracked quest and no main quest active - the campaign done, free roam -
+## the first active quest led, and the running events were listed first: a raid left behind led the HUD
+## marker and the compass again. An event out of play is listed after the side quests and leads nothing by
+## default: the first other quest leads; with none, nothing does (no marker, no compass mark). The player's
+## own Track of it stands, and back in play it leads again.
+func test_with_the_main_quest_done_an_event_left_behind_leads_nothing() -> void:
+	_setup()
+	QuestFixtures.install([
+		QuestFixtures.quest("quest.test_fixup_main", [QuestFixtures.stage("go", QuestFixtures.flag_cond("test.fixup_main_done"))]),
+		QuestFixtures.quest("quest.test_fixup_side", [QuestFixtures.stage("go", QuestFixtures.flag_cond("test.fixup_side_done"), 0,
+			{"objective": "Go west", "marker": "p37.marker.west"})], {"display_name": "Side errand"})])
+	QuestFixtures.activate(["quest.test_fixup_main", "quest.test_fixup_side"], [], "quest.test_fixup_main")
+	Quests.evaluate_now()
+	WorldState.set_flag("test.fixup_main_done", true)
+	Quests.evaluate_now()
+	assert_eq(Quests.quest_state("quest.test_fixup_main"), Quests.COMPLETED, "the main quest is done: free roam")
+	assert_eq(Quests.tracked_id(), "quest.test_fixup_side", "the side quest leads")
+	var raid: WorldEvent = _wd.events[F.RAID]
+	WorldState.set_flag("p37.raid.on", true)
+	_wd.check_events(Sim.tick)
+	assert_eq(Quests.tracked_id(), F.RAID, "the raid starts by the giant and takes the tracker")
+	assert_eq(Array(Quests.active_quest_ids()), [F.RAID, "quest.test_fixup_side"], "in play, it is listed first")
+	# The giant walks off east: the raid is left behind.
+	F.move_giant(_root, 96.0, 80.0)
+	await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+	assert_true(raid.is_running() and not _wd.in_play(raid), "the raid runs on, left behind")
+	assert_eq(Quests.tracked_quest_id, "", "it gave the tracker back")
+	assert_eq(Quests.tracked_id(), "quest.test_fixup_side", "the side quest leads, not the raid left behind")
+	assert_eq(str(Quests.current_objective().get("quest_id", "")), "quest.test_fixup_side", "the HUD marker's objective")
+	assert_eq(str(Quests.tracked_objective().get("quest_id", "")), "quest.test_fixup_side", "the compass's and the map's")
+	assert_eq(Array(Quests.active_quest_ids()), ["quest.test_fixup_side", F.RAID], "out of play, it is listed after the side quests")
+	var lines: Dictionary = (load("res://ui/hud/quest_tracker.gd") as GDScript).call("lines_for", Quests.objectives(), true, "",
+		Quests.tracked_id())
+	assert_eq([lines.main_title, lines.side_title], ["Side errand", "Tiny raid"], "the tracker leads with the side quest")
+	# The side quest done, only the raid left behind is active: nothing leads.
+	WorldState.set_flag("test.fixup_side_done", true)
+	Quests.evaluate_now()
+	assert_eq(Array(Quests.active_quest_ids()), [F.RAID], "only the raid is active (the journal lists it)")
+	assert_eq(Quests.tracked_id(), "", "nothing leads")
+	assert_eq(Quests.current_objective(), {}, "no HUD marker")
+	assert_eq(Quests.tracked_objective(), {}, "no compass mark")
+	# The player's own choice stands; back by it, in play again, it leads again.
+	assert_true(Quests.track(F.RAID), "the journal's Track")
+	await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+	assert_eq(str(Quests.current_objective().get("quest_id", "")), F.RAID, "the player's own choice leads")
+	Quests.tracked_quest_id = ""
+	F.move_giant(_root, -96.0, 16.0)
+	await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+	assert_true(_wd.in_play(raid), "the raid is in play again")
+	assert_eq(Quests.tracked_id(), F.RAID, "and leads again")
+	assert_eq(str(Quests.current_objective().get("quest_id", "")), F.RAID, "the HUD marker's objective")
+
+
 ## M8 gate fix-up 1 (N4.4): Aldmere's column (abandon_after_s 0) resumed after a Continue far from the toll
 ## fort waited for good - its run never began, never ended and held the tracker. A column with a finite
 ## abandon_after_s left waiting with its centre unloaded is given up like a raid; the shipped column has one.

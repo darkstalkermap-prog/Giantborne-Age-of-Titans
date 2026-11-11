@@ -954,12 +954,16 @@ func _begin_attempt(e: WorldEvent, tick: int) -> bool:
 ## (grow6's Ironway, the Standing Stones) show again instead of a raid 1.3 km away or a column waiting for
 ## good; it stays in the tracker's list and the journal, where the player can still track it. Coming back
 ## into play - no other event in play - it takes the tracker again. A choice the player made meanwhile is
-## what it gives back next.
+## what it gives back next. Fix-up 2 (N4.4): Quests' copy of its objective says whether it is in play now
+## ("in_play", written again the update it changes), so with no main quest active - after the campaign -
+## the run left behind is listed after the side quests and does not lead by default either.
 func sync_tracking() -> void:
 	if not Quests.has_method("p37_set_event"):
 		return
 	for e in running_events():
 		var playing := in_play(e)
+		if bool(Quests.objective_for(e.id).get("in_play", true)) != playing:
+			Quests.p37_set_event(e.id, event_objective(e))
 		if not playing and not e.tracker_given_back and Quests.tracked_quest_id == e.id:
 			e.tracker_given_back = true
 			_give_tracker_back(e)
@@ -1227,7 +1231,8 @@ func _prop_node(world_id: String) -> BreakableProp:
 	return null
 
 
-## The tracker's, compass's, map's and journal's view of a running event (Quests' objective shape).
+## The tracker's, compass's, map's and journal's view of a running event (Quests' objective shape; M8 gate
+## fix-up 2, N4.4: "in_play" says whether it is in play now - Quests.p37_out_of_play).
 func event_objective(e: WorldEvent) -> Dictionary:
 	var obj: Dictionary = e.record.get("objective", {}) if typeof(e.record.get("objective")) == TYPE_DICTIONARY else {}
 	var total := e.targets().size()
@@ -1246,7 +1251,7 @@ func event_objective(e: WorldEvent) -> Dictionary:
 	return {"quest_id": e.id, "stage_id": e.state, "text": text, "kind": str(obj.get("kind", "")),
 		"marker_id": marker, "position": pos, "targets": e.targets(), "bot": bot, "title": e.display_name(),
 		"main": false, "stage_index": 0, "stage_count": 1, "markers": PackedStringArray(), "positions": [pos],
-		"waiting_text": "", "via_exit": "", "via_name": "", "via_text": "", "event": true}
+		"waiting_text": "", "via_exit": "", "via_name": "", "via_text": "", "event": true, "in_play": in_play(e)}
 
 
 # --------------------------------------------------------------------------- deaths, reloads, respawns

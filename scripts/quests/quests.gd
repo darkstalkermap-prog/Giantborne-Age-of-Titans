@@ -545,7 +545,8 @@ func active_quest_ids() -> PackedStringArray:
 		out.append(main_quest_id)
 	for rec: Dictionary in side:
 		out.append(str(rec.id))
-	return _p37_insert_events(out, main)   # P37: running world events, right after the main quest
+	# P37: running world events, right after the main quest (M8 gate fix-up 2, N4.4: one out of play last)
+	return _p37_insert_events(out, main)
 
 
 static func _side_before(a: Dictionary, b: Dictionary) -> bool:
@@ -572,12 +573,15 @@ func objectives() -> Array:
 
 
 ## The first objective of objectives() ({} when no quest is active). P27: the tracked quest's
-## objective (Quests.tracked_id(): the main quest unless the player tracks another).
+## objective (Quests.tracked_id(): the main quest unless the player tracks another). M8 gate fix-up 2
+## (N4.4): never, untracked, a world event out of play (p37_out_of_play): it leads nothing by default.
 func current_objective() -> Dictionary:
 	var tracked := _p27_tracked_objective()
 	if not tracked.is_empty():
 		return tracked
 	for id in active_quest_ids():
+		if p37_out_of_play(id):
+			continue
 		var o := objective_for(id)
 		if not o.is_empty():
 			return o
@@ -1379,14 +1383,20 @@ func track_next() -> String:
 
 
 ## The quest followed now: tracked_quest_id while active, else the main quest while active, else the
-## first active quest ("" when none is active).
+## first active quest ("" when none is active). M8 gate fix-up 2 (N4.4): never, untracked, a world event
+## out of play (p37_out_of_play) - after the campaign (no main quest active) a raid or a column left
+## behind led the HUD marker and the compass as the list's first quest; the first other quest leads, and
+## with none nothing does ("").
 func tracked_id() -> String:
 	var ids := active_quest_ids()
 	if tracked_quest_id != "" and ids.has(tracked_quest_id):
 		return tracked_quest_id
 	if ids.has(main_quest_id):
 		return main_quest_id
-	return ids[0] if not ids.is_empty() else ""
+	for id in ids:
+		if not p37_out_of_play(id):
+			return id
+	return ""
 
 
 ## The tracked quest's objective (objective_for; {} when no quest is active).
@@ -1492,6 +1502,9 @@ func _p29_position_of(id: String) -> Vector3:
 # 5 houses stand") and takes it away when it ends (p37_clear_event). Four hook lines: quest_state() (an
 # event is ACTIVE while it runs), active_quest_ids() (_p37_insert_events), objective_for() (the event's
 # objective) and reset_for_tests(). Nothing here is saved: a reload asks the WanderDirector again.
+# M8 gate fix-up 2 (N4.4): the objective says whether the run is in play ("in_play": WanderDirector.in_play,
+# kept current by its sync_tracking). One out of play - left behind - is listed after the side quests and
+# leads nothing by default: tracked_id() and current_objective() pass over it unless the player tracks it.
 
 ## event id -> its objective (objective_for()'s shape), while it runs.
 var p37_events := {}
@@ -1507,7 +1520,14 @@ func p37_clear_event(event_id: String) -> void:
 	p37_events.erase(event_id)
 
 
-## active_quest_ids() hook: `ids` with the running events right after the main quest (or first without one).
+## M8 gate fix-up 2 (N4.4): true for a running world event out of play (its objective's "in_play" false: left
+## behind, waiting or suspended far off, a column marching the abstract); false for any other id.
+func p37_out_of_play(quest_id: String) -> bool:
+	return p37_events.has(quest_id) and not bool((p37_events[quest_id] as Dictionary).get("in_play", true))
+
+
+## active_quest_ids() hook: `ids` with the running events right after the main quest (or first without one);
+## M8 gate fix-up 2 (N4.4): those out of play after the side quests.
 func _p37_insert_events(ids: PackedStringArray, main: bool) -> PackedStringArray:
 	if p37_events.is_empty():
 		return ids
@@ -1516,7 +1536,12 @@ func _p37_insert_events(ids: PackedStringArray, main: bool) -> PackedStringArray
 	var out := PackedStringArray()
 	if main:
 		out.append(ids[0])
-	out.append_array(keys)
+	for k in keys:
+		if not p37_out_of_play(k):
+			out.append(k)
 	for i in range(1 if main else 0, ids.size()):
 		out.append(ids[i])
+	for k in keys:
+		if p37_out_of_play(k):
+			out.append(k)
 	return out
