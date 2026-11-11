@@ -66,10 +66,12 @@ static func _profile(stage: int) -> Dictionary:
 	return {}
 
 
-## A giant of `stage` at `pos`, facing -Z.
+## A giant of `stage` at `pos`, facing -Z. Its recoveries are cut short (controller.recovery_scale, as
+## P31's reach bands do): the checks here are about seizing and throwing, not the pauses after them.
 func _giant(stage: int, pos: Vector3) -> GiantPlayer:
 	var p := spawn_player(pos, 0.0)
 	p.set_profile(_profile(stage))
+	p.controller.recovery_scale = 0.05
 	await step_ticks(2)
 	return p
 

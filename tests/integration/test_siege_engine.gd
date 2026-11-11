@@ -1,7 +1,10 @@
 extends IntegrationSuite
 ## P32 (plan M6-M9 §2.10, §3.16 tests, §5.11, decision 21): siege engines in play, on hand-placed
 ## engines and crews (the director's engines list is the slow battery's). Reloads and windups are cut
-## short through TestFixtures so the default tier stays quick; the rules are the shipped ones.
+## short through TestFixtures, and the engines' firing rules are proven on a stand-in target - a
+## soldier on the giant's team, which an engine takes for the giant (its target is the first living
+## PLAYER entity) - so the default tier stays quick; the rules are the shipped ones (the giant itself
+## is the target in test_size_override and the slow battery).
 ##   * An engine fires only while crewed and at most once per reload_s; a crew member killed leaves it
 ##     uncrewed (siege_engine_crewed false) and silent.
 ##   * Launches at one target stay at least 1.0 s apart with every other ranged attacker: two ballistae
@@ -79,14 +82,21 @@ func _crew(engine: SiegeEngine, id: String, ai := false) -> EnemyActor:
 	return c
 
 
-func _kill(target: CombatEntity, by: GiantPlayer) -> void:
-	queue_hit(by.entity.entity_id, target.entity_id, by.global_position, 1.0e6)
+func _kill(target: CombatEntity, by: Node3D) -> void:
+	queue_hit((by.get("entity") as CombatEntity).entity_id, target.entity_id, by.global_position, 1.0e6)
+
+
+## The engines' target in the firing tests: a soldier (AI off, unkillable) on the giant's team.
+func _stand_in(pos: Vector3) -> EnemyActor:
+	var s := spawn_soldier(pos, 0.0, "test.p32_target", false)
+	s.entity.team = CombatEntity.Team.PLAYER
+	s.entity.combatant.unkillable = true
+	return s
 
 
 func test_an_engine_fires_only_while_crewed_and_at_most_once_per_reload() -> void:
 	_quick(0.3, 0.1)
-	var p := spawn_player(Vector3(0, 0.05, 0))
-	p.entity.combatant.unkillable = true
+	var p := _stand_in(Vector3(0, 0.05, 0))
 	var b := _engine(BALLISTA, "test.p32_ballista", Vector3(0, 0, -30))
 	await step_ticks(SiegeEngine.CREW_CHECK_TICKS + 2)
 	var waiting := b.reload_left
@@ -118,8 +128,7 @@ func test_an_engine_fires_only_while_crewed_and_at_most_once_per_reload() -> voi
 
 func test_launches_at_one_target_stay_a_second_apart_with_other_ranged_attackers() -> void:
 	_quick(0.4, 0.1)
-	var p := spawn_player(Vector3(0, 0.05, 0))
-	p.entity.combatant.unkillable = true
+	var p := _stand_in(Vector3(0, 0.05, 0))
 	var a := _engine(BALLISTA, "test.p32_ballista_a", Vector3(-6, 0, -30))
 	var b := _engine(BALLISTA, "test.p32_ballista_b", Vector3(6, 0, -30))
 	_crew(a, "test.p32_crew_a")
@@ -151,7 +160,7 @@ func test_launches_at_one_target_stay_a_second_apart_with_other_ranged_attackers
 
 
 func test_an_engines_fall_costs_its_side_20_morale_once_and_its_crew_flees() -> void:
-	var p := spawn_player(Vector3(0, 0.05, 30))
+	var p := _stand_in(Vector3(0, 0.05, 30))   # who breaks the engines
 	var e1 := _engine(BALLISTA, "test.p32_ballista_1", Vector3(-4, 0, -30))
 	var e2 := _engine(CATAPULT, "test.p32_catapult_2", Vector3(8, 0, -30))
 	var near := spawn_soldier(Vector3(-4, 0.05, -24), 0.0, "test.p32_near")      # 6 m from the first
