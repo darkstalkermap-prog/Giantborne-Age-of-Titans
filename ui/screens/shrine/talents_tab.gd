@@ -48,7 +48,7 @@ func _ready() -> void:
 	add_theme_constant_override("separation", 5)
 	_points = UiKit.label("", 16)
 	add_child(_points)
-	var intro := UiKit.label("Talent points come with every level. Each talent needs the one above it; a tree's crown needs both talents of tier 4. Talents last for good.", 12, UiKit.MUTED)
+	var intro := UiKit.label("You gain a talent point with every level. A talent needs the one above it in its column, and a tree's crown needs both talents of its tier 4. Talents are permanent. Green: learned · white: ready to learn · grey: not yet (select one to see why).", 12, UiKit.MUTED)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(intro)
 	var trees := HBoxContainer.new()
