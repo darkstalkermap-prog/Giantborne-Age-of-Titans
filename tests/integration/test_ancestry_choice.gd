@@ -3,11 +3,13 @@ extends IntegrationSuite
 ## 22): the ancestry is offered once the Old Kingdom has opened (the flag progress.world_entered) and
 ## never in the prologue or in combat; choosing it adds its attribute points once, makes its strengths
 ## lasting passives, teaches its signature (auto-slotted into the first free slot), sets the flag
-## ancestry.chosen, emits ancestry_chosen and completes quest.ancestry (started at stage 4); it can be
-## chosen once and stays chosen through a save and a load (the attributes are not added again). A
-## migrated v1 save (a finished prologue) is offered the same choice once it reaches the world, and its
-## carried-over talent points buy talents: points spent once, talent_learned, a refusal spends nothing.
+## ancestry.chosen, emits ancestry_chosen, completes quest.ancestry (started at stage 4) and dismisses
+## the prompt a world shrine showed; it can be chosen once and stays chosen through a save and a load
+## (the attributes are not added again). A migrated v1 save (a finished prologue) is offered the same
+## choice once it reaches the world, and its carried-over talent points buy talents: points spent
+## once, talent_learned, a refusal spends nothing.
 
+const Fx := preload("res://tests/support/quest_fixtures.gd")
 const FIXTURE := "res://tests/fixtures/saves/v1_force_complete.json"
 
 var chosen: Array = []
@@ -74,10 +76,12 @@ func test_the_ancestry_is_chosen_once_in_the_old_kingdom_and_stays_chosen() -> v
 	assert_eq(str(prog.choose_ancestry("ancestry.stoneblood").reason), "combat", "not during combat")
 	c.pools.since_combat = 999.0
 	assert_eq(chosen, [], "nothing chosen by a refusal")
-	# The quest: stage 4 without an ancestry starts it.
-	Quests.test_active = true
-	Quests.scope = PackedStringArray(["quest.ancestry"])
-	Quests.evaluate_now()
+	# The prompt at the first shrine of the Old Kingdom, and the quest: stage 4 without an ancestry.
+	Fx.activate(["quest.ancestry"], ["tutorial.ancestry"])
+	Quests.evaluate_now()   # Quests meet this giant (a new player starts a new level memory)
+	Events.shrine_activated.emit(Sim.tick, "world.shrine.kingsgate")
+	await step_ticks(1)
+	assert_eq(str(Quests.current_tutorial().get("id", "")), "tutorial.ancestry", "a world shrine shows the ancestry prompt")
 	assert_eq(Quests.quest_state("quest.ancestry"), Quests.INACTIVE, "not at stage 3")
 	p.set_profile(GameData.get_record("growth.04"))
 	Quests.evaluate_now()
@@ -105,9 +109,10 @@ func test_the_ancestry_is_chosen_once_in_the_old_kingdom_and_stays_chosen() -> v
 	assert_eq(prog.ancestry_line(),
 		"Ancestry: Stoneblood — Endurance +2, Constitution +3; Armour +10, Poise (staggers less) +20; Bedrock Ward",
 		"the attribute screens name what it gives")
-	Quests.evaluate_now()
+	await step_ticks(1)
 	assert_eq(Quests.quest_state("quest.ancestry"), Quests.COMPLETED, "the quest completes")
 	assert_eq(prog.xp - xp, 30, "for its 30 XP")
+	assert_eq(str(Quests.current_tutorial().get("id", "")), "", "and the choice dismisses the prompt")
 	# Once.
 	assert_eq(str(prog.choose_ancestry("ancestry.wildheart").reason), "chosen", "a second ancestry is refused")
 	assert_eq(str(prog.choose_ancestry("ancestry.stoneblood").reason), "chosen", "and the same one again")
