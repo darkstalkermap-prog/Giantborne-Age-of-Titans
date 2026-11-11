@@ -126,6 +126,16 @@ static func fields() -> Dictionary:
 		"slot": U.int_field(-1, 255),
 	})
 
+	## @anchor P32
+	# P32 (plan M6-M9 §2.10, §3.16; this anchor is P32's own: the plan's §1.5 table gave the encounter
+	# schema none for the `engines` list its §3.16 director edit reads): `engines`, the siege engines the
+	# encounter's crews serve - each `engine` names a placed engine by its world id (a SiegeEngine prop of
+	# the level's scene or chunk) and `crew` the spawn entity ids of this encounter that serve it (role
+	# "crew"; one engine each). The director gives each crew member its engine when both are in the tree.
+	f["engines"] = {"t": "array", "items": "dict", "item_fields": {
+		"engine": U.str_field(true),
+		"crew": {"t": "array", "req": true, "items": "string"}}}
+
 	## @anchor P37
 
 	return f
@@ -167,6 +177,34 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 	# plain ids, a stage range that is not empty, every member's formation and slot, one banner; M7
 	# gate: in a leashed encounter every formation's reach - slots plus advance_m - inside the leash).
 	out.errors.append_array(FormationRules.record_errors(d, ctx))
+
+	## @anchor P32
+	# P32: an engine named once, a world id of the dotted form; every crew id is a spawn of this
+	# encounter and serves one engine only.
+	var p32_engines: Variant = d.get("engines")
+	if typeof(p32_engines) == TYPE_ARRAY:
+		var p32_spawn_ids := {}
+		for sp: Variant in d.get("spawns", []):
+			if typeof(sp) == TYPE_DICTIONARY:
+				p32_spawn_ids[str(sp.get("entity_id", ""))] = true
+		var p32_seen_engines := {}
+		var p32_seen_crew := {}
+		for i in (p32_engines as Array).size():
+			var p32_e: Variant = p32_engines[i]
+			var p32_ctx := "%s.engines[%d]" % [ctx, i]
+			if typeof(p32_e) != TYPE_DICTIONARY:
+				continue
+			var p32_id := str(p32_e.get("engine", ""))
+			if U.check_id_string(p32_id, p32_ctx + ".engine", out):
+				if p32_seen_engines.has(p32_id):
+					out.errors.append("%s.engine: engine '%s' is listed twice" % [p32_ctx, p32_id])
+				p32_seen_engines[p32_id] = true
+			for p32_c: Variant in p32_e.get("crew", []):
+				if not p32_spawn_ids.has(str(p32_c)):
+					out.errors.append("%s.crew: '%s' is not a spawn of this encounter" % [p32_ctx, p32_c])
+				elif p32_seen_crew.has(str(p32_c)):
+					out.errors.append("%s.crew: '%s' already serves another engine" % [p32_ctx, p32_c])
+				p32_seen_crew[str(p32_c)] = true
 
 	## @anchor P37
 

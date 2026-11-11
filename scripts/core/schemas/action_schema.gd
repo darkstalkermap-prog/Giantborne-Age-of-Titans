@@ -224,6 +224,13 @@ static func fields() -> Dictionary:
 	(f.telegraph.fields as Dictionary)["at"] = U.str_field(false, ["actor", "target"])
 
 	## @anchor P32
+	# P32 (plan M6-M9 §2.10, decision 21): the size override - poise, knockback and the stagger length
+	# treat this action's hits as coming from an attacker this tall (siege engines 8.0, the cavalry's
+	# charge 4.0; HitFactory). Damage keeps the action's size_policy, which must be "none" with an
+	# override (the override never scales damage). Rampart Grip's grab mode "rampart" (PlayerGrab): a
+	# small body is crushed and dropped, a medium one or a siege engine lifted and thrown at once.
+	f["attacker_height_override_m"] = U.pos()
+	(((f.grab.fields as Dictionary).mode as Dictionary).enum as Array).append("rampart")
 
 	## @anchor P34
 
@@ -363,6 +370,8 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.errors.append("%s: a %s ability is granted, not evolved (evolves_from)" % [ctx, p31_granted])
 
 	## @anchor P32
+	if d.has("attacker_height_override_m") and str(d.get("size_policy", "attacker_growth")) == "attacker_growth":
+		out.errors.append("%s: attacker_height_override_m changes poise and knockback only: give the action size_policy 'none' (decision 21)" % ctx)
 
 	## @anchor P34
 

@@ -93,6 +93,14 @@ static func build(ctx: AttackContext, a: ActionDef, cand: Dictionary, pulse_id: 
 	## @anchor P07
 	# M6-M9 (P20): P32's size override (attacker_height_override_m) goes below its anchor.
 	## @anchor P32
+	# P32 (plan M6-M9 §2.10, decision 21): an action's attacker_height_override_m - siege engines 8.0, the
+	# cavalry's charge 4.0 - is the attacker's height for this hit: the poise ratio, the knockback ratio
+	# and the stagger length treat it as coming from that tall an attacker (a ballista bolt staggers a
+	# big giant as an 8 m attacker would). Damage's M_size is unchanged: such actions use size_policy
+	# "none" (the action schema requires it).
+	var p32_override := float(a.param("attacker_height_override_m", 0.0))
+	if p32_override > 0.0:
+		e.attacker_height_m = p32_override
 	return e
 
 

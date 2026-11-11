@@ -69,6 +69,11 @@ static func fields() -> Dictionary:
 		"flat_penetration": U.num(0.0)}}})
 
 	## @anchor P32
+	# P32 (plan M6-M9 §5.12): the fists have a mesh of their own; the titanforged fists' perk
+	# grab_reach adds grab_reach_add metres to the giant's grab reach (PlayerGrab.grab_reach).
+	(f.visual_shape.enum as Array).append("fists")
+	((((f.perk as Dictionary).fields as Dictionary).kind as Dictionary).enum as Array).append("grab_reach")
+	((f.perk as Dictionary).fields as Dictionary)["grab_reach_add"] = U.pos()
 
 	return f
 
@@ -129,6 +134,8 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		U.require(p31_perk, p31_needs, ctx + ".perk", out, "a %s perk" % str(p31_perk.get("kind", "")))
 
 	## @anchor P32
+	if typeof(p31_perk) == TYPE_DICTIONARY and str(p31_perk.get("kind", "")) == "grab_reach":
+		U.require(p31_perk, ["grab_reach_add"], ctx + ".perk", out, "a grab_reach perk")
 
 
 static func required_ids() -> Dictionary:
