@@ -32,7 +32,11 @@ const float TARGET_REACH_RADII = 0.5;
 const float NEAR_CORE = 0.75;
 const float SAME_CAMERA_M = 0.5;
 
+// The fragment's world position (MODEL_MATRIX holds a MultiMesh instance's transform too).
+varying vec3 world_pos;
+
 void vertex() {
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	if (vertex_color_albedo && !OUTPUT_IS_SRGB) {
 		COLOR.rgb = mix(pow((COLOR.rgb + vec3(0.055)) * (1.0 / (1.0 + 0.055)), vec3(2.4)),
 				COLOR.rgb * (1.0 / 12.92), lessThan(COLOR.rgb, vec3(0.04045)));
@@ -91,7 +95,6 @@ float bayer4(vec2 a) {
 void fragment() {
 	// The eye of this pass: the camera's own pass matches scenery_fade_camera, a shadow pass does not.
 	vec3 eye = INV_VIEW_MATRIX[3].xyz;
-	vec3 world_pos = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	float fade = scenery_fade(world_pos, eye);
 	if (fade > 0.0 && fade >= bayer4(FRAGCOORD.xy) + 1.0 / 32.0) {
 		discard;
