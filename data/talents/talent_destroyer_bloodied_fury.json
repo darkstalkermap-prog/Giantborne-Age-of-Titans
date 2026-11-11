@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.destroyer_bloodied_fury",
+	"type": "talent",
+	"display_name": "Bloodied Fury",
+	"description": "Every foe you fell feeds your fury.",
+	"tree": "destroyer",
+	"tier": 4,
+	"column": 2,
+	"cost": 1,
+	"requires": ["talent.destroyer_juggernaut"],
+	"requires_level": 10,
+	"effects": {"modifiers": {"fury_on_kill_add": 6}, "grants": [], "replaces": {}}
+}

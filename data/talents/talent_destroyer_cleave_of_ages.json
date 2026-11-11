@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.destroyer_cleave_of_ages",
+	"type": "talent",
+	"display_name": "Cleave of Ages",
+	"description": "A great sweeping cleave that splits armour.",
+	"tree": "destroyer",
+	"tier": 4,
+	"column": 1,
+	"cost": 1,
+	"requires": ["talent.destroyer_relentless"],
+	"requires_level": 10,
+	"effects": {"modifiers": {}, "grants": ["ability.cleave_of_ages"], "replaces": {}}
+}

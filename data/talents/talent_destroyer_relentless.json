@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.destroyer_relentless",
+	"type": "talent",
+	"display_name": "Relentless",
+	"description": "You fight on long after others tire: everything you do costs less stamina.",
+	"tree": "destroyer",
+	"tier": 3,
+	"column": 1,
+	"cost": 1,
+	"requires": ["talent.destroyer_shoulder_charge"],
+	"requires_level": 9,
+	"effects": {"modifiers": {"stamina_cost_mult": 0.85}, "grants": [], "replaces": {}}
+}

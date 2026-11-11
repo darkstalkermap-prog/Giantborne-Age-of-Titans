@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.destroyer_juggernaut",
+	"type": "talent",
+	"display_name": "Juggernaut",
+	"description": "Blows that would stagger a lesser giant only rock you.",
+	"tree": "destroyer",
+	"tier": 3,
+	"column": 2,
+	"cost": 1,
+	"requires": ["talent.destroyer_bone_breaker"],
+	"requires_level": 9,
+	"effects": {"modifiers": {"poise_damage_taken_mult": 0.85}, "grants": [], "replaces": {}}
+}

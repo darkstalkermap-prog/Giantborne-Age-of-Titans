@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.primordial_regrowth",
+	"type": "talent",
+	"display_name": "Regrowth",
+	"description": "Your wounds close faster under every healing.",
+	"tree": "primordial",
+	"tier": 4,
+	"column": 2,
+	"cost": 1,
+	"requires": ["talent.primordial_wellspring"],
+	"requires_level": 10,
+	"effects": {"modifiers": {"heal_received_mult": 1.15}, "grants": [], "replaces": {}}
+}

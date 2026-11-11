@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.primordial_quick_runes",
+	"type": "talent",
+	"display_name": "Quick Runes",
+	"description": "Your abilities come back a little sooner.",
+	"tree": "primordial",
+	"tier": 2,
+	"column": 2,
+	"cost": 1,
+	"requires": ["talent.primordial_kindled"],
+	"requires_level": 8,
+	"effects": {"modifiers": {"cooldown_mult": 0.95}, "grants": [], "replaces": {}}
+}

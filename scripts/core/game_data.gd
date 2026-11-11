@@ -224,6 +224,10 @@ func _post_pass() -> void:
 	## @anchor P32
 
 	## @anchor P33
+	# P33 (plan M6-M9 §2.11, §5.12, decision 22): the talent tiers' levels (progression.default), each
+	# talent's tier, column and requirements within its tree, the abilities talents grant and the
+	# ancestries' signatures (granted by exactly one talent or ancestry, in the library).
+	errors.append_array(Talents.data_errors(records, record_paths))
 
 	## @anchor P34
 

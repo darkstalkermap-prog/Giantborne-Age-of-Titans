@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.guardian_tireless",
+	"type": "talent",
+	"display_name": "Tireless",
+	"description": "You spend your strength with care: everything you do costs less stamina.",
+	"tree": "guardian",
+	"tier": 2,
+	"column": 2,
+	"cost": 1,
+	"requires": ["talent.guardian_steady_stance"],
+	"requires_level": 8,
+	"effects": {"modifiers": {"stamina_cost_mult": 0.9}, "grants": [], "replaces": {}}
+}

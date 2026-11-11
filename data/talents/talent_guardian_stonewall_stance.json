@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.guardian_stonewall_stance",
+	"type": "talent",
+	"display_name": "Stonewall Stance",
+	"description": "Become a wall for a few seconds: nothing staggers you.",
+	"tree": "guardian",
+	"tier": 4,
+	"column": 1,
+	"cost": 1,
+	"requires": ["talent.guardian_unyielding"],
+	"requires_level": 10,
+	"effects": {"modifiers": {}, "grants": ["ability.stonewall_stance"], "replaces": {}}
+}

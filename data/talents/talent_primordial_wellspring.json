@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.primordial_wellspring",
+	"type": "talent",
+	"display_name": "Wellspring",
+	"description": "A deeper well of essence.",
+	"tree": "primordial",
+	"tier": 3,
+	"column": 2,
+	"cost": 1,
+	"requires": ["talent.primordial_quick_runes"],
+	"requires_level": 9,
+	"effects": {"modifiers": {"essence_add": 40}, "grants": [], "replaces": {}}
+}

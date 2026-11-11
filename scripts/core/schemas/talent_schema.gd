@@ -34,6 +34,9 @@ static func fields() -> Dictionary:
 			"replaces": {"t": "dict", "values": U.str_field()}}},
 	}
 	## @anchor P33
+	# P33 (plan M6-M9 §5.12): where the talent stands on the Talents tab - column 1 or 2 of tiers 1-4
+	# (each talent needs the one above it in its column, `requires`), 0 for the tier-5 capstone.
+	f.merge({"column": U.int_field(0, 2)})
 
 	return f
 
@@ -54,6 +57,18 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 				out.refs.append({"ctx": "%s.effects.replaces.%s" % [ctx, k], "id": str(effects.replaces[k]),
 					"type": "action"})
 	## @anchor P33
+	# P33: passives last (no periodic heal, no slow: those are statuses'), a multiplier is above 0, and the
+	# capstone (tier 5) stands in column 0, the others in column 1 or 2. Cross-record rules (tiers and
+	# levels, requirements within the tree, grants) are Talents.data_errors' (GameData, anchor P33).
+	if typeof(effects) == TYPE_DICTIONARY:
+		Talents.check_passive_modifiers(effects.get("modifiers"), ctx + ".effects.modifiers", out)
+	var p33_tier: Variant = d.get("tier")
+	var p33_column: Variant = d.get("column")
+	if U.is_number(p33_tier) and U.is_number(p33_column):
+		if int(p33_tier) == 5 and int(p33_column) != 0:
+			out.errors.append("%s.column: a tier-5 capstone stands in column 0 (got %d)" % [ctx, int(p33_column)])
+		elif int(p33_tier) < 5 and int(p33_column) == 0:
+			out.errors.append("%s.column: a tier-%d talent stands in column 1 or 2" % [ctx, int(p33_tier)])
 
 
 static func required_ids() -> Dictionary:

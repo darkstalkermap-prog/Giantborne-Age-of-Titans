@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.primordial_storm_call",
+	"type": "talent",
+	"display_name": "Storm Call",
+	"description": "Call lightning down on the foe you are locked on.",
+	"tree": "primordial",
+	"tier": 4,
+	"column": 1,
+	"cost": 1,
+	"requires": ["talent.primordial_primal_regrowth"],
+	"requires_level": 10,
+	"effects": {"modifiers": {}, "grants": ["ability.storm_call"], "replaces": {}}
+}

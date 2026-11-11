@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.destroyer_bone_breaker",
+	"type": "talent",
+	"display_name": "Bone Breaker",
+	"description": "Every blow you land breaks guards and stances sooner.",
+	"tree": "destroyer",
+	"tier": 2,
+	"column": 2,
+	"cost": 1,
+	"requires": ["talent.destroyer_iron_grip"],
+	"requires_level": 8,
+	"effects": {"modifiers": {"outgoing_poise_mult": 1.1}, "grants": [], "replaces": {}}
+}

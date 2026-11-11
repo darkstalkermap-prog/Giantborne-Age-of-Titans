@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.guardian_mountains_heart",
+	"type": "talent",
+	"display_name": "Mountain's Heart",
+	"description": "The Guardian's crown: a heart as deep as the mountain, and far more health.",
+	"tree": "guardian",
+	"tier": 5,
+	"column": 0,
+	"cost": 2,
+	"requires": ["talent.guardian_stonewall_stance", "talent.guardian_protector"],
+	"requires_level": 12,
+	"effects": {"modifiers": {"health_add": 250}, "grants": [], "replaces": {}}
+}

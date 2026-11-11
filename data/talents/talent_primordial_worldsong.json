@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.primordial_worldsong",
+	"type": "talent",
+	"display_name": "Worldsong",
+	"description": "The Primordial's crown: the world sings through your spells, and your magic strikes harder.",
+	"tree": "primordial",
+	"tier": 5,
+	"column": 0,
+	"cost": 2,
+	"requires": ["talent.primordial_storm_call", "talent.primordial_regrowth"],
+	"requires_level": 12,
+	"effects": {"modifiers": {"magic_damage_mult": 1.15}, "grants": [], "replaces": {}}
+}
