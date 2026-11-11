@@ -12,6 +12,9 @@ extends UiScreen
 ## choice the rebuilt buttons are wired again and the first one takes the focus.
 ## P20: a locked choice (DialogueSession: failing conditions with a locked_text) is a greyed,
 ## disabled button that names its reason - "Swear the peace (Return when you stand at stage 5)".
+## M8 gate (F7): two hooks for screens built on this one - numbered_keys() (false: keys 1-4 do not
+## choose and the buttons carry no numbers) and _wire_choice() (how a button takes its choice);
+## YieldPrompt uses both.
 
 const MAX_KEYED_CHOICES := 4
 
@@ -123,10 +126,10 @@ func _rebuild_choices() -> void:
 		var text := str(c.text)
 		if bool(c.get("locked", false)):
 			text = "%s (%s)" % [text, str(c.get("locked_text", ""))]
-		var b := UiKit.button(choice_label(int(c.index), text), 17)
+		var b := UiKit.button(choice_label(int(c.index), text) if numbered_keys() else text, 17)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.disabled = bool(c.get("locked", false))
-		b.pressed.connect(press_choice.bind(int(c.index)))
+		_wire_choice(b, c)
 		_choices.add_child(b)
 		choice_buttons.append(b)
 	if is_open():
@@ -139,6 +142,18 @@ func _rebuild_choices() -> void:
 ## "1. I'll bring back your stolen supplies." (only the first four are numbered keys).
 static func choice_label(index: int, text: String) -> String:
 	return "%d. %s" % [index + 1, text] if index < MAX_KEYED_CHOICES else text
+
+
+## True when keys 1-4 take the first four choices and the buttons are numbered (M8 gate F7: the
+## yield prompt says false - there 1-4 are the fight's ability keys).
+func numbered_keys() -> bool:
+	return true
+
+
+## Wires one choice button (`c`: an entry of DialogueSession.choices()): a press takes the choice.
+## M8 gate (F7): YieldPrompt takes a deciding choice by a held press instead.
+func _wire_choice(b: Button, c: Dictionary) -> void:
+	b.pressed.connect(press_choice.bind(int(c.index)))
 
 
 ## Takes choice `index` (the buttons, keys 1-4, the bot's screen path): DialogueSession.choose.
@@ -162,7 +177,7 @@ func press_choice(index: int) -> Dictionary:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not is_open() or not (event is InputEventKey):
+	if not is_open() or not (event is InputEventKey) or not numbered_keys():
 		return
 	var k := event as InputEventKey
 	if not k.pressed or k.echo:

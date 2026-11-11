@@ -186,11 +186,11 @@ func test_the_prompt_is_armed_late_and_esc_goes_back() -> void:
 	assert_eq(prompt.choice_buttons.size(), 2, "two choices")
 	assert_true(prompt.choice_buttons[0].disabled, "not armed yet")
 	assert_eq(str(prompt.press_choice(0).get("reason", "")), "not_armed", "an early press is refused")
-	prompt.set("_armed_at_ms", 0)
+	prompt.arm_now()   # M8 gate (F7): the hook that stands for every button let go long enough
 	prompt.press_choice(1)
 	await get_tree().process_frame
 	assert_true(Quests.dialogue.find_choice("strike") >= 0, "on the confirm line")
-	prompt.set("_armed_at_ms", 0)
+	prompt.arm_now()   # M8 gate (F7): the hook that stands for every button let go long enough
 	prompt.cancel()
 	assert_true(Quests.dialogue.find_choice("spare") >= 0, "Esc goes back to the choice")
 	prompt.cancel()
