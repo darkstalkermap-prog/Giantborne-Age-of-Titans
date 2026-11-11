@@ -26,7 +26,8 @@ extends Node3D
 ##     boss starts a new attempt (EnemyActor.p34_reset_attempt: home, full health, its first phase)
 ##     and Events.boss_disengaged(boss, "left") is emitted (the music returns to the zone). Entering
 ##     again engages a new attempt.
-##   * Members of the arena's own encounter (the Matriarch's whelps) are never removed as intruders.
+##   * Members of the arena's own encounter and the boss's brood (the Matriarch's whelps) are never
+##     removed as intruders.
 ##   * A yield's decision (EnemyActor.p34_decide -> p34_on_yield_decided): Spare ends the fight as won
 ##     (the gate opens, the defeated flag, boss_defeated); Strike ends it when the boss dies.
 ##   * The boss's flight (boss_disengaged(boss, "fled"), the Matriarch's drive-out) ends it too: the
@@ -263,8 +264,8 @@ func _remove_intruders() -> void:
 			continue
 		if e.entity_id == boss_id or not e.entity.is_alive() or not in_bounds(e.global_position):
 			continue
-		if d != null and encounter_id != "" and d.members_of(encounter_id).has(e.entity_id):
-			continue   # P34: the arena's own encounter (the Matriarch's whelps) stays
+		if _p34_keeps(e, d):
+			continue   # P34: the arena's own encounter and the boss's brood (the Matriarch's whelps) stay
 		removed_intruders.append(e.entity_id)
 		if d != null and d.member_status(e.entity_id) == EncounterDirector.SPAWNED:
 			d.despawn(e.entity_id)
@@ -305,6 +306,16 @@ func _defeat(tick: int) -> void:
 
 
 # --------------------------------------------------------------------------- P34: attempts and endings
+
+## True for an enemy that belongs to this fight: a member of the arena's own encounter, or of the
+## boss's brood (its record's brood.definition).
+func _p34_keeps(e: EnemyActor, d: EncounterDirector) -> bool:
+	if d != null and encounter_id != "" and d.members_of(encounter_id).has(e.entity_id):
+		return true
+	var b := boss()
+	var brood: Variant = b.record.get("brood") if b != null else null
+	return typeof(brood) == TYPE_DICTIONARY and e.entity.definition_id == str((brood as Dictionary).get("definition", ""))
+
 
 ## The disengage rule (see the class notes): ENGAGED, the giant beyond the radius for disengage_s.
 func _check_disengage(tick: int) -> void:

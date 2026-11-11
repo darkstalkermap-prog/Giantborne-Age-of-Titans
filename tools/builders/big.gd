@@ -20,8 +20,9 @@ extends RefCounted
 ##                                        fire_pits, r 4 m) at the centre, the Matriarch and two whelps,
 ##                                        a BossArena without a gate, titan (16) and large (2) navmeshes.
 ##   scenes/test/moot_test.tscn           the Moot's ring: a 60 m wall of stones with a south entrance,
-##                                        Harrok, two clan watchers outside the ring (rival giants,
-##                                        neutral, AI off: they only watch), a BossArena without a gate,
+##                                        Harrok, two clan watchers outside the ring (rival giants of the
+##                                        neutral faction.test_moot_clans, AI off: they only watch), a
+##                                        BossArena without a gate,
 ##                                        the titan navmesh.
 ##   scenes/test/bailey_test.tscn         a LevelRoot (level.bailey_test): a 120 x 90 m bailey with its
 ##                                        gate to the south, the BattleBoss of battle.iron_regiment over
@@ -584,9 +585,7 @@ static func build_moot_test(kit: SceneKit) -> Node:
 		w.set("ai_enabled", false)
 		w.position = spec[1]
 		w.rotation.y = PI * 0.5 if (spec[1] as Vector3).x > 0.0 else -PI * 0.5
-		var ce := w.get_node("CombatEntity")
-		ce.set("entity_id", spec[0])
-		ce.set("team", 0)   # neutral: the clans watch the duel; they never strike and are never struck
+		w.set("faction", "faction.test_moot_clans")   # neutral: the clans watch the duel and never strike
 		watchers.add_child(w)
 	root.add_child(watchers)
 	_place_player(kit, root, player, MOOT_PLAYER, 0.0)

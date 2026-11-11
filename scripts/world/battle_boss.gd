@@ -7,7 +7,8 @@ extends BossArena
 ##
 ##   * `phases` (export): [{"id", "below": aggregate fraction at which it begins (the first 1.0),
 ##     "encounters": [encounter ids it activates], "name"}] - "The Wall" at engagement, "The Charge" at
-##     60 %, "The Last Stand" at 25 %. A phase begins once per attempt (phase_log): its encounters are
+##     60 %, "The Last Stand" at 25 % (or once every unit of the phases so far has fallen, so a
+##     composition never stalls). A phase begins once per attempt (phase_log): its encounters are
 ##     force-activated (spawning around, never inside, the giant's footprint: the director's P34 rule),
 ##     Events.boss_phase_changed(battle id, phase) sounds the horn and the music layer.
 ##   * The aggregate (aggregate(), the boss bar): the maximum health of every unit the battle's
@@ -101,7 +102,7 @@ func _on_post_resolve(tick: int) -> void:
 func _battle_step(tick: int) -> void:
 	var frac := aggregate_fraction()
 	var next := phase_index + 1
-	while next < phases.size() and frac <= float(phases[next].get("below", 0.0)) + 1e-6:
+	while next < phases.size() and (frac <= float(phases[next].get("below", 0.0)) + 1e-6 or _phase_spent()):
 		_begin_phase(next, tick)
 		next = phase_index + 1
 	if phase_index == phases.size() - 1 and guard_broken():
@@ -122,6 +123,29 @@ func _begin_phase(i: int, tick: int) -> void:
 		d.update_now()
 	if i > 0:
 		Events.boss_phase_changed.emit(tick, battle_id, i + 1)
+
+
+## True when every unit the phases begun so far fielded has fallen (or fled): the next phase begins
+## then whatever the aggregate says, so a composition whose later phases weigh more than a fraction
+## never stalls (the web's smaller formations).
+func _phase_spent() -> bool:
+	var d := _director()
+	if d == null:
+		return false
+	var fielded := 0
+	for i in range(0, phase_index + 1):
+		for enc_id: Variant in phases[i].get("encounters", []):
+			for id: String in d.members_of(str(enc_id)):
+				if not _planned.has(id):
+					continue
+				var st := d.member_status(id)
+				if st == EncounterDirector.UNSPAWNED or st == EncounterDirector.DESPAWNED:
+					return false   # still to come
+				var e := Sim.get_entity(id)
+				if st == EncounterDirector.SPAWNED and e != null and e.is_alive():
+					return false
+				fielded += 1
+	return fielded > 0
 
 
 ## The current phase, 1-based (0 before engagement), and how many there are (the bar's pips).

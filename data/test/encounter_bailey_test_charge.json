@@ -14,7 +14,7 @@
 	"counts_toward_budget": true,
 	"id": "encounter.bailey_test_charge",
 	"display_name": "Test bailey: the charge",
-	"description": "P34: phase 2 of the bailey's battle - a cavalry pair from the stables in the north-east corner.",
+	"description": "P34: phase 2 of the bailey's battle - four cavalry from the stables in the north-east corner, charging in pairs.",
 	"center_m": [
 		40,
 		0,
@@ -25,7 +25,7 @@
 			"entity_id": "test.bailey.rider_1",
 			"definition": "enemy.cavalry",
 			"position_m": [
-				38,
+				36,
 				0,
 				-32
 			],
@@ -41,7 +41,39 @@
 			"entity_id": "test.bailey.rider_2",
 			"definition": "enemy.cavalry",
 			"position_m": [
-				44,
+				40,
+				0,
+				-32
+			],
+			"yaw_deg": 210,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "test.bailey.rider_3",
+			"definition": "enemy.cavalry",
+			"position_m": [
+				36,
+				0,
+				-28
+			],
+			"yaw_deg": 210,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "test.bailey.rider_4",
+			"definition": "enemy.cavalry",
+			"position_m": [
+				40,
 				0,
 				-28
 			],

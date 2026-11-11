@@ -14,7 +14,7 @@
 	"counts_toward_budget": true,
 	"id": "encounter.bailey_test_stand",
 	"display_name": "Test bailey: the last stand",
-	"description": "P34: phase 3 of the bailey's battle - Warlord Corvane on the keep's steps (z -38) behind his guard: four iron guards in a shield formation without a banner (his guard breaks when it routs or falls).",
+	"description": "P34: phase 3 of the bailey's battle - Warlord Corvane on the keep's steps (z -38) behind his guard: two iron guards in a shield formation without a banner (his guard breaks when it routs or falls).",
 	"center_m": [
 		0,
 		0,
@@ -25,7 +25,7 @@
 			"id": "guard",
 			"kind": "shield",
 			"ranks": 1,
-			"files": 4,
+			"files": 2,
 			"rank_spacing_m": 1.4,
 			"file_spacing_m": 1.2,
 			"facing": "threat",
@@ -42,7 +42,7 @@
 			"entity_id": "test.bailey.guard_1",
 			"definition": "enemy.iron_guard",
 			"position_m": [
-				-1.8,
+				-0.6,
 				0,
 				-34.0
 			],
@@ -60,7 +60,7 @@
 			"entity_id": "test.bailey.guard_2",
 			"definition": "enemy.iron_guard",
 			"position_m": [
-				-0.6000000000000001,
+				0.6,
 				0,
 				-34.0
 			],
@@ -73,42 +73,6 @@
 			"loot_table": "",
 			"formation": "guard",
 			"slot": 1
-		},
-		{
-			"entity_id": "test.bailey.guard_3",
-			"definition": "enemy.iron_guard",
-			"position_m": [
-				0.5999999999999999,
-				0,
-				-34.0
-			],
-			"yaw_deg": 180,
-			"patrol": "",
-			"faction": "",
-			"commander": false,
-			"ai_enabled": true,
-			"persist_death": false,
-			"loot_table": "",
-			"formation": "guard",
-			"slot": 2
-		},
-		{
-			"entity_id": "test.bailey.guard_4",
-			"definition": "enemy.iron_guard",
-			"position_m": [
-				1.7999999999999996,
-				0,
-				-34.0
-			],
-			"yaw_deg": 180,
-			"patrol": "",
-			"faction": "",
-			"commander": false,
-			"ai_enabled": true,
-			"persist_death": false,
-			"loot_table": "",
-			"formation": "guard",
-			"slot": 3
 		},
 		{
 			"entity_id": "test.bailey.corvane",

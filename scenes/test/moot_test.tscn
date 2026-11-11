@@ -764,6 +764,7 @@ collision_mask = 51
 script = ExtResource("5_78029")
 entity_id = "test.moot.watcher_1"
 ai_enabled = false
+faction = "faction.test_moot_clans"
 
 [node name="test_moot_watcher_2" type="CharacterBody3D" parent="Watchers" instance=ExtResource("6_3bec1")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 80, 0.05, -20)
@@ -772,6 +773,7 @@ collision_mask = 51
 script = ExtResource("5_78029")
 entity_id = "test.moot.watcher_2"
 ai_enabled = false
+faction = "faction.test_moot_clans"
 
 [node name="Spawns" type="Node3D" parent="."]
 

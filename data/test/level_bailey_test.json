@@ -3,7 +3,7 @@
 	"id": "level.bailey_test",
 	"type": "level",
 	"display_name": "Bailey test level",
-	"description": "P34: a battle as one boss on a walled 120 x 90 m bailey (z -45 to 45) with its gate to the south - the BattleBoss of battle.iron_regiment over three encounters: the wall (a shield formation of eight and its banner), the charge (a cavalry pair) and the last stand (Corvane and four iron guards in a shield formation). The encounters wait for test.bailey.manual (never set): the BattleBoss activates them phase by phase.",
+	"description": "P34: a battle as one boss on a walled 120 x 90 m bailey (z -45 to 45) with its gate to the south - the BattleBoss of battle.iron_regiment over three encounters: the wall (a shield formation of twelve and its banner), the charge (four cavalry) and the last stand (Corvane and two iron guards in a shield formation). The encounters wait for test.bailey.manual (never set): the BattleBoss activates them phase by phase.",
 	"scene": "res://scenes/test/bailey_test.tscn",
 	"start_checkpoint": "test.bailey.cp_start",
 	"max_active_enemies": 16,
