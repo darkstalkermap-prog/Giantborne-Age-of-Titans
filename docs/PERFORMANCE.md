@@ -1109,6 +1109,19 @@ Chromium, SwiftShader, the world's default 397 m route across four region border
 loads, 3 unloads, no thrash, 224.1 m of margin; draw calls p50 38, max 54; page frames p50 266.7, p99
 400.0 ms (software WebGL, indicative); Play to the walk 45.0 s.
 
+**The lane's suites** ("M8 screenshot pass" in `docs/systems/P25.md`, `P26.md`, `P27.md`, `P32.md`,
+`P34.md` and the others it names). In the default tier: `test_scenery_fade` (new; V1: 110 checks,
+0.11 s), V2's test in `test_hud_layout` (0.40 s in all), V3's in `test_battle_boss` (0.41 s in all) and
+`test_cavalry` (0.10 s in all). In the slow tier: `test_tree_fade_world` (new; V1: four places on the
+real world and the Valley, 38 checks, 4.2 s) and `test_world_cavalry` (new; V3: Fort Aldmere's Charge and
+the war camp on the real world, 19 checks, 10.6 s). No gate suite changed; `test_bosses_seeded`,
+`test_iron_regiment_world` and `test_world_events_real` pass with the battle's alert and the riders'
+leash. `tools/check.sh --slow --gate --only=valley,world` on the lane's code (09377c3, 13.9 minutes): the
+valley and world builders wrote the same bytes as the committed outputs, the seam check passed (64
+chunks, 112 seams), 270 suites and 46,249 checks with 0 failures - default 64.1 s (budget 75 s), slow
+253.4 s (8 minutes), gate 439.0 s (50 minutes) - and the 120 s autoplay had 0 errors (2 fences broken, 2
+loot awards, the debris pool at 10).
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
