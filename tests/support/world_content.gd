@@ -86,5 +86,31 @@ static func written_flags() -> Dictionary:
 		var rec := GameData.get_record(str(site.call("record_of", el)))
 		for f: Variant in (rec.get("on_destroyed_flags", {}) as Dictionary):
 			w[str(f)] = true
+	w.merge(p36_written_flags())
 	_flags = w
+	return w
+
+
+## P36: the flags the Aldmere March's and the Stonehold's runtime writes besides the records - the arenas'
+## (FortBattle and MootArena: the boss's defeated flag and settled outcome, the fort opened, the Moot
+## emptied), the Stone Throne's claim, the longhouses' rebuilt flags (RebuildPoint) and every world event's
+## (WorldEvent: <id>.runs, .done, .outcome and its outcomes' set_flags).
+static func p36_written_flags() -> Dictionary:
+	var w := {}
+	for el: Dictionary in elements_of("arena"):
+		for key: String in ["defeated_flag", "settled_flag", "open_flag", "empty_flag"]:
+			if str(el.get(key, "")) != "":
+				w[str(el[key])] = true
+	for el: Dictionary in elements_of("throne"):
+		w[str(el.get("claim_flag", "world.throne.claimed"))] = true
+	for el: Dictionary in elements_of("longhouse"):
+		if str(el.get("rebuilt_flag", "")) != "":
+			w[str(el.rebuilt_flag)] = true
+	for rec: Dictionary in GameData.records_of_type("world_event"):
+		for key: String in ["runs", "done", "outcome"]:
+			w[WorldEvent.flag(str(rec.id), key)] = true
+		for o: Variant in (rec.get("outcomes", {}) as Dictionary).values():
+			if typeof(o) == TYPE_DICTIONARY:
+				for f: Variant in (o.get("set_flags", {}) as Dictionary):
+					w[str(f)] = true
 	return w

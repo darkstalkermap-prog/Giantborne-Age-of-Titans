@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "wander.aldmere",
+	"type": "wander_table",
+	"display_name": "The Aldmere March's roads",
+	"description": "P36 (plan M6-M9 §2.13, §5.10, decision 27): who walks the Aldmere March's roads while the giant is there - at most two at once, one every 60-120 s, 120-220 m away, out of view, on a road node. Each entry's members pay kill XP for its first three spawns only. Aldmere's pike columns and cavalry squadrons (stage 4 and up) are neutral while the kingdom is at peace and stop after the crown's parley or a spared Corvane; the sabotage road thins them (no cavalry once the army withdrew); with Corvane struck down his garrison's remnants roam instead. The plan's siege train (stage 5; 2 catapults with crews) waits for engines that can travel with a copy (P32's engines are placed props; docs/systems/P36.md).",
+	"region": "region.aldmere",
+	"max_active": 2,
+	"interval_s": [60, 120],
+	"min_distance_m": 120,
+	"max_distance_m": 220,
+	"anchors": "roads",
+	"xp_full_spawns": 3,
+	"patrol_m": 40,
+	"entries": [
+		{"id": "pike_column", "weight": 3, "min_stage": 4, "max_stage": 10, "template": "encounter.tpl_aldmere_pike_column", "conditions": [{"type": "not", "of": {"type": "flag", "flag": "oath.crown.outcome", "equals": "parley"}}, {"type": "not", "of": {"type": "flag", "flag": "boss.corvane.outcome", "equals": "spared"}}, {"type": "not", "of": {"type": "flag", "flag": "boss.corvane.outcome", "equals": "slain"}}]},
+		{"id": "cavalry_squadron", "weight": 2, "min_stage": 4, "max_stage": 10, "template": "encounter.tpl_aldmere_cavalry_squadron", "forbids_flags": ["world.aldmere.army_withdrawn"], "conditions": [{"type": "not", "of": {"type": "flag", "flag": "oath.crown.outcome", "equals": "parley"}}, {"type": "not", "of": {"type": "flag", "flag": "boss.corvane.outcome", "equals": "spared"}}, {"type": "not", "of": {"type": "flag", "flag": "boss.corvane.outcome", "equals": "slain"}}]},
+		{"id": "remnants", "weight": 3, "template": "encounter.tpl_aldmere_remnants", "conditions": [{"type": "flag", "flag": "boss.corvane.outcome", "equals": "slain"}]}
+	]
+}

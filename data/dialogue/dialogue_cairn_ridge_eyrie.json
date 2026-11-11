@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.cairn_ridge_eyrie",
+	"type": "dialogue",
+	"speaker": "Old Kings' Cairn",
+	"description": "An Old Kings' cairn on the ridge eyrie's spire (plan M6-M9 §5.4: poi.ridge_eyrie, a sealed place out of reach below stage 6; P36): reading it once gives one attribute point (once-flag reward.cairn.ridge_eyrie).",
+	"entries": [
+		{"node": "read", "conditions": [{"type": "flag", "flag": "reward.cairn.ridge_eyrie"}]},
+		{"node": "cairn", "conditions": []}
+	],
+	"nodes": [
+		{"id": "cairn", "text": "A cairn on the spire's top, where only the tallest can reach. 'The kings watched the road from here, and the road never saw them.'", "choices": [{"text": "[Lay a hand on the stones] (+1 attribute point)", "next": "", "effects": {"attribute_points": 1, "once_flag": "reward.cairn.ridge_eyrie"}}, {"text": "Leave the stones be.", "next": ""}]},
+		{"id": "read", "text": "An Old Kings' cairn. Its strength is already in you.", "choices": [{"text": "[Leave]", "next": ""}]}
+	]
+}

@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.ulfra",
+	"type": "dialogue",
+	"speaker": "Ulfra of Skarn",
+	"description": "P36 (plan M6-M9 §5.4, §5.7, §5.9, §5.10): Ulfra, chief of Skarn Steading. Her plea (stage 5) starts the siege of Skarn (world.skarn.plea_accepted: event.siege_of_skarn's condition; a stage-6 giant arriving at Skarn starts it too). Saved, Skarn gives its support (world.skarn.support, the event's saved flags) and its hearth-forge; burned, she asks for the roof beams to be raised (quest.skarn_rebuild, stage 6). Offended (faction.skarn hostile), she only takes 2 iron for the harm (outcome reconcile_skarn: FactionState reconciles the steading). A Stoneblood giant hears a line of her own.",
+	"entries": [
+		{"node": "angry", "conditions": [{"type": "flag", "flag": "faction.skarn.hostile"}, {"type": "not", "of": {"type": "flag", "flag": "faction.skarn.reconciled"}}]},
+		{"node": "friend_saved", "conditions": [{"type": "flag", "flag": "world.skarn.saved"}]},
+		{"node": "friend_rebuilt", "conditions": [{"type": "flag", "flag": "world.skarn.rebuilt"}]},
+		{"node": "burned", "conditions": [{"type": "flag", "flag": "world.skarn.burned"}]},
+		{"node": "siege", "conditions": [{"type": "flag", "flag": "event.siege_of_skarn.runs"}]},
+		{"node": "waiting", "conditions": [{"type": "flag", "flag": "world.skarn.plea_accepted"}]},
+		{"node": "greet", "conditions": []}
+	],
+	"nodes": [
+		{"id": "greet", "text": "A giant out of the lowlands... Sit, if the bench will hold you. I am Ulfra, chief of Skarn. We have trouble coming: the toll-riders - Aldmere's hired siege company - mean to burn Skarn out with their engines, because we would not bar the Moot to rival giants as Harrok's clan does.", "choices": [{"text": "I will stand with Skarn. Let them come.", "next": "plea_yes", "conditions": [{"type": "stage_at_least", "stage": 5}], "locked_text": "Return when you stand at stage 5 - a smaller giant cannot break a siege line", "effects": {"set_flags": {"world.skarn.plea_accepted": true}, "outcome": "plea"}}, {"text": "[Stoneblood] The old kings' stone is in my blood, chief.", "next": "stoneblood", "conditions": [{"type": "ancestry_is", "ancestry": "ancestry.stoneblood"}], "locked_text": "Only a Stoneblood giant can say this"}, {"text": "Not now.", "next": ""}]},
+		{"id": "stoneblood", "text": "Stoneblood! Then you are kin to the kings who raised the Moot's stones. Skarn would be proud to stand behind you when the clans gather - if Skarn still stands.", "choices": [{"text": "I will stand with Skarn. Let them come.", "next": "plea_yes", "conditions": [{"type": "stage_at_least", "stage": 5}], "locked_text": "Return when you stand at stage 5 - a smaller giant cannot break a siege line", "effects": {"set_flags": {"world.skarn.plea_accepted": true}, "outcome": "plea"}}, {"text": "Not now.", "next": ""}]},
+		{"id": "plea_yes", "text": "Then stand on our green when they come. Their siege line sets up east of the steading: break its engines - smash them, or tear them up and throw them if you are tall enough - before two of our halls burn. While you are far from Skarn their engines hold their fire; they start again when you come back.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "waiting", "text": "The toll-riders' siege line is coming up from the east. Stand on our green, and break their engines before our halls burn.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "siege", "text": "The engines! Break them, giant, before our halls burn!", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "burned", "text": "They burned Skarn... Two of our halls are ash. If you would still help us, lift the roof beams back onto our longhouses - only a giant of the old height, stage 6, can raise them. Then Skarn will stand with you again.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "friend_saved", "text": "Skarn stands because of you. Our hearth-forge is yours, and when the clans gather at the Moot, Skarn will stand at your back.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "friend_rebuilt", "text": "Our halls stand again, raised by your hands. Skarn will stand at your back at the Moot.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "angry", "text": "You struck Skarn's hall! Pay for the harm you did, giant - or get out of my steading.", "choices": [{"text": "Pay for the harm. (2 iron)", "next": "reconciled", "conditions": [{"type": "has_item", "item": "item.iron_ingot", "count": 2}], "locked_text": "You need 2 iron", "effects": {"take_items": [{"item": "item.iron_ingot", "count": 2}], "outcome": "reconcile_skarn"}}, {"text": "Leave.", "next": ""}]},
+		{"id": "reconciled", "text": "...It is paid. Skarn's hall is open to you again.", "choices": [{"text": "[Leave]", "next": ""}]}
+	]
+}

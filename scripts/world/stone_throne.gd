@@ -79,9 +79,10 @@ func _on_flag_changed(_tick: int, flag_id: String, value: Variant) -> void:
 
 
 ## The end screen's arguments for the campaign: Quests.end_summary() (time, deaths, level, stage) with
-## "campaign" true and the outcomes (EndScreen.campaign_lines reads the rest live).
+## "campaign" true and the outcomes of the oaths, Skarn and the champion (EndScreen.campaign_summary).
 static func campaign_summary() -> Dictionary:
 	var out: Dictionary = Quests.end_summary()
+	out.merge(EndScreen.campaign_summary(WorldState.flags), true)
 	out["campaign"] = true
 	out["outcome"] = ""
 	return out

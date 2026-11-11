@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_stonehold_rival_scout",
+	"type": "encounter",
+	"display_name": "Rival giant scout",
+	"description": "P36 (plan M6-M9 §2.13, §5.10): a wander template of wander.stonehold's rival_scout entry (stage 5 and up): a rival giant scout of the clans and two dire wolves, hostile. Its centre is nominal.",
+	"template": true,
+	"level": "level.world",
+	"center_m": [300, 81.7, -668],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.stonehold.wander_scout", "definition": "enemy.rival_giant", "position_m": [300, 81.7, -668], "yaw_deg": 0, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.stonehold.wander_scout_wolf_1", "definition": "enemy.dire_wolf", "position_m": [292, 81.56, -662], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.stonehold.wander_scout_wolf_2", "definition": "enemy.dire_wolf", "position_m": [308, 81.54, -662], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

@@ -136,9 +136,10 @@ func test_every_crownmarch_quest_stage_can_complete_and_reads_written_flags() ->
 			for m: String in Quests.stage_markers(s):
 				var idx := WorldIndex.for_level("level.valley" if m.begins_with("valley.") else LEVEL)
 				assert_true(idx != null and idx.position_of(m).is_finite(), "%s: marker %s is in its level's index" % [where, m])
-	# M7: only Brannock's oath ships, so the oaths stage (two of three) waits for P35's and P36's.
-	assert_eq(later.keys().map(func(f: String) -> String: return f.get_slice(".", 1)), ["wood", "crown"],
-		"only the wood's and the crown's oaths are read before they ship (%s)" % [later])
+	# M7: only Brannock's oath shipped, so the oaths stage (two of three) waited for P35's and P36's; P36 ships
+	# the crown's - any oath read before it ships is one of the M8 packages' (the wood's until P35 merges).
+	for key: String in later.keys().map(func(f: String) -> String: return f.get_slice(".", 1)):
+		assert_true(key in ["wood", "crown"], "only the wood's and the crown's oaths are read before they ship (%s)" % [later])
 
 
 func test_the_oaths_stage_leads_to_the_three_powers_and_the_march_opens_at_stage_4() -> void:

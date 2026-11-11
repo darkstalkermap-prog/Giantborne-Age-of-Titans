@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "faction.skarn",
+	"type": "faction",
+	"display_name": "Skarn",
+	"description": "P36 (plan M6-M9 §5.4, §5.7, §5.9, §5.10): Skarn Steading - Ulfra and the giants of her steading (members carry faction \"skarn\"; its three longhouses carry it on their nodes). Friendly and at peace: its giants watch and talk and never fight (their AI is off). Damage the giant does to Skarn's longhouses or its folk is an offence: two within 30 s turn the steading against the giant - Ulfra then only takes 2 iron for the harm (outcome reconcile_skarn). The siege of Skarn (event.siege_of_skarn) is the toll-riders' doing, not Skarn's quarrel with the giant.",
+	"flag_prefix": "faction.skarn",
+	"initial": "neutral",
+	"offences_to_hostile": 2,
+	"offence_window_s": 30,
+	"civilians_give_way": false,
+	"give_way_m": 3.0,
+	"reconcile": {"talker": "world.stonehold.ulfra", "cost": [{"item": "item.iron_ingot", "count": 2}], "text": "Pay for the harm you did to Skarn (2 iron)"},
+	"warn_text": "Skarn's giants rise from their benches. Strike their hall again and the steading turns from you.",
+	"hostile_text": "Skarn's horn sounds: the steading turns from you.",
+	"stood_down_text": "Skarn's giants sit down again.",
+	"reconciled_text": "Ulfra takes your iron: Skarn's hall is open to you again."
+}

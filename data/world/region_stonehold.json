@@ -12,6 +12,5 @@
 	"discover_xp": 50,
 	"map_tint": [0.6, 0.58, 0.54],
 	"fog_color": [0.64, 0.66, 0.7],
-	"skyline_tint": [0.4, 0.39, 0.36],
-	"m7_note": "The clans, Ulfra, Harrok and the Moot come with the next build."
+	"skyline_tint": [0.4, 0.39, 0.36]
 }

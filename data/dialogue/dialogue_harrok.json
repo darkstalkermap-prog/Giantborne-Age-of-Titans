@@ -1,0 +1,25 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.harrok",
+	"type": "dialogue",
+	"speaker": "Harrok the Unbowed",
+	"description": "P36 (plan M6-M9 §5.7 the champion stage, §5.9, §5.13 boss 3): Harrok answers from the Moot's ring at the challenge stone outside its gate (world.stonehold.moot_challenge). To a giant below stage 6 he sends it away (the Moot's size gate). Otherwise he names the duel: stepping into the ring (world.area.moot_engage) begins it (MootArena); Wildheart's challenge shortens it (his record's challenge_poise_breaks). The talk ending: a stage-6 giant to whom all three powers have sworn and whom Skarn supports (saved or rebuilt) can bid him kneel - boss.harrok.outcome yielded_talk: no fight, the clan reconciled, the clans attend the crowning.",
+	"entries": [
+		{"node": "knelt", "conditions": [{"type": "flag", "flag": "boss.harrok.outcome", "equals": "yielded_talk"}]},
+		{"node": "spared", "conditions": [{"type": "flag", "flag": "boss.harrok.outcome", "equals": "spared"}]},
+		{"node": "empty", "conditions": [{"type": "flag", "flag": "boss.harrok.outcome", "equals": "slain"}]},
+		{"node": "small", "conditions": [{"type": "not", "of": {"type": "stage_at_least", "stage": 6}}]},
+		{"node": "talk", "conditions": [{"type": "stage_at_least", "stage": 6}, {"type": "count", "n": 3, "of": [{"type": "flag", "flag": "oath.march.done"}, {"type": "flag", "flag": "oath.wood.done"}, {"type": "flag", "flag": "oath.crown.done"}]}, {"type": "flag", "flag": "world.skarn.support"}]},
+		{"node": "challenge", "conditions": []}
+	],
+	"nodes": [
+		{"id": "small", "text": "Go home, little giant. The Moot admits only a giant of the old height - come back when you stand at stage 6, and we will see.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "challenge", "text": "So you would be king of the giants? I am Harrok the Unbowed, champion of the clans. Step into the ring, rival, and we will see whose blood the stones remember. Break me and I kneel - and then you choose whether I rise again.", "choices": [{"text": "I accept. Ready yourself, Harrok.", "next": ""}, {"text": "[Wildheart] I'll take you the old way, with tooth and fury.", "next": "wild", "conditions": [{"type": "ancestry_is", "ancestry": "ancestry.wildheart"}], "locked_text": "Only a Wildheart giant can make this challenge"}, {"text": "Not yet.", "next": ""}]},
+		{"id": "wild", "text": "Ha! A Wildheart. Then the stones will judge us quickly - I kneel at the second time you break my guard, not the third. Into the ring!", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "talk", "text": "Every power of the old kingdom has sworn to you - the March, the Greywood and the crown - and Skarn stands at your back. Even I can count, rival. What would you have of me?", "choices": [{"text": "Kneel, Harrok, and let the clans crown me without blood.", "next": "knelt_now", "conditions": [{"type": "stage_at_least", "stage": 6}, {"type": "count", "n": 3, "of": [{"type": "flag", "flag": "oath.march.done"}, {"type": "flag", "flag": "oath.wood.done"}, {"type": "flag", "flag": "oath.crown.done"}]}, {"type": "flag", "flag": "world.skarn.support"}], "locked_text": "The clans will not hear it yet", "effects": {"set_flags": {"boss.harrok.outcome": "yielded_talk"}, "outcome": "yielded_talk"}}, {"text": "We fight. Into the ring.", "next": ""}]},
+		{"id": "knelt_now", "text": "Harrok drives his axe into the earth and kneels. \"The Moot is yours. Take the Stone Throne, king of giants.\"", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "knelt", "text": "Harrok kneels by the ring's gate. \"The Moot is yours. Take the Stone Throne.\"", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "spared", "text": "You broke me and let me rise. The clans will crown you - take the Stone Throne.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "empty", "text": "The challenge stone is silent. Harrok is dead, and the clans have left the Moot.", "choices": [{"text": "[Leave]", "next": ""}]}
+	]
+}

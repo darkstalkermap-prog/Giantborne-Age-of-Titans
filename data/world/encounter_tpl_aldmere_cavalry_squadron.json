@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_aldmere_cavalry_squadron",
+	"type": "encounter",
+	"display_name": "Aldmere cavalry squadron",
+	"description": "P36 (plan M6-M9 §2.13, §5.10): a wander template of wander.aldmere's cavalry_squadron entry (stage 4 and up): four of Aldmere's riders (faction aldmere: neutral while the kingdom is at peace, harassing a giant it is at war with). Gone after the parley or a spared Corvane, and after the army withdrew (the sabotage road thins the patrols). Its centre is nominal.",
+	"template": true,
+	"level": "level.world",
+	"center_m": [545, 25.24, 232],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.aldmere.wander_rider_1", "definition": "enemy.cavalry", "position_m": [539, 25.78, 229], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.aldmere.wander_rider_2", "definition": "enemy.cavalry", "position_m": [545, 25.56, 229], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.aldmere.wander_rider_3", "definition": "enemy.cavalry", "position_m": [551, 25.39, 229], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.aldmere.wander_rider_4", "definition": "enemy.cavalry", "position_m": [545, 24.86, 235], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

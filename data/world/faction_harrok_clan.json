@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "faction.harrok_clan",
+	"type": "faction",
+	"display_name": "Harrok's clan",
+	"description": "P36 (plan M6-M9 §5.4, §5.9, §5.13): the giants of Harrok the Unbowed's clan at Harrok's Hall (members carry faction \"harrok_clan\"). Hostile to a rival giant until the champion's duel at the Moot is settled: a spared Harrok - or the talk ending, where he kneels without a fight - reconciles the clan (MootArena: FactionState.reconcile), and its giants stand down; a slain Harrok leaves it hostile for good (its giants wander the highlands: wander.stonehold's clan_giants).",
+	"flag_prefix": "faction.harrok_clan",
+	"initial": "hostile",
+	"offences_to_hostile": 1,
+	"offence_window_s": 30,
+	"civilians_give_way": false,
+	"give_way_m": 3.0,
+	"warn_text": "Harrok's clan bares its teeth.",
+	"hostile_text": "Harrok's clan roars a challenge.",
+	"stood_down_text": "Harrok's clan lowers its axes.",
+	"reconciled_text": "Harrok's clan honours your victory: its giants let you pass."
+}

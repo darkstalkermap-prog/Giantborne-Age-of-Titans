@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.corvane",
+	"type": "dialogue",
+	"speaker": "Warlord Corvane",
+	"description": "P36 (plan M6-M9 §5.7, §5.9, §5.13): Warlord Corvane answers the parley horn at Fort Aldmere's gate (world.aldmere.fort_parley). Once the herald has accepted a token (oath.crown.parley_accepted) he swears the peace: the crown's oath by parley (oath.crown.outcome parley; quest.oath_crown's resolve stage pays its 750 XP and the oath's reward), Aldmere allied and reconciled, the fort opened (its gate swings open: world.aldmere.fort_open) and its forge with it, the crown's flags struck at the toll fort. Without the herald's word he sends the giant back to her; with the gate broken he calls it into the bailey to meet the Iron Regiment (the breach path); after the battle he speaks as the outcome left him.",
+	"entries": [
+		{"node": "sworn", "conditions": [{"type": "flag", "flag": "oath.crown.outcome", "equals": "parley"}]},
+		{"node": "spared", "conditions": [{"type": "flag", "flag": "boss.corvane.outcome", "equals": "spared"}]},
+		{"node": "silent", "conditions": [{"type": "flag", "flag": "boss.corvane.outcome", "equals": "slain"}]},
+		{"node": "breached", "conditions": [{"type": "destroyed", "world_id": "world.aldmere.fort_gate"}]},
+		{"node": "sworn_other", "conditions": [{"type": "flag", "flag": "oath.crown.done"}]},
+		{"node": "parley", "conditions": [{"type": "flag", "flag": "oath.crown.parley_accepted"}]},
+		{"node": "war", "conditions": [{"type": "flag", "flag": "faction.aldmere.hostile"}, {"type": "not", "of": {"type": "flag", "flag": "faction.aldmere.reconciled"}}]},
+		{"node": "greet", "conditions": []}
+	],
+	"nodes": [
+		{"id": "greet", "text": "Who sounds the horn at Fort Aldmere? ...A giant. The herald has sent me no word of you. Go back to the war camp and speak with Herald Maelis - or break my gate, and the Iron Regiment will meet you in the bailey.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "parley", "text": "So the herald's rider spoke true. I am Corvane, warlord of Aldmere. You come with a token the crown can trust... Swear that you will leave the kingdom's people in peace, and Aldmere will swear its oath to you and open this fort to you.", "choices": [{"text": "I swear it. Peace between the giant and the crown.", "next": "sworn_now", "conditions": [{"type": "flag", "flag": "oath.crown.parley_accepted"}], "effects": {"set_flags": {"oath.crown.met": true, "oath.crown.done": true, "oath.crown.outcome": "parley", "faction.aldmere.allied": true, "faction.aldmere.reconciled": true, "world.aldmere.fort_open": true, "world.aldmere.flags_struck": true}, "outcome": "parley"}}, {"text": "Not yet.", "next": ""}]},
+		{"id": "sworn_now", "text": "Then it is sworn. Open the gate! ...The fort is yours to walk in, giant, and its forge will work your iron. I will send riders to strike the crown's flags at the toll fort.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "sworn", "text": "Aldmere keeps its oath. The fort's gate stands open to you, and its forge works for you.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "sworn_other", "text": "The crown has sworn its oath to you already, giant. There is nothing left to parley over.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "war", "text": "Aldmere is at war with you, giant. If you want this fort, break its gate - or go back to the herald and make your peace.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "breached", "text": "You broke my gate. Then come into the bailey, giant - the Iron Regiment is waiting for you.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "spared", "text": "You spared me and my men when you could have crushed us. Aldmere keeps its word: the fort's gate stands open to you and its forge is yours.", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "silent", "text": "No one answers the horn. Corvane is dead, and the fort's garrison has fled its walls.", "choices": [{"text": "[Leave]", "next": ""}]}
+	]
+}
