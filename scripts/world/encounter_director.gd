@@ -177,6 +177,7 @@ func _ready() -> void:
 	level = _find_level()
 	reload_encounters()
 	_p29_ready()   # P29: stand-downs, provocation, talkers on greens, the respawn blocker
+	_p32_ready()   # P32: an encounter's engines take their crews
 
 
 # --------------------------------------------------------------------------- public API
@@ -1466,6 +1467,46 @@ func _p30_debug_lines() -> PackedStringArray:
 	return out
 
 ## @anchor P32
+# --- siege engines take their crews (P32) ------------------------------------------------------------
+# Plan M6-M9 §2.10, §3.16. Hook line: _ready (_p32_ready). An encounter's `engines` list names, for each
+# siege engine (a SiegeEngine prop of the level, by its world id), the spawns of the encounter that
+# serve it. When such a crew member spawns, the engine takes it (SiegeEngine.add_crew: the member's
+# place beside the engine, its crew rules in EnemyBrain's P32 section); an engine that is not in the
+# tree (another chunk, or none by that id) takes none - the crew member runs after
+# EnemyBrain.CREW_WAIT_S - and a broken engine takes a crew member only to send it running.
+
+
+func _p32_ready() -> void:
+	if not member_spawned.is_connected(_p32_on_member_spawned):
+		member_spawned.connect(_p32_on_member_spawned)
+
+
+## The engine `entity_id` serves in encounter `encounter_id` ("" when it serves none).
+func p32_engine_of(encounter_id: String, entity_id: String) -> String:
+	var enc: Encounter = _encounters.get(encounter_id)
+	if enc == null:
+		return ""
+	for entry: Variant in enc.record.get("engines", []):
+		if typeof(entry) == TYPE_DICTIONARY and (entry.get("crew", []) as Array).has(entity_id):
+			return str(entry.get("engine", ""))
+	return ""
+
+
+## The placed siege engine with world id `world_id` (in the tree), else null.
+func p32_engine(world_id: String) -> SiegeEngine:
+	if world_id == "" or not is_inside_tree():
+		return null
+	for n in get_tree().get_nodes_in_group(SiegeEngine.GROUP):
+		var e := n as SiegeEngine
+		if e != null and e.world_id == world_id and e.is_inside_tree():
+			return e
+	return null
+
+
+func _p32_on_member_spawned(encounter_id: String, entity_id: String, node: Node3D) -> void:
+	var engine := p32_engine(p32_engine_of(encounter_id, entity_id))
+	if engine != null and node != null and is_instance_valid(node):
+		engine.add_crew(node)
 
 ## @anchor P34
 

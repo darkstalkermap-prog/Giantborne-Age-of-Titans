@@ -16,6 +16,9 @@ extends RefCounted
 ## tiers of needles toward the far end, hidden in first person like the tree's canopy, and carried
 ## raised like the tree). A titanforged weapon (id ending in "_titan") gets dark titan-iron bands with
 ## a glowing rune line.
+##
+## P32 (plan M6-M9 §5.12): fists (the Stoneknuckles: a stone-studded bracer along the forearm and a
+## banded fist at the far end - the sweep runs from the elbow to the knuckles).
 
 const NODE_NAME := "Weapon"
 const FP_HIDDEN_LAYER := 2
@@ -32,6 +35,7 @@ const COLORS := {
 	"needles": [Color(0.16, 0.30, 0.17), 0.95, 0.0],   # P31: the great pine
 	"titan": [Color(0.20, 0.22, 0.27), 0.4, 0.75],     # P31: titan iron
 	"rune": [Color(0.55, 0.85, 1.0), 0.3, 0.0],        # P31: the titanforged rune line (glows)
+	"stone": [Color(0.50, 0.49, 0.46), 0.95, 0.0],     # P32: the fists' studs
 }
 
 static var _materials := {}
@@ -72,6 +76,8 @@ static func build(rec: Dictionary) -> Node3D:
 			_axe(root, length)   # P31
 		"pine":
 			_pine(root, length)   # P31
+		"fists":
+			_fists(root, length)   # P32
 		_:
 			_staff(root, length)
 	if is_reinforced(rec):
@@ -284,3 +290,19 @@ static func _titanforge(root: Node3D, shape: String, length: float) -> void:
 	var rune_len := length * 0.5
 	root.add_child(_box("Rune", Vector3(0.03, 0.03, rune_len), Vector3(0, radius * 0.8 if shape == "club" else 0.06,
 		-length * 0.3 - rune_len * 0.5), "rune"))
+
+
+# --------------------------------------------------------------------------- P32: the fists
+
+## The Stoneknuckles: a leather bracer from the grip (the elbow) along -Z, two iron bands round it, a
+## broad fist block at the far end and three stone studs across its knuckles at the tip.
+static func _fists(root: Node3D, length: float) -> void:
+	var fist := 0.44
+	var bracer := maxf(length - fist, 0.1)
+	root.add_child(_box("Bracer", Vector3(0.3, 0.28, bracer), Vector3(0, 0, -bracer * 0.5), "leather"))
+	for i in 2:
+		root.add_child(_box("Band%d" % i, Vector3(0.34, 0.32, 0.08), Vector3(0, 0, -bracer * (0.3 + 0.4 * i)), "iron"))
+	root.add_child(_box("Fist", Vector3(0.42, 0.36, fist), Vector3(0, 0, -(length - fist * 0.5)), "leather"))
+	for i in 3:
+		root.add_child(_box("Stud%d" % i, Vector3(0.11, 0.11, 0.08), Vector3(-0.13 + 0.13 * i, 0.04, -length + 0.04),
+			"stone"))

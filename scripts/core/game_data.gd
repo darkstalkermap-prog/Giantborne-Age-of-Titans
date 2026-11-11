@@ -222,6 +222,10 @@ func _post_pass() -> void:
 	errors.append_array(Progression.stage_moveset_errors(records, record_paths))
 
 	## @anchor P32
+	# P32 (plan M6-M9 §2.10, decision 21): a siege engine's shot is a projectile enemy attack and its
+	# throw action flies the engine; an encounter's engines are served by crew spawns (role crew) and
+	# every crew spawn serves an engine of its encounter (SiegeRules: pure, so the actors stay unloaded).
+	errors.append_array(SiegeRules.data_errors(records, record_paths))
 
 	## @anchor P33
 

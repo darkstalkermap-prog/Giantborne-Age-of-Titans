@@ -59,6 +59,7 @@ func _ready() -> void:
 		m.cull_mode = BaseMaterial3D.CULL_DISABLED
 		_materials[key] = m
 	Events.telegraph_started.connect(_on_telegraph_started)
+	_p32_ready()   # P32: an indirect shot's landing circle stays through the flight
 
 
 # --------------------------------------------------------------------------- records (static)
@@ -168,7 +169,7 @@ func _process(delta: float) -> void:
 	_time += delta
 	for actor_id: String in _records.keys():
 		var rec: Dictionary = _records[actor_id]
-		if not is_live(rec):
+		if not is_live(rec) and not _p32_in_flight(rec):
 			_records.erase(actor_id)
 			_release_view(actor_id)
 			continue
@@ -188,7 +189,8 @@ func _ends(rec: Dictionary) -> Array:
 		if end == Vector3.INF:
 			end = start + _forward(actor.global_rotation.y) * float(rec.length)
 		return [start, end]
-	if actor != null and not is_striking(rec) and not _p30_band(rec, actor) and not _p31_at_target(rec):
+	if actor != null and not is_striking(rec) and not _p30_band(rec, actor) and not _p31_at_target(rec) \
+			and not _p32_landing(rec):
 		# Ground decals follow the actor through the windup; the strike stays where it began.
 		rec["at"] = actor.global_position
 		rec["at_yaw"] = actor.global_rotation.y
@@ -202,6 +204,8 @@ static func _forward(yaw: float) -> Vector3:
 
 
 func _draw_record(actor_id: String, rec: Dictionary) -> void:
+	if _p32_draw_flight(actor_id, rec):
+		return   # P32: the landing circle while the shot flies
 	var view := _view_for(actor_id)
 	var base: MeshInstance3D = view.base
 	var fill_mi: MeshInstance3D = view.fill
@@ -423,5 +427,102 @@ func _p31_crack_mesh() -> ArrayMesh:
 
 
 ## @anchor P32
+# An indirect shot's landing circle (P32, plan M6-M9 §2.10, §3.16: the catapult): the telegraph of an
+# action CueRouter.is_indirect calls indirect (its stone) lies at its landing point - the event's
+# origin - and stays there instead of following the engine (the hook in _ends). It fills over the
+# windup as every telegraph does, and when the shot is launched (Events.projectile_spawned by the same
+# actor and action) it stays on through the flight with its timer: the fill grows again from the
+# middle to the rim as the stone comes down (the flight time from the launch's horizontal speed,
+# CueRouter.flight_seconds) and flashes for the last P32_FLASH_S. It goes when the stone lands
+# (Events.projectile_impact), or at the latest P32_GRACE_S after the expected landing. The audio's
+# rising incoming whistle sounds over the same circle (P28).
+
+const P32_FLASH_S := 0.35
+const P32_GRACE_S := 1.0
+
+
+func _p32_ready() -> void:
+	if not Events.projectile_spawned.is_connected(_p32_on_projectile_spawned):
+		Events.projectile_spawned.connect(_p32_on_projectile_spawned)
+	if not Events.projectile_impact.is_connected(_p32_on_projectile_impact):
+		Events.projectile_impact.connect(_p32_on_projectile_impact)
+
+
+## True when `rec` is an indirect shot's landing circle (it keeps its origin).
+static func _p32_landing(rec: Dictionary) -> bool:
+	if rec.has("p32_landing"):
+		return bool(rec.p32_landing)
+	var a := GameData.get_action(str(rec.get("action_id", "")))
+	var landing := a != null and str(rec.get("shape", "")) == "circle" and CueRouter.is_indirect(a)
+	rec["p32_landing"] = landing
+	return landing
+
+
+## True while `rec`'s shot is in the air (launched, not yet landed, not past its expected landing by
+## more than P32_GRACE_S).
+func _p32_in_flight(rec: Dictionary) -> bool:
+	if not rec.has("p32_projectile"):
+		return false
+	return _time - float(rec.p32_launch_s) <= float(rec.p32_flight_s) + P32_GRACE_S
+
+
+## The landing circle's state for tests: {} when `actor_id` has no shot in the air; else {"projectile",
+## "point", "radius", "timer" (0..1 of the flight), "flight_s"}.
+func landing_for(actor_id: String) -> Dictionary:
+	var rec: Dictionary = _records.get(actor_id, {})
+	if rec.is_empty() or not _p32_in_flight(rec):
+		return {}
+	return {"projectile": int(rec.p32_projectile), "point": rec.origin, "radius": float(rec.radius),
+		"timer": _p32_timer(rec), "flight_s": float(rec.p32_flight_s)}
+
+
+func _p32_timer(rec: Dictionary) -> float:
+	return clampf((_time - float(rec.p32_launch_s)) / maxf(0.05, float(rec.p32_flight_s)), 0.0, 1.0)
+
+
+func _p32_on_projectile_spawned(_tick: int, projectile_id: int, owner_id: String, action_id: String,
+		position: Vector3, velocity: Vector3, _visual: String) -> void:
+	var rec: Dictionary = _records.get(owner_id, {})
+	if rec.is_empty() or str(rec.get("action_id", "")) != action_id or not _p32_landing(rec):
+		return
+	var a := GameData.get_action(action_id)
+	var gravity := float(Projectile.spec_for(a).gravity_mps2) if a != null else 0.0
+	rec["p32_projectile"] = projectile_id
+	rec["p32_launch_s"] = _time
+	rec["p32_flight_s"] = CueRouter.flight_seconds(position, velocity, rec.origin, gravity)
+
+
+func _p32_on_projectile_impact(_tick: int, projectile_id: int, _point: Vector3, _hit_id: String) -> void:
+	for actor_id: String in _records.keys():
+		var rec: Dictionary = _records[actor_id]
+		if int(rec.get("p32_projectile", -1)) == projectile_id:
+			_records.erase(actor_id)
+			_release_view(actor_id)
+			return
+
+
+## Draws the landing circle of a shot in flight (true when it did): the base disc and a fill growing
+## with the flight timer, flashing as it ends.
+func _p32_draw_flight(actor_id: String, rec: Dictionary) -> bool:
+	if is_live(rec) or not _p32_in_flight(rec):
+		return false
+	var view := _view_for(actor_id)
+	var base: MeshInstance3D = view.base
+	var fill_mi: MeshInstance3D = view.fill
+	var r := maxf(float(rec.radius), 0.1)
+	var at: Vector3 = (rec.origin as Vector3) + Vector3.UP * GROUND_LIFT_M
+	var timer := _p32_timer(rec)
+	var left := float(rec.p32_flight_s) * (1.0 - timer)
+	var flash := left <= P32_FLASH_S and fmod(_time * FLASH_HZ, 1.0) < 0.5
+	base.visible = true
+	base.mesh = _disc
+	base.material_override = _materials.base
+	base.global_transform = Transform3D(Basis.from_scale(Vector3(r, 1.0, r)), at)
+	fill_mi.visible = true
+	fill_mi.mesh = _disc
+	fill_mi.material_override = _materials.flash if flash else _materials.fill
+	var fr := maxf(r * timer, 0.01)
+	fill_mi.global_transform = Transform3D(Basis.from_scale(Vector3(fr, 1.2, fr)), at + Vector3.UP * 0.005)
+	return true
 
 ## @anchor P34

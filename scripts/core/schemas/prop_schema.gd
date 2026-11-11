@@ -76,6 +76,30 @@ static func fields() -> Dictionary:
 	f["prop_tags"] = {"t": "array", "items": "string"}
 
 	## @anchor P32
+	# P32 (plan M6-M9 §2.10, §5.11): a siege engine (SiegeEngine): its `engine` block - the projectile
+	# `action` it shoots, `crew_radius_m` (a crew member farther than this from it does not serve it),
+	# `min_crew` (how many must serve it for it to shoot), `reload_s` (crewed reloading between shots),
+	# `range_m` [min, max] (flat, to the giant), `turn_deg_s`, `morale_event_radius_m` (its fall is the
+	# siege_destroyed morale event of every soldier this close), `grab_stage` (the giant's stage that may
+	# seize it: siege disruption), `muzzle_m` (the launch point in its own frame) and `throw_action` (what
+	# a giant hurls it with). An engine's `poise` (its stagger: a staggered engine stops shooting and may
+	# be seized), `mass_class` and `grab_attach` are a grab's rules, as an enemy's are.
+	f.merge({
+		"engine": {"t": "dict", "fields": {
+			"action": U.ref("action", true),
+			"crew_radius_m": U.pos(true),
+			"min_crew": U.int_field(0, 16),
+			"reload_s": U.pos(true),
+			"range_m": {"t": "array", "req": true, "items": "number"},
+			"turn_deg_s": U.pos(),
+			"morale_event_radius_m": U.num(0.0),
+			"grab_stage": U.int_field(1, 10),
+			"muzzle_m": U.vec3(),
+			"throw_action": U.ref("action")}},
+		"poise": {"t": "dict", "fields": U.poise_fields()},
+		"mass_class": U.str_field(false, DataValidator.MASS_CLASSES),
+		"grab_attach": U.str_field(false, DataValidator.GRAB_ATTACH),
+	})
 
 	return f
 
@@ -153,6 +177,21 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 				out.errors.append("%s.prop_tags: '%s' must be a plain lowercase word like 'house'" % [ctx, p30_tag])
 
 	## @anchor P32
+	# P32: an engine breaks (breakable or structural), carries the "engine" prop tag (FactionState's
+	# offences, target providers), and its range is [min, max] with 0 <= min < max.
+	var p32_engine: Variant = d.get("engine")
+	if typeof(p32_engine) == TYPE_DICTIONARY:
+		if not p08_category in ["breakable", "structural"]:
+			out.errors.append("%s: a siege engine (engine block) is a breakable or structural prop" % ctx)
+		var p32_tags: Variant = d.get("prop_tags", [])
+		if typeof(p32_tags) != TYPE_ARRAY or not (p32_tags as Array).has("engine"):
+			out.errors.append("%s: a siege engine carries the prop tag 'engine'" % ctx)
+		var p32_range: Variant = p32_engine.get("range_m")
+		if typeof(p32_range) == TYPE_ARRAY:
+			var p32_r: Array = p32_range
+			if p32_r.size() != 2 or not U.is_number(p32_r[0]) or not U.is_number(p32_r[1]) \
+					or float(p32_r[0]) < 0.0 or float(p32_r[0]) >= float(p32_r[1]):
+				out.errors.append("%s.engine.range_m: expected [min, max] with 0 <= min < max" % ctx)
 
 
 static func required_ids() -> Dictionary:

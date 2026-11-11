@@ -28,7 +28,7 @@
 	"hit_shape": "cylinder_pulse",
 	"radius_m": 8.0,
 	"height_m": 8.0,
-	"on_hit_stagger": {"seconds": 1.5, "archetypes": ["soldier", "archer", "mage"]},
+	"on_hit_stagger": {"seconds": 1.5, "archetypes": ["soldier", "archer", "mage", "cavalry"]},
 	"movement": {"windup_speed_mult": 0.0, "active_speed_mult": 0.0, "recovery_speed_mult": 0.2},
 	"knockback_impulse": 3.0,
 	"knockback_max_speed": 6.0,

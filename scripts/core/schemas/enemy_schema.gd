@@ -183,6 +183,14 @@ static func fields() -> Dictionary:
 	(f.guard.fields as Dictionary)["breaks_on_tags"] = U.enum_array(DataValidator.TAGS)
 
 	## @anchor P32
+	# P32 (plan M6-M9 §2.10, §5.11): the cavalry's charge cycle - after a charge it wheels away to a
+	# point wheel_min_m..wheel_max_m from the giant before it turns and charges again (CavalryBrain).
+	# A siege crew is a soldier of role "crew" (SOLDIER_ROLES) whose engine an encounter's `engines`
+	# list names (EncounterDirector); its outmatched_behavior "crew" makes it run when it has none.
+	(f.tactics.fields as Dictionary).merge({
+		"wheel_min_m": U.num(0.0),
+		"wheel_max_m": U.num(0.0),
+	})
 
 	## @anchor P34
 
@@ -295,6 +303,13 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 					out.errors.append("%s.targets.prop_tags: '%s' must be a plain lowercase word like 'house'" % [ctx, p30_tag])
 
 	## @anchor P32
+	# P32: a wheel band that is not empty; a crew's role and its behaviour go together.
+	if typeof(tactics) == TYPE_DICTIONARY and U.is_number(tactics.get("wheel_min_m")) \
+			and U.is_number(tactics.get("wheel_max_m")) and float(tactics.wheel_min_m) > float(tactics.wheel_max_m):
+		out.errors.append("%s: tactics.wheel_min_m must be <= tactics.wheel_max_m" % ctx)
+	if str(d.get("role", "")) == "crew" and typeof(tactics) == TYPE_DICTIONARY \
+			and str(tactics.get("outmatched_behavior", "crew")) != "crew":
+		out.errors.append("%s: a siege crew (role 'crew') has tactics.outmatched_behavior 'crew'" % ctx)
 
 	## @anchor P34
 

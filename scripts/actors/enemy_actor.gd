@@ -3158,6 +3158,86 @@ static func _p30_half_extents(t: CombatEntity) -> Vector3:
 	return far
 
 ## @anchor P32
+# --- siege crews: a place beside an engine, the haul, the engine's loss (P32) ---------------------
+# Plan M6-M9 §2.10, §3.16, §5.11. An encounter's `engines` list gives a crew member its engine
+# (EncounterDirector -> SiegeEngine.add_crew -> p32_assign_engine). The brain (EnemyBrain's P32
+# section) then holds the member's place beside the engine (crew_slot_resolver: SiegeEngine.crew_slot,
+# inside its crew radius), facing the giant while it knows where it is, else the engine's front
+# (crew_face_resolver), and never fights. While the engine reloads it asks one member at a time to haul
+# (p32_crew_reload: the record's crew action, a pose without a hit). engine_id names the engine: the
+# music director counts an engine crew as a threat whatever its height (MusicDirector.is_special). When
+# the engine breaks, a giant seizes it or it leaves the tree, the member gives up its place, runs and
+# routs (p32_engine_lost; the brain notices a vanished engine itself through crew_engine_check).
+
+## The world id of the engine this crew member serves ("" = none).
+var engine_id := ""
+var _p32_engine_ref: WeakRef = null
+
+
+## SiegeEngine.add_crew: `engine` takes this unit into its crew.
+func p32_assign_engine(engine: Node) -> void:
+	if engine == null or not is_instance_valid(engine):
+		return
+	_p32_engine_ref = weakref(engine)
+	engine_id = str(engine.call("engine_id")) if engine.has_method("engine_id") else ""
+	if brain == null:
+		return
+	brain.crew_slot_resolver = _p32_crew_slot
+	brain.crew_face_resolver = _p32_crew_face
+	brain.crew_engine_check = func() -> bool: return p32_engine() != null
+	brain.crew_engine_assigned(Sim.tick)
+
+
+## The engine this unit serves (null when none, or once it was freed or left the tree).
+func p32_engine() -> Node3D:
+	var e: Node3D = _p32_engine_ref.get_ref() as Node3D if _p32_engine_ref != null else null
+	return e if e != null and e.is_inside_tree() else null
+
+
+## `engine` broke or a giant seized it (SiegeEngine), or (null) it vanished: this unit gives up its
+## place, runs and routs. Another engine's loss is ignored.
+func p32_engine_lost(engine: Node = null) -> void:
+	var mine: Object = _p32_engine_ref.get_ref() if _p32_engine_ref != null else null
+	if engine != null and mine != null and mine != engine:
+		return
+	_p32_engine_ref = null
+	engine_id = ""
+	if brain == null or entity == null or not entity.is_alive():
+		return
+	Sim.release_all_tokens(entity.entity_id)
+	if brain.crew_serving or not brain.crew_lost:
+		brain.crew_engine_lost(Sim.tick)
+
+
+## SiegeEngine's haul: this member runs its crew action (ability.crew_reload: a pose, no hit) when it
+## stands free at its place. True when it started.
+func p32_crew_reload() -> bool:
+	var id := _p32_crew_action()
+	if id == "" or brain == null or not brain.crew_at_slot(global_position) or not p30_can_act():
+		return false
+	controller.request(&"attack", {"action_id": id})
+	return controller.action != null and controller.action.id == id
+
+
+## The record's crew action (its first attack), "" when it has none.
+func _p32_crew_action() -> String:
+	var attacks: Array = record.get("attacks", [])
+	return str(attacks[0]) if not attacks.is_empty() else ""
+
+
+func _p32_crew_slot() -> Vector3:
+	var e := p32_engine()
+	return e.call("crew_slot", self) if e != null and e.has_method("crew_slot") else Vector3.INF
+
+
+## Where a crew member looks while it does not know where the giant is: 10 m before its engine.
+func _p32_crew_face() -> Vector3:
+	var e := p32_engine()
+	if e == null:
+		return Vector3.INF
+	var fwd := -e.global_transform.basis.z
+	fwd.y = 0.0
+	return e.global_position + (fwd.normalized() if fwd.length_squared() > 1e-6 else Vector3.FORWARD) * 10.0
 
 ## @anchor P34
 
