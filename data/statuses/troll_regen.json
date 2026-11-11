@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "status.troll_regen",
+	"type": "status_effect",
+	"display_name": "Regenerating",
+	"hud_label": "REGEN",
+	"description": "P34 (plan M6-M9 section 2.10): a troll's regeneration - a marker status the actor refreshes every second while it is hurt and not Burning (the healing itself is the record's regeneration.hp_per_s, given by the actor each second); while it lasts the troll pulses green and the cue router plays the wet regrowth cue.",
+	"stacking": "refresh_no_stack",
+	"duration_s": 1.5,
+	"tick_s": 0,
+	"magnitude_key": "",
+	"modifiers": {},
+	"tags": ["Buff", "Regeneration"],
+	"hidden": true
+}

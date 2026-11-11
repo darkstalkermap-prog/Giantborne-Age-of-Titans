@@ -3,7 +3,7 @@
 	"id": "audio_bank.world_abilities",
 	"type": "audio_bank",
 	"display_name": "World abilities and projectiles",
-	"description": "P28 (section 4.1 family D, M7-M9): the stage evolutions (Titan Stomp, Earthquake, Crag Hurl, Formation Sweep, Titan Roar, Rampart Grip) as their base abilities' sounds lowered (P21's files at a lower pitch: no new sample in either level), the talents' and ancestries' abilities (Shoulder Charge, Cleave of Ages, Bulwark, Stonewall Stance, Rune Lance, Primal Regrowth, Storm Call, Bedrock Ward, Thunderhead, Wild Surge), the engines' and the new spells' projectiles, and the axe's and the fists' swings. New layers: the earthquake's crack, the charge, the stone ward, the regrowth, lightning and the ballista bolt's whirr. P32: the cavalry's lance thrust (sfx.ability.cavalry_lance.sweep) is P21's blade swing pitched down (no new sample).",
+	"description": "P28 (section 4.1 family D, M7-M9): the stage evolutions (Titan Stomp, Earthquake, Crag Hurl, Formation Sweep, Titan Roar, Rampart Grip) as their base abilities' sounds lowered (P21's files at a lower pitch: no new sample in either level), the talents' and ancestries' abilities (Shoulder Charge, Cleave of Ages, Bulwark, Stonewall Stance, Rune Lance, Primal Regrowth, Storm Call, Bedrock Ward, Thunderhead, Wild Surge), the engines' and the new spells' projectiles, and the axe's and the fists' swings. New layers: the earthquake's crack, the charge, the stone ward, the regrowth, lightning and the ballista bolt's whirr. P32: the cavalry's lance thrust (sfx.ability.cavalry_lance.sweep) is P21's blade swing pitched down (no new sample). P34: aliases for the trolls' and the Matriarch's sector sweeps and the enemies' throws (the whelp, the boulders) on existing files (no new bytes).",
 	"cues": {
 		"sfx.ability.bedrock_ward.cast": {
 			"files": [
@@ -240,6 +240,101 @@
 			"max_voices": 2,
 			"retrigger_ms": 80,
 			"priority": 90,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.giant_boulder.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/hurl_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"volume_db": -6.0,
+			"pitch": 0.78,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 400,
+			"priority": 95,
+			"far": "",
+			"levels": [
+				"level.world"
+			],
+			"class": "giant"
+		},
+		"sfx.ability.harrok_boulder.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/hurl_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"volume_db": -6.0,
+			"pitch": 0.68,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 400,
+			"priority": 95,
+			"far": "",
+			"levels": [
+				"level.world"
+			],
+			"class": "boss"
+		},
+		"sfx.ability.matriarch_frenzy_1.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_tree_heavy_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.5,
+			"pitch": 0.66,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.matriarch_frenzy_2.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_tree_heavy_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.5,
+			"pitch": 0.6,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.matriarch_sweep.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_tree_heavy_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.5,
+			"pitch": 0.62,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
 			"far": "",
 			"levels": [
 				"level.world"
@@ -534,6 +629,65 @@
 			"retrigger_ms": 80,
 			"priority": 90,
 			"far": "sfx.impact.stomp.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.troll_club.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blunt_heavy_1.wav",
+				"res://assets/audio/sfx/combat/swing_blunt_heavy_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 0.7,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.troll_throw_whelp.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/hurl_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"volume_db": -6.0,
+			"pitch": 0.7,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 400,
+			"priority": 95,
+			"far": "",
+			"levels": [
+				"level.world"
+			],
+			"class": "boss"
+		},
+		"sfx.ability.troll_whelp_swipe.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blunt_heavy_1.wav",
+				"res://assets/audio/sfx/combat/swing_blunt_heavy_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.0,
+			"pitch": 0.95,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 75,
+			"far": "",
 			"levels": [
 				"level.world"
 			]

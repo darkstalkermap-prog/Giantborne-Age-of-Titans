@@ -193,6 +193,69 @@ static func fields() -> Dictionary:
 	})
 
 	## @anchor P34
+	# P34 (plan M6-M9 §2.10, §5.11, §5.13): trolls, rival giants and the three bosses.
+	#   regeneration  a status (tag Regeneration) the actor refreshes every interval_s while it is hurt
+	#                 and carries none of blocked_by_tags (default Burning); it heals hp_per_s each
+	#                 interval (phase_hp_per_s: a boss phase's own rate, "2": 40). Fire reaches it: a
+	#                 prop tagged "fire" (a brazier) breaking within brazier_radius_m sets Burning for
+	#                 brazier_burn_s; a burning body thrown into it sets Burning for thrown_burn_s and
+	#                 deals thrown_damage fire damage.
+	#   yield_at      the yield protocol (§2.10): at or below health_frac (a floor no blow passes), or
+	#                 after poise_breaks poise breaks (challenge_poise_breaks while every
+	#                 challenge_conditions quest condition holds: Wildheart's shorter duel), the actor
+	#                 kneels, immune and harmless, and `dialogue` decides: its outcome "spare" sets the
+	#                 boss_outcome flag to "spared", "strike" either kills it at once (on_strike "kill")
+	#                 or makes it fight to the death (on_strike "fight"); boss_id is the id
+	#                 boss_yielded carries ("" = its own entity id; Corvane: battle.iron_regiment).
+	#   drive_out     the Matriarch's fled ending: once every requires_flags flag holds and its health
+	#                 is at or below health_frac it runs to exit_marker and leaves ("fled").
+	#   boss_outcome  the flags a boss's ending writes (plan §2.3): `flag` (boss.<short>.outcome: slain,
+	#                 spared, fled) and defeated_flag (boss.<short>.defeated, set by every ending).
+	#   brood         the Matriarch's whelps: the definition she throws and summons, how far she reaches
+	#                 for one, how many of hers may live at once, and the ring her roar's summons appear in.
+	f.merge({
+		"regeneration": {"t": "dict", "fields": {
+			"status": U.ref("status_effect", true),
+			"hp_per_s": U.pos(true),
+			"phase_hp_per_s": {"t": "dict", "values": U.num(0.0)},
+			"interval_s": U.pos(),
+			"blocked_by_tags": U.enum_array(DataValidator.STATUS_TAGS),
+			"brazier_radius_m": U.pos(),
+			"brazier_burn_s": U.pos(),
+			"thrown_burn_s": U.pos(),
+			"thrown_damage": U.num(0.0)}},
+		"yield_at": {"t": "dict", "fields": {
+			"health_frac": U.num(0.0, 1.0),
+			"poise_breaks": U.int_field(0, 99),
+			"challenge_poise_breaks": U.int_field(0, 99),
+			"challenge_conditions": {"t": "array", "items": "dict"},
+			"dialogue": U.ref("dialogue", true),
+			"on_strike": U.str_field(true, ["kill", "fight"]),
+			"boss_id": U.str_field()}},
+		"drive_out": {"t": "dict", "fields": {
+			"requires_flags": {"t": "array", "items": "string"},
+			"health_frac": U.num(0.0, 1.0, true),
+			"exit_marker": U.str_field(true),
+			"leave_s": U.pos()}},
+		"boss_outcome": {"t": "dict", "fields": {
+			"flag": U.str_field(true),
+			"defeated_flag": U.str_field()}},
+		"brood": {"t": "dict", "fields": {
+			"definition": U.ref("enemy", true),
+			"throw_action": U.ref("action", true),
+			"reach_m": U.pos(true),
+			"max_alive": U.int_field(1, 16),
+			"summon_radius_m": {"t": "array", "items": "number"}}},
+	})
+	# Boss phases (P11a's block) gain: enter_on_poise_breaks - the phase also begins after this many
+	# poise breaks (Harrok's second phase after two); hazard - the arena hazard action the phase runs
+	# (Harrok's falling stones: an action with an arena_hazard block); summon - how many of the
+	# record's brood the phase's enter action calls (the Matriarch's roar: three whelps).
+	(((f.boss.fields as Dictionary).phases as Dictionary).item_fields as Dictionary).merge({
+		"enter_on_poise_breaks": U.int_field(1, 99),
+		"hazard": U.ref("action", false, true),
+		"summon": U.int_field(0, 16),
+	})
 
 	return f
 
@@ -312,6 +375,42 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.errors.append("%s: a siege crew (role 'crew') has tactics.outmatched_behavior 'crew'" % ctx)
 
 	## @anchor P34
+	# P34: a yield names at least one trigger, and a yield or a drive-out needs the boss_outcome flags it
+	# writes; flags are flag ids; challenge conditions are valid quest conditions; a summoning phase has a
+	# brood to call; phase regeneration rates name phases that exist.
+	var p34_yield: Variant = d.get("yield_at")
+	var p34_outcome: Variant = d.get("boss_outcome")
+	if typeof(p34_yield) == TYPE_DICTIONARY:
+		if float(p34_yield.get("health_frac", 0.0)) <= 0.0 and int(p34_yield.get("poise_breaks", 0)) <= 0:
+			out.errors.append("%s.yield_at: needs a health_frac above 0 or poise_breaks" % ctx)
+		if typeof(p34_yield.get("challenge_conditions")) == TYPE_ARRAY:
+			U.check_conditions(p34_yield.challenge_conditions, "%s.yield_at.challenge_conditions" % ctx, out)
+	var p34_drive: Variant = d.get("drive_out")
+	if typeof(p34_drive) == TYPE_DICTIONARY:
+		for p34_flag: Variant in p34_drive.get("requires_flags", []):
+			U.check_flag_id(p34_flag, "%s.drive_out.requires_flags" % ctx, out)
+	if (typeof(p34_yield) == TYPE_DICTIONARY or typeof(p34_drive) == TYPE_DICTIONARY) \
+			and typeof(p34_outcome) != TYPE_DICTIONARY:
+		out.errors.append("%s: a yield_at or drive_out needs boss_outcome (the flags its ending writes)" % ctx)
+	if typeof(p34_outcome) == TYPE_DICTIONARY:
+		for p34_key: String in ["flag", "defeated_flag"]:
+			if str(p34_outcome.get(p34_key, "")) != "":
+				U.check_flag_id(p34_outcome[p34_key], "%s.boss_outcome.%s" % [ctx, p34_key], out)
+	var p34_boss: Variant = d.get("boss")
+	var p34_phase_count := 0
+	if typeof(p34_boss) == TYPE_DICTIONARY and typeof(p34_boss.get("phases")) == TYPE_ARRAY:
+		p34_phase_count = (p34_boss.phases as Array).size()
+		for p34_ph: Variant in p34_boss.phases:
+			if typeof(p34_ph) == TYPE_DICTIONARY and int(p34_ph.get("summon", 0)) > 0 \
+					and typeof(d.get("brood")) != TYPE_DICTIONARY:
+				out.errors.append("%s.boss.phases: phase '%s' summons, but the record has no brood" % [ctx,
+					str(p34_ph.get("id", ""))])
+	var p34_regen: Variant = d.get("regeneration")
+	if typeof(p34_regen) == TYPE_DICTIONARY and typeof(p34_regen.get("phase_hp_per_s")) == TYPE_DICTIONARY:
+		for p34_key: Variant in p34_regen.phase_hp_per_s:
+			if not str(p34_key).is_valid_int() or int(str(p34_key)) < 1 or int(str(p34_key)) > p34_phase_count:
+				out.errors.append("%s.regeneration.phase_hp_per_s: '%s' is not one of its boss phases (1..%d)" % [
+					ctx, p34_key, p34_phase_count])
 
 
 static func required_ids() -> Dictionary:
