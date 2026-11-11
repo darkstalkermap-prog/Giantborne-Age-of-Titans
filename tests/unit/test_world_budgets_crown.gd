@@ -16,8 +16,11 @@ const MARGIN := 50
 const OATH_XP := 800
 ## The march's resolutions and the props each declared path must break (P29's XP test).
 const MARCH_PATHS := {"help": ["prop.gate_toll"], "intimidate": [], "force": ["prop.gatehouse_brannock"]}
-## Where a stage-4 giant must stand to take each oath (the discoveries it cannot avoid).
-const OATH_POINTS := {MARCH: ["world.crownmarch.edda"], CROWN: ["world.aldmere.herald"]}
+## W21: the wood's (P35's test_world_budgets_wood): the drive path must burn the den's three brood nests.
+const WOOD_PATHS := {"slay": [], "drive": ["prop.brood_nest", "prop.brood_nest", "prop.brood_nest"]}
+## Where a stage-4 giant must stand to take each oath (the discoveries it cannot avoid; W21: Sedge in
+## Hollowmere, P35's).
+const OATH_POINTS := {MARCH: ["world.crownmarch.edda"], CROWN: ["world.aldmere.herald"], WOOD: ["world.greywood.sedge"]}
 const BEACON_POINTS := ["world.cp.kingsgate_shelf", "world.marker.kingsgate_beacon"]
 const SHRINE_POINTS := ["world.marker.kingsgate_shrine"]
 ## The finale's unavoidable places: the Standing Stones' shrine, the Moot's ring.
@@ -39,7 +42,8 @@ func _through_grow4() -> int:
 func _worst(quest_id: String) -> int:
 	var worst := -1
 	for outcome: String in OathRules.first_oath_resolutions(quest_id, GameData.records):
-		var extra: Array = MARCH_PATHS.get(outcome, []) if quest_id == MARCH else []
+		var extra: Array = MARCH_PATHS.get(outcome, []) if quest_id == MARCH \
+			else WOOD_PATHS.get(outcome, []) if quest_id == WOOD else []
 		var xp := WorldXp.resolution_xp(quest_id, outcome, extra)
 		worst = xp if worst < 0 else mini(worst, xp)
 	return worst
