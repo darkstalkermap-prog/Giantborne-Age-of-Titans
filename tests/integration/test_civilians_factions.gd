@@ -363,3 +363,22 @@ func test_members_spawned_after_hostility_spawn_hostile_or_in_shelter() -> void:
 	assert_true(hid, "a villager spawned into a hostile village is already in hiding")
 	assert_true(ValleyProbe.flat(v.global_position, shelter.global_position) < 0.5, "at its shelter")
 	assert_eq(v.process_mode, Node.PROCESS_MODE_DISABLED, "not processing")
+
+
+## M8 gate fix-up 1 (N4.7, the audit's play pass: nine engine errors at civilian.gd as the giant crossed
+## into the Drowned Steps while chunks unloaded): a civilian out of the tree - its chunk unloading, the node
+## not freed yet - hears no fight: an attack begun or a blow landed nearby measures nothing from it.
+func test_a_civilian_out_of_the_tree_hears_no_fight() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0))
+	var v := _person(VILLAGER, Vector3(6, 0.05, 0), "test.fixup.villager")
+	var s := _guard(Vector3(0, 0.05, 8), 0.0, "test.fixup.guard", false)
+	await step_ticks(3)
+	assert_true(v._listening(), "in the tree and idle, it listens")
+	world.remove_child(v)
+	assert_false(v._listening(), "out of the tree it does not")
+	Events.ability_started.emit(Sim.tick, s.entity_id, "ability.soldier_chop", Sim.new_instance_id())
+	_blow(s.entity_id, p.global_position)
+	await step_ticks(2)
+	assert_eq(v.brain.state, CivilianBrain.State.IDLE, "and heard nothing (no engine error either)")
+	v.free()
+
