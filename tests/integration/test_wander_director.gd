@@ -18,6 +18,9 @@ extends IntegrationSuite
 ##     on a place's connector, the layout's extra edges or a stage-limited edge, nor by a checkpoint - and
 ##     neither stands nor walks inside a sealed place; every member's body must stand clear of static and
 ##     prop geometry (a node with a rock on it is refused).
+##   * M8 gate fix-up 1 (N3.3): an engaged battle's reservation (EncounterDirector.p34_reserve: room in the
+##     caps for its units still to come) is not room for a wanderer - no copy is admitted beside it, nor its
+##     entry's spawn counted - and a moving column's copy is held back meanwhile; once released, copies come.
 
 const F := preload("res://tests/support/living_world_fixtures.gd")
 
@@ -243,3 +246,58 @@ func test_wanderers_stand_on_open_roads_clear_of_places_and_solids() -> void:
 	await step_ticks(2)
 	assert_eq(_wd.footprint_problem(tpl, at, pts), "body:p37.pack_a", "a member would stand in the rock: refused")
 	rock.queue_free()
+
+
+## A placed encounter of `n` counted soldiers that stays dormant (its flag is never set): the battle's
+## units still to come, whose room an engaged battle reserves.
+func _battle_record(id: String, n: int) -> Dictionary:
+	var spawns: Array = []
+	for i in n:
+		var x := 100.0 + float(i)
+		spawns.append({"entity_id": "%s.unit_%d" % [id, i], "definition": "enemy.soldier", "position_m": [x, F.height(x, 100.0), 100.0],
+			"yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": false, "persist_death": false, "loot_table": ""})
+	return {"schema_version": 1, "id": id, "type": "encounter", "level": F.LEVEL,
+		"center_m": [100.0, F.height(100.0, 100.0), 100.0], "activate_radius_m": 10, "deactivate_radius_m": 20,
+		"leash_radius_m": 40, "alert_group": true, "requires_flags": ["test.never"], "forbids_flags": [],
+		"counts_toward_budget": true, "spawns": spawns}
+
+
+func test_a_battles_reserved_room_admits_no_wanderer_and_holds_a_column() -> void:
+	F.install()
+	TestFixtures.record_override("encounter.test_battle", _battle_record("encounter.test_battle", 11))
+	var made := F.make(world)
+	_root = made[0]
+	_wd = made[1]
+	var d := _wd.director
+	await step_ticks(3)
+	assert_eq(d.max_active_enemies, 12, "the tiny level's cap")
+	var ids: Array = []
+	for i in 11:
+		ids.append("encounter.test_battle.unit_%d" % i)
+	d.p34_reserve("battle.test", ids)   # BattleBoss.engage reserves its plan's room
+	assert_eq(d.p34_reserved_room(false), 11, "11 counted units still to come")
+	assert_true(_wd.battle_holds_room(), "a battle holds room")
+	var flag := WanderDirector.spawns_flag(F.TABLE, "pack")
+	var before := int(WorldState.get_flag(flag, 0))
+	assert_false(_wd.budget_allows(GameData.get_record(F.PACK)), "two soldiers do not fit beside the 11 reserved (cap 12)")
+	var r := _wd.try_spawn(GameData.get_record(F.TABLE))
+	assert_eq(str(r.reason), "budget", "no copy is admitted (%s)" % [r])
+	assert_eq(int(WorldState.get_flag(flag, 0)), before, "and the entry's spawn is not counted")
+	# A moving column's copy out of the world is held back while the battle waits for its units.
+	var column: WorldEvent = _wd.events[F.COLUMN]
+	_wd.start_event(column)
+	var copy := str(column.copies[0]) if not column.copies.is_empty() else ""
+	if copy != "":
+		var at := _anchor(copy)
+		d.p37_deactivate(copy)
+		for i in 5:
+			_wd.update_event(column, 1.0)
+		assert_true(_anchor(copy).is_equal_approx(at), "the column's copy stays where it was (%s -> %s)" % [at, _anchor(copy)])
+		_wd.end_event(column, WanderDirector.ABANDONED)
+	# Released (the battle ended): copies come again.
+	d.p34_release("battle.test")
+	assert_false(_wd.battle_holds_room(), "no battle holds room")
+	assert_true(_wd.budget_allows(GameData.get_record(F.PACK)), "two soldiers fit")
+	assert_true(bool(_wd.try_spawn(GameData.get_record(F.TABLE)).ok), "a copy is admitted")
+	assert_eq(int(WorldState.get_flag(flag, 0)), before + 1, "and counted")
+

@@ -369,7 +369,9 @@ static func pick_entry(entries: Array, rng: RandomNumberGenerator) -> Dictionary
 
 
 ## True when the director has room for every combatant and formation member of `tpl` now (copies spawn
-## whole or not at all, never one member at a time as room frees up).
+## whole or not at all, never one member at a time as room frees up). M8 gate fix-up 1 (N3.3): the room an
+## engaged battle reserves for its units still to come (EncounterDirector.p34_reserved_room) is not room:
+## a copy admitted beside it was held back member by member and still counted its entry's spawn.
 func budget_allows(tpl: Dictionary) -> bool:
 	var budgeted := 0
 	var formation := 0
@@ -384,13 +386,21 @@ func budget_allows(tpl: Dictionary) -> bool:
 			formation += 1
 		elif counts_budget or (str(s.get("faction", "")) != "" and FactionState.is_hostile(str(s.faction))):
 			budgeted += 1
-	if budgeted > 0 and director.active_combatant_count() + budgeted > director.max_active_enemies:
+	if budgeted > 0 and director.active_combatant_count() + director.p34_reserved_room(false) + budgeted \
+			> director.max_active_enemies:
 		return false
 	if formation > 0:
 		director.p30_formation_room()   # loads the level's cap
-		if director.formation_member_count() + formation > director.max_formation_members:
+		if director.formation_member_count() + director.p34_reserved_room(true) + formation > director.max_formation_members:
 			return false
 	return true
+
+
+## M8 gate fix-up 1 (N3.3): true while an engaged battle still waits for reserved units - a moving event's
+## copy out of the world is then held back (its point walks on) instead of being brought near the giant to
+## spawn member by member as the battle's room frees.
+func battle_holds_room() -> bool:
+	return director != null and director.p34_reserved_room(true) + director.p34_reserved_room(false) > 0
 
 
 ## Where a copy of `tpl` for `entry` of `table` may stand now, the giant at `from`: {"anchor" (level
@@ -732,7 +742,7 @@ func _update_columns(dt: float) -> void:
 		var c: Dictionary = _copies[id]
 		if c.route == null:
 			continue
-		if march(id, c.route, dt) == "done":
+		if march(id, c.route, dt, battle_holds_room()) == "done":
 			if copy_in_view(id):
 				c.route = null
 				c.active_seen = true
@@ -997,7 +1007,7 @@ func update_event(e: WorldEvent, dt: float, tick: int = Sim.tick) -> void:
 			_carry_event(e, false)
 			return
 	if e.route != null and not e.copies.is_empty():
-		if march(e.copies[0], e.route, dt, other_in_play(e) != null) == "done" and e.end_outcome() != "":
+		if march(e.copies[0], e.route, dt, other_in_play(e) != null or battle_holds_room()) == "done" and e.end_outcome() != "":
 			end_event(e, e.end_outcome(), tick)
 			return
 	if _ready_at(e.centre):
