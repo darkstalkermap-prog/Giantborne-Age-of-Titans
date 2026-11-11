@@ -42,7 +42,7 @@
 		{"id": "world.greywood.great_pine_3", "pos": [-562, -240], "yaw": 80, "poi": "poi.great_pines", "uproot_prop": "prop.great_pine", "weapon": "weapon.tree_pine", "radius": 8.0}
 	],
 	"shrines": [
-		{"id": "world.shrine.greywood", "record": "shrine.world_greywood", "pos": [-540, 110], "yaw": 30, "poi": "poi.greywood_shrine"}
+		{"id": "world.shrine.greywood", "record": "shrine.world_greywood", "pos": [-540, 110], "yaw": -10, "poi": "poi.greywood_shrine", "note": "M8 gate (F4): its growth pad (6.5 m before the stone) faces the clearing's open north side: at yaw 30 it stood 2.1 m from a pine and a stage-5 giant had no room to grow there."}
 	],
 	"waystones": [
 		{"id": "world.cp.hollowmere", "display_name": "Hollowmere waystone", "pos": [-590, 40], "yaw": 150, "radius": 10, "stone": [8, 0], "poi": "poi.hollowmere"},
