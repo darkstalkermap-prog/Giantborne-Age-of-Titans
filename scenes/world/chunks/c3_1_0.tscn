@@ -204,7 +204,7 @@ collision_mask = 0
 script = ExtResource("10_f30a1")
 gate_id = "world.gate.moot"
 min_stage = 6
-message = "The clans admit only a giant of the old height to the Moot."
+message = "The clans admit only a giant of the old height to the Moot. Grow to stage 6."
 cue = "sfx.gate.stone"
 
 [node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_moot_0"]

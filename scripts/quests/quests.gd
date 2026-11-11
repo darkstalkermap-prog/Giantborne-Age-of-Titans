@@ -60,7 +60,9 @@ extends Node
 ## "position" is the exit's, "via_exit", "via_name" and "via_text" name it; "" when the objective is
 ## on this level). M8 gate (F46): of a multi-marker stage's open markers, "position" is the nearest one
 ## the giant's stage can reach (marker_min_stage: a POI's min_stage), else the nearest, and
-## "marker_id" names that marker ("markers" and "positions" still list every open one).
+## "marker_id" names that marker ("markers" and "positions" still list every open one). M8 gate (F29): a
+## stage's `lead` (stage_lead) replaces them while it holds - the way round a gate the giant's stage
+## cannot pass yet - and "via_text" is its text ("by the Ironway"); "lead" is true then.
 
 const MAIN_QUEST_ID := "quest.main"
 const HOOK_ORDER := 100
@@ -607,6 +609,18 @@ func objective_for(quest_id: String) -> Dictionary:
 		position = positions[i]
 		route = routes[i]
 		marker = position_markers[i]
+	# M8 gate (F29): while the stage's lead holds, the way round a gate the giant cannot pass yet leads.
+	var lead_text := ""
+	var lead := stage_lead(srec)
+	if not lead.is_empty():
+		var lr := objective_route(str(lead.marker))
+		if (lr.position as Vector3).is_finite():
+			marker = str(lead.marker)
+			route = lr
+			position = lr.position
+			markers = PackedStringArray([marker])
+			positions = [position]
+			lead_text = str(lead.get("text", ""))
 	var bot: Dictionary = (srec.get("bot", {}) as Dictionary).duplicate(true) if typeof(srec.get("bot")) == TYPE_DICTIONARY else {}
 	return {"quest_id": quest_id, "stage_id": sid, "text": str(srec.get("objective", "")),
 		"kind": str(cond.get("type", "")) if typeof(cond) == TYPE_DICTIONARY else "",
@@ -617,7 +631,9 @@ func objective_for(quest_id: String) -> Dictionary:
 		"markers": markers, "positions": positions, "waiting_text": str(srec.get("waiting_text", "")),
 		# M7 polish: the exit the position leads to when the objective lies on another level ("" here),
 		# its name and the tracker's and the journal's phrase for it ("by the Kings' Door").
-		"via_exit": str(route.via_exit), "via_name": str(route.via_name), "via_text": by_exit_text(str(route.via_name))}
+		"via_exit": str(route.via_exit), "via_name": str(route.via_name),
+		"via_text": lead_text if lead_text != "" else by_exit_text(str(route.via_name)),
+		"lead": lead_text != "" or not lead.is_empty()}
 
 
 ## A stage's marker ids: its `marker`, then its `markers` (P20), each once.
@@ -657,6 +673,28 @@ static func markers_open_in(srec: Dictionary, ctx: Dictionary) -> PackedStringAr
 			continue
 		out.append(m)
 	return out
+
+
+## M8 gate (F29): the stage's `lead` while it holds ({} otherwise): the giant's stage is below its
+## below_stage and the giant does not stand in its outside_region (the level index's region at its
+## position; no region named: anywhere). The main thread's grow6 leads a giant below stage 6 that is not
+## yet up in the Stonehold to the Ironway's waystone - the Giant's Stair refuses it, and the Ironway is
+## the highlands' long way for every stage (plan §5.5) - and the tracker names "by the Ironway".
+func stage_lead(srec: Dictionary) -> Dictionary:
+	var lead: Variant = srec.get("lead")
+	if typeof(lead) != TYPE_DICTIONARY or str((lead as Dictionary).get("marker", "")) == "":
+		return {}
+	var p := _player_or_null()
+	if _stage_of_player(p) >= int((lead as Dictionary).get("below_stage", 0)):
+		return {}
+	var region := str((lead as Dictionary).get("outside_region", ""))
+	if region != "" and p != null and p.is_inside_tree():
+		var idx := level_index()
+		var root := _level_root()
+		var offset := root.global_position if root != null and root.is_inside_tree() else Vector3.ZERO
+		if idx != null and idx.region_at(p.global_position - offset) == region:
+			return {}
+	return lead
 
 
 ## M8 gate (F46): `positions` (of the markers `marker_ids`, in the same order) without those the giant's

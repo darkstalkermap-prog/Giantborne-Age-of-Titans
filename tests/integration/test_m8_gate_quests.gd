@@ -19,6 +19,11 @@ extends IntegrationSuite
 ##     inside a POI whose min_stage is above the giant's stage waits, unless nothing else is open), and
 ##     marker_id names the marker the position belongs to: a stage-4 giant at the third bell is led to
 ##     the second, not to the island's bell past the stage-5 channel.
+##   * F29: the main thread's grow6 names the way round the Giant's Stair - its waiting text the Ironway, up
+##     from Aldmere's road, and its lead: below stage 6, outside the Stonehold, the objective (the HUD
+##     marker, the compass, the tracker's "by the Ironway") points at the Ironway's waystone, then at the
+##     Standing Stones once the giant is up in the highlands; every size gate's message names the stage
+##     it needs (decision 18), the Stair's the Ironway too.
 
 const START_CP := "world.cp.kingsgate_shelf"
 const CROWN := "quest.oath_crown"
@@ -386,3 +391,65 @@ func test_the_bells_lead_a_stage_4_giant_to_a_bell_it_can_reach() -> void:
 		"the last open bell leads even before the giant can reach it")
 	assert_eq(Quests.marker_min_stage("world.marker.bell_5"), 5, "the island's bell lies in the Ancestral Circle (stage 5)")
 	assert_eq(Quests.marker_min_stage("world.marker.bell_2"), 0, "the second bell in the open shallows")
+
+
+# --------------------------------------------------------------------------- F29
+
+const MAIN := "quest.world_main"
+const TRACKER := preload("res://ui/hud/quest_tracker.gd")
+const LAYOUTS := ["crownmarch", "greywood", "drowned_steps", "aldmere", "stonehold"]
+
+
+func test_every_size_gate_names_its_stage_and_the_stair_the_way_round() -> void:
+	var gates := {}
+	for r: String in LAYOUTS:
+		var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tools/data/world/%s.json" % r))
+		for g: Dictionary in d.get("size_gates", []):
+			gates[str(g.id)] = g
+	assert_true(gates.size() >= 4, "the world's size gates (%s)" % [gates.keys()])
+	for id: String in gates:
+		var g: Dictionary = gates[id]
+		var text := str(g.get("message", ""))
+		if text == "":
+			text = str(SizeGate.DEFAULT_MESSAGES.get(int(g.min_stage), ""))
+		assert_true(text.contains("Grow to stage %d" % int(g.min_stage)), "%s names the stage it needs: '%s'" % [id, text])
+	for id: String in ["world.gate.giants_stair", "world.gate.moot"]:
+		assert_true(str(gates[id].message).ends_with("Grow to stage 6.") or str(gates[id].message).contains("Grow to stage 6,"),
+			"%s ends with what to do (%s)" % [id, gates[id].message])
+	assert_true(str(gates["world.gate.giants_stair"].message).contains("the Ironway"), "the Stair names the way round")
+
+
+func test_grow6_names_the_ironway_and_leads_a_smaller_giant_round_by_it() -> void:
+	var grow6 := Quests.stage_record(GameData.get_record(MAIN), "grow6")
+	var waiting := str(grow6.get("waiting_text", ""))
+	assert_true(waiting.contains("Ironway") and waiting.contains("Aldmere's road"),
+		"grow6's waiting text names the way round (%s)" % waiting)
+	GameSession.start_world_for_tests(START_CP)
+	GameSession.level_id = "level.world"
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	GameSession.on_level_ready(world, p)
+	p.set_profile(GameData.get_record("growth.05"))
+	Quests.test_active = true
+	Quests.scope = PackedStringArray([MAIN])
+	Quests.main_quest_id = MAIN
+	WorldState.set_flag(Quests.stage_flag(MAIN), "grow6")   # the main thread on grow6 (two oaths won)
+	var stones := WorldXp.position_of("world.marker.standing_stones")
+	var foot := WorldXp.position_of("world.cp.ironway")
+	# On the Mere's north shore, below the Stair: the lead is the Ironway's waystone.
+	for at: Vector3 in [Vector3(0, 0.05, -200), Vector3(-196, 0.05, 32), Vector3(500, 0.05, 150)]:
+		p.global_position = at
+		var o := Quests.objective_for(MAIN)
+		assert_eq(str(o.marker_id), "world.cp.ironway", "at %s a stage-5 giant is led to the Ironway's foot" % at)
+		assert_true((o.position as Vector3).is_equal_approx(foot), "the marker and the compass point there (%s)" % o.position)
+		assert_eq(str(o.via_text), "by the Ironway", "the tracker says which way")
+		assert_eq(TRACKER.title_of(o), "The Crown Unclaimed  -  by the Ironway", "the tracker's title line")
+	# Up in the highlands (the Ironway's top, in the Stonehold): the Standing Stones.
+	p.global_position = Vector3(700, 0.05, -560)
+	var up := Quests.objective_for(MAIN)
+	assert_eq(str(up.marker_id), "world.marker.standing_stones", "up the Ironway the Stones lead")
+	assert_true((up.position as Vector3).is_equal_approx(stones), "their position")
+	assert_eq(str(up.via_text), "", "no way round left to name")
+	# A stage-6 giant climbs the Stair: no lead.
+	p.set_profile(GameData.get_record("growth.06"))
+	p.global_position = Vector3(0, 0.05, -200)
+	assert_eq(str(Quests.objective_for(MAIN).marker_id), "world.marker.standing_stones", "at stage 6 the Stones lead from anywhere")

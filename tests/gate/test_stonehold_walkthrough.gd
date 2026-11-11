@@ -12,7 +12,8 @@ extends IntegrationSuite
 ##   * Skarn burned instead: two longhouses fall, the siege quest is lost and the rebuilding errand begins -
 ##     a stage-6 giant lifts the beams of two burned halls, Skarn stands with it again and its forge opens;
 ##   * the Moot battery's engines at stage 6: refused to a stage-5 giant, seized by a stage-6 one and thrown;
-##   * the Giant's Stair and the Moot's gate admit only stage 6, the Stair's head reveals 600 m, entering
+##   * the Giant's Stair and the Moot's gate admit only stage 6 and say so (M8 gate F29: "Grow to stage 6", the
+##     Stair's message the Ironway too), the Stair's head reveals 600 m, entering
 ##     the Moot completes its stage, and the champion's three outcomes - spared (his clan reconciled, the
 ##     clans watch the crowning), slain (the Moot empties, his clan stays hostile) and the talk ending (no
 ##     fight: the ring stays quiet) - each lets the giant take the Stone Throne.
@@ -390,6 +391,10 @@ func test_the_stair_and_the_moot_admit_only_stage_6_and_the_moot_is_entered() ->
 		if g != null:
 			assert_false(g.passes(5), "%s refuses a stage-5 giant" % id)
 			assert_true(g.passes(6), "%s admits a stage-6 giant" % id)
+			# M8 gate (F29): the refusal names the stage it needs (decision 18), the Stair the way round.
+			assert_true(g.message_text().contains("Grow to stage 6"), "%s says to grow to stage 6 (%s)" % [id, g.message_text()])
+	var stair_gate := gates.get("world.gate.giants_stair") as SizeGate
+	assert_true(stair_gate != null and stair_gate.message_text().contains("the Ironway"), "the Stair names the Ironway")
 	assert_eq(int(GameData.get_record("poi.stair_top").get("reveals_m", 0)), 600, "the Stair's head reveals 600 m")
 	var r: Array = await _moot()
 	var p: GiantPlayer = r[0]
