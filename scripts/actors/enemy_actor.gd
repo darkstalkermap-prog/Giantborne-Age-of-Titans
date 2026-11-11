@@ -3518,7 +3518,9 @@ func p34_yield(reason: String) -> void:
 
 
 ## Makes this actor harmless at once: AI off, its action and buffer gone, tokens back, its shots and
-## hazards discarded, unlockable, the player's lock on it released (yield, stand-down).
+## hazards discarded, unlockable, the player's lock on it released, and (M8 gate F13) the giant's
+## hold on it ended - set down, so a yield's prompt never opens with the boss in the giant's hand and
+## nothing still is thrown as a body (yield, stand-down).
 func _p34_still(remember_ai: bool) -> void:
 	if remember_ai:
 		_p34_ai_before = ai_enabled
@@ -3540,6 +3542,8 @@ func _p34_still(remember_ai: bool) -> void:
 	var p := get_tree().get_first_node_in_group("player") as GiantPlayer
 	if p != null and p.targeting != null and p.lock.is_locked() and p.lock.target_id == entity.entity_id:
 		p.targeting.release_lock("boss_yielded")
+	if p != null and p.grab != null and p.grab.held_id() == entity.entity_id:
+		p.grab.release("interrupted")
 
 
 ## Ends every projectile this actor launched that is still in the air.
