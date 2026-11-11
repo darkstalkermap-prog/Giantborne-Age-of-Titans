@@ -276,9 +276,11 @@ phases = [{
 engines = PackedStringArray("world.aldmere.fort_ballista_w", "world.aldmere.fort_ballista_e", "world.aldmere.fort_ballista_nw", "world.aldmere.fort_ballista_ne")
 commander_id = "world.aldmere.corvane"
 guard_formation = "guard"
+stand_out = PackedStringArray("encounter.aldmere_fort_gate")
 engage_area_id = "world.area.fort_bailey"
 pillars_path = NodePath("")
 inner_radius_m = 72.0
+floor_rect = Rect2(-90, -80, 180, 150)
 defeated_flag = "boss.corvane.defeated"
 
 [node name="world_aldmere_fort_parley" type="Node3D" parent="Props"]
@@ -315,6 +317,8 @@ open_when = {
 }],
 "type": "any"
 }
+faction = "aldmere"
+hostile_message = "At war with Aldmere: the fort's smiths will not work for you."
 world_id = "world.aldmere.fort_forge"
 display_name = "Fort Aldmere's forge"
 requires_flags = PackedStringArray()

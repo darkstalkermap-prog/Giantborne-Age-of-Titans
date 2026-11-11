@@ -1,13 +1,16 @@
 extends RefCounted
 ## Element kind "arena" (P36; plan M6-M9 §2.10, §5.13): a boss's arena in the world - at `pos` (the
-## arena's centre) its arena node with `inner_radius`, the AreaTrigger that begins the engagement
+## arena's centre) its arena node with `inner_radius` (and, for an enclosure, `floor`: [[x0, z0], [x1, z1]],
+## the world corners of its floor's rectangle - BossArena.floor_rect in the arena's own frame, which the
+## disengage rule measures from; M8 gate, F8: Fort Aldmere's bailey), the AreaTrigger that begins the engagement
 ## (`engage_area` id, `engage` {"at": [x, z], "size": [w, h, d], "yaw"}) and, with `gate`
 ## ({"at", "size", "yaw"}), the gate BossArena closes behind the giant (ArenaGate: a StaticBody3D on the
 ## world layer with its Shape and bars, shown and solid only while the fight is engaged). Styles:
 ##   battle  FortBattle (scripts/world/fort_battle.gd: a BattleBoss) - `battle_id`, `battle_name`,
 ##           `phases` ([{"id", "name", "below", "encounters"}]), `engines` (world ids in the aggregate),
 ##           `commander_id`, `guard_formation`, `defeated_flag`, `peace_condition`, `settled_flag`,
-##           `faction`, `open_flag`: Fort Aldmere's Iron Regiment, the inner portcullis behind the giant;
+##           `faction`, `open_flag`, `stand_out` (encounters whose members leave when the battle engages:
+##           M8 gate, F9): Fort Aldmere's Iron Regiment, the inner portcullis behind the giant;
 ##   moot    MootArena (scripts/world/moot_arena.gd: a BossArena) - `boss_id`, `encounter_id`,
 ##           `defeated_flag`, `settled_flag`, `faction`, `empty_flag`: Harrok's ring, no gate.
 ## Its chunk's props sub-scene holds it; the index lists the engage trigger as an area.
@@ -19,7 +22,7 @@ const SCRIPTS := {"battle": "res://scripts/world/fort_battle.gd", "moot": "res:/
 ## The arena script's exports an element may set (by style).
 const KEYS := {
 	"battle": ["battle_id", "battle_name", "phases", "engines", "commander_id", "guard_formation", "defeated_flag",
-		"peace_condition", "settled_flag", "faction", "open_flag", "disengage_s", "disengage_margin_m"],
+		"peace_condition", "settled_flag", "faction", "open_flag", "disengage_s", "disengage_margin_m", "stand_out"],
 	"moot": ["boss_id", "encounter_id", "defeated_flag", "settled_flag", "faction", "empty_flag", "disengage_s",
 		"disengage_margin_m"],
 }
@@ -42,6 +45,24 @@ static func style_of(el: Dictionary) -> String:
 static func _at(ctx: Dictionary, spec: Dictionary, dy := 0.0) -> Vector3:
 	var a: Array = spec.get("at", [0, 0])
 	return L.local_point(ctx, float(a[0]), float(a[1]), dy)
+
+
+## The rectangle (in the element's frame, x/z) that holds the world corners [[x0, z0], [x1, z1]]: the
+## arena node sits at the frame's origin, so this is BossArena.floor_rect.
+static func floor_rect(ctx: Dictionary, corners: Array) -> Rect2:
+	var a: Array = corners[0]
+	var b: Array = corners[1]
+	var out := Rect2()
+	var first := true
+	for x: float in [float(a[0]), float(b[0])]:
+		for z: float in [float(a[1]), float(b[1])]:
+			var p := L.local_point(ctx, x, z)
+			if first:
+				out = Rect2(Vector2(p.x, p.z), Vector2.ZERO)
+				first = false
+			else:
+				out = out.expand(Vector2(p.x, p.z))
+	return out
 
 
 static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
@@ -102,10 +123,13 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	arena.name = "Arena"
 	var props := {"engage_area_id": str(el.get("engage_area", "")), "gate_path": gate_path, "pillars_path": NodePath(""),
 		"inner_radius_m": float(el.get("inner_radius", 60.0))}
+	var fl: Variant = el.get("floor")
+	if typeof(fl) == TYPE_ARRAY and (fl as Array).size() == 2:
+		props["floor_rect"] = floor_rect(ctx, fl as Array)
 	for key: String in KEYS[style]:
 		if el.has(key):
 			var v: Variant = el[key]
-			if key == "engines":
+			if key == "engines" or key == "stand_out":
 				v = PackedStringArray(v)
 			elif key in ["disengage_s", "disengage_margin_m"]:
 				v = float(v)

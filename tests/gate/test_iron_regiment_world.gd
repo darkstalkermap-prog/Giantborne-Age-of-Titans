@@ -1,0 +1,238 @@
+extends IntegrationSuite
+## M8 gate (plan M6-M9 §2.10, §5.13 boss 1, §3.20 "every battle fits the caps on both platforms"): the
+## Iron Regiment's battle on the real world (scenes/world/world.tscn, deterministic streaming), a stage-5
+## giant that takes no damage, Fort Aldmere's real gate broken and the bailey entered through its engage
+## trigger as a player would.
+##   * F8: the battle's arena is the bailey inside the curtain wall (its floor rectangle), not a circle
+##     whose disengage line cut through the bailey's corners: the giant stands 6 s in each corner of the
+##     closed bailey and the battle goes on; a giant that really leaves (beyond the floor + 20 m for 5 s)
+##     still resets it.
+##   * F9 (F24): on the web, the gate broken with its garrison alive, the battle stands the garrison's
+##     pikes, banner and archers out when it engages (the crews of its own ballistae stay) and keeps its
+##     units' room: the Wall musters whole (banners first) within the web's 20 formation members, the bar
+##     counts what spawned, and the Charge's six riders spawn whole within the twelve combatants.
+
+const SCENE := "res://scenes/world/world.tscn"
+const GATE := "world.aldmere.fort_gate"
+const WALL := "encounter.aldmere_iron_regiment_wall"
+const CHARGE := "encounter.aldmere_iron_regiment_charge"
+const GARRISON := "encounter.aldmere_fort_gate"
+## Spots inside the curtain wall (560..740 x -245..-95), near each corner (99-107 m from the arena's
+## centre at (650, -165): beyond the old circle's 72 + 20 m).
+const CORNERS := [Vector2(730, -236), Vector2(570, -236), Vector2(730, -104), Vector2(570, -104)]
+
+var disengaged: Array = []
+
+
+func before_each() -> void:
+	await super()
+	disengaged.clear()
+	Events.boss_disengaged.connect(_on_disengaged)
+
+
+func after_each() -> void:
+	if Events.boss_disengaged.is_connected(_on_disengaged):
+		Events.boss_disengaged.disconnect(_on_disengaged)
+	Quests.end_dialogue()
+	for f in Formation.live():
+		f.dissolve()
+	FactionState.reset_for_tests()
+	WanderDirector.reset_for_tests()
+	LevelRoot.force_web_for_tests = false
+	await super()
+
+
+func _on_disengaged(t: int, id: String, reason: String) -> void:
+	disengaged.append([t, id, reason])
+
+
+static func _profile(stage: int) -> Dictionary:
+	for rec: Dictionary in GameData.records_of_type("growth_profile"):
+		if int(rec.get("stage", 0)) == stage:
+			return rec
+	return {}
+
+
+func _world(xz: Vector2) -> WorldRoot:
+	var w := (load(SCENE) as PackedScene).instantiate() as WorldRoot
+	world.add_child(w)
+	w.streamer.deterministic = true
+	w.player().router.use_injection = true
+	await _move(w, xz)
+	return w
+
+
+## Puts the giant on the ground at `xz` once the ring around it is loaded.
+func _move(w: WorldRoot, xz: Vector2) -> void:
+	var p := w.player()
+	var at := Vector3(xz.x, 300.0, xz.y)
+	p.process_mode = Node.PROCESS_MODE_DISABLED
+	p.global_position = at
+	var guard := 0
+	while not w.streamer.ring_ready(at) and guard < 800:
+		w.streamer.load_ring_slice(at)
+		await step_ticks(1)
+		guard += 1
+	var y := w.height_at(at)
+	p.global_position = Vector3(xz.x, (y if not is_nan(y) else 80.0) + 0.3, xz.y)
+	p.velocity = Vector3.ZERO
+	p.process_mode = Node.PROCESS_MODE_INHERIT
+
+
+## Strikes a prop as a stage-5 giant until it is destroyed (at most 80 blows).
+func _break(world_id: String, attacker: String) -> bool:
+	for i in 80:
+		if WorldState.is_destroyed(world_id):
+			return true
+		var e := Sim.get_entity(world_id)
+		if e == null:
+			return false
+		var h := HitEvent.new()
+		h.tick = Sim.tick
+		h.instance_id = Sim.new_instance_id()
+		h.attacker_id = attacker
+		h.target_id = world_id
+		h.power = 900.0
+		h.attacker_stat = 40.0
+		h.attacker_height_m = 20.0
+		h.damage_split = {"physical": 1.0}
+		h.poise_damage = 50.0
+		h.tags = PackedStringArray(["Melee"])
+		h.category = "melee"
+		h.attacker_growth_stage = 5
+		h.attacker_position = (e.actor as Node3D).global_position + Vector3(0, 0, 8) if e.actor != null else Vector3.ZERO
+		Sim.queue_hit(h)
+		await step_ticks(1)
+	return WorldState.is_destroyed(world_id)
+
+
+func _battle(w: Node) -> FortBattle:
+	for n in w.get_tree().get_nodes_in_group(BattleBoss.BATTLE_GROUP):
+		if n is FortBattle:
+			return n
+	return null
+
+
+## The real world before Fort Aldmere's gate, a stage-5 giant that takes no damage, the gate broken.
+func _fort(web: bool) -> WorldRoot:
+	LevelRoot.force_web_for_tests = web
+	WanderDirector.test_active = true
+	WanderDirector.view_probe = func(_p: Vector3) -> bool: return false
+	var w: WorldRoot = await _world(Vector2(650.0, -75.0))
+	var p := w.player()
+	p.set_profile(_profile(5))
+	p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+	await step_ticks(10)
+	assert_true(await _break(GATE, p.entity.entity_id), "the fort's gate breaks")
+	await step_ticks(30)
+	return w
+
+
+## Into the engage trigger and past the portcullis, as a player walks in.
+func _enter_bailey(w: WorldRoot, b: BattleBoss) -> void:
+	await _move(w, Vector2(650.0, -112.0))
+	await step_ticks(6)
+	await _move(w, Vector2(650.0, -128.0))
+	await step_ticks(6)
+	assert_eq(b.state_name(), "engaged", "walking in engages the battle")
+	assert_true(b.is_gate_closed(), "the portcullis closes behind the giant")
+
+
+func test_the_bailey_corners_never_disengage_the_battle() -> void:
+	var w := await _fort(false)
+	var b := _battle(w)
+	assert_true(b != null, "the battle is loaded")
+	if b == null:
+		return
+	await _enter_bailey(w, b)
+	await step_ticks(60)
+	for c: Vector2 in CORNERS:
+		await _move(w, c)
+		var p := w.player()
+		var local := b.to_local(p.global_position)
+		var r := Vector2(local.x, local.z).length()
+		assert_true(p.global_position.x > 561.5 and p.global_position.x < 738.5 and p.global_position.z > -243.5
+			and p.global_position.z < -96.5, "the giant stands inside the curtain wall at %s" % [p.global_position])
+		await step_ticks(6 * 60)
+		print("    iron regiment: %s, %.1f m from the arena's centre: %s, disengaged %s" % [c, r, b.state_name(), disengaged])
+		assert_eq(disengaged, [], "6 s in the bailey's corner at %s (%.0f m from the centre) keeps the battle" % [c, r])
+		assert_eq(b.state_name(), "engaged", "still engaged")
+		assert_true(b.is_gate_closed(), "the portcullis stays down")
+	# A giant that really leaves: out past the gate, beyond the bailey + 20 m, for 5 s.
+	await _move(w, Vector2(650.0, -40.0))
+	await step_ticks(int(5.5 * 60))
+	assert_eq(disengaged.size(), 1, "leaving the bailey for good still resets the battle")
+	if not disengaged.is_empty():
+		assert_eq([disengaged[0][1], disengaged[0][2]], ["battle.iron_regiment", "left"], "boss_disengaged(battle.iron_regiment, left)")
+	assert_eq(b.state_name(), "waiting", "the battle waits for a new attempt")
+	w.queue_free()
+	await step_ticks(2)
+
+
+func _kill(id: String) -> void:
+	var e := Sim.get_entity(id)
+	if e == null or e.actor == null or not e.is_alive():
+		return
+	var h := HitEvent.new()
+	h.tick = Sim.tick
+	h.instance_id = Sim.new_instance_id()
+	h.attacker_id = "test.nobody"
+	h.target_id = id
+	h.power = 1.0e6
+	h.size_policy = "none"
+	h.damage_split = {"physical": 1.0}
+	h.tags = PackedStringArray(["Melee", "Unblockable", "Unparryable"])
+	h.attacker_position = (e.actor as Node3D).global_position + Vector3(0, 0, 6)
+	Sim.queue_hit(h)
+
+
+func test_the_web_battle_fits_the_cap_with_the_gate_garrison_alive() -> void:
+	var w := await _fort(true)
+	var b := _battle(w)
+	assert_true(b != null, "the battle is loaded")
+	if b == null:
+		return
+	var d := w.director()
+	var garrison := Array(d.members_of(GARRISON)).filter(func(id: String) -> bool:
+		return d.member_status(id) == EncounterDirector.SPAWNED)
+	var pikes := garrison.filter(func(id: String) -> bool: return id.contains("gate_pike") or id.contains("gate_banner"))
+	print("    iron regiment (web): before the battle, the gate garrison %d up (%d of its formation), formation members %d/%d" % [
+		garrison.size(), pikes.size(), d.formation_member_count(), d.max_formation_members])
+	assert_eq(d.max_formation_members, 20, "the web's formation cap")
+	assert_true(pikes.size() >= 7, "the garrison's pikes and banner stand at the broken gate (%d)" % pikes.size())
+	await _enter_bailey(w, b)
+	await step_ticks(120)
+	for id: String in pikes:
+		assert_true(d.member_status(id) != EncounterDirector.SPAWNED, "%s stood out (%s)" % [id, d.member_status(id)])
+	for crew: String in ["world.aldmere.wall_crew_1", "world.aldmere.wall_crew_2"]:
+		if garrison.has(crew):
+			assert_eq(d.member_status(crew), EncounterDirector.SPAWNED, "%s stays at its ballista (the battle's)" % crew)
+	var planned := b.planned()
+	var waiting: Array = []
+	for id: String in d.members_of(WALL):
+		if planned.has(id) and d.member_status(id) != EncounterDirector.SPAWNED:
+			waiting.append(id)
+	print("    iron regiment (web): 2 s after engaging, the Wall waiting %s; formation members %d/%d; stood out %d" % [
+		waiting, d.formation_member_count(), d.max_formation_members, b.stood_out.size()])
+	assert_eq(waiting, [], "every unit of the Wall the bar counts has spawned")
+	assert_eq(d.member_status("world.aldmere.regiment_shield_banner"), EncounterDirector.SPAWNED, "the shield wall's banner with it")
+	assert_true(d.formation_member_count() <= d.max_formation_members, "within the web's cap")
+	var counted := 0.0
+	for id: String in planned:
+		var e := Sim.get_entity(id)
+		counted += e.combatant.pools.health if e != null and e.combatant != null else float(planned[id])
+	for eid in b.engines:
+		var e := Sim.get_entity(eid)
+		counted += e.combatant.pools.health if e != null and e.combatant != null and e.is_alive() else 0.0
+	assert_near(float(b.aggregate().current), counted, 0.5, "the bar counts what spawned")
+	# The Wall falls: the Charge's six riders spawn whole within the budget.
+	for id: String in d.members_of(WALL):
+		_kill(id)
+	await step_ticks(30)
+	assert_true(b.phase_log.has(2), "The Charge (%s)" % [b.phase_log])
+	var riders := Array(d.members_of(CHARGE)).filter(func(id: String) -> bool: return d.member_status(id) == EncounterDirector.SPAWNED)
+	print("    iron regiment (web): the Charge %d riders up, combatants %d/%d" % [riders.size(), d.active_combatant_count(), d.max_active_enemies])
+	assert_eq(riders.size(), 6, "six riders, whole")
+	assert_true(d.active_combatant_count() <= d.max_active_enemies, "within the twelve")
+	w.queue_free()
+	await step_ticks(2)

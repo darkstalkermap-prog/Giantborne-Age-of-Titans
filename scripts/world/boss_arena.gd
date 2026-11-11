@@ -32,6 +32,17 @@ extends Node3D
 ##     (the gate opens, the defeated flag, boss_defeated); Strike ends it when the boss dies.
 ##   * The boss's flight (boss_disengaged(boss, "fled"), the Matriarch's drive-out) ends it too: the
 ##     gate opens and the defeated flag is set, without boss_defeated.
+##
+## M8 gate:
+##   * F8: an arena may be an enclosure - `floor_rect`, its floor as a rectangle in this node's local
+##     x/z (Fort Aldmere's bailey inside its curtain wall, from the layout element's `floor`). The
+##     disengage rule then measures how far the giant stands outside that rectangle (outside_m), not
+##     beyond inner_radius_m: the circle that fitted the plan's 120 x 90 m bailey cut through the
+##     corners of the 180 x 150 m one built, and a giant standing in a corner of the closed bailey reset
+##     the battle. in_bounds() counts the rectangle too.
+##   * F33: the giant is told: a warning on the HUD's message line when it crosses the disengage line
+##     during an engaged attempt (at most every LEAVING_WARN_EVERY_S), and a line when the attempt resets
+##     (Events.hud_message; BattleBoss words them for a battle).
 
 const GROUP := "boss_arenas"
 const HOOK_ORDER := 120
@@ -44,6 +55,8 @@ const WALL_MARGIN_M := 2.0
 ## P34: the disengage rule's defaults (plan M6-M9 §2.10).
 const DISENGAGE_S := 5.0
 const DISENGAGE_MARGIN_M := 20.0
+## M8 gate (F33): the leaving warning is not repeated sooner than this.
+const LEAVING_WARN_EVERY_S := 4.0
 
 enum State { WAITING, ENGAGING, ENGAGED, DEFEATED }
 const STATE_NAMES := ["waiting", "engaging", "engaged", "defeated"]
@@ -58,6 +71,9 @@ const STATE_NAMES := ["waiting", "engaging", "engaged", "defeated"]
 @export var pillars_path: NodePath = ^"../Pillars"
 ## The arena floor's radius (from this node, horizontally).
 @export var inner_radius_m := 40.0
+## M8 gate (F8): the arena floor as a rectangle in this node's local x/z (an enclosure); no area = the
+## circle of inner_radius_m. The disengage rule and in_bounds() measure from it when it is set.
+@export var floor_rect := Rect2()
 ## The antechamber (and gateway) in this node's local x/z: part of the arena bounds.
 @export var antechamber_rect := Rect2()
 ## Set (first write wins) when the boss dies.
@@ -75,6 +91,7 @@ var removed_intruders: Array[String] = []
 var attempts := 0
 var disengages := 0
 var _outside_since := -1
+var _leaving_warned_tick := -100000
 var gate: StaticBody3D
 var _gate_shape: CollisionShape3D
 
@@ -149,13 +166,26 @@ func pillar_positions() -> Array[Vector3]:
 	return out
 
 
-## True when `point` lies inside the arena bounds: within inner_radius_m (+ the wall) of this
-## node, or inside the antechamber rectangle (local x/z).
+## True when `point` lies inside the arena bounds: on its floor (within inner_radius_m of this node, or
+## inside floor_rect when it has one) + the wall, or inside the antechamber rectangle (local x/z).
 func in_bounds(point: Vector3) -> bool:
-	var local := to_local(point)
-	if Vector2(local.x, local.z).length() <= inner_radius_m + WALL_MARGIN_M:
+	if outside_m(point) <= WALL_MARGIN_M:
 		return true
+	var local := to_local(point)
 	return antechamber_rect.has_area() and antechamber_rect.has_point(Vector2(local.x, local.z))
+
+
+## How far `point` lies outside the arena's floor, flat (0 on it): beyond inner_radius_m of this node,
+## or outside floor_rect when the arena has one (M8 gate, F8).
+func outside_m(point: Vector3) -> float:
+	var local := to_local(point)
+	var at := Vector2(local.x, local.z)
+	if floor_rect.has_area():
+		var r := floor_rect.abs()
+		var dx := maxf(maxf(r.position.x - at.x, 0.0), at.x - r.end.x)
+		var dz := maxf(maxf(r.position.y - at.y, 0.0), at.y - r.end.y)
+		return Vector2(dx, dz).length()
+	return maxf(0.0, at.length() - inner_radius_m)
 
 
 func debug_lines() -> PackedStringArray:
@@ -319,25 +349,30 @@ func _p34_keeps(e: EnemyActor, d: EncounterDirector) -> bool:
 	return typeof(brood) == TYPE_DICTIONARY and e.entity.definition_id == str((brood as Dictionary).get("definition", ""))
 
 
-## The disengage rule (see the class notes): ENGAGED, the giant beyond the radius for disengage_s.
+## The disengage rule (see the class notes): ENGAGED, the giant beyond the floor + disengage_margin_m
+## for disengage_s (M8 gate, F8: measured from floor_rect when the arena has one). Crossing that line
+## warns the giant (F33).
 func _check_disengage(tick: int) -> void:
 	if disengage_s <= 0.0:
 		return
 	var p := _player()
 	if p == null:
 		return
-	var local := to_local(p.global_position)
-	if Vector2(local.x, local.z).length() <= inner_radius_m + disengage_margin_m:
+	if outside_m(p.global_position) <= disengage_margin_m:
 		_outside_since = -1
 		return
 	if _outside_since < 0:
 		_outside_since = tick
+		if tick - _leaving_warned_tick >= ActionDef.seconds_to_ticks(LEAVING_WARN_EVERY_S):
+			_leaving_warned_tick = tick
+			Events.hud_message.emit(leaving_line(), "warn")
 	elif tick - _outside_since >= ActionDef.seconds_to_ticks(disengage_s):
 		disengage(tick)
 
 
 ## Ends the attempt (the disengage rule; tests may call it): the arena waits with its gate open, the
-## boss begins a new attempt, Events.boss_disengaged(boss, "left"). Only while engaged.
+## boss begins a new attempt, Events.boss_disengaged(boss, "left") and the HUD's reset line (F33). Only
+## while engaged.
 func disengage(tick: int = -1) -> void:
 	if state != State.ENGAGED:
 		return
@@ -348,6 +383,23 @@ func disengage(tick: int = -1) -> void:
 	_set_gate_closed(false)
 	_reset_attempt()
 	Events.boss_disengaged.emit(t, boss_id, "left")
+	Events.hud_message.emit(reset_line(), "bad")
+
+
+## M8 gate (F33): the fight's name in the disengage lines - the boss's display name.
+func fight_name() -> String:
+	var e := boss_entity()
+	return e.display_name() if e != null else "The boss"
+
+
+## The warning when the giant crosses the disengage line during an engaged attempt (F33).
+func leaving_line() -> String:
+	return "%s will recover unless you turn back." % fight_name()
+
+
+## The line when the attempt resets (F33).
+func reset_line() -> String:
+	return "%s recovered: you left the fight." % fight_name()
 
 
 ## The boss's part of a new attempt (BattleBoss resets its battle instead).

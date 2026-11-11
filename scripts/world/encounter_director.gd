@@ -538,11 +538,12 @@ func _update_cleared(enc: Encounter, ppos: Vector3) -> void:
 			m.status = UNSPAWNED
 
 
-## Spawns the members still waiting, in spawn order, while the budget has room (members that do
-## not count toward it always spawn) and the update's spawn quota lasts (the rest wait for the
-## next tick). Killed ones are skipped for good.
+## Spawns the members still waiting, in spawn order (each formation's banner first: P30, M8 gate F9),
+## while the budget has room (members that do not count toward it always spawn; an engaged battle's
+## units still to come keep theirs: P34, M8 gate F9) and the update's spawn quota lasts (the rest wait
+## for the next tick). Killed ones are skipped for good.
 func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
-	for m: Member in enc.members:
+	for m: Member in _p30_spawn_order(enc):
 		if m.status != UNSPAWNED:
 			continue
 		if WorldState.is_killed(m.entity_id):
@@ -552,7 +553,7 @@ func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
 			continue   # P24b: not at this stage
 		if _p30_waits_for_room(m):
 			continue   # P30: the level's formation members are at max_formation_members
-		if counts(m) and active_combatant_count() >= max_active_enemies:
+		if counts(m) and active_combatant_count() + _p34_reserved_room(m, false) >= max_active_enemies:
 			continue
 		if _spawn_quota == 0:
 			_spawn_deferred = true
@@ -564,7 +565,7 @@ func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
 
 
 func _can_activate(enc: Encounter) -> bool:
-	var waiting := false
+	var waiting: Member = null
 	for m: Member in enc.members:
 		if m.status != UNSPAWNED and m.status != DESPAWNED:
 			continue
@@ -572,10 +573,11 @@ func _can_activate(enc: Encounter) -> bool:
 			continue
 		if not _p24b_stage_allows(m):
 			continue   # P24b: a member of another stage does not make the encounter worth activating
-		waiting = true
 		if not counts(m):
 			return true
-	return waiting and active_combatant_count() < max_active_enemies
+		if waiting == null:
+			waiting = m
+	return waiting != null and active_combatant_count() + _p34_reserved_room(waiting, false) < max_active_enemies
 
 
 func _check_leash(enc: Encounter, tick: int) -> void:
@@ -1307,7 +1309,24 @@ func _p30_waits_for_room(m: Member) -> bool:
 	if str(m.spawn.get("formation", "")) == "":
 		return false
 	_p30_load_cap()
-	return formation_member_count() >= max_formation_members
+	return formation_member_count() + _p34_reserved_room(m, true) >= max_formation_members
+
+
+## M8 gate (F9): an encounter's members in spawn order with each formation's banner first, so a formation
+## short of room in the cap never fields its rank and file without its banner (the Wall's shield banner,
+## listed last, waited while four of its shields stood).
+func _p30_spawn_order(enc: Encounter) -> Array:
+	var forms: Variant = enc.record.get("formations")
+	if typeof(forms) != TYPE_ARRAY or (forms as Array).is_empty():
+		return enc.members
+	var banners: Array = []
+	var rest: Array = []
+	for m: Member in enc.members:
+		if str(m.spawn.get("formation", "")) != "" and int(m.spawn.get("slot", 0)) == Formation.BANNER_SLOT:
+			banners.append(m)
+		else:
+			rest.append(m)
+	return banners + rest
 
 
 func _p30_load_cap() -> void:
@@ -1535,6 +1554,58 @@ func _p32_on_member_spawned(encounter_id: String, entity_id: String, node: Node3
 # giant's centre (the hook in _spawn).
 
 const P34_FOOTPRINT_MARGIN_M := 1.0
+
+## M8 gate (F9; plan §3.20 "every battle fits the caps on both platforms"): owner (a battle id) -> {entity
+## id: true}, the planned units of an engaged battle. While they are reserved, each of them still to come
+## (waiting to spawn: unspawned or despawned, not killed) keeps its room in the level's caps - its place in
+## max_formation_members when it is a formation member, in max_active_enemies when it counts - against the
+## members of every other encounter (a wanderer, an event's column, a garrison coming back), which wait
+## for room meanwhile. The battle's own units spawn as before. BattleBoss reserves its plan when it engages
+## and releases it when the attempt ends (a disengage, its defeat).
+var _p34_reserved := {}
+
+
+## Reserves the room of `ids` (see the notes) for `owner`, replacing what it reserved before.
+func p34_reserve(owner: String, ids: Array) -> void:
+	var units := {}
+	for id: Variant in ids:
+		units[str(id)] = true
+	_p34_reserved[owner] = units
+	_dirty = true
+
+
+## Releases what `owner` reserved.
+func p34_release(owner: String) -> void:
+	if _p34_reserved.erase(owner):
+		_dirty = true
+
+
+## True when `entity_id` is a unit some battle reserves room for (tests, debug).
+func p34_is_reserved(entity_id: String) -> bool:
+	for owner: String in _p34_reserved:
+		if (_p34_reserved[owner] as Dictionary).has(entity_id):
+			return true
+	return false
+
+
+## The room `m` must leave in a cap (formation: max_formation_members, else max_active_enemies) for the
+## reserved units still to come: 0 for a reserved unit itself (it is one of them) or when nothing is
+## reserved.
+func _p34_reserved_room(m: Member, formation: bool) -> int:
+	if _p34_reserved.is_empty() or p34_is_reserved(m.entity_id):
+		return 0
+	var n := 0
+	for owner: String in _p34_reserved:
+		for id: String in _p34_reserved[owner]:
+			var r: Member = _members.get(id)
+			if r == null or (r.status != UNSPAWNED and r.status != DESPAWNED) or WorldState.is_killed(id):
+				continue
+			if formation:
+				if str(r.spawn.get("formation", "")) != "":
+					n += 1
+			elif str(r.spawn.get("formation", "")) == "" and counts(r):
+				n += 1
+	return n
 
 
 ## Resets an encounter for a new attempt (see above). Nothing for an unknown id.

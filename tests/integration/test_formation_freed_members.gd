@@ -197,3 +197,50 @@ func test_one_formation_repath_costs_one_query() -> void:
 	assert_false((f.get("_path") as PackedVector3Array).is_empty(), "the formation asked one path")
 	assert_eq(NavQuery.queries_total - before_total, 1, "one path query")
 	assert_eq(NavQuery.used_this_tick(lv) - before_tick, 1, "it costs one of the tick's budget")
+
+
+## The crowd renderer draws far members as a crowd (their rigs hidden): one the director frees (taken out
+## of its formation first) and one freed while still listed are let go of, and release_all() skips them.
+func test_the_crowd_renderer_lets_go_of_freed_members_it_drew() -> void:
+	var stand_in := Node3D.new()
+	stand_in.name = "GiantStandIn"
+	stand_in.position = Vector3(0, 0.05, 120)   # far: every member is drawn in the crowd
+	world.add_child(stand_in)
+	stand_in.add_to_group("player")
+	f = Formation.new()
+	f.id = "test.freed_crowd"
+	f.kind = "pike"
+	f.ranks = 2
+	f.files = 3
+	f.place(Vector3(0, 0, -20), PI)
+	var pikes: Array[EnemyActor] = []
+	for i in 6:
+		var e := TestSpawn.enemy(world, PIKEMAN, f.slot_position(i), "test.freed_crowd_%d" % i, false, PI)
+		pikes.append(e)
+		f.add_member(e, i)
+	var r := CrowdRenderer.new()
+	r.formation = f
+	world.add_child(r)
+	r.set_process(false)   # only these refreshes: a member freed between two frames (a deferred despawn)
+	await step_ticks(1)
+	r.refresh()
+	assert_eq(r.crowded.size(), 6, "six members in the crowd, their rigs hidden")
+	# One the director frees: out of the formation first (Formation.remove_member), then freed.
+	var a := pikes[0]
+	f.remove_member(a)
+	a.get_parent().remove_child(a)
+	a.queue_free()
+	# One freed while the formation still lists it (before its prune).
+	var b := pikes[1]
+	b.get_parent().remove_child(b)
+	b.queue_free()
+	await get_tree().process_frame
+	r.refresh()
+	assert_eq(r.crowded.size(), 4, "the four left in the crowd")
+	var c := pikes[2]
+	c.get_parent().remove_child(c)
+	c.queue_free()
+	await get_tree().process_frame
+	r.release_all()
+	assert_eq(r.crowded.size(), 0, "every rig given back, the freed skipped")
+	r.queue_free()
