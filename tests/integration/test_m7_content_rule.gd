@@ -72,8 +72,13 @@ func test_every_region_has_encounters_and_caches_or_cairns() -> void:
 func test_the_light_encounters_use_existing_archetypes_within_the_rules() -> void:
 	# The light content of the four regions P25 ships (the Crownmarch's settlements, talkers and
 	# formation fights are P29's: tests/integration/test_crownmarch_content.gd).
-	var light := _of_level("encounter").filter(func(r: Dictionary) -> bool: return LIGHT_REGIONS.has(_region_of(_xz(r.center_m))))
-	assert_true(light.size() >= 8, "two light encounters in each of four regions (%d)" % light.size())
+	# P36: a region package that brings its region's content removes the region record's m7_note; its
+	# encounters are its own tests' (P36: tests/integration/test_aldmere_stonehold_content.gd).
+	var waiting := LIGHT_REGIONS.filter(func(id: String) -> bool:
+		return str(GameData.get_record(id).get("m7_note", "")) != "")
+	var light := _of_level("encounter").filter(func(r: Dictionary) -> bool: return waiting.has(_region_of(_xz(r.center_m))))
+	assert_true(light.size() >= 2 * waiting.size(), "two light encounters in each region still waiting for its package (%d in %s)" % [
+		light.size(), waiting])
 	for enc: Dictionary in light:
 		var id := str(enc.id)
 		# M8 (P35, P36): an arena boss's encounter is held by its arena's disengage rule instead of a

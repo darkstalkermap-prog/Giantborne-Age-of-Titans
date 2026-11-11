@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "quest.iron_regiment",
+	"type": "quest",
+	"display_name": "The Iron Regiment",
+	"description": "P36 (plan M6-M9 §5.7, §5.13 boss 1): the crown's oath by breach. It starts when Fort Aldmere's gate falls (a stage-4 giant breaks it). In the bailey the battle (world.aldmere.iron_regiment_arena, FortBattle: the Wall, the Charge, the Last Stand) runs until Corvane yields; the yield prompt's Spare or Strike settles boss.corvane.outcome (spared / slain), and this stage writes the oath's outcome breach (first write wins) - quest.oath_crown's resolve stage then pays. Given up once the oath is won another way.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{"type": "destroyed", "world_id": "world.aldmere.fort_gate"}
+	],
+	"abandon_when": {"type": "flag", "flag": "oath.crown.done"},
+	"tracker_priority": 55,
+	"stages": [
+		{"id": "battle", "objective": "Break the Iron Regiment in Fort Aldmere's bailey until Corvane yields", "complete_when": {"type": "flag", "flag": "boss.corvane.outcome"}, "marker": "world.marker.fort_bailey", "xp": 0, "waiting_text": "Enter the bailey through the broken gate: the portcullis closes behind you. Break the formations' banners, smash the wall ballistae, and bring down Corvane's guard until he yields - then spare or strike him.", "items": [], "set_flags": {"oath.crown.done": true, "oath.crown.outcome": "breach"}, "bot": {"action": "fight_encounter", "target": "world.area.fort_bailey", "arena": "world.aldmere.iron_regiment_arena", "encounters": ["encounter.aldmere_iron_regiment_wall", "encounter.aldmere_iron_regiment_charge", "encounter.aldmere_iron_regiment_stand"]}}
+	],
+	"on_complete_flags": {}
+}

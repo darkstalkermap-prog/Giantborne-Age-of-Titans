@@ -1,11 +1,14 @@
 [gd_scene format=4]
 
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
-[ext_resource type="Script" path="res://scripts/world/inscription.gd" id="3_dd8c0"]
-[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="4_2c089"]
-[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="5_add9b"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="6_acc12"]
+[ext_resource type="PackedScene" path="res://scenes/world/siege_catapult.tscn" id="1_1d827"]
+[ext_resource type="Script" path="res://scripts/world/siege_engine.gd" id="2_29782"]
+[ext_resource type="PackedScene" path="res://scenes/world/siege_ballista.tscn" id="3_83f62"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="4_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="5_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/inscription.gd" id="6_dd8c0"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="7_2c089"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="8_add9b"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="9_acc12"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(3, 4, 3)
@@ -17,7 +20,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 216,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAdAB4AHAAeAB8AHwAeABkAHwAZABgAHgAdABoAHgAaABkAHQAcABsAHQAbABoAHAAfABgAHAAYABsAIAAhACIAIAAiACMAJAAlACYAJAAmACcAJwAmACEAJwAhACAAJgAlACIAJgAiACEAJQAkACMAJQAjACIAJAAnACAAJAAgACMAKAApACoAKAAqACsALAAtAC4ALAAuAC8ALwAuACkALwApACgALgAtACoALgAqACkALQAsACsALQArACoALAAvACgALAAoACsA"),
-"material": ExtResource("4_2c089"),
+"material": ExtResource("7_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 48,
@@ -34,7 +37,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 72,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
-"material": ExtResource("4_2c089"),
+"material": ExtResource("7_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 16,
@@ -48,7 +51,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 36,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMA"),
-"material": ExtResource("4_2c089"),
+"material": ExtResource("7_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 8,
@@ -59,17 +62,35 @@ _surfaces = [{
 
 [node name="Props" type="Node3D" parent="."]
 
-[node name="world_aldmere_war_camp_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
+[node name="world_aldmere_camp_catapult_1" type="StaticBody3D" parent="Props" instance=ExtResource("1_1d827")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 232, 33.352, 66)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_29782")
+faction = "aldmere"
+prop_targets = PackedStringArray()
+world_id = "world.aldmere.camp_catapult_1"
+
+[node name="world_aldmere_camp_ballista_1" type="StaticBody3D" parent="Props" instance=ExtResource("3_83f62")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 252, 33.352, 58)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_29782")
+faction = "aldmere"
+prop_targets = PackedStringArray()
+world_id = "world.aldmere.camp_ballista_1"
+
+[node name="world_aldmere_war_camp_cache" type="StaticBody3D" parent="Props" instance=ExtResource("4_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 33.352, 162)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("2_5fc47")
+script = ExtResource("5_5fc47")
 world_id = "world.aldmere.war_camp_cache"
 loot_table = "loot.cache_war_camp"
 
 [node name="world_aldmere_mill_cairn" type="Node3D" parent="Props"]
 transform = Transform3D(-0.9396926, 0, -0.34202015, 0, 1, 0, 0.34202015, 0, -0.9396926, 198, 23.14, 236)
-script = ExtResource("3_dd8c0")
+script = ExtResource("6_dd8c0")
 npc_id = "world.aldmere.mill_cairn"
 dialogue_id = "dialogue.cairn_deserters_mill"
 prompt = "Read the cairn"
@@ -92,7 +113,7 @@ mesh = SubResource("ArrayMesh_2")
 
 [node name="world_cp_aldmere_road" type="Marker3D" parent="Waystones"]
 transform = Transform3D(0.76604444, 0, -0.6427876, 0, 1, 0, 0.6427876, 0, 0.76604444, 214, 34.51, 60)
-script = ExtResource("5_add9b")
+script = ExtResource("8_add9b")
 requires_flags = PackedStringArray()
 display_name = "Aldmere road waystone"
 checkpoint_id = "world.cp.aldmere_road"
@@ -118,8 +139,29 @@ mesh = SubResource("ArrayMesh_5")
 
 [node name="world_marker_war_camp_edge" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 244, 33.272, 190)
-script = ExtResource("6_acc12")
+script = ExtResource("9_acc12")
 marker_id = "world.marker.war_camp_edge"
+
+[node name="world_marker_deserters_mill" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 184, 23.34, 204)
+script = ExtResource("9_acc12")
+marker_id = "world.marker.deserters_mill"
+
+[node name="Safe" type="Node3D" parent="Markers"]
+
+[node name="world_marker_deserters_hide" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 168, 23.34, 238)
+script = ExtResource("9_acc12")
+marker_id = "world.marker.deserters_hide"
+kind = 4
+
+[node name="Patrol" type="Node3D" parent="Markers"]
+
+[node name="world_marker_camp_flee_w" type="Marker3D" parent="Markers/Patrol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 164, 30.084, 110)
+script = ExtResource("9_acc12")
+marker_id = "world.marker.camp_flee_w"
+kind = 5
 
 [node name="Triggers" type="Node3D" parent="."]
 

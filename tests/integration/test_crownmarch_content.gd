@@ -138,7 +138,7 @@ func test_every_crownmarch_quest_stage_can_complete_and_reads_written_flags() ->
 				assert_true(idx != null and idx.position_of(m).is_finite(), "%s: marker %s is in its level's index" % [where, m])
 	# M7: only Brannock's oath ships, so the oaths stage (two of three) waits for P35's and P36's; M8:
 	# the wood's (P35) and the crown's (P36) are read before they ship only while their records are
-	# missing.
+	# missing - once both have merged (W21), no oath is read before it ships.
 	var unshipped := ["wood", "crown"].filter(func(k: String) -> bool: return not GameData.has_record("quest.oath_" + k))
 	assert_eq(later.keys().map(func(f: String) -> String: return f.get_slice(".", 1)), unshipped,
 		"only the oaths not shipped yet are read before they ship (%s)" % [later])

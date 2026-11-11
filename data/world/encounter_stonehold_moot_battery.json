@@ -1,0 +1,43 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_moot_battery",
+	"type": "encounter",
+	"display_name": "The Moot battery",
+	"description": "P36 (plan M6-M9 §5.4, §5.10): the toll-riders' siege company Harrok's clan hired to bar rival giants from the Moot - two catapults and two ballistae with six crews and a shield wall of eight and its banner, holding the plateau road to the Moot. It musters for a giant of stage 6 (a smaller one is no rival to the clans); hostile. Its engines can be seized and thrown at stage 6. Leash 70 m.",
+	"level": "level.world",
+	"center_m": [-190, 86.37, -640],
+	"activate_radius_m": 150,
+	"deactivate_radius_m": 230,
+	"leash_radius_m": 70,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"web_formation_scale": 0.7,
+	"engines": [
+		{"engine": "world.stonehold.battery_catapult_1", "crew": ["world.stonehold.battery_crew_1", "world.stonehold.battery_crew_2"]},
+		{"engine": "world.stonehold.battery_catapult_2", "crew": ["world.stonehold.battery_crew_3", "world.stonehold.battery_crew_4"]},
+		{"engine": "world.stonehold.battery_ballista_1", "crew": ["world.stonehold.battery_crew_5"]},
+		{"engine": "world.stonehold.battery_ballista_2", "crew": ["world.stonehold.battery_crew_6"]}
+	],
+	"formations": [
+		{"id": "shields", "kind": "shield", "display_name": "The Battery's Shield Wall", "banner": "world.stonehold.battery_banner", "banner_name": "Banner of the Toll-Riders", "banner_color": [0.62, 0.18, 0.14], "ranks": 2, "files": 4, "rank_spacing_m": 2.0, "file_spacing_m": 1.6, "facing": "threat", "yaw_deg": -90, "turn_deg_s": 40, "advance_mps": 1.0, "advance_m": 12, "brace_m": 6.0, "brace_action": "ability.formation_brace_shield", "brace_height_m": 5.0, "morale_start": 90, "flee_points": ["world.marker.battery_flee_w", "world.marker.battery_flee_e", "world.marker.battery_flee_n"], "min_stage": 6}
+	],
+	"spawns": [
+		{"entity_id": "world.stonehold.battery_shield_1", "definition": "enemy.shieldman", "position_m": [-156.0, 85.77, -647.4], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 0, "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_shield_2", "definition": "enemy.shieldman", "position_m": [-156.0, 85.77, -645.8], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 1, "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_shield_3", "definition": "enemy.shieldman", "position_m": [-156.0, 85.77, -644.2], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 2, "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_shield_4", "definition": "enemy.shieldman", "position_m": [-156.0, 85.77, -642.6], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 3, "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_shield_5", "definition": "enemy.shieldman", "position_m": [-158.0, 85.79, -647.4], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 4, "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_shield_6", "definition": "enemy.shieldman", "position_m": [-158.0, 85.8, -645.8], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 5, "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_shield_7", "definition": "enemy.shieldman", "position_m": [-158.0, 85.8, -644.2], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 6, "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_shield_8", "definition": "enemy.shieldman", "position_m": [-158.0, 85.81, -642.6], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 7, "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_banner", "definition": "enemy.bannerman", "position_m": [-160.2, 85.83, -645.0], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": -1, "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_crew_1", "definition": "enemy.siege_crew", "position_m": [-207.8, 87.21, -653.6], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_crew_2", "definition": "enemy.siege_crew", "position_m": [-207.8, 87.26, -650.4], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_crew_3", "definition": "enemy.siege_crew", "position_m": [-179.8, 86.34, -658.6], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_crew_4", "definition": "enemy.siege_crew", "position_m": [-179.8, 86.3, -655.4], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_crew_5", "definition": "enemy.siege_crew", "position_m": [-213.8, 87.06, -631.6], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 6},
+		{"entity_id": "world.stonehold.battery_crew_6", "definition": "enemy.siege_crew", "position_m": [-171.8, 86.14, -635.6], "yaw_deg": -90, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 6}
+	]
+}

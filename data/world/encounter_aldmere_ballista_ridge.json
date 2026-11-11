@@ -1,0 +1,42 @@
+{
+	"schema_version": 1,
+	"id": "encounter.aldmere_ballista_ridge",
+	"type": "encounter",
+	"display_name": "Ballista Ridge",
+	"description": "P36 (plan M6-M9 §5.4, §5.7 quest.ballista_ridge, §5.10): three ballistae on the ridge over the King's Road, two crews each, and a shield wall of eight and its banner holding the ridge (faction aldmere: neutral until offended; silencing the ballistae counts for the crown's sabotage). Leash 55 m.",
+	"level": "level.world",
+	"center_m": [790, 61.61, 20],
+	"activate_radius_m": 130,
+	"deactivate_radius_m": 210,
+	"leash_radius_m": 55,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"web_formation_scale": 0.7,
+	"engines": [
+		{"engine": "world.aldmere.ridge_ballista_1", "crew": ["world.aldmere.ridge_crew_1", "world.aldmere.ridge_crew_2"]},
+		{"engine": "world.aldmere.ridge_ballista_2", "crew": ["world.aldmere.ridge_crew_3", "world.aldmere.ridge_crew_4"]},
+		{"engine": "world.aldmere.ridge_ballista_3", "crew": ["world.aldmere.ridge_crew_5", "world.aldmere.ridge_crew_6"]}
+	],
+	"formations": [
+		{"id": "shields", "kind": "shield", "display_name": "Ridge Shield Wall", "banner": "world.aldmere.ridge_banner", "banner_name": "Banner of the Ridge", "banner_color": [0.2, 0.3, 0.6], "ranks": 2, "files": 4, "rank_spacing_m": 2.0, "file_spacing_m": 1.6, "facing": "threat", "yaw_deg": 135, "turn_deg_s": 40, "advance_mps": 0.0, "advance_m": 0, "brace_m": 6.0, "brace_action": "ability.formation_brace_shield", "brace_height_m": 5.0, "morale_start": 90, "flee_points": ["world.marker.ridge_flee_n", "world.marker.ridge_flee_e", "world.marker.ridge_flee_s"]}
+	],
+	"spawns": [
+		{"entity_id": "world.aldmere.ridge_shield_1", "definition": "enemy.shieldman", "position_m": [763.7, 57.88, 53.7], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 0},
+		{"entity_id": "world.aldmere.ridge_shield_2", "definition": "enemy.shieldman", "position_m": [762.57, 58.05, 52.57], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 1},
+		{"entity_id": "world.aldmere.ridge_shield_3", "definition": "enemy.shieldman", "position_m": [761.43, 58.22, 51.43], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 2},
+		{"entity_id": "world.aldmere.ridge_shield_4", "definition": "enemy.shieldman", "position_m": [760.3, 58.39, 50.3], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 3},
+		{"entity_id": "world.aldmere.ridge_shield_5", "definition": "enemy.shieldman", "position_m": [765.11, 58.06, 52.28], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 4},
+		{"entity_id": "world.aldmere.ridge_shield_6", "definition": "enemy.shieldman", "position_m": [763.98, 58.24, 51.15], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 5},
+		{"entity_id": "world.aldmere.ridge_shield_7", "definition": "enemy.shieldman", "position_m": [762.85, 58.41, 50.02], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 6},
+		{"entity_id": "world.aldmere.ridge_shield_8", "definition": "enemy.shieldman", "position_m": [761.72, 58.58, 48.89], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 7},
+		{"entity_id": "world.aldmere.ridge_banner", "definition": "enemy.bannerman", "position_m": [764.97, 58.52, 49.03], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": -1},
+		{"entity_id": "world.aldmere.ridge_crew_1", "definition": "enemy.siege_crew", "position_m": [777.4, 59.36, 40.86], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.ridge_crew_2", "definition": "enemy.siege_crew", "position_m": [775.14, 59.74, 38.6], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.ridge_crew_3", "definition": "enemy.siege_crew", "position_m": [799.4, 61.52, 16.86], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.ridge_crew_4", "definition": "enemy.siege_crew", "position_m": [797.14, 61.92, 14.6], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.ridge_crew_5", "definition": "enemy.siege_crew", "position_m": [821.4, 62.6, -9.14], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.ridge_crew_6", "definition": "enemy.siege_crew", "position_m": [819.14, 62.99, -11.4], "yaw_deg": 135, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

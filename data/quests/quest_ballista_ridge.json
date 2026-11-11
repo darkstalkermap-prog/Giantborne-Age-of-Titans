@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "quest.ballista_ridge",
+	"type": "quest",
+	"display_name": "Ballista Ridge",
+	"description": "P36 (plan M6-M9 §5.7 side quests): Aldmere's three ballistae on the ridge over the King's Road shoot at any giant on the road. Silence them (smash them, or tear them up and throw them at stage 6): 150 XP. It counts for the crown's sabotage road (quest.war_engines' second half) - and each engine broken is an offence against Aldmere. It starts once a stage-4 giant discovers the ridge.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{"type": "stage_at_least", "stage": 4},
+		{"type": "discovered", "poi": "poi.ballista_ridge"}
+	],
+	"abandon_when": null,
+	"tracker_priority": 30,
+	"stages": [
+		{"id": "silence", "objective": "Silence the three ballistae on Ballista Ridge", "complete_when": {"type": "all", "of": [{"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_1"}, {"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_2"}, {"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_3"}]}, "marker": "world.marker.ballista_ridge", "xp": 150, "waiting_text": "Three ballistae and their crews hold the ridge east of the King's Road, behind a shield wall. Breaking them makes Aldmere your enemy.", "items": [], "set_flags": {}, "bot": {"action": "break", "targets": ["world.aldmere.ridge_ballista_1", "world.aldmere.ridge_ballista_2", "world.aldmere.ridge_ballista_3"]}}
+	],
+	"on_complete_flags": {}
+}

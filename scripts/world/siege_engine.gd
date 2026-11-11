@@ -82,6 +82,15 @@ const REFUSAL_TEXTS := {
 
 ## The faction this placement belongs to ("" = always hostile).
 @export var faction := ""
+## P36 (plan M6-M9 §5.10, the siege of Skarn): the props a siege line's engine bombards (world ids of
+## props with a CombatEntity: Skarn's longhouses) while the giant is out of its reach - only while the
+## giant stands within bombard_within_m of the prop it would strike (0 = any distance), so the siege's
+## clock pauses while the giant is away; empty = the giant only (every other engine).
+@export var prop_targets: PackedStringArray = PackedStringArray()
+@export var bombard_within_m := 0.0
+## P36: the siege line this engine belongs to ("" = none): when its group's last engine falls the line
+## breaks - every soldier of its side within P36_GROUP_ROUT_M routs.
+@export var siege_group := ""
 
 ## The record's engine block.
 var engine: Dictionary = {}
@@ -132,6 +141,7 @@ func _ready() -> void:
 	if faction != "" and not Events.faction_changed.is_connected(_on_faction_changed):
 		Events.faction_changed.connect(_on_faction_changed)
 	Sim.register_actor(entity.entity_id, self)
+	p36_set_draw_range()   # P36: not drawn beyond P36_DRAW_RANGE_M
 
 
 func _exit_tree() -> void:
@@ -358,12 +368,17 @@ func sim_step(tick: int, dt: float) -> void:
 	entity.combatant.poise.tick(dt)
 
 
-## The engine's target: the first living PLAYER entity (the giant), while it may shoot.
+## The engine's target: the first living PLAYER entity (the giant), while it may shoot - P36: or, for a
+## siege line's engine while the giant is out of its reach, the prop it bombards (p36_bombard_target).
 func _target() -> CombatEntity:
 	if not can_shoot():
 		return null
 	for e: CombatEntity in Sim.entities():
 		if e.team == CombatEntity.Team.PLAYER and e.is_alive() and is_instance_valid(e.actor):
+			if not prop_targets.is_empty() and not can_reach(e):
+				var prop := p36_bombard_target(e)
+				if prop != null:
+					return prop
 			return e
 	return null
 
@@ -599,6 +614,7 @@ func on_entity_died(killer_id: String) -> void:
 	siege_morale_event(side)
 	_crew_flee()
 	_refresh_crewed()
+	p36_check_group_broken(side)   # P36: a siege line's last engine breaks the line
 
 
 ## The siege morale event (decision 21): every soldier on this engine's side - of its team `side` when
@@ -763,3 +779,84 @@ func floor_point(desired: Vector3, fallbacks: Array = []) -> Vector3:
 		if not hit.is_empty():
 			return hit.position + Vector3.UP * 0.02
 	return desired
+
+
+# --------------------------------------------------------------------------- P36: siege lines
+
+## P36 (plan M6-M9 §5.7, §5.10, the siege of Skarn): a siege line's engines bombard props - Skarn's
+## longhouses - while the giant is out of their reach, and break as one line.
+##   * p36_bombard_target(giant): the first of prop_targets still standing (a living CombatEntity in the
+##     tree), inside the range band and in sight, with the giant within bombard_within_m of it (0 = any
+##     distance): the siege's clock runs only while the giant is near Skarn (plan: its timer pauses
+##     while the giant is more than 200 m away). Null when none qualifies (the engine aims at the giant).
+##   * p36_check_group_broken(side): when the last engine of siege_group in the tree has fallen, every
+##     soldier of the engine's faction (without one: every hostile) within P36_GROUP_ROUT_M routs - the
+##     line breaks, so breaking the engines saves the place they bombard.
+
+const P36_GROUP_ROUT_M := 160.0
+## P36 (plan M6-M9 §3.8, §5.3: 40 draw calls a view): an engine's meshes (four materials) are not drawn
+## beyond this - well past the longest engine range (the catapult's 180 m) and the `low` preset's
+## scenery distance (220 m) - so the Aldmere March's eleven engines do not crowd the views of places
+## streamed in hundreds of metres away.
+const P36_DRAW_RANGE_M := 300.0
+
+
+func p36_bombard_target(giant: CombatEntity) -> CombatEntity:
+	if prop_targets.is_empty() or giant == null or not is_instance_valid(giant.actor):
+		return null
+	var gpos := (giant.actor as Node3D).global_position
+	for id in prop_targets:
+		var t := Sim.get_entity(id)
+		if t == null or not t.is_alive() or not is_instance_valid(t.actor) or not (t.actor as Node).is_inside_tree():
+			continue
+		if bombard_within_m > 0.0:
+			var tp := (t.actor as Node3D).global_position
+			if Vector2(gpos.x - tp.x, gpos.z - tp.z).length() > bombard_within_m:
+				continue
+		if can_reach(t):
+			return t
+	return null
+
+
+## True when every engine of this engine's siege group in the tree is destroyed.
+func p36_group_broken() -> bool:
+	if siege_group == "" or not is_inside_tree():
+		return false
+	for n in get_tree().get_nodes_in_group(GROUP):
+		var e := n as SiegeEngine
+		if e != null and e.siege_group == siege_group and not e.destroyed:
+			return false
+	return true
+
+
+## The line breaks with its last engine: every soldier of its side within P36_GROUP_ROUT_M routs.
+## Returns how many routed.
+func p36_check_group_broken(side: int) -> int:
+	if not p36_group_broken():
+		return 0
+	var n := 0
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var e := node as EnemyActor
+		if e == null or not e.is_inside_tree() or e.entity == null or not e.entity.is_alive():
+			continue
+		# a line with a faction routs its faction's soldiers only; a line without one, every hostile
+		var ours := e.faction == faction if faction != "" \
+			else (side == CombatEntity.Team.ENEMY and e.entity.team == CombatEntity.Team.ENEMY)
+		if not ours:
+			continue
+		if Vector2(e.global_position.x - global_position.x, e.global_position.z - global_position.z).length() > P36_GROUP_ROUT_M:
+			continue
+		if e.has_method("p30_force_rout"):
+			e.call("p30_force_rout")
+			n += 1
+	if n > 0:
+		Events.hud_message.emit("The siege line breaks: its soldiers flee.", "good")
+	return n
+
+
+## P36: the engine's meshes are not drawn beyond P36_DRAW_RANGE_M (see the constant).
+func p36_set_draw_range() -> void:
+	for n in find_children("*", "GeometryInstance3D", true, false):
+		var g := n as GeometryInstance3D
+		if g.visibility_range_end <= 0.0 or g.visibility_range_end > P36_DRAW_RANGE_M:
+			g.visibility_range_end = P36_DRAW_RANGE_M

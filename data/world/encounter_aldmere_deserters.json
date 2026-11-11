@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.aldmere_deserters",
+	"type": "encounter",
+	"display_name": "The deserters at the mill",
+	"description": "P36 (plan M6-M9 §5.7 quest.deserters, §5.9): Sergeant Wynn and three of his men, deserters of the war camp hiding at the burned mill (no faction: they belong to no one now). Spare them or hand them over (dialogue.deserters); once handed over they are gone. Not budgeted.",
+	"level": "level.world",
+	"center_m": [440, 23.14, 214],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 30,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": ["world.aldmere.deserters_handed"],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.aldmere.deserter_wynn", "definition": "npc.deserter", "position_m": [446, 23.14, 210], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.deserter_1", "definition": "npc.villager", "position_m": [434, 23.14, 208], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.deserter_2", "definition": "npc.villager", "position_m": [452, 23.14, 218], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.deserter_3", "definition": "npc.villager", "position_m": [428, 23.14, 222], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

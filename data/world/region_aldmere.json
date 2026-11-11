@@ -12,6 +12,5 @@
 	"discover_xp": 40,
 	"map_tint": [0.6, 0.58, 0.4],
 	"fog_color": [0.66, 0.66, 0.6],
-	"skyline_tint": [0.4, 0.4, 0.27],
-	"m7_note": "Aldmere's army, its herald and the Iron Regiment come with the next build; the fort's gate stays shut until then."
+	"skyline_tint": [0.4, 0.4, 0.27]
 }

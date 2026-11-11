@@ -204,13 +204,27 @@ func test_the_cairns_and_the_caches() -> void:
 	# The six sealed ones come with their regions (P35's three: the old root, the sunken vault, the
 	# Titan's shoulder): seven, and at most the plan's thirteen once every region has shipped.
 	assert_true(cairns >= CAIRNS.size() and cairns <= 13, "seven cairns and the sealed ones of the regions shipped (%d)" % cairns)
+	# P36: the sealed cairns come with their regions' secrets (the ridge eyrie's: stage 6; plan §3.8) - each
+	# a layout cairn beyond the seven (sealed by its stage, requires_stage, or by a rockfall: P35's sunken
+	# vault), its dialogue a once-only gift.
+	var sealed := 0
+	for region: String in LAYOUT_REGIONS:
+		for it: Dictionary in _layout(region).get("cairns", []):
+			if not CAIRNS.has(str(it.id)):
+				sealed += 1
+				var gift := GameData.get_record(str(it.get("dialogue", "")))
+				assert_true(Inscription.gift_flag(gift).begins_with("reward.cairn."), "the sealed cairn %s gives its point once" % it.id)
+	assert_true(sealed <= 6, "at most the six sealed cairns of plan §3.8 (%d)" % sealed)
+	assert_eq(cairns, CAIRNS.size() + sealed, "seven cairns and the regions' sealed ones (%d sealed)" % sealed)
 	assert_true(caches >= 25, "caches at ruins, vistas and the POIs that would hold nothing else (%d)" % caches)
 	for region: String in LAYOUT_REGIONS:
 		for it: Dictionary in _layout(region).get("caches", []):
 			var loot := GameData.get_record(str(it.get("loot", "")))
 			assert_eq(str(loot.get("type", "")), "loot_table", "%s's loot table %s" % [it.id, it.get("loot", "")])
-	# Fort Aldmere's gate stays shut until P36 makes it the real gate; quest-critical props never break.
-	assert_true(bool(idx.props.get("world.aldmere.fort_gate", {}).get("indestructible", false)), "the fort's gate is indestructible")
+	# P36 made Fort Aldmere's gate the real gate (a stage-4 breach: the crown's oath); quest-critical props never break.
+	assert_true(idx.props.has("world.aldmere.fort_gate"), "the fort's gate is in the index")
+	assert_false(bool(idx.props.get("world.aldmere.fort_gate", {}).get("indestructible", true)), "the fort's gate can be breached (P36)")
+	assert_true(bool(idx.props.get("world.aldmere.fort_gate", {}).get("quest_target", false)), "the fort's gate is a quest target")
 	for id: String in idx.props:
 		if bool(idx.props[id].get("quest_critical", false)):
 			assert_true(bool(idx.props[id].get("indestructible", false)), "the quest-critical %s is indestructible" % id)

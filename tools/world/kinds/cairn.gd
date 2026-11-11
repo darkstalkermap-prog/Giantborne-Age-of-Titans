@@ -37,6 +37,14 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	n.name = str(el.id).validate_node_name()
 	kit.scripted(n, S_INSCRIPTION, {"npc_id": str(el.id), "dialogue_id": str(el.dialogue), "prompt": "Read the cairn",
 		"radius_m": 4.0, "priority": 45, "requires_stage": int(el.get("requires_stage", 0))})
+	# P36: a sealed cairn on a ledge (the ridge eyrie, y_off up its cliff) is read only by a giant tall
+	# enough to reach it (`requires_stage`, `stage_message`; the reach from the ground below, `radius`).
+	# W21: a cairn whose reading stays at its foot (P35's `ledge_m`) keeps the 4 m reach.
+	if int(el.get("requires_stage", 0)) > 0:
+		n.set("requires_stage", int(el.requires_stage))
+		n.set("radius_m", float(el.get("radius", 8.0 if float(el.get("y_off", 0.0)) > 0.0 else 4.0)))
+		if str(el.get("stage_message", "")) != "":
+			n.set("stage_message", str(el.stage_message))
 	var base := StaticBody3D.new()
 	base.name = "Base"
 	base.collision_layer = SceneKit.L_WORLD

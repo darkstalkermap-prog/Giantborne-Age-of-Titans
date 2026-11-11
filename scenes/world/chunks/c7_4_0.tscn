@@ -1,0 +1,58 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/siege_ballista.tscn" id="1_83f62"]
+[ext_resource type="Script" path="res://scripts/world/siege_engine.gd" id="2_29782"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+
+[node name="Chunk_7_4_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_aldmere_ridge_ballista_1" type="StaticBody3D" parent="Props" instance=ExtResource("1_83f62")]
+transform = Transform3D(-0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, -0.70710677, 7, 59.419, 41)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_29782")
+faction = "aldmere"
+prop_targets = PackedStringArray()
+world_id = "world.aldmere.ridge_ballista_1"
+
+[node name="world_aldmere_ridge_ballista_2" type="StaticBody3D" parent="Props" instance=ExtResource("1_83f62")]
+transform = Transform3D(-0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, -0.70710677, 29, 61.63525, 17)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_29782")
+faction = "aldmere"
+prop_targets = PackedStringArray()
+world_id = "world.aldmere.ridge_ballista_2"
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="world_marker_ballista_ridge" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 60.436, 30)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.ballista_ridge"
+
+[node name="Patrol" type="Node3D" parent="Markers"]
+
+[node name="world_marker_ridge_flee_n" type="Marker3D" parent="Markers/Patrol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 67, 36.83225, 75)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.ridge_flee_n"
+kind = 5
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

@@ -1,9 +1,11 @@
 [gd_scene format=4]
 
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
-[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="3_add9b"]
-[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="4_2c089"]
+[ext_resource type="Script" path="res://scripts/world/condition_spawn.gd" id="1_0a08d"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="2_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="3_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="4_add9b"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="5_2c089"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="6_acc12"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(1.6, 5, 1.6)
@@ -15,7 +17,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 72,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
-"material": ExtResource("4_2c089"),
+"material": ExtResource("5_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 16,
@@ -29,7 +31,7 @@ _surfaces = [{
 "format": 34359742479,
 "index_count": 36,
 "index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMA"),
-"material": ExtResource("4_2c089"),
+"material": ExtResource("5_2c089"),
 "primitive": 3,
 "uv_scale": Vector4(0, 0, 0, 0),
 "vertex_count": 8,
@@ -40,11 +42,96 @@ _surfaces = [{
 
 [node name="Props" type="Node3D" parent="."]
 
-[node name="world_stonehold_ironway_top_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
+[node name="world_stonehold_siege_catapult_1" type="Node3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 36, 77.352, 128)
+script = ExtResource("1_0a08d")
+scene = "res://scenes/world/siege_catapult.tscn"
+props = {
+"bombard_within_m": 200.0,
+"faction": "toll_riders",
+"prop_targets": PackedStringArray("world.stonehold.skarn_longhouse_3", "world.stonehold.skarn_longhouse_2", "world.stonehold.skarn_longhouse_1"),
+"siege_group": "skarn_siege",
+"world_id": "world.stonehold.siege_catapult_1"
+}
+when = {
+"flag": "event.siege_of_skarn.runs",
+"type": "flag"
+}
+child_name = "world_stonehold_siege_catapult_1"
+
+[node name="world_stonehold_siege_catapult_2" type="Node3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 44, 78.122, 106)
+script = ExtResource("1_0a08d")
+scene = "res://scenes/world/siege_catapult.tscn"
+props = {
+"bombard_within_m": 200.0,
+"faction": "toll_riders",
+"prop_targets": PackedStringArray("world.stonehold.skarn_longhouse_2", "world.stonehold.skarn_longhouse_3", "world.stonehold.skarn_longhouse_1"),
+"siege_group": "skarn_siege",
+"world_id": "world.stonehold.siege_catapult_2"
+}
+when = {
+"flag": "event.siege_of_skarn.runs",
+"type": "flag"
+}
+child_name = "world_stonehold_siege_catapult_2"
+
+[node name="world_stonehold_siege_catapult_3" type="Node3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 36, 77.856, 84)
+script = ExtResource("1_0a08d")
+scene = "res://scenes/world/siege_catapult.tscn"
+props = {
+"bombard_within_m": 200.0,
+"faction": "toll_riders",
+"prop_targets": PackedStringArray("world.stonehold.skarn_longhouse_2", "world.stonehold.skarn_longhouse_1", "world.stonehold.skarn_longhouse_3"),
+"siege_group": "skarn_siege",
+"world_id": "world.stonehold.siege_catapult_3"
+}
+when = {
+"flag": "event.siege_of_skarn.runs",
+"type": "flag"
+}
+child_name = "world_stonehold_siege_catapult_3"
+
+[node name="world_stonehold_siege_ballista_1" type="Node3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 18, 76.244, 118)
+script = ExtResource("1_0a08d")
+scene = "res://scenes/world/siege_ballista.tscn"
+props = {
+"bombard_within_m": 200.0,
+"faction": "toll_riders",
+"prop_targets": PackedStringArray("world.stonehold.skarn_longhouse_3", "world.stonehold.skarn_longhouse_2"),
+"siege_group": "skarn_siege",
+"world_id": "world.stonehold.siege_ballista_1"
+}
+when = {
+"flag": "event.siege_of_skarn.runs",
+"type": "flag"
+}
+child_name = "world_stonehold_siege_ballista_1"
+
+[node name="world_stonehold_siege_ballista_2" type="Node3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 18, 76.363, 94)
+script = ExtResource("1_0a08d")
+scene = "res://scenes/world/siege_ballista.tscn"
+props = {
+"bombard_within_m": 200.0,
+"faction": "toll_riders",
+"prop_targets": PackedStringArray("world.stonehold.skarn_longhouse_2", "world.stonehold.skarn_longhouse_3"),
+"siege_group": "skarn_siege",
+"world_id": "world.stonehold.siege_ballista_2"
+}
+when = {
+"flag": "event.siege_of_skarn.runs",
+"type": "flag"
+}
+child_name = "world_stonehold_siege_ballista_2"
+
+[node name="world_stonehold_ironway_top_cache" type="StaticBody3D" parent="Props" instance=ExtResource("2_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 224, 76.164, 180)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("2_5fc47")
+script = ExtResource("3_5fc47")
 world_id = "world.stonehold.ironway_top_cache"
 loot_table = "loot.cache_ironway_top"
 
@@ -54,7 +141,7 @@ loot_table = "loot.cache_ironway_top"
 
 [node name="world_cp_ironway_top" type="Marker3D" parent="Waystones"]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 188, 76.22401, 192)
-script = ExtResource("3_add9b")
+script = ExtResource("4_add9b")
 requires_flags = PackedStringArray()
 display_name = "Ironway top waystone"
 checkpoint_id = "world.cp.ironway_top"
@@ -75,6 +162,33 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.3, 0)
 mesh = SubResource("ArrayMesh_3")
 
 [node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="world_marker_siege_line" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 77.313995, 106)
+script = ExtResource("6_acc12")
+marker_id = "world.marker.siege_line"
+
+[node name="Patrol" type="Node3D" parent="Markers"]
+
+[node name="world_marker_siege_flee_e" type="Marker3D" parent="Markers/Patrol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 76.06799, 128)
+script = ExtResource("6_acc12")
+marker_id = "world.marker.siege_flee_e"
+kind = 5
+
+[node name="world_marker_siege_flee_s" type="Marker3D" parent="Markers/Patrol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73, 77.15825, 183)
+script = ExtResource("6_acc12")
+marker_id = "world.marker.siege_flee_s"
+kind = 5
+
+[node name="world_marker_siege_flee_n" type="Marker3D" parent="Markers/Patrol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73, 79.801994, 33)
+script = ExtResource("6_acc12")
+marker_id = "world.marker.siege_flee_n"
+kind = 5
 
 [node name="Triggers" type="Node3D" parent="."]
 

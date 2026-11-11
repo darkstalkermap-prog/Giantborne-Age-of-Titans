@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
 [ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
 
 [node name="Chunk_1_1_0" type="Node3D"]
 
@@ -20,6 +21,13 @@ loot_table = "loot.cache_harroks_hall"
 [node name="Waystones" type="Node3D" parent="."]
 
 [node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="world_marker_harroks_hall" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 208, 82.492, 73)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.harroks_hall"
 
 [node name="Triggers" type="Node3D" parent="."]
 

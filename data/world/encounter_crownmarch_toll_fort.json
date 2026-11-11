@@ -3,7 +3,7 @@
 	"id": "encounter.crownmarch_toll_fort",
 	"type": "encounter",
 	"display_name": "The toll fort's garrison",
-	"description": "P29 (plan M6-M9 §5.5, §5.7, §5.9, §5.10): the toll-riders' fort on the King's Road (faction toll_riders, hostile by their faction): six soldiers and their sergeant (the commander) inside the palisade, two archers on the gate tower (M7 polish: it stands on the palisade west of the gate, and its archers hold its top - elevation markers their navmesh does not reach are their posts - and shoot at a giant on the road within their 30 m reach; at the fort's back they came down behind the closed gate and never fired) and, for a stage-4 giant, a pike formation of eight and its banner before the gate. While the toll is pending, paid or cowed (stand_down_when: neither refused nor the gate breached; a blow on a rider provokes them) the garrison holds the road instead of fighting. Breaching the gate and breaking the garrison is the toll quest's third way and half of Brannock's help path. P36 adds a tower ballista at stage 5. M7 gate: the leash (70 m, the plan's most) holds the pikes' reach - their slots 35 m out, turned, plus their 30 m advance: 68.3 m (FormationRules.reach_m) - so the director never leashes the formation it leads down the road.",
+	"description": "P29 (plan M6-M9 §5.5, §5.7, §5.9, §5.10): the toll-riders' fort on the King's Road (faction toll_riders, hostile by their faction): six soldiers and their sergeant (the commander) inside the palisade, two archers on the gate tower (M7 polish: it stands on the palisade west of the gate, and its archers hold its top - elevation markers their navmesh does not reach are their posts - and shoot at a giant on the road within their 30 m reach; at the fort's back they came down behind the closed gate and never fired) and, for a stage-4 giant, a pike formation of eight and its banner before the gate. While the toll is pending, paid or cowed (stand_down_when: neither refused nor the gate breached; a blow on a rider provokes them) the garrison holds the road instead of fighting. Breaching the gate and breaking the garrison is the toll quest's third way and half of Brannock's help path. P36: for a stage-5 giant a ballista is mounted on the gun tower east of the gate (world.crownmarch.toll_ballista, on the platform world.crownmarch.toll_gun_tower: it appears only then) and its crew serves it (engines). M7 gate: the leash (70 m, the plan's most) holds the pikes' reach - their slots 35 m out, turned, plus their 30 m advance: 68.3 m (FormationRules.reach_m) - so the director never leashes the formation it leads down the road.",
 	"level": "level.world",
 	"center_m": [460, 12.25, 330],
 	"activate_radius_m": 110,
@@ -15,6 +15,9 @@
 	"counts_toward_budget": true,
 	"web_formation_scale": 0.7,
 	"stand_down_when": {"type": "all", "of": [{"type": "not", "of": {"type": "flag", "flag": "world.toll_fort.defied"}}, {"type": "not", "of": {"type": "destroyed", "world_id": "world.crownmarch.toll_gate"}}]},
+	"engines": [
+		{"engine": "world.crownmarch.toll_ballista", "crew": ["world.crownmarch.toll_ballista_crew"]}
+	],
 	"formations": [
 		{"id": "pikes", "kind": "pike", "display_name": "Toll-Rider Pikes", "banner": "world.crownmarch.toll_banner", "banner_name": "Banner of the Toll-Riders", "banner_color": [0.62, 0.18, 0.14], "min_stage": 4, "ranks": 2, "files": 4, "rank_spacing_m": 2.2, "file_spacing_m": 1.6, "facing": "threat", "yaw_deg": 180, "turn_deg_s": 40, "advance_mps": 1.4, "advance_m": 30, "brace_m": 6.0, "brace_action": "ability.formation_brace_pike", "brace_height_m": 5.0, "morale_start": 90, "flee_points": ["world.marker.toll_flee_n", "world.marker.toll_flee_e", "world.marker.toll_flee_w"]}
 	],
@@ -36,6 +39,7 @@
 		{"entity_id": "world.crownmarch.toll_pike_6", "definition": "enemy.pikeman", "position_m": [460.8, 12.25, 363.9], "yaw_deg": 180, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 5},
 		{"entity_id": "world.crownmarch.toll_pike_7", "definition": "enemy.pikeman", "position_m": [459.2, 12.25, 363.9], "yaw_deg": 180, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 6},
 		{"entity_id": "world.crownmarch.toll_pike_8", "definition": "enemy.pikeman", "position_m": [457.6, 12.25, 363.9], "yaw_deg": 180, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 7},
-		{"entity_id": "world.crownmarch.toll_banner", "definition": "enemy.bannerman", "position_m": [460.0, 12.25, 361.7], "yaw_deg": 180, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": -1}
+		{"entity_id": "world.crownmarch.toll_banner", "definition": "enemy.bannerman", "position_m": [460.0, 12.25, 361.7], "yaw_deg": 180, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": -1},
+		{"entity_id": "world.crownmarch.toll_ballista_crew", "definition": "enemy.siege_crew", "position_m": [476.6, 22.28, 355.7], "yaw_deg": 180, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 5}
 	]
 }
