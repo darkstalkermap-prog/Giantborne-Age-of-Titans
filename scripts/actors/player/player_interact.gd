@@ -78,7 +78,7 @@ func refresh() -> void:
 			continue
 		if dist >= CLOSE_M and fwd.dot(to / maxf(dist, 1e-6)) < FRONT_DOT:
 			continue
-		_consider({"priority": it.priority, "prompt": it.prompt_text(player), "distance": dist,
+		_consider({"priority": it.priority_for(player), "prompt": it.prompt_text(player), "distance": dist,
 			"id": it.interact_id, "node": it})
 	for c: PlayerComponent in player.components():
 		var cand := c.interact_candidate()
