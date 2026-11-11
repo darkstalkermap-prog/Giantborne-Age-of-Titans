@@ -5,13 +5,12 @@ extends IntegrationSuite
 ##   * An engine fires only while crewed and at most once per reload_s; a crew member killed leaves it
 ##     uncrewed (siege_engine_crewed false) and silent.
 ##   * Launches at one target stay at least 1.0 s apart with every other ranged attacker: two ballistae
-##     ready at once launch a second apart, and no archer's launch slot is granted within a second of an
-##     engine's launch.
+##     ready at once launch a second apart, one after the other, and no archer's launch slot is granted
+##     within a second of an engine's launch.
 ##   * An engine's fall costs every unit of its side within 30 m 20 morale, once (a second engine
 ##     falling within 2 s costs nothing more), units farther away nothing; its crew flees and routs.
-##   * The ballista's aim line runs from its muzzle and freezes at the aim lock: a giant that steps
-##     aside afterwards is missed. (The catapult's landing circle through the flight is the slow
-##     battery's: tests/slow/test_siege_battery.gd.)
+## The engines' telegraphs - the ballista's aim line frozen at its lock, the catapult's landing circle
+## through the flight - are the slow battery's (tests/slow/test_siege_battery.gd).
 
 const BALLISTA := "res://scenes/world/siege_ballista.tscn"
 const CATAPULT := "res://scenes/world/siege_catapult.tscn"
@@ -130,14 +129,14 @@ func test_launches_at_one_target_stay_a_second_apart_with_other_ranged_attackers
 	var refused_after_launch := 0
 	var asked_after_launch := 0
 	var start := Sim.tick
-	while Sim.tick - start < 170 and launches.size() < 3:
+	while Sim.tick - start < 110 and launches.size() < 2:
 		await step_ticks(1)
 		# another ranged attacker (an archer's draw: the same launch slots) asks right after each launch
 		if not launches.is_empty() and Sim.tick - int(launches.back()[0]) < archer_gap - 2:
 			asked_after_launch += 1
 			if not Sim.request_launch_slot(p.entity.entity_id, "test.p32_other_archer", archer_gap):
 				refused_after_launch += 1
-	assert_true(launches.size() >= 2, "both ballistae launch (%s)" % [launches])
+	assert_eq(launches.size(), 2, "both ballistae launch (%s)" % [launches])
 	var owners := {}
 	for i in launches.size():
 		owners[str(launches[i][1])] = true
@@ -186,34 +185,3 @@ func test_an_engines_fall_costs_its_side_20_morale_once_and_its_crew_flees() -> 
 	for s: EnemyActor in [near, far_in, out]:
 		s.queue_free()
 
-
-func test_the_aim_line_freezes_at_the_lock_and_a_step_aside_dodges_the_bolt() -> void:
-	_quick(0.1, 0.3)
-	var tv := TelegraphVisuals.new()
-	world.add_child(tv)
-	var p := spawn_player(Vector3(0, 0.05, 0))
-	p.entity.combatant.unkillable = true
-	var b := _engine(BALLISTA, "test.p32_ballista_t", Vector3(0, 0, -30))
-	_crew(b, "test.p32_crew_t")
-	var drawing: bool = await TestWait.until(self, func() -> bool: return not tv.telegraph_for("test.p32_ballista_t").is_empty(), 30)
-	assert_true(drawing, "the ballista's windup is telegraphed")
-	var t := tv.telegraph_for("test.p32_ballista_t")
-	assert_true(bool(t.get("aim_line", false)), "as an aim line")
-	if not t.is_empty():
-		assert_true((t.start as Vector3).distance_to(b.launch_point_global()) < 0.05, "from its muzzle")
-	var lock_at := EnemyActor.aim_lock_tick(GameData.get_action(BOLT))
-	await TestWait.until(self, func() -> bool: return b.aim_locked(), lock_at + 4)
-	assert_true(b.aim_locked(), "the aim locks at %d ticks of the windup" % lock_at)
-	var locked := b.current_aim_point()
-	assert_true(locked.distance_to(p.entity.anchor_position()) < 0.5, "on the giant")
-	p.global_position += Vector3(9.0, 0.0, 0.0)   # a step aside after the lock
-	await step_ticks(2)
-	t = tv.telegraph_for("test.p32_ballista_t")
-	if not t.is_empty():
-		assert_true((t.end as Vector3).distance_to(locked) < 0.05, "the line stays where it locked")
-	var hits_before := hits_on(p.entity.entity_id).size()
-	await TestWait.until(self, func() -> bool: return launches.size() >= 1, 20)
-	assert_eq(launches.size(), 1, "the bolt flies")
-	await step_ticks(34)   # 30 m at 60 m/s, and a little
-	assert_eq(hits_on(p.entity.entity_id).size(), hits_before, "to the locked point: the giant that stepped aside is missed")
-	b.queue_free()

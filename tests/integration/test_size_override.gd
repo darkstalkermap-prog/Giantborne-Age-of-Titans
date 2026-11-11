@@ -4,7 +4,8 @@ extends IntegrationSuite
 ## bolt - flown by the real engine at a stage-4 giant - strikes as an 8 m attacker and staggers it
 ## (its poise ratio taken from the override), while an archer's arrow (1.8 m: the 0.25 floor) does not;
 ## the override never touches damage (siege actions keep size_policy "none", which the action schema
-## requires with an override); the cavalry's charge strikes as a 4 m attacker.
+## requires with an override); the cavalry's charge strikes as a 4 m attacker. One test: the giant, the
+## archer and the engine serve every check (the default tier's time).
 
 const BALLISTA := "res://scenes/world/siege_ballista.tscn"
 const CREW := "res://scenes/enemies/siege_crew.tscn"
@@ -33,7 +34,7 @@ static func _built(attacker: CombatEntity, action_id: String, target: CombatEnti
 		"point": target.anchor_position(), "substep": 0, "distance": 10.0, "weak_point": false}, 1, Sim.tick)
 
 
-func test_a_bolt_staggers_a_stage_4_giant_while_an_arrow_does_not() -> void:
+func test_a_bolt_staggers_a_stage_4_giant_an_arrow_does_not_and_the_charge_strikes_as_4_m() -> void:
 	TestFixtures.record_override("prop.siege_ballista", {"engine": {"reload_s": 0.2}})
 	TestFixtures.record_override(BOLT, {"windup_s": 0.2})
 	var p := _giant(4, Vector3(0, 0.05, 0))
@@ -91,14 +92,8 @@ func test_a_bolt_staggers_a_stage_4_giant_while_an_arrow_does_not() -> void:
 	var mine := DamageResolver.mitigate(big, p.entity.combatant)
 	var theirs := DamageResolver.mitigate(plain, p.entity.combatant)
 	assert_near(float(mine.total), float(theirs.total), 1e-4, "size_policy none: the damage does not grow with the override")
-	crew.queue_free()
-	archer.queue_free()
-
-
-func test_the_cavalry_charge_strikes_as_a_4_m_attacker_and_the_schema_keeps_damage_out() -> void:
-	var p := _giant(4, Vector3(0, 0.05, 0))
-	var archer := TestSpawn.enemy(world, ARCHER, Vector3(4, 0.05, -10), "test.p32_rider_stand_in", false, 0.0)
-	await step_ticks(1)
+	# The cavalry's charge strikes as a 4 m attacker (built here from the archer standing in for a rider;
+	# the real charge is test_cavalry's), its lance from the rider's own height.
 	var charge := _built(archer.entity, "ability.cavalry_charge", p.entity)
 	assert_near(charge.attacker_height_m, 4.0, 1e-4, "the charge strikes as a 4 m attacker")
 	assert_eq(charge.size_policy, "none", "with size_policy none")
@@ -113,4 +108,5 @@ func test_the_cavalry_charge_strikes_as_a_4_m_attacker_and_the_schema_keeps_dama
 		if str(e).contains("attacker_height_override_m"):
 			refused = true
 	assert_true(refused, "an override needs size_policy none (%s)" % [r.get("errors", [])])
+	crew.queue_free()
 	archer.queue_free()
