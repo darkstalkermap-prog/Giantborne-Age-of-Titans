@@ -3,7 +3,7 @@
 	"id": "audio_bank.world_abilities",
 	"type": "audio_bank",
 	"display_name": "World abilities and projectiles",
-	"description": "P28 (section 4.1 family D, M7-M9): the stage evolutions (Titan Stomp, Earthquake, Crag Hurl, Formation Sweep, Titan Roar, Rampart Grip) as their base abilities' sounds lowered (P21's files at a lower pitch: no new sample in either level), the talents' and ancestries' abilities (Shoulder Charge, Cleave of Ages, Bulwark, Stonewall Stance, Rune Lance, Primal Regrowth, Storm Call, Bedrock Ward, Thunderhead, Wild Surge), the engines' and the new spells' projectiles, and the axe's and the fists' swings. New layers: the earthquake's crack, the charge, the stone ward, the regrowth, lightning and the ballista bolt's whirr.",
+	"description": "P28 (section 4.1 family D, M7-M9): the stage evolutions (Titan Stomp, Earthquake, Crag Hurl, Formation Sweep, Titan Roar, Rampart Grip) as their base abilities' sounds lowered (P21's files at a lower pitch: no new sample in either level), the talents' and ancestries' abilities (Shoulder Charge, Cleave of Ages, Bulwark, Stonewall Stance, Rune Lance, Primal Regrowth, Storm Call, Bedrock Ward, Thunderhead, Wild Surge), the engines' and the new spells' projectiles, and the axe's and the fists' swings. New layers: the earthquake's crack, the charge, the stone ward, the regrowth, lightning and the ballista bolt's whirr. P32: the cavalry's lance thrust (sfx.ability.cavalry_lance.sweep) is P21's blade swing pitched down (no new sample).",
 	"cues": {
 		"sfx.ability.bedrock_ward.cast": {
 			"files": [
@@ -72,6 +72,26 @@
 			"max_voices": 1,
 			"retrigger_ms": 300,
 			"priority": 90,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.ability.cavalry_lance.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blade_light_1.wav",
+				"res://assets/audio/sfx/combat/swing_blade_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -4.0,
+			"pitch": 0.68,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
 			"far": "",
 			"levels": [
 				"level.world"

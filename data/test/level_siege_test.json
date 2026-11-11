@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "level.siege_test",
+	"type": "level",
+	"display_name": "Siege test level",
+	"description": "P32: siege engines and cavalry proven on a walled 400 x 320 m floor - a battery of two catapults and two ballistae in the north (z -64 to -70, facing south) with six crews and a shield wall of eight and a banner before them, and a cavalry pair in the east (x 120). Its encounters wait for test.siege.manual (never set): tests activate them.",
+	"scene": "res://scenes/test/siege_test.tscn",
+	"start_checkpoint": "test.siege.cp_start",
+	"max_active_enemies": 12,
+	"lod": {"near_m": 80, "mid_m": 160, "check_ticks": 30, "corpse_free_s": 6},
+	"render": {
+		"low": {"shadow_distance_m": 0, "scenery_visibility_end_m": 260, "msaa": 0},
+		"medium": {"shadow_distance_m": 120, "scenery_visibility_end_m": 300, "msaa": 2}
+	},
+	"web_overrides": {"quality": "low", "ai_tier1_m": 30},
+	"districts": [
+		{"id": "field", "display_name": "Siege field", "min_m": [-200, 0, -160], "max_m": [200, 0, 160], "surface": "soft"}
+	]
+}

@@ -1,0 +1,44 @@
+{
+	"schema_version": 1,
+	"id": "encounter.siege_test_battery",
+	"type": "encounter",
+	"display_name": "Test battery",
+	"description": "P32: a battery of two catapults and two ballistae (placed props of the siege test level, by world id) served by six crews - the catapults two each, the ballistae one each - with a shield wall of eight and its banner holding before them; only tests activate it (test.siege.manual is never set).",
+	"level": "level.siege_test",
+	"district": "field",
+	"center_m": [0, 0, -60],
+	"activate_radius_m": 40,
+	"deactivate_radius_m": 300,
+	"leash_radius_m": 120,
+	"alert_group": true,
+	"requires_flags": ["test.siege.manual"],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"web_formation_scale": 0.7,
+	"formations": [
+		{"id": "shields", "kind": "shield", "banner": "test.siege.shield_banner", "banner_name": "Banner of the Test Battery", "banner_color": [0.55, 0.18, 0.12], "ranks": 2, "files": 4, "rank_spacing_m": 2.0, "file_spacing_m": 1.6, "facing": "threat", "yaw_deg": 180, "turn_deg_s": 40, "advance_mps": 0, "brace_m": 6, "brace_action": "ability.formation_brace_shield", "brace_height_m": 5.0, "morale_start": 90}
+	],
+	"engines": [
+		{"engine": "test.siege.catapult_1", "crew": ["test.siege.crew_1", "test.siege.crew_2"]},
+		{"engine": "test.siege.ballista_1", "crew": ["test.siege.crew_3"]},
+		{"engine": "test.siege.ballista_2", "crew": ["test.siege.crew_4"]},
+		{"engine": "test.siege.catapult_2", "crew": ["test.siege.crew_5", "test.siege.crew_6"]}
+	],
+	"spawns": [
+		{"entity_id": "test.siege.shield_1", "definition": "enemy.shieldman", "position_m": [2.4, 0, -46.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "shields", "slot": 0},
+		{"entity_id": "test.siege.shield_2", "definition": "enemy.shieldman", "position_m": [0.8, 0, -46.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "shields", "slot": 1},
+		{"entity_id": "test.siege.shield_3", "definition": "enemy.shieldman", "position_m": [-0.8, 0, -46.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "shields", "slot": 2},
+		{"entity_id": "test.siege.shield_4", "definition": "enemy.shieldman", "position_m": [-2.4, 0, -46.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "shields", "slot": 3},
+		{"entity_id": "test.siege.shield_5", "definition": "enemy.shieldman", "position_m": [2.4, 0, -48.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "shields", "slot": 4},
+		{"entity_id": "test.siege.shield_6", "definition": "enemy.shieldman", "position_m": [0.8, 0, -48.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "shields", "slot": 5},
+		{"entity_id": "test.siege.shield_7", "definition": "enemy.shieldman", "position_m": [-0.8, 0, -48.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "shields", "slot": 6},
+		{"entity_id": "test.siege.shield_8", "definition": "enemy.shieldman", "position_m": [-2.4, 0, -48.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "shields", "slot": 7},
+		{"entity_id": "test.siege.shield_banner", "definition": "enemy.bannerman", "position_m": [0, 0, -50.4], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "shields", "slot": -1},
+		{"entity_id": "test.siege.crew_1", "definition": "enemy.siege_crew", "position_m": [-28.4, 0, -72.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test.siege.crew_2", "definition": "enemy.siege_crew", "position_m": [-31.6, 0, -72.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test.siege.crew_3", "definition": "enemy.siege_crew", "position_m": [-10.4, 0, -66.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test.siege.crew_4", "definition": "enemy.siege_crew", "position_m": [13.6, 0, -66.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test.siege.crew_5", "definition": "enemy.siege_crew", "position_m": [28.4, 0, -72.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test.siege.crew_6", "definition": "enemy.siege_crew", "position_m": [31.6, 0, -72.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

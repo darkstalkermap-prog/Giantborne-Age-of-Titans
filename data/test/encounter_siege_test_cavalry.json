@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "encounter.siege_test_cavalry",
+	"type": "encounter",
+	"display_name": "Test cavalry",
+	"description": "P32: a cavalry pair in the east of the siege test level - they charge, wheel away 30-50 m and charge again; only tests activate it (test.siege.manual is never set).",
+	"level": "level.siege_test",
+	"district": "field",
+	"center_m": [120, 0, 0],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 300,
+	"alert_group": true,
+	"requires_flags": ["test.siege.manual"],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "test.siege.cavalry_1", "definition": "enemy.cavalry", "position_m": [118, 0, -4], "yaw_deg": 270, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test.siege.cavalry_2", "definition": "enemy.cavalry", "position_m": [122, 0, 4], "yaw_deg": 270, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}
