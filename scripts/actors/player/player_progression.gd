@@ -614,6 +614,17 @@ func choose_ancestry(id: String) -> Dictionary:
 	return last_result
 
 
+## Where a newly learned ability went, for the shrine tabs: "It is on slot 8." when it was
+## auto-slotted, else "Put it on a key in the Loadout tab." ("" for no id).
+func slot_hint(action_id: String) -> String:
+	if action_id == "":
+		return ""
+	var slot := _slot_of(action_id)
+	if slot == "":
+		return "Put it on a key in the Loadout tab."
+	return "It is on %s." % ("the ultimate key" if slot == "ultimate" else "slot " + slot.trim_prefix("slot_"))
+
+
 ## The talents' and the ancestry's passive lines ("Armour +25", "Stamina costs -15%", ...).
 func passive_lines() -> PackedStringArray:
 	var c := player.entity.combatant

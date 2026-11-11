@@ -94,8 +94,8 @@ func refresh() -> void:
 	if chosen:
 		var sig := Talents.signature_of(str(p.progression.ancestry))
 		var def := GameData.get_action(sig)
-		_set_result("You are %s. %s" % [p.progression.ancestry_name(),
-			("%s is yours: set it on a key in the Loadout tab." % def.display_name) if def != null else ""], UiKit.GOOD)
+		var signature := ("%s is yours. %s" % [def.display_name, p.progression.slot_hint(sig)]) if def != null else ""
+		_set_result("You are %s. %s" % [p.progression.ancestry_name(), signature], UiKit.GOOD)
 
 
 ## "Choose <name>...": opens the ancestry screen to confirm (or, without a screen stack, chooses at

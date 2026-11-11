@@ -137,6 +137,8 @@ func test_the_talents_and_ancestry_tabs_with_a_pad() -> void:
 	var r: Dictionary = tab.call("learn", "talent.destroyer_shoulder_charge")
 	assert_eq(r.learned, ["ability.shoulder_charge"], "Shoulder Charge teaches its ability")
 	assert_eq(str(p.controller.loadout.slot_8), "ability.shoulder_charge", "into the free slot")
+	assert_eq(str(tab.call("result_text")),
+		"Talent learned: Shoulder Charge (new ability: Shoulder Charge). It is on slot 8.", "and the tab says where")
 	assert_true(bool(tab.call("learn", "talent.guardian_stone_hide").ok), "Stone Hide")
 	tab.call("learn", "talent.guardian_bulwark")
 	assert_true(prog.knows("ability.bulwark") and not p.controller.loadout.values().has("ability.bulwark"),

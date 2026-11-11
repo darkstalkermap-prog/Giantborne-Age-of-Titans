@@ -244,7 +244,7 @@ func learn_selected() -> Dictionary:
 	var out: Dictionary = prog.learn_talent(id)
 	_set_label(_result, str(out.get("message", "")), UiKit.GOOD if out.ok else UiKit.WARN)
 	if out.ok and not (out.get("learned", []) as Array).is_empty():
-		_result.text += ". Put it on a key in the Loadout tab."
+		_result.text += ". " + str(prog.slot_hint(str(out.learned[0])))   # "It is on slot 8." / the Loadout tab
 	if screen != null:
 		screen.notify_changed()
 	else:
