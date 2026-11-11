@@ -111,7 +111,11 @@ hidden invulnerability.
 On a streamed world (the test world: `--level=res://scenes/test/test_world.tscn`; the real one from
 P25: `--mode=world --new-game`) the giant follows a route - by default the level's `Markers/Route`
 (the test world's 2.9 km loop: four seam crossings round (-256, -256), the town's street, the east,
-the 35-degree plateau, the pond), or `--route=x:z;x:z;...` - sprinting with the stick, or carried at
+the 35-degree plateau, the pond; since the M7 polish the real world's, `tools/data/world/world.json`'s
+`walk_route`: about 400 m from (-200, 360) in the Crownmarch north into the Drowned Steps, west to
+the Greywood's edge and back, four region changes and three seams), or `--route=x:z;x:z;...` - a
+level with neither is a usage error (the walk's only check failure, `usage_error` in its report) -
+sprinting with the stick, or carried at
 `--walk-speed=M` m/s (16: the stage-6 sprint, the streaming budget's case). It sets off once the
 starting ring is loaded and records, per tick, the margin to unloaded ground (the distance to the
 nearest chunk of the grid that is not loaded), the most chunks loaded, seam crossings, region
@@ -133,7 +137,8 @@ failed requests. Exit code 0 when the walk finished without check failures and t
 clean; `--strict` also fails on the indicative frame budget.
 
 Since the M7 gate, `--world` walks the real world (`--mode=world --new-game`; the release build takes
-its arguments) and `--audio` records the game's music during the walk with `audio_check.mjs`'s
+its arguments; since the M7 polish its default route, so no `--route` is needed - a walk without a
+route exits 2, a usage error) and `--audio` records the game's music during the walk with `audio_check.mjs`'s
 recorder (`tools/web/audio_recorder.mjs`, shared by both checks): it arms at the walk's start once
 zone music plays and disarms at its end, then reports the seconds of music recorded (at least
 `--music-s`, 60), the region borders crossed while recording (the music sets that followed one
@@ -243,6 +248,18 @@ node tools/web/stream_check.mjs --build=builds/web_m7 --world --audio --autoplay
 ```
 
 On a machine with a GPU, add `--strict` (every hole over 50 ms fails).
+
+The real world's default route (M7 polish: `walk_route`, written into `scenes/world/world.tscn` as
+`Markers/Route`): the world walk and the web stream check need no `--route`. The headless walk (about
+50 s of simulated time, so `--autoplay=60` is enough) and the web check with the music recorder:
+
+```
+tools/gd.sh --headless --path . --fixed-fps 60 -- --no-user-settings --mode=world --new-game \
+  --scenario=world_walk --autoplay=60
+tools/build_web.sh --preset=Web --out=builds/web_m7
+node tools/web/stream_check.mjs --build=builds/web_m7 --world --audio --autoplay=1200 --timeout-s=1500 \
+  --json=builds/stream_audio_m7.json
+```
 
 ## Container results
 
@@ -729,6 +746,7 @@ on the container's 4 cores, alone in the container. Indicative: software WebGL.
 | **The gate's**: -200:360, -210:280, -250:220, -380:220, -452:300, -470:420 (506 m in 61 s of game time, 127 s of wall time; Play to the walk 28.5 s) | 98.5 s, 3 (Crownmarch -> Drowned Steps -> Greywood -> Crownmarch) | 301 (281.5 ms) | all 301 (458 long tasks, the longest 440 ms) | 217 / 317 / 450 ms | 223.7 m, 0, 16 | 5.3 ms | 39 / 57 | OK; the criterion NOT MET |
 | -200:360, -200:200, -380:200 (278 m in 28 s) | 42.5 s, 1 | 130 (261.2 ms) | all 130 | 200 / 267 / 383 ms | **199.9 m**, 0, 16 | 10.9 ms | 38 / 47 | failed: too short, and the margin |
 | The same, back north to -380:360 and -200:360 (674 m in 69 s) | 125.8 s, 3 | 397 (394.7 ms) | all 397 | 233 / 367 / 433 ms | **199.9 m**, 0, 16 | 4.6 ms | 40 / 52 | failed: the margin |
+| **M7 polish, the world's default route** (no `--route`: `walk_route`, -200:360, -210:280, -250:220, -345:216, -295:300, -280:360; 397 m in 47.4 s of game time, 106 s of wall time; Play to the walk 30.2 s; the polish's release build, 15.92 MB shipped in two parts) | 75.3 s, 4 (Crownmarch -> Drowned Steps -> Greywood -> Drowned Steps -> Crownmarch) | 207 (330.9 ms) | all 207 (357 long tasks, the longest 379 ms) | 200 / 300 / 383 ms | 225.4 m, 0, 16 | 9.0 ms | 40 / 47 | OK; the criterion NOT MET |
 
 The music played across every border with no hole the main thread does not explain: every silent run
 over 50 ms lies where the main thread was drawing a frame of 100-450 ms and the no-threads build's
@@ -740,7 +758,10 @@ x 353 KB + 12 MB). The console stayed clean while the game ran (0 errors; the li
 engine's audio teardown, as above). The other two routes came 199.9 m from unloaded ground (the
 walk check wants 200 m) after the walk's stuck-walk teleports (two on each, the same headless): a
 miss of the route, not of the music or the streaming work; the gate's route keeps 223.7 m. The
-engine's own frames sat at their 133 ms cap.
+engine's own frames sat at their 133 ms cap. The M7 polish's default route (the last row) has no
+stuck-walk teleport (headless the gate's route has one, where its third leg runs into a trunk at
+(-346, 221)) and keeps
+225.4 m; its peak live sample bytes 57.0 MB, 0 console errors while the game ran.
 
 The gate's searches within the path-query budget (`docs/systems/P24b.md`, "M7 gate") are on the
 desktop side: the reviewer's world walk at stage 4 past the Raiders' Hollow to Brannock (headless)

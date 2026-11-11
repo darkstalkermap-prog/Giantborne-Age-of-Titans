@@ -1774,6 +1774,7 @@
 			"above_m": 15
 		}
 	],
+	"walk_route": {"note": "M7 polish: the world walk's default route (scripts/debug/world_walk.gd: --scenario=world_walk without --route=, tools/web/stream_check.mjs --world), written into scenes/world/world.tscn as Markers/Route. About 400 m in 48 s of walking at stage 3: north from the Crownmarch into the Drowned Steps, west into the Greywood's edge, and back east and south into the Crownmarch (four region changes, three chunk seams, the next chunks loading behind the giant), every leg clear of trunks and rocks by more than a stage-3 giant's width; a turn stays within about 40 m of a chunk seam it has just crossed, so the web build's slower streaming keeps 200 m of loaded ground ahead (the M7 gate's audio route, bent round two trunks).", "points": [[-200, 360], [-210, 280], [-250, 220], [-345, 216], [-295, 300], [-280, 360]]},
 	"index_edges": [
 		{
 			"id": "the_needle",

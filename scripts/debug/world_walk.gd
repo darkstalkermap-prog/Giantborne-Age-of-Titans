@@ -8,7 +8,11 @@ extends Node
 ## Options (after "--"):
 ##   --route=x:z;x:z;...   the waypoints (world x and z; the ground gives y). Default: the level's
 ##                         Markers/Route children in order (the test world's loop with four seam
-##                         crossings, the town's street, the east, the 35-degree plateau, the pond).
+##                         crossings, the town's street, the east, the 35-degree plateau, the pond;
+##                         M7 polish: the real world's from tools/data/world/world.json's walk_route,
+##                         about 400 m from the Crownmarch through the Drowned Steps and the
+##                         Greywood's edge and back, four region changes and three seams). A level
+##                         with neither is a usage error (NO_ROUTE), not an unfinished walk.
 ##   --walk-speed=M        carry the giant along the route at M m/s (16: a stage-6 sprint, the
 ##                         streaming budget's case) instead of walking it with the stick (sprinting).
 ##   --walk-stage=N        grow the giant to stage N first (1-3 until P26 adds 4-6).
@@ -24,7 +28,8 @@ extends Node
 ## giant stands in. The streamer's statistics (loads, unloads, thrash, work per frame p50 / p99 /
 ## max) are reset when the walk starts, after the starting ring. result() is the report;
 ## check_failures holds: a margin under MARGIN_REQUIRED_M, thrash, more than MAX_LOADED chunks,
-## ticks under the terrain, a route not finished.
+## ticks under the terrain, a route not finished - or, alone, the usage error of a walk with no
+## route (usage_error; the Autopilot's run then fails with it, and tools/web/stream_check.mjs exits 2).
 
 const STATUS_INVULNERABLE := "status.debug_invulnerable"
 const WAYPOINT_M := 4.0
@@ -36,6 +41,8 @@ const UNDER_TERRAIN_M := 0.25
 ## The longest the walk waits for the ring at its first point (a --route starting elsewhere on a slow
 ## machine: about 9 chunks of steps at a few a frame) before it sets off anyway.
 const RING_WAIT_TICKS := 3600
+## The check failure of a walk without a route of at least two points (M7 polish): a usage error.
+const NO_ROUTE := "usage: no route to walk - the level has no Markers/Route and no --route=x:z;x:z;... of two or more points was given"
 
 var done := false
 var player: GiantPlayer = null
@@ -58,6 +65,8 @@ var seam_crossings := 0
 var chunks_visited := {}
 var region_changes: Array = []
 var finished_route := false
+## NO_ROUTE when the walk had no route to follow ("" otherwise).
+var usage_error := ""
 
 var _state := "wait_ring"
 var _state_ticks := 0
@@ -142,7 +151,8 @@ func start(p: GiantPlayer, w: WorldRoot, perf: PerfProbe, opts: Dictionary) -> v
 	_seg_lengths = PackedFloat32Array()
 	for i in route.size() - 1:
 		_seg_lengths.append(Vector2(route[i + 1].x - route[i].x, route[i + 1].z - route[i].z).length())
-	_state = "wait_ring" if not route.is_empty() else "done"
+	usage_error = NO_ROUTE if route.size() < 2 else ""
+	_state = "wait_ring" if usage_error == "" else "done"
 
 
 func _on_region_changed(_tick: int, region_id: String, previous_id: String) -> void:
@@ -296,7 +306,10 @@ func _finish() -> void:
 	if done:
 		return
 	done = true
-	print("WORLD_WALK_END %s" % JSON.stringify({"finished": finished_route, "ticks": ticks}))
+	var end := {"finished": finished_route, "ticks": ticks}
+	if usage_error != "":
+		end["usage_error"] = usage_error
+	print("WORLD_WALK_END %s" % JSON.stringify(end))
 	if player != null and is_instance_valid(player):
 		player.router.set_injected_move(Vector2.ZERO)
 		player.router.set_injected_hold(&"sprint", false)
@@ -331,6 +344,10 @@ func result() -> Dictionary:
 	out["under_terrain_ticks"] = under_terrain_ticks
 	out["worst_sink_m"] = snappedf(worst_sink_m, 0.001)
 	out["stuck_teleports"] = stuck_teleports
+	out["usage_error"] = usage_error
+	if usage_error != "":
+		out["check_failures"] = PackedStringArray([usage_error])
+		return out
 	var failures := PackedStringArray()
 	if not finished_route:
 		failures.append("the route was not finished (waypoint %d of %d, lap %d of %d)" % [_wp + 1, route.size(), _lap + 1, laps])

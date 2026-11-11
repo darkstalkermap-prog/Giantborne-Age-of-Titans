@@ -16,8 +16,9 @@ extends RefCounted
 ##   "character" (CharacterState: talents and ancestry_chosen since schema 2), "world"
 ##   (WorldState.to_save_dict, its own schema 2), "progress": {"prologue_complete",
 ##   "world_entered", "levels_visited", "tracked_quest"}, "stats"}. Schema 1 (the 0.5.0 Valley
-##   build) had no progress, no checkpoint position and neither character key; _migrate_1_to_2
-##   adds them. The slot name and the project name stay, so desktop and web saves are kept.
+##   build) had no progress, no checkpoint position, neither character key and no visited.<checkpoint>
+##   flags; _migrate_1_to_2 adds them (the flags for the stones the save proves it reached: M7
+##   polish). The slot name and the project name stay, so desktop and web saves are kept.
 ##   Tests point path_override at user://test_saves/.
 
 const DIR := "user://saves"
@@ -214,7 +215,9 @@ static func migrate(doc: Dictionary) -> Dictionary:
 ## character.ancestry_chosen (false unless the ancestry is not ancestry.neutral); the progress
 ## block (prologue_complete from the flag slice.completed, world_entered false, levels_visited the
 ## save's level, tracked_quest ""); checkpoint.position and yaw from the level's world index when
-## it knows the respawn. Nothing else changes (the world block is already its own schema 2).
+## it knows the respawn; and (M7 polish) the flag visited.<checkpoint> of every stone the save's
+## flags prove it reached (v1_reached_checkpoints), which schema 1 never recorded. Nothing else
+## changes (the world block is already its own schema 2).
 static func _migrate_1_to_2(doc: Dictionary) -> Dictionary:
 	var out := doc
 	var c: Variant = out.get("character")
@@ -236,14 +239,76 @@ static func _migrate_1_to_2(doc: Dictionary) -> Dictionary:
 			"world_entered": false, "levels_visited": [level if level != "" else "level.valley"],
 			"tracked_quest": ""}
 	var cp: Variant = out.get("checkpoint")
+	var respawn := str((cp as Dictionary).get("respawn", "")) if typeof(cp) == TYPE_DICTIONARY else ""
+	var idx := WorldIndex.for_level(level) if level != "" else null
 	if typeof(cp) == TYPE_DICTIONARY and not (cp as Dictionary).has("position") and level != "":
-		var respawn := str((cp as Dictionary).get("respawn", ""))
-		var idx := WorldIndex.for_level(level)
 		if respawn != "" and idx != null and idx.has_checkpoint(respawn):
 			var e := idx.checkpoint(respawn)
 			var pos: Vector3 = e.position
 			cp["position"] = [pos.x, pos.y, pos.z]
 			cp["yaw"] = float(e.get("yaw", 0.0))
+	# M7 polish (the M7 gate review): the stones the save had reached, as visited.<checkpoint>.
+	if typeof(world) == TYPE_DICTIONARY and typeof((world as Dictionary).get("flags")) == TYPE_DICTIONARY:
+		for id in v1_reached_checkpoints(flags, level, respawn, idx):
+			if not flags.has(GameSession.VISITED_PREFIX + id):
+				flags[GameSession.VISITED_PREFIX + id] = true
+	return out
+
+
+## How near a stone (a shrine or a waystone) the objective of a finished quest stage must lie for a
+## schema 1 save to count the stone as reached (M7 polish): a shrine wakes at 14 m, a waystone at
+## 10 m, and a stage's objective is done standing at its marker.
+const VISIT_PROOF_M := 30.0
+
+
+## The checkpoints of `level` a schema 1 save proves the giant reached, sorted (M7 polish; the M7
+## gate review). Schema 1 (the 0.5.0 Valley) never recorded visited.<checkpoint> - P20 added the flag
+## for fast travel and the respawn search - so a migrated save would know only the stone it wakes at
+## and the map would refuse every other one it had used. Its flags prove more: the level's start
+## checkpoint (every game began there), its respawn, and each checkpoint of the level's index within
+## VISIT_PROOF_M of the marker of a quest stage the save completed (that stage's once-flag
+## reward.<quest>.<stage>: its objective was done there) whose requires_flags the save holds (a
+## waystone that never opened was never reached). Pure: the flags, the index and the quest records
+## in, ids out ([] without an index).
+static func v1_reached_checkpoints(flags: Dictionary, level: String, respawn: String, idx: WorldIndex) -> PackedStringArray:
+	var out := PackedStringArray()
+	if idx == null:
+		return out
+	var start := str(GameData.get_record(level).get("start_checkpoint", "")) if level != "" else ""
+	for id: String in [start, respawn]:
+		if id != "" and idx.has_checkpoint(id) and not out.has(id):
+			out.append(id)
+	var done_at: Array[Vector2] = []   # where the completed stages' objectives were done (x, z)
+	for rec: Dictionary in GameData.records_of_type("quest"):
+		var short := str(rec.get("id", "")).trim_prefix("quest.")
+		for s: Variant in rec.get("stages", []):
+			if typeof(s) != TYPE_DICTIONARY \
+					or not QuestConditions.truthy(flags.get("reward.%s.%s" % [short, str(s.get("id", ""))])):
+				continue
+			var markers: Array = [s.get("marker", "")]
+			if typeof(s.get("markers")) == TYPE_ARRAY:
+				markers.append_array(s.markers)
+			for m: Variant in markers:
+				var p := idx.position_of(str(m)) if typeof(m) == TYPE_STRING and str(m) != "" else Vector3.INF
+				if p.is_finite():
+					done_at.append(Vector2(p.x, p.z))
+	for id in idx.checkpoint_ids():
+		if out.has(id):
+			continue
+		var e := idx.checkpoint(id)
+		var open := true
+		for f: Variant in e.get("requires_flags", PackedStringArray()):
+			if not QuestConditions.truthy(flags.get(str(f))):
+				open = false
+				break
+		if not open:
+			continue
+		var at := Vector2((e.position as Vector3).x, (e.position as Vector3).z)
+		for p in done_at:
+			if p.distance_to(at) <= VISIT_PROOF_M:
+				out.append(id)
+				break
+	out.sort()
 	return out
 
 

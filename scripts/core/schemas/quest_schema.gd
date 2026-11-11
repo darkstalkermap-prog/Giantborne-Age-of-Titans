@@ -17,7 +17,9 @@ extends RefCounted
 ## set_flags) are granted once (the once-flag reward.<quest short id>.<stage>) and the next stage
 ## starts; after the last one the quest is complete and on_complete_flags are set (first write
 ## wins). The quest's state lives in the flags quest.<short id>.stage and quest.<short id>.done.
-## `marker` is an objective marker id ("" = none); `bot` is the Valley bot's hint for the stage:
+## `marker` is an objective marker id ("" = none); `markers` (P20) several, and `markers_done_when`
+## (M7 polish) {marker id: condition} drops a marker from the objective once its condition holds (an
+## oath lead once its oath is won); `bot` is the Valley bot's hint for the stage:
 ## {"action": one of BOT_ACTIONS (required), "target": an id (optional), any other keys the bot
 ## reads}. tracker_priority (optional, default 0) orders side quests in the HUD tracker (higher
 ## first).
@@ -53,6 +55,9 @@ static func fields() -> Dictionary:
 			"marker": U.str_field(),
 			# P20 (plan M6-M9 §2.6): several marker or POI ids (the compass shows them all).
 			"markers": {"t": "array", "items": "string"},
+			# M7 polish: marker id -> a condition; once it holds the marker is done and drops out of
+			# the objective, the compass and the map (an oath lead once its oath is won).
+			"markers_done_when": {"t": "dict"},
 			"xp": U.int_field(0, 100000),
 			# P20: on completion award max(xp, the XP that reaches this level).
 			"xp_floor_level": U.int_field(1, 20),
@@ -107,6 +112,16 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			for m: Variant in markers:
 				U.check_id_string(m, "%s.markers[%d]" % [sctx, j], out)
 				j += 1
+		# M7 polish: each markers_done_when key is one of the stage's markers, each value a condition.
+		var done_when: Variant = s.get("markers_done_when")
+		if typeof(done_when) == TYPE_DICTIONARY:
+			var named: Array = [marker]
+			if typeof(markers) == TYPE_ARRAY:
+				named.append_array(markers)
+			for m: Variant in done_when:
+				if not named.has(m):
+					out.errors.append("%s.markers_done_when: '%s' is not one of the stage's markers" % [sctx, m])
+				U.check_condition(done_when[m], "%s.markers_done_when.%s" % [sctx, m], out)
 		DIALOGUE.check_flag_map(s.get("set_flags"), sctx + ".set_flags", out)
 		var bot: Variant = s.get("bot")
 		if typeof(bot) == TYPE_DICTIONARY:

@@ -133,6 +133,28 @@ shape = SubResource("BoxShape3D_12")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 440, 120, 897)
 shape = SubResource("BoxShape3D_13")
 
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Route" type="Node3D" parent="Markers"]
+
+[node name="WP01" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -200, 9.568, 360)
+
+[node name="WP02" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -210, 5.882, 280)
+
+[node name="WP03" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -250, 5.394, 220)
+
+[node name="WP04" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -345, 18.958, 216)
+
+[node name="WP05" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -295, 8.365, 300)
+
+[node name="WP06" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -280, 7.6, 360)
+
 [node name="Spawns" type="Node3D" parent="."]
 
 [node name="PlayerSpawn" type="Marker3D" parent="Spawns"]

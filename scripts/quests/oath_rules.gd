@@ -19,6 +19,12 @@ extends RefCounted
 ## reconcile_errors(): a faction record's `reconcile` is offered somewhere - some dialogue has a
 ## choice whose outcome is "reconcile_<short>" (FactionState reconciles on it) and that takes the
 ## record's cost.
+##
+## lead_errors() (M7 polish; the M7 gate review): a quest stage that counts the oaths' done flags
+## (oath.<x>.done in its complete_when - the main thread's oaths stage) and points at several
+## markers, the oath leads, ends each lead with its own oath: every marker has a markers_done_when
+## that is the flag test of one of those oaths, one lead per oath. Quests drops a lead once its
+## condition holds, so no lead outlives its oath in any order of the oaths (decision 26).
 
 const OATH_QUEST_PREFIX := "quest.oath_"
 const FIRST_OATH_STAGE := 4
@@ -248,6 +254,72 @@ static func reconcile_errors(records: Dictionary, record_paths: Dictionary = {})
 		if not matched:
 			errors.append("%s: the '%s' choice does not take the reconciliation's cost %s" % [ctx, outcome, JSON.stringify(cost)])
 	return errors
+
+
+## The oath leads' errors (see the class notes): one line per stage whose leads do not each end with
+## their own oath.
+static func lead_errors(records: Dictionary, record_paths: Dictionary = {}) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var ids: Array = records.keys()
+	ids.sort()
+	for id: Variant in ids:
+		var rec: Variant = records[id]
+		if typeof(rec) != TYPE_DICTIONARY or str(rec.get("type", "")) != "quest":
+			continue
+		var ctx := "%s (%s)" % [record_paths.get(id, id), id]
+		for s: Variant in rec.get("stages", []):
+			if typeof(s) != TYPE_DICTIONARY:
+				continue
+			var oaths := oath_done_flags_read(s.get("complete_when"))
+			var markers := PackedStringArray()
+			var named: Array = [s.get("marker", "")]
+			if typeof(s.get("markers")) == TYPE_ARRAY:
+				named.append_array(s.markers)
+			for m: Variant in named:
+				if typeof(m) == TYPE_STRING and str(m) != "" and not markers.has(str(m)):
+					markers.append(str(m))
+			if oaths.is_empty() or markers.size() < 2:
+				continue
+			var done_when: Dictionary = s.markers_done_when if typeof(s.get("markers_done_when")) == TYPE_DICTIONARY else {}
+			var claimed := {}
+			var lacking := PackedStringArray()
+			for m in markers:
+				var c: Variant = done_when.get(m)
+				var flag := str(c.get("flag", "")) if typeof(c) == TYPE_DICTIONARY and str(c.get("type", "")) == "flag" \
+					and not (c as Dictionary).has("equals") else ""
+				if not oaths.has(flag):
+					lacking.append(m)
+				elif claimed.has(flag):
+					errors.append("%s: stage '%s': the leads '%s' and '%s' both end with %s (one lead per oath)" % [
+						ctx, s.get("id", ""), claimed[flag], m, flag])
+				else:
+					claimed[flag] = m
+			var unclaimed := PackedStringArray()
+			for f in oaths:
+				if not claimed.has(f):
+					unclaimed.append(f)
+			if not lacking.is_empty() or not unclaimed.is_empty():
+				errors.append("%s: stage '%s': the oath leads %s need a markers_done_when on their own oath (%s): a lead must not outlive its oath" % [
+					ctx, s.get("id", ""), ", ".join(lacking), ", ".join(unclaimed)])
+	return errors
+
+
+## The oaths' done flags (oath.<x>.done) a condition reads, through all / any / count, in order.
+static func oath_done_flags_read(c: Variant) -> PackedStringArray:
+	var out := PackedStringArray()
+	if typeof(c) != TYPE_DICTIONARY:
+		return out
+	match str(c.get("type", "")):
+		"flag":
+			var f := str(c.get("flag", ""))
+			if f.begins_with("oath.") and f.ends_with(".done") and f.get_slice_count(".") == 3:
+				out.append(f)
+		"all", "any", "count":
+			for sub: Variant in c.get("of", []):
+				for f in oath_done_flags_read(sub):
+					if not out.has(f):
+						out.append(f)
+	return out
 
 
 static func _same_items(a: Variant, b: Variant) -> bool:

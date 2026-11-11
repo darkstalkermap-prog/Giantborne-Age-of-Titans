@@ -204,6 +204,8 @@ func _post_pass() -> void:
 	# offered by a dialogue choice (outcome reconcile_<short>) that takes its cost (OathRules).
 	errors.append_array(OathRules.first_oath_errors(records, record_paths))
 	errors.append_array(OathRules.reconcile_errors(records, record_paths))
+	# M7 polish: a stage counting the oaths' done flags ends each of its leads with its own oath.
+	errors.append_array(OathRules.lead_errors(records, record_paths))
 
 	## @anchor P30
 	# P30 (plan M6-M9 §2.10, decision 19): a formation's banner spawn is a banner and its rank and file

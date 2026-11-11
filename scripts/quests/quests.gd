@@ -54,6 +54,11 @@ extends Node
 ## current_objective() is the first of them. Each is {"quest_id", "stage_id", "text", "kind" (the
 ## complete_when type), "marker_id", "position" (the marker, else the first target found in the
 ## level; Vector3.INF when none), "targets", "bot", "title", "main", "stage_index", "stage_count"}.
+## M7 polish (the M7 gate review): "markers" are the stage's open markers (a marker whose
+## markers_done_when condition holds - an oath lead whose oath is won - is dropped), and a marker or
+## target that another campaign level holds leads to this level's door there (objective_route:
+## "position" is the exit's, "via_exit", "via_name" and "via_text" name it; "" when the objective is
+## on this level).
 
 const MAIN_QUEST_ID := "quest.main"
 const HOOK_ORDER := 100
@@ -573,16 +578,23 @@ func objective_for(quest_id: String) -> Dictionary:
 		return {}
 	var cond: Variant = srec.get("complete_when", {})
 	var targets := QuestConditions.targets_of(cond)
-	var markers := stage_markers(srec)
+	var markers := open_markers(srec)   # M7 polish: a lead whose markers_done_when holds is dropped
 	var marker := markers[0] if not markers.is_empty() else ""
+	# M7 polish: a marker on another campaign level leads to this level's door there (objective_route);
+	# several markers behind one door are one position.
 	var positions: Array = []
+	var routes: Array = []
 	for m in markers:
-		var mp := objective_position(m)
-		if mp.is_finite():
+		var r := objective_route(m)
+		var mp: Vector3 = r.position
+		if mp.is_finite() and not (str(r.via_exit) != "" and positions.has(mp)):
 			positions.append(mp)
-	var position := objective_position(marker, targets)
+			routes.append(r)
+	var route := objective_route(marker, targets)
+	var position: Vector3 = route.position
 	if markers.size() > 1 and not positions.is_empty():
 		position = nearest_to_player(positions)
+		route = routes[positions.find(position)]
 	var bot: Dictionary = (srec.get("bot", {}) as Dictionary).duplicate(true) if typeof(srec.get("bot")) == TYPE_DICTIONARY else {}
 	return {"quest_id": quest_id, "stage_id": sid, "text": str(srec.get("objective", "")),
 		"kind": str(cond.get("type", "")) if typeof(cond) == TYPE_DICTIONARY else "",
@@ -590,7 +602,10 @@ func objective_for(quest_id: String) -> Dictionary:
 		"bot": bot, "title": str(rec.get("display_name", quest_id)), "main": quest_id == main_quest_id,
 		"stage_index": _stage_index(rec, sid), "stage_count": _stages(rec).size(),
 		# P20: every marker of a multi-marker stage and their known positions; the journal's text.
-		"markers": markers, "positions": positions, "waiting_text": str(srec.get("waiting_text", ""))}
+		"markers": markers, "positions": positions, "waiting_text": str(srec.get("waiting_text", "")),
+		# M7 polish: the exit the position leads to when the objective lies on another level ("" here),
+		# its name and the tracker's and the journal's phrase for it ("by the Kings' Door").
+		"via_exit": str(route.via_exit), "via_name": str(route.via_name), "via_text": by_exit_text(str(route.via_name))}
 
 
 ## A stage's marker ids: its `marker`, then its `markers` (P20), each once.
@@ -604,6 +619,31 @@ static func stage_markers(srec: Dictionary) -> PackedStringArray:
 			var s := str(id)
 			if s != "" and not out.has(s):
 				out.append(s)
+	return out
+
+
+## The stage's markers that still lead somewhere (M7 polish; the M7 gate review): stage_markers()
+## without each one whose `markers_done_when` condition holds now - an oath lead once its oath is
+## won - so the objective, its diamonds on the compass and the map, and the compass's leads never
+## point at a finished lead (the main thread's oaths stage kept sending a giant who had won
+## Brannock's oath back to Brannock's green).
+func open_markers(srec: Dictionary) -> PackedStringArray:
+	var done: Variant = srec.get("markers_done_when")
+	if typeof(done) != TYPE_DICTIONARY or (done as Dictionary).is_empty():
+		return stage_markers(srec)
+	return markers_open_in(srec, condition_context())
+
+
+## open_markers() for a condition context (pure): the stage's markers whose markers_done_when
+## condition does not hold in `ctx` (a marker without one is always open), in stage order.
+static func markers_open_in(srec: Dictionary, ctx: Dictionary) -> PackedStringArray:
+	var done: Variant = srec.get("markers_done_when")
+	var out := PackedStringArray()
+	for m in stage_markers(srec):
+		var c: Variant = (done as Dictionary).get(m) if typeof(done) == TYPE_DICTIONARY else null
+		if typeof(c) == TYPE_DICTIONARY and QuestConditions.holds(c, ctx):
+			continue
+		out.append(m)
 	return out
 
 
@@ -655,6 +695,127 @@ func objective_position(marker_id: String, targets: PackedStringArray = PackedSt
 			if it.is_finite():
 				return it + offset
 	return Vector3.INF
+
+
+# --------------------------------------------------------------------------- M7 polish: objectives on another level
+
+## How far from an exit the stone it shares a passage with may stand (the stone the other level's
+## exits bring a giant back to: 7-22 m from each door of the Valley and the world).
+const PASSAGE_STONE_M := 40.0
+
+
+## Where an objective leads the giant on the level being played (M7 polish; the M7 gate review):
+## {"position", "via_exit", "via_name", "level"}. objective_position() when this level knows the
+## marker or a target ("via_exit" ""); else, when another campaign level's index knows it, the exit
+## of this level that leads there best (exit_toward), so the HUD marker, the compass and the map lead
+## to the Kings' Door or the Broken Stair and the tracker names it. Before, such an objective had
+## no position at all (Vector3.INF): quest.sealed_citadel tracked in the world, or the world's main
+## thread while the giant revisits the Valley, showed text alone. Position INF and "" when no level
+## the exits reach knows it. objective_position() stays this level's own: the near condition reads
+## it and must never hold beside a door.
+func objective_route(marker_id: String, targets: PackedStringArray = PackedStringArray()) -> Dictionary:
+	var pos := objective_position(marker_id, targets)
+	if pos.is_finite():
+		return {"position": pos, "via_exit": "", "via_name": "", "level": ""}
+	var ids := PackedStringArray()
+	if marker_id != "":
+		ids.append(marker_id)
+	ids.append_array(targets)
+	for id in ids:
+		var r := exit_toward(id)
+		if str(r.via_exit) != "":
+			return r
+	return {"position": Vector3.INF, "via_exit": "", "via_name": "", "level": ""}
+
+
+## The exit of the level being played that leads best toward `id` on another level:
+## {"position" (this level's space), "via_exit", "via_name", "level"} ("" and INF when none). Among
+## the open exits (exit_open) to a level whose index knows `id`, the one with the shortest way in a
+## straight line: from the giant to the exit, plus from the stone the exit arrives at to `id`.
+func exit_toward(id: String) -> Dictionary:
+	var out := {"position": Vector3.INF, "via_exit": "", "via_name": "", "level": ""}
+	var idx := level_index()
+	if idx == null or idx.exits.is_empty() or id == "":
+		return out
+	var root := _level_root()
+	var offset := root.global_position if root != null and root.is_inside_tree() else Vector3.ZERO
+	var p := _player_or_null()
+	var at := p.global_position - offset if p != null and p.is_inside_tree() else Vector3.INF
+	var best := INF
+	var ids: Array = idx.exits.keys()
+	ids.sort()
+	for eid: Variant in ids:
+		var e: Dictionary = idx.exits[eid]
+		var to_level := str(e.get("to_level", ""))
+		if to_level == "" or to_level == idx.level_id:
+			continue
+		var there := WorldIndex.for_level(to_level)
+		var target := there.position_of(id) if there != null else Vector3.INF
+		if not target.is_finite() or not exit_open(idx, str(eid), there):
+			continue
+		var door: Vector3 = e.get("position", Vector3.INF)
+		var arrival := there.position_of(str(e.get("to_checkpoint", "")))
+		var cost := _flat(arrival, target) if arrival.is_finite() else 0.0
+		if at.is_finite():
+			cost += _flat(at, door)
+		if cost < best:
+			best = cost
+			out = {"position": door + offset, "via_exit": str(eid),
+				"via_name": str(e.get("display_name", idx.display_name(str(eid)))), "level": to_level}
+	return out
+
+
+## Whether a giant may pass the exit `exit_id` of the level `idx` (`there`: the index of the level it
+## leads to) now. A door is a passage with a stone at each end: the stone it arrives at and the stone
+## beside it on this side - the checkpoint the other level's exits bring a giant back to, nearest the
+## exit within PASSAGE_STONE_M - must both have their requires_flags, and its LevelExit node, while
+## it is loaded, its own. (The Citadel stair stands behind the sealed gate with no flag of its own; its
+## stone opens with the breach, as the Broken Stair's rubble does.)
+func exit_open(idx: WorldIndex, exit_id: String, there: WorldIndex) -> bool:
+	if is_inside_tree():
+		for n in get_tree().get_nodes_in_group(LevelExit.GROUP):
+			var x := n as LevelExit
+			if x != null and x.exit_id == exit_id and not x.is_open():
+				return false
+	var e: Dictionary = idx.exits.get(exit_id, {})
+	if there == null or not _checkpoint_open(there, str(e.get("to_checkpoint", ""))):
+		return false
+	var door: Vector3 = e.get("position", Vector3.INF)
+	var beside := ""
+	var nearest := PASSAGE_STONE_M
+	for back: Dictionary in there.exits.values():
+		if str(back.get("to_level", "")) != idx.level_id:
+			continue
+		var stone := str(back.get("to_checkpoint", ""))
+		var d := _flat(idx.position_of(stone), door) if idx.has_checkpoint(stone) else INF
+		if d <= nearest:
+			nearest = d
+			beside = stone
+	return beside == "" or _checkpoint_open(idx, beside)
+
+
+## True when the checkpoint `id` of `idx` exists and every one of its requires_flags holds.
+static func _checkpoint_open(idx: WorldIndex, id: String) -> bool:
+	if not idx.has_checkpoint(id):
+		return false
+	for f: Variant in idx.checkpoint(id).get("requires_flags", PackedStringArray()):
+		if not QuestConditions.truthy(WorldState.get_flag(str(f))):
+			return false
+	return true
+
+
+## The phrase for the door an objective on another level leads through: "by the Kings' Door" for
+## "The Kings' Door" ("" for "").
+static func by_exit_text(exit_name: String) -> String:
+	if exit_name == "":
+		return ""
+	return "by " + ("the " + exit_name.substr(4) if exit_name.begins_with("The ") else exit_name)
+
+
+static func _flat(a: Vector3, b: Vector3) -> float:
+	if not a.is_finite() or not b.is_finite():
+		return INF
+	return Vector2(a.x - b.x, a.z - b.z).length()
 
 
 ## The world index of the level being played (P20): the loaded LevelRoot's, else the campaign
@@ -1102,21 +1263,27 @@ func tracked_objective() -> Dictionary:
 
 
 ## The compass's leads while another quest is tracked: the main quest's current markers that have
-## a position, at most LEAD_LIMIT: [{"marker_id", "position"}] ([] while the main quest is the
-## tracked one or is not active).
+## a position, at most LEAD_LIMIT: [{"marker_id", "position", "via_exit"}] ([] while the main quest
+## is the tracked one or is not active). M7 polish: only the open markers (a lead whose oath is won is
+## gone), and a marker on another level gives the position of the door there (objective_route; leads
+## behind the same door are one).
 func leads() -> Array:
 	var out: Array = []
 	var tracked := tracked_id()
 	if tracked == "" or tracked == main_quest_id or quest_state(main_quest_id) != ACTIVE:
 		return out
 	var o := objective_for(main_quest_id)
-	var markers: PackedStringArray = o.get("markers", PackedStringArray())
+	var markers: PackedStringArray = o.get("markers", PackedStringArray())   # M7 polish: the open ones
+	var taken: Array = []
 	for m in markers:
 		if out.size() >= LEAD_LIMIT:
 			break
-		var pos := objective_position(m)
-		if pos.is_finite():
-			out.append({"marker_id": m, "position": pos})
+		# M7 polish: a lead on another level points at the door there; leads behind one door are one.
+		var r := objective_route(m)
+		var pos: Vector3 = r.position
+		if pos.is_finite() and not (str(r.via_exit) != "" and taken.has(pos)):
+			taken.append(pos)
+			out.append({"marker_id": m, "position": pos, "via_exit": str(r.via_exit)})
 	return out
 
 

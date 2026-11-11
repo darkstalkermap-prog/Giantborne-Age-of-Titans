@@ -4,7 +4,8 @@ extends HudWidget
 ## side-quest order: the active village branch, otherwise quest.village, otherwise another (the
 ## Hollow tutorial). For a few seconds after quest or dialogue XP it adds "+110 XP - Prototype
 ## pacing: accelerated quest XP" (decision 7). Hidden while quests are inactive (the sandbox) or
-## nothing is tracked. Read API: lines_now(), visible_text().
+## nothing is tracked. Read API: lines_now(), visible_text(). M7 polish: an objective on another
+## campaign level adds the door it leads through to its title line (title_of).
 ## P27 (plan M6-M9 §2.12, §3.10 design 4): the first line follows the tracked quest
 ## (Quests.tracked_id(): the main quest unless the player tracks another with T / D-pad Left or the
 ## journal); the second is then the main quest, else the first other quest. Drawn by HudKit's rules
@@ -74,7 +75,7 @@ static func lines_for(objectives: Array, main_done := false, main_title := "", t
 			tracked = o
 	var first: Dictionary = tracked if not tracked.is_empty() else main
 	if not first.is_empty():
-		out.main_title = str(first.get("title", ""))
+		out.main_title = title_of(first)
 		out.main_text = str(first.get("text", ""))
 	elif main_done:
 		out.main_title = main_title
@@ -88,9 +89,18 @@ static func lines_for(objectives: Array, main_done := false, main_title := "", t
 				side = o
 				break
 	if not side.is_empty():
-		out.side_title = str(side.get("title", ""))
+		out.side_title = title_of(side)
 		out.side_text = str(side.get("text", ""))
 	return out
+
+
+## An objective's title line (M7 polish): its quest's title, and when the objective lies on another
+## level, the door it leads through ("The Sealed Citadel  -  by the Kings' Door": Quests.objective_for's
+## via_text).
+static func title_of(o: Dictionary) -> String:
+	var title := str(o.get("title", ""))
+	var via := str(o.get("via_text", ""))
+	return title if via == "" else "%s  -  %s" % [title, via]
 
 
 func _on_xp_gained(_tick: int, amount: int, source: String, _total: int) -> void:
