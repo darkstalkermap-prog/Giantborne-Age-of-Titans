@@ -3607,6 +3607,9 @@ func p34_decide(outcome: String) -> bool:
 		var p := get_tree().get_first_node_in_group("player") as GiantPlayer
 		if p != null and brain != null:
 			brain.on_noise(Sim.tick, p.global_position, p.entity.entity_id, true)
+		# M8 gate (F11): the fight is on again under the id the yield ended it with - the boss bar
+		# drops its "yields", the boss music comes back (CueRouter: in the boss's current phase).
+		Events.boss_engaged.emit(Sim.tick, yield_boss_id())
 	else:
 		_p34_strike()
 	get_tree().call_group(BossArena.GROUP, "p34_on_yield_decided", entity.entity_id, outcome)

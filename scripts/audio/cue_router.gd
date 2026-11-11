@@ -904,14 +904,29 @@ func _on_upgrade_applied(_tick: int, _from_weapon: String, _to_weapon: String) -
 	request(["sfx.world.forge_upgrade"], _player_pos(), {"priority": 60, "reason": "upgrade"})
 
 
-func _on_boss_engaged(_tick: int, boss_id: String) -> void:
-	audio.music.on_boss_engaged(boss_id)
-	var arena: Node3D = null
+## The boss music, in the phase the boss fights in now, and the arena's gate when the arena itself
+## engaged at this tick. M8 gate (F11): a yield decided as a fight (Harrok struck rises) emits
+## boss_engaged again - the music comes back in his phase, and the gate, long shut, makes no sound.
+func _on_boss_engaged(tick: int, boss_id: String) -> void:
+	audio.music.on_boss_engaged(boss_id, _boss_phase_now(boss_id))
+	var arena: BossArena = null
 	for n in audio.get_tree().get_nodes_in_group(BossArena.GROUP):
 		if n is BossArena and (n as BossArena).boss_id == boss_id:
 			arena = n
-	if arena != null and arena.gate != null:
+	if arena != null and arena.gate != null and arena.engaged_tick == tick:
 		request(["sfx.world.gate_iron"], arena.gate.global_position, {"priority": 60, "reason": "arena_gate"})
+
+
+## The phase the boss `boss_id` fights in now (its actor's boss_phase(), or its battle's; 1 when
+## unknown): 1 on a fresh engagement, later when a yielded boss rises to fight on (M8 gate F11).
+func _boss_phase_now(boss_id: String) -> int:
+	var e := Sim.get_entity(boss_id)
+	if e != null and is_instance_valid(e.actor) and e.actor.has_method("boss_phase"):
+		return maxi(1, int(e.actor.call("boss_phase")))
+	for n in audio.get_tree().get_nodes_in_group("battle_bosses"):
+		if str(n.get("battle_id")) == boss_id and n.has_method("boss_phase"):
+			return maxi(1, int(n.call("boss_phase")))
+	return 1
 
 
 func _on_boss_phase_changed(_tick: int, boss_id: String, phase: int) -> void:

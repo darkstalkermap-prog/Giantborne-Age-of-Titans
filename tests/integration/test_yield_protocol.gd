@@ -6,9 +6,13 @@ extends IntegrationSuite
 ## stays possible. Only Strike confirmed in the prompt decides death: Corvane dies by the giant's one
 ## accepted blow; Harrok rises to fight to the death. Three poise breaks make Harrok yield, two under
 ## Wildheart's challenge. The yield prompt is armed only after a moment and Esc goes back, never away.
+## M8 gate (F11): Harrok struck rises to a fight the boss bar and the music follow again (no "yields",
+## the boss set back, in the phase the fight is in). (F13): a yield ends the giant's hold on the boss.
 
 const HARROK := "res://scenes/enemies/harrok.tscn"
 const CORVANE := "res://scenes/enemies/corvane.tscn"
+const BOSS_BAR := preload("res://ui/hud/boss_bar.gd")
+const FRAME := 1.0 / 60.0
 
 var yields: Array = []
 
@@ -197,3 +201,34 @@ func test_the_prompt_is_armed_late_and_esc_goes_back() -> void:
 	assert_true(prompt.is_open(), "and never closes the prompt undecided")
 	assert_eq(c.yield_decided, "", "undecided")
 	stack.close_all()
+
+
+## M8 gate (F11): Strike on Harrok ("he rises and fights to the death") takes back everything his
+## yield ended: the bar no longer says "yields", and his boss music is due again, in the phase the fight
+## is in (the director's boss state is pending: a test world has no zone for it to play over).
+func test_struck_he_rises_and_the_bar_and_the_music_follow_the_fight() -> void:
+	Audio.enable_for_tests()
+	spawn_player(Vector3(0, 0.05, 20), 0.0)
+	var h := _spawn(HARROK, "test.harrok", Vector3(0, 0.05, 0)) as RivalGiantEnemy
+	var layer := CanvasLayer.new()
+	world.add_child(layer)
+	var bar := BOSS_BAR.new()
+	layer.add_child(bar)
+	await step_ticks(2)
+	Events.boss_engaged.emit(Sim.tick, h.entity_id)   # (his arena's engagement)
+	assert_eq(Audio.music.boss_id, h.entity_id, "his music is due")
+	h.brain.update_boss_phase(0.4, Sim.tick)
+	assert_eq(h.boss_phase(), 2, "his second phase")
+	assert_eq(Audio.music.boss_phase, 2, "the music follows to phase 2")
+	h.p34_yield("health")
+	await get_tree().process_frame
+	assert_true(bar.visible_text().ends_with("yields"), "the bar: he yields ('%s')" % bar.visible_text())
+	assert_eq(Audio.music.boss_id, "", "his music ends with the yield")
+	assert_true(h.p34_decide("strike"), "Strike")
+	Quests.end_dialogue()
+	await get_tree().process_frame
+	assert_false(bar.visible_text().ends_with("yields"), "he fights to the death: no 'yields' ('%s')" % bar.visible_text())
+	assert_eq(Audio.music.boss_id, h.entity_id, "his music again")
+	assert_eq(int(Audio.music.pending.get("state", -1)), MusicDirector.State.BOSS, "the boss state is due")
+	assert_eq(Audio.music.boss_phase, 2, "in the phase the fight is in")
+	assert_true(h.entity.combatant.lockable and not h.yielded and not h.entity.combatant.unkillable, "and he fights")
