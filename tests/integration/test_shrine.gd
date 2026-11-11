@@ -274,7 +274,8 @@ func test_shrine_screen_rest_and_grow_tabs() -> void:
 	var titles: Array = []
 	for t in screen.tabs:
 		titles.append(t.tab_title())
-	assert_eq(titles, ["Rest", "Grow", "Loadout", "Attributes"], "Rest and Grow, and P12's Loadout and Attributes")
+	assert_eq(titles, ["Rest", "Grow", "Loadout", "Attributes", "Talents"],
+		"Rest and Grow, P12's Loadout and Attributes, and P33's Talents (Ancestry waits for the Old Kingdom)")
 	var pools := p.entity.combatant.pools
 	pools.health = 0.4 * pools.health_max
 	screen.show_tab(0)

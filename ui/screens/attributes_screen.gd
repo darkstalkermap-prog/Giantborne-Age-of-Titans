@@ -2,8 +2,8 @@ class_name AttributesScreen
 extends UiScreen
 ## The Attributes screen (plan §2.10.2, §3.14 design 5; P12): ScreenStack SCREENS["attributes"],
 ## opened from the inventory (or Events.ui_screen_requested("attributes", {})). It pauses the game
-## and holds an AttributePanel: allocation with a derived preview, the ancestry line ("Ancestry:
-## Unaligned — no modifiers in the prototype"), the talent points. Close (or Esc / pad B) closes it.
+## and holds an AttributePanel: allocation with a derived preview, the ancestry line (P33: what the
+## ancestry gives, or where to choose it), the talent points. Close (or Esc / pad B) closes it.
 ## args: {"player": GiantPlayer} (else the first node in group "player").
 ## P16: the panel's rows ([-, +] per attribute, Confirm and Reset), then Close, rewired whenever the
 ## panel refreshes.

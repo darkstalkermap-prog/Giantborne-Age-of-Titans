@@ -4,8 +4,8 @@ extends VBoxContainer
 ## screen and the shrine's Attributes tab. One row per attribute (name, value, [-], the points
 ## planned for it, [+], its effect), the unspent points, the derived values now -> with the planned
 ## points (health, stamina, essence, poise, attack recovery, elemental resistance, damage), Confirm
-## (PlayerProgression.allocate) and Reset, the ancestry line "Ancestry: Unaligned — no modifiers in
-## the prototype", the talent points and the prototype pacing label.
+## (PlayerProgression.allocate) and Reset, the ancestry line (P33: "Ancestry: Stoneblood —
+## Constitution +3, ..."), the talent points with the talents learned and the prototype pacing label.
 ##
 ## Reads and changes the game only through player.progression. Call setup(player) before it enters
 ## the tree; refresh() re-reads everything. Tests use add_point / remove_point / confirm / reset and
@@ -175,7 +175,7 @@ func refresh() -> void:
 	confirm_button.disabled = planned_total() <= 0
 	reset_button.disabled = planned_total() <= 0
 	_ancestry.text = str(prog.ancestry_line())
-	_talents.text = "Talent points: %d (talent trees are a full-game feature)" % int(prog.talent_points)
+	_talents.text = str(prog.talent_line()) if prog.has_method("talent_line") else "Talent points: %d" % int(prog.talent_points)
 	refreshed.emit()
 
 

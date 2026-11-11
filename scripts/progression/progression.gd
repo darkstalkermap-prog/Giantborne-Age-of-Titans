@@ -163,14 +163,17 @@ static func allocate(character: Dictionary, delta: Dictionary) -> Dictionary:
 	return out
 
 
-## What `attributes` (with the growth bonus) make of a player record, through a scratch Combatant
-## (the same formulas the giant uses): {"health", "stamina", "essence", "poise", "recovery_scale",
-## "recovery_reduction" (0..0.15), "elemental_resistance" (0..0.20), "damage_scale"
-## (1 + 0.015 x Strength), "magic_scale" (1 + 0.015 x Intellect)}.
+## What `attributes` (with the growth bonus and, P33, the talents' and ancestry's `passives`) make
+## of a player record, through a scratch Combatant (the same formulas the giant uses): {"health",
+## "stamina", "essence", "poise", "recovery_scale", "recovery_reduction" (0..0.15),
+## "elemental_resistance" (Willpower's bonus, 0..0.20, plus the passives' elemental_resist_add),
+## "damage_scale" (1 + 0.015 x Strength), "magic_scale" (1 + 0.015 x Intellect)}.
 static func derived_preview(player_record: Dictionary, attributes: Dictionary,
-		growth_bonus: Dictionary = {}) -> Dictionary:
+		growth_bonus: Dictionary = {}, passives: Dictionary = {}) -> Dictionary:
 	var c := Combatant.from_record("progression_preview", player_record)
 	c.growth_bonus = growth_bonus.duplicate()
+	if not passives.is_empty():
+		c.set_passives(passives)
 	var attrs := {}
 	for key: String in ATTRIBUTE_KEYS:
 		attrs[key] = float(attributes.get(key, c.attribute(key)))
@@ -179,7 +182,8 @@ static func derived_preview(player_record: Dictionary, attributes: Dictionary,
 	return {
 		"health": c.pools.health_max, "stamina": c.pools.stamina_max, "essence": c.pools.essence_max,
 		"poise": c.poise.threshold, "recovery_scale": scale, "recovery_reduction": 1.0 - scale,
-		"elemental_resistance": CombatRules.willpower_resistance_bonus(c.attribute("willpower")),
+		"elemental_resistance": CombatRules.willpower_resistance_bonus(c.attribute("willpower"))
+			+ c.elemental_resist_add(),
 		"damage_scale": 1.0 + CombatRules.STRENGTH_SCALE * c.attribute("strength"),
 		"magic_scale": 1.0 + CombatRules.STRENGTH_SCALE * c.attribute("intellect"),
 	}

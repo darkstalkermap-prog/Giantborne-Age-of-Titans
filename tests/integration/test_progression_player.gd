@@ -276,8 +276,10 @@ func test_allocation_raises_maxima_keeping_fractions_and_dexterity_is_capped() -
 	if s == null:
 		return
 	var panel := s.panel_ui
-	assert_eq(panel.ancestry_text(), "Ancestry: Unaligned — no modifiers in the prototype", "the ancestry line")
-	assert_true(panel.talent_text().contains("talent trees are a full-game feature"), "the talent note")
+	# P33: the ancestry is chosen once the Old Kingdom opens, and talents are learned at shrines.
+	assert_eq(panel.ancestry_text(), "Ancestry: Unaligned — your blood awakens when you reach the Old Kingdom",
+		"the ancestry line")
+	assert_true(panel.talent_text().contains("learn talents at a shrine"), "the talent note")
 	assert_true(panel.add_point("strength"), "plan a point")
 	assert_true(panel.add_point("strength"), "and another")
 	assert_true(panel.preview_text().contains("Damage x1.150 -> x1.180"), "the preview shows the damage change (%s)" % panel.preview_text())
@@ -351,7 +353,8 @@ func test_shrine_loadout_and_attributes_tabs() -> void:
 	var titles: Array = []
 	for t in plain.tabs:
 		titles.append(t.tab_title())
-	assert_eq(titles, ["Rest", "Grow"], "a shrine record can turn both tabs off")
+	# P33: the Talents tab shows at every shrine (plan M6-M9 §3.17), whatever the shrine record says.
+	assert_eq(titles, ["Rest", "Grow", "Talents"], "a shrine record can turn both tabs off (Talents stays)")
 	assert_eq(prog.set_slot("slot_3", "ability.stone_skin", s).reason, "no_shrine", "and its loadout")
 	stack.close_all()
 

@@ -34,11 +34,11 @@ const PROMPTS := ["tutorial.camera", "tutorial.light", "tutorial.heavy", "tutori
 	"tutorial.block", "tutorial.dodge", "tutorial.shrine", "tutorial.soldier_guard", "tutorial.grab",
 	"tutorial.hurl", "tutorial.attributes", "tutorial.boss_charge"]
 ## The world's prompts (P27, plan M6-M9 §3.10: data/tutorial/{map,compass,fast_travel,discovery,size_gate,
-## sealed_place}.json; P29, §3.12: {world_arrival,stage4_humans,formations}.json): each waits for
-## progress.world_entered, so none shows in a first Valley run.
+## sealed_place}.json; P29, §3.12: {world_arrival,stage4_humans,formations}.json; P33, §3.17:
+## ancestry.json): each waits for progress.world_entered, so none shows in a first Valley run.
 const WORLD_PROMPTS := ["tutorial.map", "tutorial.compass", "tutorial.fast_travel", "tutorial.discovery",
 	"tutorial.size_gate", "tutorial.sealed_place", "tutorial.world_arrival", "tutorial.stage4_humans",
-	"tutorial.formations"]
+	"tutorial.formations", "tutorial.ancestry"]
 const QUESTS := ["quest.main", "quest.tutorial", "quest.village", "quest.village_cache", "quest.village_ogre"]
 
 static var _index: Dictionary = {}
@@ -194,6 +194,8 @@ func _written_flags() -> Dictionary:
 	w["progress.world_entered"] = true
 	w[Discovery.SEALED_COUNT_FLAG] = true
 	w[Discovery.MAP_OPENED_FLAG] = true
+	# P33: PlayerProgression.choose_ancestry sets ancestry.chosen (the ancestry prompt's dismissal).
+	w[Talents.CHOSEN_FLAG] = true
 	# The world's writers besides the records (P29): its encounters, factions, beacons and breakable sites.
 	w.merge(WorldContent.written_flags())
 	return w
@@ -270,7 +272,7 @@ func test_every_id_in_the_scene_is_unique_and_the_content_is_shipped() -> void:
 	var expected := PROMPTS.duplicate()
 	expected.append_array(WORLD_PROMPTS)
 	expected.sort()
-	assert_eq(prompt_ids, expected, "the 13 tutorial prompts of plan §4.5 and the world's nine (P27, P29)")
+	assert_eq(prompt_ids, expected, "the 13 tutorial prompts of plan §4.5 and the world's ten (P27, P29, P33)")
 	for id: String in WORLD_PROMPTS:
 		assert_true((GameData.get_record(id).get("requires_flags", []) as Array).has("progress.world_entered"),
 			"%s waits for the world" % id)
