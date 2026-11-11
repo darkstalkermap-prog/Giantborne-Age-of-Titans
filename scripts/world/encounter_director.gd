@@ -1782,6 +1782,7 @@ func p37_move_copy(id: String, centre: Vector3, yaw: float, ground: Callable = C
 			at.y = h
 		m.spawn["position_m"] = [at.x, at.y, at.z]
 		m.spawn["yaw_deg"] = wrapf(float(yaws.get(m.entity_id, 0.0)) + rad_to_deg(yaw), -180.0, 180.0)
+	_dirty = true   # its activation is looked at again on the next tick (it may have walked onto loaded ground)
 
 
 ## Walks a copy in the world along its route (see the notes): its centre to `centre` (level space) facing

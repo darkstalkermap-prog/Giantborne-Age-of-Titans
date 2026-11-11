@@ -489,10 +489,16 @@ func copy_ids() -> PackedStringArray:
 	return out
 
 
-## A copy's member came into the world: the giant has reached that copy.
-func _on_member_spawned(encounter_id: String, _entity_id: String, _node: Node3D) -> void:
+## A member came into the world: a copy's means the giant has reached that copy; a villager of the folk a
+## running event hunts, near its centre, comes out into the raid and runs for shelter.
+func _on_member_spawned(encounter_id: String, _entity_id: String, node: Node3D) -> void:
 	if _copies.has(encounter_id):
 		(_copies[encounter_id] as Dictionary)["active_seen"] = true
+	var e := running_event()
+	var c := node as Civilian
+	if e != null and e.state == WorldEvent.RUNNING and c != null and c.brain != null \
+			and _hunted_factions(e).has(c.faction) and _flat(c.global_position - _to_global(e.centre)) <= WorldEvent.SHELTER_RADIUS_M:
+		c.brain.on_noise(Sim.tick, 0.0)
 
 
 ## Drops wanderers the giant left behind, cleared ones once their dead are gone, and ones never reached.
@@ -712,14 +718,21 @@ func target_points(e: WorldEvent) -> Array:
 	return out
 
 
-## The folk of the factions its encounters hunt (their spawns' targets) near its centre take shelter.
-func _shelter_folk(e: WorldEvent, tick: int) -> void:
+## The factions (short names) e's encounters hunt: their spawns' targets.
+static func _hunted_factions(e: WorldEvent) -> Dictionary:
 	var hunted := {}
 	for t: Variant in e.record.get("encounters", []):
 		for s: Variant in GameData.get_record(str(t)).get("spawns", []):
 			if typeof(s) == TYPE_DICTIONARY and typeof(s.get("targets")) == TYPE_DICTIONARY:
 				for f: Variant in (s.targets as Dictionary).get("factions", []):
 					hunted[str(f).trim_prefix("faction.")] = true
+	return hunted
+
+
+## The folk of the factions its encounters hunt (their spawns' targets) near its centre take shelter (and
+## those who come into the world while it runs: _on_member_spawned).
+func _shelter_folk(e: WorldEvent, tick: int) -> void:
+	var hunted := _hunted_factions(e)
 	if hunted.is_empty() or not is_inside_tree():
 		return
 	var c0 := _to_global(e.centre)

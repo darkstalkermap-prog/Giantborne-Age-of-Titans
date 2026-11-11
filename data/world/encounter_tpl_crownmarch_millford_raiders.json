@@ -3,24 +3,24 @@
 	"id": "encounter.tpl_crownmarch_millford_raiders",
 	"type": "encounter",
 	"display_name": "Millford raiders",
-	"description": "P37 (plan M6-M9 §5.10): the encounter of event.millford_raid - six raiders and an archer coming up the east road into Millford. Their target provider (P30: `targets`, allowed on a template's spawns) hunts Millford's people and houses (faction millford: villagers, militia and the houses of the hamlet); the giant comes first only within 20 m. While the raid runs they sweep its protected houses in turn (the event's patrol). Its centre lies in the hamlet's east half so the 70 m leash holds the five houses the raid threatens; it stands where the event puts it (its own centre).",
+	"description": "P37 (plan M6-M9 §5.10): the encounter of event.millford_raid - six raiders and an archer coming up the east road into Millford. Their target provider (P30: `targets`, allowed on a template's spawns) hunts Millford's people (faction millford: villagers and militia) and houses (props tagged house: a house carries its faction on its node, not its entity); the giant comes first only within 20 m. They raid each for himself (alert_group false: a raider who spots a villager does not wake the others to a giant far off, whom they would flee). While the raid runs they sweep its protected houses in turn (the event's patrol). Its centre lies in the hamlet's east half so the 70 m leash holds the five houses the raid threatens; it stands where the event puts it (its own centre).",
 	"template": true,
 	"level": "level.world",
 	"center_m": [-350, 8.08, 640],
 	"activate_radius_m": 120,
 	"deactivate_radius_m": 200,
 	"leash_radius_m": 70,
-	"alert_group": true,
+	"alert_group": false,
 	"requires_flags": [],
 	"forbids_flags": [],
 	"counts_toward_budget": true,
 	"spawns": [
-		{"entity_id": "world.crownmarch.raid_raider_1", "definition": "enemy.soldier", "position_m": [-303, 8.08, 636], "yaw_deg": -90, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "aggro_player_m": 20}},
-		{"entity_id": "world.crownmarch.raid_raider_2", "definition": "enemy.soldier", "position_m": [-303, 8.08, 644], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "aggro_player_m": 20}},
-		{"entity_id": "world.crownmarch.raid_raider_3", "definition": "enemy.soldier", "position_m": [-307, 8.08, 632], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "aggro_player_m": 20}},
-		{"entity_id": "world.crownmarch.raid_raider_4", "definition": "enemy.soldier", "position_m": [-307, 8.08, 648], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "aggro_player_m": 20}},
-		{"entity_id": "world.crownmarch.raid_raider_5", "definition": "enemy.soldier", "position_m": [-299, 8.08, 640], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "aggro_player_m": 20}},
-		{"entity_id": "world.crownmarch.raid_raider_6", "definition": "enemy.soldier", "position_m": [-311, 8.08, 640], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "aggro_player_m": 20}},
-		{"entity_id": "world.crownmarch.raid_archer", "definition": "enemy.archer", "position_m": [-296, 8.08, 640], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "aggro_player_m": 20}}
+		{"entity_id": "world.crownmarch.raid_raider_1", "definition": "enemy.soldier", "position_m": [-303, 8.08, 636], "yaw_deg": -90, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "prop_tags": ["house"], "aggro_player_m": 20}},
+		{"entity_id": "world.crownmarch.raid_raider_2", "definition": "enemy.soldier", "position_m": [-303, 8.08, 644], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "prop_tags": ["house"], "aggro_player_m": 20}},
+		{"entity_id": "world.crownmarch.raid_raider_3", "definition": "enemy.soldier", "position_m": [-307, 8.08, 632], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "prop_tags": ["house"], "aggro_player_m": 20}},
+		{"entity_id": "world.crownmarch.raid_raider_4", "definition": "enemy.soldier", "position_m": [-307, 8.08, 648], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "prop_tags": ["house"], "aggro_player_m": 20}},
+		{"entity_id": "world.crownmarch.raid_raider_5", "definition": "enemy.soldier", "position_m": [-299, 8.08, 640], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "prop_tags": ["house"], "aggro_player_m": 20}},
+		{"entity_id": "world.crownmarch.raid_raider_6", "definition": "enemy.soldier", "position_m": [-311, 8.08, 640], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "prop_tags": ["house"], "aggro_player_m": 20}},
+		{"entity_id": "world.crownmarch.raid_archer", "definition": "enemy.archer", "position_m": [-296, 8.08, 640], "yaw_deg": -90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "targets": {"factions": ["faction.millford"], "prop_tags": ["house"], "aggro_player_m": 20}}
 	]
 }
