@@ -58,7 +58,9 @@ extends Node
 ## markers_done_when condition holds - an oath lead whose oath is won - is dropped), and a marker or
 ## target that another campaign level holds leads to this level's door there (objective_route:
 ## "position" is the exit's, "via_exit", "via_name" and "via_text" name it; "" when the objective is
-## on this level).
+## on this level). M8 gate (F46): of a multi-marker stage's open markers, "position" is the nearest one
+## the giant's stage can reach (marker_min_stage: a POI's min_stage), else the nearest, and
+## "marker_id" names that marker ("markers" and "positions" still list every open one).
 
 const MAIN_QUEST_ID := "quest.main"
 const HOOK_ORDER := 100
@@ -588,17 +590,23 @@ func objective_for(quest_id: String) -> Dictionary:
 	# several markers behind one door are one position.
 	var positions: Array = []
 	var routes: Array = []
+	var position_markers: Array = []   # M8 gate (F46): the marker of each position
 	for m in markers:
 		var r := objective_route(m)
 		var mp: Vector3 = r.position
 		if mp.is_finite() and not (str(r.via_exit) != "" and positions.has(mp)):
 			positions.append(mp)
 			routes.append(r)
+			position_markers.append(m)
 	var route := objective_route(marker, targets)
 	var position: Vector3 = route.position
 	if markers.size() > 1 and not positions.is_empty():
-		position = nearest_to_player(positions)
-		route = routes[positions.find(position)]
+		# M8 gate (F46): the nearest of the markers the giant's stage can reach (else the nearest of all),
+		# and marker_id names the marker that position is.
+		var i := positions.find(nearest_to_player(reachable_positions(positions, position_markers)))
+		position = positions[i]
+		route = routes[i]
+		marker = position_markers[i]
 	var bot: Dictionary = (srec.get("bot", {}) as Dictionary).duplicate(true) if typeof(srec.get("bot")) == TYPE_DICTIONARY else {}
 	return {"quest_id": quest_id, "stage_id": sid, "text": str(srec.get("objective", "")),
 		"kind": str(cond.get("type", "")) if typeof(cond) == TYPE_DICTIONARY else "",
@@ -649,6 +657,38 @@ static func markers_open_in(srec: Dictionary, ctx: Dictionary) -> PackedStringAr
 			continue
 		out.append(m)
 	return out
+
+
+## M8 gate (F46): `positions` (of the markers `marker_ids`, in the same order) without those the giant's
+## stage cannot reach yet (marker_min_stage above it) - all of them when none is in reach, so a stage
+## whose every open marker waits for a bigger giant still leads somewhere.
+func reachable_positions(positions: Array, marker_ids: Array) -> Array:
+	var stage := _stage_of_player(_player_or_null())
+	var out: Array = []
+	for i in positions.size():
+		if i >= marker_ids.size() or marker_min_stage(str(marker_ids[i])) <= stage:
+			out.append(positions[i])
+	return out if not out.is_empty() else positions
+
+
+## M8 gate (F46): the growth stage a giant needs to reach the marker `marker_id`: the highest min_stage
+## of this level's world-index POIs whose radius holds the marker (the Drowned Steps' island bell lies in
+## the Ancestral Circle, past the stage-5 channel: 5); 0 when none does or the index does not know it.
+## The tracker's lead then waits for that stage while a marker the giant can reach is open (the bells'
+## quest led a stage-4 giant into the channel's size gate with two wadeable bells still open).
+func marker_min_stage(marker_id: String) -> int:
+	var idx := level_index()
+	if idx == null or marker_id == "":
+		return 0
+	var at := idx.position_of(marker_id)
+	if not at.is_finite():
+		return 0
+	var need := 0
+	for poi: Dictionary in idx.pois.values():
+		var c: Vector3 = poi.get("position", Vector3.INF)
+		if c.is_finite() and _flat(c, at) <= float(poi.get("radius", 0.0)):
+			need = maxi(need, int(poi.get("min_stage", 0)))
+	return need
 
 
 ## The position in `positions` nearest the player on the ground plane (the first without one).

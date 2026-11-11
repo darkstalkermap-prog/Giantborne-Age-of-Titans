@@ -15,6 +15,10 @@ extends IntegrationSuite
 ##   * F42: every npc record of role "talker" is built from a scene that carries an NpcTalker, which
 ##     names its npc and its record's dialogue once spawned as the director spawns it (Wenna the
 ##     ferrywoman was built from villager.tscn, which has none: her dialogue could not be reached).
+##   * F46: a multi-marker stage leads to the nearest open marker the giant's stage can reach (a marker
+##     inside a POI whose min_stage is above the giant's stage waits, unless nothing else is open), and
+##     marker_id names the marker the position belongs to: a stage-4 giant at the third bell is led to
+##     the second, not to the island's bell past the stage-5 channel.
 
 const START_CP := "world.cp.kingsgate_shelf"
 const CROWN := "quest.oath_crown"
@@ -331,3 +335,54 @@ func test_every_talker_npc_is_built_from_a_scene_that_carries_an_npc_talker() ->
 		assert_eq(t.resolved_dialogue_id(), str(rec.get("dialogue", "")), "%s's talker runs its record's dialogue" % rec.id)
 		assert_false(t.dialogue_record().is_empty(), "%s's dialogue exists" % rec.id)
 	assert_eq(lacking, PackedStringArray(), "every talker can be talked to")
+
+
+# --------------------------------------------------------------------------- F46
+
+const BELLS := "quest.drowned_bells"
+
+
+func _bell_marker(n: int) -> Vector3:
+	return WorldXp.position_of("world.marker.bell_%d" % n)
+
+
+func test_the_bells_lead_a_stage_4_giant_to_a_bell_it_can_reach() -> void:
+	GameSession.start_world_for_tests("world.cp.mere_south")
+	GameSession.level_id = "level.world"
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	GameSession.on_level_ready(world, p)
+	p.set_profile(GameData.get_record("growth.04"))
+	Quests.test_active = true
+	Quests.scope = PackedStringArray([BELLS])
+	await _settle()
+	assert_true(Quests.start_quest(BELLS), "the bells' quest starts")
+	for id: String in ["world.drowned.bell_1", "world.drowned.bell_3"]:
+		WorldState.record_destroyed(id)   # rung (a bell records its destruction)
+	# The giant stands at the third bell's marker on the north shore.
+	var at := _bell_marker(3)
+	add_box(Vector3(40, 1, 40), Vector3(at.x, -0.5, at.z))
+	p.global_position = Vector3(at.x, 0.05, at.z)
+	p.velocity = Vector3.ZERO
+	await _settle()
+	var o := Quests.objective_for(BELLS)
+	assert_eq(o.markers, PackedStringArray(["world.marker.bell_2", "world.marker.bell_4", "world.marker.bell_5"]),
+		"three bells still to ring")
+	assert_eq(str(o.marker_id), "world.marker.bell_2", "a stage-4 giant is led to the second bell, the nearest it can reach")
+	assert_true((o.position as Vector3).is_equal_approx(_bell_marker(2)), "and the position is that bell's (%s)" % o.position)
+	assert_eq((o.positions as Array).size(), 3, "the compass still draws every open bell")
+	# At stage 5 the island's bell past the channel is the nearest.
+	p.set_profile(GameData.get_record("growth.05"))
+	await _settle()
+	o = Quests.objective_for(BELLS)
+	assert_eq(str(o.marker_id), "world.marker.bell_5", "at stage 5 the island's bell leads")
+	assert_true((o.position as Vector3).is_equal_approx(_bell_marker(5)), "its position is the island bell's")
+	# Back at stage 4 with only the island's bell open, it still leads (nothing else is open).
+	p.set_profile(GameData.get_record("growth.04"))
+	for id: String in ["world.drowned.bell_2", "world.drowned.bell_4"]:
+		WorldState.record_destroyed(id)
+	await _settle()
+	o = Quests.objective_for(BELLS)
+	assert_eq([str(o.marker_id), (o.position as Vector3).is_equal_approx(_bell_marker(5))], ["world.marker.bell_5", true],
+		"the last open bell leads even before the giant can reach it")
+	assert_eq(Quests.marker_min_stage("world.marker.bell_5"), 5, "the island's bell lies in the Ancestral Circle (stage 5)")
+	assert_eq(Quests.marker_min_stage("world.marker.bell_2"), 0, "the second bell in the open shallows")
