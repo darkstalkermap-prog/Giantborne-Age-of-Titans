@@ -3,7 +3,7 @@
 	"id": "encounter.aldmere_war_camp",
 	"type": "encounter",
 	"display_name": "Aldmere's war camp",
-	"description": "P36 (plan M6-M9 §5.4, §5.7, §5.10): the war camp where Aldmere builds its war engines for the march on the giant lands - a shield wall of ten and its banner on the camp's south side, the crews of its four engines (two catapults, two ballistae: the sabotage path wrecks them), four cavalry at the pickets and two archers. Faction aldmere: neutral and watching until offended (wrecking an engine is an offence: two and the kingdom is at war). Leash 70 m.",
+	"description": "P36 (plan M6-M9 §5.4, §5.7, §5.10): the war camp where Aldmere builds its war engines for the march on the giant lands - a shield wall of ten and its banner on the camp's south side, the crews of its four engines (two catapults, two ballistae: the sabotage path wrecks them), four cavalry at the pickets and two archers. Faction aldmere: neutral and watching until offended (wrecking an engine is an offence: two and the kingdom is at war). M8 gate (F41): not budgeted while Aldmere is at peace (the director's neutral-garrison rule: its armed members count toward the twelve combatants only once Aldmere is hostile), so on the road up from the camp the fort gate's wall archers and crews find their room. Leash 70 m.",
 	"level": "level.world",
 	"center_m": [520, 33.35, 120],
 	"activate_radius_m": 150,
@@ -12,7 +12,7 @@
 	"alert_group": true,
 	"requires_flags": [],
 	"forbids_flags": [],
-	"counts_toward_budget": true,
+	"counts_toward_budget": false,
 	"web_formation_scale": 0.7,
 	"engines": [
 		{"engine": "world.aldmere.camp_catapult_1", "crew": ["world.aldmere.camp_crew_1"]},

@@ -1062,6 +1062,16 @@ func spend_nav_queries(n := 1) -> void:
 #     shrines, far out of the settlements' sight).
 #   * the respawn blocker: FactionState.respawn_refusal joins GameSession's blockers while this level's
 #     director lives (its bound method; GameSession drops it once the director is freed).
+#   * M8 gate (F40; plan §3.20 "the parley path ... takes zero damage from the fort"): an encounter's
+#     siege engines (its `engines` list, P32) stand down with it. A stood-down crew still crews its engine
+#     (SiegeEngine.serves), and the engine's team came from its faction alone, so with Aldmere hostile the
+#     fort's wall ballistae shot the giant who carried Brannock's banner or held the herald's accepted
+#     parley. While the encounter stands down each of its engines in the tree is NEUTRAL - it never
+#     shoots (SiegeEngine.can_shoot), and a shot already loosed harms no one (CombatEntity.can_damage) -
+#     its ranged token given back; when the stand-down ends it takes its faction's standing again
+#     (SiegeEngine._apply_standing). Applied with the members (every update, and as a crew member
+#     spawns), and the tick after any faction change (an engine's own faction handler would otherwise
+#     re-arm it until the next update).
 
 const P29_PROVOKED_FMT := "encounter.%s.provoked"
 
@@ -1069,6 +1079,8 @@ const P29_PROVOKED_FMT := "encounter.%s.provoked"
 var _p29_down := {}
 ## A provocation was seen: the next tick re-evaluates the stand-downs.
 var _p29_dirty := false
+## M8 gate (F40): engines this director stood down with their encounter (world id -> true).
+var _p29_engines_down := {}
 ## Talkers placed on a green (entity id -> the green, global): tests, debug.
 var p29_on_green := {}
 
@@ -1086,6 +1098,8 @@ func _p29_ready() -> void:
 		Events.hit_resolved.connect(_p29_on_hit_resolved)
 	if not Events.growth_changed.is_connected(_p29_on_growth_changed):
 		Events.growth_changed.connect(_p29_on_growth_changed)
+	if not Events.faction_changed.is_connected(_p29_on_faction_changed):
+		Events.faction_changed.connect(_p29_on_faction_changed)
 
 
 func _p29_respawn_blocker(checkpoint_id: String) -> String:
@@ -1130,6 +1144,7 @@ func p29_update_stand_downs() -> void:
 		for m: Member in enc.members:
 			if m.status == SPAWNED and _alive(m.node):
 				_p29_apply(m, down)
+		_p29_apply_engines(enc, down)   # M8 gate (F40)
 
 
 ## Stands a faction member down (down), or gives it its faction's standing back (alerted).
@@ -1150,7 +1165,39 @@ func _p29_on_member_spawned(encounter_id: String, entity_id: String, node: Node3
 	if p29_stands_down(encounter_id):
 		_p29_down[encounter_id] = true
 		_p29_apply(m, true)
+		_p29_apply_engines(_encounters[encounter_id], true)   # M8 gate (F40): before a crew takes its engine
 	_p29_place_talker(m, node)
+
+
+## M8 gate (F40): stands the encounter's engines down with it (NEUTRAL, the ranged token given back), or
+## gives the ones it stood down their faction's standing back (see the notes).
+func _p29_apply_engines(enc: Encounter, down: bool) -> void:
+	for entry: Variant in enc.record.get("engines", []):
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var engine := p32_engine(str(entry.get("engine", "")))
+		if engine == null or engine.destroyed or engine.entity == null:
+			continue
+		if down:
+			_p29_engines_down[engine.world_id] = true
+			if engine.entity.team != CombatEntity.Team.NEUTRAL:
+				engine.entity.team = CombatEntity.Team.NEUTRAL
+				engine.call("_release_token")
+				engine.call("_refresh_crewed")
+		elif _p29_engines_down.erase(engine.world_id):
+			engine.call("_apply_standing")
+
+
+## True while the director stands engine `world_id` down with its encounter (tests, debug).
+func p29_engine_stood_down(world_id: String) -> bool:
+	return _p29_engines_down.has(world_id)
+
+
+## A faction's standing changed: the next tick applies the stand-downs again (an engine's own handler may
+## just have re-armed it; F40).
+func _p29_on_faction_changed(_tick: int, _faction: String, _state: String) -> void:
+	if not _p29_down.is_empty():
+		_p29_dirty = true
 
 
 ## A connecting blow of the giant on a member of an encounter standing down provokes it.
