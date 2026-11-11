@@ -15,8 +15,14 @@ extends ShrineTab
 ## Shown at every shrine whenever the giant has a progression component (P33: "Talents (always)").
 ## Pad and keyboard: one row per tier (left / right across the columns and trees, up / down between
 ## tiers; the capstones' row last), then Learn; every direction wraps (UiNav).
+##
+## M8 gate (F17): the passives line shows at most PASSIVE_LINES lines (the most passives a level-20
+## giant can gather fill four), ending in an ellipsis past them with the whole list as its tooltip, so
+## the shrine panel stays inside a 1280 x 720 window at any level (shrine_screen.gd).
 
 const STATE_COLORS := {"learned": UiKit.GOOD, "available": UiKit.TEXT, "locked": UiKit.MUTED}
+## M8 gate (F17): the passives line's most lines.
+const PASSIVE_LINES := 4
 ## The tree headers' colours (Destroyer red, Guardian stone, Primordial violet).
 const TREE_COLORS := {"destroyer": Color(1.0, 0.62, 0.5), "guardian": Color(0.78, 0.82, 0.9),
 	"primordial": Color(0.78, 0.62, 1.0)}
@@ -119,6 +125,9 @@ func _ready() -> void:
 	add_child(_result)
 	_passives = UiKit.label("", 12, UiKit.MUTED)
 	_passives.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_passives.max_lines_visible = PASSIVE_LINES
+	_passives.text_overrun_behavior = TextServer.OVERRUN_TRIM_WORD_ELLIPSIS
+	_passives.mouse_filter = Control.MOUSE_FILTER_PASS   # its tooltip holds the whole list
 	add_child(_passives)
 	refresh()
 
@@ -192,6 +201,7 @@ func refresh() -> void:
 	show_detail(selected)
 	var lines: PackedStringArray = prog.passive_lines()
 	_passives.text = "Your talents and ancestry now: " + ("none yet" if lines.is_empty() else "  ·  ".join(lines))
+	_passives.tooltip_text = "\n".join(lines) if not lines.is_empty() else ""
 
 
 ## Shows talent `id` in the detail box (the focus calls it): tree, tier, level, cost, effects
