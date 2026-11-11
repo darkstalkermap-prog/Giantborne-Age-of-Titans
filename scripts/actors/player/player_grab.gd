@@ -56,8 +56,9 @@ extends PlayerComponent
 ## - The fists' finisher: a light whose action is a grab (ability.fists_light_3) is requested with this
 ##   component's precheck, so a third light with nothing to seize - no target in reach, or one whose poise
 ##   is not broken - is refused and costs nothing; one that closes on a staggered target holds it.
-## - Grab reach grows with the weapon's grab_reach perk (the titanforged fists: +1.5 m), the statuses'
-##   grab_reach_add and the character's passives (P33's Iron Grip, read defensively: Combatant.passives).
+## - Grab reach grows with the weapon's grab_reach perk (the titanforged fists: +1.5 m); the statuses'
+##   grab_reach_add and the character's passives (P33's Iron Grip) reach it through the profile's
+##   grab_reach_m (PlayerProgression keeps a raised copy of the growth record).
 
 const GRAB_ID := "ability.grab_hold"
 const THROW_ID := "ability.throw_held"
@@ -1063,23 +1064,15 @@ func hold_limit_s() -> float:
 	return hold_timeout_s
 
 
-## Metres the grab reach grows by: the weapon's grab_reach perk (the titanforged fists), the statuses'
-## grab_reach_add, and the character's passives (P33: Combatant.passives, a flat dictionary or one with
-## "modifiers"; read defensively, since it lands beside this package).
+## Metres the grab reach grows by beyond the profile's grab_reach_m: the weapon's grab_reach perk
+## (the titanforged fists). The statuses' and passives' grab_reach_add (P33's Iron Grip) are not added
+## here: PlayerProgression folds Combatant.grab_reach_add() into the profile's grab_reach_m (a copy of
+## the growth record), so counting them again would double them (wave 19 merge).
 func grab_reach_bonus() -> float:
 	var bonus := 0.0
 	var perk: Variant = player.weapon.get("perk") if typeof(player.weapon) == TYPE_DICTIONARY else null
 	if typeof(perk) == TYPE_DICTIONARY and str(perk.get("kind", "")) == "grab_reach":
 		bonus += float(perk.get("grab_reach_add", 0.0))
-	var c: Combatant = player.entity.combatant if player.entity != null else null
-	if c == null:
-		return bonus
-	bonus += c.statuses.modifier_sum("grab_reach_add")
-	var passives: Variant = c.get("passives")
-	if typeof(passives) == TYPE_DICTIONARY:
-		var mods: Variant = (passives as Dictionary).get("modifiers", passives)
-		if typeof(mods) == TYPE_DICTIONARY and SchemaUtil.is_number((mods as Dictionary).get("grab_reach_add")):
-			bonus += float(mods.grab_reach_add)
 	return bonus
 
 
