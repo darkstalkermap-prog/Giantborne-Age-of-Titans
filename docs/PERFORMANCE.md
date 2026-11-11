@@ -28,7 +28,8 @@ reference-PC commands below.
 | World data (P24a, P24b) | <= 5.0 MB: chunks, navmeshes, index, map, skyline, chunk scenes (decision 8) | the test world's files, extrapolated to 64 chunks | Without navmeshes (P24a): the test world 308,965 bytes; extrapolated to 64 chunks about 1.1 MB (chunks 0.91 MB with the border chunks at their share). The navmeshes (P24b: three lean layers and the gate regions, 29.2 KB a chunk): 467,751 bytes for the test world, about 1.55 MB for 64 chunks (the border chunks' rim halves have none). Together about 2.65 MB, about 3.0 MB with P25's map image: **on track** |
 | World data (P25: the real world) | <= 5.0 MB (decision 8) | `tests/integration/test_world_data.gd` (the files) | **2,390,369 bytes: met** (chunk data 0.83 MB, navmeshes 0.93 MB, structures 0.14 MB, props scenes 0.19 MB, skyline 0.15 MB, index 68 KB, map 52 KB); the release pck's world share 2.37 MB (24.6 %) |
 | Map picture (P25) | <= 300 KB, 1,024 x 1,024 (plan §3.8) | `tests/integration/test_world_data.gd` | 52,433 bytes: **met** |
-| Static world draw calls, the real world (P25) | <= 40 per view at `low` at the Kingsgate shelf and the six settlements (plan §3.8) | `tests/slow/test_world_build.gd` (Xvfb, `tests/support/world_draw_probe.gd`) | At most 33 (Skarn; the shelf 30, Hollowmere 31, Brannock 28, Millford 27, Fort Aldmere 23, Harrok's Hall 19), with the giant in view 8 more: **met**; the breakable houses' share comes with P29 |
+| Static world draw calls, the real world (P25; M8 gate, F27) | <= 40 per view at `low` (plan §5.2: any view - "P25 and the region packages re-measure at the viewpoints"; §3.8: the shelf and the settlements) | `tests/slow/test_world_build.gd` (Xvfb, `tests/support/world_draw_probe.gd`: the shelf, the six settlements and, since the M8 gate, the M8 regions' ten places) | P25: at most 33 (Skarn; the shelf 30, Hollowmere 31, Brannock 28, Millford 27, Fort Aldmere 23, Harrok's Hall 19), with the giant in view 8 more: **met**. The M8 gate's review found the M8 places at up to 59 (nine of ten over 40; P35 had recorded its own as a known gap, P36 none), **not met**; after the gate's merge pass (lane m8p) all seventeen views draw at most 40 - the great pines, the sunken vault and the Mere of Kings at 40 exactly, Ballista Ridge 30, the war camp 26 -: **met** ("The M8 gate, lane m8p") |
+| Streaming work, the real world (M8 gate, F26) | <= 4 ms a frame, every step under about 3 ms (plan §5.2); P39's worst work frame <= 12 ms headless (§6.4) | the review's stage-6 walk from Aldmere to the Stonehold, carried at 16 m/s (headless, deterministic streaming); `stream_check.mjs --world` on its route at 8 m/s (the release build) | Before the gate: `props_dep` steps (a chunk's first load of a script or shared scene its props need) of 10.3-17.6 ms headless and 41.7 ms on the web, the worst work frame the same: **not met**. Since lane m8p the world's preload list loads them behind the loading screen (155-187 ms headless): no `props_dep` step during play, the worst work frame 4.0-4.6 ms headless (the heaviest step a props part's load, 2.4-3.1 ms): P39's 12 ms **met**, the 4 ms a frame within 0.6 ms; on the web (the review's Stonehold route, SwiftShader, indicative) no `props_dep` step either and the worst work frame 6.6 ms (was 41.7; the heaviest step a props part's instancing) ("The M8 gate, lane m8p") |
 
 ## The tools
 
@@ -263,6 +264,23 @@ tools/gd.sh --headless --path . --fixed-fps 60 -- --no-user-settings --mode=worl
 tools/build_web.sh --preset=Web --out=builds/web_m7
 node tools/web/stream_check.mjs --build=builds/web_m7 --world --audio --autoplay=1200 --timeout-s=1500 \
   --json=builds/stream_audio_m7.json
+```
+
+The M8 gate (lane m8p): the review's stage-6 walk from Aldmere into the Stonehold, headless (the steps by
+kind are `AUTOPILOT_RESULT`'s `world_walk.streaming.steps_by_kind`), its route on the web (the release
+build, without `XDG_DATA_HOME`), and the seventeen viewpoints' static draw calls under Xvfb (the slow
+tier's `test_world_build` runs the same probe):
+
+```
+tools/gd.sh --headless --path . --fixed-fps 60 -- --no-user-settings --mode=world --new-game \
+  --scenario=world_walk --walk-stage=6 --walk-speed=16 \
+  "--route=650:-260;560:-450;470:-620;300:-640;100:-660;-60:-650;-150:-645;-230:-640" --autoplay=400 --perf
+tools/build_web.sh --preset=Web --out=builds/web_m8p
+node tools/web/stream_check.mjs --build=builds/web_m8p --world --audio --walk-stage=6 --walk-speed=8 \
+  "--route=600:-380;470:-600;440:-645;480:-665;440:-645;480:-665;440:-645;300:-640;-60:-650;-130:-645;-160:-645" \
+  --autoplay=1800 --timeout-s=2400 --json=builds/stream_stonehold.json
+xvfb-run -a -s "-screen 0 640x360x24" tools/gd.sh --path . --resolution 640x360 --audio-driver Dummy \
+  -s res://tests/support/world_draw_probe.gd -- --no-user-settings
 ```
 
 ## Container results
@@ -932,6 +950,114 @@ No frame-time or draw-call measurement changes, and none was re-measured:
 - A wrapped message is still one label, and the message labels keep the HUD's batching rules
   (`test_hud_layout`).
 - The turned Greywood shrine and the lowered fourth bell (3 m lower) add no mesh.
+
+### The M8 gate, lane m8p (streaming steps, draw calls and the 0.8.0-m8 text)
+
+**F26: the props dependencies load behind the loading screen.** A chunk's props sub-scenes depend on the
+world's runtime scripts (FortBattle, StoneThrone, ForgeFire, ConditionForge, BeaconFire, ...) and shared
+scenes (the siege engines, the rockfall, the toppled statue, the crate, the shrine, ...); TerrainChunk loaded
+each the first time a chunk that uses it streamed in, one `props_dep` step each, synchronously in
+deterministic streaming (headless) and on the web (no loader thread). `level.world`'s `preload` list (the
+44 dependencies) is now loaded by `WorldRoot` at `_ready`, inside the level build behind the loading screen,
+and kept for the process's life (`docs/systems/P24a.md`, "M8 gate").
+
+The review's stage-6 walk (headless, deterministic streaming, carried at 16 m/s from Aldmere into the
+Stonehold, 1,111 m; the command below), two runs each on the round-2 merge (29ec501) and on the lane:
+
+| | `props_dep` steps (the walk) | `props_dep` max | Worst work frame | Work p99 | Heaviest other step |
+| --- | --- | --- | --- | --- | --- |
+| The review (56d5242, three machines' loads) | 5 | 9.8-17.6 ms | 9.9-17.6 ms | | |
+| Before (29ec501) | 5 | 11.06 / 10.33 ms | 11.07 / 10.34 ms | 5.53 / 7.23 ms | `props_load` 2.35 / 2.40 ms |
+| After (lane m8p) | 0 | - | 4.58 / 4.00 ms | 3.60 / 2.62 ms | `props_load` 3.10 / 2.42 ms |
+
+The first-time loads of the run (the review's timing patch on the base: the starting ring's and the first
+point's, then the walk's five - moot_arena.gd, forge_fire.gd, size_gate.gd, stone_throne.gd,
+siege_catapult.tscn): fort_battle.gd 18.8 ms, forge_fire.gd 14.0, stone_throne.gd 11.6, beacon_fire.gd
+10.1, rockfall.tscn 9.5, condition_forge.gd 8.9, toppled_statue.tscn 8.8, size_gate.gd 5.9,
+siege_catapult.tscn 4.4 (and smaller ones). The preload costs
+155-187 ms headless on the first world load of a run (44 paths; 0 later: the cache outlives the level), and
+static memory about +0.9 MB (the walk's peak 201.7 -> 202.6 MB). Streaming every chunk that has props, one
+after another (`tests/slow/test_world_preload.gd`): before, 21 `props_dep` steps, max 20.5 ms, 155 ms in
+all; after, none. Its heaviest steps after are the largest props parts' loads from the source tree's text
+scenes: `c1_2_0.tscn` (78 KB) 10.0 ms, `c2_6_0` (68 KB) 8.7 ms, `c4_5_0` (59 KB) 7.5 ms, `c0_2_0` (50 KB)
+7.0 ms (headless from the project folder; exports ship the scenes in binary form, and the web's
+`props_load` measured below). The walk's CPU per tick: p95 4.2-4.3 ms (budget 8); its slowest ticks
+12-19 ms are encounters spawning (the c6_2 tick that read 29 ms before reads 12-17 ms).
+
+On the web (the release build of the lane, `tools/build_web.sh --out=builds/web_m8p`; `stream_check.mjs
+--world --audio` on the review's Stonehold route at 8 m/s, stage 6; headless Chromium with SwiftShader on
+the container's four shared cores, indicative; the review's run on 56d5242 is the before):
+
+| | The review (56d5242) | Lane m8p |
+| --- | --- | --- |
+| `props_dep` steps | 5, max 41.7 ms (93.3 ms in all) | 0 |
+| Streaming work p50 / p99 / max | 0.8 / 17.0 / 41.7 ms | 0.6 / 5.5 / 6.6 ms |
+| The heaviest other steps | `rows` 11.1, `scenery` 7.7, `nav_add` 6.9, `props_add` 5.6 ms | `props_add` 6.6 (a props part's instancing), `ground` and `scenery` 2.4-2.5, `props_load` 1.7 ms |
+| Page frames p50 / p99 / worst (walking) | 416.7 / 649.9 / 1,066.7 ms | 266.7 / 383.4 / 549.9 ms |
+| Draw calls (rendered, actors in view) p50 / max | 51 / 141 | 42 / 126 |
+| Play to the walk | 51.1 s | 42.4 s (the preload included) |
+| The walk | 1,101.6 m, 11 loads, 7 unloads, 0 thrash, 236.2 m of margin | the same, 233.8 m of margin |
+| Console errors while running | 0 | 0 |
+| Music | criterion NOT MET (1,019 holes, every one on the main thread) | NOT MET (969 holes, every one on the main thread; the default form OK) |
+
+The frames are software WebGL's on loaded shared cores (the frame budget is the owner's on a GPU); the
+streaming steps are what the fix changes: no `props_dep` step during play on the web either.
+
+**F27: the merge pass.** Plan §5.2's 40 static draw calls a view at `low` hold at every viewpoint, not
+only the settlements. Attributing each view's calls to its nodes showed what the M8 places drew: the two
+reward racks' weapons on display (six and seven parts) at any distance, every siege engine as four calls
+(one per material), every framed prop (the bells, the den's wall) as two, and the waystones (two each),
+the cairns and the ledge chests at any distance. Since the lane: WeaponRack's weapon fades with its rack
+(P08.md), the siege builder merges an engine into one vertex-coloured mesh a state (P32.md), the breakable
+kit draws a frame in its Intact and Broken meshes (P35.md), and the waystones, the cairns and the ledge
+chests fade with the scenery (P25.md). Gameplay, collision and navigation are unchanged; the world rebuilt
+25 chunk props parts and nothing else (`docs/systems/P25.md`, "M8 gate").
+
+`tests/support/world_draw_probe.gd` (Xvfb 640 x 360, llvmpipe, `low`, no director, the stage-3 camera
+turned through four directions, the most of the four; the M8 places after the shelf and the settlements,
+so earlier views' chunks stay loaded as in play, up to 25):
+
+| Viewpoint | The review (its own order) | Before (29ec501) | After (lane m8p) | With the giant |
+| --- | --- | --- | --- | --- |
+| The Kingsgate shelf | | 33 | 31 | 39 |
+| Millford's green | | 35 | 33 | 41 |
+| Brannock's green | | 40 | 38 | 46 |
+| Hollowmere's green | | 37 | 29 | 37 |
+| Fort Aldmere's gate | | 40 | 28 | 36 |
+| Skarn's green | | 36 | 28 | 36 |
+| Harrok's Hall | | 19 | 19 | 27 |
+| The woodcutters' camp | 49 | 53 | 39 | 47 |
+| The great pines | 59 | 59 | 40 | 48 |
+| The bell tower | 50 | 50 | 30 | 38 |
+| The Titan's Bones | 50 | 50 | 31 | 39 |
+| The sunken vault | 59 | 59 | 40 | 48 |
+| The Mere of Kings | 47 | 47 | 40 | 48 |
+| The troll den | 48 | 48 | 36 | 44 |
+| The war camp | 46 | 46 | 26 | 34 |
+| The Moot battery | 38 | 38 | 27 | 35 |
+| Ballista Ridge | 45 | 45 | 30 | 38 |
+
+The great pines, the sunken vault and the Mere sit at 40 exactly; what is left there is terrain (8-11
+calls), water (3-6), scenery and the structures meshes (12-14), the skyline (2) and props within 220 m
+(the supply crates and the rockfalls two calls each, the great pines two, a bell, a cairn). Their next
+levers, for whoever adds a prop there: one vertex-coloured mesh for the crate (P08's world_props
+builder), the rockfall and the great pine (P26's world_props2), each one call fewer. With actors in view
+the total stays within 250 (the review's battles peaked at 150 at `low`, before the HUD's about 10, with
+the engines' four calls each; they are one each now).
+
+**F31.** `config/version` 0.8.0-m8: `tools/build_web.sh` applies the 23 MB budget; the release build
+ships `index.pck` 17,417,588 bytes (12,970,337 gzipped), 17,293,784 bytes as shipped, 16.49 MB in two
+parts of 8,646,892 (the audio 57 % of its files); the page's download about 29.0 MB with the engine (12.5
+MB), so the launcher's "About 30 MB" holds.
+
+**The lane's suites:** `test_world_preload` (19 ms), `test_world_draw_merge` (52-180 ms) and
+`test_launcher_notes` (7 ms) in the default tier; `test_world_preload` (slow, 1.1-1.7 s: the world built
+and every chunk with props streamed); `test_world_build` renders seventeen views now (19.2 s, 774
+checks; it was 10.6 s with seven on the base). `tools/check.sh --only=siege,world --slow --gate` on the
+lane's code (13.5 minutes): the siege and world builders wrote the same bytes as the committed outputs
+(a second build), the seam check passed (64 chunks, 112 seams), 265 suites and 45,329 checks with 0
+failures - default 59.0 s (the base 56.4), slow 227.5 s (211.8), gate 443.6 s (424.1) - and the 120 s
+autoplay had 0 errors.
 
 ## Reference PC results (owner: NOT RUN)
 
