@@ -7,6 +7,10 @@ extends RefCounted
 ## world id). Its hit and ring sound by the record's material "bell" (data/audio/bank_world_bells.json).
 ## The bell hangs so its lip clears the water by `clear_m` (or stands `lip_m` above dry ground); the
 ## frame (two posts and a lintel, a WORLD body) stays standing. Its chunk's props part holds it.
+## M8 gate (F45): but never higher above its own bed than `max_lip_m` (MAX_LIP_M, the Mere's shallows'
+## 3 m of water and 0.8 m clear): in deeper water - the Wend's deep reach, 6 m - the bell hangs half
+## drowned instead, so its hurtbox and its lock anchor stay where a stage-4 giant wading on that bed
+## rings it with a light swing, as in the shallows (at its old 9.3 m only a heavy swing reached it).
 
 const L := preload("res://tools/world/layout.gd")
 const K := preload("res://tools/world/kinds/_breakable_kit.gd")
@@ -15,9 +19,12 @@ const S_BREAKABLE := "res://scripts/world/breakable_prop.gd"
 const RECORD := "prop.bell"
 const BELL_H := 5.0
 const MOUTH_D := 4.6
+## M8 gate (F45): the highest a bell's lip hangs above its own bed (an element may set `max_lip_m`).
+const MAX_LIP_M := 3.8
 
 
-## The bell's lip height above the element's ground.
+## The bell's lip height above the element's ground: `lip_m` on dry ground, clear of the water by
+## `clear_m` in it, at most `max_lip_m` (MAX_LIP_M) above the bed.
 static func lip_y(el: Dictionary, ctx: Dictionary) -> float:
 	var lip := float(el.get("lip_m", 3.0))
 	var water := K.water_over(el, ctx)
@@ -25,7 +32,7 @@ static func lip_y(el: Dictionary, ctx: Dictionary) -> float:
 		var f: HeightField = ctx.get("field")
 		var p := L.pos2(el)
 		lip = maxf(lip, water - f.sample(p.x, p.y) + float(el.get("clear_m", 0.8)))
-	return lip
+	return minf(lip, maxf(float(el.get("max_lip_m", MAX_LIP_M)), float(el.get("lip_m", 3.0))))
 
 
 static func _bell(y: float, tilt: float, rung: bool) -> Array:
