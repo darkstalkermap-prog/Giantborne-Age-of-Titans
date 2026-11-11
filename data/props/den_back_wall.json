@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "prop.den_back_wall",
+	"type": "prop",
+	"category": "structural",
+	"display_name": "Den's back wall",
+	"height_m": 11.0,
+	"health": 900,
+	"armor": 40,
+	"accepted_attack_categories": ["melee", "ability"],
+	"description": "P35 (plan M6-M9 §5.5, §5.7, §5.13): boulders and timber heaped across the cave at the back of the Troll Den - the Matriarch's way out when she is driven off. A stage-5 giant heaves it aside (requires_permission heave); the woodfolk pull it down 20 s after the den's last brood nest burns, or at once when a Stormborn giant strikes Sedge's bargain (DenWall sets world.troll_den.wall_open, which opens it). Open, by any of these, world.troll_den.wall_open holds: one of the Matriarch's drive-out flags.",
+	"requires_permission": "heave",
+	"locked_message": "It will not move. Grow to stage 5 - or burn the den's nests and the woodfolk will pull it down.",
+	"open_when_flag": "world.troll_den.wall_open",
+	"on_destroyed_flags": {"world.troll_den.wall_open": true},
+	"damage_stages": [
+		{"id": "blocked", "at_or_below_frac": 1.0, "visual": "Intact"},
+		{"id": "open", "at_or_below_frac": 0.0, "visual": "Broken", "removes_collision": true, "enables_nav_links": true}
+	],
+	"debris_count": 8,
+	"debris_length_m": 12,
+	"debris_layout": "pile",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

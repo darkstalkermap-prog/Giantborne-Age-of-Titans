@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "prop.bonfire",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Bonfire",
+	"height_m": 2.5,
+	"health": 30,
+	"armor": 0,
+	"accepted_attack_categories": ["melee", "ability", "projectile", "magic", "siege"],
+	"description": "P35 (plan M6-M9 §3.19, tutorial.troll_fire): the woodcutters' log fire in their wrecked camp, where the Greywood teaches fire. Tagged fire like a brazier: kicked apart, its burning logs set the trolls beside it Burning (P34's brazier rule), and the first time it breaks world.greywood.bonfire_scattered ends the fire lesson.",
+	"prop_tags": ["fire"],
+	"on_destroyed_flags": {"world.greywood.bonfire_scattered": true},
+	"debris_count": 0,
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

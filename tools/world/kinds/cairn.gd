@@ -4,6 +4,8 @@ extends RefCounted
 ## once (its once_flag reward.cairn.<name>), standing on its stacked stones (a WORLD body). The
 ## element's id is the cairn's world id; `dialogue` names its dialogue record. Its chunk's props
 ## sub-scene holds it; the index lists it as a prop (and as its POI's landmark when it is one).
+## P35: `requires_stage` (a cairn on a ledge only a big giant reaches: the Titan's shoulder) and
+## `ledge_m` (its stones stand that far up, on the ledge; the reading stays at the foot).
 
 const L := preload("res://tools/world/layout.gd")
 const SCRIPTED := true
@@ -34,7 +36,7 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	var n := Node3D.new()
 	n.name = str(el.id).validate_node_name()
 	kit.scripted(n, S_INSCRIPTION, {"npc_id": str(el.id), "dialogue_id": str(el.dialogue), "prompt": "Read the cairn",
-		"radius_m": 4.0, "priority": 45})
+		"radius_m": 4.0, "priority": 45, "requires_stage": int(el.get("requires_stage", 0))})
 	var base := StaticBody3D.new()
 	base.name = "Base"
 	base.collision_layer = SceneKit.L_WORLD
@@ -45,5 +47,6 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	cs.position = Vector3(0, 1.6, 0)
 	base.add_child(cs)
 	base.add_child(L.parts_node("Stones", stones(), ctx.get("mat")))
+	base.position = Vector3(0, float(el.get("ledge_m", 0.0)), 0)
 	n.add_child(base)
 	return n

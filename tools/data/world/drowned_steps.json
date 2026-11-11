@@ -1,444 +1,75 @@
 {
 	"schema": "world_region_layout",
 	"region": "region.drowned_steps",
-	"description": "P25: the Drowned Steps' skeleton and light content (plan M6-M9 \u00a75.4, \u00a75.10): the Mere's drowned colonnade, the Sunken Steps' terraces and shrine, the island's Ancestral Circle and its cairn, the broken causeway and the sunken vault behind its rockfall, the drowned bell tower, the Titan's Bones and the cache on the Titan's shoulder, the deep channel's size gate, waystones and caches. P35 brings the bells, the island's warden and the Titan Forge.",
+	"description": "P25: the Drowned Steps' skeleton and light content (plan M6-M9 §5.4, §5.10): the Mere's drowned colonnade, the Sunken Steps' terraces and shrine, the island's Ancestral Circle and its cairn, the broken causeway and the sunken vault behind its rockfall, the drowned bell tower, the Titan's Bones and the cache on the Titan's shoulder, the deep channel's size gate, waystones and caches. P35 (plan M6-M9 §3.19, §5.4, §5.7): the five sunken bells (two in the shallows, one on the north shore, one in the Wend's deep reach below the Mere - stage 4 - and the island's - stage 5), the Titan Forge in the Titan's ribs (a titan-tier forge whose fire is lit once the bones' scavengers are gone), the ferrywoman's landing on the Steps with the Stoneknuckles kept for the bell-ringer, a brazier at the bones' troll, the sunken vault's and the Titan's shoulder's cairns, the quests' markers and the vault's area.",
 	"elements": [
-		{
-			"kind": "column",
-			"id": "world.drowned.mere_columns",
-			"style": "column",
-			"pos": [
-				0,
-				-40
-			],
-			"points": [
-				[
-					-62,
-					18
-				],
-				[
-					-92,
-					-8
-				],
-				[
-					-44,
-					-132
-				],
-				[
-					-112,
-					-58
-				],
-				[
-					118,
-					-14
-				],
-				[
-					96,
-					30
-				],
-				[
-					-20,
-					60
-				]
-			],
-			"size": [
-				3,
-				13
-			],
-			"poi": "poi.mere_of_kings",
-			"landmark": true
-		},
-		{
-			"kind": "ruin",
-			"id": "world.drowned.steps_terrace_1",
-			"style": "terrace",
-			"pos": [
-				-180,
-				150
-			],
-			"yaw": 0,
-			"size": [
-				140,
-				2.6,
-				2
-			],
-			"thick": 2.4,
-			"poi": "poi.sunken_steps",
-			"landmark": true,
-			"no_solids": true
-		},
-		{
-			"kind": "ruin",
-			"id": "world.drowned.steps_terrace_2",
-			"style": "terrace",
-			"pos": [
-				-180,
-				118
-			],
-			"yaw": 0,
-			"size": [
-				140,
-				2.6,
-				2
-			],
-			"thick": 2.4,
-			"no_solids": true
-		},
-		{
-			"kind": "ruin",
-			"id": "world.drowned.steps_terrace_3",
-			"style": "terrace",
-			"pos": [
-				-180,
-				86
-			],
-			"yaw": 0,
-			"size": [
-				140,
-				2.6,
-				2
-			],
-			"thick": 2.4,
-			"no_solids": true
-		},
-		{
-			"kind": "ruin",
-			"id": "world.drowned.steps_terrace_4",
-			"style": "terrace",
-			"pos": [
-				-180,
-				54
-			],
-			"yaw": 0,
-			"size": [
-				140,
-				2.6,
-				2
-			],
-			"thick": 2.4,
-			"no_solids": true
-		},
-		{
-			"kind": "stone_circle",
-			"id": "world.drowned.ancestral_circle",
-			"style": "trilithon",
-			"pos": [
-				40,
-				-90
-			],
-			"radius": 28,
-			"count": 10,
-			"size": [
-				4,
-				11,
-				2
-			],
-			"poi": "poi.ancestral_circle",
-			"landmark": true
-		},
-		{
-			"kind": "column",
-			"id": "world.drowned.causeway_stones",
-			"style": "slab",
-			"pos": [
-				20,
-				76
-			],
-			"points": [
-				[
-					9,
-					98
-				],
-				[
-					31,
-					90
-				],
-				[
-					10,
-					66
-				],
-				[
-					32,
-					58
-				]
-			],
-			"size": [
-				2,
-				3
-			],
-			"poi": "poi.causeway",
-			"landmark": true,
-			"no_solids": true
-		},
-		{
-			"kind": "column",
-			"id": "world.drowned.causeway_piers",
-			"style": "stump",
-			"pos": [
-				30,
-				4
-			],
-			"points": [
-				[
-					30,
-					6
-				],
-				[
-					34,
-					-8
-				],
-				[
-					37,
-					-22
-				]
-			],
-			"size": [
-				6,
-				6
-			]
-		},
-		{
-			"kind": "ruin",
-			"id": "world.drowned.sunken_vault",
-			"style": "vault",
-			"pos": [
-				22,
-				40
-			],
-			"yaw": 0,
-			"size": [
-				22,
-				14,
-				19
-			],
-			"thick": 1.5,
-			"poi": "poi.sunken_vault",
-			"door_m": 15
-		},
-		{
-			"kind": "tower",
-			"id": "world.drowned.bell_tower",
-			"style": "bell",
-			"pos": [
-				-200,
-				-240
-			],
-			"size": [
-				10,
-				34
-			],
-			"poi": "poi.bell_tower",
-			"landmark": true,
-			"skyline": true
-		},
-		{
-			"kind": "bones",
-			"id": "world.drowned.titans_bones",
-			"pos": [
-				220,
-				-262
-			],
-			"yaw": 90,
-			"length": 120,
-			"poi": "poi.titans_bones",
-			"landmark": true,
-			"skyline": true
-		},
-		{
-			"kind": "rock",
-			"id": "world.drowned.titan_shoulder",
-			"style": "spire",
-			"pos": [
-				252,
-				-302
-			],
-			"size": [
-				7,
-				15
-			],
-			"poi": "poi.bones_shoulder",
-			"landmark": true
-		}
+		{"kind": "column", "id": "world.drowned.mere_columns", "style": "column", "pos": [0, -40], "points": [[-62, 18], [-92, -8], [-44, -132], [-112, -58], [118, -14], [96, 30], [-20, 60]], "size": [3, 13], "poi": "poi.mere_of_kings", "landmark": true},
+		{"kind": "ruin", "id": "world.drowned.steps_terrace_1", "style": "terrace", "pos": [-180, 150], "yaw": 0, "size": [140, 2.6, 2], "thick": 2.4, "poi": "poi.sunken_steps", "landmark": true, "no_solids": true},
+		{"kind": "ruin", "id": "world.drowned.steps_terrace_2", "style": "terrace", "pos": [-180, 118], "yaw": 0, "size": [140, 2.6, 2], "thick": 2.4, "no_solids": true},
+		{"kind": "ruin", "id": "world.drowned.steps_terrace_3", "style": "terrace", "pos": [-180, 86], "yaw": 0, "size": [140, 2.6, 2], "thick": 2.4, "no_solids": true},
+		{"kind": "ruin", "id": "world.drowned.steps_terrace_4", "style": "terrace", "pos": [-180, 54], "yaw": 0, "size": [140, 2.6, 2], "thick": 2.4, "no_solids": true},
+		{"kind": "stone_circle", "id": "world.drowned.ancestral_circle", "style": "trilithon", "pos": [40, -90], "radius": 28, "count": 10, "size": [4, 11, 2], "poi": "poi.ancestral_circle", "landmark": true},
+		{"kind": "column", "id": "world.drowned.causeway_stones", "style": "slab", "pos": [20, 76], "points": [[9, 98], [31, 90], [10, 66], [32, 58]], "size": [2, 3], "poi": "poi.causeway", "landmark": true, "no_solids": true},
+		{"kind": "column", "id": "world.drowned.causeway_piers", "style": "stump", "pos": [30, 4], "points": [[30, 6], [34, -8], [37, -22]], "size": [6, 6]},
+		{"kind": "ruin", "id": "world.drowned.sunken_vault", "style": "vault", "pos": [22, 40], "yaw": 0, "size": [22, 14, 19], "thick": 1.5, "poi": "poi.sunken_vault", "door_m": 15},
+		{"kind": "tower", "id": "world.drowned.bell_tower", "style": "bell", "pos": [-200, -240], "size": [10, 34], "poi": "poi.bell_tower", "landmark": true, "skyline": true},
+		{"kind": "bones", "id": "world.drowned.titans_bones", "pos": [220, -262], "yaw": 90, "length": 120, "poi": "poi.titans_bones", "landmark": true, "skyline": true},
+		{"kind": "rock", "id": "world.drowned.titan_shoulder", "style": "spire", "pos": [252, -302], "size": [7, 15], "poi": "poi.bones_shoulder", "landmark": true},
+		{"kind": "bell", "id": "world.drowned.bell_1", "pos": [-150, -60], "yaw": 20, "quest_target": true, "note": "In the shallows west of the island."},
+		{"kind": "bell", "id": "world.drowned.bell_2", "pos": [130, 20], "yaw": -35, "quest_target": true, "note": "In the shallows east of the causeway."},
+		{"kind": "bell", "id": "world.drowned.bell_3", "pos": [-66, -182], "yaw": 10, "quest_target": true, "note": "On the Mere's north shore."},
+		{"kind": "bell", "id": "world.drowned.bell_4", "pos": [20, 252], "yaw": 0, "quest_target": true, "note": "In the Wend's deep reach below the Mere: a giant of stage 4 wades to it (plan: a deep pool; the Wend's reach is the Drowned Steps' stage-4 water)."},
+		{"kind": "bell", "id": "world.drowned.bell_5", "pos": [52, -102], "yaw": 30, "quest_target": true, "note": "On the island, inside the Ancestral Circle: a giant of stage 5 wades the deep channel to it."},
+		{"kind": "forge_site", "id": "world.drowned.titan_forge", "pos": [225, -279], "yaw": 90, "tier": "titan", "display_name": "Titan Forge", "requires_flags": ["world.titan_forge.lit"], "closed_message": "The Titan Forge is cold. Light its fire first.", "radius": 7, "note": "A titan-tier forge in the Titan's ribs (plan §5.12): it titanforges reinforced weapons once its fire burns."},
+		{"kind": "forge_fire", "id": "world.drowned.titan_forge_fire", "pos": [233, -286], "yaw": 90, "flag": "world.titan_forge.lit", "requires_flags": ["encounter.drowned_bones_scavengers.cleared"], "display_name": "Titan Forge", "locked_message": "Scavengers still pick at the Titan's bones. Drive them off before you light the forge.", "loot": "loot.titan_bones", "lit_message": "The Titan Forge roars alight in the Titan's ribs: titan iron can be worked here now.", "fire_y": 1.8, "radius": 9, "quest_target": true},
+		{"kind": "brazier", "id": "world.drowned.bones_brazier", "pos": [214, -252]},
+		{"kind": "pier", "id": "world.drowned.ferry_landing", "pos": [-186, 18], "yaw": 180, "size": [4, 16], "deck_m": 0.8},
+		{"kind": "rack", "style": "reward", "id": "world.drowned.stoneknuckles_rack", "pos": [-204, 36], "yaw": 150, "weapon": "weapon.fists", "requires_flags": ["quest.drowned_bells.done"], "quest_target": true, "locked_message": "The ferrywoman keeps these gauntlets for the one who rings the Mere's five bells."}
 	],
 	"shrines": [
-		{
-			"id": "world.shrine.steps",
-			"record": "shrine.world_steps",
-			"pos": [
-				-200,
-				168
-			],
-			"yaw": 0,
-			"poi": "poi.sunken_steps"
-		}
+		{"id": "world.shrine.steps", "record": "shrine.world_steps", "pos": [-200, 168], "yaw": 0, "poi": "poi.sunken_steps"}
 	],
 	"waystones": [
-		{
-			"id": "world.cp.mere_south",
-			"display_name": "Mere south waystone",
-			"pos": [
-				78,
-				182
-			],
-			"yaw": -30,
-			"radius": 10,
-			"stone": [
-				8,
-				0
-			],
-			"poi": ""
-		},
-		{
-			"id": "world.cp.bell_tower",
-			"display_name": "Bell tower waystone",
-			"pos": [
-				-180,
-				-200
-			],
-			"yaw": 150,
-			"radius": 10,
-			"stone": [
-				7,
-				5
-			],
-			"poi": "poi.bell_tower"
-		}
+		{"id": "world.cp.mere_south", "display_name": "Mere south waystone", "pos": [78, 182], "yaw": -30, "radius": 10, "stone": [8, 0], "poi": ""},
+		{"id": "world.cp.bell_tower", "display_name": "Bell tower waystone", "pos": [-180, -200], "yaw": 150, "radius": 10, "stone": [7, 5], "poi": "poi.bell_tower"}
 	],
 	"size_gates": [
-		{
-			"id": "world.gate.mere_channel",
-			"ring": "deep_channel",
-			"min_stage": 5,
-			"cue": "sfx.gate.water",
-			"height_m": 18,
-			"message": "The channel is too deep. Grow to stage 5."
-		}
+		{"id": "world.gate.mere_channel", "ring": "deep_channel", "min_stage": 5, "cue": "sfx.gate.water", "height_m": 18, "message": "The channel is too deep. Grow to stage 5."}
 	],
 	"secrets": [
-		{
-			"id": "world.drowned.vault_rockfall",
-			"seal": "rockfall",
-			"pos": [
-				22,
-				28
-			],
-			"yaw": 0,
-			"poi": "poi.sunken_vault"
-		},
-		{
-			"id": "world.drowned.shoulder_cache",
-			"seal": "ledge",
-			"pos": [
-				250,
-				-296
-			],
-			"poi": "poi.bones_shoulder",
-			"item": "item.iron_ingot",
-			"count": 2,
-			"requires_stage": 6,
-			"ledge_m": 15
-		}
+		{"id": "world.drowned.vault_rockfall", "seal": "rockfall", "pos": [22, 28], "yaw": 0, "poi": "poi.sunken_vault"},
+		{"id": "world.drowned.shoulder_cache", "seal": "ledge", "pos": [250, -296], "poi": "poi.bones_shoulder", "item": "item.iron_ingot", "count": 2, "requires_stage": 6, "ledge_m": 15}
 	],
 	"caches": [
-		{
-			"id": "world.drowned.mere_cache",
-			"pos": [
-				-34,
-				110
-			],
-			"loot": "loot.cache_mere_of_kings",
-			"poi": "poi.mere_of_kings"
-		},
-		{
-			"id": "world.drowned.steps_cache",
-			"pos": [
-				-150,
-				100
-			],
-			"loot": "loot.cache_sunken_steps",
-			"poi": "poi.sunken_steps"
-		},
-		{
-			"id": "world.drowned.circle_cache",
-			"pos": [
-				54,
-				-78
-			],
-			"loot": "loot.cache_ancestral_circle",
-			"poi": "poi.ancestral_circle"
-		},
-		{
-			"id": "world.drowned.causeway_cache",
-			"pos": [
-				12,
-				82
-			],
-			"loot": "loot.cache_causeway",
-			"poi": "poi.causeway"
-		},
-		{
-			"id": "world.drowned.vault_cache",
-			"pos": [
-				22,
-				46
-			],
-			"loot": "loot.cache_sunken_vault",
-			"poi": "poi.sunken_vault"
-		},
-		{
-			"id": "world.drowned.bell_cache",
-			"pos": [
-				-168,
-				-222
-			],
-			"loot": "loot.cache_bell_tower",
-			"poi": "poi.bell_tower"
-		}
+		{"id": "world.drowned.mere_cache", "pos": [-34, 110], "loot": "loot.cache_mere_of_kings", "poi": "poi.mere_of_kings"},
+		{"id": "world.drowned.steps_cache", "pos": [-150, 100], "loot": "loot.cache_sunken_steps", "poi": "poi.sunken_steps"},
+		{"id": "world.drowned.circle_cache", "pos": [54, -78], "loot": "loot.cache_ancestral_circle", "poi": "poi.ancestral_circle"},
+		{"id": "world.drowned.causeway_cache", "pos": [12, 82], "loot": "loot.cache_causeway", "poi": "poi.causeway"},
+		{"id": "world.drowned.vault_cache", "pos": [22, 46], "loot": "loot.cache_sunken_vault", "poi": "poi.sunken_vault"},
+		{"id": "world.drowned.bell_cache", "pos": [-168, -222], "loot": "loot.cache_bell_tower", "poi": "poi.bell_tower"}
 	],
 	"cairns": [
-		{
-			"id": "world.drowned.circle_cairn",
-			"dialogue": "dialogue.cairn_ancestral_circle",
-			"pos": [
-				40,
-				-92
-			],
-			"yaw": 0,
-			"poi": "poi.ancestral_circle"
-		}
+		{"id": "world.drowned.circle_cairn", "dialogue": "dialogue.cairn_ancestral_circle", "pos": [40, -92], "yaw": 0, "poi": "poi.ancestral_circle"},
+		{"id": "world.drowned.vault_cairn", "dialogue": "dialogue.cairn_sunken_vault", "pos": [15, 46], "yaw": 0, "poi": "poi.sunken_vault", "note": "Inside the drowned kings' vault, behind the causeway's rockfall (stage 5)."},
+		{"id": "world.drowned.shoulder_cairn", "dialogue": "dialogue.cairn_bones_shoulder", "pos": [256, -298], "yaw": 200, "poi": "poi.bones_shoulder", "requires_stage": 6, "ledge_m": 15, "note": "On the Titan's shoulder, out of reach below stage 6."}
 	],
-	"markers": [],
+	"markers": [
+		{"id": "world.marker.bell_1", "kind": "objective", "pos": [-150, -54]},
+		{"id": "world.marker.bell_2", "kind": "objective", "pos": [130, 26]},
+		{"id": "world.marker.bell_3", "kind": "objective", "pos": [-66, -176]},
+		{"id": "world.marker.bell_4", "kind": "objective", "pos": [20, 258]},
+		{"id": "world.marker.bell_5", "kind": "objective", "pos": [52, -96]},
+		{"id": "world.marker.ferry_landing", "kind": "objective", "pos": [-196, 30]},
+		{"id": "world.marker.titan_forge", "kind": "objective", "pos": [228, -270]},
+		{"id": "world.marker.sunken_vault", "kind": "objective", "pos": [22, 44]},
+		{"id": "world.marker.steps_safe", "kind": "safe", "pos": [-212, 44]}
+	],
 	"scenery": [
-		{
-			"mesh": "reed",
-			"density": 0.003,
-			"spacing_m": 4,
-			"scale": [
-				0.8,
-				1.4
-			],
-			"solid": false,
-			"near_water_m": 14
-		},
-		{
-			"mesh": "tree_broadleaf",
-			"density": 0.00018,
-			"spacing_m": 16,
-			"scale": [
-				0.8,
-				1.2
-			],
-			"solid": true
-		},
-		{
-			"mesh": "rock",
-			"density": 0.00012,
-			"spacing_m": 18,
-			"scale": [
-				0.8,
-				1.6
-			],
-			"solid": true
-		}
+		{"mesh": "reed", "density": 0.003, "spacing_m": 4, "scale": [0.8, 1.4], "solid": false, "near_water_m": 14},
+		{"mesh": "tree_broadleaf", "density": 0.00018, "spacing_m": 16, "scale": [0.8, 1.2], "solid": true},
+		{"mesh": "rock", "density": 0.00012, "spacing_m": 18, "scale": [0.8, 1.6], "solid": true}
+	],
+	"areas": [
+		{"id": "world.area.sunken_vault", "pos": [22, 42], "r": 7, "h": 12, "note": "The drowned kings' vault: walking into it completes quest.sunken_vault."}
 	]
 }

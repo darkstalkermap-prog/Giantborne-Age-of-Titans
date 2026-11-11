@@ -3,18 +3,19 @@
 	"id": "encounter.drowned_bones_scavengers",
 	"type": "encounter",
 	"display_name": "Bone scavengers",
-	"description": "P25 light content (plan M6-M9 §5.10): two ogres picking over the Titan's Bones; P35 adds a troll.",
+	"description": "P25 light content (plan M6-M9 §5.10), P35's content: two ogres and a troll picking over the Titan's Bones, beside the cold Titan Forge (its fire is lit once they are gone: quest.titan_bones). A brazier stands by the ribs for the troll.",
 	"level": "level.world",
-	"center_m": [220, 16.7, -260],
-	"activate_radius_m": 80,
-	"deactivate_radius_m": 150,
+	"center_m": [220, 16.73, -260],
+	"activate_radius_m": 90,
+	"deactivate_radius_m": 160,
 	"leash_radius_m": 60,
 	"alert_group": true,
 	"requires_flags": [],
 	"forbids_flags": [],
 	"counts_toward_budget": true,
 	"spawns": [
-		{"entity_id": "world.drowned.bones_scavengers_ogre_1", "definition": "enemy.ogre", "position_m": [206, 16.7, -250], "yaw_deg": 90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
-		{"entity_id": "world.drowned.bones_scavengers_ogre_2", "definition": "enemy.ogre", "position_m": [232, 16.7, -272], "yaw_deg": 270, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+		{"entity_id": "world.drowned.bones_scavengers_ogre_1", "definition": "enemy.ogre", "position_m": [206, 16.73, -250], "yaw_deg": 90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bones_scavengers_ogre_2", "definition": "enemy.ogre", "position_m": [232, 16.73, -272], "yaw_deg": 270, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bones_scavengers_troll", "definition": "enemy.troll", "position_m": [214, 16.73, -262], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
 	]
 }

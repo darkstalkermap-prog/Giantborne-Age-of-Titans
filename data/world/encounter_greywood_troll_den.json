@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.greywood_troll_den",
+	"type": "encounter",
+	"display_name": "The Troll Matriarch",
+	"description": "P35 (plan M6-M9 §5.10, §5.13; P34's mechanics): the Troll Matriarch and two whelps in the Troll Den, an arena boss (world.greywood.den_arena: the disengage rule, no leash). Recommended stage 5, possible at 4. Slain, her outcome is slain; driven off through the den's back wall (the three nests burned and the wall open, then below 60 %) it is fled. Either way she never comes back (forbids boss.matriarch.outcome).",
+	"level": "level.world",
+	"center_m": [-760, 27, -330],
+	"activate_radius_m": 110,
+	"deactivate_radius_m": 170,
+	"leash_radius_m": 0,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": ["boss.matriarch.outcome"],
+	"counts_toward_budget": true,
+	"arena": true,
+	"spawns": [
+		{"entity_id": "world.greywood.troll_matriarch", "definition": "enemy.troll_matriarch", "position_m": [-768, 27, -338], "yaw_deg": 135, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.den_whelp_1", "definition": "enemy.troll_whelp", "position_m": [-780, 27, -330], "yaw_deg": 120, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.den_whelp_2", "definition": "enemy.troll_whelp", "position_m": [-752, 27, -350], "yaw_deg": 150, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

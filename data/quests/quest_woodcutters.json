@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "quest.woodcutters",
+	"type": "quest",
+	"display_name": "The Woodcutters' Camp",
+	"description": "P35 (plan M6-M9 §5.4, §5.7): two trolls squat in the wrecked woodcutters' camp on the Woodway (the quest starts when the giant finds the camp or comes within 150 m of it). The camp's bonfire and brazier teach fire (tutorial.troll_fire): clear the trolls (150 XP), then take the woodcutters' greataxe from its rack (weapon.axe).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "any", "of": [
+		{"type": "discovered", "poi": "poi.woodcutters_camp"},
+		{"type": "near", "target": "world.marker.woodcutters_camp", "radius_m": 150}]}],
+	"abandon_when": null,
+	"tracker_priority": 10,
+	"stages": [
+		{"id": "clear", "objective": "Drive the trolls out of the woodcutters' camp",
+			"complete_when": {"type": "encounter_cleared", "encounter": "encounter.greywood_woodcutters"},
+			"marker": "world.marker.woodcutters_camp", "xp": 150,
+			"waiting_text": "Trolls close their wounds unless they burn: smash the bonfire or the brazier beside one.",
+			"items": [], "set_flags": {},
+			"bot": {"action": "fight_encounter", "target": "encounter.greywood_woodcutters",
+				"burn": ["world.greywood.woodcutters_bonfire", "world.greywood.woodcutters_brazier"]}},
+		{"id": "axe", "objective": "Take the woodcutters' greataxe from its rack",
+			"complete_when": {"type": "weapon_equipped", "weapon": "weapon.axe"},
+			"marker": "world.marker.woodcutters_camp", "xp": 0, "items": [], "set_flags": {},
+			"bot": {"action": "interact", "target": "world.greywood.woodcutters_axe_rack"}}
+	],
+	"on_complete_flags": {}
+}

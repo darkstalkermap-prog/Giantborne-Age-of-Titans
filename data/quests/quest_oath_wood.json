@@ -1,0 +1,36 @@
+{
+	"schema_version": 1,
+	"id": "quest.oath_wood",
+	"type": "quest",
+	"display_name": "The Blight of the Greywood",
+	"description": "P35 (plan M6-M9 §5.7, §5.9, §5.13, decision 26): the woodfolk's oath, one of the three powers' for quest.world_main's oaths stage. It starts at stage 4. Meet Sedge, Hollowmere's elder (50; among the huts on the pond's south shore for a giant of stage 4, on the green for a bigger one), then lift the blight of the Troll Matriarch one of two ways, each open as a first oath at stage 4: slay her in the Troll Den (750 at Sedge's: the woodfolk's feast, 2 attribute points); or drive her out - burn the den's three brood nests (3 x 50: a smashed brazier beside a nest, a burning troll or whelp hurled into one), open the den's back wall (the woodfolk pull it down 20 s after the third nest burns, a giant of stage 5 heaves it at once, and Stormborn's bargain with Sedge has them open it at once) and bring her below 60 % so she flees through it (600 at Sedge's; her scattered brood then roams the Greywood as a troll pack). Every resolution pays the oath's reward (loot.oath_reward: 1 titan iron, 2 iron), lifts the XP to level 9, makes the woodfolk allies and lights Hollowmere's lanterns. Worst path 800 XP, best 800.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "stage_at_least", "stage": 4}],
+	"abandon_when": null,
+	"tracker_priority": 60,
+	"stages": [
+		{"id": "meet", "objective": "Meet Sedge, the woodfolk's elder, at Hollowmere",
+			"complete_when": {"type": "flag", "flag": "oath.wood.met"},
+			"marker": "world.marker.hollowmere_green", "xp": 50, "items": [], "set_flags": {},
+			"bot": {"action": "talk", "target": "world.greywood.sedge"}},
+		{"id": "den", "objective": "Lift the blight: slay the Troll Matriarch, or burn her nests and drive her from the den",
+			"complete_when": {"type": "any", "of": [
+				{"type": "flag", "flag": "boss.matriarch.outcome", "equals": "slain"},
+				{"type": "flag", "flag": "boss.matriarch.outcome", "equals": "fled"}]},
+			"marker": "world.marker.troll_den", "xp": 0,
+			"waiting_text": "Sedge asks you to rid the Greywood of the Troll Matriarch: slay her, or burn her three brood nests, see the den's back wall opened and drive her out through it.",
+			"items": [], "set_flags": {},
+			"bot": {"action": "fight_encounter", "target": "encounter.greywood_troll_den",
+				"burn": ["world.greywood.den_nest_1", "world.greywood.den_nest_2", "world.greywood.den_nest_3"],
+				"heave": "world.greywood.troll_den_wall"}},
+		{"id": "swear", "objective": "Return to Sedge at Hollowmere",
+			"complete_when": {"type": "flag", "flag": "oath.wood.done"},
+			"marker": "world.marker.hollowmere_green", "xp": 0, "xp_floor_level": 9,
+			"waiting_text": "The Matriarch is gone from the den. Sedge waits at Hollowmere to swear the woodfolk's oath.",
+			"items": [{"item": "item.titan_iron", "count": 1}, {"item": "item.iron_ingot", "count": 2}],
+			"set_flags": {},
+			"bot": {"action": "talk", "target": "world.greywood.sedge"}}
+	],
+	"on_complete_flags": {}
+}

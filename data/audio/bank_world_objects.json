@@ -3,8 +3,46 @@
 	"id": "audio_bank.world_objects",
 	"type": "audio_bank",
 	"display_name": "World objects",
-	"description": "P28 (section 4.1 family G, M7-M9): the size gates' answers at the contact point (water, stone, timber; stone and timber also register in the Valley, whose gates use them), splashes, a trample, the town bell of a friendly settlement's arrival, the war horn of a world event, an exit and an inscription; the formation's brace, its broken horn and the banner's fall; the ballista's and the catapult's release; the cavalry's gallop swell; burning and a troll's regrowth.",
+	"description": "P28 (section 4.1 family G, M7-M9): the size gates' answers at the contact point (water, stone, timber; stone and timber also register in the Valley, whose gates use them), splashes, a trample, the town bell of a friendly settlement's arrival, the war horn of a world event, an exit and an inscription; the formation's brace, its broken horn and the banner's fall; the ballista's and the catapult's release; the cavalry's gallop swell; burning and a troll's regrowth; P35: a bronze or iron prop rung or broken (sfx.break.iron.*: the town bell's sample, lower - the Mere's sunken bells, material iron; struck, they answer with the combat bank's sfx.hit.iron).",
 	"cues": {
+		"sfx.break.iron.large": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/town_bell_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -2.0,
+			"pitch": 0.72,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 600,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.break.iron.small": {
+			"files": [
+				"res://assets/audio/sfx/world/objects/town_bell_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -3.0,
+			"pitch": 0.8,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 600,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
 		"sfx.cavalry.charge": {
 			"files": [
 				"res://assets/audio/sfx/world/objects/cavalry_charge_1.wav"

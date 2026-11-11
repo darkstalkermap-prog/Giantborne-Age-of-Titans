@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "wander.greywood",
+	"type": "wander_table",
+	"display_name": "The Greywood's rides",
+	"description": "P35 (plan M6-M9 §2.13, §5.9, §5.10, decision 27): who walks the Greywood's rides while the giant is there - at most two at once, one every 60-120 s, 120-220 m away, out of view, on a ride's node (never in Hollowmere, never by a placed fight that is not cleared). Dire wolves and troll pairs for a giant of stage 4 and up; once the Matriarch fled the den (boss.matriarch.outcome = fled: the oath's drive) her scattered brood roams as a troll pack for a giant of stage 5 and up; the woodfolk's hunters (neutral while Hollowmere is at peace) at any stage. Each entry's members pay kill XP for its first three spawns only (wander.greywood.<entry>.spawns).",
+	"region": "region.greywood",
+	"max_active": 2,
+	"interval_s": [60, 120],
+	"min_distance_m": 120,
+	"max_distance_m": 220,
+	"anchors": "roads",
+	"xp_full_spawns": 3,
+	"patrol_m": 40,
+	"entries": [
+		{"id": "dire_wolf_pack", "weight": 3, "min_stage": 4, "max_stage": 10, "template": "encounter.tpl_greywood_dire_wolves"},
+		{"id": "troll_pair", "weight": 2, "min_stage": 4, "max_stage": 10, "template": "encounter.tpl_greywood_trolls"},
+		{"id": "troll_pack", "weight": 2, "min_stage": 5, "max_stage": 10, "template": "encounter.tpl_greywood_troll_pack",
+			"conditions": [{"type": "flag", "flag": "boss.matriarch.outcome", "equals": "fled"}]},
+		{"id": "hunters", "weight": 1, "template": "encounter.tpl_greywood_hunters"}
+	]
+}

@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "encounter.greywood_pines",
+	"type": "encounter",
+	"display_name": "A troll under the great pines",
+	"description": "P35 (plan M6-M9 §5.10): a troll and two whelps nest among the three great pines; a brazier by the trunks.",
+	"level": "level.world",
+	"center_m": [-558, 28.98, -252],
+	"activate_radius_m": 90,
+	"deactivate_radius_m": 160,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.greywood.pines_troll", "definition": "enemy.troll", "position_m": [-560, 28.68, -258], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.pines_whelp_1", "definition": "enemy.troll_whelp", "position_m": [-551, 28.45, -264], "yaw_deg": 30, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.pines_whelp_2", "definition": "enemy.troll_whelp", "position_m": [-567, 29.01, -246], "yaw_deg": 330, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

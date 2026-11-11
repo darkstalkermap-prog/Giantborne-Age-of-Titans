@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "npc.sedge",
+	"type": "npc",
+	"role": "talker",
+	"display_name": "Sedge",
+	"description": "P35 (plan M6-M9 §5.4, §5.7, §2.12): the woodfolk's elder at Hollowmere, who gives the woodfolk's oath (quest.oath_wood). A giant of stage 4 or less meets her among the huts on the pond's south shore; a bigger one on Hollowmere's green beside them (the director moves her: the settlement's POI has max_inner_stage 4). Protected: every blow is refused (still an offence against the woodfolk).",
+	"scene": "res://scenes/npcs/elder.tscn",
+	"height_m": 1.6,
+	"capsule_radius_m": 0.3,
+	"health": 60,
+	"armor": 0,
+	"walk_speed_mps": 1.1,
+	"run_speed_mps": 2.6,
+	"flee_trigger_radius_m": 0,
+	"protected": true,
+	"dialogue": "dialogue.sedge",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"nav_layers": 1,
+	"grab_attach": "none"
+}

@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_greywood_dire_wolves",
+	"type": "encounter",
+	"display_name": "Dire wolf pack",
+	"description": "P35 (plan M6-M9 §2.13, §5.10): a wander template of wander.greywood's dire_wolf_pack entry (stage 4 and up) - three dire wolves hunting the Greywood's rides. Its centre is nominal (a node of the Hollowmere ride, more than 120 m from every checkpoint and 150 m from the placed fights).",
+	"template": true,
+	"level": "level.world",
+	"center_m": [-736, 19.49, -110],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.greywood.wander_dire_1", "definition": "enemy.dire_wolf", "position_m": [-739, 19.5, -112], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.greywood.wander_dire_2", "definition": "enemy.dire_wolf", "position_m": [-733, 19.58, -112], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.greywood.wander_dire_3", "definition": "enemy.dire_wolf", "position_m": [-736, 19.36, -106], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

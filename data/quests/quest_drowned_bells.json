@@ -1,0 +1,41 @@
+{
+	"schema_version": 1,
+	"id": "quest.drowned_bells",
+	"type": "quest",
+	"display_name": "The Drowned Bells",
+	"description": "P35 (plan M6-M9 §5.4, §5.7): the five great bells of the drowned kings hang silent in and about the Mere of Kings; Wenna the ferrywoman asks the giant to ring them (the quest also starts when the giant finds the Mere). Two hang in the shallows, one on the north shore, one in the Wend's deep reach below the Mere (a giant of stage 4 wades it) and the island's in the Ancestral Circle (stage 5: the deep channel). A blow rings a bell (its world id counts as destroyed): 200 XP once all five ring, then the Stoneknuckles (weapon.fists) on the rack at Wenna's landing.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "any", "of": [
+		{"type": "dialogue_outcome", "dialogue": "dialogue.ferrywoman", "outcome": "bells"},
+		{"type": "discovered", "poi": "poi.mere_of_kings"}]}],
+	"abandon_when": null,
+	"tracker_priority": 10,
+	"stages": [
+		{"id": "ring", "objective": "Ring the five sunken bells of the Mere",
+			"complete_when": {"type": "count", "n": 5, "of": [
+				{"type": "destroyed", "world_id": "world.drowned.bell_1"},
+				{"type": "destroyed", "world_id": "world.drowned.bell_2"},
+				{"type": "destroyed", "world_id": "world.drowned.bell_3"},
+				{"type": "destroyed", "world_id": "world.drowned.bell_4"},
+				{"type": "destroyed", "world_id": "world.drowned.bell_5"}]},
+			"marker": "world.marker.bell_1",
+			"markers": ["world.marker.bell_1", "world.marker.bell_2", "world.marker.bell_3", "world.marker.bell_4", "world.marker.bell_5"],
+			"markers_done_when": {
+				"world.marker.bell_1": {"type": "destroyed", "world_id": "world.drowned.bell_1"},
+				"world.marker.bell_2": {"type": "destroyed", "world_id": "world.drowned.bell_2"},
+				"world.marker.bell_3": {"type": "destroyed", "world_id": "world.drowned.bell_3"},
+				"world.marker.bell_4": {"type": "destroyed", "world_id": "world.drowned.bell_4"},
+				"world.marker.bell_5": {"type": "destroyed", "world_id": "world.drowned.bell_5"}},
+			"xp": 200,
+			"waiting_text": "Two bells hang in the shallows and one on the north shore; one hangs in the Wend's deep reach below the Mere (a giant of stage 4 wades it) and one on the island, past the deep channel (stage 5).",
+			"items": [], "set_flags": {},
+			"bot": {"action": "break", "target": "world.drowned.bell_1",
+				"targets": ["world.drowned.bell_1", "world.drowned.bell_2", "world.drowned.bell_3", "world.drowned.bell_4", "world.drowned.bell_5"]}},
+		{"id": "gauntlets", "objective": "Take the Stoneknuckles from the ferrywoman's landing",
+			"complete_when": {"type": "weapon_equipped", "weapon": "weapon.fists"},
+			"marker": "world.marker.ferry_landing", "xp": 0, "items": [], "set_flags": {},
+			"bot": {"action": "interact", "target": "world.drowned.stoneknuckles_rack"}}
+	],
+	"on_complete_flags": {}
+}

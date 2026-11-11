@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "encounter.greywood_woodcutters",
+	"type": "encounter",
+	"display_name": "Trolls in the woodcutters' camp",
+	"description": "P35 (plan M6-M9 §5.10, §3.19): two trolls squat in the wrecked woodcutters' camp on the Woodway. The camp's bonfire and its brazier are the fire lesson (tutorial.troll_fire): smash one while a troll stands by it and the troll burns - no regeneration while it does. quest.woodcutters asks the giant to clear them; the woodcutters' greataxe waits on its rack.",
+	"level": "level.world",
+	"center_m": [-420, 23, 220],
+	"activate_radius_m": 90,
+	"deactivate_radius_m": 160,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.greywood.woodcutters_troll_1", "definition": "enemy.troll", "position_m": [-424, 23, 214], "yaw_deg": 120, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.woodcutters_troll_2", "definition": "enemy.troll", "position_m": [-414, 23, 225], "yaw_deg": 200, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

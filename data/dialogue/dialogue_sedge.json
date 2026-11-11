@@ -1,0 +1,42 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.sedge",
+	"type": "dialogue",
+	"speaker": "Sedge",
+	"description": "P35 (plan M6-M9 §5.7, §5.9, §5.13, decision 26): the woodfolk's oath (quest.oath_wood). Meeting her sets oath.wood.met. Once the Troll Matriarch is gone from her den, the report swears the oath: slain (boss.matriarch.outcome slain) - 750 XP once and the woodfolk's feast (2 attribute points); driven out (fled) - 600 XP once. Either way the woodfolk become allies (faction.woodfolk.allied) and Hollowmere's lanterns are lit (oath.wood.done). A Stormborn giant may strike the druids' old bargain (world.troll_den.bargain): the woodfolk open the den's back wall at once. Hostile, she will only take 2 iron for the fright (outcome reconcile_woodfolk: FactionState reconciles Hollowmere, every time it is paid).",
+	"entries": [
+		{"node": "angry", "conditions": [{"type": "flag", "flag": "faction.woodfolk.hostile"}, {"type": "not", "of": {"type": "flag", "flag": "faction.woodfolk.reconciled"}}]},
+		{"node": "sworn_slay", "conditions": [{"type": "flag", "flag": "oath.wood.outcome", "equals": "slay"}]},
+		{"node": "sworn_drive", "conditions": [{"type": "flag", "flag": "oath.wood.outcome", "equals": "drive"}]},
+		{"node": "report_slain", "conditions": [{"type": "flag", "flag": "boss.matriarch.outcome", "equals": "slain"}]},
+		{"node": "report_fled", "conditions": [{"type": "flag", "flag": "boss.matriarch.outcome", "equals": "fled"}]},
+		{"node": "waiting", "conditions": [{"type": "flag", "flag": "oath.wood.met"}]},
+		{"node": "greet", "conditions": []}
+	],
+	"nodes": [
+		{"id": "greet", "text": "A giant at Hollowmere... The Greywood has not felt such feet in an age. I am Sedge, elder of the woodfolk. A troll-mother has made her den in the north-west ridge, and her brood strips the wood to the bone - our hunters do not come home. Lift that blight, giant, and the Greywood will swear its oath to you: kill her, or burn her nests and drive her out of the wood.", "choices": [
+			{"text": "I will lift the blight.", "next": "task", "effects": {"set_flags": {"oath.wood.met": true}, "outcome": "accept"}},
+			{"text": "[Stormborn] The storm remembers the wood's old bargain. Open the den's back wall for me.", "next": "bargain", "conditions": [{"type": "ancestry_is", "ancestry": "ancestry.stormborn"}, {"type": "not", "of": {"type": "flag", "flag": "world.troll_den.bargain"}}], "effects": {"set_flags": {"oath.wood.met": true, "world.troll_den.bargain": true}, "outcome": "bargain"}},
+			{"text": "Not now.", "next": "", "effects": {"set_flags": {"oath.wood.met": true}}}]},
+		{"id": "task", "text": "Her den is a bowl in the ridge beyond the waystone. Three brood nests keep her there: burn them - our braziers stand by each, and a troll hurled into the fire pit burns well - and our people will pull down the den's back wall so she has a way out. Hurt her enough and she will run through it. Or end her. Come back to me when the den is empty.", "choices": [
+			{"text": "I'll see it done.", "next": ""}]},
+		{"id": "bargain", "text": "...The storm and the wood. Then the old druids' bargain holds. Our people will be at the den's back wall with their ropes and pull it down for you. Burn her nests, wound her, and she will run through it.", "choices": [
+			{"text": "I'll see it done.", "next": ""}]},
+		{"id": "waiting", "text": "The Matriarch still holds the den. Slay her - or burn her three nests and drive her out through the back wall.", "choices": [
+			{"text": "[Stormborn] The storm remembers the wood's old bargain. Open the den's back wall for me.", "next": "bargain", "conditions": [{"type": "ancestry_is", "ancestry": "ancestry.stormborn"}, {"type": "not", "of": {"type": "flag", "flag": "world.troll_den.bargain"}}], "effects": {"set_flags": {"oath.wood.met": true, "world.troll_den.bargain": true}, "outcome": "bargain"}},
+			{"text": "I'm on my way.", "next": ""}]},
+		{"id": "report_slain", "text": "The troll-mother is dead... I heard the wood breathe out. Hollowmere will feast tonight, and the woodfolk swear their oath to you.", "choices": [
+			{"text": "Then swear the wood's oath.", "next": "feast", "conditions": [{"type": "flag", "flag": "boss.matriarch.outcome", "equals": "slain"}], "effects": {"set_flags": {"oath.wood.met": true, "oath.wood.done": true, "oath.wood.outcome": "slay", "faction.woodfolk.allied": true}, "outcome": "slay", "xp": 750, "attribute_points": 2, "once_flag": "reward.oath_wood.slay"}},
+			{"text": "Later.", "next": ""}]},
+		{"id": "report_fled", "text": "She ran! Out through the wall and away into the deep wood, her nests in ashes. Her brood will wander, but the den is ours again. The woodfolk swear their oath to you.", "choices": [
+			{"text": "Then swear the wood's oath.", "next": "sworn_drive", "conditions": [{"type": "flag", "flag": "boss.matriarch.outcome", "equals": "fled"}], "effects": {"set_flags": {"oath.wood.met": true, "oath.wood.done": true, "oath.wood.outcome": "drive", "faction.woodfolk.allied": true}, "outcome": "drive", "xp": 600, "once_flag": "reward.oath_wood.drive"}},
+			{"text": "Later.", "next": ""}]},
+		{"id": "feast", "text": "Hollowmere feasts its giant: the woodfolk's oldest songs, and the strength of the wood in you. (+2 attribute points)"},
+		{"id": "sworn_slay", "text": "The Greywood is yours to walk, friend. Hollowmere's lanterns burn for you."},
+		{"id": "sworn_drive", "text": "The den is empty and the wood breathes again. Watch the rides for her brood - they wander without her. Hollowmere's lanterns burn for you."},
+		{"id": "angry", "text": "You struck our folk, giant. The woodfolk will not speak with you.", "choices": [
+			{"text": "Make good the fright you gave Hollowmere. (2 iron)", "next": "reconciled", "conditions": [{"type": "has_item", "item": "item.iron_ingot", "count": 2}], "locked_text": "You need 2 iron", "effects": {"take_items": [{"item": "item.iron_ingot", "count": 2}], "outcome": "reconcile_woodfolk"}},
+			{"text": "Leave.", "next": ""}]},
+		{"id": "reconciled", "text": "...Hollowmere forgives you. Our hunters will lower their bows."}
+	]
+}

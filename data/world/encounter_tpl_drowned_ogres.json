@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_drowned_ogres",
+	"type": "encounter",
+	"display_name": "Ogre pair",
+	"description": "P35 (plan M6-M9 §2.13, §5.10): a wander template of wander.drowned_steps' ogre_pair entry (stage 4 and up) - two ogres come down to the Mere for the bones. Its centre is nominal (a node of the Mere road's east arm, as the robbers').",
+	"template": true,
+	"level": "level.world",
+	"center_m": [226, 7.77, -40],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.drowned.wander_ogre_1", "definition": "enemy.ogre", "position_m": [222, 7.76, -40], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.drowned.wander_ogre_2", "definition": "enemy.ogre", "position_m": [230, 7.76, -38], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

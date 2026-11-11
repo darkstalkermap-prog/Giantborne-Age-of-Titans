@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "quest.the_needle",
+	"type": "quest",
+	"display_name": "The Needle",
+	"description": "P35 (plan M6-M9 §5.4, §5.5, §5.7): the Needle, a slot canyon 5 m wide through the ridge east of Hollowmere, leads to the Hidden Grove (the quest starts when the giant finds the Needle or comes within 200 m of the grove). A giant of stages 3-4 walks the slot; a bigger one has outgrown it and heaves the rockfall on the grove's north ridge instead (stage 5). The grove holds the Old Root stone (its cache: 1 titan iron), lore and a cairn; reaching it: 100 XP. Never missable: one key or the other at every stage from 3.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "any", "of": [
+		{"type": "discovered", "poi": "poi.the_needle"},
+		{"type": "near", "target": "world.marker.hidden_grove", "radius_m": 200}]}],
+	"abandon_when": null,
+	"tracker_priority": 10,
+	"stages": [
+		{"id": "grove", "objective": "Find the way into the Hidden Grove",
+			"complete_when": {"type": "discovered", "poi": "poi.hidden_grove"},
+			"marker": "world.marker.hidden_grove", "xp": 100,
+			"waiting_text": "The Needle's slot fits a giant of stages 3-4; a bigger one heaves the rockfall on the grove's north ridge (stage 5).",
+			"items": [], "set_flags": {},
+			"bot": {"action": "go", "target": "world.marker.hidden_grove"}}
+	],
+	"on_complete_flags": {}
+}
