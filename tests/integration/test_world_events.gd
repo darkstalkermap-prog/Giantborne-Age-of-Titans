@@ -18,6 +18,10 @@ extends IntegrationSuite
 ##     unloaded, the giant beyond its start radius, none of its members in the world) keeps no other from
 ##     starting where the giant is, and while that one is in play the one left behind waits (its attempt
 ##     does not begin); its abandonment clock outlives the giant's death and the reload that follows.
+##   * M8 gate fix-up 1 (N4.4): a running event leads the tracker (the HUD marker, the compass, the map)
+##     only while it is in play - left behind, it gives the tracker back and the main quest leads again
+##     (it stays in the tracker's list and the journal, where the player may track it: that choice is
+##     kept); back in play it takes the tracker again.
 
 const F := preload("res://tests/support/living_world_fixtures.gd")
 ## M8 gate (F2): a second raid at the tiny world's east end (more than its start radius from the first).
@@ -278,3 +282,62 @@ func test_the_abandonment_clock_outlives_a_death_and_the_reload() -> void:
 	_wd.update_event(raid, 1.0)
 	assert_false(raid.is_running(), "20 s: given up, a reload or a death did not restart the clock")
 	assert_eq(_ended[_ended.size() - 1], [F.RAID, WanderDirector.ABANDONED], "with no outcome")
+
+
+## M8 gate fix-up 1 (N4.4, the audit's play pass: a raid left behind at Millford and then Aldmere's column
+## waiting for good kept the HUD marker and the compass, so the main thread's leads never showed).
+func test_an_event_left_behind_gives_the_tracker_back_until_it_is_in_play_again() -> void:
+	_setup()
+	QuestFixtures.install([QuestFixtures.quest("quest.test_fixup_main", [QuestFixtures.stage("go", QuestFixtures.flag_cond("test.never"))])])
+	QuestFixtures.activate(["quest.test_fixup_main"], [], "quest.test_fixup_main")
+	Quests.evaluate_now()
+	assert_eq(Quests.tracked_id(), "quest.test_fixup_main", "the main quest leads")
+	var raid: WorldEvent = _wd.events[F.RAID]
+	WorldState.set_flag("p37.raid.on", true)
+	_wd.check_events(Sim.tick)
+	assert_true(raid.is_running(), "the raid starts by the giant")
+	assert_eq(Quests.tracked_id(), F.RAID, "and takes the tracker")
+	# The giant walks off east: the raid's centre unloads, its raiders go, the giant is beyond its radius.
+	F.move_giant(_root, 96.0, 80.0)
+	await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+	assert_true(raid.is_running() and not _wd.in_play(raid), "the raid runs on, left behind (%s)" % raid.state)
+	assert_eq(Quests.tracked_quest_id, "", "it gave the tracker back (none was chosen before it)")
+	assert_eq(Quests.tracked_id(), "quest.test_fixup_main", "so the main quest leads the marker and the compass")
+	assert_true(Quests.active_quest_ids().has(F.RAID), "the raid stays in the tracker's list and the journal")
+	# The player tracks it from the journal while it is far off: that choice is kept.
+	assert_true(Quests.track(F.RAID), "the journal's Track")
+	await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+	assert_eq(Quests.tracked_id(), F.RAID, "the player's own choice stays while it is out of play")
+	Quests.tracked_quest_id = ""
+	await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+	assert_eq(Quests.tracked_id(), "quest.test_fixup_main", "untracked again: the main quest leads")
+	# Back by it: in play again, it takes the tracker again; its end gives it back.
+	F.move_giant(_root, -96.0, 16.0)
+	await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+	assert_true(_wd.in_play(raid), "the raid is in play again")
+	assert_eq(Quests.tracked_id(), F.RAID, "and leads again")
+	_wd.end_event(raid, WanderDirector.ABANDONED)
+	assert_eq(Quests.tracked_id(), "quest.test_fixup_main", "its end gives the tracker back")
+
+
+## M8 gate fix-up 1 (N4.4): Aldmere's column (abandon_after_s 0) resumed after a Continue far from the toll
+## fort waited for good - its run never began, never ended and held the tracker. A column with a finite
+## abandon_after_s left waiting with its centre unloaded is given up like a raid; the shipped column has one.
+func test_a_column_left_waiting_far_off_is_given_up() -> void:
+	assert_true(float(GameData.get_record("event.army_column").get("abandon_after_s", 0.0)) > 0.0,
+		"the shipped army column is given up after a while (abandon_after_s)")
+	F.install({F.COLUMN: {"abandon_after_s": 20}})
+	var made := F.make(world, Vector3(96.0, 0.0, 80.0))
+	_root = made[0]
+	_wd = made[1]
+	var column: WorldEvent = _wd.events[F.COLUMN]
+	_wd.start_event(column)
+	assert_eq(column.state, WorldEvent.WAITING, "far from its start the column waits (its attempt cannot begin)")
+	for i in 19:
+		_wd.update_event(column, 1.0)
+	assert_true(column.is_running(), "19 s with its centre unloaded: still waiting")
+	_wd.update_event(column, 1.0)
+	assert_false(column.is_running(), "20 s: given up")
+	assert_eq(_ended[_ended.size() - 1], [F.COLUMN, WanderDirector.ABANDONED], "with no outcome")
+	assert_false(Quests.active_quest_ids().has(F.COLUMN), "and gone from the tracker")
+

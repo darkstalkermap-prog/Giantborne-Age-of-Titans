@@ -242,6 +242,7 @@ func _on_tick(tick: int) -> void:
 			var e: WorldEvent = events[eid]
 			if e.is_running():
 				update_event(e, dt, tick)
+		sync_tracking()
 	if tick % CHECK_TICKS == 0:
 		_prune_copies(tick)
 		check_events(tick)
@@ -855,6 +856,7 @@ func start_event(e: WorldEvent, tick: int = Sim.tick) -> void:
 	Events.world_event_started.emit(tick, e.id)
 	if Quests.has_method("p37_set_event"):
 		e.tracked_before = Quests.tracked_quest_id
+		e.tracker_given_back = false
 		Quests.p37_set_event(e.id, event_objective(e))
 		Quests.track(e.id)
 	_begin_attempt(e, tick)
@@ -886,9 +888,52 @@ func _begin_attempt(e: WorldEvent, tick: int) -> bool:
 	e.state = WorldEvent.RUNNING
 	_shelter_folk(e, tick)
 	if Quests.has_method("p37_set_event") and Quests.tracked_quest_id != e.id:
-		Quests.p37_set_event(e.id, event_objective(e))
-		Quests.track(e.id)   # each attempt leads the compass there (a death reload restored the old choice)
+		_take_tracker(e)   # each attempt leads the compass there (a death reload restored the old choice)
 	return true
+
+
+## M8 gate fix-up 1 (N4.4): a running event leads the HUD marker, the compass and the map only while it is
+## in play (in_play). The director took the tracker when the event started (and at each attempt); a run left
+## behind - WAITING or SUSPENDED far off, a column marching the abstract - gives it back as an ended event
+## does (the quest tracked before it, else the main quest leads), so the main thread's marker and leads
+## (grow6's Ironway, the Standing Stones) show again instead of a raid 1.3 km away or a column waiting for
+## good; it stays in the tracker's list and the journal, where the player can still track it. Coming back
+## into play - no other event in play - it takes the tracker again. A choice the player made meanwhile is
+## what it gives back next.
+func sync_tracking() -> void:
+	if not Quests.has_method("p37_set_event"):
+		return
+	for e in running_events():
+		var playing := in_play(e)
+		if not playing and not e.tracker_given_back and Quests.tracked_quest_id == e.id:
+			e.tracker_given_back = true
+			_give_tracker_back(e)
+		elif playing and e.tracker_given_back and other_in_play(e) == null:
+			_take_tracker(e)
+
+
+## The event takes the tracker (its objective first); one that gave it back while out of play keeps the
+## player's choice made since as the one to give back.
+func _take_tracker(e: WorldEvent) -> void:
+	if not Quests.has_method("p37_set_event"):
+		return
+	Quests.p37_set_event(e.id, event_objective(e))
+	if Quests.tracked_quest_id != e.id:
+		if e.tracker_given_back:
+			e.tracked_before = Quests.tracked_quest_id
+		Quests.track(e.id)
+	e.tracker_given_back = false
+
+
+## The tracker goes back to the quest tracked before the event took it while that quest is still active,
+## else to nobody (the main quest leads).
+func _give_tracker_back(e: WorldEvent) -> void:
+	if Quests.tracked_quest_id != e.id:
+		return
+	var before := e.tracked_before
+	Quests.tracked_quest_id = ""
+	if before != "" and before != e.id and Quests.quest_state(before) == Quests.ACTIVE:
+		Quests.track(before)
 
 
 ## The places of e's protected targets (level space, in their listed order; the index's, else a loaded
@@ -1068,11 +1113,8 @@ func end_event(e: WorldEvent, outcome: String, tick: int = Sim.tick) -> void:
 		for o: WorldEvent in events.values():
 			if o != e and o.tracked_before == e.id:
 				o.tracked_before = e.tracked_before   # an event that took the tracker from this one hands it back past it
-		if Quests.tracked_quest_id == e.id:
-			var before := e.tracked_before
-			Quests.tracked_quest_id = ""
-			if before != "" and Quests.quest_state(before) == Quests.ACTIVE:
-				Quests.track(before)
+		_give_tracker_back(e)
+		e.tracker_given_back = false
 	Events.world_event_ended.emit(tick, e.id, outcome)
 	if outcome != ABANDONED:
 		GameSession.request_checkpoint("world_event")

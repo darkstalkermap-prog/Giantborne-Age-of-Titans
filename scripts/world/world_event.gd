@@ -72,6 +72,9 @@ var runs_this_load := 0
 var log: Array = []
 ## The tracked quest before it took the tracker ("" = none chosen).
 var tracked_before := ""
+## M8 gate fix-up 1 (N4.4): the director gave the tracker back while this run was out of play (it takes it
+## again when the run comes back into play).
+var tracker_given_back := false
 ## M8 gate (F2): whether <id>.unloaded_since_s holds this run's unloaded clock (written once as its
 ## centre is left, cleared once it is loaded again).
 var unloaded_marked := false
