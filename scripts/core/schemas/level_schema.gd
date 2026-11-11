@@ -94,6 +94,10 @@ static func fields() -> Dictionary:
 		"skyline": U.str_field(),
 		"skyline_landmarks": U.str_field(),
 	}}
+	# M8 gate (F26, plan M6-M9 §5.2): a streamed level's `preload` list - the res:// resources its
+	# chunks' props sub-scenes use (scripts, shared scenes) - WorldRoot loads behind the loading screen,
+	# so no streaming step loads one during play.
+	f["preload"] = {"t": "array", "items": "string"}
 
 	## @anchor P24b
 	# P24b (plan M6-M9 §2.7, §2.8, decision 13): the level's navigation queries (NavQuery): unlimited
@@ -228,6 +232,22 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			out.errors.append("%s.fog_m: expected [from, to] metres with from < to" % wctx)
 		if typeof(d.get("index")) != TYPE_STRING or str(d.get("index")) == "":
 			out.errors.append("%s: a streamed level needs its world index ('index')" % ctx)
+	# M8 gate (F26): every preload path is a res:// resource that exists, listed once.
+	var preload_list: Variant = d.get("preload")
+	if typeof(preload_list) == TYPE_ARRAY:
+		var seen_paths := {}
+		for i in (preload_list as Array).size():
+			var path: Variant = preload_list[i]
+			if typeof(path) != TYPE_STRING:
+				continue
+			var pctx := "%s.preload[%d]" % [ctx, i]
+			if not str(path).begins_with("res://"):
+				out.errors.append("%s: '%s' must be a res:// path" % [pctx, path])
+			elif not ResourceLoader.exists(path):
+				out.errors.append("%s: '%s' does not exist" % [pctx, path])
+			if seen_paths.has(path):
+				out.errors.append("%s: '%s' is listed twice" % [pctx, path])
+			seen_paths[path] = true
 
 	## @anchor P24b
 	# P24b: a chase never searches farther than the bot and the director do.

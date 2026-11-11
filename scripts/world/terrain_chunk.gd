@@ -26,7 +26,10 @@ extends Node3D
 ## (the ArrayMesh; the chunk joins the tree here), "ground", "water", "scenery" (one key a step),
 ## "solids" (one batch a step), "props_dep" (one not yet cached dependency of a sub-scene: a
 ## building's or a gate's scene), "props_load" and "props_add" (one sub-scene each), then "" (done).
-## Navigation (P24b) adds its steps after these.
+## Navigation (P24b) adds its steps after these. M8 gate (F26): the real world runs no "props_dep"
+## step during play - WorldRoot loads every dependency of its chunks' sub-scenes (level.world's
+## `preload` list) behind the loading screen; a first-time script load here took up to 27 ms headless
+## and 41.7 ms on the web build.
 
 const GROUP := "world_chunks"
 ## LevelRoot.TERRAIN_GROUP: the preset's terrain_visibility_end_m applies to these meshes.

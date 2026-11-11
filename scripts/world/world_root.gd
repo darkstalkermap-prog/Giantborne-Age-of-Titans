@@ -25,11 +25,29 @@ extends LevelRoot
 ## loaded; region_at() from the world index's region grid (any distance). is_ready() / loading_
 ## progress(): the starting ring around the player (main.gd's loading screen and GameSession's
 ## level_entered wait for it).
+##
+## M8 gate (F26; plan M6-M9 §5.2: streaming steps under about 3 ms): the level record's `preload` list -
+## the world's runtime scripts and the shared scenes its chunks' props sub-scenes use - is loaded at
+## _ready, inside main.gd's level build behind the loading screen (warm_preload()), as the
+## EncounterDirector loads its enemy scenes, and kept for the process's life in a cache every WorldRoot
+## shares (a reload after a death, a fast travel or a trip to the Valley finds it loaded). No streaming
+## step then loads one during play: TerrainChunk's "props_dep" step runs only for what a chunk's
+## props scene needs that is not in the cache, and the list names every such dependency
+## (tests/integration/test_world_preload.gd).
 
 const WORLD_GROUP := "world_root"
 const REGION_HYSTERESIS_M := 15.0
 ## The skyline mask is worked out again when the camera moved this far (or the loaded set changed).
 const MASK_MOVE_M := 4.0
+
+## M8 gate (F26): res:// path -> the Resource warm_preload() loaded (null when it did not load), shared by
+## every WorldRoot of the process.
+static var _preloaded: Dictionary = {}
+
+## M8 gate (F26): what this level's warm_preload() did at _ready: the paths it loaded (0 when every one
+## was cached already) and the wall time it took (ms).
+var preload_loaded := 0
+var preload_ms := 0.0
 
 var streamer: ChunkStreamer = null
 var skyline: Skyline = null
@@ -52,6 +70,9 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	world = world_settings()
+	var t0 := Time.get_ticks_usec()
+	preload_loaded = warm_preload()
+	preload_ms = (Time.get_ticks_usec() - t0) / 1000.0
 	streamer = get_node_or_null("Streamer") as ChunkStreamer
 	if streamer == null:
 		streamer = ChunkStreamer.new()
@@ -84,6 +105,26 @@ func _load_mesh(path: String) -> Mesh:
 	if path == "" or not ResourceLoader.exists(path):
 		return null
 	return load(path) as Mesh
+
+
+## M8 gate (F26): loads every path of the level record's `preload` list that the shared cache does not
+## hold yet (the validator checks that each exists) and keeps it there. Returns how many it loaded now.
+func warm_preload() -> int:
+	var list: Variant = level_record().get("preload", [])
+	if typeof(list) != TYPE_ARRAY:
+		return 0
+	var loaded := 0
+	for p: Variant in list:
+		var path := str(p)
+		if _preloaded.has(path):
+			continue
+		var res: Resource = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REUSE) \
+			if ResourceLoader.exists(path) else null
+		if res == null:
+			push_warning("WorldRoot: %s cannot preload %s" % [level_id, path])
+		_preloaded[path] = res
+		loaded += 1
+	return loaded
 
 
 ## The depth fog of the world block: from fog_m[0] to fog_m[1] metres, at most fog_max.
