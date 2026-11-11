@@ -861,10 +861,11 @@ static func _alive(n: Node3D) -> bool:
 
 
 ## Takes `n` out of the tree now and frees it (only from a safe point: the director's update, a
-## deferred call).
+## deferred call). A formation member leaves its formation first (P30; M8 gate, F23).
 func _free_node(n: Node) -> void:
 	if n == null or not is_instance_valid(n):
 		return
+	_p30_leave_formation(n)
 	var parent := n.get_parent()
 	if parent != null:
 		parent.remove_child(n)
@@ -909,8 +910,9 @@ func _warn_once(key: String, text: String) -> void:
 #   * spawn entries may carry min_stage / max_stage: at each activation the members outside the
 #     giant's stage sit it out (they do not spawn, nor keep the encounter from being cleared);
 #   * the director's own path queries (P30's formation pivots, P37's wander anchors) ask
-#     nav_budget_left() and spend_nav_queries() - NavQuery's per-tick budget, shared with the actors -
-#     the rest waiting a tick.
+#     nav_budget_left() - NavQuery's per-tick budget, shared with the actors -, the rest waiting a tick;
+#     a query made through NavQuery (path, closest_point) counts itself, spend_nav_queries() counts one
+#     made around it (M8 gate, F25: a formation's re-path counted twice).
 # Elsewhere (the Valley, test levels) every encounter is live and nothing changes; the stage filter
 # applies wherever entries carry the keys.
 
@@ -1278,6 +1280,16 @@ func formation_member_count() -> int:
 	return n
 
 
+## M8 gate (F23): a member node the director frees - a corpse corpse_free_s after its death, a despawn, a
+## deactivation, a copy removed - leaves its formation first (Formation.remove_member), so no formation
+## lists a freed node until its next update prunes it (its per-frame readers - the lock line, the group
+## lock, the march - read every entry).
+static func _p30_leave_formation(n: Node) -> void:
+	var f: Variant = n.get("formation") if n != null and is_instance_valid(n) else null
+	if f is Formation:
+		(f as Formation).remove_member(n)
+
+
 ## True when `n` stands in an intact formation (the leash leaves it to its formation; see the notes).
 static func _p30_formation_holds(n: Node) -> bool:
 	var f: Variant = n.get("formation") if n != null and is_instance_valid(n) else null
@@ -1341,7 +1353,6 @@ func _p30_activate(enc: Encounter) -> void:
 		var f := Formation.from_record(enc.id, rec)
 		f.level = level
 		f.budget_left = nav_budget_left
-		f.spend_budget = spend_nav_queries
 		_p30_place(f, rec, members, origin)
 		for m: Member in members:
 			var slot := int(m.spawn.get("slot", 0))

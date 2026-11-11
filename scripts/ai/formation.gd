@@ -101,11 +101,11 @@ var flee_point_ids := PackedStringArray()
 var flee_points: Array[Vector3] = []
 ## The faction its members fight under ("" = the always-hostile default), from its first member.
 var faction := ""
-## The level it stands in (NavQuery's), and the director's path budget: budget_left() -> int,
-## spend_budget(n: int). Unset (tests): the pivot walks straight.
+## The level it stands in (NavQuery's), and the director's path budget: budget_left() -> int (a re-path
+## waits while it is 0; NavQuery.path counts the query it makes against that budget itself - M8 gate,
+## F25: the advance spent a second one for the same query). Unset (tests): the pivot walks straight.
 var level: Node = null
 var budget_left := Callable()
-var spend_budget := Callable()
 
 ## Rank-and-file members in the order they joined; slot_of[entity id] is each one's slot.
 var members: Array[EnemyActor] = []
@@ -275,19 +275,22 @@ func set_banner(actor: EnemyActor) -> void:
 	actor.call("p30_join_formation", self, BANNER_SLOT, true)
 
 
-## Takes `actor` out (it died and was freed, despawned, or broke away for good).
-func remove_member(actor: EnemyActor) -> void:
+## Takes `actor` out (it died and is being freed, despawned, or broke away for good). EncounterDirector
+## calls it for every member node it frees (M8 gate, F23). An actor already freed is only dropped from
+## the lists (untyped: a freed object fails a typed argument).
+func remove_member(actor: Variant) -> void:
+	var valid := actor != null and is_instance_valid(actor)
 	if actor == banner:
 		banner = null
 	var i := members.find(actor)
 	if i >= 0:
 		members.remove_at(i)
-	if actor != null and is_instance_valid(actor) and actor.entity != null:
-		slot_of.erase(actor.entity_id)
+	if valid and (actor as EnemyActor) != null and (actor as EnemyActor).entity != null:
+		slot_of.erase((actor as EnemyActor).entity_id)
 	if actor == _brace_holder:
 		_finish_brace()
-	if actor != null and is_instance_valid(actor):
-		actor.call("p30_leave_formation", self)
+	if valid and (actor as Object).has_method("p30_leave_formation"):
+		(actor as Object).call("p30_leave_formation", self)
 
 
 func slot_taken(slot: int) -> bool:
@@ -653,7 +656,8 @@ func _can_advance() -> bool:
 
 
 ## Moves the pivot toward the threat along one path (NavQuery on the human layer, re-asked every
-## PIVOT_REPATH_TICKS or when the goal moved PIVOT_REPATH_MOVE_M, within the director's budget).
+## PIVOT_REPATH_TICKS or when the goal moved PIVOT_REPATH_MOVE_M, within the director's budget: one
+## re-path is one query of it, which NavQuery.path counts).
 func _advance(tick: int, dt: float) -> void:
 	if threat_pos == Vector3.INF:
 		return
@@ -666,8 +670,6 @@ func _advance(tick: int, dt: float) -> void:
 			_path_i = 0
 			_path_goal = goal
 			_path_tick = tick
-			if spend_budget.is_valid():
-				spend_budget.call(1)
 	var step := advance_mps * dt
 	var target := goal
 	while _path_i < _path.size() and _flat(_path[_path_i] - pivot) < 0.3:
@@ -823,17 +825,24 @@ func _standing() -> Array[EnemyActor]:
 	return out
 
 
-static func _alive(m: EnemyActor) -> bool:
-	return m != null and is_instance_valid(m) and m.is_inside_tree() and m.entity != null \
-		and m.entity.combatant != null and m.entity.is_alive()
+## M8 gate (F23): these take any entry of `members` - untyped, checked before the cast - because an entry
+## can be a freed node until the next update prunes it (a typed argument raised "previously freed" in
+## every per-frame reader: the lock line, the march, the group lock).
+static func _alive(m: Variant) -> bool:
+	if m == null or not is_instance_valid(m):
+		return false
+	var a := m as EnemyActor
+	return a != null and a.is_inside_tree() and a.entity != null and a.entity.combatant != null and a.entity.is_alive()
 
 
-static func _fleeing(m: EnemyActor) -> bool:
-	return m.brain != null and m.brain.state == EnemyBrain.AIState.FLEE
+static func _fleeing(m: Variant) -> bool:
+	var a := m as EnemyActor if m != null and is_instance_valid(m) else null
+	return a != null and a.brain != null and a.brain.state == EnemyBrain.AIState.FLEE
 
 
-static func _routed(m: EnemyActor) -> bool:
-	return m.brain != null and m.brain.state == EnemyBrain.AIState.ROUTED
+static func _routed(m: Variant) -> bool:
+	var a := m as EnemyActor if m != null and is_instance_valid(m) else null
+	return a != null and a.brain != null and a.brain.state == EnemyBrain.AIState.ROUTED
 
 
 static func _flat(v: Vector3) -> float:
