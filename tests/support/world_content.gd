@@ -7,12 +7,17 @@ extends RefCounted
 ##   * written_flags(): the world's encounters' cleared flags and their factions' standing flags
 ##     (warned and hostile; reconciled for a faction record with a reconciliation, which FactionState
 ##     writes on its dialogue outcome), the lit flag of every beacon fire of the layout tables
-##     (BeaconFire) and the on_destroyed_flags of every breakable site's prop record.
+##     (BeaconFire) and the on_destroyed_flags of every breakable site's prop record; P35: the forge
+##     fires' lit flags, the bells', braziers', brood nests' and den wall's records' and nodes' flags,
+##     and the bosses' outcome and defeated flags.
 ## Records, the index and the layout tables only (no scene): the default tier's budget. Both are
 ## built once per run (the shipped content does not change during one).
 
 const LEVEL := "level.world"
 const BREAKABLE_SITE := "res://tools/world/kinds/breakable_site.gd"
+## P35: the kinds whose elements are breakable props of their own records (record_of(el)).
+const KINDS_DIR := "res://tools/world/kinds/"
+const P35_BREAKABLE_KINDS := ["bell", "brazier", "nest", "den_wall"]
 
 static var _places: Dictionary = {}
 static var _flags: Dictionary = {}
@@ -86,5 +91,27 @@ static func written_flags() -> Dictionary:
 		var rec := GameData.get_record(str(site.call("record_of", el)))
 		for f: Variant in (rec.get("on_destroyed_flags", {}) as Dictionary):
 			w[str(f)] = true
+	# P35: the forge fires' lit flags (a ForgeFire is a BeaconFire), the on_destroyed_flags of the
+	# breakables P35's kinds place (bells, braziers and bonfires, brood nests, the den's back wall),
+	# the den's nests-burned flag (BroodNest) and wall flag (DenWall), and the bosses' outcome and
+	# defeated flags (EnemyActor writes an enemy record's boss_outcome).
+	for el: Dictionary in elements_of("forge_fire"):
+		if str(el.get("flag", "")) != "":
+			w[str(el.flag)] = true
+	for kind: String in P35_BREAKABLE_KINDS:
+		var script: GDScript = load(KINDS_DIR + kind + ".gd")
+		for el: Dictionary in elements_of(kind):
+			var rec := GameData.get_record(str(script.call("record_of", el)))
+			for f: Variant in (rec.get("on_destroyed_flags", {}) as Dictionary):
+				w[str(f)] = true
+			if script.has_method("written_flags"):
+				for f: Variant in script.call("written_flags", el):
+					w[str(f)] = true
+	for rec: Dictionary in GameData.records_of_type("enemy"):
+		var bo: Variant = rec.get("boss_outcome")
+		if typeof(bo) == TYPE_DICTIONARY:
+			for key: String in ["flag", "defeated_flag"]:
+				if str((bo as Dictionary).get(key, "")) != "":
+					w[str(bo[key])] = true
 	_flags = w
 	return w

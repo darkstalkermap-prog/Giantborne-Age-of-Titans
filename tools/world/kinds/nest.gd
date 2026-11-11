@@ -11,6 +11,7 @@ const K := preload("res://tools/world/kinds/_breakable_kit.gd")
 const SCRIPTED := true
 const S_NEST := "res://scripts/world/brood_nest.gd"
 const RECORD := "prop.brood_nest"
+const DEN_FLAG := "world.troll_den.nests_burned"
 
 
 static func design(el: Dictionary) -> Dictionary:
@@ -42,8 +43,19 @@ static func solids(_el: Dictionary, _ctx: Dictionary) -> Array:
 	return []
 
 
+## The prop record of the element (its `record`, else prop.brood_nest).
+static func record_of(el: Dictionary) -> String:
+	return str(el.get("record", RECORD))
+
+
+## The flag the nest's node writes once every nest of its den burns (BroodNest.den_flag; the
+## content tests).
+static func written_flags(el: Dictionary) -> Array:
+	return [str(el.get("den_flag", DEN_FLAG))]
+
+
 static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
-	return K.build(kit, el, ctx, S_NEST, str(el.get("record", RECORD)), design(el), {
+	return K.build(kit, el, ctx, S_NEST, record_of(el), design(el), {
 		"den_nests": PackedStringArray(el.get("den_nests", [str(el.get("id", ""))])),
-		"den_flag": str(el.get("den_flag", "world.troll_den.nests_burned")),
+		"den_flag": str(el.get("den_flag", DEN_FLAG)),
 		"ignite_radius_m": float(el.get("ignite_m", 9.0))})

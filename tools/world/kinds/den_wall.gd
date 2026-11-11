@@ -14,6 +14,9 @@ const SCRIPTED := true
 const S_DEN_WALL := "res://scripts/world/den_wall.gd"
 const S_HEAVE := "res://scripts/world/heave_point.gd"
 const RECORD := "prop.den_back_wall"
+const NESTS_FLAG := "world.troll_den.nests_burned"
+const BARGAIN_FLAG := "world.troll_den.bargain"
+const WALL_FLAG := "world.troll_den.wall_open"
 
 
 static func design(el: Dictionary) -> Dictionary:
@@ -57,11 +60,21 @@ static func solids(_el: Dictionary, _ctx: Dictionary) -> Array:
 	return []
 
 
+## The prop record of the element (its `record`, else prop.den_back_wall).
+static func record_of(el: Dictionary) -> String:
+	return str(el.get("record", RECORD))
+
+
+## The flag the wall's node writes when the woodfolk open it (DenWall.wall_flag; the content tests).
+static func written_flags(el: Dictionary) -> Array:
+	return [str(el.get("wall_flag", WALL_FLAG))]
+
+
 static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
-	var root := K.build(kit, el, ctx, S_DEN_WALL, str(el.get("record", RECORD)), design(el), {
-		"nests_flag": str(el.get("nests_flag", "world.troll_den.nests_burned")),
-		"bargain_flag": str(el.get("bargain_flag", "world.troll_den.bargain")),
-		"wall_flag": str(el.get("wall_flag", "world.troll_den.wall_open")),
+	var root := K.build(kit, el, ctx, S_DEN_WALL, record_of(el), design(el), {
+		"nests_flag": str(el.get("nests_flag", NESTS_FLAG)),
+		"bargain_flag": str(el.get("bargain_flag", BARGAIN_FLAG)),
+		"wall_flag": str(el.get("wall_flag", WALL_FLAG)),
 		"woodfolk_delay_s": float(el.get("woodfolk_s", 20.0))})
 	var s := L.size3(el, Vector3(20, 10, 7))
 	var heave := Node3D.new()

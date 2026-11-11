@@ -70,5 +70,10 @@ static func solids(_el: Dictionary, _ctx: Dictionary) -> Array:
 	return []
 
 
+## The prop record of the element (its `record`, else its style's).
+static func record_of(el: Dictionary) -> String:
+	return str(el.get("record", RECORDS[style_of(el)]))
+
+
 static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
-	return K.build(kit, el, ctx, S_BREAKABLE, str(el.get("record", RECORDS[style_of(el)])), design(el))
+	return K.build(kit, el, ctx, S_BREAKABLE, record_of(el), design(el))

@@ -201,7 +201,9 @@ func test_the_cairns_and_the_caches() -> void:
 				cairns += 1
 			"cache", "ledge":
 				caches += 1
-	assert_eq(cairns, CAIRNS.size(), "seven cairns (the six sealed ones come with their regions)")
+	# The six sealed ones come with their regions (P35's three: the old root, the sunken vault, the
+	# Titan's shoulder): seven, and at most the plan's thirteen once every region has shipped.
+	assert_true(cairns >= CAIRNS.size() and cairns <= 13, "seven cairns and the sealed ones of the regions shipped (%d)" % cairns)
 	assert_true(caches >= 25, "caches at ruins, vistas and the POIs that would hold nothing else (%d)" % caches)
 	for region: String in LAYOUT_REGIONS:
 		for it: Dictionary in _layout(region).get("caches", []):

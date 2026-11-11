@@ -76,16 +76,21 @@ func test_the_light_encounters_use_existing_archetypes_within_the_rules() -> voi
 	assert_true(light.size() >= 8, "two light encounters in each of four regions (%d)" % light.size())
 	for enc: Dictionary in light:
 		var id := str(enc.id)
-		assert_true(float(enc.get("leash_radius_m", 0.0)) > 0.0 and float(enc.leash_radius_m) <= MAX_LEASH_M,
+		# M8 (P35, P36): an arena boss's encounter is held by its arena's disengage rule instead of a
+		# leash (GameData's leash rule exempts `arena: true`), and the regions' settlements and talkers
+		# spawn npc records (folk, elders, the ferrywoman) beside the enemies.
+		var arena := bool(enc.get("arena", false))
+		assert_true(arena or (float(enc.get("leash_radius_m", 0.0)) > 0.0 and float(enc.leash_radius_m) <= MAX_LEASH_M),
 			"%s has a leash of at most 70 m" % id)
 		var c := _xz(enc.center_m)
 		var at_once := 0
 		for sp: Dictionary in enc.spawns:
 			var def := GameData.get_record(str(sp.definition))
-			assert_eq(str(def.get("type", "")), "enemy", "%s spawns an existing archetype (%s)" % [id, sp.definition])
-			assert_true(_xz(sp.position_m).distance_to(c) <= float(enc.leash_radius_m), "%s's %s starts inside its leash" % [id, sp.entity_id])
+			var type := str(def.get("type", ""))
+			assert_true(type == "enemy" or type == "npc", "%s spawns an existing archetype (%s)" % [id, sp.definition])
+			assert_true(arena or _xz(sp.position_m).distance_to(c) <= float(enc.leash_radius_m), "%s's %s starts inside its leash" % [id, sp.entity_id])
 			assert_true(str(sp.entity_id).begins_with("world."), "%s's spawn ids are world ids" % id)
-			if int(sp.get("max_stage", 10)) >= 4 and int(sp.get("min_stage", 0)) <= 4:
+			if type == "enemy" and int(sp.get("max_stage", 10)) >= 4 and int(sp.get("min_stage", 0)) <= 4:
 				at_once += 1
 		assert_true(at_once <= BUDGET, "%s fits the combatant budget at stage 4 (%d)" % [id, at_once])
 		var chunk := str(_index().encounters.get(id, {}).get("chunk", ""))
