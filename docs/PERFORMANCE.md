@@ -767,6 +767,41 @@ The gate's searches within the path-query budget (`docs/systems/P24b.md`, "M7 ga
 desktop side: the reviewer's world walk at stage 4 past the Raiders' Hollow to Brannock (headless)
 went from `cpu_tick_ms` max 36.1 to 10.4-14.0 ms (two runs) and p99 7.4 to 5.6-5.7 ms.
 
+### The M7 polish (lane B): civilians within the path-query budget
+
+A town's folk fleeing at once (`docs/systems/P24b.md`, "M7 polish"): Brannock turned hostile with a
+stage-4 giant on its street and all eight villagers deciding in the same tick (the worst their
+decision phases allow), headless, the slow suite's measurement
+(`tools/gd.sh --headless --path . --fixed-fps 60 res://tests/run_tests.tscn -- --no-user-settings
+--no-audio --slow --filter=test_m7_polish_world`):
+
+| | Path queries in the worst tick | Ticks over the budget of 8 | The actors' phase, worst tick | Every villager in shelter |
+| --- | --- | --- | --- | --- |
+| Before (two runs) | 16 counted by NavQuery + 8 agent paths it did not count (24) | 1 | 7.9-8.4 ms | yes, the last after 16.7 s |
+| After (three runs) | 8, the agent paths counted | 0 | 3.6-8.4 ms (noisy: the container) | yes, the last after 16.7 s |
+
+With the villagers' natural decision phases the same flight spent at most 6 counted queries a tick
+before the change. P37's Millford raid and P39's performance capture re-measure with raiders in the
+town.
+
+### The M7 polish (lane B): the human map's edge merge
+
+Every chunk's navmeshes of a layer on one map, as `NavMaps` sets it up (`docs/systems/P24b.md`, "M7
+polish"), the navigation server's own counts after one sync: the human map 70,832 edges, 45,015
+merged, 455 connections between regions and 16 edge errors (c4_1, c4_2, c5_2 and c6_6, four each)
+before the explicit merge scale; 70,840, 45,023, 455 and 0 after. The large (53,251 / 32,408 / 355)
+and titan maps (43,909 / 25,796 / 572, gate regions included) are the same either way, as are the
+test world's three. (Counted with the toll fort's tower on its new place, lane B's c5_5 rebuild; before
+it the human map had 70,841 / 45,021 edges with the default scale, 70,849 / 45,029 with the explicit
+one, the large map 53,249 / 32,407.) A carried walk at 16 m/s through the four chunks printed four edge-error warnings
+before (one per region sync) and none after:
+
+```
+tools/gd.sh --headless --path . --fixed-fps 60 -- --no-user-settings --no-audio --mode=world --new-game \
+  --scenario=world_walk --graphics=low --autoplay=1200 --walk-speed=16 \
+  "--route=-300:780;60:450;120:-350;150:-650;380:-400;620:600;200:330"
+```
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |

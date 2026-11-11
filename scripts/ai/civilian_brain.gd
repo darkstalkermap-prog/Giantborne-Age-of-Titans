@@ -10,7 +10,10 @@ extends RefCounted
 ##         * its faction turns hostile or stands down (perceived flags, or on_faction()).
 ##   FLEE  asks the resolver once for the nearest reachable safe marker and runs there; only a
 ##         path failure (on_path_failed) makes it ask again (the failed marker is skipped). With
-##         nowhere reachable it stands where it is and asks again every REPICK_S.
+##         nowhere reachable it stands where it is and asks again every REPICK_S. A search the
+##         resolver stopped for the tick's path-query budget (nav_search_pending; M7 polish) is
+##         asked for again at the next decision, where it resumes - it is the same choice, not a new
+##         pick, and not "nowhere reachable".
 ##   SAFE  arrived (within ARRIVE_M): the actor stops processing it.
 ##   DEAD  killed.
 ##   GIVE_WAY (P22, plan M6-M9 §2.12, decision 31): a civilian of a faction whose record has
@@ -55,6 +58,9 @@ var perception: Dictionary = {}
 ## safe_resolver(from: Vector3, skip_failed: bool) -> Vector3: the nearest reachable safe point
 ## (Vector3.INF = none). The actor installs it; unset, the civilian has nowhere to go.
 var safe_resolver := Callable()
+## True when the resolver's last answer stopped for the tick's path-query budget (the actor sets it,
+## M7 polish): the next decision asks again and the search resumes where it stopped.
+var nav_search_pending := false
 
 # Outputs, read by the actor every tick.
 var move_target := Vector3.INF
@@ -158,7 +164,7 @@ func decide(tick: int, my_position: Vector3, alive: bool) -> void:
 			face_point = perception.get("position", Vector3.INF) if near else Vector3.INF
 		State.FLEE:
 			face_point = Vector3.INF
-			if destination == Vector3.INF and now - _last_pick_tick >= int(REPICK_S * TICK_RATE):
+			if destination == Vector3.INF and (nav_search_pending or now - _last_pick_tick >= int(REPICK_S * TICK_RATE)):
 				_pick(my_position, false)
 			if destination == Vector3.INF:
 				move_target = Vector3.INF
@@ -184,9 +190,14 @@ func on_path_failed(my_position: Vector3) -> void:
 		_set_state(State.IDLE)
 
 
+## Asks the resolver for a destination. A search that stopped for the budget and resumes now is the
+## same pick (picks counts choices, not the ticks one took).
 func _pick(my_position: Vector3, skip_failed: bool) -> void:
+	var resuming := nav_search_pending and not skip_failed
+	nav_search_pending = false
 	_last_pick_tick = now
-	picks += 1
+	if not resuming:
+		picks += 1
 	destination = safe_resolver.call(my_position, skip_failed) if safe_resolver.is_valid() else Vector3.INF
 
 

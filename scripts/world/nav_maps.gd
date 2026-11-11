@@ -16,9 +16,25 @@ extends RefCounted
 ##
 ## Regions are server RIDs (no nodes): a chunk's are freed when it unloads (remove_chunk) and every
 ## map and region when the level goes (free_all).
+##
+## The edge merge (M7 polish). A map joins its regions' polygons by keying every polygon edge on its
+## two vertices floored to the map's merge-rasterizer cell, (cell size, cell height, cell size) x
+## merge_rasterizer_cell_scale (0.1); more than two edges on one key is an "edge error" and none of
+## them connects. Godot 4.6.3 applies that scale only when a map's cell size or height changes from
+## the engine's defaults (0.25 / 0.25), so the human map - whose navmeshes use exactly those - keyed
+## its edges in 0.25 m cells while the large and titan maps used 0.05 m and 0.1 m: the human meshes of
+## c4_1, c4_2, c5_2 and c6_6 had near-duplicate vertices 5-7 cm apart in one 0.25 m cell, four edge
+## errors each on every sync. setup() therefore sets the scale explicitly (MERGE_RASTERIZER_SCALE,
+## through a different value first: the engine skips a set to the scale it already holds), so every
+## layer's map keys at its cell x 0.1. NavBake welds and checks its bakes in the same cells
+## (NavBake.merge_cell); the slow suite loads every chunk of every layer through this class and fails
+## on any edge error (tests/slow/test_m7_polish_world.gd).
 
 ## The map a query on layer 0 uses (the human map).
 const DEFAULT_LAYER := 1
+## Every map's merge-rasterizer cell is its cell size and height times this (the engine's own 0.1;
+## see the header).
+const MERGE_RASTERIZER_SCALE := 0.1
 
 ## The level's nav layers (single bits, as the world block lists them).
 var layers := PackedInt32Array()
@@ -57,10 +73,19 @@ func setup(p_layers: Array, p_gate_bits: Array, p_gate_layer := 16, p_determinis
 		var m := NavigationServer3D.map_create()
 		NavigationServer3D.map_set_up(m, Vector3.UP)
 		NavigationServer3D.map_set_use_edge_connections(m, false)
+		set_merge_scale(m)
 		if deterministic:
 			NavigationServer3D.map_set_use_async_iterations(m, false)
 		NavigationServer3D.map_set_active(m, true)
 		_maps[bit] = m
+
+
+## Makes map `m` key its edges at its cell size and height x MERGE_RASTERIZER_SCALE whatever cells it
+## gets (see the header): the scale is set to half its value, then to it, so the engine applies it
+## even to a map that keeps the default cells. Commands run in order at the next sync.
+static func set_merge_scale(m: RID) -> void:
+	NavigationServer3D.map_set_merge_rasterizer_cell_scale(m, MERGE_RASTERIZER_SCALE * 0.5)
+	NavigationServer3D.map_set_merge_rasterizer_cell_scale(m, MERGE_RASTERIZER_SCALE)
 
 
 ## True when the level has maps (a world block with nav layers).

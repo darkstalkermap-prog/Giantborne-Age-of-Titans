@@ -17,6 +17,17 @@ extends RefCounted
 ## Lean settings (brief §5.1: about half the polygons): edge_max_error 2 cells, detail sample
 ## distance 24 cells, detail sample error 4 cell heights.
 ##
+## M7 polish: the map's edge keys. The navigation server joins polygons by keying every edge on its
+## two vertices floored to the map's merge-rasterizer cell - the cell size and height x
+## NavMaps.MERGE_RASTERIZER_SCALE (0.1), in world space - and an edge key that more than two edges
+## share is an "edge error": none of them connects. The detail triangulation leaves pairs of vertices
+## a few centimetres apart with sliver triangles between them (the human meshes of c4_1, c4_2, c5_2
+## and c6_6, 5-7 cm): harmless in 0.025 m cells, four errors each in the 0.25 m cells the human map
+## used before NavMaps set the scale explicitly (scripts/world/nav_maps.gd). Every bake is welded in
+## those cells (weld_for_map: vertices sharing a key become one, its collapsed slivers go; no bake
+## of the shipped worlds has such a pair, so it changes nothing today) and checked (edge_conflicts: a
+## key left with more than two edges is a build error naming the chunk and the place).
+##
 ## Layers (plan §2.2): human (1), large (2) and titan (16). Water deeper than MAX_WADE_M is left
 ## out of the human and large meshes (a projected obstruction over every deep cell). The titan mesh
 ## keeps the water bed walkable, and its polygons that touch gated ground (the builder's gate_at:
@@ -421,7 +432,8 @@ static func polygon_gate(verts: PackedVector3Array, poly: PackedInt32Array, orig
 ## Every navmesh of one chunk: {bit: NavigationMesh} for the human (1), large (2) and titan (16)
 ## layers and the titan gate regions (32 / 64 / 128) gate_at marks. `obstacles` and `water` are in
 ## world space (water: [{"rect": Rect2 world x, z, "surface_y"}]); `walkable` (Callable(world_x,
-## world_z) -> bool) leaves the terrain it refuses out. Layers without a polygon are left out.
+## world_z) -> bool) leaves the terrain it refuses out. Layers without a polygon are left out. Each
+## layer is welded for its map (weld_for_map, before the titan mesh is split by gate).
 static func bake_chunk(field: HeightField, origin: Vector3, size: float, obstacles: Array, water: Array,
 		gate_at := Callable(), walkable := Callable()) -> Dictionary:
 	var out := {}
@@ -429,6 +441,11 @@ static func bake_chunk(field: HeightField, origin: Vector3, size: float, obstacl
 	for spec: Dictionary in LAYERS:
 		var src := source_for(spec, field, origin, size, obstacles, water, walkable)
 		var nm := bake_layer(spec, src, size, ground)
+		weld_for_map(nm, origin)
+		var left := edge_conflicts(nm, origin)
+		if not left.is_empty():
+			push_error("NavBake: the %s navmesh of the chunk at %s keeps %d edge key(s) shared by more than two edges, the first near %s: its map would not connect them" % [
+				spec.name, origin, left.size(), (left[0].at as Vector3).snapped(Vector3(0.01, 0.01, 0.01))])
 		if nm.get_polygon_count() == 0:
 			continue
 		if int(spec.layer) == TITAN_LAYER:
@@ -437,6 +454,113 @@ static func bake_chunk(field: HeightField, origin: Vector3, size: float, obstacl
 				out[bit] = parts[bit]
 		else:
 			out[int(spec.layer)] = nm
+	return out
+
+
+# --------------------------------------------------------------------------- the map's edge keys (M7 polish)
+
+## The merge-rasterizer cell a layer's map keys `nm`'s edges in: its cell size and height (NavMaps gives
+## each layer's map its navmeshes' cells) x NavMaps.MERGE_RASTERIZER_SCALE, as the server multiplies
+## them (single precision).
+static func merge_cell(nm: NavigationMesh) -> Vector3:
+	return Vector3(nm.cell_size, nm.cell_height, nm.cell_size) * NavMaps.MERGE_RASTERIZER_SCALE
+
+
+## The server's point key of a region's vertex `v` at `origin` (its region transform): the vertex
+## moved to the world and divided by `cell`, each in single precision as the server does (Vector3
+## operations), then floored.
+static func point_key(v: Vector3, origin: Vector3, cell: Vector3) -> Vector3i:
+	return Vector3i(((Transform3D(Basis(), origin) * v) / cell).floor())
+
+
+## Welds `nm` for its map at `origin` (the chunk's region transform): vertices that share a point key
+## become the first of them - in the same key, so no edge key changes and seams still meet - a polygon
+## left with a repeated vertex (a collapsed sliver) or the same vertices as another is dropped, and
+## vertices no polygon uses go. Returns how many vertices were welded away; 0 leaves the mesh
+## untouched (byte for byte).
+static func weld_for_map(nm: NavigationMesh, origin: Vector3) -> int:
+	var cell := merge_cell(nm)
+	var verts := nm.get_vertices()
+	var first := {}   # point key -> the first vertex index in it
+	var remap := PackedInt32Array()
+	remap.resize(verts.size())
+	var welded := 0
+	for i in verts.size():
+		var k := point_key(verts[i], origin, cell)
+		if first.has(k):
+			remap[i] = int(first[k])
+			welded += 1
+		else:
+			first[k] = i
+			remap[i] = i
+	if welded == 0:
+		return 0
+	var polys: Array[PackedInt32Array] = []
+	var seen := {}
+	for p in nm.get_polygon_count():
+		var np := PackedInt32Array()
+		var collapsed := false
+		for idx in nm.get_polygon(p):
+			var r := remap[idx]
+			if np.has(r):
+				collapsed = true
+				break
+			np.append(r)
+		if collapsed or np.size() < 3:
+			continue
+		var sorted := np.duplicate()
+		sorted.sort()
+		var key := str(sorted)
+		if seen.has(key):
+			continue
+		seen[key] = true
+		polys.append(np)
+	var used := {}
+	for np in polys:
+		for idx in np:
+			used[idx] = true
+	var compact := {}
+	var out_verts := PackedVector3Array()
+	for i in verts.size():
+		if used.has(i):
+			compact[i] = out_verts.size()
+			out_verts.append(verts[i])
+	nm.clear_polygons()
+	nm.set_vertices(out_verts)
+	for np in polys:
+		var cp := PackedInt32Array()
+		for idx in np:
+			cp.append(int(compact[idx]))
+		nm.add_polygon(cp)
+	return welded
+
+
+## The edge keys of `nm` at `origin` that more than two polygon edges share - the map's "edge errors"
+## (see weld_for_map) - as [{"at": Vector3 (world, the edge's middle), "edges": n}], nearest the
+## origin's corner first. Empty for a mesh its map merges cleanly on its own.
+static func edge_conflicts(nm: NavigationMesh, origin: Vector3) -> Array:
+	var cell := merge_cell(nm)
+	var verts := nm.get_vertices()
+	var count := {}   # [ka, kb] (sorted) -> [edges, the first edge's middle]
+	for p in nm.get_polygon_count():
+		var poly := nm.get_polygon(p)
+		for e in poly.size():
+			var a := verts[poly[e]]
+			var b := verts[poly[(e + 1) % poly.size()]]
+			var ka := point_key(a, origin, cell)
+			var kb := point_key(b, origin, cell)
+			var key := [ka, kb] if (ka.x < kb.x or (ka.x == kb.x and (ka.y < kb.y or (ka.y == kb.y and ka.z <= kb.z)))) else [kb, ka]
+			var ks := str(key)
+			if count.has(ks):
+				(count[ks] as Array)[0] = int(count[ks][0]) + 1
+			else:
+				count[ks] = [1, origin + (a + b) * 0.5]
+	var out: Array = []
+	for ks: String in count:
+		if int(count[ks][0]) > 2:
+			out.append({"at": count[ks][1], "edges": int(count[ks][0])})
+	out.sort_custom(func(x: Dictionary, y: Dictionary) -> bool:
+		return (x.at as Vector3).x < (y.at as Vector3).x or ((x.at as Vector3).x == (y.at as Vector3).x and (x.at as Vector3).z < (y.at as Vector3).z))
 	return out
 
 

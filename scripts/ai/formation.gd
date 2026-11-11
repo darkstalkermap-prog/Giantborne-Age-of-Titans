@@ -25,7 +25,10 @@ extends RefCounted
 ##              of the target's melee tokens for its duration; the others only pose;
 ##   broken     fewer than BROKEN_COHESION of its members stand (living, not fleeing): they fight on
 ##              their own until enough regroup;
-##   routed     none stands and at least one fled: over for good.
+##   routed     none stands and none will come back: every living member routed (a routed unit never
+##              regroups), or one fled and no banner lives to lead them back: over for good. (M7
+##              polish: a living banner keeps a formation whose members only fled broken - they
+##              regroup to their slots and it forms again; it was routed the moment all fled at once.)
 ## banner_fell is announced once when the banner dies (its members take it as their commander's
 ## death: EnemyActor's P30 section). While the banner lives its members lose half the morale of awe
 ## and ally deaths and regroup to their slots (EnemyBrain's P30 section); every rally_interval_s it
@@ -556,9 +559,8 @@ func _decide_state() -> String:
 		return "routed"
 	var standing := _standing()
 	if standing.is_empty():
-		for m in all_members():
-			if _routed(m) or _fleeing(m):
-				return "routed"
+		if _routed_for_good():
+			return "routed"
 		return "broken" if peak_members > 0 else "formed"
 	if cohesion() < BROKEN_COHESION:
 		return "broken"
@@ -570,6 +572,27 @@ func _decide_state() -> String:
 	if advance_mps > 0.0 and _can_advance() and gap > maxf(0.0, brace_m - ADVANCE_SLACK_M):
 		return "advancing"
 	return "formed"
+
+
+## With none of its rank and file standing: true when none will come back (see the class notes).
+## Every living member routed - a routed unit never regroups; or they fled and no banner lives - a
+## member regroups only around its banner (EnemyActor._p30_has_leader). While the banner lives, members
+## that only fled regroup to their slots above ai.regroup_morale (plan §2.10, §3.13), so the formation
+## is broken meanwhile, not routed for good (M7 polish: every member fleeing at once - two Titan Roars
+## can do that - left it routed, and the members came back as loose soldiers without brace or slot).
+## With no rank and file alive, the banner's own flight routs it, as before.
+func _routed_for_good() -> bool:
+	var living := 0
+	var routed := 0
+	for m in members:
+		if not _alive(m):
+			continue
+		living += 1
+		if _routed(m):
+			routed += 1
+	if living == 0:
+		return banner_alive() and (_routed(banner) or _fleeing(banner))
+	return routed == living or not banner_alive()
 
 
 func _set_state(tick: int, next: String) -> void:
