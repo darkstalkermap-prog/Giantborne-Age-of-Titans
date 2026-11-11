@@ -61,3 +61,18 @@ renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 anti_aliasing/quality/msaa_3d=1
 lights_and_shadows/directional_shadow/size=2048
+
+[shader_globals]
+
+scenery_fade_camera={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+scenery_fade_focus={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+scenery_fade_target={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}

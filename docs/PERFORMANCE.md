@@ -1142,6 +1142,60 @@ minutes), gate 414.5 s (468.4 s; 50 minutes); the 120 s soak with 0 errors (2 fe
 the debris pool at 10). The whole check took 16 min 38 s. No frame time or draw calls were re-measured: the
 lane changed no builder, layout, chunk, generated output or audio.
 
+### The M8 screenshot pass, lane m8v (trees that fade, the lock line, the riders)
+
+**V1: the trees' fade** (`docs/systems/P25.md`, "M8 screenshot pass"). The world's two tree meshes and
+the Valley's tree MultiMeshes are drawn with `assets/shaders/scenery_fade.gdshader` instead of the vertex
+material: the same MultiMeshes and the same number of draw calls (another material, no node more), a
+world position per vertex, and per fragment two cone tests and, inside a cone or near the camera, an
+ordered-dither discard. Its cost, measured in one process with the trees switched between the fade and
+the old material every 40 frames (six rounds, 240 frames each; Xvfb 1280 x 720, llvmpipe on the
+container's shared cores, `low`; the viewport's measured render time, which on llvmpipe is the CPU's
+rasterising - indicative, the frame budget is the owner's on a GPU):
+
+| Place (stage 4, the arm at 15.5 m) | Render p50 / mean, the fade | The old material | Frame p50 / mean, the fade | The old material |
+| --- | --- | --- | --- | --- |
+| The Hollowmere waystone (the Greywood's pines all round, several in the cones) | 185.6 / 188.4 ms | 172.4 / 181.7 ms | 206.2 / 211.5 ms | 197.7 / 207.6 ms |
+| The way into the Matriarch's den | 128.7 / 130.5 ms | 128.5 / 130.1 ms | 160.2 / 161.4 ms | 158.9 / 161.4 ms |
+
+At most about 4 % of a frame (the render mean +3.7 % among the densest pines; nothing at the den), from
+the fragments of the trees on screen. The draw calls the before and after captures counted at the same
+views: Hollowmere 83 and 83, the den approach 121 and 121. The web build (`tools/build_web.sh
+--out=builds/web_m8v`, the release preset) ships `index.pck` 17,441,828 bytes (12,982,854 gzipped),
+17,310,472 as shipped, 16.51 MB in two parts of the 23 MB budget; the shader and its four materials
+are a few kilobytes. `node tools/web/stream_check.mjs --build=builds/web_m8v --world` (headless
+Chromium, SwiftShader, the world's default 397 m route across four region borders): OK - console errors
+0 (the shader compiles in WebGL2), failed requests 0; streaming work p50 0.8 / p99 5.7 / max 9.3 ms, 6
+loads, 3 unloads, no thrash, 224.1 m of margin; draw calls p50 38, max 54; page frames p50 266.7, p99
+400.0 ms (software WebGL, indicative); Play to the walk 45.0 s.
+
+**The lane's suites** ("M8 screenshot pass" in `docs/systems/P25.md`, `P26.md`, `P27.md`, `P32.md`,
+`P34.md` and the others it names). In the default tier: `test_scenery_fade` (new; V1: 110 checks,
+0.11 s), V2's test in `test_hud_layout` (0.40 s in all), V3's in `test_battle_boss` (0.41 s in all) and
+`test_cavalry` (0.10 s in all). In the slow tier: `test_tree_fade_world` (new; V1: four places on the
+real world and the Valley, 38 checks, 4.2 s) and `test_world_cavalry` (new; V3: Fort Aldmere's Charge and
+the war camp on the real world, 19 checks, 10.6 s). No gate suite changed; `test_bosses_seeded`,
+`test_iron_regiment_world` and `test_world_events_real` pass with the battle's alert and the riders'
+leash. `tools/check.sh --slow --gate --only=valley,world` on the lane's code (09377c3, 13.9 minutes): the
+valley and world builders wrote the same bytes as the committed outputs, the seam check passed (64
+chunks, 112 seams), 270 suites and 46,249 checks with 0 failures - default 64.1 s (budget 75 s), slow
+253.4 s (8 minutes), gate 439.0 s (50 minutes) - and the 120 s autoplay had 0 errors (2 fences broken, 2
+loot awards, the debris pool at 10).
+
+**The fix-up** (the verifier's two findings: "M8 screenshot pass" in `docs/systems/P32.md`, `P10a.md` and
+`P25.md`). In the default tier: `test_scenery_fade` gains the shader's own rule run against `SceneryFade`
+(`tests/support/shader_rule.gd`; 150 checks, 0.25 s in all), `test_cavalry` a rider beside the giant at
+its leash's edge (42 checks, 0.12 s in all) and `test_encounter_director` an alert group's freshest
+knowledge (1.10 s in all). In the slow tier: `test_world_cavalry` gains the giant among the war camp's
+pickets (23 checks, 15.4 s in all). No frame cost to speak of: the leash's turn tries at most eleven
+bearings, and only when the leash's edge would leave the giant inside a rider's charge window; the alert
+share reads every member of an active alert group each tick (it read until the first aware one); the
+shader is unchanged. `tools/check.sh --slow --gate --only=valley,world` on 24be0e3 (about 14 minutes): the
+valley and world builders wrote the same bytes as the committed outputs, the seam check passed (64 chunks,
+112 seams), 270 suites and 46,305 checks with 0 failures - default 58.0 s (budget 75 s), slow 250.5 s (8
+minutes), gate 427.7 s (50 minutes) - and the 120 s autoplay had 0 errors (2 fences broken, 2 loot awards,
+the debris pool at 10).
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |

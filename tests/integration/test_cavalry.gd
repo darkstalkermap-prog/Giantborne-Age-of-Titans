@@ -9,6 +9,10 @@ extends IntegrationSuite
 ##     hit as it rides through a stage-4 giant's legs - struck as a 4 m attacker - without shoving the
 ##     giant along the line, and the horse collides with actors again once its run is over; then a
 ##     giant that steps off the line after the commit is not hit (the rider does not turn after it).
+##   * M8 screenshot pass (V3): the leash - a rider rides for its start point only as far as its leash
+##     allows, holds there facing the giant and charges from there once he is in its window; with the giant
+##     close beside it (inside its window's near edge) it never holds: it turns its approach round him to a
+##     start point the leash allows, and charges or thrusts its lance within seconds.
 
 const CAVALRY := "res://scenes/enemies/cavalry.tscn"
 const CHARGE := "ability.cavalry_charge"
@@ -224,3 +228,175 @@ func test_the_charge_strikes_once_through_the_legs_and_a_step_off_the_line_after
 	assert_true(absf(c.global_position.x - x0) < 0.3, "committed, it kept its line (x %.2f)" % c.global_position.x)
 	assert_eq(_charge_hits(p.entity.entity_id).size(), 1, "the giant that stepped aside is not hit")
 	c.queue_free()
+
+
+# --------------------------------------------------------------------------- the leash (M8 screenshot pass)
+
+## M8 screenshot pass (V3): a rider rides for its start point only as far as its leash allows. The war
+## camp's riders, posted at the edge of the camp's 70 m leash, rode for a start point beyond it, were sent
+## home, saw the giant again and rode out again (60 leashes a minute, no charge). On CavalryBrain with a
+## leash clamp like CavalryEnemy's (70 m round the centre, 3 m short of its edge): from its post it holds,
+## facing the giant; from farther in it rides only to the leash; and it charges from its post once the
+## giant is in its window. The fix-up's cases: the giant close beside its post (inside the window's near
+## edge) - it turns its approach round him to a start point inside the leash and its window, and it rides on
+## to a leash's-edge start point it stands short of (it held, beside him, in both). Without a leash it rides
+## for its start point as before.
+func test_the_leash_keeps_the_approach_inside_it() -> void:
+	var rec: Dictionary = GameData.get_record("enemy.cavalry")
+	var radius := 2.2   # a stage-4 giant
+	var edge_m := 70.0 - 3.0
+	var clamp := func(pt: Vector3) -> Vector3:
+		var off := Vector2(pt.x, pt.z)
+		if off.length() <= edge_m:
+			return pt
+		off = off.normalized() * edge_m
+		return Vector3(off.x, pt.y, off.y)
+	var req := func() -> bool: return true
+	var rel := func() -> void: pass
+	var t0 := 1000
+	var b := CavalryBrain.new("test.v3_leash", rec, 7)
+	b.leash_clamp = clamp
+	var decide_at := func(br: CavalryBrain, tick: int, me: Vector3, giant: Vector3) -> void:
+		var to := giant - me
+		br.perceive(tick, {"exists": true, "target_id": "player", "alive": true, "position": giant,
+			"distance": to.length(), "visible": true, "facing_deg": 0.0, "target_radius": radius,
+			"target_forward": Vector3.LEFT, "target_height": 10.9728, "target_stage": 4, "target_state": LOCO,
+			"self_health_frac": 1.0, "has_leader": true})
+		if br.state != EnemyBrain.AIState.APPROACH and br.state != EnemyBrain.AIState.ATTACK:
+			br.state = EnemyBrain.AIState.APPROACH
+			br.state_tick = tick
+		br.decide(tick, LOCO, me, req, rel)
+	# At its post 66 m out, the giant 40 m beyond it: its start point (24 m short of him, 82 m out) is past
+	# the leash - it holds where it stands, facing him.
+	var post := Vector3(66, 0, 0)
+	var giant := Vector3(106, 0, 0)
+	decide_at.call(b, t0, post, giant)
+	assert_true(b.held_by_leash, "the leash keeps it short of its start point")
+	assert_eq(b.move_target, Vector3.INF, "at the leash's edge it holds")
+	assert_true(b.face_point.is_equal_approx(giant), "facing the giant")
+	assert_eq(b.attack_request, "", "no charge from 37.8 m off his surface (window %s)" % b.start_window())
+	# From farther in, it rides out only as far as the leash allows.
+	decide_at.call(b, t0 + 6, Vector3(40, 0, 0), giant)
+	assert_true(b.move_target != Vector3.INF and absf(b.move_target.x - edge_m) < 0.01,
+		"it rides to %s, the leash's edge (not to its start point, 82 m out)" % b.move_target)
+	# The giant comes within its window: it charges from its post.
+	giant = Vector3(88, 0, 0)
+	decide_at.call(b, t0 + 12, post, giant)
+	assert_eq(b.attack_request, CHARGE, "it charges from the leash's edge (%.1f m off his surface)" % (22.0 - radius))
+	# M8 screenshot pass fix-up (V3): the giant close beside its post, 3.8 m off his surface - inside the
+	# window's near edge (8 m), out of lance reach (3.2 m) - with the leash's edge behind it: the start point
+	# brought inside the leash would leave him too close for a charge. It does not hold there (it stood beside
+	# him, facing him, for good): it turns its approach round him to a start point inside the leash and inside
+	# its window.
+	var window := b.start_window()
+	var near := CavalryBrain.new("test.v3_leash_near", rec, 7)
+	near.leash_clamp = clamp
+	var close_giant := Vector3(60, 0, 0)
+	decide_at.call(near, t0 + 18, post, close_giant)
+	assert_eq(near.attack_request, "", "no attack fits 3.8 m off his surface")
+	assert_true(near.move_target != Vector3.INF, "it does not stand beside him (move_target %s)" % near.move_target)
+	if near.move_target != Vector3.INF:
+		var start_edge := _flat(near.move_target, close_giant) - radius
+		assert_true(Vector2(near.move_target.x, near.move_target.z).length() <= edge_m + 0.01,
+			"it rides to a start point inside the leash (%s, %.1f m out)" % [near.move_target,
+			Vector2(near.move_target.x, near.move_target.z).length()])
+		assert_true(start_edge >= window.x and start_edge <= window.y,
+			"a start point inside its window (%.1f m off his surface; %.0f-%.0f)" % [start_edge, window.x, window.y])
+	# The leash's edge is a start point (9.8 m off his surface) and it stands 4.5 m short of it, 5.3 m off his
+	# surface: it rides on to it (it held there, inside the window's near edge, for good).
+	var short := CavalryBrain.new("test.v3_leash_short", rec, 7)
+	short.leash_clamp = clamp
+	decide_at.call(short, t0 + 24, Vector3(62.5, 0, 0), Vector3(55, 0, 0))
+	assert_true(short.move_target != Vector3.INF and short.move_target.is_equal_approx(Vector3(edge_m, 0, 0)),
+		"it rides on to the leash's edge, a start point (move_target %s)" % short.move_target)
+	# Without a leash it rides for its start point as before.
+	var free := CavalryBrain.new("test.v3_free", rec, 7)
+	free.perceive(t0, {"exists": true, "target_id": "player", "alive": true, "position": Vector3(106, 0, 0),
+		"distance": 40.0, "visible": true, "facing_deg": 0.0, "target_radius": radius, "target_forward": Vector3.LEFT,
+		"target_height": 10.9728, "target_stage": 4, "target_state": LOCO, "self_health_frac": 1.0, "has_leader": true})
+	free.state = EnemyBrain.AIState.APPROACH
+	free.state_tick = t0
+	free.decide(t0 + 6, LOCO, post, req, rel)
+	assert_false(free.held_by_leash, "no leash")
+	assert_true(free.move_target != Vector3.INF and absf(free.move_target.x - 82.0) < 0.01,
+		"it rides for its start point, 24 m short of the giant (%s)" % free.move_target)
+
+
+## M8 screenshot pass fix-up (V3): a rider at the edge of its leash with the giant close beside it never
+## freezes. A kinematic stand-in (it runs to the brain's move_target at the record's run speed and faces its
+## face point at once) at its post 66 m out under a 70 m leash (a clamp like CavalryEnemy's, LEASH_MARGIN_M
+## short of its edge), the giant 4.5-10 m from it on eight bearings - inside the window's near edge, the
+## leash's edge behind it or beside it: within 4 s it charges or thrusts its lance, and it never rides past
+## the leash's edge. (It stood still beside him, facing him, wherever the start point brought inside the
+## leash left him inside its window's near edge.)
+func test_a_rider_at_its_leash_edge_beside_the_giant_still_attacks() -> void:
+	var rec: Dictionary = GameData.get_record("enemy.cavalry")
+	var radius := 2.2   # a stage-4 giant
+	var leash_m := 70.0
+	var edge_m := leash_m - CavalryEnemy.LEASH_MARGIN_M
+	var clamp := func(pt: Vector3) -> Vector3:
+		var off := Vector2(pt.x, pt.z)
+		if off.length() <= edge_m:
+			return pt
+		off = off.normalized() * edge_m
+		return Vector3(off.x, pt.y, off.y)
+	var req := func() -> bool: return true
+	var rel := func() -> void: pass
+	var dt := 1.0 / Sim.TICK_RATE
+	var speed := float(rec.run_speed_mps)
+	var post := Vector3(66, 0, 0)
+	var frozen := PackedStringArray()
+	var strayed := PackedStringArray()
+	var attacks := {}
+	var t0 := 1000
+	var n := 0
+	for gap: float in [4.5, 6.0, 8.0, 10.0]:
+		for deg in range(0, 360, 45):
+			n += 1
+			var giant := post + Vector3(cos(deg_to_rad(deg)), 0.0, sin(deg_to_rad(deg))) * gap
+			var b := CavalryBrain.new("test.v3_leash_sweep_%d" % n, rec, n)
+			b.leash_clamp = clamp
+			var pos := post
+			var facing := (giant - pos).normalized()
+			var attack := ""
+			var farthest := 0.0
+			for tick in range(t0, t0 + 240):
+				if (tick - t0) % 12 == 0:
+					var to := giant - pos
+					to.y = 0.0
+					b.perceive(tick, {"exists": true, "target_id": "player", "alive": true, "position": giant,
+						"distance": to.length(), "visible": true,
+						"facing_deg": rad_to_deg(facing.signed_angle_to(to, Vector3.UP)) if to.length() > 0.01 else 0.0,
+						"target_radius": radius, "target_forward": Vector3.LEFT, "target_height": 10.9728,
+						"target_stage": 4, "target_state": LOCO, "self_health_frac": 1.0, "has_leader": true})
+					if tick == t0:
+						b.state = EnemyBrain.AIState.APPROACH
+						b.state_tick = tick
+				if (tick - t0) % 6 == 0:
+					b.decide(tick, LOCO, pos, req, rel)
+					if b.attack_request != "":
+						attack = b.attack_request
+						break
+					if b.move_target != Vector3.INF:
+						farthest = maxf(farthest, Vector2(b.move_target.x, b.move_target.z).length())
+				if b.face_point != Vector3.INF:
+					var f := Vector3(b.face_point.x - pos.x, 0.0, b.face_point.z - pos.z)
+					if f.length() > 0.01:
+						facing = f.normalized()
+				if b.move_target != Vector3.INF:
+					var d := Vector3(b.move_target.x - pos.x, 0.0, b.move_target.z - pos.z)
+					if d.length() > 0.05:
+						pos += d.normalized() * minf(speed * dt, d.length())
+				farthest = maxf(farthest, Vector2(pos.x, pos.z).length())
+			var label := "giant %.1f m away at %d deg (%.1f m off his surface)" % [gap, deg, gap - radius]
+			if attack == "":
+				frozen.append("%s: no attack in 4 s, state %s, move_target %s, at %s" % [label,
+					EnemyBrain.STATE_NAMES[b.state], b.move_target, pos])
+			else:
+				attacks[attack] = int(attacks.get(attack, 0)) + 1
+			if farthest > edge_m + 0.05:
+				strayed.append("%s: %.2f m out" % [label, farthest])
+	assert_eq(frozen.size(), 0, "every rider charges or thrusts its lance within 4 s (%d of %d did not): %s"
+		% [frozen.size(), n, " | ".join(frozen)])
+	assert_eq(strayed.size(), 0, "no rider rides past the leash's edge (%.0f m): %s" % [edge_m, " | ".join(strayed)])
+	assert_true(int(attacks.get(CHARGE, 0)) > 0, "riders turned out and charged (%s)" % str(attacks))

@@ -1,7 +1,8 @@
 [gd_scene format=3]
 
 [ext_resource type="Shader" path="res://assets/shaders/ground_checker.gdshader" id="1_49689"]
-[ext_resource type="Script" path="res://scripts/world/cosmetic_field.gd" id="2_fd773"]
+[ext_resource type="Shader" path="res://assets/shaders/scenery_fade.gdshader" id="2_0e864"]
+[ext_resource type="Script" path="res://scripts/world/cosmetic_field.gd" id="3_fd773"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(88, 1, 75)
@@ -137,9 +138,12 @@ instance_count = 3
 mesh = SubResource("PlaneMesh_25")
 buffer = PackedFloat32Array(12, 0, 0, 106, 0, 1, 0, 0.05, 0, 0, 108.8, 40.600002, 8, 0, 0, 104, 0, 1, 0, 0.05, 0, 0, 80, 135, 12, 0, 0, 106, 0, 1, 0, 0.05, 0, 0, 25, 187.5)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_33"]
-albedo_color = Color(0.16, 0.31, 0.15, 1)
-roughness = 0.95
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_33"]
+render_priority = 0
+shader = ExtResource("2_0e864")
+shader_parameter/albedo = Color(0.16, 0.31, 0.15, 1)
+shader_parameter/roughness = 0.95
+shader_parameter/vertex_color_albedo = false
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_34"]
 top_radius = 0.0
@@ -153,9 +157,12 @@ instance_count = 28
 mesh = SubResource("CylinderMesh_34")
 buffer = PackedFloat32Array(5.544, 0, 0, 124.1, 0, 4.24, 0, 8.692, 0, 0, 5.544, 42.7, 7.4, 0, 0, 114.3, 0, 5.5, 0, 5.75, 0, 0, 7.4, 52.8, 5.18, 0, 0, 114.3, 0, 4, 0, 8.2, 0, 0, 5.18, 52.8, 7.556, 0, 0, 124.5, 0, 5.599, 0, 5.8535, 0, 0, 7.556, 53.3, 5.2892, 0, 0, 124.5, 0, 4.072, 0, 8.3476, 0, 0, 5.2892, 53.3, 5.0344, 0, 0, 116.3, 0, 3.904, 0, 8.0032, 0, 0, 5.0344, 28, 7.244, 0, 0, 192.7, 0, 5.401, 0, 5.6465, 0, 0, 7.244, 55.6, 5.0708, 0, 0, 192.7, 0, 3.928, 0, 8.0524, 0, 0, 5.0708, 55.6, 7.556, 0, 0, 196, 0, 5.599, 0, 5.8535, 0, 0, 7.556, 36.6, 5.2892, 0, 0, 196, 0, 4.072, 0, 8.3476, 0, 0, 5.2892, 36.6, 5.2892, 0, 0, 186.3, 0, 4.072, 0, 8.3476, 0, 0, 5.2892, 62.9, 7.712, 0, 0, 184.7, 0, 5.698, 0, 5.957, 0, 0, 7.712, 48.4, 5.3984, 0, 0, 184.7, 0, 4.144, 0, 8.4952, 0, 0, 5.3984, 48.4, 8.157981, 0, 0, 135.7827, 0, 5.9810266, 0, 21.252892, 0, 0, 8.157981, 90.748825, 5.710587, 0, 0, 135.7827, 0, 4.3498373, 0, 23.917168, 0, 0, 5.710587, 90.748825, 5.7546268, 0, 0, 120.33454, 0, 4.378875, 0, 23.976692, 0, 0, 5.7546268, 76.52356, 7.2511353, 0, 0, 131.21112, 0, 5.405528, 0, 20.651234, 0, 0, 7.2511353, 78.83991, 5.0757947, 0, 0, 131.21112, 0, 3.9312932, 0, 23.05915, 0, 0, 5.0757947, 78.83991, 7.8051105, 0, 0, 128.38257, 0, 5.7570896, 0, 21.018776, 0, 0, 7.8051105, 91.10995, 5.4635773, 0, 0, 128.38257, 0, 4.186974, 0, 23.583298, 0, 0, 5.4635773, 91.10995, 5.832646, 0, 0, 172.44733, 0, 4.430316, 0, 24.082148, 0, 0, 5.832646, 89.459335, 7.278653, 0, 0, 197.09505, 0, 5.4229913, 0, 20.66949, 0, 0, 7.278653, 78.09707, 5.095057, 0, 0, 197.09505, 0, 3.9439938, 0, 23.085188, 0, 0, 5.095057, 78.09707, 8.090224, 0, 0, 168.12329, 0, 5.938027, 0, 21.207937, 0, 0, 8.090224, 81.29271, 5.663157, 0, 0, 168.12329, 0, 4.318565, 0, 23.853058, 0, 0, 5.663157, 81.29271, 5.2014894, 0, 0, 161.56653, 0, 4.0141687, 0, 23.229046, 0, 0, 5.2014894, 77.08655, 8.115643, 0, 0, 181.6334, 0, 5.9541574, 0, 21.2248, 0, 0, 8.115643, 82.48414, 5.6809497, 0, 0, 181.6334, 0, 4.3302965, 0, 23.877108, 0, 0, 5.6809497, 82.48414)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_36"]
-albedo_color = Color(0.24, 0.4, 0.19, 1)
-roughness = 0.95
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_36"]
+render_priority = 0
+shader = ExtResource("2_0e864")
+shader_parameter/albedo = Color(0.24, 0.4, 0.19, 1)
+shader_parameter/roughness = 0.95
+shader_parameter/vertex_color_albedo = false
 
 [sub_resource type="MultiMesh" id="MultiMesh_37"]
 transform_format = 1
@@ -163,9 +170,12 @@ instance_count = 6
 mesh = SubResource("CylinderMesh_34")
 buffer = PackedFloat32Array(7.92, 0, 0, 124.1, 0, 5.83, 0, 6.095, 0, 0, 7.92, 42.7, 7.192, 0, 0, 116.3, 0, 5.368, 0, 5.612, 0, 0, 7.192, 28, 7.556, 0, 0, 186.3, 0, 5.599, 0, 5.8535, 0, 0, 7.556, 62.9, 8.220895, 0, 0, 120.33454, 0, 6.0209527, 0, 21.294632, 0, 0, 8.220895, 76.52356, 8.332351, 0, 0, 172.44733, 0, 6.0916843, 0, 21.36858, 0, 0, 8.332351, 89.459335, 7.4306993, 0, 0, 161.56653, 0, 5.519482, 0, 20.770369, 0, 0, 7.4306993, 77.08655)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_38"]
-albedo_color = Color(0.33, 0.24, 0.16, 1)
-roughness = 0.95
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_38"]
+render_priority = 0
+shader = ExtResource("2_0e864")
+shader_parameter/albedo = Color(0.33, 0.24, 0.16, 1)
+shader_parameter/roughness = 0.95
+shader_parameter/vertex_color_albedo = false
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_39"]
 height = 1.0
@@ -408,22 +418,22 @@ multimesh = SubResource("MultiMesh_32")
 [node name="Scenery" type="Node3D" parent="."]
 
 [node name="LeavesDark_Cone" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
-material_override = SubResource("StandardMaterial3D_33")
+material_override = SubResource("ShaderMaterial_33")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_35")
 
 [node name="Leaves_Cone" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
-material_override = SubResource("StandardMaterial3D_36")
+material_override = SubResource("ShaderMaterial_36")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_37")
 
 [node name="Bark_Cyl" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
-material_override = SubResource("StandardMaterial3D_38")
+material_override = SubResource("ShaderMaterial_38")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_40")
 
 [node name="Dressing" type="Node3D" parent="."]
-script = ExtResource("2_fd773")
+script = ExtResource("3_fd773")
 kinds = PackedStringArray("banner", "banner")
 transforms = Array[Transform3D]([Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 139, 0, 65), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 161, 0, 65)])
 tints = PackedColorArray(0.62, 0.14, 0.13, 1, 0.62, 0.14, 0.13, 1)

@@ -119,6 +119,10 @@ const EXPECTED_SURFACE_OFFSET := 0.5
 ## presets to the group).
 const SCENERY_VISIBILITY_END_M := 220.0
 const SCENERY_GROUP := "valley_scenery"
+## M8 screenshot pass (V1): the trees (the Scenery MultiMeshes: trunks and crowns) are drawn with the
+## scenery fade shader (SceneryFade) in their material's colour and roughness, so a tree near the
+## camera or between it and the giant dithers out of the way. Saved as <material>_fade.tres.
+const FADE_SHADER := "res://assets/shaders/scenery_fade.gdshader"
 const FOG_BEGIN_M := 120.0
 const FOG_END_M := 300.0
 const SKY := Color(0.56, 0.64, 0.74)
@@ -293,6 +297,25 @@ static func _ground_mat(kit: SceneKit, mat_name: String, a: Color, b: Color, lin
 ## ("stone", "wood_dark", "sack", ...).
 static func _mat(kit: SceneKit, mat_name: String) -> Material:
 	return kit.mats[_mat_key(kit, mat_name)]
+
+
+## M8 screenshot pass (V1): the scenery fade material of a layout material name (FADE_SHADER with
+## the flat material's albedo colour and roughness), made once per build and saved beside it as
+## <kit key>_fade.tres.
+static func _fade_mat(kit: SceneKit, mat_name: String) -> Material:
+	var key := _mat_key(kit, mat_name) + "_fade"
+	if kit.mats.has(key):
+		return kit.mats[key]
+	var base := _mat(kit, mat_name) as BaseMaterial3D
+	var m := ShaderMaterial.new()
+	m.shader = load(FADE_SHADER) as Shader
+	m.set_shader_parameter("albedo", base.albedo_color if base != null else Color.WHITE)
+	m.set_shader_parameter("roughness", base.roughness if base != null else 0.95)
+	m.set_shader_parameter("vertex_color_albedo", false)
+	if kit.out_root == "":
+		ResourceSaver.save(m, "%s/%s.tres" % [SceneKit.MAT_DIR, key], ResourceSaver.FLAG_CHANGE_PATH)
+	kit.mats[key] = m
+	return m
 
 
 ## The kit.mats key of a layout material name ("stone" when it is unknown, after an error).
@@ -660,7 +683,8 @@ static func build_district(kit: SceneKit, id: String, geo: Dictionary) -> Node:
 		mm.instance_count = list.size()
 		mm.buffer = multimesh_buffer(list)
 		mmi.multimesh = mm
-		mmi.material_override = _mat(kit, parts[1])
+		# V1: the trees (scenery) fade out of the giant's way
+		mmi.material_override = _fade_mat(kit, parts[1]) if parts[2] == "1" else _mat(kit, parts[1])
 		if parts[3] == "0":
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		if parts[2] == "1":

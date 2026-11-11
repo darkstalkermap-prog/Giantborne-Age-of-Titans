@@ -25,8 +25,15 @@ extends EnemyActor
 ##
 ## A stage-4 giant can seize a staggered horse with both hands (mass medium, grab_attach two_hand; the
 ## grab point on its back, Anchors/Grab).
+##
+## M8 screenshot pass (V3): the leash (CavalryBrain.leash_clamp): a point brought inside this rider's
+## encounter leash (EncounterDirector.leash_of), LEASH_MARGIN_M short of its edge - the director sends a
+## member home beyond it - and unchanged where the encounter has none (the battle's arena encounters, the
+## siege test level, a rider spawned without a director).
 
 const BODY_SWEEP_MARGIN_M := 0.25
+## M8 screenshot pass (V3): a start point is kept this far inside the leash.
+const LEASH_MARGIN_M := 3.0
 ## How far beside the charge line a body-sweep hit's knockback origin sits (it shoves sideways).
 const SHOVE_SIDE_M := 1.0
 ## Wheel candidates: straight on, then this many steps of WHEEL_STEP_DEG either side.
@@ -55,11 +62,28 @@ func _ready() -> void:
 func _make_brain() -> EnemyBrain:
 	var b := CavalryBrain.new(entity.entity_id, record, Sim.DEFAULT_SEED ^ hash(entity.entity_id))
 	b.wheel_resolver = _resolve_wheel_point
+	b.leash_clamp = _leash_clamp
 	return b
 
 
 func cavalry_brain() -> CavalryBrain:
 	return brain as CavalryBrain
+
+
+## CavalryBrain.leash_clamp (M8 screenshot pass, V3; see the class notes).
+func _leash_clamp(point: Vector3) -> Vector3:
+	if not is_inside_tree() or entity == null:
+		return point
+	var d := get_tree().get_first_node_in_group(EncounterDirector.GROUP) as EncounterDirector
+	var leash := d.leash_of(entity.entity_id) if d != null else Vector4.ZERO
+	if leash.w <= 0.0:
+		return point
+	var off := Vector2(point.x - leash.x, point.z - leash.z)
+	var r := maxf(leash.w - LEASH_MARGIN_M, 0.0)
+	if off.length() <= r:
+		return point
+	off = off.normalized() * r
+	return Vector3(leash.x + off.x, point.y, leash.z + off.y)
 
 
 ## True while a charge (an action tagged Charge) runs in `phase` (ActionDef.Phase).

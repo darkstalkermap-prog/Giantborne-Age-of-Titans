@@ -43,6 +43,14 @@ extends Control
 ## fits, and a message already shown is moved down instead of shown twice. A message stays for
 ## message_lifetime(): MESSAGE_LIFETIME, longer for a long one (READ_CHARS_PER_S, at most
 ## MESSAGE_MAX_LIFETIME). test_hud_messages shows every shipped refusal, size-gate and notice text.
+##
+## M8 screenshot pass (V2): the lock line is no longer blank. Its label sits in the centred line beside
+## a banner's flag and trims a text too long for the frame with an ellipsis, and a trimming Label's
+## minimum width is 1 px, so the line laid it out 1 px wide and it drew nothing: outside boss fights
+## (whose bar names the boss) the player never saw what was locked or how far. _fit_lock_line() gives
+## the label its text's width, at most the line's room (TARGET_FRAME_WIDTH less the panel's margins,
+## and the flag while it shows), so the line stays centred and only a name too long for the frame is
+## trimmed; the frame never grows (test_hud_layout).
 
 const MESSAGE_LIFETIME := 2.6
 ## M8 gate (F30): the message box's width, the lines it holds (one message may use all of them), the
@@ -57,6 +65,9 @@ const MESSAGE_FADE_S := 0.5
 const TARGET_FRAME_TOP := 44.0
 const TARGET_FRAME_TOP_UNDER_BOSS := 94.0
 const TARGET_FRAME_HEIGHT := 60.0
+const TARGET_FRAME_WIDTH := 340.0
+## The gap between a banner's flag and the name in the lock line.
+const LOCK_LINE_SEPARATION := 6
 const HELP_TITLE := "CONTROLS  (rebind in Pause > Controls)"
 ## The banner mark P30's lock_label() puts before a banner's name (drawn as a flag instead).
 const BANNER_MARK := "⚑"
@@ -71,6 +82,7 @@ var _capture_hint: PanelContainer
 var _marker: Control
 var _target_frame: PanelContainer
 var _target_name: Label
+var _lock_line_fitted := ""               ## the text and flag _fit_lock_line() last measured (V2)
 var _target_flag: Control
 var _target_bar: ProgressBar
 var _target_hint: Label
@@ -363,8 +375,8 @@ func _build_target_frame() -> void:
 	_target_frame = HudKit.panel()
 	_target_frame.anchor_left = 0.5
 	_target_frame.anchor_right = 0.5
-	_target_frame.offset_left = -170
-	_target_frame.offset_right = 170
+	_target_frame.offset_left = -TARGET_FRAME_WIDTH * 0.5
+	_target_frame.offset_right = TARGET_FRAME_WIDTH * 0.5
 	_target_frame.offset_top = TARGET_FRAME_TOP
 	_target_frame.offset_bottom = TARGET_FRAME_TOP + TARGET_FRAME_HEIGHT
 	_target_frame.visible = false
@@ -375,7 +387,7 @@ func _build_target_frame() -> void:
 	# P27: the lock line - a drawn flag before a banner's name (BannerFlag), then the label.
 	var line := HBoxContainer.new()
 	line.alignment = BoxContainer.ALIGNMENT_CENTER
-	line.add_theme_constant_override("separation", 6)
+	line.add_theme_constant_override("separation", LOCK_LINE_SEPARATION)
 	v.add_child(line)
 	_target_flag = BannerFlag.new()
 	_target_flag.custom_minimum_size = Vector2(12, 16)
@@ -901,6 +913,7 @@ func _update_target() -> void:
 	var line := lock_line(_lock_label(target))
 	_target_flag.visible = bool(line.banner)
 	_target_name.text = "%s   %d m" % [str(line.text), int(player.global_position.distance_to(target.actor.global_position))]
+	_fit_lock_line()
 	var p := target.combatant.pools
 	_target_bar.value = p.health / maxf(p.health_max, 0.001)
 	_target_hint.text = lock_hint(InputBindings.last_device_is_pad())
@@ -911,6 +924,27 @@ func _update_target() -> void:
 		_marker.position = cam.unproject_position(anchor) - Vector2(16, 16)
 	else:
 		_marker.visible = false
+
+
+## M8 screenshot pass (V2): the lock line's label as wide as its text (plus its drop shadow), at most
+## the line's room - the frame's width less the panel's margins, and less the flag and its gap while
+## the flag shows - so the centred line shows the name and the distance and trims only a text too long
+## for the frame (a trimming Label's own minimum width is 1 px). Measured only when the text or the
+## flag changes.
+func _fit_lock_line() -> void:
+	var key := "%s|%s" % [_target_name.text, _target_flag.visible]
+	if key == _lock_line_fitted:
+		return
+	_lock_line_fitted = key
+	var font := _target_name.get_theme_font("font")
+	var need := 1.0
+	if font != null:
+		need = ceilf(font.get_string_size(_target_name.text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+			_target_name.get_theme_font_size("font_size")).x) + 1.0
+	var room := TARGET_FRAME_WIDTH - _target_frame.get_theme_stylebox("panel").get_minimum_size().x
+	if _target_flag.visible:
+		room -= _target_flag.custom_minimum_size.x + LOCK_LINE_SEPARATION
+	_target_name.custom_minimum_size.x = clampf(need, 1.0, maxf(room, 1.0))
 
 
 ## The lock label of the player's lock (PlayerTargeting.lock_label, P30), else `target`'s name.

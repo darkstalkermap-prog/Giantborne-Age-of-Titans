@@ -6,6 +6,8 @@ extends IntegrationSuite
 ## aggregate (60 %, 25 %), activating its encounters through the director, announced by
 ## boss_phase_changed; when the guard breaks Corvane yields under the battle's id, the rest of the
 ## battle stands down, and Spare wins it. (The web composition and the attempt reset: the slow battery.)
+## M8 screenshot pass (V3): the units of a phase know where the giant is when they come - the Charge's
+## riders, 84-90 m from him (beyond their 70 m sight), ride for him at once.
 
 const BAILEY := "res://scenes/test/bailey_test.tscn"
 const BB := preload("res://tools/builders/big.gd")
@@ -127,3 +129,46 @@ func test_the_iron_regiment_as_one_boss() -> void:
 	assert_eq(defeated, [["defeated", BB.BAILEY_ID]], "the battle is won")
 	assert_eq(WorldState.get_flag("boss.corvane.outcome"), "spared", "Corvane spared")
 	assert_true(battle.is_defeated(), "the bailey is done")
+
+
+## M8 screenshot pass (V3): Fort Aldmere's Charge spawned its riders at the stables, 85-110 m from where
+## the giant fights the Wall - beyond their 70 m sight and 30 m hearing - and they stood there for the rest
+## of the battle (the screenshot pass saw none charge). Here the giant stands where the test bailey's riders
+## are 84-90 m off when the Wall falls: they must know where he is at once and ride for him.
+func test_the_charge_rides_at_a_giant_beyond_its_sight() -> void:
+	level = (load(BAILEY) as PackedScene).instantiate() as Node3D
+	world.add_child(level)
+	var p := level.get_node("Player") as GiantPlayer
+	p.router.use_injection = true
+	await step_ticks(2)
+	var battle := level.get_node("BattleBoss") as BattleBoss
+	var d := level.get_node("EncounterDirector") as EncounterDirector
+	p.global_position = Vector3(-20, 0.05, 35)
+	battle.engage()
+	await step_ticks(2)
+	await _kill_encounter(d, WALL)
+	assert_eq(battle.phase_log, [1, 2] as Array[int], "The Charge")
+	var riders: Array[CavalryEnemy] = []
+	for id in d.members_of(CHARGE):
+		var e := Sim.get_entity(id)
+		if e != null and e.is_alive() and e.actor is CavalryEnemy:
+			riders.append(e.actor as CavalryEnemy)
+	assert_eq(riders.size(), 4, "the four riders came")
+	var start := {}
+	for r in riders:
+		var off := _flat_distance(r.global_position, p.global_position)
+		start[r.entity_id] = off
+		assert_true(off > 80.0, "%s comes %.0f m from the giant: beyond its sight (70 m)" % [r.entity_id, off])
+	await step_ticks(12)
+	for r in riders:
+		assert_true(r.brain.aware and r.brain.target_id == p.entity.entity_id,
+			"%s knows where the giant is (aware %s, target '%s')" % [r.entity_id, r.brain.aware, r.brain.target_id])
+	await step_ticks(180)
+	for r in riders:
+		var off := _flat_distance(r.global_position, p.global_position)
+		assert_true(off < float(start[r.entity_id]) - 20.0 or r.charges_started > 0,
+			"%s rides for him (%.0f m -> %.0f m, %d charges)" % [r.entity_id, start[r.entity_id], off, r.charges_started])
+
+
+static func _flat_distance(a: Vector3, b: Vector3) -> float:
+	return Vector2(a.x - b.x, a.z - b.z).length()
