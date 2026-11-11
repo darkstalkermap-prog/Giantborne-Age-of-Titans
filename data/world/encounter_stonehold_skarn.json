@@ -8,7 +8,7 @@
 	"center_m": [440, 76.0, -660],
 	"activate_radius_m": 160,
 	"deactivate_radius_m": 240,
-	"leash_radius_m": 30,
+	"leash_radius_m": 45,
 	"alert_group": true,
 	"requires_flags": [],
 	"forbids_flags": [],
