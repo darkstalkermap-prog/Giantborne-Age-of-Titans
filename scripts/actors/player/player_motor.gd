@@ -14,8 +14,11 @@ extends PlayerComponent
 ## along the facing it had when the phase began, at speed_mps (times its slows) for at most
 ## max_distance_m; its body passes through other actors while it dashes (the sweep throws them
 ## aside), and stop_on_wall ends it against a wall, an untrampled prop or a blocker. Statuses scale walk and run speed by their
-## move_speed_mult (product: Stonewall Stance 0.7, Wild Surge 1.15), and a status tagged Barrier
-## (Bulwark) takes no knockback.
+## move_speed_mult (product: Stonewall Stance 0.7, Wild Surge 1.15; P33: with the passives', Wildheart
+## 1.05), and a status tagged Barrier (Bulwark) takes no knockback.
+##
+## P33 (plan M6-M9 §5.12): the sprint's stamina drain follows the giant's stamina_cost_mult like every
+## action's cost (Relentless, Tireless: "everything you do costs less stamina").
 
 const GRAVITY := 22.0
 const KNOCKBACK_DECEL := 28.0
@@ -129,7 +132,7 @@ func update_sprint(intents: Dictionary, dt: float) -> void:
 		and not sprint_locked and pools.stamina > 0.0
 	if player.sprinting:
 		var drain := float(sprint_def.param("drain_per_s", 8.0)) if sprint_def != null else 8.0
-		pools.consume_stamina_up_to(drain * dt)
+		pools.consume_stamina_up_to(drain * dt * player.entity.combatant.stamina_cost_mult())
 		if pools.stamina <= 0.0:
 			player.sprinting = false
 			sprint_locked = true
@@ -349,11 +352,11 @@ func ran_into_wall(dir: Vector3) -> bool:
 
 
 ## The product of the active statuses' move_speed_mult (1 when none: Stonewall Stance 0.7, Wild
-## Surge 1.15).
+## Surge 1.15) and (P33) the passives' (Wildheart 1.05): Combatant.move_speed_mult, applied once here.
 func status_speed_mult() -> float:
 	if player.entity == null or player.entity.combatant == null:
 		return 1.0
-	return maxf(0.0, player.entity.combatant.statuses.modifier_product("move_speed_mult"))
+	return player.entity.combatant.move_speed_mult()
 
 
 ## True while a status tagged Barrier protects the giant (Bulwark: no knockback).

@@ -17,8 +17,8 @@ extends RefCounted
 ## Keys this file does not know (added by later packages) pass through unchanged.
 ## Save schema 2 (P20, plan M6-M9 §2.6): "talents" (talent record ids, P33 learns them; unknown ids
 ## are dropped like abilities) and "ancestry_chosen" (true once the ancestry was chosen at a
-## shrine; a character whose ancestry is not ancestry.neutral has chosen one) - normalize() adds
-## both. world_start() is the character a campaign started in the world gets.
+## shrine: P33 normalises it to "the ancestry is not ancestry.neutral") - normalize() adds both.
+## world_start() is the character a campaign started in the world gets.
 
 const DEFAULT_ID := "char.valley_1"
 const DEFAULT_DEFINITION := "player.giant"
@@ -30,9 +30,10 @@ const MAX_LEVEL := 99
 const COUNTER_KEYS := ["xp", "unspent_attribute_points", "talent_points"]
 const ID_LIST_KEYS := ["weapons_owned", "known_abilities", "level_exempt"]
 const RESOURCE_KEYS := ["health", "stamina", "essence", "fury"]
-## The keys PlayerProgression (P12) applies and captures; "xp" is the total XP earned.
+## The keys PlayerProgression (P12) applies and captures; "xp" is the total XP earned. P33 adds the
+## learned talents and whether the ancestry was chosen.
 const PROGRESSION_KEYS := ["level", "xp", "unspent_attribute_points", "talent_points", "attributes",
-	"level_exempt", "ancestry"]
+	"level_exempt", "ancestry", "talents", "ancestry_chosen"]
 
 
 ## The Valley's starting character: the player record's body and attributes with the
@@ -230,7 +231,7 @@ static func sanitize(d: Dictionary) -> Dictionary:
 				_append_unique_packed(dropped, s)
 		out[key] = clean
 	# Save schema 2 (P20): the learned talents (talent records; P33) and whether the ancestry was
-	# chosen (default: a character whose ancestry is not the neutral one has chosen it).
+	# chosen.
 	var talents: Array = []
 	var raw_talents: Array = d.talents if typeof(d.get("talents")) == TYPE_ARRAY else []
 	for id: Variant in raw_talents:
@@ -242,8 +243,10 @@ static func sanitize(d: Dictionary) -> Dictionary:
 		else:
 			_append_unique_packed(dropped, s)
 	out["talents"] = talents
-	out["ancestry_chosen"] = bool(d.ancestry_chosen) if typeof(d.get("ancestry_chosen")) == TYPE_BOOL \
-		else ancestry != DEFAULT_ANCESTRY
+	# P33: the choice is the ancestry itself - every ancestry but the neutral (prologue) one is chosen,
+	# and the neutral one never is, whatever the save says (a neutral character marked as having
+	# chosen would never be offered the choice).
+	out["ancestry_chosen"] = ancestry != DEFAULT_ANCESTRY
 	var lo: Dictionary = d.loadout if typeof(d.get("loadout")) == TYPE_DICTIONARY else {}
 	var slots: Array = []
 	for id: Variant in _slot_list(lo.get("slots", [])):

@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.destroyer_heavy_hands",
+	"type": "talent",
+	"display_name": "Heavy Hands",
+	"description": "Your heavy blows land harder, and every blow shakes a foe's footing a little more.",
+	"tree": "destroyer",
+	"tier": 1,
+	"column": 1,
+	"cost": 1,
+	"requires": [],
+	"requires_level": 6,
+	"effects": {"modifiers": {"heavy_damage_mult": 1.1, "outgoing_poise_mult": 1.05}, "grants": [], "replaces": {}}
+}

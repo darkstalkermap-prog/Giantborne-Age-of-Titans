@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.destroyer_titans_wrath",
+	"type": "talent",
+	"display_name": "Titan's Wrath",
+	"description": "The Destroyer's crown: all the damage you deal is greater.",
+	"tree": "destroyer",
+	"tier": 5,
+	"column": 0,
+	"cost": 2,
+	"requires": ["talent.destroyer_cleave_of_ages", "talent.destroyer_bloodied_fury"],
+	"requires_level": 12,
+	"effects": {"modifiers": {"outgoing_damage_mult": 1.08}, "grants": [], "replaces": {}}
+}

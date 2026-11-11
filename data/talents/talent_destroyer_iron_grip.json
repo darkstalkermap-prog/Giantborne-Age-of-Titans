@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.destroyer_iron_grip",
+	"type": "talent",
+	"display_name": "Iron Grip",
+	"description": "Long arms and a hard throw: you seize foes from farther away, and what you throw lands harder.",
+	"tree": "destroyer",
+	"tier": 1,
+	"column": 2,
+	"cost": 1,
+	"requires": [],
+	"requires_level": 6,
+	"effects": {"modifiers": {"grab_reach_add": 1.5, "throw_damage_mult": 1.15}, "grants": [], "replaces": {}}
+}

@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"id": "ancestry.stoneblood",
+	"type": "ancestry",
+	"display_name": "Stoneblood",
+	"description": "Your line was quarried from the mountain. Hard to stagger, slow to anger.",
+	"attribute_bonus": {"constitution": 3, "endurance": 2},
+	"resistances": {},
+	"modifiers": {"armor_flat": 10, "poise_threshold_add": 20},
+	"signature": "ability.bedrock_ward",
+	"dialogue_tags": ["stone"],
+	"dialogue_note": "The Moot's elders and the hearth of Skarn honour stone blood, and Aldmere's founding oath was sworn on it."
+}

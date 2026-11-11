@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"id": "ancestry.stormborn",
+	"type": "ancestry",
+	"display_name": "Stormborn",
+	"description": "Your line was born in the thunderheads over the high peaks. Runes come easily to you, and fire and frost do not.",
+	"attribute_bonus": {"intellect": 3, "willpower": 2},
+	"resistances": {},
+	"modifiers": {"essence_add": 30, "elemental_resist_add": 0.10, "magic_damage_mult": 1.10},
+	"signature": "ability.thunderhead",
+	"dialogue_tags": ["storm"],
+	"dialogue_note": "The Greywood's druids bargain with storm blood: Sedge will listen to you."
+}

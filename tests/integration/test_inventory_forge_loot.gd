@@ -280,7 +280,8 @@ func test_the_inventory_screen() -> void:
 	assert_true(InventoryScreen.item_line(rows[1]).begins_with("Iron Ingot x2 — "), "then the iron")
 	assert_true(inv.character_text().begins_with("Level 3 (0 / 200 XP)"), "the level line (%s)" % inv.character_text())
 	assert_true(inv.character_text().contains("Unspent attribute points: 6"), "and the unspent points")
-	assert_eq(inv.talent_text(), "Talent points: 2 (talent trees are a full-game feature)", "talent points")
+	# P33: talents are learned at a shrine's Talents tab now (no longer "a full-game feature").
+	assert_eq(inv.talent_text(), "Talent points: 2 — learn talents at a shrine (the Talents tab)", "talent points")
 	assert_true(inv.loadout_text().begins_with("1 Heavy Footfall   2 Sweeping Blow"), "the loadout")
 	assert_true(inv.loadout_text().ends_with("Ultimate: Titan Surge"), "with the ultimate")
 	var weapons := inv.weapon_rows()

@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.guardian_protector",
+	"type": "talent",
+	"display_name": "Protector",
+	"description": "Healing finds you more readily.",
+	"tree": "guardian",
+	"tier": 4,
+	"column": 2,
+	"cost": 1,
+	"requires": ["talent.guardian_grounded"],
+	"requires_level": 10,
+	"effects": {"modifiers": {"heal_received_mult": 1.2}, "grants": [], "replaces": {}}
+}

@@ -13,6 +13,9 @@ static func fields() -> Dictionary:
 		"xp_to_next": {"t": "array", "req": true, "items": "int"},
 		"attribute_points_per_level": U.int_field(0, null, true),
 		"talent_points_per_level": U.int_field(0, null, true),
+		# P33 (plan M6-M9 §5.12): the character level at which talent tiers 1-5 open (6, 8, 9, 10, 12);
+		# Talents.data_errors checks them against the talents and the level cap.
+		"talent_tier_levels": {"t": "array", "items": "int"},
 		# Shown by the HUD and docs while quest XP is accelerated (decision 7).
 		"prototype_xp_label": U.str_field(),
 		# Minimum resource fractions after a death reload (health 0.6, stamina 1.0, essence 0.5).

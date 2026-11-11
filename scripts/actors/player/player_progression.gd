@@ -45,11 +45,27 @@ extends PlayerComponent
 ##   before PlayerGrowth's unlocks, which then find them known) and announces them with the growth
 ##   (growth_changed; a restore drops the announcements); an evolution another path taught (an
 ##   ungated debug growth's unlocks, a reward) takes its base's slot at the next growth or level.
+## - Talents and the ancestry (P33, plan M6-M9 §2.11, §5.12, decision 22; the rules are Talents'):
+##   learn_talent(id) spends the talent's points once (out of combat; its tier's level reached -
+##   any level while ungated - and the talent above it learned), learns the abilities it grants
+##   (granted_by "talent", auto-slotted like any learned ability) and emits talent_learned.
+##   choose_ancestry(id) - once, out of combat, once the Old Kingdom has opened (world_opened) - adds
+##   the ancestry's attribute points, teaches its signature, sets the flag ancestry.chosen and emits
+##   ancestry_chosen. Both are permanent and saved ("talents", "ancestry", "ancestry_chosen").
+##   rebuild_passives() folds the talents' and the ancestry's modifiers into the combatant
+##   (Combatant.set_passives: never statuses) on every change, on load and on growth, and applies the
+##   two a combatant cannot apply alone: the stamina and essence costs and cooldowns of the actions
+##   in the giant's controller library (per-character copies of the actions those passives change,
+##   so the controller, the hotbar and refunds all see the same numbers), and the grab reach of the
+##   giant's profile (a copy of the growth record with grab_reach_m raised while a passive adds
+##   reach). The combatant's action_source is the giant's controller, so heavy, throw and magic
+##   damage passives reach the action being performed.
 
 const UNGATED_LEVEL := CharacterState.MAX_LEVEL
 const DEBUG_XP := 100
 const SLOT_REASONS := ["no_shrine", "combat", "unknown_slot", "not_known", "wrong_kind", "evolved"]
-const ANCESTRY_NOTE := "no modifiers in the prototype"
+## P33: why choose_ancestry refuses (learn_talent: Talents.LEARN_REASONS and "combat").
+const ANCESTRY_REASONS := ["unknown", "chosen", "not_yet", "combat"]
 
 var level := 1
 ## The total XP earned (the save's "xp").
@@ -66,12 +82,29 @@ var learned: Array = []
 ## P31: evolutions learned when the profile changed, announced with the growth
 ## ([{"id", "base", "slot"}]); a restore or a profile swap without a growth drops them.
 var _pending_evolutions: Array = []
+## P33: the learned talent ids, in learning order (the save's "talents").
+var talents: Array = []
+## P33: true once the ancestry was chosen (the save's "ancestry_chosen"): exactly when the ancestry is
+## not the neutral (prologue) one.
+var ancestry_chosen := false
+## P33: the stamina cost, essence cost and cooldown multipliers the library's action copies carry,
+## and the library's size when they were made (an action added since joins with its record's costs
+## until the next sync, at the end of the tick).
+var _cost_mults := Vector3.ONE
+var _cost_lib_size := -1
+## P33: the growth record the giant's profile copies (the profile itself while no passive changes
+## it), and the grab reach the copy adds.
+var _profile_base: Dictionary = {}
+var _profile_copy: Dictionary = {}
+var _profile_reach_add := 0.0
 
 
 func setup(p: GiantPlayer) -> void:
 	super(p)
 	ancestry = str(player.record.get("ancestry", CharacterState.DEFAULT_ANCESTRY))
 	level = Progression.level_for_xp(xp)
+	_profile_base = player.profile
+	player.entity.combatant.action_source = weakref(player.controller)
 	for pair: Array in _listeners():
 		var sig: Signal = pair[0]
 		if not sig.is_connected(pair[1]):
@@ -136,9 +169,36 @@ func ancestry_name() -> String:
 	return str(rec.get("display_name", ancestry))
 
 
-## "Ancestry: Unaligned — no modifiers in the prototype" (decision 20).
+## The ancestry and what it gives, for the attribute screens (P33): "Ancestry: Stoneblood —
+## Constitution +3, Endurance +2; Armour +10, Poise (staggers less) +20; Bedrock Ward", or before the
+## choice "Ancestry: Unaligned — choose yours at a shrine of the Old Kingdom" (once the world has
+## opened) / "... — your blood awakens when you reach the Old Kingdom".
 func ancestry_line() -> String:
-	return "Ancestry: %s — %s" % [ancestry_name(), ANCESTRY_NOTE]
+	if not ancestry_chosen or not Talents.is_choosable(ancestry):
+		return "Ancestry: %s — %s" % [ancestry_name(), "choose yours at a shrine of the Old Kingdom"
+			if world_opened() else "your blood awakens when you reach the Old Kingdom"]
+	var s := Talents.ancestry_summary(ancestry)
+	var parts := PackedStringArray()
+	if str(s.attributes) != "":
+		parts.append(str(s.attributes))
+	if not (s.passives as PackedStringArray).is_empty():
+		parts.append(", ".join(s.passives))
+	var sig := GameData.get_action(str(s.signature_id))
+	if sig != null:
+		parts.append(sig.display_name)
+	return "Ancestry: %s — %s" % [ancestry_name(), "; ".join(parts)]
+
+
+## The talent points and talents, for the inventory and the attribute screens (P33): "Talent
+## points: 2 — talents: Heavy Hands, Stone Hide" or "Talent points: 5 — learn talents at a shrine
+## (the Talents tab)".
+func talent_line() -> String:
+	if talents.is_empty():
+		return "Talent points: %d — learn talents at a shrine (the Talents tab)" % talent_points
+	var names := PackedStringArray()
+	for id: Variant in talents:
+		names.append(Talents.display_name(str(id)))
+	return "Talent points: %d — talents: %s" % [talent_points, ", ".join(names)]
 
 
 func library() -> Array:
@@ -371,7 +431,12 @@ func evolved_into(id: String) -> String:
 ## PlayerGrowth applies the profile's unlocks, which then find them known and leave their slots
 ## alone - and keeps their announcements for growth_changed. Profile swaps that shrink, or of an
 ## ungated giant (the sandbox, tests that set a profile), learn nothing here.
+## P33: every profile change (a growth, a restore) rebuilds the passives on the new profile (its
+## grab reach copy) - this component is the last, so the others have read the record already.
 func on_profile_changed(old_profile: Dictionary, new_profile: Dictionary) -> void:
+	if not is_same(new_profile, _profile_copy):   # the copy set again keeps its record
+		_profile_base = new_profile
+	rebuild_passives()
 	var new_stage := int(new_profile.get("stage", 1))
 	if not gated or new_stage <= int(old_profile.get("stage", 1)):
 		return
@@ -384,9 +449,14 @@ func on_profile_changed(old_profile: Dictionary, new_profile: Dictionary) -> voi
 
 
 ## A profile swap without a growth (a test, a restore) drops the announcements it queued.
+## P33: then the library's action costs follow the passives (an action added this tick, a status
+## that changed a cost multiplier) and so does the profile's grab reach.
 func post_movement(_tick: int, _dt: float) -> void:
 	if not _pending_evolutions.is_empty():
 		_pending_evolutions.clear()
+	_sync_action_costs()
+	if player.entity.combatant.grab_reach_add() != _profile_reach_add:
+		_sync_profile_passives()
 
 
 # --------------------------------------------------------------------------- attributes
@@ -410,13 +480,229 @@ func allocate(delta: Dictionary) -> Dictionary:
 
 
 ## The derived values after adding `delta` ({attribute: points}) to the current attributes, with
-## the current growth bonus (Progression.derived_preview).
+## the current growth bonus and (P33) passives (Progression.derived_preview).
 func derived_preview(delta: Dictionary = {}) -> Dictionary:
 	var attrs := attributes()
 	for key: Variant in delta:
 		if attrs.has(str(key)) and SchemaUtil.is_number(delta[key]):
 			attrs[str(key)] = int(attrs[str(key)]) + int(delta[key])
-	return Progression.derived_preview(player.record, attrs, player.entity.combatant.growth_bonus)
+	var c := player.entity.combatant
+	return Progression.derived_preview(player.record, attrs, c.growth_bonus, c.passives)
+
+
+# --------------------------------------------------------------------------- talents and ancestry (P33)
+
+## True once the Old Kingdom has opened to this character (the flag progress.world_entered, or the
+## world being the level played): ancestries are offered from then on.
+static func world_opened() -> bool:
+	if QuestConditions.truthy(WorldState.get_flag(Talents.WORLD_FLAG)):
+		return true
+	return GameSession.current_level_id() == GameSession.WORLD_LEVEL_ID
+
+
+## True while the shrines offer the ancestry: not chosen yet, and the world has opened.
+func ancestry_offered() -> bool:
+	return not ancestry_chosen and world_opened()
+
+
+## The character the talent rules read ({"level", "talent_points", "talents"}); an ungated giant
+## (the sandbox) counts as level 99, so no tier is closed to it.
+func talent_view() -> Dictionary:
+	return {"level": level if gated else UNGATED_LEVEL, "talent_points": talent_points, "talents": talents.duplicate()}
+
+
+func knows_talent(id: String) -> bool:
+	return talents.has(id)
+
+
+## {ok, reason, message}: talent `id` can be learned now - out of combat (reason "combat"), then
+## Talents.check (unknown, known, level, requires, points).
+func can_learn_talent(id: String) -> Dictionary:
+	if player.entity.combatant.pools.in_combat():
+		return _fail("combat", "Not during combat.")
+	return Talents.check(talent_view(), id)
+
+
+## Learns talent `id` (can_learn_talent first): its points are spent once, its granted abilities
+## are learned (source "talent": auto-slotted, ability_learned), a replacement takes its old
+## ability's slot, the passives are rebuilt, talent_learned and a HUD line are emitted.
+## {ok, reason, message, spent, learned (ability ids)}.
+func learn_talent(id: String) -> Dictionary:
+	var check := can_learn_talent(id)
+	if not check.ok:
+		check["spent"] = 0
+		check["learned"] = []
+		last_result = check
+		return check
+	var c := talent_view()
+	var r := Talents.learn(c, id)
+	talent_points = int(c.talent_points)
+	talents = c.talents
+	var taught: Array = []
+	for g: Variant in Talents.grants_of(id):
+		if learn_ability(str(g), "talent"):
+			taught.append(str(g))
+	var replaces := Talents.replaces_of(id)
+	for old: Variant in replaces:
+		var new_id := str(replaces[old])
+		if learn_ability(new_id, "talent"):
+			taught.append(new_id)
+		var slot := _slot_of(str(old))
+		if slot != "" and knows(new_id):
+			var previous := _slot_of(new_id)
+			if previous != "" and previous != slot:
+				player.set_loadout_slot(previous, "")
+			player.set_loadout_slot(slot, new_id)
+			Events.loadout_changed.emit(Sim.tick, player.entity.entity_id)
+	rebuild_passives()
+	Events.talent_learned.emit(Sim.tick, id)
+	var line := "Talent learned: %s" % Talents.display_name(id)
+	if not taught.is_empty():
+		var names := PackedStringArray()
+		for a: Variant in taught:
+			var def := GameData.get_action(str(a))
+			names.append(def.display_name if def != null else str(a))
+		line += " (new ability: %s)" % ", ".join(names)
+	Events.hud_message.emit(line, "good")
+	r["learned"] = taught
+	r["message"] = line
+	last_result = r
+	return r
+
+
+## {ok, reason (ANCESTRY_REASONS), message}: ancestry `id` can be chosen now - not chosen yet, a
+## choosable ancestry (not the neutral one), the Old Kingdom opened, out of combat.
+func can_choose_ancestry(id: String) -> Dictionary:
+	if ancestry_chosen:
+		return _fail("chosen", "Your ancestry is chosen: you are %s." % ancestry_name())
+	if not Talents.is_choosable(id):
+		return _fail("unknown", "There is no ancestry '%s' to choose." % id)
+	if not world_opened():
+		return _fail("not_yet", "Your blood awakens when you reach the Old Kingdom.")
+	if player.entity.combatant.pools.in_combat():
+		return _fail("combat", "Not during combat.")
+	return {"ok": true, "reason": "", "message": ""}
+
+
+## Chooses ancestry `id`, once (can_choose_ancestry first): its attribute points join the
+## attributes (attributes_changed), its passives are rebuilt, its signature is learned (source
+## "ancestry"), the flag ancestry.chosen is set (to the id), ancestry_chosen and a HUD line are
+## emitted. {ok, reason, message, signature (learned id or "")}.
+func choose_ancestry(id: String) -> Dictionary:
+	var check := can_choose_ancestry(id)
+	if not check.ok:
+		check["signature"] = ""
+		last_result = check
+		return check
+	ancestry = id
+	ancestry_chosen = true
+	var bonus := Talents.attribute_bonus_of(id)
+	if not bonus.is_empty():
+		var attrs := attributes()
+		for key: String in bonus:
+			attrs[key] = int(attrs[key]) + int(bonus[key])
+		player.entity.combatant.set_attributes(attrs)
+		Events.attributes_changed.emit(Sim.tick)
+	rebuild_passives()
+	var sig := Talents.signature_of(id)
+	var taught := sig != "" and learn_ability(sig, "ancestry")
+	WorldState.try_set_flag(Talents.CHOSEN_FLAG, id)
+	Events.ancestry_chosen.emit(Sim.tick, id)
+	var line := "Your blood answers: you are %s" % ancestry_name()
+	Events.hud_message.emit(line, "good")
+	last_result = {"ok": true, "reason": "", "message": line, "signature": sig if taught else ""}
+	return last_result
+
+
+## Where a newly learned ability went, for the shrine tabs: "It is on slot 8." when it was
+## auto-slotted, else "Put it on a key in the Loadout tab." ("" for no id).
+func slot_hint(action_id: String) -> String:
+	if action_id == "":
+		return ""
+	var slot := _slot_of(action_id)
+	if slot == "":
+		return "Put it on a key in the Loadout tab."
+	return "It is on %s." % ("the ultimate key" if slot == "ultimate" else "slot " + slot.trim_prefix("slot_"))
+
+
+## The talents' and the ancestry's passive lines ("Armour +25", "Stamina costs -15%", ...).
+func passive_lines() -> PackedStringArray:
+	var c := player.entity.combatant
+	var out := Talents.modifier_lines(c.passives)
+	for t: Variant in c.passive_resistances:
+		out.append("%s resistance +%d%%" % [str(t).capitalize(), roundi(float(c.passive_resistances[t]) * 100.0)])
+	return out
+
+
+## Folds the learned talents' and the ancestry's modifiers into the combatant (Combatant.set_passives),
+## then brings the two things the combatant cannot change itself up to date: the costs and
+## cooldowns of the library's actions and the profile's grab reach. Called on every talent and
+## ancestry change, on load (apply_state) and on every profile change (growth).
+func rebuild_passives() -> void:
+	if player == null or player.entity == null:
+		return
+	var c := player.entity.combatant
+	var p := Talents.passives_for(talents, ancestry if ancestry_chosen else "")
+	c.set_passives(p.modifiers, p.resistances)
+	if c.action_source == null:
+		c.action_source = weakref(player.controller)
+	_sync_action_costs(true)
+	_sync_profile_passives()
+
+
+## The library's actions carry the giant's stamina cost, essence cost and cooldown multipliers:
+## while any of them is not 1, every action of the controller's library is a copy of its record's
+## ActionDef with stamina_cost, essence_cost and cooldown_s scaled (the controller checks and pays
+## those, the hotbar shows them, a refunded grab gives them back); otherwise the shared ActionDefs.
+## A copy is remade when the multipliers change, when its record was refilled (a test override) or
+## when force is set; an action added to the library since the last sync is copied at the next.
+func _sync_action_costs(force: bool = false) -> void:
+	var c := player.entity.combatant
+	var m := Vector3(c.stamina_cost_mult(), c.essence_cost_mult(), c.cooldown_mult())
+	var lib: Dictionary = player.controller.library
+	if not force and m == _cost_mults and lib.size() == _cost_lib_size:
+		return
+	var neutral := m == Vector3.ONE
+	for id: Variant in lib.keys():
+		var base := GameData.get_action(str(id))
+		var cur: ActionDef = lib[id]
+		if base == null or cur == null:
+			continue
+		if neutral:
+			if cur != base:
+				lib[id] = base
+		elif cur == base or force or m != _cost_mults or not is_same(cur.params, base.params):
+			lib[id] = scaled_action(base, m)
+	_cost_mults = m
+	_cost_lib_size = lib.size()
+
+
+## A copy of `base` whose stamina cost, essence cost and cooldown are multiplied by m.x, m.y, m.z.
+static func scaled_action(base: ActionDef, m: Vector3) -> ActionDef:
+	var a := ActionDef.from_dict(base.params)
+	a.stamina_cost = base.stamina_cost * m.x
+	a.essence_cost = base.essence_cost * m.y
+	a.cooldown_s = base.cooldown_s * m.z
+	return a
+
+
+## The giant's profile with the grab reach the passives add (Iron Grip): a copy of the growth record
+## with grab_reach_m raised (PlayerGrab reads it there), or the record itself when nothing is added.
+func _sync_profile_passives() -> void:
+	var add := player.entity.combatant.grab_reach_add()
+	_profile_reach_add = add
+	if _profile_base.is_empty():
+		_profile_base = player.profile
+	if add == 0.0:
+		_profile_copy = {}
+		if not is_same(player.profile, _profile_base):
+			player.profile = _profile_base
+		return
+	var p := _profile_base.duplicate()
+	var reach := float(_profile_base.get("grab_reach_m", float(_profile_base.get("melee_reach_m", 3.5)) + 0.5))
+	p["grab_reach_m"] = reach + add
+	_profile_copy = p
+	player.profile = p
 
 
 # --------------------------------------------------------------------------- loadout
@@ -536,6 +822,16 @@ func apply_state(state: Dictionary) -> void:
 		_push_level()
 	elif not gated:
 		level = Progression.level_for_xp(xp)
+	# P33: the learned talents (unknown ids left out), the ancestry's choice (the ancestry itself:
+	# every ancestry but the neutral one is chosen, as CharacterState normalises it), then the passives.
+	if typeof(state.get("talents")) == TYPE_ARRAY:
+		var known: Array = []
+		for id: Variant in state.talents:
+			if not Talents.record(str(id)).is_empty() and not known.has(str(id)):
+				known.append(str(id))
+		talents = known
+	ancestry_chosen = ancestry != CharacterState.DEFAULT_ANCESTRY
+	rebuild_passives()
 
 
 func capture_state(out: Dictionary) -> void:
@@ -546,9 +842,14 @@ func capture_state(out: Dictionary) -> void:
 	out["attributes"] = attributes()
 	out["level_exempt"] = level_exempt_ids()
 	out["ancestry"] = ancestry
+	out["talents"] = talents.duplicate()   # P33
+	out["ancestry_chosen"] = ancestry_chosen
 
 
 func debug_info(out: Dictionary) -> void:
 	var prog := level_progress()
 	out["progression"] = "Lv %d%s  %d XP (%d / %d)  points %d  talents %d" % [level,
 		"" if gated else " (ungated)", xp, int(prog[0]), int(prog[1]), unspent_attribute_points, talent_points]
+	# P33: what the talents and the ancestry add (the passives, never statuses).
+	out["talents"] = "%s  %d learned  %s" % [ancestry_name() if ancestry_chosen else "no ancestry",
+		talents.size(), ", ".join(passive_lines())]
