@@ -35,6 +35,13 @@ extends BossArena
 ##     shield wall and crews, a column on the road), as many of them as the caps need leave too, the
 ##     farthest first (EncounterDirector.p34_make_room; `stood_out` lists every unit that left). Its
 ##     composition (the plan, the bar's aggregate) is then what actually spawns, banners first.
+##   * M8 screenshot pass (V3): while an attempt is engaged the battle's units know where the giant is
+##     (_alert_units, every tick of the battle): a living unit of its plan that is unaware hears him
+##     (EnemyBrain.on_noise, certain), as an arena's boss is told at engagement (BossArena._alert_boss).
+##     The director shares awareness only within one encounter, and Fort Aldmere's Charge spawned its six
+##     riders at the stables 85-110 m from where the giant fights the Wall - beyond their 70 m sight and
+##     30 m hearing - where they stood for the rest of the battle. Units walking home, held by the giant,
+##     fleeing, routed or dead are left out.
 
 const BATTLE_GROUP := "battle_bosses"
 
@@ -154,6 +161,32 @@ func _battle_step(tick: int) -> void:
 		var c := boss()
 		if c != null and c.has_method("p34_yield"):
 			c.p34_yield("guard_broken")
+	_alert_units(tick)
+
+
+## M8 screenshot pass (V3): every living, unaware unit of the plan hears the giant (see the notes).
+func _alert_units(tick: int) -> void:
+	var p := _player()
+	if p == null or p.entity == null:
+		return
+	for uid: String in _planned:
+		var e := Sim.get_entity(uid)
+		if e == null or not e.is_alive() or e.actor == null or not is_instance_valid(e.actor):
+			continue
+		var n := e.actor
+		var b: Variant = n.get("brain")
+		if not (b is EnemyBrain):
+			continue
+		var brain := b as EnemyBrain
+		if brain.aware or brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED,
+				EnemyBrain.AIState.DEAD, EnemyBrain.AIState.RETURN]:
+			continue
+		if (n.has_method("is_held") and bool(n.call("is_held"))) \
+				or (n.has_method("is_returning") and bool(n.call("is_returning"))):
+			continue
+		brain.on_noise(tick, p.global_position, p.entity.entity_id, true)
+		if n.has_method("set_lod_tier"):
+			n.call("set_lod_tier", 0)
 
 
 func _begin_phase(i: int, tick: int) -> void:

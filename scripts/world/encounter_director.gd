@@ -310,6 +310,17 @@ func spawn_count(entity_id: String) -> int:
 	return m.spawn_count if m != null else 0
 
 
+## M8 screenshot pass (V3): the leash a member is held to - its encounter's centre (level space, as
+## the leash measures it) in xyz and the leash radius in w; w 0 when its encounter has no leash or
+## `entity_id` is no member here. CavalryEnemy keeps a rider's start points inside it.
+func leash_of(entity_id: String) -> Vector4:
+	var m: Member = _members.get(entity_id)
+	var enc: Encounter = _encounters.get(m.encounter_id) if m != null else null
+	if enc == null or enc.leash_r <= 0.0:
+		return Vector4.ZERO
+	return Vector4(enc.center.x, enc.center.y, enc.center.z, enc.leash_r)
+
+
 ## Re-reads the level record and this level's encounter records (and WorldState: kills and
 ## cleared flags). Everything spawned so far is freed first.
 func reload_encounters() -> void:

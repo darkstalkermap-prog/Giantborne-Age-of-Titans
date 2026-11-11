@@ -24,6 +24,12 @@ extends EnemyBrain
 ## are the base's (it flees at ai.flee_morale, 25).
 ## Outmatched (tactics.outmatched_ratio: every giant from stage 3) the cycle is its harass behaviour; it
 ## is the same cycle against a smaller one. A pure object like EnemyBrain: the actor feeds perception.
+## M8 screenshot pass (V3): a rider rides for its start point only as far as its encounter's leash allows
+## (leash_clamp, from the actor): a start point beyond the leash is brought inside it, and a rider that has
+## reached that point (within LEASH_HOLD_M) holds there facing the target - and charges from there once the
+## target comes within its start window. The war camp's riders, posted 60-68 m from the camp's centre
+## under its 70 m leash, rode for a start point beyond it whenever the giant stood east of their pickets,
+## were sent home by the leash, saw him again and rode out again: 60 leashes a minute and no charge.
 
 const CHARGE_TAG := "Charge"
 ## An approach aims at this centre distance from the target (inside the start window).
@@ -41,11 +47,19 @@ const RECHARGE_PAUSE_S := 0.8
 const WHEEL_LEAD_M := 10.0
 ## An unreachable start point turns the approach this far round the target.
 const BLOCKED_TURN_DEG := 60.0
+## M8 screenshot pass (V3): a start point the leash brought inside it counts as reached this close (the
+## horse runs at 13 m/s and stops within about 4 m): the rider holds there.
+const LEASH_HOLD_M := 5.0
 
 ## wheel_resolver(from: Vector3, threat: Vector3, dir: Vector3, distance: float) -> Vector3: a reachable
 ## point `distance` m from `threat` along `dir` (or near it); Vector3.INF when none - or, with
 ## nav_search_pending set, when the search waits for the path-query budget.
 var wheel_resolver := Callable()
+## M8 screenshot pass (V3): leash_clamp(point: Vector3) -> Vector3 - `point` brought inside the rider's
+## encounter leash (unchanged where it has none); invalid = no leash (tests).
+var leash_clamp := Callable()
+## True while the leash keeps the approach short of its start point (tests, debug).
+var held_by_leash := false
 ## "approach" | "charge" | "lance" | "wheel" (tests, debug).
 var cycle := "approach"
 ## Where the current wheel rides to (Vector3.INF until chosen).
@@ -175,7 +189,17 @@ func _approach(my_position: Vector3, target_pos: Vector3, distance: float, seen:
 	if _start_turn_deg != 0.0:
 		away = away.rotated(Vector3.UP, deg_to_rad(_start_turn_deg))
 	var start := clampf(CHARGE_START_M, radius + window.x + START_SLACK_M, radius + window.y - START_SLACK_M)
-	move_target = target_pos + away.normalized() * start
+	var point := target_pos + away.normalized() * start
+	held_by_leash = false
+	if leash_clamp.is_valid():
+		var inside: Vector3 = leash_clamp.call(point)
+		if _flat_distance(inside, point) > 0.01:
+			held_by_leash = true   # M8 screenshot pass (V3): no farther than the leash allows
+			if _flat_distance(my_position, inside) <= LEASH_HOLD_M:
+				_stop_moving()   # there: it holds, facing the target, until a charge fits
+				return
+			point = inside
+	move_target = point
 	move_speed = -1.0
 
 
