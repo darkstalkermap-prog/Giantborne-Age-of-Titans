@@ -157,6 +157,8 @@ static func holds(c: Variant, ctx: Dictionary) -> bool:
 		"near":
 			return near_holds(ctx, str(d.get("target", "")), float(d.get("radius_m", NEAR_DEFAULT_M)))
 		## @anchor P37
+		"event_done":
+			return event_done_holds(ctx, str(d.get("event", "")), str(d.get("outcome", "")))
 	return false
 
 
@@ -356,3 +358,15 @@ static func near_holds(ctx: Dictionary, target: String, radius_m: float) -> bool
 	return Vector2(at.x - (me as Vector3).x, at.z - (me as Vector3).z).length() <= maxf(0.0, radius_m)
 
 ## @anchor P37
+# event_done {event, outcome?} (P37; plan M6-M9 §2.12, §2.3): a world event ended at least once with an
+# outcome - its flag <event id>.done (event.millford_raid.done) is true - and, with `outcome`, its last
+# outcome (<event id>.outcome) was that one. Pure: the context's flags. WorldEvent writes both flags.
+
+## event_done {event, outcome}: see the notes above.
+static func event_done_holds(ctx: Dictionary, event: String, outcome: String) -> bool:
+	if event == "":
+		return false
+	var flags: Dictionary = ctx.get("flags", {})
+	if not same_value(flags.get(event + ".done"), true):
+		return false
+	return outcome == "" or str(flags.get(event + ".outcome", "")) == outcome

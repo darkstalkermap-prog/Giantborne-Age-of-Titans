@@ -178,6 +178,7 @@ func _ready() -> void:
 	reload_encounters()
 	_p29_ready()   # P29: stand-downs, provocation, talkers on greens, the respawn blocker
 	_p32_ready()   # P32: an encounter's engines take their crews
+	_p37_ready()   # P37: copies of templates (wanderers, world events) - their members' XP, targets, patrols
 
 
 # --------------------------------------------------------------------------- public API
@@ -327,6 +328,8 @@ func reload_encounters() -> void:
 	for rec: Dictionary in GameData.records_of_type("encounter"):
 		if str(rec.get("level", "")) != level.level_id:
 			continue
+		if bool(rec.get("template", false)):
+			continue   # P37: a template is never active by itself; the WanderDirector makes copies of it
 		var enc := Encounter.new()
 		enc.id = str(rec.get("id", ""))
 		enc.record = rec
@@ -754,7 +757,8 @@ func _check_cleared(enc: Encounter, tick: int) -> void:
 func _mark_cleared(enc: Encounter, tick: int) -> void:
 	enc.state = CLEARED
 	enc.cleared_emitted = true
-	WorldState.set_flag(enc.flag, true)
+	if not _p37_copies.has(enc.id):   # P37: a copy of a template saves nothing
+		WorldState.set_flag(enc.flag, true)
 	Events.encounter_cleared.emit(tick, enc.id)
 
 
@@ -1511,3 +1515,389 @@ func _p32_on_member_spawned(encounter_id: String, entity_id: String, node: Node3
 ## @anchor P34
 
 ## @anchor P37
+# --- copies of templates: wanderers and world events (P37) --------------------------------------------
+# Plan M6-M9 §2.13, decision 27. Hook lines: _ready (_p37_ready), reload_encounters (a template is skipped:
+# never active by itself) and _mark_cleared (a copy writes no cleared flag).
+#   * p37_add_copy(rec, info) registers a copy of a template - an encounter record p37_copy_record() made:
+#     ids <template id>.<n> (its spawns' <entity id>.<n>), its centre at an anchor and every spawn point
+#     moved and turned with it, persist_death false, no loot table - as an encounter of this director, so
+#     activation, the budget and the formation cap, the leash, LOD, deactivation, the streaming rules
+#     (P24b), formations (P30), stand-downs (P29) and crews (P32) all treat it as a placed one. Nothing of
+#     a copy is saved: no kill, no cleared flag. info: {"xp_scale" (0..1), "patrol" (level-space points
+#     its members walk in turn, each keeping its offset from the group's middle: a wanderer's road, a
+#     raid's round of the houses), "owner" (who made it), "march" (true: a moving column - see p37_march)}.
+#   * Each member a copy spawns gets its record's kill XP times the copy's xp_scale (the existing kill-XP
+#     path reads the combatant's xp_reward: a template's fourth and later spawns pay none), its spawn's
+#     `targets` (P30's provider for that unit: EnemyActor.p37_set_targets), the road points of its patrol,
+#     and in a moving column the point it keeps to (EnemyActor.p37_join_march); its faction's standing
+#     comes with its faction (EnemyActor's P11b: a neutral column walks past a giant at peace with it).
+#   * p37_remove_copy(id) frees what is left of a copy (living members despawned, corpses freed, its
+#     formations dissolved) and forgets it.
+#   * p37_move_copy(id, centre, yaw) re-places a copy that is not in the world (an abstract column at its
+#     path point): its centre, every spawn point (on the loaded ground's height when known) and the chunk
+#     the streaming rules read. p37_march(id, centre, yaw) walks a copy in the world along its route: its
+#     centre, and the pivot of each intact formation of it that is not engaged (aware of the giant): its
+#     members follow their slots; its other members keep to points at their offsets from the centre.
+
+## A copy's spawns and formations take these radii (the WanderDirector places a wanderer 120-220 m away).
+const P37_ACTIVATE_M := 280.0
+const P37_DEACTIVATE_M := 340.0
+## A marching column's escorts make for their place this far ahead of the column (they walk faster).
+const P37_ESCORT_LEAD_M := 6.0
+
+## copy id -> info (see the notes): "xp_scale", "patrol", "owner", "march", "offsets" (entity id ->
+## Vector3 offset from the centre at yaw 0), "yaw" (rad), "centre" (level space), "form_off" (formation
+## id -> Vector3 pivot offset at yaw 0, captured when the formation first stands).
+var _p37_copies := {}
+
+
+func _p37_ready() -> void:
+	if not member_spawned.is_connected(_p37_on_member_spawned):
+		member_spawned.connect(_p37_on_member_spawned)
+
+
+## True when `id` is a live copy of a template run by this director.
+func p37_is_copy(id: String) -> bool:
+	return _p37_copies.has(id) and _encounters.has(id)
+
+
+## The ids of the live copies (sorted).
+func p37_copy_ids() -> PackedStringArray:
+	var out := PackedStringArray()
+	for id: String in _p37_copies:
+		if _encounters.has(id):
+			out.append(id)
+	out.sort()
+	return out
+
+
+## A copy's info ({} when it is no copy).
+func p37_copy_info(id: String) -> Dictionary:
+	return _p37_copies.get(id, {}) if _encounters.has(id) else {}
+
+
+## A copy of template `tpl` (see the notes): id "<template id>.<n>", every spawn's entity id
+## "<entity id>.<n>" (formation banners and engine crews renamed with them), the centre at `centre` (level
+## space) and every spawn point and yaw (and every formation's yaw) moved and turned by `yaw` about the
+## template's centre, each spawn's height from `ground` (Callable(pos: Vector3) -> float; NaN or none:
+## the moved height), its `prefer` definition when that record exists, persist_death false, no loot, no
+## flags of its own (the WanderDirector chose it), template false; `overrides` are merged last. The copy
+## keeps its offsets in "_p37" ({"template", "n", "offsets", "yaws"}) for p37_move_copy.
+static func p37_copy_record(tpl: Dictionary, n: int, centre: Vector3, yaw: float, ground: Callable = Callable(),
+		overrides := {}) -> Dictionary:
+	var rec := tpl.duplicate(true)
+	var tpl_id := str(tpl.get("id", ""))
+	var suffix := ".%d" % n
+	var c0 := _vec3(tpl.get("center_m"))
+	var basis := Basis(Vector3.UP, yaw)
+	var offsets := {}
+	var yaws := {}
+	var renamed := {}
+	for sp: Dictionary in rec.get("spawns", []):
+		var old_id := str(sp.get("entity_id", ""))
+		var new_id := old_id + suffix
+		renamed[old_id] = new_id
+		sp["entity_id"] = new_id
+		var off := _vec3(sp.get("position_m")) - c0
+		offsets[new_id] = off
+		yaws[new_id] = float(sp.get("yaw_deg", 0.0))
+		var at := centre + basis * off
+		var h: float = float(ground.call(at)) if ground.is_valid() else NAN
+		if not is_nan(h):
+			at.y = h
+		sp["position_m"] = [at.x, at.y, at.z]
+		sp["yaw_deg"] = wrapf(float(sp.get("yaw_deg", 0.0)) + rad_to_deg(yaw), -180.0, 180.0)
+		sp["persist_death"] = false
+		sp["loot_table"] = ""
+		var prefer := str(sp.get("prefer", ""))
+		if prefer != "" and GameData.has_record(prefer):
+			sp["definition"] = prefer
+	var form_yaws := {}
+	for f: Dictionary in rec.get("formations", []):
+		if str(f.get("banner", "")) != "":
+			f["banner"] = str(renamed.get(str(f.banner), str(f.banner) + suffix))
+		if SchemaUtil.is_number(f.get("yaw_deg")):
+			form_yaws[str(f.get("id", ""))] = float(f.yaw_deg)
+			f["yaw_deg"] = wrapf(float(f.yaw_deg) + rad_to_deg(yaw), -180.0, 180.0)
+	for e: Dictionary in rec.get("engines", []):
+		var crew: Array = []
+		for c: Variant in e.get("crew", []):
+			crew.append(str(renamed.get(str(c), str(c) + suffix)))
+		e["crew"] = crew
+	rec["id"] = tpl_id + suffix
+	rec["template"] = false
+	rec["center_m"] = [centre.x, centre.y, centre.z]
+	rec["requires_flags"] = []
+	rec["forbids_flags"] = []
+	rec["activate_radius_m"] = maxf(float(tpl.get("activate_radius_m", 0.0)), P37_ACTIVATE_M)
+	rec["deactivate_radius_m"] = maxf(float(tpl.get("deactivate_radius_m", 0.0)), P37_DEACTIVATE_M)
+	rec.merge(overrides, true)
+	rec["_p37"] = {"template": tpl_id, "n": n, "offsets": offsets, "yaws": yaws, "form_yaws": form_yaws}
+	return rec
+
+
+## Registers a copy (a record from p37_copy_record) with its info (see the notes); it activates at the next
+## update when the giant is within its activate radius and its chunk is ready. False when the id is taken.
+func p37_add_copy(rec: Dictionary, info := {}) -> bool:
+	var id := str(rec.get("id", ""))
+	if id == "" or _encounters.has(id) or level == null:
+		return false
+	for s: Variant in rec.get("spawns", []):
+		if typeof(s) == TYPE_DICTIONARY and _members.has(str(s.get("entity_id", ""))):
+			return false   # a member id still in use (the counter of its maker restarted)
+	var origin := level.global_transform if level.is_inside_tree() else level.transform
+	var enc := Encounter.new()
+	enc.id = id
+	enc.record = rec
+	enc.flag = cleared_flag(id)
+	enc.center = origin * _vec3(rec.get("center_m"))
+	enc.activate_r = float(rec.get("activate_radius_m", P37_ACTIVATE_M))
+	enc.deactivate_r = float(rec.get("deactivate_radius_m", P37_DEACTIVATE_M))
+	enc.leash_r = float(rec.get("leash_radius_m", 0.0))
+	enc.alert_group = bool(rec.get("alert_group", true))
+	enc.counts_budget = bool(rec.get("counts_toward_budget", true))
+	for s: Variant in rec.get("spawns", []):
+		if typeof(s) != TYPE_DICTIONARY:
+			continue
+		var m := Member.new()
+		m.entity_id = str(s.get("entity_id", ""))
+		m.encounter_id = id
+		m.spawn = s
+		m.definition = str(s.get("definition", ""))
+		var def := GameData.get_record(m.definition)
+		m.enemy_def = str(def.get("type", "")) == "enemy"
+		m.budgeted = enc.counts_budget and m.enemy_def
+		m.faction = str(s.get("faction", ""))
+		if m.entity_id == "":
+			continue
+		_members[m.entity_id] = m
+		enc.members.append(m)
+		_scene(str(def.get("scene", "")))   # the spawn hitch: the scene is cached before it is needed
+	var meta: Dictionary = rec.get("_p37", {})
+	var stored := info.duplicate()
+	stored["offsets"] = meta.get("offsets", {})
+	stored["yaws"] = meta.get("yaws", {})
+	stored["form_yaws"] = meta.get("form_yaws", {})
+	var mean := Vector3.ZERO
+	for o: Vector3 in (stored.offsets as Dictionary).values():
+		mean += o
+	stored["group_off"] = mean / float(maxi(1, (stored.offsets as Dictionary).size()))
+	stored["centre"] = _vec3(rec.get("center_m"))
+	stored["yaw"] = float(info.get("yaw", 0.0))
+	stored["form_off"] = {}
+	_p37_copies[id] = stored
+	_encounters[id] = enc
+	_order.append(id)
+	_order.sort()
+	_dirty = true
+	return true
+
+
+## Frees what is left of a copy and forgets it (see the notes). Call it from a safe point (a Sim hook).
+func p37_remove_copy(id: String) -> void:
+	var enc: Encounter = _encounters.get(id)
+	_p37_copies.erase(id)
+	if enc == null:
+		return
+	_p30_dissolve_encounter(id)
+	for m: Member in enc.members:
+		if m.node != null and is_instance_valid(m.node):
+			if "ai_enabled" in m.node:
+				m.node.set("ai_enabled", false)
+			_free_node(m.node)
+		m.node = null
+		_members.erase(m.entity_id)
+		_p24b_skipped.erase(m.entity_id)
+	_encounters.erase(id)
+	var i := _order.find(id)
+	if i >= 0:
+		_order.remove_at(i)
+	_p24b_chunks.erase(id)
+	_p29_down.erase(id)
+
+
+## Living, spawned members of a copy (or of any encounter).
+func p37_living(id: String) -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	var enc: Encounter = _encounters.get(id)
+	if enc == null:
+		return out
+	for m: Member in enc.members:
+		if m.status == SPAWNED and _alive(m.node):
+			out.append(m.node)
+	return out
+
+
+## True when no member of the encounter is left to fight: each is dead, routed, or (sitting this
+## activation out) skipped - its encounter cleared, or about to be (members that never spawned count
+## as standing).
+func p37_defeated(id: String) -> bool:
+	var enc: Encounter = _encounters.get(id)
+	if enc == null:
+		return false
+	if enc.state == CLEARED:
+		return true
+	for m: Member in enc.members:
+		if m.status == DEAD or _p24b_skipped.has(m.entity_id):
+			continue
+		if m.status == SPAWNED and m.routed:
+			continue
+		return false
+	return not enc.members.is_empty()
+
+
+## True while a member of the encounter is aware of the giant (and not walking home).
+func p37_engaged(id: String) -> bool:
+	var enc: Encounter = _encounters.get(id)
+	return enc != null and enc.state == ACTIVE and _any_aware(enc)
+
+
+## Re-places a copy that is not in the world: its centre (level space) and yaw, every spawn point at its
+## offset (turned by yaw; on the loaded ground's height through `ground` when known), and the chunk the
+## streaming rules read. A copy in the world keeps its members where they are (use p37_march).
+func p37_move_copy(id: String, centre: Vector3, yaw: float, ground: Callable = Callable()) -> void:
+	var enc: Encounter = _encounters.get(id)
+	var info: Dictionary = _p37_copies.get(id, {})
+	if enc == null or info.is_empty():
+		return
+	var origin := level.global_transform if level != null and level.is_inside_tree() else Transform3D.IDENTITY
+	info["centre"] = centre
+	info["yaw"] = yaw
+	enc.center = origin * centre
+	(enc.record as Dictionary)["center_m"] = [centre.x, centre.y, centre.z]
+	_p24b_chunks.erase(id)
+	var form_yaws: Dictionary = info.get("form_yaws", {})
+	for f: Dictionary in enc.record.get("formations", []):
+		if form_yaws.has(str(f.get("id", ""))):
+			f["yaw_deg"] = wrapf(float(form_yaws[str(f.id)]) + rad_to_deg(yaw), -180.0, 180.0)
+	var basis := Basis(Vector3.UP, yaw)
+	var offsets: Dictionary = info.get("offsets", {})
+	var yaws: Dictionary = info.get("yaws", {})
+	for m: Member in enc.members:
+		if m.status == SPAWNED:
+			continue
+		var at := centre + basis * (offsets.get(m.entity_id, Vector3.ZERO) as Vector3)
+		var h: float = float(ground.call(at)) if ground.is_valid() else NAN
+		if not is_nan(h):
+			at.y = h
+		m.spawn["position_m"] = [at.x, at.y, at.z]
+		m.spawn["yaw_deg"] = wrapf(float(yaws.get(m.entity_id, 0.0)) + rad_to_deg(yaw), -180.0, 180.0)
+
+
+## Walks a copy in the world along its route (see the notes): its centre to `centre` (level space) facing
+## `yaw`, the pivot of every intact formation of it not engaged with the giant (its offset from the centre
+## kept), and the points its other members keep to. Returns true when no formation of it was engaged.
+func p37_march(id: String, centre: Vector3, yaw: float) -> bool:
+	var enc: Encounter = _encounters.get(id)
+	var info: Dictionary = _p37_copies.get(id, {})
+	if enc == null or info.is_empty():
+		return false
+	var origin := level.global_transform if level != null and level.is_inside_tree() else Transform3D.IDENTITY
+	var free := true
+	var form_off: Dictionary = info.get("form_off", {})
+	var basis := Basis(Vector3.UP, yaw)
+	for fid: String in _p30_by_encounter.get(id, PackedStringArray()):
+		var f: Formation = _p30_formations.get(fid)
+		if f == null or f.dissolved:
+			continue
+		if not form_off.has(fid):
+			var c0 := origin * (info.get("centre", centre) as Vector3)
+			form_off[fid] = Basis(Vector3.UP, -float(info.get("yaw", yaw))) * (f.pivot - c0)
+		if not f.is_intact():
+			continue
+		if f.aware or f.state != "formed":
+			free = false
+			continue
+		var p := origin * (centre + basis * (form_off[fid] as Vector3))
+		f.pivot = Vector3(p.x, f.pivot.y, p.z)
+		f.home_pivot = f.pivot
+		f.facing_yaw = wrapf(yaw, -PI, PI)
+		f.home_yaw = f.facing_yaw
+	info["form_off"] = form_off
+	info["centre"] = centre
+	info["yaw"] = yaw
+	enc.center = origin * centre
+	(enc.record as Dictionary)["center_m"] = [centre.x, centre.y, centre.z]
+	_p24b_chunks.erase(id)
+	# Its members in no formation (escorts: the column's riders), hostile and walking: the patrol point
+	# they make for is their place a little ahead of the column (at peace, EnemyActor.p37_join_march's
+	# post does it).
+	var ahead := Formation.forward_of(yaw) * P37_ESCORT_LEAD_M
+	for m: Member in enc.members:
+		if m.status != SPAWNED or not _alive(m.node) or m.node.get("formation") != null:
+			continue
+		var b := m.node.get("brain") as EnemyBrain
+		if b == null or b.at_peace() or b.aware:
+			continue
+		var t := p37_march_target(id, m.entity_id)
+		if not t.is_empty():
+			var pts: Array[Vector3] = [(t.point as Vector3) + ahead]
+			b.patrol_points = pts
+	return free and not _any_aware(enc)
+
+
+## Where a member of a moving copy keeps to now: {"point" (global; its formation slot while its formation
+## stands, else its offset from the copy's centre), "yaw" (the column's heading)}; {} when it is none.
+func p37_march_target(id: String, entity_id: String) -> Dictionary:
+	var info: Dictionary = _p37_copies.get(id, {})
+	if info.is_empty() or not bool(info.get("march", false)):
+		return {}
+	var origin := level.global_transform if level != null and level.is_inside_tree() else Transform3D.IDENTITY
+	var yaw := float(info.get("yaw", 0.0))
+	var off: Vector3 = (info.get("offsets", {}) as Dictionary).get(entity_id, Vector3.ZERO)
+	var p := origin * ((info.get("centre", Vector3.ZERO) as Vector3) + Basis(Vector3.UP, yaw) * off)
+	return {"point": p, "yaw": yaw}
+
+
+## Deactivates a copy now (an abstract column whose point left the loaded ground): its living members
+## are freed and come back at their spawn points on its next activation.
+func p37_deactivate(id: String) -> void:
+	var enc: Encounter = _encounters.get(id)
+	if enc != null and enc.state == ACTIVE:
+		_deactivate(enc)
+
+
+func _p37_on_member_spawned(encounter_id: String, entity_id: String, node: Node3D) -> void:
+	var info: Dictionary = _p37_copies.get(encounter_id, {})
+	var m: Member = _members.get(entity_id)
+	if info.is_empty() or m == null or node == null or not is_instance_valid(node):
+		return
+	var e: Variant = node.get("entity")
+	if e is CombatEntity and (e as CombatEntity).combatant != null:
+		var base := int(GameData.get_record(m.definition).get("xp_reward", 0))
+		(e as CombatEntity).combatant.xp_reward = int(roundf(float(base) * clampf(float(info.get("xp_scale", 1.0)), 0.0, 1.0)))
+	if typeof(m.spawn.get("targets")) == TYPE_DICTIONARY and node.has_method("p37_set_targets"):
+		node.call("p37_set_targets", m.spawn.targets)
+	var brain: Variant = node.get("brain")
+	var patrol: Array = info.get("patrol", [])
+	if not patrol.is_empty() and brain is EnemyBrain:
+		var off: Vector3 = (info.get("offsets", {}) as Dictionary).get(entity_id, Vector3.ZERO) - (info.get("group_off", Vector3.ZERO) as Vector3)
+		var basis := Basis(Vector3.UP, float(info.get("yaw", 0.0)))
+		var origin := level.global_transform if level != null and level.is_inside_tree() else Transform3D.IDENTITY
+		var points: Array[Vector3] = []
+		for p: Vector3 in patrol:
+			points.append(origin * (p + basis * Vector3(off.x, 0.0, off.z)))
+		(brain as EnemyBrain).patrol_points = points
+	if bool(info.get("march", false)) and node.has_method("p37_join_march"):
+		var copy_id := encounter_id
+		node.call("p37_join_march", func() -> Dictionary: return p37_march_target(copy_id, entity_id))
+
+
+## Loads the scenes the templates `template_ids` spawn (their definitions, and the records they prefer
+## when those exist) into the shared cache at level load, so no copy loads a scene when it appears (the
+## spawn hitch, P17a). Returns how many it loaded now.
+func p37_preload(template_ids: PackedStringArray) -> int:
+	var loaded := 0
+	for tid in template_ids:
+		for s: Variant in GameData.get_record(tid).get("spawns", []):
+			if typeof(s) != TYPE_DICTIONARY:
+				continue
+			var defs := [str(s.get("definition", ""))]
+			if str(s.get("prefer", "")) != "" and GameData.has_record(str(s.prefer)):
+				defs.append(str(s.prefer))
+			for d: String in defs:
+				var path := str(GameData.get_record(d).get("scene", ""))
+				if path != "" and not _scene_cache.has(path):
+					_scene(path)
+					loaded += 1
+	return loaded

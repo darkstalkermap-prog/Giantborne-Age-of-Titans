@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_crownmarch_raider_band",
+	"type": "encounter",
+	"display_name": "Raider band",
+	"description": "P37 (plan M6-M9 §2.13, §5.10): a wander template of wander.crownmarch's raider_band entry (stage 3-4) - four raiders (soldiers) and an archer of the Hollow's kind, hostile, on the road. Copies drop no loot (a placed raider's loot.raider is the Hollow's; a wanderer's would be farmable). Its centre is nominal.",
+	"template": true,
+	"level": "level.world",
+	"center_m": [-500, 7.75, 688],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.crownmarch.wander_raider_1", "definition": "enemy.soldier", "position_m": [-502, 7.75, 686], "yaw_deg": 0, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_raider_2", "definition": "enemy.soldier", "position_m": [-498, 7.75, 686], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_raider_3", "definition": "enemy.soldier", "position_m": [-502, 7.75, 690], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_raider_4", "definition": "enemy.soldier", "position_m": [-498, 7.75, 690], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_raider_archer", "definition": "enemy.archer", "position_m": [-500, 7.75, 695], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

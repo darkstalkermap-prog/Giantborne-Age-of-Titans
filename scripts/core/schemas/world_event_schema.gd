@@ -61,6 +61,50 @@ static func fields() -> Dictionary:
 			"items": DIALOGUE.item_list()}}},
 	}
 	## @anchor P37
+	# P37 (the framework: scripts/world/world_event.gd, run by the WanderDirector):
+	#   trigger.max_runs (0 = no limit: how often the event may start), trigger.cooldown_from ("end",
+	#     default: cooldown_s after the last run ended; "start": after it started);
+	#   success_outcome / fail_outcome: the outcome its encounters' defeat gives (default "defended";
+	#     the audio router plays the quest stinger for it) and the one its fail rule gives (the protect
+	#     objective lost, the timer out);
+	#   start_text: the HUD notice when it starts; respawn_text: why a respawn near it moves away;
+	#   objective.text: the tracker's line ("{standing}" and "{total}" give the protected targets
+	#     standing and listed); objective.marker: the place its marker shows (default its centre; a
+	#     moving event shows its column);
+	#   outcomes.<name>.text: the HUD notice of that ending; outcomes.<name>.burn: at least this many of
+	#     the protected targets stand destroyed after it (the raiders' fire);
+	#   route (as a wander entry's: from, to, round_trip, stage) with speed_mps: a moving column whose
+	#     march ends it with `end_outcome` when it comes back (or reaches its end);
+	#   abandon_after_s: an active event whose centre has been unloaded this long (play time) ends with
+	#     no outcome (default 600; 0 = never);
+	#   xp_full_runs: its members' kill XP for its first runs only (default 3; nothing farmable).
+	(f.trigger.fields as Dictionary).merge({
+		"max_runs": U.int_field(0, 1000),
+		"cooldown_from": U.str_field(false, ["start", "end"]),
+	})
+	(f.objective.fields as Dictionary).merge({
+		"text": U.str_field(),
+		"marker": U.str_field(),
+	})
+	((f.outcomes.values as Dictionary).fields as Dictionary).merge({
+		"text": U.str_field(),
+		"burn": U.int_field(0, 100),
+	})
+	f.merge({
+		"success_outcome": U.str_field(),
+		"fail_outcome": U.str_field(),
+		"end_outcome": U.str_field(),
+		"start_text": U.str_field(),
+		"respawn_text": U.str_field(),
+		"route": {"t": "dict", "fields": {
+			"from": U.str_field(true),
+			"to": U.str_field(true),
+			"round_trip": U.bool_field(),
+			"stage": U.int_field(0, 10)}},
+		"abandon_after_s": U.num(0.0),
+		"xp_full_runs": U.int_field(0, 100),
+		"bot": {"t": "dict"},
+	})
 
 	return f
 
@@ -104,6 +148,23 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			if typeof(o) == TYPE_DICTIONARY:
 				DIALOGUE.check_flag_map(o.get("set_flags"), "%s.outcomes.%s.set_flags" % [ctx, name], out)
 	## @anchor P37
+	# P37: the named outcomes exist; a route has two ends and excludes a path. (lost_to_fail and burn
+	# are capped at the objective's targets at run time: the plan's examples list one target for brevity.)
+	var p37_outcomes: Dictionary = outcomes if typeof(outcomes) == TYPE_DICTIONARY else {}
+	for p37_key: String in ["success_outcome", "fail_outcome", "end_outcome"]:
+		var p37_name: Variant = d.get(p37_key)
+		if typeof(p37_name) == TYPE_STRING and p37_name != "" and not p37_outcomes.has(p37_name):
+			out.errors.append("%s.%s: '%s' is not one of its outcomes (%s)" % [ctx, p37_key, p37_name,
+				", ".join(PackedStringArray(p37_outcomes.keys()))])
+	if typeof(d.get("route")) == TYPE_DICTIONARY:
+		var p37_route: Dictionary = d.route
+		for p37_end: String in ["from", "to"]:
+			if typeof(p37_route.get(p37_end)) == TYPE_STRING:
+				U.check_id_string(p37_route[p37_end], "%s.route.%s" % [ctx, p37_end], out)
+		if str(p37_route.get("from", "")) != "" and str(p37_route.get("from", "")) == str(p37_route.get("to", "")):
+			out.errors.append("%s.route: a route goes from one place to another (from == to)" % ctx)
+		if typeof(path) == TYPE_STRING and path != "":
+			out.errors.append("%s: an event moves along a path or a route, not both" % ctx)
 
 
 static func required_ids() -> Dictionary:

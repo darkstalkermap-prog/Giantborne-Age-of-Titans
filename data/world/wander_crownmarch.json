@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "wander.crownmarch",
+	"type": "wander_table",
+	"display_name": "The Crownmarch's roads",
+	"description": "P37 (plan M6-M9 §2.13, §5.10, decision 27): who walks the Crownmarch's roads while the giant is there - at most two at once, one every 60-120 s, 120-220 m away, out of view, on a road node (never in a settlement, never by a placed fight that is not cleared). Each entry's members pay kill XP for its first three spawns only (wander.crownmarch.<entry>.spawns). The pike column marches the King's Road (a route through the road graph) from the toll fort to Kingsgate, neutral while Aldmere is at peace; the cavalry ride while Aldmere is hostile and Brannock's militia while the town is. The toll-riders' siege train of the plan's table (stage 6) waits for a siege-engine copy that pays nothing twice (docs/systems/P37.md).",
+	"region": "region.crownmarch",
+	"max_active": 2,
+	"interval_s": [60, 120],
+	"min_distance_m": 120,
+	"max_distance_m": 220,
+	"anchors": "roads",
+	"xp_full_spawns": 3,
+	"patrol_m": 40,
+	"entries": [
+		{"id": "toll_patrol", "weight": 3, "min_stage": 3, "max_stage": 4, "template": "encounter.tpl_crownmarch_toll_patrol"},
+		{"id": "raider_band", "weight": 2, "min_stage": 3, "max_stage": 4, "template": "encounter.tpl_crownmarch_raider_band"},
+		{"id": "wolf_pack", "weight": 2, "min_stage": 3, "max_stage": 3, "template": "encounter.tpl_crownmarch_wolves"},
+		{"id": "dire_wolf_pack", "weight": 2, "min_stage": 4, "max_stage": 10, "template": "encounter.tpl_crownmarch_dire_wolves"},
+		{"id": "pike_column", "weight": 2, "min_stage": 4, "max_stage": 10, "template": "encounter.tpl_crownmarch_pike_column",
+		 "route": {"from": "world.marker.toll_fort", "to": "world.marker.kingsgate_shrine", "stage": 4}, "speed_mps": 1.2,
+		 "conditions": [{"type": "not", "of": {"type": "flag", "flag": "oath.crown.outcome", "equals": "parley"}},
+		                {"type": "not", "of": {"type": "flag", "flag": "boss.corvane.outcome", "equals": "spared"}}]},
+		{"id": "cavalry_pair", "weight": 1, "min_stage": 5, "max_stage": 10, "template": "encounter.tpl_crownmarch_cavalry_pair",
+		 "requires_flags": ["faction.aldmere.hostile"], "forbids_flags": ["faction.aldmere.reconciled"]},
+		{"id": "militia", "weight": 3, "template": "encounter.tpl_crownmarch_militia",
+		 "requires_flags": ["faction.brannock.hostile"], "forbids_flags": ["faction.brannock.reconciled"]}
+	]
+}

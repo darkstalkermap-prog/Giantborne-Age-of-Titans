@@ -3242,3 +3242,68 @@ func _p32_crew_face() -> Vector3:
 ## @anchor P34
 
 ## @anchor P37
+# --- wanderers and world events: a spawn's own targets, a marching column (P37) ----------------------
+# Plan M6-M9 §2.13, decision 27. The EncounterDirector's P37 section calls these on a copy of a template:
+#   * p37_set_targets(targets): this unit's target provider (P30) takes `targets` instead of its record's
+#     (a raid's raiders burn the settlement's houses and hunt its folk while the giant is not in their way);
+#   * p37_join_march(target): this unit walks with a moving column - target() -> {"point", "yaw"} is its
+#     place in the column now (its formation slot while its formation stands, else its offset from the
+#     column's centre). At peace (a neutral column walking past a giant at peace with its faction) the
+#     post it holds is that place, a little ahead of it so it keeps walking with the column instead of
+#     stopping and starting at each refresh of its post (EnemyBrain's POST_REFRESH_S); hostile, its
+#     formation slot (P30) or the escort's patrol point the director keeps ahead of the column does it.
+
+## How far ahead of its place in a marching column a member at peace makes for (its post is asked for
+## again every second; the column marches about a metre a second).
+const P37_POST_LEAD_M := 1.5
+
+## target() -> {"point": Vector3, "yaw": float} of this unit's place in a marching column; unset = none.
+var p37_march_target := Callable()
+
+
+## This unit's target provider takes `targets` (the shape of an enemy record's `targets`, P30) from now on.
+func p37_set_targets(targets: Dictionary) -> void:
+	if targets.is_empty():
+		return
+	record = record.duplicate()
+	record["targets"] = targets.duplicate(true)
+	_p30_target_tick = -1
+	_p30_target_ref = null
+	if runner != null:
+		runner.provider_target = _p30_provider_target
+
+
+## This unit walks with a marching column (see the section notes).
+func p37_join_march(target: Callable) -> void:
+	p37_march_target = target
+	if brain != null:
+		brain.post_resolver = _p37_post
+
+
+## This unit leaves its column: it holds its own post again (P11b).
+func p37_leave_march() -> void:
+	p37_march_target = Callable()
+	if brain != null and faction != "":
+		brain.post_resolver = faction_post
+
+
+## Where this unit keeps to in its column now (Vector3.INF when it walks with none): its formation slot
+## while its formation stands, else its place from target().
+func p37_march_point() -> Vector3:
+	if formation != null and formation.is_intact():
+		return formation.slot_position(formation_slot)
+	if not p37_march_target.is_valid():
+		return Vector3.INF
+	var t: Variant = p37_march_target.call()
+	return (t as Dictionary).get("point", Vector3.INF) if typeof(t) == TYPE_DICTIONARY else Vector3.INF
+
+
+## brain.post_resolver while marching: the column's place for this unit, a little ahead, facing the way
+## the column goes; its own post (P11b) when the column gives none.
+func _p37_post() -> Dictionary:
+	var t: Variant = p37_march_target.call() if p37_march_target.is_valid() else null
+	var p := p37_march_point()
+	if typeof(t) != TYPE_DICTIONARY or not p.is_finite():
+		return faction_post()
+	var fwd := Formation.forward_of(float((t as Dictionary).get("yaw", 0.0)))
+	return {"post": p + fwd * P37_POST_LEAD_M, "face": p + fwd * 10.0}

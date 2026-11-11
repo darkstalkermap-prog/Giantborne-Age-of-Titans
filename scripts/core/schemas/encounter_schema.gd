@@ -137,6 +137,24 @@ static func fields() -> Dictionary:
 		"crew": {"t": "array", "req": true, "items": "string"}}}
 
 	## @anchor P37
+	# P37 (plan M6-M9 §2.13, decision 27): `template` - a wander or world-event template, never active by
+	# itself: the WanderDirector has the director make copies of it (EncounterDirector's P37 section) with
+	# ids <template id>.<n>, its centre at the anchor chosen and every spawn point moved (and turned)
+	# with it. A template's own centre_m is where it is drawn up (the copies keep their offsets from it).
+	# A spawn of a template may carry `targets` (P30's target provider for that spawn alone: raiders who
+	# burn a settlement's houses and hunt its folk while the giant is not in their way) and `prefer` (a
+	# record used instead of `definition` once it exists - a later package's archetype, such as
+	# enemy.dire_wolf, without a data change when it lands; checked by GameData as a warning only).
+	f["template"] = U.bool_field()
+	(((f.spawns as Dictionary).item_fields) as Dictionary).merge({
+		"targets": {"t": "dict", "fields": {
+			"teams": {"t": "array", "items": "string", "items_enum": ["player"]},
+			"factions": U.ref_array("faction"),
+			"prop_tags": {"t": "array", "items": "string"},
+			"priority": U.str_field(false, ["nearest"]),
+			"aggro_player_m": U.pos()}},
+		"prefer": U.str_field(),
+	})
 
 	return f
 
@@ -207,6 +225,30 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 				p32_seen_crew[str(p32_c)] = true
 
 	## @anchor P37
+	# P37: a spawn's `targets` names at least one team, faction or prop tag (as an enemy record's) and
+	# `prefer` is a record id; only a template's spawns use them (a placed encounter's members are their
+	# records' own).
+	var p37_spawns: Variant = d.get("spawns")
+	if typeof(p37_spawns) == TYPE_ARRAY:
+		var p37_template := bool(d.get("template", false))
+		for i in (p37_spawns as Array).size():
+			var p37_sp: Variant = p37_spawns[i]
+			if typeof(p37_sp) != TYPE_DICTIONARY:
+				continue
+			var p37_ctx := "%s.spawns[%d]" % [ctx, i]
+			for p37_key: String in ["targets", "prefer"]:
+				if p37_sp.has(p37_key) and not p37_template:
+					out.errors.append("%s.%s: only a template's spawns take %s (P37)" % [p37_ctx, p37_key, p37_key])
+			var p37_targets: Variant = p37_sp.get("targets")
+			if typeof(p37_targets) == TYPE_DICTIONARY:
+				var p37_kinds := 0
+				for p37_key: String in ["teams", "factions", "prop_tags"]:
+					if typeof(p37_targets.get(p37_key)) == TYPE_ARRAY:
+						p37_kinds += (p37_targets[p37_key] as Array).size()
+				if p37_kinds == 0:
+					out.errors.append("%s.targets: names no team, faction or prop tag" % p37_ctx)
+			if typeof(p37_sp.get("prefer")) == TYPE_STRING and str(p37_sp.prefer) != "":
+				U.check_id_string(p37_sp.prefer, p37_ctx + ".prefer", out)
 
 
 ## The spawn list: at least one member, ids unique within the encounter and in the id form, a

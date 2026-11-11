@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_crownmarch_toll_patrol",
+	"type": "encounter",
+	"display_name": "Toll-rider patrol",
+	"description": "P37 (plan M6-M9 §2.13, §5.10): a wander template of wander.crownmarch's toll_patrol entry (stage 3-4) - three toll-rider soldiers and an archer (faction toll_riders, hostile by their faction) on the road. Never active by itself: the WanderDirector places copies of it on a road node 120-220 m from the giant, out of view, and walks them along the road. Its centre is nominal (a Crownmarch road node, clear of the placed encounters' clusters).",
+	"template": true,
+	"level": "level.world",
+	"center_m": [350, 12.17, 700],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.crownmarch.wander_toll_1", "definition": "enemy.soldier", "position_m": [348, 12.17, 698], "yaw_deg": 0, "patrol": "", "faction": "toll_riders", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_toll_2", "definition": "enemy.soldier", "position_m": [352, 12.17, 698], "yaw_deg": 0, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_toll_3", "definition": "enemy.soldier", "position_m": [350, 12.17, 702], "yaw_deg": 0, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_toll_archer", "definition": "enemy.archer", "position_m": [350, 12.17, 706], "yaw_deg": 0, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

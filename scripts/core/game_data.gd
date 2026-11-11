@@ -236,6 +236,12 @@ func _post_pass() -> void:
 	## @anchor P34
 
 	## @anchor P37
+	# P37 (plan M6-M9 §2.13, decision 27): wander tables and world events name templates of their level
+	# (leashed, persisting and dropping nothing: nothing farmable), routes and objective markers name places
+	# of the level's world index (WorldEvent.data_problems).
+	var p37 := WorldEvent.data_problems(records, record_paths)
+	errors.append_array(p37.errors)
+	warnings.append_array(p37.warnings)
 
 	pass
 
