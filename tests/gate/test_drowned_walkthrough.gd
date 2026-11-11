@@ -4,8 +4,11 @@ extends IntegrationSuite
 ## grown to its stage, and the shipped chunks' props parts (the Mere's bells, the Titan's Bones, the
 ## causeway, the ferrywoman's landing) struck, lit and heaved by the giant:
 ##   * the bells: Wenna's dialogue starts the quest; the fourth bell hangs in the Wend's deep reach
-##     (a stage-4 gate) and the island's past the deep channel (stage 5); the five rung pay 200 XP and
-##     open the Stoneknuckles' rack, whose gauntlets end the quest;
+##     (a stage-4 gate) and the island's past the deep channel (stage 5); each rings to the giant's real
+##     light swing (the input router) from its bed 6 m before it - the first four at stage 4, the fifth
+##     at stage 5 (M8 gate F45: the fourth hung out of a stage-4 light swing's reach; synthetic hits had
+##     hidden it); the five rung pay 200 XP and open the Stoneknuckles' rack, whose gauntlets end the
+##     quest;
 ##   * the Titan's Bones: the forge's fire waits for the scavengers, then lights (2 titan iron, the
 ##     quest's 150 XP) and the Titan Forge, cold before, titanforges a reinforced weapon;
 ##   * the sunken vault: the causeway's rockfall will not move at stage 4 and is heaved at stage 5;
@@ -19,6 +22,9 @@ const BELL_PARTS := ["res://scenes/world/chunks/c3_3_0.tscn", "res://scenes/worl
 const LANDING_PART := "res://scenes/world/chunks/c3_4_0.tscn"
 const BONES_PART := "res://scenes/world/chunks/c4_2_0.tscn"
 const VAULT_PART := "res://scenes/world/chunks/c4_4_0.tscn"
+## Where the giant stands to ring a bell: this far before it along the bell's own z (clear of the
+## frame's posts), on its bed.
+const BELL_STAND_M := 6.0
 
 
 func before_each() -> void:
@@ -68,31 +74,25 @@ func _find(world_id: String) -> Node:
 	return null
 
 
-func _strike(p: GiantPlayer, world_id: String) -> bool:
-	for i in 40:
+## Rings a bell with the giant's real light swings (InputRouter injection, at most three): the giant
+## stands on the bell's bed (a floor at the bell's ground) BELL_STAND_M before it along its own z,
+## facing it. True once it rang.
+func _ring(p: GiantPlayer, world_id: String) -> bool:
+	var bell := _find(world_id) as Node3D
+	if bell == null:
+		return false
+	var dir := bell.global_transform.basis.z.normalized()
+	var stand := bell.global_position + dir * BELL_STAND_M
+	add_box(Vector3(24, 1, 24), Vector3(stand.x, bell.global_position.y - 0.5, stand.z))
+	GameSession.place_player(p, Transform3D(Basis(Vector3.UP, atan2(dir.x, dir.z)),
+		Vector3(stand.x, bell.global_position.y + 0.3, stand.z)))
+	await step_ticks(10)
+	for i in 3:
+		p.router.inject_light_attack()
+		await step_ticks(100)
 		if WorldState.is_destroyed(world_id):
 			return true
-		var e := Sim.get_entity(world_id)
-		if e == null:
-			break
-		var h := HitEvent.new()
-		h.tick = Sim.tick
-		h.instance_id = Sim.new_instance_id()
-		h.attacker_id = p.entity.entity_id
-		h.target_id = world_id
-		h.power = 600.0
-		h.attacker_stat = 40.0
-		h.attacker_height_m = 20.0
-		h.damage_split = {"physical": 1.0}
-		h.poise_damage = 50.0
-		h.tags = PackedStringArray(["Melee"])
-		h.category = "melee"
-		h.attacker_growth_stage = int(p.get("growth_stage"))
-		h.attacker_position = (e.actor as Node3D).global_position + Vector3(0, 0, 8) if e.actor != null else Vector3.ZERO
-		Sim.queue_hit(h)
-		await step_ticks(1)
-	await step_ticks(2)
-	return WorldState.is_destroyed(world_id)
+	return false
 
 
 func test_the_five_bells_and_the_stoneknuckles() -> void:
@@ -120,8 +120,11 @@ func test_the_five_bells_and_the_stoneknuckles() -> void:
 	for path: String in BELL_PARTS:
 		_part(path)
 	var xp: int = p.progression.xp
-	for b: String in BELLS:
-		assert_true(await _strike(p, b), "%s rings" % b)
+	for i in BELLS.size():
+		if i == 4:
+			await _grow(p, 5)   # the island's bell, past the stage-5 channel
+		assert_true(await _ring(p, BELLS[i]), "%s rings to a light swing from its bed (stage %d)" % [BELLS[i],
+			int(p.get("growth_stage"))])
 	await _settle()
 	assert_eq(Quests.stage_of("quest.drowned_bells"), "gauntlets", "the five bells rung")
 	assert_true(p.progression.xp - xp >= 200, "and paid 200 XP (%d)" % (p.progression.xp - xp))

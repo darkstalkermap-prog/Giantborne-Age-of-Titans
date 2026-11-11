@@ -4,7 +4,8 @@ extends IntegrationSuite
 ## screen shows the speaker, the line and numbered choices (keys 1-4), pauses the game, takes a
 ## rewarded choice through the real progression (the ability learned once, XP once over two
 ## conversations) and closes when the conversation ends, leaving Quests.dialogue null; Esc leaves
-## without choosing; a talker on an NPC takes its ids from its parent and goes when it dies.
+## without choosing; a talker on an NPC takes its ids from its parent and goes when it dies. M8 gate
+## (F5): a talker whose npc's death WorldState records starts silent (its chunk loaded again).
 
 const Fx := preload("res://tests/support/quest_fixtures.gd")
 const STORY := "dialogue.test_story"
@@ -183,3 +184,23 @@ func test_a_talker_on_an_npc_takes_its_ids_and_goes_when_it_dies() -> void:
 	assert_false(npc.entity.is_alive(), "the NPC died")
 	assert_false(t.enabled, "gone once its NPC is dead")
 	assert_false(t.can_interact(p), "and silent")
+
+
+## M8 gate (F5): a talker standing for a spawned actor (P36's talker kind: Ulfra's beside Skarn's
+## longhouses, Harrok's challenge stone) names the actor's npc_id, so its talk ends with the actor's
+## death - also when the death was recorded before the talker was made (its chunk loaded again after
+## the kill, a reload): WorldState.is_killed counts as dead in _ready and in can_interact.
+func test_a_talker_whose_npc_was_killed_before_it_loaded_stays_silent() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	WorldState.record_killed("test.dead_chief")
+	var dead := _talker(Vector3(0, 0, -3), "test.dead_chief")
+	var alive := _talker(Vector3(30, 0, -3), "test.living_chief")
+	await step_ticks(8)
+	assert_false(dead.enabled, "a talker whose npc's death is recorded is gone when it loads")
+	assert_false(dead.can_interact(p), "and cannot talk")
+	assert_eq(dead.blocked_reason(p), "", "without a refusal line")
+	assert_eq(p.interact.current_prompt(), "", "no prompt beside it")
+	assert_true(alive.enabled and alive.can_interact(p), "another npc's talker still talks")
+	# A death recorded while the talker stands (a kill elsewhere, a loaded save) silences it too.
+	WorldState.record_killed("test.living_chief")
+	assert_false(alive.can_interact(p), "a recorded death silences a standing talker")

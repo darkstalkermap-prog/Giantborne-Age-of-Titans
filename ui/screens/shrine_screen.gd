@@ -11,6 +11,17 @@ extends UiScreen
 ##
 ## Pad and keyboard (P16): the tab buttons are one row, the shown tab's focus_rows() follow, then
 ## Leave; every direction wraps. Opening a tab focuses its first control; pad LB / RB switch tabs.
+##
+## M8 gate (F17): the panel is PANEL_SIZE around a point LIFT_PX above the screen's centre and grows
+## both ways when a tab needs more (it grew downward only: at level 20 the Talents tab's passives line
+## pushed Leave below a 720 px window, under the stack's footer hint). With the passives line capped
+## (talents_tab.gd) the tallest tab stays inside 1280 x 720 and above the footer hint at any level
+## (test_shrine_panel_fit).
+
+## The panel's size before a tab needs more, and how far its centre sits above the screen's: the
+## stack's footer hint takes the bottom 30 px (ScreenStack).
+const PANEL_SIZE := Vector2(760, 580)
+const LIFT_PX := 16.0
 
 ## [title, path]; a missing file is skipped (its package has not landed yet).
 const TABS := [
@@ -45,10 +56,12 @@ func _ready() -> void:
 	var panel := UiKit.panel(Color(0.07, 0.09, 0.10, 0.97))
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.offset_left = -380
-	panel.offset_right = 380
-	panel.offset_top = -290
-	panel.offset_bottom = 290
+	panel.offset_left = -PANEL_SIZE.x * 0.5
+	panel.offset_right = PANEL_SIZE.x * 0.5
+	panel.offset_top = -PANEL_SIZE.y * 0.5 - LIFT_PX
+	panel.offset_bottom = PANEL_SIZE.y * 0.5 - LIFT_PX
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.grow_vertical = Control.GROW_DIRECTION_BOTH
 	add_child(panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)

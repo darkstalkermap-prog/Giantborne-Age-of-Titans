@@ -50,6 +50,10 @@ func _ready() -> void:
 	frame.offset_right = 330
 	frame.offset_top = -250
 	frame.offset_bottom = 250
+	# M8 gate (F17): like the shrine panel it opens over, it grows both ways if its text ever needs
+	# more than 500 px (today 446 at most), so it stays inside a 720 px window.
+	frame.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	frame.grow_vertical = Control.GROW_DIRECTION_BOTH
 	add_child(frame)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)

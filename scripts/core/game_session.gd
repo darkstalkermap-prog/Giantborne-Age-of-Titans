@@ -17,13 +17,20 @@ extends Node
 ##   checkpoint_reached (a shrine's first activation, a waystone)   -> respawn: that marker
 ##   shrine_activated, shrine_rested, ui_screen_requested("shrine")  -> respawn: that shrine
 ##   growth_changed for the player beside a shrine                   -> respawn: that shrine
+##   talent_learned, ancestry_chosen, attributes_changed,
+##     loadout_changed while a shrine's screen is open (M8 gate)     -> respawn: that shrine
 ##   boss_defeated (in the Valley)                                   -> respawn: valley.shrine.kingsfall
+##   boss_disengaged "fled" (a drive-out, M8 gate)                   -> respawn unchanged
 ##   quest_stage_changed for quest.main                              -> respawn unchanged
 ## A request waits (one pending request; a later one replaces the reason and keeps the newest
 ## respawn) while checkpoint_blockers() is not empty: the player is dead, grabbed, executing or
 ## holding something, a modal screen is open, or an enemy within 40 m is aware of the player.
 ## It is retried every tick from a Sim POST_RESOLVE hook (order 200). The shrine screen's
-## checkpoint is taken at once, before the screen opens. Only the campaign writes the save slot
+## checkpoint is taken at once, before the screen opens; M8 gate (F15): what the giant then makes
+## of itself in that screen (talents, the ancestry, attribute points, the loadout - the screens call
+## the first three permanent) takes the shrine's checkpoint again at once, at most once a frame, the
+## shrine's own screens not holding it back (the game is paused, as it was when the screen opened;
+## anything else that holds a checkpoint back still does). Only the campaign writes the save slot
 ## (and only with `persist`); a test level's checkpoints in the sandbox stay in memory. A reached
 ## checkpoint also sets the flag visited.<checkpoint id> (fast travel and respawns, P20).
 ##
@@ -167,6 +174,8 @@ var _blocker_level := ""
 ## The level_entered waiting for its level and the samples: {"level": WeakRef, "level_id",
 ## "reason", "frames"}; {} when none waits.
 var _entering: Dictionary = {}
+## M8 gate (F15): a shrine-screen choice's checkpoint is queued for the end of this frame.
+var _shrine_choice_queued := false
 
 
 func _ready() -> void:
@@ -178,7 +187,13 @@ func _ready() -> void:
 	Events.ui_screen_requested.connect(_on_ui_screen_requested)
 	Events.growth_changed.connect(_on_growth_changed)
 	Events.boss_defeated.connect(_on_boss_defeated)
+	Events.boss_disengaged.connect(_on_boss_disengaged)
 	Events.quest_stage_changed.connect(_on_quest_stage_changed)
+	# M8 gate (F15): what the giant makes of itself in a shrine's screen.
+	Events.talent_learned.connect(_on_shrine_choice_2)
+	Events.ancestry_chosen.connect(_on_shrine_choice_2)
+	Events.attributes_changed.connect(_on_shrine_choice_1)
+	Events.loadout_changed.connect(_on_shrine_choice_2)
 	Events.reload_checkpoint_requested.connect(_on_reload_checkpoint_requested)
 	Events.mode_change_requested.connect(_on_mode_change_requested)
 	Events.entity_died.connect(_on_entity_died)
@@ -1370,12 +1385,105 @@ func _on_growth_changed(_tick: int, entity_id: String, _old_stage: int, _new_sta
 	request_checkpoint("growth", shrine_node_respawn(shrine))
 
 
+## M8 gate (F15): talent_learned / ancestry_chosen / loadout_changed (two arguments) and
+## attributes_changed (one) while a shrine's screen is open.
+func _on_shrine_choice_2(_tick: int, _id: String) -> void:
+	_note_shrine_choice()
+
+
+func _on_shrine_choice_1(_tick: int) -> void:
+	_note_shrine_choice()
+
+
+## A talent learned, the ancestry chosen, attribute points spent or the loadout changed in a shrine's
+## screen (or the ancestry screen it opened): the screens call the first three permanent, so the
+## shrine's checkpoint is taken again - with the shrine as the respawn, at the end of this frame (one
+## checkpoint however many changed together: choose_ancestry also changes the attributes), the
+## shrine's own screens not holding it back. A choice made anywhere else waits for the next
+## checkpoint, as XP does.
+func _note_shrine_choice() -> void:
+	if _restoring or not checkpoints_enabled():
+		return
+	var screen := open_shrine_screen()
+	if screen == null:
+		return
+	var respawn := ""
+	if screen.shrine != null and is_instance_valid(screen.shrine):
+		respawn = shrine_node_respawn(screen.shrine)
+	request_checkpoint("shrine_choice", respawn)
+	if not _shrine_choice_queued:
+		_shrine_choice_queued = true
+		call_deferred("_commit_shrine_choice")
+
+
+## Takes the queued shrine-choice checkpoint unless something besides the shrine's own screens holds
+## it back (an aware enemy near the shrine: it then waits like any other request).
+func _commit_shrine_choice() -> void:
+	_shrine_choice_queued = false
+	if _pending.is_empty() or not checkpoints_enabled():
+		return
+	if shrine_choice_blockers().is_empty():
+		_commit_checkpoint(str(_pending.reason), str(_pending.respawn))
+
+
+## The shrine screen open in a screen stack now (under the ancestry screen it may have opened), or
+## null.
+func open_shrine_screen() -> ShrineScreen:
+	if not is_inside_tree():
+		return null
+	for n in get_tree().get_nodes_in_group(ScreenStack.GROUP):
+		var s := n as ScreenStack
+		if s == null or not is_instance_valid(s) or not s.is_open("shrine"):
+			continue
+		for c in s.get_children():
+			if c is ShrineScreen and s.has_screen(c as UiScreen):
+				return c as ShrineScreen
+	return null
+
+
+## checkpoint_blockers() for a choice made in a shrine's screen: the shrine screen and the ancestry
+## screen over it are where the choice is made, not a reason to wait; any other screen still is.
+func shrine_choice_blockers() -> PackedStringArray:
+	var own_screens := _only_shrine_screens_open()
+	var out := PackedStringArray()
+	for b in checkpoint_blockers():
+		if b == "screen" and own_screens:
+			continue
+		out.append(b)
+	return out
+
+
+## True when a shrine screen is open and every open screen is it or the ancestry screen.
+func _only_shrine_screens_open() -> bool:
+	if not is_inside_tree():
+		return false
+	var shrine_open := false
+	for n in get_tree().get_nodes_in_group(ScreenStack.GROUP):
+		var s := n as ScreenStack
+		if s == null or not is_instance_valid(s) or not s.any_open():
+			continue
+		var own := (1 if s.is_open("shrine") else 0) + (1 if s.is_open("ancestry") else 0)
+		if s.count() > own:
+			return false
+		shrine_open = shrine_open or s.is_open("shrine")
+	return shrine_open
+
+
 ## The Ogre King's death moves the respawn to the Kingsfall shrine - but not on another campaign
 ## level (P20: a world boss keeps the respawn; test levels keep today's rule).
 func _on_boss_defeated(_tick: int, _boss_id: String) -> void:
 	var other_level := is_campaign() and level_id != "" and level_id != VALLEY_LEVEL_ID \
 		and not level_id.begins_with("res://")
 	request_checkpoint("boss_defeated", "" if other_level else KINGSFALL_RESPAWN)
+
+
+## M8 gate (F38): a boss driven out (the Matriarch's flight: boss_disengaged "fled") ends its fight
+## as a kill does, so it is checkpointed like boss_defeated (decision 13: a checkpoint never loses a
+## boss's end) - the respawn unchanged, and no victory cue (only boss_defeated has one). "left" (the
+## giant walked out; the boss resets) takes none.
+func _on_boss_disengaged(_tick: int, _boss_id: String, reason: String) -> void:
+	if reason == "fled":
+		request_checkpoint("boss_fled")
 
 
 func _on_quest_stage_changed(_tick: int, quest_id: String, _stage_id: String) -> void:
@@ -1578,6 +1686,7 @@ func reset_for_tests() -> void:
 	_respawn_blockers.clear()
 	_blocker_level = ""
 	_entering = {}
+	_shrine_choice_queued = false
 	_stop_polling_entered()
 	SaveSlots.path_override = TEST_SAVE_PATH
 	SaveSlots.delete_slot(true)
