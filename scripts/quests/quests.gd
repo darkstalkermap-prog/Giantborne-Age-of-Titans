@@ -169,6 +169,17 @@ func is_active() -> bool:
 	return test_active or GameSession.is_campaign()
 
 
+## M8 gate fix-up 1 (N4.1): true while a campaign load waits for its level's player
+## (GameSession.pending_restore: the title after Continue or New Game, the frames before a death,
+## debug or travel reload). The save's character is on no player then, so the hook neither evaluates
+## nor updates the tutorial: a stage the loaded save already meets (the growth checkpoint is taken
+## before the stage it completes) paid its XP to no listener and set its once-flag for good, and a
+## prompt showed at the title. The first tick after on_level_ready evaluates with the restored giant.
+## A test that turned quests on itself (test_active) is not held.
+func waiting_for_load() -> bool:
+	return not test_active and GameSession.pending_restore
+
+
 # --------------------------------------------------------------------------- records and state
 
 ## Every quest record (only those in `scope` when it is set): the main quest first, then by id.
@@ -266,7 +277,7 @@ func evaluate_now() -> void:
 
 
 func _on_post_resolve(tick: int) -> void:
-	if not is_active():
+	if not is_active() or waiting_for_load():
 		return
 	_sync_level()
 	if _dirty or tick - _last_eval_tick >= EVALUATE_EVERY_TICKS:
@@ -1045,7 +1056,7 @@ func current_tutorial() -> Dictionary:
 ## _sync_level() then wiped the arrival's and the map's prompts (they never showed on a New Game in the
 ## world nor through the Kings' Door).
 func _tutorial_event(event_name: String, info: Dictionary, tick: int = -1) -> void:
-	if not is_active():
+	if not is_active() or waiting_for_load():
 		return
 	_sync_level()
 	tutorial.on_event(event_name, info, tick if tick >= 0 else Sim.tick)
