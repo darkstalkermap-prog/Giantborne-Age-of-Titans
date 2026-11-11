@@ -103,6 +103,13 @@ script = ExtResource("3_acc12")
 marker_id = "world.marker.brannock_north_safe"
 kind = 4
 
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="world_marker_bell_4" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1.8, 2)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.bell_4"
+
 [node name="Triggers" type="Node3D" parent="."]
 
 [node name="Exits" type="Node3D" parent="."]

@@ -52,6 +52,7 @@ const S_EXIT := "res://scripts/world/level_exit.gd"
 const S_SIZE_GATE := "res://scripts/world/size_gate.gd"
 const S_TRIGGER := "res://scripts/world/area_trigger.gd"
 const S_FLAG := "res://scripts/world/flag_visibility.gd"
+const S_UPROOT := "res://scripts/world/great_pine_tree.gd"
 const GIANT := "res://scenes/player/giant.tscn"
 const SHRINE := "res://scenes/world/shrine.tscn"
 const PINE := "res://scenes/world/great_pine.tscn"
@@ -736,6 +737,10 @@ static func _place_node(kit: SceneKit, it: Dictionary, section: String, ctx: Dic
 				return []
 			pine.name = id.validate_node_name()
 			pine.transform = xf.translated_local(Vector3.DOWN * 0.5)
+			if str(it.get("uproot_prop", "")) != "":
+				# P35: a great pine a giant of stage 4 uproots (P26's scene has UprootTree's children)
+				kit.scripted(pine, S_UPROOT, {"world_id": id, "interact_id": id, "prop_id": str(it.uproot_prop),
+					"weapon_id": str(it.get("weapon", "")), "radius_m": float(it.get("radius", 8.0)), "priority": 45})
 			return [pine, "Landmarks"]
 		"markers":
 			var kind: Array = MARKER_KINDS.get(str(it.get("kind", "objective")), MARKER_KINDS.objective)

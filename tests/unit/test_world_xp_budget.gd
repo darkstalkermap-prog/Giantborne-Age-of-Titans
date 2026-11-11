@@ -18,6 +18,9 @@ const MARGIN := 50
 const OATH_MIN_XP := 800
 ## The march's resolutions and the props each declared path must break (their XP is guaranteed).
 const MARCH_PATHS := {"help": ["prop.gate_toll"], "intimidate": [], "force": ["prop.gatehouse_brannock"]}
+## M8: the other oaths' resolutions and the props their declared paths must break (P35: the wood's
+## drive burns the troll den's three brood nests).
+const OATH_PATHS := {"quest.oath_wood": {"drive": ["prop.brood_nest", "prop.brood_nest", "prop.brood_nest"]}}
 ## The opening's unavoidable points: the Kings' Door's arrival, the beacon's marker; then the shrine's.
 const BEACON_POINTS := ["world.cp.kingsgate_shelf", "world.marker.kingsgate_beacon"]
 const SHRINE_POINTS := ["world.marker.kingsgate_shrine"]
@@ -89,7 +92,7 @@ func test_two_oaths_reach_stage_6_once_the_second_oath_exists() -> void:
 			continue
 		var worst := -1
 		for outcome: String in OathRules.first_oath_resolutions(id, GameData.records):
-			var extra: Array = MARCH_PATHS.get(outcome, []) if id == MARCH else []
+			var extra: Array = MARCH_PATHS.get(outcome, []) if id == MARCH else (OATH_PATHS.get(id, {}) as Dictionary).get(outcome, [])
 			var xp := WorldXp.resolution_xp(id, outcome, extra)
 			worst = xp if worst < 0 else mini(worst, xp)
 		assert_true(worst >= 0, "%s has a resolution open to a first oath" % id)

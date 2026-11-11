@@ -298,3 +298,20 @@ Kingdom" with a save that finished the prologue. Tick each line for each device;
 
 Write the results under the session in `docs/USABILITY_RESULTS.md`; every line two or more players
 miss becomes a follow-up for P27's screens and widgets in `docs/plans/FOLLOWUPS.md`.
+
+### 9.1 Region notes: the Greywood and the Drowned Steps (owner, M8)
+
+Start at stage 4 in the Old Kingdom (`--mode=world --new-game`, then grow at a shrine or with the
+debug panel) and fast travel to the Hollowmere waystone, then the Mere south waystone. Tick each line;
+note what confused.
+
+| # | Check | Pad | Mouse and keyboard |
+| --- | --- | --- | --- |
+| 1 | Walking into the woodcutters' camp a TIP explains fire; smashing the bonfire or the brazier beside a troll sets it burning (no green pulse while it burns). Does the player connect the fire to the trolls' healing? | | |
+| 2 | Sedge stands among Hollowmere's huts near the green (on the green at stage 5-6); her oath offers slay or drive, and the den's marker leads to the troll den. | | |
+| 3 | In the den: three nests with a brazier beside each; smashing a brazier burns its nest; 20 s after the last nest the woodfolk pull the back wall down (a HUD line says so); below 60 % the Matriarch runs out through it. At stage 5 "Heave the wall aside" opens it at once. Is the drive-out understood without the journal? | | |
+| 4 | Back at Sedge the oath is sworn; Hollowmere's lanterns are lit on the next visit. | | |
+| 5 | The Needle: at stage 4 the giant fits the slot; at stage 5 the sign says it has outgrown it, and the map's sealed rockfall on the grove's north ridge is the other way in. | | |
+| 6 | Wenna at her landing names the five bells; the compass's diamonds lead to the nearest unrung bell; the fourth bell (the Wend's deep reach) needs stage 4, the island's stage 5; the Stoneknuckles' rack opens once all five ring. | | |
+| 7 | The Titan Forge stays cold while the scavengers are there ("Light the Titan Forge" says why); once lit it titanforges a reinforced weapon. | | |
+| 8 | The causeway's rockfall will not move below stage 5; behind it the vault, its cache and cairn. | | |

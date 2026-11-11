@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "encounter.drowned_steps_pack",
+	"type": "encounter",
+	"display_name": "Dire wolves on the Sunken Steps",
+	"description": "P35 (plan M6-M9 §5.10): three dire wolves prowl the Sunken Steps' terraces above the ferrywoman's landing.",
+	"level": "level.world",
+	"center_m": [-180, 10, 100],
+	"activate_radius_m": 90,
+	"deactivate_radius_m": 160,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.drowned.steps_pack_1", "definition": "enemy.dire_wolf", "position_m": [-184, 10, 104], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.steps_pack_2", "definition": "enemy.dire_wolf", "position_m": [-174, 10, 98], "yaw_deg": 20, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.steps_pack_3", "definition": "enemy.dire_wolf", "position_m": [-186, 10, 94], "yaw_deg": 340, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

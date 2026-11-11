@@ -1,0 +1,26 @@
+{
+	"schema_version": 1,
+	"id": "quest.great_pine",
+	"type": "quest",
+	"display_name": "The Great Pines",
+	"description": "P35 (plan M6-M9 §5.4, §5.7): three great pines tower over the Greywood's north ride, where a troll and its whelps nest (the quest starts when the giant finds the pines or comes within 150 m of them). A giant of stage 4 tears one out of the earth: 100 XP and the pine itself, a weapon (weapon.tree_pine).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "any", "of": [
+		{"type": "discovered", "poi": "poi.great_pines"},
+		{"type": "near", "target": "world.marker.great_pines", "radius_m": 150}]}],
+	"abandon_when": null,
+	"tracker_priority": 10,
+	"stages": [
+		{"id": "uproot", "objective": "Uproot one of the great pines",
+			"complete_when": {"type": "any", "of": [
+				{"type": "destroyed", "world_id": "world.greywood.great_pine_1"},
+				{"type": "destroyed", "world_id": "world.greywood.great_pine_2"},
+				{"type": "destroyed", "world_id": "world.greywood.great_pine_3"}]},
+			"marker": "world.marker.great_pines", "xp": 100,
+			"waiting_text": "The great pines are rooted too deep for a giant below stage 4.",
+			"items": [], "set_flags": {},
+			"bot": {"action": "interact", "target": "world.greywood.great_pine_1"}}
+	],
+	"on_complete_flags": {}
+}

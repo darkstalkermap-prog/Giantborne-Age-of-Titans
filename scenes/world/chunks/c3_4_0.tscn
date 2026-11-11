@@ -1,10 +1,13 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
-[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
-[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="3_f6def"]
-[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="4_e36fc"]
-[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="5_f30a1"]
+[ext_resource type="PackedScene" path="res://scenes/world/weapon_rack.tscn" id="1_2400b"]
+[ext_resource type="Script" path="res://scripts/world/reward_rack.gd" id="2_0cdd4"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="3_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="4_5fc47"]
+[ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="5_f6def"]
+[ext_resource type="Script" path="res://scripts/world/shrine.gd" id="6_e36fc"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="7_acc12"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="8_f30a1"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(16.979977, 18, 1)
@@ -13,27 +16,37 @@ size = Vector3(16.979977, 18, 1)
 
 [node name="Props" type="Node3D" parent="."]
 
-[node name="world_drowned_mere_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
+[node name="world_drowned_stoneknuckles_rack" type="Node3D" parent="Props" instance=ExtResource("1_2400b")]
+transform = Transform3D(-0.8660254, 0, 0.50000006, 0, 1, 0, -0.50000006, 0, -0.8660254, 52, 4.996, 36)
+script = ExtResource("2_0cdd4")
+requires_flags = PackedStringArray("world.drowned.bells_rung")
+locked_message = "The ferrywoman keeps these gauntlets for the one who rings the Mere's five bells."
+world_id = "world.drowned.stoneknuckles_rack"
+weapon_id = "weapon.fists"
+radius_m = 6.0
+priority = 45
+
+[node name="world_drowned_mere_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 4.764, 110)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("2_5fc47")
+script = ExtResource("4_5fc47")
 world_id = "world.drowned.mere_cache"
 loot_table = "loot.cache_mere_of_kings"
 
-[node name="world_drowned_steps_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
+[node name="world_drowned_steps_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106, 10, 100)
 collision_layer = 16
 collision_mask = 0
-script = ExtResource("2_5fc47")
+script = ExtResource("4_5fc47")
 world_id = "world.drowned.steps_cache"
 loot_table = "loot.cache_sunken_steps"
 
 [node name="Shrines" type="Node3D" parent="."]
 
-[node name="world_shrine_steps" type="Node3D" parent="Shrines" instance=ExtResource("3_f6def")]
+[node name="world_shrine_steps" type="Node3D" parent="Shrines" instance=ExtResource("5_f6def")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 15, 168)
-script = ExtResource("4_e36fc")
+script = ExtResource("6_e36fc")
 world_id = "world.shrine.steps"
 shrine_id = "shrine.world_steps"
 prompt = "Rest"
@@ -43,6 +56,21 @@ priority = 40
 [node name="Waystones" type="Node3D" parent="."]
 
 [node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="world_marker_ferry_landing" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 5.12, 30)
+script = ExtResource("7_acc12")
+marker_id = "world.marker.ferry_landing"
+
+[node name="Safe" type="Node3D" parent="Markers"]
+
+[node name="world_marker_steps_safe" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 5.2, 44)
+script = ExtResource("7_acc12")
+marker_id = "world.marker.steps_safe"
+kind = 4
 
 [node name="Triggers" type="Node3D" parent="."]
 
@@ -54,7 +82,7 @@ priority = 40
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 242.46088, 5.433041, 8.049591)
 collision_layer = 128
 collision_mask = 0
-script = ExtResource("5_f30a1")
+script = ExtResource("8_f30a1")
 gate_id = "world.gate.mere_channel"
 min_stage = 5
 message = "The channel is too deep. Grow to stage 5."

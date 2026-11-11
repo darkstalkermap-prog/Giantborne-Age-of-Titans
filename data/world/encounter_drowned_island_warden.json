@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "encounter.drowned_island_warden",
+	"type": "encounter",
+	"display_name": "The island's warden",
+	"description": "P35 (plan M6-M9 §5.10): a rival giant keeps the Ancestral Circle on the island with two dire wolves - for a giant of stage 5, who alone wades the deep channel to it.",
+	"level": "level.world",
+	"center_m": [40, 8.57, -90],
+	"activate_radius_m": 90,
+	"deactivate_radius_m": 160,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.drowned.island_warden", "definition": "enemy.rival_giant", "position_m": [30, 8.45, -96], "yaw_deg": 160, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 5},
+		{"entity_id": "world.drowned.island_dire_1", "definition": "enemy.dire_wolf", "position_m": [46, 8.45, -80], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 5},
+		{"entity_id": "world.drowned.island_dire_2", "definition": "enemy.dire_wolf", "position_m": [54, 8.42, -88], "yaw_deg": 200, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "min_stage": 5}
+	]
+}

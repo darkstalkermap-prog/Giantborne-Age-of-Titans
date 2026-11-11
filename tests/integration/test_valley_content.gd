@@ -39,6 +39,8 @@ const PROMPTS := ["tutorial.camera", "tutorial.light", "tutorial.heavy", "tutori
 const WORLD_PROMPTS := ["tutorial.map", "tutorial.compass", "tutorial.fast_travel", "tutorial.discovery",
 	"tutorial.size_gate", "tutorial.sealed_place", "tutorial.world_arrival", "tutorial.stage4_humans",
 	"tutorial.formations", "tutorial.ancestry"]
+## P35: the fire lesson at the woodcutters' camp (a world prompt on a world area).
+const P35_PROMPTS := ["tutorial.troll_fire"]
 const QUESTS := ["quest.main", "quest.tutorial", "quest.village", "quest.village_cache", "quest.village_ogre"]
 
 static var _index: Dictionary = {}
@@ -271,6 +273,7 @@ func test_every_id_in_the_scene_is_unique_and_the_content_is_shipped() -> void:
 	prompt_ids.sort()
 	var expected := PROMPTS.duplicate()
 	expected.append_array(WORLD_PROMPTS)
+	expected.append_array(P35_PROMPTS)
 	expected.sort()
 	assert_eq(prompt_ids, expected, "the 13 tutorial prompts of plan §4.5 and the world's ten (P27, P29, P33)")
 	for id: String in WORLD_PROMPTS:
@@ -339,7 +342,9 @@ func test_every_reference_resolves() -> void:
 			var t: Dictionary = rec.get(key, {})
 			match str(t.get("type", "")):
 				"entered":
-					assert_true((scene.areas as Dictionary).has(str(t.area)), "%s.%s: area %s" % [rec.id, key, t.area])
+					# P35: a world prompt may name a world area (the woodcutters' camp's fire lesson).
+					assert_true((scene.areas as Dictionary).has(str(t.area)) or WorldContent.places().has(str(t.area)),
+						"%s.%s: area %s" % [rec.id, key, t.area])
 				"event":
 					assert_true(DataValidator.TUTORIAL_EVENTS.has(str(t.event)), "%s.%s: event %s" % [rec.id, key, t.event])
 				"action_id":

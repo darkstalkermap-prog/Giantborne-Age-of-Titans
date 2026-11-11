@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_greywood_hunters",
+	"type": "encounter",
+	"display_name": "Woodfolk hunters",
+	"description": "P35 (plan M6-M9 §2.12, §2.13, §5.10): a wander template of wander.greywood's hunters entry - three woodfolk hunters (faction woodfolk: neutral, watching, while Hollowmere is at peace with the giant; they fight once the woodfolk turn hostile). Its centre is nominal (as the dire wolves').",
+	"template": true,
+	"level": "level.world",
+	"center_m": [-736, 19.49, -110],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.greywood.wander_hunter_1", "definition": "enemy.archer", "position_m": [-739, 19.44, -110], "yaw_deg": 0, "patrol": "", "faction": "woodfolk", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.greywood.wander_hunter_2", "definition": "enemy.archer", "position_m": [-733, 19.52, -110], "yaw_deg": 0, "patrol": "", "faction": "woodfolk", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.greywood.wander_hunter_3", "definition": "enemy.archer", "position_m": [-736, 19.36, -106], "yaw_deg": 0, "patrol": "", "faction": "woodfolk", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.ferrywoman",
+	"type": "dialogue",
+	"speaker": "Wenna the ferrywoman",
+	"description": "P35 (plan M6-M9 §5.4, §5.7): Wenna, the last ferrywoman of the Mere, gives quest.drowned_bells (outcome bells) and tells where the five sunken bells hang; a Stoneblood giant hears of the drowned kings' blood. Once all five ring (world.drowned.bells_rung) she points to the Stoneknuckles on the rack at her landing.",
+	"entries": [
+		{"node": "thanks", "conditions": [{"type": "flag", "flag": "world.drowned.bells_rung"}]},
+		{"node": "asked", "conditions": [{"type": "dialogue_outcome", "dialogue": "dialogue.ferrywoman", "outcome": "bells"}]},
+		{"node": "greet", "conditions": []}
+	],
+	"nodes": [
+		{"id": "greet", "text": "Mind the steps, big one - they go a long way down under the water. I'm Wenna. I ferried folk over the Mere of Kings before the robbers came. Five great bells of the drowned kings hang in and about the Mere, silent these hundred years. Ring them all, and the Mere will remember you - and the Stoneknuckles my grandmother pulled from the deep are yours.", "choices": [
+			{"text": "I'll ring your bells.", "next": "where", "effects": {"outcome": "bells"}},
+			{"text": "[Stoneblood] The drowned kings' blood runs in me.", "next": "blood", "conditions": [{"type": "ancestry_is", "ancestry": "ancestry.stoneblood"}]},
+			{"text": "Not now.", "next": ""}]},
+		{"id": "where", "text": "Two hang in the shallows, west and east of the causeway. One stands on the north shore, below the bell tower. One sank into the Wend's deep reach below the Mere - only a giant your size or bigger wades there. The fifth is on the island, past the deep channel, where the old circle stands.", "choices": [
+			{"text": "I'll find them.", "next": ""}]},
+		{"id": "blood", "text": "Stoneblood... Then the drowned kings were your kin. They went down into the Mere with their bells so the water would remember them. Ring them for your fathers.", "choices": [
+			{"text": "I'll ring your bells.", "next": "where", "effects": {"outcome": "bells"}},
+			{"text": "Not now.", "next": ""}]},
+		{"id": "asked", "text": "The bells are still silent - I'd hear them from my landing.", "choices": [
+			{"text": "Where are they again?", "next": "where"},
+			{"text": "I'm on my way.", "next": ""}]},
+		{"id": "thanks", "text": "Five bells! I heard every one of them... The Mere remembers. The Stoneknuckles hang on the rack by my landing - they're yours.", "choices": [
+			{"text": "[Leave]", "next": ""}]}
+	]
+}

@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "quest.sunken_vault",
+	"type": "quest",
+	"display_name": "The Sunken Vault",
+	"description": "P35 (plan M6-M9 §5.4, §5.5, §5.7): a rockfall seals the drowned kings' vault under the broken causeway (the quest starts when the giant finds the causeway or the vault, or comes within 120 m of it). A giant of stage 5 heaves it aside and walks the vault: 100 XP; the vault holds lore, 2 iron (its cache) and a cairn.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "any", "of": [
+		{"type": "discovered", "poi": "poi.causeway"},
+		{"type": "discovered", "poi": "poi.sunken_vault"},
+		{"type": "near", "target": "world.marker.sunken_vault", "radius_m": 120}]}],
+	"abandon_when": null,
+	"tracker_priority": 10,
+	"stages": [
+		{"id": "heave", "objective": "Heave the rockfall from the causeway's vault",
+			"complete_when": {"type": "destroyed", "world_id": "world.drowned.vault_rockfall"},
+			"marker": "world.marker.sunken_vault", "xp": 0,
+			"waiting_text": "The rockfall will not move for a giant below stage 5.",
+			"items": [], "set_flags": {},
+			"bot": {"action": "heave", "target": "world.drowned.vault_rockfall"}},
+		{"id": "vault", "objective": "Walk the drowned kings' vault",
+			"complete_when": {"type": "entered", "area": "world.area.sunken_vault"},
+			"marker": "world.marker.sunken_vault", "xp": 100, "items": [], "set_flags": {},
+			"bot": {"action": "go", "target": "world.marker.sunken_vault"}}
+	],
+	"on_complete_flags": {}
+}
