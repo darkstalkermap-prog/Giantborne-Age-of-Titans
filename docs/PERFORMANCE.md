@@ -1082,6 +1082,33 @@ lane's code (13.5 minutes): the siege and world builders wrote the same bytes as
 failures - default 59.0 s (the base 56.4), slow 227.5 s (211.8), gate 443.6 s (424.1) - and the 120 s
 autoplay had 0 errors.
 
+### The M8 screenshot pass, lane m8v (trees that fade, the lock line, the riders)
+
+**V1: the trees' fade** (`docs/systems/P25.md`, "M8 screenshot pass"). The world's two tree meshes and
+the Valley's tree MultiMeshes are drawn with `assets/shaders/scenery_fade.gdshader` instead of the vertex
+material: the same MultiMeshes and the same number of draw calls (another material, no node more), a
+world position per vertex, and per fragment two cone tests and, inside a cone or near the camera, an
+ordered-dither discard. Its cost, measured in one process with the trees switched between the fade and
+the old material every 40 frames (six rounds, 240 frames each; Xvfb 1280 x 720, llvmpipe on the
+container's shared cores, `low`; the viewport's measured render time, which on llvmpipe is the CPU's
+rasterising - indicative, the frame budget is the owner's on a GPU):
+
+| Place (stage 4, the arm at 15.5 m) | Render p50 / mean, the fade | The old material | Frame p50 / mean, the fade | The old material |
+| --- | --- | --- | --- | --- |
+| The Hollowmere waystone (the Greywood's pines all round, several in the cones) | 185.6 / 188.4 ms | 172.4 / 181.7 ms | 206.2 / 211.5 ms | 197.7 / 207.6 ms |
+| The way into the Matriarch's den | 128.7 / 130.5 ms | 128.5 / 130.1 ms | 160.2 / 161.4 ms | 158.9 / 161.4 ms |
+
+At most about 4 % of a frame (the render mean +3.7 % among the densest pines; nothing at the den), from
+the fragments of the trees on screen. The draw calls the before and after captures counted at the same
+views: Hollowmere 83 and 83, the den approach 121 and 121. The web build (`tools/build_web.sh
+--out=builds/web_m8v`, the release preset) ships `index.pck` 17,441,828 bytes (12,982,854 gzipped),
+17,310,472 as shipped, 16.51 MB in two parts of the 23 MB budget; the shader and its four materials
+are a few kilobytes. `node tools/web/stream_check.mjs --build=builds/web_m8v --world` (headless
+Chromium, SwiftShader, the world's default 397 m route across four region borders): OK - console errors
+0 (the shader compiles in WebGL2), failed requests 0; streaming work p50 0.8 / p99 5.7 / max 9.3 ms, 6
+loads, 3 unloads, no thrash, 224.1 m of margin; draw calls p50 38, max 54; page frames p50 266.7, p99
+400.0 ms (software WebGL, indicative); Play to the walk 45.0 s.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
