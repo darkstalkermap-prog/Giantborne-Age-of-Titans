@@ -1,0 +1,57 @@
+{
+	"schema_version": 1,
+	"type": "encounter",
+	"level": "level.bailey_test",
+	"district": "bailey",
+	"activate_radius_m": 40,
+	"deactivate_radius_m": 300,
+	"leash_radius_m": 90,
+	"alert_group": true,
+	"requires_flags": [
+		"test.bailey.manual"
+	],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"id": "encounter.bailey_test_charge",
+	"display_name": "Test bailey: the charge",
+	"description": "P34: phase 2 of the bailey's battle - a cavalry pair from the stables in the north-east corner.",
+	"center_m": [
+		40,
+		0,
+		-30
+	],
+	"spawns": [
+		{
+			"entity_id": "test.bailey.rider_1",
+			"definition": "enemy.cavalry",
+			"position_m": [
+				38,
+				0,
+				-32
+			],
+			"yaw_deg": 210,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		},
+		{
+			"entity_id": "test.bailey.rider_2",
+			"definition": "enemy.cavalry",
+			"position_m": [
+				44,
+				0,
+				-28
+			],
+			"yaw_deg": 210,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": ""
+		}
+	]
+}

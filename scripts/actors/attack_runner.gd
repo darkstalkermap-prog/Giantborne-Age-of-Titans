@@ -62,6 +62,9 @@ func _init(p_actor: Node3D, p_entity: CombatEntity, p_controller: CombatControll
 	_p31_setup()   # P31: line_pulse, the titanforged perks on the weapon arc, the casts' effects (below)
 	## @anchor P32
 	## @anchor P34
+	# P34: an enemy's thrown whelp needs nothing new here (a projectile of visual thrown_body from the
+	# troll's launch offset; TrollEnemy hands the body over); a brain's arena hazards strike through
+	# p34_hazard_pulse() (the P34 section at the end).
 
 
 ## handler(a: ActionDef, tick: int) runs every ACTIVE tick of an action with this hit_shape.
@@ -644,3 +647,27 @@ func _p31_shockwave(a: ActionDef, perk: Dictionary, tick: int) -> void:
 ## The radius of the maul's shockwave now (perk.radius_m x the weapon's scale).
 func p31_shockwave_radius(perk: Dictionary) -> float:
 	return float(perk.get("radius_m", 3.0)) * _p31_perk_scale()
+
+
+# --------------------------------------------------------------------------- P34 arena hazards
+# The anchor P34 in _init names this section (plan M6-M9 §2.10, §5.13: Harrok's falling stones).
+
+## One arena hazard of `a` (its arena_hazard block) strikes at `point` now: a cylinder pulse of
+## arena_hazard.radius_m and the action's height_m standing on `point`, an area effect whose hits are
+## this runner's actor's (credited to the boss whose brain placed it), with a registry of its own (one
+## hit per target per stone) and no weapon multiplier. Returns the hits queued.
+func p34_hazard_pulse(a: ActionDef, point: Vector3, tick: int) -> int:
+	var spec: Variant = a.param("arena_hazard", {})
+	var radius := float((spec as Dictionary).get("radius_m", a.radius_m)) if typeof(spec) == TYPE_DICTIONARY else a.radius_m
+	var space := actor.get_world_3d().direct_space_state
+	var cands := HitQueryAdapter.cylinder_pulse(space, entity, point + Vector3.UP * (a.height_m * 0.5), radius,
+		a.height_m, point + Vector3.UP * 0.8)
+	var ctx := context()
+	ctx.instance_id = Sim.new_instance_id()
+	ctx.registry = HitRegistry.new()
+	ctx.weapon = {}
+	ctx.attacker_position = point
+	ctx.area_effect = true
+	var n := HitFactory.queue(ctx, a, cands, 1, tick)
+	Events.area_pulse.emit(tick, entity.entity_id, a.id, point, radius)
+	return n

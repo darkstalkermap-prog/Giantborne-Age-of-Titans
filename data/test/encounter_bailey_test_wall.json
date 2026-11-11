@@ -1,0 +1,213 @@
+{
+	"schema_version": 1,
+	"type": "encounter",
+	"level": "level.bailey_test",
+	"district": "bailey",
+	"activate_radius_m": 40,
+	"deactivate_radius_m": 300,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [
+		"test.bailey.manual"
+	],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"id": "encounter.bailey_test_wall",
+	"display_name": "Test bailey: the wall",
+	"description": "P34: phase 1 of the bailey's battle - a shield wall of two ranks of four and its banner across the bailey (z -8) that advances and braces; on the web it keeps round(8 x 0.7) = 6 and the banner.",
+	"center_m": [
+		0,
+		0,
+		-8
+	],
+	"web_formation_scale": 0.7,
+	"formations": [
+		{
+			"id": "wall",
+			"kind": "shield",
+			"banner": "test.bailey.wall_banner",
+			"banner_name": "Banner of the Iron Wall",
+			"banner_color": [
+				0.3,
+				0.31,
+				0.34
+			],
+			"ranks": 2,
+			"files": 4,
+			"rank_spacing_m": 1.4,
+			"file_spacing_m": 1.1,
+			"facing": "threat",
+			"yaw_deg": 180,
+			"turn_deg_s": 45,
+			"advance_mps": 1.2,
+			"advance_m": 10,
+			"brace_m": 5,
+			"brace_action": "ability.formation_brace_shield",
+			"morale_start": 90
+		}
+	],
+	"spawns": [
+		{
+			"entity_id": "test.bailey.wall_1",
+			"definition": "enemy.shieldman",
+			"position_m": [
+				-1.65,
+				0,
+				-8.0
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": "",
+			"formation": "wall",
+			"slot": 0
+		},
+		{
+			"entity_id": "test.bailey.wall_2",
+			"definition": "enemy.shieldman",
+			"position_m": [
+				-0.5499999999999998,
+				0,
+				-8.0
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": "",
+			"formation": "wall",
+			"slot": 1
+		},
+		{
+			"entity_id": "test.bailey.wall_3",
+			"definition": "enemy.shieldman",
+			"position_m": [
+				0.5500000000000003,
+				0,
+				-8.0
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": "",
+			"formation": "wall",
+			"slot": 2
+		},
+		{
+			"entity_id": "test.bailey.wall_4",
+			"definition": "enemy.shieldman",
+			"position_m": [
+				1.6500000000000004,
+				0,
+				-8.0
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": "",
+			"formation": "wall",
+			"slot": 3
+		},
+		{
+			"entity_id": "test.bailey.wall_5",
+			"definition": "enemy.shieldman",
+			"position_m": [
+				-1.65,
+				0,
+				-9.4
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": "",
+			"formation": "wall",
+			"slot": 4
+		},
+		{
+			"entity_id": "test.bailey.wall_6",
+			"definition": "enemy.shieldman",
+			"position_m": [
+				-0.5499999999999998,
+				0,
+				-9.4
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": "",
+			"formation": "wall",
+			"slot": 5
+		},
+		{
+			"entity_id": "test.bailey.wall_7",
+			"definition": "enemy.shieldman",
+			"position_m": [
+				0.5500000000000003,
+				0,
+				-9.4
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": "",
+			"formation": "wall",
+			"slot": 6
+		},
+		{
+			"entity_id": "test.bailey.wall_8",
+			"definition": "enemy.shieldman",
+			"position_m": [
+				1.6500000000000004,
+				0,
+				-9.4
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": "",
+			"formation": "wall",
+			"slot": 7
+		},
+		{
+			"entity_id": "test.bailey.wall_banner",
+			"definition": "enemy.bannerman",
+			"position_m": [
+				0,
+				0,
+				-11.6
+			],
+			"yaw_deg": 180,
+			"patrol": "",
+			"faction": "",
+			"commander": false,
+			"ai_enabled": true,
+			"persist_death": false,
+			"loot_table": "",
+			"formation": "wall",
+			"slot": -1
+		}
+	]
+}

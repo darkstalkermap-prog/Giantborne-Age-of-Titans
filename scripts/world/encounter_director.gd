@@ -690,6 +690,7 @@ func _spawn(enc: Encounter, m: Member, tick: int, ppos: Vector3) -> bool:
 	var yaw := deg_to_rad(float(s.get("yaw_deg", 0.0)))
 	var world := level.global_transform * Transform3D(Basis(Vector3.UP, yaw),
 		_vec3(s.get("position_m")) + Vector3.UP * SPAWN_LIFT_M)
+	world.origin = _p34_clear_of_giant(world.origin, def)   # P34: never inside the giant's footprint
 	node.transform = parent.global_transform.affine_inverse() * world
 	_set_if(node, "home_position", world.origin)
 	if node.has_method("set_lod_tier") and ppos != Vector3.INF:
@@ -1509,5 +1510,48 @@ func _p32_on_member_spawned(encounter_id: String, entity_id: String, node: Node3
 		engine.add_crew(node)
 
 ## @anchor P34
+# --- battles: the attempt reset and the giant's footprint (P34) ------------------------------------
+# Plan M6-M9 §2.10, §5.13. A BattleBoss owns its encounters through force_activate(); on the disengage
+# rule it resets them with p34_reset_encounter(): every member leaves as at a deactivation (the living
+# freed, corpses freed, formations dissolved), the fallen whose spawn entries do not persist their
+# death (persist_death false: a battle's units) wait to spawn again, and a cleared encounter can
+# activate again. A unit never spawns inside the giant's footprint (§5.13): a spawn point within the
+# giant's capsule radius + its own + P34_FOOTPRINT_MARGIN_M is moved out along the line from the
+# giant's centre (the hook in _spawn).
+
+const P34_FOOTPRINT_MARGIN_M := 1.0
+
+
+## Resets an encounter for a new attempt (see above). Nothing for an unknown id.
+func p34_reset_encounter(encounter_id: String) -> void:
+	var enc: Encounter = _encounters.get(encounter_id)
+	if enc == null:
+		return
+	_deactivate(enc)
+	for m: Member in enc.members:
+		if m.status == DEAD and not bool(m.spawn.get("persist_death", true)):
+			m.status = UNSPAWNED
+			m.died_tick = -1
+			m.free_tick = -1
+	if enc.cleared_emitted:
+		enc.cleared_emitted = false
+		WorldState.set_flag(enc.flag, false)
+	enc.force_requested = false
+	enc.state = DORMANT
+	_dirty = true
+
+
+## `point`, or the nearest point outside the giant's footprint for a unit of record `def`.
+func _p34_clear_of_giant(point: Vector3, def: Dictionary) -> Vector3:
+	var p := _player()
+	var e: Variant = p.get("entity") if p != null else null
+	if not (e is CombatEntity):
+		return point
+	var need := EnemyActor.entity_radius(e) + float(def.get("capsule_radius_m", 0.5)) + P34_FOOTPRINT_MARGIN_M
+	var flat := Vector2(point.x - p.global_position.x, point.z - p.global_position.z)
+	if flat.length() >= need:
+		return point
+	var dir := flat.normalized() if flat.length() > 0.01 else Vector2(1.0, 0.0)
+	return Vector3(p.global_position.x + dir.x * need, point.y, p.global_position.z + dir.y * need)
 
 ## @anchor P37

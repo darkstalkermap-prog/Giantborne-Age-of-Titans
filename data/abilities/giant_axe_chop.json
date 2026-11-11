@@ -11,7 +11,7 @@
 	"stamina_cost": 0,
 	"cooldown_s": 0,
 	"windup_s": 1.4,
-	"active_s": 0.24,
+	"active_s": 0.25,
 	"recovery_s": 1.2,
 	"poise_damage": 90,
 	"max_hits_per_target": 1,
