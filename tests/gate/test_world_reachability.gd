@@ -5,7 +5,8 @@ extends IntegrationSuite
 ## waystone, checkpoint, exit, settlement green and POI centre is reachable from the start
 ## checkpoint (world.cp.kingsgate_shelf) at the stage it needs: 4 unless its POI needs more, the
 ## sealed places' caches through their seals at 5 or 6. The Needle's side is walked: a stage-3 giant
-## goes through the 5 m slot into the Hidden Grove on the streamed world (WorldWalk, the stick).
+## goes through the 5 m slot into the Hidden Grove on the streamed world (WorldWalk, the stick; M8 gate,
+## F21: the walk grows the giant to stage 3 first and the test checks it walked at stage 3).
 ## Below their stage the gates hold: the Moot's ring and the Giant's Stair (a stage-5 giant goes
 ## round by the Ironway), and the vaults while their rockfalls stand.
 ##
@@ -253,6 +254,9 @@ func test_a_stage_3_giant_walks_through_the_needle() -> void:
 		ticks += 1
 	var r := walk.result()
 	var end := Vector2(p.global_position.x, p.global_position.z)
+	assert_eq(str(r.get("stage_error", "")), "", "the giant was grown to stage 3 (M8 gate, F21)")
+	assert_eq(int(r.get("stage", 0)), 3, "the walk was a stage-3 giant's")
+	assert_eq(p.current_growth_stage(), 3, "a stage-3 giant stands in the grove")
 	assert_true(walk.done and bool(r.finished), "the walk ended (%d ticks)" % ticks)
 	assert_eq(int(r.get("stuck_teleports", -1)), 0, "the stage-3 giant was never stuck in the slot")
 	assert_true(end.distance_to(GROVE_CENTRE) <= GROVE_FLOOR_R, "it stands on the Hidden Grove's floor (%.0f m from its centre)" % end.distance_to(GROVE_CENTRE))
