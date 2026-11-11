@@ -202,6 +202,8 @@ static func reward_flag(quest_id: String, stage_id: String) -> String:
 
 ## inactive | active | completed | abandoned (from the quest's flags).
 func quest_state(quest_id: String) -> String:
+	if p37_events.has(quest_id):
+		return ACTIVE   # P37: a world event running now is an active objective
 	if WorldState.has_flag(done_flag(quest_id)):
 		return COMPLETED if QuestConditions.truthy(WorldState.get_flag(done_flag(quest_id))) else ABANDONED
 	return ACTIVE if str(WorldState.get_flag(stage_flag(quest_id), "")) != "" else INACTIVE
@@ -528,7 +530,7 @@ func active_quest_ids() -> PackedStringArray:
 		out.append(main_quest_id)
 	for rec: Dictionary in side:
 		out.append(str(rec.id))
-	return out
+	return _p37_insert_events(out, main)   # P37: running world events, right after the main quest
 
 
 static func _side_before(a: Dictionary, b: Dictionary) -> bool:
@@ -569,6 +571,8 @@ func current_objective() -> Dictionary:
 
 ## The objective of one active quest ({} when it is not active).
 func objective_for(quest_id: String) -> Dictionary:
+	if p37_events.has(quest_id):
+		return (p37_events[quest_id] as Dictionary).duplicate()   # P37: a running world event's objective
 	var rec := quest_record(quest_id)
 	if rec.is_empty() or quest_state(quest_id) != ACTIVE:
 		return {}
@@ -1199,6 +1203,7 @@ func reset_for_tests() -> void:
 	tutorial.shown_ids.clear()
 	history.clear()
 	_p27_reset()
+	p37_events.clear()   # P37
 
 
 # --------------------------------------------------------------------------- package anchors (M6-M9)
@@ -1350,3 +1355,40 @@ func _p29_position_of(id: String) -> Vector3:
 
 
 ## @anchor P37
+# --- world events as objectives (P37; plan M6-M9 §2.13, decision 27) ----------------------------------
+# A running world event is shown like a quest - in the tracker (right after the main quest), the journal
+# (active, with Track), the compass, the map and the HUD marker while it is tracked (the WanderDirector
+# tracks it when it starts and gives the player's choice back when it ends) - so a new player sees what
+# happens and where. The WanderDirector writes its objective here (p37_set_event: the shape of
+# objective_for(), with the live position - a column's point moves - and the line "Defend Millford: 4 of
+# 5 houses stand") and takes it away when it ends (p37_clear_event). Four hook lines: quest_state() (an
+# event is ACTIVE while it runs), active_quest_ids() (_p37_insert_events), objective_for() (the event's
+# objective) and reset_for_tests(). Nothing here is saved: a reload asks the WanderDirector again.
+
+## event id -> its objective (objective_for()'s shape), while it runs.
+var p37_events := {}
+
+
+## A running world event's objective now (see the notes).
+func p37_set_event(event_id: String, objective: Dictionary) -> void:
+	p37_events[event_id] = objective.duplicate()
+
+
+## The event ended (or its level was left): it is no objective any more.
+func p37_clear_event(event_id: String) -> void:
+	p37_events.erase(event_id)
+
+
+## active_quest_ids() hook: `ids` with the running events right after the main quest (or first without one).
+func _p37_insert_events(ids: PackedStringArray, main: bool) -> PackedStringArray:
+	if p37_events.is_empty():
+		return ids
+	var keys := PackedStringArray(p37_events.keys())
+	keys.sort()
+	var out := PackedStringArray()
+	if main:
+		out.append(ids[0])
+	out.append_array(keys)
+	for i in range(1 if main else 0, ids.size()):
+		out.append(ids[i])
+	return out

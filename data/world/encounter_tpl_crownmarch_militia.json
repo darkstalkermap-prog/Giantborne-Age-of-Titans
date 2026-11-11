@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_crownmarch_militia",
+	"type": "encounter",
+	"display_name": "Brannock militia",
+	"description": "P37 (plan M6-M9 §2.13, §5.9, §5.10): a wander template of wander.crownmarch's militia entry (while Brannock is hostile and not reconciled) - four Brannock militiamen and an archer (faction brannock) hunting the giant on the roads. Its centre is nominal (more than 120 m from every checkpoint: Brannock's respawn guard reads these spawn points).",
+	"template": true,
+	"level": "level.world",
+	"center_m": [-150, 9.72, 638],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.crownmarch.wander_militia_1", "definition": "enemy.soldier", "position_m": [-152, 9.72, 636], "yaw_deg": 0, "patrol": "", "faction": "brannock", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_militia_2", "definition": "enemy.soldier", "position_m": [-148, 9.72, 636], "yaw_deg": 0, "patrol": "", "faction": "brannock", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_militia_3", "definition": "enemy.soldier", "position_m": [-152, 9.72, 640], "yaw_deg": 0, "patrol": "", "faction": "brannock", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_militia_4", "definition": "enemy.soldier", "position_m": [-148, 9.72, 640], "yaw_deg": 0, "patrol": "", "faction": "brannock", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_militia_archer", "definition": "enemy.archer", "position_m": [-150, 9.72, 645], "yaw_deg": 0, "patrol": "", "faction": "brannock", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

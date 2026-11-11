@@ -1,0 +1,32 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_crownmarch_pike_column",
+	"type": "encounter",
+	"display_name": "Aldmere pike column",
+	"description": "P37 (plan M6-M9 §2.13, §5.10): a wander template of wander.crownmarch's pike_column entry (stage 4 and up) - an Aldmere pike formation of eight and its banner (faction aldmere) marching the King's Road from the toll fort to Kingsgate. Neutral while Aldmere is at peace (its members hold their places in the column and walk past the giant); gone after the crown's parley or a spared Corvane (the entry's conditions). Its formation faces the march (yaw 0 here: a copy turns it to the road's heading). Its centre is nominal.",
+	"template": true,
+	"level": "level.world",
+	"center_m": [200, 7.97, 600],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 70,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"web_formation_scale": 0.7,
+	"formations": [
+		{"id": "pikes", "kind": "pike", "display_name": "Aldmere Pikes", "banner": "world.crownmarch.wander_aldmere_banner", "banner_name": "Banner of Aldmere", "banner_color": [0.2, 0.32, 0.62], "ranks": 2, "files": 4, "rank_spacing_m": 2.2, "file_spacing_m": 1.6, "facing": "threat", "yaw_deg": 0, "turn_deg_s": 40, "advance_mps": 1.4, "advance_m": 30, "brace_m": 6.0, "brace_action": "ability.formation_brace_pike", "brace_height_m": 5.0, "morale_start": 90}
+	],
+	"spawns": [
+		{"entity_id": "world.crownmarch.wander_aldmere_pike_1", "definition": "enemy.pikeman", "position_m": [197.6, 7.97, 598.9], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 0},
+		{"entity_id": "world.crownmarch.wander_aldmere_pike_2", "definition": "enemy.pikeman", "position_m": [199.2, 7.97, 598.9], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 1},
+		{"entity_id": "world.crownmarch.wander_aldmere_pike_3", "definition": "enemy.pikeman", "position_m": [200.8, 7.97, 598.9], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 2},
+		{"entity_id": "world.crownmarch.wander_aldmere_pike_4", "definition": "enemy.pikeman", "position_m": [202.4, 7.97, 598.9], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 3},
+		{"entity_id": "world.crownmarch.wander_aldmere_pike_5", "definition": "enemy.pikeman", "position_m": [197.6, 7.97, 601.1], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 4},
+		{"entity_id": "world.crownmarch.wander_aldmere_pike_6", "definition": "enemy.pikeman", "position_m": [199.2, 7.97, 601.1], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 5},
+		{"entity_id": "world.crownmarch.wander_aldmere_pike_7", "definition": "enemy.pikeman", "position_m": [200.8, 7.97, 601.1], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 6},
+		{"entity_id": "world.crownmarch.wander_aldmere_pike_8", "definition": "enemy.pikeman", "position_m": [202.4, 7.97, 601.1], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 7},
+		{"entity_id": "world.crownmarch.wander_aldmere_banner", "definition": "enemy.bannerman", "position_m": [200.0, 7.97, 603.3], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": -1}
+	]
+}

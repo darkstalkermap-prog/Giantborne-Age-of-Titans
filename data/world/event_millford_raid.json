@@ -1,0 +1,33 @@
+{
+	"schema_version": 1,
+	"id": "event.millford_raid",
+	"type": "world_event",
+	"display_name": "Raid on Millford",
+	"description": "P37 (plan M6-M9 §5.10, decision 27): raiders come up the east road into Millford - six raiders and an archer whose target provider hunts the hamlet's people and houses while its villagers run for the mill's, the barn's and the west safe markers. A protect objective in the tracker, the compass and the map (the green): it fails when three of the five houses on the raiders' side fall. Stage 3-5, once the Kingsgate beacon burns, at most twice, ten minutes after the last raid ended, never while Millford is hostile to the giant. It starts only with Millford's chunk loaded and the giant within 200 m; while that chunk is unloaded nothing advances. Defended: 100 XP the first time and the villagers' thanks; fell: at least two houses stay burned (the reeve's changed words wait for her dialogue's owner, docs/systems/P37.md).",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"centre_m": [-380, 8.08, 640],
+	"start_radius_m": 200,
+	"trigger": {"min_stage": 3, "max_stage": 5, "requires_flags": ["world.kingsgate.lit"], "forbids_flags": [],
+		"conditions": [{"type": "any", "of": [{"type": "not", "of": {"type": "flag", "flag": "faction.millford.hostile"}},
+			{"type": "flag", "flag": "faction.millford.reconciled"}]}],
+		"cooldown_s": 600, "cooldown_from": "end", "max_runs": 2},
+	"encounters": ["encounter.tpl_crownmarch_millford_raiders"],
+	"objective": {"kind": "protect", "lost_to_fail": 3, "marker": "world.marker.millford_green",
+		"text": "Defend Millford: {standing} of {total} houses stand",
+		"targets": ["world.crownmarch.millford_house_7", "world.crownmarch.millford_house_1", "world.crownmarch.millford_house_2",
+			"world.crownmarch.millford_house_3", "world.crownmarch.millford_house_4"]},
+	"fail": {"timer_s": 0},
+	"success_outcome": "defended",
+	"fail_outcome": "fell",
+	"start_text": "Raiders are burning Millford!",
+	"respawn_text": "Raiders still burn Millford.",
+	"abandon_after_s": 600,
+	"xp_full_runs": 2,
+	"outcomes": {
+		"defended": {"set_flags": {"world.millford.defended": true}, "xp": 100,
+			"text": "Millford is saved. Its villagers come out to thank you."},
+		"fell": {"set_flags": {"world.millford.burned": true}, "burn": 2,
+			"text": "Millford fell to the raiders: its houses burn."}
+	}
+}

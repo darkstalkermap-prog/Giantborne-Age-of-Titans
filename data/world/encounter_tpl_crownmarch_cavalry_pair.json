@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_crownmarch_cavalry_pair",
+	"type": "encounter",
+	"display_name": "Aldmere riders",
+	"description": "P37 (plan M6-M9 §2.13, §5.10): a wander template of wander.crownmarch's cavalry_pair entry (stage 5 and up, while Aldmere is hostile) - two Aldmere cavalry (P32's archetype) riding the road. Its centre is nominal.",
+	"template": true,
+	"level": "level.world",
+	"center_m": [800, 11.28, 632],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.crownmarch.wander_rider_1", "definition": "enemy.cavalry", "position_m": [796, 11.28, 632], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.crownmarch.wander_rider_2", "definition": "enemy.cavalry", "position_m": [804, 11.28, 632], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

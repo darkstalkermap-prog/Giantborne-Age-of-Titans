@@ -46,8 +46,43 @@ static func fields() -> Dictionary:
 			"forbids_flags": {"t": "array", "items": "string"}}},
 	}
 	## @anchor P37
+	# P37 (the framework; scripts/world/wander_director.gd): `patrol_m` - wanderers placed on a road walk
+	# its nodes within this distance either way of their anchor (default 40; 0 = they stand where they
+	# came); an entry's `conditions` (quest conditions, all must hold: values the flag lists cannot say -
+	# "the crown oath was not won by parley") and `route` (a moving column: it marches along the road
+	# graph from `from` to `to` - place ids of the level's world index - at `speed_mps`, and back when
+	# `round_trip`; it is placed on that route instead of a road node, and leaves the world at its end;
+	# `path` names a patrol route of the level instead, when the level has one).
+	f["patrol_m"] = U.num(0.0, 200.0)
+	(((f.entries as Dictionary).item_fields) as Dictionary).merge({
+		"conditions": {"t": "array"},
+		"route": route_field(),
+		"speed_mps": U.pos(),
+	})
 
 	return f
+
+
+## The `route` of a moving column (wander entries and world events; P37): along the level's road graph
+## from one world-index place to another, at the giant's `stage` rules for the road (default 3), there
+## and back when round_trip.
+static func route_field() -> Dictionary:
+	return {"t": "dict", "fields": {
+		"from": U.str_field(true),
+		"to": U.str_field(true),
+		"round_trip": U.bool_field(),
+		"stage": U.int_field(0, 10)}}
+
+
+## The route's errors (P37): its ends are ids, and they differ.
+static func check_route(route: Variant, ctx: String, out: Dictionary) -> void:
+	if typeof(route) != TYPE_DICTIONARY:
+		return
+	for key: String in ["from", "to"]:
+		if typeof(route.get(key)) == TYPE_STRING:
+			U.check_id_string(route[key], "%s.%s" % [ctx, key], out)
+	if str(route.get("from", "")) != "" and str(route.get("from", "")) == str(route.get("to", "")):
+		out.errors.append("%s: a route goes from one place to another (from == to)" % ctx)
 
 
 static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
@@ -64,6 +99,24 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.errors.append("%s: min_distance_m must be <= max_distance_m" % ctx)
 	check_entries(d.get("entries"), ctx, out)
 	## @anchor P37
+	# P37: an entry's conditions are quest conditions; its route has two different ends; a path and a
+	# route exclude each other; a route needs no speed (the WanderDirector's default) but a speed needs
+	# a route or a path.
+	var p37_entries: Variant = d.get("entries")
+	if typeof(p37_entries) == TYPE_ARRAY:
+		for i in (p37_entries as Array).size():
+			var p37_e: Variant = p37_entries[i]
+			if typeof(p37_e) != TYPE_DICTIONARY:
+				continue
+			var p37_ctx := "%s.entries[%d]" % [ctx, i]
+			if typeof(p37_e.get("conditions")) == TYPE_ARRAY:
+				U.check_conditions(p37_e.conditions, p37_ctx + ".conditions", out)
+			check_route(p37_e.get("route"), p37_ctx + ".route", out)
+			var p37_path := str(p37_e.get("path", ""))
+			if p37_path != "" and p37_e.has("route"):
+				out.errors.append("%s: an entry moves along a path or a route, not both" % p37_ctx)
+			if p37_e.has("speed_mps") and p37_path == "" and not p37_e.has("route"):
+				out.errors.append("%s: speed_mps needs a route or a path" % p37_ctx)
 
 
 static func required_ids() -> Dictionary:
