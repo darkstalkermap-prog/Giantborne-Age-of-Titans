@@ -189,6 +189,8 @@ func decide(tick: int, p_controller_state: int, my_position: Vector3, request_to
 	var seen: bool = perception.get("visible", false)
 	var target_pos: Vector3 = perception.get("position", last_known) if seen else last_known
 	var distance: float = perception.get("distance", INF) if seen else _flat_distance(my_position, last_known)
+	if _p32_decide(my_position, memory_ok, target_pos, release_token):
+		return   # P32: a siege crew serves its engine, or runs once it has none
 	if _p30_decide(my_position, memory_ok, target_alive, release_token):
 		return   # P30: a formation member holds its slot; an outmatched soldier joins a formation or flees
 	match state:
@@ -511,6 +513,8 @@ func on_morale_event(event: StringName, tick: int = -1) -> bool:
 	var key := String(event)
 	if not MORALE_EVENTS.has(key):
 		return false
+	if _p32_debounced(key, tick):
+		return true   # P32: a siege engine's fall costs a unit once per SIEGE_DEBOUNCE_S
 	apply_morale(float(MORALE_EVENTS[key]), key, tick)
 	return true
 
@@ -1869,6 +1873,133 @@ func _p30_hold_slot(my_position: Vector3, release_token: Callable) -> void:
 		_set_state(AIState.HOLD)
 
 ## @anchor P32
+# --- siege crews and the siege morale debounce (P32) ---------------------------------------------
+# Plan M6-M9 §2.10, §3.16, §5.11, decision 21. Hook lines: decide() (_p32_decide, after the flight
+# check, before P30's) and on_morale_event() (_p32_debounced). The actor (EnemyActor's P32 section)
+# installs crew_slot_resolver and crew_face_resolver when an engine takes it (SiegeEngine.add_crew ->
+# EnemyActor.p32_assign_engine) and calls crew_engine_lost() when that engine breaks or a giant seizes
+# it.
+#   * The siege morale event ("siege_destroyed", -20) counts once per SIEGE_DEBOUNCE_S per unit: two
+#     engines breaking within 2 s cost a soldier 20 morale once.
+#   * A siege crew (tactics.outmatched_behavior "crew": the enemy schema ties it to the record's role
+#     "crew") serves its engine: it walks to its place beside it (running when that is more than 4 m
+#     away, with HOLD's hysteresis), faces the giant while it knows where it is (else the point
+#     crew_face_resolver gives: the engine's front) and asks for no attack and no token of its own -
+#     its engine asks it to haul (EnemyActor.p32_crew_reload). State HOLD. Its morale can still break
+#     (FLEE); regrouped, it walks back to its place.
+#   * Without an engine - its engine broke or a giant seized it, or none took it within CREW_WAIT_S
+#     of its first decision - it runs and routs: a crew without an engine is out of the fight.
+
+const SIEGE_EVENT := "siege_destroyed"
+const SIEGE_DEBOUNCE_S := 2.0
+const CREW_BEHAVIOR := "crew"
+## A crew member no engine took within this long after its first decision runs.
+const CREW_WAIT_S := 3.0
+## A crew member counts as at its place within this distance (the haul starts there).
+const CREW_AT_SLOT_M := 1.0
+
+## crew_slot_resolver() -> Vector3: the crew member's place beside its engine (INF = none);
+var crew_slot_resolver := Callable()
+## crew_face_resolver() -> Vector3: the point it faces while it does not know where the giant is
+## (INF = keep its facing);
+var crew_face_resolver := Callable()
+## crew_engine_check() -> bool: its engine is still there (false: it vanished - freed or out of the
+## tree - and the member runs as if it broke).
+var crew_engine_check := Callable()
+## True while an engine has it; crew_lost once that engine is gone (it routed).
+var crew_serving := false
+var crew_lost := false
+var _p32_siege_tick := NO_TICK
+var _p32_wait_since := NO_TICK
+var _p32_slot_moving := false
+
+
+## True for a siege crew member (see the section notes).
+func is_crew() -> bool:
+	return str(tactics.get("outmatched_behavior", "")) == CREW_BEHAVIOR
+
+
+## An engine took this crew member (the actor has installed the resolvers): it serves it.
+func crew_engine_assigned(tick: int = -1) -> void:
+	if tick >= 0:
+		now = tick
+	crew_serving = true
+	crew_lost = false
+	_p32_slot_moving = true
+	_p32_wait_since = NO_TICK
+
+
+## Its engine broke or a giant seized it: it gives up its place, runs and routs (once).
+func crew_engine_lost(tick: int = -1) -> void:
+	if tick >= 0:
+		now = tick
+	crew_serving = false
+	crew_lost = true
+	crew_slot_resolver = Callable()
+	crew_face_resolver = Callable()
+	crew_engine_check = Callable()
+	if state != AIState.ROUTED:
+		force_rout(now)
+
+
+## True while it stands at its place beside its engine (HOLD, within CREW_AT_SLOT_M; tests, the haul).
+func crew_at_slot(my_position: Vector3) -> bool:
+	if not crew_serving or state != AIState.HOLD or not crew_slot_resolver.is_valid():
+		return false
+	var slot: Vector3 = crew_slot_resolver.call()
+	return slot != Vector3.INF and _flat_distance(my_position, slot) <= CREW_AT_SLOT_M
+
+
+## on_morale_event(): true when this "siege_destroyed" falls within SIEGE_DEBOUNCE_S of the last one
+## that counted (it costs nothing).
+func _p32_debounced(key: String, tick: int) -> bool:
+	if key != SIEGE_EVENT:
+		return false
+	var t := tick if tick >= 0 else now
+	if _p32_siege_tick != NO_TICK and t - _p32_siege_tick < _ticks(SIEGE_DEBOUNCE_S):
+		return true
+	_p32_siege_tick = t
+	return false
+
+
+## decide(): true when it handled the decision (a crew member that is neither fleeing, routed,
+## staggered, returning home nor at peace).
+func _p32_decide(my_position: Vector3, memory_ok: bool, target_pos: Vector3, release_token: Callable) -> bool:
+	if not is_crew() or faction_mode != "" \
+			or state in [AIState.FLEE, AIState.ROUTED, AIState.DEAD, AIState.STAGGERED, AIState.RETURN]:
+		return false
+	_release(release_token)
+	attack_request = ""
+	var threat := target_pos if aware and memory_ok else Vector3.INF
+	if crew_serving and crew_engine_check.is_valid() and not bool(crew_engine_check.call()):
+		crew_engine_lost(now)   # its engine vanished (freed, or out of the tree): out of the fight
+		return true
+	if not crew_serving:
+		if _p32_wait_since == NO_TICK:
+			_p32_wait_since = now
+		if crew_lost or now - _p32_wait_since >= _ticks(CREW_WAIT_S):
+			crew_engine_lost(now)
+			return true
+		_stop_moving()
+		face_point = threat
+		if state != AIState.HOLD:
+			_set_state(AIState.HOLD)
+		return true
+	var slot: Vector3 = crew_slot_resolver.call() if crew_slot_resolver.is_valid() else Vector3.INF
+	var to_slot := _flat_distance(my_position, slot) if slot != Vector3.INF else 0.0
+	if to_slot > HOLD_LEAVE_M:
+		_p32_slot_moving = true
+	if _p32_slot_moving and to_slot > HOLD_ARRIVE_M:
+		move_target = slot
+		move_speed = -1.0 if to_slot > 4.0 else 0.0
+	else:
+		_p32_slot_moving = false
+		_stop_moving()
+	face_point = threat if threat != Vector3.INF \
+		else (crew_face_resolver.call() if crew_face_resolver.is_valid() else Vector3.INF)
+	if state != AIState.HOLD:
+		_set_state(AIState.HOLD)
+	return true
 
 ## @anchor P34
 
