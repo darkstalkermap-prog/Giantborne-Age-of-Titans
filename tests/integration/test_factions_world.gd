@@ -14,7 +14,8 @@ const RECORDS := {
 	"brannock": ["neutral", 2, true, 120.0, "world.crownmarch.edda"],
 	"millford": ["neutral", 2, true, 120.0, "world.crownmarch.reeve_tamsin"],
 	"toll_riders": ["hostile", 1, false, 0.0, ""],
-	"aldmere": ["neutral", 2, false, 0.0, ""],
+	# M8 gate (F6): a peace sworn with the crown and broken afterwards is mended at the herald.
+	"aldmere": ["neutral", 2, false, 0.0, "world.aldmere.herald"],
 }
 ## Thornwick's texts as P22 shipped them (the regression of plan §3.12).
 const THORNWICK := {"warned": "Thornwick's people cower. Strike again and they will fight you.",

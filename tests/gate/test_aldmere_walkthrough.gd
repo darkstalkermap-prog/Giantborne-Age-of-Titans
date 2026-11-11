@@ -22,7 +22,10 @@ extends IntegrationSuite
 ##     herald - the fort found on the road, the engines found through the deserters' marks - complete
 ##     quest.oath_crown and pay its resolution once (750 XP, the level-9 floor, 1 titan iron and 2 iron):
 ##     the battle and the ridge, which write the oath, write oath.crown.met with it, as Edda's and
-##     Sedge's resolutions do. Before, the oath quest stayed on "Meet Aldmere's herald" for good.
+##     Sedge's resolutions do. Before, the oath quest stayed on "Meet Aldmere's herald" for good;
+##   * M8 gate (F6): after a parley the ridge's errand is given up; breaking the ridge's real ballistae
+##     anyway turns Aldmere hostile, pays nothing and the oath stays the parley; the herald and Corvane name
+##     the broken peace before their sworn lines, and the herald mends it for 2 iron.
 
 const START_CP := "world.cp.kingsgate_shelf"
 const MAIN := "quest.world_main"
@@ -310,6 +313,48 @@ func test_sabotage_without_meeting_the_herald() -> void:
 	assert_eq(Quests.quest_state("quest.war_engines"), Quests.COMPLETED, "the war engines are wrecked")
 	await _sworn_without_the_herald(p, "sabotage", titan, iron)
 	Events.xp_award_requested.disconnect(_on_xp)
+
+
+func test_a_parley_broken_on_the_ridge_is_named_and_mended() -> void:
+	var p := await _opening()
+	WorldState.set_flag(Discovery.discovered_flag("poi.ballista_ridge"), true)   # the ridge found on the way
+	await _settle()
+	assert_eq(Quests.quest_state("quest.ballista_ridge"), Quests.ACTIVE, "Ballista Ridge's errand starts")
+	var d := Quests.start_dialogue("dialogue.deserters", "world.aldmere.deserter_wynn")
+	if d != null:
+		d.choose_outcome("spare")
+	Quests.end_dialogue()
+	await _parley(p, "deserters")
+	assert_eq(Quests.quest_state("quest.ballista_ridge"), Quests.ABANDONED, "a crown at peace gives the ridge's errand up")
+	_xp.clear()
+	Events.xp_award_requested.connect(_on_xp)
+	var titan := WorldItems.count(WorldState.inventory, WorldItems.TITAN_IRON)
+	for path: String in ENGINE_PARTS.slice(2):
+		_part(path)
+	await step_ticks(2)
+	for id: String in ENGINES.slice(4):
+		assert_true(await _break(p, id), "%s is broken anyway" % id)
+		await step_ticks(1)
+	await _settle()
+	Events.xp_award_requested.disconnect(_on_xp)
+	assert_true(FactionState.is_hostile("aldmere"), "breaking its ballistae breaks the peace")
+	assert_eq(str(WorldState.get_flag("oath.crown.outcome")), "parley", "the oath stays the parley")
+	assert_eq(_crown_xp(), {}, "the oath pays nothing again")
+	assert_eq(_xp.filter(func(a: Array) -> bool: return str(a[1]).begins_with("quest:")), [], "and no quest pays for the ridge")
+	assert_eq(WorldItems.count(WorldState.inventory, WorldItems.TITAN_IRON), titan, "no second titan iron")
+	var c := Quests.start_dialogue("dialogue.corvane", "world.aldmere.fort_parley")
+	assert_eq(str(c.node().get("id", "")) if c != null else "", "broken_peace", "Corvane names the broken peace")
+	Quests.end_dialogue()
+	var h := Quests.start_dialogue("dialogue.herald", "world.aldmere.herald")
+	assert_eq(str(h.node().get("id", "")) if h != null else "", "broken_peace", "so does the herald")
+	assert_true(h != null and h.find_choice("reconcile_aldmere") >= 0, "she takes 2 iron to mend it")
+	if h != null:
+		h.choose_outcome("reconcile_aldmere")
+	Quests.end_dialogue()
+	await step_ticks(2)
+	assert_eq(FactionState.standing("aldmere"), "reconciled", "the peace is mended")
+	var forge := _find(world, FORGE) as ConditionForge
+	assert_true(forge != null and forge.is_open(), "the fort's forge works for the giant again")
 
 
 ## The herald accepts the parley on `token`, then Corvane swears at the horn.

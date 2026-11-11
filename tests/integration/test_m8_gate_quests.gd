@@ -7,11 +7,15 @@ extends IntegrationSuite
 ##     resolutions always did; the crown's battle and ridge did not, so a breach or a sabotage won before
 ##     meeting the herald left quest.oath_crown on "Meet Aldmere's herald" for good), and a save already
 ##     stuck that way loads, completes the oath quest and pays its resolution once.
+##   * F6: a crown sworn in peace (the parley, or Corvane spared) gives up Ballista Ridge's errand (and a
+##     ridge found afterwards starts none), and a peace broken afterwards is named by the herald and
+##     Corvane before their sworn lines - the herald mends it for 2 iron (faction.aldmere's reconcile).
 
 const START_CP := "world.cp.kingsgate_shelf"
 const CROWN := "quest.oath_crown"
 const OATHS := ["march", "wood", "crown"]
 const STUCK_SAVE := "res://tests/fixtures/saves/v2_crown_sabotage_stuck_on_meet.json"
+const RIDGE := "quest.ballista_ridge"
 
 var _xp: Array = []
 
@@ -112,3 +116,151 @@ func test_a_save_stuck_on_meeting_the_herald_loads_and_pays_the_oath_once() -> v
 	await _settle()
 	assert_eq(_xp.size(), paid, "a reload pays nothing again (%s)" % [_xp.slice(paid)])
 	assert_eq(Quests.quest_state(CROWN), Quests.COMPLETED, "and the oath quest stays complete")
+
+
+# --------------------------------------------------------------------------- F6
+
+## The campaign from world_start in level.world, the giant at `stage` on the suite's floor, Quests over
+## every shipped quest.
+func _world_start(stage := 4) -> GiantPlayer:
+	GameSession.start_world_for_tests(START_CP)
+	GameSession.level_id = "level.world"
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	GameSession.on_level_ready(world, p)
+	p.global_position = Vector3(0, 0.05, 0)
+	p.velocity = Vector3.ZERO
+	p.set_profile(GameData.get_record("growth.%02d" % stage))
+	Quests.test_active = true
+	Quests.scope = PackedStringArray()
+	await _settle()
+	return p
+
+
+func _choose_text(s: DialogueSession, prefix: String) -> bool:
+	for c: Dictionary in s.choices():
+		if str(c.text).begins_with(prefix) and not bool(c.get("locked", false)):
+			s.choose(int(c.index))
+			return true
+	return false
+
+
+## The crown's oath by parley, as a player swears it: Wynn spared (his word), the herald shown it,
+## Corvane's oath at the horn.
+func _parley() -> void:
+	var d := Quests.start_dialogue("dialogue.deserters", "world.aldmere.deserter_wynn")
+	if d != null:
+		d.choose_outcome("spare")
+	Quests.end_dialogue()
+	var h := Quests.start_dialogue("dialogue.herald", "world.aldmere.herald")
+	assert_true(h != null and _choose_text(h, "What are the three roads"), "the herald names the three roads")
+	if h != null:
+		h.choose_outcome("parley_deserters")
+	Quests.end_dialogue()
+	var c := Quests.start_dialogue("dialogue.corvane", "world.aldmere.fort_parley")
+	if c != null:
+		c.choose_outcome("parley")
+	Quests.end_dialogue()
+	await _settle()
+	assert_eq(str(WorldState.get_flag("oath.crown.outcome", "")), "parley", "the crown sworn by parley")
+
+
+func _blow(target_id: String) -> void:
+	var e := HitEvent.new()
+	e.tick = Sim.tick
+	e.instance_id = Sim.new_instance_id()
+	e.attacker_id = "player"
+	e.target_id = target_id
+	e.action_id = "ability.light_1"
+	e.power = 5.0
+	e.attacker_stat = 10.0
+	e.attacker_height_m = 11.0
+	e.damage_split = {"physical": 1.0}
+	e.tags = PackedStringArray(["Melee", "Light", "BasicAttack"])
+	e.attacker_position = Vector3.ZERO
+	Sim.queue_hit(e)
+
+
+var _guards := 0
+
+
+## Aldmere offended the way FactionState counts it: two blows on one of its soldiers.
+func _offend_aldmere() -> void:
+	_guards += 1
+	var guard: SoldierEnemy = (load(SOLDIER) as PackedScene).instantiate()
+	guard.entity_id = "test.m8q.aldmere_guard_%d" % _guards
+	guard.ai_enabled = false
+	guard.faction = "aldmere"
+	guard.position = Vector3(0, 0.05, -5)
+	world.add_child(guard)
+	await step_ticks(2)
+	for i in 2:
+		_blow(guard.entity_id)
+		await step_ticks(3)
+	assert_eq(FactionState.standing("aldmere"), "hostile", "two blows on its soldier turn Aldmere hostile again")
+
+
+func _node_of(dialogue_id: String, npc: String) -> String:
+	var s := Quests.start_dialogue(dialogue_id, npc)
+	var node := str(s.node().get("id", "")) if s != null else ""
+	Quests.end_dialogue()
+	return node
+
+
+func test_a_peaceful_crown_gives_up_the_ridge_and_a_broken_peace_is_named_and_mended() -> void:
+	await _world_start(4)
+	WorldState.set_flag(Discovery.discovered_flag("poi.ballista_ridge"), true)   # the ridge found on the way
+	await _settle()
+	assert_eq(Quests.quest_state(RIDGE), Quests.ACTIVE, "Ballista Ridge's errand starts at stage 4")
+	await _parley()
+	assert_eq(Quests.quest_state(RIDGE), Quests.ABANDONED, "a crown sworn in peace gives the ridge's errand up")
+	assert_eq(Quests.objectives().filter(func(o: Dictionary) -> bool: return str(o.quest_id) == RIDGE), [],
+		"'Silence the three ballistae' leaves the tracker")
+	assert_eq(FactionState.standing("aldmere"), "reconciled", "Aldmere at peace")
+	assert_eq(_node_of("dialogue.herald", "world.aldmere.herald"), "sworn_parley", "the herald: the peace holds")
+	# The peace broken: the herald and Corvane say so before their sworn lines.
+	await _offend_aldmere()
+	assert_eq(_node_of("dialogue.corvane", "world.aldmere.fort_parley"), "broken_peace", "Corvane names the broken peace")
+	var iron := WorldItems.count(WorldState.inventory, WorldItems.IRON)
+	var h := Quests.start_dialogue("dialogue.herald", "world.aldmere.herald")
+	assert_eq(str(h.node().get("id", "")) if h != null else "", "broken_peace", "so does the herald")
+	assert_true(h != null and h.find_choice("reconcile_aldmere") >= 0, "she takes a price for the harm (%s)" % [
+		h.choices().map(func(c: Dictionary) -> String: return str(c.text)) if h != null else []])
+	if h != null:
+		h.choose_outcome("reconcile_aldmere")
+	Quests.end_dialogue()
+	await step_ticks(2)
+	assert_eq(WorldItems.count(WorldState.inventory, WorldItems.IRON), iron - 2, "2 iron paid")
+	assert_eq(FactionState.standing("aldmere"), "reconciled", "the peace mended")
+	assert_eq(_node_of("dialogue.herald", "world.aldmere.herald"), "sworn_parley", "the herald: the peace holds again")
+	assert_eq(_node_of("dialogue.corvane", "world.aldmere.fort_parley"), "sworn", "Corvane too")
+	# With no iron the price is named, greyed.
+	await _offend_aldmere()
+	var left := WorldItems.count(WorldState.inventory, WorldItems.IRON)
+	if left > 0:
+		WorldState.remove_item(WorldItems.IRON, left, "test")
+	var h2 := Quests.start_dialogue("dialogue.herald", "world.aldmere.herald")
+	var locked := h2.choices().filter(func(c: Dictionary) -> bool: return bool(c.get("locked", false))) if h2 != null else []
+	assert_eq(locked.map(func(c: Dictionary) -> String: return str(c.locked_text)), ["You need 2 iron"],
+		"without iron the price is greyed with its reason")
+	Quests.end_dialogue()
+
+
+func test_a_ridge_found_after_a_peaceful_crown_starts_no_errand() -> void:
+	await _world_start(4)
+	await _parley()
+	WorldState.set_flag(Discovery.discovered_flag("poi.ballista_ridge"), true)
+	await _settle()
+	assert_eq(Quests.quest_state(RIDGE), Quests.INACTIVE, "Aldmere's allies are not asked to silence its ballistae")
+
+
+func test_the_sabotage_and_the_struck_warlord_keep_aldmere_at_war() -> void:
+	await _world_start(4)
+	# The sabotage's and a struck Corvane's Aldmere stays hostile: their sworn lines, no price offered.
+	for pair: Array in [["sabotage", "", "sworn_sabotage"], ["breach", "slain", "sworn_breach"]]:
+		WorldState.clear()
+		for f: Array in [["oath.crown.met", true], ["oath.crown.done", true], ["oath.crown.outcome", pair[0]],
+				[FactionState.flag_id("aldmere", "hostile"), true]]:
+			WorldState.set_flag(str(f[0]), f[1])
+		if str(pair[1]) != "":
+			WorldState.set_flag("boss.corvane.outcome", pair[1])
+		assert_eq(_node_of("dialogue.herald", "world.aldmere.herald"), str(pair[2]), "%s: the herald's sworn line" % pair[0])
