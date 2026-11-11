@@ -488,9 +488,9 @@ func go_to_title() -> void:
 	_reload_scene("title")
 
 
-## The slice's completion checkpoint, if it still waits (something other than an aware enemy held
-## it back), is committed before a quit to the title clears the session (P17a, M4 review: Quit to
-## title on the end screen lost it). A dead giant is never saved.
+## The slice's completion checkpoint (or a boss's end, M8 gate), if it still waits (something other
+## than an aware enemy held it back), is committed before a quit to the title clears the session
+## (P17a, M4 review: Quit to title on the end screen lost it). A dead giant is never saved.
 func _commit_pending_completion() -> void:
 	if _pending.is_empty() or not bool(_pending.get("completion", false)) or not checkpoints_enabled():
 		return
@@ -1102,7 +1102,8 @@ func _start_checkpoint(level: Node) -> String:
 ## not wait for aware enemies - the crown can be taken with the Barrow's wardens still about, and
 ## the end screen that opens next offers Quit to title - and a quit to the title commits it if it
 ## is still pending (go_to_title), so the completed slice is never lost. It stays set on the
-## pending request until that is taken.
+## pending request until that is taken. M8 gate (fix-up 1): a boss's end (boss_defeated, a
+## drive-out) is a completion request too.
 func request_checkpoint(reason: String, respawn: String = "", completion := false) -> void:
 	if not checkpoints_enabled():
 		return
@@ -1471,19 +1472,24 @@ func _only_shrine_screens_open() -> bool:
 
 ## The Ogre King's death moves the respawn to the Kingsfall shrine - but not on another campaign
 ## level (P20: a world boss keeps the respawn; test levels keep today's rule).
+## M8 gate (fix-up 1, F38): a boss's end is a completion request (request_checkpoint): its brood or
+## guards still aware within 40 m (the Matriarch's den whelps, her summoned ones) do not hold it back,
+## and a quit to the title commits it if something else does - decision 13 never loses a boss kill.
+## The respawn stays at a shrine or waystone (or the Kingsfall shrine), so it cannot trap the giant.
 func _on_boss_defeated(_tick: int, _boss_id: String) -> void:
 	var other_level := is_campaign() and level_id != "" and level_id != VALLEY_LEVEL_ID \
 		and not level_id.begins_with("res://")
-	request_checkpoint("boss_defeated", "" if other_level else KINGSFALL_RESPAWN)
+	request_checkpoint("boss_defeated", "" if other_level else KINGSFALL_RESPAWN, true)
 
 
 ## M8 gate (F38): a boss driven out (the Matriarch's flight: boss_disengaged "fled") ends its fight
 ## as a kill does, so it is checkpointed like boss_defeated (decision 13: a checkpoint never loses a
-## boss's end) - the respawn unchanged, and no victory cue (only boss_defeated has one). "left" (the
-## giant walked out; the boss resets) takes none.
+## boss's end) - the respawn unchanged, and no victory cue (only boss_defeated has one); a completion
+## request like the kill's (fix-up 1: her aware whelps held it back). "left" (the giant walked out;
+## the boss resets) takes none.
 func _on_boss_disengaged(_tick: int, _boss_id: String, reason: String) -> void:
 	if reason == "fled":
-		request_checkpoint("boss_fled")
+		request_checkpoint("boss_fled", "", true)
 
 
 func _on_quest_stage_changed(_tick: int, quest_id: String, _stage_id: String) -> void:
