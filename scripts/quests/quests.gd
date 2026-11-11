@@ -621,17 +621,22 @@ func objective_for(quest_id: String) -> Dictionary:
 		route = routes[i]
 		marker = position_markers[i]
 	# M8 gate (F29): while the stage's lead holds, the way round a gate the giant cannot pass yet leads.
+	# Fix-up 1: past the lead's marker its `then` leads (lead_marker), and only on the lead's own level - on
+	# another (the Valley) the route leads to this level's door either way, and the tracker names the door.
 	var lead_text := ""
 	var lead := stage_lead(srec)
+	var led := false
 	if not lead.is_empty():
-		var lr := objective_route(str(lead.marker))
-		if (lr.position as Vector3).is_finite():
-			marker = str(lead.marker)
+		var lm := lead_marker(lead)
+		var lr := objective_route(lm)
+		if (lr.position as Vector3).is_finite() and str(lr.via_exit) == "":
+			marker = lm
 			route = lr
 			position = lr.position
 			markers = PackedStringArray([marker])
 			positions = [position]
 			lead_text = str(lead.get("text", ""))
+			led = true
 	var bot: Dictionary = (srec.get("bot", {}) as Dictionary).duplicate(true) if typeof(srec.get("bot")) == TYPE_DICTIONARY else {}
 	return {"quest_id": quest_id, "stage_id": sid, "text": str(srec.get("objective", "")),
 		"kind": str(cond.get("type", "")) if typeof(cond) == TYPE_DICTIONARY else "",
@@ -644,7 +649,7 @@ func objective_for(quest_id: String) -> Dictionary:
 		# its name and the tracker's and the journal's phrase for it ("by the Kings' Door").
 		"via_exit": str(route.via_exit), "via_name": str(route.via_name),
 		"via_text": lead_text if lead_text != "" else by_exit_text(str(route.via_name)),
-		"lead": lead_text != "" or not lead.is_empty()}
+		"lead": led}
 
 
 ## A stage's marker ids: its `marker`, then its `markers` (P20), each once.
@@ -706,6 +711,34 @@ func stage_lead(srec: Dictionary) -> Dictionary:
 		if idx != null and idx.region_at(p.global_position - offset) == region:
 			return {}
 	return lead
+
+
+## M8 gate fix-up 1 (N2.3): a lead's `then` leads once the giant is past the lead's marker.
+const LEAD_REACH_M := 40.0
+
+
+## The marker a holding lead points at (M8 gate fix-up 1, N2.3): its marker, or - once the giant is past it
+## on the way round (within LEAD_REACH_M of it, or nearer the lead's `then` than the marker is) - its `then`.
+## grow6's lead pointed a giant walking up the Ironway back down to the foot's waystone until the Stonehold
+## began, 70 m on; now the Ironway's top leads from the foot on.
+func lead_marker(lead: Dictionary) -> String:
+	var m := str(lead.get("marker", ""))
+	var then := str(lead.get("then", ""))
+	var p := _player_or_null()
+	if then == "" or p == null or not p.is_inside_tree():
+		return m
+	var at := objective_route(m)
+	var nxt := objective_route(then)
+	if str(at.via_exit) != "" or str(nxt.via_exit) != "":
+		return m
+	var a: Vector3 = at.position
+	var b: Vector3 = nxt.position
+	if not a.is_finite() or not b.is_finite():
+		return m
+	var g := p.global_position
+	if _flat(g, a) <= LEAD_REACH_M or _flat(g, b) < _flat(a, b):
+		return then
+	return m
 
 
 ## M8 gate (F46): `positions` (of the markers `marker_ids`, in the same order) without those the giant's
