@@ -38,7 +38,7 @@ extends RefCounted
 ##     WAITING or SUSPENDED far off, a column marching the abstract - keeps nobody else from starting; it
 ##     waits (its attempt begins again) while another is in play. Its abandonment clock (unloaded_s) is not
 ##     the attempt's: a death or a reload keeps it (the carry, and the save through the flag
-##     <id>.unloaded_since_s, the play time its centre was left at; -1 = loaded).
+##     <id>.unloaded_since_s, the play time its centre was left at; false while it is loaded).
 ##   * M8 gate (F12): fail.within_m (> 0) makes the fail timer run only while the giant stands within that
 ##     many metres of the centre (the siege of Skarn: its clock pauses beyond 200 m, plan §5.10).
 ##   * M8 gate (F19): a run counted in a save (its last_start_s after its last_end_s) and no longer carried
