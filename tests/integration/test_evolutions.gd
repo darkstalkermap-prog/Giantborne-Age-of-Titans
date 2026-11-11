@@ -120,7 +120,10 @@ func test_evolutions_learned_at_their_stage_take_their_bases_slots() -> void:
 	evolved.clear()
 	await _grow(p, 6)
 	assert_eq(_slot(p, "slot_1"), "ability.earthquake", "Earthquake in slot 1")
-	assert_eq(evolved, [["ability.titan_stomp", "ability.earthquake", "slot_1"]], "Titan Stomp evolved")
+	# P32: Rampart Grip (the stage-6, level-11 evolution of Crushing Grip) evolves with it into slot 4.
+	assert_eq(_slot(p, "slot_4"), "ability.rampart_grip", "Rampart Grip in Crushing Grip's slot 4")
+	assert_eq(evolved, [["ability.titan_stomp", "ability.earthquake", "slot_1"],
+		["ability.crushing_grip", "ability.rampart_grip", "slot_4"]], "Titan Stomp and Crushing Grip evolved")
 	known = p.known_abilities
 	assert_true(known.find("ability.earthquake") < known.find("ability.titan_stomp")
 		and known.find("ability.titan_stomp") < known.find("ability.heavy_footfall"),

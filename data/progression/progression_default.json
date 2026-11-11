@@ -16,7 +16,8 @@
 		"ability.titan_stomp", "ability.earthquake", "ability.crag_hurl", "ability.formation_sweep", "ability.titan_roar",
 		"ability.shoulder_charge", "ability.cleave_of_ages", "ability.bulwark", "ability.stonewall_stance",
 		"ability.rune_lance", "ability.primal_regrowth", "ability.storm_call",
-		"ability.bedrock_ward", "ability.thunderhead", "ability.wild_surge"],
+		"ability.bedrock_ward", "ability.thunderhead", "ability.wild_surge",
+		"ability.rampart_grip"],
 	"new_game": {
 		"level": 1,
 		"growth_profile": "growth.01",

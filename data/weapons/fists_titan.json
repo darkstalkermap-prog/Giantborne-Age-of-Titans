@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "weapon.fists_titan",
+	"type": "weapon",
+	"family": "fists",
+	"display_name": "Titanforged Stoneknuckles",
+	"damage_multiplier": 1.1,
+	"length_m": 1.9,
+	"hit_radius_m": 0.5,
+	"description": "The Stoneknuckles titanforged with dark titan iron: harder blows, and the hands close from farther away (+1.5 m grab reach).",
+	"scales_with_growth": true,
+	"fit_max_stage": 6,
+	"required_stage": 4,
+	"visual_shape": "fists",
+	"light_chain": "ability.fists_light_1",
+	"heavy": "ability.fists_heavy",
+	"perk": {"kind": "grab_reach", "grab_reach_add": 1.5, "text": "+1.5 m grab reach"}
+}
