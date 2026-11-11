@@ -23,6 +23,18 @@ extends BossArena
 ##   * Engagement emits Events.boss_engaged(battle id); the disengage rule resets the battle: every
 ##     member leaves (EncounterDirector.p34_reset_encounter: the fallen come back, persist_death false),
 ##     the phases start again and boss_disengaged(battle id, "left").
+##   * M8 gate (F9; plan §3.20 "every battle fits the caps on both platforms"): on engagement the
+##     members of the `stand_out` encounters leave (EncounterDirector.despawn: they come back on their
+##     encounter's next activation) - Fort Aldmere's gate garrison outside the portcullis, whose pikes,
+##     banner and archers took the room in the formation cap and the combatants' budget the battle's
+##     units need (on the web its pikes left three of the Wall's shields and their banner waiting while the
+##     bar counted them) - except the crews of the battle's own engines and a unit the giant holds; and
+##     the battle reserves the room of its planned units still to come in the level's caps until the
+##     attempt ends (EncounterDirector.p34_reserve), so nothing that turns up later takes it either; and
+##     should units of other encounters already in the world still hold that room (Ballista Ridge's
+##     shield wall and crews, a column on the road), as many of them as the caps need leave too, the
+##     farthest first (EncounterDirector.p34_make_room; `stood_out` lists every unit that left). Its
+##     composition (the plan, the bar's aggregate) is then what actually spawns, banners first.
 
 const BATTLE_GROUP := "battle_bosses"
 
@@ -35,6 +47,8 @@ const BATTLE_GROUP := "battle_bosses"
 ## Corvane's entity id and his guard's formation id (the encounter's local formation id).
 @export var commander_id := ""
 @export var guard_formation := ""
+## M8 gate (F9): encounters whose members leave when the battle engages (see the notes).
+@export var stand_out: PackedStringArray = PackedStringArray()
 
 ## The current phase (0-based; -1 before the first engagement).
 var phase_index := -1
@@ -42,6 +56,8 @@ var phase_index := -1
 var phase_log: Array[int] = []
 ## True once the battle surrendered (Corvane yielded).
 var surrendered := false
+## Entity ids the last engagement stood out (tests, debug).
+var stood_out: Array[String] = []
 var _planned: Dictionary = {}   # entity id -> max health of the planned composition (this attempt)
 var _engine_max: Dictionary = {}   # world id -> max health
 var _total := 0.0
@@ -88,8 +104,37 @@ func engage(tick: int = -1) -> void:
 	phase_index = -1
 	phase_log.clear()
 	_plan()
+	_stand_out()
+	var d := _director()
+	if d != null:
+		d.p34_reserve(battle_id, _planned.keys())
+		stood_out.append_array(d.p34_make_room(battle_id, global_position, engines))
 	_begin_phase(0, t)
 	Events.boss_engaged.emit(t, battle_id)
+
+
+## M8 gate (F9): the stand_out encounters' living members leave (see the notes): every one but the crews
+## of the battle's engines and a unit the giant holds.
+func _stand_out() -> void:
+	stood_out.clear()
+	var d := _director()
+	if d == null:
+		return
+	var keep := {}
+	for enc_id in stand_out:
+		for entry: Variant in GameData.get_record(enc_id).get("engines", []):
+			if typeof(entry) == TYPE_DICTIONARY and engines.has(str(entry.get("engine", ""))):
+				for c: Variant in entry.get("crew", []):
+					keep[str(c)] = true
+	for enc_id in stand_out:
+		for id in d.members_of(enc_id):
+			if keep.has(id) or d.member_status(id) != EncounterDirector.SPAWNED:
+				continue
+			var n := d.spawned(id)
+			if n != null and n.has_method("is_held") and bool(n.call("is_held")):
+				continue
+			d.despawn(id)
+			stood_out.append(id)
 
 
 func _on_post_resolve(tick: int) -> void:
@@ -283,16 +328,39 @@ func _yielding_id() -> String:
 	return commander_id
 
 
-## A new attempt: every member of the battle's encounters leaves (the fallen return), phases restart.
+## M8 gate (F33): the disengage lines name the battle, which regroups rather than recovers.
+func fight_name() -> String:
+	return battle_name
+
+
+func leaving_line() -> String:
+	return "%s will regroup unless you turn back." % battle_name
+
+
+func reset_line() -> String:
+	return "%s regrouped: you left the battle." % battle_name
+
+
+## A new attempt: every member of the battle's encounters leaves (the fallen return), phases restart; the
+## room its plan reserved is released (F9).
 func _reset_attempt() -> void:
 	var d := _director()
 	if d != null:
+		d.p34_release(battle_id)
 		for ph: Dictionary in phases:
 			for enc_id: Variant in ph.get("encounters", []):
 				d.p34_reset_encounter(str(enc_id))
 	phase_index = -1
 	phase_log.clear()
 	surrendered = false
+
+
+## The battle is over (won, or its commander slain): the room its plan reserved is released (F9).
+func _defeat(tick: int) -> void:
+	super(tick)
+	var d := _director()
+	if d != null:
+		d.p34_release(battle_id)
 
 
 func debug_lines() -> PackedStringArray:

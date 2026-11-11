@@ -538,11 +538,12 @@ func _update_cleared(enc: Encounter, ppos: Vector3) -> void:
 			m.status = UNSPAWNED
 
 
-## Spawns the members still waiting, in spawn order, while the budget has room (members that do
-## not count toward it always spawn) and the update's spawn quota lasts (the rest wait for the
-## next tick). Killed ones are skipped for good.
+## Spawns the members still waiting, in spawn order (each formation's banner first: P30, M8 gate F9),
+## while the budget has room (members that do not count toward it always spawn; an engaged battle's
+## units still to come keep theirs: P34, M8 gate F9) and the update's spawn quota lasts (the rest wait
+## for the next tick). Killed ones are skipped for good.
 func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
-	for m: Member in enc.members:
+	for m: Member in _p30_spawn_order(enc):
 		if m.status != UNSPAWNED:
 			continue
 		if WorldState.is_killed(m.entity_id):
@@ -552,7 +553,7 @@ func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
 			continue   # P24b: not at this stage
 		if _p30_waits_for_room(m):
 			continue   # P30: the level's formation members are at max_formation_members
-		if counts(m) and active_combatant_count() >= max_active_enemies:
+		if counts(m) and active_combatant_count() + _p34_reserved_room(m, false) >= max_active_enemies:
 			continue
 		if _spawn_quota == 0:
 			_spawn_deferred = true
@@ -564,7 +565,7 @@ func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
 
 
 func _can_activate(enc: Encounter) -> bool:
-	var waiting := false
+	var waiting: Member = null
 	for m: Member in enc.members:
 		if m.status != UNSPAWNED and m.status != DESPAWNED:
 			continue
@@ -572,10 +573,11 @@ func _can_activate(enc: Encounter) -> bool:
 			continue
 		if not _p24b_stage_allows(m):
 			continue   # P24b: a member of another stage does not make the encounter worth activating
-		waiting = true
 		if not counts(m):
 			return true
-	return waiting and active_combatant_count() < max_active_enemies
+		if waiting == null:
+			waiting = m
+	return waiting != null and active_combatant_count() + _p34_reserved_room(waiting, false) < max_active_enemies
 
 
 func _check_leash(enc: Encounter, tick: int) -> void:
@@ -861,10 +863,11 @@ static func _alive(n: Node3D) -> bool:
 
 
 ## Takes `n` out of the tree now and frees it (only from a safe point: the director's update, a
-## deferred call).
+## deferred call). A formation member leaves its formation first (P30; M8 gate, F23).
 func _free_node(n: Node) -> void:
 	if n == null or not is_instance_valid(n):
 		return
+	_p30_leave_formation(n)
 	var parent := n.get_parent()
 	if parent != null:
 		parent.remove_child(n)
@@ -909,8 +912,9 @@ func _warn_once(key: String, text: String) -> void:
 #   * spawn entries may carry min_stage / max_stage: at each activation the members outside the
 #     giant's stage sit it out (they do not spawn, nor keep the encounter from being cleared);
 #   * the director's own path queries (P30's formation pivots, P37's wander anchors) ask
-#     nav_budget_left() and spend_nav_queries() - NavQuery's per-tick budget, shared with the actors -
-#     the rest waiting a tick.
+#     nav_budget_left() - NavQuery's per-tick budget, shared with the actors -, the rest waiting a tick;
+#     a query made through NavQuery (path, closest_point) counts itself, spend_nav_queries() counts one
+#     made around it (M8 gate, F25: a formation's re-path counted twice).
 # Elsewhere (the Valley, test levels) every encounter is live and nothing changes; the stage filter
 # applies wherever entries carry the keys.
 
@@ -1058,6 +1062,16 @@ func spend_nav_queries(n := 1) -> void:
 #     shrines, far out of the settlements' sight).
 #   * the respawn blocker: FactionState.respawn_refusal joins GameSession's blockers while this level's
 #     director lives (its bound method; GameSession drops it once the director is freed).
+#   * M8 gate (F40; plan §3.20 "the parley path ... takes zero damage from the fort"): an encounter's
+#     siege engines (its `engines` list, P32) stand down with it. A stood-down crew still crews its engine
+#     (SiegeEngine.serves), and the engine's team came from its faction alone, so with Aldmere hostile the
+#     fort's wall ballistae shot the giant who carried Brannock's banner or held the herald's accepted
+#     parley. While the encounter stands down each of its engines in the tree is NEUTRAL - it never
+#     shoots (SiegeEngine.can_shoot), and a shot already loosed harms no one (CombatEntity.can_damage) -
+#     its ranged token given back; when the stand-down ends it takes its faction's standing again
+#     (SiegeEngine._apply_standing). Applied with the members (every update, and as a crew member
+#     spawns), and the tick after any faction change (an engine's own faction handler would otherwise
+#     re-arm it until the next update).
 
 const P29_PROVOKED_FMT := "encounter.%s.provoked"
 
@@ -1065,6 +1079,8 @@ const P29_PROVOKED_FMT := "encounter.%s.provoked"
 var _p29_down := {}
 ## A provocation was seen: the next tick re-evaluates the stand-downs.
 var _p29_dirty := false
+## M8 gate (F40): engines this director stood down with their encounter (world id -> true).
+var _p29_engines_down := {}
 ## Talkers placed on a green (entity id -> the green, global): tests, debug.
 var p29_on_green := {}
 
@@ -1082,6 +1098,8 @@ func _p29_ready() -> void:
 		Events.hit_resolved.connect(_p29_on_hit_resolved)
 	if not Events.growth_changed.is_connected(_p29_on_growth_changed):
 		Events.growth_changed.connect(_p29_on_growth_changed)
+	if not Events.faction_changed.is_connected(_p29_on_faction_changed):
+		Events.faction_changed.connect(_p29_on_faction_changed)
 
 
 func _p29_respawn_blocker(checkpoint_id: String) -> String:
@@ -1126,6 +1144,7 @@ func p29_update_stand_downs() -> void:
 		for m: Member in enc.members:
 			if m.status == SPAWNED and _alive(m.node):
 				_p29_apply(m, down)
+		_p29_apply_engines(enc, down)   # M8 gate (F40)
 
 
 ## Stands a faction member down (down), or gives it its faction's standing back (alerted).
@@ -1146,7 +1165,39 @@ func _p29_on_member_spawned(encounter_id: String, entity_id: String, node: Node3
 	if p29_stands_down(encounter_id):
 		_p29_down[encounter_id] = true
 		_p29_apply(m, true)
+		_p29_apply_engines(_encounters[encounter_id], true)   # M8 gate (F40): before a crew takes its engine
 	_p29_place_talker(m, node)
+
+
+## M8 gate (F40): stands the encounter's engines down with it (NEUTRAL, the ranged token given back), or
+## gives the ones it stood down their faction's standing back (see the notes).
+func _p29_apply_engines(enc: Encounter, down: bool) -> void:
+	for entry: Variant in enc.record.get("engines", []):
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var engine := p32_engine(str(entry.get("engine", "")))
+		if engine == null or engine.destroyed or engine.entity == null:
+			continue
+		if down:
+			_p29_engines_down[engine.world_id] = true
+			if engine.entity.team != CombatEntity.Team.NEUTRAL:
+				engine.entity.team = CombatEntity.Team.NEUTRAL
+				engine.call("_release_token")
+				engine.call("_refresh_crewed")
+		elif _p29_engines_down.erase(engine.world_id):
+			engine.call("_apply_standing")
+
+
+## True while the director stands engine `world_id` down with its encounter (tests, debug).
+func p29_engine_stood_down(world_id: String) -> bool:
+	return _p29_engines_down.has(world_id)
+
+
+## A faction's standing changed: the next tick applies the stand-downs again (an engine's own handler may
+## just have re-armed it; F40).
+func _p29_on_faction_changed(_tick: int, _faction: String, _state: String) -> void:
+	if not _p29_down.is_empty():
+		_p29_dirty = true
 
 
 ## A connecting blow of the giant on a member of an encounter standing down provokes it.
@@ -1278,6 +1329,16 @@ func formation_member_count() -> int:
 	return n
 
 
+## M8 gate (F23): a member node the director frees - a corpse corpse_free_s after its death, a despawn, a
+## deactivation, a copy removed - leaves its formation first (Formation.remove_member), so no formation
+## lists a freed node until its next update prunes it (its per-frame readers - the lock line, the group
+## lock, the march - read every entry).
+static func _p30_leave_formation(n: Node) -> void:
+	var f: Variant = n.get("formation") if n != null and is_instance_valid(n) else null
+	if f is Formation:
+		(f as Formation).remove_member(n)
+
+
 ## True when `n` stands in an intact formation (the leash leaves it to its formation; see the notes).
 static func _p30_formation_holds(n: Node) -> bool:
 	var f: Variant = n.get("formation") if n != null and is_instance_valid(n) else null
@@ -1295,7 +1356,24 @@ func _p30_waits_for_room(m: Member) -> bool:
 	if str(m.spawn.get("formation", "")) == "":
 		return false
 	_p30_load_cap()
-	return formation_member_count() >= max_formation_members
+	return formation_member_count() + _p34_reserved_room(m, true) >= max_formation_members
+
+
+## M8 gate (F9): an encounter's members in spawn order with each formation's banner first, so a formation
+## short of room in the cap never fields its rank and file without its banner (the Wall's shield banner,
+## listed last, waited while four of its shields stood).
+func _p30_spawn_order(enc: Encounter) -> Array:
+	var forms: Variant = enc.record.get("formations")
+	if typeof(forms) != TYPE_ARRAY or (forms as Array).is_empty():
+		return enc.members
+	var banners: Array = []
+	var rest: Array = []
+	for m: Member in enc.members:
+		if str(m.spawn.get("formation", "")) != "" and int(m.spawn.get("slot", 0)) == Formation.BANNER_SLOT:
+			banners.append(m)
+		else:
+			rest.append(m)
+	return banners + rest
 
 
 func _p30_load_cap() -> void:
@@ -1341,7 +1419,6 @@ func _p30_activate(enc: Encounter) -> void:
 		var f := Formation.from_record(enc.id, rec)
 		f.level = level
 		f.budget_left = nav_budget_left
-		f.spend_budget = spend_nav_queries
 		_p30_place(f, rec, members, origin)
 		for m: Member in members:
 			var slot := int(m.spawn.get("slot", 0))
@@ -1524,6 +1601,118 @@ func _p32_on_member_spawned(encounter_id: String, entity_id: String, node: Node3
 # giant's centre (the hook in _spawn).
 
 const P34_FOOTPRINT_MARGIN_M := 1.0
+
+## M8 gate (F9; plan §3.20 "every battle fits the caps on both platforms"): owner (a battle id) -> {entity
+## id: true}, the planned units of an engaged battle. While they are reserved, each of them still to come
+## (waiting to spawn: unspawned or despawned, not killed) keeps its room in the level's caps - its place in
+## max_formation_members when it is a formation member, in max_active_enemies when it counts - against the
+## members of every other encounter (a wanderer, an event's column, a garrison coming back), which wait
+## for room meanwhile. The battle's own units spawn as before. BattleBoss reserves its plan when it engages
+## and releases it when the attempt ends (a disengage, its defeat).
+var _p34_reserved := {}
+
+
+## Reserves the room of `ids` (see the notes) for `owner`, replacing what it reserved before.
+func p34_reserve(owner: String, ids: Array) -> void:
+	var units := {}
+	for id: Variant in ids:
+		units[str(id)] = true
+	_p34_reserved[owner] = units
+	_dirty = true
+
+
+## Releases what `owner` reserved.
+func p34_release(owner: String) -> void:
+	if _p34_reserved.erase(owner):
+		_dirty = true
+
+
+## True when `entity_id` is a unit some battle reserves room for (tests, debug).
+func p34_is_reserved(entity_id: String) -> bool:
+	for owner: String in _p34_reserved:
+		if (_p34_reserved[owner] as Dictionary).has(entity_id):
+			return true
+	return false
+
+
+## The room `m` must leave in a cap (formation: max_formation_members, else max_active_enemies) for the
+## reserved units still to come: 0 for a reserved unit itself (it is one of them) or when nothing is
+## reserved.
+func _p34_reserved_room(m: Member, formation: bool) -> int:
+	if _p34_reserved.is_empty() or p34_is_reserved(m.entity_id):
+		return 0
+	var n := 0
+	for owner: String in _p34_reserved:
+		for id: String in _p34_reserved[owner]:
+			var r: Member = _members.get(id)
+			if r == null or (r.status != UNSPAWNED and r.status != DESPAWNED) or WorldState.is_killed(id):
+				continue
+			if formation:
+				if str(r.spawn.get("formation", "")) != "":
+					n += 1
+			elif str(r.spawn.get("formation", "")) == "" and counts(r):
+				n += 1
+	return n
+
+
+## M8 gate (F9): makes the room `owner`'s reserved units still to come need in the level's caps against the
+## units of other encounters already in the world (the reservation only keeps newcomers out). While the
+## living formation members with the reserved formation units to come would pass max_formation_members, or
+## the counted combatants with the reserved counted units to come max_active_enemies, living members of
+## other encounters leave (despawn: they come back on their encounter's next activation, and wait for room
+## meanwhile) - formation members for the one, counted combatants for the other - the farthest from `from`
+## first, and only as many as the caps need. Never a reserved unit, a crew member of one of `engines` (the
+## battle's own) nor a unit the giant holds. Returns the entity ids that left.
+func p34_make_room(owner: String, from: Vector3, engines: PackedStringArray = PackedStringArray()) -> Array[String]:
+	var out: Array[String] = []
+	var units: Dictionary = _p34_reserved.get(owner, {})
+	if units.is_empty():
+		return out
+	var need_f := 0
+	var need_c := 0
+	for id: String in units:
+		var r: Member = _members.get(id)
+		if r == null or (r.status != UNSPAWNED and r.status != DESPAWNED) or WorldState.is_killed(id):
+			continue
+		if str(r.spawn.get("formation", "")) != "":
+			need_f += 1
+		elif counts(r):
+			need_c += 1
+	_p30_load_cap()
+	var over_f := formation_member_count() + need_f - max_formation_members
+	var over_c := active_combatant_count() + need_c - max_active_enemies
+	if over_f <= 0 and over_c <= 0:
+		return out
+	var cands: Array[Member] = []
+	for id: String in _members:
+		var m: Member = _members[id]
+		if m.status != SPAWNED or not _alive(m.node) or p34_is_reserved(id):
+			continue
+		if not engines.is_empty() and engines.has(p32_engine_of(m.encounter_id, id)):
+			continue
+		if m.node.has_method("is_held") and bool(m.node.call("is_held")):
+			continue
+		cands.append(m)
+	var at := Vector2(from.x, from.z)
+	cands.sort_custom(func(a: Member, b: Member) -> bool:
+		return Vector2(a.node.global_position.x, a.node.global_position.z).distance_squared_to(at) \
+			> Vector2(b.node.global_position.x, b.node.global_position.z).distance_squared_to(at))
+	for m: Member in cands:
+		if over_f <= 0 and over_c <= 0:
+			break
+		if _p30_formation_member(m):
+			if over_f <= 0:
+				continue
+			over_f -= 1
+		elif counts(m) and not m.routed:
+			if over_c <= 0:
+				continue
+			over_c -= 1
+		else:
+			continue
+		out.append(m.entity_id)
+		despawn(m.entity_id)
+	return out
 
 
 ## Resets an encounter for a new attempt (see above). Nothing for an unknown id.

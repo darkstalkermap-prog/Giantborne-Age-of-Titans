@@ -100,3 +100,58 @@ func test_leaving_resets_the_boss_and_returning_starts_a_new_attempt() -> void:
 	assert_eq(m.attempt_phases, [2] as Array[int], "phase 2 exactly once in attempt 2")
 	assert_eq(m.phase_changes, 2, "once per attempt over both")
 	Audio.enable_for_tests(false)
+
+
+# --------------------------------------------------------------------------- M8 gate (F33)
+
+## The giant is told (F33): crossing the disengage line during an engaged attempt warns it on the HUD's
+## message line - once, not again on every step across within LEAVING_WARN_EVERY_S - and the reset says
+## the boss recovered; a battle's lines name the battle, which regroups.
+func test_leaving_warns_the_giant_and_the_reset_tells_it() -> void:
+	var lines: Array = []
+	var on_message := func(text: String, kind: String) -> void: lines.append([text, kind])
+	Events.hud_message.connect(on_message)
+	level = (load(DEN) as PackedScene).instantiate() as Node3D
+	world.add_child(level)
+	var p := level.get_node("Player") as GiantPlayer
+	p.router.use_injection = true
+	await step_ticks(2)
+	var arena := level.get_node("BossArena") as BossArena
+	arena.disengage_s = 0.5
+	p.global_position = Vector3(0, 0.05, 20)
+	arena.engage()
+	await step_ticks(2)
+	lines.clear()
+	p.global_position = Vector3(0, 0.05, 45)   # inside radius + 20 m: no word
+	await step_ticks(6)
+	assert_eq(lines, [], "nothing inside the line")
+	p.global_position = Vector3(0, 0.05, 60)
+	await step_ticks(6)
+	assert_eq(lines, [["The Troll Matriarch will recover unless you turn back.", "warn"]], "crossing the line warns the giant")
+	p.global_position = Vector3(0, 0.05, 40)
+	await step_ticks(3)
+	p.global_position = Vector3(0, 0.05, 60)
+	await step_ticks(6)
+	assert_eq(lines.size(), 1, "stepping across again at once does not repeat the warning")
+	await step_ticks(30)
+	assert_eq(gone, [[BB.DEN_ID, "left"]], "the attempt resets")
+	assert_eq(lines.back(), ["The Troll Matriarch recovered: you left the fight.", "bad"], "and the HUD says so")
+	# A battle names itself and regroups.
+	level.queue_free()
+	await step_ticks(2)
+	var bailey := (load("res://scenes/test/bailey_test.tscn") as PackedScene).instantiate() as Node3D
+	world.add_child(bailey)
+	await step_ticks(2)
+	var bp := bailey.get_node("Player") as GiantPlayer
+	var battle := bailey.get_node("BattleBoss") as BattleBoss
+	battle.disengage_s = 0.25
+	lines.clear()
+	bp.global_position = Vector3(0, 0.05, 30)
+	battle.engage()
+	await step_ticks(2)
+	bp.global_position = Vector3(0, 0.05, 90)
+	await step_ticks(20)
+	var texts := lines.map(func(l: Array) -> String: return str(l[0]))
+	assert_true(texts.has("The Iron Regiment will regroup unless you turn back."), "the battle's warning (%s)" % [texts])
+	assert_true(texts.has("The Iron Regiment regrouped: you left the battle."), "and its reset line")
+	Events.hud_message.disconnect(on_message)

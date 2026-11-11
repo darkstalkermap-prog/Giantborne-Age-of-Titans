@@ -891,6 +891,24 @@ mashes in real time, by design) and `test_boss_sight` (3.3 s) in the slow tier. 
 changes: the AI change (F36) acts only while a target in reach is hidden, and the 30 seeded boss runs
 never meet that case.
 
+### The M8 gate, lane m8b (battles and the encounter director): the suites
+
+The lane added six suites and one test (`docs/systems/P30.md`, `P32.md`, `P34.md`, `P36.md`, "M8 gate"):
+`test_formation_freed_members` (0.13 s), `test_battle_caps` (0.16 s), `test_battle_kill_xp` (0.19 s),
+`test_condition_forge_factions` (0.04 s) and the F33 test in `test_boss_disengage` (0.30 s in all) in the
+default tier; `test_iron_regiment_world` (8.9 s: the real world three times - the bailey's corners on
+the desktop, the web battle with the gate garrison alive and come from Ballista Ridge) and
+`test_fort_gate_world` (11.7 s: the banner and the parley with Aldmere at war, the road up from the war
+camp) in the gate tier. The lane's check (`tools/check.sh --only=world,big --build-args=--chunks=c6_3,c5_1
+--slow --gate`, on the round-1 merge with the lane's commits): the two chunks and the big builder's
+scenes rebuilt (no committed file changes), the seam check (16 chunks, 23 seams), 254 suites, 44,950
+checks, 0 failures; default 57.9 s (budget 75 s), slow 210.7 s (8 minutes), gate 415.0 s (50 minutes;
+the lane's two gate suites are 20.6 s of it); the 120 s soak with 0 errors (2 fences broken, 2 loot
+awards, the debris pool at 10). Path queries: a formation's re-path is one of NavQuery's eight queries
+a tick, not two (F25). The battle's room (`EncounterDirector.p34_reserve`, `p34_make_room`) walks the
+battle's planned units (about 40) only while a battle is engaged; no frame-time or draw-call
+measurement changes.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |

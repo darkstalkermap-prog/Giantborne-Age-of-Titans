@@ -175,6 +175,25 @@ func test_the_iron_regiment_is_one_battle_on_both_platforms() -> void:
 	var corvane := (guard.spawns as Array).filter(func(s: Dictionary) -> bool: return str(s.entity_id) == "world.aldmere.corvane")
 	assert_eq(corvane.size(), 1, "Corvane stands with his guard")
 	assert_eq(str(arena.get("commander_id", "")), "world.aldmere.corvane", "the battle's commander yields")
+	# M8 gate (F8): the battle's arena is the bailey inside the curtain wall, corners and all.
+	var walls := _element("world.aldmere.fort_walls")
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for pt: Variant in walls.get("points", []):
+		lo = lo.min(Vector2(float(pt[0]), float(pt[1])))
+		hi = hi.max(Vector2(float(pt[0]), float(pt[1])))
+	var fl: Array = arena.get("floor", [])
+	assert_eq(fl.size(), 2, "the arena has a floor rectangle")
+	if fl.size() == 2:
+		var a := Vector2(float(fl[0][0]), float(fl[0][1]))
+		var b := Vector2(float(fl[1][0]), float(fl[1][1]))
+		assert_true(a.min(b).is_equal_approx(lo) and a.max(b).is_equal_approx(hi),
+			"its floor is the curtain wall's rectangle (%s %s, the wall %s %s)" % [a.min(b), a.max(b), lo, hi])
+	# M8 gate (F9): the gate garrison outside the portcullis stands out when the battle engages.
+	assert_eq(arena.get("stand_out", []), ["encounter.aldmere_fort_gate"], "the gate garrison stands out of the battle")
+	# M8 gate (F16): the titan forges a deed opens shut while their settlement is hostile.
+	assert_eq(str(_element("world.aldmere.fort_forge").get("faction", "")), "aldmere", "the fort forge is Aldmere's")
+	assert_eq(str(_element("world.stonehold.skarn_forge").get("faction", "")), "skarn", "the hearth-forge is Skarn's")
 
 
 func test_the_crowns_three_roads_and_the_parley_tokens() -> void:
@@ -282,12 +301,20 @@ func test_the_battery_the_moot_and_the_main_threads_end() -> void:
 	var throne := _element("world.stonehold.stone_throne")
 	assert_eq(str(throne.get("kind", "")), "throne", "the Stone Throne ends the campaign")
 	assert_true(WorldContent.index().props.has("world.stonehold.stone_throne"), "the throne is in the index")
-	# checkpoints outside the arenas within 80 m of their edge
+	# checkpoints outside the arenas within 80 m of their edge (M8 gate, F8: an enclosure's edge is its floor
+	# rectangle's, beyond the disengage rule's 20 m too, so a giant waiting at the checkpoint has left the fight)
 	for pair: Array in [["world.aldmere.iron_regiment_arena", "world.cp.fort_gate"], ["world.stonehold.moot_arena", "world.cp.moot_foot"]]:
 		var a := _element(str(pair[0]))
 		var centre := Vector2(float(a.pos[0]), float(a.pos[1]))
 		var cp := WorldXp.position_of(str(pair[1]))
 		var d := Vector2(cp.x, cp.z).distance_to(centre) - float(a.inner_radius)
+		var fl: Array = a.get("floor", [])
+		if fl.size() == 2:
+			var r := Rect2(Vector2(float(fl[0][0]), float(fl[0][1])), Vector2.ZERO).expand(Vector2(float(fl[1][0]), float(fl[1][1])))
+			var dx := maxf(maxf(r.position.x - cp.x, 0.0), cp.x - r.end.x)
+			var dz := maxf(maxf(r.position.y - cp.z, 0.0), cp.z - r.end.y)
+			d = Vector2(dx, dz).length()
+			assert_true(d > BossArena.DISENGAGE_MARGIN_M, "%s lies beyond %s's disengage line (%.1f m)" % [pair[1], pair[0], d])
 		assert_true(d > 0.0 and d <= CHECKPOINT_M, "%s lies outside %s within 80 m of its edge (%.1f m)" % [pair[1], pair[0], d])
 	for r: String in ["region.aldmere", "region.stonehold"]:
 		assert_eq(str(GameData.get_record(r).get("m7_note", "")), "", "%s no longer waits for its package" % r)

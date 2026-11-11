@@ -85,12 +85,13 @@ func refresh() -> void:
 			near.append(m)
 		else:
 			crowd.append(m)
-	# Members that left the formation get their rigs back.
+	# Members that left the formation get their rigs back (M8 gate, F23: one freed meanwhile - a
+	# despawned member - is only forgotten; a typed variable cannot hold a freed one).
 	for id: String in _hidden.keys():
 		if not gone.has(id):
-			var a: EnemyActor = _hidden[id]
+			var a: Variant = _hidden[id]
 			if is_instance_valid(a):
-				_set_rig(a, true)
+				_set_rig(a as EnemyActor, true)
 			_hidden.erase(id)
 	if center != Vector3.INF:
 		urgent.sort_custom(func(a: EnemyActor, b: EnemyActor) -> bool:
@@ -142,9 +143,9 @@ func pose_for(m: EnemyActor) -> String:
 ## Every member drawn by this renderer gets its rig back (the formation dissolved, or tests).
 func release_all() -> void:
 	for id: String in _hidden.keys():
-		var a: EnemyActor = _hidden[id]
+		var a: Variant = _hidden[id]
 		if is_instance_valid(a):
-			_set_rig(a, true)
+			_set_rig(a as EnemyActor, true)
 	_hidden.clear()
 	crowded.clear()
 	promoted.clear()

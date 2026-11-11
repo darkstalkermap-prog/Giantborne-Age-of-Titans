@@ -18,7 +18,8 @@ extends PlayerComponent
 ##   record's xp_reward, and its loot table - the actor's own `loot_table` (a per-spawn override
 ##   set by the director), else the record's - once per entity id (Loot.award_once). NEUTRAL
 ##   actors (village guards before the village turns hostile, dummies) and props give nothing
-##   here (props award their own XP through xp_award_requested).
+##   here (props award their own XP through xp_award_requested). M8 gate (F14): a unit a spawn
+##   record brings back under the same entity id pays its kill XP once too (kill_xp_due).
 ## - Abilities: newly met ones (unlock_level <= level, unlock_stage <= stage, in the progression
 ##   record's ability_library) are learned on a level-up or a growth, and learn_ability(id, source)
 ##   teaches one early (a quest or dialogue reward: then it is level_exempt). A learned ability is
@@ -251,6 +252,34 @@ static func is_reward_kill(e: CombatEntity) -> bool:
 		and is_instance_valid(e.actor) and e.actor.is_in_group("enemies")
 
 
+## M8 gate (F14; plan M6-M9 §5.9 "Nothing is farmable"): the world delta key (WorldState.deltas[entity
+## id], beside "killed" and "loot_awarded"; saved with the world) of a unit whose kill XP was paid.
+const KILL_XP_PAID := "kill_xp_paid"
+
+
+## True when a kill of `e` pays its kill XP now, and marks it paid when it is a unit that comes back under
+## the same entity id: a member of a placed encounter (its encounter_id names an encounter record) whose
+## spawn entry does not persist its death (persist_death false: a battle's units, which a disengage
+## brings back for the next attempt) pays it once per spawn record - the first kill marks it in the
+## world's deltas, as Loot.award_once marks its loot, so neither a new attempt nor a checkpoint's world
+## loaded again pays it twice. Every other kill pays as before: a unit whose death persists never comes
+## back, an actor no director placed has no spawn record, and a copy of a template (P37: its encounter
+## id is no record) keeps the copy's xp_scale.
+static func kill_xp_due(e: CombatEntity) -> bool:
+	var a: Node = e.actor if e != null and e.actor != null and is_instance_valid(e.actor) else null
+	if a == null or not ("persist_death" in a) or bool(a.get("persist_death")):
+		return true
+	var enc := str(a.get("encounter_id")) if "encounter_id" in a else ""
+	if enc == "" or str(GameData.get_record(enc).get("type", "")) != "encounter":
+		return true
+	var d: Dictionary = WorldState.deltas.get(e.entity_id, {})
+	if bool(d.get(KILL_XP_PAID, false)):
+		return false
+	d[KILL_XP_PAID] = true
+	WorldState.deltas[e.entity_id] = d
+	return true
+
+
 ## The loot table a killed enemy drops: its actor's own loot_table, else its record's ("" = none).
 static func loot_table_of(e: CombatEntity) -> String:
 	if e == null:
@@ -273,7 +302,7 @@ func _on_entity_died(_tick: int, entity_id: String, killer_id: String) -> void:
 	var e := Sim.get_entity(entity_id)
 	if not is_reward_kill(e):
 		return
-	if e.combatant.xp_reward > 0:
+	if e.combatant.xp_reward > 0 and kill_xp_due(e):
 		add_xp(e.combatant.xp_reward, "kill:%s" % entity_id)
 	var table := loot_table_of(e)
 	if table != "":

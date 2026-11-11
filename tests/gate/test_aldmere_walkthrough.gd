@@ -336,8 +336,8 @@ func test_a_help_save_walks_up_to_the_fort_unharmed() -> void:
 	var d := w.director()
 	var taken: Array = []
 	var on_hit := func(_t: int, r: HitResult) -> void:
-		if r.target_id == p.entity.entity_id and r.damage > 0.0:
-			taken.append([r.attacker_id, r.damage])
+		if r.event != null and r.event.target_id == p.entity.entity_id and r.health_damage > 0:
+			taken.append([r.event.attacker_id, r.health_damage])
 	Events.hit_resolved.connect(on_hit)
 	# up the road to the gate, a few metres a step, then stand before it
 	for zz: float in [-20.0, -30.0, -40.0, -50.0, -60.0, -66.0]:

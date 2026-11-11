@@ -2,7 +2,8 @@ extends RefCounted
 ## Element kind "condition_forge" (P36; plan M6-M9 §5.7, §5.9, §5.12): a forge a deed opens - a
 ## ConditionForge (scripts/world/condition_forge.gd: P12's Forge with an `open_when` quest condition)
 ## with the element's world id, `display_name`, `tier` (iron | titan), `open_when` and
-## `closed_message`: Fort Aldmere's (open on the crown's parley or a spared Corvane) and Skarn's
+## `closed_message` (and M8 gate, F16: `faction` and `hostile_message` - shut while that settlement is
+## hostile): Fort Aldmere's (open on the crown's parley or a spared Corvane) and Skarn's
 ## hearth-forge (open once Skarn is saved or rebuilt). A titan's forge, built here at a giant's scale
 ## (a stone hearth with its chimney and glowing coals, a great anvil) as one mesh of the world's
 ## vertex-coloured material - one draw call where forge.tscn's three materials cost three in the
@@ -45,6 +46,10 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 		"open_when": el.get("open_when", {}) as Dictionary}
 	if str(el.get("closed_message", "")) != "":
 		props["closed_message"] = str(el.closed_message)
+	if str(el.get("faction", "")) != "":   # M8 gate (F16): shut while its settlement is hostile
+		props["faction"] = str(el.faction)
+		if str(el.get("hostile_message", "")) != "":
+			props["hostile_message"] = str(el.hostile_message)
 	kit.scripted(f, S_FORGE, props)
 	var body := StaticBody3D.new()
 	body.name = "Body"

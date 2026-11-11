@@ -455,6 +455,8 @@ open_when = {
 }],
 "type": "any"
 }
+faction = "skarn"
+hostile_message = "Skarn has turned from you: make amends with Ulfra first."
 world_id = "world.stonehold.skarn_forge"
 display_name = "Skarn's hearth-forge"
 requires_flags = PackedStringArray()
