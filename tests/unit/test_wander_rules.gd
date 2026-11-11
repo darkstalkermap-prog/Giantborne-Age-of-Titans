@@ -388,7 +388,9 @@ func test_the_living_worlds_kill_xp_is_bounded() -> void:
 	print("    the Crownmarch's living world pays at most %d kill XP from wanderers and %d from its events (placed fights: %d)" % [
 		wander, events, placed])
 	assert_true(wander + events > 0, "it pays something")
-	assert_true(wander + events <= 2 * placed, "never more than twice the region's placed fights (%d + %d vs %d)" % [wander, events, placed])
+	# A sanity bound with room for the archetypes the templates prefer once they land (P34's dire wolves):
+	# the living world tops the Crownmarch's placed fights up, it does not dwarf them.
+	assert_true(wander + events <= 3 * placed, "never more than three times the region's placed fights (%d + %d vs %d)" % [wander, events, placed])
 
 
 func _kill_xp(enc: Dictionary) -> int:
