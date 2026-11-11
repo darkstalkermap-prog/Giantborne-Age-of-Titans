@@ -7,6 +7,11 @@ extends RefCounted
 ## banner where it is (Fort Aldmere's gate: "Hail Warlord Corvane" - the warlord answers from his
 ## wall), "stone" a speaking stone (the Moot's gate: Harrok's challenge), "none" nothing (an actor
 ## stands there). Its chunk's props sub-scene holds it.
+## M8 gate (F5): "ends with the actor's death" holds after a reload too - NpcTalker reads the death
+## WorldState records for a persist_death actor, so a chunk loaded again after the kill holds a silent
+## talker. Harrok's stone names Harrok on purpose: it is his voice from the ring and falls silent with
+## him (his dialogue's "empty" entry is not reached through it); the horn names itself and outlives
+## Corvane.
 
 const L := preload("res://tools/world/layout.gd")
 const SCRIPTED := true
