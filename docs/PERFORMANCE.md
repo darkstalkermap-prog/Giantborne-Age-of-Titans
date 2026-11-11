@@ -951,6 +951,29 @@ No frame-time or draw-call measurement changes, and none was re-measured:
   (`test_hud_layout`).
 - The turned Greywood shrine and the lowered fourth bell (3 m lower) add no mesh.
 
+### The M8 gate, lane m8q (quests, dialogue and tutorials): the suites
+
+Lane m8p owned this file in round 3, so the round's merge records lane m8q's suites from the lane's check
+("M8 gate" in `docs/systems/P13.md`, `P27.md`, `P29.md`, `P32.md`, `P35.md` and `P36.md`). In the default
+tier: `test_m8_gate_quests` (new; F39, F6, F22, F29, F34, F42, F46: 111 checks, 0.68 s), three F28 and
+F32 tests in `test_tutorial` (123 checks, 4.55 s in all; 1.10 s on the base) and the F22 test in
+`test_journal` (0.08 s in all). In the slow tier: `test_m8_gate_tutorials` (new; F28, F32: main.tscn, a
+New Game in the world and the Kings' Door, 35 checks, 17.4 s). In the gate tier:
+`test_main_thread_combinations` rewritten for F3 (eight orders through the deeds' own writers, a
+checkpoint and reload after every stage: 876 checks, 10.7 s; 207 checks and 2.9 s on the base), three F39
+and F6 tests in `test_aldmere_walkthrough` (237 checks, 4.6 s in all; 4.3 s on the base), and
+`test_drowned_walkthrough` (F42, 4.6 s) and `test_stonehold_walkthrough` (F29, 23.0 s) with their new
+checks.
+
+The lane's check (`tools/check.sh --slow --gate --only=world --build-args=--chunks=c4_2,c3_1`, on round
+2's merge (29ec501) with the lane's commits, e3efe26): the world rebuilt c4_2 and c3_1 with their
+neighbours and left the tree unchanged; the seams held (14 chunks, 20 seams); 263 suites, 45,819 checks,
+0 failures; default 60.9 s (the base 56.4 s; budget 75 s), slow 229.1 s (211.8 s; 8 minutes), gate
+445.2 s (424.1 s; 50 minutes); the 120 s soak with 0 errors (2 fences broken, 2 loot awards, the debris
+pool at 10). The whole check took 13 min 16 s. The lane re-measured no frame time or draw calls: the size
+gates' longer messages are text in two props parts (c4_2, c3_1), and the other fixes are data and quest
+and tutorial logic.
+
 ### The M8 gate, lane m8p (streaming steps, draw calls and the 0.8.0-m8 text)
 
 **F26: the props dependencies load behind the loading screen.** A chunk's props sub-scenes depend on the
