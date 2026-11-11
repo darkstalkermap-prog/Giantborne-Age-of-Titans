@@ -821,6 +821,60 @@ container's 4 cores (indicative: software WebGL). The merge's own check (`tools/
 | Linux export (`builds/linux/Giantborn.x86_64`, 88,530,232 bytes) | The 120 s soak headless: 0 errors (fence breaks 2, loot 2, debris 10). An assisted novice Valley run (`--scenario=valley --bot-village=intimidate --bot-skill=novice --bot-seed=1 --bot-assist`): completed in 446.4 s of simulated time, 0 deaths, 0 breaches, 0 invariant failures, 0 errors, 0 warnings, CPU per tick p95 3.5 ms |
 | Windows export (`builds/windows/Giantborn.exe`, 122,113,832 bytes, and `Giantborn.console.exe`) | Built; not launched (no Windows here) |
 
+### The W21 merge (P35 and P36): the four regions' content
+
+The Greywood and the Drowned Steps (P35) and the Aldmere March and the Stonehold (P36) replaced P25's
+light content; their measurements, from `docs/systems/P35.md` and `docs/systems/P36.md` (plan §3.19,
+§3.20), carried here at the merge.
+
+**Static draw calls at `low`** (Xvfb, llvmpipe, `tests/support/world_draw_probe.gd`'s method: the
+static world, the camera turned through four directions, the most of the four; with the giant in view
+8 more each). Each package measured on its own branch. On the merged build the slow tier's
+`tests/slow/test_world_build` (the settlements' budget of 40) read the Kingsgate shelf 33, Millford 35,
+Brannock 40, Hollowmere 37, Fort Aldmere 40, Skarn 36 and Harrok's Hall 19 (with the giant 8 more each):
+every settlement within 40.
+
+| Viewpoint | Before (W20) | After | Package |
+| --- | --- | --- | --- |
+| Hollowmere's green (a settlement: budget 40) | 30 | 36 | P35 |
+| The den's waystone | 34 | 39 | P35 |
+| The Troll Den | 34 | 41 | P35 |
+| The woodcutters' camp | 41 | 57 | P35 |
+| The Needle | 37 | 36 | P35 |
+| The great pines | 37 | 51 | P35 |
+| The Hidden Grove | 38 | 38 | P35 |
+| The Mere, south | 38 | 53 | P35 |
+| The ferry landing | 40 | 42 | P35 |
+| The drowned bell tower | 38 | 54 | P35 |
+| The Titan's Bones | 34 | 52 | P35 |
+| The sunken vault | 40 | 56 | P35 |
+| The Kingsgate shelf | | 33 | P36 |
+| Millford | | 35 | P36 |
+| Brannock | | 40 | P36 |
+| Fort Aldmere | | 40 | P36 |
+| Skarn | | 35 | P36 |
+| Harrok's Hall | | 19 | P36 |
+
+The rise at P35's places (about 15 at the Mere and the camp) is its new breakables, each an intact mesh
+and a frame or rack mesh within 220 m; every settlement holds the 40 budget. P36's engines are not drawn
+beyond 300 m and the siege of Skarn's line exists only while the siege runs (before those, Skarn read 55
+and Fort Aldmere 41).
+
+**The web pck** (the release, `tools/build_web.sh --preset=Web`, no test content, every record
+validating without `data/test`):
+
+| Build | `index.pck` raw | As shipped | Share against W20 (a9f4cc0) |
+| --- | --- | --- | --- |
+| W20's merge (a9f4cc0) | 16,830,716 | 16.26 MB | |
+| P35's branch | 17,142,508 | 16.38 MB in 2 parts | +311,792 raw, about +0.12 MB shipped (the chunks' props parts, the regions' data, scripts) |
+| P36's branch | 17,078,996 | 16.34 MB in 2 parts | +248,280 raw, +82,148 shipped (0.08 MB) |
+| **The W21 merge** (`--out=builds/web_w21`) | **17,390,820** (12,944,810 gzipped) | **17,259,748 bytes, 16.46 MB in 2 parts of 8,629,874** | +560,104 raw, about +0.20 MB shipped; the audio 56 % of its files |
+
+16.46 MB of the 21 MB budget. The merge's check (`tools/check.sh --build --slow --audio --gate`): the
+world rebuilt from both regions' layouts (a second build leaves the tree unchanged), the seams (64
+chunks, 112 seams), 441 audio files bit-exact, 239 suites, 42,683 checks, 0 failures (default 56.2 s,
+slow 201.0 s, gate 376.8 s), the 120 s soak with 0 errors.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
