@@ -20,6 +20,9 @@ extends IntegrationSuite
 ##   * M8 gate fix-up 1 (N4.6): Harrok's challenge stone stands beyond the Moot's disengage line (95.8 m from
 ##     the ring's centre, the line at 80 m), and a stage-6 giant answering it - within its reach on the ring's
 ##     side - stands on the fight's ground (BossArena.at_boss_talker): no leaving warning, no reset.
+##   * Fix-up 2 (N4.6): so does one walking there from the ring's engage point at its own pace, across the
+##     2.1 m between the line and the stone's reach, and back (BossArena.on_way_to_boss_talker); walking on
+##     to the Moot foot waystone is leaving.
 
 const START_CP := "world.cp.kingsgate_shelf"
 const MAIN := "quest.world_main"
@@ -504,4 +507,75 @@ func test_answering_harroks_challenge_stone_is_no_leaving_the_moot() -> void:
 		assert_true(arena.at_boss_talker(p), "within the stone's reach the giant has not left the fight (%s)" % d)
 	p.global_position = stone.global_position - to_ring.normalized() * (reach + 10.0)
 	assert_false(arena.at_boss_talker(p), "past the stone's reach it has")
+
+
+## The points of a walk from `from` to `to` at `pace` metres a tick (the last one `to`).
+static func _walk(from: Vector3, to: Vector3, pace: float) -> Array:
+	var out: Array = []
+	var n := maxi(1, ceili(from.distance_to(to) / pace))
+	for i in range(1, n + 1):
+		out.append(from.lerp(to, float(i) / float(n)))
+	return out
+
+
+## M8 gate fix-up 2 (N4.6, the re-audit: the walk the test above skips - it puts the giant straight into the
+## stone's reach). The shipped Moot and challenge stone; a stage-6 giant engages Harrok at the ring's engage
+## point (-26, -713) and walks at its own pace to the stone - the line lies 80 m from the ring's centre, the
+## stone's reach begins 82.1 m out, so the way crosses a gap outside both -, answers it for longer than the
+## disengage time and walks back into the ring: no leaving warning and no reset (the warning came on the
+## first tick in the gap). Walking on past the stone to the Moot foot waystone, 23 m beyond it, is leaving:
+## warned, and the attempt resets.
+func test_walking_from_the_ring_to_the_challenge_stone_and_back() -> void:
+	var p := spawn_player(Vector3(-26, 0.05, -713), 0.0)
+	p.set_profile(_profile(6))
+	var battery := _part(BATTERY_PART)
+	battery.position = Vector3(-256, 0, -768)
+	var moot := _part(MOOT_PARTS[0])
+	moot.position = Vector3(0, 0, -768)
+	await step_ticks(2)
+	var arena: MootArena = null
+	for n in moot.find_children("*", "", true, false):
+		if n is MootArena:
+			arena = n
+	var stone: NpcTalker = null
+	for n in battery.find_children("*", "", true, false):
+		if n is NpcTalker and (n as NpcTalker).prompt == "Answer Harrok's challenge":
+			stone = n
+	assert_true(arena != null and stone != null, "the Moot's arena and Harrok's challenge stone")
+	if arena == null or stone == null:
+		return
+	p.process_mode = Node.PROCESS_MODE_DISABLED   # moved by hand at its walking pace: the arena reads where it stands
+	var lines: Array = []
+	var on_message := func(text: String, kind: String) -> void: lines.append([text, kind])
+	var ring := Vector3(-26, 0.05, -713)
+	var at_stone := Vector3(stone.global_position.x, 0.05, stone.global_position.z)
+	var pace := float(p.profile.get("walk_speed_mps", 0.0)) * Sim.DT
+	assert_true(pace > 0.0, "the giant's walking pace (%.3f m a tick)" % pace)
+	arena.engage()
+	await step_ticks(2)
+	assert_true(arena.is_engaged(), "Harrok engaged at the ring's engage point")
+	Events.hud_message.connect(on_message)
+	var gap := 0
+	for at: Vector3 in _walk(ring, at_stone, pace):
+		p.global_position = at
+		await step_ticks(1)
+		if arena.outside_m(at) > arena.disengage_margin_m and not arena.at_boss_talker(p):
+			gap += 1
+	assert_true(gap > 0, "the way out crossed the gap between the line and the stone's reach (%d ticks)" % gap)
+	assert_eq(lines, [], "walking out to the challenge stone warns nothing")
+	await step_ticks(int((arena.disengage_s + 1.0) * Sim.TICK_RATE))
+	for at: Vector3 in _walk(at_stone, ring, pace):
+		p.global_position = at
+		await step_ticks(1)
+	assert_eq(lines, [], "nor answering it, nor walking back into the ring")
+	assert_true(arena.is_engaged() and arena.disengages == 0, "the attempt goes on")
+	# On past the stone to the Moot foot waystone: that is leaving the fight.
+	for at: Vector3 in _walk(ring, at_stone, pace) + _walk(at_stone, Vector3(-70, 0.05, -650), pace):
+		p.global_position = at
+		await step_ticks(1)
+	await step_ticks(int((arena.disengage_s + 1.0) * Sim.TICK_RATE))
+	assert_eq(lines, [[arena.leaving_line(), "warn"], [arena.reset_line(), "bad"]],
+		"past the stone the giant is warned, and the attempt resets")
+	assert_eq(arena.disengages, 1, "once")
+	Events.hud_message.disconnect(on_message)
 

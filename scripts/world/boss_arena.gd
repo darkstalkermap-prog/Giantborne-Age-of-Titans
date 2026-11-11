@@ -46,6 +46,9 @@ extends Node3D
 ##   * Fix-up 1 (N4.6): the boss's own talker is the fight's ground - a giant within talking reach of an
 ##     NpcTalker whose npc is the boss (the Moot's challenge stone, outside the ring's gate 95.8 m from
 ##     its centre, beyond the 80 m line) has not left the fight (at_boss_talker).
+##   * Fix-up 2 (N4.6): and so is the way there - within that reach of the straight way from the line's
+##     nearest point to the talker (on_way_to_boss_talker): the stone's reach begins 2.1 m beyond the line,
+##     and walking out to it warned the giant on its first tick in between.
 
 const GROUP := "boss_arenas"
 const HOOK_ORDER := 120
@@ -189,6 +192,20 @@ func outside_m(point: Vector3) -> float:
 		var dz := maxf(maxf(r.position.y - at.y, 0.0), at.y - r.end.y)
 		return Vector2(dx, dz).length()
 	return maxf(0.0, at.length() - inner_radius_m)
+
+
+## M8 gate fix-up 2 (N4.6): the point of the disengage line - disengage_margin_m outside the floor (the circle
+## of inner_radius_m, or floor_rect) - nearest `at` (this node's local x/z); `at` itself when it lies within
+## the line.
+func line_point_toward(at: Vector2) -> Vector2:
+	var on_floor := at.limit_length(inner_radius_m)
+	if floor_rect.has_area():
+		var r := floor_rect.abs()
+		on_floor = Vector2(clampf(at.x, r.position.x, r.end.x), clampf(at.y, r.position.y, r.end.y))
+	var out := at - on_floor
+	if out.length() <= disengage_margin_m:
+		return at
+	return on_floor + out.normalized() * disengage_margin_m
 
 
 func debug_lines() -> PackedStringArray:
@@ -354,14 +371,15 @@ func _p34_keeps(e: EnemyActor, d: EncounterDirector) -> bool:
 
 ## The disengage rule (see the class notes): ENGAGED, the giant beyond the floor + disengage_margin_m
 ## for disengage_s (M8 gate, F8: measured from floor_rect when the arena has one). Crossing that line
-## warns the giant (F33).
+## warns the giant (F33). Fix-up 2 (N4.6): the way to the boss's own talker is the fight's ground too
+## (on_way_to_boss_talker, which holds at_boss_talker's reach).
 func _check_disengage(tick: int) -> void:
 	if disengage_s <= 0.0:
 		return
 	var p := _player()
 	if p == null:
 		return
-	if outside_m(p.global_position) <= disengage_margin_m or at_boss_talker(p):
+	if outside_m(p.global_position) <= disengage_margin_m or on_way_to_boss_talker(p):
 		_outside_since = -1
 		return
 	if _outside_since < 0:
@@ -379,18 +397,50 @@ func _check_disengage(tick: int) -> void:
 ## challenge after Harrok engaged (on entering the ring) was told "Harrok the Unbowed will recover unless
 ## you turn back", and lingering at the stone reset the attempt.
 func at_boss_talker(p: GiantPlayer) -> bool:
-	if boss_id == "" or p == null or not is_inside_tree():
+	if p == null:
 		return false
 	var capsule := float(p.profile.get("capsule_radius_m", 0.0))
-	for n in get_tree().get_nodes_in_group("interactables"):
-		var t := n as NpcTalker
-		if t == null or not t.enabled or not t.is_inside_tree() or t.resolved_npc_id() != boss_id:
-			continue
+	for t in boss_talkers():
 		var d := t.global_position - p.global_position
 		d.y = 0.0
 		if d.length() <= t.radius_m + capsule:
 			return true
 	return false
+
+
+## M8 gate fix-up 2 (N4.6, the re-audit's walk from the Moot's engage point to the challenge stone): true while
+## the giant is within talking reach (the talker's radius + the giant's capsule) of the straight way from the
+## disengage line's nearest point (line_point_toward) to an enabled NpcTalker that speaks for this arena's
+## boss - at_boss_talker's reach drawn back to the line. The stone's reach begins 82.1 m from the Moot's
+## centre, 2.1 m beyond the 80 m line, so every way from the ring to the stone crossed a gap outside both, and
+## the leaving warning came on its first tick there (at the stone the attempt no longer reset). A talker
+## within the line keeps its reach alone; the ground beside the way, past the talker or round the far side of
+## the ring is left as before (the Moot foot waystone, 23 m past the stone, is out of it).
+func on_way_to_boss_talker(p: GiantPlayer) -> bool:
+	if p == null:
+		return false
+	var capsule := float(p.profile.get("capsule_radius_m", 0.0))
+	var local := to_local(p.global_position)
+	var at := Vector2(local.x, local.z)
+	for t in boss_talkers():
+		var tl := to_local(t.global_position)
+		var talker := Vector2(tl.x, tl.z)
+		var way_point := Geometry2D.get_closest_point_to_segment(at, line_point_toward(talker), talker)
+		if at.distance_to(way_point) <= t.radius_m + capsule:
+			return true
+	return false
+
+
+## The enabled NpcTalkers in the tree that speak for this arena's boss (none without a boss_id).
+func boss_talkers() -> Array[NpcTalker]:
+	var out: Array[NpcTalker] = []
+	if boss_id == "" or not is_inside_tree():
+		return out
+	for n in get_tree().get_nodes_in_group("interactables"):
+		var t := n as NpcTalker
+		if t != null and t.enabled and t.is_inside_tree() and t.resolved_npc_id() == boss_id:
+			out.append(t)
+	return out
 
 
 ## Ends the attempt (the disengage rule; tests may call it): the arena waits with its gate open, the
