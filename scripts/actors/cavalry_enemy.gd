@@ -6,9 +6,11 @@ extends EnemyActor
 ## large nav layer (2).
 ##
 ## The charge (an action tagged Charge, ability.cavalry_charge) runs on the base's scripted `motion`
-## (a straight run behind its line telegraph); while it runs the horse ignores other actors - it rides
-## through the giant's legs and through its own side's ranks, and walls, breakables and blockers still
-## stop it - and its hit is the body_sweep registered on its own runner: the horse's capsule (+
+## (a straight run behind its line telegraph); while it runs the horse and the other actors pass
+## through each other (it leaves the actor layer and stops colliding with it: it rides through the
+## giant's legs and through its own side's ranks without shoving the giant along, and walls,
+## breakables and blockers still stop it) - and its hit is the body_sweep registered on its own runner:
+## the horse's capsule (+
 ## BODY_SWEEP_MARGIN_M) swept from the previous tick's position to this one, one hit per target per
 ## charge (max_hits_per_target), each coming from beside the target off the charge line so the
 ## knockback shoves it aside. The hit strikes as a 4 m attacker (the action's
@@ -39,11 +41,13 @@ var charges_started := 0
 var _sweep_instance := -1
 var _sweep_prev := Vector3.ZERO
 var _base_collision_mask := -1
+var _base_collision_layer := -1
 
 
 func _ready() -> void:
 	super()
 	_base_collision_mask = collision_mask
+	_base_collision_layer = collision_layer
 	runner.register_shape("body_sweep", _run_body_sweep)
 	controller.action_started.connect(_on_cavalry_action_started)
 
@@ -64,17 +68,31 @@ func is_charging(phase: int = ActionDef.Phase.ACTIVE) -> bool:
 	return a != null and a.has_tag(CavalryBrain.CHARGE_TAG) and controller.phase() == phase
 
 
+## True while the charge's run moves the horse: its active phase until the run is over (the distance
+## or a wall ended it).
+func is_galloping() -> bool:
+	return is_charging() and (_motion_instance != controller.instance_id or not _motion_done)
+
+
 func _on_cavalry_action_started(action: ActionDef, _instance_id: int) -> void:
 	if action != null and action.has_tag(CavalryBrain.CHARGE_TAG):
 		charges_started += 1
 
 
-## While a charge runs the horse ignores other actors (see the class notes); then the base motion runs.
+## While the charge's run moves the horse, it and the other actors pass through each other (see the
+## class notes): it leaves the actor layer and its mask drops it - a giant whose body still collided
+## with the horse would be shoved along the charge line by its own depenetration. Then the base
+## motion runs.
 func _custom_movement(dt: float) -> bool:
 	if _base_collision_mask >= 0:
-		var want := _base_collision_mask & ~HitQueryAdapter.LAYER_ACTORS if is_charging() else _base_collision_mask
-		if collision_mask != want:
-			collision_mask = want
+		var charging := is_galloping()
+		var actors := HitQueryAdapter.LAYER_ACTORS
+		var want_mask := _base_collision_mask & ~actors if charging else _base_collision_mask
+		var want_layer := _base_collision_layer & ~actors if charging else _base_collision_layer
+		if collision_mask != want_mask:
+			collision_mask = want_mask
+		if collision_layer != want_layer:
+			collision_layer = want_layer
 	var moved: bool = super(dt)
 	return moved and not is_returning()
 
