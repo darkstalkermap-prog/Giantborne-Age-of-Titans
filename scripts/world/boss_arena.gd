@@ -43,6 +43,9 @@ extends Node3D
 ##   * F33: the giant is told: a warning on the HUD's message line when it crosses the disengage line
 ##     during an engaged attempt (at most every LEAVING_WARN_EVERY_S), and a line when the attempt resets
 ##     (Events.hud_message; BattleBoss words them for a battle).
+##   * Fix-up 1 (N4.6): the boss's own talker is the fight's ground - a giant within talking reach of an
+##     NpcTalker whose npc is the boss (the Moot's challenge stone, outside the ring's gate 95.8 m from
+##     its centre, beyond the 80 m line) has not left the fight (at_boss_talker).
 
 const GROUP := "boss_arenas"
 const HOOK_ORDER := 120
@@ -358,7 +361,7 @@ func _check_disengage(tick: int) -> void:
 	var p := _player()
 	if p == null:
 		return
-	if outside_m(p.global_position) <= disengage_margin_m:
+	if outside_m(p.global_position) <= disengage_margin_m or at_boss_talker(p):
 		_outside_since = -1
 		return
 	if _outside_since < 0:
@@ -368,6 +371,26 @@ func _check_disengage(tick: int) -> void:
 			Events.hud_message.emit(leaving_line(), "warn")
 	elif tick - _outside_since >= ActionDef.seconds_to_ticks(disengage_s):
 		disengage(tick)
+
+
+## M8 gate fix-up 1 (N4.6): true while the giant is within talking reach (the talker's radius + the giant's
+## capsule) of an enabled NpcTalker that speaks for this arena's boss. Harrok's challenge stone stands
+## 95.8 m from the Moot's centre, beyond the 80 m disengage line, so every giant that answered the
+## challenge after Harrok engaged (on entering the ring) was told "Harrok the Unbowed will recover unless
+## you turn back", and lingering at the stone reset the attempt.
+func at_boss_talker(p: GiantPlayer) -> bool:
+	if boss_id == "" or p == null or not is_inside_tree():
+		return false
+	var capsule := float(p.profile.get("capsule_radius_m", 0.0))
+	for n in get_tree().get_nodes_in_group("interactables"):
+		var t := n as NpcTalker
+		if t == null or not t.enabled or not t.is_inside_tree() or t.resolved_npc_id() != boss_id:
+			continue
+		var d := t.global_position - p.global_position
+		d.y = 0.0
+		if d.length() <= t.radius_m + capsule:
+			return true
+	return false
 
 
 ## Ends the attempt (the disengage rule; tests may call it): the arena waits with its gate open, the
