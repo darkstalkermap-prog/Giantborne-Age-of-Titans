@@ -194,9 +194,11 @@ func shrine_clearance(prof: Dictionary, shrine: Node) -> Dictionary:
 
 ## The growth pad of `shrine` (Shrine.growth_pad_position) when the giant stands within the shrine's
 ## reach (its radius_m + the giant's capsule + PAD_STEP_MARGIN_M: it is using the shrine) and the pad has
-## room for `prof`; Vector3.INF otherwise.
+## a floor and room for `prof`; Vector3.INF otherwise.
 func pad_with_room(prof: Dictionary, shrine: Node) -> Vector3:
-	if not (shrine is Shrine) or not is_instance_valid(shrine) or not (shrine as Shrine).is_inside_tree():
+	if shrine == null or not is_instance_valid(shrine) or not (shrine is Shrine) or not shrine.is_inside_tree():
+		return Vector3.INF
+	if not player.is_inside_tree():
 		return Vector3.INF
 	var s := shrine as Shrine
 	var reach := s.radius_m + float(player.profile.get("capsule_radius_m", 0.85)) + PAD_STEP_MARGIN_M
@@ -204,20 +206,21 @@ func pad_with_room(prof: Dictionary, shrine: Node) -> Vector3:
 	if Vector2(d.x, d.z).length() > reach:
 		return Vector3.INF
 	var pad := _on_ground(s.growth_pad_position())
+	if not pad.is_finite():
+		return Vector3.INF
 	return pad if bool(check_clearance(prof, pad).ok) else Vector3.INF
 
 
 ## `at` set down on the floor below or above it (the world layer within PAD_GROUND_M): a pad marker of a
-## streamed chunk may sit a little under the terrain the giant would stand on.
+## streamed chunk may sit a little under the terrain the giant would stand on. Vector3.INF when no floor is
+## there (the giant is never stepped onto a pad it would fall from).
 func _on_ground(at: Vector3) -> Vector3:
-	if not player.is_inside_tree():
-		return at
 	var space := player.get_world_3d().direct_space_state
 	var q := PhysicsRayQueryParameters3D.create(at + Vector3.UP * PAD_GROUND_M, at - Vector3.UP * PAD_GROUND_M,
 		HitQueryAdapter.LAYER_WORLD, [player.get_rid()])
 	q.collide_with_areas = false
 	var hit := space.intersect_ray(q)
-	return (hit.position as Vector3) if not hit.is_empty() else at
+	return (hit.position as Vector3) if not hit.is_empty() else Vector3.INF
 
 
 ## The combat gate of a shrine growth (P16, M3 review: "Enemies are near" now means it): {ok,

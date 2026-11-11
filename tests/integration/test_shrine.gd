@@ -381,6 +381,13 @@ func test_a_giant_without_room_within_the_shrines_reach_grows_on_its_pad() -> vo
 	assert_false(bool(s.grow(p, 3).ok), "grow() refuses")
 	assert_true(p.growth_stage == 2 and Vector2(p.global_position.x - 3, p.global_position.z + 6).length() < 0.2,
 		"and the giant stays where it stood")
+	# A pad with no floor under it (past the floor's edge at z -60) is no way out either.
+	var edge := _shrine(Vector3(20, 0, -55), "test.edge")
+	add_box(Vector3(3, 1, 3), Vector3(20, 6.5, -51))
+	p.global_position = Vector3(20, 0.05, -51)
+	await step_ticks(3)
+	assert_true(edge.growth_pad_position().z < -60.0, "the edge shrine's pad hangs past the floor")
+	assert_eq(str(edge.can_grow(p, 3).reason), "clearance", "no floor on the pad: refused")
 
 
 # --------------------------------------------------------------------------- sandbox
