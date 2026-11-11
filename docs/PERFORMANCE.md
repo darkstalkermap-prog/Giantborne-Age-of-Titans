@@ -1122,6 +1122,20 @@ chunks, 112 seams), 270 suites and 46,249 checks with 0 failures - default 64.1 
 253.4 s (8 minutes), gate 439.0 s (50 minutes) - and the 120 s autoplay had 0 errors (2 fences broken, 2
 loot awards, the debris pool at 10).
 
+**The fix-up** (the verifier's two findings: "M8 screenshot pass" in `docs/systems/P32.md`, `P10a.md` and
+`P25.md`). In the default tier: `test_scenery_fade` gains the shader's own rule run against `SceneryFade`
+(`tests/support/shader_rule.gd`; 150 checks, 0.25 s in all), `test_cavalry` a rider beside the giant at
+its leash's edge (42 checks, 0.12 s in all) and `test_encounter_director` an alert group's freshest
+knowledge (1.10 s in all). In the slow tier: `test_world_cavalry` gains the giant among the war camp's
+pickets (23 checks, 15.4 s in all). No frame cost to speak of: the leash's turn tries at most eleven
+bearings, and only when the leash's edge would leave the giant inside a rider's charge window; the alert
+share reads every member of an active alert group each tick (it read until the first aware one); the
+shader is unchanged. `tools/check.sh --slow --gate --only=valley,world` on 24be0e3 (about 14 minutes): the
+valley and world builders wrote the same bytes as the committed outputs, the seam check passed (64 chunks,
+112 seams), 270 suites and 46,305 checks with 0 failures - default 58.0 s (budget 75 s), slow 250.5 s (8
+minutes), gate 427.7 s (50 minutes) - and the 120 s autoplay had 0 errors (2 fences broken, 2 loot awards,
+the debris pool at 10).
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
