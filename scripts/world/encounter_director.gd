@@ -1655,6 +1655,66 @@ func _p34_reserved_room(m: Member, formation: bool) -> int:
 	return n
 
 
+## M8 gate (F9): makes the room `owner`'s reserved units still to come need in the level's caps against the
+## units of other encounters already in the world (the reservation only keeps newcomers out). While the
+## living formation members with the reserved formation units to come would pass max_formation_members, or
+## the counted combatants with the reserved counted units to come max_active_enemies, living members of
+## other encounters leave (despawn: they come back on their encounter's next activation, and wait for room
+## meanwhile) - formation members for the one, counted combatants for the other - the farthest from `from`
+## first, and only as many as the caps need. Never a reserved unit, a crew member of one of `engines` (the
+## battle's own) nor a unit the giant holds. Returns the entity ids that left.
+func p34_make_room(owner: String, from: Vector3, engines: PackedStringArray = PackedStringArray()) -> Array[String]:
+	var out: Array[String] = []
+	var units: Dictionary = _p34_reserved.get(owner, {})
+	if units.is_empty():
+		return out
+	var need_f := 0
+	var need_c := 0
+	for id: String in units:
+		var r: Member = _members.get(id)
+		if r == null or (r.status != UNSPAWNED and r.status != DESPAWNED) or WorldState.is_killed(id):
+			continue
+		if str(r.spawn.get("formation", "")) != "":
+			need_f += 1
+		elif counts(r):
+			need_c += 1
+	_p30_load_cap()
+	var over_f := formation_member_count() + need_f - max_formation_members
+	var over_c := active_combatant_count() + need_c - max_active_enemies
+	if over_f <= 0 and over_c <= 0:
+		return out
+	var cands: Array[Member] = []
+	for id: String in _members:
+		var m: Member = _members[id]
+		if m.status != SPAWNED or not _alive(m.node) or p34_is_reserved(id):
+			continue
+		if not engines.is_empty() and engines.has(p32_engine_of(m.encounter_id, id)):
+			continue
+		if m.node.has_method("is_held") and bool(m.node.call("is_held")):
+			continue
+		cands.append(m)
+	var at := Vector2(from.x, from.z)
+	cands.sort_custom(func(a: Member, b: Member) -> bool:
+		return Vector2(a.node.global_position.x, a.node.global_position.z).distance_squared_to(at) \
+			> Vector2(b.node.global_position.x, b.node.global_position.z).distance_squared_to(at))
+	for m: Member in cands:
+		if over_f <= 0 and over_c <= 0:
+			break
+		if _p30_formation_member(m):
+			if over_f <= 0:
+				continue
+			over_f -= 1
+		elif counts(m) and not m.routed:
+			if over_c <= 0:
+				continue
+			over_c -= 1
+		else:
+			continue
+		out.append(m.entity_id)
+		despawn(m.entity_id)
+	return out
+
+
 ## Resets an encounter for a new attempt (see above). Nothing for an unknown id.
 func p34_reset_encounter(encounter_id: String) -> void:
 	var enc: Encounter = _encounters.get(encounter_id)

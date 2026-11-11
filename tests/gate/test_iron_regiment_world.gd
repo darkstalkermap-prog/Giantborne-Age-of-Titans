@@ -11,12 +11,17 @@ extends IntegrationSuite
 ##     pikes, banner and archers out when it engages (the crews of its own ballistae stay) and keeps its
 ##     units' room: the Wall musters whole (banners first) within the web's 20 formation members, the bar
 ##     counts what spawned, and the Charge's six riders spawn whole within the twelve combatants.
+##   * F9, Ballista Ridge: a giant who comes from the ridge over the King's Road finds its shield wall and
+##     crews still in the world when it engages (the ridge stays active out to 210 m): as many of them as
+##     the caps need leave too (EncounterDirector.p34_make_room), the Wall musters whole and the Charge's
+##     riders spawn whole.
 
 const SCENE := "res://scenes/world/world.tscn"
 const GATE := "world.aldmere.fort_gate"
 const WALL := "encounter.aldmere_iron_regiment_wall"
 const CHARGE := "encounter.aldmere_iron_regiment_charge"
 const GARRISON := "encounter.aldmere_fort_gate"
+const RIDGE := "encounter.aldmere_ballista_ridge"
 ## Spots inside the curtain wall (560..740 x -245..-95), near each corner (99-107 m from the arena's
 ## centre at (650, -165): beyond the old circle's 72 + 20 m).
 const CORNERS := [Vector2(730, -236), Vector2(570, -236), Vector2(730, -104), Vector2(570, -104)]
@@ -113,15 +118,19 @@ func _battle(w: Node) -> FortBattle:
 	return null
 
 
-## The real world before Fort Aldmere's gate, a stage-5 giant that takes no damage, the gate broken.
-func _fort(web: bool) -> WorldRoot:
+## The real world before Fort Aldmere's gate, a stage-5 giant that takes no damage, the gate broken. With
+## `via_ridge` the giant first stands 5 s on the King's Road below Ballista Ridge (the ridge wakes).
+func _fort(web: bool, via_ridge := false) -> WorldRoot:
 	LevelRoot.force_web_for_tests = web
 	WanderDirector.test_active = true
 	WanderDirector.view_probe = func(_p: Vector3) -> bool: return false
-	var w: WorldRoot = await _world(Vector2(650.0, -75.0))
+	var w: WorldRoot = await _world(Vector2(760.0, -30.0) if via_ridge else Vector2(650.0, -75.0))
 	var p := w.player()
 	p.set_profile(_profile(5))
 	p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+	if via_ridge:
+		await step_ticks(5 * 60)
+		await _move(w, Vector2(650.0, -75.0))
 	await step_ticks(10)
 	assert_true(await _break(GATE, p.entity.entity_id), "the fort's gate breaks")
 	await step_ticks(30)
@@ -232,6 +241,50 @@ func test_the_web_battle_fits_the_cap_with_the_gate_garrison_alive() -> void:
 	assert_true(b.phase_log.has(2), "The Charge (%s)" % [b.phase_log])
 	var riders := Array(d.members_of(CHARGE)).filter(func(id: String) -> bool: return d.member_status(id) == EncounterDirector.SPAWNED)
 	print("    iron regiment (web): the Charge %d riders up, combatants %d/%d" % [riders.size(), d.active_combatant_count(), d.max_active_enemies])
+	assert_eq(riders.size(), 6, "six riders, whole")
+	assert_true(d.active_combatant_count() <= d.max_active_enemies, "within the twelve")
+	w.queue_free()
+	await step_ticks(2)
+
+
+func test_the_web_battle_makes_room_from_ballista_ridge() -> void:
+	var w := await _fort(true, true)
+	var b := _battle(w)
+	assert_true(b != null, "the battle is loaded")
+	if b == null:
+		return
+	var d := w.director()
+	var spawned := func(id: String) -> bool: return d.member_status(id) == EncounterDirector.SPAWNED
+	var ridge_wall := Array(d.members_of(RIDGE)).filter(func(id: String) -> bool:
+		return not id.contains("ridge_crew") and spawned.call(id))
+	var ridge_crews := Array(d.members_of(RIDGE)).filter(func(id: String) -> bool:
+		return id.contains("ridge_crew") and spawned.call(id))
+	print("    iron regiment (web, via the ridge): before the battle, the ridge %s with %d of its wall and %d crews up; formation members %d/%d, combatants %d/%d" % [
+		d.encounter_state(RIDGE), ridge_wall.size(), ridge_crews.size(), d.formation_member_count(), d.max_formation_members,
+		d.active_combatant_count(), d.max_active_enemies])
+	assert_eq(d.encounter_state(RIDGE), EncounterDirector.ACTIVE, "the ridge is still awake at the gate")
+	assert_true(ridge_wall.size() >= 7, "its shield wall stands (%d)" % ridge_wall.size())
+	await _enter_bailey(w, b)
+	await step_ticks(120)
+	for id: String in ridge_wall:
+		assert_eq(d.member_status(id), EncounterDirector.DESPAWNED, "%s made room (%s)" % [id, d.member_status(id)])
+	var planned := b.planned()
+	var waiting: Array = []
+	for id: String in d.members_of(WALL):
+		if planned.has(id) and d.member_status(id) != EncounterDirector.SPAWNED:
+			waiting.append(id)
+	var crews_left := ridge_crews.filter(func(id: String) -> bool: return d.member_status(id) == EncounterDirector.DESPAWNED)
+	print("    iron regiment (web, via the ridge): 2 s after engaging, the Wall waiting %s; formation members %d/%d; combatants %d/%d; stood out %d (%d of the ridge's crews)" % [
+		waiting, d.formation_member_count(), d.max_formation_members, d.active_combatant_count(), d.max_active_enemies,
+		b.stood_out.size(), crews_left.size()])
+	assert_eq(waiting, [], "every unit of the Wall the bar counts has spawned")
+	assert_true(d.formation_member_count() <= d.max_formation_members, "within the web's cap")
+	for id: String in d.members_of(WALL):
+		_kill(id)
+	await step_ticks(30)
+	assert_true(b.phase_log.has(2), "The Charge (%s)" % [b.phase_log])
+	var riders := Array(d.members_of(CHARGE)).filter(func(id: String) -> bool: return spawned.call(id))
+	print("    iron regiment (web, via the ridge): the Charge %d riders up, combatants %d/%d" % [riders.size(), d.active_combatant_count(), d.max_active_enemies])
 	assert_eq(riders.size(), 6, "six riders, whole")
 	assert_true(d.active_combatant_count() <= d.max_active_enemies, "within the twelve")
 	w.queue_free()

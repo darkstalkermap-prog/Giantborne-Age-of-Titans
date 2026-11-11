@@ -27,10 +27,13 @@ extends BossArena
 ##     members of the `stand_out` encounters leave (EncounterDirector.despawn: they come back on their
 ##     encounter's next activation) - Fort Aldmere's gate garrison outside the portcullis, whose pikes,
 ##     banner and archers took the room in the formation cap and the combatants' budget the battle's
-##     units need (on the web its pikes left four of the Wall's shields and their banner waiting while the
+##     units need (on the web its pikes left three of the Wall's shields and their banner waiting while the
 ##     bar counted them) - except the crews of the battle's own engines and a unit the giant holds; and
 ##     the battle reserves the room of its planned units still to come in the level's caps until the
-##     attempt ends (EncounterDirector.p34_reserve), so nothing that turns up later takes it either. Its
+##     attempt ends (EncounterDirector.p34_reserve), so nothing that turns up later takes it either; and
+##     should units of other encounters already in the world still hold that room (Ballista Ridge's
+##     shield wall and crews, a column on the road), as many of them as the caps need leave too, the
+##     farthest first (EncounterDirector.p34_make_room; `stood_out` lists every unit that left). Its
 ##     composition (the plan, the bar's aggregate) is then what actually spawns, banners first.
 
 const BATTLE_GROUP := "battle_bosses"
@@ -105,6 +108,7 @@ func engage(tick: int = -1) -> void:
 	var d := _director()
 	if d != null:
 		d.p34_reserve(battle_id, _planned.keys())
+		stood_out.append_array(d.p34_make_room(battle_id, global_position, engines))
 	_begin_phase(0, t)
 	Events.boss_engaged.emit(t, battle_id)
 

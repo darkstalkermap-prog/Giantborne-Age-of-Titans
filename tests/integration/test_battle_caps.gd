@@ -9,12 +9,16 @@ extends IntegrationSuite
 ##   * while the battle is engaged its units still to come keep their room (EncounterDirector.p34_reserve):
 ##     the garrison, coming back, waits for room, and the Charge's riders spawn whole within the
 ##     combatants' budget;
-##   * a formation short of room in the cap fields its banner before its rank and file.
+##   * a formation short of room in the cap fields its banner before its rank and file;
+##   * units of other encounters already in the world that no stand_out names (Fort Aldmere's Ballista
+##     Ridge, a column) leave as the caps need when the battle engages (EncounterDirector.p34_make_room):
+##     the farthest first, only as many as the battle's units to come need.
 
 const BAILEY := "res://scenes/test/bailey_test.tscn"
 const WALL := "encounter.bailey_test_wall"
 const CHARGE := "encounter.bailey_test_charge"
 const GATE := "encounter.bailey_test_gate_garrison"
+const RIDGE := "encounter.bailey_test_ridge"
 
 
 func after_each() -> void:
@@ -45,6 +49,29 @@ static func _garrison() -> Dictionary:
 		"web_formation_scale": 0.7,
 		"formations": [{"id": "pikes", "kind": "pike", "banner": "test.bailey.gate_banner", "ranks": 2, "files": 5,
 			"rank_spacing_m": 2.2, "file_spacing_m": 1.6, "facing": "fixed", "yaw_deg": 0}],
+		"spawns": spawns}
+
+
+## A second test encounter farther out (like Fort Aldmere's Ballista Ridge): a shield formation of four and
+## its banner and three archers, inert, about 100 m from the battle; it waits for the same unset flag.
+static func _ridge() -> Dictionary:
+	var spawns: Array = []
+	for i in 4:
+		spawns.append({"entity_id": "test.bailey.ridge_shield_%d" % (i + 1), "definition": "enemy.shieldman",
+			"position_m": [66.0 + float(i) * 1.1, 0.05, 70.0], "yaw_deg": 0, "ai_enabled": false, "persist_death": true,
+			"formation": "shields", "slot": i})
+	spawns.append({"entity_id": "test.bailey.ridge_banner", "definition": "enemy.bannerman",
+		"position_m": [67.6, 0.05, 72.5], "yaw_deg": 0, "ai_enabled": false, "persist_death": true,
+		"formation": "shields", "slot": -1})
+	for i in 3:
+		spawns.append({"entity_id": "test.bailey.ridge_archer_%d" % (i + 1), "definition": "enemy.archer",
+			"position_m": [60.0 + float(i) * 3.0, 0.05, 76.0], "yaw_deg": 0, "ai_enabled": false, "persist_death": true})
+	return {"schema_version": 1, "id": RIDGE, "type": "encounter", "level": "level.bailey_test",
+		"display_name": "Test bailey: a ridge", "center_m": [66, 0, 72], "activate_radius_m": 10,
+		"deactivate_radius_m": 400, "leash_radius_m": 60, "alert_group": false,
+		"requires_flags": ["test.bailey.manual"], "forbids_flags": [], "counts_toward_budget": true,
+		"formations": [{"id": "shields", "kind": "shield", "banner": "test.bailey.ridge_banner", "ranks": 1, "files": 4,
+			"rank_spacing_m": 1.4, "file_spacing_m": 1.1, "facing": "fixed", "yaw_deg": 0}],
 		"spawns": spawns}
 
 
@@ -144,3 +171,51 @@ func test_a_formation_short_of_room_fields_its_banner_first() -> void:
 		if x.encounter_id == WALL:
 			f = x
 	assert_true(f != null and f.banner_alive(), "the Wall stands behind its banner")
+
+
+func test_the_battle_makes_room_from_the_farthest_units_of_other_encounters() -> void:
+	LevelRoot.force_web_for_tests = true
+	TestFixtures.record_override(GATE, _garrison())
+	TestFixtures.record_override(RIDGE, _ridge())
+	var level := await _level()
+	var battle := level.get_node("BattleBoss") as BattleBoss
+	var d := level.get_node("EncounterDirector") as EncounterDirector
+	d.p30_formation_room()
+	assert_eq(d.max_formation_members, 20, "the web's formation cap")
+	d.max_active_enemies = 5   # tight: the Charge's four riders and one more
+	d.force_activate(GATE)
+	d.force_activate(RIDGE)
+	d.update_now()
+	var garrison := _spawned(d, GATE)
+	var ridge := _spawned(d, RIDGE)
+	assert_eq(garrison.size(), 10, "the garrison stands: seven pikes and the banner, two archers")
+	assert_eq(ridge.size(), 8, "the ridge stands: four shields and the banner, three archers")
+	# Nothing named to stand out: the garrison's eight, the ridge's five and the battle's twelve (the Wall's
+	# nine, the guard's three) pass the 20; the five archers and the four riders pass the five.
+	assert_eq(battle.stand_out.size(), 0, "no stand_out")
+	battle.engage()
+	await step_ticks(2)
+	var left := battle.stood_out.duplicate()
+	left.sort()
+	var want: Array[String] = ["test.bailey.gate_archer_1", "test.bailey.ridge_archer_1", "test.bailey.ridge_archer_2",
+		"test.bailey.ridge_archer_3", "test.bailey.ridge_banner", "test.bailey.ridge_shield_1", "test.bailey.ridge_shield_2",
+		"test.bailey.ridge_shield_3", "test.bailey.ridge_shield_4"]
+	assert_eq(left, want, "the farthest leave, as many as the caps need: the ridge, and the farther gate archer")
+	for id: String in left:
+		assert_eq(d.member_status(id), EncounterDirector.DESPAWNED, "%s left (it comes back on its next activation)" % id)
+	for id: String in garrison:
+		if not left.has(id):
+			assert_eq(d.member_status(id), EncounterDirector.SPAWNED, "%s stays (the battle needs no more room)" % id)
+	var planned := battle.planned()
+	var wall := Array(d.members_of(WALL)).filter(func(id: String) -> bool: return planned.has(id))
+	assert_eq(wall.size(), 9, "the web's Wall: eight shields and the banner")
+	for id: String in wall:
+		assert_eq(d.member_status(id), EncounterDirector.SPAWNED, "%s spawned" % id)
+	assert_true(d.formation_member_count() <= d.max_formation_members, "within the cap (%d)" % d.formation_member_count())
+	# The Wall falls: the Charge's four riders spawn whole within the five.
+	for id: String in wall:
+		_kill(id)
+	await step_ticks(3)
+	assert_eq(battle.phase_log, [1, 2] as Array[int], "The Charge")
+	assert_eq(_spawned(d, CHARGE).size(), 4, "its four riders, whole")
+	assert_true(d.active_combatant_count() <= d.max_active_enemies, "within the budget (%d)" % d.active_combatant_count())
