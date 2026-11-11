@@ -4,8 +4,9 @@ extends RefCounted
 ## CombatEntity (team NEUTRAL) on Anchors/Center, Block* shapes on the breakables layer (navigation
 ## obstacles while they stand), Hurtboxes/Body, the Intact and Broken visuals (one vertex-coloured
 ## mesh each, in the scenery group so they fade with the preset like the other props), and an
-## optional static Frame (a WORLD body with its own mesh that stays when the prop breaks: a bell's
-## posts). The bell, brazier, nest and den_wall kinds describe their props as designs:
+## optional static Frame (a WORLD body that stays when the prop breaks: a bell's posts; M8 gate, F27:
+## its parts are drawn in both the Intact and the Broken mesh, one draw call a prop, and the body keeps
+## only its solids). The bell, brazier, nest and den_wall kinds describe their props as designs:
 ##   {"intact": parts, "broken": parts, "blocks": [[size, center]], "hurt": [size, center],
 ##    "center": Vector3, "frame": parts, "frame_solids": [[size, center]]}
 
@@ -41,14 +42,17 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary, script_path: S
 	hb.add_child(kit.hurtbox("Body", "body", kit.box_shape(hurt[0]), hurt[1]))
 	root.add_child(hb)
 	var mat: Material = ctx.get("mat")
+	# M8 gate (F27; plan M6-M9 §5.2: at most 40 static draw calls a view at low): the frame's parts are
+	# drawn in the Intact and in the Broken mesh - whichever shows, the frame stands in it - so a framed
+	# prop costs one draw call instead of two; the Frame body keeps only its solids.
+	var frame: Array = design.get("frame", [])
 	var intact := kit.n3("Intact")
-	intact.add_child(scenery(L.parts_node("Mesh", design.get("intact", []), mat)))
+	intact.add_child(scenery(L.parts_node("Mesh", (design.get("intact", []) as Array) + frame, mat)))
 	root.add_child(intact)
 	var broken := kit.n3("Broken")
-	broken.add_child(scenery(L.parts_node("Mesh", design.get("broken", []), mat)))
+	broken.add_child(scenery(L.parts_node("Mesh", (design.get("broken", []) as Array) + frame, mat)))
 	broken.visible = false
 	root.add_child(broken)
-	var frame: Array = design.get("frame", [])
 	if not frame.is_empty():
 		var body := StaticBody3D.new()
 		body.name = "Frame"
@@ -62,7 +66,6 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary, script_path: S
 			fcs.position = s[1]
 			body.add_child(fcs)
 			j += 1
-		body.add_child(scenery(L.parts_node("Mesh", frame, mat)))
 		root.add_child(body)
 	return root
 

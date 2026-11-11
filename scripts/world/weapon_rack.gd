@@ -31,8 +31,25 @@ func _ready() -> void:
 		display_weapon = WeaponVisuals.build(rec)
 		display_weapon.rotation_degrees = Vector3(90, 0, 0)   # the tip up
 		display.add_child(display_weapon)
+		_fade_with_frame()
 	if ItemPickup.is_taken(world_id):
 		_empty()
+
+
+## M8 gate (F27; plan M6-M9 §5.2: at most 40 static draw calls a view at low): the weapon on display -
+## built here, after the level or the chunk gave the rack's frame the preset's scenery distance - fades
+## with the frame: its parts join group "scenery" (so LevelRoot.apply_graphics keeps them in step) at
+## the frame's distance now. Before, the six or seven parts of a world rack's weapon were drawn from
+## 500 m away while the rack itself was not.
+func _fade_with_frame() -> void:
+	var frame_range := 0.0
+	var frame := get_node_or_null("Frame")
+	if frame != null:
+		for n in frame.find_children("*", "GeometryInstance3D", true, false):
+			frame_range = maxf(frame_range, (n as GeometryInstance3D).visibility_range_end)
+	for n in display_weapon.find_children("*", "GeometryInstance3D", true, false):
+		n.add_to_group(LevelRoot.SCENERY_GROUPS[0])
+		(n as GeometryInstance3D).visibility_range_end = frame_range
 
 
 func weapon_name() -> String:

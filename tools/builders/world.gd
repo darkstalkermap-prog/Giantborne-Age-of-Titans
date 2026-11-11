@@ -901,6 +901,9 @@ static func ground_links(prop: Node3D, field: HeightField) -> void:
 
 ## A waystone (Waystone, a Marker3D): the marker where the giant respawns and, `stone` metres off,
 ## its standing stone (WORLD) and cap as one vertex-coloured mesh, and the Glow shown while it is open.
+## M8 gate (F27): both meshes are in the scenery group - they fade with the preset's scenery distance
+## (220 m at low) as the other props do; before, every loaded waystone cost two draw calls a view at
+## any distance (plan §5.2: at most 40 static draw calls a view at low).
 static func _waystone(it: Dictionary, xf: Transform3D, mat: Material) -> Node3D:
 	var m := Marker3D.new()
 	m.name = str(it.id).validate_node_name()
@@ -924,10 +927,13 @@ static func _waystone(it: Dictionary, xf: Transform3D, mat: Material) -> Node3D:
 	cs.shape = box
 	cs.position = Vector3(0, 2.5, 0)
 	body.add_child(cs)
-	body.add_child(WorldLayout.parts_node("Mesh", [WorldLayout.part("box", Vector3(0, -0.6, 0), Vector3(1.6, 5.6, 1.6), "stone_dark"),
-		WorldLayout.part("box", Vector3(0, 5.0, 0), Vector3(2.2, 0.5, 2.2), "stone")], mat))
+	var stone := WorldLayout.parts_node("Mesh", [WorldLayout.part("box", Vector3(0, -0.6, 0), Vector3(1.6, 5.6, 1.6), "stone_dark"),
+		WorldLayout.part("box", Vector3(0, 5.0, 0), Vector3(2.2, 0.5, 2.2), "stone")], mat)
+	stone.add_to_group(TerrainChunk.SCENERY_GROUP, true)
+	body.add_child(stone)
 	m.add_child(body)
 	var glow := WorldLayout.parts_node("Glow", [WorldLayout.part("box", Vector3(0, 5.6, 0), Vector3(0.8, 0.8, 0.8), "rune")], mat)
+	glow.add_to_group(TerrainChunk.SCENERY_GROUP, true)
 	glow.position = off
 	m.add_child(glow)
 	return m

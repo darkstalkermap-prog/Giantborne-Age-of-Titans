@@ -1,6 +1,7 @@
 extends SceneTree
-## The static world's draw calls at the Kingsgate shelf and the six settlements' greens (P25; plan
-## M6-M9 §3.8, §5.2: at most 40 a view at `low`), as tests/slow/test_world_build.gd measures them in a
+## The static world's draw calls at the Kingsgate shelf, the six settlements' greens and (M8 gate, F27)
+## the M8 regions' ten places (P25; plan M6-M9 §3.8, §5.2: at most 40 a view at `low` - "P25 and the
+## region packages re-measure at the viewpoints"), as tests/slow/test_world_build.gd measures them in a
 ## child process under Xvfb (the headless test runner renders nothing). It needs a renderer:
 ##
 ##   xvfb-run -a -s "-screen 0 640x360x24" godot --path . --resolution 640x360 --audio-driver Dummy \
@@ -17,9 +18,15 @@ extends SceneTree
 ## autoloads exist.
 
 const WORLD := "res://scenes/world/world.tscn"
-## Viewpoint -> [x, z]: the shelf's start checkpoint and the six settlements' greens (plan §5.4).
+## Viewpoint -> [x, z]: the shelf's start checkpoint and the six settlements' greens (plan §5.4), then
+## (M8 gate, F27) the Greywood's, the Drowned Steps', Aldmere's and the Stonehold's places of P35 and
+## P36 at their POIs (the review's viewpoints, in its order; the chunks of earlier views stay loaded
+## until they are three chunks away, as in play: the budget's worst case of up to 25).
 const VIEWS := {"kingsgate_shelf": [-300, 916], "millford": [-380, 618], "brannock": [60, 565],
-	"hollowmere": [-610, 22], "fort_aldmere": [650, -62], "skarn": [440, -640], "harroks_hall": [-560, -690]}
+	"hollowmere": [-610, 22], "fort_aldmere": [650, -62], "skarn": [440, -640], "harroks_hall": [-560, -690],
+	"woodcutters_camp": [-420, 220], "great_pines": [-560, -260], "bell_tower": [-200, -240],
+	"titans_bones": [220, -260], "sunken_vault": [20, 30], "mere_of_kings": [-20, 20], "troll_den": [-760, -330],
+	"war_camp": [520, 120], "moot_battery": [-190, -640], "ballista_ridge": [780, 20]}
 const DIRECTIONS := 4
 ## The stage-3 camera (growth.03: pivot 7.25 m, arm 12 m, the rig's default pitch -18 degrees).
 const PIVOT_M := 7.25

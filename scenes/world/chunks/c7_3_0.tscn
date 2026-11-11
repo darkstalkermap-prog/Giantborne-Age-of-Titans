@@ -62,7 +62,7 @@ stage_message = "Out of reach. Grow to stage 6."
 
 [node name="Visual" type="Node3D" parent="Props/world_aldmere_eyrie_cache"]
 
-[node name="Chest" type="MeshInstance3D" parent="Props/world_aldmere_eyrie_cache/Visual"]
+[node name="Chest" type="MeshInstance3D" parent="Props/world_aldmere_eyrie_cache/Visual" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_1")
 
 [node name="world_aldmere_eyrie_cairn" type="Node3D" parent="Props"]
@@ -83,7 +83,7 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="Stones" type="MeshInstance3D" parent="Props/world_aldmere_eyrie_cairn/Base"]
+[node name="Stones" type="MeshInstance3D" parent="Props/world_aldmere_eyrie_cairn/Base" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_3")
 
 [node name="Shrines" type="Node3D" parent="."]

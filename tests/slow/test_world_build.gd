@@ -7,8 +7,10 @@ extends TestSuite
 ## giant at the start checkpoint; --chunks= rebuilds a chunk with its eight neighbours; a size gate's
 ## rectangle is drawn in by 6 m for the titan split (a narrow one keeps its middle); and, rendered
 ## in a child process under Xvfb (tests/support/world_draw_probe.gd), the static world draws at most
-## 40 draw calls at `low` from the Kingsgate shelf and the six settlements' greens (skipped with a
-## note without xvfb-run).
+## 40 draw calls at `low` from the Kingsgate shelf, the six settlements' greens and (M8 gate, F27) the
+## M8 regions' ten places - the woodcutters' camp, the great pines, the bell tower, the Titan's Bones,
+## the sunken vault, the Mere of Kings, the troll den, the war camp, the Moot battery and Ballista Ridge
+## (59 at most before the gate's merge pass) - (skipped with a note without xvfb-run).
 
 const LEVEL := "level.world"
 const PROBE := "res://tests/support/world_draw_probe.gd"
@@ -191,7 +193,7 @@ func test_the_static_world_draws_at_most_40_calls_at_low() -> void:
 	if typeof(r) != TYPE_DICTIONARY:
 		return
 	var views: Dictionary = r.views
-	assert_eq(views.size(), 7, "the shelf and the six settlements")
+	assert_eq(views.size(), 17, "the shelf, the six settlements and the M8 regions' ten places")
 	for view: String in views:
 		assert_true(int(views[view]) > 0 and int(views[view]) <= MAX_STATIC_DRAWS,
 			"%s: %d draw calls of the static world at low (at most 40)" % [view, int(views[view])])
