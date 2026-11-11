@@ -21,6 +21,8 @@ extends IntegrationSuite
 ## StyleBoxFlat, outline, shadow outline or clipping under it, every panel and text on an absolute
 ## layer under the modal screens - with every part built; the lock line turns a formation's banner
 ## mark into a drawn flag.
+## M8 screenshot pass (V2): the lock line's label is as wide as its name and distance (it was laid out
+## 1 px wide and drew nothing), inside the frame; a name too long for the frame is trimmed at its width.
 
 const KING := "res://scenes/enemies/ogre_king.tscn"
 const ARCHER := "res://scenes/enemies/archer.tscn"
@@ -135,6 +137,58 @@ func test_the_target_frame_moves_below_the_boss_bar() -> void:
 		await get_tree().process_frame
 	assert_false(hud.boss_bar_visible(), "defeated: the bar hides")
 	assert_near(hud.target_frame_rect().position.y, Hud.TARGET_FRAME_TOP, 0.5, "and the frame goes back up")
+
+
+## The width (px) `label` needs to show its text untrimmed, in its own font and size.
+static func _text_width(label: Label) -> float:
+	var font := label.get_theme_font("font")
+	return font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
+
+
+## `c`'s rect in `hud`.
+static func _rect_in(hud: Hud, c: Control) -> Rect2:
+	return Rect2(c.get_global_rect().position - hud.get_global_rect().position, c.size)
+
+
+## M8 screenshot pass (V2): the lock line shows the locked target's name and distance. Its label sits
+## in a centred line beside a banner's flag and trims a text too long for the frame with an ellipsis -
+## and a trimming label's own minimum width is 1 px, so it was laid out 1 px wide and the line was
+## blank outside boss fights (the Valley ogre, a troll, the Aldmere Shield Wall). Now the label is as
+## wide as its text, inside the frame and centred in it; a name too long for the frame is trimmed at
+## the frame's width and never grows the frame.
+func test_the_lock_line_shows_the_name_and_the_distance() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var hud := _hud()
+	hud.player = p
+	var s := spawn_soldier(Vector3(0, 0.05, -8), 0.0, "test.soldier_line")
+	await step_ticks(3)
+	p.camera_rig.yaw = 0.0
+	p.targeting.try_lock()
+	assert_eq(p.lock.target_id, "test.soldier_line", "locked on the soldier")
+	for i in 3:
+		await get_tree().process_frame
+	assert_true(hud.target_frame_visible(), "the target frame shows")
+	var label := hud.get("_target_name") as Label
+	var text := str(hud.lock_line_now().get("text", ""))
+	assert_true(text.begins_with("Soldier") and text.ends_with(" m"), "the line holds the name and the distance (%s)" % text)
+	assert_eq(label.text, text, "in the label")
+	var need := _text_width(label)
+	assert_true(need > 20.0, "the text needs %.0f px" % need)
+	assert_true(label.size.x + 0.5 >= need, "the label is wide enough to show it: %.0f px for %.0f px" % [label.size.x, need])
+	var frame := hud.target_frame_rect()
+	var drawn := _rect_in(hud, label)
+	assert_true(frame.encloses(drawn), "inside the frame: %s in %s" % [drawn, frame])
+	assert_near(drawn.get_center().x, frame.get_center().x, 2.0, "centred in the frame")
+	# A name too long for the frame: trimmed at the frame's width, the frame keeps its rect.
+	s.entity.combatant.display_name = "The Banner of the Iron Regiment of Fort Aldmere and its Shield Wall"
+	for i in 3:
+		await get_tree().process_frame
+	assert_true(str(hud.lock_line_now().get("text", "")).begins_with("The Banner of the Iron"), "the long name is the label's text")
+	assert_true(_text_width(label) > frame.size.x, "a text wider than the frame (%.0f px)" % _text_width(label))
+	assert_true(hud.target_frame_rect().is_equal_approx(frame), "the frame keeps its rect: %s" % hud.target_frame_rect())
+	drawn = _rect_in(hud, label)
+	assert_true(frame.encloses(drawn), "the trimmed label stays inside the frame: %s in %s" % [drawn, frame])
+	assert_true(drawn.size.x > frame.size.x * 0.75, "and uses the frame's width (%.0f px of %.0f)" % [drawn.size.x, frame.size.x])
 
 
 ## P27: the batching rules over the whole HUD with every part built and showing - a giant's hotbar
