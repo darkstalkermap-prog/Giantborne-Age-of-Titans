@@ -891,6 +891,30 @@ mashes in real time, by design) and `test_boss_sight` (3.3 s) in the slow tier. 
 changes: the AI change (F36) acts only while a target in reach is hidden, and the 30 seeded boss runs
 never meet that case.
 
+### The M8 gate, lane m8s (saves, shrines, the HUD message line and world layout): the suites
+
+The lane added seven suites, one test and two rows ("M8 gate" in `docs/systems/P13.md`, `P20.md`,
+`P27.md`, `P33.md` and `P35.md`). In the default tier: `test_shrine_choices_saved` (F15, 0.51 s),
+`test_shrine_panel_fit` (F17, 0.39 s), `test_hud_messages` (F30, 0.14 s: all 109 shipped refusal,
+size-gate and notice texts on the message line at 1280 x 720), the drive-out rows of
+`test_checkpoint_triggers` (F38; 0.32 s in all) and the F5 test of `test_npc_talker` (0.07 s in all).
+In the slow tier: `test_world_talkers` (F5, 0.08 s). In the gate tier: `test_den_checkpoints` (F38,
+1.7 s), `test_world_shrine_pads` (F4, 0.74 s) and `test_bell_reach` (F45, 1.0 s);
+`test_drowned_walkthrough` now rings its bells with real light swings (4.3 s in all).
+
+The lane's check (`tools/check.sh --slow --gate --only=world --build-args=--chunks=c1_4,c4_4`, run on
+round 1's merge (46bce55) with the lane's commits):
+- The world rebuilt c1_4 and c4_4 with their neighbours (18 chunks, 21.7 s) and left the tree
+  unchanged. The seams held (18 chunks, 27 seams).
+- 255 suites, 44,833 checks, 0 failures. Default 55.1 s (lane m8y: 59.5 s; budget 75 s), slow
+  214.5 s (221.7 s; budget 8 minutes), gate 398.0 s (380.3 s; budget 50 minutes).
+- The 120 s soak had 0 errors. The whole check took 12 min 7 s.
+
+No frame-time or draw-call measurement changes, and none was re-measured:
+- A wrapped message is still one label, and the message labels keep the HUD's batching rules
+  (`test_hud_layout`).
+- The turned Greywood shrine and the lowered fourth bell (3 m lower) add no mesh.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
