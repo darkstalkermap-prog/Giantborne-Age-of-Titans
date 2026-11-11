@@ -173,6 +173,11 @@ func test_copies_spawn_with_decaying_kill_xp_and_leave_when_the_giant_leaves() -
 	assert_true(bool(near.ok), "a copy in the giant's own chunk")
 	await step_ticks(3)
 	assert_eq(d.p37_living(str(near.copy)).size(), 2, "in the world")
+	# The director's own check (every CHECK_TICKS of Sim.tick) drops a copy the giant left: the two ticks
+	# below must not hold one, or the put-back state is gone before it is read (whether they did hung on
+	# the ticks every earlier suite ran).
+	while (Sim.tick + 1) % WanderDirector.CHECK_TICKS == 0 or (Sim.tick + 2) % WanderDirector.CHECK_TICKS == 0:
+		await step_ticks(1)
 	F.move_giant(_root, 96.0, 16.0)
 	await step_ticks(2)
 	assert_false(_root.streamer.is_loaded(d.encounter_chunk(str(near.copy))), "its chunk unloaded")
