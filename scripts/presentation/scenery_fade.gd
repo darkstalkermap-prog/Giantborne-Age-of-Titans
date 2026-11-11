@@ -15,7 +15,9 @@ extends RefCounted
 ## The camera rig sets the three global shader parameters (declared in project.godot,
 ## shader_globals) every frame through set_view() and clears them when it leaves (clear()); w = 0
 ## switches a part off. fade_at() is the shader's rule on the CPU (tests: TreeSight); keep the
-## shader's constants equal to these.
+## shader's constants equal to these. test_scenery_fade holds the two to one rule: it runs the shader's
+## own text on the CPU (tests/support/shader_rule.gd) against fade_at() and discarded_share() - its
+## constants, its global uniforms, the fade round random views and its dither.
 ##
 ## Why a fade and not the camera's obstruction probe: in the Greywood the pines stand 9 m apart and
 ## their crowns are 5-9 m wide from 0.5 m up, so a stage-4 camera 12-20 m behind the giant always has
