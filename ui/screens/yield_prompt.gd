@@ -8,9 +8,10 @@ extends DialogueScreen
 ##   * a header names who yields ("HARROK YIELDS");
 ##   * the number keys never choose here (1-4 are the ability keys) and the choices carry no numbers;
 ##   * a line's choices arm only once every button has been let go for ARM_S - nothing held (keys,
-##     mouse buttons, pad buttons, triggers and sticks past their dead zones) and nothing pressed or
-##     released meanwhile - after the prompt opens and after every change of line: a fight that goes
-##     on (mashed keys or buttons, a held trigger, a held mouse button) never arms it;
+##     mouse buttons, pad buttons, triggers and sticks AXIS_TOUCH or more from rest) and nothing pressed
+##     or released meanwhile - after the prompt opens and after every change of line: a fight that goes
+##     on (mashed keys or buttons, a held trigger, a held mouse button) never arms it; a stick resting
+##     under AXIS_TOUCH (a pad's drift) is not touching (M8 gate fix-up 1: touching_now());
 ##   * on a line that decides (the Spare / Strike line and the confirm line) a choice is taken by
 ##     HOLDING it for HOLD_S - pad A, Enter or the mouse button held on it, a fill showing the hold - so
 ##     no tap decides; letting go early, moving the focus or the mouse off it cancels the hold;
@@ -47,6 +48,8 @@ var _hold_index := -1
 var _hold_since_ms := 0
 var _fills: Dictionary = {}   ## choice index -> its hold fill (ColorRect)
 var _hint_key := ""
+## Keys pressed while the prompt is open and not let go yet (physical keycodes; touching_now()).
+var _held_keys: Dictionary = {}
 
 
 func _ready() -> void:
@@ -66,6 +69,7 @@ func _ready() -> void:
 
 
 func on_open() -> void:
+	_held_keys.clear()
 	boss_name = str(args.get("name", ""))
 	if _header != null:
 		_header.text = ("%s yields" % boss_name).to_upper() if boss_name != "" else "YIELDS"
@@ -133,15 +137,76 @@ static func touches_controls(event: InputEvent) -> bool:
 ## Every event reaches this first (the screen runs while the game is paused): while the line is not
 ## armed, touching the controls starts the quiet time again.
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and not (event as InputEventKey).echo:
+		var k := _key_of(event as InputEventKey)
+		if (event as InputEventKey).pressed:
+			_held_keys[k] = true
+		else:
+			_held_keys.erase(k)
 	if is_open() and not _armed and touches_controls(event):
 		_quiet_since_ms = now_ms()
+
+
+## M8 gate fix-up 1 (N3.1): whether the controls are touched now, by touches_controls()'s rule - a key, a
+## mouse button or a pad button held, or a stick or trigger AXIS_TOUCH or more from rest. The arming read
+## Input.is_anything_pressed(), which also counts every InputMap action past its own dead zone - move and
+## look at 0.2 (data/input/default_bindings.json) - so a pad whose stick rested between 0.2 and 0.5 (a
+## little drift, even with the keyboard in use) held the quiet time back for good: the prompt never armed,
+## and Esc never closes it undecided. An action pressed by a key held since before the prompt opened
+## still counts (its key is held), and so does anything held that no action names.
+func touching_now() -> bool:
+	if not Input.is_anything_pressed():
+		return false
+	if Input.get_mouse_button_mask() != 0:
+		return true
+	for k: int in _held_keys.keys():
+		if Input.is_physical_key_pressed(k) or Input.is_key_pressed(k):
+			return true
+		_held_keys.erase(k)   # let go while the prompt did not hear it
+	for device in _pads():
+		for axis in JOY_AXIS_MAX:
+			if absf(Input.get_joy_axis(device, axis)) >= AXIS_TOUCH:
+				return true
+		for b in JOY_BUTTON_MAX:
+			if Input.is_joy_button_pressed(device, b):
+				return true
+	# What is left is the InputMap's actions (and keys held from before the prompt): an action pressed by
+	# a key is a key held; one pressed only by a stick or trigger under AXIS_TOUCH is resting.
+	var any_action := false
+	for action: StringName in InputMap.get_actions():
+		if not Input.is_action_pressed(action):
+			continue
+		any_action = true
+		for e: InputEvent in InputMap.action_get_events(action):
+			if e is InputEventKey and _key_held(e as InputEventKey):
+				return true
+	return not any_action   # held, but by nothing an action names (a key or button no action uses)
+
+
+## The pads to read: the connected ones, and device 0 (where a pad's events come from when the engine
+## lists none - tests that inject them).
+static func _pads() -> Array:
+	var out: Array = Input.get_connected_joypads()
+	if not out.has(0):
+		out.append(0)
+	return out
+
+
+static func _key_of(e: InputEventKey) -> int:
+	return int(e.physical_keycode) if e.physical_keycode != KEY_NONE else int(e.keycode)
+
+
+static func _key_held(e: InputEventKey) -> bool:
+	if e.physical_keycode != KEY_NONE:
+		return Input.is_physical_key_pressed(e.physical_keycode)
+	return e.keycode != KEY_NONE and Input.is_key_pressed(e.keycode)
 
 
 func _process(_delta: float) -> void:
 	if not is_open():
 		return
 	if not _armed:
-		if Input.is_anything_pressed():
+		if touching_now():
 			_quiet_since_ms = now_ms()
 		elif now_ms() - _quiet_since_ms >= int(ARM_S * 1000.0) and session != null and session.is_active():
 			_arm()
