@@ -17,7 +17,12 @@ extends IntegrationSuite
 ##     the crown's flags struck at the toll fort, the forge open;
 ##   * from a "help" save (Brannock's banner, the march's oath won by help) the giant walks the real world
 ##     up to Fort Aldmere's gate and stands there: its garrison stands down and no blow, bolt or arrow of
-##     the fort touches the giant.
+##     the fort touches the giant;
+##   * M8 gate (F39): the breach (Corvane spared) and the sabotage won by a giant that never met the
+##     herald - the fort found on the road, the engines found through the deserters' marks - complete
+##     quest.oath_crown and pay its resolution once (750 XP, the level-9 floor, 1 titan iron and 2 iron):
+##     the battle and the ridge, which write the oath, write oath.crown.met with it, as Edda's and
+##     Sedge's resolutions do. Before, the oath quest stayed on "Meet Aldmere's herald" for good.
 
 const START_CP := "world.cp.kingsgate_shelf"
 const MAIN := "quest.world_main"
@@ -36,6 +41,8 @@ const SCENE := "res://scenes/world/world.tscn"
 
 
 func after_each() -> void:
+	if Events.xp_award_requested.is_connected(_on_xp):
+		Events.xp_award_requested.disconnect(_on_xp)
 	Quests.end_dialogue()
 	for f in Formation.live():
 		f.dissolve()
@@ -151,8 +158,9 @@ func _sworn(p: GiantPlayer, outcome: String) -> void:
 		"the stage-5 shrines open after the first oath")
 
 
-func _breach(p: GiantPlayer) -> FortBattle:
-	await _meet_the_herald()
+func _breach(p: GiantPlayer, meet := true) -> FortBattle:
+	if meet:
+		await _meet_the_herald()
 	var part := _part(FORT_PART)
 	await step_ticks(2)
 	var gate := _find(part, GATE)
@@ -224,6 +232,84 @@ func test_sabotage_as_the_first_oath() -> void:
 	await _sworn(p, "sabotage")
 	assert_true(QuestConditions.truthy(WorldState.get_flag("world.aldmere.army_withdrawn")), "the army withdraws")
 	assert_eq(Quests.stage_of("quest.war_engines"), "ridge", "Ballista Ridge's three ballistae were its last stage")
+
+
+# --------------------------------------------------------------------------- M8 gate (F39): no herald met
+
+var _xp: Array = []
+
+
+func _on_xp(amount: int, source: String) -> void:
+	_xp.append([amount, source])
+
+
+## The XP the crown's oath quest paid, by source ("quest:quest.oath_crown:<stage>" -> XP).
+func _crown_xp() -> Dictionary:
+	var out := {}
+	for a: Array in _xp:
+		if str(a[1]).begins_with("quest:" + CROWN + ":"):
+			out[str(a[1])] = int(out.get(str(a[1]), 0)) + int(a[0])
+	return out
+
+
+## The oath won without meeting the herald first: quest.oath_crown completes, its resolution paid once.
+func _sworn_without_the_herald(p: GiantPlayer, outcome: String, titan_before: int, iron_before: int) -> void:
+	await _sworn(p, outcome)
+	assert_eq(Quests.stage_of(CROWN), "resolve", "its resolve stage paid (not left on 'meet')")
+	assert_eq(_crown_xp(), {"quest:%s:meet" % CROWN: 50, "quest:%s:resolve" % CROWN: 750},
+		"the oath quest pays 50 and 750 XP once")
+	assert_eq(WorldItems.count(WorldState.inventory, WorldItems.TITAN_IRON) - titan_before, 1, "the oath's titan iron, once")
+	assert_true(WorldItems.count(WorldState.inventory, WorldItems.IRON) - iron_before >= 2, "the oath's 2 iron")
+	var objs := Quests.objectives().filter(func(o: Dictionary) -> bool: return str(o.quest_id) == CROWN)
+	assert_eq(objs, [], "no 'Meet Aldmere's herald' objective is left in the tracker")
+	var h := Quests.start_dialogue("dialogue.herald", "world.aldmere.herald")
+	assert_eq(str(h.node().get("id", "")) if h != null else "", "sworn_" + outcome, "the herald speaks of the oath sworn")
+	Quests.end_dialogue()
+
+
+func test_breach_without_meeting_the_herald() -> void:
+	var p := await _opening()
+	_xp.clear()
+	Events.xp_award_requested.connect(_on_xp)
+	var titan := WorldItems.count(WorldState.inventory, WorldItems.TITAN_IRON)
+	var iron := WorldItems.count(WorldState.inventory, WorldItems.IRON)
+	var battle := await _breach(p, false)
+	assert_false(QuestConditions.truthy(WorldState.get_flag("oath.crown.met")), "the herald was never met")
+	if battle != null:
+		WorldState.set_flag("boss.corvane.outcome", "spared")
+		battle.p34_on_yield_decided(CORVANE, "spare")
+		await _settle()
+		await _settle()
+		await _sworn_without_the_herald(p, "breach", titan, iron)
+	Events.xp_award_requested.disconnect(_on_xp)
+
+
+func test_sabotage_without_meeting_the_herald() -> void:
+	var p := await _opening()
+	_xp.clear()
+	Events.xp_award_requested.connect(_on_xp)
+	# Sergeant Wynn spared: the engines marked, the war engines' errand in the journal - the herald never met
+	var d := Quests.start_dialogue("dialogue.deserters", "world.aldmere.deserter_wynn")
+	assert_true(d != null and d.find_choice("spare") >= 0, "Wynn can be spared")
+	if d != null:
+		d.choose_outcome("spare")
+	Quests.end_dialogue()
+	await _settle()
+	assert_eq(Quests.quest_state("quest.war_engines"), Quests.ACTIVE, "the war engines' errand is in the journal")
+	var titan := WorldItems.count(WorldState.inventory, WorldItems.TITAN_IRON)
+	var iron := WorldItems.count(WorldState.inventory, WorldItems.IRON)
+	assert_false(QuestConditions.truthy(WorldState.get_flag("oath.crown.met")), "the herald was never met")
+	for path: String in ENGINE_PARTS:
+		_part(path)
+	await step_ticks(2)
+	for id: String in ENGINES:
+		assert_true(await _break(p, id), "%s is broken" % id)
+		await step_ticks(1)
+	await _settle()
+	await _settle()
+	assert_eq(Quests.quest_state("quest.war_engines"), Quests.COMPLETED, "the war engines are wrecked")
+	await _sworn_without_the_herald(p, "sabotage", titan, iron)
+	Events.xp_award_requested.disconnect(_on_xp)
 
 
 ## The herald accepts the parley on `token`, then Corvane swears at the horn.

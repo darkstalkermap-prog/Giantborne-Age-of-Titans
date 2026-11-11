@@ -1,0 +1,204 @@
+{
+	"build_version": "0.7.0-m7",
+	"character": {
+		"ancestry": "ancestry.neutral",
+		"ancestry_chosen": false,
+		"attributes": {
+			"constitution": 10,
+			"dexterity": 10,
+			"endurance": 10,
+			"intellect": 10,
+			"strength": 10,
+			"willpower": 10
+		},
+		"definition_id": "player.giant",
+		"growth_stage": 4,
+		"id": "char.valley_1",
+		"known_abilities": [
+			"ability.titan_stomp",
+			"ability.heavy_footfall",
+			"ability.sweeping_blow",
+			"ability.stone_skin",
+			"ability.crushing_grip",
+			"ability.crag_hurl",
+			"ability.boulder_hurl",
+			"ability.runic_bolt",
+			"ability.ancestral_mend",
+			"ability.thunder_roar",
+			"ability.titan_surge"
+		],
+		"level": 8,
+		"level_exempt": [],
+		"loadout": {
+			"slots": [
+				"ability.titan_stomp",
+				"ability.sweeping_blow",
+				"ability.stone_skin",
+				"ability.crushing_grip",
+				"ability.crag_hurl",
+				"ability.runic_bolt",
+				"ability.ancestral_mend",
+				"ability.thunder_roar"
+			],
+			"ultimate": "ability.titan_surge"
+		},
+		"resources": {
+			"essence": 100.0,
+			"fury": 0.0,
+			"health": 950.0,
+			"stamina": 130.0
+		},
+		"talent_points": 7,
+		"talents": [],
+		"unspent_attribute_points": 21,
+		"weapon": "weapon.club",
+		"weapons_owned": [
+			"weapon.club"
+		],
+		"xp": 1780
+	},
+	"checkpoint": {
+		"position": [
+			470.0,
+			34.5099983215332,
+			60.0
+		],
+		"reason": "waystone",
+		"respawn": "world.cp.aldmere_road",
+		"yaw": -0.698131678143339
+	},
+	"level": "level.world",
+	"progress": {
+		"levels_visited": [
+			"level.world"
+		],
+		"prologue_complete": true,
+		"tracked_quest": "",
+		"world_entered": true
+	},
+	"saved_at_unix": 1794414167,
+	"schema_version": 2,
+	"slot": "valley_1",
+	"stats": {
+		"checkpoint_loads": 0,
+		"deaths": 0,
+		"play_time_s": 2.36666666666666
+	},
+	"world": {
+		"deltas": {
+			"world.aldmere.camp_ballista_1": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.aldmere.camp_ballista_2": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.aldmere.camp_catapult_1": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.aldmere.camp_catapult_2": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.aldmere.ridge_ballista_1": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.aldmere.ridge_ballista_2": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.aldmere.ridge_ballista_3": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			}
+		},
+		"flags": {
+			"dialogue.deserters.outcome.spare": true,
+			"encounter.crownmarch_kingsgate_scouts.cleared": true,
+			"faction.aldmere.hostile": true,
+			"faction.aldmere.warned": true,
+			"faction.village.hostile": true,
+			"oath.crown.done": true,
+			"oath.crown.outcome": "sabotage",
+			"oath.crown.token_deserters": true,
+			"progress.world_entered": true,
+			"quest.ancestry.stage": "choose",
+			"quest.main.done": true,
+			"quest.main.stage": "crown",
+			"quest.oath_crown.stage": "meet",
+			"quest.oath_march.stage": "meet",
+			"quest.oath_wood.stage": "meet",
+			"quest.sealed_citadel.stage": "breach",
+			"quest.sunken_vault.stage": "heave",
+			"quest.tutorial.done": true,
+			"quest.tutorial.stage": "spar",
+			"quest.village.done": true,
+			"quest.village.outcome": "force",
+			"quest.village.stage": "resolve",
+			"quest.war_engines.done": true,
+			"quest.war_engines.stage": "ridge",
+			"quest.world_main.stage": "oaths",
+			"reward.deserters.spared": true,
+			"reward.war_engines.camp": true,
+			"reward.war_engines.ridge": true,
+			"reward.world_main.beacon": true,
+			"reward.world_main.grow4": true,
+			"reward.world_main.kings_door": true,
+			"slice.completed": true,
+			"slice.crown_claimed": true,
+			"tutorial.attributes.done": true,
+			"tutorial.attributes.seen": true,
+			"tutorial.block.done": true,
+			"tutorial.block.seen": true,
+			"tutorial.boss_charge.done": true,
+			"tutorial.boss_charge.seen": true,
+			"tutorial.camera.done": true,
+			"tutorial.camera.seen": true,
+			"tutorial.dodge.done": true,
+			"tutorial.dodge.seen": true,
+			"tutorial.footfall.done": true,
+			"tutorial.footfall.seen": true,
+			"tutorial.grab.done": true,
+			"tutorial.grab.seen": true,
+			"tutorial.heavy.done": true,
+			"tutorial.heavy.seen": true,
+			"tutorial.hurl.done": true,
+			"tutorial.hurl.seen": true,
+			"tutorial.light.done": true,
+			"tutorial.light.seen": true,
+			"tutorial.lock.done": true,
+			"tutorial.lock.seen": true,
+			"tutorial.shrine.seen": true,
+			"tutorial.soldier_guard.done": true,
+			"tutorial.soldier_guard.seen": true,
+			"world.aldmere.army_withdrawn": true,
+			"world.aldmere.deserters_fate": "spared",
+			"world.aldmere.deserters_met": true,
+			"world.aldmere.engines_marked": true,
+			"world.kingsgate.lit": true,
+			"world.ogre_king.defeated": true
+		},
+		"inventory": {
+			"item.iron_ingot": 2,
+			"item.ogre_tusk": 1
+		},
+		"schema_version": 2
+	}
+}
