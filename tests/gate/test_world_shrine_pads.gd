@@ -7,6 +7,11 @@ extends IntegrationSuite
 ## stage-5 capsule is 2.9 m across the radius: "Not enough room to grow here", blocker Batch4); its
 ## pad now faces the open side of the clearing. Also: the stage-5 capsule fits where each shrine's
 ## SpawnPoint puts a giant that respawns there.
+## M8 gate fix-up 1 (F4 in the real game): growth is checked where the giant stands, and pines of the
+## Greywood clearing (FOLLOWUPS: the builder's no-scenery grid) left 7 of 24 spots within the shrine's reach
+## without room - the F47 run was refused twice there. A giant using a shrine whose spot has no room now grows
+## on the shrine's pad (PlayerGrowth.shrine_clearance / pad_with_room): from every spot within reach of every
+## world shrine the shrine's stage has room, and at the F47 run's spots the giant grows, on the pad.
 
 const SCENE := "res://scenes/world/world.tscn"
 const REGIONS := ["crownmarch", "greywood", "drowned_steps", "aldmere", "stonehold"]
@@ -81,3 +86,84 @@ func test_every_world_shrine_pad_has_room_for_the_stage_it_grants() -> void:
 					r.get("reason", ""), r.get("blocker", "")])
 			p.process_mode = Node.PROCESS_MODE_DISABLED
 	assert_eq(refused, PackedStringArray(), "every world shrine's pad has room for the stage it grants")
+
+
+## The F47 reviewer's three spots at the Greywood shrine (grove2.log: refused at the first two - blockers
+## Batch4 and Batch8 - grown at the third).
+const F47_SPOTS := [Vector3(-542.4, 26.0, 104.6), Vector3(-534.2, 25.8, 108.7), Vector3(-535.4, 25.7, 113.4)]
+
+
+func _ground_y(at: Vector3) -> float:
+	var space := (w as Node3D).get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(Vector3(at.x, 400.0, at.z), Vector3(at.x, -100.0, at.z))
+	q.collision_mask = 1
+	var hit := space.intersect_ray(q)
+	return float((hit.position as Vector3).y) if not hit.is_empty() else at.y
+
+
+func _stand(p: GiantPlayer, spot: Vector3) -> void:
+	p.global_position = Vector3(spot.x, _ground_y(spot) + 0.05, spot.z)
+	p.velocity = Vector3.ZERO
+	p.process_mode = Node.PROCESS_MODE_INHERIT
+	await step_ticks(3)
+	p.process_mode = Node.PROCESS_MODE_DISABLED
+
+
+func test_a_giant_using_a_shrine_grows_from_anywhere_within_its_reach() -> void:
+	w = (load(SCENE) as PackedScene).instantiate() as WorldRoot
+	world.add_child(w)
+	w.streamer.deterministic = true
+	var p := w.player()
+	p.router.use_injection = true
+	p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+	WorldState.set_flag("world.kingsgate.lit", true)
+	for f: String in ["oath.march.done", "oath.crown.done"]:
+		WorldState.set_flag(f, true)
+	var no_room := PackedStringArray()
+	var stepped := 0
+	for s: Dictionary in world_shrines():
+		var stage := int(GameData.get_record(str(s.record)).get("max_stage", 0))
+		var at := Vector3((s.pos as Vector2).x, 200.0, (s.pos as Vector2).y)
+		p.process_mode = Node.PROCESS_MODE_DISABLED
+		p.global_position = at
+		var guard := 0
+		while not w.streamer.ring_ready(at) and guard < 900:
+			w.streamer.load_ring_slice(at)
+			await step_ticks(1)
+			guard += 1
+		await step_ticks(20)
+		var node := _shrine_node(str(s.id))
+		if node == null:
+			no_room.append("%s not loaded" % s.id)
+			continue
+		var prof := _profile_of_stage(stage)
+		p.set_profile(_profile_of_stage(stage - 1))
+		var reach := node.radius_m + float(p.profile.get("capsule_radius_m", 1.0))
+		for ring: float in [reach * 0.7, reach]:
+			for k in 12:
+				var a := TAU * k / 12.0
+				await _stand(p, node.global_position + Vector3(cos(a), 0, sin(a)) * ring)
+				var r: Dictionary = p.growth.shrine_clearance(prof, node)
+				if not bool(r.ok):
+					no_room.append("%s at %.1f m, %d deg: %s" % [s.id, ring, k * 30, r.get("blocker", r.get("reason", ""))])
+				elif (r.get("step_to", Vector3.INF) as Vector3).is_finite():
+					stepped += 1
+		if str(s.id) == "world.shrine.greywood":
+			for spot: Vector3 in F47_SPOTS:
+				p.set_profile(_profile_of_stage(stage - 1))
+				p.global_position = Vector3(spot.x, _ground_y(spot) + 0.05, spot.z)
+				p.velocity = Vector3.ZERO
+				p.process_mode = Node.PROCESS_MODE_INHERIT
+				await step_ticks(10)
+				var before: Dictionary = p.growth.check_clearance(prof)
+				var g: Dictionary = node.grow(p, stage)
+				await step_ticks(2)
+				p.process_mode = Node.PROCESS_MODE_DISABLED
+				assert_true(bool(g.ok), "at the F47 spot %s the giant grows to stage %d (%s)" % [spot, stage, g.get("message", "")])
+				if not bool(before.ok):
+					var pad := node.growth_pad_position()
+					assert_true(Vector2(p.global_position.x - pad.x, p.global_position.z - pad.z).length() < 0.5,
+						"its own spot had no room (%s): it grew on the shrine's pad" % before.get("blocker", ""))
+	assert_eq(no_room, PackedStringArray(), "from every spot within a world shrine's reach the giant has room to grow")
+	assert_true(stepped > 0, "some spots (the Greywood clearing's) grow on the pad (%d)" % stepped)
+

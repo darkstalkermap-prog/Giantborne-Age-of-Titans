@@ -7,7 +7,9 @@ extends IntegrationSuite
 ## answered on purpose with the pad, the keyboard and the mouse: "No - let me think again" comes first
 ## on the confirm line, and every choice of a deciding line is held, never tapped. The full matrix
 ## (every order of keys 1-4 and of the face buttons, both bosses, wall-clock mashes) is
-## tests/slow/test_yield_prompt_mashing.gd.
+## tests/slow/test_yield_prompt_mashing.gd. M8 gate fix-up 1 (N3.1): a stick resting between the move and
+## look actions' dead zone (0.2) and the prompt's touch threshold (AXIS_TOUCH, 0.5) - a pad's drift - is
+## not touching the controls: the prompt arms, while a key held from before it opened still holds it.
 
 const CORVANE := "res://scenes/enemies/corvane.tscn"
 const HARROK := "res://scenes/enemies/harrok.tscn"
@@ -109,6 +111,35 @@ func test_a_trigger_held_as_it_opens_keeps_it_unarmed_until_let_go() -> void:
 	await io.wait_ms(350)
 	assert_true(p.armed(), "0.85 s after letting go: armed")
 	assert_eq(_focused(p), "Spare him. The duel is won.", "the focus starts on Spare")
+
+
+func test_a_drifting_stick_does_not_keep_it_unarmed() -> void:
+	var h := await _boss(HARROK, "test.harrok")
+	var p := await _yield(h)
+	await io.axis(JOY_AXIS_LEFT_X, 0.3)   # the left stick at rest a little off centre (drift)
+	await io.axis(JOY_AXIS_RIGHT_Y, -0.25)
+	assert_true(Input.is_action_pressed("move_right"), "past move_right's own dead zone (0.2)")
+	assert_false(p.touching_now(), "but under the prompt's touch threshold: not touching")
+	await io.wait_ms(int(YieldPrompt.ARM_S * 1000.0) + 100)
+	assert_true(p.armed(), "armed with the stick drifting at 0.3 (%s)" % p.hint_text())
+	assert_eq(_focused(p), "Spare him. The duel is won.", "the focus starts on Spare")
+	# A stick pushed past AXIS_TOUCH on a new line still touches the controls.
+	await io.axis(JOY_AXIS_LEFT_X, 0.8)
+	assert_true(p.touching_now(), "a stick pushed to 0.8 touches the controls")
+	await io.axis(JOY_AXIS_LEFT_X, 0.3)
+
+
+func test_a_key_held_from_before_it_opened_keeps_it_unarmed() -> void:
+	var h := await _boss(HARROK, "test.harrok")
+	await io.key_down(KEY_W)   # walking into the yield
+	var p := await _yield(h)
+	await io.axis(JOY_AXIS_LEFT_X, 0.3)
+	await io.wait_ms(1500)
+	assert_true(p.touching_now(), "W held since before the prompt opened touches the controls")
+	assert_false(p.armed(), "W held for 1.5 s (a drifting stick too): not armed")
+	await io.key_up(KEY_W)
+	await io.wait_ms(int(YieldPrompt.ARM_S * 1000.0) + 100)
+	assert_true(p.armed(), "let go: armed")
 
 
 func test_answered_on_purpose_with_the_pad() -> void:

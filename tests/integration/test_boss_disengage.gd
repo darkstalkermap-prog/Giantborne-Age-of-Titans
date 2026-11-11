@@ -4,7 +4,9 @@ extends IntegrationSuite
 ## home at full health in her first phase, the whelps her roar called go, Events.boss_disengaged(left)
 ## and the music back to the zone - and entering again starts a new attempt in which each phase happens
 ## once more, exactly once. Stepping out and back in before the time runs out changes nothing. (The
-## default tier shortens the 5 s to 0.25 s; the slow battery waits the full 5 s.)
+## default tier shortens the 5 s to 0.25 s; the slow battery waits the full 5 s.) M8 gate fix-up 1 (N4.6): the
+## boss's own talker beyond the line (the Moot's challenge stone) is the fight's ground: answering it warns
+## nothing and resets nothing; beyond its reach the rule holds.
 
 const DEN := "res://scenes/test/troll_den_test.tscn"
 const BB := preload("res://tools/builders/big.gd")
@@ -155,3 +157,84 @@ func test_leaving_warns_the_giant_and_the_reset_tells_it() -> void:
 	assert_true(texts.has("The Iron Regiment will regroup unless you turn back."), "the battle's warning (%s)" % [texts])
 	assert_true(texts.has("The Iron Regiment regrouped: you left the battle."), "and its reset line")
 	Events.hud_message.disconnect(on_message)
+
+
+## M8 gate fix-up 1 (N4.6, the audit's play pass: Harrok engages as the giant enters the Moot, and his
+## challenge stone stands 95.8 m from the ring's centre, beyond the 80 m line - answering it warned "will
+## recover unless you turn back"). A talker naming the boss, 60 m out (beyond radius + 20 m = 50 m).
+func test_the_bosss_own_talker_beyond_the_line_is_the_fights_ground() -> void:
+	var lines: Array = []
+	var on_message := func(text: String, kind: String) -> void: lines.append([text, kind])
+	Events.hud_message.connect(on_message)
+	level = (load(DEN) as PackedScene).instantiate() as Node3D
+	world.add_child(level)
+	var p := level.get_node("Player") as GiantPlayer
+	p.router.use_injection = true
+	await step_ticks(2)
+	var arena := level.get_node("BossArena") as BossArena
+	arena.disengage_s = 0.5
+	var stone := NpcTalker.new()
+	stone.npc_id = arena.boss_id
+	stone.radius_m = 10.0
+	stone.position = Vector3(0, 0, 70)
+	level.add_child(stone)
+	var other := NpcTalker.new()
+	other.npc_id = "test.someone_else"
+	other.radius_m = 10.0
+	other.position = Vector3(40, 0, 70)
+	level.add_child(other)
+	p.global_position = Vector3(0, 0.05, 20)
+	arena.engage()
+	await step_ticks(2)
+	lines.clear()
+	p.global_position = Vector3(0, 0.05, 62)   # 62 m out: beyond the line, within the stone's reach
+	assert_true(arena.outside_m(p.global_position) > arena.disengage_margin_m, "beyond the disengage line")
+	assert_true(arena.at_boss_talker(p), "at the boss's own talker")
+	await step_ticks(60)
+	assert_eq(lines, [], "answering the boss's challenge warns nothing")
+	assert_true(arena.is_engaged() and gone.is_empty(), "and resets nothing")
+	p.global_position = Vector3(40, 0.05, 62)   # another's talker out there is no ground of the fight
+	assert_false(arena.at_boss_talker(p), "another npc's talker is not the boss's")
+	await step_ticks(6)
+	assert_eq(lines, [["The Troll Matriarch will recover unless you turn back.", "warn"]], "it warns there")
+	await step_ticks(40)
+	assert_eq(gone, [[BB.DEN_ID, "left"]], "and the attempt resets")
+	Events.hud_message.disconnect(on_message)
+
+
+## M8 gate fix-up 1 (N4.5, the audit's play pass: the Iron Regiment's portcullis traps the giant in the
+## bailey - P36 shuts it on purpose - and nothing said so; its leaving lines were reached only by a teleport
+## out). Engaging the battle behind its gate tells the giant at once that there is no way out until it ends.
+func test_a_battle_behind_its_gate_says_there_is_no_way_out() -> void:
+	var lines: Array = []
+	var on_message := func(text: String, kind: String) -> void: lines.append([text, kind])
+	Events.hud_message.connect(on_message)
+	var bailey := (load("res://scenes/test/bailey_test.tscn") as PackedScene).instantiate() as Node3D
+	# The test bailey has no gate; give it the portcullis Fort Aldmere's battle shuts (a body and its shape,
+	# where the battle's gate_path looks).
+	var portcullis := StaticBody3D.new()
+	portcullis.name = "ArenaGate"
+	var shape := CollisionShape3D.new()
+	shape.name = "Shape"
+	var box := BoxShape3D.new()
+	box.size = Vector3(18, 13, 2)
+	shape.shape = box
+	portcullis.add_child(shape)
+	portcullis.position = Vector3(0, 6.5, 60)
+	bailey.add_child(portcullis)
+	(bailey.get_node("BattleBoss") as BattleBoss).gate_path = ^"../ArenaGate"   # Fort Aldmere's battle's default
+	world.add_child(bailey)
+	await step_ticks(2)
+	var bp := bailey.get_node("Player") as GiantPlayer
+	bp.router.use_injection = true
+	var battle := bailey.get_node("BattleBoss") as BattleBoss
+	assert_true(battle.gate != null, "the bailey's gate")
+	bp.global_position = Vector3(0, 0.05, 30)
+	lines.clear()
+	battle.engage()
+	await step_ticks(2)
+	assert_true(battle.is_gate_closed(), "the portcullis is down")
+	assert_true(lines.has(["The portcullis drops behind you: no way out until The Iron Regiment is beaten.", "warn"]),
+		"and the giant is told (%s)" % [lines])
+	Events.hud_message.disconnect(on_message)
+

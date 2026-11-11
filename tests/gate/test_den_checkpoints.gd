@@ -8,6 +8,10 @@ extends IntegrationSuite
 ##     for the exit and flees (boss_disengaged "fled", the arena DEFEATED) - and a checkpoint is taken
 ##     the same way, with no boss_defeated (no victory cue); a death right after reloads the drive-out:
 ##     her outcome, the burned nests and the open wall stay.
+## M8 gate fix-up 1 (F38 in the real game): both endings again with two den whelps aware 10 m from the
+## giant - an aware enemy within 40 m holds an ordinary checkpoint back, and the den's brood stays
+## aware after the Matriarch's end - so the slay and the drive-out are completion requests: taken at
+## once with the whelps about, and a death to the whelps reloads the ending.
 
 const START_CP := "world.cp.hollowmere"
 const DEN_PARTS := ["res://scenes/world/chunks/c0_2_0.tscn", "res://scenes/world/chunks/c1_2_0.tscn"]
@@ -181,3 +185,90 @@ func test_the_drive_out_takes_a_checkpoint_that_a_death_reloads() -> void:
 	assert_eq(str(WorldState.get_flag("boss.matriarch.outcome")), "fled", "after a death her outcome stays fled")
 	assert_true(QuestConditions.truthy(WorldState.get_flag("world.troll_den.nests_burned")), "the nests stay burned")
 	assert_true(QuestConditions.truthy(WorldState.get_flag("world.troll_den.wall_open")), "the wall stays open")
+
+
+func _whelp(id: String, at: Vector3) -> EnemyActor:
+	var rec := GameData.get_record("enemy.troll_whelp")
+	var w := (load(str(rec.scene)) as PackedScene).instantiate() as EnemyActor
+	w.set("entity_id", id)
+	w.position = at
+	world.add_child(w)
+	await step_ticks(2)
+	return w
+
+
+## The slay (drive false) or the drive-out with two whelps aware beside the giant: the ending's
+## checkpoint is taken although they still block an ordinary one, and a death reloads the ending.
+func _ending_with_whelps(drive: bool) -> void:
+	var p := await _start(4)
+	_den()
+	await step_ticks(2)
+	var arena := _arena()
+	assert_true(arena != null, "the den's arena is in its props part")
+	if drive:
+		for b: String in BRAZIERS:
+			assert_true(await _strike(p, b), "%s smashed" % b)
+			await step_ticks(3)
+		await step_ticks(ActionDef.seconds_to_ticks(20.5))
+		assert_true(QuestConditions.truthy(WorldState.get_flag("world.troll_den.wall_open")), "the woodfolk opened the wall")
+	var m := await _matriarch()
+	var whelps := ["test.den.whelp_1", "test.den.whelp_2"]
+	await _whelp(whelps[0], Vector3(8, 0.05, 6))
+	await _whelp(whelps[1], Vector3(-8, 0.05, 6))
+	await step_ticks(60)
+	for id: String in whelps:
+		assert_true(GameSession.checkpoint_blockers().has("aware:%s" % id), "%s is aware within 40 m" % id)
+	_saved.clear()
+	_defeated.clear()
+	var reason := "boss_fled" if drive else "boss_defeated"
+	if drive:
+		var pools := m.entity.combatant.pools
+		pools.health = pools.health_max * 0.55
+		await step_ticks(2)
+		assert_true(m.is_fleeing(), "below 60 % she runs")
+		m.global_position = m.exit_point() + Vector3(0, 0.05, 1.0)
+		await step_ticks(3)
+		assert_eq(WorldState.get_flag("boss.matriarch.outcome"), "fled", "fled")
+	else:
+		var h := HitEvent.new()
+		h.tick = Sim.tick
+		h.instance_id = Sim.new_instance_id()
+		h.attacker_id = p.entity.entity_id
+		h.target_id = MATRIARCH
+		h.power = 99999.0
+		h.attacker_stat = 40.0
+		h.attacker_height_m = 11.0
+		h.damage_split = {"physical": 1.0}
+		h.tags = PackedStringArray(["Melee", "Unblockable", "Unparryable"])
+		h.category = "melee"
+		h.attacker_growth_stage = 4
+		h.attacker_position = m.global_position + Vector3(0, 0, 6)
+		Sim.queue_hit(h)
+		await step_ticks(3)
+		assert_eq(WorldState.get_flag("boss.matriarch.outcome"), "slain", "slain")
+	assert_true(arena.is_defeated(), "the arena is won")
+	await step_ticks(10)
+	var still_aware := 0
+	for id: String in whelps:
+		if GameSession.checkpoint_blockers().has("aware:%s" % id):
+			still_aware += 1
+	assert_true(still_aware > 0, "the whelps are still aware beside the giant (%s)" % [GameSession.checkpoint_blockers()])
+	assert_eq(_taken(reason).size(), 1, "the %s takes its checkpoint with the whelps about (%s)" % [
+		"drive-out" if drive else "slay", _saved])
+	assert_true(GameSession.pending_checkpoint().is_empty(), "nothing waits (%s)" % [GameSession.pending_checkpoint()])
+	assert_eq(_defeated.size(), 0 if drive else 1, "boss_defeated only for the slay")
+	# The giant falls to the whelps before they are dealt with: the death reloads the ending.
+	var outcome := "fled" if drive else "slain"
+	GameSession.reload_checkpoint("death")
+	assert_eq(str(WorldState.get_flag("boss.matriarch.outcome", "")), outcome, "after a death her outcome stays %s" % outcome)
+	if drive:
+		assert_true(QuestConditions.truthy(WorldState.get_flag("world.troll_den.nests_burned")), "the nests stay burned")
+		assert_true(QuestConditions.truthy(WorldState.get_flag("world.troll_den.wall_open")), "the wall stays open")
+
+
+func test_the_slay_with_the_whelps_aware_takes_its_checkpoint() -> void:
+	await _ending_with_whelps(false)
+
+
+func test_the_drive_out_with_the_whelps_aware_takes_its_checkpoint() -> void:
+	await _ending_with_whelps(true)

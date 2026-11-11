@@ -16,7 +16,10 @@ extends IntegrationSuite
 ##     Stair's message the Ironway too), the Stair's head reveals 600 m, entering
 ##     the Moot completes its stage, and the champion's three outcomes - spared (his clan reconciled, the
 ##     clans watch the crowning), slain (the Moot empties, his clan stays hostile) and the talk ending (no
-##     fight: the ring stays quiet) - each lets the giant take the Stone Throne.
+##     fight: the ring stays quiet) - each lets the giant take the Stone Throne;
+##   * M8 gate fix-up 1 (N4.6): Harrok's challenge stone stands beyond the Moot's disengage line (95.8 m from
+##     the ring's centre, the line at 80 m), and a stage-6 giant answering it - within its reach on the ring's
+##     side - stands on the fight's ground (BossArena.at_boss_talker): no leaving warning, no reset.
 
 const START_CP := "world.cp.kingsgate_shelf"
 const MAIN := "quest.world_main"
@@ -462,3 +465,43 @@ func test_the_champion_kneels_to_the_talk() -> void:
 	assert_eq(arena.state, BossArena.State.DEFEATED, "the ring stays quiet")
 	assert_true(QuestConditions.truthy(WorldState.get_flag("faction.harrok_clan.reconciled")), "his clan reconciled")
 	await _claim(r[1])
+
+
+## M8 gate fix-up 1 (N4.6): the shipped Moot (c4_1) and the challenge stone (c3_1) at their chunks' places
+## in the world (256 m chunks: c3_1 at (-256, -768), c4_1 at (0, -768)).
+func test_answering_harroks_challenge_stone_is_no_leaving_the_moot() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	p.set_profile(_profile(6))
+	var battery := _part(BATTERY_PART)
+	battery.position = Vector3(-256, 0, -768)
+	var moot := _part(MOOT_PARTS[0])
+	moot.position = Vector3(0, 0, -768)
+	await step_ticks(2)
+	var arena: MootArena = null
+	for n in moot.find_children("*", "", true, false):
+		if n is MootArena:
+			arena = n
+	var stone: NpcTalker = null
+	for n in battery.find_children("*", "", true, false):
+		if n is NpcTalker and (n as NpcTalker).prompt == "Answer Harrok's challenge":
+			stone = n
+	assert_true(arena != null and stone != null, "the Moot's arena and Harrok's challenge stone")
+	if arena == null or stone == null:
+		return
+	assert_eq(stone.resolved_npc_id(), arena.boss_id, "the stone speaks for the arena's boss")
+	var centre := arena.global_position
+	var to_ring := Vector3(centre.x - stone.global_position.x, 0.0, centre.z - stone.global_position.z)
+	assert_true(arena.outside_m(stone.global_position) > arena.disengage_margin_m,
+		"the stone stands beyond the disengage line (%.1f m out)" % arena.outside_m(stone.global_position))
+	var reach := stone.radius_m + float(p.profile.get("capsule_radius_m", 0.0))
+	var nearest := stone.global_position + to_ring.normalized() * (reach - 1.0)
+	assert_true(arena.outside_m(nearest) > arena.disengage_margin_m,
+		"even its reach on the ring's side lies beyond the line (%.1f m out): answering it meant leaving" % arena.outside_m(nearest))
+	# The giant answers from the ring's side of the stone, from its far side and beside it: all within reach.
+	for d: Vector3 in [to_ring.normalized() * (reach - 1.0), -to_ring.normalized() * 2.0,
+			to_ring.normalized().cross(Vector3.UP) * (reach - 1.0)]:
+		p.global_position = Vector3(stone.global_position.x + d.x, 0.05, stone.global_position.z + d.z)
+		assert_true(arena.at_boss_talker(p), "within the stone's reach the giant has not left the fight (%s)" % d)
+	p.global_position = stone.global_position - to_ring.normalized() * (reach + 10.0)
+	assert_false(arena.at_boss_talker(p), "past the stone's reach it has")
+

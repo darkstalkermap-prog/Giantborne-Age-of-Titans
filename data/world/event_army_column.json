@@ -3,7 +3,7 @@
 	"id": "event.army_column",
 	"type": "world_event",
 	"display_name": "Aldmere's army column",
-	"description": "P37 (plan M6-M9 §5.10, decision 27): while Aldmere is at war with the giant (and the crown's oath was not parleyed nor Corvane spared), an Aldmere pike formation and four cavalry march the King's Road from the toll fort to Fort Aldmere's gate and back, every fifteen minutes when the giant is near the toll fort's east road. The column is a point on its route: it walks on whatever is loaded, comes into the world only while that point lies on loaded, ready ground near the giant and leaves it (back into the abstract) when it does not; it halts while it fights. Broken: every member dead or routed; passed: it came home. No reward beyond its first run's kills.",
+	"description": "P37 (plan M6-M9 §5.10, decision 27): while Aldmere is at war with the giant (and the crown's oath was not parleyed nor Corvane spared), an Aldmere pike formation and four cavalry march the King's Road from the toll fort to Fort Aldmere's gate and back, every fifteen minutes when the giant is near the toll fort's east road. The column is a point on its route: it walks on whatever is loaded, comes into the world only while that point lies on loaded, ready ground near the giant and leaves it (back into the abstract) when it does not; it halts while it fights. Broken: every member dead or routed; passed: it came home. No reward beyond its first run's kills. M8 gate fix-up 1: abandon_after_s 600 (was 0, never) - a run left waiting with its centre unloaded (resumed by a Continue far from the toll fort) is given up after ten minutes of play instead of waiting for good; marching, it still ends by coming home.",
 	"level": "level.world",
 	"region": "region.crownmarch",
 	"centre_m": [524, 12.2, 347],
@@ -20,7 +20,7 @@
 	"end_outcome": "passed",
 	"start_text": "War horns: an Aldmere column marches on the King's Road.",
 	"respawn_text": "Aldmere's column still marches there.",
-	"abandon_after_s": 0,
+	"abandon_after_s": 600,
 	"xp_full_runs": 1,
 	"outcomes": {
 		"broken": {"set_flags": {}, "text": "Aldmere's column is broken."},

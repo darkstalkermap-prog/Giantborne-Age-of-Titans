@@ -36,6 +36,12 @@ func can_interact(_player: GiantPlayer) -> bool:
 	return true
 
 
+## The priority PlayerInteract ranks this by now (lower wins): `priority`, unless a subclass says
+## otherwise (M8 gate fix-up 1: a reward rack whose reward is ready outranks a talker, RewardRack).
+func priority_for(_player: GiantPlayer) -> int:
+	return priority
+
+
 ## P26: "" when a giant of `stage` may use this, else its refusal (requires_stage).
 func stage_reason(stage: int) -> String:
 	if requires_stage <= 0 or stage >= requires_stage:

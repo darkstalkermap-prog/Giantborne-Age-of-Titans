@@ -25,7 +25,10 @@ extends RefCounted
 ## first). M8 gate (F29): `lead` {"marker", "below_stage", "outside_region"?, "text"?} is the way
 ## round a gate the giant's stage cannot pass yet - while the giant is below below_stage and does not
 ## stand in outside_region, the objective leads to the lead's marker (an id the level knows: a
-## marker, a checkpoint, a POI) and the tracker names its text ("by the Ironway").
+## marker, a checkpoint, a POI) and the tracker names its text ("by the Ironway"). M8 gate fix-up 1:
+## `then` (optional) is the way round's next marker - once the giant is past the lead's marker
+## (within Quests.LEAD_REACH_M of it, or nearer `then` than the marker is) the objective leads there
+## (the Ironway's top, not back down to its foot).
 ##
 ## Semantic rules: the id starts with "quest."; at least one stage; stage ids are unique plain
 ## words; conditions are valid (§2.8.3 shapes); marker and bot target ids and flag ids pass the
@@ -68,7 +71,7 @@ static func fields() -> Dictionary:
 			"waiting_text": U.str_field(),
 			# M8 gate (F29): the way round a gate the giant's stage cannot pass yet (see the notes).
 			"lead": {"t": "dict", "fields": {"marker": U.str_field(true), "below_stage": U.int_field(2, 10, true),
-				"outside_region": U.ref("region"), "text": U.str_field()}},
+				"outside_region": U.ref("region"), "text": U.str_field(), "then": U.str_field()}},
 			"items": DIALOGUE.item_list(),
 			"set_flags": {"t": "dict"},
 			"bot": {"t": "dict"}}},
@@ -131,6 +134,8 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		var lead: Variant = s.get("lead")
 		if typeof(lead) == TYPE_DICTIONARY and typeof(lead.get("marker")) == TYPE_STRING:
 			U.check_id_string(lead.marker, sctx + ".lead.marker", out)
+		if typeof(lead) == TYPE_DICTIONARY and typeof(lead.get("then")) == TYPE_STRING and str(lead.then) != "":
+			U.check_id_string(lead.then, sctx + ".lead.then", out)
 		DIALOGUE.check_flag_map(s.get("set_flags"), sctx + ".set_flags", out)
 		var bot: Variant = s.get("bot")
 		if typeof(bot) == TYPE_DICTIONARY:

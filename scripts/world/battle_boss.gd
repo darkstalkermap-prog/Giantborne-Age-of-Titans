@@ -111,6 +111,8 @@ func engage(tick: int = -1) -> void:
 		stood_out.append_array(d.p34_make_room(battle_id, global_position, engines))
 	_begin_phase(0, t)
 	Events.boss_engaged.emit(t, battle_id)
+	if gate != null:
+		Events.hud_message.emit(gate_line(), "warn")
 
 
 ## M8 gate (F9): the stand_out encounters' living members leave (see the notes): every one but the crews
@@ -339,6 +341,14 @@ func leaving_line() -> String:
 
 func reset_line() -> String:
 	return "%s regrouped: you left the battle." % battle_name
+
+
+## M8 gate fix-up 1 (N4.5): the line when the battle engages behind its gate. Fort Aldmere's portcullis
+## drops behind the giant (P36: on purpose), and the curtain wall is 12 m high: the bailey has no way out
+## on foot until the battle ends (death, victory, or Load last checkpoint), so its leaving lines above are
+## reached only by leaving some other way - the giant is told so at once.
+func gate_line() -> String:
+	return "The portcullis drops behind you: no way out until %s is beaten." % battle_name
 
 
 ## A new attempt: every member of the battle's encounters leaves (the fallen return), phases restart; the

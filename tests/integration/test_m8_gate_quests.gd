@@ -23,7 +23,9 @@ extends IntegrationSuite
 ##     from Aldmere's road, and its lead: below stage 6, outside the Stonehold, the objective (the HUD
 ##     marker, the compass, the tracker's "by the Ironway") points at the Ironway's waystone, then at the
 ##     Standing Stones once the giant is up in the highlands; every size gate's message names the stage
-##     it needs (decision 18), the Stair's the Ironway too.
+##     it needs (decision 18), the Stair's the Ironway too. Fix-up 1: past the Ironway's foot its top leads
+##     (the marker never points back down the Ironway), and in the Valley no lead: the tracker names the
+##     Kings' Door its marker leads to.
 
 const START_CP := "world.cp.kingsgate_shelf"
 const CROWN := "quest.oath_crown"
@@ -443,6 +445,21 @@ func test_grow6_names_the_ironway_and_leads_a_smaller_giant_round_by_it() -> voi
 		assert_true((o.position as Vector3).is_equal_approx(foot), "the marker and the compass point there (%s)" % o.position)
 		assert_eq(str(o.via_text), "by the Ironway", "the tracker says which way")
 		assert_eq(TRACKER.title_of(o), "The Crown Unclaimed  -  by the Ironway", "the tracker's title line")
+	# M8 gate fix-up 1 (N2.3): walking up the Ironway from its foot the marker never points back down to it -
+	# past the foot the lead's `then`, the Ironway's top, leads (then the Stones, once in the Stonehold).
+	var top := WorldXp.position_of("world.cp.ironway_top")
+	var z := foot.z - 10.0
+	while z > top.z:
+		p.global_position = Vector3(foot.x, 0.05, z)
+		var w := Quests.objective_for(MAIN)
+		assert_true((w.position as Vector3).z < z - 1.0,
+			"at z %.0f up the Ironway the marker is ahead of the giant (%s at %s)" % [z, w.marker_id, w.position])
+		z -= 10.0
+	p.global_position = Vector3(foot.x, 0.05, foot.z - 30.0)
+	var past := Quests.objective_for(MAIN)
+	assert_eq(str(past.marker_id), "world.cp.ironway_top", "past the foot the Ironway's top leads")
+	assert_true((past.position as Vector3).is_equal_approx(top), "the marker and the compass point there (%s)" % past.position)
+	assert_eq(str(past.via_text), "by the Ironway", "still by the Ironway")
 	# Up in the highlands (the Ironway's top, in the Stonehold): the Standing Stones.
 	p.global_position = Vector3(700, 0.05, -560)
 	var up := Quests.objective_for(MAIN)
@@ -453,3 +470,12 @@ func test_grow6_names_the_ironway_and_leads_a_smaller_giant_round_by_it() -> voi
 	p.set_profile(GameData.get_record("growth.06"))
 	p.global_position = Vector3(0, 0.05, -200)
 	assert_eq(str(Quests.objective_for(MAIN).marker_id), "world.marker.standing_stones", "at stage 6 the Stones lead from anywhere")
+	# M8 gate fix-up 1 (N3.2): on another level (a Valley revisit below stage 6) the lead's marker lies behind
+	# the Kings' Door as the Stones do - no lead there, and the tracker names the door the marker leads to.
+	GameSession.level_id = "level.valley"
+	p.set_profile(GameData.get_record("growth.05"))
+	var v := Quests.objective_for(MAIN)
+	assert_eq(str(v.via_exit), "valley.exit.kings_door", "in the Valley the marker leads to the Kings' Door")
+	assert_eq(str(v.via_text), "by the Kings' Door", "and the tracker names the door, not the Ironway")
+	assert_false(bool(v.get("lead", true)), "no lead on another level")
+	assert_eq(TRACKER.title_of(v), "The Crown Unclaimed  -  by the Kings' Door", "the tracker's title line")

@@ -133,6 +133,12 @@ var events := {}
 var spawn_log: Array = []
 ## Why the last attempts of each table found nothing: reason -> count (tests, debug).
 var refusals := {}
+## M8 gate fix-up 1 (N4.8): why each event did not start at the last check - event id -> "" (it runs, or
+## it started), "no_player", "in_play: <event> (<in_play_reason>)" while another event is in play, else
+## WorldEvent.can_start_with's reason ("flags", "cooldown", "unloaded", "far", ...). The F3 panel shows it
+## (debug_lines), so an event held back for good - the audit saw the siege of Skarn not start once after
+## Ulfra's plea, a column out of play being the tracked event - shows what held it.
+var hold_reasons := {}
 
 var _table_state := {}     # table id -> {"next_tick": int}
 var _copies := {}          # copy id -> {"table", "entry", "template", "route": Route or null, "made_tick",
@@ -242,6 +248,7 @@ func _on_tick(tick: int) -> void:
 			var e: WorldEvent = events[eid]
 			if e.is_running():
 				update_event(e, dt, tick)
+		sync_tracking()
 	if tick % CHECK_TICKS == 0:
 		_prune_copies(tick)
 		check_events(tick)
@@ -368,7 +375,9 @@ static func pick_entry(entries: Array, rng: RandomNumberGenerator) -> Dictionary
 
 
 ## True when the director has room for every combatant and formation member of `tpl` now (copies spawn
-## whole or not at all, never one member at a time as room frees up).
+## whole or not at all, never one member at a time as room frees up). M8 gate fix-up 1 (N3.3): the room an
+## engaged battle reserves for its units still to come (EncounterDirector.p34_reserved_room) is not room:
+## a copy admitted beside it was held back member by member and still counted its entry's spawn.
 func budget_allows(tpl: Dictionary) -> bool:
 	var budgeted := 0
 	var formation := 0
@@ -383,13 +392,21 @@ func budget_allows(tpl: Dictionary) -> bool:
 			formation += 1
 		elif counts_budget or (str(s.get("faction", "")) != "" and FactionState.is_hostile(str(s.faction))):
 			budgeted += 1
-	if budgeted > 0 and director.active_combatant_count() + budgeted > director.max_active_enemies:
+	if budgeted > 0 and director.active_combatant_count() + director.p34_reserved_room(false) + budgeted \
+			> director.max_active_enemies:
 		return false
 	if formation > 0:
 		director.p30_formation_room()   # loads the level's cap
-		if director.formation_member_count() + formation > director.max_formation_members:
+		if director.formation_member_count() + director.p34_reserved_room(true) + formation > director.max_formation_members:
 			return false
 	return true
+
+
+## M8 gate fix-up 1 (N3.3): true while an engaged battle still waits for reserved units - a moving event's
+## copy out of the world is then held back (its point walks on) instead of being brought near the giant to
+## spawn member by member as the battle's room frees.
+func battle_holds_room() -> bool:
+	return director != null and director.p34_reserved_room(true) + director.p34_reserved_room(false) > 0
 
 
 ## Where a copy of `tpl` for `entry` of `table` may stand now, the giant at `from`: {"anchor" (level
@@ -731,7 +748,7 @@ func _update_columns(dt: float) -> void:
 		var c: Dictionary = _copies[id]
 		if c.route == null:
 			continue
-		if march(id, c.route, dt) == "done":
+		if march(id, c.route, dt, battle_holds_room()) == "done":
 			if copy_in_view(id):
 				c.route = null
 				c.active_seen = true
@@ -816,14 +833,53 @@ func other_in_play(e: WorldEvent = null) -> WorldEvent:
 
 ## Starts the first event (by id) whose rules hold, when none is in play (M8 gate, F2: one left behind,
 ## out of play, holds nothing - the siege of Skarn starts while a raid the giant walked away from waits).
+## Fix-up 1 (N4.8): first notes why each event that is not running waits (hold_reasons).
 func check_events(tick: int) -> void:
-	if _player() == null or other_in_play() != null:
+	var blocker: WorldEvent = other_in_play() if _player() != null else null
+	_note_holds(blocker)
+	if _player() == null or blocker != null:
 		return
 	for eid: String in _event_ids():
 		var e: WorldEvent = events[eid]
 		if e.can_start_with(event_context(e)) == "":
 			start_event(e, tick)
 			return
+
+
+## M8 gate fix-up 1 (N4.8): hold_reasons for every event of the level now (`blocker`: the event in play).
+func _note_holds(blocker: WorldEvent) -> void:
+	for eid: String in _event_ids():
+		var e: WorldEvent = events[eid]
+		var why := ""
+		if not e.is_running():
+			if _player() == null:
+				why = "no_player"
+			elif blocker != null:
+				why = "in_play: %s (%s)" % [blocker.id, in_play_reason(blocker)]
+			else:
+				why = e.can_start_with(event_context(e))
+		hold_reasons[eid] = why
+
+
+## M8 gate fix-up 1 (N4.8): why `e` is in play ("" when it is not): a living member of one of its copies
+## (the copy, how many live and where the first stands, in level space) or its place within its start
+## radius of the giant (how far).
+func in_play_reason(e: WorldEvent) -> String:
+	if e == null or not e.is_running():
+		return ""
+	if director != null:
+		for id in e.copies:
+			var living := director.p37_living(id)
+			if not living.is_empty():
+				var first := living[0]
+				var at := level.global_transform.affine_inverse() * first.global_position if level != null else first.global_position
+				return "%s: %d living, %s at (%.0f, %.0f)" % [id, living.size(), str(first.get("entity_id")), at.x, at.z]
+	var p := _player()
+	if p == null:
+		return ""
+	var place := e.route.point_at() if e.route != null else e.centre
+	var d := _flat(p.global_position - _to_global(place))
+	return "its place %.0f m away" % d if d <= e.start_radius() else ""
 
 
 ## The facts WorldEvent.can_start_with reads for `e` now.
@@ -855,6 +911,7 @@ func start_event(e: WorldEvent, tick: int = Sim.tick) -> void:
 	Events.world_event_started.emit(tick, e.id)
 	if Quests.has_method("p37_set_event"):
 		e.tracked_before = Quests.tracked_quest_id
+		e.tracker_given_back = false
 		Quests.p37_set_event(e.id, event_objective(e))
 		Quests.track(e.id)
 	_begin_attempt(e, tick)
@@ -886,9 +943,52 @@ func _begin_attempt(e: WorldEvent, tick: int) -> bool:
 	e.state = WorldEvent.RUNNING
 	_shelter_folk(e, tick)
 	if Quests.has_method("p37_set_event") and Quests.tracked_quest_id != e.id:
-		Quests.p37_set_event(e.id, event_objective(e))
-		Quests.track(e.id)   # each attempt leads the compass there (a death reload restored the old choice)
+		_take_tracker(e)   # each attempt leads the compass there (a death reload restored the old choice)
 	return true
+
+
+## M8 gate fix-up 1 (N4.4): a running event leads the HUD marker, the compass and the map only while it is
+## in play (in_play). The director took the tracker when the event started (and at each attempt); a run left
+## behind - WAITING or SUSPENDED far off, a column marching the abstract - gives it back as an ended event
+## does (the quest tracked before it, else the main quest leads), so the main thread's marker and leads
+## (grow6's Ironway, the Standing Stones) show again instead of a raid 1.3 km away or a column waiting for
+## good; it stays in the tracker's list and the journal, where the player can still track it. Coming back
+## into play - no other event in play - it takes the tracker again. A choice the player made meanwhile is
+## what it gives back next.
+func sync_tracking() -> void:
+	if not Quests.has_method("p37_set_event"):
+		return
+	for e in running_events():
+		var playing := in_play(e)
+		if not playing and not e.tracker_given_back and Quests.tracked_quest_id == e.id:
+			e.tracker_given_back = true
+			_give_tracker_back(e)
+		elif playing and e.tracker_given_back and other_in_play(e) == null:
+			_take_tracker(e)
+
+
+## The event takes the tracker (its objective first); one that gave it back while out of play keeps the
+## player's choice made since as the one to give back.
+func _take_tracker(e: WorldEvent) -> void:
+	if not Quests.has_method("p37_set_event"):
+		return
+	Quests.p37_set_event(e.id, event_objective(e))
+	if Quests.tracked_quest_id != e.id:
+		if e.tracker_given_back:
+			e.tracked_before = Quests.tracked_quest_id
+		Quests.track(e.id)
+	e.tracker_given_back = false
+
+
+## The tracker goes back to the quest tracked before the event took it while that quest is still active,
+## else to nobody (the main quest leads).
+func _give_tracker_back(e: WorldEvent) -> void:
+	if Quests.tracked_quest_id != e.id:
+		return
+	var before := e.tracked_before
+	Quests.tracked_quest_id = ""
+	if before != "" and before != e.id and Quests.quest_state(before) == Quests.ACTIVE:
+		Quests.track(before)
 
 
 ## The places of e's protected targets (level space, in their listed order; the index's, else a loaded
@@ -952,7 +1052,7 @@ func update_event(e: WorldEvent, dt: float, tick: int = Sim.tick) -> void:
 			_carry_event(e, false)
 			return
 	if e.route != null and not e.copies.is_empty():
-		if march(e.copies[0], e.route, dt, other_in_play(e) != null) == "done" and e.end_outcome() != "":
+		if march(e.copies[0], e.route, dt, other_in_play(e) != null or battle_holds_room()) == "done" and e.end_outcome() != "":
 			end_event(e, e.end_outcome(), tick)
 			return
 	if _ready_at(e.centre):
@@ -1068,11 +1168,8 @@ func end_event(e: WorldEvent, outcome: String, tick: int = Sim.tick) -> void:
 		for o: WorldEvent in events.values():
 			if o != e and o.tracked_before == e.id:
 				o.tracked_before = e.tracked_before   # an event that took the tracker from this one hands it back past it
-		if Quests.tracked_quest_id == e.id:
-			var before := e.tracked_before
-			Quests.tracked_quest_id = ""
-			if before != "" and Quests.quest_state(before) == Quests.ACTIVE:
-				Quests.track(before)
+		_give_tracker_back(e)
+		e.tracker_given_back = false
 	Events.world_event_ended.emit(tick, e.id, outcome)
 	if outcome != ABANDONED:
 		GameSession.request_checkpoint("world_event")
@@ -1524,6 +1621,14 @@ func debug_lines() -> PackedStringArray:
 		running.append("%s (%s%s, %.0f s)" % [e.id, e.state, ", in play" if in_play(e) else "", e.elapsed_s])
 	lines.append("WANDER %s  copies %d  spawns %d  events %s" % [level.level_id if level != null else "?",
 		copy_ids().size(), spawn_log.size(), ", ".join(running) if not running.is_empty() else "-"])
+	for e in running_events():
+		var why := in_play_reason(e)
+		if why != "":
+			lines.append("  in play %s: %s" % [e.id, why])   # M8 gate fix-up 1 (N4.8)
+	for eid: String in _event_ids():
+		var held := str(hold_reasons.get(eid, ""))
+		if held != "" and held not in ["flags", "conditions", "stage", "max_runs"]:
+			lines.append("  waits %s: %s" % [eid, held])
 	for id in copy_ids():
 		lines.append("  %s: %s" % [id, director.encounter_state(id)])
 	return lines

@@ -10,7 +10,8 @@ extends IntegrationSuite
 ##     light swing (the input router) from its bed 6 m before it - the first four at stage 4, the fifth
 ##     at stage 5 (M8 gate F45: the fourth hung out of a stage-4 light swing's reach; synthetic hits had
 ##     hidden it); the five rung pay 200 XP and open the Stoneknuckles' rack, whose gauntlets end the
-##     quest;
+##     quest - taken with the E key (PlayerInteract) from where the review's run came up to the rack, with
+##     Wenna at her spawn by the landing in reach too (M8 gate fix-up 1: her talker's prompt took E there);
 ##   * the Titan's Bones: the forge's fire waits for the scavengers, then lights (2 titan iron, the
 ##     quest's 150 XP) and the Titan Forge, cold before, titanforges a reinforced weapon;
 ##   * the sunken vault: the causeway's rockfall will not move at stage 4 and is heaved at stage 5;
@@ -170,7 +171,31 @@ func test_the_five_bells_and_the_stoneknuckles() -> void:
 	_part(LANDING_PART)
 	var rack := _find("world.drowned.stoneknuckles_rack") as RewardRack
 	assert_true(rack != null and rack.can_interact(p), "the Stoneknuckles are the bell-ringer's")
-	rack.interact(p)
+	if rack == null:
+		return
+	# M8 gate fix-up 1 (N2.2): Wenna stands at her spawn by the landing (8 m east and 4 m south of the rack:
+	# encounter.drowned_ferry), and the giant comes up where the review's run did (8.1 m east, 2.7 m north
+	# of the rack), facing the rack: both are in reach, and E takes the gauntlets.
+	var rack_at := rack.global_position
+	wenna.global_position = Vector3(rack_at.x + 8.0, 0.05, rack_at.z - 4.0)
+	var stand := Vector3(rack_at.x + 8.1, 0.3, rack_at.z + 2.7)
+	var to_rack := Vector3(rack_at.x - stand.x, 0.0, rack_at.z - stand.z).normalized()
+	GameSession.place_player(p, Transform3D(Basis(Vector3.UP, atan2(-to_rack.x, -to_rack.z)), stand))
+	p.velocity = Vector3.ZERO
+	await step_ticks(8)
+	var cands := 0
+	for n in world.find_children("*", "", true, false):
+		var it := n as Interactable
+		if it == null or not it.enabled or not it.is_inside_tree():
+			continue
+		var to := it.global_position - p.global_position
+		to.y = 0.0
+		if (it == rack or it is NpcTalker) and to.length() <= it.radius_m + float(p.profile.get("capsule_radius_m", 0.0)):
+			cands += 1
+	assert_eq(cands, 2, "the rack and Wenna's talker are both in reach there")
+	p.interact.refresh()
+	assert_eq(p.interact.current_prompt(), "Take the Stoneknuckles", "E offers the gauntlets, not a talk with Wenna")
+	p.router.inject_edge(&"interact")
 	await _settle()
 	assert_eq(p.equipment.weapon_id(), "weapon.fists", "the giant wears them")
 	assert_eq(Quests.quest_state("quest.drowned_bells"), Quests.COMPLETED, "the bells' quest is done")

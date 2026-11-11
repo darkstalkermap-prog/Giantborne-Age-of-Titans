@@ -327,6 +327,69 @@ func test_grow_tab_shows_unmet_requirements_and_disables_grow() -> void:
 	stack.close_all()
 
 
+## M8 gate fix-up 1 (F4): a giant using a shrine (standing within its reach) whose own spot has no room
+## for the next stage grows on the shrine's growth pad: the growth steps it onto the pad, facing the
+## stone, and the Grow tab counts the pad's room. Beyond the shrine's reach, or with no room on the pad
+## either, the growth is refused for clearance as before and the giant stays where it stood.
+func test_a_giant_without_room_within_the_shrines_reach_grows_on_its_pad() -> void:
+	var s := _shrine(Vector3(0, 0, -6))
+	var pad := s.growth_pad_position()
+	# Low roofs: stage 1 (3.66 m) fits under them, stage 2 (5.49 m) does not.
+	add_box(Vector3(3, 1, 3), Vector3(0, 4.5, -2))   # 4 m from the stone: within its reach
+	add_box(Vector3(3, 1, 3), Vector3(0, 4.5, 3))   # 9 m from it: beyond
+	var p := await _grounded_player(Vector3(0, 0.05, 3))
+	var prof: Dictionary = p.growth.profile_for_stage(2)
+	assert_eq(str(p.growth.check_clearance(prof).reason), "clearance", "no room for stage 2 under the far roof")
+	var far := s.can_grow(p, 2)
+	assert_eq(str(far.reason), "clearance", "beyond the shrine's reach the growth is refused (%s)" % far.message)
+	var at := p.global_position
+	assert_false(bool(s.grow(p, 2).ok), "grow() refuses too")
+	assert_eq(blocked.back(), ["clearance"], "growth_blocked clearance")
+	assert_true(p.growth_stage == 1 and p.global_position.distance_to(at) < 0.01, "nothing changes, nothing moves")
+	# Within the shrine's reach under the near roof: the pad has room.
+	p.global_position = Vector3(0, 0.05, -2)
+	await step_ticks(3)
+	assert_eq(str(p.growth.check_clearance(prof).reason), "clearance", "no room for stage 2 under the near roof")
+	var near := s.can_grow(p, 2)
+	assert_true(near.ok, "within the shrine's reach its pad has room (%s)" % near.get("message", ""))
+	var step: Vector3 = near.get("step_to", Vector3.INF)
+	assert_true(step.is_finite() and Vector2(step.x - pad.x, step.z - pad.z).length() < 0.01,
+		"the growth steps onto the pad (%s, pad %s)" % [step, pad])
+	var rows: Array = load("res://ui/screens/shrine/grow_tab.gd").rows_for(s, p)
+	var room: Array = rows.filter(func(row: Dictionary) -> bool: return row.id == "clearance")
+	assert_true(room.size() == 1 and bool(room[0].met), "the Grow tab counts the pad's room (%s)" % [room])
+	assert_true(bool(s.grow(p, 2).ok), "the giant grows")
+	assert_eq(p.growth_stage, 2, "to stage 2")
+	assert_true(Vector2(p.global_position.x - pad.x, p.global_position.z - pad.z).length() < 0.05,
+		"on the pad (%s, pad %s)" % [p.global_position, pad])
+	var to_stone := s.global_position - p.global_position
+	assert_near(angle_difference(p.facing_yaw, atan2(-to_stone.x, -to_stone.z)), 0.0, 0.01, "facing the stone")
+	assert_true(p.velocity.is_zero_approx(), "at rest")
+	await step_ticks(10)
+	assert_true(bool(p.growth.check_clearance(prof).ok), "with room around it")
+	assert_true(Vector2(p.global_position.x - pad.x, p.global_position.z - pad.z).length() < 0.2, "and it stays there")
+	# Stage 3 beside the stone under a roof (stage 2 fits under it, stage 3's 7.92 m does not): the pad has
+	# room, then a roof on the pad too leaves no way out and the growth is refused.
+	add_box(Vector3(3, 1, 3), Vector3(3, 6.5, -6))
+	p.global_position = Vector3(3, 0.05, -6)
+	await step_ticks(3)
+	assert_true(bool(s.can_grow(p, 3).ok), "stage 3 on the pad while it has room")
+	add_box(Vector3(4, 1, 4), Vector3(pad.x, 6.5, pad.z))
+	await step_ticks(1)
+	var both := s.can_grow(p, 3)
+	assert_eq(str(both.reason), "clearance", "no room here and none on the pad: refused (%s)" % both.message)
+	assert_false(bool(s.grow(p, 3).ok), "grow() refuses")
+	assert_true(p.growth_stage == 2 and Vector2(p.global_position.x - 3, p.global_position.z + 6).length() < 0.2,
+		"and the giant stays where it stood")
+	# A pad with no floor under it (past the floor's edge at z -60) is no way out either.
+	var edge := _shrine(Vector3(20, 0, -55), "test.edge")
+	add_box(Vector3(3, 1, 3), Vector3(20, 6.5, -51))
+	p.global_position = Vector3(20, 0.05, -51)
+	await step_ticks(3)
+	assert_true(edge.growth_pad_position().z < -60.0, "the edge shrine's pad hangs past the floor")
+	assert_eq(str(edge.can_grow(p, 3).reason), "clearance", "no floor on the pad: refused")
+
+
 # --------------------------------------------------------------------------- sandbox
 
 func test_the_sandbox_has_a_shrine_that_grows_to_stage_3() -> void:

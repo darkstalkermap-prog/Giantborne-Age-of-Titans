@@ -213,9 +213,12 @@ func _on_faction_changed(tick: int, changed_faction: String, _state: String) -> 
 		brain.on_faction(tick, FactionState.standing(faction))
 
 
+## M8 gate fix-up 1 (N4.7): only in the tree - a civilian whose chunk is unloading (out of the tree, not
+## freed yet) stays connected to Events and measured its noise from its global transform, an engine error
+## ("!is_inside_tree()") for every attack begun nearby.
 func _listening() -> bool:
-	return ai_enabled and brain != null and brain.state == CivilianBrain.State.IDLE and not sheltered \
-		and entity != null and entity.combatant != null and entity.is_alive()
+	return is_inside_tree() and ai_enabled and brain != null and brain.state == CivilianBrain.State.IDLE \
+		and not sheltered and entity != null and entity.combatant != null and entity.is_alive()
 
 
 # --------------------------------------------------------------------------- safe points

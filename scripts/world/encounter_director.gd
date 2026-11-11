@@ -1641,6 +1641,17 @@ func p34_is_reserved(entity_id: String) -> bool:
 func _p34_reserved_room(m: Member, formation: bool) -> int:
 	if _p34_reserved.is_empty() or p34_is_reserved(m.entity_id):
 		return 0
+	return p34_reserved_room(formation)
+
+
+## M8 gate fix-up 1 (N3.3): the room the reserved units still to come keep in a cap against any newcomer
+## that is not one of them (formation: their formation members, against max_formation_members; else their
+## counted combatants, against max_active_enemies); 0 when nothing is reserved. The WanderDirector admits
+## a copy only when it fits beside this room (WanderDirector.budget_allows), and holds a column's copy back
+## while a battle still waits for units (P37.md, "M8 gate").
+func p34_reserved_room(formation: bool) -> int:
+	if _p34_reserved.is_empty():
+		return 0
 	var n := 0
 	for owner: String in _p34_reserved:
 		for id: String in _p34_reserved[owner]:

@@ -100,7 +100,7 @@ static func rows_for(s: Shrine, p: GiantPlayer) -> Array:
 	out.append({"id": "combat", "met": calm, "text": "Out of combat" if calm else PlayerGrowth.default_message("combat")})
 	var still: bool = p.controller.state == CombatController.State.LOCOMOTION and p.controller.holding_id == ""
 	out.append({"id": "busy", "met": still, "text": "Standing ready, hands free" if still else PlayerGrowth.default_message("busy")})
-	var room := growth.check_clearance(prof)
+	var room := growth.shrine_clearance(prof, s)   # M8 gate fix-up 1 (F4): the pad counts
 	out.append({"id": "clearance", "met": room.ok, "text": "Room to grow" if room.ok else str(room.message)})
 	return out
 

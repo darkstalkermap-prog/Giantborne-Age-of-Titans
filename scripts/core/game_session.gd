@@ -78,6 +78,10 @@ const WORLD_LEVEL_ID := "level.world"
 const PROGRESSION_ID := "progression.default"
 const PLAYER_ID := "player.giant"
 const MAIN_QUEST_ID := "quest.main"
+## The world's main quest (P29: it leads once the prologue is done) and the oaths' quest ids
+## (OathRules.OATH_QUEST_PREFIX): their progress is checkpointed as completion requests (fix-up 1).
+const WORLD_MAIN_QUEST_ID := "quest.world_main"
+const OATH_QUEST_PREFIX := "quest.oath_"
 const KINGSFALL_RESPAWN := "valley.shrine.kingsfall"
 ## Where a save from a level this build does not have continues in the Valley (P26 places it;
 ## until then the Valley's start checkpoint is used).
@@ -189,6 +193,8 @@ func _ready() -> void:
 	Events.boss_defeated.connect(_on_boss_defeated)
 	Events.boss_disengaged.connect(_on_boss_disengaged)
 	Events.quest_stage_changed.connect(_on_quest_stage_changed)
+	Events.quest_started.connect(_on_quest_started)       # M8 gate fix-up 1 (N4.2)
+	Events.quest_completed.connect(_on_quest_completed)
 	# M8 gate (F15): what the giant makes of itself in a shrine's screen.
 	Events.talent_learned.connect(_on_shrine_choice_2)
 	Events.ancestry_chosen.connect(_on_shrine_choice_2)
@@ -488,9 +494,9 @@ func go_to_title() -> void:
 	_reload_scene("title")
 
 
-## The slice's completion checkpoint, if it still waits (something other than an aware enemy held
-## it back), is committed before a quit to the title clears the session (P17a, M4 review: Quit to
-## title on the end screen lost it). A dead giant is never saved.
+## The slice's completion checkpoint (or a boss's end, M8 gate), if it still waits (something other
+## than an aware enemy held it back), is committed before a quit to the title clears the session
+## (P17a, M4 review: Quit to title on the end screen lost it). A dead giant is never saved.
 func _commit_pending_completion() -> void:
 	if _pending.is_empty() or not bool(_pending.get("completion", false)) or not checkpoints_enabled():
 		return
@@ -1102,7 +1108,8 @@ func _start_checkpoint(level: Node) -> String:
 ## not wait for aware enemies - the crown can be taken with the Barrow's wardens still about, and
 ## the end screen that opens next offers Quit to title - and a quit to the title commits it if it
 ## is still pending (go_to_title), so the completed slice is never lost. It stays set on the
-## pending request until that is taken.
+## pending request until that is taken. M8 gate (fix-up 1): a boss's end (boss_defeated, a
+## drive-out) is a completion request too.
 func request_checkpoint(reason: String, respawn: String = "", completion := false) -> void:
 	if not checkpoints_enabled():
 		return
@@ -1471,24 +1478,73 @@ func _only_shrine_screens_open() -> bool:
 
 ## The Ogre King's death moves the respawn to the Kingsfall shrine - but not on another campaign
 ## level (P20: a world boss keeps the respawn; test levels keep today's rule).
+## M8 gate (fix-up 1, F38): a boss's end is a completion request (request_checkpoint): its brood or
+## guards still aware within 40 m (the Matriarch's den whelps, her summoned ones) do not hold it back,
+## and a quit to the title commits it if something else does - decision 13 never loses a boss kill.
+## The respawn stays at a shrine or waystone (or the Kingsfall shrine), so it cannot trap the giant.
 func _on_boss_defeated(_tick: int, _boss_id: String) -> void:
 	var other_level := is_campaign() and level_id != "" and level_id != VALLEY_LEVEL_ID \
 		and not level_id.begins_with("res://")
-	request_checkpoint("boss_defeated", "" if other_level else KINGSFALL_RESPAWN)
+	request_checkpoint("boss_defeated", "" if other_level else KINGSFALL_RESPAWN, true)
 
 
 ## M8 gate (F38): a boss driven out (the Matriarch's flight: boss_disengaged "fled") ends its fight
 ## as a kill does, so it is checkpointed like boss_defeated (decision 13: a checkpoint never loses a
-## boss's end) - the respawn unchanged, and no victory cue (only boss_defeated has one). "left" (the
-## giant walked out; the boss resets) takes none.
+## boss's end) - the respawn unchanged, and no victory cue (only boss_defeated has one); a completion
+## request like the kill's (fix-up 1: her aware whelps held it back). "left" (the giant walked out;
+## the boss resets) takes none.
 func _on_boss_disengaged(_tick: int, _boss_id: String, reason: String) -> void:
 	if reason == "fled":
-		request_checkpoint("boss_fled")
+		request_checkpoint("boss_fled", "", true)
 
 
+## The quests' checkpoints (decision 13: "after every quest.main stage").
+## M8 gate fix-up 1 (N4.2): the world's main thread was never checkpointed - only quest.main (the
+## Valley's) was compared, so quest.world_main's stages, the oaths won and the quests a dialogue starts
+## were lost to a quit or a death. Now:
+##   * quest.main's stages (the Valley; or a test's main quest, Quests.main_quest_id): as before, an
+##     ordinary request (aware enemies within 40 m hold it back);
+##   * quest.world_main's stages and an oath won (a quest.oath_<x> completed): completion requests,
+##     as a boss's end - the main thread moves on where enemies are about (the war camp after its
+##     sabotage, the Moot after the duel), and a quit to the title commits one still waiting;
+##   * on another campaign level than the Valley (the world), every other quest's start, stage and
+##     completion (Ulfra's plea starting the siege, a side quest's reward): an ordinary request.
+## The respawn stays where it is.
 func _on_quest_stage_changed(_tick: int, quest_id: String, _stage_id: String) -> void:
-	if quest_id == MAIN_QUEST_ID:
+	if quest_id == WORLD_MAIN_QUEST_ID:
+		request_checkpoint("quest_stage", "", true)
+	elif quest_id == MAIN_QUEST_ID or quest_id == _main_quest_id():
 		request_checkpoint("quest_stage")
+	elif _world_quests_checkpoint():
+		request_checkpoint("quest_stage")
+
+
+func _on_quest_started(_tick: int, quest_id: String) -> void:
+	if quest_id != WORLD_MAIN_QUEST_ID and _world_quests_checkpoint():
+		request_checkpoint("quest_started")
+
+
+func _on_quest_completed(_tick: int, quest_id: String) -> void:
+	if quest_id == MAIN_QUEST_ID or quest_id == WORLD_MAIN_QUEST_ID or quest_id == _main_quest_id():
+		return   # the main quest's end: Quests requests its completion checkpoint ("quest_complete")
+	if quest_id.begins_with(OATH_QUEST_PREFIX):
+		request_checkpoint("oath_won", "", true)
+	elif _world_quests_checkpoint():
+		request_checkpoint("quest_completed")
+
+
+## Quests.main_quest_id (quest.main until quest.world_main leads; a test's fixture), else quest.main.
+func _main_quest_id() -> String:
+	var quests := get_node_or_null("/root/Quests")
+	if quests != null and "main_quest_id" in quests:
+		return str(quests.get("main_quest_id"))
+	return MAIN_QUEST_ID
+
+
+## True on a campaign level other than the Valley (the world): every quest's progress takes a
+## checkpoint there (fix-up 1, N4.2). The Valley and test levels keep decision 13's table.
+func _world_quests_checkpoint() -> bool:
+	return is_campaign() and level_id != "" and level_id != VALLEY_LEVEL_ID and not level_id.begins_with("res://")
 
 
 func _on_reload_checkpoint_requested(reason: String) -> void:
