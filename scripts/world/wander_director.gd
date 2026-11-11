@@ -133,6 +133,12 @@ var events := {}
 var spawn_log: Array = []
 ## Why the last attempts of each table found nothing: reason -> count (tests, debug).
 var refusals := {}
+## M8 gate fix-up 1 (N4.8): why each event did not start at the last check - event id -> "" (it runs, or
+## it started), "no_player", "in_play: <event> (<in_play_reason>)" while another event is in play, else
+## WorldEvent.can_start_with's reason ("flags", "cooldown", "unloaded", "far", ...). The F3 panel shows it
+## (debug_lines), so an event held back for good - the audit saw the siege of Skarn not start once after
+## Ulfra's plea, a column out of play being the tracked event - shows what held it.
+var hold_reasons := {}
 
 var _table_state := {}     # table id -> {"next_tick": int}
 var _copies := {}          # copy id -> {"table", "entry", "template", "route": Route or null, "made_tick",
@@ -827,14 +833,53 @@ func other_in_play(e: WorldEvent = null) -> WorldEvent:
 
 ## Starts the first event (by id) whose rules hold, when none is in play (M8 gate, F2: one left behind,
 ## out of play, holds nothing - the siege of Skarn starts while a raid the giant walked away from waits).
+## Fix-up 1 (N4.8): first notes why each event that is not running waits (hold_reasons).
 func check_events(tick: int) -> void:
-	if _player() == null or other_in_play() != null:
+	var blocker: WorldEvent = other_in_play() if _player() != null else null
+	_note_holds(blocker)
+	if _player() == null or blocker != null:
 		return
 	for eid: String in _event_ids():
 		var e: WorldEvent = events[eid]
 		if e.can_start_with(event_context(e)) == "":
 			start_event(e, tick)
 			return
+
+
+## M8 gate fix-up 1 (N4.8): hold_reasons for every event of the level now (`blocker`: the event in play).
+func _note_holds(blocker: WorldEvent) -> void:
+	for eid: String in _event_ids():
+		var e: WorldEvent = events[eid]
+		var why := ""
+		if not e.is_running():
+			if _player() == null:
+				why = "no_player"
+			elif blocker != null:
+				why = "in_play: %s (%s)" % [blocker.id, in_play_reason(blocker)]
+			else:
+				why = e.can_start_with(event_context(e))
+		hold_reasons[eid] = why
+
+
+## M8 gate fix-up 1 (N4.8): why `e` is in play ("" when it is not): a living member of one of its copies
+## (the copy, how many live and where the first stands, in level space) or its place within its start
+## radius of the giant (how far).
+func in_play_reason(e: WorldEvent) -> String:
+	if e == null or not e.is_running():
+		return ""
+	if director != null:
+		for id in e.copies:
+			var living := director.p37_living(id)
+			if not living.is_empty():
+				var first := living[0]
+				var at := level.global_transform.affine_inverse() * first.global_position if level != null else first.global_position
+				return "%s: %d living, %s at (%.0f, %.0f)" % [id, living.size(), str(first.get("entity_id")), at.x, at.z]
+	var p := _player()
+	if p == null:
+		return ""
+	var place := e.route.point_at() if e.route != null else e.centre
+	var d := _flat(p.global_position - _to_global(place))
+	return "its place %.0f m away" % d if d <= e.start_radius() else ""
 
 
 ## The facts WorldEvent.can_start_with reads for `e` now.
@@ -1576,6 +1621,14 @@ func debug_lines() -> PackedStringArray:
 		running.append("%s (%s%s, %.0f s)" % [e.id, e.state, ", in play" if in_play(e) else "", e.elapsed_s])
 	lines.append("WANDER %s  copies %d  spawns %d  events %s" % [level.level_id if level != null else "?",
 		copy_ids().size(), spawn_log.size(), ", ".join(running) if not running.is_empty() else "-"])
+	for e in running_events():
+		var why := in_play_reason(e)
+		if why != "":
+			lines.append("  in play %s: %s" % [e.id, why])   # M8 gate fix-up 1 (N4.8)
+	for eid: String in _event_ids():
+		var held := str(hold_reasons.get(eid, ""))
+		if held != "" and held not in ["flags", "conditions", "stage", "max_runs"]:
+			lines.append("  waits %s: %s" % [eid, held])
 	for id in copy_ids():
 		lines.append("  %s: %s" % [id, director.encounter_state(id)])
 	return lines

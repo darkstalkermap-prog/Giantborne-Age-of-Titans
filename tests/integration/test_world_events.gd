@@ -341,3 +341,36 @@ func test_a_column_left_waiting_far_off_is_given_up() -> void:
 	assert_eq(_ended[_ended.size() - 1], [F.COLUMN, WanderDirector.ABANDONED], "with no outcome")
 	assert_false(Quests.active_quest_ids().has(F.COLUMN), "and gone from the tracker")
 
+
+## M8 gate fix-up 1 (N4.8, seen once in the audit's long session, not reproduced: the siege of Skarn did not
+## start after Ulfra's plea while Aldmere's column, out of play, was the tracked event). Why an event waits
+## is kept (hold_reasons) and shown on the F3 panel: another event in play is named with why it is in play;
+## and a column whose copy left the world (its point off loaded ground) is in play no more - it holds
+## nothing - nor does it count a member that is gone.
+func test_why_an_event_waits_is_kept_and_a_column_gone_from_the_world_holds_nothing() -> void:
+	F.install({F.COLUMN: {"speed_mps": 0.5}})
+	var made := F.make(world)
+	_root = made[0]
+	_wd = made[1]
+	var column: WorldEvent = _wd.events[F.COLUMN]
+	var raid: WorldEvent = _wd.events[F.RAID]
+	WorldState.set_flag("p37.column.on", true)
+	_wd.check_events(Sim.tick)
+	assert_true(column.is_running(), "the column starts by the giant")
+	await step_ticks(WanderDirector.UPDATE_TICKS * 4)
+	WorldState.set_flag("p37.raid.on", true)
+	_wd.check_events(Sim.tick)
+	assert_false(raid.is_running(), "the raid waits while the column is in play")
+	var held := str(_wd.hold_reasons.get(F.RAID, ""))
+	assert_true(held.begins_with("in_play: %s (" % F.COLUMN), "and the wait names the column and why (%s)" % held)
+	assert_true(_wd.debug_lines().has("  waits %s: %s" % [F.RAID, held]), "the F3 panel shows it (%s)" % [_wd.debug_lines()])
+	# The giant walks off east: the column's point leaves the loaded ground, its copy leaves the world.
+	F.move_giant(_root, 96.0, 80.0)
+	await step_ticks(WanderDirector.UPDATE_TICKS * 4)
+	for id in column.copies:
+		assert_eq(_wd.director.p37_living(id).size(), 0, "no member of the column's copy is left in the world")
+	assert_false(_wd.in_play(column), "the column out of the world is out of play (%s)" % _wd.in_play_reason(column))
+	assert_eq(_wd.in_play_reason(column), "", "with no reason to be")
+	_wd.check_events(Sim.tick)
+	assert_false(str(_wd.hold_reasons.get(F.RAID, "")).begins_with("in_play"), "and it holds nothing (%s)" % _wd.hold_reasons.get(F.RAID, ""))
+
