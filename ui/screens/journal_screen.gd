@@ -12,8 +12,9 @@ extends UiScreen
 ##   * Oaths: the outcome of every oath settled (oath.<march|wood|crown>.outcome);
 ##   * Sealed places: those seen (sealed.<poi>.seen) whose seal is still shut, with the stage they
 ##     need;
-##   * Regions: each region's M7 note while one exists ("The woodfolk and their troubles come with
-##     the next build.").
+##   * Regions: each region's journal_note (M8 gate, F22: every region of the world has one; the
+##     M7 rule's m7_note - "still waiting for its package" - is no longer the journal's text, so the
+##     two packages that shipped their regions' content no longer drop out of the list).
 ## Pad and keyboard: the Track buttons top to bottom, then Close (wrapping; the page scrolls with the
 ## focus). J or Esc / B closes it.
 ## Read API for tests: sections() (pure but for the autoloads it reads), track_button(id),
@@ -135,7 +136,7 @@ static func sections() -> Dictionary:
 			"stage": int(rec.get("min_stage", 0)),
 			"region": str(GameData.get_record(str(rec.get("region", ""))).get("display_name", ""))})
 	for rec: Dictionary in GameData.records_of_type("region"):
-		var note := str(rec.get("m7_note", ""))
+		var note := str(rec.get("journal_note", ""))
 		if note != "":
 			(out.regions as Array).append({"id": str(rec.id), "name": str(rec.get("display_name", rec.id)), "note": note})
 	return out

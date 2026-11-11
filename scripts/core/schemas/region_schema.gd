@@ -1,7 +1,8 @@
 extends RefCounted
 ## Schema module for "region" records (P20 pre-declares it for M7; plan M6-M9 §2.7): one of the
-## world's regions - its bounds, surface, discovery XP, faction, tints, wander table and the note
-## the journal shows while its content is still to come. P25 ships the first records.
+## world's regions - its bounds, surface, discovery XP, faction, tints, wander table, the journal's
+## note on it (journal_note, M8 gate F22) and the M7 rule's note while its content is still to come
+## (m7_note). P25 ships the first records.
 ## Loaded by DataValidator's registry (see data_validator.gd for the module contract).
 ##
 ##   {"schema_version": 1, "id": "region.greywood", "type": "region", "display_name": "The Greywood",
@@ -9,6 +10,7 @@ extends RefCounted
 ##    "bounds_m": [[-896, -440], [-320, 300]], "surface": "soft", "discover_xp": 40,
 ##    "faction": "faction.woodfolk", "map_tint": [0.33, 0.47, 0.33], "fog_color": [0.52, 0.6, 0.55],
 ##    "skyline_tint": [0.22, 0.33, 0.24], "wander_table": "wander.greywood",
+##    "journal_note": "The woodfolk's wood: Hollowmere on its black pond...",
 ##    "m7_note": "The woodfolk and their troubles come with the next build."}
 ##
 ## bounds_m is [[min_x, min_z], [max_x, max_z]] in level space. faction and wander_table are
@@ -40,7 +42,10 @@ static func fields() -> Dictionary:
 		"fog_color": U.vec3(),
 		"skyline_tint": U.vec3(),
 		"wander_table": U.ref("wander_table", false, true),
-		# Shown by the journal and the map while the region's content is still to come (M7).
+		# M8 gate (F22): what the journal's Regions section says of the region (every region has one).
+		"journal_note": U.str_field(),
+		# The M7 rule's marker: the region's content is still to come (its package not yet shipped);
+		# tests/integration/test_m7_content_rule.gd reads it. No region of the M8 build has one.
 		"m7_note": U.str_field(),
 	}
 	## @anchor P25
