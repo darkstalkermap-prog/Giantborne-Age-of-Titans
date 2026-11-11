@@ -225,6 +225,11 @@ func test_an_event_left_behind_keeps_no_other_from_starting() -> void:
 	assert_true(_wd.in_play(raid), "it is in play: its raiders in the world")
 	_wd.check_events(Sim.tick)
 	assert_false(east.is_running(), "the east raid does not start while the raid is in play")
+	# The director's own check (every CHECK_TICKS of Sim.tick) would start the east raid by itself if it
+	# fell in the two ticks below, before its rules are read here (whether it did hung on the ticks every
+	# earlier suite ran: M8 gate fix-up 1's full check): step past it first.
+	while (Sim.tick + 1) % WanderDirector.CHECK_TICKS == 0 or (Sim.tick + 2) % WanderDirector.CHECK_TICKS == 0:
+		await step_ticks(1)
 	# the giant walks away to the east end: the raid's centre unloads, its raiders leave with the chunk
 	F.move_giant(_root, 96.0, 80.0)
 	await step_ticks(2)
