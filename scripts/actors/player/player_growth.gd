@@ -19,7 +19,9 @@ extends PlayerComponent
 ##               is aware of the giant stands within the shrine's activation radius (P16)
 ##   clearance   the new capsule overlaps WORLD | BREAKABLE | BLOCKER | ACTORS (P16: a dummy, an
 ##               enemy, an NPC), or something is above the head up to the new height
-##               (check_clearance)
+##               (check_clearance) - M8 gate fix-up 1: at a shrine the giant is using (within its
+##               reach) whose growth pad has room, the growth steps the giant onto the pad instead
+##               (pad_with_room: "step_to" in the result)
 ## The debug path (debug_set_stage) skips shrine_max, flags, level and combat.
 ##
 ## A growth that passes is applied in one tick, through GiantPlayer.set_profile: the stage
@@ -52,6 +54,11 @@ const CLEARANCE_MASK := HitQueryAdapter.LAYER_WORLD | HitQueryAdapter.LAYER_BREA
 	| HitQueryAdapter.LAYER_ACTORS
 ## The combat gate's radius around a shrine without an activation_radius_m (P16).
 const DEFAULT_SHRINE_RADIUS_M := 14.0
+## M8 gate fix-up 1 (F4): how far beyond a shrine's reach (its radius_m + the giant's capsule) a giant may
+## stand and still be stepped onto the shrine's pad to grow (pad_with_room).
+const PAD_STEP_MARGIN_M := 1.0
+## How far above and below a pad marker its floor is looked for (_on_ground).
+const PAD_GROUND_M := 4.0
 ## The clearance capsule is lifted this far off the floor so the floor itself never counts.
 const CLEARANCE_LIFT_M := 0.05
 const REASONS := ["no_profile", "already", "shrine_max", "flags", "conditions", "level", "busy",
@@ -163,7 +170,54 @@ func check_growth(target: int, shrine: Node) -> Dictionary:
 	var combat := combat_gate(shrine)
 	if not combat.ok:
 		return combat
-	return check_clearance(prof)
+	return shrine_clearance(prof, shrine)
+
+
+## M8 gate fix-up 1 (F4): the giant using a shrine grows on the shrine's growth pad when the spot it
+## stands on has no room. Growth was checked only where the giant stood, and the Greywood shrine's
+## clearing keeps pines (the world builder's no-scenery grid never takes a mark: FOLLOWUPS, P39), so 7
+## of 24 spots within the shrine's reach refused stage 5 ("Not enough room to grow here") although its
+## pad has room. check_clearance at the giant's spot; when that fails and pad_with_room() finds the pad
+## clear, ok with "step_to": the pad (grow_to puts the giant there before it grows).
+func shrine_clearance(prof: Dictionary, shrine: Node) -> Dictionary:
+	var here := check_clearance(prof)
+	if here.ok:
+		return here
+	var pad := pad_with_room(prof, shrine)
+	if not pad.is_finite():
+		return here
+	var ok := result_ok()
+	ok["blocker"] = ""
+	ok["step_to"] = pad
+	return ok
+
+
+## The growth pad of `shrine` (Shrine.growth_pad_position) when the giant stands within the shrine's
+## reach (its radius_m + the giant's capsule + PAD_STEP_MARGIN_M: it is using the shrine) and the pad has
+## room for `prof`; Vector3.INF otherwise.
+func pad_with_room(prof: Dictionary, shrine: Node) -> Vector3:
+	if not (shrine is Shrine) or not is_instance_valid(shrine) or not (shrine as Shrine).is_inside_tree():
+		return Vector3.INF
+	var s := shrine as Shrine
+	var reach := s.radius_m + float(player.profile.get("capsule_radius_m", 0.85)) + PAD_STEP_MARGIN_M
+	var d := s.global_position - player.global_position
+	if Vector2(d.x, d.z).length() > reach:
+		return Vector3.INF
+	var pad := _on_ground(s.growth_pad_position())
+	return pad if bool(check_clearance(prof, pad).ok) else Vector3.INF
+
+
+## `at` set down on the floor below or above it (the world layer within PAD_GROUND_M): a pad marker of a
+## streamed chunk may sit a little under the terrain the giant would stand on.
+func _on_ground(at: Vector3) -> Vector3:
+	if not player.is_inside_tree():
+		return at
+	var space := player.get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(at + Vector3.UP * PAD_GROUND_M, at - Vector3.UP * PAD_GROUND_M,
+		HitQueryAdapter.LAYER_WORLD, [player.get_rid()])
+	q.collide_with_areas = false
+	var hit := space.intersect_ray(q)
+	return (hit.position as Vector3) if not hit.is_empty() else at
 
 
 ## The combat gate of a shrine growth (P16, M3 review: "Enemies are near" now means it): {ok,
@@ -213,9 +267,10 @@ func aware_enemies_near(shrine: Node) -> PackedStringArray:
 ## grow into a gate wall it could not leave) (the giant's own body excluded), and an upward ray
 ## from the current head to the new head height must be clear. {ok, reason, message, "blocker":
 ## node name or ""}.
-func check_clearance(profile: Dictionary) -> Dictionary:
+func check_clearance(profile: Dictionary, at := Vector3.INF) -> Dictionary:
 	if profile.is_empty():
 		return result_fail("no_profile")
+	var base := at if at.is_finite() else player.global_position   # fix-up 1: a shrine's pad
 	var r := float(profile.get("capsule_radius_m", 0.85))
 	var h := float(profile.get("capsule_total_height_m", 3.66))
 	var space := player.get_world_3d().direct_space_state
@@ -224,7 +279,7 @@ func check_clearance(profile: Dictionary) -> Dictionary:
 	cap.height = maxf(h, 2.0 * r)
 	var q := PhysicsShapeQueryParameters3D.new()
 	q.shape = cap
-	q.transform = Transform3D(Basis(), player.global_position + Vector3.UP * (cap.height * 0.5 + CLEARANCE_LIFT_M))
+	q.transform = Transform3D(Basis(), base + Vector3.UP * (cap.height * 0.5 + CLEARANCE_LIFT_M))
 	q.collision_mask = CLEARANCE_MASK | size_gate_mask_of(profile)
 	q.collide_with_areas = false
 	q.collide_with_bodies = true
@@ -234,8 +289,8 @@ func check_clearance(profile: Dictionary) -> Dictionary:
 		var out := result_fail("clearance", _blocker_message(hits[0]))
 		out["blocker"] = _collider_name(hits[0])
 		return out
-	var head := player.global_position + Vector3.UP * float(player.profile.get("capsule_total_height_m", 3.66))
-	var top := player.global_position + Vector3.UP * (cap.height + CLEARANCE_LIFT_M)
+	var head := base + Vector3.UP * float(player.profile.get("capsule_total_height_m", 3.66))
+	var top := base + Vector3.UP * (cap.height + CLEARANCE_LIFT_M)
 	if top.y > head.y + 1e-3:
 		var ray := PhysicsRayQueryParameters3D.create(head, top, CLEARANCE_MASK, [player.get_rid()])
 		ray.collide_with_areas = false
@@ -260,7 +315,26 @@ func grow_to(target: int, shrine: Node, reason := "shrine") -> Dictionary:
 		_blocked(check)
 		last_result = check
 		return check
+	var step: Vector3 = check.get("step_to", Vector3.INF)
+	if step.is_finite():
+		_step_onto(step, shrine as Node3D)   # fix-up 1 (F4): onto the shrine's pad, facing the stone
 	return _grow(target, reason)
+
+
+## Puts the giant at `pad` facing `toward` (the shrine), at rest.
+func _step_onto(pad: Vector3, toward: Node3D) -> void:
+	var yaw := player.facing_yaw
+	if toward != null and is_instance_valid(toward):
+		var d := toward.global_position - pad
+		if Vector2(d.x, d.z).length() > 0.01:
+			yaw = atan2(-d.x, -d.z)
+	player.global_transform = Transform3D(Basis(Vector3.UP, yaw), pad + Vector3.UP * CLEARANCE_LIFT_M)
+	player.velocity = Vector3.ZERO
+	player.move_velocity = Vector3.ZERO
+	player.knockback_velocity = Vector3.ZERO
+	player.facing_yaw = yaw
+	if player.camera_rig != null:
+		player.camera_rig.yaw = yaw
 
 
 ## F6 / F7: any stage that has a profile, with the busy, holding and clearance checks but no
