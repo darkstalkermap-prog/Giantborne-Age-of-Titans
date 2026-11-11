@@ -54,7 +54,11 @@ static func build(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 	cs.shape = kit.box_shape(Vector3(3.0, 4.0, 3.0))
 	cs.position = Vector3(0, 1.6, 0)
 	base.add_child(cs)
-	base.add_child(L.parts_node("Stones", stones(), ctx.get("mat")))
+	# M8 gate (F27): the stones fade with the preset's scenery distance (220 m at low) as the other props
+	# do; before, every loaded cairn cost a draw call a view at any distance (plan §5.2: at most 40).
+	var mesh := L.parts_node("Stones", stones(), ctx.get("mat"))
+	mesh.add_to_group(TerrainChunk.SCENERY_GROUP, true)
+	base.add_child(mesh)
 	base.position = Vector3(0, float(el.get("ledge_m", 0.0)), 0)
 	n.add_child(base)
 	return n

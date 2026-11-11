@@ -48,6 +48,10 @@ static func _ledge(kit: SceneKit, el: Dictionary, ctx: Dictionary) -> Node3D:
 		L.part("box", Vector3(0, up, -1.5), Vector3(2.4, 1.4, 1.6), "timber_dark"),
 		L.part("box", Vector3(0, up + 1.4, -1.5), Vector3(2.5, 0.4, 1.7), "gold"),
 	]
-	visual.add_child(L.parts_node("Chest", parts, ctx.get("mat")))
+	# M8 gate (F27): the chest fades with the preset's scenery distance (220 m at low) as the other props
+	# do; before, it cost a draw call a view at any distance (plan §5.2: at most 40 a view at low).
+	var chest := L.parts_node("Chest", parts, ctx.get("mat"))
+	chest.add_to_group(TerrainChunk.SCENERY_GROUP, true)
+	visual.add_child(chest)
 	n.add_child(visual)
 	return n

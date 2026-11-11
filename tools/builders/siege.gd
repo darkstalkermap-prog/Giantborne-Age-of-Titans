@@ -7,8 +7,9 @@ extends RefCounted
 ##     takes its side - on Anchors/Center, Intact / Broken visuals, Block* shapes, Hurtboxes/Body) facing
 ##     -Z with Anchors/Grab where a giant's hands close. The ballista (3.2 m) is a great crossbow on a
 ##     post and sled whose stock ends at its muzzle (the record's engine.muzzle_m); the catapult (4.0 m)
-##     a frame with a throwing arm whose bucket is its muzzle. Each visual group is merged into one mesh
-##     per material; they are not level scenery (a battery 180 m off must stay in view).
+##     a frame with a throwing arm whose bucket is its muzzle. Each visual group is merged into one
+##     vertex-coloured mesh (M8 gate, F27: one draw call, not one per material - four before); they are
+##     not level scenery (a battery 180 m off must stay in view).
 ##   * scenes/enemies/siege_crew.tscn: the soldier's body in a leather jerkin with a mallet (P22's merged
 ##     rig; soldier_enemy.gd: the crew rules are EnemyBrain's P32 section).
 ##   * scenes/enemies/cavalry.tscn: a warhorse with its rider and lance on a QuadrupedRig (the horse's
@@ -119,12 +120,22 @@ static func _block(kit: SceneKit, node_name: String, size: Vector3, pos: Vector3
 	return cs
 
 
-## Merges each visual group (Intact, Broken) into one mesh per material (not level scenery).
+## Merges each visual group (Intact, Broken) into one vertex-coloured mesh "Merged" (not level
+## scenery). M8 gate (F27; plan M6-M9 §5.2: at most 40 static draw calls a view at low): one draw call
+## an engine instead of one per material - the war camp's six engines in view cost 24 before, the
+## ridge's and the fort's five 20.
 static func _merged(kit: SceneKit, root: Node3D) -> Node3D:
 	for group_name: String in ["Intact", "Broken"]:
 		var g := root.get_node_or_null(group_name) as Node3D
-		if g != null:
-			kit.merge_meshes(g)
+		if g == null:
+			continue
+		var parts: Array[MeshInstance3D] = []
+		for c in g.get_children():
+			if c is MeshInstance3D:
+				parts.append(c as MeshInstance3D)
+		var merged := kit.merge_vertex_colored(parts)
+		if merged != null:
+			merged.name = "Merged"
 	return root
 
 

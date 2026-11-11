@@ -136,7 +136,7 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="Stones" type="MeshInstance3D" parent="Props/world_stonehold_cairnlands_cairn/Base"]
+[node name="Stones" type="MeshInstance3D" parent="Props/world_stonehold_cairnlands_cairn/Base" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_3")
 
 [node name="world_stonehold_stair_top_cairn" type="Node3D" parent="Props"]
@@ -155,7 +155,7 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_4")
 
-[node name="Stones" type="MeshInstance3D" parent="Props/world_stonehold_stair_top_cairn/Base"]
+[node name="Stones" type="MeshInstance3D" parent="Props/world_stonehold_stair_top_cairn/Base" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")
 
 [node name="Shrines" type="Node3D" parent="."]
@@ -177,10 +177,10 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_6")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_cairnlands/Stone"]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_cairnlands/Stone" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_7")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_cairnlands"]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_cairnlands" groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, -0.3, 4)
 mesh = SubResource("ArrayMesh_8")
 

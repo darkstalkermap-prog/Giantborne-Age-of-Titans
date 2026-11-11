@@ -104,7 +104,7 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Stones" type="MeshInstance3D" parent="Props/world_aldmere_mill_cairn/Base"]
+[node name="Stones" type="MeshInstance3D" parent="Props/world_aldmere_mill_cairn/Base" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_2")
 
 [node name="Shrines" type="Node3D" parent="."]
@@ -126,10 +126,10 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_3")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_aldmere_road/Stone"]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_aldmere_road/Stone" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_aldmere_road"]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_aldmere_road" groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 3)
 mesh = SubResource("ArrayMesh_5")
 

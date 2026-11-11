@@ -503,10 +503,10 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_22")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_troll_den/Stone"]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_troll_den/Stone" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_23")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_troll_den"]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_troll_den" groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 4)
 mesh = SubResource("ArrayMesh_24")
 

@@ -92,10 +92,10 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_ironway/Stone"]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_ironway/Stone" groups=["scenery"]]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_ironway"]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_ironway" groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -0.3, 0)
 mesh = SubResource("ArrayMesh_3")
 
