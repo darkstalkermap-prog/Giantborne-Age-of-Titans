@@ -362,12 +362,12 @@ func _finish_flight(tick: int) -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
-	var burning := p34_has_status_tag("Burning")
+	var burning := p34_has_status_tag("Burning") and entity.is_alive()
 	var want := Color(0, 0, 0, 0)
 	if burning:
 		want = BURN_TINT
 		want.a = 0.45 + 0.25 * absf(sin(_time * 17.0))
-	elif p34_regenerating():
+	elif entity.is_alive() and p34_regenerating():
 		want = REGEN_TINT
 		want.a = 0.18 + 0.32 * (0.5 + 0.5 * sin(_time * TAU * TINT_PULSE_HZ))
 	if want.a <= 0.0 and tint.a <= 0.0:

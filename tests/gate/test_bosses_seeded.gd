@@ -1,7 +1,7 @@
 extends IntegrationSuite
 ## Ten seeded runs per boss (plan M6-M9 §5.13, §3.18 gate tier; P34). Each run reseeds the boss's brain
-## and plays its fight with the AI on against a giant who stands, takes no damage (status
-## debug_invulnerable) and wears the boss down with regular blows. Every run checks:
+## and plays its fight with the AI on against a giant of the boss's stage who stands, takes no damage
+## (status debug_invulnerable) and wears the boss down with regular blows. Every run checks:
 ##   * each boss phase happens exactly once per attempt - for the Matriarch and Harrok over a second
 ##     attempt after the disengage rule, for the battle over its three phases;
 ##   * no unseen instant damage: every blow that lands on the giant from an action with a windup of
@@ -40,12 +40,15 @@ func _on_tel(tick: int, actor_id: String, action_id: String, _t: String, _s: Str
 	telegraphs.append([tick, actor_id, action_id, origin])
 
 
-func _level(path: String) -> Node3D:
+## The level with its giant at `stage` (the boss's own: the Matriarch 5, Harrok 6, the battle 5),
+## standing on the floor and taking no damage.
+func _level(path: String, stage: int) -> Node3D:
 	var level := (load(path) as PackedScene).instantiate() as Node3D
 	world.add_child(level)
 	var p := level.get_node("Player") as GiantPlayer
 	p.router.use_injection = true
-	await step_ticks(2)
+	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
+	assert_true(p.growth.debug_set_stage(stage).ok, "%s: the giant at stage %d" % [path.get_file(), stage])
 	p.entity.apply_status("status.debug_invulnerable", NAN, 3600.0, "test")
 	return level
 
@@ -95,8 +98,9 @@ func _attempt_once(phases: Array[int], label: String) -> void:
 
 
 func test_the_matriarch_ten_seeds() -> void:
+	var checked := 0
 	for seed_value: int in SEEDS:
-		var level := await _level(DEN)
+		var level := await _level(DEN, 5)
 		var p := level.get_node("Player") as GiantPlayer
 		var m := level.get_node("TrollMatriarch") as TrollEnemy
 		var arena := level.get_node("BossArena") as BossArena
@@ -122,14 +126,16 @@ func test_the_matriarch_ten_seeds() -> void:
 		var actors: Array = [BB.DEN_ID]
 		for node in get_tree().get_nodes_in_group("enemies"):
 			actors.append((node as EnemyActor).entity_id)
-		_check_telegraphed(p, actors, "matriarch seed %d" % seed_value)
+		checked += _check_telegraphed(p, actors, "matriarch seed %d" % seed_value)
 		level.queue_free()
 		await step_ticks(2)
+	assert_true(checked > 0, "the Matriarch's telegraphed blows did land on the giant (%d checked)" % checked)
 
 
 func test_harrok_ten_seeds() -> void:
+	var checked := 0
 	for seed_value: int in SEEDS:
-		var level := await _level(MOOT)
+		var level := await _level(MOOT, 6)
 		var p := level.get_node("Player") as GiantPlayer
 		var h := level.get_node("Harrok") as RivalGiantEnemy
 		var arena := level.get_node("BossArena") as BossArena
@@ -159,7 +165,7 @@ func test_harrok_ten_seeds() -> void:
 		assert_true(h.yielded, "seed %d: he yields" % seed_value)
 		assert_eq(h.attempt_phases, [2] as Array[int], "seed %d: phase 2 once in attempt 2" % seed_value)
 		assert_true(h.entity.combatant.pools.ratio("health") >= 0.25 - 1e-4, "seed %d: never below his yield" % seed_value)
-		_check_telegraphed(p, [BB.MOOT_ID], "harrok seed %d" % seed_value)
+		checked += _check_telegraphed(p, [BB.MOOT_ID], "harrok seed %d" % seed_value)
 		if seed_value % 2 == 0:
 			assert_true(h.p34_decide("spare"), "seed %d: Spare" % seed_value)
 			await step_ticks(2)
@@ -174,11 +180,12 @@ func test_harrok_ten_seeds() -> void:
 		level.queue_free()
 		await step_ticks(2)
 		WorldState.clear()
+	assert_true(checked > 0, "Harrok's telegraphed blows did land on the giant (%d checked)" % checked)
 
 
 func test_the_iron_regiment_ten_seeds() -> void:
 	for seed_value: int in SEEDS:
-		var level := await _level(BAILEY)
+		var level := await _level(BAILEY, 5)
 		var p := level.get_node("Player") as GiantPlayer
 		var battle := level.get_node("BattleBoss") as BattleBoss
 		var d := level.get_node("EncounterDirector") as EncounterDirector
