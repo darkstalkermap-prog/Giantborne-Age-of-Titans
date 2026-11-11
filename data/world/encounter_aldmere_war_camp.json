@@ -1,0 +1,49 @@
+{
+	"schema_version": 1,
+	"id": "encounter.aldmere_war_camp",
+	"type": "encounter",
+	"display_name": "Aldmere's war camp",
+	"description": "P36 (plan M6-M9 §5.4, §5.7, §5.10): the war camp where Aldmere builds its war engines for the march on the giant lands - a shield wall of ten and its banner on the camp's south side, the crews of its four engines (two catapults, two ballistae: the sabotage path wrecks them), four cavalry at the pickets and two archers. Faction aldmere: neutral and watching until offended (wrecking an engine is an offence: two and the kingdom is at war). Leash 70 m.",
+	"level": "level.world",
+	"center_m": [520, 33.35, 120],
+	"activate_radius_m": 150,
+	"deactivate_radius_m": 230,
+	"leash_radius_m": 70,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"web_formation_scale": 0.7,
+	"engines": [
+		{"engine": "world.aldmere.camp_catapult_1", "crew": ["world.aldmere.camp_crew_1"]},
+		{"engine": "world.aldmere.camp_ballista_1", "crew": ["world.aldmere.camp_crew_2"]},
+		{"engine": "world.aldmere.camp_ballista_2", "crew": ["world.aldmere.camp_crew_3"]},
+		{"engine": "world.aldmere.camp_catapult_2", "crew": ["world.aldmere.camp_crew_4"]}
+	],
+	"formations": [
+		{"id": "shields", "kind": "shield", "display_name": "Aldmere Shield Wall", "banner": "world.aldmere.camp_banner", "banner_name": "Banner of the War Camp", "banner_color": [0.2, 0.3, 0.6], "ranks": 2, "files": 5, "rank_spacing_m": 2.0, "file_spacing_m": 1.6, "facing": "threat", "yaw_deg": 180, "turn_deg_s": 40, "advance_mps": 1.0, "advance_m": 10, "brace_m": 6.0, "brace_action": "ability.formation_brace_shield", "brace_height_m": 5.0, "morale_start": 90, "flee_points": ["world.marker.camp_flee_n", "world.marker.camp_flee_e", "world.marker.camp_flee_w"]}
+	],
+	"spawns": [
+		{"entity_id": "world.aldmere.camp_shield_1", "definition": "enemy.shieldman", "position_m": [523.2, 32.78, 168.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 0},
+		{"entity_id": "world.aldmere.camp_shield_2", "definition": "enemy.shieldman", "position_m": [521.6, 32.81, 168.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 1},
+		{"entity_id": "world.aldmere.camp_shield_3", "definition": "enemy.shieldman", "position_m": [520.0, 32.85, 168.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 2},
+		{"entity_id": "world.aldmere.camp_shield_4", "definition": "enemy.shieldman", "position_m": [518.4, 32.89, 168.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 3},
+		{"entity_id": "world.aldmere.camp_shield_5", "definition": "enemy.shieldman", "position_m": [516.8, 32.93, 168.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 4},
+		{"entity_id": "world.aldmere.camp_shield_6", "definition": "enemy.shieldman", "position_m": [523.2, 32.9, 166.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 5},
+		{"entity_id": "world.aldmere.camp_shield_7", "definition": "enemy.shieldman", "position_m": [521.6, 32.94, 166.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 6},
+		{"entity_id": "world.aldmere.camp_shield_8", "definition": "enemy.shieldman", "position_m": [520.0, 32.97, 166.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 7},
+		{"entity_id": "world.aldmere.camp_shield_9", "definition": "enemy.shieldman", "position_m": [518.4, 33.0, 166.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 8},
+		{"entity_id": "world.aldmere.camp_shield_10", "definition": "enemy.shieldman", "position_m": [516.8, 33.03, 166.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": 9},
+		{"entity_id": "world.aldmere.camp_banner", "definition": "enemy.bannerman", "position_m": [520.0, 33.09, 163.8], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "shields", "slot": -1},
+		{"entity_id": "world.aldmere.camp_crew_1", "definition": "enemy.siege_crew", "position_m": [486.4, 33.35, 67.8], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.camp_crew_2", "definition": "enemy.siege_crew", "position_m": [506.4, 33.35, 59.8], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.camp_crew_3", "definition": "enemy.siege_crew", "position_m": [530.4, 33.35, 59.8], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.camp_crew_4", "definition": "enemy.siege_crew", "position_m": [550.4, 36.79, 67.8], "yaw_deg": 0, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.camp_rider_1", "definition": "enemy.cavalry", "position_m": [580, 33.35, 112], "yaw_deg": -90, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.camp_rider_2", "definition": "enemy.cavalry", "position_m": [586, 33.35, 120], "yaw_deg": -90, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.camp_rider_3", "definition": "enemy.cavalry", "position_m": [580, 33.35, 128], "yaw_deg": -90, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.camp_rider_4", "definition": "enemy.cavalry", "position_m": [586, 33.35, 136], "yaw_deg": -90, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.camp_archer_1", "definition": "enemy.archer", "position_m": [472, 33.35, 150], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.camp_archer_2", "definition": "enemy.archer", "position_m": [568, 33.35, 150], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

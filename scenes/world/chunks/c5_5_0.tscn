@@ -4,10 +4,11 @@
 [ext_resource type="Script" path="res://scripts/combat/combat_entity.gd" id="2_c8050"]
 [ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="3_129e0"]
 [ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="4_2c089"]
-[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="5_960f4"]
-[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="6_add9b"]
-[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="7_acc12"]
-[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="8_f30a1"]
+[ext_resource type="Script" path="res://scripts/world/condition_spawn.gd" id="5_0a08d"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="6_960f4"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="7_add9b"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="8_acc12"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="9_f30a1"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(18, 7, 1.2)
@@ -258,7 +259,21 @@ navigation_layers = 16
 start_position = Vector3(0, -0.24900055, 8)
 end_position = Vector3(0, -0.24900055, -11.5)
 
-[node name="world_crownmarch_kings_road_cache" type="StaticBody3D" parent="Props" instance=ExtResource("5_960f4")]
+[node name="world_crownmarch_toll_ballista" type="Node3D" parent="Props"]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 219, 22.23, 101.5)
+script = ExtResource("5_0a08d")
+scene = "res://scenes/world/siege_ballista.tscn"
+props = {
+"faction": "toll_riders",
+"world_id": "world.crownmarch.toll_ballista"
+}
+when = {
+"stage": 5.0,
+"type": "stage_at_least"
+}
+child_name = "world_crownmarch_toll_ballista"
+
+[node name="world_crownmarch_kings_road_cache" type="StaticBody3D" parent="Props" instance=ExtResource("6_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 57, 11.618, 66)
 collision_layer = 16
 collision_mask = 0
@@ -266,7 +281,7 @@ script = ExtResource("1_5fc47")
 world_id = "world.crownmarch.kings_road_cache"
 loot_table = "loot.cache_kings_road"
 
-[node name="world_crownmarch_toll_cache" type="StaticBody3D" parent="Props" instance=ExtResource("5_960f4")]
+[node name="world_crownmarch_toll_cache" type="StaticBody3D" parent="Props" instance=ExtResource("6_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 192, 12.252, 66)
 collision_layer = 16
 collision_mask = 0
@@ -280,7 +295,7 @@ loot_table = "loot.cache_toll_fort"
 
 [node name="world_cp_kings_road" type="Marker3D" parent="Waystones"]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 44, 11.860001, 84)
-script = ExtResource("6_add9b")
+script = ExtResource("7_add9b")
 requires_flags = PackedStringArray()
 display_name = "King's Road waystone"
 checkpoint_id = "world.cp.kings_road"
@@ -306,26 +321,26 @@ mesh = SubResource("ArrayMesh_9")
 
 [node name="world_marker_toll_bar" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 148, 11.464, 116)
-script = ExtResource("7_acc12")
+script = ExtResource("8_acc12")
 marker_id = "world.marker.toll_bar"
 
 [node name="world_marker_toll_fort" type="Marker3D" parent="Markers/Objective"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 204, 12.448, 116)
-script = ExtResource("7_acc12")
+script = ExtResource("8_acc12")
 marker_id = "world.marker.toll_fort"
 
 [node name="Elevation" type="Node3D" parent="Markers"]
 
 [node name="world_marker_toll_tower_w" type="Marker3D" parent="Markers/Elevation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 187.6, 25.4556, 100)
-script = ExtResource("7_acc12")
+script = ExtResource("8_acc12")
 marker_id = "world.marker.toll_tower_w"
 kind = 2
 faction = "toll_riders"
 
 [node name="world_marker_toll_tower_e" type="Marker3D" parent="Markers/Elevation"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 190.4, 25.470001, 100)
-script = ExtResource("7_acc12")
+script = ExtResource("8_acc12")
 marker_id = "world.marker.toll_tower_e"
 kind = 2
 faction = "toll_riders"
@@ -334,13 +349,13 @@ faction = "toll_riders"
 
 [node name="world_marker_toll_flee_n" type="Marker3D" parent="Markers/Patrol"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 204, 17.604, 24)
-script = ExtResource("7_acc12")
+script = ExtResource("8_acc12")
 marker_id = "world.marker.toll_flee_n"
 kind = 5
 
 [node name="world_marker_toll_flee_w" type="Marker3D" parent="Markers/Patrol"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 13.96, 62)
-script = ExtResource("7_acc12")
+script = ExtResource("8_acc12")
 marker_id = "world.marker.toll_flee_w"
 kind = 5
 
@@ -354,7 +369,7 @@ kind = 5
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.024536, 7.319914, 125.87854)
 collision_layer = 64
 collision_mask = 0
-script = ExtResource("8_f30a1")
+script = ExtResource("9_f30a1")
 gate_id = "world.gate.wend_deep"
 message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
 
@@ -430,7 +445,7 @@ shape = SubResource("BoxShape3D_26")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7222595, 7.7892375, 148.62476)
 collision_layer = 64
 collision_mask = 0
-script = ExtResource("8_f30a1")
+script = ExtResource("9_f30a1")
 gate_id = "world.gate.wend_deep"
 message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
 

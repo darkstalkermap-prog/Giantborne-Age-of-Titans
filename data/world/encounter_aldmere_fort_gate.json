@@ -1,0 +1,44 @@
+{
+	"schema_version": 1,
+	"id": "encounter.aldmere_fort_gate",
+	"type": "encounter",
+	"display_name": "Fort Aldmere's gate garrison",
+	"description": "P36 (plan M6-M9 §5.4, §5.7, §5.10, §2.12): the garrison before Fort Aldmere's gate - a pike formation of ten and its banner on the road before the gate (stage >= 4), four wall archers on the gate bastions (elevation markers: their posts) and the crews of the bastions' two ballistae (faction aldmere: neutral until offended - breaching the gate is an offence, so the breach path fights them). While the giant has the herald's leave to parley, or carries Brannock's banner within 150 m of the gate, and the gate stands, the garrison stands down (stand_down_when): the parley path walks up to the gate unharmed whatever Aldmere's standing. Leash 60 m.",
+	"level": "level.world",
+	"center_m": [650, 55.83, -62],
+	"activate_radius_m": 130,
+	"deactivate_radius_m": 210,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"web_formation_scale": 0.7,
+	"engines": [
+		{"engine": "world.aldmere.fort_ballista_w", "crew": ["world.aldmere.wall_crew_1"]},
+		{"engine": "world.aldmere.fort_ballista_e", "crew": ["world.aldmere.wall_crew_2"]}
+	],
+	"stand_down_when": {"type": "all", "of": [{"type": "not", "of": {"type": "destroyed", "world_id": "world.aldmere.fort_gate"}}, {"type": "any", "of": [{"type": "flag", "flag": "oath.crown.parley_accepted"}, {"type": "all", "of": [{"type": "has_item", "item": "item.brannock_banner", "count": 1}, {"type": "near", "target": "world.aldmere.fort_gate", "radius_m": 150}]}]}]},
+	"formations": [
+		{"id": "pikes", "kind": "pike", "display_name": "Fort Aldmere's Pikes", "banner": "world.aldmere.gate_banner", "banner_name": "Banner of Fort Aldmere", "banner_color": [0.2, 0.3, 0.6], "ranks": 2, "files": 5, "rank_spacing_m": 2.2, "file_spacing_m": 1.6, "facing": "threat", "yaw_deg": 180, "turn_deg_s": 40, "advance_mps": 1.2, "advance_m": 18, "brace_m": 6.0, "brace_action": "ability.formation_brace_pike", "brace_height_m": 5.0, "morale_start": 90, "flee_points": ["world.marker.fort_flee_w", "world.marker.fort_flee_e", "world.marker.fort_flee_s"], "min_stage": 4}
+	],
+	"spawns": [
+		{"entity_id": "world.aldmere.gate_pike_1", "definition": "enemy.pikeman", "position_m": [653.2, 57.96, -78.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 0, "min_stage": 4},
+		{"entity_id": "world.aldmere.gate_pike_2", "definition": "enemy.pikeman", "position_m": [651.6, 57.95, -78.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 1, "min_stage": 4},
+		{"entity_id": "world.aldmere.gate_pike_3", "definition": "enemy.pikeman", "position_m": [650.0, 57.91, -78.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 2, "min_stage": 4},
+		{"entity_id": "world.aldmere.gate_pike_4", "definition": "enemy.pikeman", "position_m": [648.4, 57.88, -78.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 3, "min_stage": 4},
+		{"entity_id": "world.aldmere.gate_pike_5", "definition": "enemy.pikeman", "position_m": [646.8, 57.8, -78.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 4, "min_stage": 4},
+		{"entity_id": "world.aldmere.gate_pike_6", "definition": "enemy.pikeman", "position_m": [653.2, 58.01, -80.2], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 5, "min_stage": 4},
+		{"entity_id": "world.aldmere.gate_pike_7", "definition": "enemy.pikeman", "position_m": [651.6, 58.03, -80.2], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 6, "min_stage": 4},
+		{"entity_id": "world.aldmere.gate_pike_8", "definition": "enemy.pikeman", "position_m": [650.0, 58.04, -80.2], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 7, "min_stage": 4},
+		{"entity_id": "world.aldmere.gate_pike_9", "definition": "enemy.pikeman", "position_m": [648.4, 58.05, -80.2], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 8, "min_stage": 4},
+		{"entity_id": "world.aldmere.gate_pike_10", "definition": "enemy.pikeman", "position_m": [646.8, 58.03, -80.2], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": 9, "min_stage": 4},
+		{"entity_id": "world.aldmere.gate_banner", "definition": "enemy.bannerman", "position_m": [650.0, 58.05, -82.4], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": "", "formation": "pikes", "slot": -1, "min_stage": 4},
+		{"entity_id": "world.aldmere.wall_archer_1", "definition": "enemy.archer", "position_m": [631, 75.0, -90.5], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.wall_archer_2", "definition": "enemy.archer", "position_m": [639, 75.0, -90.5], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.wall_archer_3", "definition": "enemy.archer", "position_m": [661, 74.48, -90.5], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.wall_archer_4", "definition": "enemy.archer", "position_m": [669, 74.48, -90.5], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.wall_crew_1", "definition": "enemy.siege_crew", "position_m": [636.6, 75.0, -96.8], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.aldmere.wall_crew_2", "definition": "enemy.siege_crew", "position_m": [666.6, 74.48, -96.8], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "encounter.aldmere_herald",
+	"type": "encounter",
+	"display_name": "Aldmere's herald",
+	"description": "P36 (plan M6-M9 §5.7): Herald Maelis at the war camp's south edge (world.marker.war_camp_edge): the crown's oath begins with her. A talker (faction aldmere, protected); not budgeted.",
+	"level": "level.world",
+	"center_m": [500, 32.81, 192],
+	"activate_radius_m": 160,
+	"deactivate_radius_m": 240,
+	"leash_radius_m": 20,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.aldmere.herald", "definition": "npc.herald", "position_m": [500, 32.22, 194], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

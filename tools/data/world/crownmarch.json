@@ -71,7 +71,9 @@
 		{"kind": "breakable_site", "style": "house", "id": "world.crownmarch.millford_house_7", "pos": [-322, 616], "yaw": -20, "size": [9, 5, 7], "faction": "millford", "roof": "thatch", "wall": "plaster"},
 		{"kind": "breakable_site", "style": "dam", "id": "world.crownmarch.millrace_dam", "pos": [-360, 560], "yaw": 20, "quest_target": true},
 		{"kind": "breakable_site", "style": "gate", "id": "world.crownmarch.toll_gate", "pos": [460, 355], "yaw": 0, "size": [18, 7, 1.2], "faction": "toll_riders", "quest_target": true},
-		{"kind": "dressing", "style": "toll_bar", "id": "world.crownmarch.toll_bar", "pos": [408, 368], "yaw": 68, "size": [22, 6]}
+		{"kind": "dressing", "style": "toll_bar", "id": "world.crownmarch.toll_bar", "pos": [408, 368], "yaw": 68, "size": [22, 6]},
+		{"kind": "platform", "id": "world.crownmarch.toll_gun_tower", "pos": [475, 357], "yaw": 0, "size": [8, 10], "banner_color": "canvas_red", "note": "P36: the toll fort's gun tower east of the gate - an open deck where the stage-5 tower ballista stands (encounter.crownmarch_toll_fort crews it)."},
+		{"kind": "engine", "style": "ballista", "id": "world.crownmarch.toll_ballista", "pos": [475, 357.5], "y": 22.23, "yaw": 180, "faction": "toll_riders", "appears_when": {"type": "stage_at_least", "stage": 5}, "note": "P36: on the gun tower's deck (its top: the ground at the tower, 12.23, + 10 m); mounted for a giant of stage 5 (a ConditionSpawn until then)."}
 	],
 	"shrines": [
 		{"id": "world.shrine.kingsgate", "record": "shrine.world_kingsgate", "pos": [-300, 770], "yaw": 0, "poi": "poi.kingsgate_shrine", "max_stage": 10}

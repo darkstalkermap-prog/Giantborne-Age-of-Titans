@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "prop.gate_fort_aldmere",
+	"type": "prop",
+	"category": "structural",
+	"display_name": "Fort Aldmere's Gate",
+	"height_m": 12.0,
+	"health": 3000,
+	"armor": 50,
+	"accepted_attack_categories": ["melee", "ability", "projectile", "siege"],
+	"min_growth_stage": 4,
+	"requires_permission": "gate_breach",
+	"description": "P36 (plan M6-M9 §5.4, §5.5, §5.7, §5.13): Fort Aldmere's main gate between its bastions - iron-bound timber 18 m wide and 12 m tall. A stage-4 giant breaches it (the crown's breach path: Aldmere's gate is its fortress, so every blow on it is an offence against Aldmere and its garrison takes up arms); the crown's parley opens it without a blow (open_when_flag world.aldmere.fort_open), so a friend walks into the bailey and to the fort's forge. Breached, it opens the way to the Iron Regiment's bailey.",
+	"locked_message": "Fortified gates can be breached at stage 4.",
+	"open_when_flag": "world.aldmere.fort_open",
+	"on_destroyed_flags": {"world.aldmere.fort_breached": true},
+	"prop_tags": ["house"],
+	"damage_stages": [
+		{"id": "intact", "at_or_below_frac": 1.0, "visual": "Intact"},
+		{"id": "breached", "at_or_below_frac": 0.0, "visual": "Broken", "removes_collision": true, "enables_nav_links": true}
+	],
+	"debris_count": 16,
+	"debris_length_m": 16,
+	"debris_layout": "line",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}
