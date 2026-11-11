@@ -233,6 +233,23 @@ static func fields() -> Dictionary:
 	(((f.grab.fields as Dictionary).mode as Dictionary).enum as Array).append("rampart")
 
 	## @anchor P34
+	# P34 (plan M6-M9 §2.10, §5.13): an enemy's lobbed throw (a rival giant's boulder) is `indirect`: its
+	# circle telegraph lies at the landing point, committed when the windup begins, and stays there
+	# through the flight with the incoming whistle (P28's router and P32's landing circle). An
+	# `arena_hazard` is a brain's arena effect, not a blow of the actor's own body (Harrok's falling
+	# stones): every interval_s the brain keeps `count` hazards going, each a circle of radius_m placed
+	# distance_m from its target (at least min_gap_m from the others), telegraphed for telegraph_s and
+	# then striking with this action's numbers - credited to the actor, a cylinder pulse of height_m.
+	f.merge({
+		"indirect": U.bool_field(),
+		"arena_hazard": {"t": "dict", "fields": {
+			"count": U.int_field(1, 8, true),
+			"interval_s": U.pos(true),
+			"telegraph_s": U.pos(true),
+			"radius_m": U.pos(true),
+			"distance_m": {"t": "array", "items": "number"},
+			"min_gap_m": U.num(0.0)}},
+	})
 
 	return f
 
@@ -374,6 +391,21 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.errors.append("%s: attacker_height_override_m changes poise and knockback only: give the action size_policy 'none' (decision 21)" % ctx)
 
 	## @anchor P34
+	# P34: an indirect action is a lobbed projectile telegraphed by a circle (at its landing point); an
+	# arena hazard strikes with a cylinder pulse and announces a circle, its distances a [min, max] pair.
+	if bool(d.get("indirect", false)):
+		var p34_tel: Variant = d.get("telegraph")
+		if str(d.get("hit_shape", "")) != "projectile" or typeof(p34_tel) != TYPE_DICTIONARY \
+				or str((p34_tel as Dictionary).get("shape", "")) != "circle":
+			out.errors.append("%s: an indirect action is a projectile with a circle telegraph (its landing point)" % ctx)
+	var p34_hazard: Variant = d.get("arena_hazard")
+	if typeof(p34_hazard) == TYPE_DICTIONARY:
+		if str(d.get("hit_shape", "")) != "cylinder_pulse":
+			out.errors.append("%s: an arena_hazard strikes as a cylinder_pulse" % ctx)
+		var p34_dist: Variant = p34_hazard.get("distance_m")
+		if typeof(p34_dist) == TYPE_ARRAY and ((p34_dist as Array).size() != 2 \
+				or float(p34_dist[0]) > float(p34_dist[1]) or float(p34_dist[0]) < 0.0):
+			out.errors.append("%s.arena_hazard.distance_m: give [min, max] with 0 <= min <= max" % ctx)
 
 
 static func required_ids() -> Dictionary:

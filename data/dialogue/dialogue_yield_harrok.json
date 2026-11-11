@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.yield_harrok",
+	"type": "dialogue",
+	"speaker": "Harrok the Unbowed",
+	"description": "P34 (plan M6-M9 section 2.10, 5.13): Harrok's yield in the honour duel - the yield protocol's two-choice prompt. Spare (outcome spare: the duel is won) or Strike, which asks again before it counts (outcome strike: he rises and fights to the death).",
+	"entries": [{"node": "yield", "conditions": []}],
+	"nodes": [
+		{"id": "yield", "text": "Harrok drops to one knee and lays his axe on the stone. \"The duel is yours. The clans have seen it. Will you take my life as well?\"", "choices": [{"text": "Spare him. The duel is won.", "next": "spared", "effects": {"outcome": "spare"}}, {"text": "Strike him down.", "next": "confirm"}]},
+		{"id": "confirm", "text": "The watching clans fall silent. Strike a giant who knelt to you? He will rise and fight to the death.", "choices": [{"text": "Strike. (There is no taking it back.)", "next": "struck", "effects": {"outcome": "strike"}}, {"text": "No - let me think again.", "next": "yield"}]},
+		{"id": "spared", "text": "Harrok rises and bows his head. \"The Moot will hear that the Unbowed bowed - and was spared.\"", "choices": [{"text": "[Leave]", "next": ""}]},
+		{"id": "struck", "text": "Harrok's eyes harden. He takes up his axe and rises: this ends with one of you dead.", "choices": [{"text": "[Leave]", "next": ""}]}
+	]
+}

@@ -234,6 +234,10 @@ func _post_pass() -> void:
 	errors.append_array(Talents.data_errors(records, record_paths))
 
 	## @anchor P34
+	# P34 (plan M6-M9 §2.10, §5.13): a yield's dialogue offers "spare" and "strike", a brood can be carried
+	# and thrown as a body, a phase's hazard is an arena hazard, a regeneration's status is tagged
+	# Regeneration (BossRules: pure, so the actors stay unloaded).
+	errors.append_array(BossRules.data_errors(records, record_paths))
 
 	## @anchor P37
 

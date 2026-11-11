@@ -19,6 +19,19 @@ extends Node3D
 ##   * A death in the arena reloads the last checkpoint, which reloads the level: the arena resets.
 ## Engagement and the gate run in Sim's POST_RESOLVE phase (HOOK_ORDER), never from a physics
 ## callback.
+##
+## P34 (plan M6-M9 §2.10, §5.13), for every boss:
+##   * The disengage rule: while engaged, a giant that stays beyond inner_radius_m + DISENGAGE_MARGIN_M
+##     of the centre for DISENGAGE_S ends the attempt - the arena waits again with its gate open, the
+##     boss starts a new attempt (EnemyActor.p34_reset_attempt: home, full health, its first phase)
+##     and Events.boss_disengaged(boss, "left") is emitted (the music returns to the zone). Entering
+##     again engages a new attempt.
+##   * Members of the arena's own encounter and the boss's brood (the Matriarch's whelps) are never
+##     removed as intruders.
+##   * A yield's decision (EnemyActor.p34_decide -> p34_on_yield_decided): Spare ends the fight as won
+##     (the gate opens, the defeated flag, boss_defeated); Strike ends it when the boss dies.
+##   * The boss's flight (boss_disengaged(boss, "fled"), the Matriarch's drive-out) ends it too: the
+##     gate opens and the defeated flag is set, without boss_defeated.
 
 const GROUP := "boss_arenas"
 const HOOK_ORDER := 120
@@ -28,6 +41,9 @@ const DEFAULT_DEFEATED_FLAG := "world.ogre_king.defeated"
 const GATE_CLEARANCE_M := 0.3
 ## The ring's wall thickness counts as inside the bounds.
 const WALL_MARGIN_M := 2.0
+## P34: the disengage rule's defaults (plan M6-M9 §2.10).
+const DISENGAGE_S := 5.0
+const DISENGAGE_MARGIN_M := 20.0
 
 enum State { WAITING, ENGAGING, ENGAGED, DEFEATED }
 const STATE_NAMES := ["waiting", "engaging", "engaged", "defeated"]
@@ -46,12 +62,19 @@ const STATE_NAMES := ["waiting", "engaging", "engaged", "defeated"]
 @export var antechamber_rect := Rect2()
 ## Set (first write wins) when the boss dies.
 @export var defeated_flag := DEFAULT_DEFEATED_FLAG
+## P34: the disengage rule (seconds beyond inner_radius_m + disengage_margin_m; 0 = never).
+@export var disengage_s := DISENGAGE_S
+@export var disengage_margin_m := DISENGAGE_MARGIN_M
 
 var state: int = State.WAITING
 var engaged_tick := -1
 var defeated_tick := -1
 ## Entity ids removed from the arena at engagement (tests, debug).
 var removed_intruders: Array[String] = []
+## P34: attempts engaged and attempts ended by the disengage rule (tests, debug).
+var attempts := 0
+var disengages := 0
+var _outside_since := -1
 var gate: StaticBody3D
 var _gate_shape: CollisionShape3D
 
@@ -63,6 +86,8 @@ func _enter_tree() -> void:
 		Events.area_entered.connect(_on_area_entered)
 	if not Events.entity_died.is_connected(_on_entity_died):
 		Events.entity_died.connect(_on_entity_died)
+	if not Events.boss_disengaged.is_connected(_on_boss_disengaged):
+		Events.boss_disengaged.connect(_on_boss_disengaged)   # P34: a boss that fled
 	Sim.add_hook(Sim.Hook.POST_RESOLVE, self, _on_post_resolve, HOOK_ORDER)
 
 
@@ -72,6 +97,8 @@ func _exit_tree() -> void:
 		Events.area_entered.disconnect(_on_area_entered)
 	if Events.entity_died.is_connected(_on_entity_died):
 		Events.entity_died.disconnect(_on_entity_died)
+	if Events.boss_disengaged.is_connected(_on_boss_disengaged):
+		Events.boss_disengaged.disconnect(_on_boss_disengaged)
 
 
 func _ready() -> void:
@@ -145,6 +172,9 @@ func _on_area_entered(_tick: int, area_id: String, _entity_id: String) -> void:
 
 
 func _on_post_resolve(tick: int) -> void:
+	if state == State.ENGAGED:
+		_check_disengage(tick)   # P34: the disengage rule
+		return
 	if state != State.ENGAGING:
 		return
 	var p := _player()
@@ -173,6 +203,8 @@ func engage(tick: int = -1) -> void:
 	state = State.ENGAGED
 	engaged_tick = t
 	_alert_boss(t)
+	attempts += 1
+	_outside_since = -1
 	Events.boss_engaged.emit(t, boss_id)
 
 
@@ -232,6 +264,8 @@ func _remove_intruders() -> void:
 			continue
 		if e.entity_id == boss_id or not e.entity.is_alive() or not in_bounds(e.global_position):
 			continue
+		if _p34_keeps(e, d):
+			continue   # P34: the arena's own encounter and the boss's brood (the Matriarch's whelps) stay
 		removed_intruders.append(e.entity_id)
 		if d != null and d.member_status(e.entity_id) == EncounterDirector.SPAWNED:
 			d.despawn(e.entity_id)
@@ -245,6 +279,8 @@ func _alert_boss(tick: int) -> void:
 	var p := _player()
 	if b == null or p == null or b.brain == null:
 		return
+	if b.has_method("p34_stop_return"):
+		b.p34_stop_return()   # P34: a new attempt begins while the boss still walks home
 	b.brain.on_noise(tick, p.global_position, p.entity.entity_id, true)
 
 
@@ -269,3 +305,73 @@ func _defeat(tick: int) -> void:
 	if defeated_flag != "":
 		WorldState.try_set_flag(defeated_flag, true)
 	Events.boss_defeated.emit(tick, boss_id)
+
+
+# --------------------------------------------------------------------------- P34: attempts and endings
+
+## True for an enemy that belongs to this fight: a member of the arena's own encounter, or of the
+## boss's brood (its record's brood.definition).
+func _p34_keeps(e: EnemyActor, d: EncounterDirector) -> bool:
+	if d != null and encounter_id != "" and d.members_of(encounter_id).has(e.entity_id):
+		return true
+	var b := boss()
+	var brood: Variant = b.record.get("brood") if b != null else null
+	return typeof(brood) == TYPE_DICTIONARY and e.entity.definition_id == str((brood as Dictionary).get("definition", ""))
+
+
+## The disengage rule (see the class notes): ENGAGED, the giant beyond the radius for disengage_s.
+func _check_disengage(tick: int) -> void:
+	if disengage_s <= 0.0:
+		return
+	var p := _player()
+	if p == null:
+		return
+	var local := to_local(p.global_position)
+	if Vector2(local.x, local.z).length() <= inner_radius_m + disengage_margin_m:
+		_outside_since = -1
+		return
+	if _outside_since < 0:
+		_outside_since = tick
+	elif tick - _outside_since >= ActionDef.seconds_to_ticks(disengage_s):
+		disengage(tick)
+
+
+## Ends the attempt (the disengage rule; tests may call it): the arena waits with its gate open, the
+## boss begins a new attempt, Events.boss_disengaged(boss, "left"). Only while engaged.
+func disengage(tick: int = -1) -> void:
+	if state != State.ENGAGED:
+		return
+	var t := tick if tick >= 0 else Sim.tick
+	state = State.WAITING
+	_outside_since = -1
+	disengages += 1
+	_set_gate_closed(false)
+	_reset_attempt()
+	Events.boss_disengaged.emit(t, boss_id, "left")
+
+
+## The boss's part of a new attempt (BattleBoss resets its battle instead).
+func _reset_attempt() -> void:
+	var b := boss()
+	if b != null and b.has_method("p34_reset_attempt"):
+		b.p34_reset_attempt()
+
+
+## A yielded boss's decision (EnemyActor.p34_decide, through the group): Spare wins the fight.
+func p34_on_yield_decided(entity_id: String, outcome: String) -> void:
+	if outcome == "spare" and entity_id == _yielding_id() and state != State.DEFEATED:
+		_defeat(Sim.tick)
+
+
+## The entity whose yield ends this arena's fight (the boss; BattleBoss: its commander).
+func _yielding_id() -> String:
+	return boss_id
+
+
+func _on_boss_disengaged(tick: int, id: String, reason: String) -> void:
+	if reason == "fled" and id == boss_id and state != State.DEFEATED:
+		state = State.DEFEATED
+		defeated_tick = tick
+		_set_gate_closed(false)
+		if defeated_flag != "":
+			WorldState.try_set_flag(defeated_flag, true)

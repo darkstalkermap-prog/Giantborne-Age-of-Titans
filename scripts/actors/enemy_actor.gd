@@ -120,6 +120,7 @@ func _ready() -> void:
 	_p22_ready()
 	_p24b_ready()
 	_p30_ready()
+	_p34_ready()   # P34: regeneration, the yield protocol, boss outcomes
 	Sim.register_actor(entity.entity_id, self)
 
 
@@ -751,6 +752,8 @@ static func entity_radius(t: CombatEntity) -> float:
 ## (radius_m, 0), line (width_m / 2, length_m), cone (radius_m, radius_m; arc_deg is in the
 ## action record). Duration = the windup.
 func _on_phase_entered(action: ActionDef, instance_id: int, phase: int) -> void:
+	if _p34_on_phase_entered(action, instance_id, phase):
+		return   # P34: a lobbed throw's circle lies at its committed landing point
 	if _p30_on_phase_entered(action, phase, instance_id):
 		return   # P30: a band brace's telegraph lies along its formation's front rank; a rally strikes
 	if phase != ActionDef.Phase.WINDUP or action == null:
@@ -1480,6 +1483,8 @@ func launch_gap_ticks(action_id: String) -> int:
 static func max_ranged_windup_ticks() -> int:
 	var most := 0
 	for rec: Dictionary in GameData.records_of_type("enemy"):
+		if _p34_own_launch(rec):
+			continue   # P34: a troll's whelp and a giant's boulder are lobs, not volleys
 		for id: Variant in rec.get("attacks", []):
 			var a := GameData.get_action(str(id))
 			if a != null and a.hit_shape == "projectile":
@@ -2977,6 +2982,8 @@ func _p30_rig_state(s: Dictionary) -> Dictionary:
 ## CombatEntity.receive_hit asks before resolving: every hit is accepted; the shield rule reads it
 ## (receive_hit builds the defence state right after this, in the same call).
 func accepts_hit(hit: HitEvent) -> bool:
+	if not _p34_accepts(hit):
+		return false   # P34: a yielded boss is IMMUNE to all but the confirmed strike
 	_p30_incoming = hit
 	return true
 
@@ -3240,5 +3247,467 @@ func _p32_crew_face() -> Vector3:
 	return e.global_position + (fwd.normalized() if fwd.length_squared() > 1e-6 else Vector3.FORWARD) * 10.0
 
 ## @anchor P34
+# --- the larger creatures and the bosses: regeneration and fire, the yield protocol, lobbed throws,
+# --- attempts (P34) --------------------------------------------------------------------------------
+# Plan M6-M9 §2.10, §5.13. The hooks outside this section are one line each: _ready() calls
+# _p34_ready(); _on_phase_entered() asks _p34_on_phase_entered() first; accepts_hit() asks
+# _p34_accepts() first; max_ranged_windup_ticks() skips _p34_own_launch() records.
+#
+# Regeneration (record.regeneration; TrollEnemy calls p34_regen_step() every tick): every interval_s a
+# living, hurt troll that carries no status tagged one of blocked_by_tags (default Burning) heals
+# hp_per_s x interval_s (phase_hp_per_s by its boss phase) through CombatEntity.heal and refreshes its
+# marker status (status.troll_regen, tag Regeneration: the cue router's wet regrowth, the green pulse
+# TrollEnemy paints). Burning stops both; the marker runs out 1.5 s later. Fire: a prop tagged "fire"
+# (a brazier) broken within brazier_radius_m sets Burning for brazier_burn_s.
+#
+# The yield protocol (record.yield_at: Corvane, Harrok; §2.10). While a yield is armed the boss is
+# unkillable and every hit that takes its health to health_frac or below is held at that floor and
+# makes it yield ("health"); poise_breaks (or challenge_poise_breaks while challenge_conditions hold,
+# Wildheart's challenge) poise breaks make it yield too ("honour"); BattleBoss yields Corvane when his
+# guard breaks. p34_yield(): at once IMMUNE (accepts_hit refuses every hit, so whatever was swung,
+# thrown, pulsed or set burning before it lands on nothing) and non-hostile (AI off, the running action
+# cancelled, tokens back, its own projectiles and hazards discarded, not lockable, the player's lock on
+# it released); Events.boss_yielded(boss id) and the yield prompt (the dialogue of yield_at in
+# ScreenStack "yield", reopened while undecided). Only the prompt's outcome decides
+# (Events.dialogue_outcome, or p34_decide() for the bot and tests): "spare" leaves it kneeling, immune,
+# for good (outcome flag "spared"); "strike" (a confirm node first) either queues one killing blow from
+# the giant - the only hit it accepts (on_strike "kill") - or lets it rise to fight to the death
+# without a second yield (on_strike "fight"). Any death of a record with boss_outcome writes "slain"
+# (first write wins: a spared or fled boss keeps its outcome).
+#
+# Lobbed throws (an action with `indirect`: the rival giants' boulders): when the windup begins the
+# landing point is committed at the target's feet - the runner aims there and the circle telegraph is
+# announced there (P32's landing circle and P28's incoming whistle follow it).
+#
+# Attempts (§2.10 the disengage rule): p34_reset_attempt() (BossArena, BattleBoss) starts a new attempt
+# - the first phase again (each phase happens once per attempt: attempt_phases), full health, no
+# statuses, no poise breaks, the archetype's own reset (_p34_reset_extra) - and walks the boss home.
+
+## Archetypes whose projectile attacks are lobs, not volleys: they never set the launch gap of the
+## archers and mages (max_ranged_windup_ticks; the troll's whelp and the giants' boulders are slower).
+const P34_OWN_LAUNCH_ARCHETYPES := ["troll", "rival_giant"]
+const P34_YIELD_HOOK_ORDER := 125
+## An undecided yield's prompt opens again this long after it closed.
+const P34_PROMPT_RETRY_S := 1.0
+## The strike's power (it always kills: armour and resistances cannot save it).
+const P34_STRIKE_POWER := 1.0e7
+const P34_BURNING := "status.burning"
+
+## Regeneration heals given and the health they restored (tests, debug).
+var regen_heals := 0
+var regen_healed := 0.0
+## Poise breaks taken in this attempt (Harrok's honour and his second phase).
+var poise_breaks := 0
+## The yield protocol: true from p34_yield() on (a spared boss stays yielded).
+var yielded := false
+var yield_tick := -1
+var yield_reason := ""
+## "" until the prompt decides: "spare" | "strike".
+var yield_decided := ""
+## True once a boss stood down with its battle (BattleBoss): immune and still, like a spared one.
+var stood_down := false
+## The attempt this boss fights (1 at spawn; p34_reset_attempt starts the next).
+var attempt := 1
+## The boss phases (1-based) entered in this attempt, in order.
+var attempt_phases: Array[int] = []
+var _p34_regen: Dictionary = {}
+var _p34_yield: Dictionary = {}
+var _p34_regen_next := 0
+var _p34_fight_to_death := false
+var _p34_strike_instance := -1
+var _p34_prompt_tick := -1
+var _p34_ai_before := true
+var _p34_hook_owner: RefCounted = null
+var _p34_phase_due := -1
+
+
+func _p34_ready() -> void:
+	var regen: Variant = record.get("regeneration")
+	_p34_regen = regen if typeof(regen) == TYPE_DICTIONARY else {}
+	var y: Variant = record.get("yield_at")
+	_p34_yield = y if typeof(y) == TYPE_DICTIONARY else {}
+	var outcome := typeof(record.get("boss_outcome")) == TYPE_DICTIONARY
+	if outcome and not is_in_group("bosses"):
+		add_to_group("bosses")
+	if not _p34_yield.is_empty() or _p34_poise_phases():
+		entity.hit_taken.connect(_p34_on_hit_taken)
+	if outcome:
+		entity.died.connect(_p34_on_died)
+	if not _p34_yield.is_empty():
+		entity.combatant.unkillable = true   # the floor: _p34_on_hit_taken holds health there
+		Events.dialogue_outcome.connect(_p34_on_dialogue_outcome)
+		_p34_hook_owner = RefCounted.new()
+		Sim.add_hook(Sim.Hook.POST_RESOLVE, _p34_hook_owner, _p34_yield_step, P34_YIELD_HOOK_ORDER)
+	if float(_p34_regen.get("brazier_radius_m", 0.0)) > 0.0:
+		Events.object_destroyed.connect(_p34_on_object_destroyed)
+	if brain != null:
+		brain.boss_phase_entered.connect(_p34_on_boss_phase)
+
+
+## True for a record whose projectile attacks must not set the launch gap (P34_OWN_LAUNCH_ARCHETYPES).
+static func _p34_own_launch(rec: Dictionary) -> bool:
+	return P34_OWN_LAUNCH_ARCHETYPES.has(str(rec.get("archetype", "")))
+
+
+## The boss id of this actor's yield and outcome (yield_at.boss_id, else its entity id).
+func yield_boss_id() -> String:
+	var id := str(_p34_yield.get("boss_id", ""))
+	return id if id != "" else entity.entity_id
+
+
+func _p34_poise_phases() -> bool:
+	var boss: Variant = record.get("boss")
+	if typeof(boss) != TYPE_DICTIONARY:
+		return false
+	for ph: Variant in boss.get("phases", []):
+		if typeof(ph) == TYPE_DICTIONARY and int(ph.get("enter_on_poise_breaks", 0)) > 0:
+			return true
+	return false
+
+
+func _p34_on_boss_phase(phase: int, _phase_id: String, _enter_action: String) -> void:
+	attempt_phases.append(phase)
+
+
+# ---- regeneration and fire
+
+## One regeneration step (TrollEnemy, every tick; it acts every interval_s).
+func p34_regen_step(tick: int) -> void:
+	if _p34_regen.is_empty() or entity == null or not entity.is_alive() or tick < _p34_regen_next:
+		return
+	var interval := maxi(1, ActionDef.seconds_to_ticks(float(_p34_regen.get("interval_s", 1.0))))
+	_p34_regen_next = tick + interval
+	var pools := entity.combatant.pools
+	if p34_regen_blocked() or pools.health >= pools.health_max - 1e-3:
+		return
+	var before := pools.health
+	entity.heal(p34_regen_rate() * float(interval) / float(Sim.TICK_RATE), "regeneration")
+	regen_heals += 1
+	regen_healed += pools.health - before
+	entity.apply_status(str(_p34_regen.get("status", "")), NAN, -1.0, entity.entity_id)
+
+
+## True while a status tagged one of regeneration.blocked_by_tags (Burning) stops the regeneration.
+func p34_regen_blocked() -> bool:
+	for tag: Variant in _p34_regen.get("blocked_by_tags", ["Burning"]):
+		if p34_has_status_tag(str(tag)):
+			return true
+	return false
+
+
+## Health per second now: phase_hp_per_s of the current boss phase, else hp_per_s (0 without).
+func p34_regen_rate() -> float:
+	var by_phase: Variant = _p34_regen.get("phase_hp_per_s")
+	if typeof(by_phase) == TYPE_DICTIONARY and brain != null and brain.has_boss_phases():
+		var key := str(brain.boss_phase())
+		if (by_phase as Dictionary).has(key):
+			return float(by_phase[key])
+	return float(_p34_regen.get("hp_per_s", 0.0))
+
+
+## True while the regeneration's marker status (tag Regeneration) is on.
+func p34_regenerating() -> bool:
+	return not _p34_regen.is_empty() and entity != null \
+		and entity.combatant.statuses.has(str(_p34_regen.get("status", "")))
+
+
+## True while a status with `tag` is active.
+func p34_has_status_tag(tag: String) -> bool:
+	if entity == null or entity.combatant == null:
+		return false
+	for id: String in entity.combatant.statuses.active_ids():
+		var def := GameData.get_status(id)
+		if def != null and def.has_tag(tag):
+			return true
+	return false
+
+
+## Sets Burning for `seconds` (fire from a brazier, the pit or a burning body).
+func p34_ignite(seconds: float, source_id: String = "") -> bool:
+	if entity == null or not entity.is_alive():
+		return false
+	return entity.apply_status(P34_BURNING, NAN, seconds, source_id)
+
+
+## A prop tagged "fire" broken within brazier_radius_m sets Burning (brazier_burn_s).
+func _p34_on_object_destroyed(_tick: int, world_id: String, killer_id: String) -> void:
+	if not is_inside_tree() or entity == null or not entity.is_alive():
+		return
+	for n in get_tree().get_nodes_in_group("breakables"):
+		if not (n is Node3D) or str(n.get("world_id")) != world_id:
+			continue
+		var rec: Variant = n.get("record")
+		var tags: Array = (rec as Dictionary).get("prop_tags", []) if typeof(rec) == TYPE_DICTIONARY else []
+		var reach := float(_p34_regen.get("brazier_radius_m", 0.0))
+		if tags.has("fire") and (n as Node3D).global_position.distance_to(global_position) <= reach + 1e-3:
+			p34_ignite(float(_p34_regen.get("brazier_burn_s", 8.0)), killer_id)
+		return
+
+
+# ---- the yield protocol
+
+func _p34_on_hit_taken(result: HitResult) -> void:
+	if entity == null or not entity.is_alive():
+		return
+	if result.poise_broken and not yielded:
+		poise_breaks += 1
+		_p34_check_poise_phase()
+	if _p34_yield.is_empty() or yielded or _p34_fight_to_death:
+		return
+	var pools := entity.combatant.pools
+	var floor_hp := pools.health_max * float(_p34_yield.get("health_frac", 0.0))
+	if floor_hp > 0.0 and pools.health <= floor_hp + 1e-6:
+		pools.health = maxf(pools.health, floor_hp)
+		p34_yield("health")
+		return
+	var need := p34_yield_poise_breaks()
+	if need > 0 and poise_breaks >= need:
+		p34_yield("honour")
+
+
+## Poise breaks that make this boss yield now (0 = none): challenge_poise_breaks while every
+## challenge condition holds (Wildheart's challenge), else poise_breaks.
+func p34_yield_poise_breaks() -> int:
+	var need := int(_p34_yield.get("poise_breaks", 0))
+	var conds: Variant = _p34_yield.get("challenge_conditions")
+	if typeof(conds) == TYPE_ARRAY and not (conds as Array).is_empty() \
+			and int(_p34_yield.get("challenge_poise_breaks", 0)) > 0 \
+			and QuestConditions.all_hold(conds, Quests.condition_context()):
+		need = int(_p34_yield.challenge_poise_breaks)
+	return need
+
+
+## A later phase with enter_on_poise_breaks begins once that many breaks were taken - at the next step
+## the boss is not staggered (TrollEnemy / RivalGiantEnemy call p34_boss_step), so its roar never
+## cuts the stagger short.
+func _p34_check_poise_phase() -> void:
+	if brain == null or not brain.has_boss_phases():
+		return
+	for i in range(brain.phase_index + 1, brain.boss_phases.size()):
+		var need := int((brain.boss_phases[i] as Dictionary).get("enter_on_poise_breaks", 0))
+		if need > 0 and poise_breaks >= need:
+			_p34_phase_due = i
+			return
+
+
+## The boss archetypes' per-tick step before their own (phases by poise breaks).
+func p34_boss_step(_tick: int) -> void:
+	if _p34_phase_due < 0 or brain == null or yielded or not entity.is_alive():
+		return
+	if controller.state == CombatController.State.STAGGERED or _p34_phase_due <= brain.phase_index:
+		if _p34_phase_due <= brain.phase_index:
+			_p34_phase_due = -1
+		return
+	var frac := float((brain.boss_phases[_p34_phase_due] as Dictionary).get("health_frac_below", 0.0))
+	_p34_phase_due = -1
+	brain.update_boss_phase(frac, Sim.tick)
+
+
+## Yields now (see the section notes). Nothing happens without yield_at, once yielded, while fighting
+## to the death, or dead.
+func p34_yield(reason: String) -> void:
+	if yielded or _p34_yield.is_empty() or _p34_fight_to_death or entity == null or not entity.is_alive():
+		return
+	yielded = true
+	yield_tick = Sim.tick
+	yield_reason = reason
+	yield_decided = ""
+	_p34_still(true)
+	Events.boss_yielded.emit(Sim.tick, yield_boss_id())
+	_p34_open_prompt()
+
+
+## Makes this actor harmless at once: AI off, its action and buffer gone, tokens back, its shots and
+## hazards discarded, unlockable, the player's lock on it released (yield, stand-down).
+func _p34_still(remember_ai: bool) -> void:
+	if remember_ai:
+		_p34_ai_before = ai_enabled
+	ai_enabled = false
+	if controller.action != null:
+		controller.call("_finish_action", true)
+	controller.buffer.clear()
+	if brain != null:
+		brain.attack_request = ""
+		brain.holds_token = false
+		brain.move_target = Vector3.INF
+		brain.face_point = Vector3.INF
+	move_velocity = Vector3.ZERO
+	release_ranged_claims()
+	entity.combatant.lockable = false
+	_p34_discard_own_shots()
+	if brain != null and brain.has_method("p34_clear_hazards"):
+		brain.call("p34_clear_hazards")
+	var p := get_tree().get_first_node_in_group("player") as GiantPlayer
+	if p != null and p.targeting != null and p.lock.is_locked() and p.lock.target_id == entity.entity_id:
+		p.targeting.release_lock("boss_yielded")
+
+
+## Ends every projectile this actor launched that is still in the air.
+func _p34_discard_own_shots() -> void:
+	var system := ProjectileSystem.instance(get_tree())
+	if system == null:
+		return
+	for pr: Projectile in system.projectiles():
+		if not pr.ended and pr.owner_id == entity.entity_id:
+			system.discard(pr.id)
+
+
+## A battle's surrender (BattleBoss): immune and still for good, like a spared boss.
+func p34_stand_down() -> void:
+	if stood_down or entity == null or not entity.is_alive():
+		return
+	stood_down = true
+	_p34_still(false)
+
+
+func _p34_open_prompt() -> void:
+	_p34_prompt_tick = Sim.tick
+	var dlg := str(_p34_yield.get("dialogue", ""))
+	var s := Quests.start_dialogue(dlg, entity.entity_id)
+	if s != null:
+		Events.ui_screen_requested.emit("yield", {"session": s, "dialogue_id": dlg, "npc_id": entity.entity_id,
+			"boss_id": yield_boss_id(), "name": entity.display_name()})
+
+
+## POST_RESOLVE while yielded: keeps the boss still and reopens an undecided prompt that closed.
+func _p34_yield_step(tick: int) -> void:
+	if not yielded or not is_inside_tree() or entity == null or not entity.is_alive():
+		return
+	if ai_enabled:
+		ai_enabled = false
+	if yield_decided != "":
+		return
+	var open := Quests.dialogue != null and Quests.dialogue.is_active() \
+		and str(Quests.dialogue.dialogue_id) == str(_p34_yield.get("dialogue", ""))
+	if open:
+		_p34_prompt_tick = tick
+	elif tick - _p34_prompt_tick >= ActionDef.seconds_to_ticks(P34_PROMPT_RETRY_S):
+		_p34_open_prompt()
+
+
+func _p34_on_dialogue_outcome(_tick: int, dialogue_id: String, outcome: String) -> void:
+	if yielded and yield_decided == "" and dialogue_id == str(_p34_yield.get("dialogue", "")):
+		p34_decide(outcome)
+
+
+## The prompt's decision ("spare" | "strike"); false when it cannot decide now (not yielded, decided,
+## or another outcome).
+func p34_decide(outcome: String) -> bool:
+	if not yielded or yield_decided != "" or not (outcome in ["spare", "strike"]) or not entity.is_alive():
+		return false
+	yield_decided = outcome
+	if outcome == "spare":
+		_p34_write_outcome("spared")
+	elif str(_p34_yield.get("on_strike", "kill")) == "fight":
+		yielded = false
+		_p34_fight_to_death = true
+		entity.combatant.unkillable = false
+		entity.combatant.lockable = true
+		ai_enabled = _p34_ai_before
+		var p := get_tree().get_first_node_in_group("player") as GiantPlayer
+		if p != null and brain != null:
+			brain.on_noise(Sim.tick, p.global_position, p.entity.entity_id, true)
+	else:
+		_p34_strike()
+	get_tree().call_group(BossArena.GROUP, "p34_on_yield_decided", entity.entity_id, outcome)
+	return true
+
+
+## The confirmed Strike: one killing blow from the giant, the only hit a yielded boss accepts.
+func _p34_strike() -> void:
+	entity.combatant.unkillable = false
+	var p := get_tree().get_first_node_in_group("player") as GiantPlayer
+	var h := HitEvent.new()
+	h.tick = Sim.tick
+	h.instance_id = Sim.new_instance_id()
+	h.attacker_id = p.entity.entity_id if p != null else ""
+	h.target_id = entity.entity_id
+	h.action_id = "yield.strike"
+	h.power = P34_STRIKE_POWER
+	h.attacker_stat = 10.0
+	h.size_policy = "none"
+	h.damage_split = {"physical": 1.0}
+	h.tags = PackedStringArray(["Melee", "Unblockable", "Unparryable"])
+	h.attacker_position = p.global_position if p != null else global_position - global_transform.basis.z
+	_p34_strike_instance = h.instance_id
+	Sim.queue_hit(h)
+
+
+## accepts_hit: a yielded or stood-down actor refuses every hit but the confirmed strike.
+func _p34_accepts(hit: HitEvent) -> bool:
+	if not yielded and not stood_down:
+		return true
+	return _p34_strike_instance >= 0 and hit.instance_id == _p34_strike_instance
+
+
+func _p34_on_died(_killer_id: String) -> void:
+	_p34_write_outcome("slain")
+
+
+## The outcome flag (first write wins) and the defeated flag of record.boss_outcome.
+func _p34_write_outcome(value: String) -> void:
+	var bo: Variant = record.get("boss_outcome")
+	if typeof(bo) != TYPE_DICTIONARY:
+		return
+	WorldState.try_set_flag(str(bo.get("flag", "")), value)
+	if str(bo.get("defeated_flag", "")) != "":
+		WorldState.try_set_flag(str(bo.defeated_flag), true)
+
+
+# ---- lobbed throws
+
+## _on_phase_entered: an indirect action's windup commits its landing point (the runner aims there)
+## and announces its circle there. True when it announced the telegraph.
+func _p34_on_phase_entered(action: ActionDef, _instance_id: int, phase: int) -> bool:
+	if phase != ActionDef.Phase.WINDUP or action == null or not bool(action.param("indirect", false)):
+		return false
+	var t := Sim.get_entity(brain.target_id) if brain != null and brain.target_id != "" else _target()
+	var point := t.actor.global_position if t != null and is_instance_valid(t.actor) \
+		else global_position - global_transform.basis.z * 20.0
+	runner.aim_point = point
+	var tel: Variant = action.param("telegraph")
+	var radius := float((tel as Dictionary).get("radius_m", 4.0)) if typeof(tel) == TYPE_DICTIONARY else 4.0
+	Events.telegraph_started.emit(Sim.tick, entity.entity_id, action.id, t.entity_id if t != null else "",
+		"circle", point, facing_yaw, radius, 0.0, float(action.windup_ticks) / Sim.TICK_RATE)
+	return true
+
+
+# ---- attempts
+
+## A new attempt (the disengage rule): the first phase, full health and poise, no statuses or poise
+## breaks, the archetype's own reset, and the walk home. Not while yielded, stood down or dead.
+func p34_reset_attempt() -> void:
+	if entity == null or not entity.is_alive() or yielded or stood_down:
+		return
+	attempt += 1
+	attempt_phases.clear()
+	poise_breaks = 0
+	_p34_phase_due = -1
+	if controller.action != null:
+		controller.call("_finish_action", true)
+	controller.buffer.clear()
+	if brain != null and brain.has_boss_phases():
+		brain.init_boss_phases(record)
+	for id: String in entity.combatant.statuses.active_ids():
+		entity.combatant.statuses.remove(id)
+		Events.status_expired.emit(Sim.tick, entity.entity_id, id)
+	var pools := entity.combatant.pools
+	entity.heal(pools.health_max - pools.health, "attempt")
+	if not entity.combatant.poise.locked:
+		entity.combatant.poise.value = 0.0
+	_p34_reset_extra()
+	begin_leash_return()
+
+
+## The archetype's own part of a new attempt (summons, hazards, a carried whelp).
+func _p34_reset_extra() -> void:
+	pass
+
+
+## A new attempt engaged while the boss still walks home: it stops there and fights (full health).
+func p34_stop_return() -> void:
+	if is_returning():
+		_end_leash_return(true)
+
 
 ## @anchor P37

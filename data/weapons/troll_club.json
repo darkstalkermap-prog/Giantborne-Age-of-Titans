@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "weapon.troll_club",
+	"type": "weapon",
+	"family": "club",
+	"display_name": "Troll Club",
+	"description": "P34: a troll's club, a stripped trunk - the trolls' and the Matriarch's weapon arcs and blows (multiplier 1.0).",
+	"damage_multiplier": 1.0,
+	"length_m": 2.4,
+	"hit_radius_m": 0.55,
+	"visual_shape": "club"
+}

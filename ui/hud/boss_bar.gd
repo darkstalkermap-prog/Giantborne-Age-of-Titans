@@ -12,6 +12,12 @@ extends HudWidget
 ## tracker at 1280 x 720 and more at any wider screen, and clears the checkpoint toast (top left).
 ## P27 (plan M6-M9 §2.14): (-HALF_WIDTH..HALF_WIDTH, 44..88), 30 px lower, under the compass; drawn by
 ## HudKit's rules (rectangles: the panel, the bar, the pips and the notches are one batch).
+## P34 (plan M6-M9 §2.10, §5.13): a battle boss (BattleBoss, group battle_bosses) engaged under its
+## battle id shows its aggregate - the health of what its encounters field (the web's composition on
+## the web) and its engines - with a pip per phase and a notch at each phase's fraction; while it is on
+## screen every unit of the battle counts as shown (Hud hides its target frame for them). A boss that
+## yielded (Events.boss_yielded: its own id, or the battle's) shows "yields" until the fight ends;
+## boss_disengaged ends the bar (the attempt is over).
 
 const PIP_FILLED := Color(0.95, 0.72, 0.30)
 const PIP_EMPTY := Color(0.30, 0.30, 0.34)
@@ -28,6 +34,7 @@ var _notches: Control
 var _pips: Array[ColorRect] = []
 var _boss_id := ""
 var _text := ""
+var _yielded: Dictionary = {}   # P34: boss ids that yielded (their own or their battle's)
 
 
 func _ready() -> void:
@@ -77,15 +84,44 @@ func _ready() -> void:
 	stack.add_child(_notches)
 	Events.boss_engaged.connect(_on_boss_engaged)
 	Events.boss_defeated.connect(_on_boss_defeated)
+	Events.boss_yielded.connect(_on_boss_yielded)
+	Events.boss_disengaged.connect(_on_boss_disengaged)
 
 
 func _on_boss_engaged(_tick: int, boss_id: String) -> void:
 	_boss_id = boss_id
+	_yielded.erase(boss_id)
 
 
 func _on_boss_defeated(_tick: int, boss_id: String) -> void:
 	if boss_id == _boss_id:
 		_boss_id = ""
+	_yielded.erase(boss_id)
+
+
+func _on_boss_yielded(_tick: int, boss_id: String) -> void:
+	_yielded[boss_id] = true
+
+
+func _on_boss_disengaged(_tick: int, boss_id: String, _reason: String) -> void:
+	if boss_id == _boss_id:
+		_boss_id = ""
+	_yielded.erase(boss_id)
+
+
+## P34: the engaged battle boss the bar follows (null when the engaged boss is not a battle).
+func current_battle() -> Node:
+	if _boss_id == "" or not is_inside_tree():
+		return null
+	for n in get_tree().get_nodes_in_group("battle_bosses"):
+		if str(n.get("battle_id")) == _boss_id and bool(n.call("is_engaged")):
+			return n
+	return null
+
+
+## True while the boss shown (`id`: an entity's or a battle's boss id) has yielded.
+func is_yielded(id: String) -> bool:
+	return _yielded.has(id)
 
 
 ## The boss the bar follows now: the engaged boss while it lives, otherwise the player's locked
@@ -102,9 +138,15 @@ func current_boss() -> CombatEntity:
 	return null
 
 
-## True while the bar shows `e` (Hud hides its target frame then).
+## True while the bar shows `e` (Hud hides its target frame then): the boss, or any unit of the battle
+## on screen (P34).
 func shows_entity(e: CombatEntity) -> bool:
-	return e != null and e == current_boss()
+	if e == null:
+		return false
+	var battle := current_battle()
+	if battle != null:
+		return (battle.call("planned") as Dictionary).has(e.entity_id) or e.entity_id == str(battle.get("commander_id"))
+	return e == current_boss()
 
 
 ## True while the bar is on screen (P16: Hud puts the target frame below it then).
@@ -146,6 +188,10 @@ static func phase_thresholds(record: Dictionary) -> Array[float]:
 
 
 func _process(_delta: float) -> void:
+	var battle := current_battle()
+	if battle != null:
+		_show_battle(battle)
+		return
 	var b := current_boss()
 	if b == null:
 		_panel.visible = false
@@ -160,9 +206,35 @@ func _process(_delta: float) -> void:
 		_pips[i].visible = i < count
 		_pips[i].color = PIP_FILLED if i < phase else PIP_EMPTY
 	(_notches as Notches).fractions = phase_thresholds(GameData.get_record(b.definition_id))
-	_name.text = b.display_name()
-	_text = "%s  %d / %d  phase %d/%d" % [b.display_name(), ceili(pools.health), int(pools.health_max),
-		phase, count]
+	var yields := ""
+	if b.actor.has_method("yield_boss_id") and is_yielded(str(b.actor.call("yield_boss_id"))):
+		yields = "  yields"   # P34
+	_name.text = b.display_name() + yields
+	_text = "%s  %d / %d  phase %d/%d%s" % [b.display_name(), ceili(pools.health), int(pools.health_max),
+		phase, count, yields]
+
+
+## P34: a battle's aggregate bar ("The Iron Regiment  13700 / 13700  phase 1/3", "  yields" once its
+## commander yielded).
+func _show_battle(battle: Node) -> void:
+	var a: Dictionary = battle.call("aggregate")
+	_panel.visible = true
+	_bar.value = float(a.fraction)
+	var phase := int(a.phase)
+	var count := int(a.count)
+	for i in _pips.size():
+		_pips[i].visible = i < count
+		_pips[i].color = PIP_FILLED if i < phase else PIP_EMPTY
+	var marks: Array[float] = []
+	for ph: Dictionary in battle.get("phases"):
+		var f := float(ph.get("below", 1.0))
+		if f < 1.0:
+			marks.append(f)
+	(_notches as Notches).fractions = marks
+	var yields := "  yields" if bool(a.yielded) or is_yielded(_boss_id) else ""
+	_name.text = str(a.name) + yields
+	_text = "%s  %d / %d  phase %d/%d%s" % [str(a.name), ceili(float(a.current)), int(float(a.total)), phase,
+		count, yields]
 
 
 ## Thin marks across the bar at each phase threshold.
