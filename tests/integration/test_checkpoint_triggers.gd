@@ -5,7 +5,8 @@ extends IntegrationSuite
 ## take none; a request waits while the player executes, is grabbed, holds something, is dead
 ## or a screen is open, and while an aware enemy is within 40 m; later requests replace earlier
 ## ones but keep the newest respawn; the sandbox never checkpoints or writes; a waystone needs
-## its flag and fires once per load.
+## its flag and fires once per load. M8 gate (F38): a boss's drive-out (boss_disengaged "fled") is a
+## row of the table; a boss the giant walked away from ("left") is not.
 
 const FLOW := "res://scenes/test/flow_test_level.tscn"
 
@@ -121,6 +122,13 @@ func test_each_trigger_takes_one_checkpoint_with_its_respawn() -> void:
 		func() -> void: Events.growth_changed.emit(Sim.tick, "player", 1, 2), 1, "test.shrine")
 	await _expect("boss_defeated",
 		func() -> void: Events.boss_defeated.emit(Sim.tick, "valley.arena.ogre_king"), 1, "valley.shrine.kingsfall")
+	# M8 gate (F38): a boss driven out ends its fight as a kill does (the respawn unchanged); one the
+	# giant walked away from resets and takes none.
+	await _expect("boss_disengaged fled (a drive-out)",
+		func() -> void: Events.boss_disengaged.emit(Sim.tick, "test.boss", "fled"), 1, "test.cp_a")
+	assert_eq(str(GameSession.checkpoint_doc.checkpoint.reason), "boss_fled", "reason boss_fled")
+	await _expect("boss_disengaged left (the giant walked out)",
+		func() -> void: Events.boss_disengaged.emit(Sim.tick, "test.boss", "left"), 0, "test.cp_a", 5)
 	await _expect("quest_stage_changed for quest.main",
 		func() -> void: Events.quest_stage_changed.emit(Sim.tick, "quest.main", "ogre"), 1, "test.cp_a")
 	await _expect("quest_stage_changed for another quest",
