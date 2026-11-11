@@ -1196,6 +1196,15 @@ valley and world builders wrote the same bytes as the committed outputs, the sea
 minutes), gate 427.7 s (50 minutes) - and the 120 s autoplay had 0 errors (2 fences broken, 2 loot awards,
 the debris pool at 10).
 
+**The merge's check** (`tools/check.sh --build --slow --audio --gate` on the merge with the FOLLOWUPS rows
+after it, 9a47f2d, after an import, a full build and an import of its own): both full builds (every
+builder, the world with the lane's tree materials included) wrote the committed outputs byte for byte, so
+nothing was regenerated (the rebuild-twice check); the seam check passed (64 chunks, 112 seams); the audio
+pipeline's 35 tests passed and its 441 files regenerated bit-exact; 271 suites, 46,563 checks (fix-up round
+2's merge: 268 and 46,300), 0 failures; default 63.3 s (fix-up round 2's merge: 65.0 s; budget 75 s), slow
+256.5 s (238.7 s; 8 minutes: the lane's two new slow suites), gate 423.8 s (414.5 s; 50 minutes); the 120 s
+soak with 0 errors (2 fences broken, 2 loot awards, the debris pool at 10). The whole check took 17 min 6 s.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
