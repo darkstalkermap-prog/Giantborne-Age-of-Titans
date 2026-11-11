@@ -15,7 +15,10 @@ extends Node
 ##                         with neither is a usage error (NO_ROUTE), not an unfinished walk.
 ##   --walk-speed=M        carry the giant along the route at M m/s (16: a stage-6 sprint, the
 ##                         streaming budget's case) instead of walking it with the stick (sprinting).
-##   --walk-stage=N        grow the giant to stage N first (1-3 until P26 adds 4-6).
+##   --walk-stage=N        grow the giant to stage N first (M8 gate, F21: the growth is retried every
+##                         STAGE_RETRY_TICKS while the just-placed giant is not yet on the floor and free,
+##                         for at most STAGE_WAIT_TICKS; a giant that never reaches stage N fails the walk,
+##                         "stage N not reached", and walks nothing).
 ##   --walk-laps=N         walk the route N times (default 1).
 ## The giant carries the hidden status.debug_invulnerable (as in the Valley walk): encounters it
 ## passes engage it, and a death would end the measurement.
@@ -29,7 +32,8 @@ extends Node
 ## max) are reset when the walk starts, after the starting ring. result() is the report;
 ## check_failures holds: a margin under MARGIN_REQUIRED_M, thrash, more than MAX_LOADED chunks,
 ## ticks under the terrain, a route not finished - or, alone, the usage error of a walk with no
-## route (usage_error; the Autopilot's run then fails with it, and tools/web/stream_check.mjs exits 2).
+## route (usage_error; the Autopilot's run then fails with it, and tools/web/stream_check.mjs exits 2),
+## or the stage not reached (stage_error, M8 gate F21). The report names the stage the giant walked at.
 
 const STATUS_INVULNERABLE := "status.debug_invulnerable"
 const WAYPOINT_M := 4.0
@@ -43,6 +47,11 @@ const UNDER_TERRAIN_M := 0.25
 const RING_WAIT_TICKS := 3600
 ## The check failure of a walk without a route of at least two points (M7 polish): a usage error.
 const NO_ROUTE := "usage: no route to walk - the level has no Markers/Route and no --route=x:z;x:z;... of two or more points was given"
+## M8 gate (F21): the growth to --walk-stage waits this long at most (the giant just placed falls to the
+## floor first: PlayerGrowth refuses a giant that is not on the floor and free, "busy"), asking again this
+## often (each refusal prints a line).
+const STAGE_WAIT_TICKS := 600
+const STAGE_RETRY_TICKS := 15
 
 var done := false
 var player: GiantPlayer = null
@@ -67,6 +76,10 @@ var region_changes: Array = []
 var finished_route := false
 ## NO_ROUTE when the walk had no route to follow ("" otherwise).
 var usage_error := ""
+## M8 gate (F21): "stage N not reached (...)" when the giant could not be grown to --walk-stage ("" otherwise).
+var stage_error := ""
+## How long the growth may wait (STAGE_WAIT_TICKS; tests shorten it).
+var stage_wait_ticks := STAGE_WAIT_TICKS
 
 var _state := "wait_ring"
 var _state_ticks := 0
@@ -186,12 +199,22 @@ func _physics_process(_delta: float) -> void:
 				GameSession.place_player(player, Transform3D(Basis(Vector3.UP, player.facing_yaw),
 					Vector3(first.x, (ground + 0.3) if not is_nan(ground) else at.y, first.z)))
 			if world.streamer.ring_ready(first) and not is_nan(ground) or _state_ticks > RING_WAIT_TICKS:
-				if stage > 0 and player.growth != null and player.current_growth_stage() != stage:
-					player.growth.debug_set_stage(stage)
-				world.streamer.reset_stats()
-				_set_state("walk")
-				# The web stream check times the page's frames between these two lines.
-				print("WORLD_WALK_START %s" % JSON.stringify({"route_points": route.size(), "speed_mps": speed_mps}))
+				if stage > 0 and player.current_growth_stage() != stage:
+					_set_state("grow")
+				else:
+					_set_off()
+			return
+		"grow":
+			# M8 gate (F21): grow the giant once it stands on the floor and is free; never walk at another stage.
+			if player.current_growth_stage() == stage:
+				_set_off()
+			elif player.growth == null or _state_ticks > stage_wait_ticks:
+				var why := "no growth" if player.growth == null else str(player.growth.last_result.get("reason", "?"))
+				stage_error = "stage %d not reached (the giant stays at stage %d: %s)" % [stage, player.current_growth_stage(), why]
+				_finish()
+			elif _state_ticks % STAGE_RETRY_TICKS == 0 and player.is_on_floor() and player.controller != null \
+					and player.controller.state == CombatController.State.LOCOMOTION:
+				player.growth.debug_set_stage(stage)
 			return
 	_keep_invulnerable()
 	ticks += 1
@@ -209,6 +232,15 @@ func _physics_process(_delta: float) -> void:
 func _set_state(s: String) -> void:
 	_state = s
 	_state_ticks = 0
+
+
+## The walk sets off from the route's first point (the ring ready, the giant at its stage).
+func _set_off() -> void:
+	world.streamer.reset_stats()
+	_set_state("walk")
+	# The web stream check times the page's frames between these two lines.
+	print("WORLD_WALK_START %s" % JSON.stringify({"route_points": route.size(), "speed_mps": speed_mps,
+		"stage": player.current_growth_stage()}))
 
 
 func _measure(pos: Vector3) -> void:
@@ -309,6 +341,8 @@ func _finish() -> void:
 	var end := {"finished": finished_route, "ticks": ticks}
 	if usage_error != "":
 		end["usage_error"] = usage_error
+	if stage_error != "":
+		end["stage_error"] = stage_error
 	print("WORLD_WALK_END %s" % JSON.stringify(end))
 	if player != null and is_instance_valid(player):
 		player.router.set_injected_move(Vector2.ZERO)
@@ -325,7 +359,8 @@ func summary() -> Dictionary:
 		"min_margin_m": snappedf(min_margin_m, 0.1) if min_margin_m != INF else -1.0,
 		"max_loaded": max_loaded, "loads": int(st.get("loads", 0)), "unloads": int(st.get("unloads", 0)),
 		"thrash": int(st.get("thrash", 0)), "work_ms_p50": st.get("work_ms_p50", 0.0),
-		"work_ms_p99": st.get("work_ms_p99", 0.0), "work_ms_max": st.get("work_ms_max", 0.0)}
+		"work_ms_p99": st.get("work_ms_p99", 0.0), "work_ms_max": st.get("work_ms_max", 0.0),
+		"stage": player.current_growth_stage() if player != null and is_instance_valid(player) else 0}
 
 
 ## The walk's report: the summary, the streamer's statistics, the chunks and regions passed, the
@@ -345,8 +380,12 @@ func result() -> Dictionary:
 	out["worst_sink_m"] = snappedf(worst_sink_m, 0.001)
 	out["stuck_teleports"] = stuck_teleports
 	out["usage_error"] = usage_error
+	out["stage_error"] = stage_error
 	if usage_error != "":
 		out["check_failures"] = PackedStringArray([usage_error])
+		return out
+	if stage_error != "":
+		out["check_failures"] = PackedStringArray([stage_error])   # (nothing was walked)
 		return out
 	var failures := PackedStringArray()
 	if not finished_route:

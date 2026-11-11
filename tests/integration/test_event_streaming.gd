@@ -9,7 +9,10 @@ extends IntegrationSuite
 ##     again where it has walked to when it comes back) and ends with its end outcome when it comes home;
 ##   * across a reload (a death, a travel) a running event is carried: a respawn within 120 m of it is
 ##     refused and moves to another checkpoint, the new level resumes it (a death from the start of its
-##     attempt, its run kept), and the title or a new game forget it.
+##     attempt, its run kept), and the title or a new game forget it;
+##   * M8 gate (F19): a run the save holds in progress survives a save, a quit to the title and a continue:
+##     the next load resumes it (its run counted once, its abandonment clock from the save) and it ends
+##     with its outcome; M8 gate (F12): fail.within_m runs the fail timer only while the giant is near.
 
 const F := preload("res://tests/support/living_world_fixtures.gd")
 
@@ -166,3 +169,83 @@ func test_a_carried_event_moves_the_respawn_and_resumes_after_the_reload() -> vo
 	Events.mode_change_requested.emit("title", {})
 	assert_false(WanderDirector.is_carried(F.LEVEL, F.RAID), "the title forgets it")
 	assert_eq(WanderDirector.respawn_refusal(F.NEAR_CP), "", "no respawn is refused then")
+
+
+# --------------------------------------------------------------------------- M8 gate (F19, F12)
+
+## Kills every living member of the event's copies.
+func _defeat(e: WorldEvent) -> void:
+	for id in e.copies:
+		for n: Node3D in _wd.director.p37_living(id):
+			var en := (n as EnemyActor).entity
+			en.combatant.pools.health = 0.0
+			en.combatant.dead = true
+			Events.entity_died.emit(Sim.tick, en.entity_id, "")
+
+
+func test_a_running_event_survives_a_save_and_a_continue() -> void:
+	_setup()
+	var raid: WorldEvent = _wd.events[F.RAID]
+	_wd.start_event(raid)
+	await step_ticks(3)
+	# the giant leaves it: 6 s of play with its centre unloaded (the director's own updates)
+	F.move_giant(_root, 96.0, 16.0)
+	await step_ticks(60 * 6)
+	assert_eq(raid.state, WorldEvent.SUSPENDED, "left behind: suspended")
+	var away := raid.unloaded_s
+	assert_true(away > 4.0, "its abandonment clock runs (%.1f s)" % away)
+	# a checkpoint saves the world as it is; quit to the title; continue
+	var saved := WorldState.to_save_dict()
+	Events.mode_change_requested.emit("title", {})
+	_root.free()
+	WorldState.clear()
+	WorldState.from_save_dict(saved)
+	Events.mode_change_requested.emit("continue", {})
+	assert_false(WanderDirector.is_carried(F.LEVEL, F.RAID), "the continue carries nothing")
+	var made := F.make(world, Vector3(96.0, 0.0, 16.0))
+	_root = made[0]
+	_wd = made[1]
+	raid = _wd.events[F.RAID]
+	assert_eq(raid.state, WorldEvent.WAITING, "the saved run in progress is resumed")
+	assert_eq(int(WorldState.get_flag("event.p37_raid.runs", 0)), 1, "its run counted once")
+	assert_near(raid.unloaded_s, away, 1.0, "its abandonment clock from the save (%.1f s)" % raid.unloaded_s)
+	assert_true(Quests.active_quest_ids().has(F.RAID), "its objective is back in the tracker")
+	assert_true(WanderDirector.is_carried(F.LEVEL, F.RAID), "and carried for the deaths that follow")
+	# the giant comes back: its attempt begins and it can end with an outcome
+	F.move_giant(_root, -96.0, 16.0)
+	await step_ticks(WanderDirector.UPDATE_TICKS + 4)
+	assert_eq(raid.state, WorldEvent.RUNNING, "its attempt began again")
+	assert_eq(raid.copies.size(), 1, "its raiders are back")
+	await step_ticks(3)
+	_defeat(raid)
+	_wd.update_event(raid, 0.1)
+	assert_false(raid.is_running(), "it ends")
+	assert_eq(_ended[_ended.size() - 1], [F.RAID, "defended"], "with its outcome")
+	assert_eq(WorldState.get_flag("event.p37_raid.outcome"), "defended", "written: nothing is lost")
+
+
+func test_a_fail_timer_with_within_m_runs_only_while_the_giant_is_near() -> void:
+	_setup({F.RAID: {"fail": {"timer_s": 10, "within_m": 60}}})
+	var raid: WorldEvent = _wd.events[F.RAID]
+	_wd.start_event(raid)
+	await step_ticks(3)
+	for i in 5:
+		_wd.update_event(raid, 1.0)
+	assert_near(raid.elapsed_s, 5.0, 0.3, "near its centre its clock runs (%.1f s)" % raid.elapsed_s)
+	# 80 m off: its centre still loaded (running), the giant beyond within_m
+	F.move_giant(_root, -40.0, 50.0)
+	await step_ticks(2)
+	assert_true(_root.streamer.is_ready(_root.chunk_at(raid.centre)), "its centre is still loaded")
+	for i in 20:
+		if not raid.is_running():
+			break
+		_wd.update_event(raid, 1.0)
+	assert_eq(_ended, [], "20 s far from it: it never ended")
+	assert_eq(raid.state, WorldEvent.RUNNING, "it runs")
+	assert_near(raid.elapsed_s, 5.0, 0.3, "but its fail clock pauses beyond within_m (%.1f s)" % raid.elapsed_s)
+	F.move_giant(_root, -96.0, 16.0)
+	for i in 5:
+		if raid.is_running():
+			_wd.update_event(raid, 1.0)
+	assert_false(raid.is_running(), "back near it, the timer runs out at 10 s")
+	assert_eq(_ended[_ended.size() - 1], [F.RAID, "fell"], "with its fail outcome")

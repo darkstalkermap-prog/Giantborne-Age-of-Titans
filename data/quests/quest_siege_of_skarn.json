@@ -3,7 +3,7 @@
 	"id": "quest.siege_of_skarn",
 	"type": "quest",
 	"display_name": "The Siege of Skarn",
-	"description": "P36 (plan M6-M9 §5.7 side quests, §5.9, §5.10): the toll-riders' siege line - hired by Aldmere - bombards Skarn's longhouses (event.siege_of_skarn). It starts with Ulfra's plea (stage 5) or when the siege begins (a stage-6 giant arriving at Skarn). Break the line's five engines (siege disruption at stage 6 is the intended way; blows break them too) before two longhouses burn: saved - 300 XP, 1 titan iron, Skarn's support (Harrok's talk ending) and its hearth-forge. If Skarn burns the quest is lost (abandoned) and quest.skarn_rebuild raises the halls again. The line holds its fire while the giant is more than 200 m from Skarn.",
+	"description": "P36 (plan M6-M9 §5.7 side quests, §5.9, §5.10): the toll-riders' siege line - hired by Aldmere - bombards Skarn's longhouses (event.siege_of_skarn). It starts with Ulfra's plea (stage 5) or when the siege begins (a stage-6 giant arriving at Skarn); until the siege begins its first stage sends the giant to Skarn's green, where the line sets up (M8 gate: a waiting text when the siege cannot start yet). Break the line's five engines (siege disruption at stage 6 is the intended way; blows break them too) before two longhouses burn: saved - 300 XP, 1 titan iron, Skarn's support (Harrok's talk ending) and its hearth-forge. If Skarn burns the quest is lost (abandoned) and quest.skarn_rebuild raises the halls again. The line holds its fire while the giant is more than 200 m from Skarn.",
 	"prototype_pacing": true,
 	"auto_start": false,
 	"start_conditions": [
@@ -12,6 +12,7 @@
 	"abandon_when": {"type": "event_done", "event": "event.siege_of_skarn", "outcome": "burned"},
 	"tracker_priority": 50,
 	"stages": [
+		{"id": "await", "objective": "Stand on Skarn's green: the toll-riders' siege line sets up when you are there", "complete_when": {"type": "flag", "flag": "event.siege_of_skarn.runs"}, "marker": "world.marker.skarn_green", "waiting_text": "The toll-riders' siege line waits east of the steading for you: it sets up its engines once you stand on Skarn's green, and not while you are away.", "bot": {"action": "go", "target": "world.marker.skarn_green"}},
 		{"id": "defend", "objective": "Break the siege line before Skarn's longhouses burn", "complete_when": {"type": "event_done", "event": "event.siege_of_skarn", "outcome": "saved"}, "marker": "world.marker.siege_line", "xp": 300, "waiting_text": "The siege line stands east of Skarn: three catapults and two ballistae with their crews, pikes, shields and cavalry. Break the engines before two longhouses fall. Their fire stops while you are far away.", "items": [{"item": "item.titan_iron", "count": 1}], "set_flags": {"world.skarn.support": true}, "bot": {"action": "protect", "target": "world.marker.siege_line", "event": "event.siege_of_skarn"}}
 	],
 	"on_complete_flags": {}

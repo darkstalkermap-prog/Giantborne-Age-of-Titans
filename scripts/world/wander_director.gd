@@ -13,13 +13,19 @@ extends Node
 ## standings filter them (Brannock's militia while the town is hostile, Aldmere's cavalry while the
 ## kingdom is). At most max_active copies of a table live at once, and only when the director's budget
 ## has room for its combatants and the formation cap for its formation members. The copy stands at an
-## anchor (anchors "roads": a road node of the region; "markers", "pois": the region's markers or places)
-## min_distance_m..max_distance_m from the giant (on the ground plane), outside the camera's view (every
-## spawn point outside its frustum), with every spawn point on loaded, ready ground and the anchor on the
-## human navmesh (one query of NavQuery's per-tick budget), never inside a settlement, never within
-## ENCOUNTER_GAP_M of a placed encounter that is not cleared, COPY_GAP_M of another copy or EVENT_CLEAR_M
-## of a running world event. It faces along the road and its members walk the road's nodes within the
-## table's patrol_m of the anchor. An entry with a `route` (or a `path`) is a moving column: it is placed
+## anchor (anchors "roads": a road node of the region - M8 gate, F18: a node of a road's own polyline open
+## to every stage, never a place's connector, the layout's extra edges (the Needle's slot, the Grove's
+## rockfall route), a stage-limited or direct edge, within PLACE_CLEAR_M of a checkpoint, a POI's centre, a
+## cairn or a seal, or within a sealed place (a secret POI's radius + SEALED_MARGIN_M); "markers", "pois":
+## the region's markers or places) min_distance_m..max_distance_m from the giant (on the ground plane),
+## outside the camera's view (every spawn point outside its frustum), with every spawn point on loaded,
+## ready ground - and (M8 gate, F18) every member's body clear of static and prop geometry, out of deep
+## water and its own nav layer within its radius + NAV_MARGIN_M (footprint_problem; the nav part one query
+## of NavQuery's per-tick budget, with the anchor on the human navmesh within NAV_SNAP_M) - never inside a
+## settlement, never within ENCOUNTER_GAP_M of a placed encounter that is not cleared, COPY_GAP_M of another
+## copy or EVENT_CLEAR_M of a running world event. It faces along the road and its members walk the road's
+## nodes within the table's patrol_m of the anchor (on the same roads: never into a sealed place). An entry
+## with a `route` (or a `path`) is a moving column: it is placed
 ## on its route and marches along it (see the columns below), leaving the world at its end. Each spawn
 ## counts in the flag wander.<table short>.<entry>.spawns; a template's members pay their kill XP for the
 ## first xp_full_spawns (3) spawns of an entry only. A copy leaves the world when the giant leaves it
@@ -27,12 +33,16 @@ extends Node
 ## STALE_S; nothing of it is saved.
 ##
 ## World events (`world_event` records of the level; WorldEvent holds a run's state and pure rules): at
-## most one runs at a time; one may start when WorldEvent.can_start_with holds - its trigger, its
-## cooldown, its centre chunk loaded and ready and the giant within start_radius_m (200) of the centre.
-## While it runs it is in the tracker, the compass, the map and the journal (Quests' P37 section) and a
-## respawn within EVENT_CLEAR_M (120) of it moves to another checkpoint (GameSession's respawn blockers;
-## fast travel there is refused the same way). See world_event.gd for its rules: suspension while its
-## centre chunk is unloaded, the protect objective, the fail rule, outcomes, the death reset.
+## most one is in play at a time (in_play: a member of its copies in the world, or its place within its
+## start radius of the giant - M8 gate, F2: one left behind, waiting or suspended far off or a column
+## marching the abstract, keeps no other from starting, and while another is in play it waits: its
+## attempt does not begin and a column's copy is not brought near); one may start when
+## WorldEvent.can_start_with holds - its trigger, its cooldown, its centre chunk loaded and ready and the
+## giant within start_radius_m (200) of the centre. While it runs it is in the tracker, the compass, the
+## map and the journal (Quests' P37 section) and a respawn within EVENT_CLEAR_M (120) of it moves to
+## another checkpoint (GameSession's respawn blockers; fast travel there is refused the same way). See
+## world_event.gd for its rules: suspension while its centre chunk is unloaded, the protect objective, the
+## fail rule (fail.within_m: its clock only while the giant is near), outcomes, the death reset.
 ##
 ## Moving columns (a route: the road graph of the level's world index from one place to another, there
 ## and back when round_trip): the column's point walks at speed_mps as a path parameter whatever is
@@ -45,7 +55,11 @@ extends Node
 ##
 ## State across reloads: a running event is carried in a static table (by level) so that a death reload
 ## restarts its attempt (and moves the respawn away from it) and a travel resumes it; the title, a new
-## game or a continue forget it (Events.mode_change_requested).
+## game or a continue forget it (Events.mode_change_requested). Its abandonment clock goes with it (M8
+## gate, F2: a death or a reload does not restart it). M8 gate (F19): a run a save holds in progress (its
+## last_start_s after its last_end_s: the run was counted, its outcome not yet written) and that is not
+## carried - a quit to the title and a continue - begins its attempt again on the level's next load
+## (_resume_saved), its abandonment clock from the save (<id>.unloaded_since_s), so it is never lost.
 
 const GROUP := "wander_director"
 ## PRE_ACTORS, after the EncounterDirector (10): a copy added here activates at the director's next update.
@@ -64,6 +78,24 @@ const EVENT_CLEAR_M := 120.0
 ## A wanderer's anchor must lie this close to the human navmesh.
 const NAV_SNAP_M := 4.0
 const NAV_LAYER := 1
+## M8 gate (F18): a wanderer's anchor keeps this far from a place its road passes - a checkpoint (shrine,
+## waystone), a POI's centre, a cairn, a seal (PLACE_PROP_KINDS) - and this far beyond a sealed place's
+## radius (a secret POI); no road node of a sealed place is anchor or patrol point.
+const PLACE_CLEAR_M := 30.0
+const SEALED_MARGIN_M := 10.0
+const PLACE_PROP_KINDS := ["cairn", "rockfall", "toppled_statue", "titan_tree", "ledge", "den_wall"]
+## M8 gate (F18): the footprint check. A member's body - a cylinder of its radius and height standing
+## BODY_LIFT_M over the ground - touches no static or prop geometry (world, breakables, blockers; the
+## terrain's heightmap is the ground itself); its own nav layer (its record's nav_layers) lies within its
+## radius + NAV_MARGIN_M on the ground plane and NAV_HEIGHT_M up or down (the chunks' own navmesh regions:
+## the whole footprint costs one query of the tick's budget); water over it is at most WATER_SHARE of its
+## height (a titan-layer giant wades).
+const BODY_LIFT_M := 0.35
+const BODY_MASK := 1 | 16 | 32   # HitQueryAdapter.LAYER_WORLD | LAYER_BREAKABLE | the blockers' layer (32)
+const NAV_MARGIN_M := 2.0
+const NAV_HEIGHT_M := 4.0
+const WATER_SHARE := 0.6
+const TITAN_LAYER := 16
 const DEFAULT_PATROL_M := 40.0
 const DEFAULT_INTERVAL_S := [60.0, 120.0]
 const DEFAULT_MIN_M := 120.0
@@ -77,14 +109,17 @@ const ROUTE_SAMPLE_M := 12.0
 ## The text of a respawn refused near a running event that names none.
 const RESPAWN_TEXT := "%s still rages there."
 const ABANDONED := "abandoned"
+## footprint_problem(): the tick's path-query budget is spent (the place waits).
+const BUSY := "busy"
 
 ## Tests: run outside the campaign (as Quests.test_active).
 static var test_active := false
 ## Tests: Callable(pos: Vector3) -> bool saying whether a point is in the camera's view (unset: the
 ## viewport's camera frustum).
 static var view_probe := Callable()
-## level id -> {event id -> {"runs", "last_start_s", "centre": Vector3, "s", "reset": bool}}: the events
-## running when their level was left (a death, a travel), carried to its next load.
+## level id -> {event id -> {"runs", "last_start_s", "centre": Vector3, "s", "reset": bool, "unloaded_s",
+## "tracked_before"}}: the events running when their level was left (a death, a travel), carried to its
+## next load.
 static var _carry := {}
 
 var level: LevelRoot = null
@@ -103,8 +138,8 @@ var _table_state := {}     # table id -> {"next_tick": int}
 var _copies := {}          # copy id -> {"table", "entry", "template", "route": Route or null, "made_tick",
 							#  "active_seen": bool, "cleared_tick": int}
 var _counter := 0
-var _roads := {}           # region id -> PackedInt32Array of road node indices in it
-var _adjacent := {}        # road node index -> [[neighbour, length], ...]
+var _roads := {}           # region id -> PackedInt32Array of the road nodes a wanderer may stand on in it
+var _adjacent := {}        # road node index -> [[neighbour, length], ...] (the roads wanderers walk)
 var _dead := {}            # entity ids seen dying in this load (an event's people targets)
 var _removals := PackedStringArray()   # copies to remove at the next tick (from signal handlers)
 
@@ -127,6 +162,7 @@ func _ready() -> void:
 	if director != null and not director.member_spawned.is_connected(_on_member_spawned):
 		director.member_spawned.connect(_on_member_spawned)
 	_resume_carried()
+	_resume_saved()
 
 
 func _exit_tree() -> void:
@@ -403,11 +439,14 @@ func find_place(table: Dictionary, entry: Dictionary, tpl: Dictionary, from: Vec
 		var points := footprint(tpl, anchor, yaw)
 		if not _ground_ready(points) or _any_in_view(points):
 			continue
-		var snapped := _snap(anchor)
-		probes += 1
-		if not snapped.is_finite():
-			if probes >= 4:
-				break   # the tick's path-query budget is not ours to spend: try again later
+		var why := footprint_problem(tpl, anchor, points)
+		if why == BUSY:
+			break   # the tick's path-query budget is not ours to spend: the place waits
+		if why != "":
+			if why.begins_with("nav"):
+				probes += 1   # a query of the budget was spent on it
+				if probes >= 4:
+					break
 			continue
 		var h := _height(anchor)
 		if not is_nan(h):
@@ -431,6 +470,112 @@ static func footprint(tpl: Dictionary, anchor: Vector3, yaw: float) -> PackedVec
 		if typeof(s) == TYPE_DICTIONARY:
 			out.append(anchor + basis * (WorldEvent._vec3(s.get("position_m")) - c0))
 	return out
+
+
+## M8 gate (F18): why the copy of `tpl` with its centre at `anchor` and its spawns at `points` (footprint())
+## may not stand there now ("" = it may; BUSY = the tick's path-query budget is spent - ask again later):
+## "body:<entity id>" - a member's body would stand in static or prop geometry; "water:<entity id>" - in
+## water deeper than WATER_SHARE of its height; "nav:anchor" - the anchor more than NAV_SNAP_M off the human
+## navmesh; "nav:<entity id>" - a member's own nav layer more than its radius + NAV_MARGIN_M away (or
+## NAV_HEIGHT_M up or down). The ground under every point must be loaded (the caller checks it). The body
+## and water checks are physics and chunk queries; the nav ones cost one query of the tick's budget (each
+## point asks its own chunk's navmesh regions, never the whole map). A level without navigation skips them.
+func footprint_problem(tpl: Dictionary, anchor: Vector3, points: PackedVector3Array) -> String:
+	var spawns: Array = tpl.get("spawns", [])
+	var members: Array = []   # [entity id, definition record, point (level space, on the ground)]
+	for i in mini(spawns.size(), points.size()):
+		var sp: Variant = spawns[i]
+		if typeof(sp) != TYPE_DICTIONARY:
+			continue
+		var def := GameData.get_record(_member_definition(sp as Dictionary))
+		if str(def.get("type", "")) != "enemy":
+			continue
+		var at := points[i]
+		var h := _height(at)
+		if not is_nan(h):
+			at.y = h
+		members.append([str((sp as Dictionary).get("entity_id", "")), def, at])
+	for m: Array in members:
+		var why := _body_problem(m[1], m[2])
+		if why != "":
+			return "%s:%s" % [why, m[0]]
+	var s := _streamer()
+	if s == null or s.nav_maps == null or not NavQuery.has_navigation(level, NAV_LAYER):
+		return ""
+	if NavQuery.budget_left(level) <= 0:
+		return BUSY
+	NavQuery.spend(level)
+	var ground := anchor
+	var ah := _height(anchor)
+	if not is_nan(ah):
+		ground.y = ah
+	if not _near_nav(ground, NAV_LAYER, NAV_SNAP_M):
+		return "nav:anchor"
+	for m: Array in members:
+		var def: Dictionary = m[1]
+		if not _near_nav(m[2], int(def.get("nav_layers", NAV_LAYER)), float(def.get("capsule_radius_m", 0.5)) + NAV_MARGIN_M):
+			return "nav:%s" % m[0]
+	return ""
+
+
+## The record a spawn of a template comes into the world as (its `prefer` when that record exists).
+static func _member_definition(sp: Dictionary) -> String:
+	var prefer := str(sp.get("prefer", ""))
+	return prefer if prefer != "" and GameData.has_record(prefer) else str(sp.get("definition", ""))
+
+
+## "body" when a member of record `def` standing at `at` (level space, on the ground) would stand in static
+## or prop geometry, "water" when in water too deep for it, else "".
+func _body_problem(def: Dictionary, at: Vector3) -> String:
+	if level == null or not level.is_inside_tree():
+		return ""
+	var r := float(def.get("capsule_radius_m", 0.5))
+	var height := float(def.get("height_m", 1.8))
+	var g := _to_global(at)
+	if level.has_method("water_at") and (int(def.get("nav_layers", NAV_LAYER)) & TITAN_LAYER) == 0:
+		var water := float(level.call("water_at", g))
+		if not is_nan(water) and water - at.y > height * WATER_SHARE:
+			return "water"
+	var shape := CylinderShape3D.new()
+	shape.radius = r
+	shape.height = maxf(0.5, height - BODY_LIFT_M)
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = shape
+	q.collision_mask = BODY_MASK
+	q.collide_with_areas = false
+	q.transform = Transform3D(Basis(), g + Vector3.UP * (BODY_LIFT_M + shape.height * 0.5))
+	for hit: Dictionary in level.get_world_3d().direct_space_state.intersect_shape(q, 16):
+		var rid: RID = hit.get("rid", RID())
+		if rid.is_valid() and PhysicsServer3D.shape_get_type(PhysicsServer3D.body_get_shape(rid, int(hit.get("shape", 0)))) \
+				== PhysicsServer3D.SHAPE_HEIGHTMAP:
+			continue   # the terrain: the ground it stands on
+		return "body"
+	return ""
+
+
+## True when the navigation of `layers` (any of its bits) lies within `reach` of `at` (level space) on the
+## ground plane and NAV_HEIGHT_M up or down: the navmesh regions of the loaded, ready chunks within reach
+## (each chunk's own polygons; an empty region answers nothing).
+func _near_nav(at: Vector3, layers: int, reach: float) -> bool:
+	var s := _streamer()
+	if s == null or s.nav_maps == null:
+		return true
+	var g := _to_global(at)
+	var chunks := {}
+	for off: Vector2 in [Vector2.ZERO, Vector2(reach, 0), Vector2(-reach, 0), Vector2(0, reach), Vector2(0, -reach)]:
+		var c := s.chunk_at(g + Vector3(off.x, 0.0, off.y))
+		if c != "" and s.is_ready(c):
+			chunks[c] = true
+	for c: String in chunks:
+		for r: Dictionary in s.nav_maps.chunk_regions(c):
+			if (int(r.get("bit", 0)) & layers) == 0 or not (r.rid as RID).is_valid():
+				continue
+			if NavigationServer3D.region_get_closest_point_normal(r.rid, g).length_squared() < 1e-6:
+				continue   # a region without polygons
+			var q := NavigationServer3D.region_get_closest_point(r.rid, g)
+			if Vector2(q.x - g.x, q.z - g.z).length() <= reach and absf(q.y - g.y) <= NAV_HEIGHT_M:
+				return true
+	return false
 
 
 ## The road points a wanderer at road node `node` walks: the nodes reachable along the road within
@@ -494,11 +639,14 @@ func copy_ids() -> PackedStringArray:
 func _on_member_spawned(encounter_id: String, _entity_id: String, node: Node3D) -> void:
 	if _copies.has(encounter_id):
 		(_copies[encounter_id] as Dictionary)["active_seen"] = true
-	var e := running_event()
 	var c := node as Civilian
-	if e != null and e.state == WorldEvent.RUNNING and c != null and c.brain != null \
-			and _hunted_factions(e).has(c.faction) and _flat(c.global_position - _to_global(e.centre)) <= WorldEvent.SHELTER_RADIUS_M:
-		c.brain.on_noise(Sim.tick, 0.0)
+	if c == null or c.brain == null:
+		return
+	for e in running_events():
+		if e.state == WorldEvent.RUNNING and _hunted_factions(e).has(c.faction) \
+				and _flat(c.global_position - _to_global(e.centre)) <= WorldEvent.SHELTER_RADIUS_M:
+			c.brain.on_noise(Sim.tick, 0.0)
+			return
 
 
 ## Drops wanderers the giant left behind, cleared ones once their dead are gone, and ones never reached.
@@ -593,8 +741,10 @@ func _update_columns(dt: float) -> void:
 
 ## One update of the column `copy_id` on `route`: its point walks on unless a member is engaged; in the
 ## world it walks its formations along (or is despawned back into the abstract when its point left the
-## loaded ground); out of it, its spawn points follow the point. Returns "done" at the route's end.
-func march(copy_id: String, route: WorldEvent.Route, dt: float) -> String:
+## loaded ground); out of it, its spawn points follow the point - unless it is `held` (M8 gate, F2:
+## another world event is in play, so the column's copy is not brought near the giant: its point walks
+## on, its spawn points stay where they were). Returns "done" at the route's end.
+func march(copy_id: String, route: WorldEvent.Route, dt: float, held := false) -> String:
 	var state := director.encounter_state(copy_id)
 	if state == "" or state == EncounterDirector.CLEARED:
 		return "done" if route.done() else ""
@@ -610,25 +760,64 @@ func march(copy_id: String, route: WorldEvent.Route, dt: float) -> String:
 			director.p37_deactivate(copy_id)
 		else:
 			director.p37_march(copy_id, p, yaw)
-	else:
+	elif not held:
 		director.p37_move_copy(copy_id, p, yaw, _ground_fn())
 	return "done" if route.done() else ""
 
 
 # --------------------------------------------------------------------------- world events
 
-## The event that runs now (null when none).
-func running_event() -> WorldEvent:
+## The events that run now (WAITING, RUNNING or SUSPENDED), by id.
+func running_events() -> Array[WorldEvent]:
+	var out: Array[WorldEvent] = []
 	for eid: String in _event_ids():
 		var e: WorldEvent = events[eid]
 		if e.is_running():
+			out.append(e)
+	return out
+
+
+## The event that runs now (null when none): the one in play when there is one, else the first running
+## by id.
+func running_event() -> WorldEvent:
+	var first: WorldEvent = null
+	for e in running_events():
+		if in_play(e):
 			return e
+		if first == null:
+			first = e
+	return first
+
+
+## M8 gate (F2): true while `e` is in play - running, with a member of its copies in the world or its place
+## (its centre; a moving column's point) within its start radius of the giant. "At most one event at a
+## time" (plan §2.13) is a rule about these: an event left behind (waiting or suspended far off, a column
+## marching the abstract) keeps no other from starting, and does not come into play while another is.
+func in_play(e: WorldEvent) -> bool:
+	if e == null or not e.is_running():
+		return false
+	for id in e.copies:
+		if director != null and not director.p37_living(id).is_empty():
+			return true
+	var p := _player()
+	if p == null:
+		return false
+	var at := e.route.point_at() if e.route != null else e.centre
+	return _flat(p.global_position - _to_global(at)) <= e.start_radius()
+
+
+## The event in play other than `e` (null when none; `e` null: any).
+func other_in_play(e: WorldEvent = null) -> WorldEvent:
+	for o in running_events():
+		if o != e and in_play(o):
+			return o
 	return null
 
 
-## Starts the first event (by id) whose rules hold, when none runs.
+## Starts the first event (by id) whose rules hold, when none is in play (M8 gate, F2: one left behind,
+## out of play, holds nothing - the siege of Skarn starts while a raid the giant walked away from waits).
 func check_events(tick: int) -> void:
-	if running_event() != null or _player() == null:
+	if _player() == null or other_in_play() != null:
 		return
 	for eid: String in _event_ids():
 		var e: WorldEvent = events[eid]
@@ -750,22 +939,32 @@ func update_event(e: WorldEvent, dt: float, tick: int = Sim.tick) -> void:
 	if e.state == WorldEvent.WAITING:
 		if not _ready_at(e.centre):
 			e.unloaded_s += dt
+			_mark_unloaded(e)
 			if _abandoned(e):
 				end_event(e, ABANDONED, tick)
+			else:
+				_carry_event(e, false)
 			return
-		if not _begin_attempt(e, tick):
+		e.unloaded_s = 0.0   # its place is loaded: it is not left behind
+		_mark_loaded(e)
+		# M8 gate (F2): while another event is in play this one waits (at most one in play at a time).
+		if other_in_play(e) != null or not _begin_attempt(e, tick):
+			_carry_event(e, false)
 			return
 	if e.route != null and not e.copies.is_empty():
-		if march(e.copies[0], e.route, dt) == "done" and e.end_outcome() != "":
+		if march(e.copies[0], e.route, dt, other_in_play(e) != null) == "done" and e.end_outcome() != "":
 			end_event(e, e.end_outcome(), tick)
 			return
 	if _ready_at(e.centre):
 		e.state = WorldEvent.RUNNING
 		e.unloaded_s = 0.0
-		e.elapsed_s += dt
+		_mark_loaded(e)
+		if _fail_clock_runs(e):
+			e.elapsed_s += dt
 	else:
 		e.state = WorldEvent.SUSPENDED
 		e.unloaded_s += dt
+		_mark_unloaded(e)
 		if _abandoned(e) and e.route == null:
 			end_event(e, ABANDONED, tick)
 			return
@@ -776,7 +975,7 @@ func update_event(e: WorldEvent, dt: float, tick: int = Sim.tick) -> void:
 	if _all_defeated(e):
 		end_event(e, e.success_outcome(), tick)
 		return
-	var timer := float((e.record.get("fail", {}) as Dictionary).get("timer_s", 0.0)) if typeof(e.record.get("fail")) == TYPE_DICTIONARY else 0.0
+	var timer := e.fail_timer_s()
 	if timer > 0.0 and e.elapsed_s >= timer and e.fail_outcome() != "":
 		end_event(e, e.fail_outcome(), tick)
 		return
@@ -788,6 +987,30 @@ func update_event(e: WorldEvent, dt: float, tick: int = Sim.tick) -> void:
 func _abandoned(e: WorldEvent) -> bool:
 	var limit := float(e.record.get("abandon_after_s", WorldEvent.DEFAULT_ABANDON_S))
 	return limit > 0.0 and e.unloaded_s >= limit
+
+
+## M8 gate (F12): whether e's fail timer runs now (its centre loaded): always, or with fail.within_m only
+## while the giant stands within that of its centre (the siege of Skarn's clock pauses beyond 200 m).
+func _fail_clock_runs(e: WorldEvent) -> bool:
+	var within := e.fail_within_m()
+	if within <= 0.0:
+		return true
+	var p := _player()
+	return p != null and _flat(p.global_position - _to_global(e.centre)) <= within
+
+
+## M8 gate (F2): the save keeps e's abandonment clock - the play time its centre was left at (written once
+## as it is left; false once it is loaded again), so a continue takes it up (_resume_saved).
+func _mark_unloaded(e: WorldEvent) -> void:
+	if not e.unloaded_marked:
+		e.unloaded_marked = true
+		WorldState.set_flag(WorldEvent.flag(e.id, "unloaded_since_s"), clock_s() - e.unloaded_s)
+
+
+func _mark_loaded(e: WorldEvent) -> void:
+	if e.unloaded_marked:
+		e.unloaded_marked = false
+		WorldState.set_flag(WorldEvent.flag(e.id, "unloaded_since_s"), false)
 
 
 func _all_defeated(e: WorldEvent) -> bool:
@@ -838,9 +1061,13 @@ func end_event(e: WorldEvent, outcome: String, tick: int = Sim.tick) -> void:
 	e.state = WorldEvent.IDLE
 	e.elapsed_s = 0.0
 	e.unloaded_s = 0.0
+	_mark_loaded(e)
 	(_carry.get(level.level_id, {}) as Dictionary).erase(e.id)
 	if Quests.has_method("p37_clear_event"):
 		Quests.p37_clear_event(e.id)
+		for o: WorldEvent in events.values():
+			if o != e and o.tracked_before == e.id:
+				o.tracked_before = e.tracked_before   # an event that took the tracker from this one hands it back past it
 		if Quests.tracked_quest_id == e.id:
 			var before := e.tracked_before
 			Quests.tracked_quest_id = ""
@@ -851,7 +1078,8 @@ func end_event(e: WorldEvent, outcome: String, tick: int = Sim.tick) -> void:
 		GameSession.request_checkpoint("world_event")
 
 
-## The giant died: the running event's attempt starts again (its copies go; see world_event.gd).
+## The giant died: the running event's attempt starts again (its copies go; see world_event.gd). Its
+## abandonment clock (unloaded_s) is not the attempt's: it goes on (M8 gate, F2).
 func reset_attempt(e: WorldEvent) -> void:
 	if not e.is_running():
 		return
@@ -859,7 +1087,6 @@ func reset_attempt(e: WorldEvent) -> void:
 		_removals.append(id)
 	e.copies.clear()
 	e.elapsed_s = 0.0
-	e.unloaded_s = 0.0
 	if e.route != null:
 		e.route.s = e.route.start
 	e.state = WorldEvent.WAITING
@@ -929,10 +1156,10 @@ func event_objective(e: WorldEvent) -> Dictionary:
 
 func _on_entity_died(_tick: int, entity_id: String, _killer_id: String) -> void:
 	_dead[entity_id] = true
-	var p := _player()
-	if p != null and p.entity != null and entity_id == p.entity.entity_id:
-		var e := running_event()
-		if e != null:
+	# (the giant is dead by now: _player() would not name it)
+	var p := level.player() if level != null else null
+	if p != null and is_instance_valid(p) and p.entity != null and entity_id == p.entity.entity_id:
+		for e in running_events():
 			reset_attempt(e)
 
 
@@ -953,11 +1180,13 @@ func _carry_event(e: WorldEvent, reset: bool) -> void:
 	(_carry[level.level_id] as Dictionary)[e.id] = {"runs": e.runs(WorldState.flags),
 		"last_start_s": WorldState.get_flag(WorldEvent.flag(e.id, "last_start_s"), clock_s()),
 		"centre": at, "s": e.route.s if e.route != null else 0.0,
-		"reset": reset or bool(prev.get("reset", false)), "tracked_before": e.tracked_before}
+		"reset": reset or bool(prev.get("reset", false)), "tracked_before": e.tracked_before,
+		"unloaded_s": e.unloaded_s}
 
 
 ## A new load of the level: the events running when it was left run again - a death restarts their
-## attempt from its beginning, a travel resumes them where they were.
+## attempt from its beginning, a travel resumes them where they were; either way their abandonment clock
+## goes on where it was (M8 gate, F2).
 func _resume_carried() -> void:
 	if level == null or not _carry.has(level.level_id):
 		return
@@ -973,10 +1202,36 @@ func _resume_carried() -> void:
 			WorldState.set_flag(WorldEvent.flag(e.id, "last_start_s"), c.get("last_start_s", clock_s()))
 		e.state = WorldEvent.WAITING
 		e.tracked_before = str(c.get("tracked_before", ""))
+		e.unloaded_s = maxf(0.0, float(c.get("unloaded_s", 0.0)))
+		e.unloaded_marked = false   # written again at its next update (the reload may have rolled the flag back)
 		e.route = _event_route(e)
 		if e.route != null and not bool(c.get("reset", false)):
 			e.route.s = clampf(float(c.get("s", e.route.start)), e.route.start, e.route.end_s())
 		c["reset"] = false
+		if Quests.has_method("p37_set_event"):
+			Quests.p37_set_event(e.id, event_objective(e))
+
+
+## M8 gate (F19): a run the save holds in progress (WorldEvent.run_in_progress: counted, started after the
+## last one ended, its outcome not written) that this session does not carry - the title, a continue and a
+## new game forget the carry, not the save - begins its attempt again: WAITING (a column from the start of
+## its march), its run counted once, its abandonment clock from the save, its objective in the tracker.
+## Without this a run saved mid-way (the siege of Skarn, max_runs 1) could never start again nor end.
+func _resume_saved() -> void:
+	if level == null or not is_live():
+		return
+	var carried: Dictionary = _carry.get(level.level_id, {})
+	for eid: String in _event_ids():
+		var e: WorldEvent = events[eid]
+		if e.is_running() or carried.has(eid) or not e.run_in_progress(WorldState.flags):
+			continue
+		e.state = WorldEvent.WAITING
+		e.elapsed_s = 0.0
+		e.route = _event_route(e)
+		var since: Variant = WorldState.get_flag(WorldEvent.flag(e.id, "unloaded_since_s"))
+		e.unloaded_marked = SchemaUtil.is_number(since)
+		e.unloaded_s = maxf(0.0, clock_s() - float(since)) if e.unloaded_marked else 0.0
+		_carry_event(e, true)
 		if Quests.has_method("p37_set_event"):
 			Quests.p37_set_event(e.id, event_objective(e))
 
@@ -1076,19 +1331,6 @@ func _to_global(p: Vector3) -> Vector3:
 	return level.global_transform * p if level != null and level.is_inside_tree() else p
 
 
-## The anchor on the human navmesh (within NAV_SNAP_M), or Vector3.INF - one query of the tick's budget
-## (none left: INF, and the place waits). A level without navigation takes the anchor as it is.
-func _snap(anchor: Vector3) -> Vector3:
-	if not NavQuery.has_navigation(level, NAV_LAYER):
-		return anchor
-	if NavQuery.budget_left(level) <= 0:
-		return Vector3.INF
-	var q := NavQuery.closest_point(level, _to_global(anchor), NAV_LAYER)
-	if not q.is_finite() or _flat(q - _to_global(anchor)) > NAV_SNAP_M:
-		return Vector3.INF
-	return q
-
-
 ## True when a living member of copy `id` stands in the camera's view.
 func copy_in_view(id: String) -> bool:
 	for n: Node3D in director.p37_living(id):
@@ -1131,9 +1373,9 @@ func _clear_of_others(anchor: Vector3) -> bool:
 		var info := director.p37_copy_info(id)
 		if not info.is_empty() and _flat(anchor - (info.get("centre", Vector3.INF) as Vector3)) <= COPY_GAP_M:
 			return false
-	var e := running_event()
-	if e != null and _flat(anchor - e.centre) <= EVENT_CLEAR_M:
-		return false
+	for e in running_events():
+		if _flat(anchor - e.centre) <= EVENT_CLEAR_M:
+			return false
 	return true
 
 
@@ -1144,7 +1386,12 @@ func _index_ids(table: String) -> PackedStringArray:
 	return out
 
 
-## The road nodes of each region and the road graph's neighbours (from the level's world index).
+## The roads wanderers stand and walk on (from the level's world index; M8 gate, F18): the edges a road's
+## own polyline drew or a loose road end's join, open to every stage and not direct - never a place's
+## connector (whose far end is the place itself), nor the layout's extra edges (the Needle's 5 m slot, the
+## Grove's rockfall route), nor an edge with an end in a sealed place (sealed_place_at). A wanderer stands
+## (anchor) only on a node of a road's polyline that keeps clear of the places it passes
+## (anchor_clear_of_places). The anchors of each region in _roads, the neighbours in _adjacent.
 func _build_roads() -> void:
 	_roads.clear()
 	_adjacent.clear()
@@ -1153,17 +1400,19 @@ func _build_roads() -> void:
 		return
 	var nodes := idx.road_nodes()
 	var edges := idx.road_edges()
+	var places := place_circles(idx)
+	var sealed := {}
 	for i in nodes.size():
-		var r := idx.region_at(nodes[i])
-		if r == "":
-			continue
-		var in_region: PackedInt32Array = _roads.get(r, PackedInt32Array())
-		in_region.append(i)
-		_roads[r] = in_region   # a packed array is a value: store it back
+		if sealed_place_at(places, nodes[i]):
+			sealed[i] = true
+	var on_road := {}
 	for k in range(edges.size() / 2):
 		var a := edges[2 * k]
 		var b := edges[2 * k + 1]
-		if a < 0 or b < 0 or a >= nodes.size() or b >= nodes.size():
+		if a < 0 or b < 0 or a >= nodes.size() or b >= nodes.size() or sealed.has(a) or sealed.has(b):
+			continue
+		var kind := idx.edge_kind(k)
+		if not idx.is_open_edge(k) or (kind != WorldIndex.ROAD_KIND_ROAD and kind != WorldIndex.ROAD_KIND_JOIN):
 			continue
 		var d := _flat(nodes[a] - nodes[b])
 		if not _adjacent.has(a):
@@ -1172,9 +1421,73 @@ func _build_roads() -> void:
 			_adjacent[b] = []
 		(_adjacent[a] as Array).append([b, d])
 		(_adjacent[b] as Array).append([a, d])
+		if kind == WorldIndex.ROAD_KIND_ROAD:
+			on_road[a] = true
+			on_road[b] = true
+	var ids := on_road.keys()
+	ids.sort()
+	for i: int in ids:
+		var r := idx.region_at(nodes[i])
+		if r == "" or not anchor_clear_of_places(places, nodes[i]):
+			continue
+		var in_region: PackedInt32Array = _roads.get(r, PackedInt32Array())
+		in_region.append(i)
+		_roads[r] = in_region   # a packed array is a value: store it back
 
 
-## The heading along the road at node `i` (toward its first neighbour).
+## The road nodes a wanderer of `region` may stand on (see _build_roads; tests, the gate's probe).
+func anchor_nodes(region: String) -> PackedInt32Array:
+	return _roads.get(region, PackedInt32Array())
+
+
+## M8 gate (F18): the places a wanderer keeps clear of, from the world index: [[centre (level space), radius,
+## sealed]] - each checkpoint (PLACE_CLEAR_M), each POI (a settlement its radius + SETTLEMENT_MARGIN_M, a
+## sealed place - kind secret - its radius + SEALED_MARGIN_M, any other PLACE_CLEAR_M about its centre),
+## each prop of PLACE_PROP_KINDS (cairns and seals: PLACE_CLEAR_M; a seal also seals what is near it).
+static func place_circles(idx: WorldIndex) -> Array:
+	var out: Array = []
+	if idx == null:
+		return out
+	for id: String in idx.checkpoints:
+		out.append([(idx.checkpoints[id] as Dictionary).position, PLACE_CLEAR_M, false])
+	for id: String in idx.pois:
+		var poi: Dictionary = idx.pois[id]
+		match str(poi.get("kind", "")):
+			"settlement":
+				out.append([poi.position, float(poi.get("radius", 0.0)) + SETTLEMENT_MARGIN_M, false])
+			"secret":
+				out.append([poi.position, float(poi.get("radius", 0.0)) + SEALED_MARGIN_M, true])
+			_:
+				out.append([poi.position, PLACE_CLEAR_M, false])
+	for id: String in idx.props:
+		var kind := str((idx.props[id] as Dictionary).get("kind", ""))
+		if PLACE_PROP_KINDS.has(kind):
+			out.append([(idx.props[id] as Dictionary).position, PLACE_CLEAR_M, kind != "cairn"])
+	return out
+
+
+## True when `p` (level space) lies in a sealed place of `places` (place_circles): no wanderer stands or walks
+## there.
+static func sealed_place_at(places: Array, p: Vector3) -> bool:
+	for c: Array in places:
+		if bool(c[2]) and _flat(p - (c[0] as Vector3)) <= float(c[1]):
+			return true
+	return false
+
+
+## True when `p` keeps clear of every place of `places` (place_circles): a wanderer's anchor.
+static func anchor_clear_of_places(places: Array, p: Vector3) -> bool:
+	for c: Array in places:
+		if _flat(p - (c[0] as Vector3)) <= float(c[1]):
+			return false
+	return true
+
+
+## The heading along the road at node `i` (toward its first neighbour on the roads wanderers walk).
+func road_yaw(i: int) -> float:
+	return _road_yaw(i)
+
+
 func _road_yaw(i: int) -> float:
 	var nb: Array = _adjacent.get(i, [])
 	var idx := _index()
@@ -1206,9 +1519,11 @@ static func _flat(v: Vector3) -> float:
 ## Lines for the F3 debug panel.
 func debug_lines() -> PackedStringArray:
 	var lines := PackedStringArray()
-	var e := running_event()
-	lines.append("WANDER %s  copies %d  spawns %d  event %s" % [level.level_id if level != null else "?",
-		copy_ids().size(), spawn_log.size(), "%s (%s, %.0f s)" % [e.id, e.state, e.elapsed_s] if e != null else "-"])
+	var running := PackedStringArray()
+	for e in running_events():
+		running.append("%s (%s%s, %.0f s)" % [e.id, e.state, ", in play" if in_play(e) else "", e.elapsed_s])
+	lines.append("WANDER %s  copies %d  spawns %d  events %s" % [level.level_id if level != null else "?",
+		copy_ids().size(), spawn_log.size(), ", ".join(running) if not running.is_empty() else "-"])
 	for id in copy_ids():
 		lines.append("  %s: %s" % [id, director.encounter_state(id)])
 	return lines

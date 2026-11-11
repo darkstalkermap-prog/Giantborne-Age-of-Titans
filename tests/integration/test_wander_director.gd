@@ -13,7 +13,11 @@ extends IntegrationSuite
 ##     their record's kill XP for the entry's first three spawns and none for the fourth, walk the road's
 ##     nodes near the anchor, and a member of a neutral faction spawns at peace;
 ##   * a copy leaves when the giant leaves it (its chunk unloads: nothing of it is saved) and, never
-##     reached, after STALE_S.
+##     reached, after STALE_S;
+##   * M8 gate (F18): a wanderer stands only on a node of a road's own polyline open to every stage - never
+##     on a place's connector, the layout's extra edges or a stage-limited edge, nor by a checkpoint - and
+##     neither stands nor walks inside a sealed place; every member's body must stand clear of static and
+##     prop geometry (a node with a rock on it is refused).
 
 const F := preload("res://tests/support/living_world_fixtures.gd")
 
@@ -188,3 +192,49 @@ func test_copies_spawn_with_decaying_kill_xp_and_leave_when_the_giant_leaves() -
 
 func assert_ne_state(d: EncounterDirector, id: String) -> void:
 	assert_eq(d.encounter_state(id), EncounterDirector.DORMANT, "not before STALE_S")
+
+
+# --------------------------------------------------------------------------- M8 gate (F18)
+
+func test_wanderers_stand_on_open_roads_clear_of_places_and_solids() -> void:
+	_setup()
+	var idx := WorldIndex.for_level(F.LEVEL)
+	var road_count := idx.road_nodes().size()
+	# a place's connector off the road at x = -64, the layout's extra edge on to a pocket, a stage-6 road
+	idx.add_road(F.ground(-64.0, 0.0), F.ground(-64.0, -40.0), 10.0, 0, WorldIndex.ANY_STAGE, false, 0.5, WorldIndex.ROAD_KIND_CONNECTOR)
+	idx.add_road(F.ground(-64.0, -40.0), F.ground(-80.0, -56.0), 5.0, 0, 4, true, 0.5, WorldIndex.ROAD_KIND_EXTRA)
+	idx.add_road(F.ground(-32.0, 0.0), F.ground(-32.0, 40.0), 60.0, 6)
+	# a waystone by the road at x = 16, a sealed place over its east end
+	idx.checkpoints["p37.cp.mid"] = {"position": F.ground(16.0, 6.0), "yaw": 0.0, "display_name": "Mid stone", "kind": "waystone",
+		"chunk": "c2_2", "fast_travel": true, "requires_flags": PackedStringArray(), "region": F.REGION, "district": "", "max_stage": 10}
+	idx.pois["p37.poi.vault"] = {"position": F.ground(104.0, 0.0), "radius": 10.0, "kind": "secret", "region": F.REGION,
+		"display_name": "Vault", "chunk": "c3_2", "min_stage": 5}
+	_wd.refresh()
+	var nodes := idx.road_nodes()
+	var xs := []
+	for i: int in _wd.anchor_nodes(F.REGION):
+		assert_true(i < road_count, "only the road's own nodes are anchors (node %d at %s)" % [i, nodes[i]])
+		xs.append(snappedf(nodes[i].x, 0.5))
+	for x: float in [0.0, 16.0, 32.0]:
+		assert_false(xs.has(x), "not by the waystone (within %.0f m): x = %.0f" % [WanderDirector.PLACE_CLEAR_M, x])
+	for x: float in [96.0, 112.0]:
+		assert_false(xs.has(x), "not in the sealed place (its radius + %.0f m): x = %.0f" % [WanderDirector.SEALED_MARGIN_M, x])
+	for x: float in [-112.0, -64.0, -32.0, 48.0, 80.0]:
+		assert_true(xs.has(x), "the road's node at x = %.0f is an anchor (a connector or a stage-6 road may leave it)" % x)
+	var east := _wd.patrol_points(idx.nearest_road_node(F.ground(80.0, 0.0)), 40.0, F.ground(80.0, 0.0))
+	assert_false(east.is_empty(), "a patrol from x = 80")
+	for q: Vector3 in east:
+		assert_true(q.x < 90.0, "no patrol walks into the sealed place (%s)" % q)
+	var west := _wd.patrol_points(idx.nearest_road_node(F.ground(-64.0, 0.0)), 40.0, F.ground(-64.0, 0.0))
+	assert_false(west.is_empty(), "a patrol from x = -64")
+	for q: Vector3 in west:
+		assert_true(absf(q.z) < 0.01, "a patrol keeps to the road, not the connector, the extra edge or the stage-6 road (%s)" % q)
+	# a rock where a member would stand (the node at x = -96; every other rule holds there): refused
+	var tpl := GameData.get_record(F.PACK)
+	var at := F.ground(-96.0, 0.0)
+	var pts := WanderDirector.footprint(tpl, at, _wd.road_yaw(idx.nearest_road_node(at)))
+	assert_eq(_wd.footprint_problem(tpl, at, pts), "", "a clear road node fits")
+	var rock := add_box(Vector3(2, 3, 2), F.ground(pts[0].x, pts[0].z) + Vector3(0, 1.5, 0))
+	await step_ticks(2)
+	assert_eq(_wd.footprint_problem(tpl, at, pts), "body:p37.pack_a", "a member would stand in the rock: refused")
+	rock.queue_free()

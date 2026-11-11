@@ -3,8 +3,12 @@ extends IntegrationSuite
 ##   * the siege of Skarn on the real world (scenes/world/world.tscn, deterministic streaming, the living
 ##     world on): Ulfra's plea to a stage-5 giant starts it - its five engines appear with it, their crews
 ##     take them; the line holds its fire while the giant is more than 200 m from Skarn's longhouses (no
-##     longhouse loses health) and bombards them when it comes back; breaking the engines breaks the line
-##     (its soldiers rout) and Skarn is saved - 300 XP, the titan iron, Skarn's support and its forge;
+##     longhouse loses health) and bombards them when it comes back - its shots strike them and they lose
+##     health (M8 gate, F12); breaking the engines breaks the line (its soldiers rout) and Skarn is saved -
+##     300 XP, the titan iron, Skarn's support and its forge;
+##   * Skarn burned in play (M8 gate, F12): a giant that stands by Skarn out of the engines' reach and breaks
+##     nothing watches the line's fire bring down two longhouses - the siege ends burned, its quest is lost
+##     and the rebuilding errand begins;
 ##   * Skarn burned instead: two longhouses fall, the siege quest is lost and the rebuilding errand begins -
 ##     a stage-6 giant lifts the beams of two burned halls, Skarn stands with it again and its forge opens;
 ##   * the Moot battery's engines at stage 6: refused to a stage-5 giant, seized by a stage-6 one and thrown;
@@ -26,7 +30,26 @@ const MOOT_PARTS := ["res://scenes/world/chunks/c4_1_0.tscn", "res://scenes/worl
 const HARROK := "world.stonehold.harrok"
 
 
+var _engine_hits: Array = []   ## [target id, health damage] of the siege line's hits on a longhouse
+
+
+func before_each() -> void:
+	await super()
+	_engine_hits.clear()
+	Events.hit_resolved.connect(_on_hit_resolved)
+
+
+func _on_hit_resolved(_tick: int, result: HitResult) -> void:
+	if result == null or result.event == null:
+		return
+	var hit := result.event
+	if hit.attacker_id.begins_with("world.stonehold.siege_") and LONGHOUSES.has(hit.target_id) and result.health_damage > 0:
+		_engine_hits.append([hit.target_id, result.health_damage])
+
+
 func after_each() -> void:
+	if Events.hit_resolved.is_connected(_on_hit_resolved):
+		Events.hit_resolved.disconnect(_on_hit_resolved)
 	Quests.end_dialogue()
 	for f in Formation.live():
 		f.dissolve()
@@ -173,6 +196,13 @@ func test_the_siege_of_skarn_saved_on_the_real_world() -> void:
 		if e.p36_bombard_target(p.entity) != null:
 			bombarding += 1
 	assert_true(bombarding > 0, "back at Skarn the line bombards its longhouses (%d engines)" % bombarding)
+	var struck: bool = await TestWait.until(self, func() -> bool: return not _engine_hits.is_empty(), 60 * 45)
+	assert_true(struck, "the engines' shots strike a longhouse (M8 gate, F12)")
+	var after := _longhouse_health()
+	var lost := false
+	for i in after.size():
+		lost = lost or float(after[i]) < float(before[i])
+	assert_true(lost, "a longhouse loses health to the engines' fire (%s -> %s)" % [before, after])
 	for e: SiegeEngine in engines:
 		assert_true(await _break(e.world_id, p.entity.entity_id), "%s is broken" % e.world_id)
 	var done: bool = await TestWait.until(self, func() -> bool: return not siege.is_running(), 60 * 20)
@@ -183,6 +213,59 @@ func test_the_siege_of_skarn_saved_on_the_real_world() -> void:
 	assert_true(QuestConditions.truthy(WorldState.get_flag("world.skarn.support")), "Skarn stands with the giant")
 	var forge := _find(w, "world.stonehold.skarn_forge") as ConditionForge
 	assert_true(forge != null and forge.is_open(), "Skarn's hearth-forge opens")
+
+
+# --------------------------------------------------------------------------- Skarn burned in play (M8 gate, F12)
+
+## West of the steading: within 200 m of the longhouses the engines aim at, beyond every engine's range
+## (the catapults' 180 m, the ballistae's 140 m) - the whole line bombards the halls.
+const OUT_OF_REACH := Vector2(330.0, -650.0)
+
+
+func test_skarn_burned_by_the_siege_lines_fire_in_play() -> void:
+	WanderDirector.test_active = true
+	WanderDirector.view_probe = func(_p: Vector3) -> bool: return false
+	Quests.test_active = true
+	Quests.scope = PackedStringArray()
+	var w: WorldRoot = await _world(Vector2(440.0, -600.0))
+	var p := w.player()
+	p.set_profile(_profile(5))
+	p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+	await step_ticks(5)
+	var wd := w.get_node_or_null("WanderDirector") as WanderDirector
+	var siege: WorldEvent = wd.events[SIEGE]
+	var s := Quests.start_dialogue("dialogue.ulfra", "world.stonehold.ulfra")
+	if s != null:
+		s.choose_outcome("plea")
+	Quests.end_dialogue()
+	wd.check_events(Sim.tick)
+	assert_eq(wd.running_event(), siege, "the siege starts")
+	var started := Sim.tick
+	await _move(w, OUT_OF_REACH)
+	var engines := _siege_engines(w)
+	assert_eq(engines.size(), 5, "its five engines")
+	var reach := 0
+	for e: SiegeEngine in engines:
+		if e.can_reach(p.entity):
+			reach += 1
+	assert_eq(reach, 0, "the giant stands out of every engine's reach")
+	# the giant breaks nothing: the line's fire alone decides (at most 8 minutes of play)
+	var done: bool = await TestWait.until(self, func() -> bool: return not siege.is_running(), 60 * 60 * 8)
+	assert_true(done, "the siege ends")
+	assert_eq(str(WorldState.get_flag("%s.outcome" % SIEGE, "")), "burned", "Skarn burns")
+	var fallen := LONGHOUSES.filter(func(id: String) -> bool: return WorldState.is_destroyed(id))
+	assert_true(fallen.size() >= 2, "two longhouses fell (%s)" % [fallen])
+	var by_fire := {}
+	for h: Array in _engine_hits:
+		by_fire[str(h[0])] = true
+	for id: String in fallen:
+		assert_true(by_fire.has(id), "%s was struck by the engines' fire" % id)
+	var ended_tick := int(siege.log[siege.log.size() - 1].tick) if not siege.log.is_empty() else Sim.tick
+	print("    test_stonehold_walkthrough: Skarn burned by the siege line's fire in %.0f s of play (%d hits on its halls)" % [
+		float(ended_tick - started) / float(Sim.TICK_RATE), _engine_hits.size()])
+	await _settle()
+	assert_eq(Quests.quest_state("quest.siege_of_skarn"), Quests.ABANDONED, "the siege's quest is lost")
+	assert_eq(Quests.quest_state("quest.skarn_rebuild"), Quests.ACTIVE, "the rebuilding errand begins")
 
 
 # --------------------------------------------------------------------------- Skarn burned and rebuilt
