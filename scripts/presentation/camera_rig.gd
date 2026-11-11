@@ -287,6 +287,7 @@ func _update_transform(delta: float) -> void:
 			head_hidden = hide
 			camera.cull_mask = CULL_NO_HEAD if hide else CULL_ALL
 	_apply_shake(delta)
+	_update_scenery_fade()
 
 
 ## Fraction (0..1) of the segment a camera-sized sphere can travel without touching the world.
@@ -370,3 +371,56 @@ var p30_lock_group: Formation = null
 
 func p30_set_lock_group(f: Formation) -> void:
 	p30_lock_group = f
+
+## @anchor M8 screenshot pass (V1)
+# Trees fade out of the giant's way (SceneryFade; assets/shaders/scenery_fade.gdshader). The camera the
+# player sees through sets the fade's three global shader parameters every frame, after it moved:
+# itself with its near radius (third person SceneryFade.NEAR_ARM x the arm, first person
+# SceneryFade.FP_NEAR_RADII x the giant's height), the giant's middle with his cone's radius (third
+# person only: in first person the camera is in his head) and the lock point of the locked target or
+# formation with its radius. A rig that leaves the tree, or a frame of a camera that is not current,
+# clears them: nothing fades without the player's camera.
+
+## True while this rig's camera writes the fade's parameters (it was current at its last update).
+var scenery_fade_owner := false
+
+
+func _exit_tree() -> void:
+	if scenery_fade_owner:
+		scenery_fade_owner = false
+		SceneryFade.clear()
+
+
+## What the fade keeps clear for this rig now: {"camera", "focus", "target"} (Vector4s as the shader's
+## parameters: xyz a position, w a radius, 0 = none).
+func scenery_fade_view() -> Dictionary:
+	var h := float(profile.get("height_m", 3.66))
+	var eye := camera.global_position
+	var near := SceneryFade.FP_NEAR_RADII * h
+	var foc := Vector4.ZERO
+	if mode == Mode.THIRD_PERSON:
+		near = maxf(SceneryFade.NEAR_MIN_M, SceneryFade.NEAR_ARM * current_distance)
+		var mid := player.global_position + Vector3.UP * h * SceneryFade.FOCUS_HEIGHT
+		foc = Vector4(mid.x, mid.y, mid.z, SceneryFade.FOCUS_RADII * h)
+	var tgt := Vector4.ZERO
+	var locked := lock_target != null and is_instance_valid(lock_target) and lock_target.is_alive()
+	var anchor := lock_focus_point() if locked else Vector3.INF
+	if anchor.is_finite():
+		var r := SceneryFade.TARGET_MIN_M
+		if lock_target.combatant != null:
+			r = maxf(r, SceneryFade.TARGET_RADII * lock_target.combatant.height_m)
+		if p30_lock_group != null and not p30_lock_group.dissolved:
+			r = maxf(r, 0.5 * p30_lock_group.files * p30_lock_group.file_spacing_m)
+		tgt = Vector4(anchor.x, anchor.y, anchor.z, r)
+	return {"camera": Vector4(eye.x, eye.y, eye.z, near), "focus": foc, "target": tgt}
+
+
+func _update_scenery_fade() -> void:
+	if camera == null or player == null or not is_instance_valid(player) or not camera.current:
+		if scenery_fade_owner:
+			scenery_fade_owner = false
+			SceneryFade.clear()
+		return
+	scenery_fade_owner = true
+	var v := scenery_fade_view()
+	SceneryFade.set_view(v.camera, v.focus, v.target)

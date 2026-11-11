@@ -39,6 +39,12 @@ const MAP_PATH := "res://assets/world/map_world.png"
 const SKYLINE_PATH := "res://assets/world/skyline.res"
 const LANDMARKS_PATH := "res://assets/world/skyline_landmarks.res"
 const VERTEX_MATERIAL := "res://assets/world/shared/mat_vertex.tres"
+## M8 screenshot pass (V1): the trees' material - VERTEX_MATERIAL's look in the scenery fade shader
+## (SceneryFade), so a tree near the camera or between it and the giant dithers out of the way.
+const TREE_MATERIAL := "res://assets/world/shared/mat_tree_fade.tres"
+const FADE_SHADER := "res://assets/shaders/scenery_fade.gdshader"
+## The shared meshes drawn with TREE_MATERIAL.
+const FADE_KEYS := ["tree_pine", "tree_broadleaf"]
 
 const S_WORLD := "res://scripts/world/world_root.gd"
 const S_STREAMER := "res://scripts/world/chunk_streamer.gd"
@@ -347,7 +353,22 @@ static func _vertex_material(kit: SceneKit) -> StandardMaterial3D:
 	return m
 
 
-## The scenery meshes (one vertex-coloured surface each, the one material): their res:// paths.
+## M8 screenshot pass (V1): TREE_MATERIAL - the scenery fade shader with VERTEX_MATERIAL's settings
+## (vertex colours, sRGB, as the albedo; roughness 0.95).
+static func _tree_material(kit: SceneKit) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = load(FADE_SHADER) as Shader
+	m.set_shader_parameter("albedo", Color.WHITE)
+	m.set_shader_parameter("vertex_color_albedo", true)
+	m.set_shader_parameter("roughness", 0.95)
+	DirAccess.make_dir_recursive_absolute(kit.output_path(SHARED_DIR))
+	ResourceSaver.save(m, kit.output_path(TREE_MATERIAL), ResourceSaver.FLAG_CHANGE_PATH)
+	m.take_over_path(TREE_MATERIAL)
+	return m
+
+
+## The scenery meshes (one vertex-coloured surface each; the trees with TREE_MATERIAL, the rest with
+## `mat`): their res:// paths.
 static func _shared_meshes(kit: SceneKit, mat: Material) -> Dictionary:
 	var L := WorldLayout
 	var specs := {
@@ -369,8 +390,9 @@ static func _shared_meshes(kit: SceneKit, mat: Material) -> Dictionary:
 	}
 	var out := {}
 	DirAccess.make_dir_recursive_absolute(kit.output_path(SHARED_DIR))
+	var tree_mat := _tree_material(kit)
 	for key: String in specs:
-		var mesh := L.parts_mesh(specs[key], Transform3D.IDENTITY, mat)
+		var mesh := L.parts_mesh(specs[key], Transform3D.IDENTITY, tree_mat if FADE_KEYS.has(key) else mat)
 		var path := SHARED_DIR + key + ".res"
 		ResourceSaver.save(mesh, kit.output_path(path), ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_COMPRESS)
 		out[key] = path
