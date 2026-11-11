@@ -144,7 +144,7 @@ static func fields() -> Dictionary:
 	# A spawn of a template may carry `targets` (P30's target provider for that spawn alone: raiders who
 	# burn a settlement's houses and hunt its folk while the giant is not in their way) and `prefer` (a
 	# record used instead of `definition` once it exists - a later package's archetype, such as
-	# enemy.dire_wolf, without a data change when it lands; checked by GameData as a warning only).
+	# enemy.dire_wolf, without a data change when it lands: a prefer naming no record yet is no error).
 	f["template"] = U.bool_field()
 	(((f.spawns as Dictionary).item_fields) as Dictionary).merge({
 		"targets": {"t": "dict", "fields": {

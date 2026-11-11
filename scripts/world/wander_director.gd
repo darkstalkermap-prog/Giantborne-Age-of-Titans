@@ -124,6 +124,8 @@ func _ready() -> void:
 	if not Events.mode_change_requested.is_connected(_on_mode_change_requested):
 		Events.mode_change_requested.connect(_on_mode_change_requested)
 	GameSession.register_respawn_blocker(_respawn_blocker)
+	if director != null and not director.member_spawned.is_connected(_on_member_spawned):
+		director.member_spawned.connect(_on_member_spawned)
 	_resume_carried()
 
 
@@ -487,6 +489,12 @@ func copy_ids() -> PackedStringArray:
 	return out
 
 
+## A copy's member came into the world: the giant has reached that copy.
+func _on_member_spawned(encounter_id: String, _entity_id: String, _node: Node3D) -> void:
+	if _copies.has(encounter_id):
+		(_copies[encounter_id] as Dictionary)["active_seen"] = true
+
+
 ## Drops wanderers the giant left behind, cleared ones once their dead are gone, and ones never reached.
 func _prune_copies(tick: int) -> void:
 	for id: String in _copies.keys():
@@ -507,6 +515,11 @@ func _prune_copies(tick: int) -> void:
 			_remove_copy(id)   # the giant left it: wanderers move on
 		elif state == EncounterDirector.DORMANT and tick - int(c.made_tick) >= seconds_to_ticks(STALE_S):
 			_remove_copy(id)
+
+
+## Removes a copy now (its living members and corpses go; tests and the bot).
+func drop_copy(id: String) -> void:
+	_remove_copy(id)
 
 
 func _remove_copy(id: String) -> void:
@@ -1131,9 +1144,9 @@ func _build_roads() -> void:
 		var r := idx.region_at(nodes[i])
 		if r == "":
 			continue
-		if not _roads.has(r):
-			_roads[r] = PackedInt32Array()
-		(_roads[r] as PackedInt32Array).append(i)
+		var in_region: PackedInt32Array = _roads.get(r, PackedInt32Array())
+		in_region.append(i)
+		_roads[r] = in_region   # a packed array is a value: store it back
 	for k in range(edges.size() / 2):
 		var a := edges[2 * k]
 		var b := edges[2 * k + 1]
