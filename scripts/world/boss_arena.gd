@@ -279,6 +279,8 @@ func _alert_boss(tick: int) -> void:
 	var p := _player()
 	if b == null or p == null or b.brain == null:
 		return
+	if b.has_method("p34_stop_return"):
+		b.p34_stop_return()   # P34: a new attempt begins while the boss still walks home
 	b.brain.on_noise(tick, p.global_position, p.entity.entity_id, true)
 
 

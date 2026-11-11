@@ -3,12 +3,12 @@ extends IntegrationSuite
 ## shows the green pulse - not while it burns (the orange flicker instead); a 5.5 m troll can be grabbed
 ## by a stage-5 giant but is too tall for stage 4; the 9 m Matriarch is too tall at stage 5 and the
 ## refused grab spends nothing; a fire-tagged prop broken near a troll sets it burning; a troll or whelp
-## set down in the fire pit comes out burning; dire wolves harass a giant they are outmatched by.
+## set down in the fire pit comes out burning. (Dire wolves harassing a giant that outmatches them: the
+## slow battery, tests/slow/test_big_battery.)
 
 const TROLL := "res://scenes/enemies/troll.tscn"
 const WHELP := "res://scenes/enemies/troll_whelp.tscn"
 const MATRIARCH := "res://scenes/enemies/troll_matriarch.tscn"
-const DIRE_WOLF := "res://scenes/enemies/dire_wolf.tscn"
 
 
 func _spawn(path: String, id: String, pos: Vector3, ai := false) -> EnemyActor:
@@ -118,18 +118,3 @@ func test_fire_from_a_brazier_and_the_pit() -> void:
 	w.carry(Vector3(30, 1.0, 20), Basis(), w.body_centre_local())
 	w.on_released("thrown", [Vector3(30, 0.05, 20)])
 	assert_true(w.p34_has_status_tag("Burning"), "out of the pit burning")
-
-
-func test_dire_wolves_harass_a_giant_that_outmatches_them() -> void:
-	var p := spawn_player(Vector3(0, 0.05, 14))
-	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 30)
-	assert_true(p.growth.debug_set_stage(4).ok, "stage 4")
-	var w := _spawn(DIRE_WOLF, "test.dire_wolf_1", Vector3(0, 0.05, -4), true)
-	var rec := GameData.get_record("enemy.dire_wolf")
-	assert_eq(float(rec.height_m), 1.8, "a 1.8 m dire wolf")
-	assert_eq(float(rec.health), 260.0, "health 260")
-	await TestWait.until(self, func() -> bool: return w.brain.is_outmatched(), 40)
-	assert_true(w.brain.is_outmatched(), "a stage-4 giant outmatches it (10.97 / 1.8 = 6.1)")
-	assert_eq(w.brain.outmatched_behavior(), "harass", "it harasses")
-	assert_true(w.brain.state != EnemyBrain.AIState.FLEE and w.brain.state != EnemyBrain.AIState.ROUTED,
-		"it does not flee: it harasses")

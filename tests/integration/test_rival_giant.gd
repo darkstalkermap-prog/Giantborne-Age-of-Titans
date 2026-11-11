@@ -1,9 +1,8 @@
 extends IntegrationSuite
 ## Rival giants (plan M6-M9 §2.10, §3.18; P34): the axe combo is a weapon arc through AttackRunner that
-## hits the giant in front; the shoulder charge runs straight and ends against stone in the 2.5 s
-## punishable recovery (OgreBoss's committed run); the boulder is a lob whose landing circle is
-## committed at the giant's feet when its windup begins; rival giants are never grabbable and their
-## lobs do not set the archers' launch gaps.
+## hits the giant in front; the boulder is a lob whose landing circle is committed at the giant's feet
+## when its windup begins; rival giants are never grabbable and their lobs do not set the archers'
+## launch gaps. (The shoulder charge ending against stone: the slow battery, tests/slow/test_big_battery.)
 
 const RIVAL := "res://scenes/enemies/rival_giant.tscn"
 
@@ -60,21 +59,3 @@ func test_the_boulder_lands_where_its_circle_was_committed() -> void:
 	assert_near(float(circles[0][3]), 5.0, 0.01, "5 m")
 	assert_true(g.runner.aim_point.distance_to(circles[0][2]) < 0.01, "the throw aims at the committed point")
 	assert_true(a.windup_ticks >= 48, "a windup of 0.8 s or more is telegraphed")
-
-
-func test_the_shoulder_charge_ends_against_stone() -> void:
-	add_box(Vector3(40, 12, 2), Vector3(0, 6, -16))
-	var p := spawn_player(Vector3(30, 0.05, 20))
-	var g := _rival(Vector3(0, 0.05, 6))
-	await step_ticks(2)
-	p.global_position = Vector3(0, 0.05, -10)
-	g.brain.target_id = p.entity.entity_id
-	var a := GameData.get_action("ability.giant_shoulder_charge")
-	assert_eq(a.hit_shape, "body_sweep", "the charge is a body sweep")
-	g.controller.force_action(a)
-	p.global_position = Vector3(30, 0.05, 20)   # out of the way: the run meets only the wall
-	var ended := await TestWait.until(self, func() -> bool: return g.wall_stops > 0, a.windup_ticks + 120)
-	assert_true(ended, "the charge ends against the wall")
-	assert_eq(g.controller.action_id(), "ability.giant_charge_recover", "in its punishable recovery")
-	assert_true(g.get_rig_state().get("staggered", false), "reeling (shown like a stagger)")
-	assert_true(g.global_position.z > -16.0 + 2.2 - 0.5, "stopped at the stone, not through it")

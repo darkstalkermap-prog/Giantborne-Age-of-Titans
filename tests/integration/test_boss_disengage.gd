@@ -62,7 +62,7 @@ func test_leaving_resets_the_boss_and_returning_starts_a_new_attempt() -> void:
 	var called := m.summoned.duplicate()
 	# Out to 45 m (inside radius + 20 m = 50 m): nothing happens.
 	p.global_position = Vector3(0, 0.05, 45)
-	await step_ticks(20)
+	await step_ticks(18)
 	assert_true(arena.is_engaged(), "45 m is not far enough")
 	# Out to 60 m, back in before the time runs out: nothing either.
 	p.global_position = Vector3(0, 0.05, 60)

@@ -3704,4 +3704,10 @@ func _p34_reset_extra() -> void:
 	pass
 
 
+## A new attempt engaged while the boss still walks home: it stops there and fights (full health).
+func p34_stop_return() -> void:
+	if is_returning():
+		_end_leash_return(true)
+
+
 ## @anchor P37

@@ -1,9 +1,10 @@
 extends IntegrationSuite
 ## The Troll Matriarch in her den (plan M6-M9 §5.13 boss 2; P34) on scenes/test/troll_den_test.tscn:
-## her whelp throw carries a whelp of her brood at the giant; her second phase (50 %) begins once per
+## her whelp throw picks up a whelp of her brood; her second phase (50 %) begins once per
 ## attempt with the roar that calls three whelps; the drive-out ending - the nests burned, the back wall
 ## open, below 60 % - sends her through the exit: her outcome "fled", Events.boss_disengaged(fled), the
-## arena done and the music out of the boss state. (A burning whelp thrown into her: the slow battery.)
+## arena done and the music out of the boss state. (The thrown whelp's flight and a burning whelp
+## thrown into her: the slow battery, tests/slow/test_big_battery.)
 
 const DEN := "res://scenes/test/troll_den_test.tscn"
 const BB := preload("res://tools/builders/big.gd")
@@ -60,16 +61,15 @@ func test_the_whelp_throw_and_her_second_phase_once() -> void:
 			held = w
 	assert_true(held != null, "she picks a whelp up at the windup")
 	assert_eq(held.grab_holder_id, BB.DEN_ID, "in her hand")
-	var thrown := await TestWait.until(self, func() -> bool: return m.whelp_throws > 0, a.windup_ticks + 4)
-	assert_true(thrown, "the throw carries it")
-	assert_eq(ProjectileSystem.instance(get_tree()).carried_count(), 1, "a thrown body in the air")
-	# Her second phase: once, with the roar and three whelps.
+	# (its launch as a thrown_body: the slow battery) Her second phase: once, with the roar and three
+	# whelps - the roar ends the throw, so the whelp is set down.
 	var pools := m.entity.combatant.pools
 	pools.health = pools.health_max * 0.49
 	await step_ticks(1)
 	assert_eq(m.attempt_phases, [2] as Array[int], "phase 2 at 50 %")
 	assert_eq(m.controller.action_id(), "ability.matriarch_roar", "the roar")
 	assert_eq(m.summoned.size(), 3, "it calls three whelps")
+	assert_false(held.is_held(), "the whelp in her hand is set down")
 	assert_near(m.p34_regen_rate(), 40.0, 0.01, "40 hp/s in phase 2")
 	pools.health = pools.health_max
 	await step_ticks(1)
