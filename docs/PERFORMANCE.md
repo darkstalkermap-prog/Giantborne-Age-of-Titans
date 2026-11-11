@@ -802,6 +802,25 @@ tools/gd.sh --headless --path . --fixed-fps 60 -- --no-user-settings --no-audio 
   "--route=-300:780;60:450;120:-350;150:-650;380:-400;620:600;200:330"
 ```
 
+### The 0.7.0-m7 release (the M7 gate and its polish)
+
+The play link's build after the M7 polish merge (`tools/build_web.sh`, preset `Web`, no test content;
+every record validates without `data/test`), checked in headless Chromium with SwiftShader on the
+container's 4 cores (indicative: software WebGL). The merge's own check (`tools/check.sh --build
+--slow --gate --audio`): 205 suites, 37,537 checks, 0 failures (default 48.3 s, slow 165.8 s, gate
+267.4 s), the seams (64 chunks, 112 seams), 441 audio files bit-exact, the 120 s soak with 0 errors.
+
+| Item | Result |
+| --- | --- |
+| `index.wasm` | 37,700,666 bytes; 12,528,700 as shipped (gzip, base64) |
+| `index.pck` | 16,188,664 bytes (12,522,869 gzipped); 16,697,160 as shipped in two parts of 8,348,580 bytes: 15.92 MB of the M7 budget of 21 MB; the audio 61 % of its files |
+| The page's download | about 29.2 MB (the engine 12.5 MB, the pck 16.7 MB) |
+| `stream_check.mjs --world --audio` (the world's default route, no `--route`) | OK in its default form: 396.9 m in 47.4 s of game time (124.5 s of wall time), 4 region borders (Crownmarch, Drowned Steps, Greywood, Drowned Steps, Crownmarch), 0 thrash, at most 16 chunks loaded, 223.6 m of margin, streaming work max 7.7 ms, draw calls p50 40 / max 47, 0 console errors; 86.7 s of music with 283 holes over 50 ms (the longest 322.2 ms), every one placed on the main thread; peak live samples 57.0 MB of the 67.9 MB cap. The plan's criterion NOT MET here (the strict form is the owner's, on a GPU) |
+| `audio_check.mjs` (the Valley) | OK in its default form: sound 0.3 s after the Hollow's music begins, 60.2 s of music with 179 holes over 50 ms (the longest 168.3 ms), every one placed on the main thread; peak live samples 37.0 MB of the 48.0 MB cap; 0 console errors. Criterion NOT MET here, as at M6 |
+| The launcher's open-world start | One press arms the button ("Press again to start a new game in the open world"; the game does not start); the second starts the engine (5.9 s) with `--mode=world`; the first save, 21.6 s later, holds `"level": "level.world"`, respawn `world.cp.kingsgate_shelf`, stage 3, level 6; 0 console errors. Play still opens the title |
+| Linux export (`builds/linux/Giantborn.x86_64`, 88,530,232 bytes) | The 120 s soak headless: 0 errors (fence breaks 2, loot 2, debris 10). An assisted novice Valley run (`--scenario=valley --bot-village=intimidate --bot-skill=novice --bot-seed=1 --bot-assist`): completed in 446.4 s of simulated time, 0 deaths, 0 breaches, 0 invariant failures, 0 errors, 0 warnings, CPU per tick p95 3.5 ms |
+| Windows export (`builds/windows/Giantborn.exe`, 122,113,832 bytes, and `Giantborn.console.exe`) | Built; not launched (no Windows here) |
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
