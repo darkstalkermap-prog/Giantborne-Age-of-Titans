@@ -118,6 +118,7 @@ func spawn(owner: CombatEntity, a: ActionDef, origin: Vector3, velocity: Vector3
 		snap.outgoing_damage_mult = owner.combatant.outgoing_damage_mult()
 		snap.outgoing_poise_mult = owner.combatant.outgoing_poise_mult()
 	p.ctx = snap
+	_p36_note_target(p)   # M8 gate (F12): a siege engine's shot may strike the prop it bombards
 	_active.append(p)
 	_show_visual(p)
 	Events.projectile_spawned.emit(Sim.tick, p.id, p.owner_id, a.id if a != null else "",
@@ -176,7 +177,9 @@ func _advance(p: Projectile, tick: int) -> void:
 	var space := p.owner.get_viewport().find_world_3d().direct_space_state
 	var contact := HitQueryAdapter.sphere_contact(space, from, to, p.radius)
 	var stop := to if contact.is_empty() else (contact.position as Vector3)
+	var lifted := _p36_lift_target(p)
 	var cands := HitQueryAdapter.sweep_sphere(space, p.owner, from, stop, p.radius)
+	_p36_drop_target(lifted)
 	HitFactory.sort_candidates(cands)
 	var first_substep := -1
 	var impact := Vector3.INF
@@ -214,8 +217,10 @@ func _impact(p: Projectile, point: Vector3, hit_id: String, tick: int) -> void:
 	p.position = point
 	if p.impact_radius > 0.0:
 		var space := p.owner.get_viewport().find_world_3d().direct_space_state
+		var lifted := _p36_lift_target(p)
 		var cands := HitQueryAdapter.cylinder_pulse(space, p.owner, point, p.impact_radius,
 			p.impact_height, point)
+		_p36_drop_target(lifted)
 		var others: Array = []
 		for c: Dictionary in cands:
 			if not p.hit_entities.has((c.entity as CombatEntity).entity_id):
@@ -233,6 +238,7 @@ func _end(p: Projectile, reason: String) -> void:
 	if p.ended:
 		return
 	p.ended = true
+	_p36_targets.erase(p.id)
 	_hide_visual(p)
 	projectile_ended.emit(p, reason)
 
@@ -620,5 +626,49 @@ static func _p32_engine_of_info(info: Dictionary) -> Node3D:
 	var ref: WeakRef = info.get("engine")
 	var engine := ref.get_ref() as Node3D if ref != null else null
 	return engine if engine != null and is_instance_valid(engine) else null
+
+
+# --- M8 gate (F12): a siege line's bombardment strikes the prop it aims at --------------------------------
+# The team rule (CombatEntity.can_damage) lets an ENEMY's hits reach only the PLAYER team, and Skarn's
+# longhouses are NEUTRAL props: a siege engine's shot at one (P36's bombardment) was dropped by the sweep
+# and the splash alike, so the siege of Skarn could never burn it. At launch the owner's actor names the
+# prop its shot is aimed at (SiegeEngine.p36_shot_target()); for this projectile's own hurtbox queries -
+# the sweep and the splash, nothing else - that one entity counts as the PLAYER team (as AttackRunner's
+# provider_target does for a raider's blow on a house), then is NEUTRAL again. No other neutral prop and
+# no civilian can be struck by an enemy's shot, and the hit's resolution is unchanged (the engine is not
+# the giant: no offence against the prop's faction).
+
+var _p36_targets: Dictionary = {}   ## projectile id -> entity id of the NEUTRAL prop its owner aims at
+
+
+func _p36_note_target(p: Projectile) -> void:
+	if p.owner == null or not is_instance_valid(p.owner.actor) or not p.owner.actor.has_method("p36_shot_target"):
+		return
+	var t: Variant = p.owner.actor.call("p36_shot_target")
+	if t is CombatEntity:
+		_p36_targets[p.id] = (t as CombatEntity).entity_id
+
+
+## The prop projectile `p` was aimed at, made hittable for its next query (returned so the caller puts it
+## back with _p36_drop_target); null when it has none, or when that prop is no longer a living neutral.
+func _p36_lift_target(p: Projectile) -> CombatEntity:
+	var id := str(_p36_targets.get(p.id, ""))
+	if id == "":
+		return null
+	var t := Sim.get_entity(id)
+	if t == null or not t.is_alive() or t.team != CombatEntity.Team.NEUTRAL:
+		return null
+	t.team = CombatEntity.Team.PLAYER
+	return t
+
+
+func _p36_drop_target(t: CombatEntity) -> void:
+	if t != null and is_instance_valid(t):
+		t.team = CombatEntity.Team.NEUTRAL
+
+
+## The entity id of the prop a projectile in flight was aimed at ("" = none; tests).
+func p36_target_of(projectile_id: int) -> String:
+	return str(_p36_targets.get(projectile_id, ""))
 
 ## @anchor P34

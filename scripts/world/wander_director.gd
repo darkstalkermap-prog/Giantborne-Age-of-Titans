@@ -27,12 +27,16 @@ extends Node
 ## STALE_S; nothing of it is saved.
 ##
 ## World events (`world_event` records of the level; WorldEvent holds a run's state and pure rules): at
-## most one runs at a time; one may start when WorldEvent.can_start_with holds - its trigger, its
-## cooldown, its centre chunk loaded and ready and the giant within start_radius_m (200) of the centre.
-## While it runs it is in the tracker, the compass, the map and the journal (Quests' P37 section) and a
-## respawn within EVENT_CLEAR_M (120) of it moves to another checkpoint (GameSession's respawn blockers;
-## fast travel there is refused the same way). See world_event.gd for its rules: suspension while its
-## centre chunk is unloaded, the protect objective, the fail rule, outcomes, the death reset.
+## most one is in play at a time (in_play: a member of its copies in the world, or its place within its
+## start radius of the giant - M8 gate, F2: one left behind, waiting or suspended far off or a column
+## marching the abstract, keeps no other from starting, and while another is in play it waits: its
+## attempt does not begin and a column's copy is not brought near); one may start when
+## WorldEvent.can_start_with holds - its trigger, its cooldown, its centre chunk loaded and ready and the
+## giant within start_radius_m (200) of the centre. While it runs it is in the tracker, the compass, the
+## map and the journal (Quests' P37 section) and a respawn within EVENT_CLEAR_M (120) of it moves to
+## another checkpoint (GameSession's respawn blockers; fast travel there is refused the same way). See
+## world_event.gd for its rules: suspension while its centre chunk is unloaded, the protect objective, the
+## fail rule (fail.within_m: its clock only while the giant is near), outcomes, the death reset.
 ##
 ## Moving columns (a route: the road graph of the level's world index from one place to another, there
 ## and back when round_trip): the column's point walks at speed_mps as a path parameter whatever is
@@ -45,7 +49,11 @@ extends Node
 ##
 ## State across reloads: a running event is carried in a static table (by level) so that a death reload
 ## restarts its attempt (and moves the respawn away from it) and a travel resumes it; the title, a new
-## game or a continue forget it (Events.mode_change_requested).
+## game or a continue forget it (Events.mode_change_requested). Its abandonment clock goes with it (M8
+## gate, F2: a death or a reload does not restart it). M8 gate (F19): a run a save holds in progress (its
+## last_start_s after its last_end_s: the run was counted, its outcome not yet written) and that is not
+## carried - a quit to the title and a continue - begins its attempt again on the level's next load
+## (_resume_saved), its abandonment clock from the save (<id>.unloaded_since_s), so it is never lost.
 
 const GROUP := "wander_director"
 ## PRE_ACTORS, after the EncounterDirector (10): a copy added here activates at the director's next update.
@@ -83,8 +91,9 @@ static var test_active := false
 ## Tests: Callable(pos: Vector3) -> bool saying whether a point is in the camera's view (unset: the
 ## viewport's camera frustum).
 static var view_probe := Callable()
-## level id -> {event id -> {"runs", "last_start_s", "centre": Vector3, "s", "reset": bool}}: the events
-## running when their level was left (a death, a travel), carried to its next load.
+## level id -> {event id -> {"runs", "last_start_s", "centre": Vector3, "s", "reset": bool, "unloaded_s",
+## "tracked_before"}}: the events running when their level was left (a death, a travel), carried to its
+## next load.
 static var _carry := {}
 
 var level: LevelRoot = null
@@ -127,6 +136,7 @@ func _ready() -> void:
 	if director != null and not director.member_spawned.is_connected(_on_member_spawned):
 		director.member_spawned.connect(_on_member_spawned)
 	_resume_carried()
+	_resume_saved()
 
 
 func _exit_tree() -> void:
@@ -494,11 +504,14 @@ func copy_ids() -> PackedStringArray:
 func _on_member_spawned(encounter_id: String, _entity_id: String, node: Node3D) -> void:
 	if _copies.has(encounter_id):
 		(_copies[encounter_id] as Dictionary)["active_seen"] = true
-	var e := running_event()
 	var c := node as Civilian
-	if e != null and e.state == WorldEvent.RUNNING and c != null and c.brain != null \
-			and _hunted_factions(e).has(c.faction) and _flat(c.global_position - _to_global(e.centre)) <= WorldEvent.SHELTER_RADIUS_M:
-		c.brain.on_noise(Sim.tick, 0.0)
+	if c == null or c.brain == null:
+		return
+	for e in running_events():
+		if e.state == WorldEvent.RUNNING and _hunted_factions(e).has(c.faction) \
+				and _flat(c.global_position - _to_global(e.centre)) <= WorldEvent.SHELTER_RADIUS_M:
+			c.brain.on_noise(Sim.tick, 0.0)
+			return
 
 
 ## Drops wanderers the giant left behind, cleared ones once their dead are gone, and ones never reached.
@@ -593,8 +606,10 @@ func _update_columns(dt: float) -> void:
 
 ## One update of the column `copy_id` on `route`: its point walks on unless a member is engaged; in the
 ## world it walks its formations along (or is despawned back into the abstract when its point left the
-## loaded ground); out of it, its spawn points follow the point. Returns "done" at the route's end.
-func march(copy_id: String, route: WorldEvent.Route, dt: float) -> String:
+## loaded ground); out of it, its spawn points follow the point - unless it is `held` (M8 gate, F2:
+## another world event is in play, so the column's copy is not brought near the giant: its point walks
+## on, its spawn points stay where they were). Returns "done" at the route's end.
+func march(copy_id: String, route: WorldEvent.Route, dt: float, held := false) -> String:
 	var state := director.encounter_state(copy_id)
 	if state == "" or state == EncounterDirector.CLEARED:
 		return "done" if route.done() else ""
@@ -610,25 +625,64 @@ func march(copy_id: String, route: WorldEvent.Route, dt: float) -> String:
 			director.p37_deactivate(copy_id)
 		else:
 			director.p37_march(copy_id, p, yaw)
-	else:
+	elif not held:
 		director.p37_move_copy(copy_id, p, yaw, _ground_fn())
 	return "done" if route.done() else ""
 
 
 # --------------------------------------------------------------------------- world events
 
-## The event that runs now (null when none).
-func running_event() -> WorldEvent:
+## The events that run now (WAITING, RUNNING or SUSPENDED), by id.
+func running_events() -> Array[WorldEvent]:
+	var out: Array[WorldEvent] = []
 	for eid: String in _event_ids():
 		var e: WorldEvent = events[eid]
 		if e.is_running():
+			out.append(e)
+	return out
+
+
+## The event that runs now (null when none): the one in play when there is one, else the first running
+## by id.
+func running_event() -> WorldEvent:
+	var first: WorldEvent = null
+	for e in running_events():
+		if in_play(e):
 			return e
+		if first == null:
+			first = e
+	return first
+
+
+## M8 gate (F2): true while `e` is in play - running, with a member of its copies in the world or its place
+## (its centre; a moving column's point) within its start radius of the giant. "At most one event at a
+## time" (plan §2.13) is a rule about these: an event left behind (waiting or suspended far off, a column
+## marching the abstract) keeps no other from starting, and does not come into play while another is.
+func in_play(e: WorldEvent) -> bool:
+	if e == null or not e.is_running():
+		return false
+	for id in e.copies:
+		if director != null and not director.p37_living(id).is_empty():
+			return true
+	var p := _player()
+	if p == null:
+		return false
+	var at := e.route.point_at() if e.route != null else e.centre
+	return _flat(p.global_position - _to_global(at)) <= e.start_radius()
+
+
+## The event in play other than `e` (null when none; `e` null: any).
+func other_in_play(e: WorldEvent = null) -> WorldEvent:
+	for o in running_events():
+		if o != e and in_play(o):
+			return o
 	return null
 
 
-## Starts the first event (by id) whose rules hold, when none runs.
+## Starts the first event (by id) whose rules hold, when none is in play (M8 gate, F2: one left behind,
+## out of play, holds nothing - the siege of Skarn starts while a raid the giant walked away from waits).
 func check_events(tick: int) -> void:
-	if running_event() != null or _player() == null:
+	if _player() == null or other_in_play() != null:
 		return
 	for eid: String in _event_ids():
 		var e: WorldEvent = events[eid]
@@ -750,22 +804,32 @@ func update_event(e: WorldEvent, dt: float, tick: int = Sim.tick) -> void:
 	if e.state == WorldEvent.WAITING:
 		if not _ready_at(e.centre):
 			e.unloaded_s += dt
+			_mark_unloaded(e)
 			if _abandoned(e):
 				end_event(e, ABANDONED, tick)
+			else:
+				_carry_event(e, false)
 			return
-		if not _begin_attempt(e, tick):
+		e.unloaded_s = 0.0   # its place is loaded: it is not left behind
+		_mark_loaded(e)
+		# M8 gate (F2): while another event is in play this one waits (at most one in play at a time).
+		if other_in_play(e) != null or not _begin_attempt(e, tick):
+			_carry_event(e, false)
 			return
 	if e.route != null and not e.copies.is_empty():
-		if march(e.copies[0], e.route, dt) == "done" and e.end_outcome() != "":
+		if march(e.copies[0], e.route, dt, other_in_play(e) != null) == "done" and e.end_outcome() != "":
 			end_event(e, e.end_outcome(), tick)
 			return
 	if _ready_at(e.centre):
 		e.state = WorldEvent.RUNNING
 		e.unloaded_s = 0.0
-		e.elapsed_s += dt
+		_mark_loaded(e)
+		if _fail_clock_runs(e):
+			e.elapsed_s += dt
 	else:
 		e.state = WorldEvent.SUSPENDED
 		e.unloaded_s += dt
+		_mark_unloaded(e)
 		if _abandoned(e) and e.route == null:
 			end_event(e, ABANDONED, tick)
 			return
@@ -776,7 +840,7 @@ func update_event(e: WorldEvent, dt: float, tick: int = Sim.tick) -> void:
 	if _all_defeated(e):
 		end_event(e, e.success_outcome(), tick)
 		return
-	var timer := float((e.record.get("fail", {}) as Dictionary).get("timer_s", 0.0)) if typeof(e.record.get("fail")) == TYPE_DICTIONARY else 0.0
+	var timer := e.fail_timer_s()
 	if timer > 0.0 and e.elapsed_s >= timer and e.fail_outcome() != "":
 		end_event(e, e.fail_outcome(), tick)
 		return
@@ -788,6 +852,30 @@ func update_event(e: WorldEvent, dt: float, tick: int = Sim.tick) -> void:
 func _abandoned(e: WorldEvent) -> bool:
 	var limit := float(e.record.get("abandon_after_s", WorldEvent.DEFAULT_ABANDON_S))
 	return limit > 0.0 and e.unloaded_s >= limit
+
+
+## M8 gate (F12): whether e's fail timer runs now (its centre loaded): always, or with fail.within_m only
+## while the giant stands within that of its centre (the siege of Skarn's clock pauses beyond 200 m).
+func _fail_clock_runs(e: WorldEvent) -> bool:
+	var within := e.fail_within_m()
+	if within <= 0.0:
+		return true
+	var p := _player()
+	return p != null and _flat(p.global_position - _to_global(e.centre)) <= within
+
+
+## M8 gate (F2): the save keeps e's abandonment clock - the play time its centre was left at (written once
+## as it is left; false once it is loaded again), so a continue takes it up (_resume_saved).
+func _mark_unloaded(e: WorldEvent) -> void:
+	if not e.unloaded_marked:
+		e.unloaded_marked = true
+		WorldState.set_flag(WorldEvent.flag(e.id, "unloaded_since_s"), clock_s() - e.unloaded_s)
+
+
+func _mark_loaded(e: WorldEvent) -> void:
+	if e.unloaded_marked:
+		e.unloaded_marked = false
+		WorldState.set_flag(WorldEvent.flag(e.id, "unloaded_since_s"), false)
 
 
 func _all_defeated(e: WorldEvent) -> bool:
@@ -838,9 +926,13 @@ func end_event(e: WorldEvent, outcome: String, tick: int = Sim.tick) -> void:
 	e.state = WorldEvent.IDLE
 	e.elapsed_s = 0.0
 	e.unloaded_s = 0.0
+	_mark_loaded(e)
 	(_carry.get(level.level_id, {}) as Dictionary).erase(e.id)
 	if Quests.has_method("p37_clear_event"):
 		Quests.p37_clear_event(e.id)
+		for o: WorldEvent in events.values():
+			if o != e and o.tracked_before == e.id:
+				o.tracked_before = e.tracked_before   # an event that took the tracker from this one hands it back past it
 		if Quests.tracked_quest_id == e.id:
 			var before := e.tracked_before
 			Quests.tracked_quest_id = ""
@@ -851,7 +943,8 @@ func end_event(e: WorldEvent, outcome: String, tick: int = Sim.tick) -> void:
 		GameSession.request_checkpoint("world_event")
 
 
-## The giant died: the running event's attempt starts again (its copies go; see world_event.gd).
+## The giant died: the running event's attempt starts again (its copies go; see world_event.gd). Its
+## abandonment clock (unloaded_s) is not the attempt's: it goes on (M8 gate, F2).
 func reset_attempt(e: WorldEvent) -> void:
 	if not e.is_running():
 		return
@@ -859,7 +952,6 @@ func reset_attempt(e: WorldEvent) -> void:
 		_removals.append(id)
 	e.copies.clear()
 	e.elapsed_s = 0.0
-	e.unloaded_s = 0.0
 	if e.route != null:
 		e.route.s = e.route.start
 	e.state = WorldEvent.WAITING
@@ -929,10 +1021,10 @@ func event_objective(e: WorldEvent) -> Dictionary:
 
 func _on_entity_died(_tick: int, entity_id: String, _killer_id: String) -> void:
 	_dead[entity_id] = true
-	var p := _player()
-	if p != null and p.entity != null and entity_id == p.entity.entity_id:
-		var e := running_event()
-		if e != null:
+	# (the giant is dead by now: _player() would not name it)
+	var p := level.player() if level != null else null
+	if p != null and is_instance_valid(p) and p.entity != null and entity_id == p.entity.entity_id:
+		for e in running_events():
 			reset_attempt(e)
 
 
@@ -953,11 +1045,13 @@ func _carry_event(e: WorldEvent, reset: bool) -> void:
 	(_carry[level.level_id] as Dictionary)[e.id] = {"runs": e.runs(WorldState.flags),
 		"last_start_s": WorldState.get_flag(WorldEvent.flag(e.id, "last_start_s"), clock_s()),
 		"centre": at, "s": e.route.s if e.route != null else 0.0,
-		"reset": reset or bool(prev.get("reset", false)), "tracked_before": e.tracked_before}
+		"reset": reset or bool(prev.get("reset", false)), "tracked_before": e.tracked_before,
+		"unloaded_s": e.unloaded_s}
 
 
 ## A new load of the level: the events running when it was left run again - a death restarts their
-## attempt from its beginning, a travel resumes them where they were.
+## attempt from its beginning, a travel resumes them where they were; either way their abandonment clock
+## goes on where it was (M8 gate, F2).
 func _resume_carried() -> void:
 	if level == null or not _carry.has(level.level_id):
 		return
@@ -973,10 +1067,36 @@ func _resume_carried() -> void:
 			WorldState.set_flag(WorldEvent.flag(e.id, "last_start_s"), c.get("last_start_s", clock_s()))
 		e.state = WorldEvent.WAITING
 		e.tracked_before = str(c.get("tracked_before", ""))
+		e.unloaded_s = maxf(0.0, float(c.get("unloaded_s", 0.0)))
+		e.unloaded_marked = false   # written again at its next update (the reload may have rolled the flag back)
 		e.route = _event_route(e)
 		if e.route != null and not bool(c.get("reset", false)):
 			e.route.s = clampf(float(c.get("s", e.route.start)), e.route.start, e.route.end_s())
 		c["reset"] = false
+		if Quests.has_method("p37_set_event"):
+			Quests.p37_set_event(e.id, event_objective(e))
+
+
+## M8 gate (F19): a run the save holds in progress (WorldEvent.run_in_progress: counted, started after the
+## last one ended, its outcome not written) that this session does not carry - the title, a continue and a
+## new game forget the carry, not the save - begins its attempt again: WAITING (a column from the start of
+## its march), its run counted once, its abandonment clock from the save, its objective in the tracker.
+## Without this a run saved mid-way (the siege of Skarn, max_runs 1) could never start again nor end.
+func _resume_saved() -> void:
+	if level == null or not is_live():
+		return
+	var carried: Dictionary = _carry.get(level.level_id, {})
+	for eid: String in _event_ids():
+		var e: WorldEvent = events[eid]
+		if e.is_running() or carried.has(eid) or not e.run_in_progress(WorldState.flags):
+			continue
+		e.state = WorldEvent.WAITING
+		e.elapsed_s = 0.0
+		e.route = _event_route(e)
+		var since: Variant = WorldState.get_flag(WorldEvent.flag(e.id, "unloaded_since_s"))
+		e.unloaded_marked = SchemaUtil.is_number(since)
+		e.unloaded_s = maxf(0.0, clock_s() - float(since)) if e.unloaded_marked else 0.0
+		_carry_event(e, true)
 		if Quests.has_method("p37_set_event"):
 			Quests.p37_set_event(e.id, event_objective(e))
 
@@ -1131,9 +1251,9 @@ func _clear_of_others(anchor: Vector3) -> bool:
 		var info := director.p37_copy_info(id)
 		if not info.is_empty() and _flat(anchor - (info.get("centre", Vector3.INF) as Vector3)) <= COPY_GAP_M:
 			return false
-	var e := running_event()
-	if e != null and _flat(anchor - e.centre) <= EVENT_CLEAR_M:
-		return false
+	for e in running_events():
+		if _flat(anchor - e.centre) <= EVENT_CLEAR_M:
+			return false
 	return true
 
 
@@ -1206,9 +1326,11 @@ static func _flat(v: Vector3) -> float:
 ## Lines for the F3 debug panel.
 func debug_lines() -> PackedStringArray:
 	var lines := PackedStringArray()
-	var e := running_event()
-	lines.append("WANDER %s  copies %d  spawns %d  event %s" % [level.level_id if level != null else "?",
-		copy_ids().size(), spawn_log.size(), "%s (%s, %.0f s)" % [e.id, e.state, e.elapsed_s] if e != null else "-"])
+	var running := PackedStringArray()
+	for e in running_events():
+		running.append("%s (%s%s, %.0f s)" % [e.id, e.state, ", in play" if in_play(e) else "", e.elapsed_s])
+	lines.append("WANDER %s  copies %d  spawns %d  events %s" % [level.level_id if level != null else "?",
+		copy_ids().size(), spawn_log.size(), ", ".join(running) if not running.is_empty() else "-"])
 	for id in copy_ids():
 		lines.append("  %s: %s" % [id, director.encounter_state(id)])
 	return lines

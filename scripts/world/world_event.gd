@@ -33,6 +33,17 @@ extends RefCounted
 ##     and it waits for its start rule to begin again (outcomes already won stay; the death reload rolls the
 ##     world back to the last checkpoint). The WanderDirector carries a running event across level reloads
 ##     (deaths, travel) so a respawn near it moves away and it resumes.
+##   * M8 gate (F2): "at most one at a time" holds for the events in play (WanderDirector.in_play: its copies
+##     in the world, or its place within its start radius of the giant). A running event left behind - one
+##     WAITING or SUSPENDED far off, a column marching the abstract - keeps nobody else from starting; it
+##     waits (its attempt begins again) while another is in play. Its abandonment clock (unloaded_s) is not
+##     the attempt's: a death or a reload keeps it (the carry, and the save through the flag
+##     <id>.unloaded_since_s, the play time its centre was left at; -1 = loaded).
+##   * M8 gate (F12): fail.within_m (> 0) makes the fail timer run only while the giant stands within that
+##     many metres of the centre (the siege of Skarn: its clock pauses beyond 200 m, plan §5.10).
+##   * M8 gate (F19): a run counted in a save (its last_start_s after its last_end_s) and no longer carried
+##     (a quit to the title and a continue) is resumed by the next load of the level: its attempt begins
+##     again, its run is not counted twice.
 ## Kill XP of its members is paid for its first xp_full_runs runs (default 3) only: nothing is farmable.
 
 const IDLE := "idle"
@@ -61,6 +72,9 @@ var runs_this_load := 0
 var log: Array = []
 ## The tracked quest before it took the tracker ("" = none chosen).
 var tracked_before := ""
+## M8 gate (F2): whether <id>.unloaded_since_s holds this run's unloaded clock (written once as its
+## centre is left, cleared once it is loaded again).
+var unloaded_marked := false
 
 
 ## A route of a moving column: road points (level space) walked from the first to the last at `speed`
@@ -217,6 +231,29 @@ func end_outcome() -> String:
 
 func display_name() -> String:
 	return str(record.get("display_name", id))
+
+
+## The fail timer's length (fail.timer_s; 0 = none).
+func fail_timer_s() -> float:
+	var fail: Variant = record.get("fail")
+	return float((fail as Dictionary).get("timer_s", 0.0)) if typeof(fail) == TYPE_DICTIONARY else 0.0
+
+
+## M8 gate (F12): the fail timer runs only while the giant is within this of the centre (fail.within_m;
+## 0 = wherever the giant is, while the centre is loaded).
+func fail_within_m() -> float:
+	var fail: Variant = record.get("fail")
+	return float((fail as Dictionary).get("within_m", 0.0)) if typeof(fail) == TYPE_DICTIONARY else 0.0
+
+
+## M8 gate (F19): true when the saved flags say a run of this event was in progress - started after the
+## last one ended (or none ever ended) and without an outcome since. Pure but for `flags`.
+func run_in_progress(flags: Dictionary) -> bool:
+	var started: Variant = flags.get(flag(id, "last_start_s"))
+	if runs(flags) <= 0 or not SchemaUtil.is_number(started):
+		return false
+	var ended: Variant = flags.get(flag(id, "last_end_s"))
+	return not SchemaUtil.is_number(ended) or float(ended) < float(started)
 
 
 func runs(flags: Dictionary) -> int:

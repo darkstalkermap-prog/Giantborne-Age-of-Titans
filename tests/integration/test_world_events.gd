@@ -13,9 +13,17 @@ extends IntegrationSuite
 ##   * every copy defeated ends it with its success outcome and pays its XP once (a second run's
 ##     success pays none);
 ##   * the giant's death resets the attempt: its copies go, its timer starts again, it waits and its
-##     encounters come back; an outcome already won stays.
+##     encounters come back; an outcome already won stays;
+##   * M8 gate (F2): "at most one at a time" is about the events in play - an event left behind (its centre
+##     unloaded, the giant beyond its start radius, none of its members in the world) keeps no other from
+##     starting where the giant is, and while that one is in play the one left behind waits (its attempt
+##     does not begin); its abandonment clock outlives the giant's death and the reload that follows.
 
 const F := preload("res://tests/support/living_world_fixtures.gd")
+## M8 gate (F2): a second raid at the tiny world's east end (more than its start radius from the first).
+const EAST := "event.p37_east"
+const EAST_TPL := "encounter.p37_tpl_east"
+const EAST_AT := [104.0, 0.0, 96.0]
 
 var _root: WorldRoot
 var _wd: WanderDirector
@@ -180,3 +188,93 @@ func test_success_pays_once_and_a_death_resets_the_attempt() -> void:
 
 func assert_ne(a: Variant, b: Variant, message: String) -> void:
 	assert_true(a != b, "%s (%s)" % [message, a])
+
+
+# --------------------------------------------------------------------------- M8 gate (F2)
+
+## A second raid at the east end: its own template there, its own switch (p37.east.on).
+func _install_east() -> void:
+	TestFixtures.record_override(EAST_TPL, F._template(EAST_TPL, EAST_AT, [["p37.east_a", -2.0, 0.0, ""], ["p37.east_b", 2.0, 0.0, ""]], 40.0))
+	var rec := (GameData.get_record(F.RAID) as Dictionary).duplicate(true)
+	rec["id"] = EAST
+	rec["display_name"] = "Tiny east raid"
+	rec["centre_m"] = [EAST_AT[0], F.height(EAST_AT[0], EAST_AT[2]), EAST_AT[2]]
+	(rec.trigger as Dictionary)["requires_flags"] = ["p37.east.on"]
+	rec["encounters"] = [EAST_TPL]
+	rec["objective"] = {"kind": "defeat", "targets": [], "text": "Hold the east"}
+	TestFixtures.record_override(EAST, rec)
+
+
+func test_an_event_left_behind_keeps_no_other_from_starting() -> void:
+	F.install()
+	_install_east()
+	var made := F.make(world)
+	_root = made[0]
+	_wd = made[1]
+	var raid: WorldEvent = _wd.events[F.RAID]
+	var east: WorldEvent = _wd.events[EAST]
+	WorldState.set_flag("p37.raid.on", true)
+	WorldState.set_flag("p37.east.on", true)
+	_wd.check_events(Sim.tick)
+	assert_eq(_wd.running_event(), raid, "the raid starts where the giant is")
+	await step_ticks(3)
+	assert_true(_wd.in_play(raid), "it is in play: its raiders in the world")
+	_wd.check_events(Sim.tick)
+	assert_false(east.is_running(), "the east raid does not start while the raid is in play")
+	# the giant walks away to the east end: the raid's centre unloads, its raiders leave with the chunk
+	F.move_giant(_root, 96.0, 80.0)
+	await step_ticks(2)
+	_wd.update_event(raid, 0.5)
+	assert_eq(raid.state, WorldEvent.SUSPENDED, "the raid left behind is suspended")
+	assert_false(_wd.in_play(raid), "and out of play")
+	assert_eq(east.can_start_with(_wd.event_context(east)), "", "the east raid's own rules hold")
+	_wd.check_events(Sim.tick)
+	assert_true(east.is_running(), "the east raid starts: the one left behind holds no slot (M8 gate, F2)")
+	assert_true(_wd.in_play(east), "the east raid is in play")
+	assert_true(raid.is_running(), "the raid left behind still runs (suspended)")
+	assert_eq(_wd.running_event(), east, "running_event() names the one in play")
+	assert_eq(Quests.tracked_quest_id, EAST, "the new one takes the tracker")
+	# while the east raid is in play the raid left behind waits, even with its own start rule holding again
+	F.move_giant(_root, -30.0, 40.0)
+	await step_ticks(2)
+	assert_true(_wd.in_play(east), "the east raid is still in play (its place within 200 m)")
+	assert_true(_root.streamer.is_ready(_root.chunk_at(raid.centre)), "the raid's centre is loaded again")
+	assert_true(Vector2(-30.0 - raid.centre.x, 40.0 - raid.centre.z).length() < raid.start_radius(), "and the giant near it")
+	_wd.reset_attempt(raid)
+	_wd.update_event(raid, 0.5)
+	assert_eq(raid.state, WorldEvent.WAITING, "the raid waits: its attempt does not begin while another is in play")
+	assert_true(raid.copies.is_empty(), "none of its raiders come")
+	_wd.end_event(east, WanderDirector.ABANDONED)
+	_wd.update_event(raid, 0.5)
+	assert_eq(raid.state, WorldEvent.RUNNING, "once the east raid is over the raid begins again")
+	assert_eq(raid.copies.size(), 1, "its raiders come back")
+	assert_eq(int(WorldState.get_flag("event.p37_raid.runs", 0)), 1, "its run counted once")
+	_wd.end_event(raid, WanderDirector.ABANDONED)
+	assert_eq(Quests.tracked_quest_id, "", "each gave the tracker back (none was chosen before)")
+
+
+func test_the_abandonment_clock_outlives_a_death_and_the_reload() -> void:
+	_setup()
+	var raid: WorldEvent = _wd.events[F.RAID]
+	_wd.start_event(raid)
+	F.move_giant(_root, 96.0, 16.0)
+	await step_ticks(2)
+	for i in 12:
+		_wd.update_event(raid, 1.0)
+	assert_near(raid.unloaded_s, 12.0, 0.3, "12 s unloaded (%.1f)" % raid.unloaded_s)
+	Events.entity_died.emit(Sim.tick, _root.player().entity.entity_id, "")
+	assert_eq(raid.state, WorldEvent.WAITING, "the giant's death restarts the attempt")
+	assert_near(raid.unloaded_s, 12.0, 0.3, "but not its abandonment clock (%.1f)" % raid.unloaded_s)
+	_root.free()
+	var made := F.make(world, Vector3(96.0, 0.0, 16.0))
+	_root = made[0]
+	_wd = made[1]
+	raid = _wd.events[F.RAID]
+	assert_eq(raid.state, WorldEvent.WAITING, "the reload resumes it")
+	assert_near(raid.unloaded_s, 12.0, 0.3, "with its abandonment clock (%.1f)" % raid.unloaded_s)
+	for i in 7:
+		_wd.update_event(raid, 1.0)
+	assert_true(raid.is_running(), "19 s unloaded in all: still waiting")
+	_wd.update_event(raid, 1.0)
+	assert_false(raid.is_running(), "20 s: given up, a reload or a death did not restart the clock")
+	assert_eq(_ended[_ended.size() - 1], [F.RAID, WanderDirector.ABANDONED], "with no outcome")

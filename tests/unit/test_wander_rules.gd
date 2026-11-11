@@ -183,6 +183,29 @@ func test_an_event_starts_only_when_its_rules_hold() -> void:
 	assert_eq(e.can_start_with(_start_ctx(lit)), "running", "a running event does not start again")
 
 
+## M8 gate (F19, F12): a run a save holds in progress (counted, started after the last one ended), and the
+## fail block's within_m.
+func test_a_run_in_progress_and_the_fail_timer_within_m() -> void:
+	var e := WorldEvent.make(_event())
+	assert_false(e.run_in_progress({}), "never run")
+	assert_true(e.run_in_progress({"event.test.runs": 1, "event.test.last_start_s": 10.0}), "started, never ended")
+	assert_false(e.run_in_progress({"event.test.runs": 1, "event.test.last_start_s": 10.0, "event.test.last_end_s": 40.0}),
+		"ended after it started")
+	assert_true(e.run_in_progress({"event.test.runs": 2, "event.test.last_start_s": 900.0, "event.test.last_end_s": 40.0}),
+		"a second run started after the first ended")
+	assert_false(e.run_in_progress({"event.test.runs": 0, "event.test.last_start_s": 10.0}), "no run counted")
+	assert_eq(e.fail_within_m(), 0.0, "no within_m: the fail timer runs wherever the giant is")
+	var near := _event()
+	near["fail"] = {"timer_s": 600, "within_m": 200}
+	assert_eq(WorldEvent.make(near).fail_timer_s(), 600.0, "its timer")
+	assert_eq(WorldEvent.make(near).fail_within_m(), 200.0, "only while the giant is within 200 m")
+	var ev := {"schema_version": 1, "id": "event.t", "type": "world_event", "level": "level.world", "centre_m": [0, 0, 0],
+		"fail": {"timer_s": 600, "within_m": 200}, "outcomes": {"defended": {}}}
+	assert_eq(_validate(ev), "", "the schema takes fail.within_m")
+	(ev.fail as Dictionary)["within_m"] = -5
+	assert_true(_validate(ev).contains("within_m"), "but not below 0")
+
+
 func test_the_protect_objective_its_flags_and_the_event_done_condition() -> void:
 	var e := WorldEvent.make(_event())
 	assert_eq(e.targets(), PackedStringArray(["t.a", "t.b", "t.c"]), "its protected targets")

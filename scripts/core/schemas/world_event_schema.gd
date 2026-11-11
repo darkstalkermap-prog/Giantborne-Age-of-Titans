@@ -77,10 +77,15 @@ static func fields() -> Dictionary:
 	#     march ends it with `end_outcome` when it comes back (or reaches its end);
 	#   abandon_after_s: an active event whose centre has been unloaded this long (play time) ends with
 	#     no outcome (default 600; 0 = never);
-	#   xp_full_runs: its members' kill XP for its first runs only (default 3; nothing farmable).
+	#   xp_full_runs: its members' kill XP for its first runs only (default 3; nothing farmable);
+	#   fail.within_m (M8 gate, F12): the fail timer runs only while the giant is within this of the
+	#     centre (0 = while the centre is loaded, wherever the giant is).
 	(f.trigger.fields as Dictionary).merge({
 		"max_runs": U.int_field(0, 1000),
 		"cooldown_from": U.str_field(false, ["start", "end"]),
+	})
+	(f.fail.fields as Dictionary).merge({
+		"within_m": U.num(0.0),
 	})
 	(f.objective.fields as Dictionary).merge({
 		"text": U.str_field(),

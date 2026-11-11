@@ -792,6 +792,11 @@ func floor_point(desired: Vector3, fallbacks: Array = []) -> Vector3:
 ##   * p36_check_group_broken(side): when the last engine of siege_group in the tree has fallen, every
 ##     soldier of the engine's faction (without one: every hostile) within P36_GROUP_ROUT_M routs - the
 ##     line breaks, so breaking the engines saves the place they bombard.
+##   * p36_shot_target() (M8 gate, F12): the prop the running shot is aimed at when it is one of
+##     prop_targets (a NEUTRAL longhouse). The team rule lets an ENEMY's hits reach only the PLAYER team, so
+##     ProjectileSystem asks for it at launch and lets that one prop - no other neutral prop, no civilian -
+##     be struck by this shot's sweep and splash (as AttackRunner's provider_target does for a raider's
+##     blow): the bombardment burns what it aims at.
 
 const P36_GROUP_ROUT_M := 160.0
 ## P36 (plan M6-M9 §3.8, §5.3: 40 draw calls a view): an engine's meshes (four materials) are not drawn
@@ -816,6 +821,17 @@ func p36_bombard_target(giant: CombatEntity) -> CombatEntity:
 		if can_reach(t):
 			return t
 	return null
+
+
+## M8 gate (F12): the prop of prop_targets the running shot is aimed at (a living NEUTRAL CombatEntity),
+## or null - the giant, or no shot. ProjectileSystem reads it when the shot is launched (see the notes).
+func p36_shot_target() -> CombatEntity:
+	if prop_targets.is_empty() or _target_id == "" or not prop_targets.has(_target_id):
+		return null
+	var t := Sim.get_entity(_target_id)
+	if t == null or not t.is_alive() or t.team != CombatEntity.Team.NEUTRAL:
+		return null
+	return t
 
 
 ## True when every engine of this engine's siege group in the tree is destroyed.
