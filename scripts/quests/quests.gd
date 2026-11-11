@@ -1040,9 +1040,14 @@ func current_tutorial() -> Dictionary:
 	return tutorial.current_prompt()
 
 
+## M8 gate (F28): a new giant's level memory is reset before its first event is recorded - main.gd's
+## loading gate emits level_entered while the tree is paused, before the level's first tick, whose
+## _sync_level() then wiped the arrival's and the map's prompts (they never showed on a New Game in the
+## world nor through the Kings' Door).
 func _tutorial_event(event_name: String, info: Dictionary, tick: int = -1) -> void:
 	if not is_active():
 		return
+	_sync_level()
 	tutorial.on_event(event_name, info, tick if tick >= 0 else Sim.tick)
 
 
@@ -1141,6 +1146,7 @@ func _on_size_gate_blocked(tick: int, gate_id: String, min_stage: int, message: 
 
 
 func _on_level_entered(tick: int, level_id: String, reason: String) -> void:
+	_sync_level()   # M8 gate (F28): see _tutorial_event
 	_dirty = true
 	_tutorial_event("level_entered", {"level": level_id, "reason": reason}, tick)
 
