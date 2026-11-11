@@ -164,6 +164,10 @@ func test_the_rider_charges_wheels_away_past_the_giant_and_charges_again() -> vo
 	assert_eq(blocked.state, EnemyBrain.AIState.APPROACH, "a blocked approach is no wheel")
 	var turned := rad_to_deg(Vector2(first.x, first.z).angle_to(Vector2(blocked.move_target.x, blocked.move_target.z)))
 	assert_near(absf(turned), CavalryBrain.BLOCKED_TURN_DEG, 0.5, "it turns its start point %.0f degrees round the giant" % turned)
+	blocked.on_path_failed(from)
+	blocked.decide(t0 + 18, LOCO, from, req, rel)
+	var turned_2 := rad_to_deg(Vector2(first.x, first.z).angle_to(Vector2(blocked.move_target.x, blocked.move_target.z)))
+	assert_near(turned_2, -turned, 0.5, "blocked again, it tries the other side (%.0f degrees)" % turned_2)
 
 
 # --------------------------------------------------------------------------- the charge (physics)

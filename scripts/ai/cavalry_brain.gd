@@ -19,8 +19,9 @@ extends EnemyBrain
 ## Caught close (inside the start window's near edge) it thrusts its lance when the lance fits the
 ## range and it faces the target (one of the target's tokens, then a pause in RECOVER), else it rides
 ## out to its start point. A start point it cannot reach (the actor's path check: no progress for
-## ai.path_fail_s) turns its approach BLOCKED_TURN_DEG round the target, alternately to either side,
-## until a charge starts. Morale and flight are the base's (it flees at ai.flee_morale, 25).
+## ai.path_fail_s) turns its approach round the target, alternately to either side and farther each
+## time (BLOCKED_TURN_DEG steps: -60, +60, -120, +120 ...), until a charge starts. Morale and flight
+## are the base's (it flees at ai.flee_morale, 25).
 ## Outmatched (tactics.outmatched_ratio: every giant from stage 3) the cycle is its harass behaviour; it
 ## is the same cycle against a smaller one. A pure object like EnemyBrain: the actor feeds perception.
 
@@ -56,8 +57,10 @@ var _charge_dir := Vector3.ZERO
 var _wheel_distance := 0.0
 var _charge_id := ""
 var _lance_id := ""
-## Degrees the approach is turned round the target after blocked start points (0 once a charge starts).
+## Degrees the approach is turned round the target after blocked start points (0 once a charge starts),
+## and how many start points were blocked since the last charge.
 var _start_turn_deg := 0.0
+var _blocked_starts := 0
 
 
 func _init(p_actor_id: String, record: Dictionary, seed_value: int) -> void:
@@ -159,6 +162,7 @@ func _approach(my_position: Vector3, target_pos: Vector3, distance: float, seen:
 				cycle = "charge"
 				charges += 1
 				_start_turn_deg = 0.0
+				_blocked_starts = 0
 				_set_state(AIState.ATTACK)
 				_stop_moving()
 				return
@@ -240,10 +244,12 @@ func on_path_failed(my_position: Vector3) -> void:
 			_in_wheel_blocked(my_position)
 			return
 		AIState.APPROACH:
-			# The start point is out of reach: try another bearing (the base's answer, a REPOSITION, is
-			# this brain's wheel).
-			reposition_sign = -reposition_sign
-			_start_turn_deg = wrapf(_start_turn_deg + BLOCKED_TURN_DEG * reposition_sign, -180.0, 180.0)
+			# The start point is out of reach: try another bearing, alternately to either side and
+			# farther round each time (-60, +60, -120, +120 ...; the base's answer, a REPOSITION, is this
+			# brain's wheel).
+			_blocked_starts += 1
+			var k := _blocked_starts
+			_start_turn_deg = wrapf(BLOCKED_TURN_DEG * ((k + 1) >> 1) * (-1.0 if k % 2 == 1 else 1.0), -180.0, 180.0)
 			return
 	super(my_position)
 
