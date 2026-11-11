@@ -41,8 +41,8 @@
 		{"id": "world.cp.moot_foot", "display_name": "Moot foot waystone", "pos": [-70, -650], "yaw": 150, "radius": 10, "stone": [-8, 4], "poi": ""}
 	],
 	"size_gates": [
-		{"id": "world.gate.giants_stair", "min_stage": 6, "cue": "sfx.gate.stone", "message": "Each step is taller than a house. Only a giant of the old height can climb the Stair.", "boxes": [[0, -425, 64, 40, 2, 0]], "gate_rect": [[-31, -527], [31, -426]], "visual": "stone"},
-		{"id": "world.gate.moot", "min_stage": 6, "cue": "sfx.gate.stone", "message": "The clans admit only a giant of the old height to the Moot.", "boxes": [[-38.0, -698.6, 32, 24, 3, 140.7]], "gate_rect": [[-62, -722], [-16, -676]], "visual": "stone"}
+		{"id": "world.gate.giants_stair", "min_stage": 6, "cue": "sfx.gate.stone", "message": "Each step is taller than a house: only a giant of the old height can climb the Stair. Grow to stage 6, or go round by the Ironway, up from Aldmere's road.", "boxes": [[0, -425, 64, 40, 2, 0]], "gate_rect": [[-31, -527], [31, -426]], "visual": "stone"},
+		{"id": "world.gate.moot", "min_stage": 6, "cue": "sfx.gate.stone", "message": "The clans admit only a giant of the old height to the Moot. Grow to stage 6.", "boxes": [[-38.0, -698.6, 32, 24, 3, 140.7]], "gate_rect": [[-62, -722], [-16, -676]], "visual": "stone"}
 	],
 	"caches": [
 		{"id": "world.stonehold.ironway_top_cache", "pos": [736, -588], "loot": "loot.cache_ironway_top", "poi": "poi.ironway_top"},

@@ -3,7 +3,9 @@ extends IntegrationSuite
 ## the campaign started from world_start in level.world with Quests over every shipped quest, the giant
 ## grown to its stage, and the shipped chunks' props parts (the Mere's bells, the Titan's Bones, the
 ## causeway, the ferrywoman's landing) struck, lit and heaved by the giant:
-##   * the bells: Wenna's dialogue starts the quest; the fourth bell hangs in the Wend's deep reach
+##   * the bells: Wenna's dialogue starts the quest - opened through her own NpcTalker as the giant's E
+##     opens it, on her spawned npc scene (M8 gate F42: she was built from villager.tscn, which carries no
+##     talker, and the test had called Quests.start_dialogue directly); the fourth bell hangs in the Wend's deep reach
 ##     (a stage-4 gate) and the island's past the deep channel (stage 5); each rings to the giant's real
 ##     light swing (the input router) from its bed 6 m before it - the first four at stage 4, the fifth
 ##     at stage 5 (M8 gate F45: the fourth hung out of a stage-4 light swing's reach; synthetic hits had
@@ -95,6 +97,42 @@ func _ring(p: GiantPlayer, world_id: String) -> bool:
 	return false
 
 
+## Wenna as the ferry encounter spawns her (EncounterDirector._spawn: her record's scene, its
+## CombatEntity's definition and her entity id set before she enters the tree), beside the giant.
+func _spawn_wenna(p: GiantPlayer) -> Node3D:
+	var spawn: Dictionary = (GameData.get_record("encounter.drowned_ferry").spawns as Array)[0]
+	var def := str(spawn.definition)
+	var node := (load(str(GameData.get_record(def).scene)) as PackedScene).instantiate() as Node3D
+	var ce := node.get_node_or_null("CombatEntity")
+	if ce != null and "definition_id" in ce:
+		ce.set("definition_id", def)
+	node.set("entity_id", str(spawn.entity_id))
+	node.position = p.global_position + Vector3(0, 0, -6)
+	world.add_child(node)
+	await step_ticks(2)
+	return node
+
+
+## Talks to an npc as the giant's E does: its NpcTalker in reach, interact(); Quests opens the dialogue.
+## The running session (null when the talker is missing or refuses).
+func _talk_to(npc: Node3D, p: GiantPlayer) -> DialogueSession:
+	var talker: NpcTalker = null
+	for n in npc.find_children("*", "", true, false):
+		if n is NpcTalker:
+			talker = n
+	assert_true(talker != null, "%s carries an NpcTalker" % npc.name)
+	if talker == null:
+		return null
+	GameSession.place_player(p, Transform3D(Basis.IDENTITY, npc.global_position + Vector3(0, 0.3, 2.5)))
+	await step_ticks(2)
+	assert_true(talker.can_interact(p), "the giant can talk to her (%s)" % talker.prompt_text(p))
+	talker.interact(p)
+	await step_ticks(1)
+	assert_true(Quests.dialogue != null and Quests.dialogue.dialogue_id == "dialogue.ferrywoman",
+		"E opens her dialogue")
+	return Quests.dialogue
+
+
 func test_the_five_bells_and_the_stoneknuckles() -> void:
 	var p := await _start(4)
 	# Where they hang: the fourth in the Wend's stage-4 deep reach, the fifth past the stage-5 channel.
@@ -108,8 +146,9 @@ func test_the_five_bells_and_the_stoneknuckles() -> void:
 	for d: Vector2 in [Vector2(60, 0), Vector2(-60, 0), Vector2(0, 60), Vector2(0, -60)]:
 		assert_eq(int(feats.gate_at(float(circle[0]) + d.x, float(circle[2]) + d.y)), 64,
 			"the deep channel round the island is a stage-5 gate (%s)" % d)
-	# Wenna asks.
-	var s := Quests.start_dialogue("dialogue.ferrywoman", "world.drowned.ferrywoman")
+	# Wenna asks: the giant talks to her (her NpcTalker's interact, the E prompt).
+	var wenna: Node3D = await _spawn_wenna(p)
+	var s := await _talk_to(wenna, p)
 	assert_true(s != null and s.find_choice("bells") >= 0, "Wenna asks the giant to ring her bells")
 	if s == null:
 		return
@@ -135,7 +174,7 @@ func test_the_five_bells_and_the_stoneknuckles() -> void:
 	await _settle()
 	assert_eq(p.equipment.weapon_id(), "weapon.fists", "the giant wears them")
 	assert_eq(Quests.quest_state("quest.drowned_bells"), Quests.COMPLETED, "the bells' quest is done")
-	var thanks := Quests.start_dialogue("dialogue.ferrywoman", "world.drowned.ferrywoman")
+	var thanks := await _talk_to(wenna, p)
 	assert_eq(str(thanks.node().get("id", "")) if thanks != null else "", "thanks", "Wenna heard every bell")
 	Quests.end_dialogue()
 

@@ -12,5 +12,6 @@
 	"discover_xp": 40,
 	"map_tint": [0.6, 0.58, 0.4],
 	"fog_color": [0.66, 0.66, 0.6],
-	"skyline_tint": [0.4, 0.4, 0.27]
+	"skyline_tint": [0.4, 0.4, 0.27],
+	"journal_note": "The crown's march: Herald Maelis at the war camp, where Aldmere builds its war engines; Fort Aldmere and Warlord Corvane's Iron Regiment, the ballistae on the ridge over the King's Road, the deserters at the burned mill and the Ironway climbing north to the Stonehold."
 }

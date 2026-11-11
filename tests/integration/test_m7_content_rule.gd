@@ -73,7 +73,9 @@ func test_the_light_encounters_use_existing_archetypes_within_the_rules() -> voi
 	# The light content of the four regions P25 ships (the Crownmarch's settlements, talkers and
 	# formation fights are P29's: tests/integration/test_crownmarch_content.gd).
 	# P36: a region package that brings its region's content removes the region record's m7_note; its
-	# encounters are its own tests' (P36: tests/integration/test_aldmere_stonehold_content.gd).
+	# encounters are its own tests' (P36: tests/integration/test_aldmere_stonehold_content.gd; P35:
+	# test_greywood_drowned_content.gd). M8 gate (F22): the journal's text is the record's journal_note,
+	# so P35 no longer keeps its regions' m7_note as their description: in the M8 build no region waits.
 	var waiting := LIGHT_REGIONS.filter(func(id: String) -> bool:
 		return str(GameData.get_record(id).get("m7_note", "")) != "")
 	var light := _of_level("encounter").filter(func(r: Dictionary) -> bool: return waiting.has(_region_of(_xz(r.center_m))))

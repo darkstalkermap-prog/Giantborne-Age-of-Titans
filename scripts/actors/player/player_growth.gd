@@ -65,7 +65,8 @@ const PERMISSION_TEXT := {
 	"trample": "Trample fences and palisades underfoot",
 	"formation_sweep": "Sweep through soldier formations",
 	"heave": "Heave rockfalls, fallen titan-trees and toppled statues aside",
-	"siege_disruption": "Wreck siege engines",
+	# M8 gate (F34): blows break an engine at any stage; stage 6 adds seizing one (PlayerGrab, SiegeEngine).
+	"siege_disruption": "Seize a staggered or uncrewed siege engine and hurl it",
 	"monster_grapple": "Grapple great monsters",
 	"titan_execution": "Execute titans",
 }

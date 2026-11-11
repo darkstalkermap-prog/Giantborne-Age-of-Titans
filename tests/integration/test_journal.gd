@@ -3,8 +3,10 @@ extends IntegrationSuite
 ## tests/support/world_ux_fixtures.gd. JournalScreen.sections() lists the active quests with their
 ## step, objective and region, the waiting ones with their waiting_text, the completed ones, the
 ## oaths settled, the sealed places seen with the stage they need (gone once the seal opens) and the
-## regions' M7 notes; "Track" tracks a quest (Quests.track); and the screen with a pad: the Track
-## buttons top to bottom, A tracks, B closes - and J closes it from a keyboard.
+## regions' journal notes; "Track" tracks a quest (Quests.track); and the screen with a pad: the Track
+## buttons top to bottom, A tracks, B closes - and J closes it from a keyboard. M8 gate (F22): the
+## shipped world's Regions section describes all five regions (each record's journal_note; m7_note is
+## only the M7 rule's "still waiting for its package" now).
 
 const Fx := preload("res://tests/support/quest_fixtures.gd")
 const Wux := preload("res://tests/support/world_ux_fixtures.gd")
@@ -91,7 +93,7 @@ func test_the_journal_lists() -> void:
 	assert_eq(s.sealed, [], "no sealed place seen yet")
 	var notes: Array = (s.regions as Array).filter(func(r: Dictionary) -> bool: return str(r.id).begins_with("region.test_p27"))
 	assert_eq(notes, [{"id": Wux.NORTH, "name": "The North Test", "note": "The north comes later."}],
-		"the region with an M7 note (the south has none)")
+		"the region with a journal note (the south has none)")
 	WorldState.set_flag("oath.march.outcome", "intimidate")
 	WorldState.set_flag("sealed.test_p27_seal.seen", true)
 	s = JournalScreen.sections()
@@ -151,3 +153,26 @@ func test_the_journal_with_a_pad() -> void:
 	Input.parse_input_event(key)
 	await get_tree().process_frame
 	assert_false(stack.is_open("journal"), "J closes it again")
+
+
+## M8 gate (F22): every region of the world has its line under Regions, from its journal_note.
+func test_the_regions_section_describes_all_five_regions_of_the_world() -> void:
+	var regions := GameData.records_of_type("region").filter(func(r: Dictionary) -> bool:
+		return str(r.get("level", "")) == "level.world")
+	assert_eq(regions.size(), 5, "the world's five regions")
+	var s := JournalScreen.sections()
+	var listed := {}
+	for r: Dictionary in s.regions:
+		listed[str(r.id)] = str(r.note)
+	for rec: Dictionary in regions:
+		var id := str(rec.id)
+		assert_true(str(listed.get(id, "")) != "", "%s has its line under Regions (%s)" % [id, listed.keys()])
+		assert_eq(str(listed.get(id, "")), str(rec.get("journal_note", "")), "%s's line is its journal_note" % id)
+		assert_eq(str(rec.get("m7_note", "")), "", "%s no longer waits for its package (M8 ships them all)" % id)
+	var j := stack.open("journal") as JournalScreen
+	var page := j.lines()
+	var at := page.find("# Regions")
+	assert_true(at >= 0, "the page has its Regions section")
+	for rec: Dictionary in regions:
+		assert_true(page.has("%s: %s" % [rec.display_name, rec.get("journal_note", "")]), "the page describes %s" % rec.id)
+	j.close()

@@ -8,8 +8,14 @@ extends RefCounted
 ##
 ## - Triggers: entered (the player is inside the area now: AreaTrigger.player_inside, a state, so
 ##   it combines with min_stage after growing inside the area), flag, level and stage (states),
-##   and event (an edge: a matching event makes the prompt pending for EVENT_PENDING_S, until it
-##   can be shown). A prompt is a candidate while its trigger holds, every requires_flags flag is
+##   and event (an edge: a matching event makes the prompt pending until it can be shown). M8 gate
+##   (F28, F32): pending prompts queue - they do not age while another prompt holds the screen (two
+##   prompts of one event, the world's arrival and the map, a shrine's ancestry and fast travel, show
+##   one after the other; a shrine's lessons wait behind the map's), and lapse only after
+##   EVENT_PENDING_S during which the screen was free but they were held back (in combat, the giant
+##   dead). Before, a pending prompt lapsed 6 s after its event even while another showed, so the
+##   map lesson (behind the arrival's 20 s) and the fast-travel lesson (behind the ancestry's) were
+##   lost. A prompt is a candidate while its trigger holds, every requires_flags flag is
 ##   truthy, the player is at least min_stage and - for `once` prompts (the default) - its flag
 ##   tutorial.<name>.seen is not set. Event triggers record a prompt only when those already hold.
 ## - The candidate with the highest priority (then the lowest id) is shown when none is; a
@@ -35,7 +41,8 @@ extends RefCounted
 
 signal changed
 
-## How long an event trigger keeps a prompt pending while another prompt is showing.
+## How long an event trigger keeps a prompt pending while the screen is free but the prompt is held
+## back (in combat, the giant dead); time behind another prompt does not count (M8 gate, F28, F32).
 const EVENT_PENDING_S := 6.0
 const TICKS_PER_S := 60
 ## Dismissal kinds that teach something the player does (a lesson that can stay open).
@@ -54,7 +61,8 @@ var player_provider := Callable()
 ## the shipped prompts).
 var scope := PackedStringArray()
 
-var _pending: Dictionary = {}   ## prompt id -> tick its event trigger fired
+var _pending: Dictionary = {}   ## prompt id -> tick its event trigger fired, moved on by the time spent
+                                ## behind a shown prompt (M8 gate: so its age counts the free screen only)
 var _armed: Dictionary = {}     ## once=false prompts: shown again only after their state trigger went false
 var _lesson_counts: Dictionary = {}   ## open lessons: prompt id -> matching actions or events so far
 var _cache: Array = []
@@ -322,7 +330,8 @@ func dismiss_matches(d: Dictionary, event_name: String, info: Dictionary) -> boo
 
 ## Takes the shown prompt away: the seen flag, sets_flag when reason is "done",
 ## tutorial_dismissed. Any other reason (a fallback) leaves its lesson open, counted on from the
-## prompt's progress.
+## prompt's progress. M8 gate (F28, F32): the prompts pending behind it get back the time it held the
+## screen (their queue: see EVENT_PENDING_S).
 func dismiss(reason: String, tick: int) -> void:
 	if current.is_empty():
 		return
@@ -330,6 +339,7 @@ func dismiss(reason: String, tick: int) -> void:
 	var sets := str(current.get("sets_flag", ""))
 	if reason != "done" and int(current.get("progress", 0)) > 0:
 		_lesson_counts[id] = int(current.progress)
+	_hold_pending(int(current.get("shown_tick", tick)), tick)
 	current = {}
 	WorldState.try_set_flag(seen_flag(id), true)
 	if reason == "done" and sets != "":
@@ -367,6 +377,14 @@ func _check_dismiss(tick: int) -> void:
 				return
 	if d.has("timeout_s") and elapsed >= float(d.timeout_s) - 1e-6:
 		dismiss("timeout", tick)
+
+
+## M8 gate (F28, F32): moves every pending prompt's tick on by the part of [shown_tick, tick] it spent
+## pending behind the prompt on screen, so that time does not count against EVENT_PENDING_S.
+func _hold_pending(shown_tick: int, tick: int) -> void:
+	for id: Variant in _pending.keys():
+		var since := int(_pending[id])
+		_pending[id] = since + maxi(0, tick - maxi(since, shown_tick))
 
 
 ## A prompt whose flag dismissal already holds has nothing left to teach.

@@ -41,7 +41,7 @@ static func install(level_id := LEVEL) -> WorldIndex:
 		"world": {"chunk_size_m": 100, "grid": [4, 4], "origin_m": [-200, 0, -200]}})
 	TestFixtures.record_override(NORTH, {"schema_version": 1, "id": NORTH, "type": "region",
 		"display_name": "The North Test", "level": level_id, "bounds_m": [[-200, -200], [200, 0]],
-		"recommended_stage": [4, 5], "discover_xp": 25, "m7_note": "The north comes later."})
+		"recommended_stage": [4, 5], "discover_xp": 25, "journal_note": "The north comes later."})
 	TestFixtures.record_override(SOUTH, {"schema_version": 1, "id": SOUTH, "type": "region",
 		"display_name": "The South Test", "level": level_id, "bounds_m": [[-200, 0], [200, 200]],
 		"recommended_stage": [1, 3], "discover_xp": 0})
