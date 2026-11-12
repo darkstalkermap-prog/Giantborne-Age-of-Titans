@@ -1033,7 +1033,7 @@ attempt on it). Iteration 0's value in brackets.
 The rows the report does not judge: the XP and equipment budget tests (margins of at least 50 XP) pass in
 this branch's check (no XP was tuned); the Valley's items hold as iteration 0 measured them - no change of
 the three iterations acts in the Valley (the data is the world's bosses, engines and the Matriarch, and every
-bot change acts from stage 4 or in the world only), which the Valley's force:expert:2 replay above confirms. Three tests encoded tuned numbers and now read them
+bot change acts from stage 4 or in the world only), which the Valley's force:expert:2 replay above confirms. Four tests encoded tuned numbers and now read them
 from the records (their behaviour unchanged): `test_matriarch` and `test_boss_disengage` (her phase-2 call and
 regeneration), `test_yield_protocol` (Harrok held at 25 % of his health) and the gate's `test_bosses_seeded`
 (its scripted blows 8 % of Harrok's health, as P34's 400 were of 5,000).
