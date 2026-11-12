@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-"""Markdown tables of a Valley bot batch (P17b; plan §5.6, §5.7; docs/HOW_IT_PLAYS.md, docs/BALANCE_LOG.md).
+"""Markdown tables of a bot batch: the Valley bot's (P17b; plan §5.6, §5.7; docs/HOW_IT_PLAYS.md,
+docs/BALANCE_LOG.md) and the world bot's (P38; plan M6-M9 §6.1, §5.15).
 
     python3 tools/bot_report.py <batch dir> [section ...]
 
 <batch dir> is a tools/run_bots.sh folder, user://bot_runs/<tag>/ (in this worktree:
-.userdata/godot/app_userdata/<project>/bot_runs/<tag>/). Sections (all when none is named):
-summary runs segments deaths growth abilities perf stuck states targets. Every number is read from the runs'
-AUTOPILOT_RESULT files (<run>.json) except two estimates, both marked where they are printed:
+.userdata/godot/app_userdata/<project>/bot_runs/<tag>/). Sections (all of the batch's kind when none is
+named): the Valley's summary runs segments deaths growth abilities perf stuck states targets; the world's
+(runs whose result has "world_bot") world_summary world_runs world_segments world_outcomes world_bosses
+world_travel world_streaming world_formations world_siege world_music world_deaths world_stuck.
+Every Valley number is read from the runs' AUTOPILOT_RESULT files (<run>.json) except two estimates,
+both marked where they are printed:
 - a segment's damage as a share of maximum health uses the giant's maximum health at the segment's
   end, rebuilt from the run's XP timeline and growth ticks the way the bot spends its points
   (Strength and Endurance alternating: 500 + 15 per Endurance point + 150 at stage 2, 300 at 3);
@@ -330,15 +334,236 @@ def stuck_table(rows, cell=20.0):
     return "\n".join(out)
 
 
+# --------------------------------------------------------------------------- the world bot (P38)
+
+# Plan M6-M9 §5.15: the segments after the Valley, target minutes (target, low, high).
+WSEGS = ["w1_opening", "w2_first_oath", "w3_second_oath", "w4_roaming", "w5_stonehold"]
+WSEG_NAMES = {"w1_opening": "Opening", "w2_first_oath": "First oath", "w3_second_oath": "Second oath",
+              "w4_roaming": "Growth to 5, roaming", "w5_stonehold": "Stonehold"}
+WSEG_TARGET = {"w1_opening": (10, 7, 14), "w2_first_oath": (20, 10, 30), "w3_second_oath": (25, 18, 35),
+               "w4_roaming": (15, 0, 40), "w5_stonehold": (24, 15, 32)}
+WMAIN_TARGET = (94, 60, 140)
+
+
+def world_row(path):
+    """One world run's numbers from its AUTOPILOT_RESULT ("world_bot")."""
+    name = os.path.basename(path)[:-5]
+    exit_path = path[:-5] + ".exit"
+    code, wall = (open(exit_path).read().split() + ["?", "?"])[:2] if os.path.exists(exit_path) else ("?", "?")
+    try:
+        r = json.load(open(path))
+    except (OSError, ValueError):
+        return None
+    wb = r.get("world_bot")
+    if not isinstance(wb, dict):
+        return None
+    w = wb.get("world", {})
+    pol = wb.get("policy", {})
+    segs = {s["id"]: s for s in wb.get("segments", [])}
+    deaths = wb.get("deaths", [])
+    return {
+        "name": name, "exit": code, "wall": wall, "r": r, "wb": wb, "w": w, "segs": segs,
+        "preset": pol.get("preset") or "-", "oaths": ",".join("%s:%s" % (o[0], o[1]) for o in pol.get("oaths", [])),
+        "skill": wb.get("bot", {}).get("skill"), "seed": wb.get("bot", {}).get("seed"),
+        "assist": bool(wb.get("bot", {}).get("assist")),
+        "completed": bool(wb.get("campaign_completed")), "finish": wb.get("finish_reason"),
+        "sim_s": wb.get("simulated_s", 0), "human_s": wb.get("human_estimate_s", 0),
+        "deaths": deaths, "breaches": wb.get("breaches", []), "invariants": wb.get("invariant_failures", []),
+        "stage": wb.get("main_stage"), "outcomes": wb.get("outcomes", {}), "errors": r.get("errors"),
+        "cpu_p95": r.get("perf", {}).get("cpu_tick_ms", {}).get("p95"),
+    }
+
+
+def load_world(batch_dir):
+    rows = [world_row(p) for p in sorted(glob.glob(os.path.join(batch_dir, "*.json")))]
+    return [r for r in rows if r is not None]
+
+
+def _who(r):
+    return "%s %s%s s%s" % (r["preset"], r["skill"], " assisted" if r["assist"] else "", r["seed"])
+
+
+def world_summary(rows):
+    by = collections.defaultdict(list)
+    for r in rows:
+        by[(r["skill"], r["assist"], r["preset"], r["oaths"])].append(r)
+    out = ["| Skill | Assisted | Preset | Oaths | Completed | Human est. median (min) | Raw median (min) | Deaths median | world_blocked |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for (skill, assist, preset, oaths), rs in sorted(by.items(), key=lambda kv: (str(kv[0][0]), kv[0][2], kv[0][3])):
+        done = [r for r in rs if r["completed"]]
+        blocked = sum(1 for r in rs for b in r["breaches"] if b.get("classification") == "world_blocked")
+        out.append("| %s | %s | %s | %s | %d / %d | %s | %s | %s | %d |" % (
+            skill, "yes" if assist else "no", preset, oaths, len(done), len(rs), fmt(med([r["human_s"] / 60 for r in done])),
+            fmt(med([r["sim_s"] / 60 for r in done])), fmt(med([len(r["deaths"]) for r in rs]), 0), blocked))
+    return "\n".join(out)
+
+
+def world_runs(rows):
+    out = ["| Run | Preset | Oaths | Done | Raw (min) | Human est. (min) | Wall (s) | Deaths | Stage reached | Watchdogs | Invariants | Errors |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        wd = "; ".join("%s: %s (%s)" % (b.get("classification"), b.get("objective"), b.get("reason")) for b in r["breaches"]) or "none"
+        inv = "; ".join(str(f.get("failure")) for f in r["invariants"]) or "none"
+        out.append("| %s | %s | %s | %s | %.1f | %.1f | %s | %d | %s | %s | %s | %s |" % (
+            r["name"], r["preset"], r["oaths"], "yes" if r["completed"] else "no (%s)" % r["finish"], r["sim_s"] / 60,
+            r["human_s"] / 60, r["wall"], len(r["deaths"]), r["stage"], wd, inv, r["errors"]))
+    return "\n".join(out)
+
+
+def world_segments(rows):
+    done = [r for r in rows if r["completed"]]
+    out = ["| Segment | Target (range), min | Human est. median, min | Raw median, min | Combat / traversal median, min | Map screens, fast travels | Regions, POIs | Deaths (all runs) |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for s in WSEGS:
+        t = WSEG_TARGET[s]
+        seg = [r["segs"].get(s, {}) for r in done]
+        out.append("| %s | %d (%d-%d) | %s | %s | %s / %s | %s, %s | %s, %s | %d |" % (
+            WSEG_NAMES[s], t[0], t[1], t[2], fmt(med([g.get("human_estimate_s", 0) / 60 for g in seg])),
+            fmt(med([g.get("raw_s", 0) / 60 for g in seg])), fmt(med([g.get("combat_s", 0) / 60 for g in seg])),
+            fmt(med([g.get("traversal_s", 0) / 60 for g in seg])), fmt(med([g.get("map_screens", 0) for g in seg]), 0),
+            fmt(med([g.get("fast_travels", 0) for g in seg]), 0), fmt(med([g.get("regions_entered", 0) for g in seg]), 0),
+            fmt(med([g.get("pois", 0) for g in seg]), 0), sum(1 for r in rows for d in r["deaths"] if d.get("segment") == s)))
+    out.append("| Main path after the Valley | %d (%d-%d) | %s | %s | | | | %d |" % (
+        WMAIN_TARGET[0], WMAIN_TARGET[1], WMAIN_TARGET[2], fmt(med([r["human_s"] / 60 for r in done])),
+        fmt(med([r["sim_s"] / 60 for r in done])), sum(len(r["deaths"]) for r in rows)))
+    return "\n".join(out)
+
+
+def world_outcomes(rows):
+    keys = ["march", "wood", "crown", "boss.matriarch", "boss.corvane", "boss.harrok", "skarn", "throne", "ancestry"]
+    out = ["| Run | " + " | ".join(k.replace("boss.", "") for k in keys) + " | Yields decided |",
+           "| --- | " + " | ".join("---" for _ in keys) + " | --- |"]
+    for r in rows:
+        o = r["outcomes"]
+        yd = ", ".join("%s %s" % (str(y[1]).split(".")[-1], y[2]) for y in r["wb"].get("yields_decided", [])) or "-"
+        out.append("| %s | %s | %s |" % (r["name"], " | ".join(str(o.get(k, "")).replace("ancestry.", "") or "-" for k in keys), yd))
+    return "\n".join(out)
+
+
+def world_bosses(rows):
+    out = ["| Run | Boss | Attempts | Engaged | Disengaged | Yields | Phases | Outcome |", "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        for bid, b in sorted(r["w"].get("bosses", {}).items()):
+            out.append("| %s | %s | %s | %s | %s | %s | %s | %s |" % (
+                r["name"], bid, b.get("attempts", 0), b.get("engaged", 0),
+                ", ".join(str(d[1]) for d in b.get("disengaged", [])) or "-", b.get("yields", 0),
+                ", ".join(str(p[1]) for p in b.get("phases", [])) or "-", b.get("outcome") or ("defeated" if b.get("defeated") else "-")))
+    return "\n".join(out)
+
+
+def world_travel(rows):
+    out = ["| Run | Regions (s) | Discovered | Map screens | Fast travels (refused) | Refusals | Stage seconds |",
+           "| --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        w = r["w"]
+        regions = ", ".join("%s %.0f" % (k.replace("region.", ""), v.get("s", 0)) for k, v in sorted(w.get("regions", {}).items()))
+        ft = w.get("fast_travels", [])   # [tick, from, to, ok, message]
+        refused = sum(1 for f in ft if len(f) > 3 and not f[3])
+        out.append("| %s | %s | %s | %s | %d (%d) | %d | %s |" % (
+            r["name"], regions or "-", w.get("discovered", 0), w.get("map_screens", 0), len(ft), refused,
+            len(w.get("refusals", [])), ", ".join("%s: %.0f" % kv for kv in sorted(w.get("stage_s", {}).items()))))
+    return "\n".join(out)
+
+
+def world_streaming(rows):
+    out = ["| Run | Loads | Unloads | Thrash | Smallest margin (m) | Worst work frame (ms) | Path queries per tick p95 / max | Save max (bytes) | Counted combatants max (s over 12) | CPU per tick p95 (ms) |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        w = r["w"]
+        st = w.get("streaming", {})
+        q = w.get("path_queries_per_tick", {})
+        b = r["wb"].get("budget", {})
+        out.append("| %s | %s | %s | %s | %s | %s | %s / %s | %s | %s (%s) | %s |" % (
+            r["name"], st.get("loads", "-"), st.get("unloads", "-"), st.get("thrash", "-"), fmt(st.get("min_margin_m")),
+            fmt(st.get("work_ms_max")), q.get("p95", "-"), q.get("max", "-"), w.get("save_bytes_max", "-"),
+            b.get("max_counted", "-"), fmt(b.get("over_cap_s")), fmt(r["cpu_p95"], 2)))
+    return "\n".join(out)
+
+
+def world_formations(rows):
+    out = ["| Run | Formations seen | Group / banner / single lock samples (stage 4+) | Group lock share | Banners felled | Broken | Routed | Sweeps |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        f = r["w"].get("formations", {})
+        out.append("| %s | %s | %s / %s / %s | %s | %s | %s | %s | %s |" % (
+            r["name"], f.get("seen", 0), f.get("group_lock_samples", 0), f.get("banner_lock_samples", 0),
+            f.get("single_lock_samples", 0), fmt(r["w"].get("formation_lock_share"), 2), f.get("banners_felled", 0),
+            f.get("broken", 0), f.get("routed", 0), f.get("sweeps", 0)))
+    return "\n".join(out)
+
+
+def world_siege(rows):
+    out = ["| Run | Engines destroyed | Engines thrown | Engine shots at the giant | Damage taken from engines | Wander spawns | World events |",
+           "| --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        sg = r["w"].get("siege", {})
+        dmg = sum(v for k, v in r["wb"].get("damage_taken_by_archetype", {}).items() if k.startswith("prop.siege"))
+        ev = ", ".join("%s %s" % (k.replace("event.", ""), "/".join(v.get("outcomes", [])) or "started %d" % v.get("started", 0))
+                       for k, v in sorted(r["w"].get("world_events", {}).items())) or "-"
+        out.append("| %s | %s | %s | %s | %d | %s | %s |" % (
+            r["name"], sg.get("engines_destroyed", 0), sg.get("engines_thrown", 0), sg.get("shots_at_giant", 0), dmg,
+            r["w"].get("wander", {}).get("spawns", 0), ev))
+    return "\n".join(out)
+
+
+def world_music(rows):
+    out = ["| Run | Stage | Explore | Danger | Combat |", "| --- | --- | --- | --- | --- |"]
+    for r in rows:
+        for stage, m in sorted(r["w"].get("music", {}).items()):
+            total = sum(m.values()) or 1.0
+            out.append("| %s | %s | %s | %s | %s |" % (r["name"], stage, *("%.0f %%" % (100.0 * m.get(k, 0.0) / total)
+                                                                          for k in ["explore", "danger", "combat"])))
+    return "\n".join(out)
+
+
+def world_deaths(rows):
+    causes = collections.Counter()
+    segs = collections.Counter()
+    for r in rows:
+        for d in r["deaths"]:
+            causes["%s/%s" % (d.get("killer_archetype"), str(d.get("action_id", "")).replace("ability.", ""))] += 1
+            segs[WSEG_NAMES.get(d.get("segment"), d.get("segment"))] += 1
+    return "deaths (%d): %s\n\ndeaths by segment: %s" % (
+        sum(causes.values()), ", ".join("%s %d" % kv for kv in causes.most_common()) or "none",
+        ", ".join("%s %d" % kv for kv in segs.most_common()) or "none")
+
+
+def world_stuck(rows, cell=50.0):
+    """Stuck events per 50 m cell of the world, with the objectives and how the bot got out."""
+    cells = collections.defaultdict(lambda: [0, collections.Counter(), collections.Counter()])
+    for r in rows:
+        for e in r["wb"].get("stuck_events", []):
+            p = e.get("position", [0, 0, 0])
+            key = (int((p[0] // cell) * cell + cell / 2), int((p[2] // cell) * cell + cell / 2))
+            cells[key][0] += 1
+            cells[key][1][str(e.get("objective", "")).replace("quest.world_main:", "")] += 1
+            cells[key][2][str(e.get("recovered_by", ""))] += 1
+    out = ["| Cell centre (x, z) | Stuck events | Objectives | Recovered by |", "| --- | --- | --- | --- |"]
+    for key, (n, objs, how) in sorted(cells.items(), key=lambda kv: -kv[1][0])[:25]:
+        out.append("| (%d, %d) | %d | %s | %s |" % (key[0], key[1], n, ", ".join("%s %d" % kv for kv in objs.most_common(3)),
+                                                    ", ".join("%s %d" % kv for kv in how.most_common())))
+    if len(out) == 2:
+        out.append("| - | 0 | - | - |")
+    return "\n".join(out)
+
+
 SECTIONS = {"summary": summary_table, "runs": runs_table, "segments": segments_table, "deaths": deaths_table,
             "growth": growth_table, "abilities": abilities_table, "perf": perf_table, "stuck": stuck_table, "states": states_table,
             "targets": targets_table}
+WORLD_SECTIONS = {"world_summary": world_summary, "world_runs": world_runs, "world_segments": world_segments,
+                  "world_outcomes": world_outcomes, "world_bosses": world_bosses, "world_travel": world_travel,
+                  "world_streaming": world_streaming, "world_formations": world_formations, "world_siege": world_siege,
+                  "world_music": world_music, "world_deaths": world_deaths, "world_stuck": world_stuck}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(__doc__)
-    batch = load(sys.argv[1])
-    for section in (sys.argv[2:] or list(SECTIONS)):
+    world = load_world(sys.argv[1])
+    valley = [] if world and not sys.argv[2:] else load(sys.argv[1])
+    for section in (sys.argv[2:] or (list(WORLD_SECTIONS) if world else list(SECTIONS))):
         print("### " + section)
-        print(SECTIONS[section](batch))
+        if section in WORLD_SECTIONS:
+            print(WORLD_SECTIONS[section](world))
+        else:
+            print(SECTIONS[section](valley))
         print()

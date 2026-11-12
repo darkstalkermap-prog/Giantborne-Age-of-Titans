@@ -33,6 +33,9 @@ const HUMAN_SEALED_S := 8.0
 const ITEM_IRON := "item.iron_ingot"
 const ITEM_TITAN := "item.titan_iron"
 const MARGIN_EVERY_TICKS := 30
+## How often the streamer's counters are snapshotted (a reload frees the streamer before its level's
+## end is announced: the snapshot keeps its counts).
+const STATS_EVERY_TICKS := 120
 const QUERY_HIST_MAX := 64
 
 var run_metrics: RunMetrics = null
@@ -44,6 +47,9 @@ var cairns: Array = []                ## [tick, flag]
 var xp_floors: Array = []             ## [tick, source, awarded, stage xp]
 var items: Array = []                 ## [tick, iron, titan iron] on every change
 var oaths: Dictionary = {}            ## march|wood|crown -> {"outcome", "tick"}
+## The boss outcome flags' names (boss.<name>.outcome) and the ids their engagements carry.
+const BOSS_IDS := {"matriarch": "world.greywood.troll_matriarch", "harrok": "world.stonehold.harrok",
+	"corvane": "battle.iron_regiment"}
 var bosses: Dictionary = {}           ## boss id -> {"engaged", "attempts", "phases": [], "yields", "outcome", "disengaged": []}
 var formations := {"group_lock_samples": 0, "banner_lock_samples": 0, "single_lock_samples": 0,
 	"banners_felled": 0, "broken": 0, "routed": 0, "sweeps": 0, "seen": 0}
@@ -69,6 +75,7 @@ var _iron_last := -1
 var _titan_last := -1
 var _region := ""
 var _streamer_ref: WeakRef = null
+var _stream_snapshot: Dictionary = {}
 
 
 func _init(p_run_metrics: RunMetrics = null) -> void:
@@ -143,7 +150,7 @@ func _on_flag_changed(tick: int, flag_id: String, value: Variant) -> void:
 			oaths[oath] = {"outcome": str(value), "tick": tick}
 	elif flag_id.begins_with("boss.") and flag_id.ends_with(".outcome") and str(value) != "":
 		var b := flag_id.trim_prefix("boss.").trim_suffix(".outcome")
-		var rec := _boss(b)
+		var rec := _boss(str(BOSS_IDS.get(b, b)))
 		rec.outcome = str(value)
 	elif flag_id.begins_with("reward.") and flag_id.contains("cairn") and QuestConditions.truthy(value):
 		cairns.append([tick, flag_id])
@@ -336,6 +343,8 @@ func on_tick(tick: int, player: GiantPlayer, world: Node) -> void:
 		var s := _streamer_ref.get_ref() as ChunkStreamer
 		if s != null:
 			min_margin_m = minf(min_margin_m, WorldWalk.margin_to_unloaded(s, player.global_position))
+			if tick % STATS_EVERY_TICKS == 0:
+				_stream_snapshot = s.stats()
 	_sample_music(stage)
 	var iron := WorldState.count_of(ITEM_IRON)
 	var titan := WorldState.count_of(ITEM_TITAN)
@@ -371,19 +380,27 @@ func _sample_music(stage: String) -> void:
 	music[stage] = by
 
 
-## The streamer's counters of the level now ending (each load starts its own).
+## The current level's streamer counters: read live while the streamer is there, else the last
+## snapshot (a death's reload frees the level before the next one is announced).
+func _current_stream_stats() -> Dictionary:
+	if _streamer_ref != null:
+		var s := _streamer_ref.get_ref() as ChunkStreamer
+		if s != null and is_instance_valid(s):
+			_stream_snapshot = s.stats()
+	return _stream_snapshot
+
+
+## The counters of the level now ending, added to the run's (each load's streamer starts its own).
 func _fold_streamer() -> void:
-	if _streamer_ref == null:
+	var st := _current_stream_stats()
+	if st.is_empty():
 		return
-	var s := _streamer_ref.get_ref() as ChunkStreamer
-	if s == null:
-		return
-	var st := s.stats()
 	stream_totals.loads = int(stream_totals.loads) + int(st.get("loads", 0))
 	stream_totals.unloads = int(stream_totals.unloads) + int(st.get("unloads", 0))
 	stream_totals.thrash = int(stream_totals.thrash) + int(st.get("thrash", 0))
 	stream_totals.work_ms_max = maxf(float(stream_totals.work_ms_max), float(st.get("work_ms_max", 0.0)))
 	streaming = st
+	_stream_snapshot = {}
 
 
 # --------------------------------------------------------------------------- the result
@@ -407,7 +424,7 @@ func _query_percentile(p: float) -> int:
 
 
 func result() -> Dictionary:
-	_fold_streamer()
+	var cur := _current_stream_stats()
 	var region_out := {}
 	for r: String in regions:
 		region_out[r] = {"s": snappedf(float(regions[r].s), 0.01), "first_tick": int(regions[r].first_tick)}
@@ -438,9 +455,11 @@ func result() -> Dictionary:
 		"fast_travels": fast_travels.duplicate(true),
 		"map_screens": map_screens,
 		"level_loads": loads,
-		"streaming": {"loads": stream_totals.loads, "unloads": stream_totals.unloads, "thrash": stream_totals.thrash,
-			"work_ms_max": stream_totals.work_ms_max, "min_margin_m": snappedf(min_margin_m, 0.1) if min_margin_m != INF else -1.0,
-			"last": streaming.duplicate(true)},
+		"streaming": {"loads": int(stream_totals.loads) + int(cur.get("loads", 0)),
+			"unloads": int(stream_totals.unloads) + int(cur.get("unloads", 0)),
+			"thrash": int(stream_totals.thrash) + int(cur.get("thrash", 0)),
+			"work_ms_max": maxf(float(stream_totals.work_ms_max), float(cur.get("work_ms_max", 0.0))), "min_margin_m": snappedf(min_margin_m, 0.1) if min_margin_m != INF else -1.0,
+			"last": (cur if not cur.is_empty() else streaming).duplicate(true)},
 		"path_queries_per_tick": {"p50": _query_percentile(0.5), "p95": _query_percentile(0.95), "max": q_max},
 		"music": music.duplicate(true),
 		"save_bytes_max": save_bytes_max,

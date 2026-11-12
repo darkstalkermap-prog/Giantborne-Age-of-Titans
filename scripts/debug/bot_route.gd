@@ -7,7 +7,7 @@ extends RefCounted
 ##      the giant to the node nearest the goal, over the edges the giant's growth stage may use
 ##      (min_stage / max_stage: the Giant's Stair's edges need stage 6, the Needle's stage 4 or
 ##      less). A `direct` edge (the Needle: no titan navmesh, a 5 m slot) is walked in a straight
-##      line. A goal within LEG_MAX_M takes no road at all.
+##      line. A goal within LEG_MAX_M takes no road at all, unless the road there has a direct edge.
 ##   2. Local legs on the titan map: the leg's target is the farthest route point at most LEG_MAX_M
 ##      along the route from the giant, and a NavQuery path (the stage's titan query mask: 16 and
 ##      the gate bits it has reached) leads there. A target in a chunk that is not loaded and ready
@@ -38,6 +38,10 @@ const FAST_TRAVEL_MIN_M := 600.0
 const FAST_TRAVEL_NEAR_M := 200.0
 ## A goal this close is walked to without the road graph.
 const NEAR_GOAL_M := LEG_MAX_M
+## How many route points ahead the giant's place along the route is looked for, and how much nearer
+## a later segment must be to pass the points before it.
+const ADVANCE_LOOKAHEAD := 6
+const ADVANCE_MARGIN_M := 2.0
 
 var index: WorldIndex = null
 var level: Node = null
@@ -165,11 +169,16 @@ func plan(from: Vector3, to: Vector3) -> bool:
 	_plan_stage = stage
 	_leg_tick = -1000000
 	var ok := true
-	if flat_dist(from, to) > NEAR_GOAL_M and index != null:
+	if flat_dist(from, to) > NODE_REACHED_M * 2.0 and index != null:
 		var rp := road_path(index, from, to, stage)
 		var nodes: PackedInt32Array = rp.nodes
-		if nodes.is_empty():
-			ok = false
+		# A near goal is walked on the navmesh - unless the road there takes a direct edge (the
+		# Needle's slot has no titan navmesh: its straight steps are the only way through).
+		var near := flat_dist(from, to) <= NEAR_GOAL_M
+		if near and not _has_direct(rp.edges):
+			pass
+		elif nodes.is_empty():
+			ok = near
 		else:
 			var pos := index.road_nodes()
 			var route_edges: PackedInt32Array = rp.edges
@@ -184,6 +193,13 @@ func plan(from: Vector3, to: Vector3) -> bool:
 	direct.append(1 if direct.size() > 0 and direct[direct.size() - 1] == 1 and points.size() > 1 \
 		and flat_dist(points[points.size() - 2], to) < NODE_REACHED_M * 2.0 else 0)
 	return ok
+
+
+func _has_direct(route_edges: PackedInt32Array) -> bool:
+	for e in route_edges:
+		if edge_direct(index, e):
+			return true
+	return false
 
 
 ## Drops a first node the giant is already past (the second lies nearer the giant than the first
@@ -250,21 +266,39 @@ func steer(pos: Vector3, tick: int, world: Node = null) -> Vector3:
 	return leg_target if leg_target.is_finite() else points[step]
 
 
-## Passes every route point within NODE_REACHED_M, and a point the giant is already beyond (the
-## next one lies nearer than the distance between them).
+## Passes every route point within NODE_REACHED_M, then finds the giant's place along the route: when
+## a later segment (within ADVANCE_LOOKAHEAD points, not past a direct step) lies clearly nearer the
+## giant than the one it is on, the points before that segment are passed. A navigation path does
+## not keep to the road's line - it rounds a hill or a house the road crosses - and a point it never
+## comes within NODE_REACHED_M of must not hold the route back (the leg window is measured from the
+## next point: a point left behind shrinks it and the giant turns back).
 func _advance(pos: Vector3) -> void:
-	while step < points.size() - 1:
-		var here := flat_dist(pos, points[step])
-		if here < NODE_REACHED_M:
-			step += 1
-			continue
-		if direct[step] == 0 and direct[step + 1] == 0 \
-				and flat_dist(pos, points[step + 1]) < flat_dist(points[step], points[step + 1]) - NODE_REACHED_M:
-			step += 1
-			continue
-		break
+	while step < points.size() - 1 and flat_dist(pos, points[step]) < NODE_REACHED_M:
+		step += 1
+	if step < points.size() - 1 and direct[step] == 0:
+		var best := step
+		var best_d := _segment_dist(pos, step)
+		for i in range(step + 1, mini(points.size(), step + 1 + ADVANCE_LOOKAHEAD)):
+			if direct[i] == 1:
+				break
+			var d := _segment_dist(pos, i)
+			if d < best_d - ADVANCE_MARGIN_M:
+				best_d = d
+				best = i
+		step = best
 	if step == points.size() - 1 and flat_dist(pos, points[step]) < 0.5:
 		step = points.size()
+
+
+## The distance from `pos` to the route's segment into point `i` (from the point before it; the
+## first point alone for i = 0), on the ground plane.
+func _segment_dist(pos: Vector3, i: int) -> float:
+	var b := Vector3(points[i].x, 0.0, points[i].z)
+	var p := Vector3(pos.x, 0.0, pos.z)
+	if i == 0:
+		return p.distance_to(b)
+	var a := Vector3(points[i - 1].x, 0.0, points[i - 1].z)
+	return p.distance_to(Geometry3D.get_closest_point_to_segment(p, a, b))
 
 
 ## The index of the farthest route point within LEG_MAX_M along the route from `pos` (not past a

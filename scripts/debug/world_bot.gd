@@ -96,9 +96,21 @@ const SHRINE_CHOICE_RADIUS_M := 60.0
 const FAST_TRAVEL_RETRY_S := 30.0
 ## The Matriarch: a brazier is broken while she stands this close to it (her brazier_radius_m is 8).
 const BRAZIER_BURN_M := 7.5
-## A stage-4 drive-out fights her down to this health share before the nests burn.
-const DRIVE_FIGHT_TO := 0.7
-const DRIVE_FIGHT_MAX_S := 150.0
+## The drive-out: until the den's flags hold (nests burned, wall open) she is struck only while her
+## health is above this share - killed before they hold, she would be slain, not driven out.
+const DRIVE_HOLD_FRAC := 0.35
+## --bot-explore: each oath's region, and how long one POI is tried before it is given up.
+const OATH_REGIONS := {"march": "region.crownmarch", "wood": "region.greywood", "crown": "region.aldmere"}
+const EXPLORE_GIVE_UP_S := 120.0
+## The objective kinds that fight on their own terms at their place (the den: the drive-out's order;
+## the battle: crews and fort ballistae first; the duel): within FIGHT_OWNER_RADIUS_M of the place's
+## marker the plan keeps the objective although threats are near.
+const FIGHT_OWNERS := {"matriarch": "world.marker.troll_den", "battle": "world.marker.fort_bailey",
+	"duel": "world.marker.moot_ring"}
+const FIGHT_OWNER_RADIUS_M := 120.0
+## An engaged arena's leash: the giant turns back once it stands this share of the disengage margin
+## outside the arena's floor.
+const ARENA_LEASH_SHARE := 0.4
 ## How near the giant must come to a talker (beyond its reach): the talker's radius + the capsule, less.
 const TALK_SLACK_M := 1.0
 const TALK_RETRY_TICKS := 90
@@ -126,7 +138,6 @@ class WorldRun extends RefCounted:
 	var talents_tried: Dictionary = {}
 	var decided: Array = []            ## [tick, boss id, outcome]
 	var refused: Dictionary = {}       ## what -> the last refusal line (noted once)
-	var drive_fight_ticks := 0
 	var explored: Dictionary = {}      ## poi id -> true once visited (or given up)
 	var world_started_tick := -1
 	var valley_done_tick := -1
@@ -150,6 +161,7 @@ var _budget_director: EncounterDirector = null
 var _budget_seen := 0                  ## counted combatants at the last look (tick, spawn or flag)
 var _spawn_positions: Dictionary = {}  ## entity id -> its spawn position (encounter records)
 var _talk_tick := -1000
+var _leashed := false
 var _world: WorldRoot = null
 
 
@@ -592,6 +604,12 @@ func _plan(tick: int) -> void:
 	if _valley_part():
 		super(tick)
 		return
+	var objective := _objective_task(tick)
+	var owner := str(FIGHT_OWNERS.get(str(objective.get("kind", "")), ""))
+	if owner != "" and _flat_dist(player.global_position, _where(owner)) <= FIGHT_OWNER_RADIUS_M:
+		task = objective
+		_stall_since = -1
+		return
 	var fight_target := _fight_target()
 	if fight_target != null and _chase_futile(fight_target, tick):
 		fight_target = _fight_target()
@@ -599,7 +617,7 @@ func _plan(tick: int) -> void:
 		task = {"kind": "fight", "target": fight_target}
 		_stall_since = -1
 		return
-	task = _objective_task(tick)
+	task = objective
 
 
 ## A fight the current task overrides: none (every aware hostile near is fought), except a yielded or
@@ -790,8 +808,68 @@ func _oaths_task() -> Dictionary:
 			continue
 		if _can_grow5():
 			return _grow5_task(_oath_anchor(oath))
+		var explore := _explore_task(oath)
+		if not explore.is_empty():
+			return explore
 		return _oath_task(oath, str(pair[1]))
 	return {"kind": "wait", "why": "the oaths are won"}
+
+
+## --bot-explore=<share> (plan §6.1 "Exploration"): before an oath, the giant visits that share of its
+## region's POIs not yet discovered when the oath is first taken up (those its stage may reach),
+## nearest first, each until discovered or given up after EXPLORE_GIVE_UP_S; {} when none is due.
+## POIs found on the way count.
+func _explore_task(oath: String) -> Dictionary:
+	if wrun.explore <= 0.0 or route == null or route.index == null:
+		return {}
+	var key := "oath:" + oath
+	if not wrun.explored.has(key):
+		var todo := _undiscovered_pois(str(OATH_REGIONS.get(oath, "")))
+		wrun.explored[key] = {"set": todo, "quota": ceili(wrun.explore * todo.size())}
+		run.metrics.note(Sim.tick, "explore before the %s oath: %d of %d POIs" % [oath, int(wrun.explored[key].quota), todo.size()])
+	var plan: Dictionary = wrun.explored[key]
+	var done := 0
+	var best := ""
+	var best_d := INF
+	for id: String in plan.set:
+		if _poi_found(id) or wrun.explored.has(id):
+			done += 1
+			continue
+		var d := _flat_dist(route.index.pois[id].position, player.global_position)
+		if d < best_d:
+			best = id
+			best_d = d
+	if done >= int(plan.quota) or best == "":
+		return {}
+	var started := int(wrun.explored.get("since:" + best, -1))
+	if started < 0:
+		wrun.explored["since:" + best] = Sim.tick
+	elif Sim.tick - started > ActionDef.seconds_to_ticks(EXPLORE_GIVE_UP_S):
+		wrun.explored[best] = "given up"
+		run.metrics.note(Sim.tick, "explore: %s given up" % best)
+		return _explore_task(oath)
+	var poi: Dictionary = route.index.pois[best]
+	return _travel_task(poi.position, maxf(4.0, float(poi.get("radius", 20.0)) * 0.5), "explore " + best)
+
+
+static func _poi_found(id: String) -> bool:
+	var v: Variant = WorldState.get_flag(Discovery.discovered_flag(id))
+	return QuestConditions.truthy(v) and str(v) != Discovery.REVEALED
+
+
+## The ids of `region`'s POIs not yet discovered that the giant's stage may reach (sorted).
+func _undiscovered_pois(region: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	if region == "" or route == null or route.index == null:
+		return out
+	for id: String in route.index.pois:
+		var poi: Dictionary = route.index.pois[id]
+		if str(poi.get("region", "")) != region or int(poi.get("min_stage", 0)) > player.current_growth_stage():
+			continue
+		if not _poi_found(id):
+			out.append(id)
+	out.sort()
+	return out
 
 
 ## With --bot-oath-count=3 the third oath is won before grow6.
@@ -986,6 +1064,8 @@ func _encounter_cleared(encounter_id: String) -> bool:
 
 func _act(tick: int, defending: bool) -> void:
 	var kind := str(task.get("kind", "wait"))
+	if _in_world() and _arena_leash(tick):
+		return
 	if not (kind in WORLD_KINDS) and not (_in_world() and kind == "go"):
 		super(tick, defending)
 		return
@@ -1027,6 +1107,30 @@ func _act(tick: int, defending: bool) -> void:
 		_:
 			stop_moving()
 	_equip_best()
+
+
+## A boss arena's disengage rule (P34) resets the attempt - the boss at full health - when the giant
+## stays beyond the floor by the arena's margin (20 m) for 5 s. A fight drifts (a chase, a knock-back,
+## Harrok's charges): while an arena is engaged and the giant stands more than ARENA_LEASH_SHARE of
+## that margin outside its floor, it walks back toward the floor's centre (the boss follows) instead of
+## fighting on. True while it does.
+func _arena_leash(tick: int) -> bool:
+	if tick < combat.dodge_steer_until():
+		return false
+	for n in get_tree().get_nodes_in_group(BossArena.GROUP):
+		var a := n as BossArena
+		if a == null or not a.is_inside_tree() or a.state != BossArena.State.ENGAGED:
+			continue
+		if a.outside_m(player.global_position) <= a.disengage_margin_m * ARENA_LEASH_SHARE:
+			continue
+		mode = "traverse"
+		if not _leashed:
+			_leashed = true
+			run.metrics.note(tick, "back into %s's arena (%.0f m outside)" % [a.boss_id, a.outside_m(player.global_position)])
+		_act_go(tick, a.global_position, 4.0)
+		return true
+	_leashed = false
+	return false
 
 
 ## Walks (or fast-travels) to `pos`: true once within `radius`.
@@ -1392,47 +1496,58 @@ func _battle_target() -> Node3D:
 # ---- the Troll Matriarch
 
 ## The den: the Matriarch fought in her bowl. Slay: she is fought to the end, each brazier broken while
-## she stands within BRAZIER_BURN_M of it (8 s of Burning: no regeneration). Drive: at stage 5 the back
-## wall is heaved aside first; at stage 4 she is fought down to DRIVE_FIGHT_TO first (at most
-## DRIVE_FIGHT_MAX_S), then the braziers are broken beside her (each burns its nest), the woodfolk open
-## the wall 20 s after the last nest, and she is fought below 60 % until she flees.
+## she stands within BRAZIER_BURN_M of it (8 s of Burning: no regeneration; F37: fire matters at stage
+## 4). Drive (P35): her flight needs the den's flags - the three nests burned (a brazier beside each:
+## broken, its fire burns the nest) and the back wall open (the woodfolk open it 20 s after the last
+## nest) - and her health at or below 60 %: the braziers first, then she is fought while above
+## DRIVE_HOLD_FRAC (else only defended against, her whelps fought) until the wall opens, then fought
+## down until she runs for the exit (not struck while she runs: a fleeing boss is no threat).
 func _act_matriarch(tick: int, defending: bool) -> void:
 	var res := str(task.get("resolution", "slay"))
 	var m := _entity_node("world.greywood.troll_matriarch") as EnemyActor
-	var den := _where("world.marker.troll_den")
-	var nests_burned := QuestConditions.truthy(WorldState.get_flag("world.troll_den.nests_burned"))
-	var wall_open := QuestConditions.truthy(WorldState.get_flag("world.troll_den.wall_open"))
-	if res == "drive" and player.current_growth_stage() >= 5 and not wall_open:
-		var wall := _world_node("world.greywood.troll_den_wall")
-		if wall != null:
-			var hp := wall.get_node_or_null("HeavePoint") as Node3D
-			if hp != null:
-				task["target"] = hp
-				_act_interact(tick)
-				return
-		_act_travel(tick, _where("world.greywood.troll_den_wall"), 10.0)
-		return
 	if m == null or not m.entity.is_alive():
-		_act_travel(tick, den, 8.0)
+		_act_travel(tick, _where("world.marker.troll_den"), 8.0)
 		return
-	var frac := m.entity.combatant.pools.ratio("health")
-	# a brazier beside her: break it (fire) - always for the slay; for the drive once she is worn down
-	var want_fire := res == "slay" or frac <= DRIVE_FIGHT_TO or wrun.drive_fight_ticks > ActionDef.seconds_to_ticks(DRIVE_FIGHT_MAX_S)
-	if want_fire and not (res == "drive" and nests_burned):
-		var brazier := _brazier_near(m.global_position)
-		if brazier != null:
-			task["target"] = brazier
-			_act_break(tick, defending)
-			return
-	if res == "drive" and not nests_burned and want_fire:
-		# no brazier beside her: go to the nearest standing one (she follows)
-		var b := _nearest_brazier()
-		if b != null and _flat_dist(b.global_position, player.global_position) > 6.0:
-			_act_travel(tick, b.global_position, 5.0)
-			return
-	wrun.drive_fight_ticks += 1
+	if res == "drive":
+		_act_drive(tick, defending, m)
+		return
+	var brazier := _brazier_near(m.global_position)
+	if brazier != null:
+		task["target"] = brazier
+		_act_break(tick, defending)
+		return
 	mode = "combat"
 	combat.fight(tick, m)
+
+
+func _act_drive(tick: int, defending: bool, m: EnemyActor) -> void:
+	if m.has_method("is_fleeing") and bool(m.call("is_fleeing")):
+		_fight_others(tick, m)
+		return
+	if not QuestConditions.truthy(WorldState.get_flag("world.troll_den.nests_burned")):
+		var b := _nearest_brazier()
+		if b != null:
+			task["target"] = b
+			_act_break(tick, defending)
+			return
+	var frac := m.entity.combatant.pools.ratio("health")
+	if not QuestConditions.truthy(WorldState.get_flag("world.troll_den.wall_open")) and frac <= DRIVE_HOLD_FRAC:
+		_fight_others(tick, m)
+		return
+	mode = "combat"
+	combat.fight(tick, m)
+
+
+## Fights the nearest threat other than `boss` (her whelps); with none, stands and defends.
+func _fight_others(tick: int, boss: EnemyActor) -> void:
+	for e: EnemyActor in combat.threats(combat.engage_radius()):
+		if e != boss and not _is_ignored(e):
+			mode = "combat"
+			combat.fight(tick, e)
+			return
+	stop_moving()
+	mode = "combat"
+	combat.defend(tick)
 
 
 func _brazier_near(at: Vector3) -> BreakableProp:
