@@ -990,7 +990,9 @@ func _act_break(tick: int, defending: bool) -> void:
 	stop_moving()
 	mode = "combat"
 	var c := player.controller
-	if e != null and e.combatant.lockable:
+	# P38: a lockable prop the giant may not target (a faction's at peace: P03's hostile-only
+	# targeting) refuses the lock; it is struck facing it, as one that cannot be locked.
+	if e != null and e.combatant.lockable and player.targeting.may_target(e):
 		var locked := player.targeting.locked_entity()
 		if locked != e:
 			if locked != null:

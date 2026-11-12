@@ -1495,7 +1495,8 @@ static func _outcome_nodes(rec: Dictionary, outcome: String) -> Dictionary:
 
 ## Breaks a prop by its world id: walk to it (its index position while its chunk is out), then the
 ## Valley's break act (lock it when it can be locked, close in, heavies). An engine is hurled at with
-## Crag Hurl when it is ready and the engine stands in its range.
+## Crag Hurl when it is ready and the engine stands in its range, until 8 s of hurling leave it
+## unhurt (then blows for RANGED_IGNORE_S).
 func _act_smash(tick: int, defending: bool) -> void:
 	var id := str(task.get("id", ""))
 	var prop := _world_node(id) as BreakableProp
@@ -1505,14 +1506,32 @@ func _act_smash(tick: int, defending: bool) -> void:
 	if prop.destroyed:
 		_next_plan_tick = tick
 		return
-	if prop is SiegeEngine and _hurl_at_engine(tick, prop):
+	if prop is SiegeEngine and _engine_hurl_ok(tick, prop) and _hurl_at_engine(tick, prop):
 		return
 	task["target"] = prop
 	_act_break(tick, defending)
 
 
+## Whether Crag Hurl at `engine` is still worth trying: in its band, ready, and not given up after
+## RANGED_GIVE_UP_S of hurling that did not hurt it.
+func _engine_hurl_ok(tick: int, engine: BreakableProp) -> bool:
+	var d := _flat_dist(player.global_position, engine.global_position)
+	if d < 12.0 or d > 40.0 or combat.ready_slot(BotCombat.BOULDER_HURL) == "":
+		return false
+	var e := engine.get_node_or_null("CombatEntity") as CombatEntity
+	if e == null or e.combatant == null:
+		return false
+	var key := "hurl:" + str(engine.world_id)
+	if int(_ignored.get(key, -1)) > tick:
+		return false
+	return not _ranged_futile(key, e.combatant.pools.health, tick)
+
+
 ## Crag Hurl (Boulder Hurl's evolution, a siege category) at an engine between 12 and 40 m: lock it
-## when it can be locked, face it, hurl. True while hurling.
+## when it can be locked, face it, hurl. True while hurling. Not at an engine the giant may not target
+## (P03's hostile-only targeting: the war camp's engines while Aldmere is at peace - its lock is
+## refused, and the bot pressed lock in front of the camp's catapult until the watchdog): the first
+## blow at one is a melee one, an offence that turns Aldmere hostile.
 func _hurl_at_engine(tick: int, engine: BreakableProp) -> bool:
 	var d := _flat_dist(player.global_position, engine.global_position)
 	if d < 12.0 or d > 40.0:
@@ -1520,8 +1539,10 @@ func _hurl_at_engine(tick: int, engine: BreakableProp) -> bool:
 	var key := combat.ready_slot(BotCombat.BOULDER_HURL)
 	if key == "" or player.controller.state != CombatController.State.LOCOMOTION:
 		return false
-	stop_moving()
 	var e := engine.get_node_or_null("CombatEntity") as CombatEntity
+	if e != null and e.combatant != null and e.combatant.lockable and not player.targeting.may_target(e):
+		return false
+	stop_moving()
 	var locked := player.targeting.locked_entity()
 	if e != null and e.combatant != null and e.combatant.lockable and locked != e:
 		player.camera_rig.yaw = TargetingRules.yaw_of(_flat(engine.global_position - player.global_position))
