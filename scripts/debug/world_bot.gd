@@ -2212,7 +2212,7 @@ func _act_matriarch(tick: int, defending: bool) -> void:
 		_act_drive(tick, defending, m)
 		return
 	var brazier := _brazier_near(m.global_position)
-	if brazier != null:
+	if brazier != null and _standing_braziers() > 1:
 		task["target"] = brazier
 		_act_break(tick, defending)
 		return
@@ -2222,10 +2222,28 @@ func _act_matriarch(tick: int, defending: bool) -> void:
 	combat.fight(tick, m)
 
 
+## P39 (iteration 2): the den's braziers still standing. The slay breaks none of them once it is the last:
+## each brazier broken burns the nest beside it, and with all three nests burned the woodfolk open the den's
+## back wall and she flees at 60 % (P35's drive-out) - iteration 1's lure broke all three in both conqueror
+## novice runs, and she fled instead of being slain.
+func _standing_braziers() -> int:
+	var n := 0
+	for id: String in DEN_BRAZIERS:
+		if WorldState.is_destroyed(id):
+			continue
+		var b := _world_node(id) as BreakableProp
+		if b != null and not b.destroyed:
+			n += 1
+	return n
+
+
 ## P39: the brazier to draw the Matriarch to and where the giant stands for it ({"id", "spot"}), or {}:
-## none while she burns or stands above LURE_BELOW_FRAC of her health, nor a brazier left for now.
+## none while she burns or stands above LURE_BELOW_FRAC of her health, nor a brazier left for now, nor the
+## last one standing (see _standing_braziers).
 func _lure_spot(tick: int, m: EnemyActor) -> Dictionary:
 	if m == null or not is_instance_valid(m) or m.entity == null or not m.entity.is_alive():
+		return {}
+	if _standing_braziers() <= 1:
 		return {}
 	if (m.has_method("p34_regen_blocked") and bool(m.call("p34_regen_blocked"))) \
 			or m.entity.combatant.pools.ratio("health") > LURE_BELOW_FRAC:

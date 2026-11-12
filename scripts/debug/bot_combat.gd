@@ -50,13 +50,15 @@ const HEAVY_COMMIT_RANGE_M := 10.0
 ## answer was always due, and the expert swung 68 and 56 lights in runs where the novice swung 213-253
 ## (and died there 6 and 5 times where the novice did not). Now: a blow whose attacker stands farther from
 ## the giant's capsule than the blow reaches (its telegraph, line, radius or AI range, plus
-## EXPERT_REACH_SLACK_M) is not answered; a light shot (power under EXPERT_LIGHT_SHOT_POWER: an arrow) holds
-## no blow off and is dodged only when no blow of the giant's own is under way as it arrives (a ballista
-## bolt, a catapult stone, a boulder or a thrown whelp are answered as before); and answers due one after
+## EXPERT_REACH_SLACK_M) is not answered; a light shot (an arrow: a projectile under EXPERT_LIGHT_SHOT_POWER
+## and no spell) holds no blow off and is dodged only when no blow of the giant's own is under way as it
+## arrives (a mage's slowing bolt, a ballista bolt, a catapult stone, a boulder or a thrown whelp are answered
+## as before - iteration 1 took every projectile under 30 for a light shot, and the three peaceful experts,
+## slowed by the Raiders' Hollow's mage while they struck, died there six times each); and answers due one after
 ## another hold the giant's blows off for EXPERT_HOLD_MAX_TICKS at most, after which it strikes (each blow
 ## it starts begins a new hold). The Valley (stages 1-3) keeps P17a's rules, so its matrix stays comparable.
 const EXPERT_REACH_SLACK_M := 1.5
-const EXPERT_LIGHT_SHOT_POWER := 30.0
+const EXPERT_LIGHT_SHOT_POWER := 20.0
 const EXPERT_HOLD_MAX_TICKS := 60
 ## P39 (plan M6-M9 §6.4: every slotted ability used at least once a run, none over 40 % of the ability
 ## damage): from stage 4 a slotted ability the rules below have not used for ROTATION_IDLE_TICKS is used on
@@ -65,7 +67,10 @@ const EXPERT_HOLD_MAX_TICKS := 60
 ## Hurl when it was ready, 12 Sweeping Blow, 8 Crag Hurl and 7 Titan Stomp, and one run's Titan Stomp took
 ## 65 % of its ability damage: the rules below want a locked archer beyond 10 m for the hurls and use Heavy
 ## Footfall's slot before Sweeping Blow's. The two area blows now take turns (the one used longer ago
-## first). The heal, Stone Skin and Titan Surge keep their own rules only.
+## first). Only the heal keeps its own rule alone (iteration 2: Stone Skin and Titan Surge take their turns
+## too - their own rules want a boss or three enemies, so iteration 1's runs never used them in 5 of 18). The
+## rotation acts in the world at any stage (iteration 2: the world's opening at stage 3 slotted Boulder Hurl
+## and never used it) and from stage 4 anywhere; the Valley keeps P17a's rules.
 const ROTATION_IDLE_TICKS := 1200
 ## Hostile, aware enemies this far (by stage) pull the bot into a fight.
 const ENGAGE_RADIUS_M := [16.0, 22.0, 28.0]
@@ -216,7 +221,7 @@ func _plan_reaction(decide_tick: int, eta: int, a: ActionDef, actor: Node3D, why
 	if skill == EXPERT:
 		if dodge:
 			_add_reaction(eta - DODGE_LEAD_TICKS, "dodge", actor, why)
-			if _world_expert() and a.hit_shape == "projectile" and a.power < EXPERT_LIGHT_SHOT_POWER:
+			if _world_expert() and a.hit_shape == "projectile" and a.power < EXPERT_LIGHT_SHOT_POWER and not a.has_tag("Magic"):
 				_reactions[-1]["light_shot"] = true   # P39: it holds no blow off (see the constants)
 		else:
 			_add_reaction(eta - rng.randi_range(EXPERT_PARRY_LEAD_MIN, EXPERT_PARRY_LEAD_MAX), "block", actor, why)
@@ -310,6 +315,15 @@ func defend(tick: int) -> bool:
 	elif _hold_since < 0:
 		_hold_since = tick
 	return busy or (holding and not _hold_spent(tick))
+
+
+## P39: true from stage 4 or in the world (its opening is at stage 3): the rotation's rules (the Valley keeps P17a's).
+func _world_rules() -> bool:
+	if not _alive_player():
+		return false
+	if player.current_growth_stage() >= 4:
+		return true
+	return bot != null and is_instance_valid(bot) and bot.has_method("_in_world") and bool(bot.call("_in_world"))
 
 
 ## P39: true for the expert from stage 4 (the world's rules of its answers; the Valley keeps P17a's).
@@ -887,7 +901,7 @@ func _abilities(tick: int, t: EnemyActor, dist: float) -> bool:
 			if key != "":
 				use_slot(key, "boulder hurl at a %s" % arch)
 				return true
-	if player.current_growth_stage() >= 4:
+	if _world_rules():
 		key = _rotation_slot(tick)
 		if key != "":
 			use_slot(key, "rotation: %s" % str(c.loadout.get(key, "")))
@@ -901,8 +915,7 @@ func _used_tick(key: String) -> int:
 
 
 ## P39: the slotted ability the rules have not used for ROTATION_IDLE_TICKS, the longest unused first,
-## that nothing refuses now (the heal, Stone Skin and Titan Surge keep their own rules; a charge is left
-## out); "" when none.
+## that nothing refuses now (the heal keeps its own rule; a charge is left out); "" when none.
 func _rotation_slot(tick: int) -> String:
 	var best := ""
 	var best_tick := 1 << 40
@@ -911,7 +924,7 @@ func _rotation_slot(tick: int) -> String:
 		if id == "":
 			continue
 		var own_rule := false
-		for own: String in [MEND, STONE_SKIN, SURGE]:
+		for own: String in [MEND]:
 			if id == own or evolves_from_chain(id, own):
 				own_rule = true
 		var def := GameData.get_action(id)

@@ -453,6 +453,9 @@ func test_the_world_expert_answers_only_blows_that_can_land_and_strikes_between_
 	bot.combat._plan_reaction(Sim.tick, Sim.tick + 40, GameData.get_action("ability.archer_shot"), archer, "test")
 	assert_true(bool(bot.combat._reactions[-1].get("light_shot", false)), "an arrow is a light shot")
 	assert_false(bot.combat.defend_busy(Sim.tick), "it holds no blow off")
+	bot.combat._plan_reaction(Sim.tick, Sim.tick + 40, GameData.get_action("ability.mage_slow_bolt"), archer, "test")
+	assert_false(bool(bot.combat._reactions[-1].get("light_shot", false)),
+		"a mage's slowing bolt is no light shot (iteration 2: slowed while striking, the experts died at the Raiders' Hollow)")
 	bot.combat._plan_reaction(Sim.tick, Sim.tick + 40, GameData.get_action("ability.ballista_bolt"), archer, "test")
 	assert_false(bool(bot.combat._reactions[-1].get("light_shot", false)), "a ballista bolt is no light shot")
 	assert_true(bot.combat.defend_busy(Sim.tick) or Sim.tick + 40 - 10 - Sim.tick > 20, "a bolt is answered as before")
@@ -483,8 +486,13 @@ func test_every_slotted_ability_takes_its_turn_from_stage_4() -> void:
 	var key := c._rotation_slot(Sim.tick)
 	assert_true(key != "", "a slotted ability is ready for its turn (loadout %s)" % [p.controller.loadout])
 	var id := str(p.controller.loadout.get(key, ""))
-	for own: String in [BotCombat.MEND, BotCombat.STONE_SKIN, BotCombat.SURGE]:
-		assert_false(id == own or BotCombat.evolves_from_chain(id, own), "not one with its own rule: " + id)
+	assert_false(id == BotCombat.MEND or BotCombat.evolves_from_chain(id, BotCombat.MEND), "not the heal (its own rule): " + id)
+	assert_true(c._world_rules(), "the rotation's rules hold from stage 4")
+	p.set_profile(_profile(3))
+	await step_ticks(1)
+	assert_false(c._world_rules(), "at stage 3 outside the world (the Valley) they do not: P17a's rules")
+	p.set_profile(_profile(4))
+	await step_ticks(1)
 	assert_eq(c.slot_reason(key), "", "nothing refuses it")
 	c._next_ability_tick = 0
 	c._last_used.clear()
@@ -557,8 +565,18 @@ func test_the_giant_draws_the_matriarch_to_a_brazier() -> void:
 	assert_true(WorldBot._flat_dist(p.global_position, spot) < WorldBot.LURE_ARRIVE_M + 0.5, "without leaving the spot")
 	assert_true(int(bot._lure[WorldBot.DEN_BRAZIERS[0]].until) > Sim.tick, "she did not come: that brazier is left for now")
 	assert_eq(str(bot._lure_spot(Sim.tick, m).get("id", "")), WorldBot.DEN_BRAZIERS[1], "the next one nearest her")
+	# the slay keeps the last brazier standing (iteration 2): with all three nests burned the back wall opens
+	# and she flees at 60 % - iteration 1's lure turned both conqueror novices' slays into drive-outs
 	b2.destroyed = true
-	assert_true(bot._lure_spot(Sim.tick, m).is_empty(), "no standing brazier left: no lure")
+	assert_eq(bot._standing_braziers(), 1, "one brazier left")
+	assert_true(bot._lure_spot(Sim.tick, m).is_empty(), "the last one standing: no lure")
+	m.global_position = b1.global_position + Vector3(2, 0, 0)
+	await step_ticks(1)
+	bot.task = {"kind": "matriarch", "resolution": "slay"}
+	bot._act_matriarch(Sim.tick, false)
+	assert_true(bot.task.get("target") != b1, "nor is it broken while she stands beside it")
+	m.global_position = Vector3(0, 0.05, -30)
+	await step_ticks(1)
 	b2.destroyed = false
 	m.p34_ignite(8.0, "")
 	await step_ticks(1)
