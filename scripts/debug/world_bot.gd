@@ -109,8 +109,10 @@ const FIGHT_OWNERS := {"matriarch": "world.marker.troll_den", "battle": "world.m
 	"duel": "world.marker.moot_ring"}
 const FIGHT_OWNER_RADIUS_M := 120.0
 ## An engaged arena's leash: the giant turns back once it stands this share of the disengage margin
-## outside the arena's floor.
+## outside the arena's floor, and walks until within the second share (a dodge's drift does not flip
+## it on and off at one line).
 const ARENA_LEASH_SHARE := 0.4
+const ARENA_LEASH_BACK_SHARE := 0.25
 ## Ranged blows at an enemy or engine above reach: given up after this long without hurting it, then
 ## ignored for this long.
 const RANGED_GIVE_UP_S := 8.0
@@ -1212,9 +1214,12 @@ func _act(tick: int, defending: bool) -> void:
 
 ## A boss arena's disengage rule (P34) resets the attempt - the boss at full health - when the giant
 ## stays beyond the floor by the arena's margin (20 m) for 5 s. A fight drifts (a chase, a knock-back,
-## Harrok's charges): while an arena is engaged and the giant stands more than ARENA_LEASH_SHARE of
-## that margin outside its floor, it walks back toward the floor's centre (the boss follows) instead of
-## fighting on. True while it does.
+## Harrok's charges, the dodges away from his blows): while an arena is engaged and the giant stands
+## more than ARENA_LEASH_SHARE of that margin outside its floor, it walks back toward the floor's centre
+## (the boss follows) until within ARENA_LEASH_BACK_SHARE, instead of fighting on. Each walk back is
+## its own for the stuck watch: one that ends got back in, so the next does not inherit its time (the
+## Moot's duel drifts out through the gate again and again, each walk back to the same line). True
+## while it walks.
 func _arena_leash(tick: int) -> bool:
 	if tick < combat.dodge_steer_until():
 		return false
@@ -1222,12 +1227,14 @@ func _arena_leash(tick: int) -> bool:
 		var a := n as BossArena
 		if a == null or not a.is_inside_tree() or a.state != BossArena.State.ENGAGED:
 			continue
-		if a.outside_m(player.global_position) <= a.disengage_margin_m * ARENA_LEASH_SHARE:
+		var out := a.outside_m(player.global_position)
+		if out <= a.disengage_margin_m * (ARENA_LEASH_BACK_SHARE if _leashed else ARENA_LEASH_SHARE):
 			continue
 		mode = "traverse"
 		if not _leashed:
 			_leashed = true
-			run.metrics.note(tick, "back into %s's arena (%.0f m outside)" % [a.boss_id, a.outside_m(player.global_position)])
+			_reset_stuck()
+			run.metrics.note(tick, "back into %s's arena (%.0f m outside)" % [a.boss_id, out])
 		_act_go(tick, a.global_position, 4.0)
 		return true
 	_leashed = false
