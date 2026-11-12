@@ -15,7 +15,7 @@ const WIDGETS := [
 	"res://ui/hud/xp_bar.gd",            # P12  bottom-left, (16..340, -166..-152), "Lv 3  120 / 200 XP"
 	"res://ui/hud/ability_notice.gd",    # P12  top-centre, (-260..260, 162..200) (P27; P16 132..170; was -250..-212 from the bottom); "New ability: Runic Bolt [6]", out of combat
 	"res://ui/hud/boss_bar.gd",          # P11a top-centre, (-270..270, 44..88) (P27: under the compass; P16 14..58, was -320..320); Hud hides its target frame for bosses
-	"res://ui/hud/quest_tracker.gd",     # P13  top-right, (-356..-16, 14..132)
+	"res://ui/hud/quest_tracker.gd",     # P13  top-right, (-356..-16, 14..132; P39f: from 14 down as tall as its lines, at most max_height())
 	"res://ui/hud/tutorial_prompt.gd",   # P13  left-centre, (16..396, -70..70 around vertical centre)
 	# M6-M9 (pre-declared by P20, plan M6-M9 §2.14; below the two edge overlays):
 	"res://ui/hud/compass.gd",           # P27  top-centre, (-270..270, 4..34) (P39f; P27 4..28; the plan's -300..300 met the tracker at 1280 px)

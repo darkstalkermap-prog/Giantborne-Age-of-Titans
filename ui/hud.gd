@@ -29,7 +29,8 @@ extends Control
 ##   and no outline in three sizes, nothing clipped, absolute z layers (the HUD itself on
 ##   HudKit.Z_BACK, so whatever its widgets add without a layer of their own joins the rectangles) -
 ##   so a view's HUD costs one batch of rectangles and one per text size, not about 120 draw calls.
-## - The compass sits at the top centre (4..28), so the target frame and the boss bar sit 30 px lower
+## - The compass sits at the top centre (4..28; P39f: 4..34, its marks on a row of their own above the letters), so
+##   the target frame and the boss bar sit 30 px lower
 ##   (44..104; 94..154 under the bar) and the ability notice at 162..200.
 ## - The lock line shows PlayerTargeting.lock_label() (P30): "Pike Regiment (8)" for a formation, a
 ##   drawn flag before "Banner of the Toll-Riders" for its banner (the label's "⚑" is not in the

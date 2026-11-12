@@ -889,7 +889,7 @@ func _draw_entry(e: Dictionary) -> void:
 ## another label or any mark (a place's icon, the pin, the objective, the giant's arrow) and none is cut by the
 ## view's edge: each takes the first of its candidate spots that is free (a place's: above its icon, below, to
 ## the right, to the left, then the four corners; a region's: its centre, then half-block steps up, down and
-## aside), in
+## aside, then a grid over the region's own ground, nearest its centre first), in
 ## order of importance - the place in focus, the regions, the settlements, the sealed places, the rest - and a
 ## label with no free spot is left out (the panel names the place in focus; zooming in makes room). The place in
 ## focus always shows, kept inside the view.

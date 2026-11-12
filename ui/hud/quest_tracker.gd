@@ -1,5 +1,5 @@
 extends HudWidget
-## The quest tracker (plan §2.10.1, §3.15 design 6; P13): top-right, (-356..-16, 14..132). The
+## The quest tracker (plan §2.10.1, §3.15 design 6; P13): top-right, (-356..-16, 14..132; P39f: see below). The
 ## main quest's title and current objective, then one side quest - the first of Quests'
 ## side-quest order: the active village branch, otherwise quest.village, otherwise another (the
 ## Hollow tutorial). For a few seconds after quest or dialogue XP it adds "+110 XP - Prototype
