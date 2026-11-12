@@ -2790,7 +2790,10 @@ func target_out_of_reach(my_position: Vector3, target_pos: Vector3, band: Vector
 #     It never takes a target its blows cannot damage (_p30_out_of_reach): a civilian in shelter (inside,
 #     out of the world's physics), a protected NPC (Reeve Tamsin refuses every blow), or one it gave up -
 #     fixed on an NPC or prop for P30_GIVE_UP_S without damaging it, it leaves it for P30_GIVEN_UP_S
-#     (_p30_futile; a raider stood at the mill's shelter for the rest of a raid).
+#     (_p30_futile; a raider stood at the mill's shelter for the rest of a raid). The count runs only while
+#     the provider keeps picking that NPC or prop: the giant in between, or over P30_FIX_GAP_S with nothing
+#     in sight or asleep, starts it again (W23 fix-up: a raider that fought the giant for 12 s gave its
+#     house up the moment he stepped off).
 
 ## At this stage or more, an outmatched soldier that finds no formation to join flees (plan §5.14:
 ## at stage 4 single humans flee; smaller giants keep P04's lines).
@@ -2799,6 +2802,10 @@ const JOIN_OR_FLEE_STAGE := 4
 ## damaging it (_p30_futile), and takes it again only after P30_GIVEN_UP_S.
 const P30_GIVE_UP_S := 12.0
 const P30_GIVEN_UP_S := 60.0
+## W23 fix-up: the give-up count starts again when the provider has not picked the target it is fixed on
+## for longer than this (nothing in sight, or a dormant unit): an awake unit senses at least once a
+## second (AI LOD tier 1), a dormant one never.
+const P30_FIX_GAP_S := 2.0
 ## Arm poses (yaw, pitch in degrees: weapon arm, off arm) of a braced member, by role: the pike
 ## levelled at the giant's legs (the pike lies along the weapon arm), the shield raised, a line's
 ## blades low. The crowd renderer's brace meshes are built from the same table
@@ -2819,10 +2826,12 @@ var _p30_last_formation: Formation = null
 var _p30_incoming: HitEvent = null
 var _p30_target_tick := -1
 var _p30_target_ref: WeakRef = null
-## W23 (P39f): the provider target this unit is fixed on ("" = none) and the tick it fixed on it or last
-## damaged it; the targets it gave up (entity id -> the tick it may take them again).
+## W23 (P39f): the provider target this unit is fixed on ("" = none), the tick it fixed on it or last
+## damaged it and the tick the provider last picked it; the targets it gave up (entity id -> the tick it
+## may take them again).
 var _p30_fix_id := ""
 var _p30_fix_tick := -1
+var _p30_fix_seen_tick := -1
 var _p30_given_up := {}
 var _p30_extents := {}   # entity id -> Vector3 (half extents of its hurtboxes in its own frame)
 ## M7 gate: the band a running band_pulse strikes, taken when its windup began - the band its
@@ -3151,6 +3160,8 @@ func _p30_target() -> CombatEntity:
 		pick = _p30_nearest_target(t)
 		if pick != null and _p30_futile(pick):
 			pick = _p30_nearest_target(t)   # given up: the next one, if any
+	if pick != null and pick == player:
+		_p30_fix_id = ""   # W23 fix-up: the giant ends the fix as another target does (the give-up count, _p30_futile)
 	if pick != cached and cached != null and entity != null:
 		Sim.release_all_tokens(entity.entity_id)
 		if brain != null:
@@ -3231,12 +3242,19 @@ func _p30_out_of_reach(e: CombatEntity) -> bool:
 
 
 ## W23 (P39f): the provider's give-up rule. True when this unit has been fixed on `e` (the NPC or prop the
-## provider picks) for P30_GIVE_UP_S without damaging it: `e` is given up for P30_GIVEN_UP_S. Picking
-## another target, or a blow that damages this one (_p30_on_hit_landed), starts the count again.
+## provider picks) for P30_GIVE_UP_S without damaging it: `e` is given up for P30_GIVEN_UP_S. The count
+## runs only while the provider keeps picking `e`: picking another target (another NPC or prop, or the
+## giant: _p30_target ends the fix), no pick of `e` for over P30_FIX_GAP_S (nothing in sight that long, or
+## a dormant unit, which senses nothing) or a blow that damages `e` (_p30_on_hit_landed) starts it again.
+## A shorter spell with nothing in sight (a sight line passing a post) does not, so a target the unit keeps
+## losing and finding is still given up. W23 fix-up: before, a fight with the giant, a long spell with
+## nothing in sight or a sleep counted as time spent on `e`, and the unit gave `e` up the moment it saw it.
 func _p30_futile(e: CombatEntity) -> bool:
 	if entity != null and not entity.hit_landed.is_connected(_p30_on_hit_landed):
 		entity.hit_landed.connect(_p30_on_hit_landed)
-	if e.entity_id != _p30_fix_id:
+	var gap := Sim.tick - _p30_fix_seen_tick
+	_p30_fix_seen_tick = Sim.tick
+	if e.entity_id != _p30_fix_id or gap > int(roundf(P30_FIX_GAP_S * Sim.TICK_RATE)):
 		_p30_fix_id = e.entity_id
 		_p30_fix_tick = Sim.tick
 		return false
