@@ -461,5 +461,7 @@ On a machine with a GPU, also run the container's checks with their strict forms
 (Node and Playwright installed; the release built with `tools/build_web.sh`): `node tools/web/audio_check.mjs
 --strict`, `node tools/web/stream_check.mjs --world --audio --strict` and `node tools/web/world_check.mjs
 --strict` (the plan's music criterion - no silent run over 50 ms - is NOT RUN until then;
-`docs/plans/FOLLOWUPS.md`). Write the results under the session in `docs/USABILITY_RESULTS.md` and the frame
+`docs/plans/FOLLOWUPS.md`). These strict runs are the ones that count: the container's default verdicts are
+indicative only (they pass holes placed on the main thread's stalls - since W23 also a hole the recording's end
+cut short - and under load they can fail on holes the placement misses). Write the results under the session in `docs/USABILITY_RESULTS.md` and the frame
 and load times beside the reference-PC table in `docs/PERFORMANCE.md`.

@@ -52,7 +52,12 @@
 // Needs Playwright (PLAYWRIGHT_MODULE, NODE_PATH or /opt/node-tools/node_modules) and its Chromium
 // (PLAYWRIGHT_BROWSERS_PATH, default /opt/pw-browsers when that folder exists). Software WebGL
 // (SwiftShader) is all a GPU-less machine has: its frame times are the CPU's rasterising, indicative only,
-// and the no-threads build's mixer waits for every slow frame (the music's holes).
+// and the no-threads build's mixer waits for every slow frame (the music's holes). There the default verdict is
+// indicative and load-dependent: it passes the holes placed on the main thread's stalls (and, since W23, a hole
+// the recording's end cut short - audio_recorder.mjs's holes_cut_at_disarm), but with the machine starved the
+// browser's audio clock runs unevenly against the page's, so holes can land outside the stalls and fail it (a
+// run at a load average of 8-9 did: docs/systems/P39f.md, "Part web"). The run that counts for the gate is
+// --strict on a machine with a GPU (docs/USABILITY_SCRIPT.md §11).
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
