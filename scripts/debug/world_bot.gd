@@ -716,6 +716,24 @@ func _fight_target() -> EnemyActor:
 	return null
 
 
+## A chase given up on a formation's member gives the whole formation up for as long: its braced wall
+## takes nothing off from the front, and with the Moot battery's five shields given up one at a time
+## (CHASE_GIVE_UP_S each, so the first was back before the last was done) the conqueror stood before
+## the battery until the Moot's watchdog instead of going on to the ring.
+func _chase_futile(t: EnemyActor, tick: int) -> bool:
+	if not super(t, tick):
+		return false
+	var f: Variant = t.get("formation")
+	if _in_world() and f is Formation and t.entity != null:
+		var until := int(_ignored.get(t.entity.entity_id, tick))
+		var group: Array[EnemyActor] = (f as Formation).members.duplicate()
+		group.append((f as Formation).banner)
+		for m in group:
+			if m != null and is_instance_valid(m) and m.entity != null:
+				_ignored[m.entity.entity_id] = maxi(int(_ignored.get(m.entity.entity_id, -1)), until)
+	return true
+
+
 func _ranged_ready() -> bool:
 	return combat.ready_slot(BotCombat.RUNIC_BOLT) != "" or combat.ready_slot(BotCombat.BOULDER_HURL) != ""
 
