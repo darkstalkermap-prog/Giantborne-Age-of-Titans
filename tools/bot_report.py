@@ -443,8 +443,8 @@ def world_outcomes(rows):
 
 
 def world_bosses(rows):
-    out = ["| Run | Boss | Attempts | Engaged | Disengaged | Yields | Phases | Outcome | Deaths | Damage taken in the fight (by source) |",
-           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    out = ["| Run | Boss | Attempts | Engaged | Disengaged | Yields | Phases | Lowest health per attempt | Outcome | Deaths | Damage taken in the fight (by source) |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     names = {"world.greywood.troll_matriarch": "matriarch", "world.stonehold.harrok": "harrok", "battle.iron_regiment": "battle"}
     for r in rows:
         for bid, b in sorted(r["w"].get("bosses", {}).items()):
@@ -452,11 +452,15 @@ def world_bosses(rows):
             total = sum(by.values())
             src = ", ".join("%s %d (%.0f %%)" % (k, v, 100.0 * v / total) for k, v in sorted(by.items(), key=lambda kv: -kv[1])[:4]) if total else "-"
             deaths = sum(1 for d in r["deaths"] if boss_of_death(r, d) == names.get(bid, bid))
-            out.append("| %s | %s | %s | %s | %s | %s | %s | %s | %d | %s |" % (
+            # P39: each closed attempt's lowest health share (a battle's: its aggregate's), then the open one's
+            lows = ["%.0f %%" % (100.0 * float(x)) for x in b.get("lows", [])]
+            if b.get("open") and "low" in b:
+                lows.append("%.0f %% (open)" % (100.0 * float(b["low"])))
+            out.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %d | %s |" % (
                 r["name"], bid, b.get("attempts", 0), b.get("engaged", 0),
                 ", ".join(str(d[1]) for d in b.get("disengaged", [])) or "-", b.get("yields", 0),
-                ", ".join(str(p[1]) for p in b.get("phases", [])) or "-", b.get("outcome") or ("defeated" if b.get("defeated") else "-"),
-                deaths, src))
+                ", ".join(str(p[1]) for p in b.get("phases", [])) or "-", ", ".join(lows) or "-",
+                b.get("outcome") or ("defeated" if b.get("defeated") else "-"), deaths, src))
     return "\n".join(out)
 
 
