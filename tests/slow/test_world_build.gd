@@ -21,6 +21,8 @@ const INTERIOR := 896.0
 const BAND_M := 8.0
 const RULE_DEG := 35.0 + 0.05
 const CLIFF_DEG := 45.0
+## W23 (P39f): the scattered scenery's meshes (the regions' scenery rules).
+const SCENERY_KEYS := ["tree_pine", "tree_broadleaf", "sapling", "bush", "heather", "log", "rock", "reed"]
 ## The walkable notches in the south rim (the Kingsgate shelf, the Broken Stair): world.json's rim.
 const NOTCHES := [Rect2(-335, 892, 70, 53), Rect2(-62, 892, 44, 50)]
 
@@ -166,6 +168,87 @@ func test_the_world_scene_and_the_chunk_rebuild() -> void:
 	assert_eq(builder.call("drawn_in", Rect2(-31, -527, 62, 101)), Rect2(-25, -521, 50, 89),
 		"the Giant's Stair's rectangle drawn in by 6 m")
 	assert_eq(builder.call("drawn_in", Rect2(0, 0, 10, 40)), Rect2(3, 6, 4, 28), "a 10 m gate keeps its middle 4 m")
+
+
+## W23 (P39f; FOLLOWUPS "From the M8 gate review"): the builder's no-scenery and road grids take their marks
+## (tools/builders/world.gd's _set_cell wrote into a converted copy, so the "road" grid stayed empty and "clear"
+## held only the water and the rim) and the shipped chunks keep to them: no scenery instance and no trunk solid
+## stands on a cell the builder keeps clear (roads and rides with their margin, pads, structures, places, the
+## shrines' 22 m clearings; reeds keep to the water by their own rule), no trunk within 22 m of a shrine's stone,
+## and every 16 m surface cell whose centre lies on a carved road is hard (footsteps) unless it is under water.
+func test_no_scenery_stands_where_the_builder_keeps_the_ground_clear() -> void:
+	_load_chunks()
+	var wb := load("res://tools/builders/world.gd")
+	var layout := WorldLayout.load_all()
+	var feats := WorldFeatures.new(layout.world)
+	wb.call("_gate_rects", feats, layout)
+	var field := feats.make_field()
+	feats.soften_borders(field)
+	var walk := func(x: float, z: float) -> bool: return feats.border_walkable(field, x, z)
+	field.relax_borders(feats.field_first(), int(feats.chunk_m / feats.spacing), feats.grid,
+		HeightField.BORDER_BAND_M, HeightField.BORDER_MAX_DEG, walk)
+	field.quantise_all()
+	var g: Dictionary = wb.call("_grids", feats, field, layout, {"field": field, "feats": feats, "mat": StandardMaterial3D.new(),
+		"kit": null})
+	var road_cells := 0
+	for b in (g.road as PackedByteArray):
+		road_cells += int(b)
+	assert_true(road_cells > 1000, "the road grid holds the carved roads (%d cells)" % road_cells)
+	var shrine := Vector2.INF
+	for it: Dictionary in layout.items:
+		if str(it._section) == "shrines" and str(it.get("id", "")).ends_with("greywood"):
+			shrine = WorldLayout.pos2(it)
+	assert_true(shrine.is_finite() and bool(wb.call("cell_set", g, "clear", shrine + Vector2(15, 0))),
+		"a mark reads back: the Greywood shrine's clearing is clear 15 m from its stone")
+	var near_water := {}
+	for region_short: String in WorldLayout.REGION_FILES:
+		for rule: Dictionary in (layout.regions.get(region_short, {}) as Dictionary).get("scenery", []):
+			if float(rule.get("near_water_m", 0.0)) > 0.0:
+				near_water[str(rule.mesh)] = true
+	var shrines: Array = []
+	for it: Dictionary in layout.items:
+		if str(it._section) == "shrines" and it.has("pos"):
+			shrines.append(WorldLayout.pos2(it))
+	var checked := 0
+	var trunks := 0
+	var bad: Array = []
+	var soft_roads: Array = []
+	for c: Vector2i in _chunks:
+		var d: ChunkData = _chunks[c]
+		for path: Variant in d.scenery:
+			var key := str(path).get_file().get_basename()
+			if not key in SCENERY_KEYS or near_water.has(key):
+				continue   # a settlement's merged buildings; reeds keep to the water by their own rule
+			var buf: PackedFloat32Array = d.scenery[path]
+			for i in buf.size() / ChunkData.SCENERY_STRIDE:
+				var p := Vector2(d.origin.x + buf[i * 12 + 3], d.origin.z + buf[i * 12 + 11])
+				checked += 1
+				if bool(wb.call("cell_set", g, "clear", p)) and bad.size() < 20:
+					bad.append("%s %s at %s" % [d.chunk_id, key, p.snappedf(0.1)])
+		for i in range(0, d.solids.size(), ChunkData.SOLID_STRIDE):
+			if int(d.solids[i]) != ChunkData.SOLID_CYLINDER or absf(d.solids[i + 6]) > 1e-4 \
+					or not (is_equal_approx(d.solids[i + 4], 1.0) or is_equal_approx(d.solids[i + 4], 1.2)):
+				continue
+			trunks += 1
+			var p := Vector2(d.origin.x + d.solids[i + 1], d.origin.z + d.solids[i + 3])
+			if bool(wb.call("cell_set", g, "clear", p)) and bad.size() < 20:
+				bad.append("%s trunk at %s%s" % [d.chunk_id, p.snappedf(0.1), " (on a road)" if bool(wb.call("cell_set", g, "road", p)) else ""])
+			for sp: Vector2 in shrines:
+				if p.distance_to(sp) <= 22.0 and bad.size() < 20:
+					bad.append("%s trunk %.1f m from the shrine at %s" % [d.chunk_id, p.distance_to(sp), sp])
+		var n := ChunkData.SURFACE_CELLS
+		var cell_m := float(GameData.get_record(LEVEL).world.chunk_size_m) / n
+		for j in n:
+			for k in n:
+				var x := d.origin.x + (k + 0.5) * cell_m
+				var z := d.origin.z + (j + 0.5) * cell_m
+				if bool(wb.call("cell_set", g, "road", Vector2(x, z))) and is_nan(feats.water_surface_at(field, x, z)) \
+						and d.surface_cells[j * n + k] != ChunkData.SURFACE_HARD and soft_roads.size() < 20:
+					soft_roads.append("%s (%.0f, %.0f)" % [d.chunk_id, x, z])
+	print("    test_world_build: %d scenery instances and %d trunks checked against %d road cells" % [checked, trunks, road_cells])
+	assert_true(checked > 5000 and trunks > 1500, "the chunks' scenery (%d) and trunks (%d)" % [checked, trunks])
+	assert_eq(bad, [], "no scenery or trunk stands where the builder keeps the ground clear")
+	assert_eq(soft_roads, [], "every carved road's surface cell is hard")
 
 
 static func _have(tool: String) -> bool:

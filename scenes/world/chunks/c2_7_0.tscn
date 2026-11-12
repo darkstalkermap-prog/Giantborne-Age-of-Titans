@@ -55,19 +55,19 @@ world_id = "world.crownmarch.kingsgate_statue"
 [node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_crownmarch_kingsgate_statue"]
 enabled = false
 start_position = Vector3(0, 0.3220005, 5)
-end_position = Vector3(0, 0.26187038, -5.000004)
+end_position = Vector3(0, 0.27952385, -5.000004)
 
 [node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_crownmarch_kingsgate_statue"]
 enabled = false
 navigation_layers = 2
-start_position = Vector3(0, 0.55022526, 6.5)
-end_position = Vector3(0, -0.24511051, -6.500004)
+start_position = Vector3(0, 0.53226185, 6.5)
+end_position = Vector3(0, -0.3732481, -6.500004)
 
 [node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_crownmarch_kingsgate_statue"]
 enabled = false
 navigation_layers = 16
-start_position = Vector3(0, 1.0410767, 12)
-end_position = Vector3(0, -0.78106785, -12.000008)
+start_position = Vector3(0, 0.59329796, 12)
+end_position = Vector3(0, -0.96464443, -12.000008)
 
 [node name="world_crownmarch_shelf_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 190, 46, 154)

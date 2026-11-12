@@ -415,3 +415,92 @@ func test_the_shrines_wait_for_the_beacon_and_the_oaths() -> void:
 		else:
 			assert_eq(str(c.flag), "world.kingsgate.lit", "Kingsgate waits for its beacon")
 		assert_false((GameData.get_record(id).get("growth_conditions_text", []) as Array).is_empty(), "%s says what it waits for" % id)
+
+
+## W23 (P39f; plan §5.10, FOLLOWUPS "From P37"): after the raid on Millford the reeve's words change - its
+## outcome flags (event.millford_raid's `fell` and `defended`) open her own greeting, a burned Millford first
+## (two houses stay burned), and both lead on to her troubles; hostile, she still sends the giant away.
+func test_the_reeve_speaks_of_the_raid() -> void:
+	var rec := GameData.get_record("dialogue.reeve_tamsin")
+	var raid := GameData.get_record("event.millford_raid")
+	var outcome_flags := {}
+	for outcome: String in ["fell", "defended"]:
+		for f: String in (((raid.get("outcomes", {}) as Dictionary).get(outcome, {}) as Dictionary).get("set_flags", {}) as Dictionary):
+			outcome_flags[outcome] = f
+	assert_eq(outcome_flags, {"fell": "world.millford.burned", "defended": "world.millford.defended"},
+		"the raid's outcomes write the flags her greeting reads")
+	var start := func(flags: Dictionary) -> String:
+		var ctx := QuestConditions.empty_context()
+		ctx.flags = flags
+		return DialogueSession.start_node(rec, ctx)
+	assert_eq(start.call({}), "greet", "before any raid: her greeting")
+	assert_eq(start.call({"world.millford.burned": true}), "burned", "the raid fell: the houses lost")
+	assert_eq(start.call({"world.millford.defended": true}), "defended", "the raid was beaten off: her thanks")
+	assert_eq(start.call({"world.millford.defended": true, "world.millford.burned": true}), "burned",
+		"defended once and burned the second time: the burned houses come first")
+	assert_eq(start.call({"world.millford.defended": true, "quest.millrace.done": true}), "defended",
+		"the raid is newer news than the mill")
+	assert_eq(start.call({"world.millford.burned": true, "faction.millford.hostile": true}), "hostile",
+		"hostile, she still sends the giant away")
+	assert_eq(start.call({"world.millford.burned": true, "faction.millford.hostile": true, "faction.millford.reconciled": true}),
+		"burned", "reconciled, the raid again")
+	for id: String in ["burned", "defended"]:
+		var node := DialogueSession.node_record(rec, id)
+		assert_true(str(node.get("text", "")).length() > 40, "%s has its words" % id)
+		var nexts: Array = (node.get("choices", []) as Array).map(func(c: Dictionary) -> String: return str(c.get("next", "")))
+		assert_true(nexts.has("troubles") and nexts.has(""), "%s leads on to her troubles and lets the giant go (%s)" % [id, nexts])
+
+
+## W23 (P39f; FOLLOWUPS "From P36"): the toll fort's watchtower shows its archers. Its top is an open lookout -
+## a deck whose top is the footing solid's, where the archers' posts stand, a railing at most 1 m high round its
+## edge and the roof on corner posts - so no part of the tower covers either archer above the railing (the old
+## closed cabin, 1.4 m tall on a deck 0.6 m over the footing, hid them to the shoulders).
+func test_the_toll_watchtower_shows_its_archers() -> void:
+	var tower_kind := load("res://tools/world/kinds/tower.gd")
+	var table := WorldFeatures.load_json(WorldLayout.DATA_DIR.path_join("crownmarch.json"))
+	var tower: Dictionary = {}
+	for el: Dictionary in table.get("elements", []):
+		if str(el.get("id", "")) == "world.crownmarch.toll_watchtower":
+			tower = el
+	assert_eq(str(tower.get("style", "")), "watch", "the toll fort's watchtower")
+	if tower.is_empty():
+		return
+	var at := WorldLayout.pos2(tower)
+	var h := float((tower.size as Array)[1])
+	var solids: Array = tower_kind.call("solids", tower, {})
+	var top := -INF
+	for sd: Dictionary in solids:
+		top = maxf(top, (sd.center as Vector3).y + (sd.size as Vector3).y * 0.5)
+	assert_near(top, h, 0.01, "its footing solid's top is the deck (%.2f m)" % top)
+	var archer := GameData.get_record("enemy.archer")
+	var body_h := float(archer.get("height_m", 1.8))
+	var body_r := float(archer.get("capsule_radius_m", 0.35))
+	var posts: Array = []
+	for m: Dictionary in table.get("markers", []):
+		if str(m.get("id", "")).begins_with("world.marker.toll_tower_"):
+			posts.append(m)
+	assert_eq(posts.size(), 2, "its two archers' posts")
+	var parts: Array = tower_kind.call("parts", tower, {})
+	var deck_top := -INF
+	for p: Dictionary in parts:
+		var pos: Vector3 = p.pos
+		var size: Vector3 = p.size
+		if str(p.shape) == "box" and size.x > 4.0 and size.z > 4.0 and pos.y + size.y <= h + 0.01:
+			deck_top = maxf(deck_top, pos.y + size.y)
+	assert_near(deck_top, h, 0.01, "the deck's top is where the archers stand, not above their feet (%.2f m)" % deck_top)
+	for m: Dictionary in posts:
+		var local := WorldLayout.pos2(m) - at
+		var feet := float(m.get("y_off", 0.0))
+		assert_near(feet, h, 0.1, "%s stands on the deck" % m.id)
+		var rail: Variant = tower_kind.get("WATCH_RAIL_TOP")
+		var shown_from := feet + (float(rail) if rail != null else 1.0)
+		var hidden: Array = []
+		for p: Dictionary in parts:
+			var pos: Vector3 = p.pos
+			var size: Vector3 = p.size
+			var lo := Vector3(pos.x - size.x * 0.5, pos.y, pos.z - size.z * 0.5)
+			var hi := Vector3(pos.x + size.x * 0.5, pos.y + size.y, pos.z + size.z * 0.5)
+			var across := local.x + body_r > lo.x and local.x - body_r < hi.x and local.y + body_r > lo.z and local.y - body_r < hi.z
+			if across and hi.y > shown_from + 0.01 and lo.y < feet + body_h:
+				hidden.append("%s %s from %.2f to %.2f m" % [p.shape, size, lo.y, hi.y])
+		assert_eq(hidden, [], "no part of the tower covers %s above its railing (%.2f m)" % [m.id, shown_from])

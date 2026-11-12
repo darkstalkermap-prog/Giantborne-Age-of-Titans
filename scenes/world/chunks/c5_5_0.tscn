@@ -273,8 +273,8 @@ mesh = SubResource("ArrayMesh_6")
 
 [node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_crownmarch_toll_gate"]
 enabled = false
-start_position = Vector3(0, 0.10099983, 4)
-end_position = Vector3(0, 0.30739784, -4)
+start_position = Vector3(0, 0.0798645, 4)
+end_position = Vector3(0, 0.11377144, -4)
 
 [node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_crownmarch_toll_gate"]
 enabled = false
@@ -285,8 +285,8 @@ end_position = Vector3(0, -0.09900093, -5)
 [node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_crownmarch_toll_gate"]
 enabled = false
 navigation_layers = 16
-start_position = Vector3(0, -0.24900055, 8)
-end_position = Vector3(0, -0.24900055, -11.5)
+start_position = Vector3(0, -0.2739668, 8)
+end_position = Vector3(0, -0.24900055, -8)
 
 [node name="world_crownmarch_toll_ballista" type="Node3D" parent="Props"]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 219, 22.23, 101.5)
