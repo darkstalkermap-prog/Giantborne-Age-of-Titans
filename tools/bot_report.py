@@ -10,8 +10,9 @@ named): the Valley's summary runs segments deaths growth abilities perf stuck st
 (runs whose result has "world_bot") world_summary world_runs world_segments world_outcomes world_bosses
 world_travel world_streaming world_formations world_siege world_music world_deaths world_stuck, and P39's
 world_growth (per run: plan §6.4's growth, readability, siege and ability measures), world_targets (plan
-§6.4's targets, met or missed, for a world_balance batch) and world_perf (plan §6.3: the CPU per tick per
-region, from the probe's sections that WorldMetrics files under the giant's region).
+§6.4's targets, met or missed, for a world_balance batch), world_perf (plan §6.3: the CPU per tick per
+region, from the probe's sections that WorldMetrics files under the giant's region) and world_states (plan
+§6.5: the AI-state histogram at stages 4-6 per archetype and behaviour).
 Every Valley number is read from the runs' AUTOPILOT_RESULT files (<run>.json) except two estimates,
 both marked where they are printed:
 - a segment's damage as a share of maximum health uses the giant's maximum health at the segment's
@@ -601,6 +602,38 @@ def world_stuck(rows, cell=50.0):
     return "\n".join(out)
 
 
+def world_states(rows):
+    """P39 (plan §6.5: "the growth evidence at stages 4-6 (AI-state histograms per role)"): RunMetrics' AI-state
+    histogram of the world runs at stages 4-6, pooled over the novice runs (all runs when the batch has none, as
+    the Valley's states section pools the balance target): for each archetype the share of its engaged
+    seconds in each brain state, and in each behaviour (formation: a formation's members, crew: siege crews,
+    harass: riders, spread and kite: shooters keeping their range). The soldier archetype holds the formations'
+    pikemen, shieldmen and bannermen, the crews and the lone soldiers alike: world_lone splits the lone humans
+    out and world_growth the formations."""
+    states = ["Alert", "Approach", "Attack", "Recover", "Staggered", "Hold", "Reposition", "Flee", "Routed"]
+    behaviours = ["formation", "crew", "harass", "spread", "kite"]
+    out = ["| Stage | Archetype | Engaged (s, all runs) | " + " | ".join(states) + " | " +
+           " | ".join("as " + b for b in behaviours) + " |",
+           "| --- | --- | --- | " + " | ".join("---" for _ in states + behaviours) + " |"]
+    rows = [r for r in rows if r["skill"] == "novice"] or rows
+    for stage in ["4", "5", "6"]:
+        pooled = collections.defaultdict(collections.Counter)
+        for r in rows:
+            for arch, st in (r["wb"].get("ai_states") or {}).get(stage, {}).items():
+                for k, v in st.items():
+                    pooled[arch][k] += float(v)
+        for arch in sorted(pooled, key=lambda a: -pooled[a].get("engaged", 0.0)):
+            c = pooled[arch]
+            eng = c.get("engaged", 0.0)
+            if eng <= 0:
+                continue
+            cells = [("%.0f %%" % (100.0 * c.get(k, 0.0) / eng)) if c.get(k, 0.0) > 0 else "-" for k in states]
+            cells += [("%.0f %%" % (100.0 * c.get("behavior:" + b, 0.0) / eng)) if c.get("behavior:" + b, 0.0) > 0 else "-"
+                      for b in behaviours]
+            out.append("| %s | %s | %.0f | %s |" % (stage, arch, eng, " | ".join(cells)))
+    return "\n".join(out)
+
+
 def _pooled(rows, num, den):
     """Sum of world.growth[num] over sum of world.growth[den] (None when nothing was measured)."""
     n = sum(float(r["w"].get("growth", {}).get(num, 0.0)) for r in rows)
@@ -823,7 +856,7 @@ WORLD_SECTIONS = {"world_summary": world_summary, "world_runs": world_runs, "wor
                   "world_streaming": world_streaming, "world_formations": world_formations, "world_siege": world_siege,
                   "world_music": world_music, "world_deaths": world_deaths, "world_stuck": world_stuck,
                   "world_growth": world_growth, "world_lone": world_lone, "world_targets": world_targets,
-                  "world_perf": world_perf}
+                  "world_perf": world_perf, "world_states": world_states}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
