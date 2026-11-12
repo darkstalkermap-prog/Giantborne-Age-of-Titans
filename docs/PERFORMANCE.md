@@ -20,7 +20,7 @@ reference-PC commands below.
 | Navmesh files | <= 100 KB each | P10b test | Met (15-19 KB); the streamed test world's (P24b) 0.9-16 KB each |
 | Path queries (P24b) | <= 8 a tick per level (`nav_query.queries_per_tick`); chases capped at 120 m, the bot and the director at 300 m, unlimited polygons; tier-0 re-paths at least 6 ticks apart and only after the goal moved 2 m (plan §2.8) | `tests/slow/test_unreachable_chase.gd` | At most 8 re-paths in a tick (twenty asking at once served 8, 8, 4), never two of one agent closer than 6 ticks without a failure: **met** |
 | Navigation readiness (P24b) | Deterministic runs: a chunk ready one tick after its last region add; world walks with AI identical run to run (decision 13) | `tests/integration/test_nav_maps.gd`; `tests/gate/test_world_determinism.gd` | One tick in every run; two traced world walks identical (with async iterations on they part by two ticks): **met** |
-| Web `.pck` | <= 4 MB packed | P18 | **Met**: `index.pck` 2,356,808 bytes, 1,260,098 gzipped, 1,680,132 as shipped (gzip + base64) |
+| Web `.pck` | <= 4 MB packed at P18; since decision 8 the milestone's budget for the shipped pck (7.5 MB to M6, 21 MB at M7, 23 MB from M8), in parts of at most 15 MB | P18; `tools/build_web.sh` (fails over the budget since the M7 polish) | P18 **met**: `index.pck` 2,356,808 bytes, 1,260,098 gzipped, 1,680,132 as shipped (gzip + base64). The 0.8.0-m8 release **met**: 17,452,804 bytes, 12,994,508 gzipped, 17,326,012 as shipped (16.52 MB of 23 MB) in two parts of 8,663,006 ("The 0.8.0-m8 release") |
 | Streaming work (P24a) | <= 4 ms a frame, every step under about 3 ms (plan §5.3) | `--scenario=world_walk` on the test world (`tests/slow/test_world_walk.gd`); the web stream check | Desktop at 16 m/s: p50 0.9, p99 3.5-3.9 ms (up to 6.5 while another agent's runs loaded the cores), max 4.4 ms; the heaviest steps 3.2 ms (the terrain mesh) and 3.5 ms (a town part): **met** (container, indicative). Web: p99 9.2 ms walking and 17.9 ms at 16 m/s (Chromium with software WebGL on loaded shared cores; every step's mean is under 3 ms, the peaks are the main thread preempted): **not met in this container**; real browsers **NOT RUN** |
 | Loaded margin, thrash, chunks (P24a) | >= 200 m to unloaded ground at 16 m/s; 0 reloads walking a border; <= 25 loaded | the same | 254.9 m, 0 thrash, at most 15 loaded (16 m/s, 2.9 km); 20 border walks load each chunk once: **met** |
 | Static world draw calls, streamed (P24a) | <= 40 per view at web `low`, and <= 25 more for breakable houses in a settlement view (plan §5.3) | Xvfb viewpoints on the test world | At most 35 static plus the 8 breakable houses at `low` (`medium`: at most 127 with shadows): **met** on the test world; P25 and the region packages re-measure the real one |
@@ -281,6 +281,17 @@ node tools/web/stream_check.mjs --build=builds/web_m8p --world --audio --walk-st
   --autoplay=1800 --timeout-s=2400 --json=builds/stream_stonehold.json
 xvfb-run -a -s "-screen 0 640x360x24" tools/gd.sh --path . --resolution 640x360 --audio-driver Dummy \
   -s res://tests/support/world_draw_probe.gd -- --no-user-settings
+```
+
+The launcher's two start buttons (the 0.8.0-m8 release; the release build, without `XDG_DATA_HOME`):
+Play opens the title, which writes no save, and Enter there starts the Valley; one press of "Start in the
+open world" only arms it, it disarms after 6 s, and two presses start the engine with `--mode=world`,
+whose first save holds `"level": "level.world"`; 0 console errors. Each part runs in a fresh browser
+profile; `--shots=DIR` also saves the title and the open world as PNGs:
+
+```
+tools/build_web.sh
+node tools/web/world_start_check.mjs --build=builds/web --json=builds/world_start_check.json
 ```
 
 ## Container results
@@ -1205,6 +1216,35 @@ pipeline's 35 tests passed and its 441 files regenerated bit-exact; 271 suites, 
 256.5 s (238.7 s; 8 minutes: the lane's two new slow suites), gate 423.8 s (414.5 s; 50 minutes); the 120 s
 soak with 0 errors (2 fences broken, 2 loot awards, the debris pool at 10). The whole check took 17 min 6 s.
 
+### The 0.8.0-m8 release (the M8 gate and its fixes)
+
+The play link's build after the M8 gate, its fix-up rounds and the screenshot pass's lane m8v
+(`tools/build_web.sh`, preset `Web`, no test content: `pck_files.py` finds none of the 2,746 packed files
+in `scenes/test/`, `assets/test_world/` or `data/test/`; every record validates without `data/test`),
+checked in headless Chromium with SwiftShader on the container's 4 cores, which another agent's checks
+shared (indicative: software WebGL). The merge's own check (`tools/check.sh --build --slow --audio --gate`
+on 9a47f2d; the release's base, 47a2fe8, adds only that check's record, above): 271 suites, 46,563 checks,
+0 failures (default 63.3 s, slow 256.5 s, gate 423.8 s), both full builds byte for byte, the seams (64
+chunks, 112 seams), 441 audio files bit-exact, the 120 s soak with 0 errors. The release's own
+`tools/check.sh` (the default tier, with the launcher's notes, the new check tool and this record): 204
+suites, 36,577 checks, 0 failures - default 88.4 s, over its 75 s budget only under another agent's Godot
+runs on the 4 cores (load average 6-8; the merge's check took 63.3 s) -, the 120 s soak with 0 errors (2
+fences broken, 2 loot awards, the debris pool at 10), 2 min 22 s in all. The launcher's notes (lane m8p's)
+gained the trees that fade between the camera and the giant, Fort Aldmere's portcullis, which holds the
+giant in the bailey until the Iron Regiment is beaten (the one arena he cannot walk out of), and what the
+scripted runs cover (every pair of oaths in either order).
+
+| Item | Result |
+| --- | --- |
+| `index.wasm` | 37,700,666 bytes; 12,528,700 as shipped (gzip, base64), as at 0.7.0-m7 |
+| `index.pck` | 17,452,804 bytes (12,994,508 gzipped); 17,326,012 as shipped in two parts of 8,663,006 bytes (the host's cap is 15 MB a part): 16.52 MB of the M8 budget of 23 MB; the audio 9.28 MB, 57 % of its files |
+| The page's download | about 29.9 MB (the engine 12.5 MB, the pck 17.3 MB; 28.5 MB on the launcher's meter, which counts in MiB), so its "About 30 MB" holds |
+| `stream_check.mjs --world --audio` (the world's default route, no `--route`) | OK in its default form: 396.9 m in 47.4 s of game time (160.4 s of wall time; Play to the walk 47.8 s), 4 region borders (Crownmarch, Drowned Steps, Greywood, Drowned Steps, Crownmarch), 3 seams, 6 loads, 3 unloads, 0 thrash, at most 16 chunks loaded, 225.1 m of margin, streaming work p50 0.8 / p99 6.1 / max 7.0 ms, draw calls p50 38 / max 58, 0 console errors while the game ran (the one at exit is the engine's audio teardown, as at M7), 0 failed requests; 111.9 s of music with 354 holes over 50 ms (the longest 478.9 ms), every one placed on the main thread (355 long tasks, the longest 499 ms); peak live samples 57.1 MB of the 67.9 MB cap; page frames p50 300.0 / p99 466.6 / worst 516.6 ms. The plan's criterion NOT MET here (the strict form is the owner's, on a GPU) |
+| `audio_check.mjs` (the Valley) | OK in its default form: Play to the title's music 5.3 s, New Game to the Hollow 8.4 s, sound 0.28 s after the Hollow's music begins, 60.3 s of music with 241 holes over 50 ms (the longest 409.3 ms), every one placed on the main thread (302 long tasks, the longest 471 ms); peak live samples 37.0 MB of the 48.0 MB cap; 0 console errors, 0 failed requests. Criterion NOT MET here, as at M6 and M7 |
+| The launcher's two starts (`tools/web/world_start_check.mjs`, new) | OK. Play starts the engine (5.9 s) with no game arguments; the title writes no save, and Enter (New Game) writes the Valley's first save 30.1 s later (`"level": "level.valley"`, respawn `valley.shrine.hollow`). One press of "Start in the open world" only arms it ("Press again to start a new game in the open world"; the gate stays and nothing of the engine is fetched), and it disarms 6 s later; two presses start the engine (7.1 s) with `['--', '--mode=world']`, and the first save, 7.7 s later, holds `"level": "level.world"`, respawn `world.cp.kingsgate_shelf`, stage 3, level 6. 0 console errors and 0 failed requests in both |
+| Linux export (`builds/linux/Giantborn.x86_64`, 89,896,096 bytes) | The 120 s soak headless: 0 errors, 0 warnings (fence breaks 2, loot 2, debris 10). An assisted novice Valley run (`--scenario=valley --bot-village=intimidate --bot-skill=novice --bot-seed=1 --bot-assist --perf`): completed in 446.4 s of simulated time, as at 0.7.0-m7, 0 deaths, 0 breaches, 0 invariant failures, 0 errors, 0 warnings (one stuck moment on the causeway, cleared by a side-step jump; no teleport); CPU per tick p50 2.7 / p95 9.4 ms with another agent's Godot runs on the 4 cores (load average 6-8; 3.5 ms p95 at 0.7.0-m7) |
+| Windows export (`builds/windows/Giantborn.exe`, 123,479,696 bytes, and `Giantborn.console.exe`, 188,928 bytes) | Built; not launched (no Windows here) |
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
@@ -1271,14 +1311,14 @@ nothing about a real GPU; they are listed only to show the build works.
 | Check | P18 in the container | Real browser |
 | --- | --- | --- |
 | The page fits without a sideways scroll | Met at 1280 px (scroll width = client width) | NOT RUN |
-| Play downloads, unpacks and starts the engine | Met: the engine started 5.7 s after Play (4.6 s after a reload); about 14 MB to download | NOT RUN |
+| Play downloads, unpacks and starts the engine | Met: the engine started 5.7 s after Play (4.6 s after a reload); about 14 MB to download. Now (the 0.8.0-m8 release): about 29.9 MB to download (the engine 12.5 MB, the pck 17.3 MB in two parts); the engine started 5.9 s after Play | NOT RUN |
 | The title screen, then New Game into the Valley | Met: the title shows build 0.5.0-m5; New Game reaches the Hollow, its first checkpoint stored after 14.2 s | NOT RUN |
 | The Valley loads in at most 6 s behind the "Loading..." frame (plan §5.4) | Not judged (software rendering; 14.2 s includes the storage sync) | NOT RUN |
 | The save survives a page reload (IndexedDB) | Met: `/userfs/godot/app_userdata/Giantborn- Age of Titans/saves/valley_1.json` is in IndexedDB before and after the reload; the title then offers Continue ("Saved game: level 1, stage 1 ...") and Continue loads the Valley at the Hollow Shrine | NOT RUN |
 | The title's button that starts a mode takes the mouse (pointer lock inside the click) | Met (headed): no lock on the title or after a click on Settings; locked after the New Game click and in the Valley; Esc releases it | NOT RUN |
 | The build runs the `low` preset whatever the saved setting says | Met: the Valley renders without sun shadows (the `low` preset); `test_graphics_quality` covers the web forcing `low` over a `medium` setting (the Settings row's lock is tested under `--graphics`) | NOT RUN |
 | AI tier 1 starts at 30 m (`level.valley` `web_overrides.ai_tier1_m`) | Covered by `test_graphics_quality` (forced web) | NOT RUN |
-| The packed `.pck` is at most 4 MB (plan §5.4) | Met: 1.26 MB gzipped, 1.68 MB as shipped | - |
+| The packed `.pck` is at most 4 MB (plan §5.4; since decision 8 the milestone's budget, 23 MB from M8, in parts of at most 15 MB) | Met: 1.26 MB gzipped, 1.68 MB as shipped. Now (the 0.8.0-m8 release): 12.39 MB gzipped, 16.52 MB as shipped in two parts of 8,663,006 bytes, of 23 MB | - |
 | No errors in the browser console | Met headless (0 through boot, New Game, walking, reload and Continue); headed: one "404 (File not found)" with no failed request of the page itself (most likely the browser's own favicon request) | NOT RUN |
 | Walk the Cradle -> forest trail -> Grove and the village square with the browser's frame meter (Chrome DevTools > Rendering > Frame rendering stats): frame time and hitches, especially when an encounter first appears | NOT RUN (software WebGL here: about 2 frames a second) | NOT RUN |
 | A gamepad inside the page (browsers expose a pad after its first button press) | NOT RUN | NOT RUN |
