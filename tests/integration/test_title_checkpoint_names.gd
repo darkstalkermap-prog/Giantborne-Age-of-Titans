@@ -88,9 +88,15 @@ func test_the_title_names_the_checkpoint_never_its_id() -> void:
 	doc.level = GameSession.WORLD_LEVEL_ID
 	doc.checkpoint.respawn = "world.cp.kingsgate_shelf"
 	var w := TitleScreen.describe_save(doc)
-	assert_true(w.contains("at the Kingsgate shelf, in The Old Kingdom"), "a world save: %s" % w)
+	# P39f: a name that begins with "The" reads "the" mid-sentence (it was "in The Old Kingdom")
+	assert_true(w.contains("at the Kingsgate shelf, in the Old Kingdom"), "a world save: %s" % w)
+	assert_false(w.contains("The "), "no capital article mid-sentence: %s" % w)
 	doc.checkpoint.respawn = "world.cp.kings_door"
-	assert_true(TitleScreen.describe_save(doc).contains("at The Kings' Door"), "no doubled article: %s" % TitleScreen.describe_save(doc))
+	var door := TitleScreen.describe_save(doc)
+	assert_true(door.contains("at the Kings' Door") and not door.contains("the the") and not door.contains("The "),
+		"no doubled article, no capital one: %s" % door)
+	assert_eq(TitleScreen.mid_sentence("The Old Kingdom"), "the Old Kingdom", "the level's name mid-sentence")
+	assert_eq(TitleScreen.mid_sentence("Grove Shrine"), "the Grove Shrine", "a name without an article takes one")
 
 
 ## M8 release (R2): the line names where Continue wakes the giant. A 0.7.0-m7 save at the Brannock waystone
@@ -104,7 +110,7 @@ func test_the_save_line_names_where_continue_wakes_the_giant() -> void:
 		["level.world", "world.cp.brannock", true], "the save: the Brannock waystone, Brannock hostile")
 	WorldState.set_flag("test.live_world", true)
 	var line := TitleScreen.describe_save(doc)
-	assert_true(line.begins_with("Saved game: level 9, stage 4, at the Kingsgate shelf waystone, in The Old Kingdom"),
+	assert_true(line.begins_with("Saved game: level 9, stage 4, at the Kingsgate shelf waystone, in the Old Kingdom"),
 		"the line names where the giant will wake: %s" % line)
 	assert_false(line.contains("Brannock"), "not the stone its guards hold: %s" % line)
 	assert_eq(WorldState.flags, {"test.live_world": true}, "describing a save leaves the live world as it was")
