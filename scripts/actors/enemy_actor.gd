@@ -1893,6 +1893,18 @@ const LEASH_HEAL_S := 6.0
 const LEASH_ARRIVE_M := 1.5
 ## PRE_ACTORS hook order of the return (after the EncounterDirector's 10).
 const LEASH_HOOK_ORDER := 12
+## W23 (P39f; FOLLOWUPS "From the M8 screenshot pass"): a return pinned against a body in its way (a stage-6
+## giant standing between a rider and its post: actors are not on the navmesh, so the path runs through him)
+## rides round it. A body counts as in the way when its edge is within LEASH_DETOUR_REACH_M of this member's
+## and it lies ahead (toward home); the detour point stands LEASH_DETOUR_CLEAR_M beyond both edges beside it,
+## past its centre, first on the side the member already is, the other side after a second failure; a detour
+## lasts at most LEASH_DETOUR_S. A body standing on its post (home within its edge) ends the return where the
+## member is, as do LEASH_GIVE_UP_FAILURES path failures in one return: its AI resumes (inside the leash, near
+## its post, it is not sent home again).
+const LEASH_DETOUR_REACH_M := 2.5
+const LEASH_DETOUR_CLEAR_M := 3.0
+const LEASH_DETOUR_S := 6.0
+const LEASH_GIVE_UP_FAILURES := 6
 
 ## Tick the current leash return began (-1 when it is not returning).
 var leash_started_tick := -1
@@ -1902,6 +1914,13 @@ var _leash_returning := false
 var _leash_healed := false
 var _leash_ai_was_enabled := true
 var _leash_hook_owner: RefCounted = null
+## W23 (P39f): the return's detour round a body in its way (INF: none), when it began, the path failures seen
+## so far in this return and how many detours it took (the side alternates).
+var leash_detour := Vector3.INF
+var leash_detours := 0
+var _leash_detour_tick := -1
+var _leash_failures_seen := 0
+var _leash_failures := 0
 
 
 ## Starts the leash return (plan §2.7.3): drop the target and its attack tokens, run home to
@@ -1916,6 +1935,10 @@ func begin_leash_return() -> void:
 	leash_count += 1
 	_leash_ai_was_enabled = ai_enabled
 	ai_enabled = false   # no perception, no decisions: it ignores targets until it is home
+	leash_detour = Vector3.INF
+	leash_detours = 0
+	_leash_failures = 0
+	_leash_failures_seen = path_failures
 	Sim.release_all_tokens(entity.entity_id)
 	_release_formation_marker()
 	brain.begin_return(Sim.tick)
@@ -1953,7 +1976,84 @@ func _leash_step(tick: int) -> void:
 	if to_home.length() <= LEASH_ARRIVE_M:
 		_end_leash_return(true)
 		return
+	if path_failures > _leash_failures_seen:   # W23 (P39f): no progress for a path check - something is in the way
+		_leash_failures += path_failures - _leash_failures_seen
+		_leash_failures_seen = path_failures
+		var blocker := _leash_blocker()
+		if _leash_failures >= LEASH_GIVE_UP_FAILURES or (not blocker.is_empty() and bool(blocker.on_post)):
+			_end_leash_return(true)   # its post is taken: the return ends here and the AI resumes
+			return
+		leash_detour = _leash_detour_point(blocker)
+		_leash_detour_tick = tick
+		if leash_detour != Vector3.INF:
+			leash_detours += 1
+	if leash_detour != Vector3.INF:
+		var to_detour := Vector2(leash_detour.x - global_position.x, leash_detour.z - global_position.z)
+		if to_detour.length() > LEASH_ARRIVE_M * 2.0 and tick - _leash_detour_tick < ActionDef.seconds_to_ticks(LEASH_DETOUR_S):
+			brain.return_step(tick, leash_detour)
+			return
+		leash_detour = Vector3.INF
 	brain.return_step(tick, home_position)
+
+
+## W23 (P39f): the body pinning this member on its way home (see LEASH_DETOUR_*): the nearest living actor
+## whose edge is within LEASH_DETOUR_REACH_M of this member's and that lies ahead, as {"centre", "radius",
+## "on_post": true when home lies within its edge}; {} when none (a wall or a cliff: the return keeps to its
+## path).
+func _leash_blocker() -> Dictionary:
+	var to_home := home_position - global_position
+	to_home.y = 0.0
+	if to_home.length() < 0.5:
+		return {}
+	var dir := to_home.normalized()
+	var my_r := float(record.get("capsule_radius_m", 0.5))
+	var best: CombatEntity = null
+	var best_r := 0.0
+	var best_gap := INF
+	for e: CombatEntity in Sim.entities():
+		if e == entity or not e.is_alive() or not is_instance_valid(e.actor) or not (e.actor is CharacterBody3D):
+			continue
+		var r := 0.5
+		var giant := e.actor as GiantPlayer
+		if giant != null:
+			r = float(giant.profile.get("capsule_radius_m", 0.85))
+		else:
+			r = float(GameData.get_record(e.definition_id).get("capsule_radius_m", 0.5))
+		var off := e.actor.global_position - global_position
+		off.y = 0.0
+		var gap := off.length() - r - my_r
+		if gap > LEASH_DETOUR_REACH_M or off.dot(dir) <= 0.0 or gap >= best_gap:
+			continue
+		best = e
+		best_r = r
+		best_gap = gap
+	if best == null:
+		return {}
+	var c := best.actor.global_position
+	var home_gap := Vector2(home_position.x - c.x, home_position.z - c.z).length() - best_r - my_r
+	return {"centre": c, "radius": best_r, "on_post": home_gap < LEASH_ARRIVE_M}
+
+
+## W23 (P39f): the detour point round `blocker` (_leash_blocker): beside it, past its centre toward home, on the
+## side this member is (the other one on every second detour). INF without a blocker.
+func _leash_detour_point(blocker: Dictionary) -> Vector3:
+	if blocker.is_empty():
+		return Vector3.INF
+	var to_home := home_position - global_position
+	to_home.y = 0.0
+	var dir := to_home.normalized() if to_home.length() > 0.01 else Vector3.FORWARD
+	var my_r := float(record.get("capsule_radius_m", 0.5))
+	var c: Vector3 = blocker.centre
+	var best_r := float(blocker.radius)
+	var side := Vector3(-dir.z, 0.0, dir.x)
+	if (global_position - c).dot(side) < 0.0:
+		side = -side
+	if leash_detours % 2 == 1:
+		side = -side   # the side tried last failed too: round the other way
+	var around := best_r + my_r + LEASH_DETOUR_CLEAR_M
+	var past := minf(around, maxf(0.0, (home_position - c).dot(dir)))
+	var p := c + side * around + dir * past
+	return Vector3(p.x, global_position.y, p.z)
 
 
 ## Ends the return: the hook goes, a living member is healed (if the 6 s had not passed yet) and
