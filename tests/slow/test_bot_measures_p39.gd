@@ -180,7 +180,7 @@ func _crewed_engine(id: String, pos: Vector3, face: Vector3) -> SiegeEngine:
 
 
 ## A WorldBot bound by hand to the test's giant (no run: its own tick does nothing), its BotCombat set up.
-func _bot() -> void:
+func _bot(skill := "novice") -> void:
 	bot = WorldBot.new()
 	world.add_child(bot)
 	bot.player = p
@@ -188,7 +188,7 @@ func _bot() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1
 	bot.combat = BotCombat.new()
-	bot.combat.setup(bot, p, "novice", rng)
+	bot.combat.setup(bot, p, skill, rng)
 
 
 func test_the_world_bot_seizes_and_throws_an_engine_at_stage_6() -> void:
@@ -377,3 +377,137 @@ func test_a_boss_attempts_lowest_health_share_is_kept() -> void:
 	lows = m.bosses[id].lows
 	assert_eq(lows.size(), 2, "a reload closes the next attempt")
 	assert_near(float(lows[1]), 0.7, 0.001, "the next attempt starts from its share at engagement")
+
+
+## A soldier winding its chop up at the giant (its controller in the windup, its brain on the giant).
+func _winding(pos: Vector3, id: String) -> SoldierEnemy:
+	var s := spawn_soldier(pos, yaw_towards(pos, p.global_position), id)
+	await step_ticks(1)
+	s.brain.target_id = p.entity.entity_id
+	s.controller.force_action(GameData.get_action("ability.soldier_chop"))
+	await step_ticks(1)
+	assert_eq(s.controller.phase(), ActionDef.Phase.WINDUP, "%s winds its chop up" % id)
+	return s
+
+
+## From stage 4 the expert answers only the blows that can land on it, and its answers hold its own blows
+## off for EXPERT_HOLD_MAX_TICKS at most (P39: before the toll fort's pikes and tower archers the expert
+## swung 68 and 56 lights in a run where the novice swung 213-253, an answer always due within 20 ticks);
+## an arrow holds no blow off. The Valley's stages keep P17a's rules.
+func test_the_world_expert_answers_only_blows_that_can_land_and_strikes_between_answers() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	_bot("expert")
+	var near := await _winding(Vector3(0, 0.05, -4.5), "test.p39_near_chop")
+	var far := await _winding(Vector3(6, 0.05, -9), "test.p39_far_chop")
+	var chop := GameData.get_action("ability.soldier_chop")
+	assert_true(far.global_position.distance_to(p.global_position) < BotCombat.EXPERT_WATCH_M,
+		"the far soldier stands within P17a's 12 m watch")
+	assert_true(bot.combat.blow_can_land(chop, near), "the near chop can land")
+	assert_false(bot.combat.blow_can_land(chop, far), "the far one cannot (%.1f m reach)" % BotCombat.blow_reach_m(chop, far))
+	bot.combat._expert_watch(Sim.tick)
+	var answered: Array = bot.combat._reactions.map(func(re: Dictionary) -> String: return (re.actor as WeakRef).get_ref().entity_id)
+	assert_eq(answered, ["test.p39_near_chop"], "at stage 4 only the blow that can land is answered")
+	# the Valley's stages: P17a's rule answers both
+	p.set_profile(_profile(3))
+	await step_ticks(1)
+	bot.combat._reactions.clear()
+	bot.combat._seen.clear()
+	near.controller.force_action(chop)
+	far.controller.force_action(chop)
+	await step_ticks(1)
+	bot.combat._expert_watch(Sim.tick)
+	assert_eq(bot.combat._reactions.size(), 2, "at stage 3 every blow within 12 m is answered")
+	# The hold: answers due one after another (one always due in 15 ticks) hold the blows off.
+	for stage in [3, 4]:
+		p.set_profile(_profile(stage))
+		await step_ticks(1)
+		bot.combat._seen.clear()
+		bot.combat._reactions.clear()
+		assert_false(bot.combat.defend(Sim.tick), "no answer due: no hold (a tick with none ends the last one)")
+		await step_ticks(1)
+		var held := 0
+		var free_at := -1
+		for i in 150:
+			bot.combat._reactions = [{"at": Sim.tick + 15, "kind": "block", "actor": weakref(near), "why": "test"}]
+			var busy := bot.combat.defend(Sim.tick)
+			assert_eq(busy, bot.combat.defend_busy(Sim.tick), "defend and defend_busy agree (stage %d, tick %d)" % [stage, i])
+			if busy:
+				held += 1
+			elif free_at < 0:
+				free_at = i
+			await step_ticks(1)
+		if stage == 3:
+			assert_eq(held, 150, "at stage 3 an answer always due holds every blow off (P17a)")
+		else:
+			assert_true(free_at > 0 and free_at <= BotCombat.EXPERT_HOLD_MAX_TICKS + 2,
+				"at stage 4 the hold ends after %d ticks (free at %d)" % [BotCombat.EXPERT_HOLD_MAX_TICKS, free_at])
+			bot.combat._note_blow(Sim.tick)
+			bot.combat._reactions = [{"at": Sim.tick + 15, "kind": "block", "actor": weakref(near), "why": "test"}]
+			assert_true(bot.combat.defend(Sim.tick), "a blow the giant starts begins the next hold")
+	# An arrow (a light shot) holds no blow off, and is not dodged while a blow of the giant's own is under way.
+	bot.combat._reactions.clear()
+	var archer := TestSpawn.enemy(world, ARCHER, Vector3(0, 0.05, -30), "test.p39_archer", false, 0.0)
+	await step_ticks(1)
+	bot.combat._plan_reaction(Sim.tick, Sim.tick + 40, GameData.get_action("ability.archer_shot"), archer, "test")
+	assert_true(bool(bot.combat._reactions[-1].get("light_shot", false)), "an arrow is a light shot")
+	assert_false(bot.combat.defend_busy(Sim.tick), "it holds no blow off")
+	bot.combat._plan_reaction(Sim.tick, Sim.tick + 40, GameData.get_action("ability.ballista_bolt"), archer, "test")
+	assert_false(bool(bot.combat._reactions[-1].get("light_shot", false)), "a ballista bolt is no light shot")
+	assert_true(bot.combat.defend_busy(Sim.tick) or Sim.tick + 40 - 10 - Sim.tick > 20, "a bolt is answered as before")
+	bot.combat._reactions = [{"at": Sim.tick, "kind": "dodge", "actor": weakref(archer), "why": "test", "light_shot": true}]
+	p.router.inject_light_attack()
+	await step_ticks(2)
+	assert_eq(p.controller.state, CombatController.State.ATTACKING, "the giant is mid-blow")
+	bot.combat._reactions[0]["at"] = Sim.tick
+	bot.combat.defend(Sim.tick)
+	assert_true(Sim.tick >= bot.combat.dodge_steer_until(), "the arrow is taken: no dodge given up the blow for")
+
+
+## From stage 4 every slotted ability takes its turn: one the rules have not used for ROTATION_IDLE_TICKS
+## is used on the fight's target when nothing refuses it, the longest unused first; the two area blows
+## take turns (P39: of the first world matrix's 18 runs, 14 never used Boulder Hurl when ready, 12 Sweeping
+## Blow). The heal, Stone Skin and Titan Surge keep their own rules.
+func test_every_slotted_ability_takes_its_turn_from_stage_4() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	var soldier := spawn_soldier(Vector3(0, 0.05, -9), 0.0, "test.p39_rotation_target")
+	soldier.brain.aware = true
+	await step_ticks(2)
+	_bot()
+	p.camera_rig.yaw = 0.0
+	p.targeting.try_lock()
+	await step_ticks(1)
+	assert_eq(p.lock.target_id, "test.p39_rotation_target", "the giant locks its target")
+	var c := bot.combat
+	var key := c._rotation_slot(Sim.tick)
+	assert_true(key != "", "a slotted ability is ready for its turn (loadout %s)" % [p.controller.loadout])
+	var id := str(p.controller.loadout.get(key, ""))
+	for own: String in [BotCombat.MEND, BotCombat.STONE_SKIN, BotCombat.SURGE]:
+		assert_false(id == own or BotCombat.evolves_from_chain(id, own), "not one with its own rule: " + id)
+	assert_eq(c.slot_reason(key), "", "nothing refuses it")
+	c._next_ability_tick = 0
+	c._last_used.clear()
+	# every rule-bound slot used just now: only the rotation can pick
+	assert_true(c._abilities(Sim.tick, soldier, 9.0), "the look uses an ability")
+	var why := str(c._ability_log[-1][2])
+	assert_true(why.begins_with("rotation: ") or why.ends_with("enemies") or why.ends_with("big foe"), why)
+	var used := str(c._ability_log[-1][1])
+	assert_eq(c._used_tick(used), Sim.tick, "its use is kept")
+	assert_true(c._rotation_slot(Sim.tick) != used, "the same slot waits its turn (%d ticks)" % BotCombat.ROTATION_IDLE_TICKS)
+	assert_true(c._rotation_slot(Sim.tick + BotCombat.ROTATION_IDLE_TICKS) == used or c._rotation_slot(Sim.tick + BotCombat.ROTATION_IDLE_TICKS) != "",
+		"after its idle time a slot may take a turn again")
+	# the area blows take turns: Heavy Footfall's slot (Titan Stomp) used last, Sweeping Blow's comes first
+	var stomp := c.slot_of(BotCombat.FOOTFALL)
+	var sweep := c.slot_of(BotCombat.SWEEP)
+	if stomp != "" and sweep != "":
+		c._last_used[stomp] = Sim.tick
+		c._last_used[sweep] = Sim.tick - 600
+		var second := spawn_soldier(Vector3(2, 0.05, -5), 0.0, "test.p39_rotation_second")
+		second.brain.aware = true
+		soldier.global_position = Vector3(-2, 0.05, -5)
+		await step_ticks(1)
+		await TestWait.until(self, func() -> bool: return p.controller.state == CombatController.State.LOCOMOTION, 240)
+		c._next_ability_tick = 0
+		if c.ready_slot(BotCombat.SWEEP) != "":
+			assert_true(c._abilities(Sim.tick, soldier, soldier.global_position.distance_to(p.global_position)), "an area blow at two")
+			assert_eq(str(c._ability_log[-1][1]), sweep, "Sweeping Blow's turn: Titan Stomp was used last")
+
