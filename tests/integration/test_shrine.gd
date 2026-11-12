@@ -474,7 +474,9 @@ func test_the_tab_row_shows_the_open_tab() -> void:
 ## its record) keeps one size on screen - an em of at least 18 px at the default field of view on a 720 px screen,
 ## at least 14 px at the widest - where the shared sign was a 0.38 m text, about 6 px from a stage-3 camera behind
 ## a giant on the pad; it shows from the pad at every stage (a stage-6 camera stands within its range) and floats
-## clear of the stone's cap.
+## clear of the stone's cap. Now that it reads, it would read through a screen's see-through panel (the shrine
+## window opens right in front of it): it hides while any screen is open, as the HUD does - a shrine made while
+## one is open starts hidden - and shows again once the last one closes or its stack leaves the tree.
 func test_the_shrine_name_reads_from_the_pad() -> void:
 	# (the camera's farthest zoom at stage 6 is 32 m behind a 17 m pivot: 45 m from the name - within its 90 m)
 	var s := _shrine(Vector3(0, 0, -6), "test.kingsgate", "shrine.world_kingsgate")
@@ -503,3 +505,22 @@ func test_the_shrine_name_reads_from_the_pad() -> void:
 		if mi.mesh != null and mi.name != "Glow":
 			cap_top = maxf(cap_top, (mi.global_transform * mi.get_aabb()).end.y)
 	assert_true(l.global_position.y - cap_top >= 1.0, "the name floats %.1f m over the stone (top %.2f m)" % [l.global_position.y - cap_top, cap_top])
+	var layer := CanvasLayer.new()
+	world.add_child(layer)
+	var stack := ScreenStack.new()
+	layer.add_child(stack)
+	await get_tree().process_frame
+	var overlay := load("res://tests/support/test_overlay_screen.gd") as GDScript
+	assert_true(l.visible, "the name shows while no screen is open")
+	stack.push(overlay.new() as UiScreen)
+	assert_false(l.visible, "the name hides while a screen is open")
+	var s2 := _shrine(Vector3(40, 0, -6), "test.kingsgate_2", "shrine.world_kingsgate")
+	var l2 := s2.get_node("Visual/Name") as Label3D
+	assert_false(l2.visible, "a shrine made while a screen is open starts with its name hidden")
+	stack.close_all()
+	assert_true(l.visible and l2.visible, "the names show again once the screen closes")
+	stack.push(overlay.new() as UiScreen)
+	assert_false(l.visible or l2.visible, "hidden again under the next screen")
+	layer.remove_child(stack)
+	assert_true(l.visible and l2.visible, "a stack leaving the tree with its screen open shows the names again")
+	stack.free()

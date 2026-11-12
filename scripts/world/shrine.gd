@@ -22,6 +22,7 @@ extends Interactable
 ##   growth_waiting_text() is the line it shows meanwhile).
 ## Children: SpawnPoint (a CheckpointMarker whose checkpoint_id is set to world_id) and
 ## GrowthPad (a Marker3D at an open spot with stage-3 clearance). Group "shrines".
+## P39f: Visual/Name (the record's name) hides while a screen is open (ScreenStack.HIDE_UNDER_SCREENS).
 
 const GROUP := "shrines"
 const DEFAULT_ACTIVATION_RADIUS_M := 14.0
@@ -53,6 +54,10 @@ func _ready() -> void:
 	var label := get_node_or_null("Visual/Name") as Label3D
 	if label != null:
 		label.text = display_name()
+		# P39f: the name keeps one size on screen (the shrine builder), so it read through the shrine window's
+		# see-through panel: it hides while a screen is open, as the HUD does (ScreenStack.HIDE_UNDER_SCREENS).
+		label.add_to_group(ScreenStack.HIDE_UNDER_SCREENS)
+		label.visible = not ScreenStack.any_open_in(get_tree())
 	if record().is_empty():
 		push_error("Shrine %s: unknown shrine record '%s'" % [world_id, shrine_id])
 	Sim.add_hook(Sim.Hook.POST_RESOLVE, self, _on_sim_tick, HOOK_ORDER)
