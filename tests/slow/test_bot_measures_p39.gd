@@ -11,13 +11,15 @@ extends IntegrationSuite
 ##     crewed ballista in reach is struck until its poise breaks, seized with both hands and thrown at
 ##     the soldier beyond it, where it smashes; below stage 6, or at peace (a neutral engine), it is no
 ##     engine to seize;
-##   * an enemy above reach is shot only along a clear line, from a spot chosen by that line.
+##   * an enemy above reach is shot only along a clear line, from a spot chosen by that line;
+##   * from stage 4 a lone big foe within reach draws the roar and the area blows.
 
 const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
 const BANNERMAN := "res://scenes/enemies/bannerman.tscn"
 const BALLISTA := "res://scenes/world/siege_ballista.tscn"
 const CREW := "res://scenes/enemies/siege_crew.tscn"
 const ARCHER := "res://scenes/enemies/archer.tscn"
+const TROLL := "res://scenes/enemies/troll.tscn"
 
 var f: Formation
 var p: GiantPlayer
@@ -320,3 +322,33 @@ func test_an_enemy_above_reach_is_shot_from_a_clear_line() -> void:
 	await step_ticks(ActionDef.seconds_to_ticks(WorldBot.ELEVATED_SHOT_BLOCKED_S) + 2)
 	assert_false(bot._shot_spot(archer).is_finite(), "the line stayed blocked there: the spot failed")
 	assert_eq((bot._shot_spots[id].bad as Array).size(), 1, "and is not chosen again")
+
+
+## From stage 4 a lone big foe within reach (a boss, a troll, a rival giant) draws the roar and the area
+## blows (P39: the first world matrix's novice died six and seven times to Harrok with Earthquake never
+## used - P17a's rules want two enemies near, three for the roar); a lone soldier is no big foe, and the
+## Valley's stages keep P17a's rules.
+func test_a_lone_big_foe_draws_the_roar_and_the_area_blows_from_stage_4() -> void:
+	await _giant(3, Vector3(0, 0.05, 0))
+	var troll := TestSpawn.enemy(world, TROLL, Vector3(0, 0.05, -7.0), "test.p39_troll", false, 0.0)
+	await step_ticks(2)
+	_bot()
+	troll.brain.aware = true
+	var dist := p.global_position.distance_to(troll.global_position)
+	bot.combat._next_ability_tick = 0
+	assert_false(bot.combat._abilities(Sim.tick, troll, dist), "at stage 3 a lone troll draws no ability (P17a's rules)")
+	p.set_profile(_profile(4))
+	await step_ticks(1)
+	assert_true(bot.combat.big_foe(troll), "a troll is a big foe")
+	bot.combat._next_ability_tick = 0
+	assert_true(bot.combat._abilities(Sim.tick, troll, dist), "at stage 4 it draws an ability")
+	assert_eq(str(bot.combat._ability_log[-1][2]), "roar at a big foe", "the roar first")
+	await step_ticks(3)
+	assert_true(p.controller.state != CombatController.State.LOCOMOTION, "the roar is being cast")
+	await TestWait.until(self, func() -> bool: return p.controller.state == CombatController.State.LOCOMOTION, 240)
+	bot.combat._next_ability_tick = 0
+	assert_true(bot.combat._abilities(Sim.tick, troll, dist), "then, the roar spent, an area blow")
+	var why := str(bot.combat._ability_log[-1][2])
+	assert_true(why.ends_with("at a big foe") and not why.begins_with("roar"), "an area blow at a big foe: " + why)
+	var soldier := spawn_soldier(Vector3(5, 0.05, -5), 0.0, "test.p39_lone_soldier")
+	assert_false(bot.combat.big_foe(soldier), "a soldier is no big foe")

@@ -359,6 +359,13 @@ func is_elevated(e: Node3D) -> bool:
 	return e.global_position.y - player.global_position.y > elevated_m()
 
 
+## P39: a boss (Harrok, the Matriarch, Corvane, the Ogre King) or a large body (a troll, a rival giant).
+func big_foe(t: EnemyActor) -> bool:
+	if t == null or not is_instance_valid(t) or t.entity == null or t.entity.combatant == null:
+		return false
+	return t.is_in_group(OgreBoss.GROUP) or str(t.entity.combatant.base_record.get("mass_class", "")) == "large"
+
+
 ## How much higher than the giant's feet a target is out of melee reach: ELEVATED_M at stages 1-3
 ## (the Valley), ELEVATED_HEIGHT_SHARE of the giant's height from stage 4 (P38: an 11-19 m giant's
 ## blows reach a soldier on a bank its stage-3 self could not; an archer on a 16 m bastion stays out).
@@ -756,16 +763,23 @@ func _abilities(tick: int, t: EnemyActor, dist: float) -> bool:
 		if key != "":
 			use_slot(key, "titan surge")
 			return true
-	if crowd >= 3:
+	# P39: from stage 4 a lone big foe within reach - a boss, a troll, a rival giant - is worth the area
+	# blows and the roar: P17a's rules want two enemies within reach (three for the roar), so Titan Stomp,
+	# Earthquake, Formation Sweep and Titan Roar were never used against Harrok, the Matriarch or a troll
+	# (the first world matrix's runs: the novice died six and seven times to Harrok with Earthquake ready
+	# in 11 combat windows and used in none, Formation Sweep 0 of 12). The Valley (stages 1-3) keeps
+	# P17a's rules, so its matrix stays comparable with the M6 gate's.
+	var big := player.current_growth_stage() >= 4 and big_foe(t) and dist <= reach + 2.0
+	if crowd >= 3 or (big and dist <= reach):
 		key = ready_slot(ROAR)
 		if key != "":
-			use_slot(key, "roar at %d enemies" % crowd)
+			use_slot(key, "roar at %d enemies" % crowd if crowd >= 3 else "roar at a big foe")
 			return true
-	if near >= 2:
+	if near >= 2 or big:
 		for id: String in [FOOTFALL, SWEEP]:
 			key = ready_slot(id)
 			if key != "":
-				use_slot(key, "%s at %d enemies" % [id, near])
+				use_slot(key, "%s at %d enemies" % [id, near] if near >= 2 else "%s at a big foe" % id)
 				return true
 	var locked := player.targeting.locked_entity()
 	if locked != null and locked == t.entity:
