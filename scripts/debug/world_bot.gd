@@ -626,6 +626,22 @@ func _fight_ignored_now(_t: EnemyActor) -> bool:
 	return false
 
 
+## The Valley's choice, but in the world an enemy out of melee reach above the giant (an archer on
+## Fort Aldmere's wall, 16 m over the gate) is no fight: the Valley's choice kept it as the task's
+## preferred target (or took it while a ranged blow was ready), BotCombat stands still under a target
+## it cannot reach, and the giant stood under the wall - lock refused, no bolt thrown - instead of
+## breaking the gate beside it, until the watchdog (1,040 s). The nearest threat on its own ground is
+## fought instead, else none (the objective goes on; the archers shoot on).
+func _fight_target() -> EnemyActor:
+	var t := super()
+	if t == null or not _in_world() or not combat.is_elevated(t):
+		return t
+	for e in combat.threats(combat.engage_radius()):
+		if not _is_ignored(e) and not combat.is_elevated(e) and reachable(e.global_position, 3.5):
+			return e
+	return null
+
+
 func _objective_task(tick: int) -> Dictionary:
 	if _valley_part():
 		return super(tick)
