@@ -45,8 +45,14 @@ const HEAVY_COMMIT_TICKS := 60
 const HEAVY_COMMIT_RANGE_M := 10.0
 ## Hostile, aware enemies this far (by stage) pull the bot into a fight.
 const ENGAGE_RADIUS_M := [16.0, 22.0, 28.0]
+## P38 (plan M6-M9 §6.1): from stage 4 the engage radius follows the profile - ENGAGE_REACH_MULT x its
+## melee reach, never under stage 3's (the Valley's stages 1-3 keep the table above, so its runs are
+## unchanged).
+const ENGAGE_REACH_MULT := 2.5
 ## A target this much higher than the giant's feet is out of melee reach (an archer on a wall).
 const ELEVATED_M := 2.5
+## P38: the elevation share of the giant's height from stage 4 (elevated_m).
+const ELEVATED_HEIGHT_SHARE := 0.45
 ## Targets narrower than this get the reach band (BotCombat.reach_band); larger ones the reach.
 const SMALL_TARGET_RADIUS_M := 0.8
 ## Where the bot stands against a man-sized target: the plan's "approach to 0.8 x reach" (§5.1) from
@@ -350,12 +356,25 @@ func is_threat(e: EnemyActor) -> bool:
 
 
 func is_elevated(e: Node3D) -> bool:
-	return e.global_position.y - player.global_position.y > ELEVATED_M
+	return e.global_position.y - player.global_position.y > elevated_m()
+
+
+## How much higher than the giant's feet a target is out of melee reach: ELEVATED_M at stages 1-3
+## (the Valley), ELEVATED_HEIGHT_SHARE of the giant's height from stage 4 (P38: an 11-19 m giant's
+## blows reach a soldier on a bank its stage-3 self could not; an archer on a 16 m bastion stays out).
+func elevated_m() -> float:
+	if player.current_growth_stage() <= 3:
+		return ELEVATED_M
+	return maxf(ELEVATED_M, ELEVATED_HEIGHT_SHARE * float(player.entity.combatant.height_m))
 
 
 func engage_radius() -> float:
-	var stage := clampi(player.current_growth_stage(), 1, 3)
-	return float(ENGAGE_RADIUS_M[stage - 1])
+	var stage := player.current_growth_stage()
+	if stage <= 3:
+		return float(ENGAGE_RADIUS_M[clampi(stage, 1, 3) - 1])
+	# P38: stage-generic (2.5 x the profile's melee reach), never under stage 3's radius.
+	var reach := float(player.profile.get("melee_reach_m", 3.5))
+	return maxf(float(ENGAGE_RADIUS_M[2]), ENGAGE_REACH_MULT * reach)
 
 
 ## The target to fight: `preferred` (an objective's kill target) when it is alive and near, else
@@ -384,12 +403,33 @@ func _fightable(e: EnemyActor) -> bool:
 
 # --------------------------------------------------------------------------- slots
 
-## The slot key ("slot_1".."slot_8", "ultimate") holding `action_id`, or "".
+## The slot key ("slot_1".."slot_8", "ultimate") holding `action_id`, or "". P38: when the base
+## ability is not slotted, the slot of the evolution that replaced it (plan M6-M9 §2.11: an evolution
+## takes its base's slot - Titan Stomp for Heavy Footfall, Formation Sweep for Sweeping Blow, Crag Hurl
+## for Boulder Hurl, Titan Roar for Thunder Roar, Earthquake and Rampart Grip after them), so the
+## rules below keep their ability at stages 4-6. The Valley has no evolutions: nothing changes there.
 func slot_of(action_id: String) -> String:
 	for key: String in GiantPlayer.SLOT_KEYS:
 		if str(player.controller.loadout.get(key, "")) == action_id:
 			return key
+	for key: String in GiantPlayer.SLOT_KEYS:
+		var id := str(player.controller.loadout.get(key, ""))
+		if id != "" and evolves_from_chain(id, action_id):
+			return key
 	return ""
+
+
+## True when `id` is an evolution of `base` (its evolves_from chain reaches it).
+static func evolves_from_chain(id: String, base: String) -> bool:
+	var cur := id
+	for i in 6:
+		var from := str(GameData.get_record(cur).get("evolves_from", ""))
+		if from == "":
+			return false
+		if from == base:
+			return true
+		cur = from
+	return false
 
 
 ## The slot holding `action_id` when it could be used now (nothing refuses it), else "".
@@ -397,7 +437,9 @@ func ready_slot(action_id: String) -> String:
 	var key := slot_of(action_id)
 	if key == "":
 		return ""
-	if not affordable(GameData.get_action(action_id)):
+	# P38: the slotted action (an evolution of action_id at stages 4-6) is the one afforded
+	var slotted := str(player.controller.loadout.get(key, action_id))
+	if not affordable(GameData.get_action(slotted)):
 		return ""   # P17b: the expert's dodge reserve
 	return key if slot_reason(key) == "" else ""
 
@@ -641,6 +683,12 @@ func _ensure_lock(tick: int, t: EnemyActor) -> EnemyActor:
 	if locked != null and locked.is_alive():
 		if locked == t.entity:
 			return t
+		# P38 (plan M6-M9 §6.1): at stages 4-6 a formation is one lock group whose focus member changes
+		# as the giant moves; a lock on t's formation (its group, or another of its members) is t's lock -
+		# the blows go to the focus member - not a reason to toggle the lock.
+		var la := locked.actor as EnemyActor
+		if la != null and t.formation != null and la.formation == t.formation and is_threat(la):
+			return la
 		var other := locked.actor as EnemyActor
 		if other != null and is_threat(other) and other.global_position.distance_to(player.global_position) < 10.0 \
 				and not t.is_in_group(OgreBoss.GROUP) and not is_elevated(other):

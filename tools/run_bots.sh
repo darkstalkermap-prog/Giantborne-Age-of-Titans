@@ -1,17 +1,30 @@
 #!/usr/bin/env bash
-# Valley bot batch runner (plan §3.19, §5.6). Starts each run as its own headless Godot process with
-# a wall-clock limit, at most --jobs at once, and prints a summary table when all are done. Each run
-# writes its AUTOPILOT_RESULT (JSON) to user://bot_runs/<tag>/<name>.json and its log next to it
-# (<name>.log); <name> is <policy>_<skill>_<seed>[_assist][_loop]. A run that hits its time limit is
-# a failure with its last objective (from the log). Every Godot call goes through tools/gd.sh, so
-# user:// is this worktree's .userdata/ folder.
+# Valley and world bot batch runner (plan M2-M5 §3.19, §5.6; P38: plan M6-M9 §6.1-§6.4). Starts each
+# run as its own headless Godot process with a wall-clock limit, at most --jobs at once, and prints a
+# summary table when all are done. Each run writes its AUTOPILOT_RESULT (JSON) to
+# user://bot_runs/<tag>/<name>.json and its log next to it (<name>.log); <name> is
+# <policy>_<skill>_<seed>[_assist][_loop]. A run that hits its time limit is a failure with its last
+# objective (from the log). Every Godot call goes through tools/gd.sh, so user:// is this worktree's
+# .userdata/ folder.
 #
 # Usage: tools/run_bots.sh [options] [RUN...]
 #   RUN                  policy:skill:seed[:assist]   e.g. help_cache:novice:1  force:expert:2:assist
+#                        P38: a world run names a world policy with "w." first: w.peaceful, w.conqueror,
+#                        w.mixed (the presets of plan §6.1), w.order_march, w.order_wood, w.order_crown
+#                        (each oath first with a stage-4 resolution), w.campaign (the Valley's New Game
+#                        through the Kings' Door, --bot-campaign), e.g. w.conqueror:novice:2:assist
 #   --preset=assisted    the four policies, novice, seed 1, assisted (the M4 complete-loop gate)
 #   --preset=balance     P17b's matrix: novice x {help_cache, help_ogre, intimidate} x seeds 1-5,
 #                        novice x force x seeds 1-3, expert x the four policies x seed 1
 #   --preset=stability   the 30-minute run: --bot-loop --bot-assist, help_cache first, 1800 s
+#   --preset=world_assisted   P38: the three world presets, novice, seed 1, assisted (the M9 acceptance)
+#   --preset=world_orders     P38: each oath first (w.order_march, w.order_wood, w.order_crown), novice,
+#                        seed 1, assisted (the M9 acceptance)
+#   --preset=world_balance    P38/P39: novice x the three presets x seeds 1-3, expert x the three presets x
+#                        seeds 1-3, unassisted, and the three orders once (plan §6.4; 3 jobs, 1,800 s each)
+#   --preset=world_stability  P38/P39: the 60-minute world run: --bot-loop --bot-assist through the three
+#                        presets from --mode=world --new-game, --autoplay=3600 (plan §6.2)
+#   --preset=world_smoke P38: the long world smoke run: w.peaceful, novice, seed 1, assisted, with --perf
 #   --jobs=N             runs at once (default 3)
 #   --timeout=S          wall-clock limit of each run in seconds (default 900)
 #   --autoplay=S         simulated-seconds limit of each run (default 2400; stability 1800)
@@ -33,8 +46,10 @@ PROJECT_NAME="$(sed -n 's/^config\/name="\(.*\)"$/\1/p' project.godot | head -n 
 USERDIR="$DATA/godot/app_userdata/$PROJECT_NAME"
 
 JOBS=3
-TIMEOUT=900
+TIMEOUT=""
 AUTOPLAY=""
+# P38: world runs' defaults (a campaign takes far longer than the Valley's slice)
+WORLD_TIMEOUT_DEFAULT=3600
 TAG="$(date +%Y%m%d_%H%M%S)"
 EXTRA=""
 DRY=0
@@ -53,6 +68,21 @@ for arg in "$@"; do
 		--preset=stability)
 			LOOP=1
 			RUNS+=(help_cache:novice:1:assist) ;;
+		--preset=world_assisted)
+			RUNS+=(w.peaceful:novice:1:assist w.conqueror:novice:1:assist w.mixed:novice:1:assist) ;;
+		--preset=world_orders)
+			RUNS+=(w.order_march:novice:1:assist w.order_wood:novice:1:assist w.order_crown:novice:1:assist) ;;
+		--preset=world_balance)
+			for p in peaceful conqueror mixed; do for s in 1 2 3; do RUNS+=("w.$p:novice:$s"); done; done
+			for p in peaceful conqueror mixed; do for s in 1 2 3; do RUNS+=("w.$p:expert:$s"); done; done
+			for o in order_march order_wood order_crown; do RUNS+=("w.$o:novice:1"); done
+			WORLD_TIMEOUT_DEFAULT=1800 ;;
+		--preset=world_stability)
+			LOOP=1
+			RUNS+=(w.peaceful:novice:1:assist) ;;
+		--preset=world_smoke)
+			EXTRA="${EXTRA:+$EXTRA }--perf"
+			RUNS+=(w.peaceful:novice:1:assist) ;;
 		--jobs=*) JOBS="${arg#--jobs=}" ;;
 		--timeout=*) TIMEOUT="${arg#--timeout=}" ;;
 		--autoplay=*) AUTOPLAY="${arg#--autoplay=}" ;;
@@ -60,13 +90,23 @@ for arg in "$@"; do
 		--extra=*) EXTRA="${arg#--extra=}" ;;
 		--dry-run) DRY=1 ;;
 		--summary) SUMMARY_ONLY=1 ;;
-		-h|--help) sed -n '2,27p' "$0"; exit 0 ;;
+		-h|--help) sed -n '2,40p' "$0"; exit 0 ;;
 		--*) echo "run_bots.sh: unknown option '$arg'" >&2; exit 2 ;;
 		*) RUNS+=("$arg") ;;
 	esac
 done
+# P38: world runs (a spec starting "w.") get the world's limits unless given
+WORLD_RUNS=0
+for spec in "${RUNS[@]}"; do
+	case "$spec" in w.*) WORLD_RUNS=1 ;; esac
+done
 if [ -z "$AUTOPLAY" ]; then
-	if [ "$LOOP" = "1" ]; then AUTOPLAY=1800; else AUTOPLAY=2400; fi
+	if [ "$WORLD_RUNS" = "1" ]; then
+		if [ "$LOOP" = "1" ]; then AUTOPLAY=3600; else AUTOPLAY=7200; fi
+	elif [ "$LOOP" = "1" ]; then AUTOPLAY=1800; else AUTOPLAY=2400; fi
+fi
+if [ -z "$TIMEOUT" ]; then
+	if [ "$WORLD_RUNS" = "1" ]; then TIMEOUT=$WORLD_TIMEOUT_DEFAULT; else TIMEOUT=900; fi
 fi
 OUT_REL="bot_runs/$TAG"
 OUT="$USERDIR/$OUT_REL"
@@ -82,10 +122,11 @@ run_limited() {
 	fi
 }
 
-# name_of policy:skill:seed[:assist] -> policy_skill_seed[_assist][_loop]
+# name_of policy:skill:seed[:assist] -> policy_skill_seed[_assist][_loop] (a world policy w.<name> -> w_<name>)
 name_of() {
 	local IFS=':'
 	read -r policy skill seed assist <<<"$1"
+	policy="${policy/w./w_}"
 	local n="${policy}_${skill:-novice}_${seed:-1}"
 	if [ "${assist:-}" = "assist" ]; then n="${n}_assist"; fi
 	if [ "$LOOP" = "1" ]; then n="${n}_loop"; fi
@@ -100,9 +141,30 @@ one_run() {
 	local name
 	name="$(name_of "$spec")"
 	local args=(--headless --path . --fixed-fps 60 -- --no-user-settings
-		"--save-dir=user://bot_saves/$TAG/$name" --mode=valley --new-game --scenario=valley
-		"--autoplay=$AUTOPLAY" "--bot-village=$policy" "--bot-skill=${skill:-novice}" "--bot-seed=${seed:-1}"
-		"--result-file=user://$OUT_REL/$name.json")
+		"--save-dir=user://bot_saves/$TAG/$name")
+	case "$policy" in
+		w.*)
+			# P38: a world run (plan M6-M9 §6.1): from world_start, or the whole campaign
+			local wp="${policy#w.}"
+			case "$wp" in
+				campaign) args+=(--mode=valley --new-game --scenario=valley --bot-campaign --bot-village=help_cache) ;;
+				*) args+=(--mode=world --new-game --scenario=world) ;;
+			esac
+			case "$wp" in
+				peaceful|conqueror|mixed) args+=("--bot-preset=$wp") ;;
+				order_march) args+=(--bot-preset=peaceful "--bot-oaths=march:help,crown:parley") ;;
+				order_wood) args+=(--bot-preset=peaceful "--bot-oaths=wood:drive,march:force") ;;
+				order_crown) args+=(--bot-preset=peaceful "--bot-oaths=crown:breach,wood:slay") ;;
+				campaign) args+=(--bot-preset=peaceful) ;;
+				*) echo "run_bots.sh: unknown world policy '$wp'" >&2 ;;
+			esac
+			args+=("--autoplay=$AUTOPLAY" "--bot-skill=${skill:-novice}" "--bot-seed=${seed:-1}"
+				"--result-file=user://$OUT_REL/$name.json") ;;
+		*)
+			args+=(--mode=valley --new-game --scenario=valley
+				"--autoplay=$AUTOPLAY" "--bot-village=$policy" "--bot-skill=${skill:-novice}" "--bot-seed=${seed:-1}"
+				"--result-file=user://$OUT_REL/$name.json") ;;
+	esac
 	if [ "${assist:-}" = "assist" ]; then args+=(--bot-assist); fi
 	if [ "$LOOP" = "1" ]; then args+=(--bot-loop); fi
 	if [ -n "$EXTRA" ]; then
@@ -123,7 +185,7 @@ one_run() {
 
 summary() {
 	echo ""
-	echo "Valley bot runs in user://$OUT_REL ($OUT)"
+	echo "Bot runs in user://$OUT_REL ($OUT)"
 	if command -v python3 >/dev/null 2>&1; then
 		python3 - "$OUT" <<'PY'
 import json, os, sys, glob
@@ -139,7 +201,7 @@ for exit_file in sorted(glob.glob(os.path.join(out, "*.exit"))):
             res = json.load(open(path))
         except Exception:
             res = {}
-    vb = res.get("valley_bot", {})
+    vb = res.get("valley_bot", {}) or res.get("world_bot", {})
     last = ""
     if not vb:
         log = os.path.join(out, name + ".log")
@@ -153,6 +215,9 @@ for exit_file in sorted(glob.glob(os.path.join(out, "*.exit"))):
     loop = bool(vb.get("bot", {}).get("loop", False))
     # A loop run's metrics restart with each new game: its simulated time is the Autopilot's.
     sim = res.get("simulated_s", 0) if loop else vb.get("simulated_s", 0)
+    if "world_bot" in res and objectives:
+        mains = [o["id"] for o in objectives if o["id"].startswith("quest.world_main:")]
+        last_obj = mains[-1] if mains else last_obj
     rows.append([name, code, wall, str(vb.get("completed", "")), "%.0f" % float(sim or 0),
         "%.0f" % float(vb.get("human_estimate_s", 0) or 0), str(len(vb.get("deaths", []))),
         str(len(breaches)), ",".join(sorted({b.get("classification", "?") for b in breaches})),

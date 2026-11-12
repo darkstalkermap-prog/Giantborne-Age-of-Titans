@@ -133,6 +133,9 @@ class Run extends RefCounted:
 	var teleports := 0
 	var started_tick := -1
 	var completed_runs := 0
+	## P38: the world bot's own state (WorldBot.WorldRun) when the run plays the world or the whole
+	## campaign (--scenario=world, or --scenario=valley --bot-campaign); null for a Valley run.
+	var world: RefCounted = null
 
 
 static var run: Run = null
