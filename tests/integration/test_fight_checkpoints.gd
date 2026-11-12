@@ -112,6 +112,48 @@ func test_the_moots_duel_holds_checkpoints_until_harrok_is_spared() -> void:
 	await _taken_at_the_end(arena, "boss_defeated", "the Moot")
 
 
+## Harrok's talk ending chosen while the duel is engaged (the giant stepped into the ring, then walked out to
+## the challenge stone - the fight's ground - and bid him kneel) ends the duel as won: the arena is not left
+## engaged with nothing to fight, so the held request (and later the throne's) is taken. The test Moot's arena
+## made a MootArena (its settled flag boss.harrok.outcome).
+func test_the_talk_ending_ends_an_engaged_duel() -> void:
+	level = (load(str(ARENAS["moot"])) as PackedScene).instantiate() as Node3D
+	var old := level.get_node("BossArena") as Node3D
+	var moot := MootArena.new()
+	moot.name = "BossArena"
+	moot.boss_id = "test.moot.harrok"
+	moot.encounter_id = ""
+	moot.engage_area_id = "test.area.moot_engage"
+	moot.gate_path = NodePath("")
+	moot.pillars_path = NodePath("")
+	moot.inner_radius_m = 60.0
+	moot.defeated_flag = "test.moot.defeated"
+	moot.transform = old.transform
+	level.remove_child(old)
+	old.free()
+	level.add_child(moot)
+	TestSpawn.disable_all_ai(level)
+	world.add_child(level)
+	player = level.get_node("Player") as GiantPlayer
+	player.router.use_injection = true
+	GameSession.test_checkpoints = true
+	GameSession.on_level_ready(level, player)
+	player.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+	await step_ticks(2)
+	player.global_position = moot.global_position + Vector3(0, 0.05, 8)
+	await step_ticks(1)
+	await _held(moot, "the Moot")
+	var defeated: Array = []
+	var on_defeated := func(_t: int, id: String) -> void: defeated.append(id)
+	Events.boss_defeated.connect(on_defeated)
+	WorldState.set_flag("boss.harrok.outcome", "yielded_talk")   # Harrok's dialogue: the talk ending
+	await step_ticks(1)
+	Events.boss_defeated.disconnect(on_defeated)
+	assert_eq(defeated, ["test.moot.harrok"], "the duel is won without blood (boss_defeated: the bar and the music end)")
+	await _taken_at_the_end(moot, "boss_defeated", "the Moot's talk ending")
+	assert_true(QuestConditions.truthy(WorldState.get_flag("test.moot.defeated")), "the duel's defeated flag")
+
+
 ## A fight the giant walks away from (the disengage rule) lets a held request through at once.
 func test_a_fight_left_lets_a_held_checkpoint_through() -> void:
 	var arena := await _arena("ogre_king")

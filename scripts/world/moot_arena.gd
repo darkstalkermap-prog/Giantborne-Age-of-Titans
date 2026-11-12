@@ -48,12 +48,19 @@ func engage(tick: int = -1) -> void:
 
 
 ## The talk ending during play: the ring goes quiet at once (no duel, no boss music), the clan
-## reconciled.
-func _on_moot_flag(_tick: int, flag_id: String, value: Variant) -> void:
+## reconciled. M8 release (R1): also when the duel is engaged - the giant stepped into the ring, then
+## walked out to the challenge stone (the fight's ground, N4.6) and bid Harrok kneel: the duel is won
+## without blood (BossArena._defeat: the defeated flag, boss_defeated - the bar and the boss music end, and
+## its checkpoint is taken). It stayed engaged before, with Harrok stood down, until the giant walked away;
+## and since no checkpoint is committed while a fight is engaged, the throne inside the ring would have been
+## claimed with nothing saved.
+func _on_moot_flag(tick: int, flag_id: String, value: Variant) -> void:
 	if flag_id != settled_flag or not QuestConditions.truthy(value):
 		return
 	if str(value) == "yielded_talk":
-		if state != State.ENGAGED:
+		if state == State.ENGAGED:
+			_defeat(tick)
+		else:
 			state = State.DEFEATED
 		if faction != "":
 			FactionState.reconcile(faction)
