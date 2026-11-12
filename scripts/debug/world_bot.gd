@@ -117,6 +117,8 @@ const ARENA_LEASH_BACK_SHARE := 0.25
 ## ignored for this long.
 const RANGED_GIVE_UP_S := 8.0
 const RANGED_IGNORE_S := 120.0
+## An encounter's last members above reach are shot at from the ground this far from them.
+const ELEVATED_SHOT_M := 16.0
 ## A boss fight's respawn point: the waystone within this of its place is taken first; the bot waits at
 ## it this long for the checkpoint (taken out of combat).
 const RESPAWN_POINT_RADIUS_M := 160.0
@@ -1156,11 +1158,43 @@ func _exit_task(exit_id: String) -> Dictionary:
 	return {"kind": "exit", "id": exit_id}
 
 
-## An encounter of the world: its nearest living member (as the Valley's), else its centre.
+## An encounter of the world: its nearest living member (as the Valley's), else - from stage 4, when
+## a member above reach is left - the ground ELEVATED_SHOT_M from it to shoot it from, else its centre.
 func _world_encounter_task(encounter_id: String) -> Dictionary:
 	if director == null:
 		return _travel_task(_where(encounter_id), 10.0, encounter_id)
-	return _encounter_task(encounter_id, _where(encounter_id))
+	var t := _encounter_task(encounter_id, _where(encounter_id))
+	if str(t.get("kind", "")) == "go" and player.current_growth_stage() >= 4:
+		var spot := _elevated_shot_spot(encounter_id)
+		if spot.is_finite():
+			t["pos"] = spot
+			t["radius"] = 3.0
+	return t
+
+
+## Where to shoot an encounter's members above reach from: the ground ELEVATED_SHOT_M from the
+## nearest one left (toward the giant); INF when none is left. The toll fort's tower archers stand
+## 13 m up behind their cabin's wall: from the fort's centre, 31 m off, the bolts struck the wall and
+## the bot stood there until the march's watchdog; from 17 m they struck the archers.
+func _elevated_shot_spot(encounter_id: String) -> Vector3:
+	var best: EnemyActor = null
+	var best_d := INF
+	for e in _encounter_alive(encounter_id):
+		if not combat.is_elevated(e) or e.brain == null \
+				or e.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]:
+			continue
+		var d := _flat_dist(e.global_position, player.global_position)
+		if d < best_d:
+			best = e
+			best_d = d
+	if best == null:
+		return Vector3.INF
+	var away := _flat(player.global_position - best.global_position)
+	if away.length_squared() < 1.0:
+		away = Vector3.BACK
+	var spot := best.global_position + away.normalized() * ELEVATED_SHOT_M
+	spot.y = player.global_position.y
+	return spot
 
 
 func _encounter_cleared(encounter_id: String) -> bool:
