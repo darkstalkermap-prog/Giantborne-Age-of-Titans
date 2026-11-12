@@ -1363,6 +1363,27 @@ static func respawn_refusal(checkpoint_id: String) -> String:
 	return ""
 
 
+## M8 release (R2): respawn_refusal for a save that is not loaded yet (the title's saved-game line): what the
+## level's director will carry when the save loads (_resume_saved: an event whose run WorldState holds in
+## progress) refuses a checkpoint within EVENT_CLEAR_M of that event's centre, with its respawn_text. Reads
+## the events of GameSession.respawn_blocker_level() and WorldState's flags; nothing needs to be loaded.
+static func saved_run_refusal(checkpoint_id: String) -> String:
+	var lv := GameSession.respawn_blocker_level()
+	var idx := WorldIndex.for_level(lv)
+	if idx == null or not idx.has_checkpoint(checkpoint_id):
+		return ""
+	var at := idx.position_of(checkpoint_id)
+	for rec: Dictionary in GameData.records_of_type("world_event"):
+		if str(rec.get("level", "")) != lv:
+			continue
+		var e := WorldEvent.make(rec)
+		if not e.run_in_progress(WorldState.flags) or not e.centre.is_finite() or _flat(at - e.centre) > EVENT_CLEAR_M:
+			continue
+		var text := str(rec.get("respawn_text", ""))
+		return text if text != "" else RESPAWN_TEXT % str(rec.get("display_name", "A battle"))
+	return ""
+
+
 ## True when `event_id` runs (or waits to resume) on `level_id` (tests, the bot).
 static func is_carried(level_id: String, event_id: String) -> bool:
 	return (_carry.get(level_id, {}) as Dictionary).has(event_id)

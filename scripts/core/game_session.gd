@@ -750,18 +750,23 @@ func respawn_transform(checkpoint_id: String) -> Transform3D:
 ## start checkpoint when unblocked, else the nearest unblocked one; the saved respawn when every
 ## checkpoint is refused (or the level has no index).
 func respawn_checkpoint() -> String:
-	if respawn_id == "" or respawn_blocker(respawn_id) == "":
-		return respawn_id
-	var idx := WorldIndex.for_level(save_level_id())
+	return _respawn_for(respawn_id, save_level_id(), current_stage())
+
+
+## respawn_checkpoint()'s rule for a saved respawn `saved` of level `lv` and a giant of `stage`.
+func _respawn_for(saved: String, lv: String, stage: int) -> String:
+	if saved == "" or respawn_blocker(saved, lv, stage) == "":
+		return saved
+	var idx := WorldIndex.for_level(lv)
 	if idx == null:
-		return respawn_id
-	var origin := idx.position_of(respawn_id)
+		return saved
+	var origin := idx.position_of(saved)
 	var best_visited := ""
 	var best_visited_d := INF
 	var best_any := ""
 	var best_any_d := INF
 	for id in idx.checkpoint_ids():
-		if id == respawn_id or respawn_blocker(id) != "":
+		if id == saved or respawn_blocker(id, lv, stage) != "":
 			continue
 		var p := idx.position_of(id)
 		var d := p.distance_to(origin) if origin.is_finite() else 0.0
@@ -773,20 +778,54 @@ func respawn_checkpoint() -> String:
 			best_any_d = d
 	if best_visited != "":
 		return best_visited
-	var start := str(level_record().get("start_checkpoint", ""))
-	if start != "" and start != respawn_id and idx.has_checkpoint(start) and respawn_blocker(start) == "":
+	var rec := GameData.get_record(lv)
+	var start := str(rec.get("start_checkpoint", "")) if str(rec.get("type", "")) == "level" else ""
+	if start != "" and start != saved and idx.has_checkpoint(start) and respawn_blocker(start, lv, stage) == "":
 		return start
-	return best_any if best_any != "" else respawn_id
+	return best_any if best_any != "" else saved
+
+
+## M8 release (R2): the checkpoint a Continue of the save document `doc` wakes the giant at, before the
+## save is loaded (the title's saved-game line names it: TitleScreen.describe_save). respawn_checkpoint()'s
+## rule judged for that save - its level, saved respawn and the character's stage, its world (swapped into
+## WorldState for the call and back: bulk loads emit nothing) - with the blockers its level registers once it
+## loads, which are not registered at the title: FactionState's guards (FactionState.respawn_refusal) and a
+## world event's run the save holds in progress (WanderDirector.saved_run_refusal). The 0.7.0-m7 save at
+## the Brannock waystone with Brannock hostile read "at the Brannock waystone" while Continue woke the giant at
+## the Kingsgate shelf waystone. The saved respawn when the document has no world.
+func save_respawn(doc: Dictionary) -> String:
+	var cp: Variant = doc.get("checkpoint")
+	var saved := str((cp as Dictionary).get("respawn", "")) if typeof(cp) == TYPE_DICTIONARY else ""
+	var doc_world: Variant = doc.get("world")
+	if saved == "" or typeof(doc_world) != TYPE_DICTIONARY:
+		return saved
+	var lv := str(doc.get("level", VALLEY_LEVEL_ID))
+	var ch: Variant = doc.get("character")
+	var stage := maxi(1, int((ch as Dictionary).get("growth_stage", 1))) if typeof(ch) == TYPE_DICTIONARY else 1
+	var live := WorldState.to_save_dict()
+	if not WorldState.from_save_dict(doc_world as Dictionary):
+		return saved
+	var level_blockers: Array[Callable] = [
+		func(id: String) -> String: return FactionState.respawn_refusal(id),
+		func(id: String) -> String: return WanderDirector.saved_run_refusal(id),
+	]
+	_respawn_blockers.append_array(level_blockers)
+	var out := _respawn_for(saved, lv, stage)
+	for b in level_blockers:
+		_respawn_blockers.erase(b)
+	WorldState.from_save_dict(live)
+	return out
 
 
 ## Why a respawn at `checkpoint_id` is refused ("" = it is fine): its index max_stage below the
-## character's stage (built in), else the first registered blocker's reason. The checkpoint is the
-## save's level's, or `p_level_id`'s when given (a fast travel's destination: the registered blockers
-## judge that level meanwhile - respawn_blocker_level()).
-func respawn_blocker(checkpoint_id: String, p_level_id := "") -> String:
+## character's stage (built in; `stage` when given, else current_stage()), else the first registered
+## blocker's reason. The checkpoint is the save's level's, or `p_level_id`'s when given (a fast travel's
+## destination: the registered blockers judge that level meanwhile - respawn_blocker_level()).
+func respawn_blocker(checkpoint_id: String, p_level_id := "", stage := 0) -> String:
 	var lv := p_level_id if p_level_id != "" else save_level_id()
 	var idx := WorldIndex.for_level(lv)
-	if idx != null and idx.has_checkpoint(checkpoint_id) and idx.max_stage_of(checkpoint_id) < current_stage():
+	var st := stage if stage > 0 else current_stage()
+	if idx != null and idx.has_checkpoint(checkpoint_id) and idx.max_stage_of(checkpoint_id) < st:
 		return NARROW_PATHS
 	var previous := _blocker_level
 	_blocker_level = lv
