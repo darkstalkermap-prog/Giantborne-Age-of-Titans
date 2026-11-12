@@ -51,6 +51,22 @@ extends Control
 ## the label its text's width, at most the line's room (TARGET_FRAME_WIDTH less the panel's margins,
 ## and the flag while it shows), so the line stays centred and only a name too long for the frame is
 ## trimmed; the frame never grows (test_hud_layout).
+##
+## P39f (FOLLOWUPS, "From the M8 screenshot pass"):
+## - While a modal screen is open (ScreenStack.any_open_in: pause, shrine, dialogue, the yield prompt, map,
+##   journal, inventory, end screen...) the HUD is hidden. It stayed drawn round every menu: the stack's
+##   footer hint printed over the hotbar's cost labels and red notes, the quest tracker, the TIP box and an
+##   objective marker's distance showed beside and behind the shrine window, and the last message stuck out
+##   under the end screen's buttons. A child that runs while the game is paused (MenuWatch) hides and shows
+##   it; nothing in it changes meanwhile (the HUD is pausable), so it comes back as it was.
+## - The hotbar's slots are SLOT_SIZE wide with SLOT_GAP between them and an ability's name may use the slot's
+##   whole inner width (SLOT_TITLE_WIDTH): every shipped hotbar label fits it untrimmed (RAMPART, FOOTFALL
+##   read "RAMPA", "FOOTF"). The row sits HOTBAR_BOTTOM above the screen's edge, so the red notes under the
+##   slots end REASON_EDGE_PX above it (their letters' tails were cut by the edge).
+## - The loot line is a backed panel (LOOT_WIDTH wide, growing upward) listing the materials the giant
+##   carries (stackable items: iron, titan iron, wood), packed whole onto lines (loot_lines): it was one
+##   unbacked line of every item, trimmed with "..." ("Loot: Iron Ingot x1, Ogre King's Tu..."). One-of-a-kind
+##   trophies, keys and quest items are listed by the inventory screen (I).
 
 const MESSAGE_LIFETIME := 2.6
 ## M8 gate (F30): the message box's width, the lines it holds (one message may use all of them), the
@@ -72,6 +88,23 @@ const HELP_TITLE := "CONTROLS  (rebind in Pause > Controls)"
 ## The banner mark P30's lock_label() puts before a banner's name (drawn as a flag instead).
 const BANNER_MARK := "⚑"
 const BANNER_FLAG_COLOR := Color(0.95, 0.72, 0.30)
+## P39f: the hotbar. Nine slots of SLOT_SIZE with SLOT_GAP between them (572 px; it was 58 + 6 = 570 px, where
+## a 42 px title cut RAMPART and FOOTFALL); the row's bottom HOTBAR_BOTTOM above the screen's edge and its
+## height HOTBAR_HEIGHT; a slot's title may span SLOT_TITLE_WIDTH (the slot inside its 1 px border, less 1 px
+## a side); the red reason line starts REASON_GAP below the slot's content and ends REASON_EDGE_PX or more
+## above the screen's edge.
+const SLOT_SIZE := Vector2(60, 60)
+const SLOT_GAP := 4
+const HOTBAR_BOTTOM := 20.0
+const HOTBAR_HEIGHT := 76.0
+const SLOT_TITLE_WIDTH := 56.0
+const REASON_GAP := 6.0
+const REASON_EDGE_PX := 3.0
+## P39f: the loot panel's width (its text LOOT_WIDTH less the panel's margins), the most lines it holds, and the
+## separator between two items on a line.
+const LOOT_WIDTH := 300.0
+const LOOT_MAX_LINES := 3
+const LOOT_SEPARATOR := "   "
 
 var player: GiantPlayer
 var _bars: Dictionary = {}
@@ -96,6 +129,8 @@ var _help_rows: Array = []                 ## the rows shown now (help_rows())
 var _help_signature := ""                  ## _help_key() when the overlay was built
 var _mode_label: Label
 var _loot_label: Label
+var _loot_panel: PanelContainer
+var _loot_key := ""                       ## the inventory the loot panel last showed (P39f)
 var _hotbar: HBoxContainer
 var _resources_panel: PanelContainer
 var _labels_dirty := true
@@ -121,6 +156,11 @@ func _ready() -> void:
 	HudWidgets.create_all(self)
 	_build_death()
 	_build_help()
+	# P39f: hidden while a modal screen is open; the watch runs while the screens pause the game.
+	var watch := MenuWatch.new()
+	watch.name = "MenuWatch"
+	watch.hud = self
+	add_child(watch)
 	Events.hud_message.connect(show_message)
 	Events.loot_awarded.connect(_on_loot)
 	Events.object_destroyed.connect(_on_object_destroyed)
@@ -247,16 +287,18 @@ func _build_resources() -> void:
 
 func _build_hotbar() -> void:
 	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 6)
+	h.add_theme_constant_override("separation", SLOT_GAP)
 	h.anchor_left = 0.5
 	h.anchor_right = 0.5
 	h.anchor_top = 1.0
 	h.anchor_bottom = 1.0
-	# 9 slots of 58 px and 8 gaps of 6 px: 570 px (P16: the old 568 let the row grow 2 px right).
-	h.offset_left = -285
-	h.offset_right = 285
-	h.offset_top = -92
-	h.offset_bottom = -16
+	# P39f: 9 slots of 60 px and 8 gaps of 4 px: 572 px (P16's 9 x 58 + 8 x 6 = 570), HOTBAR_BOTTOM above the
+	# screen's edge (the red notes under the slots were cut by it at 16).
+	var half := (9.0 * SLOT_SIZE.x + 8.0 * SLOT_GAP) * 0.5
+	h.offset_left = -half
+	h.offset_right = half
+	h.offset_top = -HOTBAR_BOTTOM - HOTBAR_HEIGHT
+	h.offset_bottom = -HOTBAR_BOTTOM
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(h)
 	_hotbar = h
@@ -265,24 +307,32 @@ func _build_hotbar() -> void:
 		h.add_child(slot.root)
 		_slots.append(slot)
 		_slot_states.append({"id": "", "reason_code": "", "reason": "", "target": "", "key": "", "alt_key": ""})
-	_loot_label = HudKit.label("", HudKit.TEXT, UiKit.MUTED)
-	_loot_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_loot_label.anchor_left = 1.0
-	_loot_label.anchor_right = 1.0
-	_loot_label.anchor_top = 1.0
-	_loot_label.anchor_bottom = 1.0
-	_loot_label.offset_left = -260
-	_loot_label.offset_right = -16
-	_loot_label.offset_top = -40
-	_loot_label.offset_bottom = -16
+	# P39f: the loot panel - a backing, the materials packed whole onto lines (loot_lines), growing upward from
+	# the bottom right; hidden while the giant carries none.
+	_loot_panel = HudKit.panel(Color(0.05, 0.06, 0.08, 0.72))
+	_loot_panel.anchor_left = 1.0
+	_loot_panel.anchor_right = 1.0
+	_loot_panel.anchor_top = 1.0
+	_loot_panel.anchor_bottom = 1.0
+	_loot_panel.offset_left = -16.0 - LOOT_WIDTH
+	_loot_panel.offset_right = -16.0
+	_loot_panel.offset_top = -HOTBAR_BOTTOM - 1.0
+	_loot_panel.offset_bottom = -HOTBAR_BOTTOM
+	_loot_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_loot_panel.visible = false
+	add_child(_loot_panel)
+	_loot_label = HudKit.label("", HudKit.TEXT, UiKit.TEXT)
 	_loot_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	add_child(_loot_label)
+	_loot_label.add_theme_constant_override("line_spacing", 0)
+	_loot_panel.add_child(_loot_label)
+	_update_loot()
 
 
 func _make_slot(index: int) -> Dictionary:
 	var root := PanelContainer.new()
-	root.custom_minimum_size = Vector2(58, 60)
-	root.add_theme_stylebox_override("panel", HudKit.box(UiKit.BG))
+	root.custom_minimum_size = SLOT_SIZE
+	var box := HudKit.box(UiKit.BG)
+	root.add_theme_stylebox_override("panel", box)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	HudKit.set_z(root, HudKit.Z_BACK)
 	var stack := Control.new()
@@ -305,6 +355,10 @@ func _make_slot(index: int) -> Dictionary:
 	stack.add_child(pad)
 	var title := HudKit.label("", HudKit.SMALL)
 	title.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# P39f: the name may use the slot's whole inner width (SLOT_TITLE_WIDTH), past the box's side margins.
+	var spill := (SLOT_TITLE_WIDTH - (SLOT_SIZE.x - box.content_margin_left - box.content_margin_right)) * 0.5
+	title.offset_left = -spill
+	title.offset_right = spill
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -326,8 +380,10 @@ func _make_slot(index: int) -> Dictionary:
 	reason.anchor_top = 1.0
 	reason.anchor_bottom = 1.0
 	reason.anchor_right = 1.0
-	reason.offset_top = 8
-	reason.offset_bottom = 22
+	# P39f: one line of SMALL text (its font's height), starting REASON_GAP below the slot's content - it
+	# ends REASON_EDGE_PX or more above the screen's edge (test_hud_layout).
+	reason.offset_top = REASON_GAP
+	reason.offset_bottom = REASON_GAP + _small_line_height()
 	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	# P16: a reason wider than the slot ("Out of range") grows to both sides, staying centred.
 	reason.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -705,6 +761,7 @@ func mode_line_text() -> String:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_update_loot()
 	if player == null or not is_instance_valid(player):
 		player = get_tree().get_first_node_in_group("player") as GiantPlayer
 		if player == null:
@@ -730,10 +787,84 @@ func _process(delta: float) -> void:
 	_capture_hint.visible = not _death.visible and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED \
 		and DisplayServer.get_name() != "headless" and not get_tree().paused \
 		and not InputBindings.last_device_is_pad()
-	var parts := PackedStringArray()
-	for item_id: String in WorldState.inventory:
-		parts.append("%s x%d" % [GameData.get_record(item_id).get("display_name", item_id), WorldState.inventory[item_id]])
-	_loot_label.text = ("Loot: " + ", ".join(parts)) if not parts.is_empty() else ""
+
+
+# --------------------------------------------------------------------------- P39f: the loot panel
+
+## The loot panel's entries for an inventory (item id -> count): the materials - items that stack (a record's
+## stack_max over 1: iron, titan iron, wood) - as "Iron Ingot x3", in the inventory's order. One-of-a-kind
+## trophies, keys and quest items are left to the inventory screen.
+static func loot_entries(inventory: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	for item_id: String in inventory:
+		var rec := GameData.get_record(item_id)
+		if int(rec.get("stack_max", 1)) <= 1:
+			continue
+		out.append("%s x%d" % [str(rec.get("display_name", item_id)), int(inventory[item_id])])
+	return out
+
+
+## `entries` packed whole onto lines at most `width` px wide in `font` at `size`, the first led by "Loot:", the
+## entries of a line LOOT_SEPARATOR apart; an entry is never split (one wider than a line has a line of its
+## own). [] for no entries.
+static func loot_lines(entries: PackedStringArray, font: Font, size: int, width: float) -> PackedStringArray:
+	var lines := PackedStringArray()
+	if entries.is_empty():
+		return lines
+	var line := "Loot:"
+	for e in entries:
+		var joined := line + LOOT_SEPARATOR + e if line != "" else e
+		if line == "" or font.get_string_size(joined, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x <= width:
+			line = joined
+		else:
+			lines.append(line)
+			line = e
+	lines.append(line)
+	return lines
+
+
+## The loot panel's text room: LOOT_WIDTH less its box's side margins.
+func loot_text_width() -> float:
+	var sb := _loot_panel.get_theme_stylebox("panel")
+	return LOOT_WIDTH - (sb.get_minimum_size().x if sb != null else 0.0)
+
+
+## Refreshes the loot panel when the inventory changed: its lines, and its top so it holds them exactly (it grows
+## upward from the bottom, so its drawn rect is its anchored one).
+func _update_loot() -> void:
+	var key := str(WorldState.inventory)
+	if key == _loot_key:
+		return
+	_loot_key = key
+	var font := _loot_label.get_theme_font("font")
+	var lines := loot_lines(loot_entries(WorldState.inventory), font, _loot_label.get_theme_font_size("font_size"),
+		loot_text_width()) if font != null else PackedStringArray()
+	_loot_label.text = "\n".join(lines)
+	_loot_panel.visible = not lines.is_empty()
+	_loot_panel.offset_top = _loot_panel.offset_bottom - maxf(_loot_panel.get_combined_minimum_size().y, 1.0)
+
+
+## The loot panel's lines now ([] while it is hidden; tests).
+func loot_lines_now() -> PackedStringArray:
+	if _loot_panel == null or not _loot_panel.visible:
+		return PackedStringArray()
+	return _loot_label.text.split("\n")
+
+
+## The loot panel's tallest rect on a `view`-sized screen: LOOT_MAX_LINES lines (its layout region).
+func _loot_region(view: Vector2) -> Rect2:
+	var sb := _loot_panel.get_theme_stylebox("panel")
+	var font := _loot_label.get_theme_font("font")
+	var h := LOOT_MAX_LINES * (font.get_height(_loot_label.get_theme_font_size("font_size")) if font != null else 20.0)
+	h += sb.get_minimum_size().y if sb != null else 0.0
+	var bottom := view.y + _loot_panel.offset_bottom
+	return Rect2(view.x + _loot_panel.offset_left, bottom - h, LOOT_WIDTH, h)
+
+
+## The height of a line of HudKit.SMALL text in the HUD's font.
+func _small_line_height() -> float:
+	var font := get_theme_font("font", "Label")
+	return font.get_height(HudKit.SMALL) if font != null else 16.0
 
 
 ## Updates the resource bars, hotbar and target frame from the current state right away
@@ -1014,7 +1145,7 @@ func layout_regions(view: Vector2) -> Dictionary:
 	var out := {
 		"resources": HudWidget.anchored_rect(_resources_panel, view),
 		"hotbar": HudWidget.anchored_rect(_hotbar, view).grow_individual(10.0, 16.0, 10.0, 16.0),
-		"loot": HudWidget.anchored_rect(_loot_label, view),
+		"loot": _loot_region(view),
 		"capture_hint": HudWidget.anchored_rect(_capture_hint, view),
 		"messages": HudWidget.anchored_rect(_messages, view),
 	}
@@ -1064,7 +1195,7 @@ static func _shows_something(c: Control) -> bool:
 ## The Controls behind the regions that have one (tests compare their drawn rects with
 ## layout_regions at the real screen size): the HUD's panels and every widget's.
 func layout_controls() -> Dictionary:
-	var out := {"resources": _resources_panel, "hotbar": _hotbar, "loot": _loot_label,
+	var out := {"resources": _resources_panel, "hotbar": _hotbar, "loot": _loot_panel,
 		"capture_hint": _capture_hint, "messages": _messages, "target_frame": _target_frame}
 	for c in get_children():
 		if c is HudWidget:
@@ -1087,6 +1218,35 @@ func _update_messages() -> void:
 		if age > life:
 			_messages.remove_child(child)
 			child.queue_free()
+
+
+## P39f: hides the HUD while a modal screen is open and shows it again when the last one closes. A plain Node
+## (it draws nothing) that runs while the game is paused - the HUD itself is pausable.
+class MenuWatch:
+	extends Node
+
+	var hud: Hud
+
+	func _ready() -> void:
+		process_mode = Node.PROCESS_MODE_ALWAYS
+
+	func _process(_delta: float) -> void:
+		if hud != null and is_instance_valid(hud):
+			hud.sync_menu_hidden()
+
+
+## P39f: hides the HUD while a screen stack in the tree has a screen open (ScreenStack.any_open_in), shows it
+## when none has. Returns whether it is hidden now.
+func sync_menu_hidden() -> bool:
+	var open := is_inside_tree() and ScreenStack.any_open_in(get_tree())
+	if visible == open:
+		visible = not open
+	return open
+
+
+## True while the HUD is hidden behind an open screen (tests).
+func menu_hidden() -> bool:
+	return not visible
 
 
 ## P27: rectangles only (a dot and four ticks), so the crosshair joins the HUD's batch of rectangles

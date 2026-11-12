@@ -18,6 +18,9 @@ extends Control
 ## top screen's focus rows when it opens or comes back on top (and once more on the next frame,
 ## after the layout ran), puts a lost focus back every frame, and shows a footer hint ("A: select
 ## B: back" or "Enter: select Esc: back", by the last device) while any screen is open.
+## P39f: the footer says what the top screen's nav_hint() says (UiNav's line by default); a screen with its own
+## instructions returns "" and the footer hides - the yield prompt's choices are held, not selected, and its
+## own line under them says so (the footer's "Enter: select" contradicted it).
 
 const GROUP := "screen_stack"
 ## Every planned screen; a missing file is skipped (its package has not landed yet).
@@ -46,7 +49,6 @@ var _menu_context := false            ## this stack set InputRouter MENU
 var _paused := false                  ## this stack paused the tree
 var _last_input_was_click := false
 var _hint: Label                      ## the footer hint (P16), the stack's last child
-var _hint_serial := -1
 
 
 func _ready() -> void:
@@ -82,10 +84,10 @@ func hint_text() -> String:
 func _process(_delta: float) -> void:
 	var t := top()
 	if _hint != null:
-		_hint.visible = t != null
-		if t != null and InputBindings.device_serial != _hint_serial:
-			_hint_serial = InputBindings.device_serial
-			_hint.text = UiNav.hint_text(InputBindings.last_device_is_pad())
+		var line := t.nav_hint(InputBindings.last_device_is_pad()) if t != null and is_instance_valid(t) else ""
+		if _hint.text != line:
+			_hint.text = line
+		_hint.visible = line != ""
 	if t == null or not is_instance_valid(t) or not t.is_inside_tree():
 		return
 	if t.focus_dirty:
@@ -214,6 +216,17 @@ func handle_pause() -> void:
 func close_all() -> void:
 	while not _screens.is_empty():
 		pop(_screens.back(), {"closed_all": true})
+
+
+## P39f: true while a stack in `tree` has a screen open (the HUD hides then).
+static func any_open_in(tree: SceneTree) -> bool:
+	if tree == null:
+		return false
+	for node in tree.get_nodes_in_group(GROUP):
+		var s := node as ScreenStack
+		if s != null and is_instance_valid(s) and s.any_open():
+			return true
+	return false
 
 
 ## Closes the screens of every stack in the tree. Returns how many were open (the test reset

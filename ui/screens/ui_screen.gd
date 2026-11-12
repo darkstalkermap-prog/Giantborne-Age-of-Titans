@@ -42,6 +42,12 @@ func pauses_game() -> bool:
 	return true
 
 
+## P39f: the footer line the stack shows under this screen for the device in use (`pad`): UiNav's "move /
+## select / back". A screen whose own text says how to use it returns "" (the footer hides).
+func nav_hint(pad: bool) -> String:
+	return UiNav.hint_text(pad)
+
+
 ## The control that gets the focus when the screen opens (pad navigation), or null.
 func first_focus() -> Control:
 	return null

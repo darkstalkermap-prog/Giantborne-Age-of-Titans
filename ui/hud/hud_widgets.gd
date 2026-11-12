@@ -18,7 +18,7 @@ const WIDGETS := [
 	"res://ui/hud/quest_tracker.gd",     # P13  top-right, (-356..-16, 14..132)
 	"res://ui/hud/tutorial_prompt.gd",   # P13  left-centre, (16..396, -70..70 around vertical centre)
 	# M6-M9 (pre-declared by P20, plan M6-M9 §2.14; below the two edge overlays):
-	"res://ui/hud/compass.gd",           # P27  top-centre, (-270..270, 4..28) (the plan's -300..300 met the tracker at 1280 px)
+	"res://ui/hud/compass.gd",           # P27  top-centre, (-270..270, 4..34) (P39f; P27 4..28; the plan's -300..300 met the tracker at 1280 px)
 	"res://ui/hud/region_banner.gd",     # P27  top-centre, (-320..320, 206..252), 3 s (the plan's 150..196 met the ability notice)
 	"res://ui/hud/discovery_toast.gd",   # P27  top-left under the checkpoint toast, (12..352, 92..126)
 	"res://ui/hud/objective_marker.gd",  # P13  projected marker + edge clamp (36 px inside the edge, clear of the panels) + distance

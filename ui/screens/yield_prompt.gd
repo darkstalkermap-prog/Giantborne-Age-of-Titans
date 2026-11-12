@@ -119,6 +119,13 @@ func hint_text() -> String:
 	return _hint.text if _hint != null else ""
 
 
+## P39f (FOLLOWUPS: "the yield prompt gives two instructions"): no footer under the prompt. Its own line under
+## the choices (hint_text) says how to take a choice - held, on a deciding line - where the stack's footer said
+## "Enter: select" (a tap takes nothing here).
+func nav_hint(_pad: bool) -> String:
+	return ""
+
+
 ## Keys 1-4 are the fight's ability keys: they never choose here, and the buttons carry no numbers.
 func numbered_keys() -> bool:
 	return false

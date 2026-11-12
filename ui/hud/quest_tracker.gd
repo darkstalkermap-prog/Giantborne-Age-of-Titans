@@ -10,11 +10,19 @@ extends HudWidget
 ## (Quests.tracked_id(): the main quest unless the player tracks another with T / D-pad Left or the
 ## journal); the second is then the main quest, else the first other quest. Drawn by HudKit's rules
 ## (no clipping: the lines trim with an ellipsis and the panel fits its region).
+## P39f (FOLLOWUPS, "long HUD lines are cut with '...'"): each objective wraps onto up to TEXT_LINES lines (the
+## first had two, the second one, so a long step - the crown's oath, Sedge's errand - was cut with "...") and
+## the panel is as tall as what it shows (it was a fixed 118 px box), from TOP down: its layout region is its
+## tallest (max_height()), and every shipped objective fits it whole (test_hud_layout).
 
 const PACING_SHOW_S := 4.0
 const MAX_FRAME_S := 0.1
 const GOLD := Color(1.0, 0.86, 0.45)
 const COMPLETE_TEXT := "Complete. The valley is yours to explore."
+## P39f: the panel's top, its text width, and the lines an objective may take (each of the two).
+const TOP := 14.0
+const TEXT_WIDTH := 324.0
+const TEXT_LINES := 3
 
 var _panel: PanelContainer
 var _main_title: Label
@@ -33,24 +41,27 @@ func _ready() -> void:
 	_panel.anchor_right = 1.0
 	_panel.offset_left = -356
 	_panel.offset_right = -16
-	_panel.offset_top = 14
-	_panel.offset_bottom = 132
+	_panel.offset_top = TOP
+	_panel.offset_bottom = TOP + 1.0
 	add_child(_panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 0)
 	_panel.add_child(v)
 	_main_title = _line(v, HudKit.SMALL, GOLD)
-	_main_text = _line(v, HudKit.TEXT, UiKit.TEXT, 2)
+	_main_text = _line(v, HudKit.TEXT, UiKit.TEXT, TEXT_LINES)
 	_side_title = _line(v, HudKit.SMALL, UiKit.MUTED)
-	_side_text = _line(v, HudKit.TEXT, UiKit.TEXT, 1)
+	_side_text = _line(v, HudKit.TEXT, UiKit.TEXT, TEXT_LINES)
 	_pacing = _line(v, HudKit.SMALL, GOLD)
+	for l: Label in [_main_title, _main_text, _side_title, _side_text, _pacing]:
+		l.visible = false
+	_fit_panel()
 	_panel.visible = false
 	Events.xp_gained.connect(_on_xp_gained)
 
 
 func _line(parent: Control, size: int, color: Color, max_lines := 1) -> Label:
 	var l := HudKit.label("", size, color)
-	l.custom_minimum_size = Vector2(324, 0)
+	l.custom_minimum_size = Vector2(TEXT_WIDTH, 0)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if max_lines > 1 else TextServer.AUTOWRAP_OFF
 	l.max_lines_visible = max_lines
 	l.add_theme_constant_override("line_spacing", 0)
@@ -130,6 +141,36 @@ func _process(delta: float) -> void:
 		_pacing_left -= minf(delta, MAX_FRAME_S)
 	_pacing.visible = _pacing_left > 0.0
 	_panel.visible = _main_text.visible or _side_text.visible or _pacing.visible
+	_fit_panel()
+
+
+## P39f: the panel's bottom where its lines end (it grows and shrinks with them; its drawn rect is its
+## anchored one).
+func _fit_panel() -> void:
+	var bottom := TOP + maxf(_panel.get_combined_minimum_size().y, 1.0)
+	if not is_equal_approx(_panel.offset_bottom, bottom):
+		_panel.offset_bottom = bottom
+
+
+## P39f: the panel's tallest height - both titles, TEXT_LINES lines of each objective and the pacing line,
+## with the panel's margins - in this widget's font.
+func max_height() -> float:
+	var font := get_theme_font("font", "Label")
+	var small := font.get_height(HudKit.SMALL) if font != null else 16.0
+	var text := font.get_height(HudKit.TEXT) if font != null else 20.0
+	var sb := _panel.get_theme_stylebox("panel")
+	return 3.0 * small + 2.0 * TEXT_LINES * text + (sb.get_minimum_size().y if sb != null else 0.0)
+
+
+## P39f: the tracker's region is its tallest rect (layout_controls() gives the panel as drawn now).
+func layout_regions(view: Vector2) -> Dictionary:
+	var r := HudWidget.anchored_rect(_panel, view)
+	return {"quest_tracker": Rect2(r.position.x, TOP, r.size.x, max_height())}
+
+
+## The labels of the objectives' texts (tests: whether a text shows whole).
+func text_labels() -> Array[Label]:
+	return [_main_text, _side_text] as Array[Label]
 
 
 ## The tracker's lines now ({} while hidden).
