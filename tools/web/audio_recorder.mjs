@@ -93,9 +93,13 @@ export function taskStats(tasks, from, to) {
 // PLACE_TOLERANCE_MS of its end is the main thread's: the worklet ran dry while the main thread
 // could not mix, and the first message it handled refilled it. A hole that no "read" ended is
 // placed with the holes that follow it within MERGE_GAP_MS (one stall, broken by a moment of a
-// sample voice, which Web Audio plays without the mixer). The rest are listed.
+// sample voice, which Web Audio plays without the mixer). P39f: a hole that runs to the recording's end
+// (the disarm cut it short, so no "read" can have ended it) with no "read" handled inside it is the
+// main thread's too (counted in cut_at_disarm as well: tools/web/world_check.mjs's walk ended in a
+// 415 ms frame, its WORLD_WALK_END line disarming the recorder before the main thread served the
+// driver again). The rest are listed.
 export function placeHoles(holes, service, armRef, disarmRef, quantumMs) {
-  const out = { holes: holes.length, while_unserved: 0, elsewhere: [] };
+  const out = { holes: holes.length, while_unserved: 0, cut_at_disarm: 0, elsewhere: [] };
   const list = (p, ms) => { if (out.elsewhere.length < 50) out.elsewhere.push({ page_s: round1(p), ms: round1(ms) }); };
   if (!armRef || service.length === 0) {
     for (const [t, q] of holes) list(armRef ? (t - armRef.ctx_t) : t, q * quantumMs);
@@ -115,11 +119,16 @@ export function placeHoles(holes, service, armRef, disarmRef, quantumMs) {
     }
     return lo;
   };
+  const cutAt = disarmRef ? disarmRef.page_ms : Infinity;
+  // "read" when the main thread left the mixer unserved through the hole and a "read" it handled ended it,
+  // "disarm" when the recording's end cut it short with none handled inside, "" otherwise.
   const unserved = (p0, p1) => {
     const k = from(p0 + PLACE_TOLERANCE_MS);
     const servedInside = k < service.length && service[k] < p1 - PLACE_TOLERANCE_MS;
+    if (servedInside) return '';
     const next = from(p1 - PLACE_TOLERANCE_MS);
-    return !servedInside && next < service.length && service[next] <= p1 + PLACE_TOLERANCE_MS;
+    if (next < service.length && service[next] <= p1 + PLACE_TOLERANCE_MS) return 'read';
+    return p1 >= cutAt - PLACE_TOLERANCE_MS ? 'disarm' : '';
   };
   const spans = holes.map(([t, quanta]) => {
     const p0 = toPage(t);
@@ -137,6 +146,7 @@ export function placeHoles(holes, service, armRef, disarmRef, quantumMs) {
     }
     if (ok) {
       out.while_unserved += j - i + 1;
+      if (ok === 'disarm') out.cut_at_disarm += 1;
       i = j + 1;
     } else {
       list((p0 - armRef.page_ms) / 1000, p1 - p0);
@@ -442,7 +452,7 @@ export function analyseRecording(state, { musicS, strict, t0 }) {
     seconds: Math.round((s.end_t - s.start_t) * 10) / 10, wall_s: Math.round((state.wall_ms - t0) / 100) / 10,
     quanta: s.quanta, silent_quanta: s.silent, longest_silence_ms: Math.round(s.longest * quantumMs * 10) / 10,
     silent_runs_over_50_ms: s.runs_over + (s.run * quantumMs > HOLE_MAX_MS ? 1 : 0), peak: Math.round(s.peak * 1000) / 1000,
-    holes_while_unserved: placed.while_unserved, holes_elsewhere: placed.elsewhere,
+    holes_while_unserved: placed.while_unserved, holes_cut_at_disarm: placed.cut_at_disarm, holes_elsewhere: placed.elsewhere,
   };
   const until = state.disarmRef ? state.disarmRef.page_ms : state.wall_ms;
   const out = {

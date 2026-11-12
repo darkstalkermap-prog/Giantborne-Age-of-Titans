@@ -344,6 +344,15 @@ func _run_valley_walk() -> void:
 		_finish()
 
 
+## P39f: in a world walk, the scene this autopilot belongs to going away (the title's Continue, a fast
+## travel's reload) prints "WORLD_WALK_UNLOAD {...}": tools/web/world_check.mjs times the next level's
+## load from it (to the walk's WORLD_WALK_LEVEL line). Not after the run's result (the engine quits).
+func _exit_tree() -> void:
+	if _scenario == SCENARIO_WORLD_WALK and not _finished:
+		print("WORLD_WALK_UNLOAD %s" % JSON.stringify({"mode": GameSession.mode_name(), "level": GameSession.current_level_id(),
+			"respawn": GameSession.respawn_id}))
+
+
 ## --scenario=world_walk (P24a): starts a WorldWalk once on the streamed world; the run ends with it.
 func _run_world_walk() -> void:
 	if _world_walk == null:

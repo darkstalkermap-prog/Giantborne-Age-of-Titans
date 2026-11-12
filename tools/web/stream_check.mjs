@@ -57,14 +57,17 @@ import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { extname, join, normalize, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   BYTES_PER_REGISTERED_S, HOLE_MAX_MS, LIVE_HEADROOM_BYTES, SILENCE_PEAK, analyseRecording, instrument, levelIdForScene,
   readRecording, registeredSeconds,
 } from './audio_recorder.mjs';
 
-const BUDGET_WORST_MS = 45;
-const BUDGET_P99_MS = 25;
-const MARGIN_REQUIRED_M = 200;
+// P39f: the indicative budgets, the server, the statistics and the --audio report are exported for
+// tools/web/world_check.mjs, which extends this check to a Continue, a fast travel and a walk.
+export const BUDGET_WORST_MS = 45;
+export const BUDGET_P99_MS = 25;
+export const MARGIN_REQUIRED_M = 200;
 
 function parseArgs(argv) {
   const opts = {
@@ -116,7 +119,7 @@ function parseArgs(argv) {
   return opts;
 }
 
-function loadPlaywright() {
+export function loadPlaywright() {
   const require = createRequire(import.meta.url);
   const tries = [process.env.PLAYWRIGHT_MODULE, 'playwright', '/opt/node-tools/node_modules/playwright'];
   for (const name of tries) {
@@ -151,13 +154,13 @@ function engineArgs(opts) {
   return args;
 }
 
-const TYPES = {
+export const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.wasm': 'application/wasm',
   '.txt': 'text/plain; charset=utf-8', '.jpg': 'image/jpeg', '.png': 'image/png', '.pck': 'application/octet-stream',
 };
 
 // A static server for the build folder on 127.0.0.1 (a free port).
-function serve(root) {
+export function serve(root) {
   const base = resolve(root);
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
@@ -178,13 +181,13 @@ function serve(root) {
   return new Promise((ok) => server.listen(0, '127.0.0.1', () => ok(server)));
 }
 
-function percentile(sorted, p) {
+export function percentile(sorted, p) {
   if (sorted.length === 0) return null;
   const rank = Math.min(sorted.length - 1, Math.max(0, Math.ceil(p / 100 * sorted.length) - 1));
   return sorted[rank];
 }
 
-function summary(values) {
+export function summary(values) {
   const v = values.filter((x) => Number.isFinite(x)).slice().sort((a, b) => a - b);
   if (v.length === 0) return { n: 0 };
   const r = (x) => Math.round(x * 1000) / 1000;
@@ -192,7 +195,7 @@ function summary(values) {
   return { n: v.length, p50: r(percentile(v, 50)), p95: r(percentile(v, 95)), p99: r(percentile(v, 99)), max: r(v[v.length - 1]), mean: r(mean) };
 }
 
-function verdict(value, limit) {
+export function verdict(value, limit) {
   if (typeof value !== 'number') return 'N/A';
   return value <= limit ? 'PASS' : 'MISS';
 }
@@ -407,7 +410,7 @@ async function main() {
 // borders crossed while it ran (zone-state music sets that followed one another between the arm and
 // the disarm, counting the set playing at the arm) and the live sample bytes against the cap.
 // Returns { report, trace, problems }.
-function audioReport(state, opts, walk) {
+export function audioReport(state, opts, walk) {
   const problems = [];
   const level = opts.world ? 'level.world' : levelIdForScene(opts.level);
   const registeredS = opts.registeredS !== null ? opts.registeredS : (level ? registeredSeconds(level) : 0);
@@ -455,7 +458,10 @@ function audioReport(state, opts, walk) {
   return { report, trace: rec.music ? rec.trace : null, problems };
 }
 
-main().catch((e) => {
-  console.error(`stream_check: ${e && e.stack ? e.stack : e}`);
-  process.exit(1);
-});
+// Run as a script (not when world_check.mjs imports the helpers above).
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((e) => {
+    console.error(`stream_check: ${e && e.stack ? e.stack : e}`);
+    process.exit(1);
+  });
+}
