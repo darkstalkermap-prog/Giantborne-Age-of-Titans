@@ -55,7 +55,7 @@ func test_the_check_walks_from_the_waystone_across_borders() -> void:
 	var r := walk.result()
 	print("    test_world_check_route: %s" % JSON.stringify({"metres": r.metres, "seconds": r.seconds, "stage": r.stage,
 		"min_margin_m": r.min_margin_m, "loads": r.loads, "regions": (r.region_changes as Array).map(func(c: Dictionary) -> String: return c.region),
-		"seams": r.seam_crossings, "stuck": r.stuck_teleports, "work_ms_max": r.work_ms_max, "over_budget": r.work_over_budget}))
+		"seams": r.seam_crossings, "stuck": r.stuck_teleports, "work_ms_max": r.work_ms_max, "work_ms_over_budget": r.work_ms_over_budget}))
 	assert_true(walk.done and bool(r.finished), "the walk finished (%d ticks)" % ticks)
 	assert_eq(int(r.stage), stage, "a stage-%d giant walked it (the fixture's)" % stage)
 	assert_eq((r.check_failures as PackedStringArray).size(), 0, "no check failed: %s" % [r.check_failures])

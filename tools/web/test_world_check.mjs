@@ -157,9 +157,9 @@ registerProcessor('godot-processor', StubDriver);\`;
         const borders = mode === 'noborder' ? [] : [{ s: 4, region: 'region.drowned_steps', previous: 'region.crownmarch' }];
         say('AUTOPILOT_RESULT', { errors: 0, world_walk: { mode: 'walk', speed_mps: 0, metres: 640, seconds: mode === 'short' ? 30 : 64,
           finished: true, stage, min_margin_m: 251.7, max_loaded: 15, loads: 10, unloads: 4, thrash: 0, work_ms_p50: 0.8,
-          work_ms_p99: 5.2, work_ms_max: 9.6, work_over_budget: 3, seam_crossings: 5, stuck_teleports: 0, route_points: 11,
+          work_ms_p99: 5.2, work_ms_max: 9.6, work_ms_over_budget: 3, seam_crossings: 5, stuck_teleports: 0, route_points: 11,
           region_changes: borders, travel_to: travelTo, travel: { to: travelTo, arrival_m: 0 }, travel_error: '',
-          streaming: { work_frames: 120, over_budget: 3, budget_ms: 4.0, steps_by_kind: { props_add: { n: 9, max_ms: 9.6, total_ms: 40 }, rows: { n: 80, max_ms: 2.1, total_ms: 60 } } },
+          streaming: { work_frames: 120, work_ms_over_budget: 3, budget_ms: 4.0, steps_by_kind: { props_add: { n: 9, max_ms: 9.6, total_ms: 40 }, rows: { n: 80, max_ms: 2.1, total_ms: 60 } } },
           check_failures: [] } });
       }, 200);
     }, 5500);

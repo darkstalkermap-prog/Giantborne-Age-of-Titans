@@ -454,7 +454,7 @@ async function main() {
   };
   report.streaming = {
     work_ms_p50: walk.work_ms_p50, work_ms_p99: walk.work_ms_p99, work_ms_max: walk.work_ms_max, work_frames: st.work_frames,
-    hitches: st.over_budget, budget_ms: st.budget_ms, heaviest_steps: heaviest, loads: walk.loads, unloads: walk.unloads,
+    hitches: st.work_ms_over_budget, budget_ms: st.budget_ms, heaviest_steps: heaviest, loads: walk.loads, unloads: walk.unloads,
     thrash: walk.thrash, max_loaded: walk.max_loaded, min_margin_m: walk.min_margin_m,
   };
   report.errors_counted_by_game = result ? result.errors : null;
@@ -499,7 +499,7 @@ async function main() {
   console.log(`${TOOL}: ${opts.fixture} (${fixture.level} at ${fixture.respawn}, stage ${s(fixture.stage)}) -> Continue -> fast travel to ${opts.travel} -> a walk of ${f(walk.metres)} m in ${f(walk.seconds)} s of game time; ${report.wall_s} s of wall time (${report.renderer}, ${report.quality}, ${opts.size})`);
   console.log(`  boot: Play to the title's music ${s(report.play_to_title_s)} s; Continue (Enter x${presses}, ${s(c.presses_ignored)} ignored) loaded ${s(c.level)} at ${s(c.respawn)}, stage ${s(c.stage)}, in ${s(c.load_s)} s (Enter to control ${s(c.enter_to_control_s)} s); the fast travel from ${s(t.from)} loaded ${s(t.arrived && t.arrived.respawn)} in ${s(t.load_s)} s (request to control ${s(t.request_to_control_s)} s; ${s(t.refusals)} refusal(s) first)`);
   console.log(`  frames while walking (page rAF): p50 ${f(raf.p50)} ms, p99 ${f(raf.p99)} ms [${report.budget.p99_ms.verdict} <= ${BUDGET_P99_MS}], worst ${f(raf.max)} ms [${report.budget.worst_ms.verdict} <= ${BUDGET_WORST_MS}] over ${raf.n} frames (indicative); the engine's (capped at 133 ms): p50 ${f(frames && frames.p50)}, p99 ${f(frames && frames.p99)}, worst ${f(frames && frames.max)} ms`);
-  console.log(`  streaming: work p50 ${f(walk.work_ms_p50)} / p99 ${f(walk.work_ms_p99)} / max ${f(walk.work_ms_max)} ms; hitches (work frames over ${s(st.budget_ms)} ms) ${s(st.over_budget)} of ${s(st.work_frames)}; heaviest steps ${heaviest.map((h) => `${h.step} ${h.max_ms} ms`).join(', ') || 'N/A'}; loads ${s(walk.loads)}, unloads ${s(walk.unloads)}, thrash ${s(walk.thrash)}, max loaded ${s(walk.max_loaded)}, margin ${f(walk.min_margin_m)} m`);
+  console.log(`  streaming: work p50 ${f(walk.work_ms_p50)} / p99 ${f(walk.work_ms_p99)} / max ${f(walk.work_ms_max)} ms; hitches (work frames over ${s(st.budget_ms)} ms) ${s(st.work_ms_over_budget)} of ${s(st.work_frames)}; heaviest steps ${heaviest.map((h) => `${h.step} ${h.max_ms} ms`).join(', ') || 'N/A'}; loads ${s(walk.loads)}, unloads ${s(walk.unloads)}, thrash ${s(walk.thrash)}, max loaded ${s(walk.max_loaded)}, margin ${f(walk.min_margin_m)} m`);
   console.log(`  the walk: ${report.walk.region_changes} region change(s) (${report.walk.regions.join(' -> ') || 'none'}), ${s(walk.seam_crossings)} seam(s), ${s(walk.stuck_teleports)} stuck teleport(s); draw calls ${report.draw_calls && report.draw_calls.max !== undefined ? `p50 ${report.draw_calls.p50}, max ${report.draw_calls.max}` : JSON.stringify(report.draw_calls)}`);
   const a = report.audio;
   const m = a.music || {};

@@ -478,7 +478,7 @@ func summary() -> Dictionary:
 		"max_loaded": max_loaded, "loads": int(st.get("loads", 0)), "unloads": int(st.get("unloads", 0)),
 		"thrash": int(st.get("thrash", 0)), "work_ms_p50": st.get("work_ms_p50", 0.0),
 		"work_ms_p99": st.get("work_ms_p99", 0.0), "work_ms_max": st.get("work_ms_max", 0.0),
-		"work_over_budget": int(st.get("over_budget", 0)),
+		"work_ms_over_budget": int(st.get("work_ms_over_budget", 0)),
 		"stage": player.current_growth_stage() if player != null and is_instance_valid(player) else 0}
 
 

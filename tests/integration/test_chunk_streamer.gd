@@ -88,7 +88,7 @@ func test_a_fixed_quota_nearest_first() -> void:
 	# P39f: the hitches - the frames whose work outran the budget (tools/web/world_check.mjs reports them)
 	s.set("_work_us", PackedInt64Array([1000, 3999, 4000, 4001, 9000, 12000]))
 	st = s.stats()
-	assert_eq([int(st.over_budget), float(st.budget_ms)], [3, 4.0], "three frames over the 4 ms budget (%s)" % [st.over_budget])
+	assert_eq([int(st.work_ms_over_budget), float(st.budget_ms)], [3, 4.0], "three frames over the 4 ms budget (%s)" % [st.work_ms_over_budget])
 	assert_eq(_events.filter(func(e: String) -> bool: return e.begins_with("loaded:")).size(), 9, "Events.world_chunk_loaded for each")
 	assert_true(s.ring_ready(_center(s, 1, 1)), "the ring is ready")
 	assert_true(s.is_ready("c0_0") and not s.is_loaded("c3_3"), "is_ready / is_loaded")
