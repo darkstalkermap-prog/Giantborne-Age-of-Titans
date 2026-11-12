@@ -13,6 +13,10 @@ about 30 minutes per player.
 | Audio sheet (§8: the owner's listening pass, M6) | **NOT RUN** (the owner runs it) |
 | Music and ambience behaviour (layers, variants, rests, crossfades, ducks, beds, spots) | Automated: `tests/integration/test_music_valley.gd`, `test_ambience_valley.gd`, `test_audio_zones.gd`; the web build: `tools/web/audio_check.mjs` |
 | World sheet (§9: finding the way - the map, pins, the compass, fast travel, sealed places; M7) | **NOT RUN** (the owner runs it); the rules automated: `tests/integration/test_map_screen.gd`, `test_compass.gd`, `test_discovery.gd`, `test_fast_travel.gd`, `test_tracked_quest.gd`, `test_journal.gd` |
+| Usability sessions with the world (M9: §3.5 Part C and §10 - twenty minutes of the world from the Kings' Door, after the Valley's first ten minutes) | **NOT RUN** (the owner runs them with three players) |
+| The world's music and ambience on speakers and headphones (§8.7, M9) | **NOT RUN** (the owner's listening pass) |
+| Real browsers (§11, M9: load time with the multi-part pack, streaming hitches, a Continue and a fast travel, audio in a hidden tab) | **NOT RUN** (the owner's); the container's headless Chromium runs automated: `tools/web/world_check.mjs` (a Continue of a world save, a fast travel, a 60 s walk across region borders), `stream_check.mjs --world --audio`, `audio_check.mjs`, `world_start_check.mjs` - software WebGL, indicative only |
+| Real gamepad: the map, journal, track and pin bindings (§6 rows 16-21, M9) | **NOT RUN** (the owner runs it); the bindings automated: `tests/integration/test_map_screen.gd`, `test_journal.gd`, `test_tracked_quest.gd`, `test_ui_focus.gd` |
 
 The recommended owner checkpoints after waves 1 and 8 (plan §1.3) use the same sheets (§4 and §5).
 
@@ -52,8 +56,19 @@ Hollow (`quest.main` stage `wolves`). The Sandbox has its own sparring post for 
   the moment the player first sees the title screen.
 - **Facilitator.** One person, seated behind the player, with this script printed. Do not explain
   the controls beyond the opening sentence in §3.1.
+- **The world (M9, Part C).** Part C starts from a save made just after the crown, so every player
+  meets the world at the same place: the Kings' Door behind the crown's altar, standing open. Make it
+  once per player before the session with the Valley bot (about 8 minutes, unattended), which plays the
+  Valley to the crown and writes its checkpoints into the player's own save slot (a few minutes
+  headless):
+  `Giantborn.console.exe --headless --fixed-fps 60 -- --no-user-settings --save-dir=user://saves
+  --mode=valley --new-game --scenario=valley --bot-village=help_cache --bot-skill=novice --bot-assist
+  --bot-seed=1 --autoplay=1800` (the run ends at the crown, `"finish_reason": "completed"` in its
+  `AUTOPILOT_RESULT` line; without `--headless --fixed-fps 60` it plays in real time). Keep a copy of
+  `saves\valley_1.json` and put it back before each player's Part C (Part B's New Game replaces it).
+  The title's Continue then wakes the giant at the Kingsfall shrine with the Kings' Door open.
 
-## 3. Session protocol (about 30 minutes)
+## 3. Session protocol (about 30 minutes; about 55 with M9's Part C)
 
 ### 3.1 Opening (2 minutes)
 
@@ -99,6 +114,30 @@ Let the player choose keyboard and mouse or the controller.
 ### 3.4 Post-session questionnaire (5 minutes)
 
 Hand over §5. The player fills it in alone.
+
+### 3.5 Part C (M9): twenty minutes of the world from the Kings' Door (20 minutes)
+
+After Part B and a short break (the questionnaires of §5 and §10.2 are filled in at the very end):
+
+1. Quit to the title, put the crowned save back (§2), and choose **Continue**. Start the clock when
+   the giant stands at the Kingsfall shrine. Say only: "The Valley is behind you now. Go on as you
+   like for twenty minutes."
+2. Do not point at the Kings' Door, the map or the compass. The tracker reads "Step through the Kings'
+   Door" and the objective marker leads there; note how long it takes to find it.
+3. Watch for the moments of §10.1 and write their times: the door, the first view from the Kingsgate
+   shelf (the world's reveal), the first map, the first pin, the beacon and the growth to stage 4 at
+   the Kingsgate shrine, the first formation met at stage 4, the first sealed place seen, the first fast
+   travel. A player who never travels: after 15 minutes ask once, "Is there a quicker way back to the
+   shelf?" and note the answer (a prompt counts as help on the sheet).
+4. Stop at 20 minutes. Ask, and write verbatim:
+   - **The view:** "What did you see from the shelf, and where did you decide to go?"
+   - **The way:** "Where would you go next, and how would you get there?" (Answered from the map and the
+     compass alone?)
+   - **Formations:** "How did the soldiers in a block fight differently from the ones on their own?" (Correct:
+     names one of the group lock or its banner, the braced wall that takes no blows from the front, the
+     rout when the banner falls.)
+   - **Sealed places:** "What was the place with the lock on the map, and what does it need?" (Correct: a
+     larger growth stage.)
 
 ## 4. Observation sheet (one per player)
 
@@ -170,11 +209,18 @@ the OS driver). Tick each line; note the pad model and the OS.
 | 13 | Combos: LT + A / B / X / Y and LT + D-pad fire slots 1-8 and never jump, dodge, interact or switch the camera; LT + RT is the ultimate, not a heavy. | |
 | 14 | Lock-on: right-stick press locks; a right-stick flick switches targets; vibration follows the Controller vibration slider (0 = none). | |
 | 15 | Web build (play link): the title takes pad input after the browser has seen one button press (browsers hide pads until then); the camera works with the right stick without clicking; the "Click the game" hint does not show for a pad player. | |
+| 16 | **M9, the world's bindings on a real pad.** In the Old Kingdom: D-pad Down opens the map and pauses the game; D-pad / left stick move between places, the right stick pans, LB / RB zoom, A chooses a place (a visited waystone or shrine: the focus moves to Travel, A again travels), B closes. The panel's control line names the pad's buttons. | |
+| 17 | Y on the map pins the place in focus (or the map's centre); the compass shows the red pin after the map closes; Clear pin (focus it, A) removes it; the pin is still there after loading the game again. | |
+| 18 | D-pad Right opens the journal (one page: quests, waiting quests, completed quests, oaths, sealed places, regions) and pauses the game: D-pad up / down walk its Track buttons and Close, the page scrolls with the focus, A on Track follows that quest ("Tracked"), B closes. | |
+| 19 | D-pad Left (no screen open) cycles the tracked quest: "Tracking: <quest>" shows, and the tracker, the compass's gold diamonds and the objective marker follow it. | |
+| 20 | With LT held, the D-pad fires slots 5-8 and never opens the map or the journal or changes the tracked quest; released, D-pad Down / Right / Left work again at once. | |
+| 21 | The web build with the pad: the map, journal, track and pin buttons above work in the browser too (after one button press), and the map's travel loads the world again with the pad still in charge. | |
 
 ## 7. Reporting
 
-- Copy the filled sheets (§4, §5 and §6) into `docs/USABILITY_RESULTS.md` (one section per
-  session date), with the build version and the device of each player.
+- Copy the filled sheets (§4, §5 and §6; since M9 also §10 for Part C, and the owner's §8.7 and §11)
+  into `docs/USABILITY_RESULTS.md` (one section per session date), with the build version and the
+  device of each player.
 - Write the verdict: **PASS** when §1's rule holds (2 of 3), else **FAIL** with the recurring
   problems.
 - Turn every problem seen with two or more players into a follow-up in
@@ -267,6 +313,33 @@ Bones); Aldmere (the war camp's forge, a pike formation marching and bracing); t
 | 32 | Web: the first click on the page starts the sound (the launcher resumes the browser's audio); no sound before it, no crackle after it on a mid-range laptop. | |
 | 33 | Web: music keeps playing without gaps while the frame rate drops (heavy fights in the forest, a formation fight in the world). Note any gap. | |
 
+### 8.7 The world's music and ambience on speakers and headphones (M9)
+
+The listening pass of plan §6.7 for the whole Old Kingdom as M9 ships it (P28's sets with M8's peoples,
+bosses and engines): once on headphones and once on laptop or desk speakers, at one fixed system
+volume, Settings > Audio at its defaults; about 45 minutes a device. Start in the world with a save
+from the world bot or your own (`Giantborn.exe -- --mode=world --new-game` and F6 / F7 for the stages
+work too). **Where to listen** (fast travel between the stones once reached): the Kingsgate shelf (the
+reveal, then stand 4 minutes); down the King's Road to Brannock and the King's Road waystone; south
+into the Drowned Steps (the Mere's shore, a bell); west into the Greywood (Hollowmere, the troll den's
+mouth); east into the Aldmere March (the war camp, Fort Aldmere's walls); up the Ironway into the
+Stonehold (Skarn, the Moot). Fight at least once in each region, once a formation, once with an
+engine shooting, once a mounted charge. Tick each line for each device and note the place.
+
+| # | Check | Headphones | Speakers |
+| --- | --- | --- | --- |
+| 34 | **Balance across the regions.** No region's music or bed is clearly louder than the others; crossing a border nothing jumps (the music over two bars at a bar line, the beds over three seconds). Note the loudest and the quietest place. | | |
+| 35 | **Effects over the world's music.** A footfall at stage 4-6, a pike wall's brace, a catapult's release and whistle, a ballista bolt, a rider's charge and a troll's roar stay clearer than the melody and the beds, in the music's combat layer too. | | |
+| 36 | **Harshness.** No world set is shrill or fizzy at your level: the Crownmarch's fiddle, the Greywood's reed, the Drowned Steps' bells, Aldmere's trumpet and field drum, the Stonehold's horn and choir, the bosses' sets (the Matriarch, Harrok, the Iron Regiment's battle). Note the worst one. | | |
+| 37 | **The low end.** The stage 5-6 footfalls, the Stonehold's horn, the war camp's drums and the engines' impacts are full on headphones and not boomy on speakers. | | |
+| 38 | **Threat readability.** From behind and off camera: a formation's march, an engine winding, a cavalry charge's swell and an archer's draw are heard and turned to in time; you can tell the danger pulse (noticed) from combat. | | |
+| 39 | **The melody rotation.** Stay 5 minutes in each of two regions without fighting: the region's melody rotates between its variants, rests one to three loops between phrases and never plays one variant three times running. Pleasant, or nagging? | | |
+| 40 | **The silence windows.** After about 3 minutes of quiet exploring the music fades out for 1-2 minutes and comes back (in the world as in the Valley); the place beds carry the silence. Welcome, too early, too long? | | |
+| 41 | **Fatigue over a session.** After 45 minutes, which set would you mute first, and which would you keep? Does the world's music still feel like the Valley's kingdom (the same chords and tempo)? | | |
+| 42 | **Settlements and places.** Brannock, Millford, Hollowmere, Skarn: the region's music quieter with the place's bed under it; the Moot: its drone until Harrok; the troll den, the Titan's Bones, the war camp: their beds without a seam at their edges. | | |
+| 43 | **The bosses.** The Matriarch, Harrok and the Iron Regiment's battle: their music enters on a bar, its phases lift without a jump, and the end (a death, a yield, a rout, a flight) closes it with its stinger and back to the region's music. | | |
+| 44 | **The web build** (the play link, same route, same device): no crackle, no music gap at a fast travel's loading screen or while chunks stream in (note any gap and where); the sound fades out in a hidden tab and comes back. | | |
+
 Write the results under the session in `docs/USABILITY_RESULTS.md` and turn every "change this"
 into a follow-up for the sound packages (P21 effects, P23 music and ambience, P28 the world's).
 
@@ -315,3 +388,78 @@ note what confused.
 | 6 | Wenna at her landing names the five bells; the compass's diamonds lead to the nearest unrung bell; the fourth bell (the Wend's deep reach) needs stage 4, the island's stage 5; the Stoneknuckles' rack opens once all five ring. | | |
 | 7 | The Titan Forge stays cold while the scavengers are there ("Light the Titan Forge" says why); once lit it titanforges a reinforced weapon. | | |
 | 8 | The causeway's rockfall will not move below stage 5; behind it the vault, its cache and cairn. | | |
+
+## 10. World session sheet (owner, M9): twenty minutes from the Kings' Door
+
+Part C of the session (§3.5), one column per player, the same three players as Parts A and B. The
+moments are what plan §6.7 asks the sessions to look at: the view, finding the way, the map, the compass,
+pins, fast travel, formations at stage 4 and a sealed place. Write a time (from the Continue) or "not
+reached", and what the player said or did.
+
+### 10.1 Observation
+
+| Field | Player 1 | Player 2 | Player 3 |
+| --- | --- | --- | --- |
+| Device in Part C (KBM / pad), switched? | | | |
+| **The Kings' Door**: found it (time); how (the tracker, the marker, the compass, by chance) | | | |
+| **The view** from the Kingsgate shelf: stopped to look? turned the camera? what they named (the beacon, the King's Road, a far landmark) | | | |
+| **Finding the way**: the beacon reached (time); the route taken (the ramp and the road, cross-country); lost or turned back (where) | | | |
+| **The compass**: used it (looked up at it, said "the diamond")? the gold diamonds and a "?" understood? | | | |
+| **The map**: first opened (time, by the TIP or alone); found where they stood; moved between places, zoomed | | | |
+| **Pins**: set one (time)? followed it on the compass? cleared it? | | | |
+| **Stage 4**: grew at the Kingsgate shrine (time); noticed the size (the camera, the road, the folk fleeing) | | | |
+| **Formations at stage 4**: first block met (where: the toll fort, a pike column on the road, the war camp); locked the group or a member; hit a braced wall from the front and stopped; went for the banner; a rout seen | | | |
+| **A sealed place**: first seen (which; the TIP, the map's lock and "Stage N"); tried to open it; understood it needs growth | | | |
+| **Fast travel**: first use (time, from where to where); a refusal seen ("You have not been there yet.", "Not while enemies are close.") and understood; asked at 15 minutes (§3.5 step 3)? | | | |
+| Deaths (time, what) and confusion points (time, place, what) | | | |
+| Camera at stages 4-5 (trees, the ground, framing a formation) | | | |
+| Developer interventions (time, what was said) | | | |
+| The four questions of §3.5 step 4 (verbatim; the formation and sealed-place answers correct?) | | | |
+
+### 10.2 Questions after Part C
+
+Rate 1 (strongly disagree) to 5 (strongly agree):
+
+1. Leaving the Valley felt like a reward: the view made me want to explore.
+2. I always knew where to go next in the world.
+3. The map was easy to read and to use with my device.
+4. The compass told me where things were without opening the map.
+5. Fast travel was there when I wanted it, and I understood when it was not.
+6. Fighting a block of soldiers felt different from fighting soldiers one by one, and I knew how to break it.
+7. I understood why some places were sealed and when I could come back.
+8. Growing to stage 4 changed how the world felt.
+
+Open questions: What did you most want to do when you first saw the world? What made you stop or turn
+back? What would you change first?
+
+Write the results under the session in `docs/USABILITY_RESULTS.md`. A moment two or more players miss, or
+a question most rate 2 or less, becomes a follow-up in `docs/plans/FOLLOWUPS.md` (owners: P27's map,
+compass, journal and fast travel; P30's formations; P25's and the regions' places and sealed places).
+
+## 11. Real browsers (owner, M9)
+
+The play link in real browsers on real machines (plan §6.7): Chrome or Edge, Firefox and Safari (macOS or
+iPadOS with a keyboard), on a mid-range laptop with its own GPU and on a low-end one. The container's
+checks run headless Chromium with software WebGL, so their frame times and music holes are the CPU's
+rasterising (indicative only; `docs/systems/P39f.md`, "Part web"); these runs are the real ones. Clear the
+site's data before each browser (a fresh profile) and keep the browser's task manager open.
+
+| # | Check | Chrome / Edge | Firefox | Safari |
+| --- | --- | --- | --- | --- |
+| 1 | **Load time with the multi-part pack**: from Play to the title's music (the meter counts the engine and the pck's two parts in one bar); then New Game to the Hollow. Write both times and the connection. | | | |
+| 2 | **Continue a world save**: play into the Old Kingdom, reach a waystone, quit to the title, reload the page, Continue: the giant stands where the save was. Time from Continue to control. | | | |
+| 3 | **Fast travel**: from the map to a waystone 500 m or more away; the loading screen's time; the music goes on (no gap, or note it). | | | |
+| 4 | **Streaming hitches**: walk 60 s across a region border (the King's Road waystone south into the Drowned Steps, then east into the Aldmere March, as `tools/web/world_check.mjs` walks): stutters where the ground ahead loads? Note each and where. | | | |
+| 5 | **Frame rate**: steady in the open, in Brannock, in a formation fight and at a battle (the Iron Regiment's bailey). Note the worst place (and the browser's FPS meter if it has one). | | | |
+| 6 | **Audio in a hidden tab**: switch to another tab for 30 s and back: the sound fades out within a fifth of a second and comes back; no burst, no crackle; the music did not race ahead. | | | |
+| 7 | **Music without holes**: 60 s of a region's music while walking - any gap or crackle (the container hears holes on every slow frame of its software WebGL: is it clean here?). | | | |
+| 8 | **Memory over a session**: the tab's memory after the title, after 10 minutes and after 30 minutes of the world (no steady climb); the page never reloads or crashes. | | | |
+| 9 | **Saves stay**: close the browser, open the link again: Continue is offered and wakes the giant where it was. | | | |
+| 10 | **A pad in the browser** (§6 rows 15 and 21). | | | |
+
+On a machine with a GPU, also run the container's checks with their strict forms and keep the reports
+(Node and Playwright installed; the release built with `tools/build_web.sh`): `node tools/web/audio_check.mjs
+--strict`, `node tools/web/stream_check.mjs --world --audio --strict` and `node tools/web/world_check.mjs
+--strict` (the plan's music criterion - no silent run over 50 ms - is NOT RUN until then;
+`docs/plans/FOLLOWUPS.md`). Write the results under the session in `docs/USABILITY_RESULTS.md` and the frame
+and load times beside the reference-PC table in `docs/PERFORMANCE.md`.
