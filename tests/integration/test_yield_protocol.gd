@@ -75,7 +75,7 @@ func test_harrok_yields_at_25_percent_and_nothing_after_it_decides() -> void:
 	await step_ticks(1)
 	assert_true(h.yielded, "he yields")
 	assert_eq(h.yield_reason, "health", "at 25 %")
-	assert_near(pools.health, 1250.0, 0.01, "held at exactly 25 % of 5,000")
+	assert_near(pools.health, pools.health_max * 0.25, 0.01, "held at exactly 25 %% of his %.0f health" % pools.health_max)
 	assert_eq(yields, ["test.harrok"], "boss_yielded with his id")
 	assert_false(h.entity.combatant.lockable, "no longer lockable")
 	assert_false(p.lock.is_locked(), "the giant's lock released")
