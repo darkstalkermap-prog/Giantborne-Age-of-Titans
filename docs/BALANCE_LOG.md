@@ -694,6 +694,51 @@ iteration 1's Charge threshold, which is set from both aggregates.
   the report's (`docs/HOW_IT_PLAYS.md`), not the tuning plan's; the 100 % exploration run
   (`targeted.sh explore100`) is left for when the report wants the upper bound.
 
+### The Valley matrix (regression; plan §6.4 item 1)
+
+The M6 gate's matrix again (novice and expert x the four outcomes x seeds 1-3, 24 unassisted runs,
+`--timeout=1500 --autoplay=2400`), on this branch's bot (its P39 changes act from stage 4 or in the
+world only, so the Valley's rules are W22's); tag `p39_iter0_valley`, `python3 tools/bot_report.py
+<batch> summary targets growth`:
+
+| Skill | Policy | Completed: M6 gate -> P39 | Human est. median (min), M6 gate -> P39 | Deaths median (boss), M6 gate -> P39 |
+| --- | --- | --- | --- | --- |
+| novice | force | 3 / 3 -> 3 / 3 | 15.2 -> 14.9 | 0 (0) -> 0 (0) |
+| novice | help_cache | 3 / 3 -> 3 / 3 | 15.0 -> 15.0 | 0 (0) -> 0 (0) |
+| novice | help_ogre | 3 / 3 -> 3 / 3 | 13.9 -> 14.0 | 0 (0) -> 0 (0) |
+| novice | intimidate | 3 / 3 -> 3 / 3 | 12.7 -> 12.6 | 0 (0) -> 0 (0) |
+| expert | force | 3 / 3 -> **2 / 3** | 18.4 -> 18.1 | 0 (0) -> 0 (0) |
+| expert | help_cache | 3 / 3 -> 3 / 3 | 18.5 -> 18.8 | 0 (0) -> 0 (0) |
+| expert | help_ogre | 3 / 3 -> 3 / 3 | 17.5 -> 17.2 | 0 (0) -> 0 (0) |
+| expert | intimidate | 3 / 3 -> 3 / 3 | 16.4 -> 16.4 | 0 (0) -> 0 (0) |
+
+| Item (plan §3.4, §6.4; `docs/HOW_IT_PLAYS.md`) | Target | M6 gate | P39 iteration 0 |
+| --- | --- | --- | --- |
+| Off-camera hits, median share of the hits taken | under 20 % | 20 % (a miss by 0.4 points) | 19 % |
+| Thornwick hostile at the end of a help or intimidate run | never | never | never (18 runs) |
+| The novice's tries at the Ogre King (deaths there, median) | 1-2 deaths | 0 | 0 |
+| Damage per segment, forest / ruins (x maximum health, novice median) | <= 0.6 | 1.23 / 1.00 | 1.23 / 1.00 |
+| The force branch's return leg inside the 240 s watchdog | 3 of 3 | novice 3 / 3, expert 3 / 3 | novice 3 / 3 (the Deadfall 80, 124 and 221 s), expert **2 / 3** (113 and 115 s; seed 2 ran out the watchdog, below) |
+| The expert on seeds 1-3 | 3 of 3 a policy, at most 2 deaths each | 12 / 12, no death | 11 / 12, no death |
+| Soldiers in FLEE or ROUTED at stage 3 (novice median) | at least 50 % | 52 % | **38 %** (runs 11-61 %) |
+
+- Novice deaths 5 (M6 gate 6), all in the ruins: the brace 2, an archer's shot 2, a mage's bolt 1.
+  CPU per tick p95 median 5.47 ms, max 5.93 ms; 0 errors, 0 warnings, 0 invariant failures; one
+  teleport (`force_expert_3`), 26 stuck events, all recovered.
+- **The stage-3 flee share** read 40 % at P22 and 52 % at the M6 gate: a run's share spreads 11-61 %,
+  so a 12-run median moves by more than the target's margin between batches. The world soldier record
+  of iteration 1's plan would leave the Valley's soldiers as they are; if the Valley's share is to be
+  held above 50 %, the shared `enemy.soldier`'s awe loss is the lever for both (a stage-3 giant is 4.4
+  times a soldier's height), checked with this matrix.
+- **The expert's force run on seed 2** stopped on the Deadfall stage's 240 s watchdog with no death
+  (health 525 of 935). Replayed with a trace (`p39_valley_trace`, `--bot-trace=2`; the same stop at
+  the same tick): about 206 s of the stage went to fights with the ruins' patrol and gate guards on the
+  way back from Kingsfall (the patrol's mage and archers, the gate soldiers in HOLD, the patrol captain),
+  and the giant was 17 m from the deadfall when the watchdog ran out. The expert's other two force runs
+  took 113 and 115 s, the M6 gate's 86-178 s; the novice's seed 3 took 221 s. A slow expert fight, not
+  a blocked path: the bot changes of iteration 1's plan (the expert's answers to blows) are re-checked
+  on this seed.
+
 ### The plan for iteration 1
 
 **The bot first** (plan §3.23: these misses measure the bot; each with its slow test, then the expert's
