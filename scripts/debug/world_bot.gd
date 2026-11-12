@@ -111,6 +111,14 @@ const FIGHT_OWNER_RADIUS_M := 120.0
 ## An engaged arena's leash: the giant turns back once it stands this share of the disengage margin
 ## outside the arena's floor.
 const ARENA_LEASH_SHARE := 0.4
+## Ranged blows at an enemy or engine above reach: given up after this long without hurting it, then
+## ignored for this long.
+const RANGED_GIVE_UP_S := 8.0
+const RANGED_IGNORE_S := 120.0
+## A boss fight's respawn point: the waystone within this of its place is taken first; the bot waits at
+## it this long for the checkpoint (taken out of combat).
+const RESPAWN_POINT_RADIUS_M := 160.0
+const RESPAWN_POINT_WAIT_S := 15.0
 ## How near the giant must come to a talker (beyond its reach): the talker's radius + the capsule, less.
 const TALK_SLACK_M := 1.0
 const TALK_RETRY_TICKS := 90
@@ -144,6 +152,9 @@ class WorldRun extends RefCounted:
 	## --bot-until=<flag>: the run ends ("until") once this world flag holds (the gate's smoke run stops
 	## at Brannock's oath: oath.march.done).
 	var until_flag := ""
+	## Boss fights' respawn points (_respawn_point_first): waystone id -> true once given up, and
+	## "at:<id>" -> the tick the giant reached it.
+	var respawn_given_up: Dictionary = {}
 	## The encounter budget in the world (see _on_member_spawned): spawns that broke it, and the
 	## largest count of counted combatants seen (it may pass the cap when a faction turns hostile).
 	var budget_failures: PackedStringArray = []
@@ -162,6 +173,7 @@ var _budget_seen := 0                  ## counted combatants at the last look (t
 var _spawn_positions: Dictionary = {}  ## entity id -> its spawn position (encounter records)
 var _talk_tick := -1000
 var _leashed := false
+var _ranged_tries: Dictionary = {}     ## entity id -> [first tick, health then, last tick] (_ranged_futile)
 var _world: WorldRoot = null
 
 
@@ -516,6 +528,7 @@ func _on_campaign_complete(tick: int) -> void:
 	wrun.fast_travel_block.clear()
 	wrun.talents_tried.clear()
 	wrun.explored.clear()
+	wrun.respawn_given_up.clear()
 	run.obj_key = ""
 	run.obj_ticks = 0
 	run.obj_deaths = 0
@@ -604,7 +617,7 @@ func _plan(tick: int) -> void:
 	if _valley_part():
 		super(tick)
 		return
-	var objective := _objective_task(tick)
+	var objective := _respawn_point_first(_objective_task(tick), tick)
 	var owner := str(FIGHT_OWNERS.get(str(objective.get("kind", "")), ""))
 	if owner != "" and _flat_dist(player.global_position, _where(owner)) <= FIGHT_OWNER_RADIUS_M:
 		task = objective
@@ -620,26 +633,98 @@ func _plan(tick: int) -> void:
 	task = objective
 
 
+## Before a boss fight (the den, the battle - from the fort gate's breach on - and the duel) the waystone
+## nearest its place (within RESPAWN_POINT_RADIUS_M) is made the respawn point, as a player would: a
+## death in the fight then wakes beside it. The first crown run died in the battle and woke at the
+## Kingsgate shelf, a kilometre and 200 s of walking away, with the battle to start again. The
+## waystone is walked into (its 10 m radius); it is taken out of combat, so the bot waits there up to
+## RESPAWN_POINT_WAIT_S, then goes on either way.
+func _respawn_point_first(objective: Dictionary, tick: int) -> Dictionary:
+	if not _in_world() or route == null or route.index == null:
+		return objective
+	var kind := str(objective.get("kind", ""))
+	var place := Vector3.INF
+	if FIGHT_OWNERS.has(kind):
+		place = _where(str(FIGHT_OWNERS[kind]))
+	elif kind == "smash" and str(objective.get("id", "")) == "world.aldmere.fort_gate":
+		place = _where("world.marker.fort_bailey")
+	if not place.is_finite():
+		return objective
+	var best := ""
+	var best_d := RESPAWN_POINT_RADIUS_M
+	for id in route.index.checkpoint_ids():
+		var c := route.index.checkpoint(id)
+		var p: Variant = c.get("position")
+		if str(c.get("kind", "")) != "waystone" or typeof(p) != TYPE_VECTOR3:
+			continue
+		var open := true
+		for f: Variant in c.get("requires_flags", PackedStringArray()):
+			if not QuestConditions.truthy(WorldState.get_flag(str(f))):
+				open = false
+		var d := _flat_dist(p, place)
+		if open and d < best_d:
+			best = id
+			best_d = d
+	if best == "" or GameSession.respawn_id == best or wrun.respawn_given_up.has(best):
+		return objective
+	var at: Vector3 = route.index.checkpoint(best).position
+	if _flat_dist(at, player.global_position) <= 8.0:
+		var since := int(wrun.respawn_given_up.get("at:" + best, -1))
+		if since < 0:
+			wrun.respawn_given_up["at:" + best] = tick
+		elif tick - since > ActionDef.seconds_to_ticks(RESPAWN_POINT_WAIT_S):
+			wrun.respawn_given_up[best] = true
+			run.metrics.note(tick, "the waystone %s was not taken (fighting near it): on without it" % best)
+			return objective
+		return {"kind": "wait", "why": "at %s for the respawn point" % best}
+	return _travel_task(at, 4.0, "respawn point " + best)
+
+
 ## A fight the current task overrides: none (every aware hostile near is fought), except a yielded or
 ## stood-down boss and a neutral or fleeing actor (BotCombat.is_threat already leaves those out).
 func _fight_ignored_now(_t: EnemyActor) -> bool:
 	return false
 
 
-## The Valley's choice, but in the world an enemy out of melee reach above the giant (an archer on
-## Fort Aldmere's wall, 16 m over the gate) is no fight: the Valley's choice kept it as the task's
-## preferred target (or took it while a ranged blow was ready), BotCombat stands still under a target
-## it cannot reach, and the giant stood under the wall - lock refused, no bolt thrown - instead of
-## breaking the gate beside it, until the watchdog (1,040 s). The nearest threat on its own ground is
-## fought instead, else none (the objective goes on; the archers shoot on).
+## The Valley's choice, but in the world an enemy out of melee reach above the giant is fought only
+## while a ranged blow is ready, and given up (RANGED_IGNORE_S) when those blows have not hurt it in
+## RANGED_GIVE_UP_S: the Valley's choice kept such an enemy as the task's preferred target, BotCombat
+## stands still under a target it cannot reach, and the giant stood under Fort Aldmere's wall - its
+## archers 16 m up, no lock taken, no bolt thrown, the target switching between four of them so the
+## Valley's chase give-up never ran out - instead of breaking the gate beside it, until the watchdog.
+## The toll fort's tower archers (part of an encounter to clear) are still shot down by bolts. Else
+## the nearest threat on the giant's own ground, else none (the objective goes on).
 func _fight_target() -> EnemyActor:
 	var t := super()
 	if t == null or not _in_world() or not combat.is_elevated(t):
+		return t
+	if _ranged_ready() and not _ranged_futile(t.entity.entity_id, t.entity.combatant.pools.health, Sim.tick):
 		return t
 	for e in combat.threats(combat.engage_radius()):
 		if not _is_ignored(e) and not combat.is_elevated(e) and reachable(e.global_position, 3.5):
 			return e
 	return null
+
+
+func _ranged_ready() -> bool:
+	return combat.ready_slot(BotCombat.RUNIC_BOLT) != "" or combat.ready_slot(BotCombat.BOULDER_HURL) != ""
+
+
+## True when ranged blows at `id` (its health now `hp`) have been tried for RANGED_GIVE_UP_S without
+## hurting it (a lock refused, a bolt that never left): it is then ignored for RANGED_IGNORE_S. A pause
+## of over a second between tries, or any damage, starts the count again.
+func _ranged_futile(id: String, hp: float, tick: int) -> bool:
+	var rec: Array = _ranged_tries.get(id, [])
+	if rec.is_empty() or tick - int(rec[2]) > 60 or hp < float(rec[1]) - 0.5:
+		_ranged_tries[id] = [tick, hp, tick]
+		return false
+	rec[2] = tick
+	if tick - int(rec[0]) < ActionDef.seconds_to_ticks(RANGED_GIVE_UP_S):
+		return false
+	_ignored[id] = tick + ActionDef.seconds_to_ticks(RANGED_IGNORE_S)
+	_ranged_tries.erase(id)
+	run.metrics.note(tick, "gave up ranged blows at %s" % id)
+	return true
 
 
 func _objective_task(tick: int) -> Dictionary:
@@ -1459,11 +1544,17 @@ func _act_exit(tick: int) -> void:
 ## closes the portcullis and starts the Wall), then the battle's units: the engines' crews and the
 ## inner ballistae first (they shoot; their crews are units of the Wall, whose fall begins the Charge),
 ## then whatever unit of the battle is nearest; Corvane's yield is decided by the screens' hook.
+## The gate bastions' two ballistae stand 16 m above the bailey, out of melee reach, and deal most of
+## the battle's damage (the first crown run died to them standing in the bailey with nothing left in
+## reach): while one still shoots, a ready Crag Hurl is thrown at it from 14-38 m and a ready Runic
+## Bolt at a crew member serving it (_battle_ranged); between the cooldowns the melee goes on.
 func _act_battle(tick: int, defending: bool) -> void:
 	if str(WorldState.get_flag("boss.corvane.outcome", "")) != "":
 		_next_plan_tick = tick
 		return
 	var bailey := _where("world.marker.fort_bailey")
+	if _battle_ranged(tick):
+		return
 	var target := _battle_target()
 	if target is EnemyActor:
 		mode = "combat"
@@ -1476,6 +1567,58 @@ func _act_battle(tick: int, defending: bool) -> void:
 		_act_break(tick, defending)
 		return
 	_act_travel(tick, bailey, 10.0)
+
+
+## The fort's elevated ballistae (on the gate bastions) that may still shoot, nearest first.
+func _elevated_fort_engines() -> Array[SiegeEngine]:
+	var out: Array[SiegeEngine] = []
+	for n in get_tree().get_nodes_in_group(SiegeEngine.GROUP):
+		var s := n as SiegeEngine
+		if s == null or not s.is_inside_tree() or not s.can_shoot() \
+				or not str(s.world_id).begins_with("world.aldmere.fort_ballista"):
+			continue
+		if s.global_position.y - player.global_position.y > combat.elevated_m():
+			out.append(s)
+	out.sort_custom(func(a: SiegeEngine, b: SiegeEngine) -> bool:
+		return _flat_dist(a.global_position, player.global_position) < _flat_dist(b.global_position, player.global_position))
+	return out
+
+
+## A ranged blow at an elevated fort ballista that still shoots: Crag Hurl at the engine (from 14-38 m;
+## the giant steps to 26 m on the bailey's side when it stands nearer or farther), else Runic Bolt at a
+## crew member serving it. True while one is being thrown or the giant takes its place for it.
+func _battle_ranged(tick: int) -> bool:
+	if player.controller.state != CombatController.State.LOCOMOTION or combat.defend_busy(tick):
+		return false
+	var hurl := combat.ready_slot(BotCombat.BOULDER_HURL) != ""
+	var bolt := combat.ready_slot(BotCombat.RUNIC_BOLT) != ""
+	if not hurl and not bolt:
+		return false
+	for s in _elevated_fort_engines():
+		# One engine at a time, the nearest: the hurl at it (unless given up), then a bolt at its crew.
+		var hurl_key := "hurl:" + (s.entity.entity_id if s.entity != null else str(s.world_id))
+		if hurl and int(_ignored.get(hurl_key, -1)) <= tick:
+			var d := _flat_dist(s.global_position, player.global_position)
+			if d < 14.0 or d > 38.0:
+				var bailey := _where("world.marker.fort_bailey")
+				var away := _flat(bailey - s.global_position)
+				if away.length_squared() < 1.0:
+					away = Vector3.BACK
+				_act_go(tick, s.global_position + away.normalized() * 26.0, 3.0)
+				return true
+			if not _ranged_futile(hurl_key, s.entity.combatant.pools.health, tick) and _hurl_at_engine(tick, s):
+				return true
+		if bolt:
+			for c in s.crew():
+				var e := c as EnemyActor
+				if e != null and s.serves(e) and not _is_ignored(e) \
+						and _flat_dist(e.global_position, player.global_position) <= 40.0 \
+						and not _ranged_futile(e.entity.entity_id, e.entity.combatant.pools.health, tick):
+					mode = "combat"
+					combat.fight(tick, e)
+					return true
+		break
+	return false
 
 
 ## The battle's next target: a crew of an engine within 70 m (or the engine itself when it is
