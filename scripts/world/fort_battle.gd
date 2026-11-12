@@ -38,6 +38,12 @@ func settled() -> bool:
 	return settled_flag != "" and QuestConditions.truthy(WorldState.get_flag(settled_flag))
 
 
+## M8 release (R1): a settled battle is over too - a load keeps its phases as they are (BattleBoss repairs
+## only a battle not over).
+func battle_over() -> bool:
+	return super() or settled()
+
+
 ## True while the bailey is at peace (the parley).
 func at_peace() -> bool:
 	return not peace_condition.is_empty() and QuestConditions.holds(peace_condition, Quests.condition_context())

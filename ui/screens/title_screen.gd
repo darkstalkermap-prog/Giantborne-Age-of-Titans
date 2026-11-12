@@ -214,13 +214,14 @@ func refresh() -> void:
 ## A short line about a save document: "Saved game: level 3, stage 2, at the Grove Shrine,
 ## 2026-11-05 14:02" (P20: the checkpoint's display name from its level's world index; a
 ## checkpoint the index does not name is left out - never its id - and a level other than the
-## Valley is named: "in The Old Kingdom").
+## Valley is named: "in The Old Kingdom"). M8 release (R2): the place is where Continue wakes the
+## giant (GameSession.save_respawn: the saved respawn unless a respawn blocker refuses it - hostile
+## guards there - and then the stone the load moves it to), not the saved respawn as such.
 static func describe_save(doc: Dictionary) -> String:
 	var c: Dictionary = doc.get("character", {})
-	var cp: Dictionary = doc.get("checkpoint", {})
 	var parts := PackedStringArray(["level %d" % int(c.get("level", 1)), "stage %d" % int(c.get("growth_stage", 1))])
 	var lv := str(doc.get("level", GameSession.VALLEY_LEVEL_ID))
-	var place := WorldIndex.display_name_in(lv, str(cp.get("respawn", "")))
+	var place := WorldIndex.display_name_in(lv, GameSession.save_respawn(doc))
 	if place != "":
 		parts.append("at the %s" % place if not place.begins_with("The ") else "at %s" % place)
 	if lv != GameSession.VALLEY_LEVEL_ID:

@@ -1314,8 +1314,15 @@ func _on_boss_yielded(...args: Array) -> void:
 	audio.music.on_boss_finished(str(_arg(args, 1)), "yield")
 
 
+## A boss that fled, or (M8 release, R1) Harrok knelt to the talk ending in his engaged duel: the yield
+## stinger; the giant who walked out ("left"): none.
 func _on_boss_disengaged(...args: Array) -> void:
-	audio.music.on_boss_finished(str(_arg(args, 1)), "yield" if str(_arg(args, 2)) == "fled" else "")
+	audio.music.on_boss_finished(str(_arg(args, 1)), boss_end_stinger(str(_arg(args, 2))))
+
+
+## The stinger a boss_disengaged reason ends the boss music with ("" = none).
+static func boss_end_stinger(reason: String) -> String:
+	return "yield" if reason == "fled" or reason == "yielded_talk" else ""
 
 
 func _on_ability_evolved(..._args: Array) -> void:

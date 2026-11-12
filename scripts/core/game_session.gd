@@ -21,10 +21,13 @@ extends Node
 ##     loadout_changed while a shrine's screen is open (M8 gate)     -> respawn: that shrine
 ##   boss_defeated (in the Valley)                                   -> respawn: valley.shrine.kingsfall
 ##   boss_disengaged "fled" (a drive-out, M8 gate)                   -> respawn unchanged
+##   boss_disengaged "yielded_talk" (Harrok's talk ending ends his
+##     engaged duel, M8 release)                                     -> respawn unchanged
 ##   quest_stage_changed for quest.main                              -> respawn unchanged
 ## A request waits (one pending request; a later one replaces the reason and keeps the newest
 ## respawn) while checkpoint_blockers() is not empty: the player is dead, grabbed, executing or
-## holding something, a modal screen is open, or an enemy within 40 m is aware of the player.
+## holding something, a modal screen is open, a boss fight or battle is engaged (M8 release, R1), or
+## an enemy within 40 m is aware of the player.
 ## It is retried every tick from a Sim POST_RESOLVE hook (order 200). The shrine screen's
 ## checkpoint is taken at once, before the screen opens; M8 gate (F15): what the giant then makes
 ## of itself in that screen (talents, the ancestry, attribute points, the loadout - the screens call
@@ -61,6 +64,16 @@ extends Node
 ##     save (schema 2); the tracked quest is Quests.tracked_quest_id once P27 adds it.
 ##   * --mode=world starts the campaign in level.world with progression.default's world_start
 ##     character, inventory and flags; --start=<checkpoint> starts a New Game at that checkpoint.
+##
+## M8 release (R1, the release check's blocker): no checkpoint is committed while a boss fight or a battle is
+## engaged (engaged_fights(): an engaged BossArena or BattleBoss; the blocker "fight:<boss id>", which holds
+## completion requests too, a quit to the title's commit of one and travel). A request made before or during
+## the fight waits until it is won (its own end - boss_defeated, a drive-out, Harrok's talk ending - is then
+## taken with it), lost (a death reload drops it with the fight), abandoned or reset (the disengage rule). The
+## Iron Regiment's battle had a request deferred from before it (waiting for no aware enemy within 40 m)
+## committed as the Wall fell: the save held a battle not won with its Wall cleared, and after a death or a
+## quit and Continue the giant was shut in an empty bailey. BattleBoss now also starts every engagement afresh
+## and repairs such saves as they load (P34.md, "M8 release").
 ##
 ## Tests: reset_for_tests() (ResetHooks.BEFORE_EACH) puts the session in the sandbox, turns
 ## writes off, points SaveSlots at user://test_saves/ and replaces scene reloads with a log
@@ -108,6 +121,13 @@ const NARROW_PATHS := "The old paths here are too narrow for you now."
 const NOT_VISITED := "You have not been there yet."
 const NOT_OPEN := "The way there is not open yet."
 const UNKNOWN_PLACE := "That place is not on the map."
+## M8 release (R1): checkpoint_blockers()' code of an engaged boss fight or battle ("fight:<boss id>") and the
+## line a travel it holds back is refused with.
+const FIGHT_BLOCKER_PREFIX := "fight:"
+const FIGHT_BLOCKED := "Not in the middle of a fight."
+## boss_disengaged's reasons that end a fight (not "left": the boss resets) -> the reason of the fight's end
+## checkpoint (M8 gate F38: the drive-out; M8 release R1: Harrok's talk ending in an engaged duel).
+const BOSS_END_REASONS := {"fled": "boss_fled", "yielded_talk": "boss_yielded_talk"}
 ## The flag of a reached checkpoint (fast-travel eligibility, the respawn fallback).
 const VISITED_PREFIX := "visited."
 ## level_entered waits at most this many frames for the level and the samples (then it is sent
@@ -496,11 +516,13 @@ func go_to_title() -> void:
 
 ## The slice's completion checkpoint (or a boss's end, M8 gate), if it still waits (something other
 ## than an aware enemy held it back), is committed before a quit to the title clears the session
-## (P17a, M4 review: Quit to title on the end screen lost it). A dead giant is never saved.
+## (P17a, M4 review: Quit to title on the end screen lost it). A dead giant is never saved, nor (M8
+## release, R1) a world in the middle of a boss fight or battle: the quit leaves the fight, and the save
+## keeps the world from before it.
 func _commit_pending_completion() -> void:
 	if _pending.is_empty() or not bool(_pending.get("completion", false)) or not checkpoints_enabled():
 		return
-	if _player_dead():
+	if _player_dead() or not engaged_fights().is_empty():
 		return
 	_commit_checkpoint(str(_pending.reason), str(_pending.respawn))
 
@@ -733,18 +755,23 @@ func respawn_transform(checkpoint_id: String) -> Transform3D:
 ## start checkpoint when unblocked, else the nearest unblocked one; the saved respawn when every
 ## checkpoint is refused (or the level has no index).
 func respawn_checkpoint() -> String:
-	if respawn_id == "" or respawn_blocker(respawn_id) == "":
-		return respawn_id
-	var idx := WorldIndex.for_level(save_level_id())
+	return _respawn_for(respawn_id, save_level_id(), current_stage())
+
+
+## respawn_checkpoint()'s rule for a saved respawn `saved` of level `lv` and a giant of `stage`.
+func _respawn_for(saved: String, lv: String, stage: int) -> String:
+	if saved == "" or respawn_blocker(saved, lv, stage) == "":
+		return saved
+	var idx := WorldIndex.for_level(lv)
 	if idx == null:
-		return respawn_id
-	var origin := idx.position_of(respawn_id)
+		return saved
+	var origin := idx.position_of(saved)
 	var best_visited := ""
 	var best_visited_d := INF
 	var best_any := ""
 	var best_any_d := INF
 	for id in idx.checkpoint_ids():
-		if id == respawn_id or respawn_blocker(id) != "":
+		if id == saved or respawn_blocker(id, lv, stage) != "":
 			continue
 		var p := idx.position_of(id)
 		var d := p.distance_to(origin) if origin.is_finite() else 0.0
@@ -756,20 +783,54 @@ func respawn_checkpoint() -> String:
 			best_any_d = d
 	if best_visited != "":
 		return best_visited
-	var start := str(level_record().get("start_checkpoint", ""))
-	if start != "" and start != respawn_id and idx.has_checkpoint(start) and respawn_blocker(start) == "":
+	var rec := GameData.get_record(lv)
+	var start := str(rec.get("start_checkpoint", "")) if str(rec.get("type", "")) == "level" else ""
+	if start != "" and start != saved and idx.has_checkpoint(start) and respawn_blocker(start, lv, stage) == "":
 		return start
-	return best_any if best_any != "" else respawn_id
+	return best_any if best_any != "" else saved
+
+
+## M8 release (R2): the checkpoint a Continue of the save document `doc` wakes the giant at, before the
+## save is loaded (the title's saved-game line names it: TitleScreen.describe_save). respawn_checkpoint()'s
+## rule judged for that save - its level, saved respawn and the character's stage, its world (swapped into
+## WorldState for the call and back: bulk loads emit nothing) - with the blockers its level registers once it
+## loads, which are not registered at the title: FactionState's guards (FactionState.respawn_refusal) and a
+## world event's run the save holds in progress (WanderDirector.saved_run_refusal). The 0.7.0-m7 save at
+## the Brannock waystone with Brannock hostile read "at the Brannock waystone" while Continue woke the giant at
+## the Kingsgate shelf waystone. The saved respawn when the document has no world.
+func save_respawn(doc: Dictionary) -> String:
+	var cp: Variant = doc.get("checkpoint")
+	var saved := str((cp as Dictionary).get("respawn", "")) if typeof(cp) == TYPE_DICTIONARY else ""
+	var doc_world: Variant = doc.get("world")
+	if saved == "" or typeof(doc_world) != TYPE_DICTIONARY:
+		return saved
+	var lv := str(doc.get("level", VALLEY_LEVEL_ID))
+	var ch: Variant = doc.get("character")
+	var stage := maxi(1, int((ch as Dictionary).get("growth_stage", 1))) if typeof(ch) == TYPE_DICTIONARY else 1
+	var live := WorldState.to_save_dict()
+	if not WorldState.from_save_dict(doc_world as Dictionary):
+		return saved
+	var level_blockers: Array[Callable] = [
+		func(id: String) -> String: return FactionState.respawn_refusal(id),
+		func(id: String) -> String: return WanderDirector.saved_run_refusal(id),
+	]
+	_respawn_blockers.append_array(level_blockers)
+	var out := _respawn_for(saved, lv, stage)
+	for b in level_blockers:
+		_respawn_blockers.erase(b)
+	WorldState.from_save_dict(live)
+	return out
 
 
 ## Why a respawn at `checkpoint_id` is refused ("" = it is fine): its index max_stage below the
-## character's stage (built in), else the first registered blocker's reason. The checkpoint is the
-## save's level's, or `p_level_id`'s when given (a fast travel's destination: the registered blockers
-## judge that level meanwhile - respawn_blocker_level()).
-func respawn_blocker(checkpoint_id: String, p_level_id := "") -> String:
+## character's stage (built in; `stage` when given, else current_stage()), else the first registered
+## blocker's reason. The checkpoint is the save's level's, or `p_level_id`'s when given (a fast travel's
+## destination: the registered blockers judge that level meanwhile - respawn_blocker_level()).
+func respawn_blocker(checkpoint_id: String, p_level_id := "", stage := 0) -> String:
 	var lv := p_level_id if p_level_id != "" else save_level_id()
 	var idx := WorldIndex.for_level(lv)
-	if idx != null and idx.has_checkpoint(checkpoint_id) and idx.max_stage_of(checkpoint_id) < current_stage():
+	var st := stage if stage > 0 else current_stage()
+	if idx != null and idx.has_checkpoint(checkpoint_id) and idx.max_stage_of(checkpoint_id) < st:
 		return NARROW_PATHS
 	var previous := _blocker_level
 	_blocker_level = lv
@@ -1012,6 +1073,8 @@ static func blocker_text(blockers: PackedStringArray) -> String:
 	var b := blockers[0]
 	if b.begins_with("aware:"):
 		return "Not while enemies are close."
+	if b.begins_with(FIGHT_BLOCKER_PREFIX):
+		return FIGHT_BLOCKED
 	match b:
 		"dead":
 			return "The dead cannot travel."
@@ -1137,8 +1200,10 @@ func take_checkpoint(reason: String, respawn: String = "", completion := false) 
 
 
 ## Why a checkpoint must wait now ([] = it may be taken): dead, grabbed, executing, holding,
-## screen, aware:<enemy id> (an aware enemy within 40 m), no_player. ignore_aware: leave the
-## aware enemies out (the slice's completion checkpoint, an exit).
+## screen, fight:<boss id> (M8 release, R1: a boss fight or battle engaged - engaged_fights()),
+## aware:<enemy id> (an aware enemy within 40 m), no_player. ignore_aware: leave the aware enemies out
+## (the slice's completion checkpoint, a boss's end, the main thread's stages, an exit); an engaged fight
+## holds those too.
 func checkpoint_blockers(ignore_aware := false) -> PackedStringArray:
 	var out := PackedStringArray()
 	var p := player()
@@ -1156,6 +1221,8 @@ func checkpoint_blockers(ignore_aware := false) -> PackedStringArray:
 		out.append("holding")
 	if _modal_screen_open():
 		out.append("screen")
+	for boss_id in engaged_fights():
+		out.append(FIGHT_BLOCKER_PREFIX + boss_id)
 	if ignore_aware:
 		return out
 	for n in get_tree().get_nodes_in_group("enemies"):
@@ -1170,6 +1237,20 @@ func checkpoint_blockers(ignore_aware := false) -> PackedStringArray:
 			continue
 		if enemy.global_position.distance_to(p.global_position) <= AWARE_BLOCK_RADIUS_M:
 			out.append("aware:%s" % str(enemy.get("entity_id")))
+	return out
+
+
+## M8 release (R1): the boss ids of the boss fights and battles engaged now - every BossArena (BattleBoss
+## among them: group boss_arenas) whose is_engaged() holds. While one is, no checkpoint is committed
+## (checkpoint_blockers: fight:<boss id>): a world saved mid-fight held the fight half fought (the Iron
+## Regiment's Wall cleared, the battle not won), and its next engagement after a load could not be won.
+func engaged_fights() -> PackedStringArray:
+	var out := PackedStringArray()
+	if not is_inside_tree():
+		return out
+	for n in get_tree().get_nodes_in_group(BossArena.GROUP):
+		if is_instance_valid(n) and n.is_inside_tree() and n.has_method("is_engaged") and bool(n.call("is_engaged")):
+			out.append(str(n.get("boss_id")))
 	return out
 
 
@@ -1492,10 +1573,12 @@ func _on_boss_defeated(_tick: int, _boss_id: String) -> void:
 ## as a kill does, so it is checkpointed like boss_defeated (decision 13: a checkpoint never loses a
 ## boss's end) - the respawn unchanged, and no victory cue (only boss_defeated has one); a completion
 ## request like the kill's (fix-up 1: her aware whelps held it back). "left" (the giant walked out;
-## the boss resets) takes none.
+## the boss resets) takes none. M8 release (R1): "yielded_talk" (Harrok's talk ending chosen while his
+## duel is engaged: MootArena ends the duel without a victory) ends the fight too and takes the same
+## request ("boss_yielded_talk").
 func _on_boss_disengaged(_tick: int, _boss_id: String, reason: String) -> void:
-	if reason == "fled":
-		request_checkpoint("boss_fled", "", true)
+	if BOSS_END_REASONS.has(reason):
+		request_checkpoint(str(BOSS_END_REASONS[reason]), "", true)
 
 
 ## The quests' checkpoints (decision 13: "after every quest.main stage").

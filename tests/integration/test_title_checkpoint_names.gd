@@ -93,6 +93,34 @@ func test_the_title_names_the_checkpoint_never_its_id() -> void:
 	assert_true(TitleScreen.describe_save(doc).contains("at The Kings' Door"), "no doubled article: %s" % TitleScreen.describe_save(doc))
 
 
+## M8 release (R2): the line names where Continue wakes the giant. A 0.7.0-m7 save at the Brannock waystone
+## with Brannock hostile read "at the Brannock waystone" while Continue woke the giant at the Kingsgate shelf
+## waystone ("Brannock's guards hold the ground there."): the line now applies the respawn blockers the load
+## applies (GameSession.save_respawn), on the real world's index and records, before anything is loaded.
+func test_the_save_line_names_where_continue_wakes_the_giant() -> void:
+	var doc := _fixture("v2_m7_after_brannock_force")
+	var flags: Dictionary = doc.world.flags
+	assert_eq([str(doc.level), str(doc.checkpoint.respawn), flags.get("faction.brannock.hostile")],
+		["level.world", "world.cp.brannock", true], "the save: the Brannock waystone, Brannock hostile")
+	WorldState.set_flag("test.live_world", true)
+	var line := TitleScreen.describe_save(doc)
+	assert_true(line.begins_with("Saved game: level 9, stage 4, at the Kingsgate shelf waystone, in The Old Kingdom"),
+		"the line names where the giant will wake: %s" % line)
+	assert_false(line.contains("Brannock"), "not the stone its guards hold: %s" % line)
+	assert_eq(WorldState.flags, {"test.live_world": true}, "describing a save leaves the live world as it was")
+	# Continue wakes the giant there: the save loaded, the blockers the world's director registers move it.
+	_write_save(doc)
+	var r := GameSession.continue_valley()
+	assert_true(bool(r.ok), "Continue loads the save (%s)" % r.message)
+	GameSession.register_respawn_blocker(func(id: String) -> String: return FactionState.respawn_refusal(id))
+	assert_eq(GameSession.respawn_checkpoint(), "world.cp.kingsgate_shelf", "Continue wakes the giant at the stone the line named")
+	# With Brannock at peace the line names the saved stone.
+	var calm := doc.duplicate(true)
+	(calm.world.flags as Dictionary).erase("faction.brannock.hostile")
+	assert_true(TitleScreen.describe_save(calm).contains("at the Brannock waystone"), "a stone nothing holds: %s" %
+		TitleScreen.describe_save(calm))
+
+
 # --------------------------------------------------------------------------- the toast
 
 func test_the_toast_names_the_checkpoint() -> void:

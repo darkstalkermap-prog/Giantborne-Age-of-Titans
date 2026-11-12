@@ -13,6 +13,10 @@ extends BossArena
 ## Placed by the world builder's arena kind (style "moot"); Harrok's encounter holds him neutral at his
 ## post until the giant enters the ring (its stand_down_when).
 
+## The talk ending's outcome (Harrok's dialogue sets settled_flag to it) and, M8 release (R1), the
+## boss_disengaged reason it ends an engaged duel with.
+const TALK_OUTCOME := "yielded_talk"
+
 ## Set once the champion's outcome is decided.
 @export var settled_flag := "boss.harrok.outcome"
 ## The faction a spared (or talked-down) champion reconciles ("" = none).
@@ -48,15 +52,34 @@ func engage(tick: int = -1) -> void:
 
 
 ## The talk ending during play: the ring goes quiet at once (no duel, no boss music), the clan
-## reconciled.
-func _on_moot_flag(_tick: int, flag_id: String, value: Variant) -> void:
+## reconciled. M8 release (R1): also when the duel is engaged (_end_by_talk).
+func _on_moot_flag(tick: int, flag_id: String, value: Variant) -> void:
 	if flag_id != settled_flag or not QuestConditions.truthy(value):
 		return
-	if str(value) == "yielded_talk":
-		if state != State.ENGAGED:
+	if str(value) == TALK_OUTCOME:
+		if state == State.ENGAGED:
+			_end_by_talk(tick)
+		else:
 			state = State.DEFEATED
 		if faction != "":
 			FactionState.reconcile(faction)
+
+
+## M8 release (R1): the talk ending chosen while the duel is engaged - the giant stepped into the ring, then
+## walked out to the challenge stone (the fight's ground, N4.6) and bid Harrok kneel - ends the duel without a
+## victory: the ring at peace (DEFEATED, its gate open) and Events.boss_disengaged(boss, "yielded_talk"), which
+## ends the bar, takes the boss music back to the zone with the yield stinger (CueRouter) and takes the fight's
+## end checkpoint (GameSession: boss_yielded_talk). No defeated flag and no boss_defeated (no victory stinger):
+## the talk ending chosen before the duel sets neither, and the outcome flag is its record (settled() on a
+## load). The duel stayed engaged before, with Harrok stood down, until the giant walked away; and since no
+## checkpoint is committed while a fight is engaged, the throne inside the ring would have been claimed with
+## nothing saved.
+func _end_by_talk(tick: int) -> void:
+	state = State.DEFEATED
+	defeated_tick = tick
+	_outside_since = -1
+	_set_gate_closed(false)
+	Events.boss_disengaged.emit(tick, boss_id, TALK_OUTCOME)
 
 
 ## The yield's decision: Spare reconciles the clan (the duel is won).

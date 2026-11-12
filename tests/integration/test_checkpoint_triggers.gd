@@ -8,7 +8,8 @@ extends IntegrationSuite
 ## its flag and fires once per load. M8 gate (F38): a boss's drive-out (boss_disengaged "fled") is a
 ## row of the table; a boss the giant walked away from ("left") is not. M8 gate fix-up 1: a boss's end
 ## (the kill and the drive-out) does not wait for aware enemies (its brood), and a quit to the title
-## commits one that something else holds back.
+## commits one that something else holds back. M8 release (R1): Harrok's talk ending ending his engaged
+## duel (boss_disengaged "yielded_talk") is a row too.
 
 const FLOW := "res://scenes/test/flow_test_level.tscn"
 
@@ -129,6 +130,10 @@ func test_each_trigger_takes_one_checkpoint_with_its_respawn() -> void:
 	await _expect("boss_disengaged fled (a drive-out)",
 		func() -> void: Events.boss_disengaged.emit(Sim.tick, "test.boss", "fled"), 1, "test.cp_a")
 	assert_eq(str(GameSession.checkpoint_doc.checkpoint.reason), "boss_fled", "reason boss_fled")
+	# M8 release (R1): Harrok's talk ending chosen while his duel is engaged ends it as well.
+	await _expect("boss_disengaged yielded_talk (the talk ending ends an engaged duel)",
+		func() -> void: Events.boss_disengaged.emit(Sim.tick, "test.boss", "yielded_talk"), 1, "test.cp_a")
+	assert_eq(str(GameSession.checkpoint_doc.checkpoint.reason), "boss_yielded_talk", "reason boss_yielded_talk")
 	await _expect("boss_disengaged left (the giant walked out)",
 		func() -> void: Events.boss_disengaged.emit(Sim.tick, "test.boss", "left"), 0, "test.cp_a", 5)
 	await _expect("quest_stage_changed for quest.main",
