@@ -21,6 +21,8 @@ extends Node
 ##     loadout_changed while a shrine's screen is open (M8 gate)     -> respawn: that shrine
 ##   boss_defeated (in the Valley)                                   -> respawn: valley.shrine.kingsfall
 ##   boss_disengaged "fled" (a drive-out, M8 gate)                   -> respawn unchanged
+##   boss_disengaged "yielded_talk" (Harrok's talk ending ends his
+##     engaged duel, M8 release)                                     -> respawn unchanged
 ##   quest_stage_changed for quest.main                              -> respawn unchanged
 ## A request waits (one pending request; a later one replaces the reason and keeps the newest
 ## respawn) while checkpoint_blockers() is not empty: the player is dead, grabbed, executing or
@@ -66,12 +68,12 @@ extends Node
 ## M8 release (R1, the release check's blocker): no checkpoint is committed while a boss fight or a battle is
 ## engaged (engaged_fights(): an engaged BossArena or BattleBoss; the blocker "fight:<boss id>", which holds
 ## completion requests too, a quit to the title's commit of one and travel). A request made before or during
-## the fight waits until it is won (its own end - boss_defeated, a drive-out - is then taken with it), lost (a
-## death reload drops it with the fight), abandoned or reset (the disengage rule). The Iron Regiment's battle
-## had a request deferred from before it (waiting for no aware enemy within 40 m) committed as the Wall fell:
-## the save held a battle not won with its Wall cleared, and after a death or a quit and Continue the giant
-## was shut in an empty bailey. BattleBoss now also starts every engagement afresh and repairs such saves as
-## they load (P34.md, "M8 release").
+## the fight waits until it is won (its own end - boss_defeated, a drive-out, Harrok's talk ending - is then
+## taken with it), lost (a death reload drops it with the fight), abandoned or reset (the disengage rule). The
+## Iron Regiment's battle had a request deferred from before it (waiting for no aware enemy within 40 m)
+## committed as the Wall fell: the save held a battle not won with its Wall cleared, and after a death or a
+## quit and Continue the giant was shut in an empty bailey. BattleBoss now also starts every engagement afresh
+## and repairs such saves as they load (P34.md, "M8 release").
 ##
 ## Tests: reset_for_tests() (ResetHooks.BEFORE_EACH) puts the session in the sandbox, turns
 ## writes off, points SaveSlots at user://test_saves/ and replaces scene reloads with a log
@@ -123,6 +125,9 @@ const UNKNOWN_PLACE := "That place is not on the map."
 ## line a travel it holds back is refused with.
 const FIGHT_BLOCKER_PREFIX := "fight:"
 const FIGHT_BLOCKED := "Not in the middle of a fight."
+## boss_disengaged's reasons that end a fight (not "left": the boss resets) -> the reason of the fight's end
+## checkpoint (M8 gate F38: the drive-out; M8 release R1: Harrok's talk ending in an engaged duel).
+const BOSS_END_REASONS := {"fled": "boss_fled", "yielded_talk": "boss_yielded_talk"}
 ## The flag of a reached checkpoint (fast-travel eligibility, the respawn fallback).
 const VISITED_PREFIX := "visited."
 ## level_entered waits at most this many frames for the level and the samples (then it is sent
@@ -1568,10 +1573,12 @@ func _on_boss_defeated(_tick: int, _boss_id: String) -> void:
 ## as a kill does, so it is checkpointed like boss_defeated (decision 13: a checkpoint never loses a
 ## boss's end) - the respawn unchanged, and no victory cue (only boss_defeated has one); a completion
 ## request like the kill's (fix-up 1: her aware whelps held it back). "left" (the giant walked out;
-## the boss resets) takes none.
+## the boss resets) takes none. M8 release (R1): "yielded_talk" (Harrok's talk ending chosen while his
+## duel is engaged: MootArena ends the duel without a victory) ends the fight too and takes the same
+## request ("boss_yielded_talk").
 func _on_boss_disengaged(_tick: int, _boss_id: String, reason: String) -> void:
-	if reason == "fled":
-		request_checkpoint("boss_fled", "", true)
+	if BOSS_END_REASONS.has(reason):
+		request_checkpoint(str(BOSS_END_REASONS[reason]), "", true)
 
 
 ## The quests' checkpoints (decision 13: "after every quest.main stage").

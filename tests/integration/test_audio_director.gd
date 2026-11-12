@@ -291,6 +291,33 @@ func test_zone_music_boss_set_after_its_intro_and_a_phase_layer_at_the_next_bar(
 	assert_eq(Audio.music.set_id(), "music.test_zone", "the zone's set again")
 
 
+## M8 release (R1): the endings of a boss fight that are not a kill - Harrok's talk ending chosen while his duel
+## is engaged (boss_disengaged "yielded_talk", MootArena) and a drive-out ("fled") - end the boss music with the
+## yield stinger, never the victory's; a giant who walked out ("left") hears none. The talk ending mid-duel
+## played the victory stinger (boss_defeated) before; before that it left the boss music on.
+func test_a_boss_fight_ended_without_a_kill_ends_its_music_with_the_yield_stinger() -> void:
+	_install_music()
+	_make_level()
+	spawn_player(Vector3.ZERO)
+	await step_ticks(1)
+	Audio.advance_for_tests(0.6)
+	for row: Array in [["yielded_talk", "mus.stinger.yield"], ["fled", "mus.stinger.yield"], ["left", ""]]:
+		var reason := str(row[0])
+		Events.boss_engaged.emit(Sim.tick, "test.boss_x")
+		await _drain()
+		Audio.advance_for_tests(INTRO_S + 0.3)
+		assert_eq(Audio.music.state_name(), "boss", "%s: the boss set plays" % reason)
+		Audio.music.stingers.clear()
+		Events.boss_disengaged.emit(Sim.tick, "test.boss_x", reason)
+		await _drain()
+		Audio.advance_for_tests(0.2)
+		assert_eq(Audio.music.state_name(), "zone", "%s: back to the zone" % reason)
+		assert_eq(Audio.music.stingers, [str(row[1])] if str(row[1]) != "" else [],
+			"%s: %s" % [reason, "the %s" % row[1] if str(row[1]) != "" else "no stinger"])
+		assert_false(Audio.music.stingers.has("mus.stinger.victory"), "%s: never the victory stinger" % reason)
+		Audio.advance_for_tests(3.0)
+
+
 func test_volumes_reach_the_buses() -> void:
 	var music_bus := AudioServer.get_bus_index("Music")
 	assert_true(music_bus >= 0 and AudioServer.get_bus_index("SFX") >= 0 and AudioServer.get_bus_index("UI") >= 0

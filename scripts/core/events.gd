@@ -193,8 +193,10 @@ signal talent_learned(tick: int, talent_id: String)
 signal ancestry_chosen(tick: int, ancestry_id: String)
 ## Emitter: BattleBoss, RivalGiantBrain (P34). Listeners: Quests, Audio, the boss bar, the yield prompt.
 signal boss_yielded(tick: int, boss_id: String)
-## reason: left (the player left the arena; the boss resets) | fled (the Matriarch's drive-out).
-## Emitter: BossArena, BattleBoss, MatriarchBrain (P34). Listeners: Audio, the boss bar, Quests.
+## reason: left (the player left the arena; the boss resets) | fled (the Matriarch's drive-out) |
+## yielded_talk (M8 release: Harrok's talk ending chosen while his duel is engaged - the duel ends without a
+## victory). Emitter: BossArena, BattleBoss, MatriarchBrain (P34), MootArena. Listeners: Audio, the boss bar,
+## Quests, GameSession (fled, yielded_talk: the fight's end checkpoint).
 signal boss_disengaged(tick: int, boss_id: String, reason: String)
 ## Emitter: WanderDirector (P37). Listeners: metrics, debug.
 signal wander_spawned(tick: int, template_id: String, encounter_id: String)

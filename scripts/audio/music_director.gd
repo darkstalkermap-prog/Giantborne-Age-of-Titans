@@ -16,7 +16,8 @@ extends Node
 ## zone (in a level: the zone's set with intensity layers, the melody scheduler and the silence
 ## window); boss (boss_engaged for a boss with an audio_region: the intro stinger, then the boss set
 ## cross-faded in 0.5 s, phase layers at the next bar on boss_phase_changed; back to the zone on
-## boss_defeated (victory), boss_yielded and boss_disengaged(fled) (yield), boss_disengaged(left)).
+## boss_defeated (victory), boss_yielded, boss_disengaged(fled) and boss_disengaged(yielded_talk) (yield),
+## boss_disengaged(left)).
 ##
 ## Intensity (every audio_mix.intensity.poll_s; AudioMath.intensity_target): explore, danger or
 ## combat from the threats around the giant weighed by their size (decision 6). Entering combat

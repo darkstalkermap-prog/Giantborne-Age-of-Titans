@@ -4,7 +4,8 @@ extends IntegrationSuite
 ## waits (GameSession's fight blocker) until the fight ends; the fight's own end (the M8 gate's boss-end and
 ## drive-out checkpoints, F38) is still taken; the arena's gate stands open whenever the fight is not engaged.
 ## The boss test arenas with their AI off (nothing aware: on the old rule a request went through at once
-## mid-fight): the Ogre King's (a gate, the kill), the troll den's (the drive-out) and the Moot's (Spare).
+## mid-fight): the Ogre King's (a gate, the kill), the troll den's (the drive-out) and the Moot's (Spare, and
+## Harrok's talk ending chosen mid-duel).
 
 const ARENAS := {
 	"ogre_king": "res://scenes/test/boss_arena_test.tscn",
@@ -113,9 +114,12 @@ func test_the_moots_duel_holds_checkpoints_until_harrok_is_spared() -> void:
 
 
 ## Harrok's talk ending chosen while the duel is engaged (the giant stepped into the ring, then walked out to
-## the challenge stone - the fight's ground - and bid him kneel) ends the duel as won: the arena is not left
-## engaged with nothing to fight, so the held request (and later the throne's) is taken. The test Moot's arena
-## made a MootArena (its settled flag boss.harrok.outcome).
+## the challenge stone - the fight's ground - and bid him kneel) ends the duel without a victory: the arena is
+## not left engaged with nothing to fight - it is at peace and boss_disengaged(yielded_talk) ends the bar and
+## the boss music (with the yield stinger: test_audio_director) - so the held request (and later the throne's)
+## is taken with the fight's end (boss_yielded_talk); and as for the talk ending chosen before the duel, nothing
+## calls it won: no boss_defeated (its victory stinger) and no defeated flag. The test Moot's arena made a
+## MootArena (its settled flag boss.harrok.outcome).
 func test_the_talk_ending_ends_an_engaged_duel() -> void:
 	level = (load(str(ARENAS["moot"])) as PackedScene).instantiate() as Node3D
 	var old := level.get_node("BossArena") as Node3D
@@ -144,14 +148,23 @@ func test_the_talk_ending_ends_an_engaged_duel() -> void:
 	await step_ticks(1)
 	await _held(moot, "the Moot")
 	var defeated: Array = []
+	var ended: Array = []
 	var on_defeated := func(_t: int, id: String) -> void: defeated.append(id)
+	var on_ended := func(_t: int, id: String, reason: String) -> void: ended.append([id, reason])
 	Events.boss_defeated.connect(on_defeated)
+	Events.boss_disengaged.connect(on_ended)
 	WorldState.set_flag("boss.harrok.outcome", "yielded_talk")   # Harrok's dialogue: the talk ending
 	await step_ticks(1)
 	Events.boss_defeated.disconnect(on_defeated)
-	assert_eq(defeated, ["test.moot.harrok"], "the duel is won without blood (boss_defeated: the bar and the music end)")
-	await _taken_at_the_end(moot, "boss_defeated", "the Moot's talk ending")
-	assert_true(QuestConditions.truthy(WorldState.get_flag("test.moot.defeated")), "the duel's defeated flag")
+	Events.boss_disengaged.disconnect(on_ended)
+	assert_eq(ended, [["test.moot.harrok", "yielded_talk"]], "the duel ends: boss_disengaged(yielded_talk) ends the bar and the music")
+	assert_eq(defeated, [], "without a victory: no boss_defeated (no victory stinger)")
+	await _taken_at_the_end(moot, "boss_yielded_talk", "the Moot's talk ending")
+	assert_true(moot.is_defeated(), "the ring is at peace")
+	assert_false(QuestConditions.truthy(WorldState.get_flag("test.moot.defeated")),
+		"no defeated flag: the outcome flag is the talk ending's record")
+	moot.engage()
+	assert_true(moot.is_defeated(), "and the duel never engages again")
 
 
 ## A fight the giant walks away from (the disengage rule) lets a held request through at once.
