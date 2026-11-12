@@ -86,6 +86,8 @@ var refusals: Array = []              ## [tick, what, message] (fast travel and 
 ## any formation lived in the loaded world: a troll fight 300 m from a war camp counted).
 var growth := {"lone_engaged_s": 0.0, "lone_fled_s": 0.0, "formation_engaged_s": 0.0, "formation_held_s": 0.0}
 var music_lesser: Dictionary = {}     ## intensity -> seconds while only lesser enemies are engaged (stages 4-6)
+## P39: the lone humans' engaged seconds by "<archetype>/<brain state>" (what they do when they do not flee).
+var lone_states: Dictionary = {}
 var _formation_engaged := false
 
 var _connected := false
@@ -435,8 +437,11 @@ func _sample_growth(player: GiantPlayer) -> void:
 			engaged_formations[f] = true
 		if is_lone_human(a):
 			growth.lone_engaged_s = float(growth.lone_engaged_s) + dt
-			if a.brain.state_name() in FLED_STATES:
+			var st := a.brain.state_name()
+			if st in FLED_STATES:
 				growth.lone_fled_s = float(growth.lone_fled_s) + dt
+			var key := "%s/%s" % [RunMetrics.archetype_of(a.entity), st]
+			lone_states[key] = snappedf(float(lone_states.get(key, 0.0)) + dt, 0.001)
 	for f: Formation in engaged_formations:
 		growth.formation_engaged_s = float(growth.formation_engaged_s) + dt
 		if f.is_intact():
@@ -612,6 +617,7 @@ func result() -> Dictionary:
 		"music": music.duplicate(true),
 		"growth": _growth_out(),
 		"music_lesser": music_lesser.duplicate(true),
+		"lone_states": lone_states.duplicate(true),
 		"save_bytes_max": save_bytes_max,
 		"deaths_by_region": deaths_by_region.duplicate(),
 		"refusals": refusals.duplicate(true),

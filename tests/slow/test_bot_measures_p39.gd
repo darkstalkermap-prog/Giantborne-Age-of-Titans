@@ -10,12 +10,14 @@ extends IntegrationSuite
 ##   * the world bot's siege disruption at stage 6 (plan §5.14; P38's bot never seized an engine): a
 ##     crewed ballista in reach is struck until its poise breaks, seized with both hands and thrown at
 ##     the soldier beyond it, where it smashes; below stage 6, or at peace (a neutral engine), it is no
-##     engine to seize.
+##     engine to seize;
+##   * an enemy above reach is shot only along a clear line, from a spot chosen by that line.
 
 const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
 const BANNERMAN := "res://scenes/enemies/bannerman.tscn"
 const BALLISTA := "res://scenes/world/siege_ballista.tscn"
 const CREW := "res://scenes/enemies/siege_crew.tscn"
+const ARCHER := "res://scenes/enemies/archer.tscn"
 
 var f: Formation
 var p: GiantPlayer
@@ -276,3 +278,33 @@ func test_a_look_at_the_abilities_mid_blow_waits_from_stage_4() -> void:
 	bot.combat._next_ability_tick = 0
 	assert_false(bot.combat._abilities(Sim.tick, soldier, 6.0), "no ability mid-blow at stage 3 either")
 	assert_true(bot.combat._next_ability_tick > Sim.tick, "but at stage 3 the look is spent (P17a's rule, the Valley unchanged)")
+
+
+## The world bot's bolt at an enemy above reach goes only along a clear line (P39: from 17 m east of
+## the toll fort's tower the line to its west archer struck the deck's edge, the blows that did not
+## hurt it came a bolt's cooldown apart so the ranged give-up never ran out, and the bot stood there
+## until the march's watchdog). An archer on a 13 m deck, 5 m in from its near edge: from the ground
+## the old rule chose (16 m toward the giant) the line meets the deck; the points the bot chooses now
+## are clear, the nearest to the giant first, and a spot given up is not chosen again.
+func test_an_enemy_above_reach_is_shot_from_a_clear_line() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	add_box(Vector3(6, 13, 6), Vector3(0, 6.5, -20))
+	var archer := TestSpawn.enemy(world, ARCHER, Vector3(0, 13.1, -22.0), "test.p39_deck_archer", false, 0.0)
+	await TestWait.until(self, func() -> bool: return archer.is_on_floor(), 60)
+	_bot()
+	await step_ticks(1)
+	assert_true(bot.combat.is_elevated(archer), "the archer stands above the stage-4 giant's reach")
+	assert_false(bot._shot_clear(p.global_position, archer), "from 22 m south the bolt's line meets the deck")
+	assert_false(bot._shot_clear(Vector3(0, 0.05, -6), archer), "so it does from 16 m toward the giant (P38's spot)")
+	assert_true(bot._shot_clear(Vector3(0, 0.05, -38), archer), "from 16 m north, past the deck's far edge, it is clear")
+	var points: Array[Vector3] = bot._clear_shot_points(archer, [], 4)
+	assert_eq(points.size(), 4, "clear points around it")
+	for q in points:
+		assert_true(bot._shot_clear(q, archer), "each one clear: %s" % q)
+	for i in range(1, points.size()):
+		assert_true(WorldBot._flat_dist(points[i - 1], p.global_position) <= WorldBot._flat_dist(points[i], p.global_position) + 1e-3,
+			"nearest the giant first")
+	var again: Array[Vector3] = bot._clear_shot_points(archer, [points[0]], 4)
+	assert_false(again.has(points[0]), "a spot given up is not chosen again")
+	for q in again:
+		assert_true(WorldBot._flat_dist(q, points[0]) >= WorldBot.ELEVATED_SHOT_BAD_M, "nor one beside it")

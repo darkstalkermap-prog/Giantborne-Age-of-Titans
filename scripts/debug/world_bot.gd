@@ -120,6 +120,14 @@ const RANGED_GIVE_UP_S := 8.0
 const RANGED_IGNORE_S := 120.0
 ## An encounter's last members above reach are shot at from the ground this far from them.
 const ELEVATED_SHOT_M := 16.0
+## P39: ...from the nearest of these rings (every ELEVATED_SHOT_STEP_DEG) from which a bolt flies clear
+## to them; at most ELEVATED_SHOT_NAV_TRIES clear points are tried on the navigation per choice, and a
+## spot the bot stood at while it gave the member up is not chosen again (within ELEVATED_SHOT_BAD_M).
+const ELEVATED_SHOT_RINGS_M := [16.0, 22.0, 28.0]
+const ELEVATED_SHOT_STEP_DEG := 30.0
+const ELEVATED_SHOT_NAV_TRIES := 4
+const ELEVATED_SHOT_BAD_M := 4.0
+const ELEVATED_SHOT_MAX_BAD := 3
 ## A boss fight's respawn point: the waystone within this of its place is taken first; the bot waits at
 ## it this long for the checkpoint (taken out of combat).
 const RESPAWN_POINT_RADIUS_M := 160.0
@@ -216,6 +224,9 @@ var _world: WorldRoot = null
 ## the last interact pressed on an engine.
 var _siege_tries: Dictionary = {}
 var _siege_grab_tick := -1000
+## P39: where each member above reach is shot from - entity id -> {"spot": the chosen ground (INF:
+## none clear), "at": the member's position then, "tick": when chosen, "bad": the spots given up}.
+var _shot_spots: Dictionary = {}
 
 
 # --------------------------------------------------------------------------- configuration
@@ -399,6 +410,7 @@ func _on_level_loaded() -> void:
 	super()
 	_world = level as WorldRoot
 	_node_cache.clear()
+	_shot_spots.clear()
 	route = BotRoute.new(level.index() if level != null else null, level)
 	if wrun != null:
 		wrun.metrics.note_level_loaded(level)
@@ -753,18 +765,69 @@ func _fight_ignored_now(_t: EnemyActor) -> bool:
 ## stands still under a target it cannot reach, and the giant stood under Fort Aldmere's wall - its
 ## archers 16 m up, no lock taken, no bolt thrown, the target switching between four of them so the
 ## Valley's chase give-up never ran out - instead of breaking the gate beside it, until the watchdog.
-## The toll fort's tower archers (part of an encounter to clear) are still shot down by bolts. Else
-## the nearest threat on the giant's own ground, else none (the objective goes on).
+## The toll fort's tower archers (part of an encounter to clear) are still shot down by bolts. P39:
+## only one a bolt from where the giant stands would reach (_shot_clear - the Valley's pick first, then
+## the other elevated threats): from 17 m east of the toll fort's tower the line to its west archer
+## struck the deck's edge, the blows that did not hurt it came seconds apart (the bolt's cooldown, so
+## the ranged give-up never ran out) and the bot stood there until the march's watchdog. The
+## encounter's task takes the giant to a spot with a clear line (_elevated_shot_spot). Else the
+## nearest threat on the giant's own ground, else none (the objective goes on).
 func _fight_target() -> EnemyActor:
 	var t := super()
 	if t == null or not _in_world() or not combat.is_elevated(t):
 		return t
-	if _ranged_ready() and not _ranged_futile(t.entity.entity_id, t.entity.combatant.pools.health, Sim.tick):
-		return t
+	if _ranged_ready():
+		var shots: Array[EnemyActor] = [t]
+		for e in combat.threats(combat.engage_radius()):
+			if e != t and combat.is_elevated(e) and not _is_ignored(e):
+				shots.append(e)
+		for e in shots:
+			if e.entity != null and _shot_clear(player.global_position, e):
+				if not _ranged_futile(e.entity.entity_id, e.entity.combatant.pools.health, Sim.tick):
+					return e
+				break
 	for e in combat.threats(combat.engage_radius()):
 		if not _is_ignored(e) and not combat.is_elevated(e) and reachable(e.global_position, 3.5):
 			return e
 	return null
+
+
+## True when a bolt the giant threw standing at `ground` (facing `e`) would fly clear to `e`: the
+## line from the bolt's launch point (launch_offset_m x the body's scale) to e's anchor, within the
+## bolt's reach at the stage, meets no world or breakable body - the sphere ProjectileSystem sweeps.
+func _shot_clear(ground: Vector3, e: EnemyActor) -> bool:
+	if e == null or e.entity == null or player.get_world_3d() == null:
+		return false
+	var aim := e.entity.anchor_position()
+	var dir := _flat(aim - ground)
+	if dir.length_squared() < 0.01:
+		return false
+	var bolt := _bolt_geometry()
+	var origin := ground + Basis.looking_at(dir.normalized(), Vector3.UP) * (bolt.offset as Vector3)
+	if origin.distance_to(aim) > float(bolt.reach):
+		return false
+	var space := player.get_world_3d().direct_space_state
+	return HitQueryAdapter.sphere_contact(space, origin, aim, float(bolt.radius)).is_empty()
+
+
+## The giant's bolt now: its launch offset in the giant's space (scaled), its reach at the stage and its
+## radius - the slotted Runic Bolt (or what evolved from it), else the record's.
+func _bolt_geometry() -> Dictionary:
+	var a: ActionDef = null
+	var key := combat.slot_of(BotCombat.RUNIC_BOLT)
+	if key != "":
+		a = player.controller.library.get(str(player.controller.loadout.get(key, "")))
+	if a == null:
+		a = player.controller.library.get(BotCombat.RUNIC_BOLT)
+	if a == null or player.attack == null:
+		return {"offset": Vector3(0.6, 2.9, -0.8), "reach": 25.0, "radius": 0.3}
+	var spec := player.attack.stage_spec(a)
+	var offset: Vector3 = spec.get("launch_offset", Vector3.INF)
+	if offset == Vector3.INF:
+		offset = Vector3(0.0, float(player.entity.combatant.height_m) * 0.6, 0.0)
+	else:
+		offset *= player.attack.body_scale()
+	return {"offset": offset, "reach": PlayerAttack.reach_of(spec), "radius": float(spec.get("radius_m", 0.3))}
 
 
 ## A chase given up on a formation's member gives the whole formation up for as long: its braced wall
@@ -1279,10 +1342,12 @@ func _world_encounter_task(encounter_id: String) -> Dictionary:
 	return t
 
 
-## Where to shoot an encounter's members above reach from: the ground ELEVATED_SHOT_M from the
-## nearest one left (toward the giant); INF when none is left. The toll fort's tower archers stand
-## 13 m up behind their cabin's wall: from the fort's centre, 31 m off, the bolts struck the wall and
-## the bot stood there until the march's watchdog; from 17 m they struck the archers.
+## Where to shoot an encounter's members above reach from: for the nearest one left, the ground with a
+## clear bolt's line to it (_shot_spot), else the ground ELEVATED_SHOT_M from it toward the giant; INF
+## when none is left. The toll fort's tower archers stand 13 m up on its deck: from the fort's centre,
+## 31 m off, the bolts struck the tower and the bot stood there until the march's watchdog; from 17 m
+## south they struck the archers (P38) - from 17 m east, where the fight at the gate left the giant,
+## the line to the west archer crossed 4 m of deck and struck its edge, until the watchdog (P39).
 func _elevated_shot_spot(encounter_id: String) -> Vector3:
 	var best: EnemyActor = null
 	var best_d := INF
@@ -1296,12 +1361,101 @@ func _elevated_shot_spot(encounter_id: String) -> Vector3:
 			best_d = d
 	if best == null:
 		return Vector3.INF
+	var clear := _shot_spot(best)
+	if clear.is_finite():
+		return clear
 	var away := _flat(player.global_position - best.global_position)
 	if away.length_squared() < 1.0:
 		away = Vector3.BACK
 	var spot := best.global_position + away.normalized() * ELEVATED_SHOT_M
 	spot.y = player.global_position.y
 	return spot
+
+
+## The ground to shoot member `e` from (_clear_shot_spot), kept per member. It is chosen again when
+## the member has moved over 2 m, 5 s after none was clear, or when the bot gave the member up (a
+## chase or ranged blows that did not hurt it) while standing at the spot: that spot is not chosen
+## again and the member is tried at once from the next. A member given up elsewhere is tried again
+## at once when the giant reaches its spot. INF when none is clear (or ELEVATED_SHOT_MAX_BAD spots
+## were given up).
+func _shot_spot(e: EnemyActor) -> Vector3:
+	if e.entity == null:
+		return Vector3.INF
+	var id := e.entity.entity_id
+	var tick := Sim.tick
+	var until := int(_ignored.get(id, -1))
+	var rec: Dictionary = _shot_spots.get(id, {})
+	var again := rec.is_empty() or _flat_dist(rec.at, e.global_position) > 2.0
+	if not again:
+		var spot: Vector3 = rec.spot
+		if not spot.is_finite():
+			again = tick - int(rec.tick) > ActionDef.seconds_to_ticks(5.0) \
+				and (rec.bad as Array).size() < ELEVATED_SHOT_MAX_BAD
+		elif _flat_dist(spot, player.global_position) < ELEVATED_SHOT_BAD_M:
+			if not bool(rec.arrived):
+				rec["arrived"] = true
+				if until > tick:
+					_ignored.erase(id)
+					until = -1
+			elif until > tick and until != int(rec.until):
+				(rec.bad as Array).append(spot)
+				run.metrics.note(tick, "no shot at %s from (%.0f, %.0f): another spot" % [id, spot.x, spot.z])
+				_ignored.erase(id)
+				until = -1
+				again = (rec.bad as Array).size() < ELEVATED_SHOT_MAX_BAD
+				if not again:
+					rec["spot"] = Vector3.INF
+		rec["until"] = until
+	if again:
+		var bad: Array = rec.get("bad", [])
+		rec = {"spot": _clear_shot_spot(e, bad), "at": e.global_position, "tick": tick, "bad": bad,
+			"arrived": false, "until": until}
+		_shot_spots[id] = rec
+	var out: Vector3 = rec["spot"]
+	return out
+
+
+## Of the clear points around `e` (_clear_shot_points, nearest the giant first), the first on the
+## giant's navigation (within 2 m) that a path reaches; at most ELEVATED_SHOT_NAV_TRIES are tried. INF
+## when none.
+func _clear_shot_spot(e: EnemyActor, bad: Array) -> Vector3:
+	for ground in _clear_shot_points(e, bad, ELEVATED_SHOT_NAV_TRIES):
+		var snapped := NavQuery.closest_point(level, ground, _nav_mask())
+		if snapped.is_finite() and snapped.distance_to(ground) < 2.0 and reachable(snapped, 3.0):
+			return snapped
+	return Vector3.INF
+
+
+## The ground on ELEVATED_SHOT_RINGS_M around `e` (every ELEVATED_SHOT_STEP_DEG; the world's surface
+## under each point; none within ELEVATED_SHOT_BAD_M of a spot in `bad`) from which a bolt flies clear
+## to it (_shot_clear), nearest the giant first - at most `limit` of them.
+func _clear_shot_points(e: EnemyActor, bad: Array, limit: int) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var world := player.get_world_3d()
+	if world == null or e.entity == null:
+		return out
+	var space := world.direct_space_state
+	var top := e.entity.anchor_position().y
+	var cands: Array[Vector3] = []
+	var steps := int(roundf(360.0 / ELEVATED_SHOT_STEP_DEG))
+	for r: float in ELEVATED_SHOT_RINGS_M:
+		for i in steps:
+			var a := deg_to_rad(ELEVATED_SHOT_STEP_DEG * i)
+			cands.append(e.global_position + Vector3(sin(a), 0.0, cos(a)) * r)
+	var from := player.global_position
+	cands.sort_custom(func(a: Vector3, b: Vector3) -> bool: return _flat_dist(a, from) < _flat_dist(b, from))
+	for c in cands:
+		if bad.any(func(b: Vector3) -> bool: return _flat_dist(b, c) < ELEVATED_SHOT_BAD_M):
+			continue
+		var q := PhysicsRayQueryParameters3D.create(Vector3(c.x, top + 5.0, c.z), Vector3(c.x, top - 120.0, c.z),
+			HitQueryAdapter.LAYER_WORLD)
+		var hit := space.intersect_ray(q)
+		if hit.is_empty() or not _shot_clear(hit.position, e):
+			continue
+		out.append(hit.position)
+		if out.size() >= limit:
+			break
+	return out
 
 
 func _encounter_cleared(encounter_id: String) -> bool:
