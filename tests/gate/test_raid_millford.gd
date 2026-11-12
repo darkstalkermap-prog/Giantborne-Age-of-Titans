@@ -12,8 +12,11 @@ extends IntegrationSuite
 ##   * the raiders strike the protected houses (their target provider) and, the giant standing by, three
 ##     of the five fall: the raid ends "fell" - event.millford_raid.done and .outcome, world.millford.burned,
 ##     at least two houses burned - its objective leaves the tracker, and the raiders who are left rout.
-## (A stage-4 giant scares raiders off as they turn from a house they burned: P30's provider falls back
-## to the giant, and an aware soldier outmatched by a stage-4 giant routs - docs/systems/P37.md.)
+## (Since W23 a raider with nothing of its targets in sight keeps no target - P30's provider no longer falls
+## back to the giant - so a stage-4 giant standing off does not rout raiders that turn from a house they
+## burned, as it did up to W22 (the outmatched rule measured them against a giant they did not see); the
+## giant within aggro_player_m and in sight is still their target. docs/systems/P39f.md, "Raiders keep no
+## target rather than a giant they do not see".)
 
 const SCENE := "res://scenes/world/world.tscn"
 const RAID := "event.millford_raid"
