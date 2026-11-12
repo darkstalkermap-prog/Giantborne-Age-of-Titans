@@ -2684,10 +2684,21 @@ func target_out_of_reach(my_position: Vector3, target_pos: Vector3, band: Vector
 #     hittable during this unit's hit queries (AttackRunner.provider_target: the M1 team rule lets an
 #     enemy hit only the player); the perception gives it its own radius and no size (no awe, no
 #     outmatched tactics against a house). Without `targets` nothing changes.
+#     W23 (P39f; FOLLOWUPS "From P37"): with none of those in sight it keeps no target (it patrols or
+#     idles on) - it no longer falls back to the giant it does not see, against whom an aware raider at
+#     stages 4-5 measured itself 100 m off and routed (the outmatched rule), thinning the Millford raid.
+#     It never takes a target its blows cannot damage (_p30_out_of_reach): a civilian in shelter (inside,
+#     out of the world's physics), a protected NPC (Reeve Tamsin refuses every blow), or one it gave up -
+#     fixed on an NPC or prop for P30_GIVE_UP_S without damaging it, it leaves it for P30_GIVEN_UP_S
+#     (_p30_futile; a raider stood at the mill's shelter for the rest of a raid).
 
 ## At this stage or more, an outmatched soldier that finds no formation to join flees (plan §5.14:
 ## at stage 4 single humans flee; smaller giants keep P04's lines).
 const JOIN_OR_FLEE_STAGE := 4
+## W23 (P39f): the target provider gives up an NPC or prop it has been fixed on this long without
+## damaging it (_p30_futile), and takes it again only after P30_GIVEN_UP_S.
+const P30_GIVE_UP_S := 12.0
+const P30_GIVEN_UP_S := 60.0
 ## Arm poses (yaw, pitch in degrees: weapon arm, off arm) of a braced member, by role: the pike
 ## levelled at the giant's legs (the pike lies along the weapon arm), the shield raised, a line's
 ## blades low. The crowd renderer's brace meshes are built from the same table
@@ -2708,6 +2719,11 @@ var _p30_last_formation: Formation = null
 var _p30_incoming: HitEvent = null
 var _p30_target_tick := -1
 var _p30_target_ref: WeakRef = null
+## W23 (P39f): the provider target this unit is fixed on ("" = none) and the tick it fixed on it or last
+## damaged it; the targets it gave up (entity id -> the tick it may take them again).
+var _p30_fix_id := ""
+var _p30_fix_tick := -1
+var _p30_given_up := {}
 var _p30_extents := {}   # entity id -> Vector3 (half extents of its hurtboxes in its own frame)
 ## M7 gate: the band a running band_pulse strikes, taken when its windup began - the band its
 ## telegraph shows ({"instance": the action's instance id, "band": the band}; {} when none).
@@ -3031,9 +3047,10 @@ func _p30_target() -> CombatEntity:
 	if player != null and player.is_alive() and _p30_player_engaged(player, t):
 		pick = player
 	else:
+		# W23 (P39f): none in sight - no target (never the giant it does not see; see the section notes)
 		pick = _p30_nearest_target(t)
-		if pick == null:
-			pick = player
+		if pick != null and _p30_futile(pick):
+			pick = _p30_nearest_target(t)   # given up: the next one, if any
 	if pick != cached and cached != null and entity != null:
 		Sim.release_all_tokens(entity.entity_id)
 		if brain != null:
@@ -3076,7 +3093,7 @@ func _p30_nearest_target(t: Dictionary) -> CombatEntity:
 	for e: CombatEntity in Sim.entities():
 		if e == entity or e.team != CombatEntity.Team.NEUTRAL or not e.is_alive() or not is_instance_valid(e.actor):
 			continue
-		if not _p30_allowed(e, t):
+		if not _p30_allowed(e, t) or _p30_out_of_reach(e):
 			continue
 		var d := _flat_len(e.actor.global_position - global_position)
 		if d > best_d:
@@ -3101,6 +3118,42 @@ func _p30_allowed(e: CombatEntity, t: Dictionary) -> bool:
 		if tags.has(str(tag)):
 			return true
 	return false
+
+
+## W23 (P39f): true for an NPC or prop no blow of this unit can damage now: one it gave up (_p30_futile)
+## until its time is up, a civilian in shelter (inside: hidden, out of the world's physics) and a
+## protected NPC (it refuses every hit).
+func _p30_out_of_reach(e: CombatEntity) -> bool:
+	if int(_p30_given_up.get(e.entity_id, -1)) > Sim.tick:
+		return true
+	var c := e.actor as Civilian
+	return c != null and (c.sheltered or not c.accepts_hit(null))
+
+
+## W23 (P39f): the provider's give-up rule. True when this unit has been fixed on `e` (the NPC or prop the
+## provider picks) for P30_GIVE_UP_S without damaging it: `e` is given up for P30_GIVEN_UP_S. Picking
+## another target, or a blow that damages this one (_p30_on_hit_landed), starts the count again.
+func _p30_futile(e: CombatEntity) -> bool:
+	if entity != null and not entity.hit_landed.is_connected(_p30_on_hit_landed):
+		entity.hit_landed.connect(_p30_on_hit_landed)
+	if e.entity_id != _p30_fix_id:
+		_p30_fix_id = e.entity_id
+		_p30_fix_tick = Sim.tick
+		return false
+	if Sim.tick - _p30_fix_tick < int(roundf(P30_GIVE_UP_S * Sim.TICK_RATE)):
+		return false
+	for id: Variant in _p30_given_up.keys():
+		if int(_p30_given_up[id]) <= Sim.tick:
+			_p30_given_up.erase(id)
+	_p30_given_up[e.entity_id] = Sim.tick + int(roundf(P30_GIVEN_UP_S * Sim.TICK_RATE))
+	_p30_fix_id = ""
+	return true
+
+
+## W23 (P39f): a blow of this unit that damaged the target it is fixed on restarts the give-up count.
+func _p30_on_hit_landed(result: HitResult) -> void:
+	if result != null and result.event != null and result.event.target_id == _p30_fix_id and result.dealt_damage():
+		_p30_fix_tick = Sim.tick
 
 
 ## AttackRunner.provider_target: the NPC or prop this unit fights now (its brain's target when the
