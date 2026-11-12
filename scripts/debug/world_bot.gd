@@ -122,12 +122,15 @@ const RANGED_IGNORE_S := 120.0
 const ELEVATED_SHOT_M := 16.0
 ## P39: ...from the nearest of these rings (every ELEVATED_SHOT_STEP_DEG) from which a bolt flies clear
 ## to them; at most ELEVATED_SHOT_NAV_TRIES clear points are tried on the navigation per choice, and a
-## spot the bot stood at while it gave the member up is not chosen again (within ELEVATED_SHOT_BAD_M).
+## spot that failed (the member given up there, or the line from where the giant stopped blocked for
+## ELEVATED_SHOT_BLOCKED_S) is not chosen again (nor one within ELEVATED_SHOT_BAD_M of it); after
+## ELEVATED_SHOT_MAX_BAD failed spots, P38's rule (ELEVATED_SHOT_M toward the giant).
 const ELEVATED_SHOT_RINGS_M := [16.0, 22.0, 28.0]
 const ELEVATED_SHOT_STEP_DEG := 30.0
 const ELEVATED_SHOT_NAV_TRIES := 4
 const ELEVATED_SHOT_BAD_M := 4.0
 const ELEVATED_SHOT_MAX_BAD := 3
+const ELEVATED_SHOT_BLOCKED_S := 3.0
 ## A boss fight's respawn point: the waystone within this of its place is taken first; the bot waits at
 ## it this long for the checkpoint (taken out of combat).
 const RESPAWN_POINT_RADIUS_M := 160.0
@@ -1373,11 +1376,12 @@ func _elevated_shot_spot(encounter_id: String) -> Vector3:
 
 
 ## The ground to shoot member `e` from (_clear_shot_spot), kept per member. It is chosen again when
-## the member has moved over 2 m, 5 s after none was clear, or when the bot gave the member up (a
-## chase or ranged blows that did not hurt it) while standing at the spot: that spot is not chosen
-## again and the member is tried at once from the next. A member given up elsewhere is tried again
-## at once when the giant reaches its spot. INF when none is clear (or ELEVATED_SHOT_MAX_BAD spots
-## were given up).
+## the member has moved over 2 m, 5 s after none was clear, or when the spot failed: the bot gave the
+## member up (a chase or ranged blows that did not hurt it) while standing at it, or the line from where
+## the giant stopped (within the go task's radius of the spot) stayed blocked for ELEVATED_SHOT_BLOCKED_S.
+## A failed spot is not chosen again, and the member is tried again at once from the next; one given up
+## elsewhere is tried again at once when the giant reaches its spot. INF when none is clear (or
+## ELEVATED_SHOT_MAX_BAD spots failed).
 func _shot_spot(e: EnemyActor) -> Vector3:
 	if e.entity == null:
 		return Vector3.INF
@@ -1392,14 +1396,24 @@ func _shot_spot(e: EnemyActor) -> Vector3:
 			again = tick - int(rec.tick) > ActionDef.seconds_to_ticks(5.0) \
 				and (rec.bad as Array).size() < ELEVATED_SHOT_MAX_BAD
 		elif _flat_dist(spot, player.global_position) < ELEVATED_SHOT_BAD_M:
+			var failed := ""
 			if not bool(rec.arrived):
 				rec["arrived"] = true
 				if until > tick:
 					_ignored.erase(id)
 					until = -1
 			elif until > tick and until != int(rec.until):
+				failed = "given up there"
+			if failed == "" and not _shot_clear(player.global_position, e):
+				if int(rec.blocked_since) < 0:
+					rec["blocked_since"] = tick
+				elif tick - int(rec.blocked_since) > ActionDef.seconds_to_ticks(ELEVATED_SHOT_BLOCKED_S):
+					failed = "the line blocked"
+			else:
+				rec["blocked_since"] = -1
+			if failed != "":
 				(rec.bad as Array).append(spot)
-				run.metrics.note(tick, "no shot at %s from (%.0f, %.0f): another spot" % [id, spot.x, spot.z])
+				run.metrics.note(tick, "no shot at %s from (%.0f, %.0f), %s: another spot" % [id, spot.x, spot.z, failed])
 				_ignored.erase(id)
 				until = -1
 				again = (rec.bad as Array).size() < ELEVATED_SHOT_MAX_BAD
@@ -1409,7 +1423,7 @@ func _shot_spot(e: EnemyActor) -> Vector3:
 	if again:
 		var bad: Array = rec.get("bad", [])
 		rec = {"spot": _clear_shot_spot(e, bad), "at": e.global_position, "tick": tick, "bad": bad,
-			"arrived": false, "until": until}
+			"arrived": false, "until": until, "blocked_since": -1}
 		_shot_spots[id] = rec
 	var out: Vector3 = rec["spot"]
 	return out

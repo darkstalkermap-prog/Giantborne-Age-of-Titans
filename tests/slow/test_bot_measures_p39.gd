@@ -308,3 +308,15 @@ func test_an_enemy_above_reach_is_shot_from_a_clear_line() -> void:
 	assert_false(again.has(points[0]), "a spot given up is not chosen again")
 	for q in again:
 		assert_true(WorldBot._flat_dist(q, points[0]) >= WorldBot.ELEVATED_SHOT_BAD_M, "nor one beside it")
+	# The spot the bot walks to fails when the line from where the giant stopped stays blocked for
+	# ELEVATED_SHOT_BLOCKED_S: it joins the failed spots and the next is chosen (none in the test world,
+	# which has no navigation: INF, so P38's rule).
+	WorldBot.configure_world(PackedStringArray(["--bot-preset=peaceful"]))
+	bot.set_physics_process(false)   # a configured run would start the bot's own ticks (a level bind)
+	var id := archer.entity.entity_id
+	bot._shot_spots[id] = {"spot": p.global_position, "at": archer.global_position, "tick": Sim.tick, "bad": [],
+		"arrived": false, "until": -1, "blocked_since": -1}
+	assert_eq(bot._shot_spot(archer), bot._shot_spots[id].spot, "the giant stands at its spot")
+	await step_ticks(ActionDef.seconds_to_ticks(WorldBot.ELEVATED_SHOT_BLOCKED_S) + 2)
+	assert_false(bot._shot_spot(archer).is_finite(), "the line stayed blocked there: the spot failed")
+	assert_eq((bot._shot_spots[id].bad as Array).size(), 1, "and is not chosen again")
