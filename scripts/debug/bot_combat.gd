@@ -44,22 +44,22 @@ const EXPERT_WATCH_M := 12.0
 const HEAVY_COMMIT_TICKS := 60
 const HEAVY_COMMIT_RANGE_M := 10.0
 ## P39 (plan M6-M9 §3.23; the toll fort's expert runs): from stage 4 the expert answers only the blows that
-## can land on it and lets no answer hold its own blows off for long. P17a's rule - every blow aimed at it
-## within EXPERT_WATCH_M, every shot at any range, no attack while an answer is due within 20 ticks - was
-## set for the Valley's handfuls of enemies; before the toll fort's pikes with archers on its tower an
-## answer was always due, and the expert swung 68 and 56 lights in runs where the novice swung 213-253
-## (and died there 6 and 5 times where the novice did not). Now: a blow whose attacker stands farther from
-## the giant's capsule than the blow reaches (its telegraph, line, radius or AI range, plus
-## EXPERT_REACH_SLACK_M) is not answered; a light shot (an arrow: a projectile under EXPERT_LIGHT_SHOT_POWER
-## and no spell) holds no blow off and is dodged only when no blow of the giant's own is under way as it
-## arrives (a mage's slowing bolt, a ballista bolt, a catapult stone, a boulder or a thrown whelp are answered
-## as before - iteration 1 took every projectile under 30 for a light shot, and the three peaceful experts,
-## slowed by the Raiders' Hollow's mage while they struck, died there six times each); and answers due one after
-## another hold the giant's blows off for EXPERT_HOLD_MAX_TICKS at most, after which it strikes (each blow
-## it starts begins a new hold). The Valley (stages 1-3) keeps P17a's rules, so its matrix stays comparable.
+## can land on it, and an arrow holds no blow off. P17a's rule - every blow aimed at it within
+## EXPERT_WATCH_M, every shot at any range, no attack while an answer is due within 20 ticks - was set for
+## the Valley's handfuls of enemies; before the toll fort's pikes with archers on its tower an answer was
+## always due, and the expert swung 68 and 56 lights in runs where the novice swung 213-253 (and died there
+## 6 and 5 times where the novice did not). Now: a blow whose attacker stands farther from the giant's capsule
+## than the blow reaches (its telegraph, line, radius or AI range, plus EXPERT_REACH_SLACK_M) is not answered;
+## and a light shot (an arrow: a projectile under EXPERT_LIGHT_SHOT_POWER and no spell) holds no blow off and
+## is dodged only when no blow of the giant's own is under way as it arrives (a mage's slowing bolt, a ballista
+## bolt, a catapult stone, a boulder or a thrown whelp are answered as before - iteration 1 took every
+## projectile under 30 for a light shot, and the peaceful experts, slowed by the Raiders' Hollow's mage while
+## they struck, died there). Iterations 1-2 also ended any hold after one second (the giant then struck
+## through the answer due): the three peaceful experts died six times each at the Raiders' Hollow in both,
+## caught mid-blow by the raiders' soldiers, ogre and archers, so iteration 3 dropped that rule. The Valley
+## (stages 1-3) keeps P17a's rules, so its matrix stays comparable.
 const EXPERT_REACH_SLACK_M := 1.5
 const EXPERT_LIGHT_SHOT_POWER := 20.0
-const EXPERT_HOLD_MAX_TICKS := 60
 ## P39 (plan M6-M9 §6.4: every slotted ability used at least once a run, none over 40 % of the ability
 ## damage): from stage 4 a slotted ability the rules below have not used for ROTATION_IDLE_TICKS is used on
 ## the fight's target whenever nothing refuses it (its range, its grab, its cost), the longest unused
@@ -120,7 +120,6 @@ var _last_light_tick := -100
 var _connected := false
 var _ability_log: Array = []
 var _bands: Dictionary = {}     ## reach_band cache
-var _hold_since := -1           ## P39: the first tick of the expert's current hold (answers due one after another)
 var _last_used: Dictionary = {} ## P39: slot key -> the tick its ability was last used (the rotation)
 
 
@@ -282,14 +281,13 @@ func defend(tick: int) -> bool:
 		_expert_watch(tick)
 	var r := player.router
 	var busy := false
-	var holding := false
 	var keep: Array = []
 	for re: Dictionary in _reactions:
 		var at := int(re.at)
 		if at > tick:
 			keep.append(re)
 			if at - tick <= 20 and not bool(re.get("light_shot", false)):
-				holding = true
+				busy = true
 			continue
 		if tick - at > 6:
 			continue   # too stale to act on
@@ -309,12 +307,7 @@ func defend(tick: int) -> bool:
 		r.inject_edge(&"block_release")
 	if _block_until >= 0 or tick < _dodge_hold_until:
 		busy = true
-	# P39: from stage 4 the expert's hold (answers due one after another) lasts EXPERT_HOLD_MAX_TICKS at most.
-	if not holding:
-		_hold_since = -1
-	elif _hold_since < 0:
-		_hold_since = tick
-	return busy or (holding and not _hold_spent(tick))
+	return busy
 
 
 ## P39: true from stage 4 or in the world (its opening is at stage 3): the rotation's rules (the Valley keeps P17a's).
@@ -329,17 +322,6 @@ func _world_rules() -> bool:
 ## P39: true for the expert from stage 4 (the world's rules of its answers; the Valley keeps P17a's).
 func _world_expert() -> bool:
 	return skill == EXPERT and _alive_player() and player.current_growth_stage() >= 4
-
-
-## P39: true once the expert's current hold has held its blows off for EXPERT_HOLD_MAX_TICKS (stage 4 on).
-func _hold_spent(tick: int) -> bool:
-	return _world_expert() and _hold_since >= 0 and tick - _hold_since > EXPERT_HOLD_MAX_TICKS
-
-
-## P39: a blow the giant starts begins the expert's next hold afresh (each held off EXPERT_HOLD_MAX_TICKS at most).
-func _note_blow(tick: int) -> void:
-	if _hold_since >= 0:
-		_hold_since = tick
 
 
 ## P39: how far a blow reaches from its attacker's centre: the longest of its telegraph, its line, its
@@ -617,7 +599,6 @@ func use_slot(key: String, why: String) -> void:
 	player.router.inject_edge(StringName(key))
 	_ability_log.append([Sim.tick, key, why])
 	_last_used[key] = Sim.tick
-	_note_blow(Sim.tick)
 
 
 # --------------------------------------------------------------------------- fighting
@@ -705,12 +686,10 @@ func fight(tick: int, t: EnemyActor) -> void:
 	var light_ok := affordable(_loadout_action(&"light"))
 	if heavy_lands and heavy_ok and (heavy or not light_lands) and c.preview_reason(&"heavy") == "":
 		r.inject_edge(&"heavy")
-		_note_blow(tick)
 		return
 	if light_lands and light_ok and c.preview_reason(&"light") in ["", "busy"]:
 		r.inject_edge(&"light")
 		_last_light_tick = tick
-		_note_blow(tick)
 
 
 ## The loadout's action for `kind` (light: the chain's first; heavy).
@@ -774,7 +753,7 @@ func defend_busy(tick: int) -> bool:
 		return true
 	for re: Dictionary in _reactions:
 		if int(re.at) - tick <= 20 and not bool(re.get("light_shot", false)):
-			return not _hold_spent(tick)   # P39: the expert's hold ends after EXPERT_HOLD_MAX_TICKS (stage 4 on)
+			return true   # P39: an arrow (a light shot) holds no blow off
 	return false
 
 

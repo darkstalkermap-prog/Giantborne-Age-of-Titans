@@ -392,11 +392,12 @@ func _winding(pos: Vector3, id: String) -> SoldierEnemy:
 	return s
 
 
-## From stage 4 the expert answers only the blows that can land on it, and its answers hold its own blows
-## off for EXPERT_HOLD_MAX_TICKS at most (P39: before the toll fort's pikes and tower archers the expert
-## swung 68 and 56 lights in a run where the novice swung 213-253, an answer always due within 20 ticks);
-## an arrow holds no blow off. The Valley's stages keep P17a's rules.
-func test_the_world_expert_answers_only_blows_that_can_land_and_strikes_between_answers() -> void:
+## From stage 4 the expert answers only the blows that can land on it, and an arrow holds no blow off nor is
+## dodged mid-blow (P39: before the toll fort's pikes and tower archers the expert swung 68 and 56 lights in a
+## run where the novice swung 213-253, an answer always due within 20 ticks); every other answer holds its
+## blows off as P17a's did (iterations 1-2 ended a hold after a second, and the peaceful experts died at the
+## Raiders' Hollow struck mid-blow). The Valley's stages keep P17a's rules.
+func test_the_world_expert_answers_only_blows_that_can_land_and_arrows_hold_no_blow_off() -> void:
 	await _giant(4, Vector3(0, 0.05, 0))
 	_bot("expert")
 	var near := await _winding(Vector3(0, 0.05, -4.5), "test.p39_near_chop")
@@ -419,33 +420,20 @@ func test_the_world_expert_answers_only_blows_that_can_land_and_strikes_between_
 	await step_ticks(1)
 	bot.combat._expert_watch(Sim.tick)
 	assert_eq(bot.combat._reactions.size(), 2, "at stage 3 every blow within 12 m is answered")
-	# The hold: answers due one after another (one always due in 15 ticks) hold the blows off.
+	# An answer always due (one in 15 ticks) holds every blow off, at stage 4 as at stage 3 (P17a's rule).
 	for stage in [3, 4]:
 		p.set_profile(_profile(stage))
 		await step_ticks(1)
 		bot.combat._seen.clear()
-		bot.combat._reactions.clear()
-		assert_false(bot.combat.defend(Sim.tick), "no answer due: no hold (a tick with none ends the last one)")
-		await step_ticks(1)
 		var held := 0
-		var free_at := -1
-		for i in 150:
+		for i in 90:
 			bot.combat._reactions = [{"at": Sim.tick + 15, "kind": "block", "actor": weakref(near), "why": "test"}]
 			var busy := bot.combat.defend(Sim.tick)
 			assert_eq(busy, bot.combat.defend_busy(Sim.tick), "defend and defend_busy agree (stage %d, tick %d)" % [stage, i])
 			if busy:
 				held += 1
-			elif free_at < 0:
-				free_at = i
 			await step_ticks(1)
-		if stage == 3:
-			assert_eq(held, 150, "at stage 3 an answer always due holds every blow off (P17a)")
-		else:
-			assert_true(free_at > 0 and free_at <= BotCombat.EXPERT_HOLD_MAX_TICKS + 2,
-				"at stage 4 the hold ends after %d ticks (free at %d)" % [BotCombat.EXPERT_HOLD_MAX_TICKS, free_at])
-			bot.combat._note_blow(Sim.tick)
-			bot.combat._reactions = [{"at": Sim.tick + 15, "kind": "block", "actor": weakref(near), "why": "test"}]
-			assert_true(bot.combat.defend(Sim.tick), "a blow the giant starts begins the next hold")
+		assert_eq(held, 90, "at stage %d an answer always due holds every blow off" % stage)
 	# An arrow (a light shot) holds no blow off, and is not dodged while a blow of the giant's own is under way.
 	bot.combat._reactions.clear()
 	var archer := TestSpawn.enemy(world, ARCHER, Vector3(0, 0.05, -30), "test.p39_archer", false, 0.0)
@@ -554,6 +542,13 @@ func test_the_giant_draws_the_matriarch_to_a_brazier() -> void:
 	assert_near(WorldBot._flat_dist(spot, b1.global_position), WorldBot.LURE_BEYOND_M, 0.01, "the giant stands past it")
 	assert_true(WorldBot._flat_dist(spot, m.global_position) > WorldBot._flat_dist(b1.global_position, m.global_position) + 3.0,
 		"on the far side from her")
+	# a lure taken up again after a gap (a death's reload, a burn) starts its walk afresh (iteration 2's runs gave
+	# every brazier up at once on clocks left from an earlier attempt)
+	bot._lure[WorldBot.DEN_BRAZIERS[0]] = {"walk": Sim.tick - 100000, "last": Sim.tick - 100000}
+	p.global_position = Vector3(spot.x + 6.0, 0.05, spot.z)
+	await step_ticks(2)
+	assert_true(bot._act_lure(Sim.tick, m), "a lure taken up again walks on")
+	assert_eq(int(bot._lure[WorldBot.DEN_BRAZIERS[0]].walk), Sim.tick, "with its walk clock started afresh")
 	# at the spot the giant waits for her (she is out of its reach: it does not walk to her)
 	p.global_position = Vector3(spot.x, 0.05, spot.z)
 	await step_ticks(2)

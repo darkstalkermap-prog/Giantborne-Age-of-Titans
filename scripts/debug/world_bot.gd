@@ -114,6 +114,10 @@ const LURE_BELOW_FRAC := 0.9
 const LURE_WALK_S := 20.0
 const LURE_WAIT_S := 12.0
 const LURE_IGNORE_S := 45.0
+## A lure not acted on for this long (she burned, a death's reload, another fight) starts its walk and its
+## wait afresh: iteration 2's runs gave every brazier up at once ("not reached in 20 s") with walk clocks left
+## from an earlier attempt.
+const LURE_GAP_TICKS := 30
 const DEN_BRAZIERS := ["world.greywood.den_brazier_1", "world.greywood.den_brazier_2", "world.greywood.den_brazier_3"]
 ## --bot-explore: each oath's region, and how long one POI is tried before it is given up.
 const OATH_REGIONS := {"march": "region.crownmarch", "wood": "region.greywood", "crown": "region.aldmere"}
@@ -2278,6 +2282,10 @@ func _act_lure(tick: int, m: EnemyActor) -> bool:
 	var id := str(lure.id)
 	var spot: Vector3 = lure.spot
 	var st: Dictionary = _lure.get(id, {})
+	if tick - int(st.get("last", -1000000)) > LURE_GAP_TICKS:
+		st.erase("walk")
+		st.erase("at")
+	st["last"] = tick
 	var reach := float(player.profile.get("melee_reach_m", 3.5))
 	var her := _flat_dist(m.global_position, player.global_position)
 	mode = "combat"
