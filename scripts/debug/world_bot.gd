@@ -640,9 +640,13 @@ func _plan(tick: int) -> void:
 ## death in the fight then wakes beside it. The first crown run died in the battle and woke at the
 ## Kingsgate shelf, a kilometre and 200 s of walking away, with the battle to start again. The
 ## waystone is walked into (its 10 m radius); it is taken out of combat, so the bot waits there up to
-## RESPAWN_POINT_WAIT_S, then goes on either way.
+## RESPAWN_POINT_WAIT_S, then goes on either way. Never once the fight is engaged: no checkpoint
+## commits then, and the walk out of the arena pulled against its leash (the Moot's duel engages as
+## the champion's stage begins, with the Moot foot waystone 58 m outside the ring).
 func _respawn_point_first(objective: Dictionary, tick: int) -> Dictionary:
 	if not _in_world() or route == null or route.index == null:
+		return objective
+	if not GameSession.engaged_fights().is_empty():
 		return objective
 	var kind := str(objective.get("kind", ""))
 	var place := Vector3.INF
