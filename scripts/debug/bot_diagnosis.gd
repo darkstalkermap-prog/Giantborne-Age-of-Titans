@@ -506,9 +506,12 @@ static func _index_has(level: Node, table: String, id: String) -> bool:
 ## cap; no living encounter member in a chunk that is not loaded; at most MAX_LOADED_CHUNKS chunks
 ## loaded; at most MAX_REGIONS_PER_LAYER navigation regions per layer and gate bit on each layer map; no
 ## chunk reloaded within its thrash window (the streamer's thrash count does not grow); no two world
-## events running at once; no event's fail timer counting while its centre chunk is unloaded; the save
-## within MAX_SAVE_BYTES. `state` carries what one tick needs from the last ({} at first; the function
-## fills it). `full` adds the costly scans (members, regions), which the bot runs every half second.
+## events in play at once (W23, P39f: the WanderDirector's rule since the M8 gate's F2 - an event left
+## behind, waiting or suspended far off or a column marching the abstract, is running but not in play, and
+## another may start; a director without in_play() counts every running event); no event's fail timer
+## counting while its centre chunk is unloaded; the save within MAX_SAVE_BYTES. `state` carries what one
+## tick needs from the last ({} at first; the function fills it). `full` adds the costly scans (members,
+## regions), which the bot runs every half second.
 static func check_world_invariants(tree: SceneTree, world: Node, state: Dictionary, save_bytes: int,
 		full := true) -> PackedStringArray:
 	var out := PackedStringArray()
@@ -532,14 +535,19 @@ static func check_world_invariants(tree: SceneTree, world: Node, state: Dictiona
 		out.append("the save is %d bytes (at most %d)" % [save_bytes, MAX_SAVE_BYTES])
 	var wd := tree.get_first_node_in_group(WanderDirector.GROUP) if tree != null else null
 	if wd != null and "events" in wd:
-		var running := PackedStringArray()
+		var playing := PackedStringArray()
+		var behind := PackedStringArray()
+		var by_rule := wd.has_method("in_play")
 		var timers: Dictionary = state.get("event_timers", {})
 		for id: String in wd.get("events"):
 			var e := (wd.get("events") as Dictionary)[id] as WorldEvent
 			if e == null:
 				continue
 			if e.is_running():
-				running.append(id)
+				if not by_rule or bool(wd.call("in_play", e)):
+					playing.append(id)
+				else:
+					behind.append("%s (%s, left behind)" % [id, e.state])
 			var chunk := s.chunk_at(e.centre)
 			var unloaded := chunk != "" and not s.is_ready(chunk)
 			var prev: Array = timers.get(id, [e.elapsed_s, 0])
@@ -548,8 +556,8 @@ static func check_world_invariants(tree: SceneTree, world: Node, state: Dictiona
 				out.append("world event %s: its fail timer runs (%.2f s) while its centre chunk %s is unloaded" % [id, e.elapsed_s, chunk])
 			timers[id] = [e.elapsed_s, unloaded_ticks]
 		state["event_timers"] = timers
-		if running.size() > 1:
-			out.append("%d world events at once (%s)" % [running.size(), ", ".join(running)])
+		if playing.size() > 1:
+			out.append("%d world events in play at once (%s)" % [playing.size(), ", ".join(playing + behind)])
 	if not full:
 		return out
 	if d != null:
