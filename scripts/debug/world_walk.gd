@@ -27,7 +27,9 @@ extends Node
 ## "WORLD_WALK_END {...}" when it ends: tools/web/stream_check.mjs times the page's frames between them.
 ## Per tick it records the margin to unloaded ground (the distance from the giant to the nearest grid
 ## chunk that is not loaded), the most chunks loaded, chunk and region changes, and (walking) ticks
-## with the feet more than UNDER_TERRAIN_M under the ground; the probe's section is the chunk the
+## with the feet more than UNDER_TERRAIN_M under the ground, and (P39, plan §6.3's world walk row) the
+## path queries run in the tick (NavQuery.queries_total; the summary's path_queries_per_tick: p50 / p95 /
+## max); the probe's section is the chunk the
 ## giant stands in. The streamer's statistics (loads, unloads, thrash, work per frame p50 / p99 /
 ## max) are reset when the walk starts, after the starting ring. result() is the report;
 ## check_failures holds: a margin under MARGIN_REQUIRED_M, thrash, more than MAX_LOADED chunks,
@@ -91,6 +93,45 @@ var _best := INF
 var _since := 0
 var _carry_s := 0.0
 var _seg_lengths := PackedFloat32Array()
+## P39: the walk's ticks by the path queries run in them (queries -> ticks), and the running count.
+var query_hist: Dictionary = {}
+var _queries_before := -1
+
+
+## Percentile `p` (0-1, nearest rank) of a {value -> count} histogram; 0 when it is empty.
+static func hist_percentile(hist: Dictionary, p: float) -> int:
+	var total := 0
+	for k: Variant in hist:
+		total += int(hist[k])
+	if total == 0:
+		return 0
+	var keys := hist.keys()
+	keys.sort()
+	var want := p * float(total)
+	var acc := 0
+	for k: Variant in keys:
+		acc += int(hist[k])
+		if float(acc) >= want:
+			return int(k)
+	return int(keys.back())
+
+
+## One walked tick's count: `total` is NavQuery.queries_total now (the first call only sets the base).
+func note_queries(total: int) -> void:
+	if _queries_before >= 0:
+		var n := total - _queries_before
+		query_hist[n] = int(query_hist.get(n, 0)) + 1
+	_queries_before = total
+
+
+## The walk's path queries a tick: {"p50", "p95", "max", "ticks"} (P39, plan §6.3).
+func path_queries_per_tick() -> Dictionary:
+	var keys := query_hist.keys()
+	var ticks_n := 0
+	for k: Variant in query_hist:
+		ticks_n += int(query_hist[k])
+	return {"p50": hist_percentile(query_hist, 0.5), "p95": hist_percentile(query_hist, 0.95),
+		"max": int(keys.max()) if not keys.is_empty() else 0, "ticks": ticks_n}
 
 
 ## The walk's options from the user args: {"route": PackedVector3Array (empty = the level's),
@@ -245,6 +286,7 @@ func _set_off() -> void:
 
 func _measure(pos: Vector3) -> void:
 	var s := world.streamer
+	note_queries(NavQuery.queries_total)
 	min_margin_m = minf(min_margin_m, margin_to_unloaded(s, pos))
 	max_loaded = maxi(max_loaded, s.loaded_chunks().size())
 	var chunk := s.chunk_at(pos)
@@ -360,6 +402,7 @@ func summary() -> Dictionary:
 		"max_loaded": max_loaded, "loads": int(st.get("loads", 0)), "unloads": int(st.get("unloads", 0)),
 		"thrash": int(st.get("thrash", 0)), "work_ms_p50": st.get("work_ms_p50", 0.0),
 		"work_ms_p99": st.get("work_ms_p99", 0.0), "work_ms_max": st.get("work_ms_max", 0.0),
+		"path_queries_per_tick": path_queries_per_tick(),
 		"stage": player.current_growth_stage() if player != null and is_instance_valid(player) else 0}
 
 

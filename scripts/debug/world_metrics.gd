@@ -88,6 +88,11 @@ var growth := {"lone_engaged_s": 0.0, "lone_fled_s": 0.0, "formation_engaged_s":
 var music_lesser: Dictionary = {}     ## intensity -> seconds while only lesser enemies are engaged (stages 4-6)
 ## P39: the lone humans' engaged seconds by "<archetype>/<brain state>" (what they do when they do not flee).
 var lone_states: Dictionary = {}
+## P39 (plan §6.3 "the bot batches: --perf on every balance run, CPU per tick p95 per region"): the run's
+## PerfProbe files each tick's samples under the region the giant stands in (its `section`; NO_REGION
+## before the first region). Null: the Autopilot's bot probe (Autopilot.bot_probe()); tests set their own.
+var probe: PerfProbe = null
+const NO_REGION := "(none)"
 var _formation_engaged := false
 
 var _connected := false
@@ -408,6 +413,9 @@ func on_tick(tick: int, player: GiantPlayer, world: Node) -> void:
 			var rec: Dictionary = regions.get(r, {"s": 0.0, "first_tick": tick})
 			rec.s = float(rec.s) + TICK_S
 			regions[r] = rec
+	var pr := probe if probe != null else Autopilot.bot_probe()
+	if pr != null and is_instance_valid(pr):
+		pr.section = _region if _region != "" else NO_REGION
 	var q := NavQuery.queries_total
 	if _queries_before >= 0:
 		var n := mini(q - _queries_before, QUERY_HIST_MAX)

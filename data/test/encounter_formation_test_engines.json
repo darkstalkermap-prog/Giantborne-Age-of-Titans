@@ -1,0 +1,26 @@
+{
+	"schema_version": 1,
+	"id": "encounter.formation_test_engines",
+	"type": "encounter",
+	"display_name": "Test stress engines",
+	"description": "P39 (plan section 6.3, the formation stress case): the crews of two of the siege test level's engines - a ballista (one crew) and a catapult (two) - that the stress scenario places behind the 40-member regiments (stress_scenario.gd P39_ENGINES: test.formation.ballista_1 at (152, -22), test.formation.catapult_1 at (168, -40), facing the giant's walk along the front); only the stress scenario and tests activate it (test.formation.manual is never set).",
+	"level": "level.formation_test",
+	"district": "field",
+	"center_m": [160, 0, -31],
+	"activate_radius_m": 30,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 80,
+	"alert_group": true,
+	"requires_flags": ["test.formation.manual"],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"engines": [
+		{"engine": "test.formation.ballista_1", "crew": ["test.formation.crew_1"]},
+		{"engine": "test.formation.catapult_1", "crew": ["test.formation.crew_2", "test.formation.crew_3"]}
+	],
+	"spawns": [
+		{"entity_id": "test.formation.crew_1", "definition": "enemy.siege_crew", "position_m": [153.6, 0, -24.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test.formation.crew_2", "definition": "enemy.siege_crew", "position_m": [166.4, 0, -42.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test.formation.crew_3", "definition": "enemy.siege_crew", "position_m": [169.6, 0, -42.0], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

@@ -9,8 +9,9 @@ docs/BALANCE_LOG.md) and the world bot's (P38; plan M6-M9 §6.1, §5.15).
 named): the Valley's summary runs segments deaths growth abilities perf stuck states targets; the world's
 (runs whose result has "world_bot") world_summary world_runs world_segments world_outcomes world_bosses
 world_travel world_streaming world_formations world_siege world_music world_deaths world_stuck, and P39's
-world_growth (per run: plan §6.4's growth, readability, siege and ability measures) and world_targets (plan
-§6.4's targets, met or missed, for a world_balance batch).
+world_growth (per run: plan §6.4's growth, readability, siege and ability measures), world_targets (plan
+§6.4's targets, met or missed, for a world_balance batch) and world_perf (plan §6.3: the CPU per tick per
+region, from the probe's sections that WorldMetrics files under the giant's region).
 Every Valley number is read from the runs' AUTOPILOT_RESULT files (<run>.json) except two estimates,
 both marked where they are printed:
 - a segment's damage as a share of maximum health uses the giant's maximum health at the segment's
@@ -493,6 +494,46 @@ def world_streaming(rows):
     return "\n".join(out)
 
 
+REGION_ORDER = ["region.crownmarch", "region.greywood", "region.drowned_steps", "region.aldmere", "region.stonehold"]
+
+
+def _region_key(region):
+    return (REGION_ORDER.index(region) if region in REGION_ORDER else len(REGION_ORDER), region)
+
+
+def world_perf(rows):
+    """P39 (plan §6.3 "the bot batches: CPU per tick p95 per region"): each run's CPU per tick by the region the
+    giant stood in (the probe's sections, AUTOPILOT_RESULT's perf.sections), then per region over the batch: the
+    median and the largest of the runs' p95 and the runs' summed seconds there (a run's samples in a region it
+    spent under 10 s are left out of the median: too few to say)."""
+    regions = sorted({sec for r in rows for sec in r["r"].get("perf", {}).get("sections", {})}, key=_region_key)
+    if not regions:
+        return "(no run carries per-region perf sections: runs before P39's report part, or the Valley bot's)"
+    out = ["| Run | " + " | ".join(regions) + " | Whole run |", "| --- | " + " | ".join("---" for _ in regions) + " | --- |"]
+    per_region = collections.defaultdict(list)
+    seconds = collections.defaultdict(float)
+    for r in rows:
+        secs = r["r"].get("perf", {}).get("sections", {})
+        cells = []
+        for reg in regions:
+            cpu = secs.get(reg, {}).get("cpu_tick_ms", {})
+            n = int(cpu.get("n", 0) or 0) if isinstance(cpu, dict) else 0
+            if n <= 0:
+                cells.append("-")
+                continue
+            seconds[reg] += n / 60.0
+            if n >= 600:
+                per_region[reg].append(float(cpu.get("p95", 0.0)))
+            cells.append("%s (%.0f s)" % (fmt(cpu.get("p95"), 2), n / 60.0))
+        out.append("| %s | %s | %s |" % (r["name"], " | ".join(cells), fmt(r["cpu_p95"], 2)))
+    out.append("| **p95, median of the runs (largest)** | " + " | ".join(
+        "%s (%s)" % (fmt(med(per_region[reg]), 2), fmt(max(per_region[reg]) if per_region[reg] else None, 2)) for reg in regions)
+        + " | %s (%s) |" % (fmt(med([r["cpu_p95"] for r in rows if r["cpu_p95"] is not None]), 2),
+                           fmt(max([r["cpu_p95"] for r in rows if r["cpu_p95"] is not None] or [0]), 2)))
+    out.append("| **seconds in the region, all runs** | " + " | ".join("%.0f" % seconds[reg] for reg in regions) + " | |")
+    return "\n".join(out)
+
+
 def world_formations(rows):
     out = ["| Run | Formations seen | Group / banner / single lock samples (stage 4+) | Group lock share | Banners felled | Broken | Routed | Sweeps |",
            "| --- | --- | --- | --- | --- | --- | --- | --- |"]
@@ -781,7 +822,8 @@ WORLD_SECTIONS = {"world_summary": world_summary, "world_runs": world_runs, "wor
                   "world_outcomes": world_outcomes, "world_bosses": world_bosses, "world_travel": world_travel,
                   "world_streaming": world_streaming, "world_formations": world_formations, "world_siege": world_siege,
                   "world_music": world_music, "world_deaths": world_deaths, "world_stuck": world_stuck,
-                  "world_growth": world_growth, "world_lone": world_lone, "world_targets": world_targets}
+                  "world_growth": world_growth, "world_lone": world_lone, "world_targets": world_targets,
+                  "world_perf": world_perf}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

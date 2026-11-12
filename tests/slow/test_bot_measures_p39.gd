@@ -381,6 +381,49 @@ func test_a_boss_attempts_lowest_health_share_is_kept() -> void:
 	assert_near(float(lows[1]), 0.7, 0.001, "the next attempt starts from its share at engagement")
 
 
+## A stand-in for WorldRoot: WorldMetrics reads only its region_id.
+class _RegionWorld extends Node:
+	var region_id := ""
+
+
+## The world bot's PerfProbe files its ticks under the region the giant stands in (P39, plan §6.3: "the bot
+## batches: --perf on every balance run, CPU per tick p95 per region"; P38's runs had one CPU summary per
+## run), and the Autopilot's result keeps the per-region CPU summaries (AUTOPILOT_RESULT perf.sections).
+func test_the_run_probe_files_its_ticks_under_the_giants_region() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	var probe := PerfProbe.new()
+	probe.warmup_ticks = 0
+	world.add_child(probe)
+	var region_world := _RegionWorld.new()
+	world.add_child(region_world)
+	var m := WorldMetrics.new()
+	m.probe = probe
+	m.on_tick(Sim.tick, p, region_world)
+	assert_eq(probe.section, WorldMetrics.NO_REGION, "before the first region the samples are filed apart")
+	region_world.region_id = "region.crownmarch"
+	for i in 30:
+		await step_ticks(1)
+		m.on_tick(Sim.tick, p, region_world)
+	region_world.region_id = "region.greywood"
+	for i in 20:
+		await step_ticks(1)
+		m.on_tick(Sim.tick, p, region_world)
+	await step_ticks(1)
+	probe.finish()
+	var r := probe.result()
+	var secs: Dictionary = r.get("sections", {})
+	assert_true(secs.has("region.crownmarch") and secs.has("region.greywood"), "a section per region (%s)" % [secs.keys()])
+	var crown := int((secs.get("region.crownmarch", {}) as Dictionary).get("cpu_tick_ms", {}).get("n", 0))
+	var grey := int((secs.get("region.greywood", {}) as Dictionary).get("cpu_tick_ms", {}).get("n", 0))
+	assert_true(crown >= 28 and crown <= 32, "the Crownmarch's ticks under it (%d of 30)" % crown)
+	assert_true(grey >= 18 and grey <= 22, "the Greywood's under it (%d of 20)" % grey)
+	var kept := Autopilot.perf_sections(r)
+	assert_true((kept.get("region.greywood", {}) as Dictionary).has("cpu_tick_ms"), "the result keeps each region's CPU per tick")
+	assert_false((kept.get("region.greywood", {}) as Dictionary).has("draw_calls"), "and only the CPU summaries")
+	region_world.queue_free()
+	probe.queue_free()
+
+
 ## A soldier winding its chop up at the giant (its controller in the windup, its brain on the giant).
 func _winding(pos: Vector3, id: String) -> SoldierEnemy:
 	var s := spawn_soldier(pos, yaw_towards(pos, p.global_position), id)
