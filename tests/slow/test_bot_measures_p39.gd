@@ -352,3 +352,28 @@ func test_a_lone_big_foe_draws_the_roar_and_the_area_blows_from_stage_4() -> voi
 	assert_true(why.ends_with("at a big foe") and not why.begins_with("roar"), "an area blow at a big foe: " + why)
 	var soldier := spawn_soldier(Vector3(5, 0.05, -5), 0.0, "test.p39_lone_soldier")
 	assert_false(bot.combat.big_foe(soldier), "a soldier is no big foe")
+
+
+## WorldMetrics keeps each boss attempt's lowest health share (P39: the M8 release check's Iron Regiment
+## bar never fell below 62 % - a fight lost is told from one nearly won): sampled while the attempt is
+## open (and at engagement), kept when a death's reload, a disengage or a defeat closes it.
+func test_a_boss_attempts_lowest_health_share_is_kept() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	var troll := TestSpawn.enemy(world, TROLL, Vector3(0, 0.05, -12.0), "test.p39_boss_troll", false, 0.0)
+	await step_ticks(2)
+	var m := WorldMetrics.new(RunMetrics.new())
+	var id := troll.entity.entity_id
+	m._on_boss_engaged(Sim.tick, id)
+	var pools := troll.entity.combatant.pools
+	pools.health = pools.health_max * 0.4
+	m._sample_boss(id, m.bosses[id])
+	pools.health = pools.health_max * 0.7
+	m._on_boss_disengaged(Sim.tick, id, "left")
+	var lows: Array = m.bosses[id].lows
+	assert_eq(lows.size(), 1, "one closed attempt")
+	assert_near(float(lows[0]), 0.4, 0.001, "the attempt's lowest share, kept as it closed")
+	m._on_boss_engaged(Sim.tick, id)
+	m.note_level_loaded(null)
+	lows = m.bosses[id].lows
+	assert_eq(lows.size(), 2, "a reload closes the next attempt")
+	assert_near(float(lows[1]), 0.7, 0.001, "the next attempt starts from its share at engagement")

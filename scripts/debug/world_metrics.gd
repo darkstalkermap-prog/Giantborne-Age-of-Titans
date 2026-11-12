@@ -61,7 +61,7 @@ var formations := {"group_lock_samples": 0, "banner_lock_samples": 0, "single_lo
 	"banners_felled": 0, "broken": 0, "routed": 0, "sweeps": 0, "seen": 0}
 var siege := {"engines_destroyed": 0, "engines_thrown": 0, "shots_at_giant": 0, "destroyed_ids": []}
 var wander := {"spawns": 0, "by_template": {}}
-var world_events: Dictionary = {}     ## event id -> {"started", "outcomes": []}
+var world_events: Dictionary = {}     ## event id -> {"started", "outcomes": [], "ticks": [[start, end, outcome]]}
 var fast_travels: Array = []          ## [tick, from checkpoint, to checkpoint, ok, message]
 var map_screens := 0
 var loads := 0
@@ -194,8 +194,16 @@ func _on_xp_award(amount: int, source: String) -> void:
 func _boss(id: String) -> Dictionary:
 	if not bosses.has(id):
 		bosses[id] = {"engaged": 0, "attempts": 0, "phases": [], "yields": 0, "outcome": "", "disengaged": [],
-			"defeated": false}
+			"defeated": false, "lows": []}
 	return bosses[id]
+
+
+## P39: closes boss `b`'s open attempt: its lowest health share joins "lows" (one per attempt).
+func _close_attempt(b: Dictionary) -> void:
+	if bool(b.get("open", false)):
+		(b.lows as Array).append(snappedf(float(b.get("low", 1.0)), 0.001))
+	b.open = false
+	b.erase("low")
 
 
 ## An engagement opens an attempt unless one is open: a disengage, a defeat, a yield's decision or a
@@ -206,6 +214,8 @@ func _on_boss_engaged(tick: int, boss_id: String) -> void:
 	if not bool(b.get("open", false)):
 		b.attempts = int(b.attempts) + 1
 		b.open = true
+		b["low"] = 1.0
+		_sample_boss(boss_id, b)
 	b["last_engaged"] = tick
 
 
@@ -221,13 +231,31 @@ func _on_boss_yielded(_tick: int, boss_id: String) -> void:
 func _on_boss_disengaged(tick: int, boss_id: String, reason: String) -> void:
 	var b := _boss(boss_id)
 	(b.disengaged as Array).append([tick, reason])
-	b.open = false
+	_close_attempt(b)
 
 
 func _on_boss_defeated(_tick: int, boss_id: String) -> void:
 	var b := _boss(boss_id)
+	_sample_boss(boss_id, b)
 	b.defeated = true
-	b.open = false
+	_close_attempt(b)
+
+
+## P39: the open attempt's lowest health share of boss `id` so far - an enemy's health over its maximum,
+## a battle's aggregate fraction (BattleBoss.aggregate_fraction) - so a fight lost is told from one
+## nearly won (the M8 release check: the Iron Regiment's bar never fell below 62 %).
+func _sample_boss(id: String, b: Dictionary) -> void:
+	var frac := -1.0
+	var e := Sim.get_entity(id)
+	if e != null and e.combatant != null and e.combatant.pools.health_max > 0.0:
+		frac = e.combatant.pools.health / e.combatant.pools.health_max if e.is_alive() else 0.0
+	elif Engine.get_main_loop() is SceneTree:
+		for n in (Engine.get_main_loop() as SceneTree).get_nodes_in_group(BattleBoss.BATTLE_GROUP):
+			var bb := n as BattleBoss
+			if bb != null and bb.battle_id == id and bb.total_health() > 0.0:
+				frac = bb.aggregate_fraction()
+	if frac >= 0.0:
+		b["low"] = minf(float(b.get("low", 1.0)), frac)
 
 
 func _on_formation_changed(_tick: int, _formation_id: String, state: String) -> void:
@@ -286,15 +314,22 @@ func _on_wander_spawned(_tick: int, template_id: String, _encounter_id: String) 
 	by[template_id] = int(by.get(template_id, 0)) + 1
 
 
-func _on_event_started(_tick: int, event_id: String) -> void:
-	var e: Dictionary = world_events.get(event_id, {"started": 0, "outcomes": []})
+func _on_event_started(tick: int, event_id: String) -> void:
+	var e: Dictionary = world_events.get(event_id, {"started": 0, "outcomes": [], "ticks": []})
 	e.started = int(e.started) + 1
+	(e.get_or_add("ticks", []) as Array).append([tick, -1, ""])
 	world_events[event_id] = e
 
 
-func _on_event_ended(_tick: int, event_id: String, outcome: String) -> void:
-	var e: Dictionary = world_events.get(event_id, {"started": 0, "outcomes": []})
+func _on_event_ended(tick: int, event_id: String, outcome: String) -> void:
+	var e: Dictionary = world_events.get(event_id, {"started": 0, "outcomes": [], "ticks": []})
 	(e.outcomes as Array).append(outcome)
+	var ticks: Array = e.get_or_add("ticks", [])
+	if not ticks.is_empty() and int(ticks[-1][1]) < 0:
+		ticks[-1][1] = tick
+		ticks[-1][2] = outcome
+	else:
+		ticks.append([-1, tick, outcome])
 	world_events[event_id] = e
 
 
@@ -326,7 +361,7 @@ func _on_ability_started(_tick: int, actor_id: String, action_id: String, _insta
 func note_level_loaded(world: Node) -> void:
 	loads += 1
 	for id: String in bosses:
-		(bosses[id] as Dictionary).open = false   # a reload (a death) ends the attempt
+		_close_attempt(bosses[id])   # a reload (a death) ends the attempt
 	_fold_streamer()
 	_streamer_ref = null
 	if world != null and "streamer" in world and world.get("streamer") is ChunkStreamer:
@@ -378,6 +413,10 @@ func on_tick(tick: int, player: GiantPlayer, world: Node) -> void:
 		var n := mini(q - _queries_before, QUERY_HIST_MAX)
 		query_hist[n] = int(query_hist.get(n, 0)) + 1
 	_queries_before = q
+	if tick % GROWTH_SAMPLE_TICKS == 0:
+		for id: String in bosses:
+			if bool((bosses[id] as Dictionary).get("open", false)):
+				_sample_boss(id, bosses[id])
 	if player.current_growth_stage() >= 4:
 		if tick % GROWTH_SAMPLE_TICKS == 0:
 			_sample_growth(player)
