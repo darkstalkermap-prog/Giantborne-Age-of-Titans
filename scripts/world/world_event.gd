@@ -75,6 +75,11 @@ var tracked_before := ""
 ## M8 gate fix-up 1 (N4.4): the director gave the tracker back while this run was out of play (it takes it
 ## again when the run comes back into play).
 var tracker_given_back := false
+## W23 (P39f; FOLLOWUPS "From the M8 gate review"): the tracker is on this event because the director put it
+## there (start_event, an attempt, back in play) and nobody has moved it since. Only such a tracker is given
+## back while the run is out of play: the player's own Track (the journal's, after a load included) stands.
+## Kept across a reload in the carry and across a save in the flag <id>.tracker_held.
+var holds_tracker := false
 ## M8 gate (F2): whether <id>.unloaded_since_s holds this run's unloaded clock (written once as its
 ## centre is left, cleared once it is loaded again).
 var unloaded_marked := false
