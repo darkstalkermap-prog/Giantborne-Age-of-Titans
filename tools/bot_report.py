@@ -609,11 +609,15 @@ def boss_of_death(r, d):
     stage (the Matriarch), the crown's resolve stage when the crown is breached (the gate and the Iron
     Regiment), the champion's stage (Harrok); "" for any other death."""
     obj = str(d.get("objective", ""))
-    if "oath_wood:den" in obj:
+    killer = str(d.get("killer_id", ""))
+    # P39: a death's objective is the main thread's ("quest.world_main:oaths" during either oath), so the
+    # killer names the fight too: the Matriarch and her whelps, Harrok, the battle's units and fort engines.
+    if "oath_wood:den" in obj or killer.startswith("world.greywood.troll_matriarch"):
         return "matriarch"
-    if "world_main:champion" in obj:
+    if "world_main:champion" in obj or killer == "world.stonehold.harrok":
         return "harrok"
-    if "oath_crown:resolve" in obj and "crown:breach" in r["oaths"]:
+    if ("oath_crown:resolve" in obj and "crown:breach" in r["oaths"]) or killer.startswith(
+            ("world.aldmere.regiment_", "world.aldmere.iron_guard_", "world.aldmere.corvane", "world.aldmere.fort_ballista")):
         return "battle"
     return ""
 
