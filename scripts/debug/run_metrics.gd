@@ -716,15 +716,17 @@ func result(tick: int) -> Dictionary:
 	for st: String in engagement:
 		var e: Array = engagement[st]
 		eng_out[st] = {"n": int(e[1]), "mean_m": snappedf(float(e[0]) / maxf(1.0, float(e[1])), 0.01)}
+	# The slotted abilities' damage (plan §6.4: none over 40 %): a grab's throw is no slotted ability -
+	# P39: an engine's throw (ability.throw_engine, PlayerGrab.is_throw) is left out as throw_held is.
 	var ability_damage := 0
 	for id: String in damage_dealt_by_action:
 		var a := GameData.get_action(id)
-		if a != null and a.kind in ["ability", "ultimate"] and id != PlayerGrab.THROW_ID:
+		if a != null and a.kind in ["ability", "ultimate"] and not PlayerGrab.is_throw(a):
 			ability_damage += int(damage_dealt_by_action[id])
 	var share := {}
 	for id: String in damage_dealt_by_action:
 		var a := GameData.get_action(id)
-		if a != null and a.kind in ["ability", "ultimate"] and id != PlayerGrab.THROW_ID:
+		if a != null and a.kind in ["ability", "ultimate"] and not PlayerGrab.is_throw(a):
 			share[id] = snappedf(float(damage_dealt_by_action[id]) / maxf(1.0, float(ability_damage)), 0.001)
 	var ready := {}
 	for id: String in ready_windows:

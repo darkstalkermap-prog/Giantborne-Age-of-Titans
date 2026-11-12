@@ -126,8 +126,25 @@ const RESPAWN_POINT_WAIT_S := 15.0
 ## How near the giant must come to a talker (beyond its reach): the talker's radius + the capsule, less.
 const TALK_SLACK_M := 1.0
 const TALK_RETRY_TICKS := 90
+## P39 - siege disruption (plan §5.14: at stage 6 the giant grabs and throws ballistae and catapults;
+## P38's bot broke engines with blows and Crag Hurl only, so a run threw 0-1): a hostile engine on
+## the giant's level within SIEGE_SEEK_M is seized before the fight goes on - struck until its poise
+## breaks (or its crew is gone), grabbed, and thrown at the nearest enemy. An engine tried for
+## SIEGE_GIVE_UP_S without being seized or hurt is left alone for SIEGE_IGNORE_S.
+const SIEGE_SEEK_M := 45.0
+const SIEGE_GIVE_UP_S := 25.0
+const SIEGE_IGNORE_S := 90.0
+## Presses of interact on an engine that may be seized stay this many ticks apart.
+const SIEGE_GRAB_EVERY_TICKS := 20
+## P39 - the waystones beside the way (P38's bot took a waystone only as a fight's respawn point, so no
+## far goal ever had a visited stone near it and fast travel never ran): out of combat, a waystone or
+## shrine within WAYSTONE_DETOUR_M that the giant has not visited (and may visit: its flags hold, its
+## max_stage admits the giant) is walked into on the way, as a player lights the stones the compass
+## shows; one not reached in WAYSTONE_GIVE_UP_S is given up.
+const WAYSTONE_DETOUR_M := 50.0
+const WAYSTONE_GIVE_UP_S := 30.0
 const WORLD_KINDS := ["travel", "say", "smash", "exit", "heave_at", "battle", "matriarch", "duel", "throne",
-	"choose_ancestry"]
+	"choose_ancestry", "siege"]
 
 
 ## The world part of the run (ValleyBot.Run.world): the policy, the oath plan and what the world bot
@@ -164,6 +181,9 @@ class WorldRun extends RefCounted:
 	var budget_failures: PackedStringArray = []
 	var max_counted := 0
 	var over_cap_ticks := 0
+	## P39: the waystones walked to on the way (_waystone_detour): checkpoint id -> the tick the detour
+	## began, or true once given up.
+	var detours: Dictionary = {}
 
 
 var route: BotRoute = null
@@ -181,6 +201,10 @@ var _leashed := false
 var _stuck_plans := -1
 var _ranged_tries: Dictionary = {}     ## entity id -> [first tick, health then, last tick] (_ranged_futile)
 var _world: WorldRoot = null
+## P39: siege disruption - engine world id -> [first tick tried, its health then] (_siege_futile), and
+## the last interact pressed on an engine.
+var _siege_tries: Dictionary = {}
+var _siege_grab_tick := -1000
 
 
 # --------------------------------------------------------------------------- configuration
@@ -525,7 +549,6 @@ func _on_campaign_complete(tick: int) -> void:
 	run.metrics.node_samples = before.node_samples
 	run.metrics.load_samples = before.load_samples
 	run.metrics.connect_events()
-	run.metrics.on_new_game(tick)
 	wrun.metrics = WorldMetrics.new(run.metrics)
 	wrun.metrics.connect_events()
 	_use_world_segments(run, wrun)
@@ -535,12 +558,17 @@ func _on_campaign_complete(tick: int) -> void:
 	wrun.talents_tried.clear()
 	wrun.explored.clear()
 	wrun.respawn_given_up.clear()
+	wrun.detours.clear()
 	run.obj_key = ""
 	run.obj_ticks = 0
 	run.obj_deaths = 0
 	run.dup_seen = 0
 	print("[world_bot] the campaign is complete; loop run %d: %s" % [run.run_index + 1, preset])
 	GameSession.change_mode("world", {"new_game": true})
+	# P39: the rewards already given are read once the new game has emptied the world (it does so at
+	# once): read before, the last game's flags counted the new game's first reward - Kings' Door's,
+	# granted as the world starts - as given twice, and the 60-minute run stopped there (exit 3).
+	run.metrics.on_new_game(tick)
 
 
 func _world_summary(tick: int) -> Dictionary:
@@ -629,12 +657,21 @@ func _plan(tick: int) -> void:
 		task = objective
 		_stall_since = -1
 		return
+	var engine := _siege_target(tick)
+	if engine != null or _holding_engine():
+		task = {"kind": "siege", "engine": engine}
+		_stall_since = -1
+		return
 	var fight_target := _fight_target()
 	if fight_target != null and _chase_futile(fight_target, tick):
 		fight_target = _fight_target()
 	if fight_target != null and not _fight_ignored_now(fight_target):
 		task = {"kind": "fight", "target": fight_target}
 		_stall_since = -1
+		return
+	var detour := _waystone_detour(tick)
+	if not detour.is_empty():
+		task = detour
 		return
 	task = objective
 
@@ -1261,6 +1298,8 @@ func _act(tick: int, defending: bool) -> void:
 			_act_exit(tick)
 		"battle":
 			_act_battle(tick, defending)
+		"siege":
+			_act_siege(tick, defending, task.get("engine") as SiegeEngine)
 		"matriarch":
 			_act_matriarch(tick, defending)
 		"duel":
@@ -1569,6 +1608,14 @@ func _act_smash(tick: int, defending: bool) -> void:
 	if prop.destroyed:
 		_next_plan_tick = tick
 		return
+	# P39: at stage 6 an engine is seized and thrown (siege disruption), a held one thrown first.
+	if _holding_engine():
+		_act_siege(tick, defending, null)
+		return
+	if prop is SiegeEngine and _can_seize_engines() and _seizable_engine(prop as SiegeEngine) \
+			and int(_ignored.get("siege:" + str(prop.world_id), -1)) <= tick:
+		_act_siege(tick, defending, prop as SiegeEngine)
+		return
 	if prop is SiegeEngine and _engine_hurl_ok(tick, prop) and _hurl_at_engine(tick, prop):
 		return
 	task["target"] = prop
@@ -1617,6 +1664,162 @@ func _hurl_at_engine(tick: int, engine: BreakableProp) -> bool:
 	return true
 
 
+# ---- P39: siege disruption (stage 6)
+
+## True when the giant's profile allows seizing siege engines (stage 6's siege_disruption).
+func _can_seize_engines() -> bool:
+	var perms: Variant = player.profile.get("interaction_permissions", []) if player != null else []
+	return typeof(perms) == TYPE_ARRAY and (perms as Array).has("siege_disruption")
+
+
+## True while the giant holds a siege engine (it is thrown before anything else).
+func _holding_engine() -> bool:
+	return player != null and player.grab != null and player.grab.is_holding() \
+		and PlayerGrab.is_engine(player.grab.held_entity())
+
+
+## The engine to seize now (see SIEGE_SEEK_M): the nearest hostile, standing engine on the giant's level
+## within SIEGE_SEEK_M that is not given up; null when the giant cannot seize engines or none is near.
+func _siege_target(tick: int) -> SiegeEngine:
+	if not _in_world() or not _can_seize_engines():
+		return null
+	var best: SiegeEngine = null
+	var best_d := SIEGE_SEEK_M
+	for n in get_tree().get_nodes_in_group(SiegeEngine.GROUP):
+		var s := n as SiegeEngine
+		if not _seizable_engine(s) or int(_ignored.get("siege:" + str(s.world_id), -1)) > tick:
+			continue
+		var d := _flat_dist(s.global_position, player.global_position)
+		if d < best_d:
+			best = s
+			best_d = d
+	return best
+
+
+## A hostile engine standing on the giant's level that nobody holds (a faction's engine at peace is no
+## target: P03's hostile-only targeting; the sabotage's first blow is its smash task's).
+func _seizable_engine(s: SiegeEngine) -> bool:
+	if s == null or not is_instance_valid(s) or not s.is_inside_tree() or s.destroyed or s.thrown or s.holder_id != "":
+		return false
+	if s.entity == null or not s.entity.is_alive() or s.entity.team != CombatEntity.Team.ENEMY:
+		return false
+	return s.global_position.y - player.global_position.y <= combat.elevated_m()
+
+
+## True when seizing `s` has gone on for SIEGE_GIVE_UP_S with the engine neither seized nor hurt: it is
+## then left alone for SIEGE_IGNORE_S (a braced wall before it, an engine out of the giant's way).
+func _siege_futile(s: SiegeEngine, tick: int) -> bool:
+	var key := str(s.world_id)
+	var hp := s.entity.combatant.pools.health if s.entity != null and s.entity.combatant != null else 0.0
+	var rec: Array = _siege_tries.get(key, [])
+	if rec.is_empty() or hp < float(rec[1]) - 0.5 or tick - int(rec[2]) > 60:
+		_siege_tries[key] = [tick, hp, tick]
+		return false
+	rec[2] = tick
+	if tick - int(rec[0]) < ActionDef.seconds_to_ticks(SIEGE_GIVE_UP_S):
+		return false
+	_siege_tries.erase(key)
+	_ignored["siege:" + key] = tick + ActionDef.seconds_to_ticks(SIEGE_IGNORE_S)
+	if run != null:
+		run.metrics.note(tick, "gave up seizing %s" % key)
+	return true
+
+
+## Siege disruption at `s` (null: only a held engine to throw): a held engine is thrown at the nearest
+## enemy (BotCombat's throw locks it first); an engine that may be seized now (staggered, or its crew
+## gone) within the grab's reach is locked and grabbed (interact); otherwise the giant closes in and
+## strikes it - a heavy breaks its poise - through the break act.
+func _act_siege(tick: int, defending: bool, s: SiegeEngine) -> void:
+	if _holding_engine():
+		mode = "combat"
+		stop_moving()
+		var held: CombatEntity = player.grab.held_entity()
+		var target: EnemyActor = null
+		for e in combat.threats(40.0):
+			if e.entity != held and not combat.is_elevated(e):
+				target = e
+				break
+		if target != null:
+			combat.fight(tick, target)
+		elif player.controller.preview_reason(&"light") in ["", "busy"]:
+			player.router.inject_edge(&"light")
+		return
+	if not _seizable_engine(s) or _siege_futile(s, tick):
+		_next_plan_tick = tick
+		return
+	var why: String = player.grab.check_target(s.entity, "hold") if player.grab != null else "no_grab"
+	if why == "":
+		mode = "combat"
+		stop_moving()
+		var e := s.entity
+		if e.combatant.lockable and player.targeting.may_target(e) and player.targeting.locked_entity() != e:
+			if player.targeting.locked_entity() != null:
+				if tick % 4 == 0:
+					player.router.inject_edge(&"lock_press")
+				return
+			player.camera_rig.yaw = TargetingRules.yaw_of(_flat(s.global_position - player.global_position))
+			if tick % 8 == 0:
+				player.router.inject_edge(&"lock_press")
+			return
+		if defending or player.controller.state != CombatController.State.LOCOMOTION \
+				or tick - _siege_grab_tick < SIEGE_GRAB_EVERY_TICKS:
+			return
+		_siege_grab_tick = tick
+		combat.set("_hold_started", tick)   # the throw locks the next enemy first (BotCombat._throw)
+		player.router.inject_edge(&"interact")
+		return
+	if why in ["engine_crewed", "nothing_in_reach", "no_los"]:
+		task["target"] = s
+		_act_break(tick, defending)
+		return
+	# engine_stage and the like: not an engine this giant may seize
+	_ignored["siege:" + str(s.world_id)] = tick + ActionDef.seconds_to_ticks(SIEGE_IGNORE_S)
+	_next_plan_tick = tick
+
+
+# ---- P39: the waystones beside the way
+
+## A detour to a waystone or shrine the giant has not visited, within WAYSTONE_DETOUR_M (see the
+## constant); {} when there is none (or a fight is engaged, or the giant is in the Valley).
+func _waystone_detour(tick: int) -> Dictionary:
+	if not _in_world() or route == null or route.index == null or not GameSession.engaged_fights().is_empty():
+		return {}
+	var best := ""
+	var best_d := WAYSTONE_DETOUR_M
+	for id in route.index.checkpoint_ids():
+		if wrun.detours.get(id, null) is bool:
+			continue
+		var c := route.index.checkpoint(id)
+		var p: Variant = c.get("position")
+		if typeof(p) != TYPE_VECTOR3 or not (str(c.get("kind", "")) in ["waystone", "shrine"]):
+			continue
+		if not bool(c.get("fast_travel", true)) or route.index.max_stage_of(id) < player.current_growth_stage():
+			continue
+		if QuestConditions.truthy(WorldState.get_flag(GameSession.VISITED_PREFIX + id)):
+			continue
+		var open := true
+		for f: Variant in c.get("requires_flags", PackedStringArray()):
+			if not QuestConditions.truthy(WorldState.get_flag(str(f))):
+				open = false
+		var d := _flat_dist(p, player.global_position)
+		if open and d < best_d:
+			best = id
+			best_d = d
+	if best == "":
+		return {}
+	var since := int(wrun.detours.get(best, -1))
+	if since < 0:
+		wrun.detours[best] = tick
+		if run != null:
+			run.metrics.note(tick, "on the way: the waystone %s" % best)
+	elif tick - since > ActionDef.seconds_to_ticks(WAYSTONE_GIVE_UP_S):
+		wrun.detours[best] = true
+		if run != null:
+			run.metrics.note(tick, "the waystone %s was not reached: on without it" % best)
+		return _waystone_detour(tick)
+	return _travel_task(route.index.checkpoint(best).position, 4.0, "waystone " + best)
+
+
 ## A LevelExit: walk to it and press interact.
 func _act_exit(tick: int) -> void:
 	var id := str(task.get("id", ""))
@@ -1648,12 +1851,19 @@ func _act_battle(tick: int, defending: bool) -> void:
 		_next_plan_tick = tick
 		return
 	var bailey := _where("world.marker.fort_bailey")
+	if _holding_engine():
+		_act_siege(tick, defending, null)   # P39: a seized engine is thrown first
+		return
 	if _battle_ranged(tick):
 		return
 	var target := _battle_target()
 	if target is EnemyActor:
 		mode = "combat"
 		combat.fight(tick, target as EnemyActor)
+		return
+	if target is SiegeEngine and _can_seize_engines() and _seizable_engine(target as SiegeEngine) \
+			and int(_ignored.get("siege:" + str((target as SiegeEngine).world_id), -1)) <= tick:
+		_act_siege(tick, defending, target as SiegeEngine)   # P39: siege disruption at stage 6
 		return
 	if target is BreakableProp:
 		task["target"] = target

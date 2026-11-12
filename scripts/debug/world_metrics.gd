@@ -37,6 +37,12 @@ const MARGIN_EVERY_TICKS := 30
 ## end is announced: the snapshot keeps its counts).
 const STATS_EVERY_TICKS := 120
 const QUERY_HIST_MAX := 64
+## P39: the growth and lesser-music samples are taken this often (ticks).
+const GROWTH_SAMPLE_TICKS := 6
+## P39: the soldiers, archers and mages that §6.4's "lone humans" are when no formation holds them.
+const HUMAN_ARCHETYPES := ["soldier", "archer", "mage"]
+## P39: a lone human's states that count as fleeing (§6.4: "flee or rout").
+const FLED_STATES := ["Flee", "Routed"]
 
 var run_metrics: RunMetrics = null
 var regions: Dictionary = {}          ## region id -> {"s", "first_tick"}
@@ -67,6 +73,20 @@ var music: Dictionary = {}            ## stage -> {"explore", "danger", "combat"
 var save_bytes_max := 0
 var deaths_by_region: Dictionary = {}
 var refusals: Array = []              ## [tick, what, message] (fast travel and other refusals)
+## P39 (plan §6.4 "growth shows" and "readability"), sampled every GROWTH_SAMPLE_TICKS at stages 4-6
+## among the enemies engaged with the giant (alive, aware, hostile, within RunMetrics.HOSTILE_NEAR_M):
+##   * lone humans (a soldier, archer or mage in no intact formation, serving no engine, no boss):
+##     their engaged seconds and the seconds they spent fleeing or routed;
+##   * formations whose banner lives and that have such an engaged member: their engaged seconds and
+##     the seconds they held (formed, advancing or braced: Formation.is_intact);
+##   * stage seconds with only lesser enemies engaged (none the music director counts: shorter than
+##     its lesser_height_ratio of the giant and not special - MusicDirector.is_special) and the music's
+##     intensity over them.
+## The formation lock samples are taken only while a formation is engaged so (P38 sampled whenever
+## any formation lived in the loaded world: a troll fight 300 m from a war camp counted).
+var growth := {"lone_engaged_s": 0.0, "lone_fled_s": 0.0, "formation_engaged_s": 0.0, "formation_held_s": 0.0}
+var music_lesser: Dictionary = {}     ## intensity -> seconds while only lesser enemies are engaged (stages 4-6)
+var _formation_engaged := false
 
 var _connected := false
 var _last_tick := -1
@@ -337,8 +357,13 @@ func on_tick(tick: int, player: GiantPlayer, world: Node) -> void:
 		var n := mini(q - _queries_before, QUERY_HIST_MAX)
 		query_hist[n] = int(query_hist.get(n, 0)) + 1
 	_queries_before = q
-	if player.current_growth_stage() >= 4 and not Formation.live().is_empty():
-		_sample_lock(player)
+	if player.current_growth_stage() >= 4:
+		if tick % GROWTH_SAMPLE_TICKS == 0:
+			_sample_growth(player)
+		if _formation_engaged:
+			_sample_lock(player)
+	else:
+		_formation_engaged = false
 	if tick % MARGIN_EVERY_TICKS == 0 and _streamer_ref != null:
 		var s := _streamer_ref.get_ref() as ChunkStreamer
 		if s != null:
@@ -366,6 +391,90 @@ func _sample_lock(player: GiantPlayer) -> void:
 		formations.banner_lock_samples = int(formations.banner_lock_samples) + 1
 	else:
 		formations.single_lock_samples = int(formations.single_lock_samples) + 1
+
+
+## P39: one growth sample (every GROWTH_SAMPLE_TICKS at stages 4-6; see `growth`): the lone humans
+## and the formations engaged with the giant, whether a formation is engaged (the lock samples' gate)
+## and, when only lesser enemies are engaged, the music's intensity.
+func _sample_growth(player: GiantPlayer) -> void:
+	var dt := float(GROWTH_SAMPLE_TICKS) * TICK_S
+	var tree := player.get_tree()
+	var ppos := player.global_position
+	var player_h := player.entity.combatant.height_m if player.entity != null and player.entity.combatant != null else 1.8
+	var engaged_formations := {}
+	var engaged := 0
+	var counting := 0
+	for n in tree.get_nodes_in_group("enemies"):
+		var a := n as EnemyActor
+		if not engaged_with(a, ppos):
+			continue
+		engaged += 1
+		if counts_for_music(a, player_h, _lesser_ratio()):
+			counting += 1
+		var f := a.formation
+		if f != null and not f.dissolved and f.banner_alive():
+			engaged_formations[f] = true
+		if is_lone_human(a):
+			growth.lone_engaged_s = float(growth.lone_engaged_s) + dt
+			if a.brain.state_name() in FLED_STATES:
+				growth.lone_fled_s = float(growth.lone_fled_s) + dt
+	for f: Formation in engaged_formations:
+		growth.formation_engaged_s = float(growth.formation_engaged_s) + dt
+		if f.is_intact():
+			growth.formation_held_s = float(growth.formation_held_s) + dt
+	_formation_engaged = not engaged_formations.is_empty()
+	if engaged > 0 and counting == 0:
+		var key := _music_key()
+		music_lesser[key] = snappedf(float(music_lesser.get(key, 0.0)) + dt, 0.001)
+
+
+## P39: an enemy engaged with the giant at `ppos` - alive, aware, hostile and within
+## RunMetrics.HOSTILE_NEAR_M (the AI-state histogram's own rule).
+static func engaged_with(a: EnemyActor, ppos: Vector3) -> bool:
+	if a == null or not a.is_inside_tree() or a.entity == null or not a.entity.is_alive() or a.brain == null:
+		return false
+	if not a.brain.aware or a.entity.team != CombatEntity.Team.ENEMY:
+		return false
+	return a.global_position.distance_to(ppos) <= RunMetrics.HOSTILE_NEAR_M
+
+
+## P39: a lone human (§6.4): a soldier, archer or mage that no intact formation holds, that serves no
+## engine (a crew) and is no boss (Corvane).
+static func is_lone_human(a: EnemyActor) -> bool:
+	if a == null or a.entity == null or a.entity.combatant == null or a.is_in_group("bosses"):
+		return false
+	var rec: Dictionary = a.entity.combatant.base_record
+	if not (str(rec.get("archetype", "")) in HUMAN_ARCHETYPES) or str(rec.get("role", "")) == "crew":
+		return false
+	return a.formation == null or a.formation.dissolved
+
+
+## P39: true when `a` counts toward the music's combat (the music director's rule, decision 6): a
+## special enemy (a boss, a rival giant, a formation member, an engine crew) or one at least
+## `ratio` x the giant's height.
+static func counts_for_music(a: EnemyActor, player_height_m: float, ratio: float) -> bool:
+	var h := a.entity.combatant.height_m if a.entity != null and a.entity.combatant != null else 1.8
+	return AudioMath.threat_counts(h, player_height_m, MusicDirector.is_special(a), ratio)
+
+
+func _lesser_ratio() -> float:
+	var tree := Engine.get_main_loop() as SceneTree
+	var audio: Node = tree.root.get_node_or_null("Audio") if tree != null else null
+	if audio != null and audio.get("mix") is Dictionary:
+		var cfg: Variant = (audio.get("mix") as Dictionary).get("intensity", {})
+		if cfg is Dictionary:
+			return float((cfg as Dictionary).get("lesser_height_ratio", 0.3))
+	return 0.3
+
+
+## The music's intensity now ("off" while audio does not run).
+func _music_key() -> String:
+	var tree := Engine.get_main_loop() as SceneTree
+	var audio: Node = tree.root.get_node_or_null("Audio") if tree != null else null
+	if audio != null and bool(audio.get("enabled")) and audio.get("music") != null:
+		var m: Object = audio.get("music")
+		return str(m.get("intensity")) if "intensity" in m else "off"
+	return "off"
 
 
 func _sample_music(stage: String) -> void:
@@ -423,6 +532,26 @@ func _query_percentile(p: float) -> int:
 	return int(keys.back())
 
 
+## P39: the growth seconds with §6.4's shares (-1 when nothing was engaged): lone humans fleeing or
+## routed, formations holding while their banner lives, and the music in combat among only lesser
+## enemies.
+func _growth_out() -> Dictionary:
+	var out := {}
+	for k: String in growth:
+		out[k] = snappedf(float(growth[k]), 0.01)
+	var lone := float(growth.lone_engaged_s)
+	var held := float(growth.formation_engaged_s)
+	var lesser := 0.0
+	for k: String in music_lesser:
+		lesser += float(music_lesser[k])
+	out["lone_fled_share"] = snappedf(float(growth.lone_fled_s) / lone, 0.001) if lone > 0.0 else -1.0
+	out["formation_held_share"] = snappedf(float(growth.formation_held_s) / held, 0.001) if held > 0.0 else -1.0
+	out["lesser_s"] = snappedf(lesser, 0.01)
+	out["lesser_combat_share"] = snappedf(float(music_lesser.get("combat", 0.0)) / lesser, 0.001) \
+		if lesser > 0.0 and not music_lesser.has("off") else -1.0
+	return out
+
+
 func result() -> Dictionary:
 	var cur := _current_stream_stats()
 	var region_out := {}
@@ -462,6 +591,8 @@ func result() -> Dictionary:
 			"last": (cur if not cur.is_empty() else streaming).duplicate(true)},
 		"path_queries_per_tick": {"p50": _query_percentile(0.5), "p95": _query_percentile(0.95), "max": q_max},
 		"music": music.duplicate(true),
+		"growth": _growth_out(),
+		"music_lesser": music_lesser.duplicate(true),
 		"save_bytes_max": save_bytes_max,
 		"deaths_by_region": deaths_by_region.duplicate(),
 		"refusals": refusals.duplicate(true),
