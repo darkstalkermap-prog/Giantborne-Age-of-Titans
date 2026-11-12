@@ -17,6 +17,9 @@ extends IntegrationSuite
 ##     the same fade at points all round random views (the near sphere, the cones, their soft edges and
 ##     reach, behind the camera, a shadow pass), a 4 x 4 Bayer dither and the same share of its tile
 ##     discarded at every fade. (Nothing tied them: the shader repeated the constants and the maths by hand.)
+##   * P39f: the shader's vertex() and fragment() run too (ShaderRule.run_body): the world position through
+##     MODEL_MATRIX, the vertex colours' sRGB to linear (only where the output is linear), the eye from
+##     INV_VIEW_MATRIX deciding the discard with the fade and the dither, and the albedo and roughness.
 
 const SHARED := "res://assets/world/shared/"
 const DISTRICTS := ["forest", "hills", "hollow", "kingsfall", "village"]
@@ -270,3 +273,102 @@ func test_the_shader_runs_the_rule_the_tests_measure() -> void:
 				SceneryFade.discarded_share(f)])
 	assert_eq(rule.error, "", "the shader's discard condition runs")
 	assert_eq(shares.size(), 0, "the shader's dither drops what discarded_share says: %s" % "; ".join(shares))
+
+
+## P39f (FOLLOWUPS, "From the M8 screenshot pass": "the scenery fade's shader test does not cover the shader's
+## world position, eye and vertex-colour albedo lines"): the shader's own vertex() and fragment() run on the CPU
+## (ShaderRule.run_body) with the built-ins Godot hands them, and give what they must:
+##   * vertex(): world_pos is the vertex through MODEL_MATRIX (a mesh's or a MultiMesh instance's transform) -
+##     at 200 random transforms and vertices, Transform3D * VERTEX - and the vertex colours turn from sRGB to
+##     linear exactly as Color.srgb_to_linear does, only with vertex_color_albedo on and the output not sRGB
+##     (the Compatibility renderer's output is sRGB: they stay as they are there, as a StandardMaterial3D's do);
+##   * fragment(): the eye is INV_VIEW_MATRIX's origin - the camera's position for the camera's pass, so the
+##     fade (SceneryFade.fade_at with that eye) and its dither decide the discard; another pass's eye fades
+##     nothing - and the albedo is the uniform times the vertex colour with vertex_color_albedo, else the uniform;
+##     the roughness is the uniform's.
+func test_the_shader_stages_feed_the_rule() -> void:
+	var rule = ShaderRule.from_file(TreeSight.FADE_SHADER)
+	assert_eq(rule.error, "", "the shader reads")
+	if rule.error != "":
+		return
+	assert_true(rule.vertex_body != "" and rule.fragment_body != "", "it has a vertex() and a fragment()")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3923
+	var worst := 0.0
+	for i in 200:
+		var basis := Basis(Vector3(rng.randf_range(-1, 1), rng.randf_range(-1, 1), rng.randf_range(-1, 1)).normalized(),
+			rng.randf_range(-PI, PI)).scaled(Vector3(rng.randf_range(0.5, 3.0), rng.randf_range(0.5, 3.0), rng.randf_range(0.5, 3.0)))
+		var xf := Transform3D(basis, Vector3(rng.randf_range(-900, 900), rng.randf_range(-20, 200), rng.randf_range(-900, 900)))
+		var v := Vector3(rng.randf_range(-6, 6), rng.randf_range(0, 12), rng.randf_range(-6, 6))
+		var out: Dictionary = rule.run_body("vertex", {"MODEL_MATRIX": Projection(xf), "VERTEX": v, "COLOR": Vector4(1, 1, 1, 1),
+			"vertex_color_albedo": false, "OUTPUT_IS_SRGB": true, "world_pos": Vector3.ZERO})
+		if rule.error != "":
+			break
+		worst = maxf(worst, (out.world_pos as Vector3).distance_to(xf * v))
+	assert_eq(rule.error, "", "vertex() runs")
+	assert_true(worst < 1e-3, "world_pos is the vertex through MODEL_MATRIX at 200 transforms (worst %.6f m)" % worst)
+	var colour_worst := 0.0
+	var colours: Array = [Color(0.04, 0.0405, 0.5), Color(0.0, 1.0, 0.04045), Color(0.2, 0.6, 0.9)]
+	for i in 61:
+		colours.append(Color(rng.randf(), rng.randf(), rng.randf()))
+	for c: Color in colours:
+		var col := Vector4(c.r, c.g, c.b, 1.0)
+		var base := {"MODEL_MATRIX": Projection(Transform3D.IDENTITY), "VERTEX": Vector3.ZERO, "COLOR": col,
+			"world_pos": Vector3.ZERO}
+		var linear: Dictionary = rule.run_body("vertex", base.merged({"vertex_color_albedo": true, "OUTPUT_IS_SRGB": false}))
+		var want := c.srgb_to_linear()
+		var got: Vector4 = linear.get("COLOR", Vector4.ZERO)
+		colour_worst = maxf(colour_worst, Vector3(got.x - want.r, got.y - want.g, got.z - want.b).length())
+		assert_eq(rule.run_body("vertex", base.merged({"vertex_color_albedo": true, "OUTPUT_IS_SRGB": true})).get("COLOR"), col,
+			"an sRGB output keeps the vertex colour (%s)" % c)
+		assert_eq(rule.run_body("vertex", base.merged({"vertex_color_albedo": false, "OUTPUT_IS_SRGB": false})).get("COLOR"), col,
+			"without vertex_color_albedo the colour is left alone (%s)" % c)
+	assert_eq(rule.error, "", "the colour lines run")
+	assert_true(colour_worst < 1e-5, "sRGB to linear as Color.srgb_to_linear at %d colours (worst %.7f)" % [colours.size(), colour_worst])
+	# fragment(): the eye, the fade and the dither, the albedo
+	var kinds := {"discarded": 0, "kept": 0, "shadow": 0}
+	for i in 200:
+		var cam_pos := Vector3(rng.randf_range(-50, 50), rng.randf_range(2, 40), rng.randf_range(-50, 50))
+		var near_r := rng.randf_range(2.0, 9.0)
+		var foc_pos := cam_pos + Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.5, 0.1), rng.randf_range(-1, 1)).normalized() * 20.0
+		var foc := Vector4(foc_pos.x, foc_pos.y, foc_pos.z, 7.0)
+		var cam := Vector4(cam_pos.x, cam_pos.y, cam_pos.z, near_r)
+		var shadow_pass := i % 5 == 0
+		var eye_at := cam_pos if not shadow_pass else cam_pos + Vector3(rng.randf_range(-60, 60), 90, rng.randf_range(-60, 60))
+		var view_xf := Transform3D(Basis.looking_at(foc_pos - eye_at), eye_at)
+		var p := cam_pos.lerp(foc_pos, rng.randf_range(-0.2, 1.4)) + Vector3(rng.randf_range(-4, 4), rng.randf_range(-3, 3), rng.randf_range(-4, 4))
+		if i % 7 == 0:
+			p = cam_pos + Vector3(rng.randf_range(-1, 1), rng.randf_range(-1, 1), rng.randf_range(-1, 1)) * near_r * 0.6
+		var frag := Vector4(float(rng.randi_range(0, 1279)) + 0.5, float(rng.randi_range(0, 719)) + 0.5, 0.5, 1.0)
+		var albedo := Color(rng.randf(), rng.randf(), rng.randf())
+		var vcol := Vector4(rng.randf(), rng.randf(), rng.randf(), 1.0)
+		var with_vc := i % 2 == 0
+		rule.globals = {"scenery_fade_camera": cam, "scenery_fade_focus": foc, "scenery_fade_target": Vector4.ZERO,
+			"FRAGCOORD": frag}
+		var out: Dictionary = rule.run_body("fragment", {"INV_VIEW_MATRIX": Projection(view_xf), "world_pos": p, "COLOR": vcol,
+			"albedo": albedo, "roughness": 0.95, "vertex_color_albedo": with_vc, "ALBEDO": Vector3.ZERO, "METALLIC": -1.0,
+			"SPECULAR": -1.0, "ROUGHNESS": -1.0})
+		if rule.error != "":
+			break
+		var fade := SceneryFade.fade_at(p, eye_at, cam, foc, Vector4.ZERO)
+		var threshold := float(rule.run("bayer4", [Vector2(frag.x, frag.y)]))
+		var want_discard := fade > 0.0 and fade >= threshold + 1.0 / 32.0
+		assert_eq(rule.discarded, want_discard, "fragment %d: discarded when the fade (%.3f, eye %s) passes the dither (%.3f)" % [i, fade,
+			"the camera" if not shadow_pass else "a shadow pass", threshold])
+		if shadow_pass:
+			kinds.shadow += 1
+			assert_false(rule.discarded, "fragment %d: a shadow pass's eye fades nothing" % i)
+		if rule.discarded:
+			kinds.discarded += 1
+			continue
+		kinds.kept += 1
+		var a := Vector3(albedo.r, albedo.g, albedo.b)
+		var want_albedo := a * Vector3(vcol.x, vcol.y, vcol.z) if with_vc else a
+		assert_true((out.ALBEDO as Vector3).is_equal_approx(want_albedo), "fragment %d: the albedo %s (%s)" % [i,
+			"times the vertex colour" if with_vc else "is the uniform", out.ALBEDO])
+		assert_near(float(out.ROUGHNESS), 0.95, 1e-6, "fragment %d: the roughness uniform" % i)
+		assert_near(float(out.METALLIC), 0.0, 1e-6, "fragment %d: not metallic" % i)
+	assert_eq(rule.error, "", "fragment() runs")
+	for k: String in kinds:
+		assert_true(int(kinds[k]) >= 20, "the fragments cover the %s case (%s)" % [k, str(kinds)])
+	print("    the shader's stages: %s, colour worst %.8f, position worst %.6f m" % [str(kinds), colour_worst, worst])
