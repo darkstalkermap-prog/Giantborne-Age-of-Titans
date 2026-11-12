@@ -952,3 +952,115 @@ tools/run_bots.sh w.conqueror:novice:2 w.order_crown:novice:1 w.order_wood:novic
   w.{conqueror,peaceful,mixed}:expert:{1,2,3} --jobs=2 --timeout=3600 --tag=p39_i3_world
 tools/run_bots.sh force:expert:2 --jobs=1 --timeout=1500 --autoplay=2400 --tag=p39_i3_valley   # the Valley replays
 ```
+
+| Run | Before (iteration 1 or 2) | Iteration 3 | Bosses (attempts, each attempt's lowest health share) |
+| --- | --- | --- | --- |
+| w_conqueror_novice_2 | the den, 7 deaths (i2) | the den, 7 deaths (the Matriarch's frenzy 3, stomp 2, a whelp 1, a raider 1) | the Matriarch 6 (0.48, 0.32, 0.24, 0.38, 0.84, 0.36): not slain |
+| w_order_crown_novice_1 | the crown's meeting, 5 deaths (iteration 0) | the crown's meeting, 6 deaths (fort ballistae 5, a soldier 1) | the battle 6 (0.85, 0.79, 0.65, 0.69, 1.0, 0.69): no Charge |
+| w_order_wood_novice_1 | the den, 6 deaths (iteration 0) | **completed**, 3 deaths (the den's troll 1, Harrok 2), 30.1 min | the Matriarch driven out at stage 4 on the 1st attempt (0.59); Harrok spared on the 2nd (0.47, 0.25) |
+| w_order_march_novice_1 | Harrok's duel, 6 deaths (iteration 0) | **completed**, 4 deaths (Harrok 4), 32.3 min | Harrok spared on the 5th (0.44, 0.38, 0.30, 0.34, 0.25) |
+| w_conqueror_expert_1 | the den, watchdog (i2) | Harrok's duel, 7 deaths (an archer 1, Harrok 6) | the Matriarch slain in 1 attempt; Harrok 6 (0.53, 0.34, 0.07, 0.22, 0.18, 0.35): yielded, struck, not slain |
+| w_conqueror_expert_2 | (i2: stopped in Harrok's duel) | the den, 7 deaths (the den 3, a troll 3, an ogre 1) | the Matriarch 4 (0.47, 0.48, 0.35, 0.49): not slain |
+| w_conqueror_expert_3 | the den, watchdog (i2) | Harrok's duel, 8 deaths (the den 1, a soldier 1, a Stonehold troll 1, Harrok 5) | the Matriarch slain on the 2nd (0.87, 0); Harrok 6 (0.49-0.19): not slain |
+| w_peaceful_expert_1-3 | the Raiders' Hollow, 6 deaths each (i2) | the Raiders' Hollow, 6 deaths each - the same runs to the tick as iteration 2 | - |
+| w_mixed_expert_1 | Harrok's duel, watchdog (iteration 0) | **completed**, 1 death, 29.1 min | Harrok spared on the 2nd (0.45, 0.25) |
+| w_mixed_expert_2 | Harrok's duel, watchdog (iteration 0) | **completed**, 1 death, 27.0 min | Harrok spared on the 2nd (0.28, 0.25) |
+| w_mixed_expert_3 | Harrok's duel, watchdog (iteration 0) | **completed**, no death, 26.6 min | Harrok spared on the 1st (0.25) |
+
+What iteration 3 did:
+
+- **The den** (12 / 15 hp/s, the lure's clock fixed): the conqueror experts slew her in two of three runs
+  (1 and 2 attempts; iteration 2: neither); the drive-out at stage 4 (`w_order_wood_novice_1`) took one
+  attempt with no death in the den (iteration 0: six deaths, stopped). The conqueror novice on seed 2 still
+  could not slay her (six attempts, down to 0.24; her frenzy 3 of its 6 den deaths), while seed 1 slew her
+  in one attempt in iteration 2: one of two conqueror novices slays her.
+- **The peaceful experts** replayed iteration 2's runs to the tick: the hold cap was never what killed them
+  at the Raiders' Hollow (no hold lasted a second there). What does is still open - the expert's world
+  rules (the arrows, the blows not answered) or its abilities; the M6 gate's Valley-tuned expert has no
+  world equivalent yet. Reported for the confirmation phase.
+- **Harrok** with the experts: the mixed experts, who spare him, all three completed with at most one
+  death; the conqueror experts, who strike him when he yields and fight on, brought him to 0.07-0.25 and
+  died five and six times. The slay path is the harder one by design (a duel to the death from the yield);
+  no fourth iteration is allowed to tune it.
+- **The Iron Regiment at stage 4** is unchanged: six attempts at 0.65-1.0 with five deaths to the fort's
+  ballistae, no Charge (see "Left for the confirmation phase").
+
+**Targeted checks on the final numbers** (`cee2edd`, `tools/run_bots.sh <run> --jobs=1 --tag=<tag> --extra=...`, the
+iteration-0 groups of `targeted.sh`):
+
+- **The Valley replays** (`force:expert:2 --timeout=1500 --autoplay=2400`, tag `p39_i3_valley`): iteration 0's
+  run to the tick - 933.33 s simulated, 32 kills, 472 hits, the same flags hash (`58420dccc2cd`) and the
+  same Deadfall watchdog. None of the three iterations acts in the Valley, so its matrix (iteration 0's,
+  above) stands.
+- **The siege of Skarn at stage 5** (`p39_i3_skarn5`, `w.peaceful:novice:1 --bot-skarn=5`): 6 deaths
+  (riders' charges 2, catapult stones 2, a rival giant 1, a pike brace 1) and the siege not ended, as in
+  iteration 0 (6 deaths: stones 3, bolts 2, a rider 1). Lighter shots moved its killers from the engines to
+  its riders; the siege at stage 5 is Ulfra's plea, a choice (at stage 6 it took 60 s, no death).
+- **The Iron Regiment at stage 5** (`p39_i3_ir5`, `w.peaceful:novice:1 --bot-oaths=march:help,crown:breach`):
+  five attempts (0.73, 0.90, 0.60, 0.71, 0.71), the Charge begun in one of them (iteration 0: one engaged
+  attempt at 0.84, no Charge), 6 deaths (ballistae 3, the shields' brace 2, a rider 1), the ballistae 74 %
+  of the damage taken in the battle.
+
+## M9 (P39): where the targets stand after three iterations
+
+The latest run of each of the matrix's 18 slots (`python3 tools/bot_report.py <set> world_targets`): iteration
+3's thirteen (the conqueror novice seed 2, the three orders, the nine experts, on `cee2edd`) and iteration
+2's five novice runs it did not repeat (peaceful 1-2, conqueror 1, mixed 1-2, on `65293ad`: the same data but
+the Matriarch's 15 / 25 regeneration, which only the conqueror slay meets - and seed 1 slew her in one
+attempt on it). Iteration 0's value in brackets.
+
+| Target (plan §6.4) | After iteration 3 | Met |
+| --- | --- | --- |
+| Completion, novice: at least 2 of 3 seeds per preset | peaceful 2 / 2, conqueror 1 / 2, mixed 2 / 2 (1 / 2, 0 / 2, 0 / 2) | peaceful and mixed met; conqueror **miss** (the den's slay on seed 2) |
+| Completion, expert: 3 of 3, at most 2 deaths each | mixed 3 / 3 (deaths 1, 1, 0); conqueror 0 / 3; peaceful 0 / 3 (0 / 9) | mixed met; **miss** |
+| Every first-oath order completes | march yes, wood yes, crown no (none) | **miss** (the Iron Regiment at stage 4) |
+| Human estimate of the main path 75-140 min | 32.9 min, completed novice runs (41.0) | **miss** (the report's: the main path played straight) |
+| Each §5.15 segment within its range | Opening 3.8, First oath 2.4, Second oath 8.6, Roaming 5.6, Stonehold 8.9 | **miss** (as above) |
+| Deaths: 1-3 per boss attempt sequence (novice median) | Harrok 2 (runs 5 / 2 / 3 / 2 / 1; the orders 4 and 2) (6); the Matriarch 0 (runs 0 / 6 / 0 / 0) (3); the battle not won | Harrok met; the Matriarch under the range on three runs of four; the battle **miss** |
+| Deaths: at most 2 in any other segment (novice) | max 1 (6) | met |
+| Lone humans flee or rout >= 70 % of their engaged time | 3 %; melee 0 % of 280 s (3 %; 0 % of 256 s) | **miss** (left for the merged W23: below) |
+| Formations hold or brace >= 50 % while the banner lives | 85 % (82 %) | met |
+| Group or banner locks >= half with a formation engaged | 86 % (75 %) | met |
+| At least 2 engines thrown per run that reaches stage 6 | 10 of 10 runs (7 of 7) | met |
+| Off-camera share of the hits taken under 20 % | median 11 % (12 %) | met |
+| Music in combat under 25 % among only lesser enemies | 45 % (38 %) | **miss** (P28's mix data: reported) |
+| Every slotted ability used at least once a run | never used when ready, by runs of 18: Titan Stomp 10, Rampart Grip 9, Earthquake 8, Heavy Footfall 6, Boulder Hurl 5, Formation Sweep 4, Crag Hurl 3, Crushing Grip 2 (Boulder Hurl 14, Sweeping Blow 12, Crag Hurl 8, Titan Stomp 7, Crushing Grip 7) | **miss** |
+| No ability over 40 % of ability damage | 90 % (Runic Bolt in a peaceful expert dead at stage 4); the novice's completed runs 31-51 % (65 %) | **miss** |
+| Worst streaming work frame <= 12 ms | 63.5 ms (33.6 ms) | **miss** (two runs beside the other lane's checks on 4 CPUs) |
+| Loaded margin >= 200 m, no thrash | 253 m, 0 | met |
+| CPU per tick p95 <= 8 ms | median 10.22 ms (7.16 ms) | **miss** (as the work frame) |
+
+The rows the report does not judge: the XP and equipment budget tests (margins of at least 50 XP) pass in
+this branch's check (no XP was tuned); the Valley's items hold as iteration 0 measured them - no change of
+the three iterations acts in the Valley (the data is the world's bosses, engines and the Matriarch, and every
+bot change acts from stage 4 or in the world only), which the Valley's force:expert:2 replay below confirms.
+
+### Left for the confirmation phase (and why no fourth iteration)
+
+- **The Iron Regiment's Charge** (`tools/data/world/aldmere.json`, the battle arena's phase `below`: 0.6).
+  The Wall's fall leaves the bar at 0.622 of the desktop aggregate (and about 0.67 of the web's 11,740),
+  above the Charge's 0.6, and at stage 4 nothing the giant throws from the bailey harms the fort's
+  ballistae or the wall's crews: every stage-4 attempt in four iterations stopped at 0.65-1.0, five or six
+  deaths to the fort's ballistae. A lighter bolt (60) did not change it. The threshold is a layout number
+  (a chunk rebuild) that this lane leaves to the merge with the other W23 lane's world rebuild: set it
+  above both aggregates' post-Wall bars (desktop 0.622, web about 0.67, so about 0.70), rebuild the arena's
+  chunk, and re-run `w.order_crown:novice:1` and `p39_ir4`.
+- **The lone humans** (§6.4 at least 70 %): a lone soldier's awe costs 35 of its 70 morale, leaving it above
+  its flee threshold of 25, so it fights a stage-4 giant to the end (melee lone humans fled 0 % in every
+  iteration); the pooled share is the toll fort's tower archers', which hold the tower by design (M7b B3).
+  The lever is `tactics.awe_morale_loss` (46 or more makes a lone soldier flee on sight at stage 4, as §5.14
+  says), for the world's soldiers only - the Valley's stage-3 share is a separate item - measured on the
+  merged W23, where the other lane changed the raiders' rout from a giant they do not see.
+- **The peaceful experts at the Raiders' Hollow**: six deaths each in iterations 1-3 (iteration 0: two of
+  three died at the toll fort before it). The expert's world rules (from stage 4: arrows hold no blow off,
+  blows that cannot land are not answered; the rotation) let it past the toll fort but not the Hollow; a
+  trace of `w.peaceful:expert:1` (`--bot-trace=60`) is the next step, a bot change for the confirmation
+  phase.
+- **The conqueror's slay** of the Matriarch (one novice of two) and of Harrok (no expert of three):
+  the slay paths are the harder ones by design (the den without its third brazier; Harrok fought to the
+  death after his yield). Every iteration has been used; the confirmation matrix measures them as they are.
+- **Ability use**: Titan Stomp, Earthquake and Rampart Grip are never used when ready in 8-10 runs of 18:
+  their windows come while the novice is mid-blow (the readiness is sampled every 6 ticks in combat, the
+  bot looks once a second at a free tick). A bot question for the confirmation phase.
+- **Music and streaming**: not §6.4 data levers (the music's intensity rules are P28's mix data; the work
+  frame and the CPU per tick were measured with two runs beside the other lane's full checks).
