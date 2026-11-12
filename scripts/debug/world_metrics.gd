@@ -143,6 +143,7 @@ func _listeners() -> Array:
 		[Events.entity_died, _on_entity_died],
 		[Events.ability_started, _on_ability_started],
 		[Events.grab_ended, _on_grab_ended],
+		[Events.hit_resolved, _on_hit_resolved],
 	]
 
 
@@ -257,6 +258,24 @@ func _on_grab_ended(_tick: int, holder_id: String, target_id: String, reason: St
 	var e := Sim.get_entity(target_id)
 	if e != null and e.actor is SiegeEngine:
 		siege.engines_thrown = int(siege.engines_thrown) + 1
+
+
+## P39: the damage the giant takes while a boss fight is engaged, by the attacker's archetype, in each
+## engaged boss's record ("damage_taken_by": the M8 release check measured the Iron Regiment's fort
+## ballistae dealing about 85 % of it).
+func _on_hit_resolved(_tick: int, r: HitResult) -> void:
+	if r == null or r.event == null or r.event.target_id != RunMetrics.PLAYER_ID or r.health_damage <= 0:
+		return
+	var fights := GameSession.engaged_fights()
+	if fights.is_empty():
+		return
+	var e := Sim.get_entity(r.event.attacker_id)
+	var arch := RunMetrics.archetype_of(e) if e != null else "unknown"
+	for id: String in fights:
+		var b := _boss(id)
+		var by: Dictionary = b.get("damage_taken_by", {})
+		by[arch] = int(by.get(arch, 0)) + r.health_damage
+		b["damage_taken_by"] = by
 
 
 func _on_wander_spawned(_tick: int, template_id: String, _encounter_id: String) -> void:

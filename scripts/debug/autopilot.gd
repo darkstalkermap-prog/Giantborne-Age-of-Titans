@@ -43,7 +43,8 @@ extends Node
 ##                          bot's save): it plays quest.world_main from world_start to the Stone Throne
 ##                          under an oath policy (--bot-preset=peaceful|conqueror|mixed, --bot-oaths=
 ##                          march:help,wood:drive,..., --bot-oath-count=2|3, --bot-champion=, --bot-corvane=,
-##                          --bot-explore=) with the Valley bot's skill, assist, seed, loop and trace options.
+##                          --bot-explore=; P39: --bot-skarn=5|6 takes the siege of Skarn at that stage)
+##                          with the Valley bot's skill, assist, seed, loop and trace options.
 ##                          --scenario=valley --bot-campaign plays the Valley first and hands over at
 ##                          slice.completed. AUTOPILOT_RESULT's "world_bot" key holds the run (the Valley
 ##                          bot's metrics, the world's, the outcomes); exit codes as for --scenario=valley

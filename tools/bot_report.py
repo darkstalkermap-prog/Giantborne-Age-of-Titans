@@ -443,13 +443,20 @@ def world_outcomes(rows):
 
 
 def world_bosses(rows):
-    out = ["| Run | Boss | Attempts | Engaged | Disengaged | Yields | Phases | Outcome |", "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    out = ["| Run | Boss | Attempts | Engaged | Disengaged | Yields | Phases | Outcome | Deaths | Damage taken in the fight (by source) |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    names = {"world.greywood.troll_matriarch": "matriarch", "world.stonehold.harrok": "harrok", "battle.iron_regiment": "battle"}
     for r in rows:
         for bid, b in sorted(r["w"].get("bosses", {}).items()):
-            out.append("| %s | %s | %s | %s | %s | %s | %s | %s |" % (
+            by = b.get("damage_taken_by", {})
+            total = sum(by.values())
+            src = ", ".join("%s %d (%.0f %%)" % (k, v, 100.0 * v / total) for k, v in sorted(by.items(), key=lambda kv: -kv[1])[:4]) if total else "-"
+            deaths = sum(1 for d in r["deaths"] if boss_of_death(r, d) == names.get(bid, bid))
+            out.append("| %s | %s | %s | %s | %s | %s | %s | %s | %d | %s |" % (
                 r["name"], bid, b.get("attempts", 0), b.get("engaged", 0),
                 ", ".join(str(d[1]) for d in b.get("disengaged", [])) or "-", b.get("yields", 0),
-                ", ".join(str(p[1]) for p in b.get("phases", [])) or "-", b.get("outcome") or ("defeated" if b.get("defeated") else "-")))
+                ", ".join(str(p[1]) for p in b.get("phases", [])) or "-", b.get("outcome") or ("defeated" if b.get("defeated") else "-"),
+                deaths, src))
     return "\n".join(out)
 
 

@@ -23,7 +23,8 @@ extends ValleyBot
 ##             Corvane spared; the ancestry Stoneblood (a parley token)
 ##   conqueror march force, wood slay, crown breach; Corvane struck, Harrok slain; Wildheart
 ##   mixed     march intimidate, crown sabotage, wood slay; Harrok spared; Stormborn
-## --bot-champion=spare|slay|talk and --bot-corvane=spare|strike override the preset's.
+## --bot-champion=spare|slay|talk and --bot-corvane=spare|strike override the preset's. P39: --bot-skarn=5|6
+## takes the siege of Skarn (Ulfra's plea, then the line's engines) on the way at that stage.
 ##
 ## Each plan tick (every 6 ticks): a yield waiting for its decision is decided (the screens' hook,
 ## before any pausing screen is closed); a fight when aware hostiles are near (BotCombat: formations
@@ -106,7 +107,7 @@ const EXPLORE_GIVE_UP_S := 120.0
 ## the battle: crews and fort ballistae first; the duel): within FIGHT_OWNER_RADIUS_M of the place's
 ## marker the plan keeps the objective although threats are near.
 const FIGHT_OWNERS := {"matriarch": "world.marker.troll_den", "battle": "world.marker.fort_bailey",
-	"duel": "world.marker.moot_ring"}
+	"duel": "world.marker.moot_ring", "skarn": "world.marker.siege_line"}
 const FIGHT_OWNER_RADIUS_M := 120.0
 ## An engaged arena's leash: the giant turns back once it stands this share of the disengage margin
 ## outside the arena's floor, and walks until within the second share (a dodge's drift does not flip
@@ -143,8 +144,16 @@ const SIEGE_GRAB_EVERY_TICKS := 20
 ## shows; one not reached in WAYSTONE_GIVE_UP_S is given up.
 const WAYSTONE_DETOUR_M := 50.0
 const WAYSTONE_GIVE_UP_S := 30.0
+## P39 - the siege of Skarn as a new player takes it (--bot-skarn=5|6; FOLLOWUPS "The siege of Skarn's
+## pace is untuned"): on the way to the Standing Stones (stage 5) or the Moot (stage 6), Ulfra's plea
+## (a stage-6 giant's arrival starts the siege too), Skarn's green, then the line's five engines nearest
+## first - seized and thrown at stage 6, struck or hurled at at stage 5 - while defending, until the
+## event ends (saved: the line routs when its last engine falls; burned: two longhouses fall).
+const SKARN_ENGINES := ["world.stonehold.siege_catapult_1", "world.stonehold.siege_catapult_2",
+	"world.stonehold.siege_catapult_3", "world.stonehold.siege_ballista_1", "world.stonehold.siege_ballista_2"]
+const SKARN_TIMEOUT_S := 900.0
 const WORLD_KINDS := ["travel", "say", "smash", "exit", "heave_at", "battle", "matriarch", "duel", "throne",
-	"choose_ancestry", "siege"]
+	"choose_ancestry", "siege", "skarn"]
 
 
 ## The world part of the run (ValleyBot.Run.world): the policy, the oath plan and what the world bot
@@ -184,6 +193,8 @@ class WorldRun extends RefCounted:
 	## P39: the waystones walked to on the way (_waystone_detour): checkpoint id -> the tick the detour
 	## began, or true once given up.
 	var detours: Dictionary = {}
+	## P39: --bot-skarn=<stage> (0: the siege of Skarn is left alone, as the main thread does).
+	var skarn_stage := 0
 
 
 var route: BotRoute = null
@@ -284,6 +295,8 @@ static func parse_world_options(args: PackedStringArray) -> Dictionary:
 			explicit["campaign"] = true
 		elif arg.begins_with("--bot-until="):
 			explicit["until"] = arg.substr(12).strip_edges()
+		elif arg.begins_with("--bot-skarn="):
+			explicit["skarn"] = clampi(int(arg.substr(12)), 0, 6)
 	var preset: Dictionary = PRESETS[out.preset]
 	out["oaths"] = parse_oaths(str(preset.oaths))
 	out["champion"] = str(preset.champion)
@@ -326,6 +339,7 @@ static func apply_world_options(w: WorldRun, o: Dictionary) -> void:
 	w.explore = float(o.get("explore", 0.0))
 	w.campaign = bool(o.get("campaign", false))
 	w.until_flag = str(o.get("until", ""))
+	w.skarn_stage = int(o.get("skarn", 0))
 	# every oath the order leaves out follows (a third oath, or one the second needs)
 	for oath: String in OATHS:
 		var named := false
@@ -801,6 +815,9 @@ func _objective_task(tick: int) -> Dictionary:
 	var o := Quests.objective_for(WORLD_MAIN)
 	if o.is_empty():
 		return {"kind": "wait", "why": "no world objective"}
+	var skarn := _skarn_task(str(o.stage_id))
+	if not skarn.is_empty():
+		return skarn
 	match str(o.stage_id):
 		"kings_door":
 			return _exit_task("valley.exit.kings_door")
@@ -1170,6 +1187,41 @@ func _parley_token() -> String:
 	return ""
 
 
+# ---- P39: the siege of Skarn (--bot-skarn)
+
+## True while the siege of Skarn is this run's to take now: --bot-skarn names the giant's stage, the
+## main thread is on its way to the Stones or the Moot, and the siege has not ended.
+func _skarn_open(main_stage: String) -> bool:
+	if wrun == null or wrun.skarn_stage <= 0 or player == null or player.current_growth_stage() != wrun.skarn_stage:
+		return false
+	if not (main_stage in ["grow6", "moot"]):
+		return false
+	return not QuestConditions.truthy(WorldState.get_flag("world.skarn.saved")) \
+		and not QuestConditions.truthy(WorldState.get_flag("world.skarn.burned"))
+
+
+## The siege of Skarn's next step (see SKARN_ENGINES), {} when it is not this run's to take now.
+func _skarn_task(main_stage: String) -> Dictionary:
+	if not _skarn_open(main_stage):
+		return {}
+	if not QuestConditions.truthy(WorldState.get_flag("event.siege_of_skarn.runs")):
+		if player.current_growth_stage() < 6 and not QuestConditions.truthy(WorldState.get_flag("world.skarn.plea_accepted")):
+			return _say_task("world.stonehold.ulfra", "dialogue.ulfra", "plea", _where("world.marker.skarn_green"))
+		return _travel_task(_where("world.marker.skarn_green"), 12.0, "Skarn's green: the siege line sets up")
+	var best := ""
+	var best_d := INF
+	for id: String in SKARN_ENGINES:
+		if WorldState.is_destroyed(id):
+			continue
+		var d := _flat_dist(_where(id), player.global_position)
+		if d < best_d:
+			best = id
+			best_d = d
+	if best == "":
+		return _travel_task(_where("world.marker.siege_line"), 20.0, "the siege line routs")
+	return {"kind": "skarn", "id": best}
+
+
 # ---- the champion
 
 func _champion_task() -> Dictionary:
@@ -1292,7 +1344,7 @@ func _act(tick: int, defending: bool) -> void:
 			_act_travel(tick, task.get("pos", Vector3.INF), float(task.get("radius", 4.0)))
 		"say":
 			_act_say(tick)
-		"smash":
+		"smash", "skarn":
 			_act_smash(tick, defending)
 		"exit":
 			_act_exit(tick)
@@ -2176,6 +2228,8 @@ func _watch_key() -> String:
 			key += "/grow5"
 	elif stage == "grow6" and player.current_growth_stage() < 5:
 		key += "/grow5"
+	if _skarn_open(stage):
+		key += "/skarn"
 	return key
 
 
@@ -2188,6 +2242,8 @@ func _stage_limit(key: String) -> float:
 		base = BOSS_STAGE_TIMEOUT_S
 	elif key.contains("/quest.oath_"):
 		base = OATHS_TIMEOUT_S
+	elif key.ends_with("/skarn"):
+		base = SKARN_TIMEOUT_S
 	var goal := _stage_goal()
 	var travel := 0.0
 	if goal.is_finite() and route != null and route.index != null:

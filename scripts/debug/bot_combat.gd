@@ -723,8 +723,15 @@ func _throw(tick: int) -> void:
 func _abilities(tick: int, t: EnemyActor, dist: float) -> bool:
 	if tick < _next_ability_tick:
 		return false
-	_next_ability_tick = tick + (NOVICE_ABILITY_EVERY_TICKS if skill == NOVICE else EXPERT_ABILITY_EVERY_TICKS)
 	var c := player.controller
+	# P39: from stage 4 (the world) a look at the abilities that finds the giant mid-blow waits for its
+	# next free tick instead of being spent: the novice's light chains filled most of its one-a-second
+	# looks, so its slotted abilities were used once a run or never (P38's peaceful run: Titan Stomp in 0
+	# of 9 windows, Sweeping Blow 0 of 13) - a measure of the bot's timing, not of the abilities. The
+	# Valley (stages 1-3) keeps P17a's rule, so its matrix stays comparable with the M6 gate's.
+	if c.state != CombatController.State.LOCOMOTION and player.current_growth_stage() >= 4:
+		return false
+	_next_ability_tick = tick + (NOVICE_ABILITY_EVERY_TICKS if skill == NOVICE else EXPERT_ABILITY_EVERY_TICKS)
 	if c.state != CombatController.State.LOCOMOTION:
 		return false
 	var pools := player.entity.combatant.pools

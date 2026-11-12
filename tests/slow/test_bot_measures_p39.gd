@@ -251,3 +251,28 @@ func test_a_loops_next_world_game_counts_its_first_reward_once() -> void:
 	var m: Dictionary = ValleyBot.run.metrics.result(Sim.tick)
 	assert_eq((m.rewards as Dictionary).get("duplicates"), [], "no reward given twice")
 	assert_eq(((m.rewards as Dictionary).get("granted", []) as Array).size(), 1, "Kings' Door's reward given once in this game")
+
+
+## BotCombat's look at the abilities (the novice's once a second) that finds the giant mid-blow: from
+## stage 4 it waits for the giant's next free tick (P38's runs: Titan Stomp used in 0 of 9 windows, the
+## novice's light chains spent the looks); in the Valley (stages 1-3) the look is spent as before, so the
+## Valley's matrix stays the M6 gate's.
+func test_a_look_at_the_abilities_mid_blow_waits_from_stage_4() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	var soldier := spawn_soldier(Vector3(0, 0.05, -6), 0.0, "test.p39_mid_blow")
+	soldier.brain.aware = true
+	_bot()
+	p.router.inject_light_attack()
+	await step_ticks(2)
+	assert_true(p.controller.state != CombatController.State.LOCOMOTION, "the giant is mid-blow")
+	bot.combat._next_ability_tick = 0
+	assert_false(bot.combat._abilities(Sim.tick, soldier, 6.0), "no ability mid-blow")
+	assert_eq(bot.combat._next_ability_tick, 0, "at stage 4 the look is not spent: the next free tick looks again")
+	p.set_profile(_profile(3))
+	await TestWait.until(self, func() -> bool: return p.controller.state == CombatController.State.LOCOMOTION, 120)
+	p.router.inject_light_attack()
+	await step_ticks(2)
+	assert_true(p.controller.state != CombatController.State.LOCOMOTION, "the stage-3 giant is mid-blow")
+	bot.combat._next_ability_tick = 0
+	assert_false(bot.combat._abilities(Sim.tick, soldier, 6.0), "no ability mid-blow at stage 3 either")
+	assert_true(bot.combat._next_ability_tick > Sim.tick, "but at stage 3 the look is spent (P17a's rule, the Valley unchanged)")
