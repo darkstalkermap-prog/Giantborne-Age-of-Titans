@@ -175,6 +175,8 @@ var _budget_seen := 0                  ## counted combatants at the last look (t
 var _spawn_positions: Dictionary = {}  ## entity id -> its spawn position (encounter records)
 var _talk_tick := -1000
 var _leashed := false
+## The route plan the stuck watch measures along (BotRoute.plans when its best was taken).
+var _stuck_plans := -1
 var _ranged_tries: Dictionary = {}     ## entity id -> [first tick, health then, last tick] (_ranged_futile)
 var _world: WorldRoot = null
 
@@ -1307,8 +1309,11 @@ func steer_path(tick: int, goal: Vector3, sprint: bool) -> void:
 
 
 ## Stuck in the world: progress is measured along the route (its remaining length), so a winding road
-## is not mistaken for no progress; the recovery is the Valley's (sidestep and jump, a new route or the
-## breadcrumbs back, a recorded teleport to the leg's next point), then a breach.
+## is not mistaken for no progress, and from a new plan's own length (the mixed run's sabotage ended on
+## the Ballista Ridge, planned no road there, and the road route its first recovery found was 450 m
+## longer than the straight line it had been measured on: every recovery followed, 6 s apart, while it
+## walked that road); the recovery is the Valley's (sidestep and jump, a new route or the breadcrumbs
+## back, a recorded teleport to the leg's next point), then a breach.
 func _track_stuck(tick: int, goal: Vector3) -> void:
 	if not _in_world() or route == null:
 		super(tick, goal)
@@ -1318,6 +1323,12 @@ func _track_stuck(tick: int, goal: Vector3) -> void:
 		_stuck_best = INF
 		_stuck_since = tick
 	var d := route.remaining_m(player.global_position) if not route.goal_changed(goal) else _flat_dist(player.global_position, goal)
+	if route.plans != _stuck_plans:
+		# A new plan measures along another line (a road route instead of the goal alone, a detour):
+		# progress counts from its length here; the recovery ladder's level stays.
+		_stuck_plans = route.plans
+		_stuck_best = d
+		return
 	if d < _stuck_best - STUCK_PROGRESS_M:
 		_stuck_best = d
 		_stuck_since = tick

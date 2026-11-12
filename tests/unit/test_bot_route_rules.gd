@@ -4,7 +4,8 @@ extends TestSuite
 ##   * plan(): road nodes then the goal, by stage (a min_stage edge closed below it, a max_stage edge
 ##     above it); a direct edge marks its steps direct; the first node is dropped when the giant is
 ##     already past it, the last when the goal lies before it; a near goal takes no road unless the
-##     road there has a direct edge; no road joining far ends: false, the goal alone;
+##     road there has a direct edge; no road joining far ends: false, the goal alone; the road starts
+##     at the nearest node the giant's stage may leave (not a stage-closed spur's end);
 ##   * steer(): a direct step is steered at straight; passed points are left behind;
 ##   * fast_travel_point(): a far goal (over FAST_TRAVEL_MIN_M) with a visited checkpoint within
 ##     FAST_TRAVEL_NEAR_M of it, open to fast travel, whose flags hold and whose max_stage admits the
@@ -78,6 +79,22 @@ func test_a_direct_edge_is_walked_straight_and_closed_above_its_stage() -> void:
 	r5.plan(Vector3(1160, 0, 0), Vector3(1200, 0, -60))
 	assert_false(r5.direct.has(1), "stage 5 may not use the slot: no direct step")
 	assert_eq(r5.points, PackedVector3Array([Vector3(1200, 0, -60)]), "the near goal alone (the navmesh decides)")
+
+
+func test_a_route_starts_at_the_nearest_node_the_stage_may_leave() -> void:
+	var idx := _index()
+	# beyond the slot's far end: at stage 5 its two nodes, (1200, -60) and (1200, -30), have no edge the
+	# stage may use (the slot is stage 4 at most), so the road starts at (1200, 0)
+	var from := Vector3(1200, 0, -64)
+	var road_end := idx.nearest_road_node(Vector3(1200, 0, 0))
+	var slot_end := idx.nearest_road_node(Vector3(1200, 0, -60))
+	assert_eq(idx.nearest_road_node(from), slot_end, "the nearest node of all is the slot's end")
+	assert_eq(BotRoute.nearest_leavable_node(idx, from, 5), road_end, "stage 5 leaves from the road's end")
+	assert_eq(BotRoute.nearest_leavable_node(idx, from, 4), slot_end, "stage 4 may leave from the slot's end")
+	var r := _route(idx, 5)
+	assert_true(r.plan(from, Vector3(0, 0, 10)), "a road joins it to a far goal at stage 5")
+	assert_eq(r.points[0], Vector3(1200, 0, 0), "from the nearest node the stage may leave")
+	assert_eq(BotRoute.nearest_leavable_node(WorldIndex.new(), from, 5), -1, "no roads: no node")
 
 
 func test_a_near_goal_on_an_open_road_takes_no_road() -> void:

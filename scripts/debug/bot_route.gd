@@ -81,14 +81,19 @@ func _init(p_index: WorldIndex = null, p_level: Node = null) -> void:
 
 # --------------------------------------------------------------------------- the road graph
 
-## A* over the road edges a giant of `stage` may use, from the node nearest `from` to the node
-## nearest `to`: {"nodes": PackedInt32Array (both ends), "edges": PackedInt32Array (one per step),
-## "length": float}; empty arrays when either end has no node or no allowed path joins them.
+## A* over the road edges a giant of `stage` may use, from the node nearest `from` that the stage
+## may leave (one of its edges allowed) to the node nearest `to`: {"nodes": PackedInt32Array (both
+## ends), "edges": PackedInt32Array (one per step), "length": float}; empty arrays when either end has
+## no node or no allowed path joins them. The start skips nodes the stage may not leave: the giant
+## stands where it walked, and the nearest node there can be a stage-closed spur's (the Ballista
+## Ridge's east end at stage 5: its two nodes' only edges are stage-limited, so no road left it and
+## the bot walked toward the Standing Stones on the navmesh alone). The goal's end keeps the nearest
+## node: a goal only a closed edge reaches has no road at that stage (a diagnosis's world_blocked).
 static func road_path(idx: WorldIndex, from: Vector3, to: Vector3, p_stage: int) -> Dictionary:
 	var out := {"nodes": PackedInt32Array(), "edges": PackedInt32Array(), "length": 0.0}
 	if idx == null:
 		return out
-	var start := idx.nearest_road_node(from)
+	var start := nearest_leavable_node(idx, from, p_stage)
 	var target := idx.nearest_road_node(to)
 	if start < 0 or target < 0:
 		return out
@@ -141,6 +146,25 @@ static func road_path(idx: WorldIndex, from: Vector3, to: Vector3, p_stage: int)
 ## node -> [[neighbour, edge], ...] of an index (cached on the index's own table).
 static func _adjacency(idx: WorldIndex) -> Dictionary:
 	return idx._adjacency_table()
+
+
+## The road node nearest `pos` on the ground plane with an edge a giant of `p_stage` may use; the
+## nearest node of all when none has one (-1 when there are no roads).
+static func nearest_leavable_node(idx: WorldIndex, pos: Vector3, p_stage: int) -> int:
+	var nodes := idx.road_nodes()
+	var adj := _adjacency(idx)
+	var best := -1
+	var best_d := INF
+	for i in nodes.size():
+		var d := Vector2(nodes[i].x - pos.x, nodes[i].z - pos.z).length_squared()
+		if d >= best_d:
+			continue
+		for pair: Array in adj.get(i, []):
+			if idx.edge_allowed(int(pair[1]), p_stage):
+				best_d = d
+				best = i
+				break
+	return best if best >= 0 else idx.nearest_road_node(pos)
 
 
 ## True when road edge `e` of `idx` is walked in a straight line (direct = 1).
