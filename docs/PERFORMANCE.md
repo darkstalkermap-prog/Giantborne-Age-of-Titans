@@ -157,6 +157,18 @@ criterion NOT MET ...)", and `--json` keeps the recording's trace for `audio_che
 recorder's verdicts on a stub launcher (a border crossed in music; three slow frames; no border; no
 music).
 
+Since W23 (lane P39f) `tools/web/world_check.mjs` measures the world as a returning player meets it, on
+the release build: a world save (`tools/web/world_check.json`'s fixture, a save the world bot wrote)
+written into the page's IndexedDB, Continue from the title, a fast travel to the King's Road waystone
+(the world walk's `--walk-travel`), then a walk of at least 60 s of game time across region borders with
+the AI on. It reports what the stream check reports for its walk, and the Continue's and the travel's
+load times, the streaming hitches (frames whose streaming work passed the streamer's 4 ms budget) with
+the heaviest steps, and the engine's warnings apart from its errors (only `--strict` fails on warnings,
+as on the frame budget and on every music hole over 50 ms). A hole that runs to the recording's end with
+no driver read inside it is placed on the main thread too (the recorder's rule, for all three checks).
+`tools/web/test_world_check.mjs` tests its verdicts on a stub launcher; its runs are in
+`docs/systems/P39f.md` ("Part web").
+
 ### Graphics presets (`--graphics`, Settings, LevelRoot)
 
 The level record's `render` presets, applied by `LevelRoot` at load and on every change of the
