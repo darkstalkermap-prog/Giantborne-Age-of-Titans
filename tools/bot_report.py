@@ -572,7 +572,7 @@ def _lone_by_archetype(rows):
             arch, _, st = str(key).partition("/")
             tot, fled, states = out.get(arch, (0.0, 0.0, {}))
             states[st] = states.get(st, 0.0) + float(s)
-            out[arch] = (tot + float(s), fled + (float(s) if st in ("FLEE", "ROUTED") else 0.0), states)
+            out[arch] = (tot + float(s), fled + (float(s) if st.upper() in ("FLEE", "ROUTED") else 0.0), states)
     return out
 
 
