@@ -563,6 +563,29 @@ def _pooled(rows, num, den):
     return (n / d) if d > 0 else None
 
 
+def _lone_by_archetype(rows):
+    """P39: the lone humans' engaged seconds at stages 4-6 pooled by archetype (world.lone_states,
+    "<archetype>/<brain state>" -> s): {archetype: (engaged s, fled-or-routed s, {state: s})}."""
+    out = {}
+    for r in rows:
+        for key, s in (r["w"].get("lone_states") or {}).items():
+            arch, _, st = str(key).partition("/")
+            tot, fled, states = out.get(arch, (0.0, 0.0, {}))
+            states[st] = states.get(st, 0.0) + float(s)
+            out[arch] = (tot + float(s), fled + (float(s) if st in ("FLEE", "ROUTED") else 0.0), states)
+    return out
+
+
+def world_lone(rows):
+    """P39: what lone humans do at stages 4-6 when engaged (plan §5.14: single humans flee on sight;
+    archers keep range), pooled over the batch by archetype and brain state."""
+    out = ["| Archetype | Engaged (s) | Fled or routed | States (share of its engaged time) |", "| --- | --- | --- | --- |"]
+    for arch, (tot, fled, states) in sorted(_lone_by_archetype(rows).items(), key=lambda kv: -kv[1][0]):
+        out.append("| %s | %.0f | %s | %s |" % (arch or "-", tot, _pct(fled / tot if tot else None),
+                   ", ".join("%s %s" % (st, _pct(v / tot)) for st, v in sorted(states.items(), key=lambda kv: -kv[1])[:6])))
+    return "\n".join(out)
+
+
 def _lock_share(rows):
     f = [r["w"].get("formations", {}) for r in rows]
     group = sum(int(x.get("group_lock_samples", 0)) + int(x.get("banner_lock_samples", 0)) for x in f)
@@ -701,7 +724,12 @@ def world_targets(rows):
     row("Deaths: at most 2 in any other segment (novice)", "max %d%s" % (worst_other, (" (" + where + ")") if where else ""),
         worst_other <= 2 if novice else None)
     v = _pooled(allr, "lone_fled_s", "lone_engaged_s")
-    row("Lone humans flee or rout >= 70 % of their engaged time, stages 4-6 (pooled)", _pct(v), (v >= 0.7) if v is not None else None)
+    by = _lone_by_archetype(allr)
+    melee = [by[a] for a in by if a not in ("archer", "mage")]
+    mt, mf = sum(x[0] for x in melee), sum(x[1] for x in melee)
+    row("Lone humans flee or rout >= 70 % of their engaged time, stages 4-6 (pooled)",
+        "%s (melee only, archers and mages left out as §5.14 keeps them at range: %s of %.0f s)" % (
+            _pct(v), _pct(mf / mt if mt else None), mt) if by else _pct(v), (v >= 0.7) if v is not None else None)
     v = _pooled(allr, "formation_held_s", "formation_engaged_s")
     row("Formations hold or brace >= 50 % of their engaged time while the banner lives (pooled)", _pct(v), (v >= 0.5) if v is not None else None)
     v = _lock_share(allr)
@@ -742,7 +770,7 @@ WORLD_SECTIONS = {"world_summary": world_summary, "world_runs": world_runs, "wor
                   "world_outcomes": world_outcomes, "world_bosses": world_bosses, "world_travel": world_travel,
                   "world_streaming": world_streaming, "world_formations": world_formations, "world_siege": world_siege,
                   "world_music": world_music, "world_deaths": world_deaths, "world_stuck": world_stuck,
-                  "world_growth": world_growth, "world_targets": world_targets}
+                  "world_growth": world_growth, "world_lone": world_lone, "world_targets": world_targets}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
