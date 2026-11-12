@@ -100,6 +100,21 @@ const BRAZIER_BURN_M := 7.5
 ## The drive-out: until the den's flags hold (nests burned, wall open) she is struck only while her
 ## health is above this share - killed before they hold, she would be slain, not driven out.
 const DRIVE_HOLD_FRAC := 0.35
+## P39 (F37: the den's fire "used as designed, a human-like policy"): with no brazier within BRAZIER_BURN_M
+## of the Matriarch, the giant draws her to the standing brazier nearest her - it stands LURE_BEYOND_M past
+## it on the far side from her, so that she follows it into the brazier's reach and the rule above breaks
+## it (8 s of Burning: no regeneration) - while she does not burn and stands under LURE_BELOW_FRAC of her
+## health. It walks there (LURE_WALK_S at most), then waits LURE_WAIT_S for her, fighting her only while she
+## is within its reach; a brazier she did not come to is left for LURE_IGNORE_S. P38's rule broke a brazier
+## only when she happened to stand beside one: the conqueror experts' 745 s in the den never brought her to
+## her phase 2.
+const LURE_BEYOND_M := 4.0
+const LURE_ARRIVE_M := 2.5
+const LURE_BELOW_FRAC := 0.9
+const LURE_WALK_S := 20.0
+const LURE_WAIT_S := 12.0
+const LURE_IGNORE_S := 45.0
+const DEN_BRAZIERS := ["world.greywood.den_brazier_1", "world.greywood.den_brazier_2", "world.greywood.den_brazier_3"]
 ## --bot-explore: each oath's region, and how long one POI is tried before it is given up.
 const OATH_REGIONS := {"march": "region.crownmarch", "wood": "region.greywood", "crown": "region.aldmere"}
 const EXPLORE_GIVE_UP_S := 120.0
@@ -230,6 +245,7 @@ var _siege_grab_tick := -1000
 ## P39: where each member above reach is shot from - entity id -> {"spot": the chosen ground (INF:
 ## none clear), "at": the member's position then, "tick": when chosen, "bad": the spots given up}.
 var _shot_spots: Dictionary = {}
+var _lure: Dictionary = {}             ## P39: brazier world id -> {"walk": tick, "at": tick, "until": tick}
 
 
 # --------------------------------------------------------------------------- configuration
@@ -2200,8 +2216,78 @@ func _act_matriarch(tick: int, defending: bool) -> void:
 		task["target"] = brazier
 		_act_break(tick, defending)
 		return
+	if _act_lure(tick, m):
+		return
 	mode = "combat"
 	combat.fight(tick, m)
+
+
+## P39: the brazier to draw the Matriarch to and where the giant stands for it ({"id", "spot"}), or {}:
+## none while she burns or stands above LURE_BELOW_FRAC of her health, nor a brazier left for now.
+func _lure_spot(tick: int, m: EnemyActor) -> Dictionary:
+	if m == null or not is_instance_valid(m) or m.entity == null or not m.entity.is_alive():
+		return {}
+	if (m.has_method("p34_regen_blocked") and bool(m.call("p34_regen_blocked"))) \
+			or m.entity.combatant.pools.ratio("health") > LURE_BELOW_FRAC:
+		return {}
+	var best: BreakableProp = null
+	var best_d := INF
+	for id: String in DEN_BRAZIERS:
+		if WorldState.is_destroyed(id) or int((_lure.get(id, {}) as Dictionary).get("until", -1)) > tick:
+			continue
+		var b := _world_node(id) as BreakableProp
+		if b == null or b.destroyed:
+			continue
+		var d := _flat_dist(b.global_position, m.global_position)
+		if d < best_d:
+			best = b
+			best_d = d
+	if best == null:
+		return {}
+	var away := _flat(best.global_position - m.global_position)
+	if away.length_squared() < 0.01:
+		return {}   # she stands on it: the break rule's
+	var spot := best.global_position + away.normalized() * LURE_BEYOND_M
+	spot.y = player.global_position.y
+	return {"id": str(best.world_id), "spot": spot}
+
+
+## P39: one tick of drawing the Matriarch to a brazier (LURE_* above). True while it does.
+func _act_lure(tick: int, m: EnemyActor) -> bool:
+	var lure := _lure_spot(tick, m)
+	if lure.is_empty():
+		return false
+	var id := str(lure.id)
+	var spot: Vector3 = lure.spot
+	var st: Dictionary = _lure.get(id, {})
+	var reach := float(player.profile.get("melee_reach_m", 3.5))
+	var her := _flat_dist(m.global_position, player.global_position)
+	mode = "combat"
+	if _flat_dist(spot, player.global_position) > LURE_ARRIVE_M:
+		st.erase("at")
+		if not st.has("walk"):
+			st["walk"] = tick
+		elif tick - int(st.walk) > ActionDef.seconds_to_ticks(LURE_WALK_S):
+			_lure[id] = {"until": tick + ActionDef.seconds_to_ticks(LURE_IGNORE_S)}
+			if run != null:
+				run.metrics.note(tick, "lure: %s not reached in %.0f s" % [id, LURE_WALK_S])
+			return false
+		_lure[id] = st
+		steer_toward(spot, her > reach)
+		return true
+	if not st.has("at"):
+		st["at"] = tick
+	elif tick - int(st.at) > ActionDef.seconds_to_ticks(LURE_WAIT_S):
+		_lure[id] = {"until": tick + ActionDef.seconds_to_ticks(LURE_IGNORE_S)}
+		if run != null:
+			run.metrics.note(tick, "lure: the Matriarch did not come to %s in %.0f s" % [id, LURE_WAIT_S])
+		return false
+	_lure[id] = st
+	if her <= reach + 2.0:
+		combat.fight(tick, m)
+	else:
+		stop_moving()
+	return true
 
 
 func _act_drive(tick: int, defending: bool, m: EnemyActor) -> void:

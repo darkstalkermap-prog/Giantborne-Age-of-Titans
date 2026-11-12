@@ -20,6 +20,8 @@ const BALLISTA := "res://scenes/world/siege_ballista.tscn"
 const CREW := "res://scenes/enemies/siege_crew.tscn"
 const ARCHER := "res://scenes/enemies/archer.tscn"
 const TROLL := "res://scenes/enemies/troll.tscn"
+const MATRIARCH := "res://scenes/enemies/troll_matriarch.tscn"
+const CRATE := "res://scenes/world/crate.tscn"
 
 var f: Formation
 var p: GiantPlayer
@@ -511,3 +513,54 @@ func test_every_slotted_ability_takes_its_turn_from_stage_4() -> void:
 			assert_true(c._abilities(Sim.tick, soldier, soldier.global_position.distance_to(p.global_position)), "an area blow at two")
 			assert_eq(str(c._ability_log[-1][1]), sweep, "Sweeping Blow's turn: Titan Stomp was used last")
 
+
+
+
+## A stand-in for one of the den's braziers (the lure reads only its world id, place and state).
+func _brazier(id: String, pos: Vector3) -> BreakableProp:
+	var b := (load(CRATE) as PackedScene).instantiate() as BreakableProp
+	b.world_id = id
+	b.position = pos
+	world.add_child(b)
+	return b
+
+
+## The den slain: with no brazier within BRAZIER_BURN_M of the Matriarch, the giant draws her to the one
+## nearest her - it stands LURE_BEYOND_M past it on her far side - while she does not burn and stands under
+## LURE_BELOW_FRAC of her health; at the spot it waits for her, and a brazier she does not come to is left
+## for LURE_IGNORE_S (P39: F37 asks for the fire used as designed; P38's rule broke a brazier only when she
+## happened to stand beside one).
+func test_the_giant_draws_the_matriarch_to_a_brazier() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	var m := TestSpawn.enemy(world, MATRIARCH, Vector3(0, 0.05, -30), "world.greywood.troll_matriarch", false, 0.0)
+	var b1 := _brazier(WorldBot.DEN_BRAZIERS[0], Vector3(10, 0.05, -20))
+	var b2 := _brazier(WorldBot.DEN_BRAZIERS[1], Vector3(-25, 0.05, -45))
+	await step_ticks(2)
+	_bot()
+	var pools := m.entity.combatant.pools
+	assert_true(bot._lure_spot(Sim.tick, m).is_empty(), "at full health she is not drawn")
+	pools.health = pools.health_max * 0.7
+	var lure: Dictionary = bot._lure_spot(Sim.tick, m)
+	assert_eq(str(lure.get("id", "")), WorldBot.DEN_BRAZIERS[0], "to the brazier nearest her")
+	var spot: Vector3 = lure.spot
+	assert_near(WorldBot._flat_dist(spot, b1.global_position), WorldBot.LURE_BEYOND_M, 0.01, "the giant stands past it")
+	assert_true(WorldBot._flat_dist(spot, m.global_position) > WorldBot._flat_dist(b1.global_position, m.global_position) + 3.0,
+		"on the far side from her")
+	# at the spot the giant waits for her (she is out of its reach: it does not walk to her)
+	p.global_position = Vector3(spot.x, 0.05, spot.z)
+	await step_ticks(2)
+	var start := Sim.tick
+	while Sim.tick - start <= ActionDef.seconds_to_ticks(WorldBot.LURE_WAIT_S) + 2:
+		assert_true(bot._act_lure(Sim.tick, m) or Sim.tick - start > ActionDef.seconds_to_ticks(WorldBot.LURE_WAIT_S),
+			"it waits there for her")
+		await step_ticks(1)
+	assert_true(WorldBot._flat_dist(p.global_position, spot) < WorldBot.LURE_ARRIVE_M + 0.5, "without leaving the spot")
+	assert_true(int(bot._lure[WorldBot.DEN_BRAZIERS[0]].until) > Sim.tick, "she did not come: that brazier is left for now")
+	assert_eq(str(bot._lure_spot(Sim.tick, m).get("id", "")), WorldBot.DEN_BRAZIERS[1], "the next one nearest her")
+	b2.destroyed = true
+	assert_true(bot._lure_spot(Sim.tick, m).is_empty(), "no standing brazier left: no lure")
+	b2.destroyed = false
+	m.p34_ignite(8.0, "")
+	await step_ticks(1)
+	assert_true(bool(m.call("p34_regen_blocked")), "she burns")
+	assert_true(bot._lure_spot(Sim.tick, m).is_empty(), "while she burns she is fought, not drawn")
