@@ -307,14 +307,16 @@ func ring_ready(pos: Vector3) -> bool:
 
 
 ## Loads, unloads, thrash, the steps run, the loaded count (now and at most), the queue and the
-## work per frame that did work (ms: p50, p99, max).
+## work per frame that did work (ms: p50, p99, max; P39f: "over_budget", the frames whose work outran
+## budget_ms - the streaming hitches tools/web/world_check.mjs reports).
 func stats() -> Dictionary:
 	var sorted := _work_us.duplicate()
 	sorted.sort()
 	var n := sorted.size()
+	var over := n - sorted.bsearch(int(budget_ms * 1000.0), false) if n > 0 else 0
 	return {"loads": loads, "unloads": unloads, "thrash": thrash, "steps": steps, "aborted": aborted_loads,
 		"loaded": loaded_chunks().size(), "max_loaded": max_loaded, "queue": _queue.size(),
-		"loading": loading_chunk(), "work_frames": n,
+		"loading": loading_chunk(), "work_frames": n, "budget_ms": budget_ms, "over_budget": over,
 		"work_ms_p50": snappedf(sorted[int(n * 0.5)] / 1000.0, 0.001) if n > 0 else 0.0,
 		"work_ms_p99": snappedf(sorted[int((n - 1) * 0.99)] / 1000.0, 0.001) if n > 0 else 0.0,
 		"work_ms_max": snappedf(sorted[n - 1] / 1000.0, 0.001) if n > 0 else 0.0,
