@@ -4,7 +4,7 @@
 	"type": "enemy",
 	"archetype": "troll",
 	"display_name": "The Troll Matriarch",
-	"description": "P34 (plan M6-M9 section 5.13): the Troll Matriarch of the Troll Den - 9 m, 3,200 health, poise 220 (x3.5 in recovery), armour 25, regenerating 25 hp/s (40 in phase 2) unless Burning. Phase 1: the club sweep (140 degree cone), the stomp (7 m circle, unblockable) and the whelp throw (a whelp hurled as a thrown body along an aim line). Phase 2 (at 50 %): a 1.5 s roar that calls three whelps, the two-sweep frenzy. A brazier broken within 8 m of her sets her Burning for 8 s; a burning whelp or troll thrown at her sets her Burning for 10 s and deals 300 fire damage. Never grabbable (Grab immunity; 9 m is more than half of a stage-5 giant). The drive-out ending: once the den's nests are burned and its back wall is open (the flags below), at 60 % she flees through the wall (boss.matriarch.outcome fled, boss_disengaged fled).",
+	"description": "P34 (plan M6-M9 section 5.13): the Troll Matriarch of the Troll Den - 9 m, 3,200 health, poise 220 (x3.5 in recovery), armour 25, regenerating 15 hp/s (25 in phase 2) unless Burning (P39, M9 balance: 25 / 40 -> 15 / 25). Phase 1: the club sweep (140 degree cone), the stomp (7 m circle, unblockable) and the whelp throw (a whelp hurled as a thrown body along an aim line). Phase 2 (at 50 %): a 1.5 s roar that calls two whelps (P39: three -> two), the two-sweep frenzy. A brazier broken within 8 m of her sets her Burning for 8 s; a burning whelp or troll thrown at her sets her Burning for 10 s and deals 300 fire damage. Never grabbable (Grab immunity; 9 m is more than half of a stage-5 giant). The drive-out ending: once the den's nests are burned and its back wall is open (the flags below), at 60 % she flees through the wall (boss.matriarch.outcome fled, boss_disengaged fled).",
 	"scene": "res://scenes/enemies/troll_matriarch.tscn",
 	"render_lod_m": 0,
 	"height_m": 9.0,
@@ -25,7 +25,7 @@
 	"attack_origin_m": [0.0, 6.4, 0.0],
 	"arm_length_m": 2.9,
 	"attacks": ["ability.matriarch_sweep", "ability.matriarch_stomp", "ability.troll_throw_whelp", "ability.matriarch_frenzy_1", "ability.matriarch_frenzy_2"],
-	"boss": {"phases": [{"id": "phase_1", "health_frac_below": 1.0, "attacks": ["ability.matriarch_sweep", "ability.matriarch_stomp", "ability.troll_throw_whelp"], "sequence": ["ability.matriarch_sweep", "ability.troll_throw_whelp", "ability.matriarch_stomp"]}, {"id": "phase_2", "health_frac_below": 0.5, "attacks": ["ability.matriarch_frenzy_1", "ability.matriarch_stomp", "ability.troll_throw_whelp", "ability.matriarch_sweep"], "sequence": ["ability.matriarch_frenzy_1", "ability.matriarch_stomp", "ability.troll_throw_whelp", "ability.matriarch_frenzy_1", "ability.matriarch_sweep"], "enter_action": "ability.matriarch_roar", "summon": 3}]},
+	"boss": {"phases": [{"id": "phase_1", "health_frac_below": 1.0, "attacks": ["ability.matriarch_sweep", "ability.matriarch_stomp", "ability.troll_throw_whelp"], "sequence": ["ability.matriarch_sweep", "ability.troll_throw_whelp", "ability.matriarch_stomp"]}, {"id": "phase_2", "health_frac_below": 0.5, "attacks": ["ability.matriarch_frenzy_1", "ability.matriarch_stomp", "ability.troll_throw_whelp", "ability.matriarch_sweep"], "sequence": ["ability.matriarch_frenzy_1", "ability.matriarch_stomp", "ability.troll_throw_whelp", "ability.matriarch_frenzy_1", "ability.matriarch_sweep"], "enter_action": "ability.matriarch_roar", "summon": 2}]},
 	"ai": {
 		"sight_range_m": 40,
 		"sight_half_angle_deg": 80,
@@ -50,8 +50,8 @@
 	"status_immunities": ["Fear"],
 	"regeneration": {
 		"status": "status.troll_regen",
-		"hp_per_s": 25,
-		"phase_hp_per_s": {"2": 40},
+		"hp_per_s": 15,
+		"phase_hp_per_s": {"2": 25},
 		"interval_s": 1.0,
 		"blocked_by_tags": ["Burning"],
 		"brazier_radius_m": 8.0,

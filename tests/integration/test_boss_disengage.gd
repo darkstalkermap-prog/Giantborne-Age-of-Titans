@@ -61,7 +61,9 @@ func test_leaving_resets_the_boss_and_returning_starts_a_new_attempt() -> void:
 	pools.health = pools.health_max * 0.45
 	await step_ticks(1)
 	assert_eq(m.attempt_phases, [2] as Array[int], "phase 2 in attempt 1")
-	assert_eq(m.summoned.size(), 3, "three whelps called")
+	var summon := int(GameData.get_record("enemy.troll_matriarch").boss.phases[1].summon)
+	assert_true(summon >= 1, "phase 2 calls whelps")
+	assert_eq(m.summoned.size(), summon, "the record's whelps called (P39's balance pass: two, was three)")
 	var called := m.summoned.duplicate()
 	# Out to 45 m (inside radius + 20 m = 50 m): nothing happens.
 	p.global_position = Vector3(0, 0.05, 45)
