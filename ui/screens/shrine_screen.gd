@@ -17,6 +17,10 @@ extends UiScreen
 ## pushed Leave below a 720 px window, under the stack's footer hint). With the passives line capped
 ## (talents_tab.gd) the tallest tab stays inside 1280 x 720 and above the footer hint at any level
 ## (test_shrine_panel_fit).
+##
+## P39f (FOLLOWUPS: "the shrine's tab row does not show the open tab"): the open tab's button is marked
+## (UiKit.set_tab_open: a lit box, a gold underline and title; the others muted), whichever way the tab
+## opened - a click, Enter on the focused tab, LB / RB, a tab's own call.
 
 ## The panel's size before a tab needs more, and how far its centre sits above the screen's: the
 ## stack's footer hint takes the bottom 30 px (ScreenStack).
@@ -156,6 +160,8 @@ func show_tab(index: int) -> void:
 	_current = index
 	for i in tabs.size():
 		tabs[i].visible = i == index
+		if i < _buttons.size():
+			UiKit.set_tab_open(_buttons[i], i == index)
 	tabs[index].refresh()
 	if is_inside_tree():
 		refresh_focus()

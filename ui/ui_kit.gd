@@ -73,3 +73,47 @@ static func button(text: String, size := 18) -> Button:
 	b.add_theme_font_size_override("font_size", size)
 	b.focus_mode = Control.FOCUS_ALL
 	return b
+
+
+## P39f: the colour of an open tab's title and underline.
+const TAB_OPEN := Color(1.0, 0.84, 0.45)
+const TAB_OPEN_BG := Color(0.20, 0.22, 0.26, 1.0)
+const TAB_UNDERLINE_PX := 3
+
+
+## P39f (FOLLOWUPS: "the shrine's tab row does not show the open tab"): marks a tab button open or not. The open
+## tab stands on a lit box with a gold underline and a gold title; the others keep the plain button with a muted
+## title (white when hovered). The focus outline stays the theme's, so the focus and the open tab read apart.
+static func set_tab_open(b: Button, open: bool) -> void:
+	b.set_meta("tab_open", open)
+	var title := TAB_OPEN if open else MUTED
+	for c: String in ["font_color", "font_focus_color", "font_pressed_color"]:
+		b.add_theme_color_override(c, title)
+	for c: String in ["font_hover_color", "font_hover_pressed_color"]:
+		b.add_theme_color_override(c, TAB_OPEN if open else TEXT)
+	for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
+		if open:
+			b.add_theme_stylebox_override(st, open_tab_box())
+		else:
+			b.remove_theme_stylebox_override(st)
+
+
+## True for a tab button set_tab_open() marked open.
+static func is_tab_open(b: Button) -> bool:
+	return b != null and bool(b.get_meta("tab_open", false))
+
+
+## The open tab's box: TAB_OPEN_BG with a TAB_UNDERLINE_PX gold underline, with the theme button's content
+## margins (an open tab is as big as a closed one: the row does not move when the tab changes).
+static func open_tab_box() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = TAB_OPEN_BG
+	sb.border_color = TAB_OPEN
+	sb.border_width_bottom = TAB_UNDERLINE_PX
+	sb.set_corner_radius_all(3)
+	sb.corner_radius_bottom_left = 0
+	sb.corner_radius_bottom_right = 0
+	var base := ThemeDB.get_default_theme().get_stylebox("normal", "Button")
+	for side: int in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		sb.set_content_margin(side, base.get_content_margin(side) if base != null else 4.0)
+	return sb

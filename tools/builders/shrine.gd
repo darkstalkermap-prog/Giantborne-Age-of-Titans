@@ -7,11 +7,26 @@ extends RefCounted
 ##
 ## The shrine faces -Z: the pad is at local (0, 0, -6.5) and the SpawnPoint faces away from
 ## the stone. A level places it with world_id and shrine_id set on the instance.
+##
+## P39f (FOLLOWUPS: "the Kingsgate shrine's floating name is too small to read"): the name above the stone
+## (Visual/Name, a Label3D the Shrine fills with its record's name) keeps one size on screen whatever the
+## distance (fixed_size): NAME_EM_PX tall at the default 75 degree field of view on a 720 px screen, where the
+## shared sign was a 0.38 m world-space text that shrank to about 6 px from where fast travel and a stage-3
+## camera put the giant; it shows from NAME_NEAR_M (not over the camera) to NAME_FAR_M - farther than a
+## stage-6 camera stands from the pad - and floats NAME_HEIGHT_M up, clear of the cap.
 
 const S_SHRINE := "res://scripts/world/shrine.gd"
 const S_MARKER := "res://scripts/world/checkpoint_marker.gd"
 const PATH := "res://scenes/world/shrine.tscn"
 const PAD_Z := -6.5
+## P39f: the name's size on screen (px of the em at 75 degrees and 720 px), its range and its height.
+const NAME_EM_PX := 24.0
+const NAME_FONT_SIZE := 64
+const NAME_NEAR_M := 7.0
+const NAME_FAR_M := 90.0
+const NAME_HEIGHT_M := 5.8
+const REFERENCE_FOV_DEG := 75.0
+const REFERENCE_VIEW_PX := 720.0
 
 
 static func build_all(kit: SceneKit) -> void:
@@ -20,6 +35,12 @@ static func build_all(kit: SceneKit) -> void:
 	var shrine := build_shrine(kit)
 	kit.merge_meshes(shrine as Node3D, PackedStringArray(["Glow"]), PackedStringArray(["scenery"]))
 	kit.save(shrine, PATH)
+
+
+## P39f: the name's pixel_size for NAME_EM_PX on screen: a fixed-size label is drawn as if one unit from the
+## camera, where the view's height spans 2 tan(fov / 2) units.
+static func name_pixel_size() -> float:
+	return NAME_EM_PX * 2.0 * tan(deg_to_rad(REFERENCE_FOV_DEG) * 0.5) / (NAME_FONT_SIZE * REFERENCE_VIEW_PX)
 
 
 static func _materials(kit: SceneKit) -> void:
@@ -56,8 +77,14 @@ static func build_shrine(kit: SceneKit) -> Node:
 	var glow := kit.box("Glow", Vector3(0.56, 1.9, 0.08), Vector3(0, 2.5, -0.53), "shrine_glow")
 	glow.visible = false
 	visual.add_child(glow)
-	var name_label := kit.sign("SHRINE", Vector3(0, 5.3, 0))
+	var name_label := kit.sign("SHRINE", Vector3(0, NAME_HEIGHT_M, 0))
 	name_label.name = "Name"
+	# P39f: one size on screen at any distance (see the notes above)
+	name_label.fixed_size = true
+	name_label.font_size = NAME_FONT_SIZE
+	name_label.pixel_size = name_pixel_size()
+	name_label.visibility_range_begin = NAME_NEAR_M
+	name_label.visibility_range_end = NAME_FAR_M
 	visual.add_child(name_label)
 	root.add_child(visual)
 	var pad := kit.marker("GrowthPad", Vector3(0, 0, PAD_Z))
