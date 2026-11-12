@@ -674,12 +674,15 @@ def world_targets(rows):
     def row(name, value, met):
         out.append("| %s | %s | %s |" % (name, value, "met" if met is True else ("**miss**" if met is False else "-")))
 
-    parts, ok = [], True
+    # P39: judged on the seeds run - two completed meet "2 of 3" whatever a third seed does, two failed
+    # miss it; one of two is open (the plan lets the novice drop to seeds 1-2 when wall time is short).
+    parts, verdicts = [], []
     for p in presets:
         rs = cell("novice", p)
         done = sum(1 for r in rs if r["completed"])
         parts.append("%s %d / %d" % (p, done, len(rs)))
-        ok = ok and len(rs) > 0 and done * 3 >= 2 * len(rs)
+        verdicts.append(True if done >= 2 else (False if len(rs) - done >= 2 or not rs else None))
+    ok = False if False in verdicts else (True if all(v is True for v in verdicts) else None)
     row("Completion, novice: at least 2 of 3 seeds per preset", ", ".join(parts), ok if novice else None)
     parts, ok = [], True
     for p in presets:
