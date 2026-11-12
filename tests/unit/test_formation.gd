@@ -201,6 +201,26 @@ func test_cross_record_errors_check_banner_roles_and_the_caps_of_every_cluster()
 		if e.contains("max_formation_members 40"):
 			desktop_over += 1
 	assert_eq(desktop_over, 6, "both encounters see 45 at stages 4-6 (%s)" % [errors])
+	# W23 (P39f; FOLLOWUPS "From P37"): a template drawn up 100 m away is a cluster of its own - its copies come
+	# where the WanderDirector places them, within the live caps - but must still fit the caps by itself
+	small["template"] = true
+	assert_eq(FormationRules.cross_record_errors(records).size(), 0, "a template 100 m away joins no placed cluster")
+	var lone: Array = []
+	for i in 45:
+		lone.append(_spawn("t%d" % i, "small", i))
+	small["spawns"] = lone
+	(small.formations[0] as Dictionary)["ranks"] = 5
+	(small.formations[0] as Dictionary)["files"] = 9
+	errors = FormationRules.cross_record_errors(records)
+	desktop_over = 0
+	for e in errors:
+		if e.contains("max_formation_members 40"):
+			desktop_over += 1
+	assert_eq(desktop_over, 3, "a template of 45 alone is over the desktop's 40 at stages 4-6 (%s)" % [errors])
+	small.erase("template")
+	small["spawns"] = spawns2
+	(small.formations[0] as Dictionary)["ranks"] = 3
+	(small.formations[0] as Dictionary)["files"] = 5
 	small["center_m"] = [160, 0, 0]
 	assert_eq(FormationRules.cross_record_errors(records).size(), 0, "160 m away it is another cluster")
 	# a banner of the wrong role, and a banner standing in a rank

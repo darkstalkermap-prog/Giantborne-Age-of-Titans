@@ -112,3 +112,20 @@ func test_a_respawn_at_brannock_moves_away_while_its_guards_are_hostile() -> voi
 		WorldState.record_killed(id)
 	assert_eq(FactionState.respawn_refusal(BRANNOCK_CP), "", "with its guards dead the town no longer refuses")
 	GameSession.unregister_respawn_blocker(blocker)
+
+
+## W23 (P39f; FOLLOWUPS "From P37"): a template's spawns are no members of its faction - it is never placed where
+## its record draws it up (its copies stand where the WanderDirector puts them, never by a checkpoint) - so one drawn
+## up by Brannock's waystone neither counts among its guards nor refuses a respawn there.
+func test_a_template_drawn_up_by_a_checkpoint_is_no_guard() -> void:
+	var at := WorldXp.position_of(BRANNOCK_CP)
+	TestFixtures.record_override("encounter.test_tpl_brannock_militia", {"type": "encounter", "level": WORLD, "template": true,
+		"center_m": [at.x, at.y, at.z], "spawns": [{"entity_id": "world.test.tpl_militia_1", "definition": "enemy.soldier",
+			"position_m": [at.x + 5.0, at.y, at.z], "faction": "brannock"}]})
+	WorldState.set_flag(FactionState.flag_id("brannock", "hostile"), true)
+	var near := FactionState.armed_members_near(WORLD, "brannock", at, 120.0)
+	assert_false(near.has("world.test.tpl_militia_1"), "a template's spawn is no guard (%s)" % [near])
+	assert_eq(near.size(), 6, "the south gate's six guards and archers as before")
+	for id: String in near:
+		WorldState.record_killed(id)
+	assert_eq(FactionState.respawn_refusal(BRANNOCK_CP), "", "with the guards dead the template drawn up there refuses nothing")

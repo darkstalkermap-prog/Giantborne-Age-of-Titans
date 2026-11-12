@@ -192,6 +192,10 @@ static func _leash_errors(enc: Dictionary, by_id: Dictionary, ctx: String) -> Pa
 ## it - those that form at the giant's stage, for every stage 1..STAGES - fit the level's
 ## max_formation_members on the desktop and its web_overrides' value on the web (each formation's
 ## web composition: web_kept_slots at its encounter's web_formation_scale).
+## W23 (P39f; FOLLOWUPS "From P37"): a template (`template: true`) stands nowhere its record draws it up - its
+## copies come where the WanderDirector places them, and the director admits a copy only while the live caps
+## hold all of it - so it joins no placed encounter's cluster and its own cluster is itself alone (a template
+## still has to fit the caps by itself).
 static func cross_record_errors(records: Dictionary, record_paths: Dictionary = {}) -> PackedStringArray:
 	var errors := PackedStringArray()
 	var by_level := {}   # level id -> Array of encounter records with formations
@@ -223,6 +227,8 @@ static func cross_record_errors(records: Dictionary, record_paths: Dictionary = 
 				for other: Dictionary in encs:
 					if _center(other).distance_to(center) > CLUSTER_M:
 						continue
+					if other != enc and (bool(enc.get("template", false)) or bool(other.get("template", false))):
+						continue   # W23 (P39f): a template is a cluster of its own (see above)
 					var counts := member_counts(other, stage)
 					if counts[0] > 0:
 						near.append(str(other.id))
