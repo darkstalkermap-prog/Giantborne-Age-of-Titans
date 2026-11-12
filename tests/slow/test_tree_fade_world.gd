@@ -14,7 +14,10 @@ extends IntegrationSuite
 ## down 18 degrees, the stage's camera distance) and at the stage's zoom limits, and in the Valley at
 ## stage 1:
 ##   * the Hollowmere waystone on arrival: a pine 9-11 m from the camera stood in front of half of him
-##     (6 of 12 lines at 15.5 m, 5 at 12 m, 6 at 20.5 m);
+##     (6 of 12 lines at 15.5 m, 5 at 12 m, 6 at 20.5 m). W23 (P39f): that pine stood in the waystone's
+##     clearing, where the world builder's no-scenery grid never took its marks; since the grid's fix and
+##     the world's rebuild no tree stands in his lines there at any zoom (the fade's work is checked at the
+##     den, the pack and in the Valley);
 ##   * the way into the Matriarch's den, beside a pine (he stands in its lowest crown): all 12 lines,
 ##     at every zoom; and with the Troll Matriarch locked (the director wakes her den), the lines to
 ##     her;
@@ -132,7 +135,8 @@ func test_trees_do_not_hide_the_giant_arriving_at_hollowmere_at_stage_4() -> voi
 		assert_true(sm != null and sm.shader != null and sm.shader.resource_path == TreeSight.FADE_SHADER,
 			"%s is drawn with the scenery fade shader" % tr.key)
 	var most := await _check_giant(p, "Hollowmere")
-	assert_true(most >= 4, "a pine stands between the camera and the giant there (%d lines meet one)" % most)
+	# W23 (P39f): the waystone's clearing is kept clear now (it held the pine of the screenshot: 4-6 lines).
+	assert_eq(most, 0, "the waystone's clearing keeps the pines out of the lines to the giant (%d lines meet one)" % most)
 
 
 func test_trees_do_not_hide_the_den_fight_or_the_locked_matriarch() -> void:
