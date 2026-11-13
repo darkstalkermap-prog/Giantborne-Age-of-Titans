@@ -440,7 +440,8 @@ The world processes print, after their `AUTOPILOT_RESULT`, Godot's exit report o
 ("ObjectDB instances leaked at exit", "N resources still in use at exit", Jolt shapes and dummy meshes):
 static caches (`EncounterDirector._scene_cache`, `WorldRoot._preloaded`) still hold their scenes at quit.
 They come after the run's own error count (0) and W22's smoke run printed them too; the other W23 lane's
-P38 hand-over reports them.
+P38 hand-over reports them. The table's 0 errors and 0 warnings are the run's own counter; the exit report is a
+separate open item (FOLLOWUPS, "From the M9 gate review (lane review)", owner P40; M9 gate, lane review).
 
 ### The world matrix (plan §6.4 item 1)
 
@@ -1298,12 +1299,14 @@ reported for P40 (FOLLOWUPS: the M8 release check's Iron Regiment row, annotated
 
 | Run | Result | Notes |
 | --- | --- | --- |
-| The world, 60 minutes (`--preset=world_stability`: the assisted novice, `--bot-loop` through the presets from `--mode=world --new-game`; `confirm_world_stability`) | **pass** | 3,600 s simulated in 2,305 s of wall, exit 0; two campaigns completed back to back (peaceful in about 1,480 s, conqueror in 1,430 s) and the third (mixed) at its grow6 stage at the end; 0 deaths in the hour; no breach, no `world_blocked`, no duplicated reward, no invariant failure (the lock and targeting invariant included); 3 loads at the Kingsgate shelf, 1,107 / 1,114 / 1,107 nodes (0.6 %), orphans 0; 0 errors, 0 warnings; the last campaign's 5 stuck moments all recovered by a sidestep and jump, no teleport; CPU per tick p95 6.93 ms |
-| The Valley, 30 minutes (`--preset=stability`; `confirm_valley_stability`) | **pass** | 1,800 s simulated in 998 s of wall, exit 0; three slices completed (help_cache 506.9 s, help_ogre 472.9 s, intimidate 489.7 s - lane P39's 507, 473 and 490 s) and the fourth (force) under way; 0 deaths; no breach, no duplicated reward, no invariant failure; 4 loads, 1,554 / 1,561 / 1,561 / 1,561 nodes (0.5 %), orphans 0; 0 errors, 0 warnings; 2 stuck moments (recovered), no teleport; CPU per tick p95 6.52 ms |
-| The campaign's hand-over (`w.campaign:novice:1:assist`: the Valley's New Game, the Kings' Door, the world; `confirm_campaign`) | **pass** | the Valley in 504 s (its seven segments), the march's meeting with Edda at 765 s, the Stone Throne at 1,972 s simulated (1,129 s of wall), campaign complete; exit 0, no breach, no invariant failure, 0 errors, 0 warnings, 0 deaths; its two loads are two levels (the Valley 1,554 nodes, the world 1,109) |
+| The world, 60 minutes (`--preset=world_stability`: the assisted novice, `--bot-loop` through the presets from `--mode=world --new-game`; `confirm_world_stability`) | **pass** | 3,600 s simulated in 2,305 s of wall, exit 0; two campaigns completed back to back (peaceful in about 1,480 s, conqueror in 1,430 s) and the third (mixed) at its grow6 stage at the end; 0 deaths in the hour; no breach, no `world_blocked`, no duplicated reward, no invariant failure (the lock and targeting invariant included); 3 loads at the Kingsgate shelf, 1,107 / 1,114 / 1,107 nodes (0.6 %), orphans 0; 0 errors, 0 warnings on the run's own counter (Godot's exit report after each completed campaign is a separate open item: FOLLOWUPS, "From the M9 gate review (lane review)", owner P40); the last campaign's 5 stuck moments all recovered by a sidestep and jump, no teleport; CPU per tick p95 6.93 ms |
+| The Valley, 30 minutes (`--preset=stability`; `confirm_valley_stability`) | **pass** | 1,800 s simulated in 998 s of wall, exit 0; three slices completed (help_cache 506.9 s, help_ogre 472.9 s, intimidate 489.7 s - lane P39's 507, 473 and 490 s) and the fourth (force) under way; 0 deaths; no breach, no duplicated reward, no invariant failure; 4 loads, 1,554 / 1,561 / 1,561 / 1,561 nodes (0.5 %), orphans 0; 0 errors, 0 warnings on the run's own counter; 2 stuck moments (recovered), no teleport; CPU per tick p95 6.52 ms |
+| The campaign's hand-over (`w.campaign:novice:1:assist`: the Valley's New Game, the Kings' Door, the world; `confirm_campaign`) | **pass** | the Valley in 504 s (its seven segments), the march's meeting with Edda at 765 s, the Stone Throne at 1,972 s simulated (1,129 s of wall), campaign complete; exit 0, no breach, no invariant failure, 0 errors, 0 warnings on the run's own counter (the exit report after the completed campaign a separate open item, as above), 0 deaths; its two loads are two levels (the Valley 1,554 nodes, the world 1,109) |
 
 As in lane P39's runs, each world process prints Godot's exit report of leaked resources after its `AUTOPILOT_RESULT`
-(static caches holding their scenes at quit): after the run's own error count (0), lane P39f's recorded item.
+(static caches holding their scenes at quit): after the run's own error count (0), lane P39f's recorded item. The 0 errors
+and 0 warnings of these §6.2 rows are the run's own counter; the process's exit report is a separate open item
+(FOLLOWUPS, "From the M9 gate review (lane review)", owner P40; M9 gate, lane review).
 
 ### The world matrix (`confirm_world`, 21 runs)
 
@@ -1513,9 +1516,9 @@ the new row on the garrison.
 
 | Target | Measured (the merged code) | Met | Why, where it misses (the row in `docs/plans/FOLLOWUPS.md`, "From the M9 confirmation", unless named) |
 | --- | --- | --- | --- |
-| §6.2 the world, 60 minutes: no crash, no `world_blocked`, no duplicated reward, no unrecoverable targeting state, no invariant failure, nodes after each load within 10 % of the first, 0 errors and warnings | all held (`confirm_world_stability`; nodes within 0.6 %) | met | |
+| §6.2 the world, 60 minutes: no crash, no `world_blocked`, no duplicated reward, no unrecoverable targeting state, no invariant failure, nodes after each load within 10 % of the first, 0 errors and warnings | all held (`confirm_world_stability`; nodes within 0.6 %; 0 errors and 0 warnings on the run's own counter) | met | Godot's exit report after each completed campaign is a separate open item (FOLLOWUPS, "From the M9 gate review (lane review)", owner P40) |
 | §6.2 the Valley, 30 minutes | all held (`confirm_valley_stability`; nodes within 0.5 %) | met | |
-| §6.2 the campaign's hand-over | the Valley's New Game to the Stone Throne, assisted (`confirm_campaign`) | met | |
+| §6.2 the campaign's hand-over | the Valley's New Game to the Stone Throne, assisted (`confirm_campaign`; 0 errors and 0 warnings on the run's own counter) | met | the exit report after the completed campaign: as above |
 | Completion: the novice at least 2 of 3 seeds per preset | peaceful 3 / 3, conqueror 0 / 3, mixed 2 / 3 | **miss** | the conqueror's slay of the Matriarch: six attempts on each seed, down to 9-14 % of her health - her phase 2 (frenzy, whelps) kills the novice as she nears the end (a narrow miss, as in lane P39's set) |
 | Completion: the expert 3 of 3, at most 2 deaths each | peaceful 2 / 3 (deaths 7, 5, 10), conqueror 0 / 3 (3, 8, 4), mixed 3 / 3 (7, 1, 6) | **miss** | the peaceful experts die to the toll fort's tower archers on the march's help; the expert's brazier lure no longer pays on the den the rebuild cleared; the mixed experts meet the Raiders' Hollow on the road and the war camp's riders |
 | Every first-oath order completes | the march first and the wood first yes, the crown first no (assisted too: P38's acceptance order, which completed on W22) | **miss** | the Iron Regiment at stage 4 (unassisted, the fort's ballistae: five deaths of six, the bar at 78 % at best; assisted, the Last Stand reached twice and lost to a rider and a ballista, the oath's time out) and the gate garrison in Fort Aldmere's gateway (two crown runs of three stopped on a stuck; the assisted run teleported out of it three times) |
