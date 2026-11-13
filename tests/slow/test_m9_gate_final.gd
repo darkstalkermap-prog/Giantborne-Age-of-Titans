@@ -21,6 +21,9 @@ extends IntegrationSuite
 ##     reload is hauled; freed, it turns and shoots. The gate test read only the battle's flag.
 ##   * The early audit's R4: the moved-respawn line writes a checkpoint name that begins with "The" mid-sentence
 ##     ("You wake at the Broken Stair."); its only test used the King's Road waystone, which the old code wrote right.
+##   * The early audit's A8: the two layout fixes of the M9 gate (the war camp's shield wall off the King's Road, the
+##     gate garrison's pikes off the line through Fort Aldmere's gate) were spawn placements that only the gate tier's
+##     world walks guarded; a static check of the records and the layout tables (no world loads) now runs with --slow.
 
 const RIVAL := "res://scenes/enemies/rival_giant.tscn"
 const CLANS := "encounter.stonehold_moot_clans"
@@ -386,3 +389,71 @@ func test_a_moved_respawn_names_the_broken_stair_lower_case_mid_sentence() -> vo
 	assert_eq(GameSession.last_load_message, expected, "mid-sentence: 'the Broken Stair', not 'The Broken Stair'")
 	assert_true(lines.has(expected), "the HUD's line too (%s)" % [lines])
 	FactionState.reset_for_tests()
+
+
+# --------------------------------------------------------------------------- A8: the posts off the giant's ways
+
+## Flat distance from `p` to the polyline `points` (Vector2s).
+static func _polyline_distance(p: Vector2, points: Array) -> float:
+	var best := INF
+	for i in range(points.size() - 1):
+		best = minf(best, p.distance_to(Geometry2D.get_closest_point_to_segment(p, points[i], points[i + 1])))
+	return best
+
+
+## The first dictionary with `id` in a layout table (any depth).
+static func _find_id(o: Variant, id: String) -> Dictionary:
+	if o is Dictionary:
+		if str((o as Dictionary).get("id", "")) == id:
+			return o
+		for v: Variant in (o as Dictionary).values():
+			var f := _find_id(v, id)
+			if not f.is_empty():
+				return f
+	elif o is Array:
+		for v: Variant in o:
+			var f := _find_id(v, id)
+			if not f.is_empty():
+				return f
+	return {}
+
+
+static func _xz(v: Variant) -> Vector2:
+	var a: Array = v
+	return Vector2(float(a[0]), float(a[a.size() - 1]))
+
+
+func test_the_camp_wall_and_the_gate_pikes_keep_off_the_giants_ways() -> void:
+	# The war camp's shield wall: off the King's Road's line (the road's own points and width, world.json) by 6 m more
+	# than its half width, so a stage-6 giant (3.7 m) walking the road's edge passes it.
+	var road := _find_id(WorldFeatures.load_json(WorldLayout.DATA_DIR.path_join("world.json")), "kings_road")
+	assert_false(road.is_empty(), "world.json has the King's Road")
+	var line: Array = []
+	for pt: Variant in road.get("points", []):
+		line.append(_xz(pt))
+	var half := float(road.get("width_m", 18.0)) * 0.5
+	var near := INF
+	for sp: Dictionary in GameData.get_record("encounter.aldmere_war_camp").get("spawns", []):
+		if str(sp.get("formation", "")) == "shields":
+			near = minf(near, _polyline_distance(_xz(sp.position_m), line))
+	print("    posts: the war camp's shield wall %.1f m from the King's Road's line (half width %.1f m)" % [near, half])
+	assert_true(near < INF and near >= half + 6.0, "the camp's shield wall keeps off the King's Road (%.1f m from its line)" % near)
+	# The gate garrison's pikes and banner: off the giant's line from the fort gate's waystone through the gate's link
+	# (its inner end 10 m inside the gate) by the gateway's half width (9 m) and a stage-6 giant's radius.
+	var aldmere := WorldFeatures.load_json(WorldLayout.DATA_DIR.path_join("aldmere.json"))
+	var stone := _xz(_find_id(aldmere, "world.cp.fort_gate").get("pos", [650, -55]))
+	var gate := _xz(_find_id(aldmere, "world.aldmere.fort_gate").get("pos", [650, -95]))
+	var inner := gate + (gate - stone).normalized() * 10.0
+	var clear := 9.0 + float(_profile(6).get("capsule_radius_m", 3.7))
+	var nearest := INF
+	var nearest_id := ""
+	for sp: Dictionary in GameData.get_record("encounter.aldmere_fort_gate").get("spawns", []):
+		var id := str(sp.entity_id)
+		if not (id.contains("gate_pike") or id.contains("gate_banner")):
+			continue
+		var d := _polyline_distance(_xz(sp.position_m), [stone, inner])
+		if d < nearest:
+			nearest = d
+			nearest_id = id
+	print("    posts: the gate's pikes, nearest %s %.1f m from the line %s -> %s (clear %.1f m)" % [nearest_id, nearest, stone, inner, clear])
+	assert_true(nearest < INF and nearest >= clear, "the gate's pikes keep off the giant's way through the gate (%s %.1f m)" % [nearest_id, nearest])
