@@ -246,11 +246,7 @@ func _the_wall_falls_with_a_request_waiting() -> void:
 	var aware_near := Array(GameSession.checkpoint_blockers()).filter(func(x: String) -> bool: return x.begins_with("aware:"))
 	print("    iron regiment reload: the Wall fallen, blockers %s, checkpoints since %s" % [GameSession.checkpoint_blockers(), saved])
 	assert_eq(aware_near, [], "no enemy is aware within 40 m (the riders come from the stables)")
-	# M9 gate (lane ironreg; a deliberate change): the gate's fall starts the crown's road, a completion request
-	# (GameSession.settles_an_oath), so the request deferred from before the battle is taken with the breach - before
-	# the battle engages, with the gate broken and the battle waiting. None is committed while it is engaged.
-	var during := saved.filter(func(s: Array) -> bool: return int(s[0]) >= b.engaged_tick)
-	assert_eq(during, [], "no checkpoint is committed while the battle is engaged (%s; engaged at %d)" % [saved, b.engaged_tick])
+	assert_eq(saved, [], "no checkpoint is committed while the battle is engaged (%s)" % [saved])
 	assert_false(QuestConditions.truthy(GameSession.checkpoint_doc.world.flags.get(EncounterDirector.cleared_flag(WALL), false)),
 		"the last checkpoint does not hold the Wall's fall")
 

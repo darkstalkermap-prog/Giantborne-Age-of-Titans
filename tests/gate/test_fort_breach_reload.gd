@@ -3,19 +3,26 @@ extends IntegrationSuite
 ## breach of Fort Aldmere's gate stays made after a death, and the fort gate's waystone the death reloads is no fight -
 ## on the real world (scenes/world/world.tscn, deterministic streaming), the campaign from world_start at the fort
 ## gate's waystone, saving on, a giant that takes no damage, the gate broken as the giant (blows that offend Aldmere).
-##   * The breach is checkpointed at once (GameSession.settles_an_oath: quest.iron_regiment, which the gate's fall
-##     starts, is the crown's road; its start is a completion request): before, the ordinary request waited on the
-##     garrison aware about the giant, then on the battle, and a death dropped it - every death reloaded the waystone
-##     with the gate whole (lane aldmere's aldmere_e5_ir4: six attempts each broke it again for 66-77 s under the
-##     wall archers and the bastions' ballistae).
 ##   * The garrison falls back to its posts and stands down once the gate is breached, until the giant enters the
-##     bailey this visit (data/world/encounter_aldmere_fort_gate.json, stand_down_when): after a death the reload puts
-##     its pikes, banner, archers and crews at their posts, at peace, and the giant walks from the waystone into the
-##     bailey untouched - before, the breach roused them for good and after each reload they held the giant at the
-##     waystone (aldmere_e5_ir5: twice 130 s, until he died). In the bailey the battle has them as before: the wall
-##     crews serve the bastions' two ballistae, held until the Charge, and all four shoot from the Charge.
+##     bailey this visit (data/world/encounter_aldmere_fort_gate.json, stand_down_when). So the breach's checkpoint
+##     (quest.iron_regiment's start, an ordinary request) is taken as the garrison stands down, with none of it aware
+##     of the giant: before, it waited on the garrison aware about him, then on the battle, and a death dropped it -
+##     every death reloaded the waystone with the gate whole (lane aldmere's aldmere_e5_ir4: six attempts each broke it
+##     again for 66-77 s under the wall archers and the bastions' ballistae). After a death the reload puts the
+##     garrison's pikes, banner, archers and crews at their posts, at peace, and the giant walks from the waystone into
+##     the bailey untouched - before, the breach roused them for good and after each reload they held the giant at the
+##     waystone (aldmere_e5_ir5: twice 130 s, until he died). A blow on a stood-down member after the breach's
+##     checkpoint rouses the garrison (P29's provoked flag) but is not in the checkpoint: a death still comes back to
+##     it standing down. In the bailey the battle has them as before: the wall crews serve the bastions' two
+##     ballistae, held until the Charge, and all four shoot from the Charge.
 ## Each case at stage 4 (the crown-first giant fights the garrison from his first blow on the gate) and at stage 5
-## with Brannock's banner (the garrison stands down for it while the gate stands; the breach roused it).
+## with Brannock's banner (the garrison stands down for it while the gate stands, and goes on standing down).
+##   * Fix-up 1 (the lane's verifier): the war camp's first wreck - which starts the crown's sabotage
+##     (quest.war_engines) and offends Aldmere - is not checkpointed while the camp is aware about the giant: a death
+##     comes back to the Aldmere road's waystone, 18 m from that catapult, with the camp at peace and nothing wrecked.
+##     The lane had made the start of an oath's road a completion request (taken at once, whoever is aware about):
+##     the wreck was committed in the same tick, and after a death the camp's engines and riders shot and rode down a
+##     giant standing at the waystone (14 hits, dead within 40 s).
 
 const SCENE := "res://scenes/world/world.tscn"
 const FORT_CP := "world.cp.fort_gate"
@@ -29,27 +36,36 @@ const WALL_CREWS := ["world.aldmere.wall_crew_1", "world.aldmere.wall_crew_2"]
 ## The bailey's floor beyond the engage trigger (the giant's titan path from the waystone ends here).
 const BAILEY := Vector3(650.0, 60.0, -130.0)
 const INSIDE_Z := -118.0
+## The war camp's sabotage (fix-up 1): the Aldmere road's waystone and the camp's west catapult, 18 m from it.
+const ROAD_CP := "world.cp.aldmere_road"
+const ROAD_CP_AT := Vector2(470.0, 60.0)
+const CAMP := "encounter.aldmere_war_camp"
+const CAMP_CATAPULT := "world.aldmere.camp_catapult_1"
 
 var w: WorldRoot
-## [tick, respawn, reason] of every checkpoint committed.
+## [tick, respawn, reason, the gate garrison standing down, its members aware of the giant] of every checkpoint
+## committed.
 var saved: Array = []
 ## Hits of the gate garrison's members that reached the giant.
 var garrison_hits: Array = []
+## [tick, attacker id, health damage] of every hit that reached the giant.
+var giant_hits: Array = []
 
 
 func before_each() -> void:
 	await super()
 	saved.clear()
 	garrison_hits.clear()
+	giant_hits.clear()
 	Events.checkpoint_saved.connect(_on_saved)
-	Events.hit_resolved.connect(_on_garrison_hit)
+	Events.hit_resolved.connect(_on_giant_hit)
 
 
 func after_each() -> void:
 	if Events.checkpoint_saved.is_connected(_on_saved):
 		Events.checkpoint_saved.disconnect(_on_saved)
-	if Events.hit_resolved.is_connected(_on_garrison_hit):
-		Events.hit_resolved.disconnect(_on_garrison_hit)
+	if Events.hit_resolved.is_connected(_on_giant_hit):
+		Events.hit_resolved.disconnect(_on_giant_hit)
 	Quests.end_dialogue()
 	for f in Formation.live():
 		f.dissolve()
@@ -65,15 +81,21 @@ func after_each() -> void:
 
 
 func _on_saved(tick: int, respawn: String, _ok: bool, _message: String) -> void:
-	saved.append([tick, respawn, str(GameSession.checkpoint_doc.get("checkpoint", {}).get("reason", ""))])
+	var down := false
+	var aware := -1
+	if w != null and is_instance_valid(w) and w.director() != null:
+		down = w.director().p29_standing_down(GARRISON)
+		aware = _garrison_aware().size()
+	saved.append([tick, respawn, str(GameSession.checkpoint_doc.get("checkpoint", {}).get("reason", "")), down, aware])
 
 
-func _on_garrison_hit(tick: int, result: HitResult) -> void:
+func _on_giant_hit(tick: int, result: HitResult) -> void:
 	if w == null or result == null or result.event == null:
 		return
 	var p := w.player()
 	if p == null or p.entity == null or result.event.target_id != p.entity.entity_id:
 		return
+	giant_hits.append([tick, result.event.attacker_id, result.health_damage])
 	if w.director() != null and w.director().members_of(GARRISON).has(result.event.attacker_id):
 		garrison_hits.append([tick, result.event.attacker_id])
 
@@ -133,11 +155,11 @@ func _move(xz: Vector2) -> void:
 	p.process_mode = Node.PROCESS_MODE_INHERIT
 
 
-## The campaign's New Game at the fort gate's waystone (world_start), saving on, the giant grown to `stage` and
-## that checkpointed (as a growth at a shrine is).
-func _new_game(stage: int, banner: bool) -> void:
+## The campaign's New Game at waystone `cp` (world_start; the fort gate's by default), saving on, the giant grown
+## to `stage` and that checkpointed (as a growth at a shrine is).
+func _new_game(stage: int, banner: bool, cp := FORT_CP) -> void:
 	GameSession.persist = true
-	GameSession.start_world_for_tests(FORT_CP)
+	GameSession.start_world_for_tests(cp)
 	GameSession.level_id = "level.world"
 	if banner:
 		WorldState.add_item(BANNER, 1, "test")
@@ -158,18 +180,19 @@ func _new_game(stage: int, banner: bool) -> void:
 		"the checkpoint before the breach holds the gate whole")
 
 
-## Strikes the gate as the giant (an offence against Aldmere) until its health is at most `frac` of its maximum.
-func _strike_gate(frac: float) -> void:
+## Strikes world object `id` as the giant (from `from`, an offset of the object's place) until its health is at
+## most `frac` of its maximum or it is destroyed.
+func _strike_until(id: String, frac: float, from: Vector3) -> void:
 	var p := w.player()
-	for i in 120:
-		var e := Sim.get_entity(GATE)
-		if e == null or WorldState.is_destroyed(GATE) or e.combatant.pools.health <= frac * e.combatant.pools.health_max:
+	for i in 200:
+		var e := Sim.get_entity(id)
+		if e == null or WorldState.is_destroyed(id) or e.combatant.pools.health <= frac * e.combatant.pools.health_max:
 			return
 		var h := HitEvent.new()
 		h.tick = Sim.tick
 		h.instance_id = Sim.new_instance_id()
 		h.attacker_id = p.entity.entity_id
-		h.target_id = GATE
+		h.target_id = id
 		h.power = 300.0
 		h.attacker_stat = 40.0
 		h.attacker_height_m = 20.0
@@ -178,9 +201,32 @@ func _strike_gate(frac: float) -> void:
 		h.tags = PackedStringArray(["Melee"])
 		h.category = "melee"
 		h.attacker_growth_stage = p.current_growth_stage()
-		h.attacker_position = (e.actor as Node3D).global_position + Vector3(0, 0, 8) if e.actor != null else Vector3.ZERO
+		h.attacker_position = (e.actor as Node3D).global_position + from if e.actor != null else Vector3.ZERO
 		Sim.queue_hit(h)
 		await step_ticks(6)
+
+
+## Strikes the gate as the giant (an offence against Aldmere) until its health is at most `frac` of its maximum.
+func _strike_gate(frac: float) -> void:
+	await _strike_until(GATE, frac, Vector3(0, 0, 8))
+
+
+## One ordinary blow of the giant on the member `id` (a light hit, not a kill).
+func _strike_member(id: String) -> void:
+	var e := Sim.get_entity(id)
+	if e == null or e.actor == null or not e.is_alive():
+		return
+	var h := HitEvent.new()
+	h.tick = Sim.tick
+	h.instance_id = Sim.new_instance_id()
+	h.attacker_id = w.player().entity.entity_id
+	h.target_id = id
+	h.power = 5.0
+	h.damage_split = {"physical": 1.0}
+	h.tags = PackedStringArray(["Melee"])
+	h.category = "melee"
+	h.attacker_position = (e.actor as Node3D).global_position + Vector3(0, 0, 6)
+	Sim.queue_hit(h)
 
 
 func _battle() -> FortBattle:
@@ -262,6 +308,43 @@ func _bastions_shooting() -> Array:
 	return out
 
 
+## The enemies aware of the giant within `radius_m` of him now (entity ids, sorted): what holds an ordinary
+## checkpoint request back (GameSession.checkpoint_blockers).
+func _aware_within(radius_m: float) -> Array:
+	var out: Array = []
+	var p := w.player()
+	for n in get_tree().get_nodes_in_group("enemies"):
+		var en := n as Node3D
+		if en == null or not en.is_inside_tree():
+			continue
+		var e: Variant = en.get("entity")
+		if e is CombatEntity and not (e as CombatEntity).is_alive():
+			continue
+		var brain: Variant = en.get("brain")
+		if brain == null or not (brain is Object) or not ("aware" in brain) or not bool(brain.get("aware")):
+			continue
+		if en.global_position.distance_to(p.global_position) <= radius_m:
+			out.append(str(en.get("entity_id")))
+	out.sort()
+	return out
+
+
+## The hits on the giant by the war camp's members or engines (fix-up 1).
+func _camp_hits() -> Array:
+	var camp: Array = Array(w.director().members_of(CAMP))
+	for entry: Variant in GameData.get_record(CAMP).get("engines", []):
+		if typeof(entry) == TYPE_DICTIONARY:
+			camp.append(str(entry.get("engine", "")))
+	return giant_hits.filter(func(x: Array) -> bool: return camp.has(str(x[1])))
+
+
+## True when the last checkpoint holds world object `id` destroyed.
+static func _checkpoint_holds_destroyed(id: String) -> bool:
+	var deltas: Variant = (GameSession.checkpoint_doc.get("world", {}) as Dictionary).get("deltas", {})
+	return typeof(deltas) == TYPE_DICTIONARY and typeof(deltas.get(id)) == TYPE_DICTIONARY \
+		and bool((deltas[id] as Dictionary).get("destroyed", false))
+
+
 func _breach_case(stage: int, banner: bool) -> void:
 	var name := "stage %d%s" % [stage, " with Brannock's banner" if banner else ""]
 	await _new_game(stage, banner)
@@ -296,11 +379,30 @@ func _breach_case(stage: int, banner: bool) -> void:
 		saved, d.p29_standing_down(GARRISON), _garrison_aware().size()])
 	assert_true(taken, "%s: the breach is checkpointed within 2 s (blockers %s, pending %s)" % [name,
 		GameSession.checkpoint_blockers(), GameSession.pending_checkpoint()])
+	# Fix-up 1: the breach's checkpoint is the ordinary one, taken as the garrison stands down - never mid-fight.
+	var breach_cps := saved.filter(func(s: Array) -> bool: return str(s[2]) == "quest_started")
+	assert_eq(breach_cps.size(), 1, "%s: one checkpoint for the breach (%s)" % [name, saved])
+	if not breach_cps.is_empty():
+		assert_true(bool(breach_cps[0][3]), "%s: the breach is checkpointed with the garrison standing down (%s)" % [name, saved])
+		assert_eq(int(breach_cps[0][4]), 0, "%s: ...none of it aware of the giant as it is taken (%s)" % [name, saved])
 	assert_eq(Quests.quest_state("quest.iron_regiment"), "active", "%s: the breach starts the crown's road by breach" % name)
 	assert_eq(GameSession.respawn_checkpoint(), FORT_CP, "%s: the respawn stays the fort gate's waystone" % name)
 	await step_ticks(40)
 	assert_true(d.p29_standing_down(GARRISON), "%s: the breached gate's garrison falls back and stands down" % name)
 	assert_eq(_garrison_aware(), [], "%s: none of it stays aware of the giant" % name)
+	var provoked := EncounterDirector.provoked_flag(GARRISON)
+	if not banner:
+		# Fix-up 1: a blow on a stood-down member after the breach's checkpoint rouses the garrison for good (P29) -
+		# the giant fights it at the gate - but it is not in the checkpoint.
+		var pikes := _garrison_up().filter(func(id: String) -> bool: return id.contains("pike"))
+		assert_false(pikes.is_empty(), "%s: a pikeman of the garrison stands at its post" % name)
+		if not pikes.is_empty():
+			_strike_member(str(pikes[0]))
+		await step_ticks(10)
+		assert_true(QuestConditions.truthy(WorldState.get_flag(provoked)), "%s: the blow provokes the garrison" % name)
+		assert_false(d.p29_standing_down(GARRISON), "%s: ...which stands down no longer" % name)
+		assert_false(QuestConditions.truthy(GameSession.checkpoint_doc.world.flags.get(provoked, false)),
+			"%s: the breach's checkpoint, taken before the blow, does not hold the provocation" % name)
 	# Into the bailey: the battle has them as before.
 	await _move(Vector2(650.0, -112.0))
 	await step_ticks(6)
@@ -321,6 +423,7 @@ func _breach_case(stage: int, banner: bool) -> void:
 		name, p.global_position.x, p.global_position.z, WorldState.is_destroyed(GATE), up.size(), _garrison_not_down().size(),
 		_garrison_aware().size()])
 	assert_true(WorldState.is_destroyed(GATE), "%s: after a death the breach stays made" % name)
+	assert_false(QuestConditions.truthy(WorldState.get_flag(provoked)), "%s: no provocation comes back with the reload" % name)
 	assert_true(_flat(p.global_position - Vector3(650.0, 0.0, -55.0)).length() < 15.0, "%s: at the fort gate's waystone (%s)" % [
 		name, p.global_position])
 	assert_true(b != null and b.state_name() == "waiting" and not b.is_gate_closed(), "%s: the battle waits, the portcullis open" % name)
@@ -355,3 +458,54 @@ func test_the_breach_stays_made_after_a_death_at_stage_4() -> void:
 
 func test_the_breach_stays_made_after_a_death_at_stage_5_with_the_banner() -> void:
 	await _breach_case(5, true)
+
+
+## Fix-up 1: the crown's sabotage begun beside the Aldmere road's waystone - the war camp's west catapult wrecked at
+## stage 4 with a crew aware of the giant - then a death.
+func test_the_war_camps_first_wreck_is_not_checkpointed_mid_fight() -> void:
+	await _new_game(4, false, ROAD_CP)
+	var p := w.player()
+	assert_true(_flat(p.global_position - Vector3(ROAD_CP_AT.x, 0.0, ROAD_CP_AT.y)).length() < 15.0,
+		"the New Game stands at the Aldmere road's waystone (%s)" % [p.global_position])
+	assert_false(FactionState.is_hostile("aldmere"), "Aldmere is at peace")
+	# Beside the catapult, 18 m from the waystone: it is wrecked with its camp about the giant.
+	await _move(Vector2(480.0, 55.0))
+	await step_ticks(60)
+	saved.clear()
+	await _strike_until(CAMP_CATAPULT, 0.0, Vector3(0, 0, -8))
+	var aware := _aware_within(GameSession.AWARE_BLOCK_RADIUS_M)
+	print("    war camp: the catapult wrecked %s, the sabotage %s, Aldmere hostile %s, aware within 40 m %s" % [
+		WorldState.is_destroyed(CAMP_CATAPULT), Quests.quest_state("quest.war_engines"), FactionState.is_hostile("aldmere"), aware])
+	assert_true(WorldState.is_destroyed(CAMP_CATAPULT), "the camp's west catapult is wrecked")
+	assert_eq(Quests.quest_state("quest.war_engines"), "active", "the wreck starts the crown's sabotage")
+	assert_true(FactionState.is_hostile("aldmere"), "the blows on Aldmere's engine are offences: at war")
+	assert_false(aware.is_empty(), "a camp member is aware of the giant within 40 m")
+	await step_ticks(120)
+	var pending := GameSession.pending_checkpoint()
+	print("    war camp: 2 s later the checkpoints %s, pending %s, blockers %s" % [saved, pending, GameSession.checkpoint_blockers()])
+	assert_eq(saved, [], "no checkpoint is committed while the camp is aware about the giant (%s)" % [saved])
+	assert_false(_checkpoint_holds_destroyed(CAMP_CATAPULT), "the last checkpoint holds the catapult whole")
+	assert_eq(str(pending.get("reason", "")), "quest_started", "the sabotage's start waits for its checkpoint")
+	assert_false(bool(pending.get("completion", false)), "...as an ordinary request (aware enemies hold it back)")
+	# A death: the reload gives back the waystone with the camp at peace and nothing wrecked.
+	GameSession.reload_checkpoint("death")
+	await _unload()
+	await _load()
+	p = w.player()
+	await step_ticks(60)
+	print("    war camp: after a death the giant at (%.1f, %.1f), the catapult wrecked %s, the sabotage %s, Aldmere hostile %s, aware within 40 m %s" % [
+		p.global_position.x, p.global_position.z, WorldState.is_destroyed(CAMP_CATAPULT), Quests.quest_state("quest.war_engines"),
+		FactionState.is_hostile("aldmere"), _aware_within(GameSession.AWARE_BLOCK_RADIUS_M)])
+	assert_true(_flat(p.global_position - Vector3(ROAD_CP_AT.x, 0.0, ROAD_CP_AT.y)).length() < 15.0,
+		"after a death the giant is at the Aldmere road's waystone (%s)" % [p.global_position])
+	assert_false(WorldState.is_destroyed(CAMP_CATAPULT), "the catapult stands again")
+	assert_true(Quests.quest_state("quest.war_engines") != "active", "the sabotage is not begun (%s)" % Quests.quest_state("quest.war_engines"))
+	assert_false(FactionState.is_hostile("aldmere"), "Aldmere is at peace")
+	# 30 s at the waystone, his own health at stake: no blow, arrow, bolt or stone of the camp reaches him.
+	p.entity.combatant.statuses.remove("status.debug_invulnerable")
+	giant_hits.clear()
+	var health: float = p.entity.combatant.pools.health
+	await step_ticks(30 * 60)
+	print("    war camp: 30 s at the waystone - the hits on the giant %s, his health %.0f of %.0f" % [giant_hits, p.entity.combatant.pools.health, health])
+	assert_eq(_camp_hits(), [], "no camp member or engine strikes the giant at the waystone")
+	assert_true(p.entity.is_alive() and p.entity.combatant.pools.health >= health, "the giant stands there unharmed")

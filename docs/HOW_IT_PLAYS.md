@@ -23,11 +23,11 @@ ballistae shoot). The lines these change say so;
 
 **The M9 gate (lane ironreg)** then made the battle's phases follow its units whatever becomes of its ballistae (a
 ballista broken early had brought the Charge, or the Charge and the Last Stand together, before their time), kept the
-breach of Fort Aldmere's gate through a death (it is checkpointed at once, and the gate garrison falls back to its
-posts and stands down until the giant enters the bailey, so the fort gate's waystone is no fight), and moved the war
-camp's shield wall a few metres further west, off the giant's way to the Aldmere road's waystone. Unassisted, the
-stage-5 novice now wins the battle and the stage-4 novice reaches the Charge but still loses. The lines these change
-say so; `docs/BALANCE_LOG.md`, "M9 gate (lane ironreg)", has the runs.
+breach of Fort Aldmere's gate through a death (the gate garrison falls back to its posts and stands down once the gate
+has fallen, until the giant enters the bailey, so the breach is checkpointed there and then and the fort gate's
+waystone is no fight), and moved the war camp's shield wall a few metres further west, off the giant's way to the
+Aldmere road's waystone. Unassisted, the stage-5 novice now wins the battle and the stage-4 novice reaches the Charge
+but still loses. The lines these change say so; `docs/BALANCE_LOG.md`, "M9 gate (lane ironreg)", has the runs.
 
 **The M9 gate (lane "balance")** changed what follows in a few places, measured on a reduced matrix (the novice and
 the expert on the three presets at seed 1, the conqueror's and the peaceful experts' seeds 2-3, three Valley runs;
@@ -549,8 +549,7 @@ draw calls: the rendered Valley walk at `low` is at p50 93, p95 143, max 154 (P2
 | What | Before -> after | Why |
 | --- | --- | --- |
 | The Iron Regiment's phases (`BattleBoss.phase_fraction`) | began by the bar's fraction, which counts the four ballistae's health -> by the units' health with the engines counted whole (the bar shown is unchanged) | a giant who broke ballistae moved the phases: with the gate bastions' pair broken first the Wall's fall began the Charge and the Last Stand together; on the web with all four broken the Charge began as the battle engaged; a ballista broken mid-Wall began the Charge with seven of the Wall's units standing (the M9 gate review) |
-| The start of an oath's road (`GameSession.settles_an_oath`: the crown's breach, `quest.iron_regiment`, and its sabotage, `quest.war_engines`) | an ordinary checkpoint request -> a completion request, as the oath it leads to | the gate falls with its garrison aware about the giant, so the breach's checkpoint waited on them, then on the battle, and a death dropped it: every death reloaded the gate whole, and the giant broke it again under the garrison's arrows and bolts before each attempt |
-| Fort Aldmere's gate garrison after the breach (`stand_down_when`, `data/world/encounter_aldmere_fort_gate.json`) | roused for good -> falls back to its posts and stands down until the giant enters the bailey (this visit) or the battle is settled, unless he strikes it | the reload gives back the fort gate's waystone, 25-35 m from the garrison: at stage 5 the giant fought it there after each death and twice never reached the gate |
+| Fort Aldmere's gate garrison after the breach (`stand_down_when`, `data/world/encounter_aldmere_fort_gate.json`) | roused for good -> falls back to its posts and stands down until the giant enters the bailey (this visit) or the battle is settled, unless he strikes it | the gate falls with its garrison aware about the giant, so the breach's checkpoint waited on them, then on the battle, and a death dropped it: every death reloaded the gate whole and the giant broke it again under the garrison's arrows and bolts; now no one is aware of him once it falls and the breach's checkpoint is taken then. And the reload gives back the fort gate's waystone, 25-35 m from the garrison: at stage 5 the giant fought it there after each death and twice never reached the gate (the lane's first answer to the breach's checkpoint, the start of an oath's road as a completion request, was taken back at its fix-up: it committed the war camp's first wreck mid-fight, and a death came back to the camp's fire) |
 | The war camp's shield wall (`data/world/encounter_aldmere_war_camp.json`) | pivot (500, 163) -> (490, 167), just outside the tents' ring | its east end stood on the giant's way from the road's south side to the Aldmere road's waystone and the shrine, diagonally through the camp: held 5-6 s in the runs, 29-41 s in the gate test's walks |
 
 No unit's or ability's number changed; the battle's bar, its thresholds (0.7 / 0.5) and the layout are as they were.
@@ -632,9 +631,9 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   two attempts of four, where the riders end them, and twice dies outside the broken gate: the death reload comes back
   at the gate's waystone beside the garrison the breach roused. The battle now tells the giant which ballistae shoot -
   "Smash the ballistae: two shoot now, two more at the Charge." as it engages, "Two more ballistae open fire." as the
-  Charge frees the bastions' pair. Since lane ironreg a death no longer undoes the breach (the breach is checkpointed at
-  once) and the garrison falls back to its posts and stands down once the gate has fallen, until the giant enters the
-  bailey: at stage 5 the novice wins the battle at its third attempt, with two deaths; at stage 4 it comes back to the
+  Charge frees the bastions' pair. Since lane ironreg a death no longer undoes the breach: the garrison falls back to
+  its posts and stands down once the gate has fallen, until the giant enters the bailey, and the breach is checkpointed
+  then: at stage 5 the novice wins the battle at its third attempt, with two deaths; at stage 4 it comes back to the
   bailey with 60 % of its health each time and reaches the Charge twice in six attempts, but still dies six times,
   four of them to the inner pair's ballistae (64 % of the damage taken in the battle) - in two attempts it stood in the
   gateway's inner mouth against the Wall's advancing pikes and killed nothing. Left for P40: the inner ballistae's
@@ -653,6 +652,12 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   matrix). It now stands on open ground west of the road between the camp's tents (`tests/gate/test_war_camp_road.gd`);
   lane ironreg moved it a few metres further west, just outside the tents' ring, off the giant's way from the road's
   south side to the Aldmere road's waystone and the shrine, where lane aldmere's post had held a giant 5-6 s.
+- **A death in the war camp's sabotage after a checkpoint there**: the sabotage's start (the first engine wrecked) is
+  checkpointed as soon as no camp member within 40 m is aware of the giant, with Aldmere at war; a death after that
+  comes back to the Aldmere road's waystone, 18 m from the camp's west catapult, under the camp's engines and riders (a
+  probe: 12 hits in 30 s on a giant standing still). A death before that checkpoint comes back to the camp at peace
+  (lane ironreg's fix-up kept it so: its first rule took the wreck's checkpoint at once). No bot run died at the camp;
+  the levers are in FOLLOWUPS.
 - ~~**The Raiders' Hollow beside the King's Road**: the road to Brannock passes its shield wall at about 23 m on the
   rebuilt world and the bot turns to fight it in most runs (a person may walk on); it adds a few minutes and a death
   in some runs to the first oath.~~ Fixed at the M9 gate: the bot walks past a formation holding its ground off its

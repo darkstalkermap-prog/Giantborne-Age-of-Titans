@@ -1591,14 +1591,15 @@ func _on_boss_disengaged(_tick: int, _boss_id: String, reason: String) -> void:
 ##     as a boss's end - the main thread moves on where enemies are about (the war camp after its
 ##     sabotage, the Moot after the duel), and a quit to the title commits one still waiting;
 ##   * on another campaign level than the Valley (the world), every other quest's start, stage and
-##     completion (Ulfra's plea starting the siege, a side quest's reward): an ordinary request -
-##     M9 gate (lane ironreg) but the start of an oath's road (settles_an_oath: the crown's breach,
-##     quest.iron_regiment, which Fort Aldmere's gate falling starts, and its sabotage, quest.war_engines,
-##     which the deserters' word or the first of its engines wrecked starts): a completion request, as
-##     the oath it leads to. The gate falls with its garrison aware about the giant: the ordinary request
-##     waited on them, then on the battle he walked into, and a death in the battle dropped it - every
-##     death reloaded the fort gate's waystone with the gate whole, and he broke it again under the
-##     garrison's arrows and bolts before each attempt (docs/BALANCE_LOG.md, "M9 gate (lane ironreg)").
+##     completion (Ulfra's plea starting the siege, a side quest's reward): an ordinary request.
+##     M9 gate (lane ironreg): the crown's breach (quest.iron_regiment, which Fort Aldmere's gate falling
+##     starts) is one of them. The gate falls with its garrison aware about the giant, and the garrison
+##     stands down once it has fallen (encounter.aldmere_fort_gate's stand_down_when), so the request is taken
+##     then, before the battle - it no longer waits on them, then on the battle, until a death drops it.
+##     The starts of the crown's roads are not completion requests: that was tried at the gate and taken
+##     back (fix-up 1) - it committed the sabotage's start (quest.war_engines: the war camp's first engine
+##     wrecked, its crews aware about the giant) at once, and a death came back to the roused camp's fire
+##     at the Aldmere road's waystone, 18 m from that engine.
 ## The respawn stays where it is.
 func _on_quest_stage_changed(_tick: int, quest_id: String, _stage_id: String) -> void:
 	if quest_id == WORLD_MAIN_QUEST_ID:
@@ -1611,20 +1612,7 @@ func _on_quest_stage_changed(_tick: int, quest_id: String, _stage_id: String) ->
 
 func _on_quest_started(_tick: int, quest_id: String) -> void:
 	if quest_id != WORLD_MAIN_QUEST_ID and _world_quests_checkpoint():
-		request_checkpoint("quest_started", "", settles_an_oath(quest_id))   # M9 gate (lane ironreg)
-
-
-## M9 gate (lane ironreg): true when a stage of quest `quest_id` writes an oath's done flag (oath.<x>.done): the
-## quest is one of that oath's roads (see _on_quest_stage_changed's notes).
-static func settles_an_oath(quest_id: String) -> bool:
-	for st: Variant in GameData.get_record(quest_id).get("stages", []):
-		var writes: Variant = (st as Dictionary).get("set_flags", {}) if typeof(st) == TYPE_DICTIONARY else {}
-		if typeof(writes) != TYPE_DICTIONARY:
-			continue
-		for flag: Variant in writes:
-			if str(flag).begins_with("oath.") and str(flag).ends_with(".done"):
-				return true
-	return false
+		request_checkpoint("quest_started")
 
 
 func _on_quest_completed(_tick: int, quest_id: String) -> void:
