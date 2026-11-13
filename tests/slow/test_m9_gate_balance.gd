@@ -89,6 +89,7 @@ func test_a_lone_soldier_flees_a_stage_4_giant_on_sight_and_not_a_stage_3_one() 
 	assert_true(calm.brain.morale > float(calm.brain.ai.get("flee_morale", 25.0)),
 		"its morale (%.1f) stays above its flee threshold: it stands (the Valley as it was)" % calm.brain.morale)
 	assert_false(calm.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED], "and does not flee")
+	assert_false(calm.brain.awed_at_tier, "the base awe, not a tier's")
 	calm.queue_free()
 	p.set_profile(_profile(4))
 	await step_ticks(2)
@@ -100,6 +101,12 @@ func test_a_lone_soldier_flees_a_stage_4_giant_on_sight_and_not_a_stage_3_one() 
 		"its morale (%.1f) falls below its flee threshold" % lone.brain.morale)
 	await TestWait.until(self, func() -> bool: return lone.brain.state == EnemyBrain.AIState.FLEE, 60)
 	assert_eq(lone.brain.state, EnemyBrain.AIState.FLEE, "a lone soldier flees a stage-4 giant on sight (plan §5.14)")
+	assert_true(lone.brain.awed_at_tier, "awed by its tier")
+	# The flight ends in a rout, not in a walk back to the giant (no formation here to take it): the Millford
+	# raiders regrouped and went back to burning the hamlet among its folk.
+	await TestWait.until(self, func() -> bool: return lone.brain.state == EnemyBrain.AIState.ROUTED, 60 * 40)
+	assert_eq(lone.brain.state, EnemyBrain.AIState.ROUTED, "its flight ends in a rout: it does not come back")
+	assert_false(lone.brain.aware, "routed, it is out of the fight")
 	var pike := TestSpawn.enemy(world, PIKEMAN, Vector3(20, 0.05, -14), "test.m9_pike", false)
 	await step_ticks(2)
 	assert_near(pike.brain.awe_loss_at(6.1), float(pike.brain.tactics.get("awe_morale_loss", 0.0)), 1e-6,
