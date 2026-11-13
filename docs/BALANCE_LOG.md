@@ -1746,3 +1746,217 @@ shrine - the bot's line to them, diagonally through the camp - meets the wall's 
 5-6 s until it steps aside (seeds 1 and 2; seed 3 kept to the road), where the old post held a giant on the road itself
 (the confirmation's seed 3: about 60 s). A post a few metres further west, outside the tents' ring, would clear that
 line too; not made here (FOLLOWUPS, the war camp's row).
+
+## M9 gate (lane ironreg): the Iron Regiment's phases, the breach after a death and the war camp's wall (tags `ironreg_*`)
+
+Three items at the M9 gate, on lane aldmere's head (`5c57636`): the review's major finding - the battle's phases moved
+with its ballistae's health - and the two levers lane aldmere left for the unassisted novice at Fort Aldmere (the
+breach after a death at stage 4; the roused garrison at the waystone a death gives back at stage 5), then the war
+camp's wall a few metres further west (lane aldmere's "Left:"). No unit's or ability's number was tuned and nothing
+was rebuilt (no layout or builder data changed). The runs here: one or two Godot processes at a time beside the other
+M9 gate lanes' on the 4-CPU container (load average 4-10), `--perf --bot-trace=1` on each; the lane's evidence is in
+`m9_gate/ironreg/` (`exp/<name>/` holds the code each batch ran: `base` is `5c57636`, lane aldmere's head; `after` is
+`10c5058`, this lane's code - the lane's later commits are a comment, docs and a `.uid` file).
+
+```
+# lane aldmere's head (base), then this lane's code (after): the same command on each copy
+tools/run_bots.sh w.order_crown:novice:2 --jobs=1 --timeout=3600 --tag=ironreg_<base|after>_ir4 "--extra=--perf --bot-trace=1 --bot-until=oath.crown.done"
+tools/run_bots.sh w.peaceful:novice:1 --jobs=1 --timeout=3600 --tag=ironreg_<base|after>_ir5 \
+  "--extra=--perf --bot-trace=1 --bot-oaths=march:help,crown:breach --bot-until=oath.crown.done"
+# this lane's code
+tools/run_bots.sh w.order_crown:novice:1:assist --jobs=1 --timeout=3600 --tag=ironreg_after_crown_assist "--extra=--perf --bot-trace=1"
+tools/run_bots.sh w.order_crown:novice:2:assist --jobs=1 --timeout=3600 --tag=ironreg_after_crown_assist_s2 "--extra=--perf --bot-trace=1 --bot-until=oath.crown.done"
+tools/run_bots.sh w.order_crown:expert:1 --jobs=1 --timeout=3600 --tag=ironreg_after_crown_expert "--extra=--perf --bot-trace=1 --bot-until=oath.crown.done"
+tools/run_bots.sh w.mixed:novice:<1|2|3> --jobs=1 --timeout=3600 --tag=ironreg_after_mixed_s<1|2|3> "--extra=--perf --bot-trace=1 --bot-until=oath.crown.done"
+```
+
+### The phases with the ballistae broken (commit `baaf6a8`; the review's major finding)
+
+The battle's bar (`BattleBoss.aggregate`) counts the fort's four ballistae - 3,600 of the desktop's 14,080 and of the
+web's 11,740 - and its phases began by the bar's fraction: the Charge at 0.7, the Last Stand at 0.5 (the layout's
+thresholds since the M9 confirmation, set above what the Wall and the riders leave with every engine standing). A giant
+who broke ballistae moved the phases with them - the plan's way to fight the battle (smash the ballistae) began phases
+the units had not reached:
+
+| Case (the real bailey, `test_iron_regiment_world`) | The old rule | Now |
+| --- | --- | --- |
+| desktop, the gate bastions' pair broken before the battle | the Wall's fall left the bar at 0.494: **the Charge and the Last Stand together** | the Charge alone (the Last Stand once the riders fall, the bar at 0.324) |
+| web, all four broken before | the bar 0.693 as the battle engaged: **the Charge with the Wall standing**; after the Wall 0.363: the Last Stand with the Charge | the Wall alone, then the Charge (0.363), then the Last Stand (0.158) |
+| desktop, the north-west ballista broken mid-Wall | the bar down 900 at once: **the Charge with 7 of the Wall's units standing** (0.688) | the Charge once the Wall's units fall (0.558) |
+| every ballista standing (desktop / web) | the Charge at 0.622 / 0.670, the Last Stand at 0.452 / 0.465 | the same |
+
+The phases now go by `BattleBoss.phase_fraction`: the units' current health with the engines counted whole (each at
+its full health, standing or wrecked), over the same total. With every engine whole it is the bar's fraction, so the
+measured sequence with all four standing is unchanged, and an engine's wear or wreck never moves a phase. The bar
+shown is unchanged (it counts the engines' current health, a wrecked one nothing), as are the thresholds (a layout
+number) and P34's phase-spent rule; so with ballistae broken the bar runs ahead of its notches at 0.7 and 0.5 (0.494
+after the Wall with the gate pair broken, under the Last Stand's notch, while the pips show the Charge). The gate's
+`test_iron_regiment_world.test_the_phases_follow_the_units_whatever_becomes_of_the_ballistae` asserts each case at
+stages 4, 5 and 6, one phase at a time and in order: 12 failures of 226 checks on the old rule (the four marked above at
+each stage), 0 now; the suite's first test (the sequence with every ballista standing) is unchanged and passes. The
+review's own probe (`test_zz_m9g_ir_ballistae_first`, in the review's evidence: 2 failures of 12 on the reviewed code)
+passes on this lane's code, 0 of 12 - the web with the gate pair broken too (0.516 after the Wall: the Charge alone).
+
+### The breach after a death, and the garrison at the waystone (commit `23d4d3c`)
+
+**Stage 4: a death undid the breach.** The gate's fall starts `quest.iron_regiment` (the crown's breach), and the
+start of a world quest asked for an ordinary checkpoint. An ordinary request waits while an enemy within 40 m is aware
+of the giant - the whole garrison was, from his first blow on the gate - then on the battle he walked into (none is
+committed while a boss fight is engaged), and a death drops a waiting request (the M8 release's rule). So every death
+reloaded the fort gate's waystone with the gate whole (lane aldmere's runs: six breaks of 65-77 s each). Three ways
+were weighed:
+
+- the gate staying broken through a death reload - rejected: a reload restores one consistent checkpoint (the XP and
+  loot of the garrison's fallen, Aldmere's standing, which the breach offends, and the quest the gate's fall starts),
+  and a structure kept outside it would split them;
+- a respawn nearer the bailey - none to give: the next waystones are the Aldmere road's (470, 60), 215 m off, and
+  the shrine (420, -40), 230 m, both through the war camp;
+- **the general rule, made**: the start of an oath's road is checkpointed as the oath it leads to is - as a
+  completion request, at once whoever is aware about (an engaged boss fight still holds it back). A quest is an oath's
+  road when one of its stages writes an oath's done flag (`GameSession.settles_an_oath`): `quest.iron_regiment` (the
+  gate's fall) and `quest.war_engines` (the deserters' word on the engines, or the first of them wrecked), no other. The
+  respawn stays where it is.
+
+A death in the bailey now reloads the breach: the gate broken, the giant at the fort gate's waystone with at least the
+death floor's 60 % of his health. A quit and Continue after the breach does the same (the save is the checkpoint).
+
+**Stage 5: the roused garrison at the waystone.** With Brannock's banner the breach's checkpoint was already committed
+(the garrison stood down for the banner while the gate stood, so no one was aware of him), but the breach roused the
+garrison for good - its stand-down needed the gate standing - and the reload put the giant 25-35 m from its pikes and
+archers: lane aldmere's `aldmere_e5_ir5` fought them there 130 s twice and died without reaching the gate. The gate
+garrison's `stand_down_when` has a second branch now: the gate destroyed, the giant not yet in the bailey
+(`world.area.fort_bailey`, entered this visit - a load or a death reload starts a new one) and the battle not settled
+(`boss.corvane.outcome`). Once the gate falls the garrison falls back to its posts and stands down (P29: neutral, at
+its post, never aware; its engines with it) until the giant enters the bailey - where the battle engages and stands
+it out, its two wall crews serving the bastions' ballistae for the battle (held until the Charge, as lane aldmere made
+it) - or strikes one of its members (the encounter's provoked flag ends a stand-down for good). The garrison still
+fights a giant breaking the gate, and the breach still offends Aldmere. On a death in the bailey the reload comes back
+to a standing-down garrison and the giant walks in to a fresh attempt.
+
+`tests/gate/test_fort_breach_reload.gd` (new; 2 tests, 60 checks, 11 s in the full check) breaks the gate at stage 4 with the
+garrison aware (the crown first) and at stage 5 with Brannock's banner, and asserts: the breach checkpointed within
+2 s; the garrison standing down at its posts, none aware; after a death, the gate still broken and the garrison
+standing down at the waystone; the walk from the waystone into the bailey untouched by it; the battle engaging again
+for a full attempt; the garrison's wall crews serving their ballistae for Aldmere, and from the Charge the bastions'
+pair shooting. On lane aldmere's code 16 failures: at stage 4 the breach was never checkpointed (blocked by the 17
+aware), so after the death the gate stood whole and the walk ended at z -92 against it; at stage 5 the 17 were aware
+of the giant at the waystone and a wall archer hit him on the way in. Two tests were changed on purpose, as the
+behaviour they encode changed: `test_aldmere_stonehold_content.test_fort_aldmere_has_its_real_gate_and_garrison`
+asserted that the garrison does not stand down once the gate is breached (now: it does while the giant has not entered
+the bailey, and not once he has or the battle is settled), and `test_iron_regiment_reload` asserted that a request
+deferred by an aware enemy before the battle is still uncommitted after the Wall's fall (the gate's fall, which starts
+the crown's road, now takes it as a completion request before the battle engages; the test still asserts that none
+is committed while the battle is engaged and that the last checkpoint does not hold the Wall's fall).
+
+### The crown-first order unassisted, before and after
+
+The same two commands on lane aldmere's head (`base`; lane aldmere's own `e5` runs ran `812e626`, before the hold's
+last change and the HUD lines, and came out alike) and on this lane's code (`after`). Per attempt, from the trace
+(`m9_gate/ironreg/gate_fights.py`: the seconds locked on the gate garrison and the health lost between the fort and
+the bailey):
+
+| Stage 4 (`w.order_crown:novice:2`, until the crown's oath) | `ironreg_base_ir4` | `ironreg_after_ir4` |
+| --- | --- | --- |
+| Result | **lost**: 6 deaths, `bot_failed` at 1,273 s | **lost**: 6 deaths, `bot_failed` at 921 s |
+| After each death (attempts 2-6) | the gate whole again: 30-54 s locked on the garrison and the gate's smash (65-69 s), 375-513 health lost on the way, 103-141 s from the reload to the bailey | the gate broken and the garrison at its posts: 12-17 s from the reload to the bailey, none of it locked on the garrison (0-55 health lost, a bolt as the battle engages) |
+| Into the bailey with (of 1,160) | 234, 273, 303, 165, 245, 221 | 162 (the first breach), 641, 641, 641, 696, 696 |
+| The battle's lows (the first five attempts) | 0.96, 0.92, 0.83, 0.82, 0.92 - **no Charge** | 0.98, 0.69, 0.65, 1.0, 1.0 - **the Charge twice** (584 s, 663 s) |
+| Deaths (killer) | the inner pair's ballistae 3 (north-east, north-west twice), the Wall's pikes 2, a shield 1 - all in the bailey | the inner pair's ballistae 4 (north-east twice, north-west twice), a shield 1, a rider 1 - all in the bailey |
+| The run's damage taken: arrows / bolts / the pikes' brace / the shields' brace | 3,818 / 1,602 / 1,479 / 695 | 881 / 2,873 / 1,359 / 753 |
+| Damage taken in the engaged battle | 2,060 (the ballistae 1,302, soldiers 758) | 4,504 (the ballistae 2,873 - 64 %, soldiers 1,521, the riders 110) |
+
+At stage 4 the gate after a death is gone - the wall archers' arrows, the run's largest share before (3,818), are now the
+first breach's alone (881) - and every attempt after the first enters the bailey with 641-696 health where it had
+165-303; two of them reach the Charge (none did before, nor in lane aldmere's or the confirmation's stage-4 runs). The novice
+still loses the battle: four of its six deaths are the inner pair's bolts, and in attempts 4 and 5 it stood in the
+gateway's inner mouth (z -103 to -111) against the Wall's pikes, which had advanced to it, mostly without a lock (its
+battle target the far ballistae, past the braced pikes; 7 stuck moments there, each freed by a sidestep or a replan)
+and killed nothing before the north-west ballista killed it (the bar at 1.0 both times). That is the bot's battle play,
+the other M9 gate lane's (`scripts/debug/world_bot.gd`), and the battle's own numbers (the inner ballistae, 64 % of the
+damage taken in it); this lane changed neither.
+
+| Stage 5 (`w.peaceful:novice:1`, the march's help then the breach) | `ironreg_base_ir5` | `ironreg_after_ir5` |
+| --- | --- | --- |
+| Result | **lost**: `bot_failed` at 1,681 s, 7 deaths (6 at the fort; one on the road, a raider) | **won**: the crown's oath met by the breach at 1,355 s - Corvane yielded and was spared at the third attempt; 3 deaths (2 at the fort; the same raider on the road) |
+| Attempts | six: the Charge in three (0.66, 0.68, 0.67), died to a rider, the north-east ballista and the north-west twice in the bailey and a shield; the fourth died outside the broken gate to the garrison's pikes, never reaching the bailey | three, each into the bailey with full health (1,355: the breach's checkpoint was taken at full health): 1 - the Charge at 993 s, a rider's charge 26 s later; 2 - the Charge at 1,061 s, the west bastion's ballista; 3 - the Charge at 1,197 s, the Last Stand at 1,300 s, Corvane's yield at 1,355 s |
+| The way from the fort to the bailey | every attempt fought the garrison, roused by the breach (the first too, once the gate fell): 25-94 s locked on it, 168-712 health lost on the way | none: 74 s the first time (the gate's smash, the garrison standing down for the banner, then at its posts), 7 s after each reload, no health lost |
+| Damage taken in the engaged battle | 4,229 (the ballistae 2,555, soldiers 1,619, the riders 55) | 5,442 (the ballistae 3,290, the riders 1,159, soldiers 993) |
+
+At stage 5 the novice wins the battle unassisted for the first time in any run (lane aldmere's `aldmere_e5_ir5`:
+`bot_failed` at 1,612 s, the Charge twice). The riders ended one attempt of three and dealt 1,159 of the 5,442 the
+giant took in the battle; they are not the only cause of the deaths (a bastion ballista ended another) and the
+battle was won, so no rider number was touched. The levers if the stage-5 battle should be easier still: the riders' charge
+(`ability.cavalry_charge`, 1,085 of the run's damage) and the bastions' pair from the Charge (the west one's bolt
+ended attempt 2).
+
+### The crown-first order assisted (P38's spec), and the expert
+
+| Run (this lane's code) | Result | The battle |
+| --- | --- | --- |
+| `ironreg_after_crown_assist` (`w.order_crown:novice:1:assist`, the whole order) | **completed** the order (the crown's breach, the wood slain, the throne) at 1,816 s simulated, 39.6 minutes of human estimate, **no death** (lane aldmere's `aldmere_e5_crown_assist`: 1,996 s, 42.7 minutes, no death) | one attempt: the Charge at 577 s, the Last Stand at 707 s, Corvane spared at 754 s; 1,052 damage taken in it (the ballistae 558, the riders 333, soldiers 161); no engine broken |
+| `ironreg_after_crown_assist_s2` (`w.order_crown:novice:2:assist`, until the crown's oath) | **done**: the crown's oath met at 1,069 s, **one death** (lane aldmere's `aldmere_fix1_crown_assist_s2`: 711 s, no death) | two attempts: the Charge at 540 s and the Last Stand at 675 s (the bar at 0.35), the giant at 64 health after the Charge, dead at 713 s to the west bastion's ballista; then from the reload (the breach kept: into the bailey 16 s after it, 668 health) the Charge at 825 s, the Last Stand at 965 s, Corvane spared at 1,069 s; 2,954 damage taken in it (the ballistae 1,504, the riders 1,129, soldiers 321) |
+| `ironreg_after_crown_expert` (`w.order_crown:expert:1`, until the crown's oath) | **stopped**: the crown oath's stage out at 1,179 s (its 1,040 s), 4 deaths - three at the Raiders' Hollow beside the King's Road (its archers), the fourth to a gate pike before the breach | never reached: at the fort at 1,073 s with 416 health, it fought the garrison and began on the gate, died at 1,130 s, and the reload (from before the breach) gave the gate back whole; the stage ran out before it fell |
+| `ironreg_after_crown_expert_s2` (`w.order_crown:expert:2`, until the crown's oath; seed 1 never reached the battle, so a second seed was run) | **lost**: 6 deaths at the fort, `bot_failed` at 947 s | the first death at the gate before the breach (a gate pike, after 89 s against the garrison; the reload gave the gate back whole) and the second in the bailey after breaking it (into it with 288 of 960 health); then four attempts from the reload with the gate broken - in the bailey 5 s after it with 696 health, the garrison at its posts - each ended by the inner pair's ballistae (the north-east three times, the north-west once) at lows of 0.73, 0.78 and 0.71: no Charge; the battle's damage 4,183, the ballistae's 3,472 (83 %) |
+
+Seed 2's death follows from the phase rule doing what it is for: in its first attempt the giant broke the north-west
+ballista during the Charge (637-657 s), which no longer takes 900 off the phases, so the Last Stand waited for the
+riders - 135 s into the Charge (140 s in the second attempt) - and the riders wore the giant down to 64 health before
+it. Lane aldmere's seed-2 run broke the north-east ballista in its Charge, and the old rule brought the Last Stand on
+48 s into the Charge with riders still up (19 of its locks in the Last Stand were riders): the phases running together
+that the review found. Both seeds complete; seed 1, P38's acceptance order, with no death.
+
+### The war camp's wall off the diagonal (commit `0b6c233`)
+
+Lane aldmere's post (pivot (500, 163)) left the wall's east end at (503, 164), on the giant's way at peace from the
+road's south side to the Aldmere road's waystone (470, 60) and the shrine beyond it - diagonally through the camp's
+south-west, the world bot's line to them (lane aldmere's runs: held 5-6 s there until it stepped aside). Each of the
+wall's eleven posts moved 10 m west and 4 m south: pivot (490, 167), just outside the tents' ring (52 m about the
+camp's centre (520, 120); the pivot 55.8 m), on open ground south of tent 6 (its banner 2.9 m off the tent's
+footprint), inside the camp's 70 m leash with the wall's 10 m advance (69.1 m). Its nearest post stands 29.4 m from
+the King's Road's line (18.9 before) and 11.5 m from the diagonal's (0.8 before). No rebuild (no builder reads an
+encounter's spawns).
+
+| `tests/gate/test_war_camp_road.gd` (a stage-4 and a stage-6 giant at peace, the wall in the world) | Lane aldmere's post (500, 163) | Now (490, 167) |
+| --- | --- | --- |
+| the King's Road through the camp, both ways | walked, never held | walked, never held |
+| the diagonal from the road's south side (514, 192) to the Aldmere road's waystone, both ways (new) | every walk held 29-41 s at (502.5-504.6, 158.6-167.1), never arriving | walked, never held |
+| the posts' distance off the diagonal's line (new; at least 8 m) | 0.8 m | 11.5 m |
+| the suite | 34 checks, 9 failures | 34 checks, 0 failures (27 s in the full check) |
+
+`test_placed_spawns` (every placed member's body clear of the world's solids): 273 members of 36 encounters, 0 bad.
+
+**The camp's sabotage measured again** (`w.mixed:novice:N` until the crown's oath, the commands above; the stages
+compared are the same as lane aldmere's table):
+
+| Seed | The camp's stage (time, damage, deaths) | The ridge's stage | The crown's oath met | Held at the camp's wall |
+| --- | --- | --- | --- | --- |
+| 1, the confirmation | 112 s, 751, 0 | 173 s, 456, 0 | 714 s | - |
+| 1, lane aldmere (`aldmere_e5_mixed`) | 207 s, 1,852, 0 | 262 s, 2,351, 1 | 897 s | 6 s at (504, 166) |
+| 1, now (`ironreg_after_mixed_s1`) | 112 s, 751, 0 | 173 s, 456, 0 | 714 s | - |
+| 2, the confirmation | 122 s, 716, 0 | 169 s, 180, 0 | 757 s | - |
+| 2, lane aldmere (`aldmere_e6_mixed`) | 102 s, 694, 0 | 171 s, 840, 0 | 766 s | 5 s at (504, 166) |
+| 2, now (`ironreg_after_mixed_s2`) | 122 s, 716, 0 | 169 s, 180, 0 | 757 s | - |
+| 3, the confirmation | 124 s, 1,038, 0 | 169 s, 792, 0 | 852 s | about 60 s at (519, 166), the old post on the road |
+| 3, lane aldmere (`aldmere_e6_mixed`) | 47 s, 120, 0 | 104 s, 120, 0 | 726 s | - |
+| 3, now (`ironreg_after_mixed_s3`) | 47 s, 120, 0 | 104 s, 120, 0 | 726 s | - |
+
+Seeds 1 and 2 now replay the confirmation's runs - the same stage times, damage taken and oath times: nothing in
+them meets the wall any more (lane aldmere's post held both at its east end and their paths diverged from there) - and
+seed 3, which kept to the road on lane aldmere's post too, replays lane aldmere's run. No run met the wall; the
+sabotage's own checkpoint (`quest.war_engines`' start, now a completion request) changes nothing a run plays. So the
+camp's sabotage is as the confirmation measured it, and not harder for either move of the wall.
+
+### Left
+
+- **The battle at stage 4, unassisted** (the novice and the expert): with the gate after a death gone, what ends the
+  attempts is the battle itself - the inner pair's ballistae (64 % of the damage the novice took in it, 83 % for the
+  expert's seed 2) and the bot's play in the gateway's inner mouth (in some attempts it stands there against the Wall's
+  advancing pikes without a lock, its target the far ballistae). Levers for P40: `ability.ballista_bolt` and
+  `prop.siege_ballista` for the inner pair, the bot's battle target (`scripts/debug/world_bot.gd`, the other M9 gate
+  lane's), the assist. No number was tuned here: the stage-5 novice now wins, and the stage-4 battle's numbers were not
+  what this lane's items were about.
+- **The riders at stage 5**: one attempt of three ended by a rider's charge (1,159 of the battle's 5,442); the battle is
+  won, so no rider number was touched.
+- **The bar's notches with ballistae broken**: the phases follow the units and the bar still counts the engines, so the
+  bar can pass a notch before its phase begins (the pips show the phase). A player-facing detail for P40's polish if it
+  reads wrongly in a playtest.
