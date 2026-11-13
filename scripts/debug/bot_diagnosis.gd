@@ -17,6 +17,12 @@ extends RefCounted
 ##      lying somewhere, and so on through all / any / not.
 ## world_blocked = no path, or a condition that can no longer hold: a softlock, a stability failure.
 ## bot_failed = both fine: the bot could not do something possible (reported, tuned in P17b).
+## M9 gate (final; the README's item 5): the path check asks as a walker does (reaches_far): a far query on the world
+## stops at its search distance (level_world's nav_query.far_distance_m, 300 m) and answers with the part it found, so a
+## goal farther along the navmesh than that is carried on from where the answer stopped. The integration's stage-4
+## novice ended "world_blocked" at its 6th death in Fort Aldmere's bailey, 6 m inside the broken gate: its one query to
+## the herald 340 m off stopped 25-35 m short of him (out through the gate and down the road is longer than 300 m),
+## though the titan path out through the gate and on to the herald was there.
 ##
 ## check_invariants() runs every tick of a bot run; each failure is a line of text, and any failure
 ## ends the run with exit code 3 (Autopilot).
@@ -118,7 +124,7 @@ static func path_check(player: GiantPlayer, level: LevelRoot, goal: Vector3, use
 	if not snapped.is_finite() or gap > use_radius + 1e-3:
 		out["note"] = "the objective is %.1f m from the nearest point of the giant's layer" % gap
 		return out
-	if reaches(level, from, snapped, layers):
+	if reaches_far(level, from, snapped, layers):
 		out.direct = true
 		out.reachable = true
 		return out
@@ -126,7 +132,7 @@ static func path_check(player: GiantPlayer, level: LevelRoot, goal: Vector3, use
 		var a := link.to_global(link.start_position)
 		var b := link.to_global(link.end_position)
 		for pair: Array in [[a, b], [b, a]]:
-			if reaches(level, from, pair[0], layers, LINK_TOLERANCE_M) and reaches(level, pair[1], snapped, layers):
+			if reaches_far(level, from, pair[0], layers, LINK_TOLERANCE_M) and reaches_far(level, pair[1], snapped, layers):
 				out.via_link = str(link.get_path())
 				out.reachable = true
 				return out
@@ -149,7 +155,7 @@ static func reachable_from_any(level: LevelRoot, points: PackedVector3Array, goa
 	if not snapped.is_finite() or _flat(snapped, goal) > use_radius + 1e-3:
 		return Vector3.INF
 	for i in range(points.size() - 1, -1, -1):
-		if reaches(level, points[i], snapped, layers):
+		if reaches_far(level, points[i], snapped, layers):
 			return points[i]
 	return Vector3.INF
 
@@ -166,6 +172,31 @@ static func snap_to_layer(level: LevelRoot, pos: Vector3, layers: int) -> Vector
 static func reaches(level: LevelRoot, a: Vector3, b: Vector3, layers: int, tolerance := REACH_TOLERANCE_M) -> bool:
 	var p := NavQuery.path(level, a, b, layers, NavQuery.PURPOSE_FAR)
 	return p.size() > 0 and _flat(p[p.size() - 1], b) <= tolerance
+
+
+## M9 gate (final): how many far queries reaches_far chains, each from where the last stopped.
+const FAR_LEGS := 4
+## M9 gate (final): a leg whose answer ends nearer than this to where it began made no progress (the nearest point of
+## a part of the navmesh the goal is not in): the chain stops there.
+const FAR_PROGRESS_M := 1.0
+
+
+## M9 gate (final; the diagnosis only - the bots keep reaches()): reaches(), carried on from where a far query's answer
+## stopped (at most FAR_LEGS queries) - a far query stops at its search distance (nav_query.far_distance_m on the
+## world) with the part it found - until the goal is reached or a leg makes no progress.
+static func reaches_far(level: LevelRoot, a: Vector3, b: Vector3, layers: int, tolerance := REACH_TOLERANCE_M) -> bool:
+	var from := a
+	for leg in FAR_LEGS:
+		var p := NavQuery.path(level, from, b, layers, NavQuery.PURPOSE_FAR)
+		if p.is_empty():
+			return false
+		var end := p[p.size() - 1]
+		if _flat(end, b) <= tolerance:
+			return true
+		if _flat(end, from) < FAR_PROGRESS_M:
+			return false
+		from = end
+	return false
 
 
 ## Disabled NavigationLink3D nodes of the level on `layers` (breakable props not yet broken).
