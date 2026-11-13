@@ -7,8 +7,9 @@ extends BossArena
 ##
 ##   * `phases` (export): [{"id", "below": aggregate fraction at which it begins (the first 1.0),
 ##     "encounters": [encounter ids it activates], "name"}] - "The Wall" at engagement, "The Charge" at
-##     60 %, "The Last Stand" at 25 % (or once every unit of the phases so far has fallen, so a
-##     composition never stalls). A phase begins once per attempt (phase_log): its encounters are
+##     70 %, "The Last Stand" at 50 % (Fort Aldmere's layout; 60 % and 25 % before the M9 confirmation,
+##     which the bar never reached while the battle's engines and their crews stood) (or once every unit
+##     of the phases so far has fallen, so a composition never stalls). A phase begins once per attempt (phase_log): its encounters are
 ##     force-activated (spawning around, never inside, the giant's footprint: the director's P34 rule),
 ##     Events.boss_phase_changed(battle id, phase) sounds the horn and the music layer.
 ##   * The aggregate (aggregate(), the boss bar): the maximum health of every unit the battle's

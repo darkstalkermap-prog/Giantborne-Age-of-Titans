@@ -142,7 +142,9 @@ func test_the_iron_regiment_is_one_battle_on_both_platforms() -> void:
 	var phases: Array = arena.get("phases", [])
 	assert_eq(phases.map(func(p: Dictionary) -> Array: return p.encounters), [[BATTLE[0]], [BATTLE[1]], [BATTLE[2]]],
 		"the Wall, the Charge and the Last Stand")
-	assert_eq(phases.map(func(p: Dictionary) -> float: return float(p.below)), [1.0, 0.6, 0.25], "at 100 %, 60 % and 25 %")
+	# M9 confirmation (W23): 0.6 / 0.25 -> 0.7 / 0.5, a layout defect (the next test): each phase begins once
+	# the phases before it fall, the ballistae and their crews standing.
+	assert_eq(phases.map(func(p: Dictionary) -> float: return float(p.below)), [1.0, 0.7, 0.5], "at 100 %, 70 % and 50 %")
 	var desktop := 0
 	var web := 0
 	for id: String in BATTLE:
@@ -194,6 +196,71 @@ func test_the_iron_regiment_is_one_battle_on_both_platforms() -> void:
 	# M8 gate (F16): the titan forges a deed opens shut while their settlement is hostile.
 	assert_eq(str(_element("world.aldmere.fort_forge").get("faction", "")), "aldmere", "the fort forge is Aldmere's")
 	assert_eq(str(_element("world.stonehold.skarn_forge").get("faction", "")), "skarn", "the hearth-forge is Skarn's")
+
+
+## M9 confirmation (W23): every phase of every battle in the layout begins once the phases before it have
+## fallen - their formations, riders and guards - while the battle's engines and the crews serving them still
+## stand. Plan §5.13 keeps the ballistae shooting into the Charge ("all four ballistae fire"), and Fort
+## Aldmere's bastion pair stands 16 m up, beyond a stage-4 giant's blows and throws; BattleBoss begins a phase
+## at its aggregate fraction or once every unit of the phases so far has fallen (P34's phase-spent rule), and
+## the crews of the battle's own engines count among those units. So each phase's `below` must be at or above
+## the bar the engines, their crews and the later phases leave - on both compositions (BattleBoss.planned_units,
+## the units the battle plans and its bar counts) at every stage a giant can fight it. With 0.6 / 0.25 the
+## Wall's fall left the bar at 0.622 (desktop) and 0.669 (web), and the Charge's at 0.452 and 0.465: a giant
+## who could not break the fort's ballistae never saw the Charge (lane P39's crown-first runs, four iterations).
+func test_every_battle_phase_begins_once_the_phases_before_it_fall() -> void:
+	var placed := _engines()
+	var battles := WorldContent.elements_of("arena").filter(func(el: Dictionary) -> bool:
+		return str(el.get("style", "")) == "battle")
+	assert_true(battles.size() >= 1, "the layout holds its battle")
+	for arena: Dictionary in battles:
+		var name := str(arena.get("battle_id", arena.get("id", "")))
+		var phases: Array = arena.get("phases", [])
+		assert_true(phases.size() >= 2, "%s has phases" % name)
+		if phases.is_empty():
+			continue
+		assert_eq(float(phases[0].get("below", 0.0)), 1.0, "%s: its first phase begins at engagement" % name)
+		for i in range(1, phases.size()):
+			assert_true(float(phases[i].below) < float(phases[i - 1].below), "%s: phase %d's fraction falls" % [name, i + 1])
+		var engines: Array = arena.get("engines", [])
+		var engine_hp := 0.0
+		for id: Variant in engines:
+			var el := placed.get(str(id), {}) as Dictionary
+			assert_false(el.is_empty(), "%s: engine %s is placed" % [name, id])
+			engine_hp += float(GameData.get_record("prop.siege_" + str(el.get("style", "ballista"))).get("health", 0))
+		var crews := {}
+		for ph: Dictionary in phases:
+			for enc_id: Variant in ph.get("encounters", []):
+				for entry: Variant in GameData.get_record(str(enc_id)).get("engines", []):
+					if typeof(entry) == TYPE_DICTIONARY and engines.has(str(entry.get("engine", ""))):
+						for c: Variant in entry.get("crew", []):
+							crews[str(c)] = true
+		for web: bool in [false, true]:
+			for stage: int in [4, 5, 6]:
+				var units: Array = []
+				var total := engine_hp
+				for ph: Dictionary in phases:
+					var u := {}
+					for enc_id: Variant in ph.get("encounters", []):
+						u.merge(BattleBoss.planned_units(GameData.get_record(str(enc_id)), stage, web))
+					units.append(u)
+					for v: float in u.values():
+						total += v
+				var line := PackedStringArray()
+				for i in range(1, phases.size()):
+					var left := engine_hp
+					for j in units.size():
+						for id: String in units[j]:
+							if j >= i or crews.has(id):
+								left += float(units[j][id])
+					var frac := left / total if total > 0.0 else 0.0
+					line.append("%s %.3f (begins at %.2f)" % [str(phases[i].get("id", i)), frac, float(phases[i].below)])
+					assert_true(frac <= float(phases[i].below) + 1e-6,
+						"%s (%s, stage %d): the phases before %s fallen leave the bar at %.3f of %d, above its %.2f" % [
+							name, "web" if web else "desktop", stage, phases[i].get("id", i), frac, int(total), float(phases[i].below)])
+				if stage == 4:
+					print("    battle phases (%s, %s, stage 4; aggregate %d, engines %d, %d engine crews standing): %s" % [
+						name, "web" if web else "desktop", int(total), int(engine_hp), crews.size(), ", ".join(line)])
 
 
 func test_the_crowns_three_roads_and_the_parley_tokens() -> void:

@@ -263,12 +263,12 @@ phases = [{
 "id": "wall",
 "name": "The Wall"
 }, {
-"below": 0.6,
+"below": 0.7,
 "encounters": ["encounter.aldmere_iron_regiment_charge"],
 "id": "charge",
 "name": "The Charge"
 }, {
-"below": 0.25,
+"below": 0.5,
 "encounters": ["encounter.aldmere_iron_regiment_stand"],
 "id": "last_stand",
 "name": "The Last Stand"
