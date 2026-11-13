@@ -522,7 +522,8 @@ static func _index_has(level: Node, table: String, id: String) -> bool:
 
 
 ## The world's invariants (plan M6-M9 §6.1), beside check_invariants: formation members within the
-## cap; no living encounter member in a chunk that is not loaded; at most MAX_LOADED_CHUNKS chunks
+## cap; no living encounter member in a chunk that is not loaded (one queued for unload counts once its
+## chunk_unloading has fired: ChunkStreamer.unload_pending); at most MAX_LOADED_CHUNKS chunks
 ## loaded; at most MAX_REGIONS_PER_LAYER navigation regions per layer and gate bit on each layer map; no
 ## chunk reloaded within its thrash window (the streamer's thrash count does not grow); no two world
 ## events in play at once (W23, P39f: the WanderDirector's rule since the M8 gate's F2 - an event left
@@ -591,7 +592,10 @@ static func check_world_invariants(tree: SceneTree, world: Node, state: Dictiona
 				if ent is CombatEntity and not (ent as CombatEntity).is_alive():
 					continue
 				var c := s.chunk_at(n.global_position)
-				if c != "" and not s.is_loaded(c):
+				# M9 gate (integration): a chunk queued for unload whose chunk_unloading has not fired yet is
+				# no failure - the director despawns its members at that step (integ_assisted's mixed run:
+				# the fort gate's garrison in c6_3, queued one step behind c6_2, at a half-second scan).
+				if c != "" and not s.is_loaded(c) and not s.unload_pending(c):
 					out.append("%s (alive) stands in %s, which is not loaded" % [id, c])
 	if world.has_method("nav_layers") and world.has_method("nav_map"):
 		for layer: int in world.call("nav_layers"):

@@ -7,7 +7,8 @@ extends IntegrationSuite
 ##     metrics written (the region, the discoveries, the streaming with its margin, the save size,
 ##     the path queries, the segments); under 4 minutes of wall time;
 ##   * each world invariant (BotDiagnosis.check_world_invariants) fires on its own injected fault on the
-##     streamed test world - the formation cap, a living member in a chunk that is not loaded, a chunk
+##     streamed test world - the formation cap, a living member in a chunk that is not loaded (M9 gate,
+##     integration: none while its chunk waits for its chunk_unloading in the unload queue), a chunk
 ##     reloaded within the thrash window, two world events in play at once, an event's fail timer running
 ##     while its centre is unloaded, a save over 200 KB - and stays quiet without one; a group lock on a
 ##     formation that is gone is a lock failure. W23 (P39f): the events invariant is the WanderDirector's
@@ -157,6 +158,20 @@ func test_each_world_invariant_fires_on_its_fault() -> void:
 		assert_eq(BotDiagnosis.check_world_invariants(get_tree(), w, state, 1000, false).size(), 0,
 			"the member scan is the full scan's (every 30 ticks)")
 		moved.global_position = home
+		# M9 gate (integration): its own chunk queued for unload (as _refresh queues it) - no failure until
+		# its chunk_unloading fires (the director despawns its members there), a failure after
+		var own := s.chunk_at(home)
+		var node: Variant = s._loaded.get(own)
+		s._loaded.erase(own)
+		s._unloading.append({"id": own, "node": node, "stage": 0})
+		assert_true(s.unload_pending(own) and not s.is_loaded(own), "queued for unload, its signal not fired yet")
+		assert_eq(BotDiagnosis.check_world_invariants(get_tree(), w, state, 1000), PackedStringArray(),
+			"a member in a chunk whose unload is pending: no failure")
+		s._unloading[s._unloading.size() - 1].stage = 1
+		fails = BotDiagnosis.check_world_invariants(get_tree(), w, state, 1000)
+		assert_true(fails.size() >= 1 and fails[0].contains("which is not loaded"), "after its chunk_unloading: %s" % [fails])
+		s._unloading.remove_at(s._unloading.size() - 1)
+		s._loaded[own] = node
 	# two world events in play at once (not one in play and one left behind), and a fail timer running with
 	# its centre unloaded
 	var wander := FakeWander.new()

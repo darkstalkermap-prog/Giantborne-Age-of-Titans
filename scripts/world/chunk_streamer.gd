@@ -233,6 +233,16 @@ func is_loaded(chunk_id: String) -> bool:
 	return n != null and is_instance_valid(n)
 
 
+## M9 gate (integration): true while the chunk waits in the unload queue and its chunk_unloading has not
+## fired yet - it left the loaded set when the focus moved (_refresh), and its members are despawned at its
+## first unload step, after the unloads queued before it (one step at a time).
+func unload_pending(chunk_id: String) -> bool:
+	for u: Dictionary in _unloading:
+		if str(u.id) == chunk_id:
+			return int(u.stage) == 0
+	return false
+
+
 ## True when the chunk is loaded and usable: every nav region added (it is loaded only then) and
 ## every map it changed synced past that change (P24b).
 func is_ready(chunk_id: String) -> bool:
