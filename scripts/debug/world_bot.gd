@@ -107,7 +107,9 @@ const DRIVE_HOLD_FRAC := 0.35
 ## health. It walks there (LURE_WALK_S at most), then waits LURE_WAIT_S for her, fighting her only while she
 ## is within its reach; a brazier she did not come to is left for LURE_IGNORE_S. P38's rule broke a brazier
 ## only when she happened to stand beside one: the conqueror experts' 745 s in the den never brought her to
-## her phase 2.
+## her phase 2. The expert only (P39 fix-up): the lure is a skilled player's tactic, and the novice - the
+## balance target - keeps P38's rule; with the lure (and the walk clock restarted below) the conqueror novice
+## on seed 1 lost the slay that it won without the restart.
 const LURE_BEYOND_M := 4.0
 const LURE_ARRIVE_M := 2.5
 const LURE_BELOW_FRAC := 0.9
@@ -2242,9 +2244,11 @@ func _standing_braziers() -> int:
 
 
 ## P39: the brazier to draw the Matriarch to and where the giant stands for it ({"id", "spot"}), or {}:
-## none while she burns or stands above LURE_BELOW_FRAC of her health, nor a brazier left for now, nor the
-## last one standing (see _standing_braziers).
+## none for the novice (see _lures), while she burns or stands above LURE_BELOW_FRAC of her health, nor a
+## brazier left for now, nor the last one standing (see _standing_braziers).
 func _lure_spot(tick: int, m: EnemyActor) -> Dictionary:
+	if not _lures():
+		return {}
 	if m == null or not is_instance_valid(m) or m.entity == null or not m.entity.is_alive():
 		return {}
 	if _standing_braziers() <= 1:
@@ -2272,6 +2276,13 @@ func _lure_spot(tick: int, m: EnemyActor) -> Dictionary:
 	var spot := best.global_position + away.normalized() * LURE_BEYOND_M
 	spot.y = player.global_position.y
 	return {"id": str(best.world_id), "spot": spot}
+
+
+## P39 (fix-up): true when the bot draws the Matriarch to a brazier - the expert only. The novice fights her
+## and breaks a brazier only while she stands beside one (P38's rule, the last one kept): walking her to the
+## fire is a skilled player's tactic, not the balance target's.
+func _lures() -> bool:
+	return combat != null and combat.skill == BotCombat.EXPERT
 
 
 ## P39: one tick of drawing the Matriarch to a brazier (LURE_* above). True while it does.

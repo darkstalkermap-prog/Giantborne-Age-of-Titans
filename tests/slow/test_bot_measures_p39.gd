@@ -564,18 +564,19 @@ func _brazier(id: String, pos: Vector3) -> BreakableProp:
 	return b
 
 
-## The den slain: with no brazier within BRAZIER_BURN_M of the Matriarch, the giant draws her to the one
-## nearest her - it stands LURE_BEYOND_M past it on her far side - while she does not burn and stands under
-## LURE_BELOW_FRAC of her health; at the spot it waits for her, and a brazier she does not come to is left
+## The den slain by the expert: with no brazier within BRAZIER_BURN_M of the Matriarch, the giant draws her to
+## the one nearest her - it stands LURE_BEYOND_M past it on her far side - while she does not burn and stands
+## under LURE_BELOW_FRAC of her health; at the spot it waits for her, and a brazier she does not come to is left
 ## for LURE_IGNORE_S (P39: F37 asks for the fire used as designed; P38's rule broke a brazier only when she
-## happened to stand beside one).
+## happened to stand beside one). The novice does not lure (the next test).
 func test_the_giant_draws_the_matriarch_to_a_brazier() -> void:
 	await _giant(4, Vector3(0, 0.05, 0))
 	var m := TestSpawn.enemy(world, MATRIARCH, Vector3(0, 0.05, -30), "world.greywood.troll_matriarch", false, 0.0)
 	var b1 := _brazier(WorldBot.DEN_BRAZIERS[0], Vector3(10, 0.05, -20))
 	var b2 := _brazier(WorldBot.DEN_BRAZIERS[1], Vector3(-25, 0.05, -45))
 	await step_ticks(2)
-	_bot()
+	_bot("expert")
+	assert_true(bot._lures(), "the expert draws her to the fire")
 	var pools := m.entity.combatant.pools
 	assert_true(bot._lure_spot(Sim.tick, m).is_empty(), "at full health she is not drawn")
 	pools.health = pools.health_max * 0.7
@@ -620,3 +621,38 @@ func test_the_giant_draws_the_matriarch_to_a_brazier() -> void:
 	await step_ticks(1)
 	assert_true(bool(m.call("p34_regen_blocked")), "she burns")
 	assert_true(bot._lure_spot(Sim.tick, m).is_empty(), "while she burns she is fought, not drawn")
+
+
+## The novice does not draw her to the fire (P39 fix-up: the lure is the expert's; with it the conqueror novice
+## on seed 1 lost the slay it won without the iteration-3 walk clock): at 70 % of her health with no brazier near
+## her it fights her where she stands, and it breaks a brazier only while she stands beside one (P38's rule), the
+## last one standing kept (iteration 2).
+func test_the_novice_fights_the_matriarch_without_a_lure() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	var m := TestSpawn.enemy(world, MATRIARCH, Vector3(0, 0.05, -30), "world.greywood.troll_matriarch", false, 0.0)
+	var b1 := _brazier(WorldBot.DEN_BRAZIERS[0], Vector3(10, 0.05, -20))
+	var b2 := _brazier(WorldBot.DEN_BRAZIERS[1], Vector3(-25, 0.05, -45))
+	await step_ticks(2)
+	_bot()
+	assert_false(bot._lures(), "the novice does not lure")
+	var pools := m.entity.combatant.pools
+	pools.health = pools.health_max * 0.7
+	assert_true(bot._lure_spot(Sim.tick, m).is_empty(), "no brazier to draw her to (the expert's would be %s)" % WorldBot.DEN_BRAZIERS[0])
+	assert_false(bot._act_lure(Sim.tick, m), "no lure taken up")
+	bot.task = {"kind": "matriarch", "resolution": "slay"}
+	bot._act_matriarch(Sim.tick, false)
+	assert_true(bot._lure.is_empty(), "no lure's walk or wait begun")
+	assert_eq(bot.mode, "combat", "she is fought where she stands")
+	assert_true(bot.task.get("target") == null, "no brazier is the slay's target")
+	# P38's rule: she stands beside a brazier (two standing) - it is broken
+	p.global_position = b1.global_position + Vector3(-2, 0, 2)
+	m.global_position = b1.global_position + Vector3(2, 0, 0)
+	await step_ticks(2)
+	bot._act_matriarch(Sim.tick, false)
+	assert_eq(bot.task.get("target"), b1, "a brazier she stands beside is broken")
+	# the last one standing is kept: with all three nests burned she would flee
+	b2.destroyed = true
+	bot.task = {"kind": "matriarch", "resolution": "slay"}
+	bot._act_matriarch(Sim.tick, false)
+	assert_true(bot.task.get("target") != b1, "the last brazier is not broken")
+	assert_true(bot._lure.is_empty(), "and no lure begun")
