@@ -1678,10 +1678,42 @@ attempt - the Charge at 613 s, the Last Stand at 689 s, Corvane spared at 789 s 
 took 815 damage in it (the ballistae 380, the riders 342, soldiers 93; `fix1`: 1,306, the ballistae 821); 2 stuck
 moments at the gate, none at the camp, no teleport.
 
-So the composition follows the plan and the giant lives half again as long in the bailey, but the novice still loses
-at stage 4: it enters with a quarter of its health or less, and the bar never goes below 0.79. The lever is not the
-battle's: it is the gate after each death (above) - the breach's checkpoint, the garrison's arrows and bolts on a giant
-breaking the gate, or the bot's answer to them - which this lane leaves to P40 with the measurements (FOLLOWUPS, the M8
-release check's Iron Regiment row). Telling the player was not needed for the battle: the quest's battle stage already
-reads "smash the wall ballistae" (`quest.iron_regiment`'s waiting text), and now the two in the Wall stand on the
-bailey's floor at its far corners, where a stage-4 giant reaches them.
+At stage 5 (`aldmere_e5_ir5`, `w.peaceful:novice:1` with the march's help, then the breach; the same command as
+`fix1_ir5`) the battle reached the Charge for the first time in this lane's unassisted runs, but the novice still lost:
+
+| `aldmere_e5_ir5` (stage 5, 1,355-1,385 health) | Result |
+| --- | --- |
+| The run | `bot_failed` at 1,612 s simulated (six deaths at the fort; one more on the road at 228 s, a raider) |
+| Attempts 1-2 (from 885 s) | into the bailey with 914 and 1,045 health; **the Charge** each time (the bar at 0.641 and 0.628); died to the riders 50 and 71 s in (`fix1_ir5`: every attempt died in the Wall 27-43 s after entering) |
+| Attempts 3-4 (from 1,153 s) | died outside the broken gate (the garrison's pikes), 130 s each, never reaching the gate |
+| Attempts 5-6 (from 1,420 s) | into the bailey with 759 and 739; died in the Wall 41 and 39 s in (a pike, the north-west ballista; bar 0.745, 0.816) |
+| The battle's damage | the ballistae 2,541 (60 %), soldiers 1,302, the riders 420 |
+
+Attempts 3-4 are the stage-5 form of the gate after a death: the breach's checkpoint committed (the garrison stood
+down for Brannock's banner while the gate stood), so the reload comes back at the fort gate's waystone (650, -59) with
+the gate broken - but the breach roused the garrison (its stand-down needs the gate standing), and it stands 25-30 m
+from the waystone: the giant fought its pikes and archers in the gateway's mouth from 3 s after each reload (the run's
+13 stuck moments at the fort: 10 in the gateway's mouth, 3 in the gate, each freed by a sidestep or a replan, no
+teleport) and twice never reached the gate. Attempts 2, 5 and 6 got
+through it in 50-56 s with 200-600 health spent.
+
+So the composition follows the plan and the giant lives half again as long in the bailey (stage 4) and reaches the
+Charge (stage 5), but the novice still loses: at stage 4 it enters with a quarter of its health or less and the bar
+never goes below 0.79; at stage 5 the riders end the attempts that reach the Charge. The lever is not the battle's
+numbers: it is the gate after each death (above) - the breach's checkpoint and the roused garrison at the waystone, the
+garrison's arrows and bolts on a giant breaking the gate, or the bot's answer to them - which this lane leaves to P40
+with the measurements (FOLLOWUPS, the M8 release check's Iron Regiment row). No number of the battle was tuned.
+
+**Telling the player** (commit `40afc4e`): the ballistae take most of the giant's health in the battle, and the
+quest's word for them ("smash the wall ballistae", `quest.iron_regiment`'s waiting text) was only in the journal's
+Waiting section. As the battle engages the HUD now says which of its standing engines shoot and how many more join
+later - "Smash the ballistae: two shoot now, two more join when the Charge begins." - and as the Charge frees the
+bastions' pair, "Two more ballistae open fire." (BattleBoss.engines_line, phase_engines_line: built from the engines'
+phases, so the line follows the composition, and a wrecked engine is not counted). The two in the Wall stand on the
+bailey's floor at its far corners, where a stage-4 giant reaches them. `test_iron_regiment_world` asserts both lines
+on desktop and the web (102 -> 108 checks; 4 failures on the previous code). The bot does not read the HUD, so its
+runs are unchanged by the line.
+
+### What the changes touch, measured again
+
+[MIXED_LOG]
