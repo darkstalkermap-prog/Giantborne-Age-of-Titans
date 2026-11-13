@@ -139,6 +139,10 @@ func _ready() -> void:
 		int(tier_ms.get("slow", 0)) / 1000.0, int(tier_ms.get("gate", 0)) / 1000.0])
 	for f in total_failures:
 		print("FAIL  " + f)
+	# M9 gate (final): the wall-clock budgets measured over budget on a loaded machine (BudgetRule), for check.sh
+	for w in BudgetRule.warnings:
+		print(w)
+	print("WARNINGS: %d" % BudgetRule.warnings.size())
 	print("RESULT: %d suites, %d checks, %d failures" % [suites, total_checks, total_failures.size()])
 	OS.remove_logger(_logger)
 	get_tree().quit(1 if not total_failures.is_empty() else 0)

@@ -58,6 +58,7 @@ func _on_bake_finished() -> void:
 # --------------------------------------------------------------------------- load and structure
 
 func test_loads_fast_with_offline_navigation() -> void:
+	var load_start := BudgetRule.load_average()   # M9 gate (final): the shared load rule (tests/support/budget_rule.gd)
 	var t0 := Time.get_ticks_usec()
 	var packed := load(ValleyProbe.VALLEY) as PackedScene
 	var lv := packed.instantiate() as LevelRoot
@@ -77,7 +78,7 @@ func test_loads_fast_with_offline_navigation() -> void:
 	var ms := (Time.get_ticks_usec() - t0) / 1000.0
 	var nodes := _count_nodes(lv)
 	print("    valley: loaded, instanced and added in %.0f ms; %d nodes" % [ms, nodes])
-	assert_true(ms < MAX_LOAD_MS, "the Valley loads in under 3 s headless (%.0f ms)" % ms)
+	BudgetRule.judge(self, ms, MAX_LOAD_MS, load_start, "the Valley loads in under 3 s headless (%.0f ms)" % ms)
 	assert_true(nodes > 100 and nodes < 4000, "a plausible node count (%d)" % nodes)
 	var synced: bool = await ValleyProbe.wait_for_navigation(self, lv)
 	assert_true(synced, "the navigation map answers on every layer without a bake")

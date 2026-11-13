@@ -6,7 +6,8 @@ extends IntegrationSuite
 ## reload a chunk within 10 s of its unload (thrash), never hold more than 25 chunks, and keep the
 ## streaming work at p99 6 ms or less per frame (desktop headless). The work is wall time, which
 ## another process on a shared machine can stretch: when the first walk's p99 is over, a second walk
-## (a fresh world, the same deterministic streaming) is measured and the better p99 is judged.
+## (a fresh world, the same deterministic streaming) is measured and the better p99 is judged. M9 gate (final):
+## judged by the shared load rule (tests/support/budget_rule.gd) - still over on a loaded machine, it warns.
 
 const SCENE := "res://scenes/test/test_world.tscn"
 const SPEED := 16.0
@@ -43,6 +44,7 @@ func _walk_once() -> Dictionary:
 
 
 func test_the_streaming_walk_at_16_metres_a_second() -> void:
+	var load_start := BudgetRule.load_average()
 	var r := await _walk_once()
 	assert_true(bool(r.done) and bool(r.finished), "the route was carried to its end (%d ticks)" % r.ticks)
 	assert_true(float(r.metres) > 2500.0, "about 2.9 km (%.0f m)" % r.metres)
@@ -60,5 +62,5 @@ func test_the_streaming_walk_at_16_metres_a_second() -> void:
 		var again := await _walk_once()
 		p99 = minf(p99, float(again.work_ms_p99))
 		seen.append("%.2f" % float(again.work_ms_p99))
-	assert_true(p99 <= WORK_P99_MS, "streaming work p99 %.2f ms (at most %.0f ms; the walks measured: %s)" % [p99,
-		WORK_P99_MS, ", ".join(seen)])
+	BudgetRule.judge(self, p99, WORK_P99_MS, load_start, "streaming work p99 %.2f ms (at most %.0f ms; the walks measured: %s)" % [
+		p99, WORK_P99_MS, ", ".join(seen)])

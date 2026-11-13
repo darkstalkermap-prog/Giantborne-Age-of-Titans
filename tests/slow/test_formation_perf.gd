@@ -126,33 +126,23 @@ func _second_window(r: Dictionary, budget: float, retry_ticks: int, what: String
 
 
 ## M9 gate (lane review): the machine's 1-minute load average (/proc/loadavg) when a measurement starts; -1 where
-## the system has none to read (it is then judged as on a quiet machine).
+## the system has none to read (it is then judged as on a quiet machine). M9 gate (final): BudgetRule's, shared with
+## every wall-clock CPU budget test.
 static func load_average() -> float:
-	var f := FileAccess.open("/proc/loadavg", FileAccess.READ)
-	if f == null:
-		return -1.0
-	var first := f.get_line().get_slice(" ", 0)
-	return float(first) if first.is_valid_float() else -1.0
+	return BudgetRule.load_average()
 
 
 ## M9 gate (lane review): how a wall-clock p95 is judged - "pass" within its budget; over it, "warn" when the load
 ## average at the measurement's start (`load_start`) was above the machine's `cpus`, else "fail". Pure.
 static func verdict(p95: float, budget: float, load_start: float, cpus: int) -> String:
-	if p95 <= budget:
-		return "pass"
-	return "warn" if load_start > float(cpus) else "fail"
+	return BudgetRule.verdict(p95, budget, load_start, cpus)
 
 
-## Asserts `cpu`'s p95 within `budget` - or, over it on a loaded machine (verdict "warn"), prints the measurement as
-## a warning instead of failing.
+## Asserts `cpu`'s p95 within `budget` - or, over it on a loaded machine (verdict "warn"), reports it as a BUDGET
+## WARNING instead of failing (BudgetRule: check.sh shows it in its summary).
 func _judge_p95(cpu: Dictionary, budget: float, load_start: float, what: String) -> void:
-	var cpus := OS.get_processor_count()
-	var line := "%s: CPU per tick p95 %.2f ms <= %.1f ms (p50 %.2f, max %.2f; load average %.2f at the start, %d CPUs)" % [
-		what, float(cpu.p95), budget, float(cpu.p50), float(cpu.max), load_start, cpus]
-	if verdict(float(cpu.p95), budget, load_start, cpus) == "warn":
-		print("    WARNING test_formation_perf: over budget on a loaded machine, reported and not failed - %s" % line)
-		return
-	assert_true(float(cpu.p95) <= budget, line)
+	BudgetRule.judge(self, float(cpu.p95), budget, load_start, "%s: CPU per tick p95 %.2f ms <= %.1f ms (p50 %.2f, max %.2f)" % [
+		what, float(cpu.p95), budget, float(cpu.p50), float(cpu.max)])
 
 
 func test_the_load_rule_fails_a_regression_on_a_quiet_machine_only_warns_on_a_loaded_one() -> void:
