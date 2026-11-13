@@ -104,7 +104,7 @@ static func _same(a: Variant, b: Variant) -> bool:
 # --------------------------------------------------------------------------- Interactable
 
 func prompt_text(_player: GiantPlayer) -> String:
-	return "Reforge at the %s" % display_name
+	return "Reforge at %s" % TextUtil.with_the(display_name)   # M9 gate (lane review): not "at the The Giantforge"
 
 
 func can_interact(_player: GiantPlayer) -> bool:

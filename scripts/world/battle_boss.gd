@@ -491,7 +491,7 @@ func reset_line() -> String:
 ## on foot until the battle ends (death, victory, or Load last checkpoint), so its leaving lines above are
 ## reached only by leaving some other way - the giant is told so at once.
 func gate_line() -> String:
-	return "The portcullis drops behind you: no way out until %s is beaten." % battle_name
+	return "The portcullis drops behind you: no way out until %s is beaten." % TextUtil.mid_sentence(battle_name)
 
 
 ## A new attempt: every member of the battle's encounters leaves (the fallen return), phases restart; the

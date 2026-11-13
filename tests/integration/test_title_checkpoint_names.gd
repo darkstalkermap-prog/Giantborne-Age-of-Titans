@@ -99,6 +99,56 @@ func test_the_title_names_the_checkpoint_never_its_id() -> void:
 	assert_eq(TitleScreen.mid_sentence("Grove Shrine"), "the Grove Shrine", "a name without an article takes one")
 
 
+## M9 gate (lane review): a display name that begins with "The" reads "the" mid-sentence in the game's other
+## lines too, through TextUtil (scripts/core/text_util.gd): the bailey's gate line said "until The Iron Regiment
+## is beaten", the Valley's forge "Reforge at the The Giantforge", its two vault pickups "Take the The Kings'
+## Annals", a talker "Talk to The ...", a moved respawn "You wake at The Broken Stair". Every item a pickup may
+## hold, every dialogue's speaker, the forges, exits and battles with such names: no "the The", no capital "The"
+## after a line's first word.
+func test_display_names_read_lower_case_mid_sentence() -> void:
+	assert_eq(TextUtil.mid_sentence("The Iron Regiment"), "the Iron Regiment", "a leading The is lower-cased")
+	assert_eq(TextUtil.mid_sentence("Reeve Tamsin"), "Reeve Tamsin", "any other name is left as it is: it only lower-cases")
+	assert_eq(TextUtil.with_the("The Broken Stair"), "the Broken Stair", "after a 'the' of the sentence's own")
+	assert_eq(TextUtil.with_the("Kingsgate shelf waystone"), "the Kingsgate shelf waystone", "a name without one takes it")
+	var bad: Array = []   # an Array: the lambda below appends to it (a packed array would be its own copy there)
+	var check := func(line: String, what: String) -> void:
+		if line.contains("the The ") or line.to_lower().contains("the the ") or line.substr(1).contains(" The "):
+			bad.append("%s: '%s'" % [what, line])
+	var battle := BattleBoss.new()
+	battle.battle_name = "The Iron Regiment"
+	check.call(battle.gate_line(), "the bailey's gate line")
+	assert_eq(battle.gate_line(), "The portcullis drops behind you: no way out until the Iron Regiment is beaten.",
+		"the battle's gate line")
+	battle.free()
+	var forge := Forge.new()
+	forge.display_name = "The Giantforge"
+	assert_eq(forge.prompt_text(null), "Reforge at the Giantforge", "the Valley's forge")
+	forge.display_name = "Giantforge"
+	assert_eq(forge.prompt_text(null), "Reforge at the Giantforge", "a forge named without its article")
+	forge.free()
+	var pickup := ItemPickup.new()
+	var named := 0
+	for rec: Dictionary in GameData.records_of_type("item"):
+		pickup.item_id = str(rec.id)
+		pickup.count = 1
+		check.call(pickup.prompt_text(null), str(rec.id))
+		named += 1 if str(rec.get("display_name", "")).begins_with("The ") else 0
+	pickup.item_id = "item.kings_annals"
+	assert_eq(pickup.prompt_text(null), "Take the Kings' Annals", "the Citadel's annals")
+	pickup.free()
+	assert_true(named >= 2, "items named The ... are checked (%d)" % named)
+	var talker := NpcTalker.new()
+	for rec: Dictionary in GameData.records_of_type("dialogue"):
+		talker.dialogue_id = str(rec.id)
+		check.call(talker.prompt_text(null), str(rec.id))
+	talker.dialogue_id = "dialogue.kingsgate_beacon"
+	assert_eq(talker.prompt_text(null), "Talk to the Kingsgate beacon", "a speaker named The ...")
+	talker.free()
+	for exit_name: String in ["The Kings' Door", "The Broken Stair", "The Citadel stair"]:
+		assert_eq(Quests.by_exit_text(exit_name), "by " + exit_name.replace("The ", "the "), "the tracker's way by %s" % exit_name)
+	assert_eq(bad, [], "no line puts a capital The mid-sentence")
+
+
 ## M8 release (R2): the line names where Continue wakes the giant. A 0.7.0-m7 save at the Brannock waystone
 ## with Brannock hostile read "at the Brannock waystone" while Continue woke the giant at the Kingsgate shelf
 ## waystone ("Brannock's guards hold the ground there."): the line now applies the respawn blockers the load

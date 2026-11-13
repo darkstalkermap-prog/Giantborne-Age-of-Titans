@@ -939,7 +939,7 @@ static func _checkpoint_open(idx: WorldIndex, id: String) -> bool:
 static func by_exit_text(exit_name: String) -> String:
 	if exit_name == "":
 		return ""
-	return "by " + ("the " + exit_name.substr(4) if exit_name.begins_with("The ") else exit_name)
+	return "by " + TextUtil.mid_sentence(exit_name)
 
 
 static func _flat(a: Vector3, b: Vector3) -> float:

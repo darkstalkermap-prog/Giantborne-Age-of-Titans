@@ -861,8 +861,8 @@ func _note_respawn_moved(from_id: String, to_id: String) -> void:
 	var where := checkpoint_display_name(to_id)
 	if where == "":
 		where = "another resting place"
-	elif not where.begins_with("The "):
-		where = "the " + where
+	else:
+		where = TextUtil.with_the(where)   # M9 gate (lane review): "the Broken Stair", not "The Broken Stair"
 	var line := "%s You wake at %s." % [why if why != "" else "You cannot wake there now.", where]
 	last_load_message = _join_message(last_load_message, line)
 	Events.hud_message.emit(line, "warn")

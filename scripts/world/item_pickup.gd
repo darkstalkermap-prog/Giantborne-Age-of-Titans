@@ -49,7 +49,8 @@ func item_name() -> String:
 
 
 func prompt_text(_player: GiantPlayer) -> String:
-	return "Take the %s%s" % [item_name(), " (x%d)" % count if count > 1 else ""]
+	# M9 gate (lane review): "Take the Kings' Annals", not "Take the The Kings' Annals".
+	return "Take %s%s" % [TextUtil.with_the(item_name()), " (x%d)" % count if count > 1 else ""]
 
 
 func can_interact(_player: GiantPlayer) -> bool:

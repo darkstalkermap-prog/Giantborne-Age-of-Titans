@@ -301,7 +301,8 @@ func test_a_battle_behind_its_gate_says_there_is_no_way_out() -> void:
 	battle.engage()
 	await step_ticks(2)
 	assert_true(battle.is_gate_closed(), "the portcullis is down")
-	assert_true(lines.has(["The portcullis drops behind you: no way out until The Iron Regiment is beaten.", "warn"]),
+	# M9 gate (lane review): the battle's name mid-sentence reads "the Iron Regiment" (it was "until The Iron Regiment").
+	assert_true(lines.has(["The portcullis drops behind you: no way out until the Iron Regiment is beaten.", "warn"]),
 		"and the giant is told (%s)" % [lines])
 	Events.hud_message.disconnect(on_message)
 

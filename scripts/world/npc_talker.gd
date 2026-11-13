@@ -84,7 +84,7 @@ func prompt_text(_player: GiantPlayer) -> String:
 	if prompt != DEFAULT_PROMPT:
 		return prompt
 	var speaker := str(dialogue_record().get("speaker", ""))
-	return "%s to %s" % [DEFAULT_PROMPT, speaker] if speaker != "" else DEFAULT_PROMPT
+	return "%s to %s" % [DEFAULT_PROMPT, TextUtil.mid_sentence(speaker)] if speaker != "" else DEFAULT_PROMPT
 
 
 func interact(_player: GiantPlayer) -> void:
