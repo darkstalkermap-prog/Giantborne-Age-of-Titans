@@ -2139,7 +2139,9 @@ func _begin_leash_wait(tick: int, why: String) -> void:
 ## M9 gate (lane review, fix-up 1): struck by a hostile or hurt while it waits for its post outside its leash, the
 ## member answers: the return ends where it stands, unhealed (what LEASH_HEAL_S gave stays), its AI resumes and
 ## it learns who struck it (else the hostile body on its post), so it fights or flees by its own rules. The body
-## that holds its post now holds it off the leash (leash_held_off) while it stays there.
+## that holds its post now holds it off the leash (leash_held_off) while it stays there - M9 gate (final): only a
+## hostile one. A fellow (its own team, or a neutral body) standing on its post held it exempt from the leash for
+## as long as that fellow stood there; now the leash holds it as before (it waits for its post again).
 func _leash_answer(tick: int) -> void:
 	var taker := _leash_post_taker()
 	var foe := Sim.get_entity(_leash_struck_by) if _leash_struck_by != "" else null
@@ -2147,7 +2149,9 @@ func _leash_answer(tick: int) -> void:
 		foe = Sim.get_entity(str(taker.id))
 	leash_answers += 1
 	_end_leash_return(true, false)
-	leash_holder_id = str(taker.get("id", ""))
+	var holder := Sim.get_entity(str(taker.get("id", ""))) if not taker.is_empty() else null
+	leash_holder_id = holder.entity_id if holder != null and holder.team != entity.team \
+		and holder.team != CombatEntity.Team.NEUTRAL else ""
 	if brain == null or not entity.is_alive():
 		return
 	if foe != null and foe != entity and foe.team != entity.team and foe.is_alive() and is_instance_valid(foe.actor):
