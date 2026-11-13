@@ -1594,11 +1594,11 @@ func _on_boss_disengaged(_tick: int, _boss_id: String, reason: String) -> void:
 ##     completion (Ulfra's plea starting the siege, a side quest's reward): an ordinary request -
 ##     M9 gate (lane ironreg) but the start of an oath's road (settles_an_oath: the crown's breach,
 ##     quest.iron_regiment, which Fort Aldmere's gate falling starts, and its sabotage, quest.war_engines,
-##     which the first of its engines wrecked starts): a completion request, as the oath it leads to. The
-##     gate falls with its garrison aware about the giant: the ordinary request waited on them, then on
-##     the battle he walked into, and a death in the battle dropped it - every death reloaded the fort
-##     gate's waystone with the gate whole, and he broke it again under the garrison's arrows and bolts
-##     before each attempt (docs/BALANCE_LOG.md, "M9 gate (lane ironreg)").
+##     which the deserters' word or the first of its engines wrecked starts): a completion request, as
+##     the oath it leads to. The gate falls with its garrison aware about the giant: the ordinary request
+##     waited on them, then on the battle he walked into, and a death in the battle dropped it - every
+##     death reloaded the fort gate's waystone with the gate whole, and he broke it again under the
+##     garrison's arrows and bolts before each attempt (docs/BALANCE_LOG.md, "M9 gate (lane ironreg)").
 ## The respawn stays where it is.
 func _on_quest_stage_changed(_tick: int, quest_id: String, _stage_id: String) -> void:
 	if quest_id == WORLD_MAIN_QUEST_ID:
