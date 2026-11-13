@@ -1067,3 +1067,60 @@ regeneration), `test_yield_protocol` (Harrok held at 25 % of his health) and the
   bot looks once a second at a free tick). A bot question for the confirmation phase.
 - **Music and streaming**: not §6.4 data levers (the music's intensity rules are P28's mix data; the work
   frame and the CPU per tick were measured with two runs beside the other lane's full checks).
+
+## M9 (P39): the report's set - the novice's runs again on the final numbers (tag `p39_rep_world`)
+
+The table above combines runs of two codes: iteration 3's thirteen (`cee2edd`) and iteration 2's five novice runs
+(`65293ad`, the Matriarch at 15 / 25 hp/s). For `docs/HOW_IT_PLAYS.md` the novice's nine runs were made again on
+the final numbers, on commit `00a2bad` (`cee2edd`'s game, with the bot's probe filing its CPU per tick by region:
+`docs/PERFORMANCE.md`), from a snapshot, two streams at once with nothing else running on the machine, and the
+Matriarch's slay at stage 4 with them:
+
+```
+tools/run_bots.sh w.peaceful:novice:1 w.conqueror:novice:1 w.mixed:novice:1 w.order_march:novice:1 \
+  w.order_crown:novice:1 --jobs=1 --timeout=3600 --tag=p39_rep_world
+tools/run_bots.sh w.peaceful:novice:2 w.conqueror:novice:2 w.mixed:novice:2 w.order_wood:novice:1 \
+  --jobs=1 --timeout=3600 --tag=p39_rep_world
+tools/run_bots.sh w.peaceful:novice:1 --jobs=1 --timeout=3600 --tag=p39_rep_mat4_slay \
+  --extra="--bot-oaths=wood:slay,march:intimidate --bot-until=oath.wood.done"
+```
+
+| Run | In the set above (its code) | On the final numbers (`p39_rep_world`) |
+| --- | --- | --- |
+| w_peaceful_novice_1 | completed, 2 deaths, 35.7 min (`65293ad`) | completed, 1 death, 34.3 min: the Matriarch driven out at 0.60, Harrok spared on the 2nd attempt (0.39, 0.25) |
+| w_peaceful_novice_2 | completed, 1 death, 32.9 min (`65293ad`) | completed, 3 deaths, 34.6 min: the Matriarch driven out at 0.58, Harrok spared on the 4th (0.42, 0.41, 0.34, 0.25) |
+| w_conqueror_novice_1 | completed, 6 deaths, 35.0 min: the Matriarch slain in one attempt (`65293ad`) | **stopped in the den**, 7 deaths: the Matriarch 6 attempts (0.46, 0.48, 0.85, 0.26, 0.28, 0.29), five of them into her phase 2 |
+| w_conqueror_novice_2 | the den, 7 deaths (`cee2edd`) | the same run to the tick |
+| w_mixed_novice_1, w_mixed_novice_2 | completed, 2 and 3 deaths (`65293ad`) | the same runs to the tick (no change of iteration 3 meets them) |
+| w_order_march_novice_1, w_order_wood_novice_1, w_order_crown_novice_1 | completed, completed, the Iron Regiment (`cee2edd`) | the same runs to the tick |
+
+The runs that met a change came out differently; every other came out to the tick (the same simulated seconds,
+kills and flags hash), which also shows that the probe's region sections leave the game alone. So the report's
+set is these nine with iteration 3's nine expert runs (`p39_report_set`).
+
+**The conqueror novice on seed 1** slew the Matriarch in one attempt in iteration 2 and fails in six on the final
+numbers, although her regeneration fell between them (15 / 25 -> 12 / 15 hp/s). The run is the same to the den. In
+it, iteration 3's bot draws her to a standing brazier before breaking it (the lure, whose walk clock iteration 3
+fixed): in its first attempt (tick 33,201) it gave up walking her to the den's second brazier after 20 s, and that
+attempt and the five after it failed, five of the six in her phase 2 (her sweep and stomp 5,279 of the 9,038
+damage it took in the den, her whelps 1,696; iteration 2's single attempt took 244 from her blows). The lure gave
+the conqueror experts two slays of three (none in iteration 2); for the novice it appears to cost the fight. No
+data lever is indicated (her numbers fell); the lure is a bot question for the confirmation phase, with a trace of
+`w.conqueror:novice:1` (`--bot-trace=60`) as its first step.
+
+**The Matriarch slain at stage 4** (`p39_rep_mat4_slay`; iteration 0's `p39_mat4_slay` at 25 / 40 hp/s: six deaths,
+her phase 2 held at 0.46-0.53): not slain on the final numbers either - six attempts (0.82, 0.79, 0.45, 0.46,
+0.64, 0.47), three of them into her phase 2, and the run stopped on its sixth death (her frenzy 2, sweep 1 and stomp
+1, her whelps 2; 5,523 of the 8,089 damage taken in the den from her blows, 2,566 from the whelps, thrown or
+swiping). The bot's log has no lure given up in this run. The novice's slay is a miss at stage 4 as at stage 5; the
+drive-out at stage 4 takes one attempt (`w_order_wood_novice_1`).
+
+**The targets on the report's set** (`python3 tools/bot_report.py <p39_report_set> world_targets`; the set above in
+brackets where it differs): novice completion peaceful 2 / 2, conqueror 0 / 2 (1 / 2), mixed 2 / 2; the experts as
+above; the orders march and wood complete, the crown does not; the human estimate of the main path 29.8 min (32.9);
+Harrok's deaths per duel median 2.5 (2), the runs 1 / 3 / 2 / 3 and the orders' 4 and 1 - **met**; the Matriarch
+driven out with no death in the den at stage 4 or 5, slain by no novice at stage 5 (one of two) or at stage 4 -
+**miss**; other segments at most 1 death; formations 84 % (85 %), group locks 87 % (86 %), engines thrown 9 of 9
+runs at stage 6 (10 of 10); off camera 13 % (11 %); the music among lesser enemies 44 % (45 %); lone humans 3 %; the
+abilities as above. CPU per tick and the work frame on a quiet machine: `docs/PERFORMANCE.md`, "The M9
+performance captures (P39)".
