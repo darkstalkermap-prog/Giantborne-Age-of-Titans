@@ -10,6 +10,12 @@ extends BossArena
 ##   * The duel's endings reach the clans: Spare (or the talk) reconciles `faction` (Harrok's clan: its
 ##     giants at Harrok's Hall stand down); Strike - Harrok dead - sets `empty_flag` (world.moot.empty:
 ##     the watching clans leave the Moot, and Harrok's clan stays hostile).
+##   * M9 gate (final; the final audit's F2): the clans leave at once. The empty flag kept their encounter from
+##     activating (its forbids_flags) but never sent an active one away - the director reads forbids_flags only as
+##     it activates an encounter - so the six watchers stood on around the empty Moot until the giant walked 240 m
+##     off. Harrok's death now deactivates `clans_encounter` (EncounterDirector.p37_deactivate: its giants leave
+##     the world, and the empty flag keeps them away). Only that encounter: a generic despawn on forbids_flags could
+##     pull a fight such as the gate garrison's away mid-combat.
 ## Placed by the world builder's arena kind (style "moot"); Harrok's encounter holds him neutral at his
 ## post until the giant enters the ring (its stand_down_when).
 
@@ -23,6 +29,8 @@ const TALK_OUTCOME := "yielded_talk"
 @export var faction := "harrok_clan"
 ## Set when the champion dies (the Moot empties).
 @export var empty_flag := "world.moot.empty"
+## M9 gate (final): the watching clans' encounter, sent away when the champion dies ("" = none).
+@export var clans_encounter := "encounter.stonehold_moot_clans"
 
 
 func _ready() -> void:
@@ -89,8 +97,11 @@ func p34_on_yield_decided(entity_id: String, outcome: String) -> void:
 		FactionState.reconcile(faction)
 
 
-## Harrok's death (Strike): the Moot empties.
+## Harrok's death (Strike): the Moot empties - and its watching clans leave now (M9 gate, final).
 func _on_entity_died(tick: int, id: String, killer: String) -> void:
 	super(tick, id, killer)
 	if id == boss_id and empty_flag != "":
 		WorldState.try_set_flag(empty_flag, true)
+		var d := _director()
+		if d != null and clans_encounter != "":
+			d.p37_deactivate(clans_encounter)

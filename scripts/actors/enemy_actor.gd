@@ -37,6 +37,9 @@ const ALLY_DEATH_RADIUS_M := 15.0
 @export var commander := false
 ## Per-spawn loot table override set by the director; "" = the record's (P12 reads it).
 @export var loot_table := ""
+## M9 gate (final): it only watches (a spawn's `spectator`, set by the director: the clans' giants around the
+## Moot's ring) - a blow of the giant that strikes it offends no faction (FactionState.offended_faction).
+@export var spectator := false
 
 ## Spawn point; the director sets it and the leash walks back to it (P10a).
 var home_position := Vector3.ZERO

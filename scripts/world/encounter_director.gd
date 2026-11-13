@@ -713,6 +713,7 @@ func _spawn(enc: Encounter, m: Member, tick: int, ppos: Vector3) -> bool:
 	_set_if(node, "persist_death", bool(s.get("persist_death", true)))
 	_set_if(node, "commander", bool(s.get("commander", false)))
 	_set_if(node, "loot_table", str(s.get("loot_table", "")))
+	_set_if(node, "spectator", bool(s.get("spectator", false)))   # M9 gate (final): it only watches
 	var patrol := str(s.get("patrol", ""))
 	if patrol != "":
 		var route := level.patrol_route(patrol)
