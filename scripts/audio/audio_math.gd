@@ -302,6 +302,14 @@ static func intensity_target(snapshot: Dictionary, cfg: Dictionary) -> String:
 	var h := float(snapshot.get("player_height", REFERENCE_HEIGHT_M))
 	var ratio := float(cfg.get("lesser_height_ratio", 0.3))
 	var combat_r := float(cfg.get("combat_radius_m", 35.0)) * scale
+	# M9 gate (plan §5.14, §6.4: lone humans no longer raise combat music from stage 4; the music in combat for
+	# under 25 % of the time among only lesser enemies): for a giant at least combat_cap_min_height_m tall the
+	# scaled combat radius (105-181 m at stages 4-6) is capped at combat_cap_m, so a formation or a crew
+	# holding 40-120 m off while the giant fights lone humans and riders raises danger, not combat; a
+	# formation that closes in, a boss and the hits of what counts still raise combat. Smaller giants (the
+	# Valley's stages 1-3) keep the scaled radius.
+	if h >= float(cfg.get("combat_cap_min_height_m", INF)) - 1e-6:
+		combat_r = minf(combat_r, float(cfg.get("combat_cap_m", INF)))
 	var danger_r := minf(float(cfg.get("danger_radius_m", 70.0)) * scale, float(cfg.get("danger_cap_m", 150.0)))
 	var lesser_r := float(cfg.get("lesser_danger_m", 40.0))
 	if float(snapshot.get("combat_hit_age_s", INF)) <= float(cfg.get("hit_recent_s", 5.0)):

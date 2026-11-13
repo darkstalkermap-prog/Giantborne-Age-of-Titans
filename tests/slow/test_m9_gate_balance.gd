@@ -8,7 +8,10 @@ extends IntegrationSuite
 ##   * an engine that shot at the giant is sought from SIEGE_SHOT_SEEK_M (the walk to the Moot passed the
 ##     Moot battery beyond SIEGE_SEEK_M);
 ##   * Rampart Grip reads as ready only with something in reach to seize, and a slotted ability the run has
-##     not used yet is tried at the first free tick it fits.
+##     not used yet is tried at the first free tick it fits;
+##   * the music's combat radius is capped for a stage-4+ giant (audio_mix.intensity.combat_cap_m): a
+##     formation holding 50 m off raises danger, one 30 m off or a boss combat; the Valley's stages keep the
+##     scaled radius.
 
 const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
 const BANNERMAN := "res://scenes/enemies/bannerman.tscn"
@@ -236,3 +239,37 @@ func test_rampart_grip_is_ready_only_with_something_to_seize_and_is_tried_once_i
 		if c.slot_reason(stomp) == "":
 			assert_eq(c._first_use_slot(reach), stomp, "at a foe within reach")
 	c.bot = bot
+
+
+func _threat(distance: float, height: float, special: bool) -> Dictionary:
+	return {"distance": distance, "height": height, "special": special, "aware": true, "engaged": true,
+		"fleeing": false, "hostile": true}
+
+
+func _snap(threats: Array, giant_h: float, extra := {}) -> Dictionary:
+	var s := {"threats": threats, "player_height": giant_h, "scale": AudioMath.distance_scale(giant_h),
+		"boss_engaged": false, "combat_hit_age_s": INF, "lesser_hit_age_s": INF, "telegraph_age_s": INF,
+		"encounter_inside": false}
+	s.merge(extra, true)
+	return s
+
+
+func test_the_music_s_combat_radius_is_capped_for_a_stage_4_giant() -> void:
+	var cfg: Dictionary = (GameData.get_record("audio_mix.default").get("intensity", {}) as Dictionary)
+	var cap := float(cfg.get("combat_cap_m", 0.0))
+	assert_true(cap > 0.0 and cap <= 45.0, "a combat cap near the lesser enemies' 40 m (%.0f m)" % cap)
+	var s4 := 10.97
+	assert_eq(AudioMath.intensity_target(_snap([_threat(50.0, 1.8, true)], s4), cfg), AudioMath.DANGER,
+		"a formation member holding 50 m from a stage-4 giant raises danger (was combat: 105 m)")
+	assert_eq(AudioMath.intensity_target(_snap([_threat(30.0, 1.8, true)], s4), cfg), AudioMath.COMBAT,
+		"30 m off: combat (a formation fight)")
+	assert_eq(AudioMath.intensity_target(_snap([_threat(90.0, 9.0, false)], 18.9), cfg), AudioMath.DANGER,
+		"a big foe 90 m from a stage-6 giant: danger")
+	assert_eq(AudioMath.intensity_target(_snap([], s4, {"boss_engaged": true}), cfg), AudioMath.COMBAT,
+		"an engaged boss is combat at any distance")
+	assert_eq(AudioMath.intensity_target(_snap([], s4, {"combat_hit_age_s": 2.0}), cfg), AudioMath.COMBAT,
+		"and a hit from what counts within 5 s")
+	assert_eq(AudioMath.intensity_target(_snap([_threat(60.0, 3.4, false)], 7.92), cfg), AudioMath.COMBAT,
+		"a stage-3 giant (the Valley) keeps the scaled radius: an ogre 60 m off is combat (75.8 m)")
+	assert_eq(AudioMath.intensity_target(_snap([_threat(50.0, 1.8, false)], 5.49), cfg), AudioMath.COMBAT,
+		"and a stage-2 giant: a soldier 50 m off is combat (52.5 m)")
