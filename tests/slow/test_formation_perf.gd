@@ -24,6 +24,12 @@ extends IntegrationSuite
 ## and both print the machine's load average with the measurement. Over budget when the load average at the
 ## measurement's start is above the CPU count, the measurement is printed as a warning instead of failing
 ## (verdict): the budgets stay, and a quiet machine still fails a real regression.
+## M9 gate (lane review, fix-up 1): a second window only measures time (_second_window, shared by both cases).
+## Everything else a case asserts is taken from its first run, before any second window: the engine case read
+## the stress scenario's own checks after it, when the bot had run 23 s instead of 15 and the scenario's 20 s
+## brace check ("formation_test_stress.left never braced") had turned on - so every second window failed the
+## case, on exactly the loaded machine the rule is for. The forced test below runs the second window once in
+## every slow run (on a quiet machine the cases never take it).
 
 const LEVEL := "res://scenes/test/formation_test.tscn"
 const STRESS := "encounter.formation_test_stress"
@@ -53,43 +59,70 @@ func test_the_stress_bot_brings_two_crewed_engines_that_shoot() -> void:
 	world.add_child(probe)
 	await step_ticks(ENGINE_RUN_TICKS)
 	probe.finish()
-	var r := probe.result()
+	# The stress case's own results are its 15 s run's, taken now: a second window (below) only measures time.
+	var failures := Array(sc.check_failures(float(ENGINE_RUN_TICKS) / 60.0))
+	var engines := []
+	for e in sc.p39_engines():
+		engines.append({"id": e.world_id, "crewed": e.crewed, "shots": e.shots, "team": e.entity.team})
+	var d := lv.director()
+	var members := d.formation_member_count()
+	var combatants := d.active_combatant_count()
+	var bot_ticks := sc.bot_ticks
 	# M9 gate (lane review): P30's rule - a machine busy with other work can push one window over; the better of
 	# two windows is judged
-	var first: Variant = r.get("cpu_tick_ms")
-	if typeof(first) == TYPE_DICTIONARY and float(first.p95) > ENGINE_MAX_P95_MS:
-		var again := PerfProbe.new()
-		again.warmup_ticks = 0
-		again.label = "formation_stress_engines_2"
-		world.add_child(again)
-		var load_again := load_average()
-		await step_ticks(ENGINE_RETRY_TICKS)
-		again.finish()
-		var second := again.result()
-		var cpu2: Variant = second.get("cpu_tick_ms")
-		print("    test_formation_perf: the engine case's first window p95 %.2f ms (load average %.2f); a second window %s (load average %.2f)" % [
-			float(first.p95), load_start, ("%.2f ms" % float(cpu2.p95)) if typeof(cpu2) == TYPE_DICTIONARY else "-", load_again])
-		if typeof(cpu2) == TYPE_DICTIONARY and float(cpu2.p95) < float(first.p95):
-			r = second
-	var engines := sc.p39_engines()
+	var w: Dictionary = await _second_window(probe.result(), ENGINE_MAX_P95_MS, ENGINE_RETRY_TICKS,
+		"the engine case", load_start)
 	assert_eq(engines.size(), 2, "the two engines placed (%d)" % engines.size())
 	var shots := PackedStringArray()
-	for e in engines:
-		assert_true(e.crewed, "%s is crewed" % e.world_id)
-		assert_true(e.shots >= 1, "%s shot at the giant (%d shots)" % [e.world_id, e.shots])
-		assert_eq(e.entity.team, CombatEntity.Team.ENEMY, "%s fights for its crew" % e.world_id)
-		shots.append("%s %d" % [e.world_id, e.shots])
-	var d := lv.director()
-	assert_eq(d.formation_member_count(), 40, "beside the 40 members")
-	assert_eq(d.active_combatant_count(), 3, "the three crews count as combatants")
-	assert_eq(Array(sc.check_failures(float(ENGINE_RUN_TICKS) / 60.0)), [], "the stress case's own checks pass")
-	var cpu: Variant = r.get("cpu_tick_ms")
+	for e: Dictionary in engines:
+		assert_true(bool(e.crewed), "%s is crewed" % e.id)
+		assert_true(int(e.shots) >= 1, "%s shot at the giant (%d shots)" % [e.id, int(e.shots)])
+		assert_eq(int(e.team), CombatEntity.Team.ENEMY, "%s fights for its crew" % e.id)
+		shots.append("%s %d" % [e.id, int(e.shots)])
+	assert_eq(members, 40, "beside the 40 members")
+	assert_eq(combatants, 3, "the three crews count as combatants")
+	assert_eq(failures, [], "the stress case's own checks pass (its %.1f s run)" % (float(bot_ticks) / 60.0))
+	var cpu: Variant = (w.result as Dictionary).get("cpu_tick_ms")
 	assert_true(typeof(cpu) == TYPE_DICTIONARY, "the probe measured the ticks")
 	if typeof(cpu) == TYPE_DICTIONARY:
 		_judge_p95(cpu, ENGINE_MAX_P95_MS, load_start, "40 members and two crewed engines")
 		print("    test_formation_perf: 40 members and two crewed engines (%s), cpu_tick_ms p50 %.2f p95 %.2f max %.2f; load average %.2f at the start, %d CPUs" % [
 			", ".join(shots), float(cpu.p50), float(cpu.p95), float(cpu.max), load_start, OS.get_processor_count()])
 	sc.stop_bot()
+
+
+## M9 gate (lane review): P30's rule for a wall-clock window `r` (PerfProbe.result()) - a machine busy with other
+## work can push one window over its `budget`, so over it (or `force`d: the rule's own test) a second window of
+## `retry_ticks` is measured and the better of the two is judged. It only measures time (fix-up 1): what else a
+## case asserts is taken before it. Returns {"result": the window judged, "retried", "first_p95", "second_p95"
+## (NAN without a second window), "load_again" (the load average at the second window's start; -1 without one)}.
+func _second_window(r: Dictionary, budget: float, retry_ticks: int, what: String, load_start: float,
+		force := false) -> Dictionary:
+	var out := {"result": r, "retried": false, "first_p95": NAN, "second_p95": NAN, "load_again": -1.0}
+	var first: Variant = r.get("cpu_tick_ms")
+	if typeof(first) != TYPE_DICTIONARY:
+		return out
+	out.first_p95 = float(first.p95)
+	if float(first.p95) <= budget and not force:
+		return out
+	var again := PerfProbe.new()
+	again.warmup_ticks = 0
+	again.label = "%s_2" % str(r.get("label", "window"))
+	world.add_child(again)
+	out.load_again = load_average()
+	await step_ticks(retry_ticks)
+	again.finish()
+	var second := again.result()
+	var cpu2: Variant = second.get("cpu_tick_ms")
+	out.retried = true
+	if typeof(cpu2) == TYPE_DICTIONARY:
+		out.second_p95 = float(cpu2.p95)
+		if float(cpu2.p95) < float(first.p95):
+			out.result = second
+	print("    test_formation_perf: %s's first window p95 %.2f ms (load average %.2f); a second window %s (load average %.2f)" % [
+		what, float(first.p95), load_start, ("%.2f ms" % float(out.second_p95)) if not is_nan(float(out.second_p95)) else "-",
+		float(out.load_again)])
+	return out
 
 
 ## M9 gate (lane review): the machine's 1-minute load average (/proc/loadavg) when a measurement starts; -1 where
@@ -169,34 +202,21 @@ func test_forty_members_at_tier_0_cost_at_most_5_ms_per_tick() -> void:
 	world.add_child(probe)
 	await step_ticks(RUN_TICKS)
 	probe.finish()
-	var r := probe.result()
-	# a machine busy with other work can push one window over; the better of two windows is judged
-	# (as P24b's world walk does)
-	var first: Variant = r.get("cpu_tick_ms")
-	if typeof(first) == TYPE_DICTIONARY and float(first.p95) > MAX_P95_MS:
-		var again := PerfProbe.new()
-		again.warmup_ticks = 0
-		again.label = "formation_stress_2"
-		world.add_child(again)
-		var load_again := load_average()
-		await step_ticks(RUN_TICKS)
-		again.finish()
-		var second := again.result()
-		var cpu2: Variant = second.get("cpu_tick_ms")
-		print("    test_formation_perf: the first window's p95 %.2f ms (load average %.2f); a second window %s (load average %.2f)" % [
-			float(first.p95), load_start, ("%.2f ms" % float(cpu2.p95)) if typeof(cpu2) == TYPE_DICTIONARY else "-", load_again])
-		if typeof(cpu2) == TYPE_DICTIONARY and float(cpu2.p95) < float(first.p95):
-			r = second
+	# The case's own results are its run's, taken now: a second window (below) only measures time.
 	var tiers := {}
 	for f in d.formations():
 		for m in f.all_members():
 			tiers[m.lod_tier] = int(tiers.get(m.lod_tier, 0)) + 1
-	assert_eq(tiers, {0: 40}, "every member at AI tier 0 (the desktop budget's worst case)")
 	var braces := 0
 	var crowd := 0
 	for f in d.formations():
 		braces += f.brace_count
 		crowd += d.crowd_renderer(f.id).instance_count()
+	# a machine busy with other work can push one window over; the better of two windows is judged
+	# (as P24b's world walk does)
+	var w: Dictionary = await _second_window(probe.result(), MAX_P95_MS, RUN_TICKS, "the 40 members' case", load_start)
+	var r: Dictionary = w.result
+	assert_eq(tiers, {0: 40}, "every member at AI tier 0 (the desktop budget's worst case)")
 	assert_true(braces > 0, "the regiments braced against the giant (%d pulses)" % braces)
 	assert_true(crowd > 0, "and drew their rank and file as crowds (%d instances)" % crowd)
 	var cpu: Variant = r.get("cpu_tick_ms")
@@ -206,6 +226,40 @@ func test_forty_members_at_tier_0_cost_at_most_5_ms_per_tick() -> void:
 	_judge_p95(cpu, MAX_P95_MS, load_start, "40 members at tier 0")
 	print("    test_formation_perf: 40 members at tier 0, cpu_tick_ms p50 %.2f p95 %.2f p99 %.2f max %.2f; %d brace pulses, %d crowd instances; load average %.2f at the start, %d CPUs" % [
 		float(cpu.p50), float(cpu.p95), float(cpu.get("p99", 0.0)), float(cpu.max), braces, crowd, load_start, OS.get_processor_count()])
+
+
+## M9 gate (lane review, fix-up 1): the second window itself, forced (a quiet machine never takes it, so the
+## cases above would not run it): it runs for its ticks only when the first window is over budget or forced,
+## measures them, and the better window is the one judged.
+func test_a_second_window_runs_only_over_budget_and_the_better_window_is_judged() -> void:
+	var probe := PerfProbe.new()
+	probe.warmup_ticks = 0
+	probe.label = "second_window_rule"
+	world.add_child(probe)
+	await step_ticks(30)
+	probe.finish()
+	var r := probe.result()
+	var first: Variant = r.get("cpu_tick_ms")
+	assert_true(typeof(first) == TYPE_DICTIONARY, "the first window measured its ticks")
+	if typeof(first) != TYPE_DICTIONARY:
+		return
+	var t0 := Sim.tick
+	var within: Dictionary = await _second_window(r, float(first.p95) + 1000.0, 30, "the rule's quiet window", load_average())
+	assert_false(bool(within.retried), "within its budget no second window runs")
+	assert_eq(Sim.tick - t0, 0, "and no tick passes")
+	assert_true(within.result == r, "the first window is judged")
+	t0 = Sim.tick
+	var forced: Dictionary = await _second_window(r, float(first.p95) + 1000.0, 30, "the rule's forced window", load_average(), true)
+	assert_true(bool(forced.retried), "forced, the second window runs")
+	assert_eq(Sim.tick - t0, 30, "for its ticks")
+	assert_true(not is_nan(float(forced.second_p95)), "and measures them (p95 %.2f ms)" % float(forced.second_p95))
+	var judged: Variant = (forced.result as Dictionary).get("cpu_tick_ms")
+	assert_true(typeof(judged) == TYPE_DICTIONARY, "a measured window is judged")
+	if typeof(judged) == TYPE_DICTIONARY:
+		assert_eq(float(judged.p95), minf(float(forced.first_p95), float(forced.second_p95)), "the better of the two")
+	t0 = Sim.tick
+	var over: Dictionary = await _second_window(r, float(first.p95) - 0.001, 30, "the rule's window over budget", load_average())
+	assert_true(bool(over.retried) and Sim.tick - t0 == 30, "over its budget the second window runs")
 
 
 func test_forty_members_draw_at_most_120_calls() -> void:

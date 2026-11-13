@@ -615,7 +615,13 @@ over budget, print the 1-minute load average at the measurement's start (`/proc/
 count beside their numbers, and, over budget when that load average is above the CPU count, print the
 measurement as a WARNING instead of failing. The budgets are unchanged and a quiet machine (load at or
 below the CPU count, or no load average to read) still fails a real regression. At the gate's check
-(load 2.96 on 4 CPUs): 4.28 ms with the engines, 3.80 ms without.
+(load 2.96 on 4 CPUs): 4.28 ms with the engines, 3.80 ms without. A second window only measures time
+(the lane's fix-up 1): everything else a case asserts is taken from its first run, before any second
+window. The engine case first read the stress scenario's own checks after it - the bot had then run
+23 s instead of 15 and the scenario's 20 s brace check had turned on ("formation_test_stress.left never
+braced"), so every second window failed the case on exactly the loaded machine the rule is for (the
+verifier's forced second window: before, that failure; after, 0 failures). One helper
+(`_second_window`) serves both cases, and the suite's own test forces a second window in every slow run.
 
 ### Draw calls after P27 (the HUD)
 
