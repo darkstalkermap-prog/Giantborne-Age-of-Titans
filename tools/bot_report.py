@@ -700,9 +700,34 @@ def boss_of_death(r, d):
     return ""
 
 
+BOSS_IDS = {"world.greywood.troll_matriarch": "matriarch", "world.stonehold.harrok": "harrok", "battle.iron_regiment": "battle"}
+
+
 def _bosses_met(r):
-    names = {"world.greywood.troll_matriarch": "matriarch", "world.stonehold.harrok": "harrok", "battle.iron_regiment": "battle"}
-    return [names.get(bid, bid) for bid, b in r["w"].get("bosses", {}).items() if int(b.get("engaged", 0)) > 0]
+    return [BOSS_IDS.get(bid, bid) for bid, b in r["w"].get("bosses", {}).items() if int(b.get("engaged", 0)) > 0]
+
+
+def _boss_record(r, boss):
+    for bid, b in r["w"].get("bosses", {}).items():
+        if BOSS_IDS.get(bid, bid) == boss:
+            return b
+    return {}
+
+
+def _boss_resolution(r, boss):
+    """W23: how the run's policy meets the boss - the Matriarch "driven out" or "slain" (the wood's oath), Harrok
+    "spared" (spare or talk) or "slain" (the champion policy), the battle "breached"."""
+    if boss == "matriarch":
+        return "slain" if "wood:slay" in r["oaths"] else "driven out"
+    if boss == "harrok":
+        return "slain" if str(r["wb"].get("policy", {}).get("champion", "")) == "slay" else "spared"
+    return "breached"
+
+
+def _boss_won(r, boss):
+    """W23: true when the run settled the boss (an outcome, or the battle's defeated flag)."""
+    b = _boss_record(r, boss)
+    return bool(b.get("defeated")) or str(b.get("outcome", "")) not in ("", "None")
 
 
 def _unused_abilities(r):
@@ -790,16 +815,31 @@ def world_targets(rows):
         seg_parts.append("%s %s (%d-%d)" % (WSEG_NAMES[s], fmt(v), lo, hi))
         seg_ok = seg_ok and v is not None and lo <= v <= hi
     row("Each §5.15 segment within its range (novice median)", "; ".join(seg_parts), seg_ok if done else None)
+    # W23 confirmation: every unassisted novice run, the first-oath orders included (the battle is met only in
+    # the crown-first order), and each boss by the resolution the run plays - the Matriarch driven out or slain,
+    # Harrok spared or slain - so that a drive-out with no death and a slay stopped on its sixth no longer
+    # average into a median inside the range (before, the orders were left out and the Matriarch's 6/6/0/0
+    # read "median 3, met").
     boss_parts, boss_ok = [], True
+    seq_runs = novice + [r for r in orders if r["skill"] == "novice" and not r["assist"]]
     for boss in ["battle", "matriarch", "harrok"]:
-        per_run = [sum(1 for d in r["deaths"] if boss_of_death(r, d) == boss) for r in novice if boss in _bosses_met(r)]
-        if not per_run:
+        groups = {}
+        for r in seq_runs:
+            if boss not in _bosses_met(r):
+                continue
+            groups.setdefault(_boss_resolution(r, boss), []).append(
+                (sum(1 for d in r["deaths"] if boss_of_death(r, d) == boss), _boss_won(r, boss)))
+        if not groups:
             boss_parts.append("%s not met" % boss)
             continue
-        m = med(per_run)
-        boss_parts.append("%s median %s (runs %s)" % (boss, fmt(float(m)), "/".join(str(x) for x in per_run)))
-        boss_ok = boss_ok and 1 <= m <= 3
-    row("Deaths: 1-3 per boss attempt sequence (novice median)", "; ".join(boss_parts), boss_ok if novice else None)
+        for res in sorted(groups):
+            lst = groups[res]
+            m = med([n for n, _ in lst])
+            boss_parts.append("%s %s median %s, won %d of %d (runs %s)" % (
+                boss, res, fmt(float(m)), sum(1 for _, won in lst if won), len(lst), "/".join(str(n) for n, _ in lst)))
+            boss_ok = boss_ok and 1 <= m <= 3
+    row("Deaths: 1-3 per boss attempt sequence (novice median, by resolution; the orders included)", "; ".join(boss_parts),
+        boss_ok if seq_runs else None)
     worst_other, where = 0, ""
     for r in novice:
         by_seg = collections.Counter(d.get("segment") for d in r["deaths"] if boss_of_death(r, d) == "")
@@ -842,7 +882,7 @@ def world_targets(rows):
     mm = min([m for m in margins if m >= 0] or [0.0])
     th = sum(int(r["w"].get("streaming", {}).get("thrash", 0)) for r in allr)
     cpu = [float(r["cpu_p95"]) for r in allr if r["cpu_p95"] is not None]
-    row("Worst streaming work frame <= 12 ms (headless; two runs at a time on 4 shared CPUs)", "%.1f ms" % wf, wf <= 12.0 if allr else None)
+    row("Worst streaming work frame <= 12 ms (headless; the batch's runs share 4 CPUs)", "%.1f ms" % wf, wf <= 12.0 if allr else None)
     row("Loaded margin >= 200 m and no thrash", "min %.0f m, thrash %d" % (mm, th), (mm >= 200 and th == 0) if allr else None)
     row("CPU per tick p95 <= 8 ms", "median %s ms, max %s ms" % (fmt(med(cpu), 2), fmt(max(cpu) if cpu else None, 2)), (max(cpu) <= 8.0) if cpu else None)
     return "\n".join(out)

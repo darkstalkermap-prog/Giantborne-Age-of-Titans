@@ -247,6 +247,64 @@ func test_the_web_battle_fits_the_cap_with_the_gate_garrison_alive() -> void:
 	await step_ticks(2)
 
 
+## M9 confirmation (W23, the layout defect of the Charge's and the Last Stand's thresholds): on both compositions the
+## Charge begins once the Wall's fighting units fall and the Last Stand once the riders fall, while the battle's four
+## ballistae and the two crews of the inner pair still stand - a giant who cannot break the fort's ballistae (the
+## bastion pair stands 16 m up) sees every phase. With 0.6 and 0.25 the bar stayed at 0.622 / 0.670 after the Wall and
+## at 0.452 / 0.465 after the riders, and neither phase began (the phase-spent rule waits on the crews).
+func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing() -> void:
+	for web: bool in [false, true]:
+		var w := await _fort(web)
+		var b := _battle(w)
+		assert_true(b != null, "the battle is loaded")
+		if b == null:
+			return
+		var d := w.director()
+		await _enter_bailey(w, b)
+		await step_ticks(120)
+		var crews := {}
+		for entry: Variant in GameData.get_record(WALL).get("engines", []):
+			for c: Variant in (entry as Dictionary).get("crew", []):
+				crews[str(c)] = true
+		assert_eq(crews.size(), 2, "the Wall's encounter crews the two inner ballistae")
+		var planned := b.planned()
+		for id: String in d.members_of(WALL):
+			if planned.has(id) and not crews.has(id):
+				_kill(id)
+		await step_ticks(30)
+		var name := "web" if web else "desktop"
+		print("    iron regiment (%s): the Wall's fighting units fallen, the bar at %.3f, phases %s" % [
+			name, b.aggregate_fraction(), b.phase_log])
+		assert_true(b.phase_log.has(2), "%s: the Charge begins once the Wall falls (%s, bar %.3f)" % [name, b.phase_log, b.aggregate_fraction()])
+		for id: String in crews:
+			var e := Sim.get_entity(id)
+			assert_true(e != null and e.is_alive(), "%s: %s still serves its ballista" % [name, id])
+		for eid in b.engines:
+			var e := Sim.get_entity(eid)
+			assert_true(e != null and e.is_alive(), "%s: %s still stands" % [name, eid])
+		var guard := 0
+		while _up(d, CHARGE).size() < 6 and guard < 300:
+			await step_ticks(1)
+			guard += 1
+		for id: String in d.members_of(CHARGE):
+			_kill(id)
+		await step_ticks(30)
+		print("    iron regiment (%s): the riders fallen, the bar at %.3f, phases %s" % [name, b.aggregate_fraction(), b.phase_log])
+		assert_true(b.phase_log.has(3), "%s: the Last Stand begins once the riders fall (%s, bar %.3f)" % [name, b.phase_log, b.aggregate_fraction()])
+		for id: String in crews:
+			var e := Sim.get_entity(id)
+			assert_true(e != null and e.is_alive(), "%s: %s still serves its ballista in the Last Stand" % [name, id])
+		w.queue_free()
+		await step_ticks(2)
+		FactionState.reset_for_tests()
+		WanderDirector.reset_for_tests()
+		LevelRoot.force_web_for_tests = false
+
+
+func _up(d: EncounterDirector, enc: String) -> Array:
+	return Array(d.members_of(enc)).filter(func(id: String) -> bool: return d.member_status(id) == EncounterDirector.SPAWNED)
+
+
 func test_the_web_battle_makes_room_from_ballista_ridge() -> void:
 	var w := await _fort(true, true)
 	var b := _battle(w)
