@@ -49,8 +49,9 @@ extends BreakableProp
 ## hostile it is ENEMY.
 ##
 ## M9 gate (lane aldmere): `fire_held` - a battle holds an engine's fire until the phase that brings it
-## (BattleBoss: Fort Aldmere's gate-bastion ballistae join at the Charge, plan §5.13). While held it
-## neither turns nor shoots (can_shoot false); its crew stays at its place and it counts as uncrewed.
+## (BattleBoss: Fort Aldmere's gate-bastion ballistae join at the Charge, plan §5.13). While held it takes
+## no target, so it neither turns nor shoots (in_action false); its crew stays at its place and still
+## counts as its crew (crewed and the crowd's "abandon" cue are untouched), and it hauls a reload as usual.
 
 const GROUP := "siege_engines"
 ## Launches at one target stay at least this far apart (with every other ranged attacker's).
@@ -292,20 +293,23 @@ func is_staggered() -> bool:
 	return controller != null and controller.state == CombatController.State.STAGGERED
 
 
-## True while it may shoot: standing, free (not held), hostile, its fire not held by a battle (M9 gate).
+## True while it may shoot: standing, free (not held), hostile.
 func can_shoot() -> bool:
-	return not destroyed and entity.is_alive() and holder_id == "" and entity.team == CombatEntity.Team.ENEMY \
-		and not fire_held
+	return not destroyed and entity.is_alive() and holder_id == "" and entity.team == CombatEntity.Team.ENEMY
 
 
-## M9 gate: a battle holds (true) or frees (false) this engine's fire (see the notes); crewed follows at once.
+## M9 gate: true while it is in the fight - crewed, free to shoot and its fire not held by a battle (tests, debug).
+func in_action() -> bool:
+	return is_crewed() and can_shoot() and not fire_held
+
+
+## M9 gate: a battle holds (true) or frees (false) this engine's fire (see the notes).
 func set_fire_held(held: bool) -> void:
 	if fire_held == held:
 		return
 	fire_held = held
 	if held:
 		_release_token()
-	_refresh_crewed()
 
 
 ## The place of crew member `actor` (global; Vector3.INF when it does not serve this engine).
@@ -388,7 +392,7 @@ func sim_step(tick: int, dt: float) -> void:
 ## The engine's target: the first living PLAYER entity (the giant), while it may shoot - P36: or, for a
 ## siege line's engine while the giant is out of its reach, the prop it bombards (p36_bombard_target).
 func _target() -> CombatEntity:
-	if not can_shoot():
+	if not can_shoot() or fire_held:
 		return null
 	for e: CombatEntity in Sim.entities():
 		if e.team == CombatEntity.Team.PLAYER and e.is_alive() and is_instance_valid(e.actor):

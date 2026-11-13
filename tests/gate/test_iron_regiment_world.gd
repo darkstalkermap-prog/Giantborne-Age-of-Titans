@@ -326,12 +326,13 @@ func _up(d: EncounterDirector, enc: String) -> Array:
 	return Array(d.members_of(enc)).filter(func(id: String) -> bool: return d.member_status(id) == EncounterDirector.SPAWNED)
 
 
-## The battle's engines that shoot now - crewed and free to shoot (world ids, sorted; M9 gate).
+## The battle's engines in the fight now - crewed, free to shoot, their fire not held (world ids, sorted; M9
+## gate). On the old code an engine had no hold: crewed and free to shoot was in the fight.
 func _shooting_engines(w: Node, b: BattleBoss) -> Array:
 	var out: Array = []
 	for n in w.get_tree().get_nodes_in_group(SiegeEngine.GROUP):
 		var e := n as SiegeEngine
-		if e != null and b.engines.has(e.world_id) and e.is_crewed() and e.can_shoot():
+		if e != null and b.engines.has(e.world_id) and e.is_crewed() and e.can_shoot() and not e.get("fire_held") == true:
 			out.append(e.world_id)
 	out.sort()
 	return out
