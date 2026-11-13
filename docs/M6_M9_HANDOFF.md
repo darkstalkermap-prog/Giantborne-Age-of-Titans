@@ -151,7 +151,8 @@ level; growth to stage 6 of ten) are recorded in [DECISIONS.md](DECISIONS.md) §
 Legend: **PASS** = verified by running the game or engine here. **PARTIAL** = verified here, with a
 part that only a real PC, pad, browser or person can confirm, or with part of the requirement met.
 **FAIL** = measured and not met. **NOT RUN** = needs hardware or people that are not available here.
-A result that the M9 gate or the ship step settles is a ⟦SHIP⟧ placeholder until then. The M6-M8 gates
+A result that the M9 gate or the ship step settles is the ship step's placeholder until then (in double
+square brackets, beginning with SHIP). The M6-M8 gates
 are final; their evidence is the gate's own record (`docs/BALANCE_LOG.md`, `docs/PERFORMANCE.md`,
 `docs/plans/FOLLOWUPS.md`, the system documents' gate sections) or a later run where the row says so.
 Test names are in `tests/` (`unit/`, `integration/`, `slow/`, `gate/`).
@@ -295,7 +296,7 @@ followed, so each result is the M9 gate's to give.
 | Item | Result | Evidence |
 | --- | --- | --- |
 | The final check on the final code: every scene and the world rebuilt with no diff, every suite in all three tiers, `--audio`, the soak | ⟦SHIP: PASS or FAIL from tools/check.sh --build --slow --gate --audio on the final commit (its hash, suites, checks, failures, the three tier times, the soak)⟧ | §6.1 |
-| README, ARCHITECTURE and DECISIONS consolidated; this handoff | ⟦SHIP: PASS once every ⟦SHIP placeholder is filled and test_ship_docs passes on the final documents⟧ | README.md, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, this document; `tests/unit/test_ship_docs.gd` |
+| README, ARCHITECTURE and DECISIONS consolidated; this handoff | ⟦SHIP: PASS once every placeholder of the ship step is filled and test_ship_docs passes on the final documents⟧ | README.md, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, this document; `tests/unit/test_ship_docs.gd` |
 | Screenshots of the world: a world tour beside the bot, the Kingsgate shelf's view first | ⟦SHIP: the tour's command, its run, and the shots added to docs/screenshots/ and the README's gallery⟧ | |
 | The Linux export: the soak and an assisted bot run, headless | ⟦SHIP: §7's Linux row⟧ | §7 |
 | The Windows export built (not launched) | ⟦SHIP: §7's Windows row⟧ | §7 |

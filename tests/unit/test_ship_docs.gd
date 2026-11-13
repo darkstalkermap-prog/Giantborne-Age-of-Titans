@@ -20,8 +20,9 @@ extends TestSuite
 ##    documents.
 ## 3. P40 (plan M6-M9 §3.24): the M6-M9 handoff's gate table (its §5) gives every row a verdict -
 ##    PASS, PARTIAL, FAIL or NOT RUN - in its Result column, or the ship step's placeholder for one
-##    ("⟦SHIP: ...⟧", filled when the M9 gate and the ship step have run), and covers the M6, M7, M8
-##    and M9 gates and the Ship gate. It reads the file only.
+##    (SHIP_PLACEHOLDER: a left white square bracket, then "SHIP: what goes here and where it comes
+##    from", then the right one; filled when the M9 gate and the ship step have run), and covers the
+##    M6, M7, M8 and M9 gates and the Ship gate. It reads the file only.
 
 const HANDOFF := "res://docs/M2_M5_HANDOFF.md"
 const M6_M9_HANDOFF := "res://docs/M6_M9_HANDOFF.md"
@@ -31,8 +32,9 @@ const DECISIONS := "res://docs/DECISIONS.md"
 const M6_M9_GATES := ["M6", "M7", "M8", "M9", "Ship"]
 ## A gate row's verdict (a whole word or phrase anywhere in its Result cell).
 const VERDICT := "\\b(PASS|PARTIAL|FAIL|NOT RUN)\\b"
-## The ship step's placeholder for a result it fills in (it greps for this text).
-const SHIP_PLACEHOLDER := "⟦SHIP"
+## The ship step's placeholder for a result it fills in (it greps for this text). Built from two
+## parts so that this file holds no placeholder of its own for that grep to find.
+const SHIP_PLACEHOLDER := "\u27E6" + "SHIP"
 const OUTCOMES := ["help_cache", "help_ogre", "intimidate", "force"]
 ## Packages whose bot runs predate the shipped game code (P17b retuned the game after P17a's).
 const EARLIER_BUILDS := ["P17a"]
