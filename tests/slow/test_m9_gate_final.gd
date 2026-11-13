@@ -6,9 +6,17 @@ extends IntegrationSuite
 ##     30 s turned Skarn hostile for good (the gate's conqueror expert struck one for the throne stage's 306 s). The
 ##     watchers are spectators now (the spawns' `spectator`, FactionState.offended_faction): the blows that strike
 ##     them offend no faction; any other Skarn giant (its steading's) still takes offence as before.
+##   * F4/F12: a crewed siege engine's shot that lands on the giant raises combat music (its crew's hit; decision
+##     6: crews count). The engine's projectile belongs to the engine's prop entity, which CueRouter left out with
+##     every other prop, and since the M9 gate's combat cap (40 m from a stage-4+ giant) a barrage from a battery
+##     50-60 m off stayed at danger. Through the real router into Audio.music: danger before a stone lands, combat
+##     within 5 s after it; a lone soldier's blow still raises danger only, a blow on a crate notes nothing.
 
 const RIVAL := "res://scenes/enemies/rival_giant.tscn"
 const CLANS := "encounter.stonehold_moot_clans"
+const CATAPULT := "res://scenes/world/siege_catapult.tscn"
+const CREW := "res://scenes/enemies/siege_crew.tscn"
+const CRATE := "res://scenes/world/crate.tscn"
 
 
 static func _profile(stage: int) -> Dictionary:
@@ -95,3 +103,107 @@ func test_the_moot_watchers_are_spectators_whose_blows_offend_no_one() -> void:
 	var ordinary: Array = await _swing_case(false)
 	assert_true(int(ordinary[0]) >= 2, "the same swings strike ordinary Skarn giants (%d blows)" % int(ordinary[0]))
 	assert_true(bool(ordinary[1]) or bool(ordinary[2]), "and an ordinary Skarn giant struck takes offence (P11b kept)")
+
+
+func after_each() -> void:
+	Audio.enable_for_tests(false)
+	await super()
+
+
+## The music's intensity target now, from the director's own snapshot of the live actors and its hit ages.
+func _target() -> String:
+	return AudioMath.intensity_target(Audio.music.intensity_snapshot(), Audio.mix.get("intensity", {}) as Dictionary)
+
+
+func test_an_engines_shot_raises_combat_music_as_its_crews_hit() -> void:
+	Audio.enable_for_tests()
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	p.set_profile(_profile(6))
+	p.entity.combatant.unkillable = true
+	await step_ticks(5)
+	var e := (load(CATAPULT) as PackedScene).instantiate() as SiegeEngine
+	e.world_id = "test.m9f_catapult"
+	e.position = Vector3(0, 0, -55.0)
+	e.rotation.y = TargetingRules.yaw_of(Vector3(0, 0, 55.0))
+	world.add_child(e)
+	var crew := TestSpawn.enemy(world, CREW, e.global_position + Vector3(0, 0.05, 0), "test.m9f_crew", true, e.rotation.y)
+	e.add_crew(crew)
+	crew.global_position = e.crew_slot(crew) + Vector3(0, 0.05, 0)
+	await step_ticks(10)
+	var before := ""
+	var landed := -1
+	var after: Array = []
+	for i in 40 * 4:
+		if crew.brain != null and not crew.brain.aware:
+			crew.brain.on_noise(Sim.tick, p.global_position, p.entity.entity_id, true)   # the director's alert group
+		await step_ticks(15)
+		var hits := hits_on(p.entity.entity_id).filter(func(r: HitResult) -> bool:
+			return r.event.attacker_id == e.entity.entity_id and r.outcome != HitResult.Outcome.IGNORED)
+		if hits.is_empty():
+			before = _target()   # the last sample before the first stone lands
+		elif landed < 0:
+			landed = Sim.tick
+		if landed >= 0:
+			after.append(_target())
+			if Sim.tick - landed >= 5 * 60 - 15:
+				break
+	var age := float(Audio.music.intensity_snapshot().get("combat_hit_age_s", INF))
+	print("    m9 final (F4/F12): catapult 55 m off a stage-6 giant, crew aware %s: before the first stone %s, the 5 s after it %s (combat hit age %.2f s)" % [
+		crew.brain.aware if crew.brain != null else false, before, after, age])
+	assert_true(landed >= 0, "a stone lands on the giant")
+	assert_eq(before, AudioMath.DANGER, "before any stone lands the battery 55 m off raises danger (the combat cap)")
+	assert_true(after.size() >= 2 and after.all(func(t: String) -> bool: return t == AudioMath.COMBAT),
+		"within 5 s after the stone lands the music is in combat (%s)" % [after])
+	e.queue_free()
+	crew.queue_free()
+	await step_ticks(3)
+	# The controls: a lone soldier's blow raises danger only, the giant's blow on a crate notes nothing.
+	await step_ticks(int(6.0 * 60))
+	var soldier := TestSpawn.enemy(world, SOLDIER, Vector3(0, 0.05, -60.0), "test.m9f_soldier", true, 0.0)
+	await step_ticks(2)
+	var h := HitEvent.new()
+	h.tick = Sim.tick
+	h.instance_id = Sim.new_instance_id()
+	h.attacker_id = soldier.entity.entity_id
+	h.target_id = p.entity.entity_id
+	h.power = 10.0
+	h.damage_split = {"physical": 1.0}
+	h.tags = PackedStringArray(["Melee"])
+	h.category = "melee"
+	h.attacker_position = p.global_position + Vector3(0, 0, -3)
+	Sim.queue_hit(h)
+	await step_ticks(3)
+	var snap: Dictionary = Audio.music.intensity_snapshot()
+	print("    m9 final (F4/F12): a lone soldier's blow - combat hit age %.2f s, lesser hit age %.2f s" % [
+		float(snap.get("combat_hit_age_s", INF)), float(snap.get("lesser_hit_age_s", INF))])
+	assert_true(float(snap.get("lesser_hit_age_s", INF)) <= 1.0, "a lone soldier's blow is noted as a lesser hit")
+	assert_true(float(snap.get("combat_hit_age_s", INF)) > 5.0, "...not as combat's")
+	soldier.queue_free()
+	await step_ticks(2)
+	var crate := (load(CRATE) as PackedScene).instantiate() as Node3D
+	crate.set("world_id", "test.m9f_crate")
+	crate.position = Vector3(0, 0.05, -12.0)
+	world.add_child(crate)
+	await step_ticks(2)
+	var age0 := float(Audio.music.intensity_snapshot().get("combat_hit_age_s", INF))
+	var ce := crate.get("entity") as CombatEntity
+	assert_true(ce != null, "the crate stands")
+	if ce != null:
+		var hc := HitEvent.new()
+		hc.tick = Sim.tick
+		hc.instance_id = Sim.new_instance_id()
+		hc.attacker_id = p.entity.entity_id
+		hc.target_id = ce.entity_id
+		hc.power = 50.0
+		hc.damage_split = {"physical": 1.0}
+		hc.tags = PackedStringArray(["Melee"])
+		hc.category = "melee"
+		hc.attacker_position = crate.global_position + Vector3(0, 0, 6)
+		Sim.queue_hit(hc)
+		await step_ticks(3)
+		assert_true(hits_on(ce.entity_id).size() >= 1, "the giant's blow reaches the crate")
+		assert_true(float(Audio.music.intensity_snapshot().get("combat_hit_age_s", INF)) >= age0,
+			"the giant's blow on a crate notes no hit")
+	crate.queue_free()
+	p.queue_free()
+	await step_ticks(3)

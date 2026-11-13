@@ -459,6 +459,12 @@ func _on_hit_resolved(_tick: int, result: HitResult) -> void:
 			var counts := AudioMath.threat_counts(_height(other), _height(p.entity) if p != null else 3.66,
 				MusicDirector.is_special(other.actor) if other.actor != null else false, ratio)
 			audio.music.note_player_hit(counts)
+		elif other != null and other == attacker and other.team == CombatEntity.Team.ENEMY and other.actor is SiegeEngine:
+			# M9 gate (final; the final audit's F4/F12): a hostile engine's shot that reaches the giant is its crew's
+			# blow, and crews always count (decision 6) - combat for hit_recent_s. Its projectile belongs to the
+			# engine's prop entity, which the line above leaves out with every other prop (crates, walls, nests),
+			# so since the combat cap (audio_math) a barrage from beyond 40 m stayed at danger.
+			audio.music.note_player_hit(true)
 
 
 ## "heavy" for heavies and for anything over power 50, else "light".
