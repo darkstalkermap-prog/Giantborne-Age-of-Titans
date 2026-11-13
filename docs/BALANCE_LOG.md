@@ -659,7 +659,11 @@ iteration 0. The battle's phases are fractions of its own aggregate, so the web'
 Wall's formations at 0.7, the guard at 0.5, so the bailey fits the web's 20 formation members) moves no
 phase threshold; its 4.6 % short of the plan's figure is a shorter Wall and Last Stand, not a different
 fight. The battle is not yet won on either composition (above), so the web aggregate is revisited with
-iteration 1's Charge threshold, which is set from both aggregates.
+iteration 1's Charge threshold, which is set from both aggregates. (Corrected after the report part's review:
+the thresholds stay the same fractions, but the web's smaller Wall leaves the bar at about 0.67 of its aggregate
+after the Wall against the desktop's 0.622, so the web's composition does change how far the bar sits from the
+Charge's 0.6. The aggregate was kept by decision; the threshold that both compositions need is in "Left for the
+confirmation phase" below.)
 
 ### P38's findings (the hand-over in `docs/systems/P38.md`)
 
@@ -1104,9 +1108,9 @@ it, iteration 3's bot draws her to a standing brazier before breaking it (the lu
 fixed): in its first attempt (tick 33,201) it gave up walking her to the den's second brazier after 20 s, and that
 attempt and the five after it failed, five of the six in her phase 2 (her sweep and stomp 5,279 of the 9,038
 damage it took in the den, her whelps 1,696; iteration 2's single attempt took 244 from her blows). The lure gave
-the conqueror experts two slays of three (none in iteration 2); for the novice it appears to cost the fight. No
-data lever is indicated (her numbers fell); the lure is a bot question for the confirmation phase, with a trace of
-`w.conqueror:novice:1` (`--bot-trace=60`) as its first step.
+the conqueror experts two slays of three (none in iteration 2); for the novice it cost the fight - confirmed by the
+report's review, and since fix-up 1 the lure is the expert's alone (the next section, with the novice's den made
+again without it).
 
 **The Matriarch slain at stage 4** (`p39_rep_mat4_slay`; iteration 0's `p39_mat4_slay` at 25 / 40 hp/s: six deaths,
 her phase 2 held at 0.46-0.53): not slain on the final numbers either - six attempts (0.82, 0.79, 0.45, 0.46,
@@ -1116,11 +1120,72 @@ swiping). The bot's log has no lure given up in this run. The novice's slay is a
 drive-out at stage 4 takes one attempt (`w_order_wood_novice_1`).
 
 **The targets on the report's set** (`python3 tools/bot_report.py <p39_report_set> world_targets`; the set above in
-brackets where it differs): novice completion peaceful 2 / 2, conqueror 0 / 2 (1 / 2), mixed 2 / 2; the experts as
-above; the orders march and wood complete, the crown does not; the human estimate of the main path 29.8 min (32.9);
-Harrok's deaths per duel median 2.5 (2), the runs 1 / 3 / 2 / 3 and the orders' 4 and 1 - **met**; the Matriarch
-driven out with no death in the den at stage 4 or 5, slain by no novice at stage 5 (one of two) or at stage 4 -
-**miss**; other segments at most 1 death; formations 84 % (85 %), group locks 87 % (86 %), engines thrown 9 of 9
-runs at stage 6 (10 of 10); off camera 13 % (11 %); the music among lesser enemies 44 % (45 %); lone humans 3 %; the
-abilities as above. CPU per tick and the work frame on a quiet machine: `docs/PERFORMANCE.md`, "The M9
-performance captures (P39)".
+brackets where it differs; fix-up 1's final set, `p39_report_set_fx1`, in the next section): novice completion
+peaceful 2 / 2, conqueror 0 / 2 (1 / 2), mixed 2 / 2; the experts as above; the orders march and wood complete, the
+crown does not; the human estimate of the main path 29.8 min (32.9); Harrok's deaths per duel median 2.5 (2), the runs
+1 / 3 / 2 / 3 and the orders' 4 and 1 - **met**; the Matriarch driven out with no death in the den at stage 4 or 5,
+slain by no novice at stage 5 (one of two) or at stage 4 - **miss**; other segments at most 1 death; formations 84 %
+(85 %), group locks 87 % (86 %), engines thrown 9 of 9 runs at stage 6 (10 of 10); off camera 13 % (11 %); the music
+among lesser enemies 44 % (45 %); lone humans 3 %; the abilities as above. CPU per tick and the work frame on a quiet
+machine: `docs/PERFORMANCE.md`, "The M9 performance captures (P39)".
+
+## M9 (P39), fix-up 1: the lure is the expert's; the novice's den again (tags `p39_fx1_world`, `p39_fx1_mat4_slay`)
+
+**What the report's review found.** It ran the report's code (`01a650f`) with only iteration 3's four lines of the
+lure's walk clock removed - iteration 2's lure on the final numbers, every number unchanged - on
+`w.conqueror:novice:1`: the novice slew the Matriarch on its fifth attempt (lows 0.46, 0.50, 0.17, 0.39, 0) and
+completed the campaign (9 deaths, 1,813 s simulated, Harrok slain), where the report's run had stopped in the den after
+six attempts and seven deaths. The lure is a rule of play this lane added (iteration 1; its clock in iteration 3), and
+as iteration 3 left it the novice played worse with it: not a measurement fix (plan §3.23).
+
+**What changed** (commit `331d3b4`, the bot only): the lure is the expert's alone (`WorldBot._lures`); the novice
+fights her where she stands and breaks a brazier only while she stands within 7.5 m of it (P38's rule, the last one
+kept). The expert's den is the same code as before, so its runs - and its two slays of three - stand. Tested in
+`tests/slow/test_bot_measures_p39.gd`.
+
+**How it was measured**: the report's commands on `331d3b4` from a snapshot, two streams at once with nothing else
+running, and for comparison the review's variant on seed 2 (`01a650f` with the review's `lure_revert.diff`):
+
+```
+tools/run_bots.sh w.conqueror:novice:1 --jobs=1 --timeout=3600 --tag=p39_fx1_world
+tools/run_bots.sh w.conqueror:novice:2 --jobs=1 --timeout=3600 --tag=p39_fx1_world
+tools/run_bots.sh w.peaceful:novice:1 --jobs=1 --timeout=3600 --tag=p39_fx1_mat4_slay \
+  --extra="--bot-oaths=wood:slay,march:intimidate --bot-until=oath.wood.done"
+tools/run_bots.sh w.conqueror:novice:2 --jobs=1 --timeout=3600 --tag=p39_fx1_variant_b   # the review's variant
+tools/run_bots.sh w.conqueror:expert:1 --jobs=1 --timeout=3600 --tag=p39_fx1_expert_replay
+```
+
+The expert's run replayed iteration 3's to the tick on `331d3b4` (2,486.8 s simulated, 37 kills, the same flags hash
+`a17760418412`): the expert's den is unchanged and the experts' nine runs of `p39_i3_world` stand.
+
+| The den, slain (each attempt's lowest health share) | Iteration 3's lure (the report, `00a2bad`) | Iteration 2's lure on the final numbers (the review's variant) | No lure for the novice (fix-up 1, `331d3b4`) |
+| --- | --- | --- | --- |
+| w_conqueror_novice_1 (stage 5) | 6 attempts, not slain: 0.46, 0.48, 0.85, 0.26, 0.28, 0.29; stopped, 7 deaths | **slain** on the 5th: 0.46, 0.50, 0.17, 0.39, 0; **completed**, 9 deaths | 6 attempts, not slain: 0.28, 0.38, 0.20, 0.04, 0.37, 0.15; stopped, 7 deaths |
+| w_conqueror_novice_2 (stage 5) | 6 attempts, not slain: 0.48, 0.32, 0.24, 0.38, 0.84, 0.36; stopped, 7 deaths | 6 attempts, not slain: 0.48, 0.23, 0.22, 0.25, 0.35, 0.29; stopped, 7 deaths | 6 attempts, not slain: 0.33, 0.17, 0.28, 0.28, 0.27, 0.33; stopped, 7 deaths |
+| The slay at stage 4 (`w.peaceful:novice:1`, the wood's oath first) | 6 attempts: 0.82, 0.79, 0.45, 0.46, 0.64, 0.47; 6 deaths | - | 6 attempts: 0.65, 0.43, 0.48, 0.43, 0.47, 0.48; 6 deaths |
+
+What it showed:
+
+- **Iteration 3's lure made the novice's den worse**: its attempts ended highest (two of the twelve at 0.84-0.85, the
+  median 0.37 against 0.28 without the lure) and on seed 1 it lost the slay that iteration 2's lure won. The review's
+  finding holds for seed 1.
+- **Without the lure the novice still does not slay her**: it brings her lower than with either lure (to 0.04 and
+  0.17) but dies sooner (the runs stopped on the sixth den death at 883 and 798 s simulated, against 1,012 and 981 s
+  with the lure), every attempt into her phase 2 - her frenzy 5, sweep 4 and stomp 1 of the 12 den deaths, a whelp she
+  threw 1, a whelp's swipe 1. Iteration 2's lure did not slay her on seed 2 either. At stage 4 she never fell below
+  0.43 (her stomp 3, frenzy 2, a thrown whelp 1).
+- So one run of six (two seeds, three ways of fighting the den) slew her at stage 5: on the final numbers the
+  novice's slay is a narrow miss there, decided by the bot's way of fighting the den as much as by her numbers, and a
+  clear miss at stage 4. No data change follows (the plan allows three iterations); her phase 2 is the lever
+  (`docs/plans/FOLLOWUPS.md`, the Matriarch's row), and the confirmation phase measures the slay as it now is.
+
+**The report's final set** (`p39_report_set_fx1`: these two conqueror novices with `p39_rep_world`'s other seven
+novice runs, which never meet the lure, and `p39_i3_world`'s nine experts; `python3 tools/bot_report.py <set>
+world_targets`) is the report's set above but for the conqueror novices' own numbers: novice completion peaceful
+2 / 2, conqueror 0 / 2, mixed 2 / 2; the orders march and wood complete, the crown does not; the human estimate of the
+main path 29.8 min; Harrok's deaths per duel median 2.5 - **met**; the Matriarch driven out with no death in the den at
+stage 4 or 5, slain by no novice at stage 4 or 5 - **miss**; other segments at most 1 death; formations 84 %, group
+locks 87 %, engines thrown 9 of 9 runs at stage 6; off camera 13 % (pooled 9 % of 3,406 hits); the music among lesser
+enemies 43 % (44 %); lone humans 3 %; the abilities as above. The conqueror novices' CPU per tick p95 for the whole run
+6.80 and 6.50 ms (6.70 and 6.34 with the lure), their worst streaming work frames 41.0 and 24.0 ms (33.0 and 27.1):
+`docs/PERFORMANCE.md`, "The M9 performance captures (P39)".
