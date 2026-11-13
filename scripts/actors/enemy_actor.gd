@@ -1602,9 +1602,21 @@ func _release_firing_marker() -> void:
 	_firing_marker = null
 
 
+## M9 gate (final; the final audit's F13): a firing point the member's leash does not hold (LEASH_END_MARGIN_M inside
+## its ring, leash_ring; any point when it has none) is never chosen - by the marker searches, the ring search, its
+## fallback or its last pure-ring point. Brannock's south-gate archer_1 (post 58.3 m from its encounter's centre,
+## leash 60 m) stepped out for a shot past the ring, was leashed home and stepped out again every 3.6 s, and never
+## shot once the gatehouse fell. With no point inside, the unit holds and searches again (FIRING_REPICK_S).
+func _fp_in_leash(p: Vector3, ring: Vector4) -> bool:
+	if ring.w <= 0.0:
+		return true
+	return Vector2(p.x - ring.x, p.z - ring.z).length() <= ring.w - LEASH_END_MARGIN_M
+
+
 func _pick_firing_marker(my_position: Vector3, target_pos: Vector3, band: Vector2, spread_m: float,
 		target: CombatEntity, allies: Array) -> Node3D:
 	var search := float(_tactics().get("cover_search_radius_m", 25.0))
+	var ring := leash_ring()
 	for group: String in [ELEVATION_GROUP, COVER_GROUP]:
 		var best: Node3D = null
 		var best_d := INF
@@ -1618,7 +1630,7 @@ func _pick_firing_marker(my_position: Vector3, target_pos: Vector3, band: Vector
 			var p := m.global_position
 			var d := _flat_len(p - my_position)
 			var td := _flat_len(p - target_pos)
-			if d > search or d >= best_d or td < band.x or td > band.y:
+			if d > search or d >= best_d or td < band.x or td > band.y or not _fp_in_leash(p, ring):
 				continue
 			if _crowded(p, spread_m, allies) or not _sees_target_from(p, target):
 				continue
@@ -1690,6 +1702,7 @@ func _ring_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2
 	var r := hi if far else clampf(dist, lo, hi)
 	var start := _search_start("firing_ring")
 	var fallback := _search_fallback if start > 0 else Vector3.INF
+	var ring := leash_ring()
 	for i in range(start, RING_STEPS * 2 + 1):
 		var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)   # 0, 1, -1, 2, -2, ...
 		var desired := target_pos + away.rotated(Vector3.UP, deg_to_rad(RING_STEP_DEG * k)) * r
@@ -1701,7 +1714,7 @@ func _ring_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2
 		var q0 := NavQuery.queries_total
 		var p := _walkable_point(my_position, desired)
 		_search_spend(q0)
-		if p == Vector3.INF:
+		if p == Vector3.INF or not _fp_in_leash(p, ring):
 			continue
 		var td := _flat_len(p - target_pos)
 		if td < band.x or td > band.y:
@@ -1717,7 +1730,8 @@ func _ring_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2
 		return fallback
 	if _p24b_throttled():
 		return Vector3.INF   # M7 gate: no candidate is walkable - hold, and search again after FIRING_REPICK_S
-	return Vector3(target_pos.x + away.x * r, my_position.y, target_pos.z + away.z * r)
+	var last := Vector3(target_pos.x + away.x * r, my_position.y, target_pos.z + away.z * r)
+	return last if _fp_in_leash(last, ring) else Vector3.INF
 
 
 ## Firing-point resolvers' first step (P22's wrapper and _resolve_firing_point; M7 polish, the posts
@@ -2653,6 +2667,7 @@ func front_arc_firing_point(my_position: Vector3, target_pos: Vector3, band: Vec
 	var target := _aim_target()
 	var allies := ranged_allies()
 	var search := float(_tactics().get("cover_search_radius_m", 25.0))
+	var ring := leash_ring()
 	for group: String in [ELEVATION_GROUP, COVER_GROUP]:
 		var best: Node3D = null
 		var best_d := INF
@@ -2666,7 +2681,7 @@ func front_arc_firing_point(my_position: Vector3, target_pos: Vector3, band: Vec
 			var p := m.global_position
 			var d := _flat_len(p - my_position)
 			var td := _flat_len(p - target_pos)
-			if d > search or d >= best_d or td < band.x or td > band.y:
+			if d > search or d >= best_d or td < band.x or td > band.y or not _fp_in_leash(p, ring):
 				continue
 			if not EnemyBrain.in_front_arc(p, target_pos, yaw, arc) or _crowded(p, spread_m, allies) \
 					or not _sees_target_from(p, target):
@@ -2701,7 +2716,7 @@ func front_arc_firing_point(my_position: Vector3, target_pos: Vector3, band: Vec
 		var q0 := NavQuery.queries_total
 		var p := _walkable_point(my_position, desired)
 		_search_spend(q0)
-		if p == Vector3.INF:
+		if p == Vector3.INF or not _fp_in_leash(p, ring):
 			continue
 		var td := _flat_len(p - target_pos)
 		if td < band.x or td > band.y or not EnemyBrain.in_front_arc(p, target_pos, yaw, arc):
