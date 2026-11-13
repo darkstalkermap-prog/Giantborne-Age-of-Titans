@@ -18,7 +18,8 @@ extends IntegrationSuite
 ##   * M9 gate (lane aldmere; plan §5.13: two ballistae in the Wall, all four from the Charge): in the Wall
 ##     only the two inner ballistae (the Wall's own crews) shoot - the gate bastions' pair, its garrison
 ##     crews at their places, holds its fire - and from the Charge into the Last Stand all four shoot
-##     (test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing).
+##     (test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing); the HUD tells the
+##     giant so as the battle engages and again as the Charge frees the pair (ENGINES_LINE, CHARGE_LINE).
 
 const SCENE := "res://scenes/world/world.tscn"
 const GATE := "world.aldmere.fort_gate"
@@ -33,19 +34,28 @@ const BASTION_BALLISTAE := ["world.aldmere.fort_ballista_e", "world.aldmere.fort
 ## Spots inside the curtain wall (560..740 x -245..-95), near each corner (99-107 m from the arena's
 ## centre at (650, -165): beyond the old circle's 72 + 20 m).
 const CORNERS := [Vector2(730, -236), Vector2(570, -236), Vector2(730, -104), Vector2(570, -104)]
+## The HUD's lines about the ballistae as the battle engages and as the Charge begins (M9 gate).
+const ENGINES_LINE := "Smash the ballistae: two shoot now, two more join when the Charge begins."
+const CHARGE_LINE := "Two more ballistae open fire."
 
 var disengaged: Array = []
+## The HUD's messages since the test began (text only).
+var hud_lines: Array = []
 
 
 func before_each() -> void:
 	await super()
 	disengaged.clear()
+	hud_lines.clear()
 	Events.boss_disengaged.connect(_on_disengaged)
+	Events.hud_message.connect(_on_hud_message)
 
 
 func after_each() -> void:
 	if Events.boss_disengaged.is_connected(_on_disengaged):
 		Events.boss_disengaged.disconnect(_on_disengaged)
+	if Events.hud_message.is_connected(_on_hud_message):
+		Events.hud_message.disconnect(_on_hud_message)
 	Quests.end_dialogue()
 	for f in Formation.live():
 		f.dissolve()
@@ -57,6 +67,10 @@ func after_each() -> void:
 
 func _on_disengaged(t: int, id: String, reason: String) -> void:
 	disengaged.append([t, id, reason])
+
+
+func _on_hud_message(text: String, _kind: String) -> void:
+	hud_lines.append(text)
 
 
 static func _profile(stage: int) -> Dictionary:
@@ -271,8 +285,12 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		if b == null:
 			return
 		var d := w.director()
+		hud_lines.clear()
 		await _enter_bailey(w, b)
 		await step_ticks(120)
+		assert_true(hud_lines.has(ENGINES_LINE), "%s: the HUD tells the giant which ballistae shoot as the battle engages (%s)" % [
+			"web" if web else "desktop", hud_lines])
+		assert_false(hud_lines.has(CHARGE_LINE), "the Charge's line waits for the Charge")
 		var crews := {}
 		for entry: Variant in GameData.get_record(WALL).get("engines", []):
 			for c: Variant in (entry as Dictionary).get("crew", []):
@@ -301,6 +319,7 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		shooting = _shooting_engines(w, b)
 		print("    iron regiment (%s): in the Charge the ballistae that shoot %s" % [name, shooting])
 		assert_eq(shooting.size(), 4, "%s: from the Charge all four ballistae shoot (%s)" % [name, shooting])
+		assert_eq(hud_lines.count(CHARGE_LINE), 1, "%s: the HUD says so as the Charge begins (%s)" % [name, hud_lines])
 		var guard := 0
 		while _up(d, CHARGE).size() < 6 and guard < 300:
 			await step_ticks(1)
