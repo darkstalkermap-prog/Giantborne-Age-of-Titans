@@ -16,6 +16,11 @@ extends IntegrationSuite
 ##     58.3 m from its encounter's centre, leash 60 m) stepped out past the ring for each shot and was leashed home,
 ##     8 times in 20 s, and never shot. Now neither archer is leashed, every firing point it picks lies inside its
 ##     leash, and both shoot.
+##   * The early audit's A1/A3/A5: what a battle's hold does to an engine (SiegeEngine._target's `fire_held`; 82eab0b
+##     kept the crew counted): held, it neither turns nor shoots, its crew stays counted (no abandon cue) and its
+##     reload is hauled; freed, it turns and shoots. The gate test read only the battle's flag.
+##   * The early audit's R4: the moved-respawn line writes a checkpoint name that begins with "The" mid-sentence
+##     ("You wake at the Broken Stair."); its only test used the King's Road waystone, which the old code wrote right.
 
 const RIVAL := "res://scenes/enemies/rival_giant.tscn"
 const CLANS := "encounter.stonehold_moot_clans"
@@ -25,6 +30,8 @@ const CRATE := "res://scenes/world/crate.tscn"
 const WORLD_SCENE := "res://scenes/world/world.tscn"
 const BRANNOCK_ARCHERS := ["world.crownmarch.brannock_archer_1", "world.crownmarch.brannock_archer_2"]
 const BRANNOCK_SOUTH_GATE := "world.crownmarch.brannock_south_gate"
+const BALLISTA := "res://scenes/world/siege_ballista.tscn"
+const WORLD_LEVEL := "level.world"
 
 
 static func _profile(stage: int) -> Dictionary:
@@ -308,3 +315,74 @@ func test_brannocks_gate_archers_pick_firing_points_inside_their_leash() -> void
 	await step_ticks(2)
 	FactionState.reset_for_tests()
 	WanderDirector.reset_for_tests()
+
+
+# --------------------------------------------------------------------------- A1/A3/A5: a held engine
+
+func test_a_held_engine_neither_turns_nor_shoots_until_freed() -> void:
+	TestFixtures.record_override("prop.siege_ballista", {"engine": {"reload_s": 0.3}})
+	TestFixtures.record_override("ability.ballista_bolt", {"windup_s": 0.1, "recovery_s": 0.05})
+	var fired: Array = []
+	var abandoned: Array = []
+	var on_fired := func(t: int, engine_id: String, _a: String, _target: String) -> void: fired.append([t, engine_id])
+	var on_crewed := func(t: int, engine_id: String, is_crewed: bool) -> void:
+		if not is_crewed:
+			abandoned.append([t, engine_id])
+	Events.siege_engine_fired.connect(on_fired)
+	Events.siege_engine_crewed.connect(on_crewed)
+	var s := spawn_soldier(Vector3(0, 0.05, 0), 0.0, "test.final_target", false)   # its target, unkillable
+	s.entity.team = CombatEntity.Team.PLAYER
+	s.entity.combatant.unkillable = true
+	var b := (load(BALLISTA) as PackedScene).instantiate() as SiegeEngine
+	b.world_id = "test.final_ballista"
+	b.position = Vector3(0, 0, -30)
+	b.rotation.y = wrapf(TargetingRules.yaw_of(Vector3(0, 0, 30)) + PI * 0.5, -PI, PI)   # 90 degrees off its target
+	world.add_child(b)
+	b.set_fire_held(true)   # as a battle holds a later phase's engine
+	var c := TestSpawn.enemy(world, CREW, b.global_position + Vector3(0, 0.05, 0), "test.final_crew", false, b.rotation.y)
+	b.add_crew(c)
+	c.global_position = b.crew_slot(c) + Vector3(0, 0.05, 0)
+	var yaw0 := b.facing_yaw
+	var reload0 := b.reload_left
+	await step_ticks(120)
+	assert_true(reload0 > 0.0, "it started with a reload to haul (%.3f s)" % reload0)
+	assert_eq(fired, [], "held, it does not shoot")
+	assert_eq(b.shots, 0, "no shot")
+	assert_near(b.facing_yaw, yaw0, 1e-4, "held, it does not turn on its target")
+	assert_true(b.crewed and b.is_crewed(), "its crew stays counted")
+	assert_eq(abandoned, [], "no siege_engine_crewed(false): the crowd hears no abandon cue")
+	assert_near(b.reload_left, 0.0, 1e-6, "held, its crew hauls its reload down")
+	assert_false(b.in_action(), "in_action() is false while held")
+	b.set_fire_held(false)
+	await TestWait.until(self, func() -> bool: return fired.size() >= 1, 6 * 60)
+	assert_eq(fired.size(), 1, "freed, it turns and shoots (%s)" % [fired])
+	assert_true(absf(angle_difference(b.facing_yaw, yaw0)) > 1.0, "turned on its target (yaw %.2f from %.2f)" % [b.facing_yaw, yaw0])
+	Events.siege_engine_fired.disconnect(on_fired)
+	Events.siege_engine_crewed.disconnect(on_crewed)
+	b.queue_free()
+
+
+# --------------------------------------------------------------------------- R4: the moved respawn's line
+
+func test_a_moved_respawn_names_the_broken_stair_lower_case_mid_sentence() -> void:
+	FactionState.reset_for_tests()
+	GameSession.start_world_for_tests("world.cp.kings_road")
+	GameSession.level_id = WORLD_LEVEL
+	var blocker := func(id: String) -> String: return FactionState.respawn_refusal(id)
+	GameSession.register_respawn_blocker(blocker)
+	WorldState.set_flag(FactionState.flag_id("brannock", "hostile"), true)   # the town sworn by force
+	var held := "Brannock's guards hold the ground there."
+	assert_eq(GameSession.respawn_blocker("world.cp.brannock"), held, "hostile: Brannock's guards refuse a respawn at its stone")
+	var lines: Array[String] = []
+	var on_message := func(text: String, _kind: String) -> void: lines.append(text)
+	Events.hud_message.connect(on_message)
+	GameSession.last_load_message = ""
+	GameSession._note_respawn_moved("world.cp.brannock", "world.cp.broken_stair")
+	Events.hud_message.disconnect(on_message)
+	GameSession.unregister_respawn_blocker(blocker)
+	assert_eq(GameSession.checkpoint_display_name("world.cp.broken_stair", WORLD_LEVEL), "The Broken Stair",
+		"the only checkpoint whose name begins with The")
+	var expected := held + " You wake at the Broken Stair."
+	assert_eq(GameSession.last_load_message, expected, "mid-sentence: 'the Broken Stair', not 'The Broken Stair'")
+	assert_true(lines.has(expected), "the HUD's line too (%s)" % [lines])
+	FactionState.reset_for_tests()

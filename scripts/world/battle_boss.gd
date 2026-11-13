@@ -86,7 +86,9 @@ extends BossArena
 ##     14,080 in the final audit's probe), so the giant had to hunt a dozen running men across the bailey, each
 ##     running again when hit. And
 ##     the bar's notches follow the phases (phase_marks: each `below` less what the engines have lost), so the
-##     bar no longer passes the Charge's notch while the Wall still holds.
+##     bar no longer passes the Charge's notch while the Wall still holds. The HUD's engine lines count only an
+##     engine with a crew now or one still to come (_engine_manned): a bastion ballista whose one garrison crew a
+##     Crag Hurl killed stands silent for good, and the Charge no longer says it opens fire.
 
 const BATTLE_GROUP := "battle_bosses"
 ## M9 gate: the engines' holds are applied again this often while engaged (an engine streamed in since).
@@ -354,7 +356,8 @@ func _apply_engine_holds() -> void:
 
 ## M9 gate: the HUD line as the battle engages - how many of its standing engines shoot now and how many
 ## more a later phase frees ("Smash the ballistae: two shoot now, two more at the Charge.");
-## "" when none stands. Engines are counted standing whether or not a crew serves them yet.
+## "" when none stands. Engines are counted standing whether or not a crew serves them yet - M9 gate (final; the
+## early audit's A2/A4): but not one whose crew is gone for good (_engine_manned): it never shoots again.
 func engines_line() -> String:
 	var standing: Array = []
 	var now := 0
@@ -362,7 +365,7 @@ func engines_line() -> String:
 	var first_later := phases.size()
 	for id in engines:
 		var e := _standing_engine(id)
-		if e == null:
+		if e == null or not _engine_manned(e):
 			continue
 		standing.append(e)
 		var ph := engine_phase(id)
@@ -385,12 +388,12 @@ func engines_line() -> String:
 
 
 ## M9 gate: the HUD line as phase `i` (0-based) frees the engines it brings ("Two more ballistae open
-## fire."); "" when it frees none that stands.
+## fire."); "" when it frees none that stands - M9 gate (final): and is manned (_engine_manned).
 func phase_engines_line(i: int) -> String:
 	var freed: Array = []
 	for id in engines:
 		var e := _standing_engine(id)
-		if e != null and engine_phase(id) == i:
+		if e != null and engine_phase(id) == i and _engine_manned(e):
 			freed.append(e)
 	if freed.is_empty():
 		return ""
@@ -405,6 +408,39 @@ func _standing_engine(world_id: String) -> SiegeEngine:
 	if e == null or e.destroyed or e.entity == null or not e.entity.is_alive():
 		return null
 	return e
+
+
+## M9 gate (final; the early audit's A2/A4): whether engine `e` has a crew now or one can still come this attempt:
+## a crew member serving it (is_crewed), one of its crew alive and not routed (on its way back to its place), or a
+## member an encounter names as its crew that is neither killed nor dead, routed or lost to its engine (unspawned
+## ones, a later phase's or a Wall crew killed in an earlier attempt, still count). Fort Aldmere's bastion pair is
+## crewed only by the gate garrison's wall_crew_1/2 (persist_death): a Crag Hurl that kills one leaves its ballista
+## standing and silent for good, and the HUD went on telling the giant it would open fire at the Charge.
+func _engine_manned(e: SiegeEngine) -> bool:
+	if e.is_crewed():
+		return true
+	for c: Variant in e.crew():
+		var a := c as EnemyActor
+		if a != null and a.entity != null and a.entity.is_alive() and a.brain != null \
+				and a.brain.state != EnemyBrain.AIState.ROUTED:
+			return true
+	var d := _director()
+	if d == null:
+		return true
+	for enc_id: String in d.encounter_ids():
+		for entry: Variant in GameData.get_record(enc_id).get("engines", []):
+			if typeof(entry) != TYPE_DICTIONARY or str((entry as Dictionary).get("engine", "")) != e.world_id:
+				continue
+			for c: Variant in (entry as Dictionary).get("crew", []):
+				var cid := str(c)
+				if WorldState.is_killed(cid) or d.member_status(cid) == EncounterDirector.DEAD:
+					continue
+				var n := d.spawned(cid)
+				var br: Variant = n.get("brain") if n != null else null
+				if br is EnemyBrain and ((br as EnemyBrain).crew_lost or (br as EnemyBrain).state == EnemyBrain.AIState.ROUTED):
+					continue
+				return true
+	return false
 
 
 ## M9 gate: what to call `list` of engines - their record's name when they share one ("ballista",
