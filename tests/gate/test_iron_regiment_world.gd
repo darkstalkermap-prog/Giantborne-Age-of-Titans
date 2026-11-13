@@ -140,15 +140,15 @@ func _battle(w: Node) -> FortBattle:
 	return null
 
 
-## The real world before Fort Aldmere's gate, a stage-5 giant that takes no damage, the gate broken. With
-## `via_ridge` the giant first stands 5 s on the King's Road below Ballista Ridge (the ridge wakes).
-func _fort(web: bool, via_ridge := false) -> WorldRoot:
+## The real world before Fort Aldmere's gate, a giant of `stage` (default 5) that takes no damage, the gate
+## broken. With `via_ridge` the giant first stands 5 s on the King's Road below Ballista Ridge (the ridge wakes).
+func _fort(web: bool, via_ridge := false, stage := 5) -> WorldRoot:
 	LevelRoot.force_web_for_tests = web
 	WanderDirector.test_active = true
 	WanderDirector.view_probe = func(_p: Vector3) -> bool: return false
 	var w: WorldRoot = await _world(Vector2(760.0, -30.0) if via_ridge else Vector2(650.0, -75.0))
 	var p := w.player()
-	p.set_profile(_profile(5))
+	p.set_profile(_profile(stage))
 	p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
 	if via_ridge:
 		await step_ticks(5 * 60)
@@ -341,6 +341,97 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		FactionState.reset_for_tests()
 		WanderDirector.reset_for_tests()
 		LevelRoot.force_web_for_tests = false
+
+
+## M9 gate (lane ironreg; the review's major finding): the phases follow the battle's units whatever becomes of its
+## ballistae. The thresholds (0.7, 0.5) were set with all four standing, and their 3,600 of the bar (25.6 % on the
+## desktop, 30.7 % on the web) moved the phases: a ballista broken - on the way to the gate, in an earlier attempt
+## (its wreck persists and its health stayed in the bar's total) or mid-Wall - brought every phase on early. The gate
+## bastions' pair broken before the battle left the desktop bar at 0.872 as it engaged and at 0.494 when the Wall's
+## fighting units fell: the Charge's six riders and the Last Stand began together; on the web, all four broken, the bar
+## stood at 0.693 as it engaged and the Charge came with the Wall. Each case at stages 4, 5 and 6: the Wall alone as
+## the battle engages, the Charge alone once the Wall's fighting units fall (its two ballista crews still standing),
+## the Last Stand once the riders fall - one phase at a time, in order.
+func test_the_phases_follow_the_units_whatever_becomes_of_the_ballistae() -> void:
+	for stage: int in [4, 5, 6]:
+		await _phases_case("desktop, the gate bastions' pair broken before (stage %d)" % stage, false, stage,
+			BASTION_BALLISTAE, "")
+		await _phases_case("web, all four broken before (stage %d)" % stage, true, stage,
+			BASTION_BALLISTAE + INNER_BALLISTAE, "")
+		await _phases_case("desktop, the north-west ballista broken mid-Wall (stage %d)" % stage, false, stage, [],
+			"world.aldmere.fort_ballista_nw")
+
+
+## One case of test_the_phases_follow_the_units_whatever_becomes_of_the_ballistae: the engines `broken_before` wrecked
+## before the giant walks in; `mid_wall` (a world id, or "") wrecked once the Wall's fall has brought the bar within one
+## ballista's share of the Charge's threshold - where the old rule began the Charge with the Wall still standing.
+func _phases_case(name: String, web: bool, stage: int, broken_before: Array, mid_wall: String) -> void:
+	WorldState.clear()   # each case its own world: no wreck or kill of the case before
+	var w := await _fort(web, false, stage)
+	var b := _battle(w)
+	assert_true(b != null, "%s: the battle is loaded" % name)
+	if b == null:
+		return
+	var d := w.director()
+	for eid: String in broken_before:
+		_kill(eid)
+	await step_ticks(30)
+	for eid: String in broken_before:
+		assert_true(WorldState.is_destroyed(eid), "%s: %s is wrecked before the battle" % [name, eid])
+	await _enter_bailey(w, b)
+	await step_ticks(120)
+	var charge_at := float((b.phases[1] as Dictionary).get("below", 0.0))
+	print("    iron regiment (%s): engaged, the bar at %.3f, phases %s" % [name, b.aggregate_fraction(), b.phase_log])
+	assert_eq(b.phase_log, [1] as Array[int], "%s: the Wall alone as the battle engages (bar %.3f)" % [name, b.aggregate_fraction()])
+	var crews := {}
+	for entry: Variant in GameData.get_record(WALL).get("engines", []):
+		for c: Variant in (entry as Dictionary).get("crew", []):
+			crews[str(c)] = true
+	var planned := b.planned()
+	var fighting: Array = Array(d.members_of(WALL)).filter(func(id: String) -> bool:
+		return planned.has(id) and not crews.has(id))
+	if mid_wall != "":
+		# The Wall falls a unit at a time until the bar stands within one ballista's share of the Charge.
+		var share := 900.0 / maxf(1.0, b.total_health())
+		while not fighting.is_empty() and b.aggregate_fraction() >= charge_at + share:
+			_kill(str(fighting.pop_front()))
+			await step_ticks(3)
+		assert_eq(b.phase_log, [1] as Array[int], "%s: the Wall still fights, bar %.3f" % [name, b.aggregate_fraction()])
+		_kill(mid_wall)
+		await step_ticks(30)
+		assert_true(WorldState.is_destroyed(mid_wall), "%s: %s is wrecked mid-Wall" % [name, mid_wall])
+		print("    iron regiment (%s): %d of the Wall's fighting units left, the bar at %.3f, phases %s" % [name,
+			fighting.size(), b.aggregate_fraction(), b.phase_log])
+		assert_eq(b.phase_log, [1] as Array[int], "%s: the Charge waits for the Wall's units, not the ballista (bar %.3f)" % [
+			name, b.aggregate_fraction()])
+	for id: String in fighting:
+		_kill(id)
+	await step_ticks(30)
+	var riders_up := 0
+	var guard := 0
+	while riders_up < 6 and guard < 300:
+		riders_up = _up(d, CHARGE).size()
+		await step_ticks(1)
+		guard += 1
+	print("    iron regiment (%s): the Wall's fighting units fallen, the bar at %.3f, phases %s, riders up %d" % [name,
+		b.aggregate_fraction(), b.phase_log, riders_up])
+	assert_eq(b.phase_log, [1, 2] as Array[int], "%s: the Charge alone once the Wall falls (bar %.3f)" % [name, b.aggregate_fraction()])
+	assert_eq(riders_up, 6, "%s: its six riders come" % name)
+	for id: String in crews:
+		var e := Sim.get_entity(id)
+		assert_true(e != null and e.is_alive(), "%s: %s still stands" % [name, id])
+	for id: String in d.members_of(CHARGE):
+		_kill(id)
+	await step_ticks(30)
+	print("    iron regiment (%s): the riders fallen, the bar at %.3f, phases %s" % [name, b.aggregate_fraction(), b.phase_log])
+	assert_eq(b.phase_log, [1, 2, 3] as Array[int], "%s: the Last Stand once the riders fall (bar %.3f)" % [name, b.aggregate_fraction()])
+	w.queue_free()
+	await step_ticks(2)
+	for f in Formation.live():
+		f.dissolve()
+	FactionState.reset_for_tests()
+	WanderDirector.reset_for_tests()
+	LevelRoot.force_web_for_tests = false
 
 
 ## M9 gate: the HUD's message box (Hud.MESSAGE_MAX_LINES at 1280 x 720) shows the portcullis's line and the

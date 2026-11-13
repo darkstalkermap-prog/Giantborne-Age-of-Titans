@@ -5,7 +5,8 @@ extends BossArena
 ## giant, the disengage rule, a checkpoint outside) whose "boss" is a set of encounters and siege
 ## engines it owns through the EncounterDirector, in phases:
 ##
-##   * `phases` (export): [{"id", "below": aggregate fraction at which it begins (the first 1.0),
+##   * `phases` (export): [{"id", "below": aggregate fraction at which it begins (the first 1.0) - counted
+##     with the engines whole (phase_fraction, M9 gate lane ironreg below),
 ##     "encounters": [encounter ids it activates], "name"}] - "The Wall" at engagement, "The Charge" at
 ##     70 %, "The Last Stand" at 50 % (Fort Aldmere's layout; 60 % and 25 % before the M9 confirmation,
 ##     which the bar never reached while the battle's engines and their crews stood) (or once every unit
@@ -70,6 +71,14 @@ extends BossArena
 ##     engages: "Smash the ballistae: two shoot now, two more at the Charge."; and
 ##     phase_engines_line as a phase frees held ones: "Two more ballistae open fire."): the engines take
 ##     most of the giant's health in the battle, and the quest's word for them was only in the journal.
+##   * M9 gate (lane ironreg; the review's major finding): the phases follow the units, not the engines
+##     (phase_fraction: the aggregate with every engine counted at its full health). The thresholds were set
+##     with the four ballistae standing - 3,600 of the bar, 25.6 % on the desktop and 30.7 % on the web - and a
+##     wrecked engine kept its maximum in the total (a wreck persists; the reset does not mend it), so a giant
+##     who smashed the gate bastions' pair on the way in started the battle at 0.872 and met the Charge's six
+##     riders and the Last Stand together as the Wall fell (0.494); on the web, all four smashed, the Charge came
+##     with the Wall (0.693 as it engaged); a ballista smashed mid-Wall brought the Charge on before the Wall
+##     fell. The bar the giant sees (aggregate) still counts what the engines have left.
 
 const BATTLE_GROUP := "battle_bosses"
 ## M9 gate: the engines' holds are applied again this often while engaged (an engine streamed in since).
@@ -246,12 +255,13 @@ func _on_post_resolve(tick: int) -> void:
 	super(tick)
 
 
-## Phases by the aggregate fraction (each once per attempt); the guard's break in the last phase.
+## Phases by the phase fraction - the aggregate with the engines counted whole (each once per attempt; M9 gate,
+## lane ironreg: phase_fraction); the guard's break in the last phase.
 func _battle_step(tick: int) -> void:
 	_recall_despawned()
 	if tick % ENGINE_HOLD_CHECK_TICKS == 0:
 		_apply_engine_holds()   # M9 gate: an engine that streamed in since
-	var frac := aggregate_fraction()
+	var frac := phase_fraction()
 	var next := phase_index + 1
 	while next < phases.size() and (frac <= float(phases[next].get("below", 0.0)) + 1e-6 or _phase_spent()):
 		_begin_phase(next, tick)
@@ -572,14 +582,7 @@ static func planned_units(enc: Dictionary, stage: int, web: bool) -> Dictionary:
 ## {"current", "total", "fraction", "phase", "count", "name", "yielded"}: the battle's bar. A unit down for
 ## this attempt (dead, or one of a cleared encounter that will never come: M8 release, R1) counts nothing.
 func aggregate() -> Dictionary:
-	var current := 0.0
-	var d := _director()
-	for id: String in _planned:
-		var e := Sim.get_entity(id)
-		if e != null and e.combatant != null:
-			current += e.combatant.pools.health if e.is_alive() else 0.0
-		elif d == null or not _unit_spent(d, id):
-			current += float(_planned[id])
+	var current := _units_current()
 	for id: String in _engine_max:
 		var e := Sim.get_entity(id)
 		if e != null and e.combatant != null and e.is_alive():
@@ -590,6 +593,36 @@ func aggregate() -> Dictionary:
 
 func aggregate_fraction() -> float:
 	return float(aggregate().fraction)
+
+
+## M9 gate (lane ironreg): the fraction the phases follow - the aggregate with every engine of the battle counted
+## at its full health, wrecked or worn or not: (the units' current health + the engines' maxima) / the total. It is
+## the bar's fraction while the engines stand whole, so each phase's `below` keeps its meaning (the layout's 0.7
+## and 0.5, set with the four ballistae standing: the Charge as the Wall falls, the Last Stand as the riders do) -
+## but a ballista broken on the way to the gate, in an earlier attempt (its wreck persists and its health stays in
+## the total) or mid-fight no longer brings a phase on early. The bar the giant sees still counts what the engines
+## have left, so smashing them shows there.
+func phase_fraction() -> float:
+	if _total <= 0.0:
+		return 0.0
+	var engines_full := 0.0
+	for v: float in _engine_max.values():
+		engines_full += v
+	return (_units_current() + engines_full) / _total
+
+
+## The health the planned units have now: a spawned unit its current health (nothing once dead), a unit still to
+## come its full health, a unit down for this attempt (M8 release, R1) nothing.
+func _units_current() -> float:
+	var current := 0.0
+	var d := _director()
+	for id: String in _planned:
+		var e := Sim.get_entity(id)
+		if e != null and e.combatant != null:
+			current += e.combatant.pools.health if e.is_alive() else 0.0
+		elif d == null or not _unit_spent(d, id):
+			current += float(_planned[id])
+	return current
 
 
 ## The units planned for this attempt (entity id -> maximum health; tests, debug).
