@@ -20,6 +20,8 @@ extends IntegrationSuite
 ##     crews at their places, holds its fire - and from the Charge into the Last Stand all four shoot
 ##     (test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing); the HUD tells the
 ##     giant so as the battle engages and again as the Charge frees the pair (ENGINES_LINE, CHARGE_LINE).
+##   * M9 gate (final): the Wall's routed men count as fallen (test_the_wall_s_routed_men_count_as_fallen), and the
+##     bar's notches follow the phases (BattleBoss.phase_marks; the mid-Wall case of _phases_case).
 
 const SCENE := "res://scenes/world/world.tscn"
 const GATE := "world.aldmere.fort_gate"
@@ -400,10 +402,15 @@ func _phases_case(name: String, web: bool, stage: int, broken_before: Array, mid
 		_kill(mid_wall)
 		await step_ticks(30)
 		assert_true(WorldState.is_destroyed(mid_wall), "%s: %s is wrecked mid-Wall" % [name, mid_wall])
-		print("    iron regiment (%s): %d of the Wall's fighting units left, the bar at %.3f, phases %s" % [name,
-			fighting.size(), b.aggregate_fraction(), b.phase_log])
+		print("    iron regiment (%s): %d of the Wall's fighting units left, the bar at %.3f, phases %s, notches %s" % [name,
+			fighting.size(), b.aggregate_fraction(), b.phase_log, b.phase_marks()])
 		assert_eq(b.phase_log, [1] as Array[int], "%s: the Charge waits for the Wall's units, not the ballista (bar %.3f)" % [
 			name, b.aggregate_fraction()])
+		# M9 gate (final; lane ironreg's 'left'): the bar shown has lost the ballista's health, so it stands below the
+		# Charge's 0.7 - its notch follows the phases and moves down with it: the bar has not passed it.
+		var marks := b.phase_marks()
+		assert_true(not marks.is_empty() and b.aggregate_fraction() > marks[0],
+			"%s: the bar (%.3f) has not passed the Charge's notch (%s) while the Wall fights" % [name, b.aggregate_fraction(), marks])
 	for id: String in fighting:
 		_kill(id)
 	await step_ticks(30)
@@ -432,6 +439,124 @@ func _phases_case(name: String, web: bool, stage: int, broken_before: Array, mid
 	FactionState.reset_for_tests()
 	WanderDirector.reset_for_tests()
 	LevelRoot.force_web_for_tests = false
+
+
+## M9 gate (final; the final audit's F10): the Wall's men who routed count as fallen. The giant does what the quest
+## stage says - he fells the Wall's two banners and a few of its men - and the rest flee and rout to the bailey's flee
+## points (out of the fight for good). Before, the phases counted a routed man's whole health: the battle stayed in the
+## Wall (phase fraction 0.898 in the audit's probe) until about twelve running men were hunted down across the bailey,
+## each running again when struck, and smashing both inner ballistae did not move it either. Stage 4, the desktop, all
+## four ballistae standing: the Charge begins without a routed man killed, the phase fraction falls to the Charge's
+## 0.7 or below, and a routed man struck afterwards (briefly STAGGERED) does not lift it again.
+func test_the_wall_s_routed_men_count_as_fallen() -> void:
+	WorldState.clear()
+	var w := await _fort(false, false, 4)
+	var b := _battle(w)
+	assert_true(b != null, "the battle is loaded")
+	if b == null:
+		return
+	var d := w.director()
+	await _enter_bailey(w, b)
+	await step_ticks(120)
+	var giant := w.player().entity.entity_id
+	var crews := {}
+	for entry: Variant in GameData.get_record(WALL).get("engines", []):
+		for c: Variant in (entry as Dictionary).get("crew", []):
+			crews[str(c)] = true
+	var planned := b.planned()
+	var fighting: Array = Array(d.members_of(WALL)).filter(func(id: String) -> bool:
+		return planned.has(id) and not crews.has(id))
+	var charge_at := float((b.phases[1] as Dictionary).get("below", 0.0))
+	# The giant fells the two banners, then four men who still stand, one every 0.75 s (the audit's probe).
+	for id: String in fighting:
+		if id.contains("banner"):
+			_strike(id, giant, 1.0e6)
+	await step_ticks(60)
+	var kills := 0
+	for i in 4:
+		var target := ""
+		for id: String in fighting:
+			var e := Sim.get_entity(id)
+			if e == null or not e.is_alive() or d.member_routed(id):
+				continue
+			var a := e.actor as EnemyActor
+			if a != null and a.brain != null and a.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]:
+				continue
+			target = id
+			break
+		if target == "":
+			break
+		_strike(target, giant, 1.0e6)
+		kills += 1
+		await step_ticks(45)
+	# The rest flee and rout (their morale, as in play: the audit's probe, and this case run alone, see them all
+	# routed 19.5 s after the last kill); whoever still stands after 25 s is routed by hand (p30_force_rout), so the
+	# case checks the phases' rule whatever the morale did (run after this suite's other cases the Wall has been
+	# seen to hold its slots at full morale after its banners fell).
+	var living := func() -> Array:
+		return fighting.filter(func(id: String) -> bool:
+			var e := Sim.get_entity(id)
+			return e != null and e.is_alive())
+	var all_routed := func() -> bool:
+		return (living.call() as Array).all(func(id: String) -> bool: return d.member_routed(id))
+	var guard := 0
+	while guard < 25 * 60 and not bool(all_routed.call()):
+		await step_ticks(30)
+		guard += 30
+	var forced: Array = []
+	for id: String in living.call():
+		var a := Sim.get_entity(id).actor as EnemyActor
+		if not d.member_routed(id) and a != null and a.brain != null:
+			print("      not routed after %.1f s: %s %s morale %.0f aware %s - routed by hand" % [guard / 60.0, id,
+				EnemyBrain.AIState.keys()[a.brain.state], a.brain.morale, a.brain.aware])
+			a.p30_force_rout()
+			forced.append(id)
+	if not forced.is_empty():
+		await step_ticks(60)
+	var routed: Array = (living.call() as Array).filter(func(id: String) -> bool: return d.member_routed(id))
+	print("    iron regiment (stage 4, routs): %d killed after the banners, %d of the Wall's men alive, %d routed (%d by hand) after %.1f s; phases %s, phase fraction %.3f, bar %.3f" % [
+		kills, (living.call() as Array).size(), routed.size(), forced.size(), guard / 60.0, b.phase_log, b.phase_fraction(),
+		b.aggregate_fraction()])
+	assert_true(routed.size() >= 6, "most of the Wall's men routed rather than fell (%d routed, %d killed)" % [routed.size(), kills])
+	assert_eq(routed.size(), (living.call() as Array).size(), "every man of the Wall still alive is routed")
+	assert_eq(b.phase_log, [1, 2] as Array[int], "the Charge begins without a routed man killed (phase fraction %.3f)" % b.phase_fraction())
+	assert_true(b.phase_fraction() <= charge_at + 1e-6, "the phase fraction falls to the Charge's %.2f or below (%.3f)" % [
+		charge_at, b.phase_fraction()])
+	assert_near(b.aggregate_fraction(), b.phase_fraction(), 1e-6, "the bar shown agrees, the engines whole")
+	# A routed man struck afterwards (staggered for a moment) stays fallen for the phases.
+	if not routed.is_empty():
+		var vid: String = routed[0]
+		var before := b.phase_fraction()
+		_strike(vid, giant, 25.0)
+		var highest := before
+		for i in 20:
+			await step_ticks(6)
+			highest = maxf(highest, b.phase_fraction())
+		var ve := Sim.get_entity(vid)
+		assert_true(ve != null and ve.is_alive(), "the struck man lives")
+		assert_true(d.member_routed(vid), "and stays routed for the director")
+		assert_true(highest <= before + 1e-6, "striking a routed man does not lift the phase fraction (%.3f -> at most %.3f)" % [
+			before, highest])
+	w.queue_free()
+	await step_ticks(2)
+
+
+## A blow of `power` on `id` from `attacker` (the giant's entity: it counts as his).
+func _strike(id: String, attacker: String, power: float) -> void:
+	var e := Sim.get_entity(id)
+	if e == null or e.actor == null or not e.is_alive():
+		return
+	var h := HitEvent.new()
+	h.tick = Sim.tick
+	h.instance_id = Sim.new_instance_id()
+	h.attacker_id = attacker
+	h.target_id = id
+	h.power = power
+	h.size_policy = "none"
+	h.damage_split = {"physical": 1.0}
+	h.tags = PackedStringArray(["Melee", "Unblockable", "Unparryable"])
+	h.attacker_position = (e.actor as Node3D).global_position + Vector3(0, 0, 6)
+	Sim.queue_hit(h)
 
 
 ## M9 gate: the HUD's message box (Hud.MESSAGE_MAX_LINES at 1280 x 720) shows the portcullis's line and the

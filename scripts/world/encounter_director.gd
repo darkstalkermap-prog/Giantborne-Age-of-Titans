@@ -308,6 +308,14 @@ func member_status(entity_id: String) -> String:
 	return m.status if m != null else ""
 
 
+## M9 gate (final): true while a spawned member is routed - out of the fight for good (Events.enemy_routed;
+## sticky until it dies, leaves the world or its encounter starts afresh), whatever its brain does for a moment
+## (a routed man struck is briefly STAGGERED). _check_cleared counts it fallen; so do the battle's phases.
+func member_routed(entity_id: String) -> bool:
+	var m: Member = _members.get(entity_id)
+	return m != null and m.status == SPAWNED and m.routed
+
+
 ## How many times a member was spawned in this load (tests).
 func spawn_count(entity_id: String) -> int:
 	var m: Member = _members.get(entity_id)

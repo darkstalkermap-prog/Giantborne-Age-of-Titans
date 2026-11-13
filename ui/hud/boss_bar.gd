@@ -164,6 +164,11 @@ func visible_text() -> String:
 
 
 ## The phase pips: true for each phase reached ([] while hidden).
+## The notches drawn now (health fractions; tests).
+func notch_fractions() -> Array[float]:
+	return (_notches as Notches).fractions.duplicate()
+
+
 func phase_pips() -> Array[bool]:
 	var out: Array[bool] = []
 	if not _panel.visible:
@@ -226,10 +231,13 @@ func _show_battle(battle: Node) -> void:
 		_pips[i].visible = i < count
 		_pips[i].color = PIP_FILLED if i < phase else PIP_EMPTY
 	var marks: Array[float] = []
-	for ph: Dictionary in battle.get("phases"):
-		var f := float(ph.get("below", 1.0))
-		if f < 1.0:
-			marks.append(f)
+	if battle.has_method("phase_marks"):
+		marks = battle.call("phase_marks")   # M9 gate (final): the notches follow the phases (BattleBoss)
+	else:
+		for ph: Dictionary in battle.get("phases"):
+			var f := float(ph.get("below", 1.0))
+			if f < 1.0:
+				marks.append(f)
 	(_notches as Notches).fractions = marks
 	var yields := "  yields" if bool(a.yielded) or is_yielded(_boss_id) else ""
 	_name.text = str(a.name) + yields
