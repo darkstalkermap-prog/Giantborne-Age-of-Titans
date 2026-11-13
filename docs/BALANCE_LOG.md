@@ -2333,3 +2333,43 @@ each replayed the confirmation's run to the tick - the Valley's items stand as t
 The full check on the lane's code (`tools/check.sh --slow --gate`, `41fddb0`): CHECK PASSED - 284 suites, 49,362
 checks, 0 failures; the tiers 65.5 s (default), 288.3 s (slow) and 576.5 s (gate), within their budgets; the 120 s
 autoplay with 0 errors.
+
+## M9 gate (final): the Iron Regiment at stage 4 - one attempt on the ballistae's cadence, a miss (and the audits' corrections)
+
+Item B of the final round: the integration's stage-4 runs of the crown-first order (`integ_ir4_novice`,
+`integ_ir4_expert`, `w.order_crown:<skill>:2 --bot-until=oath.crown.done`) both lost with six deaths, the battle's
+ballistae dealing 67 % and 76 % of the damage the giant took in it (the inner pair, the Wall's own crews, the ones that
+shoot in the Wall: the bastion pair holds its fire until the Charge since lane aldmere). One tuning attempt on the
+inner pair's cadence, measured on the same two specs at once (`--jobs=2`, `--perf --bot-trace=1`, nice 10, beside the
+other lanes' runs; scratch worktrees of this lane's `af0b7b9`, the evidence `m9_gate/final/fix/runs/fin_ir4_*`):
+
+| Run (`w.order_crown:<skill>:2`, stage 4) | Deaths (the simulated second each respawn shows in the trace) | Result |
+| --- | --- | --- |
+| baseline novice (this lane's code) | 408, 485, 552 and 650 s | stopped at 692 s with 4 deaths: the integration's run, which lost with 6 (deaths at 405, 482, 549, 647, 717 and 878 s), within 3 s |
+| baseline expert | 487, 565, 646 and 718 s | stopped at 751 s with 4 deaths: the integration's run (deaths at 485, 563, 644, 715, 789 and 859 s: lost with 6) within 3 s |
+| **the attempt** novice: `prop.siege_ballista`'s `engine.reload_s` 6.0 -> 10.0 | 410, 516, 639 and 755 s | 4 deaths by 755 s (stopped at 763 s): **over the plan's 1-3** |
+| the attempt, expert | 494, 580, 671 and 747 s | 4 deaths by 747 s (stopped at 813 s) |
+
+The cadence moves the battle - the novice's lives after its first were 18-56 s longer (106, 123 and 116 s against 77,
+67 and 98 s), the expert's 4-10 s (86, 91 and 76 s against 78, 81 and 72 s) - but not to the target: the novice's fourth death came at 755 s, so the change could not be kept
+(the gate's rule: keep it only if the stage-4 novice wins within 1-3 deaths and nothing else moves), and the assisted
+crown order and the stage-5 run it would have needed were not run. **Reverted** (it never left the scratch worktree:
+`data/props/siege_ballista.json` is as before). The reload is every ballista's (the toll fort's, the war camp's, the
+ridge's, the Moot battery's), which is why it was the one attempt, not a fix to keep without those runs.
+
+**The miss and its levers for M10** (FOLLOWUPS, "From the M9 gate's final round"): the stage-4 novice still loses the
+battle at the gate's ballistae and the Wall; one attempt on the cadence alone is not enough. The levers, in the order
+the runs point to them: (1) the inner pair's reach into the bailey's gate end, where the giant fights the Wall (their
+range band 20-140 m covers the whole bailey); (2) the bot's play - its siege disruption does not break engines or hunt
+their crews in the battle, though the HUD tells it to ("Smash the ballistae"); (3) a cadence change scoped to the
+battle's engines (an engine record of their own) rather than every ballista, measured with the assisted order and a
+stage-5 run as the gate asks; (4) the death reload's state (the giant re-enters with 678 health, the death floor).
+
+**Corrections to the M9 gate's entries** (the final audit, F2-F7, and the early audit, A6-A7; made in place above,
+each marked "M9 gate (final)"): the Moot's watching clans turned hostile by the giant's own blows near the ring, not by
+Harrok's death (F2: the watchers are spectators now); the Matriarch's own phase-2 sequence is 0.74x her phase 1's
+power per second, the 1.7x counting her whelp (F3/F5); the lone soldiers' 66 % is flight added before the same rout,
+their non-flee time unchanged at 286 -> 276 s (F6); Harrok's spare duels in the gate's runs (0 and 2 deaths),
+Earthquake's use (eight runs of ten) and the Millford raid (abandoned in one conqueror expert run) (F7); an engine's
+landed shot now raises combat music as its crew's hit (F4/F12: the lesser-only share on the final code is the final
+measurement's); the bastion hold's "half again as long" and "a quarter of its health" (A6/A7).

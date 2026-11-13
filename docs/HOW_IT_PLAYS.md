@@ -644,7 +644,10 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   bailey with 60 % of its health each time and reaches the Charge twice in six attempts, but still dies six times,
   four of them to the inner pair's ballistae (64 % of the damage taken in the battle) - in two attempts it stood in the
   gateway's inner mouth against the Wall's advancing pikes and killed nothing. Left for P40: the inner ballistae's
-  numbers and the bot's play in the battle.
+  numbers and the bot's play in the battle. **M9 gate (final)**: one attempt on the ballistae's cadence (reload 6 -> 10 s) made
+  the novice's lives 18-56 s longer but the novice still died 4 times by 755 s (target 1-3), so it was reverted; the
+  levers are left for M10 (FOLLOWUPS: the inner pair's reach, the bot's siege play, a battle-only cadence, the reload's
+  health).
 - **The Iron Regiment's routed Wall** (fixed at the M9 gate's final round): the Wall's men who routed to the bailey's
   flee points when their banners fell counted as fighting, so the Charge waited until a dozen running men were cut
   down across the bailey (each running again when hit), and smashing the ballistae no longer brought it. A routed unit
