@@ -251,7 +251,7 @@ tools/check.sh --only=world --build-args=--chunks=c2_6   # rebuild chunk c2_6 an
 tools/run_tests.sh                      # the default tier only; add --slow, --gate or --filter=<part of a path>
 ```
 
-There are three tiers (plan M6-M9 decision 34): the **default** tier (`tests/unit`, `tests/integration`:
+There are three tiers (DECISIONS.md decision 64): the **default** tier (`tests/unit`, `tests/integration`:
 pure rules, real scenes, physics and input events; silent; its budget 75 s of wall time), the
 **slow** tier (`tests/slow`: the Valley, routes, the real world's builds and walks, batteries;
 budget 8 minutes) and the **gate** tier (`tests/gate`: walkthroughs of every region, every order of
@@ -367,7 +367,8 @@ The script packs the files, copies the poster and writes the byte counts and the
 `python3 -m http.server -d builds/web 8000`) and open `http://localhost:8000/play.html`
 (`play.html?args=a,b` passes engine arguments). To update the play link, republish
 `web/launcher.html` to the same artifact URL with these files from `builds/web/`: `index.js`,
-`index.wasm.gz.b64.txt`, the `index.pck.gz.b64.*.txt` parts, `index.audio.worklet.js`,
+`index.wasm.gz.b64.txt`, the packed pck (`index.pck.gz.b64.txt`, or its parts
+`index.pck.gz.b64.1.txt`, `.2.txt`, ...), `index.audio.worklet.js`,
 `index.audio.position.worklet.js` and `poster.jpg`.
 
 The web checks drive the build in headless Chromium (Playwright): `node tools/web/audio_check.mjs`

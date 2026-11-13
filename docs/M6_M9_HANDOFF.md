@@ -323,7 +323,7 @@ The checks on the way, each on its own code (so none is the final one):
 
 Sources: `docs/systems/P23.md` ("Runtime added to the suites"), `docs/PERFORMANCE.md` ("The 0.7.0-m7
 release", "The 0.8.0-m8 release"), `docs/systems/P39f.md` ("Part web", "Tests"), `docs/systems/P39.md`
-("Tests and the full check"). The default tier stayed within its 75 s budget in each (decision 64).
+("Tests and the full check"). The default tier stayed within its 75 s budget in each (DECISIONS.md decision 64).
 
 ### 6.2 Bot runs and the stability runs
 
