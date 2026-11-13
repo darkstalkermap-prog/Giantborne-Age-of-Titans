@@ -67,7 +67,7 @@ extends BossArena
 ##     a stage-4 giant can neither reach nor see from there - and killed the novice at stage 4 before the
 ##     Charge (docs/BALANCE_LOG.md, "M9 gate (lane aldmere)"). A reset, a win or the node leaving the tree
 ##     frees every hold. The giant is told which engines shoot (engines_line, a HUD line as the battle
-##     engages: "Smash the ballistae: two shoot now, two more join when the Charge begins."; and
+##     engages: "Smash the ballistae: two shoot now, two more at the Charge."; and
 ##     phase_engines_line as a phase frees held ones: "Two more ballistae open fire."): the engines take
 ##     most of the giant's health in the battle, and the quest's word for them was only in the journal.
 
@@ -335,7 +335,7 @@ func _apply_engine_holds() -> void:
 
 
 ## M9 gate: the HUD line as the battle engages - how many of its standing engines shoot now and how many
-## more a later phase frees ("Smash the ballistae: two shoot now, two more join when the Charge begins.");
+## more a later phase frees ("Smash the ballistae: two shoot now, two more at the Charge.");
 ## "" when none stands. Engines are counted standing whether or not a crew serves them yet.
 func engines_line() -> String:
 	var standing: Array = []
@@ -357,12 +357,13 @@ func engines_line() -> String:
 		return ""
 	if later == 0:
 		return "Smash the %s: %s at you." % [engines_noun(standing, now > 1), _n_verb(now, "", "shoot")]
+	# Short enough that it and the portcullis's line fit the HUD's three-line message box together.
 	var when := mid_sentence(str((phases[first_later] as Dictionary).get("name", "the next phase")))
 	if now == 0:
-		return "%s %s %s when %s begins." % [count_word(later).capitalize(), engines_noun(standing, later > 1),
+		return "%s %s %s at %s." % [count_word(later).capitalize(), engines_noun(standing, later > 1),
 			"open fire" if later > 1 else "opens fire", when]
-	return "Smash the %s: %s now, %s when %s begins." % [engines_noun(standing, true), _n_verb(now, "", "shoot"),
-		_n_verb(later, "more ", "join"), when]
+	return "Smash the %s: %s now, %s more at %s." % [engines_noun(standing, true), _n_verb(now, "", "shoot"),
+		count_word(later), when]
 
 
 ## M9 gate: the HUD line as phase `i` (0-based) frees the engines it brings ("Two more ballistae open

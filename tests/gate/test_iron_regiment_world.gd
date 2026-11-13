@@ -35,7 +35,7 @@ const BASTION_BALLISTAE := ["world.aldmere.fort_ballista_e", "world.aldmere.fort
 ## centre at (650, -165): beyond the old circle's 72 + 20 m).
 const CORNERS := [Vector2(730, -236), Vector2(570, -236), Vector2(730, -104), Vector2(570, -104)]
 ## The HUD's lines about the ballistae as the battle engages and as the Charge begins (M9 gate).
-const ENGINES_LINE := "Smash the ballistae: two shoot now, two more join when the Charge begins."
+const ENGINES_LINE := "Smash the ballistae: two shoot now, two more at the Charge."
 const CHARGE_LINE := "Two more ballistae open fire."
 
 var disengaged: Array = []
@@ -291,6 +291,8 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		assert_true(hud_lines.has(ENGINES_LINE), "%s: the HUD tells the giant which ballistae shoot as the battle engages (%s)" % [
 			"web" if web else "desktop", hud_lines])
 		assert_false(hud_lines.has(CHARGE_LINE), "the Charge's line waits for the Charge")
+		if not web:
+			await _check_box_holds_both(b.gate_line(), ENGINES_LINE)
 		var crews := {}
 		for entry: Variant in GameData.get_record(WALL).get("engines", []):
 			for c: Variant in (entry as Dictionary).get("crew", []):
@@ -339,6 +341,30 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		FactionState.reset_for_tests()
 		WanderDirector.reset_for_tests()
 		LevelRoot.force_web_for_tests = false
+
+
+## M9 gate: the HUD's message box (Hud.MESSAGE_MAX_LINES at 1280 x 720) shows the portcullis's line and the
+## ballistae's together as the battle engages - the newer would push the older out if they took more lines.
+func _check_box_holds_both(first: String, second: String) -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var frame := Control.new()
+	frame.size = Vector2(1280, 720)
+	layer.add_child(frame)
+	var hud := Hud.new()
+	frame.add_child(hud)
+	await get_tree().process_frame
+	hud.show_message(first, "warn")
+	hud.show_message(second, "info")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var shown := hud.message_texts()
+	print("    iron regiment: the HUD's box %s (lines %d + %d of %d)" % [shown, hud.message_line_count(first),
+		hud.message_line_count(second), Hud.MESSAGE_MAX_LINES])
+	assert_true(shown.has(first) and shown.has(second),
+		"the HUD shows the portcullis's line and the ballistae's together (%s)" % [shown])
+	layer.queue_free()
+	await get_tree().process_frame
 
 
 func _up(d: EncounterDirector, enc: String) -> Array:

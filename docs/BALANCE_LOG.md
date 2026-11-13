@@ -1707,12 +1707,14 @@ with the measurements (FOLLOWUPS, the M8 release check's Iron Regiment row). No 
 **Telling the player** (commit `40afc4e`): the ballistae take most of the giant's health in the battle, and the
 quest's word for them ("smash the wall ballistae", `quest.iron_regiment`'s waiting text) was only in the journal's
 Waiting section. As the battle engages the HUD now says which of its standing engines shoot and how many more join
-later - "Smash the ballistae: two shoot now, two more join when the Charge begins." - and as the Charge frees the
-bastions' pair, "Two more ballistae open fire." (BattleBoss.engines_line, phase_engines_line: built from the engines'
-phases, so the line follows the composition, and a wrecked engine is not counted). The two in the Wall stand on the
-bailey's floor at its far corners, where a stage-4 giant reaches them. `test_iron_regiment_world` asserts both lines
-on desktop and the web (102 -> 108 checks; 4 failures on the previous code). The bot does not read the HUD, so its
-runs are unchanged by the line.
+later - "Smash the ballistae: two shoot now, two more at the Charge." - and as the Charge frees the bastions' pair,
+"Two more ballistae open fire." (BattleBoss.engines_line, phase_engines_line: built from the engines' phases, so the
+line follows the composition, and a wrecked engine is not counted). The engagement's line is one line long, so it
+and the portcullis's two fit the HUD's three-line message box together (a longer first wording pushed the
+portcullis's line out). The two in the Wall stand on the bailey's floor at its far corners, where a stage-4 giant
+reaches them. `test_iron_regiment_world` asserts both lines on desktop and the web and the box holding the two
+engagement lines together (102 -> 109 checks; 4 failures on the code before the lines). The bot does not read the
+HUD, so its runs are unchanged by the lines.
 
 ### What the changes touch, measured again
 
