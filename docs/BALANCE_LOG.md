@@ -1608,3 +1608,80 @@ With the gateway and the camp fixed (`fix1`):
 
 The bot still stands by the gateway trying to hurl at the bastions' ballistae it cannot see (two give-ups of 8-10 s in
 each run): its ranged rule, the other M9 gate lane's (`scripts/debug/world_bot.gd`), costs time but no longer the order.
+
+### The crown-first order unassisted, with the gateway fixed (`fix1`)
+
+| Run | Stage | Result |
+| --- | --- | --- |
+| `aldmere_fix1_ir4` (`w.order_crown:novice:2`, until the crown's oath) | 4 | **the battle not won**: six deaths (`bot_failed` at 1,183 s), five attempts engaged at lows of 0.94, 0.95, 0.79 and 0.91 (the bar never at the Charge's 0.70); the gateway's stuck moments 5 (none freed by a teleport; `confirm_ir4`: 25, six teleports) |
+| `aldmere_fix1_ir5` (`w.peaceful:novice:1`, the march's help then the breach) | 5 | **the battle reached** (`confirm_ir5` stopped on a stuck at the gate before it ever engaged): four attempts entered the bailey with 914, 736, 675 and 697 of 1,355 health and each died 27-43 s later, in the Wall; the run was stopped at 1,399 s by an operator's mistake (killed with the wrong process), so it has no result file - its trace is kept (`runs/aldmere_fix1_ir5_partial/`) |
+
+**Why the stage-4 novice still loses.** Every death reloads the fort gate's waystone, a checkpoint taken before the
+breach (no checkpoint is committed while the battle is engaged, and the breach's own request waits on the aware
+garrison and then on the battle: the M8 release's rule), so each attempt breaks the gate again under the gate
+garrison's four wall archers and the bastions' two ballistae, with the 678 health (60 %) the death floor gives back:
+
+| Attempt (`aldmere_fix1_ir4`) | The garrison's pikes | The gate's smash | Into the bailey with |
+| --- | --- | --- | --- |
+| 1 (390 s, 554 health) | 20 s | 76 s, -429 | 234 |
+| 2 (555 s) | 26 s | 68 s, -387 | (died before the bailey) |
+| 3 (670 s) | 22 s | 67 s, -391 | 147 |
+| 4 (803 s) | 16 s | 71 s, -425 | 203 |
+| 5 (943 s) | 24 s | 71 s, -379 | 281 |
+| 6 (1,059 s) | 23 s | 67 s, -379 | 70 |
+
+The run's damage taken: the wall archers' arrows 4,185 (the largest share), the pikes' brace 1,368, the ballistae's
+bolts 1,125, the shields' brace 569; in the engaged battle the ballistae 1,035 and soldiers 434. The confirmation's
+run (`confirm_ir4`, the old post) met the same gate after each death but was teleported past the garrison's front
+rank into the gateway by the bot's recoveries (six times) and took 341 from arrows. The assisted runs take a quarter of
+it (`status.bot_assist`) and win. So the battle's own numbers are not what holds the unassisted novice back at stage
+4: the gate after each death is. At stage 5 (`fix1_ir5`) the gate cost nothing: the march's help gives the giant
+Brannock's banner, and while he carries it near the standing gate the garrison stands down, so he broke the gate at full
+health with no one aware of him and the reloads came back with the gate broken and full health (the breach's checkpoint
+committed); the crown-first giant fights the garrison from his first blow on the gate, which keeps the breach's
+checkpoint waiting until the battle drops it. At stage 5 the Wall killed the novice 27-43 s after each entry (the
+garrison's pikes, roused by the breach, cost it 428 health before the first).
+
+### The Wall's ballistae as plan §5.13 has them (commits `812e626`, `82eab0b`)
+
+Plan §5.13: "The Wall ... two wall ballistae fire", "The Charge ... all four ballistae fire". All four shot from the
+Wall's first blow: the Wall's encounter crews the bailey's two inner ballistae, and the gate garrison's wall crews -
+which the battle keeps at its own engines when it stands the garrison out (the M8 gate's F9) - served the bastions'
+pair, 16 m up behind a giant at the bailey's gate end, which a stage-4 giant can neither reach nor see from there (the
+bot's ranged tries at them were given up twice in every run). The bastions' pair now holds its fire until the Charge
+(`BattleBoss.engine_phase`: the Charge's record names the pair in its `engines` list, with no crew of its own); the
+garrison's crews stay at their places and the pair joins as the Charge begins. The bar is unchanged (the four engines
+count in it as before): `test_iron_regiment_world` reads 0.622 / 0.452 (desktop) and 0.670 / 0.465 (web) after the
+Wall and the riders, with the inner pair alone in the fight in the Wall and all four from the Charge (2 failures on the
+old code). A first try - the Charge bringing two crews of its own and the garrison's leaving - lost both new crews off
+the bastions' tops within 3 s (a crew more than 3 m from its place paths, and from a top with no navmesh the path's
+first point is on the ground; `exp/e3_charge_crews`); the hold keeps the garrison's crews, which follow their engine's
+turn a step at a time as they always did.
+
+| Run (`w.order_crown:novice:2`, unassisted, until the crown's oath) | `aldmere_fix1_ir4` (all four from the first blow) | `aldmere_e5_ir4` (two in the Wall) |
+| --- | --- | --- |
+| Result | 6 deaths, `bot_failed` at 1,183 s | 6 deaths, `bot_failed` at 1,323 s |
+| Attempts engaged; their lows | 5; 0.94, 0.95, 0.79, 0.91 | 5; 0.97, 0.88, 0.95, 0.79 |
+| Into the bailey with (of 1,130-1,160) | 234, -, 147, 203, 281, 70 | 234, 401, 205, 287, -, 284 |
+| Time in the battle's stage | 243 s | 361 s |
+| Deaths in the bailey (killer) | 5 (the west bastion's ballista 2, the north-west 2, a pike) | 5 (the inner pair: the north-east 3, the north-west 2) |
+| Deaths at the gate | 1 (a wall archer) | 1 (a wall archer) |
+| Damage taken in the engaged battle | 1,469 (ballistae 1,035, soldiers 434) | 1,853 (ballistae 970, soldiers 883) |
+
+(`aldmere_e5_ir4` and the other `e5` runs ran commit `812e626`; `82eab0b` changes only what the hold does to the
+engine's `crewed` - its crew stays counted, so no crowd "abandon" cue as the battle engages - and lets the held pair
+haul its reload, so it is loaded when the Charge frees it.)
+
+Assisted, the crown-first order completes on this code as well: `aldmere_e5_crown_assist` (seed 1, P38's spec)
+completed the order at 1,996 s simulated (42.7 minutes of human estimate) with no death; the battle was won at the first
+attempt - the Charge at 613 s, the Last Stand at 689 s, Corvane spared at 789 s (the crown oath's stage 641 s) - and
+took 815 damage in it (the ballistae 380, the riders 342, soldiers 93; `fix1`: 1,306, the ballistae 821); 2 stuck
+moments at the gate, none at the camp, no teleport.
+
+So the composition follows the plan and the giant lives half again as long in the bailey, but the novice still loses
+at stage 4: it enters with a quarter of its health or less, and the bar never goes below 0.79. The lever is not the
+battle's: it is the gate after each death (above) - the breach's checkpoint, the garrison's arrows and bolts on a giant
+breaking the gate, or the bot's answer to them - which this lane leaves to P40 with the measurements (FOLLOWUPS, the M8
+release check's Iron Regiment row). Telling the player was not needed for the battle: the quest's battle stage already
+reads "smash the wall ballistae" (`quest.iron_regiment`'s waiting text), and now the two in the Wall stand on the
+bailey's floor at its far corners, where a stage-4 giant reaches them.

@@ -32,7 +32,10 @@ Wall and all four from the Charge (they now hold their fire until the Charge). T
   the fort's ballistae kill the novice before the Charge; two crown runs of three stopped against the gate garrison in
   Fort Aldmere's gateway); Harrok's duel stopped one mixed novice, the toll fort's tower archers one peaceful expert.
   Assisted (P38's acceptance orders), the march-first and wood-first orders complete with no death; the crown-first
-  reaches the battle's Last Stand twice - its phases follow now - but dies in it and runs out the oath's time.
+  reaches the battle's Last Stand twice - its phases follow now - but dies in it and runs out the oath's time. Since the
+  M9 gate the gateway is clear and the crown-first order completes assisted too, with no death; unassisted, the novice
+  still loses the battle at stage 4 - after each death it breaks the gate again under the garrison's arrows and bolts
+  and enters the bailey with a quarter of its health or less ("Known issues").
 - **The bosses**: the novice wins Harrok's duel with a median of 2.5 deaths (it was 6 before P39's balance pass), the
   Matriarch is driven out in one attempt with no death in the den, at stage 4 or 5, and the mixed experts spare Harrok
   with one to three deaths.
@@ -144,7 +147,8 @@ of the merged code without that one commit confirms ("The Valley" below).
 
 P38's acceptance orders, the novice assisted (`confirm_world_orders`): the march first completed in 28.0 minutes of human
 estimate and the wood first in 30.2, with no death; the crown first stopped on the oath stage's time limit with the
-battle in its Last Stand ("The bosses", below). P38's same runs on W22 all completed.
+battle in its Last Stand ("The bosses", below). P38's same runs on W22 all completed. Since the M9 gate the crown first
+completes again (`aldmere_e5_crown_assist`: 42.7 minutes, no death, Corvane spared at the first attempt).
 
 ### Every run
 
@@ -210,7 +214,7 @@ a timed human run can say how long the campaign is.
 | --- | --- | --- |
 | **Harrok the Unbowed** (the Moot's ring, stage 6) | deaths per duel: 3, 2, 2 (peaceful), 4, 6, 4 (mixed; the second stopped on its sixth) and the orders' 0 and 0 - median 2.5, won in 7 of 8; the first tries end at 33-52 % of his health; the mixed experts spare him in 2-4 attempts with one to three deaths, the peaceful experts in 1 and 3; the one conqueror expert who reached him brought him to 11 % and died five times in the duel | 1-3 per boss sequence: **met** |
 | **The Troll Matriarch** (the den, stages 4-5) | driven out: at the first attempt in all six runs that drive her out (stage 4 in the wood-first order, stage 5 for the peaceful novices and experts), no death in the den; slain: by no novice at stage 5 - six attempts on each of three seeds, every one into her phase 2, the lowest 9, 14 and 12 %, six deaths each (her frenzy 7, the whelps 7 - six swipes and one she threw - her stomp 3 and her sweep 1 of the 18) - and by no expert: four, three and four attempts at 37-50 %, two runs on the den's time limit, the third drove her out after burning the braziers | 1-3: the drive-out under the range, the slay **miss** |
-| **The Iron Regiment** (Fort Aldmere's bailey, the crown's breach) | the phase thresholds are fixed (the Charge at 70 % of the bar, the Last Stand at 50 %: "What changed in tuning"); at stage 4 (`confirm_ir4`) six attempts at 78-91 % of the bar, the fort's ballistae five of six deaths (74 % of the damage taken in the battle), the Charge never begins; the matrix's crown-first run and the stage-5 run (`confirm_ir5`) stopped on stucks in the fort's gateway, against the gate garrison's pike formation; assisted (`confirm_world_orders`), the Charge began at 621 s and the Last Stand at 760 s (the bar at 0.50) and again at 1,081 s, but the giant died in the Last Stand both times (a rider's charge, a ballista) and the oath's 1,320 s ran out | **miss**: the ballistae and the riders at stage 4; the gate |
+| **The Iron Regiment** (Fort Aldmere's bailey, the crown's breach) | the phase thresholds are fixed (the Charge at 70 % of the bar, the Last Stand at 50 %: "What changed in tuning"); at stage 4 (`confirm_ir4`) six attempts at 78-91 % of the bar, the fort's ballistae five of six deaths (74 % of the damage taken in the battle), the Charge never begins; the matrix's crown-first run and the stage-5 run (`confirm_ir5`) stopped on stucks in the fort's gateway, against the gate garrison's pike formation; assisted (`confirm_world_orders`), the Charge began at 621 s and the Last Stand at 760 s (the bar at 0.50) and again at 1,081 s, but the giant died in the Last Stand both times (a rider's charge, a ballista) and the oath's 1,320 s ran out. Since the M9 gate (the gateway clear, the gate bastions' two ballistae holding their fire until the Charge as plan §5.13 has it): assisted, won at the first attempt with no death (`aldmere_e5_crown_assist`); unassisted at stage 4 (`aldmere_e5_ir4`) six deaths, the bar at 0.79 at best - each attempt breaks the gate again under the garrison's arrows and bolts and enters the bailey with 205-401 of 1,160 health | **miss**: unassisted at stage 4 (the gate after each death) |
 
 **The den without its trunks.** Lane P39's expert drew the Matriarch to a standing brazier before breaking it (the
 lure) and slew her in two runs of three. Lane P39f's rebuild cleared the places' clearings of scenery, and the den lost
@@ -560,7 +564,12 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
 - **The Iron Regiment at stage 4** (the crown's oath first): the phases now follow the Wall and the Charge (fixed in the
   confirmation phase), but the novice brings the battle's bar to 78 % at best before the fort's four ballistae kill it
   (five deaths of six, 74 % of the damage taken in the battle); assisted, it reaches the Last Stand (the bar at 50 %)
-  twice and dies in it, to a rider's charge and a ballista. At stage 5 the battle was not reached.
+  twice and dies in it, to a rider's charge and a ballista. At stage 5 the battle was not reached. Since the M9 gate
+  (the gateway clear; in the Wall only the two inner ballistae shoot, as plan §5.13 has it) the assisted order wins the
+  battle at the first attempt with no death, but the unassisted novice still loses at stage 4 (0.79 at best, six
+  deaths): every death reloads the fort gate's waystone, a checkpoint from before the breach, so each attempt breaks
+  the gate again for over a minute under the garrison's four wall archers and the bastions' two ballistae and enters
+  the bailey with a quarter of its health or less. At stage 5 [E5_IR5_HOW].
 - **Fort Aldmere's gateway** (fixed at the M9 gate): the gate garrison's pike formation stood in the gateway's mouth,
   on every titan path into the bailey, with about 5 m beside each flank - less than a stage-4 or stage-5 giant needs;
   two crown runs of three stopped there. It now stands in front of the west bastion beside the road's approach, and a
@@ -627,8 +636,8 @@ Moot, Harrok's duel, the Stone Throne.
 
 Things to watch, from where the bots struggled: Harrok's overhead chop (unblockable, a long line: dodge sideways,
 not back) and the Moot's falling stones in his second phase; the Matriarch's regeneration and her whelps in her
-second phase (fight her beside a brazier: its fire stops it); the Iron Regiment's ballistae and the gate garrison in
-Fort Aldmere's gateway when the crown comes first; the toll fort's tower archers; the Raiders' Hollow's archers and
+second phase (fight her beside a brazier: its fire stops it); the Iron Regiment's ballistae, and Fort Aldmere's gate
+under the garrison's arrows and bolts after a death, when the crown comes first; the toll fort's tower archers; the Raiders' Hollow's archers and
 mage.
 
 **The 5-minute combat tour** (New Game, the Valley's Hollow): the dummies and the sparring post teach the light
