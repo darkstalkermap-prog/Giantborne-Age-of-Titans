@@ -241,9 +241,7 @@ static func describe_save(doc: Dictionary) -> String:
 ## P39f: a place or level name as it reads after "at" or "in": "The Old Kingdom" -> "the Old Kingdom", and a
 ## name without an article takes one - "Grove Shrine" -> "the Grove Shrine".
 static func mid_sentence(display_name: String) -> String:
-	if display_name.begins_with("The "):
-		return "the " + display_name.substr(4)
-	return "the " + display_name
+	return TextUtil.with_the(display_name)
 
 
 ## True when New Game offers the skip-prologue choice (P20): the saved game finished the prologue

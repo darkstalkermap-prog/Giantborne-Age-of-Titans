@@ -59,8 +59,8 @@ say so; `docs/BALANCE_LOG.md`, "M9 gate (lane ironreg)", has the runs.
   giant yet (4 % of the lone humans' engaged time against the target's 70 %: a known issue).
 - **Stable**: the 60-minute world run (two campaigns back to back), the 30-minute Valley run and the campaign's
   hand-over from the Valley all passed: no crash, no blocked world, no duplicated reward, no invariant failure, no
-  error or warning in the runs' own counts (Godot's exit report of leaked resources follows a campaign's result:
-  below), node counts within 0.6 %.
+  error or warning in the runs' own counts (Godot's exit report of leaked resources follows a campaign's result: a
+  separate open item, below), node counts within 0.6 %.
 - **CPU per tick** (the container, indicative; budget p95 8 ms): the world walk through every region at stage 6 runs
   at 5.89 ms, the 40-member formation stress with two siege engines at 4.39 ms and the unreachable chase at 3.32 ms;
   the campaign runs (three at a time) at 6.4-10.6 ms a run, by region the median run's 7.5 ms in the Crownmarch, 6.0 in
@@ -383,12 +383,13 @@ real browsers and GPUs are NOT RUN.
 
 | Run | Result |
 | --- | --- |
-| **The world, 60 minutes** (`--preset=world_stability`: the assisted novice, `--bot-loop` through the presets from `--mode=world --new-game`, 3,600 s; `confirm_world_stability`) | **passed**: two campaigns completed back to back (peaceful in about 1,480 s, conqueror in 1,430 s) and the third (mixed) at its grow6 stage at the end; no death; exit 0; no breach, no `world_blocked`, no duplicated reward, no invariant failure (the lock and targeting invariant included); 3 loads at the Kingsgate shelf, 1,107 / 1,114 / 1,107 nodes (0.6 %), 0 orphans; 0 errors, 0 warnings; the last campaign's 5 stuck moments all recovered, no teleport; CPU per tick p95 6.93 ms; 2,305 s of wall |
-| **The Valley, 30 minutes** (`--preset=stability`; `confirm_valley_stability`) | **passed**: three slices completed (help_cache 507 s, help_ogre 473 s, intimidate 490 s) and the fourth under way; 4 loads, 1,554 / 1,561 / 1,561 / 1,561 nodes (0.5 %); 0 errors, 0 warnings, no death; CPU per tick p95 6.52 ms |
-| **The campaign's hand-over** (`w.campaign:novice:1:assist`: the Valley's New Game, the Kings' Door, the world; `confirm_campaign`) | **passed**: the Valley in 504 s, Edda met at 765 s, the Stone Throne at 1,972 s (1,129 s of wall), 0 errors, 0 warnings, no death; its two loads are two levels (the Valley 1,554 nodes, the world 1,109) |
+| **The world, 60 minutes** (`--preset=world_stability`: the assisted novice, `--bot-loop` through the presets from `--mode=world --new-game`, 3,600 s; `confirm_world_stability`) | **passed**: two campaigns completed back to back (peaceful in about 1,480 s, conqueror in 1,430 s) and the third (mixed) at its grow6 stage at the end; no death; exit 0; no breach, no `world_blocked`, no duplicated reward, no invariant failure (the lock and targeting invariant included); 3 loads at the Kingsgate shelf, 1,107 / 1,114 / 1,107 nodes (0.6 %), 0 orphans; 0 errors, 0 warnings on the run's own counter (the exit report after each completed campaign is a separate open item: below); the last campaign's 5 stuck moments all recovered, no teleport; CPU per tick p95 6.93 ms; 2,305 s of wall |
+| **The Valley, 30 minutes** (`--preset=stability`; `confirm_valley_stability`) | **passed**: three slices completed (help_cache 507 s, help_ogre 473 s, intimidate 490 s) and the fourth under way; 4 loads, 1,554 / 1,561 / 1,561 / 1,561 nodes (0.5 %); 0 errors, 0 warnings on the run's own counter, no death; CPU per tick p95 6.52 ms |
+| **The campaign's hand-over** (`w.campaign:novice:1:assist`: the Valley's New Game, the Kings' Door, the world; `confirm_campaign`) | **passed**: the Valley in 504 s, Edda met at 765 s, the Stone Throne at 1,972 s (1,129 s of wall), 0 errors, 0 warnings on the run's own counter (the exit report after the completed campaign: below), no death; its two loads are two levels (the Valley 1,554 nodes, the world 1,109) |
 
 Godot prints its exit report of leaked resources after each full campaign's result (static caches holding their
-scenes at quit): it comes after the run's own error count and is lane P39f's recorded item.
+scenes at quit): it comes after the run's own error count and is lane P39f's recorded item. The 0 errors and 0 warnings
+above are the run's own counter; the process's exit report is a separate open item (FOLLOWUPS, "From the M9 gate review (lane review)", owner P40; M9 gate, lane review).
 
 **Where the giant got stuck** (`world_stuck`, the matrix's 21 runs; a stuck moment is no progress toward the objective
 for 6 s): 227 moments: recovered by a sidestep and jump 192, a replan 31 and a teleport 3 (the war camp's entrance and the

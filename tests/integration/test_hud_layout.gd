@@ -634,3 +634,152 @@ func test_tracker_steps_show_whole() -> void:
 	var drawn := _rect_in(hud, panel)
 	assert_true(hud.layout_regions(hud.size).quest_tracker.grow(0.5).encloses(drawn), "inside its region: %s" % drawn)
 	assert_near(drawn.size.y, panel.get_combined_minimum_size().y, 1.0, "as tall as its lines")
+
+
+## M9 gate (lane review): the discovery toast shows its line whole. One 324 px line with an ellipsis cut every
+## vista's line ("Discovered: The Kingsgate Shelf  +30 XP  (7 pla..."); a line now wraps onto up to TEXT_LINES
+## lines and the panel grows down from its top, inside its layout region. Every POI's line, with as many places as
+## the most any vista of the data reveals, and every sealed place's line fit TEXT_LINES lines of the toast's width;
+## the longest shows whole on the live toast, which is as tall as its lines and inside its region.
+func test_discovery_lines_show_whole() -> void:
+	var hud := _hud()
+	await get_tree().process_frame
+	var toast := hud.get_node("DiscoveryToast")
+	var label: Label = toast.call("text_label")
+	var font := label.get_theme_font("font")
+	var width: float = toast.get("TEXT_WIDTH")
+	var max_lines: int = toast.get("TEXT_LINES")
+	var flags := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
+	# the most places a vista reveals: the other non-secret POIs of its level within its reveal radius
+	var pois := GameData.records_of_type("poi")
+	var reveal := 0
+	for v: Dictionary in pois:
+		if str(v.get("kind", "")) != "vista":
+			continue
+		var r := float(v.get("reveals_m", 0.0))
+		r = r if r > 0.0 else Discovery.DEFAULT_REVEAL_M
+		var c: Array = v.get("position_m", [0, 0, 0])
+		var n := 0
+		for p: Dictionary in pois:
+			var q: Array = p.get("position_m", [0, 0, 0])
+			if p != v and str(p.get("kind", "")) != "secret" and str(p.get("level", "")) == str(v.get("level", "")) \
+					and Vector2(float(q[0]) - float(c[0]), float(q[2]) - float(c[2])).length() <= r:
+				n += 1
+		reveal = maxi(reveal, n)
+	assert_true(reveal >= 7, "a vista reveals up to %d places" % reveal)
+	var lines := PackedStringArray()
+	for p: Dictionary in pois:
+		for t: String in [toast.call("line_for", str(p.id), reveal), toast.call("sealed_line", str(p.id))]:
+			if t != "":
+				lines.append(t)
+	var over := PackedStringArray()
+	var longest := ""
+	var longest_w := 0.0
+	var wide := 0
+	for t in lines:
+		var w := font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, HudKit.TEXT).x
+		if w > width:
+			wide += 1
+		var n := roundi(font.get_multiline_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, width, HudKit.TEXT, -1, flags).y
+			/ font.get_height(HudKit.TEXT))
+		if n > max_lines:
+			over.append("%s (%d lines)" % [t, n])
+		if w > longest_w:
+			longest_w = w
+			longest = t
+	assert_true(lines.size() > 40, "every POI's and sealed place's line is measured (%d)" % lines.size())
+	assert_true(wide > 0, "some lines are wider than one line of the toast (%d): they wrap" % wide)
+	assert_eq(over, PackedStringArray(), "every line fits %d lines of the toast whole" % max_lines)
+	toast.call("push", longest, Color.WHITE)
+	for i in 3:
+		await get_tree().process_frame
+	assert_eq(toast.call("visible_text"), longest, "the toast shows the longest line")
+	assert_true(label.get_line_count() >= 2, "on %d lines: %s" % [label.get_line_count(), longest])
+	assert_eq(label.get_visible_line_count(), label.get_line_count(), "whole, untrimmed")
+	var panel: Control = toast.call("layout_controls").discovery_toast
+	var drawn := _rect_in(hud, panel)
+	assert_true(hud.layout_regions(hud.size).discovery_toast.grow(0.5).encloses(drawn), "inside its region: %s" % drawn)
+	assert_near(drawn.size.y, panel.get_combined_minimum_size().y, 1.0, "as tall as its lines")
+
+
+## M9 gate (lane review): the hotbar's texts never collide. A slot's cooldown timer and its title were both
+## centred on the slot, so the timer printed over the ability's name; the cooldown shade was anchored to the box's
+## 44 px content while P39f's title spills 6 px past it on each side; a projectile slot's target label was 64 px
+## wide on a 64 px pitch, so two side by side touched and "» Shieldman" (66 px) was trimmed in every slot. With
+## every ability on cooldown, a slot's title is hidden while its timer shows (and shows again once ready); a full
+## shade covers the title; the target labels of every slot, as projectile slots' labels would sit, never
+## intersect, and each says what it says whole - the locked target's name, however long in the data, is the lock
+## line's.
+func test_hotbar_timer_shade_and_target_labels_never_collide() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var hud := _hud()
+	hud.player = p
+	await step_ticks(2)
+	for i in 2:
+		await get_tree().process_frame
+	var slots: Array = hud.get("_slots")
+	var c := p.controller
+	var cooled := 0
+	for slot: Dictionary in slots:
+		var id := str(c.loadout.get("ultimate" if int(slot.index) == 8 else "slot_%d" % (int(slot.index) + 1), ""))
+		if id != "":
+			c.cooldowns.start(id, 20.0, Sim.tick)
+			cooled += 1
+	hud.refresh()
+	await get_tree().process_frame
+	assert_true(cooled >= 5, "abilities on cooldown (%d)" % cooled)
+	var overlaps := PackedStringArray()
+	var uncovered := PackedStringArray()
+	for slot: Dictionary in slots:
+		var timer := slot.timer as Label
+		var title := slot.title as Label
+		if timer.text == "":
+			continue
+		var timer_box := _text_rect(hud, timer)
+		var title_box := _text_rect(hud, title)
+		if title.is_visible_in_tree() and title.text != "" and timer_box.intersects(title_box):
+			overlaps.append("slot %d: %s over %s" % [int(slot.index), timer.text, title.text])
+		var shade := _rect_in(hud, slot.cooldown as Control)
+		var inner := _rect_in(hud, slot.root as Control).grow(-(Hud.SLOT_SIZE.x - Hud.SLOT_TITLE_WIDTH) * 0.5)
+		if not shade.grow(0.5).encloses(_rect_in(hud, title)) or not shade.grow(0.5).encloses(inner):
+			uncovered.append("slot %d: shade %s, title %s, slot inside its border %s" % [int(slot.index), shade,
+				_rect_in(hud, title), inner])
+	assert_eq(overlaps, PackedStringArray(), "no timer prints over its slot's title")
+	assert_eq(uncovered, PackedStringArray(), "a full cooldown's shade covers the title, its spill included")
+	var first := slots[0] as Dictionary
+	assert_false((first.title as Label).visible, "the title hides while the timer shows")
+	c.cooldowns.clear()
+	hud.refresh()
+	assert_true((first.title as Label).visible and (first.timer as Label).text == "", "ready again: the title shows")
+	# The target labels: as projectile slots' would sit, side by side, they never intersect.
+	var labels: Array[Rect2] = []
+	for slot: Dictionary in slots:
+		labels.append(_rect_in(hud, slot.target as Control))
+	for i in range(labels.size() - 1):
+		assert_false(labels[i].intersects(labels[i + 1]), "the target labels of slots %d and %d do not touch: %s / %s" % [
+			i + 1, i + 2, labels[i], labels[i + 1]])
+	var target := first.target as Label
+	var font := target.get_theme_font("font")
+	var fs := target.get_theme_font_size("font_size")
+	for t: String in [Hud.TARGET_LOCKED, Hud.TARGET_AIM]:
+		assert_true(font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= labels[0].size.x,
+			"\"%s\" fits a target label whole (%.0f px)" % [t, labels[0].size.x])
+	# The longest name a lock can show in the data would not have fitted a slot's label: the lock line names it.
+	var longest := ""
+	for rec: Dictionary in GameData.records_of_type("enemy"):
+		var n := str(rec.get("display_name", ""))
+		if n.length() > longest.length():
+			longest = n
+	assert_true(font.get_string_size("» " + longest, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > labels[0].size.x,
+		"the longest enemy name (%s) is wider than a slot: the slots show the lock, not the name" % longest)
+
+
+## The box the label's text takes, centred as the label aligns it (tests: what is drawn, not the label's rect).
+static func _text_rect(hud: Hud, l: Label) -> Rect2:
+	var r := _rect_in(hud, l)
+	var font := l.get_theme_font("font")
+	var fs := l.get_theme_font_size("font_size")
+	var size := font.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+	var x := r.position.x + (r.size.x - size.x) * 0.5
+	var y := r.position.y + (r.size.y - font.get_height(fs)) * 0.5
+	return Rect2(x, y, size.x, font.get_height(fs))

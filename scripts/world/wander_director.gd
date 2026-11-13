@@ -964,11 +964,22 @@ func _begin_attempt(e: WorldEvent, tick: int) -> bool:
 ## an event out of play, so after a load - the run resumed waiting, far off - the journal's Track of it was undone
 ## within 0.1 s and the tracker went to nobody. Once the tracker moves off the event the director no longer
 ## holds it; tracked again by the player, it is the player's.
+##
+## M9 gate (lane review): a save written before W23 has no <event>.tracker_held flag, and W23 read the missing
+## flag as "the player's": a 0.8.0-m8 save taken while the director held a raid's tracker kept the tracker on the
+## raid, out of play, after a Continue. A run resumed without the flag holds it unknown (WorldEvent.hold_unknown)
+## until the first sync, which applies M8's rule - a tracker on the running event is the director's - and writes
+## the flag either way, so the next save says whose it is.
 func sync_tracking() -> void:
 	if not Quests.has_method("p37_set_event"):
 		return
 	for e in running_events():
 		var playing := in_play(e)
+		if e.hold_unknown:
+			e.hold_unknown = false
+			var held := Quests.tracked_quest_id == e.id   # an older save: the tracker on a running event is the director's
+			e.holds_tracker = held
+			WorldState.set_flag(WorldEvent.flag(e.id, "tracker_held"), held)
 		if bool(Quests.objective_for(e.id).get("in_play", true)) != playing:
 			Quests.p37_set_event(e.id, event_objective(e))
 		if e.holds_tracker and Quests.tracked_quest_id != e.id:
@@ -1314,7 +1325,7 @@ func _carry_event(e: WorldEvent, reset: bool) -> void:
 		"last_start_s": WorldState.get_flag(WorldEvent.flag(e.id, "last_start_s"), clock_s()),
 		"centre": at, "s": e.route.s if e.route != null else 0.0,
 		"reset": reset or bool(prev.get("reset", false)), "tracked_before": e.tracked_before,
-		"holds_tracker": e.holds_tracker, "unloaded_s": e.unloaded_s}
+		"holds_tracker": e.holds_tracker, "hold_unknown": e.hold_unknown, "unloaded_s": e.unloaded_s}
 
 
 ## A new load of the level: the events running when it was left run again - a death restarts their
@@ -1336,6 +1347,7 @@ func _resume_carried() -> void:
 		e.state = WorldEvent.WAITING
 		_note_tracked_before(e, str(c.get("tracked_before", "")))
 		_hold_tracker(e, bool(c.get("holds_tracker", false)))   # W23 (P39f): the director's tracker stays its own
+		e.hold_unknown = bool(c.get("hold_unknown", false))   # M9 gate (lane review): an older save's, not decided yet
 		e.unloaded_s = maxf(0.0, float(c.get("unloaded_s", 0.0)))
 		e.unloaded_marked = false   # written again at its next update (the reload may have rolled the flag back)
 		e.route = _event_route(e)
@@ -1365,8 +1377,11 @@ func _resume_saved() -> void:
 		var since: Variant = WorldState.get_flag(WorldEvent.flag(e.id, "unloaded_since_s"))
 		e.unloaded_marked = SchemaUtil.is_number(since)
 		e.unloaded_s = maxf(0.0, clock_s() - float(since)) if e.unloaded_marked else 0.0
-		# W23 (P39f): whether the director held the tracker when the game was saved, and what it gives back to
-		e.holds_tracker = WorldState.get_flag(WorldEvent.flag(e.id, "tracker_held"), false) == true
+		# W23 (P39f): whether the director held the tracker when the game was saved, and what it gives back to;
+		# M9 gate (lane review): a save from before W23 has no flag - unknown until the first sync (sync_tracking)
+		var held: Variant = WorldState.get_flag(WorldEvent.flag(e.id, "tracker_held"))
+		e.holds_tracker = held == true
+		e.hold_unknown = held == null
 		e.tracked_before = str(WorldState.get_flag(WorldEvent.flag(e.id, "tracked_before"), ""))
 		_carry_event(e, true)
 		if Quests.has_method("p37_set_event"):

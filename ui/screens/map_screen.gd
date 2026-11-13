@@ -892,12 +892,21 @@ func _draw_entry(e: Dictionary) -> void:
 ## aside, then a grid over the region's own ground, nearest its centre first), in
 ## order of importance - the place in focus, the regions, the settlements, the sealed places, the rest - and a
 ## label with no free spot is left out (the panel names the place in focus; zooming in makes room). The place in
-## focus always shows, kept inside the view.
+## focus always shows, kept inside the view - M9 gate (lane review): with none of its spots free (the giant's arrow
+## on its icon, as when a checkpoint put him there) it took its first spot over whatever was there, at zoom 0 the
+## tracked raid's diamond and Millford's icon; it now tries a ring farther out, then the spot that covers least.
 const NAME_PX := 13
 const REGION_PX := 15
 const REGION_STAGE_PX := 12
 const STAGE_PX := 12
 const LABEL_GAP := 3.0
+## M9 gate (lane review): the place in focus with none of its spots free tries the spots RING_SCALES times as far from
+## its icon, then the spot (of all of them, kept inside the view) whose cover of the marks and labels costs least - a
+## place's icon MARK_COST_ICON a pixel, the pin and the giant's arrow MARK_COST_PIN, a placed label 1 - and it never
+## covers the tracked objective's diamond while any spot leaves it clear.
+const RING_SCALES := [1.5, 2.0]
+const MARK_COST_ICON := 4.0
+const MARK_COST_PIN := 40.0
 const REGION_COLOR := Color(0.95, 0.92, 0.85, 0.9)
 const REGION_STAGE_COLOR := Color(0.8, 0.82, 0.86, 0.85)
 const NAME_COLOR := Color(0.92, 0.92, 0.9, 0.85)
@@ -958,12 +967,13 @@ func layout_labels(font: Font) -> Array:
 	var bounds := Rect2(Vector2.ZERO, view.size)
 	var marks := mark_rects()
 	var blocked: Array = marks.values()
+	var costs: Array = marks.keys().map(func(k: String) -> float: return mark_cost(k))
 	var placed: Array = []
 	# the place in focus, always shown
 	var sel: Dictionary = _by_id.get(_selected, {})
 	if not sel.is_empty() and marks.has("entry:" + _selected):
 		var lines := _entry_lines(sel, SELECTED_COLOR)
-		var r := _place(font, lines, _entry_spots(marks["entry:" + _selected]), blocked, placed, bounds, true)
+		var r := _place(font, lines, _entry_spots(marks["entry:" + _selected]), blocked, placed, bounds, true, costs)
 		out.append({"kind": "selected", "id": _selected, "lines": lines, "rect": r})
 		placed.append(r)
 	# the regions (the Valley: its districts)
@@ -1085,11 +1095,22 @@ static func _region_spots(font: Font, lines: Array, centre: Vector2, area := Rec
 	return out
 
 
+## What a label covering the mark `key` (mark_rects()) costs a pixel - INF for the tracked objective's diamond,
+## never covered (M9 gate, lane review; see RING_SCALES).
+static func mark_cost(key: String) -> float:
+	if key.begins_with("objective_"):
+		return INF
+	if key == "pin" or key == "player":
+		return MARK_COST_PIN
+	return MARK_COST_ICON
+
+
 ## The first spot of `spots` where the block of `lines` covers nothing of `blocked` (marks) and `placed`
-## (labels) and lies inside `bounds`; Rect2() when none does - unless `must`, then the first spot kept inside
-## `bounds`.
+## (labels) and lies inside `bounds`; Rect2() when none does - unless `must`: then the first such spot RING_SCALES
+## times as far out, else the least costly of all of them kept inside `bounds` (`costs`: each mark's cost a pixel,
+## parallel to `blocked`; M9 gate, lane review - it was the first spot, whatever it covered).
 static func _place(font: Font, lines: Array, spots: Array, blocked: Array, placed: Array, bounds: Rect2,
-		must: bool) -> Rect2:
+		must: bool, costs: Array = []) -> Rect2:
 	var size := block_size(font, lines)
 	var rects: Array = []
 	var reach := Rect2()
@@ -1118,8 +1139,46 @@ static func _place(font: Font, lines: Array, spots: Array, blocked: Array, place
 			return r
 	if not must:
 		return Rect2()
-	first.position = first.position.clamp(bounds.position, bounds.end - first.size)
-	return first
+	# M9 gate (lane review): a second ring farther out, then the spot that covers least.
+	var centre: Vector2 = (spots[0][1] as Rect2).get_center() if not spots.is_empty() else first.get_center()
+	var ring: Array = []
+	for k: float in RING_SCALES:
+		for r: Rect2 in rects:
+			ring.append(Rect2(centre + (r.get_center() - centre) * k - r.size * 0.5, r.size))
+	for r: Rect2 in ring:
+		if bounds.encloses(r) and not _covers_any(r, blocked) and not _covers_any(r, placed):
+			return r
+	var best := first
+	var best_cost := INF
+	var best_clear := false
+	for r0: Rect2 in rects + ring:
+		var r := r0
+		r.position = r.position.clamp(bounds.position, bounds.end - r.size)
+		var cost := 0.0
+		var clear := true
+		for i in blocked.size():
+			var over := r.intersection(blocked[i] as Rect2)
+			if not over.has_area():
+				continue
+			var c: float = float(costs[i]) if i < costs.size() else MARK_COST_ICON
+			if is_inf(c):
+				clear = false
+			else:
+				cost += c * over.get_area()
+		for b: Rect2 in placed:
+			cost += r.intersection(b).get_area()
+		if (clear and not best_clear) or (clear == best_clear and cost < best_cost):
+			best = r
+			best_cost = cost
+			best_clear = clear
+	return best
+
+
+static func _covers_any(r: Rect2, rects: Array) -> bool:
+	for b: Rect2 in rects:
+		if r.intersects(b):
+			return true
+	return false
 
 
 ## The block of `size` at a spot: "at" (the spot's own rect), or a side of the icon rect `icon`.

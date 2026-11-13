@@ -80,6 +80,10 @@ var tracker_given_back := false
 ## back while the run is out of play: the player's own Track (the journal's, after a load included) stands.
 ## Kept across a reload in the carry and across a save in the flag <id>.tracker_held.
 var holds_tracker := false
+## M9 gate (lane review): a run resumed from a save that has no <id>.tracker_held flag (written before W23:
+## 0.8.0-m8 and older) - whose the tracker on it is cannot be told until the save's tracked quest is back, so
+## the director's first sync decides by M8's rule: a tracker on the running event is the director's.
+var hold_unknown := false
 ## M8 gate (F2): whether <id>.unloaded_since_s holds this run's unloaded clock (written once as its
 ## centre is left, cleared once it is loaded again).
 var unloaded_marked := false
