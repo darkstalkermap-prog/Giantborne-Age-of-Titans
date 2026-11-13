@@ -13,6 +13,13 @@ lane P39's balance pass with lane P39f's fixes and rebuilt world, and the Iron R
 ("What changed in tuning"). Lane P39's own runs on its branch before the merge, and how the two compare, are in
 `docs/BALANCE_LOG.md` ("M9 (P39)" and "M9 confirmation").
 
+**The M9 gate (lane aldmere)** then fixed three things on the crown's way and measured the crown order again (not the
+matrix): Fort Aldmere's gate garrison stood in the gateway's mouth on every titan path into the bailey (it now stands
+beside the road's approach), the war camp's shield wall stood across the King's Road (it now stands beside it), and
+the Iron Regiment's gate-bastion ballistae shot from the Wall's first blow where plan §5.13 has two ballistae in the
+Wall and all four from the Charge (they now hold their fire until the Charge). The lines these change say so;
+`docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)", has the runs.
+
 ## In short
 
 - **The campaign is completable, and the novice finishes most of it.** Of the matrix's 21 unassisted runs (the
@@ -375,7 +382,9 @@ fort's gateway in the crown-first run, the Stone Throne's ring in `w_peaceful_no
 Aldmere's gateway that stopped the crown-first run. The busiest places are the Raiders' Hollow beside the King's Road
 ((-125, 575) and (-75, 575): 47, the bot fighting the Hollow on its way), the war camp's south entrance ((525, 175):
 30, the giant pressing on the camp's neutral shield wall on the road), the Moot battery's plateau ((-225, -575):
-15, the walk to the Moot) and Fort Aldmere's gate ((675, -75) and (625, -75): 8).
+15, the walk to the Moot) and Fort Aldmere's gate ((675, -75) and (625, -75): 8). Since the M9 gate the camp's wall
+stands off the road and the gate garrison beside the gateway's approach: in the crown runs measured since, no stuck
+moment at the camp and none at the gate that needed a teleport (`docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)").
 
 ## The Valley (the prologue)
 
@@ -497,6 +506,16 @@ draw calls: the rendered Valley walk at `low` is at p50 93, p95 143, max 154 (P2
 
 ## What changed in tuning, and why
 
+### The M9 gate (lane aldmere): Fort Aldmere and the war camp (`docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)")
+
+| What | Before -> after | Why |
+| --- | --- | --- |
+| Fort Aldmere's gate garrison: its pike formation's post (`data/world/encounter_aldmere_fort_gate.json`) | pivot (650, -79.1), on the gate's line -> (626, -75), in front of the west bastion beside the road's approach | every titan path into the bailey crosses the gate's nav link and the formation stood on it: a stage-4 to stage-6 giant stopped against it, breached or opened (two crown runs of three stopped there) |
+| The war camp's shield wall (`data/world/encounter_aldmere_war_camp.json`) | pivot (520, 163), on the King's Road's line -> (500, 163), beside it | a giant at peace walking the road through the camp stood against the neutral front rank (30 stuck moments in the matrix) |
+| The Iron Regiment's gate-bastion ballistae (the Charge's `engines` list; `BattleBoss`) | shoot from the Wall's first blow -> hold their fire until the Charge | plan §5.13: two ballistae fire in the Wall (the inner pair, the Wall's own crews), all four from the Charge; the bastion pair stands 16 m up behind a giant at the bailey's gate end, out of a stage-4 giant's reach and sight |
+
+No unit's numbers changed; the battle's bar and its thresholds are as they were.
+
 ### The M9 confirmation (W23): the Iron Regiment's phase thresholds (`docs/BALANCE_LOG.md`, "M9 confirmation")
 
 | What | Before -> after | Why |
@@ -542,12 +561,13 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   confirmation phase), but the novice brings the battle's bar to 78 % at best before the fort's four ballistae kill it
   (five deaths of six, 74 % of the damage taken in the battle); assisted, it reaches the Last Stand (the bar at 50 %)
   twice and dies in it, to a rider's charge and a ballista. At stage 5 the battle was not reached.
-- **Fort Aldmere's gateway**: the gate garrison's pike formation stands in the gateway's mouth with about 5 m beside
-  each flank, less than a stage-4 or stage-5 giant needs; walking in, he stops against it until it is broken. Two
-  crown runs of three stopped there (the bot's recoveries no longer got through on the rebuilt world).
-- **The war camp's shield wall stands across the King's Road** at the camp's south entrance (moved 4 m into the camp
-  by lane P39f, out of a tent): a giant at peace walking the road presses against the neutral front rank (30 stuck
-  moments in the matrix, one only freed by a teleport).
+- **Fort Aldmere's gateway** (fixed at the M9 gate): the gate garrison's pike formation stood in the gateway's mouth,
+  on every titan path into the bailey, with about 5 m beside each flank - less than a stage-4 or stage-5 giant needs;
+  two crown runs of three stopped there. It now stands in front of the west bastion beside the road's approach, and a
+  stage-4 to stage-6 giant walks through the breached or opened gate past it (`tests/gate/test_fort_gateway.gd`).
+- **The war camp's shield wall across the King's Road** (fixed at the M9 gate): moved 4 m into the camp by lane P39f,
+  it stood on the road's line, and a giant at peace pressed against the neutral front rank (30 stuck moments in the
+  matrix). It now stands on open ground west of the road between the camp's tents (`tests/gate/test_war_camp_road.gd`).
 - **The Raiders' Hollow beside the King's Road**: the road to Brannock passes its shield wall at about 23 m on the
   rebuilt world and the bot turns to fight it in most runs (a person may walk on); it adds a few minutes and a death
   in some runs to the first oath.
