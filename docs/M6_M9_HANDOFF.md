@@ -31,9 +31,8 @@ Linux container without a GPU, speakers, a gamepad, a Windows PC, a real browser
 so the usability, listening, real-controller, reference-PC and real-browser gates are **NOT RUN** and
 their sheets and commands are ready for the owner (§9). The numbers in this document name their
 source; numbers of the W23 confirmation (the merged `wave-23` code with commit `a7da72d`, 13 November)
-are that confirmation's, and the M9 gate's fixes followed it. ⟦SHIP: one sentence with the final
-result - the M9 gate's verdict (stability, the bot's acceptance, the balance targets met and missed)
-and the ship gate's final check (suites, checks, failures), from §5.4 and §6.1 once filled⟧
+are that confirmation's, and the M9 gate's fixes followed it.
+⟦SHIP: one sentence with the final result - the M9 gate's verdict (stability, the bot's acceptance, the balance targets met and missed) and the ship gate's final check (suites, checks, failures), from §5.4 and §6.1 once filled⟧
 
 ## 1. Engine, build and environment
 
