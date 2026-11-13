@@ -1130,6 +1130,46 @@ func _p29_ready() -> void:
 		Events.growth_changed.connect(_p29_on_growth_changed)
 	if not Events.faction_changed.is_connected(_p29_on_faction_changed):
 		Events.faction_changed.connect(_p29_on_faction_changed)
+	if not Events.object_destroyed.is_connected(_p29_on_object_destroyed):
+		Events.object_destroyed.connect(_p29_on_object_destroyed)
+
+
+## M9 gate (final; the final audit's F9): an object's fall that begins a stand-down - a `destroyed` term on it in an
+## encounter's stand_down_when, outside any `not` (Fort Aldmere's gate for its garrison: it stands down after the
+## breach) - begins it afresh: a provocation from before (a blow on a member stood down for the banner or the
+## parley) is lifted, so the garrison stands down after the breach as it does on every other path, the breach's
+## ordinary checkpoint is taken with none of it aware, and a death reloads it at peace. Before, the provoked flag
+## (saved, the first write kept for good) refused every branch of the condition, the post-breach one included: the
+## garrison stayed roused for the save, held the breach's request back and was hostile at the waystone after a death.
+## Once, on the fall: a blow after it still provokes, as the data says.
+func _p29_on_object_destroyed(_tick: int, world_id: String, _by: String) -> void:
+	for id in _order:
+		var enc: Encounter = _encounters[id]
+		var cond: Variant = enc.record.get("stand_down_when")
+		if typeof(cond) != TYPE_DICTIONARY or not p29_fall_begins_stand_down(cond, world_id):
+			continue
+		var flag := provoked_flag(id)
+		if Waystone.flag_truthy(WorldState.get_flag(flag)):
+			WorldState.set_flag(flag, false)
+			_p29_dirty = true
+
+
+## True when condition `cond` holds a `destroyed` term on `world_id` outside any `not` (F9 above).
+static func p29_fall_begins_stand_down(cond: Variant, world_id: String, negated := false) -> bool:
+	if typeof(cond) != TYPE_DICTIONARY:
+		return false
+	match str(cond.get("type", "")):
+		"destroyed":
+			return not negated and str(cond.get("world_id", "")) == world_id
+		"not":
+			return p29_fall_begins_stand_down(cond.get("of"), world_id, not negated)
+		"all", "any", "count":
+			var of: Variant = cond.get("of", [])
+			if typeof(of) == TYPE_ARRAY:
+				for c: Variant in of:
+					if p29_fall_begins_stand_down(c, world_id, negated):
+						return true
+	return false
 
 
 func _p29_respawn_blocker(checkpoint_id: String) -> String:
