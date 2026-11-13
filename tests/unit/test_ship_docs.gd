@@ -23,6 +23,10 @@ extends TestSuite
 ##    (SHIP_PLACEHOLDER: a left white square bracket, then "SHIP: what goes here and where it comes
 ##    from", then the right one; filled when the M9 gate and the ship step have run), and covers the
 ##    M6, M7, M8 and M9 gates and the Ship gate. It reads the file only.
+## 4. P40: the ship step fills the Ship gate's documentation row (the handoff's §5.7, "README,
+##    ARCHITECTURE and DECISIONS consolidated") last, once every other placeholder is filled (the
+##    pull request's row included); from then on no SHIP_PLACEHOLDER may remain in README.md, the
+##    handoff, ARCHITECTURE.md or DECISIONS.md, so a forgotten one fails here, not only in a grep.
 
 const HANDOFF := "res://docs/M2_M5_HANDOFF.md"
 const M6_M9_HANDOFF := "res://docs/M6_M9_HANDOFF.md"
@@ -178,6 +182,19 @@ func test_every_row_of_the_m6_m9_gate_table_has_a_verdict() -> void:
 		% [SHIP_PLACEHOLDER, "\n  ".join(offenders)])
 	for covered: String in M6_M9_GATES:
 		assert_true(int(rows_by_gate.get(covered, 0)) > 0, "the gate table covers the %s gate (a subsection naming it, with rows)" % covered)
+
+
+func test_no_ship_placeholder_outlives_the_documentation_row() -> void:
+	var docs_row := ""
+	for line in _section(_read(M6_M9_HANDOFF), "### 5.7 ").split("\n"):
+		if line.begins_with("| README, ARCHITECTURE and DECISIONS consolidated"):
+			docs_row = line
+	assert_true(docs_row != "", "the Ship gate (handoff §5.7) has its documentation row")
+	if docs_row.contains(SHIP_PLACEHOLDER):
+		return  # the draft and the ship step's earlier commits: this row is filled last
+	for path: String in ["res://README.md", M6_M9_HANDOFF, ARCHITECTURE, DECISIONS]:
+		assert_false(_read(path).contains(SHIP_PLACEHOLDER),
+			"%s keeps a ship placeholder after the Ship gate's documentation row was filled" % path)
 
 
 ## The text of a file under res:// (docs/ is .gdignored for imports, but read from disk as it is).

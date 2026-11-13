@@ -53,10 +53,10 @@ flat-coloured boxes on purpose. The M1 combat sandbox is still there for practic
 
 *(The Valley's shots were rendered by the game itself while the Valley bot played the help_cache
 path (`tools/valley_tour.gd`, software OpenGL under a virtual display, the desktop's `medium`
-preset), at milestone M5; the last is the browser build in Chromium, which always uses the `low`
-preset. The M1 sandbox's shots are in [docs/screenshots/sandbox_m1/](docs/screenshots/sandbox_m1/).)*
+preset), at milestone M5; the tenth is the browser build in Chromium, which always uses the `low`
+preset. ⟦SHIP: one sentence on how the world's shots were rendered: the tour's script, the renderer, the preset, and that they show `0.9.0-m9`, the final code⟧ The M1 sandbox's shots are in [docs/screenshots/sandbox_m1/](docs/screenshots/sandbox_m1/).)*
 
-⟦SHIP: the world tour's screenshots (the Kingsgate shelf's view first, then a formation, a siege engine, a boss, the map), rendered beside the world bot by the ship step into docs/screenshots/, as rows of this gallery with captions⟧
+⟦SHIP: the world tour's screenshots (the Kingsgate shelf's view first, then a formation, a siege engine, a boss, the map), rendered on the final code beside the world bot by the ship step into docs/screenshots/ (numbered from 11 on), appended as rows of the gallery table above, after the end-screen and browser row, with captions⟧
 
 ---
 
@@ -123,7 +123,7 @@ the game. Button prompts follow the last device you used (Settings → Button pr
 | Action | Keyboard / mouse | Controller |
 | --- | --- | --- |
 | Move / look | W A S D / mouse | Left / right stick |
-| Light attack (3-hit chain) | Left mouse | RB |
+| Light attack (a 2- or 3-hit chain, by weapon) | Left mouse | RB |
 | Heavy attack | **Shift + left mouse** | RT |
 | Block (tap just before a hit = parry) | Right mouse | LB |
 | Dodge / jump | Space / F | B / A |
@@ -180,19 +180,24 @@ First King's vault.
 | Stage 6 | The Shrine of the Standing Stones | After two oaths: **growth to stage 6 (62 ft)**, Earthquake and Rampart Grip; seize and throw siege engines. Below 62 ft the Giant's Stair turns you back: go round by the Ironway. |
 | The finale | The Moot, the Stone Throne | Enter the Moot, settle the clans' champion Harrok the Unbowed in its ring (spare him, slay him, or talk when all three powers and Skarn stand behind you), and take the Stone Throne. The campaign's end, "The Giant King", names every outcome; Continue leaves you free to roam. |
 
-Off the main thread: Brannock's and Millford's side quests, the Barrow Fields, the Shepherd's Watch
-beacon, the Needle and the Hidden Grove, the great pines (stage 4 uproots one as a weapon), Wenna's
-five sunken bells, the sunken vault and the Titan Forge, the deserters at the burned mill, Ballista
-Ridge, Skarn and its siege, and the Old Kings' cairns (one attribute point each). Places give
-discovery XP the first time you reach them (a shrine is its own reward); vistas reveal the places
-around them on the map; sealed places (a rockfall, a statue, a ledge) are logged in the journal with
-the stage they need.
+Off the main thread: the King's Road toll (pay, cow or breach), Millford's millrace and the wolves of
+the Barrow Fields, the Shepherd's Watch beacon, the Needle and the Hidden Grove, the great pines
+(stage 4 uproots one as a weapon), the woodcutters' camp, Wenna's five sunken bells, the sunken vault
+and the Titan Forge, the deserters at the burned mill, Ballista Ridge, Skarn and its siege, and the
+Old Kings' cairns (one attribute point each). Places give discovery XP the first time you reach them
+(the Kingsgate, Greywood and Aldmere shrines give none: the shrine is the reward); vistas reveal the
+places around them on the map; sealed places (a rockfall, a statue, a ledge) are logged in the
+journal with the stage they need.
 
-**Weapons and forges.** A base weapon fits stage 2; reinforcing it (2 iron at an iron-tier forge,
-such as the Kingsgate anvil) makes it fit stage 6 with its family's stage 4-6 moveset, whose third
-light lands at the giant's feet; titanforging (2 titan iron and 2 iron at a titan-tier forge) adds
-damage and one perk. The Woodcutter's Greataxe, the great pine and the fists join the club, the sword
-and the hammer.
+**Weapons and forges.** The club, the sword and the hammer fit stage 2; reinforcing one (2 iron at
+an iron-tier forge, such as the Kingsgate anvil) makes it fit stage 6 with its family's stage 4-6
+moveset. The Woodcutter's Greataxe fits stage 6 as found, with its own stage 4-6 moveset, and the
+Stoneknuckles and the great pine fit stages 4-6; none of the three has a reinforcing step. In the
+stage 4-6 movesets the third light of the club, the sword and the Greataxe sweeps out from the
+giant's feet; the Stoneknuckles' third light seizes a staggered foe in reach, and the hammer's and
+the trees' chains have two blows. Titanforging (2 titan iron and 2 iron at a titan-tier forge) adds
+damage and one perk to a reinforced weapon, the Greataxe or the Stoneknuckles; the trees are never
+forged.
 
 **The living world.** Each region has a table of wandering bands that spawn out of sight on loaded
 ground, filtered by your stage and your standing with its peoples (a band's kill XP falls to nothing
@@ -212,8 +217,9 @@ A weapon fits up to a stage: above it the HUD says it is too small until a forge
   the hotbar shows why one is unavailable.
 - Block covers your front 120°. Pressing block within 0.20 s of a hit is a **parry**: no damage,
   and the attacker takes 40 poise (a soldier staggers). Dodge makes you invulnerable from 0.10 to
-  0.30 s. Unblockable blows (the Ogre King's slam and charge, Harrok's chop, the Matriarch's stomp)
-  must be dodged.
+  0.30 s. Unblockable blows must be dodged: the Ogre King's slam and charge; Harrok's chop, his
+  shoulder charge, the last stroke of his frenzy and the stones that fall into his ring; the
+  Matriarch's stomp; a rival giant's overhead chop and shoulder charge.
 - Every enemy blow with a long windup shows a **telegraph** on the ground that fills as it winds up;
   archers, mages and ballistae show an aim line, a catapult's stone falls in its circle, and a rider's
   charge runs down a line. An arrow at the screen's edge warns of a threat you cannot see, and a
@@ -232,11 +238,15 @@ A weapon fits up to a stage: above it the HUD says it is too small until a forge
   for 6 s. The library holds 24 active abilities and Titan Surge: the Valley's eight, six that
   evolve from them as you grow, seven from talents and three ancestry signatures.
 
-**Sound.** The Valley, every region, every town and every boss have their own score and ambience,
-music that follows the place and the fight, and threats you can hear coming. The volumes (master,
-music, ambience, effects, interface) are in **Settings → Audio**, and the sound mutes while the
-window (or the browser tab) is in the background. Nobody has listened to it on speakers yet: every
-audio check here is a measurement (`docs/USABILITY_SCRIPT.md` §8 is the owner's listening sheet).
+**Sound.** The Valley, every region and every boss have their own score, and the Valley and every
+region their own ambience. Towns, camps and the giants' halls have no score of their own: they keep
+the music of their region (or the Valley) over a bed of their kind (the village's, the town's, the
+camp's, the giants' hearth; Hollowmere keeps the Greywood's), and a boss fight changes the music, not
+the ambience. Music follows the place and the fight, and you can hear threats coming. The volumes
+(master, music, ambience, effects, interface) are in **Settings → Audio**, and the sound mutes while
+the window (or the browser tab) is in the background. Nobody has listened to it on speakers yet:
+every audio check here is a measurement (`docs/USABILITY_SCRIPT.md` §8 is the owner's listening
+sheet).
 
 ## 6. Tests, bots, measurements and the audio pipeline
 
@@ -299,7 +309,7 @@ On your PC, run the exported build **without** `--fixed-fps` (real frame times):
 prints `frame_ms`, `gpu_render_ms` and `draw_calls` percentiles in its `PERF_RESULT` line.
 
 **Screenshots** (need a display; on Linux `xvfb-run` provides one): `tools/capture_tour.sh` (the M1
-sandbox), and the Valley tour beside the bot:
+sandbox), the Valley tour beside the Valley bot:
 
 ```bash
 xvfb-run -a -s "-screen 0 1280x720x24" tools/gd.sh --path . --resolution 1280x720 \
@@ -307,6 +317,8 @@ xvfb-run -a -s "-screen 0 1280x720x24" tools/gd.sh --path . --resolution 1280x72
   --save-dir=user://tour_saves --mode=valley --new-game --scenario=valley --bot-assist \
   --bot-village=help_cache --autoplay=2400 --tour-dir=/absolute/folder
 ```
+
+and the world tour beside the world bot, which rendered the gallery's world shots: ⟦SHIP: the world tour's command as the ship step ran it for the gallery (its script, the world bot's options, --tour-dir), as a bash block like the Valley tour's - the command the handoff's §6.3 gives⟧
 
 **The audio pipeline** (`tools/audio/`, Python 3 with numpy, seeded, float64, single-threaded) writes
 every sound: the effects as WAV masters (committed: they are Godot's import source), the music and
@@ -372,11 +384,13 @@ The script packs the files, copies the poster and writes the byte counts and the
 `index.audio.position.worklet.js` and `poster.jpg`.
 
 The web checks drive the build in headless Chromium (Playwright): `node tools/web/audio_check.mjs`
-(the Valley's music), `node tools/web/stream_check.mjs --world --audio` (a walk across region borders
-with the music recorded), `node tools/web/world_check.mjs` (a world save Continued, a fast travel and
-a walk) and `node tools/web/world_start_check.mjs` (the launcher's two start buttons). Add `--strict`
-on a machine with a GPU: the plan's audio criterion (no silent run over 50 ms in the music) only
-counts there.
+(the Valley's music), `node tools/web/stream_check.mjs --build=builds/web --world --audio` (a walk
+across region borders with the music recorded; without `--build` it uses the `Web (test)` build in
+`builds/web_test/`), `node tools/web/world_check.mjs` (a world save Continued, a fast travel and a
+walk with the music recorded) and `node tools/web/world_start_check.mjs` (the launcher's two start
+buttons). On a machine with a GPU, add `--strict` to the first three (the checks that record the
+music): the plan's audio criterion (no silent run over 50 ms in the music) only counts there.
+`world_start_check.mjs` takes no `--strict`.
 
 In the browser: click the game (or a title button) to take the mouse; the first **Esc** gives it
 back and pauses, because the browser keeps that key for itself. **H** shows the controls (F1 may
@@ -435,12 +449,22 @@ from it: [docs/DECISIONS.md](docs/DECISIONS.md).
   (the build mixes its sound on the main thread) and the world may take more than its 8 s to load its
   first ground; tested only in Chromium with software rendering; a gamepad may not be detected inside
   the hosting page.
-- **Streaming in the editor and headless runs** parses the world's largest prop parts as text scenes
-  (about 12 ms at worst); exported builds load them as binary scenes in about a tenth of the time.
+- **Streaming in the editor and headless runs** parses the world's largest prop parts as text scenes:
+  the three largest take 11.8-12.7 ms each (median of three; two over plan §6.4's 12 ms for a
+  streaming work frame), and the W23 confirmation's headless world walk had its worst work frame,
+  12.19 ms, on one such parse (`docs/PERFORMANCE.md`, "The M9 confirmation"). Exported builds ship
+  them as binary scenes, and the same parts saved as binary parse in at most 1.2 ms (0.88 ms for the
+  largest, `c1_2_0`). The parse times were measured at W23 by lane P39f's probe
+  (`docs/systems/P39f.md`, "The heaviest streaming step").
 - **Not built yet** (`docs/plans/M6_M9_PLAN.md` §0.4): growth stages 7-10, boss grapples, ability
-  ranks, siege trains on the roads, day and night, weather, mounts, swimming, voice acting,
-  localization, several save slots, destructible walls and bridges, physics interpolation (on
-  monitors faster than 60 Hz bodies move at 60 Hz; mouse look stays smooth).
+  ranks, day and night, weather, mounts, swimming, voice acting, localization, several save slots,
+  destructible walls and bridges, physics interpolation (on monitors faster than 60 Hz bodies move at
+  60 Hz; mouse look stays smooth).
+- **Planned but not built** (the full list: [docs/M6_M9_HANDOFF.md](docs/M6_M9_HANDOFF.md) §4.2): the
+  siege trains of the wander tables (`docs/plans/M6_M9_PLAN.md` §5.10; an engine is a placed prop, so
+  a wandering band cannot bring one along: `docs/plans/FOLLOWUPS.md`), Bulwark's frontal rule (§5.12:
+  it takes x0.4 from every side), a horn at a battle's phase change and the watching clans' cheers,
+  and two of the plan's fourteen Old Kings' cairns (the Toppled King's and the Barrow Vault's).
 - **Smaller gaps.** Button prompts are text (Xbox names); soldiers fleeing together through a gate
   can jam (no crowd avoidance).
 
@@ -454,7 +478,7 @@ from it: [docs/DECISIONS.md](docs/DECISIONS.md).
 | [docs/USABILITY_SCRIPT.md](docs/USABILITY_SCRIPT.md) | The usability sessions (the Valley and the world), the real-controller checklist, the audio sheet, the world sheets, the real-browser sheet |
 | [docs/BALANCE_LOG.md](docs/BALANCE_LOG.md) | Every tuning change, why, and the matrices before and after |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DECISIONS.md](docs/DECISIONS.md) | How it is built; every interpretation and deviation |
-| [docs/systems/](docs/systems/) | One document per package (P01-P18, P19-P39f): APIs, data, decisions, tests, gate notes |
+| [docs/systems/](docs/systems/) | One document per package (P01-P18, P19-⟦SHIP: P40 once the ship step writes docs/systems/P40.md (plan §1.1 item 5, §3.24; as P18 wrote P18.md), else P39f⟧): APIs, data, decisions, tests, gate notes |
 | [docs/plans/M6_M9_PLAN.md](docs/plans/M6_M9_PLAN.md), [docs/plans/M2_M5_PLAN.md](docs/plans/M2_M5_PLAN.md), [docs/plans/FOLLOWUPS.md](docs/plans/FOLLOWUPS.md) | The plans and the review follow-ups |
 | [docs/M2_M5_HANDOFF.md](docs/M2_M5_HANDOFF.md), [docs/M1_HANDOFF.md](docs/M1_HANDOFF.md) | The Valley's handoff and the M0/M1 combat sandbox handoff |
 | `assets/audio/PROVENANCE.md` | Where every sound comes from |
@@ -463,6 +487,6 @@ from it: [docs/DECISIONS.md](docs/DECISIONS.md).
 
 **M10: the realistic giant, with a character creator.** It follows `0.9.0-m9`; no plan for it is in
 the repository yet. Before it come the owner's checks of this build (the handoff's §9): the usability
-sessions in the Valley and the world, the listening pass, the reference PC and real browsers, a real
-gamepad; and the owner's two decisions (its §10): a licence for the project and its generated assets,
-and whether to commit the lossless music and ambience masters.
+sessions in the Valley and the world, the world sheets, the listening pass, the reference PC and real
+browsers, a real gamepad; and the owner's two decisions (its §10): a licence for the project and its
+generated assets, and whether to commit the lossless music and ambience masters.
