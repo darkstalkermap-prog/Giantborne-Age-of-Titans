@@ -18,6 +18,8 @@ extends IntegrationSuite
 ##     drops the lock in its own next step);
 ##   * the world bot walks past a placed member whose AI is off (the clans watching the Moot, hostile once
 ##     Harrok is slain, never strike);
+##   * the Strike on a yielded Harrok lands before he rises (yield_at.strike_health_frac): it leaves him that
+##     share of his health, from his floor or from an honour yield near full health; Spare lands nothing;
 ##   * the music's combat radius is capped for a stage-4+ giant (audio_mix.intensity.combat_cap_m): a
 ##     formation holding 50 m off raises danger, one 30 m off or a boss combat; the Valley's stages keep the
 ##     scaled radius.
@@ -25,6 +27,7 @@ extends IntegrationSuite
 const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
 const BANNERMAN := "res://scenes/enemies/bannerman.tscn"
 const BALLISTA := "res://scenes/world/siege_ballista.tscn"
+const HARROK := "res://scenes/enemies/harrok.tscn"
 
 var f: Formation
 var p: GiantPlayer
@@ -203,6 +206,96 @@ func test_a_tier_awed_soldier_with_a_leader_routs_or_joins_a_formation_never_com
 	await TestWait.until(self, func() -> bool: return joiner.brain.state == EnemyBrain.AIState.HOLD, 60)
 	assert_eq(joiner.brain.state, EnemyBrain.AIState.HOLD, "holding its slot, not walking back to the giant")
 	assert_eq(f.free_slots().size(), 0, "the formation is full")
+
+
+## A blow from the giant at `target`: `power`, `poise` poise damage (tests of the yield).
+func _blow_at(target: EnemyActor, power: float, poise := 0.0) -> void:
+	var h := HitEvent.new()
+	h.tick = Sim.tick
+	h.instance_id = Sim.new_instance_id()
+	h.attacker_id = p.entity.entity_id
+	h.target_id = target.entity_id
+	h.power = power
+	h.attacker_stat = 10.0
+	h.size_policy = "none"
+	h.damage_split = {"physical": 1.0}
+	h.poise_damage = poise
+	h.tags = PackedStringArray(["Melee"])
+	h.attacker_position = p.global_position
+	Sim.queue_hit(h)
+
+
+## The verification's major (fix-up 1): the conqueror novice's run stopped at Harrok's slay - it met his fight to
+## the death after the duel with a quarter of its own health and no stamina, against him at 25-36 % of his, and
+## died in it every time. The Strike on a yielded Harrok now lands before he rises - one blow from the giant
+## (yield.strike) that leaves him yield_at.strike_health_frac of his health, whether he knelt at his 25 % floor
+## or for honour near full health - and the fight to the death goes on from there; Spare lands nothing.
+func test_the_strike_lands_before_harrok_rises_and_spare_lands_nothing() -> void:
+	var y: Dictionary = GameData.get_record("enemy.harrok").get("yield_at", {})
+	var frac := float(y.get("strike_health_frac", 0.0))
+	assert_true(frac > 0.0 and frac < float(y.get("health_frac", 0.0)),
+		"his Strike leaves him %.2f of his health, below the %.2f he yields at" % [frac, float(y.get("health_frac", 0.0))])
+	await _giant(6, Vector3(0, 0.05, 24))
+	# At his floor (25 %), struck: the blow lands and he rises from it.
+	var h := TestSpawn.enemy(world, HARROK, Vector3(0, 0.05, 0), "test.m9_harrok", false) as RivalGiantEnemy
+	await step_ticks(2)
+	var pools := h.entity.combatant.pools
+	_blow_at(h, 1.0e6)
+	await step_ticks(1)
+	assert_true(h.yielded and h.yield_reason == "health", "he kneels at his floor")
+	assert_near(pools.ratio("health"), 0.25, 1e-3, "held at 25 %")
+	hits.clear()
+	assert_true(h.p34_decide("strike"), "Strike")
+	await step_ticks(2)
+	var struck := hits_on(h.entity.entity_id)
+	assert_eq(struck.size(), 1, "one blow lands on him")
+	if struck.size() == 1:
+		assert_eq([struck[0].event.action_id, struck[0].event.attacker_id, struck[0].outcome],
+			["yield.strike", p.entity.entity_id, HitResult.Outcome.HIT], "the giant's Strike, a hit")
+	assert_near(pools.health, pools.health_max * frac, 1.0,
+		"it leaves him %.0f of his %.0f health" % [pools.health_max * frac, pools.health_max])
+	assert_true(h.entity.is_alive() and not h.yielded and not h.entity.combatant.unkillable,
+		"he rises from it to fight to the death")
+	assert_true(h.entity.combatant.lockable, "lockable again")
+	_blow_at(h, 1.0e7)
+	await step_ticks(1)
+	assert_false(h.entity.is_alive(), "and can be slain")
+	assert_eq(WorldState.get_flag("boss.harrok.outcome"), "slain", "slain")
+	h.queue_free()
+	WorldState.clear()
+	await step_ticks(2)
+	# For honour (Wildheart's two poise breaks), near full health: the Strike takes him to the same share.
+	p.progression.ancestry = "ancestry.wildheart"
+	var hh := TestSpawn.enemy(world, HARROK, Vector3(0, 0.05, 0), "test.m9_harrok_2", false) as RivalGiantEnemy
+	await step_ticks(2)
+	for i in 2:
+		if hh.controller.state == CombatController.State.STAGGERED:
+			hh.controller.call("_end_stagger")
+		hh.entity.combatant.poise.immunity_left = 0.0
+		_blow_at(hh, 10.0, 1.0e5)
+		await step_ticks(1)
+	assert_true(hh.yielded and hh.yield_reason == "honour", "he kneels for honour")
+	var p2 := hh.entity.combatant.pools
+	assert_true(p2.ratio("health") > 0.9, "near full health (%.2f)" % p2.ratio("health"))
+	assert_true(hh.p34_decide("strike"), "Strike")
+	await step_ticks(2)
+	assert_near(p2.health, p2.health_max * frac, 1.0, "the Strike leaves him the same share")
+	assert_true(hh.entity.is_alive() and not hh.yielded, "and he rises")
+	hh.queue_free()
+	WorldState.clear()
+	await step_ticks(2)
+	# Spare: no blow lands, he stays as he knelt.
+	var hs := TestSpawn.enemy(world, HARROK, Vector3(0, 0.05, 0), "test.m9_harrok_3", false) as RivalGiantEnemy
+	await step_ticks(2)
+	_blow_at(hs, 1.0e6)
+	await step_ticks(1)
+	assert_true(hs.yielded, "he kneels")
+	hits.clear()
+	assert_true(hs.p34_decide("spare"), "Spare")
+	await step_ticks(2)
+	assert_eq(hits_on(hs.entity.entity_id).size(), 0, "Spare lands no blow")
+	assert_near(hs.entity.combatant.pools.ratio("health"), 0.25, 1e-3, "he stays at 25 %")
+	assert_true(hs.yielded, "kneeling for good")
 
 
 ## The Raiders' Hollow (gate_world's w.peaceful:novice:1): a shieldman thrown 30 m up came down through the

@@ -3469,8 +3469,9 @@ func _p32_crew_face() -> Vector3:
 # (Events.dialogue_outcome, or p34_decide() for the bot and tests): "spare" leaves it kneeling, immune,
 # for good (outcome flag "spared"); "strike" (a confirm node first) either queues one killing blow from
 # the giant - the only hit it accepts (on_strike "kill") - or lets it rise to fight to the death
-# without a second yield (on_strike "fight"). Any death of a record with boss_outcome writes "slain"
-# (first write wins: a spared or fled boss keeps its outcome).
+# without a second yield (on_strike "fight"; M9 gate: yield_at.strike_health_frac - the Strike's blow
+# lands first and leaves it that share of its health, _p34_strike_wound). Any death of a record with
+# boss_outcome writes "slain" (first write wins: a spared or fled boss keeps its outcome).
 #
 # Lobbed throws (an action with `indirect`: the rival giants' boulders): when the windup begins the
 # landing point is committed at the target's feet - the runner aims there and the circle telegraph is
@@ -3804,6 +3805,7 @@ func p34_decide(outcome: String) -> bool:
 		_p34_fight_to_death = true
 		entity.combatant.unkillable = false
 		entity.combatant.lockable = true
+		_p34_strike_wound()   # M9 gate: the Strike lands before he rises (yield_at.strike_health_frac)
 		ai_enabled = _p34_ai_before
 		var p := get_tree().get_first_node_in_group("player") as GiantPlayer
 		if p != null and brain != null:
@@ -3820,6 +3822,14 @@ func p34_decide(outcome: String) -> bool:
 ## The confirmed Strike: one killing blow from the giant, the only hit a yielded boss accepts.
 func _p34_strike() -> void:
 	entity.combatant.unkillable = false
+	var h := _p34_strike_hit(P34_STRIKE_POWER)
+	_p34_strike_instance = h.instance_id
+	Sim.queue_hit(h)
+
+
+## The Strike's blow from the giant at this boss (action "yield.strike", unblockable, unparryable) of
+## `power` (P34_STRIKE_POWER always kills).
+func _p34_strike_hit(power: float) -> HitEvent:
 	var p := get_tree().get_first_node_in_group("player") as GiantPlayer
 	var h := HitEvent.new()
 	h.tick = Sim.tick
@@ -3827,13 +3837,34 @@ func _p34_strike() -> void:
 	h.attacker_id = p.entity.entity_id if p != null else ""
 	h.target_id = entity.entity_id
 	h.action_id = "yield.strike"
-	h.power = P34_STRIKE_POWER
+	h.power = power
 	h.attacker_stat = 10.0
 	h.size_policy = "none"
 	h.damage_split = {"physical": 1.0}
 	h.tags = PackedStringArray(["Melee", "Unblockable", "Unparryable"])
 	h.attacker_position = p.global_position if p != null else global_position - global_transform.basis.z
-	_p34_strike_instance = h.instance_id
+	return h
+
+
+## M9 gate (lane balance): the Strike on a boss that rises to fight on (on_strike "fight") lands before he
+## rises when yield_at.strike_health_frac is above 0 - one blow from the giant through the ordinary
+## resolution, sized to leave him that share of his health (a boss already below it loses nothing) - and
+## the fight to the death goes on from there with all his kit (his phase, its hazard, his blows). Harrok's
+## dialogue has the giant "Strike him down" before he rises; the blow did not land before, so the slay was
+## the whole duel and then a second one: the conqueror novice met his fight to the death with about a
+## quarter of its own health and no stamina, him at 25-36 % of his, and lost it every time - six deaths in
+## each of three runs, where Spare after the same duel costs a median of 2.5 (docs/BALANCE_LOG.md, "M9 gate").
+func _p34_strike_wound() -> void:
+	var frac := float(_p34_yield.get("strike_health_frac", 0.0))
+	var pools := entity.combatant.pools
+	var loss := pools.health - pools.health_max * frac
+	if frac <= 0.0 or loss < 1.0:
+		return
+	var h := _p34_strike_hit(1.0)
+	var per_power := float(DamageResolver.mitigate(h, entity.combatant).total)
+	if per_power <= 0.0:
+		return
+	h.power = loss / per_power
 	Sim.queue_hit(h)
 
 
