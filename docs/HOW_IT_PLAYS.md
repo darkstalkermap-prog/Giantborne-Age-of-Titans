@@ -21,6 +21,14 @@ Wall and all four from the Charge (they now hold their fire until the Charge, an
 ballistae shoot). The lines these change say so;
 `docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)", has the runs.
 
+**The M9 gate (lane ironreg)** then made the battle's phases follow its units whatever becomes of its ballistae (a
+ballista broken early had brought the Charge, or the Charge and the Last Stand together, before their time), kept the
+breach of Fort Aldmere's gate through a death (it is checkpointed at once, and the gate garrison falls back to its
+posts and stands down until the giant enters the bailey, so the fort gate's waystone is no fight), and moved the war
+camp's shield wall a few metres further west, off the giant's way to the Aldmere road's waystone. Unassisted, the
+stage-5 novice now wins the battle and the stage-4 novice reaches the Charge but still loses. The lines these change
+say so; `docs/BALANCE_LOG.md`, "M9 gate (lane ironreg)", has the runs.
+
 ## In short
 
 - **The campaign is completable, and the novice finishes most of it.** Of the matrix's 21 unassisted runs (the
@@ -34,10 +42,10 @@ ballistae shoot). The lines these change say so;
   Fort Aldmere's gateway); Harrok's duel stopped one mixed novice, the toll fort's tower archers one peaceful expert.
   Assisted (P38's acceptance orders), the march-first and wood-first orders complete with no death; the crown-first
   reaches the battle's Last Stand twice - its phases follow now - but dies in it and runs out the oath's time. Since the
-  M9 gate the gateway is clear and the crown-first order completes assisted too, with no death; unassisted, the novice
-  still loses the battle at stage 4 - after each death it breaks the gate again under the garrison's arrows and bolts
-  and enters the bailey with a quarter of its health or less - and at stage 5, where it reaches the Charge but the
-  riders end it and a death reload sets it down beside the garrison the breach roused ("Known issues").
+  M9 gate the gateway is clear and the crown-first order completes assisted too, with no death. Unassisted, a death no
+  longer undoes the breach (lane ironreg): at stage 5 the novice wins the battle at its third attempt; at stage 4 it
+  comes back to the bailey with 60 % of its health after each death and reaches the Charge, but the inner pair's
+  ballistae still kill it ("Known issues").
 - **The bosses**: the novice wins Harrok's duel with a median of 2.5 deaths (it was 6 before P39's balance pass), the
   Matriarch is driven out in one attempt with no death in the den, at stage 4 or 5, and the mixed experts spare Harrok
   with one to three deaths.
@@ -216,7 +224,7 @@ a timed human run can say how long the campaign is.
 | --- | --- | --- |
 | **Harrok the Unbowed** (the Moot's ring, stage 6) | deaths per duel: 3, 2, 2 (peaceful), 4, 6, 4 (mixed; the second stopped on its sixth) and the orders' 0 and 0 - median 2.5, won in 7 of 8; the first tries end at 33-52 % of his health; the mixed experts spare him in 2-4 attempts with one to three deaths, the peaceful experts in 1 and 3; the one conqueror expert who reached him brought him to 11 % and died five times in the duel | 1-3 per boss sequence: **met** |
 | **The Troll Matriarch** (the den, stages 4-5) | driven out: at the first attempt in all six runs that drive her out (stage 4 in the wood-first order, stage 5 for the peaceful novices and experts), no death in the den; slain: by no novice at stage 5 - six attempts on each of three seeds, every one into her phase 2, the lowest 9, 14 and 12 %, six deaths each (her frenzy 7, the whelps 7 - six swipes and one she threw - her stomp 3 and her sweep 1 of the 18) - and by no expert: four, three and four attempts at 37-50 %, two runs on the den's time limit, the third drove her out after burning the braziers | 1-3: the drive-out under the range, the slay **miss** |
-| **The Iron Regiment** (Fort Aldmere's bailey, the crown's breach) | the phase thresholds are fixed (the Charge at 70 % of the bar, the Last Stand at 50 %: "What changed in tuning"); at stage 4 (`confirm_ir4`) six attempts at 78-91 % of the bar, the fort's ballistae five of six deaths (74 % of the damage taken in the battle), the Charge never begins; the matrix's crown-first run and the stage-5 run (`confirm_ir5`) stopped on stucks in the fort's gateway, against the gate garrison's pike formation; assisted (`confirm_world_orders`), the Charge began at 621 s and the Last Stand at 760 s (the bar at 0.50) and again at 1,081 s, but the giant died in the Last Stand both times (a rider's charge, a ballista) and the oath's 1,320 s ran out. Since the M9 gate (the gateway clear, the gate bastions' two ballistae holding their fire until the Charge as plan §5.13 has it): assisted, won at the first attempt with no death (`aldmere_e5_crown_assist`); unassisted at stage 4 (`aldmere_e5_ir4`) six deaths, the bar at 0.79 at best - each attempt breaks the gate again under the garrison's arrows and bolts and enters the bailey with 205-401 of 1,160 health; at stage 5 (`aldmere_e5_ir5`) the Charge in two attempts of four (the bar at 0.64, 0.63; the riders ended both), six deaths, two of them outside the broken gate to the garrison the breach roused, beside the waystone the reload gives back. The battle tells the giant which ballistae shoot ("Smash the ballistae: two shoot now, two more at the Charge.") | **miss**: unassisted at stages 4 and 5 (the gate after each death) |
+| **The Iron Regiment** (Fort Aldmere's bailey, the crown's breach) | the phase thresholds are fixed (the Charge at 70 % of the bar, the Last Stand at 50 %: "What changed in tuning"); at stage 4 (`confirm_ir4`) six attempts at 78-91 % of the bar, the fort's ballistae five of six deaths (74 % of the damage taken in the battle), the Charge never begins; the matrix's crown-first run and the stage-5 run (`confirm_ir5`) stopped on stucks in the fort's gateway, against the gate garrison's pike formation; assisted (`confirm_world_orders`), the Charge began at 621 s and the Last Stand at 760 s (the bar at 0.50) and again at 1,081 s, but the giant died in the Last Stand both times (a rider's charge, a ballista) and the oath's 1,320 s ran out. Since the M9 gate (the gateway clear, the gate bastions' two ballistae holding their fire until the Charge as plan §5.13 has it): assisted, won at the first attempt with no death (`aldmere_e5_crown_assist`); unassisted at stage 4 (`aldmere_e5_ir4`) six deaths, the bar at 0.79 at best - each attempt breaks the gate again under the garrison's arrows and bolts and enters the bailey with 205-401 of 1,160 health; at stage 5 (`aldmere_e5_ir5`) the Charge in two attempts of four (the bar at 0.64, 0.63; the riders ended both), six deaths, two of them outside the broken gate to the garrison the breach roused, beside the waystone the reload gives back. The battle tells the giant which ballistae shoot ("Smash the ballistae: two shoot now, two more at the Charge."). Since lane ironreg (the breach kept through a death, the garrison at its posts after it, the phases by the units whatever becomes of the ballistae): at stage 5 (`ironreg_after_ir5`) **won** at the third attempt - the Charge in all three, the Last Stand in the third, Corvane spared - with two deaths in the battle (a rider's charge, the west bastion's ballista); at stage 4 (`ironreg_after_ir4`) every attempt after the first enters the bailey with 641-696 of 1,160 health and two reach the Charge (0.69, 0.65), but six deaths, four of them to the inner pair's ballistae | **miss** at stage 4 (the battle itself: the inner ballistae, the bot's play against the Wall at the gate's inner mouth); stage 5 unassisted: 2 deaths, **met** |
 
 **The den without its trunks.** Lane P39's expert drew the Matriarch to a standing brazier before breaking it (the
 lure) and slew her in two runs of three. Lane P39f's rebuild cleared the places' clearings of scenery, and the den lost
@@ -392,7 +400,8 @@ Aldmere's gateway that stopped the crown-first run. The busiest places are the R
 stands off the road and the gate garrison beside the gateway's approach: in the crown runs measured since, none at the
 gate needed a teleport, and the camp's wall held the giant only where the bot cuts from the road toward the Aldmere
 road's waystone (5-6 s, in two sabotage runs of three; the old post held one about 60 s on the road)
-(`docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)").
+(`docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)"). Since lane ironreg the wall stands off that line too, and the
+same three sabotage runs met it nowhere (`docs/BALANCE_LOG.md`, "M9 gate (lane ironreg)").
 
 ## The Valley (the prologue)
 
@@ -514,6 +523,17 @@ draw calls: the rendered Valley walk at `low` is at p50 93, p95 143, max 154 (P2
 
 ## What changed in tuning, and why
 
+### The M9 gate (lane ironreg): the Iron Regiment's phases, the breach after a death, the camp's wall (`docs/BALANCE_LOG.md`, "M9 gate (lane ironreg)")
+
+| What | Before -> after | Why |
+| --- | --- | --- |
+| The Iron Regiment's phases (`BattleBoss.phase_fraction`) | began by the bar's fraction, which counts the four ballistae's health -> by the units' health with the engines counted whole (the bar shown is unchanged) | a giant who broke ballistae moved the phases: with the gate bastions' pair broken first the Wall's fall began the Charge and the Last Stand together; on the web with all four broken the Charge began as the battle engaged; a ballista broken mid-Wall began the Charge with seven of the Wall's units standing (the M9 gate review) |
+| The start of an oath's road (`GameSession.settles_an_oath`: the crown's breach, `quest.iron_regiment`, and its sabotage, `quest.war_engines`) | an ordinary checkpoint request -> a completion request, as the oath it leads to | the gate falls with its garrison aware about the giant, so the breach's checkpoint waited on them, then on the battle, and a death dropped it: every death reloaded the gate whole, and the giant broke it again under the garrison's arrows and bolts before each attempt |
+| Fort Aldmere's gate garrison after the breach (`stand_down_when`, `data/world/encounter_aldmere_fort_gate.json`) | roused for good -> falls back to its posts and stands down until the giant enters the bailey (this visit) or the battle is settled, unless he strikes it | the reload gives back the fort gate's waystone, 25-35 m from the garrison: at stage 5 the giant fought it there after each death and twice never reached the gate |
+| The war camp's shield wall (`data/world/encounter_aldmere_war_camp.json`) | pivot (500, 163) -> (490, 167), just outside the tents' ring | its east end stood on the giant's way from the road's south side to the Aldmere road's waystone and the shrine, diagonally through the camp: held 5-6 s in the runs, 29-41 s in the gate test's walks |
+
+No unit's or ability's number changed; the battle's bar, its thresholds (0.7 / 0.5) and the layout are as they were.
+
 ### The M9 gate (lane aldmere): Fort Aldmere and the war camp (`docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)")
 
 | What | Before -> after | Why |
@@ -578,14 +598,27 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   two attempts of four, where the riders end them, and twice dies outside the broken gate: the death reload comes back
   at the gate's waystone beside the garrison the breach roused. The battle now tells the giant which ballistae shoot -
   "Smash the ballistae: two shoot now, two more at the Charge." as it engages, "Two more ballistae open fire." as the
-  Charge frees the bastions' pair.
+  Charge frees the bastions' pair. Since lane ironreg a death no longer undoes the breach (the breach is checkpointed at
+  once) and the garrison falls back to its posts and stands down once the gate has fallen, until the giant enters the
+  bailey: at stage 5 the novice wins the battle at its third attempt, with two deaths; at stage 4 it comes back to the
+  bailey with 60 % of its health each time and reaches the Charge twice in six attempts, but still dies six times,
+  four of them to the inner pair's ballistae (64 % of the damage taken in the battle) - in two attempts it stood in the
+  gateway's inner mouth against the Wall's advancing pikes and killed nothing. Left for P40: the inner ballistae's
+  numbers and the bot's play in the battle.
+- **The Iron Regiment's phases with its ballistae broken early** (fixed at the M9 gate, lane ironreg): the phases went
+  by the battle's bar, which counts the fort's four ballistae, so a giant who broke the gate bastions' pair on his way
+  in met the Charge and the Last Stand together as the Wall fell, and a ballista broken mid-Wall brought the Charge
+  on with the Wall standing. They now go by the units' health with the engines counted whole; the bar shown is as it
+  was (`tests/gate/test_iron_regiment_world.gd`).
 - **Fort Aldmere's gateway** (fixed at the M9 gate): the gate garrison's pike formation stood in the gateway's mouth,
   on every titan path into the bailey, with about 5 m beside each flank - less than a stage-4 or stage-5 giant needs;
   two crown runs of three stopped there. It now stands in front of the west bastion beside the road's approach, and a
   stage-4 to stage-6 giant walks through the breached or opened gate past it (`tests/gate/test_fort_gateway.gd`).
 - **The war camp's shield wall across the King's Road** (fixed at the M9 gate): moved 4 m into the camp by lane P39f,
   it stood on the road's line, and a giant at peace pressed against the neutral front rank (30 stuck moments in the
-  matrix). It now stands on open ground west of the road between the camp's tents (`tests/gate/test_war_camp_road.gd`).
+  matrix). It now stands on open ground west of the road between the camp's tents (`tests/gate/test_war_camp_road.gd`);
+  lane ironreg moved it a few metres further west, just outside the tents' ring, off the giant's way from the road's
+  south side to the Aldmere road's waystone and the shrine, where lane aldmere's post had held a giant 5-6 s.
 - **The Raiders' Hollow beside the King's Road**: the road to Brannock passes its shield wall at about 23 m on the
   rebuilt world and the bot turns to fight it in most runs (a person may walk on); it adds a few minutes and a death
   in some runs to the first oath.
@@ -645,9 +678,9 @@ Moot, Harrok's duel, the Stone Throne.
 
 Things to watch, from where the bots struggled: Harrok's overhead chop (unblockable, a long line: dodge sideways,
 not back) and the Moot's falling stones in his second phase; the Matriarch's regeneration and her whelps in her
-second phase (fight her beside a brazier: its fire stops it); the Iron Regiment's ballistae, and Fort Aldmere's gate
-under the garrison's arrows and bolts after a death, when the crown comes first; the toll fort's tower archers; the Raiders' Hollow's archers and
-mage.
+second phase (fight her beside a brazier: its fire stops it); the Iron Regiment's ballistae - the inner pair in the
+Wall, all four from the Charge - when the crown comes first; the toll fort's tower archers; the Raiders' Hollow's
+archers and mage.
 
 **The 5-minute combat tour** (New Game, the Valley's Hollow): the dummies and the sparring post teach the light
 chain, the heavy, Heavy Footfall, the block, the parry and the dodge; the forest's first wolves and hunters follow;
@@ -662,8 +695,8 @@ F6 shows stage 2's formations and stage 3's awe on what is left of them.
 - **Harrok**: does the chop read (a long line, unblockable); is the duel fair at a median of two or three deaths for
   the bot?
 - **The Matriarch**: do players find the braziers' fire without being told; is the slay fair?
-- **The Iron Regiment**: with the phases fixed, is the bailey a fair fight at stage 4 under the fort's ballistae, and do
-  players get through the gate garrison in the gateway?
+- **The Iron Regiment**: is the bailey a fair fight at stage 4 under the fort's ballistae, and do players read the gate
+  garrison standing down at its posts once the gate is breached (and leave it be on the way back in after a death)?
 - **Fast travel and sealed places**: the bot never used them on the main path; where do players use them?
 - **Readability and audio**: do players hear the threat stings and the engines' whistles and turn to them?
 - **Pacing**: time each §5.15 segment; the bot's estimate is a floor.

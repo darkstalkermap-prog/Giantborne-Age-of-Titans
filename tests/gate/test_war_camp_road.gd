@@ -7,12 +7,23 @@ extends IntegrationSuite
 ## line (pivot (520, 163)): every one of these walks stood against its front rank at (522-524, 159-168) for the rest of its
 ## time (the M9 confirmation: 30 stuck moments there in the world runs). The wall now stands on open ground west of the
 ## road between the camp's tents (pivot (500, 163)).
+## M9 gate (lane ironreg): and off the diagonal through the camp's south-west - the giant's own way from the road's
+## south side (514, 192) to the Aldmere road's waystone (470, 60), the line the world bot walks toward that waystone
+## and the shrine beyond it. The wall's east end at (503, 164) stood on it: a giant at peace was held there for the
+## rest of the walk (lane aldmere's runs: 5-6 s each until the bot stepped aside). The wall now stands a few metres
+## west, just outside the tents' ring (pivot (490, 167)).
 
 const SCENE := "res://scenes/world/world.tscn"
 const CAMP := "encounter.aldmere_war_camp"
 ## The King's Road through the camp (tools/data/world/world.json, kings_road): its points from the south entrance on.
 const ROAD := [Vector2(545.0, 232.0), Vector2(522.0, 160.0), Vector2(520.0, 120.0)]
 const ROAD_HALF_WIDTH_M := 9.0
+## M9 gate (lane ironreg): the diagonal through the camp's south-west, from the road's south side to the Aldmere road's
+## waystone (world.cp.aldmere_road).
+const DIAGONAL := [Vector2(514.0, 192.0), Vector2(470.0, 60.0)]
+## The wall's posts keep this far off the diagonal's straight line (its titan path bends 1-3 m west of it round the
+## tents).
+const DIAGONAL_CLEAR_M := 8.0
 
 
 func after_each() -> void:
@@ -64,10 +75,15 @@ func _move(w: WorldRoot, xz: Vector2) -> void:
 
 ## The distance (m) from `xz` to the road's line through the camp.
 static func _road_distance(xz: Vector2) -> float:
+	return _line_distance(xz, ROAD)
+
+
+## The distance (m) from `xz` to the polyline `points`.
+static func _line_distance(xz: Vector2, points: Array) -> float:
 	var best := INF
-	for i in range(1, ROAD.size()):
-		var a: Vector2 = ROAD[i - 1]
-		var b: Vector2 = ROAD[i]
+	for i in range(1, points.size()):
+		var a: Vector2 = points[i - 1]
+		var b: Vector2 = points[i]
 		var ab := b - a
 		var t := clampf((xz - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
 		best = minf(best, (a + ab * t).distance_to(xz))
@@ -139,6 +155,13 @@ func test_the_shield_wall_stands_clear_of_the_kings_road() -> void:
 	print("    war camp road: the shield wall's nearest post %.1f m from the King's Road's line" % near)
 	# The road is 18 m wide; a stage-6 giant (3.7 m) walking its edge passes a wall that keeps 6 m beyond it.
 	assert_true(near >= ROAD_HALF_WIDTH_M + 6.0, "the wall's posts keep off the road (%.1f m from its line)" % near)
+	# M9 gate (lane ironreg): and off the diagonal to the Aldmere road's waystone.
+	var off_diagonal := INF
+	for sp: Dictionary in rec.get("spawns", []):
+		if str(sp.get("formation", "")) == "shields":
+			off_diagonal = minf(off_diagonal, _line_distance(Vector2(float(sp.position_m[0]), float(sp.position_m[2])), DIAGONAL))
+	print("    war camp road: the shield wall's nearest post %.1f m from the diagonal to the Aldmere road's waystone" % off_diagonal)
+	assert_true(off_diagonal >= DIAGONAL_CLEAR_M, "the wall's posts keep off the diagonal (%.1f m from its line)" % off_diagonal)
 
 
 func test_a_giant_of_stages_4_and_6_walks_the_kings_road_through_the_war_camp() -> void:
@@ -161,6 +184,39 @@ func test_a_giant_of_stages_4_and_6_walks_the_kings_road_through_the_war_camp() 
 				stage, way, at.x, at.z, r.done, int(r.still_s)])
 			assert_true(bool(r.done), "stage %d: the giant walks the King's Road %s (at (%.1f, %.1f))" % [stage, way, at.x, at.z])
 			assert_true(int(r.still_s) <= 1, "stage %d: never held up on the road %s (%d s still)" % [stage, way, int(r.still_s)])
+			w.queue_free()
+			await step_ticks(2)
+			for f in Formation.live():
+				f.dissolve()
+			FactionState.reset_for_tests()
+			WanderDirector.reset_for_tests()
+			WorldState.clear()
+
+
+## M9 gate (lane ironreg): Aldmere at peace, a giant of stage 4 and of stage 6 walks its own titan path along the
+## diagonal through the camp's south-west both ways - from the road's south side to the Aldmere road's waystone and
+## back - with the camp's shield wall in the world: never held up more than 1 s. On the wall's post at pivot
+## (500, 163) its east end stood on the way: every walk out was held at (504, 166) for the rest of its time.
+func test_a_giant_of_stages_4_and_6_walks_the_diagonal_to_the_aldmere_road_waystone() -> void:
+	for stage: int in [4, 6]:
+		for outward: bool in [true, false]:
+			var points: Array = DIAGONAL.duplicate()
+			if not outward:
+				points.reverse()
+			var w := await _world(points[0])
+			var p := w.player()
+			p.set_profile(_profile(stage))
+			p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+			await step_ticks(60)
+			assert_false(FactionState.is_hostile("aldmere"), "Aldmere at peace")
+			assert_eq(_wall_alive(w), 11, "stage %d: the camp's shield wall and its banner are in the world" % stage)
+			var r := await _walk_road(w, points, 45.0)
+			var at: Vector3 = r.at
+			var way := "toward the waystone" if outward else "back to the road"
+			print("    war camp diagonal (stage %d, %s): the giant at (%.1f, %.1f), walked %s, stood still at most %d s" % [
+				stage, way, at.x, at.z, r.done, int(r.still_s)])
+			assert_true(bool(r.done), "stage %d: the giant walks the diagonal %s (at (%.1f, %.1f))" % [stage, way, at.x, at.z])
+			assert_true(int(r.still_s) <= 1, "stage %d: never held up on the diagonal %s (%d s still)" % [stage, way, int(r.still_s)])
 			w.queue_free()
 			await step_ticks(2)
 			for f in Formation.live():
