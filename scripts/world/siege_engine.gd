@@ -47,6 +47,11 @@ extends BreakableProp
 ## A faction (this placement's `faction`; "" = always hostile) makes the engine follow its standing as
 ## a faction member does: at peace its team is NEUTRAL (it never shoots; the giant may not lock it),
 ## hostile it is ENEMY.
+##
+## M9 gate (lane aldmere): `fire_held` - a battle holds an engine's fire until the phase that brings it
+## (BattleBoss: Fort Aldmere's gate-bastion ballistae join at the Charge, plan §5.13). While held it takes
+## no target, so it neither turns nor shoots (in_action false); its crew stays at its place and still
+## counts as its crew (crewed and the crowd's "abandon" cue are untouched), and it hauls a reload as usual.
 
 const GROUP := "siege_engines"
 ## Launches at one target stay at least this far apart (with every other ranged attacker's).
@@ -108,6 +113,8 @@ var crewed := false
 var holder_id := ""
 ## Whether a giant threw it (it smashes where it lands).
 var thrown := false
+## M9 gate: a battle holds its fire until its phase (see the notes; BattleBoss sets and clears it).
+var fire_held := false
 
 var _crew: Array = []                 ## EnemyActor (weak: freed members are pruned)
 var _target_id := ""                  ## the entity the running shot is aimed at
@@ -291,6 +298,20 @@ func can_shoot() -> bool:
 	return not destroyed and entity.is_alive() and holder_id == "" and entity.team == CombatEntity.Team.ENEMY
 
 
+## M9 gate: true while it is in the fight - crewed, free to shoot and its fire not held by a battle (tests, debug).
+func in_action() -> bool:
+	return is_crewed() and can_shoot() and not fire_held
+
+
+## M9 gate: a battle holds (true) or frees (false) this engine's fire (see the notes).
+func set_fire_held(held: bool) -> void:
+	if fire_held == held:
+		return
+	fire_held = held
+	if held:
+		_release_token()
+
+
 ## The place of crew member `actor` (global; Vector3.INF when it does not serve this engine).
 func crew_slot(actor: Node) -> Vector3:
 	var i := _crew.find(actor)
@@ -371,7 +392,7 @@ func sim_step(tick: int, dt: float) -> void:
 ## The engine's target: the first living PLAYER entity (the giant), while it may shoot - P36: or, for a
 ## siege line's engine while the giant is out of its reach, the prop it bombards (p36_bombard_target).
 func _target() -> CombatEntity:
-	if not can_shoot():
+	if not can_shoot() or fire_held:
 		return null
 	for e: CombatEntity in Sim.entities():
 		if e.team == CombatEntity.Team.PLAYER and e.is_alive() and is_instance_valid(e.actor):

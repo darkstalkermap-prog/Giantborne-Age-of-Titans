@@ -13,6 +13,14 @@ lane P39's balance pass with lane P39f's fixes and rebuilt world, and the Iron R
 ("What changed in tuning"). Lane P39's own runs on its branch before the merge, and how the two compare, are in
 `docs/BALANCE_LOG.md` ("M9 (P39)" and "M9 confirmation").
 
+**The M9 gate (lane aldmere)** then fixed three things on the crown's way and measured the crown order again (not the
+matrix): Fort Aldmere's gate garrison stood in the gateway's mouth on every titan path into the bailey (it now stands
+beside the road's approach), the war camp's shield wall stood across the King's Road (it now stands beside it), and
+the Iron Regiment's gate-bastion ballistae shot from the Wall's first blow where plan §5.13 has two ballistae in the
+Wall and all four from the Charge (they now hold their fire until the Charge, and the battle tells the giant which
+ballistae shoot). The lines these change say so;
+`docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)", has the runs.
+
 ## In short
 
 - **The campaign is completable, and the novice finishes most of it.** Of the matrix's 21 unassisted runs (the
@@ -25,7 +33,11 @@ lane P39's balance pass with lane P39f's fixes and rebuilt world, and the Iron R
   the fort's ballistae kill the novice before the Charge; two crown runs of three stopped against the gate garrison in
   Fort Aldmere's gateway); Harrok's duel stopped one mixed novice, the toll fort's tower archers one peaceful expert.
   Assisted (P38's acceptance orders), the march-first and wood-first orders complete with no death; the crown-first
-  reaches the battle's Last Stand twice - its phases follow now - but dies in it and runs out the oath's time.
+  reaches the battle's Last Stand twice - its phases follow now - but dies in it and runs out the oath's time. Since the
+  M9 gate the gateway is clear and the crown-first order completes assisted too, with no death; unassisted, the novice
+  still loses the battle at stage 4 - after each death it breaks the gate again under the garrison's arrows and bolts
+  and enters the bailey with a quarter of its health or less - and at stage 5, where it reaches the Charge but the
+  riders end it and a death reload sets it down beside the garrison the breach roused ("Known issues").
 - **The bosses**: the novice wins Harrok's duel with a median of 2.5 deaths (it was 6 before P39's balance pass), the
   Matriarch is driven out in one attempt with no death in the den, at stage 4 or 5, and the mixed experts spare Harrok
   with one to three deaths.
@@ -137,7 +149,8 @@ of the merged code without that one commit confirms ("The Valley" below).
 
 P38's acceptance orders, the novice assisted (`confirm_world_orders`): the march first completed in 28.0 minutes of human
 estimate and the wood first in 30.2, with no death; the crown first stopped on the oath stage's time limit with the
-battle in its Last Stand ("The bosses", below). P38's same runs on W22 all completed.
+battle in its Last Stand ("The bosses", below). P38's same runs on W22 all completed. Since the M9 gate the crown first
+completes again (`aldmere_e5_crown_assist`: 42.7 minutes, no death, Corvane spared at the first attempt).
 
 ### Every run
 
@@ -203,7 +216,7 @@ a timed human run can say how long the campaign is.
 | --- | --- | --- |
 | **Harrok the Unbowed** (the Moot's ring, stage 6) | deaths per duel: 3, 2, 2 (peaceful), 4, 6, 4 (mixed; the second stopped on its sixth) and the orders' 0 and 0 - median 2.5, won in 7 of 8; the first tries end at 33-52 % of his health; the mixed experts spare him in 2-4 attempts with one to three deaths, the peaceful experts in 1 and 3; the one conqueror expert who reached him brought him to 11 % and died five times in the duel | 1-3 per boss sequence: **met** |
 | **The Troll Matriarch** (the den, stages 4-5) | driven out: at the first attempt in all six runs that drive her out (stage 4 in the wood-first order, stage 5 for the peaceful novices and experts), no death in the den; slain: by no novice at stage 5 - six attempts on each of three seeds, every one into her phase 2, the lowest 9, 14 and 12 %, six deaths each (her frenzy 7, the whelps 7 - six swipes and one she threw - her stomp 3 and her sweep 1 of the 18) - and by no expert: four, three and four attempts at 37-50 %, two runs on the den's time limit, the third drove her out after burning the braziers | 1-3: the drive-out under the range, the slay **miss** |
-| **The Iron Regiment** (Fort Aldmere's bailey, the crown's breach) | the phase thresholds are fixed (the Charge at 70 % of the bar, the Last Stand at 50 %: "What changed in tuning"); at stage 4 (`confirm_ir4`) six attempts at 78-91 % of the bar, the fort's ballistae five of six deaths (74 % of the damage taken in the battle), the Charge never begins; the matrix's crown-first run and the stage-5 run (`confirm_ir5`) stopped on stucks in the fort's gateway, against the gate garrison's pike formation; assisted (`confirm_world_orders`), the Charge began at 621 s and the Last Stand at 760 s (the bar at 0.50) and again at 1,081 s, but the giant died in the Last Stand both times (a rider's charge, a ballista) and the oath's 1,320 s ran out | **miss**: the ballistae and the riders at stage 4; the gate |
+| **The Iron Regiment** (Fort Aldmere's bailey, the crown's breach) | the phase thresholds are fixed (the Charge at 70 % of the bar, the Last Stand at 50 %: "What changed in tuning"); at stage 4 (`confirm_ir4`) six attempts at 78-91 % of the bar, the fort's ballistae five of six deaths (74 % of the damage taken in the battle), the Charge never begins; the matrix's crown-first run and the stage-5 run (`confirm_ir5`) stopped on stucks in the fort's gateway, against the gate garrison's pike formation; assisted (`confirm_world_orders`), the Charge began at 621 s and the Last Stand at 760 s (the bar at 0.50) and again at 1,081 s, but the giant died in the Last Stand both times (a rider's charge, a ballista) and the oath's 1,320 s ran out. Since the M9 gate (the gateway clear, the gate bastions' two ballistae holding their fire until the Charge as plan §5.13 has it): assisted, won at the first attempt with no death (`aldmere_e5_crown_assist`); unassisted at stage 4 (`aldmere_e5_ir4`) six deaths, the bar at 0.79 at best - each attempt breaks the gate again under the garrison's arrows and bolts and enters the bailey with 205-401 of 1,160 health; at stage 5 (`aldmere_e5_ir5`) the Charge in two attempts of four (the bar at 0.64, 0.63; the riders ended both), six deaths, two of them outside the broken gate to the garrison the breach roused, beside the waystone the reload gives back. The battle tells the giant which ballistae shoot ("Smash the ballistae: two shoot now, two more at the Charge.") | **miss**: unassisted at stages 4 and 5 (the gate after each death) |
 
 **The den without its trunks.** Lane P39's expert drew the Matriarch to a standing brazier before breaking it (the
 lure) and slew her in two runs of three. Lane P39f's rebuild cleared the places' clearings of scenery, and the den lost
@@ -375,7 +388,11 @@ fort's gateway in the crown-first run, the Stone Throne's ring in `w_peaceful_no
 Aldmere's gateway that stopped the crown-first run. The busiest places are the Raiders' Hollow beside the King's Road
 ((-125, 575) and (-75, 575): 47, the bot fighting the Hollow on its way), the war camp's south entrance ((525, 175):
 30, the giant pressing on the camp's neutral shield wall on the road), the Moot battery's plateau ((-225, -575):
-15, the walk to the Moot) and Fort Aldmere's gate ((675, -75) and (625, -75): 8).
+15, the walk to the Moot) and Fort Aldmere's gate ((675, -75) and (625, -75): 8). Since the M9 gate the camp's wall
+stands off the road and the gate garrison beside the gateway's approach: in the crown runs measured since, none at the
+gate needed a teleport, and the camp's wall held the giant only where the bot cuts from the road toward the Aldmere
+road's waystone (5-6 s, in two sabotage runs of three; the old post held one about 60 s on the road)
+(`docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)").
 
 ## The Valley (the prologue)
 
@@ -497,6 +514,17 @@ draw calls: the rendered Valley walk at `low` is at p50 93, p95 143, max 154 (P2
 
 ## What changed in tuning, and why
 
+### The M9 gate (lane aldmere): Fort Aldmere and the war camp (`docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)")
+
+| What | Before -> after | Why |
+| --- | --- | --- |
+| Fort Aldmere's gate garrison: its pike formation's post (`data/world/encounter_aldmere_fort_gate.json`) | pivot (650, -79.1), on the gate's line -> (626, -75), in front of the west bastion beside the road's approach | every titan path into the bailey crosses the gate's nav link and the formation stood on it: a stage-4 to stage-6 giant stopped against it, breached or opened (two crown runs of three stopped there) |
+| The war camp's shield wall (`data/world/encounter_aldmere_war_camp.json`) | pivot (520, 163), on the King's Road's line -> (500, 163), beside it | a giant at peace walking the road through the camp stood against the neutral front rank (30 stuck moments in the matrix) |
+| The Iron Regiment's gate-bastion ballistae (the Charge's `engines` list; `BattleBoss`) | shoot from the Wall's first blow -> hold their fire until the Charge | plan §5.13: two ballistae fire in the Wall (the inner pair, the Wall's own crews), all four from the Charge; the bastion pair stands 16 m up behind a giant at the bailey's gate end, out of a stage-4 giant's reach and sight |
+| The Iron Regiment's HUD lines (`BattleBoss.engines_line`, `phase_engines_line`) | the portcullis's line only -> also "Smash the ballistae: two shoot now, two more at the Charge." as it engages and "Two more ballistae open fire." at the Charge | the ballistae take most of the giant's health in the battle (52-60 % unassisted); the quest's word for them was only in the journal |
+
+No unit's numbers changed; the battle's bar and its thresholds are as they were.
+
 ### The M9 confirmation (W23): the Iron Regiment's phase thresholds (`docs/BALANCE_LOG.md`, "M9 confirmation")
 
 | What | Before -> after | Why |
@@ -541,13 +569,23 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
 - **The Iron Regiment at stage 4** (the crown's oath first): the phases now follow the Wall and the Charge (fixed in the
   confirmation phase), but the novice brings the battle's bar to 78 % at best before the fort's four ballistae kill it
   (five deaths of six, 74 % of the damage taken in the battle); assisted, it reaches the Last Stand (the bar at 50 %)
-  twice and dies in it, to a rider's charge and a ballista. At stage 5 the battle was not reached.
-- **Fort Aldmere's gateway**: the gate garrison's pike formation stands in the gateway's mouth with about 5 m beside
-  each flank, less than a stage-4 or stage-5 giant needs; walking in, he stops against it until it is broken. Two
-  crown runs of three stopped there (the bot's recoveries no longer got through on the rebuilt world).
-- **The war camp's shield wall stands across the King's Road** at the camp's south entrance (moved 4 m into the camp
-  by lane P39f, out of a tent): a giant at peace walking the road presses against the neutral front rank (30 stuck
-  moments in the matrix, one only freed by a teleport).
+  twice and dies in it, to a rider's charge and a ballista. At stage 5 the battle was not reached. Since the M9 gate
+  (the gateway clear; in the Wall only the two inner ballistae shoot, as plan §5.13 has it) the assisted order wins the
+  battle at the first attempt with no death, but the unassisted novice still loses at stage 4 (0.79 at best, six
+  deaths): every death reloads the fort gate's waystone, a checkpoint from before the breach, so each attempt breaks the
+  gate again for over a minute under the garrison's four wall archers and the bastions' two ballistae and enters the
+  bailey with a quarter of its health or less. At stage 5 (the march's help, then the breach) it reaches the Charge in
+  two attempts of four, where the riders end them, and twice dies outside the broken gate: the death reload comes back
+  at the gate's waystone beside the garrison the breach roused. The battle now tells the giant which ballistae shoot -
+  "Smash the ballistae: two shoot now, two more at the Charge." as it engages, "Two more ballistae open fire." as the
+  Charge frees the bastions' pair.
+- **Fort Aldmere's gateway** (fixed at the M9 gate): the gate garrison's pike formation stood in the gateway's mouth,
+  on every titan path into the bailey, with about 5 m beside each flank - less than a stage-4 or stage-5 giant needs;
+  two crown runs of three stopped there. It now stands in front of the west bastion beside the road's approach, and a
+  stage-4 to stage-6 giant walks through the breached or opened gate past it (`tests/gate/test_fort_gateway.gd`).
+- **The war camp's shield wall across the King's Road** (fixed at the M9 gate): moved 4 m into the camp by lane P39f,
+  it stood on the road's line, and a giant at peace pressed against the neutral front rank (30 stuck moments in the
+  matrix). It now stands on open ground west of the road between the camp's tents (`tests/gate/test_war_camp_road.gd`).
 - **The Raiders' Hollow beside the King's Road**: the road to Brannock passes its shield wall at about 23 m on the
   rebuilt world and the bot turns to fight it in most runs (a person may walk on); it adds a few minutes and a death
   in some runs to the first oath.
@@ -607,8 +645,8 @@ Moot, Harrok's duel, the Stone Throne.
 
 Things to watch, from where the bots struggled: Harrok's overhead chop (unblockable, a long line: dodge sideways,
 not back) and the Moot's falling stones in his second phase; the Matriarch's regeneration and her whelps in her
-second phase (fight her beside a brazier: its fire stops it); the Iron Regiment's ballistae and the gate garrison in
-Fort Aldmere's gateway when the crown comes first; the toll fort's tower archers; the Raiders' Hollow's archers and
+second phase (fight her beside a brazier: its fire stops it); the Iron Regiment's ballistae, and Fort Aldmere's gate
+under the garrison's arrows and bolts after a death, when the crown comes first; the toll fort's tower archers; the Raiders' Hollow's archers and
 mage.
 
 **The 5-minute combat tour** (New Game, the Valley's Hollow): the dummies and the sparring post teach the light

@@ -15,6 +15,11 @@ extends IntegrationSuite
 ##     crews still in the world when it engages (the ridge stays active out to 210 m): as many of them as
 ##     the caps need leave too (EncounterDirector.p34_make_room), the Wall musters whole and the Charge's
 ##     riders spawn whole.
+##   * M9 gate (lane aldmere; plan §5.13: two ballistae in the Wall, all four from the Charge): in the Wall
+##     only the two inner ballistae (the Wall's own crews) shoot - the gate bastions' pair, its garrison
+##     crews at their places, holds its fire - and from the Charge into the Last Stand all four shoot
+##     (test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing); the HUD tells the
+##     giant so as the battle engages and again as the Charge frees the pair (ENGINES_LINE, CHARGE_LINE).
 
 const SCENE := "res://scenes/world/world.tscn"
 const GATE := "world.aldmere.fort_gate"
@@ -22,22 +27,35 @@ const WALL := "encounter.aldmere_iron_regiment_wall"
 const CHARGE := "encounter.aldmere_iron_regiment_charge"
 const GARRISON := "encounter.aldmere_fort_gate"
 const RIDGE := "encounter.aldmere_ballista_ridge"
+## The bailey's two inner ballistae (the Wall's crews), sorted: the only ones that shoot in the Wall (M9 gate).
+const INNER_BALLISTAE := ["world.aldmere.fort_ballista_ne", "world.aldmere.fort_ballista_nw"]
+## The gate bastions' two ballistae (the gate garrison's crews), sorted: they join at the Charge (M9 gate).
+const BASTION_BALLISTAE := ["world.aldmere.fort_ballista_e", "world.aldmere.fort_ballista_w"]
 ## Spots inside the curtain wall (560..740 x -245..-95), near each corner (99-107 m from the arena's
 ## centre at (650, -165): beyond the old circle's 72 + 20 m).
 const CORNERS := [Vector2(730, -236), Vector2(570, -236), Vector2(730, -104), Vector2(570, -104)]
+## The HUD's lines about the ballistae as the battle engages and as the Charge begins (M9 gate).
+const ENGINES_LINE := "Smash the ballistae: two shoot now, two more at the Charge."
+const CHARGE_LINE := "Two more ballistae open fire."
 
 var disengaged: Array = []
+## The HUD's messages since the test began (text only).
+var hud_lines: Array = []
 
 
 func before_each() -> void:
 	await super()
 	disengaged.clear()
+	hud_lines.clear()
 	Events.boss_disengaged.connect(_on_disengaged)
+	Events.hud_message.connect(_on_hud_message)
 
 
 func after_each() -> void:
 	if Events.boss_disengaged.is_connected(_on_disengaged):
 		Events.boss_disengaged.disconnect(_on_disengaged)
+	if Events.hud_message.is_connected(_on_hud_message):
+		Events.hud_message.disconnect(_on_hud_message)
 	Quests.end_dialogue()
 	for f in Formation.live():
 		f.dissolve()
@@ -49,6 +67,10 @@ func after_each() -> void:
 
 func _on_disengaged(t: int, id: String, reason: String) -> void:
 	disengaged.append([t, id, reason])
+
+
+func _on_hud_message(text: String, _kind: String) -> void:
+	hud_lines.append(text)
 
 
 static func _profile(stage: int) -> Dictionary:
@@ -251,7 +273,10 @@ func test_the_web_battle_fits_the_cap_with_the_gate_garrison_alive() -> void:
 ## Charge begins once the Wall's fighting units fall and the Last Stand once the riders fall, while the battle's four
 ## ballistae and the two crews of the inner pair still stand - a giant who cannot break the fort's ballistae (the
 ## bastion pair stands 16 m up) sees every phase. With 0.6 and 0.25 the bar stayed at 0.622 / 0.670 after the Wall and
-## at 0.452 / 0.465 after the riders, and neither phase began (the phase-spent rule waits on the crews).
+## at 0.452 / 0.465 after the riders, and neither phase began (the phase-spent rule waits on the crews). M9 gate
+## (lane aldmere; plan §5.13): which ballistae shoot in each phase - in the Wall the two inner ones (the Wall's
+## crews) while the gate bastions' pair holds its fire with its garrison crews at their places, from the Charge
+## on all four. Before, all four shot from the Wall's first blow.
 func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing() -> void:
 	for web: bool in [false, true]:
 		var w := await _fort(web)
@@ -260,19 +285,30 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		if b == null:
 			return
 		var d := w.director()
+		hud_lines.clear()
 		await _enter_bailey(w, b)
 		await step_ticks(120)
+		assert_true(hud_lines.has(ENGINES_LINE), "%s: the HUD tells the giant which ballistae shoot as the battle engages (%s)" % [
+			"web" if web else "desktop", hud_lines])
+		assert_false(hud_lines.has(CHARGE_LINE), "the Charge's line waits for the Charge")
+		if not web:
+			await _check_box_holds_both(b.gate_line(), ENGINES_LINE)
 		var crews := {}
 		for entry: Variant in GameData.get_record(WALL).get("engines", []):
 			for c: Variant in (entry as Dictionary).get("crew", []):
 				crews[str(c)] = true
 		assert_eq(crews.size(), 2, "the Wall's encounter crews the two inner ballistae")
+		var name := "web" if web else "desktop"
+		var shooting := _shooting_engines(w, b)
+		print("    iron regiment (%s): in the Wall the ballistae that shoot %s, the bastions' crewed %s" % [name, shooting,
+			_crewed_engines(w, BASTION_BALLISTAE)])
+		assert_eq(shooting, INNER_BALLISTAE, "%s: in the Wall the two inner ballistae shoot, the bastions' pair holds its fire" % name)
+		assert_eq(_crewed_engines(w, BASTION_BALLISTAE), BASTION_BALLISTAE, "%s: the gate garrison's crews stand at the bastions' pair" % name)
 		var planned := b.planned()
 		for id: String in d.members_of(WALL):
 			if planned.has(id) and not crews.has(id):
 				_kill(id)
 		await step_ticks(30)
-		var name := "web" if web else "desktop"
 		print("    iron regiment (%s): the Wall's fighting units fallen, the bar at %.3f, phases %s" % [
 			name, b.aggregate_fraction(), b.phase_log])
 		assert_true(b.phase_log.has(2), "%s: the Charge begins once the Wall falls (%s, bar %.3f)" % [name, b.phase_log, b.aggregate_fraction()])
@@ -282,6 +318,10 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		for eid in b.engines:
 			var e := Sim.get_entity(eid)
 			assert_true(e != null and e.is_alive(), "%s: %s still stands" % [name, eid])
+		shooting = _shooting_engines(w, b)
+		print("    iron regiment (%s): in the Charge the ballistae that shoot %s" % [name, shooting])
+		assert_eq(shooting.size(), 4, "%s: from the Charge all four ballistae shoot (%s)" % [name, shooting])
+		assert_eq(hud_lines.count(CHARGE_LINE), 1, "%s: the HUD says so as the Charge begins (%s)" % [name, hud_lines])
 		var guard := 0
 		while _up(d, CHARGE).size() < 6 and guard < 300:
 			await step_ticks(1)
@@ -294,6 +334,8 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		for id: String in crews:
 			var e := Sim.get_entity(id)
 			assert_true(e != null and e.is_alive(), "%s: %s still serves its ballista in the Last Stand" % [name, id])
+		shooting = _shooting_engines(w, b)
+		assert_eq(shooting.size(), 4, "%s: in the Last Stand all four ballistae shoot (%s)" % [name, shooting])
 		w.queue_free()
 		await step_ticks(2)
 		FactionState.reset_for_tests()
@@ -301,8 +343,55 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		LevelRoot.force_web_for_tests = false
 
 
+## M9 gate: the HUD's message box (Hud.MESSAGE_MAX_LINES at 1280 x 720) shows the portcullis's line and the
+## ballistae's together as the battle engages - the newer would push the older out if they took more lines.
+func _check_box_holds_both(first: String, second: String) -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var frame := Control.new()
+	frame.size = Vector2(1280, 720)
+	layer.add_child(frame)
+	var hud := Hud.new()
+	frame.add_child(hud)
+	await get_tree().process_frame
+	hud.show_message(first, "warn")
+	hud.show_message(second, "info")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var shown := hud.message_texts()
+	print("    iron regiment: the HUD's box %s (lines %d + %d of %d)" % [shown, hud.message_line_count(first),
+		hud.message_line_count(second), Hud.MESSAGE_MAX_LINES])
+	assert_true(shown.has(first) and shown.has(second),
+		"the HUD shows the portcullis's line and the ballistae's together (%s)" % [shown])
+	layer.queue_free()
+	await get_tree().process_frame
+
+
 func _up(d: EncounterDirector, enc: String) -> Array:
 	return Array(d.members_of(enc)).filter(func(id: String) -> bool: return d.member_status(id) == EncounterDirector.SPAWNED)
+
+
+## The battle's engines in the fight now - crewed, free to shoot, their fire not held (world ids, sorted; M9
+## gate). On the old code an engine had no hold: crewed and free to shoot was in the fight.
+func _shooting_engines(w: Node, b: BattleBoss) -> Array:
+	var out: Array = []
+	for n in w.get_tree().get_nodes_in_group(SiegeEngine.GROUP):
+		var e := n as SiegeEngine
+		if e != null and b.engines.has(e.world_id) and e.is_crewed() and e.can_shoot() and not e.get("fire_held") == true:
+			out.append(e.world_id)
+	out.sort()
+	return out
+
+
+## Of the engines `ids`, those a crew serves now (world ids, sorted; M9 gate).
+func _crewed_engines(w: Node, ids: Array) -> Array:
+	var out: Array = []
+	for n in w.get_tree().get_nodes_in_group(SiegeEngine.GROUP):
+		var e := n as SiegeEngine
+		if e != null and ids.has(e.world_id) and e.is_crewed():
+			out.append(e.world_id)
+	out.sort()
+	return out
 
 
 func test_the_web_battle_makes_room_from_ballista_ridge() -> void:
