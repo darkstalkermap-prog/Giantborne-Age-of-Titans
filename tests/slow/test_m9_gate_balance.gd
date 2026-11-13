@@ -16,8 +16,10 @@ extends IntegrationSuite
 ##     pike wall and archers (the toll fort);
 ##   * the bot's lock invariant waits out the tick a locked formation's last member routs in (the giant
 ##     drops the lock in its own next step);
-##   * the world bot walks past a placed member whose AI is off (the clans watching the Moot, hostile once
-##     Harrok is slain, never strike);
+##   * the world bot walks past a placed member whose AI is off (the clans watching the Moot, never strike; they
+##     stood hostile because the giant's own blows at Harrok near the ring's wall struck them, 6 m outside it within a
+##     stage-6 giant's 13.6 m reach, and two blows within 30 s turn Skarn - not because he was slain: M9 gate (final),
+##     the watchers are spectators now);
 ##   * the Strike on a yielded Harrok lands before he rises (yield_at.strike_health_frac): it leaves him that
 ##     share of his health, from his floor or from an honour yield near full health; Spare lands nothing;
 ##   * the music's combat radius is capped for a stage-4+ giant (audio_mix.intensity.combat_cap_m): a
@@ -522,7 +524,7 @@ func test_the_bot_walks_past_a_placed_member_whose_ai_is_off() -> void:
 	var loose := TestSpawn.enemy(world, "res://scenes/enemies/rival_giant.tscn", Vector3(12, 0.05, 0),
 		"test.m9_loose_giant", false, 0.0)
 	await step_ticks(2)
-	watcher.brain.aware = true   # Harrok slain: the clans' faction hostile, the watcher alert
+	watcher.brain.aware = true   # the clans' faction hostile (blows that struck a watcher), the watcher alert
 	loose.brain.aware = true
 	var d := EncounterDirector.new()
 	var m := EncounterDirector.Member.new()

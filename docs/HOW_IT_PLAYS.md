@@ -32,7 +32,8 @@ but still loses. The lines these change say so; `docs/BALANCE_LOG.md`, "M9 gate 
 **The M9 gate (lane "balance")** changed what follows in a few places, measured on a reduced matrix (the novice and
 the expert on the three presets at seed 1, the conqueror's and the peaceful experts' seeds 2-3, three Valley runs;
 `docs/BALANCE_LOG.md`, "M9 gate"): the Troll Matriarch's phase 2 (the conqueror novices now slay her, with 3, 2 and 1
-deaths), awe tiers for the world's soldiers (a lone soldier runs from a stage-4 giant), the music's combat radius
+deaths), awe tiers for the world's soldiers (a lone soldier flees a stage-4 giant for about 20 s before the rout P30
+already gave it), the music's combat radius
 capped for a stage-4 giant, and the world bot's measurement fixes (the Moot battery, the Raiders' Hollow, the abilities'
 first use, the expert at the toll fort, the Moot's watching clans). The lines below that it changed say so ("M9 gate:");
 the rest are the confirmation's 21-run matrix as before.
@@ -68,8 +69,9 @@ the rest are the confirmation's 21-run matrix as before.
 - **Growth shows**: formations hold or brace 79 % of their engaged time while their banner lives, 89 % of the giant's
   locks with a formation engaged are group or banner locks, and 13 of the 14 runs that reach stage 6 throw 4 engines
   (one walked past the Moot battery out of the bot's reach and never came back). Lone soldiers do not flee a stage-4
-  giant yet (4 % of the lone humans' engaged time against the target's 70 %: a known issue). M9 gate: lone soldiers run from a
-  stage-4 giant (66 % of 803 s of their engaged time; pooled with the archers, who keep their range, 25 %),
+  giant yet (4 % of the lone humans' engaged time against the target's 70 %: a known issue). M9 gate: lone soldiers flee a
+  stage-4 giant for about 20 s before the same rout (66 % of 803 s of their engaged time, the flight added to the
+  share; their non-flee time unchanged, 286 -> 276 s; pooled with the archers, who keep their range, 25 %),
   every run reaching stage 6 throws the Moot battery's engines on the walk, and the music among lesser enemies is in
   combat 11 % of the time (target under 25 %: met).
 - **Stable**: the 60-minute world run (two campaigns back to back), the 30-minute Valley run and the campaign's
@@ -273,7 +275,7 @@ riders 2 and ballista 1 and a wandering pike column in the mixed runs' sabotage)
 | Formations hold or brace while their banner lives (share of their engaged time) | at least 50 % | 79 % |
 | The giant's locks with a formation engaged that are group or banner locks | at least half | 89 % |
 | Engines thrown per run that reaches stage 6 | at least 2 | 4 in 11 of 12 runs; none in `w_peaceful_expert_2` (below). M9 gate: 4 in every run reaching stage 6 (ten of ten), on the walk to the Moot |
-| Lone humans flee or rout (share of their engaged time) | at least 70 % | 4 %; the lone soldiers 0 % of 371 s. M9 gate: 25 %; the lone soldiers 66 % of 803 s (archers keep their range by design) |
+| Lone humans flee or rout (share of their engaged time) | at least 70 % | 4 %; the lone soldiers 0 % of 371 s (P30 already routed an aware lone soldier facing a stage-4 giant at once; a rout is unseen by the measure). M9 gate: 25 %; the lone soldiers 66 % of 803 s - about 20 s of flight before the same rout, their non-flee time unchanged (286 -> 276 s); archers keep their range by design |
 
 **Formations and engines** (`world_formations`, `world_siege`; the novice's twelve runs): every completed run broke 3-5
 formations and seized and threw the Moot battery's four engines (two ballistae, two catapults); the mixed runs also
@@ -322,9 +324,12 @@ What the numbers say, stage by stage:
 
 - **Stage 4**: humans fight in formations (95 % of the soldiers' engaged time is in one) and hold or brace (78 %):
   the pike and shield walls meet the giant at its shins, and the giant locks them as one target. Archers and mages
-  keep their range and their spread. Lone soldiers do not flee yet: a lone soldier's awe costs 35 of its 70 morale,
-  which leaves it above its flee threshold (most of the lone humans' engaged time is the toll fort's tower archers',
-  who hold their tower by design, and the Raiders' Hollow's archers and mage).
+  keep their range and their spread. Lone soldiers did not flee before the M9 gate: a lone soldier's awe costs 35 of
+  its 70 morale, which leaves it above its flee threshold - but P30's outmatched rule already routed an aware lone
+  soldier facing a stage-4 giant at once and for good, and a rout is unseen by the measure; the lone soldiers' 30-40 s
+  a run with no fleeing were the Millford raiders busy with folk and houses near the giant (most of the lone humans'
+  engaged time is the toll fort's tower archers', who hold their tower by design, and the Raiders' Hollow's archers
+  and mage). M9 gate: an awe tier sends the soldier into about 20 s of visible flight before the same rout.
 - **Stage 5**: the trolls are the den's and the Greywood's (they flank: 13 % repositioning); nearly half the soldiers'
   time is crews' (the war camp's and the Moot battery's engines), riders charge and wheel, archers flee a fifth of
   their time, and the clan scouts - rival giants - meet the giant on the Ironway.
@@ -570,7 +575,7 @@ No unit's numbers changed; the battle's bar and its thresholds are as they were.
 | What | Before -> after | Why |
 | --- | --- | --- |
 | The Troll Matriarch's phase 2 (regeneration, the roar's call, the frenzy and its punish window) | 15 hp/s, 2 whelps, 55 + 65, 1.3 s -> 13 hp/s, 1 whelp, 35 + 40, 3.0 s (her phase 1 unchanged) | no conqueror novice slew her (six deaths on each of three seeds); now all three do, with 3, 2 and 1 deaths |
-| A soldier's awe before a giant at least 6x its height (an awe tier) | 35 of its 70 morale -> 50 (35 below the tier: the Valley's stage-3 giant is 4.4x) | §5.14: single humans flee a stage-4 giant on sight; a lone soldier awed off by a tier no longer comes back (it joins a formation or routs) |
+| A soldier's awe before a giant at least 6x its height (an awe tier) | 35 of its 70 morale -> 50 (35 below the tier: the Valley's stage-3 giant is 4.4x) | §5.14: single humans flee a stage-4 giant on sight; a lone soldier awed off by a tier no longer comes back (it joins a formation or routs) - its about 20 s of flight come before the rout P30's outmatched rule already gave it (M9 gate (final): lone-soldier non-flee time 286 -> 276 s) |
 | The music's combat radius for a giant of 10 m or more | 35 m x height/3.66 m (105 m at stage 4) -> at most 40 m | formations and crews 40-120 m off held the music in combat among lesser enemies |
 | The bot (measurement fixes, no game change) | `docs/BALANCE_LOG.md`, "M9 gate" | engines sought once they shoot (the Moot battery), formations off the way passed (the Raiders' Hollow), Rampart Grip's readiness and every slotted ability's first use, the expert's dodge reserve before pikes and archers (the toll fort), the lock invariant's rout tick, the Moot's watching clans (placed with their AI off) walked past |
 | An enemy fallen through the world (below y -30 m) | lost below the ground, alive and out of reach (its encounter never cleared) -> set back at its home | found by this lane's runs: a thrown shieldman of the Raiders' Hollow came down through the ground (how is open: FOLLOWUPS) |
@@ -618,7 +623,9 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   frenzy and whelps are the levers; the owner's playtest decides how hard the slay should be. **M9 gate**: her phase 2
   eased (13 hp/s, one whelp, the frenzy 35 + 40 with a 3.0 s punish window): the novices slay her with 3, 2 and 1
   deaths and the experts in two runs of three (at the second attempt and the first; the third drove her out at its first attempt, at 49 %). The conqueror novice now stops at **Harrok's slay** instead: struck on
-  after his yield, he kills it six times in each of three runs (down to 6-11 %; FOLLOWUPS).
+  after his yield, he kills it six times in each of three runs (down to 6-11 %; FOLLOWUPS). Apart from its whelp, her
+  phase 2 now hits lighter and less often than her phase 1 (her own sequence 0.74x her phase 1's power per second):
+  the owner's playtest decides whether that is wanted (M9 gate (final), FOLLOWUPS).
 - **The Iron Regiment at stage 4** (the crown's oath first): the phases now follow the Wall and the Charge (fixed in the
   confirmation phase), but the novice brings the battle's bar to 78 % at best before the fort's four ballistae kill it
   (five deaths of six, 74 % of the damage taken in the battle); assisted, it reaches the Last Stand (the bar at 50 %)
@@ -627,7 +634,7 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   battle at the first attempt with no death, but the unassisted novice still loses at stage 4 (0.79 at best, six
   deaths): every death reloads the fort gate's waystone, a checkpoint from before the breach, so each attempt breaks the
   gate again for over a minute under the garrison's four wall archers and the bastions' two ballistae and enters the
-  bailey with a quarter of its health or less. At stage 5 (the march's help, then the breach) it reaches the Charge in
+  bailey with at most about a third of its health (205-401 of 1,145-1,160 in aldmere_e5_ir4). At stage 5 (the march's help, then the breach) it reaches the Charge in
   two attempts of four, where the riders end them, and twice dies outside the broken gate: the death reload comes back
   at the gate's waystone beside the garrison the breach roused. The battle now tells the giant which ballistae shoot -
   "Smash the ballistae: two shoot now, two more at the Charge." as it engages, "Two more ballistae open fire." as the
@@ -638,6 +645,20 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   four of them to the inner pair's ballistae (64 % of the damage taken in the battle) - in two attempts it stood in the
   gateway's inner mouth against the Wall's advancing pikes and killed nothing. Left for P40: the inner ballistae's
   numbers and the bot's play in the battle.
+- **The Iron Regiment's routed Wall** (fixed at the M9 gate's final round): the Wall's men who routed to the bailey's
+  flee points when their banners fell counted as fighting, so the Charge waited until a dozen running men were cut
+  down across the bailey (each running again when hit), and smashing the ballistae no longer brought it. A routed unit
+  now counts as fallen for the phases and the bar, and the bar's notches follow the phases
+  (`tests/gate/test_iron_regiment_world.gd`).
+- **The Moot's watching clans and Skarn** (fixed at the M9 gate's final round): the six Skarn giants watching the Moot
+  stand 6 m outside the ring's wall, within a stage-6 giant's 13.6 m reach; its blows at Harrok near the ring's stones
+  struck a watcher, and two within 30 s turned Skarn hostile for good (Ulfra's price, Skarn's forge shut, hostile
+  giants at the Moot and the steading) - not Harrok's death, as the M9 gate's notes said. The watchers are spectators
+  now, whose blows offend no one, and they leave when Harrok is slain (`tests/slow/test_m9_gate_final.gd`).
+- **Engine fire and the music** (fixed at the M9 gate's final round): since the M9 gate's 40 m combat cap a siege
+  barrage from beyond 40 m (the Moot battery, the war camp, the toll fort's ballista) stayed at danger even as its
+  stones and bolts landed - an engine's shot never reached the music. A landed shot from a hostile crewed engine now
+  raises combat for 5 s, its crew's hit.
 - **The Iron Regiment's phases with its ballistae broken early** (fixed at the M9 gate, lane ironreg): the phases went
   by the battle's bar, which counts the fort's four ballistae, so a giant who broke the gate bastions' pair on his way
   in met the Charge and the Last Stand together as the Wall fell, and a ballista broken mid-Wall brought the Charge
@@ -677,7 +698,9 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   world's soldiers (46 or more); lane P39f's raider change did not move it. **M9 gate**: an awe tier (50 before a
   giant 6x a soldier's height) and no coming back: lone soldiers flee 66 % of 803 s of their engaged time; pooled with
   the archers, who keep their range and posts by design, 25 % - the pooled 70 % needs archers to flee too (a
-  design decision).
+  design decision). **M9 gate (final)**: the 66 % is flight the tier adds (about 20 s before the rout P30's outmatched
+  rule already gave an aware lone soldier at once); the lone soldiers' non-flee time is unchanged (286 -> 276 s over
+  the ten runs), and the measure cannot see a rout (routed units are unaware).
 - **Pace**: the main path played straight is about 41 minutes against 75-140 (above): a person's time is the
   measure.
 - ~~**The music among lesser enemies** is in combat 43 % of the time (target under 25 %): P28's mix data.~~ Fixed at the
@@ -742,7 +765,9 @@ F6 shows stage 2's formations and stage 3's awe on what is left of them.
   Hollow on the King's Road or fight it?
 - **Harrok**: does the chop read (a long line, unblockable); is the duel fair at a median of two or three deaths for
   the bot?
-- **The Matriarch**: do players find the braziers' fire without being told; is the slay fair?
+- **The Matriarch**: do players find the braziers' fire without being told; is the slay fair? Does her phase 2 still
+  feel like the escalation once its whelp is killed or thrown, given her own blows are 0.74x her phase 1's (M9 gate
+  (final))?
 - **The Iron Regiment**: is the bailey a fair fight at stage 4 under the fort's ballistae, and do players read the gate
   garrison standing down at its posts once the gate is breached (and leave it be on the way back in after a death)?
 - **Fast travel and sealed places**: the bot never used them on the main path; where do players use them?
