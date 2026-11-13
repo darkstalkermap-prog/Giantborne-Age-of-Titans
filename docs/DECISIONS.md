@@ -104,7 +104,7 @@ the system documents use). The plan holds each decision's full text.
 ### 1.3 Deviations from the spec
 
 Two deviations from the owner's spec are recorded by decision (plan M6-M9 decision 4, here 34, and
-the plan's review log, §8), and both are the owner's to settle (`docs/M6_M9_HANDOFF.md` §9):
+the plan's review log, §8), and both are the owner's to settle (`docs/M6_M9_HANDOFF.md` §10):
 
 - **The lossless music and ambience masters are not committed** (spec §13: "Keep editable ...
   audio masters"). The effects' WAV masters are committed (they are also Godot's import source). For
@@ -461,7 +461,7 @@ finding was fixed with a regression test, or handed to the package that owned th
 
 Each M6-M9 gate had a review (plan §1.3), and the M8 gate an audit and a re-audit besides; every
 confirmed finding was fixed with a regression test or handed on through `docs/plans/FOLLOWUPS.md`
-(open rows: `docs/M6_M9_HANDOFF.md` §7). The fixes, in short; each package's "M7 gate", "M7
+(open rows: `docs/M6_M9_HANDOFF.md` §8). The fixes, in short; each package's "M7 gate", "M7
 polish", "M8 gate", "M8 screenshot pass" and "M8 release" sections have the detail and the tests.
 
 | Gate | Finding | Fix |
@@ -469,7 +469,7 @@ polish", "M8 gate", "M8 screenshot pass" and "M8 release" sections have the deta
 | M6 | Seeded Valley bot runs played differently with and without audio. | The loading gate also waits for the level's navigation map, the autopilot waits with it, headless runs sync navigation on the main thread (P19; gate suite `test_valley_audio_determinism`). |
 | M6 | A far threat sting reached the listener 21-30 dB down, under the combat music. | The sting and the aim lock moved to the mix's `alert` class (P21; `test_threat_audibility`). |
 | M6 | The expert's crown stage on the intimidate path ran out its watchdog: a wolf pack broken by a giant that outmatches it kept coming back to harass. | Such a pack routs (`tactics.outmatched_rout`); the Valley bot's stall at an encounter lasts while it stays within 15 m (`docs/BALANCE_LOG.md`, "M6 gate"). |
-| M6 | The web audio check could not tell a hole in the music caused by slow frames from a real fault, and its pass did not say the plan's criterion was not met. | Every report states the criterion's verdict, a default pass with holes says "the plan's criterion NOT MET", a failed run keeps its trace; the check has its own stub test (P23). The criterion itself is the owner's to run on a GPU (`docs/M6_M9_HANDOFF.md` §5: NOT RUN). |
+| M6 | The web audio check could not tell a hole in the music caused by slow frames from a real fault, and its pass did not say the plan's criterion was not met. | Every report states the criterion's verdict, a default pass with holes says "the plan's criterion NOT MET", a failed run keeps its trace; the check has its own stub test (P23). The criterion itself is the owner's to run on a GPU (`docs/M6_M9_HANDOFF.md` §5.1: NOT RUN). |
 | M6 | The Valley's views at `low` passed 250 draw calls by 4-18. | Recorded as a measured miss and handed on; fixed by P30's mid distance and P27's batched HUD (max 154). |
 | M7 | The Crownmarch's formation fights never threatened a stage-4 giant: the director leashed the toll fort's pikes as soon as they advanced, the advance stopped half a metre outside the brace distance, and the brace struck where its telegraph no longer was. | A formation's reach must lie inside its leash (a schema rule) and the director leaves an intact formation's members to it; the advance ends inside the brace distance; the brace keeps the band its windup drew (P30, P29; `test_m7_gate_fixes`, `test_m7_gate_world`). |
 | M7 | The map offered fast travel to a hostile town's waystone, and the reload woke the giant at the stone it had left without a word. | Fast travel is refused for a stone its respawn blockers refuse, judged in the destination's level; a load that moves the respawn says why (P27, P29, P20). |

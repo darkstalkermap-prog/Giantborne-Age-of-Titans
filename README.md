@@ -427,7 +427,7 @@ from it: [docs/DECISIONS.md](docs/DECISIONS.md).
 - **Balance and pacing are a bot's.** Bots play the whole campaign, but they walk from objective to
   objective without exploring, so their time is a floor, and some fights are harder or easier for
   them than they will be for a person. `docs/HOW_IT_PLAYS.md` ("Known issues") lists where they
-  still struggle, and [docs/M6_M9_HANDOFF.md](docs/M6_M9_HANDOFF.md) §7 the open items.
+  still struggle, and [docs/M6_M9_HANDOFF.md](docs/M6_M9_HANDOFF.md) §8 the open items.
 - **Browser build.** Single-threaded: on a slow machine the music can stutter while frames are slow
   (the build mixes its sound on the main thread) and the world may take more than its 8 s to load its
   first ground; tested only in Chromium with software rendering; a gamepad may not be detected inside
@@ -459,7 +459,7 @@ from it: [docs/DECISIONS.md](docs/DECISIONS.md).
 ## 11. Next milestone
 
 **M10: the realistic giant, with a character creator.** It follows `0.9.0-m9`; its plan is still to
-be written. Before it, the owner's checks of this build (the handoff's §8): the usability sessions
-in the Valley and the world, the listening pass, the reference PC and real browsers, a real gamepad,
-and two decisions - a licence for the project and its generated assets, and whether to commit the
-lossless music and ambience masters.
+be written. Before it come the owner's checks of this build (the handoff's §9): the usability
+sessions in the Valley and the world, the listening pass, the reference PC and real browsers, a real
+gamepad; and the owner's two decisions (its §10): a licence for the project and its generated assets,
+and whether to commit the lossless music and ambience masters.

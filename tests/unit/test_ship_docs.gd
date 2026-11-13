@@ -15,9 +15,24 @@ extends TestSuite
 ##    exception, the owner's spec (docs/GIANTBORN_SPEC_V2.md), which is kept verbatim (DECISIONS.md
 ##    §3, the Ship gate). The hosting platform's own names stay allowed (the play link's domain,
 ##    the launcher's meta-tag namespace and runtime object, the integration branch). Each exception
-##    must still be needed, so the list stays exact.
+##    must still be needed, so the list stays exact. Since P40 (the M6-M9 ship) the scan must also
+##    cover the M6-M9 handoff, ARCHITECTURE.md and DECISIONS.md, which consolidate the M6-M9 system
+##    documents.
+## 3. P40 (plan M6-M9 §3.24): the M6-M9 handoff's gate table (its §5) gives every row a verdict -
+##    PASS, PARTIAL, FAIL or NOT RUN - in its Result column, or the ship step's placeholder for one
+##    ("⟦SHIP: ...⟧", filled when the M9 gate and the ship step have run), and covers the M6, M7, M8
+##    and M9 gates and the Ship gate. It reads the file only.
 
 const HANDOFF := "res://docs/M2_M5_HANDOFF.md"
+const M6_M9_HANDOFF := "res://docs/M6_M9_HANDOFF.md"
+const ARCHITECTURE := "res://docs/ARCHITECTURE.md"
+const DECISIONS := "res://docs/DECISIONS.md"
+## The gates the M6-M9 gate table covers, each in a subsection of its own whose heading names it.
+const M6_M9_GATES := ["M6", "M7", "M8", "M9", "Ship"]
+## A gate row's verdict (a whole word or phrase anywhere in its Result cell).
+const VERDICT := "\\b(PASS|PARTIAL|FAIL|NOT RUN)\\b"
+## The ship step's placeholder for a result it fills in (it greps for this text).
+const SHIP_PLACEHOLDER := "⟦SHIP"
 const OUTCOMES := ["help_cache", "help_ogre", "intimidate", "force"]
 ## Packages whose bot runs predate the shipped game code (P17b retuned the game after P17a's).
 const EARLIER_BUILDS := ["P17a"]
@@ -87,7 +102,8 @@ func test_no_file_names_an_ai_product_or_model_except_the_owners_spec() -> void:
 	var own_path := (get_script() as Script).resource_path
 	var files := _text_files("res://")
 	assert_true(files.size() > 300, "the scan reads the repository's text files (%d)" % files.size())
-	for must_scan: String in ["res://README.md", HANDOFF, "res://web/launcher.html", "res://project.godot"]:
+	for must_scan: String in ["res://README.md", HANDOFF, M6_M9_HANDOFF, ARCHITECTURE, DECISIONS,
+			"res://web/launcher.html", "res://project.godot"]:
 		assert_true(files.has(must_scan), "the scan covers %s" % must_scan)
 	var offenders: Array[String] = []
 	var excepted_hits := {}
@@ -122,6 +138,46 @@ func test_the_platform_names_stay_allowed_and_product_names_do_not() -> void:
 		assert_true(names.search(platform.sub(s, "", true)) != null, "a name: %s" % s)
 
 
+func test_every_row_of_the_m6_m9_gate_table_has_a_verdict() -> void:
+	var gates := _section(_read(M6_M9_HANDOFF), "## 5. ")
+	assert_true(gates != "", "the M6-M9 handoff has its gate section (## 5.)")
+	var verdict := RegEx.create_from_string(VERDICT)
+	var gate_name := RegEx.create_from_string("\\b(%s)\\b" % "|".join(PackedStringArray(M6_M9_GATES)))
+	var rows_by_gate := {}
+	var offenders: Array[String] = []
+	var tables := 0
+	var heading := ""
+	var lines := gates.split("\n")
+	var i := 0
+	while i < lines.size():
+		if lines[i].begins_with("### "):
+			heading = lines[i]
+		if not (lines[i].begins_with("|") and i + 1 < lines.size() and lines[i + 1].begins_with("| ---")):
+			i += 1
+			continue
+		tables += 1
+		var header := _cells(lines[i])
+		var col := header.find("Result")
+		assert_true(col >= 0, "every gate table has a Result column (%s): %s" % [heading.left(60), lines[i].left(120)])
+		var m := gate_name.search(heading)
+		var gate := m.get_string(1) if m != null else ""
+		i += 2
+		while i < lines.size() and lines[i].begins_with("|"):
+			var cells := _cells(lines[i])
+			var cell := cells[col] if col >= 0 and cells.size() == header.size() else ""
+			if verdict.search(cell) == null and not cell.contains(SHIP_PLACEHOLDER):
+				offenders.append("%s: %s" % [heading.left(40), lines[i].left(140)])
+			if gate != "":
+				rows_by_gate[gate] = int(rows_by_gate.get(gate, 0)) + 1
+			i += 1
+	assert_true(tables >= M6_M9_GATES.size(), "the gate section holds the gate tables (%d)" % tables)
+	assert_true(offenders.is_empty(),
+		"gate rows without PASS, PARTIAL, FAIL, NOT RUN or a %s placeholder in their Result cell (or with a cell too many or too few):\n  %s"
+		% [SHIP_PLACEHOLDER, "\n  ".join(offenders)])
+	for covered: String in M6_M9_GATES:
+		assert_true(int(rows_by_gate.get(covered, 0)) > 0, "the gate table covers the %s gate (a subsection naming it, with rows)" % covered)
+
+
 ## The text of a file under res:// (docs/ is .gdignored for imports, but read from disk as it is).
 func _read(path: String) -> String:
 	var text := FileAccess.get_file_as_string(path)
@@ -145,6 +201,15 @@ func _section(text: String, heading: String) -> String:
 		if inside:
 			out.append(line)
 	return "\n".join(out)
+
+
+## The cells of a Markdown table row, stripped (the empty ends outside the outer pipes left out).
+func _cells(row: String) -> PackedStringArray:
+	var parts := row.split("|")
+	var out := PackedStringArray()
+	for k in range(1, parts.size() - 1):
+		out.append(parts[k].strip_edges())
+	return out
 
 
 ## True when a table row of `section` has `outcome` as its first cell and "yes" in its second.
