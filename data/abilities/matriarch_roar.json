@@ -4,7 +4,7 @@
 	"type": "action",
 	"kind": "enemy_attack",
 	"display_name": "Matriarch's Roar",
-	"description": "P34 (plan M6-M9 section 5.13): her phase-2 roar (1.5 s, super armour, no hit): it calls three whelps (the phase's summon) and raises her regeneration to 40 hp/s.",
+	"description": "P34 (plan M6-M9 section 5.13): her phase-2 roar (1.5 s, super armour, no hit): it calls the phase's summon of whelps (one since the M9 gate) and her regeneration takes the phase's rate (13 hp/s).",
 	"power": 0,
 	"damage_type": "physical",
 	"ability_multiplier": 1.0,
