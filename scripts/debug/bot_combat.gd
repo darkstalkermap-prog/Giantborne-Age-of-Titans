@@ -72,6 +72,8 @@ const EXPERT_LIGHT_SHOT_POWER := 20.0
 ## rotation acts in the world at any stage (iteration 2: the world's opening at stage 3 slotted Boulder Hurl
 ## and never used it) and from stage 4 anywhere; the Valley keeps P17a's rules.
 const ROTATION_IDLE_TICKS := 1200
+## M9 gate: the hit shapes of the area blows the rotation uses only at a foe within reach.
+const AREA_SHAPES := ["cylinder_pulse", "sector_pulse", "line_pulse"]
 ## Hostile, aware enemies this far (by stage) pull the bot into a fight.
 const ENGAGE_RADIUS_M := [16.0, 22.0, 28.0]
 ## P38 (plan M6-M9 §6.1): from stage 4 the engage radius follows the profile - ENGAGE_REACH_MULT x its
@@ -121,6 +123,8 @@ var _connected := false
 var _ability_log: Array = []
 var _bands: Dictionary = {}     ## reach_band cache
 var _last_used: Dictionary = {} ## P39: slot key -> the tick its ability was last used (the rotation)
+var _reserve_tick := -1         ## M9 gate: reserve_needed's tick and answer (asked for every slot)
+var _reserve_cached := true
 
 
 func setup(p_bot: Variant, p_player: GiantPlayer, p_skill: String, p_rng: RandomNumberGenerator) -> void:
@@ -545,7 +549,36 @@ func dodge_reserve() -> float:
 func affordable(a: ActionDef) -> bool:
 	if skill != EXPERT or a == null or a.stamina_cost <= 0.0:
 		return true
-	return player.entity.combatant.pools.stamina - a.stamina_cost >= dodge_reserve()
+	var reserve := dodge_reserve() if reserve_needed(Sim.tick) else 0.0
+	return player.entity.combatant.pools.stamina - a.stamina_cost >= reserve
+
+
+## M9 gate (FOLLOWUPS "From the M9 confirmation": the peaceful experts died at the toll fort): from stage 4
+## the expert keeps its dodge reserve only while it may need the dodge - a dodge planned against a blow (an
+## arrow's aside: it holds nothing off), or a foe whose blows it dodges within EXPERT_WATCH_M: a boss, or a
+## body of mass class medium or large (an ogre, a rider, a whelp, a troll, a rival giant). Before the toll
+## fort's pikes (a formation's brace is blocked) under its tower's archers (light shots) the reserve kept the
+## expert from every blow: it came in from a sprint with no stamina, its blocks of the brace and its casts
+## held the regeneration back, and its stamina stayed between 0 and 24 - under the dodge's 18 and a light's
+## 8 - for whole fights (traced: 70 % of the fight standing in the pikes' brace band without a blow, the
+## chase given up three times, six deaths and the run stopped there). The Valley (stages 1-3) keeps P17b's
+## reserve. Cached per tick (affordable() is asked for every slot).
+func reserve_needed(tick: int) -> bool:
+	if not _world_expert():
+		return true
+	if tick == _reserve_tick:
+		return _reserve_cached
+	_reserve_tick = tick
+	_reserve_cached = false
+	for re: Dictionary in _reactions:
+		if str(re.kind).begins_with("dodge") and not bool(re.get("light_shot", false)):
+			_reserve_cached = true
+			return true
+	for e in threats(EXPERT_WATCH_M):
+		if big_foe(e) or str(e.entity.combatant.base_record.get("mass_class", "")) == "medium":
+			_reserve_cached = true
+			break
+	return _reserve_cached
 
 
 ## P17b: true when a dodge planned against a blow from within HEAVY_COMMIT_RANGE_M falls within
@@ -579,7 +612,12 @@ func slot_reason(key: String) -> String:
 		why = str(player.attack.range_reason(def))
 		if why != "":
 			return why
-	if player.grab != null and (PlayerGrab.is_crush(def) or def.id == PlayerGrab.HURL_ID or player.grab.is_holding()):
+	# M9 gate: Rampart Grip (grab.mode "rampart") asks the grab for a body or an engine in reach as
+	# Crushing Grip does - without it the slot read as ready whenever its cooldown and stamina allowed, so
+	# the "used when ready" windows counted a grip with nothing to seize (unused in 12 of the confirmation
+	# matrix's 18 runs) and the rotation pressed it on nothing.
+	if player.grab != null and (PlayerGrab.is_crush(def) or PlayerGrab.is_rampart(def) or def.id == PlayerGrab.HURL_ID \
+			or player.grab.is_holding()):
 		why = str(player.grab.ability_reason(def, true))
 	return why
 
@@ -810,6 +848,16 @@ func _throw(tick: int) -> void:
 
 ## Abilities by rule (plan §5.1). True when one was used this tick.
 func _abilities(tick: int, t: EnemyActor, dist: float) -> bool:
+	# M9 gate: a slotted ability this run has not used yet is tried at the first free tick it is ready and
+	# fits the target (_first_use_slot), not only at the skill's look (once a second for the novice): its
+	# windows are short - a grip has a body in reach for a moment, an area blow a foe close - and came while
+	# the novice was mid-blow, so in the confirmation matrix Rampart Grip went unused in 12 runs of 18,
+	# Formation Sweep in 11 and Titan Stomp in 9 (plan §6.4: every slotted ability used at least once a run).
+	if _world_rules() and player.controller.state == CombatController.State.LOCOMOTION:
+		var first := _first_use_slot(dist)
+		if first != "":
+			use_slot(first, "first use: %s" % str(player.controller.loadout.get(first, "")))
+			return true
 	if tick < _next_ability_tick:
 		return false
 	var c := player.controller
@@ -888,6 +936,32 @@ func _abilities(tick: int, t: EnemyActor, dist: float) -> bool:
 	return false
 
 
+## M9 gate: the slot whose ability (as slotted now: an evolution counts as its own) this run has not used
+## yet, that nothing refuses now and that fits the fight's target `dist` m off - an area blow only at a foe
+## within reach; afforded out of the expert's dodge reserve, as a player tries what his hotbar holds. The
+## heal keeps its own rule and a charge is left out, as in the rotation. "" when none (or the run has no
+## metrics).
+func _first_use_slot(dist: float) -> String:
+	if bot == null or bot.metrics == null:
+		return ""
+	var uses: Dictionary = bot.metrics.ability_uses
+	var reach := float(player.profile.get("melee_reach_m", 3.5))
+	for key: String in GiantPlayer.SLOT_KEYS:
+		var id := str(player.controller.loadout.get(key, ""))
+		if id == "" or int(uses.get(id, 0)) > 0 or id == MEND or evolves_from_chain(id, MEND):
+			continue
+		var def := GameData.get_action(id)
+		if def == null or not _stamina_for(def):
+			continue
+		if typeof(def.params.get("motion")) == TYPE_DICTIONARY and def.hit_shape != "grab":
+			continue
+		if def.hit_shape in AREA_SHAPES and dist > reach + 2.0:
+			continue
+		if slot_reason(key) == "":
+			return key
+	return ""
+
+
 ## P39: the tick a slot's ability was last used (-1: never in this level).
 func _used_tick(key: String) -> int:
 	return int(_last_used.get(key, -1)) if key != "" else -1
@@ -918,6 +992,11 @@ func _rotation_slot(tick: int) -> String:
 			best = key
 			best_tick = last
 	return best
+
+
+## M9 gate: true when the giant has the stamina `a` costs (the expert's dodge reserve aside).
+func _stamina_for(a: ActionDef) -> bool:
+	return a == null or a.stamina_cost <= 0.0 or player.entity.combatant.pools.stamina >= a.stamina_cost
 
 
 ## Phase 2 of the Ogre King: stand with a pillar behind the giant (the charge ends on it), unless

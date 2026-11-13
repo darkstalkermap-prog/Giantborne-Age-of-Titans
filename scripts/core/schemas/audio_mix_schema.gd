@@ -67,6 +67,8 @@ static func fields() -> Dictionary:
 		"surfaces": {"t": "dict", "values": {"t": "dict", "values": U.str_field(false, SURFACES)}},
 		"intensity": {"t": "dict", "req": true, "fields": {
 			"combat_radius_m": U.pos(true),
+			"combat_cap_m": U.pos(),
+			"combat_cap_min_height_m": U.pos(),
 			"danger_radius_m": U.pos(true),
 			"danger_cap_m": U.pos(true),
 			"lesser_danger_m": U.pos(true),
