@@ -1541,8 +1541,8 @@ the new row on the garrison.
 
 Three items from the M9 confirmation (FOLLOWUPS, "From the M9 confirmation (W23)"), on `wave-23` (`f851b0d`). Two were
 layout defects a player hits on the main path - fixed in the encounters' data, with gate-tier tests - and the third was
-the crown-first order, which the first fixed at its cause. One change of the battle's composition follows plan §5.13
-(below). No number was tuned. The runs here: one or two Godot processes at a time beside the other M9 gate lane's on
+the crown-first order, which the first fixed at its cause. One change of the battle's composition follows plan §5.13,
+and the battle now tells the giant which ballistae shoot (below). No number was tuned. The runs here: one or two Godot processes at a time beside the other M9 gate lane's on
 the 4-CPU container, `--perf --bot-trace=1` on each; the batches are in the lane's evidence folder
 (`m9_gate/aldmere/runs/<tag>/`; `exp/<name>/` holds the code each experiment ran). A seeded run replays exactly on the
 same code: `aldmere_base_crown_assist` (the confirmation's code, `w.order_crown:novice:1:assist`) replayed
@@ -1718,4 +1718,31 @@ HUD, so its runs are unchanged by the lines.
 
 ### What the changes touch, measured again
 
-[MIXED_LOG]
+The war camp's wall moved, which can touch the crown's sabotage order (the camp's fight, and a giant walking through
+the camp at peace); the battle's changes touch only the battle. The sabotage order, `w.mixed:novice:N` until the crown's
+oath, three seeds on the lane's code (`aldmere_e5_mixed`: seed 1 on `812e626`; `aldmere_e6_mixed`: seeds 2 and 3 on
+`40afc4e`), against the confirmation's runs of the same seeds (`confirm_world`, which went on to the campaign's end; the
+stages compared are the same):
+
+```
+tools/run_bots.sh w.mixed:novice:1 --jobs=1 --timeout=3600 --tag=aldmere_e5_mixed "--extra=--perf --bot-trace=1 --bot-until=oath.crown.done"
+tools/run_bots.sh w.mixed:novice:2 w.mixed:novice:3 --jobs=2 --timeout=3600 --tag=aldmere_e6_mixed "--extra=--perf --bot-trace=1 --bot-until=oath.crown.done"
+```
+
+| Seed | The camp's stage (time, damage, deaths) | The ridge's stage | The crown's oath met | Held at the camp's wall |
+| --- | --- | --- | --- | --- |
+| 1, the confirmation | 112 s, 751, 0 | 173 s, 456, 0 | 714 s | - |
+| 1, now | 207 s, 1,852, 0 | 262 s, 2,351, 1 (a camp rider) | 897 s | 6 s at (504, 166) |
+| 2, the confirmation | 122 s, 716, 0 | 169 s, 180, 0 | 757 s | - |
+| 2, now | 102 s, 694, 0 | 171 s, 840, 0 | 766 s | 5 s at (504, 166) |
+| 3, the confirmation | 124 s, 1,038, 0 | 169 s, 792, 0 | 852 s | about 60 s at (519, 166), the old post on the road |
+| 3, now | 47 s, 120, 0 | 104 s, 120, 0 | 726 s | - |
+
+Seed 1's camp stage ran long: the camp's riders, two wandering riders and a patrol in the fight, and a walk to the
+shrine to rest in the middle of it (the riders' charges 2,184 of the run's damage); seeds 2 and 3 met the oath about as
+fast as the confirmation's or faster. So on these three seeds the camp's sabotage is not harder for the wall's new
+post. What the new post does: a giant walking at peace from the road's north toward the Aldmere road's waystone and the
+shrine - the bot's line to them, diagonally through the camp - meets the wall's east end at (504, 166) and is held there
+5-6 s until it steps aside (seeds 1 and 2; seed 3 kept to the road), where the old post held a giant on the road itself
+(the confirmation's seed 3: about 60 s). A post a few metres further west, outside the tents' ring, would clear that
+line too; not made here (FOLLOWUPS, the war camp's row).

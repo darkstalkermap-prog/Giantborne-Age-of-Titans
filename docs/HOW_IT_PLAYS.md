@@ -389,8 +389,10 @@ Aldmere's gateway that stopped the crown-first run. The busiest places are the R
 ((-125, 575) and (-75, 575): 47, the bot fighting the Hollow on its way), the war camp's south entrance ((525, 175):
 30, the giant pressing on the camp's neutral shield wall on the road), the Moot battery's plateau ((-225, -575):
 15, the walk to the Moot) and Fort Aldmere's gate ((675, -75) and (625, -75): 8). Since the M9 gate the camp's wall
-stands off the road and the gate garrison beside the gateway's approach: in the crown runs measured since, no stuck
-moment at the camp and none at the gate that needed a teleport (`docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)").
+stands off the road and the gate garrison beside the gateway's approach: in the crown runs measured since, none at the
+gate needed a teleport, and the camp's wall held the giant only where the bot cuts from the road toward the Aldmere
+road's waystone (5-6 s, in two sabotage runs of three; the old post held one about 60 s on the road)
+(`docs/BALANCE_LOG.md`, "M9 gate (lane aldmere)").
 
 ## The Valley (the prologue)
 
