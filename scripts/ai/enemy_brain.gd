@@ -1501,6 +1501,8 @@ func sequence_path_failed() -> bool:
 # Awe (decision 26): the first time a unit perceives a target at least tactics.awe_ratio times
 # its own height it loses tactics.awe_morale_loss morale, once per life (source "awe", applied as
 # given: never x1.5). A stage-3 giant (7.92 m) awes soldiers (1.8 m: 4.4 >= 4.0); stage 2 does not.
+# M9 gate: tactics.awe_tiers ([{"ratio", "morale_loss"}]) cost more before a larger target
+# (awe_loss_at): a soldier's tier at 6.0x makes it flee a stage-4 giant on sight (plan §5.14).
 
 ## A unit at peace stands within POST_ARRIVE_M of its post; it walks back once farther than
 ## POST_LEAVE_M (hysteresis, as HOLD's).
@@ -1574,7 +1576,8 @@ func _p11b_perceive(tick: int, snapshot: Dictionary) -> bool:
 
 
 ## Awe: the first perception of a target at least tactics.awe_ratio times this unit's height
-## costs tactics.awe_morale_loss morale, once per life.
+## costs tactics.awe_morale_loss morale, once per life - or, M9 gate, the loss of the tactics.awe_tiers
+## entry with the largest ratio the target meets (awe_loss_at).
 func _check_awe(snapshot: Dictionary) -> void:
 	if awed or ignores_morale or state == AIState.DEAD:
 		return
@@ -1584,10 +1587,34 @@ func _check_awe(snapshot: Dictionary) -> void:
 		return
 	if not (snapshot.get("exists", false) and snapshot.get("alive", false) and snapshot.get("visible", false)):
 		return
-	if size_ratio() < ratio - 1e-6:
+	var r := size_ratio()
+	if r < ratio - 1e-6:
 		return
 	awed = true
-	on_morale_delta(-loss, "awe", now)
+	on_morale_delta(-awe_loss_at(r), "awe", now)
+
+
+## M9 gate (plan M6-M9 §5.14: from stage 4 "single humans flee on sight (awe at 6.1x)"): the morale the
+## awe of a target `ratio` times this unit's height costs - tactics.awe_morale_loss, or the morale_loss
+## of the tactics.awe_tiers entry with the largest ratio the target meets. A lone soldier's 35 of its 70
+## left it above its flee threshold of 25 before a stage-4 giant (10.97 m: 6.1x), so it fought to the end
+## (the M9 confirmation: the melee lone humans fled 0 % of their engaged time at stages 4-6); its tier at
+## 6.0x costs enough to send it running. Below the first tier (a stage-3 giant is 4.4x a soldier: the
+## Valley) the base loss holds, so the Valley's stages 1-3 are as they were.
+func awe_loss_at(ratio: float) -> float:
+	var loss := float(tactics.get("awe_morale_loss", 0.0))
+	var best := -INF
+	var tiers: Variant = tactics.get("awe_tiers", [])
+	if typeof(tiers) != TYPE_ARRAY:
+		return loss
+	for t: Variant in tiers:
+		if typeof(t) != TYPE_DICTIONARY:
+			continue
+		var at := float((t as Dictionary).get("ratio", 0.0))
+		if at > 0.0 and ratio >= at - 1e-6 and at > best:
+			best = at
+			loss = float((t as Dictionary).get("morale_loss", loss))
+	return loss
 
 
 ## on_noise() at peace: a blow turns the unit toward the attacker; nothing makes it aware.

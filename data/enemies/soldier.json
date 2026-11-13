@@ -62,7 +62,8 @@
 		"formation_spacing_m": 3.0,
 		"hold_attack": "ability.soldier_brace",
 		"awe_ratio": 4.0,
-		"awe_morale_loss": 35
+		"awe_morale_loss": 35,
+		"awe_tiers": [{"ratio": 6.0, "morale_loss": 50}]
 	},
 	"threat": 0.6,
 	"lockable": true,

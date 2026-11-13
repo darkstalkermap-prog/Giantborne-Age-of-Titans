@@ -89,7 +89,10 @@ static func fields() -> Dictionary:
 			"barrier_range_m": U.num(0.0), "charge_min_range_m": U.num(0.0),
 			"commander_bonus_morale": U.num(0.0), "formation_spacing_m": U.num(0.0),
 			"hold_attack": U.ref("action", false, true),
-			"awe_ratio": U.num(0.0), "awe_morale_loss": U.num(0.0)}},
+			"awe_ratio": U.num(0.0), "awe_morale_loss": U.num(0.0),
+			# M9 gate: larger targets cost more awe (EnemyBrain.awe_loss_at; the largest ratio met wins)
+			"awe_tiers": {"t": "array", "items": "dict", "item_fields": {
+				"ratio": U.num(0.0, null, true), "morale_loss": U.num(0.0, null, true)}}}},
 	})
 	(f.ai.fields as Dictionary).merge({
 		"awareness_radius_m": U.num(0.0),
