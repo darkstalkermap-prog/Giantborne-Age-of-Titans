@@ -3,13 +3,15 @@ extends IntegrationSuite
 ## balance target, the conqueror novice. In the M9 confirmation the novice died in her phase 2 in every
 ## attempt (six on each of three seeds, her lowest 9-14 %): the frenzy and the two whelps her roar called
 ## killed it as she neared the end. Her phase-2 numbers were eased - regeneration 15 -> 13 hp/s, one whelp,
-## the frenzy 55 + 65 -> 45 + 50 with a 1.8 s punish window - and the novice then slew her within the plan's
-## 1-3 deaths on the confirmation's three den saves. This suite keeps what those numbers mean:
+## the frenzy 55 + 65 -> 35 + 40 with a 3.0 s punish window (45 + 50 and 1.8 s first: the gate's own runs,
+## a level lower at the den, still lost all eighteen attempts) - and the novice slew her on all three seeds
+## from the gate's den save, within 1, 4 and 2 deaths (docs/BALANCE_LOG.md, "M9 gate"). This suite keeps what
+## those numbers mean:
 ##   * her phase 2 is still the harder phase (the plan, §5.13): it regenerates faster than her first, its
 ##     roar calls whelps and its frenzy is her heaviest blow;
 ##   * but the damage it can bring - its sequence's power per second of the sequence's time, plus the
 ##     whelps the roar calls swiping - stays within PHASE2_LETHALITY_MAX of her first phase's sequence: on
-##     the confirmation's numbers it was 3.0x (no novice attempt of 18 survived it), on these 1.9x;
+##     the confirmation's numbers it was 3.0x (no novice attempt of 18 survived it), on these 1.7x;
 ##   * and her phase 2 runs in the test den: entered once, it calls the record's whelps.
 
 const DEN := "res://scenes/test/troll_den_test.tscn"
