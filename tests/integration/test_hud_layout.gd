@@ -700,3 +700,86 @@ func test_discovery_lines_show_whole() -> void:
 	var drawn := _rect_in(hud, panel)
 	assert_true(hud.layout_regions(hud.size).discovery_toast.grow(0.5).encloses(drawn), "inside its region: %s" % drawn)
 	assert_near(drawn.size.y, panel.get_combined_minimum_size().y, 1.0, "as tall as its lines")
+
+
+## M9 gate (lane review): the hotbar's texts never collide. A slot's cooldown timer and its title were both
+## centred on the slot, so the timer printed over the ability's name; the cooldown shade was anchored to the box's
+## 44 px content while P39f's title spills 6 px past it on each side; a projectile slot's target label was 64 px
+## wide on a 64 px pitch, so two side by side touched and "» Shieldman" (66 px) was trimmed in every slot. With
+## every ability on cooldown, a slot's title is hidden while its timer shows (and shows again once ready); a full
+## shade covers the title; the target labels of every slot, as projectile slots' labels would sit, never
+## intersect, and each says what it says whole - the locked target's name, however long in the data, is the lock
+## line's.
+func test_hotbar_timer_shade_and_target_labels_never_collide() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var hud := _hud()
+	hud.player = p
+	await step_ticks(2)
+	for i in 2:
+		await get_tree().process_frame
+	var slots: Array = hud.get("_slots")
+	var c := p.controller
+	var cooled := 0
+	for slot: Dictionary in slots:
+		var id := str(c.loadout.get("ultimate" if int(slot.index) == 8 else "slot_%d" % (int(slot.index) + 1), ""))
+		if id != "":
+			c.cooldowns.start(id, 20.0, Sim.tick)
+			cooled += 1
+	hud.refresh()
+	await get_tree().process_frame
+	assert_true(cooled >= 5, "abilities on cooldown (%d)" % cooled)
+	var overlaps := PackedStringArray()
+	var uncovered := PackedStringArray()
+	for slot: Dictionary in slots:
+		var timer := slot.timer as Label
+		var title := slot.title as Label
+		if timer.text == "":
+			continue
+		var timer_box := _text_rect(hud, timer)
+		var title_box := _text_rect(hud, title)
+		if title.is_visible_in_tree() and title.text != "" and timer_box.intersects(title_box):
+			overlaps.append("slot %d: %s over %s" % [int(slot.index), timer.text, title.text])
+		var shade := _rect_in(hud, slot.cooldown as Control)
+		var inner := _rect_in(hud, slot.root as Control).grow(-(Hud.SLOT_SIZE.x - Hud.SLOT_TITLE_WIDTH) * 0.5)
+		if not shade.grow(0.5).encloses(_rect_in(hud, title)) or not shade.grow(0.5).encloses(inner):
+			uncovered.append("slot %d: shade %s, title %s, slot inside its border %s" % [int(slot.index), shade,
+				_rect_in(hud, title), inner])
+	assert_eq(overlaps, PackedStringArray(), "no timer prints over its slot's title")
+	assert_eq(uncovered, PackedStringArray(), "a full cooldown's shade covers the title, its spill included")
+	var first := slots[0] as Dictionary
+	assert_false((first.title as Label).visible, "the title hides while the timer shows")
+	c.cooldowns.clear()
+	hud.refresh()
+	assert_true((first.title as Label).visible and (first.timer as Label).text == "", "ready again: the title shows")
+	# The target labels: as projectile slots' would sit, side by side, they never intersect.
+	var labels: Array[Rect2] = []
+	for slot: Dictionary in slots:
+		labels.append(_rect_in(hud, slot.target as Control))
+	for i in range(labels.size() - 1):
+		assert_false(labels[i].intersects(labels[i + 1]), "the target labels of slots %d and %d do not touch: %s / %s" % [
+			i + 1, i + 2, labels[i], labels[i + 1]])
+	var target := first.target as Label
+	var font := target.get_theme_font("font")
+	var fs := target.get_theme_font_size("font_size")
+	for t: String in [Hud.TARGET_LOCKED, Hud.TARGET_AIM]:
+		assert_true(font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= labels[0].size.x,
+			"\"%s\" fits a target label whole (%.0f px)" % [t, labels[0].size.x])
+	# The longest name a lock can show in the data would not have fitted a slot's label: the lock line names it.
+	var longest := ""
+	for rec: Dictionary in GameData.records_of_type("enemy"):
+		var n := str(rec.get("display_name", ""))
+		if n.length() > longest.length():
+			longest = n
+	assert_true(font.get_string_size("» " + longest, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > labels[0].size.x,
+		"the longest enemy name (%s) is wider than a slot: the slots show the lock, not the name" % longest)
+
+
+## The box the label's text takes, centred as the label aligns it (tests: what is drawn, not the label's rect).
+static func _text_rect(hud: Hud, l: Label) -> Rect2:
+	var r := _rect_in(hud, l)
+	var font := l.get_theme_font("font")
+	var fs := l.get_theme_font_size("font_size")
+	var size := font.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+	var x := r.position.x + (r.size.x - size.x) * 0.5
+	var y := r.position.y + (r.size.y - font.get_height(fs)) * 0.5
+	return Rect2(x, y, size.x, font.get_height(fs))

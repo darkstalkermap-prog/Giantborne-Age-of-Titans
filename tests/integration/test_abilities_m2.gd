@@ -743,7 +743,12 @@ func test_hotbar_target_line_for_projectile_slots() -> void:
 	p.router.inject_edge(&"lock_press")
 	await step_ticks(2)
 	hud.refresh()
-	assert_eq(hud.slot_state(5).target, "» Practice Dummy", "locked: the selected target")
+	# M9 gate (lane review): the slot says the bolt flies to the lock; the lock line names the target, once
+	# (the slot's label named it, trimmed in a 64 px label on a 64 px pitch).
+	assert_eq(hud.slot_state(5).target, Hud.TARGET_LOCKED, "locked: the bolt flies to the lock")
+	await get_tree().process_frame
+	assert_true(str(hud.lock_line_now().get("text", "")).begins_with("Practice Dummy"),
+		"the lock line names the target (%s)" % hud.lock_line_now())
 
 
 func test_status_row_shows_the_players_statuses() -> void:

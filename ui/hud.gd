@@ -68,6 +68,14 @@ extends Control
 ##   carries (stackable items: iron, titan iron, wood), packed whole onto lines (loot_lines): it was one
 ##   unbacked line of every item, trimmed with "..." ("Loot: Iron Ingot x1, Ogre King's Tu..."). One-of-a-kind
 ##   trophies, keys and quest items are listed by the inventory screen (I).
+## M9 gate (lane review): the hotbar's texts no longer collide.
+## - A slot's cooldown timer and its title were both centred on the slot, so the timer printed over the
+##   ability's name: the title hides while the timer shows (the slot's keys and cost still say which it is).
+## - The cooldown shade was anchored to the box's 44 px content while P39f's title spills 6 px past it on each
+##   side: it now covers the slot inside its border (SLOT_TITLE_WIDTH square), rising from the bottom.
+## - A projectile slot's target label was 64 px wide on a 64 px pitch and named the lock ("» Shieldman", 66 px,
+##   trimmed in every slot; two projectile slots side by side touched): it is the slot's width and says only
+##   TARGET_LOCKED or TARGET_AIM - the locked target's name is the lock line's (the target frame), shown once.
 
 const MESSAGE_LIFETIME := 2.6
 ## M8 gate (F30): the message box's width, the lines it holds (one message may use all of them), the
@@ -101,6 +109,10 @@ const HOTBAR_HEIGHT := 76.0
 const SLOT_TITLE_WIDTH := 56.0
 const REASON_GAP := 6.0
 const REASON_EDGE_PX := 3.0
+## M9 gate (lane review): a projectile slot's target label - locked (the bolt flies to the lock, which the lock
+## line names) or free aim at the crosshair.
+const TARGET_LOCKED := "locked"
+const TARGET_AIM := "aim"
 ## P39f: the loot panel's width (its text LOOT_WIDTH less the panel's margins), the most lines it holds, and the
 ## separator between two items on a line.
 const LOOT_WIDTH := 300.0
@@ -339,10 +351,18 @@ func _make_slot(index: int) -> Dictionary:
 	var stack := Control.new()
 	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(stack)
+	# M9 gate (lane review): the shade covers the slot inside its border (inset as the title, SLOT_TITLE_WIDTH
+	# wide - the box's content is 44 px) and rises from its bottom to its top as the cooldown runs (_shade).
+	var spill := (SLOT_TITLE_WIDTH - (SLOT_SIZE.x - box.content_margin_left - box.content_margin_right)) * 0.5
+	var inset := (SLOT_SIZE.x - SLOT_TITLE_WIDTH) * 0.5
 	var cooldown := HudKit.rect(Color(0, 0, 0, 0.6))
 	cooldown.anchor_right = 1.0
 	cooldown.anchor_top = 1.0
 	cooldown.anchor_bottom = 1.0
+	cooldown.offset_left = -spill
+	cooldown.offset_right = spill
+	cooldown.offset_bottom = box.content_margin_bottom - inset
+	cooldown.offset_top = cooldown.offset_bottom
 	stack.add_child(cooldown)
 	var key := HudKit.label("", HudKit.SMALL, UiKit.TEXT)
 	key.position = Vector2(0, -4)
@@ -357,7 +377,6 @@ func _make_slot(index: int) -> Dictionary:
 	var title := HudKit.label("", HudKit.SMALL)
 	title.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# P39f: the name may use the slot's whole inner width (SLOT_TITLE_WIDTH), past the box's side margins.
-	var spill := (SLOT_TITLE_WIDTH - (SLOT_SIZE.x - box.content_margin_left - box.content_margin_right)) * 0.5
 	title.offset_left = -spill
 	title.offset_right = spill
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -389,18 +408,30 @@ func _make_slot(index: int) -> Dictionary:
 	# P16: a reason wider than the slot ("Out of range") grows to both sides, staying centred.
 	reason.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	stack.add_child(reason)
-	# Selected target of projectile slots ("» Soldier" when locked, otherwise "aim"), above the slot.
+	# Selected target of projectile slots (TARGET_LOCKED when locked, otherwise TARGET_AIM), above the slot.
+	# M9 gate (lane review): as wide as the slot (it was 64 px on a 64 px pitch), so two never touch.
 	var target := HudKit.label("", HudKit.SMALL, UiKit.TEXT)
 	target.anchor_right = 1.0
-	target.offset_left = -10
-	target.offset_right = 10
+	target.offset_left = -box.content_margin_left
+	target.offset_right = box.content_margin_right
 	target.offset_top = -16
 	target.offset_bottom = -4
 	target.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	target.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	stack.add_child(target)
 	return {"root": root, "cooldown": cooldown, "key": key, "pad": pad, "title": title, "cost": cost,
-		"timer": timer, "reason": reason, "target": target, "index": index}
+		"timer": timer, "reason": reason, "target": target, "index": index,
+		"shade_top": box.content_margin_top - inset, "shade_bottom": box.content_margin_bottom - inset}
+
+
+## M9 gate (lane review): a slot's cooldown shade `frac` full (1 right after the cast): from the slot's inner bottom
+## up to that fraction of its inner height (anchored to the box's content, whatever height the row gives it).
+static func _shade(slot: Dictionary, frac: float) -> void:
+	var shade := slot.cooldown as ColorRect
+	var top := float(slot.shade_top)
+	var bottom := float(slot.shade_bottom)
+	shade.anchor_top = 1.0 - frac
+	shade.offset_top = bottom - frac * (top + bottom)
 
 
 func _build_center() -> void:
@@ -914,11 +945,12 @@ func _update_slots(c: CombatController, _pools: ResourcePool) -> void:
 		var root: PanelContainer = slot.root
 		if def == null:
 			(slot.title as Label).text = "ULT" if is_ultimate else ""
+			(slot.title as Label).visible = true
 			(slot.cost as Label).text = ""
 			(slot.timer as Label).text = ""
 			(slot.reason as Label).text = ""
 			(slot.target as Label).text = ""
-			(slot.cooldown as ColorRect).offset_top = 0
+			_shade(slot, 0.0)
 			root.modulate = Color(1, 1, 1, 0.45)
 			_slot_states[i] = {"id": "", "reason_code": "", "reason": "", "target": "", "key": key_text,
 				"alt_key": alt_text}
@@ -935,8 +967,9 @@ func _update_slots(c: CombatController, _pools: ResourcePool) -> void:
 		(slot.cost as Label).text = " ".join(costs)
 		var remaining := c.cooldowns.remaining_s(def.id, Sim.tick)
 		var frac := c.cooldowns.remaining_fraction(def.id, Sim.tick)
-		(slot.cooldown as ColorRect).offset_top = -60.0 * frac
+		_shade(slot, frac)
 		(slot.timer as Label).text = ("%.1f" % remaining) if remaining > 0.0 else ""
+		(slot.title as Label).visible = remaining <= 0.0   # M9 gate (lane review): the timer, not the name over it
 		var slot_key := "ultimate" if is_ultimate else "slot_%d" % (i + 1)
 		var params := _preview_params(slot_key, def, providers)
 		var code := c.preview_reason(&"ultimate" if is_ultimate else &"slot", params)
@@ -945,7 +978,7 @@ func _update_slots(c: CombatController, _pools: ResourcePool) -> void:
 		var target := ""
 		if def.hit_shape == "projectile":
 			var locked := player.locked_entity()
-			target = ("» %s" % locked.display_name()) if locked != null and locked.is_alive() else "aim"
+			target = TARGET_LOCKED if locked != null and locked.is_alive() else TARGET_AIM
 		(slot.target as Label).text = target
 		_slot_states[i] = {"id": def.id, "reason_code": code, "reason": reason, "target": target,
 			"key": key_text, "alt_key": alt_text}
@@ -1019,7 +1052,7 @@ static func reason_text(code: String, def: ActionDef) -> String:
 
 
 ## What hotbar slot `index` (0-7 = slots 1-8, 8 = ultimate) shows now: {"id", "reason_code"
-## (the preview_reason code), "reason" (its text), "target" (projectile slots)}.
+## (the preview_reason code), "reason" (its text), "target" (projectile slots: TARGET_LOCKED or TARGET_AIM)}.
 func slot_state(index: int) -> Dictionary:
 	if index < 0 or index >= _slot_states.size():
 		return {}

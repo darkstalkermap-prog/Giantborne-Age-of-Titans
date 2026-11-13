@@ -146,7 +146,7 @@ func test_runic_bolt_locked_beyond_its_reach_is_out_of_range_and_spends_nothing(
 	hud.refresh()
 	assert_eq(hud.slot_state(5).reason_code, "out_of_range", "the hotbar previews the range check")
 	assert_eq(hud.slot_state(5).reason, "Out of range", "and says so")
-	assert_eq(hud.slot_state(5).target, "» Practice Dummy", "still naming the locked target")
+	assert_eq(hud.slot_state(5).target, Hud.TARGET_LOCKED, "still showing the lock (the lock line names it; M9 gate)")
 	var pools := p.entity.combatant.pools
 	var essence := pools.essence
 	p.router.inject_edge(&"slot_6")
