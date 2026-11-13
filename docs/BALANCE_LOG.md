@@ -1756,7 +1756,9 @@ camp's wall a few metres further west (lane aldmere's "Left:"). No unit's or abi
 was rebuilt (no layout or builder data changed). The runs here: one or two Godot processes at a time beside the other
 M9 gate lanes' on the 4-CPU container (load average 4-10), `--perf --bot-trace=1` on each; the lane's evidence is in
 `m9_gate/ironreg/` (`exp/<name>/` holds the code each batch ran: `base` is `5c57636`, lane aldmere's head; `after` is
-`10c5058`, this lane's code - the lane's later commits are a comment, docs and a `.uid` file).
+`10c5058`, this lane's code - the lane's later commits are a comment, docs and a `.uid` file). Fix-up 1 (the lane's
+verifier; "Fix-up 1" below) took back one part of commit `23d4d3c` - the start of an oath's road as a completion
+request - and measured again the runs it could touch (`fix1_*`, on `bb8fab5`; its evidence in `m9_gate/ironreg/fixup-1/`).
 
 ```
 # lane aldmere's head (base), then this lane's code (after): the same command on each copy
@@ -1811,11 +1813,14 @@ were weighed:
   and a structure kept outside it would split them;
 - a respawn nearer the bailey - none to give: the next waystones are the Aldmere road's (470, 60), 215 m off, and
   the shrine (420, -40), 230 m, both through the war camp;
-- **the general rule, made**: the start of an oath's road is checkpointed as the oath it leads to is - as a
-  completion request, at once whoever is aware about (an engaged boss fight still holds it back). A quest is an oath's
-  road when one of its stages writes an oath's done flag (`GameSession.settles_an_oath`): `quest.iron_regiment` (the
-  gate's fall) and `quest.war_engines` (the deserters' word on the engines, or the first of them wrecked), no other. The
-  respawn stays where it is.
+- **the breach's own checkpoint no longer waiting on the garrison** - made, by the garrison's stand-down after the
+  breach (the stage-5 paragraph below): once the gate has fallen no one of the garrison is aware of the giant, and the
+  breach's ordinary request is committed at once (in the gate test 9 ticks after the gate fell: the director weighs the
+  stand-downs every half second), before he can reach the bailey and its battle. The respawn stays where it is. The
+  lane first made it a rule of its own too - the start of an oath's road, `quest.iron_regiment` and
+  `quest.war_engines` (`GameSession.settles_an_oath`), a completion request taken at once whoever is aware about - and
+  fix-up 1 took that back (below): it committed the war camp's first wreck mid-fight, and a death came back to the
+  roused camp's fire; for the breach it added nothing the stand-down does not give.
 
 A death in the bailey now reloads the breach: the gate broken, the giant at the fort gate's waystone with at least the
 death floor's 60 % of his health. A quit and Continue after the breach does the same (the save is the checkpoint).
@@ -1833,20 +1838,21 @@ it) - or strikes one of its members (the encounter's provoked flag ends a stand-
 fights a giant breaking the gate, and the breach still offends Aldmere. On a death in the bailey the reload comes back
 to a standing-down garrison and the giant walks in to a fresh attempt.
 
-`tests/gate/test_fort_breach_reload.gd` (new; 2 tests, 60 checks, 11 s in the full check) breaks the gate at stage 4 with the
-garrison aware (the crown first) and at stage 5 with Brannock's banner, and asserts: the breach checkpointed within
-2 s; the garrison standing down at its posts, none aware; after a death, the gate still broken and the garrison
-standing down at the waystone; the walk from the waystone into the bailey untouched by it; the battle engaging again
-for a full attempt; the garrison's wall crews serving their ballistae for Aldmere, and from the Charge the bastions'
-pair shooting. On lane aldmere's code 16 failures: at stage 4 the breach was never checkpointed (blocked by the 17
-aware), so after the death the gate stood whole and the walk ended at z -92 against it; at stage 5 the 17 were aware
-of the giant at the waystone and a wall archer hit him on the way in. Two tests were changed on purpose, as the
-behaviour they encode changed: `test_aldmere_stonehold_content.test_fort_aldmere_has_its_real_gate_and_garrison`
-asserted that the garrison does not stand down once the gate is breached (now: it does while the giant has not entered
-the bailey, and not once he has or the battle is settled), and `test_iron_regiment_reload` asserted that a request
-deferred by an aware enemy before the battle is still uncommitted after the Wall's fall (the gate's fall, which starts
-the crown's road, now takes it as a completion request before the battle engages; the test still asserts that none
-is committed while the battle is engaged and that the last checkpoint does not hold the Wall's fall).
+`tests/gate/test_fort_breach_reload.gd` (new; 2 tests and 60 checks as the lane first made it, 11 s in the full check; 3
+tests and 91 checks since fix-up 1) breaks the gate at stage 4 with the garrison aware (the crown first) and at stage 5
+with Brannock's banner, and asserts: the breach checkpointed within 2 s - since fix-up 1, with the garrison standing
+down and none of it aware as it is taken; the garrison standing down at its posts, none aware; after a death, the gate
+still broken and the garrison standing down at the waystone; the walk from the waystone into the bailey untouched by
+it; the battle engaging again for a full attempt; the garrison's wall crews serving their ballistae for Aldmere, and
+from the Charge the bastions' pair shooting. On lane aldmere's code 16 failures of the first 60: at stage 4 the breach
+was never checkpointed (blocked by the 17 aware), so after the death the gate stood whole and the walk ended at z -92
+against it; at stage 5 the 17 were aware of the giant at the waystone and a wall archer hit him on the way in. One test
+was changed on purpose, as the behaviour it encodes changed:
+`test_aldmere_stonehold_content.test_fort_aldmere_has_its_real_gate_and_garrison` asserted that the garrison does not
+stand down once the gate is breached (now: it does while the giant has not entered the bailey, and not once he has or
+the battle is settled). The lane had changed `test_iron_regiment_reload` too, for the completion request; fix-up 1
+gave it back as lane aldmere left it, and it passes (87 checks): a request deferred by an aware enemy before the battle
+is held by that enemy through the gate's fall, then by the battle, and is still uncommitted after the Wall's fall.
 
 ### The crown-first order unassisted, before and after
 
@@ -1942,9 +1948,79 @@ compared are the same as lane aldmere's table):
 
 Seeds 1 and 2 now replay the confirmation's runs - the same stage times, damage taken and oath times: nothing in
 them meets the wall any more (lane aldmere's post held both at its east end and their paths diverged from there) - and
-seed 3, which kept to the road on lane aldmere's post too, replays lane aldmere's run. No run met the wall; the
-sabotage's own checkpoint (`quest.war_engines`' start, now a completion request) changes nothing a run plays. So the
-camp's sabotage is as the confirmation measured it, and not harder for either move of the wall.
+seed 3, which kept to the road on lane aldmere's post too, replays lane aldmere's run. No run met the wall. So the
+camp's sabotage is as the confirmation measured it, and not harder for either move of the wall. (These runs had the
+sabotage's start as a completion request: it committed the first wreck mid-fight, which none of them paid for - none
+died at the camp. "Changes nothing a run plays", as this paragraph first said, held only for them: a death in the camp's
+fight came back to its fire; fix-up 1, below.)
+
+### Fix-up 1: the start of the crown's roads is an ordinary request again (the lane's verifier)
+
+The lane's verifier found two problems with commit `23d4d3c`'s checkpoint rule; both were reproduced on the lane's head
+(`8ec41cb`; probes, logs and code copies in `m9_gate/ironreg/fixup-1/`).
+
+- **The sabotage's first wreck was checkpointed mid-fight** (major). `GameSession.settles_an_oath` made the start of
+  `quest.war_engines` a completion request as well as `quest.iron_regiment`'s, and the war camp's west catapult - whose
+  wreck starts it and offends Aldmere - stands 18 m from the Aldmere road's waystone (470, 60). The verifier's probe
+  (`test_zz_vir_camp`: a stage-4 New Game at that waystone, the catapult wrecked, then a death): on `8ec41cb` the
+  checkpoint was committed in the wreck's tick (tick 93, `quest_started`) with `camp_crew_2` aware within 40 m; after the
+  reload the giant stood at the waystone with the wreck kept and Aldmere at war, and the camp's two ballistae, its east
+  catapult and two riders hit him 14 times - a giant standing still was dead within 40 s (976 damage). With the rule
+  taken back (`bb8fab5`) the request waits on the aware crew and the death drops it: the reload has the camp at peace,
+  nothing wrecked, and nothing hits him in 40 s.
+- **No test failed without the rule** (minor). Reproduced: with the rule taken back, `test_fort_breach_reload` as the
+  lane left it passed all 60 checks - once the gate falls the garrison stands down and no one is aware of the giant, so
+  the breach's ordinary request commits within half a second (tick 180, 9 ticks after the gate fell). The rule was
+  needed for nothing the stand-down does not give.
+
+**The fix** (commit `bb8fab5`): the rule is taken back - `settles_an_oath` is gone and `_on_quest_started` asks for an
+ordinary checkpoint again, as on lane aldmere's code (`game_session.gd` differs from it only in its notes). What keeps
+the breach through a death is the garrison's stand-down: the breach's request is taken as the garrison stands down,
+with nothing aware of the giant. A breach with another enemy aware within 40 m (a wandering Aldmere column or cavalry
+squadron) waits for it as any ordinary request does, and a death before it is taken loses the breach, as before the
+lane - the rule's one gain, and not worth a checkpoint taken mid-fight. `test_iron_regiment_reload`, which the lane had
+changed for the rule, is lane aldmere's again and passes (87 checks): a request deferred by an aware enemy before the
+battle is held by that enemy through the gate's fall, then by the battle.
+
+**The tests** (`tests/gate/test_fort_breach_reload.gd`, 3 tests, 91 checks, about 20 s): the breach's checkpoint is
+taken with the garrison standing down and none of it aware of the giant; at stage 4 a blow on a stood-down pikeman after
+that checkpoint rouses the garrison (P29's provoked flag) but is not in it, and the death comes back to the garrison
+standing down; and `test_the_war_camps_first_wreck_is_not_checkpointed_mid_fight` - the probe's case: the wreck starts
+the sabotage and Aldmere's war, its request waits as an ordinary one while `camp_crew_2` is aware, a death reloads the
+waystone with the catapult whole, the camp at peace and the sabotage not begun, and in 30 s there with the giant's own
+health at stake no camp member or engine strikes him. On `8ec41cb`: 10 failures of 91 (the stage-4 breach committed at
+tick 171 with 17 of the garrison aware; the camp's case 8 - the wreck committed, after the death the wreck and the war
+kept and 12 hits in 30 s, the giant at 64 of 950). On `bb8fab5`: 0. With the garrison's stand-down taken out as well
+(lane aldmere's `stand_down_when`): 18 failures of 89 (the breach never checkpointed at stage 4; at stage 5 the roused
+garrison aware at the waystone and an archer's hit on the way in) - each half of the lane's fix fails the suite alone.
+
+**The runs again** (`fix1_*` on `bb8fab5`; the commands as above, the tags `fix1_ir4`, `fix1_ir5`, `fix1_crown_assist`,
+`fix1_crown_assist_s2`, `fix1_crown_expert_s2`, `fix1_mixed_s1`-`s3`): the change touches a run only where the gate
+falls or a war engine is wrecked. The expert's seed 1 did neither (it died at the Raiders' Hollow and before the gate
+fell), so it plays as `ironreg_after_crown_expert` did and was not run again.
+
+| Run (`fix1_*`, `bb8fab5`) | The lane's (`ironreg_after_*`, `10c5058`) | Fix-up 1 |
+| --- | --- | --- |
+| `fix1_ir4` (`w.order_crown:novice:2`, until the crown's oath) | lost: 6 deaths (507, 588, 670, 744, 818, 921 s), the battle's lows 0.98 / 0.69 / 0.65 / 1.0 / 1.0, the Charge at 584 and 663 s; after each death into the bailey with the gate broken | **the same, to the tick** |
+| `fix1_ir5` (`w.peaceful:novice:1`, the march's help, then the breach) | won at the third attempt: Corvane spared at 1,355 s, 3 deaths (a raider on the road, a rider, the west bastion's ballista) | **the same** |
+| `fix1_crown_assist` (`w.order_crown:novice:1:assist`, the whole order) | completed at 1,816 s, no death | **the same** |
+| `fix1_crown_assist_s2` (`w.order_crown:novice:2:assist`, until the crown's oath) | the crown's oath at 1,069 s, one death (the west bastion's ballista at 713 s; the reload kept the breach) | **the same** |
+| `fix1_crown_expert_s2` (`w.order_crown:expert:2`, until the crown's oath) | lost: 6 deaths (478-947 s), lows 0.92 / 0.73 / 0.78 / 0.71 | **the same** |
+| `fix1_mixed_s1`-`s3` (`w.mixed:novice:1-3`, until the crown's oath) | the crown's oath by sabotage at 714, 757 and 726 s; deaths 1, 0, 1, none at the camp | **the same** |
+
+Every run ends with the same flags hash, XP and level and its deaths at the same ticks (`fixup-1/compare_*.txt`). The
+breach's checkpoint is now taken a few ticks later, as the garrison stands down, and in every run the reloads after it
+gave back the same state; no sabotage run died between its first wreck and the checkpoint after it. So the lane's
+measurements above stand for this code.
+
+**Left from it**: the sabotage's start is an ordinary request, and an ordinary request is committed as soon as no enemy
+within 40 m is aware of the giant - after the first wreck, a giant who steps off the camp or chases a rider out of it has
+the wreck and Aldmere's war checkpointed, and a death after that comes back to the Aldmere road's waystone under the
+camp's fire. A probe (`fixup-1/probes/test_zz_fix1_camp_later.gd`: the wreck, the giant 80 m off at (400, 40), the request
+committed at once, a death) found 12 hits in 30 s there and a standing giant at 64 of 950, on `bb8fab5` and on lane
+aldmere's head `5c57636` alike: older than this lane, which only made it follow every death after the first wreck. Not
+fixed here - Aldmere has no respawn guard (`respawn_guard_m`, `FactionState.respawn_refusal`) because one would refuse
+the fort gate's waystone after the breach too; FOLLOWUPS has the row and the levers. No sabotage run died at the camp.
 
 ### Left
 
@@ -1960,3 +2036,5 @@ camp's sabotage is as the confirmation measured it, and not harder for either mo
 - **The bar's notches with ballistae broken**: the phases follow the units and the bar still counts the engines, so the
   bar can pass a notch before its phase begins (the pips show the phase). A player-facing detail for P40's polish if it
   reads wrongly in a playtest.
+- **A death in the war camp's sabotage after its start was checkpointed** (fix-up 1, "Left from it" above): the Aldmere
+  road's waystone under the roused camp's fire; older than this lane; FOLLOWUPS has the levers.
