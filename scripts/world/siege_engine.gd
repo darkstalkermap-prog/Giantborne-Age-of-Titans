@@ -47,6 +47,10 @@ extends BreakableProp
 ## A faction (this placement's `faction`; "" = always hostile) makes the engine follow its standing as
 ## a faction member does: at peace its team is NEUTRAL (it never shoots; the giant may not lock it),
 ## hostile it is ENEMY.
+##
+## M9 gate (lane aldmere): `fire_held` - a battle holds an engine's fire until the phase that brings it
+## (BattleBoss: Fort Aldmere's gate-bastion ballistae join at the Charge, plan §5.13). While held it
+## neither turns nor shoots (can_shoot false); its crew stays at its place and it counts as uncrewed.
 
 const GROUP := "siege_engines"
 ## Launches at one target stay at least this far apart (with every other ranged attacker's).
@@ -108,6 +112,8 @@ var crewed := false
 var holder_id := ""
 ## Whether a giant threw it (it smashes where it lands).
 var thrown := false
+## M9 gate: a battle holds its fire until its phase (see the notes; BattleBoss sets and clears it).
+var fire_held := false
 
 var _crew: Array = []                 ## EnemyActor (weak: freed members are pruned)
 var _target_id := ""                  ## the entity the running shot is aimed at
@@ -286,9 +292,20 @@ func is_staggered() -> bool:
 	return controller != null and controller.state == CombatController.State.STAGGERED
 
 
-## True while it may shoot: standing, free (not held), hostile.
+## True while it may shoot: standing, free (not held), hostile, its fire not held by a battle (M9 gate).
 func can_shoot() -> bool:
-	return not destroyed and entity.is_alive() and holder_id == "" and entity.team == CombatEntity.Team.ENEMY
+	return not destroyed and entity.is_alive() and holder_id == "" and entity.team == CombatEntity.Team.ENEMY \
+		and not fire_held
+
+
+## M9 gate: a battle holds (true) or frees (false) this engine's fire (see the notes); crewed follows at once.
+func set_fire_held(held: bool) -> void:
+	if fire_held == held:
+		return
+	fire_held = held
+	if held:
+		_release_token()
+	_refresh_crewed()
 
 
 ## The place of crew member `actor` (global; Vector3.INF when it does not serve this engine).

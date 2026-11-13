@@ -57,8 +57,20 @@ extends BossArena
 ##         count as fallen (and nothing in the bar), and a unit of a begun phase that left the world without
 ##         falling (despawned) is called back (_recall_despawned: its encounter activated again);
 ##       - the room the battle reserved is released if its node leaves the tree engaged.
+##   * M9 gate (lane aldmere; plan §5.13: "The Wall ... two wall ballistae fire", "The Charge ... all four
+##     ballistae fire"): an engine of the battle that a later phase's encounter names in its `engines` list
+##     (with its own crew, or none: a crew of another encounter serves it) holds its fire until that phase
+##     begins (SiegeEngine.set_fire_held; engine_phase, held_engines): Fort Aldmere's Charge names the gate
+##     bastions' two ballistae, which the gate garrison's wall crews serve, so the Wall faces the two inner
+##     ballistae its own encounter crews and the Charge and the Last Stand all four. Before, all four shot
+##     from the Wall's first blow - the bastion pair 16 m up behind a giant at the bailey's gate end, which
+##     a stage-4 giant can neither reach nor see from there - and killed the novice at stage 4 before the
+##     Charge (docs/BALANCE_LOG.md, "M9 gate (lane aldmere)"). A reset, a win or the node leaving the tree
+##     frees every hold.
 
 const BATTLE_GROUP := "battle_bosses"
+## M9 gate: the engines' holds are applied again this often while engaged (an engine streamed in since).
+const ENGINE_HOLD_CHECK_TICKS := 30
 
 ## The battle's boss id (boss_engaged, boss_yielded, boss_disengaged, boss_defeated, the music).
 @export var battle_id := "battle.iron_regiment"
@@ -82,6 +94,8 @@ var surrendered := false
 var stood_out: Array[String] = []
 ## M8 release (R1): the encounters whose cleared flag the battle lifted as it loaded (tests, debug).
 var repaired: Array[String] = []
+## M9 gate: the battle's engines whose fire this attempt holds until their phase (world id -> phase index).
+var held_engines: Dictionary = {}
 var _planned: Dictionary = {}   # entity id -> max health of the planned composition (this attempt)
 var _unit_encounter: Dictionary = {}   # planned entity id -> its encounter id
 var _engine_max: Dictionary = {}   # world id -> max health
@@ -105,6 +119,7 @@ func _exit_tree() -> void:
 		var d := _director()   # M8 release (R1): an attempt left engaged keeps no room in the caps
 		if d != null:
 			d.p34_release(battle_id)
+	_free_engine_holds()   # M9 gate
 
 
 func _ready() -> void:
@@ -228,6 +243,8 @@ func _on_post_resolve(tick: int) -> void:
 ## Phases by the aggregate fraction (each once per attempt); the guard's break in the last phase.
 func _battle_step(tick: int) -> void:
 	_recall_despawned()
+	if tick % ENGINE_HOLD_CHECK_TICKS == 0:
+		_apply_engine_holds()   # M9 gate: an engine that streamed in since
 	var frac := aggregate_fraction()
 	var next := phase_index + 1
 	while next < phases.size() and (frac <= float(phases[next].get("below", 0.0)) + 1e-6 or _phase_spent()):
@@ -277,6 +294,44 @@ func _begin_phase(i: int, tick: int) -> void:
 		d.update_now()
 	if i > 0:
 		Events.boss_phase_changed.emit(tick, battle_id, i + 1)
+	_apply_engine_holds()   # M9 gate: the engines this phase brings shoot from now on
+
+
+## M9 gate: the phase (0-based) that brings engine `world_id` into the fight - the first phase whose
+## encounters name it in their `engines` lists; 0 (the first blow) when none does.
+func engine_phase(world_id: String) -> int:
+	for i in phases.size():
+		for enc_id: Variant in (phases[i] as Dictionary).get("encounters", []):
+			for entry: Variant in GameData.get_record(str(enc_id)).get("engines", []):
+				if typeof(entry) == TYPE_DICTIONARY and str(entry.get("engine", "")) == world_id:
+					return i
+	return 0
+
+
+## M9 gate: while engaged, holds the fire of each of the battle's engines whose phase has not begun and
+## frees the rest (see the notes).
+func _apply_engine_holds() -> void:
+	var d := _director()
+	for id in engines:
+		var ph := engine_phase(id)
+		var hold := state == State.ENGAGED and ph > phase_index
+		if hold:
+			held_engines[id] = ph
+		else:
+			held_engines.erase(id)
+		var e := d.p32_engine(id) if d != null else null
+		if e != null:
+			e.set_fire_held(hold)
+
+
+## M9 gate: frees every engine whose fire the battle holds (a reset, a win, the node leaving the tree).
+func _free_engine_holds() -> void:
+	var d := _director()
+	for id in engines:
+		var e := d.p32_engine(id) if d != null else null
+		if e != null and e.fire_held:
+			e.set_fire_held(false)
+	held_engines.clear()
 
 
 ## True when every unit the phases begun so far fielded has fallen (or fled): the next phase begins
@@ -506,6 +561,7 @@ func _reset_attempt() -> void:
 	phase_index = -1
 	phase_log.clear()
 	surrendered = false
+	_free_engine_holds()   # M9 gate
 
 
 ## The battle is over (won, or its commander slain): the room its plan reserved is released (F9).
@@ -514,6 +570,7 @@ func _defeat(tick: int) -> void:
 	var d := _director()
 	if d != null:
 		d.p34_release(battle_id)
+	_free_engine_holds()   # M9 gate
 
 
 func debug_lines() -> PackedStringArray:
