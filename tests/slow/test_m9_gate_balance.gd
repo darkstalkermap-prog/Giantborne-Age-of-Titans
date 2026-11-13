@@ -2,7 +2,9 @@ extends IntegrationSuite
 ## M9 gate (lane "balance"; docs/BALANCE_LOG.md, "M9 gate"): the fixes of the W23 confirmation's misses.
 ##   * awe tiers (EnemyBrain.awe_loss_at, tactics.awe_tiers): a lone soldier flees a stage-4 giant on sight
 ##     (plan §5.14: "single humans flee on sight (awe at 6.1x)"), a stage-3 one costs it the base 35 of its
-##     70 morale as before (the Valley's stages 1-3 unchanged), and a formation's pikeman has no tier;
+##     70 morale as before (the Valley's stages 1-3 unchanged), and a formation's pikeman has no tier; a soldier
+##     a tier sent running whose morale comes back with its leader alive routs straight from its flight when no
+##     formation takes it, and takes a formation's free slot when one does (it never walks back to the giant);
 ##   * the world bot walks past a formation that holds its ground off its way (the road to Brannock and the
 ##     Raiders' Hollow), and fights it once it closes in, braces, or stands where the objective leads;
 ##   * an engine that shot at the giant is sought from SIEGE_SHOT_SEEK_M (the walk to the Moot passed the
@@ -118,6 +120,89 @@ func test_a_lone_soldier_flees_a_stage_4_giant_on_sight_and_not_a_stage_3_one() 
 	await step_ticks(2)
 	assert_near(pike.brain.awe_loss_at(6.1), float(pike.brain.tactics.get("awe_morale_loss", 0.0)), 1e-6,
 		"a pikeman has no tier: formations keep their ground as they did")
+
+
+## A soldier with its AI off standing for the encounter's commander: placed units share the encounter "", so
+## while it lives it is every placed soldier's leader (EnemyActor._has_leader_now).
+func _commander(pos: Vector3) -> SoldierEnemy:
+	var c := spawn_soldier(pos, 0.0, "test.m9_commander", false)
+	c.commander = true
+	return c
+
+
+## Follows `s` (in flight) until its flight ends: {"after": its state on the first tick out of FLEE, "morale":
+## its morale then (the decision that ended the flight recovered it first), "leader": whether it had a leader
+## on its last tick in flight, "ended": false when it was still in flight after `max_ticks`}.
+func _follow_flight(s: SoldierEnemy, max_ticks: int) -> Dictionary:
+	var seen := {"after": -1, "morale": 0.0, "leader": false, "ended": false}
+	seen.ended = await TestWait.until(self, func() -> bool:
+		if s.brain.state == EnemyBrain.AIState.FLEE:
+			seen.leader = s.brain.has_leader()
+			return false
+		seen.after = s.brain.state
+		seen.morale = s.brain.morale
+		return true, max_ticks)
+	return seen
+
+
+## The M9 gate's verification: the flight of the lone soldier above ends in the rout it has without a leader
+## (ai.rout_after_s), the old rule. The Millford raid's raiders had one - their commander - so their flight
+## ended in P04's regroup once their morale came back above regroup_morale, and they walked back to the raid.
+## A soldier an awe tier sent running that recovers with its leader alive routs straight from its flight when
+## no formation takes it, and joins one when one does; it never turns back towards the giant it fled.
+func test_a_tier_awed_soldier_with_a_leader_routs_or_joins_a_formation_never_comes_back() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	var cmd := _commander(Vector3(-30, 0.05, -30))
+	var regroup := 0.0
+	# No formation near: it routs when its morale comes back, with its leader alive.
+	var led := _soldier_facing_giant(Vector3(0, 0.05, -14), "test.m9_led_1")
+	regroup = float(led.brain.ai.get("regroup_morale", 45.0))
+	await TestWait.until(self, func() -> bool: return led.brain.state == EnemyBrain.AIState.FLEE, 120)
+	assert_eq(led.brain.state, EnemyBrain.AIState.FLEE, "a lone soldier flees a stage-4 giant on sight")
+	assert_true(led.brain.awed_at_tier, "awed by its tier")
+	var flight := await _follow_flight(led, 60 * 40)
+	assert_true(flight.ended, "its flight ends")
+	assert_true(flight.leader, "with its leader (the commander) alive: no leaderless rout (ai.rout_after_s)")
+	assert_true(float(flight.morale) > regroup,
+		"its morale came back above regroup_morale (%.1f > %.0f): P04 would regroup it" % [float(flight.morale), regroup])
+	assert_eq(int(flight.after), EnemyBrain.AIState.ROUTED,
+		"it routs straight from its flight (not APPROACH or ALERT: it does not come back)")
+	await step_ticks(60 * 3)
+	assert_eq(led.brain.state, EnemyBrain.AIState.ROUTED, "and stays routed")
+	assert_false(led.brain.aware, "out of the fight")
+	assert_true(cmd.entity.is_alive(), "(its commander still lives)")
+	led.queue_free()
+	await step_ticks(2)
+	# A formation of its faction with a free slot within Formation.JOIN_RADIUS_M of where its flight ends: it
+	# takes the slot (P30's joining) instead.
+	f = Formation.new()
+	f.id = "test.m9_join"
+	f.kind = "pike"
+	f.ranks = 1
+	f.files = 6
+	f.rank_spacing_m = 1.6
+	f.file_spacing_m = 1.4
+	f.place(Vector3(16, 0, -30), PI * 0.5)
+	Formation.register(f)
+	for i in 5:
+		f.add_member(TestSpawn.enemy(world, PIKEMAN, f.slot_position(i), "test.m9_join_pike_%d" % i, false, PI * 0.5), i)
+	f.set_banner(TestSpawn.enemy(world, BANNERMAN, f.slot_position(Formation.BANNER_SLOT), "test.m9_join_banner", false, PI * 0.5))
+	await step_ticks(2)
+	assert_eq(f.free_slots().size(), 1, "one slot free")
+	var joiner := _soldier_facing_giant(Vector3(0, 0.05, -14), "test.m9_led_2")
+	await TestWait.until(self, func() -> bool: return joiner.brain.state == EnemyBrain.AIState.FLEE, 120)
+	assert_eq(joiner.brain.state, EnemyBrain.AIState.FLEE, "it flees the stage-4 giant on sight too")
+	assert_true(joiner.brain.awed_at_tier, "awed by its tier")
+	assert_eq(joiner.brain.formation_id, "", "no formation took it before its flight")
+	flight = await _follow_flight(joiner, 60 * 40)
+	assert_true(flight.ended and bool(flight.leader) and float(flight.morale) > regroup,
+		"its flight ends with its leader alive and its morale above regroup_morale")
+	assert_true(int(flight.after) != EnemyBrain.AIState.ROUTED, "a formation took it: it does not rout")
+	assert_eq(joiner.brain.formation_id, f.id, "it ends its flight in the formation")
+	assert_true(f.members.has(joiner), "in one of its slots")
+	await TestWait.until(self, func() -> bool: return joiner.brain.state == EnemyBrain.AIState.HOLD, 60)
+	assert_eq(joiner.brain.state, EnemyBrain.AIState.HOLD, "holding its slot, not walking back to the giant")
+	assert_eq(f.free_slots().size(), 0, "the formation is full")
 
 
 ## The Raiders' Hollow (gate_world's w.peaceful:novice:1): a shieldman thrown 30 m up came down through the
