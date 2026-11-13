@@ -14,7 +14,9 @@ extends Node
 ##     farther than leash_radius_m from its centre (begin_leash_return() and encounter_leashed;
 ##     they engage again once home; members of an intact formation excepted - their formation holds
 ##     them, see the P30 notes; a member on its way home is left to its return, which never ends
-##     outside the leash - M9 gate, lane review: EnemyActor's leash wait), sets each member's AI LOD
+##     outside the leash - M9 gate, lane review: EnemyActor's leash wait - and one that answered a blow
+##     while it waited for its post is left off the leash while the body on its post stays there:
+##     EnemyActor.leash_held_off, fix-up 1), sets each member's AI LOD
 ##     tier by distance to the player
 ##     (tier 0 within lod.near_m, 1 within lod.mid_m, else 2; engaged members stay at tier 0),
 ##     and deactivates once the player is beyond deactivate_radius_m and no member has been aware
@@ -611,6 +613,8 @@ func _check_leash(enc: Encounter, tick: int) -> void:
 				EnemyBrain.AIState.ROUTED, EnemyBrain.AIState.DEAD, EnemyBrain.AIState.RETURN]:
 			continue
 		if _flat_dist(n.global_position, enc.center) > enc.leash_r:
+			if n.has_method("leash_held_off") and bool(n.call("leash_held_off")):
+				continue   # M9 gate (lane review, fix-up 1): it answered the body on its post, which still holds it
 			n.call("begin_leash_return")
 			Events.encounter_leashed.emit(tick, enc.id, m.entity_id)
 

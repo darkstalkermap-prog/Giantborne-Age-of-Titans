@@ -13,6 +13,12 @@ extends IntegrationSuite
 ##   * its way lost outside the leash (a wall the navmesh does not know of between it and its post): it holds
 ##     still LEASH_RETRY_S at a time and tries again, never ending its return out there; once the wall is
 ##     gone it rides home.
+## Fix-up 1 (the lane's verifier): waiting off its taken post the member was a target that never answered - it
+## stood in its return while the giant on its post beat it, for as long as he stayed (a Brannock guard from 220
+## to 20 health in 30 s). Now:
+##   * struck while it waits for its post: its return ends there, unhealed, its AI resumes knowing who struck it,
+##     and the director leaves it off the leash while he holds its post (no second leash, no second heal); once
+##     he leaves, the leash holds it again.
 ## The real world's case (the war camp's picket rider) is the gate tier's tests/gate/test_war_camp_leash.gd.
 
 const LEVEL_SCENE := "res://scenes/test/director_test.tscn"
@@ -154,6 +160,68 @@ func test_a_member_whose_post_is_taken_outside_its_leash_waits_off_the_body() ->
 	assert_eq(heals, 1, "no second heal on arrival")
 	assert_true(s.entity.combatant.pools.health < hp_max, "the blow after its heal still shows")
 	assert_eq(leashed, 1, "still leashed once")
+
+
+func test_struck_while_it_waits_for_its_post_it_answers_and_is_held_off_the_leash_while_he_stays() -> void:
+	var s := await _setup()
+	var centre := _centre()
+	var leash := _leash_m()
+	var post := centre + Vector3(0, 0.05, leash - 3.0)   # 37 m out of a 40 m leash
+	s.home_position = post
+	_put_giant(post)
+	s.global_position = centre + Vector3(0.3, 0.05, leash + 20.0)   # lured out behind him
+	director.update_now()
+	assert_true(s.is_returning(), "the leash sends it home")
+	var waiting: bool = await TestWait.until(self, func() -> bool: return s.leash_waiting == "post", 60 * 12)
+	assert_true(waiting, "it waits for its post")
+	for i in 60 * 2:
+		await step_ticks(1)   # still waiting, its LEASH_HEAL_S heal behind it or not
+	var heals_before := heals
+	var hp_max := s.entity.combatant.pools.health_max
+	queue_hit("player", s.entity_id, player.global_position, 40.0)   # his blow from his post
+	var blow_tick := Sim.tick
+	var answered: bool = await TestWait.until(self, func() -> bool: return not s.is_returning(), 3)
+	var hp_after := s.entity.combatant.pools.health
+	print("    struck while it waits: answered %s %d tick(s) after the blow, %.1f m from the centre (leash %.0f), health %.0f / %.0f, state %s, target '%s'" % [
+		answered, Sim.tick - blow_tick, _flat(s.global_position, centre), leash, hp_after, hp_max, s.brain.state_name(), s.brain.target_id])
+	assert_true(answered, "struck while it waits, its return ends (it answers)")
+	assert_eq(s.leash_answers, 1, "one answer")
+	assert_true(_flat(s.global_position, centre) > leash, "out there, outside the leash")
+	assert_eq(heals, heals_before, "unhealed: the answer is an early end")
+	assert_true(hp_after < hp_max, "the blow shows (%.0f / %.0f)" % [hp_after, hp_max])
+	assert_true(s.ai_enabled, "its AI resumes")
+	assert_true(s.brain.target_id == "player" and s.brain.aware, "it knows who struck it (%s)" % s.brain.target_id)
+	assert_true(s.leash_held_off(), "the giant on its post holds it off the leash")
+	var states := {}
+	var outside_held := 0
+	var outside_free := 0
+	for i in 60 * 8:
+		await step_ticks(1)
+		if i % 30 == 29:
+			director.update_now()
+		if not s.entity.is_alive():
+			break
+		states[s.brain.state_name()] = true
+		if _flat(s.global_position, centre) > leash and s.brain.state != EnemyBrain.AIState.RETURN:
+			if s.leash_held_off():
+				outside_held += 1
+			else:
+				outside_free += 1
+	print("    while he stays (8 s): states %s, %d leash(es), %d heal(s), %.1f s outside the leash held off, %.1f s not" % [
+		states.keys(), leashed, heals, outside_held / 60.0, outside_free / 60.0])
+	assert_false(states.has("Return"), "it answers him rather than go home")
+	assert_eq(leashed, 1, "the director does not send it home while he holds its post")
+	assert_eq(heals, heals_before, "nor heals it")
+	assert_eq(outside_free, 0, "outside the leash it is held off it while he stays")
+	# He leaves: it is no longer held off, and outside the leash the director sends it home.
+	_put_giant(centre + Vector3(-30, 0.05, leash + 30.0))
+	await step_ticks(1)
+	assert_false(s.leash_held_off(), "with its post free nothing holds it off the leash")
+	if s.entity.is_alive() and not (s.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]):
+		var inside: bool = await TestWait.until(self, func() -> bool:
+			return _flat(s.global_position, centre) <= leash, 60 * 15)
+		assert_true(inside, "the leash holds it again: it comes back inside (%.1f m from the centre, %d leash(es))" % [
+			_flat(s.global_position, centre), leashed])
 
 
 func test_a_member_whose_post_is_taken_inside_its_leash_ends_its_return_unhealed() -> void:

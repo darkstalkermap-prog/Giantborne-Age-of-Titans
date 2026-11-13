@@ -7,25 +7,40 @@ extends IntegrationSuite
 ## home again at its next update and each early end healed it to full: 12 leashes and 11 heals in 30 s, pinned
 ## 4.1 m from his centre (the review's probe). Now a return never ends early outside the leash: the rider backs
 ## off his body and waits for its post, and while he stays it is leashed once and healed once (LEASH_HEAL_S into
-## the return; the blows after it stay), and it is not pinned against him. When he leaves, it rides home and its
-## return ends at its post.
+## the return), and it is not pinned against him.
 ## The camp's centre and leash and the picket's post come from the encounter's record at run time (the shield
 ## wall's place may change; the riders' pickets are what this test is about).
+## Fix-up 1 (the lane's verifier): waiting off its post the rider was a target that never answered - the giant on
+## its post could beat it for as long as he stayed (the review's camp probe: it fell, waiting). Now his blow ends
+## its wait: the return ends there, unhealed, it turns on him (charges or thrusts its lance), and while he holds
+## its post the director leaves it off the leash - still one leash and one heal while he stays, and it is never
+## pinned against him. Once he leaves, the leash holds it again: it is back inside the camp's leash, its return over
+## (a detour's end asks for a fresh path: at AI tier 1 the rider had kept its path to the detour point and rode to
+## and fro short of its post).
 
 const SCENE := "res://scenes/world/world.tscn"
 const CAMP := "encounter.aldmere_war_camp"
 const RIDER := "world.aldmere.camp_rider_2"
+## Fix-up 1: he leaves the waiting rider be for WAIT_S, then strikes it every BLOW_TICKS (the review's probe's 2.5 s)
+## while its body is within BLOW_REACH_M of his, for BLOWS_S.
+const WAIT_S := 14
+const BLOWS_S := 16
+const BLOW_TICKS := 150
+const BLOW_REACH_M := 6.0
 
 var leashed := 0
 var heals := 0
+var rider_actions: Array[String] = []
 
 
 func before_each() -> void:
 	await super()
 	leashed = 0
 	heals = 0
+	rider_actions.clear()
 	Events.encounter_leashed.connect(_on_leashed)
 	Events.healed.connect(_on_healed)
+	Events.ability_started.connect(_on_ability)
 
 
 func after_each() -> void:
@@ -33,6 +48,8 @@ func after_each() -> void:
 		Events.encounter_leashed.disconnect(_on_leashed)
 	if Events.healed.is_connected(_on_healed):
 		Events.healed.disconnect(_on_healed)
+	if Events.ability_started.is_connected(_on_ability):
+		Events.ability_started.disconnect(_on_ability)
 	Quests.end_dialogue()
 	for f in Formation.live():
 		f.dissolve()
@@ -49,6 +66,11 @@ func _on_leashed(_t: int, _enc: String, id: String) -> void:
 func _on_healed(_t: int, id: String, _amount: float, source: String) -> void:
 	if id == RIDER and source == "leash":
 		heals += 1
+
+
+func _on_ability(_t: int, actor: String, action_id: String, _i: int) -> void:
+	if actor == RIDER:
+		rider_actions.append(action_id)
 
 
 static func _profile(stage: int) -> Dictionary:
@@ -84,7 +106,7 @@ func _move(w: WorldRoot, xz: Vector2) -> void:
 	p.process_mode = Node.PROCESS_MODE_INHERIT
 
 
-func test_a_rider_whose_picket_the_giant_stands_on_is_leashed_once_and_waits_off_him() -> void:
+func test_a_rider_whose_picket_the_giant_stands_on_is_leashed_once_waits_off_him_and_answers_his_blows() -> void:
 	var rec := GameData.get_record(CAMP)
 	var centre := _xz(rec.get("center_m"))
 	var leash := float(rec.get("leash_radius_m", 0.0))
@@ -136,60 +158,109 @@ func test_a_rider_whose_picket_the_giant_stands_on_is_leashed_once_and_waits_off
 	assert_true(rider.entity.combatant.pools.health < hp_max, "hurt before the leash")
 	d.update_now()
 	assert_true(rider.is_returning(), "the leash sends it home")
+	var giant := p.global_position
+	# He leaves it be: it backs off his body and waits for its post.
 	var wait_tick := -1
 	var pinned_waiting := 0.0
-	var pinned := 0.0
 	var ends_out := 0
 	var was_returning := true
-	var giant := p.global_position
-	for i in 60 * 30:
-		if i == 60 * 12 or i == 60 * 20:
-			queue_hit("player", rider.entity_id, rider.global_position + Vector3(0, 0, 2), 40.0)   # his blows while it waits
+	for i in 60 * WAIT_S:
 		await step_ticks(1)
-		if not is_instance_valid(rider) or not rider.entity.is_alive():
+		if not rider.entity.is_alive():
 			break
-		if was_returning and not rider.is_returning() \
-				and Vector2(rider.global_position.x, rider.global_position.z).distance_to(centre) > leash:
+		if was_returning and not rider.is_returning() and _flat2(rider.global_position, centre) > leash:
 			ends_out += 1   # a return ended outside the leash: the director sends it home again
 		was_returning = rider.is_returning()
-		if wait_tick < 0 and str(rider.get("leash_waiting")) == "post":
+		if wait_tick < 0 and rider.leash_waiting == "post":
 			wait_tick = Sim.tick
-		var gap := _flat(rider.global_position, p.global_position) - giant_r - rider_r
-		if gap < 0.5:
-			pinned += 1.0 / 60.0
-			if wait_tick >= 0 and Sim.tick - wait_tick >= 60:
-				pinned_waiting += 1.0 / 60.0
-	assert_true(is_instance_valid(rider) and rider.entity.is_alive(), "the rider lives through the 30 s")
-	if not is_instance_valid(rider):
-		w.queue_free()
-		await step_ticks(2)
-		return
-	var gap_end := _flat(rider.global_position, p.global_position) - giant_r - rider_r
-	print("    the giant on %s's picket for 30 s: %d leash(es), %d heal(s), %d return(s) ended outside the leash, %.1f s against him; waiting '%s' %.1f m off his body, %.1f m from the camp's centre (leash %.0f); health %.0f / %.0f" % [
-		RIDER.get_slice(".", 2), leashed, heals, ends_out, pinned, str(rider.get("leash_waiting")), gap_end,
-		Vector2(rider.global_position.x, rider.global_position.z).distance_to(centre), leash,
-		rider.entity.combatant.pools.health, hp_max])
-	assert_true(_flat(p.global_position, giant) < 1.0, "he stayed on its post (%s)" % p.global_position.snappedf(0.1))
-	assert_eq(ends_out, 0, "its return never ends outside the leash")
-	assert_true(rider.is_returning() and wait_tick >= 0, "it waits for its post, still on its way home")
-	assert_eq(leashed, 1, "leashed once while he stays (the review's probe: 12 in 30 s)")
-	assert_eq(heals, 1, "healed once while he stays (the probe: 11)")
-	assert_true(rider.entity.combatant.pools.health < hp_max, "his blows after its heal stay")
+		if wait_tick >= 0 and Sim.tick - wait_tick >= 60 and _gap(rider, p, giant_r, rider_r) < 0.5:
+			pinned_waiting += 1.0 / 60.0
+	var gap_wait := _gap(rider, p, giant_r, rider_r)
+	print("    the giant on %s's picket, %d s with no blow: %d leash(es), %d heal(s), %d return(s) ended outside the leash; waiting '%s' %.1f m off his body, %.1f m from the camp's centre (leash %.0f); health %.0f / %.0f" % [
+		RIDER.get_slice(".", 2), WAIT_S, leashed, heals, ends_out, rider.leash_waiting, gap_wait,
+		_flat2(rider.global_position, centre), leash, rider.entity.combatant.pools.health, hp_max])
+	assert_true(rider.entity.is_alive(), "the rider lives")
+	assert_eq(ends_out, 0, "its return never ends outside the leash on its own")
+	assert_true(rider.is_returning() and rider.leash_waiting == "post", "it waits for its post, still on its way home")
+	assert_eq(leashed, 1, "leashed once (the review's probe: 12 in 30 s)")
+	assert_eq(heals, 1, "healed once, %.0f s into the return (the probe: 11)" % EnemyActor.LEASH_HEAL_S)
 	assert_true(pinned_waiting < 0.01, "not pinned against him once it waits (%.1f s within 0.5 m of his body)" % pinned_waiting)
-	assert_true(gap_end >= EnemyActor.LEASH_DETOUR_CLEAR_M - EnemyActor.LEASH_ARRIVE_M,
-		"it stands off his body (%.1f m; pinned, it stood at -0.5)" % gap_end)
-	# He leaves, out past the pickets: it rides home and its return ends at its post, with no second heal.
-	await _move(w, post + out * 40.0)
-	var home := false
-	for i in 60 * 15:
+	assert_true(gap_wait >= EnemyActor.LEASH_DETOUR_CLEAR_M - EnemyActor.LEASH_ARRIVE_M,
+		"it stands off his body (%.1f m; pinned, it stood at -0.5)" % gap_wait)
+	# Fix-up 1: he strikes it whenever it is within his reach - it answers.
+	var answer_tick := -1
+	var first_blow := -1
+	var hp_answer := 0.0
+	var knew_him := false
+	var actions_before := rider_actions.size()
+	var blows := 0
+	var next_blow := 0
+	var pinned_run := 0
+	var pinned_longest := 0
+	var outside_held := 0
+	var outside_free := 0
+	for i in 60 * BLOWS_S:
+		if i >= next_blow and rider.entity.is_alive() and _gap(rider, p, giant_r, rider_r) <= BLOW_REACH_M:
+			queue_hit("player", rider.entity_id, p.global_position, 40.0)
+			blows += 1
+			next_blow = i + BLOW_TICKS
+			if first_blow < 0:
+				first_blow = Sim.tick
 		await step_ticks(1)
-		if not rider.is_returning():
-			home = true
+		if not rider.entity.is_alive():
 			break
-	assert_true(home, "with its post free it rides home")
-	assert_true(_flat(rider.global_position, Vector3(post.x, 0, post.y)) <= EnemyActor.LEASH_ARRIVE_M + 0.3,
-		"its return ends at its post (%.1f m from it)" % _flat(rider.global_position, Vector3(post.x, 0, post.y)))
-	assert_eq(heals, 1, "no second heal on arrival")
-	assert_eq(leashed, 1, "still leashed once")
+		if answer_tick < 0 and not rider.is_returning():
+			answer_tick = Sim.tick
+			hp_answer = rider.entity.combatant.pools.health
+		elif answer_tick >= 0 and Sim.tick == answer_tick + 1:
+			knew_him = rider.brain.target_id == "player" and rider.brain.aware
+		if _gap(rider, p, giant_r, rider_r) < 0.5 and not rider.is_galloping():   # a charge's run goes through his legs
+			pinned_run += 1
+			pinned_longest = maxi(pinned_longest, pinned_run)
+		else:
+			pinned_run = 0
+		if answer_tick >= 0 and _flat2(rider.global_position, centre) > leash and not rider.is_returning():
+			if rider.leash_held_off():
+				outside_held += 1
+			else:
+				outside_free += 1
+	var acted := rider_actions.slice(actions_before)
+	print("    then his blows (%d in %d s): it answered %d tick(s) after the first, health %.0f / %.0f then; actions %s; %d leash(es), %d heal(s) while he stays; %.1f s outside the leash held off it, %.1f s not; longest against his body out of a charge %.2f s" % [
+		blows, BLOWS_S, answer_tick - first_blow, hp_answer, hp_max, acted, leashed, heals, outside_held / 60.0,
+		outside_free / 60.0, pinned_longest / 60.0])
+	assert_true(_flat(p.global_position, giant) < 1.0, "he stayed on its post (%s)" % p.global_position.snappedf(0.1))
+	assert_true(rider.entity.is_alive(), "the rider lives through his blows")
+	assert_true(first_blow >= 0 and answer_tick >= 0 and answer_tick - first_blow <= 2,
+		"his first blow ends its wait at once (%d tick(s))" % (answer_tick - first_blow))
+	assert_eq(rider.leash_answers, 1, "it answered once")
+	assert_true(hp_answer < hp_max, "unhealed: the blow shows (%.0f / %.0f)" % [hp_answer, hp_max])
+	assert_true(knew_him, "it knows who struck it")
+	assert_true(not acted.is_empty(), "it turns on him (%s)" % [acted])
+	assert_eq(leashed, 1, "still leashed once while he stays")
+	assert_eq(heals, 1, "and healed once")
+	assert_eq(outside_free, 0, "outside the leash, the giant on its post holds it off the leash")
+	assert_true(pinned_longest < 60, "never pinned against him (%.2f s at most within 0.5 m of his body, out of a charge)" % (pinned_longest / 60.0))
+	# He leaves, out past the pickets: nothing holds it off the leash any more, and the leash brings it back.
+	await _move(w, post + out * 40.0)
+	await step_ticks(1)
+	assert_false(rider.leash_held_off(), "with its post free nothing holds it off the leash")
+	var t_left := Sim.tick
+	var back: bool = await TestWait.until(self, func() -> bool:
+		return not rider.is_returning() and _flat2(rider.global_position, centre) <= leash, 60 * 20)
+	print("    he leaves: after %.1f s %.1f m from the camp's centre, %.1f m from its post, returning %s; %d leash(es), %d heal(s) in all" % [
+		(Sim.tick - t_left) / 60.0, _flat2(rider.global_position, centre), _flat2(rider.global_position, post),
+		rider.is_returning(), leashed, heals])
+	assert_true(back, "the leash holds it again: back inside the camp's leash, its return over (%.1f m from the centre, returning %s; a rider sent home round its fellows on the picket line rode to and fro short of its post)" % [
+		_flat2(rider.global_position, centre), rider.is_returning()])
+	assert_true(leashed <= 2, "at most the one leash that sent it back (%d in all)" % leashed)
 	w.queue_free()
 	await step_ticks(2)
+
+
+static func _flat2(a: Vector3, c: Vector2) -> float:
+	return Vector2(a.x - c.x, a.z - c.y).length()
+
+
+## The gap between the rider's body and the giant's (negative: pressed into him).
+static func _gap(rider: Node3D, giant: Node3D, giant_r: float, rider_r: float) -> float:
+	return _flat(rider.global_position, giant.global_position) - giant_r - rider_r
