@@ -386,7 +386,7 @@ static func check_invariants(tree: SceneTree, player: GiantPlayer, level: LevelR
 			out.append("player fell out of the world (y %.1f)" % pos.y)
 		var lock_id := player.lock.target_id
 		if lock_id != "":
-			var why := lock_failure(lock_id)
+			var why := lock_failure(lock_id, Sim.tick)
 			if why != "":
 				out.append(why)
 	if Sim.pending_hit_count() >= MAX_PENDING_HITS:
@@ -436,12 +436,31 @@ static func check_invariants(tree: SceneTree, player: GiantPlayer, level: LevelR
 
 ## "" when the lock id names something alive: an entity, or (P38, stages 4-6) a formation's group
 ## ("formation:<id>": a live formation with a living member); else the invariant's failure line.
-static func lock_failure(lock_id: String) -> String:
+## M9 gate (FOLLOWUPS "the world bot's lock invariant fails for one tick when a locked formation's last
+## member routs"): given the tick it is checked at, a group lock whose formation has just lost its last
+## living member passes in that tick and the next - a rout is no death, so the death signal does not drop
+## the lock; the giant drops it in its own next step (PlayerTargeting._p30_maintain, "target_died"),
+## after the Sim's tick this invariant runs on - and fails if it is still held after that. In the M9
+## gate's runs the toll fort's pikes routing under a group lock ended a peaceful novice's run at 410 s.
+static var _memberless_lock := ""
+static var _memberless_since := -1
+
+
+static func lock_failure(lock_id: String, tick := -1) -> String:
 	if lock_id.begins_with(GROUP_LOCK_PREFIX):
 		var fid := lock_id.trim_prefix(GROUP_LOCK_PREFIX)
 		for f in Formation.live():
 			if f.id == fid:
-				return "" if f.living_count() > 0 else "lock target %s has no living member" % lock_id
+				if f.living_count() > 0:
+					_memberless_lock = ""
+					return ""
+				if tick >= 0:
+					if _memberless_lock != lock_id or tick < _memberless_since:
+						_memberless_lock = lock_id
+						_memberless_since = tick
+					if tick - _memberless_since <= 1:
+						return ""
+				return "lock target %s has no living member" % lock_id
 		return "lock target %s is gone" % lock_id
 	var t := Sim.get_entity(lock_id)
 	if t == null or not t.is_alive():

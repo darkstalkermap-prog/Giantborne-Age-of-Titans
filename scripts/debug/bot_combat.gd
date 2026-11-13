@@ -123,6 +123,8 @@ var _connected := false
 var _ability_log: Array = []
 var _bands: Dictionary = {}     ## reach_band cache
 var _last_used: Dictionary = {} ## P39: slot key -> the tick its ability was last used (the rotation)
+var _reserve_tick := -1         ## M9 gate: reserve_needed's tick and answer (asked for every slot)
+var _reserve_cached := true
 
 
 func setup(p_bot: Variant, p_player: GiantPlayer, p_skill: String, p_rng: RandomNumberGenerator) -> void:
@@ -547,7 +549,36 @@ func dodge_reserve() -> float:
 func affordable(a: ActionDef) -> bool:
 	if skill != EXPERT or a == null or a.stamina_cost <= 0.0:
 		return true
-	return player.entity.combatant.pools.stamina - a.stamina_cost >= dodge_reserve()
+	var reserve := dodge_reserve() if reserve_needed(Sim.tick) else 0.0
+	return player.entity.combatant.pools.stamina - a.stamina_cost >= reserve
+
+
+## M9 gate (FOLLOWUPS "From the M9 confirmation": the peaceful experts died at the toll fort): from stage 4
+## the expert keeps its dodge reserve only while it may need the dodge - a dodge planned against a blow (an
+## arrow's aside: it holds nothing off), or a foe whose blows it dodges within EXPERT_WATCH_M: a boss, or a
+## body of mass class medium or large (an ogre, a rider, a whelp, a troll, a rival giant). Before the toll
+## fort's pikes (a formation's brace is blocked) under its tower's archers (light shots) the reserve kept the
+## expert from every blow: it came in from a sprint with no stamina, its blocks of the brace and its casts
+## held the regeneration back, and its stamina stayed between 0 and 24 - under the dodge's 18 and a light's
+## 8 - for whole fights (traced: 70 % of the fight standing in the pikes' brace band without a blow, the
+## chase given up three times, six deaths and the run stopped there). The Valley (stages 1-3) keeps P17b's
+## reserve. Cached per tick (affordable() is asked for every slot).
+func reserve_needed(tick: int) -> bool:
+	if not _world_expert():
+		return true
+	if tick == _reserve_tick:
+		return _reserve_cached
+	_reserve_tick = tick
+	_reserve_cached = false
+	for re: Dictionary in _reactions:
+		if str(re.kind).begins_with("dodge") and not bool(re.get("light_shot", false)):
+			_reserve_cached = true
+			return true
+	for e in threats(EXPERT_WATCH_M):
+		if big_foe(e) or str(e.entity.combatant.base_record.get("mass_class", "")) == "medium":
+			_reserve_cached = true
+			break
+	return _reserve_cached
 
 
 ## P17b: true when a dodge planned against a blow from within HEAVY_COMMIT_RANGE_M falls within

@@ -9,6 +9,11 @@ extends IntegrationSuite
 ##     Moot battery beyond SIEGE_SEEK_M);
 ##   * Rampart Grip reads as ready only with something in reach to seize, and a slotted ability the run has
 ##     not used yet is tried at the first free tick it fits;
+##   * from stage 4 the expert keeps its dodge's stamina in reserve only while a dodge is planned or a foe
+##     whose blows it dodges (a boss, a medium or large body) stands within EXPERT_WATCH_M - not before a
+##     pike wall and archers (the toll fort);
+##   * the bot's lock invariant waits out the tick a locked formation's last member routs in (the giant
+##     drops the lock in its own next step);
 ##   * the music's combat radius is capped for a stage-4+ giant (audio_mix.intensity.combat_cap_m): a
 ##     formation holding 50 m off raises danger, one 30 m off or a boss combat; the Valley's stages keep the
 ##     scaled radius.
@@ -274,6 +279,84 @@ func test_rampart_grip_is_ready_only_with_something_to_seize_and_is_tried_once_i
 		if c.slot_reason(stomp) == "":
 			assert_eq(c._first_use_slot(reach), stomp, "at a foe within reach")
 	c.bot = bot
+
+
+func test_the_world_expert_keeps_its_dodge_reserve_only_for_blows_it_dodges() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	_bot("expert")
+	var c := bot.combat
+	var pools := p.entity.combatant.pools
+	var light := c._loadout_action(&"light")
+	var reserve := c.dodge_reserve()
+	assert_true(light != null and light.stamina_cost > 0.0 and reserve > 0.0,
+		"a light that costs stamina and a dodge's reserve (%.0f)" % reserve)
+	var short := light.stamina_cost + reserve * 0.5   # enough for the blow, not for the blow and a dodge
+	pools.stamina = short
+	assert_true(c.affordable(light), "nothing near: the blow is afforded without the reserve")
+	# the toll fort: a pike wall at the giant's legs (its brace is blocked) and an archer (light shots)
+	await _formation(Vector3(0, 0, -6))
+	var archer := TestSpawn.enemy(world, "res://scenes/enemies/archer.tscn", Vector3(6, 0.05, -6), "test.m9_reserve_archer", false)
+	await step_ticks(2)
+	archer.brain.aware = true
+	pools.stamina = short
+	c._reserve_tick = -1
+	assert_true(c.threats(BotCombat.EXPERT_WATCH_M).size() >= 6,
+		"the pikes, their banner and the archer are threats within %.0f m" % BotCombat.EXPERT_WATCH_M)
+	assert_true(c.affordable(light), "a formation and an archer: no reserve - the blow is afforded")
+	c._reactions.append({"at": Sim.tick + 30, "kind": "dodge", "actor": weakref(archer), "why": "test", "light_shot": true})
+	c._reserve_tick = -1
+	assert_true(c.affordable(light), "a planned answer to an arrow (it holds nothing off) keeps none either")
+	c._reactions.append({"at": Sim.tick + 30, "kind": "dodge", "actor": weakref(f.members[0]), "why": "test"})
+	c._reserve_tick = -1
+	assert_false(c.affordable(light), "a dodge planned against a blow keeps the dodge's stamina")
+	c._reactions.clear()
+	# a foe whose blows it dodges within EXPERT_WATCH_M: an ogre (mass class medium)
+	var ogre := TestSpawn.enemy(world, "res://scenes/enemies/ogre.tscn", Vector3(-8, 0.05, 0), "test.m9_reserve_ogre", false)
+	await step_ticks(2)
+	ogre.brain.aware = true
+	pools.stamina = short
+	c._reserve_tick = -1
+	assert_false(c.affordable(light), "an ogre within %.0f m keeps the reserve" % BotCombat.EXPERT_WATCH_M)
+	ogre.global_position = Vector3(-30, 0.05, 0)
+	c._reserve_tick = -1
+	assert_true(c.affordable(light), "one 30 m off does not")
+	pools.stamina = light.stamina_cost - 1.0
+	c._reserve_tick = -1
+	assert_false(c.affordable(light), "a blow the giant has not the stamina for is never afforded")
+	# the Valley's stages keep P17b's reserve
+	p.set_profile(_profile(3))
+	await step_ticks(1)
+	var light3 := c._loadout_action(&"light")
+	pools.stamina = light3.stamina_cost + c.dodge_reserve() * 0.5
+	c._reserve_tick = -1
+	assert_false(c.affordable(light3), "at stage 3 the expert keeps the reserve whatever stands near (the Valley unchanged)")
+	ogre.queue_free()
+	archer.queue_free()
+
+
+func test_the_lock_invariant_waits_out_the_tick_a_locked_formation_routs_in() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	await _formation(Vector3(0, 0, -12))
+	var lock_id := BotDiagnosis.GROUP_LOCK_PREFIX + f.id
+	var t := Sim.tick
+	assert_eq(BotDiagnosis.lock_failure(lock_id, t), "", "a group lock on a standing formation holds")
+	for m: EnemyActor in f.members:
+		m.brain.state = EnemyBrain.AIState.ROUTED   # the last members rout (a rout is no death)
+	assert_eq(f.living_count(), 0, "no living member is left")
+	assert_eq(BotDiagnosis.lock_failure(lock_id, t), "", "in the tick it lost its last member the lock passes")
+	assert_eq(BotDiagnosis.lock_failure(lock_id, t + 1), "",
+		"and in the next, when the giant's own step drops it (PlayerTargeting._p30_maintain)")
+	assert_true(BotDiagnosis.lock_failure(lock_id, t + 2).contains("has no living member"),
+		"held after that, it is a failure")
+	assert_true(BotDiagnosis.lock_failure(lock_id).contains("has no living member"),
+		"asked without a tick, at once (the old rule)")
+	for m: EnemyActor in f.members:
+		m.brain.state = EnemyBrain.AIState.HOLD
+	assert_eq(BotDiagnosis.lock_failure(lock_id, t + 3), "", "standing again, it holds")
+	for m: EnemyActor in f.members:
+		m.brain.state = EnemyBrain.AIState.ROUTED
+	assert_eq(BotDiagnosis.lock_failure(lock_id, t + 50), "", "a later rout gets its own tick of grace")
+	assert_true(BotDiagnosis.lock_failure(lock_id, t + 52) != "", "and only that")
 
 
 func _threat(distance: float, height: float, special: bool) -> Dictionary:
