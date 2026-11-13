@@ -634,3 +634,69 @@ func test_tracker_steps_show_whole() -> void:
 	var drawn := _rect_in(hud, panel)
 	assert_true(hud.layout_regions(hud.size).quest_tracker.grow(0.5).encloses(drawn), "inside its region: %s" % drawn)
 	assert_near(drawn.size.y, panel.get_combined_minimum_size().y, 1.0, "as tall as its lines")
+
+
+## M9 gate (lane review): the discovery toast shows its line whole. One 324 px line with an ellipsis cut every
+## vista's line ("Discovered: The Kingsgate Shelf  +30 XP  (7 pla..."); a line now wraps onto up to TEXT_LINES
+## lines and the panel grows down from its top, inside its layout region. Every POI's line, with as many places as
+## the most any vista of the data reveals, and every sealed place's line fit TEXT_LINES lines of the toast's width;
+## the longest shows whole on the live toast, which is as tall as its lines and inside its region.
+func test_discovery_lines_show_whole() -> void:
+	var hud := _hud()
+	await get_tree().process_frame
+	var toast := hud.get_node("DiscoveryToast")
+	var label: Label = toast.call("text_label")
+	var font := label.get_theme_font("font")
+	var width: float = toast.get("TEXT_WIDTH")
+	var max_lines: int = toast.get("TEXT_LINES")
+	var flags := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
+	# the most places a vista reveals: the other non-secret POIs of its level within its reveal radius
+	var pois := GameData.records_of_type("poi")
+	var reveal := 0
+	for v: Dictionary in pois:
+		if str(v.get("kind", "")) != "vista":
+			continue
+		var r := float(v.get("reveals_m", 0.0))
+		r = r if r > 0.0 else Discovery.DEFAULT_REVEAL_M
+		var c: Array = v.get("position_m", [0, 0, 0])
+		var n := 0
+		for p: Dictionary in pois:
+			var q: Array = p.get("position_m", [0, 0, 0])
+			if p != v and str(p.get("kind", "")) != "secret" and str(p.get("level", "")) == str(v.get("level", "")) \
+					and Vector2(float(q[0]) - float(c[0]), float(q[2]) - float(c[2])).length() <= r:
+				n += 1
+		reveal = maxi(reveal, n)
+	assert_true(reveal >= 7, "a vista reveals up to %d places" % reveal)
+	var lines := PackedStringArray()
+	for p: Dictionary in pois:
+		for t: String in [toast.call("line_for", str(p.id), reveal), toast.call("sealed_line", str(p.id))]:
+			if t != "":
+				lines.append(t)
+	var over := PackedStringArray()
+	var longest := ""
+	var longest_w := 0.0
+	var wide := 0
+	for t in lines:
+		var w := font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, HudKit.TEXT).x
+		if w > width:
+			wide += 1
+		var n := roundi(font.get_multiline_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, width, HudKit.TEXT, -1, flags).y
+			/ font.get_height(HudKit.TEXT))
+		if n > max_lines:
+			over.append("%s (%d lines)" % [t, n])
+		if w > longest_w:
+			longest_w = w
+			longest = t
+	assert_true(lines.size() > 40, "every POI's and sealed place's line is measured (%d)" % lines.size())
+	assert_true(wide > 0, "some lines are wider than one line of the toast (%d): they wrap" % wide)
+	assert_eq(over, PackedStringArray(), "every line fits %d lines of the toast whole" % max_lines)
+	toast.call("push", longest, Color.WHITE)
+	for i in 3:
+		await get_tree().process_frame
+	assert_eq(toast.call("visible_text"), longest, "the toast shows the longest line")
+	assert_true(label.get_line_count() >= 2, "on %d lines: %s" % [label.get_line_count(), longest])
+	assert_eq(label.get_visible_line_count(), label.get_line_count(), "whole, untrimmed")
+	var panel: Control = toast.call("layout_controls").discovery_toast
+	var drawn := _rect_in(hud, panel)
+	assert_true(hud.layout_regions(hud.size).discovery_toast.grow(0.5).encloses(drawn), "inside its region: %s" % drawn)
+	assert_near(drawn.size.y, panel.get_combined_minimum_size().y, 1.0, "as tall as its lines")
