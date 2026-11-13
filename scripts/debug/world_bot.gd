@@ -813,9 +813,13 @@ func _fight_ignored_now(_t: EnemyActor) -> bool:
 ## Skarn's steading (P36: AI off, "they never deal damage"), whom a slain Harrok's faction leaves hostile -
 ## so it is not fought: a player walks past it. A conqueror expert that slew Harrok struck a watching clan
 ## giant 11.7 m off for the throne stage's whole 306 s (each blow that landed took a little health off it,
-## so the chase give-up never ran out) and stopped one step from the throne. (A unit walking home on its
-## leash, a yielded boss and a Matriarch in flight have their AI off too: BotCombat.is_threat leaves the
-## first two out already, and the third leaves the fight.)
+## so the chase give-up never ran out) and stopped one step from the throne. A unit walking home on its
+## leash has its AI off too, and it is walked past as well: BotCombat.is_threat leaves it out of the
+## threats, but an encounter's task (_encounter_task: its nearest member not fleeing or routed) took it as
+## the target and the bot followed it home (the gate's w.peaceful:expert:1 chased the Crownmarch raiders'
+## mage walking home at tick 23,095 before this rule, walks past it since, and plays on differently: the
+## verification of the M9 gate). A yielded boss (is_threat leaves it out) and a Matriarch in flight (she
+## leaves the fight) have their AI off as well.
 func _is_ignored(e: EnemyActor) -> bool:
 	if super(e):
 		return true

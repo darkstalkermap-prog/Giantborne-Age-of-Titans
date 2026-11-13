@@ -208,7 +208,8 @@ static func fields() -> Dictionary:
 	#                 challenge_conditions quest condition holds: Wildheart's shorter duel), the actor
 	#                 kneels, immune and harmless, and `dialogue` decides: its outcome "spare" sets the
 	#                 boss_outcome flag to "spared", "strike" either kills it at once (on_strike "kill")
-	#                 or makes it fight to the death (on_strike "fight"); boss_id is the id
+	#                 or makes it fight to the death (on_strike "fight": with strike_health_frac above 0
+	#                 the Strike's blow lands first and leaves it that share of its health); boss_id is the id
 	#                 boss_yielded carries ("" = its own entity id; Corvane: battle.iron_regiment).
 	#   drive_out     the Matriarch's fled ending: once every requires_flags flag holds and its health
 	#                 is at or below health_frac it runs to exit_marker and leaves ("fled").
@@ -234,6 +235,7 @@ static func fields() -> Dictionary:
 			"challenge_conditions": {"t": "array", "items": "dict"},
 			"dialogue": U.ref("dialogue", true),
 			"on_strike": U.str_field(true, ["kill", "fight"]),
+			"strike_health_frac": U.num(0.0, 1.0),
 			"boss_id": U.str_field()}},
 		"drive_out": {"t": "dict", "fields": {
 			"requires_flags": {"t": "array", "items": "string"},
@@ -388,6 +390,15 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			out.errors.append("%s.yield_at: needs a health_frac above 0 or poise_breaks" % ctx)
 		if typeof(p34_yield.get("challenge_conditions")) == TYPE_ARRAY:
 			U.check_conditions(p34_yield.challenge_conditions, "%s.yield_at.challenge_conditions" % ctx, out)
+		# M9 gate: the Strike's blow before a boss rises (strike_health_frac) only where he rises (on_strike
+		# "fight"), and below his health floor - a blow that left him above the share he yields at would not land.
+		var p34_wound := float(p34_yield.get("strike_health_frac", 0.0))
+		if p34_wound > 0.0 and str(p34_yield.get("on_strike", "")) != "fight":
+			out.errors.append("%s.yield_at.strike_health_frac: only with on_strike 'fight' (he rises from it)" % ctx)
+		var p34_floor := float(p34_yield.get("health_frac", 0.0))
+		if p34_wound > 0.0 and p34_floor > 0.0 and p34_wound >= p34_floor:
+			out.errors.append("%s.yield_at.strike_health_frac (%s) must be below its health_frac (%s)" % [ctx,
+				p34_wound, p34_floor])
 	var p34_drive: Variant = d.get("drive_out")
 	if typeof(p34_drive) == TYPE_DICTIONARY:
 		for p34_flag: Variant in p34_drive.get("requires_flags", []):
