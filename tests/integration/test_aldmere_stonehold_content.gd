@@ -112,7 +112,15 @@ func test_fort_aldmere_has_its_real_gate_and_garrison() -> void:
 	ctx.flags = {"oath.crown.parley_accepted": true}
 	assert_true(QuestConditions.holds(stand_down, ctx), "the garrison stands down once the herald accepted a parley")
 	ctx.destroyed = {"world.aldmere.fort_gate": true}
-	assert_false(QuestConditions.holds(stand_down, ctx), "...but not once the gate is breached")
+	# M9 gate (lane ironreg; a deliberate change): the gate breached, the garrison falls back to its posts and stands
+	# down until the giant enters the bailey (this visit) or the battle is settled - the fort gate's waystone, where a
+	# death reloads, is no fight. Before, the breach ended every stand-down ("...but not once the gate is breached").
+	ctx.entered = {"world.area.fort_bailey": true}
+	assert_false(QuestConditions.holds(stand_down, ctx), "...but not once the gate is breached and the giant is in the bailey")
+	ctx.entered = {}
+	assert_true(QuestConditions.holds(stand_down, ctx), "the breached gate's garrison falls back while the giant is outside the bailey")
+	ctx.flags = {"boss.corvane.outcome": "slain"}
+	assert_false(QuestConditions.holds(stand_down, ctx), "...until the battle is settled")
 	var archers := 0
 	for sp: Dictionary in garrison.spawns:
 		if str(sp.definition) == "enemy.archer":
