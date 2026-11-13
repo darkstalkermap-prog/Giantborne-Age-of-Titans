@@ -13,7 +13,9 @@ extends Node
 ##   * an active encounter spawns members still waiting for room in the budget, leashes members
 ##     farther than leash_radius_m from its centre (begin_leash_return() and encounter_leashed;
 ##     they engage again once home; members of an intact formation excepted - their formation holds
-##     them, see the P30 notes), sets each member's AI LOD tier by distance to the player
+##     them, see the P30 notes; a member on its way home is left to its return, which never ends
+##     outside the leash - M9 gate, lane review: EnemyActor's leash wait), sets each member's AI LOD
+##     tier by distance to the player
 ##     (tier 0 within lod.near_m, 1 within lod.mid_m, else 2; engaged members stay at tier 0),
 ##     and deactivates once the player is beyond deactivate_radius_m and no member has been aware
 ##     of the player for UNAWARE_DEACTIVATE_S: its living members are freed (not killed) and come

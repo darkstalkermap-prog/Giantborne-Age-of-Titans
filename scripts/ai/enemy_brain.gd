@@ -1186,6 +1186,17 @@ func return_step(tick: int, home: Vector3) -> void:
 	face_point = Vector3.INF
 
 
+## M9 gate (lane review): one tick of a return that waits (EnemyActor's leash wait: its post taken or its way
+## lost outside its leash): it stands still, facing `face` (INF: as it stands), still ignoring targets.
+func return_hold(tick: int, face: Vector3) -> void:
+	now = tick
+	_forget_target()
+	if state != AIState.RETURN:
+		_set_state(AIState.RETURN)
+	_stop_moving()
+	face_point = face
+
+
 ## Home (or dead): stop; IDLE, so patrol resumes and the unit may engage again; DEAD when it
 ## died on the way. The old perception is dropped: the next perceive() starts afresh.
 func end_return(tick: int, alive: bool) -> void:

@@ -1901,10 +1901,23 @@ const LEASH_HOOK_ORDER := 12
 ## lasts at most LEASH_DETOUR_S. A body standing on its post (home within its edge) ends the return where the
 ## member is, as do LEASH_GIVE_UP_FAILURES path failures in one return: its AI resumes (inside the leash, near
 ## its post, it is not sent home again).
+## M9 gate (lane review): ... but only inside the leash. Such an early end comes LEASH_END_MARGIN_M or more
+## inside the member's leash (EncounterDirector.leash_of), or where it has none, and it does not heal: the
+## leash heals on arrival or LEASH_HEAL_S into the return, never at an early end. Outside the leash a return
+## never ends early - the director sent the member home again at its next update, and the next early end
+## healed it to full: a war-camp rider whose picket a giant stood on, at the leash's edge, was leashed every
+## 2.5 s, healed at each end and stayed pinned against him. There the return waits instead (leash_waiting):
+##   * its post taken: it backs off to LEASH_DETOUR_CLEAR_M beyond both edges of the body on its post, on
+##     its own side of it, and holds there facing it until the post is free, then rides home;
+##   * its way lost (LEASH_GIVE_UP_FAILURES): it holds where it stands for LEASH_RETRY_S, then tries again.
 const LEASH_DETOUR_REACH_M := 2.5
 const LEASH_DETOUR_CLEAR_M := 3.0
 const LEASH_DETOUR_S := 6.0
 const LEASH_GIVE_UP_FAILURES := 6
+## M9 gate (lane review): an early end (post taken, way lost) needs the member this far inside its leash.
+const LEASH_END_MARGIN_M := 2.0
+## M9 gate (lane review): a return whose way is lost outside the leash holds this long before trying again.
+const LEASH_RETRY_S := 3.0
 
 ## Tick the current leash return began (-1 when it is not returning).
 var leash_started_tick := -1
@@ -1921,6 +1934,13 @@ var leash_detours := 0
 var _leash_detour_tick := -1
 var _leash_failures_seen := 0
 var _leash_failures := 0
+## M9 gate (lane review): the return waits outside the leash (see LEASH_END_MARGIN_M): "post" while a body
+## stands on its post, "way" after its way was lost; "" while it rides on. leash_waits counts the waits begun.
+var leash_waiting := ""
+var leash_waits := 0
+var _leash_wait_tick := -1
+var _leash_wait_hold_until := -1
+var _leash_backing_off := false
 
 
 ## Starts the leash return (plan §2.7.3): drop the target and its attack tokens, run home to
@@ -1939,6 +1959,8 @@ func begin_leash_return() -> void:
 	leash_detours = 0
 	_leash_failures = 0
 	_leash_failures_seen = path_failures
+	leash_waiting = ""
+	_leash_wait_tick = -1
 	Sim.release_all_tokens(entity.entity_id)
 	_release_formation_marker()
 	brain.begin_return(Sim.tick)
@@ -1972,21 +1994,37 @@ func _leash_step(tick: int) -> void:
 		return   # a giant holds it (P07): the return waits until it is put down
 	if not _leash_healed and tick - leash_started_tick >= ActionDef.seconds_to_ticks(LEASH_HEAL_S):
 		_leash_heal()
+	if leash_waiting != "":
+		_leash_wait_step(tick)   # M9 gate (lane review): outside its leash, waiting for its post or its way
+		return
 	var to_home := Vector2(home_position.x - global_position.x, home_position.z - global_position.z)
 	if to_home.length() <= LEASH_ARRIVE_M:
-		_end_leash_return(true)
+		_end_leash_return(true)   # home: healed now if LEASH_HEAL_S had not passed yet
 		return
 	if path_failures > _leash_failures_seen:   # W23 (P39f): no progress for a path check - something is in the way
 		_leash_failures += path_failures - _leash_failures_seen
 		_leash_failures_seen = path_failures
 		var blocker := _leash_blocker()
-		if _leash_failures >= LEASH_GIVE_UP_FAILURES or (not blocker.is_empty() and bool(blocker.on_post)):
-			_end_leash_return(true)   # its post is taken: the return ends here and the AI resumes
+		var post_taken := not blocker.is_empty() and bool(blocker.on_post)
+		if post_taken or _leash_failures >= LEASH_GIVE_UP_FAILURES:
+			if _leash_may_end_here():
+				_end_leash_return(true, false)   # its post taken (or its way lost) inside its leash: the return ends here, unhealed, and the AI resumes
+				return
+			_begin_leash_wait(tick, "post" if post_taken else "way")   # M9 gate (lane review): outside it, never an early end
 			return
 		leash_detour = _leash_detour_point(blocker)
 		_leash_detour_tick = tick
 		if leash_detour != Vector3.INF:
 			leash_detours += 1
+	_leash_drive(tick)
+
+
+## The return's move this tick (also re-applied after a hit or a noise taught the brain something): on to the
+## detour point while a detour lasts, else home.
+func _leash_drive(tick: int) -> void:
+	if leash_waiting != "":
+		_leash_wait_step(tick)
+		return
 	if leash_detour != Vector3.INF:
 		var to_detour := Vector2(leash_detour.x - global_position.x, leash_detour.z - global_position.z)
 		if to_detour.length() > LEASH_ARRIVE_M * 2.0 and tick - _leash_detour_tick < ActionDef.seconds_to_ticks(LEASH_DETOUR_S):
@@ -1994,6 +2032,106 @@ func _leash_step(tick: int) -> void:
 			return
 		leash_detour = Vector3.INF
 	brain.return_step(tick, home_position)
+
+
+## M9 gate (lane review): the leash this member is held to (EncounterDirector.leash_of: its centre in xyz, its
+## radius in w; w 0 when it has none or no director runs it).
+func leash_ring() -> Vector4:
+	if not is_inside_tree() or entity == null:
+		return Vector4.ZERO
+	var d := get_tree().get_first_node_in_group(EncounterDirector.GROUP) as EncounterDirector
+	return d.leash_of(entity.entity_id) if d != null else Vector4.ZERO
+
+
+## M9 gate (lane review): whether a return may end early where the member stands (its post taken, its way
+## lost): LEASH_END_MARGIN_M or more inside its leash, or anywhere when it has none - out there the director
+## would send it home again at its next update.
+func _leash_may_end_here() -> bool:
+	var ring := leash_ring()
+	if ring.w <= 0.0:
+		return true
+	return Vector2(global_position.x - ring.x, global_position.z - ring.z).length() <= ring.w - LEASH_END_MARGIN_M
+
+
+## M9 gate (lane review): the return stops riding home and waits outside its leash ("post": a body stands on
+## its post; "way": its way is lost). It stays a return - the director leaves it alone, it ignores what hits it
+## - and LEASH_HEAL_S still heals it once.
+func _begin_leash_wait(tick: int, why: String) -> void:
+	leash_waiting = why
+	leash_waits += 1
+	_leash_wait_tick = tick
+	_leash_wait_hold_until = -1
+	_leash_backing_off = false
+	leash_detour = Vector3.INF
+	_leash_wait_step(tick)
+
+
+## M9 gate (lane review): one tick of a wait. A post wait ends once no body stands on the post, a way wait after
+## LEASH_RETRY_S; the return then rides home again with a fresh count of failures. Meanwhile it keeps clear of
+## the body on its post: once that body's edge comes within LEASH_DETOUR_CLEAR_M - LEASH_ARRIVE_M of its own, it
+## backs off on its own side of it to LEASH_DETOUR_CLEAR_M beyond both edges (never pressing on it); there it
+## holds, facing it. A back-off that makes no progress (a wall behind it) holds LEASH_RETRY_S where it is.
+func _leash_wait_step(tick: int) -> void:
+	var taker := _leash_post_taker()
+	if (leash_waiting == "post" and taker.is_empty()) \
+			or (leash_waiting == "way" and tick - _leash_wait_tick >= ActionDef.seconds_to_ticks(LEASH_RETRY_S)):
+		leash_waiting = ""
+		_leash_failures = 0
+		_leash_failures_seen = path_failures
+		request_repath()
+		brain.return_step(tick, home_position)
+		return
+	if taker.is_empty():
+		brain.return_hold(tick, Vector3.INF)
+		return
+	var c: Vector3 = taker.centre
+	var around := float(taker.radius) + float(record.get("capsule_radius_m", 0.5)) + LEASH_DETOUR_CLEAR_M
+	var off := Vector2(global_position.x - c.x, global_position.z - c.z)
+	if path_failures > _leash_failures_seen:   # backing off made no progress (a wall behind it): hold a while
+		_leash_failures_seen = path_failures
+		_leash_wait_hold_until = tick + ActionDef.seconds_to_ticks(LEASH_RETRY_S)
+	if off.length() < around - LEASH_ARRIVE_M:
+		_leash_backing_off = true
+	elif off.length() >= around - 0.25:
+		_leash_backing_off = false
+	if not _leash_backing_off or tick < _leash_wait_hold_until:
+		brain.return_hold(tick, c)   # clear of it (or as far as it can go): hold, facing it
+		return
+	if off.length() < 0.01:
+		off = Vector2(global_position.x - home_position.x, global_position.z - home_position.z)
+	if off.length() < 0.01:
+		off = Vector2(0.0, 1.0)
+	off = off.normalized() * around
+	brain.return_step(tick, Vector3(c.x + off.x, global_position.y, c.z + off.y))
+
+
+## M9 gate (lane review): the living body standing on this member's post (its edge within LEASH_ARRIVE_M of
+## home_position, as _leash_blocker's on_post), as {"centre", "radius"}; {} when the post is free.
+func _leash_post_taker() -> Dictionary:
+	var my_r := float(record.get("capsule_radius_m", 0.5))
+	var best: CombatEntity = null
+	var best_r := 0.0
+	var best_gap := INF
+	for e: CombatEntity in Sim.entities():
+		if e == entity or not e.is_alive() or not is_instance_valid(e.actor) or not (e.actor is CharacterBody3D):
+			continue
+		var r := _leash_body_radius(e)
+		var gap := Vector2(home_position.x - e.actor.global_position.x, home_position.z - e.actor.global_position.z).length() - r - my_r
+		if gap < LEASH_ARRIVE_M and gap < best_gap:
+			best = e
+			best_r = r
+			best_gap = gap
+	if best == null:
+		return {}
+	return {"centre": best.actor.global_position, "radius": best_r}
+
+
+## The radius _leash_blocker and _leash_post_taker give a body: the giant's profile's, else its record's.
+static func _leash_body_radius(e: CombatEntity) -> float:
+	var giant := e.actor as GiantPlayer
+	if giant != null:
+		return float(giant.profile.get("capsule_radius_m", 0.85))
+	return float(GameData.get_record(e.definition_id).get("capsule_radius_m", 0.5))
 
 
 ## W23 (P39f): the body pinning this member on its way home (see LEASH_DETOUR_*): the nearest living actor
@@ -2013,12 +2151,7 @@ func _leash_blocker() -> Dictionary:
 	for e: CombatEntity in Sim.entities():
 		if e == entity or not e.is_alive() or not is_instance_valid(e.actor) or not (e.actor is CharacterBody3D):
 			continue
-		var r := 0.5
-		var giant := e.actor as GiantPlayer
-		if giant != null:
-			r = float(giant.profile.get("capsule_radius_m", 0.85))
-		else:
-			r = float(GameData.get_record(e.definition_id).get("capsule_radius_m", 0.5))
+		var r := _leash_body_radius(e)
 		var off := e.actor.global_position - global_position
 		off.y = 0.0
 		var gap := off.length() - r - my_r
@@ -2058,10 +2191,13 @@ func _leash_detour_point(blocker: Dictionary) -> Vector3:
 
 ## Ends the return: the hook goes, a living member is healed (if the 6 s had not passed yet) and
 ## its AI resumes from IDLE at home; a dead one's brain becomes DEAD. in_world: still in the
-## level (false when it left the tree: only the state is reset).
-func _end_leash_return(in_world: bool) -> void:
+## level (false when it left the tree: only the state is reset). heal false: an early end (its post
+## taken, its way lost; M9 gate, lane review) - no heal that LEASH_HEAL_S had not given yet.
+func _end_leash_return(in_world: bool, heal := true) -> void:
 	_leash_returning = false
 	leash_started_tick = -1
+	leash_waiting = ""
+	leash_detour = Vector3.INF
 	if _leash_hook_owner != null:
 		Sim.remove_hooks(_leash_hook_owner)
 		_leash_hook_owner = null
@@ -2070,7 +2206,7 @@ func _end_leash_return(in_world: bool) -> void:
 	if Events.ability_started.is_connected(_on_noise_while_returning):
 		Events.ability_started.disconnect(_on_noise_while_returning)
 	var alive := entity != null and entity.combatant != null and entity.is_alive()
-	if in_world and alive and not _leash_healed:
+	if in_world and alive and heal and not _leash_healed:
 		_leash_heal()
 	ai_enabled = _leash_ai_was_enabled
 	if brain != null:
@@ -2079,12 +2215,12 @@ func _end_leash_return(in_world: bool) -> void:
 
 func _on_hit_while_returning(_result: HitResult) -> void:
 	if _leash_returning and brain != null:
-		brain.return_step(Sim.tick, home_position)
+		_leash_drive(Sim.tick)
 
 
 func _on_noise_while_returning(_tick: int, _actor_id: String, _action_id: String, _instance: int) -> void:
 	if _leash_returning and brain != null and is_inside_tree():
-		brain.return_step(Sim.tick, home_position)
+		_leash_drive(Sim.tick)
 
 
 ## Full health (through CombatEntity.heal, so Events.healed shows it), full stamina, no poise
