@@ -444,11 +444,60 @@ func test_the_reeve_speaks_of_the_raid() -> void:
 		"hostile, she still sends the giant away")
 	assert_eq(start.call({"world.millford.burned": true, "faction.millford.hostile": true, "faction.millford.reconciled": true}),
 		"burned", "reconciled, the raid again")
-	for id: String in ["burned", "defended"]:
+	# M9 gate (lane review): the raid is defended while fewer than lost_to_fail of its houses fall, and a fallen
+	# house stays burned (a destroyed prop, saved) - her thanks said every house still had its roof over the ashes.
+	# With a house of the raid's objective destroyed she speaks of the losses; the houses she counts are the raid's.
+	var objective: Dictionary = raid.get("objective", {})
+	var houses: Array = objective.get("targets", [])
+	assert_true(int(objective.get("lost_to_fail", 0)) >= 2 and houses.size() >= 3,
+		"a defended raid may lose up to %d of its %d houses" % [int(objective.get("lost_to_fail", 0)) - 1, houses.size()])
+	var counted: Array = []
+	for entry: Dictionary in rec.get("entries", []):
+		if str(entry.get("node", "")) == "defended_losses":
+			counted = _destroyed_ids(entry.get("conditions", []))
+	counted.sort()
+	var expected := houses.duplicate()
+	expected.sort()
+	assert_eq(counted, expected, "the losses she counts are the raid's protected houses")
+	var after := func(flags: Dictionary, burned: Array) -> String:
+		var ctx := QuestConditions.empty_context()
+		ctx.flags = flags
+		var deltas := {}
+		for h: Variant in burned:
+			deltas[str(h)] = {"destroyed": true, "damage_stage": 1}
+		ctx.deltas = deltas
+		return DialogueSession.start_node(rec, ctx)
+	var defended := {"world.millford.defended": true}
+	for h: Variant in houses:
+		assert_eq(after.call(defended, [h]), "defended_losses", "defended, %s burned: she speaks of the losses" % h)
+	assert_eq(after.call(defended, houses.slice(0, int(objective.get("lost_to_fail", 0)) - 1)), "defended_losses",
+		"defended with the most houses a defence may lose")
+	assert_eq(after.call(defended, []), "defended", "defended with every house standing: every roof stands")
+	assert_eq(after.call({"world.millford.defended": true, "world.millford.burned": true}, houses), "burned",
+		"defended, then burned: the burned houses come first")
+	assert_eq(after.call({"world.millford.defended": true, "faction.millford.hostile": true}, [houses[0]]), "hostile",
+		"hostile, she still sends the giant away")
+	assert_false(str(DialogueSession.node_record(rec, "defended_losses").get("text", "")).to_lower().contains("every house"),
+		"the losses' words do not say every house stands")
+	for id: String in ["burned", "defended", "defended_losses"]:
 		var node := DialogueSession.node_record(rec, id)
 		assert_true(str(node.get("text", "")).length() > 40, "%s has its words" % id)
 		var nexts: Array = (node.get("choices", []) as Array).map(func(c: Dictionary) -> String: return str(c.get("next", "")))
 		assert_true(nexts.has("troubles") and nexts.has(""), "%s leads on to her troubles and lets the giant go (%s)" % [id, nexts])
+
+
+## The world ids of every destroyed condition in `conds` (any depth of all / any / not / count).
+static func _destroyed_ids(conds: Variant) -> Array:
+	var out: Array = []
+	if typeof(conds) == TYPE_ARRAY:
+		for c: Variant in conds:
+			out.append_array(_destroyed_ids(c))
+	elif typeof(conds) == TYPE_DICTIONARY:
+		var d: Dictionary = conds
+		if str(d.get("type", "")) == "destroyed":
+			out.append(str(d.get("world_id", "")))
+		out.append_array(_destroyed_ids(d.get("of", [])))
+	return out
 
 
 ## W23 (P39f; FOLLOWUPS "From P36"): the toll fort's watchtower shows its archers. Its top is an open lookout -
