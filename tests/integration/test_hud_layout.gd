@@ -751,12 +751,16 @@ func test_hotbar_timer_shade_and_target_labels_never_collide() -> void:
 	c.cooldowns.clear()
 	hud.refresh()
 	assert_true((first.title as Label).visible and (first.timer as Label).text == "", "ready again: the title shows")
-	# The target labels: as projectile slots' would sit, side by side, they never intersect.
+	# The target labels: as projectile slots' would sit, side by side, they never touch. M9 gate (final; the early
+	# audit's R3): a shared edge counts as touching (intersects(..., true), as "clear of" is read above) - the old
+	# 64 px labels on the 64 px pitch met edge to edge and passed the strict form - and each label is its slot's width.
 	var labels: Array[Rect2] = []
 	for slot: Dictionary in slots:
 		labels.append(_rect_in(hud, slot.target as Control))
+	for i in range(labels.size()):
+		assert_near(labels[i].size.x, Hud.SLOT_SIZE.x, 0.5, "slot %d's target label is the slot's width" % (i + 1))
 	for i in range(labels.size() - 1):
-		assert_false(labels[i].intersects(labels[i + 1]), "the target labels of slots %d and %d do not touch: %s / %s" % [
+		assert_false(labels[i].intersects(labels[i + 1], true), "the target labels of slots %d and %d do not touch: %s / %s" % [
 			i + 1, i + 2, labels[i], labels[i + 1]])
 	var target := first.target as Label
 	var font := target.get_theme_font("font")
