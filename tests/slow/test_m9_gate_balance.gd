@@ -106,6 +106,34 @@ func test_a_lone_soldier_flees_a_stage_4_giant_on_sight_and_not_a_stage_3_one() 
 		"a pikeman has no tier: formations keep their ground as they did")
 
 
+## The Raiders' Hollow (gate_world's w.peaceful:novice:1): a shieldman thrown 30 m up came down through the
+## ground and fell on, alive, until its encounter could never clear. A living enemy below the world is set
+## back at its home on the floor, still; a dead one, or one in the giant's hand, is left alone.
+func test_an_enemy_fallen_through_the_world_is_set_back_at_its_home() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	var home := Vector3(6, 0.05, -10)
+	var s := spawn_soldier(home, 0.0, "test.m9_void", false)
+	await TestWait.until(self, func() -> bool: return s.is_on_floor(), 40)
+	assert_near(s.home_position.distance_to(home), 0.0, 0.1, "its home is where it came into the world")
+	s.global_position = Vector3(30, EnemyActor.OUT_OF_WORLD_Y - 5.0, 40)
+	s.velocity = Vector3(0, -40, 0)
+	s.knockback_velocity = Vector3(3, 0, 0)
+	await step_ticks(2)
+	assert_true(s.global_position.y > EnemyActor.OUT_OF_WORLD_Y, "it is back above the world (y %.1f)" % s.global_position.y)
+	assert_true(Vector2(s.global_position.x - home.x, s.global_position.z - home.z).length() < 0.5,
+		"at its home (%s)" % s.global_position)
+	assert_true(s.entity.is_alive(), "alive, as it fell")
+	assert_true(s.knockback_velocity.length() < 0.5 and s.velocity.y > -1.0, "and still")
+	await TestWait.until(self, func() -> bool: return s.is_on_floor(), 40)
+	assert_true(s.is_on_floor(), "standing on the floor there")
+	assert_false(s.recover_from_void(), "above the world nothing moves it")
+	s.ai_enabled = false
+	s.entity.combatant.dead = true
+	s.global_position = Vector3(30, EnemyActor.OUT_OF_WORLD_Y - 5.0, 40)
+	assert_false(s.recover_from_void(), "a dead body is left where it fell")
+	assert_true(s.global_position.y < EnemyActor.OUT_OF_WORLD_Y, "(it stays below)")
+
+
 ## A formation of five pikemen and its banner around `pivot`, AI off, aware of the giant.
 func _formation(pivot: Vector3) -> void:
 	f = Formation.new()

@@ -349,6 +349,28 @@ func _update_movement(dt: float) -> void:
 	velocity.x = move_velocity.x + knockback_velocity.x
 	velocity.z = move_velocity.z + knockback_velocity.z
 	move_and_slide()
+	recover_from_void()
+
+
+## M9 gate (lane "balance"): a body this far down fell through the world. The giant has the same rule
+## (GiantPlayer.OUT_OF_WORLD_Y: set back at its spawn); an enemy had none.
+const OUT_OF_WORLD_Y := -30.0
+
+
+## M9 gate: a living enemy below OUT_OF_WORLD_Y - one of the Raiders' Hollow's shieldmen, thrown 30 m up
+## over the stage-4 giant, came down through the ground and fell on for good: alive and out of every
+## reach, it kept its encounter from clearing and the march's help ran out its watchdog (`gate_world`'s
+## w.peaceful:novice:1) - is set back where it came into the world: its home, on the floor there
+## (release_position), standing still, and finds its way again. True when it was moved.
+func recover_from_void() -> bool:
+	if global_position.y >= OUT_OF_WORLD_Y or grab_holder_id != "" or entity == null or not entity.is_alive():
+		return false
+	global_position = release_position(home_position, [])
+	velocity = Vector3.ZERO
+	move_velocity = Vector3.ZERO
+	knockback_velocity = Vector3.ZERO
+	request_repath()
+	return true
 
 
 ## Brain-driven steering: path with the NavigationAgent beyond DIRECT_STEER_DISTANCE, steer
