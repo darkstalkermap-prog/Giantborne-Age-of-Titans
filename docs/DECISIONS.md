@@ -432,12 +432,12 @@ tuning iteration; fix-up 1 made the Matriarch's brazier lure the expert's alone,
 novice a slay.
 
 **P39f Fixes and polish.** Every defect was reproduced on `wave-22` (a failing test or a probe of the
-shipped world) before it was fixed. Left, with reasons: far people as plain posts, faint seams in the distant haze, the siege trains of the
-wander tables (a framework change), the worst streaming frame headless (a text scene's parse;
-exports ship binary scenes), and Godot's exit-time report of resources held by process-lifetime
-caches after a completed campaign (recorded, not hidden). The web checks' default verdicts pass a
-hole cut short by the recording's end with no driver read inside it (`holes_cut_at_disarm`, reported
-apart); the strict forms are unchanged.
+shipped world) before it was fixed. Left, with reasons: far people as plain posts, faint seams in the
+distant haze, the siege trains of the wander tables (a framework change), the worst streaming frame
+headless (a text scene's parse; exports ship binary scenes), and Godot's exit-time report of
+resources held by process-lifetime caches after a completed campaign (recorded, not hidden). The web
+checks' default verdicts pass a hole cut short by the recording's end with no driver read inside it
+(`holes_cut_at_disarm`, reported apart); the strict forms are unchanged.
 
 ## 3. Fixes from the milestone gate reviews
 
