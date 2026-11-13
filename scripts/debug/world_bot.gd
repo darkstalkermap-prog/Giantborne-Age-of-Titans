@@ -808,6 +808,22 @@ func _fight_ignored_now(_t: EnemyActor) -> bool:
 	return false
 
 
+## The Valley's rule (a target given up for a while), and M9 gate: in the world a placed member (the
+## director's) whose AI is off never moves or strikes - the giants of the clans watching the Moot and of
+## Skarn's steading (P36: AI off, "they never deal damage"), whom a slain Harrok's faction leaves hostile -
+## so it is not fought: a player walks past it. A conqueror expert that slew Harrok struck a watching clan
+## giant 11.7 m off for the throne stage's whole 306 s (each blow that landed took a little health off it,
+## so the chase give-up never ran out) and stopped one step from the throne. (A unit walking home on its
+## leash, a yielded boss and a Matriarch in flight have their AI off too: BotCombat.is_threat leaves the
+## first two out already, and the third leaves the fight.)
+func _is_ignored(e: EnemyActor) -> bool:
+	if super(e):
+		return true
+	if not _in_world() or e == null or e.ai_enabled or e.entity == null or director == null:
+		return false
+	return director.spawned(e.entity.entity_id) == e
+
+
 ## The Valley's choice, but in the world an enemy out of melee reach above the giant is fought only
 ## while a ranged blow is ready, and given up (RANGED_IGNORE_S) when those blows have not hurt it in
 ## RANGED_GIVE_UP_S: the Valley's choice kept such an enemy as the task's preferred target, BotCombat

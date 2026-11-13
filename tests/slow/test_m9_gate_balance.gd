@@ -14,6 +14,8 @@ extends IntegrationSuite
 ##     pike wall and archers (the toll fort);
 ##   * the bot's lock invariant waits out the tick a locked formation's last member routs in (the giant
 ##     drops the lock in its own next step);
+##   * the world bot walks past a placed member whose AI is off (the clans watching the Moot, hostile once
+##     Harrok is slain, never strike);
 ##   * the music's combat radius is capped for a stage-4+ giant (audio_mix.intensity.combat_cap_m): a
 ##     formation holding 50 m off raises danger, one 30 m off or a boss combat; the Valley's stages keep the
 ##     scaled radius.
@@ -332,6 +334,33 @@ func test_the_world_expert_keeps_its_dodge_reserve_only_for_blows_it_dodges() ->
 	assert_false(c.affordable(light3), "at stage 3 the expert keeps the reserve whatever stands near (the Valley unchanged)")
 	ogre.queue_free()
 	archer.queue_free()
+
+
+func test_the_bot_walks_past_a_placed_member_whose_ai_is_off() -> void:
+	await _giant(6, Vector3(0, 0.05, 0))
+	_bot("expert")
+	var watcher := TestSpawn.enemy(world, "res://scenes/enemies/rival_giant.tscn", Vector3(0, 0.05, -12),
+		"test.m9_moot_watcher", false, 0.0)   # a clan giant watching the Moot: placed with its AI off
+	var loose := TestSpawn.enemy(world, "res://scenes/enemies/rival_giant.tscn", Vector3(12, 0.05, 0),
+		"test.m9_loose_giant", false, 0.0)
+	await step_ticks(2)
+	watcher.brain.aware = true   # Harrok slain: the clans' faction hostile, the watcher alert
+	loose.brain.aware = true
+	var d := EncounterDirector.new()
+	var m := EncounterDirector.Member.new()
+	m.entity_id = watcher.entity.entity_id
+	m.node = watcher
+	d._members[m.entity_id] = m
+	bot.director = d
+	assert_true(bot.combat.is_threat(watcher), "the watcher is a threat to the fight's rules (hostile, aware)")
+	assert_true(bot._is_ignored(watcher), "a placed member whose AI is off is walked past")
+	assert_false(bot._is_ignored(loose), "an enemy that is not the director's is fought as before (the tests' AI-off foes)")
+	watcher.ai_enabled = true
+	assert_false(bot._is_ignored(watcher), "with its AI on, the placed member is fought")
+	bot.director = null
+	d.free()
+	watcher.queue_free()
+	loose.queue_free()
 
 
 func test_the_lock_invariant_waits_out_the_tick_a_locked_formation_routs_in() -> void:
