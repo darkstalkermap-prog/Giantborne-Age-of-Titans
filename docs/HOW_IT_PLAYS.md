@@ -525,7 +525,7 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   the expert's world rules, a bot question for the confirmation phase.
 - **Pace**: the main path played straight is about 30 minutes against 75-140 (above): a person's time is the
   measure.
-- **The music among lesser enemies** is in combat 44 % of the time (target under 25 %): P28's mix data.
+- **The music among lesser enemies** is in combat 43 % of the time (target under 25 %): P28's mix data.
 - **Abilities**: Rampart Grip and Titan Stomp sit unused in more than half the runs, Earthquake and Heavy Footfall
   in a third; one ability takes over 40 % of the ability damage in most expert runs (the bot's policy).
 - **The worst streaming work frame** is a large props part's text parse (12.5 ms on the world walk
