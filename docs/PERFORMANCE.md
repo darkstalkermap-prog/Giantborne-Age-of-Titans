@@ -606,6 +606,17 @@ stage 4 everyone is within the 60 m promotion radius), 10 with nobody promoted (
 the two banners), and 244 drawn as forty rigs. Headless, the same 40 at AI tier 0 cost 3.5-4.3 ms
 per tick at p95 (budget 5 ms); the `--stress-formations` scenario, 40 s: p95 3.69 ms.
 
+**The load rule of the slow tier's CPU cases** (M9 gate, lane review): the two headless cases of
+`tests/slow/test_formation_perf.gd` (the 40 members, 5 ms; with P39's two engines, 8 ms) time real ticks
+on a machine shared with other work, so they are load-sensitive: at a load average of 8-9 on 4 CPUs the
+engine case read 10.41 ms from its one window and the 40 members 10.94 and 11.54 ms from their two (the
+review's run), on an idle machine 4.3-4.4 ms. Both now take the better of two windows when the first is
+over budget, print the 1-minute load average at the measurement's start (`/proc/loadavg`) and the CPU
+count beside their numbers, and, over budget when that load average is above the CPU count, print the
+measurement as a WARNING instead of failing. The budgets are unchanged and a quiet machine (load at or
+below the CPU count, or no load average to read) still fails a real regression. At the gate's check
+(load 2.96 on 4 CPUs): 4.28 ms with the engines, 3.80 ms without.
+
 ### Draw calls after P27 (the HUD)
 
 FOLLOWUPS' row ("Valley views at `low` still pass 250 draw calls") went on to P27 for the HUD, about
