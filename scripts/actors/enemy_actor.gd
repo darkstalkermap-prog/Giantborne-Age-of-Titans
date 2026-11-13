@@ -1893,6 +1893,18 @@ const LEASH_HEAL_S := 6.0
 const LEASH_ARRIVE_M := 1.5
 ## PRE_ACTORS hook order of the return (after the EncounterDirector's 10).
 const LEASH_HOOK_ORDER := 12
+## W23 (P39f; FOLLOWUPS "From the M8 screenshot pass"): a return pinned against a body in its way (a stage-6
+## giant standing between a rider and its post: actors are not on the navmesh, so the path runs through him)
+## rides round it. A body counts as in the way when its edge is within LEASH_DETOUR_REACH_M of this member's
+## and it lies ahead (toward home); the detour point stands LEASH_DETOUR_CLEAR_M beyond both edges beside it,
+## past its centre, first on the side the member already is, the other side after a second failure; a detour
+## lasts at most LEASH_DETOUR_S. A body standing on its post (home within its edge) ends the return where the
+## member is, as do LEASH_GIVE_UP_FAILURES path failures in one return: its AI resumes (inside the leash, near
+## its post, it is not sent home again).
+const LEASH_DETOUR_REACH_M := 2.5
+const LEASH_DETOUR_CLEAR_M := 3.0
+const LEASH_DETOUR_S := 6.0
+const LEASH_GIVE_UP_FAILURES := 6
 
 ## Tick the current leash return began (-1 when it is not returning).
 var leash_started_tick := -1
@@ -1902,6 +1914,13 @@ var _leash_returning := false
 var _leash_healed := false
 var _leash_ai_was_enabled := true
 var _leash_hook_owner: RefCounted = null
+## W23 (P39f): the return's detour round a body in its way (INF: none), when it began, the path failures seen
+## so far in this return and how many detours it took (the side alternates).
+var leash_detour := Vector3.INF
+var leash_detours := 0
+var _leash_detour_tick := -1
+var _leash_failures_seen := 0
+var _leash_failures := 0
 
 
 ## Starts the leash return (plan §2.7.3): drop the target and its attack tokens, run home to
@@ -1916,6 +1935,10 @@ func begin_leash_return() -> void:
 	leash_count += 1
 	_leash_ai_was_enabled = ai_enabled
 	ai_enabled = false   # no perception, no decisions: it ignores targets until it is home
+	leash_detour = Vector3.INF
+	leash_detours = 0
+	_leash_failures = 0
+	_leash_failures_seen = path_failures
 	Sim.release_all_tokens(entity.entity_id)
 	_release_formation_marker()
 	brain.begin_return(Sim.tick)
@@ -1953,7 +1976,84 @@ func _leash_step(tick: int) -> void:
 	if to_home.length() <= LEASH_ARRIVE_M:
 		_end_leash_return(true)
 		return
+	if path_failures > _leash_failures_seen:   # W23 (P39f): no progress for a path check - something is in the way
+		_leash_failures += path_failures - _leash_failures_seen
+		_leash_failures_seen = path_failures
+		var blocker := _leash_blocker()
+		if _leash_failures >= LEASH_GIVE_UP_FAILURES or (not blocker.is_empty() and bool(blocker.on_post)):
+			_end_leash_return(true)   # its post is taken: the return ends here and the AI resumes
+			return
+		leash_detour = _leash_detour_point(blocker)
+		_leash_detour_tick = tick
+		if leash_detour != Vector3.INF:
+			leash_detours += 1
+	if leash_detour != Vector3.INF:
+		var to_detour := Vector2(leash_detour.x - global_position.x, leash_detour.z - global_position.z)
+		if to_detour.length() > LEASH_ARRIVE_M * 2.0 and tick - _leash_detour_tick < ActionDef.seconds_to_ticks(LEASH_DETOUR_S):
+			brain.return_step(tick, leash_detour)
+			return
+		leash_detour = Vector3.INF
 	brain.return_step(tick, home_position)
+
+
+## W23 (P39f): the body pinning this member on its way home (see LEASH_DETOUR_*): the nearest living actor
+## whose edge is within LEASH_DETOUR_REACH_M of this member's and that lies ahead, as {"centre", "radius",
+## "on_post": true when home lies within its edge}; {} when none (a wall or a cliff: the return keeps to its
+## path).
+func _leash_blocker() -> Dictionary:
+	var to_home := home_position - global_position
+	to_home.y = 0.0
+	if to_home.length() < 0.5:
+		return {}
+	var dir := to_home.normalized()
+	var my_r := float(record.get("capsule_radius_m", 0.5))
+	var best: CombatEntity = null
+	var best_r := 0.0
+	var best_gap := INF
+	for e: CombatEntity in Sim.entities():
+		if e == entity or not e.is_alive() or not is_instance_valid(e.actor) or not (e.actor is CharacterBody3D):
+			continue
+		var r := 0.5
+		var giant := e.actor as GiantPlayer
+		if giant != null:
+			r = float(giant.profile.get("capsule_radius_m", 0.85))
+		else:
+			r = float(GameData.get_record(e.definition_id).get("capsule_radius_m", 0.5))
+		var off := e.actor.global_position - global_position
+		off.y = 0.0
+		var gap := off.length() - r - my_r
+		if gap > LEASH_DETOUR_REACH_M or off.dot(dir) <= 0.0 or gap >= best_gap:
+			continue
+		best = e
+		best_r = r
+		best_gap = gap
+	if best == null:
+		return {}
+	var c := best.actor.global_position
+	var home_gap := Vector2(home_position.x - c.x, home_position.z - c.z).length() - best_r - my_r
+	return {"centre": c, "radius": best_r, "on_post": home_gap < LEASH_ARRIVE_M}
+
+
+## W23 (P39f): the detour point round `blocker` (_leash_blocker): beside it, past its centre toward home, on the
+## side this member is (the other one on every second detour). INF without a blocker.
+func _leash_detour_point(blocker: Dictionary) -> Vector3:
+	if blocker.is_empty():
+		return Vector3.INF
+	var to_home := home_position - global_position
+	to_home.y = 0.0
+	var dir := to_home.normalized() if to_home.length() > 0.01 else Vector3.FORWARD
+	var my_r := float(record.get("capsule_radius_m", 0.5))
+	var c: Vector3 = blocker.centre
+	var best_r := float(blocker.radius)
+	var side := Vector3(-dir.z, 0.0, dir.x)
+	if (global_position - c).dot(side) < 0.0:
+		side = -side
+	if leash_detours % 2 == 1:
+		side = -side   # the side tried last failed too: round the other way
+	var around := best_r + my_r + LEASH_DETOUR_CLEAR_M
+	var past := minf(around, maxf(0.0, (home_position - c).dot(dir)))
+	var p := c + side * around + dir * past
+	return Vector3(p.x, global_position.y, p.z)
 
 
 ## Ends the return: the hook goes, a living member is healed (if the 6 s had not passed yet) and
@@ -2684,10 +2784,28 @@ func target_out_of_reach(my_position: Vector3, target_pos: Vector3, band: Vector
 #     hittable during this unit's hit queries (AttackRunner.provider_target: the M1 team rule lets an
 #     enemy hit only the player); the perception gives it its own radius and no size (no awe, no
 #     outmatched tactics against a house). Without `targets` nothing changes.
+#     W23 (P39f; FOLLOWUPS "From P37"): with none of those in sight it keeps no target (it patrols or
+#     idles on) - it no longer falls back to the giant it does not see, against whom an aware raider at
+#     stages 4-5 measured itself 100 m off and routed (the outmatched rule), thinning the Millford raid.
+#     It never takes a target its blows cannot damage (_p30_out_of_reach): a civilian in shelter (inside,
+#     out of the world's physics), a protected NPC (Reeve Tamsin refuses every blow), or one it gave up -
+#     fixed on an NPC or prop for P30_GIVE_UP_S without damaging it, it leaves it for P30_GIVEN_UP_S
+#     (_p30_futile; a raider stood at the mill's shelter for the rest of a raid). The count runs only while
+#     the provider keeps picking that NPC or prop: the giant in between, or over P30_FIX_GAP_S with nothing
+#     in sight or asleep, starts it again (W23 fix-up: a raider that fought the giant for 12 s gave its
+#     house up the moment he stepped off).
 
 ## At this stage or more, an outmatched soldier that finds no formation to join flees (plan §5.14:
 ## at stage 4 single humans flee; smaller giants keep P04's lines).
 const JOIN_OR_FLEE_STAGE := 4
+## W23 (P39f): the target provider gives up an NPC or prop it has been fixed on this long without
+## damaging it (_p30_futile), and takes it again only after P30_GIVEN_UP_S.
+const P30_GIVE_UP_S := 12.0
+const P30_GIVEN_UP_S := 60.0
+## W23 fix-up: the give-up count starts again when the provider has not picked the target it is fixed on
+## for longer than this (nothing in sight, or a dormant unit): an awake unit senses at least once a
+## second (AI LOD tier 1), a dormant one never.
+const P30_FIX_GAP_S := 2.0
 ## Arm poses (yaw, pitch in degrees: weapon arm, off arm) of a braced member, by role: the pike
 ## levelled at the giant's legs (the pike lies along the weapon arm), the shield raised, a line's
 ## blades low. The crowd renderer's brace meshes are built from the same table
@@ -2708,6 +2826,13 @@ var _p30_last_formation: Formation = null
 var _p30_incoming: HitEvent = null
 var _p30_target_tick := -1
 var _p30_target_ref: WeakRef = null
+## W23 (P39f): the provider target this unit is fixed on ("" = none), the tick it fixed on it or last
+## damaged it and the tick the provider last picked it; the targets it gave up (entity id -> the tick it
+## may take them again).
+var _p30_fix_id := ""
+var _p30_fix_tick := -1
+var _p30_fix_seen_tick := -1
+var _p30_given_up := {}
 var _p30_extents := {}   # entity id -> Vector3 (half extents of its hurtboxes in its own frame)
 ## M7 gate: the band a running band_pulse strikes, taken when its windup began - the band its
 ## telegraph shows ({"instance": the action's instance id, "band": the band}; {} when none).
@@ -3031,9 +3156,12 @@ func _p30_target() -> CombatEntity:
 	if player != null and player.is_alive() and _p30_player_engaged(player, t):
 		pick = player
 	else:
+		# W23 (P39f): none in sight - no target (never the giant it does not see; see the section notes)
 		pick = _p30_nearest_target(t)
-		if pick == null:
-			pick = player
+		if pick != null and _p30_futile(pick):
+			pick = _p30_nearest_target(t)   # given up: the next one, if any
+	if pick != null and pick == player:
+		_p30_fix_id = ""   # W23 fix-up: the giant ends the fix as another target does (the give-up count, _p30_futile)
 	if pick != cached and cached != null and entity != null:
 		Sim.release_all_tokens(entity.entity_id)
 		if brain != null:
@@ -3076,7 +3204,7 @@ func _p30_nearest_target(t: Dictionary) -> CombatEntity:
 	for e: CombatEntity in Sim.entities():
 		if e == entity or e.team != CombatEntity.Team.NEUTRAL or not e.is_alive() or not is_instance_valid(e.actor):
 			continue
-		if not _p30_allowed(e, t):
+		if not _p30_allowed(e, t) or _p30_out_of_reach(e):
 			continue
 		var d := _flat_len(e.actor.global_position - global_position)
 		if d > best_d:
@@ -3101,6 +3229,49 @@ func _p30_allowed(e: CombatEntity, t: Dictionary) -> bool:
 		if tags.has(str(tag)):
 			return true
 	return false
+
+
+## W23 (P39f): true for an NPC or prop no blow of this unit can damage now: one it gave up (_p30_futile)
+## until its time is up, a civilian in shelter (inside: hidden, out of the world's physics) and a
+## protected NPC (it refuses every hit).
+func _p30_out_of_reach(e: CombatEntity) -> bool:
+	if int(_p30_given_up.get(e.entity_id, -1)) > Sim.tick:
+		return true
+	var c := e.actor as Civilian
+	return c != null and (c.sheltered or not c.accepts_hit(null))
+
+
+## W23 (P39f): the provider's give-up rule. True when this unit has been fixed on `e` (the NPC or prop the
+## provider picks) for P30_GIVE_UP_S without damaging it: `e` is given up for P30_GIVEN_UP_S. The count
+## runs only while the provider keeps picking `e`: picking another target (another NPC or prop, or the
+## giant: _p30_target ends the fix), no pick of `e` for over P30_FIX_GAP_S (nothing in sight that long, or
+## a dormant unit, which senses nothing) or a blow that damages `e` (_p30_on_hit_landed) starts it again.
+## A shorter spell with nothing in sight (a sight line passing a post) does not, so a target the unit keeps
+## losing and finding is still given up. W23 fix-up: before, a fight with the giant, a long spell with
+## nothing in sight or a sleep counted as time spent on `e`, and the unit gave `e` up the moment it saw it.
+func _p30_futile(e: CombatEntity) -> bool:
+	if entity != null and not entity.hit_landed.is_connected(_p30_on_hit_landed):
+		entity.hit_landed.connect(_p30_on_hit_landed)
+	var gap := Sim.tick - _p30_fix_seen_tick
+	_p30_fix_seen_tick = Sim.tick
+	if e.entity_id != _p30_fix_id or gap > int(roundf(P30_FIX_GAP_S * Sim.TICK_RATE)):
+		_p30_fix_id = e.entity_id
+		_p30_fix_tick = Sim.tick
+		return false
+	if Sim.tick - _p30_fix_tick < int(roundf(P30_GIVE_UP_S * Sim.TICK_RATE)):
+		return false
+	for id: Variant in _p30_given_up.keys():
+		if int(_p30_given_up[id]) <= Sim.tick:
+			_p30_given_up.erase(id)
+	_p30_given_up[e.entity_id] = Sim.tick + int(roundf(P30_GIVEN_UP_S * Sim.TICK_RATE))
+	_p30_fix_id = ""
+	return true
+
+
+## W23 (P39f): a blow of this unit that damaged the target it is fixed on restarts the give-up count.
+func _p30_on_hit_landed(result: HitResult) -> void:
+	if result != null and result.event != null and result.event.target_id == _p30_fix_id and result.dealt_damage():
+		_p30_fix_tick = Sim.tick
 
 
 ## AttackRunner.provider_target: the NPC or prop this unit fights now (its brain's target when the

@@ -12,6 +12,10 @@ extends IntegrationSuite
 ## without room - the F47 run was refused twice there. A giant using a shrine whose spot has no room now grows
 ## on the shrine's pad (PlayerGrowth.shrine_clearance / pad_with_room): from every spot within reach of every
 ## world shrine the shrine's stage has room, and at the F47 run's spots the giant grows, on the pad.
+## W23 (P39f): the builder's no-scenery grid takes its marks now and the world was rebuilt: no trunk stands in
+## a shrine's 22 m clearing (the Greywood's five are gone), so every spot within reach of every shrine has room
+## where it stands and no growth steps to the pad (the step to the pad is tested on boxes in
+## tests/integration/test_shrine.gd); the F47 spots grow where the giant stands.
 
 const SCENE := "res://scenes/world/world.tscn"
 const REGIONS := ["crownmarch", "greywood", "drowned_steps", "aldmere", "stonehold"]
@@ -165,5 +169,5 @@ func test_a_giant_using_a_shrine_grows_from_anywhere_within_its_reach() -> void:
 					assert_true(Vector2(p.global_position.x - pad.x, p.global_position.z - pad.z).length() < 0.5,
 						"its own spot had no room (%s): it grew on the shrine's pad" % before.get("blocker", ""))
 	assert_eq(no_room, PackedStringArray(), "from every spot within a world shrine's reach the giant has room to grow")
-	assert_true(stepped > 0, "some spots (the Greywood clearing's) grow on the pad (%d)" % stepped)
+	assert_eq(stepped, 0, "every spot within a shrine's reach has room where it stands: the clearings are clear (%d step to the pad)" % stepped)
 

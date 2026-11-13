@@ -433,3 +433,88 @@ func test_why_an_event_waits_is_kept_and_a_column_gone_from_the_world_holds_noth
 	_wd.check_events(Sim.tick)
 	assert_false(str(_wd.hold_reasons.get(F.RAID, "")).begins_with("in_play"), "and it holds nothing (%s)" % _wd.hold_reasons.get(F.RAID, ""))
 
+
+
+## W23 (P39f; FOLLOWUPS "From the M8 gate review"): the director gives back only a tracker it holds - it tracked
+## the event itself and nobody has moved the tracker since (WorldEvent.holds_tracker, kept across a reload and in
+## the flag <event>.tracker_held across a save). After a load the run resumed waiting, out of play: the journal's
+## Track of it was undone within 0.1 s (sync_tracking gave back any tracker on an event out of play) and the
+## tracker went to the quest the event had taken it from, not to the player's own choice.
+func test_after_a_reload_the_players_track_of_an_event_out_of_play_stands() -> void:
+	_setup()
+	QuestFixtures.install([
+		QuestFixtures.quest("quest.test_fixup_main", [QuestFixtures.stage("go", QuestFixtures.flag_cond("test.never"))]),
+		QuestFixtures.quest("quest.test_fixup_side", [QuestFixtures.stage("go", QuestFixtures.flag_cond("test.never_side"))])])
+	QuestFixtures.activate(["quest.test_fixup_main", "quest.test_fixup_side"], [], "quest.test_fixup_main")
+	Quests.evaluate_now()
+	assert_true(Quests.track("quest.test_fixup_side"), "the player follows the side quest")
+	var raid: WorldEvent = _wd.events[F.RAID]
+	WorldState.set_flag("p37.raid.on", true)
+	_wd.check_events(Sim.tick)
+	assert_true(raid.is_running() and Quests.tracked_quest_id == F.RAID, "the raid starts by the giant and takes the tracker")
+	assert_true(raid.holds_tracker and WorldState.get_flag(WorldEvent.flag(F.RAID, "tracker_held"), false) == true,
+		"the director holds it (and its flag says so for a save)")
+	# The giant walks off east: the raid is left behind and gives the tracker back.
+	F.move_giant(_root, 96.0, 80.0)
+	await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+	assert_false(_wd.in_play(raid), "the raid is left behind")
+	assert_eq(Quests.tracked_quest_id, "quest.test_fixup_side", "the director gave its tracker back to the side quest")
+	assert_false(raid.holds_tracker, "and holds none")
+	# A reload far off (a death, a travel): the raid resumes, waiting out of play.
+	_root.free()
+	var made := F.make(world, Vector3(96.0, 0.0, 80.0))
+	_root = made[0]
+	_wd = made[1]
+	raid = _wd.events[F.RAID]
+	assert_eq(raid.state, WorldEvent.WAITING, "the reload resumes it, waiting")
+	await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+	assert_eq(Quests.tracked_quest_id, "quest.test_fixup_side", "the player's side quest stays tracked")
+	# The journal's Track of the raid, far off: the player's choice stands.
+	assert_true(Quests.track(F.RAID), "the journal's Track")
+	await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+	assert_eq(Quests.tracked_quest_id, F.RAID, "the player's Track of the raid out of play stands after the load")
+	assert_eq(Quests.tracked_id(), F.RAID, "it leads the marker and the compass")
+	assert_false(raid.holds_tracker, "the tracker is the player's, not the director's")
+	# Back by it and it ends: the tracker goes back to the quest it was taken from.
+	F.move_giant(_root, -96.0, 16.0)
+	await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+	assert_true(_wd.in_play(raid), "the raid is in play again")
+	assert_eq(Quests.tracked_id(), F.RAID, "and leads")
+	_wd.end_event(raid, WanderDirector.ABANDONED)
+	assert_eq(Quests.tracked_quest_id, "quest.test_fixup_side", "its end gives the tracker back to the side quest")
+	assert_eq(WorldState.get_flag(WorldEvent.flag(F.RAID, "tracker_held"), false), false, "and the director holds nothing")
+
+
+## W23 (P39f): a run the save holds in progress resumes (a Continue: the carry forgotten) with the director's hold
+## and the quest it gives back to from the flags - its own tracker goes back once it is out of play (M8 gate fix-up
+## 1, N4.4: Aldmere's column resumed waiting far off held the HUD marker for good), the player's own Track stands.
+func test_a_continue_gives_back_only_the_directors_tracker() -> void:
+	_setup()
+	QuestFixtures.install([
+		QuestFixtures.quest("quest.test_fixup_main", [QuestFixtures.stage("go", QuestFixtures.flag_cond("test.never"))]),
+		QuestFixtures.quest("quest.test_fixup_side", [QuestFixtures.stage("go", QuestFixtures.flag_cond("test.never_side"))])])
+	QuestFixtures.activate(["quest.test_fixup_main", "quest.test_fixup_side"], [], "quest.test_fixup_main")
+	Quests.evaluate_now()
+	assert_true(Quests.track("quest.test_fixup_side"), "the player follows the side quest")
+	var raid: WorldEvent = _wd.events[F.RAID]
+	WorldState.set_flag("p37.raid.on", true)
+	_wd.check_events(Sim.tick)
+	assert_eq(Quests.tracked_quest_id, F.RAID, "the raid takes the tracker")
+	for held: bool in [true, false]:
+		# a Continue far off: the carry forgotten, the run resumed from the save's flags, the tracker on the raid
+		if not held:
+			WorldState.set_flag(WorldEvent.flag(F.RAID, "tracker_held"), false)   # the player had tracked it before saving
+		Quests.tracked_quest_id = F.RAID
+		_root.free()
+		WanderDirector._carry.clear()
+		var made := F.make(world, Vector3(96.0, 0.0, 80.0))
+		_root = made[0]
+		_wd = made[1]
+		raid = _wd.events[F.RAID]
+		assert_eq(raid.state, WorldEvent.WAITING, "the Continue resumes the raid, waiting (held %s)" % held)
+		assert_eq(raid.holds_tracker, held, "with the director's hold from the save")
+		await step_ticks(WanderDirector.UPDATE_TICKS * 3)
+		if held:
+			assert_eq(Quests.tracked_quest_id, "quest.test_fixup_side", "the director's tracker goes back to the side quest")
+		else:
+			assert_eq(Quests.tracked_quest_id, F.RAID, "the player's Track stands")

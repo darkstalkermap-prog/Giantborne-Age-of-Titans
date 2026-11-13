@@ -207,3 +207,83 @@ func test_lt_keeps_the_d_pad_for_the_abilities() -> void:
 	await _pad(JOY_BUTTON_DPAD_RIGHT)
 	assert_true(stack.is_open("journal"), "D-pad Right alone opens the journal")
 	assert_eq(router.consume().edges, [] as Array, "and none of them fired an ability")
+
+
+## P39f (FOLLOWUPS, "From the M8 screenshot pass": "the map's labels overlap"): the real world's map at its
+## fullest - every place found, every chunk seen, every stone visited, a pin - at each zoom level, centred on
+## each settlement and on the crowded Kingsgate: no label covers another label or any mark (an icon, the pin),
+## none is cut by the view's edge, the place in focus always shows, and on the whole map every region's label
+## and every settlement's name shows. (On the screenshot pass's frames "Hollowmere" printed over "THE
+## GREYWOOD", "Greywood Shrine" over "Needle waystone", icons sat on "THE CROWNMARCH" and "The Broken Stair".)
+func test_the_world_map_labels_never_overlap() -> void:
+	var idx := WorldIndex.for_level(GameSession.WORLD_LEVEL_ID)
+	assert_true(idx != null, "the world's index")
+	if idx == null:
+		return
+	for id: String in Discovery.poi_table(GameSession.WORLD_LEVEL_ID):
+		WorldState.set_flag(Discovery.discovered_flag(id), true)
+	var g := Discovery.chunk_grid(GameSession.WORLD_LEVEL_ID)
+	var n: Vector2i = g.grid
+	for z in n.y:
+		for x in n.x:
+			WorldState.set_flag(Discovery.seen_flag("c%d_%d" % [x, z]), true)
+	for id: String in idx.checkpoint_ids():
+		WorldState.set_flag(GameSession.VISITED_PREFIX + id, true)
+	WorldState.set_flag(Discovery.PIN_FLAG, [-560.0, -260.0, GameSession.WORLD_LEVEL_ID])
+	var map := stack.open("map", {"level": GameSession.WORLD_LEVEL_ID}) as MapScreen
+	await get_tree().process_frame
+	var font := map.view.get_theme_default_font()
+	var bad := PackedStringArray()
+	var shown := 0
+	# at the screenshot pass's 1280 x 720 and at 1920 x 1080: the stack (and the map filling it) sized so
+	stack.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	for screen: Vector2 in [Vector2(1280, 720), Vector2(1920, 1080)]:
+		stack.size = screen
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var bounds := Rect2(Vector2.ZERO, map.view.size)
+		assert_true(bounds.size.x > 400.0 and bounds.size.y > 300.0, "the map's view is laid out (%s)" % bounds.size)
+		var settlements: Array = map.entries().filter(func(e: Dictionary) -> bool: return str(e.kind) == "settlement")
+		assert_true(settlements.size() >= 6, "the world's settlements are on the map (%d)" % settlements.size())
+		var focus: Array = settlements.map(func(e: Dictionary) -> String: return str(e.id))
+		focus.append_array(["world.shrine.kingsgate", "world.cp.kingsgate_shelf"])
+		for zoom in MapScreen.ZOOMS.size():
+			for id: String in focus:
+				map.set_zoom(zoom)
+				if not map.select(id):
+					continue
+				var labels := map.layout_labels(font)
+				var marks := map.mark_rects()
+				var what := "%dx%d zoom %d, %s" % [int(screen.x), int(screen.y), zoom, id]
+				var in_focus := labels.filter(func(l: Dictionary) -> bool: return str(l.kind) == "selected")
+				if in_focus.size() != 1 or str(in_focus[0].id) != id:
+					bad.append("%s: the place in focus has no label" % what)
+				for i in labels.size():
+					var a: Dictionary = labels[i]
+					var ra: Rect2 = a.rect
+					if not bounds.encloses(ra):
+						bad.append("%s: %s's label is cut by the view's edge (%s)" % [what, a.id, ra])
+					for j in range(i + 1, labels.size()):
+						if ra.intersects(labels[j].rect):
+							bad.append("%s: %s's label covers %s's" % [what, a.id, labels[j].id])
+					for k: String in marks:
+						if ra.intersects(marks[k]):
+							bad.append("%s: %s's label covers the mark %s" % [what, a.id, k])
+				shown += labels.size()
+				if zoom == 0:
+					var regions := labels.filter(func(l: Dictionary) -> bool: return str(l.kind) == "region").size()
+					if regions != MapScreen.regions_for(GameSession.WORLD_LEVEL_ID).size():
+						if id == "poi.brannock":
+							for l: Dictionary in labels:
+								print("DBG ", l.kind, " ", l.id, " ", l.rect)
+							for reg: Dictionary in MapScreen.regions_for(GameSession.WORLD_LEVEL_ID):
+								print("DBG REGION ", reg.id, " ", map.to_screen(reg.pos), " ", reg.name)
+							for k: String in marks:
+								print("DBG MARK ", k, " ", marks[k])
+						bad.append("%s: %d region labels of %d" % [what, regions, MapScreen.regions_for(GameSession.WORLD_LEVEL_ID).size()])
+					for e: Dictionary in settlements:
+						if not labels.any(func(l: Dictionary) -> bool: return str(l.id) == str(e.id)):
+							bad.append("%s: %s has no name" % [what, e.id])
+	assert_eq(bad, PackedStringArray(), "no label covers a label or a mark, none is cut, the regions and settlements show")
+	assert_true(shown > 100, "the views laid out %d labels in all" % shown)
+	map.close()

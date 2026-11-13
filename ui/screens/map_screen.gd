@@ -276,7 +276,8 @@ static func map_bounds_for(idx: WorldIndex) -> Rect2:
 	return r.grow(maxf(10.0, maxf(r.size.x, r.size.y) * 0.04))
 
 
-## The region labels of a level: [{"id", "name", "pos" (Vector2), "stages" ([lo, hi] or [])}].
+## The region labels of a level: [{"id", "name", "pos" (Vector2), "stages" ([lo, hi] or []), "bounds" (Rect2 of
+## map points; P39f: its label stays inside it)}].
 static func regions_for(p_level_id: String) -> Array:
 	var out: Array = []
 	for rec: Dictionary in GameData.records_of_type("region"):
@@ -285,8 +286,10 @@ static func regions_for(p_level_id: String) -> Array:
 		var b: Array = rec.bounds_m
 		var c := Vector2((float(b[0][0]) + float(b[1][0])) * 0.5, (float(b[0][1]) + float(b[1][1])) * 0.5)
 		var rs: Variant = rec.get("recommended_stage", [])
+		var lo := Vector2(minf(float(b[0][0]), float(b[1][0])), minf(float(b[0][1]), float(b[1][1])))
+		var hi := Vector2(maxf(float(b[0][0]), float(b[1][0])), maxf(float(b[0][1]), float(b[1][1])))
 		out.append({"id": str(rec.id), "name": str(rec.get("display_name", rec.id)), "pos": c,
-			"stages": rs if typeof(rs) == TYPE_ARRAY else []})
+			"stages": rs if typeof(rs) == TYPE_ARRAY else [], "bounds": Rect2(lo, hi - lo)})
 	return out
 
 
@@ -797,17 +800,9 @@ func _draw_map() -> void:
 					var r := Discovery.chunk_rect(_grid, Vector2i(x, z))
 					var a := to_screen(r.position)
 					view.draw_rect(Rect2(a, to_screen(r.end) - a), FOG)
-	var stage := _stage()
-	for reg: Dictionary in _regions:
-		var s := to_screen(reg.pos)
-		_text(font, s + Vector2(0, -4), str(reg.name).to_upper(), 15, Color(0.95, 0.92, 0.85, 0.9))
-		var st: Array = reg.stages
-		if st.size() == 2:
-			var below := stage < int(st[0])
-			_text(font, s + Vector2(0, 13), "Recommended stage %d-%d" % [int(st[0]), int(st[1])], 12,
-				UiKit.WARN if below else Color(0.8, 0.82, 0.86, 0.85))
+	# P39f: every mark first, then the labels the layout placed clear of them and of each other
 	for e: Dictionary in _entries:
-		_draw_entry(font, e)
+		_draw_entry(e)
 	var pin := pin_point()
 	if pin.is_finite():
 		var s := to_screen(pin)
@@ -828,9 +823,12 @@ func _draw_map() -> void:
 	var c := vs * 0.5
 	view.draw_rect(Rect2(c.x - 8.0, c.y - 0.5, 16.0, 1.0), Color(1, 1, 1, 0.35))
 	view.draw_rect(Rect2(c.x - 0.5, c.y - 8.0, 1.0, 16.0), Color(1, 1, 1, 0.35))
+	_labels = layout_labels(font)
+	for l: Dictionary in _labels:
+		_draw_label(font, l)
 
 
-func _draw_vector_map(font: Font) -> void:
+func _draw_vector_map(_font: Font) -> void:
 	var i := 0
 	for d: Variant in _index.districts:
 		if typeof(d) != TYPE_DICTIONARY or typeof(d.get("min")) != TYPE_VECTOR2:
@@ -840,8 +838,7 @@ func _draw_vector_map(font: Font) -> void:
 		var col: Color = DISTRICT_COLORS[i % DISTRICT_COLORS.size()]
 		view.draw_rect(Rect2(a, b - a), col)
 		view.draw_rect(Rect2(a, b - a), Color(1, 1, 1, 0.15), false, 1.0)
-		_text(font, (a + b) * 0.5 + Vector2(0, -18), str(d.get("display_name", "")), 13, Color(0.9, 0.9, 0.86, 0.85))
-		i += 1
+		i += 1   # P39f: the district's name is a label (layout_labels)
 	var nodes: PackedVector3Array = _index.road_nodes()
 	var edges: PackedInt32Array = _index.road_edges()
 	for k in range(edges.size() / 2):
@@ -850,11 +847,10 @@ func _draw_vector_map(font: Font) -> void:
 		view.draw_line(to_screen(Vector2(a.x, a.z)), to_screen(Vector2(b.x, b.z)), Color(0.75, 0.66, 0.48, 0.8), 2.0)
 
 
-func _draw_entry(font: Font, e: Dictionary) -> void:
+func _draw_entry(e: Dictionary) -> void:
 	var s := to_screen(e.pos)
 	if not Rect2(Vector2(-20, -20), view.size + Vector2(40, 40)).has_point(s):
 		return
-	var selected := str(e.id) == _selected
 	match str(e.type):
 		"checkpoint":
 			var col := CHECKPOINT if bool(e.visited) else Color(CHECKPOINT.r, CHECKPOINT.g, CHECKPOINT.b, 0.45)
@@ -870,26 +866,295 @@ func _draw_entry(font: Font, e: Dictionary) -> void:
 			view.draw_rect(Rect2(s.x - 2.0, s.y - 1.0, 4.0, 6.0), Color(0.1, 0.1, 0.1))
 		"poi":
 			if bool(e.sealed):
-				# a lock: the shackle and the body
+				# a lock: the shackle and the body (its "Stage N" is a label: layout_labels)
 				view.draw_rect(Rect2(s.x - 4.0, s.y - 9.0, 8.0, 2.0), SEALED)
 				view.draw_rect(Rect2(s.x - 4.0, s.y - 9.0, 2.0, 6.0), SEALED)
 				view.draw_rect(Rect2(s.x + 2.0, s.y - 9.0, 2.0, 6.0), SEALED)
 				view.draw_rect(Rect2(s.x - 6.0, s.y - 3.0, 12.0, 10.0), SEALED)
-				_text(font, s + Vector2(0, 20), "Stage %d" % int(e.stage), 12, SEALED)
 			else:
 				var col: Color = HudCompass.KIND_COLORS.get(str(e.kind), DIM)
 				if bool(e.revealed):
 					col = Color(col.r, col.g, col.b, 0.5)
 				view.draw_rect(Rect2(s.x - 7.0, s.y - 7.0, 14.0, 14.0), Color(0, 0, 0, 0.6))
 				view.draw_rect(Rect2(s.x - 5.0, s.y - 5.0, 10.0, 10.0), col)
-	if selected:
+	if str(e.id) == _selected:
 		HudKit.draw_diamond_outline(view, s, 16.0, Color(1, 1, 1, 0.95), 2.0)
-	if selected or (_zoom > 0 and not bool(e.get("revealed", false))) or str(e.kind) == "settlement":
-		_text(font, s + Vector2(0, -14), str(e.name), 13, Color(1, 1, 1, 0.95) if selected else Color(0.92, 0.92, 0.9, 0.85))
 
 
-func _text(font: Font, centre: Vector2, text: String, size: int, color: Color) -> void:
-	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
-	var p := centre - Vector2(w * 0.5, 0)
-	view.draw_string(font, p + Vector2(1, 1), text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(0, 0, 0, 0.8 * color.a))
-	view.draw_string(font, p, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
+# --------------------------------------------------------------------------- P39f: the labels
+
+## P39f (FOLLOWUPS: "the map's labels overlap"): the map's words - the regions' names with their recommended
+## stages (the Valley's district names), the place in focus, the settlements, the sealed places' "Stage N" and,
+## zoomed in, every found place's name - are laid out after the marks are drawn, so that no label covers
+## another label or any mark (a place's icon, the pin, the objective, the giant's arrow) and none is cut by the
+## view's edge: each takes the first of its candidate spots that is free (a place's: above its icon, below, to
+## the right, to the left, then the four corners; a region's: its centre, then half-block steps up, down and
+## aside, then a grid over the region's own ground, nearest its centre first), in
+## order of importance - the place in focus, the regions, the settlements, the sealed places, the rest - and a
+## label with no free spot is left out (the panel names the place in focus; zooming in makes room). The place in
+## focus always shows, kept inside the view.
+const NAME_PX := 13
+const REGION_PX := 15
+const REGION_STAGE_PX := 12
+const STAGE_PX := 12
+const LABEL_GAP := 3.0
+const REGION_COLOR := Color(0.95, 0.92, 0.85, 0.9)
+const REGION_STAGE_COLOR := Color(0.8, 0.82, 0.86, 0.85)
+const NAME_COLOR := Color(0.92, 0.92, 0.9, 0.85)
+const SELECTED_COLOR := Color(1, 1, 1, 0.95)
+
+var _labels: Array = []
+
+
+## The labels drawn now (tests): [{"kind" (selected | region | settlement | sealed | name), "id", "lines":
+## [[text, size, color]], "rect" (Rect2 on the view)}], in the order they were placed.
+func label_layout() -> Array:
+	return _labels
+
+
+## Every mark drawn on the view now, as rects on it: {"entry:<id>": Rect2, "pin", "objective_<n>", "player"}.
+func mark_rects() -> Dictionary:
+	var out := {}
+	var near := Rect2(Vector2(-20, -20), view.size + Vector2(40, 40))
+	for e: Dictionary in _entries:
+		var s := to_screen(e.pos)
+		if near.has_point(s):
+			out["entry:" + str(e.id)] = icon_rect(e, s, str(e.id) == _selected)
+	var pin := pin_point()
+	if pin.is_finite():
+		var s := to_screen(pin)
+		out["pin"] = Rect2(s.x - 5.0, s.y - 12.0, 10.0, 22.0)
+	var objectives := objective_points()
+	for i in objectives.size():
+		var s := to_screen(objectives[i])
+		out["objective_%d" % i] = Rect2(s - Vector2(10, 10), Vector2(20, 20))
+	var me := player_map_point()
+	if me.is_finite():
+		var s := to_screen(me)
+		out["player"] = Rect2(s - Vector2(22, 22), Vector2(44, 44))
+	return out
+
+
+## The rect an entry's icon covers at `s` on the view (the selection's outline with it when `selected`).
+static func icon_rect(e: Dictionary, s: Vector2, selected := false) -> Rect2:
+	var r := Rect2(s - Vector2(7, 7), Vector2(14, 14))
+	match str(e.get("type", "")):
+		"checkpoint":
+			r = Rect2(s - Vector2(9, 9), Vector2(18, 18)) if str(e.get("kind", "")) == "shrine" \
+				else Rect2(s.x - 5.0, s.y - 8.0, 10.0, 16.0)
+		"poi":
+			if bool(e.get("sealed", false)):
+				r = Rect2(s.x - 6.0, s.y - 9.0, 12.0, 16.0)
+	if selected:
+		r = r.merge(Rect2(s - Vector2(17, 17), Vector2(34, 34)))
+	return r
+
+
+## Lays the labels out on the view as it is now (see the notes above). Returns label_layout()'s rows.
+func layout_labels(font: Font) -> Array:
+	var out: Array = []
+	if font == null or view == null or _index == null:
+		return out
+	var bounds := Rect2(Vector2.ZERO, view.size)
+	var marks := mark_rects()
+	var blocked: Array = marks.values()
+	var placed: Array = []
+	# the place in focus, always shown
+	var sel: Dictionary = _by_id.get(_selected, {})
+	if not sel.is_empty() and marks.has("entry:" + _selected):
+		var lines := _entry_lines(sel, SELECTED_COLOR)
+		var r := _place(font, lines, _entry_spots(marks["entry:" + _selected]), blocked, placed, bounds, true)
+		out.append({"kind": "selected", "id": _selected, "lines": lines, "rect": r})
+		placed.append(r)
+	# the regions (the Valley: its districts)
+	for reg: Dictionary in _region_labels():
+		var lines: Array = reg.lines
+		var area: Rect2 = reg.bounds
+		var on_view := Rect2(to_screen(area.position), area.size * _scale()) if area.size != Vector2.ZERO else Rect2()
+		on_view = on_view.intersection(bounds)
+		var r := _place(font, lines, _region_spots(font, lines, to_screen(reg.pos), on_view), blocked, placed, bounds,
+			false)
+		if r.size != Vector2.ZERO:
+			out.append({"kind": "region", "id": str(reg.id), "lines": lines, "rect": r})
+			placed.append(r)
+	# the places: settlements, then sealed places, then (zoomed in) every found place
+	for pass_kind: String in ["settlement", "sealed", "name"]:
+		for e: Dictionary in _entries:
+			var id := str(e.id)
+			if id == _selected or not marks.has("entry:" + id) or _label_kind(e) != pass_kind:
+				continue
+			var lines := _entry_lines(e, NAME_COLOR)
+			var r := _place(font, lines, _entry_spots(marks["entry:" + id]), blocked, placed, bounds, false)
+			if r.size != Vector2.ZERO:
+				out.append({"kind": pass_kind, "id": id, "lines": lines, "rect": r})
+				placed.append(r)
+	return out
+
+
+## Which pass labels an entry ("" = none at this zoom): settlements always, sealed places always (their stage),
+## other found places when zoomed in.
+func _label_kind(e: Dictionary) -> String:
+	if str(e.get("kind", "")) == "settlement":
+		return "settlement"
+	if bool(e.get("sealed", false)):
+		return "sealed"
+	if _zoom > 0 and not bool(e.get("revealed", false)):
+		return "name"
+	return ""
+
+
+## An entry's label lines: its name (zoomed in, in focus or a settlement) and a sealed place's stage.
+func _entry_lines(e: Dictionary, color: Color) -> Array:
+	var lines: Array = []
+	var named := str(e.id) == _selected or _zoom > 0 or str(e.get("kind", "")) == "settlement"
+	if named:
+		lines.append([str(e.name), NAME_PX, color])
+	if bool(e.get("sealed", false)):
+		lines.append(["Stage %d" % int(e.stage), STAGE_PX, SEALED])
+	return lines
+
+
+## The region labels: [{"id", "pos" (map point), "lines"}] - the world's regions with their recommended stages,
+## or the Valley's districts.
+func _region_labels() -> Array:
+	var out: Array = []
+	var stage := _stage()
+	for reg: Dictionary in _regions:
+		var lines: Array = [[str(reg.name).to_upper(), REGION_PX, REGION_COLOR]]
+		var st: Array = reg.stages
+		if st.size() == 2:
+			lines.append(["Recommended stage %d-%d" % [int(st[0]), int(st[1])], REGION_STAGE_PX,
+				UiKit.WARN if stage < int(st[0]) else REGION_STAGE_COLOR])
+		out.append({"id": str(reg.id), "pos": reg.pos, "lines": lines, "bounds": reg.get("bounds", Rect2())})
+	if _image == null and _index != null:
+		for d: Variant in _index.districts:
+			if typeof(d) != TYPE_DICTIONARY or typeof(d.get("min")) != TYPE_VECTOR2 or str(d.get("display_name", "")) == "":
+				continue
+			var lo: Vector2 = d.min
+			var hi: Vector2 = d.max
+			out.append({"id": str(d.get("id", d.display_name)), "pos": (lo + hi) * 0.5, "bounds": Rect2(lo, hi - lo),
+				"lines": [[str(d.display_name), NAME_PX, Color(0.9, 0.9, 0.86, 0.85)]]})
+	return out
+
+
+## The size of a block of `lines` ([[text, size, color]]) in `font`.
+static func block_size(font: Font, lines: Array) -> Vector2:
+	var out := Vector2.ZERO
+	for l: Array in lines:
+		out.x = maxf(out.x, font.get_string_size(str(l[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, int(l[1])).x + 1.0)
+		out.y += font.get_height(int(l[1]))
+	return out
+
+
+## A place's label spots round its icon `icon` - above, below, right, left, then the corners - as anchors
+## (Vector2 of the block's top-left, given the block's size later): [[side, Vector2]]. _place sizes them.
+static func _entry_spots(icon: Rect2) -> Array:
+	return [["above", icon], ["below", icon], ["right", icon], ["left", icon], ["above_right", icon],
+		["above_left", icon], ["below_right", icon], ["below_left", icon]]
+
+
+## A region's spots: its centre, then steps of half the block's height up and down (up to six) and half its
+## width aside; and every spot of a grid whose centre lies in the region's own rect `area` (on the view; none
+## when it is empty), nearest the centre first - a crowded region's label finds the free ground left in it.
+static func _region_spots(font: Font, lines: Array, centre: Vector2, area := Rect2()) -> Array:
+	var size := block_size(font, lines)
+	var offsets: Array = [Vector2.ZERO]
+	for k in range(1, 7):
+		offsets.append(Vector2(0, -k * size.y * 0.5))
+		offsets.append(Vector2(0, k * size.y * 0.5))
+	for k in [0, -1, 1, -2, 2, -3, 3]:
+		for side in [-1, 1]:
+			offsets.append(Vector2(side * size.x * 0.5, k * size.y * 0.5))
+	if area.size.x > 1.0 and area.size.y > 1.0:
+		var grid: Array = []
+		# at most about 16 x 16 spots, however far the map is zoomed in
+		var step := Vector2(maxf(maxf(size.x * 0.125, 8.0), area.size.x / 16.0),
+			maxf(maxf(size.y * 0.25, 6.0), area.size.y / 16.0))
+		var y := area.position.y
+		while y <= area.end.y:
+			var x := area.position.x
+			while x <= area.end.x:
+				grid.append(Vector2(x, y) - centre)
+				x += step.x
+			y += step.y
+		grid.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.length_squared() < b.length_squared())
+		offsets.append_array(grid)
+	var out: Array = []
+	for o: Vector2 in offsets:
+		out.append(["at", Rect2(centre - size * 0.5 + o, size)])
+	return out
+
+
+## The first spot of `spots` where the block of `lines` covers nothing of `blocked` (marks) and `placed`
+## (labels) and lies inside `bounds`; Rect2() when none does - unless `must`, then the first spot kept inside
+## `bounds`.
+static func _place(font: Font, lines: Array, spots: Array, blocked: Array, placed: Array, bounds: Rect2,
+		must: bool) -> Rect2:
+	var size := block_size(font, lines)
+	var rects: Array = []
+	var reach := Rect2()
+	for spot: Array in spots:
+		var r := _spot_rect(str(spot[0]), spot[1], size)
+		rects.append(r)
+		reach = r if reach.size == Vector2.ZERO else reach.merge(r)
+	# only what lies within reach of a spot can be in the way
+	var near: Array = []
+	for b: Rect2 in blocked:
+		if reach.intersects(b):
+			near.append(b)
+	for b: Rect2 in placed:
+		if reach.intersects(b):
+			near.append(b)
+	var first: Rect2 = rects[0] if not rects.is_empty() else Rect2()
+	for r: Rect2 in rects:
+		if not bounds.encloses(r):
+			continue
+		var free := true
+		for b: Rect2 in near:
+			if r.intersects(b):
+				free = false
+				break
+		if free:
+			return r
+	if not must:
+		return Rect2()
+	first.position = first.position.clamp(bounds.position, bounds.end - first.size)
+	return first
+
+
+## The block of `size` at a spot: "at" (the spot's own rect), or a side of the icon rect `icon`.
+static func _spot_rect(side: String, anchor: Rect2, size: Vector2) -> Rect2:
+	var c := anchor.get_center()
+	match side:
+		"above":
+			return Rect2(c.x - size.x * 0.5, anchor.position.y - LABEL_GAP - size.y, size.x, size.y)
+		"below":
+			return Rect2(c.x - size.x * 0.5, anchor.end.y + LABEL_GAP, size.x, size.y)
+		"right":
+			return Rect2(anchor.end.x + LABEL_GAP, c.y - size.y * 0.5, size.x, size.y)
+		"left":
+			return Rect2(anchor.position.x - LABEL_GAP - size.x, c.y - size.y * 0.5, size.x, size.y)
+		"above_right":
+			return Rect2(anchor.end.x, anchor.position.y - size.y, size.x, size.y)
+		"above_left":
+			return Rect2(anchor.position.x - size.x, anchor.position.y - size.y, size.x, size.y)
+		"below_right":
+			return Rect2(anchor.end.x, anchor.end.y, size.x, size.y)
+		"below_left":
+			return Rect2(anchor.position.x - size.x, anchor.end.y, size.x, size.y)
+	return Rect2(anchor.position, size)
+
+
+## Draws a placed label: each line centred in its rect, with a shadow.
+func _draw_label(font: Font, l: Dictionary) -> void:
+	var r: Rect2 = l.rect
+	var y := r.position.y
+	for line: Array in l.lines:
+		var size := int(line[1])
+		var text := str(line[0])
+		var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+		var p := Vector2(r.position.x + (r.size.x - w) * 0.5, y + font.get_ascent(size))
+		var color: Color = line[2]
+		view.draw_string(font, p + Vector2(1, 1), text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(0, 0, 0, 0.8 * color.a))
+		view.draw_string(font, p, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
+		y += font.get_height(size)

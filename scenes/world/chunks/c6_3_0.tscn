@@ -207,19 +207,19 @@ mesh = SubResource("ArrayMesh_6")
 [node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
 enabled = false
 start_position = Vector3(0, 0.28549957, 4)
-end_position = Vector3(0, 0.9104996, -6)
+end_position = Vector3(0, 0.8146553, -6)
 
 [node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
 enabled = false
 navigation_layers = 2
 start_position = Vector3(0, -0.13241196, 5)
-end_position = Vector3(0, 2.0855026, -7.5)
+end_position = Vector3(0, 1.5855026, -7.5)
 
 [node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
 enabled = false
 navigation_layers = 16
 start_position = Vector3(0, -0.2519989, 8)
-end_position = Vector3(0, 1.5723228, -9.5)
+end_position = Vector3(0, 1.9355011, -10)
 
 [node name="world_aldmere_iron_regiment_arena" type="Node3D" parent="Props"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138, 60, 91)

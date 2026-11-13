@@ -910,10 +910,11 @@ func start_event(e: WorldEvent, tick: int = Sim.tick) -> void:
 		Events.hud_message.emit(text, "warn")
 	Events.world_event_started.emit(tick, e.id)
 	if Quests.has_method("p37_set_event"):
-		e.tracked_before = Quests.tracked_quest_id
+		_note_tracked_before(e, Quests.tracked_quest_id)
 		e.tracker_given_back = false
 		Quests.p37_set_event(e.id, event_objective(e))
 		Quests.track(e.id)
+		_hold_tracker(e, Quests.tracked_quest_id == e.id)
 	_begin_attempt(e, tick)
 
 
@@ -957,6 +958,12 @@ func _begin_attempt(e: WorldEvent, tick: int) -> bool:
 ## what it gives back next. Fix-up 2 (N4.4): Quests' copy of its objective says whether it is in play now
 ## ("in_play", written again the update it changes), so with no main quest active - after the campaign -
 ## the run left behind is listed after the side quests and does not lead by default either.
+##
+## W23 (P39f; FOLLOWUPS "From the M8 gate review"): only a tracker the director holds (WorldEvent.holds_tracker:
+## it tracked the event itself and nobody has moved the tracker since) is given back. It gave back any tracker on
+## an event out of play, so after a load - the run resumed waiting, far off - the journal's Track of it was undone
+## within 0.1 s and the tracker went to nobody. Once the tracker moves off the event the director no longer
+## holds it; tracked again by the player, it is the player's.
 func sync_tracking() -> void:
 	if not Quests.has_method("p37_set_event"):
 		return
@@ -964,9 +971,12 @@ func sync_tracking() -> void:
 		var playing := in_play(e)
 		if bool(Quests.objective_for(e.id).get("in_play", true)) != playing:
 			Quests.p37_set_event(e.id, event_objective(e))
-		if not playing and not e.tracker_given_back and Quests.tracked_quest_id == e.id:
+		if e.holds_tracker and Quests.tracked_quest_id != e.id:
+			_hold_tracker(e, false)   # the player moved the tracker: it is not the director's any more
+		if not playing and e.holds_tracker:
 			e.tracker_given_back = true
 			_give_tracker_back(e)
+			_hold_tracker(e, false)
 		elif playing and e.tracker_given_back and other_in_play(e) == null:
 			_take_tracker(e)
 
@@ -979,9 +989,28 @@ func _take_tracker(e: WorldEvent) -> void:
 	Quests.p37_set_event(e.id, event_objective(e))
 	if Quests.tracked_quest_id != e.id:
 		if e.tracker_given_back:
-			e.tracked_before = Quests.tracked_quest_id
+			_note_tracked_before(e, Quests.tracked_quest_id)
 		Quests.track(e.id)
+		_hold_tracker(e, Quests.tracked_quest_id == e.id)
 	e.tracker_given_back = false
+
+
+## W23 (P39f): whether the director holds the tracker for `e` (WorldEvent.holds_tracker), written to the flag
+## <event>.tracker_held too, so a save keeps it (a run resumed by a Continue gives back only the director's).
+func _hold_tracker(e: WorldEvent, held: bool) -> void:
+	e.holds_tracker = held
+	var f := WorldEvent.flag(e.id, "tracker_held")
+	if bool(WorldState.get_flag(f, false)) != held:
+		WorldState.set_flag(f, held)
+
+
+## W23 (P39f): the quest the tracker goes back to when the director gives it back (WorldEvent.tracked_before),
+## written to the flag <event>.tracked_before too, so a run resumed by a Continue gives it back there.
+func _note_tracked_before(e: WorldEvent, quest_id: String) -> void:
+	e.tracked_before = quest_id
+	var f := WorldEvent.flag(e.id, "tracked_before")
+	if str(WorldState.get_flag(f, "")) != quest_id:
+		WorldState.set_flag(f, quest_id)
 
 
 ## The tracker goes back to the quest tracked before the event took it while that quest is still active,
@@ -1171,9 +1200,11 @@ func end_event(e: WorldEvent, outcome: String, tick: int = Sim.tick) -> void:
 		Quests.p37_clear_event(e.id)
 		for o: WorldEvent in events.values():
 			if o != e and o.tracked_before == e.id:
-				o.tracked_before = e.tracked_before   # an event that took the tracker from this one hands it back past it
+				_note_tracked_before(o, e.tracked_before)   # an event that took the tracker from this one hands it back past it
 		_give_tracker_back(e)
 		e.tracker_given_back = false
+		_hold_tracker(e, false)
+		_note_tracked_before(e, "")
 	Events.world_event_ended.emit(tick, e.id, outcome)
 	if outcome != ABANDONED:
 		GameSession.request_checkpoint("world_event")
@@ -1283,7 +1314,7 @@ func _carry_event(e: WorldEvent, reset: bool) -> void:
 		"last_start_s": WorldState.get_flag(WorldEvent.flag(e.id, "last_start_s"), clock_s()),
 		"centre": at, "s": e.route.s if e.route != null else 0.0,
 		"reset": reset or bool(prev.get("reset", false)), "tracked_before": e.tracked_before,
-		"unloaded_s": e.unloaded_s}
+		"holds_tracker": e.holds_tracker, "unloaded_s": e.unloaded_s}
 
 
 ## A new load of the level: the events running when it was left run again - a death restarts their
@@ -1303,7 +1334,8 @@ func _resume_carried() -> void:
 			WorldState.set_flag(WorldEvent.flag(e.id, "runs"), int(c.runs))   # the reload rolled the start back
 			WorldState.set_flag(WorldEvent.flag(e.id, "last_start_s"), c.get("last_start_s", clock_s()))
 		e.state = WorldEvent.WAITING
-		e.tracked_before = str(c.get("tracked_before", ""))
+		_note_tracked_before(e, str(c.get("tracked_before", "")))
+		_hold_tracker(e, bool(c.get("holds_tracker", false)))   # W23 (P39f): the director's tracker stays its own
 		e.unloaded_s = maxf(0.0, float(c.get("unloaded_s", 0.0)))
 		e.unloaded_marked = false   # written again at its next update (the reload may have rolled the flag back)
 		e.route = _event_route(e)
@@ -1333,6 +1365,9 @@ func _resume_saved() -> void:
 		var since: Variant = WorldState.get_flag(WorldEvent.flag(e.id, "unloaded_since_s"))
 		e.unloaded_marked = SchemaUtil.is_number(since)
 		e.unloaded_s = maxf(0.0, clock_s() - float(since)) if e.unloaded_marked else 0.0
+		# W23 (P39f): whether the director held the tracker when the game was saved, and what it gives back to
+		e.holds_tracker = WorldState.get_flag(WorldEvent.flag(e.id, "tracker_held"), false) == true
+		e.tracked_before = str(WorldState.get_flag(WorldEvent.flag(e.id, "tracked_before"), ""))
 		_carry_event(e, true)
 		if Quests.has_method("p37_set_event"):
 			Quests.p37_set_event(e.id, event_objective(e))

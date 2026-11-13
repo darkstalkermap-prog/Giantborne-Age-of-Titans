@@ -416,3 +416,111 @@ func test_the_sandbox_has_a_shrine_that_grows_to_stage_3() -> void:
 	assert_true(s.grow(p, 3).ok, "stage 3 too: the pad has stage-3 clearance")
 	arena.queue_free()
 	await step_ticks(2)
+
+
+## P39f (FOLLOWUPS, "From the M8 screenshot pass": "the shrine's tab row does not show the open tab"): whichever
+## way a tab opens - show_tab, a click on its button, pad RB - its button alone is marked open (UiKit.set_tab_open:
+## a lit box with a gold underline and a gold title), the others plain with a muted title; the pause menu's page
+## tabs the same.
+func test_the_tab_row_shows_the_open_tab() -> void:
+	var s := _shrine(Vector3(0, 0, -6))
+	await _grounded_player(Vector3(0, 0.05, 0))
+	var layer := CanvasLayer.new()
+	world.add_child(layer)
+	var stack := ScreenStack.new()
+	layer.add_child(stack)
+	await get_tree().process_frame
+	var screen := stack.open("shrine", {"shrine": s}) as ShrineScreen
+	var buttons := screen.tab_buttons()
+	assert_true(buttons.size() >= 4, "the shrine's tabs (%d)" % buttons.size())
+	var check := func(open: int, how: String) -> void:
+		for i in buttons.size():
+			var b := buttons[i]
+			var is_open := i == open
+			assert_eq(UiKit.is_tab_open(b), is_open, "%s: %s is %s" % [how, b.text, "open" if is_open else "closed"])
+			assert_eq(b.get_theme_color("font_color"), UiKit.TAB_OPEN if is_open else UiKit.MUTED,
+				"%s: %s's title colour" % [how, b.text])
+			var sb := b.get_theme_stylebox("normal") as StyleBoxFlat
+			assert_eq(sb != null and sb.border_width_bottom == UiKit.TAB_UNDERLINE_PX and sb.border_color == UiKit.TAB_OPEN,
+				is_open, "%s: %s %s the gold underline" % [how, b.text, "has" if is_open else "has not"])
+	check.call(0, "on opening")
+	for i in buttons.size():
+		screen.show_tab(i)
+		check.call(i, "show_tab(%d)" % i)
+	buttons[1].pressed.emit()
+	check.call(1, "a click on %s" % buttons[1].text)
+	var rb := InputEventJoypadButton.new()
+	rb.button_index = JOY_BUTTON_RIGHT_SHOULDER
+	rb.pressed = true
+	screen._unhandled_input(rb)
+	check.call(2, "pad RB")
+	var sizes := buttons.map(func(b: Button) -> Vector2: return b.get_combined_minimum_size())
+	screen.show_tab(0)
+	assert_eq(buttons.map(func(b: Button) -> Vector2: return b.get_combined_minimum_size()), sizes,
+		"an open tab is as big as a closed one: the row does not move")
+	stack.close_all()
+	var pause := stack.open("pause") as PauseMenu
+	if pause != null:
+		for page: String in ["Main", "Settings", "Controls"]:
+			pause.show_page(page)
+			for other: String in ["Main", "Settings", "Controls"]:
+				assert_eq(UiKit.is_tab_open(pause.tab_button(other)), other == page,
+					"the pause menu on %s: its %s tab is %s" % [page, other, "open" if other == page else "closed"])
+	stack.close_all()
+
+
+## P39f (FOLLOWUPS, "From the M8 screenshot pass": "the Kingsgate shrine's floating name is too small to read from
+## where fast travel puts the giant"): the name above every shrine (the shrine scene's Visual/Name, filled from
+## its record) keeps one size on screen - an em of at least 18 px at the default field of view on a 720 px screen,
+## at least 14 px at the widest - where the shared sign was a 0.38 m text, about 6 px from a stage-3 camera behind
+## a giant on the pad; it shows from the pad at every stage (a stage-6 camera stands within its range) and floats
+## clear of the stone's cap. Now that it reads, it would read through a screen's see-through panel (the shrine
+## window opens right in front of it): it hides while any screen is open, as the HUD does - a shrine made while
+## one is open starts hidden - and shows again once the last one closes or its stack leaves the tree.
+func test_the_shrine_name_reads_from_the_pad() -> void:
+	# (the camera's farthest zoom at stage 6 is 32 m behind a 17 m pivot: 45 m from the name - within its 90 m)
+	var s := _shrine(Vector3(0, 0, -6), "test.kingsgate", "shrine.world_kingsgate")
+	await get_tree().process_frame
+	var l := s.get_node("Visual/Name") as Label3D
+	assert_eq(l.text, s.display_name(), "the name is the record's (%s)" % l.text)
+	assert_true(l.fixed_size, "one size on screen at any distance")
+	for pair: Array in [[75.0, 18.0], [100.0, 14.0]]:
+		var em := float(l.font_size) * l.pixel_size / (2.0 * tan(deg_to_rad(float(pair[0])) * 0.5)) * 720.0
+		assert_true(em >= float(pair[1]), "at %d degrees the name is %.1f px tall (at least %d)" % [int(pair[0]), em, int(pair[1])])
+	var old_em := 64.0 * 0.006 / (2.0 * tan(deg_to_rad(37.5)) * 30.0) * 720.0
+	assert_true(old_em < 8.0, "the old sign was %.1f px from 30 m" % old_em)
+	var pad := s.growth_pad_position()
+	for stage in range(1, 7):
+		var prof := GameData.get_record("growth.%02d" % stage)
+		assert_false(prof.is_empty(), "stage %d's growth profile" % stage)
+		# the camera zoomed all the way out, behind a giant facing the stone
+		var back := maxf(float(prof.get("camera_distance_m", 0.0)), float(prof.get("camera_zoom_max_m", 0.0)))
+		var camera := pad + (pad - s.global_position).normalized() * back + Vector3.UP * float(prof.get("camera_pivot_height_m",
+			prof.get("height_m", 4.0)))
+		var d := camera.distance_to(l.global_position)
+		assert_true(d <= l.visibility_range_end, "stage %d: the camera behind a giant on the pad is %.0f m from the name (shown to %.0f m)" % [stage, d, l.visibility_range_end])
+	var cap_top := 0.0
+	for n in s.find_children("*", "MeshInstance3D", true, false):
+		var mi := n as MeshInstance3D
+		if mi.mesh != null and mi.name != "Glow":
+			cap_top = maxf(cap_top, (mi.global_transform * mi.get_aabb()).end.y)
+	assert_true(l.global_position.y - cap_top >= 1.0, "the name floats %.1f m over the stone (top %.2f m)" % [l.global_position.y - cap_top, cap_top])
+	var layer := CanvasLayer.new()
+	world.add_child(layer)
+	var stack := ScreenStack.new()
+	layer.add_child(stack)
+	await get_tree().process_frame
+	var overlay := load("res://tests/support/test_overlay_screen.gd") as GDScript
+	assert_true(l.visible, "the name shows while no screen is open")
+	stack.push(overlay.new() as UiScreen)
+	assert_false(l.visible, "the name hides while a screen is open")
+	var s2 := _shrine(Vector3(40, 0, -6), "test.kingsgate_2", "shrine.world_kingsgate")
+	var l2 := s2.get_node("Visual/Name") as Label3D
+	assert_false(l2.visible, "a shrine made while a screen is open starts with its name hidden")
+	stack.close_all()
+	assert_true(l.visible and l2.visible, "the names show again once the screen closes")
+	stack.push(overlay.new() as UiScreen)
+	assert_false(l.visible or l2.visible, "hidden again under the next screen")
+	layer.remove_child(stack)
+	assert_true(l.visible and l2.visible, "a stack leaving the tree with its screen open shows the names again")
+	stack.free()

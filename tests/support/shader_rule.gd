@@ -11,6 +11,13 @@ extends RefCounted
 ## here; its min, max, floor and smoothstep are Godot's own. Anything outside the subset fails loudly
 ## (`error` is set and the run returns null), so a rewrite of the shader the subset cannot read breaks
 ## the test rather than passing it.
+## P39f (FOLLOWUPS: the fade's shader test did not cover vertex() and fragment()): run_body() runs a stage's own
+## body - vertex() or fragment() - with the built-ins a test hands it (MODEL_MATRIX and INV_VIEW_MATRIX as
+## Projections, VERTEX, COLOR as a Vector4, FRAGCOORD, OUTPUT_IS_SRGB, the material's uniforms) and returns
+## what it wrote (world_pos, COLOR, ALBEDO, ...) and whether it discarded. The subset grows by what those bodies
+## use: assignments to a swizzle (`COLOR.rgb = ...`), `discard;`, the conditional `c ? a : b`, `!`, swizzles of any
+## operand (`(M * v).xyz`, `M[3].xyz`, `.rgb` as `.xyz`), vecN() with one value or a vector and a value, and the
+## language's pow, mix (with a vector of 0 / 1 for a bvec) and lessThan.
 
 const TYPES := ["float", "int", "bool", "vec2", "vec3", "vec4"]
 
@@ -23,6 +30,9 @@ var functions := {}
 ## fragment()'s body, and the text of its `if (...) { discard; }` condition ("" when it has none).
 var fragment_body := ""
 var discard_condition := ""
+## P39f: vertex()'s body ("" when the shader has none), and whether the last run_body() discarded.
+var vertex_body := ""
+var discarded := false
 ## name -> value: what the shader's globals hold for the next run (its global uniforms, FRAGCOORD).
 var globals := {}
 ## The first failure ("" while none).
@@ -32,7 +42,8 @@ var _cache := {}
 var _rewritten := {}
 var _re_decl := RegEx.create_from_string("^(float|int|bool|vec2|vec3|vec4)\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*=\\s*(.+)$")
 var _re_assign := RegEx.create_from_string("^([A-Za-z_][A-Za-z0-9_]*)\\s*([-+*/]?)=\\s*(.+)$")
-var _re_swizzle := RegEx.create_from_string("([A-Za-z_][A-Za-z0-9_]*)\\.(xyz|xy)\\b")
+var _re_swizzle := RegEx.create_from_string("([A-Za-z_][A-Za-z0-9_]*(?:\\[[^\\]]*\\])?)\\.(xyz|xy|rgb)\\b")
+var _re_swizzle_assign := RegEx.create_from_string("^([A-Za-z_][A-Za-z0-9_]*)\\.(rgb|xyz)\\s*=\\s*(.+)$")
 
 
 static func from_file(path: String) -> RefCounted:
@@ -73,6 +84,26 @@ func parse(code: String) -> void:
 			var open := body.find("(", if_at)
 			var close := _match(body, open, "(", ")")
 			discard_condition = body.substr(open + 1, close - open - 1).strip_edges()
+	var vert := RegEx.create_from_string("\\bvoid\\s+vertex\\s*\\(\\s*\\)\\s*\\{").search(text)
+	if vert != null:
+		var vend := _match(text, vert.get_end() - 1, "{", "}")
+		vertex_body = text.substr(vert.get_end(), vend - vert.get_end())
+
+
+## P39f: runs vertex() or fragment() (`stage`) with `env` - the built-ins and uniforms it reads, and every name
+## it writes (its varyings and outputs, so their assignments land) - and returns the env as the body left it;
+## `discarded` says whether it discarded. {} (with `error` set) when it cannot.
+func run_body(stage: String, env: Dictionary) -> Dictionary:
+	discarded = false
+	if error != "":
+		return {}
+	var body := vertex_body if stage == "vertex" else fragment_body if stage == "fragment" else ""
+	if body == "":
+		_fail("the shader has no %s()" % stage)
+		return {}
+	var e := env.duplicate()
+	_block(body, e)
+	return {} if error != "" else e
 
 
 ## Runs the shader's function `fn_name` with `args` and returns what it returns (null, with `error` set,
@@ -124,8 +155,56 @@ func fract(x: Variant) -> Variant:
 	return x - x.floor() if (x is Vector2 or x is Vector3) else float(x) - floorf(float(x))
 
 
-func xyz(v: Vector4) -> Vector3:
+func xyz(v: Variant) -> Vector3:
+	if v is Color:
+		return Vector3((v as Color).r, (v as Color).g, (v as Color).b)
 	return Vector3(v.x, v.y, v.z)
+
+
+## P39f: vecN() with N values, one value for every component, or a smaller vector and the rest.
+func vec2_(a: Variant, b: Variant = null) -> Vector2:
+	return Vector2(float(a), float(a)) if b == null else Vector2(float(a), float(b))
+
+
+func vec3_(a: Variant, b: Variant = null, c: Variant = null) -> Vector3:
+	if b == null:
+		return Vector3(float(a), float(a), float(a))
+	if a is Vector2:
+		return Vector3(a.x, a.y, float(b))
+	return Vector3(float(a), float(b), float(c))
+
+
+func vec4_(a: Variant, b: Variant = null, c: Variant = null, d: Variant = null) -> Vector4:
+	if b == null:
+		return Vector4(float(a), float(a), float(a), float(a))
+	if a is Vector3:
+		return Vector4(a.x, a.y, a.z, float(b))
+	return Vector4(float(a), float(b), float(c), float(d))
+
+
+## P39f: the language's pow, componentwise on a vector.
+func pow_(a: Variant, b: Variant) -> Variant:
+	if a is Vector3:
+		var e: Vector3 = b if b is Vector3 else Vector3(float(b), float(b), float(b))
+		return Vector3(pow(a.x, e.x), pow(a.y, e.y), pow(a.z, e.z))
+	return pow(float(a), float(b))
+
+
+## P39f: the language's mix; a vector of 0 and 1 (lessThan's bvec) picks a component from `b` where it is 1.
+func mix(a: Variant, b: Variant, t: Variant) -> Variant:
+	if t is Vector3:
+		return a * (Vector3.ONE - t) + b * t
+	return a + (b - a) * float(t)
+
+
+## P39f: the conditional operator `c ? a : b`.
+func select_(c: Variant, a: Variant, b: Variant) -> Variant:
+	return a if bool(c) else b
+
+
+## P39f: the language's lessThan, as a vector of 1 (true) and 0 (false).
+func lessThan(a: Vector3, b: Vector3) -> Vector3:
+	return Vector3(1.0 if a.x < b.x else 0.0, 1.0 if a.y < b.y else 0.0, 1.0 if a.z < b.z else 0.0)
 
 
 func xy(v: Variant) -> Vector2:
@@ -174,10 +253,23 @@ func _block(text: String, env: Dictionary) -> Array:
 		if semi < 0:
 			_fail("a statement without ';': %s" % text.substr(i, 40))
 			break
-		var stmt := text.substr(i, semi - i).strip_edges()
+		# a statement may run over several lines (P39f: vertex()'s colour line)
+		var stmt := text.substr(i, semi - i).replace("\n", " ").replace("\t", " ").strip_edges()
 		i = semi + 1
 		if stmt.begins_with("return "):
 			return [true, _eval(stmt.substr(7), env)]
+		if stmt == "discard":
+			discarded = true
+			return [true, null]
+		var sw := _re_swizzle_assign.search(stmt)
+		if sw != null and env.has(sw.get_string(1)):
+			var v3: Variant = _eval(sw.get_string(3), env)
+			var whole: Variant = env[sw.get_string(1)]
+			if whole is Vector4 and v3 is Vector3:
+				env[sw.get_string(1)] = Vector4(v3.x, v3.y, v3.z, (whole as Vector4).w)
+				continue
+			_fail("a swizzle assignment outside the subset: %s" % stmt)
+			break
 		var m := _re_decl.search(stmt)
 		if m != null:
 			env[m.get_string(2)] = _eval(m.get_string(3), env)
@@ -242,11 +334,71 @@ func _rewrite(expr: String) -> String:
 			s = s.substr(0, m.get_start()) + "call_fn(\"%s\", [" % fn_name + s.substr(open + 1, close - open - 1) + "])" \
 				+ s.substr(close + 1)
 			m = re.search(s)
+	s = _ternary(s)
+	s = _paren_swizzles(s)
 	s = _re_swizzle.sub(s, "$2($1)", true)
+	s = s.replace("rgb(", "xyz(")
 	s = s.replace("&&", " and ").replace("||", " or ")
+	s = RegEx.create_from_string("!(?!=)").sub(s, " not ", true)
 	for n in [2, 3, 4]:
-		s = RegEx.create_from_string("\\bvec%d\\s*\\(" % n).sub(s, "Vector%d(" % n, true)
+		s = RegEx.create_from_string("\\bvec%d\\s*\\(" % n).sub(s, "vec%d_(" % n, true)
+	s = RegEx.create_from_string("\\bpow\\s*\\(").sub(s, "pow_(", true)
 	return s
+
+
+## P39f: `c ? a : b` (at the top level of the expression) as select_(c, a, b) (Expression has no conditional
+## operator: `a if c else b` reads as `a`).
+static func _ternary(s: String) -> String:
+	var depth := 0
+	var q := -1
+	var colon := -1
+	for i in s.length():
+		var ch := s[i]
+		if ch == "(":
+			depth += 1
+		elif ch == ")":
+			depth -= 1
+		elif depth == 0 and ch == "?" and q < 0:
+			q = i
+		elif depth == 0 and ch == ":" and q >= 0 and colon < 0:
+			colon = i
+	if q < 0 or colon < 0:
+		return s
+	return "select_((%s), (%s), (%s))" % [s.substr(0, q).strip_edges(), s.substr(q + 1, colon - q - 1).strip_edges(),
+		s.substr(colon + 1).strip_edges()]
+
+
+## P39f: a swizzle of a parenthesised operand, `(M * v).xyz`, as xyz((M * v)).
+static func _paren_swizzles(s: String) -> String:
+	var out := s
+	var at := out.find(").")
+	while at >= 0:
+		var rest := out.substr(at + 2)
+		var sw := ""
+		for name: String in ["xyz", "rgb", "xy"]:
+			if rest.begins_with(name) and (rest.length() == name.length() or not (rest[name.length()].is_valid_identifier()
+					or rest[name.length()].is_valid_int())):
+				sw = name
+				break
+		if sw == "":
+			at = out.find(").", at + 2)
+			continue
+		var depth := 0
+		var open := -1
+		for i in range(at, -1, -1):
+			if out[i] == ")":
+				depth += 1
+			elif out[i] == "(":
+				depth -= 1
+				if depth == 0:
+					open = i
+					break
+		if open < 0:
+			break
+		var fn := "xy" if sw == "xy" else "xyz"
+		out = out.substr(0, open) + "%s(%s)" % [fn, out.substr(open, at - open + 1)] + out.substr(at + 2 + sw.length())
+		at = out.find(").")
+	return out
 
 
 # --------------------------------------------------------------------------- text

@@ -157,6 +157,25 @@ criterion NOT MET ...)", and `--json` keeps the recording's trace for `audio_che
 recorder's verdicts on a stub launcher (a border crossed in music; three slow frames; no border; no
 music).
 
+Since W23 (lane P39f) `tools/web/world_check.mjs` measures the world as a returning player meets it, on
+the release build: a world save (`tools/web/world_check.json`'s fixture, a save the world bot wrote)
+written into the page's IndexedDB, Continue from the title, a fast travel to the King's Road waystone
+(the world walk's `--walk-travel`), then a walk of at least 60 s of game time across region borders with
+the AI on. It reports what the stream check reports for its walk, and the Continue's and the travel's
+load times, the streaming hitches (frames whose streaming work passed the streamer's 4 ms budget) with
+the heaviest steps, and the engine's warnings apart from its errors (only `--strict` fails on warnings,
+as on the frame budget and on every music hole over 50 ms). A hole that runs to the recording's end with
+no driver read inside it is placed on the main thread too (the recorder's rule, for all three checks): an
+allowance W23 added, so every default verdict since then - `audio_check.mjs`, `stream_check.mjs --world
+--audio` and `world_check.mjs` alike - includes it (`holes_cut_at_disarm`, reported on its own line;
+`--strict` fails such a hole as before). In this container the default verdict is indicative and
+load-dependent: with the machine starved, the browser's audio clock runs unevenly against the page's and
+holes can land outside the main thread's stalls - a `world_check.mjs` run at a load average of 8-9 failed
+on 50 of them, where the lane's own run at about 9.5 had passed. The run that counts for the gate is the
+owner's `--strict` run on a machine with a GPU (`docs/USABILITY_SCRIPT.md` §11).
+`tools/web/test_world_check.mjs` tests its verdicts on a stub launcher; its runs are in
+`docs/systems/P39f.md` ("Part web").
+
 ### Graphics presets (`--graphics`, Settings, LevelRoot)
 
 The level record's `render` presets, applied by `LevelRoot` at load and on every change of the
@@ -1357,5 +1376,6 @@ nothing about a real GPU; they are listed only to show the build works.
 | Walk the Cradle -> forest trail -> Grove and the village square with the browser's frame meter (Chrome DevTools > Rendering > Frame rendering stats): frame time and hitches, especially when an encounter first appears | NOT RUN (software WebGL here: about 2 frames a second) | NOT RUN |
 | A gamepad inside the page (browsers expose a pad after its first button press) | NOT RUN | NOT RUN |
 | Record the browser, the machine and the numbers in this file | Above | Owner |
-| **M6: the web audio check's criterion** - no silent run over 50 ms in 60 s of the Hollow's music (`node tools/web/audio_check.mjs --strict`; P23) | **Not met here** (software WebGL: every run has 166-213 holes over 50 ms, the longest 241-618 ms, each placed on the main thread drawing a frame while the no-threads build's mixer waits; the default form passes those, under load it fails as well, and of the gate's last two runs on its final release one failed it on a single 78 ms hole placed 1.7 ms past the tolerance); the report now prints the criterion's verdict and a failed run keeps its trace (`tools/web/test_audio_check.mjs`) | **NOT RUN** (a machine with a GPU: the owner, before M6 is declared passed) |
-| **M7: the world's music across a region border** - no silent run over 50 ms in 60 s of the world's music across a region border, on the release build (`node tools/web/stream_check.mjs --world --audio --strict`; the M7 gate) | **Not met here** (software WebGL: the gate's route had 98.5 s of music across three borders and 301 holes over 50 ms, the longest 281.5 ms, every one placed on the main thread drawing a frame while the no-threads build's mixer waited; the default form passes those; "The world's music on the web (the M7 gate)"); the recorder's verdicts are tested on a stub launcher (`tools/web/test_stream_check.mjs`) | **NOT RUN** (a machine with a GPU: the owner, before M7 is declared passed) |
+| **M6: the web audio check's criterion** - no silent run over 50 ms in 60 s of the Hollow's music (`node tools/web/audio_check.mjs --strict`; P23) | **Not met here** (software WebGL: every run has 166-213 holes over 50 ms, the longest 241-618 ms, each placed on the main thread drawing a frame while the no-threads build's mixer waits; the default form passes those, under load it fails as well, and of the gate's last two runs on its final release one failed it on a single 78 ms hole placed 1.7 ms past the tolerance); the report now prints the criterion's verdict and a failed run keeps its trace (`tools/web/test_audio_check.mjs`); since W23 the default form also passes a hole the recording's end cut short with no driver read inside it (`holes_cut_at_disarm`, reported apart) | **NOT RUN** (a machine with a GPU: the owner, before M6 is declared passed) |
+| **M7: the world's music across a region border** - no silent run over 50 ms in 60 s of the world's music across a region border, on the release build (`node tools/web/stream_check.mjs --world --audio --strict`; the M7 gate) | **Not met here** (software WebGL: the gate's route had 98.5 s of music across three borders and 301 holes over 50 ms, the longest 281.5 ms, every one placed on the main thread drawing a frame while the no-threads build's mixer waited; the default form passes those; "The world's music on the web (the M7 gate)"); the recorder's verdicts are tested on a stub launcher (`tools/web/test_stream_check.mjs`); since W23 the default form also passes a hole the recording's end cut short with no driver read inside it (`holes_cut_at_disarm`, reported apart) | **NOT RUN** (a machine with a GPU: the owner, before M7 is declared passed) |
+| **M9: the world as a returning player meets it** - a world save Continued from the title, a fast travel, 60 s of walking across region borders; the frames, streaming hitches, music holes over 50 ms, peak live samples and console errors (`node tools/web/world_check.mjs --strict`; W23, lane P39f) | **Not met here** (software WebGL, the machine shared: the Continue and the travel load and the walk finishes - 787.7 m, 3 region changes, 211 m of margin, 0 thrash, 57.3 of 67.9 MB of samples, 0 console errors - but the page's frames run 1.7 s at p50 and the music has 608 holes over 50 ms, the longest 4,377 ms, every one placed on the main thread; the default form passes those, one of them cut short at the recording's end (`holes_cut_at_disarm`: an allowance W23 added to all three checks' default forms); under load the default form fails too - the verifier's run at a load average of 8-9 FAILED on 50 holes the placement missed; both loads end on the starting ring's 8 s warning; `docs/systems/P39f.md`, "Part web") | **NOT RUN** (the owner: `docs/USABILITY_SCRIPT.md` §11; that strict run is the one that counts) |

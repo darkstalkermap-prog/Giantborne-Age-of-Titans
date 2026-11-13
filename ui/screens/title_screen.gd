@@ -214,25 +214,36 @@ func refresh() -> void:
 ## A short line about a save document: "Saved game: level 3, stage 2, at the Grove Shrine,
 ## 2026-11-05 14:02" (P20: the checkpoint's display name from its level's world index; a
 ## checkpoint the index does not name is left out - never its id - and a level other than the
-## Valley is named: "in The Old Kingdom"). M8 release (R2): the place is where Continue wakes the
+## Valley is named: "in the Old Kingdom"). M8 release (R2): the place is where Continue wakes the
 ## giant (GameSession.save_respawn: the saved respawn unless a respawn blocker refuses it - hostile
 ## guards there - and then the stone the load moves it to), not the saved respawn as such.
+## P39f (FOLLOWUPS: "the saved-game line writes 'in The Old Kingdom'"): a name that begins with "The" takes
+## a small "the" mid-sentence (mid_sentence), as the warning above and the menu button write it: "in the Old
+## Kingdom", "at the Kings' Door" (it read "in The Old Kingdom" and "at The Kings' Door").
 static func describe_save(doc: Dictionary) -> String:
 	var c: Dictionary = doc.get("character", {})
 	var parts := PackedStringArray(["level %d" % int(c.get("level", 1)), "stage %d" % int(c.get("growth_stage", 1))])
 	var lv := str(doc.get("level", GameSession.VALLEY_LEVEL_ID))
 	var place := WorldIndex.display_name_in(lv, GameSession.save_respawn(doc))
 	if place != "":
-		parts.append("at the %s" % place if not place.begins_with("The ") else "at %s" % place)
+		parts.append("at %s" % mid_sentence(place))
 	if lv != GameSession.VALLEY_LEVEL_ID:
 		var level_name := str(GameData.get_record(lv).get("display_name", ""))
 		if level_name != "":
-			parts.append("in %s" % level_name)
+			parts.append("in %s" % mid_sentence(level_name))
 	var when := int(doc.get("saved_at_unix", 0))
 	if when > 0:
 		var local := when + int(Time.get_time_zone_from_system().get("bias", 0)) * 60
 		parts.append(Time.get_datetime_string_from_unix_time(local, true).substr(0, 16))
 	return "Saved game: " + ", ".join(parts)
+
+
+## P39f: a place or level name as it reads after "at" or "in": "The Old Kingdom" -> "the Old Kingdom", and a
+## name without an article takes one - "Grove Shrine" -> "the Grove Shrine".
+static func mid_sentence(display_name: String) -> String:
+	if display_name.begins_with("The "):
+		return "the " + display_name.substr(4)
+	return "the " + display_name
 
 
 ## True when New Game offers the skip-prologue choice (P20): the saved game finished the prologue

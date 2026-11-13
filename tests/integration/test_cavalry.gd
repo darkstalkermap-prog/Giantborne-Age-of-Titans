@@ -400,3 +400,51 @@ func test_a_rider_at_its_leash_edge_beside_the_giant_still_attacks() -> void:
 		% [frozen.size(), n, " | ".join(frozen)])
 	assert_eq(strayed.size(), 0, "no rider rides past the leash's edge (%.0f m): %s" % [edge_m, " | ".join(strayed)])
 	assert_true(int(attacks.get(CHARGE, 0)) > 0, "riders turned out and charged (%s)" % str(attacks))
+
+
+## W23 (P39f; FOLLOWUPS "From the M8 screenshot pass"): a rider sent home by the leash with a stage-6 giant
+## standing between it and its post rides round him - it pressed on his body for as long as he stood there (the
+## return's path runs through him: actors are not on the navmesh). Pinned for its path check, it takes a detour
+## point beside the body in its way and then rides home.
+func test_a_rider_sent_home_rides_round_a_giant_in_its_way() -> void:
+	var g := _giant(6, Vector3(0, 0.05, 0))
+	var radius := float(g.profile.get("capsule_radius_m", 0.85))
+	var c := TestSpawn.enemy(world, CAVALRY, Vector3(0.3, 0.05, -(radius + 14.0)), "test.p39f_rider", false, 0.0) as CavalryEnemy
+	c.home_position = Vector3(0, 0.05, radius + 18.0)   # its post, on the far side of the giant
+	await step_ticks(2)
+	c.begin_leash_return()
+	assert_true(c.is_returning(), "the leash sends it home")
+	var nearest := INF
+	var home := false
+	for i in 60 * 25:
+		await step_ticks(1)
+		nearest = minf(nearest, _flat(c.global_position, g.global_position))
+		if not c.is_returning():
+			home = true
+			break
+	assert_true(home, "it reached its post round the giant (at %s, %.1f m from home)" % [c.global_position.snappedf(0.1),
+		_flat(c.global_position, c.home_position)])
+	assert_true(nearest > radius, "it never rode through him (nearest %.1f m from his centre, radius %.1f m)" % [nearest, radius])
+	assert_true(_flat(g.global_position, Vector3(0, 0, 0)) < 1.0, "and did not shove him aside (%s)" % g.global_position.snappedf(0.1))
+	assert_true(c.leash_detours >= 1, "by a detour round him (%d)" % c.leash_detours)
+
+
+## W23 (P39f): with the giant standing on its post a rider sent home can never get there: at its first path
+## failure against him (or after EnemyActor.LEASH_GIVE_UP_FAILURES failures in all) the return ends where it is
+## and its AI resumes - it no longer presses on him for as long as he stands there.
+func test_a_rider_whose_post_is_taken_ends_its_return() -> void:
+	var g := _giant(6, Vector3(0, 0.05, 0))
+	var radius := float(g.profile.get("capsule_radius_m", 0.85))
+	var c := TestSpawn.enemy(world, CAVALRY, Vector3(0.3, 0.05, -(radius + 14.0)), "test.p39f_rider_2", false, 0.0) as CavalryEnemy
+	c.home_position = Vector3(0, 0.05, 0)   # its post, where the giant stands
+	await step_ticks(2)
+	c.begin_leash_return()
+	var ended_after := -1
+	for i in 60 * 20:
+		await step_ticks(1)
+		if not c.is_returning():
+			ended_after = i
+			break
+	assert_true(ended_after >= 0, "with its post taken the return ends (at %s, %.1f m from him)" % [c.global_position.snappedf(0.1),
+		_flat(c.global_position, g.global_position)])
+	assert_true(ended_after < 60 * 8, "within seconds of meeting him (%.1f s)" % (ended_after / 60.0))

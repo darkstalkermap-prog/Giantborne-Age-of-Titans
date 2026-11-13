@@ -520,10 +520,13 @@ static func respawn_refusal(checkpoint_id: String) -> String:
 ## The entity ids of `faction`'s armed members on `level_id` that may stand within `radius_m` of
 ## `at` (horizontally, by their spawn points): spawns of enemy records in the level's encounters
 ## that are not cleared and that were not killed (pure data: the members need not be loaded).
+## W23 (P39f; FOLLOWUPS "From P37"): a template's spawns are no members - it is never placed where its record
+## draws it up, its copies stand where the WanderDirector puts them (never near a checkpoint) and none is in the
+## data - so templates are skipped: one drawn up near a checkpoint no longer refuses a respawn there.
 static func armed_members_near(level_id: String, faction: String, at: Vector3, radius_m: float) -> PackedStringArray:
 	var out := PackedStringArray()
 	for enc: Dictionary in GameData.records_of_type("encounter"):
-		if str(enc.get("level", "")) != level_id:
+		if str(enc.get("level", "")) != level_id or bool(enc.get("template", false)):
 			continue
 		if truthy(WorldState.get_flag(QuestConditions.encounter_flag(str(enc.get("id", ""))))):
 			continue

@@ -15,6 +15,6 @@
 	"counts_toward_budget": true,
 	"spawns": [
 		{"entity_id": "world.greywood.woodcutters_troll_1", "definition": "enemy.troll", "position_m": [-424, 23, 214], "yaw_deg": 120, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
-		{"entity_id": "world.greywood.woodcutters_troll_2", "definition": "enemy.troll", "position_m": [-414, 23, 225], "yaw_deg": 200, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+		{"entity_id": "world.greywood.woodcutters_troll_2", "definition": "enemy.troll", "position_m": [-412, 23, 230], "yaw_deg": 200, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
 	]
 }

@@ -8,9 +8,11 @@ extends IntegrationSuite
 ##     the path queries, the segments); under 4 minutes of wall time;
 ##   * each world invariant (BotDiagnosis.check_world_invariants) fires on its own injected fault on the
 ##     streamed test world - the formation cap, a living member in a chunk that is not loaded, a chunk
-##     reloaded within the thrash window, two world events at once, an event's fail timer running while
-##     its centre is unloaded, a save over 200 KB - and stays quiet without one; a group lock on a
-##     formation that is gone is a lock failure.
+##     reloaded within the thrash window, two world events in play at once, an event's fail timer running
+##     while its centre is unloaded, a save over 200 KB - and stays quiet without one; a group lock on a
+##     formation that is gone is a lock failure. W23 (P39f): the events invariant is the WanderDirector's
+##     rule (M8 gate, F2) - a running event left behind, out of play, keeps no other from starting - so an
+##     event left behind beside one in play is no failure.
 
 const SCENE := "res://scenes/test/test_world.tscn"
 const BAND := "encounter.test_world_soldiers"
@@ -18,12 +20,17 @@ const SMOKE_WALL_S := 240.0
 const RESULT_PREFIX := "AUTOPILOT_RESULT "
 
 
-## A world event stand-in's director: a node in the WanderDirector group with the events table.
+## A world event stand-in's director: a node in the WanderDirector group with the events table and its
+## in-play rule (W23, P39f): a running event is in play unless it is listed in `left_behind`.
 class FakeWander extends Node:
 	var events := {}
+	var left_behind := {}
 
 	func _enter_tree() -> void:
 		add_to_group(WanderDirector.GROUP)
+
+	func in_play(e: WorldEvent) -> bool:
+		return e.is_running() and not left_behind.has(e.id)
 
 
 static func run_smoke() -> Dictionary:
@@ -150,7 +157,8 @@ func test_each_world_invariant_fires_on_its_fault() -> void:
 		assert_eq(BotDiagnosis.check_world_invariants(get_tree(), w, state, 1000, false).size(), 0,
 			"the member scan is the full scan's (every 30 ticks)")
 		moved.global_position = home
-	# two world events at once, and a fail timer running with its centre unloaded
+	# two world events in play at once (not one in play and one left behind), and a fail timer running with
+	# its centre unloaded
 	var wander := FakeWander.new()
 	add_child(wander)
 	var a := WorldEvent.new()
@@ -165,7 +173,10 @@ func test_each_world_invariant_fires_on_its_fault() -> void:
 	b.centre = spot
 	wander.events[b.id] = b
 	fails = BotDiagnosis.check_world_invariants(get_tree(), w, state, 1000)
-	assert_true(fails.size() == 1 and fails[0].begins_with("2 world events at once"), "two events: %s" % [fails])
+	assert_true(fails.size() == 1 and fails[0].begins_with("2 world events in play at once"), "two events: %s" % [fails])
+	wander.left_behind[b.id] = true
+	assert_eq(BotDiagnosis.check_world_invariants(get_tree(), w, state, 1000), PackedStringArray(),
+		"an event left behind (running, out of play) beside one in play: no failure (the director's rule, F2)")
 	b.state = WorldEvent.SUSPENDED
 	var timer_fails := PackedStringArray()
 	for i in BotDiagnosis.EVENT_UNLOADED_GRACE_TICKS + 2:

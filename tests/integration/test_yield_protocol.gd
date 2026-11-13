@@ -232,3 +232,36 @@ func test_struck_he_rises_and_the_bar_and_the_music_follow_the_fight() -> void:
 	assert_eq(int(Audio.music.pending.get("state", -1)), MusicDirector.State.BOSS, "the boss state is due")
 	assert_eq(Audio.music.boss_phase, 2, "in the phase the fight is in")
 	assert_true(h.entity.combatant.lockable and not h.yielded and not h.entity.combatant.unkillable, "and he fights")
+
+
+## P39f (FOLLOWUPS, "From the M8 screenshot pass": "the yield prompt gives two instructions" - "Hold Enter, or
+## hold the mouse button on a choice, to take it" on the panel, "Enter: select" in the stack's footer): under the
+## yield prompt the footer is hidden, so its own line is the only instruction; a screen opened over it (the pause
+## menu) has the footer again, and closing that hides it once more.
+func test_the_prompt_alone_says_what_to_do() -> void:
+	spawn_player(Vector3(0, 0.05, 20), 0.0)
+	var c := _spawn(CORVANE, "test.corvane", Vector3(0, 0.05, 0))
+	await step_ticks(2)
+	c.p34_yield("health")
+	var layer := CanvasLayer.new()
+	world.add_child(layer)
+	var stack := ScreenStack.new()
+	layer.add_child(stack)
+	var prompt := stack.open("yield", {"session": Quests.dialogue, "name": "Corvane"}) as YieldPrompt
+	assert_true(prompt != null, "the yield screen opens")
+	if prompt == null:
+		return
+	prompt.arm_now()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_eq(prompt.nav_hint(false), "", "the prompt asks for no footer (keyboard)")
+	assert_eq(prompt.nav_hint(true), "", "nor with a pad")
+	assert_eq(stack.hint_text(), "", "the footer is hidden under the prompt")
+	assert_true(prompt.hint_text().begins_with("Hold Enter"), "its own line says how to take a choice: %s" % prompt.hint_text())
+	stack.open("pause")
+	await get_tree().process_frame
+	assert_eq(stack.hint_text(), UiNav.hint_text(false), "the pause menu over it has the footer")
+	stack.top().close()
+	await get_tree().process_frame
+	assert_eq(stack.hint_text(), "", "and it is hidden again under the prompt")
+	stack.close_all()

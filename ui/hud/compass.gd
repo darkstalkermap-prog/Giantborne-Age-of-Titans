@@ -1,7 +1,7 @@
 class_name HudCompass
 extends HudWidget
 ## The compass (P27; plan M6-M9 §2.14, §3.10 design 3): a heading strip at the top centre,
-## (-HALF_WIDTH..HALF_WIDTH, 4..28), turned with the camera: ticks every 15 degrees and N, E, S, W,
+## (-HALF_WIDTH..HALF_WIDTH, 4..34), turned with the camera: ticks every 15 degrees and N, E, S, W,
 ## and on it
 ##   * the tracked quest's objective as gold diamonds - one per marker of a multi-marker stage
 ##     (Quests.tracked_objective()'s positions) - held at the strip's ends when they are behind;
@@ -18,10 +18,22 @@ extends HudWidget
 ## shadowed text on the small text layer.
 ## Read API: markers_now(), heading_now(), visible_text(); the geometry is static (markers_for,
 ## heading_of, bearing_of, offset_deg).
+## P39f (FOLLOWUPS: "compass markers draw over its direction letters"): the strip has two rows - the marks
+## (diamonds, squares, the pin and the "?") on the upper one round MARK_Y, the letters on the lower one at
+## LETTER_BASELINE - so no mark ever covers a letter, whatever the bearing (a red pin sat on the N of "NE",
+## "?" on "NW" and "E"). The strip is 30 px tall (4..34; it was 24), still 10 px above the target frame and
+## the boss bar; the ticks stand between the letters. mark_rect() and letter_rect() are where each is drawn.
 
 const HALF_WIDTH := 270.0
 const TOP := 4.0
-const HEIGHT := 24.0
+const HEIGHT := 30.0
+## P39f: the marks' row (its centre, px from the strip's top) and the letters' baseline; a letter's ink is
+## LETTER_CAP_PX tall above its baseline (HudKit.SMALL caps in the HUD's font), and the "?" is drawn on the
+## marks' row with its baseline UNKNOWN_BASELINE.
+const MARK_Y := 9.0
+const LETTER_BASELINE := 27.0
+const LETTER_CAP_PX := 9.0
+const UNKNOWN_BASELINE := 13.0
 ## The strip spans the heading +- FIELD_DEG / 2.
 const FIELD_DEG := 180.0
 const RADIUS_M := 600.0
@@ -253,43 +265,67 @@ func _draw_strip() -> void:
 	var deg := int(floor((_heading - FIELD_DEG * 0.5) / 15.0)) * 15
 	while deg <= int(ceil(_heading + FIELD_DEG * 0.5)):
 		var x := x_of(offset_deg(float(deg), _heading))
-		# the cardinal letters stand where the long ticks would
-		if is_finite(x) and posmod(deg, 90) != 0:
-			var tall := 7.0 if posmod(deg, 45) == 0 else 4.0
-			s.draw_rect(Rect2(cx + x - 0.5, h - tall - 1.0, 1.0, tall), TICK)
+		# P39f: the letters stand at every 45 degrees, the ticks between them
+		if is_finite(x) and posmod(deg, 45) != 0:
+			s.draw_rect(Rect2(cx + x - 0.5, h - 4.0, 1.0, 3.0), TICK)
 		deg += 15
 	# the centre notch: the way the camera looks
 	s.draw_rect(Rect2(cx - 1.0, 0.0, 2.0, 5.0), Color(1, 1, 1, 0.85))
 	for m: Dictionary in _markers:
 		var x := cx + float(m.x)
 		var c: Color = m.color
-		var mid := Vector2(x, h * 0.5)
+		var mid := Vector2(x, MARK_Y)
+		# P39f: every mark on the upper row, inside mark_rect(kind, x)
 		match str(m.kind):
 			"objective":
-				HudKit.draw_diamond(s, mid, 8.0, Color(0, 0, 0, 0.55))
-				HudKit.draw_diamond(s, mid, 6.0, c if not bool(m.held) else Color(c.r, c.g, c.b, 0.6))
+				HudKit.draw_diamond(s, mid, 7.0, Color(0, 0, 0, 0.55))
+				HudKit.draw_diamond(s, mid, 5.5, c if not bool(m.held) else Color(c.r, c.g, c.b, 0.6))
 			"lead":
-				HudKit.draw_diamond_outline(s, mid, 6.0, c, 2.0)
+				HudKit.draw_diamond_outline(s, mid, 5.0, c, 2.0)
 			"poi":
-				s.draw_rect(Rect2(x - 4.0, h * 0.5 - 4.0, 8.0, 8.0), Color(0, 0, 0, 0.55))
-				s.draw_rect(Rect2(x - 3.0, h * 0.5 - 3.0, 6.0, 6.0), c)
+				s.draw_rect(Rect2(x - 4.0, MARK_Y - 4.0, 8.0, 8.0), Color(0, 0, 0, 0.55))
+				s.draw_rect(Rect2(x - 3.0, MARK_Y - 3.0, 6.0, 6.0), c)
 			"pin":
-				s.draw_rect(Rect2(x - 1.0, h * 0.5 - 2.0, 2.0, 10.0), Color(0.15, 0.1, 0.1, 0.9))
-				HudKit.draw_diamond(s, Vector2(x, h * 0.5 - 4.0), 5.0, c)
+				s.draw_rect(Rect2(x - 1.0, MARK_Y - 1.0, 2.0, 7.0), Color(0.15, 0.1, 0.1, 0.9))
+				HudKit.draw_diamond(s, Vector2(x, MARK_Y - 2.5), 4.5, c)
 
 
-## The letters N E S W (the in-between ones in grey) and the "?" of undiscovered places.
+## The letters N E S W (the in-between ones in grey) on the lower row and the "?" of undiscovered places on
+## the marks' row (P39f).
 func _draw_letters() -> void:
 	var s := _letters
 	var cx := s.size.x * 0.5
-	var baseline := s.size.y - 7.0
 	var names := ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 	for k in 8:
 		var x := x_of(offset_deg(k * 45.0, _heading))
 		if not is_finite(x):
 			continue
 		var color := NORTH if k == 0 else (Color(0.95, 0.95, 0.97) if k % 2 == 0 else Color(0.7, 0.72, 0.76))
-		HudKit.draw_text(s, Vector2(cx + x, baseline), names[k], HudKit.SMALL, color, true)
+		HudKit.draw_text(s, Vector2(cx + x, LETTER_BASELINE), names[k], HudKit.SMALL, color, true)
 	for m: Dictionary in _markers:
 		if str(m.kind) == "unknown":
-			HudKit.draw_text(s, Vector2(cx + float(m.x), baseline), "?", HudKit.SMALL, UNKNOWN, true)
+			HudKit.draw_text(s, Vector2(cx + float(m.x), UNKNOWN_BASELINE), "?", HudKit.SMALL, UNKNOWN, true)
+
+
+## P39f: where a mark of `kind` centred at `x` (px from the strip's left) is drawn, in the strip's coordinates:
+## every kind on the marks' row, above the letters' row.
+static func mark_rect(kind: String, x: float) -> Rect2:
+	match kind:
+		"objective":
+			return Rect2(x - 7.0, MARK_Y - 7.0, 14.0, 14.0)
+		"lead":
+			return Rect2(x - 6.0, MARK_Y - 6.0, 12.0, 12.0)
+		"poi":
+			return Rect2(x - 4.0, MARK_Y - 4.0, 8.0, 8.0)
+		"pin":
+			return Rect2(x - 4.5, MARK_Y - 7.0, 9.0, 13.0)
+		"unknown":
+			return Rect2(x - 4.0, UNKNOWN_BASELINE - LETTER_CAP_PX, 8.0, LETTER_CAP_PX + 1.0)
+	return Rect2(x - 7.0, MARK_Y - 7.0, 14.0, 14.0)
+
+
+## P39f: where a direction letter (`text`, centred at `x`) is drawn: its ink above LETTER_BASELINE, as wide as
+## `font` sets it at HudKit.SMALL (plus its 1 px shadow).
+static func letter_rect(text: String, x: float, font: Font) -> Rect2:
+	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, HudKit.SMALL).x if font != null else 14.0
+	return Rect2(x - w * 0.5, LETTER_BASELINE - LETTER_CAP_PX, w + 1.0, LETTER_CAP_PX + 2.0)

@@ -3,10 +3,12 @@
 	"id": "dialogue.reeve_tamsin",
 	"type": "dialogue",
 	"speaker": "Reeve Tamsin",
-	"description": "P29 (plan M6-M9 §5.7, §5.9): Millford's reeve. She asks about the Barrow Fields' wolves (outcome barrow: starts quest.barrow_fields) and the dammed Millrace (outcome millrace: starts quest.millrace), and thanks the giant once either is done. Hostile, she takes 2 iron to make good the damage (outcome reconcile_millford).",
+	"description": "P29 (plan M6-M9 §5.7, §5.9): Millford's reeve. She asks about the Barrow Fields' wolves (outcome barrow: starts quest.barrow_fields) and the dammed Millrace (outcome millrace: starts quest.millrace), and thanks the giant once either is done. Hostile, she takes 2 iron to make good the damage (outcome reconcile_millford). W23 (P39f; plan §5.10): after the raid on Millford (event.millford_raid) her greeting changes - burned (the raid fell: world.millford.burned) she speaks of the houses lost, defended (world.millford.defended) she thanks the giant for the hamlet; a burned Millford comes first, since its houses stay burned.",
 	"entries": [
 		{"node": "hostile", "conditions": [{"type": "flag", "flag": "faction.millford.hostile"},
 			{"type": "not", "of": {"type": "flag", "flag": "faction.millford.reconciled"}}]},
+		{"node": "burned", "conditions": [{"type": "flag", "flag": "world.millford.burned"}]},
+		{"node": "defended", "conditions": [{"type": "flag", "flag": "world.millford.defended"}]},
 		{"node": "thanks", "conditions": [{"type": "any", "of": [
 			{"type": "quest_done", "quest": "quest.barrow_fields"}, {"type": "quest_done", "quest": "quest.millrace"}]}]},
 		{"node": "greet", "conditions": []}
@@ -24,6 +26,14 @@
 		{"id": "thanks", "text": "Millford is in your debt, giant. The sheep sleep easy and the wheel turns.",
 			"choices": [
 				{"text": "Is there more trouble?", "next": "troubles"},
+				{"text": "Farewell.", "next": ""}]},
+		{"id": "burned", "text": "The raiders came up the east road and put our houses to the torch. Two families sleep in the mill now. We'll build again - Millford always has.",
+			"choices": [
+				{"text": "Is there anything else troubling Millford?", "next": "troubles"},
+				{"text": "Farewell.", "next": ""}]},
+		{"id": "defended", "text": "You stood between Millford and the raiders, giant. Every house still has its roof, and every door here is open to you.",
+			"choices": [
+				{"text": "Is there anything else troubling Millford?", "next": "troubles"},
 				{"text": "Farewell.", "next": ""}]},
 		{"id": "hostile", "text": "Get away from Millford! Haven't you done enough?",
 			"choices": [

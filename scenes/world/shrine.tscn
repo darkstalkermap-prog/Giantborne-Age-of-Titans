@@ -89,11 +89,12 @@ material_override = SubResource("StandardMaterial3D_2")
 mesh = SubResource("BoxMesh_3")
 
 [node name="Name" type="Label3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.3, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.8, 0)
 visibility_range_begin = 7.0
-visibility_range_end = 40.0
-pixel_size = 0.006
+visibility_range_end = 90.0
+pixel_size = 0.0007992989
 billboard = 2
+fixed_size = true
 modulate = Color(1, 0.95, 0.8, 1)
 text = "SHRINE"
 font_size = 64

@@ -463,10 +463,15 @@ static func _cell_of(g: Dictionary, p: Vector2) -> Vector2i:
 	return Vector2i(int(floor((p.x - o.x) / GRID_M)), int(floor((p.y - o.y) / GRID_M)))
 
 
+## W23 (P39f): the cell is written through a typed local, which shares the dictionary's array: an indexed
+## write through `(g[key] as PackedByteArray)` went into a converted copy, so no mark ever reached the grids
+## (the "road" grid stayed empty and "clear" held only the water and the rim - trunks stood on roads, rides,
+## pads and in the shrines' clearings).
 static func _set_cell(g: Dictionary, key: String, c: Vector2i) -> void:
 	var n: Vector2i = g.n
 	if c.x >= 0 and c.y >= 0 and c.x < n.x and c.y < n.y:
-		(g[key] as PackedByteArray)[c.y * n.x + c.x] = 1
+		var cells: PackedByteArray = g[key]
+		cells[c.y * n.x + c.x] = 1
 
 
 static func cell_set(g: Dictionary, key: String, p: Vector2) -> bool:

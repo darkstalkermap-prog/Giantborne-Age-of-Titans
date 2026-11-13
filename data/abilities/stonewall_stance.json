@@ -4,7 +4,7 @@
 	"type": "action",
 	"kind": "ability",
 	"display_name": "Stonewall Stance",
-	"hotbar_label": "STONEWALL",
+	"hotbar_label": "STANCE",
 	"description": "Guardian: for 6 seconds nothing staggers you and hits deal 60% of their damage, but you move at 70% speed.",
 	"unlock_level": 10,
 	"granted_by": "talent",

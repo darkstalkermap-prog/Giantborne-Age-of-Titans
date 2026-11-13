@@ -123,3 +123,66 @@ func test_the_live_compass_follows_the_level_index() -> void:
 	assert_eq(unknown, ["poi.test_p27_far", "poi.test_p27_ruin", "poi.test_p27_shrine", "poi.test_p27_town"],
 		"? for the town (240 m), the ruin (205 m) and the shrine (215 m), and the far landmark on the skyline (367 m); not the 260 m ruin, nor the sealed place")
 	GameSession.mode = GameSession.Mode.SANDBOX
+
+
+## P39f (FOLLOWUPS, "From the M8 screenshot pass": "compass markers draw over its direction letters" - a red pin
+## on the N of "NE", "?" on "NW" and "E"): the strip has a row of marks above a row of letters, so no mark of any
+## kind covers any letter wherever both stand - here every kind exactly on every letter's bearing - and both rows
+## lie inside the strip's height. Live: a POI due north of the giant, the pin due north-east and undiscovered places
+## round it, facing north: each mark is drawn at its letter's x, on the marks' row.
+func test_marks_never_cover_the_letters() -> void:
+	var layer := CanvasLayer.new()
+	world.add_child(layer)
+	var hud := Hud.new()
+	layer.add_child(hud)
+	await get_tree().process_frame
+	var font := hud.get_theme_font("font", "Label")
+	var bad := PackedStringArray()
+	var letters := ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+	for heading in range(0, 360, 5):
+		for k in 8:
+			var x := HudCompass.x_of(HudCompass.offset_deg(k * 45.0, float(heading)))
+			if not is_finite(x):
+				continue
+			var cx := HudCompass.HALF_WIDTH + x
+			var lr := HudCompass.letter_rect(letters[k], cx, font)
+			if lr.position.y < 0.0 or lr.end.y > HudCompass.HEIGHT:
+				bad.append("%s at heading %d leaves the strip: %s" % [letters[k], heading, lr])
+			for kind: String in ["objective", "lead", "poi", "pin", "unknown"]:
+				var mr := HudCompass.mark_rect(kind, cx)
+				if mr.intersects(lr):
+					bad.append("a %s mark covers %s at heading %d" % [kind, letters[k], heading])
+				if mr.position.y < 0.0 or mr.end.y > HudCompass.HEIGHT:
+					bad.append("a %s mark leaves the strip: %s" % [kind, mr])
+	assert_eq(bad, PackedStringArray(), "no mark covers a letter, and all of them lie on the strip")
+	var lowest := 0.0
+	for kind: String in ["objective", "lead", "poi", "pin", "unknown"]:
+		lowest = maxf(lowest, HudCompass.mark_rect(kind, 0.0).end.y)
+	assert_true(lowest <= HudCompass.letter_rect("N", 0.0, font).position.y,
+		"the marks' row ends (%.0f px) above the letters' (%.0f px)" % [lowest, HudCompass.letter_rect("N", 0.0, font).position.y])
+	# live: marks exactly on the N and NE letters
+	var p := spawn_player(Vector3(0, 0.05, 140), 0.0)
+	Fx.install()
+	GameSession.level_id = Fx.LEVEL
+	GameSession.mode = GameSession.Mode.VALLEY
+	WorldState.set_flag("discovered.test_p27_town", true)                    # (0, -100): due north of (0, 140)
+	WorldState.set_flag(Discovery.PIN_FLAG, [240.0, -100.0, Fx.LEVEL])      # due north-east
+	p.camera_rig.yaw = 0.0
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var c := hud.get_node("Compass")
+	var marks: Array = c.call("markers_now")
+	var town := marks.filter(func(m: Dictionary) -> bool: return str(m.id) == "poi.test_p27_town")
+	var pin := marks.filter(func(m: Dictionary) -> bool: return str(m.kind) == "pin")
+	assert_true(town.size() == 1 and absf(float(town[0].x)) < 0.5, "the town sits on the N (%s)" % str(town))
+	assert_true(pin.size() == 1 and absf(float(pin[0].offset) - 45.0) < 0.5, "the pin on the NE (%s)" % str(pin))
+	bad.clear()
+	for m: Dictionary in marks:
+		var cx := HudCompass.HALF_WIDTH + float(m.x)
+		for k in 8:
+			var x := HudCompass.x_of(HudCompass.offset_deg(k * 45.0, 0.0))
+			if is_finite(x) and HudCompass.mark_rect(str(m.kind), cx).intersects(
+					HudCompass.letter_rect(letters[k], HudCompass.HALF_WIDTH + x, font)):
+				bad.append("%s %s covers %s" % [m.kind, m.id, letters[k]])
+	assert_eq(bad, PackedStringArray(), "live: no mark covers a letter")
+	GameSession.mode = GameSession.Mode.SANDBOX
