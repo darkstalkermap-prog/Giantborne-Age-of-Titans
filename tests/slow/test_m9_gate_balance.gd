@@ -1,0 +1,238 @@
+extends IntegrationSuite
+## M9 gate (lane "balance"; docs/BALANCE_LOG.md, "M9 gate"): the fixes of the W23 confirmation's misses.
+##   * awe tiers (EnemyBrain.awe_loss_at, tactics.awe_tiers): a lone soldier flees a stage-4 giant on sight
+##     (plan §5.14: "single humans flee on sight (awe at 6.1x)"), a stage-3 one costs it the base 35 of its
+##     70 morale as before (the Valley's stages 1-3 unchanged), and a formation's pikeman has no tier;
+##   * the world bot walks past a formation that holds its ground off its way (the road to Brannock and the
+##     Raiders' Hollow), and fights it once it closes in, braces, or stands where the objective leads;
+##   * an engine that shot at the giant is sought from SIEGE_SHOT_SEEK_M (the walk to the Moot passed the
+##     Moot battery beyond SIEGE_SEEK_M);
+##   * Rampart Grip reads as ready only with something in reach to seize, and a slotted ability the run has
+##     not used yet is tried at the first free tick it fits.
+
+const PIKEMAN := "res://scenes/enemies/pikeman.tscn"
+const BANNERMAN := "res://scenes/enemies/bannerman.tscn"
+const BALLISTA := "res://scenes/world/siege_ballista.tscn"
+
+var f: Formation
+var p: GiantPlayer
+var bot: WorldBot
+
+
+func before_each() -> void:
+	await super()
+	WorldBot.reset_world()
+
+
+func after_each() -> void:
+	if f != null:
+		f.dissolve()
+		f = null
+	if bot != null and is_instance_valid(bot):
+		bot.queue_free()
+	bot = null
+	WorldBot.reset_world()
+	await super()
+
+
+static func _profile(stage: int) -> Dictionary:
+	for rec: Dictionary in GameData.records_of_type("growth_profile"):
+		if int(rec.get("stage", 0)) == stage:
+			return rec
+	return {}
+
+
+func _giant(stage: int, pos: Vector3) -> void:
+	p = spawn_player(pos, 0.0)
+	p.set_profile(_profile(stage))
+	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 40)
+	p.camera_rig.yaw = 0.0
+	await step_ticks(1)
+
+
+## Stands in for the bot a BotCombat reads its run's metrics through (no run: the bot's own tick idles).
+class MetricsHolder extends RefCounted:
+	var metrics := RunMetrics.new()
+
+
+## A WorldBot bound by hand to the test's giant (no run: its own tick does nothing), its BotCombat set up;
+## it counts as in the world (a WorldRoot it does not tick).
+func _bot(skill := "novice") -> void:
+	bot = WorldBot.new()
+	world.add_child(bot)
+	bot.player = p
+	bot._world = WorldRoot.new()
+	p.router.use_injection = true
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	bot.combat = BotCombat.new()
+	bot.combat.setup(bot, p, skill, rng)
+
+
+## A soldier with its AI on at `pos`, facing the giant.
+func _soldier_facing_giant(pos: Vector3, id: String) -> SoldierEnemy:
+	return spawn_soldier(pos, yaw_towards(pos, p.global_position), id, true)
+
+
+func test_a_lone_soldier_flees_a_stage_4_giant_on_sight_and_not_a_stage_3_one() -> void:
+	var rec := GameData.get_record("enemy.soldier")
+	var tactics: Dictionary = rec.get("tactics", {})
+	assert_eq(float(tactics.get("awe_morale_loss", 0.0)), 35.0, "the base awe (the Valley's) is 35")
+	await _giant(3, Vector3(0, 0.05, 0))
+	var calm := _soldier_facing_giant(Vector3(0, 0.05, -12), "test.m9_awed_3")
+	await TestWait.until(self, func() -> bool: return calm.brain.awed, 120)
+	assert_true(calm.brain.awed, "a stage-3 giant (4.4x a soldier) awes it")
+	assert_near(calm.brain.awe_loss_at(calm.brain.size_ratio()), 35.0, 1e-6, "at 4.4x the base loss")
+	assert_true(calm.brain.morale > float(calm.brain.ai.get("flee_morale", 25.0)),
+		"its morale (%.1f) stays above its flee threshold: it stands (the Valley as it was)" % calm.brain.morale)
+	assert_false(calm.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED], "and does not flee")
+	calm.queue_free()
+	p.set_profile(_profile(4))
+	await step_ticks(2)
+	var lone := _soldier_facing_giant(Vector3(0, 0.05, -14), "test.m9_awed_4")
+	await TestWait.until(self, func() -> bool: return lone.brain.awed, 120)
+	assert_true(lone.brain.size_ratio() >= 6.0, "a stage-4 giant is %.2fx a soldier" % lone.brain.size_ratio())
+	assert_near(lone.brain.awe_loss_at(lone.brain.size_ratio()), 50.0, 1e-6, "its awe tier at 6.0x costs 50")
+	assert_true(lone.brain.morale < float(lone.brain.ai.get("flee_morale", 25.0)),
+		"its morale (%.1f) falls below its flee threshold" % lone.brain.morale)
+	await TestWait.until(self, func() -> bool: return lone.brain.state == EnemyBrain.AIState.FLEE, 60)
+	assert_eq(lone.brain.state, EnemyBrain.AIState.FLEE, "a lone soldier flees a stage-4 giant on sight (plan §5.14)")
+	var pike := TestSpawn.enemy(world, PIKEMAN, Vector3(20, 0.05, -14), "test.m9_pike", false)
+	await step_ticks(2)
+	assert_near(pike.brain.awe_loss_at(6.1), float(pike.brain.tactics.get("awe_morale_loss", 0.0)), 1e-6,
+		"a pikeman has no tier: formations keep their ground as they did")
+
+
+## A formation of five pikemen and its banner around `pivot`, AI off, aware of the giant.
+func _formation(pivot: Vector3) -> void:
+	f = Formation.new()
+	f.id = "test.m9_pikes"
+	f.kind = "pike"
+	f.ranks = 1
+	f.files = 5
+	f.rank_spacing_m = 1.6
+	f.file_spacing_m = 1.4
+	f.place(pivot, PI * 0.5)
+	Formation.register(f)
+	for i in 5:
+		f.add_member(TestSpawn.enemy(world, PIKEMAN, f.slot_position(i), "test.m9_pike_%d" % i, false, PI * 0.5), i)
+	f.set_banner(TestSpawn.enemy(world, BANNERMAN, f.slot_position(Formation.BANNER_SLOT), "test.m9_banner", false, PI * 0.5))
+	await step_ticks(2)
+	for m: EnemyActor in f.members + [f.banner]:
+		m.brain.aware = true
+
+
+func _move_formation(pivot: Vector3) -> void:
+	f.place(pivot, PI * 0.5)
+	for i in 5:
+		f.members[i].global_position = f.slot_position(i)
+	f.banner.global_position = f.slot_position(Formation.BANNER_SLOT)
+	await step_ticks(1)
+
+
+func test_the_bot_walks_past_a_formation_that_holds_its_ground_off_its_way() -> void:
+	await _giant(4, Vector3(0, 0.05, 0))
+	await _formation(Vector3(0, 0, -23))
+	_bot()
+	f.state = "formed"
+	bot._plan_place = Vector3(0, 0, 400)   # the objective leads away from it (Brannock past the Hollow)
+	assert_true(bot._passing_by(f.members[0]), "a formed wall 23 m off the road is passed")
+	assert_true(bot._passing_by(f.banner), "and its banner")
+	f.state = "advancing"
+	assert_true(bot._passing_by(f.members[2]), "still while it advances, far off (1.2 m/s against a giant's stride)")
+	f.state = "braced"
+	assert_false(bot._passing_by(f.members[0]), "a wall braced against the giant is fought")
+	f.state = "formed"
+	await _move_formation(Vector3(0, 0, -10))
+	assert_false(bot._passing_by(f.members[0]), "one that closed within %.0f m is fought" % WorldBot.FORMATION_PASS_M)
+	await _move_formation(Vector3(0, 0, -23))
+	bot._plan_place = Vector3.INF
+	assert_false(bot._passing_by(f.members[0]), "with no place the objective leads to, the old rule (fought)")
+	# its encounter's ground is where the objective leads (the march's help clears the Hollow): fought
+	f.encounter_id = "encounter.crownmarch_raiders"
+	var centre := bot._where(f.encounter_id)
+	assert_true(centre.is_finite(), "the Hollow's centre is known from the world's index")
+	bot._plan_place = centre + Vector3(10, 0, 0)
+	assert_false(bot._passing_by(f.members[0]), "a wall where the objective leads is fought")
+	bot._plan_place = centre + Vector3(300, 0, 0)
+	assert_true(bot._passing_by(f.members[0]), "the same wall off the objective's way is passed")
+	# a lone soldier is never passed
+	var lone := spawn_soldier(Vector3(10, 0.05, -20), 0.0, "test.m9_lone")
+	lone.brain.aware = true
+	assert_false(bot._passing_by(lone), "a lone enemy in no formation is fought as before")
+	# the objective's place: a talker, a thing to smash, a fight's target, a travel's spot
+	assert_eq(bot._objective_place({"kind": "travel", "pos": Vector3(1, 2, 3)}), Vector3(1, 2, 3), "a travel's spot")
+	assert_eq(bot._objective_place({"kind": "fight", "target": lone}), lone.global_position, "a fight's target")
+	assert_false(bot._objective_place({"kind": "wait"}).is_finite(), "a wait leads nowhere")
+
+
+## A ballista at `pos` facing `face`, uncrewed unless `crew`.
+func _engine(id: String, pos: Vector3, face: Vector3, crew := true) -> SiegeEngine:
+	var e := (load(BALLISTA) as PackedScene).instantiate() as SiegeEngine
+	e.world_id = id
+	e.position = pos
+	e.rotation.y = yaw_towards(pos, face)
+	world.add_child(e)
+	if crew:
+		e.add_crew(TestSpawn.enemy(world, "res://scenes/enemies/siege_crew.tscn", pos + Vector3(0, 0.05, -2.5), id + "_hauler", false, 0.0))
+	return e
+
+
+func test_an_engine_that_shoots_at_the_giant_is_sought_from_farther() -> void:
+	await _giant(6, Vector3(0, 0.05, 0))
+	var eng := _engine("test.m9_battery_ballista", Vector3(0, 0, -60), Vector3(0, 0, 0))
+	await step_ticks(2)
+	_bot()
+	assert_true(bot._can_seize_engines(), "a stage-6 giant may seize engines")
+	assert_true(bot._seizable_engine(eng), "the ballista is one to seize")
+	assert_true(bot._siege_target(Sim.tick) == null, "60 m off, beyond SIEGE_SEEK_M (%.0f m), it is not sought" % WorldBot.SIEGE_SEEK_M)
+	bot._on_engine_fired(Sim.tick, eng.world_id, "ability.ballista_bolt", p.entity.entity_id)
+	assert_eq(bot._siege_target(Sim.tick), eng, "once it shot at the giant it is sought from %.0f m" % WorldBot.SIEGE_SHOT_SEEK_M)
+	var later := Sim.tick + ActionDef.seconds_to_ticks(WorldBot.SIEGE_SHOT_MEMORY_S) + 1
+	assert_true(bot._siege_target(later) == null, "a shot %.0f s ago is forgotten" % WorldBot.SIEGE_SHOT_MEMORY_S)
+	bot._on_engine_fired(Sim.tick, eng.world_id, "ability.ballista_bolt", "test.someone_else")
+	bot._shot_at_by.clear()
+	bot._on_engine_fired(Sim.tick, eng.world_id, "ability.ballista_bolt", "test.someone_else")
+	assert_true(bot._siege_target(Sim.tick) == null, "a shot at someone else is no reason")
+	eng.global_position = Vector3(0, 0, -100)
+	bot._on_engine_fired(Sim.tick, eng.world_id, "ability.ballista_bolt", p.entity.entity_id)
+	assert_true(bot._siege_target(Sim.tick) == null, "nor one beyond SIEGE_SHOT_SEEK_M")
+
+
+func test_rampart_grip_is_ready_only_with_something_to_seize_and_is_tried_once_it_fits() -> void:
+	await _giant(6, Vector3(0, 0.05, 0))
+	p.set_loadout_slot("slot_4", "ability.rampart_grip")   # as the evolution leaves it at stage 6 (P32)
+	await step_ticks(1)
+	_bot()
+	var c := bot.combat
+	var key := c.slot_of(BotCombat.GRIP)
+	assert_true(key != "", "the grip's slot (loadout %s)" % [p.controller.loadout])
+	var def: ActionDef = p.controller.library.get(str(p.controller.loadout.get(key, "")))
+	assert_true(PlayerGrab.is_rampart(def), "at stage 6 it holds Rampart Grip (%s)" % (def.id if def != null else "-"))
+	assert_true(c.slot_reason(key) != "", "with nothing in reach it is not ready (%s)" % c.slot_reason(key))
+	assert_false(c.readiness().get(def.id, true), "nor counted ready by the 'used when ready' windows")
+	var eng := _engine("test.m9_crewless", Vector3(0, 0, -7.5), Vector3(0, 0, 40), false)
+	await step_ticks(3)
+	assert_eq(p.grab.check_target(eng.entity, "hold"), "", "a crewless engine in reach may be seized")
+	assert_eq(c.slot_reason(key), "", "Rampart Grip is ready with the engine in reach")
+	assert_true(c.readiness().get(def.id, false), "and counted ready")
+	# the first use: the run has not used it - offered at a free tick, the expert's reserve aside
+	var holder := MetricsHolder.new()
+	c.bot = holder
+	assert_true(c._first_use_slot(4.0) != "", "with nothing used yet this run a slot is offered")
+	for k: String in GiantPlayer.SLOT_KEYS:
+		var id := str(p.controller.loadout.get(k, ""))
+		if id != "" and id != def.id:
+			holder.metrics.ability_uses[id] = 1
+	assert_eq(c._first_use_slot(4.0), key, "the one slot the run has not used is offered for its first use")
+	holder.metrics.ability_uses[def.id] = 1
+	assert_eq(c._first_use_slot(4.0), "", "once every slotted ability was used this run, none is due")
+	# an area blow's first use waits for a foe within reach
+	var stomp := c.slot_of(BotCombat.FOOTFALL)
+	if stomp != "":
+		holder.metrics.ability_uses.erase(str(p.controller.loadout.get(stomp, "")))
+		var reach := float(p.profile.get("melee_reach_m", 3.5))
+		assert_eq(c._first_use_slot(reach + 20.0), "", "not at a foe %.0f m off" % (reach + 20.0))
+		if c.slot_reason(stomp) == "":
+			assert_eq(c._first_use_slot(reach), stomp, "at a foe within reach")
+	c.bot = bot

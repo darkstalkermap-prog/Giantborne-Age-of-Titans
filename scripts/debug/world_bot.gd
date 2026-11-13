@@ -165,8 +165,18 @@ const TALK_RETRY_TICKS := 90
 ## breaks (or its crew is gone), grabbed, and thrown at the nearest enemy. An engine tried for
 ## SIEGE_GIVE_UP_S without being seized or hurt is left alone for SIEGE_IGNORE_S.
 const SIEGE_SEEK_M := 45.0
+## M9 gate: an engine that shot at the giant in the last SIEGE_SHOT_MEMORY_S is sought from as far as
+## SIEGE_SHOT_SEEK_M - a player under fire goes for the engine that fires. Lane P39f's rebuilt world moved
+## the walk from the Standing Stones to the Moot 49.5-51.2 m from the Moot battery's ballistae, beyond
+## SIEGE_SEEK_M, so a run that won Harrok's duel at once walked by while the battery shot at it and threw
+## no engine (the M9 confirmation: 11 of 12 runs at stage 6 threw two; lane P39's set 9 of 9).
+const SIEGE_SHOT_SEEK_M := 90.0
+const SIEGE_SHOT_MEMORY_S := 20.0
 const SIEGE_GIVE_UP_S := 25.0
 const SIEGE_IGNORE_S := 90.0
+## M9 gate (FOLLOWUPS "From the M9 confirmation": the road to Brannock): a formation the giant passes on
+## its way is not left the road for while its nearest member stands beyond FORMATION_PASS_M (_passing_by).
+const FORMATION_PASS_M := 12.0
 ## Presses of interact on an engine that may be seized stay this many ticks apart.
 const SIEGE_GRAB_EVERY_TICKS := 20
 ## P39 - the waystones beside the way (P38's bot took a waystone only as a fight's respawn point, so no
@@ -248,6 +258,10 @@ var _world: WorldRoot = null
 ## the last interact pressed on an engine.
 var _siege_tries: Dictionary = {}
 var _siege_grab_tick := -1000
+## M9 gate: engine world id -> the tick it last shot at the giant (Events.siege_engine_fired).
+var _shot_at_by: Dictionary = {}
+## M9 gate: where this plan tick's objective leads (_objective_place; INF: unknown), for _passing_by.
+var _plan_place := Vector3.INF
 ## P39: where each member above reach is shot from - entity id -> {"spot": the chosen ground (INF:
 ## none clear), "at": the member's position then, "tick": when chosen, "bad": the spots given up}.
 var _shot_spots: Dictionary = {}
@@ -443,6 +457,15 @@ func _on_level_loaded() -> void:
 			wrun.world_started_tick = Sim.tick
 	_stuck_goal = Vector3.INF
 	_watch_budget(level.director() if level != null else null)
+	_shot_at_by.clear()
+	if not Events.siege_engine_fired.is_connected(_on_engine_fired):
+		Events.siege_engine_fired.connect(_on_engine_fired)
+
+
+## M9 gate: remembers the engines that shoot at the giant (SIEGE_SHOT_SEEK_M).
+func _on_engine_fired(tick: int, engine_id: String, _action_id: String, target_id: String) -> void:
+	if player != null and is_instance_valid(player) and player.entity != null and target_id == player.entity.entity_id:
+		_shot_at_by[engine_id] = tick
 
 
 # --------------------------------------------------------------------------- the encounter budget
@@ -713,6 +736,7 @@ func _plan(tick: int) -> void:
 		task = {"kind": "siege", "engine": engine}
 		_stall_since = -1
 		return
+	_plan_place = _objective_place(objective)
 	var fight_target := _fight_target()
 	if fight_target != null and _chase_futile(fight_target, tick):
 		fight_target = _fight_target()
@@ -799,6 +823,12 @@ func _fight_ignored_now(_t: EnemyActor) -> bool:
 ## nearest threat on the giant's own ground, else none (the objective goes on).
 func _fight_target() -> EnemyActor:
 	var t := super()
+	if t != null and _passing_by(t):
+		t = null
+		for e in combat.threats(combat.engage_radius()):
+			if not _is_ignored(e) and not _passing_by(e) and not combat.is_elevated(e) and reachable(e.global_position, 3.5):
+				t = e
+				break
 	if t == null or not _in_world() or not combat.is_elevated(t):
 		return t
 	if _ranged_ready():
@@ -812,9 +842,57 @@ func _fight_target() -> EnemyActor:
 					return e
 				break
 	for e in combat.threats(combat.engage_radius()):
-		if not _is_ignored(e) and not combat.is_elevated(e) and reachable(e.global_position, 3.5):
+		if not _is_ignored(e) and not _passing_by(e) and not combat.is_elevated(e) and reachable(e.global_position, 3.5):
 			return e
 	return null
+
+
+## M9 gate (FOLLOWUPS "From the M9 confirmation": the road to Brannock passed the Raiders' Hollow's shield
+## wall at about 23 m on the rebuilt world, and the bot - fighting any aware enemy within its engage radius
+## - left the King's Road for it in nearly every run whose oath does not ask for the Hollow: the march's
+## meeting took a median 226 s against lane P39's 54 s, with deaths and stucks in the Hollow's cells). A
+## player walks past a formation that holds its ground and does not close on him: `e` belongs to a
+## formation that is formed or advancing (not braced against the giant, not broken), whose encounter's
+## ground (its activate radius round its centre) is not where the objective leads, and whose nearest member
+## stands beyond FORMATION_PASS_M. It is fought once it closes in or braces, and wherever the objective is
+## its encounter (the march's help clears the Hollow) or lies on its ground (the toll gate in the toll
+## fort's pikes).
+func _passing_by(e: EnemyActor) -> bool:
+	if e == null or not _in_world() or e.formation == null:
+		return false
+	var f := e.formation
+	if f.dissolved or not (f.state in ["formed", "advancing"]) or not _plan_place.is_finite():
+		return false
+	if f.encounter_id != "":
+		var centre := _where(f.encounter_id)
+		var r := float(GameData.get_record(f.encounter_id).get("activate_radius_m", 0.0))
+		if not centre.is_finite() or _flat_dist(centre, _plan_place) <= r:
+			return false
+	var near := INF
+	var group: Array = f.members.duplicate()
+	group.append(f.banner)
+	for m: Variant in group:
+		var a := m as EnemyActor if is_instance_valid(m) else null
+		if a != null and a.entity != null and a.entity.is_alive():
+			near = minf(near, _flat_dist(a.global_position, player.global_position))
+	return near > FORMATION_PASS_M
+
+
+## M9 gate: where an objective task leads (its place, the talker, the thing to smash or touch, its
+## target); INF when it names none.
+func _objective_place(obj: Dictionary) -> Vector3:
+	match str(obj.get("kind", "")):
+		"say":
+			var at := _where(str(obj.get("npc", "")))
+			if at.is_finite():
+				return at
+		"smash":
+			return _where(str(obj.get("id", "")))
+	var t: Variant = obj.get("target")
+	if t is Node3D and is_instance_valid(t):
+		return (t as Node3D).global_position
+	var p: Variant = obj.get("pos")
+	return p if p is Vector3 else Vector3.INF
 
 
 ## True when a bolt the giant threw standing at `ground` (facing `e`) would fly clear to `e`: the
@@ -1921,18 +1999,20 @@ func _holding_engine() -> bool:
 
 
 ## The engine to seize now (see SIEGE_SEEK_M): the nearest hostile, standing engine on the giant's level
-## within SIEGE_SEEK_M that is not given up; null when the giant cannot seize engines or none is near.
+## within SIEGE_SEEK_M - or, M9 gate, within SIEGE_SHOT_SEEK_M when it shot at the giant in the last
+## SIEGE_SHOT_MEMORY_S - that is not given up; null when the giant cannot seize engines or none is near.
 func _siege_target(tick: int) -> SiegeEngine:
 	if not _in_world() or not _can_seize_engines():
 		return null
 	var best: SiegeEngine = null
-	var best_d := SIEGE_SEEK_M
+	var best_d := INF
 	for n in get_tree().get_nodes_in_group(SiegeEngine.GROUP):
 		var s := n as SiegeEngine
 		if not _seizable_engine(s) or int(_ignored.get("siege:" + str(s.world_id), -1)) > tick:
 			continue
 		var d := _flat_dist(s.global_position, player.global_position)
-		if d < best_d:
+		var shot := tick - int(_shot_at_by.get(str(s.world_id), -1000000)) <= ActionDef.seconds_to_ticks(SIEGE_SHOT_MEMORY_S)
+		if d < best_d and (d <= SIEGE_SEEK_M or (shot and d <= SIEGE_SHOT_SEEK_M)):
 			best = s
 			best_d = d
 	return best
