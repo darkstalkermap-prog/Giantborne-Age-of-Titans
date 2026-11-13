@@ -1536,3 +1536,269 @@ the new row on the garrison.
 | CPU per tick p95 at most 8 ms | the captures 5.89 (the walk), 4.39 (40 members and two engines), 3.32 ms (the chase); the bot runs' median run 8.40 ms, the Aldmere March's fights 11.2-12.5 ms | **miss** in the runs' big fights (met on the captures) | three runs at a time on 4 CPUs; the war camp's 21 members with four crewed engines; a reference PC is the measure (owner, NOT RUN) |
 | The XP and equipment budget tests pass (margins at least 50 XP) | the five budget suites pass (`test_world_xp_budget`, `test_world_budgets_wood`, `test_world_budgets_crown`, `test_world_equipment_budget`, `test_xp_budget`: 178 checks, run alone on this code and in the full check); the smallest margin 70 XP (two oaths to stage 6), stage 4 by 100, stage 5 by 160-170, the finale by 300 | met | |
 | The Valley's items hold as P22 left them | no item moved: 17 of lane P39's 24 runs replay to the tick, seven changed by lane P39f's leash return; no novice death at the Ogre King (P22: 0); the forest and ruins damage 1.23 and 1.00 of maximum health (P22 1.27 and 1.23); the force branch's return leg: the novice 3 of 3, the expert 2 of 3 (P22 3 and 3); the stage-3 flee share 38 % (P22 40 %) | held (the items that missed before still miss) | the expert's force seed 2 runs out the Deadfall's watchdog (since lane P39's iteration 0), the segment damage is over 0.6 (since P17b), the Ogre King costs the novice no try (since P22) and the stage-3 share is under 50 %: the M6 gate's Valley row and "From the M9 confirmation" |
+
+## M9 gate (lane "balance": the Matriarch's slay, lone humans, the music, the bot; tags `gate_world`, `gate2_world`, `gate3_world`, `gate4_world`, `gate5_world`, `gate5_valley`, `den_*`, `toll_probe*`)
+
+The M9 gate's fixes of the confirmation's misses this lane owns (FOLLOWUPS, "From the M9 confirmation (W23)"): the
+Matriarch's slay for the novice, lone humans that do not flee, the music among lesser enemies, and five places where
+the world bot measured wrong or never tried what a player would. Made on `wave-23` (`f851b0d`) in the worktree
+`fix/m9-balance`; every number below is from runs of this lane's code (the evidence folder `m9_gate/balance/`: its
+`snaps/` are the trees the runs played, `queue/done/` their commands). The world runs are `run_bots.sh <spec> --jobs=1
+--timeout=3600 --tag=<tag> --extra=--perf` (two at a time on the 4 shared CPUs, the other fix lane's runs beside them);
+the den runs `--mode=world --continue` from a den save (the waystone `world.cp.troll_den`, stage 5) with
+`--bot-preset=conqueror --bot-until=oath.wood.done` (`scripts/den.sh`, `den2.sh`). Seeded runs replay exactly on the
+same code, so a before and an after on one seed differ only by the changes listed here.
+
+| Change | Where | Why | Test |
+| --- | --- | --- | --- |
+| Awe tiers: a soldier perceiving a target at least 6.0x its height loses 50 morale (the base 35 below it) | `tactics.awe_tiers` (enemy schema, `EnemyBrain.awe_loss_at`), `data/enemies/soldier.json` | §5.14: single humans flee a stage-4 giant on sight (6.1x a soldier); 35 of a lone soldier's 70 left it above its flee threshold of 25, so it fought; a flat loss of 46 or more would also make the Valley's stage-3 soldiers (4.4x) flee | `test_m9_gate_balance` (stage 3: 35, stands; stage 4: 50, flees; a pikeman has no tier) |
+| The music's combat radius capped at 40 m for a giant of 10 m or more | `intensity.combat_cap_m` / `combat_cap_min_height_m` (`data/audio/mix_default.json`, `AudioMath.intensity_target`) | the combat radius scales with the giant (35 m x 3.0 = 105 m at stage 4): formations and crews 40-120 m off - beyond the 40 m the bot's measure calls engaged - held the music in combat among lesser enemies | `test_m9_gate_balance` (a formation 50 m off: danger; 30 m: combat; a boss: combat; the Valley's stages keep the scaled radius) |
+| The Matriarch's phase 2: regeneration 15 -> 13 hp/s, the roar's call 2 -> 1 whelp, the frenzy 55 + 65 -> 35 + 40 with its punish window 1.3 -> 3.0 s | `data/enemies/troll_matriarch.json`, `data/abilities/matriarch_frenzy_1.json`, `matriarch_frenzy_2.json` | no conqueror novice slew her (six deaths on each of three seeds) | gate `test_matriarch_phase_two` (her phase 2 still the harder phase: regenerates faster, calls a whelp, the frenzy her heaviest blow, 1.7x her first phase's damage per second, at most 2.2x; 3.0x on the confirmation's numbers fails it) |
+| The bot seeks an engine that shot at it in the last 20 s from 90 m (45 m otherwise) | `world_bot.gd` (`SIEGE_SHOT_SEEK_M`, `_shot_at_by`) | the walk to the Moot passes the Moot battery 49.5-51.2 m off since lane P39f's rebuild | `test_m9_gate_balance` |
+| The bot walks past a formation that holds its ground off its way (formed or advancing, its encounter's ground not where the objective leads, its nearest member over 12 m off) | `world_bot.gd` (`_passing_by`, `_objective_place`) | the road to Brannock passes the Raiders' Hollow's shield wall at about 23 m and the bot left the road for it | `test_m9_gate_balance` |
+| Rampart Grip reads as ready only with a body or an engine in reach; a slotted ability the run has not used yet is tried at the first free tick it fits | `bot_combat.gd` (`slot_reason`, `_first_use_slot`) | Rampart Grip "ready" with nothing to seize (unused in 12 runs of 18), Formation Sweep 11, Titan Stomp 9: their windows came while the novice was mid-blow | `test_m9_gate_balance` |
+| A living enemy below the world (y < -30) is set back at its home | `EnemyActor.recover_from_void` | found by this lane's runs: a thrown shieldman fell through the ground and its encounter never cleared (below) | `test_m9_gate_balance` |
+| From stage 4 the expert keeps its dodge reserve only while a dodge is planned or a boss or a medium or large body stands within 12 m | `BotCombat.reserve_needed` (`bot_combat.gd`) | the peaceful experts died at the toll fort: the reserve kept the expert from every blow before the pikes and the tower's archers (below) | `test_m9_gate_balance` |
+| The bot's lock invariant waits out the tick a locked formation's last member routs in | `BotDiagnosis.lock_failure` | a rout is no death: the giant drops the group lock in its own next step, and the toll fort's pikes routing under it ended a peaceful novice's run at 410 s (FOLLOWUPS' row from lane P39's runs) | `test_m9_gate_balance` |
+| The world bot walks past a placed member whose AI is off | `WorldBot._is_ignored` | the clans' giants watching the Moot (AI off, never striking) stand hostile once Harrok is slain: a conqueror expert that slew him struck one for the throne stage's 306 s and stopped one step from the throne | `test_m9_gate_balance` |
+
+### The Matriarch's phase 2 (the novice's slay)
+
+**Before** (`confirm_world`, the conqueror novice, seeds 1-3): six attempts and six deaths on each seed, no slay; her
+lowest per attempt 36/9/23/21/33/14 %, 36/14/28/24/26/26 % and 32/12/20/32/17/17 %; every attempt reached her phase 2;
+the 18 den deaths: the whelps 7 (the roar's two and the den's), her frenzy 7, stomp 3, sweep 1. The novice arrived
+at level 10-11.
+
+**The den harness.** Each variant was played from the confirmation's three den saves (`--continue`, `den.sh`; the
+novice, its seed): her phase-1 numbers untouched throughout (regeneration 12 hp/s, the sweep, stomp and whelp throw).
+The lowest health per attempt, then the outcome:
+
+| Phase-2 numbers (regeneration, the roar's whelps, the frenzy, its punish window) | Seed 1 | Seed 2 | Seed 3 |
+| --- | --- | --- | --- |
+| wave-23: 15 hp/s, 2, 55 + 65, 1.3 s | not slain, 6 deaths: 33, 19, 6, 20, 27, 34 | not slain, 6 deaths: 29, 31, 26, 17, 28, 27 | not slain, 6 deaths: 30, 19, 15, 34, 16, 13 |
+| A: 8 hp/s, 1, 55 + 65, 1.3 s | not slain, 6 deaths: 28, 4, 26, 23, 26, 0 | not slain, 6 deaths: 26, 28, 13, 14, 19, 21 | - |
+| C: 8 hp/s, 1, 40 + 45, 1.3 s | slain on the 2nd (1 death): 28, 0 | slain on the 4th (3 deaths): 19, 7, 5, 0 | not slain, 6 deaths: 15, 19, 22, 7, 20, 19 |
+| D: 6 hp/s, 1, 45 + 50, 1.8 s | slain on the 3rd (2 deaths): 23, 18, 0 | slain on the 2nd (1 death): 19, 0 | slain on the 3rd (2 deaths): 18, 20, 0 |
+| E: 12 hp/s, 1, 40 + 45, 1.8 s | not slain, 6 deaths: 28, 23, 8, 19, 10, 27 | slain on the 2nd (1 death): 24, 0 | - |
+| F: 12 hp/s, 1, 45 + 50, 1.8 s | slain on the 3rd (2 deaths): 28, 23, 0 | slain on the 2nd (1 death): 24, 0 | slain on the 3rd (2 deaths): 22, 23, 0 |
+| G: 13 hp/s, 1, 45 + 50, 1.8 s | slain on the 3rd (2 deaths): 29, 23, 0 | slain on the 2nd (1 death): 25, 0 | slain on the 3rd (2 deaths): 23, 24, 0 |
+
+The roar's second whelp and the frenzy's 120 (55 + 65) with a 1.3 s window were what the novice could not live
+through; her regeneration hardly mattered (D, F and G play the same fights, a few points apart). G kept her phase 2
+regenerating faster than her first (13 > 12 hp/s: P34's `test_matriarch` and plan §5.13) and was committed (`b29ddb4`);
+the same numbers on the wave-23 bot (`den_matGold`: seed 1 slain on the 3rd attempt) showed the data alone did it.
+
+**The gate's own runs on G** (`gate_world`, this lane's code then: the conqueror novice, seeds 1-3) did not slay her:
+six deaths on every seed, her lowest per attempt 25/29/14/10/26/27 %, 28/8/18/6/0/32 % and 24/14/12/7/9/26 %. The
+novice reached the den a level lower than in the confirmation (level 10, 3,107 XP: the Millford raid was not settled
+on the way - below, "Lone humans"), and at that level G was not enough: replayed from the gate run's den save
+(`den2.sh`, `den_matG2`: seed 1) it lost all six attempts too (30/23/14/36/16/12 %). From that save (level 10; the
+saves of seeds 1 and 2 play the same fights for a given seed):
+
+| Phase-2 numbers | Seed 1 | Seed 2 | Seed 3 |
+| --- | --- | --- | --- |
+| G: 13 hp/s, 1, 45 + 50, 1.8 s | not slain, 6 deaths: 30, 23, 14, 36, 16, 12 | - | - |
+| H: 13 hp/s, 1, 40 + 45, 2.2 s | not slain, 6 deaths: 21, 0, 27, 4, 21, 3 | slain on the 2nd (1 death): 19, 0 | slain on the 3rd (2 deaths): 25, 9, 0 |
+| **H3: 13 hp/s, 1, 35 + 40, 3.0 s** | slain on the 2nd (1 death): 17, 0 | slain on the 5th (4 deaths): 12, 1, 26, 12, 0 | slain on the 3rd (2 deaths): 17, 25, 0 |
+
+H3 is committed (`6c3d9db`): the frenzy combo is 75 (still her heaviest blow: her stomp is 70) and its punish window
+3.0 s - the frenzy's second sweep is followed by the longest recovery of her kit, the opening a novice is taught to
+take; her phase 2 still regenerates faster (13 > 12 hp/s), still calls a whelp, and brings 1.7x her first phase's
+damage per second (the confirmation's numbers: 3.0x). The gate suite `test_matriarch_phase_two` keeps those
+relations (it fails on the confirmation's numbers: 3.0x over its 2.2x ceiling).
+
+**After** (`gate3_world`, this lane's code: the conqueror novice, seeds 1-3, each arriving at level 10 as in the
+confirmation, 2,700-2,716 XP; the Millford raid defended on the way in all three): **slain in every run** - on the
+4th attempt with 3 deaths (her lowest 19, 1, 13, 0 %), the 3rd with 2 (24, 14, 0 %) and the 2nd with 1 (36, 0 %).
+Deaths per attempt sequence 3, 2 and 1 (plan §6.4: 1-3, met); the drive-out is untouched (her phase 1 and the
+drive-out rule did not change). With the den behind it the conqueror novice now reaches the Moot and stops at
+Harrok's slay instead: in all three runs he yields (twice, twice, four times), is struck on, and kills the novice six
+times (his lowest per attempt 95/34/17/6/37/40 %, 42/46/9/7/33/35 % and 42/31/17/11/25/34 %; in `gate2_world` seed 2
+slew him on the sixth attempt with five deaths). The confirmation never measured it (no conqueror novice got past
+the den); FOLLOWUPS has the row - his spare and talk duels (the novice's median 2.5 deaths, met) share his numbers,
+so his slay is a tuning of its own with its own measurement.
+
+### Lone humans (awe tiers)
+
+**Before**: lone humans fled 4 % of their engaged time at stages 4-6 (the confirmation's 21 runs; in this lane's ten
+runs of the same seeds `before/subset` 4 %: archers 4 % of 3,354 s, mages 6 % of 747 s, soldiers 0 % of 286 s). A lone
+soldier perceiving a stage-4 giant (10.97 m: 6.1x its 1.8 m) lost 35 of its 70 morale to awe - above its flee
+threshold of 25 - and fought (30-40 s of lone soldier time in each conqueror and peaceful run, none of it fleeing).
+P30's joining rule already sends an outmatched soldier that no formation takes into a rout at once when it targets a
+stage-4 giant; a routed unit is no longer engaged, so the measure does not count it.
+
+**The change** (`ada7ebd`, `18b2708`): awe tiers (`tactics.awe_tiers`, the largest ratio met wins). The soldier's
+tier at 6.0x costs 50, so a lone soldier runs from a stage-4 giant on sight; below it (a stage-3 giant is 4.4x a
+soldier: the Valley) the base 35 holds, so the Valley's stages 1-3 are unchanged. A formation's members are other
+records (pikeman, shieldman, bannerman: no tier), and a living banner halves awe, so a soldier already in a formation
+loses 25 and holds. The first runs (`gate_world`) showed what the flight alone did at the Millford raid: its
+raiders (P37's target provider: they hunt the hamlet's folk and houses, the giant only within 20 m) fled him and,
+regrouped round their commander, went back to the raid; Millford was warned or turned hostile in all three conqueror
+runs (in the confirmation it stayed at peace and the raid was defended in all three), and the raid never settled -
+its 100 XP and kills were lost to the novice before the den. So a unit whose awe was a tier's now ends its flight in
+a formation's slot if one takes it (P30's joining: outmatched soldiers join formations) and otherwise routs: it does
+not walk back to a giant it is no match for, and a rout settles an encounter or an event as a death does.
+
+**After** (the reduced matrix, `after/subset`: the ten runs of `before/subset`'s seeds and presets on this lane's
+code - below, "The reduced matrix"): lone humans fled or routed 25 % of their engaged time (before 4 %); the
+soldiers 66 % of 803 s (before 0 % of 286 s), archers 4 % of 1,308 s and mages 16 % of 458 s (before 4 % and 6 %).
+A lone soldier now runs from a stage-4 giant on sight and does not come back: in the conqueror novices' runs 33-42 %
+of all lone humans' engaged time is flight (before 0-13 %). The Millford raid was defended in every conqueror run (as
+in the confirmation; `gate_world` before the rout rule: warned or hostile, never settled). The Valley's stage-3
+soldiers keep the base 35 (the three Valley runs replay the confirmation's - below). Formations: 70 % of
+their engaged time holding or bracing (before 78 %; target 50 %, met) - the pooled share fell because the expert no
+longer stands idle before a pike wall (its dodge reserve, "The bot" below): the confirmation's experts spent
+1,770 s engaged with formations, 90 % of it with the formation holding before an expert that seldom struck, and this
+lane's experts 556 s, 76 % of it holding; the novices' share rose (53 % of 813 s before, 64 % of 536 s after). A formation's members
+have no awe tier (`test_m9_gate_balance`), so the tiers do not touch them.
+
+Archers and mages keep their own ranges and behaviours (plan §5.14: "ballistae and archers keep range and take
+positions the camera can see"; the toll fort's and Fort Aldmere's tower and wall archers hold their posts by design,
+M7 polish): no tier was given to them. The plan's measure pools every lone human, and archers are most of that time
+(3,354 of 4,387 s in the ten runs before), so it can only pass if archers flee a stage-4 giant too - a design change,
+not a fix; the melee share is the one this lever moves (the report's own breakdown).
+
+### The music among lesser enemies
+
+**Before**: 43 % of the stage 4-6 time among only lesser enemies was in combat (the confirmation; this lane's ten
+runs 32 %). P28's intensity scales the combat radius with the giant (35 m x height/3.66 m: 105 m at stage 4, 182 m
+at stage 6). The lesser-only measure counts the enemies engaged within 40 m; the music counted a formation's members
+or a siege crew (special, so counted whatever their size) well beyond. Traced on `w.mixed:novice:1` (a probe of why
+the music was in combat in each such sample, `probe_music/why.patch`): of 27.6 s in combat among lesser enemies,
+formations 40-59 m off 9.3 s, siege crews 40-59 m off 8.9 s, formations 80-120 m off 4.4 s, and a hit taken 5.0 s
+(P28's rule: a blow keeps the music in combat 5 s). In `w.peaceful:novice:1` (11.7 s): the music's hold after a
+fight 6.0 s, hits 5.0 s, the Matriarch engaged 0.7 s.
+
+**The change** (`4be451d`, data): `intensity.combat_cap_m` 40 and `combat_cap_min_height_m` 10 in
+`data/audio/mix_default.json` - from a 10 m giant (stage 4) the combat radius is capped at 40 m, the measure's own
+engaged radius. A formation holding 50 m off raises danger, one 30 m off, a boss or a rival giant combat (their own
+rules unchanged); the Valley's stages keep the scaled radius.
+
+**After** (`after/subset`): 11 % of the stage 4-6 time among only lesser enemies in combat (before 32 %;
+target under 25 %, met); the bosses' and rival giants' fights keep combat (the Moot's and the den's stage-6 and
+stage-5 music is combat as before: `world_music`).
+
+### The bot (measurement fixes, plan §3.23)
+
+- **Engines thrown at stage 6.** The walk from the Standing Stones to the Moot passes the Moot battery 49.5-51.2 m
+  off on the rebuilt world, beyond the bot's siege reach (45 m), so a run that won Harrok's duel at once walked by
+  under fire. The bot now remembers the engines that shot at it (`Events.siege_engine_fired`) and seeks one that
+  did in the last 20 s from 90 m (`73dad1c`). Every run of the reduced matrix that reached stage 6 threw the battery's four engines (ten of ten), on the walk from the Standing Stones to the Moot: its stage took 48-119 s against the 30-44 s of the runs that walked past in the confirmation, and the experts' traces show the siege task at the battery's ballistae and catapults during it.
+- **The road to Brannock and the Raiders' Hollow.** The bot fought any aware enemy in its engage radius, so it left
+  the King's Road for the Hollow's shield wall 23 m off. It now walks past a formation that holds its ground (formed
+  or advancing) off its way - its encounter's ground not where the objective leads, its nearest member over 12 m
+  off - and fights it once it closes, braces, or is where the objective is (the march's help clears the Hollow; the
+  toll gate stands in the toll fort's pikes) (`73dad1c`). The march's meeting (the road to Brannock) took 55-144 s in this lane's runs (85, 144 and 93 s for the conqueror novices, 88, 96 and 89 s for the conqueror experts, 54-55 s for the others) against a median of 226 s (94-874 s) in the confirmation, and no run whose oath does not ask for the Hollow died to its members (the confirmation: six deaths).
+- **Abilities never used when ready.** Rampart Grip read as ready whenever its cooldown and stamina allowed, with
+  nothing to seize (its "windows" counted, the rotation pressed it on nothing); it now needs a body or an engine in
+  reach, as Crushing Grip does. A slotted ability the run has not used yet is tried at the first free tick it fits
+  (an area blow only at a foe within reach; the heal and charges keep their rules), not only at the novice's
+  once-a-second look (`73dad1c`). Never used when ready (`world_growth`, `after/subset`): Earthquake in 9 of the ten runs, Formation Sweep, Sweeping Blow and Titan Stomp in 3, Crushing Grip and Rampart Grip in 2, Titan Surge in 1 (ten runs reach stage 6 now, five before, and Earthquake is a stage-6 ability) (before: Rampart Grip in 5 of the ten runs, Formation Sweep 4, Earthquake 4, Crushing Grip 4, Heavy Footfall 3, Boulder Hurl 3, Titan Stomp 2, Crag Hurl 2, Titan Surge 1); Earthquake (Titan Stomp's stage-6 evolution: 35 stamina, 14 s) has one to four windows a run and is used in six runs of eight but outside them. The largest single share of the ability damage 51 % (Crag Hurl, `w_mixed_novice_1`) (before 92 %, the expert's Runic Bolt).
+- **The expert's brazier lure** (not changed). In the confirmation the conqueror experts held her at 37-50 % in her
+  phase 2 (two runs on the den's time, the third drove her out after burning the braziers). With her phase 2 eased
+  the lure as it is draws her to the braziers and the experts slay her again (`gate5_world`): seed 1 at the second
+  attempt, seed 3 at the first; seed 2 drove her out at its first attempt (49 %, her nests burned) - and all three
+  went on to slay Harrok and complete (3, 2 and 2 deaths). What the trunks did for the lure was not isolated (the
+  confirmation's row); on the cleared den it pays once her phase 2 is the gate's.
+- **The lock invariant and a formation's rout** (FOLLOWUPS, lane P39's row). `gate3_world`'s `w.peaceful:novice:1`
+  stopped at 410 s on "lock target formation:crownmarch_toll_fort.pikes has no living member": the toll fort's last
+  pikes routed under the giant's group lock - a rout is no death, so the death signal did not drop the lock, and
+  the giant drops it in its own next step, after the Sim's tick the invariant runs on. The invariant now lets such a
+  lock pass in that tick and the next and fails it if it is held after that (`36d7938`, `BotDiagnosis.lock_failure`).
+  On the fix the same seed completed with one death (`gate4_world`'s `w.peaceful:novice:1`: the toll fort in 70 s with no death); no run of the gate's matrix failed an invariant.
+- **The clans watching the Moot.** With the Matriarch slain the conqueror expert reached Harrok's duel and slew him
+  (`gate4_world`'s `w.conqueror:expert:1`: two attempts, one death) - a path no run took before - and then stopped one
+  step from the Stone Throne: the clans' giants that watch the Moot are placed with their AI off (P36: they never
+  deal damage), Harrok's death leaves their faction hostile, and the bot struck one 11.7 m off for the throne stage's
+  whole 306 s (each blow that landed took a little health off it, so the chase give-up never ran out). The world bot
+  now walks past a member the director placed with its AI off (`41fddb0`, `WorldBot._is_ignored`). On the fix the same seed completed, the throne claimed one second into its stage (`gate5_world`'s `w.conqueror:expert:1`), and the conqueror experts of seeds 2-3 slew Harrok and completed too.
+- **The peaceful experts at the toll fort.** In the confirmation they died there 4, 4 and 5 times (the tower's
+  archers 10 of 14, the pikes 4; 465-565 s at the toll against the novice's 57-71 s with no death); on this lane's
+  code before the fix `gate3_world`'s `w.peaceful:expert:1` died there six times and stopped (558 s at the toll).
+  Traced (`--bot-trace=2`, and a probe of the expert's stamina and answers, `probe_toll/probe.patch`, from that
+  run's save at the toll fort's waystone, `scripts/toll.sh`): the giant stood in the pikes' brace band without a
+  blow 70 % of the fight - not held off by answers (an answer was due in 24 % of the samples), but by the
+  expert's dodge reserve (P17b: no blow that would leave less than a dodge's 18 stamina). It came in from a sprint
+  with no stamina; its blocks of the brace and its casts held the regeneration back, and its stamina stayed at
+  0-24, under the 26 a light needs with the reserve, for whole fights, while the pikes' brace and the tower's
+  arrows wore it down (the chase given up three times: 20 s without taking health off a pike). The reserve was
+  made for the Ogre King's slams; a pike wall's brace is blocked and an arrow holds nothing off, so before them
+  it only kept the expert from fighting. Now from stage 4 the expert keeps the reserve only while it may need the
+  dodge - a dodge planned against a blow (an arrow's aside), or a boss or a medium or large body (an ogre, a
+  rider, a whelp, a troll, a rival giant) within 12 m (`36d7938`, `BotCombat.reserve_needed`); the Valley keeps
+  P17b's rule. From that save, the march's help to its end (`toll_probe` without the fix, `toll_probe2` with it; the
+  expert, bot seeds 1-3): the toll gate taken in 122 and 135 s with one death each and 1,130 and 1,269 damage taken
+  (seeds 1-2) without it; in 55, 62 and 56 s with no death and 386, 480 and 539 taken with it. In the full runs (`gate4_world`, `gate5_world`: the peaceful experts on seeds 1-3) the toll took 69, 65 and 66 s
+  with no death there (the confirmation: 465, 539 and 565 s with 4, 4 and 5 deaths), and the runs completed with 1, 1 and
+  1 deaths in all (the confirmation: 7, 5 and 10, the third stopped at the toll fort).
+
+### A thrown enemy fell through the world (found by this lane's runs)
+
+`gate_world`'s `w.peaceful:novice:1` stopped on the march's help: 919 s with the giant at the Raiders' Hollow's
+centre, the encounter never cleared. A probe of its members (`probe_hollow/probe.patch`, the bot's trace) showed the
+last one, the shieldman `raider_shield_4`, thrown about 30 m up over the giant, come down through the ground and fall
+on (y -106 m 5 s later, -16,478 m when it went dormant), alive and out of every reach. The giant has a rule for this
+(set back at its spawn below y -30); an enemy had none. Now a living enemy below -30 m is set back at its home on the
+floor there (`e3aae55`, `EnemyActor.recover_from_void`). How the body passed through the ground is not found (a body
+released in the air over the giant; another shieldman thrown the same way landed); FOLLOWUPS has the row.
+
+### The reduced matrix (before and after)
+
+**The runs.** The novice and the expert on the three presets at seed 1, the conqueror's seeds 2-3 (the Matriarch, the
+lure) and the peaceful experts' seeds 2-3 (the toll fort), against the same specs in the confirmation (`before/subset`:
+`confirm_world`'s ten runs of these specs; the peaceful experts' seeds 2-3 from `confirm_world` too). Each was run on
+the code of its time, as the fixes came in:
+
+| Tag | Code | Runs |
+| --- | --- | --- |
+| `gate3_world` | `18b2708` | `w.conqueror:novice:1-3`, `w.mixed:novice:1` (and `w.peaceful:novice:1`, `w.peaceful:expert:1`, stopped by the lock invariant and the toll fort: the fixes below) |
+| `gate4_world` | `36d7938` (the expert's reserve, the lock invariant) | `w.peaceful:novice:1`, `w.peaceful:expert:1`, `w.mixed:expert:1` (and `w.conqueror:expert:1`, stopped one step from the throne) |
+| `gate5_world` | `41fddb0` (the Moot's watching clans) | `w.conqueror:expert:1-3`, `w.peaceful:expert:2-3` |
+| `gate5_valley` | `41fddb0` | `help_cache:novice:1`, `force:expert:2`, `intimidate:novice:3` |
+
+A run on an earlier commit stands for the final code: the later commits change only the expert's rules from stage 4,
+the invariant (a check, not the game) and how the bot treats a placed member whose AI is off (hostile only after
+Harrok's slay), none of which the novices' and the mixed expert's runs meet - seeded runs replay exactly, as the Valley's
+three runs show (each replayed the confirmation's to the tick: ticks, deaths, XP, the flags' hash and the AI states).
+
+| Run | Before (`confirm_world`) | After (this lane) |
+| --- | --- | --- |
+| `w_conqueror_novice_1` | stopped at the den: the Matriarch not slain, 6 deaths | the Matriarch slain (3 deaths); stopped at Harrok's slay (6 deaths); 10 in all |
+| `w_conqueror_novice_2` | stopped at the den, 7 deaths | the Matriarch slain (2); stopped at Harrok's slay (6); 9 |
+| `w_conqueror_novice_3` | stopped at the den, 6 deaths | the Matriarch slain (1); stopped at Harrok's slay (6); 8 |
+| `w_peaceful_novice_1` | completed, 6 deaths | completed, 1 death |
+| `w_mixed_novice_1` | completed, 6 deaths | completed, 3 deaths |
+| `w_peaceful_expert_1` | completed, 7 deaths (the toll fort 4) | completed, 1 death (the toll fort none) |
+| `w_peaceful_expert_2` | completed, 5 deaths (the toll fort 4) | completed, 1 death |
+| `w_peaceful_expert_3` | stopped at the toll fort (six deaths to its pikes and archers on the march's help), 10 deaths | completed, 1 death |
+| `w_conqueror_expert_1` | stopped at the den (the den's time), 3 deaths | completed, 3 deaths (the Matriarch and Harrok slain) |
+| `w_conqueror_expert_2` | stopped at Harrok's duel (its time), 8 deaths | completed, 2 deaths (the Matriarch driven out, Harrok slain) |
+| `w_conqueror_expert_3` | stopped at the den (the den's time), 4 deaths | completed, 2 deaths (the Matriarch and Harrok slain) |
+| `w_mixed_expert_1` | completed, 7 deaths | completed, 2 deaths |
+
+**The targets** (`python3 tools/bot_report.py <dir> world_targets`, on `before/subset` and `after/subset`, the same ten
+specs):
+
+| Target (plan §6.4) | Before | After |
+| --- | --- | --- |
+| Completion, novice (2 of 3 per preset) | peaceful 1/1, conqueror 0/3, mixed 1/1 | peaceful 1/1, conqueror 0/3 (Harrok's slay), mixed 1/1 |
+| Completion, expert (3 of 3, at most 2 deaths each) | peaceful 1/1 (7 deaths), conqueror 0/3, mixed 1/1 (7) | peaceful 1/1 (1; seeds 2-3: 1 and 1), conqueror 3/3 (3, 2, 2), mixed 1/1 (2) |
+| Human estimate, novice median (75-140 min) | 36.6 min | 29.9 min (the Hollow no longer fought on the road) |
+| Deaths per boss sequence (1-3, novice median by resolution) | the Matriarch slain: 6 (0 of 3 won, 6/6/6); Harrok spared: 3.5 (4/3) | the Matriarch slain: 2 (3 of 3 won, 3/2/1); Harrok slain: 6 (0 of 3, newly reached, 6/6/6); Harrok spared: 1 (2/0) |
+| At most 2 deaths in any other segment (novice) | max 2: met | max 1: met |
+| Lone humans flee or rout (70 %, pooled) | 4 % (soldiers 0 % of 286 s) | 25 % (soldiers 66 % of 803 s) |
+| Formations hold or brace (50 %) | 78 % | 70 % (the novices 53 % -> 64 %; the experts no longer idle before a wall) |
+| Formation locks (half) | 87 % | 63 % (the conqueror runs, which now go on past the den - the toll fort by force, Harrok's duel, the Moot: 13-67 %; the peaceful and mixed runs 73-80 % as before) |
+| Engines thrown, runs reaching stage 6 | 5 of 5 | 10 of 10 |
+| Off-camera share (under 20 %) | median 4 % | median 8 % |
+| Music in combat among lesser enemies (under 25 %) | 32 % | 11 % |
+| Every slotted ability used when ready | 9 abilities unused in 1-5 runs | Earthquake unused in 9 runs, six others in 1-3 |
+| No ability over 40 % | max 92 % (Runic Bolt) | max 51 % (Crag Hurl) |
+| Streaming work frame (12 ms), CPU per tick (8 ms) | 33.9 ms; median 7.51 ms | 150.7 ms; median 14.68 ms - not comparable: these runs shared the 4 CPUs with two other lanes' bot runs and full checks (a load of 6-11), the confirmation's three at a time with nothing else |
+
+The Valley (`gate5_valley`, three runs: `python3 m9_gate/balance/scripts/valley_cmp.py <confirm_valley> <gate5_valley>`):
+each replayed the confirmation's run to the tick - the Valley's items stand as the confirmation measured them.
+
+The full check on the lane's code (`tools/check.sh --slow --gate`, `41fddb0`): CHECK PASSED - 284 suites, 49,362
+checks, 0 failures; the tiers 65.5 s (default), 288.3 s (slow) and 576.5 s (gate), within their budgets; the 120 s
+autoplay with 0 errors.
