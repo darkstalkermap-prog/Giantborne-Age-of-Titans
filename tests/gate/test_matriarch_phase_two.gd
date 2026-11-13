@@ -7,15 +7,25 @@ extends IntegrationSuite
 ## a level lower at the den, still lost all eighteen attempts) - and the novice slew her on all three seeds
 ## from the gate's den save, within 1, 4 and 2 deaths (docs/BALANCE_LOG.md, "M9 gate"). This suite keeps what
 ## those numbers mean:
-##   * her phase 2 is still the harder phase (the plan, §5.13): it regenerates faster than her first, its
-##     roar calls whelps and its frenzy is her heaviest blow;
-##   * but the damage it can bring - its sequence's power per second of the sequence's time, plus the
-##     whelps the roar calls swiping - stays within PHASE2_LETHALITY_MAX of her first phase's sequence: on
-##     the confirmation's numbers it was 3.0x (no novice attempt of 18 survived it), on these 1.7x;
+##   * her phase 2 is still the harder phase (the plan, §5.13) by what it adds - not by her own rate: it
+##     regenerates faster than her first, its roar calls a whelp and its frenzy is her heaviest blow;
+##   * the damage it can bring - its sequence's power per second of the sequence's time, plus the whelps the
+##     roar calls swiping without pause - stays within PHASE2_LETHALITY_MAX of her first phase's sequence: on
+##     the confirmation's numbers it was 3.0x (no novice attempt of 18 survived it), on these 1.7x. M9 gate
+##     (final; the final audit's F3/F5): that floor (more than her first) counts the whelp's swipes, 22.6 power/s,
+##     55 % of the phase-2 figure: her own phase-2 sequence alone brings 0.74x her first phase's power per second
+##     (18.3 against 24.6; 1.18x on the confirmation's numbers) - the frenzy's 35 + 40 are among her lightest
+##     blows and its two 3.0 s recoveries the longest windows of her kit. Once its whelp is killed or thrown, her
+##     phase 2 hits lighter and less often than her first;
+##   * a guard, not a "harder" claim: her own phase-2 rate stays at least PHASE2_OWN_RATE_MIN of her first's (0.74x
+##     now), so any further easing of her own blows fails here visibly instead of hiding behind the whelp
+##     (docs/plans/FOLLOWUPS.md: whether the phase still feels like the escalation is the playtest's question);
 ##   * and her phase 2 runs in the test den: entered once, it calls the record's whelps.
 
 const DEN := "res://scenes/test/troll_den_test.tscn"
 const PHASE2_LETHALITY_MAX := 2.2
+## M9 gate (final): her own phase-2 sequence's power per second, at least this share of her first phase's (0.74x now).
+const PHASE2_OWN_RATE_MIN := 0.7
 
 
 ## The power per second of a phase's sequence (an action that chains runs its chain within its entry).
@@ -52,8 +62,13 @@ func test_her_second_phase_stays_within_what_the_novice_survives() -> void:
 	for id: Variant in p1.attacks:
 		assert_true(combo > GameData.get_action(str(id)).power, "the frenzy (%.0f) is her heaviest blow (%s)" % [combo, id])
 	var r1 := _sequence_rate(p1.sequence)
-	var r2 := _sequence_rate(p2.sequence) + float(p2.summon) * _whelp_rate()
-	assert_true(r2 > r1, "her phase 2 brings more than her first (%.1f > %.1f power/s)" % [r2, r1])
+	var own := _sequence_rate(p2.sequence)
+	var r2 := own + float(p2.summon) * _whelp_rate()
+	assert_true(r2 > r1, "her phase 2 with its whelp's swipes brings more than her first (%.1f > %.1f power/s; her own blows alone %.1f, %.2fx)"
+		% [r2, r1, own, own / r1])
+	assert_true(own >= PHASE2_OWN_RATE_MIN * r1,
+		"her own phase-2 blows bring at least %.1fx her first's (%.1f / %.1f = %.2fx): a guard against easing them further"
+		% [PHASE2_OWN_RATE_MIN, own, r1, own / r1])
 	assert_true(r2 <= PHASE2_LETHALITY_MAX * r1,
 		"but at most %.1fx her first (%.1f / %.1f = %.2fx; the confirmation's numbers: 3.0x, no novice attempt survived)"
 		% [PHASE2_LETHALITY_MAX, r2, r1, r2 / r1])
