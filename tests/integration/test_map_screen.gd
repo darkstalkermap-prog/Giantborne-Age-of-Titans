@@ -215,6 +215,10 @@ func test_lt_keeps_the_d_pad_for_the_abilities() -> void:
 ## none is cut by the view's edge, the place in focus always shows, and on the whole map every region's label
 ## and every settlement's name shows. (On the screenshot pass's frames "Hollowmere" printed over "THE
 ## GREYWOOD", "Greywood Shrine" over "Needle waystone", icons sat on "THE CROWNMARCH" and "The Broken Stair".)
+## M9 gate (lane review): then again in the campaign with the raid on Millford tracked - its diamond on the map -
+## and the pin between the Kingsgate shrine and its shelf. The review's frame: the Kingsgate Shrine in focus at
+## zoom 0 had none of its 8 spots free, and its label went over the diamond and Millford's icon (_place took its
+## first spot whatever it covered); now it finds a spot farther out.
 func test_the_world_map_labels_never_overlap() -> void:
 	var idx := WorldIndex.for_level(GameSession.WORLD_LEVEL_ID)
 	assert_true(idx != null, "the world's index")
@@ -255,20 +259,7 @@ func test_the_world_map_labels_never_overlap() -> void:
 				var labels := map.layout_labels(font)
 				var marks := map.mark_rects()
 				var what := "%dx%d zoom %d, %s" % [int(screen.x), int(screen.y), zoom, id]
-				var in_focus := labels.filter(func(l: Dictionary) -> bool: return str(l.kind) == "selected")
-				if in_focus.size() != 1 or str(in_focus[0].id) != id:
-					bad.append("%s: the place in focus has no label" % what)
-				for i in labels.size():
-					var a: Dictionary = labels[i]
-					var ra: Rect2 = a.rect
-					if not bounds.encloses(ra):
-						bad.append("%s: %s's label is cut by the view's edge (%s)" % [what, a.id, ra])
-					for j in range(i + 1, labels.size()):
-						if ra.intersects(labels[j].rect):
-							bad.append("%s: %s's label covers %s's" % [what, a.id, labels[j].id])
-					for k: String in marks:
-						if ra.intersects(marks[k]):
-							bad.append("%s: %s's label covers the mark %s" % [what, a.id, k])
+				bad.append_array(_label_faults(labels, marks, bounds, id, what))
 				shown += labels.size()
 				if zoom == 0:
 					var regions := labels.filter(func(l: Dictionary) -> bool: return str(l.kind) == "region").size()
@@ -286,4 +277,69 @@ func test_the_world_map_labels_never_overlap() -> void:
 							bad.append("%s: %s has no name" % [what, e.id])
 	assert_eq(bad, PackedStringArray(), "no label covers a label or a mark, none is cut, the regions and settlements show")
 	assert_true(shown > 100, "the views laid out %d labels in all" % shown)
+	# M9 gate (lane review): the campaign on the world, the raid on Millford tracked (its objective's marker, read
+	# from the event's record), the pin between the Kingsgate shrine and its shelf, and the giant by the shrine
+	# where its checkpoint put him (the review's frame: at (-294, 774), the shrine at (-300, 770)) - his arrow
+	# covered every spot by the shrine's icon.
+	GameSession.mode = GameSession.Mode.VALLEY
+	GameSession.level_id = GameSession.WORLD_LEVEL_ID
+	Quests.test_active = true
+	var raid := GameData.get_record("event.millford_raid")
+	var marker := str((raid.get("objective", {}) as Dictionary).get("marker", ""))
+	var at := idx.position_of(marker)
+	assert_true(at.is_finite(), "the raid's objective marker '%s' is on the world's index" % marker)
+	Quests.p37_set_event("event.millford_raid", {"quest_id": "event.millford_raid", "title": "Raid on Millford",
+		"text": "Defend Millford", "kind": "protect", "marker_id": marker, "position": at, "positions": [at],
+		"main": false, "event": true, "in_play": true})
+	assert_true(Quests.track("event.millford_raid"), "the raid is tracked")
+	var shrine: Vector2 = map.entry("world.shrine.kingsgate").get("pos", Vector2.INF)
+	var shelf: Vector2 = map.entry("world.cp.kingsgate_shelf").get("pos", Vector2.INF)
+	assert_true(shrine.is_finite() and shelf.is_finite(), "the Kingsgate shrine and its shelf are on the map")
+	var pin := (shrine + shelf) * 0.5
+	WorldState.set_flag(Discovery.PIN_FLAG, [pin.x, pin.y, GameSession.WORLD_LEVEL_ID])
+	var giant := spawn_player(Vector3(shrine.x + 6.0, 0.0, shrine.y + 4.0))
+	giant.process_mode = Node.PROCESS_MODE_DISABLED   # it stands there: no floor under it in this test's world
+	bad.clear()
+	var diamonds := 0
+	for screen: Vector2 in [Vector2(1280, 720), Vector2(1920, 1080)]:
+		stack.size = screen
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var bounds := Rect2(Vector2.ZERO, map.view.size)
+		for zoom in MapScreen.ZOOMS.size():
+			for id: String in ["world.shrine.kingsgate", "world.cp.kingsgate_shelf", "world.cp.millford", "poi.millford",
+					"world.cp.brannock"]:
+				map.set_zoom(zoom)
+				if not map.select(id):
+					continue
+				var labels := map.layout_labels(font)
+				var marks := map.mark_rects()
+				var what := "raid tracked, %dx%d zoom %d, %s" % [int(screen.x), int(screen.y), zoom, id]
+				if zoom == 0 and not (marks.has("objective_0") and marks.has("pin") and marks.has("player")):
+					bad.append("%s: the diamond, the pin or the giant is not on the whole map (%s)" % [what, marks.keys()])
+				diamonds += 1 if marks.has("objective_0") else 0
+				bad.append_array(_label_faults(labels, marks, bounds, id, what))
+	assert_eq(bad, PackedStringArray(), "with the raid tracked and the pin by the shrine, no label covers a label or a mark")
+	assert_true(diamonds >= 6, "the raid's diamond was on %d of the views" % diamonds)
 	map.close()
+
+
+## The faults of the map's labels as laid out (test_the_world_map_labels_never_overlap): the place in focus `id`
+## without its label, a label cut by the view's edge `bounds`, over another label or over a mark of `marks`.
+static func _label_faults(labels: Array, marks: Dictionary, bounds: Rect2, id: String, what: String) -> PackedStringArray:
+	var bad := PackedStringArray()
+	var in_focus := labels.filter(func(l: Dictionary) -> bool: return str(l.kind) == "selected")
+	if in_focus.size() != 1 or str(in_focus[0].id) != id:
+		bad.append("%s: the place in focus has no label" % what)
+	for i in labels.size():
+		var a: Dictionary = labels[i]
+		var ra: Rect2 = a.rect
+		if not bounds.encloses(ra):
+			bad.append("%s: %s's label is cut by the view's edge (%s)" % [what, a.id, ra])
+		for j in range(i + 1, labels.size()):
+			if ra.intersects(labels[j].rect):
+				bad.append("%s: %s's label covers %s's" % [what, a.id, labels[j].id])
+		for k: String in marks:
+			if ra.intersects(marks[k]):
+				bad.append("%s: %s's label covers the mark %s %s" % [what, a.id, k, marks[k]])
+	return bad
