@@ -23,7 +23,8 @@ extends ValleyBot
 ##             Corvane spared; the ancestry Stoneblood (a parley token)
 ##   conqueror march force, wood slay, crown breach; Corvane struck, Harrok slain; Wildheart
 ##   mixed     march intimidate, crown sabotage, wood slay; Harrok spared; Stormborn
-## --bot-champion=spare|slay|talk and --bot-corvane=spare|strike override the preset's.
+## --bot-champion=spare|slay|talk and --bot-corvane=spare|strike override the preset's. P39: --bot-skarn=5|6
+## takes the siege of Skarn (Ulfra's plea, then the line's engines) on the way at that stage.
 ##
 ## Each plan tick (every 6 ticks): a yield waiting for its decision is decided (the screens' hook,
 ## before any pausing screen is closed); a fight when aware hostiles are near (BotCombat: formations
@@ -99,6 +100,27 @@ const BRAZIER_BURN_M := 7.5
 ## The drive-out: until the den's flags hold (nests burned, wall open) she is struck only while her
 ## health is above this share - killed before they hold, she would be slain, not driven out.
 const DRIVE_HOLD_FRAC := 0.35
+## P39 (F37: the den's fire "used as designed, a human-like policy"): with no brazier within BRAZIER_BURN_M
+## of the Matriarch, the giant draws her to the standing brazier nearest her - it stands LURE_BEYOND_M past
+## it on the far side from her, so that she follows it into the brazier's reach and the rule above breaks
+## it (8 s of Burning: no regeneration) - while she does not burn and stands under LURE_BELOW_FRAC of her
+## health. It walks there (LURE_WALK_S at most), then waits LURE_WAIT_S for her, fighting her only while she
+## is within its reach; a brazier she did not come to is left for LURE_IGNORE_S. P38's rule broke a brazier
+## only when she happened to stand beside one: the conqueror experts' 745 s in the den never brought her to
+## her phase 2. The expert only (P39 fix-up): the lure is a skilled player's tactic, and the novice - the
+## balance target - keeps P38's rule; with the lure (and the walk clock restarted below) the conqueror novice
+## on seed 1 lost the slay that it won without the restart.
+const LURE_BEYOND_M := 4.0
+const LURE_ARRIVE_M := 2.5
+const LURE_BELOW_FRAC := 0.9
+const LURE_WALK_S := 20.0
+const LURE_WAIT_S := 12.0
+const LURE_IGNORE_S := 45.0
+## A lure not acted on for this long (she burned, a death's reload, another fight) starts its walk and its
+## wait afresh: iteration 2's runs gave every brazier up at once ("not reached in 20 s") with walk clocks left
+## from an earlier attempt.
+const LURE_GAP_TICKS := 30
+const DEN_BRAZIERS := ["world.greywood.den_brazier_1", "world.greywood.den_brazier_2", "world.greywood.den_brazier_3"]
 ## --bot-explore: each oath's region, and how long one POI is tried before it is given up.
 const OATH_REGIONS := {"march": "region.crownmarch", "wood": "region.greywood", "crown": "region.aldmere"}
 const EXPLORE_GIVE_UP_S := 120.0
@@ -106,7 +128,7 @@ const EXPLORE_GIVE_UP_S := 120.0
 ## the battle: crews and fort ballistae first; the duel): within FIGHT_OWNER_RADIUS_M of the place's
 ## marker the plan keeps the objective although threats are near.
 const FIGHT_OWNERS := {"matriarch": "world.marker.troll_den", "battle": "world.marker.fort_bailey",
-	"duel": "world.marker.moot_ring"}
+	"duel": "world.marker.moot_ring", "skarn": "world.marker.siege_line"}
 const FIGHT_OWNER_RADIUS_M := 120.0
 ## An engaged arena's leash: the giant turns back once it stands this share of the disengage margin
 ## outside the arena's floor, and walks until within the second share (a dodge's drift does not flip
@@ -119,6 +141,17 @@ const RANGED_GIVE_UP_S := 8.0
 const RANGED_IGNORE_S := 120.0
 ## An encounter's last members above reach are shot at from the ground this far from them.
 const ELEVATED_SHOT_M := 16.0
+## P39: ...from the nearest of these rings (every ELEVATED_SHOT_STEP_DEG) from which a bolt flies clear
+## to them; at most ELEVATED_SHOT_NAV_TRIES clear points are tried on the navigation per choice, and a
+## spot that failed (the member given up there, or the line from where the giant stopped blocked for
+## ELEVATED_SHOT_BLOCKED_S) is not chosen again (nor one within ELEVATED_SHOT_BAD_M of it); after
+## ELEVATED_SHOT_MAX_BAD failed spots, P38's rule (ELEVATED_SHOT_M toward the giant).
+const ELEVATED_SHOT_RINGS_M := [16.0, 22.0, 28.0]
+const ELEVATED_SHOT_STEP_DEG := 30.0
+const ELEVATED_SHOT_NAV_TRIES := 4
+const ELEVATED_SHOT_BAD_M := 4.0
+const ELEVATED_SHOT_MAX_BAD := 3
+const ELEVATED_SHOT_BLOCKED_S := 3.0
 ## A boss fight's respawn point: the waystone within this of its place is taken first; the bot waits at
 ## it this long for the checkpoint (taken out of combat).
 const RESPAWN_POINT_RADIUS_M := 160.0
@@ -126,8 +159,33 @@ const RESPAWN_POINT_WAIT_S := 15.0
 ## How near the giant must come to a talker (beyond its reach): the talker's radius + the capsule, less.
 const TALK_SLACK_M := 1.0
 const TALK_RETRY_TICKS := 90
+## P39 - siege disruption (plan §5.14: at stage 6 the giant grabs and throws ballistae and catapults;
+## P38's bot broke engines with blows and Crag Hurl only, so a run threw 0-1): a hostile engine on
+## the giant's level within SIEGE_SEEK_M is seized before the fight goes on - struck until its poise
+## breaks (or its crew is gone), grabbed, and thrown at the nearest enemy. An engine tried for
+## SIEGE_GIVE_UP_S without being seized or hurt is left alone for SIEGE_IGNORE_S.
+const SIEGE_SEEK_M := 45.0
+const SIEGE_GIVE_UP_S := 25.0
+const SIEGE_IGNORE_S := 90.0
+## Presses of interact on an engine that may be seized stay this many ticks apart.
+const SIEGE_GRAB_EVERY_TICKS := 20
+## P39 - the waystones beside the way (P38's bot took a waystone only as a fight's respawn point, so no
+## far goal ever had a visited stone near it and fast travel never ran): out of combat, a waystone or
+## shrine within WAYSTONE_DETOUR_M that the giant has not visited (and may visit: its flags hold, its
+## max_stage admits the giant) is walked into on the way, as a player lights the stones the compass
+## shows; one not reached in WAYSTONE_GIVE_UP_S is given up.
+const WAYSTONE_DETOUR_M := 50.0
+const WAYSTONE_GIVE_UP_S := 30.0
+## P39 - the siege of Skarn as a new player takes it (--bot-skarn=5|6; FOLLOWUPS "The siege of Skarn's
+## pace is untuned"): on the way to the Standing Stones (stage 5) or the Moot (stage 6), Ulfra's plea
+## (a stage-6 giant's arrival starts the siege too), Skarn's green, then the line's five engines nearest
+## first - seized and thrown at stage 6, struck or hurled at at stage 5 - while defending, until the
+## event ends (saved: the line routs when its last engine falls; burned: two longhouses fall).
+const SKARN_ENGINES := ["world.stonehold.siege_catapult_1", "world.stonehold.siege_catapult_2",
+	"world.stonehold.siege_catapult_3", "world.stonehold.siege_ballista_1", "world.stonehold.siege_ballista_2"]
+const SKARN_TIMEOUT_S := 900.0
 const WORLD_KINDS := ["travel", "say", "smash", "exit", "heave_at", "battle", "matriarch", "duel", "throne",
-	"choose_ancestry"]
+	"choose_ancestry", "siege", "skarn"]
 
 
 ## The world part of the run (ValleyBot.Run.world): the policy, the oath plan and what the world bot
@@ -164,6 +222,11 @@ class WorldRun extends RefCounted:
 	var budget_failures: PackedStringArray = []
 	var max_counted := 0
 	var over_cap_ticks := 0
+	## P39: the waystones walked to on the way (_waystone_detour): checkpoint id -> the tick the detour
+	## began, or true once given up.
+	var detours: Dictionary = {}
+	## P39: --bot-skarn=<stage> (0: the siege of Skarn is left alone, as the main thread does).
+	var skarn_stage := 0
 
 
 var route: BotRoute = null
@@ -181,6 +244,14 @@ var _leashed := false
 var _stuck_plans := -1
 var _ranged_tries: Dictionary = {}     ## entity id -> [first tick, health then, last tick] (_ranged_futile)
 var _world: WorldRoot = null
+## P39: siege disruption - engine world id -> [first tick tried, its health then] (_siege_futile), and
+## the last interact pressed on an engine.
+var _siege_tries: Dictionary = {}
+var _siege_grab_tick := -1000
+## P39: where each member above reach is shot from - entity id -> {"spot": the chosen ground (INF:
+## none clear), "at": the member's position then, "tick": when chosen, "bad": the spots given up}.
+var _shot_spots: Dictionary = {}
+var _lure: Dictionary = {}             ## P39: brazier world id -> {"walk": tick, "at": tick, "until": tick}
 
 
 # --------------------------------------------------------------------------- configuration
@@ -260,6 +331,8 @@ static func parse_world_options(args: PackedStringArray) -> Dictionary:
 			explicit["campaign"] = true
 		elif arg.begins_with("--bot-until="):
 			explicit["until"] = arg.substr(12).strip_edges()
+		elif arg.begins_with("--bot-skarn="):
+			explicit["skarn"] = clampi(int(arg.substr(12)), 0, 6)
 	var preset: Dictionary = PRESETS[out.preset]
 	out["oaths"] = parse_oaths(str(preset.oaths))
 	out["champion"] = str(preset.champion)
@@ -302,6 +375,7 @@ static func apply_world_options(w: WorldRun, o: Dictionary) -> void:
 	w.explore = float(o.get("explore", 0.0))
 	w.campaign = bool(o.get("campaign", false))
 	w.until_flag = str(o.get("until", ""))
+	w.skarn_stage = int(o.get("skarn", 0))
 	# every oath the order leaves out follows (a third oath, or one the second needs)
 	for oath: String in OATHS:
 		var named := false
@@ -361,6 +435,7 @@ func _on_level_loaded() -> void:
 	super()
 	_world = level as WorldRoot
 	_node_cache.clear()
+	_shot_spots.clear()
 	route = BotRoute.new(level.index() if level != null else null, level)
 	if wrun != null:
 		wrun.metrics.note_level_loaded(level)
@@ -525,7 +600,6 @@ func _on_campaign_complete(tick: int) -> void:
 	run.metrics.node_samples = before.node_samples
 	run.metrics.load_samples = before.load_samples
 	run.metrics.connect_events()
-	run.metrics.on_new_game(tick)
 	wrun.metrics = WorldMetrics.new(run.metrics)
 	wrun.metrics.connect_events()
 	_use_world_segments(run, wrun)
@@ -535,12 +609,17 @@ func _on_campaign_complete(tick: int) -> void:
 	wrun.talents_tried.clear()
 	wrun.explored.clear()
 	wrun.respawn_given_up.clear()
+	wrun.detours.clear()
 	run.obj_key = ""
 	run.obj_ticks = 0
 	run.obj_deaths = 0
 	run.dup_seen = 0
 	print("[world_bot] the campaign is complete; loop run %d: %s" % [run.run_index + 1, preset])
 	GameSession.change_mode("world", {"new_game": true})
+	# P39: the rewards already given are read once the new game has emptied the world (it does so at
+	# once): read before, the last game's flags counted the new game's first reward - Kings' Door's,
+	# granted as the world starts - as given twice, and the 60-minute run stopped there (exit 3).
+	run.metrics.on_new_game(tick)
 
 
 func _world_summary(tick: int) -> Dictionary:
@@ -629,12 +708,21 @@ func _plan(tick: int) -> void:
 		task = objective
 		_stall_since = -1
 		return
+	var engine := _siege_target(tick)
+	if engine != null or _holding_engine():
+		task = {"kind": "siege", "engine": engine}
+		_stall_since = -1
+		return
 	var fight_target := _fight_target()
 	if fight_target != null and _chase_futile(fight_target, tick):
 		fight_target = _fight_target()
 	if fight_target != null and not _fight_ignored_now(fight_target):
 		task = {"kind": "fight", "target": fight_target}
 		_stall_since = -1
+		return
+	var detour := _waystone_detour(tick)
+	if not detour.is_empty():
+		task = detour
 		return
 	task = objective
 
@@ -702,18 +790,69 @@ func _fight_ignored_now(_t: EnemyActor) -> bool:
 ## stands still under a target it cannot reach, and the giant stood under Fort Aldmere's wall - its
 ## archers 16 m up, no lock taken, no bolt thrown, the target switching between four of them so the
 ## Valley's chase give-up never ran out - instead of breaking the gate beside it, until the watchdog.
-## The toll fort's tower archers (part of an encounter to clear) are still shot down by bolts. Else
-## the nearest threat on the giant's own ground, else none (the objective goes on).
+## The toll fort's tower archers (part of an encounter to clear) are still shot down by bolts. P39:
+## only one a bolt from where the giant stands would reach (_shot_clear - the Valley's pick first, then
+## the other elevated threats): from 17 m east of the toll fort's tower the line to its west archer
+## struck the deck's edge, the blows that did not hurt it came seconds apart (the bolt's cooldown, so
+## the ranged give-up never ran out) and the bot stood there until the march's watchdog. The
+## encounter's task takes the giant to a spot with a clear line (_elevated_shot_spot). Else the
+## nearest threat on the giant's own ground, else none (the objective goes on).
 func _fight_target() -> EnemyActor:
 	var t := super()
 	if t == null or not _in_world() or not combat.is_elevated(t):
 		return t
-	if _ranged_ready() and not _ranged_futile(t.entity.entity_id, t.entity.combatant.pools.health, Sim.tick):
-		return t
+	if _ranged_ready():
+		var shots: Array[EnemyActor] = [t]
+		for e in combat.threats(combat.engage_radius()):
+			if e != t and combat.is_elevated(e) and not _is_ignored(e):
+				shots.append(e)
+		for e in shots:
+			if e.entity != null and _shot_clear(player.global_position, e):
+				if not _ranged_futile(e.entity.entity_id, e.entity.combatant.pools.health, Sim.tick):
+					return e
+				break
 	for e in combat.threats(combat.engage_radius()):
 		if not _is_ignored(e) and not combat.is_elevated(e) and reachable(e.global_position, 3.5):
 			return e
 	return null
+
+
+## True when a bolt the giant threw standing at `ground` (facing `e`) would fly clear to `e`: the
+## line from the bolt's launch point (launch_offset_m x the body's scale) to e's anchor, within the
+## bolt's reach at the stage, meets no world or breakable body - the sphere ProjectileSystem sweeps.
+func _shot_clear(ground: Vector3, e: EnemyActor) -> bool:
+	if e == null or e.entity == null or player.get_world_3d() == null:
+		return false
+	var aim := e.entity.anchor_position()
+	var dir := _flat(aim - ground)
+	if dir.length_squared() < 0.01:
+		return false
+	var bolt := _bolt_geometry()
+	var origin := ground + Basis.looking_at(dir.normalized(), Vector3.UP) * (bolt.offset as Vector3)
+	if origin.distance_to(aim) > float(bolt.reach):
+		return false
+	var space := player.get_world_3d().direct_space_state
+	return HitQueryAdapter.sphere_contact(space, origin, aim, float(bolt.radius)).is_empty()
+
+
+## The giant's bolt now: its launch offset in the giant's space (scaled), its reach at the stage and its
+## radius - the slotted Runic Bolt (or what evolved from it), else the record's.
+func _bolt_geometry() -> Dictionary:
+	var a: ActionDef = null
+	var key := combat.slot_of(BotCombat.RUNIC_BOLT)
+	if key != "":
+		a = player.controller.library.get(str(player.controller.loadout.get(key, "")))
+	if a == null:
+		a = player.controller.library.get(BotCombat.RUNIC_BOLT)
+	if a == null or player.attack == null:
+		return {"offset": Vector3(0.6, 2.9, -0.8), "reach": 25.0, "radius": 0.3}
+	var spec := player.attack.stage_spec(a)
+	var offset: Vector3 = spec.get("launch_offset", Vector3.INF)
+	if offset == Vector3.INF:
+		offset = Vector3(0.0, float(player.entity.combatant.height_m) * 0.6, 0.0)
+	else:
+		offset *= player.attack.body_scale()
+	return {"offset": offset, "reach": PlayerAttack.reach_of(spec), "radius": float(spec.get("radius_m", 0.3))}
 
 
 ## A chase given up on a formation's member gives the whole formation up for as long: its braced wall
@@ -764,6 +903,9 @@ func _objective_task(tick: int) -> Dictionary:
 	var o := Quests.objective_for(WORLD_MAIN)
 	if o.is_empty():
 		return {"kind": "wait", "why": "no world objective"}
+	var skarn := _skarn_task(str(o.stage_id))
+	if not skarn.is_empty():
+		return skarn
 	match str(o.stage_id):
 		"kings_door":
 			return _exit_task("valley.exit.kings_door")
@@ -1133,6 +1275,41 @@ func _parley_token() -> String:
 	return ""
 
 
+# ---- P39: the siege of Skarn (--bot-skarn)
+
+## True while the siege of Skarn is this run's to take now: --bot-skarn names the giant's stage, the
+## main thread is on its way to the Stones or the Moot, and the siege has not ended.
+func _skarn_open(main_stage: String) -> bool:
+	if wrun == null or wrun.skarn_stage <= 0 or player == null or player.current_growth_stage() != wrun.skarn_stage:
+		return false
+	if not (main_stage in ["grow6", "moot"]):
+		return false
+	return not QuestConditions.truthy(WorldState.get_flag("world.skarn.saved")) \
+		and not QuestConditions.truthy(WorldState.get_flag("world.skarn.burned"))
+
+
+## The siege of Skarn's next step (see SKARN_ENGINES), {} when it is not this run's to take now.
+func _skarn_task(main_stage: String) -> Dictionary:
+	if not _skarn_open(main_stage):
+		return {}
+	if not QuestConditions.truthy(WorldState.get_flag("event.siege_of_skarn.runs")):
+		if player.current_growth_stage() < 6 and not QuestConditions.truthy(WorldState.get_flag("world.skarn.plea_accepted")):
+			return _say_task("world.stonehold.ulfra", "dialogue.ulfra", "plea", _where("world.marker.skarn_green"))
+		return _travel_task(_where("world.marker.skarn_green"), 12.0, "Skarn's green: the siege line sets up")
+	var best := ""
+	var best_d := INF
+	for id: String in SKARN_ENGINES:
+		if WorldState.is_destroyed(id):
+			continue
+		var d := _flat_dist(_where(id), player.global_position)
+		if d < best_d:
+			best = id
+			best_d = d
+	if best == "":
+		return _travel_task(_where("world.marker.siege_line"), 20.0, "the siege line routs")
+	return {"kind": "skarn", "id": best}
+
+
 # ---- the champion
 
 func _champion_task() -> Dictionary:
@@ -1190,10 +1367,12 @@ func _world_encounter_task(encounter_id: String) -> Dictionary:
 	return t
 
 
-## Where to shoot an encounter's members above reach from: the ground ELEVATED_SHOT_M from the
-## nearest one left (toward the giant); INF when none is left. The toll fort's tower archers stand
-## 13 m up behind their cabin's wall: from the fort's centre, 31 m off, the bolts struck the wall and
-## the bot stood there until the march's watchdog; from 17 m they struck the archers.
+## Where to shoot an encounter's members above reach from: for the nearest one left, the ground with a
+## clear bolt's line to it (_shot_spot), else the ground ELEVATED_SHOT_M from it toward the giant; INF
+## when none is left. The toll fort's tower archers stand 13 m up on its deck: from the fort's centre,
+## 31 m off, the bolts struck the tower and the bot stood there until the march's watchdog; from 17 m
+## south they struck the archers (P38) - from 17 m east, where the fight at the gate left the giant,
+## the line to the west archer crossed 4 m of deck and struck its edge, until the watchdog (P39).
 func _elevated_shot_spot(encounter_id: String) -> Vector3:
 	var best: EnemyActor = null
 	var best_d := INF
@@ -1207,12 +1386,112 @@ func _elevated_shot_spot(encounter_id: String) -> Vector3:
 			best_d = d
 	if best == null:
 		return Vector3.INF
+	var clear := _shot_spot(best)
+	if clear.is_finite():
+		return clear
 	var away := _flat(player.global_position - best.global_position)
 	if away.length_squared() < 1.0:
 		away = Vector3.BACK
 	var spot := best.global_position + away.normalized() * ELEVATED_SHOT_M
 	spot.y = player.global_position.y
 	return spot
+
+
+## The ground to shoot member `e` from (_clear_shot_spot), kept per member. It is chosen again when
+## the member has moved over 2 m, 5 s after none was clear, or when the spot failed: the bot gave the
+## member up (a chase or ranged blows that did not hurt it) while standing at it, or the line from where
+## the giant stopped (within the go task's radius of the spot) stayed blocked for ELEVATED_SHOT_BLOCKED_S.
+## A failed spot is not chosen again, and the member is tried again at once from the next; one given up
+## elsewhere is tried again at once when the giant reaches its spot. INF when none is clear (or
+## ELEVATED_SHOT_MAX_BAD spots failed).
+func _shot_spot(e: EnemyActor) -> Vector3:
+	if e.entity == null:
+		return Vector3.INF
+	var id := e.entity.entity_id
+	var tick := Sim.tick
+	var until := int(_ignored.get(id, -1))
+	var rec: Dictionary = _shot_spots.get(id, {})
+	var again := rec.is_empty() or _flat_dist(rec.at, e.global_position) > 2.0
+	if not again:
+		var spot: Vector3 = rec.spot
+		if not spot.is_finite():
+			again = tick - int(rec.tick) > ActionDef.seconds_to_ticks(5.0) \
+				and (rec.bad as Array).size() < ELEVATED_SHOT_MAX_BAD
+		elif _flat_dist(spot, player.global_position) < ELEVATED_SHOT_BAD_M:
+			var failed := ""
+			if not bool(rec.arrived):
+				rec["arrived"] = true
+				if until > tick:
+					_ignored.erase(id)
+					until = -1
+			elif until > tick and until != int(rec.until):
+				failed = "given up there"
+			if failed == "" and not _shot_clear(player.global_position, e):
+				if int(rec.blocked_since) < 0:
+					rec["blocked_since"] = tick
+				elif tick - int(rec.blocked_since) > ActionDef.seconds_to_ticks(ELEVATED_SHOT_BLOCKED_S):
+					failed = "the line blocked"
+			else:
+				rec["blocked_since"] = -1
+			if failed != "":
+				(rec.bad as Array).append(spot)
+				run.metrics.note(tick, "no shot at %s from (%.0f, %.0f), %s: another spot" % [id, spot.x, spot.z, failed])
+				_ignored.erase(id)
+				until = -1
+				again = (rec.bad as Array).size() < ELEVATED_SHOT_MAX_BAD
+				if not again:
+					rec["spot"] = Vector3.INF
+		rec["until"] = until
+	if again:
+		var bad: Array = rec.get("bad", [])
+		rec = {"spot": _clear_shot_spot(e, bad), "at": e.global_position, "tick": tick, "bad": bad,
+			"arrived": false, "until": until, "blocked_since": -1}
+		_shot_spots[id] = rec
+	var out: Vector3 = rec["spot"]
+	return out
+
+
+## Of the clear points around `e` (_clear_shot_points, nearest the giant first), the first on the
+## giant's navigation (within 2 m) that a path reaches; at most ELEVATED_SHOT_NAV_TRIES are tried. INF
+## when none.
+func _clear_shot_spot(e: EnemyActor, bad: Array) -> Vector3:
+	for ground in _clear_shot_points(e, bad, ELEVATED_SHOT_NAV_TRIES):
+		var snapped := NavQuery.closest_point(level, ground, _nav_mask())
+		if snapped.is_finite() and snapped.distance_to(ground) < 2.0 and reachable(snapped, 3.0):
+			return snapped
+	return Vector3.INF
+
+
+## The ground on ELEVATED_SHOT_RINGS_M around `e` (every ELEVATED_SHOT_STEP_DEG; the world's surface
+## under each point; none within ELEVATED_SHOT_BAD_M of a spot in `bad`) from which a bolt flies clear
+## to it (_shot_clear), nearest the giant first - at most `limit` of them.
+func _clear_shot_points(e: EnemyActor, bad: Array, limit: int) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var world := player.get_world_3d()
+	if world == null or e.entity == null:
+		return out
+	var space := world.direct_space_state
+	var top := e.entity.anchor_position().y
+	var cands: Array[Vector3] = []
+	var steps := int(roundf(360.0 / ELEVATED_SHOT_STEP_DEG))
+	for r: float in ELEVATED_SHOT_RINGS_M:
+		for i in steps:
+			var a := deg_to_rad(ELEVATED_SHOT_STEP_DEG * i)
+			cands.append(e.global_position + Vector3(sin(a), 0.0, cos(a)) * r)
+	var from := player.global_position
+	cands.sort_custom(func(a: Vector3, b: Vector3) -> bool: return _flat_dist(a, from) < _flat_dist(b, from))
+	for c in cands:
+		if bad.any(func(b: Vector3) -> bool: return _flat_dist(b, c) < ELEVATED_SHOT_BAD_M):
+			continue
+		var q := PhysicsRayQueryParameters3D.create(Vector3(c.x, top + 5.0, c.z), Vector3(c.x, top - 120.0, c.z),
+			HitQueryAdapter.LAYER_WORLD)
+		var hit := space.intersect_ray(q)
+		if hit.is_empty() or not _shot_clear(hit.position, e):
+			continue
+		out.append(hit.position)
+		if out.size() >= limit:
+			break
+	return out
 
 
 func _encounter_cleared(encounter_id: String) -> bool:
@@ -1255,12 +1534,14 @@ func _act(tick: int, defending: bool) -> void:
 			_act_travel(tick, task.get("pos", Vector3.INF), float(task.get("radius", 4.0)))
 		"say":
 			_act_say(tick)
-		"smash":
+		"smash", "skarn":
 			_act_smash(tick, defending)
 		"exit":
 			_act_exit(tick)
 		"battle":
 			_act_battle(tick, defending)
+		"siege":
+			_act_siege(tick, defending, task.get("engine") as SiegeEngine)
 		"matriarch":
 			_act_matriarch(tick, defending)
 		"duel":
@@ -1569,6 +1850,14 @@ func _act_smash(tick: int, defending: bool) -> void:
 	if prop.destroyed:
 		_next_plan_tick = tick
 		return
+	# P39: at stage 6 an engine is seized and thrown (siege disruption), a held one thrown first.
+	if _holding_engine():
+		_act_siege(tick, defending, null)
+		return
+	if prop is SiegeEngine and _can_seize_engines() and _seizable_engine(prop as SiegeEngine) \
+			and int(_ignored.get("siege:" + str(prop.world_id), -1)) <= tick:
+		_act_siege(tick, defending, prop as SiegeEngine)
+		return
 	if prop is SiegeEngine and _engine_hurl_ok(tick, prop) and _hurl_at_engine(tick, prop):
 		return
 	task["target"] = prop
@@ -1617,6 +1906,162 @@ func _hurl_at_engine(tick: int, engine: BreakableProp) -> bool:
 	return true
 
 
+# ---- P39: siege disruption (stage 6)
+
+## True when the giant's profile allows seizing siege engines (stage 6's siege_disruption).
+func _can_seize_engines() -> bool:
+	var perms: Variant = player.profile.get("interaction_permissions", []) if player != null else []
+	return typeof(perms) == TYPE_ARRAY and (perms as Array).has("siege_disruption")
+
+
+## True while the giant holds a siege engine (it is thrown before anything else).
+func _holding_engine() -> bool:
+	return player != null and player.grab != null and player.grab.is_holding() \
+		and PlayerGrab.is_engine(player.grab.held_entity())
+
+
+## The engine to seize now (see SIEGE_SEEK_M): the nearest hostile, standing engine on the giant's level
+## within SIEGE_SEEK_M that is not given up; null when the giant cannot seize engines or none is near.
+func _siege_target(tick: int) -> SiegeEngine:
+	if not _in_world() or not _can_seize_engines():
+		return null
+	var best: SiegeEngine = null
+	var best_d := SIEGE_SEEK_M
+	for n in get_tree().get_nodes_in_group(SiegeEngine.GROUP):
+		var s := n as SiegeEngine
+		if not _seizable_engine(s) or int(_ignored.get("siege:" + str(s.world_id), -1)) > tick:
+			continue
+		var d := _flat_dist(s.global_position, player.global_position)
+		if d < best_d:
+			best = s
+			best_d = d
+	return best
+
+
+## A hostile engine standing on the giant's level that nobody holds (a faction's engine at peace is no
+## target: P03's hostile-only targeting; the sabotage's first blow is its smash task's).
+func _seizable_engine(s: SiegeEngine) -> bool:
+	if s == null or not is_instance_valid(s) or not s.is_inside_tree() or s.destroyed or s.thrown or s.holder_id != "":
+		return false
+	if s.entity == null or not s.entity.is_alive() or s.entity.team != CombatEntity.Team.ENEMY:
+		return false
+	return s.global_position.y - player.global_position.y <= combat.elevated_m()
+
+
+## True when seizing `s` has gone on for SIEGE_GIVE_UP_S with the engine neither seized nor hurt: it is
+## then left alone for SIEGE_IGNORE_S (a braced wall before it, an engine out of the giant's way).
+func _siege_futile(s: SiegeEngine, tick: int) -> bool:
+	var key := str(s.world_id)
+	var hp := s.entity.combatant.pools.health if s.entity != null and s.entity.combatant != null else 0.0
+	var rec: Array = _siege_tries.get(key, [])
+	if rec.is_empty() or hp < float(rec[1]) - 0.5 or tick - int(rec[2]) > 60:
+		_siege_tries[key] = [tick, hp, tick]
+		return false
+	rec[2] = tick
+	if tick - int(rec[0]) < ActionDef.seconds_to_ticks(SIEGE_GIVE_UP_S):
+		return false
+	_siege_tries.erase(key)
+	_ignored["siege:" + key] = tick + ActionDef.seconds_to_ticks(SIEGE_IGNORE_S)
+	if run != null:
+		run.metrics.note(tick, "gave up seizing %s" % key)
+	return true
+
+
+## Siege disruption at `s` (null: only a held engine to throw): a held engine is thrown at the nearest
+## enemy (BotCombat's throw locks it first); an engine that may be seized now (staggered, or its crew
+## gone) within the grab's reach is locked and grabbed (interact); otherwise the giant closes in and
+## strikes it - a heavy breaks its poise - through the break act.
+func _act_siege(tick: int, defending: bool, s: SiegeEngine) -> void:
+	if _holding_engine():
+		mode = "combat"
+		stop_moving()
+		var held: CombatEntity = player.grab.held_entity()
+		var target: EnemyActor = null
+		for e in combat.threats(40.0):
+			if e.entity != held and not combat.is_elevated(e):
+				target = e
+				break
+		if target != null:
+			combat.fight(tick, target)
+		elif player.controller.preview_reason(&"light") in ["", "busy"]:
+			player.router.inject_edge(&"light")
+		return
+	if not _seizable_engine(s) or _siege_futile(s, tick):
+		_next_plan_tick = tick
+		return
+	var why: String = player.grab.check_target(s.entity, "hold") if player.grab != null else "no_grab"
+	if why == "":
+		mode = "combat"
+		stop_moving()
+		var e := s.entity
+		if e.combatant.lockable and player.targeting.may_target(e) and player.targeting.locked_entity() != e:
+			if player.targeting.locked_entity() != null:
+				if tick % 4 == 0:
+					player.router.inject_edge(&"lock_press")
+				return
+			player.camera_rig.yaw = TargetingRules.yaw_of(_flat(s.global_position - player.global_position))
+			if tick % 8 == 0:
+				player.router.inject_edge(&"lock_press")
+			return
+		if defending or player.controller.state != CombatController.State.LOCOMOTION \
+				or tick - _siege_grab_tick < SIEGE_GRAB_EVERY_TICKS:
+			return
+		_siege_grab_tick = tick
+		combat.set("_hold_started", tick)   # the throw locks the next enemy first (BotCombat._throw)
+		player.router.inject_edge(&"interact")
+		return
+	if why in ["engine_crewed", "nothing_in_reach", "no_los"]:
+		task["target"] = s
+		_act_break(tick, defending)
+		return
+	# engine_stage and the like: not an engine this giant may seize
+	_ignored["siege:" + str(s.world_id)] = tick + ActionDef.seconds_to_ticks(SIEGE_IGNORE_S)
+	_next_plan_tick = tick
+
+
+# ---- P39: the waystones beside the way
+
+## A detour to a waystone or shrine the giant has not visited, within WAYSTONE_DETOUR_M (see the
+## constant); {} when there is none (or a fight is engaged, or the giant is in the Valley).
+func _waystone_detour(tick: int) -> Dictionary:
+	if not _in_world() or route == null or route.index == null or not GameSession.engaged_fights().is_empty():
+		return {}
+	var best := ""
+	var best_d := WAYSTONE_DETOUR_M
+	for id in route.index.checkpoint_ids():
+		if wrun.detours.get(id, null) is bool:
+			continue
+		var c := route.index.checkpoint(id)
+		var p: Variant = c.get("position")
+		if typeof(p) != TYPE_VECTOR3 or not (str(c.get("kind", "")) in ["waystone", "shrine"]):
+			continue
+		if not bool(c.get("fast_travel", true)) or route.index.max_stage_of(id) < player.current_growth_stage():
+			continue
+		if QuestConditions.truthy(WorldState.get_flag(GameSession.VISITED_PREFIX + id)):
+			continue
+		var open := true
+		for f: Variant in c.get("requires_flags", PackedStringArray()):
+			if not QuestConditions.truthy(WorldState.get_flag(str(f))):
+				open = false
+		var d := _flat_dist(p, player.global_position)
+		if open and d < best_d:
+			best = id
+			best_d = d
+	if best == "":
+		return {}
+	var since := int(wrun.detours.get(best, -1))
+	if since < 0:
+		wrun.detours[best] = tick
+		if run != null:
+			run.metrics.note(tick, "on the way: the waystone %s" % best)
+	elif tick - since > ActionDef.seconds_to_ticks(WAYSTONE_GIVE_UP_S):
+		wrun.detours[best] = true
+		if run != null:
+			run.metrics.note(tick, "the waystone %s was not reached: on without it" % best)
+		return _waystone_detour(tick)
+	return _travel_task(route.index.checkpoint(best).position, 4.0, "waystone " + best)
+
+
 ## A LevelExit: walk to it and press interact.
 func _act_exit(tick: int) -> void:
 	var id := str(task.get("id", ""))
@@ -1648,12 +2093,19 @@ func _act_battle(tick: int, defending: bool) -> void:
 		_next_plan_tick = tick
 		return
 	var bailey := _where("world.marker.fort_bailey")
+	if _holding_engine():
+		_act_siege(tick, defending, null)   # P39: a seized engine is thrown first
+		return
 	if _battle_ranged(tick):
 		return
 	var target := _battle_target()
 	if target is EnemyActor:
 		mode = "combat"
 		combat.fight(tick, target as EnemyActor)
+		return
+	if target is SiegeEngine and _can_seize_engines() and _seizable_engine(target as SiegeEngine) \
+			and int(_ignored.get("siege:" + str((target as SiegeEngine).world_id), -1)) <= tick:
+		_act_siege(tick, defending, target as SiegeEngine)   # P39: siege disruption at stage 6
 		return
 	if target is BreakableProp:
 		task["target"] = target
@@ -1766,12 +2218,113 @@ func _act_matriarch(tick: int, defending: bool) -> void:
 		_act_drive(tick, defending, m)
 		return
 	var brazier := _brazier_near(m.global_position)
-	if brazier != null:
+	if brazier != null and _standing_braziers() > 1:
 		task["target"] = brazier
 		_act_break(tick, defending)
 		return
+	if _act_lure(tick, m):
+		return
 	mode = "combat"
 	combat.fight(tick, m)
+
+
+## P39 (iteration 2): the den's braziers still standing. The slay breaks none of them once it is the last:
+## each brazier broken burns the nest beside it, and with all three nests burned the woodfolk open the den's
+## back wall and she flees at 60 % (P35's drive-out) - iteration 1's lure broke all three in both conqueror
+## novice runs, and she fled instead of being slain.
+func _standing_braziers() -> int:
+	var n := 0
+	for id: String in DEN_BRAZIERS:
+		if WorldState.is_destroyed(id):
+			continue
+		var b := _world_node(id) as BreakableProp
+		if b != null and not b.destroyed:
+			n += 1
+	return n
+
+
+## P39: the brazier to draw the Matriarch to and where the giant stands for it ({"id", "spot"}), or {}:
+## none for the novice (see _lures), while she burns or stands above LURE_BELOW_FRAC of her health, nor a
+## brazier left for now, nor the last one standing (see _standing_braziers).
+func _lure_spot(tick: int, m: EnemyActor) -> Dictionary:
+	if not _lures():
+		return {}
+	if m == null or not is_instance_valid(m) or m.entity == null or not m.entity.is_alive():
+		return {}
+	if _standing_braziers() <= 1:
+		return {}
+	if (m.has_method("p34_regen_blocked") and bool(m.call("p34_regen_blocked"))) \
+			or m.entity.combatant.pools.ratio("health") > LURE_BELOW_FRAC:
+		return {}
+	var best: BreakableProp = null
+	var best_d := INF
+	for id: String in DEN_BRAZIERS:
+		if WorldState.is_destroyed(id) or int((_lure.get(id, {}) as Dictionary).get("until", -1)) > tick:
+			continue
+		var b := _world_node(id) as BreakableProp
+		if b == null or b.destroyed:
+			continue
+		var d := _flat_dist(b.global_position, m.global_position)
+		if d < best_d:
+			best = b
+			best_d = d
+	if best == null:
+		return {}
+	var away := _flat(best.global_position - m.global_position)
+	if away.length_squared() < 0.01:
+		return {}   # she stands on it: the break rule's
+	var spot := best.global_position + away.normalized() * LURE_BEYOND_M
+	spot.y = player.global_position.y
+	return {"id": str(best.world_id), "spot": spot}
+
+
+## P39 (fix-up): true when the bot draws the Matriarch to a brazier - the expert only. The novice fights her
+## and breaks a brazier only while she stands beside one (P38's rule, the last one kept): walking her to the
+## fire is a skilled player's tactic, not the balance target's.
+func _lures() -> bool:
+	return combat != null and combat.skill == BotCombat.EXPERT
+
+
+## P39: one tick of drawing the Matriarch to a brazier (LURE_* above). True while it does.
+func _act_lure(tick: int, m: EnemyActor) -> bool:
+	var lure := _lure_spot(tick, m)
+	if lure.is_empty():
+		return false
+	var id := str(lure.id)
+	var spot: Vector3 = lure.spot
+	var st: Dictionary = _lure.get(id, {})
+	if tick - int(st.get("last", -1000000)) > LURE_GAP_TICKS:
+		st.erase("walk")
+		st.erase("at")
+	st["last"] = tick
+	var reach := float(player.profile.get("melee_reach_m", 3.5))
+	var her := _flat_dist(m.global_position, player.global_position)
+	mode = "combat"
+	if _flat_dist(spot, player.global_position) > LURE_ARRIVE_M:
+		st.erase("at")
+		if not st.has("walk"):
+			st["walk"] = tick
+		elif tick - int(st.walk) > ActionDef.seconds_to_ticks(LURE_WALK_S):
+			_lure[id] = {"until": tick + ActionDef.seconds_to_ticks(LURE_IGNORE_S)}
+			if run != null:
+				run.metrics.note(tick, "lure: %s not reached in %.0f s" % [id, LURE_WALK_S])
+			return false
+		_lure[id] = st
+		steer_toward(spot, her > reach)
+		return true
+	if not st.has("at"):
+		st["at"] = tick
+	elif tick - int(st.at) > ActionDef.seconds_to_ticks(LURE_WAIT_S):
+		_lure[id] = {"until": tick + ActionDef.seconds_to_ticks(LURE_IGNORE_S)}
+		if run != null:
+			run.metrics.note(tick, "lure: the Matriarch did not come to %s in %.0f s" % [id, LURE_WAIT_S])
+		return false
+	_lure[id] = st
+	if her <= reach + 2.0:
+		combat.fight(tick, m)
+	else:
+		stop_moving()
+	return true
 
 
 func _act_drive(tick: int, defending: bool, m: EnemyActor) -> void:
@@ -1966,6 +2519,8 @@ func _watch_key() -> String:
 			key += "/grow5"
 	elif stage == "grow6" and player.current_growth_stage() < 5:
 		key += "/grow5"
+	if _skarn_open(stage):
+		key += "/skarn"
 	return key
 
 
@@ -1978,6 +2533,8 @@ func _stage_limit(key: String) -> float:
 		base = BOSS_STAGE_TIMEOUT_S
 	elif key.contains("/quest.oath_"):
 		base = OATHS_TIMEOUT_S
+	elif key.ends_with("/skarn"):
+		base = SKARN_TIMEOUT_S
 	var goal := _stage_goal()
 	var travel := 0.0
 	if goal.is_finite() and route != null and route.index != null:

@@ -43,6 +43,35 @@ const EXPERT_WATCH_M := 12.0
 ## counted, archers and mages kept the bot from breaking a guard for whole fights.
 const HEAVY_COMMIT_TICKS := 60
 const HEAVY_COMMIT_RANGE_M := 10.0
+## P39 (plan M6-M9 §3.23; the toll fort's expert runs): from stage 4 the expert answers only the blows that
+## can land on it, and an arrow holds no blow off. P17a's rule - every blow aimed at it within
+## EXPERT_WATCH_M, every shot at any range, no attack while an answer is due within 20 ticks - was set for
+## the Valley's handfuls of enemies; before the toll fort's pikes with archers on its tower an answer was
+## always due, and the expert swung 68 and 56 lights in runs where the novice swung 213-253 (and died there
+## 6 and 5 times where the novice did not). Now: a blow whose attacker stands farther from the giant's capsule
+## than the blow reaches (its telegraph, line, radius or AI range, plus EXPERT_REACH_SLACK_M) is not answered;
+## and a light shot (an arrow: a projectile under EXPERT_LIGHT_SHOT_POWER and no spell) holds no blow off and
+## is dodged only when no blow of the giant's own is under way as it arrives (a mage's slowing bolt, a ballista
+## bolt, a catapult stone, a boulder or a thrown whelp are answered as before - iteration 1 took every
+## projectile under 30 for a light shot, and the peaceful experts, slowed by the Raiders' Hollow's mage while
+## they struck, died there). Iterations 1-2 also ended any hold after one second (the giant then struck
+## through the answer due): the three peaceful experts died six times each at the Raiders' Hollow in both,
+## caught mid-blow by the raiders' soldiers, ogre and archers, so iteration 3 dropped that rule. The Valley
+## (stages 1-3) keeps P17a's rules, so its matrix stays comparable.
+const EXPERT_REACH_SLACK_M := 1.5
+const EXPERT_LIGHT_SHOT_POWER := 20.0
+## P39 (plan M6-M9 §6.4: every slotted ability used at least once a run, none over 40 % of the ability
+## damage): from stage 4 a slotted ability the rules below have not used for ROTATION_IDLE_TICKS is used on
+## the fight's target whenever nothing refuses it (its range, its grab, its cost), the longest unused
+## first - as a player works through a hotbar. Of the first world matrix's 18 runs, 14 never used Boulder
+## Hurl when it was ready, 12 Sweeping Blow, 8 Crag Hurl and 7 Titan Stomp, and one run's Titan Stomp took
+## 65 % of its ability damage: the rules below want a locked archer beyond 10 m for the hurls and use Heavy
+## Footfall's slot before Sweeping Blow's. The two area blows now take turns (the one used longer ago
+## first). Only the heal keeps its own rule alone (iteration 2: Stone Skin and Titan Surge take their turns
+## too - their own rules want a boss or three enemies, so iteration 1's runs never used them in 5 of 18). The
+## rotation acts in the world at any stage (iteration 2: the world's opening at stage 3 slotted Boulder Hurl
+## and never used it) and from stage 4 anywhere; the Valley keeps P17a's rules.
+const ROTATION_IDLE_TICKS := 1200
 ## Hostile, aware enemies this far (by stage) pull the bot into a fight.
 const ENGAGE_RADIUS_M := [16.0, 22.0, 28.0]
 ## P38 (plan M6-M9 §6.1): from stage 4 the engage radius follows the profile - ENGAGE_REACH_MULT x its
@@ -91,6 +120,7 @@ var _last_light_tick := -100
 var _connected := false
 var _ability_log: Array = []
 var _bands: Dictionary = {}     ## reach_band cache
+var _last_used: Dictionary = {} ## P39: slot key -> the tick its ability was last used (the rotation)
 
 
 func setup(p_bot: Variant, p_player: GiantPlayer, p_skill: String, p_rng: RandomNumberGenerator) -> void:
@@ -190,6 +220,8 @@ func _plan_reaction(decide_tick: int, eta: int, a: ActionDef, actor: Node3D, why
 	if skill == EXPERT:
 		if dodge:
 			_add_reaction(eta - DODGE_LEAD_TICKS, "dodge", actor, why)
+			if _world_expert() and a.hit_shape == "projectile" and a.power < EXPERT_LIGHT_SHOT_POWER and not a.has_tag("Magic"):
+				_reactions[-1]["light_shot"] = true   # P39: it holds no blow off (see the constants)
 		else:
 			_add_reaction(eta - rng.randi_range(EXPERT_PARRY_LEAD_MIN, EXPERT_PARRY_LEAD_MAX), "block", actor, why)
 		return
@@ -229,6 +261,8 @@ func _expert_watch(tick: int) -> void:
 		var far_ok := c.action.hit_shape == "projectile" or typeof(c.action.params.get("motion")) == TYPE_DICTIONARY
 		if not far_ok and e.global_position.distance_to(player.global_position) > EXPERT_WATCH_M:
 			continue
+		if not far_ok and _world_expert() and not blow_can_land(c.action, e):
+			continue   # P39: not marked seen - should the attacker close in during its windup, it is answered then
 		if int(_seen.get(e.entity_id, -1)) == c.instance_id:
 			continue
 		_seen[e.entity_id] = c.instance_id
@@ -252,7 +286,7 @@ func defend(tick: int) -> bool:
 		var at := int(re.at)
 		if at > tick:
 			keep.append(re)
-			if at - tick <= 20:
+			if at - tick <= 20 and not bool(re.get("light_shot", false)):
 				busy = true
 			continue
 		if tick - at > 6:
@@ -262,6 +296,8 @@ func defend(tick: int) -> bool:
 			"block":
 				_press_block(tick, actor)
 			"dodge", "dodge_wrong":
+				if bool(re.get("light_shot", false)) and player.controller.state == CombatController.State.ATTACKING:
+					continue   # P39: an arrow is taken rather than a blow of the giant's own given up
 				_press_dodge(tick, actor, str(re.kind) == "dodge_wrong")
 		busy = true
 	_reactions = keep
@@ -272,6 +308,49 @@ func defend(tick: int) -> bool:
 	if _block_until >= 0 or tick < _dodge_hold_until:
 		busy = true
 	return busy
+
+
+## P39: true from stage 4 or in the world (its opening is at stage 3): the rotation's rules (the Valley keeps P17a's).
+func _world_rules() -> bool:
+	if not _alive_player():
+		return false
+	if player.current_growth_stage() >= 4:
+		return true
+	return bot != null and is_instance_valid(bot) and bot.has_method("_in_world") and bool(bot.call("_in_world"))
+
+
+## P39: true for the expert from stage 4 (the world's rules of its answers; the Valley keeps P17a's).
+func _world_expert() -> bool:
+	return skill == EXPERT and _alive_player() and player.current_growth_stage() >= 4
+
+
+## P39: how far a blow reaches from its attacker's centre: the longest of its telegraph, its line, its
+## radius and its AI range, else the attacker's arm (its record's arm_length_m, or 1.5 m) and 1.5 m of weapon.
+static func blow_reach_m(a: ActionDef, e: EnemyActor) -> float:
+	var r := maxf(0.0, a.radius_m)
+	var tel: Variant = a.params.get("telegraph")
+	if typeof(tel) == TYPE_DICTIONARY:
+		r = maxf(r, maxf(float(tel.get("length_m", 0.0)), float(tel.get("radius_m", 0.0))))
+	var line: Variant = a.params.get("line")
+	if typeof(line) == TYPE_DICTIONARY:
+		r = maxf(r, float(line.get("start_m", 0.0)) + float(line.get("length_m", 0.0)))
+	r = maxf(r, float(a.params.get("ai_max_range_m", 0.0)))
+	if r <= 0.0:
+		var arm := 1.5
+		if e != null and e.entity != null and e.entity.combatant != null:
+			arm = float(e.entity.combatant.base_record.get("arm_length_m", arm))
+		r = arm + 1.5
+	return r
+
+
+## P39: whether `a`, wound up by `e`, can land on the giant: its attacker within the blow's reach (plus
+## EXPERT_REACH_SLACK_M) of the giant's capsule, measured from the attacker's body.
+func blow_can_land(a: ActionDef, e: EnemyActor) -> bool:
+	if not _alive_player() or e == null or not is_instance_valid(e):
+		return false
+	var gap := _flat(e.global_position - player.global_position).length() \
+		- EnemyActor.entity_radius(player.entity) - (EnemyActor.entity_radius(e.entity) if e.entity != null else 0.5)
+	return gap <= blow_reach_m(a, e) + EXPERT_REACH_SLACK_M
 
 
 func _press_block(tick: int, actor: Node3D) -> void:
@@ -357,6 +436,13 @@ func is_threat(e: EnemyActor) -> bool:
 
 func is_elevated(e: Node3D) -> bool:
 	return e.global_position.y - player.global_position.y > elevated_m()
+
+
+## P39: a boss (Harrok, the Matriarch, Corvane, the Ogre King) or a large body (a troll, a rival giant).
+func big_foe(t: EnemyActor) -> bool:
+	if t == null or not is_instance_valid(t) or t.entity == null or t.entity.combatant == null:
+		return false
+	return t.is_in_group(OgreBoss.GROUP) or str(t.entity.combatant.base_record.get("mass_class", "")) == "large"
 
 
 ## How much higher than the giant's feet a target is out of melee reach: ELEVATED_M at stages 1-3
@@ -512,6 +598,7 @@ func readiness() -> Dictionary:
 func use_slot(key: String, why: String) -> void:
 	player.router.inject_edge(StringName(key))
 	_ability_log.append([Sim.tick, key, why])
+	_last_used[key] = Sim.tick
 
 
 # --------------------------------------------------------------------------- fighting
@@ -662,10 +749,12 @@ func reach_band(action: ActionDef, t_radius: float, t_height: float) -> Vector2:
 
 
 func defend_busy(tick: int) -> bool:
+	if _block_until >= 0 or tick < _dodge_hold_until:
+		return true
 	for re: Dictionary in _reactions:
-		if int(re.at) - tick <= 20:
-			return true
-	return _block_until >= 0 or tick < _dodge_hold_until
+		if int(re.at) - tick <= 20 and not bool(re.get("light_shot", false)):
+			return true   # P39: an arrow (a light shot) holds no blow off
+	return false
 
 
 ## True during a light's recovery, when the next light of the chain may be pressed.
@@ -723,8 +812,15 @@ func _throw(tick: int) -> void:
 func _abilities(tick: int, t: EnemyActor, dist: float) -> bool:
 	if tick < _next_ability_tick:
 		return false
-	_next_ability_tick = tick + (NOVICE_ABILITY_EVERY_TICKS if skill == NOVICE else EXPERT_ABILITY_EVERY_TICKS)
 	var c := player.controller
+	# P39: from stage 4 (the world) a look at the abilities that finds the giant mid-blow waits for its
+	# next free tick instead of being spent: the novice's light chains filled most of its one-a-second
+	# looks, so its slotted abilities were used once a run or never (P38's peaceful run: Titan Stomp in 0
+	# of 9 windows, Sweeping Blow 0 of 13) - a measure of the bot's timing, not of the abilities. The
+	# Valley (stages 1-3) keeps P17a's rule, so its matrix stays comparable with the M6 gate's.
+	if c.state != CombatController.State.LOCOMOTION and player.current_growth_stage() >= 4:
+		return false
+	_next_ability_tick = tick + (NOVICE_ABILITY_EVERY_TICKS if skill == NOVICE else EXPERT_ABILITY_EVERY_TICKS)
 	if c.state != CombatController.State.LOCOMOTION:
 		return false
 	var pools := player.entity.combatant.pools
@@ -749,16 +845,26 @@ func _abilities(tick: int, t: EnemyActor, dist: float) -> bool:
 		if key != "":
 			use_slot(key, "titan surge")
 			return true
-	if crowd >= 3:
+	# P39: from stage 4 a lone big foe within reach - a boss, a troll, a rival giant - is worth the area
+	# blows and the roar: P17a's rules want two enemies within reach (three for the roar), so Titan Stomp,
+	# Earthquake, Formation Sweep and Titan Roar were never used against Harrok, the Matriarch or a troll
+	# (the first world matrix's runs: the novice died six and seven times to Harrok with Earthquake ready
+	# in 11 combat windows and used in none, Formation Sweep 0 of 12). The Valley (stages 1-3) keeps
+	# P17a's rules, so its matrix stays comparable with the M6 gate's.
+	var big := player.current_growth_stage() >= 4 and big_foe(t) and dist <= reach + 2.0
+	if crowd >= 3 or (big and dist <= reach):
 		key = ready_slot(ROAR)
 		if key != "":
-			use_slot(key, "roar at %d enemies" % crowd)
+			use_slot(key, "roar at %d enemies" % crowd if crowd >= 3 else "roar at a big foe")
 			return true
-	if near >= 2:
-		for id: String in [FOOTFALL, SWEEP]:
+	if near >= 2 or big:
+		var area: Array = [FOOTFALL, SWEEP]
+		if player.current_growth_stage() >= 4 and _used_tick(slot_of(SWEEP)) < _used_tick(slot_of(FOOTFALL)):
+			area = [SWEEP, FOOTFALL]   # P39: the two area blows take turns from stage 4
+		for id: String in area:
 			key = ready_slot(id)
 			if key != "":
-				use_slot(key, "%s at %d enemies" % [id, near])
+				use_slot(key, "%s at %d enemies" % [id, near] if near >= 2 else "%s at a big foe" % id)
 				return true
 	var locked := player.targeting.locked_entity()
 	if locked != null and locked == t.entity:
@@ -774,7 +880,44 @@ func _abilities(tick: int, t: EnemyActor, dist: float) -> bool:
 			if key != "":
 				use_slot(key, "boulder hurl at a %s" % arch)
 				return true
+	if _world_rules():
+		key = _rotation_slot(tick)
+		if key != "":
+			use_slot(key, "rotation: %s" % str(c.loadout.get(key, "")))
+			return true
 	return false
+
+
+## P39: the tick a slot's ability was last used (-1: never in this level).
+func _used_tick(key: String) -> int:
+	return int(_last_used.get(key, -1)) if key != "" else -1
+
+
+## P39: the slotted ability the rules have not used for ROTATION_IDLE_TICKS, the longest unused first,
+## that nothing refuses now (the heal keeps its own rule; a charge is left out); "" when none.
+func _rotation_slot(tick: int) -> String:
+	var best := ""
+	var best_tick := 1 << 40
+	for key: String in GiantPlayer.SLOT_KEYS:
+		var id := str(player.controller.loadout.get(key, ""))
+		if id == "":
+			continue
+		var own_rule := false
+		for own: String in [MEND]:
+			if id == own or evolves_from_chain(id, own):
+				own_rule = true
+		var def := GameData.get_action(id)
+		if own_rule or def == null or not affordable(def):
+			continue
+		if typeof(def.params.get("motion")) == TYPE_DICTIONARY and def.hit_shape != "grab":
+			continue   # a charge carries the giant off: left to a player who means to go there
+		var last := _used_tick(key)
+		if last >= 0 and tick - last < ROTATION_IDLE_TICKS:
+			continue
+		if last < best_tick and slot_reason(key) == "":
+			best = key
+			best_tick = last
+	return best
 
 
 ## Phase 2 of the Ogre King: stand with a pillar behind the giant (the charge ends on it), unless

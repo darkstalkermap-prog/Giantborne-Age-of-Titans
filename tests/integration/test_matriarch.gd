@@ -61,22 +61,26 @@ func test_the_whelp_throw_and_her_second_phase_once() -> void:
 			held = w
 	assert_true(held != null, "she picks a whelp up at the windup")
 	assert_eq(held.grab_holder_id, BB.DEN_ID, "in her hand")
-	# (its launch as a thrown_body: the slow battery) Her second phase: once, with the roar and three
-	# whelps - the roar ends the throw, so the whelp is set down.
+	# (its launch as a thrown_body: the slow battery) Her second phase: once, with the roar and the
+	# record's whelps (P39's balance pass: two, was three) - the roar ends the throw, so the whelp is set down.
+	var rec := GameData.get_record("enemy.troll_matriarch")
+	var summon := int(rec.boss.phases[1].summon)
+	var regen_2 := float(rec.regeneration.phase_hp_per_s["2"])
+	assert_true(summon >= 1 and regen_2 > float(rec.regeneration.hp_per_s), "phase 2 calls whelps and regenerates faster")
 	var pools := m.entity.combatant.pools
 	pools.health = pools.health_max * 0.49
 	await step_ticks(1)
 	assert_eq(m.attempt_phases, [2] as Array[int], "phase 2 at 50 %")
 	assert_eq(m.controller.action_id(), "ability.matriarch_roar", "the roar")
-	assert_eq(m.summoned.size(), 3, "it calls three whelps")
+	assert_eq(m.summoned.size(), summon, "it calls the record's whelps (%d)" % summon)
 	assert_false(held.is_held(), "the whelp in her hand is set down")
-	assert_near(m.p34_regen_rate(), 40.0, 0.01, "40 hp/s in phase 2")
+	assert_near(m.p34_regen_rate(), regen_2, 0.01, "the record's phase-2 regeneration (%.0f hp/s)" % regen_2)
 	pools.health = pools.health_max
 	await step_ticks(1)
 	pools.health = pools.health_max * 0.3
 	await step_ticks(1)
 	assert_eq(m.attempt_phases, [2] as Array[int], "never twice in an attempt")
-	assert_eq(m.summoned.size(), 3, "no second call")
+	assert_eq(m.summoned.size(), summon, "no second call")
 
 
 func test_the_drive_out_ending() -> void:

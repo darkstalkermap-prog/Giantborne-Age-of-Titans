@@ -13,7 +13,11 @@ extends IntegrationSuite
 ##     renderer; skipped with a note without xvfb-run);
 ##   * the mid distance (FOLLOWUPS, the Valley's views at `low`): at `low` a soldier's rig draws as
 ##     one merged rest-pose mesh from 0.45 x render_lod_m, as its full rig again while it acts, and
-##     not at all at `medium`.
+##     not at all at `medium`;
+##   * P39 (plan §6.3's formation stress row: "P39 adds two engines from the siege test level"): the stress
+##     scenario's formation bot places the siege test level's ballista and catapult behind the regiments
+##     with their three crews (encounter.formation_test_engines); crewed, both shoot at the giant walking
+##     the front while the 40 members stay at tier 0, and the whole case stays within plan §5.2's 8 ms.
 
 const LEVEL := "res://scenes/test/formation_test.tscn"
 const STRESS := "encounter.formation_test_stress"
@@ -22,6 +26,44 @@ const PREFIX := "FORMATION_DRAWS "
 const MAX_P95_MS := 5.0
 const MAX_DRAWS := 120
 const RUN_TICKS := 240
+## P39: the stress bot's run with its two engines (15 s: both engines shoot within it) and its budget.
+const ENGINE_RUN_TICKS := 900
+const ENGINE_MAX_P95_MS := 8.0
+
+
+func test_the_stress_bot_brings_two_crewed_engines_that_shoot() -> void:
+	var lv := (load(LEVEL) as PackedScene).instantiate() as LevelRoot
+	world.add_child(lv)
+	await step_ticks(2)
+	var sc := lv.get_node("StressScenario") as StressScenario
+	assert_true(sc.formations_mode, "the formation test level runs the formation stress mode")
+	sc.start_bot(lv.player())
+	var probe := PerfProbe.new()
+	probe.warmup_ticks = 120
+	probe.label = "formation_stress_engines"
+	world.add_child(probe)
+	await step_ticks(ENGINE_RUN_TICKS)
+	probe.finish()
+	var engines := sc.p39_engines()
+	assert_eq(engines.size(), 2, "the two engines placed (%d)" % engines.size())
+	var shots := PackedStringArray()
+	for e in engines:
+		assert_true(e.crewed, "%s is crewed" % e.world_id)
+		assert_true(e.shots >= 1, "%s shot at the giant (%d shots)" % [e.world_id, e.shots])
+		assert_eq(e.entity.team, CombatEntity.Team.ENEMY, "%s fights for its crew" % e.world_id)
+		shots.append("%s %d" % [e.world_id, e.shots])
+	var d := lv.director()
+	assert_eq(d.formation_member_count(), 40, "beside the 40 members")
+	assert_eq(d.active_combatant_count(), 3, "the three crews count as combatants")
+	assert_eq(Array(sc.check_failures(float(ENGINE_RUN_TICKS) / 60.0)), [], "the stress case's own checks pass")
+	var cpu: Variant = probe.result().get("cpu_tick_ms")
+	assert_true(typeof(cpu) == TYPE_DICTIONARY, "the probe measured the ticks")
+	if typeof(cpu) == TYPE_DICTIONARY:
+		assert_true(float(cpu.p95) <= ENGINE_MAX_P95_MS, "CPU per tick p95 %.2f ms <= %.0f ms (p50 %.2f, max %.2f)" % [
+			float(cpu.p95), ENGINE_MAX_P95_MS, float(cpu.p50), float(cpu.max)])
+		print("    test_formation_perf: 40 members and two crewed engines (%s), cpu_tick_ms p50 %.2f p95 %.2f max %.2f" % [
+			", ".join(shots), float(cpu.p50), float(cpu.p95), float(cpu.max)])
+	sc.stop_bot()
 
 
 static func _have(tool: String) -> bool:

@@ -12,24 +12,24 @@ reference-PC commands below.
 | --- | --- | --- | --- |
 | Frame time | p95 <= 16.7 ms, p99 < 33.3 ms at 1080p, `--graphics=low` (spec) | Reference PC, exported build: owner | **NOT RUN** |
 | GPU render time | Reported separately from CPU (spec §16) | Reference PC: owner. The container has no GPU (software rendering only) | **NOT RUN** |
-| Sim CPU per tick | p95 <= 8 ms in the stress route and the Valley | Container (indicative) and PC | Container: 4.88 ms (stress), 3.37 ms (Valley walk): **met**; after P17b 3.72 ms (stress), at most 6.37 ms in every run of the final balance matrix (three runs at once) and 5.77 ms over the 30-minute run: **met**; P18 on the final code 3.69 ms (stress) and 5.40 ms over the 30-minute run: **met**; P24b's unreachable chase (20 humans chasing a giant in deep water, the throttle and the query budget) 3.9 ms: **met** |
-| Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered; `tools/draw_call_probe.tscn` (the static world) | P17b (container, software GL): the static world at most 93 per view at `low` and 221 at `medium` (was 402 / 584): **met**; with enemies in view the walk's p50 is 256 and its largest view 656 at `low` (was 608 / 1,354): **not met** while about five or more full-rig enemies are in view (about 33 draw calls each; see "Draw calls after P17b"). After P22, re-measured at the M6 gate: the walk's p50 201, p95 251, max 268; the largest view of five districts 253-268: **not met by 4-18 draw calls** (a measured miss: "Draw calls at the M6 gate"). After P27 (the HUD batched: about 10 draw calls a view instead of about 120): the walk's p50 93, p95 143, max 154, every view at least 96 under: **met** ("Draw calls after P27") |
+| Sim CPU per tick | p95 <= 8 ms in the stress route and the Valley | Container (indicative) and PC | Container: 4.88 ms (stress), 3.37 ms (Valley walk): **met**; after P17b 3.72 ms (stress), at most 6.37 ms in every run of the final balance matrix (three runs at once) and 5.77 ms over the 30-minute run: **met**; P18 on the final code 3.69 ms (stress) and 5.40 ms over the 30-minute run: **met**; P24b's unreachable chase (20 humans chasing a giant in deep water, the throttle and the query budget) 3.9 ms: **met**; P39 (M9, plan §6.3; "The M9 performance captures (P39)", nothing else running): the world walk through every region at stage 6 5.81 ms headless, the formation stress with its two engines 4.58 ms, the unreachable chase again 3.20-4.44 ms: **met**; the novice's nine campaign runs (two at a time) 6.0-9.6 ms a run, by region at most 7.3 ms in the Crownmarch, 6.0 in the Greywood and 7.0 in the Stonehold (**met**) and in the Aldmere March 10.8-11.3 ms in the war camp's sabotage and 9.3 ms in the Iron Regiment's battle (**not met**) |
+| Draw calls | <= 250 in any Valley view | PerfProbe, `--scenario=valley_walk`, rendered; `tools/draw_call_probe.tscn` (the static world) | P17b (container, software GL): the static world at most 93 per view at `low` and 221 at `medium` (was 402 / 584): **met**; with enemies in view the walk's p50 is 256 and its largest view 656 at `low` (was 608 / 1,354): **not met** while about five or more full-rig enemies are in view (about 33 draw calls each; see "Draw calls after P17b"). After P22, re-measured at the M6 gate: the walk's p50 201, p95 251, max 268; the largest view of five districts 253-268: **not met by 4-18 draw calls** (a measured miss: "Draw calls at the M6 gate"). After P27 (the HUD batched: about 10 draw calls a view instead of about 120): the walk's p50 93, p95 143, max 154, every view at least 96 under: **met** ("Draw calls after P27"). P39 (M9, the world, `low`): the world walk through every region at stage 6 p50 40, p95 63, max 91; the formation stress (40 members, two engines and their crews) p50 63, max 100 (the same in both capture sets): **met** |
 | Distant actors | Tier 2 shows a one-box proxy | P04 test; the Valley walk's LOD comparison | Met: every distant member shows its proxy at tier 2 |
 | Active combatants | <= 12 (the director's budget) | P10a tests; P17a bot invariant | 12 in the stress route (its own spawner) and in the Valley walk |
 | Valley load | <= 3 s headless, <= 6 s web | P10b slow test; P18 browser | Headless about 0.3 s (P10b); web in a real browser **NOT RUN**. P18, Chromium with software WebGL on the container's shared CPU (indicative only): New Game to the first checkpoint stored in IndexedDB 14.2 s |
 | Navmesh files | <= 100 KB each | P10b test | Met (15-19 KB); the streamed test world's (P24b) 0.9-16 KB each |
-| Path queries (P24b) | <= 8 a tick per level (`nav_query.queries_per_tick`); chases capped at 120 m, the bot and the director at 300 m, unlimited polygons; tier-0 re-paths at least 6 ticks apart and only after the goal moved 2 m (plan §2.8) | `tests/slow/test_unreachable_chase.gd` | At most 8 re-paths in a tick (twenty asking at once served 8, 8, 4), never two of one agent closer than 6 ticks without a failure: **met** |
+| Path queries (P24b) | <= 8 a tick per level (`nav_query.queries_per_tick`); chases capped at 120 m, the bot and the director at 300 m, unlimited polygons; tier-0 re-paths at least 6 ticks apart and only after the goal moved 2 m (plan §2.8) | `tests/slow/test_unreachable_chase.gd` | At most 8 re-paths in a tick (twenty asking at once served 8, 8, 4), never two of one agent closer than 6 ticks without a failure: **met**. P39: the same test three times, at most 8 a tick; the world walk through every region (AI on) p95 1, at most 4 a tick; the novice's nine campaign runs p95 1, at most 6-8 a tick: **met** |
 | Navigation readiness (P24b) | Deterministic runs: a chunk ready one tick after its last region add; world walks with AI identical run to run (decision 13) | `tests/integration/test_nav_maps.gd`; `tests/gate/test_world_determinism.gd` | One tick in every run; two traced world walks identical (with async iterations on they part by two ticks): **met** |
 | Web `.pck` | <= 4 MB packed at P18; since decision 8 the milestone's budget for the shipped pck (7.5 MB to M6, 21 MB at M7, 23 MB from M8), in parts of at most 15 MB | P18; `tools/build_web.sh` (fails over the budget since the M7 polish) | P18 **met**: `index.pck` 2,356,808 bytes, 1,260,098 gzipped, 1,680,132 as shipped (gzip + base64). The 0.8.0-m8 release (its patch, lane m8r) **met**: 17,457,348 bytes, 12,998,617 gzipped, 17,331,492 as shipped (16.53 MB of 23 MB) in two parts of 8,665,746 ("The 0.8.0-m8 release") |
 | Streaming work (P24a) | <= 4 ms a frame, every step under about 3 ms (plan §5.3) | `--scenario=world_walk` on the test world (`tests/slow/test_world_walk.gd`); the web stream check | Desktop at 16 m/s: p50 0.9, p99 3.5-3.9 ms (up to 6.5 while another agent's runs loaded the cores), max 4.4 ms; the heaviest steps 3.2 ms (the terrain mesh) and 3.5 ms (a town part): **met** (container, indicative). Web: p99 9.2 ms walking and 17.9 ms at 16 m/s (Chromium with software WebGL on loaded shared cores; every step's mean is under 3 ms, the peaks are the main thread preempted): **not met in this container**; real browsers **NOT RUN** |
-| Loaded margin, thrash, chunks (P24a) | >= 200 m to unloaded ground at 16 m/s; 0 reloads walking a border; <= 25 loaded | the same | 254.9 m, 0 thrash, at most 15 loaded (16 m/s, 2.9 km); 20 border walks load each chunk once: **met** |
+| Loaded margin, thrash, chunks (P24a) | >= 200 m to unloaded ground at 16 m/s; 0 reloads walking a border; <= 25 loaded | the same | 254.9 m, 0 thrash, at most 15 loaded (16 m/s, 2.9 km); 20 border walks load each chunk once: **met**. P39, the real world's tour (5,555 m at 16 m/s, every region, 25 seams): 250.3 m, 0 thrash, at most 16 loaded; the novice's nine campaign runs 253.9-254.9 m, 0 thrash: **met** |
 | Static world draw calls, streamed (P24a) | <= 40 per view at web `low`, and <= 25 more for breakable houses in a settlement view (plan §5.3) | Xvfb viewpoints on the test world | At most 35 static plus the 8 breakable houses at `low` (`medium`: at most 127 with shadows): **met** on the test world; P25 and the region packages re-measure the real one |
 | Web frames while streaming, with gameplay (P24a) | worst <= 45 ms, p99 <= 25 ms (indicative) | `tools/web/stream_check.mjs` on the `Web (test)` build | Chromium with software WebGL on the loaded container: page frames p50 433 / p99 1,733 / worst 4,350 ms walking at 1280 x 720 (250 / 1,683 / 3,633 ms at 640 x 360, 16 m/s): **not met (software rendering)**; the walks finished with 251.6 m and 246.9 m of margin, 0 thrash and 0 console errors while running. Real browsers **NOT RUN** |
 | World data (P24a, P24b) | <= 5.0 MB: chunks, navmeshes, index, map, skyline, chunk scenes (decision 8) | the test world's files, extrapolated to 64 chunks | Without navmeshes (P24a): the test world 308,965 bytes; extrapolated to 64 chunks about 1.1 MB (chunks 0.91 MB with the border chunks at their share). The navmeshes (P24b: three lean layers and the gate regions, 29.2 KB a chunk): 467,751 bytes for the test world, about 1.55 MB for 64 chunks (the border chunks' rim halves have none). Together about 2.65 MB, about 3.0 MB with P25's map image: **on track** |
 | World data (P25: the real world) | <= 5.0 MB (decision 8) | `tests/integration/test_world_data.gd` (the files) | **2,390,369 bytes: met** (chunk data 0.83 MB, navmeshes 0.93 MB, structures 0.14 MB, props scenes 0.19 MB, skyline 0.15 MB, index 68 KB, map 52 KB); the release pck's world share 2.37 MB (24.6 %) |
 | Map picture (P25) | <= 300 KB, 1,024 x 1,024 (plan §3.8) | `tests/integration/test_world_data.gd` | 52,433 bytes: **met** |
 | Static world draw calls, the real world (P25; M8 gate, F27) | <= 40 per view at `low` (plan §5.2: any view - "P25 and the region packages re-measure at the viewpoints"; §3.8: the shelf and the settlements) | `tests/slow/test_world_build.gd` (Xvfb, `tests/support/world_draw_probe.gd`: the shelf, the six settlements and, since the M8 gate, the M8 regions' ten places) | P25: at most 33 (Skarn; the shelf 30, Hollowmere 31, Brannock 28, Millford 27, Fort Aldmere 23, Harrok's Hall 19), with the giant in view 8 more: **met**. The M8 gate's review found the M8 places at up to 59 (nine of ten over 40; P35 had recorded its own as a known gap, P36 none), **not met**; after the gate's merge pass (lane m8p) all seventeen views draw at most 40 - the great pines, the sunken vault and the Mere of Kings at 40 exactly, Ballista Ridge 30, the war camp 26 -: **met** ("The M8 gate, lane m8p") |
-| Streaming work, the real world (M8 gate, F26) | <= 4 ms a frame, every step under about 3 ms (plan §5.2); P39's worst work frame <= 12 ms headless (§6.4) | the review's stage-6 walk from Aldmere to the Stonehold, carried at 16 m/s (headless, deterministic streaming); `stream_check.mjs --world` on its route at 8 m/s (the release build) | Before the gate: `props_dep` steps (a chunk's first load of a script or shared scene its props need) of 10.3-17.6 ms headless and 41.7 ms on the web, the worst work frame the same: **not met**. Since lane m8p the world's preload list loads them behind the loading screen (155-187 ms headless): no `props_dep` step during play, the worst work frame 4.0-4.6 ms headless (the heaviest step a props part's load, 2.4-3.1 ms): P39's 12 ms **met**, the 4 ms a frame within 0.6 ms; on the web (the review's Stonehold route, SwiftShader, indicative) no `props_dep` step either and the worst work frame 6.6 ms (was 41.7; the heaviest step a props part's instancing) ("The M8 gate, lane m8p") |
+| Streaming work, the real world (M8 gate, F26) | <= 4 ms a frame, every step under about 3 ms (plan §5.2); P39's worst work frame <= 12 ms headless (§6.4) | the review's stage-6 walk from Aldmere to the Stonehold, carried at 16 m/s (headless, deterministic streaming); `stream_check.mjs --world` on its route at 8 m/s (the release build) | Before the gate: `props_dep` steps (a chunk's first load of a script or shared scene its props need) of 10.3-17.6 ms headless and 41.7 ms on the web, the worst work frame the same: **not met**. Since lane m8p the world's preload list loads them behind the loading screen (155-187 ms headless): no `props_dep` step during play, the worst work frame 4.0-4.6 ms headless (the heaviest step a props part's load, 2.4-3.1 ms): P39's 12 ms **met**, the 4 ms a frame within 0.6 ms; on the web (the review's Stonehold route, SwiftShader, indicative) no `props_dep` step either and the worst work frame 6.6 ms (was 41.7; the heaviest step a props part's instancing) ("The M8 gate, lane m8p"). P39's tour through every region at stage 6 ("The M9 performance captures (P39)"): headless p50 0.52 / p99 6.91 / max 12.48 ms (the first set 17.72), the max a `props_load` (a large text props part's parse; exports ship binary scenes): P39's 12 ms **not met headless** (by 0.5 ms), 4 ms not met; rendered, with the loads on the loader thread, p99 4.24 / max 6.77 ms (the first set 4.60): **not met** (4 ms). The novice's nine campaign runs: worst work frames 19.0-41.0 ms headless (two runs at a time): **not met** |
 
 ## The tools
 
@@ -311,6 +311,31 @@ profile; `--shots=DIR` also saves the title and the open world as PNGs:
 ```
 tools/build_web.sh
 node tools/web/world_start_check.mjs --build=builds/web --json=builds/world_start_check.json
+```
+
+The M9 captures (P39, plan §6.3; results in "The M9 performance captures (P39)"): the world walk's tour through every
+region at stage 6, headless and under Xvfb (draw calls); the unreachable chase (P24b's slow suite); the formation
+stress with its two engines, headless and under Xvfb; the bot batches' CPU per tick by region:
+
+```
+TOUR="-300:902;-300:780;-220:712;-250:640;-150:638;-60:582;60:565;60:528;60:450;60:380;60:330;60:270;120:330;\
+120:262;180:322;180:262;86:212;62:172;30:150;-60:152;-128:150;-180:192;-250:220;-345:216;-420:222;-478:162;\
+-540:112;-604:28;-400:-120;-200:-240;20:-250;220:-260;400:-180;560:-50;650:-55;700:-66;792:-118;792:-300;\
+720:-392;720:-556;600:-602;520:-632;440:-640;300:-668;100:-680;-70:-660;-190:-640;-300:-662;-430:-672;-560:-700"
+tools/gd.sh --headless --path . --fixed-fps 60 -- --no-user-settings --mode=world --new-game \
+  --scenario=world_walk --autoplay=900 --graphics=low --walk-stage=6 --walk-speed=16 "--route=$TOUR"
+xvfb-run -a -s "-screen 0 640x360x24" tools/gd.sh --path . --fixed-fps 60 --resolution 640x360 \
+  --audio-driver Dummy -- --no-user-settings --mode=world --new-game --scenario=world_walk --graphics=low \
+  --autoplay=900 --walk-stage=6 --walk-speed=16 "--route=$TOUR"
+tools/gd.sh --headless --path . --fixed-fps 60 res://tests/run_tests.tscn -- --no-user-settings --no-audio \
+  --slow --filter=test_unreachable_chase
+tools/gd.sh --headless --path . --fixed-fps 60 -- --no-user-settings \
+  --level=res://scenes/test/formation_test.tscn --scenario=stress --stress-formations --autoplay=60 --graphics=low
+xvfb-run -a -s "-screen 0 640x360x24" tools/gd.sh --path . --fixed-fps 60 --resolution 640x360 \
+  --audio-driver Dummy -- --no-user-settings --level=res://scenes/test/formation_test.tscn --scenario=stress \
+  --stress-formations --autoplay=60 --graphics=low
+tools/run_bots.sh w.peaceful:novice:1 w.conqueror:novice:1 ... --jobs=2 --timeout=3600 --tag=<batch>
+python3 tools/bot_report.py ".userdata/godot/app_userdata/Giantborn- Age of Titans/bot_runs/<batch>" world_perf
 ```
 
 ## Container results
@@ -1298,6 +1323,106 @@ calls were re-measured natively: the lane changed no builder, layout, chunk, gen
 | Linux export (`builds/linux/Giantborn.x86_64`, 89,896,096 bytes) | The candidate's (not rebuilt for the patch). The 120 s soak headless: 0 errors, 0 warnings (fence breaks 2, loot 2, debris 10). An assisted novice Valley run (`--scenario=valley --bot-village=intimidate --bot-skill=novice --bot-seed=1 --bot-assist --perf`): completed in 446.4 s of simulated time, as at 0.7.0-m7, 0 deaths, 0 breaches, 0 invariant failures, 0 errors, 0 warnings (one stuck moment on the causeway, cleared by a side-step jump; no teleport); CPU per tick p50 2.7 / p95 9.4 ms with another agent's Godot runs on the 4 cores (load average 6-8; 3.5 ms p95 at 0.7.0-m7) |
 | Windows export (`builds/windows/Giantborn.exe`, 123,479,696 bytes, and `Giantborn.console.exe`, 188,928 bytes) | The candidate's (not rebuilt for the patch). Built; not launched (no Windows here) |
 
+### The M9 performance captures (P39, plan §6.3)
+
+Plan M6-M9 §6.3's captures that need no merged code, on the measurement lane's branch (`pkg/P39`: `wave-22` with
+P39's tuning, its bot fixes and the measurements below; the game code of commit `00a2bad`). The container as above: 4
+shared CPU cores, no GPU, a debug build from the project folder (text scenes). **Two sets, both indicative.** The
+numbers below are the second set, taken on 13 November after a container restart, one process at a time with nothing
+else running on the machine (the other W23 lane, P39f, had finished; the first runs after the restart read the
+game's files from a cold cache). The first set, taken on 12 November while lane P39f worked beside them and, for
+the rendered captures and the chase, two of P39's own bot runs shared the cores (load average 3-4; the headless
+walk and the headless formation stress on an idle machine), is given in brackets where it differs. The confirmation
+phase repeats them on the merged code. The web world (`world_check.mjs`, `stream_check.mjs --world --audio`) is lane
+P39f's (`docs/systems/P39f.md`).
+
+**The world walk** (§6.3: "a route through every region at stage 6 sprint, a settlement and a border walk"). The
+world's default route (`walk_route`, about 400 m) is the web checks', so the capture gives its tour with `--route`:
+from the Kingsgate shelf down the King's Road through Brannock's green, a border walk across the Crownmarch and the
+Drowned Steps east of Brannock, the Drowned Steps' Mere road west into the Greywood to Hollowmere, back east past the
+bell tower and the Titan's Bones, Fort Aldmere's gate and the Ironway, up the ramp to Skarn and along the high
+Ironway past the Moot battery to Harrok's Hall: 50 points, 5,555 m, every region (the Crownmarch, the Drowned Steps,
+the Greywood, the Drowned Steps again, Aldmere, the Stonehold), 25 seams, carried at 16 m/s (the stage-6 sprint) at
+stage 6, AI on (the encounters on the way engage the invulnerable giant). The command is under "Commands" below.
+
+| | Headless (deterministic streaming: every step on the main thread) | Rendered (Xvfb 640 x 360, llvmpipe, `low`; threaded resource loads) |
+| --- | --- | --- |
+| Walk | 5,555.3 m in 342.6 s, finished, 0 errors, 0 warnings, no check failure | the same, 5,555.7 m |
+| Streaming | 62 loads, 56 unloads, 0 thrash, at most 16 chunks loaded, the least margin 250.3 m; work per frame p50 0.52 / p99 6.91 / max 12.48 ms [0.63 / 7.50 / 17.72]; the heaviest step a `props_load` 12.47 ms (43 loads, 155.1 ms in all: a props part's text scene parsed, P39f's finding) [17.71 ms; and a `data` step of 13.82 ms, 0.41 ms now]; `nav_load` at most 1.53 ms | 0 thrash, the least margin 248.7 m; work per frame p50 0.10 / p99 4.24 / max 6.77 ms [0.08 / 4.14 / 4.60] (the resource loads off the main thread: `nav_request` steps) |
+| CPU per tick | p50 2.79 / p95 5.81 / p99 7.87 / max 22.5 ms [2.57 / 5.32 / 7.18 / 19.3] (the slowest ticks in the Drowned Steps' c3_3 and the Greywood's c1_4 and c1_3: encounters spawning); `sim_ms` p95 4.74 | p50 4.30 / p95 7.83 / p99 10.0 / max 41.4 ms [3.17 / 6.13 / 8.09 / 31.7, two bot runs beside it]: llvmpipe renders on the same four cores, so the headless column is the budget's |
+| Path queries per tick | p50 0 / p95 1 / max 4 (20,552 ticks) | the same |
+| Active combatants | mean 6.3, at most 12 | mean 6.2, at most 12 |
+| Nodes, objects | nodes p50 2,886 / max 3,599, objects p50 8,110 / max 9,483; orphans at most 1 | the same within 0.1 % |
+| Static memory | p50 259.5 / max 280.3 MB | p50 267.0 / max 287.7 MB |
+| Draw calls (`low`, the HUD included) | - | p50 40 / p95 63 / p99 79 / max 91 (both sets: c6_1, the top of the Ironway ramp east of Skarn); primitives at most 121,460; render objects at most 1,734 |
+| Per chunk (the probe's sections) | CPU per tick p95 at most 7.33 ms (c4_1, the high Ironway east of the Giant's Stair) and 7.27 ms (c5_1, Skarn) | draw calls at most 91 (c6_1), 86 (c5_1, Skarn), 74 (c3_1, the Moot battery) |
+
+Against §5.2's budgets: CPU per tick p95 under 8 ms, the margin over 200 m, no thrash, at most 25 chunks, draw calls
+far under 250 - **met**; the streaming work's 4 ms a frame is **not met** in either form: rendered, with the loads on
+the loader thread, p99 4.2 ms and the worst frame 6.8 ms (the first set's 4.6), and in deterministic headless
+streaming, where one `props_load` (the parse of a large text props part) takes up to 12.5 ms (the first set's 17.7) -
+just over §6.4's 12 ms for the headless work frame. Exports ship the props parts as binary scenes, whose parse is about
+a tenth of the text's (`docs/systems/P39f.md`, "The heaviest streaming step").
+
+**The unreachable chase** (P24b's slow test, `tests/slow/test_unreachable_chase.gd`: 20 soldiers chasing a giant that
+wades in the test world's pond for 20 s), three runs:
+
+| Run | CPU per tick p50 / p95 / p99 / max (ms) | [first set, beside the rendered walk] | Re-paths |
+| --- | --- | --- | --- |
+| 1 | 2.38 / 4.44 / 5.89 / 11.7 (the first Godot run after the bot runs) | [2.16 / 4.57 / 6.61 / 8.16] | 228; at most 8 in a tick (twenty asking at once served 8, 8, 4); 1 path failure |
+| 2 | 2.02 / 3.20 / 3.97 / 6.12 | [2.10 / 4.31 / 5.99 / 9.08] | the same |
+| 3 | 2.20 / 3.55 / 4.85 / 9.51 | [2.14 / 4.73 / 6.85 / 9.14] | the same |
+
+The budget's p95 8 ms: **met** (P24b measured 3.9 ms on an idle machine).
+
+**The formation stress with two engines** (`--level=res://scenes/test/formation_test.tscn --scenario=stress
+--stress-formations --autoplay=60 --graphics=low`). P39 adds two of the siege test level's engines to the stress case
+(plan §6.3): the stress bot places its west ballista and west catapult (the same scenes, `StressScenario.P39_ENGINES`)
+31 m and 49 m behind the giant's walk along the regiments' front and activates their three crews
+(`encounter.formation_test_engines`), so the 40 members at tier 0 are measured with two crewed engines turning, aiming,
+shooting and reloading. 60 s, both runs: the 40 members spawned, every sample at tier 0 (4,800), 12 promoted, both
+regiments braced 3 times, the ballista shot 7 times and the catapult 5, both crewed the whole minute, 3 counted
+combatants (the crews), the giant never dead, 0 errors - in all four runs alike.
+
+| | Headless | Rendered (Xvfb, llvmpipe, `low`) |
+| --- | --- | --- |
+| CPU per tick p50 / p95 / p99 / max | 2.97 / 4.58 / 5.98 / 100.1 ms [2.78 / 4.21 / 5.38 / 10.8, an idle machine]: the 100 ms is one tick, tick 462, the same tick as the first set's third slowest (8.9 ms); no other tick over 10.4 ms | 3.44 / 5.07 / 6.41 / 15.0 ms [3.20 / 5.92 / 8.07 / 15.2, a bot run and the rendered walk beside it] |
+| Draw calls p50 / p95 / max | - | 63 / 94 / 100 (both sets) |
+| Nodes | 1,894-1,900 | the same |
+
+P30's stress case without the engines: 3.69 ms p95 over 40 s. The budget's p95 8 ms and 250 draw calls: **met**.
+
+**The bot batches by region** (§6.3: "`--perf` on every balance run: CPU per tick p95 per region"). Since this part
+the world bot's probe files its samples under the region the giant stands in and the result keeps them
+(`perf.sections`; `python3 tools/bot_report.py <batch> world_perf`). The matrix's novice half (the novice on seeds 1-2
+of the three presets and the three first-oath orders, tag `p39_rep_world`, on 13 November: two streams of one run
+each and nothing else on the machine; the two conqueror novices made again the same way after the report's review,
+`p39_fx1_world`, on `331d3b4`), CPU per tick p95 in ms by the region the giant stood in, with the seconds it spent
+there:
+
+| Run | The Crownmarch | The Greywood | The Aldmere March | The Stonehold | Whole run |
+| --- | --- | --- | --- | --- | --- |
+| w_peaceful_novice_1 | 6.14 (807 s) | 5.23 (236 s) | 6.93 (103 s) | 5.80 (349 s) | 6.03 |
+| w_peaceful_novice_2 | 6.36 (725 s) | 5.23 (237 s) | 6.59 (104 s) | 5.79 (451 s) | 6.08 |
+| w_conqueror_novice_1 | 7.33 (395 s) | 6.00 (487 s) | - | - | 6.80 |
+| w_conqueror_novice_2 | 7.10 (337 s) | 5.72 (460 s) | - | - | 6.50 |
+| w_mixed_novice_1 | 6.07 (216 s) | - | 11.27 (377 s) | 7.02 (444 s) | 9.61 |
+| w_mixed_novice_2 | 6.32 (192 s) | - | 10.84 (437 s) | 7.02 (446 s) | 9.50 |
+| w_order_march_novice_1 | 6.95 (622 s) | - | 7.46 (262 s) | 6.67 (499 s) | 6.98 |
+| w_order_wood_novice_1 | 6.87 (421 s) | 5.84 (325 s) | 7.62 (118 s) | 6.93 (412 s) | 6.81 |
+| w_order_crown_novice_1 | 5.80 (220 s) | - | 9.27 (1,054 s) | - | 8.99 |
+| **Median of the runs (largest)** | 6.36 (7.33) | 5.72 (6.00) | 7.62 (11.27) | 6.80 (7.02) | 6.81 (9.61) |
+
+The Drowned Steps have no column: the main path only crosses them (the world walk above measures them). Against the
+budget's p95 8 ms: the Crownmarch, the Greywood and the Stonehold **met** in every run; the Aldmere March **met** on
+the way through (6.6-7.6 ms) and **not met** in its two big fights - the war camp's sabotage in the mixed runs (10.8
+and 11.3 ms; the two runs were in the camp at the same time, on the same four cores) and the Iron Regiment's battle
+(9.3 ms over 1,054 s: the bailey's four formations, the wall's crews and ballistae and the riders). Each run's worst
+streaming work frame was 19.0-41.0 ms (its heaviest single steps a props part's load, up to 14.3 ms, as on the world
+walk), the loaded margin 253.9-254.9 m with no thrash, path queries a tick p95 1 and at most 6-8, at most 12 counted
+combatants. The expert's runs (iteration 3's, on the code before the region sections) read 5.9-11.5 ms for the whole
+run, beside the other lane's checks.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
@@ -1352,6 +1477,14 @@ calls were re-measured natively: the lane changed no builder, layout, chunk, gen
    twelve combatants the stress route stays at 4.88 ms p95.
 6. **Measuring.** `Performance.TIME_PHYSICS_PROCESS` and `TIME_PROCESS` are per-second maxima in
    Godot 4.6, not per-frame values (see PerfProbe); compare runs by `cpu_tick_ms`.
+7. **The world (P39, M9; "The M9 performance captures (P39)").** On the container the world stays inside its CPU
+   budget on the tour through every region (p95 5.8 ms headless) and in the campaign everywhere but Fort Aldmere's
+   two big fights: the war camp's sabotage (p95 10.8-11.3 ms in the mixed runs) and the Iron Regiment's battle (9.3
+   ms) - the places with the most formations, crews and engines at once. Recommendations for whoever measures the
+   merged code next: run the confirmation matrix's Aldmere fights with the probe's sections (they come with the bot
+   run) on a quiet machine before deciding anything, and on a real PC (NOT RUN). The streaming work frame is
+   the text props parts' parse (12.5-17.7 ms headless on the tour, 19-33 ms frames in the campaign runs): measure
+   it on an export, whose binary scenes parse in about a tenth of the time, before splitting the parts further.
 
 ## Web build checklist (P18: Chromium with software WebGL; real browsers NOT RUN)
 

@@ -1517,7 +1517,6 @@ func _on_slice_complete(tick: int) -> void:
 	run.metrics.node_samples = before.node_samples
 	run.metrics.load_samples = before.load_samples
 	run.metrics.connect_events()
-	run.metrics.on_new_game(tick)
 	run.obj_key = ""
 	run.obj_ticks = 0
 	run.obj_deaths = 0
@@ -1525,6 +1524,9 @@ func _on_slice_complete(tick: int) -> void:
 	run.dup_seen = 0
 	print("[valley_bot] slice complete; loop run %d: %s" % [run.run_index + 1, run.policy])
 	GameSession.change_mode("valley", {"new_game": true})
+	# P39: the rewards already given are read once the new game has emptied the world (the world
+	# loop's first reward is granted as the level starts; read before, it counted as given twice).
+	run.metrics.on_new_game(tick)
 
 
 func _run_summary(tick: int) -> Dictionary:

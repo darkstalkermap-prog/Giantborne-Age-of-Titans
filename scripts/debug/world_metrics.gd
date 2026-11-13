@@ -37,6 +37,12 @@ const MARGIN_EVERY_TICKS := 30
 ## end is announced: the snapshot keeps its counts).
 const STATS_EVERY_TICKS := 120
 const QUERY_HIST_MAX := 64
+## P39: the growth and lesser-music samples are taken this often (ticks).
+const GROWTH_SAMPLE_TICKS := 6
+## P39: the soldiers, archers and mages that §6.4's "lone humans" are when no formation holds them.
+const HUMAN_ARCHETYPES := ["soldier", "archer", "mage"]
+## P39: a lone human's states that count as fleeing (§6.4: "flee or rout").
+const FLED_STATES := ["Flee", "Routed"]
 
 var run_metrics: RunMetrics = null
 var regions: Dictionary = {}          ## region id -> {"s", "first_tick"}
@@ -55,7 +61,7 @@ var formations := {"group_lock_samples": 0, "banner_lock_samples": 0, "single_lo
 	"banners_felled": 0, "broken": 0, "routed": 0, "sweeps": 0, "seen": 0}
 var siege := {"engines_destroyed": 0, "engines_thrown": 0, "shots_at_giant": 0, "destroyed_ids": []}
 var wander := {"spawns": 0, "by_template": {}}
-var world_events: Dictionary = {}     ## event id -> {"started", "outcomes": []}
+var world_events: Dictionary = {}     ## event id -> {"started", "outcomes": [], "ticks": [[start, end, outcome]]}
 var fast_travels: Array = []          ## [tick, from checkpoint, to checkpoint, ok, message]
 var map_screens := 0
 var loads := 0
@@ -67,6 +73,27 @@ var music: Dictionary = {}            ## stage -> {"explore", "danger", "combat"
 var save_bytes_max := 0
 var deaths_by_region: Dictionary = {}
 var refusals: Array = []              ## [tick, what, message] (fast travel and other refusals)
+## P39 (plan §6.4 "growth shows" and "readability"), sampled every GROWTH_SAMPLE_TICKS at stages 4-6
+## among the enemies engaged with the giant (alive, aware, hostile, within RunMetrics.HOSTILE_NEAR_M):
+##   * lone humans (a soldier, archer or mage in no intact formation, serving no engine, no boss):
+##     their engaged seconds and the seconds they spent fleeing or routed;
+##   * formations whose banner lives and that have such an engaged member: their engaged seconds and
+##     the seconds they held (formed, advancing or braced: Formation.is_intact);
+##   * stage seconds with only lesser enemies engaged (none the music director counts: shorter than
+##     its lesser_height_ratio of the giant and not special - MusicDirector.is_special) and the music's
+##     intensity over them.
+## The formation lock samples are taken only while a formation is engaged so (P38 sampled whenever
+## any formation lived in the loaded world: a troll fight 300 m from a war camp counted).
+var growth := {"lone_engaged_s": 0.0, "lone_fled_s": 0.0, "formation_engaged_s": 0.0, "formation_held_s": 0.0}
+var music_lesser: Dictionary = {}     ## intensity -> seconds while only lesser enemies are engaged (stages 4-6)
+## P39: the lone humans' engaged seconds by "<archetype>/<brain state>" (what they do when they do not flee).
+var lone_states: Dictionary = {}
+## P39 (plan §6.3 "the bot batches: --perf on every balance run, CPU per tick p95 per region"): the run's
+## PerfProbe files each tick's samples under the region the giant stands in (its `section`; NO_REGION
+## before the first region). Null: the Autopilot's bot probe (Autopilot.bot_probe()); tests set their own.
+var probe: PerfProbe = null
+const NO_REGION := "(none)"
+var _formation_engaged := false
 
 var _connected := false
 var _last_tick := -1
@@ -123,6 +150,7 @@ func _listeners() -> Array:
 		[Events.entity_died, _on_entity_died],
 		[Events.ability_started, _on_ability_started],
 		[Events.grab_ended, _on_grab_ended],
+		[Events.hit_resolved, _on_hit_resolved],
 	]
 
 
@@ -171,8 +199,16 @@ func _on_xp_award(amount: int, source: String) -> void:
 func _boss(id: String) -> Dictionary:
 	if not bosses.has(id):
 		bosses[id] = {"engaged": 0, "attempts": 0, "phases": [], "yields": 0, "outcome": "", "disengaged": [],
-			"defeated": false}
+			"defeated": false, "lows": []}
 	return bosses[id]
+
+
+## P39: closes boss `b`'s open attempt: its lowest health share joins "lows" (one per attempt).
+func _close_attempt(b: Dictionary) -> void:
+	if bool(b.get("open", false)):
+		(b.lows as Array).append(snappedf(float(b.get("low", 1.0)), 0.001))
+	b.open = false
+	b.erase("low")
 
 
 ## An engagement opens an attempt unless one is open: a disengage, a defeat, a yield's decision or a
@@ -183,6 +219,8 @@ func _on_boss_engaged(tick: int, boss_id: String) -> void:
 	if not bool(b.get("open", false)):
 		b.attempts = int(b.attempts) + 1
 		b.open = true
+		b["low"] = 1.0
+		_sample_boss(boss_id, b)
 	b["last_engaged"] = tick
 
 
@@ -198,13 +236,31 @@ func _on_boss_yielded(_tick: int, boss_id: String) -> void:
 func _on_boss_disengaged(tick: int, boss_id: String, reason: String) -> void:
 	var b := _boss(boss_id)
 	(b.disengaged as Array).append([tick, reason])
-	b.open = false
+	_close_attempt(b)
 
 
 func _on_boss_defeated(_tick: int, boss_id: String) -> void:
 	var b := _boss(boss_id)
+	_sample_boss(boss_id, b)
 	b.defeated = true
-	b.open = false
+	_close_attempt(b)
+
+
+## P39: the open attempt's lowest health share of boss `id` so far - an enemy's health over its maximum,
+## a battle's aggregate fraction (BattleBoss.aggregate_fraction) - so a fight lost is told from one
+## nearly won (the M8 release check: the Iron Regiment's bar never fell below 62 %).
+func _sample_boss(id: String, b: Dictionary) -> void:
+	var frac := -1.0
+	var e := Sim.get_entity(id)
+	if e != null and e.combatant != null and e.combatant.pools.health_max > 0.0:
+		frac = e.combatant.pools.health / e.combatant.pools.health_max if e.is_alive() else 0.0
+	elif Engine.get_main_loop() is SceneTree:
+		for n in (Engine.get_main_loop() as SceneTree).get_nodes_in_group(BattleBoss.BATTLE_GROUP):
+			var bb := n as BattleBoss
+			if bb != null and bb.battle_id == id and bb.total_health() > 0.0:
+				frac = bb.aggregate_fraction()
+	if frac >= 0.0:
+		b["low"] = minf(float(b.get("low", 1.0)), frac)
 
 
 func _on_formation_changed(_tick: int, _formation_id: String, state: String) -> void:
@@ -239,21 +295,46 @@ func _on_grab_ended(_tick: int, holder_id: String, target_id: String, reason: St
 		siege.engines_thrown = int(siege.engines_thrown) + 1
 
 
+## P39: the damage the giant takes while a boss fight is engaged, by the attacker's archetype, in each
+## engaged boss's record ("damage_taken_by": the M8 release check measured the Iron Regiment's fort
+## ballistae dealing about 85 % of it).
+func _on_hit_resolved(_tick: int, r: HitResult) -> void:
+	if r == null or r.event == null or r.event.target_id != RunMetrics.PLAYER_ID or r.health_damage <= 0:
+		return
+	var fights := GameSession.engaged_fights()
+	if fights.is_empty():
+		return
+	var e := Sim.get_entity(r.event.attacker_id)
+	var arch := RunMetrics.archetype_of(e) if e != null else "unknown"
+	for id: String in fights:
+		var b := _boss(id)
+		var by: Dictionary = b.get("damage_taken_by", {})
+		by[arch] = int(by.get(arch, 0)) + r.health_damage
+		b["damage_taken_by"] = by
+
+
 func _on_wander_spawned(_tick: int, template_id: String, _encounter_id: String) -> void:
 	wander.spawns = int(wander.spawns) + 1
 	var by: Dictionary = wander.by_template
 	by[template_id] = int(by.get(template_id, 0)) + 1
 
 
-func _on_event_started(_tick: int, event_id: String) -> void:
-	var e: Dictionary = world_events.get(event_id, {"started": 0, "outcomes": []})
+func _on_event_started(tick: int, event_id: String) -> void:
+	var e: Dictionary = world_events.get(event_id, {"started": 0, "outcomes": [], "ticks": []})
 	e.started = int(e.started) + 1
+	(e.get_or_add("ticks", []) as Array).append([tick, -1, ""])
 	world_events[event_id] = e
 
 
-func _on_event_ended(_tick: int, event_id: String, outcome: String) -> void:
-	var e: Dictionary = world_events.get(event_id, {"started": 0, "outcomes": []})
+func _on_event_ended(tick: int, event_id: String, outcome: String) -> void:
+	var e: Dictionary = world_events.get(event_id, {"started": 0, "outcomes": [], "ticks": []})
 	(e.outcomes as Array).append(outcome)
+	var ticks: Array = e.get_or_add("ticks", [])
+	if not ticks.is_empty() and int(ticks[-1][1]) < 0:
+		ticks[-1][1] = tick
+		ticks[-1][2] = outcome
+	else:
+		ticks.append([-1, tick, outcome])
 	world_events[event_id] = e
 
 
@@ -285,7 +366,7 @@ func _on_ability_started(_tick: int, actor_id: String, action_id: String, _insta
 func note_level_loaded(world: Node) -> void:
 	loads += 1
 	for id: String in bosses:
-		(bosses[id] as Dictionary).open = false   # a reload (a death) ends the attempt
+		_close_attempt(bosses[id])   # a reload (a death) ends the attempt
 	_fold_streamer()
 	_streamer_ref = null
 	if world != null and "streamer" in world and world.get("streamer") is ChunkStreamer:
@@ -332,13 +413,25 @@ func on_tick(tick: int, player: GiantPlayer, world: Node) -> void:
 			var rec: Dictionary = regions.get(r, {"s": 0.0, "first_tick": tick})
 			rec.s = float(rec.s) + TICK_S
 			regions[r] = rec
+	var pr := probe if probe != null else Autopilot.bot_probe()
+	if pr != null and is_instance_valid(pr):
+		pr.section = _region if _region != "" else NO_REGION
 	var q := NavQuery.queries_total
 	if _queries_before >= 0:
 		var n := mini(q - _queries_before, QUERY_HIST_MAX)
 		query_hist[n] = int(query_hist.get(n, 0)) + 1
 	_queries_before = q
-	if player.current_growth_stage() >= 4 and not Formation.live().is_empty():
-		_sample_lock(player)
+	if tick % GROWTH_SAMPLE_TICKS == 0:
+		for id: String in bosses:
+			if bool((bosses[id] as Dictionary).get("open", false)):
+				_sample_boss(id, bosses[id])
+	if player.current_growth_stage() >= 4:
+		if tick % GROWTH_SAMPLE_TICKS == 0:
+			_sample_growth(player)
+		if _formation_engaged:
+			_sample_lock(player)
+	else:
+		_formation_engaged = false
 	if tick % MARGIN_EVERY_TICKS == 0 and _streamer_ref != null:
 		var s := _streamer_ref.get_ref() as ChunkStreamer
 		if s != null:
@@ -366,6 +459,93 @@ func _sample_lock(player: GiantPlayer) -> void:
 		formations.banner_lock_samples = int(formations.banner_lock_samples) + 1
 	else:
 		formations.single_lock_samples = int(formations.single_lock_samples) + 1
+
+
+## P39: one growth sample (every GROWTH_SAMPLE_TICKS at stages 4-6; see `growth`): the lone humans
+## and the formations engaged with the giant, whether a formation is engaged (the lock samples' gate)
+## and, when only lesser enemies are engaged, the music's intensity.
+func _sample_growth(player: GiantPlayer) -> void:
+	var dt := float(GROWTH_SAMPLE_TICKS) * TICK_S
+	var tree := player.get_tree()
+	var ppos := player.global_position
+	var player_h := player.entity.combatant.height_m if player.entity != null and player.entity.combatant != null else 1.8
+	var engaged_formations := {}
+	var engaged := 0
+	var counting := 0
+	for n in tree.get_nodes_in_group("enemies"):
+		var a := n as EnemyActor
+		if not engaged_with(a, ppos):
+			continue
+		engaged += 1
+		if counts_for_music(a, player_h, _lesser_ratio()):
+			counting += 1
+		var f := a.formation
+		if f != null and not f.dissolved and f.banner_alive():
+			engaged_formations[f] = true
+		if is_lone_human(a):
+			growth.lone_engaged_s = float(growth.lone_engaged_s) + dt
+			var st := a.brain.state_name()
+			if st in FLED_STATES:
+				growth.lone_fled_s = float(growth.lone_fled_s) + dt
+			var key := "%s/%s" % [RunMetrics.archetype_of(a.entity), st]
+			lone_states[key] = snappedf(float(lone_states.get(key, 0.0)) + dt, 0.001)
+	for f: Formation in engaged_formations:
+		growth.formation_engaged_s = float(growth.formation_engaged_s) + dt
+		if f.is_intact():
+			growth.formation_held_s = float(growth.formation_held_s) + dt
+	_formation_engaged = not engaged_formations.is_empty()
+	if engaged > 0 and counting == 0:
+		var key := _music_key()
+		music_lesser[key] = snappedf(float(music_lesser.get(key, 0.0)) + dt, 0.001)
+
+
+## P39: an enemy engaged with the giant at `ppos` - alive, aware, hostile and within
+## RunMetrics.HOSTILE_NEAR_M (the AI-state histogram's own rule).
+static func engaged_with(a: EnemyActor, ppos: Vector3) -> bool:
+	if a == null or not a.is_inside_tree() or a.entity == null or not a.entity.is_alive() or a.brain == null:
+		return false
+	if not a.brain.aware or a.entity.team != CombatEntity.Team.ENEMY:
+		return false
+	return a.global_position.distance_to(ppos) <= RunMetrics.HOSTILE_NEAR_M
+
+
+## P39: a lone human (§6.4): a soldier, archer or mage that no intact formation holds, that serves no
+## engine (a crew) and is no boss (Corvane).
+static func is_lone_human(a: EnemyActor) -> bool:
+	if a == null or a.entity == null or a.entity.combatant == null or a.is_in_group("bosses"):
+		return false
+	var rec: Dictionary = a.entity.combatant.base_record
+	if not (str(rec.get("archetype", "")) in HUMAN_ARCHETYPES) or str(rec.get("role", "")) == "crew":
+		return false
+	return a.formation == null or a.formation.dissolved
+
+
+## P39: true when `a` counts toward the music's combat (the music director's rule, decision 6): a
+## special enemy (a boss, a rival giant, a formation member, an engine crew) or one at least
+## `ratio` x the giant's height.
+static func counts_for_music(a: EnemyActor, player_height_m: float, ratio: float) -> bool:
+	var h := a.entity.combatant.height_m if a.entity != null and a.entity.combatant != null else 1.8
+	return AudioMath.threat_counts(h, player_height_m, MusicDirector.is_special(a), ratio)
+
+
+func _lesser_ratio() -> float:
+	var tree := Engine.get_main_loop() as SceneTree
+	var audio: Node = tree.root.get_node_or_null("Audio") if tree != null else null
+	if audio != null and audio.get("mix") is Dictionary:
+		var cfg: Variant = (audio.get("mix") as Dictionary).get("intensity", {})
+		if cfg is Dictionary:
+			return float((cfg as Dictionary).get("lesser_height_ratio", 0.3))
+	return 0.3
+
+
+## The music's intensity now ("off" while audio does not run).
+func _music_key() -> String:
+	var tree := Engine.get_main_loop() as SceneTree
+	var audio: Node = tree.root.get_node_or_null("Audio") if tree != null else null
+	if audio != null and bool(audio.get("enabled")) and audio.get("music") != null:
+		var m: Object = audio.get("music")
+		return str(m.get("intensity")) if "intensity" in m else "off"
+	return "off"
 
 
 func _sample_music(stage: String) -> void:
@@ -423,6 +603,26 @@ func _query_percentile(p: float) -> int:
 	return int(keys.back())
 
 
+## P39: the growth seconds with §6.4's shares (-1 when nothing was engaged): lone humans fleeing or
+## routed, formations holding while their banner lives, and the music in combat among only lesser
+## enemies.
+func _growth_out() -> Dictionary:
+	var out := {}
+	for k: String in growth:
+		out[k] = snappedf(float(growth[k]), 0.01)
+	var lone := float(growth.lone_engaged_s)
+	var held := float(growth.formation_engaged_s)
+	var lesser := 0.0
+	for k: String in music_lesser:
+		lesser += float(music_lesser[k])
+	out["lone_fled_share"] = snappedf(float(growth.lone_fled_s) / lone, 0.001) if lone > 0.0 else -1.0
+	out["formation_held_share"] = snappedf(float(growth.formation_held_s) / held, 0.001) if held > 0.0 else -1.0
+	out["lesser_s"] = snappedf(lesser, 0.01)
+	out["lesser_combat_share"] = snappedf(float(music_lesser.get("combat", 0.0)) / lesser, 0.001) \
+		if lesser > 0.0 and not music_lesser.has("off") else -1.0
+	return out
+
+
 func result() -> Dictionary:
 	var cur := _current_stream_stats()
 	var region_out := {}
@@ -462,6 +662,9 @@ func result() -> Dictionary:
 			"last": (cur if not cur.is_empty() else streaming).duplicate(true)},
 		"path_queries_per_tick": {"p50": _query_percentile(0.5), "p95": _query_percentile(0.95), "max": q_max},
 		"music": music.duplicate(true),
+		"growth": _growth_out(),
+		"music_lesser": music_lesser.duplicate(true),
+		"lone_states": lone_states.duplicate(true),
 		"save_bytes_max": save_bytes_max,
 		"deaths_by_region": deaths_by_region.duplicate(),
 		"refusals": refusals.duplicate(true),

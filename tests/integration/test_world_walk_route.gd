@@ -57,3 +57,18 @@ func test_a_walk_without_a_route_is_a_usage_error() -> void:
 	assert_true(WorldWalk.NO_ROUTE.begins_with("usage:"), "the walk names its own mistake: %s" % WorldWalk.NO_ROUTE)
 	assert_eq(WorldWalk.parse_options(PackedStringArray(["--route=1:2"])).route.size(), 1, "a route of one point")
 	assert_eq(WorldWalk.parse_options(PackedStringArray(["--route=a:b;c"])).route.size(), 0, "malformed pairs are skipped")
+
+
+## P39 (plan §6.3's world walk row: "path queries per tick"): each walked tick's path queries are counted
+## from NavQuery's running total (the first tick only sets the base) and reported as p50 / p95 / max.
+func test_the_walk_counts_its_path_queries_a_tick() -> void:
+	var walk := WorldWalk.new()
+	for total in [100, 103, 103, 111, 112, 112, 112, 112, 112, 112, 112]:
+		walk.note_queries(total)
+	var q := walk.path_queries_per_tick()
+	assert_eq(int(q.ticks), 10, "ten ticks counted after the base")
+	assert_eq(int(q.max), 8, "the busiest tick ran eight")
+	assert_eq(int(q.p50), 0, "most ticks ran none")
+	assert_eq(int(q.p95), 8, "the 95th percentile is the busiest of ten")
+	assert_eq(WorldWalk.hist_percentile({}, 0.95), 0, "an empty walk reports 0")
+	walk.free()

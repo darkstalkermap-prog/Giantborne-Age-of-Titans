@@ -43,12 +43,17 @@ extends Node
 ##                          bot's save): it plays quest.world_main from world_start to the Stone Throne
 ##                          under an oath policy (--bot-preset=peaceful|conqueror|mixed, --bot-oaths=
 ##                          march:help,wood:drive,..., --bot-oath-count=2|3, --bot-champion=, --bot-corvane=,
-##                          --bot-explore=) with the Valley bot's skill, assist, seed, loop and trace options.
+##                          --bot-explore=; P39: --bot-skarn=5|6 takes the siege of Skarn at that stage)
+##                          with the Valley bot's skill, assist, seed, loop and trace options.
 ##                          --scenario=valley --bot-campaign plays the Valley first and hands over at
 ##                          slice.completed. AUTOPILOT_RESULT's "world_bot" key holds the run (the Valley
 ##                          bot's metrics, the world's, the outcomes); exit codes as for --scenario=valley
 ##                          (a single run fails on a breach or an unfinished campaign, a loop only on a
 ##                          world_blocked breach; invariants 3; errors 1).
+##                          P39 (plan §6.3 "the bot batches: CPU per tick p95 per region"): the run's
+##                          probe files its samples under the region the giant stands in (WorldMetrics),
+##                          and the result's "perf" key carries them ("sections": region -> cpu_tick_ms
+##                          and sim_ms summaries; tools/bot_report.py world_perf).
 ##
 ## P24a: --scenario=world_walk  the streaming walk (WorldWalk) on a streamed world (WorldRoot: the
 ##                          test world with --level=res://scenes/test/test_world.tscn; the real world
@@ -103,6 +108,30 @@ static var _finished := false
 static var _options: Dictionary = {}
 ## P17a: the Valley bot run's PerfProbe (under the tree root: it outlives level loads).
 static var _valley_probe: PerfProbe = null
+
+
+## P39: the bot run's PerfProbe (the Valley bot's or the world bot's), or null outside a bot run.
+static func bot_probe() -> PerfProbe:
+	return _valley_probe if is_instance_valid(_valley_probe) else null
+
+
+## P39 (plan §6.3): the per-section CPU summaries of a probe result for AUTOPILOT_RESULT's "perf" key
+## (section -> {"cpu_tick_ms", "sim_ms"}); {} when the run filed no section.
+static func perf_sections(perf: Dictionary) -> Dictionary:
+	var out := {}
+	var secs: Variant = perf.get("sections", {})
+	if typeof(secs) != TYPE_DICTIONARY:
+		return out
+	for sec: Variant in secs:
+		var entry: Variant = secs[sec]
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var keep := {}
+		for metric: String in ["cpu_tick_ms", "sim_ms"]:
+			if (entry as Dictionary).has(metric):
+				keep[metric] = entry[metric]
+		out[sec] = keep
+	return out
 
 var player: GiantPlayer
 var _decision_left := 0.0
@@ -569,6 +598,8 @@ func _finish() -> void:
 		print("PERF_RESULT " + JSON.stringify(perf))
 		result["perf"] = {"cpu_tick_ms": perf.cpu_tick_ms, "sim_ms": perf.sim_ms, "budgets": perf.budgets,
 			"quality": perf.quality}
+		if is_bot_scenario(_scenario):
+			result["perf"]["sections"] = perf_sections(perf)   # P39: the world bot's regions
 	print("AUTOPILOT_RESULT " + JSON.stringify(result))
 	write_result_file(result_file_arg(OS.get_cmdline_user_args()), result)
 	get_tree().quit(exit_code(result))

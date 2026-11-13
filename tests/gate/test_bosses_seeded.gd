@@ -144,11 +144,15 @@ func test_harrok_ten_seeds() -> void:
 		arena.disengage_s = 0.25
 		hits.clear()
 		telegraphs.clear()
+		# Each blow is 8 % of his health (P34's 400 of 5,000: P39's balance pass took his health to 3,400, and
+		# seven blows of 400 then reached his yield), so the fight keeps its length and his blows their time.
+		var amount := 400.0 * h.entity.combatant.pools.health_max / 5000.0
 		# Attempt 1: down to phase 2, then away.
 		arena.engage()
 		for i in 7:
-			_blow(h, 400.0)
+			_blow(h, amount)
 			await step_ticks(50)
+		assert_false(h.yielded, "seed %d: phase 2 before his yield" % seed_value)
 		assert_eq(h.attempt_phases, [2] as Array[int], "seed %d: phase 2 once in attempt 1" % seed_value)
 		p.global_position = Vector3(0, 0.05, 100)
 		await step_ticks(25)
@@ -159,7 +163,7 @@ func test_harrok_ten_seeds() -> void:
 		arena.engage()
 		var guard := 0
 		while not h.yielded and guard < 30:
-			_blow(h, 400.0)
+			_blow(h, amount)
 			await step_ticks(40)
 			guard += 1
 		assert_true(h.yielded, "seed %d: he yields" % seed_value)

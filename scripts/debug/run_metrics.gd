@@ -99,7 +99,7 @@ var max_active_enemies := 0
 var max_debris := 0
 var max_hostiles_near := 0
 var node_samples: Array = []            ## [tick, nodes, orphans, static_mb]
-var load_samples: Array = []            ## [tick, nodes outside Spawned, orphans] 5 s after each load
+var load_samples: Array = []            ## [tick, nodes outside Spawned, orphans, level id, x, z] 5 s after each load
 var xp_total := 0
 var level := 1
 var district_seen: Dictionary = {}
@@ -514,8 +514,13 @@ func on_tick(tick: int, player: GiantPlayer, level_root: LevelRoot, mode: String
 				var sp := level_root.get_node_or_null("Spawned")
 				if sp != null:
 					spawned = _count_nodes(sp)
+			# P39: the level and the giant's place too - a world load's count depends on the chunks
+			# streamed in around it, so a load is compared with an earlier one at the same place.
+			var at := player.global_position if player != null and is_instance_valid(player) else Vector3.ZERO
 			load_samples.append([tick, int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)) - spawned,
-				int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))])
+				int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)),
+				level_root.level_id if level_root != null and is_instance_valid(level_root) else "",
+				roundi(at.x), roundi(at.z)])
 
 
 static func _count_nodes(n: Node) -> int:
@@ -716,15 +721,17 @@ func result(tick: int) -> Dictionary:
 	for st: String in engagement:
 		var e: Array = engagement[st]
 		eng_out[st] = {"n": int(e[1]), "mean_m": snappedf(float(e[0]) / maxf(1.0, float(e[1])), 0.01)}
+	# The slotted abilities' damage (plan §6.4: none over 40 %): a grab's throw is no slotted ability -
+	# P39: an engine's throw (ability.throw_engine, PlayerGrab.is_throw) is left out as throw_held is.
 	var ability_damage := 0
 	for id: String in damage_dealt_by_action:
 		var a := GameData.get_action(id)
-		if a != null and a.kind in ["ability", "ultimate"] and id != PlayerGrab.THROW_ID:
+		if a != null and a.kind in ["ability", "ultimate"] and not PlayerGrab.is_throw(a):
 			ability_damage += int(damage_dealt_by_action[id])
 	var share := {}
 	for id: String in damage_dealt_by_action:
 		var a := GameData.get_action(id)
-		if a != null and a.kind in ["ability", "ultimate"] and id != PlayerGrab.THROW_ID:
+		if a != null and a.kind in ["ability", "ultimate"] and not PlayerGrab.is_throw(a):
 			share[id] = snappedf(float(damage_dealt_by_action[id]) / maxf(1.0, float(ability_damage)), 0.001)
 	var ready := {}
 	for id: String in ready_windows:
