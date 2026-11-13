@@ -1969,6 +1969,11 @@ const LEASH_GIVE_UP_FAILURES := 6
 const LEASH_END_MARGIN_M := 2.0
 ## M9 gate (lane review): a return whose way is lost outside the leash holds this long before trying again.
 const LEASH_RETRY_S := 3.0
+## M9 gate (final): a return outside the leash with a living body in its way waits ("way") after this many path
+## failures in the return (the first detour round it failed), not LEASH_GIVE_UP_FAILURES.
+const LEASH_BODY_WAY_FAILURES := 2
+## M9 gate (final): a "way" wait keeps clear of the body in its way while that body's edge is this close to its own.
+const LEASH_WAY_BODY_M := 8.0
 
 ## Tick the current leash return began (-1 when it is not returning).
 var leash_started_tick := -1
@@ -1999,6 +2004,8 @@ var leash_answers := 0
 var leash_holder_id := ""
 var _leash_struck_by := ""
 var _leash_wait_hp := -1.0
+## M9 gate (final): the body in its way when a "way" wait began (entity id, "" for a wall): the wait keeps clear of it.
+var _leash_wait_body := ""
 
 
 ## Starts the leash return (plan §2.7.3): drop the target and its attack tokens, run home to
@@ -2072,7 +2079,10 @@ func _leash_step(tick: int) -> void:
 		_leash_failures_seen = path_failures
 		var blocker := _leash_blocker()
 		var post_taken := not blocker.is_empty() and bool(blocker.on_post)
-		if post_taken or _leash_failures >= LEASH_GIVE_UP_FAILURES:
+		# M9 gate (final): a living body in its way outside its leash - the way wait at the second failure (one failed
+		# detour), not the sixth (about 12 s pressed against it)
+		var body_in_way := not blocker.is_empty() and _leash_failures >= LEASH_BODY_WAY_FAILURES and not _leash_may_end_here()
+		if post_taken or _leash_failures >= LEASH_GIVE_UP_FAILURES or body_in_way:
 			if _leash_may_end_here():
 				_end_leash_return(true, false)   # its post taken (or its way lost) inside its leash: the return ends here, unhealed, and the AI resumes
 				return
@@ -2133,6 +2143,7 @@ func _begin_leash_wait(tick: int, why: String) -> void:
 	_leash_struck_by = ""
 	_leash_wait_hp = entity.combatant.pools.health
 	leash_detour = Vector3.INF
+	_leash_wait_body = str(_leash_blocker().get("id", "")) if why == "way" else ""
 	_leash_wait_step(tick)
 
 
@@ -2183,8 +2194,10 @@ func _leash_wait_step(tick: int) -> void:
 		request_repath()
 		brain.return_step(tick, home_position)
 		return
+	if taker.is_empty() and leash_waiting == "way":
+		taker = _leash_way_body()   # M9 gate (final): the body in its way, kept clear of as a post's taker is
 	if taker.is_empty():
-		brain.return_hold(tick, Vector3.INF)
+		brain.return_hold(tick, Vector3.INF)   # a wall in its way: it holds where it stands
 		return
 	var c: Vector3 = taker.centre
 	var around := float(taker.radius) + float(record.get("capsule_radius_m", 0.5)) + LEASH_DETOUR_CLEAR_M
@@ -2205,6 +2218,23 @@ func _leash_wait_step(tick: int) -> void:
 		off = Vector2(0.0, 1.0)
 	off = off.normalized() * around
 	brain.return_step(tick, Vector3(c.x + off.x, global_position.y, c.z + off.y))
+
+
+## M9 gate (final; the final audit's F11): the body that was in its way when a "way" wait began, while it lives and
+## stands within LEASH_WAY_BODY_M of this member's edge, as _leash_post_taker gives one; {} otherwise. War-camp riders
+## sent home through a stage-6 giant walking east off their picket line held exactly where they stopped - pressed into
+## his shins, on his east side - for LEASH_RETRY_S, rode into him again, and his walk stalled for 30 s; now they back
+## off on their own side to LEASH_DETOUR_CLEAR_M beyond both edges, and hold there facing him.
+func _leash_way_body() -> Dictionary:
+	var e := Sim.get_entity(_leash_wait_body) if _leash_wait_body != "" else null
+	if e == null or e == entity or not e.is_alive() or not is_instance_valid(e.actor) or not (e.actor is CharacterBody3D):
+		return {}
+	var r := _leash_body_radius(e)
+	var gap := Vector2(e.actor.global_position.x - global_position.x, e.actor.global_position.z - global_position.z).length() \
+		- r - float(record.get("capsule_radius_m", 0.5))
+	if gap > LEASH_WAY_BODY_M:
+		return {}
+	return {"centre": e.actor.global_position, "radius": r, "id": e.entity_id}
 
 
 ## M9 gate (lane review): the living body standing on this member's post (its edge within LEASH_ARRIVE_M of
@@ -2266,7 +2296,7 @@ func _leash_blocker() -> Dictionary:
 		return {}
 	var c := best.actor.global_position
 	var home_gap := Vector2(home_position.x - c.x, home_position.z - c.z).length() - best_r - my_r
-	return {"centre": c, "radius": best_r, "on_post": home_gap < LEASH_ARRIVE_M}
+	return {"centre": c, "radius": best_r, "on_post": home_gap < LEASH_ARRIVE_M, "id": best.entity_id}
 
 
 ## W23 (P39f): the detour point round `blocker` (_leash_blocker): beside it, past its centre toward home, on the
