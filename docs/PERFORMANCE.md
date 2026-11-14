@@ -1758,7 +1758,7 @@ of 3.7 and 4.0):
 normal 18.4, the albedo 8.3, the rest position 7.7; the designs 14 s; the export 4 s; the pack 3 s) and `--verify`
 223 s (AO 104 s, thickness 48 s), both `GIANT VERIFY OK` with 12 files bit-exact; the pipeline's 13 tests 1.4-2.1 s.
 On a fresh checkout (`git archive`) with an empty `GIANT_CACHE`: `--verify --skip-bake` 67 s and `--verify` 217 s,
-both bit-exact.
+both bit-exact. The normal bake jitters by a texel in about one bake in five (`TOLERATED`, `docs/systems/P41.md`).
 
 ## Reference PC results (owner: NOT RUN)
 

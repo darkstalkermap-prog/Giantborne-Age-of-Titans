@@ -13,8 +13,10 @@ The pipeline runs in one virtual environment shared by every worktree, never ins
     tools/giant/setup_venv.sh          # Python 3.13 + requirements.txt (pinned with hashes), about 1.2 GB
 
 `GIANT_CACHE` holds the bake cache (content-addressed by the bake's inputs), the skin's micro-relief
-tile (under the hash of its generator) and the audited data wheel; `--verify` reads none of it. `requirements.txt` pins the reference toolchain's Linux x86_64 wheels; on that toolchain every
-output regenerates bit-exactly.
+tile (under the hash of its generator) and the audited data wheel; `--verify` reads none of it.
+`requirements.txt` pins the reference toolchain's Linux x86_64 wheels; on that toolchain every output
+regenerates bit-exactly but for the Cycles bake's own jitter: a baked map can come out a texel or so
+off by 1/255 from run to run, which `--verify` reports as `TOLERATED`.
 
 ## Commands
 

@@ -27,9 +27,9 @@
 #   --giant       (P41, plan M10 §2.5) before the suites: the giant pipeline's tests
 #                 (tools/giant/test_giant_tools.py), build_giant.py --verify --skip-bake (every giant
 #                 file regenerated into a temporary folder with the cheap bake passes, AO and thickness
-#                 read back from the committed tex_hi/orm.png, and compared with
-#                 assets/giant/manifest.json: bit-exact on the reference toolchain) and --budget (the
-#                 estimated Web share); run with the shared venv GIANT_VENV (default
+#                 read back from the committed tex_hi/orm.png, and compared with manifest.json:
+#                 bit-exact on the reference toolchain, a Cycles map within the bake's own jitter of a
+#                 texel or so) and --budget (the estimated Web share); run with the venv GIANT_VENV (default
 #                 $HOME/.cache/giantborn/giant-venv) under nice -n 19; skipped with a note when the
 #                 venv is missing
 #   --giant-full  as --giant, but --verify re-bakes every pass, AO and thickness included (the full

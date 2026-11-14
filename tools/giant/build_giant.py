@@ -16,11 +16,12 @@ Steps (none given: --all):
   --all                        every step above
 Options:
   --verify       regenerate everything into a temporary folder and compare with manifest.json:
-                 bit-exact on the reference toolchain; the Cycles outputs on another toolchain within
-                 2/255 per channel and 0.1/255 on average; prints TOOLCHAIN DIFFERS apart from CONTENT
-                 DIFFERS, checks the shipped files against the manifest, and ends with GIANT VERIFY OK
-                 or GIANT VERIFY FAILED (exit 1). It never reads the bake cache (it re-bakes), but
-                 refreshes it unless --no-cache.
+                 bit-exact on the reference toolchain but for the bake's own jitter (a Cycles output
+                 may differ in at most 64 texels by 1/255: TOLERATED), the Cycles outputs on another
+                 toolchain within 2/255 per channel and 0.1/255 on average; prints TOOLCHAIN DIFFERS
+                 apart from CONTENT DIFFERS, checks the shipped files against the manifest, and ends
+                 with GIANT VERIFY OK or GIANT VERIFY FAILED (exit 1). It never reads the bake cache
+                 (it re-bakes), but refreshes it unless --no-cache.
   --skip-bake    bake only the cheap passes and read AO and thickness back from the committed
                  tex_hi/orm.png (R and B, lossless); first checks that the expensive passes' inputs
                  (the body, its UVs, the skin code, the settings) still hash to the manifest's, and
@@ -122,8 +123,9 @@ def run_kit(script, *args):
 # --------------------------------------------------------------------------------------
 def make_micro_tile(path: Path) -> None:
     """Writes the skin's micro-relief tile (skin_textures.make_micro) at ``path`` unless it exists, in an
-    interpreter of its own: made inside the bake's process, the tile changed that process's tangent-space
-    normal bake (one texel by 1/255; every other pass the same), so the bake always finds its tile made."""
+    interpreter of its own, so the bake's process does the same work whether or not the tile was cached
+    (the tangent-space normal bake is sensitive to its process's history: with the tile made inside it,
+    one texel came out 1/255 off in 3 of 4 bakes; manifest.JITTER_TEXELS)."""
     if path.exists():
         return
     code = "import sys; sys.path.insert(0, sys.argv[1]); import skin_textures; skin_textures.make_micro(sys.argv[2])"
@@ -425,6 +427,11 @@ def verify(skip_bake: bool, use_cache_write: bool) -> int:
                     continue
                 content.append("%s: differs beyond the Cycles tolerance (max %.4f, mean %.5f)" % (rel, mx, mean))
                 continue
+            if e.get("cycles") and rel.endswith(".png"):
+                ok, texels, mx = manifest.image_jitter(ROOT / rel, out_root / rel)
+                if ok:
+                    tolerated.append("%s: %d texel(s) off by at most 1/255, the bake's own jitter" % (rel, texels))
+                    continue
             content.append("%s: regenerated %s, manifest %s" % (rel, a["sha256"][:12], e["sha256"][:12]))
         for rel in sorted(set(actual["files"]) - set(expected.get("files", {}))):
             content.append("%s: regenerated but not in the manifest" % rel)
@@ -461,7 +468,7 @@ def verify(skip_bake: bool, use_cache_write: bool) -> int:
             len(content), len(shipped), n, mode))
         return 1
     print("GIANT VERIFY OK: %d files regenerated %s (%s)%s" % (
-        n, "bit-exact" if not tolerated else "bit-exact or within the Cycles tolerance", mode,
+        n, "bit-exact" if not tolerated else "bit-exact or within the bake's tolerance (TOLERATED)", mode,
         " (toolchain differs: %d keys)" % len(tool_diff) if tool_diff else ""))
     return 0
 

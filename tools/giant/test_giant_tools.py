@@ -298,7 +298,9 @@ class ManifestTest(unittest.TestCase):
 class ToleranceTest(unittest.TestCase):
     def test_cycles_outputs_compare_within_the_tolerance_on_another_toolchain(self):
         """--verify on a toolchain other than the manifest's accepts Cycles pixels within 2/255 per
-        channel and 0.1/255 on average (manifest.image_close), and names what differs in the toolchain."""
+        channel and 0.1/255 on average (manifest.image_close), and names what differs in the toolchain;
+        on the reference toolchain only the bake's own jitter (manifest.image_jitter): at most 64 texels
+        off by 1/255."""
         rng = np.random.default_rng(3)
         base = rng.integers(10, 240, (64, 64, 3), dtype=np.uint8)
         with tempfile.TemporaryDirectory() as tmp:
@@ -318,6 +320,16 @@ class ToleranceTest(unittest.TestCase):
             self.assertFalse(manifest.image_close(a, save("far.png", far))[0], "over the largest difference")
             self.assertFalse(manifest.image_close(a, save("drift.png", drift))[0], "over the mean")
             self.assertFalse(manifest.image_close(a, save("small.png", base[:32]))[0], "another size")
+            # the reference toolchain's own bake jitter: a few texels off by one step
+            one = base.copy()
+            one[7, 9, 0] += 1
+            ok, texels, mx = manifest.image_jitter(a, save("one.png", one))
+            self.assertTrue(ok and texels == 1 and abs(mx - 1 / 255.0) < 1e-9, (ok, texels, mx))
+            self.assertTrue(manifest.image_jitter(a, save("near2.png", near))[0] is False, "off by 2/255")
+            many = base.copy()
+            many[:2, :40, 1] += 1                   # 80 texels off by 1/255: more than jitter
+            self.assertFalse(manifest.image_jitter(a, save("many.png", many))[0], "more texels than jitter")
+            self.assertEqual(manifest.image_jitter(a, a)[:2], (True, 0))
         old = {"bpy": "5.3.0", "numpy": "2.5.4", "cpu": {"model": "x"}}
         new = {"bpy": "5.3.0", "numpy": "2.6.0", "cpu": {"model": "y"}}
         diff = manifest.toolchain_diff(old, new)

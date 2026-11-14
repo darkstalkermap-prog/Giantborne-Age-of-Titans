@@ -31,6 +31,12 @@ REL_PATH = "assets/giant/manifest.json"
 # Cycles outputs on another toolchain: the largest and the mean difference allowed, per channel
 CYCLES_MAX = 2.0 / 255.0
 CYCLES_MEAN = 0.1 / 255.0
+# The reference toolchain's own bake jitter: the same bake on the same inputs and machine can come out a
+# texel different (measured on the tangent-space normal bake: one texel of 1,048,576 off by 1/255 in one
+# channel, in 3 of 14 bakes with the tile made beforehand, every other pass the same). Within it a Cycles
+# output counts as regenerated on the reference toolchain; anything more is a content difference.
+JITTER_MAX = 1.0 / 255.0
+JITTER_TEXELS = 64
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -139,6 +145,21 @@ def image_close(path_a, path_b) -> tuple:
     d = np.abs(a - b)
     mx, mean = float(d.max()), float(d.mean())
     return (mx <= CYCLES_MAX + 1e-9 and mean <= CYCLES_MEAN + 1e-9), mx, mean
+
+
+def image_jitter(path_a, path_b) -> tuple:
+    """(within the reference toolchain's bake jitter, texels that differ, largest difference in 0..1) of
+    two images: at most JITTER_TEXELS texels, none by more than JITTER_MAX."""
+    import numpy as np
+    from PIL import Image
+    a = np.asarray(Image.open(path_a)).astype(np.int32)
+    b = np.asarray(Image.open(path_b)).astype(np.int32)
+    if a.shape != b.shape:
+        return False, -1, 1.0
+    d = np.abs(a - b)
+    per_texel = d.max(axis=-1) if d.ndim == 3 else d
+    n, mx = int((per_texel > 0).sum()), float(d.max()) / 255.0
+    return (n <= JITTER_TEXELS and mx <= JITTER_MAX + 1e-9), n, mx
 
 
 def file_entry(root, rel, step, inputs, cycles) -> dict:
