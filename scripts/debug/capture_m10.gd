@@ -23,6 +23,7 @@ const CAST_SLOT := "slot_3"
 var _auto: Node = null
 var _p: GiantPlayer = null
 var _beats: Array = []
+var _names := PackedStringArray()
 var _i := -1
 var _t := 0.0
 var _shot_done := false
@@ -34,6 +35,14 @@ var done := false
 func _init(autopilot: Node) -> void:
 	_auto = autopilot
 	_beats = _make_beats()
+	for b: Array in _beats:
+		_names.append(str(b[0]))
+
+
+## Lets go of the beats: their lambdas hold this object, so it is freed only once they are gone (the tour
+## clears them when it ends; the autopilot calls this when the run ends before the tour does).
+func dispose() -> void:
+	_beats.clear()
 
 
 ## One physics tick of the tour; true once it has ended.
@@ -48,6 +57,7 @@ func step(player: GiantPlayer, dt: float) -> bool:
 		_shot_done = false
 		if _i >= _beats.size():
 			done = true
+			dispose()
 			return true
 		_release_inputs()
 		var start: Callable = _beats[_i][2]
@@ -65,10 +75,7 @@ func step(player: GiantPlayer, dt: float) -> bool:
 
 ## The labels of the beats in order (docs, tests).
 func beat_names() -> PackedStringArray:
-	var out := PackedStringArray()
-	for b: Array in _beats:
-		out.append(str(b[0]))
-	return out
+	return _names
 
 
 func _release_inputs() -> void:

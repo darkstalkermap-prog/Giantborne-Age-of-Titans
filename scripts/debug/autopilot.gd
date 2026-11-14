@@ -594,6 +594,7 @@ func _finish() -> void:
 		result["world_walk"] = ww
 	if _capture_m10 != null:
 		result["capture_m10"] = {"shots": _capture_m10.shots, "notes": _capture_m10.notes, "complete": _capture_m10.done}
+		_capture_m10.dispose()
 	if is_bot_scenario(_scenario) and ValleyBot.run != null:
 		if ValleyBot.run.world != null:
 			# P38: the world bot's run (the campaign's, or the world's alone)
