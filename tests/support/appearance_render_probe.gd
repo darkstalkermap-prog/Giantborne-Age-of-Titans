@@ -17,7 +17,8 @@ extends Node
 ## user://m10_frames/options/ and prints one line
 ##   APPEARANCE_RENDER {"tiles", "grids", "ms", "grid_ms", "results": {key: {cat, view, changed, lit, vs}},
 ##                      "validate": [...], "adapter", "tier"}
-## then quits (a watchdog quits it on a script error).
+## then quits (a watchdog quits it on a script error). `-- --only=<prefix>` draws only the options whose key starts
+## with the prefix (and the bases they are measured against): `--only=scar` for a look at the scars alone.
 
 const OUT_DIR := "user://m10_frames/options/"
 const PREFIX := "APPEARANCE_RENDER "
