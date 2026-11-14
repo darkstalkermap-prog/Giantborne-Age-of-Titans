@@ -10,6 +10,10 @@ extends IntegrationSuite
 ##
 ## GameSession.reset_for_tests() logs scene reloads instead of reloading the test runner, so each
 ## test frees and instantiates the flow level itself, as main.gd does on a reload.
+##
+## M10 (P44, plan M10 §2.10): every New Game from the title passes through the character creator - New Game
+## (after its confirm) opens it, and its Begin starts the game with the creator's record; the original
+## assertions hold after Begin (the new character also carries the look: _begin()).
 
 const FLOW := "res://scenes/test/flow_test_level.tscn"
 
@@ -81,6 +85,19 @@ func _unload_level() -> void:
 	await get_tree().process_frame
 	level = null
 	player = null
+
+
+## M10 (P44): the creator New Game opened over the title, then its Begin (the default look). Returns the
+## record it began with ({} when no creator opened).
+func _begin() -> Dictionary:
+	var c := stack.top() as CreatorScreen
+	assert_true(c != null and c.screen_name == "creator", "New Game opens the character creator")
+	if c == null:
+		return {}
+	var record := c.current_record()
+	c.begin_button.pressed.emit()
+	assert_false(stack.is_open("creator"), "Begin closes the creator")
+	return record
 
 
 func _marker(node_path: String) -> CheckpointMarker:
@@ -216,13 +233,16 @@ func test_new_game_from_the_title_takes_the_pending_restore_path() -> void:
 	assert_false(title.state()["continue"], "Continue is disabled without a save")
 	assert_eq(title.first_focus(), title.button("New Game"), "New Game has the focus")
 	title.button("New Game").pressed.emit()
+	assert_eq(GameSession.scene_reloads.size(), 0, "M10: New Game opens the creator first")
+	var look := _begin()
 	assert_true(GameSession.last_mode_result.ok, "New Game started")
 	assert_eq(GameSession.scene_reloads, ["new_game"] as Array[String], "one reload into the new game")
 	assert_true(GameSession.is_valley(), "the Valley mode")
 	assert_true(GameSession.pending_restore, "pending restore")
 	assert_false(WorldState.has_flag("test.old_world"), "a clean world")
 	var expected := CharacterState.new_game(GameData.get_record("progression.default"), GameData.get_record("player.giant"))
-	assert_eq(GameSession.character, expected, "the progression record's new character")
+	expected["appearance"] = look   # M10: the creator's record
+	assert_eq(GameSession.character, expected, "the progression record's new character, with the look")
 	stack.close_all()
 	_load_level()
 	assert_false(GameSession.pending_restore, "restored")
@@ -248,6 +268,7 @@ func test_the_title_with_the_valley() -> void:
 	assert_false(state["continue"], "Continue disabled (saving is off, no save is read)")
 	assert_eq(state.note, "", "no note")
 	title.button("New Game").pressed.emit()
+	_begin()
 	assert_true(GameSession.last_mode_result.ok, "New Game starts")
 	assert_eq(GameSession.scene_reloads, ["new_game"] as Array[String], "a reload into a new game")
 	assert_true(GameSession.is_valley() and GameSession.pending_restore, "the Valley mode with a pending restore")
@@ -302,7 +323,9 @@ func test_new_game_asks_before_replacing_a_save() -> void:
 	assert_eq(GameSession.scene_reloads.size(), 0, "the first press only asks")
 	assert_true(title.button("New Game").text.contains("replace"), "the button asks: %s" % title.button("New Game").text)
 	title.button("New Game").pressed.emit()
-	assert_eq(GameSession.scene_reloads, ["new_game"] as Array[String], "the second press starts over")
+	assert_eq(GameSession.scene_reloads.size(), 0, "the second press opens the creator")
+	_begin()
+	assert_eq(GameSession.scene_reloads, ["new_game"] as Array[String], "and its Begin starts over")
 
 
 func test_unknown_ability_ids_in_a_save_are_dropped_with_a_message() -> void:

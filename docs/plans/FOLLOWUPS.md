@@ -308,3 +308,17 @@ What P43 (`docs/systems/P43.md`) leaves for the packages after it.
 | **The hair's `head_motion`** is not written: the hair shader has no such uniform yet. | P46 | `SkinnedRig` can set it from the head bone's velocity in `_on_skeleton_updated` once the uniform exists. |
 | **The stomp's leg lift** (a clip seeked by the stomp's phase fraction) is on the cut list; Heavy Footfall and Titan Stomp stand on the stance. | M11 | `kit/clips.py` (a one-leg lift clip) and a `stomp` source in `SkinnedRig._drive_tree`. |
 | **The capture tour's wall time.** `--scenario=capture_m10` at 960x540 with `--write-movie` took 8 min 30 s for its 77.7 s of video on the shared machine (two Blender renders beside it), against the plan's assumed four minutes. | P45 / gate | Run it on a quiet machine, or at 640x360, for the owner's next video. |
+
+## From the creator (P44, M10 W26)
+
+What P44 (`docs/systems/P44.md`) found in the rendered option check and the sheets, and left for the packages
+after it.
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| **The scars do not read in play.** In the option check no scar reaches the rear Game view's floor (18 px of a 320x240 tile) or first person's (90 px): the forearm slash changes 3 px from behind, the knuckles nick 1 px in first person, the brow and the chest claws neither. §2.3 names the forearm slash and the knuckles as drawn to pass; they are thinner than the 4 cm stroke rule (about 55 and 36 texels of 512). | P46 | `tests/slow/test_appearance_render.gd` lists "scar" in `KNOWN_MISSES` (it must still draw and prints a KNOWN MISS line); P46's `cheek` and `back_lash` scars, or a bolder forearm slash, take it off. |
+| **The eye colours look alike.** Ten colours change 17 to 39 pixels of the face framing's tile; in the sheets' eye close-up the iris is small and dark under the brow in the world's light, and only storm-lit stands out. | P46 | The eye shader's iris size or brightness, or the eye mesh; the option check's eyes floor (0.0001) is set on the floor's shares. |
+| **Designs on the giant's left are framed from his right.** The face, chest and arms framings look from his right side; the brow scar, the chest claws and the claw stripes sit on his left, so the creator shows them obliquely (the knuckles' hand framing already looks at the left hand). | P46 (with the kit) | The index gives a design's body regions, not its side; a `side` per design in the index would let `OptionRows.row_region` pick a mirrored framing. |
+| **The cloth details read coarsely.** In the world's sun the braies read as quilted panels about a hand wide rather than a weave (weave 0.35, the tile repeated 48 times, the detail normal 0.6); leather (0.25) does not show on the dark-leather dye; the furs' card edges carry more than the fur detail (0.45). Nothing is broken. | P46 | Sheet A's page 5 and the option grids (`user://m10_frames/options/`) show them. |
+| **Fine horizontal ridges on the forehead** in the close-ups at both texture tiers under the world's low sun: the skin's normal detail or the scalp's edge. | P46 (hair, item 1) | Sheet A's pages 3 and 6. |
+| **P42's two rows for P44 are answered.** The Appearance tab sets `appearance.tab_seen` when it is first shown (`tests/integration/test_shrine_appearance.gd`), and every New Game through the title now stores the creator's record, so `appearance.legacy_save` is set only by saves from before M10 and by command-line and bot runs without `--appearance=`. | Done (P44) | The rows above in P42's section stay as written (append-only). |

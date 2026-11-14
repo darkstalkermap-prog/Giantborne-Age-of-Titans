@@ -17,6 +17,7 @@ about 30 minutes per player.
 | The world's music and ambience on speakers and headphones (§8.7, M9) | **NOT RUN** (the owner's listening pass) |
 | Real browsers (§11, M9: load time with the multi-part pack, streaming hitches, a Continue and a fast travel, audio in a hidden tab) | **NOT RUN** (the owner's); the container's headless Chromium runs automated: `tools/web/world_check.mjs` (a Continue of a world save, a fast travel, a 60 s walk across region borders), `stream_check.mjs --world --audio`, `audio_check.mjs`, `world_start_check.mjs` - software WebGL, indicative only |
 | Real gamepad: the map, journal, track and pin bindings (§6 rows 16-21, M9) | **NOT RUN** (the owner runs it); the bindings automated: `tests/integration/test_map_screen.gd`, `test_journal.gd`, `test_tracked_quest.gd`, `test_ui_focus.gd` |
+| Creator sheet (§12, M10: New Game through the creator, the shrine's Appearance tab, with a pad, a keyboard and a mouse) | **NOT RUN** (the owner runs it); the flows automated: `tests/integration/test_creator_screen.gd`, `test_creator_layout.gd`, `test_shrine_appearance.gd`, `tests/slow/test_creator_controls.gd`, `test_shrine_appearance_saves.gd` |
 
 The recommended owner checkpoints after waves 1 and 8 (plan §1.3) use the same sheets (§4 and §5).
 
@@ -465,3 +466,28 @@ On a machine with a GPU, also run the container's checks with their strict forms
 indicative only (they pass holes placed on the main thread's stalls - since W23 also a hole the recording's end
 cut short - and under load they can fail on holes the placement misses). Write the results under the session in `docs/USABILITY_RESULTS.md` and the frame
 and load times beside the reference-PC table in `docs/PERFORMANCE.md`.
+
+## 12. Creator sheet (owner, M10)
+
+The character creator (plan M10 §2.10; `docs/systems/P44.md`) on the private preview link and on desktop:
+once with a pad, once with the keyboard alone, once with the mouse. Start from a cleared site (the browser's
+data) or a deleted save so that New Game has no save to replace; then repeat rows 1-3 with a save.
+
+| # | Check | Pad | Keyboard | Mouse |
+| --- | --- | --- | --- | --- |
+| 1 | **New Game opens the creator** ("Shape your giant"); with a save the replace question comes first. The title says "Preparing..." for a moment on the first start (desktop): how long? | | | |
+| 2 | **Back without a change** returns to the title at once, the save untouched (Continue still there). **Back after a change** asks "Discard your changes?" with Keep editing focused; Keep editing keeps the look, Discard leaves. | | | |
+| 3 | **Begin your journey** starts the prologue in the new look (pointer lock and the camera work at once in the browser); the skip choice's **Begin in the Old Kingdom** starts the world. | | | |
+| 4 | **Every category** (Presets, Skin, Eyes, Hair, Beard, Tattoos, War paint, Scars, Clothing) reachable: LB / RB, PageUp / PageDown, or a click on its tab; the focus never lost after a switch, a Randomize or an Undo. | | | |
+| 5 | **Every row**: the D-pad or the arrows move through the swatches and apply them at once; the greys move by the slider; a scar toggles; each swatch's name shows; a locked option says why. | | | |
+| 6 | **The preview**: turns (right stick, Q and E, a mouse drag) and zooms (LT / RT, + and -, the wheel); X or V (or the buttons) cycle Full, Face, Back and Game view; Hair shows the head from behind. | | | |
+| 7 | **Randomize** (Y or R) changes only the open category; **Randomize all** everything but the clothes; **Undo** (View, Ctrl+Z, the button) steps back through swatches, randomizes, a preset and Reset. | | | |
+| 8 | **Reading in play**: a tattoo under the clothes says "Hidden by your clothing" and the clothes fade while it is focused; Game view shows the giant from the game's camera beside a soldier. Which designs could you see in Game view? | | | |
+| 9 | **A shrine**: the seventh tab "Appearance (new)" until opened; "Change your look..." opens the creator over the shrine; Keep this look changes the giant and saves (quit to the title and Continue: the look is there); Cancel after a change asks and restores the old look. | | | |
+| 10 | **The launcher's open-world start** (desktop: `--mode=world --creator`) opens the creator at once; Back leaves you at the title. | | | |
+| 11 | **The layout** at 1280x720 and at the browser's full screen: nothing cut, nothing overlapping, the footer's hint readable. | | | |
+
+Questions after the sheet: which option did you look for and not find? Which choice made the biggest
+difference, and which looked the same as another (the eye colours, the scars)? Was anything slow to
+answer (a swatch, a category, the first open)? Write the answers under the session in
+`docs/USABILITY_RESULTS.md`.
