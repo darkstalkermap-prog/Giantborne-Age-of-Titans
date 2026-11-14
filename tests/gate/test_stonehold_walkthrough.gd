@@ -17,6 +17,8 @@ extends IntegrationSuite
 ##     the Moot completes its stage, and the champion's three outcomes - spared (his clan reconciled, the
 ##     clans watch the crowning), slain (the Moot empties, his clan stays hostile) and the talk ending (no
 ##     fight: the ring stays quiet) - each lets the giant take the Stone Throne;
+##   * M9 gate (final; the final audit's F2): on the real world the clans watching the Moot leave as its champion is
+##     slain, with the giant still among them (MootArena sends their encounter away), and stay away;
 ##   * M8 gate fix-up 1 (N4.6): Harrok's challenge stone stands beyond the Moot's disengage line (95.8 m from
 ##     the ring's centre, the line at 80 m), and a stage-6 giant answering it - within its reach on the ring's
 ##     side - stands on the fight's ground (BossArena.at_boss_talker): no leaving warning, no reset.
@@ -35,6 +37,7 @@ const BATTERY_PART := "res://scenes/world/chunks/c3_1_0.tscn"
 const STAIR_PART := "res://scenes/world/chunks/c4_2_0.tscn"
 const MOOT_PARTS := ["res://scenes/world/chunks/c4_1_0.tscn", "res://scenes/world/chunks/c4_0_0.tscn"]
 const HARROK := "world.stonehold.harrok"
+const CLANS := "encounter.stonehold_moot_clans"
 
 
 var _engine_hits: Array = []   ## [target id, health damage] of the siege line's hits on a longhouse
@@ -449,6 +452,51 @@ func test_the_champion_slain() -> void:
 	c.flags = WorldState.flags
 	assert_true(QuestConditions.all_hold(entry[0].conditions, c), "his clan's giants roam the highlands")
 	await _claim(r[1])
+
+
+## The watching clans' members the director has in the world now (entity ids).
+static func _watchers_up(d: EncounterDirector) -> Array:
+	var out: Array = []
+	for s: Variant in GameData.get_record(CLANS).get("spawns", []):
+		var id := str((s as Dictionary).get("entity_id", "")) if typeof(s) == TYPE_DICTIONARY else ""
+		if d != null and id != "" and d.spawned(id) != null:
+			out.append(id)
+	return out
+
+
+## M9 gate (final; the final audit's F2): the watching clans leave the Moot as its champion is slain. The empty flag
+## kept their encounter from activating (its forbids_flags) but never sent an active one away - the director reads
+## forbids_flags only as an encounter activates - so the six watchers stood on around the empty ring until the giant
+## walked 240 m off. On the real world, a stage-6 giant at the Moot foot waystone (118 m from the clans' centre): the
+## six watch; Harrok slain, none is left at once and none comes back (MootArena: EncounterDirector.p37_deactivate).
+func test_the_watching_clans_leave_the_moot_when_the_champion_is_slain() -> void:
+	WanderDirector.test_active = true
+	WanderDirector.view_probe = func(_p: Vector3) -> bool: return false
+	var w: WorldRoot = await _world(Vector2(-70.0, -650.0))
+	var p := w.player()
+	p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+	p.set_profile(_profile(6))
+	var d := w.director()
+	var up: bool = await TestWait.until(self, func() -> bool: return _watchers_up(d).size() == 6, 600)
+	assert_true(up, "the six clan giants watch the Moot (%d up)" % _watchers_up(d).size())
+	assert_eq(d.encounter_state(CLANS) if d != null else "", "active", "the watching clans' encounter is active")
+	var arena: MootArena = null
+	for n in w.find_children("*", "", true, false):
+		if n is MootArena:
+			arena = n
+	assert_true(arena != null, "the Moot's arena")
+	if arena == null or d == null:
+		return
+	WorldState.set_flag("boss.harrok.outcome", "slain")
+	arena._on_entity_died(Sim.tick, HARROK, "player")
+	await step_ticks(2)
+	assert_true(QuestConditions.truthy(WorldState.get_flag("world.moot.empty")), "the Moot empties")
+	print("    the Moot's champion slain: the clans' encounter %s, watchers left %s" % [d.encounter_state(CLANS),
+		_watchers_up(d)])
+	assert_eq(_watchers_up(d), [], "its watching clans leave at once, the giant still 118 m from their centre")
+	assert_eq(d.encounter_state(CLANS), "dormant", "their encounter is sent away")
+	await step_ticks(120)
+	assert_eq(_watchers_up(d), [], "and they do not come back (the empty flag keeps them away)")
 
 
 func test_the_champion_kneels_to_the_talk() -> void:
