@@ -138,7 +138,11 @@ def bake_dir(keys, want_expensive, read_cache, write_cache, work: Path, times: d
             missing.append((name, passes))
     if missing:
         passes = [p for _n, ps in missing for p in ps]
-        micro_dir = cache_root() / "micro" if write_cache else out
+        # The skin's micro-relief tile (skin_textures.make_micro keeps a tile that exists): in the cache
+        # under the hash of its generator, so a changed generator never meets a stale tile; a run that
+        # reads no cache (--verify, --no-cache) makes its own.
+        micro_dir = (cache_root() / "micro" / manifest.hash_json(source_hashes(("skin_textures.py",)))[:16]
+                     if read_cache else out)
         micro_dir.mkdir(parents=True, exist_ok=True)
         secs, _ = run_kit("bake.py", out, ",".join(passes), micro_dir)
         times["bake " + "+".join(n for n, _p in missing)] = round(secs, 1)
