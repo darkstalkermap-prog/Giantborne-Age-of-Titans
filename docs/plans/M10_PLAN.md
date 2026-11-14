@@ -2183,6 +2183,45 @@ bpy 5.3.0, numpy 2.5.4, scipy 1.18.1, Pillow 13.0.0, OpenEXR 3.5.4, the plan's p
 neither. **Resolved** by the orchestrator in §0.6, "How answer 1 applies": W25 and W26 keep the
 exclusion and the 23 MiB budget; P45 applies the 26 MiB budget and the 1024 px Web maps in W27.
 
+### The W25 merge and its review (the orchestrator, 14 November 2026)
+
+What W26 and later packages need from W25 (tag `wave-25`; the numbers in `docs/PERFORMANCE.md`, "The W25
+merge (P41 and P42)", and in `docs/systems/P41.md` and `P42.md`):
+
+- **The merge** (P41, then P42, one fix-forward on tip matching's grip reach): 281 suites, 49,644 checks,
+  0 failures; default tier 70.4 s, slow tier 323.9 s; `--giant` verify OK in 72 s; the Web share
+  2.64 MiB measured from a test export (`--budget` estimate 2.85 MiB).
+- **The review** (two lenses, each finding verified adversarially) confirmed six findings, all fixed in
+  `fbe201b` with regression tests: `GiantLook` never bound the hair atlas or the cloth detail maps on the
+  real model, because the index names its textures and `GiantLook` read the names as paths (blocker);
+  `covered_regions` gave different answers from the data and from the real index (now one rule:
+  a garment hides a region's designs at 75 % coverage, `DESIGN_COVER_SHARE`); `summary_lines` and
+  `covered_regions` turned an ancestry's own options into the defaults (they take an optional
+  `ancestry_id` now); a duplicated model shared its original's materials; the list of suites that load
+  the giant (now `tools/giant_suites.py`: 125 default, 44 slow and 23 gate suites; a change to
+  `giant.tscn` is accounted against all of them); and the design array's compression check per design.
+  Refuted: the "never bit-exact" claim (the bake's one-texel jitter is real and rare: a second fresh run
+  was bit-exact, so `--verify` tolerates exactly that); P42's default cost over its cap (within noise);
+  a silent `GIANT_SHARE` pass (deliberate and tested).
+- **After the fixes** the full check passed with the default tier at 74.0 s and the slow tier at
+  368.4 s; one loaded run read 77.2 s and 75.6 s. **The default tier has about 1-5 s of margin on this
+  machine**: P43 (cap 0.6 s) and P44 (cap 0.8 s) report their own default cost from the runner's
+  per-suite times and keep under their caps; a merge that reads over 75 s on a loaded machine re-runs
+  per `--strict-times`.
+- **The cloth shader** now reads P41's detail maps as packed (RGB tangent-space normal, A albedo detail);
+  the strengths (weave 0.35, leather 0.25, fur 0.45, normal 0.6) were set from one 320x240 frame and are
+  for P44's option check and P46 to judge by eye.
+- **The real model's frame**, the giant whole in the default look, llvmpipe at 2 threads: about 42 ms
+  wall at 320x240 with the web tier (the merge's rendered suite and probe, before and after the fix),
+  117 ms at 960x720 with the hi tier. **P43's slow cap stays 45 s**: its rendered suite draws about ten
+  frames at 320x240.
+- **The hair bar (§4.2)** was first judged on frames drawn without the hair atlas (the blocker above),
+  then re-judged on the fixed code at 960x720 with the hi tier (`<scratchpad>/m10/w25/hairbar2/`): **no
+  better than the research's best variant** by §4.2's two criteria — the beard's outline and tips are
+  still shingle steps of card ends, and the scalp still shows between the crop's cards at the temples and
+  the crown — although the long hair from behind is clearly better with its atlas. P46's item 1 (the
+  hair) stays its first two hours, and the W26 note to the owner uses the fixed frames.
+
 ---
 
 ## 8. Review log
