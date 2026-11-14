@@ -90,6 +90,7 @@ func _look() -> Dictionary:
 	l.hair_color = Color(0.1, 0.1, 0.1)
 	l.hair_tip = Color(0.2, 0.2, 0.2)
 	l.hair_grey = 0.4
+	l.hair_length = 0.6
 	l.beard_color = Color(0.6, 0.3, 0.1)
 	l.beard_tip = Color(0.7, 0.4, 0.2)
 	l.beard_grey = 0.6
@@ -170,11 +171,13 @@ func test_every_look_key_sets_its_uniforms_and_visibility() -> void:
 	assert_true(_near(hair.get_shader_parameter("hair_color"), l.hair_color), "the hair's colour")
 	assert_true(_near(hair.get_shader_parameter("tip_color"), l.hair_tip), "the hair's tips")
 	assert_true(_near(hair.get_shader_parameter("grey"), l.hair_grey), "the hair's grey")
+	assert_true(_near(hair.get_shader_parameter("length"), 0.6), "the hair's cut (P46: hair_length)")
 	var beard := _mat(root, "Beard_short")
 	assert_true(beard.shader == GiantLook.HAIR_SHADER, "the beard draws with giant_hair")
 	assert_true(_near(beard.get_shader_parameter("hair_color"), l.beard_color), "the beard's colour")
 	assert_true(_near(beard.get_shader_parameter("tip_color"), l.beard_tip), "the beard's tips")
 	assert_true(_near(beard.get_shader_parameter("grey"), l.beard_grey), "the beard's grey")
+	assert_true(_near(beard.get_shader_parameter("length"), 1.0), "the beard's full length when the look names none")
 	var eye := _mat(root, "Eyes")
 	assert_true(eye.shader == GiantLook.EYE_SHADER, "the eyes draw with giant_eye")
 	assert_true(_near(eye.get_shader_parameter("iris_color"), l.eye_color), "the iris colour")
@@ -384,3 +387,25 @@ func test_a_duplicated_model_gets_its_own_nodes_and_materials() -> void:
 	assert_true(_mat(c, "Body_Head") != a_mat and _near(_mat(c, "Body_Head").get_shader_parameter("skin_tone"),
 		_look().skin_tone), "a copy's first apply gives it its own materials, with the look")
 	assert_true(_near(a_mat.get_shader_parameter("skin_tone"), GiantLook.DEFAULT_LOOK.skin_tone), "the original keeps its own")
+
+
+## P46: the hair's sway. One step is a pure easing towards the head's motion times the lag; the sway on a model
+## writes the hair shader's head_motion on the shown hair and beard, in the mesh's own space, and stays within
+## its bound however fast the head moves.
+func test_the_hairs_sway_eases_towards_the_heads_motion_and_is_bounded() -> void:
+	var rest := GiantLook.sway_step(Vector3.ZERO, Vector3.ZERO, 1.0 / 60.0)
+	assert_eq(rest, Vector3.ZERO, "a still head: no sway")
+	var one := GiantLook.sway_step(Vector3.ZERO, Vector3(2, 0, 0), 1.0 / 60.0)
+	var target := Vector3(2, 0, 0) * GiantLook.SWAY_LAG_S
+	assert_true(one.x > 0.0 and one.x < target.x, "one frame moves part of the way (%.4f of %.4f)" % [one.x, target.x])
+	var v := Vector3.ZERO
+	for i in 120:
+		v = GiantLook.sway_step(v, Vector3(2, 0, 0), 1.0 / 60.0)
+	assert_true(v.distance_to(target) < 1e-4, "and settles on the head's motion times the lag")
+	for i in 120:
+		v = GiantLook.sway_step(v, Vector3.ZERO, 1.0 / 60.0)
+	assert_true(v.length() < 1e-4, "and comes back to rest when the head stops")
+	assert_true(GiantLook.undeclared_uniforms(GiantLook.HAIR_SHADER, ["head_motion", "length"]).is_empty(),
+		"the hair shader declares head_motion and length")
+	assert_eq(GiantLook.sway(null, INDEX, null), Vector3.ZERO, "no model, no skeleton: nothing, and no error")
+

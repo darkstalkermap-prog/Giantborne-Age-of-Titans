@@ -18,8 +18,12 @@ const TILE_PX := 320 * 240
 ## A tile is drawn when at least this share of its pixels is off its backdrop.
 const MIN_LIT := 0.02
 ## The share of a framed tile's pixels an option must change, per set: about half the smallest share the floor
-## catalogue's options measured in the set (W26, llvmpipe, the web tier; P44.md lists them).
-const FLOORS := {"skin": 0.008, "eyes": 0.0001, "hair": 0.045, "beard": 0.035, "haircolor": 0.015,
+## catalogue's options measured in the set (W26, llvmpipe, the web tier; P44.md lists them). The look pass (P46)
+## set the beard's again by the same rule on the target catalogue: its beards are compared with the default
+## full beard, so a shorter cut or another shape of the same beard changes less of the tile than a beard against
+## none (the smallest: the trimmed beard 0.0283; P46.md lists every set). The hair's floor stands: the
+## shoulder-length cut, the smallest, changes 0.0561.
+const FLOORS := {"skin": 0.008, "eyes": 0.0001, "hair": 0.045, "beard": 0.014, "haircolor": 0.015,
 	"tattoo": 0.0007, "ink": 0.008, "paint": 0.0045, "paintcolor": 0.0045, "scar": 0.00015, "mark": 0.0018,
 	"outfit": 0.012, "dye": 0.014, "preset": 0.012}
 ## The pixels of a 320x240 tile the best option of a design category must change in the stage-1 rear Game

@@ -41,6 +41,36 @@ func test_the_shipped_sets_and_presets_pass() -> void:
 		assert_eq(_errors(GameData.get_record(id)), "", "%s passes its schema" % id)
 
 
+## P46 (plan M10 §2.3): the target catalogue. The sets hold the floor's options and the look pass's, the
+## tattoos four a region; a hair or beard option may carry a `length` (a shorter cut of its mesh).
+func test_the_target_catalogue_is_in_the_sets() -> void:
+	var want := {"hair": 7, "beard": 7, "tattoo": 16, "paint": 4, "scar": 6, "outfit": 6, "skin": 10, "eyes": 10,
+		"haircolor": 10, "ink": 6, "paintcolor": 6, "mark": 3, "dye": 8}
+	for cat: String in want:
+		assert_eq(Appearance.option_ids(cat).size(), int(want[cat]), "the %s set's options" % cat)
+	var per_region := {}
+	for id in Appearance.option_ids("tattoo"):
+		var region := str(Appearance.option(id).get("region", ""))
+		per_region[region] = int(per_region.get(region, 0)) + 1
+	assert_eq(per_region, {"arms": 4, "chest": 4, "back": 4, "face": 4}, "four tattoos a region")
+	for id: String in ["hair.long_braided", "hair.warrior_tail", "hair.wild_mane", "beard.braided", "beard.forked",
+			"tattoo.arm_sleeve", "tattoo.back_shoulders", "paint.full_face", "paint.back_hand", "scar.cheek",
+			"scar.back_lash", "outfit.raider", "outfit.wayfarer"]:
+		assert_false(Appearance.option(id).is_empty(), "%s is an option" % id)
+	assert_true(is_equal_approx(float(Appearance.option("hair.shoulder").get("length", 1.0)), 0.6), "a shorter cut of the long hair")
+	var cut := Appearance.default_record()
+	cut.hair.style = "hair.shoulder"
+	cut.beard.style = "beard.trimmed"
+	var look := Appearance.to_look(cut, "")
+	assert_eq([str(look.hair_mesh), str(look.beard_mesh)], ["Hair_long_back", "Beard_full"], "the cuts share their style's mesh")
+	assert_true(float(look.hair_length) < 1.0 and float(look.beard_length) < 1.0, "and carry their length to the look")
+	var whole := Appearance.to_look(Appearance.default_record(), "")
+	assert_eq([float(whole.hair_length), float(whole.beard_length)], [1.0, 1.0], "the default look draws the whole length")
+	var long_set: Dictionary = GameData.get_record("appearance_set.hair").duplicate(true)
+	(long_set.options[0] as Dictionary)["length"] = 1.4
+	assert_true(_errors(long_set).contains("length"), "a length above 1 is rejected")
+
+
 func test_bad_sets_are_rejected() -> void:
 	assert_eq(_errors(_set_rec("skin", [_skin("pale"), _skin("ruddy", true)])), "", "a good skin set passes")
 	_rejects(_set_rec("wings", [{"key": "bat", "name": "Bat"}]), "wings", "an unknown category")
