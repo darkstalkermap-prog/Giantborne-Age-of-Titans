@@ -163,12 +163,12 @@ func visible_text() -> String:
 	return _text
 
 
-## The phase pips: true for each phase reached ([] while hidden).
 ## The notches drawn now (health fractions; tests).
 func notch_fractions() -> Array[float]:
 	return (_notches as Notches).fractions.duplicate()
 
 
+## The phase pips: true for each phase reached ([] while hidden).
 func phase_pips() -> Array[bool]:
 	var out: Array[bool] = []
 	if not _panel.visible:
