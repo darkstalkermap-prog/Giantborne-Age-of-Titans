@@ -73,7 +73,7 @@ or Node; the audio pipeline and the web checks do (README §1).
 From `c9434e5` (M5) to W23 (`f851b0d`), in 23 packages (P19-P39 with P24 split in two, and the W23
 fixes lane P39f) and the gate lanes: 2,845 files changed, 188,638 lines added and 3,462 removed, in
 402 commits (generated scenes, chunks and navmeshes included; `git diff --shortstat c9434e5 f851b0d`).
-To the head of the integration branch `claude/hopeful-gauss-0f323t` that the pull request merges, the release's last commit included (W24: P40): 2,890 files changed, 199,873 lines added and 3,825 removed, in 506 commits (`git diff --shortstat c9434e5 <head>`, `git rev-list --count c9434e5..<head>`); the merge to `main` follows this report (plan §6.6).
+To the head of the integration branch `claude/hopeful-gauss-0f323t` that the pull request merges, the release's last commit included (W24: P40): 2,890 files changed, 199,874 lines added and 3,825 removed, in 507 commits (`git diff --shortstat c9434e5 <head>`, `git rev-list --count c9434e5..<head>`); the merge to `main` follows this report (plan §6.6).
 
 | Area | At M5 (`c9434e5`) | At W23 (`f851b0d`) | Final (`0.9.0-m9`) | What is there now |
 | --- | --- | --- | --- | --- |
@@ -389,7 +389,7 @@ Godot processes at a time on a shared machine; `docs/BALANCE_LOG.md`, "M9 gate: 
 | `final_after_assisted`, `final_after_orders` | P38's acceptance: the three presets and the three first-oath orders, the novice assisted | 6 of 6 completed with no death (26.6-42.4 min), no breach, no invariant failure, 0 errors and 0 warnings |
 | `final_after_stability_a` | 60 minutes of the world, assisted, the three presets in a loop | passed: the full 3,600 s, two campaigns and a third at the Moot, nodes 1,107 / 1,114 / 1,107 (within 0.6 %), 0 errors and 0 warnings in the run's own count, no invariant failure, no duplicated reward |
 | `final_after_extra_valley_stability` | 30 minutes of the Valley | passed: the full 1,800 s, three slices and a fourth under way, nodes 1,554 / 1,561 / 1,561 / 1,561 (within 0.5 %), 0 errors and 0 warnings |
-| `final_after_extra_campaign` | the Valley's New Game through the Kings' Door to the Stone Throne, assisted | passed: the throne at 2,045.3 s simulated (48.2 min), no death, 0 errors and 0 warnings |
+| `final_after_extra_campaign` | the Valley's New Game through the Kings' Door to the Stone Throne, assisted | passed: the throne at 2,045.3 s simulated (48.2 min of human estimate), no death, 0 errors and 0 warnings |
 | `final_after_valley_a` | the Valley: the novice on seeds 1-2 of `help_cache`, `help_ogre` and `intimidate`, and the four outcomes assisted | 10 of 10 completed |
 
 The assisted runs of the four village outcomes, on the final code:
@@ -404,7 +404,7 @@ The assisted runs of the four village outcomes, on the final code:
 **These runs are on the final game code.** `git diff --stat 7502770 <the final commit> -- scripts ui data scenes assets
 tools/data project.godot` lists only `project.godot`, two lines: the version string (`config/version` `0.8.0-m8` ->
 `0.9.0-m9`) and the description's milestone count (`M0-M8` -> `M0-M9`), which nothing in the game reads. Everything
-else the release changed is documents, the launcher, the world tour's tool and its `.uid`. So the M9 gate's runs on
+else the release changed is documents, `tests/unit/test_ship_docs.gd`, the launcher, the world tour's tool and its `.uid`. So the M9 gate's runs on
 `7502770` stand for the release, and §5.4's acceptance and stability rows rest on them. None of the 28 runs crashed,
 met an invariant failure, an error or a warning in its own count, granted a reward twice or was classified
 `world_blocked`; the release's two quiet-machine bot runs (`w24perf_mixed`, `w24perf_crown` on `dfdfdfc`) add the
@@ -488,7 +488,7 @@ music, each placed on the main thread's long frames of the single-threaded build
 | `stream_check.mjs --world --audio --build=builds/web`, alone on the quiet machine (load 0.1 / 4.1) | **OK** | 308 (371.5 ms), 94.2 s of music across 4 borders | 57.1 MB (67.9 MB) | 0 (one page error at exit, the engine's audio teardown, not counted) |
 | `world_check.mjs`, alone on the quiet machine (load 4.1 / 6.9) | **OK**: the Continue 13 s to control, the fast travel 7.2 s, no 8 s warning, a 787.7 m walk across three region changes | 603 (894 ms), 270.2 s of music across 3 borders | 57.3 MB (67.9 MB) | 0 |
 | `world_start_check.mjs` (the launcher's two starts; the build run, load 15.8 / 19.3) | **OK**: Play starts the Valley, "Start in the open world" arms on one press and starts `--mode=world` on two | - | - | 0 |
-| The build run's first runs, at loads of 12-19 beside the gate's runs and the world tour | `audio_check.mjs` OK (54 holes, 10,092 ms); `stream_check.mjs` and `world_check.mjs` **FAILED** on one hole each the recorder did not place on the main thread (760.5 ms; 252.5 ms) - timing under load, the reason for the quiet re-runs above | | 37.0 / 57.1 / 57.3 MB | 0 |
+| The build run's first runs, beside the gate's runs and the world tour: `audio_check.mjs` (load 2.0 / 13.4), `stream_check.mjs` (12.2 / 17.3), `world_check.mjs` (13.0 / 14.7) | `audio_check.mjs` OK (54 holes, 10,092 ms); `stream_check.mjs` and `world_check.mjs` **FAILED** on one hole each the recorder did not place on the main thread (760.5 ms; 252.5 ms) - timing under load, the reason for the quiet re-runs above | | 37.0 / 57.1 / 57.3 MB | 0 |
 
 The plan's strict criterion (no hole at all; `--strict`) is NOT MET in the container and stays the owner's on a GPU
 (§9).
@@ -522,7 +522,7 @@ problems and the two missing cairns (FOLLOWUPS, "From the ship package (P40)").
 | --- | --- | --- | --- |
 | ~~The conqueror's slay of the Troll Matriarch: no novice and no expert slew her~~ | Balance | **fixed at the M9 gate** (her phase 2's data, lane balance): the conqueror novice of seed 1 slays her at its fourth attempt with three deaths, the expert at its first with none | FOLLOWUPS, "From the M9 confirmation" (struck) |
 | Harrok's slay for the conqueror novice: struck after his yield he rises, and the novice dies six times (`final_after_world_a/w_conqueror_novice_1`, its one Strike landed); the conqueror expert slays him in two attempts | Balance | open (the novice's "2 of 3 seeds" open on seed 1; seeds 2-3 not run) | M10; FOLLOWUPS, "From the M9 gate (lane balance)" ("Harrok's slay") |
-| The Iron Regiment at stage 4 (the crown first, unassisted): the novice gets through the gateway now and loses the battle with six deaths (the ballistae 65 % of the damage taken; one cadence attempt reverted); assisted it wins at the first attempt with no death | Balance | open | M10; FOLLOWUPS, "From the M9 gate's final round", "From the M8 release check" |
+| The Iron Regiment at stage 4 (the crown first, unassisted): the novice gets through the gateway now and loses the battle: six deaths, five of them in the battle (the ballistae 65 % of the damage taken; one cadence attempt reverted); assisted it wins at the first attempt with no death | Balance | open | M10; FOLLOWUPS, "From the M9 gate's final round", "From the M8 release check" |
 | Deaths per boss attempt sequence: Harrok's slay 6, Harrok's spare a median of 4.0 (3.0 with the orders), the battle 5 (target 1-3); the Matriarch slain 3 (met) | Balance | open | M10; FOLLOWUPS, "From the M9 confirmation" |
 | ~~Fort Aldmere's gateway: the gate garrison's pike formation leaves about 5 m beside each flank~~ | Layout / bot | **fixed at the M9 gate** (`1855c3a`; gate `test_fort_gateway`) | FOLLOWUPS, "From the M9 confirmation" (struck) |
 | ~~The war camp's shield wall stands across the King's Road~~ | Layout | **fixed at the M9 gate** (`ea95089`, `0b6c233`; gate `test_war_camp_road`) | the same (struck) |

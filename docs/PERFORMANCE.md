@@ -1552,7 +1552,7 @@ none of the 2,754 packed files in `scenes/test/`, `assets/test_world/` or `data/
 without `data/test`) and checked in headless Chromium with SwiftShader (indicative: software WebGL draws a world frame
 in hundreds of milliseconds). The machine's 4 cores were shared with the M9 gate's own check, its bot batches and the
 world tour, which had priority: each check below gives the 1-minute load average at its start and end. Two checks failed
-their default form on one hole each that the recorder did not place on the main thread, at loads of 12-19; the load
+their default form on one hole each that the recorder did not place on the main thread, at loads of 12-17; the load
 stayed above 4 for more than 20 minutes after them (4.3-8.2 in a per-minute log from 03:16 to 03:37 UTC, the gate's three bot runs and its world tour, with none of this step's runs going),
 so they are marked **timing under load** and are re-run on the quiet machine by the ship step's finish run. The
 evidence (each check's console output and `--json` report, the build's log, the exports' logs) is in the ship step's
