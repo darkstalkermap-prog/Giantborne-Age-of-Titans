@@ -285,7 +285,8 @@ own hands.
     are locked until the ancestry is chosen.
 17. **Two texture tiers.** Desktop exports draw the 1024 px normal and ORM maps (`tex_hi/`); the Web
     preset excludes them and the giant falls back to the 512 px maps (`tex/`, the albedo included),
-    keeping the 23 MiB pack budget. The owner may raise the Web budget to 26 MiB instead (§0.6).
+    keeping the 23 MiB pack budget. The owner raised the Web budget to 26 MiB (§0.6): from P45 on, the
+    Web pack keeps the 1024 px maps too (§0.6, "How answer 1 applies").
 18. **Options must read in play.** The face is 16–23 px wide at the game camera and usually turned
     away, so every design category offers bold, large pieces that show from behind at stage 1 or in
     first person (sleeves, back pieces, shoulder paint; strokes of at least 4 cm at stage 1), the
@@ -355,6 +356,17 @@ differ, and every package reads them as decisions:
    default stands).
 3. **No "World style" switch** in M10 (the default stands).
 4. **Keep the low-poly weapons** in M10 (the default stands).
+
+**How answer 1 applies** (the orchestrator, 14 November 2026, before W25). W25 builds both tiers and
+the Web presets' exclusions as §1.6 and §3.1 item 9 say, so P41's test export measures the floor's
+share at 512 px (≤ 2.9 MiB), and the budget stays 23 MiB through W26. **P45 applies the answer in
+W27**: it removes `assets/giant/tex_hi/*` from the Web presets' exclusions (the manifest stays
+excluded), raises `build_web.sh`'s budget for `-m10` to 26 MiB and `GIANT_SHARE`'s cap to 7.6 MiB
+(4.6 plus the 3 MiB the answer adds, keeping §2.12's 1.7 MiB margin under the budget), updates their
+tests and §2.12's row, and its checks expect `tex_hi/` in the Web pack; `GiantLook`'s tier "auto"
+then picks `tex_hi/` on the Web as on the desktop. Where a later row still names 23 MiB, a 4.6 MiB
+share or a Web pack without `tex_hi/`, it describes W25 and W26; from P45 on, the figures of this
+paragraph apply.
 
 ---
 
@@ -1183,7 +1195,7 @@ No new setting in M10 (the World style is deferred, §0.5).
 
 | Budget | Value | Checked by |
 | --- | --- | --- |
-| Web pack, shipped (gzip then base64, MiB as `build_web.sh` counts) | ≤ 23 (M6–M9 decision 8, unchanged unless the owner raises it); M10's share (`assets/giant/`, the giant's shaders and scenes) ≤ 4.6, the floor's ≤ 2.9; target total ≤ 21.3 | `build_web.sh` (a `GIANT_SHARE` line from W25; fails over either), P41 (a test export), the W26 preview build, P45, the gate |
+| Web pack, shipped (gzip then base64, MiB as `build_web.sh` counts) | ≤ 23 (M6–M9 decision 8) through W26; M10's share (`assets/giant/`, the giant's shaders and scenes) ≤ 4.6, the floor's ≤ 2.9; target total ≤ 21.3. From P45 on (the owner's answer 1, §0.6): ≤ 26, M10's share ≤ 7.6 with `tex_hi/` in the Web pack, target total ≤ 24.3 | `build_web.sh` (a `GIANT_SHARE` line from W25; fails over either), P41 (a test export), the W26 preview build, P45, the gate |
 | Pack parts | ≤ 15 MB each | `build_web.sh` |
 | Giant draw calls, low preset, fullest look (warrior outfit, long hair, full beard) | ≤ 13 (the box giant: 8; with the head split: 12, ASSUMED from the mesh list) | P41 (meshes shown per look), P45 (probe) |
 | Draw calls in every measured view | ≤ 250 (unchanged) | P45 (the Valley walk and the world viewpoints of `PERFORMANCE.md`) |
@@ -1659,15 +1671,16 @@ called when `has_method`, else `pose_relaxed()`.
 **Hotspot edits:** `tools/web/{audio_check,world_start_check}.mjs` and their tests where they exist (New Game now
 passes the creator: Enter, then Ctrl+Enter for Begin; the world start's two presses, then the
 creator, then Begin); `web/launcher.html` ("Start in the open world" passes `['--', '--mode=world',
-'--creator']`); `export_presets.cfg` and `tools/build_web.sh` (only if needed: the budget for `-m10`
-stays 23 MiB, or 26 if the owner raised it, with its test); `scripts/main.gd` (the loading screen's
+'--creator']`); `export_presets.cfg` and `tools/build_web.sh` (the owner's answer 1, §0.6: the budget for `-m10`
+becomes 26 MiB and `GIANT_SHARE`'s cap 7.6 MiB, with their tests, and the Web presets stop excluding
+`assets/giant/tex_hi/*`); `scripts/main.gd` (the loading screen's
 warm-up of the giant's level and preview variants, only if the probe shows a stall on Continue or at
 a shrine); `docs/PERFORMANCE.md` (the M10 rows); `docs/plans/FOLLOWUPS.md`.
 
 **Design and measurements**
 1. **Exports**: the release `Web` build and `Web (test)`: the shipped size, its parts and
-   `GIANT_SHARE`; `pck_files.py --check-no-test`; no `tex_hi/` file in the Web pack; the Linux pack's
-   listing shows `tex_hi/`.
+   `GIANT_SHARE`; `pck_files.py --check-no-test`; `tex_hi/` in the Web pack (the owner's answer 1, §0.6)
+   and in the Linux pack's listing.
 2. **`creator_check.mjs`** (headless Chromium, the release build; its own test as for
    `stream_check.mjs`): boot; the title's worst frame until its buttons enable; New Game → the
    creator; change a category with the keyboard; Undo; a screenshot; Begin → the Valley loads, with the
@@ -1784,7 +1797,7 @@ gate lane (data and parameters) or answered.
 | 3. Animation quality | Tip matching over every player weapon arc at stages 1, 3, 4 and 6 (§2.9's contract, on the exported landmarks); the frames of `test_skinned_rig_render`, `test_skinned_rig_stages` and the capture tour — idle, walk, run, sprint, jump, each weapon family's light and heavy, a block, both dodges, Shoulder Charge, Earthquake, a grab, hold and throw, a stomp, a roar, a self buff, a stagger, a knockback, the death fall, stages 1–6, first person looking down and ahead — reviewed for legs gliding in a frozen stride or stepping in the air, arms through the body on cross-body arcs, visible foot sliding, implausible wrists, the held body away from the hand, open cuts in first person or with the camera pressed close; misses fixed or listed for M11 |
 | 4. Saves and migration | The fixtures; unknown and broken looks repaired with their notes in the load message; a look from a later build kept untouched; backup recovery with a look; a 0.10 save opened by the 0.9.0-m9 build (a scratch worktree) keeps its look through Continue and a checkpoint (the creator brief's lab test, re-run); a 0.9 save opened by the candidate gets the default look, its ancestry's mark and the one-time message |
 | 5. UI and controls | Pad, keyboard (PageUp/PageDown, Q/E, +/−, Ctrl+Z, Ctrl+Enter) and mouse through every category; the focus never lost; the discard question; Undo; the layout at five sizes; the shrine's seven tabs at level 20; the footer hints; Game view and "Hidden by your clothing"; the Web pointer lock on Begin (`creator_check.mjs`) |
-| 6. Web and performance | The pack ≤ 23 MiB and `GIANT_SHARE` ≤ 4.6 MiB, parts ≤ 15 MB; the five Chromium checks; ≤ 250 draw calls in every measured view; the skin's CPU; the four stall measures; texture and mesh memory; the Linux export under Xvfb with `--skin` |
+| 6. Web and performance | The pack ≤ 26 MiB and `GIANT_SHARE` ≤ 7.6 MiB (the owner's answer 1, §0.6), parts ≤ 15 MB; the five Chromium checks; ≤ 250 draw calls in every measured view; the skin's CPU; the four stall measures; texture and mesh memory; the Linux export under Xvfb with `--skin` |
 | 7. Provenance and determinism of the assets | `--giant-full` bit-exact on the reference toolchain; `--giant` in a fresh worktree with the shared cache emptied; the vendored subset's audit; `PROVENANCE.md` and `CREDITS.md` complete; no copied GPL or Apache code; no hand-edited generated file; no `.import` under `tools/`; scenes rebuild with no diff; `test_ship_docs` passes |
 | 8. The look | The owner's notes on the preview and sheet A applied; the hair at the creator's framings against the approved close-up; the options in play (the option check's rear and first-person frames: every design category readable); the giant among soldiers and buildings in the real world; the World style if they asked for it |
 
@@ -1843,8 +1856,8 @@ parameters, about an hour; anything larger becomes an M11 follow-up) and re-runs
 
 ### 4.3 Release 0.10.0-m10
 
-As M6–M9 §6.6. Version `0.10.0-m10` (`build_web.sh` reads `-m10` and keeps the 23 MiB budget, or 26
-if the owner raised it); the Linux export runs the soak and an assisted bot run headless and one
+As M6–M9 §6.6. Version `0.10.0-m10` (`build_web.sh` reads `-m10` and applies the 26 MiB budget the
+owner chose, §0.6); the Linux export runs the soak and an assisted bot run headless and one
 `--skin` run under Xvfb (a screenshot, 0 errors), and `pck_files.py` lists `tex_hi/` in its pack; the
 Windows export is built (not launched); `tools/build_web.sh`, run without `XDG_DATA_HOME`, builds the
 `Web` preset and reports the shipped sizes, the parts and `GIANT_SHARE`; `creator_check.mjs`,
@@ -1859,7 +1872,7 @@ orchestrator, P47's pull request to `main` and its merge.
 The look on their own screens (a real GPU, a real browser) with the usability script's look section
 (P46); a 10-minute session — New Game through the creator into the Valley, a change at a shrine,
 first person at stage 4 — on desktop and in a browser; frame times and the warm-ups on real hardware;
-a real gamepad in the creator. Two decisions are theirs: the Web budget (23 or 26 MiB) and M11's
+a real gamepad in the creator. Two decisions are theirs: the Web budget (decided before W25: 26 MiB) and M11's
 direction (the recommendation: people near the camera on the same pipeline, §0.5).
 
 ---
@@ -2167,7 +2180,8 @@ bpy 5.3.0, numpy 2.5.4, scipy 1.18.1, Pillow 13.0.0, OpenEXR 3.5.4, the plan's p
 **Noticed, not an M9 change (for the orchestrator):** §0.6's owner answer 1 (26 MiB; the Web keeps the
 1024 px maps) still meets the 23 MiB figures and the Web presets' `tex_hi/*` exclusion in decision 17,
 §1.6, §2.12 and §3.1 item 9; the answers say they replace the defaults, and this re-check changed
-neither.
+neither. **Resolved** by the orchestrator in §0.6, "How answer 1 applies": W25 and W26 keep the
+exclusion and the 23 MiB budget; P45 applies the 26 MiB budget and the 1024 px Web maps in W27.
 
 ---
 
