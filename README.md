@@ -50,13 +50,23 @@ flat-coloured boxes on purpose. The M1 combat sandbox is still there for practic
 | The Ogre King at Kingsfall: boss bar, phase pips, the slam's telegraph | Stage 3 (26 ft) with an uprooted oak on the way back to the Deadfall |
 | ![The end screen](docs/screenshots/09_end_screen.jpg) | ![The title screen in a browser](docs/screenshots/10_title_web.jpg) |
 | The Valley's end screen (since M7 it reads "Prologue complete", with Continue) | The play link's title screen (the browser build, in Chromium, at `0.5.0-m5`) |
+| ![The Kingsgate shelf](docs/screenshots/11_kingsgate_shelf.jpg) | ![Brannock at stage 4](docs/screenshots/12_brannock_stage4.jpg) |
+| The Kingsgate shelf at stage 3 (26 ft), the world's first view: the shrine's arch and the beacon tower below, farms and villages beyond, Brannock's walls on the horizon | Grown to stage 4, the giant walks down Brannock's main street while townsfolk and a guard look on |
+| ![A pike formation under its banner](docs/screenshots/13_formation_banner.jpg) | ![The Moot battery's siege engines](docs/screenshots/14_siege_engines.jpg) |
+| A formation: beside Fort Aldmere's wall the giant locks onto the Pikes, ten pikemen under their blue banner | Siege engines: at the Moot battery the stage-6 giant swings his great club at a ballista, with two more ballistae and a catapult crew in the snow |
+| ![The Greywood at stage 5](docs/screenshots/15_greywood_pines.jpg) | ![The Drowned Steps](docs/screenshots/16_drowned_steps.jpg) |
+| Stage 5 among the Greywood's pines; the pine beside the giant fades so it does not hide him | The Drowned Steps' terraces down to the mere and its sunken pillars (a placed shot: a new game grown to stage 5, so the tracker shows the opening quest) |
+| ![Fort Aldmere's gate](docs/screenshots/17_fort_aldmere_gate.jpg) | ![The Iron Regiment's battle](docs/screenshots/18_iron_regiment_bailey.jpg) |
+| Fort Aldmere's gate, with ballistae on its two towers and the keep behind, as the giant discovers the fort | A boss: in Fort Aldmere's bailey the portcullis has dropped behind the giant, and the Iron Regiment's banners and ballistae face him |
+| ![The Moot](docs/screenshots/19_the_moot.jpg) | ![The Stone Throne](docs/screenshots/20_stone_throne.jpg) |
+| The Moot, the Stonehold's ring of standing stones, with the Stone Throne and a rival giant across the ring | With Harrok beaten and spared, the level-17 giant walks up to the Stone Throne while the clans watch from the ring wall |
+| ![The map at the campaign's end](docs/screenshots/21_world_map.jpg) | ![The campaign's end screen](docs/screenshots/22_end_screen.jpg) |
+| The map, zoomed out over the whole world: the five regions with their recommended stages, the places found, the unexplored land in shadow | The end screen after the Stone Throne: The Giant King in 29:22 with no deaths, level 17 at stage 6, and how each boss ended |
 
 *(The Valley's shots were rendered by the game itself while the Valley bot played the help_cache
 path (`tools/valley_tour.gd`, software OpenGL under a virtual display, the desktop's `medium`
 preset), at milestone M5; the tenth is the browser build in Chromium, which always uses the `low`
-preset. ⟦SHIP: one sentence on how the world's shots were rendered: the tour's script, the renderer, the preset, and that they show `0.9.0-m9`, the final code⟧ The M1 sandbox's shots are in [docs/screenshots/sandbox_m1/](docs/screenshots/sandbox_m1/).)*
-
-⟦SHIP: the world tour's screenshots (the Kingsgate shelf's view first, then a formation, a siege engine, a boss, the map), rendered on the final code beside the world bot by the ship step into docs/screenshots/ (numbered from 11 on), appended as rows of the gallery table above, after the end-screen and browser row, with captions⟧
+preset. The world's shots (11-22) were rendered by the game itself at `0.9.0-m9`, on the final code, while the world bot played the crown-first order (novice, seed 1, assisted) to the Stone Throne (`tools/world_tour.gd` through `tools/world_tour.sh`, software OpenGL under a virtual display at 1280 x 720, the default `medium` preset, drawing only the frames of each shot); three are placed shots from the same tool: the shelf's view retaken without the first tutorial tip, the Drowned Steps, which that route never enters, and the map on the run's final save. The M1 sandbox's shots are in [docs/screenshots/sandbox_m1/](docs/screenshots/sandbox_m1/).)*
 
 ---
 
@@ -318,7 +328,20 @@ xvfb-run -a -s "-screen 0 1280x720x24" tools/gd.sh --path . --resolution 1280x72
   --bot-village=help_cache --autoplay=2400 --tour-dir=/absolute/folder
 ```
 
-and the world tour beside the world bot, which rendered the gallery's world shots: ⟦SHIP: the world tour's command as the ship step ran it for the gallery (its script, the world bot's options, --tour-dir), as a bash block like the Valley tour's - the command the handoff's §6.3 gives⟧
+and the world tour beside the world bot, which rendered the gallery's world shots:
+
+```bash
+tools/world_tour.sh --out=/absolute/folder    # the crown-first order, novice, seed 1, assisted (the default --run)
+# which runs, under xvfb-run -a -s "-screen 0 1280x720x24":
+tools/gd.sh --path . --resolution 1280x720 --audio-driver Dummy --fixed-fps 60 -s res://tools/world_tour.gd -- \
+  --no-user-settings --save-dir=user://world_tour_saves/<name> --mode=world --new-game --deterministic-streaming \
+  --tour-dir=/absolute/folder --bot-preset=peaceful --bot-oaths=crown:breach,wood:slay --scenario=world \
+  --autoplay=7200 --bot-skill=novice --bot-seed=1 --bot-assist
+tools/world_tour.sh --out=/absolute/folder --places=drowned_steps    # a placed shot the route does not pass
+```
+
+(`--run=w.mixed:expert:1` and the other world specs of `tools/run_bots.sh` choose another campaign; the tool draws
+only the frames of each shot, so the bot plays at its headless speed.)
 
 **The audio pipeline** (`tools/audio/`, Python 3 with numpy, seeded, float64, single-threaded) writes
 every sound: the effects as WAV masters (committed: they are Godot's import source), the music and
@@ -478,7 +501,7 @@ from it: [docs/DECISIONS.md](docs/DECISIONS.md).
 | [docs/USABILITY_SCRIPT.md](docs/USABILITY_SCRIPT.md) | The usability sessions (the Valley and the world), the real-controller checklist, the audio sheet, the world sheets, the real-browser sheet |
 | [docs/BALANCE_LOG.md](docs/BALANCE_LOG.md) | Every tuning change, why, and the matrices before and after |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DECISIONS.md](docs/DECISIONS.md) | How it is built; every interpretation and deviation |
-| [docs/systems/](docs/systems/) | One document per package (P01-P18, P19-⟦SHIP: P40 once the ship step writes docs/systems/P40.md (plan §1.1 item 5, §3.24; as P18 wrote P18.md), else P39f⟧): APIs, data, decisions, tests, gate notes |
+| [docs/systems/](docs/systems/) | One document per package (P01-P18, P19-P40): APIs, data, decisions, tests, gate notes |
 | [docs/plans/M6_M9_PLAN.md](docs/plans/M6_M9_PLAN.md), [docs/plans/M2_M5_PLAN.md](docs/plans/M2_M5_PLAN.md), [docs/plans/FOLLOWUPS.md](docs/plans/FOLLOWUPS.md) | The plans and the review follow-ups |
 | [docs/M2_M5_HANDOFF.md](docs/M2_M5_HANDOFF.md), [docs/M1_HANDOFF.md](docs/M1_HANDOFF.md) | The Valley's handoff and the M0/M1 combat sandbox handoff |
 | `assets/audio/PROVENANCE.md` | Where every sound comes from |

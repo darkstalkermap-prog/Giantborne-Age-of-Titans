@@ -5,7 +5,7 @@ game - the combat core, the giant, the enemies, the two campaign levels and the 
 world builder, quests, the campaign and its saves, bosses, the living world, the UI, presentation and
 audio - and the tools, the bots and the tests. It consolidates the system documents of the M2-M5
 packages (`docs/systems/P01.md` ... `P18.md`) and the M6-M9 packages (`P19.md` ...
-⟦SHIP: `P40.md` once the ship step writes it, else `P39f.md`⟧), which keep every public API and
+`P40.md`), which keep every public API and
 detail; §22 says which document holds what. The interpretations behind it are in
 [DECISIONS.md](DECISIONS.md) (decisions 1-30 from the M2-M5 plan, 31-64 from the M6-M9 plan).
 
@@ -162,8 +162,7 @@ loadout, weapons, resources) in and out of the save document.
   layer, scripted lunges and charges), runs its `AttackRunner`, announces telegraphs, takes attack
   tokens (2 melee, 2 ranged per target), switches AI LOD tiers (tier 2 sleeps behind a one-box
   proxy), handles morale, flight and rout, grabs, the leash return (round a body in its way since
-  W23)
-  ⟦SHIP: if lane review merged (0f89cdd): outside its leash a return never ends early; it waits off the body on its post (docs/systems/P39f.md, "M9 gate (lane review)"); else delete⟧,
+  W23; outside its leash a return never ends early: it waits off the body on its post and answers a blow (M9 gate, `docs/systems/P39f.md`, "M9 gate (lane review)"); a ranged member's firing points stay inside its leash and only a hostile holder keeps a member off it: M9 gate, final round),
   factions, awe, ranged posts and the front-arc positioning (P22), the target provider (P30),
   crews (P32), regeneration and the yield protocol (P34) and march columns (P37) - each package's code
   under its own anchor.
@@ -183,7 +182,7 @@ loadout, weapons, resources) in and out of the save document.
   `FormationRules` checks). Pikemen, shieldmen and bannermen are records.
 - **Siege engines and crews** (P32; `scripts/world/siege_engine.gd`): a `SiegeEngine` is a
   `BreakableProp` with its own controller and runner; it shoots while crewed
-  ⟦SHIP: if lane aldmere merged (812e626, 82eab0b): and while its battle does not hold its fire until its phase (`SiegeEngine.set_fire_held`, `fire_held`; `BattleBoss.engine_phase`), as merged; else delete⟧
+  and while its battle does not hold its fire until its phase (`SiegeEngine.set_fire_held`, `fire_held`; `BattleBoss.engine_phase`: M9 gate, lane aldmere)
   (ballista bolts along an aim line, catapult stones into a landing circle), takes ranged tokens and
   launch slots, raises the −20 siege morale event when it breaks, can be seized and thrown at stage
   6, and since P36 can bombard props (`prop_targets`, the siege of Skarn).
@@ -361,8 +360,7 @@ faction a reconciliation.
   (talents, ancestry, attributes, loadout: M8 gate F15) and a boss's end (defeated, fled, yielded),
   and taken in POST_RESOLVE when nothing blocks them (dead, grabbed, holding, a screen open, an aware
   enemy within 40 m). Completion requests (the prologue's and the campaign's end, a boss's end, the
-  world's main-thread stages
-  ⟦SHIP: and, if lane ironreg merged (23d4d3c), the start of an oath's road (`GameSession.settles_an_oath`: the crown's breach and its sabotage); else delete⟧)
+  world's main-thread stages)
   ignore aware enemies. No checkpoint is taken while a boss fight or a battle is engaged (M8 release
   R1).
 - **Save schema 2** (`SaveSlots.SCHEMA_VERSION` 2): `SaveSlots.migrate()` runs after the read and
@@ -389,16 +387,22 @@ faction a reconciliation.
   projectiles and hazards land on nothing - and only the yield prompt decides, with a held confirm:
   Spare (`spared`), Strike (one blow, `slain`) or a fight to the death. `Events.boss_yielded`; the
   outcome is a flag (`boss.<name>.outcome`).
-- `BattleBoss` makes a battle a boss: phases over several encounters, begun at fractions of the
-  aggregate bar of what spawned (engines included)
-  ⟦SHIP: if lane ironreg merged (baaf6a8), rewrite this rule: the phases follow `BattleBoss.phase_fraction` (the units' current health with every engine counted at its full health), the bar the giant sees still counts what the engines have left, and the 0.70 / 0.50 below (tools/data/world/aldmere.json) are of that fraction; cite the lane's section (docs/systems/P39.md, "The M9 gate (lane ironreg)"); else delete⟧
+- `BattleBoss` makes a battle a boss: phases over several encounters, each begun at a fraction of
+  `BattleBoss.phase_fraction` - the planned units' current health with every engine counted at its
+  full health (a dead or routed unit counts as fallen since the M9 gate's final round), while the bar
+  the giant sees still counts what the engines have left and its notches follow the phases (M9 gate,
+  lane ironreg, `docs/systems/P39.md`, "The M9 gate (lane ironreg)"; the final round's `55a56db`) -
   or when every unit of the phases so far has fallen; Corvane's yield ends it. `FortBattle` is the
   Iron Regiment in Fort Aldmere's bailey (its portcullis holds the giant in until the battle ends; a
   parley leaves the bailey at peace); `MootArena` is Harrok's ring (the talk ending, `yielded_talk`);
   the Matriarch's den is a `BossArena` with the drive-out (`boss_disengaged(fled)`). A battle starts
   every attempt afresh and repairs a save written mid-battle (M8 release R1). The Iron Regiment's
-  phases begin at 0.70 and 0.50 of its bar since the W23 confirmation (`a7da72d`).
-  ⟦SHIP: if lane aldmere merged: an engine of the battle that a later phase's encounter names in its `engines` list holds its fire until that phase begins (`engine_phase`, `held_engines`, `SiegeEngine.set_fire_held`; a reset, a win or the node leaving the tree frees every hold), and the HUD says which engines shoot now and which join later (`engines_line`, `phase_engines_line`) (docs/systems/P39.md, "The M9 gate (lane aldmere)"); else delete⟧
+  phases begin at 0.70 and 0.50 of that fraction (`tools/data/world/aldmere.json`; the thresholds since
+  the W23 confirmation, `a7da72d`).
+  An engine of the battle that a later phase's encounter names in its `engines` list holds its fire
+  until that phase begins (`engine_phase`, `held_engines`, `SiegeEngine.set_fire_held`; a reset, a win or
+  the node leaving the tree frees every hold), and the HUD says which engines shoot now and which join
+  later (`engines_line`, `phase_engines_line`) (`docs/systems/P39.md`, "The M9 gate (lane aldmere)").
 
 ## 12. The living world (P37; `scripts/world/wander_director.gd`, `world_event.gd`)
 
@@ -492,7 +496,7 @@ faction a reconciliation.
   lead stem's position; states silent, context (title, end, campaign end, sandbox), zone (the winning
   `audio_region`'s set with explore / danger / combat layers) and boss (intro stinger, phase layers,
   the victory or yield stinger). Intensity weighs threats against the giant's height
-  ⟦SHIP: if lane balance merged (4be451d): and caps the combat radius at 40 m (`combat_cap_m`) for a giant at least 10 m tall (`combat_cap_min_height_m`: stages 4-6); else delete⟧.
+  and caps the combat radius at 40 m (`combat_cap_m`) for a giant at least 10 m tall (`combat_cap_min_height_m`: stages 4-6; M9 gate, lane balance), and a hostile crewed engine's landed shot counts as its crew's hit (M9 gate, final round).
   The **`MelodyScheduler`** picks a variant or a rest for each four-bar segment (no variant more
   than twice in a row, no phrase repeated within 60 s) and, after three minutes of quiet exploration,
   a silence window. **`AmbienceDirector`** cross-fades beds by zone, places weighted spots, flushes
@@ -578,7 +582,12 @@ siege test levels, and P34's troll den, Moot's ring and bailey test).
   the world's invariants every tick (members in unloaded chunks, loaded chunks ≤ 25, regions per layer,
   thrash, events, the save's size; the director's budget rule). P39 added measurement fixes and rules
   of play (`docs/systems/P38.md`, "P39 (W23)")
-  ⟦SHIP: and, if lane balance merged, the M9 gate's bot changes as merged (so far 73dad1c: each slotted ability the run has not used is tried at the first free tick it fits, an engine that shot at the giant in the last 20 s is sought from 90 m, formations off the way are passed by, Rampart Grip counts as ready only with something to seize; 36d7938: the expert's dodge reserve and the lock invariant's rout tick; 41fddb0: a placed member whose AI is off is walked past), citing the file and heading that record them; else delete⟧,
+  and the M9 gate's (`docs/BALANCE_LOG.md`, "M9 gate (lane "balance": ...)", "The bot (measurement
+  fixes, plan §3.23)"): each slotted ability the run has not used is tried at the first free tick it
+  fits, an engine that shot at the giant in the last 20 s is sought from 90 m, formations off the way
+  are passed by, Rampart Grip counts as ready only with something to seize (`73dad1c`); the expert's
+  dodge reserve and the lock invariant's rout tick (`36d7938`); a placed member whose AI is off is
+  walked past (`41fddb0`),
   which shape the ability and boss numbers it reports.
 - `PerfProbe`: CPU per tick, frame and render times, draw calls, nodes and memory, sections by
   district, chunk or region, with budget verdicts (`PERF_RESULT {json}`).
@@ -588,7 +597,7 @@ siege test levels, and P34's troll den, Moot's ring and bailey test).
   budget), `pck_files.py`, `release_data_check.gd`, the web checks in `tools/web/` (`audio_check.mjs`,
   `stream_check.mjs` and `world_check.mjs`, each with its stub test, and `world_start_check.mjs`),
   `capture_tour.sh` and `valley_tour.gd` (screenshots)
-  ⟦SHIP: the world tour's tool, if the ship step added one or gave valley_tour.gd world options (docs/systems/P40.md); else delete⟧,
+  `world_tour.gd` with `world_tour.sh` (the world tour beside the world bot, P40: `docs/systems/P40.md`),
   `draw_call_probe.tscn`.
 
 ## 19. Tests (`tests/`)
@@ -598,7 +607,7 @@ siege test levels, and P34's troll den, Moot's ring and bailey test).
   `--slow`; 8 minutes) and `tests/gate` (only with `--gate`: the walkthroughs of every region, every
   order of the oaths, seeded boss runs, the battles' reloads, determinism soaks with and without audio,
   the world bot's smoke run, the living world on the real world; 50 minutes).
-  ⟦SHIP: the suites on the final commit as "N suites (N unit, N integration, N slow, N gate)" - the total from the final check's RESULT line (the handoff's §6.1), each tier by counting the test_*.gd files directly in tests/unit, tests/integration, tests/slow and tests/gate on that commit (what tests/test_runner.gd's list_suites runs; the four sum to the total)⟧;
+  291 suites (55 unit, 154 integration, 53 slow, 29 gate) on the final commit (the final check's RESULT line, `docs/M6_M9_HANDOFF.md` §6.1; the `test_*.gd` files directly in each tier's folder);
   282 at W23 (`docs/systems/P39.md`, "Tests and the full check"; by tier, the suite files at
   `wave-23`, `f851b0d`: 55 unit, 154 integration, 49 slow, 24 gate).
 - The runner (`tests/run_tests.tscn`) reseeds `Sim`, runs `ResetHooks` around every test (session,
@@ -675,5 +684,5 @@ differences across machines (physics), which is why balance is judged over sever
 | The world bot (BotRoute, WorldBot, WorldMetrics, invariants, the acceptance runs) | P38 |
 | Stability, balance and the report; the M9 confirmation | P39 |
 | The W23 fixes and polish (the HUD and map, raiders, the world rebuilt, placed fights, the web world check) | P39f |
-| The M9 ship (the final check, the world tour, the exports and web checks, these documents) | ⟦SHIP: P40 once the ship step writes docs/systems/P40.md, else delete this row⟧ |
-| The gate reviews' fixes | `DECISIONS.md` §3.2 in short; the detail in the M6 gate's inline "M6 gate" notes (P04, P17b, P19, P21, P23), each package's "M7 gate", "M7 polish", "M8 gate", "M8 screenshot pass" and "M8 release" sections, and ⟦SHIP: the M9 gate's sections in the merged lanes, each by file and heading (so far docs/systems/P39.md, "The M9 gate (lane aldmere)" and "The M9 gate (lane ironreg)", and docs/systems/P39f.md, "M9 gate (lane review)"; add lane balance's, if it adds one)⟧ |
+| The M9 ship (the final check, the world tour, the exports and web checks, these documents) | P40 |
+| The gate reviews' fixes | `DECISIONS.md` §3.2 in short; the detail in the M6 gate's inline "M6 gate" notes (P04, P17b, P19, P21, P23), each package's "M7 gate", "M7 polish", "M8 gate", "M8 screenshot pass" and "M8 release" sections, and the M9 gate's sections: `docs/systems/P39.md`, "The M9 gate (lane aldmere)", "The M9 gate (lane ironreg)", "M9 gate (lane "balance")", "M9 gate (integration)", "M9 gate (catch-up)", "M9 gate (final)" and "M9 gate (the final round)", and `docs/systems/P39f.md`, "M9 gate (lane review)" |
