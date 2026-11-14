@@ -9,10 +9,12 @@ extends RefCounted
 ## own bodies are excluded). The giant's visuals have no collision shapes, so bounds are the
 ## only way to test them. The probe keeps the run's statistics.
 ## A skinned mesh (the realistic giant's, P43) is measured by its bones, not by its rest-pose AABB
-## (which spans the whole body, arms out): the boxes of the vertices each skin bind moves (mesh space
-## at rest, one per bind and side) carried by that bone's skinning transform in the live pose
-## (bone_parts, skinned_distance). With the skinned layers off the skeleton rests, so the tests that
-## need the arms where the player sees them turn the layers on (SkinnedRig.enable_for_tests).
+## (which spans the whole body, arms out): the triangles each skin bind moves (mesh space at rest, one
+## part per bind and side) carried by that bone's skinning transform in the live pose, with the
+## part's box as the broad phase (bone_parts, skinned_distance). A box alone is too coarse for the
+## curved torso: behind the head, its boxes cover a third-person camera's centre ray that the surface
+## never meets. With the skinned layers off the skeleton rests, so the tests that need the arms where
+## the player sees them turn the layers on (SkinnedRig.enable_for_tests).
 ##
 ##   var probe := CrosshairProbe.new(player.camera_rig.camera, [player])
 ##   ... every tick: probe.sample()
@@ -102,8 +104,8 @@ func _collect_rids(node: Node) -> void:
 		_collect_rids(c)
 
 
-## The nearest of a skinned mesh's posed bone boxes along the ray (origin, unit dir) within RANGE_M
-## (INF when none; the mesh's rest AABB when its skeleton cannot be found).
+## The nearest of a skinned mesh's posed bone parts' triangles along the ray (origin, unit dir) within
+## RANGE_M (INF when none; the mesh's rest AABB when its skeleton cannot be found).
 static func skinned_distance(mi: MeshInstance3D, origin: Vector3, dir: Vector3) -> float:
 	var sk := mi.get_node_or_null(mi.skeleton) as Skeleton3D
 	var parts := bone_parts(mi.mesh)
@@ -137,7 +139,23 @@ static func skinned_distance(mi: MeshInstance3D, origin: Vector3, dir: Vector3) 
 		var t := maxf((c - lo).dot(ld) / ld.length_squared(), 0.0)
 		if (lo + ld * t).distance_squared_to(c) > float(part[3]):
 			continue
-		best = minf(best, _slab(lo, ld, part[1] as AABB, minf(best, RANGE_M)))
+		if _slab(lo, ld, part[1] as AABB, minf(best, RANGE_M)) == INF:
+			continue
+		best = minf(best, _triangles(lo, ld, part[4] as PackedVector3Array, minf(best, RANGE_M)))
+	return best
+
+
+## The ray parameter of the nearest of `tris` (three vertices a triangle) the ray (lo + ld * t, t >= 0)
+## meets within max_t; INF when none.
+static func _triangles(lo: Vector3, ld: Vector3, tris: PackedVector3Array, max_t: float) -> float:
+	var best := INF
+	var inv_len2 := 1.0 / ld.length_squared()
+	for i in range(0, tris.size(), 3):
+		var hit: Variant = Geometry3D.ray_intersects_triangle(lo, ld, tris[i], tris[i + 1], tris[i + 2])
+		if hit != null:
+			var t := ((hit as Vector3) - lo).dot(ld) * inv_len2
+			if t >= 0.0 and t <= max_t and t < best:
+				best = t
 	return best
 
 
@@ -163,23 +181,24 @@ static func _slab(lo: Vector3, ld: Vector3, box: AABB, max_t: float) -> float:
 	return tmin
 
 
-## A vertex counts toward the box of every bind that moves it by at least this weight.
+## A vertex belongs to the part of every bind that moves it by at least this weight.
 const PART_WEIGHT := 0.25
 static var _parts := {}
 
 
-## A skinned mesh's bone boxes: [bind, AABB (mesh space, rest pose), its centre, its squared half
-## diagonal] sorted by bind, one box per bind
-## and side (x < 0, x >= 0: a bind that moves both shoulders, spine_03 in the limbs, is two boxes, not
-## one spanning the chest between them), over the vertices it moves by PART_WEIGHT or more; held per
-## mesh for the process.
+## A skinned mesh's bone parts: [bind, AABB (mesh space, rest pose), its centre, its squared half
+## diagonal, the part's triangles (PackedVector3Array, three vertices a triangle)] sorted by bind, one part
+## per bind and side (x < 0, x >= 0: a bind that moves both shoulders, spine_03 in the limbs, is two parts,
+## not one spanning the chest between them). A vertex belongs to the parts of the binds that move it by
+## PART_WEIGHT or more, a triangle to every part one of its vertices belongs to, and the box holds the
+## part's triangles; held per mesh for the process.
 static func bone_parts(mesh: Mesh) -> Array:
 	if mesh == null:
 		return []
 	var key := mesh.get_instance_id()
 	if _parts.has(key):
 		return _parts[key]
-	var boxes := {}   # bind * 2 + side -> AABB
+	var tri_idx := {}   # bind * 2 + side -> the part's triangles' vertices, three a triangle
 	for s in mesh.get_surface_count():
 		var arr := mesh.surface_get_arrays(s)
 		var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
@@ -190,19 +209,39 @@ static func bone_parts(mesh: Mesh) -> Array:
 		var b := PackedInt32Array(bones)
 		var w := PackedFloat32Array(weights)
 		var stride := b.size() / verts.size()
+		var vkeys: Array[PackedInt32Array] = []
+		vkeys.resize(verts.size())
 		for v in verts.size():
-			var p := verts[v]
-			var side := 1 if p.x >= 0.0 else 0
+			var side := 1 if verts[v].x >= 0.0 else 0
+			var ks := PackedInt32Array()
 			for j in stride:
 				if w[v * stride + j] >= PART_WEIGHT:
-					var k := b[v * stride + j] * 2 + side
-					boxes[k] = (boxes[k] as AABB).expand(p) if boxes.has(k) else AABB(p, Vector3.ZERO)
-	var keys := boxes.keys()
+					ks.append(b[v * stride + j] * 2 + side)
+			vkeys[v] = ks
+		var index := PackedInt32Array(arr[Mesh.ARRAY_INDEX]) if arr[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+		var count := index.size() if not index.is_empty() else verts.size()
+		for t in range(0, count - 2, 3):
+			var i0 := index[t] if not index.is_empty() else t
+			var i1 := index[t + 1] if not index.is_empty() else t + 1
+			var i2 := index[t + 2] if not index.is_empty() else t + 2
+			var done := PackedInt32Array()
+			for vi: int in [i0, i1, i2]:
+				for k: int in vkeys[vi]:
+					if done.has(k):
+						continue
+					done.append(k)
+					if not tri_idx.has(k):
+						tri_idx[k] = []
+					(tri_idx[k] as Array).append_array([verts[i0], verts[i1], verts[i2]])
+	var keys := tri_idx.keys()
 	keys.sort()
 	var out: Array = []
 	for k: int in keys:
-		var box: AABB = boxes[k]
-		out.append([k / 2, box, box.get_center(), box.size.length_squared() * 0.25])
+		var tris := PackedVector3Array(tri_idx[k] as Array)
+		var box := AABB(tris[0], Vector3.ZERO)
+		for p in tris:
+			box = box.expand(p)
+		out.append([k / 2, box, box.get_center(), box.size.length_squared() * 0.25, tris])
 	_parts[key] = out
 	return out
 

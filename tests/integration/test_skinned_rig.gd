@@ -14,6 +14,7 @@ extends IntegrationSuite
 ##   * flash() and set_status_tint() reach every giant surface's shader and the weapon;
 ##   * apply_look on the live giant, growth to stage 4 scaling Body by 3 with the look kept;
 ##   * the render layers per mesh kind and the first-person mask;
+##   * the crosshair probe meets the skinned body where it is and only there;
 ##   * skin_stats() and SkinnedRig.run_stats() count what ran.
 
 const LAYER_OF := {"body": 0, "eyes": 3, "hair": 3, "beard": 3}
@@ -229,6 +230,35 @@ func test_render_layers_by_mesh_kind_and_the_first_person_mask() -> void:
 	assert_eq(mask & 0b110, 0, "first person culls layers 2 and 3")
 	assert_true((mask & 1) != 0, "and draws layer 1")
 	p.camera_rig.set_mode(CameraRig.Mode.THIRD_PERSON, false)
+
+
+## The crosshair probe (tests/support/crosshair_probe.gd) measures the skinned giant by its parts' triangles:
+## a ray at the chest (the spine_03 bone) from 3 m in front meets Body_Torso on the chest's surface, one from
+## behind on the back, one 2 m to the side misses; a camera 3 m in front looking at the chest is obscured by
+## the giant, one 3 m to the side is not (the positive control for the routes' and first person's probes).
+func test_the_crosshair_probe_measures_the_skinned_body() -> void:
+	var p := await _grounded()
+	var torso := _rig(p).model().mesh("Body_Torso")
+	var sk := torso.get_node(torso.skeleton) as Skeleton3D
+	var chest := sk.global_transform * sk.get_bone_global_pose(sk.find_bone("spine_03")).origin
+	var fwd := -p.global_transform.basis.z
+	var side := p.global_transform.basis.x
+	var front := CrosshairProbe.skinned_distance(torso, chest + fwd * 3.0, -fwd)
+	var back := CrosshairProbe.skinned_distance(torso, chest - fwd * 3.0, fwd)
+	assert_true(front > 2.0 and front < 2.95, "the ray from the front meets the chest's surface (%.3f m of 3)" % front)
+	assert_true(back > 2.5 and back < 3.0, "the ray from behind meets the back (%.3f m of 3)" % back)
+	assert_eq(CrosshairProbe.skinned_distance(torso, chest + fwd * 3.0 + side * 2.0, -fwd), INF, "a ray 2 m to the side misses")
+	var cam := Camera3D.new()
+	world.add_child(cam)
+	cam.global_position = chest + fwd * 3.0
+	cam.look_at(chest)
+	var probe := CrosshairProbe.new(cam, [p])
+	assert_true(probe.sample(), "a camera in front looking at the chest is obscured (%s at %.3f m)" % [probe.last_blocker, probe.last_distance])
+	assert_true(probe.last_blocker.begins_with("Visual/Body/Model/"), "by the model (%s)" % probe.last_blocker)
+	cam.global_position = chest + fwd * 3.0 + side * 3.0
+	cam.look_at(chest + side * 3.0)
+	assert_false(CrosshairProbe.new(cam, [p]).sample(), "one 3 m to the side is not")
+	cam.queue_free()
 
 
 func test_skin_stats_count_what_ran() -> void:
