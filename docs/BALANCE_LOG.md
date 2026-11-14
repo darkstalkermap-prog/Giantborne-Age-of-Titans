@@ -1537,7 +1537,7 @@ the new row on the garrison.
 | The XP and equipment budget tests pass (margins at least 50 XP) | the five budget suites pass (`test_world_xp_budget`, `test_world_budgets_wood`, `test_world_budgets_crown`, `test_world_equipment_budget`, `test_xp_budget`: 178 checks, run alone on this code and in the full check); the smallest margin 70 XP (two oaths to stage 6), stage 4 by 100, stage 5 by 160-170, the finale by 300 | met | |
 | The Valley's items hold as P22 left them | no item moved: 17 of lane P39's 24 runs replay to the tick, seven changed by lane P39f's leash return; no novice death at the Ogre King (P22: 0); the forest and ruins damage 1.23 and 1.00 of maximum health (P22 1.27 and 1.23); the force branch's return leg: the novice 3 of 3, the expert 2 of 3 (P22 3 and 3); the stage-3 flee share 38 % (P22 40 %) | held (the items that missed before still miss) | the expert's force seed 2 runs out the Deadfall's watchdog (since lane P39's iteration 0), the segment damage is over 0.6 (since P17b), the Ogre King costs the novice no try (since P22) and the stage-3 share is under 50 %: the M6 gate's Valley row and "From the M9 confirmation" |
 
-## M9 gate (lane "balance": the Matriarch's slay, lone humans, the music, the bot; tags `gate_world`, `gate2_world`, `gate3_world`, `gate4_world`, `gate5_world`, `gate5_valley`, `den_*`, `toll_probe*`)
+## M9 gate (lane "balance": the Matriarch's slay, lone humans, the music, the bot; tags `gate_world`, `gate2_world`, `gate3_world`, `gate4_world`, `gate5_world`, `gate5_valley`, `den_*`, `toll_probe*`; fix-up 1: `h_*`, `fx1_*`)
 
 The M9 gate's fixes of the confirmation's misses this lane owns (FOLLOWUPS, "From the M9 confirmation (W23)"): the
 Matriarch's slay for the novice, lone humans that do not flee, the music among lesser enemies, and five places where
@@ -1560,7 +1560,8 @@ same code, so a before and an after on one seed differ only by the changes liste
 | A living enemy below the world (y < -30) is set back at its home | `EnemyActor.recover_from_void` | found by this lane's runs: a thrown shieldman fell through the ground and its encounter never cleared (below) | `test_m9_gate_balance` |
 | From stage 4 the expert keeps its dodge reserve only while a dodge is planned or a boss or a medium or large body stands within 12 m | `BotCombat.reserve_needed` (`bot_combat.gd`) | the peaceful experts died at the toll fort: the reserve kept the expert from every blow before the pikes and the tower's archers (below) | `test_m9_gate_balance` |
 | The bot's lock invariant waits out the tick a locked formation's last member routs in | `BotDiagnosis.lock_failure` | a rout is no death: the giant drops the group lock in its own next step, and the toll fort's pikes routing under it ended a peaceful novice's run at 410 s (FOLLOWUPS' row from lane P39's runs) | `test_m9_gate_balance` |
-| The world bot walks past a placed member whose AI is off | `WorldBot._is_ignored` | the clans' giants watching the Moot (AI off, never striking) stand hostile once Harrok is slain: a conqueror expert that slew him struck one for the throne stage's 306 s and stopped one step from the throne | `test_m9_gate_balance` |
+| The world bot walks past a placed member whose AI is off | `WorldBot._is_ignored` | the clans' giants watching the Moot (AI off, never striking) stand hostile once Harrok is slain: a conqueror expert that slew him struck one for the throne stage's 306 s and stopped one step from the throne (it walks past a member walking home on its leash too: below, "The reduced matrix") | `test_m9_gate_balance` |
+| Fix-up 1: the Strike on a yielded Harrok lands before he rises and leaves him 10 % of his health | `yield_at.strike_health_frac` (enemy schema, `EnemyActor._p34_strike_wound`), `data/enemies/harrok.json` | the verification's major: with the Matriarch slain the conqueror novices stopped at Harrok's slay, six deaths each - every fight to the death after the duel lost (below, "Harrok's slay") | `test_m9_gate_balance` (the blow from his floor and from an honour yield, Spare lands nothing) |
 
 ### The Matriarch's phase 2 (the novice's slay)
 
@@ -1615,8 +1616,42 @@ drive-out rule did not change). With the den behind it the conqueror novice now 
 Harrok's slay instead: in all three runs he yields (twice, twice, four times), is struck on, and kills the novice six
 times (his lowest per attempt 95/34/17/6/37/40 %, 42/46/9/7/33/35 % and 42/31/17/11/25/34 %; in `gate2_world` seed 2
 slew him on the sixth attempt with five deaths). The confirmation never measured it (no conqueror novice got past
-the den); FOLLOWUPS has the row - his spare and talk duels (the novice's median 2.5 deaths, met) share his numbers,
-so his slay is a tuning of its own with its own measurement.
+the den); his spare and talk duels (the novice's median 2.5 deaths, met) share his numbers, so his slay is a change of
+its own with its own measurement: fix-up 1, below.
+
+### Harrok's slay (fix-up 1: the verification's major)
+
+**Before** (`gate3_world`, the conqueror novice, seeds 1-3; the verification replayed seed 1 on the lane's head to the
+tick - 99,020 ticks, the flags' hash `0d22cd44614d`): six deaths to Harrok in each run, no slay. He yields (two, two
+and four times), is struck, and the giant dies in the fight to the death every time; his lowest health per attempt
+95/34/17/6/37/40 %, 42/46/9/7/33/35 % and 42/31/17/11/25/34 %.
+
+**The harness** (`m9_gate/balance/fixup-1/scripts/harrok.sh`, as `den2.sh` is the den's): from each of those runs' last
+save - the waystone `world.cp.moot_foot`, stage 6, levels 14-15 - `--continue` with the conqueror novice of its seed
+until `boss.harrok.outcome` holds (or the champion's six deaths). On the lane's head it plays the wall again: six deaths
+on each seed, no slay, eleven struck yields lost (`h_base`). A probe of his hits (`h_probe`, seeds 1-2) shows why:
+the giant came out of the duel into the fight to the death with 38-575 of its 1,600-1,615 health (2-36 %) and 0-7
+stamina, against him at 850-1,226 of his 3,400 (25-36 %: the floor, or Wildheart's challenge of two poise breaks), and
+all six of those fights were lost with him at 6-30 % - to his frenzy (1,564 of the damage), the chop (710; a stage-6
+giant stands in three or four of its six pulses, 142 each) and the stones (542). The fight to the death is his whole
+phase 2 again, so the slay was the duel and then a second duel the novice met with a fifth of its health on average; Spare
+after the same duel costs the novice a median of 2.5 deaths (the confirmation). His phase 2 is one record shared
+with those duels: no change to its stones, frenzy or chop leaves them as measured.
+
+**The change** (`e35781c`): the yield's dialogue has the giant "Strike him down" before "he will rise and fight to
+the death", but the Strike did not land - he rose with all he knelt with. Now `yield_at.strike_health_frac` (with
+`on_strike` "fight", below the yield's `health_frac`): the Strike's blow lands first - the giant's hit `yield.strike`
+through the ordinary resolution, sized to leave him that share of his health - and he rises from it to fight to the
+death with all his kit (the stones, the frenzy, the chop: nothing taken away). Spare and the talk ending never meet
+it. Harrok 0.1. From the Moot's foot (seeds 1-3, deaths before the slay): before 6, 6 and 6 with no slay; 0.15 (`h_v15`)
+4, 1 and 2; **0.1** (`h_v10`) 0, 1 and 2 - the post-strike fights won but two of seed 3's, where he rose at 340 and
+the giant, out of the duel nearly spent, met his frenzy's third stroke 4 s later.
+
+**After** (`fx1_world`, the final code `bd541da`, the full runs): the conqueror novices complete the campaign on all
+three seeds - Harrok slain on the 4th, 3rd and 4th attempt with 3, 2 and 3 deaths (his lowest per attempt 95/34/2/0,
+42/46/0 and 42/4/2/0 %; seven, five and five deaths in the whole run, 36.2, 32.2 and 36.8 minutes of human estimate).
+Each run replays the gate's until its first Strike (the same deaths before it; seed 1's third attempt is lost 4.2 s
+after the Strike as before, its fourth won). Deaths per Harrok's slay: median 3 (plan §6.4: 1-3, met; before 6).
 
 ### Lone humans (awe tiers)
 
@@ -1638,10 +1673,16 @@ runs (in the confirmation it stayed at peace and the raid was defended in all th
 its 100 XP and kills were lost to the novice before the den. So a unit whose awe was a tier's now ends its flight in
 a formation's slot if one takes it (P30's joining: outmatched soldiers join formations) and otherwise routs: it does
 not walk back to a giant it is no match for, and a rout settles an encounter or an event as a death does.
+Fix-up 1 (the verification: with that rule taken out `test_m9_gate_balance` still passed - its lone soldier had no
+leader and routed through the old `ai.rout_after_s` rule, while the rule acts only with a leader, as at the raid): the
+suite now gives a tier-awed soldier a commander that stays alive; once its morale is back above `regroup_morale` its
+flight ends in a rout straight away when no formation takes it, and in a formation's free slot when one does (taking
+the rule out fails both: the soldier turns back to APPROACH; routing every tier-awed soldier fails the second).
 
 **After** (the reduced matrix, `after/subset`: the ten runs of `before/subset`'s seeds and presets on this lane's
 code - below, "The reduced matrix"): lone humans fled or routed 25 % of their engaged time (before 4 %); the
-soldiers 66 % of 803 s (before 0 % of 286 s), archers 4 % of 1,308 s and mages 16 % of 458 s (before 4 % and 6 %).
+soldiers 66 % of 803 s (before 0 % of 286 s), archers 4 % of 1,308 s and mages 16 % of 458 s (before 4 % and 6 %);
+on the final code (fix-up 1, `after2/subset`) 27 %: soldiers 65 % of 751 s, archers 4 % of 1,301 s, mages 31 % of 393 s.
 A lone soldier now runs from a stage-4 giant on sight and does not come back: in the conqueror novices' runs 33-42 %
 of all lone humans' engaged time is flight (before 0-13 %). The Millford raid was defended in every conqueror run (as
 in the confirmation; `gate_world` before the rout rule: warned or hostile, never settled). The Valley's stage-3
@@ -1676,7 +1717,29 @@ rules unchanged); the Valley's stages keep the scaled radius.
 
 **After** (`after/subset`): 11 % of the stage 4-6 time among only lesser enemies in combat (before 32 %;
 target under 25 %, met); the bosses' and rival giants' fights keep combat (the Moot's and the den's stage-6 and
-stage-5 music is combat as before: `world_music`).
+stage-5 music is combat as before: `world_music`). On the final code (fix-up 1, `after2/subset`, the same ten specs:
+below, "The reduced matrix") 15 % (85.6 of 574.5 s): met.
+
+**What the cap does on its own** (fix-up 1: the verification found the 32 -> 11 % given here as the cap's result,
+when those runs also differ in play). The music changes nothing in play, so a run replays to the tick with the cap
+taken out of the mix (`fx1_capoff`: `combat_cap_m` and `combat_cap_min_height_m` removed). On the final code, the
+same ticks and flags' hash both ways: `w.mixed:novice:1` (68,953 ticks, `675c22f77957`) 100 % of its 21.1 s among
+only lesser enemies in combat without the cap, 68 % (14.4 s) with it; `w.peaceful:expert:1` (99,435 ticks,
+`7dab6d7ba4ef`) 17.4 % (12.3 of 70.8 s) both ways (the verification's replays 17.5 and 17.9 %: the music's own clock
+moves a few tenths between replays of a run). Pooled over the two: 36 % -> 29 %. So the cap is a part of the drop,
+not the drop: over the ten runs the lesser-only combat fell from 162.4 s (the confirmation) to 85.6 s (the final
+code), and most of that is the runs themselves changing - the mixed expert's fights among lesser enemies alone went
+from 62.6 s, all of it combat (the Raiders' Hollow fought on the road, the war camp), to 15.0 s (14.2 in combat), the
+peaceful expert's combat from 19.9 to 12.3 s, the mixed novice's from 27.6 to 21.1 s without the cap and 14.4 s with
+it; the conqueror runs now go on past the den, and lone soldiers flee a stage-4 giant (a routed one is no longer
+engaged). With the cap the mixed runs still spend most of their lesser-only time in combat (`w.mixed:novice:1` 68 %,
+`w.mixed:expert:1` 95 %): the probe of why (`fx1_why`, `fx1_capoff_why`: `probe_music/why.patch` on the final code)
+puts 18.0 of `w.mixed:novice:1`'s 21.1 s without the cap on crews 40-59 m off and formations 80-139 m off and 3.1 s on
+hits; with the cap 3.1 s are the hits (P28's rule: a blow keeps combat 5 s) and the other 11.3 s pass with no hit for
+5 s and nothing that counts within 40 m (the probe, written before the cap, still names the crews 40-59 m off and the
+formations 80-99 m off for them): the director's hold after a fight (`combat_hold_s`, 6 s after the target last
+reached combat).
+The pooled target stays met.
 
 ### The bot (measurement fixes, plan §3.23)
 
@@ -1693,12 +1756,12 @@ stage-5 music is combat as before: `world_music`).
   nothing to seize (its "windows" counted, the rotation pressed it on nothing); it now needs a body or an engine in
   reach, as Crushing Grip does. A slotted ability the run has not used yet is tried at the first free tick it fits
   (an area blow only at a foe within reach; the heal and charges keep their rules), not only at the novice's
-  once-a-second look (`73dad1c`). Never used when ready (`world_growth`, `after/subset`): Earthquake in 9 of the ten runs, Formation Sweep, Sweeping Blow and Titan Stomp in 3, Crushing Grip and Rampart Grip in 2, Titan Surge in 1 (ten runs reach stage 6 now, five before, and Earthquake is a stage-6 ability) (before: Rampart Grip in 5 of the ten runs, Formation Sweep 4, Earthquake 4, Crushing Grip 4, Heavy Footfall 3, Boulder Hurl 3, Titan Stomp 2, Crag Hurl 2, Titan Surge 1); Earthquake (Titan Stomp's stage-6 evolution: 35 stamina, 14 s) has one to four windows a run and is used in six runs of eight but outside them. The largest single share of the ability damage 51 % (Crag Hurl, `w_mixed_novice_1`) (before 92 %, the expert's Runic Bolt).
+  once-a-second look (`73dad1c`). Never used when ready (`world_growth`, `after/subset`): Earthquake in 9 of the ten runs, Formation Sweep, Sweeping Blow and Titan Stomp in 3, Crushing Grip and Rampart Grip in 2, Titan Surge in 1 (ten runs reach stage 6 now, five before, and Earthquake is a stage-6 ability) (before: Rampart Grip in 5 of the ten runs, Formation Sweep 4, Earthquake 4, Crushing Grip 4, Heavy Footfall 3, Boulder Hurl 3, Titan Stomp 2, Crag Hurl 2, Titan Surge 1); Earthquake (Titan Stomp's stage-6 evolution: 35 stamina, 14 s) has one to four windows a run and is used in six runs of eight but outside them. The largest single share of the ability damage 51 % (Crag Hurl, `w_mixed_novice_1`) (before 92 %, the expert's Runic Bolt). On the final code (fix-up 1, `after2/subset`): Earthquake in 9, Formation Sweep in 5, Titan Stomp in 4, Sweeping Blow in 3, Crushing Grip in 1; the largest share 63 % (Runic Bolt, `w_peaceful_expert_1`).
 - **The expert's brazier lure** (not changed). In the confirmation the conqueror experts held her at 37-50 % in her
   phase 2 (two runs on the den's time, the third drove her out after burning the braziers). With her phase 2 eased
   the lure as it is draws her to the braziers and the experts slay her again (`gate5_world`): seed 1 at the second
   attempt, seed 3 at the first; seed 2 drove her out at its first attempt (49 %, her nests burned) - and all three
-  went on to slay Harrok and complete (3, 2 and 2 deaths). What the trunks did for the lure was not isolated (the
+  went on to slay Harrok and complete (3, 2 and 2 deaths; on the final code, with the Strike's blow, 3, 1 and 1). What the trunks did for the lure was not isolated (the
   confirmation's row); on the cleared den it pays once her phase 2 is the gate's.
 - **The lock invariant and a formation's rout** (FOLLOWUPS, lane P39's row). `gate3_world`'s `w.peaceful:novice:1`
   stopped at 410 s on "lock target formation:crownmarch_toll_fort.pikes has no living member": the toll fort's last
@@ -1712,6 +1775,12 @@ stage-5 music is combat as before: `world_music`).
   deal damage), Harrok's death leaves their faction hostile, and the bot struck one 11.7 m off for the throne stage's
   whole 306 s (each blow that landed took a little health off it, so the chase give-up never ran out). The world bot
   now walks past a member the director placed with its AI off (`41fddb0`, `WorldBot._is_ignored`). On the fix the same seed completed, the throne claimed one second into its stage (`gate5_world`'s `w.conqueror:expert:1`), and the conqueror experts of seeds 2-3 slew Harrok and completed too.
+  Fix-up 1 (the verification): the rule walks past more than the clans - a unit walking home on its leash has its AI
+  off as well, and an encounter's task (`_encounter_task`, which skips only the fleeing and the routed) had taken such
+  a member as its target and followed it home; `BotCombat.is_threat` leaves it out of the threats, not out of an
+  encounter's members. `w.peaceful:expert:1` chased the Crownmarch raiders' mage walking home at tick 23,095 on
+  `36d7938` and walks past it on `41fddb0`, so it plays differently from there (below, "The reduced matrix"); the
+  comment on `_is_ignored` said leash-returners were already left out and now says this.
 - **The peaceful experts at the toll fort.** In the confirmation they died there 4, 4 and 5 times (the tower's
   archers 10 of 14, the pikes 4; 465-565 s at the toll against the novice's 57-71 s with no death); on this lane's
   code before the fix `gate3_world`'s `w.peaceful:expert:1` died there six times and stopped (558 s at the toll).
@@ -1730,7 +1799,8 @@ stage-5 music is combat as before: `world_music`).
   expert, bot seeds 1-3): the toll gate taken in 122 and 135 s with one death each and 1,130 and 1,269 damage taken
   (seeds 1-2) without it; in 55, 62 and 56 s with no death and 386, 480 and 539 taken with it. In the full runs (`gate4_world`, `gate5_world`: the peaceful experts on seeds 1-3) the toll took 69, 65 and 66 s
   with no death there (the confirmation: 465, 539 and 565 s with 4, 4 and 5 deaths), and the runs completed with 1, 1 and
-  1 deaths in all (the confirmation: 7, 5 and 10, the third stopped at the toll fort).
+  1 deaths in all (the confirmation: 7, 5 and 10, the third stopped at the toll fort); seed 1 on the final code (fix-up 1)
+  takes the toll in 64.5 s and completes with no death.
 
 ### A thrown enemy fell through the world (found by this lane's runs)
 
@@ -1755,46 +1825,63 @@ the code of its time, as the fixes came in:
 | `gate4_world` | `36d7938` (the expert's reserve, the lock invariant) | `w.peaceful:novice:1`, `w.peaceful:expert:1`, `w.mixed:expert:1` (and `w.conqueror:expert:1`, stopped one step from the throne) |
 | `gate5_world` | `41fddb0` (the Moot's watching clans) | `w.conqueror:expert:1-3`, `w.peaceful:expert:2-3` |
 | `gate5_valley` | `41fddb0` | `help_cache:novice:1`, `force:expert:2`, `intimidate:novice:3` |
+| `fx1_world` (fix-up 1) | `bd541da` (the final code: `a933591` and a test, the Strike's blow, a comment) | the ten specs again but `w.mixed:novice:1`: `w.conqueror:novice:1-3`, `w.conqueror:expert:1-3`, `w.peaceful:novice:1`, `w.peaceful:expert:1`, `w.mixed:expert:1` |
+| `fx1_base` (fix-up 1) | `a933591` (the lane's code before the fix-up) | `w.peaceful:novice:1` (which commit changed it: below) |
+| `fx1_why`, `fx1_capoff`, `fx1_capoff_why` (fix-up 1) | `bd541da` with the music probe and/or the cap taken out (metrics only: the same play) | `w.mixed:novice:1` (cap on, probe), `w.peaceful:expert:1` and `w.mixed:novice:1` without the cap |
 
-A run on an earlier commit stands for the final code: the later commits change only the expert's rules from stage 4,
-the invariant (a check, not the game) and how the bot treats a placed member whose AI is off (hostile only after
-Harrok's slay), none of which the novices' and the mixed expert's runs meet - seeded runs replay exactly, as the Valley's
-three runs show (each replayed the confirmation's to the tick: ticks, deaths, XP, the flags' hash and the AI states).
+The lane said here that a run on an earlier commit stood for the final code, "none of which [later commits] the
+novices' and the mixed expert's runs meet". The verification showed that wrong: `41fddb0` (`WorldBot._is_ignored`)
+walks past more than the Moot's clans - a member walking home on its leash too (above, "The bot") - and
+`w.peaceful:expert:1` plays differently on it from `gate4_world`'s run on `36d7938`. Fix-up 1 ran the specs again on
+the final code (`fx1_world`; the after set is now `after2/subset`): `w.peaceful:expert:1` replays the verification's
+head run to the tick (99,435 ticks, `7dab6d7ba4ef`, no death: the toll fort in 64.5 s, the march resolved in 366.8 s)
+where `gate4_world`'s took 116,898 ticks and one death; `w.peaceful:novice:1` differs too (98,831 ticks against 83,640:
+the march resolved in 354.9 s against 345.9, and Harrok spared on the fifth attempt with four deaths against the first
+with none) - and the lane's own last commit before the fix-up replays that final run to the tick (`fx1_base` on
+`a933591`: 98,831 ticks, `7a187070cdf4`, the same deaths, XP and AI states), so the change is `41fddb0`'s, the one
+change of play between `36d7938` and `a933591` (the two runs part in the march's help's first minute, which begins at
+141.1 s in both: level 8 comes with 1,754 XP at 182.7 s on `36d7938` and with 1,808 at 186.2 s on the final code);
+`w.mixed:expert:1` (54,461 ticks, `ba11e900f988`) and `w.mixed:novice:1` (68,953 ticks, `675c22f77957`) replay
+`gate4_world`'s and `gate3_world`'s exactly. The conqueror runs replay `gate3_world`'s and
+`gate5_world`'s up to their first Strike on Harrok (the fix-up's one change of play) and part there. The peaceful
+experts' seeds 2-3 stay `gate5_world`'s (`41fddb0`): what came after changes only what a Strike does, and they spare
+Harrok. The Valley's three runs (`gate5_valley`) each replayed the confirmation's to the tick (ticks, deaths, XP, the
+flags' hash, the AI states); nothing after `41fddb0` reaches the Valley (no Harrok there).
 
-| Run | Before (`confirm_world`) | After (this lane) |
-| --- | --- | --- |
-| `w_conqueror_novice_1` | stopped at the den: the Matriarch not slain, 6 deaths | the Matriarch slain (3 deaths); stopped at Harrok's slay (6 deaths); 10 in all |
-| `w_conqueror_novice_2` | stopped at the den, 7 deaths | the Matriarch slain (2); stopped at Harrok's slay (6); 9 |
-| `w_conqueror_novice_3` | stopped at the den, 6 deaths | the Matriarch slain (1); stopped at Harrok's slay (6); 8 |
-| `w_peaceful_novice_1` | completed, 6 deaths | completed, 1 death |
-| `w_mixed_novice_1` | completed, 6 deaths | completed, 3 deaths |
-| `w_peaceful_expert_1` | completed, 7 deaths (the toll fort 4) | completed, 1 death (the toll fort none) |
-| `w_peaceful_expert_2` | completed, 5 deaths (the toll fort 4) | completed, 1 death |
-| `w_peaceful_expert_3` | stopped at the toll fort (six deaths to its pikes and archers on the march's help), 10 deaths | completed, 1 death |
-| `w_conqueror_expert_1` | stopped at the den (the den's time), 3 deaths | completed, 3 deaths (the Matriarch and Harrok slain) |
-| `w_conqueror_expert_2` | stopped at Harrok's duel (its time), 8 deaths | completed, 2 deaths (the Matriarch driven out, Harrok slain) |
-| `w_conqueror_expert_3` | stopped at the den (the den's time), 4 deaths | completed, 2 deaths (the Matriarch and Harrok slain) |
-| `w_mixed_expert_1` | completed, 7 deaths | completed, 2 deaths |
+| Run | Before (`confirm_world`) | After (this lane, its commits of the time) | Final code (fix-up 1: `fx1_world`) |
+| --- | --- | --- | --- |
+| `w_conqueror_novice_1` | stopped at the den: the Matriarch not slain, 6 deaths | the Matriarch slain (3 deaths); stopped at Harrok's slay (6 deaths); 10 in all | **completed**, 7 deaths: the Matriarch slain (3), Harrok slain (3) |
+| `w_conqueror_novice_2` | stopped at the den, 7 deaths | the Matriarch slain (2); stopped at Harrok's slay (6); 9 | **completed**, 5: the Matriarch (2), Harrok (2) |
+| `w_conqueror_novice_3` | stopped at the den, 6 deaths | the Matriarch slain (1); stopped at Harrok's slay (6); 8 | **completed**, 5: the Matriarch (1), Harrok (3) |
+| `w_peaceful_novice_1` | completed, 6 deaths | completed, 1 death (`36d7938`) | completed, 5 deaths (Harrok spared on the fifth attempt: 4) |
+| `w_mixed_novice_1` | completed, 6 deaths | completed, 3 deaths | the same run (completed, 3) |
+| `w_peaceful_expert_1` | completed, 7 deaths (the toll fort 4) | completed, 1 death (the toll fort none; `36d7938`) | completed, no death |
+| `w_peaceful_expert_2` | completed, 5 deaths (the toll fort 4) | completed, 1 death | - (`gate5_world` stands: above) |
+| `w_peaceful_expert_3` | stopped at the toll fort (six deaths to its pikes and archers on the march's help), 10 deaths | completed, 1 death | - (as seed 2) |
+| `w_conqueror_expert_1` | stopped at the den (the den's time), 3 deaths | completed, 3 deaths (the Matriarch and Harrok slain) | completed, 3 (the same three deaths - a den whelp, a wandering troll, Harrok's stones - and Harrok slain on the 2nd attempt, as before) |
+| `w_conqueror_expert_2` | stopped at Harrok's duel (its time), 8 deaths | completed, 2 deaths (the Matriarch driven out, Harrok slain) | completed, 1 (Harrok on the 2nd attempt; before the 3rd) |
+| `w_conqueror_expert_3` | stopped at the den (the den's time), 4 deaths | completed, 2 deaths (the Matriarch and Harrok slain) | completed, 1 (Harrok on the 2nd attempt; before the 3rd) |
+| `w_mixed_expert_1` | completed, 7 deaths | completed, 2 deaths | the same run (completed, 2) |
 
-**The targets** (`python3 tools/bot_report.py <dir> world_targets`, on `before/subset` and `after/subset`, the same ten
-specs):
+**The targets** (`python3 tools/bot_report.py <dir> world_targets`, on `before/subset`, `after/subset` and
+`after2/subset`, the same ten specs; the last on the final code, fix-up 1):
 
-| Target (plan §6.4) | Before | After |
-| --- | --- | --- |
-| Completion, novice (2 of 3 per preset) | peaceful 1/1, conqueror 0/3, mixed 1/1 | peaceful 1/1, conqueror 0/3 (Harrok's slay), mixed 1/1 |
-| Completion, expert (3 of 3, at most 2 deaths each) | peaceful 1/1 (7 deaths), conqueror 0/3, mixed 1/1 (7) | peaceful 1/1 (1; seeds 2-3: 1 and 1), conqueror 3/3 (3, 2, 2), mixed 1/1 (2) |
-| Human estimate, novice median (75-140 min) | 36.6 min | 29.9 min (the Hollow no longer fought on the road) |
-| Deaths per boss sequence (1-3, novice median by resolution) | the Matriarch slain: 6 (0 of 3 won, 6/6/6); Harrok spared: 3.5 (4/3) | the Matriarch slain: 2 (3 of 3 won, 3/2/1); Harrok slain: 6 (0 of 3, newly reached, 6/6/6); Harrok spared: 1 (2/0) |
-| At most 2 deaths in any other segment (novice) | max 2: met | max 1: met |
-| Lone humans flee or rout (70 %, pooled) | 4 % (soldiers 0 % of 286 s) | 25 % (soldiers 66 % of 803 s) |
-| Formations hold or brace (50 %) | 78 % | 70 % (the novices 53 % -> 64 %; the experts no longer idle before a wall) |
-| Formation locks (half) | 87 % | 63 % (the conqueror runs, which now go on past the den - the toll fort by force, Harrok's duel, the Moot: 13-67 %; the peaceful and mixed runs 73-80 % as before) |
-| Engines thrown, runs reaching stage 6 | 5 of 5 | 10 of 10 |
-| Off-camera share (under 20 %) | median 4 % | median 8 % |
-| Music in combat among lesser enemies (under 25 %) | 32 % | 11 % |
-| Every slotted ability used when ready | 9 abilities unused in 1-5 runs | Earthquake unused in 9 runs, six others in 1-3 |
-| No ability over 40 % | max 92 % (Runic Bolt) | max 51 % (Crag Hurl) |
-| Streaming work frame (12 ms), CPU per tick (8 ms) | 33.9 ms; median 7.51 ms | 150.7 ms; median 14.68 ms - not comparable: these runs shared the 4 CPUs with two other lanes' bot runs and full checks (a load of 6-11), the confirmation's three at a time with nothing else |
+| Target (plan §6.4) | Before | After (the lane's runs) | Final code (fix-up 1) |
+| --- | --- | --- | --- |
+| Completion, novice (2 of 3 per preset) | peaceful 1/1, conqueror 0/3, mixed 1/1 | peaceful 1/1, conqueror 0/3 (Harrok's slay), mixed 1/1 | peaceful 1/1, **conqueror 3/3**, mixed 1/1 |
+| Completion, expert (3 of 3, at most 2 deaths each) | peaceful 1/1 (7 deaths), conqueror 0/3, mixed 1/1 (7) | peaceful 1/1 (1; seeds 2-3: 1 and 1), conqueror 3/3 (3, 2, 2), mixed 1/1 (2) | peaceful 1/1 (0; seeds 2-3: 1 and 1), conqueror 3/3 (3, 1, 1: seed 1's three are a den whelp's swipe, a wandering troll's stomp in the Stonehold and Harrok's stones, as before; seeds 2-3 no longer die a second time to Harrok), mixed 1/1 (2) |
+| Human estimate, novice median (75-140 min) | 36.6 min | 29.9 min (the Hollow no longer fought on the road) | 36.2 min (the conqueror novices complete now: 36.2, 32.2 and 36.8) |
+| Deaths per boss sequence (1-3, novice median by resolution) | the Matriarch slain: 6 (0 of 3 won, 6/6/6); Harrok spared: 3.5 (4/3) | the Matriarch slain: 2 (3 of 3 won, 3/2/1); Harrok slain: 6 (0 of 3, newly reached, 6/6/6); Harrok spared: 1 (2/0) | the Matriarch slain: 2 (3/2/1); **Harrok slain: 3 (3 of 3 won, 3/2/3)**; Harrok spared: 3 (2/4) |
+| At most 2 deaths in any other segment (novice) | max 2: met | max 1: met | max 1: met |
+| Lone humans flee or rout (70 %, pooled) | 4 % (soldiers 0 % of 286 s) | 25 % (soldiers 66 % of 803 s) | 27 % (soldiers 65 % of 751 s) |
+| Formations hold or brace (50 %) | 78 % | 70 % (the novices 53 % -> 64 %; the experts no longer idle before a wall) | 67 % |
+| Formation locks (half) | 87 % | 63 % (the conqueror runs, which now go on past the den - the toll fort by force, Harrok's duel, the Moot: 13-67 %; the peaceful and mixed runs 73-80 % as before) | 62 % (the conqueror runs 13-67 %, the others 69-80 %) |
+| Engines thrown, runs reaching stage 6 | 5 of 5 | 10 of 10 | 10 of 10 |
+| Off-camera share (under 20 %) | median 4 % | median 8 % | median 9 % |
+| Music in combat among lesser enemies (under 25 %) | 32 % | 11 % | 15 % (above, "The music among lesser enemies": the cap a part of the drop) |
+| Every slotted ability used when ready | 9 abilities unused in 1-5 runs | Earthquake unused in 9 runs, six others in 1-3 | Earthquake unused in 9 runs, four others in 1-5 |
+| No ability over 40 % | max 92 % (Runic Bolt) | max 51 % (Crag Hurl) | max 63 % (Runic Bolt, `w_peaceful_expert_1`) |
+| Streaming work frame (12 ms), CPU per tick (8 ms) | 33.9 ms; median 7.51 ms | 150.7 ms; median 14.68 ms - not comparable: these runs shared the 4 CPUs with two other lanes' bot runs and full checks (a load of 6-11), the confirmation's three at a time with nothing else | 179.7 ms; median 16.82 ms - not comparable either: these runs too shared the 4 CPUs with other lanes' bot runs and checks |
 
 The Valley (`gate5_valley`, three runs: `python3 m9_gate/balance/scripts/valley_cmp.py <confirm_valley> <gate5_valley>`):
 each replayed the confirmation's run to the tick - the Valley's items stand as the confirmation measured them.
