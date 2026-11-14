@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "encounter.crownmarch_toll_post",
+	"type": "encounter",
+	"display_name": "Captain Hask at the toll bar",
+	"description": "P29 (plan M6-M9 §5.7, §5.9): the toll-riders' captain (a talker: protected, never flees) at the toll bar on the King's Road west of the fort, demanding tribute from passers - pay 1 iron, cow him (stage 4) or refuse (dialogue.toll_captain). Not budgeted.",
+	"level": "level.world",
+	"center_m": [404, 11.44, 382],
+	"activate_radius_m": 100,
+	"deactivate_radius_m": 170,
+	"leash_radius_m": 20,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.crownmarch.toll_captain", "definition": "npc.toll_captain", "position_m": [404, 11.44, 382], "yaw_deg": 0, "patrol": "", "faction": "toll_riders", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

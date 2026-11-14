@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.guardian_bulwark",
+	"type": "talent",
+	"display_name": "Bulwark",
+	"description": "Brace behind your arms and let the blows come.",
+	"tree": "guardian",
+	"tier": 2,
+	"column": 1,
+	"cost": 1,
+	"requires": ["talent.guardian_stone_hide"],
+	"requires_level": 8,
+	"effects": {"modifiers": {}, "grants": ["ability.bulwark"], "replaces": {}}
+}

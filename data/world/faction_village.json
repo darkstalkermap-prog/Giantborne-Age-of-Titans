@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "faction.village",
+	"type": "faction",
+	"display_name": "Thornwick",
+	"description": "Thornwick's guards, archer and villagers (members carry faction \"village\"; P22 moved M5's rules and texts here, plan M6-M9 section 2.12). Neutral until the giant offends them: a direct blow on a member (or, in the world, damage to a faction house) warns; a second within 30 s turns them hostile (or the smashed cart barricade does); intimidation stands the guards down. Its villagers flee from a giant rushing by (civilians_give_way false: the Valley is unchanged).",
+	"flag_prefix": "faction.village",
+	"initial": "neutral",
+	"offences_to_hostile": 2,
+	"offence_window_s": 30,
+	"civilians_give_way": false,
+	"give_way_m": 3.0,
+	"warn_text": "Thornwick's people cower. Strike again and they will fight you.",
+	"hostile_text": "Thornwick turns on you: its guards will fight.",
+	"stood_down_text": "Thornwick's guards stand down.",
+	"reconciled_text": "Thornwick forgives you, if not the fright."
+}

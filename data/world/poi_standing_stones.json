@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.standing_stones",
+	"type": "poi",
+	"display_name": "The Standing Stones",
+	"level": "level.world",
+	"region": "region.stonehold",
+	"kind": "shrine",
+	"position_m": [-300, 96.0, -600],
+	"radius_m": 50,
+	"xp": 40,
+	"map_icon": "shrine",
+	"compass": true,
+	"landmark": "world.stonehold.standing_stones",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A ring of twelve stones round the highest shrine."
+}

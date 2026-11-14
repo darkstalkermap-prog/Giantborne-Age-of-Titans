@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "quest.skarn_rebuild",
+	"type": "quest",
+	"display_name": "Skarn Rebuilt",
+	"description": "P36 (plan M6-M9 §5.7 side quests, §5.9): after Skarn burned (world.skarn.burned), lift the fallen roof beams back onto two of its burned longhouses - each longhouse's RebuildPoint, a stage-6 giant's errand (world.skarn.longhouse_<n>.rebuilt). 100 XP and Ulfra's support (world.skarn.support: Harrok's talk ending) without the siege's titan iron; Skarn's hearth-forge opens (world.skarn.rebuilt).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{"type": "flag", "flag": "world.skarn.burned"}
+	],
+	"abandon_when": null,
+	"tracker_priority": 45,
+	"stages": [
+		{"id": "rebuild", "objective": "Raise the roof beams of two burned longhouses at Skarn", "complete_when": {"type": "count", "n": 2, "of": [{"type": "flag", "flag": "world.skarn.longhouse_1.rebuilt"}, {"type": "flag", "flag": "world.skarn.longhouse_2.rebuilt"}, {"type": "flag", "flag": "world.skarn.longhouse_3.rebuilt"}]}, "marker": "world.marker.skarn_green", "xp": 100, "waiting_text": "Stand by a burned longhouse's door and lift its roof beams back (stage 6).", "items": [], "set_flags": {"world.skarn.rebuilt": true, "world.skarn.support": true}, "bot": {"action": "interact", "targets": ["world.stonehold.skarn_longhouse_1", "world.stonehold.skarn_longhouse_2", "world.stonehold.skarn_longhouse_3"]}}
+	],
+	"on_complete_flags": {}
+}

@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
-"""Markdown tables of a Valley bot batch (P17b; plan §5.6, §5.7; docs/HOW_IT_PLAYS.md, docs/BALANCE_LOG.md).
+"""Markdown tables of a bot batch: the Valley bot's (P17b; plan §5.6, §5.7; docs/HOW_IT_PLAYS.md,
+docs/BALANCE_LOG.md) and the world bot's (P38; plan M6-M9 §6.1, §5.15).
 
     python3 tools/bot_report.py <batch dir> [section ...]
 
 <batch dir> is a tools/run_bots.sh folder, user://bot_runs/<tag>/ (in this worktree:
-.userdata/godot/app_userdata/<project>/bot_runs/<tag>/). Sections (all when none is named):
-summary runs segments deaths growth abilities perf stuck states targets. Every number is read from the runs'
-AUTOPILOT_RESULT files (<run>.json) except two estimates, both marked where they are printed:
+.userdata/godot/app_userdata/<project>/bot_runs/<tag>/). Sections (all of the batch's kind when none is
+named): the Valley's summary runs segments deaths growth abilities perf stuck states targets; the world's
+(runs whose result has "world_bot") world_summary world_runs world_segments world_outcomes world_bosses
+world_travel world_streaming world_formations world_siege world_music world_deaths world_stuck, and P39's
+world_growth (per run: plan §6.4's growth, readability, siege and ability measures), world_targets (plan
+§6.4's targets, met or missed, for a world_balance batch), world_perf (plan §6.3: the CPU per tick per
+region, from the probe's sections that WorldMetrics files under the giant's region) and world_states (plan
+§6.5: the AI-state histogram at stages 4-6 per archetype and behaviour).
+Every Valley number is read from the runs' AUTOPILOT_RESULT files (<run>.json) except two estimates,
+both marked where they are printed:
 - a segment's damage as a share of maximum health uses the giant's maximum health at the segment's
   end, rebuilt from the run's XP timeline and growth ticks the way the bot spends its points
   (Strength and Endurance alternating: 500 + 15 per Endurance point + 150 at stage 2, 300 at 3);
@@ -330,15 +338,579 @@ def stuck_table(rows, cell=20.0):
     return "\n".join(out)
 
 
+# --------------------------------------------------------------------------- the world bot (P38)
+
+# Plan M6-M9 §5.15: the segments after the Valley, target minutes (target, low, high).
+WSEGS = ["w1_opening", "w2_first_oath", "w3_second_oath", "w4_roaming", "w5_stonehold"]
+WSEG_NAMES = {"w1_opening": "Opening", "w2_first_oath": "First oath", "w3_second_oath": "Second oath",
+              "w4_roaming": "Growth to 5, roaming", "w5_stonehold": "Stonehold"}
+WSEG_TARGET = {"w1_opening": (10, 7, 14), "w2_first_oath": (20, 10, 30), "w3_second_oath": (25, 18, 35),
+               "w4_roaming": (15, 0, 40), "w5_stonehold": (24, 15, 32)}
+WMAIN_TARGET = (94, 60, 140)
+
+
+def world_row(path):
+    """One world run's numbers from its AUTOPILOT_RESULT ("world_bot")."""
+    name = os.path.basename(path)[:-5]
+    exit_path = path[:-5] + ".exit"
+    code, wall = (open(exit_path).read().split() + ["?", "?"])[:2] if os.path.exists(exit_path) else ("?", "?")
+    try:
+        r = json.load(open(path))
+    except (OSError, ValueError):
+        return None
+    wb = r.get("world_bot")
+    if not isinstance(wb, dict):
+        return None
+    w = wb.get("world", {})
+    pol = wb.get("policy", {})
+    segs = {s["id"]: s for s in wb.get("segments", [])}
+    deaths = wb.get("deaths", [])
+    return {
+        "name": name, "exit": code, "wall": wall, "r": r, "wb": wb, "w": w, "segs": segs,
+        "preset": pol.get("preset") or "-", "oaths": ",".join("%s:%s" % (o[0], o[1]) for o in pol.get("oaths", [])),
+        "skill": wb.get("bot", {}).get("skill"), "seed": wb.get("bot", {}).get("seed"),
+        "assist": bool(wb.get("bot", {}).get("assist")),
+        "completed": bool(wb.get("campaign_completed")), "finish": wb.get("finish_reason"),
+        "sim_s": wb.get("simulated_s", 0), "human_s": wb.get("human_estimate_s", 0),
+        "deaths": deaths, "breaches": wb.get("breaches", []), "invariants": wb.get("invariant_failures", []),
+        "stage": wb.get("main_stage"), "outcomes": wb.get("outcomes", {}), "errors": r.get("errors"),
+        "cpu_p95": r.get("perf", {}).get("cpu_tick_ms", {}).get("p95"),
+    }
+
+
+def load_world(batch_dir):
+    rows = [world_row(p) for p in sorted(glob.glob(os.path.join(batch_dir, "*.json")))]
+    return [r for r in rows if r is not None]
+
+
+def _who(r):
+    return "%s %s%s s%s" % (r["preset"], r["skill"], " assisted" if r["assist"] else "", r["seed"])
+
+
+def world_summary(rows):
+    by = collections.defaultdict(list)
+    for r in rows:
+        by[(r["skill"], r["assist"], r["preset"], r["oaths"])].append(r)
+    out = ["| Skill | Assisted | Preset | Oaths | Completed | Human est. median (min) | Raw median (min) | Deaths median | world_blocked |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for (skill, assist, preset, oaths), rs in sorted(by.items(), key=lambda kv: (str(kv[0][0]), kv[0][2], kv[0][3])):
+        done = [r for r in rs if r["completed"]]
+        blocked = sum(1 for r in rs for b in r["breaches"] if b.get("classification") == "world_blocked")
+        out.append("| %s | %s | %s | %s | %d / %d | %s | %s | %s | %d |" % (
+            skill, "yes" if assist else "no", preset, oaths, len(done), len(rs), fmt(med([r["human_s"] / 60 for r in done])),
+            fmt(med([r["sim_s"] / 60 for r in done])), fmt(med([len(r["deaths"]) for r in rs]), 0), blocked))
+    return "\n".join(out)
+
+
+def world_runs(rows):
+    out = ["| Run | Preset | Oaths | Done | Raw (min) | Human est. (min) | Wall (s) | Deaths | Stage reached | Watchdogs | Invariants | Errors |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        wd = "; ".join("%s: %s (%s)" % (b.get("classification"), b.get("objective"), b.get("reason")) for b in r["breaches"]) or "none"
+        inv = "; ".join(str(f.get("failure")) for f in r["invariants"]) or "none"
+        out.append("| %s | %s | %s | %s | %.1f | %.1f | %s | %d | %s | %s | %s | %s |" % (
+            r["name"], r["preset"], r["oaths"], "yes" if r["completed"] else "no (%s)" % r["finish"], r["sim_s"] / 60,
+            r["human_s"] / 60, r["wall"], len(r["deaths"]), r["stage"], wd, inv, r["errors"]))
+    return "\n".join(out)
+
+
+def world_segments(rows):
+    done = [r for r in rows if r["completed"]]
+    out = ["| Segment | Target (range), min | Human est. median, min | Raw median, min | Combat / traversal median, min | Map screens, fast travels | Regions, POIs | Deaths (all runs) |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for s in WSEGS:
+        t = WSEG_TARGET[s]
+        seg = [r["segs"].get(s, {}) for r in done]
+        out.append("| %s | %d (%d-%d) | %s | %s | %s / %s | %s, %s | %s, %s | %d |" % (
+            WSEG_NAMES[s], t[0], t[1], t[2], fmt(med([g.get("human_estimate_s", 0) / 60 for g in seg])),
+            fmt(med([g.get("raw_s", 0) / 60 for g in seg])), fmt(med([g.get("combat_s", 0) / 60 for g in seg])),
+            fmt(med([g.get("traversal_s", 0) / 60 for g in seg])), fmt(med([g.get("map_screens", 0) for g in seg]), 0),
+            fmt(med([g.get("fast_travels", 0) for g in seg]), 0), fmt(med([g.get("regions_entered", 0) for g in seg]), 0),
+            fmt(med([g.get("pois", 0) for g in seg]), 0), sum(1 for r in rows for d in r["deaths"] if d.get("segment") == s)))
+    out.append("| Main path after the Valley | %d (%d-%d) | %s | %s | | | | %d |" % (
+        WMAIN_TARGET[0], WMAIN_TARGET[1], WMAIN_TARGET[2], fmt(med([r["human_s"] / 60 for r in done])),
+        fmt(med([r["sim_s"] / 60 for r in done])), sum(len(r["deaths"]) for r in rows)))
+    return "\n".join(out)
+
+
+def world_outcomes(rows):
+    keys = ["march", "wood", "crown", "boss.matriarch", "boss.corvane", "boss.harrok", "skarn", "throne", "ancestry"]
+    # M9 gate (final): the factions hostile at the end (run_metrics' faction_standing; "-" for runs without it).
+    out = ["| Run | " + " | ".join(k.replace("boss.", "") for k in keys) + " | Yields decided | Hostile factions |",
+           "| --- | " + " | ".join("---" for _ in keys) + " | --- | --- |"]
+    for r in rows:
+        o = r["outcomes"]
+        yd = ", ".join("%s %s" % (str(y[1]).split(".")[-1], y[2]) for y in r["wb"].get("yields_decided", [])) or "-"
+        st = r["wb"].get("faction_standing")
+        hostile = ", ".join(sorted(f for f, v in st.items() if v == "hostile")) if isinstance(st, dict) else "-"
+        out.append("| %s | %s | %s | %s |" % (r["name"], " | ".join(str(o.get(k, "")).replace("ancestry.", "") or "-" for k in keys),
+                                             yd, hostile or "none"))
+    return "\n".join(out)
+
+
+def world_bosses(rows):
+    out = ["| Run | Boss | Attempts | Engaged | Disengaged | Yields | Phases | Lowest health per attempt | Outcome | Deaths | Damage taken in the fight (by source) |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    names = {"world.greywood.troll_matriarch": "matriarch", "world.stonehold.harrok": "harrok", "battle.iron_regiment": "battle"}
+    for r in rows:
+        for bid, b in sorted(r["w"].get("bosses", {}).items()):
+            by = b.get("damage_taken_by", {})
+            total = sum(by.values())
+            src = ", ".join("%s %d (%.0f %%)" % (k, v, 100.0 * v / total) for k, v in sorted(by.items(), key=lambda kv: -kv[1])[:4]) if total else "-"
+            deaths = sum(1 for d in r["deaths"] if boss_of_death(r, d) == names.get(bid, bid))
+            # P39: each closed attempt's lowest health share (a battle's: its aggregate's), then the open one's
+            lows = ["%.0f %%" % (100.0 * float(x)) for x in b.get("lows", [])]
+            if b.get("open") and "low" in b:
+                lows.append("%.0f %% (open)" % (100.0 * float(b["low"])))
+            out.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %d | %s |" % (
+                r["name"], bid, b.get("attempts", 0), b.get("engaged", 0),
+                ", ".join(str(d[1]) for d in b.get("disengaged", [])) or "-", b.get("yields", 0),
+                ", ".join(str(p[1]) for p in b.get("phases", [])) or "-", ", ".join(lows) or "-",
+                b.get("outcome") or ("defeated" if b.get("defeated") else "-"), deaths, src))
+    return "\n".join(out)
+
+
+def world_travel(rows):
+    out = ["| Run | Regions (s) | Discovered | Map screens | Fast travels (refused) | Refusals | Stage seconds |",
+           "| --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        w = r["w"]
+        regions = ", ".join("%s %.0f" % (k.replace("region.", ""), v.get("s", 0)) for k, v in sorted(w.get("regions", {}).items()))
+        ft = w.get("fast_travels", [])   # [tick, from, to, ok, message]
+        refused = sum(1 for f in ft if len(f) > 3 and not f[3])
+        out.append("| %s | %s | %s | %s | %d (%d) | %d | %s |" % (
+            r["name"], regions or "-", w.get("discovered", 0), w.get("map_screens", 0), len(ft), refused,
+            len(w.get("refusals", [])), ", ".join("%s: %.0f" % kv for kv in sorted(w.get("stage_s", {}).items()))))
+    return "\n".join(out)
+
+
+def world_streaming(rows):
+    out = ["| Run | Loads | Unloads | Thrash | Smallest margin (m) | Worst work frame (ms) | Path queries per tick p95 / max | Save max (bytes) | Counted combatants max (s over 12) | CPU per tick p95 (ms) |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        w = r["w"]
+        st = w.get("streaming", {})
+        q = w.get("path_queries_per_tick", {})
+        b = r["wb"].get("budget", {})
+        out.append("| %s | %s | %s | %s | %s | %s | %s / %s | %s | %s (%s) | %s |" % (
+            r["name"], st.get("loads", "-"), st.get("unloads", "-"), st.get("thrash", "-"), fmt(st.get("min_margin_m")),
+            fmt(st.get("work_ms_max")), q.get("p95", "-"), q.get("max", "-"), w.get("save_bytes_max", "-"),
+            b.get("max_counted", "-"), fmt(b.get("over_cap_s")), fmt(r["cpu_p95"], 2)))
+    return "\n".join(out)
+
+
+REGION_ORDER = ["region.crownmarch", "region.greywood", "region.drowned_steps", "region.aldmere", "region.stonehold"]
+
+
+def _region_key(region):
+    return (REGION_ORDER.index(region) if region in REGION_ORDER else len(REGION_ORDER), region)
+
+
+def world_perf(rows):
+    """P39 (plan §6.3 "the bot batches: CPU per tick p95 per region"): each run's CPU per tick by the region the
+    giant stood in (the probe's sections, AUTOPILOT_RESULT's perf.sections), then per region over the batch: the
+    median and the largest of the runs' p95 and the runs' summed seconds there (a run's samples in a region it
+    spent under 10 s are left out of the median: too few to say)."""
+    regions = sorted({sec for r in rows for sec in r["r"].get("perf", {}).get("sections", {})}, key=_region_key)
+    if not regions:
+        return "(no run carries per-region perf sections: runs before P39's report part, or the Valley bot's)"
+    out = ["| Run | " + " | ".join(regions) + " | Whole run |", "| --- | " + " | ".join("---" for _ in regions) + " | --- |"]
+    per_region = collections.defaultdict(list)
+    seconds = collections.defaultdict(float)
+    for r in rows:
+        secs = r["r"].get("perf", {}).get("sections", {})
+        cells = []
+        for reg in regions:
+            cpu = secs.get(reg, {}).get("cpu_tick_ms", {})
+            n = int(cpu.get("n", 0) or 0) if isinstance(cpu, dict) else 0
+            if n <= 0:
+                cells.append("-")
+                continue
+            seconds[reg] += n / 60.0
+            if n >= 600:
+                per_region[reg].append(float(cpu.get("p95", 0.0)))
+            cells.append("%s (%.0f s)" % (fmt(cpu.get("p95"), 2), n / 60.0))
+        out.append("| %s | %s | %s |" % (r["name"], " | ".join(cells), fmt(r["cpu_p95"], 2)))
+    out.append("| **p95, median of the runs (largest)** | " + " | ".join(
+        "%s (%s)" % (fmt(med(per_region[reg]), 2), fmt(max(per_region[reg]) if per_region[reg] else None, 2)) for reg in regions)
+        + " | %s (%s) |" % (fmt(med([r["cpu_p95"] for r in rows if r["cpu_p95"] is not None]), 2),
+                           fmt(max([r["cpu_p95"] for r in rows if r["cpu_p95"] is not None] or [0]), 2)))
+    out.append("| **seconds in the region, all runs** | " + " | ".join("%.0f" % seconds[reg] for reg in regions) + " | |")
+    return "\n".join(out)
+
+
+def world_formations(rows):
+    out = ["| Run | Formations seen | Group / banner / single lock samples (stage 4+) | Group lock share | Banners felled | Broken | Routed | Sweeps |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        f = r["w"].get("formations", {})
+        out.append("| %s | %s | %s / %s / %s | %s | %s | %s | %s | %s |" % (
+            r["name"], f.get("seen", 0), f.get("group_lock_samples", 0), f.get("banner_lock_samples", 0),
+            f.get("single_lock_samples", 0), fmt(r["w"].get("formation_lock_share"), 2), f.get("banners_felled", 0),
+            f.get("broken", 0), f.get("routed", 0), f.get("sweeps", 0)))
+    return "\n".join(out)
+
+
+def world_siege(rows):
+    out = ["| Run | Engines destroyed | Engines thrown | Engine shots at the giant | Damage taken from engines | Wander spawns | World events |",
+           "| --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        sg = r["w"].get("siege", {})
+        dmg = sum(v for k, v in r["wb"].get("damage_taken_by_archetype", {}).items() if k.startswith("prop.siege"))
+        ev = ", ".join("%s %s" % (k.replace("event.", ""), "/".join(v.get("outcomes", [])) or "started %d" % v.get("started", 0))
+                       for k, v in sorted(r["w"].get("world_events", {}).items())) or "-"
+        out.append("| %s | %s | %s | %s | %d | %s | %s |" % (
+            r["name"], sg.get("engines_destroyed", 0), sg.get("engines_thrown", 0), sg.get("shots_at_giant", 0), dmg,
+            r["w"].get("wander", {}).get("spawns", 0), ev))
+    return "\n".join(out)
+
+
+def world_music(rows):
+    out = ["| Run | Stage | Explore | Danger | Combat |", "| --- | --- | --- | --- | --- |"]
+    for r in rows:
+        for stage, m in sorted(r["w"].get("music", {}).items()):
+            total = sum(m.values()) or 1.0
+            out.append("| %s | %s | %s | %s | %s |" % (r["name"], stage, *("%.0f %%" % (100.0 * m.get(k, 0.0) / total)
+                                                                          for k in ["explore", "danger", "combat"])))
+    return "\n".join(out)
+
+
+def world_deaths(rows):
+    causes = collections.Counter()
+    segs = collections.Counter()
+    for r in rows:
+        for d in r["deaths"]:
+            causes["%s/%s" % (d.get("killer_archetype"), str(d.get("action_id", "")).replace("ability.", ""))] += 1
+            segs[WSEG_NAMES.get(d.get("segment"), d.get("segment"))] += 1
+    return "deaths (%d): %s\n\ndeaths by segment: %s" % (
+        sum(causes.values()), ", ".join("%s %d" % kv for kv in causes.most_common()) or "none",
+        ", ".join("%s %d" % kv for kv in segs.most_common()) or "none")
+
+
+def world_stuck(rows, cell=50.0):
+    """Stuck events per 50 m cell of the world, with the objectives and how the bot got out."""
+    cells = collections.defaultdict(lambda: [0, collections.Counter(), collections.Counter()])
+    for r in rows:
+        for e in r["wb"].get("stuck_events", []):
+            p = e.get("position", [0, 0, 0])
+            key = (int((p[0] // cell) * cell + cell / 2), int((p[2] // cell) * cell + cell / 2))
+            cells[key][0] += 1
+            cells[key][1][str(e.get("objective", "")).replace("quest.world_main:", "")] += 1
+            cells[key][2][str(e.get("recovered_by", ""))] += 1
+    out = ["| Cell centre (x, z) | Stuck events | Objectives | Recovered by |", "| --- | --- | --- | --- |"]
+    for key, (n, objs, how) in sorted(cells.items(), key=lambda kv: -kv[1][0])[:25]:
+        out.append("| (%d, %d) | %d | %s | %s |" % (key[0], key[1], n, ", ".join("%s %d" % kv for kv in objs.most_common(3)),
+                                                    ", ".join("%s %d" % kv for kv in how.most_common())))
+    if len(out) == 2:
+        out.append("| - | 0 | - | - |")
+    return "\n".join(out)
+
+
+def world_states(rows):
+    """P39 (plan §6.5: "the growth evidence at stages 4-6 (AI-state histograms per role)"): RunMetrics' AI-state
+    histogram of the world runs at stages 4-6, pooled over the novice runs (all runs when the batch has none, as
+    the Valley's states section pools the balance target): for each archetype the share of its engaged
+    seconds in each brain state, and in each behaviour (formation: a formation's members, crew: siege crews,
+    harass: riders, spread and kite: shooters keeping their range). The soldier archetype holds the formations'
+    pikemen, shieldmen and bannermen, the crews and the lone soldiers alike: world_lone splits the lone humans
+    out and world_growth the formations."""
+    states = ["Alert", "Approach", "Attack", "Recover", "Staggered", "Hold", "Reposition", "Flee", "Routed"]
+    behaviours = ["formation", "crew", "harass", "spread", "kite"]
+    out = ["| Stage | Archetype | Engaged (s, all runs) | " + " | ".join(states) + " | " +
+           " | ".join("as " + b for b in behaviours) + " |",
+           "| --- | --- | --- | " + " | ".join("---" for _ in states + behaviours) + " |"]
+    rows = [r for r in rows if r["skill"] == "novice"] or rows
+    for stage in ["4", "5", "6"]:
+        pooled = collections.defaultdict(collections.Counter)
+        for r in rows:
+            for arch, st in (r["wb"].get("ai_states") or {}).get(stage, {}).items():
+                for k, v in st.items():
+                    pooled[arch][k] += float(v)
+        for arch in sorted(pooled, key=lambda a: -pooled[a].get("engaged", 0.0)):
+            c = pooled[arch]
+            eng = c.get("engaged", 0.0)
+            if eng <= 0:
+                continue
+            cells = [("%.0f %%" % (100.0 * c.get(k, 0.0) / eng)) if c.get(k, 0.0) > 0 else "-" for k in states]
+            cells += [("%.0f %%" % (100.0 * c.get("behavior:" + b, 0.0) / eng)) if c.get("behavior:" + b, 0.0) > 0 else "-"
+                      for b in behaviours]
+            out.append("| %s | %s | %.0f | %s |" % (stage, arch, eng, " | ".join(cells)))
+    return "\n".join(out)
+
+
+def _pooled(rows, num, den):
+    """Sum of world.growth[num] over sum of world.growth[den] (None when nothing was measured)."""
+    n = sum(float(r["w"].get("growth", {}).get(num, 0.0)) for r in rows)
+    d = sum(float(r["w"].get("growth", {}).get(den, 0.0)) for r in rows)
+    return (n / d) if d > 0 else None
+
+
+def _lone_by_archetype(rows):
+    """P39: the lone humans' engaged seconds at stages 4-6 pooled by archetype (world.lone_states,
+    "<archetype>/<brain state>" -> s): {archetype: (engaged s, fled-or-routed s, {state: s})}."""
+    out = {}
+    for r in rows:
+        for key, s in (r["w"].get("lone_states") or {}).items():
+            arch, _, st = str(key).partition("/")
+            tot, fled, states = out.get(arch, (0.0, 0.0, {}))
+            states[st] = states.get(st, 0.0) + float(s)
+            out[arch] = (tot + float(s), fled + (float(s) if st.upper() in ("FLEE", "ROUTED") else 0.0), states)
+    return out
+
+
+def world_lone(rows):
+    """P39: what lone humans do at stages 4-6 when engaged (plan §5.14: single humans flee on sight;
+    archers keep range), pooled over the batch by archetype and brain state."""
+    out = ["| Archetype | Engaged (s) | Fled or routed | States (share of its engaged time) |", "| --- | --- | --- | --- |"]
+    for arch, (tot, fled, states) in sorted(_lone_by_archetype(rows).items(), key=lambda kv: -kv[1][0]):
+        out.append("| %s | %.0f | %s | %s |" % (arch or "-", tot, _pct(fled / tot if tot else None),
+                   ", ".join("%s %s" % (st, _pct(v / tot)) for st, v in sorted(states.items(), key=lambda kv: -kv[1])[:6])))
+    return "\n".join(out)
+
+
+def _lock_share(rows):
+    f = [r["w"].get("formations", {}) for r in rows]
+    group = sum(int(x.get("group_lock_samples", 0)) + int(x.get("banner_lock_samples", 0)) for x in f)
+    single = sum(int(x.get("single_lock_samples", 0)) for x in f)
+    return (group / (group + single)) if group + single > 0 else None
+
+
+def _lesser_combat(rows):
+    combat = total = 0.0
+    for r in rows:
+        ml = r["w"].get("music_lesser", {})
+        if "off" in ml:
+            continue
+        combat += float(ml.get("combat", 0.0))
+        total += sum(float(v) for v in ml.values())
+    return (combat / total) if total > 0 else None
+
+
+def boss_of_death(r, d):
+    """P39: the boss fight a death belongs to (plan §6.4: 1-3 deaths per boss attempt sequence): the den's
+    stage (the Matriarch), the crown's resolve stage when the crown is breached (the gate and the Iron
+    Regiment), the champion's stage (Harrok); "" for any other death."""
+    obj = str(d.get("objective", ""))
+    killer = str(d.get("killer_id", ""))
+    # P39: a death's objective is the main thread's ("quest.world_main:oaths" during either oath), so the
+    # killer names the fight too: the Matriarch and her whelps, Harrok, the battle's units and fort engines.
+    if "oath_wood:den" in obj or killer.startswith("world.greywood.troll_matriarch"):
+        return "matriarch"
+    if "world_main:champion" in obj or killer == "world.stonehold.harrok":
+        return "harrok"
+    if ("oath_crown:resolve" in obj and "crown:breach" in r["oaths"]) or killer.startswith(
+            ("world.aldmere.regiment_", "world.aldmere.iron_guard_", "world.aldmere.corvane", "world.aldmere.fort_ballista")):
+        return "battle"
+    return ""
+
+
+BOSS_IDS = {"world.greywood.troll_matriarch": "matriarch", "world.stonehold.harrok": "harrok", "battle.iron_regiment": "battle"}
+
+
+def _bosses_met(r):
+    return [BOSS_IDS.get(bid, bid) for bid, b in r["w"].get("bosses", {}).items() if int(b.get("engaged", 0)) > 0]
+
+
+def _boss_record(r, boss):
+    for bid, b in r["w"].get("bosses", {}).items():
+        if BOSS_IDS.get(bid, bid) == boss:
+            return b
+    return {}
+
+
+def _boss_resolution(r, boss):
+    """W23: how the run's policy meets the boss - the Matriarch "driven out" or "slain" (the wood's oath), Harrok
+    "spared" (spare or talk) or "slain" (the champion policy), the battle "breached"."""
+    if boss == "matriarch":
+        return "slain" if "wood:slay" in r["oaths"] else "driven out"
+    if boss == "harrok":
+        return "slain" if str(r["wb"].get("policy", {}).get("champion", "")) == "slay" else "spared"
+    return "breached"
+
+
+def _boss_won(r, boss):
+    """W23: true when the run settled the boss (an outcome, or the battle's defeated flag)."""
+    b = _boss_record(r, boss)
+    return bool(b.get("defeated")) or str(b.get("outcome", "")) not in ("", "None")
+
+
+def _unused_abilities(r):
+    ready = r["wb"].get("abilities", {}).get("used_when_ready", {})
+    return sorted(a.replace("ability.", "") for a, v in ready.items() if int(v.get("windows", 0)) > 0 and int(v.get("used", 0)) == 0)
+
+
+def _max_ability_share(r):
+    share = r["wb"].get("abilities", {}).get("damage_share", {})
+    if not share:
+        return None, ""
+    a = max(share, key=lambda k: share[k])
+    return float(share[a]), a.replace("ability.", "")
+
+
+def _pct(x):
+    if x is None or (isinstance(x, (int, float)) and x < 0):
+        return "-"
+    return "%.0f %%" % (100.0 * float(x))
+
+
+def world_growth(rows):
+    """P39: per run, plan §6.4's growth, readability, siege and ability measures (WorldMetrics' growth)."""
+    out = ["| Run | Lone humans fleeing (engaged s) | Formations holding (engaged s) | Formation locks | Lesser-only music in combat (s) | Engines thrown / destroyed (stage 6) | Fast travels | Never used when ready | Largest ability share |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in rows:
+        g = r["w"].get("growth", {})
+        sg = r["w"].get("siege", {})
+        share, who = _max_ability_share(r)
+        out.append("| %s | %s (%.0f) | %s (%.0f) | %s | %s (%.0f) | %s / %s (%s) | %d | %s | %s |" % (
+            r["name"], _pct(g.get("lone_fled_share")), float(g.get("lone_engaged_s", 0)), _pct(g.get("formation_held_share")),
+            float(g.get("formation_engaged_s", 0)), _pct(r["w"].get("formation_lock_share")), _pct(g.get("lesser_combat_share")),
+            float(g.get("lesser_s", 0)), sg.get("engines_thrown", 0), sg.get("engines_destroyed", 0),
+            "yes" if float(r["w"].get("stage_s", {}).get("6", 0)) > 0 else "no", len(r["w"].get("fast_travels", [])),
+            ", ".join(_unused_abilities(r)) or "-", ("%s %s" % (_pct(share), who)) if share is not None else "-"))
+    return "\n".join(out)
+
+
+def world_targets(rows):
+    """P39: plan §6.4's targets, met or missed, for a world_balance batch (novice and expert unassisted, the
+    three presets x seeds, and the orders). Medians are over the novice's runs unless the row says."""
+    def cell(skill, preset):
+        return [r for r in rows if r["skill"] == skill and not r["assist"] and r["name"].startswith("w_%s_" % preset)]
+    presets = ["peaceful", "conqueror", "mixed"]
+    novice = [r for r in rows if r["skill"] == "novice" and not r["assist"] and not r["name"].startswith("w_order")]
+    expert = [r for r in rows if r["skill"] == "expert" and not r["assist"]]
+    orders = [r for r in rows if r["name"].startswith("w_order")]
+    allr = novice + expert
+    out = ["| Target (plan §6.4) | Value | Met |", "| --- | --- | --- |"]
+
+    def row(name, value, met):
+        out.append("| %s | %s | %s |" % (name, value, "met" if met is True else ("**miss**" if met is False else "-")))
+
+    # P39: judged on the seeds run - two completed meet "2 of 3" whatever a third seed does, two failed
+    # miss it; one of two is open (the plan lets the novice drop to seeds 1-2 when wall time is short).
+    parts, verdicts = [], []
+    for p in presets:
+        rs = cell("novice", p)
+        done = sum(1 for r in rs if r["completed"])
+        parts.append("%s %d / %d" % (p, done, len(rs)))
+        verdicts.append(True if done >= 2 else (False if len(rs) - done >= 2 or not rs else None))
+    ok = False if False in verdicts else (True if all(v is True for v in verdicts) else None)
+    row("Completion, novice: at least 2 of 3 seeds per preset", ", ".join(parts), ok if novice else None)
+    parts, ok = [], True
+    for p in presets:
+        rs = cell("expert", p)
+        done = sum(1 for r in rs if r["completed"])
+        worst = max([len(r["deaths"]) for r in rs] or [0])
+        parts.append("%s %d / %d (deaths max %d)" % (p, done, len(rs), worst))
+        ok = ok and len(rs) > 0 and done == len(rs) and worst <= 2
+    row("Completion, expert: 3 of 3, at most 2 deaths each", ", ".join(parts), ok if expert else None)
+    if orders:
+        row("Every first-oath order completes", ", ".join("%s %s" % (r["name"][len("w_order_"):].split("_")[0], "yes" if r["completed"] else "no (%s)" % r["finish"]) for r in orders),
+            all(r["completed"] for r in orders))
+    done = [r for r in novice if r["completed"]]
+    hm = med([r["human_s"] / 60 for r in done])
+    row("Human estimate of the main path 75-140 min (novice median, completed runs)",
+        "%s min (raw %s; per preset %s)" % (fmt(hm), fmt(med([r["sim_s"] / 60 for r in done])),
+                                            ", ".join("%s %s" % (p, fmt(med([r["human_s"] / 60 for r in cell("novice", p) if r["completed"]]))) for p in presets)),
+        (75 <= hm <= 140) if hm is not None else None)
+    seg_parts, seg_ok = [], True
+    for s in WSEGS:
+        lo, hi = WSEG_TARGET[s][1], WSEG_TARGET[s][2]
+        v = med([r["segs"].get(s, {}).get("human_estimate_s", 0) / 60 for r in done])
+        seg_parts.append("%s %s (%d-%d)" % (WSEG_NAMES[s], fmt(v), lo, hi))
+        seg_ok = seg_ok and v is not None and lo <= v <= hi
+    row("Each §5.15 segment within its range (novice median)", "; ".join(seg_parts), seg_ok if done else None)
+    # W23 confirmation: every unassisted novice run, the first-oath orders included (the battle is met only in
+    # the crown-first order), and each boss by the resolution the run plays - the Matriarch driven out or slain,
+    # Harrok spared or slain - so that a drive-out with no death and a slay stopped on its sixth no longer
+    # average into a median inside the range (before, the orders were left out and the Matriarch's 6/6/0/0
+    # read "median 3, met").
+    boss_parts, boss_ok = [], True
+    seq_runs = novice + [r for r in orders if r["skill"] == "novice" and not r["assist"]]
+    for boss in ["battle", "matriarch", "harrok"]:
+        groups = {}
+        for r in seq_runs:
+            if boss not in _bosses_met(r):
+                continue
+            groups.setdefault(_boss_resolution(r, boss), []).append(
+                (sum(1 for d in r["deaths"] if boss_of_death(r, d) == boss), _boss_won(r, boss)))
+        if not groups:
+            boss_parts.append("%s not met" % boss)
+            continue
+        for res in sorted(groups):
+            lst = groups[res]
+            m = med([n for n, _ in lst])
+            boss_parts.append("%s %s median %s, won %d of %d (runs %s)" % (
+                boss, res, fmt(float(m)), sum(1 for _, won in lst if won), len(lst), "/".join(str(n) for n, _ in lst)))
+            boss_ok = boss_ok and 1 <= m <= 3
+    row("Deaths: 1-3 per boss attempt sequence (novice median, by resolution; the orders included)", "; ".join(boss_parts),
+        boss_ok if seq_runs else None)
+    worst_other, where = 0, ""
+    for r in novice:
+        by_seg = collections.Counter(d.get("segment") for d in r["deaths"] if boss_of_death(r, d) == "")
+        for s, n in by_seg.items():
+            if n > worst_other:
+                worst_other, where = n, "%s %s" % (r["name"], WSEG_NAMES.get(s, s))
+    row("Deaths: at most 2 in any other segment (novice)", "max %d%s" % (worst_other, (" (" + where + ")") if where else ""),
+        worst_other <= 2 if novice else None)
+    v = _pooled(allr, "lone_fled_s", "lone_engaged_s")
+    by = _lone_by_archetype(allr)
+    melee = [by[a] for a in by if a not in ("archer", "mage")]
+    mt, mf = sum(x[0] for x in melee), sum(x[1] for x in melee)
+    row("Lone humans flee or rout >= 70 % of their engaged time, stages 4-6 (pooled)",
+        "%s (melee only, archers and mages left out as §5.14 keeps them at range: %s of %.0f s)" % (
+            _pct(v), _pct(mf / mt if mt else None), mt) if by else _pct(v), (v >= 0.7) if v is not None else None)
+    v = _pooled(allr, "formation_held_s", "formation_engaged_s")
+    row("Formations hold or brace >= 50 % of their engaged time while the banner lives (pooled)", _pct(v), (v >= 0.5) if v is not None else None)
+    v = _lock_share(allr)
+    row("At least half of the locks at stages 4-6 are formation groups or banners while a formation is engaged (pooled)", _pct(v),
+        (v >= 0.5) if v is not None else None)
+    s6 = [r for r in allr if float(r["w"].get("stage_s", {}).get("6", 0)) > 0]
+    thrown = [int(r["w"].get("siege", {}).get("engines_thrown", 0)) for r in s6]
+    row("At least 2 engines thrown per run that reaches stage 6", "%d of %d runs (per run %s)" % (
+        sum(1 for t in thrown if t >= 2), len(s6), "/".join(str(t) for t in thrown) or "-"), all(t >= 2 for t in thrown) if s6 else None)
+    shares = [float(r["wb"].get("readability", {}).get("off_camera_share", 0)) for r in allr]
+    hits = sum(int(r["wb"].get("readability", {}).get("hits_taken", 0)) for r in allr)
+    offc = sum(int(r["wb"].get("readability", {}).get("off_camera", 0)) for r in allr)
+    mo = med(shares)
+    row("Off-camera share of the hits taken under 20 %", "median %s (pooled %s of %d hits)" % (_pct(mo), _pct(offc / hits if hits else None), hits),
+        (mo < 0.2) if mo is not None else None)
+    v = _lesser_combat(allr)
+    row("Music in combat under 25 % of stage 4-6 time among only lesser enemies (pooled)", _pct(v), (v < 0.25) if v is not None else None)
+    unused = collections.Counter(a for r in allr for a in _unused_abilities(r))
+    row("Every slotted ability used at least once a run", ("never used when ready, by runs: " + ", ".join("%s %d" % kv for kv in unused.most_common())) if unused else "all used",
+        (not unused) if allr else None)
+    worst = max(((_max_ability_share(r)[0] or 0.0, _max_ability_share(r)[1], r["name"]) for r in allr), default=(0.0, "", ""))
+    row("No ability over 40 % of ability damage", "max %s (%s, %s)" % (_pct(worst[0]), worst[1], worst[2]), (worst[0] <= 0.4) if allr else None)
+    wf = max([float(r["w"].get("streaming", {}).get("work_ms_max", 0)) for r in allr] or [0.0])
+    margins = [float(r["w"].get("streaming", {}).get("min_margin_m", -1)) for r in allr]
+    mm = min([m for m in margins if m >= 0] or [0.0])
+    th = sum(int(r["w"].get("streaming", {}).get("thrash", 0)) for r in allr)
+    cpu = [float(r["cpu_p95"]) for r in allr if r["cpu_p95"] is not None]
+    row("Worst streaming work frame <= 12 ms (headless; the batch's runs share 4 CPUs)", "%.1f ms" % wf, wf <= 12.0 if allr else None)
+    row("Loaded margin >= 200 m and no thrash", "min %.0f m, thrash %d" % (mm, th), (mm >= 200 and th == 0) if allr else None)
+    row("CPU per tick p95 <= 8 ms", "median %s ms, max %s ms" % (fmt(med(cpu), 2), fmt(max(cpu) if cpu else None, 2)), (max(cpu) <= 8.0) if cpu else None)
+    return "\n".join(out)
+
+
 SECTIONS = {"summary": summary_table, "runs": runs_table, "segments": segments_table, "deaths": deaths_table,
             "growth": growth_table, "abilities": abilities_table, "perf": perf_table, "stuck": stuck_table, "states": states_table,
             "targets": targets_table}
+WORLD_SECTIONS = {"world_summary": world_summary, "world_runs": world_runs, "world_segments": world_segments,
+                  "world_outcomes": world_outcomes, "world_bosses": world_bosses, "world_travel": world_travel,
+                  "world_streaming": world_streaming, "world_formations": world_formations, "world_siege": world_siege,
+                  "world_music": world_music, "world_deaths": world_deaths, "world_stuck": world_stuck,
+                  "world_growth": world_growth, "world_lone": world_lone, "world_targets": world_targets,
+                  "world_perf": world_perf, "world_states": world_states}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(__doc__)
-    batch = load(sys.argv[1])
-    for section in (sys.argv[2:] or list(SECTIONS)):
+    world = load_world(sys.argv[1])
+    valley = [] if world and not sys.argv[2:] else load(sys.argv[1])
+    for section in (sys.argv[2:] or (list(WORLD_SECTIONS) if world else list(SECTIONS))):
         print("### " + section)
-        print(SECTIONS[section](batch))
+        if section in WORLD_SECTIONS:
+            print(WORLD_SECTIONS[section](world))
+        else:
+            print(SECTIONS[section](valley))
         print()

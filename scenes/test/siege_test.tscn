@@ -1,0 +1,246 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/level_root.gd" id="1_eea46"]
+[ext_resource type="Shader" path="res://assets/shaders/ground_checker.gdshader" id="2_49689"]
+[ext_resource type="PackedScene" path="res://scenes/world/siege_catapult.tscn" id="3_1d827"]
+[ext_resource type="Script" path="res://scripts/world/siege_engine.gd" id="4_29782"]
+[ext_resource type="PackedScene" path="res://scenes/world/siege_ballista.tscn" id="5_83f62"]
+[ext_resource type="Script" path="res://scripts/world/checkpoint_marker.gd" id="6_74fde"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="7_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="8_7ef4a"]
+[ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="9_b0840"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.47, 0.55, 0.66, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.6, 0.62, 0.68, 1)
+ambient_light_energy = 0.6
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(400, 1, 320)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3"]
+render_priority = 0
+shader = ExtResource("2_49689")
+shader_parameter/color_a = null
+shader_parameter/color_b = null
+shader_parameter/line_color = null
+shader_parameter/cell_size = null
+shader_parameter/line_width = null
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_4"]
+size = Vector2(400, 320)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(404, 4, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6"]
+albedo_color = Color(0.52, 0.52, 0.55, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(404, 4, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(404, 4, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(404, 4, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(2, 4, 324)
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(2, 4, 324)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_12"]
+size = Vector3(2, 4, 324)
+
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
+size = Vector3(2, 4, 324)
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_14"]
+vertices = PackedVector3Array(-199.3, 0.5, -159.3, -199.3, 0.5, 159.30002, 199.40002, 0.5, 159.30002, 199.40002, 0.5, -159.3)
+polygons = [PackedInt32Array(3, 2, 0), PackedInt32Array(0, 2, 1)]
+cell_size = 0.3
+agent_height = 2.0
+agent_radius = 0.6
+agent_max_slope = 35.0
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_15"]
+vertices = PackedVector3Array(-198, 0.5, -158, -198, 0.5, 158.5, 198.5, 0.5, 158.5, 198.5, 0.5, -158)
+polygons = [PackedInt32Array(3, 2, 0), PackedInt32Array(0, 2, 1)]
+cell_size = 0.5
+agent_height = 6.0
+agent_radius = 1.5
+agent_max_climb = 0.5
+agent_max_slope = 35.0
+
+[node name="SiegeTestLevel" type="Node3D"]
+script = ExtResource("1_eea46")
+level_id = "level.siege_test"
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8480481, 0.41758206, -0.32625088, 0, 0.6156615, 0.7880107, 0.52991927, -0.668271, 0.5221106, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_max_distance = 120.0
+
+[node name="World" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/Floor"]
+shape = SubResource("BoxShape3D_2")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+material_override = SubResource("ShaderMaterial_3")
+mesh = SubResource("PlaneMesh_4")
+
+[node name="WallNorth" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -161)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallNorth"]
+shape = SubResource("BoxShape3D_5")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallNorth"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_7")
+
+[node name="WallSouth" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 161)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallSouth"]
+shape = SubResource("BoxShape3D_8")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallSouth"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_9")
+
+[node name="WallEast" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 201, 2, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallEast"]
+shape = SubResource("BoxShape3D_10")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallEast"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_11")
+
+[node name="WallWest" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -201, 2, 0)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="World/WallWest"]
+shape = SubResource("BoxShape3D_12")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WallWest"]
+material_override = SubResource("StandardMaterial3D_6")
+mesh = SubResource("BoxMesh_13")
+
+[node name="Navigation" type="Node3D" parent="."]
+
+[node name="Human" type="NavigationRegion3D" parent="Navigation"]
+navigation_mesh = SubResource("NavigationMesh_14")
+
+[node name="Large" type="NavigationRegion3D" parent="Navigation"]
+navigation_mesh = SubResource("NavigationMesh_15")
+navigation_layers = 2
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="CatapultWest" type="StaticBody3D" parent="Props" instance=ExtResource("3_1d827")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -30, 0, -70)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("4_29782")
+prop_targets = PackedStringArray()
+world_id = "test.siege.catapult_1"
+
+[node name="BallistaWest" type="StaticBody3D" parent="Props" instance=ExtResource("5_83f62")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -12, 0, -64)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("4_29782")
+prop_targets = PackedStringArray()
+world_id = "test.siege.ballista_1"
+
+[node name="BallistaEast" type="StaticBody3D" parent="Props" instance=ExtResource("5_83f62")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 12, 0, -64)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("4_29782")
+prop_targets = PackedStringArray()
+world_id = "test.siege.ballista_2"
+
+[node name="CatapultEast" type="StaticBody3D" parent="Props" instance=ExtResource("3_1d827")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 30, 0, -70)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("4_29782")
+prop_targets = PackedStringArray()
+world_id = "test.siege.catapult_2"
+
+[node name="Checkpoints" type="Node3D" parent="."]
+
+[node name="CpStart" type="Marker3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 80)
+script = ExtResource("6_74fde")
+checkpoint_id = "test.siege.cp_start"
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 80)
+
+[node name="Spawned" type="Node3D" parent="."]
+
+[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("7_627ae")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 80)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("8_7ef4a")
+
+[node name="EncounterDirector" type="Node" parent="."]
+script = ExtResource("9_b0840")
+
+[node name="Signs" type="Node3D" parent="."]
+
+[node name="SignBattery" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -50)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "BATTERY: 2 catapults, 2 ballistae, a shield wall (tests activate it)"
+font_size = 64
+
+[node name="SignCavalry" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 110, 4, 0)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "CAVALRY: a pair (tests activate it)"
+font_size = 64
+
+[node name="SignStart" type="Label3D" parent="Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.55, 76)
+visibility_range_begin = 7.0
+visibility_range_end = 40.0
+pixel_size = 0.006
+billboard = 2
+modulate = Color(1, 0.95, 0.8, 1)
+text = "SIEGE TEST LEVEL (F3: director state)"
+font_size = 64

@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"id": "loot.oath_reward",
+	"type": "loot_table",
+	"display_name": "An oath's reward",
+	"description": "P29 (plan M6-M9 §5.7, §5.8, decision 32): what every oath pays on every resolution - 1 titan iron and 2 iron. Each oath quest's last stage gives exactly these items (OathRules and the equipment budget test check it); P35 and P36 give their oaths the same.",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{"item": "item.titan_iron", "count": 1},
+		{"item": "item.iron_ingot", "count": 2}
+	]
+}

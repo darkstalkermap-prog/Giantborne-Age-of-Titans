@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "quest.kingsroad_toll",
+	"type": "quest",
+	"display_name": "The King's Road Toll",
+	"description": "P29 (plan M6-M9 §5.7, §5.9): the toll-riders' captain demands tribute at the toll bar west of their fort (the quest starts within 120 m of it). Pay 1 iron, cow him (stage 4) - the fort's garrison then lets the giant pass for good - or breach the fort's gate (its strongbox: 2 iron; it also counts for Brannock's help path). 150 XP whichever way.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "near", "target": "world.marker.toll_bar", "radius_m": 120}],
+	"abandon_when": null,
+	"tracker_priority": 30,
+	"stages": [
+		{"id": "toll", "objective": "Settle the toll-riders' toll: pay it, cow their captain, or breach their gate",
+			"complete_when": {"type": "any", "of": [
+				{"type": "flag", "flag": "world.toll_fort.paid"},
+				{"type": "flag", "flag": "world.toll_fort.cowed"},
+				{"type": "destroyed", "world_id": "world.crownmarch.toll_gate"}]},
+			"marker": "world.marker.toll_bar", "xp": 150, "items": [], "set_flags": {},
+			"bot": {"action": "talk", "target": "world.crownmarch.toll_captain", "breach": "world.crownmarch.toll_gate"}}
+	],
+	"on_complete_flags": {}
+}

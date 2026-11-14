@@ -1,0 +1,67 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/world/stone_throne.gd" id="1_9a4ec"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(19.2, 18, 16)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_2"]
+_surfaces = [{
+"aabb": AABB(-9.6, -1, -8, 19.2, 25.4, 16),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/7KtoP+yraD/sq2g/7KtoP+yraD/sq2g/7KtoP+yraD/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/9ioPf/YqD3/2Kg9/9ioPf/YqD3/2Kg9/9ioPf/YqD3/"),
+"format": 34359742479,
+"index_count": 216,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAdAB4AHAAeAB8AHwAeABkAHwAZABgAHgAdABoAHgAaABkAHQAcABsAHQAbABoAHAAfABgAHAAYABsAIAAhACIAIAAiACMAJAAlACYAJAAmACcAJwAmACEAJwAhACAAJgAlACIAJgAiACEAJQAkACMAJQAjACIAJAAnACAAJAAgACMAKAApACoAKAAqACsALAAtAC4ALAAuAC8ALwAuACkALwApACgALgAtACoALgAqACkALQAsACsALQArACoALAAvACgALAAoACsA"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 48,
+"vertex_data": PackedByteArray("mpkZwQAAAEAAAADBmpkZQQAAAEAAAADBmpkZQQAAAEAAAABBmpkZwQAAAEAAAABBmpkZwQAAgL8AAABBmpkZQQAAgL8AAABBmpkZQQAAgL8AAADBmpkZwQAAgL8AAADBZmbmwAAA4EDOzEzAZmbmQAAA4EDOzEzAZmbmQAAA4EDNzMxAZmbmwAAA4EDNzMxAZmbmwAAAAEDNzMxAZmbmQAAAAEDNzMxAZmbmQAAAAEDOzEzAZmbmwAAAAEDOzEzAZmbmwAAAsEGamdnAZmbmQAAAsEGamdnAZmbmQAAAsEE0MzPAZmbmwAAAsEE0MzPAZmbmwAAAAEA0MzPAZmbmQAAAAEA0MzPAZmbmQAAAAECamdnAZmbmwAAAAECamdnAzcwMwWZmJkHNzMzAzMzMwGZmJkHNzMzAzMzMwGZmJkHNzMxAzcwMwWZmJkHNzMxAzcwMwQAAAEDNzMxAzMzMwAAAAEDNzMxAzMzMwAAAAEDNzMzAzcwMwQAAAEDNzMzAzMzMQGZmJkHNzMzAzcwMQWZmJkHNzMzAzcwMQWZmJkHNzMxAzMzMQGZmJkHNzMxAzMzMQAAAAEDNzMxAzcwMQQAAAEDNzMxAzcwMQQAAAEDNzMzAzMzMQAAAAEDNzMzAmpmZwDMzw0FnZubAmpmZQDMzw0FnZubAmpmZQDMzw0GamRnAmpmZwDMzw0GamRnAmpmZwAAAsEGamRnAmpmZQAAAsEGamRnAmpmZQAAAsEFnZubAmpmZwAAAsEFnZubAMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
+}]
+
+[node name="Chunk_4_0_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_stonehold_stone_throne" type="Node3D" parent="Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95, 224)
+script = ExtResource("1_9a4ec")
+world_id = "world.stonehold.stone_throne"
+prompt = "Take the Stone Throne"
+radius_m = 16.0
+priority = 30
+
+[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_stone_throne"]
+collision_mask = 0
+
+[node name="Shape0" type="CollisionShape3D" parent="Props/world_stonehold_stone_throne/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, -1.6)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Throne" type="MeshInstance3D" parent="Props/world_stonehold_stone_throne/Body"]
+mesh = SubResource("ArrayMesh_2")
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="world_marker_stone_throne" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95.2, 238)
+script = ExtResource("3_acc12")
+marker_id = "world.marker.stone_throne"
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.discovery",
+	"type": "tutorial_prompt",
+	"description": "P27: the first place found in the Old Kingdom.",
+	"text": "A place found: it is on your map now, and finding places is worth experience. From a high vista you can see the places all around it.",
+	"trigger": {"type": "event", "event": "poi_discovered"},
+	"dismiss": {"type": "timeout", "timeout_s": 10},
+	"requires_flags": ["progress.world_entered"],
+	"min_stage": 1,
+	"priority": 6,
+	"once": true,
+	"defer_in_combat": true,
+	"sets_flag": "tutorial.discovery.done"
+}

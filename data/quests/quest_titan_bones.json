@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "quest.titan_bones",
+	"type": "quest",
+	"display_name": "The Titan's Bones",
+	"description": "P35 (plan M6-M9 §5.4, §5.7, §5.8, §5.12): the Titan Forge lies cold in the ribs of the Titan's Bones, where ogres and a troll pick at the bones (the quest starts when the giant finds the bones or comes within 150 m of the forge). Drive the scavengers off and light the forge: 150 XP, the titan iron left in the ribs (loot.titan_bones: 2 titan iron, paid by the fire) and the Titan Forge, a titan-tier forge that titanforges a reinforced weapon - reachable at stage 4, before any second oath.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "any", "of": [
+		{"type": "discovered", "poi": "poi.titans_bones"},
+		{"type": "near", "target": "world.marker.titan_forge", "radius_m": 150}]}],
+	"abandon_when": null,
+	"tracker_priority": 10,
+	"stages": [
+		{"id": "light", "objective": "Drive the scavengers from the Titan's Bones and light the Titan Forge",
+			"complete_when": {"type": "flag", "flag": "world.titan_forge.lit"},
+			"marker": "world.marker.titan_forge", "xp": 150,
+			"waiting_text": "Scavengers still pick at the Titan's bones: drive them off, then light the forge in its ribs.",
+			"items": [], "set_flags": {},
+			"bot": {"action": "fight_encounter", "target": "encounter.drowned_bones_scavengers",
+				"then": "interact", "interact": "world.drowned.titan_forge_fire"}}
+	],
+	"on_complete_flags": {}
+}

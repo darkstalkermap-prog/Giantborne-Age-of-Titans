@@ -37,6 +37,44 @@ static func fields() -> Dictionary:
 
 	## @anchor P12
 
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P26
+	# P26 (plan M6-M9 §2.9, §2.11): the moveset a weapon swings from a growth stage on, {"4":
+	# {"light_chain": id, "heavy": id}} - the highest key at or below the giant's stage wins, used only
+	# while the weapon fits the stage (PlayerEquipment). The ids name P31's stage movesets: an id with
+	# no action record yet falls back to the weapon's own light_chain / heavy (no reference check).
+	f.merge({"stage_movesets": {"t": "dict"}})
+
+	## @anchor P31
+	# P31 (plan M6-M9 §2.11, §5.12, decision 24): the axe and the great pine have meshes of their own;
+	# a refit step names the forge tier it needs (iron: base -> reinforced at any forge; titan:
+	# reinforced -> titanforged at a titan forge); a titanforged weapon carries one perk:
+	#   formation_poise   its Heavy blows deal poise_mult x poise to formation members (the club)
+	#   pierce            the light 3 of `actions` also strikes the next foe in line within range_m
+	#                     beyond the one it hit (the sword)
+	#   heavy_shockwave   its heavies end in a radius_m shockwave (power_mult x the heavy) where the
+	#                     head lands (the hammer)
+	# (range_m and radius_m are stage-1 metres: they grow with the weapon's scale, x3 at stage 4.)
+	#   flat_penetration  its blows ignore that much more armour (the axe)
+	(f.visual_shape.enum as Array).append_array(["axe", "pine"])
+	(f.upgrade.fields as Dictionary)["forge_tier"] = U.str_field(false, DataValidator.FORGE_TIERS)
+	f.merge({"perk": {"t": "dict", "fields": {
+		"kind": U.str_field(true, ["formation_poise", "pierce", "heavy_shockwave", "flat_penetration"]),
+		"text": U.str_field(),
+		"poise_mult": U.pos(),
+		"actions": U.ref_array("action"),
+		"range_m": U.pos(),
+		"radius_m": U.pos(),
+		"power_mult": U.pos(),
+		"flat_penetration": U.num(0.0)}}})
+
+	## @anchor P32
+	# P32 (plan M6-M9 §5.12): the fists have a mesh of their own; the titanforged fists' perk
+	# grab_reach adds grab_reach_add metres to the giant's grab reach (PlayerGrab.grab_reach).
+	(f.visual_shape.enum as Array).append("fists")
+	((((f.perk as Dictionary).fields as Dictionary).kind as Dictionary).enum as Array).append("grab_reach")
+	((f.perk as Dictionary).fields as Dictionary)["grab_reach_add"] = U.pos()
+
 	return f
 
 
@@ -63,6 +101,41 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		out.errors.append("%s.upgrade.cost: must list at least one item" % ctx)
 
 	pass
+
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P26
+	var p26_sets: Variant = d.get("stage_movesets")
+	if typeof(p26_sets) == TYPE_DICTIONARY:
+		var p26_fit := int(d.get("fit_max_stage", 10)) if U.is_number(d.get("fit_max_stage")) else 10
+		for p26_key: Variant in p26_sets:
+			var p26_ctx := "%s.stage_movesets.%s" % [ctx, p26_key]
+			var p26_stage := int(str(p26_key)) if str(p26_key).is_valid_int() else -1
+			if p26_stage < 1 or p26_stage > 10:
+				out.errors.append("%s: the key must be a growth stage 1-10" % p26_ctx)
+			elif bool(d.get("scales_with_growth", true)) and p26_stage > p26_fit:
+				out.errors.append("%s: stage %d is above fit_max_stage %d (it would never be used)" % [p26_ctx,
+					p26_stage, p26_fit])
+			var p26_set: Variant = p26_sets[p26_key]
+			if typeof(p26_set) != TYPE_DICTIONARY or (p26_set as Dictionary).is_empty():
+				out.errors.append("%s: expected {\"light_chain\": id, \"heavy\": id}" % p26_ctx)
+				continue
+			for p26_slot: Variant in p26_set:
+				if not str(p26_slot) in ["light_chain", "heavy"]:
+					out.errors.append("%s: unknown key '%s' (allowed: light_chain, heavy)" % [p26_ctx, p26_slot])
+				else:
+					U.check_id_string(p26_set[p26_slot], "%s.%s" % [p26_ctx, p26_slot], out)
+
+	## @anchor P31
+	var p31_perk: Variant = d.get("perk")
+	if typeof(p31_perk) == TYPE_DICTIONARY:
+		var p31_needs: Array = {"formation_poise": ["poise_mult"], "pierce": ["actions", "range_m"],
+			"heavy_shockwave": ["radius_m", "power_mult"], "flat_penetration": ["flat_penetration"]}.get(
+			str(p31_perk.get("kind", "")), [])
+		U.require(p31_perk, p31_needs, ctx + ".perk", out, "a %s perk" % str(p31_perk.get("kind", "")))
+
+	## @anchor P32
+	if typeof(p31_perk) == TYPE_DICTIONARY and str(p31_perk.get("kind", "")) == "grab_reach":
+		U.require(p31_perk, ["grab_reach_add"], ctx + ".perk", out, "a grab_reach perk")
 
 
 static func required_ids() -> Dictionary:

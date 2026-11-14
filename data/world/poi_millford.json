@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "poi.millford",
+	"type": "poi",
+	"display_name": "Millford",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "settlement",
+	"position_m": [-380, 8.1, 640],
+	"radius_m": 70,
+	"xp": 30,
+	"map_icon": "settlement",
+	"compass": true,
+	"landmark": "world.crownmarch.millford_mill",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"max_inner_stage": 6,
+	"green_m": [-380, 8.1, 618],
+	"note": "An open hamlet of millers and farmers on the Millrace."
+}

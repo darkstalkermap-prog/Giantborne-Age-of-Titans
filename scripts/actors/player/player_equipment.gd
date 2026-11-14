@@ -21,6 +21,11 @@ extends PlayerComponent
 ##   and the mesh is exactly as long as the sweep. The tree's canopy is on render layer 2 (hidden
 ##   in first person) and the tree is carried raised to the right (WeaponVisuals.idle_pose).
 ## - Save state: "weapon" and "weapons_owned". A restore is silent (no events, no warning).
+## - Stage movesets (P26, plan M6-M9 §2.9): a weapon's stage_movesets ({"4": {"light_chain", "heavy"}})
+##   replace its light chain and heavy from that stage on - the highest key at or below the stage
+##   wins - while the weapon fits the stage; an id with no action record yet (P31 ships the records)
+##   keeps the weapon's own. Growth re-reads it (on_profile_changed), so the moveset swaps at its
+##   stage and back when the giant shrinks.
 
 const STATE_WEAPON := "weapon"
 const STATE_OWNED := "weapons_owned"
@@ -202,15 +207,14 @@ func _apply_weapon(rec: Dictionary, announce: bool) -> void:
 
 
 ## The weapon's light chain and heavy into the controller's loadout (the player record's when the
-## weapon has none), with their chains in the library; an open light chain is forgotten.
+## weapon has none; P26: its stage moveset when one applies, moveset_for), with their chains in the
+## library; an open light chain is forgotten.
 func _load_moveset(rec: Dictionary) -> void:
 	var lo: Dictionary = player.record.get("loadout", {})
-	var light := str(rec.get("light_chain", ""))
-	if light == "":
-		light = str(lo.get("light_chain", "ability.light_1"))
-	var heavy := str(rec.get("heavy", ""))
-	if heavy == "":
-		heavy = str(lo.get("heavy", "ability.heavy_1"))
+	var moves := moveset_for(rec, player.growth_stage, str(lo.get("light_chain", "ability.light_1")),
+		str(lo.get("heavy", "ability.heavy_1")))
+	var light := str(moves.light_chain)
+	var heavy := str(moves.heavy)
 	var c := player.controller
 	player.ensure_action(light)
 	player.ensure_action(heavy)
@@ -226,6 +230,36 @@ func _warn_too_small() -> void:
 
 static func _fail(reason: String, message: String) -> Dictionary:
 	return {"ok": false, "reason": reason, "message": message}
+
+
+## P26: the light chain and heavy weapon `rec` swings at growth `stage` - {"light_chain", "heavy",
+## "stage"}: its stage_movesets entry with the highest key at or below the stage ("stage" = that key)
+## while the weapon fits the stage (a fixed-size weapon always fits), each id only when an action
+## record exists for it; otherwise the weapon's light_chain / heavy, else the defaults (the player
+## record's moveset). "stage" is 0 when no stage moveset applies.
+static func moveset_for(rec: Dictionary, stage: int, default_light := "ability.light_1",
+		default_heavy := "ability.heavy_1") -> Dictionary:
+	var light := str(rec.get("light_chain", ""))
+	var heavy := str(rec.get("heavy", ""))
+	var out := {"light_chain": light if light != "" else default_light,
+		"heavy": heavy if heavy != "" else default_heavy, "stage": 0}
+	var sets: Variant = rec.get("stage_movesets")
+	if typeof(sets) != TYPE_DICTIONARY or too_small_at(rec, stage):
+		return out
+	var best := 0
+	for key: Variant in sets:
+		var k := int(str(key)) if str(key).is_valid_int() else 0
+		if k >= 1 and k <= stage and k > best and typeof(sets[key]) == TYPE_DICTIONARY:
+			best = k
+	if best == 0:
+		return out
+	var chosen: Dictionary = sets[str(best)] if (sets as Dictionary).has(str(best)) else sets[best]
+	for slot: String in ["light_chain", "heavy"]:
+		var id := str(chosen.get(slot, ""))
+		if id != "" and GameData.get_action(id) != null:
+			out[slot] = id
+			out.stage = best
+	return out
 
 
 # --------------------------------------------------------------------------- mesh
@@ -262,6 +296,13 @@ func on_profile_changed(_old_profile: Dictionary, _new_profile: Dictionary) -> v
 	if small and not _was_too_small:
 		_pending_fit_warning = true
 	_was_too_small = small
+	# P26: a stage moveset swaps in (or out) when growth crosses its stage.
+	var lo: Dictionary = player.record.get("loadout", {})
+	var moves := moveset_for(player.weapon, player.growth_stage, str(lo.get("light_chain", "ability.light_1")),
+		str(lo.get("heavy", "ability.heavy_1")))
+	var c := player.controller
+	if str(c.loadout.get("light", "")) != str(moves.light_chain) or str(c.loadout.get("heavy", "")) != str(moves.heavy):
+		_load_moveset(player.weapon)
 
 
 func post_movement(_tick: int, _dt: float) -> void:

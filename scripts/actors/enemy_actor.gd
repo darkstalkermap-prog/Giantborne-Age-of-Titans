@@ -37,6 +37,9 @@ const ALLY_DEATH_RADIUS_M := 15.0
 @export var commander := false
 ## Per-spawn loot table override set by the director; "" = the record's (P12 reads it).
 @export var loot_table := ""
+## M9 gate (final): it only watches (a spawn's `spectator`, set by the director: the clans' giants around the
+## Moot's ring) - a blow of the giant that strikes it offends no faction (FactionState.offended_faction).
+@export var spectator := false
 
 ## Spawn point; the director sets it and the leash walks back to it (P10a).
 var home_position := Vector3.ZERO
@@ -117,6 +120,10 @@ func _ready() -> void:
 	Events.entity_died.connect(_on_any_entity_died)
 	_p04_ready()
 	_p11b_ready()
+	_p22_ready()
+	_p24b_ready()
+	_p30_ready()
+	_p34_ready()   # P34: regeneration, the yield protocol, boss outcomes
 	Sim.register_actor(entity.entity_id, self)
 
 
@@ -198,6 +205,8 @@ func _release_token() -> void:
 
 
 func _target() -> CombatEntity:
+	if _p30_has_targets():
+		return _p30_target()   # P30: the record's target provider (NPCs and props besides the giant)
 	for e: CombatEntity in Sim.entities():
 		if e.team == CombatEntity.Team.PLAYER:
 			return e
@@ -206,7 +215,9 @@ func _target() -> CombatEntity:
 
 ## Perception snapshot (5 Hz): range, view cone (360 degrees once aware and close), line of
 ## sight, plus what archetype tactics read about the target (its forward, size, growth stage,
-## combat state) and this enemy's own health fraction.
+## combat state) and this enemy's own health fraction. M8 gate (F36): "occluded" is true when the
+## target stands in sight range and in the view cone but the sight line is blocked (a trunk, a
+## pillar): the brain steps round it instead of waiting (EnemyBrain._regain_sight).
 func _sense() -> Dictionary:
 	var t := _target()
 	if t == null:
@@ -223,7 +234,8 @@ func _sense() -> Dictionary:
 	var in_cone := absf(facing_deg) <= float(ai.get("sight_half_angle_deg", 75.0)) \
 		or (brain.aware and dist <= float(ai.get("awareness_radius_m", AWARE_ALL_AROUND_M)))
 	var visible := false
-	if dist <= float(ai.get("sight_range_m", 25.0)) and in_cone:
+	var in_view := dist <= float(ai.get("sight_range_m", 25.0)) and in_cone
+	if in_view:
 		var eye := global_position + Vector3.UP * entity.combatant.height_m * 0.92
 		visible = HitQueryAdapter.line_clear(get_world_3d().direct_space_state, eye,
 			t.anchor_position(), SIGHT_MASK, t.occlusion_rids)
@@ -237,11 +249,13 @@ func _sense() -> Dictionary:
 	t_fwd.y = 0.0
 	var snapshot := {"exists": true, "target_id": t.entity_id, "alive": t.is_alive(),
 		"position": t.actor.global_position, "distance": dist, "visible": visible,
+		"occluded": in_view and not visible,
 		"facing_deg": facing_deg, "target_radius": radius,
 		"target_forward": t_fwd.normalized() if t_fwd.length_squared() > 1e-8 else Vector3.FORWARD,
 		"target_height": t.combatant.height_m, "target_stage": stage,
 		"target_state": t.controller.state if t.controller != null else -1,
 		"self_health_frac": entity.combatant.pools.ratio("health"), "has_leader": _has_leader_now()}
+	_p30_sense(snapshot, t)   # P30: an NPC or prop target's own radius; no awe or size tactics against it
 	_sense_extra(snapshot)
 	return snapshot
 
@@ -269,6 +283,8 @@ func _on_hit_taken(result: HitResult) -> void:
 func _on_any_entity_died(tick: int, id: String, _killer: String) -> void:
 	if not is_inside_tree() or id == entity.entity_id or not entity.is_alive():
 		return
+	if _p30_on_entity_died(tick, id):
+		return   # P30: its formation's banner fell (the commander's death for its members)
 	var other := Sim.get_entity(id)
 	if other == null or other.team != entity.team or other.actor == null:
 		return
@@ -336,6 +352,28 @@ func _update_movement(dt: float) -> void:
 	velocity.x = move_velocity.x + knockback_velocity.x
 	velocity.z = move_velocity.z + knockback_velocity.z
 	move_and_slide()
+	recover_from_void()
+
+
+## M9 gate (lane "balance"): a body this far down fell through the world. The giant has the same rule
+## (GiantPlayer.OUT_OF_WORLD_Y: set back at its spawn); an enemy had none.
+const OUT_OF_WORLD_Y := -30.0
+
+
+## M9 gate: a living enemy below OUT_OF_WORLD_Y - one of the Raiders' Hollow's shieldmen, thrown 30 m up
+## over the stage-4 giant, came down through the ground and fell on for good: alive and out of every
+## reach, it kept its encounter from clearing and the march's help ran out its watchdog (`gate_world`'s
+## w.peaceful:novice:1) - is set back where it came into the world: its home, on the floor there
+## (release_position), standing still, and finds its way again. True when it was moved.
+func recover_from_void() -> bool:
+	if global_position.y >= OUT_OF_WORLD_Y or grab_holder_id != "" or entity == null or not entity.is_alive():
+		return false
+	global_position = release_position(home_position, [])
+	velocity = Vector3.ZERO
+	move_velocity = Vector3.ZERO
+	knockback_velocity = Vector3.ZERO
+	request_repath()
+	return true
 
 
 ## Brain-driven steering: path with the NavigationAgent beyond DIRECT_STEER_DISTANCE, steer
@@ -350,20 +388,25 @@ func _steer(dt: float) -> void:
 		var goal := brain.move_target
 		var flat_dist := Vector2(goal.x - global_position.x, goal.z - global_position.z).length()
 		var next := goal
+		var reach := goal   # P24b: in a streamed world, where the path to an unreachable goal ends
 		if flat_dist > DIRECT_STEER_DISTANCE:
 			if _wants_repath(goal):
 				agent.target_position = goal
 				_last_nav_target = goal
 				_note_repath()
+			_p24b_level_waypoint()
 			if not agent.is_navigation_finished():
 				next = agent.get_next_path_position()
+			reach = _p24b_reach(goal)
+			if next == goal:
+				next = reach   # the path is done: on to the goal, or (unreachable) to the path's end
 			if Vector2(next.x - global_position.x, next.z - global_position.z).length() < 0.05:
-				next = goal  # no path data (no navmesh / not synced yet): steer directly
+				next = reach  # no path data (no navmesh / not synced yet): steer directly
 		var dir := next - global_position
 		dir.y = 0.0
 		if flat_dist > 0.25 and dir.length() > 0.01:
 			desired = dir.normalized() * speed * mult
-		_track_progress(goal, dt)
+		_track_progress(reach, dt)
 	else:
 		_progress_anchor = Vector3.INF
 		_progress_timer = 0.0
@@ -439,6 +482,7 @@ func get_defense_state() -> DefenseState:
 	d.stamina = entity.combatant.pools.stamina
 	d.stability = entity.combatant.stability
 	d.apply_guard(record.get("guard", {}))
+	_p30_defense(d)   # P30: a shield's guard breaks on the hit tags of its record
 	return d
 
 
@@ -463,7 +507,7 @@ func flash(strength: float, color := Color(1.0, 0.95, 0.85)) -> void:
 
 
 func get_rig_state() -> Dictionary:
-	return {
+	return _p30_rig_state({   # P30: a braced formation member's brace pose
 		"state": controller.state,
 		"action": controller.action,
 		"phase": controller.phase(),
@@ -473,7 +517,7 @@ func get_rig_state() -> Dictionary:
 		"staggered": controller.state == CombatController.State.STAGGERED,
 		"dodging": false,
 		"guarding": is_guarding(),
-	}
+	})
 
 
 func get_debug_info() -> Dictionary:
@@ -609,6 +653,8 @@ func set_lod_tier(tier: int) -> void:
 ## more than 0.5 m (M1). Tier 1: only when it has none (start, or after a path failure), at most
 ## once per TIER1_REPATH_TICKS.
 func _wants_repath(goal: Vector3) -> bool:
+	if _p24b_throttled():
+		return _p24b_wants_repath(goal)   # P24b: a streamed world's throttle and query budget
 	if lod_tier >= 1:
 		return _last_nav_target == Vector3.INF and Sim.tick - _last_repath_tick >= TIER1_REPATH_TICKS
 	return _last_nav_target == Vector3.INF or _last_nav_target.distance_to(goal) > 0.5
@@ -617,6 +663,8 @@ func _wants_repath(goal: Vector3) -> bool:
 func _note_repath() -> void:
 	repath_count += 1
 	_last_repath_tick = Sim.tick
+	if _p24b_throttled():
+		NavQuery.spend(nav_level())   # P24b: the agent's query counts against the tick's budget
 
 
 ## Drops the agent's target, as a path failure does: the next movement tick asks for a new path
@@ -732,7 +780,11 @@ static func entity_radius(t: CombatEntity) -> float:
 ## Events.telegraph_started with the brain's target. radius / length by shape: circle
 ## (radius_m, 0), line (width_m / 2, length_m), cone (radius_m, radius_m; arc_deg is in the
 ## action record). Duration = the windup.
-func _on_phase_entered(action: ActionDef, _instance_id: int, phase: int) -> void:
+func _on_phase_entered(action: ActionDef, instance_id: int, phase: int) -> void:
+	if _p34_on_phase_entered(action, instance_id, phase):
+		return   # P34: a lobbed throw's circle lies at its committed landing point
+	if _p30_on_phase_entered(action, phase, instance_id):
+		return   # P30: a band brace's telegraph lies along its formation's front rank; a rally strikes
 	if phase != ActionDef.Phase.WINDUP or action == null:
 		return
 	var t: Variant = action.param("telegraph")
@@ -790,6 +842,8 @@ func _same_encounter(other: Node) -> bool:
 func _has_leader_now() -> bool:
 	if commander and entity.is_alive():
 		return true
+	if formation != null and formation.banner_id != "":
+		return _p30_has_leader()   # P30: a formation member's leader is its banner
 	var radius := float(record.get("ai", {}).get("leader_radius_m", 20.0))
 	var commander_alive := false
 	var ally_near := false
@@ -813,8 +867,9 @@ func _has_leader_now() -> bool:
 
 ## A reachable flee destination about `distance` m from `from`, away from `threat` (spec 15:
 ## fleeing enemies have a reachable destination). The closest point on this actor's own nav
-## layer - LevelRoot.nav_region(layer) when the level provides one (P10a), otherwise the map's
-## region on that layer - accepted only when a path on the actor's nav layers ends within
+## layer (NavQuery.closest_point, P24b: LevelRoot.nav_region(layer) when the level provides one
+## (P10a), otherwise the map's region on that layer; a streamed world's own map for the layer) -
+## accepted only when a path on the actor's nav layers ends within
 ## FLEE_PATH_END_M of it. When that point lies beyond a wall (the path stops short of it), the
 ## end of the path toward it is the candidate instead, checked the same way. A candidate must
 ## be at least half `distance` away and farther from the threat than `from`; directions are
@@ -826,39 +881,48 @@ func _resolve_flee_point(from: Vector3, threat: Vector3, distance: float) -> Vec
 	if away.length() < 0.1:
 		away = Vector3(global_transform.basis.z.x, 0.0, global_transform.basis.z.z)
 	away = away.normalized() if away.length() > 1e-4 else Vector3.BACK
-	var map := get_world_3d().navigation_map
-	var region := nav_region_for_layers()
-	var use_nav := region.is_valid() and NavigationServer3D.map_get_iteration_id(map) > 0
+	var level := nav_level()
 	var layers := int(agent.navigation_layers)
+	var use_nav := NavQuery.has_navigation(level, layers)   # P24b: every query through NavQuery
 	var space := get_world_3d().direct_space_state
 	var threat_dist := _flat_len(from - threat)
-	for i in FLEE_MAX_STEPS * 2 + 1:
+	for i in range(_search_start("flee") if use_nav else 0, FLEE_MAX_STEPS * 2 + 1):
 		var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)   # 0, 1, -1, 2, -2, ...
 		var desired := from + away.rotated(Vector3.UP, deg_to_rad(FLEE_STEP_DEG * k)) * distance
 		if use_nav:
-			var p := _reachable_point(map, from, NavigationServer3D.region_get_closest_point(region, desired), layers)
+			if not _search_affords():   # M7 gate: within the tick's path-query budget (P24b section)
+				_search_stop("flee", i)
+				return Vector3.INF
+			var q0 := NavQuery.queries_total
+			var p := _reachable_point(level, from, NavQuery.closest_point(level, desired, layers), layers)
+			_search_spend(q0)
 			if p == Vector3.INF or _flat_len(p - from) < distance * 0.5 or _flat_len(p - threat) <= threat_dist:
 				continue   # unreachable, snapped back toward us, or not away from the threat
+			_search_done("flee")
 			return p
 		else:
 			var lift := Vector3.UP * 0.5
 			if HitQueryAdapter.line_clear(space, from + lift, desired + lift, SIGHT_MASK | LAYER_BLOCKER,
 					entity.occlusion_rids):
 				return Vector3(desired.x, from.y, desired.z)
+	_search_done("flee")
 	return Vector3.INF
 
 
 ## `p` when a path from `from` on `layers` ends within FLEE_PATH_END_M of it; otherwise the end
 ## of that path when the same check accepts it (p lies beyond a wall or on an unconnected
-## island); otherwise Vector3.INF.
-static func _reachable_point(map: RID, from: Vector3, p: Vector3, layers: int) -> Vector3:
-	var path := NavigationServer3D.map_get_path(map, from, p, true, layers)
+## island); otherwise Vector3.INF. P24b: the paths are NavQuery's (the level's map for the layer
+## and its chase parameters; the Valley's are map_get_path's).
+static func _reachable_point(level: Node, from: Vector3, p: Vector3, layers: int) -> Vector3:
+	if not p.is_finite():
+		return Vector3.INF
+	var path := NavQuery.path(level, from, p, layers)
 	if path.is_empty():
 		return Vector3.INF
 	var end := path[path.size() - 1]
 	if end.distance_to(p) <= FLEE_PATH_END_M:
 		return p
-	var check := NavigationServer3D.map_get_path(map, from, end, true, layers)
+	var check := NavQuery.path(level, from, end, layers)
 	if check.size() > 0 and check[check.size() - 1].distance_to(end) <= FLEE_PATH_END_M:
 		return end
 	return Vector3.INF
@@ -979,7 +1043,8 @@ func _line_members() -> Array:
 		if other == null or other.entity == null or other.entity.combatant == null:
 			continue
 		if other != self and (other.encounter_id != encounter_id or not other.entity.is_alive()
-				or other.entity.team != entity.team or other.formation_marker() != null):
+				or other.entity.team != entity.team or other.formation_marker() != null
+				or other.formation != null):   # P30: a formation's members hold its slots, not a line
 			continue
 		var t: Variant = other.record.get("tactics", {})
 		if other == self or (typeof(t) == TYPE_DICTIONARY and str(t.get("outmatched_behavior", "")) == "formation"):
@@ -1447,6 +1512,8 @@ func launch_gap_ticks(action_id: String) -> int:
 static func max_ranged_windup_ticks() -> int:
 	var most := 0
 	for rec: Dictionary in GameData.records_of_type("enemy"):
+		if _p34_own_launch(rec):
+			continue   # P34: a troll's whelp and a giant's boulder are lobs, not volleys
 		for id: Variant in rec.get("attacks", []):
 			var a := GameData.get_action(str(id))
 			if a != null and a.hit_shape == "projectile":
@@ -1489,7 +1556,13 @@ func ranged_allies() -> Array:
 ## keeps the spread (the first reachable one when none does).
 func _resolve_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2, spread_m: float,
 		far: bool) -> Vector3:
+	var post := _post_firing_step()   # M7 polish: a unit on its post holds it (the posts below)
+	if post != 0:
+		return firing_point if post > 0 else Vector3.INF
 	_release_firing_marker()
+	if target_out_of_reach(my_position, target_pos, band):
+		firing_point = Vector3.INF   # M7 gate: nothing it could hold reaches the target (P24b section)
+		return firing_point
 	var target := _aim_target()
 	var allies := ranged_allies()
 	var marker := _pick_firing_marker(my_position, target_pos, band, spread_m, target, allies)
@@ -1529,9 +1602,21 @@ func _release_firing_marker() -> void:
 	_firing_marker = null
 
 
+## M9 gate (final; the final audit's F13): a firing point the member's leash does not hold (LEASH_END_MARGIN_M inside
+## its ring, leash_ring; any point when it has none) is never chosen - by the marker searches, the ring search, its
+## fallback or its last pure-ring point. Brannock's south-gate archer_1 (post 58.3 m from its encounter's centre,
+## leash 60 m) stepped out for a shot past the ring, was leashed home and stepped out again every 3.6 s, and never
+## shot once the gatehouse fell. With no point inside, the unit holds and searches again (FIRING_REPICK_S).
+func _fp_in_leash(p: Vector3, ring: Vector4) -> bool:
+	if ring.w <= 0.0:
+		return true
+	return Vector2(p.x - ring.x, p.z - ring.z).length() <= ring.w - LEASH_END_MARGIN_M
+
+
 func _pick_firing_marker(my_position: Vector3, target_pos: Vector3, band: Vector2, spread_m: float,
 		target: CombatEntity, allies: Array) -> Node3D:
 	var search := float(_tactics().get("cover_search_radius_m", 25.0))
+	var ring := leash_ring()
 	for group: String in [ELEVATION_GROUP, COVER_GROUP]:
 		var best: Node3D = null
 		var best_d := INF
@@ -1545,7 +1630,7 @@ func _pick_firing_marker(my_position: Vector3, target_pos: Vector3, band: Vector
 			var p := m.global_position
 			var d := _flat_len(p - my_position)
 			var td := _flat_len(p - target_pos)
-			if d > search or d >= best_d or td < band.x or td > band.y:
+			if d > search or d >= best_d or td < band.x or td > band.y or not _fp_in_leash(p, ring):
 				continue
 			if _crowded(p, spread_m, allies) or not _sees_target_from(p, target):
 				continue
@@ -1615,13 +1700,21 @@ func _ring_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2
 	var lo := band.x + RING_BAND_MARGIN_M
 	var hi := maxf(lo, band.y - RING_BAND_MARGIN_M)
 	var r := hi if far else clampf(dist, lo, hi)
-	var fallback := Vector3.INF
-	for i in RING_STEPS * 2 + 1:
+	var start := _search_start("firing_ring")
+	var fallback := _search_fallback if start > 0 else Vector3.INF
+	var ring := leash_ring()
+	for i in range(start, RING_STEPS * 2 + 1):
 		var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)   # 0, 1, -1, 2, -2, ...
 		var desired := target_pos + away.rotated(Vector3.UP, deg_to_rad(RING_STEP_DEG * k)) * r
 		desired.y = my_position.y
+		if not _search_affords():   # M7 gate: within the tick's path-query budget (P24b section)
+			_search_fallback = fallback
+			_search_stop("firing_ring", i)
+			return Vector3.INF
+		var q0 := NavQuery.queries_total
 		var p := _walkable_point(my_position, desired)
-		if p == Vector3.INF:
+		_search_spend(q0)
+		if p == Vector3.INF or not _fp_in_leash(p, ring):
 			continue
 		var td := _flat_len(p - target_pos)
 		if td < band.x or td > band.y:
@@ -1630,21 +1723,160 @@ func _ring_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2
 			fallback = p
 		if _crowded(p, spread_m, allies) or not _sees_target_from(p, target):
 			continue
+		_search_done("firing_ring")
 		return p
+	_search_done("firing_ring")
 	if fallback != Vector3.INF:
 		return fallback
-	return Vector3(target_pos.x + away.x * r, my_position.y, target_pos.z + away.z * r)
+	if _p24b_throttled():
+		return Vector3.INF   # M7 gate: no candidate is walkable - hold, and search again after FIRING_REPICK_S
+	var last := Vector3(target_pos.x + away.x * r, my_position.y, target_pos.z + away.z * r)
+	return last if _fp_in_leash(last, ring) else Vector3.INF
+
+
+## Firing-point resolvers' first step (P22's wrapper and _resolve_firing_point; M7 polish, the posts
+## below): 1 when this unit holds a post - firing_point is the post, its marker claimed - 0 when it
+## holds none (the searches run), -1 while that is not decided yet (it waits for the path-query budget:
+## brain.nav_search_pending).
+func _post_firing_step() -> int:
+	var s := _post_state()
+	if s < 0:
+		if brain != null:
+			brain.nav_search_pending = true
+		return -1
+	if s == 0:
+		return 0
+	if _firing_marker != _post:
+		_release_firing_marker()
+	_post.set_meta(FIRING_POINT_META, entity.entity_id)
+	_firing_marker = _post
+	firing_point = _post.global_position
+	return 1
+
+
+# ---- posts (M7 polish)
+# A ranged unit that spawned on an elevation marker its navigation layer does not reach - the top of a
+# world tower: the bake gives an obstacle's top no navmesh - holds that marker as its post. Its firing
+# point is always the post (no search, no path query), it shoots from there at whatever its shot
+# reaches (brain.post_band: 0 to the shot's range, centre to centre), it never kicks, a flight leaves
+# it cowering there and a faction's step-back does not move it. Walking to any other point would only
+# drop it off the tower: an agent standing off the navmesh paths from the ground below. (The toll
+# fort's watchtower archers came down, stood behind the closed gate, aware, and never fired: the M7
+# gate review's follow-up.) The check costs one closest-point query, once, within the tick's budget;
+# a unit spawned on no elevation marker - every unit but a tower's - costs none. Elevation markers the
+# navmesh reaches (the Valley's ledges, wall walks and its watchtower's top) are firing points as before.
+
+## The spawn lies this close (flat) to an elevation marker, and this close in height, to stand on it.
+const POST_SNAP_M := 1.5
+const POST_HEIGHT_M := 1.5
+## The marker is a post when its layer's nearest navmesh lies this far from it or more.
+const POST_CLEAR_M := 3.0
+## A unit this far below its post fell off it: it gives the post up and fights as any other.
+const POST_LOST_M := 4.0
+
+var _post: Node3D = null
+## -1: not decided yet; 0: no post; 1: a post (_post).
+var _post_decided := -1
+
+
+## True while this unit holds a post (see the section notes); decides it first if needed.
+func holds_post() -> bool:
+	return _post_state() > 0
+
+
+## The post this unit holds (null when none).
+func post_marker() -> Node3D:
+	return _post if _post_state() > 0 else null
+
+
+## 1: holds a post; 0: none; -1: not decided yet (the closest-point query waits for the budget).
+func _post_state() -> int:
+	if _post_decided == 1:
+		if _post == null or not is_instance_valid(_post) or not _post.is_inside_tree() \
+				or global_position.y < _post.global_position.y - POST_LOST_M:
+			_lose_post()   # its tower went with its chunk, or it fell off
+		return _post_decided
+	if _post_decided == 0:
+		return 0
+	var reach := _shot_reach()
+	var marker := _spawn_marker() if reach < INF else null   # a post is for a unit that shoots
+	if marker == null:
+		_post_decided = 0
+		return 0
+	var level := nav_level()
+	var layers := int(agent.navigation_layers)
+	if not NavQuery.has_regions(level, layers):
+		_post_decided = 0   # no navigation at all (a bare test floor): the ray rules apply, as before
+		return 0
+	if not NavQuery.is_synced(level, layers):
+		return -1   # its navigation is not in yet: decided once it is
+	if _p24b_throttled() and NavQuery.budget_left(level) < 1:
+		return -1
+	var near := NavQuery.closest_point(level, marker.global_position, layers)
+	if near.is_finite() and near.distance_to(marker.global_position) < POST_CLEAR_M:
+		_post_decided = 0   # the navmesh reaches it: an ordinary firing point
+		return 0
+	_post = marker
+	_post_decided = 1
+	if brain != null:
+		brain.post_band = Vector2(0.0, reach)
+	return 1
+
+
+## The free elevation marker (this unit's faction or none) this unit spawned on (null when none).
+func _spawn_marker() -> Node3D:
+	if not is_inside_tree():
+		return null
+	var best: Node3D = null
+	var best_d := POST_SNAP_M
+	for n in get_tree().get_nodes_in_group(ELEVATION_GROUP):
+		var m := n as Node3D
+		if m == null or not m.is_inside_tree() or not _marker_free(m):
+			continue
+		var f: Variant = m.get("faction")
+		if typeof(f) == TYPE_STRING and f != "" and f != faction:
+			continue
+		var d := _flat_len(m.global_position - home_position)
+		if d <= best_d and absf(m.global_position.y - home_position.y) <= POST_HEIGHT_M:
+			best = m
+			best_d = d
+	return best
+
+
+## A unit that lost its post (it fell, or the post left the tree) fights as any other from now on: it
+## looks for a firing point afresh.
+func _lose_post() -> void:
+	if _firing_marker != null and (not is_instance_valid(_firing_marker) or _firing_marker == _post):
+		_release_firing_marker()
+		firing_point = Vector3.INF
+	_post = null
+	_post_decided = 0
+	if brain != null:
+		brain.post_band = Vector2.ZERO
+		brain.firing_point = Vector3.INF
+
+
+## How far this unit's shots reach (flat, centre to centre): the shortest of its projectile attacks'
+## ai_max_range_m and projectile range_m; INF for a unit without one (it holds no post).
+func _shot_reach() -> float:
+	var reach := INF
+	for id: Variant in record.get("attacks", []):
+		var a := GameData.get_action(str(id))
+		if a == null or a.hit_shape != "projectile":
+			continue
+		var r := minf(float(a.params.get("ai_max_range_m", INF)), float(Projectile.spec_for(a).range_m))
+		reach = minf(reach, r)
+	return reach
 
 
 ## `desired` made walkable: on a navmesh, its closest point on this actor's layer when a path
 ## reaches it (the flee rules, P04); without one, `desired` when a ray from the actor reaches it
 ## past walls and blockers. Vector3.INF when it cannot be reached.
 func _walkable_point(from: Vector3, desired: Vector3) -> Vector3:
-	var map := get_world_3d().navigation_map
-	var region := nav_region_for_layers()
-	if region.is_valid() and NavigationServer3D.map_get_iteration_id(map) > 0:
-		return _reachable_point(map, from, NavigationServer3D.region_get_closest_point(region, desired),
-			int(agent.navigation_layers))
+	var level := nav_level()
+	var layers := int(agent.navigation_layers)
+	if NavQuery.has_navigation(level, layers):   # P24b: through NavQuery
+		return _reachable_point(level, from, NavQuery.closest_point(level, desired, layers), layers)
 	var lift := Vector3.UP * 0.5
 	if HitQueryAdapter.line_clear(get_world_3d().direct_space_state, from + lift, desired + lift,
 			SIGHT_MASK | LAYER_BLOCKER, entity.occlusion_rids):
@@ -1700,6 +1932,48 @@ const LEASH_HEAL_S := 6.0
 const LEASH_ARRIVE_M := 1.5
 ## PRE_ACTORS hook order of the return (after the EncounterDirector's 10).
 const LEASH_HOOK_ORDER := 12
+## W23 (P39f; FOLLOWUPS "From the M8 screenshot pass"): a return pinned against a body in its way (a stage-6
+## giant standing between a rider and its post: actors are not on the navmesh, so the path runs through him)
+## rides round it. A body counts as in the way when its edge is within LEASH_DETOUR_REACH_M of this member's
+## and it lies ahead (toward home); the detour point stands LEASH_DETOUR_CLEAR_M beyond both edges beside it,
+## past its centre, first on the side the member already is, the other side after a second failure; a detour
+## lasts at most LEASH_DETOUR_S. A body standing on its post (home within its edge) ends the return where the
+## member is, as do LEASH_GIVE_UP_FAILURES path failures in one return: its AI resumes (inside the leash, near
+## its post, it is not sent home again).
+## M9 gate (lane review): ... but only inside the leash. Such an early end comes LEASH_END_MARGIN_M or more
+## inside the member's leash (EncounterDirector.leash_of), or where it has none, and it does not heal: the
+## leash heals on arrival or LEASH_HEAL_S into the return, never at an early end. Outside the leash a return
+## never ends early - the director sent the member home again at its next update, and the next early end
+## healed it to full: a war-camp rider whose picket a giant stood on, at the leash's edge, was leashed every
+## 2.5 s, healed at each end and stayed pinned against him. There the return waits instead (leash_waiting):
+##   * its post taken: it backs off to LEASH_DETOUR_CLEAR_M beyond both edges of the body on its post, on
+##     its own side of it, and holds there facing it until the post is free, then rides home;
+##   * its way lost (LEASH_GIVE_UP_FAILURES): it holds where it stands for LEASH_RETRY_S, then tries again.
+## M9 gate (lane review, fix-up 1): a post wait answers a blow. Waiting off its taken post the member ignored what
+## struck it, for as long as the body stayed on its post: a giant standing on a Brannock guard's post beat it
+## from 220 to 20 health in 30 s, and a war-camp rider fell, waiting. Now a hostile's blow (or any wound) while it
+## waits for its post ends the return there at the next leash step, unhealed (_leash_answer): its AI resumes
+## knowing who struck it, and it fights or flees by its own rules (awe, morale, rout). The director then leaves
+## it off the leash while the body that held its post when it answered still holds it (leash_held_off) - it
+## cannot get home, and a leash would only make it wait again; once that body is off its post the leash holds it
+## as before. A wait for a lost way is a return in motion (it tries again every LEASH_RETRY_S) and is unchanged.
+## Fix-up 1 also: a detour's start and its end each ask for a fresh path (request_repath). The streamed world
+## re-paths a member at AI tier 1 or 2 only when asked, so one kept its path to the detour point after the detour,
+## and rode to and fro across that path's end, 4-8 m short of its post, for as long as the probe ran (riding, it
+## made no path failure): a war-camp rider sent home round its fellows holding the picket line.
+const LEASH_DETOUR_REACH_M := 2.5
+const LEASH_DETOUR_CLEAR_M := 3.0
+const LEASH_DETOUR_S := 6.0
+const LEASH_GIVE_UP_FAILURES := 6
+## M9 gate (lane review): an early end (post taken, way lost) needs the member this far inside its leash.
+const LEASH_END_MARGIN_M := 2.0
+## M9 gate (lane review): a return whose way is lost outside the leash holds this long before trying again.
+const LEASH_RETRY_S := 3.0
+## M9 gate (final): a return outside the leash with a living body in its way waits ("way") after this many path
+## failures in the return (the first detour round it failed), not LEASH_GIVE_UP_FAILURES.
+const LEASH_BODY_WAY_FAILURES := 2
+## M9 gate (final): a "way" wait keeps clear of the body in its way while that body's edge is this close to its own.
+const LEASH_WAY_BODY_M := 8.0
 
 ## Tick the current leash return began (-1 when it is not returning).
 var leash_started_tick := -1
@@ -1709,6 +1983,29 @@ var _leash_returning := false
 var _leash_healed := false
 var _leash_ai_was_enabled := true
 var _leash_hook_owner: RefCounted = null
+## W23 (P39f): the return's detour round a body in its way (INF: none), when it began, the path failures seen
+## so far in this return and how many detours it took (the side alternates).
+var leash_detour := Vector3.INF
+var leash_detours := 0
+var _leash_detour_tick := -1
+var _leash_failures_seen := 0
+var _leash_failures := 0
+## M9 gate (lane review): the return waits outside the leash (see LEASH_END_MARGIN_M): "post" while a body
+## stands on its post, "way" after its way was lost; "" while it rides on. leash_waits counts the waits begun.
+var leash_waiting := ""
+var leash_waits := 0
+var _leash_wait_tick := -1
+var _leash_wait_hold_until := -1
+var _leash_backing_off := false
+## M9 gate (lane review, fix-up 1): a post wait answers a blow (see the notes above). leash_answers counts the
+## answers (tests, debug); leash_holder_id is the body that held its post when it answered ("" when none): while
+## it still does, leash_held_off(). The wait notes the hostile that struck it and the health it waits with.
+var leash_answers := 0
+var leash_holder_id := ""
+var _leash_struck_by := ""
+var _leash_wait_hp := -1.0
+## M9 gate (final): the body in its way when a "way" wait began (entity id, "" for a wall): the wait keeps clear of it.
+var _leash_wait_body := ""
 
 
 ## Starts the leash return (plan §2.7.3): drop the target and its attack tokens, run home to
@@ -1723,6 +2020,14 @@ func begin_leash_return() -> void:
 	leash_count += 1
 	_leash_ai_was_enabled = ai_enabled
 	ai_enabled = false   # no perception, no decisions: it ignores targets until it is home
+	leash_detour = Vector3.INF
+	leash_detours = 0
+	_leash_failures = 0
+	_leash_failures_seen = path_failures
+	leash_waiting = ""
+	_leash_wait_tick = -1
+	_leash_struck_by = ""
+	leash_holder_id = ""   # a new return: the hold of an earlier answer is over
 	Sim.release_all_tokens(entity.entity_id)
 	_release_formation_marker()
 	brain.begin_return(Sim.tick)
@@ -1754,21 +2059,278 @@ func _leash_step(tick: int) -> void:
 		return
 	if is_held():
 		return   # a giant holds it (P07): the return waits until it is put down
+	if leash_waiting == "post":
+		if _leash_struck_by != "" or entity.combatant.pools.health < _leash_wait_hp:
+			_leash_answer(tick)   # M9 gate (lane review, fix-up 1): struck or hurt while it waits for its post
+			return
+		_leash_wait_hp = entity.combatant.pools.health
 	if not _leash_healed and tick - leash_started_tick >= ActionDef.seconds_to_ticks(LEASH_HEAL_S):
 		_leash_heal()
+		_leash_wait_hp = entity.combatant.pools.health
+	if leash_waiting != "":
+		_leash_wait_step(tick)   # M9 gate (lane review): outside its leash, waiting for its post or its way
+		return
 	var to_home := Vector2(home_position.x - global_position.x, home_position.z - global_position.z)
 	if to_home.length() <= LEASH_ARRIVE_M:
-		_end_leash_return(true)
+		_end_leash_return(true)   # home: healed now if LEASH_HEAL_S had not passed yet
 		return
+	if path_failures > _leash_failures_seen:   # W23 (P39f): no progress for a path check - something is in the way
+		_leash_failures += path_failures - _leash_failures_seen
+		_leash_failures_seen = path_failures
+		var blocker := _leash_blocker()
+		var post_taken := not blocker.is_empty() and bool(blocker.on_post)
+		# M9 gate (final): a living body in its way outside its leash - the way wait at the second failure (one failed
+		# detour), not the sixth (about 12 s pressed against it)
+		var body_in_way := not blocker.is_empty() and _leash_failures >= LEASH_BODY_WAY_FAILURES and not _leash_may_end_here()
+		if post_taken or _leash_failures >= LEASH_GIVE_UP_FAILURES or body_in_way:
+			if _leash_may_end_here():
+				_end_leash_return(true, false)   # its post taken (or its way lost) inside its leash: the return ends here, unhealed, and the AI resumes
+				return
+			_begin_leash_wait(tick, "post" if post_taken else "way")   # M9 gate (lane review): outside it, never an early end
+			return
+		leash_detour = _leash_detour_point(blocker)
+		_leash_detour_tick = tick
+		if leash_detour != Vector3.INF:
+			leash_detours += 1
+			request_repath()   # M9 gate (lane review, fix-up 1): a path to the detour point, at any AI tier
+	_leash_drive(tick)
+
+
+## The return's move this tick (also re-applied after a hit or a noise taught the brain something): on to the
+## detour point while a detour lasts, else home.
+func _leash_drive(tick: int) -> void:
+	if leash_waiting != "":
+		_leash_wait_step(tick)
+		return
+	if leash_detour != Vector3.INF:
+		var to_detour := Vector2(leash_detour.x - global_position.x, leash_detour.z - global_position.z)
+		if to_detour.length() > LEASH_ARRIVE_M * 2.0 and tick - _leash_detour_tick < ActionDef.seconds_to_ticks(LEASH_DETOUR_S):
+			brain.return_step(tick, leash_detour)
+			return
+		leash_detour = Vector3.INF
+		request_repath()   # M9 gate (lane review, fix-up 1): the detour over, a fresh path home (see the notes above)
 	brain.return_step(tick, home_position)
+
+
+## M9 gate (lane review): the leash this member is held to (EncounterDirector.leash_of: its centre in xyz, its
+## radius in w; w 0 when it has none or no director runs it).
+func leash_ring() -> Vector4:
+	if not is_inside_tree() or entity == null:
+		return Vector4.ZERO
+	var d := get_tree().get_first_node_in_group(EncounterDirector.GROUP) as EncounterDirector
+	return d.leash_of(entity.entity_id) if d != null else Vector4.ZERO
+
+
+## M9 gate (lane review): whether a return may end early where the member stands (its post taken, its way
+## lost): LEASH_END_MARGIN_M or more inside its leash, or anywhere when it has none - out there the director
+## would send it home again at its next update.
+func _leash_may_end_here() -> bool:
+	var ring := leash_ring()
+	if ring.w <= 0.0:
+		return true
+	return Vector2(global_position.x - ring.x, global_position.z - ring.z).length() <= ring.w - LEASH_END_MARGIN_M
+
+
+## M9 gate (lane review): the return stops riding home and waits outside its leash ("post": a body stands on
+## its post; "way": its way is lost). It stays a return - the director leaves it alone, it ignores what hits it
+## - and LEASH_HEAL_S still heals it once.
+func _begin_leash_wait(tick: int, why: String) -> void:
+	leash_waiting = why
+	leash_waits += 1
+	_leash_wait_tick = tick
+	_leash_wait_hold_until = -1
+	_leash_backing_off = false
+	_leash_struck_by = ""
+	_leash_wait_hp = entity.combatant.pools.health
+	leash_detour = Vector3.INF
+	_leash_wait_body = str(_leash_blocker().get("id", "")) if why == "way" else ""
+	_leash_wait_step(tick)
+
+
+## M9 gate (lane review, fix-up 1): struck by a hostile or hurt while it waits for its post outside its leash, the
+## member answers: the return ends where it stands, unhealed (what LEASH_HEAL_S gave stays), its AI resumes and
+## it learns who struck it (else the hostile body on its post), so it fights or flees by its own rules. The body
+## that holds its post now holds it off the leash (leash_held_off) while it stays there - M9 gate (final): only a
+## hostile one. A fellow (its own team, or a neutral body) standing on its post held it exempt from the leash for
+## as long as that fellow stood there; now the leash holds it as before (it waits for its post again).
+func _leash_answer(tick: int) -> void:
+	var taker := _leash_post_taker()
+	var foe := Sim.get_entity(_leash_struck_by) if _leash_struck_by != "" else null
+	if foe == null and not taker.is_empty():
+		foe = Sim.get_entity(str(taker.id))
+	leash_answers += 1
+	_end_leash_return(true, false)
+	var holder := Sim.get_entity(str(taker.get("id", ""))) if not taker.is_empty() else null
+	leash_holder_id = holder.entity_id if holder != null and holder.team != entity.team \
+		and holder.team != CombatEntity.Team.NEUTRAL else ""
+	if brain == null or not entity.is_alive():
+		return
+	if foe != null and foe != entity and foe.team != entity.team and foe.is_alive() and is_instance_valid(foe.actor):
+		brain.on_noise(tick, foe.actor.global_position, foe.entity_id, true)
+
+
+## M9 gate (lane review, fix-up 1): true while the body this member answered from its post-taken wait still holds
+## its post (EncounterDirector._check_leash leaves it off the leash meanwhile: it cannot get home, and a leash would
+## only make it wait again). False once that body is off the post - the leash holds the member as before.
+func leash_held_off() -> bool:
+	if leash_holder_id == "" or not is_inside_tree():
+		return false
+	var taker := _leash_post_taker()
+	return not taker.is_empty() and str(taker.id) == leash_holder_id
+
+
+## M9 gate (lane review): one tick of a wait. A post wait ends once no body stands on the post, a way wait after
+## LEASH_RETRY_S; the return then rides home again with a fresh count of failures. Meanwhile it keeps clear of
+## the body on its post: once that body's edge comes within LEASH_DETOUR_CLEAR_M - LEASH_ARRIVE_M of its own, it
+## backs off on its own side of it to LEASH_DETOUR_CLEAR_M beyond both edges (never pressing on it); there it
+## holds, facing it. A back-off that makes no progress (a wall behind it) holds LEASH_RETRY_S where it is.
+func _leash_wait_step(tick: int) -> void:
+	var taker := _leash_post_taker()
+	if (leash_waiting == "post" and taker.is_empty()) \
+			or (leash_waiting == "way" and tick - _leash_wait_tick >= ActionDef.seconds_to_ticks(LEASH_RETRY_S)):
+		leash_waiting = ""
+		_leash_failures = 0
+		_leash_failures_seen = path_failures
+		request_repath()
+		brain.return_step(tick, home_position)
+		return
+	if taker.is_empty() and leash_waiting == "way":
+		taker = _leash_way_body()   # M9 gate (final): the body in its way, kept clear of as a post's taker is
+	if taker.is_empty():
+		brain.return_hold(tick, Vector3.INF)   # a wall in its way: it holds where it stands
+		return
+	var c: Vector3 = taker.centre
+	var around := float(taker.radius) + float(record.get("capsule_radius_m", 0.5)) + LEASH_DETOUR_CLEAR_M
+	var off := Vector2(global_position.x - c.x, global_position.z - c.z)
+	if path_failures > _leash_failures_seen:   # backing off made no progress (a wall behind it): hold a while
+		_leash_failures_seen = path_failures
+		_leash_wait_hold_until = tick + ActionDef.seconds_to_ticks(LEASH_RETRY_S)
+	if off.length() < around - LEASH_ARRIVE_M:
+		_leash_backing_off = true
+	elif off.length() >= around - 0.25:
+		_leash_backing_off = false
+	if not _leash_backing_off or tick < _leash_wait_hold_until:
+		brain.return_hold(tick, c)   # clear of it (or as far as it can go): hold, facing it
+		return
+	if off.length() < 0.01:
+		off = Vector2(global_position.x - home_position.x, global_position.z - home_position.z)
+	if off.length() < 0.01:
+		off = Vector2(0.0, 1.0)
+	off = off.normalized() * around
+	brain.return_step(tick, Vector3(c.x + off.x, global_position.y, c.z + off.y))
+
+
+## M9 gate (final; the final audit's F11): the body that was in its way when a "way" wait began, while it lives and
+## stands within LEASH_WAY_BODY_M of this member's edge, as _leash_post_taker gives one; {} otherwise. War-camp riders
+## sent home through a stage-6 giant walking east off their picket line held exactly where they stopped - pressed into
+## his shins, on his east side - for LEASH_RETRY_S, rode into him again, and his walk stalled for 30 s; now they back
+## off on their own side to LEASH_DETOUR_CLEAR_M beyond both edges, and hold there facing him.
+func _leash_way_body() -> Dictionary:
+	var e := Sim.get_entity(_leash_wait_body) if _leash_wait_body != "" else null
+	if e == null or e == entity or not e.is_alive() or not is_instance_valid(e.actor) or not (e.actor is CharacterBody3D):
+		return {}
+	var r := _leash_body_radius(e)
+	var gap := Vector2(e.actor.global_position.x - global_position.x, e.actor.global_position.z - global_position.z).length() \
+		- r - float(record.get("capsule_radius_m", 0.5))
+	if gap > LEASH_WAY_BODY_M:
+		return {}
+	return {"centre": e.actor.global_position, "radius": r, "id": e.entity_id}
+
+
+## M9 gate (lane review): the living body standing on this member's post (its edge within LEASH_ARRIVE_M of
+## home_position, as _leash_blocker's on_post), as {"centre", "radius", "id"}; {} when the post is free.
+func _leash_post_taker() -> Dictionary:
+	var my_r := float(record.get("capsule_radius_m", 0.5))
+	var best: CombatEntity = null
+	var best_r := 0.0
+	var best_gap := INF
+	for e: CombatEntity in Sim.entities():
+		if e == entity or not e.is_alive() or not is_instance_valid(e.actor) or not (e.actor is CharacterBody3D):
+			continue
+		var r := _leash_body_radius(e)
+		var gap := Vector2(home_position.x - e.actor.global_position.x, home_position.z - e.actor.global_position.z).length() - r - my_r
+		if gap < LEASH_ARRIVE_M and gap < best_gap:
+			best = e
+			best_r = r
+			best_gap = gap
+	if best == null:
+		return {}
+	return {"centre": best.actor.global_position, "radius": best_r, "id": best.entity_id}
+
+
+## The radius _leash_blocker and _leash_post_taker give a body: the giant's profile's, else its record's.
+static func _leash_body_radius(e: CombatEntity) -> float:
+	var giant := e.actor as GiantPlayer
+	if giant != null:
+		return float(giant.profile.get("capsule_radius_m", 0.85))
+	return float(GameData.get_record(e.definition_id).get("capsule_radius_m", 0.5))
+
+
+## W23 (P39f): the body pinning this member on its way home (see LEASH_DETOUR_*): the nearest living actor
+## whose edge is within LEASH_DETOUR_REACH_M of this member's and that lies ahead, as {"centre", "radius",
+## "on_post": true when home lies within its edge}; {} when none (a wall or a cliff: the return keeps to its
+## path).
+func _leash_blocker() -> Dictionary:
+	var to_home := home_position - global_position
+	to_home.y = 0.0
+	if to_home.length() < 0.5:
+		return {}
+	var dir := to_home.normalized()
+	var my_r := float(record.get("capsule_radius_m", 0.5))
+	var best: CombatEntity = null
+	var best_r := 0.0
+	var best_gap := INF
+	for e: CombatEntity in Sim.entities():
+		if e == entity or not e.is_alive() or not is_instance_valid(e.actor) or not (e.actor is CharacterBody3D):
+			continue
+		var r := _leash_body_radius(e)
+		var off := e.actor.global_position - global_position
+		off.y = 0.0
+		var gap := off.length() - r - my_r
+		if gap > LEASH_DETOUR_REACH_M or off.dot(dir) <= 0.0 or gap >= best_gap:
+			continue
+		best = e
+		best_r = r
+		best_gap = gap
+	if best == null:
+		return {}
+	var c := best.actor.global_position
+	var home_gap := Vector2(home_position.x - c.x, home_position.z - c.z).length() - best_r - my_r
+	return {"centre": c, "radius": best_r, "on_post": home_gap < LEASH_ARRIVE_M, "id": best.entity_id}
+
+
+## W23 (P39f): the detour point round `blocker` (_leash_blocker): beside it, past its centre toward home, on the
+## side this member is (the other one on every second detour). INF without a blocker.
+func _leash_detour_point(blocker: Dictionary) -> Vector3:
+	if blocker.is_empty():
+		return Vector3.INF
+	var to_home := home_position - global_position
+	to_home.y = 0.0
+	var dir := to_home.normalized() if to_home.length() > 0.01 else Vector3.FORWARD
+	var my_r := float(record.get("capsule_radius_m", 0.5))
+	var c: Vector3 = blocker.centre
+	var best_r := float(blocker.radius)
+	var side := Vector3(-dir.z, 0.0, dir.x)
+	if (global_position - c).dot(side) < 0.0:
+		side = -side
+	if leash_detours % 2 == 1:
+		side = -side   # the side tried last failed too: round the other way
+	var around := best_r + my_r + LEASH_DETOUR_CLEAR_M
+	var past := minf(around, maxf(0.0, (home_position - c).dot(dir)))
+	var p := c + side * around + dir * past
+	return Vector3(p.x, global_position.y, p.z)
 
 
 ## Ends the return: the hook goes, a living member is healed (if the 6 s had not passed yet) and
 ## its AI resumes from IDLE at home; a dead one's brain becomes DEAD. in_world: still in the
-## level (false when it left the tree: only the state is reset).
-func _end_leash_return(in_world: bool) -> void:
+## level (false when it left the tree: only the state is reset). heal false: an early end (its post
+## taken, its way lost; M9 gate, lane review) - no heal that LEASH_HEAL_S had not given yet.
+func _end_leash_return(in_world: bool, heal := true) -> void:
 	_leash_returning = false
 	leash_started_tick = -1
+	leash_waiting = ""
+	_leash_struck_by = ""
+	leash_detour = Vector3.INF
 	if _leash_hook_owner != null:
 		Sim.remove_hooks(_leash_hook_owner)
 		_leash_hook_owner = null
@@ -1777,21 +2339,25 @@ func _end_leash_return(in_world: bool) -> void:
 	if Events.ability_started.is_connected(_on_noise_while_returning):
 		Events.ability_started.disconnect(_on_noise_while_returning)
 	var alive := entity != null and entity.combatant != null and entity.is_alive()
-	if in_world and alive and not _leash_healed:
+	if in_world and alive and heal and not _leash_healed:
 		_leash_heal()
 	ai_enabled = _leash_ai_was_enabled
 	if brain != null:
 		brain.end_return(Sim.tick, alive)
 
 
-func _on_hit_while_returning(_result: HitResult) -> void:
+func _on_hit_while_returning(result: HitResult) -> void:
 	if _leash_returning and brain != null:
-		brain.return_step(Sim.tick, home_position)
+		if leash_waiting == "post" and result != null and result.event != null:
+			var src := Sim.get_entity(result.event.attacker_id)
+			if src != null and src != entity and src.team != entity.team:
+				_leash_struck_by = src.entity_id   # M9 gate (lane review, fix-up 1): it answers at its next step
+		_leash_drive(Sim.tick)
 
 
 func _on_noise_while_returning(_tick: int, _actor_id: String, _action_id: String, _instance: int) -> void:
 	if _leash_returning and brain != null and is_inside_tree():
-		brain.return_step(Sim.tick, home_position)
+		_leash_drive(Sim.tick)
 
 
 ## Full health (through CombatEntity.heal, so Events.healed shows it), full stamina, no poise
@@ -1984,3 +2550,1716 @@ func _guarding_at_peace() -> bool:
 	if Sim.tick - brain.last_seen_tick > ActionDef.seconds_to_ticks(float(record.get("ai", {}).get("memory_s", 3.0))):
 		return false
 	return entity.combatant.pools.stamina >= float(guard.get("min_stamina", 0.0))
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P22
+# --- the distance LOD, a guard's step-back and ranged positioning (P22) --------------------------
+# Plan M6-M9 §3.4 designs 2, 4 and 8.
+#   * Distance LOD (decision 9): the record's render_lod_m goes to the rig (ActorRig, or the wolf's
+#     QuadrupedRig): at AI LOD tiers 0 and 1 the renderer swaps the rig for a copy of its one-box
+#     proxy under Visual/Body by distance (RigPaint). set_lod_tier is unchanged: tier 2 still hides
+#     Visual/Body and shows Visual/LodProxy.
+#   * A faction member at peace steps back STEP_BACK_M from an enemy that comes within
+#     FactionState.STEP_BACK_TRIGGER_M of it (FactionState's hook calls faction_step_back), so a
+#     fight beside Thornwick's guards does not put them under the giant's blows; it walks back to
+#     its post once no enemy has been near for STEP_BACK_HOLD_S.
+#   * Ranged units (tactics.front_arc_deg): a new firing point is taken in front of the giant's
+#     camera when one exists - a marker, else a ring point, whose bearing from the target lies
+#     within front_arc_deg / 2 of the camera's yaw - before the P09 search; and a shot drawn from
+#     outside the camera's view (in_camera_view: the horizontal field of view, as RunMetrics counts
+#     the off-camera share) runs a copy of the shot whose windup is at least
+#     tactics.off_camera_aim_s (the threat cue leads it).
+
+const STEP_BACK_M := 10.0
+const STEP_BACK_HOLD_S := 2.0
+## A ranged unit's camera checks fall back to this half field of view when the camera reports none.
+const CAMERA_FALLBACK_HALF_FOV_DEG := 55.0
+
+## Where a member at peace stands back from a nearby fight (Vector3.INF = not stepping back).
+var step_back_point := Vector3.INF
+var _step_back_from := Vector3.INF
+var _step_back_tick := -1000000
+var _p22_post_resolver := Callable()
+
+
+func _p22_ready() -> void:
+	var visual := get_node_or_null("Visual")
+	if visual != null and visual.has_method("set_render_lod"):
+		visual.call("set_render_lod", float(record.get("render_lod_m", 0.0)))
+	if brain == null:
+		return
+	if brain.post_resolver.is_valid():
+		_p22_post_resolver = brain.post_resolver
+		brain.post_resolver = _p22_faction_post
+	if brain.firing_point_resolver.is_valid():
+		var p09_resolver := brain.firing_point_resolver
+		brain.firing_point_resolver = func(my_position: Vector3, target_pos: Vector3, band: Vector2,
+				spread_m: float, far: bool) -> Vector3:
+			var post := _post_firing_step()   # M7 polish: a unit on its post holds it (P09 section)
+			if post != 0:
+				return firing_point if post > 0 else Vector3.INF
+			# M7 gate: while P09's ring search resumes, the front arc already ended with nothing
+			if not search_resuming("firing_ring"):
+				var p := front_arc_firing_point(my_position, target_pos, band, spread_m, far)
+				if p != Vector3.INF or brain.nav_search_pending:
+					return p   # M7 gate: a front-arc search waiting for the budget resumes next decision
+			return p09_resolver.call(my_position, target_pos, band, spread_m, far)
+		brain.view_probe = camera_view
+		brain.shot_preparer = prepare_shot
+		if brain.flee_resolver.is_valid():
+			var p04_flee := brain.flee_resolver
+			brain.flee_resolver = func(from: Vector3, threat: Vector3, distance: float) -> Vector3:
+				var post := _post_state()   # M7 polish: on its post a fleeing unit cowers there (P09 section)
+				if post != 0:
+					if post < 0:
+						brain.nav_search_pending = true   # decided once the tick's budget allows
+					return Vector3.INF
+				return p04_flee.call(from, threat, distance)
+
+
+## The record's render_lod_m (0 = never).
+func render_lod_m() -> float:
+	return float(record.get("render_lod_m", 0.0))
+
+
+# ---- the camera
+
+## The giant's camera (its CameraRig's Camera3D), or null.
+func _player_camera() -> Camera3D:
+	var p := get_tree().get_first_node_in_group("player") if is_inside_tree() else null
+	if p == null:
+		return null
+	var rig: Variant = p.get("camera_rig")
+	if not (rig is Node) or not is_instance_valid(rig):
+		return null
+	var cam: Variant = (rig as Node).get("camera")
+	return cam as Camera3D if cam is Camera3D and (cam as Camera3D).is_inside_tree() else null
+
+
+## The giant's camera as ranged positioning sees it (brain.view_probe): {"yaw": its horizontal
+## facing (Godot yaw, 0 = -Z), "on_camera": this unit inside its horizontal field of view}; {}
+## without a camera.
+func camera_view() -> Dictionary:
+	var cam := _player_camera()
+	if cam == null:
+		return {}
+	var fwd := -cam.global_transform.basis.z
+	fwd.y = 0.0
+	if fwd.length_squared() < 1e-6:
+		return {}
+	return {"yaw": TargetingRules.yaw_of(fwd), "on_camera": in_camera_view(cam, global_position)}
+
+
+## True when `pos` lies inside `cam`'s horizontal field of view (flat; the half angle from its fov
+## and the viewport's aspect, else CAMERA_FALLBACK_HALF_FOV_DEG). RunMetrics counts a hit as
+## "off camera" with the same test.
+static func in_camera_view(cam: Camera3D, pos: Vector3) -> bool:
+	if cam == null:
+		return true
+	var to := pos - cam.global_position
+	to.y = 0.0
+	if to.length_squared() < 1e-4:
+		return true
+	var fwd := -cam.global_transform.basis.z
+	fwd.y = 0.0
+	if fwd.length_squared() < 1e-6:
+		return true
+	var half := deg_to_rad(CAMERA_FALLBACK_HALF_FOV_DEG)
+	if cam.fov > 1.0:
+		var aspect := 16.0 / 9.0
+		var vp := cam.get_viewport()
+		if vp != null:
+			var size := vp.get_visible_rect().size
+			if size.y > 1.0:
+				aspect = size.x / size.y
+		half = atan(tan(deg_to_rad(cam.fov) * 0.5) * aspect)
+	return absf(fwd.normalized().signed_angle_to(to.normalized(), Vector3.UP)) <= half
+
+
+# ---- ranged positioning
+
+## A firing point in front of the camera (see the section notes): the nearest free elevation, then
+## cover marker within tactics.cover_search_radius_m that lies in the band and the front arc, sees
+## the target and keeps the spread (claimed); else a ring point in the arc - at this unit's own
+## distance clamped into the band, or the band's far edge when `far` - starting from the arc
+## direction nearest this unit's bearing and turning in RING_STEP_DEG steps inside the arc.
+## Vector3.INF when the record has no front_arc_deg, there is no camera, or nothing in the arc
+## works (the P09 search then runs).
+func front_arc_firing_point(my_position: Vector3, target_pos: Vector3, band: Vector2, spread_m: float,
+		far: bool) -> Vector3:
+	var arc := float(_tactics().get("front_arc_deg", 0.0))
+	var view := camera_view()
+	if arc <= 0.0 or view.is_empty():
+		return Vector3.INF
+	if target_out_of_reach(my_position, target_pos, band):
+		return Vector3.INF   # M7 gate: nothing it could hold reaches the target (P24b section)
+	var yaw := float(view.yaw)
+	_release_firing_marker()
+	var target := _aim_target()
+	var allies := ranged_allies()
+	var search := float(_tactics().get("cover_search_radius_m", 25.0))
+	var ring := leash_ring()
+	for group: String in [ELEVATION_GROUP, COVER_GROUP]:
+		var best: Node3D = null
+		var best_d := INF
+		for n in get_tree().get_nodes_in_group(group):
+			var m := n as Node3D
+			if m == null or not m.is_inside_tree() or not _marker_free(m):
+				continue
+			var f: Variant = m.get("faction")
+			if typeof(f) == TYPE_STRING and f != "" and f != faction:
+				continue
+			var p := m.global_position
+			var d := _flat_len(p - my_position)
+			var td := _flat_len(p - target_pos)
+			if d > search or d >= best_d or td < band.x or td > band.y or not _fp_in_leash(p, ring):
+				continue
+			if not EnemyBrain.in_front_arc(p, target_pos, yaw, arc) or _crowded(p, spread_m, allies) \
+					or not _sees_target_from(p, target):
+				continue
+			best = m
+			best_d = d
+		if best != null:
+			best.set_meta(FIRING_POINT_META, entity.entity_id)
+			_firing_marker = best
+			firing_point = best.global_position
+			return firing_point
+	var away := my_position - target_pos
+	away.y = 0.0
+	var dist := away.length()
+	var half := deg_to_rad(arc) * 0.5
+	var own_yaw := TargetingRules.yaw_of(away) if dist > 0.1 else yaw
+	var start := yaw + clampf(angle_difference(yaw, own_yaw), -half, half)
+	var lo := band.x + RING_BAND_MARGIN_M
+	var hi := maxf(lo, band.y - RING_BAND_MARGIN_M)
+	var r := hi if far else clampf(dist, lo, hi)
+	var steps := int(floor(rad_to_deg(half) * 2.0 / RING_STEP_DEG))
+	for i in range(_search_start("firing_arc"), steps * 2 + 1):
+		var k := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)   # 0, 1, -1, 2, -2, ...
+		var a := start + deg_to_rad(RING_STEP_DEG * k)
+		if absf(angle_difference(yaw, a)) > half + 1e-4:
+			continue
+		var desired := target_pos + Vector3(-sin(a), 0.0, -cos(a)) * r
+		desired.y = my_position.y
+		if not _search_affords():   # M7 gate: within the tick's path-query budget (P24b section)
+			_search_stop("firing_arc", i)
+			return Vector3.INF
+		var q0 := NavQuery.queries_total
+		var p := _walkable_point(my_position, desired)
+		_search_spend(q0)
+		if p == Vector3.INF or not _fp_in_leash(p, ring):
+			continue
+		var td := _flat_len(p - target_pos)
+		if td < band.x or td > band.y or not EnemyBrain.in_front_arc(p, target_pos, yaw, arc):
+			continue
+		if _crowded(p, spread_m, allies) or not _sees_target_from(p, target):
+			continue
+		_search_done("firing_arc")
+		firing_point = p
+		return p
+	_search_done("firing_arc")
+	return Vector3.INF
+
+
+## Before a shot starts (brain.shot_preparer): drawn from outside the camera's view, the controller
+## runs a copy of `shot_id` whose windup is at least tactics.off_camera_aim_s (the aim still locks
+## at its tracking_fraction); otherwise the record's own. The action id stays the same (cooldowns,
+## cues, metrics).
+func prepare_shot(shot_id: String, off_camera: bool) -> void:
+	if controller == null or not controller.library.has(shot_id):
+		return
+	var base := GameData.get_action(shot_id)
+	if base == null:
+		return
+	var aim_s := float(_tactics().get("off_camera_aim_s", 0.0))
+	var windup_s := float(base.params.get("windup_s", 0.0))
+	if not off_camera or aim_s <= windup_s + 1e-6:
+		controller.library[shot_id] = base
+		return
+	var rec: Dictionary = base.params.duplicate(true)
+	rec["windup_s"] = aim_s
+	controller.library[shot_id] = ActionDef.from_dict(rec)
+
+
+# ---- a member at peace steps back from a fight
+
+## FactionState's hook: an enemy at `threat` is within its trigger distance of this member at
+## peace. It steps STEP_BACK_M away from it (a reachable point, P04's flee search), re-aimed when
+## the threat moved more than 3 m, and the post it holds becomes that point.
+func faction_step_back(threat: Vector3) -> void:
+	if _post_decided == 1:
+		return   # M7 polish: a unit on its post stays there (P09 section)
+	_step_back_tick = Sim.tick
+	if step_back_point != Vector3.INF and _step_back_from != Vector3.INF \
+			and _flat_len(threat - _step_back_from) < 3.0:
+		return
+	var p := _resolve_flee_point(global_position, threat, STEP_BACK_M)
+	if p == Vector3.INF:
+		return
+	step_back_point = p
+	_step_back_from = threat
+	if brain != null:
+		brain.refresh_post()
+
+
+## FactionState's hook: no enemy is near; after STEP_BACK_HOLD_S the member walks back to its post.
+func faction_step_back_clear() -> void:
+	if step_back_point == Vector3.INF:
+		return
+	if Sim.tick - _step_back_tick < ActionDef.seconds_to_ticks(STEP_BACK_HOLD_S):
+		return
+	step_back_point = Vector3.INF
+	_step_back_from = Vector3.INF
+	if brain != null:
+		brain.refresh_post()
+
+
+## True while this actor is a faction member that is not hostile: at peace (neutral, warned, stood
+## down) or reconciled (P22: FactionState's "reconciled" standing, which members treat as neutral).
+func member_at_peace() -> bool:
+	return faction != "" and faction_standing != "" and faction_standing != "hostile"
+
+
+## brain.post_resolver while at peace: the step-back point (facing the fight) while stepping back,
+## else the P11b post.
+func _p22_faction_post() -> Dictionary:
+	if step_back_point != Vector3.INF and member_at_peace():
+		return {"post": step_back_point, "face": _step_back_from}
+	return _p22_post_resolver.call() if _p22_post_resolver.is_valid() else {}
+
+## @anchor P24b
+# --- navigation through NavQuery, the repath throttle, the chase goal (P24b) ----------------------
+# Plan M6-M9 §2.8, decision 13. Every navigation question goes through NavQuery on the level's map
+# for this actor's layer (nav_level(): the level root, else this actor's own world): flight and
+# reachability (_reachable_point, _walkable_point, flee points snapped with NavQuery.closest_point).
+# In a level with nav_query settings (a streamed world) also:
+#   * the agent paths on its layer's own map (NavigationAgent3D.set_navigation_map) with unlimited
+#     polygons and the chase distance cap;
+#   * tier-0 re-paths are throttled - at least repath_min_ticks apart and only when the goal moved
+#     repath_min_move_m - and wait for the tick's query budget (NavQuery.budget_left; each one is
+#     spent); a path failure still asks at once (within the budget);
+#   * the chase goal is snapped to the layer: the agent's query ends at the layer's point nearest the
+#     goal, and when that end lies more than REACH_SLACK_M from the goal (a giant wading deep water,
+#     out of the human layer) the actor stops there instead of steering on into the water, and its
+#     progress is measured to it (standing on the bank is not a path failure).
+# Without settings (the Valley, test levels) nothing changes: the default map, today's re-path rule
+# and parameters, the raw goal.
+
+## A path ending this far (horizontally) from its goal did not reach it: the actor stops at its end.
+const REACH_SLACK_M := 2.0
+
+var _p24b_level_ref: WeakRef = null
+var _p24b_settings := {}
+
+
+func _p24b_ready() -> void:
+	var level := nav_level()
+	_p24b_settings = NavQuery.settings(level)
+	if _p24b_settings.is_empty():
+		return
+	var layers := int(agent.navigation_layers)
+	var m := NavQuery.map_for(level, layers)
+	if m.is_valid():
+		agent.set_navigation_map(m)
+	var p := NavQuery.params_for(level, NavQuery.PURPOSE_CHASE)
+	agent.path_search_max_polygons = int(p.max_polygons)
+	agent.path_search_max_distance = float(p.max_distance)
+
+
+## The level this actor asks for navigation: the level root of the tree (as LevelRoot.nav_region
+## was found before), else the actor itself (a bare test world: its world's default map).
+func nav_level() -> Node:
+	if _p24b_level_ref != null:
+		var n := _p24b_level_ref.get_ref() as Node
+		if n != null and n.is_inside_tree():
+			return n
+	_p24b_level_ref = null
+	var level := get_tree().get_first_node_in_group("level_root") if is_inside_tree() else null
+	if level == null:
+		return self
+	_p24b_level_ref = weakref(level)
+	return level
+
+
+## True in a level with nav_query settings (the throttle, the budget and the chase goal apply).
+func _p24b_throttled() -> bool:
+	return not _p24b_settings.is_empty()
+
+
+## The streamed world's re-path rule (see the section notes). Tier 1 keeps P04's rule, within the
+## budget.
+func _p24b_wants_repath(goal: Vector3) -> bool:
+	if NavQuery.budget_left(nav_level()) <= 0:
+		return false
+	if lod_tier >= 1:
+		return _last_nav_target == Vector3.INF and Sim.tick - _last_repath_tick >= TIER1_REPATH_TICKS
+	if _last_nav_target == Vector3.INF:
+		return true
+	return Sim.tick - _last_repath_tick >= int(_p24b_settings.get("repath_min_ticks", 6)) \
+		and _last_nav_target.distance_to(goal) >= float(_p24b_settings.get("repath_min_move_m", 2.0))
+
+
+## Streamed world: the agent's waypoint check is horizontal (NavQuery.level_waypoint - a lean
+## navmesh lies up to 1.3 m off the terrain, more than the agent's 0.6 m waypoint distance).
+func _p24b_level_waypoint() -> void:
+	if _p24b_throttled():
+		NavQuery.level_waypoint(agent, global_position)
+
+
+## Where steering and the progress check aim for `goal`: the goal itself, unless (streamed world)
+## the agent's path ends more than REACH_SLACK_M from it - then that end (the bank).
+func _p24b_reach(goal: Vector3) -> Vector3:
+	if not _p24b_throttled():
+		return goal
+	var res := agent.get_current_navigation_result()
+	if res == null or res.path.is_empty():
+		return goal
+	var end := agent.get_final_position()
+	if Vector2(end.x - goal.x, end.z - goal.z).length() > REACH_SLACK_M:
+		return end
+	return goal
+
+
+# ---- searches within the path-query budget (M7 gate)
+# A firing-point search (P09's ring, P22's front arc), a flee search (P04) and a rout point (P30) try
+# candidates - each a closest point and up to two paths (_walkable_point / _reachable_point). In a
+# streamed world (nav_query settings) they spend NavQuery's per-tick budget like a re-path does: a
+# candidate is tried only while the level's budget_left() and this actor's own share of the tick
+# (SEARCH_QUERIES_PER_TICK) allow it; otherwise the search stops where it is, brain.nav_search_pending
+# says so, and the brain's next decision resumes it at that candidate (within SEARCH_RESUME_TICKS).
+# The searches used to run every candidate at once: a raider archer or mage spent 32-34 queries in
+# one tick (17-27 ms) on a target 200 m away. Without settings (the Valley, test levels) the searches
+# run as before.
+
+## One candidate's path queries (its closest point and up to two paths), and the most one actor's
+## searches spend in a tick: one candidate a tick.
+const SEARCH_CANDIDATE_QUERIES := 3
+const SEARCH_QUERIES_PER_TICK := 3
+## A search stopped for the budget resumes at its candidate when it is asked again within this many
+## ticks (the brain asks at its next decision); later it starts anew.
+const SEARCH_RESUME_TICKS := 30
+
+var _search_key := ""
+var _search_next := 0
+var _search_stop_tick := -1000000
+var _search_spent_tick := -1
+var _search_spent := 0
+## The ring search's in-band fallback found before it stopped for the budget.
+var _search_fallback := Vector3.INF
+## The most path queries this actor's searches spent in one tick (tests, measurements).
+var search_queries_peak := 0
+
+
+## The candidate search `key` ("firing_arc", "firing_ring", "flee", "rout") starts from: the one it
+## stopped at when asked again soon, else the first.
+func _search_start(key: String) -> int:
+	return _search_next if search_resuming(key) else 0
+
+
+## True while search `key` waits to resume (it stopped for the budget at most SEARCH_RESUME_TICKS
+## ago). A resolver that chains searches skips the stages before it meanwhile: they ended without a
+## point in this round, and searching them again would spend the tick's share and overwrite where
+## `key` stopped, so it would never end (P22's front arc before P09's ring; P30's rout point before
+## P04's flight, see _p30_rout_failed).
+func search_resuming(key: String) -> bool:
+	return _search_key == key and Sim.tick - _search_stop_tick <= SEARCH_RESUME_TICKS
+
+
+## True when one more candidate fits this tick: always without nav_query settings; in a streamed
+## world when the level's budget has SEARCH_CANDIDATE_QUERIES left and this actor's searches spent
+## at most SEARCH_QUERIES_PER_TICK - SEARCH_CANDIDATE_QUERIES this tick.
+func _search_affords() -> bool:
+	if not _p24b_throttled():
+		return true
+	_search_roll()
+	return _search_spent + SEARCH_CANDIDATE_QUERIES <= SEARCH_QUERIES_PER_TICK \
+		and NavQuery.budget_left(nav_level()) >= SEARCH_CANDIDATE_QUERIES
+
+
+## Counts what a candidate spent (NavQuery.queries_total when it began).
+func _search_spend(queries_before: int) -> void:
+	_search_roll()
+	_search_spent += NavQuery.queries_total - queries_before
+	search_queries_peak = maxi(search_queries_peak, _search_spent)
+
+
+func _search_roll() -> void:
+	if _search_spent_tick != Sim.tick:
+		_search_spent_tick = Sim.tick
+		_search_spent = 0
+
+
+## Search `key` stops at candidate `next` for the budget: brain.nav_search_pending, and it resumes there.
+func _search_stop(key: String, next: int) -> void:
+	_search_key = key
+	_search_next = next
+	_search_stop_tick = Sim.tick
+	if brain != null:
+		brain.nav_search_pending = true
+
+
+## Search `key` ended (found a point or tried every candidate): the next one starts anew.
+func _search_done(key: String) -> void:
+	if _search_key == key:
+		_search_key = ""
+		_search_next = 0
+
+
+## M7 gate: true in a streamed world when no firing point this unit could hold would have the target
+## in `band`: the target lies farther than the chase distance (the path cap: no candidate around it
+## can be reached) beyond the band from the unit, or farther than the band beyond the unit's
+## encounter leash (it would walk out of its leash and be sent home). The firing search is then
+## skipped - not a query - and the brain holds where it stands and asks again after FIRING_REPICK_S.
+func target_out_of_reach(my_position: Vector3, target_pos: Vector3, band: Vector2) -> bool:
+	if not _p24b_throttled():
+		return false
+	var chase := float(NavQuery.params_for(nav_level(), NavQuery.PURPOSE_CHASE).max_distance)
+	if chase > 0.0 and _flat_len(target_pos - my_position) - band.y > chase:
+		return true
+	if encounter_id == "":
+		return false
+	var rec := GameData.get_record(encounter_id)
+	var leash := float(rec.get("leash_radius_m", 0.0))
+	var c: Variant = rec.get("center_m")
+	if leash <= 0.0 or typeof(c) != TYPE_ARRAY or (c as Array).size() != 3:
+		return false
+	var centre := Vector3(float(c[0]), target_pos.y, float(c[2]))
+	return _flat_len(target_pos - centre) - leash > band.y + EnemyBrain.BAND_TOLERANCE_M
+
+## @anchor P30
+# --- formations, the banner, shields and the target provider (P30) --------------------------------
+# Plan M6-M9 §2.10, decisions 19 and 20. Hook lines elsewhere in this file: _ready (_p30_ready),
+# _target (the provider), _sense (_p30_sense), _on_any_entity_died, get_defense_state, get_rig_state,
+# _on_phase_entered, _has_leader_now and _line_members.
+#   * A formation member (Formation.add_member -> p30_join_formation) has `formation`, `formation_id`
+#     (the music director counts formation members as threats) and `formation_slot` (-1: its banner).
+#     Its brain holds the slot the formation gives (formation_slot_resolver), faces the giant, and
+#     never strikes on its own while the formation is intact: the formation's brace runs through
+#     p30_run_action on its striker. While the banner lives the member loses half the morale of awe
+#     and ally deaths and regroups to its slot (its leader is the banner: _p30_has_leader); the
+#     banner's death is its commander's death (_p30_on_entity_died). Routed members run to the
+#     formation's flee points or fan (_p30_rout_point), so a breached gate does not jam. A braced
+#     member shows the brace pose (get_rig_state's pose_override).
+#   * The banner's record `rally` (role banner) runs every interval_s (Formation._rally_step); when
+#     its action strikes, the members within radius_m gain morale (p30_rally).
+#   * A shield (guard.breaks_on_tags): a guarded hit carrying one of those tags (heavies, stomps,
+#     sweeps) breaks the guard whatever its stamina - accepts_hit() notes every incoming hit for
+#     get_defense_state().
+#   * Joining: an outmatched soldier (behaviour "formation") outside a formation takes the free slot
+#     of the nearest intact formation of its faction within Formation.JOIN_RADIUS_M while the
+#     director's formation cap allows (_p30_try_join, asked by the brain); without one, a giant of
+#     stage JOIN_OR_FLEE_STAGE or more makes it flee (EnemyBrain), a smaller one leaves it P04's line.
+#   * The target provider (record `targets`): _target() is the giant while it is seen (or this unit is
+#     aware of it) within aggro_player_m, else the nearest living NPC of the listed factions or intact
+#     prop with a listed prop tag within sight range and in sight. The runner makes that NPC or prop
+#     hittable during this unit's hit queries (AttackRunner.provider_target: the M1 team rule lets an
+#     enemy hit only the player); the perception gives it its own radius and no size (no awe, no
+#     outmatched tactics against a house). Without `targets` nothing changes.
+#     W23 (P39f; FOLLOWUPS "From P37"): with none of those in sight it keeps no target (it patrols or
+#     idles on) - it no longer falls back to the giant it does not see, against whom an aware raider at
+#     stages 4-5 measured itself 100 m off and routed (the outmatched rule), thinning the Millford raid.
+#     It never takes a target its blows cannot damage (_p30_out_of_reach): a civilian in shelter (inside,
+#     out of the world's physics), a protected NPC (Reeve Tamsin refuses every blow), or one it gave up -
+#     fixed on an NPC or prop for P30_GIVE_UP_S without damaging it, it leaves it for P30_GIVEN_UP_S
+#     (_p30_futile; a raider stood at the mill's shelter for the rest of a raid). The count runs only while
+#     the provider keeps picking that NPC or prop: the giant in between, or over P30_FIX_GAP_S with nothing
+#     in sight or asleep, starts it again (W23 fix-up: a raider that fought the giant for 12 s gave its
+#     house up the moment he stepped off).
+
+## At this stage or more, an outmatched soldier that finds no formation to join flees (plan §5.14:
+## at stage 4 single humans flee; smaller giants keep P04's lines).
+const JOIN_OR_FLEE_STAGE := 4
+## W23 (P39f): the target provider gives up an NPC or prop it has been fixed on this long without
+## damaging it (_p30_futile), and takes it again only after P30_GIVEN_UP_S.
+const P30_GIVE_UP_S := 12.0
+const P30_GIVEN_UP_S := 60.0
+## W23 fix-up: the give-up count starts again when the provider has not picked the target it is fixed on
+## for longer than this (nothing in sight, or a dormant unit): an awake unit senses at least once a
+## second (AI LOD tier 1), a dormant one never.
+const P30_FIX_GAP_S := 2.0
+## Arm poses (yaw, pitch in degrees: weapon arm, off arm) of a braced member, by role: the pike
+## levelled at the giant's legs (the pike lies along the weapon arm), the shield raised, a line's
+## blades low. The crowd renderer's brace meshes are built from the same table
+## (tools/builders/formations.gd).
+const BRACE_POSES := {
+	"pike": [Vector2(0.0, -8.0), Vector2(-14.0, -20.0)],
+	"shield": [Vector2(18.0, -35.0), Vector2(4.0, 6.0)],
+	"line": [Vector2(-8.0, -24.0), Vector2(-12.0, -70.0)],
+}
+
+## The formation this unit belongs to (null when none), its id ("" = none: the music director's
+## test) and its slot (Formation.BANNER_SLOT for the banner, -2 when none).
+var formation: Formation = null
+var formation_id := ""
+var formation_slot := -2
+## The last formation it belonged to (its flee points serve a rout after the formation dissolved).
+var _p30_last_formation: Formation = null
+var _p30_incoming: HitEvent = null
+var _p30_target_tick := -1
+var _p30_target_ref: WeakRef = null
+## W23 (P39f): the provider target this unit is fixed on ("" = none), the tick it fixed on it or last
+## damaged it and the tick the provider last picked it; the targets it gave up (entity id -> the tick it
+## may take them again).
+var _p30_fix_id := ""
+var _p30_fix_tick := -1
+var _p30_fix_seen_tick := -1
+var _p30_given_up := {}
+var _p30_extents := {}   # entity id -> Vector3 (half extents of its hurtboxes in its own frame)
+## M7 gate: the band a running band_pulse strikes, taken when its windup began - the band its
+## telegraph shows ({"instance": the action's instance id, "band": the band}; {} when none).
+var _p30_frozen_band := {}
+## M7 gate: the rout point's last try found nowhere reachable, so the flee resolver fell back to P04's
+## flight; while that search resumes for the budget (search_resuming("flee")) the rout point is not
+## tried again - it would spend the tick's share before the flight's next candidate every time.
+var _p30_rout_failed := false
+
+
+func _p30_ready() -> void:
+	if brain == null:
+		return
+	brain.formation_slot_resolver = _p30_slot_point
+	brain.formation_face_resolver = _p30_face_point
+	brain.formation_joiner = _p30_try_join
+	var p04_flee := brain.flee_resolver
+	brain.flee_resolver = func(from: Vector3, threat: Vector3, distance: float) -> Vector3:
+		if not (_p30_rout_failed and search_resuming("flee")):   # M7 gate: see _p30_rout_failed
+			var p := _p30_rout_point(from, threat)
+			if p != Vector3.INF or brain.nav_search_pending:
+				return p   # M7 gate: a rout point waiting for the budget is asked for again next decision
+		return p04_flee.call(from, threat, distance) if p04_flee.is_valid() else Vector3.INF
+	brain.routed.connect(_p30_on_routed)
+	var rally: Variant = record.get("rally")
+	if typeof(rally) == TYPE_DICTIONARY:
+		_p30_add_action(str(rally.get("action", "")))
+	if _p30_has_targets():
+		runner.provider_target = _p30_provider_target
+
+
+func _p30_add_action(action_id: String) -> void:
+	var a := GameData.get_action(action_id)
+	if a != null and controller != null and not controller.library.has(a.id):
+		controller.add_action(a)
+
+
+## The record's role ("" = none).
+func role() -> String:
+	return str(record.get("role", ""))
+
+
+# ---- formation membership (Formation calls these)
+
+## `f` takes this unit into `slot` (Formation.BANNER_SLOT: its banner). `fresh`: it joins as it
+## spawns (its morale becomes the formation's morale_start); a soldier joining mid-fight keeps its
+## morale (it rises to morale_start as it recovers).
+func p30_join_formation(f: Formation, slot: int, fresh := true) -> void:
+	formation = f
+	formation_id = f.id
+	formation_slot = slot
+	_p30_last_formation = f
+	_release_formation_marker()
+	if f.brace_action != "":
+		_p30_add_action(f.brace_action)
+	if brain == null:
+		return
+	brain.join_formation(f.id, slot == Formation.BANNER_SLOT, f.morale_start, fresh, Sim.tick)
+	p30_formation_update(f)
+
+
+## `f` lets this unit go (its encounter deactivated, or it left for good).
+func p30_leave_formation(f: Formation) -> void:
+	if formation != f:
+		return
+	formation = null
+	formation_id = ""
+	formation_slot = -2
+	if brain != null:
+		brain.leave_formation()
+
+
+## Every formation update: what the brain needs to know (intact, braced, the banner alive).
+func p30_formation_update(f: Formation) -> void:
+	if brain == null or formation != f:
+		return
+	brain.formation_hold = f.is_intact()
+	brain.formation_braced = f.state == "braced"
+	brain.banner_alive = f.banner_alive()
+
+
+## Starts `action_id` now (the formation's brace on its striker, the banner's rally): true when the
+## controller took it.
+func p30_run_action(action_id: String) -> bool:
+	if controller == null or entity == null or not entity.is_alive() or not controller.library.has(action_id):
+		return false
+	if controller.state != CombatController.State.LOCOMOTION:
+		return false
+	controller.request(&"attack", {"action_id": action_id})
+	return controller.action != null and controller.action.id == action_id
+
+
+## True when this unit can start a formation action now: alive, free (locomotion), awake (AI LOD
+## tier below 2), not held, not walking home.
+func p30_can_act() -> bool:
+	return entity != null and entity.is_alive() and controller != null \
+		and controller.state == CombatController.State.LOCOMOTION and not is_held() and lod_tier < 2 \
+		and not is_returning() and process_mode != Node.PROCESS_MODE_DISABLED and is_inside_tree()
+
+
+## The band a band_pulse of this unit strikes (AttackRunner): the band its telegraph showed when the
+## running action's windup began (M7 gate: the brace's tracking_fraction is 0 - the band no longer
+## turns and walks with the formation between the telegraph and the strike, so a giant that steps
+## out of the drawn band is not struck); else its formation's front band, else a band in front of
+## the unit as wide as three files and as deep as the running action's radius.
+func p30_brace_band() -> Dictionary:
+	if not _p30_frozen_band.is_empty() and controller != null and controller.action != null \
+			and controller.instance_id == int(_p30_frozen_band.instance):
+		return _p30_frozen_band.band
+	return _p30_live_band()
+
+
+## The band as the formation (or this unit) stands now (p30_brace_band without the freeze).
+func _p30_live_band() -> Dictionary:
+	if formation != null:
+		return formation.front_band()
+	var depth := 6.0
+	if controller != null and controller.action != null and controller.action.radius_m > 0.0:
+		depth = controller.action.radius_m
+	var fwd := Formation.forward_of(facing_yaw)
+	return {"center": global_position + fwd * (depth * 0.5), "near": global_position, "half_width": 2.4,
+		"depth": depth, "yaw": facing_yaw}
+
+
+## The height a band_pulse of this unit strikes as (poise and knockback): its formation's
+## brace_height_m, else Formation.DEFAULT_BRACE_HEIGHT_M.
+func p30_brace_height() -> float:
+	return formation.brace_height_m if formation != null else Formation.DEFAULT_BRACE_HEIGHT_M
+
+
+## The banner's rally strikes: +morale to the members of its formation within the radius (record
+## `rally`). Returns how many it reached.
+func p30_rally() -> int:
+	var rally: Variant = record.get("rally")
+	if formation == null or typeof(rally) != TYPE_DICTIONARY:
+		return 0
+	var n := formation.rally(global_position, float(rally.get("morale", 10.0)), float(rally.get("radius_m", 15.0)))
+	Events.ability_effect.emit(Sim.tick, entity.entity_id, str(rally.get("action", "")), "cast",
+		global_position, float(rally.get("radius_m", 15.0)), facing_yaw, 0.0)
+	return n
+
+
+## Routs now (tests, scripted events): flight, then the rout, to the formation's flee points.
+func p30_force_rout() -> void:
+	if brain == null or entity == null or not entity.is_alive():
+		return
+	Sim.release_all_tokens(entity.entity_id)
+	brain.force_rout(Sim.tick)
+
+
+func _p30_slot_point() -> Vector3:
+	return formation.slot_position(formation_slot) if formation != null else Vector3.INF
+
+
+## What a member faces: the threat while the formation knows it, else straight ahead of its slot.
+func _p30_face_point() -> Vector3:
+	if formation == null:
+		return Vector3.INF
+	if formation.threat_pos != Vector3.INF:
+		return formation.threat_pos
+	return formation.slot_position(formation_slot) + Formation.forward_of(formation.facing_yaw) * 10.0
+
+
+## A formation member's leader is its banner (the banner leads itself). Its formation must have one.
+func _p30_has_leader() -> bool:
+	if formation_slot == Formation.BANNER_SLOT:
+		return entity.is_alive()
+	return formation.banner_alive()
+
+
+## Events.entity_died: this member's banner fell - its commander's death (-25, x1.5 while
+## outmatched, debounced like P04's). True when handled (the base adds no ally death on top).
+func _p30_on_entity_died(tick: int, id: String) -> bool:
+	if formation == null or formation.banner_id == "" or id != formation.banner_id \
+			or formation_slot == Formation.BANNER_SLOT or brain == null:
+		return false
+	brain.on_commander_died(tick)
+	return true
+
+
+## The nearest intact formation of this unit's faction within JOIN_RADIUS_M with a free slot takes
+## it, while the level's director allows another formation member (brain.formation_joiner).
+func _p30_try_join() -> bool:
+	if formation != null:
+		return true
+	if entity == null or not entity.is_alive() or not is_inside_tree():
+		return false
+	var director := get_tree().get_first_node_in_group(EncounterDirector.GROUP) as EncounterDirector
+	if director != null and not director.p30_formation_room():
+		return false
+	var best: Formation = null
+	var best_d := Formation.JOIN_RADIUS_M
+	for f in Formation.live():
+		if not f.is_intact() or f.faction != faction or f.free_slots().is_empty():
+			continue
+		var d := _flat_len(f.anchor() - global_position)
+		if d <= best_d:
+			best = f
+			best_d = d
+	return best != null and best.try_join(self)
+
+
+## brain.routed: a member of a formation runs to its formation's flee point (or fan).
+func _p30_on_routed() -> void:
+	if brain == null:
+		return
+	var p := _p30_rout_point(global_position, brain.last_known)
+	if p != Vector3.INF:
+		brain.flee_point = p
+
+
+## Where a routed member of a formation runs (brain.flee_resolver while routed): the formation's
+## flee point or fan point of its slot (Formation.rout_point), made reachable on its navigation
+## layer. Vector3.INF for anyone else (P04's flight applies).
+func _p30_rout_point(from: Vector3, threat: Vector3) -> Vector3:
+	_p30_rout_failed = false
+	var f := formation if formation != null else _p30_last_formation
+	if f == null or brain == null or brain.state != EnemyBrain.AIState.ROUTED:
+		return Vector3.INF
+	var index := formation_slot if formation_slot >= 0 else absi(hash(entity.entity_id))
+	var p := f.rout_point(from, threat, index)
+	var level := nav_level()
+	var layers := int(agent.navigation_layers)
+	if NavQuery.has_navigation(level, layers):
+		if not _search_affords():   # M7 gate: within the tick's path-query budget (P24b section)
+			_search_stop("rout", 0)
+			return Vector3.INF
+		var q0 := NavQuery.queries_total
+		var r := _reachable_point(level, from, NavQuery.closest_point(level, p, layers), layers)
+		_search_spend(q0)
+		_p30_rout_failed = r == Vector3.INF
+		return r
+	return Vector3(p.x, from.y, p.z)
+
+
+# ---- the brace's telegraph, the rally, the pose
+
+## controller.phase_entered: a band_pulse's windup announces one telegraph along the band (a line
+## telegraph from the front rank's centre, as wide as the rank, as deep as the band) instead of
+## the base's at the striker (returns true), and keeps that band for the strike (p30_brace_band);
+## a rally action's strike rallies.
+func _p30_on_phase_entered(action: ActionDef, phase: int, instance_id: int = -1) -> bool:
+	if action == null:
+		return false
+	if action.hit_shape == "band_pulse":
+		if phase == ActionDef.Phase.WINDUP:
+			var band := _p30_live_band()
+			_p30_frozen_band = {"instance": instance_id if instance_id >= 0 else controller.instance_id,
+				"band": band.duplicate()}
+			Events.telegraph_started.emit(Sim.tick, entity.entity_id, action.id, brain.target_id if brain != null else "",
+				"line", band.near, float(band.yaw), float(band.half_width), float(band.depth),
+				float(action.windup_ticks) / Sim.TICK_RATE)
+		return true
+	var rally: Variant = record.get("rally")
+	if phase == ActionDef.Phase.ACTIVE and typeof(rally) == TYPE_DICTIONARY and action.id == str(rally.get("action", "")):
+		p30_rally()
+	return false
+
+
+## get_rig_state: a member of an intact formation that is braced (or running the brace) shows its
+## role's brace pose.
+func _p30_rig_state(s: Dictionary) -> Dictionary:
+	if formation == null or formation_slot == Formation.BANNER_SLOT or not formation.is_intact():
+		return s
+	if bool(s.get("dead", false)) or bool(s.get("staggered", false)):
+		return s
+	var a := controller.action if controller != null else null
+	if (a == null and formation.state == "braced") or (a != null and a.hit_shape == "band_pulse"):
+		var pose: Variant = BRACE_POSES.get(role() if BRACE_POSES.has(role()) else "line")
+		s["pose_override"] = {"arm": pose[0], "off": pose[1], "exact": false}
+	return s
+
+
+# ---- shields
+
+## CombatEntity.receive_hit asks before resolving: every hit is accepted; the shield rule reads it
+## (receive_hit builds the defence state right after this, in the same call).
+func accepts_hit(hit: HitEvent) -> bool:
+	if not _p34_accepts(hit):
+		return false   # P34: a yielded boss is IMMUNE to all but the confirmed strike
+	_p30_incoming = hit
+	return true
+
+
+## get_defense_state: a guarded hit that carries one of guard.breaks_on_tags breaks the guard (the
+## defence's stamina is 0 for it, so any impact is a guard break). The hit is used once.
+func _p30_defense(d: DefenseState) -> void:
+	var hit := _p30_incoming
+	_p30_incoming = null
+	var tags: Variant = (record.get("guard", {}) as Dictionary).get("breaks_on_tags")
+	if hit == null or not d.blocking or typeof(tags) != TYPE_ARRAY:
+		return
+	for tag: Variant in tags:
+		if hit.has_tag(str(tag)):
+			d.stamina = 0.0
+			return
+
+
+# ---- the target provider
+
+func _p30_has_targets() -> bool:
+	return typeof(record.get("targets")) == TYPE_DICTIONARY
+
+
+## The provider's choice this tick (see the section notes; once per tick). A changed choice gives
+## back the attack tokens held on the old one.
+func _p30_target() -> CombatEntity:
+	var cached: CombatEntity = _p30_target_ref.get_ref() as CombatEntity if _p30_target_ref != null else null
+	if _p30_target_tick == Sim.tick and cached != null and is_instance_valid(cached):
+		return cached
+	_p30_target_tick = Sim.tick
+	var t: Dictionary = record.targets
+	var teams: Array = t.get("teams", ["player"])
+	var player: CombatEntity = null
+	if teams.has("player"):
+		for e: CombatEntity in Sim.entities():
+			if e.team == CombatEntity.Team.PLAYER:
+				player = e
+				break
+	var pick: CombatEntity = null
+	if player != null and player.is_alive() and _p30_player_engaged(player, t):
+		pick = player
+	else:
+		# W23 (P39f): none in sight - no target (never the giant it does not see; see the section notes)
+		pick = _p30_nearest_target(t)
+		if pick != null and _p30_futile(pick):
+			pick = _p30_nearest_target(t)   # given up: the next one, if any
+	if pick != null and pick == player:
+		_p30_fix_id = ""   # W23 fix-up: the giant ends the fix as another target does (the give-up count, _p30_futile)
+	if pick != cached and cached != null and entity != null:
+		Sim.release_all_tokens(entity.entity_id)
+		if brain != null:
+			brain.holds_token = false
+	_p30_target_ref = weakref(pick) if pick != null else null
+	return pick
+
+
+## True when the giant comes first: within aggro_player_m (when set) and either this unit is aware
+## of it or sees it now (sight range, its view cone or the aware radius, a clear line).
+func _p30_player_engaged(player: CombatEntity, t: Dictionary) -> bool:
+	var to := player.actor.global_position - global_position
+	to.y = 0.0
+	var dist := to.length()
+	if t.has("aggro_player_m") and dist > float(t.aggro_player_m):
+		return false
+	if brain != null and brain.aware and brain.target_id == player.entity_id:
+		return true
+	var ai: Dictionary = record.get("ai", {})
+	if dist > float(ai.get("sight_range_m", 25.0)):
+		return false
+	var fwd := -global_transform.basis.z
+	var facing_deg := rad_to_deg(Vector3(fwd.x, 0.0, fwd.z).signed_angle_to(to, Vector3.UP)) if dist > 0.01 else 0.0
+	if absf(facing_deg) > float(ai.get("sight_half_angle_deg", 75.0)) \
+			and dist > float(ai.get("awareness_radius_m", AWARE_ALL_AROUND_M)):
+		return false
+	var eye := global_position + Vector3.UP * entity.combatant.height_m * 0.92
+	return HitQueryAdapter.line_clear(get_world_3d().direct_space_state, eye, player.anchor_position(), SIGHT_MASK,
+		player.occlusion_rids)
+
+
+## The nearest living NPC of the record's factions or intact prop with one of its prop_tags,
+## within sight range and in sight; null when none.
+func _p30_nearest_target(t: Dictionary) -> CombatEntity:
+	var range_m := float((record.get("ai", {}) as Dictionary).get("sight_range_m", 25.0))
+	var space := get_world_3d().direct_space_state
+	var eye := global_position + Vector3.UP * entity.combatant.height_m * 0.92
+	var best: CombatEntity = null
+	var best_d := range_m
+	for e: CombatEntity in Sim.entities():
+		if e == entity or e.team != CombatEntity.Team.NEUTRAL or not e.is_alive() or not is_instance_valid(e.actor):
+			continue
+		if not _p30_allowed(e, t) or _p30_out_of_reach(e):
+			continue
+		var d := _flat_len(e.actor.global_position - global_position)
+		if d > best_d:
+			continue
+		if not HitQueryAdapter.line_clear(space, eye, e.anchor_position(), SIGHT_MASK, e.occlusion_rids):
+			continue
+		best = e
+		best_d = d
+	return best
+
+
+## True when `e` (a NEUTRAL entity) is one the record's targets name: a member of a listed faction
+## (record ids "faction.<short>"; members carry the short name) or a prop with a listed tag.
+func _p30_allowed(e: CombatEntity, t: Dictionary) -> bool:
+	if e.faction != "":
+		for f: Variant in t.get("factions", []):
+			if str(f).trim_prefix("faction.") == e.faction:
+				return true
+		return false
+	var tags := FactionState.prop_tags(e)
+	for tag: Variant in t.get("prop_tags", []):
+		if tags.has(str(tag)):
+			return true
+	return false
+
+
+## W23 (P39f): true for an NPC or prop no blow of this unit can damage now: one it gave up (_p30_futile)
+## until its time is up, a civilian in shelter (inside: hidden, out of the world's physics) and a
+## protected NPC (it refuses every hit).
+func _p30_out_of_reach(e: CombatEntity) -> bool:
+	if int(_p30_given_up.get(e.entity_id, -1)) > Sim.tick:
+		return true
+	var c := e.actor as Civilian
+	return c != null and (c.sheltered or not c.accepts_hit(null))
+
+
+## W23 (P39f): the provider's give-up rule. True when this unit has been fixed on `e` (the NPC or prop the
+## provider picks) for P30_GIVE_UP_S without damaging it: `e` is given up for P30_GIVEN_UP_S. The count
+## runs only while the provider keeps picking `e`: picking another target (another NPC or prop, or the
+## giant: _p30_target ends the fix), no pick of `e` for over P30_FIX_GAP_S (nothing in sight that long, or
+## a dormant unit, which senses nothing) or a blow that damages `e` (_p30_on_hit_landed) starts it again.
+## A shorter spell with nothing in sight (a sight line passing a post) does not, so a target the unit keeps
+## losing and finding is still given up. W23 fix-up: before, a fight with the giant, a long spell with
+## nothing in sight or a sleep counted as time spent on `e`, and the unit gave `e` up the moment it saw it.
+func _p30_futile(e: CombatEntity) -> bool:
+	if entity != null and not entity.hit_landed.is_connected(_p30_on_hit_landed):
+		entity.hit_landed.connect(_p30_on_hit_landed)
+	var gap := Sim.tick - _p30_fix_seen_tick
+	_p30_fix_seen_tick = Sim.tick
+	if e.entity_id != _p30_fix_id or gap > int(roundf(P30_FIX_GAP_S * Sim.TICK_RATE)):
+		_p30_fix_id = e.entity_id
+		_p30_fix_tick = Sim.tick
+		return false
+	if Sim.tick - _p30_fix_tick < int(roundf(P30_GIVE_UP_S * Sim.TICK_RATE)):
+		return false
+	for id: Variant in _p30_given_up.keys():
+		if int(_p30_given_up[id]) <= Sim.tick:
+			_p30_given_up.erase(id)
+	_p30_given_up[e.entity_id] = Sim.tick + int(roundf(P30_GIVEN_UP_S * Sim.TICK_RATE))
+	_p30_fix_id = ""
+	return true
+
+
+## W23 (P39f): a blow of this unit that damaged the target it is fixed on restarts the give-up count.
+func _p30_on_hit_landed(result: HitResult) -> void:
+	if result != null and result.event != null and result.event.target_id == _p30_fix_id and result.dealt_damage():
+		_p30_fix_tick = Sim.tick
+
+
+## AttackRunner.provider_target: the NPC or prop this unit fights now (its brain's target when the
+## provider allows it), else null.
+func _p30_provider_target() -> CombatEntity:
+	if brain == null or brain.target_id == "" or not _p30_has_targets():
+		return null
+	var e := Sim.get_entity(brain.target_id)
+	if e == null or e.team != CombatEntity.Team.NEUTRAL or not e.is_alive():
+		return null
+	return e if _p30_allowed(e, record.targets) else null
+
+
+## _sense: a target that is not the giant gets its own radius toward this unit and no size (the
+## brain's awe and outmatched tactics are for giants).
+func _p30_sense(snapshot: Dictionary, t: CombatEntity) -> void:
+	if t == null or t.team == CombatEntity.Team.PLAYER:
+		return
+	snapshot["target_radius"] = _p30_target_radius(t)
+	snapshot["target_height"] = float(record.get("height_m", 1.8))
+	snapshot["target_stage"] = 0
+
+
+## How far from `t`'s origin its edge lies toward this unit: an actor's capsule radius; a prop's
+## hurtbox box (in its own frame) along the direction to this unit.
+func _p30_target_radius(t: CombatEntity) -> float:
+	var rec := GameData.get_record(t.definition_id)
+	if str(rec.get("type", "")) != "prop":
+		return float(rec.get("capsule_radius_m", 0.4))
+	var half: Vector3 = _p30_extents.get(t.entity_id, Vector3.INF)
+	if half == Vector3.INF:
+		half = _p30_half_extents(t)
+		_p30_extents[t.entity_id] = half
+	var local := t.actor.global_transform.basis.inverse() * (global_position - t.actor.global_position)
+	var d := Vector2(local.x, local.z)
+	if d.length() < 1e-3:
+		return maxf(half.x, half.z)
+	d = d.normalized()
+	var rx := half.x / absf(d.x) if absf(d.x) > 1e-4 else INF
+	var rz := half.z / absf(d.y) if absf(d.y) > 1e-4 else INF
+	return clampf(minf(rx, rz), 0.2, 30.0)
+
+
+## Half extents (x, y, z in the prop's own frame) of the union of `t`'s hurtbox shapes, about its
+## origin (0.5 m each way without any).
+static func _p30_half_extents(t: CombatEntity) -> Vector3:
+	var box := AABB()
+	var first := true
+	var inv := t.actor.global_transform.affine_inverse()
+	for hb in t.hurtboxes:
+		if not is_instance_valid(hb):
+			continue
+		for child in hb.get_children():
+			var cs := child as CollisionShape3D
+			if cs == null or cs.shape == null:
+				continue
+			var aabb := cs.shape.get_debug_mesh().get_aabb()
+			var xf := inv * cs.global_transform
+			var local := xf * aabb
+			box = local if first else box.merge(local)
+			first = false
+	if first:
+		return Vector3(0.5, 0.5, 0.5)
+	var far := Vector3(maxf(absf(box.position.x), absf(box.end.x)), maxf(absf(box.position.y), absf(box.end.y)),
+		maxf(absf(box.position.z), absf(box.end.z)))
+	return far
+
+## @anchor P32
+# --- siege crews: a place beside an engine, the haul, the engine's loss (P32) ---------------------
+# Plan M6-M9 §2.10, §3.16, §5.11. An encounter's `engines` list gives a crew member its engine
+# (EncounterDirector -> SiegeEngine.add_crew -> p32_assign_engine). The brain (EnemyBrain's P32
+# section) then holds the member's place beside the engine (crew_slot_resolver: SiegeEngine.crew_slot,
+# inside its crew radius), facing the giant while it knows where it is, else the engine's front
+# (crew_face_resolver), and never fights. While the engine reloads it asks one member at a time to haul
+# (p32_crew_reload: the record's crew action, a pose without a hit). engine_id names the engine: the
+# music director counts an engine crew as a threat whatever its height (MusicDirector.is_special). When
+# the engine breaks, a giant seizes it or it leaves the tree, the member gives up its place, runs and
+# routs (p32_engine_lost; the brain notices a vanished engine itself through crew_engine_check).
+
+## The world id of the engine this crew member serves ("" = none).
+var engine_id := ""
+var _p32_engine_ref: WeakRef = null
+
+
+## SiegeEngine.add_crew: `engine` takes this unit into its crew.
+func p32_assign_engine(engine: Node) -> void:
+	if engine == null or not is_instance_valid(engine):
+		return
+	_p32_engine_ref = weakref(engine)
+	engine_id = str(engine.call("engine_id")) if engine.has_method("engine_id") else ""
+	if brain == null:
+		return
+	brain.crew_slot_resolver = _p32_crew_slot
+	brain.crew_face_resolver = _p32_crew_face
+	brain.crew_engine_check = func() -> bool: return p32_engine() != null
+	brain.crew_engine_assigned(Sim.tick)
+
+
+## The engine this unit serves (null when none, or once it was freed or left the tree).
+func p32_engine() -> Node3D:
+	var e: Node3D = _p32_engine_ref.get_ref() as Node3D if _p32_engine_ref != null else null
+	return e if e != null and e.is_inside_tree() else null
+
+
+## `engine` broke or a giant seized it (SiegeEngine), or (null) it vanished: this unit gives up its
+## place, runs and routs. Another engine's loss is ignored.
+func p32_engine_lost(engine: Node = null) -> void:
+	var mine: Object = _p32_engine_ref.get_ref() if _p32_engine_ref != null else null
+	if engine != null and mine != null and mine != engine:
+		return
+	_p32_engine_ref = null
+	engine_id = ""
+	if brain == null or entity == null or not entity.is_alive():
+		return
+	Sim.release_all_tokens(entity.entity_id)
+	if brain.crew_serving or not brain.crew_lost:
+		brain.crew_engine_lost(Sim.tick)
+
+
+## SiegeEngine's haul: this member runs its crew action (ability.crew_reload: a pose, no hit) when it
+## stands free at its place. True when it started.
+func p32_crew_reload() -> bool:
+	var id := _p32_crew_action()
+	if id == "" or brain == null or not brain.crew_at_slot(global_position) or not p30_can_act():
+		return false
+	controller.request(&"attack", {"action_id": id})
+	return controller.action != null and controller.action.id == id
+
+
+## The record's crew action (its first attack), "" when it has none.
+func _p32_crew_action() -> String:
+	var attacks: Array = record.get("attacks", [])
+	return str(attacks[0]) if not attacks.is_empty() else ""
+
+
+func _p32_crew_slot() -> Vector3:
+	var e := p32_engine()
+	return e.call("crew_slot", self) if e != null and e.has_method("crew_slot") else Vector3.INF
+
+
+## Where a crew member looks while it does not know where the giant is: 10 m before its engine.
+func _p32_crew_face() -> Vector3:
+	var e := p32_engine()
+	if e == null:
+		return Vector3.INF
+	var fwd := -e.global_transform.basis.z
+	fwd.y = 0.0
+	return e.global_position + (fwd.normalized() if fwd.length_squared() > 1e-6 else Vector3.FORWARD) * 10.0
+
+## @anchor P34
+# --- the larger creatures and the bosses: regeneration and fire, the yield protocol, lobbed throws,
+# --- attempts (P34) --------------------------------------------------------------------------------
+# Plan M6-M9 §2.10, §5.13. The hooks outside this section are one line each: _ready() calls
+# _p34_ready(); _on_phase_entered() asks _p34_on_phase_entered() first; accepts_hit() asks
+# _p34_accepts() first; max_ranged_windup_ticks() skips _p34_own_launch() records.
+#
+# Regeneration (record.regeneration; TrollEnemy calls p34_regen_step() every tick): every interval_s a
+# living, hurt troll that carries no status tagged one of blocked_by_tags (default Burning) heals
+# hp_per_s x interval_s (phase_hp_per_s by its boss phase) through CombatEntity.heal and refreshes its
+# marker status (status.troll_regen, tag Regeneration: the cue router's wet regrowth, the green pulse
+# TrollEnemy paints). Burning stops both; the marker runs out 1.5 s later. Fire: a prop tagged "fire"
+# (a brazier) broken within brazier_radius_m sets Burning for brazier_burn_s.
+#
+# The yield protocol (record.yield_at: Corvane, Harrok; §2.10). While a yield is armed the boss is
+# unkillable and every hit that takes its health to health_frac or below is held at that floor and
+# makes it yield ("health"); poise_breaks (or challenge_poise_breaks while challenge_conditions hold,
+# Wildheart's challenge) poise breaks make it yield too ("honour"); BattleBoss yields Corvane when his
+# guard breaks. p34_yield(): at once IMMUNE (accepts_hit refuses every hit, so whatever was swung,
+# thrown, pulsed or set burning before it lands on nothing) and non-hostile (AI off, the running action
+# cancelled, tokens back, its own projectiles and hazards discarded, not lockable, the player's lock on
+# it released); Events.boss_yielded(boss id) and the yield prompt (the dialogue of yield_at in
+# ScreenStack "yield", reopened while undecided). Only the prompt's outcome decides
+# (Events.dialogue_outcome, or p34_decide() for the bot and tests): "spare" leaves it kneeling, immune,
+# for good (outcome flag "spared"); "strike" (a confirm node first) either queues one killing blow from
+# the giant - the only hit it accepts (on_strike "kill") - or lets it rise to fight to the death
+# without a second yield (on_strike "fight"; M9 gate: yield_at.strike_health_frac - the Strike's blow
+# lands first and leaves it that share of its health, _p34_strike_wound). Any death of a record with
+# boss_outcome writes "slain" (first write wins: a spared or fled boss keeps its outcome).
+#
+# Lobbed throws (an action with `indirect`: the rival giants' boulders): when the windup begins the
+# landing point is committed at the target's feet - the runner aims there and the circle telegraph is
+# announced there (P32's landing circle and P28's incoming whistle follow it).
+#
+# Attempts (§2.10 the disengage rule): p34_reset_attempt() (BossArena, BattleBoss) starts a new attempt
+# - the first phase again (each phase happens once per attempt: attempt_phases), full health, no
+# statuses, no poise breaks, the archetype's own reset (_p34_reset_extra) - and walks the boss home.
+
+## Archetypes whose projectile attacks are lobs, not volleys: they never set the launch gap of the
+## archers and mages (max_ranged_windup_ticks; the troll's whelp and the giants' boulders are slower).
+const P34_OWN_LAUNCH_ARCHETYPES := ["troll", "rival_giant"]
+const P34_YIELD_HOOK_ORDER := 125
+## An undecided yield's prompt opens again this long after it closed.
+const P34_PROMPT_RETRY_S := 1.0
+## The strike's power (it always kills: armour and resistances cannot save it).
+const P34_STRIKE_POWER := 1.0e7
+const P34_BURNING := "status.burning"
+
+## Regeneration heals given and the health they restored (tests, debug).
+var regen_heals := 0
+var regen_healed := 0.0
+## Poise breaks taken in this attempt (Harrok's honour and his second phase).
+var poise_breaks := 0
+## The yield protocol: true from p34_yield() on (a spared boss stays yielded).
+var yielded := false
+var yield_tick := -1
+var yield_reason := ""
+## "" until the prompt decides: "spare" | "strike".
+var yield_decided := ""
+## True once a boss stood down with its battle (BattleBoss): immune and still, like a spared one.
+var stood_down := false
+## The attempt this boss fights (1 at spawn; p34_reset_attempt starts the next).
+var attempt := 1
+## The boss phases (1-based) entered in this attempt, in order.
+var attempt_phases: Array[int] = []
+var _p34_regen: Dictionary = {}
+var _p34_yield: Dictionary = {}
+var _p34_regen_next := 0
+var _p34_fight_to_death := false
+var _p34_strike_instance := -1
+var _p34_prompt_tick := -1
+var _p34_ai_before := true
+var _p34_hook_owner: RefCounted = null
+var _p34_phase_due := -1
+
+
+func _p34_ready() -> void:
+	var regen: Variant = record.get("regeneration")
+	_p34_regen = regen if typeof(regen) == TYPE_DICTIONARY else {}
+	var y: Variant = record.get("yield_at")
+	_p34_yield = y if typeof(y) == TYPE_DICTIONARY else {}
+	var outcome := typeof(record.get("boss_outcome")) == TYPE_DICTIONARY
+	if outcome and not is_in_group("bosses"):
+		add_to_group("bosses")
+	if not _p34_yield.is_empty() or _p34_poise_phases():
+		entity.hit_taken.connect(_p34_on_hit_taken)
+	if outcome:
+		entity.died.connect(_p34_on_died)
+	if not _p34_yield.is_empty():
+		entity.combatant.unkillable = true   # the floor: _p34_on_hit_taken holds health there
+		Events.dialogue_outcome.connect(_p34_on_dialogue_outcome)
+		_p34_hook_owner = RefCounted.new()
+		Sim.add_hook(Sim.Hook.POST_RESOLVE, _p34_hook_owner, _p34_yield_step, P34_YIELD_HOOK_ORDER)
+	if float(_p34_regen.get("brazier_radius_m", 0.0)) > 0.0:
+		Events.object_destroyed.connect(_p34_on_object_destroyed)
+	if brain != null:
+		brain.boss_phase_entered.connect(_p34_on_boss_phase)
+
+
+## True for a record whose projectile attacks must not set the launch gap (P34_OWN_LAUNCH_ARCHETYPES).
+static func _p34_own_launch(rec: Dictionary) -> bool:
+	return P34_OWN_LAUNCH_ARCHETYPES.has(str(rec.get("archetype", "")))
+
+
+## The boss id of this actor's yield and outcome (yield_at.boss_id, else its entity id).
+func yield_boss_id() -> String:
+	var id := str(_p34_yield.get("boss_id", ""))
+	return id if id != "" else entity.entity_id
+
+
+func _p34_poise_phases() -> bool:
+	var boss: Variant = record.get("boss")
+	if typeof(boss) != TYPE_DICTIONARY:
+		return false
+	for ph: Variant in boss.get("phases", []):
+		if typeof(ph) == TYPE_DICTIONARY and int(ph.get("enter_on_poise_breaks", 0)) > 0:
+			return true
+	return false
+
+
+func _p34_on_boss_phase(phase: int, _phase_id: String, _enter_action: String) -> void:
+	attempt_phases.append(phase)
+
+
+# ---- regeneration and fire
+
+## One regeneration step (TrollEnemy, every tick; it acts every interval_s).
+func p34_regen_step(tick: int) -> void:
+	if _p34_regen.is_empty() or entity == null or not entity.is_alive() or tick < _p34_regen_next:
+		return
+	var interval := maxi(1, ActionDef.seconds_to_ticks(float(_p34_regen.get("interval_s", 1.0))))
+	_p34_regen_next = tick + interval
+	var pools := entity.combatant.pools
+	if p34_regen_blocked() or pools.health >= pools.health_max - 1e-3:
+		return
+	var before := pools.health
+	entity.heal(p34_regen_rate() * float(interval) / float(Sim.TICK_RATE), "regeneration")
+	regen_heals += 1
+	regen_healed += pools.health - before
+	entity.apply_status(str(_p34_regen.get("status", "")), NAN, -1.0, entity.entity_id)
+
+
+## True while a status tagged one of regeneration.blocked_by_tags (Burning) stops the regeneration.
+func p34_regen_blocked() -> bool:
+	for tag: Variant in _p34_regen.get("blocked_by_tags", ["Burning"]):
+		if p34_has_status_tag(str(tag)):
+			return true
+	return false
+
+
+## Health per second now: phase_hp_per_s of the current boss phase, else hp_per_s (0 without).
+func p34_regen_rate() -> float:
+	var by_phase: Variant = _p34_regen.get("phase_hp_per_s")
+	if typeof(by_phase) == TYPE_DICTIONARY and brain != null and brain.has_boss_phases():
+		var key := str(brain.boss_phase())
+		if (by_phase as Dictionary).has(key):
+			return float(by_phase[key])
+	return float(_p34_regen.get("hp_per_s", 0.0))
+
+
+## True while the regeneration's marker status (tag Regeneration) is on.
+func p34_regenerating() -> bool:
+	return not _p34_regen.is_empty() and entity != null \
+		and entity.combatant.statuses.has(str(_p34_regen.get("status", "")))
+
+
+## True while a status with `tag` is active.
+func p34_has_status_tag(tag: String) -> bool:
+	if entity == null or entity.combatant == null:
+		return false
+	for id: String in entity.combatant.statuses.active_ids():
+		var def := GameData.get_status(id)
+		if def != null and def.has_tag(tag):
+			return true
+	return false
+
+
+## Sets Burning for `seconds` (fire from a brazier, the pit or a burning body).
+func p34_ignite(seconds: float, source_id: String = "") -> bool:
+	if entity == null or not entity.is_alive():
+		return false
+	return entity.apply_status(P34_BURNING, NAN, seconds, source_id)
+
+
+## A prop tagged "fire" broken within brazier_radius_m sets Burning (brazier_burn_s).
+func _p34_on_object_destroyed(_tick: int, world_id: String, killer_id: String) -> void:
+	if not is_inside_tree() or entity == null or not entity.is_alive():
+		return
+	for n in get_tree().get_nodes_in_group("breakables"):
+		if not (n is Node3D) or str(n.get("world_id")) != world_id:
+			continue
+		var rec: Variant = n.get("record")
+		var tags: Array = (rec as Dictionary).get("prop_tags", []) if typeof(rec) == TYPE_DICTIONARY else []
+		var reach := float(_p34_regen.get("brazier_radius_m", 0.0))
+		if tags.has("fire") and (n as Node3D).global_position.distance_to(global_position) <= reach + 1e-3:
+			p34_ignite(float(_p34_regen.get("brazier_burn_s", 8.0)), killer_id)
+		return
+
+
+# ---- the yield protocol
+
+func _p34_on_hit_taken(result: HitResult) -> void:
+	if entity == null or not entity.is_alive():
+		return
+	if result.poise_broken and not yielded:
+		poise_breaks += 1
+		_p34_check_poise_phase()
+	if _p34_yield.is_empty() or yielded or _p34_fight_to_death:
+		return
+	var pools := entity.combatant.pools
+	var floor_hp := pools.health_max * float(_p34_yield.get("health_frac", 0.0))
+	if floor_hp > 0.0 and pools.health <= floor_hp + 1e-6:
+		pools.health = maxf(pools.health, floor_hp)
+		p34_yield("health")
+		return
+	var need := p34_yield_poise_breaks()
+	if need > 0 and poise_breaks >= need:
+		p34_yield("honour")
+
+
+## Poise breaks that make this boss yield now (0 = none): challenge_poise_breaks while every
+## challenge condition holds (Wildheart's challenge), else poise_breaks.
+func p34_yield_poise_breaks() -> int:
+	var need := int(_p34_yield.get("poise_breaks", 0))
+	var conds: Variant = _p34_yield.get("challenge_conditions")
+	if typeof(conds) == TYPE_ARRAY and not (conds as Array).is_empty() \
+			and int(_p34_yield.get("challenge_poise_breaks", 0)) > 0 \
+			and QuestConditions.all_hold(conds, Quests.condition_context()):
+		need = int(_p34_yield.challenge_poise_breaks)
+	return need
+
+
+## A later phase with enter_on_poise_breaks begins once that many breaks were taken - at the next step
+## the boss is not staggered (TrollEnemy / RivalGiantEnemy call p34_boss_step), so its roar never
+## cuts the stagger short.
+func _p34_check_poise_phase() -> void:
+	if brain == null or not brain.has_boss_phases():
+		return
+	for i in range(brain.phase_index + 1, brain.boss_phases.size()):
+		var need := int((brain.boss_phases[i] as Dictionary).get("enter_on_poise_breaks", 0))
+		if need > 0 and poise_breaks >= need:
+			_p34_phase_due = i
+			return
+
+
+## The boss archetypes' per-tick step before their own (phases by poise breaks).
+func p34_boss_step(_tick: int) -> void:
+	if _p34_phase_due < 0 or brain == null or yielded or not entity.is_alive():
+		return
+	if controller.state == CombatController.State.STAGGERED or _p34_phase_due <= brain.phase_index:
+		if _p34_phase_due <= brain.phase_index:
+			_p34_phase_due = -1
+		return
+	var frac := float((brain.boss_phases[_p34_phase_due] as Dictionary).get("health_frac_below", 0.0))
+	_p34_phase_due = -1
+	brain.update_boss_phase(frac, Sim.tick)
+
+
+## Yields now (see the section notes). Nothing happens without yield_at, once yielded, while fighting
+## to the death, or dead.
+func p34_yield(reason: String) -> void:
+	if yielded or _p34_yield.is_empty() or _p34_fight_to_death or entity == null or not entity.is_alive():
+		return
+	yielded = true
+	yield_tick = Sim.tick
+	yield_reason = reason
+	yield_decided = ""
+	_p34_still(true)
+	Events.boss_yielded.emit(Sim.tick, yield_boss_id())
+	_p34_open_prompt()
+
+
+## Makes this actor harmless at once: AI off, its action and buffer gone, tokens back, its shots and
+## hazards discarded, unlockable, the player's lock on it released, and (M8 gate F13) the giant's
+## hold on it ended - set down, so a yield's prompt never opens with the boss in the giant's hand and
+## nothing still is thrown as a body (yield, stand-down).
+func _p34_still(remember_ai: bool) -> void:
+	if remember_ai:
+		_p34_ai_before = ai_enabled
+	ai_enabled = false
+	if controller.action != null:
+		controller.call("_finish_action", true)
+	controller.buffer.clear()
+	if brain != null:
+		brain.attack_request = ""
+		brain.holds_token = false
+		brain.move_target = Vector3.INF
+		brain.face_point = Vector3.INF
+	move_velocity = Vector3.ZERO
+	release_ranged_claims()
+	entity.combatant.lockable = false
+	_p34_discard_own_shots()
+	if brain != null and brain.has_method("p34_clear_hazards"):
+		brain.call("p34_clear_hazards")
+	var p := get_tree().get_first_node_in_group("player") as GiantPlayer
+	if p != null and p.targeting != null and p.lock.is_locked() and p.lock.target_id == entity.entity_id:
+		p.targeting.release_lock("boss_yielded")
+	if p != null and p.grab != null and p.grab.held_id() == entity.entity_id:
+		p.grab.release("interrupted")
+
+
+## Ends every projectile this actor launched that is still in the air.
+func _p34_discard_own_shots() -> void:
+	var system := ProjectileSystem.instance(get_tree())
+	if system == null:
+		return
+	for pr: Projectile in system.projectiles():
+		if not pr.ended and pr.owner_id == entity.entity_id:
+			system.discard(pr.id)
+
+
+## A battle's surrender (BattleBoss): immune and still for good, like a spared boss.
+func p34_stand_down() -> void:
+	if stood_down or entity == null or not entity.is_alive():
+		return
+	stood_down = true
+	_p34_still(false)
+
+
+func _p34_open_prompt() -> void:
+	_p34_prompt_tick = Sim.tick
+	var dlg := str(_p34_yield.get("dialogue", ""))
+	var s := Quests.start_dialogue(dlg, entity.entity_id)
+	if s != null:
+		Events.ui_screen_requested.emit("yield", {"session": s, "dialogue_id": dlg, "npc_id": entity.entity_id,
+			"boss_id": yield_boss_id(), "name": entity.display_name()})
+
+
+## POST_RESOLVE while yielded: keeps the boss still and reopens an undecided prompt that closed.
+func _p34_yield_step(tick: int) -> void:
+	if not yielded or not is_inside_tree() or entity == null or not entity.is_alive():
+		return
+	if ai_enabled:
+		ai_enabled = false
+	if yield_decided != "":
+		return
+	var open := Quests.dialogue != null and Quests.dialogue.is_active() \
+		and str(Quests.dialogue.dialogue_id) == str(_p34_yield.get("dialogue", ""))
+	if open:
+		_p34_prompt_tick = tick
+	elif tick - _p34_prompt_tick >= ActionDef.seconds_to_ticks(P34_PROMPT_RETRY_S):
+		_p34_open_prompt()
+
+
+func _p34_on_dialogue_outcome(_tick: int, dialogue_id: String, outcome: String) -> void:
+	if yielded and yield_decided == "" and dialogue_id == str(_p34_yield.get("dialogue", "")):
+		p34_decide(outcome)
+
+
+## The prompt's decision ("spare" | "strike"); false when it cannot decide now (not yielded, decided,
+## or another outcome).
+func p34_decide(outcome: String) -> bool:
+	if not yielded or yield_decided != "" or not (outcome in ["spare", "strike"]) or not entity.is_alive():
+		return false
+	yield_decided = outcome
+	if outcome == "spare":
+		_p34_write_outcome("spared")
+	elif str(_p34_yield.get("on_strike", "kill")) == "fight":
+		yielded = false
+		_p34_fight_to_death = true
+		entity.combatant.unkillable = false
+		entity.combatant.lockable = true
+		_p34_strike_wound()   # M9 gate: the Strike lands before he rises (yield_at.strike_health_frac)
+		ai_enabled = _p34_ai_before
+		var p := get_tree().get_first_node_in_group("player") as GiantPlayer
+		if p != null and brain != null:
+			brain.on_noise(Sim.tick, p.global_position, p.entity.entity_id, true)
+		# M8 gate (F11): the fight is on again under the id the yield ended it with - the boss bar
+		# drops its "yields", the boss music comes back (CueRouter: in the boss's current phase).
+		Events.boss_engaged.emit(Sim.tick, yield_boss_id())
+	else:
+		_p34_strike()
+	get_tree().call_group(BossArena.GROUP, "p34_on_yield_decided", entity.entity_id, outcome)
+	return true
+
+
+## The confirmed Strike: one killing blow from the giant, the only hit a yielded boss accepts.
+func _p34_strike() -> void:
+	entity.combatant.unkillable = false
+	var h := _p34_strike_hit(P34_STRIKE_POWER)
+	_p34_strike_instance = h.instance_id
+	Sim.queue_hit(h)
+
+
+## The Strike's blow from the giant at this boss (action "yield.strike", unblockable, unparryable) of
+## `power` (P34_STRIKE_POWER always kills).
+func _p34_strike_hit(power: float) -> HitEvent:
+	var p := get_tree().get_first_node_in_group("player") as GiantPlayer
+	var h := HitEvent.new()
+	h.tick = Sim.tick
+	h.instance_id = Sim.new_instance_id()
+	h.attacker_id = p.entity.entity_id if p != null else ""
+	h.target_id = entity.entity_id
+	h.action_id = "yield.strike"
+	h.power = power
+	h.attacker_stat = 10.0
+	h.size_policy = "none"
+	h.damage_split = {"physical": 1.0}
+	h.tags = PackedStringArray(["Melee", "Unblockable", "Unparryable"])
+	h.attacker_position = p.global_position if p != null else global_position - global_transform.basis.z
+	return h
+
+
+## M9 gate (lane balance): the Strike on a boss that rises to fight on (on_strike "fight") lands before he
+## rises when yield_at.strike_health_frac is above 0 - one blow from the giant through the ordinary
+## resolution, sized to leave him that share of his health (a boss already below it loses nothing) - and
+## the fight to the death goes on from there with all his kit (his phase, its hazard, his blows). Harrok's
+## dialogue has the giant "Strike him down" before he rises; the blow did not land before, so the slay was
+## the whole duel and then a second one: the conqueror novice met his fight to the death with about a
+## quarter of its own health and no stamina, him at 25-36 % of his, and lost it every time - six deaths in
+## each of three runs, where Spare after the same duel costs a median of 2.5 (docs/BALANCE_LOG.md, "M9 gate").
+func _p34_strike_wound() -> void:
+	var frac := float(_p34_yield.get("strike_health_frac", 0.0))
+	var pools := entity.combatant.pools
+	var loss := pools.health - pools.health_max * frac
+	if frac <= 0.0 or loss < 1.0:
+		return
+	var h := _p34_strike_hit(1.0)
+	var per_power := float(DamageResolver.mitigate(h, entity.combatant).total)
+	if per_power <= 0.0:
+		return
+	h.power = loss / per_power
+	Sim.queue_hit(h)
+
+
+## accepts_hit: a yielded or stood-down actor refuses every hit but the confirmed strike.
+func _p34_accepts(hit: HitEvent) -> bool:
+	if not yielded and not stood_down:
+		return true
+	return _p34_strike_instance >= 0 and hit.instance_id == _p34_strike_instance
+
+
+func _p34_on_died(_killer_id: String) -> void:
+	_p34_write_outcome("slain")
+
+
+## The outcome flag (first write wins) and the defeated flag of record.boss_outcome.
+func _p34_write_outcome(value: String) -> void:
+	var bo: Variant = record.get("boss_outcome")
+	if typeof(bo) != TYPE_DICTIONARY:
+		return
+	WorldState.try_set_flag(str(bo.get("flag", "")), value)
+	if str(bo.get("defeated_flag", "")) != "":
+		WorldState.try_set_flag(str(bo.defeated_flag), true)
+
+
+# ---- lobbed throws
+
+## _on_phase_entered: an indirect action's windup commits its landing point (the runner aims there)
+## and announces its circle there. True when it announced the telegraph.
+func _p34_on_phase_entered(action: ActionDef, _instance_id: int, phase: int) -> bool:
+	if phase != ActionDef.Phase.WINDUP or action == null or not bool(action.param("indirect", false)):
+		return false
+	var t := Sim.get_entity(brain.target_id) if brain != null and brain.target_id != "" else _target()
+	var point := t.actor.global_position if t != null and is_instance_valid(t.actor) \
+		else global_position - global_transform.basis.z * 20.0
+	runner.aim_point = point
+	var tel: Variant = action.param("telegraph")
+	var radius := float((tel as Dictionary).get("radius_m", 4.0)) if typeof(tel) == TYPE_DICTIONARY else 4.0
+	Events.telegraph_started.emit(Sim.tick, entity.entity_id, action.id, t.entity_id if t != null else "",
+		"circle", point, facing_yaw, radius, 0.0, float(action.windup_ticks) / Sim.TICK_RATE)
+	return true
+
+
+# ---- attempts
+
+## A new attempt (the disengage rule): the first phase, full health and poise, no statuses or poise
+## breaks, the archetype's own reset, and the walk home. Not while yielded, stood down or dead.
+func p34_reset_attempt() -> void:
+	if entity == null or not entity.is_alive() or yielded or stood_down:
+		return
+	attempt += 1
+	attempt_phases.clear()
+	poise_breaks = 0
+	_p34_phase_due = -1
+	if controller.action != null:
+		controller.call("_finish_action", true)
+	controller.buffer.clear()
+	if brain != null and brain.has_boss_phases():
+		brain.init_boss_phases(record)
+	for id: String in entity.combatant.statuses.active_ids():
+		entity.combatant.statuses.remove(id)
+		Events.status_expired.emit(Sim.tick, entity.entity_id, id)
+	var pools := entity.combatant.pools
+	entity.heal(pools.health_max - pools.health, "attempt")
+	if not entity.combatant.poise.locked:
+		entity.combatant.poise.value = 0.0
+	_p34_reset_extra()
+	begin_leash_return()
+
+
+## The archetype's own part of a new attempt (summons, hazards, a carried whelp).
+func _p34_reset_extra() -> void:
+	pass
+
+
+## A new attempt engaged while the boss still walks home: it stops there and fights (full health).
+func p34_stop_return() -> void:
+	if is_returning():
+		_end_leash_return(true)
+
+
+## @anchor P37
+# --- wanderers and world events: a spawn's own targets, a marching column (P37) ----------------------
+# Plan M6-M9 §2.13, decision 27. The EncounterDirector's P37 section calls these on a copy of a template:
+#   * p37_set_targets(targets): this unit's target provider (P30) takes `targets` instead of its record's
+#     (a raid's raiders burn the settlement's houses and hunt its folk while the giant is not in their way);
+#   * p37_join_march(target): this unit walks with a moving column - target() -> {"point", "yaw"} is its
+#     place in the column now (its formation slot while its formation stands, else its offset from the
+#     column's centre). At peace (a neutral column walking past a giant at peace with its faction) the
+#     post it holds is that place, a little ahead of it so it keeps walking with the column instead of
+#     stopping and starting at each refresh of its post (EnemyBrain's POST_REFRESH_S); hostile, its
+#     formation slot (P30) or the escort's patrol point the director keeps ahead of the column does it.
+
+## How far ahead of its place in a marching column a member at peace makes for (its post is asked for
+## again every second; the column marches about a metre a second).
+const P37_POST_LEAD_M := 1.5
+
+## target() -> {"point": Vector3, "yaw": float} of this unit's place in a marching column; unset = none.
+var p37_march_target := Callable()
+
+
+## This unit's target provider takes `targets` (the shape of an enemy record's `targets`, P30) from now on.
+func p37_set_targets(targets: Dictionary) -> void:
+	if targets.is_empty():
+		return
+	record = record.duplicate()
+	record["targets"] = targets.duplicate(true)
+	_p30_target_tick = -1
+	_p30_target_ref = null
+	if runner != null:
+		runner.provider_target = _p30_provider_target
+
+
+## This unit walks with a marching column (see the section notes).
+func p37_join_march(target: Callable) -> void:
+	p37_march_target = target
+	if brain != null:
+		brain.post_resolver = _p37_post
+
+
+## This unit leaves its column: it holds its own post again (P11b).
+func p37_leave_march() -> void:
+	p37_march_target = Callable()
+	if brain != null and faction != "":
+		brain.post_resolver = faction_post
+
+
+## Where this unit keeps to in its column now (Vector3.INF when it walks with none): its formation slot
+## while its formation stands, else its place from target().
+func p37_march_point() -> Vector3:
+	if formation != null and formation.is_intact():
+		return formation.slot_position(formation_slot)
+	if not p37_march_target.is_valid():
+		return Vector3.INF
+	var t: Variant = p37_march_target.call()
+	return (t as Dictionary).get("point", Vector3.INF) if typeof(t) == TYPE_DICTIONARY else Vector3.INF
+
+
+## brain.post_resolver while marching: the column's place for this unit, a little ahead, facing the way
+## the column goes; its own post (P11b) when the column gives none.
+func _p37_post() -> Dictionary:
+	var t: Variant = p37_march_target.call() if p37_march_target.is_valid() else null
+	var p := p37_march_point()
+	if typeof(t) != TYPE_DICTIONARY or not p.is_finite():
+		return faction_post()
+	var fwd := Formation.forward_of(float((t as Dictionary).get("yaw", 0.0)))
+	return {"post": p + fwd * P37_POST_LEAD_M, "face": p + fwd * 10.0}

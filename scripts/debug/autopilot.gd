@@ -38,6 +38,30 @@ extends Node
 ##                          invariant failure; errors still win (EXIT_ERRORS). The Autopilot runs
 ##                          PROCESS_MODE_ALWAYS for it (the bot closes pausing screens itself), and
 ##                          --autoplay counts simulated (unpaused) seconds as everywhere else.
+##
+## P38: --scenario=world  the world bot (WorldBot; run with --mode=world --new-game, or --continue from a
+##                          bot's save): it plays quest.world_main from world_start to the Stone Throne
+##                          under an oath policy (--bot-preset=peaceful|conqueror|mixed, --bot-oaths=
+##                          march:help,wood:drive,..., --bot-oath-count=2|3, --bot-champion=, --bot-corvane=,
+##                          --bot-explore=; P39: --bot-skarn=5|6 takes the siege of Skarn at that stage)
+##                          with the Valley bot's skill, assist, seed, loop and trace options.
+##                          --scenario=valley --bot-campaign plays the Valley first and hands over at
+##                          slice.completed. AUTOPILOT_RESULT's "world_bot" key holds the run (the Valley
+##                          bot's metrics, the world's, the outcomes); exit codes as for --scenario=valley
+##                          (a single run fails on a breach or an unfinished campaign, a loop only on a
+##                          world_blocked breach; invariants 3; errors 1).
+##                          P39 (plan §6.3 "the bot batches: CPU per tick p95 per region"): the run's
+##                          probe files its samples under the region the giant stands in (WorldMetrics),
+##                          and the result's "perf" key carries them ("sections": region -> cpu_tick_ms
+##                          and sim_ms summaries; tools/bot_report.py world_perf).
+##
+## P24a: --scenario=world_walk  the streaming walk (WorldWalk) on a streamed world (WorldRoot: the
+##                          test world with --level=res://scenes/test/test_world.tscn; the real world
+##                          from P25 with --mode=world --new-game): the giant follows --route= (default
+##                          the level's Markers/Route), walking or carried at --walk-speed=M, grown
+##                          to --walk-stage=N, --walk-laps=N times; the run ends with the walk. It adds
+##                          a PerfProbe (sections: the chunk the giant is in); AUTOPILOT_RESULT's
+##                          "world_walk" key holds the walk's report and its check failures.
 
 const EXIT_OK := 0
 const EXIT_ERRORS := 1
@@ -51,6 +75,12 @@ const SCENARIO_STRESS := "stress"
 const SCENARIO_VALLEY_WALK := "valley_walk"
 ## P17a: the Valley bot.
 const SCENARIO_VALLEY := "valley"
+## P24a: the streaming walk.
+const SCENARIO_WORLD_WALK := "world_walk"
+## P38: the world bot.
+const SCENARIO_WORLD := "world"
+const WORLD_NEEDED := "--scenario=world needs the campaign: add --mode=world --new-game (or --continue)"
+const WORLD_WALK_NEEDED := "--scenario=world_walk needs a streamed world: add --level=res://scenes/test/test_world.tscn"
 const VALLEY_NEEDED := "--scenario=valley needs the Valley: add --mode=valley --new-game"
 const STRESS_ARENA := "res://scenes/test/stress_arena.tscn"
 const VALLEY_LEVEL_ID := "level.valley"
@@ -79,6 +109,30 @@ static var _options: Dictionary = {}
 ## P17a: the Valley bot run's PerfProbe (under the tree root: it outlives level loads).
 static var _valley_probe: PerfProbe = null
 
+
+## P39: the bot run's PerfProbe (the Valley bot's or the world bot's), or null outside a bot run.
+static func bot_probe() -> PerfProbe:
+	return _valley_probe if is_instance_valid(_valley_probe) else null
+
+
+## P39 (plan §6.3): the per-section CPU summaries of a probe result for AUTOPILOT_RESULT's "perf" key
+## (section -> {"cpu_tick_ms", "sim_ms"}); {} when the run filed no section.
+static func perf_sections(perf: Dictionary) -> Dictionary:
+	var out := {}
+	var secs: Variant = perf.get("sections", {})
+	if typeof(secs) != TYPE_DICTIONARY:
+		return out
+	for sec: Variant in secs:
+		var entry: Variant = secs[sec]
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var keep := {}
+		for metric: String in ["cpu_tick_ms", "sim_ms"]:
+			if (entry as Dictionary).has(metric):
+				keep[metric] = entry[metric]
+		out[sec] = keep
+	return out
+
 var player: GiantPlayer
 var _decision_left := 0.0
 var _block_left := 0.0
@@ -95,6 +149,7 @@ var _probe: PerfProbe = null
 var _stress: StressScenario = null
 var _walk: ValleyWalk = null
 var _bot: ValleyBot = null
+var _world_walk: WorldWalk = null
 var _scenario_failures := PackedStringArray()
 
 
@@ -114,7 +169,9 @@ func configure(seconds: float, scenario: String, capture_dir: String) -> void:
 	# Count every engine/script error of the run (the logger lives as long as the process).
 	_error_counter = ErrorCounter.new()
 	OS.add_logger(_error_counter)
-	if _scenario == SCENARIO_VALLEY:
+	if is_world_bot_run(_scenario, OS.get_cmdline_user_args()):
+		WorldBot.configure_world(OS.get_cmdline_user_args())   # P38
+	elif _scenario == SCENARIO_VALLEY:
 		ValleyBot.configure(ValleyBot.parse_options(OS.get_cmdline_user_args()))
 
 
@@ -135,11 +192,22 @@ static func parse_options(args: PackedStringArray) -> Dictionary:
 
 ## True for the scenarios that run their own driver and a PerfProbe.
 static func is_perf_scenario(scenario: String) -> bool:
-	return scenario == SCENARIO_STRESS or scenario == SCENARIO_VALLEY_WALK or scenario == SCENARIO_VALLEY
+	return scenario == SCENARIO_STRESS or scenario == SCENARIO_VALLEY_WALK or scenario == SCENARIO_VALLEY \
+		or scenario == SCENARIO_WORLD_WALK or scenario == SCENARIO_WORLD
+
+
+## P38: true for a world bot run: --scenario=world, or --scenario=valley with --bot-campaign.
+static func is_world_bot_run(scenario: String, args: PackedStringArray) -> bool:
+	return scenario == SCENARIO_WORLD or (scenario == SCENARIO_VALLEY and args.has("--bot-campaign"))
+
+
+## P38: the bot scenarios (the Valley bot and the world bot): PROCESS_MODE_ALWAYS, one probe per run.
+static func is_bot_scenario(scenario: String) -> bool:
+	return scenario == SCENARIO_VALLEY or scenario == SCENARIO_WORLD
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_VALLEY] else Node.PROCESS_MODE_PAUSABLE
+	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_VALLEY, SCENARIO_WORLD] else Node.PROCESS_MODE_PAUSABLE
 	# Method callables (not lambdas): they disconnect automatically when this node is freed
 	# by a sandbox reset, so counts are never duplicated.
 	Events.hit_resolved.connect(_on_hit_resolved)
@@ -148,13 +216,13 @@ func _ready() -> void:
 	Events.action_rejected.connect(_on_action_rejected)
 	Events.loot_awarded.connect(_on_loot_awarded)
 	if is_perf_scenario(_scenario) or bool(_options.get("perf", false)):
-		if _scenario == SCENARIO_VALLEY and is_instance_valid(_valley_probe):
+		if is_bot_scenario(_scenario) and is_instance_valid(_valley_probe):
 			_probe = _valley_probe   # P17a: one probe for the whole bot run, across level loads
 		else:
 			_probe = PerfProbe.new()
 			_probe.name = "PerfProbe"
 			_probe.label = _scenario if _scenario != "" else "soak"
-			if _scenario == SCENARIO_VALLEY:
+			if is_bot_scenario(_scenario):
 				# A death, a checkpoint load or a loop's new game replaces this node with the level;
 				# the probe stays (under the root) so PERF_RESULT covers the whole run.
 				_valley_probe = _probe
@@ -190,12 +258,27 @@ func _on_loot_awarded(_t: int, _world_id: String, _item: String, _count: int, _r
 
 
 func _process(delta: float) -> void:
+	if level_loading():
+		return
 	if _frame_ms.size() < 200000:
 		_frame_ms.append(delta * 1000.0)
 
 
+## True while main's loading gate holds the tree paused behind "Loading..." (main.gd is_loading();
+## false where no main is the parent). The autopilot does nothing meanwhile (M6 gate): the gate holds
+## for extra frames with audio on, and the Valley bot, started and bound in those paused frames (the
+## autopilot and the bot run PROCESS_MODE_ALWAYS), acted one tick earlier than in a silent run, so
+## every seeded Valley run diverged from its --no-audio twin. Now the bot starts on the first tick
+## after the gate in both, as the pausable soak always did.
+func level_loading() -> bool:
+	var main := get_parent()
+	return main != null and main.has_method("is_loading") and bool(main.call("is_loading"))
+
+
 func _physics_process(dt: float) -> void:
-	if _scenario == SCENARIO_VALLEY:
+	if level_loading():
+		return
+	if is_bot_scenario(_scenario):
 		if _bot == null:
 			_start_valley_bot()
 		# The run may end while a pausing screen is up (the end screen after the crown).
@@ -209,7 +292,7 @@ func _physics_process(dt: float) -> void:
 	if _duration > 0.0 and _elapsed >= _duration:
 		_finish()
 		return
-	if _scenario == SCENARIO_VALLEY:
+	if is_bot_scenario(_scenario):
 		return
 	if player == null or not is_instance_valid(player):
 		player = get_tree().get_first_node_in_group("player") as GiantPlayer
@@ -229,6 +312,9 @@ func _physics_process(dt: float) -> void:
 	if _scenario == SCENARIO_VALLEY_WALK:
 		_run_valley_walk()
 		return
+	if _scenario == SCENARIO_WORLD_WALK:
+		_run_world_walk()
+		return
 	_run_soak(dt)
 
 
@@ -240,13 +326,19 @@ func _start_valley_bot() -> void:
 	if not is_inside_tree():
 		return
 	var lv := get_tree().get_first_node_in_group(LevelRoot.GROUP) as LevelRoot
+	var needed := WORLD_NEEDED if _scenario == SCENARIO_WORLD else VALLEY_NEEDED
 	if lv == null:
-		if _stats.ticks > 120 and not _scenario_failures.has(VALLEY_NEEDED):
-			_scenario_failures.append(VALLEY_NEEDED)
+		if _stats.ticks > 120 and not _scenario_failures.has(needed):
+			_scenario_failures.append(needed)
 			_finish()
 		return
-	_bot = ValleyBot.new()
-	_bot.name = "ValleyBot"
+	# P38: the world bot (its run carries the world's state) or the Valley bot
+	if ValleyBot.run != null and ValleyBot.run.world != null:
+		_bot = WorldBot.new()
+		_bot.name = "WorldBot"
+	else:
+		_bot = ValleyBot.new()
+		_bot.name = "ValleyBot"
 	add_child(_bot)
 
 
@@ -278,6 +370,31 @@ func _run_valley_walk() -> void:
 		add_child(_walk)
 		_walk.start(player, lv, _probe)
 	if _walk.done:
+		_finish()
+
+
+## P39f: in a world walk, the scene this autopilot belongs to going away (the title's Continue, a fast
+## travel's reload) prints "WORLD_WALK_UNLOAD {...}": tools/web/world_check.mjs times the next level's
+## load from it (to the walk's WORLD_WALK_LEVEL line). Not after the run's result (the engine quits).
+func _exit_tree() -> void:
+	if _scenario == SCENARIO_WORLD_WALK and not _finished:
+		print("WORLD_WALK_UNLOAD %s" % JSON.stringify({"mode": GameSession.mode_name(), "level": GameSession.current_level_id(),
+			"respawn": GameSession.respawn_id}))
+
+
+## --scenario=world_walk (P24a): starts a WorldWalk once on the streamed world; the run ends with it.
+func _run_world_walk() -> void:
+	if _world_walk == null:
+		var w := get_tree().get_first_node_in_group(WorldRoot.WORLD_GROUP) as WorldRoot
+		if w == null:
+			_scenario_failures.append(WORLD_WALK_NEEDED)
+			_finish()
+			return
+		_world_walk = WorldWalk.new()
+		_world_walk.name = "WorldWalk"
+		add_child(_world_walk)
+		_world_walk.start(player, w, _probe, WorldWalk.parse_options(OS.get_cmdline_user_args()))
+	if _world_walk.done:
 		_finish()
 
 
@@ -455,11 +572,22 @@ func _finish() -> void:
 		var wr := _walk.result()
 		failures.append_array(wr.check_failures)
 		result["valley_walk"] = wr
-	if _scenario == SCENARIO_VALLEY and ValleyBot.run != null:
-		var vb := ValleyBot.result(Sim.tick)
-		result["valley_bot"] = vb
-		failures.append_array(valley_failures(vb))
-		result["invariants_ok"] = (vb.get("invariant_failures", []) as Array).is_empty()
+	if _world_walk != null:
+		var ww := _world_walk.result()
+		failures.append_array(ww.check_failures)
+		result["world_walk"] = ww
+	if is_bot_scenario(_scenario) and ValleyBot.run != null:
+		if ValleyBot.run.world != null:
+			# P38: the world bot's run (the campaign's, or the world's alone)
+			var wb := WorldBot.result(Sim.tick)
+			result["world_bot"] = wb
+			failures.append_array(world_failures(wb))
+			result["invariants_ok"] = (wb.get("invariant_failures", []) as Array).is_empty()
+		else:
+			var vb := ValleyBot.result(Sim.tick)
+			result["valley_bot"] = vb
+			failures.append_array(valley_failures(vb))
+			result["invariants_ok"] = (vb.get("invariant_failures", []) as Array).is_empty()
 	if is_perf_scenario(_scenario):
 		result["scenario"] = _scenario
 		result["scenario_failures"] = failures
@@ -470,6 +598,8 @@ func _finish() -> void:
 		print("PERF_RESULT " + JSON.stringify(perf))
 		result["perf"] = {"cpu_tick_ms": perf.cpu_tick_ms, "sim_ms": perf.sim_ms, "budgets": perf.budgets,
 			"quality": perf.quality}
+		if is_bot_scenario(_scenario):
+			result["perf"]["sections"] = perf_sections(perf)   # P39: the world bot's regions
 	print("AUTOPILOT_RESULT " + JSON.stringify(result))
 	write_result_file(result_file_arg(OS.get_cmdline_user_args()), result)
 	get_tree().quit(exit_code(result))
@@ -545,6 +675,24 @@ static func valley_failures(vb: Dictionary) -> PackedStringArray:
 	if not loop and not bool(vb.get("completed", false)) and (vb.get("breaches", []) as Array).is_empty() \
 			and (vb.get("invariant_failures", []) as Array).is_empty():
 		out.append("the slice was not completed before --autoplay ended")
+	return out
+
+
+## P38: the world bot's scenario failures: valley_failures' rules on the world bot's result (a single
+## run fails on any watchdog breach and on an unfinished campaign; a loop run only on a world_blocked
+## breach).
+static func world_failures(wb: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	var loop := bool((wb.get("bot", {}) as Dictionary).get("loop", false))
+	for b: Dictionary in wb.get("breaches", []):
+		if loop and str(b.get("classification", "")) != BotDiagnosis.WORLD_BLOCKED:
+			continue
+		out.append("breach %s on %s: %s (%s)" % [b.get("reason", "?"), b.get("objective", "?"),
+			b.get("detail", ""), b.get("classification", "?")])
+	var until := str(wb.get("finish_reason", "")) == "until"   # --bot-until reached: the run's own end
+	if not loop and not until and not bool(wb.get("campaign_completed", false)) and (wb.get("breaches", []) as Array).is_empty() \
+			and (wb.get("invariant_failures", []) as Array).is_empty():
+		out.append("the campaign was not completed before --autoplay ended (stage %s)" % str(wb.get("main_stage", "?")))
 	return out
 
 

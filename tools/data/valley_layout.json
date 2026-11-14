@@ -20,6 +20,7 @@
 		{"name": "quarry", "min": [-10, -200], "max": [100, -90], "mat": "dirt"},
 		{"name": "riverbed", "min": [100, -200], "max": [112, 200], "mat": "dirt", "district": "hills"},
 		{"name": "ruins", "min": [112, -150], "max": [200, 20], "mat": "pavement"},
+		{"name": "citadel_hall", "min": [200, -85], "max": [208, -35], "mat": "pavement", "district": "ruins", "note": "P26: the hall cut into the citadel block and the east edge"},
 		{"name": "ruins_north", "min": [112, -200], "max": [200, -150], "mat": "dirt", "district": "hills"},
 		{"name": "kingsfall", "min": [112, 20], "max": [200, 95], "mat": "grass"},
 		{"name": "arena", "min": [112, 95], "max": [200, 200], "mat": "pavement"},
@@ -30,7 +31,9 @@
 		{"name": "edge_n", "min": [-210, -210], "max": [210, -200], "h": 30, "mat": "cliff", "district": "hills"},
 		{"name": "edge_s", "min": [-210, 200], "max": [210, 210], "h": 30, "mat": "cliff", "district": "hills"},
 		{"name": "edge_w", "min": [-210, -200], "max": [-200, 200], "h": 30, "mat": "cliff", "district": "hills"},
-		{"name": "edge_e", "min": [200, -200], "max": [210, 200], "h": 30, "mat": "cliff", "district": "hills"},
+		{"name": "edge_e_n", "min": [200, -200], "max": [210, -85], "h": 30, "mat": "cliff", "district": "hills"},
+		{"name": "edge_e_s", "min": [200, -35], "max": [210, 200], "h": 30, "mat": "cliff", "district": "hills"},
+		{"name": "edge_e_hall", "min": [208, -85], "max": [218, -35], "h": 30, "mat": "cliff", "district": "hills", "note": "P26: the east edge moved out behind the Citadel's hall"},
 		{"name": "hills_south", "min": [-90, 100], "max": [100, 200], "h": 30, "mat": "cliff", "district": "hills"},
 		{"name": "hills_south_crest", "min": [-80, 140], "max": [95, 196], "h": 46, "mat": "cliff_dark", "district": "hills"},
 		{"name": "hills_nw", "min": [-200, -200], "max": [-110, -135], "h": 30, "mat": "cliff", "district": "hills"},
@@ -46,9 +49,12 @@
 		{"name": "forest_north_e", "min": [-43, -135], "max": [-10, -112], "h": 30, "mat": "cliff"},
 		{"name": "forest_corner_e", "min": [-22, -112], "max": [-10, -90], "h": 30, "mat": "cliff"},
 		{"name": "forest_ridge", "min": [-40, -35], "max": [-30, 100], "h": 24, "mat": "cliff"},
-		{"name": "barrow_w", "min": [-110, -200], "max": [-85, -135], "h": 30, "mat": "cliff"},
+		{"name": "barrow_w_n", "min": [-110, -200], "max": [-85, -183], "h": 30, "mat": "cliff"},
+		{"name": "barrow_w_s", "min": [-110, -167], "max": [-85, -135], "h": 30, "mat": "cliff"},
+		{"name": "barrow_vault_back", "min": [-110, -183], "max": [-101, -167], "h": 30, "mat": "cliff", "note": "P26: the First King's vault (x -101..-85, z -183..-167) behind its rockfall"},
 		{"name": "barrow_e", "min": [-25, -200], "max": [-10, -135], "h": 30, "mat": "cliff"},
-		{"name": "barrow_n", "min": [-85, -200], "max": [-25, -185], "h": 30, "mat": "cliff"},
+		{"name": "barrow_n_w", "min": [-85, -200], "max": [-62, -185], "h": 30, "mat": "cliff"},
+		{"name": "barrow_n_e", "min": [-48, -200], "max": [-25, -185], "h": 30, "mat": "cliff", "note": "P26: the Kings' Door's recess x -62..-48 between barrow_n_w and barrow_n_e"},
 		{"name": "quarry_w", "min": [-10, -200], "max": [10, -90], "h": 30, "mat": "cliff"},
 		{"name": "quarry_nw", "min": [10, -125], "max": [35, -90], "h": 24, "mat": "cliff"},
 		{"name": "quarry_ne", "min": [45, -125], "max": [100, -90], "h": 24, "mat": "cliff"},
@@ -58,8 +64,10 @@
 		{"name": "ruins_rampart_s", "min": [112, -4], "max": [124, 20], "h": 10, "mat": "stone_dark"},
 		{"name": "ruins_south_w", "min": [124, 9], "max": [149, 20], "h": 10, "mat": "stone_dark"},
 		{"name": "ruins_south_e", "min": [161, 9], "max": [191, 20], "h": 10, "mat": "stone_dark"},
-		{"name": "citadel_block", "min": [191, -110], "max": [200, 20], "h": 20, "mat": "stone_dark", "district": "ruins"},
-		{"name": "citadel_keep", "min": [191, -85], "max": [200, -35], "h": 32, "mat": "stone", "district": "ruins"},
+		{"name": "citadel_block_n", "min": [191, -110], "max": [200, -90], "h": 20, "mat": "stone_dark", "district": "ruins"},
+		{"name": "citadel_hall_n", "min": [191, -90], "max": [200, -85], "h": 30, "mat": "stone", "district": "ruins", "note": "P26: the hall's north wall (the keep became the hall: x 191..208, z -85..-35, 30 m tall)"},
+		{"name": "citadel_hall_s", "min": [191, -35], "max": [200, -30], "h": 30, "mat": "stone", "district": "ruins"},
+		{"name": "citadel_block_s", "min": [191, -30], "max": [200, 20], "h": 20, "mat": "stone_dark", "district": "ruins"},
 		{"name": "kingsfall_fill_nw", "min": [112, 69], "max": [141, 94], "h": 15, "mat": "stone_dark"},
 		{"name": "kingsfall_fill_ne", "min": [159, 69], "max": [200, 94], "h": 15, "mat": "stone_dark"},
 		{"name": "kingsfall_fill_e", "min": [192, 94], "max": [200, 177], "h": 15, "mat": "stone_dark"},
@@ -106,7 +114,11 @@
 		{"name": "bank_e_s", "from": [112, -13.5], "to": [112, 95], "h": 12, "t": 0.6},
 		{"name": "bank_e_far", "from": [112, 175], "to": [112, 200], "h": 12, "t": 0.6},
 		{"name": "bridge_rail_n", "from": [99.7, -26.5], "to": [112.3, -26.5], "h": 12, "t": 0.6},
-		{"name": "bridge_rail_s", "from": [99.7, -13.5], "to": [112.3, -13.5], "h": 12, "t": 0.6}
+		{"name": "bridge_rail_s", "from": [99.7, -13.5], "to": [112.3, -13.5], "h": 12, "t": 0.6},
+		{"name": "yard_fill_w", "from": [67.25, -50], "to": [67.25, -33.5], "h": 12, "t": 10.5,
+			"note": "P22: fills the village yard between cottage_03, cottage_04, cottage_05, the watchtower and the north palisade (FOLLOWUPS / HOW_IT_PLAYS: the giant layer's navmesh had an island there whose 3-4 m ways in a stage-2 or stage-3 giant walks through but no path leads out of)"},
+		{"name": "yard_fill_n", "from": [75, -50], "to": [75, -42.5], "h": 12, "t": 5,
+			"note": "P22: the yard's strip north of the watchtower"}
 	],
 	"water": [
 		{"name": "river_n", "min": [100, -200], "max": [112, -26.2]},
@@ -125,6 +137,7 @@
 		{"name": "quarry_path", "w": 8, "points": [[45, -90], [40, -110], [40, -150]]},
 		{"name": "south_street", "w": 12, "points": [[45, -20], [45, 10], [42, 40], [40, 55]]},
 		{"name": "square", "w": 22, "points": [[33, -20], [57, -20]]},
+		{"name": "citadel_way", "w": 12, "points": [[150, -20], [170, -50], [186, -60], [200, -60]], "note": "P26: to the Citadel Gate and into its hall"},
 		{"name": "ruins_road", "w": 12, "points": [[125, -20], [150, -20], [155, 0], [155, 20], [150, 40], [150, 70], [150, 95]]}
 	],
 	"houses": [
@@ -180,7 +193,17 @@
 		{"name": "ruins_rubble_4", "shape": "box", "pos": [172, 0, -36], "size": [2, 1.2, 3], "mat": "stone_dark"},
 		{"name": "crown_altar", "shape": "box", "pos": [-55, 0, -180], "size": [8, 3, 3], "mat": "stone"},
 		{"name": "crown_altar_pillar_w", "shape": "box", "pos": [-62, 0, -180], "size": [1.6, 7, 1.6], "mat": "stone_dark"},
-		{"name": "crown_altar_pillar_e", "shape": "box", "pos": [-48, 0, -180], "size": [1.6, 7, 1.6], "mat": "stone_dark"}
+		{"name": "crown_altar_pillar_e", "shape": "box", "pos": [-48, 0, -180], "size": [1.6, 7, 1.6], "mat": "stone_dark"},
+		{"name": "kings_door_rock", "shape": "box", "pos": [-55, 18, -193], "size": [14, 12, 14], "mat": "cliff", "district": "barrow", "note": "P26: the cliff over the Kings' Door's tunnel (the door is 16 m tall, its lintel 2.4 m)"},
+		{"name": "citadel_hall_roof", "shape": "box", "pos": [199.5, 30, -60], "size": [19, 4, 52], "mat": "stone_dark", "district": "ruins", "note": "P26: the hall is 30 m tall"},
+		{"name": "citadel_wall_nw", "shape": "box", "pos": [190, 10, -77], "size": [2, 20, 16], "mat": "stone", "district": "ruins"},
+		{"name": "citadel_wall_sw", "shape": "box", "pos": [190, 10, -43], "size": [2, 20, 16], "mat": "stone", "district": "ruins"},
+		{"name": "citadel_gate_crown", "shape": "box", "pos": [190, 20, -60], "size": [2, 10, 18], "mat": "stone", "district": "ruins", "note": "P26: the wall over the Citadel Gate; the gateway is 20 m tall, so a stage-6 giant (18.9 m) walks into the hall"},
+		{"name": "citadel_gate_pier_n", "shape": "box", "pos": [190, 15, -67.5], "size": [3, 5, 3], "mat": "stone", "district": "ruins", "note": "P26: over the gate's 15 m towers, under the crown"},
+		{"name": "citadel_gate_pier_s", "shape": "box", "pos": [190, 15, -52.5], "size": [3, 5, 3], "mat": "stone", "district": "ruins"},
+		{"name": "citadel_stair_1", "shape": "box", "pos": [202, 0, -43], "size": [10, 2, 4], "mat": "stone", "district": "ruins"},
+		{"name": "citadel_stair_2", "shape": "box", "pos": [202, 0, -39.5], "size": [10, 4, 3], "mat": "stone", "district": "ruins"},
+		{"name": "citadel_stair_3", "shape": "box", "pos": [202, 0, -36.5], "size": [10, 6, 3], "mat": "stone", "district": "ruins"}
 	],
 	"decor": [
 		{"name": "bridge_deck", "shape": "box", "pos": [106, -0.3, -20], "size": [12.6, 0.4, 12.4], "mat": "stone"},
@@ -216,6 +239,14 @@
 		{"scene": "weapon_rack", "world_id": "valley.quarry.hammer_rack", "pos": [52, 0, -166], "yaw": 0, "set": {"weapon_id": "weapon.hammer"}},
 		{"scene": "weapon_rack", "world_id": "valley.ruins.sword_rack", "pos": [180, 0, -100], "yaw": 180, "set": {"weapon_id": "weapon.sword"}},
 		{"scene": "item_pickup", "world_id": "valley.quarry.cache", "pos": [30, 0, -158], "yaw": 0, "set": {"item_id": "item.supply_cache", "count": 1, "set_flag": ""}, "requires_records": ["item.supply_cache"]},
+		{"scene": "kings_door", "world_id": "valley.barrow.kings_door", "pos": [-55, 0, -186], "yaw": 0},
+		{"scene": "rockfall", "world_id": "valley.barrow.vault_rockfall", "pos": [-82.5, 0, -175], "yaw": 90, "nav_link": {"half_m": 6.0}},
+		{"scene": "old_kings_cairn", "world_id": "valley.barrow.vault_cairn", "pos": [-96, 0, -175], "yaw": 90, "set": {"npc_id": "valley.barrow.vault_cairn", "dialogue_id": "dialogue.cairn_valley_vault"}, "requires_records": ["dialogue.cairn_valley_vault"]},
+		{"scene": "item_pickup", "world_id": "valley.barrow.vault_iron", "pos": [-92, 0, -180], "yaw": 90, "set": {"item_id": "item.iron_ingot", "count": 2, "set_flag": ""}},
+		{"scene": "item_pickup", "world_id": "valley.barrow.vault_epitaph", "pos": [-92, 0, -170], "yaw": 90, "set": {"item_id": "item.first_king_epitaph", "count": 1, "set_flag": ""}, "requires_records": ["item.first_king_epitaph"]},
+		{"scene": "citadel_hoard", "world_id": "valley.citadel.hoard", "pos": [199.5, 0, -80], "yaw": 0},
+		{"scene": "item_pickup", "world_id": "valley.citadel.hoard_titan_iron", "pos": [195, 0, -75], "yaw": 0, "set": {"item_id": "item.titan_iron", "count": 2, "set_flag": "world.citadel.hoard_taken"}, "requires_records": ["item.titan_iron"]},
+		{"scene": "item_pickup", "world_id": "valley.citadel.kings_annals", "pos": [204, 0, -75], "yaw": 0, "set": {"item_id": "item.kings_annals", "count": 1, "set_flag": ""}, "requires_records": ["item.kings_annals"]},
 		{"scene": "item_pickup", "world_id": "valley.barrow.crown", "pos": [-55, 0.12, -172], "yaw": 0, "set": {"item_id": "item.crown_first_king", "count": 1, "set_flag": "slice.crown_claimed"}, "requires_records": ["item.crown_first_king"]},
 		{"scene": "forge", "world_id": "valley.village.forge", "pos": [40, 0, 2], "yaw": -90, "set": {"display_name": "Thornwick Smithy", "requires_flags": [], "requires_flag_values": {"quest.village.outcome": ["help_cache", "help_ogre"]}}},
 		{"scene": "forge", "world_id": "valley.ruins.giantforge", "pos": [175, 0, -104], "yaw": 180, "set": {"display_name": "The Giantforge", "requires_flags": [], "requires_flag_values": {}}},
@@ -233,19 +264,25 @@
 		{"scene": "tree_small", "world_id": "valley.forest.tree_12", "pos": [-53.6, 0, -63.6], "yaw": 47}
 	],
 	"shrines": [
-		{"world_id": "valley.shrine.hollow", "record": "shrine.hollow", "pos": [-130, 0, 145], "yaw": 90},
-		{"world_id": "valley.shrine.grove", "record": "shrine.grove", "pos": [-60, 0, -70], "yaw": 0},
-		{"world_id": "valley.shrine.thornwick", "record": "shrine.thornwick", "pos": [14, 0, -26], "yaw": -45},
-		{"world_id": "valley.shrine.kingsfall", "record": "shrine.kingsfall", "pos": [150, 0, 55], "yaw": 0}
+		{"world_id": "valley.shrine.hollow", "record": "shrine.hollow", "pos": [-130, 0, 145], "yaw": 90, "max_stage": 6},
+		{"world_id": "valley.shrine.grove", "record": "shrine.grove", "pos": [-60, 0, -70], "yaw": 0, "max_stage": 6},
+		{"world_id": "valley.shrine.thornwick", "record": "shrine.thornwick", "pos": [14, 0, -26], "yaw": -45, "max_stage": 6},
+		{"world_id": "valley.shrine.kingsfall", "record": "shrine.kingsfall", "pos": [150, 0, 55], "yaw": 0, "max_stage": 6}
 	],
 	"waystones": [
-		{"id": "valley.cp.forest_road", "pos": [-140, 0, 38], "yaw": -34, "radius": 10, "requires_flags": ["encounter.forest_wolves_a.cleared"], "stone": [9.5, 0]},
-		{"id": "valley.cp.ruins_gate", "pos": [134, 0, -18], "yaw": -90, "radius": 10, "requires_flags": ["world.ruins.gate_broken"], "stone": [-7, 0]},
-		{"id": "valley.cp.barrow_gap", "pos": [-50, 0, -122], "yaw": 0, "radius": 10, "requires_flags": ["world.forest.deadfall_broken"], "stone": [5.4, 2]}
+		{"id": "valley.cp.forest_road", "display_name": "Forest road waystone", "pos": [-140, 0, 38], "yaw": -34, "radius": 10, "requires_flags": ["encounter.forest_wolves_a.cleared"], "stone": [9.5, 0], "max_stage": 6},
+		{"id": "valley.cp.ruins_gate", "display_name": "Ruins gate waystone", "pos": [134, 0, -18], "yaw": -90, "radius": 10, "requires_flags": ["world.ruins.gate_broken"], "stone": [-7, 0], "max_stage": 6},
+		{"id": "valley.cp.barrow_gap", "display_name": "Barrow gap waystone", "pos": [-50, 0, -122], "yaw": 0, "radius": 10, "requires_flags": ["world.forest.deadfall_broken"], "stone": [5.4, 2], "max_stage": 6},
+		{"id": "valley.cp.kings_door", "display_name": "Kings' Door waystone", "pos": [-55, 0, -165], "yaw": 180, "radius": 10, "requires_flags": ["slice.completed"], "stone": [8, 5], "max_stage": 6, "note": "P26: the arrival from the world's Kings' Door; open once the crown is claimed"},
+		{"id": "valley.cp.citadel_stair", "display_name": "Citadel stair waystone", "pos": [199, 0, -52], "yaw": 0, "radius": 10, "requires_flags": ["world.citadel.breached"], "stone": [-6, 0], "max_stage": 6, "note": "P26: the arrival from the world's Broken Stair"}
 	],
 	"dummies": [
 		{"entity_id": "valley.hollow.dummy_1", "pos": [-118, 0, 160], "yaw": 90},
 		{"entity_id": "valley.hollow.dummy_2", "pos": [-112, 0, 150], "yaw": 90}
+	],
+	"exits": [
+		{"id": "valley.exit.kings_door", "display_name": "The Kings' Door", "pos": [-55, 0, -182], "yaw": 0, "to_level": "level.world", "to_checkpoint": "world.cp.kingsgate_shelf", "requires_flags": ["slice.completed"], "locked_message": "The door of the First King opens only for the one who wears his crown.", "prompt": "Step through the Kings' Door", "radius": 8},
+		{"id": "valley.exit.citadel_stair", "display_name": "The Citadel stair", "pos": [202, 0, -46], "yaw": 180, "to_level": "level.world", "to_checkpoint": "world.cp.broken_stair", "requires_flags": [], "locked_message": "", "prompt": "Climb the Citadel stair", "radius": 6}
 	],
 	"markers": [
 		{"id": "valley.marker.dummies", "kind": "objective", "pos": [-115, 0, 155]},
@@ -269,10 +306,14 @@
 		{"id": "valley.marker.kingsfall_oak", "kind": "objective", "pos": [175, 0, 39]},
 		{"id": "valley.marker.deadfall", "kind": "objective", "pos": [-50, 0, -104]},
 		{"id": "valley.marker.crown", "kind": "objective", "pos": [-55, 0, -170]},
+		{"id": "valley.marker.kings_door", "kind": "objective", "pos": [-55, 0, -176]},
+		{"id": "valley.marker.vault", "kind": "objective", "pos": [-78, 0, -175]},
+		{"id": "valley.marker.citadel_gate", "kind": "objective", "pos": [184, 0, -60]},
+		{"id": "valley.marker.citadel_hall", "kind": "objective", "pos": [199.5, 0, -62]},
 		{"id": "valley.marker.guard_post_1", "kind": "formation", "pos": [60, 0, -28], "faction": "village"},
 		{"id": "valley.marker.guard_post_2", "kind": "formation", "pos": [60, 0, -12], "faction": "village"},
-		{"id": "valley.marker.guard_post_3", "kind": "formation", "pos": [88, 0, -26], "faction": "village"},
-		{"id": "valley.marker.guard_post_4", "kind": "formation", "pos": [88, 0, -14], "faction": "village"},
+		{"id": "valley.marker.guard_post_3", "kind": "formation", "pos": [73.5, 0, -30], "faction": "village"},
+		{"id": "valley.marker.guard_post_4", "kind": "formation", "pos": [73.5, 0, -10], "faction": "village"},
 		{"id": "valley.marker.road_line_1", "kind": "formation", "pos": [-12, 0, -46]},
 		{"id": "valley.marker.road_line_2", "kind": "formation", "pos": [-4, 0, -52]},
 		{"id": "valley.marker.quarry_line_1", "kind": "formation", "pos": [32, 0, -138]},
@@ -327,7 +368,9 @@
 		{"id": "valley.area.ruins_courtyard", "pos": [158, 0, -50], "shape": "cylinder", "r": 35, "h": 16},
 		{"id": "valley.area.causeway", "pos": [155, 0, 15], "shape": "box", "size": [12, 14, 10]},
 		{"id": "valley.area.arena_engage", "pos": [150, 0, 97.8], "shape": "box", "size": [14, 16, 4]},
-		{"id": "valley.area.barrow", "pos": [-55, 0, -160], "shape": "box", "size": [60, 16, 50]}
+		{"id": "valley.area.barrow", "pos": [-55, 0, -160], "shape": "box", "size": [60, 16, 50]},
+		{"id": "valley.area.citadel_hall", "pos": [199.5, 0, -62], "shape": "box", "size": [15, 20, 40], "reward_xp": 150, "reward_flag": "reward.citadel.hall", "reward_message": "The Hall of the Broken Kings: +150 XP"},
+		{"id": "valley.area.vault", "pos": [-93, 0, -175], "shape": "box", "size": [14, 16, 14]}
 	],
 	"signs": [
 		{"text": "GIANT'S HOLLOW", "pos": [-146, 5, 158]},

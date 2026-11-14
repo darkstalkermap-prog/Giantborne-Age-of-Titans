@@ -1,0 +1,174 @@
+[gd_scene format=4]
+
+[ext_resource type="PackedScene" path="res://scenes/world/siege_catapult.tscn" id="1_1d827"]
+[ext_resource type="Script" path="res://scripts/world/siege_engine.gd" id="2_29782"]
+[ext_resource type="PackedScene" path="res://scenes/world/siege_ballista.tscn" id="3_83f62"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="4_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="5_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/inscription.gd" id="6_dd8c0"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="7_2c089"]
+[ext_resource type="Script" path="res://scripts/world/waystone.gd" id="8_add9b"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="9_acc12"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(3, 4, 3)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_2"]
+_surfaces = [{
+"aabb": AABB(-1.5, -0.4, -1.5874579, 3.133947, 4.4, 3.0674577),
+"attribute_data": PackedByteArray("f3x1/398df9/fHX/f3x1/398df9/fHX/f3x1/398df9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/398df9/fHX/f3x1/398df9/fHX/f3x1/398df9/fHX/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9/fHX/f3x1/398df9/fHX/f3x1/398df9/fHX/f3x1/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/"),
+"format": 34359742479,
+"index_count": 216,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsAEAARABIAEAASABMAFAAVABYAFAAWABcAFwAWABEAFwARABAAFgAVABIAFgASABEAFQAUABMAFQATABIAFAAXABAAFAAQABMAGAAZABoAGAAaABsAHAAdAB4AHAAeAB8AHwAeABkAHwAZABgAHgAdABoAHgAaABkAHQAcABsAHQAbABoAHAAfABgAHAAYABsAIAAhACIAIAAiACMAJAAlACYAJAAmACcAJwAmACEAJwAhACAAJgAlACIAJgAiACEAJQAkACMAJQAjACIAJAAnACAAJAAgACMAKAApACoAKAAqACsALAAtAC4ALAAuAC8ALwAuACkALwApACgALgAtACoALgAqACkALQAsACsALQArACoALAAvACgALAAoACsA"),
+"material": ExtResource("7_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 48,
+"vertex_data": PackedByteArray("AADAvzQzMz8zM7O/AADAPzQzMz8zM7O/AADAPzQzMz8zM7M/AADAvzQzMz8zM7M/AADAv83MzL4zM7M/AADAP83MzL4zM7M/AADAP83MzL4zM7O/AADAv83MzL4zM7O/Saq8v5qZ2T/yUia/VTo8P5qZ2T/SMcu/KyXRP5qZ2T+gmgc/k0QTv5qZ2T+q1bs/k0QTvzQzMz+q1bs/KyXRPzQzMz+gmgc/VTo8PzQzMz/SMcu/Saq8vzQzMz/yUia/olanv2ZmJkCuNn29QB9NPGZmJkA727a/olanP2ZmJkDkdDa+QB9NvGZmJkDpIpg/QB9NvJqZ2T/pIpg/olanP5qZ2T/kdDa+QB9NPJqZ2T8727a/olanv5qZ2T+uNn295ow2v5mZWUDcmsg+XyR9vpmZWUCiZFK/qIJfP5mZWUDcmsi+tH3QPpmZWUCiZFI/tH3QPmZmJkCiZFI/qIJfP2ZmJkDcmsi+XyR9vmZmJkCiZFK/5ow2v2ZmJkDcmsg+IIfFvgAAgEBIGrU+mtLTvgAAgEByP+S+IIfFPgAAgEDsivK+mtLTPgAAgEDOzqY+mtLTPpqZWUDOzqY+IIfFPpqZWUDsivK+mtLTvpqZWUByP+S+IIfFvpqZWUBIGrU+zczMvgAAAEB7FK4/zczMPgAAAEB7FK4/zczMPgAAAECjcL0/zczMvgAAAECjcL0/zczMvjMzsz+jcL0/zczMPjMzsz+jcL0/zczMPjMzsz97FK4/zczMvjMzsz97FK4/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqpE6o74eV72qBdq3+gdQsoVawZG6oFhL1Ld6+KULdViX91tPTiwAbt12tCthFk0RpE/OByS5cBej0x53NPhJ3rxgSMC0T2jBqDkhR+dTR6aRPstgyKBd5dm3mDihMVt5pSVus0rQKiKRy8dXXghdaa2zytoRB2dio6chy0ewXovLDVeese5wLKTGHo/RfUqNn2DODddZLtPdbq7Fnj5M/bY+hl9GTjAYlNDawFKtd7mtoDk/Bn9Vkqo+LdBaFnfB0gZok7NJa5CiSyBQvt1WYKtrzAXoZSbJka3BS6B0VzPIMJsiTZIzO5pC4FM+aY85qtwyMBtsQ3a3q0FCYOWdJ8syM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(1.6, 5, 1.6)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_4"]
+_surfaces = [{
+"aabb": AABB(-1.1, -0.6, -1.1, 2.2, 6.1, 2.2),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP+OjIf/joyH/46Mh/+OjIf/joyH/46Mh/+OjIf/joyH/w=="),
+"format": 34359742479,
+"index_count": 72,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
+"material": ExtResource("7_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 16,
+"vertex_data": PackedByteArray("zcxMvwAAoEDNzEy/zcxMPwAAoEDNzEy/zcxMPwAAoEDNzEw/zcxMvwAAoEDNzEw/zcxMv5qZGb/NzEw/zcxMP5qZGb/NzEw/zcxMP5qZGb/NzEy/zcxMv5qZGb/NzEy/zcyMvwAAsEDNzIy/zcyMPwAAsEDNzIy/zcyMPwAAsEDNzIw/zcyMvwAAsEDNzIw/zcyMvwAAoEDNzIw/zcyMPwAAoEDNzIw/zcyMPwAAoEDNzIy/zcyMvwAAoEDNzIy/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao=")
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_5"]
+_surfaces = [{
+"aabb": AABB(-0.4, 5.6, -0.4, 0.8, 0.8000002, 0.8),
+"attribute_data": PackedByteArray("f7fM/3+3zP9/t8z/f7fM/3+3zP9/t8z/f7fM/3+3zP8="),
+"format": 34359742479,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMA"),
+"material": ExtResource("7_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 8,
+"vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
+}]
+
+[node name="Chunk_5_4_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_aldmere_camp_catapult_1" type="StaticBody3D" parent="Props" instance=ExtResource("1_1d827")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 232, 33.352, 66)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_29782")
+faction = "aldmere"
+prop_targets = PackedStringArray()
+world_id = "world.aldmere.camp_catapult_1"
+
+[node name="world_aldmere_camp_ballista_1" type="StaticBody3D" parent="Props" instance=ExtResource("3_83f62")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 252, 33.352, 58)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("2_29782")
+faction = "aldmere"
+prop_targets = PackedStringArray()
+world_id = "world.aldmere.camp_ballista_1"
+
+[node name="world_aldmere_war_camp_cache" type="StaticBody3D" parent="Props" instance=ExtResource("4_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 33.352, 162)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("5_5fc47")
+world_id = "world.aldmere.war_camp_cache"
+loot_table = "loot.cache_war_camp"
+
+[node name="world_aldmere_mill_cairn" type="Node3D" parent="Props"]
+transform = Transform3D(-0.9396926, 0, -0.34202015, 0, 1, 0, 0.34202015, 0, -0.9396926, 198, 23.14, 236)
+script = ExtResource("6_dd8c0")
+npc_id = "world.aldmere.mill_cairn"
+dialogue_id = "dialogue.cairn_deserters_mill"
+prompt = "Read the cairn"
+radius_m = 4.0
+priority = 45
+
+[node name="Base" type="StaticBody3D" parent="Props/world_aldmere_mill_cairn"]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_mill_cairn/Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Stones" type="MeshInstance3D" parent="Props/world_aldmere_mill_cairn/Base" groups=["scenery"]]
+mesh = SubResource("ArrayMesh_2")
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="world_cp_aldmere_road" type="Marker3D" parent="Waystones"]
+transform = Transform3D(0.76604444, 0, -0.6427876, 0, 1, 0, 0.6427876, 0, 0.76604444, 214, 34.51, 60)
+script = ExtResource("8_add9b")
+requires_flags = PackedStringArray()
+display_name = "Aldmere road waystone"
+checkpoint_id = "world.cp.aldmere_road"
+
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_aldmere_road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 3)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_aldmere_road/Stone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+shape = SubResource("BoxShape3D_3")
+
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_aldmere_road/Stone" groups=["scenery"]]
+mesh = SubResource("ArrayMesh_4")
+
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_aldmere_road" groups=["scenery"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 3)
+mesh = SubResource("ArrayMesh_5")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="world_marker_war_camp_edge" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 244, 33.272, 190)
+script = ExtResource("9_acc12")
+marker_id = "world.marker.war_camp_edge"
+
+[node name="world_marker_deserters_mill" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 184, 23.34, 204)
+script = ExtResource("9_acc12")
+marker_id = "world.marker.deserters_mill"
+
+[node name="Safe" type="Node3D" parent="Markers"]
+
+[node name="world_marker_deserters_hide" type="Marker3D" parent="Markers/Safe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 168, 23.34, 238)
+script = ExtResource("9_acc12")
+marker_id = "world.marker.deserters_hide"
+kind = 4
+
+[node name="Patrol" type="Node3D" parent="Markers"]
+
+[node name="world_marker_camp_flee_w" type="Marker3D" parent="Markers/Patrol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 164, 30.084, 110)
+script = ExtResource("9_acc12")
+marker_id = "world.marker.camp_flee_w"
+kind = 5
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

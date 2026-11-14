@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "encounter.crownmarch_millford",
+	"type": "encounter",
+	"display_name": "Millford's folk and militia",
+	"description": "P29 (plan M6-M9 §5.4, §5.10, decision 31): Millford's six villagers, Reeve Tamsin (on the green: an open hamlet, max_inner_stage 6) and two militiamen (faction millford, neutral: not budgeted while at peace). P37's raid makes its villagers run to the mill's, the barn's and the west safe markers.",
+	"level": "level.world",
+	"center_m": [-380, 8.08, 640],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 40,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.crownmarch.millford_folk_1", "definition": "npc.villager", "position_m": [-375, 8.08, 630], "yaw_deg": 0, "patrol": "", "faction": "millford", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.millford_folk_2", "definition": "npc.villager", "position_m": [-395, 8.08, 645], "yaw_deg": 90, "patrol": "", "faction": "millford", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.millford_folk_3", "definition": "npc.villager", "position_m": [-360, 8.08, 650], "yaw_deg": -90, "patrol": "", "faction": "millford", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.millford_folk_4", "definition": "npc.villager", "position_m": [-410, 8.07, 650], "yaw_deg": 90, "patrol": "", "faction": "millford", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.millford_folk_5", "definition": "npc.villager", "position_m": [-350, 8.08, 615], "yaw_deg": 0, "patrol": "", "faction": "millford", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.millford_folk_6", "definition": "npc.villager", "position_m": [-376, 8.08, 676], "yaw_deg": 180, "patrol": "", "faction": "millford", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.reeve_tamsin", "definition": "npc.reeve_tamsin", "position_m": [-386, 8.08, 655], "yaw_deg": 180, "patrol": "", "faction": "millford", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.millford_militia_1", "definition": "enemy.soldier", "position_m": [-352, 8.07, 640], "yaw_deg": -90, "patrol": "", "faction": "millford", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.crownmarch.millford_militia_2", "definition": "enemy.soldier", "position_m": [-405, 8.09, 625], "yaw_deg": 90, "patrol": "", "faction": "millford", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

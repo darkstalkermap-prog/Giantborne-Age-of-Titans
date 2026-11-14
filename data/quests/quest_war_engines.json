@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "quest.war_engines",
+	"type": "quest",
+	"display_name": "Aldmere's War Engines",
+	"description": "P36 (plan M6-M9 §5.7, §5.9): the crown's oath by sabotage. It starts when the deserters mark the engines (spared: world.aldmere.engines_marked) or the first of Aldmere's seven war engines falls. Wreck the war camp's four engines (two catapults, two ballistae), then Ballista Ridge's three ballistae (quest.ballista_ridge's errand) - smashed or, at stage 6, torn up and thrown; each is an offence against Aldmere, which turns hostile. The last one writes the oath's outcome sabotage (first write wins) with oath.crown.met (M8 gate, F39: quest.oath_crown then pays its meet and resolve stages even when the herald was never met): the army withdraws (world.aldmere.army_withdrawn). Given up once the oath is won another way.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{"type": "any", "of": [{"type": "flag", "flag": "world.aldmere.engines_marked"}, {"type": "destroyed", "world_id": "world.aldmere.camp_catapult_1"}, {"type": "destroyed", "world_id": "world.aldmere.camp_ballista_1"}, {"type": "destroyed", "world_id": "world.aldmere.camp_ballista_2"}, {"type": "destroyed", "world_id": "world.aldmere.camp_catapult_2"}, {"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_1"}, {"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_2"}, {"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_3"}]}
+	],
+	"abandon_when": {"type": "all", "of": [{"type": "flag", "flag": "oath.crown.done"}, {"type": "not", "of": {"type": "flag", "flag": "oath.crown.outcome", "equals": "sabotage"}}]},
+	"tracker_priority": 55,
+	"stages": [
+		{"id": "camp", "objective": "Wreck the war camp's four engines", "complete_when": {"type": "all", "of": [{"type": "destroyed", "world_id": "world.aldmere.camp_catapult_1"}, {"type": "destroyed", "world_id": "world.aldmere.camp_ballista_1"}, {"type": "destroyed", "world_id": "world.aldmere.camp_ballista_2"}, {"type": "destroyed", "world_id": "world.aldmere.camp_catapult_2"}]}, "marker": "world.marker.war_camp_engines", "xp": 0, "waiting_text": "Two catapults and two ballistae stand at the camp's north side. Smash them (or, at stage 6, grab and throw them); their crews and the camp's soldiers will fight you.", "items": [], "set_flags": {}, "bot": {"action": "break", "targets": ["world.aldmere.camp_catapult_1", "world.aldmere.camp_ballista_1", "world.aldmere.camp_ballista_2", "world.aldmere.camp_catapult_2"]}},
+		{"id": "ridge", "objective": "Silence the three ballistae on Ballista Ridge", "complete_when": {"type": "all", "of": [{"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_1"}, {"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_2"}, {"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_3"}]}, "marker": "world.marker.ballista_ridge", "xp": 0, "items": [], "set_flags": {"oath.crown.met": true, "oath.crown.done": true, "oath.crown.outcome": "sabotage", "world.aldmere.army_withdrawn": true}, "bot": {"action": "break", "targets": ["world.aldmere.ridge_ballista_1", "world.aldmere.ridge_ballista_2", "world.aldmere.ridge_ballista_3"]}}
+	],
+	"on_complete_flags": {}
+}

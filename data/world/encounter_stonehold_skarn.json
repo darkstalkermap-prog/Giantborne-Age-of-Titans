@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_skarn",
+	"type": "encounter",
+	"display_name": "Skarn Steading",
+	"description": "P36 (plan M6-M9 §5.4, §5.7, §5.10): Ulfra of Skarn and three giants of her steading (faction skarn: friendly, their AI off - they watch and talk; Ulfra's talk is the layout's talker at her feet, dialogue.ulfra). Not budgeted.",
+	"level": "level.world",
+	"center_m": [440, 76.0, -660],
+	"activate_radius_m": 160,
+	"deactivate_radius_m": 240,
+	"leash_radius_m": 45,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.stonehold.ulfra", "definition": "enemy.rival_giant", "position_m": [440, 76.0, -662], "yaw_deg": 180, "patrol": "", "faction": "skarn", "commander": false, "ai_enabled": false, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.stonehold.skarn_giant_1", "definition": "enemy.rival_giant", "position_m": [410, 76.0, -648], "yaw_deg": 120, "patrol": "", "faction": "skarn", "commander": false, "ai_enabled": false, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.stonehold.skarn_giant_2", "definition": "enemy.rival_giant", "position_m": [472, 76.0, -650], "yaw_deg": -120, "patrol": "", "faction": "skarn", "commander": false, "ai_enabled": false, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.stonehold.skarn_giant_3", "definition": "enemy.rival_giant", "position_m": [424, 76.0, -624], "yaw_deg": 180, "patrol": "", "faction": "skarn", "commander": false, "ai_enabled": false, "persist_death": true, "loot_table": ""}
+	]
+}

@@ -23,8 +23,9 @@ extends Node
 ## `village` stage, else quest.main's stage `bot` hint: go | fight_encounter | kill | grow |
 ## hurl_at | break | interact | talk (a hurt giant rests before a kill).
 ##
-## Movement follows a navigation path on the giant's current layers (NavigationServer3D.map_get_path
-## with player.nav_layers), re-planned every REPATH_S or when the giant strays OFF_PATH_M off it.
+## Movement follows a navigation path on the giant's current layers (NavQuery.path with
+## player.nav_layers, P24b: the Valley's map_get_path parameters), re-planned every REPATH_S or when
+## the giant strays OFF_PATH_M off it.
 ## Stuck (the distance to the goal has not dropped by STUCK_PROGRESS_M in STUCK_S while
 ## traversing): sidestep and jump, then re-plan (or, when no path leads on from where the giant
 ## stands but one does from where it was - a pocket of the navmesh it walked into while fighting -
@@ -76,6 +77,10 @@ const RETRACE_S := 12.0
 ## How long the bot stands at an encounter whose living members are all out of its reach (fleeing,
 ## elevated, unreachable) before it takes the stage's other way on (P17b).
 const STALL_WALK_ON_S := 8.0
+## The stall's wait starts this close to an encounter's centre and lasts while the giant stays within
+## STALL_KEEP_M of it (M6 gate).
+const STALL_START_M := 6.0
+const STALL_KEEP_M := 15.0
 ## A fight that has taken no health off its target for CHASE_GIVE_UP_S (a stage-3 giant chasing a
 ## harassing wolf that keeps out of reach) is given up: the bot leaves that enemy alone for
 ## CHASE_IGNORE_S and goes on with its objective, as a person would stop chasing (P17b). Long enough
@@ -128,6 +133,9 @@ class Run extends RefCounted:
 	var teleports := 0
 	var started_tick := -1
 	var completed_runs := 0
+	## P38: the world bot's own state (WorldBot.WorldRun) when the run plays the world or the whole
+	## campaign (--scenario=world, or --scenario=valley --bot-campaign); null for a Valley run.
+	var world: RefCounted = null
 
 
 static var run: Run = null
@@ -480,7 +488,7 @@ func reachable(pos: Vector3, tol := 3.0) -> bool:
 	var hit: Variant = _reach_cache.get(key)
 	if hit is Array and Sim.tick - int(hit[0]) < 60:
 		return bool(hit[1])
-	var ok := BotDiagnosis.reaches(level.nav_map(), player.global_position, pos, player.nav_layers, tol)
+	var ok := BotDiagnosis.reaches(level, player.global_position, pos, player.nav_layers, tol)
 	_reach_cache[key] = [Sim.tick, ok]
 	return ok
 
@@ -643,8 +651,13 @@ func _encounter_task(encounter_id: String, fallback: Vector3) -> Dictionary:
 	if director != null and director.encounter_state(encounter_id) == EncounterDirector.ACTIVE \
 			and alive.is_empty() and center.distance_to(player.global_position) < 12.0:
 		return {"kind": "wait", "why": "encounter %s: nothing left to reach" % encounter_id}
-	return {"kind": "go", "pos": center, "radius": 6.0,
-		"stalled": not alive.is_empty() and center.distance_to(player.global_position) < 6.0}
+	# The wait starts within STALL_START_M of the centre and goes on while the giant stays within
+	# STALL_KEEP_M (M6 gate: a wolf harassing from behind kept pushing the dodging giant a metre or two
+	# past 6 m, the wait restarted every few seconds, and the crown stage ran out its watchdog with the
+	# crown in reach).
+	var stall_m := STALL_KEEP_M if _stall_since >= 0 else STALL_START_M
+	return {"kind": "go", "pos": center, "radius": STALL_START_M,
+		"stalled": not alive.is_empty() and center.distance_to(player.global_position) < stall_m}
 
 
 func _encounter_alive(encounter_id: String) -> Array[EnemyActor]:
@@ -977,7 +990,9 @@ func _act_break(tick: int, defending: bool) -> void:
 	stop_moving()
 	mode = "combat"
 	var c := player.controller
-	if e != null and e.combatant.lockable:
+	# P38: a lockable prop the giant may not target (a faction's at peace: P03's hostile-only
+	# targeting) refuses the lock; it is struck facing it, as one that cannot be locked.
+	if e != null and e.combatant.lockable and player.targeting.may_target(e):
 		var locked := player.targeting.locked_entity()
 		if locked != e:
 			if locked != null:
@@ -1229,7 +1244,7 @@ func steer_path(tick: int, goal: Vector3, sprint: bool) -> void:
 func _replan(tick: int, goal: Vector3) -> void:
 	_repath_tick = tick + ActionDef.seconds_to_ticks(REPATH_S)
 	_path_goal = goal
-	_path = NavigationServer3D.map_get_path(level.nav_map(), player.global_position, goal, true, player.nav_layers)
+	_path = NavQuery.path(level, player.global_position, goal, player.nav_layers, NavQuery.PURPOSE_FAR)
 	_path_index = 0
 	if _path.size() > 1:
 		_path_index = 1
@@ -1363,9 +1378,8 @@ func _note_crumb(tick: int) -> void:
 ## to `goal`, the breadcrumbs back to the newest one from which a path does (next first); [] when a
 ## path leads on from here, or from none of them.
 func _retrace_route(goal: Vector3) -> PackedVector3Array:
-	var map := level.nav_map()
 	var snapped := BotDiagnosis.snap_to_layer(level, goal, player.nav_layers)
-	if BotDiagnosis.reaches(map, player.global_position, snapped, player.nav_layers):
+	if BotDiagnosis.reaches(level, player.global_position, snapped, player.nav_layers):
 		return PackedVector3Array()
 	var route := PackedVector3Array()
 	for i in range(_crumbs.size() - 1, -1, -1):
@@ -1373,7 +1387,7 @@ func _retrace_route(goal: Vector3) -> PackedVector3Array:
 		route.append(c)
 		if _flat_dist(c, player.global_position) < CRUMB_SPACING_M:
 			continue
-		if BotDiagnosis.reaches(map, c, snapped, player.nav_layers):
+		if BotDiagnosis.reaches(level, c, snapped, player.nav_layers):
 			return route
 	return PackedVector3Array()
 
@@ -1503,7 +1517,6 @@ func _on_slice_complete(tick: int) -> void:
 	run.metrics.node_samples = before.node_samples
 	run.metrics.load_samples = before.load_samples
 	run.metrics.connect_events()
-	run.metrics.on_new_game(tick)
 	run.obj_key = ""
 	run.obj_ticks = 0
 	run.obj_deaths = 0
@@ -1511,6 +1524,9 @@ func _on_slice_complete(tick: int) -> void:
 	run.dup_seen = 0
 	print("[valley_bot] slice complete; loop run %d: %s" % [run.run_index + 1, run.policy])
 	GameSession.change_mode("valley", {"new_game": true})
+	# P39: the rewards already given are read once the new game has emptied the world (the world
+	# loop's first reward is granted as the level starts; read before, it counted as given twice).
+	run.metrics.on_new_game(tick)
 
 
 func _run_summary(tick: int) -> Dictionary:

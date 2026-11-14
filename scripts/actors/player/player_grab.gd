@@ -39,6 +39,26 @@ extends PlayerComponent
 ## dies, the scene unloads, or a growth or a checkpoint is refused because of the hold.
 ## Boulder Hurl and the throw show their landing point during the windup (ability_effect
 ## "aim_preview", the splash wide).
+##
+## P32 (plan M6-M9 §2.10, §3.16, §5.12; the W19 owner of this file):
+## - Siege disruption: a SiegeEngine is a grab candidate like an actor. Its own rule replaces the
+##   broken-poise rule (SiegeEngine.grab_refusal): a giant of the engine's grab_stage with the profile's
+##   siege_disruption permission (stage 6) may seize it while it is staggered or has lost its crew;
+##   otherwise "engine_stage" or "engine_crewed", refused through the controller like every grab (nothing
+##   spent, the reason on the HUD). Crushing Grip cannot crush one ("too_heavy_to_crush"). It is held
+##   with both hands for at most SiegeEngine.HOLD_TIMEOUT_S (2 s), and light or heavy hurls it with the
+##   engine's throw action (ability.throw_engine: a projectile of visual "engine" that the engine itself
+##   rides - ProjectileSystem.p32_carry_engine - and that smashes it where it lands).
+## - Rampart Grip (grab.mode "rampart", the stage-6 evolution of Crushing Grip): seizes a small or medium
+##   actor (grab.max_mass) or an engine as the engine's rule allows; a small body is crushed and let go as
+##   Crushing Grip does, anything else is hurled at once (the throw forced at the grab's first active
+##   tick, at no further cost). Held already, it crushes or hurls what is held.
+## - The fists' finisher: a light whose action is a grab (ability.fists_light_3) is requested with this
+##   component's precheck, so a third light with nothing to seize - no target in reach, or one whose poise
+##   is not broken - is refused and costs nothing; one that closes on a staggered target holds it.
+## - Grab reach grows with the weapon's grab_reach perk (the titanforged fists: +1.5 m); the statuses'
+##   grab_reach_add and the character's passives (P33's Iron Grip) reach it through the profile's
+##   grab_reach_m (PlayerProgression keeps a raised copy of the growth record).
 
 const GRAB_ID := "ability.grab_hold"
 const THROW_ID := "ability.throw_held"
@@ -47,7 +67,7 @@ const HURL_PERMISSION := "throw_boulder"
 const MASS_ORDER := ["small", "medium", "large", "immovable"]
 ## Grab refusals in check order (find_candidate / check_target).
 const REASONS := ["nothing_in_reach", "no_los", "too_tall", "too_heavy", "too_heavy_to_crush", "immune",
-	"no_attach_profile", "not_grabbable", "not_staggered"]
+	"no_attach_profile", "not_grabbable", "not_staggered", "engine_stage", "engine_crewed"]
 ## The other refusals of this component's prechecks.
 const OTHER_REASONS := ["holding", "not_holding", "no_permission"]
 ## The reasons a hold ends with (plan §2.4 grab_ended). EnemyActor.on_released hands the reason to
@@ -146,7 +166,8 @@ func body_scale() -> float:
 
 
 func grab_reach() -> float:
-	return float(player.profile.get("grab_reach_m", float(player.profile.get("melee_reach_m", 3.5)) + 0.5))
+	return float(player.profile.get("grab_reach_m", float(player.profile.get("melee_reach_m", 3.5)) + 0.5)) \
+		+ grab_reach_bonus()
 
 
 func grab_lunge() -> float:
@@ -171,6 +192,11 @@ static func is_crush(a: ActionDef) -> bool:
 	return a != null and a.hit_shape == "grab" and str(_grab_block(a).get("mode", "")) == "crush"
 
 
+## P32: true for Rampart Grip (hit_shape "grab", grab.mode "rampart").
+static func is_rampart(a: ActionDef) -> bool:
+	return a != null and a.hit_shape == "grab" and str(_grab_block(a).get("mode", "")) == "rampart"
+
+
 ## A crush action's grab.max_mass ("" = only the stage's capacity limits it).
 static func max_mass_of(a: ActionDef) -> String:
 	return str(_grab_block(a).get("max_mass", ""))
@@ -182,6 +208,8 @@ static func _grab_block(a: ActionDef) -> Dictionary:
 
 
 static func _mode_of(a: ActionDef) -> String:
+	if is_rampart(a):
+		return "rampart"
 	return "crush" if is_crush(a) else "hold"
 
 
@@ -229,6 +257,13 @@ func check_target(target: CombatEntity, mode := "hold", max_mass := "", max_dist
 		return "nothing_in_reach"
 	if not _can_see(target):
 		return "no_los"
+	var engine := is_engine(target)   # P32: a siege engine's own rule (see the class notes)
+	if engine:
+		var why := str(target.actor.call("grab_refusal", player.profile))
+		if why != "":
+			return why
+		if mode == "crush":
+			return "too_heavy_to_crush"
 	if target.combatant.height_m > 0.5 * player.entity.combatant.height_m + 1e-6:
 		return "too_tall"
 	var mass := mass_rank(target.combatant.mass_class)
@@ -236,6 +271,8 @@ func check_target(target: CombatEntity, mode := "hold", max_mass := "", max_dist
 		return "too_heavy"
 	if mode == "crush" and max_mass != "" and mass > mass_rank(max_mass):
 		return "too_heavy_to_crush"
+	if mode == "rampart" and not engine and max_mass != "" and mass > mass_rank(max_mass):
+		return "too_heavy"
 	if target.combatant.is_immune_to("Grab"):
 		return "immune"
 	var attach := _attach_of(target)
@@ -243,7 +280,7 @@ func check_target(target: CombatEntity, mode := "hold", max_mass := "", max_dist
 		return "no_attach_profile"
 	if not bool(target.actor.call("can_be_grabbed")):
 		return "not_grabbable"
-	if target.is_alive() and not has_broken_poise(target):
+	if not engine and target.is_alive() and not has_broken_poise(target):
 		return "not_staggered"
 	return ""
 
@@ -267,6 +304,11 @@ static func has_broken_poise(e: CombatEntity) -> bool:
 func ability_reason(def: ActionDef, cached := false) -> String:
 	if def == null:
 		return ""
+	if is_rampart(def):
+		if is_holding():
+			return ""   # P32: Rampart Grip crushes or hurls what is held
+		var r := _candidate_cached("rampart", max_mass_of(def)) if cached else find_candidate("rampart", max_mass_of(def))
+		return str(r.reason)
 	if is_crush(def):
 		if is_holding():
 			var mm := max_mass_of(def)
@@ -309,6 +351,8 @@ static func reason_text(reason: String) -> String:
 			return "You are not holding anything."
 		"no_permission":
 			return "You are too small to hurl boulders yet."
+		"engine_stage", "engine_crewed":
+			return str(SiegeEngine.REFUSAL_TEXTS.get(reason, reason))
 	return reason.capitalize()
 
 
@@ -321,10 +365,12 @@ func try_grab() -> int:
 	return player.controller.request(&"attack", {"action_id": GRAB_ID, "precheck": _grab_precheck})
 
 
-## Light or heavy while holding (and the bot): ability.throw_held; refused "not_holding" with an
-## empty hand.
+## Light or heavy while holding (and the bot): ability.throw_held (P32: an engine's own throw action);
+## refused "not_holding" with an empty hand.
 func try_throw() -> int:
-	return player.controller.request(&"attack", {"action_id": THROW_ID, "precheck": _throw_precheck})
+	var id := throw_id()
+	player.ensure_action(id)
+	return player.controller.request(&"attack", {"action_id": id, "precheck": _throw_precheck})
 
 
 ## A slot ("slot_1".."slot_8") or the ultimate, requested with ability_reason() as its precheck.
@@ -378,6 +424,9 @@ func handle_edge(edge: StringName) -> bool:
 			return _on_interact()
 		&"light", &"heavy":
 			if not (is_holding() or _grab_running()):
+				if edge == &"light" and _finisher_next() != null:
+					try_finisher()   # P32: the fists' third light seizes, or is refused without cost
+					return true
 				return false
 			_queue(&"throw")
 			return true
@@ -397,7 +446,7 @@ func handles_slot(slot_key: String) -> bool:
 	if is_holding() or _grab_running():
 		return true
 	var def := _slot_action(slot_key)
-	return def != null and (is_crush(def) or def.id == HURL_ID)
+	return def != null and (is_crush(def) or is_rampart(def) or def.id == HURL_ID)
 
 
 ## HUD hotbar (P03's hook): the slot's precheck, from the cached candidates (no physics
@@ -427,7 +476,7 @@ func post_movement(tick: int, _dt: float) -> void:
 		else:
 			_place_held()
 			if not _throw_or_crush_running():
-				if tick - _hold_tick >= ActionDef.seconds_to_ticks(hold_timeout_s):
+				if tick - _hold_tick >= ActionDef.seconds_to_ticks(hold_limit_s()):
 					release("timeout")
 				elif _checkpoint_waits_for_hold():
 					release("interrupted")
@@ -437,14 +486,15 @@ func post_movement(tick: int, _dt: float) -> void:
 
 
 func on_action_started(action: ActionDef, _instance_id: int) -> void:
-	if action.id == GRAB_ID or action.id == THROW_ID:
+	if action.id == GRAB_ID or is_throw(action):
 		_queued = &""
 	if action.hit_shape != "grab":
 		return
 	_lunge_origin = Vector3.INF
 	_lunge_set = false
 	if is_holding():
-		_pending = _target if is_crush(action) else null   # a crush squeezes what is held
+		# a crush squeezes what is held (P32: Rampart Grip crushes or hurls it)
+		_pending = _target if is_crush(action) or is_rampart(action) else null
 		return
 	var c := find_candidate(_mode_of(action), max_mass_of(action))
 	_pending = c.target if bool(c.ok) else null
@@ -479,7 +529,7 @@ func rig_state(out: Dictionary) -> void:
 	var c := player.controller
 	var a := c.action
 	var phase := ""
-	if a != null and a.id == THROW_ID:
+	if is_throw(a):
 		phase = "throw"
 	elif is_holding():
 		phase = "crush" if is_crush(a) else "hold"
@@ -521,7 +571,7 @@ func socket_local() -> Vector3:
 	var pair: Array = SOCKETS.get(_attach, SOCKETS.torso_fist)
 	var s: Vector3 = pair[1 if fp else 0]
 	var c := player.controller
-	if c.action != null and c.action.id == THROW_ID and c.phase() == ActionDef.Phase.WINDUP:
+	if c.action != null and is_throw(c.action) and c.phase() == ActionDef.Phase.WINDUP:
 		var back := THROW_BACK_TWO_HAND if _attach == "two_hand" and not fp else THROW_BACK_ONE_HAND
 		var f := clampf(float(c.elapsed + 1) / maxf(1.0, float(c.action.windup_ticks)), 0.0, 1.0)
 		s = s.lerp(back, f * f * (3.0 - 2.0 * f))
@@ -556,6 +606,8 @@ func _attach_target(target: CombatEntity, a: ActionDef) -> bool:
 	_target_id = target.entity_id
 	_attach = _attach_of(target)
 	_hold_tick = Sim.tick
+	if is_engine(target):
+		player.ensure_action(str(target.actor.call("throw_action_id")))   # P32: what hurls it
 	target.actor.call("on_grabbed", player.entity.entity_id)
 	player.controller.holding_id = target.entity_id
 	player.motor.set_speed_mult(&"grab", HOLD_SPEED_MULT)
@@ -586,6 +638,8 @@ func _run_grab_shape(a: ActionDef, tick: int) -> void:
 		return
 	if is_crush(a):
 		_crush(a, tick)
+	elif is_rampart(a):
+		_rampart(a, tick)
 
 
 ## Spec §15 "invalid grabs spend nothing" (P16, M3 review): a grab or crush whose hand closed on
@@ -644,7 +698,8 @@ func _release_fallbacks(t: CombatEntity) -> Array:
 	fwd.y = 0.0
 	fwd = fwd.normalized() if fwd.length_squared() > 1e-6 else Vector3.FORWARD
 	var right := Vector3(-fwd.z, 0.0, fwd.x)
-	var d := float(player.profile.get("capsule_radius_m", 0.85)) + EnemyActor.entity_radius(t) + RELEASE_GAP_M
+	var r := ENGINE_RELEASE_RADIUS_M if is_engine(t) else EnemyActor.entity_radius(t)   # P32: an engine is wide
+	var d := float(player.profile.get("capsule_radius_m", 0.85)) + r + RELEASE_GAP_M
 	return [p + fwd * d, p - right * d, p + right * d, p - fwd * d, p]
 
 
@@ -724,7 +779,7 @@ func _retry_queued() -> void:
 		return
 	var buf := player.controller.buffer
 	if buf.has_pending():
-		var mine := GRAB_ID if _queued == &"grab" else THROW_ID
+		var mine := GRAB_ID if _queued == &"grab" else throw_id()
 		if not (buf.kind == &"attack" and str(buf.params.get("action_id", "")) == mine):
 			_queued = &""   # a newer input replaced it
 		return              # the controller retries it itself while it is live
@@ -795,7 +850,7 @@ func _grab_running() -> bool:
 
 func _throw_or_crush_running() -> bool:
 	var a := player.controller.action
-	return a != null and (a.id == THROW_ID or is_crush(a))
+	return a != null and (is_throw(a) or is_crush(a) or is_rampart(a))
 
 
 # --------------------------------------------------------------------------- candidates
@@ -831,12 +886,14 @@ func _refresh_cache() -> void:
 	_cache = {"hold": find_candidate("hold")}
 	for key: String in GiantPlayer.SLOT_KEYS:
 		var def := _slot_action(key)
-		if def != null and is_crush(def) and not _cache.has("crush:" + max_mass_of(def)):
-			_cache["crush:" + max_mass_of(def)] = find_candidate("crush", max_mass_of(def))
+		if def != null and (is_crush(def) or is_rampart(def)):
+			var mode := _mode_of(def)
+			if not _cache.has(mode + ":" + max_mass_of(def)):
+				_cache[mode + ":" + max_mass_of(def)] = find_candidate(mode, max_mass_of(def))
 
 
 func _candidate_cached(mode: String, max_mass: String) -> Dictionary:
-	var c: Dictionary = _cache.get("hold" if mode == "hold" else "crush:" + max_mass, {})
+	var c: Dictionary = _cache.get("hold" if mode == "hold" else mode + ":" + max_mass, {})
 	if c.is_empty() or (bool(c.ok) and not is_instance_valid(c.target)):
 		return {"ok": false, "reason": "nothing_in_reach", "target": null, "distance": INF}
 	return c
@@ -867,19 +924,26 @@ func _on_growth_blocked(_tick: int, entity_id: String, reason: String, _message:
 
 
 func _on_request_rejected(_kind: StringName, action_id: String, reason: String) -> void:
-	if action_id == GRAB_ID or action_id == THROW_ID:
+	if action_id == GRAB_ID or action_id == THROW_ID or action_id == throw_id():
 		_queued = &""
 	if reason != "not_holding" and (reason in REASONS or reason in OTHER_REASONS):
 		Events.hud_message.emit(reason_text(reason), "warn")
 
 
-## A throw's projectile was launched: hand it the held body (or drop the empty throw).
+## A throw's projectile was launched: hand it the held body (or drop the empty throw). P32: an engine
+## rides a projectile of visual "engine" (ProjectileSystem.p32_carry_engine).
 func _on_projectile_spawned(_tick: int, projectile_id: int, owner_id: String, _action_id: String,
 		_position: Vector3, _velocity: Vector3, visual: String) -> void:
-	if visual != "thrown_body" or player == null or owner_id != player.entity.entity_id:
+	if not (visual in ["thrown_body", SiegeRules.THROW_VISUAL]) or player == null or owner_id != player.entity.entity_id:
 		return
 	var system := ProjectileSystem.instance(player.get_tree())
-	if is_holding() and system.carry_body(projectile_id, _target_id, owner_id):
+	var carried := false
+	if is_holding():
+		if visual == SiegeRules.THROW_VISUAL:
+			carried = is_engine(_target) and system.p32_carry_engine(projectile_id, _target.actor, owner_id)
+		else:
+			carried = not is_engine(_target) and system.carry_body(projectile_id, _target_id, owner_id)
+	if carried:
 		release("thrown")
 	else:
 		system.discard(projectile_id)
@@ -888,7 +952,7 @@ func _on_projectile_spawned(_tick: int, projectile_id: int, owner_id: String, _a
 ## The runner's launch resolver, wrapped: a throw starts from the held body's centre and aims like
 ## any projectile (PlayerAttack.aim_point_for); every other launch is PlayerAttack's.
 func _resolve_launch(a: ActionDef, spec: Dictionary) -> Dictionary:
-	if a != null and a.id == THROW_ID and is_holding():
+	if is_throw(a) and is_holding():
 		var origin: Vector3 = _target.actor.to_global(_target.actor.call("body_centre_local"))
 		return {"origin": origin, "aim": player.attack.aim_point_for(spec, origin)}
 	if _base_resolver.is_valid():
@@ -905,7 +969,7 @@ func _emit_aim_preview(tick: int) -> void:
 	var a := c.action
 	if a == null or a.hit_shape != "projectile" or c.phase() != ActionDef.Phase.WINDUP:
 		return
-	if a.id == THROW_ID and not is_holding():
+	if is_throw(a) and not is_holding():
 		return
 	var spec := Projectile.spec_for(a)
 	if not bool(spec.arc_to_target) or float(spec.gravity_mps2) <= 0.0:
@@ -961,3 +1025,95 @@ func _ground_under(point: Vector3) -> Vector3:
 	q.collide_with_areas = false
 	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
 	return hit.position if not hit.is_empty() else point
+
+
+# --------------------------------------------------------------------------- P32: engines, Rampart Grip, the fists
+
+## A released engine's footprint (its half width and more) for the release spots beside the giant.
+const ENGINE_RELEASE_RADIUS_M := 2.6
+
+
+## True when `e` is a siege engine (an actor with the engine's grab rule: SiegeEngine).
+static func is_engine(e: CombatEntity) -> bool:
+	return e != null and e.actor != null and is_instance_valid(e.actor) and e.actor.has_method("grab_refusal")
+
+
+## True for a throw of what the hand holds: ability.throw_held, or an action whose projectile the held
+## engine rides (visual "engine").
+static func is_throw(a: ActionDef) -> bool:
+	if a == null:
+		return false
+	return a.id == THROW_ID or (a.hit_shape == "projectile"
+		and str(Projectile.spec_for(a).visual) == SiegeRules.THROW_VISUAL)
+
+
+## The throw that hurls what is held now: the engine's own throw action, else ability.throw_held.
+func throw_id() -> String:
+	if is_holding() and is_engine(_target):
+		var id := str(_target.actor.call("throw_action_id"))
+		if GameData.get_action(id) != null:
+			return id
+	return THROW_ID
+
+
+## How long the hand holds what it holds before it lets go: hold_timeout_s, an engine at most
+## SiegeEngine.HOLD_TIMEOUT_S (plan §3.16: 2 s).
+func hold_limit_s() -> float:
+	if is_holding() and is_engine(_target):
+		return minf(hold_timeout_s, SiegeEngine.HOLD_TIMEOUT_S)
+	return hold_timeout_s
+
+
+## Metres the grab reach grows by beyond the profile's grab_reach_m: the weapon's grab_reach perk
+## (the titanforged fists). The statuses' and passives' grab_reach_add (P33's Iron Grip) are not added
+## here: PlayerProgression folds Combatant.grab_reach_add() into the profile's grab_reach_m (a copy of
+## the growth record), so counting them again would double them (wave 19 merge).
+func grab_reach_bonus() -> float:
+	var bonus := 0.0
+	var perk: Variant = player.weapon.get("perk") if typeof(player.weapon) == TYPE_DICTIONARY else null
+	if typeof(perk) == TYPE_DICTIONARY and str(perk.get("kind", "")) == "grab_reach":
+		bonus += float(perk.get("grab_reach_add", 0.0))
+	return bonus
+
+
+## Rampart Grip's first active tick with a body in hand: a small actor is crushed and let go (as
+## Crushing Grip does); a medium one or an engine is hurled at once.
+func _rampart(a: ActionDef, tick: int) -> void:
+	if not is_holding():
+		return
+	if not is_engine(_target) and mass_rank(_target.combatant.mass_class) <= mass_rank("small"):
+		_crush(a, tick)
+		return
+	hurl_now()
+
+
+## Forces the throw of what is held now (Rampart Grip's hurl: no further cost or cooldown).
+func hurl_now() -> void:
+	var id := throw_id()
+	player.ensure_action(id)
+	var def: ActionDef = player.controller.library.get(id)
+	if def != null and is_holding():
+		player.controller.force_action(def)
+
+
+## The light the controller would start now, when it is a grab (the fists' third light), else null.
+func _finisher_next() -> ActionDef:
+	var id := player.controller.next_light_id()
+	var a: ActionDef = player.controller.library.get(id) if id != "" else null
+	return a if a != null and a.hit_shape == "grab" else null
+
+
+## The fists' finisher: a light request carrying the grab's eligibility as its precheck (a refusal
+## spends nothing and shows its reason). Returns the controller's verdict.
+func try_finisher() -> int:
+	return player.controller.request(&"light", {"precheck": _finisher_precheck})
+
+
+## The precheck of a light: "" unless the light resolving now is a grab, else that grab's eligibility.
+func _finisher_precheck() -> String:
+	var a := _finisher_next()
+	if a == null:
+		return ""
+	if is_holding():
+		return "holding"
+	return str(find_candidate(_mode_of(a), max_mass_of(a)).reason)

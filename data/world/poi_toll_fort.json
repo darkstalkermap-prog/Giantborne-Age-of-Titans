@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.toll_fort",
+	"type": "poi",
+	"display_name": "The Toll Fort",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "camp",
+	"position_m": [460, 12.2, 330],
+	"radius_m": 60,
+	"xp": 30,
+	"map_icon": "camp",
+	"compass": true,
+	"landmark": "world.crownmarch.toll_palisade",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The toll-riders' palisade fort astride the King's Road."
+}

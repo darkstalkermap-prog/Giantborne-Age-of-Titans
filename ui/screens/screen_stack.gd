@@ -18,8 +18,16 @@ extends Control
 ## top screen's focus rows when it opens or comes back on top (and once more on the next frame,
 ## after the layout ran), puts a lost focus back every frame, and shows a footer hint ("A: select
 ## B: back" or "Enter: select Esc: back", by the last device) while any screen is open.
+## P39f: the footer says what the top screen's nav_hint() says (UiNav's line by default); a screen with its own
+## instructions returns "" and the footer hides - the yield prompt's choices are held, not selected, and its
+## own line under them says so (the footer's "Enter: select" contradicted it).
+## P39f: while any stack has a screen open, the HUD hides (Hud.MenuWatch) and so does every node in the
+## HIDE_UNDER_SCREENS group (the shrines' floating names): the screens' panels are see-through, and what the
+## HUD and the names drew read through them and round them.
 
 const GROUP := "screen_stack"
+## P39f: nodes hidden while a screen is open (sync_hidden_under_screens).
+const HIDE_UNDER_SCREENS := "hide_under_screens"
 ## Every planned screen; a missing file is skipped (its package has not landed yet).
 const SCREENS := {
 	"pause": "res://ui/pause_menu.gd",                         # P03
@@ -30,9 +38,15 @@ const SCREENS := {
 	"attributes": "res://ui/screens/attributes_screen.gd",     # P12
 	"forge": "res://ui/screens/forge_screen.gd",               # P12
 	"end": "res://ui/screens/end_screen.gd",                   # P13
+	# M6-M9 (pre-declared by P20, plan M6-M9 §2.14)
+	"map": "res://ui/screens/map_screen.gd",                   # P27
+	"journal": "res://ui/screens/journal_screen.gd",           # P27
+	"ancestry": "res://ui/screens/ancestry_screen.gd",         # P33
+	"yield": "res://ui/screens/yield_prompt.gd",               # P34
 }
-## Input action -> screen, used only while no screen is open.
-const HOTKEYS := {"inventory": "inventory"}
+## Input action -> screen, used only while no screen is open (an action not in the InputMap yet -
+## map and journal until P27 binds them - is skipped).
+const HOTKEYS := {"inventory": "inventory", "map": "map", "journal": "journal"}
 
 var _screens: Array[UiScreen] = []
 var _opened_ms: Dictionary = {}       ## screen -> Time.get_ticks_msec() when it opened
@@ -40,7 +54,6 @@ var _menu_context := false            ## this stack set InputRouter MENU
 var _paused := false                  ## this stack paused the tree
 var _last_input_was_click := false
 var _hint: Label                      ## the footer hint (P16), the stack's last child
-var _hint_serial := -1
 
 
 func _ready() -> void:
@@ -76,10 +89,10 @@ func hint_text() -> String:
 func _process(_delta: float) -> void:
 	var t := top()
 	if _hint != null:
-		_hint.visible = t != null
-		if t != null and InputBindings.device_serial != _hint_serial:
-			_hint_serial = InputBindings.device_serial
-			_hint.text = UiNav.hint_text(InputBindings.last_device_is_pad())
+		var line := t.nav_hint(InputBindings.last_device_is_pad()) if t != null and is_instance_valid(t) else ""
+		if _hint.text != line:
+			_hint.text = line
+		_hint.visible = line != ""
 	if t == null or not is_instance_valid(t) or not t.is_inside_tree():
 		return
 	if t.focus_dirty:
@@ -96,6 +109,8 @@ func _exit_tree() -> void:
 		InputRouter.set_context(InputRouter.Context.GAMEPLAY)
 	_paused = false
 	_menu_context = false
+	if is_inside_tree():
+		sync_hidden_under_screens(get_tree(), self)
 
 
 ## Opens SCREENS[screen_name] on top of the stack. Returns the screen, or null when the name is
@@ -210,6 +225,30 @@ func close_all() -> void:
 		pop(_screens.back(), {"closed_all": true})
 
 
+## P39f: true while a stack in `tree` (other than `except`) has a screen open (the HUD hides then).
+static func any_open_in(tree: SceneTree, except: ScreenStack = null) -> bool:
+	if tree == null:
+		return false
+	for node in tree.get_nodes_in_group(GROUP):
+		var s := node as ScreenStack
+		if s != null and s != except and is_instance_valid(s) and s.any_open():
+			return true
+	return false
+
+
+## P39f: hides the HIDE_UNDER_SCREENS group while a screen is open in `tree` and shows it again after (a stack
+## leaving the tree passes itself as `leaving`: its screens go with it).
+static func sync_hidden_under_screens(tree: SceneTree, leaving: ScreenStack = null) -> void:
+	if tree == null:
+		return
+	var shown := not any_open_in(tree, leaving)
+	for n in tree.get_nodes_in_group(HIDE_UNDER_SCREENS):
+		if n is Node3D:
+			(n as Node3D).visible = shown
+		elif n is CanvasItem:
+			(n as CanvasItem).visible = shown
+
+
 ## Closes the screens of every stack in the tree. Returns how many were open (the test reset
 ## hook reports a positive count as "screen left open").
 static func close_all_static() -> int:
@@ -244,6 +283,8 @@ func _apply_state() -> void:
 		_menu_context = false
 		InputRouter.set_context(InputRouter.Context.GAMEPLAY)
 		_recapture_mouse()
+	if is_inside_tree():
+		sync_hidden_under_screens(get_tree())
 
 
 func _recapture_mouse() -> void:

@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.primordial_runic_mind",
+	"type": "talent",
+	"display_name": "Runic Mind",
+	"description": "The old runes come easily: everything you cast costs less essence.",
+	"tree": "primordial",
+	"tier": 1,
+	"column": 1,
+	"cost": 1,
+	"requires": [],
+	"requires_level": 6,
+	"effects": {"modifiers": {"essence_cost_mult": 0.85}, "grants": [], "replaces": {}}
+}

@@ -5,7 +5,11 @@ extends IntegrationSuite
 ## take none; a request waits while the player executes, is grabbed, holds something, is dead
 ## or a screen is open, and while an aware enemy is within 40 m; later requests replace earlier
 ## ones but keep the newest respawn; the sandbox never checkpoints or writes; a waystone needs
-## its flag and fires once per load.
+## its flag and fires once per load. M8 gate (F38): a boss's drive-out (boss_disengaged "fled") is a
+## row of the table; a boss the giant walked away from ("left") is not. M8 gate fix-up 1: a boss's end
+## (the kill and the drive-out) does not wait for aware enemies (its brood), and a quit to the title
+## commits one that something else holds back. M8 release (R1): Harrok's talk ending ending his engaged
+## duel (boss_disengaged "yielded_talk") is a row too.
 
 const FLOW := "res://scenes/test/flow_test_level.tscn"
 
@@ -121,6 +125,17 @@ func test_each_trigger_takes_one_checkpoint_with_its_respawn() -> void:
 		func() -> void: Events.growth_changed.emit(Sim.tick, "player", 1, 2), 1, "test.shrine")
 	await _expect("boss_defeated",
 		func() -> void: Events.boss_defeated.emit(Sim.tick, "valley.arena.ogre_king"), 1, "valley.shrine.kingsfall")
+	# M8 gate (F38): a boss driven out ends its fight as a kill does (the respawn unchanged); one the
+	# giant walked away from resets and takes none.
+	await _expect("boss_disengaged fled (a drive-out)",
+		func() -> void: Events.boss_disengaged.emit(Sim.tick, "test.boss", "fled"), 1, "test.cp_a")
+	assert_eq(str(GameSession.checkpoint_doc.checkpoint.reason), "boss_fled", "reason boss_fled")
+	# M8 release (R1): Harrok's talk ending chosen while his duel is engaged ends it as well.
+	await _expect("boss_disengaged yielded_talk (the talk ending ends an engaged duel)",
+		func() -> void: Events.boss_disengaged.emit(Sim.tick, "test.boss", "yielded_talk"), 1, "test.cp_a")
+	assert_eq(str(GameSession.checkpoint_doc.checkpoint.reason), "boss_yielded_talk", "reason boss_yielded_talk")
+	await _expect("boss_disengaged left (the giant walked out)",
+		func() -> void: Events.boss_disengaged.emit(Sim.tick, "test.boss", "left"), 0, "test.cp_a", 5)
 	await _expect("quest_stage_changed for quest.main",
 		func() -> void: Events.quest_stage_changed.emit(Sim.tick, "quest.main", "ogre"), 1, "test.cp_a")
 	await _expect("quest_stage_changed for another quest",
@@ -198,6 +213,38 @@ func test_aware_enemies_within_40_m_defer_and_unaware_ones_do_not() -> void:
 	assert_false(stub.entity.is_alive(), "the stub died")
 	assert_true(stub.brain.aware, "its brain still says aware")
 	assert_false(GameSession.checkpoint_blockers().has("aware:test.stub_aware"), "but the dead never block")
+
+
+## M8 gate fix-up 1 (F38 in the real game: the Matriarch's whelps stay aware after her end and held
+## the boss_fled and boss_defeated checkpoints back until the giant died to them).
+func test_a_bosss_end_does_not_wait_for_aware_enemies_and_a_quit_commits_it() -> void:
+	_load_level()
+	var stub := TestSpawn.stub_enemy(world, player.global_position + Vector3(0, 0, -10), "test.stub_brood")
+	await step_ticks(2)
+	stub.brain.aware = true
+	assert_true(GameSession.checkpoint_blockers().has("aware:test.stub_brood"), "an aware enemy 10 m away blocks")
+	for row: Array in [["boss_fled", func() -> void: Events.boss_disengaged.emit(Sim.tick, "test.boss", "fled")],
+			["boss_defeated", func() -> void: Events.boss_defeated.emit(Sim.tick, "test.boss")]]:
+		saved.clear()
+		(row[1] as Callable).call()
+		await step_ticks(2)
+		assert_eq(saved.size(), 1, "%s is taken with the aware enemy about" % row[0])
+		assert_eq(str(GameSession.checkpoint_doc.checkpoint.reason), str(row[0]), "reason %s" % row[0])
+		assert_true(GameSession.pending_checkpoint().is_empty(), "%s: nothing waits" % row[0])
+	# An ordinary request still waits for it.
+	saved.clear()
+	Events.checkpoint_reached.emit(Sim.tick, "test.cp_b", "waystone")
+	await step_ticks(3)
+	assert_eq(saved.size(), 0, "a waystone's checkpoint still waits for the aware enemy")
+	# A drive-out held back by something else (a hold): Quit to title commits it.
+	player.controller.holding_id = "test.held"
+	Events.boss_disengaged.emit(Sim.tick, "test.boss", "fled")
+	await step_ticks(3)
+	assert_eq(saved.size(), 0, "the drive-out waits for the hold")
+	assert_true(bool(GameSession.pending_checkpoint().get("completion", false)), "as a completion request")
+	GameSession.go_to_title()
+	assert_eq(saved.size(), 1, "the quit to the title commits it")
+	assert_true(GameSession.scene_reloads.has("title"), "the title was asked for")
 
 
 func test_dead_grabbed_holding_and_screens_block() -> void:

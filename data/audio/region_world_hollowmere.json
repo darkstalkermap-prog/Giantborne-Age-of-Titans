@@ -1,0 +1,33 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_hollowmere",
+	"display_name": "Hollowmere",
+	"description": "P28: Hollowmere keeps the Greywood's music with the melody at -6 dB and longer rests (plan section 4.3) and the Greywood's ambience (its pond is that set's emitter); a stage 4+ giant entering it while the woodfolk are friendly hears a gasp and the bell once a visit.",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.hollowmere"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.greywood",
+	"ambience": "ambience.greywood",
+	"priority": 10,
+	"arrival": {
+		"faction": "faction.woodfolk"
+	},
+	"layers": {
+		"explore": {
+			"drone": 0,
+			"melody": -6
+		}
+	},
+	"melody": {
+		"rest_loops": [
+			2,
+			4
+		]
+	}
+}

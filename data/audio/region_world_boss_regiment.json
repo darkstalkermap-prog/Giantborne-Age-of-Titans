@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_boss_regiment",
+	"display_name": "The Iron Regiment",
+	"description": "P28: boss_engaged for battle.iron_regiment switches to its set (after the intro stinger); boss_defeated plays the victory stinger, boss_yielded and a flight the yield stinger, and the music returns to the zone.",
+	"level": "",
+	"districts": [],
+	"regions": [],
+	"pois": [],
+	"context": "",
+	"boss": "battle.iron_regiment",
+	"music": "music.boss_regiment",
+	"ambience": "",
+	"priority": 0
+}

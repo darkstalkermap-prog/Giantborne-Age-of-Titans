@@ -23,13 +23,101 @@ extends Control
 ## M4 gate: the edge overlays (threat arrows, objective marker) are the last widgets, so they draw
 ## over every panel (under the death and help overlays), and they slide along the screen edge clear
 ## of the panels drawn now (overlay_keep_out, HudEdge.clear_of).
+##
+## P27 (plan M6-M9 §2.14, §3.10; FOLLOWUPS: the HUD's draw calls):
+## - Every part is drawn by HudKit's rules - panels and bars as rectangles, text with a drop shadow
+##   and no outline in three sizes, nothing clipped, absolute z layers (the HUD itself on
+##   HudKit.Z_BACK, so whatever its widgets add without a layer of their own joins the rectangles) -
+##   so a view's HUD costs one batch of rectangles and one per text size, not about 120 draw calls.
+## - The compass sits at the top centre (4..28; P39f: 4..34, its marks on a row of their own above the letters), so
+##   the target frame and the boss bar sit 30 px lower
+##   (44..104; 94..154 under the bar) and the ability notice at 162..200.
+## - The lock line shows PlayerTargeting.lock_label() (P30): "Pike Regiment (8)" for a formation, a
+##   drawn flag before "Banner of the Toll-Riders" for its banner (the label's "⚑" is not in the
+##   HUD's font), else the target's name; with the distance.
+## - track_next (T / D-pad Left) tracks the next active quest (Quests.track_next) and says which.
+##
+## M8 gate (F30, F44): the message line wraps. A message is MESSAGE_WIDTH wide at HudKit.BIG and
+## wraps at words onto up to MESSAGE_MAX_LINES lines (it was one line trimmed with an ellipsis, which
+## cut the guidance off most refusals: the Needle's pointer to the north ridge, how to burn a brood
+## nest); the box holds MESSAGE_MAX_LINES lines in all, so a new message drops the oldest until it
+## fits, and a message already shown is moved down instead of shown twice. A message stays for
+## message_lifetime(): MESSAGE_LIFETIME, longer for a long one (READ_CHARS_PER_S, at most
+## MESSAGE_MAX_LIFETIME). test_hud_messages shows every shipped refusal, size-gate and notice text.
+##
+## M8 screenshot pass (V2): the lock line is no longer blank. Its label sits in the centred line beside
+## a banner's flag and trims a text too long for the frame with an ellipsis, and a trimming Label's
+## minimum width is 1 px, so the line laid it out 1 px wide and it drew nothing: outside boss fights
+## (whose bar names the boss) the player never saw what was locked or how far. _fit_lock_line() gives
+## the label its text's width, at most the line's room (TARGET_FRAME_WIDTH less the panel's margins,
+## and the flag while it shows), so the line stays centred and only a name too long for the frame is
+## trimmed; the frame never grows (test_hud_layout).
+##
+## P39f (FOLLOWUPS, "From the M8 screenshot pass"):
+## - While a modal screen is open (ScreenStack.any_open_in: pause, shrine, dialogue, the yield prompt, map,
+##   journal, inventory, end screen...) the HUD is hidden. It stayed drawn round every menu: the stack's
+##   footer hint printed over the hotbar's cost labels and red notes, the quest tracker, the TIP box and an
+##   objective marker's distance showed beside and behind the shrine window, and the last message stuck out
+##   under the end screen's buttons. A child that runs while the game is paused (MenuWatch) hides and shows
+##   it; nothing in it changes meanwhile (the HUD is pausable), so it comes back as it was.
+## - The hotbar's slots are SLOT_SIZE wide with SLOT_GAP between them and an ability's name may use the slot's
+##   whole inner width (SLOT_TITLE_WIDTH): every shipped hotbar label fits it untrimmed (RAMPART, FOOTFALL
+##   read "RAMPA", "FOOTF"). The row sits HOTBAR_BOTTOM above the screen's edge, so the red notes under the
+##   slots end REASON_EDGE_PX above it (their letters' tails were cut by the edge).
+## - The loot line is a backed panel (LOOT_WIDTH wide, growing upward) listing the materials the giant
+##   carries (stackable items: iron, titan iron, wood), packed whole onto lines (loot_lines): it was one
+##   unbacked line of every item, trimmed with "..." ("Loot: Iron Ingot x1, Ogre King's Tu..."). One-of-a-kind
+##   trophies, keys and quest items are listed by the inventory screen (I).
+## M9 gate (lane review): the hotbar's texts no longer collide.
+## - A slot's cooldown timer and its title were both centred on the slot, so the timer printed over the
+##   ability's name: the title hides while the timer shows (the slot's keys and cost still say which it is).
+## - The cooldown shade was anchored to the box's 44 px content while P39f's title spills 6 px past it on each
+##   side: it now covers the slot inside its border (SLOT_TITLE_WIDTH square), rising from the bottom.
+## - A projectile slot's target label was 64 px wide on a 64 px pitch and named the lock ("» Shieldman", 66 px,
+##   trimmed in every slot; two projectile slots side by side touched): it is the slot's width and says only
+##   TARGET_LOCKED or TARGET_AIM - the locked target's name is the lock line's (the target frame), shown once.
 
 const MESSAGE_LIFETIME := 2.6
-## The target frame's top edge, and its top edge while the boss bar shows (below the bar's 58).
-const TARGET_FRAME_TOP := 14.0
-const TARGET_FRAME_TOP_UNDER_BOSS := 64.0
+## M8 gate (F30): the message box's width, the lines it holds (one message may use all of them), the
+## reading speed a long message's lifetime allows for, and the longest lifetime.
+const MESSAGE_WIDTH := 600.0
+const MESSAGE_MAX_LINES := 3
+const READ_CHARS_PER_S := 17.0
+const MESSAGE_MAX_LIFETIME := 9.0
+const MESSAGE_FADE_S := 0.5
+## The target frame's top edge, and its top edge while the boss bar shows (below the bar's 88).
+## P27: 30 px lower than P16's 14 / 64, under the compass.
+const TARGET_FRAME_TOP := 44.0
+const TARGET_FRAME_TOP_UNDER_BOSS := 94.0
 const TARGET_FRAME_HEIGHT := 60.0
+const TARGET_FRAME_WIDTH := 340.0
+## The gap between a banner's flag and the name in the lock line.
+const LOCK_LINE_SEPARATION := 6
 const HELP_TITLE := "CONTROLS  (rebind in Pause > Controls)"
+## The banner mark P30's lock_label() puts before a banner's name (drawn as a flag instead).
+const BANNER_MARK := "⚑"
+const BANNER_FLAG_COLOR := Color(0.95, 0.72, 0.30)
+## P39f: the hotbar. Nine slots of SLOT_SIZE with SLOT_GAP between them (572 px; it was 58 + 6 = 570 px, where
+## a 42 px title cut RAMPART and FOOTFALL); the row's bottom HOTBAR_BOTTOM above the screen's edge and its
+## height HOTBAR_HEIGHT; a slot's title may span SLOT_TITLE_WIDTH (the slot inside its 1 px border, less 1 px
+## a side); the red reason line starts REASON_GAP below the slot's content and ends REASON_EDGE_PX or more
+## above the screen's edge.
+const SLOT_SIZE := Vector2(60, 60)
+const SLOT_GAP := 4
+const HOTBAR_BOTTOM := 20.0
+const HOTBAR_HEIGHT := 76.0
+const SLOT_TITLE_WIDTH := 56.0
+const REASON_GAP := 6.0
+const REASON_EDGE_PX := 3.0
+## M9 gate (lane review): a projectile slot's target label - locked (the bolt flies to the lock, which the lock
+## line names) or free aim at the crosshair.
+const TARGET_LOCKED := "locked"
+const TARGET_AIM := "aim"
+## P39f: the loot panel's width (its text LOOT_WIDTH less the panel's margins), the most lines it holds, and the
+## separator between two items on a line.
+const LOOT_WIDTH := 300.0
+const LOOT_MAX_LINES := 3
+const LOOT_SEPARATOR := "   "
 
 var player: GiantPlayer
 var _bars: Dictionary = {}
@@ -40,6 +128,8 @@ var _capture_hint: PanelContainer
 var _marker: Control
 var _target_frame: PanelContainer
 var _target_name: Label
+var _lock_line_fitted := ""               ## the text and flag _fit_lock_line() last measured (V2)
+var _target_flag: Control
 var _target_bar: ProgressBar
 var _target_hint: Label
 var _messages: VBoxContainer
@@ -52,6 +142,8 @@ var _help_rows: Array = []                 ## the rows shown now (help_rows())
 var _help_signature := ""                  ## _help_key() when the overlay was built
 var _mode_label: Label
 var _loot_label: Label
+var _loot_panel: PanelContainer
+var _loot_key := ""                       ## the inventory the loot panel last showed (P39f)
 var _hotbar: HBoxContainer
 var _resources_panel: PanelContainer
 var _labels_dirty := true
@@ -65,6 +157,8 @@ var _time := 0.0
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# P27: the HUD's base layer; every child that names no layer of its own draws with the rectangles.
+	HudKit.set_z(self, HudKit.Z_BACK)
 	_build_resources()
 	_build_hotbar()
 	_build_center()
@@ -75,6 +169,11 @@ func _ready() -> void:
 	HudWidgets.create_all(self)
 	_build_death()
 	_build_help()
+	# P39f: hidden while a modal screen is open; the watch runs while the screens pause the game.
+	var watch := MenuWatch.new()
+	watch.name = "MenuWatch"
+	watch.hud = self
+	add_child(watch)
 	Events.hud_message.connect(show_message)
 	Events.loot_awarded.connect(_on_loot)
 	Events.object_destroyed.connect(_on_object_destroyed)
@@ -82,6 +181,30 @@ func _ready() -> void:
 	Events.growth_changed.connect(_on_growth_changed)
 	Events.action_rejected.connect(_on_action_rejected)
 	Settings.changed.connect(_on_settings_changed)
+
+
+## P27: track_next (T / D-pad Left without LT) follows the next active quest and says which.
+func _unhandled_input(event: InputEvent) -> void:
+	if not InputMap.has_action("track_next") or not event.is_action_pressed("track_next"):
+		return
+	var text := track_next_now()
+	if text != "":
+		get_viewport().set_input_as_handled()
+
+
+## Tracks the next active quest (Quests.track_next) and shows "Tracking: <quest>" (only one quest:
+## "Tracking: <quest> (no other quest)"). Returns the line shown ("" when no quest is active).
+func track_next_now() -> String:
+	if not Quests.is_active():
+		return ""
+	var before := Quests.tracked_id()
+	var id := Quests.track_next()
+	if id == "":
+		return ""
+	var title := str(Quests.quest_record(id).get("display_name", id))
+	var text := "Tracking: %s" % title + ("" if id != before else " (no other quest)")
+	show_message(text, "info")
+	return text
 
 
 func _on_settings_changed(key: String) -> void:
@@ -136,7 +259,7 @@ func _on_action_rejected(_tick: int, actor_id: String, action_id: String, reason
 
 
 func _build_resources() -> void:
-	var p := UiKit.panel()
+	var p := HudKit.panel()
 	p.position = Vector2(16, 0)
 	p.anchor_top = 1.0
 	p.anchor_bottom = 1.0
@@ -152,16 +275,16 @@ func _build_resources() -> void:
 	for spec: Array in [["health", "Health", UiKit.HEALTH, 18], ["stamina", "Stamina", UiKit.STAMINA, 14],
 			["essence", "Essence", UiKit.ESSENCE, 10], ["fury", "Fury", UiKit.FURY, 10]]:
 		var row := HBoxContainer.new()
-		var name_label := UiKit.label(spec[1], 13, UiKit.MUTED)
+		var name_label := HudKit.label(spec[1], HudKit.TEXT, UiKit.MUTED)
 		name_label.custom_minimum_size = Vector2(62, 0)
 		row.add_child(name_label)
 		var stack := Control.new()
 		stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		stack.custom_minimum_size = Vector2(0, spec[3])
-		var b := UiKit.bar(spec[2], spec[3])
+		var b := HudKit.bar(spec[2], spec[3])
 		b.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		stack.add_child(b)
-		var value := UiKit.label("", 11)
+		var value := HudKit.label("", HudKit.SMALL)
 		value.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -170,22 +293,25 @@ func _build_resources() -> void:
 		v.add_child(row)
 		_bars[spec[0]] = b
 		_bar_labels[spec[0]] = value
-	_mode_label = UiKit.label("", 12, UiKit.MUTED)
+	_mode_label = HudKit.label("", HudKit.SMALL, UiKit.MUTED)
+	_mode_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	v.add_child(_mode_label)
 
 
 func _build_hotbar() -> void:
 	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 6)
+	h.add_theme_constant_override("separation", SLOT_GAP)
 	h.anchor_left = 0.5
 	h.anchor_right = 0.5
 	h.anchor_top = 1.0
 	h.anchor_bottom = 1.0
-	# 9 slots of 58 px and 8 gaps of 6 px: 570 px (P16: the old 568 let the row grow 2 px right).
-	h.offset_left = -285
-	h.offset_right = 285
-	h.offset_top = -92
-	h.offset_bottom = -16
+	# P39f: 9 slots of 60 px and 8 gaps of 4 px: 572 px (P16's 9 x 58 + 8 x 6 = 570), HOTBAR_BOTTOM above the
+	# screen's edge (the red notes under the slots were cut by it at 16).
+	var half := (9.0 * SLOT_SIZE.x + 8.0 * SLOT_GAP) * 0.5
+	h.offset_left = -half
+	h.offset_right = half
+	h.offset_top = -HOTBAR_BOTTOM - HOTBAR_HEIGHT
+	h.offset_bottom = -HOTBAR_BOTTOM
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(h)
 	_hotbar = h
@@ -194,89 +320,122 @@ func _build_hotbar() -> void:
 		h.add_child(slot.root)
 		_slots.append(slot)
 		_slot_states.append({"id": "", "reason_code": "", "reason": "", "target": "", "key": "", "alt_key": ""})
-	_loot_label = UiKit.label("", 13, UiKit.MUTED)
-	_loot_label.anchor_left = 1.0
-	_loot_label.anchor_right = 1.0
-	_loot_label.anchor_top = 1.0
-	_loot_label.anchor_bottom = 1.0
-	_loot_label.offset_left = -260
-	_loot_label.offset_right = -16
-	_loot_label.offset_top = -40
-	_loot_label.offset_bottom = -16
+	# P39f: the loot panel - a backing, the materials packed whole onto lines (loot_lines), growing upward from
+	# the bottom right; hidden while the giant carries none.
+	_loot_panel = HudKit.panel(Color(0.05, 0.06, 0.08, 0.72))
+	_loot_panel.anchor_left = 1.0
+	_loot_panel.anchor_right = 1.0
+	_loot_panel.anchor_top = 1.0
+	_loot_panel.anchor_bottom = 1.0
+	_loot_panel.offset_left = -16.0 - LOOT_WIDTH
+	_loot_panel.offset_right = -16.0
+	_loot_panel.offset_top = -HOTBAR_BOTTOM - 1.0
+	_loot_panel.offset_bottom = -HOTBAR_BOTTOM
+	_loot_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_loot_panel.visible = false
+	add_child(_loot_panel)
+	_loot_label = HudKit.label("", HudKit.TEXT, UiKit.TEXT)
 	_loot_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	add_child(_loot_label)
+	_loot_label.add_theme_constant_override("line_spacing", 0)
+	_loot_panel.add_child(_loot_label)
+	_update_loot()
 
 
 func _make_slot(index: int) -> Dictionary:
 	var root := PanelContainer.new()
-	root.custom_minimum_size = Vector2(58, 60)
-	root.add_theme_stylebox_override("panel", UiKit.box(UiKit.BG, 6))
+	root.custom_minimum_size = SLOT_SIZE
+	var box := HudKit.box(UiKit.BG)
+	root.add_theme_stylebox_override("panel", box)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	HudKit.set_z(root, HudKit.Z_BACK)
 	var stack := Control.new()
 	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(stack)
-	var cooldown := ColorRect.new()
-	cooldown.color = Color(0, 0, 0, 0.6)
+	# M9 gate (lane review): the shade covers the slot inside its border (inset as the title, SLOT_TITLE_WIDTH
+	# wide - the box's content is 44 px) and rises from its bottom to its top as the cooldown runs (_shade).
+	var spill := (SLOT_TITLE_WIDTH - (SLOT_SIZE.x - box.content_margin_left - box.content_margin_right)) * 0.5
+	var inset := (SLOT_SIZE.x - SLOT_TITLE_WIDTH) * 0.5
+	var cooldown := HudKit.rect(Color(0, 0, 0, 0.6))
 	cooldown.anchor_right = 1.0
 	cooldown.anchor_top = 1.0
 	cooldown.anchor_bottom = 1.0
-	cooldown.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cooldown.offset_left = -spill
+	cooldown.offset_right = spill
+	cooldown.offset_bottom = box.content_margin_bottom - inset
+	cooldown.offset_top = cooldown.offset_bottom
 	stack.add_child(cooldown)
-	var key := UiKit.label("", 12, UiKit.TEXT)
+	var key := HudKit.label("", HudKit.SMALL, UiKit.TEXT)
 	key.position = Vector2(0, -4)
 	stack.add_child(key)
-	var pad := UiKit.label("", 8, UiKit.MUTED)
+	var pad := HudKit.label("", HudKit.SMALL, UiKit.MUTED)
 	pad.anchor_left = 1.0
 	pad.anchor_right = 1.0
 	pad.offset_left = -40
-	pad.offset_top = -2
+	pad.offset_top = -4
 	pad.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	stack.add_child(pad)
-	var title := UiKit.label("", 9)
+	var title := HudKit.label("", HudKit.SMALL)
 	title.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# P39f: the name may use the slot's whole inner width (SLOT_TITLE_WIDTH), past the box's side margins.
+	title.offset_left = -spill
+	title.offset_right = spill
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.clip_text = true
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	stack.add_child(title)
-	var cost := UiKit.label("", 9, UiKit.STAMINA)
+	var cost := HudKit.label("", HudKit.SMALL, UiKit.STAMINA)
 	cost.anchor_top = 1.0
 	cost.anchor_bottom = 1.0
 	cost.anchor_right = 1.0
-	cost.offset_top = -13
+	cost.offset_top = -14
 	cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cost.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	stack.add_child(cost)
-	var timer := UiKit.label("", 18)
+	var timer := HudKit.label("", HudKit.BIG)
 	timer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	timer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	timer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	stack.add_child(timer)
-	var reason := UiKit.label("", 10, UiKit.BAD)
+	var reason := HudKit.label("", HudKit.SMALL, UiKit.BAD)
 	reason.anchor_top = 1.0
 	reason.anchor_bottom = 1.0
 	reason.anchor_right = 1.0
-	reason.offset_top = 8
-	reason.offset_bottom = 22
+	# P39f: one line of SMALL text (its font's height), starting REASON_GAP below the slot's content - it
+	# ends REASON_EDGE_PX or more above the screen's edge (test_hud_layout).
+	reason.offset_top = REASON_GAP
+	reason.offset_bottom = REASON_GAP + _small_line_height()
 	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	# P16: a reason wider than the slot ("Out of range") grows to both sides, staying centred.
 	reason.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	stack.add_child(reason)
-	# Selected target of projectile slots ("» Soldier" when locked, otherwise "aim"), above the slot.
-	var target := UiKit.label("", 10, UiKit.TEXT)
+	# Selected target of projectile slots (TARGET_LOCKED when locked, otherwise TARGET_AIM), above the slot.
+	# M9 gate (lane review): as wide as the slot (it was 64 px on a 64 px pitch), so two never touch.
+	var target := HudKit.label("", HudKit.SMALL, UiKit.TEXT)
 	target.anchor_right = 1.0
-	target.offset_left = -10
-	target.offset_right = 10
+	target.offset_left = -box.content_margin_left
+	target.offset_right = box.content_margin_right
 	target.offset_top = -16
 	target.offset_bottom = -4
 	target.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	target.clip_text = true
 	target.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	stack.add_child(target)
 	return {"root": root, "cooldown": cooldown, "key": key, "pad": pad, "title": title, "cost": cost,
-		"timer": timer, "reason": reason, "target": target, "index": index}
+		"timer": timer, "reason": reason, "target": target, "index": index,
+		"shade_top": box.content_margin_top - inset, "shade_bottom": box.content_margin_bottom - inset}
+
+
+## M9 gate (lane review): a slot's cooldown shade `frac` full (1 right after the cast): from the slot's inner bottom
+## up to that fraction of its inner height (anchored to the box's content, whatever height the row gives it).
+static func _shade(slot: Dictionary, frac: float) -> void:
+	var shade := slot.cooldown as ColorRect
+	var top := float(slot.shade_top)
+	var bottom := float(slot.shade_bottom)
+	shade.anchor_top = 1.0 - frac
+	shade.offset_top = bottom - frac * (top + bottom)
 
 
 func _build_center() -> void:
-	_capture_hint = UiKit.panel(Color(0.05, 0.06, 0.08, 0.85))
+	_capture_hint = HudKit.panel(Color(0.05, 0.06, 0.08, 0.85))
 	_capture_hint.anchor_left = 0.5
 	_capture_hint.anchor_right = 0.5
 	_capture_hint.anchor_top = 0.5
@@ -285,7 +444,7 @@ func _build_center() -> void:
 	_capture_hint.offset_right = 190
 	_capture_hint.offset_top = 40
 	_capture_hint.offset_bottom = 84
-	var hint := UiKit.label("Click the game to control the camera", 17)
+	var hint := HudKit.label("Click the game to control the camera", HudKit.BIG)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_capture_hint.add_child(hint)
 	_capture_hint.visible = false
@@ -301,37 +460,54 @@ func _build_center() -> void:
 
 
 func _build_target_frame() -> void:
-	_target_frame = UiKit.panel()
+	_target_frame = HudKit.panel()
 	_target_frame.anchor_left = 0.5
 	_target_frame.anchor_right = 0.5
-	_target_frame.offset_left = -170
-	_target_frame.offset_right = 170
+	_target_frame.offset_left = -TARGET_FRAME_WIDTH * 0.5
+	_target_frame.offset_right = TARGET_FRAME_WIDTH * 0.5
 	_target_frame.offset_top = TARGET_FRAME_TOP
 	_target_frame.offset_bottom = TARGET_FRAME_TOP + TARGET_FRAME_HEIGHT
 	_target_frame.visible = false
 	add_child(_target_frame)
 	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 2)
 	_target_frame.add_child(v)
-	_target_name = UiKit.label("", 15)
+	# P27: the lock line - a drawn flag before a banner's name (BannerFlag), then the label.
+	var line := HBoxContainer.new()
+	line.alignment = BoxContainer.ALIGNMENT_CENTER
+	line.add_theme_constant_override("separation", LOCK_LINE_SEPARATION)
+	v.add_child(line)
+	_target_flag = BannerFlag.new()
+	_target_flag.custom_minimum_size = Vector2(12, 16)
+	_target_flag.visible = false
+	line.add_child(_target_flag)
+	_target_name = HudKit.label("", HudKit.TEXT)
 	_target_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(_target_name)
-	_target_bar = UiKit.bar(UiKit.HEALTH, 10)
+	_target_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_target_name.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	line.add_child(_target_name)
+	_target_bar = HudKit.bar(UiKit.HEALTH, 10)
 	v.add_child(_target_bar)
-	_target_hint = UiKit.label("", 11, UiKit.MUTED)
+	_target_hint = HudKit.label("", HudKit.SMALL, UiKit.MUTED)
 	_target_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_target_hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	v.add_child(_target_hint)
 
 
+## M8 gate (F30): 90 px tall (it was 84, two short of three one-line messages), from 514 to 604 at
+## 720 px: MESSAGE_MAX_LINES lines of HudKit.BIG however they split between messages; it stays below
+## the interact prompt (460..496) and above the hotbar, and should it ever need more it grows upward.
 func _build_messages() -> void:
 	_messages = VBoxContainer.new()
 	_messages.anchor_left = 0.5
 	_messages.anchor_right = 0.5
 	_messages.anchor_top = 1.0
 	_messages.anchor_bottom = 1.0
-	_messages.offset_left = -300
-	_messages.offset_right = 300
-	_messages.offset_top = -200
+	_messages.offset_left = -MESSAGE_WIDTH * 0.5
+	_messages.offset_right = MESSAGE_WIDTH * 0.5
+	_messages.offset_top = -206
 	_messages.offset_bottom = -116
+	_messages.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_messages.alignment = BoxContainer.ALIGNMENT_END
 	_messages.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_messages)
@@ -343,6 +519,7 @@ func _build_death() -> void:
 	_death.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_death.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_death.visible = false
+	HudKit.set_z(_death, HudKit.Z_DEATH)
 	add_child(_death)
 	var v := VBoxContainer.new()
 	v.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -352,10 +529,10 @@ func _build_death() -> void:
 	v.offset_bottom = 60
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	_death.add_child(v)
-	var title := UiKit.label("DEFEATED", 48, UiKit.BAD)
+	var title := HudKit.label("DEFEATED", 48, UiKit.BAD, HudKit.Z_DEATH_TEXT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(title)
-	_death_hint = UiKit.label(death_hint(false, OS.is_debug_build()), 18)
+	_death_hint = HudKit.label(death_hint(false, OS.is_debug_build()), HudKit.BIG, UiKit.TEXT, HudKit.Z_DEATH_TEXT)
 	_death_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(_death_hint)
 
@@ -378,7 +555,8 @@ func death_hint_text() -> String:
 
 
 func _build_help() -> void:
-	_help = UiKit.panel(Color(0.05, 0.06, 0.08, 0.94))
+	_help = HudKit.panel(Color(0.05, 0.06, 0.08, 0.94))
+	HudKit.set_z(_help, HudKit.Z_HELP)
 	_help.anchor_left = 0.5
 	_help.anchor_right = 0.5
 	_help.anchor_top = 0.5
@@ -394,7 +572,7 @@ func _build_help() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
 	_help.add_child(v)
-	_help_label = UiKit.label(HELP_TITLE, 16)
+	_help_label = HudKit.label(HELP_TITLE, HudKit.TEXT, UiKit.TEXT, HudKit.Z_HELP_TEXT)
 	v.add_child(_help_label)
 	_help_grid = GridContainer.new()
 	_help_grid.columns = 3
@@ -449,6 +627,11 @@ static func help_rows_for(loadout: Dictionary) -> Array:
 	rows.append(_help_row("Ultimate: %s (%d fury)" % [ult.display_name, int(ult.fury_cost)] if ult != null
 		else "Ultimate (none equipped)", "ultimate"))
 	rows.append(_help_row("Inventory", "inventory"))
+	# P27: the map (with its pin), the journal and the tracked quest.
+	rows.append(_help_row("Map", "map"))
+	rows.append(_help_row("Map: pin here / clear the pin", "map_pin"))
+	rows.append(_help_row("Journal", "journal"))
+	rows.append(_help_row("Track the next quest", "track_next"))
 	rows.append(_help_row("Pause / settings / rebind", "pause"))
 	rows.append(_help_row("This overlay", "help"))
 	return rows
@@ -482,11 +665,12 @@ func _rebuild_help() -> void:
 	var on := UiKit.TEXT
 	var off := UiKit.MUTED
 	for h: Array in [["Action", on], ["Keyboard / mouse", off if pad else on], ["Controller", on if pad else off]]:
-		_help_grid.add_child(UiKit.label(str(h[0]), 14, Color(0.55, 0.85, 1.0) if h[1] == on else off))
+		_help_grid.add_child(HudKit.label(str(h[0]), HudKit.TEXT, Color(0.55, 0.85, 1.0) if h[1] == on else off,
+			HudKit.Z_HELP_TEXT))
 	for r: Array in _help_rows:
-		_help_grid.add_child(UiKit.label(str(r[0]), 13, on))
-		_help_grid.add_child(UiKit.label(str(r[1]), 13, off if pad else on))
-		_help_grid.add_child(UiKit.label(str(r[2]), 13, on if pad else off))
+		_help_grid.add_child(HudKit.label(str(r[0]), HudKit.TEXT, on, HudKit.Z_HELP_TEXT))
+		_help_grid.add_child(HudKit.label(str(r[1]), HudKit.TEXT, off if pad else on, HudKit.Z_HELP_TEXT))
+		_help_grid.add_child(HudKit.label(str(r[2]), HudKit.TEXT, on if pad else off, HudKit.Z_HELP_TEXT))
 	var notes := PackedStringArray()
 	if OS.is_debug_build():
 		notes.append("Debug: F3 panel, F5 reset sandbox, F6 / F7 grow / shrink, F8 +100 XP, F9 reload checkpoint")
@@ -516,14 +700,53 @@ func show_message(text: String, kind: String = "info") -> void:
 			color = UiKit.BAD
 		"good":
 			color = UiKit.GOOD
-	var l := UiKit.label(text, 17, color)
+	# M8 gate (F30): the same message again moves down (and lives on) instead of showing twice.
+	for c in _messages.get_children():
+		if c is Label and (c as Label).text == text:
+			_messages.remove_child(c)
+			c.queue_free()
+	var lines := message_line_count(text)
+	var l := HudKit.label(text, HudKit.BIG, color)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.max_lines_visible = MESSAGE_MAX_LINES
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS   # only past the last line it may show
 	l.set_meta("born", _time)
+	l.set_meta("life", message_lifetime(text))
+	l.set_meta("lines", mini(lines, MESSAGE_MAX_LINES))
 	_messages.add_child(l)
-	while _messages.get_child_count() > 3:
+	# The oldest go until the box's lines hold the newest whole.
+	while _messages.get_child_count() > 1 and _message_lines_shown() > MESSAGE_MAX_LINES:
 		var old := _messages.get_child(0)
 		_messages.remove_child(old)
 		old.queue_free()
+
+
+## M8 gate (F30): the lines `text` takes on the message line - wrapped at words at MESSAGE_WIDTH in
+## HudKit.BIG, as its label wraps it (at least 1).
+func message_line_count(text: String) -> int:
+	var font := get_theme_font("font", "Label")
+	if font == null or text == "":
+		return 1
+	var flags := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
+	var h := font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, MESSAGE_WIDTH, HudKit.BIG, -1,
+		flags).y
+	return maxi(1, roundi(h / maxf(font.get_height(HudKit.BIG), 1.0)))
+
+
+## M8 gate (F30): how long a message stays: MESSAGE_LIFETIME, or for a long one the time to read it
+## (READ_CHARS_PER_S after a second to notice it), at most MESSAGE_MAX_LIFETIME. Its last
+## MESSAGE_FADE_S fade.
+static func message_lifetime(text: String) -> float:
+	return clampf(1.0 + text.length() / READ_CHARS_PER_S, MESSAGE_LIFETIME, MESSAGE_MAX_LIFETIME)
+
+
+## The lines of the messages in the box now.
+func _message_lines_shown() -> int:
+	var n := 0
+	for c in _messages.get_children():
+		n += int(c.get_meta("lines", 1))
+	return n
 
 
 ## The message lines on screen now, oldest first (tests).
@@ -570,6 +793,7 @@ func mode_line_text() -> String:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_update_loot()
 	if player == null or not is_instance_valid(player):
 		player = get_tree().get_first_node_in_group("player") as GiantPlayer
 		if player == null:
@@ -595,10 +819,84 @@ func _process(delta: float) -> void:
 	_capture_hint.visible = not _death.visible and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED \
 		and DisplayServer.get_name() != "headless" and not get_tree().paused \
 		and not InputBindings.last_device_is_pad()
-	var parts := PackedStringArray()
-	for item_id: String in WorldState.inventory:
-		parts.append("%s x%d" % [GameData.get_record(item_id).get("display_name", item_id), WorldState.inventory[item_id]])
-	_loot_label.text = ("Loot: " + ", ".join(parts)) if not parts.is_empty() else ""
+
+
+# --------------------------------------------------------------------------- P39f: the loot panel
+
+## The loot panel's entries for an inventory (item id -> count): the materials - items that stack (a record's
+## stack_max over 1: iron, titan iron, wood) - as "Iron Ingot x3", in the inventory's order. One-of-a-kind
+## trophies, keys and quest items are left to the inventory screen.
+static func loot_entries(inventory: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	for item_id: String in inventory:
+		var rec := GameData.get_record(item_id)
+		if int(rec.get("stack_max", 1)) <= 1:
+			continue
+		out.append("%s x%d" % [str(rec.get("display_name", item_id)), int(inventory[item_id])])
+	return out
+
+
+## `entries` packed whole onto lines at most `width` px wide in `font` at `size`, the first led by "Loot:", the
+## entries of a line LOOT_SEPARATOR apart; an entry is never split (one wider than a line has a line of its
+## own). [] for no entries.
+static func loot_lines(entries: PackedStringArray, font: Font, size: int, width: float) -> PackedStringArray:
+	var lines := PackedStringArray()
+	if entries.is_empty():
+		return lines
+	var line := "Loot:"
+	for e in entries:
+		var joined := line + LOOT_SEPARATOR + e if line != "" else e
+		if line == "" or font.get_string_size(joined, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x <= width:
+			line = joined
+		else:
+			lines.append(line)
+			line = e
+	lines.append(line)
+	return lines
+
+
+## The loot panel's text room: LOOT_WIDTH less its box's side margins.
+func loot_text_width() -> float:
+	var sb := _loot_panel.get_theme_stylebox("panel")
+	return LOOT_WIDTH - (sb.get_minimum_size().x if sb != null else 0.0)
+
+
+## Refreshes the loot panel when the inventory changed: its lines, and its top so it holds them exactly (it grows
+## upward from the bottom, so its drawn rect is its anchored one).
+func _update_loot() -> void:
+	var key := str(WorldState.inventory)
+	if key == _loot_key:
+		return
+	_loot_key = key
+	var font := _loot_label.get_theme_font("font")
+	var lines := loot_lines(loot_entries(WorldState.inventory), font, _loot_label.get_theme_font_size("font_size"),
+		loot_text_width()) if font != null else PackedStringArray()
+	_loot_label.text = "\n".join(lines)
+	_loot_panel.visible = not lines.is_empty()
+	_loot_panel.offset_top = _loot_panel.offset_bottom - maxf(_loot_panel.get_combined_minimum_size().y, 1.0)
+
+
+## The loot panel's lines now ([] while it is hidden; tests).
+func loot_lines_now() -> PackedStringArray:
+	if _loot_panel == null or not _loot_panel.visible:
+		return PackedStringArray()
+	return _loot_label.text.split("\n")
+
+
+## The loot panel's tallest rect on a `view`-sized screen: LOOT_MAX_LINES lines (its layout region).
+func _loot_region(view: Vector2) -> Rect2:
+	var sb := _loot_panel.get_theme_stylebox("panel")
+	var font := _loot_label.get_theme_font("font")
+	var h := LOOT_MAX_LINES * (font.get_height(_loot_label.get_theme_font_size("font_size")) if font != null else 20.0)
+	h += sb.get_minimum_size().y if sb != null else 0.0
+	var bottom := view.y + _loot_panel.offset_bottom
+	return Rect2(view.x + _loot_panel.offset_left, bottom - h, LOOT_WIDTH, h)
+
+
+## The height of a line of HudKit.SMALL text in the HUD's font.
+func _small_line_height() -> float:
+	var font := get_theme_font("font", "Label")
+	return font.get_height(HudKit.SMALL) if font != null else 16.0
 
 
 ## Updates the resource bars, hotbar and target frame from the current state right away
@@ -647,11 +945,12 @@ func _update_slots(c: CombatController, _pools: ResourcePool) -> void:
 		var root: PanelContainer = slot.root
 		if def == null:
 			(slot.title as Label).text = "ULT" if is_ultimate else ""
+			(slot.title as Label).visible = true
 			(slot.cost as Label).text = ""
 			(slot.timer as Label).text = ""
 			(slot.reason as Label).text = ""
 			(slot.target as Label).text = ""
-			(slot.cooldown as ColorRect).offset_top = 0
+			_shade(slot, 0.0)
 			root.modulate = Color(1, 1, 1, 0.45)
 			_slot_states[i] = {"id": "", "reason_code": "", "reason": "", "target": "", "key": key_text,
 				"alt_key": alt_text}
@@ -668,8 +967,9 @@ func _update_slots(c: CombatController, _pools: ResourcePool) -> void:
 		(slot.cost as Label).text = " ".join(costs)
 		var remaining := c.cooldowns.remaining_s(def.id, Sim.tick)
 		var frac := c.cooldowns.remaining_fraction(def.id, Sim.tick)
-		(slot.cooldown as ColorRect).offset_top = -60.0 * frac
+		_shade(slot, frac)
 		(slot.timer as Label).text = ("%.1f" % remaining) if remaining > 0.0 else ""
+		(slot.title as Label).visible = remaining <= 0.0   # M9 gate (lane review): the timer, not the name over it
 		var slot_key := "ultimate" if is_ultimate else "slot_%d" % (i + 1)
 		var params := _preview_params(slot_key, def, providers)
 		var code := c.preview_reason(&"ultimate" if is_ultimate else &"slot", params)
@@ -678,7 +978,7 @@ func _update_slots(c: CombatController, _pools: ResourcePool) -> void:
 		var target := ""
 		if def.hit_shape == "projectile":
 			var locked := player.locked_entity()
-			target = ("» %s" % locked.display_name()) if locked != null and locked.is_alive() else "aim"
+			target = TARGET_LOCKED if locked != null and locked.is_alive() else TARGET_AIM
 		(slot.target as Label).text = target
 		_slot_states[i] = {"id": def.id, "reason_code": code, "reason": reason, "target": target,
 			"key": key_text, "alt_key": alt_text}
@@ -752,7 +1052,7 @@ static func reason_text(code: String, def: ActionDef) -> String:
 
 
 ## What hotbar slot `index` (0-7 = slots 1-8, 8 = ultimate) shows now: {"id", "reason_code"
-## (the preview_reason code), "reason" (its text), "target" (projectile slots)}.
+## (the preview_reason code), "reason" (its text), "target" (projectile slots: TARGET_LOCKED or TARGET_AIM)}.
 func slot_state(index: int) -> Dictionary:
 	if index < 0 or index >= _slot_states.size():
 		return {}
@@ -773,7 +1073,12 @@ func _update_target() -> void:
 	if _target_frame.offset_top != top:
 		_target_frame.offset_top = top
 		_target_frame.offset_bottom = top + TARGET_FRAME_HEIGHT
-	_target_name.text = "%s   %d m" % [target.display_name(), int(player.global_position.distance_to(target.actor.global_position))]
+	# P27: the lock line - PlayerTargeting.lock_label() (P30: a formation's name and count, a banner's
+	# name after a drawn flag), else the target's name; then the distance.
+	var line := lock_line(_lock_label(target))
+	_target_flag.visible = bool(line.banner)
+	_target_name.text = "%s   %d m" % [str(line.text), int(player.global_position.distance_to(target.actor.global_position))]
+	_fit_lock_line()
 	var p := target.combatant.pools
 	_target_bar.value = p.health / maxf(p.health_max, 0.001)
 	_target_hint.text = lock_hint(InputBindings.last_device_is_pad())
@@ -784,6 +1089,53 @@ func _update_target() -> void:
 		_marker.position = cam.unproject_position(anchor) - Vector2(16, 16)
 	else:
 		_marker.visible = false
+
+
+## M8 screenshot pass (V2): the lock line's label as wide as its text (plus its drop shadow), at most
+## the line's room - the frame's width less the panel's margins, and less the flag and its gap while
+## the flag shows - so the centred line shows the name and the distance and trims only a text too long
+## for the frame (a trimming Label's own minimum width is 1 px). Measured only when the text or the
+## flag changes.
+func _fit_lock_line() -> void:
+	var key := "%s|%s" % [_target_name.text, _target_flag.visible]
+	if key == _lock_line_fitted:
+		return
+	_lock_line_fitted = key
+	var font := _target_name.get_theme_font("font")
+	var need := 1.0
+	if font != null:
+		need = ceilf(font.get_string_size(_target_name.text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+			_target_name.get_theme_font_size("font_size")).x) + 1.0
+	var room := TARGET_FRAME_WIDTH - _target_frame.get_theme_stylebox("panel").get_minimum_size().x
+	if _target_flag.visible:
+		room -= _target_flag.custom_minimum_size.x + LOCK_LINE_SEPARATION
+	_target_name.custom_minimum_size.x = clampf(need, 1.0, maxf(room, 1.0))
+
+
+## The lock label of the player's lock (PlayerTargeting.lock_label, P30), else `target`'s name.
+func _lock_label(target: CombatEntity) -> String:
+	if player.targeting != null and player.targeting.has_method("lock_label"):
+		var label := str(player.targeting.call("lock_label"))
+		if label != "":
+			return label
+	return target.display_name()
+
+
+## The lock line for a lock label (P27): {"text", "banner"} - a banner's mark (BANNER_MARK) becomes
+## a drawn flag ("banner": true) and leaves the text: "⚑ Banner of the Toll-Riders" ->
+## {"text": "Banner of the Toll-Riders", "banner": true}.
+static func lock_line(label: String) -> Dictionary:
+	var t := label.strip_edges()
+	if t.begins_with(BANNER_MARK):
+		return {"text": t.trim_prefix(BANNER_MARK).strip_edges(), "banner": true}
+	return {"text": t, "banner": false}
+
+
+## The lock line shown now: {"text" (with the distance), "banner"} ({} while no frame shows; tests).
+func lock_line_now() -> Dictionary:
+	if _target_frame == null or not _target_frame.visible:
+		return {}
+	return {"text": _target_name.text, "banner": _target_flag.visible}
 
 
 ## True while the boss bar widget (ui/hud/boss_bar.gd, P11a) shows `target` (P11a: the target
@@ -827,7 +1179,7 @@ func layout_regions(view: Vector2) -> Dictionary:
 	var out := {
 		"resources": HudWidget.anchored_rect(_resources_panel, view),
 		"hotbar": HudWidget.anchored_rect(_hotbar, view).grow_individual(10.0, 16.0, 10.0, 16.0),
-		"loot": HudWidget.anchored_rect(_loot_label, view),
+		"loot": _loot_region(view),
 		"capture_hint": HudWidget.anchored_rect(_capture_hint, view),
 		"messages": HudWidget.anchored_rect(_messages, view),
 	}
@@ -877,7 +1229,7 @@ static func _shows_something(c: Control) -> bool:
 ## The Controls behind the regions that have one (tests compare their drawn rects with
 ## layout_regions at the real screen size): the HUD's panels and every widget's.
 func layout_controls() -> Dictionary:
-	var out := {"resources": _resources_panel, "hotbar": _hotbar, "loot": _loot_label,
+	var out := {"resources": _resources_panel, "hotbar": _hotbar, "loot": _loot_panel,
 		"capture_hint": _capture_hint, "messages": _messages, "target_frame": _target_frame}
 	for c in get_children():
 		if c is HudWidget:
@@ -895,23 +1247,63 @@ func lock_marker_point() -> Vector2:
 func _update_messages() -> void:
 	for child in _messages.get_children():
 		var age := _time - float(child.get_meta("born", _time))
-		(child as Label).modulate.a = clampf((MESSAGE_LIFETIME - age) / 0.5, 0.0, 1.0)
-		if age > MESSAGE_LIFETIME:
+		var life := float(child.get_meta("life", MESSAGE_LIFETIME))
+		(child as Label).modulate.a = clampf((life - age) / MESSAGE_FADE_S, 0.0, 1.0)
+		if age > life:
+			_messages.remove_child(child)
 			child.queue_free()
 
 
+## P39f: hides the HUD while a modal screen is open and shows it again when the last one closes. A plain Node
+## (it draws nothing) that runs while the game is paused - the HUD itself is pausable.
+class MenuWatch:
+	extends Node
+
+	var hud: Hud
+
+	func _ready() -> void:
+		process_mode = Node.PROCESS_MODE_ALWAYS
+
+	func _process(_delta: float) -> void:
+		if hud != null and is_instance_valid(hud):
+			hud.sync_menu_hidden()
+
+
+## P39f: hides the HUD while a screen stack in the tree has a screen open (ScreenStack.any_open_in), shows it
+## when none has. Returns whether it is hidden now.
+func sync_menu_hidden() -> bool:
+	var open := is_inside_tree() and ScreenStack.any_open_in(get_tree())
+	if visible == open:
+		visible = not open
+	return open
+
+
+## True while the HUD is hidden behind an open screen (tests).
+func menu_hidden() -> bool:
+	return not visible
+
+
+## P27: rectangles only (a dot and four ticks), so the crosshair joins the HUD's batch of rectangles
+## (its circle and ring were two draw calls of their own every frame).
 class Crosshair:
 	extends Control
 
-	func _process(_delta: float) -> void:
-		queue_redraw()
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_RESIZED:
+			queue_redraw()
 
 	func _draw() -> void:
-		var c := size * 0.5
-		draw_circle(c, 3.0, Color(1, 1, 1, 0.85))
-		draw_arc(c, 9.0, 0.0, TAU, 24, Color(0, 0, 0, 0.45), 1.5)
+		var c := (size * 0.5).round()
+		var shade := Color(0, 0, 0, 0.45)
+		HudKit.draw_dot(self, c, 2.5, shade)
+		HudKit.draw_dot(self, c, 1.5, Color(1, 1, 1, 0.9))
+		for d: Vector2 in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+			var mid := c + d * 9.0
+			var half := Vector2(absf(d.y), absf(d.x)) * 0.75 + Vector2(absf(d.x), absf(d.y)) * 2.0
+			draw_rect(Rect2(mid - half, half * 2.0), shade)
 
 
+## P27: the lock diamond as four turned rectangles and a dot (it was a polyline and a circle).
 class LockMarker:
 	extends Control
 
@@ -920,6 +1312,15 @@ class LockMarker:
 
 	func _draw() -> void:
 		var c := Vector2(16, 16)
-		var pts := PackedVector2Array([c + Vector2(0, -13), c + Vector2(13, 0), c + Vector2(0, 13), c + Vector2(-13, 0), c + Vector2(0, -13)])
-		draw_polyline(pts, Color(1.0, 0.35, 0.25), 2.5)
-		draw_circle(c, 2.5, Color(1.0, 0.35, 0.25))
+		HudKit.draw_diamond_outline(self, c, 13.0, Color(1.0, 0.35, 0.25), 2.5)
+		HudKit.draw_dot(self, c, 2.0, Color(1.0, 0.35, 0.25))
+
+
+## P27: the banner's flag before its name on the lock line: a pole and a flag (two rectangles).
+class BannerFlag:
+	extends Control
+
+	func _draw() -> void:
+		var h := size.y
+		draw_rect(Rect2(1, 1, 2, h - 2), Color(0.85, 0.8, 0.7))
+		draw_rect(Rect2(3, 2, size.x - 4, h * 0.45), Hud.BANNER_FLAG_COLOR)

@@ -16,7 +16,9 @@ extends PlayerComponent
 ## shot would fizzle at its range) is refused with "out_of_range" and spends nothing. The same
 ## check is the slot's precheck in the HUD (preview_params) and in the request (handle_edge;
 ## PlayerGrab's slots call range_reason too), so the hotbar's "Out of range" and the controller
-## never disagree.
+## never disagree. P26 (plan M6-M9 §2.9): an action's range_by_stage_m gives its range at the
+## giant's stage (Boulder Hurl: 25 m at stages 1-3, 32 / 38 / 44 m at stages 4-6); range_reason
+## checks it, and resolve_launch writes it into the spec the runner launches with (stage_spec).
 ##
 ## Vertical aim (P17b, the balance pass): a weapon swing tilts up toward the giant's target when the
 ## stage's default tilt (arc_pitch_offset_deg, which brings the arcs down to the giant's feet:
@@ -33,8 +35,20 @@ extends PlayerComponent
 ## about 5 m at stage 2, about 7 m with a reforged weapon at stage 3, where the fixed downward tilt
 ## stopped short at about 3.3 / 4.0 / 3.5 m (P17a's measurement), so stages 2 and 3 never felt their
 ## reach and a stage-2 giant could not strike a holding soldier from beyond its spear.
+##
+## P31 (plan M6-M9 §2.11, §5.12): a projectile with launch_from "above_target" (Storm Call) starts
+## launch_height_m above its aim point - the locked target's anchor, else the point under the
+## crosshair within the lock range - and falls on it; it is never refused as out of range (the lock
+## range bounds it). An ability with a telegraph (Earthquake's crack, Storm Call's circle) announces
+## it as its windup begins (Events.telegraph_started with the lock target; TelegraphVisuals draws
+## the giant's own telegraphs as cracks and keeps a telegraph "at" the target on the target).
+## body_sweep (Shoulder Charge's dash, moved by PlayerMotor's motion) sweeps the giant's capsule
+## from where it stood the tick before; an action's on_hit_stagger staggers the targets it hits
+## (Thunderhead: 1.5 s on humans).
 
 const OUT_OF_RANGE := "out_of_range"
+## P31: the body sweep's capsule is this much wider than the giant's (Shoulder Charge).
+const BODY_SWEEP_MARGIN_M := 0.4
 ## Vertical aim (P17b): the lift step and the highest tilt an aimed swing may take (degrees; the
 ## stage's default tilt is the lowest).
 const AIM_STEP_DEG := 2.0
@@ -56,6 +70,9 @@ func setup(p: GiantPlayer) -> void:
 	runner = AttackRunner.new(player, player.entity, player.controller)
 	runner.emit_clank = true
 	runner.launch_resolver = resolve_launch
+	runner.register_shape("body_sweep", _run_body_sweep)   # P31: Shoulder Charge
+	if not player.entity.hit_landed.is_connected(_on_hit_landed):
+		player.entity.hit_landed.connect(_on_hit_landed)
 	refresh_geometry()
 
 
@@ -89,6 +106,7 @@ func on_action_started(action: ActionDef, instance_id: int) -> void:
 		runner.prev_segment = PackedVector3Array()
 		player.stats.attacks += 1
 	_start_aim(action, instance_id)
+	_announce_telegraph(action)
 
 
 ## Weapon segment (shoulder-side end, tip) in world space at fraction f of the action's arc.
@@ -262,12 +280,12 @@ func preview_params(_slot_key: String, def: ActionDef, params: Dictionary) -> vo
 func range_reason(a: ActionDef) -> String:
 	if a == null or a.hit_shape != "projectile":
 		return ""
-	var spec := Projectile.spec_for(a)
+	var spec := stage_spec(a)
 	if not (str(spec.aim) in ["lock_or_camera", "target"]):
 		return ""
 	var target := player.targeting.locked_entity() if player.targeting != null else null
-	if target == null or not target.is_alive():
-		return ""
+	if target == null or not target.is_alive() or launches_above_target(a):
+		return ""   # P31: a strike from above (Storm Call) reaches whatever the lock holds
 	return OUT_OF_RANGE if target_distance(a, target) > reach_of(spec) + 1e-4 else ""
 
 
@@ -302,6 +320,23 @@ func _slot_action(slot_key: String) -> ActionDef:
 	return player.controller.library.get(id) if id != "" else null
 
 
+## P26: the range of projectile action `a` at the giant's stage: range_by_stage_m[stage - 1] (the
+## last entry beyond the list), else `fallback` (the projectile's range_m).
+func stage_range(a: ActionDef, fallback: float) -> float:
+	var by_stage: Variant = a.param("range_by_stage_m") if a != null else null
+	if typeof(by_stage) != TYPE_ARRAY or (by_stage as Array).is_empty():
+		return fallback
+	var list: Array = by_stage
+	return float(list[clampi(player.growth_stage - 1, 0, list.size() - 1)])
+
+
+## P26: the projectile spec of `a` (Projectile.spec_for) with the stage's range.
+func stage_spec(a: ActionDef) -> Dictionary:
+	var spec := Projectile.spec_for(a)
+	spec["range_m"] = stage_range(a, float(spec.range_m))
+	return spec
+
+
 ## k: the giant's size relative to the stage-1 giant (launch offsets are authored for stage 1).
 func body_scale() -> float:
 	return float(player.profile.get("height_m", CombatRules.REFERENCE_HEIGHT_M)) \
@@ -309,8 +344,13 @@ func body_scale() -> float:
 
 
 ## AttackRunner.launch_resolver: {"origin": launch_offset_m x k in the giant's space (or the
-## attack origin), "aim": aim_point_for(spec, origin)}.
-func resolve_launch(_a: ActionDef, spec: Dictionary) -> Dictionary:
+## attack origin), "aim": aim_point_for(spec, origin)}. P26: the stage's range (range_by_stage_m)
+## goes into `spec` itself - the runner's own copy, which it launches with right after (the arc's
+## range clamp) and PlayerGrab's landing preview reads - so the shot flies as far as the check says.
+func resolve_launch(a: ActionDef, spec: Dictionary) -> Dictionary:
+	spec["range_m"] = stage_range(a, float(spec.get("range_m", 25.0)))
+	if launches_above_target(a):
+		return above_target_launch(a, spec)
 	var offset: Vector3 = spec.get("launch_offset", Vector3.INF)
 	var origin := player.to_global(offset * body_scale()) if offset != Vector3.INF \
 		else player.attack_origin_global()
@@ -352,3 +392,128 @@ func camera_aim_point(origin: Vector3, range_m: float) -> Vector3:
 	q.collide_with_areas = false
 	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
 	return hit.position if not hit.is_empty() else to
+
+
+# --------------------------------------------------------------------------- P31: strikes from above, telegraphs, body sweep
+
+## True when projectile action `a` falls on its aim point from above (projectile.launch_from
+## "above_target": Storm Call).
+static func launches_above_target(a: ActionDef) -> bool:
+	if a == null or a.hit_shape != "projectile":
+		return false
+	var p: Variant = a.param("projectile")
+	return typeof(p) == TYPE_DICTIONARY and str((p as Dictionary).get("launch_from", "actor")) == "above_target"
+
+
+## The launch of a strike from above: the aim point is the locked target's anchor, else the point
+## under the crosshair within the lock range (aimed from the attack origin); the projectile starts
+## launch_height_m above it and falls straight onto it.
+func above_target_launch(a: ActionDef, spec: Dictionary) -> Dictionary:
+	var p: Dictionary = a.param("projectile", {})
+	var height := float(p.get("launch_height_m", 20.0))
+	var aim := strike_point(a)
+	return {"origin": aim + Vector3.UP * height, "aim": aim}
+
+
+## Where a strike from above lands now: the locked target's anchor, else the point under the
+## crosshair within the lock range.
+func strike_point(_a: ActionDef) -> Vector3:
+	var target := player.targeting.locked_entity() if player.targeting != null else null
+	if target != null and target.is_alive():
+		return target.anchor_position()
+	var origin := player.attack_origin_global()
+	return camera_aim_point(origin, float(player.profile.get("lock_range_m", 55.0)))
+
+
+## Announces the telegraph of the giant's own ability as its windup begins (Earthquake's crack along
+## its facing, Storm Call's circle where it will strike), as enemies announce theirs: radius / length
+## by shape (circle: radius_m; line: width_m / 2 and length_m; cone: radius_m), duration the windup,
+## the lock target as the target. A telegraph "at" "target" starts at the strike point.
+func _announce_telegraph(action: ActionDef) -> void:
+	var t: Variant = action.param("telegraph") if action != null else null
+	if typeof(t) != TYPE_DICTIONARY or not (action.kind in ["ability", "ultimate"]):
+		return
+	var shape := str(t.get("shape", "line"))
+	var radius := float(t.get("radius_m", 0.0))
+	var length := 0.0
+	match shape:
+		"line":
+			radius = float(t.get("width_m", 1.0)) * 0.5
+			length = float(t.get("length_m", 0.0))
+		"cone":
+			length = radius
+	var target := player.targeting.locked_entity() if player.targeting != null else null
+	var target_id := target.entity_id if target != null and target.is_alive() else ""
+	var origin := player.global_position
+	if str(t.get("at", "actor")) == "target":
+		origin = strike_point(action)
+		if target_id != "":
+			origin = (target.actor as Node3D).global_position
+	Events.telegraph_started.emit(Sim.tick, player.entity.entity_id, action.id, target_id, shape, origin,
+		player.facing_yaw, radius, length, float(action.windup_ticks) / Sim.TICK_RATE)
+
+
+var _sweep_instance := -1
+var _sweep_prev := Vector3.ZERO
+
+
+## Shoulder Charge's hit (hit_shape body_sweep, while PlayerMotor dashes the giant along its
+## motion): the giant's capsule (radius + BODY_SWEEP_MARGIN_M, its height) swept from where it stood
+## the tick before to where it stands now; one hit per target and instance (HitFactory), each coming
+## from behind the target on the charge line's side (charge_shove_origin), so the knockback throws
+## it forward and out of the charge's way.
+func _run_body_sweep(a: ActionDef, tick: int) -> void:
+	var cur := player.global_position
+	if _sweep_instance != player.controller.instance_id:
+		_sweep_instance = player.controller.instance_id
+		_sweep_prev = cur
+	var prev := _sweep_prev
+	_sweep_prev = cur
+	var cap := player.body_shape.shape as CapsuleShape3D
+	var r := (cap.radius if cap != null else 1.0) + BODY_SWEEP_MARGIN_M
+	var h := maxf(cap.height if cap != null else 3.66, 2.0 * r)
+	var lo := Vector3.UP * r
+	var hi := Vector3.UP * (h - r)
+	var cands := HitQueryAdapter.sweep_capsule(player.get_world_3d().direct_space_state, player.entity,
+		player.attack_origin_global(), prev + lo, prev + hi, cur + lo, cur + hi, r)
+	for c: Dictionary in cands:
+		var t: CombatEntity = c.entity
+		var ctx := runner.context()
+		ctx.attacker_position = charge_shove_origin(t.actor.global_position)
+		HitFactory.queue(ctx, a, [c], 0, tick)
+
+
+## The point a charge hit on a target at `target_pos` comes "from": a metre behind it, diagonally
+## from the charge line (to the giant's right when it stands dead ahead), so the knockback bowls it
+## forward and aside.
+func charge_shove_origin(target_pos: Vector3) -> Vector3:
+	var dir := Vector3(-sin(player.facing_yaw), 0.0, -cos(player.facing_yaw))
+	var to := target_pos - player.global_position
+	to.y = 0.0
+	var side := to - dir * to.dot(dir)
+	if side.length() < 0.3:
+		side = Vector3(-dir.z, 0.0, dir.x)
+	var from := target_pos - (side.normalized() + dir).normalized()
+	from.y = target_pos.y
+	return from
+
+
+## on_hit_stagger (Thunderhead): every target of the listed archetypes (any, when the list is
+## empty) a hit of the action struck - and did not kill - staggers for the given seconds (the
+## existing fixed-length stagger).
+func _on_hit_landed(result: HitResult) -> void:
+	if result == null or result.killed or result.event == null:
+		return
+	if not (result.outcome in [HitResult.Outcome.HIT, HitResult.Outcome.GUARD_BROKEN]):
+		return
+	var a := GameData.get_action(result.event.action_id)
+	var st: Variant = a.param("on_hit_stagger") if a != null else null
+	if typeof(st) != TYPE_DICTIONARY:
+		return
+	var target := Sim.get_entity(result.event.target_id)
+	if target == null or not target.is_alive():
+		return
+	var kinds: Array = (st as Dictionary).get("archetypes", [])
+	var archetype := str(target.combatant.base_record.get("archetype", "")) if target.combatant != null else ""
+	if kinds.is_empty() or kinds.has(archetype):
+		target.stagger(float(st.get("seconds", 1.0)), "stunned")

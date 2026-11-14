@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "encounter.test_world_soldiers",
+	"type": "encounter",
+	"display_name": "Test world soldier band",
+	"description": "P24b: a soldier band across the x = 0 seam where the world walk's route crosses it towards the town (c1_2 and c2_2): soldiers chase the giant from one chunk's navmesh into the next. The sergeant joins only a giant of stage 3 or more (min_stage).",
+	"level": "level.test_world",
+	"center_m": [2, 7.5, 106],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 120,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "test_world.band.soldier_1", "definition": "enemy.soldier", "position_m": [-10, 8.0, 100], "yaw_deg": -45,
+			"patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.band.soldier_2", "definition": "enemy.soldier", "position_m": [-6, 7.85, 116], "yaw_deg": -45,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.band.soldier_3", "definition": "enemy.soldier", "position_m": [8, 7.55, 98], "yaw_deg": -45,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.band.soldier_4", "definition": "enemy.soldier", "position_m": [12, 8.2, 112], "yaw_deg": -45,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "test_world.band.sergeant", "definition": "enemy.soldier", "position_m": [-2, 7.9, 92], "yaw_deg": -45,
+			"patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "",
+			"min_stage": 3}
+	]
+}

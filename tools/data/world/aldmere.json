@@ -1,0 +1,82 @@
+{
+	"schema": "world_region_layout",
+	"region": "region.aldmere",
+	"description": "P25: the Aldmere March's skeleton and light content (plan M6-M9 §5.4, §5.10). P36 (plan M6-M9 §3.20, §5.4, §5.7, §5.9, §5.13): Fort Aldmere made the crown's oath - its curtain wall with the gate bastions where the garrison's wall archers and ballistae stand, the real gate (breached at stage 4, opened by a parley), the keep and its steps (the Last Stand), the inner portcullis and the Iron Regiment's battle in the bailey (FortBattle), the parley horn where Warlord Corvane answers from his wall, the fort forge (titan tier: parley or a spared Corvane), four wall ballistae; the war camp's four engines and the herald at its edge; Ballista Ridge's three ballistae; the deserters' hiding place; the ridge eyrie's sealed cairn; the quests' markers, flee points and safe markers.",
+	"elements": [
+		{"kind": "fortress_wall", "id": "world.aldmere.fort_walls", "pos": [650, -170], "points": [[560, -245], [740, -245], [740, -95], [560, -95], [560, -245]], "height": 12, "thick": 3, "tower_m": 9, "tower_rise_m": 4, "gates": [[650, -95, 18]], "bastion": [12, 16], "banner_color": "banner_blue", "poi": "poi.fort_aldmere", "landmark": true, "skyline": true, "note": "P36: the gate bastions (12 x 12 m, 16 m tall) at (635, -95) and (665, -95) carry the gate garrison's archers and ballistae."},
+		{"kind": "keep", "id": "world.aldmere.fort_keep", "pos": [650, -222], "yaw": 180, "size": [34, 26, 24], "steps_m": 12, "banner_color": "banner_blue", "note": "P36: moved 8 m north (its steps face the bailey); Corvane's guard holds the steps in the Last Stand."},
+		{"kind": "breakable_site", "style": "gate", "id": "world.aldmere.fort_gate", "record": "prop.gate_fort_aldmere", "pos": [650, -95], "yaw": 0, "size": [18, 12, 1.5], "faction": "aldmere", "prop_tags": ["house"], "quest_target": true, "note": "P36: the real gate - breached at stage 4 (an offence against Aldmere: its garrison fights), opened without a blow by the crown's parley (prop.gate_fort_aldmere's open_when_flag)."},
+		{"kind": "tent", "id": "world.aldmere.war_camp", "style": "war", "pos": [520, 120], "count": 20, "radius": 52, "engines": 0, "size": [5, 3.6, 7], "poi": "poi.war_camp", "landmark": true, "note": "P36: the engine frames are real engines now (kind engine, north of the tents)."},
+		{"kind": "ruin", "id": "world.aldmere.ridge_emplacement_1", "style": "earthwork", "pos": [770, 36], "yaw": 45, "size": [18, 2.6, 7], "poi": "poi.ballista_ridge", "landmark": true},
+		{"kind": "ruin", "id": "world.aldmere.ridge_emplacement_2", "style": "earthwork", "pos": [792, 12], "yaw": 45, "size": [18, 2.6, 7]},
+		{"kind": "ruin", "id": "world.aldmere.ridge_emplacement_3", "style": "earthwork", "pos": [814, -14], "yaw": 45, "size": [18, 2.6, 7]},
+		{"kind": "rock", "id": "world.aldmere.eyrie_spire", "style": "spire", "pos": [826, -4], "size": [8, 16], "poi": "poi.ridge_eyrie", "landmark": true},
+		{"kind": "house", "id": "world.aldmere.deserters_mill", "style": "burned", "pos": [440, 222], "yaw": 20, "size": [14, 8, 10], "poi": "poi.deserters_mill", "landmark": true},
+		{"kind": "statue", "id": "world.aldmere.ironway_king", "style": "standing", "pos": [768, -398], "yaw": 90, "size": [5, 15], "poi": "poi.ironway", "landmark": true},
+		{"kind": "ruin", "id": "world.aldmere.kings_armoury", "style": "vault", "pos": [600, -286], "yaw": 0, "size": [22, 12, 19], "thick": 1.5, "door_m": 15, "poi": "poi.kings_armoury"},
+		{"kind": "arena", "style": "battle", "id": "world.aldmere.iron_regiment_arena", "pos": [650, -165], "inner_radius": 72, "floor": [[560, -245], [740, -95]], "engage_area": "world.area.fort_bailey", "engage": {"at": [650, -113], "size": [24, 14, 10], "yaw": 0}, "gate": {"at": [650, -99], "size": [18, 13, 2], "yaw": 0}, "battle_id": "battle.iron_regiment", "battle_name": "The Iron Regiment", "phases": [{"id": "wall", "name": "The Wall", "below": 1.0, "encounters": ["encounter.aldmere_iron_regiment_wall"]}, {"id": "charge", "name": "The Charge", "below": 0.7, "encounters": ["encounter.aldmere_iron_regiment_charge"]}, {"id": "last_stand", "name": "The Last Stand", "below": 0.5, "encounters": ["encounter.aldmere_iron_regiment_stand"]}], "engines": ["world.aldmere.fort_ballista_w", "world.aldmere.fort_ballista_e", "world.aldmere.fort_ballista_nw", "world.aldmere.fort_ballista_ne"], "commander_id": "world.aldmere.corvane", "guard_formation": "guard", "stand_out": ["encounter.aldmere_fort_gate"], "defeated_flag": "boss.corvane.defeated", "peace_condition": {"type": "flag", "flag": "oath.crown.outcome", "equals": "parley"}, "settled_flag": "boss.corvane.outcome", "faction": "aldmere", "open_flag": "world.aldmere.fort_open", "note": "The inner portcullis drops behind a giant that enters the bailey past the breached gate; the waystone world.cp.fort_gate stands 40 m outside the arena. M8 gate (F8): the arena is the bailey inside the curtain wall (floor: its corners), so the disengage rule measures from the walls, not from a circle that cut through the corners. M9 confirmation (W23, a layout defect): the Charge at 0.7 and the Last Stand at 0.5 (were 0.6 and 0.25) - the four ballistae (3,600) and the two inner crews count in the bar and stand through the Charge (plan 5.13), so the Wall's fall left the bar at 0.622 (desktop) / 0.670 (web) and the Charge's at 0.452 / 0.465: each phase now begins once the phases before it fall with the engines and their crews standing (test_aldmere_stonehold_content)."},
+		{"kind": "talker", "style": "horn", "id": "world.aldmere.fort_parley", "pos": [664, -70], "yaw": 0, "dialogue": "dialogue.corvane", "prompt": "Hail Warlord Corvane", "radius": 9, "color": "banner_blue", "note": "The parley horn before the gate: Corvane answers from his wall."},
+		{"kind": "condition_forge", "id": "world.aldmere.fort_forge", "pos": [604, -226], "yaw": 90, "tier": "titan", "display_name": "Fort Aldmere's forge", "radius": 8, "faction": "aldmere", "hostile_message": "At war with Aldmere: the fort's smiths will not work for you.", "open_when": {"type": "any", "of": [{"type": "flag", "flag": "oath.crown.outcome", "equals": "parley"}, {"type": "flag", "flag": "boss.corvane.outcome", "equals": "spared"}]}, "closed_message": "The fort's smiths work only for Aldmere's friends: swear the crown's peace, or spare its warlord."},
+		{"kind": "engine", "style": "ballista", "id": "world.aldmere.fort_ballista_w", "pos": [635, -95], "yaw": 180, "faction": "aldmere", "y": 74.95, "note": "P36: on the gate bastion's platform (its top: the ground at the bastion's centre + 16 m)."},
+		{"kind": "engine", "style": "ballista", "id": "world.aldmere.fort_ballista_e", "pos": [665, -95], "yaw": 180, "faction": "aldmere", "y": 74.43, "note": "P36: on the gate bastion's platform (its top: the ground at the bastion's centre + 16 m)."},
+		{"kind": "engine", "style": "ballista", "id": "world.aldmere.fort_ballista_nw", "pos": [588, -226], "yaw": 180, "faction": "aldmere"},
+		{"kind": "engine", "style": "ballista", "id": "world.aldmere.fort_ballista_ne", "pos": [712, -226], "yaw": 180, "faction": "aldmere"},
+		{"kind": "engine", "style": "catapult", "id": "world.aldmere.camp_catapult_1", "pos": [488, 66], "yaw": 0, "faction": "aldmere"},
+		{"kind": "engine", "style": "ballista", "id": "world.aldmere.camp_ballista_1", "pos": [508, 58], "yaw": 0, "faction": "aldmere"},
+		{"kind": "engine", "style": "ballista", "id": "world.aldmere.camp_ballista_2", "pos": [532, 58], "yaw": 0, "faction": "aldmere"},
+		{"kind": "engine", "style": "catapult", "id": "world.aldmere.camp_catapult_2", "pos": [552, 66], "yaw": 0, "faction": "aldmere"},
+		{"kind": "engine", "style": "ballista", "id": "world.aldmere.ridge_ballista_1", "pos": [775, 41], "yaw": 135, "faction": "aldmere"},
+		{"kind": "engine", "style": "ballista", "id": "world.aldmere.ridge_ballista_2", "pos": [797, 17], "yaw": 135, "faction": "aldmere"},
+		{"kind": "engine", "style": "ballista", "id": "world.aldmere.ridge_ballista_3", "pos": [819, -9], "yaw": 135, "faction": "aldmere"}
+	],
+	"shrines": [
+		{"id": "world.shrine.aldmere", "record": "shrine.world_aldmere", "pos": [420, -40], "yaw": 0, "poi": "poi.aldmere_shrine"}
+	],
+	"waystones": [
+		{"id": "world.cp.aldmere_road", "display_name": "Aldmere road waystone", "pos": [470, 60], "yaw": -40, "radius": 10, "stone": [8, 3], "poi": ""},
+		{"id": "world.cp.fort_gate", "display_name": "Fort gate waystone", "pos": [650, -55], "yaw": 0, "radius": 10, "stone": [12, 0], "poi": "poi.fort_aldmere"},
+		{"id": "world.cp.ironway", "display_name": "Ironway waystone", "pos": [700, -380], "yaw": 0, "radius": 10, "stone": [-10, 0], "poi": "poi.ironway"}
+	],
+	"secrets": [
+		{"id": "world.aldmere.armoury_rockfall", "seal": "rockfall", "pos": [600, -298], "yaw": 0, "poi": "poi.kings_armoury"},
+		{"id": "world.aldmere.eyrie_cache", "seal": "ledge", "pos": [818, -10], "poi": "poi.ridge_eyrie", "item": "item.iron_ingot", "count": 1, "requires_stage": 6, "ledge_m": 16}
+	],
+	"caches": [
+		{"id": "world.aldmere.war_camp_cache", "pos": [478, 162], "loot": "loot.cache_war_camp", "poi": "poi.war_camp"},
+		{"id": "world.aldmere.armoury_cache", "pos": [600, -284], "loot": "loot.cache_kings_armoury", "poi": "poi.kings_armoury"}
+	],
+	"cairns": [
+		{"id": "world.aldmere.mill_cairn", "dialogue": "dialogue.cairn_deserters_mill", "pos": [454, 236], "yaw": 200, "poi": "poi.deserters_mill"},
+		{"id": "world.aldmere.eyrie_cairn", "dialogue": "dialogue.cairn_ridge_eyrie", "pos": [826, -4], "yaw": 225, "y_off": 16.0, "requires_stage": 6, "stage_message": "Out of reach. Grow to stage 6.", "poi": "poi.ridge_eyrie", "note": "P36: the eyrie's sealed cairn on the spire's top (16 m: stage 6 reaches it), beside the ledge's cache."}
+	],
+	"markers": [
+		{"id": "world.marker.war_camp_edge", "kind": "objective", "pos": [500, 190]},
+		{"id": "world.marker.war_camp_engines", "kind": "objective", "pos": [520, 64]},
+		{"id": "world.marker.fort_gate", "kind": "objective", "pos": [650, -70]},
+		{"id": "world.marker.fort_bailey", "kind": "objective", "pos": [650, -150]},
+		{"id": "world.marker.ballista_ridge", "kind": "objective", "pos": [792, 30]},
+		{"id": "world.marker.deserters_mill", "kind": "objective", "pos": [440, 204]},
+		{"id": "world.marker.deserters_hide", "kind": "safe", "pos": [424, 238]},
+		{"id": "world.marker.fort_bastion_w1", "kind": "elevation", "pos": [631, -90.5], "faction": "aldmere", "y": 75.0},
+		{"id": "world.marker.fort_bastion_w2", "kind": "elevation", "pos": [639, -90.5], "faction": "aldmere", "y": 75.0},
+		{"id": "world.marker.fort_bastion_e1", "kind": "elevation", "pos": [661, -90.5], "faction": "aldmere", "y": 74.48},
+		{"id": "world.marker.fort_bastion_e2", "kind": "elevation", "pos": [669, -90.5], "faction": "aldmere", "y": 74.48},
+		{"id": "world.marker.fort_flee_w", "kind": "patrol", "pos": [585, -45]},
+		{"id": "world.marker.fort_flee_e", "kind": "patrol", "pos": [715, -45]},
+		{"id": "world.marker.fort_flee_s", "kind": "patrol", "pos": [650, 5]},
+		{"id": "world.marker.bailey_flee_w", "kind": "patrol", "pos": [578, -215]},
+		{"id": "world.marker.bailey_flee_e", "kind": "patrol", "pos": [722, -215]},
+		{"id": "world.marker.bailey_flee_n", "kind": "patrol", "pos": [650, -238]},
+		{"id": "world.marker.camp_flee_n", "kind": "patrol", "pos": [520, 10]},
+		{"id": "world.marker.camp_flee_e", "kind": "patrol", "pos": [625, 125]},
+		{"id": "world.marker.camp_flee_w", "kind": "patrol", "pos": [420, 110]},
+		{"id": "world.marker.ridge_flee_n", "kind": "patrol", "pos": [835, 75]},
+		{"id": "world.marker.ridge_flee_e", "kind": "patrol", "pos": [862, -15]},
+		{"id": "world.marker.ridge_flee_s", "kind": "patrol", "pos": [770, -55]}
+	],
+	"scenery": [
+		{"mesh": "tree_broadleaf", "density": 0.00028, "spacing_m": 16, "scale": [0.9, 1.4], "solid": true},
+		{"mesh": "bush", "density": 0.0005, "spacing_m": 6, "scale": [0.8, 1.3], "solid": false},
+		{"mesh": "rock", "density": 0.0001, "spacing_m": 20, "scale": [0.8, 1.5], "solid": true}
+	]
+}

@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.kings_road",
+	"type": "poi",
+	"display_name": "The King's Road",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "waystone",
+	"position_m": [300, 11.6, 335],
+	"radius_m": 25,
+	"xp": 10,
+	"map_icon": "waystone",
+	"compass": true,
+	"landmark": "world.cp.kings_road",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A waystone where the King's Road leaves the river for Aldmere."
+}

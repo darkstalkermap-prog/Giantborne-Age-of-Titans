@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "status.wild_surge",
+	"type": "status_effect",
+	"display_name": "Wild Surge",
+	"hud_label": "SURGE",
+	"stacking": "refresh_no_stack",
+	"duration_s": 6.0,
+	"tick_s": 0,
+	"magnitude_key": "",
+	"modifiers": {"move_speed_mult": 1.15},
+	"tags": ["Buff"],
+	"hidden": false
+}

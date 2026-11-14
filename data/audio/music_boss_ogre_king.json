@@ -1,0 +1,34 @@
+{
+	"schema_version": 1,
+	"id": "music.boss_ogre_king",
+	"type": "music_set",
+	"display_name": "The Ogre King",
+	"description": "P23: the Ogre King's fight, in its own frame (D aeolian, 104 BPM, twelve bars, 27.7 s; it shares no stem with the zone sets). Double-time taiko and a chromatic low-brass ostinato with the King's horn call; from phase 2 a string tremolo grinding a semitone above each chord's root. Enters after its one-bar intro stinger.",
+	"bpm": 104,
+	"beats_per_bar": 4,
+	"bars": 12,
+	"frame": "boss_104",
+	"stems": {
+		"drums": "res://assets/audio/music/boss_drums.ogg",
+		"theme": "res://assets/audio/music/boss_theme.ogg",
+		"frenzy": "res://assets/audio/music/boss_frenzy.ogg"
+	},
+	"layers": {
+		"explore": {
+			"drums": 0,
+			"theme": -2
+		},
+		"combat": {
+			"drums": 0,
+			"theme": -2
+		}
+	},
+	"phase_layers": {
+		"2": {
+			"frenzy": 0
+		}
+	},
+	"intro": "mus.stinger.boss_ogre_king",
+	"crossfade_bars": 1,
+	"layer_fade_beats": 2
+}

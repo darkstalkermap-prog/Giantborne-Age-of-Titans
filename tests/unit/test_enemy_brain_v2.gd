@@ -10,6 +10,7 @@ const S := EnemyBrain.AIState
 const CS := CombatController.State
 const STAGE_1_H := 3.6576
 const STAGE_2_H := 5.4864
+const STAGE_3_H := 7.9248
 
 var releases := 0
 var token_ok := true
@@ -185,6 +186,36 @@ func test_flee_lasts_4_s_and_regroups_only_with_a_leader() -> void:
 	assert_eq(b.state, S.FLEE, "morale back above 45 and a leader, but not before 4 s")
 	_run(b, t + 6 + 240, t + 6 + 246, me, with_leader)
 	assert_eq(b.state, S.APPROACH, "after 4 s with a leader it regroups (%s)" % b.state_name())
+
+
+## M6 gate (the Barrow's wardens): a wolf broken by a giant that outmatches it (tactics.outmatched_rout)
+## routs where it would regroup - leader or not - instead of coming back to harass; facing a stage-1
+## giant it regroups as every unit does.
+func test_an_outmatched_wolf_routs_instead_of_regrouping() -> void:
+	assert_true(bool((GameData.get_record("enemy.wolf").tactics as Dictionary).get("outmatched_rout", false)),
+		"the wolf's record has tactics.outmatched_rout")
+	for case: Array in [[STAGE_3_H, S.ROUTED], [STAGE_1_H, S.APPROACH]]:
+		var b := _wolf()
+		var me := Vector3(0, 0, -8)
+		var snap := _snap(me, Vector3.ZERO, float(case[0]), true)
+		var t := _engaged(b, me, snap)
+		var routs := [0]
+		b.routed.connect(func() -> void: routs[0] += 1)
+		b.morale = 10.0
+		b.perceive(t + 6, snap)
+		_decide(b, t + 6, me)
+		assert_eq(b.state, S.FLEE, "a %.1f m giant: below flee_morale the wolf flees" % float(case[0]))
+		b.morale = 60.0
+		_run(b, t + 12, t + 6 + 246, me, snap)
+		assert_eq(b.state, case[1], "a %.1f m giant (outmatched: %s): after 4 s with its morale back and a leader -> %s (%s)" % [
+			float(case[0]), b.is_outmatched(), S.keys()[case[1]], b.state_name()])
+		assert_eq(routs[0], 1 if case[1] == S.ROUTED else 0, "routed emitted %s" % ("once" if case[1] == S.ROUTED else "never"))
+		if case[1] == S.ROUTED:
+			assert_false(b.aware, "out of the fight: not aware")
+			_run(b, t + 6 + 252, t + 6 + 900, me, snap)
+			assert_eq(b.state, S.ROUTED, "and it never comes back")
+	var soldier := _soldier()
+	assert_false(soldier.routs_when_outmatched(), "a record without the flag regroups as before")
 
 
 func test_without_a_leader_it_routs_after_20_s() -> void:

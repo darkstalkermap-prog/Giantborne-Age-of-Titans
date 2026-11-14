@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "poi.skarn",
+	"type": "poi",
+	"display_name": "Skarn Steading",
+	"level": "level.world",
+	"region": "region.stonehold",
+	"kind": "settlement",
+	"position_m": [440, 76.0, -660],
+	"radius_m": 90,
+	"xp": 40,
+	"map_icon": "settlement",
+	"compass": true,
+	"landmark": "world.stonehold.skarn_longhouse_1",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"max_inner_stage": 6,
+	"green_m": [440, 76.0, -640],
+	"note": "Chief Ulfra's steading of three longhouses."
+}

@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "encounter.drowned_bell_robbers",
+	"type": "encounter",
+	"display_name": "Bell tower robbers",
+	"description": "P25 light content (plan M6-M9 §5.10), kept by P35: ruin robbers camped on the bell tower's west shore (P35 moved them 45 m west of the tower so the bell tower waystone, 24 m from P25's centre, is not among them).",
+	"level": "level.world",
+	"center_m": [-243, 11.27, -217],
+	"activate_radius_m": 90,
+	"deactivate_radius_m": 160,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.drowned.bell_robbers_robber_1", "definition": "enemy.soldier", "position_m": [-245, 11.11, -215], "yaw_deg": 110, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bell_robbers_robber_2", "definition": "enemy.soldier", "position_m": [-235, 9.34, -201], "yaw_deg": 140, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bell_robbers_robber_3", "definition": "enemy.soldier", "position_m": [-250, 12.58, -229], "yaw_deg": 90, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bell_robbers_robber_4", "definition": "enemy.soldier", "position_m": [-241, 10.13, -207], "yaw_deg": 120, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bell_robbers_mage_1", "definition": "enemy.mage", "position_m": [-255, 11.68, -219], "yaw_deg": 100, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.drowned.bell_robbers_mage_2", "definition": "enemy.mage", "position_m": [-249, 10.13, -205], "yaw_deg": 120, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

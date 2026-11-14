@@ -17,10 +17,18 @@ extends RefCounted
 ## set_flags) are granted once (the once-flag reward.<quest short id>.<stage>) and the next stage
 ## starts; after the last one the quest is complete and on_complete_flags are set (first write
 ## wins). The quest's state lives in the flags quest.<short id>.stage and quest.<short id>.done.
-## `marker` is an objective marker id ("" = none); `bot` is the Valley bot's hint for the stage:
+## `marker` is an objective marker id ("" = none); `markers` (P20) several, and `markers_done_when`
+## (M7 polish) {marker id: condition} drops a marker from the objective once its condition holds (an
+## oath lead once its oath is won); `bot` is the Valley bot's hint for the stage:
 ## {"action": one of BOT_ACTIONS (required), "target": an id (optional), any other keys the bot
 ## reads}. tracker_priority (optional, default 0) orders side quests in the HUD tracker (higher
-## first).
+## first). M8 gate (F29): `lead` {"marker", "below_stage", "outside_region"?, "text"?} is the way
+## round a gate the giant's stage cannot pass yet - while the giant is below below_stage and does not
+## stand in outside_region, the objective leads to the lead's marker (an id the level knows: a
+## marker, a checkpoint, a POI) and the tracker names its text ("by the Ironway"). M8 gate fix-up 1:
+## `then` (optional) is the way round's next marker - once the giant is past the lead's marker
+## (within Quests.LEAD_REACH_M of it, or nearer `then` than the marker is) the objective leads there
+## (the Ironway's top, not back down to its foot).
 ##
 ## Semantic rules: the id starts with "quest."; at least one stage; stage ids are unique plain
 ## words; conditions are valid (§2.8.3 shapes); marker and bot target ids and flag ids pass the
@@ -51,7 +59,19 @@ static func fields() -> Dictionary:
 			"objective": U.str_field(true),
 			"complete_when": {"t": "any", "req": true},
 			"marker": U.str_field(),
+			# P20 (plan M6-M9 §2.6): several marker or POI ids (the compass shows them all).
+			"markers": {"t": "array", "items": "string"},
+			# M7 polish: marker id -> a condition; once it holds the marker is done and drops out of
+			# the objective, the compass and the map (an oath lead once its oath is won).
+			"markers_done_when": {"t": "dict"},
 			"xp": U.int_field(0, 100000),
+			# P20: on completion award max(xp, the XP that reaches this level).
+			"xp_floor_level": U.int_field(1, 20),
+			# P20: the journal's line while the stage waits for something ("Waiting: stage 5").
+			"waiting_text": U.str_field(),
+			# M8 gate (F29): the way round a gate the giant's stage cannot pass yet (see the notes).
+			"lead": {"t": "dict", "fields": {"marker": U.str_field(true), "below_stage": U.int_field(2, 10, true),
+				"outside_region": U.ref("region"), "text": U.str_field(), "then": U.str_field()}},
 			"items": DIALOGUE.item_list(),
 			"set_flags": {"t": "dict"},
 			"bot": {"t": "dict"}}},
@@ -95,6 +115,27 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 		var marker: Variant = s.get("marker", "")
 		if typeof(marker) == TYPE_STRING and marker != "":
 			U.check_id_string(marker, sctx + ".marker", out)
+		var markers: Variant = s.get("markers")
+		if typeof(markers) == TYPE_ARRAY:
+			var j := 0
+			for m: Variant in markers:
+				U.check_id_string(m, "%s.markers[%d]" % [sctx, j], out)
+				j += 1
+		# M7 polish: each markers_done_when key is one of the stage's markers, each value a condition.
+		var done_when: Variant = s.get("markers_done_when")
+		if typeof(done_when) == TYPE_DICTIONARY:
+			var named: Array = [marker]
+			if typeof(markers) == TYPE_ARRAY:
+				named.append_array(markers)
+			for m: Variant in done_when:
+				if not named.has(m):
+					out.errors.append("%s.markers_done_when: '%s' is not one of the stage's markers" % [sctx, m])
+				U.check_condition(done_when[m], "%s.markers_done_when.%s" % [sctx, m], out)
+		var lead: Variant = s.get("lead")
+		if typeof(lead) == TYPE_DICTIONARY and typeof(lead.get("marker")) == TYPE_STRING:
+			U.check_id_string(lead.marker, sctx + ".lead.marker", out)
+		if typeof(lead) == TYPE_DICTIONARY and typeof(lead.get("then")) == TYPE_STRING and str(lead.then) != "":
+			U.check_id_string(lead.then, sctx + ".lead.then", out)
 		DIALOGUE.check_flag_map(s.get("set_flags"), sctx + ".set_flags", out)
 		var bot: Variant = s.get("bot")
 		if typeof(bot) == TYPE_DICTIONARY:

@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.valley_ancient",
+	"display_name": "The Barrow, the Ruins and Kingsfall",
+	"description": "P23: the Valley's barrow, ruins, kingsfall districts (plan section 4.3).",
+	"level": "level.valley",
+	"districts": [
+		"barrow",
+		"ruins",
+		"kingsfall"
+	],
+	"regions": [],
+	"pois": [],
+	"context": "",
+	"boss": "",
+	"music": "music.valley_ancient",
+	"ambience": "ambience.stone",
+	"priority": 0
+}

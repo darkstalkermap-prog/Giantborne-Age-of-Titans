@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "weapon.fists",
+	"type": "weapon",
+	"family": "fists",
+	"display_name": "Stoneknuckles",
+	"damage_multiplier": 0.9,
+	"length_m": 1.9,
+	"hit_radius_m": 0.5,
+	"description": "P32 (plan M6-M9 section 5.12): stone-studded bands for a giant's fists, sunk with the drowned bells. They fit a giant of stage 4 to 6: two low hooks, then a third blow that seizes a staggered foe in reach; a hammerfist for the heavy. Their length is the forearm and fist they cover (the sweep from the elbow to the knuckles).",
+	"scales_with_growth": true,
+	"fit_max_stage": 6,
+	"required_stage": 4,
+	"visual_shape": "fists",
+	"light_chain": "ability.fists_light_1",
+	"heavy": "ability.fists_heavy",
+	"upgrade": {"to": "weapon.fists_titan", "cost": [{"item": "item.titan_iron", "count": 2}, {"item": "item.iron_ingot", "count": 2}], "forge_tier": "titan"}
+}

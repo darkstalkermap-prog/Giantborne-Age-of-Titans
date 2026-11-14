@@ -1,0 +1,51 @@
+{
+	"schema_version": 1,
+	"id": "ambience.village",
+	"type": "ambience_set",
+	"display_name": "Thornwick and the fields",
+	"description": "P23: the murmur of people far off, hens, a light wind; a dog, the smith's hammer, someone calling, a cart. The river under the King's Bridge as an emitter.",
+	"beds": [
+		{
+			"cue": "amb.bed_village",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.dog",
+			"weight": 2
+		},
+		{
+			"cue": "amb.hammer",
+			"weight": 2
+		},
+		{
+			"cue": "amb.voice",
+			"weight": 2
+		},
+		{
+			"cue": "amb.cart",
+			"weight": 1
+		}
+	],
+	"spot_interval_s": [
+		5,
+		13
+	],
+	"spot_distance_m": [
+		14,
+		32
+	],
+	"emitters": [
+		{
+			"cue": "amb.river_loop",
+			"level": "level.valley",
+			"position_m": [
+				106,
+				0,
+				-20
+			],
+			"radius_m": 60
+		}
+	]
+}

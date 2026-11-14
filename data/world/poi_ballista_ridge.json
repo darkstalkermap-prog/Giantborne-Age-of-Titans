@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.ballista_ridge",
+	"type": "poi",
+	"display_name": "Ballista Ridge",
+	"level": "level.world",
+	"region": "region.aldmere",
+	"kind": "camp",
+	"position_m": [780, 62.0, 20],
+	"radius_m": 50,
+	"xp": 30,
+	"map_icon": "camp",
+	"compass": true,
+	"landmark": "world.aldmere.ridge_emplacement_1",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "Emplacements on a ridge over the King's Road."
+}

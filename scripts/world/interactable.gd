@@ -19,6 +19,12 @@ extends Node3D
 @export var priority := 50
 ## Disabled interactables are ignored entirely (no prompt, no E).
 @export var enabled := true
+## P26 (plan M6-M9 §2.9): the growth stage the giant needs to use this (0 = any) - a ledge only a
+## stage-6 giant reaches. Below it PlayerInteract shows stage_reason() and emits size_gate_blocked
+## instead of calling interact().
+@export var requires_stage := 0
+## The refusal below requires_stage ("" = "Out of reach. Grow to stage N.").
+@export var stage_message := ""
 
 
 func _notification(what: int) -> void:
@@ -28,6 +34,19 @@ func _notification(what: int) -> void:
 
 func can_interact(_player: GiantPlayer) -> bool:
 	return true
+
+
+## The priority PlayerInteract ranks this by now (lower wins): `priority`, unless a subclass says
+## otherwise (M8 gate fix-up 1: a reward rack whose reward is ready outranks a talker, RewardRack).
+func priority_for(_player: GiantPlayer) -> int:
+	return priority
+
+
+## P26: "" when a giant of `stage` may use this, else its refusal (requires_stage).
+func stage_reason(stage: int) -> String:
+	if requires_stage <= 0 or stage >= requires_stage:
+		return ""
+	return stage_message if stage_message != "" else "Out of reach. Grow to stage %d." % requires_stage
 
 
 ## Shown as a warning when E is pressed while can_interact() is false.

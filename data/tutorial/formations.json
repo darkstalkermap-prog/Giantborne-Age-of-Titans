@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.formations",
+	"type": "tutorial_prompt",
+	"description": "P29 (plan M6-M9 §2.10, §5.14): the first formation that moves against the giant (the toll fort's pikes, the Hollow's shield wall).",
+	"text": "A formation fights as one: its brace strikes your legs along its front rank. Lock the formation with {lock_target}, or switch to its banner and fell it - without the banner the ranks lose heart.",
+	"trigger": {"type": "event", "event": "formation_changed"},
+	"dismiss": {"type": "timeout", "timeout_s": 14},
+	"requires_flags": ["progress.world_entered"],
+	"min_stage": 4,
+	"priority": 13,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.formations.done"
+}

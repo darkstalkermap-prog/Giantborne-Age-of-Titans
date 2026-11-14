@@ -1,0 +1,26 @@
+{
+	"schema_version": 1,
+	"id": "encounter.greywood_hollowmere",
+	"type": "encounter",
+	"display_name": "Hollowmere's woodfolk",
+	"description": "P35 (plan M6-M9 §5.4, §5.10, decision 31): Hollowmere's seven woodfolk and Sedge, their elder (faction woodfolk, neutral: not budgeted while at peace). Sedge meets a giant of stage 4 or less on the pond's south shore among the huts, 27 m from the green, and a bigger one on the green (the director's rule: the settlement's POI has max_inner_stage 4 and green_m).",
+	"level": "level.world",
+	"center_m": [-640, 17.68, -46],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.greywood.hollowmere_folk_1", "definition": "npc.villager", "position_m": [-595.3, 21.21, -31.6], "yaw_deg": 250, "patrol": "", "faction": "woodfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.hollowmere_folk_2", "definition": "npc.villager", "position_m": [-623.7, 21.05, -6.5], "yaw_deg": 200, "patrol": "", "faction": "woodfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.hollowmere_folk_3", "definition": "npc.villager", "position_m": [-656.3, 21.05, -6.5], "yaw_deg": 160, "patrol": "", "faction": "woodfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.hollowmere_folk_4", "definition": "npc.villager", "position_m": [-679, 21.04, -21.9], "yaw_deg": 120, "patrol": "", "faction": "woodfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.hollowmere_folk_5", "definition": "npc.villager", "position_m": [-687.6, 21.28, -46], "yaw_deg": 90, "patrol": "", "faction": "woodfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.hollowmere_folk_6", "definition": "npc.villager", "position_m": [-667.3, 21.19, -80.4], "yaw_deg": 40, "patrol": "", "faction": "woodfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.hollowmere_folk_7", "definition": "npc.villager", "position_m": [-631.7, 21.24, -87.4], "yaw_deg": 0, "patrol": "", "faction": "woodfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.sedge", "definition": "npc.sedge", "position_m": [-616, 20.68, -4], "yaw_deg": 160, "patrol": "", "faction": "woodfolk", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

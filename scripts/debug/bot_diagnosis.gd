@@ -17,6 +17,12 @@ extends RefCounted
 ##      lying somewhere, and so on through all / any / not.
 ## world_blocked = no path, or a condition that can no longer hold: a softlock, a stability failure.
 ## bot_failed = both fine: the bot could not do something possible (reported, tuned in P17b).
+## M9 gate (final; the README's item 5): the path check asks as a walker does (reaches_far): a far query on the world
+## stops at its search distance (level_world's nav_query.far_distance_m, 300 m) and answers with the part it found, so a
+## goal farther along the navmesh than that is carried on from where the answer stopped. The integration's stage-4
+## novice ended "world_blocked" at its 6th death in Fort Aldmere's bailey, 6 m inside the broken gate: its one query to
+## the herald 340 m off stopped 25-35 m short of him (out through the gate and down the road is longer than 300 m),
+## though the titan path out through the gate and on to the herald was there.
 ##
 ## check_invariants() runs every tick of a bot run; each failure is a line of text, and any failure
 ## ends the run with exit code 3 (Autopilot).
@@ -33,6 +39,17 @@ const MIN_PLAYER_Y := -50.0
 const MAX_SCREEN_OPEN_S := 2.0
 const NODE_GROWTH_CYCLES := 5
 const NODE_GROWTH_FRACTION := 0.10
+## P38: a formation's group lock id (PlayerTargeting's P30 prefix).
+const GROUP_LOCK_PREFIX := "formation:"
+## The start of the encounter-budget failure (the world bot replaces it with the spawn rule).
+const BUDGET_FAILURE_PREFIX := "active combatants "
+## P38 (plan M6-M9 §6.1): the world's invariants.
+const MAX_LOADED_CHUNKS := 25
+const MAX_REGIONS_PER_LAYER := 25
+const MAX_SAVE_BYTES := 200 * 1024
+## How long a world event may run with its centre unloaded before its timer counting counts (the
+## WanderDirector updates every few ticks).
+const EVENT_UNLOADED_GRACE_TICKS := 12
 
 
 # --------------------------------------------------------------------------- diagnosis
@@ -59,7 +76,7 @@ static func diagnose(objective: Dictionary, player: GiantPlayer, level: LevelRoo
 	if where.is_finite():
 		path = path_check(player, level, where, use_radius)
 		if not bool(path.get("reachable", true)) and not came_from.is_empty():
-			var earlier := reachable_from_any(level, came_from, where, player.nav_layers, use_radius)
+			var earlier := reachable_from_any(level, came_from, where, layers_for(player, level), use_radius)
 			if earlier.is_finite():
 				path["reachable_from_earlier"] = _v(earlier)
 	else:
@@ -71,10 +88,10 @@ static func diagnose(objective: Dictionary, player: GiantPlayer, level: LevelRoo
 		if path.has("reachable_from_earlier"):
 			(out.evidence as Array).append(("no path on layers %d from where the giant stands to %s, but there is one " \
 				+ "from %s where it was earlier: it left the joined navmesh (a pocket the bake did not connect)") % [
-				player.nav_layers, _v(where), path.reachable_from_earlier])
+				layers_for(player, level), _v(where), path.reachable_from_earlier])
 		else:
 			out.classification = WORLD_BLOCKED
-			(out.evidence as Array).append("no path on layers %d to %s" % [player.nav_layers, _v(where)])
+			(out.evidence as Array).append("no path on layers %d to %s" % [layers_for(player, level), _v(where)])
 	if not bool(cond.get("satisfiable", true)):
 		out.classification = WORLD_BLOCKED
 		(out.evidence as Array).append("condition cannot hold: %s" % cond.get("why", ""))
@@ -98,8 +115,7 @@ static func _condition_of(objective: Dictionary) -> Variant:
 ## count as open. {"reachable", "direct", "via_link", "from", "goal", "snapped", "snap_gap_m",
 ## "layers"}.
 static func path_check(player: GiantPlayer, level: LevelRoot, goal: Vector3, use_radius := REACH_TOLERANCE_M) -> Dictionary:
-	var map := level.nav_map()
-	var layers := player.nav_layers
+	var layers := layers_for(player, level)
 	var from := player.global_position
 	var snapped := snap_to_layer(level, goal, layers)
 	var gap := _flat(snapped, goal)
@@ -108,7 +124,7 @@ static func path_check(player: GiantPlayer, level: LevelRoot, goal: Vector3, use
 	if not snapped.is_finite() or gap > use_radius + 1e-3:
 		out["note"] = "the objective is %.1f m from the nearest point of the giant's layer" % gap
 		return out
-	if reaches(map, from, snapped, layers):
+	if reaches_far(level, from, snapped, layers):
 		out.direct = true
 		out.reachable = true
 		return out
@@ -116,44 +132,71 @@ static func path_check(player: GiantPlayer, level: LevelRoot, goal: Vector3, use
 		var a := link.to_global(link.start_position)
 		var b := link.to_global(link.end_position)
 		for pair: Array in [[a, b], [b, a]]:
-			if reaches(map, from, pair[0], layers, LINK_TOLERANCE_M) and reaches(map, pair[1], snapped, layers):
+			if reaches_far(level, from, pair[0], layers, LINK_TOLERANCE_M) and reaches_far(level, pair[1], snapped, layers):
 				out.via_link = str(link.get_path())
 				out.reachable = true
 				return out
 	return out
 
 
+## The navigation layers a giant's paths use on `level`: its nav layers, and (P38) in a streamed world
+## the titan layer's query mask with the gate bits its stage has reached (PlayerGrowth.nav_query_mask).
+static func layers_for(player: GiantPlayer, level: Node) -> int:
+	if level is WorldRoot and player.growth != null:
+		return player.growth.nav_query_mask()
+	return player.nav_layers
+
+
 ## The newest of `points` from which a path on `layers` reaches `goal` (snapped to the layer, within
 ## `use_radius`), else Vector3.INF.
 static func reachable_from_any(level: LevelRoot, points: PackedVector3Array, goal: Vector3, layers: int,
 		use_radius := REACH_TOLERANCE_M) -> Vector3:
-	var map := level.nav_map()
 	var snapped := snap_to_layer(level, goal, layers)
 	if not snapped.is_finite() or _flat(snapped, goal) > use_radius + 1e-3:
 		return Vector3.INF
 	for i in range(points.size() - 1, -1, -1):
-		if reaches(map, points[i], snapped, layers):
+		if reaches_far(level, points[i], snapped, layers):
 			return points[i]
 	return Vector3.INF
 
 
-## The point of the giant's layer nearest `pos` (the lowest set bit's region), else `pos`.
+## The point of the giant's layer nearest `pos` (NavQuery.closest_point: the lowest set bit's
+## region here, the layer's own map in a streamed world), else `pos`.
 static func snap_to_layer(level: LevelRoot, pos: Vector3, layers: int) -> Vector3:
-	var bit := 1
-	while bit <= 255 and (layers & bit) == 0:
-		bit <<= 1
-	var region := level.nav_region(bit)
-	if not region.is_valid():
-		return pos
-	return NavigationServer3D.region_get_closest_point(region, pos)
+	var p := NavQuery.closest_point(level, pos, layers)
+	return p if p.is_finite() else pos
 
 
-## True when a path on `layers` from `a` ends within `tolerance` m of `b` (horizontally).
-static func reaches(map: RID, a: Vector3, b: Vector3, layers: int, tolerance := REACH_TOLERANCE_M) -> bool:
-	if not map.is_valid():
-		return false
-	var p := NavigationServer3D.map_get_path(map, a, b, true, layers)
+## True when a path on `layers` from `a` ends within `tolerance` m of `b` (horizontally): a
+## NavQuery path on the level's map for the layers (the far purpose).
+static func reaches(level: LevelRoot, a: Vector3, b: Vector3, layers: int, tolerance := REACH_TOLERANCE_M) -> bool:
+	var p := NavQuery.path(level, a, b, layers, NavQuery.PURPOSE_FAR)
 	return p.size() > 0 and _flat(p[p.size() - 1], b) <= tolerance
+
+
+## M9 gate (final): how many far queries reaches_far chains, each from where the last stopped.
+const FAR_LEGS := 4
+## M9 gate (final): a leg whose answer ends nearer than this to where it began made no progress (the nearest point of
+## a part of the navmesh the goal is not in): the chain stops there.
+const FAR_PROGRESS_M := 1.0
+
+
+## M9 gate (final; the diagnosis only - the bots keep reaches()): reaches(), carried on from where a far query's answer
+## stopped (at most FAR_LEGS queries) - a far query stops at its search distance (nav_query.far_distance_m on the
+## world) with the part it found - until the goal is reached or a leg makes no progress.
+static func reaches_far(level: LevelRoot, a: Vector3, b: Vector3, layers: int, tolerance := REACH_TOLERANCE_M) -> bool:
+	var from := a
+	for leg in FAR_LEGS:
+		var p := NavQuery.path(level, from, b, layers, NavQuery.PURPOSE_FAR)
+		if p.is_empty():
+			return false
+		var end := p[p.size() - 1]
+		if _flat(end, b) <= tolerance:
+			return true
+		if _flat(end, from) < FAR_PROGRESS_M:
+			return false
+		from = end
+	return false
 
 
 ## Disabled NavigationLink3D nodes of the level on `layers` (breakable props not yet broken).
@@ -260,6 +303,10 @@ static func _destroy_possible(world_id: String, player: GiantPlayer, level: Leve
 				prop = n
 				break
 	if prop == null:
+		if WorldState.is_destroyed(world_id):
+			return {"satisfiable": true, "why": "destroyed"}
+		if _index_has(level, "props", world_id):
+			return {"satisfiable": true, "why": "%s stands in an unloaded chunk (the index knows it)" % world_id}
 		return {"satisfiable": false, "why": "no prop %s" % world_id}
 	if prop.destroyed:
 		return {"satisfiable": true, "why": "destroyed"}
@@ -335,6 +382,16 @@ static func _item_possible(item_id: String, level: LevelRoot) -> Dictionary:
 static func _stage_possible(stage: int, player: GiantPlayer, level: LevelRoot) -> Dictionary:
 	if player.current_growth_stage() >= stage:
 		return {"satisfiable": true, "why": "at stage %d" % player.current_growth_stage()}
+	# P38: a streamed world's shrines in unloaded chunks: the shrine records of the level's index
+	var idx := _index_of(level)
+	if idx != null:
+		for id in idx.checkpoint_ids():
+			if str(idx.checkpoint(id).get("kind", "")) != "shrine":
+				continue
+			# a world shrine's node world.shrine.<name> runs the record shrine.world_<name>
+			var rec := GameData.get_record("shrine.world_" + id.trim_prefix("world.shrine."))
+			if bool(rec.get("allows_growth", false)) and int(rec.get("max_stage", 1)) >= stage:
+				return {"satisfiable": true, "why": "%s grows to stage %d" % [id, int(rec.get("max_stage", 1))]}
 	for n in level.get_tree().get_nodes_in_group(Shrine.GROUP):
 		var s := n as Shrine
 		if s == null or not level.is_ancestor_of(s):
@@ -360,9 +417,9 @@ static func check_invariants(tree: SceneTree, player: GiantPlayer, level: LevelR
 			out.append("player fell out of the world (y %.1f)" % pos.y)
 		var lock_id := player.lock.target_id
 		if lock_id != "":
-			var t := Sim.get_entity(lock_id)
-			if t == null or not t.is_alive():
-				out.append("lock target %s is %s" % [lock_id, "gone" if t == null else "dead"])
+			var why := lock_failure(lock_id, Sim.tick)
+			if why != "":
+				out.append(why)
 	if Sim.pending_hit_count() >= MAX_PENDING_HITS:
 		out.append("pending hits %d >= %d" % [Sim.pending_hit_count(), MAX_PENDING_HITS])
 	var pool := tree.get_first_node_in_group("debris_pool") as DebrisPool if tree != null else null
@@ -381,7 +438,7 @@ static func check_invariants(tree: SceneTree, player: GiantPlayer, level: LevelR
 	if level != null and is_instance_valid(level):
 		var d := level.director()
 		if d != null and d.active_combatant_count() > d.max_active_enemies:
-			out.append("active combatants %d > %d" % [d.active_combatant_count(), d.max_active_enemies])
+			out.append(BUDGET_FAILURE_PREFIX + "%d > %d" % [d.active_combatant_count(), d.max_active_enemies])
 	if tree != null:
 		var seen := {}
 		for group: String in ["enemies", "player", "npcs", "dummies"]:
@@ -406,6 +463,40 @@ static func check_invariants(tree: SceneTree, player: GiantPlayer, level: LevelR
 			if s != null and s.open_seconds() > MAX_SCREEN_OPEN_S:
 				out.append("a pausing screen (%s) has been open %.1f s" % [_top_name(s), s.open_seconds()])
 	return out
+
+
+## "" when the lock id names something alive: an entity, or (P38, stages 4-6) a formation's group
+## ("formation:<id>": a live formation with a living member); else the invariant's failure line.
+## M9 gate (FOLLOWUPS "the world bot's lock invariant fails for one tick when a locked formation's last
+## member routs"): given the tick it is checked at, a group lock whose formation has just lost its last
+## living member passes in that tick and the next - a rout is no death, so the death signal does not drop
+## the lock; the giant drops it in its own next step (PlayerTargeting._p30_maintain, "target_died"),
+## after the Sim's tick this invariant runs on - and fails if it is still held after that. In the M9
+## gate's runs the toll fort's pikes routing under a group lock ended a peaceful novice's run at 410 s.
+static var _memberless_lock := ""
+static var _memberless_since := -1
+
+
+static func lock_failure(lock_id: String, tick := -1) -> String:
+	if lock_id.begins_with(GROUP_LOCK_PREFIX):
+		var fid := lock_id.trim_prefix(GROUP_LOCK_PREFIX)
+		for f in Formation.live():
+			if f.id == fid:
+				if f.living_count() > 0:
+					_memberless_lock = ""
+					return ""
+				if tick >= 0:
+					if _memberless_lock != lock_id or tick < _memberless_since:
+						_memberless_lock = lock_id
+						_memberless_since = tick
+					if tick - _memberless_since <= 1:
+						return ""
+				return "lock target %s has no living member" % lock_id
+		return "lock target %s is gone" % lock_id
+	var t := Sim.get_entity(lock_id)
+	if t == null or not t.is_alive():
+		return "lock target %s is %s" % [lock_id, "gone" if t == null else "dead"]
+	return ""
 
 
 static func _top_name(s: ScreenStack) -> String:
@@ -441,3 +532,179 @@ static func _v(p: Vector3) -> Array:
 	if not p.is_finite():
 		return []
 	return [snappedf(p.x, 0.1), snappedf(p.y, 0.1), snappedf(p.z, 0.1)]
+
+
+# --------------------------------------------------------------------------- P38: the world
+
+## The level's world index (LevelRoot.index()), or null.
+static func _index_of(level: Node) -> WorldIndex:
+	if level == null or not is_instance_valid(level) or not level.has_method("index"):
+		return null
+	return level.call("index") as WorldIndex
+
+
+## True when the level's index lists `id` in `table` (props, areas, markers, checkpoints, ...).
+static func _index_has(level: Node, table: String, id: String) -> bool:
+	var idx := _index_of(level)
+	if idx == null or id == "":
+		return false
+	var t: Variant = idx.get(table)
+	return typeof(t) == TYPE_DICTIONARY and (t as Dictionary).has(id)
+
+
+## The world's invariants (plan M6-M9 §6.1), beside check_invariants: formation members within the
+## cap; no living encounter member in a chunk that is not loaded (one queued for unload counts once its
+## chunk_unloading has fired: ChunkStreamer.unload_pending); at most MAX_LOADED_CHUNKS chunks
+## loaded; at most MAX_REGIONS_PER_LAYER navigation regions per layer and gate bit on each layer map; no
+## chunk reloaded within its thrash window (the streamer's thrash count does not grow); no two world
+## events in play at once (W23, P39f: the WanderDirector's rule since the M8 gate's F2 - an event left
+## behind, waiting or suspended far off or a column marching the abstract, is running but not in play, and
+## another may start; a director without in_play() counts every running event); no event's fail timer
+## counting while its centre chunk is unloaded; the save within MAX_SAVE_BYTES. `state` carries what one
+## tick needs from the last ({} at first; the function fills it). `full` adds the costly scans (members,
+## regions), which the bot runs every half second.
+static func check_world_invariants(tree: SceneTree, world: Node, state: Dictionary, save_bytes: int,
+		full := true) -> PackedStringArray:
+	var out := PackedStringArray()
+	if world == null or not is_instance_valid(world) or not ("streamer" in world):
+		return out
+	var s := world.get("streamer") as ChunkStreamer
+	if s == null:
+		return out
+	var loaded := s.loaded_chunks().size()
+	if loaded > MAX_LOADED_CHUNKS:
+		out.append("%d chunks loaded at once (at most %d)" % [loaded, MAX_LOADED_CHUNKS])
+	var thrash := int(s.thrash)
+	if int(state.get("thrash_seen", 0)) < thrash and state.get("streamer_id", 0) == s.get_instance_id():
+		out.append("a chunk reloaded within %.0f s of its unload (thrash %d)" % [ChunkStreamer.THRASH_WINDOW_S, thrash])
+	state["thrash_seen"] = thrash
+	state["streamer_id"] = s.get_instance_id()
+	var d: EncounterDirector = world.call("director") if world.has_method("director") else null
+	if d != null and d.formation_member_count() > d.max_formation_members:
+		out.append("formation members %d > %d" % [d.formation_member_count(), d.max_formation_members])
+	if save_bytes > MAX_SAVE_BYTES:
+		out.append("the save is %d bytes (at most %d)" % [save_bytes, MAX_SAVE_BYTES])
+	var wd := tree.get_first_node_in_group(WanderDirector.GROUP) if tree != null else null
+	if wd != null and "events" in wd:
+		var playing := PackedStringArray()
+		var behind := PackedStringArray()
+		var by_rule := wd.has_method("in_play")
+		var timers: Dictionary = state.get("event_timers", {})
+		for id: String in wd.get("events"):
+			var e := (wd.get("events") as Dictionary)[id] as WorldEvent
+			if e == null:
+				continue
+			if e.is_running():
+				if not by_rule or bool(wd.call("in_play", e)):
+					playing.append(id)
+				else:
+					behind.append("%s (%s, left behind)" % [id, e.state])
+			var chunk := s.chunk_at(e.centre)
+			var unloaded := chunk != "" and not s.is_ready(chunk)
+			var prev: Array = timers.get(id, [e.elapsed_s, 0])
+			var unloaded_ticks := int(prev[1]) + 1 if unloaded else 0
+			if unloaded_ticks > EVENT_UNLOADED_GRACE_TICKS and e.elapsed_s > float(prev[0]) + 1e-6:
+				out.append("world event %s: its fail timer runs (%.2f s) while its centre chunk %s is unloaded" % [id, e.elapsed_s, chunk])
+			timers[id] = [e.elapsed_s, unloaded_ticks]
+		state["event_timers"] = timers
+		if playing.size() > 1:
+			out.append("%d world events in play at once (%s)" % [playing.size(), ", ".join(playing + behind)])
+	if not full:
+		return out
+	if d != null:
+		for enc in d.encounter_ids():
+			for id in d.members_of(enc):
+				if d.member_status(id) != EncounterDirector.SPAWNED:
+					continue
+				var n := d.spawned(id)
+				if n == null or not is_instance_valid(n) or not n.is_inside_tree():
+					continue
+				var ent: Variant = n.get("entity")
+				if ent is CombatEntity and not (ent as CombatEntity).is_alive():
+					continue
+				var c := s.chunk_at(n.global_position)
+				# M9 gate (integration): a chunk queued for unload whose chunk_unloading has not fired yet is
+				# no failure - the director despawns its members at that step (integ_assisted's mixed run:
+				# the fort gate's garrison in c6_3, queued one step behind c6_2, at a half-second scan).
+				if c != "" and not s.is_loaded(c) and not s.unload_pending(c):
+					out.append("%s (alive) stands in %s, which is not loaded" % [id, c])
+	if world.has_method("nav_layers") and world.has_method("nav_map"):
+		for layer: int in world.call("nav_layers"):
+			var m: RID = world.call("nav_map", layer)
+			if not m.is_valid():
+				continue
+			var per := {}
+			for r: RID in NavigationServer3D.map_get_regions(m):
+				var bits := NavigationServer3D.region_get_navigation_layers(r)
+				per[bits] = int(per.get(bits, 0)) + 1
+			for bits: int in per:
+				if int(per[bits]) > MAX_REGIONS_PER_LAYER:
+					out.append("the layer-%d map holds %d regions of layers %d (at most %d)" % [layer, int(per[bits]), bits,
+						MAX_REGIONS_PER_LAYER])
+	return out
+
+
+## The world's diagnosis of a breach (plan M6-M9 §6.1 "Diagnosis"): diagnose() (a path on the giant's
+## layers where the goal's chunk is loaded, the condition's satisfiability) plus the index route - a
+## road route allowed at the giant's stage from it to the goal - and per-chunk path checks of that
+## route's consecutive points in chunks that are loaded and ready (a direct edge is walked straight and
+## not asked). world_blocked when no road route exists at this stage for a goal beyond the loaded
+## ground, when a loaded leg of the route has no path between its points (and none from where the
+## giant was earlier), or when the condition cannot hold; bot_failed otherwise.
+static func diagnose_world(objective: Dictionary, player: GiantPlayer, world: Node, reason: String, goal: Vector3,
+		use_radius: float, came_from: PackedVector3Array, layers: int) -> Dictionary:
+	var out := diagnose(objective, player, world as LevelRoot, reason, goal, use_radius, came_from)
+	if player == null or not is_instance_valid(player) or world == null or not is_instance_valid(world) \
+			or not goal.is_finite():
+		return out
+	var idx := _index_of(world)
+	var s: ChunkStreamer = world.get("streamer") if "streamer" in world else null
+	if idx == null or s == null:
+		return out
+	var from := player.global_position
+	var stage := player.current_growth_stage()
+	var goal_chunk := s.chunk_at(goal)
+	var goal_loaded := goal_chunk != "" and s.is_ready(goal_chunk)
+	var rp := BotRoute.road_path(idx, from, goal, stage)
+	var nodes: PackedInt32Array = rp.nodes
+	var route := {"stage": stage, "road_nodes": nodes.size(), "length_m": snappedf(float(rp.length), 0.1),
+		"goal_chunk": goal_chunk, "goal_loaded": goal_loaded, "gaps": []}
+	out["route"] = route
+	var path: Dictionary = out.get("path", {})
+	if not goal_loaded:
+		# The navmesh at the goal is not loaded: diagnose()'s path check could not answer for it.
+		path["reachable"] = true
+		path["note"] = "the goal's chunk %s is not loaded: the road route answers" % goal_chunk
+		out["path"] = path
+		var ev: Array = out.evidence
+		for i in range(ev.size() - 1, -1, -1):
+			if str(ev[i]).begins_with("no path on layers"):
+				ev.remove_at(i)
+		if str(out.classification) == WORLD_BLOCKED and bool((out.get("condition", {}) as Dictionary).get("satisfiable", true)):
+			out.classification = BOT_FAILED
+		if nodes.is_empty() and BotRoute.flat_dist(from, goal) > BotRoute.LEG_MAX_M:
+			out.classification = WORLD_BLOCKED
+			ev.append("no road route at stage %d from %s to %s" % [stage, _v(from), _v(goal)])
+	var pos := idx.road_nodes()
+	var edges: PackedInt32Array = rp.edges
+	for i in range(1, nodes.size()):
+		var a := pos[nodes[i - 1]]
+		var b := pos[nodes[i]]
+		if BotRoute.edge_direct(idx, edges[i - 1]):
+			continue
+		var ca := s.chunk_at(a)
+		var cb := s.chunk_at(b)
+		if ca == "" or cb == "" or not s.is_ready(ca) or not s.is_ready(cb):
+			continue
+		if not reaches(world as LevelRoot, a, b, layers, 6.0):
+			(route.gaps as Array).append({"from": _v(a), "to": _v(b), "chunks": [ca, cb]})
+	if not (route.gaps as Array).is_empty():
+		var gap: Dictionary = (route.gaps as Array)[0]
+		(out.evidence as Array).append("the road route has no path on layers %d between %s and %s (%s)" % [layers,
+			gap.from, gap.to, ", ".join(PackedStringArray(gap.chunks))])
+		if not path.has("reachable_from_earlier"):
+			out.classification = WORLD_BLOCKED
+	if str(out.classification) == BOT_FAILED and (out.evidence as Array).filter(func(l: Variant) -> bool:
+			return str(l).contains("the bot failed")).is_empty():
+		(out.evidence as Array).append("a road route exists at stage %d and the condition can still hold: the bot failed" % stage)
+	return out

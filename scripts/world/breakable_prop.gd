@@ -32,6 +32,22 @@ extends StaticBody3D
 ## Required children: CombatEntity, one Node3D per stage visual (Intact/Broken; structural: the
 ## damage_stages' `visual` names), Block* CollisionShape3Ds, Hurtboxes/*, optional NavLink*
 ## (NavigationLink3D, disabled until the prop breaks).
+##
+## Size gates (P26, plan M6-M9 §2.9, §5.5, decision 18):
+##   * indestructible (this placement's export, or the record's key): every hit is refused
+##     ("indestructible") with the locked message - quest-critical props such as the Kings' Door,
+##     which only open_when_flag opens.
+##   * trample_stage (record; 0 = never): a giant of that stage or more walking into the prop
+##     (PlayerMotor reads its slide collisions) deals it one trample hit through the normal hit path
+##     (category melee, TRAMPLE_DAMAGE): it breaks and Events.trampled(tick, world_id, entity_id)
+##     goes out. The damage is the player's like a blow's, so FactionState counts a trampled house of
+##     a faction as an offence (its node's faction and prop_tags), and a fence as none.
+##   * heave: a prop whose record requires_permission "heave" (rockfalls, fallen titan-trees, toppled
+##     statues) breaks to any accepted blow of a giant with that permission (stage 5; the existing
+##     permission rule), and heave(attacker) - the HeavePoint interaction, the bots - heaves it aside
+##     with one heave hit. A smaller giant is refused with the locked message.
+##   * A player hit refused for its stage or permission also emits Events.size_gate_blocked(tick,
+##     world_id, the stage it needs, the message), with the locked message's 3 s throttle.
 
 const BLOCK_PREFIX := "Block"
 const NAV_LINK_PREFIX := "NavLink"
@@ -39,6 +55,11 @@ const DEFAULT_DEBRIS_LENGTH_M := 8.0
 ## A refused player hit shows the locked message at most once in this many ticks (3 s).
 const LOCKED_MESSAGE_GAP_TICKS := 180
 const PROTECTED_MESSAGE := "This cannot be broken."
+## P26: the damage of a trample or heave hit (enough for any prop that can be trampled or heaved).
+const TRAMPLE_DAMAGE := 9999.0
+const TRAMPLE_ACTION := "trample"
+const HEAVE_ACTION := "heave"
+const HEAVE_PERMISSION := "heave"
 ## The implicit stages of a plain breakable.
 const BREAKABLE_STAGES := [
 	{"id": "intact", "at_or_below_frac": 1.0, "visual": "Intact"},
@@ -49,6 +70,9 @@ const BREAKABLE_STAGES := [
 @export var world_id := ""
 ## Per-instance loot table override (P12); "" = the record's loot_table.
 @export var loot_table := ""
+## P26: no hit ever breaks this placement (quest-critical props); the record's indestructible key
+## does the same for every placement of the record.
+@export var indestructible := false
 
 @onready var entity: CombatEntity = $CombatEntity
 
@@ -63,6 +87,10 @@ var stage_index := 0
 var last_rejection := ""
 ## Locked messages shown so far (tests).
 var locked_messages := 0
+## P26: size_gate_blocked events sent for refused player hits (tests).
+var gate_events := 0
+## P26: the tick a trample or heave hit was queued on (it breaks the prop in that tick's resolution).
+var _special_tick := -1
 var _last_locked_tick := -1000000
 var _nav_links: Array[NavigationLink3D] = []
 
@@ -144,9 +172,19 @@ func open_flag() -> String:
 
 func locked_message() -> String:
 	var msg := str(record.get("locked_message", ""))
-	if msg == "" and bool(record.get("protected", false)):
+	if msg == "" and (bool(record.get("protected", false)) or is_indestructible()):
 		return PROTECTED_MESSAGE
 	return msg
+
+
+## P26: true when no hit breaks this prop (the placement's export or the record's key).
+func is_indestructible() -> bool:
+	return indestructible or bool(record.get("indestructible", false))
+
+
+## P26: the stage whose giant tramples this prop by walking into it (0 = never).
+func trample_stage() -> int:
+	return int(record.get("trample_stage", 0))
 
 
 func nav_links() -> Array[NavigationLink3D]:
@@ -186,6 +224,8 @@ func accepts_hit(hit: HitEvent) -> bool:
 func rejection_reason(hit: HitEvent) -> String:
 	if destroyed:
 		return "destroyed"
+	if is_indestructible():
+		return "indestructible"
 	if bool(record.get("protected", false)):
 		return "protected"
 	var categories: Array = record.get("accepted_attack_categories", [])
@@ -232,7 +272,8 @@ func _on_hit_taken(result: HitResult) -> void:
 	WorldState.record_damage(world_id, stage_index, health())
 
 
-## A refused player hit: the locked message (throttled). Hits on a wreck say nothing.
+## A refused player hit: the locked message (throttled). Hits on a wreck say nothing. P26: a hit
+## refused for the attacker's stage or permission is a size gate too (Events.size_gate_blocked).
 func _on_refused(hit: HitEvent) -> void:
 	if hit == null or last_rejection == "destroyed" or not is_player_id(hit.attacker_id):
 		return
@@ -242,6 +283,144 @@ func _on_refused(hit: HitEvent) -> void:
 	_last_locked_tick = Sim.tick
 	locked_messages += 1
 	Events.hud_message.emit(msg, "warn")
+	var needed := needed_stage(last_rejection)
+	if needed > 0:
+		gate_events += 1
+		Events.size_gate_blocked.emit(Sim.tick, world_id, needed, msg)
+
+
+## P26: the growth stage a refusal of this kind asks for: the record's min_growth_stage for "stage",
+## the first stage that grants requires_permission for "permission", 0 for any other reason.
+func needed_stage(reason: String) -> int:
+	match reason:
+		"stage":
+			return int(record.get("min_growth_stage", 1))
+		"permission":
+			return PlayerGrowth.stage_for_permission(str(record.get("requires_permission", "")))
+	return 0
+
+
+# --------------------------------------------------------------------------- trample and heave (P26)
+
+## True when a giant of `stage` tramples this prop by walking into it now: intact, a trample stage
+## at or below `stage`, breakable by a melee blow of that giant (not indestructible or protected).
+func can_trample(stage: int) -> bool:
+	var need := trample_stage()
+	if destroyed or special_hit_pending() or need <= 0 or stage < need:
+		return false
+	return _special_hit_reason(stage, PackedStringArray()) == ""
+
+
+## The giant `attacker` (an actor with an entity and a growth stage) walked into this prop: when it
+## may trample it, one trample hit through the hit queue (it breaks this tick) and Events.trampled.
+## Returns whether it trampled.
+func trample(attacker: Node3D) -> bool:
+	var stage := _stage_of(attacker)
+	if attacker == null or not can_trample(stage):
+		return false
+	if not _queue_special_hit(attacker, TRAMPLE_ACTION):
+		return false
+	Events.trampled.emit(Sim.tick, world_id, _entity_id_of(attacker))
+	return true
+
+
+## True when this prop is heaved aside (its record requires_permission "heave").
+func is_heave_prop() -> bool:
+	return str(record.get("requires_permission", "")) == HEAVE_PERMISSION
+
+
+## Heaves the prop aside for `attacker`: {ok, reason, message}. Refused ("not_heavable", "destroyed",
+## or the hit's rejection: "permission" when the giant is too small, with the locked message and a
+## size_gate_blocked event); otherwise one heave hit that breaks it this tick.
+func heave(attacker: Node3D) -> Dictionary:
+	if not is_heave_prop():
+		return {"ok": false, "reason": "not_heavable", "message": ""}
+	if destroyed or special_hit_pending():
+		return {"ok": false, "reason": "destroyed", "message": ""}
+	var why := _special_hit_reason(_stage_of(attacker), attacker_permissions(_entity_id_of(attacker)))
+	if why != "":
+		var msg := locked_message()
+		last_rejection = why
+		var needed := needed_stage(why)
+		if needed > 0 and is_player_id(_entity_id_of(attacker)):
+			gate_events += 1
+			Events.size_gate_blocked.emit(Sim.tick, world_id, needed, msg)
+		if msg != "":
+			Events.hud_message.emit(msg, "warn")
+		return {"ok": false, "reason": why, "message": msg}
+	_queue_special_hit(attacker, HEAVE_ACTION)
+	return {"ok": true, "reason": "", "message": ""}
+
+
+## Why a trample or heave (a melee hit of a giant of `stage` with `perms`) would be refused ("" = it
+## would land); the order of rejection_reason.
+func _special_hit_reason(stage: int, perms: Array) -> String:
+	if destroyed:
+		return "destroyed"
+	if is_indestructible():
+		return "indestructible"
+	if bool(record.get("protected", false)):
+		return "protected"
+	if not (record.get("accepted_attack_categories", []) as Array).has("melee"):
+		return "category"
+	if not (record.get("required_tags", []) as Array).is_empty():
+		return "tags"
+	if stage < int(record.get("min_growth_stage", 1)):
+		return "stage"
+	var permission := str(record.get("requires_permission", ""))
+	if permission != "" and not perms.has(permission):
+		return "permission"
+	return ""
+
+
+## Queues the trample or heave hit of `attacker` on this prop (category melee, TRAMPLE_DAMAGE, no
+## size scaling), resolved with the tick's other hits.
+func _queue_special_hit(attacker: Node3D, action_id: String) -> bool:
+	var attacker_id := _entity_id_of(attacker)
+	if attacker_id == "" or entity == null:
+		return false
+	var e := HitEvent.new()
+	e.tick = Sim.tick
+	e.instance_id = Sim.new_instance_id()
+	e.attacker_id = attacker_id
+	e.target_id = entity.entity_id
+	e.action_id = action_id
+	e.power = TRAMPLE_DAMAGE
+	e.attacker_stat = 0.0
+	e.size_policy = "none"
+	e.damage_split = {"physical": 1.0}
+	e.tags = PackedStringArray(["Melee"])
+	e.category = "melee"
+	e.attacker_growth_stage = _stage_of(attacker)
+	var a_entity: Variant = attacker.get("entity")
+	if a_entity is CombatEntity and (a_entity as CombatEntity).combatant != null:
+		e.attacker_height_m = (a_entity as CombatEntity).combatant.height_m
+	e.attacker_position = attacker.global_position
+	e.hit_point = global_position
+	e.distance = attacker.global_position.distance_to(global_position)
+	Sim.queue_hit(e)
+	_special_tick = Sim.tick
+	return true
+
+
+## True while a trample or heave hit queued this tick has not resolved yet.
+func special_hit_pending() -> bool:
+	return _special_tick == Sim.tick
+
+
+static func _stage_of(actor: Node) -> int:
+	if actor != null and "growth_stage" in actor:
+		return int(actor.get("growth_stage"))
+	return 1
+
+
+static func _entity_id_of(actor: Node) -> String:
+	if actor == null:
+		return ""
+	var e: Variant = actor.get("entity")
+	if e is CombatEntity:
+		return (e as CombatEntity).entity_id
+	return ""
 
 
 func on_entity_died(killer_id: String) -> void:

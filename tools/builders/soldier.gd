@@ -69,6 +69,8 @@ static func build_soldier(kit: SceneKit) -> Node:
 			shoulder.add_child(kit.box("Guard", Vector3(0.22, 0.04, 0.05), Vector3(0, 0, -0.56), "steel"))
 			shoulder.add_child(kit.box("Blade", Vector3(0.07, 0.02, 0.95), Vector3(0, 0, -0.5 - 0.475), "steel"))
 		body.add_child(shoulder)
+	# P22 (decision 9): one vertex-coloured mesh per pivot, the sword its own: 6 meshes, was 16.
+	kit.merge_rig(body, {"ShoulderR": [["Weapon", ["Grip", "Guard", "Blade"]]]})
 	# AI LOD tier 2 shows this single box instead of the rig (EnemyActor.set_lod_tier).
 	visual.add_child(kit.lod_proxy(Vector3(0.5, 1.8, 0.35), Vector3(0, 0.9, 0), "soldier_tabard"))
 	root.add_child(visual)

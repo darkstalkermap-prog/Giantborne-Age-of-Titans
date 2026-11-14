@@ -105,7 +105,10 @@ func test_unknown_ids_are_dropped_and_reported() -> void:
 	c.weapon = "weapon.lost_axe"
 	c.weapons_owned = ["weapon.club", "weapon.lost_axe"]
 	c.ancestry = "ancestry.gone"
-	c["talents"] = {"destroyer": 1}   # a key from a later package
+	# P20: "talents" became a known key of save schema 2 (a list of talent ids); a key no package
+	# declares stands in for "a key from a later package" now.
+	c["p99_journal"] = {"destroyer": 1}   # a key from a later package
+	c["talents"] = ["talent.not_in_this_build"]
 	var r := CharacterState.sanitize(_through_json(c))
 	var n: Dictionary = r.data
 	assert_eq(n.loadout.slots[2], "", "an unknown slotted ability becomes an empty slot")
@@ -115,9 +118,11 @@ func test_unknown_ids_are_dropped_and_reported() -> void:
 	assert_eq(n.weapon, "weapon.club", "an unknown weapon falls back to the record's")
 	assert_eq(n.weapons_owned, ["weapon.club"], "and leaves the owned list")
 	assert_eq(n.ancestry, "ancestry.neutral", "an unknown ancestry falls back")
-	assert_eq(n.talents, {"destroyer": 1.0}, "unknown keys pass through")
+	assert_eq(n.p99_journal, {"destroyer": 1.0}, "unknown keys pass through")
+	assert_eq(n.talents, [], "an unknown talent id is dropped (P20, save schema 2)")
 	var dropped: PackedStringArray = r.dropped
-	for id in ["ability.removed_move", "ability.removed_ultimate", "weapon.lost_axe", "ancestry.gone"]:
+	for id in ["ability.removed_move", "ability.removed_ultimate", "weapon.lost_axe", "ancestry.gone",
+			"talent.not_in_this_build"]:
 		assert_true(dropped.has(id), "%s is reported" % id)
 	assert_eq(dropped.count("ability.removed_move"), 1, "each id is reported once")
 

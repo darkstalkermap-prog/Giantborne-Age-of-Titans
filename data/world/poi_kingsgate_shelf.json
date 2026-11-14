@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.kingsgate_shelf",
+	"type": "poi",
+	"display_name": "The Kingsgate Shelf",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "vista",
+	"position_m": [-300, 46.0, 920],
+	"radius_m": 40,
+	"xp": 30,
+	"map_icon": "vista",
+	"compass": true,
+	"landmark": "world.crownmarch.kings_door_tunnel",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 600,
+	"note": "The Kings' Door's mouth on a shelf in the rim: the first view over the Old Kingdom and the world's start checkpoint."
+}

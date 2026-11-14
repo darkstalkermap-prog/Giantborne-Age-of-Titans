@@ -1,0 +1,154 @@
+[gd_scene format=4]
+
+[ext_resource type="PackedScene" path="res://scenes/world/forge.tscn" id="1_34b2a"]
+[ext_resource type="Script" path="res://scripts/world/forge.gd" id="2_f9160"]
+[ext_resource type="Script" path="res://scripts/world/forge_fire.gd" id="3_ee3f8"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="4_2c089"]
+[ext_resource type="Script" path="res://scripts/world/item_pickup.gd" id="5_3b229"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="6_acc12"]
+[ext_resource type="Script" path="res://scripts/world/size_gate.gd" id="7_f30a1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(8, 2.2, 8)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_2"]
+_surfaces = [{
+"aabb": AABB(-4.6000004, -0.6, -6.1, 9.200001, 12.2, 10.700001),
+"attribute_data": PackedByteArray("ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP/b07z/29O8/9vTvP+jmYT/o5mE/6OZhP+jmYT/o5mE/6OZhP+jmYT/o5mE/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/ZmNg/2ZjYP9mY2D/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/x4eIf8eHiH/Hh4h/w=="),
+"format": 34359742479,
+"index_count": 504,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAADAAIAAQAFAAYAAQAGAAIABAACAAYABQAHAAgABQAIAAYABAAGAAgABwAJAAoABwAKAAgABAAIAAoACQALAAwACQAMAAoABAAKAAwACwANAA4ACwAOAAwABAAMAA4ADQAPABAADQAQAA4ABAAOABAADwARABIADwASABAABAAQABIAEwAUABUAEwAVABYAFwAYABkAFwAZABoAGgAZABQAGgAUABMAGQAYABUAGQAVABQAGAAXABYAGAAWABUAFwAaABMAFwATABYAGwAcAB0AGwAdAB4AHwAgACEAHwAhACIAIgAhABwAIgAcABsAIQAgAB0AIQAdABwAIAAfAB4AIAAeAB0AHwAiABsAHwAbAB4AIwAkACUAIwAlACYAJwAoACkAJwApACoAKgApACQAKgAkACMAKQAoACUAKQAlACQAKAAnACYAKAAmACUAJwAqACMAJwAjACYAKwAsAC0AKwAtAC4ALwAwADEALwAxADIAMgAxACwAMgAsACsAMQAwAC0AMQAtACwAMAAvAC4AMAAuAC0ALwAyACsALwArAC4AMwA0ADUAMwA1ADYANwA4ADkANwA5ADoAOgA5ADQAOgA0ADMAOQA4ADUAOQA1ADQAOAA3ADYAOAA2ADUANwA6ADMANwAzADYAOwA8AD0AOwA9AD4APwBAAEEAPwBBAEIAQgBBADwAQgA8ADsAQQBAAD0AQQA9ADwAQAA/AD4AQAA+AD0APwBCADsAPwA7AD4AQwBEAEUAQwBFAEYARwBIAEkARwBJAEoASgBJAEQASgBEAEMASQBIAEUASQBFAEQASABHAEYASABGAEUARwBKAEMARwBDAEYASwBMAE0ASwBNAE4ATwBQAFEATwBRAFIAUgBRAEwAUgBMAEsAUQBQAE0AUQBNAEwAUABPAE4AUABOAE0ATwBSAEsATwBLAE4AUwBUAFUAUwBVAFYAVwBYAFkAVwBZAFoAWgBZAFQAWgBUAFMAWQBYAFUAWQBVAFQAWABXAFYAWABWAFUAVwBaAFMAVwBTAFYAWwBcAF0AWwBdAF4AXwBgAGEAXwBhAGIAYgBhAFwAYgBcAFsAYQBgAF0AYQBdAFwAYABfAF4AYABeAF0AXwBiAFsAXwBbAF4AYwBkAGUAYwBlAGYAZwBmAGUAZABoAGkAZABpAGUAZwBlAGkAaABqAGsAaABrAGkAZwBpAGsAagBsAG0AagBtAGsAZwBrAG0AbABuAG8AbABvAG0AZwBtAG8AbgBwAHEAbgBxAG8AZwBvAHEAcAByAHMAcABzAHEAZwBxAHMAcgB0AHUAcgB1AHMAZwBzAHUA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 118,
+"vertex_data": PackedByteArray("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")
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_3"]
+_surfaces = [{
+"aabb": AABB(-2.3928785, -0.18928501, -2.3, 4.987551, 5.589285, 4.6),
+"attribute_data": PackedByteArray("8owz//KMM//yjDP/8owz//KMM//yjDP/8owz//KMM//yjDP/8owz/9ioPf/YqD3/2Kg9/9ioPf/YqD3/2Kg9/9ioPf/YqD3/2Kg9//KMM//yjDP/8owz//KMM//yjDP/8owz//KMM//yjDP/8owz/w=="),
+"format": 34359742479,
+"index_count": 72,
+"index_data": PackedByteArray("AAABAAIAAQADAAIAAwAEAAIABAAFAAIABQAGAAIABgAHAAIABwAIAAIACAAJAAIACgALAAwACwANAAwADQAOAAwADgAPAAwADwAQAAwAEAARAAwAEQASAAwAEgAKAAwAEwAUABUAFAAWABUAFgAXABUAFwAYABUAGAAZABUAGQAaABUAGgAbABUAGwATABUA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 28,
+"vertex_data": PackedByteArray("MzMTQAAAAAAAAAAAFyzQPwAAAAAXLNA/AAAAAM3MrEAAAAAA+V4iJQAAAAAzMxNAFyzQvwAAAAAXLNA/MzMTwAAAAAD5XqIlFyzQvwAAAAAXLNC/dY7zpQAAAAAzMxPAFyzQPwAAAAAXLNC/MzMTQAAAAAD5XiKmHg8mQCSG+L3uiEk/auoLQO7TQb7WQ+M/GP7DP4bycECXDJk/mpmZPx3aFb4lTwxAAPNaPkzCkLzkkuU/QFhHviSG+D2sEFA/APNaPu7TQT5MuDO+mpmZPx3aFT77ohe/auoLQEzCkDy0MEa+6IFFPmmeCj6Qbmm/iEE+vtsOND6AYfE7cUq6v6GVV0Ai7Ji/zcyMvx4L6D1oRMo+tOgAwCCof7ygjcU87CQZwGmeCr48XmO/tOgAwNsONL7IV+e/zcyMvx4L6L3AewzAiEE+viCofzycfOm/jsWfnWBaB8gvsZ+dIExtuP9///8AAP+//387po1xLpjPTp+dOZVNpTsmO6aNcQmvoB3PziBMgKHD2f//ok84h17iz87uuDuuXuJvuruWasyG4qqaj3aEzGe3SZGiUtSxb4lI60IUGsQZgyaZ9HackHRPcZmimQmlqiuCp+dy4634Iv/QDkjroMXWLf3jSuaH7OQyy163a7I41m2t/m8L0xWut6MnR+y7Smut9BUM4bWDfJmoe3GOmclKQprWmF6nXxqtnCJ3arMlEp7Ia1LwpG4bPPymW2WFLOTH0Jy3+qc=")
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_4"]
+_surfaces = [{
+"aabb": AABB(-1.25, 15, -2.35, 2.5, 1.7999992, 1.6999999),
+"attribute_data": PackedByteArray("TDgj/0w4I/9MOCP/TDgj/0w4I/9MOCP/TDgj/0w4I//YqD3/2Kg9/9ioPf/YqD3/2Kg9/9ioPf/YqD3/2Kg9/w=="),
+"format": 34359742479,
+"index_count": 72,
+"index_data": PackedByteArray("AAABAAIAAAACAAMABAAFAAYABAAGAAcABwAGAAEABwABAAAABgAFAAIABgACAAEABQAEAAMABQADAAIABAAHAAAABAAAAAMACAAJAAoACAAKAAsADAANAA4ADAAOAA8ADwAOAAkADwAJAAgADgANAAoADgAKAAkADQAMAAsADQALAAoADAAPAAgADAAIAAsA"),
+"material": ExtResource("4_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 16,
+"vertex_data": PackedByteArray("mpmZvzMzg0EzMxPAmpmZPzMzg0EzMxPAmpmZPzMzg0EzMzO/mpmZvzMzg0EzMzO/mpmZvwAAcEEzMzO/mpmZPwAAcEEzMzO/mpmZPwAAcEEzMxPAmpmZvwAAcEEzMxPAAACgv2ZmhkFmZhbAAACgP2ZmhkFmZhbAAACgP2ZmhkFmZia/AACgv2ZmhkFmZia/AACgvzMzg0FmZia/AACgPzMzg0FmZia/AACgPzMzg0FmZhbAAACgvzMzg0FmZhbAMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqao=")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(64, 40, 2)
+
+[node name="Chunk_4_2_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_drowned_titan_forge" type="Node3D" parent="Props" instance=ExtResource("1_34b2a")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 225, 16.728, 233)
+script = ExtResource("2_f9160")
+world_id = "world.drowned.titan_forge"
+display_name = "Titan Forge"
+requires_flags = PackedStringArray("world.titan_forge.lit")
+closed_message = "The Titan Forge is cold. Light its fire first."
+tier = "titan"
+prompt = "Reforge"
+radius_m = 7.0
+priority = 45
+
+[node name="world_drowned_titan_forge_fire" type="Node3D" parent="Props"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 233, 16.728, 226)
+script = ExtResource("3_ee3f8")
+world_id = "world.drowned.titan_forge_fire"
+display_name = "Titan Forge"
+lit_flag = "world.titan_forge.lit"
+requires_flags = PackedStringArray("encounter.drowned_bones_scavengers.cleared")
+locked_message = "Scavengers still pick at the Titan's bones. Drive them off before you light the forge."
+loot_table = "loot.titan_bones"
+lit_message = "The Titan Forge roars alight in the Titan's ribs: titan iron can be worked here now."
+interact_id = "world.drowned.titan_forge_fire"
+prompt = "Light the forge"
+radius_m = 9.0
+priority = 35
+
+[node name="Hearth" type="StaticBody3D" parent="Props/world_drowned_titan_forge_fire"]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Props/world_drowned_titan_forge_fire/Hearth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_drowned_titan_forge_fire/Hearth" groups=["scenery"]]
+mesh = SubResource("ArrayMesh_2")
+
+[node name="Fire" type="MeshInstance3D" parent="Props/world_drowned_titan_forge_fire" groups=["scenery"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+visible = false
+mesh = SubResource("ArrayMesh_3")
+
+[node name="world_drowned_shoulder_cache" type="Node3D" parent="Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 250, 16.728, 216)
+script = ExtResource("5_3b229")
+world_id = "world.drowned.shoulder_cache"
+count = 2
+radius_m = 6.0
+priority = 45
+requires_stage = 6
+stage_message = "Out of reach. Grow to stage 6."
+
+[node name="Visual" type="Node3D" parent="Props/world_drowned_shoulder_cache"]
+
+[node name="Chest" type="MeshInstance3D" parent="Props/world_drowned_shoulder_cache/Visual" groups=["scenery"]]
+mesh = SubResource("ArrayMesh_4")
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="world_marker_titan_forge" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 228, 16.928001, 242)
+script = ExtResource("6_acc12")
+marker_id = "world.marker.titan_forge"
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="world_gate_giants_stair_0" type="StaticBody3D" parent="SizeGates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 45.456, 87)
+collision_layer = 256
+collision_mask = 0
+script = ExtResource("7_f30a1")
+gate_id = "world.gate.giants_stair"
+min_stage = 6
+message = "Each step is taller than a house: only a giant of the old height can climb the Stair. Grow to stage 6, or go round by the Ironway, up from Aldmere's road."
+cue = "sfx.gate.stone"
+
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_giants_stair_0"]
+shape = SubResource("BoxShape3D_5")
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.shepherds_watch",
+	"type": "poi",
+	"display_name": "Shepherd's Watch",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "vista",
+	"position_m": [480, 28.0, 760],
+	"radius_m": 50,
+	"xp": 30,
+	"map_icon": "vista",
+	"compass": true,
+	"landmark": "world.crownmarch.watch_beacon",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 600,
+	"note": "A hill with an unlit watch beacon over the eastern march."
+}

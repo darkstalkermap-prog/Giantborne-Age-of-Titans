@@ -1,0 +1,31 @@
+{
+	"schema_version": 1,
+	"id": "music.title",
+	"type": "music_set",
+	"display_name": "Giantborn",
+	"description": "P23: the title screen. The game's theme on a horn choir (it opens on the calm motif's rising fourth) over the stone choir of the ancient set; after three minutes left alone it rests for 45-75 s and comes back.",
+	"bpm": 96,
+	"beats_per_bar": 4,
+	"bars": 12,
+	"frame": "zone_96",
+	"stems": {
+		"drone": "res://assets/audio/music/drone_ancient.ogg",
+		"theme": "res://assets/audio/music/title_theme.ogg"
+	},
+	"layers": {
+		"explore": {
+			"drone": -4,
+			"theme": -1
+		}
+	},
+	"silence": {
+		"after_explore_s": 180,
+		"length_s": [
+			45,
+			75
+		],
+		"fade_s": 8
+	},
+	"crossfade_bars": 2,
+	"layer_fade_beats": 2
+}

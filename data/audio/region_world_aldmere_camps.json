@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_aldmere_camps",
+	"display_name": "The war camp and Fort Aldmere",
+	"description": "P28: Aldmere's camps - the war camp, Fort Aldmere's garrison and the ballista ridge - keep Aldmere's music over the camp bed.",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.war_camp",
+		"poi.fort_aldmere",
+		"poi.ballista_ridge"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.aldmere",
+	"ambience": "ambience.camp",
+	"priority": 10
+}

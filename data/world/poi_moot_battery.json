@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.moot_battery",
+	"type": "poi",
+	"display_name": "The Moot Battery",
+	"level": "level.world",
+	"region": "region.stonehold",
+	"kind": "camp",
+	"position_m": [-190, 86.4, -640],
+	"radius_m": 60,
+	"xp": 30,
+	"map_icon": "camp",
+	"compass": true,
+	"landmark": "world.stonehold.battery_lines",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The earthworks of a siege company barring the Moot's approach."
+}

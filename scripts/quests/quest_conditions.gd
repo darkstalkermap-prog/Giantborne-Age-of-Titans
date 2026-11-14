@@ -17,6 +17,10 @@ extends RefCounted
 ##   destroyed  {world id: true}                     destructions seen since the level loaded
 ##   hits       {target id: {action id: count}}      the player's blows that connected
 ##   hit_kinds  {action id: kind}                    the kind of every action in `hits`
+##   level_id   String                               the campaign level played ("" outside it; P20)
+##   position   Vector3                              the player's position (INF without one; P20)
+##   ancestry   String                               the character's ancestry id (P20)
+##   ancestry_chosen  bool                           the ancestry was chosen (P20; P33 offers it)
 ##
 ## Shapes ({"type": ...}):
 ##   flag {flag, equals?, at_least?}   truthy without a test; equals compares numbers as numbers
@@ -30,16 +34,26 @@ extends RefCounted
 ##   stage_at_least {stage}, level_at_least {level}, weapon_equipped {weapon}
 ##   dialogue_outcome {dialogue, outcome}   the flag dialogue.<short id>.outcome.<outcome>
 ##   all / any {of: [conditions]}, not {of: condition}
-## An empty list of conditions holds; an unknown or malformed condition does not.
+## M6-M9 (plan §2.12; P20 evaluates the pure ones):
+##   count {n, of: [conditions]}       at least n of the conditions hold
+##   quest_done {quest}                the quest is complete (the flag quest.<short id>.done is true)
+##   level_is {level}                  the campaign level being played is that level record
+##   ancestry_is {ancestry}            the character's ancestry is that record
+##   ancestry_chosen {}                the character has chosen its ancestry
+##   discovered {poi} (P27), region_entered {region} (P27), event_done {event, outcome?} (P37),
+##   near {target, radius_m} (P29)     evaluated below those packages' anchors in holds()
+## An empty list of conditions holds; an unknown or malformed condition does not (nor does a
+## declared type whose package has not landed yet).
 
 const KEYS := ["flags", "deltas", "inventory", "stage", "level", "weapon", "inside", "entered",
-	"died", "destroyed", "hits", "hit_kinds"]
+	"died", "destroyed", "hits", "hit_kinds", "level_id", "position", "ancestry", "ancestry_chosen"]
 
 
 ## A context with every key and nothing in it (stage 1, level 1, no weapon).
 static func empty_context() -> Dictionary:
 	return {"flags": {}, "deltas": {}, "inventory": {}, "stage": 1, "level": 1, "weapon": "",
-		"inside": {}, "entered": {}, "died": {}, "destroyed": {}, "hits": {}, "hit_kinds": {}}
+		"inside": {}, "entered": {}, "died": {}, "destroyed": {}, "hits": {}, "hit_kinds": {},
+		"level_id": "", "position": Vector3.INF, "ancestry": "", "ancestry_chosen": false}
 
 
 ## True when every condition of `conds` holds (an empty list, or null, holds).
@@ -108,6 +122,43 @@ static func holds(c: Variant, ctx: Dictionary) -> bool:
 			return false
 		"not":
 			return typeof(d.get("of")) == TYPE_DICTIONARY and not holds(d.of, ctx)
+		# M6-M9 (P20): the pure condition types of plan §2.12.
+		"count":
+			var of: Variant = d.get("of")
+			if typeof(of) != TYPE_ARRAY:
+				return false
+			var need := int(d.get("n", 1))
+			var n := 0
+			for sub: Variant in of:
+				if holds(sub, ctx):
+					n += 1
+					if n >= need:
+						return true
+			return false
+		"quest_done":
+			var quest := str(d.get("quest", ""))
+			return quest != "" and same_value((ctx.get("flags", {}) as Dictionary).get(quest + ".done"), true)
+		"level_is":
+			var lv := str(d.get("level", ""))
+			return lv != "" and str(ctx.get("level_id", "")) == lv
+		"ancestry_is":
+			var anc := str(d.get("ancestry", ""))
+			return anc != "" and str(ctx.get("ancestry", "")) == anc
+		"ancestry_chosen":
+			return bool(ctx.get("ancestry_chosen", false))
+		# A later package adds the branch of its own condition type directly below its anchor:
+		# discovered and region_entered (P27), near (P29), event_done (P37).
+		## @anchor P27
+		"discovered":
+			return discovered_holds(ctx, str(d.get("poi", "")))
+		"region_entered":
+			return region_entered_holds(ctx, str(d.get("region", "")))
+		## @anchor P29
+		"near":
+			return near_holds(ctx, str(d.get("target", "")), float(d.get("radius_m", NEAR_DEFAULT_M)))
+		## @anchor P37
+		"event_done":
+			return event_done_holds(ctx, str(d.get("event", "")), str(d.get("outcome", "")))
 	return false
 
 
@@ -216,7 +267,11 @@ static func _collect_targets(c: Variant, out: Array) -> void:
 			_add_target(out, d.get("item", ""))
 		"weapon_equipped":
 			_add_target(out, d.get("weapon", ""))
-		"all", "any":
+		"discovered":
+			_add_target(out, d.get("poi", ""))
+		"near":
+			_add_target(out, d.get("target", ""))
+		"all", "any", "count":
 			if typeof(d.get("of")) == TYPE_ARRAY:
 				for sub: Variant in d.of:
 					_collect_targets(sub, out)
@@ -239,3 +294,79 @@ static func encounter_flag(encounter_id: String) -> String:
 ## (dialogue.elder + intimidate -> dialogue.elder.outcome.intimidate).
 static func outcome_flag(dialogue_id: String, outcome: String) -> String:
 	return "dialogue.%s.outcome.%s" % [dialogue_id.trim_prefix("dialogue."), outcome]
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Helpers of the condition types above go directly below their package's anchor (plan §1.5).
+
+## @anchor P27
+# discovered {poi} and region_entered {region} (P27; plan M6-M9 §2.12): Discovery's flags, read
+# from the context's flags so the evaluation stays pure.
+
+## The record id without its type prefix ("poi.hollowmere" -> "hollowmere").
+static func short_of(id: String) -> String:
+	var dot := id.find(".")
+	return id.substr(dot + 1) if dot >= 0 else id
+
+
+## discovered {poi}: the giant found the POI (discovered.<short> is true; a vista's "revealed",
+## which only puts it on the map, does not count).
+static func discovered_holds(ctx: Dictionary, poi: String) -> bool:
+	return poi != "" and same_value((ctx.get("flags", {}) as Dictionary).get("discovered." + short_of(poi)), true)
+
+
+## region_entered {region}: the giant has entered the region (region.<short>.entered).
+static func region_entered_holds(ctx: Dictionary, region: String) -> bool:
+	return region != "" and truthy((ctx.get("flags", {}) as Dictionary).get("region.%s.entered" % short_of(region)))
+
+## @anchor P29
+# near {target, radius_m} (P29; plan M6-M9 §2.12): the giant stands within radius_m (on the ground
+# plane) of the target - a marker, area, prop, checkpoint, POI or encounter of the level's world
+# index, or anything live. The evaluation stays pure: the context names the target's position, from
+# ctx.positions ({id: Vector3}: tests and tools), else ctx.position_of (a Callable(id) -> Vector3;
+# Quests.condition_context() gives Quests.objective_position: the live node, else the level's index).
+# It does not hold without the giant's position or the target's.
+
+## The radius of a near condition without radius_m (plan §2.12's example).
+const NEAR_DEFAULT_M := 150.0
+
+
+## The position the context gives a target id: ctx.positions[id], else ctx.position_of.call(id);
+## Vector3.INF when neither knows it.
+static func target_position(ctx: Dictionary, target: String) -> Vector3:
+	if target == "":
+		return Vector3.INF
+	var known: Variant = ctx.get("positions")
+	if typeof(known) == TYPE_DICTIONARY and typeof((known as Dictionary).get(target)) == TYPE_VECTOR3:
+		return (known as Dictionary)[target]
+	var lookup: Variant = ctx.get("position_of")
+	if lookup is Callable and (lookup as Callable).is_valid():
+		var p: Variant = (lookup as Callable).call(target)
+		if typeof(p) == TYPE_VECTOR3:
+			return p
+	return Vector3.INF
+
+
+## near {target, radius_m}: the giant within radius_m of the target (horizontally).
+static func near_holds(ctx: Dictionary, target: String, radius_m: float) -> bool:
+	var me: Variant = ctx.get("position", Vector3.INF)
+	if typeof(me) != TYPE_VECTOR3 or not (me as Vector3).is_finite():
+		return false
+	var at := target_position(ctx, target)
+	if not at.is_finite():
+		return false
+	return Vector2(at.x - (me as Vector3).x, at.z - (me as Vector3).z).length() <= maxf(0.0, radius_m)
+
+## @anchor P37
+# event_done {event, outcome?} (P37; plan M6-M9 §2.12, §2.3): a world event ended at least once with an
+# outcome - its flag <event id>.done (event.millford_raid.done) is true - and, with `outcome`, its last
+# outcome (<event id>.outcome) was that one. Pure: the context's flags. WorldEvent writes both flags.
+
+## event_done {event, outcome}: see the notes above.
+static func event_done_holds(ctx: Dictionary, event: String, outcome: String) -> bool:
+	if event == "":
+		return false
+	var flags: Dictionary = ctx.get("flags", {})
+	if not same_value(flags.get(event + ".done"), true):
+		return false
+	return outcome == "" or str(flags.get(event + ".outcome", "")) == outcome

@@ -1,0 +1,31 @@
+{
+	"schema_version": 1,
+	"id": "encounter.formation_test_shields",
+	"type": "encounter",
+	"display_name": "Test shield wall",
+	"description": "P30: a shield wall of two ranks of four files - eight shieldmen and a bannerman - that advances up to 10 m on the giant and braces; only tests activate it.",
+	"level": "level.formation_test",
+	"district": "field",
+	"center_m": [-155, 0, 0],
+	"activate_radius_m": 30,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 80,
+	"alert_group": true,
+	"requires_flags": ["test.formation.manual"],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"formations": [
+		{"id": "wall", "kind": "shield", "banner": "test.formation.wall_banner", "banner_name": "Banner of the Test Wall", "banner_color": [0.7, 0.55, 0.12], "ranks": 2, "files": 4, "rank_spacing_m": 1.4, "file_spacing_m": 1.1, "facing": "threat", "yaw_deg": 180, "turn_deg_s": 45, "advance_mps": 1.2, "advance_m": 10, "brace_m": 5, "brace_action": "ability.formation_brace_shield", "morale_start": 90}
+	],
+	"spawns": [
+		{"entity_id": "test.formation.wall_1", "definition": "enemy.shieldman", "position_m": [-153.35, 0, 0.7], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "wall", "slot": 0},
+		{"entity_id": "test.formation.wall_2", "definition": "enemy.shieldman", "position_m": [-154.45, 0, 0.7], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "wall", "slot": 1},
+		{"entity_id": "test.formation.wall_3", "definition": "enemy.shieldman", "position_m": [-155.55, 0, 0.7], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "wall", "slot": 2},
+		{"entity_id": "test.formation.wall_4", "definition": "enemy.shieldman", "position_m": [-156.65, 0, 0.7], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "wall", "slot": 3},
+		{"entity_id": "test.formation.wall_5", "definition": "enemy.shieldman", "position_m": [-153.35, 0, -0.7], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "wall", "slot": 4},
+		{"entity_id": "test.formation.wall_6", "definition": "enemy.shieldman", "position_m": [-154.45, 0, -0.7], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "wall", "slot": 5},
+		{"entity_id": "test.formation.wall_7", "definition": "enemy.shieldman", "position_m": [-155.55, 0, -0.7], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "wall", "slot": 6},
+		{"entity_id": "test.formation.wall_8", "definition": "enemy.shieldman", "position_m": [-156.65, 0, -0.7], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "wall", "slot": 7},
+		{"entity_id": "test.formation.wall_banner", "definition": "enemy.bannerman", "position_m": [-155.0, 0, -2.1], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "wall", "slot": -1}
+	]
+}

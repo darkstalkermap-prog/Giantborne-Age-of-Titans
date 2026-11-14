@@ -1,0 +1,31 @@
+{
+	"schema_version": 1,
+	"id": "music.end",
+	"type": "music_set",
+	"display_name": "Prologue complete",
+	"description": "P23: the prologue's end screen (after the prologue_end stinger): the title theme's horn choir over the calm set's warm pad.",
+	"bpm": 96,
+	"beats_per_bar": 4,
+	"bars": 12,
+	"frame": "zone_96",
+	"stems": {
+		"theme": "res://assets/audio/music/title_theme.ogg",
+		"drone": "res://assets/audio/music/drone_calm.ogg"
+	},
+	"layers": {
+		"explore": {
+			"theme": -1,
+			"drone": -3
+		}
+	},
+	"silence": {
+		"after_explore_s": 240,
+		"length_s": [
+			45,
+			75
+		],
+		"fade_s": 8
+	},
+	"crossfade_bars": 2,
+	"layer_fade_beats": 2
+}

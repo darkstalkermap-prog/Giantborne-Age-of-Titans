@@ -21,7 +21,9 @@ func _init(p_actor_id: String, record: Dictionary, seed_value: int) -> void:
 
 func decide(tick: int, p_controller_state: int, my_position: Vector3, request_token: Callable,
 		release_token: Callable) -> void:
+	var held := firing_point
 	super(tick, p_controller_state, my_position, request_token, release_token)
+	keep_front_arc(held)   # P22: keep to the camera's side when a firing point there exists
 	if state != AIState.ATTACK:
 		_release_ranged()
 	if state in [AIState.FLEE, AIState.ROUTED, AIState.DEAD, AIState.PATROL, AIState.IDLE]:
@@ -87,3 +89,11 @@ func _choose_attack() -> String:
 	var edge := float(perception.get("distance", INF)) - float(perception.get("target_radius", 0.85))
 	var close := _close_attack_for(edge)
 	return close if close != "" else _ranged_shot()
+
+
+## P22: the shot to take now, readied for where the giant's camera looks (drawn from outside its view,
+## its windup lasts tactics.off_camera_aim_s: EnemyBrain.prepare_ranged_shot).
+func _ranged_shot() -> String:
+	var shot := super()
+	prepare_ranged_shot(shot)
+	return shot

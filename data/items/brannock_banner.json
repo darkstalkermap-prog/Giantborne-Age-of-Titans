@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.brannock_banner",
+	"type": "item",
+	"display_name": "Brannock's Banner",
+	"description": "The March's green banner, given by Marchwarden Edda to the giant who drove the toll-riders and the raiders from her roads. Aldmere's heralds know it: a token of peace for a parley.",
+	"stack_max": 1,
+	"category": "key"
+}

@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_stonehold_troll_pack",
+	"type": "encounter",
+	"display_name": "Highland trolls",
+	"description": "P36 (plan M6-M9 §2.13, §5.10): a wander template of wander.stonehold's troll_pack entry (stage 5 and up): two trolls roaming the highland roads (fire stops their regrowth). Its centre is nominal.",
+	"template": true,
+	"level": "level.world",
+	"center_m": [100, 84.91, -680],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.stonehold.wander_troll_1", "definition": "enemy.troll", "position_m": [94, 85.63, -680], "yaw_deg": 0, "patrol": "", "faction": "", "commander": true, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.stonehold.wander_troll_2", "definition": "enemy.troll", "position_m": [106, 84.19, -680], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

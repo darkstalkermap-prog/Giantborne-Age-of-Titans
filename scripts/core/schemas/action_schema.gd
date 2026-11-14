@@ -168,6 +168,89 @@ static func fields() -> Dictionary:
 
 	## @anchor P11a
 
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P26
+	# P26 (plan M6-M9 §2.9): a projectile's range per growth stage (index = stage - 1; the last entry
+	# beyond the list), in place of projectile.range_m: Boulder Hurl reaches 25 m at stages 1-3 and
+	# 32 / 38 / 44 m at stages 4-6 (PlayerAttack's range check and launch).
+	f.merge({"range_by_stage_m": {"t": "array", "items": "number"}})
+
+	## @anchor P31
+	# P31 (plan M6-M9 §2.11, §5.12): stage evolutions, talent and ancestry abilities, Earthquake's
+	# line of pulses, Storm Call's strike from above its target, and the casts' own effects.
+	f.merge({
+		# The ability this one evolves from: learned on reaching its unlock_stage (at or above its
+		# unlock_level), it takes the base's slot and its place in the known list; the base stays
+		# known (listed, no longer slotted). Cooldowns stay per id.
+		"evolves_from": U.ref("action"),
+		# Where an ability comes from: "talent" or "ancestry" abilities are learned only through
+		# their grant (P33), never by a level-up or a growth.
+		"granted_by": U.str_field(false, ["", "talent", "ancestry"]),
+		# A multiplier on radius_from "melee_reach" (Titan Stomp 0.9, Formation Sweep 1.2).
+		"radius_scale": U.pos(),
+		# hit_shape "line_pulse" (Earthquake): `count` cylinder pulses of `radius_m` along the
+		# facing, the first `start_m` ahead and the last `length_m` ahead, `interval_s` apart from
+		# the first active tick (rounded to ticks), each its own pulse id (1..count).
+		"line": {"t": "dict", "fields": {
+			"count": U.int_field(1, 32, true),
+			"length_m": U.pos(true),
+			"start_m": U.num(0.0),
+			"interval_s": U.num(0.0),
+			"radius_m": U.pos(true),
+			"height_m": U.pos()}},
+		# Fury the caster gains when the cast enters ACTIVE (Wild Surge +30).
+		"fury_on_cast": U.num(0.0),
+		# A heal over time sized by the caster's maximum health (Primal Regrowth: 20 % over 6 s):
+		# `status` (heal_per_tick is its magnitude key) gets max_health_fraction x the maximum,
+		# spread over its periodic ticks.
+		"heal_over_time": {"t": "dict", "fields": {
+			"status": U.ref("status_effect", true),
+			"max_health_fraction": {"t": "number", "gt": 0.0, "max": 1.0, "req": true}}},
+		# The caster's statuses with any of these tags end when the cast enters ACTIVE (Primal
+		# Regrowth clears slows).
+		"clears_status_tags": U.enum_array(DataValidator.STATUS_TAGS),
+		# A fixed-length stagger on every target of these archetypes the action hits (Thunderhead:
+		# 1.5 s on humans); an empty list = every target.
+		"on_hit_stagger": {"t": "dict", "fields": {
+			"seconds": U.pos(true),
+			"archetypes": U.enum_array(DataValidator.ARCHETYPES)}},
+	})
+	# Projectiles may start above their aim point (Storm Call's bolt falls on its target) ...
+	(f.projectile.fields as Dictionary).merge({
+		"launch_from": U.str_field(false, ["actor", "above_target"]),
+		"launch_height_m": U.pos(),
+	})
+	# ... and a player's telegraph may lie at its target instead of at the caster (Storm Call).
+	(f.telegraph.fields as Dictionary)["at"] = U.str_field(false, ["actor", "target"])
+
+	## @anchor P32
+	# P32 (plan M6-M9 §2.10, decision 21): the size override - poise, knockback and the stagger length
+	# treat this action's hits as coming from an attacker this tall (siege engines 8.0, the cavalry's
+	# charge 4.0; HitFactory). Damage keeps the action's size_policy, which must be "none" with an
+	# override (the override never scales damage). Rampart Grip's grab mode "rampart" (PlayerGrab): a
+	# small body is crushed and dropped, a medium one or a siege engine lifted and thrown at once.
+	f["attacker_height_override_m"] = U.pos()
+	(((f.grab.fields as Dictionary).mode as Dictionary).enum as Array).append("rampart")
+
+	## @anchor P34
+	# P34 (plan M6-M9 §2.10, §5.13): an enemy's lobbed throw (a rival giant's boulder) is `indirect`: its
+	# circle telegraph lies at the landing point, committed when the windup begins, and stays there
+	# through the flight with the incoming whistle (P28's router and P32's landing circle). An
+	# `arena_hazard` is a brain's arena effect, not a blow of the actor's own body (Harrok's falling
+	# stones): every interval_s the brain keeps `count` hazards going, each a circle of radius_m placed
+	# distance_m from its target (at least min_gap_m from the others), telegraphed for telegraph_s and
+	# then striking with this action's numbers - credited to the actor, a cylinder pulse of height_m.
+	f.merge({
+		"indirect": U.bool_field(),
+		"arena_hazard": {"t": "dict", "fields": {
+			"count": U.int_field(1, 8, true),
+			"interval_s": U.pos(true),
+			"telegraph_s": U.pos(true),
+			"radius_m": U.pos(true),
+			"distance_m": {"t": "array", "items": "number"},
+			"min_gap_m": U.num(0.0)}},
+	})
+
 	return f
 
 
@@ -270,6 +353,59 @@ static func semantic(d: Dictionary, ctx: String, out: Dictionary) -> void:
 			out.errors.append("%s: a targets_ally cast needs on_hit_statuses (what lands on the ally)" % ctx)
 
 	## @anchor P11a
+
+	# M6-M9 (written by P20, plan M6-M9 §1.5).
+	## @anchor P26
+	var p26_ranges: Variant = d.get("range_by_stage_m")
+	if typeof(p26_ranges) == TYPE_ARRAY:
+		var p26_list: Array = p26_ranges
+		if p26_list.is_empty():
+			out.errors.append("%s.range_by_stage_m: must list at least one range" % ctx)
+		for p26_i in p26_list.size():
+			if U.is_number(p26_list[p26_i]) and float(p26_list[p26_i]) <= 0.0:
+				out.errors.append("%s.range_by_stage_m[%d]: must be > 0 (got %s)" % [ctx, p26_i, p26_list[p26_i]])
+		if str(d.get("hit_shape", "")) != "projectile":
+			out.errors.append("%s: range_by_stage_m is for projectiles (hit_shape 'projectile')" % ctx)
+
+	## @anchor P31
+	if str(d.get("hit_shape", "")) == "line_pulse":
+		U.require(d, ["line"], ctx, out, "hit_shape 'line_pulse'")
+		var p31_line: Variant = d.get("line")
+		if typeof(p31_line) == TYPE_DICTIONARY and U.is_number(p31_line.get("length_m")) \
+				and U.is_number(p31_line.get("start_m", 0.0)) \
+				and float(p31_line.get("start_m", 0.0)) > float(p31_line.length_m):
+			out.errors.append("%s.line: start_m must not be beyond length_m" % ctx)
+	elif d.has("line"):
+		out.errors.append("%s: a 'line' block needs hit_shape 'line_pulse'" % ctx)
+	if typeof(d.get("evolves_from")) == TYPE_STRING and str(d.evolves_from) != "" \
+			and str(d.evolves_from) == str(d.get("id", "")):
+		out.errors.append("%s.evolves_from: an ability cannot evolve from itself" % ctx)
+	if d.has("radius_scale") and str(d.get("radius_from", "fixed")) != "melee_reach":
+		out.errors.append("%s: radius_scale scales radius_from 'melee_reach' only" % ctx)
+	var p31_granted := str(d.get("granted_by", ""))
+	if p31_granted != "" and str(d.get("evolves_from", "")) != "":
+		out.errors.append("%s: a %s ability is granted, not evolved (evolves_from)" % [ctx, p31_granted])
+
+	## @anchor P32
+	if d.has("attacker_height_override_m") and str(d.get("size_policy", "attacker_growth")) == "attacker_growth":
+		out.errors.append("%s: attacker_height_override_m changes poise and knockback only: give the action size_policy 'none' (decision 21)" % ctx)
+
+	## @anchor P34
+	# P34: an indirect action is a lobbed projectile telegraphed by a circle (at its landing point); an
+	# arena hazard strikes with a cylinder pulse and announces a circle, its distances a [min, max] pair.
+	if bool(d.get("indirect", false)):
+		var p34_tel: Variant = d.get("telegraph")
+		if str(d.get("hit_shape", "")) != "projectile" or typeof(p34_tel) != TYPE_DICTIONARY \
+				or str((p34_tel as Dictionary).get("shape", "")) != "circle":
+			out.errors.append("%s: an indirect action is a projectile with a circle telegraph (its landing point)" % ctx)
+	var p34_hazard: Variant = d.get("arena_hazard")
+	if typeof(p34_hazard) == TYPE_DICTIONARY:
+		if str(d.get("hit_shape", "")) != "cylinder_pulse":
+			out.errors.append("%s: an arena_hazard strikes as a cylinder_pulse" % ctx)
+		var p34_dist: Variant = p34_hazard.get("distance_m")
+		if typeof(p34_dist) == TYPE_ARRAY and ((p34_dist as Array).size() != 2 \
+				or float(p34_dist[0]) > float(p34_dist[1]) or float(p34_dist[0]) < 0.0):
+			out.errors.append("%s.arena_hazard.distance_m: give [min, max] with 0 <= min <= max" % ctx)
 
 
 static func required_ids() -> Dictionary:

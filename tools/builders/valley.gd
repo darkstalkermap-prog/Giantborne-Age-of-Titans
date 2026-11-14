@@ -14,11 +14,18 @@ extends RefCounted
 ##     layers 1/2/4/8, plan §2.2), baked here, offline, from the very elements the collision comes
 ##     from (plus the solid shapes of every placed prop, shrine, waystone and dummy) and saved
 ##     compressed; nothing bakes at runtime (the single-threaded web export);
+##   * assets/world/index_valley.res - the Valley's world index (P20, WorldIndex: checkpoints with
+##     display names and arrival limits, markers, areas, props, exits, districts, encounters and
+##     the road graph; build_index), read from the root scene before it is saved;
 ##   * scenes/world/valley.tscn - the root: LevelRoot (level.valley), Environment (depth fog from
 ##     120 m), Sun, Districts/<id>, Navigation/{Human,Large,Giant,SmallGiant}, Props, Shrines,
 ##     Waystones, Dummies, Markers/<Kind>/<marker>, Markers/Patrol/<route>/<n>, Triggers/<area>,
-##     Kingsfall/{ArenaGate,Pillars,BossArena}, Signs, Spawns/PlayerSpawn, Spawned, Player,
-##     EncounterDirector and DebrisPool.
+##     Kingsfall/{ArenaGate,Pillars,BossArena}, Exits/<exit> (P26), Signs, Spawns/PlayerSpawn,
+##     Spawned, Player, EncounterDirector and DebrisPool.
+## P26 (plan M6-M9 §5.6): the layout's "exits" become LevelExits (the Kings' Door behind the crown's
+## altar, the Citadel's stair); a trigger with "reward_xp" is a RewardArea (the Citadel's hall pays
+## 150 XP once); the bake reaches the hall cut through the east edge (BAKE_AABB); the index takes
+## every checkpoint's measured max_stage from the layout.
 ## Runs after the player, prop, shrine and world-prop builders (tools/build_scenes.gd BUILDERS).
 ##
 ## Navigation layers and links. NavigationServer3D connects each end of a NavigationLink3D to the
@@ -45,6 +52,8 @@ const S_WAYSTONE := "res://scripts/world/waystone.gd"
 const S_DEBRIS := "res://scripts/world/debris_pool.gd"
 const S_BOSS_ARENA := "res://scripts/world/boss_arena.gd"   # P11a
 const S_COSMETIC_FIELD := "res://scripts/world/cosmetic_field.gd"   # P15
+const S_REWARD_AREA := "res://scripts/world/reward_area.gd"   # P26
+const S_LEVEL_EXIT := "res://scripts/world/level_exit.gd"   # P20 (the Valley's exits: P26)
 const GIANT := "res://scenes/player/giant.tscn"
 const SHRINE := "res://scenes/world/shrine.tscn"
 const DUMMY := "res://scenes/world/practice_dummy.tscn"
@@ -65,6 +74,15 @@ const PROP_SCENES := {
 	"bush": "res://scenes/world/bush.tscn",
 	"banner": "res://scenes/world/banner.tscn",
 	"forge": "res://scenes/world/forge.tscn",
+	# P26 (tools/builders/world_props2.gd)
+	"kings_door": "res://scenes/world/kings_door.tscn",
+	"rockfall": "res://scenes/world/rockfall.tscn",
+	"titan_tree": "res://scenes/world/titan_tree.tscn",
+	"toppled_statue": "res://scenes/world/toppled_statue.tscn",
+	"palisade_trample": "res://scenes/world/palisade_trample.tscn",
+	"great_pine": "res://scenes/world/great_pine.tscn",
+	"citadel_hoard": "res://scenes/world/citadel_hoard.tscn",
+	"old_kings_cairn": "res://scenes/world/old_kings_cairn.tscn",
 }
 
 ## The four navigation layers (plan §2.2). "above": the height of the layer's navmesh over the
@@ -90,7 +108,9 @@ const REGION_MIN_SIZE := 8.0
 const EDGE_MAX_ERROR := 2.0
 ## The bake's fixed bounds: the map plus the inner half of the edge ring, from the bottom of the
 ## ground (-1 m), so the voxel grid (and with it the navmesh height) never shifts with the content.
-const BAKE_AABB := AABB(Vector3(-205, -1, -205), Vector3(410, 61, 410))
+## P26: 10 m wider to the east (to x 215), over the Citadel's hall cut into the east edge (x 191-208);
+## the minimum corner - the voxel grid's origin - stays where it was.
+const BAKE_AABB := AABB(Vector3(-205, -1, -205), Vector3(420, 61, 410))
 ## Where Recast puts a navmesh over a flat walking surface (two cell heights up); the builder
 ## measures it after each bake and moves the region so the layer ends up "above" the ground.
 const EXPECTED_SURFACE_OFFSET := 0.5
@@ -99,6 +119,10 @@ const EXPECTED_SURFACE_OFFSET := 0.5
 ## presets to the group).
 const SCENERY_VISIBILITY_END_M := 220.0
 const SCENERY_GROUP := "valley_scenery"
+## M8 screenshot pass (V1): the trees (the Scenery MultiMeshes: trunks and crowns) are drawn with the
+## scenery fade shader (SceneryFade) in their material's colour and roughness, so a tree near the
+## camera or between it and the giant dithers out of the way. Saved as <material>_fade.tres.
+const FADE_SHADER := "res://assets/shaders/scenery_fade.gdshader"
 const FOG_BEGIN_M := 120.0
 const FOG_END_M := 300.0
 const SKY := Color(0.56, 0.64, 0.74)
@@ -125,7 +149,99 @@ static func build_all(kit: SceneKit) -> void:
 		kit.save(build_district(kit, id, geo), DISTRICT_DIR + id + ".tscn")
 	var root := build_root(kit, layout, district_ids, geo)
 	if root != null:
+		# P20: the world index is read from the built root before the scene is saved (and freed).
+		save_index(kit, build_index(root, layout))
 		kit.save(root, ROOT_PATH)
+
+
+# --------------------------------------------------------------------------- the world index (P20)
+
+## The Valley's world index (P20, plan M6-M9 §2.6): every shrine (its record's name), waystone
+## (its layout display_name), marker, area, prop and exit of the built root in level space, the
+## level record's districts, the encounters of level.valley, the roads of the layout as a graph,
+## every checkpoint's arrival limit (the layout's max_stage, which tests/slow/test_valley_revisits.gd
+## measures; ANY_STAGE where the layout has none) and
+## the map's bounds (the vector map: no picture).
+static func build_index(root: Node3D, layout: Dictionary) -> WorldIndex:
+	var idx := WorldIndex.build_from_scene(root, LEVEL_ID)
+	for entries: String in ["shrines", "waystones"]:
+		for e: Dictionary in layout.get(entries, []):
+			var id := str(e.get("world_id", e.get("id", "")))
+			if idx.checkpoints.has(id):
+				(idx.checkpoints[id] as Dictionary)["max_stage"] = int(e.get("max_stage", WorldIndex.ANY_STAGE))
+	add_roads(idx, layout.get("roads", []))
+	var hills: Dictionary = {}
+	for d: Dictionary in layout.get("districts", []):
+		if str(d.get("id", "")) == "hills":
+			hills = d
+	if not hills.is_empty():
+		idx.map_bounds = Rect2(float(hills.min[0]), float(hills.min[1]), float(hills.max[0]) - float(hills.min[0]),
+			float(hills.max[1]) - float(hills.min[1]))
+	return idx
+
+
+## The layout's roads as the index's road graph: each polyline's segments (its width; every stage),
+## nodes closer than 0.5 m merged, and each road end that is no node of another road joined to the
+## nearest node of another road within ROAD_LINK_M (the King's Bridge between the village road and
+## the bridgehead, the village square's ends).
+const ROAD_LINK_M := 15.0
+
+static func add_roads(idx: WorldIndex, roads: Array) -> void:
+	var road_nodes: Array = []   # per road: its node indices
+	var widths: Array = []
+	for r: Dictionary in roads:
+		var pts: Array = r.get("points", [])
+		var w := float(r.get("w", 10.0))
+		var nodes: Array = []
+		for i in pts.size() - 1:
+			var a := Vector3(float(pts[i][0]), 0.0, float(pts[i][1]))
+			var b := Vector3(float(pts[i + 1][0]), 0.0, float(pts[i + 1][1]))
+			idx.add_road(a, b, w)
+			nodes.append(idx.nearest_road_node(a))
+			nodes.append(idx.nearest_road_node(b))
+		road_nodes.append(nodes)
+		widths.append(w)
+	var all := idx.road_nodes()
+	for ri in road_nodes.size():
+		var own: Array = road_nodes[ri]
+		if own.is_empty():
+			continue
+		for end: int in [own[0], own[own.size() - 1]]:
+			var shared := false
+			for rj in road_nodes.size():
+				if rj != ri and (road_nodes[rj] as Array).has(end):
+					shared = true
+			if shared:
+				continue
+			var best := -1
+			var best_d := ROAD_LINK_M
+			var best_w := 0.0
+			for rj in road_nodes.size():
+				if rj == ri:
+					continue
+				for n: int in road_nodes[rj]:
+					var d := all[end].distance_to(all[n])
+					if d <= best_d:
+						best_d = d
+						best = n
+						best_w = minf(float(widths[ri]), float(widths[rj]))
+			if best >= 0:
+				idx.add_road(all[end], all[best], best_w)
+
+
+## Writes the index resource next to the navmeshes' world data (assets/world/index_valley.res).
+const INDEX_PATH := "res://assets/world/index_valley.res"
+
+static func save_index(kit: SceneKit, idx: WorldIndex) -> void:
+	var path := kit.output_path(INDEX_PATH)
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var err := ResourceSaver.save(idx, path)
+	if err != OK:
+		push_error("valley: could not save %s (error %d)" % [path, err])
+		return
+	print("valley: world index: %d checkpoints, %d markers, %d areas, %d props, %d encounters, %d road nodes, %d bytes" % [
+		idx.checkpoints.size(), idx.markers.size(), idx.areas.size(), idx.props.size(), idx.encounters.size(),
+		idx.road_nodes().size(), FileAccess.get_file_as_bytes(path).size()])
 
 
 ## The layout table ({} when it is missing or not a JSON object).
@@ -181,6 +297,25 @@ static func _ground_mat(kit: SceneKit, mat_name: String, a: Color, b: Color, lin
 ## ("stone", "wood_dark", "sack", ...).
 static func _mat(kit: SceneKit, mat_name: String) -> Material:
 	return kit.mats[_mat_key(kit, mat_name)]
+
+
+## M8 screenshot pass (V1): the scenery fade material of a layout material name (FADE_SHADER with
+## the flat material's albedo colour and roughness), made once per build and saved beside it as
+## <kit key>_fade.tres.
+static func _fade_mat(kit: SceneKit, mat_name: String) -> Material:
+	var key := _mat_key(kit, mat_name) + "_fade"
+	if kit.mats.has(key):
+		return kit.mats[key]
+	var base := _mat(kit, mat_name) as BaseMaterial3D
+	var m := ShaderMaterial.new()
+	m.shader = load(FADE_SHADER) as Shader
+	m.set_shader_parameter("albedo", base.albedo_color if base != null else Color.WHITE)
+	m.set_shader_parameter("roughness", base.roughness if base != null else 0.95)
+	m.set_shader_parameter("vertex_color_albedo", false)
+	if kit.out_root == "":
+		ResourceSaver.save(m, "%s/%s.tres" % [SceneKit.MAT_DIR, key], ResourceSaver.FLAG_CHANGE_PATH)
+	kit.mats[key] = m
+	return m
 
 
 ## The kit.mats key of a layout material name ("stone" when it is unknown, after an error).
@@ -548,7 +683,8 @@ static func build_district(kit: SceneKit, id: String, geo: Dictionary) -> Node:
 		mm.instance_count = list.size()
 		mm.buffer = multimesh_buffer(list)
 		mmi.multimesh = mm
-		mmi.material_override = _mat(kit, parts[1])
+		# V1: the trees (scenery) fade out of the giant's way
+		mmi.material_override = _fade_mat(kit, parts[1]) if parts[2] == "1" else _mat(kit, parts[1])
 		if parts[3] == "0":
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		if parts[2] == "1":
@@ -708,6 +844,7 @@ static func build_root(kit: SceneKit, layout: Dictionary, district_ids: Array, g
 
 	root.add_child(_markers(kit, layout))
 	root.add_child(_triggers(kit, layout))
+	root.add_child(_exits(kit, layout))
 	var kingsfall := _kingsfall(kit, layout.get("arena", {}))
 	root.add_child(kingsfall)
 
@@ -860,11 +997,13 @@ static func _coerce(current: Variant, v: Variant) -> Variant:
 
 
 ## A waystone (P06): the marker (the respawn point, facing along the road), its stone (WORLD) at
-## the layout's local "stone" offset, and the Glow shown while it is open.
+## the layout's local "stone" offset, and the Glow shown while it is open. P20: its layout
+## display_name ("Forest road waystone").
 static func _waystone(kit: SceneKit, w: Dictionary) -> Node3D:
 	var m := kit.scripted(kit.marker(str(w.id).validate_node_name(), _v3(w.pos)), S_WAYSTONE, {
 		"checkpoint_id": str(w.id), "radius_m": float(w.get("radius", 10.0)),
-		"requires_flags": PackedStringArray(w.get("requires_flags", []))}) as Node3D
+		"requires_flags": PackedStringArray(w.get("requires_flags", [])),
+		"display_name": str(w.get("display_name", ""))}) as Node3D
 	m.position.y = maxf(m.position.y, 0.05)
 	m.rotation.y = deg_to_rad(float(w.get("yaw", 0.0)))
 	var off := Vector3(float(w.stone[0]), 0.0, float(w.stone[1]))
@@ -899,7 +1038,8 @@ static func _markers(kit: SceneKit, layout: Dictionary) -> Node3D:
 	return markers
 
 
-## Triggers/<area> (AreaTrigger): a cylinder or a box standing on the ground at "pos".
+## Triggers/<area> (AreaTrigger): a cylinder or a box standing on the ground at "pos". P26: a trigger
+## with "reward_xp" is a RewardArea (its XP once, guarded by "reward_flag").
 static func _triggers(kit: SceneKit, layout: Dictionary) -> Node3D:
 	var triggers := kit.n3("Triggers")
 	for t: Dictionary in layout.get("triggers", []):
@@ -907,7 +1047,12 @@ static func _triggers(kit: SceneKit, layout: Dictionary) -> Node3D:
 		a.name = str(t.id).validate_node_name()
 		a.position = _v3(t.pos)
 		a.rotation.y = deg_to_rad(float(t.get("yaw", 0.0)))
-		kit.scripted(a, S_TRIGGER, {"area_id": str(t.id), "once": bool(t.get("once", false))})
+		if int(t.get("reward_xp", 0)) > 0 and ResourceLoader.exists(S_REWARD_AREA):
+			kit.scripted(a, S_REWARD_AREA, {"area_id": str(t.id), "once": bool(t.get("once", false)),
+				"reward_xp": int(t.reward_xp), "reward_flag": str(t.get("reward_flag", "")),
+				"reward_message": str(t.get("reward_message", ""))})
+		else:
+			kit.scripted(a, S_TRIGGER, {"area_id": str(t.id), "once": bool(t.get("once", false))})
 		a.collision_layer = 0
 		a.collision_mask = SceneKit.L_ACTORS
 		a.monitoring = true
@@ -927,6 +1072,21 @@ static func _triggers(kit: SceneKit, layout: Dictionary) -> Node3D:
 		a.add_child(cs)
 		triggers.add_child(a)
 	return triggers
+
+
+## Exits/<exit> (P26): a LevelExit per layout "exits" entry - an interaction (E) that travels to its
+## level's checkpoint while its requires_flags hold, else shows its locked_message (P20's LevelExit).
+static func _exits(kit: SceneKit, layout: Dictionary) -> Node3D:
+	var exits := kit.n3("Exits")
+	for x: Dictionary in layout.get("exits", []):
+		var e := kit.scripted(kit.n3(str(x.id).validate_node_name(), _v3(x.pos)), S_LEVEL_EXIT, {
+			"exit_id": str(x.id), "interact_id": str(x.id), "to_level": str(x.to_level),
+			"to_checkpoint": str(x.to_checkpoint), "requires_flags": PackedStringArray(x.get("requires_flags", [])),
+			"locked_message": str(x.get("locked_message", "The way is shut.")), "display_name": str(x.get("display_name", "")),
+			"prompt": str(x.get("prompt", "Step through")), "radius_m": float(x.get("radius", 4.0)), "priority": 40}) as Node3D
+		e.rotation.y = deg_to_rad(float(x.get("yaw", 0.0)))
+		exits.add_child(e)
+	return exits
 
 
 ## Kingsfall/ArenaGate (a StaticBody3D on WORLD, hidden, its collision disabled: BossArena closes

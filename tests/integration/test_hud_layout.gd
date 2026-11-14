@@ -15,6 +15,14 @@ extends IntegrationSuite
 ## threats 80-120 degrees to the left that the TIP box covered and the ones behind that sat on the
 ## hotbar, with the giant's real camera, and the live widgets with a real archer's shot from behind
 ## and an objective behind and to the left.
+## P27: the compass (top centre), the region banner (below the ability notice) and the discovery toast
+## (under the checkpoint toast) are regions too, at every size; and the whole HUD keeps HudKit's
+## batching rules (FOLLOWUPS: the HUD cost about 117-120 draw calls of every Valley view) - no
+## StyleBoxFlat, outline, shadow outline or clipping under it, every panel and text on an absolute
+## layer under the modal screens - with every part built; the lock line turns a formation's banner
+## mark into a drawn flag.
+## M8 screenshot pass (V2): the lock line's label is as wide as its name and distance (it was laid out
+## 1 px wide and drew nothing), inside the frame; a name too long for the frame is trimmed at its width.
 
 const KING := "res://scenes/enemies/ogre_king.tscn"
 const ARCHER := "res://scenes/enemies/archer.tscn"
@@ -25,7 +33,7 @@ const SIZES := [Vector2(1280, 720), Vector2(1920, 1080), Vector2(1366, 768), Vec
 	Vector2(2560, 1440)]
 const REGIONS := ["resources", "hotbar", "loot", "capture_hint", "messages", "target_frame",
 	"target_frame_under_boss_bar", "interact_prompt", "status_row", "checkpoint_toast", "xp_bar",
-	"ability_notice", "boss_bar", "quest_tracker", "tutorial_prompt"]
+	"ability_notice", "boss_bar", "quest_tracker", "tutorial_prompt", "compass", "region_banner", "discovery_toast"]
 ## Pairs allowed to overlap (sorted names): the frame's two heights, and the frame at the top with
 ## the bar (never both on screen: the frame moves down or hides while the bar shows).
 const DESIGNED := [["boss_bar", "target_frame"], ["target_frame", "target_frame_under_boss_bar"]]
@@ -90,7 +98,7 @@ func test_the_regions_are_where_the_panels_are_drawn() -> void:
 	var controls := hud.layout_controls()
 	for region: String in ["resources", "hotbar", "loot", "capture_hint", "messages", "target_frame",
 			"interact_prompt", "status_row", "checkpoint_toast", "xp_bar", "ability_notice", "boss_bar",
-			"quest_tracker", "tutorial_prompt"]:
+			"quest_tracker", "tutorial_prompt", "compass", "region_banner", "discovery_toast"]:
 		assert_true(controls.has(region), "%s has a control" % region)
 		if not controls.has(region):
 			continue
@@ -129,6 +137,99 @@ func test_the_target_frame_moves_below_the_boss_bar() -> void:
 		await get_tree().process_frame
 	assert_false(hud.boss_bar_visible(), "defeated: the bar hides")
 	assert_near(hud.target_frame_rect().position.y, Hud.TARGET_FRAME_TOP, 0.5, "and the frame goes back up")
+
+
+## The width (px) `label` needs to show its text untrimmed, in its own font and size.
+static func _text_width(label: Label) -> float:
+	var font := label.get_theme_font("font")
+	return font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
+
+
+## `c`'s rect in `hud`.
+static func _rect_in(hud: Hud, c: Control) -> Rect2:
+	return Rect2(c.get_global_rect().position - hud.get_global_rect().position, c.size)
+
+
+## M8 screenshot pass (V2): the lock line shows the locked target's name and distance. Its label sits
+## in a centred line beside a banner's flag and trims a text too long for the frame with an ellipsis -
+## and a trimming label's own minimum width is 1 px, so it was laid out 1 px wide and the line was
+## blank outside boss fights (the Valley ogre, a troll, the Aldmere Shield Wall). Now the label is as
+## wide as its text, inside the frame and centred in it; a name too long for the frame is trimmed at
+## the frame's width and never grows the frame.
+func test_the_lock_line_shows_the_name_and_the_distance() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var hud := _hud()
+	hud.player = p
+	var s := spawn_soldier(Vector3(0, 0.05, -8), 0.0, "test.soldier_line")
+	await step_ticks(3)
+	p.camera_rig.yaw = 0.0
+	p.targeting.try_lock()
+	assert_eq(p.lock.target_id, "test.soldier_line", "locked on the soldier")
+	for i in 3:
+		await get_tree().process_frame
+	assert_true(hud.target_frame_visible(), "the target frame shows")
+	var label := hud.get("_target_name") as Label
+	var text := str(hud.lock_line_now().get("text", ""))
+	assert_true(text.begins_with("Soldier") and text.ends_with(" m"), "the line holds the name and the distance (%s)" % text)
+	assert_eq(label.text, text, "in the label")
+	var need := _text_width(label)
+	assert_true(need > 20.0, "the text needs %.0f px" % need)
+	assert_true(label.size.x + 0.5 >= need, "the label is wide enough to show it: %.0f px for %.0f px" % [label.size.x, need])
+	var frame := hud.target_frame_rect()
+	var drawn := _rect_in(hud, label)
+	assert_true(frame.encloses(drawn), "inside the frame: %s in %s" % [drawn, frame])
+	assert_near(drawn.get_center().x, frame.get_center().x, 2.0, "centred in the frame")
+	# A name too long for the frame: trimmed at the frame's width, the frame keeps its rect.
+	s.entity.combatant.display_name = "The Banner of the Iron Regiment of Fort Aldmere and its Shield Wall"
+	for i in 3:
+		await get_tree().process_frame
+	assert_true(str(hud.lock_line_now().get("text", "")).begins_with("The Banner of the Iron"), "the long name is the label's text")
+	assert_true(_text_width(label) > frame.size.x, "a text wider than the frame (%.0f px)" % _text_width(label))
+	assert_true(hud.target_frame_rect().is_equal_approx(frame), "the frame keeps its rect: %s" % hud.target_frame_rect())
+	drawn = _rect_in(hud, label)
+	assert_true(frame.encloses(drawn), "the trimmed label stays inside the frame: %s in %s" % [drawn, frame])
+	assert_true(drawn.size.x > frame.size.x * 0.75, "and uses the frame's width (%.0f px of %.0f)" % [drawn.size.x, frame.size.x])
+
+
+## P27: the batching rules over the whole HUD with every part built and showing - a giant's hotbar
+## and target frame, a message, the help overlay, the compass, a region banner and a discovery toast -
+## and the lock line.
+func test_the_hud_keeps_the_batching_rules() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	spawn_soldier(Vector3(0, 0.05, -8), 0.0, "test.soldier_batches")
+	var hud := _hud()
+	hud.player = p
+	await step_ticks(2)
+	p.camera_rig.yaw = 0.0
+	p.targeting.try_lock()
+	hud.show_message("Tracking: The Main Thread", "info")
+	hud.toggle_help()
+	hud.get_node("RegionBanner").call("show_region", "region.greywood", 1)
+	hud.get_node("DiscoveryToast").call("push", "Discovered: Hollowmere  +40 XP", Color.WHITE)
+	for i in 2:
+		await get_tree().process_frame
+	assert_true(hud.help_visible() and hud.target_frame_visible(), "the help overlay and the target frame show")
+	assert_true(str(hud.get_node("RegionBanner").call("visible_text")).begins_with("THE GREYWOOD | Recommended stage"),
+		"the region banner shows (%s)" % hud.get_node("RegionBanner").call("visible_text"))
+	assert_true(bool(hud.get_node("RegionBanner").call("warns")), "below the recommended stage: the warning colour")
+	assert_eq(hud.get_node("DiscoveryToast").call("visible_text"), "Discovered: Hollowmere  +40 XP", "the discovery toast shows")
+	assert_eq(HudKit.batch_breakers(hud), PackedStringArray(), "nothing under the HUD breaks its batches")
+	var probe := Control.new()
+	var outlined := Label.new()
+	outlined.add_theme_constant_override("outline_size", 2)
+	probe.add_child(outlined)
+	var flat := PanelContainer.new()
+	flat.add_theme_stylebox_override("panel", StyleBoxFlat.new())
+	probe.add_child(flat)
+	assert_eq(HudKit.batch_breakers(probe).size(), 4,
+		"the rules catch an outlined label and a StyleBoxFlat panel, each on the default layer (%s)" % HudKit.batch_breakers(probe))
+	probe.free()
+	hud.toggle_help()
+	assert_eq(hud.lock_line_now(), {"text": hud.lock_line_now().get("text", "?"), "banner": false}, "a soldier's lock line has no flag")
+	assert_true(str(hud.lock_line_now().get("text", "")).begins_with("Soldier"), "and names it (%s)" % hud.lock_line_now())
+	assert_eq(Hud.lock_line("%s Pike block (6)" % Hud.BANNER_MARK), {"text": "Pike block (6)", "banner": true},
+		"a formation's banner mark becomes the drawn flag")
+	assert_eq(Hud.lock_line(" Ogre "), {"text": "Ogre", "banner": false}, "any other label is kept")
 
 
 # --------------------------------------------------------------------------- edge overlays (M4 gate)
@@ -341,3 +442,348 @@ func test_the_live_overlays_clear_the_panels() -> void:
 			"%s: now the marker clears every panel (%s)" % [spot[0], place.position])
 		assert_near(_inset_of(place.position, view), Marker.INSET_PX, 0.01, "%s: 36 px inside the edge" % spot[0])
 		m.queue_free()
+
+
+# --------------------------------------------------------------------------- P39f (the M8 screenshot pass)
+
+## P39f ("the HUD stays drawn round an open menu"; "a tutorial tip stays behind the shrine window"; "the last
+## message shows through the end screen"): while a screen of the stack is open - a pausing one (the pause menu,
+## the journal) or not - the HUD is hidden: no panel, hotbar, tracker, TIP box, loot panel, message or edge
+## marker draws round it or under the stack's footer, and the edge overlays keep clear of nothing. When the
+## last screen closes the HUD is back as it was, the message (aged nothing meanwhile) included.
+func test_the_hud_hides_behind_an_open_screen() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var hud := await _busy_hud(p)
+	var stack := ScreenStack.new()
+	hud.get_parent().add_child(stack)
+	var line := "You take the Stone Throne. The clans of the Stonehold raise their voices."
+	hud.show_message(line, "good")
+	for i in 2:
+		await get_tree().process_frame
+	var view := hud.get_viewport_rect().size
+	assert_true(hud.is_visible_in_tree() and not hud.menu_hidden(), "the HUD shows while no screen is open")
+	assert_false(hud.overlay_keep_out(view).is_empty(), "with its panels on screen")
+	for screen_name: String in ["pause", "journal"]:
+		var s := stack.open(screen_name)
+		assert_true(s != null, "%s opens" % screen_name)
+		for i in 2:
+			await get_tree().process_frame
+		assert_true(get_tree().paused, "%s pauses the game" % screen_name)
+		assert_true(hud.menu_hidden() and not hud.is_visible_in_tree(), "%s open: the HUD is hidden" % screen_name)
+		for key: String in ["hotbar", "quest_tracker", "tutorial_prompt", "messages", "loot", "resources", "compass"]:
+			var c := hud.layout_controls().get(key) as Control
+			assert_true(c == null or not c.is_visible_in_tree(), "%s open: the %s is not drawn" % [screen_name, key])
+		assert_eq(hud.overlay_keep_out(view), [] as Array[Rect2], "%s open: nothing to keep clear of" % screen_name)
+		assert_true(stack.hint_text() != "", "%s open: the stack's footer shows (over nothing of the HUD)" % screen_name)
+		s.close()
+		for i in 2:
+			await get_tree().process_frame
+		assert_true(hud.is_visible_in_tree() and not hud.menu_hidden(), "%s closed: the HUD is back" % screen_name)
+	assert_true(hud.message_texts().has(line), "the message waited behind the screens (%s)" % hud.message_texts())
+	var overlay := UiScreen.new()
+	overlay.set_script(load("res://tests/support/test_overlay_screen.gd"))
+	stack.push(overlay)
+	for i in 2:
+		await get_tree().process_frame
+	assert_false(get_tree().paused, "a screen that does not pause the game")
+	assert_true(hud.menu_hidden(), "hides the HUD all the same")
+	stack.close_all()
+	for i in 2:
+		await get_tree().process_frame
+	assert_false(hud.menu_hidden(), "and it is back once that closes")
+	stack.queue_free()
+
+
+## P39f ("ability names too long for their hotbar slot are cut with no '...'": RAMPART read "RAMPA", Heavy
+## Footfall "FOOTF"): a slot's title spans the slot inside its border (Hud.SLOT_TITLE_WIDTH, it was the box's
+## 42 px content) and every hotbar label in the data fits it whole in the title's font; the live hotbar shows
+## Heavy Footfall's label untrimmed. The red reason line under the slots ends REASON_EDGE_PX or more above the
+## screen's edge, one whole line of its font tall (its letters' tails were cut), inside the hotbar's region.
+func test_hotbar_names_and_notes_fit() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var hud := _hud()
+	hud.player = p
+	await step_ticks(2)
+	for i in 2:
+		await get_tree().process_frame
+	var slots: Array = hud.get("_slots")
+	var title := (slots[0] as Dictionary).title as Label
+	assert_near(title.size.x, Hud.SLOT_TITLE_WIDTH, 0.5, "a title spans the slot's inner width (%.1f px)" % title.size.x)
+	var font := title.get_theme_font("font")
+	var fs := title.get_theme_font_size("font_size")
+	var too_long := PackedStringArray()
+	var past_old := 0
+	var labels := 0
+	for rec: Dictionary in GameData.records_of_type("action"):
+		if not rec.has("hotbar_label"):
+			continue
+		labels += 1
+		var w := font.get_string_size(str(rec.hotbar_label), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		if w > title.size.x:
+			too_long.append("%s %s (%.0f px)" % [rec.id, rec.hotbar_label, w])
+		if w > 42.0:
+			past_old += 1
+	assert_true(labels >= 25, "every ability's label is measured (%d)" % labels)
+	assert_eq(too_long, PackedStringArray(), "every hotbar label fits its slot whole")
+	assert_true(past_old >= 5, "%d labels were wider than the old 42 px title (RAMPART, FOOTFALL, ...)" % past_old)
+	hud.refresh()
+	assert_eq(title.text, GameData.get_action(str(p.controller.loadout.get("slot_1", ""))).hotbar_label,
+		"slot 1 shows its ability's label (%s)" % title.text)
+	assert_true(font.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= title.size.x,
+		"untrimmed: %s" % title.text)
+	var region: Rect2 = hud.layout_regions(hud.size).hotbar
+	for slot: Dictionary in slots:
+		var reason := slot.reason as Label
+		reason.text = "Busy"
+		var r := _rect_in(hud, reason)
+		assert_true(r.end.y <= hud.size.y - Hud.REASON_EDGE_PX + 0.5,
+			"slot %d's note ends %.1f px above the screen's edge" % [int(slot.index), hud.size.y - r.end.y])
+		assert_true(r.size.y + 0.5 >= font.get_height(reason.get_theme_font_size("font_size")),
+			"slot %d's note is a whole line tall (%.1f px)" % [int(slot.index), r.size.y])
+		assert_true(region.grow(0.5).encloses(Rect2(r.position.x + 1.0, r.position.y, maxf(r.size.x - 2.0, 1.0), r.size.y)),
+			"slot %d's note lies in the hotbar's region" % int(slot.index))
+
+
+## P39f ("long HUD lines are cut with '...'"; "the loot line has no backing"): the loot panel lists the
+## materials the giant carries (stackable items) packed whole onto lines, on a backing, growing upward inside its
+## region; one-of-a-kind trophies and quest items are the inventory screen's. Every material in the data at its
+## stack's limit fits LOOT_MAX_LINES lines whole.
+func test_the_loot_panel_lists_the_materials_whole() -> void:
+	assert_eq(Hud.loot_entries({"item.iron_ingot": 3, "item.ogre_tusk": 1, "item.titan_iron": 2, "item.kings_annals": 1}),
+		PackedStringArray(["Iron Ingot x3", "Titan Iron x2"]), "the materials, not the trophies")
+	var hud := _hud()
+	await get_tree().process_frame
+	var label := hud.get("_loot_label") as Label
+	var font := label.get_theme_font("font")
+	var fs := label.get_theme_font_size("font_size")
+	var full := {}
+	for rec: Dictionary in GameData.records_of_type("item"):
+		if int(rec.get("stack_max", 1)) > 1:
+			full[str(rec.id)] = int(rec.stack_max)
+	var entries := Hud.loot_entries(full)
+	assert_true(entries.size() >= 3, "the data's materials: %s" % entries)
+	var lines := Hud.loot_lines(entries, font, fs, hud.loot_text_width())
+	assert_true(lines.size() <= Hud.LOOT_MAX_LINES, "every material at its limit takes %d lines" % lines.size())
+	var joined := Hud.LOOT_SEPARATOR.join(lines)
+	for e in entries:
+		assert_true(joined.contains(e), "%s is shown whole" % e)
+	for l in lines:
+		assert_true(font.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= hud.loot_text_width(), "%s fits its line" % l)
+	for pair: Array in [["item.iron_ingot", 3], ["item.titan_iron", 2], ["item.wood_scrap", 12], ["item.ogre_tusk", 1],
+			["item.barrow_arm_ring", 1], ["item.kings_annals", 1]]:
+		WorldState.add_item(str(pair[0]), int(pair[1]), "test")
+	for i in 3:
+		await get_tree().process_frame
+	var shown := hud.loot_lines_now()
+	assert_eq("\n".join(shown), "\n".join(Hud.loot_lines(PackedStringArray(["Iron Ingot x3", "Titan Iron x2",
+		"Wood Scrap x12"]), font, fs, hud.loot_text_width())), "the live panel shows the three materials")
+	assert_false("\n".join(shown).contains("Tusk"), "and no trophy")
+	var panel := hud.get("_loot_panel") as PanelContainer
+	var drawn := _rect_in(hud, panel)
+	assert_true(hud.layout_regions(hud.size).loot.grow(0.5).encloses(drawn), "inside its region: %s" % drawn)
+	var box := panel.get_theme_stylebox("panel") as HudKit.Box
+	assert_true(box != null and box.bg.a >= 0.6, "on a backing (%s)" % (box.bg if box != null else "none"))
+	assert_true(drawn.size.y >= shown.size() * font.get_height(fs), "as tall as its lines")
+
+
+## P39f ("long tracker steps are cut with '...'"): each objective in the tracker may take Quest tracker's
+## TEXT_LINES lines and every shipped quest step fits them (one took three, most others two: the side line had
+## one); every quest title, with the longest door or lead after it, fits one line. The live tracker shows the
+## longest step and a two-line one whole, its panel as tall as its lines and inside its region.
+func test_tracker_steps_show_whole() -> void:
+	var hud := _hud()
+	await get_tree().process_frame
+	var tracker := hud.get_node("QuestTracker")
+	var labels: Array = tracker.call("text_labels")
+	var text_label := labels[0] as Label
+	var font := text_label.get_theme_font("font")
+	var width: float = tracker.get("TEXT_WIDTH")
+	var max_lines: int = tracker.get("TEXT_LINES")
+	var flags := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
+	var longest := ""
+	var longest_lines := 0
+	var steps := 0
+	var over := PackedStringArray()
+	for rec: Dictionary in GameData.records_of_type("quest"):
+		var title := "%s  -  by the Kings' Door" % str(rec.get("display_name", ""))
+		if font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, HudKit.SMALL).x > width:
+			over.append("title %s" % title)
+		for st: Dictionary in rec.get("stages", []):
+			var t := str(st.get("objective", ""))
+			var n := roundi(font.get_multiline_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, width, HudKit.TEXT, -1, flags).y
+				/ font.get_height(HudKit.TEXT))
+			steps += 1
+			if n > max_lines:
+				over.append("%s (%d lines)" % [t, n])
+			if n > longest_lines:
+				longest_lines = n
+				longest = t
+	assert_true(steps > 60, "every quest step is measured (%d)" % steps)
+	assert_eq(over, PackedStringArray(), "every step and title fits the tracker whole")
+	assert_true(longest_lines >= 3, "the longest step takes %d lines: %s" % [longest_lines, longest])
+	Fx.install([Fx.quest("quest.test_long", [Fx.stage("go", Fx.flag_cond("test.flag.never"), 0, {"objective": longest})]),
+		Fx.quest("quest.test_side", [Fx.stage("go", Fx.flag_cond("test.flag.never"), 0,
+			{"objective": "Meet Sedge, the woodfolk's elder, at Hollowmere, and hear what the wood asks of you"})])])
+	Fx.activate(["quest.test_long", "quest.test_side"], [], "quest.test_long")
+	for i in 3:
+		await get_tree().process_frame
+	for l: Label in labels:
+		assert_true(l.visible and l.get_line_count() >= 2, "a long step shows (%d lines): %s" % [l.get_line_count(), l.text])
+		assert_eq(l.get_visible_line_count(), l.get_line_count(), "whole, untrimmed: %s" % l.text)
+	var panel: Control = tracker.call("layout_controls").quest_tracker
+	var drawn := _rect_in(hud, panel)
+	assert_true(hud.layout_regions(hud.size).quest_tracker.grow(0.5).encloses(drawn), "inside its region: %s" % drawn)
+	assert_near(drawn.size.y, panel.get_combined_minimum_size().y, 1.0, "as tall as its lines")
+
+
+## M9 gate (lane review): the discovery toast shows its line whole. One 324 px line with an ellipsis cut every
+## vista's line ("Discovered: The Kingsgate Shelf  +30 XP  (7 pla..."); a line now wraps onto up to TEXT_LINES
+## lines and the panel grows down from its top, inside its layout region. Every POI's line, with as many places as
+## the most any vista of the data reveals, and every sealed place's line fit TEXT_LINES lines of the toast's width;
+## the longest shows whole on the live toast, which is as tall as its lines and inside its region.
+func test_discovery_lines_show_whole() -> void:
+	var hud := _hud()
+	await get_tree().process_frame
+	var toast := hud.get_node("DiscoveryToast")
+	var label: Label = toast.call("text_label")
+	var font := label.get_theme_font("font")
+	var width: float = toast.get("TEXT_WIDTH")
+	var max_lines: int = toast.get("TEXT_LINES")
+	var flags := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
+	# the most places a vista reveals: the other non-secret POIs of its level within its reveal radius
+	var pois := GameData.records_of_type("poi")
+	var reveal := 0
+	for v: Dictionary in pois:
+		if str(v.get("kind", "")) != "vista":
+			continue
+		var r := float(v.get("reveals_m", 0.0))
+		r = r if r > 0.0 else Discovery.DEFAULT_REVEAL_M
+		var c: Array = v.get("position_m", [0, 0, 0])
+		var n := 0
+		for p: Dictionary in pois:
+			var q: Array = p.get("position_m", [0, 0, 0])
+			if p != v and str(p.get("kind", "")) != "secret" and str(p.get("level", "")) == str(v.get("level", "")) \
+					and Vector2(float(q[0]) - float(c[0]), float(q[2]) - float(c[2])).length() <= r:
+				n += 1
+		reveal = maxi(reveal, n)
+	assert_true(reveal >= 7, "a vista reveals up to %d places" % reveal)
+	var lines := PackedStringArray()
+	for p: Dictionary in pois:
+		for t: String in [toast.call("line_for", str(p.id), reveal), toast.call("sealed_line", str(p.id))]:
+			if t != "":
+				lines.append(t)
+	var over := PackedStringArray()
+	var longest := ""
+	var longest_w := 0.0
+	var wide := 0
+	for t in lines:
+		var w := font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, HudKit.TEXT).x
+		if w > width:
+			wide += 1
+		var n := roundi(font.get_multiline_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, width, HudKit.TEXT, -1, flags).y
+			/ font.get_height(HudKit.TEXT))
+		if n > max_lines:
+			over.append("%s (%d lines)" % [t, n])
+		if w > longest_w:
+			longest_w = w
+			longest = t
+	assert_true(lines.size() > 40, "every POI's and sealed place's line is measured (%d)" % lines.size())
+	assert_true(wide > 0, "some lines are wider than one line of the toast (%d): they wrap" % wide)
+	assert_eq(over, PackedStringArray(), "every line fits %d lines of the toast whole" % max_lines)
+	toast.call("push", longest, Color.WHITE)
+	for i in 3:
+		await get_tree().process_frame
+	assert_eq(toast.call("visible_text"), longest, "the toast shows the longest line")
+	assert_true(label.get_line_count() >= 2, "on %d lines: %s" % [label.get_line_count(), longest])
+	assert_eq(label.get_visible_line_count(), label.get_line_count(), "whole, untrimmed")
+	var panel: Control = toast.call("layout_controls").discovery_toast
+	var drawn := _rect_in(hud, panel)
+	assert_true(hud.layout_regions(hud.size).discovery_toast.grow(0.5).encloses(drawn), "inside its region: %s" % drawn)
+	assert_near(drawn.size.y, panel.get_combined_minimum_size().y, 1.0, "as tall as its lines")
+
+
+## M9 gate (lane review): the hotbar's texts never collide. A slot's cooldown timer and its title were both
+## centred on the slot, so the timer printed over the ability's name; the cooldown shade was anchored to the box's
+## 44 px content while P39f's title spills 6 px past it on each side; a projectile slot's target label was 64 px
+## wide on a 64 px pitch, so two side by side touched and "» Shieldman" (66 px) was trimmed in every slot. With
+## every ability on cooldown, a slot's title is hidden while its timer shows (and shows again once ready); a full
+## shade covers the title; the target labels of every slot, as projectile slots' labels would sit, never
+## intersect, and each says what it says whole - the locked target's name, however long in the data, is the lock
+## line's.
+func test_hotbar_timer_shade_and_target_labels_never_collide() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	var hud := _hud()
+	hud.player = p
+	await step_ticks(2)
+	for i in 2:
+		await get_tree().process_frame
+	var slots: Array = hud.get("_slots")
+	var c := p.controller
+	var cooled := 0
+	for slot: Dictionary in slots:
+		var id := str(c.loadout.get("ultimate" if int(slot.index) == 8 else "slot_%d" % (int(slot.index) + 1), ""))
+		if id != "":
+			c.cooldowns.start(id, 20.0, Sim.tick)
+			cooled += 1
+	hud.refresh()
+	await get_tree().process_frame
+	assert_true(cooled >= 5, "abilities on cooldown (%d)" % cooled)
+	var overlaps := PackedStringArray()
+	var uncovered := PackedStringArray()
+	for slot: Dictionary in slots:
+		var timer := slot.timer as Label
+		var title := slot.title as Label
+		if timer.text == "":
+			continue
+		var timer_box := _text_rect(hud, timer)
+		var title_box := _text_rect(hud, title)
+		if title.is_visible_in_tree() and title.text != "" and timer_box.intersects(title_box):
+			overlaps.append("slot %d: %s over %s" % [int(slot.index), timer.text, title.text])
+		var shade := _rect_in(hud, slot.cooldown as Control)
+		var inner := _rect_in(hud, slot.root as Control).grow(-(Hud.SLOT_SIZE.x - Hud.SLOT_TITLE_WIDTH) * 0.5)
+		if not shade.grow(0.5).encloses(_rect_in(hud, title)) or not shade.grow(0.5).encloses(inner):
+			uncovered.append("slot %d: shade %s, title %s, slot inside its border %s" % [int(slot.index), shade,
+				_rect_in(hud, title), inner])
+	assert_eq(overlaps, PackedStringArray(), "no timer prints over its slot's title")
+	assert_eq(uncovered, PackedStringArray(), "a full cooldown's shade covers the title, its spill included")
+	var first := slots[0] as Dictionary
+	assert_false((first.title as Label).visible, "the title hides while the timer shows")
+	c.cooldowns.clear()
+	hud.refresh()
+	assert_true((first.title as Label).visible and (first.timer as Label).text == "", "ready again: the title shows")
+	# The target labels: as projectile slots' would sit, side by side, they never touch. M9 gate (final; the early
+	# audit's R3): a shared edge counts as touching (intersects(..., true), as "clear of" is read above) - the old
+	# 64 px labels on the 64 px pitch met edge to edge and passed the strict form - and each label is its slot's width.
+	var labels: Array[Rect2] = []
+	for slot: Dictionary in slots:
+		labels.append(_rect_in(hud, slot.target as Control))
+	for i in range(labels.size()):
+		assert_near(labels[i].size.x, Hud.SLOT_SIZE.x, 0.5, "slot %d's target label is the slot's width" % (i + 1))
+	for i in range(labels.size() - 1):
+		assert_false(labels[i].intersects(labels[i + 1], true), "the target labels of slots %d and %d do not touch: %s / %s" % [
+			i + 1, i + 2, labels[i], labels[i + 1]])
+	var target := first.target as Label
+	var font := target.get_theme_font("font")
+	var fs := target.get_theme_font_size("font_size")
+	for t: String in [Hud.TARGET_LOCKED, Hud.TARGET_AIM]:
+		assert_true(font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= labels[0].size.x,
+			"\"%s\" fits a target label whole (%.0f px)" % [t, labels[0].size.x])
+	# The longest name a lock can show in the data would not have fitted a slot's label: the lock line names it.
+	var longest := ""
+	for rec: Dictionary in GameData.records_of_type("enemy"):
+		var n := str(rec.get("display_name", ""))
+		if n.length() > longest.length():
+			longest = n
+	assert_true(font.get_string_size("» " + longest, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > labels[0].size.x,
+		"the longest enemy name (%s) is wider than a slot: the slots show the lock, not the name" % longest)
+
+
+## The box the label's text takes, centred as the label aligns it (tests: what is drawn, not the label's rect).
+static func _text_rect(hud: Hud, l: Label) -> Rect2:
+	var r := _rect_in(hud, l)
+	var font := l.get_theme_font("font")
+	var fs := l.get_theme_font_size("font_size")
+	var size := font.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+	var x := r.position.x + (r.size.x - size.x) * 0.5
+	var y := r.position.y + (r.size.y - font.get_height(fs)) * 0.5
+	return Rect2(x, y, size.x, font.get_height(fs))

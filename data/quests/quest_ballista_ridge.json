@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "quest.ballista_ridge",
+	"type": "quest",
+	"display_name": "Ballista Ridge",
+	"description": "P36 (plan M6-M9 §5.7 side quests): Aldmere's three ballistae on the ridge over the King's Road shoot at any giant on the road. Silence them (smash them, or tear them up and throw them at stage 6): 150 XP. It counts for the crown's sabotage road (quest.war_engines' second half) - and each engine broken is an offence against Aldmere. It starts once a stage-4 giant discovers the ridge. M8 gate (F6): a crown sworn in peace - the parley, or Corvane spared after the breach - gives it up (and a ridge found afterwards starts none): Aldmere's ballistae stand down for an ally, and silencing them would only break the peace.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{"type": "stage_at_least", "stage": 4},
+		{"type": "discovered", "poi": "poi.ballista_ridge"},
+		{"type": "not", "of": {"type": "any", "of": [{"type": "flag", "flag": "oath.crown.outcome", "equals": "parley"}, {"type": "flag", "flag": "boss.corvane.outcome", "equals": "spared"}]}}
+	],
+	"abandon_when": {"type": "any", "of": [{"type": "flag", "flag": "oath.crown.outcome", "equals": "parley"}, {"type": "flag", "flag": "boss.corvane.outcome", "equals": "spared"}]},
+	"tracker_priority": 30,
+	"stages": [
+		{"id": "silence", "objective": "Silence the three ballistae on Ballista Ridge", "complete_when": {"type": "all", "of": [{"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_1"}, {"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_2"}, {"type": "destroyed", "world_id": "world.aldmere.ridge_ballista_3"}]}, "marker": "world.marker.ballista_ridge", "xp": 150, "waiting_text": "Three ballistae and their crews hold the ridge east of the King's Road, behind a shield wall. Breaking them makes Aldmere your enemy.", "items": [], "set_flags": {}, "bot": {"action": "break", "targets": ["world.aldmere.ridge_ballista_1", "world.aldmere.ridge_ballista_2", "world.aldmere.ridge_ballista_3"]}}
+	],
+	"on_complete_flags": {}
+}

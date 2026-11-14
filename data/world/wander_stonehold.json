@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "wander.stonehold",
+	"type": "wander_table",
+	"display_name": "The Stonehold's roads",
+	"description": "P36 (plan M6-M9 §2.13, §5.10, decision 27): who walks the Stonehold Highlands' roads while the giant is there - at most two at once, one every 60-120 s, 120-220 m away, out of view, on a road node; kill XP for each entry's first three spawns only. Rival giant scouts and troll packs for a giant of stage 5 and up; with Harrok slain his clan's giants roam the highlands, hostile for good. The plan's toll-rider siege train (stage 6) waits for engines that can travel with a copy (docs/systems/P36.md).",
+	"region": "region.stonehold",
+	"max_active": 2,
+	"interval_s": [60, 120],
+	"min_distance_m": 120,
+	"max_distance_m": 220,
+	"anchors": "roads",
+	"xp_full_spawns": 3,
+	"patrol_m": 40,
+	"entries": [
+		{"id": "rival_scout", "weight": 2, "min_stage": 5, "max_stage": 10, "template": "encounter.tpl_stonehold_rival_scout"},
+		{"id": "troll_pack", "weight": 2, "min_stage": 5, "max_stage": 10, "template": "encounter.tpl_stonehold_troll_pack"},
+		{"id": "clan_giants", "weight": 2, "template": "encounter.tpl_stonehold_clan_giants", "conditions": [{"type": "flag", "flag": "boss.harrok.outcome", "equals": "slain"}]}
+	]
+}

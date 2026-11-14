@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "encounter.drowned_ferry",
+	"type": "encounter",
+	"display_name": "The ferrywoman",
+	"description": "P35 (plan M6-M9 §5.4, §5.7): Wenna, the last ferrywoman of the Mere, at her landing on the Sunken Steps' lowest terrace - the bells' quest giver. No faction; protected.",
+	"level": "level.world",
+	"center_m": [-196, 4.93, 32],
+	"activate_radius_m": 110,
+	"deactivate_radius_m": 180,
+	"leash_radius_m": 30,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.drowned.ferrywoman", "definition": "npc.ferrywoman", "position_m": [-196, 4.93, 32], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

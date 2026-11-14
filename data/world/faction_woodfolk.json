@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "faction.woodfolk",
+	"type": "faction",
+	"display_name": "The woodfolk",
+	"description": "P35 (plan M6-M9 §2.12, §5.4, §5.9, decision 31): the woodfolk of Hollowmere - their elder Sedge, the folk of the stilt village and their hunters in the Greywood (members carry faction \"woodfolk\"). Neutral until offended (two offences within 30 s: a blow on one of them); its folk step aside for a giant at peace with them. Winning their oath (either resolution) sets faction.woodfolk.allied and lights Hollowmere's lanterns. Hostile, its hunters fight; Sedge reconciles the village for 2 iron.",
+	"flag_prefix": "faction.woodfolk",
+	"initial": "neutral",
+	"offences_to_hostile": 2,
+	"offence_window_s": 30,
+	"civilians_give_way": true,
+	"give_way_m": 3.0,
+	"reconcile": {"talker": "world.greywood.sedge", "cost": [{"item": "item.iron_ingot", "count": 2}],
+		"text": "Make good the fright you gave Hollowmere (2 iron)"},
+	"warn_text": "Hollowmere's folk scatter into the reeds. Strike them again and the woodfolk will turn their bows on you.",
+	"hostile_text": "A horn sounds over the black pond: the woodfolk take up their bows against you.",
+	"stood_down_text": "The woodfolk lower their bows.",
+	"reconciled_text": "Sedge accepts the iron. The woodfolk will tolerate you again."
+}

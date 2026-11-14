@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "encounter.aldmere_iron_regiment_charge",
+	"type": "encounter",
+	"display_name": "The Iron Regiment: the Charge",
+	"description": "P36 (plan M6-M9 §5.13 boss 1, phase 2 'The Charge', at 60 % of the battle's aggregate): six cavalry charge from the stables on the bailey's east side; the wall ballistae keep firing. Force-activated by the battle. M9 gate (plan 5.13: 'two wall ballistae fire' in the Wall, 'all four ballistae fire' in the Charge): its `engines` list names the gate bastions' two ballistae with no crew of its own - the gate garrison's wall crews serve them - so the battle holds their fire through the Wall and frees it as the Charge begins (BattleBoss.engine_phase; the Wall's encounter crews the two inner ballistae, which shoot from the first blow).",
+	"level": "level.world",
+	"center_m": [650, 60.0, -215],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 400,
+	"alert_group": true,
+	"requires_flags": ["world.aldmere.regiment_mustered"],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"arena": true,
+	"engines": [
+		{"engine": "world.aldmere.fort_ballista_w", "crew": []},
+		{"engine": "world.aldmere.fort_ballista_e", "crew": []}
+	],
+	"spawns": [
+		{"entity_id": "world.aldmere.regiment_rider_1", "definition": "enemy.cavalry", "position_m": [716, 60.0, -186], "yaw_deg": 90, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.aldmere.regiment_rider_2", "definition": "enemy.cavalry", "position_m": [722, 60.0, -194], "yaw_deg": 90, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.aldmere.regiment_rider_3", "definition": "enemy.cavalry", "position_m": [716, 60.0, -202], "yaw_deg": 90, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.aldmere.regiment_rider_4", "definition": "enemy.cavalry", "position_m": [722, 60.0, -210], "yaw_deg": 90, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.aldmere.regiment_rider_5", "definition": "enemy.cavalry", "position_m": [716, 60.0, -218], "yaw_deg": 90, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.aldmere.regiment_rider_6", "definition": "enemy.cavalry", "position_m": [722, 60.0, -178], "yaw_deg": 90, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

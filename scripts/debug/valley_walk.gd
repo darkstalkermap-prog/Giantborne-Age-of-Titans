@@ -165,13 +165,12 @@ func _layers() -> int:
 
 func _wait_for_navigation() -> void:
 	player.router.set_injected_move(Vector2.ZERO)
-	var map := level.nav_map()
 	# The probe leaves its first ticks out (start-up): the LOD comparison starts after them.
-	var ready := NavigationServer3D.map_get_iteration_id(map) > 0 \
+	var ready := NavQuery.is_synced(level, _layers()) \
 		and (probe == null or probe.ticks_seen > probe.warmup_ticks)
 	if ready:
 		var first := _leg_target(0)
-		var path := NavigationServer3D.map_get_path(map, player.global_position, first, true, _layers())
+		var path := NavQuery.path(level, player.global_position, first, _layers(), NavQuery.PURPOSE_FAR)
 		ready = path.size() > 0
 	if ready or _state_ticks >= NAV_WAIT_TICKS:
 		_begin_lod()
@@ -184,11 +183,9 @@ func _wait_for_navigation() -> void:
 func _leg_target(i: int) -> Vector3:
 	var m := level.marker(str(LEGS[i][1]))
 	var at := m.global_position if m != null else player.global_position
-	var region := level.nav_region(_lowest_bit(_layers()))
-	if region.is_valid():
-		var on := NavigationServer3D.region_get_closest_point(region, at)
-		if _flat(on, at) <= 3.0:
-			return on
+	var on := NavQuery.closest_point(level, at, _layers())
+	if on.is_finite() and _flat(on, at) <= 3.0:
+		return on
 	return at
 
 
@@ -204,7 +201,7 @@ func _begin_leg(i: int) -> void:
 	legs.append(entry)
 	_path = PackedVector3Array()
 	if not teleport_only:
-		var path := NavigationServer3D.map_get_path(level.nav_map(), player.global_position, target, true, _layers())
+		var path := NavQuery.path(level, player.global_position, target, _layers(), NavQuery.PURPOSE_FAR)
 		if path.size() > 0 and _flat(path[path.size() - 1], target) <= REACH_TOLERANCE_M:
 			_path = path
 	if _path.is_empty():
@@ -513,12 +510,6 @@ func check_failures() -> PackedStringArray:
 		out.append("LOD comparison skipped: %s" % lod_compare.skipped)
 	return out
 
-
-static func _lowest_bit(mask: int) -> int:
-	for i in 32:
-		if mask & (1 << i):
-			return 1 << i
-	return 1
 
 
 static func _flat(a: Vector3, b: Vector3) -> float:

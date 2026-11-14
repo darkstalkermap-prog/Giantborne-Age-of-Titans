@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.context_sandbox",
+	"display_name": "The sandbox",
+	"description": "P23: the sandbox: the calm set and the meadow.",
+	"level": "",
+	"districts": [],
+	"regions": [],
+	"pois": [],
+	"context": "sandbox",
+	"boss": "",
+	"music": "music.valley_calm",
+	"ambience": "ambience.sandbox",
+	"priority": 0
+}

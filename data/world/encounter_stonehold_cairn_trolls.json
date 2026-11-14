@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_cairn_trolls",
+	"type": "encounter",
+	"display_name": "The Cairnlands' trolls",
+	"description": "P36 (plan M6-M9 §5.10): three trolls among the cairns west of the Stair's head (fire stops their regrowth). Leash 60 m.",
+	"level": "level.world",
+	"center_m": [-100, 79.79, -560],
+	"activate_radius_m": 110,
+	"deactivate_radius_m": 190,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.stonehold.cairn_troll_1", "definition": "enemy.troll", "position_m": [-110, 79.76, -560], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.stonehold.cairn_troll_2", "definition": "enemy.troll", "position_m": [-92, 79.09, -552], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.stonehold.cairn_troll_3", "definition": "enemy.troll", "position_m": [-98, 80.54, -570], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

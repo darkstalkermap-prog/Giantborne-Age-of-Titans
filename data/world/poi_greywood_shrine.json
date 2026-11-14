@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.greywood_shrine",
+	"type": "poi",
+	"display_name": "Greywood Shrine",
+	"level": "level.world",
+	"region": "region.greywood",
+	"kind": "shrine",
+	"position_m": [-540, 25.9, 110],
+	"radius_m": 30,
+	"xp": 0,
+	"map_icon": "shrine",
+	"compass": true,
+	"landmark": "world.shrine.greywood",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A shrine in a clearing of the Greywood."
+}

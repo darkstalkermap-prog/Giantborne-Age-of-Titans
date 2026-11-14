@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.size_gate",
+	"type": "tutorial_prompt",
+	"description": "P27: the first way too big for the giant's stage in the Old Kingdom.",
+	"text": "Some ways are only for a bigger giant: deep water, a boulder, a fortified gate. Each tells you the stage it needs. Grow at a shrine and come back.",
+	"trigger": {"type": "event", "event": "size_gate_blocked"},
+	"dismiss": {"type": "timeout", "timeout_s": 12},
+	"requires_flags": ["progress.world_entered"],
+	"min_stage": 1,
+	"priority": 9,
+	"once": true,
+	"defer_in_combat": true,
+	"sets_flag": "tutorial.size_gate.done"
+}

@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "status.burning",
+	"type": "status_effect",
+	"display_name": "Burning",
+	"hud_label": "BURNING",
+	"stacking": "refresh_no_stack",
+	"duration_s": 8.0,
+	"tick_s": 0,
+	"magnitude_key": "",
+	"modifiers": {},
+	"tags": ["Debuff", "Burning"],
+	"hidden": false
+}

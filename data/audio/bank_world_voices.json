@@ -1,0 +1,753 @@
+{
+	"schema_version": 1,
+	"id": "audio_bank.world_voices",
+	"type": "audio_bank",
+	"display_name": "World voices",
+	"description": "P28 (section 4.1 family E, M7-M9): calls, never words - the troll, the Troll Matriarch (class boss), the rival giants (voice giant: alert, attack, hurt, stagger, death, a bellow - their roar - and a greeting for Ulfra; the player's own sfx.voice.giant.roar and .intimidate stay P21's), the dire wolf, the cavalry horse; far versions of the big voices; a crowd routing and an engine crew abandoning its engine.",
+	"cues": {
+		"sfx.voice.crowd.abandon": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/crowd_abandon_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 1000,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.crowd.flee": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/crowd_flee_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -8.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 1000,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.dire_wolf.alert": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/dire_wolf_alert_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "wolf",
+			"volume_db": -5.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.dire_wolf.attack": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/dire_wolf_attack_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "wolf",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.dire_wolf.death": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/dire_wolf_death_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "wolf",
+			"volume_db": -2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.dire_wolf.flee": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/dire_wolf_flee_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "wolf",
+			"volume_db": -7.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.dire_wolf.hurt": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/dire_wolf_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "wolf",
+			"volume_db": -4.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.dire_wolf.stagger": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/dire_wolf_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "wolf",
+			"volume_db": -4.5,
+			"pitch": 0.94,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.giant.alert": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/giant_alert_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 100,
+			"priority": 75,
+			"far": "sfx.voice.giant.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.giant.attack": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/giant_attack_1.wav",
+				"res://assets/audio/sfx/world/voices/giant_attack_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.giant.bellow": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/giant_bellow_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.giant.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.giant.death": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/giant_death_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.02,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 100,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.giant.far": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/giant_far_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": -2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.giant.flee": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/giant_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 1.5,
+			"pitch": 1.08,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.giant.greet": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/giant_greet_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 2.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.02,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.giant.hurt": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/giant_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.giant.stagger": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/giant_stagger_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.horse.alert": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/horse_alert_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -7.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 100,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.horse.attack": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/horse_attack_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.horse.death": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/horse_death_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -5.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 100,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.horse.flee": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/horse_flee_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -7.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.horse.hurt": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/horse_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.horse.stagger": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/horse_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -6.0,
+			"pitch": 0.95,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 70,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.matriarch.alert": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_alert_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 100,
+			"priority": 85,
+			"far": "sfx.voice.matriarch.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.matriarch.attack": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_attack_1.wav",
+				"res://assets/audio/sfx/world/voices/matriarch_attack_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.matriarch.death": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_death_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.02,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 100,
+			"priority": 85,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.matriarch.far": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_far_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": -2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.matriarch.flee": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.0,
+			"pitch": 1.08,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.matriarch.hurt": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.matriarch.roar": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "sfx.voice.matriarch.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.matriarch.stagger": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/matriarch_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.troll.alert": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/troll_alert_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 100,
+			"priority": 75,
+			"far": "sfx.voice.troll.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.troll.attack": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/troll_attack_1.wav",
+				"res://assets/audio/sfx/world/voices/troll_attack_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.troll.death": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/troll_death_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.02,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 100,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.troll.far": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/troll_far_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 60,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.troll.flee": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/troll_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.5,
+			"pitch": 1.08,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.troll.hurt": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/troll_hurt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.troll.roar": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/troll_roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 80,
+			"far": "sfx.voice.troll.far",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.voice.troll.stagger": {
+			"files": [
+				"res://assets/audio/sfx/world/voices/troll_stagger_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 75,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		}
+	}
+}

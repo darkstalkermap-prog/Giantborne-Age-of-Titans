@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "loot.titan_bones",
+	"type": "loot_table",
+	"display_name": "The Titan's Bones",
+	"description": "P35 (plan M6-M9 §5.4, §5.7, §5.8): the titan iron left in the Titan's ribs, paid once when the giant lights the Titan Forge (world.drowned.titan_forge_fire, quest.titan_bones) - 2 titan iron.",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{"item": "item.titan_iron", "count": 2}
+	]
+}

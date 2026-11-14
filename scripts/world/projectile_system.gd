@@ -118,6 +118,7 @@ func spawn(owner: CombatEntity, a: ActionDef, origin: Vector3, velocity: Vector3
 		snap.outgoing_damage_mult = owner.combatant.outgoing_damage_mult()
 		snap.outgoing_poise_mult = owner.combatant.outgoing_poise_mult()
 	p.ctx = snap
+	_p36_note_target(p)   # M8 gate (F12): a siege engine's shot may strike the prop it bombards
 	_active.append(p)
 	_show_visual(p)
 	Events.projectile_spawned.emit(Sim.tick, p.id, p.owner_id, a.id if a != null else "",
@@ -176,7 +177,9 @@ func _advance(p: Projectile, tick: int) -> void:
 	var space := p.owner.get_viewport().find_world_3d().direct_space_state
 	var contact := HitQueryAdapter.sphere_contact(space, from, to, p.radius)
 	var stop := to if contact.is_empty() else (contact.position as Vector3)
+	var lifted := _p36_lift_target(p)
 	var cands := HitQueryAdapter.sweep_sphere(space, p.owner, from, stop, p.radius)
+	_p36_drop_target(lifted)
 	HitFactory.sort_candidates(cands)
 	var first_substep := -1
 	var impact := Vector3.INF
@@ -214,8 +217,10 @@ func _impact(p: Projectile, point: Vector3, hit_id: String, tick: int) -> void:
 	p.position = point
 	if p.impact_radius > 0.0:
 		var space := p.owner.get_viewport().find_world_3d().direct_space_state
+		var lifted := _p36_lift_target(p)
 		var cands := HitQueryAdapter.cylinder_pulse(space, p.owner, point, p.impact_radius,
 			p.impact_height, point)
+		_p36_drop_target(lifted)
 		var others: Array = []
 		for c: Dictionary in cands:
 			if not p.hit_entities.has((c.entity as CombatEntity).entity_id):
@@ -233,6 +238,7 @@ func _end(p: Projectile, reason: String) -> void:
 	if p.ended:
 		return
 	p.ended = true
+	_p36_targets.erase(p.id)
 	_hide_visual(p)
 	projectile_ended.emit(p, reason)
 
@@ -258,6 +264,8 @@ func _move_visual(p: Projectile) -> void:
 		var dir := p.velocity.normalized()
 		basis = Basis.looking_at(dir, Vector3.UP if absf(dir.y) < 0.99 else Vector3.RIGHT) \
 			* Basis.from_scale(Vector3(p.radius, p.radius, p.radius * (2.5 if p.visual == "bolt" else 1.0)))
+	basis = _p31_visual_basis(p, basis)   # P31: the rune lance and the storm bolt fly along their path
+	basis = _p32_visual_basis(p, basis)   # P32: the ballista bolt flies point first, the stone tumbles
 	mi.global_transform = Transform3D(basis, p.position)
 
 
@@ -293,6 +301,8 @@ func _make_visual(kind: String) -> MeshInstance3D:
 			ball.radial_segments = 12
 			ball.rings = 6
 			mi.mesh = ball
+	_p31_visual(mi, kind)   # P31: rune_lance, storm_bolt
+	_p32_visual(mi, kind)   # P32: ballista_bolt, catapult_stone, engine (the engine itself rides it)
 	mi.material_override = _material(kind)
 	add_child(mi)
 	return mi
@@ -455,3 +465,210 @@ func _landing_hit(p: Projectile, e: CombatEntity, info: Dictionary, tick: int) -
 		"substep": 0, "distance": 0.0, "weak_point": false}], p.id + LANDING_PULSE_OFFSET, tick)
 
 ## @anchor P09
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P31
+## P31 (plan M6-M9 §5.12): Rune Lance's long violet lance and Storm Call's falling lightning streak,
+## unit meshes stretched along the flight path (scaled by the projectile radius when shown).
+const P31_VISUALS := {
+	"rune_lance": {"size": Vector3(1.2, 1.2, 10.0), "albedo": Color(0.72, 0.55, 1.0), "emission": Color(0.55, 0.35, 1.0)},
+	"storm_bolt": {"size": Vector3(1.0, 1.0, 14.0), "albedo": Color(0.95, 0.97, 1.0), "emission": Color(0.75, 0.85, 1.0)},
+}
+
+
+## Gives a P31 visual kind its mesh and (once) its glowing material; other kinds are left as made.
+func _p31_visual(mi: MeshInstance3D, kind: String) -> void:
+	var spec: Dictionary = P31_VISUALS.get(kind, {})
+	if spec.is_empty():
+		return
+	var box := BoxMesh.new()
+	box.size = spec.size
+	mi.mesh = box
+	if not _materials.has(kind):
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.albedo_color = spec.albedo
+		m.emission_enabled = true
+		m.emission = spec.emission
+		_materials[kind] = m
+
+
+## A P31 visual points along the projectile's velocity (the lance flies point first; the bolt falls
+## as a streak); other kinds keep `basis`.
+func _p31_visual_basis(p: Projectile, basis: Basis) -> Basis:
+	if not P31_VISUALS.has(p.visual) or p.velocity.length_squared() < 1e-6:
+		return basis
+	var dir := p.velocity.normalized()
+	return Basis.looking_at(dir, Vector3.UP if absf(dir.y) < 0.99 else Vector3.RIGHT) * Basis.from_scale(Vector3.ONE * p.radius)
+
+
+## @anchor P32
+# --- the siege engines' shots and a thrown engine (P32, plan M6-M9 §2.10, §3.16) -------------------
+# Visuals: ballista_bolt (a long dark bolt with an iron head, flying point first), catapult_stone (a
+# rough grey stone, tumbling) and engine (no mesh: the thrown engine itself rides the projectile).
+# p32_carry_engine: a giant's throw of a seized engine (PlayerGrab) launches an ordinary projectile of
+# visual "engine"; the engine rides it like a thrown body (P07's carry, here for a SiegeEngine): it is
+# never one of the throw's own hits, the projectile is at least as wide as the engine, it tumbles slowly
+# along the flight, and when the projectile ends the engine comes down there
+# (SiegeEngine.p32_thrown_landed: set down and smashed by its thrower), with fallbacks back along the
+# flight, to the throw's start and to the thrower.
+
+const P32_VISUALS := {
+	"ballista_bolt": {"size": Vector3(0.7, 0.7, 7.5), "albedo": Color(0.30, 0.22, 0.14)},
+	"catapult_stone": {"size": Vector3(1.9, 1.6, 1.8), "albedo": Color(0.47, 0.45, 0.41)},
+}
+## A thrown engine tumbles this fast (degrees per second; slower than a thrown body).
+const P32_ENGINE_SPIN_DEG_S := 160.0
+## The projectile is at least this wide when it carries an engine.
+const P32_ENGINE_RADIUS_M := 1.6
+
+var _p32_engines: Dictionary = {}   ## projectile id -> {"engine": WeakRef, "origin": Vector3, "holder": String}
+
+
+func _p32_visual(mi: MeshInstance3D, kind: String) -> void:
+	if kind == SiegeRules.THROW_VISUAL:
+		mi.mesh = null   # the engine itself rides the projectile
+		return
+	var spec: Dictionary = P32_VISUALS.get(kind, {})
+	if spec.is_empty():
+		return
+	var box := BoxMesh.new()
+	box.size = spec.size
+	mi.mesh = box
+	if not _materials.has(kind):
+		var m := StandardMaterial3D.new()
+		m.albedo_color = spec.albedo
+		m.roughness = 0.9
+		_materials[kind] = m
+
+
+## The bolt points along its velocity; the stone turns over as it flies (scaled by the radius).
+func _p32_visual_basis(p: Projectile, basis: Basis) -> Basis:
+	if not P32_VISUALS.has(p.visual):
+		return basis
+	var scale := Basis.from_scale(Vector3.ONE * p.radius)
+	if p.visual == "ballista_bolt" and p.velocity.length_squared() > 1e-6:
+		var dir := p.velocity.normalized()
+		return Basis.looking_at(dir, Vector3.UP if absf(dir.y) < 0.99 else Vector3.RIGHT) * scale
+	return Basis(Vector3.RIGHT, float(p.age_ticks) * 0.07) * scale
+
+
+## Makes projectile `projectile_id` carry the seized engine `engine` (a SiegeEngine), thrown by
+## `holder_id`. False when either is unknown or the engine is not held.
+func p32_carry_engine(projectile_id: int, engine: Node3D, holder_id: String) -> bool:
+	var p := get_projectile(projectile_id)
+	if p == null or p.ended or engine == null or not is_instance_valid(engine) or not engine.has_method("p32_thrown_landed"):
+		return false
+	var e: Variant = engine.get("entity")
+	if e is CombatEntity and not p.hit_entities.has((e as CombatEntity).entity_id):
+		p.hit_entities.append((e as CombatEntity).entity_id)
+	p.radius = maxf(p.radius, P32_ENGINE_RADIUS_M)
+	_p32_engines[p.id] = {"engine": weakref(engine), "origin": p.position, "holder": holder_id}
+	if not projectile_moved.is_connected(_p32_on_moved):
+		projectile_moved.connect(_p32_on_moved)
+	if not projectile_ended.is_connected(_p32_on_ended):
+		projectile_ended.connect(_p32_on_ended)
+	_p32_place(p, engine)
+	return true
+
+
+## How many projectiles carry an engine now (tests, debug).
+func p32_carried_engines() -> int:
+	return _p32_engines.size()
+
+
+func _p32_engine_of(p: Projectile) -> Node3D:
+	var info: Dictionary = _p32_engines.get(p.id, {})
+	var ref: WeakRef = info.get("engine")
+	var engine := ref.get_ref() as Node3D if ref != null else null
+	return engine if engine != null and is_instance_valid(engine) else null
+
+
+func _p32_on_moved(p: Projectile) -> void:
+	var engine := _p32_engine_of(p)
+	if engine != null:
+		_p32_place(p, engine)
+
+
+## The engine rides the projectile: its body centre on it, facing along the flight, turning over.
+func _p32_place(p: Projectile, engine: Node3D) -> void:
+	var spin := deg_to_rad(P32_ENGINE_SPIN_DEG_S) * p.age_ticks * Sim.DT
+	var basis := Basis(Vector3.UP, _flight_yaw(p, engine)) * Basis(Vector3.RIGHT, -spin)
+	engine.call("carry", p.position, basis, engine.call("body_centre_local"))
+
+
+func _p32_on_ended(p: Projectile, _reason: String) -> void:
+	if not _p32_engines.has(p.id):
+		return
+	var info: Dictionary = _p32_engines[p.id]
+	_p32_engines.erase(p.id)
+	var engine := _p32_engine_of_info(info)
+	if engine == null:
+		return
+	var holder := Sim.get_entity(str(info.get("holder", "")))
+	var thrower: Node3D = holder.actor if holder != null and is_instance_valid(holder.actor) else null
+	var fallbacks: Array = []
+	var back := -Vector3(p.velocity.x, 0.0, p.velocity.z)
+	if back.length_squared() > 1e-6:
+		back = back.normalized()
+		for i in range(1, LANDING_STEPS_BACK + 1):
+			fallbacks.append(p.position + back * LANDING_STEP_BACK_M * 2.0 * i)
+	fallbacks.append(info.get("origin", p.position))
+	if thrower != null:
+		fallbacks.append(thrower.global_position)
+	engine.call("p32_thrown_landed", p.position, thrower, fallbacks)
+
+
+static func _p32_engine_of_info(info: Dictionary) -> Node3D:
+	var ref: WeakRef = info.get("engine")
+	var engine := ref.get_ref() as Node3D if ref != null else null
+	return engine if engine != null and is_instance_valid(engine) else null
+
+
+# --- M8 gate (F12): a siege line's bombardment strikes the prop it aims at --------------------------------
+# The team rule (CombatEntity.can_damage) lets an ENEMY's hits reach only the PLAYER team, and Skarn's
+# longhouses are NEUTRAL props: a siege engine's shot at one (P36's bombardment) was dropped by the sweep
+# and the splash alike, so the siege of Skarn could never burn it. At launch the owner's actor names the
+# prop its shot is aimed at (SiegeEngine.p36_shot_target()); for this projectile's own hurtbox queries -
+# the sweep and the splash, nothing else - that one entity counts as the PLAYER team (as AttackRunner's
+# provider_target does for a raider's blow on a house), then is NEUTRAL again. No other neutral prop and
+# no civilian can be struck by an enemy's shot, and the hit's resolution is unchanged (the engine is not
+# the giant: no offence against the prop's faction).
+
+var _p36_targets: Dictionary = {}   ## projectile id -> entity id of the NEUTRAL prop its owner aims at
+
+
+func _p36_note_target(p: Projectile) -> void:
+	if p.owner == null or not is_instance_valid(p.owner.actor) or not p.owner.actor.has_method("p36_shot_target"):
+		return
+	var t: Variant = p.owner.actor.call("p36_shot_target")
+	if t is CombatEntity:
+		_p36_targets[p.id] = (t as CombatEntity).entity_id
+
+
+## The prop projectile `p` was aimed at, made hittable for its next query (returned so the caller puts it
+## back with _p36_drop_target); null when it has none, or when that prop is no longer a living neutral.
+func _p36_lift_target(p: Projectile) -> CombatEntity:
+	var id := str(_p36_targets.get(p.id, ""))
+	if id == "":
+		return null
+	var t := Sim.get_entity(id)
+	if t == null or not t.is_alive() or t.team != CombatEntity.Team.NEUTRAL:
+		return null
+	t.team = CombatEntity.Team.PLAYER
+	return t
+
+
+func _p36_drop_target(t: CombatEntity) -> void:
+	if t != null and is_instance_valid(t):
+		t.team = CombatEntity.Team.NEUTRAL
+
+
+## The entity id of the prop a projectile in flight was aimed at ("" = none; tests).
+func p36_target_of(projectile_id: int) -> String:
+	return str(_p36_targets.get(projectile_id, ""))
+
+## @anchor P34

@@ -6,6 +6,14 @@ extends Node3D
 ## and hit flashes. Reads actor.get_rig_state() (the ActorRig keys, plus "lunging"). Purely
 ## presentational: never changes gameplay state. set_status_tint() keeps a status colour on the
 ## materials like ActorRig's (HitFeedback, P09: a slowed wolf shows it); flashes play on top.
+##
+## P22: the parts are merged per animated part into vertex-coloured meshes with one material per
+## actor (a flash sets its emission, a tint multiplies its albedo: RigPaint), render_lod_m swaps the
+## rig for its one-box proxy by distance, and `footfall` fires when a diagonal paw pair lands (each
+## half gait cycle; the audio router's paw steps, P21).
+
+## Emitted when a diagonal pair of paws lands (each half gait cycle, like ActorRig.footfall).
+signal footfall
 
 @export var body_path: NodePath
 @export var head_path: NodePath
@@ -16,7 +24,14 @@ extends Node3D
 @export var leg_br_path: NodePath
 @export var stride_length_m := 1.1
 @export var leg_swing_rad := 0.7
+## P22: beyond this distance (m) the renderer draws the one-box proxy instead of the rig (AI LOD
+## tiers 0 and 1; RigPaint.apply_render_lod). 0 = never. WolfEnemy sets it from its record.
+@export var render_lod_m := 0.0
 
+## Footfalls emitted so far (tests, debug).
+var footfalls := 0
+## The copy of Visual/LodProxy under Body that the renderer shows beyond render_lod_m (P22).
+var far_proxy: MeshInstance3D = null
 var actor: Node3D
 var body: Node3D
 var head: Node3D
@@ -30,7 +45,9 @@ var _flash_applied := 0.0
 var _flash_color := Color(1.0, 0.95, 0.85)
 var _materials: Array[StandardMaterial3D] = []
 var _base_colors: Array[Color] = []
+var _material_copies: Dictionary = {}   ## source material -> this rig's copy (RigPaint)
 var _head_rest := Basis()
+var _last_step := 0
 
 
 func _ready() -> void:
@@ -43,6 +60,8 @@ func _ready() -> void:
 	if head != null:
 		_head_rest = head.basis
 	_make_materials_unique(self)
+	if render_lod_m > 0.0:
+		set_render_lod(render_lod_m)
 
 
 func flash(strength: float, color := Color(1.0, 0.95, 0.85)) -> void:
@@ -50,17 +69,17 @@ func flash(strength: float, color := Color(1.0, 0.95, 0.85)) -> void:
 	_flash_color = color
 
 
+## P22: the distance LOD (see RigPaint): beyond lod_m metres the renderer draws the one-box proxy
+## instead of the rig (0 = never).
+func set_render_lod(lod_m: float) -> void:
+	render_lod_m = maxf(0.0, lod_m)
+	far_proxy = RigPaint.apply_render_lod(self, body, render_lod_m)
+	_p30_apply_mid()   # P30: the merged rest-pose mesh at mid distance (low preset)
+
+
+## Gives the meshes under `node` this rig's copies of their materials (one per source: P22).
 func _make_materials_unique(node: Node) -> void:
-	for child in node.get_children():
-		if child is MeshInstance3D:
-			var mi := child as MeshInstance3D
-			var mat := mi.material_override as StandardMaterial3D
-			if mat != null:
-				var copy := mat.duplicate() as StandardMaterial3D
-				mi.material_override = copy
-				_materials.append(copy)
-				_base_colors.append(copy.albedo_color)
-		_make_materials_unique(child)
+	RigPaint.make_unique(node, _materials, _base_colors, _material_copies)
 
 
 func _process(delta: float) -> void:
@@ -78,6 +97,7 @@ func _process(delta: float) -> void:
 	var moving := speed > 0.3 and state == CombatController.State.LOCOMOTION
 	if moving:
 		_gait += delta * speed / stride_length_m * PI
+		_count_footfalls()
 	var swing := sin(_gait) * clampf(speed / 6.0, 0.25, 1.0) * leg_swing_rad if moving else 0.0
 	if bool(s.get("lunging", false)):
 		swing = 0.0
@@ -107,6 +127,7 @@ func _process(delta: float) -> void:
 		tail.rotation.y = lerpf(tail.rotation.y, wag, k)
 	_update_body(s, state, phase, delta)
 	_update_flash(delta)
+	_p30_promote(s)   # P30: an acting rig keeps its full detail out to render_lod_m
 
 
 func _update_body(s: Dictionary, state: int, phase: int, delta: float) -> void:
@@ -155,8 +176,47 @@ func _update_flash(delta: float) -> void:
 		return
 	_tint_dirty = false
 	_flash = maxf(0.0, _flash - delta * 6.0)
-	var tint_rgb := Color(_tint.r, _tint.g, _tint.b)
-	for i in _materials.size():
-		var base := _base_colors[i].lerp(tint_rgb, clampf(_tint.a, 0.0, 1.0))
-		_materials[i].albedo_color = base.lerp(_flash_color, _flash * 0.85)
+	# P22: the tint multiplies the albedo, the flash is emission (RigPaint).
+	RigPaint.paint(_materials, _base_colors, _tint, _flash, _flash_color)
 	_flash_applied = _flash
+
+
+## Emits `footfall` once for every half gait cycle (pi of gait phase) since the last call: the
+## diagonal pairs (front left + back right, front right + back left) land in turn (P22).
+func _count_footfalls() -> void:
+	var step := int(floor(_gait / PI))
+	if step == _last_step:
+		return
+	_last_step = step
+	footfalls += 1
+	footfall.emit()
+
+
+# --- the mid distance (P30, FOLLOWUPS: Valley views at low under 250 draw calls) -------------------
+# Hook lines: set_render_lod (_p30_apply_mid) and _process (_p30_promote); as ActorRig's P30 section:
+# at `low` one merged rest-pose mesh between 0.45 x render_lod_m and render_lod_m, the full rig
+# while it acts.
+
+## The rig's mid-distance mesh (null when none: not at `low`, or no render_lod_m).
+var mid_proxy: MeshInstance3D = null
+var _p30_promoted := false
+
+
+func _p30_apply_mid() -> void:
+	if render_lod_m > 0.0 and RigPaint.mid_lod_wanted(self):
+		var key := actor.scene_file_path if actor != null else ""
+		mid_proxy = RigPaint.apply_mid_lod(body, render_lod_m, _materials[0] if not _materials.is_empty() else null, key)
+		_p30_promoted = false
+	elif mid_proxy != null:
+		RigPaint.remove_mid_lod(body, render_lod_m)
+		mid_proxy = null
+
+
+func _p30_promote(s: Dictionary) -> void:
+	if mid_proxy == null:
+		return
+	var acting := s.get("action") != null or bool(s.get("staggered", false)) or bool(s.get("dead", false)) \
+		or (actor != null and actor.has_method("is_held") and bool(actor.call("is_held")))
+	if acting != _p30_promoted:
+		_p30_promoted = acting
+		RigPaint.set_mid_active(body, not acting, render_lod_m)

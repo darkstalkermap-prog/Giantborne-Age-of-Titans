@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "wander.drowned_steps",
+	"type": "wander_table",
+	"display_name": "The Mere's shores",
+	"description": "P35 (plan M6-M9 §2.13, §5.10, decision 27): who walks the Mere's shores while the giant is there - at most two at once, one every 60-120 s, 120-220 m away, out of view, on a node of the Mere road (never by a placed fight that is not cleared). Ruin robbers for a giant of stages 3-4; ogre pairs and dire wolves from stage 4. Each entry's members pay kill XP for its first three spawns only (wander.drowned_steps.<entry>.spawns).",
+	"region": "region.drowned_steps",
+	"max_active": 2,
+	"interval_s": [60, 120],
+	"min_distance_m": 120,
+	"max_distance_m": 220,
+	"anchors": "roads",
+	"xp_full_spawns": 3,
+	"patrol_m": 40,
+	"entries": [
+		{"id": "ruin_robbers", "weight": 2, "min_stage": 3, "max_stage": 4, "template": "encounter.tpl_drowned_ruin_robbers"},
+		{"id": "ogre_pair", "weight": 2, "min_stage": 4, "max_stage": 10, "template": "encounter.tpl_drowned_ogres"},
+		{"id": "dire_wolves", "weight": 2, "min_stage": 4, "max_stage": 10, "template": "encounter.tpl_drowned_dire_wolves"}
+	]
+}

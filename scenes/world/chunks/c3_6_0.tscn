@@ -1,0 +1,97 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/world/beacon_fire.gd" id="1_3d546"]
+[ext_resource type="Material" path="res://assets/world/shared/mat_vertex.tres" id="2_2c089"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="3_960f4"]
+[ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="4_5fc47"]
+[ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="5_acc12"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_1"]
+_surfaces = [{
+"aabb": AABB(-1.6950698, -0.13520359, -1.6, 3.5912645, 4.335203, 3.2),
+"attribute_data": PackedByteArray("8owz//KMM//yjDP/8owz//KMM//yjDP/8owz//KMM//yjDP/8owz/9ioPf/YqD3/2Kg9/9ioPf/YqD3/2Kg9/9ioPf/YqD3/2Kg9//KMM//yjDP/8owz//KMM//yjDP/8owz//KMM//yjDP/8owz/w=="),
+"format": 34359742479,
+"index_count": 72,
+"index_data": PackedByteArray("AAABAAIAAQADAAIAAwAEAAIABAAFAAIABQAGAAIABgAHAAIABwAIAAIACAAJAAIACgALAAwACwANAAwADQAOAAwADgAPAAwADwAQAAwAEAARAAwAEQASAAwAEgAKAAwAEwAUABUAFAAWABUAFgAXABUAFwAYABUAGAAZABUAGQAaABUAGgAbABUAGwATABUA"),
+"material": ExtResource("2_2c089"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 28,
+"vertex_data": PackedByteArray("zczMPwAAAAAAAAAAw9CQPwAAAADD0JA/AAAAAGZmhkAAAAAAUOjhJAAAAADNzMw/w9CQvwAAAADD0JA/zczMvwAAAABQ6GElw9CQvwAAAADD0JC/PG6ppQAAAADNzMy/w9CQPwAAAADD0JC/zczMPwAAAABQ6OGlgrbyP2OEsb3nVfs+gV3NP89yCr50MJk/9aqUP7s4PkDu+E8/ZmZmPwUT1r1+TL8/KEdIPmzMTryi1po/wAHFvWOEsT0NVQI/KEdIPs9yCj6kg0m+ZmZmPwUT1j36Mf2+gV3NP2zMTjwUtVa+6LPCPQjvvz3yshu/rBkrvqZP+T3A0uY85C+Jv9XbJEAHS1O/zcxMvzyloD202Jc+mGm3v0D+MLwg6CI9DPjYvwjvv71CgBe/mGm3v6ZP+b3lNJ2/zcxMvzyloL3Hj7+/rBkrvkD+MDzbsJ6/TMcpm9Va88ZqsimbzU0Gt/9///8AAP+//39Oo9NzD5aUTSmb/Jf+pU8jTqPTcwWwKRuUzc1NEaKv3P//31MVhtXklM2nt+mt1eSxuBOaJMph5RWYIXhyy424CY9ZU8Swb4lI60IUGsTkgn+WbXizjj1OZpebm5elTSlfpbV0ma4LIQzQsEk0oefYYv1ATu+G7+Zjyme2SrFh2BSrDHJU0havwaHhSMy6Smut9BUM4bXDfG2mVHPul/RJL5jmms+nsBfCmbl4lbTeD37HLlOnpdYYe/xZX5mEOeaQz6e21ag=")
+}]
+
+[node name="Chunk_3_6_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="world_crownmarch_kingsgate_beacon_fire" type="Node3D" parent="Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 11.156, 238)
+script = ExtResource("1_3d546")
+world_id = "world.crownmarch.kingsgate_beacon_fire"
+display_name = "Kingsgate beacon"
+lit_flag = "world.kingsgate.lit"
+requires_flags = PackedStringArray("encounter.crownmarch_kingsgate_scouts.cleared")
+locked_message = "Toll-riders hold the beacon hill. Drive them off before you light it."
+loot_table = "loot.beacon_cache"
+lit_message = "The Kingsgate beacon burns again: the whole kingdom sees it."
+scene_dialogue = "dialogue.kingsgate_beacon"
+interact_id = "world.crownmarch.kingsgate_beacon_fire"
+prompt = "Relight the beacon"
+radius_m = 9.0
+priority = 35
+
+[node name="Fire" type="MeshInstance3D" parent="Props/world_crownmarch_kingsgate_beacon_fire" groups=["scenery"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 32.5, 0)
+visible = false
+mesh = SubResource("ArrayMesh_1")
+
+[node name="world_crownmarch_raiders_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 154, 2.7189999, 50)
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("4_5fc47")
+world_id = "world.crownmarch.raiders_cache"
+loot_table = "loot.cache_raiders_hollow"
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Objective" type="Node3D" parent="Markers"]
+
+[node name="world_marker_raiders_hollow" type="Marker3D" parent="Markers/Objective"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 156, 3.604, 73)
+script = ExtResource("5_acc12")
+marker_id = "world.marker.raiders_hollow"
+
+[node name="Patrol" type="Node3D" parent="Markers"]
+
+[node name="world_marker_raiders_flee_w" type="Marker3D" parent="Markers/Patrol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 3.278, 33)
+script = ExtResource("5_acc12")
+marker_id = "world.marker.raiders_flee_w"
+kind = 5
+
+[node name="world_marker_raiders_flee_s" type="Marker3D" parent="Markers/Patrol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 136, 9.616, 3)
+script = ExtResource("5_acc12")
+marker_id = "world.marker.raiders_flee_s"
+kind = 5
+
+[node name="world_marker_raiders_flee_e" type="Marker3D" parent="Markers/Patrol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 221, 6.8269997, 58)
+script = ExtResource("5_acc12")
+marker_id = "world.marker.raiders_flee_e"
+kind = 5
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="NavLinks" type="Node3D" parent="."]

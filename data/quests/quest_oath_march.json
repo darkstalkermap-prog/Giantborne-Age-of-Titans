@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "quest.oath_march",
+	"type": "quest",
+	"display_name": "The Marchwarden's Peace",
+	"description": "P29 (plan M6-M9 §5.7, §5.9, decision 26): Brannock's oath, one of the three powers' for quest.world_main's oaths stage. It starts at stage 4. Meet Marchwarden Edda (50; inside the south gate for a giant that fits the streets, on the giants' green for a bigger one), then win the oath one of three ways, each open as a first oath at stage 4: help - break the toll fort's gate and garrison and clear the Raiders' Hollow, then report to Edda (950: the toll fort 150, the Hollow 150, the oath 650; Brannock allied, its banner - a parley token - and the iron of a free reinforcement at its smithy, the giant's banners on its gates); intimidate - loom over her hall (750; Brannock pays tribute: 2 iron, the tribute heaped at its gate, its smithy serves); force - smash the south gatehouse (50, the town turns hostile) and take the oath by fear (700; the gate stays broken, the smithy shut, until Edda is paid 2 iron). Every resolution pays the oath's reward (loot.oath_reward: 1 titan iron, 2 iron) and lifts the XP to level 9. Worst path 800 XP, best 1,000.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "stage_at_least", "stage": 4}],
+	"abandon_when": null,
+	"tracker_priority": 60,
+	"stages": [
+		{"id": "meet", "objective": "Meet Marchwarden Edda at Brannock",
+			"complete_when": {"type": "flag", "flag": "oath.march.met"},
+			"marker": "world.marker.brannock_green", "xp": 50, "items": [], "set_flags": {},
+			"bot": {"action": "talk", "target": "world.crownmarch.edda"}},
+		{"id": "resolve", "objective": "Win Brannock's oath: free the March's roads, cow the town, or take it by force",
+			"complete_when": {"type": "flag", "flag": "oath.march.done"},
+			"marker": "world.marker.brannock_green", "xp": 0, "xp_floor_level": 9,
+			"waiting_text": "Edda asks you to break the toll-riders' fort and clear the Raiders' Hollow, then come back to her.",
+			"items": [{"item": "item.titan_iron", "count": 1}, {"item": "item.iron_ingot", "count": 2}],
+			"set_flags": {},
+			"bot": {"action": "talk", "target": "world.crownmarch.edda",
+				"help": ["encounter.crownmarch_toll_fort", "world.crownmarch.toll_gate", "encounter.crownmarch_raiders"],
+				"force": "world.crownmarch.brannock_south_gate"}}
+	],
+	"on_complete_flags": {}
+}

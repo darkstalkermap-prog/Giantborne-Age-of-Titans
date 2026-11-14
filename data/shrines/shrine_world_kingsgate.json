@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "shrine.world_kingsgate",
+	"type": "shrine",
+	"display_name": "Kingsgate Shrine",
+	"description": "Kingsgate's shrine under the shelf (plan M6-M9 §5.4): grows the giant to stage 4 once the Kingsgate beacon is relit (world.kingsgate.lit). P29: the same rule as a growth condition (growth_requires_conditions), with its line for the Grow tab.",
+	"allows_growth": true,
+	"max_stage": 4,
+	"growth_requires_flags": ["world.kingsgate.lit"],
+	"growth_locked_message": "The shrine will not answer while Kingsgate's beacon is cold.",
+	"checkpoint": true,
+	"rest_heals": true,
+	"first_activation_rest": true,
+	"loadout": true,
+	"attributes": true,
+	"activation_radius_m": 14,
+	"growth_requires_conditions": [{"type": "flag", "flag": "world.kingsgate.lit"}],
+	"growth_conditions_text": ["Relight the Kingsgate beacon first: its fire wakes the shrine."]
+}

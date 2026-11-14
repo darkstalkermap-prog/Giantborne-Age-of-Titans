@@ -1,0 +1,49 @@
+{
+	"schema_version": 1,
+	"id": "audio_bank.world_threat",
+	"type": "audio_bank",
+	"display_name": "World threat cues",
+	"description": "P28 (section 4.1 family F, M7-M9): a formation's brace (one wall cue per formation per brace cycle, at its striker) and an indirect projectile's incoming whistle at its landing circle, timed to end at the landing.",
+	"cues": {
+		"sfx.threat.incoming": {
+			"files": [
+				"res://assets/audio/sfx/world/threat/incoming_1.wav",
+				"res://assets/audio/sfx/world/threat/incoming_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "threat",
+			"volume_db": -7.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.02,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 100,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		},
+		"sfx.threat.windup.wall": {
+			"files": [
+				"res://assets/audio/sfx/world/threat/windup_wall_1.wav",
+				"res://assets/audio/sfx/world/threat/windup_wall_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "threat",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.02,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 60,
+			"priority": 100,
+			"far": "",
+			"levels": [
+				"level.world"
+			]
+		}
+	}
+}

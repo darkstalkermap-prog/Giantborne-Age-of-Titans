@@ -12,8 +12,13 @@ extends RefCounted
 ##    "attributes": {"strength": 12, ...}, "growth_stage": 2, "weapon": "weapon.club",
 ##    "weapons_owned": ["weapon.club"], "loadout": {"slots": [8 ids, "" = empty], "ultimate": ""},
 ##    "known_abilities": [...], "level_exempt": [...],
-##    "resources": {"health": 695.0, "stamina": 110.0, "essence": 102.0, "fury": 0.0}}
+##    "resources": {"health": 695.0, "stamina": 110.0, "essence": 102.0, "fury": 0.0},
+##    "talents": ["talent.guardian_stone_hide"], "ancestry_chosen": false}
 ## Keys this file does not know (added by later packages) pass through unchanged.
+## Save schema 2 (P20, plan M6-M9 §2.6): "talents" (talent record ids, P33 learns them; unknown ids
+## are dropped like abilities) and "ancestry_chosen" (true once the ancestry was chosen at a
+## shrine: P33 normalises it to "the ancestry is not ancestry.neutral") - normalize() adds both.
+## world_start() is the character a campaign started in the world gets.
 
 const DEFAULT_ID := "char.valley_1"
 const DEFAULT_DEFINITION := "player.giant"
@@ -25,9 +30,10 @@ const MAX_LEVEL := 99
 const COUNTER_KEYS := ["xp", "unspent_attribute_points", "talent_points"]
 const ID_LIST_KEYS := ["weapons_owned", "known_abilities", "level_exempt"]
 const RESOURCE_KEYS := ["health", "stamina", "essence", "fury"]
-## The keys PlayerProgression (P12) applies and captures; "xp" is the total XP earned.
+## The keys PlayerProgression (P12) applies and captures; "xp" is the total XP earned. P33 adds the
+## learned talents and whether the ancestry was chosen.
 const PROGRESSION_KEYS := ["level", "xp", "unspent_attribute_points", "talent_points", "attributes",
-	"level_exempt", "ancestry"]
+	"level_exempt", "ancestry", "talents", "ancestry_chosen"]
 
 
 ## The Valley's starting character: the player record's body and attributes with the
@@ -59,6 +65,69 @@ static func new_game(progression: Dictionary, player_record: Dictionary) -> Dict
 	_append_unique(known, str(loadout.ultimate))
 	c["known_abilities"] = known
 	return normalize(c)
+
+
+## The character of a campaign started in the world (P20, plan M6-M9 §2.6): new_game() with the
+## progression record's world_start block on top - the Valley's worst guaranteed outcome (level,
+## total XP, unspent attribute and talent points, growth profile, weapon and the weapons owned,
+## ancestry, slots, ultimate and known abilities). No resources: the giant starts with the full
+## pools of its stage. Without a world_start block it is new_game()'s character.
+static func world_start(progression: Dictionary, player_record: Dictionary) -> Dictionary:
+	var c := new_game(progression, player_record)
+	var ws: Dictionary = progression.get("world_start", {}) if typeof(progression.get("world_start")) == TYPE_DICTIONARY else {}
+	if ws.is_empty():
+		return c
+	for key: String in ["level", "xp", "unspent_attribute_points", "talent_points"]:
+		if SchemaUtil.is_number(ws.get(key)):
+			c[key] = int(ws[key])
+	if typeof(ws.get("growth_profile")) == TYPE_STRING:
+		c["growth_stage"] = _profile_stage(str(ws.growth_profile), int(c.growth_stage))
+	if typeof(ws.get("weapon")) == TYPE_STRING and str(ws.weapon) != "":
+		c["weapon"] = str(ws.weapon)
+	var owned: Array = [str(c.weapon)]
+	if typeof(ws.get("weapons_owned")) == TYPE_ARRAY:
+		for id: Variant in ws.weapons_owned:
+			_append_unique(owned, str(id))
+	c["weapons_owned"] = owned
+	if typeof(ws.get("ancestry")) == TYPE_STRING and str(ws.ancestry) != "":
+		c["ancestry"] = str(ws.ancestry)
+	if typeof(ws.get("attributes")) == TYPE_DICTIONARY:
+		var attrs: Dictionary = (c.attributes as Dictionary).duplicate()
+		for key: Variant in ws.attributes:
+			attrs[str(key)] = _whole(ws.attributes[key], int(attrs.get(str(key), 10)))
+		c["attributes"] = attrs
+	var loadout: Dictionary = c.loadout
+	if typeof(ws.get("slots")) == TYPE_ARRAY:
+		loadout["slots"] = _slot_list(ws.slots)
+	if typeof(ws.get("ultimate")) == TYPE_STRING:
+		loadout["ultimate"] = str(ws.ultimate)
+	var known: Array = []
+	if typeof(ws.get("known_abilities")) == TYPE_ARRAY:
+		for id: Variant in ws.known_abilities:
+			_append_unique(known, str(id))
+	for id: Variant in loadout.slots:
+		_append_unique(known, str(id))
+	_append_unique(known, str(loadout.ultimate))
+	c["known_abilities"] = known
+	c.erase("resources")
+	return normalize(c)
+
+
+## {item id: count} from a [{"item", "count"}] list (world_start's inventory; unknown items and
+## counts below 1 are left out).
+static func inventory_of(list: Variant) -> Dictionary:
+	var out := {}
+	if typeof(list) != TYPE_ARRAY:
+		return out
+	for e: Variant in list:
+		if typeof(e) != TYPE_DICTIONARY:
+			continue
+		var id := str(e.get("item", ""))
+		var n := _whole(e.get("count", 1), 1)
+		if id == "" or n < 1 or _record_type(id) != "item":
+			continue
+		out[id] = int(out.get(id, 0)) + n
+	return out
 
 
 ## A complete character built from a player record alone (the giant as the record describes it):
@@ -161,6 +230,23 @@ static func sanitize(d: Dictionary) -> Dictionary:
 			else:
 				_append_unique_packed(dropped, s)
 		out[key] = clean
+	# Save schema 2 (P20): the learned talents (talent records; P33) and whether the ancestry was
+	# chosen.
+	var talents: Array = []
+	var raw_talents: Array = d.talents if typeof(d.get("talents")) == TYPE_ARRAY else []
+	for id: Variant in raw_talents:
+		var s := str(id)
+		if s == "":
+			continue
+		if _record_type(s) == "talent":
+			_append_unique(talents, s)
+		else:
+			_append_unique_packed(dropped, s)
+	out["talents"] = talents
+	# P33: the choice is the ancestry itself - every ancestry but the neutral (prologue) one is chosen,
+	# and the neutral one never is, whatever the save says (a neutral character marked as having
+	# chosen would never be offered the choice).
+	out["ancestry_chosen"] = ancestry != DEFAULT_ANCESTRY
 	var lo: Dictionary = d.loadout if typeof(d.get("loadout")) == TYPE_DICTIONARY else {}
 	var slots: Array = []
 	for id: Variant in _slot_list(lo.get("slots", [])):
@@ -219,6 +305,10 @@ static func validate(d: Dictionary) -> PackedStringArray:
 	for key: String in ID_LIST_KEYS:
 		if d.has(key):
 			_check_string_list(d[key], "character.%s" % key, errors)
+	if d.has("talents"):
+		_check_string_list(d.talents, "character.talents", errors)
+	if d.has("ancestry_chosen") and typeof(d.ancestry_chosen) != TYPE_BOOL:
+		errors.append("character.ancestry_chosen: must be true or false")
 	if typeof(d.get("loadout")) != TYPE_DICTIONARY:
 		errors.append("character.loadout: missing or not an object")
 	else:

@@ -14,14 +14,22 @@ extends Interactable
 ##   its cost items are held. Reasons in REASONS order.
 ## - upgrade(player): can_upgrade, then the cost leaves the inventory (WorldState.remove_item),
 ##   the reinforced weapon is granted and equipped (PlayerEquipment.grant_weapon), the old weapon
-##   leaves the owned list, Events.upgrade_applied(tick, from, to) and a HUD line. The reinforced
-##   weapon has no upgrade of its own, so the same weapon cannot be reforged twice.
+##   leaves the owned list, Events.upgrade_applied(tick, from, to) and a HUD line.
+## - Refit chains and forge tiers (P31, plan M6-M9 §2.11, decision 24): a weapon's upgrade is one
+##   step of a chain (base -> reinforced -> titanforged), each step naming the forge tier it needs
+##   (upgrade.forge_tier, iron by default). An iron forge (`tier` "iron": the Valley's two, the
+##   Kingsgate anvil, Brannock's) does the iron steps; a titan forge ("titan": the Titan Forge, Fort
+##   Aldmere's, Skarn's hearth) does both. A titan step at an iron forge is refused with reason
+##   "forge_tier" and the forge says where to go; the offer still shows the step (to, cost).
 ##
 ## Children (forge.tscn, tools/builders/forge.gd): Hearth and Anvil (StaticBody3D on WORLD), Fire.
 ## Group "forges".
 
-const REASONS := ["closed", "no_player", "busy", "no_upgrade", "unknown_upgrade", "missing_items"]
+const REASONS := ["closed", "no_player", "busy", "no_upgrade", "unknown_upgrade", "missing_items", "forge_tier"]
 const DEFAULT_CLOSED_MESSAGE := "The forge is cold. Its smith will not work for you."
+## P31: the forge tiers in rank order (an iron forge reinforces; a titan forge also titanforges).
+const TIERS := ["iron", "titan"]
+const TIER_MESSAGE := "Titanforging needs a titan forge - this forge can only reinforce."
 
 ## Placed, persistent id, e.g. "valley.ruins.giantforge".
 @export var world_id := ""
@@ -33,9 +41,16 @@ const DEFAULT_CLOSED_MESSAGE := "The forge is cold. Its smith will not work for 
 @export var requires_flag_values: Dictionary = {}
 ## Shown (warning) when E is pressed while the forge is closed.
 @export var closed_message := DEFAULT_CLOSED_MESSAGE
+## P31: "iron" reinforces; "titan" also titanforges (TIERS).
+@export var tier := "iron"
 
 ## The result of the last upgrade() (the screen shows it).
 var last_result: Dictionary = {}
+
+
+## P31: true when this forge can do a refit step needing `step_tier` (a titan forge does every step).
+func does_tier(step_tier: String) -> bool:
+	return maxi(0, TIERS.find(tier)) >= maxi(0, TIERS.find(step_tier))
 
 
 func _ready() -> void:
@@ -89,7 +104,7 @@ static func _same(a: Variant, b: Variant) -> bool:
 # --------------------------------------------------------------------------- Interactable
 
 func prompt_text(_player: GiantPlayer) -> String:
-	return "Reforge at the %s" % display_name
+	return "Reforge at %s" % TextUtil.with_the(display_name)   # M9 gate (lane review): not "at the The Giantforge"
 
 
 func can_interact(_player: GiantPlayer) -> bool:
@@ -109,11 +124,12 @@ func interact(player: GiantPlayer) -> void:
 # --------------------------------------------------------------------------- the upgrade
 
 ## The equipped weapon's reforge, whether or not it is possible now: {"from", "from_name", "to",
-## "to_name", "to_multiplier", "to_fit", "cost": [{"item", "name", "count", "held"}]} ("to" ""
+## "to_name", "to_multiplier", "to_fit", "cost": [{"item", "name", "count", "held"}], "forge_tier"
+## (P31: the tier the step needs), "perk" (P31: the new weapon's perk text, "" = none)} ("to" ""
 ## when the weapon has no upgrade).
 func offer(player: GiantPlayer) -> Dictionary:
 	var out := {"from": "", "from_name": "", "to": "", "to_name": "", "to_multiplier": 0.0,
-		"to_fit": 0, "cost": []}
+		"to_fit": 0, "cost": [], "forge_tier": "iron", "perk": ""}
 	if player == null or not is_instance_valid(player):
 		return out
 	var w := player.current_weapon()
@@ -127,6 +143,9 @@ func offer(player: GiantPlayer) -> Dictionary:
 	out.to_name = str(to.get("display_name", out.to))
 	out.to_multiplier = float(to.get("damage_multiplier", 0.0))
 	out.to_fit = int(to.get("fit_max_stage", 10))
+	out.forge_tier = str((up as Dictionary).get("forge_tier", "iron"))
+	var perk: Variant = to.get("perk")
+	out.perk = str((perk as Dictionary).get("text", "")) if typeof(perk) == TYPE_DICTIONARY else ""
 	var cost: Array = []
 	for c: Variant in (up as Dictionary).get("cost", []):
 		if typeof(c) != TYPE_DICTIONARY:
@@ -157,6 +176,8 @@ func _check(player: GiantPlayer, o: Dictionary) -> Dictionary:
 		return _fail("no_upgrade", "The %s cannot be reforged any further." % str(o.from_name))
 	if str(GameData.get_record(str(o.to)).get("type", "")) != "weapon":
 		return _fail("unknown_upgrade", "This forge does not know how to reforge the %s." % str(o.from_name))
+	if not does_tier(str(o.get("forge_tier", "iron"))):
+		return _fail("forge_tier", TIER_MESSAGE)
 	var missing := PackedStringArray()
 	for c: Dictionary in o.cost:
 		if int(c.held) < int(c.count):

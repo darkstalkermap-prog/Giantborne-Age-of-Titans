@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.titan_iron",
+	"type": "item",
+	"display_name": "Titan Iron",
+	"description": "Dark, dense iron from the forges of the old giant-kings. A titan-tier forge needs two of them, with two iron ingots, to titanforge a weapon.",
+	"stack_max": 99,
+	"category": "material"
+}

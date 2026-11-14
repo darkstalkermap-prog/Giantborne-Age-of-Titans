@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.troll_fire",
+	"type": "tutorial_prompt",
+	"description": "P35 (plan M6-M9 §3.19, §5.10): the fire lesson at the woodcutters' camp, the Greywood's first trolls - shown when the giant walks into the camp (world.area.woodcutters_camp), where a bonfire and a brazier stand by the two trolls.",
+	"text": "Trolls close their wounds unless they burn. Smash the bonfire or a brazier while a troll stands beside it, or throw a troll into the flames - a burning troll cannot heal.",
+	"trigger": {"type": "entered", "area": "world.area.woodcutters_camp"},
+	"dismiss": {"type": "timeout", "timeout_s": 14},
+	"requires_flags": ["progress.world_entered"],
+	"min_stage": 1,
+	"priority": 13,
+	"once": true,
+	"defer_in_combat": false,
+	"sets_flag": "tutorial.troll_fire.done"
+}

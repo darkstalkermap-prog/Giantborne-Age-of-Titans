@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://assets/test_world/shared/monolith.res" id="1_16e7f"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(7, 30, 4)
+
+[node name="Chunk_1_3_0" type="Node3D"]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Shrines" type="Node3D" parent="."]
+
+[node name="Waystones" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="Exits" type="Node3D" parent="."]
+
+[node name="SizeGates" type="Node3D" parent="."]
+
+[node name="Landmarks" type="Node3D" parent="."]
+
+[node name="Monolith" type="StaticBody3D" parent="Landmarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 39.508, 124)
+collision_mask = 0
+
+[node name="Shape0" type="CollisionShape3D" parent="Landmarks/Monolith"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Mesh" type="MeshInstance3D" parent="Landmarks/Monolith"]
+mesh = ExtResource("1_16e7f")
+
+[node name="NavLinks" type="Node3D" parent="."]

@@ -59,6 +59,7 @@ func _ready() -> void:
 		m.cull_mode = BaseMaterial3D.CULL_DISABLED
 		_materials[key] = m
 	Events.telegraph_started.connect(_on_telegraph_started)
+	_p32_ready()   # P32: an indirect shot's landing circle stays through the flight
 
 
 # --------------------------------------------------------------------------- records (static)
@@ -168,7 +169,7 @@ func _process(delta: float) -> void:
 	_time += delta
 	for actor_id: String in _records.keys():
 		var rec: Dictionary = _records[actor_id]
-		if not is_live(rec):
+		if not is_live(rec) and not _p32_in_flight(rec):
 			_records.erase(actor_id)
 			_release_view(actor_id)
 			continue
@@ -188,7 +189,8 @@ func _ends(rec: Dictionary) -> Array:
 		if end == Vector3.INF:
 			end = start + _forward(actor.global_rotation.y) * float(rec.length)
 		return [start, end]
-	if actor != null and not is_striking(rec):
+	if actor != null and not is_striking(rec) and not _p30_band(rec, actor) and not _p31_at_target(rec) \
+			and not _p32_landing(rec):
 		# Ground decals follow the actor through the windup; the strike stays where it began.
 		rec["at"] = actor.global_position
 		rec["at_yaw"] = actor.global_rotation.y
@@ -202,6 +204,8 @@ static func _forward(yaw: float) -> Vector3:
 
 
 func _draw_record(actor_id: String, rec: Dictionary) -> void:
+	if _p32_draw_flight(actor_id, rec):
+		return   # P32: the landing circle while the shot flies
 	var view := _view_for(actor_id)
 	var base: MeshInstance3D = view.base
 	var fill_mi: MeshInstance3D = view.fill
@@ -263,6 +267,7 @@ func _draw_record(actor_id: String, rec: Dictionary) -> void:
 			var filled := maxf(length * fill, 0.01)
 			fill_mi.global_transform = Transform3D(turn * Basis.from_scale(Vector3(width * 0.8,
 				DECAL_THICKNESS_M * 1.5, filled)), at + fwd * (filled * 0.5) + Vector3.UP * 0.005)
+	_p31_restyle(rec, base, fill_mi, flash)   # P31: the giant's own telegraphs (a crack, its colours)
 
 
 func _view_for(actor_id: String) -> Dictionary:
@@ -316,3 +321,208 @@ func _fan_mesh(arc_deg: float) -> ArrayMesh:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	_fans[key] = mesh
 	return mesh
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P30
+# A formation's brace (P30, plan M6-M9 §2.10): its band telegraph is a line telegraph along the
+# formation's front rank - the event's origin is the front rank's centre, its radius half the rank's
+# width, its length the band's depth - announced once through the striker (EnemyActor). It stays
+# where the band lies instead of following the striker (the hook in _ends).
+
+## True when `rec` is a band telegraph (its action's hit shape is band_pulse): it keeps its origin.
+static func _p30_band(rec: Dictionary, _actor: Node3D) -> bool:
+	var a := GameData.get_action(str(rec.get("action_id", "")))
+	return a != null and a.hit_shape == "band_pulse"
+
+## @anchor P31
+# The giant's own telegraphs (P31, plan M6-M9 §5.12): PlayerAttack announces an ability's telegraph
+# like an enemy's - Earthquake's line along its facing, Storm Call's circle on the lock target. They
+# are drawn in the giant's colours (never the threat red), a line as a jagged ground crack; a
+# telegraph whose action says `at: "target"` follows its target through the windup (the hook in
+# _ends) and stays where the strike falls.
+
+const P31_BASE_COLOR := Color(0.95, 0.70, 0.28, 0.22)
+const P31_FILL_COLOR := Color(1.0, 0.80, 0.40, 0.55)
+const P31_FLASH_COLOR := Color(1.0, 0.97, 0.80, 0.85)
+const P31_CRACK_SEGMENTS := 14
+
+var _p31_crack: ArrayMesh
+
+
+## True when `rec`'s action is telegraphed at its target (telegraph.at "target"): until the strike
+## begins the decal stands on the target (it keeps its last place once the target is gone).
+func _p31_at_target(rec: Dictionary) -> bool:
+	var a := GameData.get_action(str(rec.get("action_id", "")))
+	var t: Variant = a.param("telegraph") if a != null else null
+	if typeof(t) != TYPE_DICTIONARY or str((t as Dictionary).get("at", "actor")) != "target":
+		return false
+	var target := Sim.get_entity(str(rec.get("target_id", "")))
+	if target != null and is_instance_valid(target.actor) and target.is_alive():
+		rec["at"] = (target.actor as Node3D).global_position
+	return true
+
+
+## True when the record is the giant's own telegraph.
+static func p31_is_players(rec: Dictionary) -> bool:
+	var e := Sim.get_entity(str(rec.get("actor_id", "")))
+	return e != null and is_instance_valid(e.actor) and e.actor is GiantPlayer
+
+
+## The giant's own ground telegraphs: its colours, and a crack instead of a strip for a line.
+func _p31_restyle(rec: Dictionary, base: MeshInstance3D, fill_mi: MeshInstance3D, flash: bool) -> void:
+	if bool(rec.aim_line) or not p31_is_players(rec):
+		return
+	base.material_override = _p31_material("p31_base", P31_BASE_COLOR)
+	fill_mi.material_override = _p31_material("p31_flash", P31_FLASH_COLOR) if flash \
+		else _p31_material("p31_fill", P31_FILL_COLOR)
+	if not (str(rec.shape) in ["circle", "cone"]):
+		base.mesh = _p31_crack_mesh()
+		fill_mi.mesh = base.mesh
+
+
+func _p31_material(key: String, color: Color) -> Material:
+	if not _materials.has(key):
+		var m := StandardMaterial3D.new()
+		m.albedo_color = color
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_materials[key] = m
+	return _materials[key]
+
+
+## A flat jagged crack one unit long (local z -0.5 .. 0.5) and one unit wide at most, with a short
+## branch every few segments (scaled like the strip it replaces).
+func _p31_crack_mesh() -> ArrayMesh:
+	if _p31_crack != null:
+		return _p31_crack
+	var verts := PackedVector3Array()
+	var prev_l := Vector3.ZERO
+	var prev_r := Vector3.ZERO
+	for i in P31_CRACK_SEGMENTS + 1:
+		var f := float(i) / P31_CRACK_SEGMENTS
+		var z := 0.5 - f
+		var x := 0.22 * sin(f * 23.0) * (0.4 + 0.6 * f)
+		var half := 0.10 + 0.22 * absf(sin(f * 9.0 + 0.7))
+		var l := Vector3(x - half, 0.0, z)
+		var r := Vector3(x + half, 0.0, z)
+		if i > 0:
+			verts.append_array(PackedVector3Array([prev_l, prev_r, r, prev_l, r, l]))
+			if i % 3 == 0:
+				var side := 1.0 if i % 2 == 0 else -1.0
+				var root := Vector3(x, 0.0, z)
+				verts.append_array(PackedVector3Array([root + Vector3(0.0, 0.0, 0.03), root - Vector3(0.0, 0.0, 0.03),
+					root + Vector3(side * 0.48, 0.0, -0.05)]))
+		prev_l = l
+		prev_r = r
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	_p31_crack = ArrayMesh.new()
+	_p31_crack.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return _p31_crack
+
+
+## @anchor P32
+# An indirect shot's landing circle (P32, plan M6-M9 §2.10, §3.16: the catapult): the telegraph of an
+# action CueRouter.is_indirect calls indirect (its stone) lies at its landing point - the event's
+# origin - and stays there instead of following the engine (the hook in _ends). It fills over the
+# windup as every telegraph does, and when the shot is launched (Events.projectile_spawned by the same
+# actor and action) it stays on through the flight with its timer: the fill grows again from the
+# middle to the rim as the stone comes down (the flight time from the launch's horizontal speed,
+# CueRouter.flight_seconds) and flashes for the last P32_FLASH_S. It goes when the stone lands
+# (Events.projectile_impact), or at the latest P32_GRACE_S after the expected landing. The audio's
+# rising incoming whistle sounds over the same circle (P28).
+
+const P32_FLASH_S := 0.35
+const P32_GRACE_S := 1.0
+
+
+func _p32_ready() -> void:
+	if not Events.projectile_spawned.is_connected(_p32_on_projectile_spawned):
+		Events.projectile_spawned.connect(_p32_on_projectile_spawned)
+	if not Events.projectile_impact.is_connected(_p32_on_projectile_impact):
+		Events.projectile_impact.connect(_p32_on_projectile_impact)
+
+
+## True when `rec` is an indirect shot's landing circle (it keeps its origin).
+static func _p32_landing(rec: Dictionary) -> bool:
+	if rec.has("p32_landing"):
+		return bool(rec.p32_landing)
+	var a := GameData.get_action(str(rec.get("action_id", "")))
+	var landing := a != null and str(rec.get("shape", "")) == "circle" and CueRouter.is_indirect(a)
+	rec["p32_landing"] = landing
+	return landing
+
+
+## True while `rec`'s shot is in the air (launched, not yet landed, not past its expected landing by
+## more than P32_GRACE_S).
+func _p32_in_flight(rec: Dictionary) -> bool:
+	if not rec.has("p32_projectile"):
+		return false
+	return _time - float(rec.p32_launch_s) <= float(rec.p32_flight_s) + P32_GRACE_S
+
+
+## The landing circle's state for tests: {} when `actor_id` has no shot in the air; else {"projectile",
+## "point", "radius", "timer" (0..1 of the flight), "flight_s"}.
+func landing_for(actor_id: String) -> Dictionary:
+	var rec: Dictionary = _records.get(actor_id, {})
+	if rec.is_empty() or not _p32_in_flight(rec):
+		return {}
+	return {"projectile": int(rec.p32_projectile), "point": rec.origin, "radius": float(rec.radius),
+		"timer": _p32_timer(rec), "flight_s": float(rec.p32_flight_s)}
+
+
+func _p32_timer(rec: Dictionary) -> float:
+	return clampf((_time - float(rec.p32_launch_s)) / maxf(0.05, float(rec.p32_flight_s)), 0.0, 1.0)
+
+
+func _p32_on_projectile_spawned(_tick: int, projectile_id: int, owner_id: String, action_id: String,
+		position: Vector3, velocity: Vector3, _visual: String) -> void:
+	var rec: Dictionary = _records.get(owner_id, {})
+	if rec.is_empty() or str(rec.get("action_id", "")) != action_id or not _p32_landing(rec):
+		return
+	var a := GameData.get_action(action_id)
+	var gravity := float(Projectile.spec_for(a).gravity_mps2) if a != null else 0.0
+	rec["p32_projectile"] = projectile_id
+	rec["p32_launch_s"] = _time
+	rec["p32_flight_s"] = CueRouter.flight_seconds(position, velocity, rec.origin, gravity)
+
+
+func _p32_on_projectile_impact(_tick: int, projectile_id: int, _point: Vector3, _hit_id: String) -> void:
+	for actor_id: String in _records.keys():
+		var rec: Dictionary = _records[actor_id]
+		if int(rec.get("p32_projectile", -1)) == projectile_id:
+			_records.erase(actor_id)
+			_release_view(actor_id)
+			return
+
+
+## Draws the landing circle of a shot in flight (true when it did): the base disc and a fill growing
+## with the flight timer, flashing as it ends.
+func _p32_draw_flight(actor_id: String, rec: Dictionary) -> bool:
+	if is_live(rec) or not _p32_in_flight(rec):
+		return false
+	var view := _view_for(actor_id)
+	var base: MeshInstance3D = view.base
+	var fill_mi: MeshInstance3D = view.fill
+	var r := maxf(float(rec.radius), 0.1)
+	var at: Vector3 = (rec.origin as Vector3) + Vector3.UP * GROUND_LIFT_M
+	var timer := _p32_timer(rec)
+	var left := float(rec.p32_flight_s) * (1.0 - timer)
+	var flash := left <= P32_FLASH_S and fmod(_time * FLASH_HZ, 1.0) < 0.5
+	base.visible = true
+	base.mesh = _disc
+	base.material_override = _materials.base
+	base.global_transform = Transform3D(Basis.from_scale(Vector3(r, 1.0, r)), at)
+	fill_mi.visible = true
+	fill_mi.mesh = _disc
+	fill_mi.material_override = _materials.flash if flash else _materials.fill
+	var fr := maxf(r * timer, 0.01)
+	fill_mi.global_transform = Transform3D(Basis.from_scale(Vector3(fr, 1.2, fr)), at + Vector3.UP * 0.005)
+	return true
+
+## @anchor P34

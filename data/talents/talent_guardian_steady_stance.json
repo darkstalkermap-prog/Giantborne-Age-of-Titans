@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.guardian_steady_stance",
+	"type": "talent",
+	"display_name": "Steady Stance",
+	"description": "You plant your feet: it takes more to stagger you.",
+	"tree": "guardian",
+	"tier": 1,
+	"column": 2,
+	"cost": 1,
+	"requires": [],
+	"requires_level": 6,
+	"effects": {"modifiers": {"poise_threshold_add": 25}, "grants": [], "replaces": {}}
+}

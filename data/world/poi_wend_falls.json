@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.wend_falls",
+	"type": "poi",
+	"display_name": "The Wend Falls",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "vista",
+	"position_m": [865, 12.3, 588],
+	"radius_m": 70,
+	"xp": 20,
+	"map_icon": "vista",
+	"compass": true,
+	"landmark": "world.crownmarch.wend_falls",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "Where the Wend leaves the kingdom through a gap in the rim."
+}

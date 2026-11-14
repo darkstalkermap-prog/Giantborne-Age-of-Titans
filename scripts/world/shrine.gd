@@ -4,19 +4,25 @@ extends Interactable
 ## grows the giant. One record of type "shrine" (shrine_id) says what it offers; world_id is
 ## its placed, persistent id and its checkpoint id (valley.shrine.grove).
 ##
-## - Activation: the first time per load the player comes within the record's
+## - Activation: the first time per level visit the player comes within the record's
 ##   activation_radius_m (14), activate() runs: a free Rest when the record has
 ##   first_activation_rest, then checkpoint_reached(tick, world_id, "shrine") (records with
 ##   checkpoint) and shrine_activated(tick, world_id). It is polled from a Sim POST_RESOLVE hook,
-##   so it happens inside the deterministic tick.
+##   so it happens inside the deterministic tick. P20 (plan M6-M9 §2.6): "per visit", not per
+##   node - GameSession.activated_this_visit / mark_activated - so a shrine whose streamed chunk
+##   is freed and made again in the same visit gives no second free rest or checkpoint (a reload
+##   or a travel starts a new visit).
 ## - interact (E): emits ui_screen_requested("shrine", {"shrine": self, ...}); GameSession (P06)
 ##   takes a checkpoint before the ScreenStack opens the shrine screen.
 ## - rest(): health, stamina and essence to their maxima and debuffs (slows) removed; fury and
 ##   cooldowns are kept. Emits shrine_rested.
 ## - can_grow() / grow(): the Grow tab and the Valley bot; they wrap PlayerGrowth.check_growth
-##   and grow_to with this shrine's gates (allows_growth, max_stage, growth_requires_flags).
+##   and grow_to with this shrine's gates (allows_growth, max_stage, growth_requires_flags, and P26's
+##   growth_requires_conditions: a world shrine waits for world.kingsgate.lit or a count of oaths;
+##   growth_waiting_text() is the line it shows meanwhile).
 ## Children: SpawnPoint (a CheckpointMarker whose checkpoint_id is set to world_id) and
 ## GrowthPad (a Marker3D at an open spot with stage-3 clearance). Group "shrines".
+## P39f: Visual/Name (the record's name) hides while a screen is open (ScreenStack.HIDE_UNDER_SCREENS).
 
 const GROUP := "shrines"
 const DEFAULT_ACTIVATION_RADIUS_M := 14.0
@@ -48,6 +54,10 @@ func _ready() -> void:
 	var label := get_node_or_null("Visual/Name") as Label3D
 	if label != null:
 		label.text = display_name()
+		# P39f: the name keeps one size on screen (the shrine builder), so it read through the shrine window's
+		# see-through panel: it hides while a screen is open, as the HUD does (ScreenStack.HIDE_UNDER_SCREENS).
+		label.add_to_group(ScreenStack.HIDE_UNDER_SCREENS)
+		label.visible = not ScreenStack.any_open_in(get_tree())
 	if record().is_empty():
 		push_error("Shrine %s: unknown shrine record '%s'" % [world_id, shrine_id])
 	Sim.add_hook(Sim.Hook.POST_RESOLVE, self, _on_sim_tick, HOOK_ORDER)
@@ -101,12 +111,20 @@ static func horizontal_distance(a: Vector3, b: Vector3) -> float:
 	return Vector2(a.x - b.x, a.z - b.z).length()
 
 
-## First activation per load: the free Rest (first_activation_rest), then checkpoint_reached
-## (records with checkpoint) and shrine_activated. Returns true only for that first call.
+## First activation per level visit: the free Rest (first_activation_rest), then
+## checkpoint_reached (records with checkpoint) and shrine_activated. Returns true only for that
+## first call; a shrine made again in the same visit (GameSession.activated_this_visit) only
+## lights its glow.
 func activate(player: GiantPlayer) -> bool:
 	if _activated:
 		return false
 	_activated = true
+	if world_id != "" and GameSession.activated_this_visit(world_id):
+		if _glow != null:
+			_glow.visible = true
+		return false
+	if world_id != "":
+		GameSession.mark_activated(world_id)
 	var rec := record()
 	if bool(rec.get("first_activation_rest", true)) and player != null:
 		_restore(player)
@@ -173,6 +191,13 @@ func grow(player: GiantPlayer, target: int) -> Dictionary:
 	if player == null or player.growth == null:
 		return {"ok": false, "reason": "no_profile", "message": "Nothing here can grow."}
 	return player.growth.grow_to(target, self, "shrine")
+
+
+## P26 (plan M6-M9 §2.9): while one of the record's growth_requires_conditions does not hold, the
+## refusal growing here would give (its growth_conditions_text line); "" when they all hold.
+func growth_waiting_text() -> String:
+	var r := PlayerGrowth.conditions_gate(record(), Quests.condition_context())
+	return "" if bool(r.ok) else str(r.message)
 
 
 ## The next stage this shrine offers the player (its stage + 1), or 0 when it offers none

@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.cairn_sunken_vault",
+	"type": "dialogue",
+	"speaker": "Old Kings' Cairn",
+	"description": "An Old Kings' cairn at the sunken vault (plan M6-M9 §5.4, decision 33; P35): reading it once gives one attribute point (once-flag reward.cairn.sunken_vault).",
+	"entries": [
+		{"node": "read", "conditions": [{"type": "flag", "flag": "reward.cairn.sunken_vault"}]},
+		{"node": "cairn", "conditions": []}
+	],
+	"nodes": [
+		{"id": "cairn", "text": "A cairn in the drowned kings' vault, its stones furred with silt. Under the silt: 'The kings went down into the Mere so the Mere would remember them. It remembers.'", "choices": [{"text": "[Lay a hand on the stones] (+1 attribute point)", "next": "", "effects": {"attribute_points": 1, "once_flag": "reward.cairn.sunken_vault"}}, {"text": "Leave the stones be.", "next": ""}]},
+		{"id": "read", "text": "An Old Kings' cairn. Its strength is already in you.", "choices": [{"text": "[Leave]", "next": ""}]}
+	]
+}

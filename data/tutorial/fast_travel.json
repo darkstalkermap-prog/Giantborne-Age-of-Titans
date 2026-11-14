@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.fast_travel",
+	"type": "tutorial_prompt",
+	"description": "P27: fast travel, at the first shrine activated in the Old Kingdom.",
+	"text": "Every waystone and shrine you have reached is a place to travel back to: open the map ({map}), choose one and pick Travel. Not while enemies are close.",
+	"trigger": {"type": "event", "event": "shrine_activated"},
+	"dismiss": {"type": "timeout", "timeout_s": 14},
+	"requires_flags": ["progress.world_entered"],
+	"min_stage": 1,
+	"priority": 6,
+	"once": true,
+	"defer_in_combat": true,
+	"sets_flag": "tutorial.fast_travel.done"
+}

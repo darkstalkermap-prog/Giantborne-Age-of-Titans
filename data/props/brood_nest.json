@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "prop.brood_nest",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Brood Nest",
+	"height_m": 2.6,
+	"health": 300,
+	"armor": 0,
+	"accepted_attack_categories": ["melee", "ability", "projectile", "magic", "siege"],
+	"description": "P35 (plan M6-M9 §5.7, §5.13): one of the Troll Matriarch's three brood nests in the Troll Den - wet branches, hides and bones that no blow can break: only fire burns it (BroodNest refuses every hit without fire). Fire comes from the brazier beside it (smashed, its coals spill into the nest) or from a whelp or troll thrown into the den's fire pit and then at the nest. Burning one pays 50 XP; when all three have burned, world.troll_den.nests_burned is set (the woodfolk then pull down the den's back wall: the drive-out resolution of the woodfolk's oath).",
+	"locked_message": "Blows only scatter the nest's wet branches. Burn it: smash the brazier beside it, or throw a burning troll at it.",
+	"xp_reward": 50,
+	"debris_count": 0,
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

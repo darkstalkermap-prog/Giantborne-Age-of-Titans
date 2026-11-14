@@ -4,6 +4,21 @@ extends PlayerComponent
 ## M1 GiantPlayer). Reads intents and the controller, writes the actor's shared body state
 ## (facing_yaw, sprinting, move_velocity, knockback_velocity, dodge_direction) and moves the
 ## CharacterBody3D once per tick.
+##
+## Trampling (P26, plan M6-M9 §2.9): after each move, every BreakableProp the body slid against that
+## the giant's stage tramples (its record's trample_stage) gets one trample hit and breaks - fences
+## and palisades under a stage-4 giant's feet; the next tick walks on through.
+##
+## P31 (plan M6-M9 §2.11, §5.12): the scripted `motion` of an ability whose hit is a body sweep
+## (Shoulder Charge's 12 m dash; the sweep is PlayerAttack's) moves the giant during motion.phase
+## along the facing it had when the phase began, at speed_mps (times its slows) for at most
+## max_distance_m; its body passes through other actors while it dashes (the sweep throws them
+## aside), and stop_on_wall ends it against a wall, an untrampled prop or a blocker. Statuses scale walk and run speed by their
+## move_speed_mult (product: Stonewall Stance 0.7, Wild Surge 1.15; P33: with the passives', Wildheart
+## 1.05), and a status tagged Barrier (Bulwark) takes no knockback.
+##
+## P33 (plan M6-M9 §5.12): the sprint's stamina drain follows the giant's stamina_cost_mult like every
+## action's cost (Relentless, Tireless: "everything you do costs less stamina").
 
 const GRAVITY := 22.0
 const KNOCKBACK_DECEL := 28.0
@@ -117,7 +132,7 @@ func update_sprint(intents: Dictionary, dt: float) -> void:
 		and not sprint_locked and pools.stamina > 0.0
 	if player.sprinting:
 		var drain := float(sprint_def.param("drain_per_s", 8.0)) if sprint_def != null else 8.0
-		pools.consume_stamina_up_to(drain * dt)
+		pools.consume_stamina_up_to(drain * dt * player.entity.combatant.stamina_cost_mult())
 		if pools.stamina <= 0.0:
 			player.sprinting = false
 			sprint_locked = true
@@ -167,13 +182,14 @@ func update_movement(intents: Dictionary, dt: float) -> void:
 	var dead := controller.state == CombatController.State.DEAD
 	var input: Vector2 = Vector2.ZERO if dead else intents.move
 	var walk := float(player.profile.get("walk_speed_mps", 5.0))
-	var speed := walk * controller.move_speed_multiplier() * _speed_mult
+	var speed := walk * controller.move_speed_multiplier() * _speed_mult * status_speed_mult()   # P31: statuses
 	if player.sprinting and player.sprint_def != null:
 		speed *= float(player.sprint_def.param("speed_mult", 1.5))
 	var target_v := move_dir_world(input) * speed
+	var dashing := run_motion(dt)   # P31: a scripted ability motion (Shoulder Charge) owns move_velocity
 	if controller.state == CombatController.State.DODGING and controller.action != null:
 		player.move_velocity = player.dodge_direction * dodge_speed()
-	else:
+	elif not dashing:
 		var accel := float(player.profile.get("acceleration_mps2", 32.0)) * (1.0 if player.is_on_floor() else 0.35)
 		player.move_velocity = player.move_velocity.move_toward(target_v, accel * dt)
 	player.knockback_velocity = player.knockback_velocity.move_toward(Vector3.ZERO, KNOCKBACK_DECEL * dt)
@@ -185,6 +201,20 @@ func update_movement(intents: Dictionary, dt: float) -> void:
 	player.velocity.x = player.move_velocity.x + player.knockback_velocity.x
 	player.velocity.z = player.move_velocity.z + player.knockback_velocity.z
 	player.move_and_slide()
+	if not dead:
+		trample_contacts()
+
+
+## P26: one trample hit on each prop the body slid against this tick that its stage tramples.
+## Returns how many it trampled.
+func trample_contacts() -> int:
+	var count := 0
+	var stage := player.growth_stage
+	for i in player.get_slide_collision_count():
+		var prop := player.get_slide_collision(i).get_collider() as BreakableProp
+		if prop != null and prop.can_trample(stage) and prop.trample(player):
+			count += 1
+	return count
 
 
 ## Ease-out burst that covers exactly dodge_distance_m over the dodge's movement ticks.
@@ -201,6 +231,140 @@ func dodge_speed() -> float:
 
 
 func apply_knockback(direction: Vector3, speed: float) -> void:
-	if direction.length_squared() < 1e-6:
+	if direction.length_squared() < 1e-6 or has_barrier():   # P31: Bulwark takes no knockback
 		return
 	player.knockback_velocity = direction.normalized() * maxf(speed, player.knockback_velocity.length())
+
+
+# --------------------------------------------------------------------------- P31: ability motion, status speed, barrier
+
+## What stops a dash with stop_on_wall: world geometry, breakable props (unless trampled underfoot),
+## blockers and the size gates.
+const MOTION_WALL_MASK := HitQueryAdapter.LAYER_WORLD | HitQueryAdapter.LAYER_BREAKABLE | 32 \
+	| PlayerGrowth.ALL_SIZE_GATES
+
+## Why the last dash ended: "" (running or none), "distance", "wall", "phase" (its phase ended
+## first), "interrupted".
+var motion_end_reason := ""
+## Where the last dash began and how far it has carried the giant (horizontal metres).
+var motion_origin := Vector3.ZERO
+var motion_travelled := 0.0
+var _motion_instance := -1
+var _motion_dir := Vector3.FORWARD
+var _motion_started := false
+var _motion_done := false
+var _motion_through_actors := false
+
+
+## The current action's `motion` (plan §2.8.2; P31 for the giant) when its hit is a body_sweep (the
+## grab family's motion is PlayerGrab's lunge): during motion.phase the giant moves at speed_mps
+## (times its slows) along the facing it had when that phase began, for at most max_distance_m;
+## stop_on_wall ends it against MOTION_WALL_MASK geometry. Returns true while it owns move_velocity
+## (also while standing still for the rest of the phase once it ended). The body passes through
+## other actors while the dash runs.
+func run_motion(dt: float) -> bool:
+	var controller := player.controller
+	var a := controller.action
+	# Only a dash with a body sweep: the grab family's motion is PlayerGrab's lunge.
+	var m: Variant = a.param("motion") if a != null and a.hit_shape == "body_sweep" else null
+	if a == null or typeof(m) != TYPE_DICTIONARY or controller.state == CombatController.State.DEAD \
+			or _motion_instance != controller.instance_id:
+		if _motion_started and not _motion_done:
+			_end_motion("interrupted")
+		_restore_actor_collisions()
+		if a == null or typeof(m) != TYPE_DICTIONARY or controller.state == CombatController.State.DEAD:
+			_motion_instance = -1
+			return false
+		_motion_instance = controller.instance_id
+		_motion_started = false
+		_motion_done = false
+		motion_end_reason = ""
+		motion_travelled = 0.0
+	if ActionDef.PHASE_NAMES[controller.phase()] != str((m as Dictionary).get("phase", "active")):
+		if _motion_started and not _motion_done:
+			_end_motion("phase")
+		_restore_actor_collisions()
+		return false
+	if not _motion_started:
+		_motion_started = true
+		motion_origin = player.global_position
+		_motion_dir = Vector3(-sin(player.facing_yaw), 0.0, -cos(player.facing_yaw))
+		_pass_through_actors()
+	motion_travelled = Vector2(player.global_position.x - motion_origin.x,
+		player.global_position.z - motion_origin.z).length()
+	if _motion_done:
+		player.move_velocity = Vector3.ZERO
+		return true
+	if bool((m as Dictionary).get("stop_on_wall", false)) and ran_into_wall(_motion_dir):
+		_end_motion("wall")
+		return true
+	var remaining := float((m as Dictionary).get("max_distance_m", INF)) - motion_travelled
+	if remaining <= 0.01:
+		_end_motion("distance")
+		return true
+	var speed := minf(float((m as Dictionary).get("speed_mps", 0.0)) * player.entity.combatant.move_mult(),
+		remaining / dt)
+	player.move_velocity = _motion_dir * speed
+	player.knockback_velocity = Vector3.ZERO
+	return true
+
+
+## True while a scripted motion moves the giant.
+func is_dashing() -> bool:
+	return _motion_started and not _motion_done
+
+
+func _end_motion(reason: String) -> void:
+	_motion_done = true
+	motion_end_reason = reason
+	player.move_velocity = Vector3.ZERO
+	_restore_actor_collisions()
+
+
+func _pass_through_actors() -> void:
+	if (player.collision_mask & HitQueryAdapter.LAYER_ACTORS) != 0:
+		player.collision_mask &= ~HitQueryAdapter.LAYER_ACTORS
+		_motion_through_actors = true
+
+
+func _restore_actor_collisions() -> void:
+	if _motion_through_actors:
+		player.collision_mask |= HitQueryAdapter.LAYER_ACTORS
+		_motion_through_actors = false
+
+
+## True when the previous move_and_slide ran into MOTION_WALL_MASK geometry against `dir` (a wall,
+## not the floor or a ramp); a prop being trampled underfoot is no wall.
+func ran_into_wall(dir: Vector3) -> bool:
+	for i in player.get_slide_collision_count():
+		var c := player.get_slide_collision(i)
+		var body := c.get_collider() as CollisionObject3D
+		if body == null or (body.collision_layer & MOTION_WALL_MASK) == 0:
+			continue
+		var prop := body as BreakableProp
+		if prop != null and (prop.destroyed or prop.special_hit_pending()):
+			continue
+		var n := c.get_normal()
+		var flat := Vector3(n.x, 0.0, n.z)
+		if absf(n.y) < 0.7 and flat.length_squared() > 1e-6 and flat.normalized().dot(dir) < -0.3:
+			return true
+	return false
+
+
+## The product of the active statuses' move_speed_mult (1 when none: Stonewall Stance 0.7, Wild
+## Surge 1.15) and (P33) the passives' (Wildheart 1.05): Combatant.move_speed_mult, applied once here.
+func status_speed_mult() -> float:
+	if player.entity == null or player.entity.combatant == null:
+		return 1.0
+	return player.entity.combatant.move_speed_mult()
+
+
+## True while a status tagged Barrier protects the giant (Bulwark: no knockback).
+func has_barrier() -> bool:
+	if player.entity == null or player.entity.combatant == null:
+		return false
+	for id in player.entity.combatant.statuses.active_ids():
+		var def := GameData.get_status(id)
+		if def != null and def.has_tag("Barrier"):
+			return true
+	return false

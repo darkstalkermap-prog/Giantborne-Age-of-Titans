@@ -1,0 +1,27 @@
+{
+	"schema_version": 1,
+	"id": "quest.ancestry",
+	"type": "quest",
+	"display_name": "The Blood of the Old Kings",
+	"description": "P33 (plan M6-M9 §5.7, decision 22): once the giant stands at stage 4 without an ancestry, the shrines of the Old Kingdom offer it one - Stoneblood, Stormborn or Wildheart, chosen once on a shrine's Ancestry tab. The objective leads to the nearest shrine the giant has already reached (an unreached shrine's marker is dropped). Optional: not part of the main thread (the XP budget does not count its 30 XP).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "stage_at_least", "stage": 4}, {"type": "not", "of": {"type": "ancestry_chosen"}}],
+	"abandon_when": null,
+	"tracker_priority": 20,
+	"stages": [
+		{"id": "choose", "objective": "Choose your ancestry at a shrine",
+			"complete_when": {"type": "ancestry_chosen"},
+			"markers": ["world.shrine.kingsgate", "world.shrine.greywood", "world.shrine.aldmere", "world.shrine.steps", "world.shrine.stones"],
+			"markers_done_when": {
+				"world.shrine.kingsgate": {"type": "not", "of": {"type": "flag", "flag": "visited.world.shrine.kingsgate"}},
+				"world.shrine.greywood": {"type": "not", "of": {"type": "flag", "flag": "visited.world.shrine.greywood"}},
+				"world.shrine.aldmere": {"type": "not", "of": {"type": "flag", "flag": "visited.world.shrine.aldmere"}},
+				"world.shrine.steps": {"type": "not", "of": {"type": "flag", "flag": "visited.world.shrine.steps"}},
+				"world.shrine.stones": {"type": "not", "of": {"type": "flag", "flag": "visited.world.shrine.stones"}}},
+			"waiting_text": "Rest at a shrine of the Old Kingdom and open its Ancestry tab.",
+			"xp": 30, "items": [], "set_flags": {},
+			"bot": {"action": "choose_ancestry"}}
+	],
+	"on_complete_flags": {}
+}

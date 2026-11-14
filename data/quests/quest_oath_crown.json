@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "quest.oath_crown",
+	"type": "quest",
+	"display_name": "The Warlord's Wall",
+	"description": "P36 (plan M6-M9 §5.7, §5.9, decision 26): the crown of Aldmere's oath, one of the three powers' for quest.world_main's oaths stage. It starts at stage 4. Meet Herald Maelis at the war camp's south edge (50; M8 gate, F39: the meeting also counts once the oath is sworn - every road's writer sets oath.crown.met with the outcome, and a save stuck on this stage by the old battle and ridge writers completes it when it loads), then win the oath one of three ways - every one open as a first oath at stage 4: breach - break Fort Aldmere's gate (stage 4) and the Iron Regiment in its bailey until Warlord Corvane yields, then spare him or strike him down in the prompt (quest.iron_regiment writes the outcome); sabotage - wreck the war camp's four engines and Ballista Ridge's three (Aldmere turns hostile; quest.war_engines writes it: the army withdraws); parley - show the herald a token she accepts (Brannock's banner, the deserters' word, Stoneblood blood or the stature of stage 5; the stage-4 first oath has the deserters' word and Stoneblood), walk up to the gate while its garrison stands aside, sound the horn and swear the peace with Corvane. The resolution pays 750 XP on every road (worst and best 800 with the meeting), the oath's reward (loot.oath_reward: 1 titan iron, 2 iron) and lifts the XP to level 9. Consequences: parley - Aldmere allied, the fort opened and its forge, the crown's flags struck at the toll fort, its wanderers gone; breach spared - the garrison stands down, the fort forge opens, the wanderers stop; breach struck - the garrison flees and Aldmere's wanderers turn to remnants; sabotage - Aldmere hostile, fewer patrols.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{"type": "stage_at_least", "stage": 4}
+	],
+	"abandon_when": null,
+	"tracker_priority": 60,
+	"stages": [
+		{"id": "meet", "objective": "Meet Aldmere's herald at the war camp's edge", "complete_when": {"type": "any", "of": [{"type": "flag", "flag": "oath.crown.met"}, {"type": "flag", "flag": "oath.crown.done"}]}, "marker": "world.marker.war_camp_edge", "xp": 50, "items": [], "set_flags": {}, "bot": {"action": "talk", "target": "world.aldmere.herald"}},
+		{"id": "resolve", "objective": "Win the crown's oath: breach Fort Aldmere, wreck the war engines, or parley with Warlord Corvane", "complete_when": {"type": "flag", "flag": "oath.crown.done"}, "marker": "world.marker.fort_gate", "xp": 750, "xp_floor_level": 9, "waiting_text": "Three roads: break Fort Aldmere's gate and its Iron Regiment until Corvane yields; wreck the war camp's four engines and the ridge's three ballistae; or show the herald a token (Brannock's banner, the deserters' word, Stoneblood blood or stage 5), then sound the parley horn at the fort's gate.", "items": [{"item": "item.titan_iron", "count": 1}, {"item": "item.iron_ingot", "count": 2}], "set_flags": {}, "bot": {"action": "talk", "target": "world.marker.fort_gate", "herald": "world.aldmere.herald", "breach": "world.aldmere.fort_gate", "battle": "world.area.fort_bailey", "sabotage": ["world.aldmere.camp_catapult_1", "world.aldmere.camp_ballista_1", "world.aldmere.camp_ballista_2", "world.aldmere.camp_catapult_2", "world.aldmere.ridge_ballista_1", "world.aldmere.ridge_ballista_2", "world.aldmere.ridge_ballista_3"], "talker": "world.aldmere.fort_parley"}}
+	],
+	"on_complete_flags": {}
+}

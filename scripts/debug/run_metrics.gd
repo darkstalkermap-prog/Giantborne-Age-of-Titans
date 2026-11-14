@@ -33,6 +33,23 @@ const SEGMENTS := [
 	["6_boss", ["boss"]],
 	["7_return", ["grow3", "tree", "deadfall", "crown"]],
 ]
+## P38 (plan M6-M9 §5.15, §6.1): the world's segments, by quest.world_main's stage and the oaths won
+## (WorldBot.world_segment decides; the stage lists are what each covers): the opening, the first
+## oath, the second oath, growth to stage 5 and roaming (grow6 outside the Stonehold: the way up,
+## the third oath, exploration), the Stonehold (grow6 there, the Moot, the champion, the throne).
+const WORLD_SEGMENTS := [
+	["w1_opening", ["kings_door", "beacon", "grow4"]],
+	["w2_first_oath", ["oaths"]],
+	["w3_second_oath", ["oaths"]],
+	["w4_roaming", ["grow6"]],
+	["w5_stonehold", ["grow6", "moot", "champion", "throne"]],
+]
+## P38: the human estimate's world terms (plan M6-M9 §6.1), per segment.
+const HUMAN_MAP_S := 6.0
+const HUMAN_FAST_TRAVEL_S := 4.0
+const HUMAN_REGION_S := 10.0
+const HUMAN_POI_S := 5.0
+const HUMAN_SEALED_S := 8.0
 const HUMAN_DIALOGUE_NODE_S := 4.0
 const HUMAN_READ_CHARS_PER_S := 15.0
 const HUMAN_SCREEN_S := 8.0
@@ -42,7 +59,6 @@ const SAMPLE_EVERY_TICKS := 6           ## AI-state histogram sampling
 const NODE_SAMPLE_EVERY_TICKS := 3600   ## 60 s
 const LOAD_SAMPLE_DELAY_TICKS := 300    ## node count 5 s after a level load
 const HOSTILE_NEAR_M := 40.0
-const CAMERA_FALLBACK_HALF_FOV_DEG := 55.0
 
 var policy := ""
 var skill := ""
@@ -54,6 +70,10 @@ var completed := false
 var completed_tick := -1
 
 var segments: Dictionary = {}           ## id -> record (see _new_segment)
+## P38: the segments this run counts, in order (SEGMENTS; a world run WORLD_SEGMENTS, a campaign both).
+var segment_defs: Array = SEGMENTS
+## P38: when valid, () -> String: the segment of this tick ("" = none), instead of quest.main's stage.
+var segment_resolver := Callable()
 var objectives: Dictionary = {}         ## "quest:stage" -> record
 var objective_order: Array[String] = []
 var deaths: Array = []
@@ -79,7 +99,7 @@ var max_active_enemies := 0
 var max_debris := 0
 var max_hostiles_near := 0
 var node_samples: Array = []            ## [tick, nodes, orphans, static_mb]
-var load_samples: Array = []            ## [tick, nodes outside Spawned, orphans] 5 s after each load
+var load_samples: Array = []            ## [tick, nodes outside Spawned, orphans, level id, x, z] 5 s after each load
 var xp_total := 0
 var level := 1
 var district_seen: Dictionary = {}
@@ -113,6 +133,28 @@ static func _new_segment(id: String, stages: Array) -> Dictionary:
 		"other_s": 0.0, "deaths": 0, "damage_taken": 0, "min_health_frac": 1.0, "checkpoints": [],
 		"rests": 0, "free_rests": 0, "dialogue_nodes": 0, "text_chars": 0, "screens": 0,
 		"new_districts": 0, "first_tick": -1, "last_tick": -1}
+
+
+## P38: makes this run count `defs` ([segment id, stages] in order: WORLD_SEGMENTS, or the Valley's and
+## the world's for a campaign), with `resolver` deciding each tick's segment. World segments carry the
+## human estimate's world terms (map screens, fast-travel loads, regions entered, POIs, sealed places).
+func use_segments(defs: Array, resolver: Callable) -> void:
+	segment_defs = defs
+	segment_resolver = resolver
+	for s: Array in defs:
+		if not segments.has(s[0]):
+			var seg := _new_segment(str(s[0]), s[1])
+			if not str(s[0]) in segment_ids(SEGMENTS):
+				for k: String in ["map_screens", "fast_travels", "regions_entered", "pois", "sealed"]:
+					seg[k] = 0
+			segments[s[0]] = seg
+
+
+static func segment_ids(defs: Array) -> PackedStringArray:
+	var out := PackedStringArray()
+	for s: Array in defs:
+		out.append(str(s[0]))
+	return out
 
 
 ## The segment of a quest.main stage ("" when none lists it).
@@ -426,8 +468,11 @@ func on_tick(tick: int, player: GiantPlayer, level_root: LevelRoot, mode: String
 	if started_tick < 0:
 		started_tick = tick
 	ended_tick = tick
-	var main_stage := Quests.stage_of(Quests.MAIN_QUEST_ID)
-	_segment = "" if Quests.is_complete(Quests.MAIN_QUEST_ID) else segment_of_stage(main_stage)
+	if segment_resolver.is_valid():
+		_segment = str(segment_resolver.call())   # P38: the world's segments
+	else:
+		var main_stage := Quests.stage_of(Quests.MAIN_QUEST_ID)
+		_segment = "" if Quests.is_complete(Quests.MAIN_QUEST_ID) else segment_of_stage(main_stage)
 	var seg: Dictionary = segments.get(_segment, {})
 	if not seg.is_empty():
 		seg.raw_s = float(seg.raw_s) + TICK_S
@@ -469,8 +514,13 @@ func on_tick(tick: int, player: GiantPlayer, level_root: LevelRoot, mode: String
 				var sp := level_root.get_node_or_null("Spawned")
 				if sp != null:
 					spawned = _count_nodes(sp)
+			# P39: the level and the giant's place too - a world load's count depends on the chunks
+			# streamed in around it, so a load is compared with an earlier one at the same place.
+			var at := player.global_position if player != null and is_instance_valid(player) else Vector3.ZERO
 			load_samples.append([tick, int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)) - spawned,
-				int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))])
+				int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)),
+				level_root.level_id if level_root != null and is_instance_valid(level_root) else "",
+				roundi(at.x), roundi(at.z)])
 
 
 static func _count_nodes(n: Node) -> int:
@@ -552,7 +602,10 @@ func _credit_objectives(field: String, amount: int) -> void:
 
 
 func _main_objective_key() -> String:
-	return str(_open_objective.get(Quests.MAIN_QUEST_ID, ""))
+	var key := str(_open_objective.get(Quests.MAIN_QUEST_ID, ""))
+	if key == "" and Quests.main_quest_id != Quests.MAIN_QUEST_ID:
+		key = str(_open_objective.get(Quests.main_quest_id, ""))   # P38: the world's main quest
+	return key
 
 
 ## Adds to the current segment's counter (before the first tick: the first segment; after the
@@ -560,10 +613,15 @@ func _main_objective_key() -> String:
 func _add_segment(field: String, amount: int) -> void:
 	var id := _segment
 	if id == "":
-		id = str(SEGMENTS[SEGMENTS.size() - 1][0]) if completed else str(SEGMENTS[0][0])
+		id = str(segment_defs[segment_defs.size() - 1][0]) if completed else str(segment_defs[0][0])
 	var seg: Dictionary = segments.get(id, {})
 	if not seg.is_empty():
 		seg[field] = int(seg.get(field, 0)) + amount
+
+
+## P38: adds to the current segment's counter (the world's human-estimate terms, WorldMetrics).
+func add_to_segment(field: String, amount: int) -> void:
+	_add_segment(field, amount)
 
 
 func _stage() -> int:
@@ -588,32 +646,15 @@ static func archetype_of(e: CombatEntity) -> String:
 	return a if a != "" else e.definition_id
 
 
-## True when `e`'s actor is in front of the giant's camera, inside its horizontal field of view.
+## True when `e`'s actor is in front of the giant's camera, inside its horizontal field of view
+## (P22: the test ranged units use for their off-camera aim, EnemyActor.in_camera_view).
 func on_camera(e: CombatEntity) -> bool:
 	if e == null or e.actor == null or _player == null or not is_instance_valid(_player):
 		return true
 	var rig := _player.camera_rig
 	if rig == null or rig.camera == null or not rig.camera.is_inside_tree():
 		return true
-	var cam := rig.camera
-	var to := (e.actor as Node3D).global_position - cam.global_position
-	to.y = 0.0
-	if to.length_squared() < 1e-4:
-		return true
-	var fwd := -cam.global_transform.basis.z
-	fwd.y = 0.0
-	if fwd.length_squared() < 1e-6:
-		return true
-	var half := deg_to_rad(CAMERA_FALLBACK_HALF_FOV_DEG)
-	if cam.fov > 1.0:
-		var aspect := 16.0 / 9.0
-		var vp := cam.get_viewport()
-		if vp != null:
-			var size := vp.get_visible_rect().size
-			if size.y > 1.0:
-				aspect = size.x / size.y
-		half = atan(tan(deg_to_rad(cam.fov) * 0.5) * aspect)
-	return absf(fwd.normalized().signed_angle_to(to.normalized(), Vector3.UP)) <= half
+	return EnemyActor.in_camera_view(rig.camera, (e.actor as Node3D).global_position)
 
 
 static func _mean(list: Array) -> float:
@@ -627,7 +668,10 @@ static func _mean(list: Array) -> float:
 
 func human_extra_s(seg: Dictionary) -> float:
 	return HUMAN_DIALOGUE_NODE_S * float(seg.dialogue_nodes) + float(seg.text_chars) / HUMAN_READ_CHARS_PER_S \
-		+ HUMAN_SCREEN_S * float(seg.screens) + HUMAN_DISTRICT_S * float(seg.new_districts)
+		+ HUMAN_SCREEN_S * float(seg.screens) + HUMAN_DISTRICT_S * float(seg.new_districts) \
+		+ HUMAN_MAP_S * float(seg.get("map_screens", 0)) + HUMAN_FAST_TRAVEL_S * float(seg.get("fast_travels", 0)) \
+		+ HUMAN_REGION_S * float(seg.get("regions_entered", 0)) + HUMAN_POI_S * float(seg.get("pois", 0)) \
+		+ HUMAN_SEALED_S * float(seg.get("sealed", 0))
 
 
 # --------------------------------------------------------------------------- the result
@@ -644,18 +688,22 @@ func result(tick: int) -> Dictionary:
 	var seg_out: Array = []
 	var raw_total := 0.0
 	var human_total := 0.0
-	for s: Array in SEGMENTS:
+	for s: Array in segment_defs:
 		var seg: Dictionary = segments[s[0]]
 		var human := float(seg.raw_s) + human_extra_s(seg)
 		raw_total += float(seg.raw_s)
 		human_total += human
-		seg_out.append({"id": seg.id, "stages": seg.stages, "raw_s": snappedf(float(seg.raw_s), 0.01),
+		var row := {"id": seg.id, "stages": seg.stages, "raw_s": snappedf(float(seg.raw_s), 0.01),
 			"human_estimate_s": snappedf(human, 0.01), "combat_s": snappedf(float(seg.combat_s), 0.01),
 			"traversal_s": snappedf(float(seg.traversal_s), 0.01), "other_s": snappedf(float(seg.other_s), 0.01),
 			"deaths": seg.deaths, "damage_taken": seg.damage_taken,
 			"min_health_frac": snappedf(float(seg.min_health_frac), 0.001), "checkpoints": seg.checkpoints,
 			"rests": seg.rests, "free_rests": seg.free_rests, "dialogue_nodes": seg.dialogue_nodes,
-			"text_chars": seg.text_chars, "screens": seg.screens, "new_districts": seg.new_districts})
+			"text_chars": seg.text_chars, "screens": seg.screens, "new_districts": seg.new_districts}
+		for k: String in ["map_screens", "fast_travels", "regions_entered", "pois", "sealed"]:
+			if seg.has(k):
+				row[k] = seg[k]   # P38: a world segment's human-estimate terms
+		seg_out.append(row)
 	var obj_out: Array = []
 	for key in objective_order:
 		var rec: Dictionary = objectives[key]
@@ -673,15 +721,17 @@ func result(tick: int) -> Dictionary:
 	for st: String in engagement:
 		var e: Array = engagement[st]
 		eng_out[st] = {"n": int(e[1]), "mean_m": snappedf(float(e[0]) / maxf(1.0, float(e[1])), 0.01)}
+	# The slotted abilities' damage (plan §6.4: none over 40 %): a grab's throw is no slotted ability -
+	# P39: an engine's throw (ability.throw_engine, PlayerGrab.is_throw) is left out as throw_held is.
 	var ability_damage := 0
 	for id: String in damage_dealt_by_action:
 		var a := GameData.get_action(id)
-		if a != null and a.kind in ["ability", "ultimate"] and id != PlayerGrab.THROW_ID:
+		if a != null and a.kind in ["ability", "ultimate"] and not PlayerGrab.is_throw(a):
 			ability_damage += int(damage_dealt_by_action[id])
 	var share := {}
 	for id: String in damage_dealt_by_action:
 		var a := GameData.get_action(id)
-		if a != null and a.kind in ["ability", "ultimate"] and id != PlayerGrab.THROW_ID:
+		if a != null and a.kind in ["ability", "ultimate"] and not PlayerGrab.is_throw(a):
 			share[id] = snappedf(float(damage_dealt_by_action[id]) / maxf(1.0, float(ability_damage)), 0.001)
 	var ready := {}
 	for id: String in ready_windows:
@@ -696,6 +746,12 @@ func result(tick: int) -> Dictionary:
 		"completed": completed,
 		"completed_s": snappedf(float(completed_tick - started_tick) * TICK_S, 0.01) if completed else -1.0,
 		"village_outcome": str(WorldState.get_flag("quest.village.outcome", "")),
+		# P22 (plan M6-M9 §3.4 design 4): Thornwick turned hostile in this run (by offences or the
+		# force branch's barricade); the help paths must end with it false.
+		"faction_hostile": FactionState.is_hostile("village"),
+		# M9 gate (final): every faction's standing at the end ({faction: "hostile" | "reconciled" | ...}), so a
+		# run shows a faction its giant turned (Skarn by blows at Harrok that struck a watcher of the Moot).
+		"faction_standing": faction_standings(),
 		"flags_hash": flags_hash(),
 		"segments": seg_out,
 		"objectives": obj_out,
@@ -726,6 +782,14 @@ func result(tick: int) -> Dictionary:
 		"districts": district_seen.keys(),
 		"dialogues": dialogues.duplicate(true),
 	}
+
+
+## M9 gate (final): every faction record's standing now (FactionState.standing): {short name: standing}.
+static func faction_standings() -> Dictionary:
+	var out := {}
+	for f in FactionState.known_factions():
+		out[f] = FactionState.standing(f)
+	return out
 
 
 ## A hash of the world flags (sorted), to compare runs.

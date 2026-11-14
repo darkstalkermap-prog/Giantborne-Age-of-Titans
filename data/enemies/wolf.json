@@ -5,6 +5,7 @@
 	"archetype": "wolf",
 	"display_name": "Wolf",
 	"scene": "res://scenes/enemies/wolf.tscn",
+	"render_lod_m": 40,
 	"height_m": 0.9,
 	"capsule_radius_m": 0.4,
 	"health": 90,
@@ -48,7 +49,8 @@
 		"flank_angle_deg": 100,
 		"lunge_range_m": 5.5,
 		"outmatched_ratio": 6.0,
-		"outmatched_behavior": "harass"
+		"outmatched_behavior": "harass",
+		"outmatched_rout": true
 	},
 	"threat": 0.4,
 	"lockable": true,

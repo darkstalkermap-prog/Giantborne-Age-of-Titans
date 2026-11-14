@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "prop.longhouse_skarn",
+	"type": "prop",
+	"category": "breakable",
+	"display_name": "Longhouse of Skarn",
+	"height_m": 15.0,
+	"health": 2400,
+	"armor": 15,
+	"accepted_attack_categories": [
+		"melee",
+		"ability",
+		"projectile",
+		"magic",
+		"siege"
+	],
+	"description": "P36 (plan M6-M9 §5.4, §5.7, §5.9, §5.10): one of Skarn Steading's three 40 m longhouses - the giants' halls the siege of Skarn bombards (the siege line's engines strike it: event.siege_of_skarn protects them, and two fallen burn the steading). Placed with faction skarn and the tag house (the world builder's longhouse kind), so the giant's own blows on it are an offence against Skarn; burned, a stage-6 giant lifts its roof beams back (quest.skarn_rebuild).",
+	"prop_tags": [
+		"house"
+	],
+	"debris_count": 14,
+	"debris_length_m": 30,
+	"debris_layout": "pile",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

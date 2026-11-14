@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "faction.toll_riders",
+	"type": "faction",
+	"display_name": "the Toll-Riders",
+	"description": "P29 (plan M6-M9 §2.12, §5.9, decision 31): Aldmere's toll-riders - the scouts on the Kingsgate beacon hill, the toll fort on the King's Road (and, P36, the Moot battery) - hostile from the start (members carry faction \"toll_riders\"). Their toll fort holds the road instead of fighting while its toll is pending, paid or cowed (encounter.crownmarch_toll_fort's stand_down_when) until the giant refuses, strikes a rider or breaches the gate. Hostile by default, they count no offences.",
+	"flag_prefix": "faction.toll_riders",
+	"initial": "hostile",
+	"offences_to_hostile": 1,
+	"offence_window_s": 30,
+	"civilians_give_way": false,
+	"give_way_m": 3.0,
+	"warn_text": "The toll-riders level their spears.",
+	"hostile_text": "The toll-riders sound their horns.",
+	"stood_down_text": "The toll-riders lower their spears and let you pass.",
+	"reconciled_text": "The toll-riders take their pay and look away."
+}

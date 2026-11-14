@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "shrine.world_aldmere",
+	"type": "shrine",
+	"display_name": "Aldmere Shrine",
+	"description": "The shrine by the road to Aldmere (plan M6-M9 §5.4): grows the giant to stage 5. P29: it grows the giant to stage 5 once one of the three oaths is won (decision 17).",
+	"allows_growth": true,
+	"max_stage": 5,
+	"growth_requires_flags": [],
+	"checkpoint": true,
+	"rest_heals": true,
+	"first_activation_rest": true,
+	"loadout": true,
+	"attributes": true,
+	"activation_radius_m": 14,
+	"growth_requires_conditions": [{"type": "count", "n": 1, "of": [{"type": "flag", "flag": "oath.march.done"}, {"type": "flag", "flag": "oath.wood.done"}, {"type": "flag", "flag": "oath.crown.done"}]}],
+	"growth_conditions_text": ["Win the oath of one of the three powers first."]
+}

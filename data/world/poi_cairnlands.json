@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.cairnlands",
+	"type": "poi",
+	"display_name": "The Cairnlands",
+	"level": "level.world",
+	"region": "region.stonehold",
+	"kind": "waystone",
+	"position_m": [120, 79.2, -580],
+	"radius_m": 40,
+	"xp": 20,
+	"map_icon": "waystone",
+	"compass": true,
+	"landmark": "world.stonehold.cairnlands",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "Fields of stacked cairns."
+}

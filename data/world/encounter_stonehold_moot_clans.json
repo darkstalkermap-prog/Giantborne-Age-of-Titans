@@ -1,0 +1,24 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_moot_clans",
+	"type": "encounter",
+	"display_name": "The watching clans",
+	"description": "P36 (plan M6-M9 §5.13 boss 3, §5.9): six giants of the clans watching the Moot from outside its ring (neutral, AI off: they never deal damage). They attend the crowning unless Harrok was slain (world.moot.empty: the Moot stands empty; M9 gate final: set during play, the arena sends them away at once - MootArena). Not budgeted. M9 gate (final): spectators (`spectator`) - they stand 6 m outside the ring's 60 m wall, within a stage-6 giant's 13.6 m reach while he fights Harrok near its stones, and his blows that strike one offend no faction (two within 30 s had turned Skarn hostile for good).",
+	"level": "level.world",
+	"center_m": [0, 95.0, -745],
+	"activate_radius_m": 160,
+	"deactivate_radius_m": 240,
+	"leash_radius_m": 70,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": ["world.moot.empty"],
+	"counts_toward_budget": false,
+	"spawns": [
+		{"entity_id": "world.stonehold.moot_watcher_1", "definition": "enemy.rival_giant", "position_m": [66.0, 95.0, -745.0], "yaw_deg": -90, "patrol": "", "faction": "skarn", "commander": false, "ai_enabled": false, "persist_death": true, "loot_table": "", "spectator": true},
+		{"entity_id": "world.stonehold.moot_watcher_2", "definition": "enemy.rival_giant", "position_m": [51.1, 95.0, -786.7], "yaw_deg": -45, "patrol": "", "faction": "skarn", "commander": false, "ai_enabled": false, "persist_death": true, "loot_table": "", "spectator": true},
+		{"entity_id": "world.stonehold.moot_watcher_3", "definition": "enemy.rival_giant", "position_m": [13.4, 95.0, -809.6], "yaw_deg": 0, "patrol": "", "faction": "skarn", "commander": false, "ai_enabled": false, "persist_death": true, "loot_table": "", "spectator": true},
+		{"entity_id": "world.stonehold.moot_watcher_4", "definition": "enemy.rival_giant", "position_m": [-31.8, 95.0, -802.8], "yaw_deg": 45, "patrol": "", "faction": "skarn", "commander": false, "ai_enabled": false, "persist_death": true, "loot_table": "", "spectator": true},
+		{"entity_id": "world.stonehold.moot_watcher_5", "definition": "enemy.rival_giant", "position_m": [-61.1, 95.0, -769.9], "yaw_deg": 90, "patrol": "", "faction": "skarn", "commander": false, "ai_enabled": false, "persist_death": true, "loot_table": "", "spectator": true},
+		{"entity_id": "world.stonehold.moot_watcher_6", "definition": "enemy.rival_giant", "position_m": [53.4, 95.0, -706.2], "yaw_deg": -135, "patrol": "", "faction": "skarn", "commander": false, "ai_enabled": false, "persist_death": true, "loot_table": "", "spectator": true}
+	]
+}

@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "npc.herald",
+	"type": "npc",
+	"role": "talker",
+	"display_name": "Herald Maelis",
+	"description": "P36 (plan M6-M9 §5.4, §5.7, §2.12): Aldmere's herald, who meets the giant at the war camp's south edge and offers the crown's oath its three ways - the parley (with a token of trust), the breach of Fort Aldmere, the sabotage of the war engines. Faction aldmere (set by her spawn), protected (every blow refused, still an offence), never flees (a talker).",
+	"scene": "res://scenes/npcs/elder.tscn",
+	"height_m": 1.7,
+	"capsule_radius_m": 0.3,
+	"health": 60,
+	"armor": 0,
+	"walk_speed_mps": 1.2,
+	"run_speed_mps": 2.8,
+	"flee_trigger_radius_m": 0,
+	"protected": true,
+	"dialogue": "dialogue.herald",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"nav_layers": 1,
+	"grab_attach": "none"
+}

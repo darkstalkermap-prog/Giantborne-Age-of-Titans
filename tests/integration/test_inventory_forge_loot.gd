@@ -117,7 +117,10 @@ func test_the_forge_reforges_the_club_once_and_damage_rises_15_percent() -> void
 	assert_eq(await _light_damage(p, "test.dummy_forge"), 42, "the reinforced light: round(46 x 1.15 x 100 / 125) = 42")
 	var again := f.upgrade(p)
 	assert_false(again.ok, "a second upgrade is refused")
-	assert_eq(str(again.reason), "no_upgrade", "the reinforced club has no upgrade of its own")
+	# P31 (plan M6-M9 §2.11): the reinforced club's next refit is titanforging, which an iron forge
+	# (the Valley's) cannot do.
+	assert_eq(str(again.reason), "forge_tier", "the reinforced club's next step needs a titan forge")
+	assert_eq(str(again.to), "weapon.club_titan", "the offer still names it")
 	assert_eq(WorldState.count_of("item.iron_ingot"), 1, "and costs nothing")
 	assert_eq(upgrades.size(), 1, "no second upgrade_applied")
 	assert_true(p.growth.debug_set_stage(3).ok, "grown to stage 3")
@@ -142,7 +145,8 @@ func test_the_forge_screen_through_the_interact_key() -> void:
 	if screen == null:
 		return
 	assert_true(get_tree().paused, "it pauses the game")
-	assert_eq(screen.info_text(), "Oak Club -> Reinforced Club: x1.15 damage, fits a stage-3 giant.", "the offer")
+	# P26 (plan M6-M9 decision 24): the reinforced club fits stage 6 (stage 3 in M5).
+	assert_eq(screen.info_text(), "Oak Club -> Reinforced Club: x1.15 damage, fits a stage-6 giant.", "the offer")
 	assert_true(screen.reforge_button.disabled, "Reforge is disabled without iron")
 	assert_true(screen.status_text().contains("Iron Ingot"), "and says why")
 	WorldState.add_item("item.iron_ingot", 2, "test")
@@ -151,8 +155,11 @@ func test_the_forge_screen_through_the_interact_key() -> void:
 	var out := screen.press_reforge()
 	assert_true(out.ok, "Reforge")
 	assert_eq(p.equipment.weapon_id(), "weapon.club_reinforced", "reforged while the game is paused")
-	assert_eq(screen.info_text(), "Reinforced Club: it cannot be reforged any further.", "nothing more to reforge")
+	# P31: the next step of the chain is shown, refused at this iron forge.
+	assert_eq(screen.info_text(), "Reinforced Club -> Titanforged Club: x1.35 damage, fits a stage-6 giant.",
+		"the titanforging step")
 	assert_true(screen.reforge_button.disabled, "Reforge is disabled again")
+	assert_eq(screen.status_text(), Forge.TIER_MESSAGE, "it needs a titan forge")
 	stack.close_all()
 	assert_false(get_tree().paused, "closing it unpauses")
 	assert_eq(f.last_result.get("to", ""), "weapon.club_reinforced", "the forge's last result")
@@ -273,7 +280,8 @@ func test_the_inventory_screen() -> void:
 	assert_true(InventoryScreen.item_line(rows[1]).begins_with("Iron Ingot x2 — "), "then the iron")
 	assert_true(inv.character_text().begins_with("Level 3 (0 / 200 XP)"), "the level line (%s)" % inv.character_text())
 	assert_true(inv.character_text().contains("Unspent attribute points: 6"), "and the unspent points")
-	assert_eq(inv.talent_text(), "Talent points: 2 (talent trees are a full-game feature)", "talent points")
+	# P33: talents are learned at a shrine's Talents tab now (no longer "a full-game feature").
+	assert_eq(inv.talent_text(), "Talent points: 2 — learn talents at a shrine (the Talents tab)", "talent points")
 	assert_true(inv.loadout_text().begins_with("1 Heavy Footfall   2 Sweeping Blow"), "the loadout")
 	assert_true(inv.loadout_text().ends_with("Ultimate: Titan Surge"), "with the ultimate")
 	var weapons := inv.weapon_rows()

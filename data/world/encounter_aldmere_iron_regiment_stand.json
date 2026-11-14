@@ -1,0 +1,29 @@
+{
+	"schema_version": 1,
+	"id": "encounter.aldmere_iron_regiment_stand",
+	"type": "encounter",
+	"display_name": "The Iron Regiment: the Last Stand",
+	"description": "P36 (plan M6-M9 §5.13 boss 1, phase 3 'The Last Stand', at 25 %): Warlord Corvane (his guard's banner; a rally aura) and six Iron Guards hold the keep's steps; when the guard breaks or Corvane falls below 30 % he yields - the yield prompt decides (Spare or Strike: boss.corvane.outcome). Three guards on the web (web_formation_scale 0.5: the battle's formation members fit the web's 20). Force-activated by the battle.",
+	"level": "level.world",
+	"center_m": [650, 60.0, -215],
+	"activate_radius_m": 60,
+	"deactivate_radius_m": 400,
+	"alert_group": true,
+	"requires_flags": ["world.aldmere.regiment_mustered"],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"arena": true,
+	"web_formation_scale": 0.5,
+	"formations": [
+		{"id": "guard", "kind": "shield", "display_name": "Corvane's Iron Guard", "banner": "world.aldmere.corvane", "banner_name": "Corvane's Standard", "banner_color": [0.36, 0.06, 0.08], "ranks": 2, "files": 3, "rank_spacing_m": 1.6, "file_spacing_m": 1.4, "facing": "threat", "yaw_deg": 180, "turn_deg_s": 40, "advance_mps": 0.0, "advance_m": 0, "brace_m": 6.0, "brace_action": "ability.formation_brace_shield", "brace_height_m": 5.0, "morale_start": 80, "flee_points": ["world.marker.bailey_flee_w", "world.marker.bailey_flee_e", "world.marker.bailey_flee_n"]}
+	],
+	"spawns": [
+		{"entity_id": "world.aldmere.iron_guard_1", "definition": "enemy.iron_guard", "position_m": [651.4, 60.0, -197.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "guard", "slot": 0},
+		{"entity_id": "world.aldmere.iron_guard_2", "definition": "enemy.iron_guard", "position_m": [650.0, 60.0, -197.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "guard", "slot": 1},
+		{"entity_id": "world.aldmere.iron_guard_3", "definition": "enemy.iron_guard", "position_m": [648.6, 60.0, -197.0], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "guard", "slot": 2},
+		{"entity_id": "world.aldmere.iron_guard_4", "definition": "enemy.iron_guard", "position_m": [651.4, 60.0, -198.6], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "guard", "slot": 3},
+		{"entity_id": "world.aldmere.iron_guard_5", "definition": "enemy.iron_guard", "position_m": [650.0, 60.0, -198.6], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "guard", "slot": 4},
+		{"entity_id": "world.aldmere.iron_guard_6", "definition": "enemy.iron_guard", "position_m": [648.6, 60.0, -198.6], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "guard", "slot": 5},
+		{"entity_id": "world.aldmere.corvane", "definition": "enemy.corvane", "position_m": [650.0, 60.0, -200.8], "yaw_deg": 180, "patrol": "", "faction": "aldmere", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "guard", "slot": -1}
+	]
+}

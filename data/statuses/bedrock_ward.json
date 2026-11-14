@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "status.bedrock_ward",
+	"type": "status_effect",
+	"display_name": "Bedrock Ward",
+	"hud_label": "BEDROCK",
+	"stacking": "refresh_no_stack",
+	"duration_s": 8.0,
+	"tick_s": 0,
+	"magnitude_key": "",
+	"modifiers": {"armor_flat": 40, "poise_threshold_add": 50},
+	"tags": ["Buff"],
+	"hidden": false
+}

@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "poi.hollowmere",
+	"type": "poi",
+	"display_name": "Hollowmere",
+	"level": "level.world",
+	"region": "region.greywood",
+	"kind": "settlement",
+	"position_m": [-640, 17.7, -40],
+	"radius_m": 70,
+	"xp": 40,
+	"map_icon": "settlement",
+	"compass": true,
+	"landmark": "world.greywood.hollowmere_hall",
+	"skyline": true,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"max_inner_stage": 4,
+	"green_m": [-610, 27.0, 22],
+	"note": "The woodfolk's stilt village on the black pond."
+}

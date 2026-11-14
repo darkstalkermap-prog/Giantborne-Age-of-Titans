@@ -1,0 +1,31 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.toll_captain",
+	"type": "dialogue",
+	"speaker": "Captain Hask",
+	"description": "P29 (plan M6-M9 §5.7, §5.9): the toll-riders' toll (quest.kingsroad_toll). Pay 1 iron (world.toll_fort.paid) or, at stage 4, cow him (world.toll_fort.cowed): the fort's garrison then stands down for good. Refusing (world.toll_fort.defied) ends its stand-down: the fort fights. Breaching the gate needs no words.",
+	"entries": [
+		{"node": "breached", "conditions": [{"type": "destroyed", "world_id": "world.crownmarch.toll_gate"}]},
+		{"node": "defied", "conditions": [{"type": "flag", "flag": "world.toll_fort.defied"}]},
+		{"node": "paid", "conditions": [{"type": "flag", "flag": "world.toll_fort.paid"}]},
+		{"node": "cowed", "conditions": [{"type": "flag", "flag": "world.toll_fort.cowed"}]},
+		{"node": "greet", "conditions": []}
+	],
+	"nodes": [
+		{"id": "greet", "text": "Halt! The King's Road is the toll-riders' road, by Aldmere's charter. One iron for passage - or try the fort's pikes.",
+			"choices": [
+				{"text": "Pay the toll. (1 iron)", "next": "paid",
+					"conditions": [{"type": "has_item", "item": "item.iron_ingot", "count": 1}], "locked_text": "You have no iron to pay with",
+					"effects": {"take_items": [{"item": "item.iron_ingot", "count": 1}], "set_flags": {"world.toll_fort.paid": true}, "outcome": "paid"}},
+				{"text": "[Loom over him] You will let me pass. For nothing.", "next": "cowed",
+					"conditions": [{"type": "stage_at_least", "stage": 4}], "locked_text": "Return when you stand at stage 4",
+					"effects": {"set_flags": {"world.toll_fort.cowed": true}, "outcome": "cowed"}},
+				{"text": "I pay no toll.", "next": "defied",
+					"effects": {"set_flags": {"world.toll_fort.defied": true}, "outcome": "refused"}},
+				{"text": "Not now.", "next": ""}]},
+		{"id": "paid", "text": "Paid in full. The King's Road is yours, giant - the fort will not trouble you."},
+		{"id": "cowed", "text": "P-pass! Pass, and go in peace. Nobody asked for any toll."},
+		{"id": "defied", "text": "Then you'll pay in blood. To arms!"},
+		{"id": "breached", "text": "You broke our gate, you brute! There is no toll to take from a thing like you."}
+	]
+}

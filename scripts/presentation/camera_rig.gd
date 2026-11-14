@@ -74,7 +74,7 @@ func setup(p_player: Node3D, p_profile: Dictionary) -> void:
 	current_distance = desired_distance
 	camera.fov = float(Settings.get_value("fov_deg"))
 	camera.near = 0.05
-	camera.far = 800.0
+	camera.far = level_far_plane_m()   # P24a: the level's camera_far_m (800 m unless its preset says)
 	camera.current = true
 	set_mode(int(Settings.session.get("camera_mode", Mode.THIRD_PERSON)), false)
 	_update_transform(0.0)
@@ -230,6 +230,8 @@ func _frame_lock_target(delta: float) -> void:
 ## profile's height - a knee anchor of a target at least 1.3 x the giant's height (the Ogre King
 ## at stages 1 and 2), otherwise its torso. Vector3.INF without a lock target.
 func lock_focus_point() -> Vector3:
+	if p30_lock_group != null and not p30_lock_group.dissolved:
+		return p30_lock_group.anchor()   # P30: a locked formation is framed at its anchor
 	if lock_target == null or not is_instance_valid(lock_target) or lock_target.combatant == null:
 		return Vector3.INF
 	return lock_target.lock_anchor_position(float(profile.get("height_m", 3.66)))
@@ -278,13 +280,14 @@ func _update_transform(delta: float) -> void:
 		if safe_length < current_distance or delta <= 0.0:
 			current_distance = safe_length
 		else:
-			current_distance = move_toward(current_distance, safe_length, RESTORE_SPEED * delta)
+			current_distance = move_toward(current_distance, safe_length, restore_speed() * delta)   # P26
 		global_transform = Transform3D(basis, pivot + arm / maxf(arm_length, 0.001) * current_distance)
 		var hide := hides_head(current_distance, arm_length, shoulder, float(profile.get("capsule_radius_m", 0.85)))
 		if hide != head_hidden:
 			head_hidden = hide
 			camera.cull_mask = CULL_NO_HEAD if hide else CULL_ALL
 	_apply_shake(delta)
+	_update_scenery_fade()
 
 
 ## Fraction (0..1) of the segment a camera-sized sphere can travel without touching the world.
@@ -311,3 +314,113 @@ func _apply_shake(delta: float) -> void:
 	else:
 		camera.transform = Transform3D.IDENTITY
 	_shake = maxf(0.0, _shake - delta * 1.8)
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P24a
+# The far plane follows the level (P24a, plan M6-M9 §2.7, decision 12): 2,400 m in the world, so its
+# fog and skyline reach the edge; DEFAULT_FAR_M (800 m) where the level's preset names none.
+
+const DEFAULT_FAR_M := 800.0
+
+
+## The far plane of the level the giant stands in: the camera_far_m() of its nearest LevelRoot
+## ancestor (the render preset in effect), else DEFAULT_FAR_M.
+func level_far_plane_m() -> float:
+	var n: Node = player.get_parent() if player != null else get_parent()
+	while n != null:
+		if n.has_method("camera_far_m"):
+			return float(n.call("camera_far_m"))
+		n = n.get_parent()
+	return DEFAULT_FAR_M
+
+
+## Sets the camera's far plane (LevelRoot.apply_graphics, also on a graphics setting change).
+func set_far_plane(far_m: float) -> void:
+	if camera != null:
+		camera.far = maxf(far_m, camera.near + 1.0)
+
+## @anchor P26
+# Stages 4-6 (P26, plan M6-M9 §2.9): the third-person arm reaches 32 m (stage 6's zoom limit). The
+# existing sphere sweep keeps every length out of the world, the streamed terrain included (its
+# height-map bodies are on the world layer: a camera pitched up behind a stage-6 giant stops at the
+# ground instead of going under it). An arm that long restores faster: restore_speed() scales
+# RESTORE_SPEED with the wanted arm beyond RESTORE_REFERENCE_ARM_M (stage 3's zoom limit), so stages
+# 1-3 are unchanged and a 23.5 m stage-6 arm comes back in about two seconds instead of four.
+
+const RESTORE_REFERENCE_ARM_M := 16.0
+const MAX_ARM_M := 32.0
+
+
+## The speed (m/s) the arm extends back at after an obstruction clears or the mode changes.
+func restore_speed() -> float:
+	return RESTORE_SPEED * maxf(1.0, desired_distance / RESTORE_REFERENCE_ARM_M)
+
+## @anchor P30
+# A formation locked as a group (P30, plan M6-M9 §2.10, decision 19): PlayerTargeting keeps
+# lock_target on the formation's focus member (a CombatEntity, as everything else expects) and
+# sets p30_lock_group; lock_focus_point() (the hook at its start) frames the formation's anchor -
+# the front rank's centre at chest height - so the camera holds on the group, not on whichever
+# member is nearest at the moment.
+
+## The formation locked as a group (null for a single target or no lock).
+var p30_lock_group: Formation = null
+
+
+func p30_set_lock_group(f: Formation) -> void:
+	p30_lock_group = f
+
+## @anchor M8 screenshot pass (V1)
+# Trees fade out of the giant's way (SceneryFade; assets/shaders/scenery_fade.gdshader). The camera the
+# player sees through sets the fade's three global shader parameters every frame, after it moved:
+# itself with its near radius (third person SceneryFade.NEAR_ARM x the arm, first person
+# SceneryFade.FP_NEAR_RADII x the giant's height), the giant's middle with his cone's radius (third
+# person only: in first person the camera is in his head) and the lock point of the locked target or
+# formation with its radius. A rig that leaves the tree, or a frame of a camera that is not current,
+# clears them: nothing fades without the player's camera.
+
+## True while this rig's camera writes the fade's parameters (it was current at its last update).
+var scenery_fade_owner := false
+
+
+func _exit_tree() -> void:
+	if scenery_fade_owner:
+		scenery_fade_owner = false
+		SceneryFade.clear()
+
+
+## What the fade keeps clear for this rig now: {"camera", "focus", "target"} (Vector4s as the shader's
+## parameters: xyz a position, w a radius, 0 = none).
+func scenery_fade_view() -> Dictionary:
+	var h := float(profile.get("height_m", 3.66))
+	var eye := camera.global_position
+	var near := SceneryFade.FP_NEAR_RADII * h
+	var foc := Vector4.ZERO
+	if mode == Mode.THIRD_PERSON:
+		near = maxf(SceneryFade.NEAR_MIN_M, SceneryFade.NEAR_ARM * current_distance)
+		var mid := player.global_position + Vector3.UP * h * SceneryFade.FOCUS_HEIGHT
+		foc = Vector4(mid.x, mid.y, mid.z, SceneryFade.FOCUS_RADII * h)
+	var tgt := Vector4.ZERO
+	var locked := lock_target != null and is_instance_valid(lock_target) and lock_target.is_alive()
+	var anchor := lock_focus_point() if locked else Vector3.INF
+	if anchor.is_finite():
+		var r := SceneryFade.TARGET_MIN_M
+		if lock_target.combatant != null:
+			r = maxf(r, SceneryFade.TARGET_RADII * lock_target.combatant.height_m)
+		if p30_lock_group != null and not p30_lock_group.dissolved:
+			r = maxf(r, 0.5 * p30_lock_group.files * p30_lock_group.file_spacing_m)
+		tgt = Vector4(anchor.x, anchor.y, anchor.z, r)
+	return {"camera": Vector4(eye.x, eye.y, eye.z, near), "focus": foc, "target": tgt}
+
+
+func _update_scenery_fade() -> void:
+	if camera == null or player == null or not is_instance_valid(player) or not camera.current:
+		if scenery_fade_owner:
+			scenery_fade_owner = false
+			SceneryFade.clear()
+		return
+	scenery_fade_owner = true
+	var v := scenery_fade_view()
+	SceneryFade.set_view(v.camera, v.focus, v.target)

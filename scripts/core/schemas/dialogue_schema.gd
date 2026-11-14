@@ -31,8 +31,8 @@ const U := preload("res://scripts/core/schemas/schema_util.gd")
 
 ## Node ids and outcomes are plain lowercase words (they become parts of flag ids).
 const WORD_REGEX := "^[a-z][a-z0-9_]*$"
-## Effects that are rewards: granted only through the once_flag.
-const ONCE_GATED := ["xp", "give_items", "learn_abilities"]
+## Effects that are rewards: granted only through the once_flag (attribute_points: P20).
+const ONCE_GATED := ["xp", "give_items", "learn_abilities", "attribute_points"]
 
 
 ## [{item, count}] lists (give_items, take_items; quest stage items).
@@ -59,6 +59,8 @@ static func fields() -> Dictionary:
 				"next": U.str_field(),
 				# The choice is listed only while these hold.
 				"conditions": {"t": "array"},
+				# P20: shown greyed with this reason while the conditions fail (else hidden).
+				"locked_text": U.str_field(),
 				"effects": {"t": "dict", "fields": {
 					"set_flags": {"t": "dict"},
 					"outcome": U.str_field(),
@@ -66,6 +68,8 @@ static func fields() -> Dictionary:
 					"take_items": item_list(),
 					"xp": U.int_field(0, 100000),
 					"learn_abilities": U.ref_array("action"),
+					# P20: unspent attribute points (a reward: needs a once_flag).
+					"attribute_points": U.int_field(0, 100),
 					"once_flag": U.str_field(),
 					"close": U.bool_field()}}}}}},
 	}

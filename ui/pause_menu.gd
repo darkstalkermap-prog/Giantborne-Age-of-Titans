@@ -172,6 +172,9 @@ func _show_page(page_name: String) -> void:
 	_settings_pages.cancel_capture()
 	for key: String in _pages:
 		(_pages[key] as Control).visible = key == page_name
+		# P39f: the open page's tab is marked (UiKit.set_tab_open), as the shrine's
+		if _tab_buttons.has(key):
+			UiKit.set_tab_open(_tab_buttons[key], key == page_name)
 	if page_name == "Controls":
 		_settings_pages.refresh_bindings()
 	if not is_inside_tree():

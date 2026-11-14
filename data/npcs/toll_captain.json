@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "npc.toll_captain",
+	"type": "npc",
+	"role": "talker",
+	"display_name": "Captain Hask",
+	"description": "P29 (plan M6-M9 §5.4, §5.7, §2.12): The toll-riders' captain at the toll bar on the King's Road, outside his fort's palisade: he demands tribute from passers - 1 iron, or a giant big enough to cow him. Faction toll_riders, protected, never flees (a talker).",
+	"scene": "res://scenes/npcs/elder.tscn",
+	"height_m": 1.7,
+	"capsule_radius_m": 0.3,
+	"health": 60,
+	"armor": 0,
+	"walk_speed_mps": 1.2,
+	"run_speed_mps": 2.8,
+	"flee_trigger_radius_m": 0,
+	"protected": true,
+	"dialogue": "dialogue.toll_captain",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"nav_layers": 1,
+	"grab_attach": "none"
+}

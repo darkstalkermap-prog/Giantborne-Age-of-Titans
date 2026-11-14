@@ -7,8 +7,8 @@ extends UiScreen
 ##   * the items (name, count, description, a [quest] tag for quest items);
 ##   * the weapons owned: the equipped one marked, an Equip button for the others
 ##     (PlayerEquipment.equip_weapon), "(too small)" where the giant has outgrown one;
-##   * the current loadout (changed at shrines) and the talent points ("talent trees are a
-##     full-game feature").
+##   * the current loadout (changed at shrines) and the talent points with the talents learned
+##     (P33: "Talent points: 2 — talents: Heavy Hands, Stone Hide").
 ## In combat (ResourcePool.in_combat()) it refuses to open: "Not during combat" as a HUD warning,
 ## and the screen closes itself at once. args: {"player": GiantPlayer} (else group "player").
 ## P16: focus rows Attributes, every Equip button, Close (wrapping); the list scrolls with the focus.
@@ -240,10 +240,12 @@ static func _action_name(id: String) -> String:
 	return def.display_name if def != null else id
 
 
+## P33: the talent points and the talents learned (PlayerProgression.talent_line).
 func talent_text() -> String:
 	var prog: Variant = player.progression if player != null and is_instance_valid(player) else null
-	var n := int(prog.talent_points) if prog != null else 0
-	return "Talent points: %d (talent trees are a full-game feature)" % n
+	if prog != null and prog.has_method("talent_line"):
+		return str(prog.talent_line())
+	return "Talent points: %d" % (int(prog.talent_points) if prog != null else 0)
 
 
 func result_text() -> String:

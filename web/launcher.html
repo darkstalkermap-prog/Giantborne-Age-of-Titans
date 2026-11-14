@@ -66,6 +66,14 @@ h1 .sub { font-family: var(--smallcaps); font-weight: 500; font-size: clamp(1.1r
 .play:hover { transform: translateY(-1px); box-shadow: 0 0 0 9px rgba(227, 146, 63, 0.22), 0 14px 34px rgba(0, 0, 0, 0.5); }
 .play:focus-visible { outline: 3px solid var(--bone); outline-offset: 4px; }
 .gate-note { margin: 0; max-width: 44ch; font-size: 0.95rem; color: var(--bone); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+.play-alt {
+  font: 500 1rem/1.2 var(--body); color: var(--bone); background: rgba(16, 19, 16, 0.72);
+  border: 1px solid var(--moss); border-radius: 999px; padding: 0.6rem 1.3rem; cursor: pointer;
+}
+.play-alt:hover { background: rgba(26, 31, 26, 0.9); }
+.play-alt:focus-visible { outline: 3px solid var(--bone); outline-offset: 3px; }
+.play-alt.armed { border-color: var(--ember); color: var(--ember); }
+.alt-note { margin: -0.4rem 0 0; max-width: 46ch; font-size: 0.85rem; color: var(--dim); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
 .meter { width: min(22rem, 80vw); height: 8px; border-radius: 999px; background: rgba(236, 229, 211, 0.15); overflow: hidden; }
 .meter-fill { height: 100%; width: 0%; background: var(--moss); transition: width 160ms linear; }
 .status { margin: 0; min-height: 1.5em; font-family: var(--mono); font-size: 0.85rem; color: var(--bone); font-variant-numeric: tabular-nums; }
@@ -129,11 +137,16 @@ kbd {
 
 <main class="wrap">
   <header class="masthead">
-    <p class="eyebrow">Playable prototype &middot; the Valley of Broken Kings &middot; build 0.5.0-m5</p>
+    <p class="eyebrow">Playable prototype &middot; the world opens after the Valley &middot; build 0.9.0-m9</p>
     <h1><span class="name">Giantborn</span><span class="sub">Age of Titans</span></h1>
-    <p class="pitch">You wake as a <strong>12-foot juvenile giant</strong> in Giant's Hollow. Cross the Valley of
-      Broken Kings: wolves and an ogre in the Old Wood, a village you can help, cow or force, a ruined fortress,
-      and the Ogre King at Kingsfall. Grow at shrines to 18 and then 26 feet along the way. About 20&ndash;30 minutes.</p>
+    <p class="pitch">You wake as a <strong>12-foot juvenile giant</strong> in Giant's Hollow. The Valley of Broken
+      Kings is your tutorial: wolves and an ogre in the Old Wood, a village you can help, cow or force, and the
+      Ogre King at Kingsfall, growing to 18 and then 26 feet at its shrines (about 20&ndash;30 minutes). Then the
+      Kings' Door opens onto <strong>the Old Kingdom</strong>, an open world of five regions, two kilometres
+      across, where you grow to 36, 48 and 62 feet, towns react to your size, pikes, shield walls and siege
+      engines hold the roads, and oaths are won by help, fear or force. Win two of the three oaths, grow to
+      62 feet at the Standing Stones, enter the Moot, face Harrok the Unbowed and take <strong>the Stone
+      Throne</strong>.</p>
   </header>
 
   <section class="stage" id="stage" aria-label="Game">
@@ -141,7 +154,9 @@ kbd {
     <canvas id="game-canvas" tabindex="0" hidden></canvas>
     <div class="gate" id="gate">
       <button class="play" id="play" type="button">Play in browser</button>
-      <p class="gate-note" id="gate-note">About 14 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
+      <p class="gate-note" id="gate-note">About 30 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
+      <button class="play-alt" id="play-world" type="button">Start in the open world</button>
+      <p class="alt-note" id="world-note">Skips the Valley: a new game on the Kingsgate shelf as the 26-foot giant who took the crown. It replaces a game saved in this browser.</p>
       <div class="meter" id="meter" hidden><div class="meter-fill" id="meter-fill"></div></div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <details class="detail" id="detail" hidden><summary>Technical details</summary><pre id="detail-text"></pre></details>
@@ -169,31 +184,42 @@ kbd {
           <tr><td>Titan Surge, when fury is full</td><td><kbd>R</kbd></td></tr>
           <tr><td>Talk, grab, pick up, use a shrine</td><td><kbd>E</kbd></td></tr>
           <tr><td>Inventory and attributes</td><td><kbd>I</kbd></td></tr>
+          <tr><td>Map / journal</td><td><kbd>M</kbd> / <kbd>J</kbd></td></tr>
+          <tr><td>Track the next quest / pin the map</td><td><kbd>T</kbd> / <kbd>P</kbd></td></tr>
           <tr><td>Pause, settings, rebind keys</td><td><kbd>Esc</kbd></td></tr>
           <tr><td>Controls in the game</td><td><kbd>H</kbd></td></tr>
         </tbody>
       </table>
-      <p class="pad">Gamepad: sticks move and look, RB light, RT heavy, LB block, B dodge, A jump, X use. Abilities are LT&nbsp;+&nbsp;A/B/X/Y and LT&nbsp;+&nbsp;d-pad, Titan Surge is LT&nbsp;+&nbsp;RT, Back opens the inventory and Start pauses.</p>
+      <p class="pad">Gamepad: sticks move and look, RB light, RT heavy, LB block, B dodge, A jump, X use. Abilities are LT&nbsp;+&nbsp;A/B/X/Y and LT&nbsp;+&nbsp;d-pad, Titan Surge is LT&nbsp;+&nbsp;RT, Back opens the inventory and Start pauses. On its own the d-pad opens the map (down) and the journal (right) and tracks the next quest (left).</p>
     </div>
 
     <div class="slab">
       <h2>What to try</h2>
       <ol class="route">
-        <li>Choose <b>New Game</b>. The quest tracker (top right) and the diamond marker show where to go next.</li>
-        <li>In Giant's Hollow, try both cameras (<kbd>V</kbd>), hit the dummies, and spar at the post to learn block, parry and dodge.</li>
-        <li>In the Old Wood, wolves circle and lunge: dodge, then punish. Stagger a soldier with a heavy attack, grab it with <kbd>E</kbd> and throw it. The ogre's strikes are slow; hit it during its recovery.</li>
-        <li>At level 3, press <kbd>E</kbd> at the Grove Shrine and grow to 18&nbsp;ft. Boulder Hurl unlocks: lock on to the watch cairn on the ledge and throw one.</li>
-        <li>At Thornwick, talk to Elder Maren with <kbd>E</kbd>. Help her, intimidate her guards, or force your way through; each choice changes your reward and the road ahead.</li>
-        <li>Break the practice gate into the ruins, then face the Ogre King at Kingsfall. Below half health it charges: make it hit a pillar, then punish.</li>
-        <li>Grow to 26&nbsp;ft, uproot a tree to use as a club, and smash the Deadfall you passed earlier.</li>
+        <li>Choose <b>New Game</b>. The quest tracker (top right) and the diamond marker show the way. In Giant's Hollow, try both cameras (<kbd>V</kbd>) and spar at the post to learn block, parry and dodge.</li>
+        <li>In the Old Wood, wolves circle and lunge: dodge, then punish. Stagger a soldier with a heavy attack, grab it with <kbd>E</kbd> and throw it.</li>
+        <li>Grow to 18&nbsp;ft at the Grove Shrine, choose how to deal with Elder Maren at Thornwick, break into the ruins and face the Ogre King at Kingsfall. Below half health it charges: make it hit a pillar, then punish.</li>
+        <li>Take the crown and walk through the Kings' Door: the Old Kingdom opens below the Kingsgate shelf. <b>Start in the open world</b> begins here.</li>
+        <li>Drive the scouts off the beacon hill and relight the Kingsgate beacon. The Kingsgate shrine then grows you to 36&nbsp;ft, and Heavy Footfall and Boulder Hurl become Titan Stomp and Crag Hurl. At every shrine, the <b>Talents</b> tab spends the point each level brings in three trees (new tiers open at levels 6, 8, 9, 10 and 12), and in the Old Kingdom the <b>Ancestry</b> tab lets you choose, once, Stoneblood, Stormborn or Wildheart.</li>
+        <li>Open the map (<kbd>M</kbd>): it fills in as you explore, the waystones and shrines you have visited are fast-travel points, and <kbd>P</kbd> pins a spot for the compass. The journal (<kbd>J</kbd>) lists your quests; <kbd>T</kbd> tracks the next one.</li>
+        <li>In Brannock, swear the march oath by helping its people, cowing them or breaking the gatehouse; the town remembers which. Pikes at the King's Road toll fort and a shield wall in the Raiders' Hollow brace together as you close: step out of the band drawn on the ground, then go for the banner.</li>
+        <li>In the Greywood, trolls close their wounds unless they burn: smash a bonfire or a brazier beside one, or throw it into the flames. Sedge at Hollowmere asks for the Troll Matriarch: slay her in her den, or burn her three nests and drive her out. Trees between the camera and you (or the target you lock) fade to a ghost, so the pines no longer hide the fight.</li>
+        <li>At the war camp, Aldmere's herald names the crown's three roads: break Fort Aldmere's gate and fight the Iron Regiment until Warlord Corvane yields (hold Enter, the mouse button or pad A on Spare or Strike; the screen tells you which ballistae shoot: smash them); wreck the seven war engines of the camp and Ballista Ridge; or show her a token (Brannock's banner, the deserters' word, Stoneblood, or your 48&nbsp;ft) and sound the horn at the fort's gate for a parley.</li>
+        <li>Siege engines warn before they shoot: a ballista's bolt follows its aim line, a catapult's stone falls in its circle, and riders charge down a line: step aside. At 62&nbsp;ft, seize a staggered or uncrewed engine with <kbd>E</kbd> and throw it.</li>
+        <li>Your first oath lets the shrines of the Greywood, the Sunken Steps and Aldmere grow you to 48&nbsp;ft; two oaths wake the Shrine of the Standing Stones, which grows you to 62&nbsp;ft. Below 62&nbsp;ft the Giant's Stair turns you back: go round by the Ironway, up from Aldmere's road. Then climb the Stair, enter the Moot, settle the clans' champion, Harrok, in its ring, and take the Stone Throne.</li>
+        <li>Off the road: pay, cow or breach the King's Road toll, the ogre pair in the Barrow Fields, Millford's millrace and the Shepherd's Watch beacon; the Needle and the great pines in the Greywood; Wenna's five sunken bells and the Stoneknuckles, the sunken vault and the Titan Forge at the Titan's Bones; the deserters at the burned mill; Skarn and its siege in the Stonehold; and back in the Valley, the sealed Citadel that only a 36-foot giant can breach.</li>
+        <li>The world moves without you: raiders fall on Millford, an army column marches, and bands wander the roads. From 36&nbsp;ft a lone soldier runs at the sight of you; pikes and shield walls still stand. Walk out of a boss's arena and the fight starts over (the screen warns you first), except in Fort Aldmere's bailey, whose portcullis drops behind you until the Iron Regiment is beaten.</li>
         <li>Death returns you to the last shrine or waystone. Progress is saved in this browser, so <b>Continue</b> picks up where you left off. <b>Sandbox</b> is still there for practice.</li>
       </ol>
     </div>
 
     <div class="slab about">
       <h2>About this build</h2>
-      <p><b>What it is.</b> The Valley of Broken Kings slice of Giantborn: Age of Titans (Godot 4.6.3): growth to stage 3, five enemy types and an ogre boss, eight abilities plus Titan Surge, grab and throw, four weapons, quests with a village choice, and checkpoint saves.</p>
-      <p><b>What it is not yet.</b> The art is placeholder boxes and there is no sound. A playtest bot has finished the slice under every village choice and the balance has had a first pass, but no new player has tried it yet, so expect rough edges. The browser version runs on one thread: expect slow frames on weaker computers.</p>
+      <p><b>What it is.</b> Giantborn: Age of Titans (Godot 4.6.3): the Valley of Broken Kings as the tutorial, then the Old Kingdom, a streamed open world of five regions with a map, a compass, discovery and fast travel. Growth to 62&nbsp;ft, abilities that evolve as you grow, talents and an ancestry, formations with banners, siege engines and cavalry, trolls, dire wolves and rival giants, three bosses (the Troll Matriarch, the Iron Regiment and Harrok the Unbowed), towns that react to your size, three oaths each won more than one way, and the campaign's end on the Stone Throne.</p>
+      <p><b>New in 0.9.0-m9.</b> A world bot now plays the whole campaign, peacefully, by conquest and in between, in every order of the oaths, and the world was tuned on its runs: the Troll Matriarch's second phase is easier, a Strike on Harrok when he yields lands before he rises, and from 36&nbsp;ft lone soldiers flee the giant. At Fort Aldmere the gate's garrison no longer blocks the gateway, a breach stays made after a death, the Iron Regiment's phases follow its units and the screen names the ballistae that shoot; the war camp's shield wall stands off the King's Road. Enemies walking back to their posts no longer get stuck, the music keeps its battle score for fights near you but answers a siege engine's shot, and the HUD's text no longer overlaps.</p>
+      <p><b>Sound on.</b> The Valley, every region and every boss have their own score, and the Valley and every region their own ambience; towns and camps keep their region's music. The music follows the place and the fight, and you can hear threats coming. Browsers start a page's sound only after a click or a key press, so if you hear nothing, click the game once. The volumes are in Settings, and the sound mutes while the tab is hidden.</p>
+      <p><b>What it is not yet.</b> The art is placeholder boxes. The balance is a bot's: it walks from objective to objective, no person has played the world yet, and some fights are still harder for it than they should be (the Iron Regiment, if you take the crown's oath first at 36&nbsp;ft). Siege trains do not wander the roads. The browser version runs on one thread, so expect slow frames, and music that can stutter, on weaker computers.</p>
+      <p><b>The next build.</b> This is the last build of this plan. Next come playtests by people, whose findings become tuning first, and then M10: a realistic giant, with a character creator.</p>
       <p><b>If something goes wrong.</b> Esc opens the pause menu, where you can load the last checkpoint or quit to the title. Settings and your saved game stay in this browser. Note what you did, what you expected and what happened.</p>
     </div>
   </section>
@@ -209,8 +235,9 @@ kbd {
 <script src="index.js"></script>
 <script>
 (function () {
-  // Byte counts of the current export (raw and packed as .txt), used for the progress bar.
-  const BUILD = { wasm: 37700666, pck: 2356840, wasmPacked: 12528700, pckPacked: 1680156 }; // set by tools/build_web.sh
+  // Byte counts of the current export (raw and packed as .txt), used for the progress bar, and the
+  // number of parts the packed pck ships in.
+  const BUILD = { wasm: 37700666, pck: 17591244, wasmPacked: 12528700, pckPacked: 17500048, pckParts: 2 }; // set by tools/build_web.sh
 
   const stage = document.getElementById('stage');
   const poster = document.getElementById('poster');
@@ -218,6 +245,8 @@ kbd {
   const gate = document.getElementById('gate');
   const play = document.getElementById('play');
   const gateNote = document.getElementById('gate-note');
+  const playWorld = document.getElementById('play-world');
+  const worldNote = document.getElementById('world-note');
   const meter = document.getElementById('meter');
   const meterFill = document.getElementById('meter-fill');
   const statusEl = document.getElementById('status');
@@ -253,10 +282,19 @@ kbd {
   // The page host serves text files up to 16 MB but no archives or large binaries, and the
   // engine is 36 MB. So the build ships index.wasm and index.pck gzipped and base64-encoded as
   // .txt files: download them here with progress, unpack them in the browser, and hand Godot
-  // ordinary responses.
+  // ordinary responses. A packed pck over 15 MB ships in parts (index.pck.gz.b64.1.txt, .2.txt,
+  // ...: tools/build_web.sh): they download in order under the one progress meter and their text
+  // is joined before it is unpacked.
+  function pckUrls(parts) {
+    const n = Math.max(1, Math.floor(Number(parts) || 1));
+    if (n === 1) return ['index.pck.gz.b64.txt'];
+    const urls = [];
+    for (let i = 1; i <= n; i++) urls.push('index.pck.gz.b64.' + i + '.txt');
+    return urls;
+  }
   const PACKED = {
-    'index.wasm': { url: 'index.wasm.gz.b64.txt', type: 'application/wasm' },
-    'index.pck': { url: 'index.pck.gz.b64.txt', type: 'application/octet-stream' },
+    'index.wasm': { urls: ['index.wasm.gz.b64.txt'], type: 'application/wasm' },
+    'index.pck': { urls: pckUrls(BUILD.pckParts), type: 'application/octet-stream' },
   };
   const packedTotal = BUILD.wasmPacked + BUILD.pckPacked;
   let packedReceived = 0;
@@ -271,19 +309,21 @@ kbd {
   }
 
   async function fetchPacked(entry) {
-    const res = await realFetch(entry.url);
-    if (!res.ok) {
-      throw new Error('The game files could not be downloaded (HTTP ' + res.status + ').');
-    }
-    const reader = res.body.getReader();
     const chunks = [];
-    for (;;) {
-      const step = await reader.read();
-      if (step.done) break;
-      chunks.push(step.value);
-      packedReceived += step.value.length;
-      setMeter(0.85 * Math.min(1, packedReceived / packedTotal));
-      setStatus('Downloading the game ' + mb(Math.min(packedReceived, packedTotal)) + ' / ' + mb(packedTotal) + ' MB');
+    for (const url of entry.urls) {
+      const res = await realFetch(url);
+      if (!res.ok) {
+        throw new Error('The game files could not be downloaded (HTTP ' + res.status + ').');
+      }
+      const reader = res.body.getReader();
+      for (;;) {
+        const step = await reader.read();
+        if (step.done) break;
+        chunks.push(step.value);
+        packedReceived += step.value.length;
+        setMeter(0.85 * Math.min(1, packedReceived / packedTotal));
+        setStatus('Downloading the game ' + mb(Math.min(packedReceived, packedTotal)) + ' / ' + mb(packedTotal) + ' MB');
+      }
     }
     const text = (await new Blob(chunks).text()).replace(/[^A-Za-z0-9+/=]/g, '');
     const gz = decodeBase64(text);
@@ -304,6 +344,32 @@ kbd {
     return match ? fetchPacked(PACKED[match[1]]) : realFetch(input, init);
   };
 
+  // Sound: a browser keeps an AudioContext suspended until the page is pressed when it was made
+  // outside a press, and the engine makes its own only after the download. Every click or key
+  // press on the page resumes the contexts that are suspended (the first press after the engine
+  // has made its context does it); the engine resumes its own on input too.
+  const audioContexts = [];
+  const NativeAudioContext = window.AudioContext || window.webkitAudioContext;
+  if (typeof NativeAudioContext === 'function') {
+    try {
+      const TrackedAudioContext = class extends NativeAudioContext {
+        constructor(options) {
+          super(options);
+          audioContexts.push(this);
+        }
+      };
+      window.AudioContext = TrackedAudioContext;
+      if (window.webkitAudioContext) window.webkitAudioContext = TrackedAudioContext;
+    } catch (e) { /* the engine makes an ordinary one and resumes it on input itself */ }
+  }
+  function resumeAudio() {
+    for (const ctx of audioContexts) {
+      if (ctx.state === 'suspended') ctx.resume().catch(function () { /* the next press */ });
+    }
+  }
+  window.addEventListener('pointerdown', resumeAudio, true);
+  window.addEventListener('keydown', resumeAudio, true);
+
   // The smallest valid WebAssembly module: if this does not compile, the engine cannot either.
   function wasmProblem() {
     if (typeof WebAssembly !== 'object') return 'WebAssembly is not available in this browser.';
@@ -313,6 +379,25 @@ kbd {
     } catch (e) {
       return (e && e.message) || String(e);
     }
+  }
+
+  // The page's ?args=a,b,c become the engine's command line (the web checks: P24a's stream check,
+  // P23's audio check). Each comma-separated item is one argument (URL-decoded). Without a "--"
+  // among them they are all the game's own arguments (OS.get_cmdline_user_args), as if typed
+  // after "--"; with one, the items before it go to the engine (--fixed-fps,60,--,--mode=world).
+  let startArgs = null;
+  function launchArgs() {
+    if (startArgs) return startArgs;
+    let raw = null;
+    try {
+      raw = new URLSearchParams(window.location.search).get('args');
+    } catch (e) {
+      raw = null;
+    }
+    if (!raw) return [];
+    const list = raw.split(',').map(function (a) { return a.trim(); }).filter(function (a) { return a.length > 0; });
+    if (list.length === 0) return [];
+    return list.indexOf('--') >= 0 ? list : ['--'].concat(list);
   }
 
   // Once the engine has begun loading it cannot be started twice in one page, so a retry reloads.
@@ -335,10 +420,15 @@ kbd {
     }
     play.hidden = !retryLabel;
     if (retryLabel) play.textContent = retryLabel;
+    playWorld.hidden = true;
+    worldNote.hidden = true;
   }
 
-  async function start() {
+  // engineArgs: the engine's command line for this start (the open-world start passes its own);
+  // otherwise launchArgs() reads the page's ?args=.
+  async function start(engineArgs) {
     if (running) return;
+    startArgs = Array.isArray(engineArgs) ? engineArgs : null;
     if (attempted) {
       location.reload();
       return;
@@ -361,6 +451,8 @@ kbd {
     attempted = true;
     running = true;
     play.hidden = true;
+    playWorld.hidden = true;
+    worldNote.hidden = true;
     detail.hidden = true;
     meter.hidden = false;
     setMeter(0);
@@ -370,7 +462,7 @@ kbd {
     const engine = new Engine({
       canvas: canvas,
       executable: 'index',
-      args: [],
+      args: launchArgs(),
       canvasResizePolicy: 2,
       focusCanvas: true,
       ensureCrossOriginIsolationHeaders: false,
@@ -406,7 +498,30 @@ kbd {
       fail('The game could not start: ' + (err && err.message ? err.message : String(err)), 'Reload and try again');
     }
   }
-  play.addEventListener('click', start);
+  play.addEventListener('click', function () { start(); });
+
+  // The open-world start (--mode=world: a new game from the world's start, past the Valley)
+  // replaces the game saved in this browser, so it asks twice: the first press arms it for a few
+  // seconds, the second starts. No browser dialog, which a framed page may not be allowed to show.
+  const WORLD_LABEL = playWorld.textContent;
+  let worldTimer = 0;
+  function disarmWorld() {
+    worldTimer = 0;
+    playWorld.classList.remove('armed');
+    playWorld.textContent = WORLD_LABEL;
+  }
+  playWorld.addEventListener('click', function () {
+    if (running) return;
+    if (!worldTimer) {
+      playWorld.classList.add('armed');
+      playWorld.textContent = 'Press again to start a new game in the open world';
+      worldTimer = setTimeout(disarmWorld, 6000);
+      return;
+    }
+    clearTimeout(worldTimer);
+    disarmWorld();
+    start(['--', '--mode=world']);
+  });
 
   // When this page is republished while someone is playing, the viewer reloads it at a quiet
   // moment. Remember that a game was running and go straight back into it.

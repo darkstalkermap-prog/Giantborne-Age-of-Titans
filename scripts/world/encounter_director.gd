@@ -12,7 +12,12 @@ extends Node
 ##     encounter_activated;
 ##   * an active encounter spawns members still waiting for room in the budget, leashes members
 ##     farther than leash_radius_m from its centre (begin_leash_return() and encounter_leashed;
-##     they engage again once home), sets each member's AI LOD tier by distance to the player
+##     they engage again once home; members of an intact formation excepted - their formation holds
+##     them, see the P30 notes; a member on its way home is left to its return, which never ends
+##     outside the leash - M9 gate, lane review: EnemyActor's leash wait - and one that answered a blow
+##     while it waited for its post is left off the leash while the body on its post stays there:
+##     EnemyActor.leash_held_off, fix-up 1), sets each member's AI LOD
+##     tier by distance to the player
 ##     (tier 0 within lod.near_m, 1 within lod.mid_m, else 2; engaged members stay at tier 0),
 ##     and deactivates once the player is beyond deactivate_radius_m and no member has been aware
 ##     of the player for UNAWARE_DEACTIVATE_S: its living members are freed (not killed) and come
@@ -43,6 +48,11 @@ extends Node
 ## home_position, position and yaw (level space, lifted SPAWN_LIFT_M) and the LOD tier, then add
 ## it under LevelRoot/Spawned. Spawns happen only inside the director's own update (the Sim
 ## hook, or update_now()), never from a physics callback.
+##
+## A streamed world (P24b, below its anchor): only encounters whose chunk is loaded and ready update,
+## members in an unloading chunk are despawned (encounters centred there deactivate), spawns wait for
+## a ready chunk, spawn entries filter by the giant's stage (min_stage / max_stage, at activation),
+## and the director's own path queries share NavQuery's per-tick budget.
 ##
 ## The spawn hitch (P17a, FOLLOWUPS; P14 measured a 13-25 ms tick per activation and 100-150 ms
 ## for the first load of an archetype's scene):
@@ -170,6 +180,9 @@ func _exit_tree() -> void:
 func _ready() -> void:
 	level = _find_level()
 	reload_encounters()
+	_p29_ready()   # P29: stand-downs, provocation, talkers on greens, the respawn blocker
+	_p32_ready()   # P32: an encounter's engines take their crews
+	_p37_ready()   # P37: copies of templates (wanderers, world events) - their members' XP, targets, patrols
 
 
 # --------------------------------------------------------------------------- public API
@@ -202,6 +215,8 @@ func active_combatant_count() -> int:
 ## Whether `m` counts toward the budget now: a member of a budgeted encounter whose definition is
 ## an enemy, or an enemy-definition member whose faction is hostile to the giant (P17b).
 static func counts(m: Member) -> bool:
+	if _p30_formation_member(m):
+		return false   # P30: formation members count against max_formation_members instead
 	return m.budgeted or (m.enemy_def and m.faction != "" and FactionState.is_hostile(m.faction))
 
 
@@ -293,15 +308,35 @@ func member_status(entity_id: String) -> String:
 	return m.status if m != null else ""
 
 
+## M9 gate (final): true while a spawned member is routed - out of the fight for good (Events.enemy_routed;
+## sticky until it dies, leaves the world or its encounter starts afresh), whatever its brain does for a moment
+## (a routed man struck is briefly STAGGERED). _check_cleared counts it fallen; so do the battle's phases.
+func member_routed(entity_id: String) -> bool:
+	var m: Member = _members.get(entity_id)
+	return m != null and m.status == SPAWNED and m.routed
+
+
 ## How many times a member was spawned in this load (tests).
 func spawn_count(entity_id: String) -> int:
 	var m: Member = _members.get(entity_id)
 	return m.spawn_count if m != null else 0
 
 
+## M8 screenshot pass (V3): the leash a member is held to - its encounter's centre (level space, as
+## the leash measures it) in xyz and the leash radius in w; w 0 when its encounter has no leash or
+## `entity_id` is no member here. CavalryEnemy keeps a rider's start points inside it.
+func leash_of(entity_id: String) -> Vector4:
+	var m: Member = _members.get(entity_id)
+	var enc: Encounter = _encounters.get(m.encounter_id) if m != null else null
+	if enc == null or enc.leash_r <= 0.0:
+		return Vector4.ZERO
+	return Vector4(enc.center.x, enc.center.y, enc.center.z, enc.leash_r)
+
+
 ## Re-reads the level record and this level's encounter records (and WorldState: kills and
 ## cleared flags). Everything spawned so far is freed first.
 func reload_encounters() -> void:
+	_p30_clear()   # P30: every formation goes with its members
 	for id in _order:
 		for m: Member in (_encounters[id] as Encounter).members:
 			if m.node != null and is_instance_valid(m.node):
@@ -316,6 +351,8 @@ func reload_encounters() -> void:
 	for rec: Dictionary in GameData.records_of_type("encounter"):
 		if str(rec.get("level", "")) != level.level_id:
 			continue
+		if bool(rec.get("template", false)):
+			continue   # P37: a template is never active by itself; the WanderDirector makes copies of it
 		var enc := Encounter.new()
 		enc.id = str(rec.get("id", ""))
 		enc.record = rec
@@ -388,6 +425,7 @@ func debug_lines() -> PackedStringArray:
 		lines.append("  %s: %d up, %d waiting, %d dead, %d routed%s" % [id, tally[SPAWNED],
 			int(tally[UNSPAWNED]) + int(tally[DESPAWNED]), tally[DEAD], routed,
 			"  (alert)" if Sim.tick - enc.last_aware_tick <= 1 else ""])
+	lines.append_array(_p30_debug_lines())   # P30: the formations
 	return lines
 
 
@@ -399,6 +437,8 @@ func _on_pre_actors(tick: int) -> void:
 	_share_alerts(tick)
 	if _dirty or tick >= _next_check_tick:
 		_update(tick, spawns_per_tick)
+	_p30_tick(tick)   # P30: the formations' updates (10 Hz)
+	_p29_tick(tick)   # P29: the encounters' stand_down_when
 
 
 ## One update. quota > 0: at most that many members spawn in it (forced activations excepted);
@@ -410,8 +450,11 @@ func _update(tick: int, quota := 0) -> void:
 	_spawn_deferred = false
 	var player := _player()
 	var ppos := player.global_position if player != null else Vector3.INF
+	_p24b_bind()
 	for id in _order:
 		var enc: Encounter = _encounters[id]
+		if not _p24b_live(enc):
+			continue   # P24b: its chunk is not loaded and ready (a forced activation waits for it)
 		_refresh_nodes(enc)
 		_free_due_corpses(enc, tick)
 		var forced := enc.force_requested
@@ -459,6 +502,8 @@ func _activate(enc: Encounter, tick: int, ppos: Vector3) -> void:
 	for m: Member in enc.members:
 		if m.status == DESPAWNED:
 			m.status = UNSPAWNED
+	_p24b_filter_stage(enc)   # P24b: spawn entries outside the giant's stage sit this activation out
+	_p30_activate(enc)   # P30: its formations (their stage range and the web's compositions)
 	_spawn_waiting(enc, tick, ppos)
 	Events.encounter_activated.emit(tick, enc.id)
 
@@ -487,6 +532,7 @@ func _update_active(enc: Encounter, tick: int, ppos: Vector3) -> void:
 ## activation. Corpses are freed too.
 func _deactivate(enc: Encounter) -> void:
 	for m: Member in enc.members:
+		_p24b_skipped.erase(m.entity_id)   # P24b: the next activation filters by the stage afresh
 		match m.status:
 			SPAWNED:
 				_free_node(m.node)
@@ -500,6 +546,7 @@ func _deactivate(enc: Encounter) -> void:
 			DESPAWNED:
 				m.status = UNSPAWNED
 	enc.state = DORMANT
+	_p30_deactivate(enc)   # P30: its formations dissolve with it
 
 
 ## A cleared encounter's routed survivors are freed once the player is beyond the deactivate
@@ -514,17 +561,22 @@ func _update_cleared(enc: Encounter, ppos: Vector3) -> void:
 			m.status = UNSPAWNED
 
 
-## Spawns the members still waiting, in spawn order, while the budget has room (members that do
-## not count toward it always spawn) and the update's spawn quota lasts (the rest wait for the
-## next tick). Killed ones are skipped for good.
+## Spawns the members still waiting, in spawn order (each formation's banner first: P30, M8 gate F9),
+## while the budget has room (members that do not count toward it always spawn; an engaged battle's
+## units still to come keep theirs: P34, M8 gate F9) and the update's spawn quota lasts (the rest wait
+## for the next tick). Killed ones are skipped for good.
 func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
-	for m: Member in enc.members:
+	for m: Member in _p30_spawn_order(enc):
 		if m.status != UNSPAWNED:
 			continue
 		if WorldState.is_killed(m.entity_id):
 			m.status = DEAD
 			continue
-		if counts(m) and active_combatant_count() >= max_active_enemies:
+		if _p24b_skipped.has(m.entity_id):
+			continue   # P24b: not at this stage
+		if _p30_waits_for_room(m):
+			continue   # P30: the level's formation members are at max_formation_members
+		if counts(m) and active_combatant_count() + _p34_reserved_room(m, false) >= max_active_enemies:
 			continue
 		if _spawn_quota == 0:
 			_spawn_deferred = true
@@ -536,16 +588,19 @@ func _spawn_waiting(enc: Encounter, tick: int, ppos: Vector3) -> void:
 
 
 func _can_activate(enc: Encounter) -> bool:
-	var waiting := false
+	var waiting: Member = null
 	for m: Member in enc.members:
 		if m.status != UNSPAWNED and m.status != DESPAWNED:
 			continue
 		if WorldState.is_killed(m.entity_id):
 			continue
-		waiting = true
+		if not _p24b_stage_allows(m):
+			continue   # P24b: a member of another stage does not make the encounter worth activating
 		if not counts(m):
 			return true
-	return waiting and active_combatant_count() < max_active_enemies
+		if waiting == null:
+			waiting = m
+	return waiting != null and active_combatant_count() + _p34_reserved_room(waiting, false) < max_active_enemies
 
 
 func _check_leash(enc: Encounter, tick: int) -> void:
@@ -559,11 +614,15 @@ func _check_leash(enc: Encounter, tick: int) -> void:
 			continue
 		if _held(n) or _returning(n):
 			continue
+		if _p30_formation_holds(n):
+			continue   # M7 gate: its intact formation holds it in its slot, inside the leash
 		var brain: Variant = n.get("brain")
 		if brain is EnemyBrain and (brain as EnemyBrain).state in [EnemyBrain.AIState.FLEE,
 				EnemyBrain.AIState.ROUTED, EnemyBrain.AIState.DEAD, EnemyBrain.AIState.RETURN]:
 			continue
 		if _flat_dist(n.global_position, enc.center) > enc.leash_r:
+			if n.has_method("leash_held_off") and bool(n.call("leash_held_off")):
+				continue   # M9 gate (lane review, fix-up 1): it answered the body on its post, which still holds it
 			n.call("begin_leash_return")
 			Events.encounter_leashed.emit(tick, enc.id, m.entity_id)
 
@@ -591,6 +650,11 @@ func lod_tier_for(pos: Vector3, ppos: Vector3, engaged: bool) -> int:
 ## Alert groups share awareness (every tick): while one living member of an active alert-group
 ## encounter is aware of the player, each unaware one hears it (on_noise, certain) with what the
 ## aware one knows, and wakes to LOD tier 0. Returning (leashed) and routed members are left out.
+## M8 screenshot pass (V3): what the group shares is its freshest knowledge - the aware member that saw
+## the player last - not the first aware member's. A formation holding its slots and an engine's crew
+## stay aware with what they saw long ago: the war camp's Shield Wall, aware of where the giant stood
+## when he came into sight 40 m east of the pickets, sent that place to each rider home from its leash
+## while he fought among the pickets, and the rider rode for it with its back to him, 10 m away.
 func _share_alerts(tick: int) -> void:
 	for id in _order:
 		var enc: Encounter = _encounters[id]
@@ -599,9 +663,9 @@ func _share_alerts(tick: int) -> void:
 		var source: EnemyBrain = null
 		for m: Member in enc.members:
 			var b := _brain_of(m)
-			if b != null and b.aware and not _returning(m.node):
+			if b != null and b.aware and not _returning(m.node) \
+					and (source == null or b.last_seen_tick > source.last_seen_tick):
 				source = b
-				break
 		if source == null:
 			continue
 		enc.last_aware_tick = tick
@@ -623,6 +687,8 @@ func _share_alerts(tick: int) -> void:
 func _spawn(enc: Encounter, m: Member, tick: int, ppos: Vector3) -> bool:
 	if level == null or not level.is_inside_tree():
 		return false
+	if not _p24b_spawn_ground_ready(m):
+		return false   # P24b: never on a chunk that is not loaded and ready (it waits for the next update)
 	if Sim.get_entity(m.entity_id) != null:
 		# An earlier instance has not left the tree yet (or a placed actor uses this id).
 		_warn_once("busy:" + m.entity_id, "EncounterDirector: '%s' is still in the world; spawn retried later" % m.entity_id)
@@ -647,6 +713,7 @@ func _spawn(enc: Encounter, m: Member, tick: int, ppos: Vector3) -> bool:
 	_set_if(node, "persist_death", bool(s.get("persist_death", true)))
 	_set_if(node, "commander", bool(s.get("commander", false)))
 	_set_if(node, "loot_table", str(s.get("loot_table", "")))
+	_set_if(node, "spectator", bool(s.get("spectator", false)))   # M9 gate (final): it only watches
 	var patrol := str(s.get("patrol", ""))
 	if patrol != "":
 		var route := level.patrol_route(patrol)
@@ -659,6 +726,7 @@ func _spawn(enc: Encounter, m: Member, tick: int, ppos: Vector3) -> bool:
 	var yaw := deg_to_rad(float(s.get("yaw_deg", 0.0)))
 	var world := level.global_transform * Transform3D(Basis(Vector3.UP, yaw),
 		_vec3(s.get("position_m")) + Vector3.UP * SPAWN_LIFT_M)
+	world.origin = _p34_clear_of_giant(world.origin, def)   # P34: never inside the giant's footprint
 	node.transform = parent.global_transform.affine_inverse() * world
 	_set_if(node, "home_position", world.origin)
 	if node.has_method("set_lod_tier") and ppos != Vector3.INF:
@@ -712,7 +780,7 @@ func _check_cleared(enc: Encounter, tick: int) -> void:
 	if enc.state == CLEARED or enc.cleared_emitted:
 		return
 	for m: Member in enc.members:
-		if m.status == DEAD:
+		if m.status == DEAD or _p24b_skipped.has(m.entity_id):
 			continue
 		if m.status == SPAWNED and m.routed and _alive(m.node):
 			continue
@@ -723,7 +791,8 @@ func _check_cleared(enc: Encounter, tick: int) -> void:
 func _mark_cleared(enc: Encounter, tick: int) -> void:
 	enc.state = CLEARED
 	enc.cleared_emitted = true
-	WorldState.set_flag(enc.flag, true)
+	if not _p37_copies.has(enc.id):   # P37: a copy of a template saves nothing
+		WorldState.set_flag(enc.flag, true)
 	Events.encounter_cleared.emit(tick, enc.id)
 
 
@@ -825,10 +894,11 @@ static func _alive(n: Node3D) -> bool:
 
 
 ## Takes `n` out of the tree now and frees it (only from a safe point: the director's update, a
-## deferred call).
+## deferred call). A formation member leaves its formation first (P30; M8 gate, F23).
 func _free_node(n: Node) -> void:
 	if n == null or not is_instance_valid(n):
 		return
+	_p30_leave_formation(n)
 	var parent := n.get_parent()
 	if parent != null:
 		parent.remove_child(n)
@@ -855,3 +925,1295 @@ func _warn_once(key: String, text: String) -> void:
 		return
 	_warned[key] = true
 	push_warning(text)
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P24b
+# --- the director in a streamed world (P24b, plan M6-M9 §2.8, decision 15) ------------------------
+# On a level with a ChunkStreamer (WorldRoot):
+#   * an encounter's chunk is the chunk of its centre (encounter_chunk()); it updates - activates,
+#     spawns, leashes, sets LOD, deactivates - only while that chunk is loaded and ready
+#     (ChunkStreamer.is_ready: its navigation synced), and a forced activation waits for it;
+#   * when a chunk unloads (the streamer's chunk_unloading, before any node of it is freed) every
+#     living member standing in it is despawned - not killed: it comes back at home, at full health,
+#     on its encounter's next activation - and every active encounter centred in it deactivates;
+#   * a member spawns only when the chunk under its spawn point is loaded and ready (else it waits);
+#   * spawn entries may carry min_stage / max_stage: at each activation the members outside the
+#     giant's stage sit it out (they do not spawn, nor keep the encounter from being cleared);
+#   * the director's own path queries (P30's formation pivots, P37's wander anchors) ask
+#     nav_budget_left() - NavQuery's per-tick budget, shared with the actors -, the rest waiting a tick;
+#     a query made through NavQuery (path, closest_point) counts itself, spend_nav_queries() counts one
+#     made around it (M8 gate, F25: a formation's re-path counted twice).
+# Elsewhere (the Valley, test levels) every encounter is live and nothing changes; the stage filter
+# applies wherever entries carry the keys.
+
+var _p24b_skipped := {}       # entity id -> true: a member its entry's stage range keeps out of this activation
+var _p24b_chunks := {}        # encounter id -> chunk id ("" outside the grid)
+var _p24b_streamer: ChunkStreamer = null
+
+
+## The streamer of this director's level (null when the level is not streamed).
+func _p24b_level_streamer() -> ChunkStreamer:
+	var s: Variant = level.get("streamer") if level != null else null
+	return s as ChunkStreamer if s is ChunkStreamer and (s as ChunkStreamer).configured else null
+
+
+## Connects to the level's streamer once it is configured (WorldRoot configures it after this
+## director's _ready).
+func _p24b_bind() -> void:
+	var s := _p24b_level_streamer()
+	if s == _p24b_streamer:
+		return
+	if _p24b_streamer != null and is_instance_valid(_p24b_streamer) \
+			and _p24b_streamer.chunk_unloading.is_connected(_p24b_on_chunk_unloading):
+		_p24b_streamer.chunk_unloading.disconnect(_p24b_on_chunk_unloading)
+	_p24b_streamer = s
+	_p24b_chunks.clear()
+	if s != null and not s.chunk_unloading.is_connected(_p24b_on_chunk_unloading):
+		s.chunk_unloading.connect(_p24b_on_chunk_unloading)
+
+
+## The chunk of an encounter's centre ("" outside a streamed level's grid, or not streamed).
+func encounter_chunk(encounter_id: String) -> String:
+	var enc: Encounter = _encounters.get(encounter_id)
+	var s := _p24b_level_streamer()
+	if enc == null or s == null:
+		return ""
+	if not _p24b_chunks.has(encounter_id):
+		_p24b_chunks[encounter_id] = s.chunk_at(enc.center)
+	return str(_p24b_chunks[encounter_id])
+
+
+## True when the encounter may update: always on a level that is not streamed; else while its
+## chunk is loaded and ready.
+func _p24b_live(enc: Encounter) -> bool:
+	var s := _p24b_level_streamer()
+	if s == null:
+		return true
+	var c := encounter_chunk(enc.id)
+	return c != "" and s.is_ready(c)
+
+
+## True when the ground under a member's spawn point is loaded and ready (or the level is not
+## streamed).
+func _p24b_spawn_ground_ready(m: Member) -> bool:
+	var s := _p24b_level_streamer()
+	if s == null:
+		return true
+	var at := level.global_transform * _vec3(m.spawn.get("position_m"))
+	var c := s.chunk_at(at)
+	return c != "" and s.is_ready(c)
+
+
+## A chunk is about to unload: despawn every living member standing in it and deactivate every
+## active encounter centred in it (their other members are freed too and come back at home).
+func _p24b_on_chunk_unloading(chunk_id: String) -> void:
+	var s := _p24b_level_streamer()
+	if s == null:
+		return
+	for id in _order:
+		var enc: Encounter = _encounters[id]
+		if enc.state == ACTIVE and encounter_chunk(id) == chunk_id:
+			_deactivate(enc)
+			continue
+		for m: Member in enc.members:
+			if m.status == SPAWNED and _alive(m.node) and s.chunk_at(m.node.global_position) == chunk_id:
+				despawn(m.entity_id)
+	_dirty = true
+
+
+## The giant's growth stage (0 when there is no player: nothing is filtered).
+func _p24b_player_stage() -> int:
+	var p := _player()
+	if p != null and p.has_method("current_growth_stage"):
+		return int(p.call("current_growth_stage"))
+	return 0
+
+
+## True when a member's spawn entry admits the giant's stage (min_stage / max_stage; absent = any).
+func _p24b_stage_allows(m: Member) -> bool:
+	return stage_allows(m.spawn, _p24b_player_stage())
+
+
+## True when a spawn entry admits `stage` (stage 0, no player, admits everything).
+static func stage_allows(spawn: Dictionary, stage: int) -> bool:
+	if stage <= 0:
+		return true
+	if SchemaUtil.is_number(spawn.get("min_stage")) and stage < int(spawn.min_stage):
+		return false
+	if SchemaUtil.is_number(spawn.get("max_stage")) and stage > int(spawn.max_stage):
+		return false
+	return true
+
+
+## At activation: the members whose entries exclude the giant's stage sit this activation out.
+func _p24b_filter_stage(enc: Encounter) -> void:
+	var stage := _p24b_player_stage()
+	for m: Member in enc.members:
+		if stage_allows(m.spawn, stage):
+			_p24b_skipped.erase(m.entity_id)
+		elif m.status == UNSPAWNED:
+			_p24b_skipped[m.entity_id] = true
+
+
+## True when a member sits the current activation out (its stage range; tests, debug).
+func stage_skipped(entity_id: String) -> bool:
+	return _p24b_skipped.has(entity_id)
+
+
+## Path queries left this tick for the director (NavQuery's budget of the level).
+func nav_budget_left() -> int:
+	return NavQuery.budget_left(level)
+
+
+## Counts the director's own path queries against the tick's budget.
+func spend_nav_queries(n := 1) -> void:
+	NavQuery.spend(level, n)
+
+## @anchor P29
+# --- stand-downs, provocation, talkers on their greens, the respawn blocker (P29) -----------------
+# Plan M6-M9 §2.12, §5.9, decision 31. Hook lines: _ready (_p29_ready) and _on_pre_actors (_p29_tick).
+#   * stand_down_when (an encounter's quest condition, evaluated with Quests' context): while it holds
+#     - and the giant has not struck one of its members since it began to (the saved flag
+#     encounter.<short>.provoked) - every member of the encounter that belongs to a faction stands
+#     down whatever its faction's standing (EnemyActor's "stood_down": team NEUTRAL, at its post, guard
+#     down, never aware); once it stops holding they take their faction's standing again, alerted (the
+#     toll fort's riders, hostile by their faction, hold the road while the toll is pending, paid or
+#     cowed; Aldmere's fort gate for a parley token, P36). Checked at every update (check_ticks) and
+#     at once for a member that spawns; a faction event that resets a member is undone at the next.
+#   * provocation: a connecting blow of the giant on a member of an encounter standing down sets
+#     encounter.<short>.provoked; the next tick ends the stand-down (the blow itself is no faction
+#     offence: a hostile-by-default faction counts none).
+#   * talkers on their greens (§2.12): a talker (an npc record of role "talker") whose spawn point lies
+#     inside a settlement POI with max_inner_stage and green_m stands on that green while the giant's
+#     stage is above max_inner_stage: placed there when it spawns (its chunk loading, its encounter
+#     activating), and moved there when the giant grows past it while it is loaded (growth happens at
+#     shrines, far out of the settlements' sight).
+#   * the respawn blocker: FactionState.respawn_refusal joins GameSession's blockers while this level's
+#     director lives (its bound method; GameSession drops it once the director is freed).
+#   * M8 gate (F40; plan §3.20 "the parley path ... takes zero damage from the fort"): an encounter's
+#     siege engines (its `engines` list, P32) stand down with it. A stood-down crew still crews its engine
+#     (SiegeEngine.serves), and the engine's team came from its faction alone, so with Aldmere hostile the
+#     fort's wall ballistae shot the giant who carried Brannock's banner or held the herald's accepted
+#     parley. While the encounter stands down each of its engines in the tree is NEUTRAL - it never
+#     shoots (SiegeEngine.can_shoot), and a shot already loosed harms no one (CombatEntity.can_damage) -
+#     its ranged token given back; when the stand-down ends it takes its faction's standing again
+#     (SiegeEngine._apply_standing). Applied with the members (every update, and as a crew member
+#     spawns), and the tick after any faction change (an engine's own faction handler would otherwise
+#     re-arm it until the next update).
+
+const P29_PROVOKED_FMT := "encounter.%s.provoked"
+
+## Encounters standing down now (encounter id -> true).
+var _p29_down := {}
+## A provocation was seen: the next tick re-evaluates the stand-downs.
+var _p29_dirty := false
+## M8 gate (F40): engines this director stood down with their encounter (world id -> true).
+var _p29_engines_down := {}
+## Talkers placed on a green (entity id -> the green, global): tests, debug.
+var p29_on_green := {}
+
+
+## The flag a provoked encounter sets: encounter.<short id>.provoked.
+static func provoked_flag(encounter_id: String) -> String:
+	return P29_PROVOKED_FMT % encounter_id.trim_prefix("encounter.")
+
+
+func _p29_ready() -> void:
+	GameSession.register_respawn_blocker(_p29_respawn_blocker)
+	if not member_spawned.is_connected(_p29_on_member_spawned):
+		member_spawned.connect(_p29_on_member_spawned)
+	if not Events.hit_resolved.is_connected(_p29_on_hit_resolved):
+		Events.hit_resolved.connect(_p29_on_hit_resolved)
+	if not Events.growth_changed.is_connected(_p29_on_growth_changed):
+		Events.growth_changed.connect(_p29_on_growth_changed)
+	if not Events.faction_changed.is_connected(_p29_on_faction_changed):
+		Events.faction_changed.connect(_p29_on_faction_changed)
+	if not Events.object_destroyed.is_connected(_p29_on_object_destroyed):
+		Events.object_destroyed.connect(_p29_on_object_destroyed)
+
+
+## M9 gate (final; the final audit's F9): an object's fall that begins a stand-down - a `destroyed` term on it in an
+## encounter's stand_down_when, outside any `not` (Fort Aldmere's gate for its garrison: it stands down after the
+## breach) - begins it afresh: a provocation from before (a blow on a member stood down for the banner or the
+## parley) is lifted, so the garrison stands down after the breach as it does on every other path, the breach's
+## ordinary checkpoint is taken with none of it aware, and a death reloads it at peace. Before, the provoked flag
+## (saved, the first write kept for good) refused every branch of the condition, the post-breach one included: the
+## garrison stayed roused for the save, held the breach's request back and was hostile at the waystone after a death.
+## Once, on the fall: a blow after it still provokes, as the data says.
+func _p29_on_object_destroyed(_tick: int, world_id: String, _by: String) -> void:
+	for id in _order:
+		var enc: Encounter = _encounters[id]
+		var cond: Variant = enc.record.get("stand_down_when")
+		if typeof(cond) != TYPE_DICTIONARY or not p29_fall_begins_stand_down(cond, world_id):
+			continue
+		var flag := provoked_flag(id)
+		if Waystone.flag_truthy(WorldState.get_flag(flag)):
+			WorldState.set_flag(flag, false)
+			_p29_dirty = true
+
+
+## True when condition `cond` holds a `destroyed` term on `world_id` outside any `not` (F9 above).
+static func p29_fall_begins_stand_down(cond: Variant, world_id: String, negated := false) -> bool:
+	if typeof(cond) != TYPE_DICTIONARY:
+		return false
+	match str(cond.get("type", "")):
+		"destroyed":
+			return not negated and str(cond.get("world_id", "")) == world_id
+		"not":
+			return p29_fall_begins_stand_down(cond.get("of"), world_id, not negated)
+		"all", "any", "count":
+			var of: Variant = cond.get("of", [])
+			if typeof(of) == TYPE_ARRAY:
+				for c: Variant in of:
+					if p29_fall_begins_stand_down(c, world_id, negated):
+						return true
+	return false
+
+
+func _p29_respawn_blocker(checkpoint_id: String) -> String:
+	return FactionState.respawn_refusal(checkpoint_id)
+
+
+func _p29_tick(tick: int) -> void:
+	if _p29_dirty or tick % maxi(1, check_ticks) == 0:
+		_p29_dirty = false
+		p29_update_stand_downs()
+
+
+## True when the encounter's stand_down_when holds now and it was not provoked.
+func p29_stands_down(encounter_id: String) -> bool:
+	var enc: Encounter = _encounters.get(encounter_id)
+	if enc == null or typeof(enc.record.get("stand_down_when")) != TYPE_DICTIONARY:
+		return false
+	if Waystone.flag_truthy(WorldState.get_flag(provoked_flag(encounter_id))):
+		return false
+	return QuestConditions.holds(enc.record.stand_down_when, Quests.condition_context())
+
+
+## True while the encounter's members stand down (as of the last evaluation).
+func p29_standing_down(encounter_id: String) -> bool:
+	return _p29_down.has(encounter_id)
+
+
+## Evaluates every stand_down_when now and stands its spawned faction members down or lets them go.
+func p29_update_stand_downs() -> void:
+	for id in _order:
+		var enc: Encounter = _encounters[id]
+		if typeof(enc.record.get("stand_down_when")) != TYPE_DICTIONARY:
+			continue
+		var was := _p29_down.has(id)
+		var down := enc.state == ACTIVE and p29_stands_down(id)
+		if down:
+			_p29_down[id] = true
+		else:
+			_p29_down.erase(id)
+		if not down and not was:
+			continue
+		for m: Member in enc.members:
+			if m.status == SPAWNED and _alive(m.node):
+				_p29_apply(m, down)
+		_p29_apply_engines(enc, down)   # M8 gate (F40)
+
+
+## Stands a faction member down (down), or gives it its faction's standing back (alerted).
+func _p29_apply(m: Member, down: bool) -> void:
+	var n := m.node
+	if m.faction == "" or n == null or not n.has_method("_apply_standing"):
+		return
+	if down:
+		n.call("_apply_standing", "stood_down", false)
+	elif str(n.get("faction_standing")) == "stood_down":
+		n.call("_apply_standing", FactionState.standing(m.faction), true)
+
+
+func _p29_on_member_spawned(encounter_id: String, entity_id: String, node: Node3D) -> void:
+	var m: Member = _members.get(entity_id)
+	if m == null:
+		return
+	if p29_stands_down(encounter_id):
+		_p29_down[encounter_id] = true
+		_p29_apply(m, true)
+		_p29_apply_engines(_encounters[encounter_id], true)   # M8 gate (F40): before a crew takes its engine
+	_p29_place_talker(m, node)
+
+
+## M8 gate (F40): stands the encounter's engines down with it (NEUTRAL, the ranged token given back), or
+## gives the ones it stood down their faction's standing back (see the notes).
+func _p29_apply_engines(enc: Encounter, down: bool) -> void:
+	for entry: Variant in enc.record.get("engines", []):
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var engine := p32_engine(str(entry.get("engine", "")))
+		if engine == null or engine.destroyed or engine.entity == null:
+			continue
+		if down:
+			_p29_engines_down[engine.world_id] = true
+			if engine.entity.team != CombatEntity.Team.NEUTRAL:
+				engine.entity.team = CombatEntity.Team.NEUTRAL
+				engine.call("_release_token")
+				engine.call("_refresh_crewed")
+		elif _p29_engines_down.erase(engine.world_id):
+			engine.call("_apply_standing")
+
+
+## True while the director stands engine `world_id` down with its encounter (tests, debug).
+func p29_engine_stood_down(world_id: String) -> bool:
+	return _p29_engines_down.has(world_id)
+
+
+## A faction's standing changed: the next tick applies the stand-downs again (an engine's own handler may
+## just have re-armed it; F40).
+func _p29_on_faction_changed(_tick: int, _faction: String, _state: String) -> void:
+	if not _p29_down.is_empty():
+		_p29_dirty = true
+
+
+## A connecting blow of the giant on a member of an encounter standing down provokes it.
+func _p29_on_hit_resolved(_tick: int, result: HitResult) -> void:
+	if _p29_down.is_empty() or result == null or result.event == null:
+		return
+	var m: Member = _members.get(result.event.target_id)
+	if m == null or not _p29_down.has(m.encounter_id) or not FactionState.OFFENCE_OUTCOMES.has(result.outcome):
+		return
+	var attacker := Sim.get_entity(result.event.attacker_id)
+	if attacker == null or attacker.team != CombatEntity.Team.PLAYER:
+		return
+	WorldState.set_flag(provoked_flag(m.encounter_id), true)
+	_p29_dirty = true
+
+
+## The green a talker member stands on now (global; Vector3.INF when it keeps its spawn point): its
+## spawn point's settlement POI (kind settlement, max_inner_stage and green_m) when the giant's stage
+## is above max_inner_stage.
+func p29_green_for(m: Member) -> Vector3:
+	if m == null or str(GameData.get_record(m.definition).get("role", "")) != "talker" or level == null:
+		return Vector3.INF
+	var stage := _p24b_player_stage()
+	var at := _vec3(m.spawn.get("position_m"))
+	for poi: Dictionary in GameData.records_of_type("poi"):
+		if str(poi.get("level", "")) != level.level_id or str(poi.get("kind", "")) != "settlement":
+			continue
+		if not poi.has("max_inner_stage") or typeof(poi.get("green_m")) != TYPE_ARRAY:
+			continue
+		var c := _vec3(poi.get("position_m"))
+		if _flat_dist(at, c) > float(poi.get("radius_m", 0.0)) or stage <= int(poi.max_inner_stage):
+			continue
+		var origin := level.global_transform if level.is_inside_tree() else level.transform
+		return origin * _vec3(poi.green_m)
+	return Vector3.INF
+
+
+func _p29_place_talker(m: Member, node: Node3D) -> void:
+	var green := p29_green_for(m)
+	if green == Vector3.INF or node == null or not is_instance_valid(node):
+		return
+	node.global_position = green + Vector3.UP * SPAWN_LIFT_M
+	_set_if(node, "home_position", green)
+	p29_on_green[m.entity_id] = green
+
+
+## The giant grew: its loaded talkers walk out to their greens if it is now too big for their streets.
+func _p29_on_growth_changed(_tick: int, entity_id: String, _old_stage: int, _new_stage: int) -> void:
+	var p := _player()
+	var pe: Variant = p.get("entity") if p != null else null
+	if not (pe is CombatEntity) or (pe as CombatEntity).entity_id != entity_id:
+		return
+	for id in _order:
+		for m: Member in (_encounters[id] as Encounter).members:
+			if m.status == SPAWNED and _alive(m.node) and not p29_on_green.has(m.entity_id):
+				_p29_place_talker(m, m.node)
+
+## @anchor P30
+# --- formations (P30, plan M6-M9 §2.10, decision 19) -----------------------------------------------
+# Hook lines: _on_pre_actors (_p30_tick), _activate (_p30_activate), counts(), _spawn_waiting,
+# _deactivate, reload_encounters and debug_lines.
+#   * At each activation every `formations` entry of the encounter whose stage range admits the
+#     giant's stage becomes a Formation (Formation.from_record), placed where its members' spawn
+#     points say (the pivot that best fits their slots, the entry's yaw_deg or its first member's);
+#     a formation outside the stage range sits the activation out with its members (P24b's skip set).
+#     On the web (LevelRoot.is_web) each formation keeps round(members x web_formation_scale) of its
+#     rank-and-file, the front rank first, and its banner (Formation.web_kept_slots); the rest sit out.
+#   * Spawned members join their formation in their slot (member_spawned); a CrowdRenderer per
+#     formation draws its members (group crowd_renderers).
+#   * Formation members never count toward max_active_enemies (counts()): they count toward the level
+#     record's max_formation_members (default 40; on the web its web_overrides' value, default 20),
+#     and a member waits to spawn while the level has that many (soldiers joining a formation ask
+#     p30_formation_room()).
+#   * Ten times a second (Formation.UPDATE_TICKS) every formation of a live, active encounter updates
+#     with the giant as its threat; a deactivation dissolves the encounter's formations.
+#   * The leash (M7 gate): a member of an intact formation (formed, advancing or braced) is never
+#     leashed - its formation holds it in its slot, and the data's rule (FormationRules.reach_m: every
+#     slot, wherever the pivot may advance and turn, inside the encounter's leash) keeps that slot in
+#     the leash. Leashing it sent it home through its own ranks while the formation still held the
+#     others: the toll fort's front rank stood in RETURN behind its rear rank and the pikes never
+#     braced. A member of a broken or routed formation is leashed like any other.
+
+const P30_DEFAULT_FORMATION_CAP := 40
+const P30_DEFAULT_WEB_FORMATION_CAP := 20
+
+## The level's cap on formation members (from the level record, the web's when on the web).
+var max_formation_members := P30_DEFAULT_FORMATION_CAP
+var _p30_formations := {}        # formation id -> Formation (of active encounters)
+var _p30_by_encounter := {}      # encounter id -> PackedStringArray of formation ids
+var _p30_member_slot := {}       # entity id -> [formation id, slot]
+var _p30_renderers := {}         # formation id -> CrowdRenderer
+var _p30_cap_loaded := false
+
+
+## The live formations of this director, by id.
+func formations() -> Array[Formation]:
+	var out: Array[Formation] = []
+	var ids := _p30_formations.keys()
+	ids.sort()
+	for id: String in ids:
+		out.append(_p30_formations[id])
+	return out
+
+
+## The formation with this id (null when none is live).
+func formation(formation_id: String) -> Formation:
+	return _p30_formations.get(formation_id)
+
+
+## The crowd renderer of a formation (null when none).
+func crowd_renderer(formation_id: String) -> CrowdRenderer:
+	var r: Variant = _p30_renderers.get(formation_id)
+	return r if r != null and is_instance_valid(r) else null
+
+
+## True when one more formation member fits the level's cap (a soldier joining a formation).
+func p30_formation_room() -> bool:
+	_p30_load_cap()
+	return formation_member_count() < max_formation_members
+
+
+## Living, spawned formation members of every encounter (joined soldiers included).
+func formation_member_count() -> int:
+	var n := 0
+	for id in _order:
+		for m: Member in (_encounters[id] as Encounter).members:
+			if m.status == SPAWNED and _alive(m.node) and _p30_formation_member(m):
+				n += 1
+	return n
+
+
+## M8 gate (F23): a member node the director frees - a corpse corpse_free_s after its death, a despawn, a
+## deactivation, a copy removed - leaves its formation first (Formation.remove_member), so no formation
+## lists a freed node until its next update prunes it (its per-frame readers - the lock line, the group
+## lock, the march - read every entry).
+static func _p30_leave_formation(n: Node) -> void:
+	var f: Variant = n.get("formation") if n != null and is_instance_valid(n) else null
+	if f is Formation:
+		(f as Formation).remove_member(n)
+
+
+## True when `n` stands in an intact formation (the leash leaves it to its formation; see the notes).
+static func _p30_formation_holds(n: Node) -> bool:
+	var f: Variant = n.get("formation") if n != null and is_instance_valid(n) else null
+	return f is Formation and (f as Formation).is_intact()
+
+
+## A member of a formation: its spawn names one, or it joined one.
+static func _p30_formation_member(m: Member) -> bool:
+	if str(m.spawn.get("formation", "")) != "":
+		return true
+	return m.node != null and is_instance_valid(m.node) and m.node.get("formation") != null
+
+
+func _p30_waits_for_room(m: Member) -> bool:
+	if str(m.spawn.get("formation", "")) == "":
+		return false
+	_p30_load_cap()
+	return formation_member_count() + _p34_reserved_room(m, true) >= max_formation_members
+
+
+## M8 gate (F9): an encounter's members in spawn order with each formation's banner first, so a formation
+## short of room in the cap never fields its rank and file without its banner (the Wall's shield banner,
+## listed last, waited while four of its shields stood).
+func _p30_spawn_order(enc: Encounter) -> Array:
+	var forms: Variant = enc.record.get("formations")
+	if typeof(forms) != TYPE_ARRAY or (forms as Array).is_empty():
+		return enc.members
+	var banners: Array = []
+	var rest: Array = []
+	for m: Member in enc.members:
+		if str(m.spawn.get("formation", "")) != "" and int(m.spawn.get("slot", 0)) == Formation.BANNER_SLOT:
+			banners.append(m)
+		else:
+			rest.append(m)
+	return banners + rest
+
+
+func _p30_load_cap() -> void:
+	if _p30_cap_loaded or level == null:
+		return
+	_p30_cap_loaded = true
+	var rec := level.level_record()
+	max_formation_members = int(rec.get("max_formation_members", P30_DEFAULT_FORMATION_CAP))
+	if LevelRoot.is_web():
+		max_formation_members = int(level.web_overrides().get("max_formation_members", P30_DEFAULT_WEB_FORMATION_CAP))
+
+
+func _p30_activate(enc: Encounter) -> void:
+	_p30_dissolve_encounter(enc.id)
+	var forms: Variant = enc.record.get("formations")
+	if typeof(forms) != TYPE_ARRAY or (forms as Array).is_empty():
+		return
+	_p30_load_cap()
+	if not member_spawned.is_connected(_p30_on_member_spawned):
+		member_spawned.connect(_p30_on_member_spawned)
+	var stage := _p24b_player_stage()
+	var scale := clampf(float(enc.record.get("web_formation_scale", 1.0)), 0.0, 1.0)
+	var origin := level.global_transform if level.is_inside_tree() else level.transform
+	var ids := PackedStringArray()
+	for rec: Variant in forms:
+		if typeof(rec) != TYPE_DICTIONARY:
+			continue
+		var local := str(rec.get("id", ""))
+		var members: Array = []
+		for m: Member in enc.members:
+			if str(m.spawn.get("formation", "")) == local:
+				members.append(m)
+		if not stage_allows(rec, stage):
+			for m: Member in members:
+				if m.status == UNSPAWNED:
+					_p24b_skipped[m.entity_id] = true
+			continue
+		var keep := []
+		for m: Member in members:
+			keep.append(int(m.spawn.get("slot", 0)))
+		if LevelRoot.is_web() and scale < 1.0:
+			keep = Formation.web_kept_slots(keep, scale)
+		var f := Formation.from_record(enc.id, rec)
+		f.level = level
+		f.budget_left = nav_budget_left
+		_p30_place(f, rec, members, origin)
+		for m: Member in members:
+			var slot := int(m.spawn.get("slot", 0))
+			if not keep.has(slot):
+				if m.status == UNSPAWNED:
+					_p24b_skipped[m.entity_id] = true
+				continue
+			_p30_member_slot[m.entity_id] = [f.id, slot]
+		_p30_formations[f.id] = f
+		ids.append(f.id)
+	_p30_by_encounter[enc.id] = ids
+
+
+## The formation's home: the pivot that best fits its rank-and-file's spawn points to their slots
+## (the mean of each spawn point minus its slot's offset), facing the entry's yaw_deg, else its
+## first member's spawn yaw.
+func _p30_place(f: Formation, rec: Dictionary, members: Array, origin: Transform3D) -> void:
+	var yaw := f.home_yaw
+	if not rec.has("yaw_deg"):
+		for m: Member in members:
+			if int(m.spawn.get("slot", 0)) != Formation.BANNER_SLOT:
+				yaw = deg_to_rad(float(m.spawn.get("yaw_deg", 0.0)))
+				break
+	yaw += origin.basis.get_euler().y
+	f.facing_yaw = yaw
+	var sum := Vector3.ZERO
+	var n := 0
+	for m: Member in members:
+		var slot := int(m.spawn.get("slot", 0))
+		if slot == Formation.BANNER_SLOT:
+			continue
+		var at := origin * _vec3(m.spawn.get("position_m"))
+		sum += at - Basis(Vector3.UP, yaw) * f.slot_local(slot)
+		n += 1
+	var pivot := sum / float(n) if n > 0 else origin * _p30_enc_center(f.encounter_id)
+	f.place(pivot, yaw)
+	for id: String in f.flee_point_ids:
+		var p := _p30_marker_position(id)
+		if p != Vector3.INF:
+			f.flee_points.append(p)
+
+
+func _p30_enc_center(encounter_id: String) -> Vector3:
+	var enc: Encounter = _encounters.get(encounter_id)
+	return _vec3(enc.record.get("center_m")) if enc != null else Vector3.ZERO
+
+
+## A marker's position: the level's LevelMarker, else the level's world index (the world's markers
+## of unloaded chunks); Vector3.INF when unknown.
+func _p30_marker_position(id: String) -> Vector3:
+	var m := level.marker(id) if level != null else null
+	if m != null and m.is_inside_tree():
+		return m.global_position
+	var index: WorldIndex = level.index() if level != null and level.has_method("index") else null
+	return index.position_of(id) if index != null else Vector3.INF
+
+
+func _p30_on_member_spawned(_encounter_id: String, entity_id: String, node: Node3D) -> void:
+	var info: Variant = _p30_member_slot.get(entity_id)
+	if info == null or not (node is EnemyActor):
+		return
+	var f: Formation = _p30_formations.get(str(info[0]))
+	if f == null or f.dissolved:
+		return
+	f.add_member(node as EnemyActor, int(info[1]))
+	_p30_ensure_renderer(f)
+
+
+func _p30_ensure_renderer(f: Formation) -> void:
+	if crowd_renderer(f.id) != null or level == null:
+		return
+	var r := CrowdRenderer.new()
+	r.name = ("Crowd_" + f.id).validate_node_name()
+	r.formation = f
+	level.spawn_parent().add_child(r)
+	_p30_renderers[f.id] = r
+
+
+func _p30_tick(tick: int) -> void:
+	if _p30_formations.is_empty() or tick % Formation.UPDATE_TICKS != 0:
+		return
+	var player := _player()
+	for enc_id: String in _p30_by_encounter.keys():
+		var enc: Encounter = _encounters.get(enc_id)
+		if enc == null or enc.state == DORMANT or not _p24b_live(enc):
+			continue
+		for fid: String in _p30_by_encounter[enc_id]:
+			var f: Formation = _p30_formations.get(fid)
+			if f != null:
+				f.update(tick, player)
+
+
+func _p30_deactivate(enc: Encounter) -> void:
+	_p30_dissolve_encounter(enc.id)
+
+
+func _p30_dissolve_encounter(enc_id: String) -> void:
+	for fid: String in _p30_by_encounter.get(enc_id, PackedStringArray()):
+		var f: Formation = _p30_formations.get(fid)
+		if f != null:
+			f.dissolve()
+		_p30_formations.erase(fid)
+		var r := crowd_renderer(fid)
+		if r != null:
+			r.release_all()
+			r.queue_free()
+		_p30_renderers.erase(fid)
+		for eid: String in _p30_member_slot.keys():
+			if str(_p30_member_slot[eid][0]) == fid:
+				_p30_member_slot.erase(eid)
+	_p30_by_encounter.erase(enc_id)
+
+
+func _p30_clear() -> void:
+	for enc_id: String in _p30_by_encounter.keys():
+		_p30_dissolve_encounter(enc_id)
+	_p30_formations.clear()
+	_p30_member_slot.clear()
+	_p30_cap_loaded = false
+
+
+func _p30_debug_lines() -> PackedStringArray:
+	var out := PackedStringArray()
+	for f in formations():
+		out.append(f.debug_line())
+	if not _p30_formations.is_empty():
+		out.append("  formation members %d/%d" % [formation_member_count(), max_formation_members])
+	return out
+
+## @anchor P32
+# --- siege engines take their crews (P32) ------------------------------------------------------------
+# Plan M6-M9 §2.10, §3.16. Hook line: _ready (_p32_ready). An encounter's `engines` list names, for each
+# siege engine (a SiegeEngine prop of the level, by its world id), the spawns of the encounter that
+# serve it. When such a crew member spawns, the engine takes it (SiegeEngine.add_crew: the member's
+# place beside the engine, its crew rules in EnemyBrain's P32 section); an engine that is not in the
+# tree (another chunk, or none by that id) takes none - the crew member runs after
+# EnemyBrain.CREW_WAIT_S - and a broken engine takes a crew member only to send it running.
+
+
+func _p32_ready() -> void:
+	if not member_spawned.is_connected(_p32_on_member_spawned):
+		member_spawned.connect(_p32_on_member_spawned)
+
+
+## The engine `entity_id` serves in encounter `encounter_id` ("" when it serves none).
+func p32_engine_of(encounter_id: String, entity_id: String) -> String:
+	var enc: Encounter = _encounters.get(encounter_id)
+	if enc == null:
+		return ""
+	for entry: Variant in enc.record.get("engines", []):
+		if typeof(entry) == TYPE_DICTIONARY and (entry.get("crew", []) as Array).has(entity_id):
+			return str(entry.get("engine", ""))
+	return ""
+
+
+## The placed siege engine with world id `world_id` (in the tree), else null.
+func p32_engine(world_id: String) -> SiegeEngine:
+	if world_id == "" or not is_inside_tree():
+		return null
+	for n in get_tree().get_nodes_in_group(SiegeEngine.GROUP):
+		var e := n as SiegeEngine
+		if e != null and e.world_id == world_id and e.is_inside_tree():
+			return e
+	return null
+
+
+func _p32_on_member_spawned(encounter_id: String, entity_id: String, node: Node3D) -> void:
+	var engine := p32_engine(p32_engine_of(encounter_id, entity_id))
+	if engine != null and node != null and is_instance_valid(node):
+		engine.add_crew(node)
+
+## @anchor P34
+# --- battles: the attempt reset and the giant's footprint (P34) ------------------------------------
+# Plan M6-M9 §2.10, §5.13. A BattleBoss owns its encounters through force_activate(); on the disengage
+# rule it resets them with p34_reset_encounter(): every member leaves as at a deactivation (the living
+# freed, corpses freed, formations dissolved), the fallen whose spawn entries do not persist their
+# death (persist_death false: a battle's units) wait to spawn again, and a cleared encounter can
+# activate again. A unit never spawns inside the giant's footprint (§5.13): a spawn point within the
+# giant's capsule radius + its own + P34_FOOTPRINT_MARGIN_M is moved out along the line from the
+# giant's centre (the hook in _spawn).
+
+const P34_FOOTPRINT_MARGIN_M := 1.0
+
+## M8 gate (F9; plan §3.20 "every battle fits the caps on both platforms"): owner (a battle id) -> {entity
+## id: true}, the planned units of an engaged battle. While they are reserved, each of them still to come
+## (waiting to spawn: unspawned or despawned, not killed) keeps its room in the level's caps - its place in
+## max_formation_members when it is a formation member, in max_active_enemies when it counts - against the
+## members of every other encounter (a wanderer, an event's column, a garrison coming back), which wait
+## for room meanwhile. The battle's own units spawn as before. BattleBoss reserves its plan when it engages
+## and releases it when the attempt ends (a disengage, its defeat).
+var _p34_reserved := {}
+
+
+## Reserves the room of `ids` (see the notes) for `owner`, replacing what it reserved before.
+func p34_reserve(owner: String, ids: Array) -> void:
+	var units := {}
+	for id: Variant in ids:
+		units[str(id)] = true
+	_p34_reserved[owner] = units
+	_dirty = true
+
+
+## Releases what `owner` reserved.
+func p34_release(owner: String) -> void:
+	if _p34_reserved.erase(owner):
+		_dirty = true
+
+
+## True when `entity_id` is a unit some battle reserves room for (tests, debug).
+func p34_is_reserved(entity_id: String) -> bool:
+	for owner: String in _p34_reserved:
+		if (_p34_reserved[owner] as Dictionary).has(entity_id):
+			return true
+	return false
+
+
+## The room `m` must leave in a cap (formation: max_formation_members, else max_active_enemies) for the
+## reserved units still to come: 0 for a reserved unit itself (it is one of them) or when nothing is
+## reserved.
+func _p34_reserved_room(m: Member, formation: bool) -> int:
+	if _p34_reserved.is_empty() or p34_is_reserved(m.entity_id):
+		return 0
+	return p34_reserved_room(formation)
+
+
+## M8 gate fix-up 1 (N3.3): the room the reserved units still to come keep in a cap against any newcomer
+## that is not one of them (formation: their formation members, against max_formation_members; else their
+## counted combatants, against max_active_enemies); 0 when nothing is reserved. The WanderDirector admits
+## a copy only when it fits beside this room (WanderDirector.budget_allows), and holds a column's copy back
+## while a battle still waits for units (P37.md, "M8 gate").
+func p34_reserved_room(formation: bool) -> int:
+	if _p34_reserved.is_empty():
+		return 0
+	var n := 0
+	for owner: String in _p34_reserved:
+		for id: String in _p34_reserved[owner]:
+			var r: Member = _members.get(id)
+			if r == null or (r.status != UNSPAWNED and r.status != DESPAWNED) or WorldState.is_killed(id):
+				continue
+			if formation:
+				if str(r.spawn.get("formation", "")) != "":
+					n += 1
+			elif str(r.spawn.get("formation", "")) == "" and counts(r):
+				n += 1
+	return n
+
+
+## M8 gate (F9): makes the room `owner`'s reserved units still to come need in the level's caps against the
+## units of other encounters already in the world (the reservation only keeps newcomers out). While the
+## living formation members with the reserved formation units to come would pass max_formation_members, or
+## the counted combatants with the reserved counted units to come max_active_enemies, living members of
+## other encounters leave (despawn: they come back on their encounter's next activation, and wait for room
+## meanwhile) - formation members for the one, counted combatants for the other - the farthest from `from`
+## first, and only as many as the caps need. Never a reserved unit, a crew member of one of `engines` (the
+## battle's own) nor a unit the giant holds. Returns the entity ids that left.
+func p34_make_room(owner: String, from: Vector3, engines: PackedStringArray = PackedStringArray()) -> Array[String]:
+	var out: Array[String] = []
+	var units: Dictionary = _p34_reserved.get(owner, {})
+	if units.is_empty():
+		return out
+	var need_f := 0
+	var need_c := 0
+	for id: String in units:
+		var r: Member = _members.get(id)
+		if r == null or (r.status != UNSPAWNED and r.status != DESPAWNED) or WorldState.is_killed(id):
+			continue
+		if str(r.spawn.get("formation", "")) != "":
+			need_f += 1
+		elif counts(r):
+			need_c += 1
+	_p30_load_cap()
+	var over_f := formation_member_count() + need_f - max_formation_members
+	var over_c := active_combatant_count() + need_c - max_active_enemies
+	if over_f <= 0 and over_c <= 0:
+		return out
+	var cands: Array[Member] = []
+	for id: String in _members:
+		var m: Member = _members[id]
+		if m.status != SPAWNED or not _alive(m.node) or p34_is_reserved(id):
+			continue
+		if not engines.is_empty() and engines.has(p32_engine_of(m.encounter_id, id)):
+			continue
+		if m.node.has_method("is_held") and bool(m.node.call("is_held")):
+			continue
+		cands.append(m)
+	var at := Vector2(from.x, from.z)
+	cands.sort_custom(func(a: Member, b: Member) -> bool:
+		return Vector2(a.node.global_position.x, a.node.global_position.z).distance_squared_to(at) \
+			> Vector2(b.node.global_position.x, b.node.global_position.z).distance_squared_to(at))
+	for m: Member in cands:
+		if over_f <= 0 and over_c <= 0:
+			break
+		if _p30_formation_member(m):
+			if over_f <= 0:
+				continue
+			over_f -= 1
+		elif counts(m) and not m.routed:
+			if over_c <= 0:
+				continue
+			over_c -= 1
+		else:
+			continue
+		out.append(m.entity_id)
+		despawn(m.entity_id)
+	return out
+
+
+## Resets an encounter for a new attempt (see above). Nothing for an unknown id.
+func p34_reset_encounter(encounter_id: String) -> void:
+	var enc: Encounter = _encounters.get(encounter_id)
+	if enc == null:
+		return
+	_deactivate(enc)
+	for m: Member in enc.members:
+		if m.status == DEAD and not bool(m.spawn.get("persist_death", true)):
+			m.status = UNSPAWNED
+			m.died_tick = -1
+			m.free_tick = -1
+	if enc.cleared_emitted:
+		enc.cleared_emitted = false
+		WorldState.set_flag(enc.flag, false)
+	enc.force_requested = false
+	enc.state = DORMANT
+	_dirty = true
+
+
+## `point`, or the nearest point outside the giant's footprint for a unit of record `def`.
+func _p34_clear_of_giant(point: Vector3, def: Dictionary) -> Vector3:
+	var p := _player()
+	var e: Variant = p.get("entity") if p != null else null
+	if not (e is CombatEntity):
+		return point
+	var need := EnemyActor.entity_radius(e) + float(def.get("capsule_radius_m", 0.5)) + P34_FOOTPRINT_MARGIN_M
+	var flat := Vector2(point.x - p.global_position.x, point.z - p.global_position.z)
+	if flat.length() >= need:
+		return point
+	var dir := flat.normalized() if flat.length() > 0.01 else Vector2(1.0, 0.0)
+	return Vector3(p.global_position.x + dir.x * need, point.y, p.global_position.z + dir.y * need)
+
+## @anchor P37
+# --- copies of templates: wanderers and world events (P37) --------------------------------------------
+# Plan M6-M9 §2.13, decision 27. Hook lines: _ready (_p37_ready), reload_encounters (a template is skipped:
+# never active by itself) and _mark_cleared (a copy writes no cleared flag).
+#   * p37_add_copy(rec, info) registers a copy of a template - an encounter record p37_copy_record() made:
+#     ids <template id>.<n> (its spawns' <entity id>.<n>), its centre at an anchor and every spawn point
+#     moved and turned with it, persist_death false, no loot table - as an encounter of this director, so
+#     activation, the budget and the formation cap, the leash, LOD, deactivation, the streaming rules
+#     (P24b), formations (P30), stand-downs (P29) and crews (P32) all treat it as a placed one. Nothing of
+#     a copy is saved: no kill, no cleared flag. info: {"xp_scale" (0..1), "patrol" (level-space points
+#     its members walk in turn, each keeping its offset from the group's middle: a wanderer's road, a
+#     raid's round of the houses), "owner" (who made it), "march" (true: a moving column - see p37_march)}.
+#   * Each member a copy spawns gets its record's kill XP times the copy's xp_scale (the existing kill-XP
+#     path reads the combatant's xp_reward: a template's fourth and later spawns pay none), its spawn's
+#     `targets` (P30's provider for that unit: EnemyActor.p37_set_targets), the road points of its patrol,
+#     and in a moving column the point it keeps to (EnemyActor.p37_join_march); its faction's standing
+#     comes with its faction (EnemyActor's P11b: a neutral column walks past a giant at peace with it).
+#   * p37_remove_copy(id) frees what is left of a copy (living members despawned, corpses freed, its
+#     formations dissolved) and forgets it.
+#   * p37_move_copy(id, centre, yaw) re-places a copy that is not in the world (an abstract column at its
+#     path point): its centre, every spawn point (on the loaded ground's height when known) and the chunk
+#     the streaming rules read. p37_march(id, centre, yaw) walks a copy in the world along its route: its
+#     centre, and the pivot of each intact formation of it that is not engaged (aware of the giant): its
+#     members follow their slots; its other members keep to points at their offsets from the centre.
+
+## A copy's spawns and formations take these radii (the WanderDirector places a wanderer 120-220 m away).
+const P37_ACTIVATE_M := 280.0
+const P37_DEACTIVATE_M := 340.0
+## A marching column's escorts make for their place this far ahead of the column (they walk faster).
+const P37_ESCORT_LEAD_M := 6.0
+
+## copy id -> info (see the notes): "xp_scale", "patrol", "owner", "march", "offsets" (entity id ->
+## Vector3 offset from the centre at yaw 0), "yaw" (rad), "centre" (level space), "form_off" (formation
+## id -> Vector3 pivot offset at yaw 0, captured when the formation first stands).
+var _p37_copies := {}
+
+
+func _p37_ready() -> void:
+	if not member_spawned.is_connected(_p37_on_member_spawned):
+		member_spawned.connect(_p37_on_member_spawned)
+
+
+## True when `id` is a live copy of a template run by this director.
+func p37_is_copy(id: String) -> bool:
+	return _p37_copies.has(id) and _encounters.has(id)
+
+
+## The ids of the live copies (sorted).
+func p37_copy_ids() -> PackedStringArray:
+	var out := PackedStringArray()
+	for id: String in _p37_copies:
+		if _encounters.has(id):
+			out.append(id)
+	out.sort()
+	return out
+
+
+## A copy's info ({} when it is no copy).
+func p37_copy_info(id: String) -> Dictionary:
+	return _p37_copies.get(id, {}) if _encounters.has(id) else {}
+
+
+## A copy of template `tpl` (see the notes): id "<template id>.<n>", every spawn's entity id
+## "<entity id>.<n>" (formation banners and engine crews renamed with them), the centre at `centre` (level
+## space) and every spawn point and yaw (and every formation's yaw) moved and turned by `yaw` about the
+## template's centre, each spawn's height from `ground` (Callable(pos: Vector3) -> float; NaN or none:
+## the moved height), its `prefer` definition when that record exists, persist_death false, no loot, no
+## flags of its own (the WanderDirector chose it), template false; `overrides` are merged last. The copy
+## keeps its offsets in "_p37" ({"template", "n", "offsets", "yaws"}) for p37_move_copy.
+static func p37_copy_record(tpl: Dictionary, n: int, centre: Vector3, yaw: float, ground: Callable = Callable(),
+		overrides := {}) -> Dictionary:
+	var rec := tpl.duplicate(true)
+	var tpl_id := str(tpl.get("id", ""))
+	var suffix := ".%d" % n
+	var c0 := _vec3(tpl.get("center_m"))
+	var basis := Basis(Vector3.UP, yaw)
+	var offsets := {}
+	var yaws := {}
+	var renamed := {}
+	for sp: Dictionary in rec.get("spawns", []):
+		var old_id := str(sp.get("entity_id", ""))
+		var new_id := old_id + suffix
+		renamed[old_id] = new_id
+		sp["entity_id"] = new_id
+		var off := _vec3(sp.get("position_m")) - c0
+		offsets[new_id] = off
+		yaws[new_id] = float(sp.get("yaw_deg", 0.0))
+		var at := centre + basis * off
+		var h: float = float(ground.call(at)) if ground.is_valid() else NAN
+		if not is_nan(h):
+			at.y = h
+		sp["position_m"] = [at.x, at.y, at.z]
+		sp["yaw_deg"] = wrapf(float(sp.get("yaw_deg", 0.0)) + rad_to_deg(yaw), -180.0, 180.0)
+		sp["persist_death"] = false
+		sp["loot_table"] = ""
+		var prefer := str(sp.get("prefer", ""))
+		if prefer != "" and GameData.has_record(prefer):
+			sp["definition"] = prefer
+	var form_yaws := {}
+	for f: Dictionary in rec.get("formations", []):
+		if str(f.get("banner", "")) != "":
+			f["banner"] = str(renamed.get(str(f.banner), str(f.banner) + suffix))
+		if SchemaUtil.is_number(f.get("yaw_deg")):
+			form_yaws[str(f.get("id", ""))] = float(f.yaw_deg)
+			f["yaw_deg"] = wrapf(float(f.yaw_deg) + rad_to_deg(yaw), -180.0, 180.0)
+	for e: Dictionary in rec.get("engines", []):
+		var crew: Array = []
+		for c: Variant in e.get("crew", []):
+			crew.append(str(renamed.get(str(c), str(c) + suffix)))
+		e["crew"] = crew
+	rec["id"] = tpl_id + suffix
+	rec["template"] = false
+	rec["center_m"] = [centre.x, centre.y, centre.z]
+	rec["requires_flags"] = []
+	rec["forbids_flags"] = []
+	rec["activate_radius_m"] = maxf(float(tpl.get("activate_radius_m", 0.0)), P37_ACTIVATE_M)
+	rec["deactivate_radius_m"] = maxf(float(tpl.get("deactivate_radius_m", 0.0)), P37_DEACTIVATE_M)
+	rec.merge(overrides, true)
+	rec["_p37"] = {"template": tpl_id, "n": n, "offsets": offsets, "yaws": yaws, "form_yaws": form_yaws}
+	return rec
+
+
+## Registers a copy (a record from p37_copy_record) with its info (see the notes); it activates at the next
+## update when the giant is within its activate radius and its chunk is ready. False when the id is taken.
+func p37_add_copy(rec: Dictionary, info := {}) -> bool:
+	var id := str(rec.get("id", ""))
+	if id == "" or _encounters.has(id) or level == null:
+		return false
+	for s: Variant in rec.get("spawns", []):
+		if typeof(s) == TYPE_DICTIONARY and _members.has(str(s.get("entity_id", ""))):
+			return false   # a member id still in use (the counter of its maker restarted)
+	var origin := level.global_transform if level.is_inside_tree() else level.transform
+	var enc := Encounter.new()
+	enc.id = id
+	enc.record = rec
+	enc.flag = cleared_flag(id)
+	enc.center = origin * _vec3(rec.get("center_m"))
+	enc.activate_r = float(rec.get("activate_radius_m", P37_ACTIVATE_M))
+	enc.deactivate_r = float(rec.get("deactivate_radius_m", P37_DEACTIVATE_M))
+	enc.leash_r = float(rec.get("leash_radius_m", 0.0))
+	enc.alert_group = bool(rec.get("alert_group", true))
+	enc.counts_budget = bool(rec.get("counts_toward_budget", true))
+	for s: Variant in rec.get("spawns", []):
+		if typeof(s) != TYPE_DICTIONARY:
+			continue
+		var m := Member.new()
+		m.entity_id = str(s.get("entity_id", ""))
+		m.encounter_id = id
+		m.spawn = s
+		m.definition = str(s.get("definition", ""))
+		var def := GameData.get_record(m.definition)
+		m.enemy_def = str(def.get("type", "")) == "enemy"
+		m.budgeted = enc.counts_budget and m.enemy_def
+		m.faction = str(s.get("faction", ""))
+		if m.entity_id == "":
+			continue
+		_members[m.entity_id] = m
+		enc.members.append(m)
+		_scene(str(def.get("scene", "")))   # the spawn hitch: the scene is cached before it is needed
+	var meta: Dictionary = rec.get("_p37", {})
+	var stored := info.duplicate()
+	stored["offsets"] = meta.get("offsets", {})
+	stored["yaws"] = meta.get("yaws", {})
+	stored["form_yaws"] = meta.get("form_yaws", {})
+	var mean := Vector3.ZERO
+	for o: Vector3 in (stored.offsets as Dictionary).values():
+		mean += o
+	stored["group_off"] = mean / float(maxi(1, (stored.offsets as Dictionary).size()))
+	stored["centre"] = _vec3(rec.get("center_m"))
+	stored["yaw"] = float(info.get("yaw", 0.0))
+	stored["form_off"] = {}
+	_p37_copies[id] = stored
+	_encounters[id] = enc
+	_order.append(id)
+	_order.sort()
+	_dirty = true
+	return true
+
+
+## Frees what is left of a copy and forgets it (see the notes). Call it from a safe point (a Sim hook).
+func p37_remove_copy(id: String) -> void:
+	var enc: Encounter = _encounters.get(id)
+	_p37_copies.erase(id)
+	if enc == null:
+		return
+	_p30_dissolve_encounter(id)
+	for m: Member in enc.members:
+		if m.node != null and is_instance_valid(m.node):
+			if "ai_enabled" in m.node:
+				m.node.set("ai_enabled", false)
+			_free_node(m.node)
+		m.node = null
+		_members.erase(m.entity_id)
+		_p24b_skipped.erase(m.entity_id)
+	_encounters.erase(id)
+	var i := _order.find(id)
+	if i >= 0:
+		_order.remove_at(i)
+	_p24b_chunks.erase(id)
+	_p29_down.erase(id)
+
+
+## Living, spawned members of a copy (or of any encounter).
+func p37_living(id: String) -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	var enc: Encounter = _encounters.get(id)
+	if enc == null:
+		return out
+	for m: Member in enc.members:
+		if m.status == SPAWNED and _alive(m.node):
+			out.append(m.node)
+	return out
+
+
+## True when no member of the encounter is left to fight: each is dead, routed, or (sitting this
+## activation out) skipped - its encounter cleared, or about to be (members that never spawned count
+## as standing).
+func p37_defeated(id: String) -> bool:
+	var enc: Encounter = _encounters.get(id)
+	if enc == null:
+		return false
+	if enc.state == CLEARED:
+		return true
+	for m: Member in enc.members:
+		if m.status == DEAD or _p24b_skipped.has(m.entity_id):
+			continue
+		if m.status == SPAWNED and m.routed:
+			continue
+		return false
+	return not enc.members.is_empty()
+
+
+## True while a member of the encounter is aware of the giant (and not walking home).
+func p37_engaged(id: String) -> bool:
+	var enc: Encounter = _encounters.get(id)
+	return enc != null and enc.state == ACTIVE and _any_aware(enc)
+
+
+## Re-places a copy that is not in the world: its centre (level space) and yaw, every spawn point at its
+## offset (turned by yaw; on the loaded ground's height through `ground` when known), and the chunk the
+## streaming rules read. A copy in the world keeps its members where they are (use p37_march).
+func p37_move_copy(id: String, centre: Vector3, yaw: float, ground: Callable = Callable()) -> void:
+	var enc: Encounter = _encounters.get(id)
+	var info: Dictionary = _p37_copies.get(id, {})
+	if enc == null or info.is_empty():
+		return
+	var origin := level.global_transform if level != null and level.is_inside_tree() else Transform3D.IDENTITY
+	info["centre"] = centre
+	info["yaw"] = yaw
+	enc.center = origin * centre
+	(enc.record as Dictionary)["center_m"] = [centre.x, centre.y, centre.z]
+	_p24b_chunks.erase(id)
+	var form_yaws: Dictionary = info.get("form_yaws", {})
+	for f: Dictionary in enc.record.get("formations", []):
+		if form_yaws.has(str(f.get("id", ""))):
+			f["yaw_deg"] = wrapf(float(form_yaws[str(f.id)]) + rad_to_deg(yaw), -180.0, 180.0)
+	var basis := Basis(Vector3.UP, yaw)
+	var offsets: Dictionary = info.get("offsets", {})
+	var yaws: Dictionary = info.get("yaws", {})
+	for m: Member in enc.members:
+		if m.status == SPAWNED:
+			continue
+		var at := centre + basis * (offsets.get(m.entity_id, Vector3.ZERO) as Vector3)
+		var h: float = float(ground.call(at)) if ground.is_valid() else NAN
+		if not is_nan(h):
+			at.y = h
+		m.spawn["position_m"] = [at.x, at.y, at.z]
+		m.spawn["yaw_deg"] = wrapf(float(yaws.get(m.entity_id, 0.0)) + rad_to_deg(yaw), -180.0, 180.0)
+	_dirty = true   # its activation is looked at again on the next tick (it may have walked onto loaded ground)
+
+
+## Walks a copy in the world along its route (see the notes): its centre to `centre` (level space) facing
+## `yaw`, the pivot of every intact formation of it not engaged with the giant (its offset from the centre
+## kept), and the points its other members keep to. Returns true when no formation of it was engaged.
+func p37_march(id: String, centre: Vector3, yaw: float) -> bool:
+	var enc: Encounter = _encounters.get(id)
+	var info: Dictionary = _p37_copies.get(id, {})
+	if enc == null or info.is_empty():
+		return false
+	var origin := level.global_transform if level != null and level.is_inside_tree() else Transform3D.IDENTITY
+	var free := true
+	var form_off: Dictionary = info.get("form_off", {})
+	var basis := Basis(Vector3.UP, yaw)
+	for fid: String in _p30_by_encounter.get(id, PackedStringArray()):
+		var f: Formation = _p30_formations.get(fid)
+		if f == null or f.dissolved:
+			continue
+		if not form_off.has(fid):
+			var c0 := origin * (info.get("centre", centre) as Vector3)
+			form_off[fid] = Basis(Vector3.UP, -float(info.get("yaw", yaw))) * (f.pivot - c0)
+		if not f.is_intact():
+			continue
+		if f.aware or f.state != "formed":
+			free = false
+			continue
+		var p := origin * (centre + basis * (form_off[fid] as Vector3))
+		f.pivot = Vector3(p.x, f.pivot.y, p.z)
+		f.home_pivot = f.pivot
+		f.facing_yaw = wrapf(yaw, -PI, PI)
+		f.home_yaw = f.facing_yaw
+	info["form_off"] = form_off
+	info["centre"] = centre
+	info["yaw"] = yaw
+	enc.center = origin * centre
+	(enc.record as Dictionary)["center_m"] = [centre.x, centre.y, centre.z]
+	_p24b_chunks.erase(id)
+	# Its members in no formation (escorts: the column's riders), hostile and walking: the patrol point
+	# they make for is their place a little ahead of the column (at peace, EnemyActor.p37_join_march's
+	# post does it).
+	var ahead := Formation.forward_of(yaw) * P37_ESCORT_LEAD_M
+	for m: Member in enc.members:
+		if m.status != SPAWNED or not _alive(m.node) or m.node.get("formation") != null:
+			continue
+		var b := m.node.get("brain") as EnemyBrain
+		if b == null or b.at_peace() or b.aware:
+			continue
+		var t := p37_march_target(id, m.entity_id)
+		if not t.is_empty():
+			var pts: Array[Vector3] = [(t.point as Vector3) + ahead]
+			b.patrol_points = pts
+	return free and not _any_aware(enc)
+
+
+## Where a member of a moving copy keeps to now: {"point" (global; its formation slot while its formation
+## stands, else its offset from the copy's centre), "yaw" (the column's heading)}; {} when it is none.
+func p37_march_target(id: String, entity_id: String) -> Dictionary:
+	var info: Dictionary = _p37_copies.get(id, {})
+	if info.is_empty() or not bool(info.get("march", false)):
+		return {}
+	var origin := level.global_transform if level != null and level.is_inside_tree() else Transform3D.IDENTITY
+	var yaw := float(info.get("yaw", 0.0))
+	var off: Vector3 = (info.get("offsets", {}) as Dictionary).get(entity_id, Vector3.ZERO)
+	var p := origin * ((info.get("centre", Vector3.ZERO) as Vector3) + Basis(Vector3.UP, yaw) * off)
+	return {"point": p, "yaw": yaw}
+
+
+## Deactivates a copy now (an abstract column whose point left the loaded ground): its living members
+## are freed and come back at their spawn points on its next activation.
+func p37_deactivate(id: String) -> void:
+	var enc: Encounter = _encounters.get(id)
+	if enc != null and enc.state == ACTIVE:
+		_deactivate(enc)
+
+
+func _p37_on_member_spawned(encounter_id: String, entity_id: String, node: Node3D) -> void:
+	var info: Dictionary = _p37_copies.get(encounter_id, {})
+	var m: Member = _members.get(entity_id)
+	if info.is_empty() or m == null or node == null or not is_instance_valid(node):
+		return
+	var e: Variant = node.get("entity")
+	if e is CombatEntity and (e as CombatEntity).combatant != null:
+		var base := int(GameData.get_record(m.definition).get("xp_reward", 0))
+		(e as CombatEntity).combatant.xp_reward = int(roundf(float(base) * clampf(float(info.get("xp_scale", 1.0)), 0.0, 1.0)))
+	if typeof(m.spawn.get("targets")) == TYPE_DICTIONARY and node.has_method("p37_set_targets"):
+		node.call("p37_set_targets", m.spawn.targets)
+	var brain: Variant = node.get("brain")
+	var patrol: Array = info.get("patrol", [])
+	if not patrol.is_empty() and brain is EnemyBrain:
+		var off: Vector3 = (info.get("offsets", {}) as Dictionary).get(entity_id, Vector3.ZERO) - (info.get("group_off", Vector3.ZERO) as Vector3)
+		var basis := Basis(Vector3.UP, float(info.get("yaw", 0.0)))
+		var origin := level.global_transform if level != null and level.is_inside_tree() else Transform3D.IDENTITY
+		var points: Array[Vector3] = []
+		for p: Vector3 in patrol:
+			points.append(origin * (p + basis * Vector3(off.x, 0.0, off.z)))
+		(brain as EnemyBrain).patrol_points = points
+	if bool(info.get("march", false)) and node.has_method("p37_join_march"):
+		var copy_id := encounter_id
+		node.call("p37_join_march", func() -> Dictionary: return p37_march_target(copy_id, entity_id))
+
+
+## Loads the scenes the templates `template_ids` spawn (their definitions, and the records they prefer
+## when those exist) into the shared cache at level load, so no copy loads a scene when it appears (the
+## spawn hitch, P17a). Returns how many it loaded now.
+func p37_preload(template_ids: PackedStringArray) -> int:
+	var loaded := 0
+	for tid in template_ids:
+		for s: Variant in GameData.get_record(tid).get("spawns", []):
+			if typeof(s) != TYPE_DICTIONARY:
+				continue
+			var defs := [str(s.get("definition", ""))]
+			if str(s.get("prefer", "")) != "" and GameData.has_record(str(s.prefer)):
+				defs.append(str(s.prefer))
+			for d: String in defs:
+				var path := str(GameData.get_record(d).get("scene", ""))
+				if path != "" and not _scene_cache.has(path):
+					_scene(path)
+					loaded += 1
+	return loaded

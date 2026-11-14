@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "poi.kings_armoury",
+	"type": "poi",
+	"display_name": "The Kings' Armoury",
+	"level": "level.world",
+	"region": "region.aldmere",
+	"kind": "secret",
+	"position_m": [600, 54.9, -290],
+	"radius_m": 30,
+	"xp": 40,
+	"map_icon": "secret",
+	"compass": false,
+	"landmark": "world.aldmere.kings_armoury",
+	"skyline": false,
+	"min_stage": 5,
+	"reveals_m": 0,
+	"seal": "world.aldmere.armoury_rockfall",
+	"note": "The old kings' armoury behind a collapsed adit (heave, stage 5)."
+}

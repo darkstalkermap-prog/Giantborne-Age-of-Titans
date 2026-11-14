@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "event.siege_of_skarn",
+	"type": "world_event",
+	"display_name": "The Siege of Skarn",
+	"description": "P36 (plan M6-M9 §5.7, §5.9, §5.10): the toll-riders' siege line - hired by Aldmere - sets up east of Skarn Steading and bombards its three longhouses (its engines' prop_targets: props tagged house). It starts once: after Ulfra's plea (world.skarn.plea_accepted, stage 5) or when a stage-6 giant comes to Skarn, with Skarn's chunk loaded and the giant within 200 m. Its engines appear as it starts (ConditionSpawn on event.siege_of_skarn.runs) and hold their fire while the giant is more than 200 m from Skarn (bombard_within_m: the siege's clock pauses); their shots burn the longhouses they aim at (M8 gate). Its fail timer is a backstop for a line that cannot burn them: 600 s of the giant within 200 m of Skarn (fail.within_m) and Skarn burns. Saved: every member of the line beaten or routed (the line routs when its last engine falls) before two longhouses burn - 300 XP and 1 titan iron through quest.siege_of_skarn, Skarn's support and its hearth-forge. Burned: two longhouses fall (at least two stay burned until quest.skarn_rebuild raises them).",
+	"level": "level.world",
+	"region": "region.stonehold",
+	"centre_m": [440, 76.0, -660],
+	"start_radius_m": 200,
+	"trigger": {"min_stage": 5, "max_stage": 10, "requires_flags": [], "forbids_flags": [], "conditions": [{"type": "any", "of": [{"type": "flag", "flag": "world.skarn.plea_accepted"}, {"type": "stage_at_least", "stage": 6}]}], "cooldown_s": 0, "cooldown_from": "end", "max_runs": 1},
+	"encounters": ["encounter.tpl_stonehold_siege_line"],
+	"objective": {"kind": "protect", "lost_to_fail": 2, "marker": "world.marker.skarn_green", "text": "Save Skarn: break the siege line's engines ({standing} of {total} longhouses stand)", "targets": ["world.stonehold.skarn_longhouse_3", "world.stonehold.skarn_longhouse_2", "world.stonehold.skarn_longhouse_1"]},
+	"fail": {"timer_s": 600, "within_m": 200},
+	"success_outcome": "saved",
+	"fail_outcome": "burned",
+	"start_text": "The toll-riders' siege line opens fire on Skarn!",
+	"respawn_text": "The siege of Skarn goes on.",
+	"abandon_after_s": 0,
+	"xp_full_runs": 1,
+	"outcomes": {"saved": {"set_flags": {"world.skarn.saved": true}, "text": "Skarn is saved: the siege line breaks and flees."}, "burned": {"set_flags": {"world.skarn.burned": true}, "burn": 2, "text": "Skarn burns: the siege line has fired its halls."}}
+}

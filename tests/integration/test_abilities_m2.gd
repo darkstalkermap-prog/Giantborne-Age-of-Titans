@@ -579,8 +579,11 @@ func test_footfall_radius_follows_the_growth_stage() -> void:
 	assert_near(p.attack.runner.pulse_radius(f), 4.0, 1e-9, "stage 2: 4 m")
 	p.growth_stage = 3
 	assert_near(p.attack.runner.pulse_radius(f), 5.0, 1e-9, "stage 3: 5 m")
+	# P26 (plan M6-M9 §2.9): the list runs to stage 6 now (6.5 / 8 / 9.5 m at stages 4-6).
+	p.growth_stage = 6
+	assert_near(p.attack.runner.pulse_radius(f), 9.5, 1e-9, "stage 6: 9.5 m")
 	p.growth_stage = 7
-	assert_near(p.attack.runner.pulse_radius(f), 5.0, 1e-9, "beyond the list: the last entry")
+	assert_near(p.attack.runner.pulse_radius(f), 9.5, 1e-9, "beyond the list: the last entry")
 	p.growth_stage = 1
 	assert_near(p.attack.runner.pulse_radius(action("ability.sweeping_blow")), 3.5, 1e-9,
 		"Sweeping Blow: the profile's melee reach")
@@ -740,7 +743,12 @@ func test_hotbar_target_line_for_projectile_slots() -> void:
 	p.router.inject_edge(&"lock_press")
 	await step_ticks(2)
 	hud.refresh()
-	assert_eq(hud.slot_state(5).target, "» Practice Dummy", "locked: the selected target")
+	# M9 gate (lane review): the slot says the bolt flies to the lock; the lock line names the target, once
+	# (the slot's label named it, trimmed in a 64 px label on a 64 px pitch).
+	assert_eq(hud.slot_state(5).target, Hud.TARGET_LOCKED, "locked: the bolt flies to the lock")
+	await get_tree().process_frame
+	assert_true(str(hud.lock_line_now().get("text", "")).begins_with("Practice Dummy"),
+		"the lock line names the target (%s)" % hud.lock_line_now())
 
 
 func test_status_row_shows_the_players_statuses() -> void:

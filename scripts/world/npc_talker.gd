@@ -11,6 +11,11 @@ extends Interactable
 ##   record names its dialogue).
 ## - The prompt is "Talk to <speaker>" (the dialogue's speaker) unless the scene sets another one.
 ## - Gone (no prompt) once its NPC is dead; E does nothing while the dialogue does not exist.
+##   M8 gate (F5): "dead" is the parent's entity dead, the entity_died event for the npc id, or the
+##   npc id's death recorded in WorldState (a persist_death kill): a talker made after the death -
+##   its chunk loaded again, a reload - starts silent, and a recorded death silences a standing one.
+##   A talker standing for a spawned actor names its npc_id (P36's talker kind: Ulfra's, Harrok's
+##   challenge stone), so its talk ends with the actor; one that names its own id never does.
 ## - interact_id defaults to the npc id, so Events.interacted names the NPC (quests, bot).
 
 const DEFAULT_PROMPT := "Talk"
@@ -29,6 +34,8 @@ func _ready() -> void:
 	if interact_id == "":
 		interact_id = resolved_npc_id()
 	Events.entity_died.connect(_on_entity_died)
+	if _npc_recorded_killed():
+		enabled = false
 
 
 ## npc_id, else the parent's entity_id (the NPC this talker belongs to).
@@ -77,7 +84,7 @@ func prompt_text(_player: GiantPlayer) -> String:
 	if prompt != DEFAULT_PROMPT:
 		return prompt
 	var speaker := str(dialogue_record().get("speaker", ""))
-	return "%s to %s" % [DEFAULT_PROMPT, speaker] if speaker != "" else DEFAULT_PROMPT
+	return "%s to %s" % [DEFAULT_PROMPT, TextUtil.mid_sentence(speaker)] if speaker != "" else DEFAULT_PROMPT
 
 
 func interact(_player: GiantPlayer) -> void:
@@ -85,11 +92,19 @@ func interact(_player: GiantPlayer) -> void:
 
 
 func _npc_alive() -> bool:
+	if _npc_recorded_killed():
+		return false
 	var p := get_parent()
 	if p == null or not ("entity" in p):
 		return true
 	var e: Variant = p.get("entity")
 	return not (e is CombatEntity) or (e as CombatEntity).is_alive()
+
+
+## M8 gate (F5): the npc's death is in WorldState (a persist_death kill, kept by saves and reloads).
+func _npc_recorded_killed() -> bool:
+	var id := resolved_npc_id()
+	return id != "" and WorldState.is_killed(id)
 
 
 func _on_entity_died(_tick: int, entity_id: String, _killer_id: String) -> void:

@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "faction.test_moot_clans",
+	"type": "faction",
+	"display_name": "The Watching Clans",
+	"description": "Test only (P34, scenes/test/moot_test.tscn): the giant clans who watch Harrok's duel from outside the Moot's ring - neutral, and never turned hostile by a stray blow (an offence count no duel reaches).",
+	"initial": "neutral",
+	"offences_to_hostile": 100,
+	"offence_window_s": 10,
+	"civilians_give_way": false,
+	"give_way_m": 3.0,
+	"warn_text": "The clans growl at the stray blow.",
+	"hostile_text": "The clans take up their axes.",
+	"reconciled_text": "The clans settle back to watch."
+}

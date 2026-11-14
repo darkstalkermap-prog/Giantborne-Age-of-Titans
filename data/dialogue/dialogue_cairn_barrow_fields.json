@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "dialogue.cairn_barrow_fields",
+	"type": "dialogue",
+	"speaker": "Old Kings' Cairn",
+	"description": "An Old Kings' cairn at the Barrow Fields (plan M6-M9 §5.4, decision 33): reading it once gives one attribute point (once-flag reward.cairn.barrow_fields).",
+	"entries": [
+		{"node": "read", "conditions": [{"type": "flag", "flag": "reward.cairn.barrow_fields"}]},
+		{"node": "cairn", "conditions": []}
+	],
+	"nodes": [
+		{"id": "cairn", "text": "Stones stacked by giant hands among the barrows. The topmost bears a crowned mark and a line cut deep: 'Here we laid the ones who grew too great to bury.'", "choices": [{"text": "[Lay a hand on the stones] (+1 attribute point)", "next": "", "effects": {"attribute_points": 1, "once_flag": "reward.cairn.barrow_fields"}}, {"text": "Leave the stones be.", "next": ""}]},
+		{"id": "read", "text": "An Old Kings' cairn. Its strength is already in you.", "choices": [{"text": "[Leave]", "next": ""}]}
+	]
+}

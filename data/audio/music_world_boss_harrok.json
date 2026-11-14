@@ -1,0 +1,34 @@
+{
+	"schema_version": 1,
+	"id": "music.boss_harrok",
+	"type": "music_set",
+	"display_name": "Harrok",
+	"description": "P28: Harrok's fight at the Moot (enemy.harrok), in its own frame (a half-time 72 BPM in D phrygian, eight bars, 26.7 s): giant drums and a chanting male choir; from phase 2 giant horns. Enters after its one-bar intro stinger.",
+	"bpm": 72,
+	"beats_per_bar": 4,
+	"bars": 8,
+	"frame": "boss_72",
+	"stems": {
+		"drums": "res://assets/audio/music/world/harrok_drums.ogg",
+		"theme": "res://assets/audio/music/world/harrok_choir.ogg",
+		"horns": "res://assets/audio/music/world/harrok_horns.ogg"
+	},
+	"layers": {
+		"explore": {
+			"drums": 0,
+			"theme": -2
+		},
+		"combat": {
+			"drums": 0,
+			"theme": -2
+		}
+	},
+	"phase_layers": {
+		"2": {
+			"horns": 0
+		}
+	},
+	"intro": "mus.stinger.boss_harrok",
+	"crossfade_bars": 1,
+	"layer_fade_beats": 2
+}

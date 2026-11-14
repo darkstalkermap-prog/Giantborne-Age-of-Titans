@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "encounter.greywood_den_guard",
+	"type": "encounter",
+	"display_name": "The den's guard",
+	"description": "P35 (plan M6-M9 §5.10): two trolls and two whelps hold the den ride, the Troll Den's approach (moved 60 m east of the plan's point so a giant waking at the den's waystone never wakes among them). A brazier stands between them.",
+	"level": "level.world",
+	"center_m": [-645, 28.53, -268],
+	"activate_radius_m": 90,
+	"deactivate_radius_m": 160,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.greywood.den_guard_troll_1", "definition": "enemy.troll", "position_m": [-640, 28.35, -262], "yaw_deg": 250, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.den_guard_troll_2", "definition": "enemy.troll", "position_m": [-650, 28.64, -273], "yaw_deg": 250, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.den_guard_whelp_1", "definition": "enemy.troll_whelp", "position_m": [-636, 28.82, -271], "yaw_deg": 250, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""},
+		{"entity_id": "world.greywood.den_guard_whelp_2", "definition": "enemy.troll_whelp", "position_m": [-653, 28.22, -262], "yaw_deg": 250, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

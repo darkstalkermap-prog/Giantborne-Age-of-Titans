@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.world_millford",
+	"display_name": "Millford",
+	"description": "P28: Millford keeps the Crownmarch's music over the town's bed; a stage 4+ giant entering it while the hamlet is friendly hears a gasp and the bell once a visit.",
+	"level": "level.world",
+	"districts": [],
+	"regions": [],
+	"pois": [
+		"poi.millford"
+	],
+	"context": "",
+	"boss": "",
+	"music": "music.crownmarch",
+	"ambience": "ambience.town",
+	"priority": 10,
+	"arrival": {
+		"faction": "faction.millford"
+	}
+}

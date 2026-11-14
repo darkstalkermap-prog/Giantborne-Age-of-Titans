@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "weapon.giant_axe",
+	"type": "weapon",
+	"family": "axe",
+	"display_name": "Giant Axe",
+	"description": "P34: a rival giant's axe - a 4.5 m haft with a broad blade (Harrok's arm is longer: his strokes reach further).",
+	"damage_multiplier": 1.0,
+	"length_m": 4.5,
+	"hit_radius_m": 0.9,
+	"visual_shape": "axe"
+}

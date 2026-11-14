@@ -19,11 +19,22 @@ extends UiScreen
 ## Pad and keyboard (P16; the play link opens here): the menu is one column and a page is Back
 ## followed by its rows (focus_rows), wrapping at both ends; the first focus is Continue, New Game
 ## or Sandbox on the menu and Back on a page. Disabled entries are skipped.
+##
+## P20 (plan M6-M9 §2.6): the save line names the checkpoint by its display name from the level's
+## world index ("Saved game: level 3, stage 2, at the Grove Shrine, ..."), never by its id. When
+## the saved game has finished the prologue (slice.completed) and the world exists, New Game asks
+## "Play the prologue" (the default) or "Skip to the Old Kingdom" (a New Game from world_start in
+## level.world); either replaces the saved game. Without the world the choice is hidden.
 
 const VALLEY_MISSING := "Valley not built yet"
 const PAGES := ["Settings", "Controls"]
+const PLAY_PROLOGUE := "Play the prologue"
+const SKIP_PROLOGUE := "Skip to the Old Kingdom"
+const SKIP_NOTE := "Starting over replaces your saved game. You finished the prologue: begin it again, or start in the Old Kingdom."
 
 var _new_game: Button
+var _prologue: Button
+var _skip: Button
 var _continue: Button
 var _sandbox: Button
 var _settings_button: Button
@@ -69,6 +80,11 @@ func _ready() -> void:
 	_menu.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(_menu)
 	_new_game = _menu_button("New Game", _on_new_game)
+	# P20: the skip-prologue choice, shown under New Game when it is pressed with a finished save.
+	_prologue = _menu_button(PLAY_PROLOGUE, _on_play_prologue)
+	_skip = _menu_button(SKIP_PROLOGUE, _on_skip_prologue)
+	_prologue.visible = false
+	_skip.visible = false
 	_continue = _menu_button("Continue", _on_continue)
 	_sandbox = _menu_button("Sandbox", _on_sandbox)
 	_settings_button = _menu_button("Settings", _show_page.bind("Settings"))
@@ -137,7 +153,10 @@ func focus_rows() -> Array:
 		"Controls":
 			return [[_back]] + _settings_pages.controls_rows()
 	var rows: Array = []
-	for b: Button in [_new_game, _continue, _sandbox, _settings_button, _controls_button, _quit]:
+	for b: Button in [_new_game, _prologue, _skip, _continue, _sandbox, _settings_button, _controls_button, _quit]:
+		if b == _prologue or b == _skip:
+			if not b.visible:
+				continue
 		rows.append([b])
 	return rows
 
@@ -165,6 +184,8 @@ func refresh() -> void:
 		return
 	_confirm_new = false
 	_new_game.text = "New Game"
+	_prologue.visible = false
+	_skip.visible = false
 	var valley := GameSession.valley_available()
 	_save = {}
 	var save_text := ""
@@ -190,14 +211,26 @@ func refresh() -> void:
 		refresh_focus()
 
 
-## A short line about a save document: "Saved game: level 3, stage 2, at valley.shrine.grove,
-## 2026-11-05 14:02".
+## A short line about a save document: "Saved game: level 3, stage 2, at the Grove Shrine,
+## 2026-11-05 14:02" (P20: the checkpoint's display name from its level's world index; a
+## checkpoint the index does not name is left out - never its id - and a level other than the
+## Valley is named: "in the Old Kingdom"). M8 release (R2): the place is where Continue wakes the
+## giant (GameSession.save_respawn: the saved respawn unless a respawn blocker refuses it - hostile
+## guards there - and then the stone the load moves it to), not the saved respawn as such.
+## P39f (FOLLOWUPS: "the saved-game line writes 'in The Old Kingdom'"): a name that begins with "The" takes
+## a small "the" mid-sentence (mid_sentence), as the warning above and the menu button write it: "in the Old
+## Kingdom", "at the Kings' Door" (it read "in The Old Kingdom" and "at The Kings' Door").
 static func describe_save(doc: Dictionary) -> String:
 	var c: Dictionary = doc.get("character", {})
-	var cp: Dictionary = doc.get("checkpoint", {})
 	var parts := PackedStringArray(["level %d" % int(c.get("level", 1)), "stage %d" % int(c.get("growth_stage", 1))])
-	if str(cp.get("respawn", "")) != "":
-		parts.append("at %s" % cp.respawn)
+	var lv := str(doc.get("level", GameSession.VALLEY_LEVEL_ID))
+	var place := WorldIndex.display_name_in(lv, GameSession.save_respawn(doc))
+	if place != "":
+		parts.append("at %s" % mid_sentence(place))
+	if lv != GameSession.VALLEY_LEVEL_ID:
+		var level_name := str(GameData.get_record(lv).get("display_name", ""))
+		if level_name != "":
+			parts.append("in %s" % mid_sentence(level_name))
 	var when := int(doc.get("saved_at_unix", 0))
 	if when > 0:
 		var local := when + int(Time.get_time_zone_from_system().get("bias", 0)) * 60
@@ -205,19 +238,49 @@ static func describe_save(doc: Dictionary) -> String:
 	return "Saved game: " + ", ".join(parts)
 
 
+## P39f: a place or level name as it reads after "at" or "in": "The Old Kingdom" -> "the Old Kingdom", and a
+## name without an article takes one - "Grove Shrine" -> "the Grove Shrine".
+static func mid_sentence(display_name: String) -> String:
+	return TextUtil.with_the(display_name)
+
+
+## True when New Game offers the skip-prologue choice (P20): the saved game finished the prologue
+## (slice.completed, or its progress says so) and the world exists.
+func skip_available() -> bool:
+	if not bool(_save.get("ok", false)) or not GameSession.world_available():
+		return false
+	return save_finished_prologue(_save.get("data", {}))
+
+
+## True for a save document whose prologue is complete (the flag slice.completed, or progress).
+static func save_finished_prologue(doc: Dictionary) -> bool:
+	var prog: Variant = doc.get("progress")
+	if typeof(prog) == TYPE_DICTIONARY and bool(prog.get("prologue_complete", false)):
+		return true
+	var world: Variant = doc.get("world")
+	if typeof(world) == TYPE_DICTIONARY and typeof(world.get("flags")) == TYPE_DICTIONARY:
+		return QuestConditions.truthy((world.flags as Dictionary).get("slice.completed"))
+	return false
+
+
 ## What the screen shows now (tests): {"new_game", "continue", "sandbox", "quit"} enabled flags,
-## "note", "save" and "page".
+## "note", "save", "page" and (P20) "skip_choice" (the two prologue buttons are shown).
 func state() -> Dictionary:
 	return {"new_game": not _new_game.disabled, "continue": not _continue.disabled,
 		"sandbox": not _sandbox.disabled, "quit": _quit.visible, "note": _note.text,
-		"save": _save_label.text, "page": current_page()}
+		"save": _save_label.text, "page": current_page(), "skip_choice": _skip.visible}
 
 
-## The button of a menu entry ("New Game", "Continue", "Sandbox", "Quit"), or null.
+## The button of a menu entry ("New Game", "Continue", "Sandbox", "Quit", and P20's "Play the
+## prologue" and "Skip to the Old Kingdom"), or null.
 func button(label: String) -> Button:
 	match label:
 		"New Game":
 			return _new_game
+		PLAY_PROLOGUE:
+			return _prologue
+		SKIP_PROLOGUE:
+			return _skip
 		"Continue":
 			return _continue
 		"Sandbox":
@@ -273,12 +336,35 @@ func _process(_delta: float) -> void:
 func _on_new_game() -> void:
 	if _new_game.disabled:
 		return
+	# P20: a finished prologue offers to skip it (each choice replaces the saved game).
+	if skip_available():
+		if not _skip.visible:
+			_prologue.visible = true
+			_skip.visible = true
+			_note.text = SKIP_NOTE
+			if is_inside_tree():
+				refresh_focus()
+				if UiNav.focusable(_prologue):
+					_prologue.grab_focus()
+		return
 	if _save.get("ok", false) and not _confirm_new:
 		_confirm_new = true
 		_new_game.text = "New Game: replace the saved game?"
 		_note.text = "Press New Game again to start over. Your saved game will be replaced."
 		return
 	_start("valley", {"new_game": true})
+
+
+## "Play the prologue" (P20): a New Game in the Valley, replacing the saved game.
+func _on_play_prologue() -> void:
+	if _prologue.visible:
+		_start("valley", {"new_game": true})
+
+
+## "Skip to the Old Kingdom" (P20): a New Game in the world from world_start.
+func _on_skip_prologue() -> void:
+	if _skip.visible:
+		_start("world", {"new_game": true})
 
 
 func _on_continue() -> void:

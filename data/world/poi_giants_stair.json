@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.giants_stair",
+	"type": "poi",
+	"display_name": "The Giant's Stair",
+	"level": "level.world",
+	"region": "region.stonehold",
+	"kind": "gate",
+	"position_m": [0, 28.4, -420],
+	"radius_m": 60,
+	"xp": 30,
+	"map_icon": "gate",
+	"compass": true,
+	"landmark": "world.stonehold.giants_stair",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "Steps cut for giants from the Mere's north shore to the plateau; only a giant of stage 6 climbs them."
+}

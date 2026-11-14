@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"id": "ancestry.wildheart",
+	"type": "ancestry",
+	"display_name": "Wildheart",
+	"description": "Your line ran with the beasts of the old forests. Fast, fierce and always hungry for the fight.",
+	"attribute_bonus": {"strength": 3, "dexterity": 2},
+	"resistances": {},
+	"modifiers": {"fury_gain_mult": 1.25, "stamina_add": 20, "move_speed_mult": 1.05},
+	"signature": "ability.wild_surge",
+	"dialogue_tags": ["wild"],
+	"dialogue_note": "Harrok's clan respects wild blood: his duel of honour ends after two broken stances."
+}

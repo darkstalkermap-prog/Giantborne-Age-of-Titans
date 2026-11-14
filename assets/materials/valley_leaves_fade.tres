@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://assets/shaders/scenery_fade.gdshader" id="1_t8ytp"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_t8ytp")
+shader_parameter/albedo = Color(0.24, 0.4, 0.19, 1)
+shader_parameter/roughness = 0.95
+shader_parameter/vertex_color_albedo = false

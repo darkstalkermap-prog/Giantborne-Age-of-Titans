@@ -13,6 +13,12 @@ extends Node3D
 ## Vector2, "exact": bool} (yaw, pitch in degrees) from a player component's rig_state(), which
 ## wins over every pose (P07 holding). set_status_tint() keeps a status colour on the materials
 ## (HitFeedback); hit flashes still play on top of it.
+##
+## P22 (decision 9): the rig's parts are merged per pivot into vertex-coloured meshes that share
+## one material, which the rig copies once per actor (RigPaint): a hit flash sets that material's
+## emission and a status tint multiplies its albedo. render_lod_m swaps the rig for its one-box
+## proxy by distance (RigPaint.apply_render_lod; set by the builder for people, by EnemyActor from
+## the enemy record).
 
 @export var weapon_arm_path: NodePath
 @export var off_arm_path: NodePath
@@ -26,6 +32,9 @@ extends Node3D
 @export var off_block_pose := Vector2(30.0, 8.0)
 @export var stride_length_m := 1.6
 @export var leg_swing_rad := 0.55
+## P22: beyond this distance (m) the renderer draws the one-box proxy instead of the rig (AI LOD
+## tiers 0 and 1; RigPaint.apply_render_lod). 0 = never.
+@export var render_lod_m := 0.0
 
 var actor: Node3D
 var weapon_arm: Node3D
@@ -39,6 +48,9 @@ var _flash := 0.0
 var _flash_color := Color(1.0, 0.95, 0.85)
 var _materials: Array[StandardMaterial3D] = []
 var _base_colors: Array[Color] = []
+var _material_copies: Dictionary = {}   ## source material -> this rig's copy (RigPaint)
+## The copy of Visual/LodProxy under Body that the renderer shows beyond render_lod_m (P22).
+var far_proxy: MeshInstance3D = null
 var _fall := 0.0
 var _stagger_time := 0.0
 var _arm := Vector2.ZERO
@@ -56,6 +68,16 @@ func _ready() -> void:
 	_arm = idle_arm_pose
 	_off = off_idle_pose
 	_make_materials_unique(self)
+	if render_lod_m > 0.0:
+		set_render_lod(render_lod_m)
+
+
+## P22: the distance LOD (see RigPaint): beyond lod_m metres the renderer draws the one-box proxy
+## instead of the rig (0 = never). Callable again (EnemyActor applies its record's value).
+func set_render_lod(lod_m: float) -> void:
+	render_lod_m = maxf(0.0, lod_m)
+	far_proxy = RigPaint.apply_render_lod(self, body, render_lod_m)
+	_p30_apply_mid()   # P30: the merged rest-pose mesh at mid distance (low preset)
 
 
 ## Places the weapon shoulder exactly where the data says the hit sweep pivots. `pivot_local`
@@ -76,17 +98,10 @@ func flash(strength: float, color := Color(1.0, 0.95, 0.85)) -> void:
 	_flash_color = color
 
 
+## Gives the meshes under `node` this rig's copies of their materials: one per source material,
+## so a merged rig (one shared material) gets one material per actor (P22, RigPaint).
 func _make_materials_unique(node: Node) -> void:
-	for child in node.get_children():
-		if child is MeshInstance3D:
-			var mi := child as MeshInstance3D
-			var mat := mi.material_override as StandardMaterial3D
-			if mat != null:
-				var copy := mat.duplicate() as StandardMaterial3D
-				mi.material_override = copy
-				_materials.append(copy)
-				_base_colors.append(copy.albedo_color)
-		_make_materials_unique(child)
+	RigPaint.make_unique(node, _materials, _base_colors, _material_copies)
 
 
 static func _aim(node: Node3D, pose: Vector2) -> void:
@@ -176,6 +191,7 @@ func _process(delta: float) -> void:
 		torso.rotation.y = lerpf(torso.rotation.y, twist, 1.0 - exp(-12.0 * delta))
 	_update_body(s, delta)
 	_update_flash(delta)
+	_p30_promote(s)   # P30: an acting rig keeps its full detail out to render_lod_m
 
 
 func _update_body(s: Dictionary, delta: float) -> void:
@@ -225,10 +241,8 @@ func _update_flash(delta: float) -> void:
 		return  # nothing to fade: do not touch the materials every frame
 	_tint_dirty = false
 	_flash = maxf(0.0, _flash - delta * 6.0)
-	var tint_rgb := Color(_tint.r, _tint.g, _tint.b)
-	for i in _materials.size():
-		var base := _base_colors[i].lerp(tint_rgb, clampf(_tint.a, 0.0, 1.0))
-		_materials[i].albedo_color = base.lerp(_flash_color, _flash * 0.85)
+	# P22: the tint multiplies the albedo, the flash is emission (RigPaint).
+	RigPaint.paint(_materials, _base_colors, _tint, _flash, _flash_color)
 	_flash_applied = _flash
 
 
@@ -446,10 +460,35 @@ func set_weapon_visual(node: Node3D, hand_offset := Vector3(0.0, 0.0, -1.5)) -> 
 
 
 func _forget_materials(node: Node) -> void:
-	for child in node.get_children():
-		if child is MeshInstance3D:
-			var idx := _materials.find((child as MeshInstance3D).material_override as StandardMaterial3D)
-			if idx >= 0:
-				_materials.remove_at(idx)
-				_base_colors.remove_at(idx)
-		_forget_materials(child)
+	RigPaint.forget(node, _materials, _base_colors, _material_copies)
+
+
+# --- the mid distance (P30, FOLLOWUPS: Valley views at low under 250 draw calls) -------------------
+# Hook lines: set_render_lod (_p30_apply_mid) and _process (_p30_promote). At the `low` preset the
+# rig draws as one merged mesh of its rest pose between 0.45 x render_lod_m and render_lod_m
+# (RigPaint's mid distance); while it acts (an action, staggered, dead, held) it is promoted to its
+# full rig out to render_lod_m.
+
+## The rig's mid-distance mesh (null when none: not at `low`, or no render_lod_m).
+var mid_proxy: MeshInstance3D = null
+var _p30_promoted := false
+
+
+func _p30_apply_mid() -> void:
+	if render_lod_m > 0.0 and RigPaint.mid_lod_wanted(self):
+		var key := actor.scene_file_path if actor != null else ""
+		mid_proxy = RigPaint.apply_mid_lod(body, render_lod_m, _materials[0] if not _materials.is_empty() else null, key)
+		_p30_promoted = false
+	elif mid_proxy != null:
+		RigPaint.remove_mid_lod(body, render_lod_m)
+		mid_proxy = null
+
+
+func _p30_promote(s: Dictionary) -> void:
+	if mid_proxy == null:
+		return
+	var acting := s.get("action") != null or bool(s.get("staggered", false)) or bool(s.get("dead", false)) \
+		or (actor != null and actor.has_method("is_held") and bool(actor.call("is_held")))
+	if acting != _p30_promoted:
+		_p30_promoted = acting
+		RigPaint.set_mid_active(body, not acting, render_lod_m)

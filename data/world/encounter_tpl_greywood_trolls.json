@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_greywood_trolls",
+	"type": "encounter",
+	"display_name": "Troll pair",
+	"description": "P35 (plan M6-M9 §2.13, §5.10): a wander template of wander.greywood's troll_pair entry (stage 4 and up) - two trolls on the Greywood's rides (no brazier with them: a giant who would burn them brings the fight to a fire). Its centre is nominal (a node of the Hollowmere ride, more than 120 m from every checkpoint and 150 m from the placed fights).",
+	"template": true,
+	"level": "level.world",
+	"center_m": [-730, 18.68, 12],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 50,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.greywood.wander_troll_1", "definition": "enemy.troll", "position_m": [-734, 18.76, 12], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""},
+		{"entity_id": "world.greywood.wander_troll_2", "definition": "enemy.troll", "position_m": [-726, 18.65, 14], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": ""}
+	]
+}

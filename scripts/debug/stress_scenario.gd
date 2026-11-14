@@ -135,6 +135,7 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	level = _find_level()
 	_rng.seed = 1414
+	_p30_ready()   # P30: --stress-formations (the formation test level)
 	_collect()
 	Events.entity_died.connect(_on_entity_died)
 	Events.enemy_routed.connect(_on_enemy_routed)
@@ -388,6 +389,10 @@ func _physics_process(_delta: float) -> void:
 			respawns += 1
 	if not bot_active:
 		return
+	if formations_mode:
+		bot_ticks += 1
+		_p30_bot_step()   # P30: the formation stress bot instead of the route
+		return
 	_reset_one()
 	bot_ticks += 1
 	var active := active_count()
@@ -407,7 +412,7 @@ func _physics_process(_delta: float) -> void:
 ## player through its InputRouter injection (the same path as a keyboard).
 func start_bot(p: GiantPlayer, stage := DEFAULT_STAGE) -> void:
 	player = p
-	bot_stage = stage
+	bot_stage = maxi(stage, P30_STAGE) if formations_mode else stage
 	bot_active = true
 	p.router.use_injection = true
 	_keep_invulnerable()
@@ -672,6 +677,8 @@ func active_average() -> float:
 ## The run's report (Autopilot merges it into AUTOPILOT_RESULT under "stress").
 func result(duration_s: float = -1.0) -> Dictionary:
 	var seconds := float(bot_ticks) / float(Sim.TICK_RATE)
+	if formations_mode:
+		return _p30_result(duration_s if duration_s >= 0.0 else seconds)
 	return {
 		"stage": bot_stage,
 		"simulated_s": snappedf(seconds, 0.01),
@@ -696,6 +703,8 @@ func result(duration_s: float = -1.0) -> Dictionary:
 ## The scenario's own checks for a run of `duration_s` ([] = all passed).
 func check_failures(duration_s: float) -> PackedStringArray:
 	var out := PackedStringArray()
+	if formations_mode:
+		return _p30_check_failures(duration_s)
 	if _slots.size() != COMBATANTS:
 		out.append("the arena has %d combatant slots (want %d)" % [_slots.size(), COMBATANTS])
 	if _props.size() != BREAKABLES:
@@ -740,3 +749,236 @@ func _free_node(n: Node) -> void:
 	if parent != null:
 		parent.remove_child(n)
 	n.queue_free()
+
+
+# --------------------------------------------------------------------------- P30: formations
+# `--stress-formations` (P30, W16; plan M6-M9 §3.13): the formation stress case. On the formation
+# test level, which carries a StressScenario node (tools/builders/formations.gd):
+#
+#   godot --path . -- --no-user-settings --level=res://scenes/test/formation_test.tscn \
+#     --scenario=stress --stress-formations --autoplay=60 --graphics=low
+#
+# the bot grows an invulnerable giant to stage 4 (or --stress-stage when higher), puts it in front
+# of encounter.formation_test_stress (two pike regiments of nineteen pikemen and a banner each: 40
+# members, the desktop max_formation_members), activates the encounter and walks along the
+# regiments' front, swinging a light now and then, so they turn, brace and draw their crowds.
+# result() reports the formations; check_failures() wants the 40 members spawned, every one of them
+# at AI tier 0 while the giant stands among them, both regiments braced at least once and the giant
+# never dead. The mode is on with the flag, or by itself on the formation test level.
+# P39 (plan M6-M9 §6.3, "the formation stress ... P39 adds two engines from the siege test level"): the
+# bot also places two of the siege test level's engines behind the regiments and activates their crews
+# (P39_ENGINES, P39_ENGINE_ENCOUNTER: see that section below).
+
+const P30_FLAG := "--stress-formations"
+const P30_LEVEL := "level.formation_test"
+const P30_ENCOUNTER := "encounter.formation_test_stress"
+const P30_MEMBERS := 40
+const P30_STAGE := 4
+## The giant's walk along the regiments' front (they stand at x 148 and 172, facing +Z, their
+## front ranks at z 2.4): out to each end and back.
+const P30_FRONT := [Vector3(148, 0, 9), Vector3(172, 0, 9)]
+const P30_START := Vector3(160, 0.05, 16)
+const P30_SWING_GAP_TICKS := 90
+
+## True in the formation stress mode (see the section notes).
+var formations_mode := false
+var _p30_started := false
+var _p30_leg := 0
+var _p30_peak_members := 0
+var _p30_tier0_checks := 0
+var _p30_tier0_misses := 0
+var _p30_promoted_peak := 0
+var _p30_crowd_peak := 0
+
+
+func _p30_ready() -> void:
+	formations_mode = OS.get_cmdline_user_args().has(P30_FLAG) \
+		or (level != null and level.level_id == P30_LEVEL)
+
+
+func _p30_director() -> EncounterDirector:
+	return level.director() if level != null else null
+
+
+## One tick of the formation bot: invulnerable, grown, then activated and walking the front.
+func _p30_bot_step() -> void:
+	if player == null or not is_instance_valid(player) or not player.is_inside_tree():
+		return
+	var r := player.router
+	if player.controller.state == CombatController.State.DEAD:
+		if not _was_dead:
+			player_deaths += 1
+		_was_dead = true
+		r.set_injected_move(Vector2.ZERO)
+		return
+	_was_dead = false
+	_keep_invulnerable()
+	if player.current_growth_stage() != bot_stage:
+		r.set_injected_move(Vector2.ZERO)
+		_grow_to_stage()
+		return
+	var d := _p30_director()
+	if d == null:
+		return
+	if not _p30_started:
+		_p30_started = true
+		player.global_position = P30_START
+		player.velocity = Vector3.ZERO
+		_p39_place_engines()   # P39: before the crews spawn, so each takes its engine
+		d.force_activate(P30_ENCOUNTER)
+		d.force_activate(P39_ENGINE_ENCOUNTER)
+		d.update_now()
+		return
+	_p30_measure(d)
+	var goal: Vector3 = P30_FRONT[_p30_leg % P30_FRONT.size()]
+	if _flat(player.global_position, goal) < 2.0:
+		_p30_leg += 1
+		goal = P30_FRONT[_p30_leg % P30_FRONT.size()]
+	_face(goal)
+	r.set_injected_move(Vector2(0, 0.5))
+	r.set_injected_hold(&"sprint", false)
+	if _can_act() and Sim.tick - _last_swing_tick >= P30_SWING_GAP_TICKS:
+		_last_swing_tick = Sim.tick
+		r.inject_edge(&"light")
+		inputs.light += 1
+
+
+func _p30_measure(d: EncounterDirector) -> void:
+	var members := d.formation_member_count()
+	_p30_peak_members = maxi(_p30_peak_members, members)
+	var promoted := 0
+	var crowd := 0
+	for f in d.formations():
+		var cr := d.crowd_renderer(f.id)
+		if cr != null:
+			promoted += cr.promoted.size()
+			crowd += cr.instance_count()
+		if bot_ticks % 30 == 0:
+			for m in f.all_members():
+				_p30_tier0_checks += 1
+				if m.lod_tier != 0:
+					_p30_tier0_misses += 1
+	_p30_promoted_peak = maxi(_p30_promoted_peak, promoted)
+	_p30_crowd_peak = maxi(_p30_crowd_peak, crowd)
+	_p39_measure()
+
+
+func _p30_result(duration_s: float) -> Dictionary:
+	var forms := {}
+	var d := _p30_director()
+	if d != null:
+		for f in d.formations():
+			forms[f.id] = {"state": f.state, "members": f.member_count(), "braces": f.brace_count,
+				"rallies": f.rally_count, "history": f.history.duplicate()}
+	return {
+		"mode": "formations",
+		"stage": bot_stage,
+		"simulated_s": snappedf(float(bot_ticks) / float(Sim.TICK_RATE), 0.01),
+		"members_peak": _p30_peak_members,
+		"tier0_samples": _p30_tier0_checks,
+		"tier0_misses": _p30_tier0_misses,
+		"promoted_peak": _p30_promoted_peak,
+		"crowd_instances_peak": _p30_crowd_peak,
+		"formations": forms,
+		"engines": _p39_result(),
+		"player_deaths": player_deaths,
+		"inputs": inputs.duplicate(),
+		"check_failures": _p30_check_failures(duration_s),
+	}
+
+
+func _p30_check_failures(_duration_s: float) -> PackedStringArray:
+	var out := PackedStringArray()
+	if _p30_peak_members < P30_MEMBERS:
+		out.append("%d formation members spawned (want %d)" % [_p30_peak_members, P30_MEMBERS])
+	if _p30_tier0_misses > 0:
+		out.append("%d of %d member samples were not at AI tier 0" % [_p30_tier0_misses, _p30_tier0_checks])
+	if player_deaths > 0:
+		out.append("the player died %d time(s)" % player_deaths)
+	var d := _p30_director()
+	if d != null and bot_ticks > Sim.TICK_RATE * 20:
+		for f in d.formations():
+			if f.brace_count == 0:
+				out.append("%s never braced" % f.id)
+	out.append_array(_p39_check_failures())
+	return out
+
+
+# --------------------------------------------------------------------------- P39: two engines
+# Plan M6-M9 §6.3: "Formation stress ... P39 adds two engines from the siege test level". When the
+# formation bot sets off it places two of the siege test level's engines (tools/builders/siege.gd's
+# ENGINES: its west ballista and west catapult, the same scenes) behind the regiments, facing the
+# giant's walk along their front, and activates encounter.formation_test_engines (data/test: the engines'
+# three crews - the ballista's one, the catapult's two -, which count toward max_active_enemies as
+# crews do), so the 40 members' ticks are measured with two crewed engines turning, aiming, shooting and
+# reloading at the giant, their bolts and stones in flight. The giant's walk at z 9 lies 31 m from the
+# ballista and 49 m from the catapult, inside their 20-140 m and 40-180 m. result()'s "engines" reports each
+# one's shots and crewed seconds; check_failures() wants both placed and crewed and, from
+# P39_SHOTS_CHECK_S, each to have fired (the invulnerable giant takes the hits: a bolt staggers it).
+
+const P39_ENGINE_ENCOUNTER := "encounter.formation_test_engines"
+## [node name, scene, world id, position, yaw degrees (180: facing +Z)].
+const P39_ENGINES := [
+	["StressBallista", "res://scenes/world/siege_ballista.tscn", "test.formation.ballista_1", Vector3(152, 0, -22), 180.0],
+	["StressCatapult", "res://scenes/world/siege_catapult.tscn", "test.formation.catapult_1", Vector3(168, 0, -40), 180.0],
+]
+const P39_SHOTS_CHECK_S := 20.0
+
+var _p39_engines: Array = []          # SiegeEngine (weak: a freed one is skipped)
+var _p39_crewed_ticks := {}           # world id -> ticks it was crewed
+
+
+## Places the two engines on the level (once).
+func _p39_place_engines() -> void:
+	if not _p39_engines.is_empty():
+		return
+	var parent := _arena()
+	for spec: Array in P39_ENGINES:
+		var e := _scene(str(spec[1])).instantiate() as SiegeEngine
+		if e == null:
+			push_error("StressScenario: %s is no siege engine" % spec[1])
+			continue
+		e.name = str(spec[0])
+		e.world_id = str(spec[2])
+		e.position = spec[3]
+		e.rotation_degrees = Vector3(0.0, float(spec[4]), 0.0)
+		parent.add_child(e)
+		_p39_engines.append(e)
+
+
+## The engines placed (still in the tree).
+func p39_engines() -> Array[SiegeEngine]:
+	var out: Array[SiegeEngine] = []
+	for e: Variant in _p39_engines:
+		if e != null and is_instance_valid(e) and (e as SiegeEngine).is_inside_tree():
+			out.append(e as SiegeEngine)
+	return out
+
+
+func _p39_measure() -> void:
+	for e in p39_engines():
+		if e.crewed:
+			_p39_crewed_ticks[e.world_id] = int(_p39_crewed_ticks.get(e.world_id, 0)) + 1
+
+
+func _p39_result() -> Array:
+	var out := []
+	for e in p39_engines():
+		out.append({"id": e.world_id, "shots": e.shots, "crewed_s": snappedf(
+			float(_p39_crewed_ticks.get(e.world_id, 0)) / float(Sim.TICK_RATE), 0.01), "destroyed": e.destroyed})
+	return out
+
+
+func _p39_check_failures() -> PackedStringArray:
+	var out := PackedStringArray()
+	if not _p30_started:
+		return out
+	var engines := p39_engines()
+	if engines.size() != P39_ENGINES.size():
+		out.append("%d of the %d engines placed" % [engines.size(), P39_ENGINES.size()])
+	for e in engines:
+		if int(_p39_crewed_ticks.get(e.world_id, 0)) == 0:
+			out.append("%s was never crewed" % e.world_id)
+		elif bot_ticks > Sim.TICK_RATE * P39_SHOTS_CHECK_S and e.shots == 0:
+			out.append("%s never fired" % e.world_id)
+	return out

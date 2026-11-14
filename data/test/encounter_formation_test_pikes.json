@@ -1,0 +1,32 @@
+{
+	"schema_version": 1,
+	"id": "encounter.formation_test_pikes",
+	"type": "encounter",
+	"display_name": "Test pikes",
+	"description": "P30: a pike regiment of two ranks of five files - nine pikemen (slot 9, the back rank's right file, stays free for a joiner) and a bannerman - holding its ground and bracing; only tests activate it (test.formation.manual is never set).",
+	"level": "level.formation_test",
+	"district": "field",
+	"center_m": [-190, 0, 0],
+	"activate_radius_m": 30,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 80,
+	"alert_group": true,
+	"requires_flags": ["test.formation.manual"],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"formations": [
+		{"id": "pikes", "kind": "pike", "banner": "test.formation.pikes_banner", "banner_name": "Banner of the Test Pikes", "banner_color": [0.16, 0.3, 0.72], "ranks": 2, "files": 5, "rank_spacing_m": 1.6, "file_spacing_m": 1.4, "facing": "threat", "yaw_deg": 180, "turn_deg_s": 40, "advance_mps": 0, "brace_m": 7, "brace_action": "ability.formation_brace_pike", "brace_height_m": 5.0, "morale_start": 90}
+	],
+	"spawns": [
+		{"entity_id": "test.formation.pikes_1", "definition": "enemy.pikeman", "position_m": [-187.2, 0, 0.8], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 0},
+		{"entity_id": "test.formation.pikes_2", "definition": "enemy.pikeman", "position_m": [-188.6, 0, 0.8], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 1},
+		{"entity_id": "test.formation.pikes_3", "definition": "enemy.pikeman", "position_m": [-190.0, 0, 0.8], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 2},
+		{"entity_id": "test.formation.pikes_4", "definition": "enemy.pikeman", "position_m": [-191.4, 0, 0.8], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 3},
+		{"entity_id": "test.formation.pikes_5", "definition": "enemy.pikeman", "position_m": [-192.8, 0, 0.8], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 4},
+		{"entity_id": "test.formation.pikes_6", "definition": "enemy.pikeman", "position_m": [-187.2, 0, -0.8], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 5},
+		{"entity_id": "test.formation.pikes_7", "definition": "enemy.pikeman", "position_m": [-188.6, 0, -0.8], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 6},
+		{"entity_id": "test.formation.pikes_8", "definition": "enemy.pikeman", "position_m": [-190.0, 0, -0.8], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 7},
+		{"entity_id": "test.formation.pikes_9", "definition": "enemy.pikeman", "position_m": [-191.4, 0, -0.8], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": 8},
+		{"entity_id": "test.formation.pikes_banner", "definition": "enemy.bannerman", "position_m": [-190.0, 0, -2.4], "yaw_deg": 180, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "formation": "pikes", "slot": -1}
+	]
+}

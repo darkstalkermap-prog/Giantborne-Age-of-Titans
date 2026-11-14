@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "level.director_test",
+	"type": "level",
+	"display_name": "Director test level",
+	"description": "P10a: the EncounterDirector proven on a 120 x 120 m floor - wolves, soldiers with a commander and a patrol, and a 14-member budget test.",
+	"scene": "res://scenes/test/director_test.tscn",
+	"start_checkpoint": "test.director.cp_start",
+	"max_active_enemies": 12,
+	"lod": {"near_m": 40, "mid_m": 90, "check_ticks": 30, "corpse_free_s": 6},
+	"render": {
+		"low": {"shadow_distance_m": 60, "scenery_visibility_end_m": 160, "msaa": 0},
+		"medium": {"shadow_distance_m": 120, "scenery_visibility_end_m": 220, "msaa": 2}
+	},
+	"web_overrides": {"quality": "low", "ai_tier1_m": 30},
+	"districts": [
+		{"id": "west", "display_name": "West half", "min_m": [-60, 0, -60], "max_m": [0, 0, 60], "surface": "soft"},
+		{"id": "east", "display_name": "East half", "min_m": [0, 0, -60], "max_m": [60, 0, 60], "surface": "soft"}
+	]
+}

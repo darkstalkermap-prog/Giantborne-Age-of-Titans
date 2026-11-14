@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"id": "faction.test_riders",
+	"type": "faction",
+	"display_name": "Test Riders",
+	"description": "Test only (P22, tests/integration/test_faction_records.gd): riders hostile from the start until reconciled, one offence turning them hostile again, their flags under their own prefix.",
+	"flag_prefix": "test.riders",
+	"initial": "hostile",
+	"offences_to_hostile": 1,
+	"offence_window_s": 30,
+	"hostile_text": "The riders draw steel.",
+	"reconciled_text": "The riders let you pass."
+}

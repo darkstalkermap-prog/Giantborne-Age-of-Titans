@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "region.stonehold",
+	"type": "region",
+	"display_name": "The Stonehold Highlands",
+	"description": "P25 (plan M6-M9 §2.7, §5.1): The Stonehold Highlands of level.world; its bounds tile the interior with the other four regions.",
+	"level": "level.world",
+	"tier": 4,
+	"recommended_stage": [5, 6],
+	"bounds_m": [[-896, -896], [896, -440]],
+	"surface": "hard",
+	"discover_xp": 50,
+	"map_tint": [0.6, 0.58, 0.54],
+	"fog_color": [0.64, 0.66, 0.7],
+	"skyline_tint": [0.4, 0.39, 0.36],
+	"journal_note": "The giants' highlands: Ulfra's Skarn Steading, threatened by a hired siege line; the Standing Stones that grow a giant to stage 6; the Giant's Stair up from the Mere and the long Ironway round by Aldmere; the Cairnlands; and Harrok the Unbowed in the Moot beside the Stone Throne."
+}

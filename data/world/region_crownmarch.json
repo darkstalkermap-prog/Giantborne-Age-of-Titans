@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "region.crownmarch",
+	"type": "region",
+	"display_name": "The Crownmarch",
+	"description": "P25 (plan M6-M9 §2.7, §5.1): The Crownmarch of level.world; its bounds tile the interior with the other four regions.",
+	"level": "level.world",
+	"tier": 1,
+	"recommended_stage": [3, 4],
+	"bounds_m": [[-896, 300], [896, 896]],
+	"surface": "soft",
+	"discover_xp": 30,
+	"map_tint": [0.55, 0.62, 0.38],
+	"fog_color": [0.62, 0.68, 0.74],
+	"skyline_tint": [0.36, 0.42, 0.26],
+	"journal_note": "The kingdom's southern march: Kingsgate under its shelf, Brannock on the Wend, Millford, the barrow fields and the toll-riders' roads."
+}

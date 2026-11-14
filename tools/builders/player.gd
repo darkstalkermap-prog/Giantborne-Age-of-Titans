@@ -69,6 +69,16 @@ static func build_giant(kit: SceneKit) -> Node:
 			club.rotation_degrees = Vector3(-90, 0, 0)
 			shoulder.add_child(club)
 		body.add_child(shoulder)
+	# P22 (decision 9): one vertex-coloured mesh per pivot with the rig material. The club stays its
+	# own mesh (the weapon visual hides it), and the chest, the belt and the head (render layer 2,
+	# which the camera culls in first person) stay three meshes of their own: 8 meshes, was 19.
+	kit.merge_rig(body, {
+		"Torso": [["Chest", ["Chest"]], ["Belt", ["Belt"]], ["Head", ["Neck", "Head", "Hair", "Brow", "EyeL", "EyeR"]]],
+		"ShoulderR": [["Club", ["Club"]]],
+	})
+	# Where each hand is (the grab socket's visible grip, tests), now that the hand box is merged.
+	for shoulder_name: String in ["ShoulderL", "ShoulderR"]:
+		body.get_node(shoulder_name).add_child(kit.marker("Hand", Vector3(0, 0, -1.5)))
 	root.add_child(visual)
 	var rig := kit.n3("CameraRig")
 	kit.scripted(rig, S_CAMERA)

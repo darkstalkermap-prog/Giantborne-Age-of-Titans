@@ -1,0 +1,946 @@
+{
+	"schema_version": 1,
+	"id": "audio_bank.abilities",
+	"type": "audio_bank",
+	"display_name": "Abilities",
+	"description": "P21 (section 4.1 family D): every ability of the progression library (cast, impact, sweep, roar, on), the enemies' sweeps, casts and barriers, the stomp (Heavy Footfall, ogre smashes and the King's slam, lowered by size pitch; far version beyond half its range), projectiles' launches and landings by visual, the giant's statuses and grabs. The giant's own casts, buffs and grabs play non-positional (they are its own body; at the chest the 3D attenuation would sit at max_db). Projectile casts keep a 1.5 s retrigger guard, so the launch's own 'cast' effect does not repeat the start's.",
+	"cues": {
+		"sfx.ability.ancestral_mend.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/mend_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -7.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.ancestral_mend.on": {
+			"files": [
+				"res://assets/audio/sfx/abilities/mend_on_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": 0.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.archer_kick.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blade_light_1.wav",
+				"res://assets/audio/sfx/combat/swing_blade_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -5.5,
+			"pitch": 0.85,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.archer_shot.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/bow_1.wav",
+				"res://assets/audio/sfx/abilities/bow_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.boss_combo_1.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_tree_heavy_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.5,
+			"pitch": 0.72,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.boss_combo_2.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_tree_heavy_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "boss",
+			"volume_db": 2.5,
+			"pitch": 0.68,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.boulder_hurl.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/hurl_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -6.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 1500,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.boulder_hurl.impact": {
+			"files": [
+				"res://assets/audio/sfx/abilities/hurl_impact_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "sfx.impact.stomp.far",
+			"levels": []
+		},
+		"sfx.ability.crushing_grip.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/grip_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -3.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.default": {
+			"files": [
+				"res://assets/audio/sfx/abilities/sweep_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 200,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.default.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/sweep_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.grab_hold.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/grip_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -4.5,
+			"pitch": 1.06,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.heavy_footfall.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/footfall_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": 1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.heavy_footfall.impact": {
+			"files": [
+				"res://assets/audio/sfx/abilities/stomp_1.wav",
+				"res://assets/audio/sfx/abilities/stomp_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.mage_barrier.on": {
+			"files": [
+				"res://assets/audio/sfx/abilities/barrier_on_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -9.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 200,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.mage_slow_bolt.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/runic_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -9.0,
+			"pitch": 1.18,
+			"pitch_jitter": 0.03,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 300,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.ogre_sweep.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blunt_heavy_1.wav",
+				"res://assets/audio/sfx/combat/swing_blunt_heavy_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 0.78,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 75,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.runic_bolt.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/runic_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -10.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 1500,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.pike_thrust.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blade_light_1.wav",
+				"res://assets/audio/sfx/combat/swing_blade_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -5.0,
+			"pitch": 0.75,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.shield_bash.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blunt_light_1.wav",
+				"res://assets/audio/sfx/combat/swing_blunt_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -1.5,
+			"pitch": 0.9,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.soldier_brace.sweep": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blunt_light_1.wav",
+				"res://assets/audio/sfx/combat/swing_blunt_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -0.5,
+			"pitch": 1.15,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.sparring_swing.impact": {
+			"files": [
+				"res://assets/audio/sfx/combat/swing_blunt_light_1.wav",
+				"res://assets/audio/sfx/combat/swing_blunt_light_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -0.5,
+			"pitch": 1.2,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.stone_skin.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/stone_skin_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.stone_skin.on": {
+			"files": [
+				"res://assets/audio/sfx/abilities/stone_skin_on_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.sweeping_blow.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/sweep_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.sweeping_blow.sweep": {
+			"files": [
+				"res://assets/audio/sfx/abilities/sweep_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.throw_held.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/throw_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 1500,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.throw_held.impact": {
+			"files": [
+				"res://assets/audio/sfx/abilities/throw_impact_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.thunder_roar.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/roar_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -4.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.thunder_roar.impact": {
+			"files": [
+				"res://assets/audio/sfx/abilities/roar_thunder_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "giant",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.thunder_roar.roar": {
+			"files": [
+				"res://assets/audio/sfx/abilities/roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 95,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.titan_surge.cast": {
+			"files": [
+				"res://assets/audio/sfx/abilities/surge_cast_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 95,
+			"far": "",
+			"levels": []
+		},
+		"sfx.ability.titan_surge.on": {
+			"files": [
+				"res://assets/audio/sfx/abilities/surge_on_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -7.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.grab.crush": {
+			"files": [
+				"res://assets/audio/sfx/abilities/grab_crush_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.grab.default": {
+			"files": [
+				"res://assets/audio/sfx/abilities/grab_drop_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.grab.drop": {
+			"files": [
+				"res://assets/audio/sfx/abilities/grab_drop_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.grab.seize": {
+			"files": [
+				"res://assets/audio/sfx/abilities/grab_seize_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": 0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.grab.throw": {
+			"files": [
+				"res://assets/audio/sfx/abilities/grab_throw_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -6.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 200,
+			"priority": 90,
+			"far": "",
+			"levels": []
+		},
+		"sfx.impact.arrow": {
+			"files": [
+				"res://assets/audio/sfx/abilities/land_arrow_1.wav",
+				"res://assets/audio/sfx/abilities/land_arrow_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 40,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.impact.bolt": {
+			"files": [
+				"res://assets/audio/sfx/abilities/land_bolt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -6.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 50,
+			"priority": 65,
+			"far": "",
+			"levels": []
+		},
+		"sfx.impact.boulder": {
+			"files": [
+				"res://assets/audio/sfx/abilities/land_boulder_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": -1.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.impact.default": {
+			"files": [
+				"res://assets/audio/sfx/abilities/stomp_1.wav",
+				"res://assets/audio/sfx/abilities/stomp_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 1.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 80,
+			"far": "sfx.impact.stomp.far",
+			"levels": []
+		},
+		"sfx.impact.stomp": {
+			"files": [
+				"res://assets/audio/sfx/abilities/stomp_1.wav",
+				"res://assets/audio/sfx/abilities/stomp_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 2.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 3,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "sfx.impact.stomp.far",
+			"levels": []
+		},
+		"sfx.impact.stomp.far": {
+			"files": [
+				"res://assets/audio/sfx/abilities/stomp_far_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": true,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.impact.thrown_body": {
+			"files": [
+				"res://assets/audio/sfx/combat/body_fall_small_1.wav",
+				"res://assets/audio/sfx/combat/body_fall_small_2.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 0.85,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.projectile.arrow.launch": {
+			"files": [
+				"res://assets/audio/sfx/abilities/launch_arrow_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -4.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.06,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 50,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.projectile.bolt.launch": {
+			"files": [
+				"res://assets/audio/sfx/abilities/launch_bolt_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -6.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.projectile.boulder.launch": {
+			"files": [
+				"res://assets/audio/sfx/abilities/launch_boulder_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.04,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.projectile.default": {
+			"files": [
+				"res://assets/audio/sfx/abilities/launch_body_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "human",
+			"volume_db": -0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 3,
+			"retrigger_ms": 60,
+			"priority": 70,
+			"far": "",
+			"levels": []
+		},
+		"sfx.projectile.thrown_body.launch": {
+			"files": [
+				"res://assets/audio/sfx/abilities/launch_body_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": true,
+			"class": "big",
+			"volume_db": 0.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.05,
+			"size_pitch": false,
+			"max_voices": 2,
+			"retrigger_ms": 80,
+			"priority": 85,
+			"far": "",
+			"levels": []
+		},
+		"sfx.status.default": {
+			"files": [
+				"res://assets/audio/sfx/abilities/mend_off_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -4.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 60,
+			"far": "",
+			"levels": []
+		},
+		"sfx.status.mend.off": {
+			"files": [
+				"res://assets/audio/sfx/abilities/mend_off_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"sfx.status.slow": {
+			"files": [
+				"res://assets/audio/sfx/abilities/slow_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -3.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 500,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"sfx.status.stone_skin.off": {
+			"files": [
+				"res://assets/audio/sfx/abilities/stone_skin_off_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -4.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"sfx.status.titan_surge.off": {
+			"files": [
+				"res://assets/audio/sfx/abilities/surge_off_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -13.5,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 80,
+			"far": "",
+			"levels": []
+		},
+		"sfx.voice.giant.roar": {
+			"files": [
+				"res://assets/audio/sfx/abilities/roar_1.wav"
+			],
+			"bus": "SFX",
+			"spatial": false,
+			"volume_db": -2.0,
+			"pitch": 1.0,
+			"pitch_jitter": 0.0,
+			"size_pitch": false,
+			"max_voices": 1,
+			"retrigger_ms": 300,
+			"priority": 95,
+			"far": "",
+			"levels": []
+		}
+	}
+}

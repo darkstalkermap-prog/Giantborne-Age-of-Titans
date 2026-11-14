@@ -1,0 +1,175 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/world_root.gd" id="1_ce812"]
+[ext_resource type="Script" path="res://scripts/world/chunk_streamer.gd" id="2_757f0"]
+[ext_resource type="Script" path="res://scripts/world/skyline.gd" id="3_3d2a6"]
+[ext_resource type="PackedScene" path="res://scenes/player/giant.tscn" id="4_627ae"]
+[ext_resource type="Script" path="res://scripts/actors/giant_player.gd" id="5_7ef4a"]
+[ext_resource type="Script" path="res://scripts/world/encounter_director.gd" id="6_b0840"]
+[ext_resource type="Script" path="res://scripts/world/debris_pool.gd" id="7_ce070"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.58, 0.66, 0.76, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.64, 0.7, 1)
+ambient_light_energy = 0.62
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.58, 0.66, 0.76, 1)
+fog_density = 1.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(1796, 400, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3"]
+size = Vector3(2, 400, 1796)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4"]
+size = Vector3(2, 400, 1796)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5"]
+size = Vector3(563, 400, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6"]
+size = Vector3(2, 400, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7"]
+size = Vector3(2, 400, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+size = Vector3(74, 400, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_9"]
+size = Vector3(203, 400, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(2, 400, 47)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
+size = Vector3(2, 400, 47)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_12"]
+size = Vector3(48, 400, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_13"]
+size = Vector3(916, 400, 2)
+
+[node name="World" type="Node3D"]
+script = ExtResource("1_ce812")
+level_id = "level.world"
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.81915206, 0.4262504, -0.38379753, 0, 0.66913056, 0.74314487, 0.57357645, -0.6087487, 0.54811966, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_mode = 1
+directional_shadow_max_distance = 120.0
+
+[node name="Streamer" type="Node" parent="."]
+script = ExtResource("2_757f0")
+
+[node name="Skyline" type="Node3D" parent="."]
+script = ExtResource("3_3d2a6")
+beacon_positions = PackedVector3Array(-255, 42.156, 750, 472, 43.876, 770)
+beacon_flags = PackedStringArray("world.kingsgate.lit", "world.shepherds_watch.lit")
+beacon_height_m = 500.0
+
+[node name="Chunks" type="Node3D" parent="."]
+
+[node name="Navigation" type="Node3D" parent="."]
+
+[node name="Bounds" type="StaticBody3D" parent="."]
+collision_layer = 32
+collision_mask = 0
+
+[node name="North" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 120, -897)
+shape = SubResource("BoxShape3D_2")
+
+[node name="West" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -897, 120, 0)
+shape = SubResource("BoxShape3D_3")
+
+[node name="East" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 897, 120, 0)
+shape = SubResource("BoxShape3D_4")
+
+[node name="South0" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -616.5, 120, 897)
+shape = SubResource("BoxShape3D_5")
+
+[node name="Notch1W" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -336, 120, 921)
+shape = SubResource("BoxShape3D_6")
+
+[node name="Notch1E" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -264, 120, 921)
+shape = SubResource("BoxShape3D_7")
+
+[node name="Notch1S" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -300, 120, 946)
+shape = SubResource("BoxShape3D_8")
+
+[node name="South1" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -163.5, 120, 897)
+shape = SubResource("BoxShape3D_9")
+
+[node name="Notch2W" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -63, 120, 919.5)
+shape = SubResource("BoxShape3D_10")
+
+[node name="Notch2E" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 120, 919.5)
+shape = SubResource("BoxShape3D_11")
+
+[node name="Notch2S" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 120, 943)
+shape = SubResource("BoxShape3D_12")
+
+[node name="South2" type="CollisionShape3D" parent="Bounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 440, 120, 897)
+shape = SubResource("BoxShape3D_13")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="Route" type="Node3D" parent="Markers"]
+
+[node name="WP01" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -200, 9.568, 360)
+
+[node name="WP02" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -210, 5.882, 280)
+
+[node name="WP03" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -250, 5.394, 220)
+
+[node name="WP04" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -345, 18.958, 216)
+
+[node name="WP05" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -295, 8.365, 300)
+
+[node name="WP06" type="Marker3D" parent="Markers/Route"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -280, 7.6, 360)
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+transform = Transform3D(0.9702957, 0, -0.2419219, 0, 1, 0, 0.2419219, 0, 0.9702957, -300, 46.3, 916)
+
+[node name="Spawned" type="Node3D" parent="."]
+
+[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("4_627ae")]
+transform = Transform3D(0.9702957, 0, -0.2419219, 0, 1, 0, 0.2419219, 0, 0.9702957, -300, 46.3, 916)
+collision_layer = 2
+collision_mask = 51
+script = ExtResource("5_7ef4a")
+
+[node name="EncounterDirector" type="Node" parent="."]
+script = ExtResource("6_b0840")
+
+[node name="DebrisPool" type="Node3D" parent="."]
+script = ExtResource("7_ce070")

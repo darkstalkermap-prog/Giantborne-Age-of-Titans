@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.causeway",
+	"type": "poi",
+	"display_name": "The Broken Causeway",
+	"level": "level.world",
+	"region": "region.drowned_steps",
+	"kind": "landmark",
+	"position_m": [22, 5.1, 66],
+	"radius_m": 45,
+	"xp": 20,
+	"map_icon": "landmark",
+	"compass": true,
+	"landmark": "world.drowned.causeway_stones",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The broken causeway from the south shore towards the island."
+}

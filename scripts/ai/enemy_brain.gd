@@ -189,6 +189,10 @@ func decide(tick: int, p_controller_state: int, my_position: Vector3, request_to
 	var seen: bool = perception.get("visible", false)
 	var target_pos: Vector3 = perception.get("position", last_known) if seen else last_known
 	var distance: float = perception.get("distance", INF) if seen else _flat_distance(my_position, last_known)
+	if _p32_decide(my_position, memory_ok, target_pos, release_token):
+		return   # P32: a siege crew serves its engine, or runs once it has none
+	if _p30_decide(my_position, memory_ok, target_alive, release_token):
+		return   # P30: a formation member holds its slot; an outmatched soldier joins a formation or flees
 	match state:
 		AIState.IDLE:
 			_stop()
@@ -257,7 +261,9 @@ func _decide_engaged(my_position: Vector3, target_pos: Vector3, distance: float,
 			face_point = target_pos
 			var attack_range := float(ai.get("attack_range_m", 1.2)) + float(perception.get("target_radius", 0.85))
 			var facing_ok := absf(float(perception.get("facing_deg", 180.0))) <= ATTACK_FACING_DEG
-			if distance <= attack_range:
+			if distance <= attack_range and _sight_blocked(seen):
+				_regain_sight(my_position, target_pos)   # M8 gate (F36): no waiting for a sight line
+			elif distance <= attack_range:
 				_stop_moving()
 				if seen and now >= strike_ready_tick and facing_ok:
 					if holds_token or request_token.call():
@@ -476,6 +482,7 @@ func _cache_attack_range(id: String) -> void:
 func apply_morale(delta: float, reason: String, tick: int = -1) -> void:
 	if ignores_morale or state == AIState.DEAD or delta == 0.0:
 		return
+	delta = _p30_morale_scale(delta, reason)   # P30: a living banner halves awe and ally-death losses
 	var t := tick if tick >= 0 else now
 	var before := morale
 	morale = clampf(morale + delta, 0.0, 100.0)
@@ -508,6 +515,8 @@ func on_morale_event(event: StringName, tick: int = -1) -> bool:
 	var key := String(event)
 	if not MORALE_EVENTS.has(key):
 		return false
+	if _p32_debounced(key, tick):
+		return true   # P32: a siege engine's fall costs a unit once per SIEGE_DEBOUNCE_S
 	apply_morale(float(MORALE_EVENTS[key]), key, tick)
 	return true
 
@@ -773,16 +782,50 @@ func _decide_flee(my_position: Vector3, target_pos: Vector3, distance: float, se
 		_no_leader_since = now
 	if _in_state_s() >= MIN_FLEE_S and morale > float(ai.get("regroup_morale", 45.0)) \
 			and (leader or not needs_leader):
+		if routs_when_outmatched():
+			_rout()   # M6 gate: a broken pack does not come back to a giant that outmatches it
+			return
+		if awed_at_tier and not _tier_awed_joins():
+			_rout()   # M9 gate: awed off by a giant it is no match for, it does not come back to him
+			return
 		flee_point = Vector3.INF
 		_set_state(AIState.APPROACH if aware else AIState.ALERT)
 		return
 	if needs_leader and not leader \
 			and now - _no_leader_since >= _ticks(float(ai.get("rout_after_s", 20.0))):
-		_set_state(AIState.ROUTED)
-		aware = false
-		if not _routed_emitted:
-			_routed_emitted = true
-			routed.emit()
+		_rout()
+
+
+## M9 gate: a unit an awe tier sent running (awed_at_tier) ends its flight in a formation's slot when one
+## takes it (P30's joining: outmatched soldiers join formations), else it routs - it does not walk back to
+## the giant it fled. Without this the Millford raiders, awed off a stage-4 giant on sight, regrouped
+## around their commander a few seconds later and went back to burning the hamlet among its folk, so the
+## fight moved between the houses and the giant's blows turned Millford against him (the gate's first
+## conqueror runs: Millford warned or hostile in all three, the raid never settled); and a lone soldier
+## of an encounter came back for one more flight instead of leaving it (its encounter cleared only by
+## killing him). True when a formation took it.
+func _tier_awed_joins() -> bool:
+	if not formation_joiner.is_valid() or not bool(formation_joiner.call()):
+		return false
+	return formation_id != ""
+
+
+## M6 gate (the Barrow's wardens at stage 3): true when this unit would regroup but the giant
+## outmatches it (is_outmatched) and its record has tactics.outmatched_rout - it routs instead.
+## Wolves have it: broken by a stage-2 or stage-3 giant's roar or its blows, a harassing pack ran
+## twelve metres, came back as soon as its morale recovered and broke again, for minutes, while the
+## giant could neither catch nor end it (the expert bot's crown stage ran out its 240 s watchdog).
+func routs_when_outmatched() -> bool:
+	return bool(tactics.get("outmatched_rout", false)) and is_outmatched()
+
+
+## FLEE -> ROUTED: out of the fight for good (routed emitted once).
+func _rout() -> void:
+	_set_state(AIState.ROUTED)
+	aware = false
+	if not _routed_emitted:
+		_routed_emitted = true
+		routed.emit()
 
 
 ## ROUTED: stay at the flee point, attack nothing, flee again when hit. Never regroups.
@@ -802,7 +845,10 @@ func _pick_flee_point(my_position: Vector3, threat: Vector3) -> Vector3:
 	_flee_blocked = false
 	var dist := float(ai.get("flee_distance_m", 12.0))
 	if flee_resolver.is_valid():
+		nav_search_pending = false
 		var p: Vector3 = flee_resolver.call(my_position, threat, dist)
+		if p == Vector3.INF and nav_search_pending:
+			return Vector3.INF   # M7 gate: the search waits for the budget; asked again next decision
 		# Nowhere reachable to run to (cornered): stand rather than run into a wall.
 		return p if p != Vector3.INF else my_position
 	var away := my_position - threat
@@ -866,6 +912,11 @@ var firing_point_release := Callable()
 ## action_ready(action_id: String) -> bool: its cooldown and costs allow it now (unset = always).
 var action_ready := Callable()
 
+## M7 polish: the band of a unit holding a post (EnemyActor's posts, P09 section: a tower's top it
+## spawned on, which its navmesh does not reach) - Vector2(0, its shot's reach), centre to centre;
+## ZERO = none. On its post a unit keeps the post as its firing point (no search), shoots at whatever
+## that band holds, and never kicks.
+var post_band := Vector2.ZERO
 ## True from a granted ranged token until the shot's recovery is over.
 var holds_ranged_token := false
 ## The firing point this unit holds (Vector3.INF = none).
@@ -883,6 +934,8 @@ var _ally_cast_ids: Array[String] = []
 ## The band (flat, centre to centre) this unit fights from: tactics preferred_min_m ..
 ## preferred_max_m, x OUTMATCHED_BAND_MULT when `outmatched`.
 func ranged_band(outmatched: bool = false) -> Vector2:
+	if post_band != Vector2.ZERO:
+		return post_band   # M7 polish: on a post, whatever its shot reaches
 	var b := Vector2(float(tactics.get("preferred_min_m", 0.0)), float(tactics.get("preferred_max_m", 0.0)))
 	return b * OUTMATCHED_BAND_MULT if outmatched else b
 
@@ -958,6 +1011,7 @@ func _release_ranged() -> void:
 func _drop_firing_point() -> void:
 	firing_point = Vector3.INF
 	_firing_tick = NO_TICK
+	_firing_retry_tick = NO_TICK
 	if firing_point_release.is_valid():
 		firing_point_release.call()
 
@@ -1031,7 +1085,7 @@ func _decide_ranged(my_position: Vector3, target_pos: Vector3, distance: float, 
 		_set_state(AIState.APPROACH)
 	if seen and now >= strike_ready_tick:
 		var edge := distance - float(perception.get("target_radius", 0.85))
-		var close := _close_attack_for(edge)
+		var close := _close_attack_for(edge) if post_band == Vector2.ZERO else ""   # M7 polish: no kick from a post
 		var facing_ok := absf(float(perception.get("facing_deg", 180.0))) <= ATTACK_FACING_DEG
 		if close != "" and facing_ok and _action_ready(close) and (holds_token or request_token.call()):
 			holds_token = true
@@ -1073,10 +1127,17 @@ func _keep_band(my_position: Vector3, target_pos: Vector3, distance: float, band
 			or (far and pd < (band.x + band.y) * 0.5)
 	if not repick and not bool(perception.get("visible", false)) and now - _firing_tick >= _ticks(FIRING_REPICK_S):
 		repick = true
+	if repick and firing_point == Vector3.INF and not _firing_blocked and _firing_retry_tick != NO_TICK \
+			and now < _firing_retry_tick:
+		repick = false   # M7 gate: the last search found nothing; hold until it may run again
+	if post_band != Vector2.ZERO and firing_point != Vector3.INF and not _firing_blocked:
+		repick = false   # M7 polish: a post is the one point it holds, whatever the target does
 	if repick:
 		firing_point = _pick_firing_point(my_position, target_pos, distance, band, spread, far)
 		_firing_tick = now
 		_firing_blocked = false
+		_firing_retry_tick = now + _ticks(FIRING_REPICK_S) if firing_point == Vector3.INF and not nav_search_pending \
+			else NO_TICK
 	var d := _flat_distance(my_position, firing_point) if firing_point != Vector3.INF else 0.0
 	if firing_point == Vector3.INF or d <= FIRING_ARRIVE_M:
 		_stop_moving()
@@ -1088,6 +1149,7 @@ func _keep_band(my_position: Vector3, target_pos: Vector3, distance: float, band
 func _pick_firing_point(my_position: Vector3, target_pos: Vector3, distance: float, band: Vector2,
 		spread: float, far: bool) -> Vector3:
 	if firing_point_resolver.is_valid():
+		nav_search_pending = false
 		return firing_point_resolver.call(my_position, target_pos, band, spread, far)
 	return ring_point(my_position, target_pos, distance, band, far)
 
@@ -1139,6 +1201,17 @@ func return_step(tick: int, home: Vector3) -> void:
 	move_target = home
 	move_speed = -1.0
 	face_point = Vector3.INF
+
+
+## M9 gate (lane review): one tick of a return that waits (EnemyActor's leash wait: its post taken or its way
+## lost outside its leash): it stands still, facing `face` (INF: as it stands), still ignoring targets.
+func return_hold(tick: int, face: Vector3) -> void:
+	now = tick
+	_forget_target()
+	if state != AIState.RETURN:
+		_set_state(AIState.RETURN)
+	_stop_moving()
+	face_point = face
 
 
 ## Home (or dead): stop; IDLE, so patrol resumes and the unit may engage again; DEAD when it
@@ -1404,8 +1477,11 @@ func _decide_sequence(my_position: Vector3, target_pos: Vector3, distance: float
 		move_target = target_pos + away * (radius + band.x + SEQUENCE_BAND_MARGIN_M)
 		move_speed = -1.0
 	else:
-		_stop_moving()
 		_entry_since = NO_TICK
+		if _sight_blocked(seen):
+			_regain_sight(my_position, target_pos)   # M8 gate (F36): no waiting for a sight line
+			return
+		_stop_moving()
 		var facing_ok := absf(float(perception.get("facing_deg", 180.0))) <= entry_facing_deg(id)
 		if seen and facing_ok and now >= strike_ready_tick and (holds_token or request_token.call()):
 			holds_token = true
@@ -1453,6 +1529,8 @@ func sequence_path_failed() -> bool:
 # Awe (decision 26): the first time a unit perceives a target at least tactics.awe_ratio times
 # its own height it loses tactics.awe_morale_loss morale, once per life (source "awe", applied as
 # given: never x1.5). A stage-3 giant (7.92 m) awes soldiers (1.8 m: 4.4 >= 4.0); stage 2 does not.
+# M9 gate: tactics.awe_tiers ([{"ratio", "morale_loss"}]) cost more before a larger target
+# (awe_loss_at): a soldier's tier at 6.0x makes it flee a stage-4 giant on sight (plan §5.14).
 
 ## A unit at peace stands within POST_ARRIVE_M of its post; it walks back once farther than
 ## POST_LEAVE_M (hysteresis, as HOLD's).
@@ -1469,6 +1547,8 @@ var faction_mode := ""
 var post_resolver := Callable()
 ## True once awe cost this unit morale (once per life).
 var awed := false
+## M9 gate: true when that awe was an awe tier's (awe_loss_at): its flight ends in a formation or a rout.
+var awed_at_tier := false
 var _post: Dictionary = {}
 var _post_tick := NO_TICK
 var _post_moving := false
@@ -1526,7 +1606,8 @@ func _p11b_perceive(tick: int, snapshot: Dictionary) -> bool:
 
 
 ## Awe: the first perception of a target at least tactics.awe_ratio times this unit's height
-## costs tactics.awe_morale_loss morale, once per life.
+## costs tactics.awe_morale_loss morale, once per life - or, M9 gate, the loss of the tactics.awe_tiers
+## entry with the largest ratio the target meets (awe_loss_at).
 func _check_awe(snapshot: Dictionary) -> void:
 	if awed or ignores_morale or state == AIState.DEAD:
 		return
@@ -1536,10 +1617,52 @@ func _check_awe(snapshot: Dictionary) -> void:
 		return
 	if not (snapshot.get("exists", false) and snapshot.get("alive", false) and snapshot.get("visible", false)):
 		return
-	if size_ratio() < ratio - 1e-6:
+	var r := size_ratio()
+	if r < ratio - 1e-6:
 		return
 	awed = true
-	on_morale_delta(-loss, "awe", now)
+	awed_at_tier = awe_tier_at(r) > 0.0
+	on_morale_delta(-awe_loss_at(r), "awe", now)
+
+
+## M9 gate: the ratio of the tactics.awe_tiers entry a target `ratio` times this unit's height meets (the
+## largest such), 0 when it meets none (the base awe).
+func awe_tier_at(ratio: float) -> float:
+	var best := 0.0
+	var tiers: Variant = tactics.get("awe_tiers", [])
+	if typeof(tiers) != TYPE_ARRAY:
+		return 0.0
+	for t: Variant in tiers:
+		if typeof(t) == TYPE_DICTIONARY:
+			var at := float((t as Dictionary).get("ratio", 0.0))
+			if at > 0.0 and ratio >= at - 1e-6 and at > best:
+				best = at
+	return best
+
+
+## M9 gate (plan M6-M9 §5.14: from stage 4 "single humans flee on sight (awe at 6.1x)"): the morale the
+## awe of a target `ratio` times this unit's height costs - tactics.awe_morale_loss, or the morale_loss
+## of the tactics.awe_tiers entry with the largest ratio the target meets. A lone soldier's 35 of its 70
+## left it above its flee threshold of 25 before a stage-4 giant (10.97 m: 6.1x), so it did not flee: P30's
+## outmatched rule routed it at once and for good, and a rout clears awareness, so the M9 confirmation's
+## share (the melee lone humans fled 0 % of their engaged time at stages 4-6) never counted it. Its tier at
+## 6.0x costs enough to send it into about 20 s of visible flight before the same rout (or a formation's slot);
+## lone-soldier non-flee time was unchanged by it (M9 gate (final), the final audit's F6). Below the first tier
+## (a stage-3 giant is 4.4x a soldier: the Valley) the base loss holds, so the Valley's stages 1-3 are as they were.
+func awe_loss_at(ratio: float) -> float:
+	var loss := float(tactics.get("awe_morale_loss", 0.0))
+	var best := -INF
+	var tiers: Variant = tactics.get("awe_tiers", [])
+	if typeof(tiers) != TYPE_ARRAY:
+		return loss
+	for t: Variant in tiers:
+		if typeof(t) != TYPE_DICTIONARY:
+			continue
+		var at := float((t as Dictionary).get("ratio", 0.0))
+		if at > 0.0 and ratio >= at - 1e-6 and at > best:
+			best = at
+			loss = float((t as Dictionary).get("morale_loss", loss))
+	return loss
 
 
 ## on_noise() at peace: a blow turns the unit toward the attacker; nothing makes it aware.
@@ -1597,3 +1720,408 @@ func _current_post(my_position: Vector3) -> Dictionary:
 	elif _post.is_empty():
 		_post = {"post": my_position, "face": Vector3.INF}
 	return _post
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor.
+
+## @anchor P22
+# --- ranged units keep to the camera's side; posts asked again (P22) -----------------------------
+# Plan M6-M9 §3.4 design 8 (the M5 off-camera share: 22-24 % of hits against a target under 20 %).
+# A ranged unit with tactics.front_arc_deg prefers firing points in front of the giant's camera
+# (the actor's resolver, EnemyActor.front_arc_firing_point). keep_front_arc() lets it give up a held
+# point that left the arc - at most every FRONT_ARC_REPICK_S, and only once the camera has turned
+# FRONT_ARC_REPICK_YAW_DEG since its last pick (so a point with no better place in the arc is not
+# searched again and again) - and prepare_ranged_shot() tells the actor whether a shot is drawn
+# from outside the camera's view (its windup then lasts tactics.off_camera_aim_s).
+
+const FRONT_ARC_REPICK_S := 3.0
+const FRONT_ARC_REPICK_YAW_DEG := 20.0
+
+## view_probe() -> {"yaw": the giant's camera yaw, "on_camera": this unit in its view} ({} = no
+## camera). The actor installs it (EnemyActor.camera_view); unset, nothing changes.
+var view_probe := Callable()
+## shot_preparer(shot_id: String, off_camera: bool) -> void: the actor readies the shot's windup
+## (EnemyActor.prepare_shot).
+var shot_preparer := Callable()
+var _arc_pick_tick := NO_TICK
+var _arc_pick_yaw := INF
+
+
+## True when `point`, seen from `target_pos`, lies within `arc_deg` / 2 of `cam_yaw`: the camera
+## looks over the target toward it, so it is on screen. Pure.
+static func in_front_arc(point: Vector3, target_pos: Vector3, cam_yaw: float, arc_deg: float) -> bool:
+	var d := point - target_pos
+	d.y = 0.0
+	if d.length_squared() < 1e-4:
+		return true
+	return absf(angle_difference(cam_yaw, TargetingRules.yaw_of(d))) <= deg_to_rad(arc_deg) * 0.5 + 1e-4
+
+
+## The giant's camera as the actor reports it ({} without one or without a probe).
+func camera_view() -> Dictionary:
+	var v: Variant = view_probe.call() if view_probe.is_valid() else {}
+	return v if typeof(v) == TYPE_DICTIONARY else {}
+
+
+## Before `shot_id` starts: the actor learns whether it is drawn from outside the camera's view.
+func prepare_ranged_shot(shot_id: String) -> void:
+	if shot_id == "" or not shot_preparer.is_valid():
+		return
+	var view := camera_view()
+	shot_preparer.call(shot_id, not view.is_empty() and not bool(view.get("on_camera", true)))
+
+
+## After decide() (ranged brains): a new firing point remembers the camera's yaw; a held point
+## outside the front arc is given up (the next decision picks again, in the arc when it can) - not
+## during a shot, at most every FRONT_ARC_REPICK_S, and only when the camera turned since the pick.
+## `before` is the firing point before decide().
+func keep_front_arc(before: Vector3) -> void:
+	var arc := float(tactics.get("front_arc_deg", 0.0))
+	if arc <= 0.0 or post_band != Vector2.ZERO:
+		return   # M7 polish: a unit on its post has no other point to go to
+	var view := camera_view()
+	if view.is_empty():
+		return
+	var yaw := float(view.get("yaw", 0.0))
+	if firing_point != before:
+		if firing_point != Vector3.INF:
+			_arc_pick_tick = now
+			_arc_pick_yaw = yaw
+		return
+	if firing_point == Vector3.INF or not (state in [AIState.APPROACH, AIState.RECOVER]):
+		return
+	if now - _arc_pick_tick < _ticks(FRONT_ARC_REPICK_S) or in_front_arc(firing_point, last_known, yaw, arc):
+		return
+	if _arc_pick_yaw != INF and absf(rad_to_deg(angle_difference(_arc_pick_yaw, yaw))) < FRONT_ARC_REPICK_YAW_DEG:
+		return
+	_drop_firing_point()
+	_arc_pick_tick = now
+	_arc_pick_yaw = yaw
+
+
+## Asks the post_resolver again at the next decision (a member at peace stepping back from a
+## fight, or back to its post: EnemyActor's P22 section).
+func refresh_post() -> void:
+	_post_tick = NO_TICK
+
+## @anchor P24b
+# --- searches that wait for the path-query budget (M7 gate) ----------------------------------------
+# In a streamed world a firing-point, flee or rout search spends NavQuery's per-tick budget a
+# candidate at a time (EnemyActor's P24b section). A resolver that stopped for the budget returns
+# Vector3.INF and sets nav_search_pending: the brain then waits where it stands and asks again at its
+# next decision, where the search resumes - a flight is not taken for "cornered" meanwhile. A firing
+# point search that found nothing (not pending) waits FIRING_REPICK_S before the next one (it used to
+# run again at every decision: 32-34 queries a tick for a target 200 m away).
+
+## True when the last resolver call (firing point, flee or rout point) stopped for this tick's
+## path-query budget: it resumes at the next decision.
+var nav_search_pending := false
+## The firing point search found nothing: no new one before this tick (NO_TICK = none waits).
+var _firing_retry_tick := NO_TICK
+
+## @anchor P30
+# --- formation members, the banner's morale, joining (P30) -----------------------------------------
+# Plan M6-M9 §2.10, decision 19. Hook lines: decide() (_p30_decide, after the flight check, before
+# the state machine) and apply_morale() (_p30_morale_scale). The actor (EnemyActor's P30 section)
+# installs the resolvers and calls join_formation / leave_formation; the Formation sets
+# formation_hold, formation_braced and banner_alive at every update.
+#   * A member of an intact formation holds the slot formation_slot_resolver gives - walking to it
+#     (running when it is more than 4 m away) with HOLD's hysteresis - facing the point
+#     formation_face_resolver gives, and never asks for an attack of its own: the formation braces
+#     through it. A member of a broken formation fights on its own (the rules above).
+#   * While its banner lives a member loses half the morale of awe and ally deaths; its leader is the
+#     banner (the actor's has_leader), so it regroups to its slot once its morale passes
+#     ai.regroup_morale.
+#   * An outmatched soldier (behaviour "formation") outside any formation asks formation_joiner every
+#     JOIN_RETRY_S while aware; when no formation takes it and the giant is of stage
+#     JOIN_OR_FLEE_STAGE or more (perception's target_stage), it flees and routs at once (plan
+#     §5.14: single humans flee a stage-4 giant on sight); smaller giants leave it P04's line.
+
+const BANNER_LOSS_MULT := 0.5
+## The morale losses a living banner halves (P11b's awe and P04's ally deaths).
+const BANNER_HALVED_SOURCES := ["ally_died", "awe"]
+const JOIN_RETRY_S := 0.5
+const JOIN_OR_FLEE_STAGE := 4
+
+## The formation this unit belongs to ("" = none), whether it holds (formed, advancing, braced)
+## and is braced, whether its banner lives, and whether this unit is that banner.
+var formation_id := ""
+var formation_hold := false
+var formation_braced := false
+var banner_alive := false
+var is_banner := false
+## formation_slot_resolver() -> Vector3: where this member stands (INF = none);
+var formation_slot_resolver := Callable()
+## formation_face_resolver() -> Vector3: the point it faces (the threat, else ahead; INF = keep);
+var formation_face_resolver := Callable()
+## formation_joiner() -> bool: an outmatched soldier joins a formation now (true when taken).
+var formation_joiner := Callable()
+var _p30_join_tick := NO_TICK
+var _p30_slot_moving := false
+
+
+## The actor puts this unit in formation `id` (as its banner when `banner`). `fresh` (it spawned
+## into it): its morale becomes `morale_start`; otherwise it keeps its morale and recovers toward
+## the higher of its own and the formation's.
+func join_formation(id: String, banner: bool, morale_start: float, fresh: bool, tick: int = -1) -> void:
+	if tick >= 0:
+		now = tick
+	formation_id = id
+	is_banner = banner
+	_leave_hold()
+	if fresh:
+		morale = morale_start
+		start_morale = morale_start
+	else:
+		start_morale = maxf(start_morale, morale_start)
+	_p30_slot_moving = true
+
+
+## Out of its formation (dissolved, or broken away for good): the rules above again.
+func leave_formation() -> void:
+	formation_id = ""
+	formation_hold = false
+	formation_braced = false
+	banner_alive = false
+	is_banner = false
+	if state == AIState.HOLD and not _hold_mode:
+		_set_state(AIState.APPROACH if aware else AIState.IDLE)
+
+
+## Flight and rout now (EnemyActor.p30_force_rout: tests, scripted routs).
+func force_rout(tick: int = -1) -> void:
+	if tick >= 0:
+		now = tick
+	if state == AIState.DEAD or ignores_morale:
+		return
+	holds_token = false
+	attack_request = ""
+	_begin_flee()
+	_rout()
+
+
+func _p30_morale_scale(delta: float, reason: String) -> float:
+	if delta < 0.0 and banner_alive and formation_id != "" and not is_banner and BANNER_HALVED_SOURCES.has(reason):
+		return delta * BANNER_LOSS_MULT
+	return delta
+
+
+## decide(): true when it handled the decision (see the section notes).
+func _p30_decide(my_position: Vector3, memory_ok: bool, target_alive: bool, release_token: Callable) -> bool:
+	if state in [AIState.FLEE, AIState.ROUTED, AIState.DEAD, AIState.STAGGERED, AIState.RETURN] or faction_mode != "":
+		return false
+	if formation_id != "":
+		if not formation_hold:
+			return false
+		_p30_hold_slot(my_position, release_token)
+		return true
+	if not aware or not memory_ok or not target_alive or outmatched_behavior() != "formation":
+		return false
+	if formation_joiner.is_valid() and (_p30_join_tick == NO_TICK or now - _p30_join_tick >= _ticks(JOIN_RETRY_S)):
+		_p30_join_tick = now
+		if bool(formation_joiner.call()) and formation_id != "":
+			_p30_hold_slot(my_position, release_token)
+			return true
+	if int(perception.get("target_stage", 0)) >= JOIN_OR_FLEE_STAGE and not ignores_morale and not is_banner:
+		_release(release_token)
+		_begin_flee()
+		_rout()
+		return true
+	return false
+
+
+## A formation member's decision: walk to its slot (run when far), face the formation's point, no
+## attacks of its own; state HOLD.
+func _p30_hold_slot(my_position: Vector3, release_token: Callable) -> void:
+	_release(release_token)
+	attack_request = ""
+	if _hold_mode:
+		_leave_hold()
+	var slot: Vector3 = formation_slot_resolver.call() if formation_slot_resolver.is_valid() else Vector3.INF
+	var to_slot := _flat_distance(my_position, slot) if slot != Vector3.INF else 0.0
+	if to_slot > HOLD_LEAVE_M:
+		_p30_slot_moving = true
+	if _p30_slot_moving and to_slot > HOLD_ARRIVE_M:
+		move_target = slot
+		move_speed = -1.0 if to_slot > 4.0 else 0.0
+	else:
+		_p30_slot_moving = false
+		_stop_moving()
+	face_point = formation_face_resolver.call() if formation_face_resolver.is_valid() else Vector3.INF
+	if state != AIState.HOLD:
+		_set_state(AIState.HOLD)
+
+## @anchor P32
+# --- siege crews and the siege morale debounce (P32) ---------------------------------------------
+# Plan M6-M9 §2.10, §3.16, §5.11, decision 21. Hook lines: decide() (_p32_decide, after the flight
+# check, before P30's) and on_morale_event() (_p32_debounced). The actor (EnemyActor's P32 section)
+# installs crew_slot_resolver and crew_face_resolver when an engine takes it (SiegeEngine.add_crew ->
+# EnemyActor.p32_assign_engine) and calls crew_engine_lost() when that engine breaks or a giant seizes
+# it.
+#   * The siege morale event ("siege_destroyed", -20) counts once per SIEGE_DEBOUNCE_S per unit: two
+#     engines breaking within 2 s cost a soldier 20 morale once.
+#   * A siege crew (tactics.outmatched_behavior "crew": the enemy schema ties it to the record's role
+#     "crew") serves its engine: it walks to its place beside it (running when that is more than 4 m
+#     away, with HOLD's hysteresis), faces the giant while it knows where it is (else the point
+#     crew_face_resolver gives: the engine's front) and asks for no attack and no token of its own -
+#     its engine asks it to haul (EnemyActor.p32_crew_reload). State HOLD. Its morale can still break
+#     (FLEE); regrouped, it walks back to its place.
+#   * Without an engine - its engine broke or a giant seized it, or none took it within CREW_WAIT_S
+#     of its first decision - it runs and routs: a crew without an engine is out of the fight.
+
+const SIEGE_EVENT := "siege_destroyed"
+const SIEGE_DEBOUNCE_S := 2.0
+const CREW_BEHAVIOR := "crew"
+## A crew member no engine took within this long after its first decision runs.
+const CREW_WAIT_S := 3.0
+## A crew member counts as at its place within this distance (the haul starts there).
+const CREW_AT_SLOT_M := 1.0
+
+## crew_slot_resolver() -> Vector3: the crew member's place beside its engine (INF = none);
+var crew_slot_resolver := Callable()
+## crew_face_resolver() -> Vector3: the point it faces while it does not know where the giant is
+## (INF = keep its facing);
+var crew_face_resolver := Callable()
+## crew_engine_check() -> bool: its engine is still there (false: it vanished - freed or out of the
+## tree - and the member runs as if it broke).
+var crew_engine_check := Callable()
+## True while an engine has it; crew_lost once that engine is gone (it routed).
+var crew_serving := false
+var crew_lost := false
+var _p32_siege_tick := NO_TICK
+var _p32_wait_since := NO_TICK
+var _p32_slot_moving := false
+
+
+## True for a siege crew member (see the section notes).
+func is_crew() -> bool:
+	return str(tactics.get("outmatched_behavior", "")) == CREW_BEHAVIOR
+
+
+## An engine took this crew member (the actor has installed the resolvers): it serves it.
+func crew_engine_assigned(tick: int = -1) -> void:
+	if tick >= 0:
+		now = tick
+	crew_serving = true
+	crew_lost = false
+	_p32_slot_moving = true
+	_p32_wait_since = NO_TICK
+
+
+## Its engine broke or a giant seized it: it gives up its place, runs and routs (once).
+func crew_engine_lost(tick: int = -1) -> void:
+	if tick >= 0:
+		now = tick
+	crew_serving = false
+	crew_lost = true
+	crew_slot_resolver = Callable()
+	crew_face_resolver = Callable()
+	crew_engine_check = Callable()
+	if state != AIState.ROUTED:
+		force_rout(now)
+
+
+## True while it stands at its place beside its engine (HOLD, within CREW_AT_SLOT_M; tests, the haul).
+func crew_at_slot(my_position: Vector3) -> bool:
+	if not crew_serving or state != AIState.HOLD or not crew_slot_resolver.is_valid():
+		return false
+	var slot: Vector3 = crew_slot_resolver.call()
+	return slot != Vector3.INF and _flat_distance(my_position, slot) <= CREW_AT_SLOT_M
+
+
+## on_morale_event(): true when this "siege_destroyed" falls within SIEGE_DEBOUNCE_S of the last one
+## that counted (it costs nothing).
+func _p32_debounced(key: String, tick: int) -> bool:
+	if key != SIEGE_EVENT:
+		return false
+	var t := tick if tick >= 0 else now
+	if _p32_siege_tick != NO_TICK and t - _p32_siege_tick < _ticks(SIEGE_DEBOUNCE_S):
+		return true
+	_p32_siege_tick = t
+	return false
+
+
+## decide(): true when it handled the decision (a crew member that is neither fleeing, routed,
+## staggered, returning home nor at peace).
+func _p32_decide(my_position: Vector3, memory_ok: bool, target_pos: Vector3, release_token: Callable) -> bool:
+	if not is_crew() or faction_mode != "" \
+			or state in [AIState.FLEE, AIState.ROUTED, AIState.DEAD, AIState.STAGGERED, AIState.RETURN]:
+		return false
+	_release(release_token)
+	attack_request = ""
+	var threat := target_pos if aware and memory_ok else Vector3.INF
+	if crew_serving and crew_engine_check.is_valid() and not bool(crew_engine_check.call()):
+		crew_engine_lost(now)   # its engine vanished (freed, or out of the tree): out of the fight
+		return true
+	if not crew_serving:
+		if _p32_wait_since == NO_TICK:
+			_p32_wait_since = now
+		if crew_lost or now - _p32_wait_since >= _ticks(CREW_WAIT_S):
+			crew_engine_lost(now)
+			return true
+		_stop_moving()
+		face_point = threat
+		if state != AIState.HOLD:
+			_set_state(AIState.HOLD)
+		return true
+	var slot: Vector3 = crew_slot_resolver.call() if crew_slot_resolver.is_valid() else Vector3.INF
+	var to_slot := _flat_distance(my_position, slot) if slot != Vector3.INF else 0.0
+	if to_slot > HOLD_LEAVE_M:
+		_p32_slot_moving = true
+	if _p32_slot_moving and to_slot > HOLD_ARRIVE_M:
+		move_target = slot
+		move_speed = -1.0 if to_slot > 4.0 else 0.0
+	else:
+		_p32_slot_moving = false
+		_stop_moving()
+	face_point = threat if threat != Vector3.INF \
+		else (crew_face_resolver.call() if crew_face_resolver.is_valid() else Vector3.INF)
+	if state != AIState.HOLD:
+		_set_state(AIState.HOLD)
+	return true
+
+## @anchor P34
+# --- in reach but out of sight (M8 gate F36) -------------------------------------------------------
+# A brain whose target stands inside its reach (the melee approach's attack range, a sequence entry's
+# band) used to stop there and strike only once it could see the target. With something between its
+# eye and the target - a scenery trunk in the Troll Den, a pillar, a stone of the Moot - that never came
+# while blows kept its memory fresh: the Troll Matriarch stood still for a minute while the giant hit
+# her. Now, only in that case (perception "occluded": in sight range and in the view cone, the sight
+# line blocked), the brain walks round the target at its distance, the way reposition_sign says, and
+# turns back after SIGHT_SWEEP_S without sight; the moment it sees the target it stops and strikes as
+# before. A target out of the cone or out of range is not "occluded" (the brain turns to it, as ever).
+
+## Seconds a search for sight goes one way round before it tries the other.
+const SIGHT_SWEEP_S := 2.5
+## How far round the target (radians, at the brain's distance) the search's walk goal lies.
+const SIGHT_STEP_RAD := 0.6
+## A search that was not stepped for this long is a new one.
+const SIGHT_SEARCH_GAP_S := 0.5
+
+var _sight_search_tick := NO_TICK
+var _sight_step_tick := NO_TICK
+
+
+## True when the target is in sight range and in the view cone but hidden (perception "occluded") and
+## `seen` is false.
+func _sight_blocked(seen: bool) -> bool:
+	return not seen and bool(perception.get("occluded", false))
+
+
+## One step of the search for sight: a walk goal round `target_pos` at the current distance.
+func _regain_sight(my_position: Vector3, target_pos: Vector3) -> void:
+	if _sight_search_tick == NO_TICK or now - _sight_step_tick > _ticks(SIGHT_SEARCH_GAP_S):
+		_sight_search_tick = now
+	elif now - _sight_search_tick >= _ticks(SIGHT_SWEEP_S):
+		_sight_search_tick = now
+		reposition_sign = -reposition_sign   # still hidden: the other way round
+	_sight_step_tick = now
+	var offset := my_position - target_pos
+	offset.y = 0.0
+	if offset.length() < 0.1:
+		offset = Vector3.FORWARD
+	move_target = target_pos + offset.rotated(Vector3.UP, SIGHT_STEP_RAD * reposition_sign)
+	move_speed = 0.0   # walk
+
+## @anchor P37

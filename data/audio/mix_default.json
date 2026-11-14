@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"id": "audio_mix.default",
+	"type": "audio_mix",
+	"display_name": "Default mix",
+	"description": "P19: the mix of plan M6-M9 section 4.4 - bus levels, the voice pool (16 3D voices and 8 starts a frame on the web, where every sample play copies its buffer), the audibility classes (unit / max distance, scaled with the player's height / 3.6576, the threat class by its square root, the giant's own sounds by its own height), ducking, the material, voice, step and surface maps of every existing prop, enemy, NPC and district, the music's threat-weighted intensity, the threat sting's suppression and the footfall cruise rule. M6 gate: the threat alerts (the sting and the aim lock) are their own class, \"alert\": full level out to the far threshold (unit 20 m, far_m, scaled like it) and held there beyond by a level floor (floor_db 0: distance takes nothing off them; their position still pans them), so an off-camera or far threat is heard over the combat layer at every stage instead of 20-30 dB under it. P21: the effect banks fill every class, material, voice, step and surface; the Valley's surfaces add \"water\": \"wet\" - footfalls within reach of the river's water (its Water planes; the router's wet-ground rule) sound wet. P28: the world's surfaces by region (the fallback under the chunks' own surface cells and the region records' surface: the Drowned Steps wet, the Stonehold hard, the rest soft). The voices of the M7-M9 creatures (troll, dire wolf, cavalry horse, rival giants, the bosses) come from their records' archetypes in the router until their records exist: a voice key must name a record. P32: the cavalry (horse voice, hoof steps), the siege crew (human) and the two siege engines (wood). P34: the trolls (troll; the Matriarch matriarch), dire wolves, rival giants and Harrok (giant), Corvane and his iron guard (human), and their steps (heavy, paw, human). P35: the sunken bell (iron), the brazier and the den's back wall (stone), the bonfire and the brood nest (wood), Sedge (an elder's voice) and Wenna the ferrywoman (human), both on human steps. M9 gate: the combat radius of the music's intensity (35 m x the distance scale) is capped at combat_cap_m (40 m, the lesser enemies' unscaled radius) for a giant at least combat_cap_min_height_m tall (10 m: stages 4-6), so a formation or a crew holding 40-120 m off while the giant fights lone humans raises danger, not combat (plan M6-M9 section 6.4: the music in combat under 25 % of the stage 4-6 time among only lesser enemies; the Valley's stages 1-3 keep the scaled radius).",
+	"bus_db": {
+		"Music": -9,
+		"Ambience": -12,
+		"SFX": -6,
+		"UI": -10
+	},
+	"pool": {
+		"voices_3d": 24,
+		"web_voices_3d": 16,
+		"spot_voices": 2,
+		"voices_2d": 8,
+		"starts_per_frame": 16,
+		"web_starts_per_frame": 8,
+		"min_level_db": -45,
+		"register_ms_per_frame": 12
+	},
+	"classes": {
+		"player": {
+			"unit_m": 6,
+			"max_m": 60,
+			"scaled": "own"
+		},
+		"human_step": {
+			"unit_m": 2,
+			"max_m": 15,
+			"scaled": true
+		},
+		"human": {
+			"unit_m": 4,
+			"max_m": 30,
+			"scaled": true
+		},
+		"impact": {
+			"unit_m": 5,
+			"max_m": 40,
+			"scaled": true
+		},
+		"wolf": {
+			"unit_m": 3,
+			"max_m": 22,
+			"scaled": true
+		},
+		"big": {
+			"unit_m": 8,
+			"max_m": 60,
+			"scaled": true
+		},
+		"giant": {
+			"unit_m": 15,
+			"max_m": 110,
+			"scaled": true
+		},
+		"boss": {
+			"unit_m": 30,
+			"max_m": 220,
+			"scaled": true
+		},
+		"threat": {
+			"unit_m": 8,
+			"max_m": 80,
+			"scaled": "sqrt"
+		},
+		"alert": {
+			"unit_m": 20,
+			"max_m": 200,
+			"scaled": true,
+			"floor_db": 0
+		},
+		"spot": {
+			"unit_m": 10,
+			"max_m": 74,
+			"scaled": true
+		}
+	},
+	"duck": {
+		"stinger": {
+			"Music": -8
+		},
+		"dialogue": {
+			"Music": -6,
+			"Ambience": -10
+		},
+		"pause": {
+			"Music": -10
+		},
+		"boss": {
+			"Ambience": -6
+		},
+		"combat": {
+			"Ambience": -4
+		}
+	},
+	"materials": {
+		"prop.ancient_oak": "wood",
+		"prop.banner": "cloth",
+		"prop.barley_sheaf": "foliage",
+		"prop.bell": "iron",
+		"prop.bonfire": "wood",
+		"prop.brazier": "stone",
+		"prop.brood_nest": "wood",
+		"prop.bush": "foliage",
+		"prop.cairn": "stone",
+		"prop.cart_barricade": "wood",
+		"prop.crate": "wood",
+		"prop.deadfall": "wood",
+		"prop.den_back_wall": "stone",
+		"prop.fence_wood": "wood",
+		"prop.gate_fort_aldmere": "wood",
+		"prop.gate_fortified": "stone",
+		"prop.gate_practice": "wood",
+		"prop.gate_toll": "wood",
+		"prop.gatehouse_brannock": "stone",
+		"prop.great_pine": "wood",
+		"prop.house_town": "wood",
+		"prop.kings_door": "stone",
+		"prop.longhouse_skarn": "wood",
+		"prop.millrace_dam": "stone",
+		"prop.palisade_trample": "wood",
+		"prop.practice_dummy": "wood",
+		"prop.rockfall": "stone",
+		"prop.siege_ballista": "wood",
+		"prop.siege_catapult": "wood",
+		"prop.titan_tree": "wood",
+		"prop.toppled_statue": "stone",
+		"prop.tree_small": "wood"
+	},
+	"voices": {
+		"enemy.archer": "human",
+		"enemy.bannerman": "human",
+		"enemy.cavalry": "horse",
+		"enemy.corvane": "human",
+		"enemy.dire_wolf": "dire_wolf",
+		"enemy.harrok": "giant",
+		"enemy.iron_guard": "human",
+		"enemy.mage": "human",
+		"enemy.ogre": "ogre",
+		"enemy.ogre_king": "ogre_king",
+		"enemy.pikeman": "human",
+		"enemy.rival_giant": "giant",
+		"enemy.shieldman": "human",
+		"enemy.siege_crew": "human",
+		"enemy.soldier": "human",
+		"enemy.sparring_post": "none",
+		"enemy.troll": "troll",
+		"enemy.troll_matriarch": "matriarch",
+		"enemy.troll_whelp": "troll",
+		"enemy.wolf": "wolf",
+		"npc.deserter": "human",
+		"npc.edda": "elder",
+		"npc.elder": "elder",
+		"npc.ferrywoman": "human",
+		"npc.herald": "human",
+		"npc.reeve_tamsin": "human",
+		"npc.sedge": "elder",
+		"npc.toll_captain": "human",
+		"npc.villager": "human"
+	},
+	"steps": {
+		"enemy.archer": "human",
+		"enemy.bannerman": "human",
+		"enemy.cavalry": "hoof",
+		"enemy.corvane": "human",
+		"enemy.dire_wolf": "paw",
+		"enemy.harrok": "heavy",
+		"enemy.iron_guard": "human",
+		"enemy.mage": "human",
+		"enemy.ogre": "heavy",
+		"enemy.ogre_king": "heavy",
+		"enemy.pikeman": "human",
+		"enemy.rival_giant": "heavy",
+		"enemy.shieldman": "human",
+		"enemy.siege_crew": "human",
+		"enemy.soldier": "human",
+		"enemy.sparring_post": "human",
+		"enemy.troll": "heavy",
+		"enemy.troll_matriarch": "heavy",
+		"enemy.troll_whelp": "heavy",
+		"enemy.wolf": "paw",
+		"npc.deserter": "human",
+		"npc.edda": "human",
+		"npc.elder": "human",
+		"npc.ferrywoman": "human",
+		"npc.herald": "human",
+		"npc.reeve_tamsin": "human",
+		"npc.sedge": "human",
+		"npc.toll_captain": "human",
+		"npc.villager": "human"
+	},
+	"surfaces": {
+		"level.valley": {
+			"hollow": "soft",
+			"forest": "soft",
+			"barrow": "hard",
+			"village": "soft",
+			"quarry": "hard",
+			"ruins": "hard",
+			"kingsfall": "hard",
+			"water": "wet"
+		},
+		"level.world": {
+			"region.crownmarch": "soft",
+			"region.greywood": "soft",
+			"region.drowned_steps": "wet",
+			"region.aldmere": "soft",
+			"region.stonehold": "hard"
+		},
+		"sandbox": {}
+	},
+	"intensity": {
+		"combat_radius_m": 35,
+		"combat_cap_m": 40,
+		"combat_cap_min_height_m": 10,
+		"danger_radius_m": 70,
+		"danger_cap_m": 150,
+		"lesser_danger_m": 40,
+		"lesser_height_ratio": 0.3,
+		"combat_hold_s": 6,
+		"danger_hold_s": 8,
+		"hit_recent_s": 5,
+		"telegraph_recent_s": 3,
+		"poll_s": 0.25
+	},
+	"sting": {
+		"min_damage_fraction": 0.03,
+		"skip_at_poise_floor": true
+	},
+	"footfall": {
+		"cruise_after_s": 10,
+		"cruise_duck_db": -5,
+		"stop_gap_s": 0.9
+	},
+	"threat": {
+		"offscreen_fov_factor": 0.55,
+		"far_m": 20,
+		"windup_near_m": 15,
+		"alert_radius_m": 70,
+		"alert_gap_s": 4,
+		"flee_gap_s": 2,
+		"wall_merge_s": 0.5,
+		"denied_gap_s": 0.5
+	}
+}

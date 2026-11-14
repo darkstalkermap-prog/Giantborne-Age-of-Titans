@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.aldmere_shrine",
+	"type": "poi",
+	"display_name": "Aldmere Shrine",
+	"level": "level.world",
+	"region": "region.aldmere",
+	"kind": "shrine",
+	"position_m": [420, 41.7, -40],
+	"radius_m": 30,
+	"xp": 0,
+	"map_icon": "shrine",
+	"compass": true,
+	"landmark": "world.shrine.aldmere",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "A shrine by the road to Aldmere."
+}

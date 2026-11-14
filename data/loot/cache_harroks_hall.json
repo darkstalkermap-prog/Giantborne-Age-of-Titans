@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "loot.cache_harroks_hall",
+	"type": "loot_table",
+	"display_name": "Clan stores",
+	"description": "P25 (plan M6-M9 §5.4, §5.8): the cache at poi.harroks_hall - 2 wood scrap, once (the cache's world id pays once).",
+	"rolls": 0,
+	"entries": [],
+	"guaranteed": [
+		{"item": "item.wood_scrap", "count": 2}
+	]
+}

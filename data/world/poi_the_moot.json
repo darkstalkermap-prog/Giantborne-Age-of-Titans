@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.the_moot",
+	"type": "poi",
+	"display_name": "The Moot",
+	"level": "level.world",
+	"region": "region.stonehold",
+	"kind": "boss",
+	"position_m": [0, 95.0, -740],
+	"radius_m": 80,
+	"xp": 60,
+	"map_icon": "boss",
+	"compass": true,
+	"landmark": "world.stonehold.moot_ring",
+	"skyline": true,
+	"min_stage": 6,
+	"reveals_m": 0,
+	"note": "The ring of giant stones where the clans meet; its gate stones admit only a giant of the old height."
+}

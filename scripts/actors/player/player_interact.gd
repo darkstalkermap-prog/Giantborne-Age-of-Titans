@@ -78,7 +78,7 @@ func refresh() -> void:
 			continue
 		if dist >= CLOSE_M and fwd.dot(to / maxf(dist, 1e-6)) < FRONT_DOT:
 			continue
-		_consider({"priority": it.priority, "prompt": it.prompt_text(player), "distance": dist,
+		_consider({"priority": it.priority_for(player), "prompt": it.prompt_text(player), "distance": dist,
 			"id": it.interact_id, "node": it})
 	for c: PlayerComponent in player.components():
 		var cand := c.interact_candidate()
@@ -112,6 +112,12 @@ func use_candidate(cand: Dictionary) -> void:
 			return
 		var it := node as Interactable
 		if it == null:
+			return
+		# P26: an interactable above the giant's stage (a ledge) refuses with its stage reason.
+		var too_small := it.stage_reason(player.growth_stage)
+		if too_small != "":
+			Events.hud_message.emit(too_small, "warn")
+			Events.size_gate_blocked.emit(Sim.tick, it.interact_id, it.requires_stage, too_small)
 			return
 		if not it.can_interact(player):
 			var reason := it.blocked_reason(player)

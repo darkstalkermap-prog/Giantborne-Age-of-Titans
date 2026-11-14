@@ -36,6 +36,13 @@ const SCENERY_GROUPS := ["scenery", "valley_scenery"]
 const MSAA_MODES := {0: Viewport.MSAA_DISABLED, 2: Viewport.MSAA_2X, 4: Viewport.MSAA_4X, 8: Viewport.MSAA_8X}
 ## The quality the web build runs when the record's web_overrides name none.
 const WEB_QUALITY := "low"
+## Level-wide nodes later packages own, created at run time so no builder needs them (P20, plan
+## M6-M9 §2.6): [node name, script path, the level ids it serves]. _ready makes each one whose
+## script exists for this level (a missing script is skipped silently), as a child of this root.
+const RUNTIME_NODES := [
+	["Discovery", "res://scripts/world/discovery.gd", ["level.valley", "level.world"]],   # P27
+	["WanderDirector", "res://scripts/world/wander_director.gd", ["level.world"]],         # P37
+]
 
 ## The id of this level's `level` record (budget, AI LOD, districts, start checkpoint).
 @export var level_id := "level.valley"
@@ -64,6 +71,7 @@ func _ready() -> void:
 	apply_graphics()
 	if not Settings.changed.is_connected(_on_settings_changed):
 		Settings.changed.connect(_on_settings_changed)
+	create_runtime_nodes()
 
 
 func _exit_tree() -> void:
@@ -74,6 +82,43 @@ func _exit_tree() -> void:
 func level_record() -> Dictionary:
 	var rec := GameData.get_record(level_id)
 	return rec if str(rec.get("type", "")) == "level" else {}
+
+
+## This level's world index (P20, plan M6-M9 §2.6): positions, display names and arrival limits
+## of its checkpoints, markers, areas, POIs, exits, encounters and quest props, also for nodes that
+## are not loaded. null when the level has none (WorldIndex.for_level; cached).
+func index() -> WorldIndex:
+	return WorldIndex.for_level(level_id)
+
+
+## The navigation layer the player uses here when its growth profile's layer is not baked in this
+## level: the record's player_nav_fallback (P20 declares it; the Valley's 4 comes with P26, the
+## world's 16 with P25); 0 when the record has none.
+func player_nav_fallback() -> int:
+	return int(level_record().get("player_nav_fallback", 0))
+
+
+## Makes the RUNTIME_NODES (or `entries`, tests) this level serves whose scripts exist (once: a
+## node of that name already below this root is kept). Returns the nodes made now.
+func create_runtime_nodes(entries: Array = RUNTIME_NODES) -> Array[Node]:
+	var made: Array[Node] = []
+	for entry: Array in entries:
+		var node_name := str(entry[0])
+		var path := str(entry[1])
+		var levels: Array = entry[2]
+		if not levels.has(level_id) or has_node(NodePath(node_name)) or not ResourceLoader.exists(path):
+			continue
+		var script := load(path) as Script
+		if script == null:
+			continue
+		var n: Variant = script.new()
+		if not (n is Node):
+			push_warning("LevelRoot: runtime node %s (%s) is not a Node" % [node_name, path])
+			continue
+		(n as Node).name = node_name
+		add_child(n as Node)
+		made.append(n as Node)
+	return made
 
 
 ## Re-reads the groups (called at _ready and when a lookup misses).
@@ -175,8 +220,12 @@ func player() -> GiantPlayer:
 	return fallback
 
 
-## The navigation map of this level's world (an invalid RID outside the tree).
-func nav_map() -> RID:
+## The navigation map of nav layer `layer` (0 = the human layer's): here the world's default map for
+## every layer (an invalid RID outside the tree). A streamed world keeps one map per layer
+## (WorldRoot, P24b; NavQuery and the actors ask through it).
+func nav_map(layer := 0) -> RID:
+	if layer < 0:
+		return RID()
 	return get_world_3d().navigation_map if is_inside_tree() else RID()
 
 
@@ -297,6 +346,7 @@ func apply_graphics() -> Dictionary:
 			# The director's tier-0 radius: beyond it members run the reduced tier-1 rates.
 			d.near_m = minf(float(tier1), d.mid_m)
 			out["ai_tier1_m"] = d.near_m
+	_p24a_apply_view(preset, out)   # P24a: camera_far_m and terrain_visibility_end_m (anchor P24a)
 	applied_graphics = out
 	return out
 
@@ -336,3 +386,112 @@ func _restore_msaa() -> void:
 	if vp != null:
 		vp.msaa_3d = _msaa_before as Viewport.MSAA
 	_msaa_before = -1
+
+
+# --------------------------------------------------------------------------- package anchors (M6-M9)
+# Written by P20 (plan M6-M9 §1.5): a package adds its code directly below its own anchor
+# (P24a: streaming hooks of WorldRoot's base; P24b: nav_map(layer), nav_layers(), NavQuery
+# settings; P25: regions; P27: discovery and map lookups).
+
+## @anchor P24a
+# --- view distances (P24a, plan M6-M9 §2.7, decision 12) ------------------------------------------
+# A render preset may name camera_far_m (the camera's far plane: 2,400 m in the world, so the fog
+# and the skyline can show the world to its edge; DEFAULT_CAMERA_FAR_M, today's 800 m, when absent)
+# and terrain_visibility_end_m (a streamed chunk's terrain beyond it from the camera is not drawn;
+# the skyline shows instead). apply_graphics() applies both with the rest of the preset: the far
+# plane to the player's CameraRig (which also asks camera_far_m() when it is set up), the
+# visibility range to every terrain mesh below this root (TERRAIN_GROUP; WorldRoot passes it on to
+# the chunks its streamer makes later).
+
+const DEFAULT_CAMERA_FAR_M := 800.0
+const TERRAIN_GROUP := "world_terrain"
+
+
+## The camera far plane of the render preset in effect (camera_far_m), else DEFAULT_CAMERA_FAR_M.
+func camera_far_m() -> float:
+	var v: Variant = render_preset(graphics_quality()).get("camera_far_m")
+	return float(v) if SchemaUtil.is_number(v) and float(v) > 0.0 else DEFAULT_CAMERA_FAR_M
+
+
+## terrain_visibility_end_m of the render preset in effect (0 = no limit).
+func terrain_visibility_end_m() -> float:
+	var v: Variant = render_preset(graphics_quality()).get("terrain_visibility_end_m")
+	return maxf(float(v), 0.0) if SchemaUtil.is_number(v) else 0.0
+
+
+## The terrain meshes below this root (TERRAIN_GROUP).
+func terrain_nodes() -> Array[GeometryInstance3D]:
+	var out: Array[GeometryInstance3D] = []
+	if not is_inside_tree():
+		return out
+	for n in get_tree().get_nodes_in_group(TERRAIN_GROUP):
+		var g := n as GeometryInstance3D
+		if g != null and _owns(g):
+			out.append(g)
+	return out
+
+
+func _p24a_apply_view(preset: Dictionary, out: Dictionary) -> void:
+	var far := camera_far_m()
+	var p := player()
+	if p != null and p.camera_rig != null and p.camera_rig.camera != null:
+		p.camera_rig.set_far_plane(far)
+	out["camera_far_m"] = far
+	if SchemaUtil.is_number(preset.get("terrain_visibility_end_m")):
+		var end := terrain_visibility_end_m()
+		for g in terrain_nodes():
+			g.visibility_range_end = end
+		out["terrain_visibility_end_m"] = end
+
+## @anchor P24b
+# --- navigation by layer (P24b, plan M6-M9 §2.8, decision 13) -------------------------------------
+# nav_map(layer) (above: the default map for every layer here; WorldRoot's own map per layer),
+# nav_layers() (the layers this level has navigation for), nav_layer_for(layers) (the layer a giant
+# whose growth profile names `layers` uses here: its own when the level has it, else the record's
+# player_nav_fallback) and nav_query_settings() (the record's nav_query block: NavQuery's parameters,
+# the repath throttle and the per-tick query budget; {} keeps today's queries, so the Valley's paths
+# do not change).
+
+## The single nav layer bits this level has navigation for, ascending: the layers of its
+## Navigation regions here ([1, 2, 4, 8] in the Valley); a streamed world's world.nav_layers.
+func nav_layers() -> PackedInt32Array:
+	var bits := 0
+	var nav := get_node_or_null("Navigation")
+	if nav != null:
+		for r in nav.find_children("*", "NavigationRegion3D", true, false):
+			bits |= int((r as NavigationRegion3D).navigation_layers)
+	var out := PackedInt32Array()
+	var bit := 1
+	while bit <= bits and bit > 0:
+		if (bits & bit) != 0:
+			out.append(bit)
+		bit <<= 1
+	return out
+
+
+## The layer a giant whose growth profile names `layers` paths on here: the lowest of `layers` the
+## level has (nav_layers()), else the record's player_nav_fallback (the Valley's 4 for stages 4-6
+## from P26, the world's 16 for stage 3), else `layers` unchanged.
+func nav_layer_for(layers: int) -> int:
+	for bit in nav_layers():
+		if (layers & bit) != 0:
+			return bit
+	var fallback := player_nav_fallback()
+	return fallback if fallback > 0 else layers
+
+
+## The record's nav_query block ({} when it has none: NavQuery then uses map_get_path's parameters,
+## and actors keep today's re-path rule).
+func nav_query_settings() -> Dictionary:
+	var q: Variant = level_record().get("nav_query")
+	return (q as Dictionary).duplicate() if typeof(q) == TYPE_DICTIONARY else {}
+
+## @anchor P25
+
+## @anchor P27
+# --- discovery and the map (P27, plan M6-M9 §3.10) ------------------------------------------------
+# The level's Discovery runtime node (RUNTIME_NODES) and what the map screen draws of this level.
+
+## The level's Discovery node (null where the level has none: the sandbox, test levels).
+func discovery() -> Discovery:
+	return get_node_or_null("Discovery") as Discovery

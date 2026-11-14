@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "encounter.stonehold_moot",
+	"type": "encounter",
+	"display_name": "Harrok the Unbowed",
+	"description": "P36 (plan M6-M9 §5.7 the champion stage, §5.13 boss 3): Harrok the Unbowed in the Moot's ring (an arena boss: world.stonehold.moot_arena, MootArena). Faction harrok_clan; he holds his ground at peace (stand_down_when) until the giant steps into the ring (world.area.moot_engage) - then the honour duel - and for good after the talk ending (boss.harrok.outcome yielded_talk). Once his outcome is settled he no longer comes to the ring.",
+	"level": "level.world",
+	"center_m": [0, 95.0, -745],
+	"activate_radius_m": 150,
+	"deactivate_radius_m": 240,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": ["boss.harrok.outcome"],
+	"counts_toward_budget": true,
+	"arena": true,
+	"stand_down_when": {"type": "any", "of": [{"type": "not", "of": {"type": "entered", "area": "world.area.moot_engage"}}, {"type": "flag", "flag": "boss.harrok.outcome", "equals": "yielded_talk"}]},
+	"spawns": [
+		{"entity_id": "world.stonehold.harrok", "definition": "enemy.harrok", "position_m": [0, 95.0, -772], "yaw_deg": 140, "patrol": "", "faction": "harrok_clan", "commander": false, "ai_enabled": true, "persist_death": true, "loot_table": ""}
+	]
+}

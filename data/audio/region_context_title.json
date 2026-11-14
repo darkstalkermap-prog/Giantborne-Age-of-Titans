@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.context_title",
+	"display_name": "The title screen",
+	"description": "P23: the title screen: the theme on the horn choir.",
+	"level": "",
+	"districts": [],
+	"regions": [],
+	"pois": [],
+	"context": "title",
+	"boss": "",
+	"music": "music.title",
+	"ambience": "",
+	"priority": 0
+}

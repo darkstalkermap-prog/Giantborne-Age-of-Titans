@@ -26,8 +26,14 @@ const NOT_WALKABLE_MARKERS := ["valley.marker.cairn"]
 ## Targets behind the barricade (the bridge and everything east of the river) or the Deadfall.
 const BEHIND_BARRICADE := ["valley.marker.bridge", "valley.marker.practice_gate", "valley.marker.ruins_courtyard",
 	"valley.marker.causeway", "valley.marker.kingsfall_shrine", "valley.marker.arena_center",
-	"valley.marker.kingsfall_oak", "valley.cp.ruins_gate", "valley.shrine.kingsfall"]
-const BEHIND_DEADFALL := ["valley.marker.crown", "valley.cp.barrow_gap"]
+	"valley.marker.kingsfall_oak", "valley.cp.ruins_gate", "valley.shrine.kingsfall",
+	"valley.marker.citadel_gate"]
+## P26 (plan M6-M9 §5.6): the Kings' Door's waystone and approach and the vault's rockfall are in the
+## Barrow, behind the deadfall; the Citadel's hall and stair waystone are behind the Citadel Gate,
+## which is no link prop: a giant path reaches them once the gate is breached.
+const BEHIND_DEADFALL := ["valley.marker.crown", "valley.cp.barrow_gap", "valley.cp.kings_door",
+	"valley.marker.kings_door", "valley.marker.vault"]
+const BEHIND_CITADEL_GATE := ["valley.cp.citadel_stair", "valley.marker.citadel_hall"]
 
 var level: LevelRoot
 var bakes := 0
@@ -52,6 +58,7 @@ func _on_bake_finished() -> void:
 # --------------------------------------------------------------------------- load and structure
 
 func test_loads_fast_with_offline_navigation() -> void:
+	var load_start := BudgetRule.load_average()   # M9 gate (final): the shared load rule (tests/support/budget_rule.gd)
 	var t0 := Time.get_ticks_usec()
 	var packed := load(ValleyProbe.VALLEY) as PackedScene
 	var lv := packed.instantiate() as LevelRoot
@@ -71,7 +78,7 @@ func test_loads_fast_with_offline_navigation() -> void:
 	var ms := (Time.get_ticks_usec() - t0) / 1000.0
 	var nodes := _count_nodes(lv)
 	print("    valley: loaded, instanced and added in %.0f ms; %d nodes" % [ms, nodes])
-	assert_true(ms < MAX_LOAD_MS, "the Valley loads in under 3 s headless (%.0f ms)" % ms)
+	BudgetRule.judge(self, ms, MAX_LOAD_MS, load_start, "the Valley loads in under 3 s headless (%.0f ms)" % ms)
 	assert_true(nodes > 100 and nodes < 4000, "a plausible node count (%d)" % nodes)
 	var synced: bool = await ValleyProbe.wait_for_navigation(self, lv)
 	assert_true(synced, "the navigation map answers on every layer without a bake")
@@ -178,7 +185,9 @@ func test_scene_layout_and_lookups() -> void:
 		if missing_record:
 			assert_true(node == null, "%s waits for its records" % p.world_id)
 			continue
-		assert_true(node != null and str(node.get("world_id")) == str(p.world_id), "prop %s" % p.world_id)
+		# P26: a talker prop (an Old Kings' cairn) is named by its npc_id.
+		var id_of: Variant = node.get("npc_id") if node is NpcTalker else (node.get("world_id") if node != null else null)
+		assert_true(node != null and str(id_of) == str(p.world_id), "prop %s" % p.world_id)
 	# The district rectangles of the level record.
 	for sample: Array in [["hollow", Vector3(-150, 0, 170)], ["forest", Vector3(-60, 0, -70)],
 			["village", Vector3(14, 0, -26)], ["quarry", Vector3(30, 0, -155)], ["barrow", Vector3(-55, 0, -172)],
@@ -218,7 +227,7 @@ func test_paths_on_every_layer() -> void:
 	# The giant layer from the Grove: everything before the gates, nothing behind them.
 	var targets := _giant_targets(lv)
 	for id: String in targets:
-		var behind := BEHIND_BARRICADE.has(id) or BEHIND_DEADFALL.has(id)
+		var behind := BEHIND_BARRICADE.has(id) or BEHIND_DEADFALL.has(id) or BEHIND_CITADEL_GATE.has(id)
 		var ok := ValleyProbe.reaches(lv, grove, targets[id], ValleyProbe.GIANT)
 		if behind:
 			assert_false(ok, "links closed: no giant path from the Grove to %s" % id)
@@ -226,10 +235,20 @@ func test_paths_on_every_layer() -> void:
 			assert_true(ok, "a giant path from the Grove to %s" % id)
 	assert_true(await ValleyProbe.set_links(self, lv, true), "the map takes the open links")
 	for id: String in targets:
-		var ok: bool = await ValleyProbe.settle(self, lv, grove, targets[id], ValleyProbe.GIANT, true)
+		var sealed := BEHIND_CITADEL_GATE.has(id)
+		var ok: bool = await ValleyProbe.settle(self, lv, grove, targets[id], ValleyProbe.GIANT, not sealed)
 		var p := ValleyProbe.path(lv, grove, targets[id], ValleyProbe.GIANT)
+		if sealed:
+			assert_false(ok, "links open, the Citadel Gate standing: no giant path from the Grove to %s" % id)
+			continue
 		assert_true(ok, "links open: a giant path from the Grove to %s (ends %s)" % [id,
 			p[p.size() - 1] if p.size() > 0 else "nowhere"])
+	# P26: the breached Citadel Gate opens the hall and its stair (its links, like the others').
+	assert_true(await ValleyProbe.set_links(self, lv, true, ["valley.ruins.citadel_gate"]), "the gate's links open")
+	for id: String in BEHIND_CITADEL_GATE:
+		var ok: bool = await ValleyProbe.settle(self, lv, grove, targets[id], ValleyProbe.GIANT, true)
+		assert_true(ok, "the gate breached: a giant path from the Grove to %s" % id)
+	await ValleyProbe.set_links(self, lv, false, ["valley.ruins.citadel_gate"])
 	# Each link carries each layer: closed, no layer gets past the prop; open, every layer does.
 	var crossings := {"valley.village.barricade": [Vector3(86, 0, -20), Vector3(106, 0, -20)],
 		"valley.ruins.practice_gate": [Vector3(118, 0, -20), Vector3(140, 0, -20)],
@@ -441,8 +460,9 @@ func test_checkpoints_have_stage_3_clearance() -> void:
 	for w in get_tree().get_nodes_in_group(Waystone.GROUP):
 		if lv.is_ancestor_of(w):
 			waystones += 1
-	assert_eq(waystones, 3, "three waystones")
-	assert_true(points.size() >= 11, "four pads, four shrine spawn points and three waystones (%d)" % points.size())
+	# P26 (plan M6-M9 §5.6): the Kings' Door's and the Citadel stair's waystones join the three.
+	assert_eq(waystones, 5, "five waystones")
+	assert_true(points.size() >= 13, "four pads, four shrine spawn points and five waystones (%d)" % points.size())
 	for what: String in points:
 		var at: Vector3 = points[what]
 		q.transform = Transform3D(Basis(), Vector3(at.x, 0.0, at.z) + Vector3.UP * (STAGE3_HEIGHT * 0.5 + PlayerGrowth.CLEARANCE_LIFT_M))

@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.kingsgate_shrine",
+	"type": "poi",
+	"display_name": "Kingsgate Shrine",
+	"level": "level.world",
+	"region": "region.crownmarch",
+	"kind": "shrine",
+	"position_m": [-300, 12.0, 770],
+	"radius_m": 30,
+	"xp": 0,
+	"map_icon": "shrine",
+	"compass": true,
+	"landmark": "world.shrine.kingsgate",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "Kingsgate's shrine (stage 4 once the beacon is lit) and the town's anvil."
+}

@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "talent.destroyer_shoulder_charge",
+	"type": "talent",
+	"display_name": "Shoulder Charge",
+	"description": "Lower your shoulder and charge through a crowd.",
+	"tree": "destroyer",
+	"tier": 2,
+	"column": 1,
+	"cost": 1,
+	"requires": ["talent.destroyer_heavy_hands"],
+	"requires_level": 8,
+	"effects": {"modifiers": {}, "grants": ["ability.shoulder_charge"], "replaces": {}}
+}

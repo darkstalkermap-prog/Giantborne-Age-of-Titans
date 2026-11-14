@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"id": "poi.ironway",
+	"type": "poi",
+	"display_name": "The Ironway",
+	"level": "level.world",
+	"region": "region.aldmere",
+	"kind": "gate",
+	"position_m": [720, 42.3, -400],
+	"radius_m": 50,
+	"xp": 30,
+	"map_icon": "gate",
+	"compass": true,
+	"landmark": "world.aldmere.ironway_king",
+	"skyline": false,
+	"min_stage": 0,
+	"reveals_m": 0,
+	"note": "The foot of the Ironway, the road up the highland wall."
+}

@@ -1,0 +1,28 @@
+{
+	"schema_version": 1,
+	"id": "prop.gate_toll",
+	"type": "prop",
+	"category": "structural",
+	"display_name": "Toll Fort Gate",
+	"height_m": 7.0,
+	"health": 1100,
+	"armor": 25,
+	"accepted_attack_categories": ["melee", "ability", "projectile", "siege"],
+	"min_growth_stage": 4,
+	"requires_permission": "gate_breach",
+	"description": "P29 (plan M6-M9 §5.5, §5.7, §5.9): the toll-riders' timber gate in their palisade's gap. Breached at stage 4 it ends the fort's stand-down (its garrison fights), counts for Brannock's oath (help) and quest.kingsroad_toll, and pays the riders' strongbox (2 iron).",
+	"locked_message": "Fortified gates can be breached at stage 4.",
+	"loot": [{"item": "item.iron_ingot", "count": 2}],
+	"on_destroyed_flags": {"world.toll_fort.breached": true},
+	"damage_stages": [
+		{"id": "intact", "at_or_below_frac": 1.0, "visual": "Intact"},
+		{"id": "breached", "at_or_below_frac": 0.0, "visual": "Broken", "removes_collision": true, "enables_nav_links": true}
+	],
+	"debris_count": 14,
+	"debris_length_m": 16,
+	"debris_layout": "line",
+	"lockable": false,
+	"grants_fury": false,
+	"threat": 0.0,
+	"stability": 100.0
+}

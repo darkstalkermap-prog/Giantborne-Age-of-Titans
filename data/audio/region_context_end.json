@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"type": "audio_region",
+	"id": "audio_region.context_end",
+	"display_name": "The prologue's end",
+	"description": "P23: the end screen after the crown (slice_completed): the theme over the warm pad, after the prologue_end stinger.",
+	"level": "",
+	"districts": [],
+	"regions": [],
+	"pois": [],
+	"context": "end",
+	"boss": "",
+	"music": "music.end",
+	"ambience": "",
+	"priority": 0
+}

@@ -1,0 +1,9 @@
+{
+	"schema_version": 1,
+	"id": "item.barrow_arm_ring",
+	"type": "item",
+	"display_name": "Barrow-King's Arm-Ring",
+	"description": "A ring of black bronze wide enough for a giant's wrist, from the Barrow Fields: Millford's shepherds found it where the wolves had denned.",
+	"stack_max": 1,
+	"category": "trophy"
+}

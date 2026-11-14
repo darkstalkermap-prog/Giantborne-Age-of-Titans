@@ -12,6 +12,7 @@
 	"description": "The sealed citadel of the Broken Kings: only a stage-4 giant could breach it.",
 	"requires_permission": "gate_breach",
 	"locked_message": "Fortified gates can be breached at stage 4.",
+	"on_destroyed_flags": {"world.citadel.breached": true},
 	"damage_stages": [
 		{"id": "intact", "at_or_below_frac": 1.0, "visual": "Intact"},
 		{"id": "breached", "at_or_below_frac": 0.0, "visual": "Breached", "removes_collision": true, "enables_nav_links": true}

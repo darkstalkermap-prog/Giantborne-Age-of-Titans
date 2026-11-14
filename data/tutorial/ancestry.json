@@ -1,0 +1,15 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.ancestry",
+	"type": "tutorial_prompt",
+	"description": "P33 (plan M6-M9 §3.17): at the first shrine of the Old Kingdom - shrines teach talents (talent points, one per level) and offer the ancestry, chosen once. Done when the ancestry is chosen.",
+	"text": "Shrines of the Old Kingdom shape your blood. Use the shrine ({interact}): the Talents tab spends talent points on lasting talents, and the Ancestry tab lets you choose your ancestry once.",
+	"trigger": {"type": "event", "event": "shrine_activated"},
+	"dismiss": {"type": "flag", "flag": "ancestry.chosen", "timeout_s": 20},
+	"requires_flags": ["progress.world_entered"],
+	"min_stage": 1,
+	"priority": 14,
+	"once": true,
+	"defer_in_combat": true,
+	"sets_flag": "tutorial.ancestry.done"
+}

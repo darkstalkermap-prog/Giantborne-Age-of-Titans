@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "region.drowned_steps",
+	"type": "region",
+	"display_name": "The Drowned Steps",
+	"description": "P25 (plan M6-M9 §2.7, §5.1): The Drowned Steps of level.world; its bounds tile the interior with the other four regions.",
+	"level": "level.world",
+	"tier": 2,
+	"recommended_stage": [4, 5],
+	"bounds_m": [[-320, -440], [300, 300]],
+	"surface": "wet",
+	"discover_xp": 40,
+	"map_tint": [0.42, 0.52, 0.5],
+	"fog_color": [0.56, 0.64, 0.68],
+	"skyline_tint": [0.33, 0.38, 0.34],
+	"journal_note": "The Mere of Kings: Wenna's five sunken bells, the island's warden past the deep channel, the vault under the causeway and the Titan Forge in the Titan's ribs."
+}

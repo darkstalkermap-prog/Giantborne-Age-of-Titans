@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "faction.brannock",
+	"type": "faction",
+	"display_name": "Brannock",
+	"description": "P29 (plan M6-M9 §2.12, §5.7, §5.9, decision 31): the market town on the Wend - its guards, wall archers, folk and Marchwarden Edda (members carry faction \"brannock\"). Neutral until offended: a blow on its people or damage to one of its houses warns, a second within 30 s turns the town hostile (so does smashing its south gatehouse, the march oath's force path). Its folk step aside for a giant at peace with them; hostile, its guards fight inside its walls, its smithy shuts and a respawn at its waystone moves away while its guards stand within 120 m. Edda reconciles the town for 2 iron. The oath's outcomes set allied (help) or tribute (intimidate), shown on site.",
+	"flag_prefix": "faction.brannock",
+	"initial": "neutral",
+	"offences_to_hostile": 2,
+	"offence_window_s": 30,
+	"civilians_give_way": true,
+	"give_way_m": 3.0,
+	"respawn_guard_m": 120,
+	"reconcile": {"talker": "world.crownmarch.edda", "cost": [{"item": "item.iron_ingot", "count": 2}],
+		"text": "Pay for the harm you did (2 iron)"},
+	"warn_text": "Brannock's folk scatter from your feet. Strike again and the town will fight you.",
+	"hostile_text": "Brannock's bells ring: the town takes up arms.",
+	"stood_down_text": "Brannock's guards lower their pikes.",
+	"reconciled_text": "Brannock forgives the harm, if not the fright."
+}

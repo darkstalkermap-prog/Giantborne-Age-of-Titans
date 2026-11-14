@@ -5,12 +5,14 @@
 	"family": "sword",
 	"display_name": "Kingsguard Blade",
 	"damage_multiplier": 1.1,
-	"length_m": 1.6,
-	"hit_radius_m": 0.3,
-	"description": "The Kingsguard Sword, reforged to fit a full-grown giant.",
+	"length_m": 1.9,
+	"hit_radius_m": 0.36,
+	"description": "The Kingsguard Sword, reforged longer to fit a full-grown giant.",
 	"scales_with_growth": true,
-	"fit_max_stage": 3,
+	"fit_max_stage": 6,
 	"visual_shape": "sword",
 	"light_chain": "ability.sword_light_1",
-	"heavy": "ability.sword_heavy"
+	"heavy": "ability.sword_heavy",
+	"stage_movesets": {"4": {"light_chain": "ability.sword_great_light_1", "heavy": "ability.sword_great_heavy"}},
+	"upgrade": {"to": "weapon.sword_titan", "cost": [{"item": "item.titan_iron", "count": 2}, {"item": "item.iron_ingot", "count": 2}], "forge_tier": "titan"}
 }

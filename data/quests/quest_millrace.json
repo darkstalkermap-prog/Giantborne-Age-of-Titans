@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "quest.millrace",
+	"type": "quest",
+	"display_name": "The Dammed Millrace",
+	"description": "P29 (plan M6-M9 §5.5, §5.7): boulders dam the Millrace above Millford and the mill stands still (Reeve Tamsin asks; the quest also starts within 120 m of the dam). Smash them aside - a stage-4 giant can: 100 XP and Millford's thanks (1 iron).",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "any", "of": [
+		{"type": "dialogue_outcome", "dialogue": "dialogue.reeve_tamsin", "outcome": "millrace"},
+		{"type": "near", "target": "world.marker.millrace_dam", "radius_m": 120}]}],
+	"abandon_when": null,
+	"tracker_priority": 10,
+	"stages": [
+		{"id": "dam", "objective": "Smash the boulders damming the Millrace",
+			"complete_when": {"type": "destroyed", "world_id": "world.crownmarch.millrace_dam"},
+			"marker": "world.marker.millrace_dam", "xp": 100, "waiting_text": "The boulders will not budge for a giant below stage 4.",
+			"items": [{"item": "item.iron_ingot", "count": 1}], "set_flags": {},
+			"bot": {"action": "break", "target": "world.crownmarch.millrace_dam"}}
+	],
+	"on_complete_flags": {}
+}

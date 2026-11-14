@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "encounter.tpl_crownmarch_dire_wolves",
+	"type": "encounter",
+	"display_name": "Dire wolf pack",
+	"description": "P37 (plan M6-M9 §2.13, §5.10): a wander template of wander.crownmarch's dire_wolf_pack entry (stage 4 and up) - four dire wolves. Each spawn prefers enemy.dire_wolf (P34's archetype) and is a wolf while that record does not exist (a copy takes its preferred definition when the record is there). Its centre is nominal.",
+	"template": true,
+	"level": "level.world",
+	"center_m": [640, 9.49, 690],
+	"activate_radius_m": 120,
+	"deactivate_radius_m": 200,
+	"leash_radius_m": 60,
+	"alert_group": true,
+	"requires_flags": [],
+	"forbids_flags": [],
+	"counts_toward_budget": true,
+	"spawns": [
+		{"entity_id": "world.crownmarch.wander_dire_1", "definition": "enemy.wolf", "position_m": [637, 9.49, 688], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "prefer": "enemy.dire_wolf"},
+		{"entity_id": "world.crownmarch.wander_dire_2", "definition": "enemy.wolf", "position_m": [643, 9.49, 688], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "prefer": "enemy.dire_wolf"},
+		{"entity_id": "world.crownmarch.wander_dire_3", "definition": "enemy.wolf", "position_m": [637, 9.49, 694], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "prefer": "enemy.dire_wolf"},
+		{"entity_id": "world.crownmarch.wander_dire_4", "definition": "enemy.wolf", "position_m": [643, 9.49, 694], "yaw_deg": 0, "patrol": "", "faction": "", "commander": false, "ai_enabled": true, "persist_death": false, "loot_table": "", "prefer": "enemy.dire_wolf"}
+	]
+}

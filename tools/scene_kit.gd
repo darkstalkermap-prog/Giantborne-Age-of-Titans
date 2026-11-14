@@ -328,11 +328,181 @@ func sign(text: String, pos: Vector3) -> Label3D:
 
 
 ## The one-box stand-in an enemy shows at AI LOD tier 2 (EnemyActor.set_lod_tier): named
-## "LodProxy", hidden until then. Goes under Visual, beside Visual/Body.
+## "LodProxy", hidden until then. Goes under Visual, beside Visual/Body. Since P22 it is a
+## vertex-coloured box with the rig material (the actor's one material), and the rig copies it
+## under Visual/Body as the distance proxy (ActorRig.set_render_lod).
 func lod_proxy(size: Vector3, pos: Vector3, mat: String) -> MeshInstance3D:
-	var mi := box("LodProxy", size, pos, mat)
+	var part := box("LodProxy", size, Vector3.ZERO, mat)
+	var mi := MeshInstance3D.new()
+	mi.name = "LodProxy"
+	mi.mesh = vertex_colored_mesh([part] as Array[MeshInstance3D])
+	mi.material_override = rig_material()
+	mi.position = pos
 	mi.visible = false
+	part.free()
 	return mi
+
+
+# --------------------------------------------------------------------------- merged rigs (P22)
+
+## The one material every merged rig mesh shares (P22, decision 9): written once to
+## assets/materials/rig_vertex.tres (with no out_root).
+const RIG_MATERIAL_PATH := "res://assets/materials/rig_vertex.tres"
+const RIG_MATERIAL := "rig_vertex"
+
+
+## The material of a merged rig (decision 9): the vertex colours are the albedo (sRGB, like the
+## palette's albedo colours), the albedo colour is white, and emission is on and black, so a hit
+## flash changes only the emission colour and a status tint only the albedo multiplier - never the
+## shader. ActorRig / QuadrupedRig make one unique copy per actor at run time.
+func rig_material() -> StandardMaterial3D:
+	if mats.has(RIG_MATERIAL):
+		return mats[RIG_MATERIAL]
+	var m := StandardMaterial3D.new()
+	m.vertex_color_use_as_albedo = true
+	m.vertex_color_is_srgb = true
+	m.albedo_color = Color.WHITE
+	m.roughness = 0.85
+	m.emission_enabled = true
+	m.emission = Color.BLACK
+	if out_root == "":
+		DirAccess.make_dir_recursive_absolute(MAT_DIR)
+		ResourceSaver.save(m, RIG_MATERIAL_PATH, ResourceSaver.FLAG_CHANGE_PATH)
+	mats[RIG_MATERIAL] = m
+	return m
+
+
+## Merges `parts` - MeshInstance3Ds with one surface each and a flat-colour material, all children
+## of one parent - into one mesh of one surface with vertex colours (each part's albedo colour) and
+## the rig material (decision 9: about 7 draw calls per rig instead of 15-30). Each part's transform
+## in that parent is baked into its vertices and normals. The merged MeshInstance3D takes the first
+## part's place, name, render layers and shadow setting in the parent, and the parts are freed.
+## Returns it (null for an empty list or parts of different parents).
+func merge_vertex_colored(parts: Array[MeshInstance3D]) -> MeshInstance3D:
+	if parts.is_empty():
+		return null
+	var first := parts[0]
+	var parent := first.get_parent()
+	for part in parts:
+		if part.get_parent() != parent:
+			push_error("SceneKit.merge_vertex_colored: %s and %s have different parents" % [first.name, part.name])
+			return null
+	var merged := MeshInstance3D.new()
+	merged.name = first.name
+	merged.mesh = vertex_colored_mesh(parts)
+	merged.layers = first.layers
+	merged.cast_shadow = first.cast_shadow
+	merged.visible = first.visible
+	merged.material_override = rig_material()
+	if parent == null:
+		for part in parts:
+			part.free()
+		return merged
+	var index := first.get_index()
+	for part in parts:
+		parent.remove_child(part)
+		part.free()
+	parent.add_child(merged)
+	parent.move_child(merged, mini(index, parent.get_child_count() - 1))
+	return merged
+
+
+## One ArrayMesh surface of `parts` (see merge_vertex_colored): positions and normals in the
+## parts' parent space (their own transforms baked in), one vertex colour per part (its albedo),
+## indices. No UVs or tangents: the rig material has no texture.
+static func vertex_colored_mesh(parts: Array[MeshInstance3D]) -> ArrayMesh:
+	var verts := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var colors := PackedColorArray()
+	var indices := PackedInt32Array()
+	for part in parts:
+		var xf := part.transform
+		var normal_basis := xf.basis.inverse().transposed()
+		var color := part_albedo(part)
+		var arrays := part.mesh.surface_get_arrays(0)
+		var pv: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var pn: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL] if arrays[Mesh.ARRAY_NORMAL] != null \
+			else PackedVector3Array()
+		var pi: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null \
+			else PackedInt32Array()
+		var base := verts.size()
+		for i in pv.size():
+			verts.append(xf * pv[i])
+			var n := pn[i] if i < pn.size() else Vector3.UP
+			normals.append((normal_basis * n).normalized())
+			colors.append(color)
+		if pi.is_empty():
+			for i in pv.size():
+				indices.append(base + i)
+		else:
+			for idx in pi:
+				indices.append(base + idx)
+	var arr := []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = verts
+	arr[Mesh.ARRAY_NORMAL] = normals
+	arr[Mesh.ARRAY_COLOR] = colors
+	arr[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	return mesh
+
+
+## The flat colour a part shows: its material's albedo colour (white without one).
+static func part_albedo(mi: MeshInstance3D) -> Color:
+	var m := _part_material(mi) as BaseMaterial3D
+	return m.albedo_color if m != null else Color.WHITE
+
+
+## The named direct MeshInstance3D children of `pivot`, in that order (a missing name is skipped).
+static func parts_of(pivot: Node, names: Array) -> Array[MeshInstance3D]:
+	var out: Array[MeshInstance3D] = []
+	for n: String in names:
+		var mi := pivot.get_node_or_null(NodePath(n)) as MeshInstance3D
+		if mi != null:
+			out.append(mi)
+	return out
+
+
+## Merges a rig built from boxes (P22, decision 9). Each animated pivot - Body itself and every
+## plain Node3D directly under it (hips, torso, shoulders; the quadruped's head, tail and legs) -
+## keeps its node and gets one merged mesh of its direct mesh children per render layer, named
+## `<rest_name>` (`BodyMesh` for the parts directly under Body; a second layer adds a digit).
+## `groups` merges named parts into meshes of their own first: {pivot name ("Body" for Body):
+## [[merged name, [part names]], ...]} - the weapon in the hand, and the giant's chest, belt and
+## head (render layer 2, which first person culls). Returns the merged meshes.
+func merge_rig(body: Node3D, groups: Dictionary = {}, rest_name := "Mesh") -> Array[MeshInstance3D]:
+	var out: Array[MeshInstance3D] = []
+	var pivots: Array[Node3D] = [body]
+	for child in body.get_children():
+		if child.get_class() == "Node3D":
+			pivots.append(child as Node3D)
+	for pivot in pivots:
+		var key := "Body" if pivot == body else String(pivot.name)
+		for g: Array in groups.get(key, []):
+			var grouped := merge_vertex_colored(parts_of(pivot, g[1]))
+			if grouped != null:
+				grouped.name = str(g[0])
+				grouped.set_meta(&"rig_group", true)
+				out.append(grouped)
+		var by_layer := {}
+		var layer_order: Array = []
+		for child in pivot.get_children():
+			var mi := child as MeshInstance3D
+			if mi == null or mi.has_meta(&"rig_group") or not mi.visible:
+				continue
+			if not by_layer.has(mi.layers):
+				by_layer[mi.layers] = [] as Array[MeshInstance3D]
+				layer_order.append(mi.layers)
+			(by_layer[mi.layers] as Array[MeshInstance3D]).append(mi)
+		for li in layer_order.size():
+			var merged := merge_vertex_colored(by_layer[layer_order[li]])
+			var base := "BodyMesh" if pivot == body else rest_name
+			merged.name = base if li == 0 else "%s%d" % [base, li + 1]
+			out.append(merged)
+	for m in out:
+		m.remove_meta(&"rig_group")
+	return out
 
 
 ## A Marker3D (anchors, spawn points, patrol points).

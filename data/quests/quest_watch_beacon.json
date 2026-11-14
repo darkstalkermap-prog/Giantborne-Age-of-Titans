@@ -1,0 +1,22 @@
+{
+	"schema_version": 1,
+	"id": "quest.watch_beacon",
+	"type": "quest",
+	"display_name": "Shepherd's Watch",
+	"description": "P29 (plan M6-M9 §5.7): squatters hold the hill of Shepherd's Watch and its beacon is cold (the quest starts when the giant finds the watch or comes within 150 m of it). Clear them and relight it: 80 XP, the watch's view (the places within 600 m on the map), its light column in the sky; the watch's cache lies by the waystone.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [{"type": "any", "of": [
+		{"type": "discovered", "poi": "poi.shepherds_watch"},
+		{"type": "near", "target": "world.marker.watch_beacon", "radius_m": 150}]}],
+	"abandon_when": null,
+	"tracker_priority": 10,
+	"stages": [
+		{"id": "relight", "objective": "Clear the squatters and relight Shepherd's Watch",
+			"complete_when": {"type": "flag", "flag": "world.shepherds_watch.lit"},
+			"marker": "world.marker.watch_beacon", "xp": 80, "items": [], "set_flags": {},
+			"bot": {"action": "fight_encounter", "target": "encounter.crownmarch_watch_squatters",
+				"then": "interact", "interact": "world.crownmarch.watch_beacon_fire"}}
+	],
+	"on_complete_flags": {}
+}

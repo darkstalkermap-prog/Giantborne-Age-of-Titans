@@ -1,0 +1,64 @@
+{
+	"schema_version": 1,
+	"id": "ambience.drowned_steps",
+	"type": "ambience_set",
+	"display_name": "The Drowned Steps",
+	"description": "P28: the Drowned Steps: small waves lapping at stone and a wind over open water; water birds, gulls, a sunken bell tolling far off. Emitters: the shore lapping at two points of the Mere. Birds fall silent after a giant's step close by.",
+	"beds": [
+		{
+			"cue": "amb.bed_lake",
+			"volume_db": 0
+		}
+	],
+	"spots": [
+		{
+			"cue": "amb.water_birds",
+			"weight": 3,
+			"flush": true
+		},
+		{
+			"cue": "amb.gull",
+			"weight": 2,
+			"flush": true
+		},
+		{
+			"cue": "amb.sunken_bell",
+			"weight": 1
+		}
+	],
+	"spot_interval_s": [
+		5,
+		13
+	],
+	"spot_distance_m": [
+		14,
+		36
+	],
+	"emitters": [
+		{
+			"cue": "amb.shore_loop",
+			"level": "level.world",
+			"position_m": [
+				-140,
+				4,
+				40
+			],
+			"radius_m": 50
+		},
+		{
+			"cue": "amb.shore_loop",
+			"level": "level.world",
+			"position_m": [
+				90,
+				4,
+				80
+			],
+			"radius_m": 50
+		}
+	],
+	"reactions": {
+		"flush_radius_m": 40,
+		"flush_s": 8,
+		"flush_cue": "amb.birds_flush"
+	}
+}

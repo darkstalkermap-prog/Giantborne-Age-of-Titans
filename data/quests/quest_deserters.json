@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "quest.deserters",
+	"type": "quest",
+	"display_name": "The Deserters",
+	"description": "P36 (plan M6-M9 §5.7 side quests, §5.9): deserters of Aldmere's war camp hide at the burned mill. Find them, then spare them (their word for a parley - a token the herald accepts at stage 4 - the war camp's engines marked, 1 iron from their pay chest) or hand them over to the war camp (2 iron). 120 XP. It starts once a stage-4 giant discovers the mill.",
+	"prototype_pacing": true,
+	"auto_start": false,
+	"start_conditions": [
+		{"type": "stage_at_least", "stage": 4},
+		{"type": "discovered", "poi": "poi.deserters_mill"}
+	],
+	"abandon_when": null,
+	"tracker_priority": 30,
+	"stages": [
+		{"id": "find", "objective": "Find the deserters hiding at the burned mill", "complete_when": {"type": "flag", "flag": "world.aldmere.deserters_met"}, "marker": "world.marker.deserters_mill", "xp": 0, "items": [], "set_flags": {}, "bot": {"action": "talk", "target": "world.aldmere.deserter_wynn"}},
+		{"id": "decide", "objective": "Spare the deserters, or hand them over to the war camp", "complete_when": {"type": "flag", "flag": "world.aldmere.deserters_fate"}, "marker": "world.marker.deserters_mill", "xp": 120, "items": [], "set_flags": {}, "bot": {"action": "talk", "target": "world.aldmere.deserter_wynn", "choice": "spare"}}
+	],
+	"on_complete_flags": {}
+}
