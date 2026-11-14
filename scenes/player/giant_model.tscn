@@ -226,7 +226,7 @@ index = {
 "wrist_l": [-1.087127, 2.306697, -0.44995],
 "wrist_r": [1.087127, 2.306697, -0.44995]
 },
-"manifest_sha256": "4688e9750c6cc80a23e2595d604bdd3e652cf32d4c51f860c484fdf36adfe5f1",
+"manifest_sha256": "2f64da7e1dd9b94e07f07eef9babc00be4a9520f34c65b949a482026d29bbfa6",
 "meshes": {
 "Beard_braided": {
 "atlas": "hair_atlas",
@@ -500,7 +500,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Hair_warrior_tail",
-"tris": 3424
+"tris": 4464
 },
 "Hair_wild_mane": {
 "atlas": "hair_atlas",

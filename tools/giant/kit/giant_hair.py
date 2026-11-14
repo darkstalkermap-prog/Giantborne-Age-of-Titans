@@ -46,7 +46,7 @@ STYLES.update({
         "braids": [dict(at="ear", side=s, length=0.27, width=0.034, step=0.017, lean=(0.10 * s, -0.42, -1.0))
                    for s in (1.0, -1.0)]},
     "Hair_warrior_tail": {"kind": "scalp", "layers": [
-        dict(n=300, length=0.17, lo=0.003, hi=0.007, npts=5, power=0.5, width=0.04, curl=0.04, wispy=0.0,
+        dict(n=430, length=0.17, lo=0.003, hi=0.007, npts=5, power=0.5, width=0.04, curl=0.04, wispy=0.0,
              grow="knot"),
         dict(n=64, length=0.30, lo=0.0, hi=0.0, npts=9, power=1.0, width=0.034, curl=0.1, wispy=0.25,
              grow="tail")]},

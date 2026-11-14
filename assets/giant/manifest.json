@@ -998,12 +998,12 @@
    },
    "Hair_warrior_tail": {
     "atlas": "hair_atlas",
-    "cards": 364,
+    "cards": 494,
     "category": "hair",
     "dye": "none",
     "layer": 3,
-    "tris": 3424,
-    "verts": 4152
+    "tris": 4464,
+    "verts": 5452
    },
    "Hair_wild_mane": {
     "atlas": "hair_atlas",
@@ -1066,9 +1066,9 @@
   },
   "assets/giant/giant.glb": {
    "cycles": false,
-   "inputs": "fae103cbf02e62877d6032e905f407cf49117b6b52f3c114e67025c3b4a8278f",
-   "sha256": "5385edb1b6ffd48159759087f8c64147fd7c6e23b668a3385683e96e1269e02e",
-   "size": 4401640,
+   "inputs": "9397022beb48b3509fcbbb78e988e96cf363bcbeeb40432fd497cab8d633bd65",
+   "sha256": "33ac05dc45d238d98d42567fe0b83dc5209d1e32f87cd115ca24d7fce31bb41d",
+   "size": 4475468,
    "step": "export"
   },
   "assets/giant/giant_clips.glb": {
@@ -1822,7 +1822,7 @@
     "dye": "none",
     "layer": 3,
     "node": "Hair_warrior_tail",
-    "tris": 3424
+    "tris": 4464
    },
    "Hair_wild_mane": {
     "atlas": "hair_atlas",
@@ -1923,7 +1923,7 @@
    "export_game.py": "c70dc14517d003928230ff5f1521b528b6f9fb6ab58965ddb8a5a1b2a325dea8",
    "giant_body.py": "c8f694bd9d26bfd16ef4ca60ad3d1f36ec9c75247bc360a3ae2ad8778b741581",
    "giant_garment.py": "103bbb966649904418c3f8b93830b8e3f440f4d2dc2d297d1b37785b2f5c54a5",
-   "giant_hair.py": "eac0c4f74796fed8be23e6033737a5b75189490a071e25d7968ce65ba0de0973",
+   "giant_hair.py": "88e8c8d9ef3869c0b68a86be93fe78eaf84750be800b8e9242de4e16fbfbf456",
    "giant_skin.py": "58bca541ac7ccc8ed87c477526a1650df76a6289c5d95d15e8ce6f9d30753086",
    "mh_data.py": "c6ef5a0eae9ce4ef73a3cae30db1e15f2d1bfed69af27a3c06dd404f66119ebc",
    "node_util.py": "5accffc8870441e1dd7733a0a6bb1fa80dbe3505dcabb1cab5778dc65d4e9e20",
