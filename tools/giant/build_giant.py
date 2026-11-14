@@ -26,8 +26,11 @@ Options:
                  (the body, its UVs, the skin code, the settings) still hash to the manifest's, and
                  asks for the full regeneration (check.sh --giant-full) when they do not
   --no-cache     neither read nor write GIANT_CACHE
-  --budget       estimate each file's shipped size (gzip then base64, as tools/build_web.sh counts)
-                 from the measured rates and fail over the giant's Web share (plan §2.12)
+  --budget       estimate the shipped size (gzip then base64, as tools/build_web.sh counts) of each
+                 file the Web preset ships (its exclude_filter in export_presets.cfg leaves out the
+                 manifest and tex_hi/) from the measured rates, and fail over the giant's Web share
+                 (plan §2.12): build_web.sh's rule, its default budget less 18.4 MiB (4.6 at 23 MiB);
+                 --share-mib=N overrides it
   --out=DIR      write under DIR instead of the repository (DIR/assets/giant/...)
 
 Environment: GIANT_CACHE (default $HOME/.cache/giantborn/giant-cache), BAKE_THREADS (default 2).
@@ -57,8 +60,11 @@ STEPS = ("export", "bake", "designs", "pack", "clips")
 EXPORT_SOURCES = ("mh_data.py", "giant_body.py", "giant_hair.py", "giant_garment.py", "split.py", "export_game.py")
 DESIGN_SOURCES = ("designs.py", "giant_skin.py", "giant_body.py", "mh_data.py", "split.py")
 PACK_SOURCES = ("pack.py",)
-# the giant's share of the Web pack (plan §2.12: 4.6 MiB at the 23 MiB budget), shipped bytes
-SHARE_CAP_MIB = 4.6
+# the giant's share of the Web pack (plan §2.12: 4.6 MiB at the 23 MiB budget), shipped bytes: as
+# tools/build_web.sh rules it, the Web budget less what everything else keeps (OTHER_MIB)
+OTHER_MIB = 18.4
+BUILD_WEB = "tools/build_web.sh"
+PRESETS = "export_presets.cfg"
 # Measured shipped rates (gzip -9 then base64 of the imported files; the M10 asset brief's test export):
 # meshes per vertex (LODs and shadow meshes included), textures per byte of VRAM data with mipmaps.
 RATE_MESH_B_PER_VERTEX = 61.0
@@ -467,13 +473,42 @@ def estimate(rel: str, doc: dict) -> float:
     return raw * TEXTURE_FACTOR.get(key, 0.8)
 
 
-def budget(share_mib: float) -> int:
+def web_budget_mib(root: Path = ROOT) -> float:
+    """The Web pack's default budget in MiB: the last default tools/build_web.sh assigns (the one after
+    M7: 23 MiB, 26 if the owner raises it, plan §0.6)."""
+    found = re.findall(r"\bBUDGET_MB=([0-9]+(?:\.[0-9]+)?)\b", (root / BUILD_WEB).read_text())
+    return float(found[-1]) if found else 23.0
+
+
+def share_cap_mib(root: Path = ROOT) -> float:
+    """The giant's share of the Web pack: build_web.sh's rule (its GIANT_SHARE cap)."""
+    return round(max(0.0, web_budget_mib(root) - OTHER_MIB), 1)
+
+
+def web_excluded(root: Path = ROOT, preset: str = "Web") -> list:
+    """The exclude_filter patterns of the Web preset in export_presets.cfg."""
+    text = (root / PRESETS).read_text()
+    for section in re.split(r"(?m)^\[preset\.\d+\]\s*$", text)[1:]:
+        if re.search(r'(?m)^name="%s"\s*$' % re.escape(preset), section):
+            m = re.search(r'(?m)^exclude_filter="([^"]*)"', section)
+            return [f.strip() for f in m.group(1).split(",") if f.strip()] if m else []
+    return []
+
+
+def budget(share_mib: float | None = None) -> int:
+    import fnmatch
     doc = manifest.load(ROOT)
     if not doc:
         print("build_giant: no manifest yet")
         return 1
+    if share_mib is None:
+        share_mib = share_cap_mib()
+    excluded = web_excluded()
     total = 0.0
     for rel in sorted(doc["files"]):
+        if any(fnmatch.fnmatch(rel, pat) for pat in excluded):
+            print("WEB_EXCLUDED %s (the Web preset leaves it out)" % rel)
+            continue
         b = estimate(rel, doc)
         total += b
         print("ESTIMATE %-40s %9.0f bytes shipped" % (rel, b))
@@ -489,7 +524,7 @@ def budget(share_mib: float) -> int:
 # --------------------------------------------------------------------------------------
 def main(argv) -> int:
     steps, out, verify_mode, skip, no_cache, do_budget = [], None, False, False, False, False
-    share = SHARE_CAP_MIB
+    share = None
     step_flags = {"--body": "export", "--garments": "export", "--hair": "export", "--bake": "bake",
                   "--designs": "designs", "--pack": "pack", "--clips": "clips"}
     for a in argv:

@@ -7,7 +7,8 @@ build_giant.py --verify --skip-bake). Run with the shared venv:
 They read the committed outputs (assets/giant/) and exercise the pure parts of the kit on synthetic
 data: the per-channel resize, the region encoding, the caps (no open cut on Body_Limbs or on any limb
 garment part), the packing rule, the design generator's determinism, the --skip-bake read-back of AO
-and thickness, the manifest round trip and the vendored subset's file list.
+and thickness, the manifest round trip, the Web budget's estimate rules and the vendored subset's file
+list.
 """
 from __future__ import annotations
 
@@ -292,6 +293,25 @@ class ManifestTest(unittest.TestCase):
         lm = doc["index"]["landmarks"]
         self.assertAlmostEqual(lm["shoulder_r"][0], 0.414, delta=0.02)
         self.assertAlmostEqual(lm["reach_r"], 1.385, delta=0.02)
+
+
+class BudgetTest(unittest.TestCase):
+    def test_the_estimate_follows_the_web_preset_and_build_web_rule(self):
+        """--budget estimates only what the Web preset ships and judges it by build_web.sh's rule (its
+        default budget less 18.4 MiB), so a change of either (P45: the owner's 26 MiB, the Web keeping
+        tex_hi/) moves the estimate and its cap together."""
+        import build_giant
+        self.assertEqual(build_giant.web_budget_mib(), 23.0, "build_web.sh's default after M7")
+        self.assertEqual(build_giant.share_cap_mib(), 4.6, "plan §2.12")
+        excluded = build_giant.web_excluded()
+        for pat in ("assets/giant/manifest.json", "assets/giant/tex_hi/*", "tests/*", "tools/*"):
+            self.assertIn(pat, excluded)
+        self.assertNotIn("assets/giant/tex_hi/*", build_giant.web_excluded(preset="Linux"), "desktop keeps it")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = build_giant.Path(tmp)
+            (root / "tools").mkdir()
+            (root / "tools" / "build_web.sh").write_text("\tif x; then BUDGET_MB=7.5\n\telse BUDGET_MB=26\n\tfi\n")
+            self.assertEqual(build_giant.share_cap_mib(root), 7.6, "the 26 MiB answer gives the giant 7.6")
 
 
 class VendorTest(unittest.TestCase):
