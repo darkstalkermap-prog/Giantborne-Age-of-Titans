@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.outfit",
+	"type": "appearance_set",
+	"category": "outfit",
+	"display_name": "Clothing",
+	"description": "P42 (plan M10 §2.3): the floor's outfits over the garments braies, belt, tunic, jerkin, bracers, boots and furs (giant index garment ids); covers lists the design regions the garments hide.",
+	"options": [
+		{"key": "wanderer", "name": "Wanderer's braies", "garments": ["braies", "belt"], "covers": [], "default": true},
+		{"key": "hunter", "name": "Hunter's furs", "garments": ["braies", "belt", "furs", "bracers"], "covers": []},
+		{"key": "warrior", "name": "Warrior's tunic", "garments": ["tunic", "jerkin", "belt", "bracers", "boots"], "covers": ["chest", "back"]},
+		{"key": "chieftain", "name": "Chieftain's jerkin", "garments": ["braies", "belt", "furs", "jerkin", "boots"], "covers": ["chest", "back"]}
+	]
+}

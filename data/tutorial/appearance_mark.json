@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.appearance_mark",
+	"type": "tutorial_prompt",
+	"description": "P42 (plan M10 §2.11, decision 16): when a line is chosen while the look's mark is \"auto\", its mark appears on the giant (PlayerAppearance sets appearance.mark_shown for a look of the player's own: a record, or a save from before M10). Shown for 10 s.",
+	"text": "Your line's mark now shows on your giant. You can hide it at a shrine, in Appearance.",
+	"trigger": {
+		"type": "flag",
+		"flag": "appearance.mark_shown"
+	},
+	"dismiss": {
+		"type": "timeout",
+		"timeout_s": 10
+	},
+	"requires_flags": [],
+	"min_stage": 1,
+	"priority": 13,
+	"once": true,
+	"defer_in_combat": true
+}

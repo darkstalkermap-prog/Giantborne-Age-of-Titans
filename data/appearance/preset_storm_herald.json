@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.storm_herald",
+	"type": "appearance_preset",
+	"display_name": "Storm Herald",
+	"description": "Black hair, pale skin and ice-blue eyes; woad wings on the back, chevrons on the forearms, chalk stripes under the eyes.",
+	"ancestry": "ancestry.stormborn",
+	"appearance": {
+		"v": 1,
+		"preset": "appearance_preset.storm_herald",
+		"skin": "skin.pale",
+		"eyes": "eyes.ice",
+		"hair": {"style": "hair.long_back", "color": "haircolor.black", "grey": 0.0},
+		"beard": {"style": "beard.short", "color": "", "grey": 0.0},
+		"tattoos": {"arms": "tattoo.arm_chevrons", "chest": "", "back": "tattoo.back_wings", "face": "", "ink": "ink.woad"},
+		"paint": {"design": "paint.face_stripes", "color": "paintcolor.chalk"},
+		"scars": [],
+		"mark": "auto",
+		"outfit": {"set": "outfit.hunter", "primary": "dye.woad_blue", "secondary": "dye.dark_leather"}
+	}
+}

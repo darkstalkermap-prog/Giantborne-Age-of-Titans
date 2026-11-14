@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.wild_hunter",
+	"type": "appearance_preset",
+	"display_name": "Wild Hunter",
+	"description": "Auburn mane and full beard, an ochre knot over the heart, blood-red bands on the shoulders.",
+	"ancestry": "ancestry.wildheart",
+	"appearance": {
+		"v": 1,
+		"preset": "appearance_preset.wild_hunter",
+		"skin": "skin.tan",
+		"eyes": "eyes.hazel",
+		"hair": {"style": "hair.long_back", "color": "haircolor.auburn", "grey": 0.05},
+		"beard": {"style": "beard.full", "color": "", "grey": 0.05},
+		"tattoos": {"arms": "", "chest": "tattoo.chest_knot", "back": "", "face": "", "ink": "ink.ochre"},
+		"paint": {"design": "paint.shoulder_bands", "color": "paintcolor.blood"},
+		"scars": [],
+		"mark": "auto",
+		"outfit": {"set": "outfit.hunter", "primary": "dye.moss_green", "secondary": "dye.walnut"}
+	}
+}

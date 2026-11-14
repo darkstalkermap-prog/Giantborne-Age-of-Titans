@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.paint",
+	"type": "appearance_set",
+	"category": "paint",
+	"display_name": "War paint",
+	"description": "P42 (plan M10 §2.3): the floor's war paints, drawn on top of the skin and tattoos.",
+	"options": [
+		{"key": "face_stripes", "name": "Face stripes", "design": "paint_face_stripes", "region": "face"},
+		{"key": "shoulder_bands", "name": "Shoulder bands", "design": "paint_shoulder_bands", "region": "arms"}
+	]
+}

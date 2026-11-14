@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.beard",
+	"type": "appearance_set",
+	"category": "beard",
+	"display_name": "Beard",
+	"description": "P42 (plan M10 §2.3): the floor's beards; stubble is the skin's stubble mask, beard_tint the beard colour on the skin under the cards.",
+	"options": [
+		{"key": "none", "name": "None", "mesh": "", "stubble": 0.15, "beard_tint": 0.0},
+		{"key": "stubble", "name": "Stubble", "mesh": "", "stubble": 0.8, "beard_tint": 0.0},
+		{"key": "short", "name": "Short", "mesh": "Beard_short", "stubble": 0.8, "beard_tint": 0.5},
+		{"key": "full", "name": "Full", "mesh": "Beard_full", "stubble": 0.8, "beard_tint": 1.0, "default": true}
+	]
+}

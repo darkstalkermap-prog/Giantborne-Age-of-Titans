@@ -1,7 +1,10 @@
 extends TestSuite
 ## P01: the optional schema registry, the status_effect and progression record types, the two
 ## data warnings, condition checks, the new P01 fields, the new input actions, and
-## GameData.override_record / restore_record / records_of_type.
+## GameData.override_record / restore_record / records_of_type. (The untelegraphed-attack warning, which
+## writes temporary data and reloads GameData twice - 0.6-0.9 s - moved to
+## tests/slow/test_untelegraphed_warning.gd: M10, P42, plan M10 §1.7 rule 4; the same rule as an error is
+## test_ranged_brains.test_an_untelegraphed_enemy_attack_is_a_data_error.)
 
 const TMP_DATA := "user://test_tmp_schemas_v2"
 
@@ -242,51 +245,6 @@ func test_light_without_basic_attack_warns() -> void:
 	assert_eq(r.errors.size(), 0, "missing BasicAttack is not an error")
 	assert_true("\n".join(r.warnings).contains("without the 'BasicAttack' tag"), "but it warns")
 
-
-func test_untelegraphed_enemy_attack_warns() -> void:
-	var chop: Dictionary = (GameData.get_record("ability.soldier_chop") as Dictionary).duplicate(true)
-	chop.erase("telegraph")   # P04 gave the shipped chop its telegraph; the test needs one without
-	var slow_chop := chop.duplicate(true)
-	slow_chop["id"] = "ability.test_chop"   # enemy_attack, windup 0.85 s
-	var quick := chop.duplicate(true)
-	quick["id"] = "ability.test_quick"
-	quick["windup_s"] = 0.75
-	var cast: Dictionary = (GameData.get_record("ability.heavy_footfall") as Dictionary).duplicate(true)
-	cast["id"] = "ability.test_cast"       # an ability an enemy uses
-	cast["windup_s"] = 0.9
-	var player_cast := cast.duplicate(true)
-	player_cast["id"] = "ability.test_player_cast"   # same timing, no enemy uses it
-	var enemy: Dictionary = (GameData.get_record("enemy.soldier") as Dictionary).duplicate(true)
-	enemy["id"] = "enemy.test_caster"
-	enemy["attacks"] = ["ability.test_cast", "ability.test_quick"]
-	enemy["attack_weights"] = [0.5, 0.5]
-	_rm_tree(TMP_DATA)
-	_write("a.json", slow_chop)
-	_write("b.json", quick)
-	_write("c.json", cast)
-	_write("d.json", player_cast)
-	_write("e.json", enemy)
-	_write("f.json", GameData.get_record("weapon.soldier_sword"))
-	_write("g.json", GameData.get_record("ability.soldier_brace"))   # the soldier's hold_attack (P11b)
-	_loaded_tmp = true
-	GameData.load_all(TMP_DATA, false)
-	# A warning until P09 turns the same finding into an error: accept it in either list.
-	var findings := "\n".join(GameData.warnings) + "\n" + "\n".join(GameData.errors)
-	var other_errors := Array(GameData.errors).filter(func(e: String) -> bool: return not e.contains("has no telegraph"))
-	assert_eq(other_errors.size(), 0, "the test data is otherwise valid: %s" % "\n".join(other_errors))
-	assert_true(findings.contains("(ability.test_chop): enemy attack (kind enemy_attack) with windup_s 0.85"),
-		"an untelegraphed 0.85 s enemy attack is reported")
-	assert_true(findings.contains("(ability.test_cast): enemy attack (used by enemy.test_caster)"),
-		"an ability listed in an enemy's attacks counts as an enemy attack")
-	assert_false(findings.contains("ability.test_quick"), "a 0.75 s windup needs no telegraph")
-	assert_false(findings.contains("ability.test_player_cast"), "player abilities are not checked")
-	GameData.load_all(GameData.DATA_ROOT)
-	if not (GameData.get_record("ability.soldier_chop") as Dictionary).has("telegraph"):
-		assert_true("\n".join(GameData.warnings).contains("(ability.soldier_chop)"),
-			"the shipped 0.85 s soldier chop is reported until it has a telegraph")
-
-
-# --------------------------------------------------------------------------- P01 fields
 
 func test_new_p01_fields() -> void:
 	var light: Dictionary = (GameData.get_record("ability.light_1") as Dictionary).duplicate(true)

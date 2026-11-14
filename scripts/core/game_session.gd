@@ -75,6 +75,15 @@ extends Node
 ## quit and Continue the giant was shut in an empty bailey. BattleBoss now also starts every engagement afresh
 ## and repairs such saves as they load (P34.md, "M8 release").
 ##
+## M10 (P42, plan M10 §2.2, §2.10, §2.11): the giant's look. A New Game's options may carry "appearance"
+## (the creator's record), which the new character stores (valley and world); --appearance=<preset id>
+## gives every run without a record of its own that preset's look, in every mode (Appearance.cli_preset;
+## never written into a save); --creator with --mode=world or --mode=valley --new-game shows the title with
+## creator_start set instead of starting (P44's title opens the creator from it); appearance_changed while
+## a shrine's screen (or the creator over it) is open re-takes the shrine's checkpoint like the other shrine
+## choices (F15); a Continue of a save whose character has no look sets the flag appearance.legacy_save
+## (the one-time tutorial.appearance_shrines).
+##
 ## Tests: reset_for_tests() (ResetHooks.BEFORE_EACH) puts the session in the sandbox, turns
 ## writes off, points SaveSlots at user://test_saves/ and replaces scene reloads with a log
 ## (scene_reloads), so a test drives the flow and instantiates the level itself.
@@ -133,6 +142,8 @@ const VISITED_PREFIX := "visited."
 ## level_entered waits at most this many frames for the level and the samples (then it is sent
 ## anyway, with a warning, so a stuck loader never hides the event).
 const ENTER_WAIT_FRAMES := 1200
+## M10 (P42): set by a Continue of a save whose character has no look (tutorial.appearance_shrines).
+const LEGACY_LOOK_FLAG := "appearance.legacy_save"
 
 var mode: int = Mode.SANDBOX
 ## A scene that replaces the mode's level (--level=res://...tscn; tests).
@@ -200,6 +211,9 @@ var _blocker_level := ""
 var _entering: Dictionary = {}
 ## M8 gate (F15): a shrine-screen choice's checkpoint is queued for the end of this frame.
 var _shrine_choice_queued := false
+## M10 (P42): --creator's start - {"mode": "valley" | "world", "options": {...}} - for the title to open
+## the creator with (P44's TitleScreen opens it and clears this); {} = none.
+var creator_start: Dictionary = {}
 
 
 func _ready() -> void:
@@ -220,6 +234,7 @@ func _ready() -> void:
 	Events.ancestry_chosen.connect(_on_shrine_choice_2)
 	Events.attributes_changed.connect(_on_shrine_choice_1)
 	Events.loadout_changed.connect(_on_shrine_choice_2)
+	Events.appearance_changed.connect(_on_shrine_choice_2)   # M10 (P42): a new look kept at a shrine
 	Events.reload_checkpoint_requested.connect(_on_reload_checkpoint_requested)
 	Events.mode_change_requested.connect(_on_mode_change_requested)
 	Events.entity_died.connect(_on_entity_died)
@@ -249,14 +264,24 @@ func configure_from_args(args: PackedStringArray) -> void:
 ##   --save-dir=user://...         the folder of the save slot (keeps saving on with
 ##                                 --no-user-settings)
 ##   --no-user-settings            no writes to the player's files (persist false)
+##   --appearance=<preset id>      M10 (P42): the look of a character without one, in every mode
+##                                 (appearance_preset.<key>, or just <key>); never saved
+##   --creator                     M10 (P42): with --mode=world, or --mode=valley --new-game, the title
+##                                 opens with the creator for that start (creator_start; P44 opens it)
 ## Returns {"mode", "mode_given", "new_game", "continue", "level", "save_dir", "start",
-## "no_user_settings", "tool_run", "persist", "unknown_mode"}.
+## "no_user_settings", "tool_run", "persist", "unknown_mode", "appearance", "creator"}.
 static func parse_args(args: PackedStringArray) -> Dictionary:
 	var out := {"mode": "title", "mode_given": false, "new_game": false, "continue": false,
 		"level": "", "save_dir": "", "start": "", "no_user_settings": false, "tool_run": false,
-		"unknown_mode": ""}
+		"unknown_mode": "", "appearance": "", "creator": false}
 	for arg in args:
-		if arg.begins_with("--mode="):
+		if arg.begins_with("--appearance="):
+			var preset := arg.substr(13).strip_edges()
+			out.appearance = preset if preset == "" or preset.begins_with(Appearance.PRESET_PREFIX) \
+				else Appearance.PRESET_PREFIX + preset
+		elif arg == "--creator":
+			out.creator = true
+		elif arg.begins_with("--mode="):
 			out.mode = arg.substr(7).strip_edges().to_lower()
 			out.mode_given = true
 		elif arg == "--new-game":
@@ -301,6 +326,24 @@ func apply_args(o: Dictionary) -> void:
 	_cli_start = str(o.get("start", ""))
 	if str(o.get("unknown_mode", "")) != "":
 		push_warning("GameSession: unknown --mode=%s (title | sandbox | valley | world); showing the title" % o.unknown_mode)
+	# M10 (P42): --appearance= (a preset this build has) and --creator.
+	var preset := str(o.get("appearance", ""))
+	if preset != "" and Appearance.preset_record(preset).is_empty():
+		push_warning("GameSession: --appearance=%s is not a preset of this build; the default look is used" % preset)
+		preset = ""
+	Appearance.cli_preset = preset
+	creator_start = {}
+	if bool(o.get("creator", false)):
+		var cmode := str(o.get("mode", "title"))
+		if cmode == "world" and not bool(o.get("continue", false)):
+			creator_start = {"mode": "world", "options": {"start": _cli_start}}
+		elif cmode == "valley" and bool(o.get("new_game", false)):
+			creator_start = {"mode": "valley", "options": {"new_game": true}}
+		else:
+			push_warning("GameSession: --creator goes with --mode=world or --mode=valley --new-game; ignored")
+		if not creator_start.is_empty():
+			mode = Mode.TITLE
+			return
 	match str(o.get("mode", "title")):
 		"sandbox":
 			mode = Mode.SANDBOX
@@ -428,8 +471,10 @@ func save_level_id() -> String:
 ## does. mode: "title" | "sandbox" | "valley" (options: {"new_game": true} or
 ## {"continue": true}; neither = continue when a save loads, else a new game) | "world" (P20: a
 ## New Game from world_start in level.world - the title's "Skip to the Old Kingdom").
-## Returns {"ok", "message"}.
+## M10 (P42): a New Game's options may carry "appearance" (the creator's record): the new character
+## stores it. Returns {"ok", "message"}.
 func change_mode(mode_name: String, options: Dictionary = {}) -> Dictionary:
+	var look: Dictionary = options.get("appearance", {}) if typeof(options.get("appearance")) == TYPE_DICTIONARY else {}
 	match mode_name:
 		"title":
 			go_to_title()
@@ -448,12 +493,12 @@ func change_mode(mode_name: String, options: Dictionary = {}) -> Dictionary:
 					return r
 			if not valley_available():
 				return {"ok": false, "message": VALLEY_MISSING}
-			start_new_valley()
+			start_new_valley(look)
 			return {"ok": true, "message": ""}
 		"world":
 			if not world_available():
 				return {"ok": false, "message": WORLD_MISSING}
-			start_new_world(str(options.get("start", "")))
+			start_new_world(str(options.get("start", "")), look)
 			return {"ok": true, "message": ""}
 	return {"ok": false, "message": "Unknown mode '%s'" % mode_name}
 
@@ -461,30 +506,32 @@ func change_mode(mode_name: String, options: Dictionary = {}) -> Dictionary:
 ## New Game: a clean world, the progression record's new character, then the Valley loads. The
 ## first on_level_ready keeps the player at the scene's Player node, sets respawn_id to the
 ## level's start checkpoint and takes the first checkpoint (written when persist is true).
-func start_new_valley() -> void:
+## M10: `appearance` is the creator's record ({} = none: the default look).
+func start_new_valley(appearance: Dictionary = {}) -> void:
 	if not valley_available():
 		push_warning("GameSession: %s" % VALLEY_MISSING)
 		return
-	_begin_new_valley()
+	_begin_new_valley("", appearance)
 	_reload_scene("new_game")
 
 
 ## New Game in the world (P20, plan M6-M9 §2.6): the campaign starts in level.world with
 ## progression.default's world_start character, inventory and flags (the Valley's worst
-## guaranteed outcome), at `start_checkpoint` or the world's start checkpoint.
-func start_new_world(start_checkpoint := "") -> void:
+## guaranteed outcome), at `start_checkpoint` or the world's start checkpoint. M10: `appearance` as
+## for start_new_valley.
+func start_new_world(start_checkpoint := "", appearance: Dictionary = {}) -> void:
 	if not world_available():
 		push_warning("GameSession: %s" % WORLD_MISSING)
 		return
-	_begin_new_world(start_checkpoint)
+	_begin_new_world(start_checkpoint, appearance)
 	_reload_scene("new_game")
 
 
 ## --mode=world --new-game [--start=<checkpoint>] for tests (P20): the session is set up exactly as
 ## the command line would; the reload is only logged in tests, which build their level and call
 ## on_level_ready themselves. The world level does not need to exist (tests stub its record).
-func start_world_for_tests(start_checkpoint := "") -> void:
-	_begin_new_world(start_checkpoint)
+func start_world_for_tests(start_checkpoint := "", appearance: Dictionary = {}) -> void:
+	_begin_new_world(start_checkpoint, appearance)
 	_reload_scene("new_game")
 
 
@@ -534,23 +581,33 @@ func restart_sandbox(reason: String) -> void:
 	_reload_scene(reason)
 
 
-func _begin_new_valley(start_checkpoint := "") -> void:
+func _begin_new_valley(start_checkpoint := "", appearance: Dictionary = {}) -> void:
 	mode = Mode.VALLEY
 	WorldState.clear()
 	Sim.clear_pending()
 	character = CharacterState.new_game(GameData.get_record(PROGRESSION_ID), GameData.get_record(PLAYER_ID))
+	_store_new_look(appearance)
 	level_id = level_override if level_override != "" else VALLEY_LEVEL_ID
 	_reset_campaign_state()
 	_start_override = start_checkpoint
 
 
+## M10 (P42, plan M10 §2.10): a New Game's look - the creator's record - into the new character (the
+## full record, repaired for the character's line; {} keeps the character without one: the default look).
+func _store_new_look(appearance: Dictionary) -> void:
+	if appearance.is_empty():
+		return
+	character["appearance"] = Appearance.sanitize(appearance, str(character.get("ancestry", ""))).record
+
+
 ## The world's New Game: world_start's character, inventory and flags (a bulk load: no events).
-func _begin_new_world(start_checkpoint := "") -> void:
+func _begin_new_world(start_checkpoint := "", appearance: Dictionary = {}) -> void:
 	mode = Mode.VALLEY
 	WorldState.clear()
 	Sim.clear_pending()
 	var prog := GameData.get_record(PROGRESSION_ID)
 	character = CharacterState.world_start(prog, GameData.get_record(PLAYER_ID))
+	_store_new_look(appearance)
 	var ws: Dictionary = prog.get("world_start", {}) if typeof(prog.get("world_start")) == TYPE_DICTIONARY else {}
 	WorldState.from_save_dict({"schema_version": WorldState.SCHEMA_VERSION, "deltas": {},
 		"inventory": CharacterState.inventory_of(ws.get("inventory", [])),
@@ -604,6 +661,18 @@ func _begin_continue() -> Dictionary:
 	level_id = target
 	mode = Mode.VALLEY
 	character = (doc.character as Dictionary).duplicate(true)
+	# M10 (P42, plan M10 §2.11): a save from before M10 has no look; its player is told once, at the first
+	# shrine, that the giant can now be shaped there (tutorial.appearance_shrines). The flag goes into the
+	# document too, so a death before the next checkpoint keeps it.
+	if not character.has("appearance"):
+		WorldState.set_flag(LEGACY_LOOK_FLAG, true)
+		if typeof(doc.get("world")) == TYPE_DICTIONARY:
+			doc = doc.duplicate(true)
+			var wflags: Variant = (doc.world as Dictionary).get("flags")
+			if typeof(wflags) != TYPE_DICTIONARY:
+				wflags = {}
+			(wflags as Dictionary)[LEGACY_LOOK_FLAG] = true
+			(doc.world as Dictionary)["flags"] = wflags
 	checkpoint_doc = doc
 	respawn_id = respawn
 	stats = _stats_from(doc.get("stats", {}))
@@ -1541,7 +1610,7 @@ func shrine_choice_blockers() -> PackedStringArray:
 	return out
 
 
-## True when a shrine screen is open and every open screen is it or the ancestry screen.
+## True when a shrine screen is open and every open screen is it, the ancestry screen or (M10) the creator.
 func _only_shrine_screens_open() -> bool:
 	if not is_inside_tree():
 		return false
@@ -1550,7 +1619,9 @@ func _only_shrine_screens_open() -> bool:
 		var s := n as ScreenStack
 		if s == null or not is_instance_valid(s) or not s.any_open():
 			continue
-		var own := (1 if s.is_open("shrine") else 0) + (1 if s.is_open("ancestry") else 0)
+		# M10 (P42): the creator opened from the shrine's Appearance tab is one of its own screens too.
+		var own := (1 if s.is_open("shrine") else 0) + (1 if s.is_open("ancestry") else 0) \
+			+ (1 if s.is_open("creator") else 0)
 		if s.count() > own:
 			return false
 		shrine_open = shrine_open or s.is_open("shrine")
@@ -1834,6 +1905,8 @@ func reset_for_tests() -> void:
 	_blocker_level = ""
 	_entering = {}
 	_shrine_choice_queued = false
+	creator_start = {}
+	Appearance.cli_preset = ""   # M10 (P42): no --appearance= look carries into the next test
 	_stop_polling_entered()
 	SaveSlots.path_override = TEST_SAVE_PATH
 	SaveSlots.delete_slot(true)
