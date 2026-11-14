@@ -1,8 +1,13 @@
 extends RefCounted
-## Builder: the player giant (scenes/player/giant.tscn).
+## Builder: the player giant (scenes/player/giant.tscn). P43 (plan M10 §2.9): the realistic, skinned body
+## (Visual/Body/Model, an instance of giant_model.tscn) driven by the pose brain (SkinnedRig); the
+## stylized meshes are gone, their pivots stay; the weapon hangs at Visual/Body/WeaponSocket.
 
 const S_GIANT := "res://scripts/actors/giant_player.gd"
 const S_CAMERA := "res://scripts/presentation/camera_rig.gd"
+## P43: the skinned rig and the realistic model (giant_model.gd builds the model's scene first).
+const S_SKINNED_RIG := "res://scripts/presentation/skinned_rig.gd"
+const MODEL := "res://scenes/player/giant_model.tscn"
 const PATH := "res://scenes/player/giant.tscn"
 
 
@@ -34,51 +39,38 @@ static func build_giant(kit: SceneKit) -> Node:
 	hb.add_child(kit.hurtbox("Head", "head", kit.box_shape(Vector3(0.7, 0.7, 0.7)), Vector3(0, 3.3, 0)))
 	root.add_child(hb)
 	var visual := kit.n3("Visual")
-	kit.scripted(visual, SceneKit.S_RIG, {"weapon_arm_path": NodePath("Body/ShoulderR"),
+	# P43 (plan M10 §2.9): the realistic model is the body. Visual's script is SkinnedRig (an ActorRig: the
+	# pose brain stays); the brain's pivots and hand markers stay without meshes; the model and the weapon
+	# socket join Body. The skinned layers' nodes (AnimationPlayer, AnimationTree, PoseBrainModifier) are
+	# made at run time and never saved (an instance's children are never saved, plan §2.5).
+	kit.scripted(visual, S_SKINNED_RIG, {"weapon_arm_path": NodePath("Body/ShoulderR"),
 		"off_arm_path": NodePath("Body/ShoulderL"), "leg_left_path": NodePath("Body/HipL"),
 		"leg_right_path": NodePath("Body/HipR"), "torso_path": NodePath("Body/Torso"),
 		"body_path": NodePath("Body"), "stride_length_m": 1.6})
 	var body := kit.n3("Body")
 	visual.add_child(body)
 	for side in [-1.0, 1.0]:
-		var hip := kit.n3("HipL" if side < 0 else "HipR", Vector3(0.32 * side, 1.6, 0))
-		hip.add_child(kit.box("Leg", Vector3(0.45, 1.5, 0.5), Vector3(0, -0.75, 0), "giant_tunic"))
-		hip.add_child(kit.box("Foot", Vector3(0.5, 0.16, 0.72), Vector3(0, -1.52, -0.1), "giant_belt"))
-		body.add_child(hip)
-	var torso := kit.n3("Torso", Vector3(0, 1.6, 0))
-	# Chest and belt are hidden in first person too: from the eye they would cover the ground
-	# (and any human) within ~2.6 m of the giant and the crosshair when looking down.
-	var fp := SceneKit.FP_HIDDEN
-	torso.add_child(kit.box("Chest", Vector3(1.3, 1.45, 0.8), Vector3(0, 0.73, 0), "giant_tunic", fp))
-	torso.add_child(kit.box("Belt", Vector3(1.36, 0.18, 0.86), Vector3(0, 0.1, 0), "giant_belt", fp))
-	torso.add_child(kit.box("Neck", Vector3(0.36, 0.2, 0.36), Vector3(0, 1.52, 0), "giant_skin", fp))
-	torso.add_child(kit.box("Head", Vector3(0.62, 0.62, 0.62), Vector3(0, 1.74 + 0.0, 0), "giant_skin", fp))
-	torso.add_child(kit.box("Hair", Vector3(0.66, 0.16, 0.66), Vector3(0, 2.08, 0.02), "giant_hair", fp))
-	torso.add_child(kit.box("Brow", Vector3(0.5, 0.08, 0.06), Vector3(0, 1.86, -0.32), "giant_hair", fp))
-	torso.add_child(kit.box("EyeL", Vector3(0.08, 0.08, 0.04), Vector3(-0.13, 1.78, -0.32), "eyes", fp))
-	torso.add_child(kit.box("EyeR", Vector3(0.08, 0.08, 0.04), Vector3(0.13, 1.78, -0.32), "eyes", fp))
-	body.add_child(torso)
+		body.add_child(kit.n3("HipL" if side < 0 else "HipR", Vector3(0.32 * side, 1.6, 0)))
+	body.add_child(kit.n3("Torso", Vector3(0, 1.6, 0)))
 	for side in [-1.0, 1.0]:
 		var shoulder := kit.n3("ShoulderL" if side < 0 else "ShoulderR", Vector3(0.82 * side, 2.9, 0))
 		shoulder.basis = SceneKit.arm_basis(12.0 * side, -78.0)
-		shoulder.add_child(kit.box("UpperArm", Vector3(0.34, 0.34, 0.8), Vector3(0, 0, -0.4), "giant_skin"))
-		shoulder.add_child(kit.box("Forearm", Vector3(0.3, 0.3, 0.7), Vector3(0, 0, -1.15), "giant_skin"))
-		shoulder.add_child(kit.box("Hand", Vector3(0.38, 0.38, 0.38), Vector3(0, 0, -1.5), "giant_skin"))
-		if side > 0:
-			var club := kit.cyl("Club", 0.24, 0.11, 1.85, Vector3(0, 0, -1.5 - 0.925), "club")
-			club.rotation_degrees = Vector3(-90, 0, 0)
-			shoulder.add_child(club)
+		# where each stylized hand was: the brain's hand point (the grab socket's aim, the headless weapon)
+		shoulder.add_child(kit.marker("Hand", Vector3(0, 0, -1.5)))
 		body.add_child(shoulder)
-	# P22 (decision 9): one vertex-coloured mesh per pivot with the rig material. The club stays its
-	# own mesh (the weapon visual hides it), and the chest, the belt and the head (render layer 2,
-	# which the camera culls in first person) stay three meshes of their own: 8 meshes, was 19.
-	kit.merge_rig(body, {
-		"Torso": [["Chest", ["Chest"]], ["Belt", ["Belt"]], ["Head", ["Neck", "Head", "Hair", "Brow", "EyeL", "EyeR"]]],
-		"ShoulderR": [["Club", ["Club"]]],
-	})
-	# Where each hand is (the grab socket's visible grip, tests), now that the hand box is merged.
-	for shoulder_name: String in ["ShoulderL", "ShoulderR"]:
-		body.get_node(shoulder_name).add_child(kit.marker("Hand", Vector3(0, 0, -1.5)))
+	# an edit-state instance: the saved scene keeps the instance alone, so the model's index is always
+	# giant_model.tscn's own (a copy saved here would go stale when the model is regenerated)
+	var model_path := kit.output_path(MODEL)
+	if ResourceLoader.exists(model_path):
+		var model := (load(model_path) as PackedScene).instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+		model.name = "Model"
+		body.add_child(model)
+	else:
+		push_error("player: %s is missing (tools/builders/giant_model.gd runs before player.gd)" % MODEL)
+	# the weapon's parent: at the brain's hand headless, in the fist with the skinned layers (SkinnedRig)
+	var socket := kit.n3("WeaponSocket", Vector3(0.82, 2.9, 0) + SceneKit.arm_basis(12.0, -78.0) * Vector3(0, 0, -1.5))
+	socket.basis = SceneKit.arm_basis(12.0, -78.0)
+	body.add_child(socket)
 	root.add_child(visual)
 	var rig := kit.n3("CameraRig")
 	kit.scripted(rig, S_CAMERA)

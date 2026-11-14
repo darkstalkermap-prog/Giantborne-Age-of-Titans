@@ -8,7 +8,8 @@ They read the committed outputs (assets/giant/) and exercise the pure parts of t
 data: the per-channel resize, the region encoding, the caps (no open cut on Body_Limbs or on any limb
 garment part), the packing rule, the design generator's determinism, the --skip-bake read-back of AO
 and thickness, the manifest round trip, the Cycles tolerance on another toolchain, the Web budget's
-estimate rules and the vendored subset's file list.
+estimate rules and the vendored subset's file list; P43: the clips (every clip in giant_clips.glb on the
+model's bones, the gaits' stride within 5 % of the brain's 3.2 m a cycle, no planted foot sliding).
 """
 from __future__ import annotations
 
@@ -293,6 +294,44 @@ class ManifestTest(unittest.TestCase):
         lm = doc["index"]["landmarks"]
         self.assertAlmostEqual(lm["shoulder_r"][0], 0.414, delta=0.02)
         self.assertAlmostEqual(lm["reach_r"], 1.385, delta=0.02)
+
+
+class ClipsTest(unittest.TestCase):
+    """P43 (plan M10 §3.3 design 3): giant_clips.glb holds the computed clips on the model's skeleton, and
+    the gaits' measures in the manifest (kit/clips.py measures them on the posed skeleton) keep the
+    contract: a stride within 5 % of the brain's 3.2 m per cycle, the planted foot's ground point
+    still (no slide, no lift), the keyed rotations reproducing the solved pose."""
+
+    def setUp(self):
+        with open(os.path.join(ROOT, manifest.REL_PATH), encoding="utf-8") as fh:
+            self.doc = json.load(fh)
+        if "clips" not in self.doc:
+            self.skipTest("no clips in the manifest yet")
+
+    def test_the_gaits_keep_the_brains_stride_and_plant_their_feet(self):
+        info = self.doc["clips"]
+        self.assertAlmostEqual(info["cycle_m"], 3.2, delta=1e-9, msg="two steps of the brain's 1.6 m")
+        for name in ("walk", "run"):
+            g = info["gaits"][name]
+            self.assertLess(abs(g["stride_error"]), 0.05, "%s: stride %.4f m within 5 %%" % (name, g["stride_m"]))
+            self.assertLess(g["slide_m"], 0.002, "%s: the planted foot does not slide" % name)
+            self.assertLess(g["contact_error_m"], 0.002, "%s: the posed contact is the planned one" % name)
+            self.assertLess(g["ground_lift_m"], 0.002, "%s: the planted contact stays on the ground" % name)
+            self.assertLess(g["pelvis_drop_m"], 0.45, "%s: the pelvis drops %.3f m at most" % (name, g["pelvis_drop_m"]))
+        self.assertLess(info["conversion_error_m"], 1e-4, "the keys reproduce the solved poses")
+
+    def test_the_clips_glb_animates_the_models_bones(self):
+        doc, _binary = read_glb(os.path.join(ASSETS, "giant_clips.glb"))
+        names = sorted(a["name"] for a in doc.get("animations", []))
+        self.assertEqual(names, sorted(self.doc["clips"]["clips"]), "every clip, named as the game asks for it")
+        model, _b = read_glb(os.path.join(ASSETS, "giant.glb"))
+        bones = {n["name"] for n in model["nodes"] if "mesh" not in n}
+        for a in doc["animations"]:
+            for ch in a["channels"]:
+                target = doc["nodes"][ch["target"]["node"]]["name"]
+                self.assertIn(target, bones, "%s animates %s, a bone of giant.glb" % (a["name"], target))
+        for name, c in self.doc["clips"]["clips"].items():
+            self.assertEqual(c["loop"], name in ("idle", "walk", "run"), name)
 
 
 class ToleranceTest(unittest.TestCase):

@@ -172,9 +172,13 @@ func _process(delta: float) -> void:
 		_walk_phase += delta * speed / (stride_length_m * body_scale) * PI
 		_count_footfalls()
 	var swing := sin(_walk_phase) * clampf(speed / 5.0, 0.0, 1.2) if moving else 0.0
+	_last_state = s          # P43: the brain's outputs, read by SkinnedRig (read accessors below)
+	_last_walking = moving
+	_last_swing_share = 0.0
 	if state == CombatController.State.LOCOMOTION and action == null:
 		arm.y += swing * 16.0
 		off.y -= swing * 16.0
+		_last_swing_share = clampf(speed / 5.0, 0.0, 1.2) if moving else 0.0
 	if exact:
 		_arm = arm
 	else:
@@ -492,3 +496,55 @@ func _p30_promote(s: Dictionary) -> void:
 	if acting != _p30_promoted:
 		_p30_promoted = acting
 		RigPaint.set_mid_active(body, not acting, render_lod_m)
+
+
+# --- read accessors (P43, plan M10 §2.9) ------------------------------------------------------------
+# The skinned body (SkinnedRig, a subclass) follows the brain: it reads what the brain computed this frame,
+# after ActorRig._process. Read only; nothing here changes a pose. Hook lines: _process stores the state it
+# read and the walk's arm swing.
+
+var _last_state: Dictionary = {}
+var _last_walking := false
+var _last_swing_share := 0.0
+
+
+## The rig state the brain read this frame (actor.get_rig_state(); {} before the first frame).
+func rig_state() -> Dictionary:
+	return _last_state
+
+
+## The weapon arm's pose (yaw, pitch in degrees; AttackGeometry's exact arc during ACTIVE).
+func arm_pose() -> Vector2:
+	return _arm
+
+
+## The off arm's pose (yaw, pitch in degrees).
+func off_pose() -> Vector2:
+	return _off
+
+
+## The walk phase (radians; one footfall every pi), advanced only while the brain walks.
+func walk_phase() -> float:
+	return _walk_phase
+
+
+## True while the brain walks this frame (speed over 0.3 m/s in LOCOMOTION or BLOCKING).
+func is_walking() -> bool:
+	return _last_walking
+
+
+## The share of the walk's arm swing the brain added to both arms this frame: the arms swing by
+## 16 degrees x sin(walk phase) x this share (the speed / 5 m/s, at most 1.2); 0 when it added none (an
+## action, a block, standing).
+func arm_swing_share() -> float:
+	return _last_swing_share
+
+
+## The torso's twist (radians about Body's Y).
+func torso_twist() -> float:
+	return torso.rotation.y if torso != null else 0.0
+
+
+## How far the death fall has gone (0 standing ... 1 down).
+func fall_fraction() -> float:
+	return _fall

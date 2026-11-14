@@ -1802,6 +1802,78 @@ On the same machine the stand-in of spheres and a card drew in 9.2-16.1 ms (P42'
 three times as much in software rendering, 34-54 ms a frame at loads of 4-6. At 960x720 with the hi tier one run
 took 109 ms a frame.
 
+### The skinned giant (P43, W26)
+
+The skinned giant (`docs/systems/P43.md`) on P43's branch, 14 November 2026. Container as above; two Blender renders
+shared the machine through all of it (about 3.7 of the 4 CPUs, loads 4-7), so these are a busy machine's times. The
+base is the W25-merged tree (`2b55676`), whose default and slow tiers ran on the same machine the same day (74.0 s and
+368.4 s); its gate tier is the 0.9.0-m9 ship check's (W24, 687.0 s), the last gate run of the same gate suites.
+
+**The skin's CPU** (plan M10 §3.3 item 8; the cap 0.10 ms a frame): `SkinnedRig._drive_tree`, the `AnimationTree`'s
+advance, the skeleton's update and `PoseBrainModifier`, timed around the calls on the final code:
+
+| | Idle | Walking | A tip-matched heavy |
+| --- | --- | --- | --- |
+| Native, tight loops (the best of five batches of 200; two runs) | **0.057 ms** | **0.063 ms** | **0.085 ms** (0.100 in the noisier run) |
+| Of which the modifier | 0.022 ms | 0.022 ms | 0.049 ms (the tip match, the two-bone solve and the wrist limit's re-solves) |
+| In the game's frames (300 frames each, p10 / p50 / p90) | 0.105 / 0.122 / 0.178 ms | 0.123 / 0.146 / 0.195 ms | 0.151 / 0.175 / 0.231 ms (the lights) |
+
+In the test runner (`--fixed-fps 60`, first person, a load of 4-5) a tick took 0.90 ms with the layers on against
+0.62 ms with them off. Run back to back with the layers on and off, `test_grab_first_person` took 987 / 1,131 ms
+against 1,032 / 917 ms and `test_weapons` 1,306 / 1,170 ms against 1,168 / 1,041 ms: the layers cost those two
+suites at most about 0.15 s each.
+
+**The rendered suites** (Xvfb, the Compatibility renderer, llvmpipe at 2 threads, 320x240; the final check's run):
+
+| Suite | Base | P43 | |
+| --- | --- | --- | --- |
+| `test_skinned_rig_render` (slow, new) | - | 10.0 s | stage 1: 9 frames, 51.7 ms a frame of the whole giant (43.8 alone; P42's probe 34-54 ms) |
+| `test_skinned_rig_stages` (gate, new) | - | 26.7 s | stages 4 and 6 with the reinforced club, and the pressed-close passage |
+| `test_world_build` (`world_draw_probe`) | 29.9 s | 31.0 s (34.6 in the first final check) | the giant's first shader compiles; the giant adds 10 draw calls to each viewpoint (the stylized giant 8): at most 50 (48) |
+| `test_formation_perf` (`formation_draw_probe`) | 10.0 s | 10.6 s | 90 calls near a stage-4 giant, as before; 8 far (10) |
+| `test_rig_draw_calls` (`rig_draw_probe`) | 3.9 s | 4.6 s | the twelve rigs: 77 calls, as before |
+
+**The determinism gate** (`tests/gate/test_giant_determinism.gd`, 177.0 s): the seeded 120 s soak without the skin,
+with the skin and the Wanderer's look and with the Ash Raider's printed byte-identical `AUTOPILOT_RESULT` lines; the
+skin's runs posed 7,204 frames with 254 rig footfalls and showed different meshes for the two looks. The seeded Valley
+run (intimidate, novice, seed 3, 150 s) printed the same result with and without the skin (but for the PerfProbe's
+timings and the node samples): 4 grabs, 3 throws, 252 held-visual writes, 9,001 posed frames. Every child run: 0
+errors, 0 warnings, nothing leaked at exit.
+
+**The check** (`tools/check.sh --build --slow --gate --giant --require --strict-times`, then the 120 s soak). The
+first run failed five checks of the slow tier's route suites: the crosshair probe's per-bone boxes of the torso lay on
+the third-person centre ray where the surface was not; the probe now tests the bones' triangles (`docs/systems/P43.md`,
+"Tests"), and the second run passed:
+
+| | Base | P43, first run | P43, final |
+| --- | --- | --- | --- |
+| Default tier | 74.0 s (the W25 merge: 70.4 s) | 70.6 s | **72.0 s** (under 75: no re-run) |
+| Slow tier | 368.4 s | 366.3 s | **361.5 s** (budget 8 min) |
+| Gate tier | 687.0 s (W24) | 919.4 s | **881.6 s** (budget 50 min) |
+| Suites, checks, failures | 281, 49,839, 0 (no gate tier) | 316, 53,613, 5 | **316, 53,619, 0** |
+| `--build` | - | every scene rebuilt, none changed; the world's seams ok | the same |
+| `--giant` | `--verify --skip-bake` 72 s, 12 files; `--budget` 2.85 MiB (W25) | 68 s, 13 files with the clips (3.0 s) | 75 s, `GIANT VERIFY OK`, 13 files; `--budget` **2.87 MiB** (cap 4.6) |
+| Soak | - | - | 120 s, 7,201 frames, `"errors":0`, 2 fence breaks, 2 loot, 10 debris |
+
+**The package's cost** (plan M10 §1.7 rule 2: its own suites plus the change in the suites that load the giant,
+from the runner's per-suite times of the final run against the base; `python3 tools/giant_suites.py` lists 125
+default, 44 slow and 23 gate suites besides P43's own):
+
+| Tier (cap) | Its own suites | The suites that load the giant | Cost |
+| --- | --- | --- | --- |
+| Default (0.6 s) | `test_skinned_rig` 0.283 + `test_skin_rules` 0.039: **0.32 s** | the eight it changed or that load the giant by name (`test_rig_merge`, `test_growth`, `test_growth_456`, `test_camera_review_fixes`, `test_grab_throw`, `test_weapons`, `test_session_flow`, `test_grab_first_person`): +0.08 s (the two first-person suites +0.48 and +0.51, `test_growth` -0.43, `test_grab_throw` -0.35); all 125: -4.8 s | **0.40 s** |
+| Slow (45 s) | `test_skinned_rig_render` 10.0 + `test_skinned_rig_motion` 2.0: **12.1 s** | the rendered suites (`test_world_build` +1.1, `test_formation_perf` +0.7, `test_rig_draw_calls` +0.7) and the probe's routes (`test_growth_route` +0.9, `test_growth_route_456` +1.5): +4.9 s; all 44: -19.0 s | **17.0 s** |
+| Gate (6 min) | `test_giant_determinism` 177.0 + `test_skinned_rig_stages` 26.7: **203.7 s** | all 23 against W24's run: -7.2 s | **3.4 min** |
+
+The sums over all the suites that load the giant are the machine's noise (the base's default tier ran at 74.0 s, the
+final run's at 72.0 s with P43's suites in it), so the costs above count the suites P43 changed or drew; `test_anchors`
+(every script compiled) took 12.6 s against 11.1.
+
+**The capture tour** (`--scenario=capture_m10 --skin` with `--write-movie`, Xvfb, llvmpipe; `docs/systems/P43.md`):
+2,331 frames at 30 fps (77.7 s of video at 1280x720; the 38 frames at the window's 960x540), every beat played,
+`"errors":0`, in 8 min 30 s of wall time beside the two renders (the plan assumed 4 minutes). Headless (no frames)
+it runs in 11 s.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |

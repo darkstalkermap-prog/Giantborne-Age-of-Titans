@@ -1,6 +1,7 @@
 extends IntegrationSuite
 ## Regressions from the camera/targeting review: arm collapse at a doorway, first-person body
-## occlusion, guard facing, stick flicks, and switching with the target behind the camera.
+## occlusion, guard facing, stick flicks, and switching with the target behind the camera. P43: the
+## first-person occlusion test checks the realistic giant's render layers and the camera's masks.
 
 
 func test_follow_arm_stays_long_through_a_doorway() -> void:
@@ -21,18 +22,47 @@ func test_follow_arm_stays_long_through_a_doorway() -> void:
 	assert_true(min_arm > 3.0, "arm never collapses while passing the doorway (min %.2f m)" % min_arm)
 
 
+## P43 (plan M10 decision 8): the realistic giant's render layers and the camera's masks. The head, hair,
+## beard and eyes are on layer 3, the torso and the garments' core parts on layer 2, the limbs and the
+## garments' limb parts on layer 1 (the index says which, and these lists pin it); first person culls
+## layers 2 and 3 and draws the limbs and the weapon; third person draws everything.
+const HEAD_MESHES := ["Body_Head", "Eyes", "Hair_crop", "Hair_long_back", "Beard_full", "Beard_short"]
+const TORSO_MESHES := ["Body_Torso", "Garment_tunic_core", "Garment_braies_core", "Garment_jerkin", "Garment_furs",
+	"Garment_belt"]
+const LIMB_MESHES := ["Body_Limbs", "Garment_tunic_limbs", "Garment_braies_limbs", "Garment_boots", "Garment_bracers"]
+
+
 func test_first_person_hides_the_giants_torso() -> void:
 	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
 	await step_ticks(2)
+	var model := p.get_node("Visual/Body/Model") as GiantModel
+	var third := p.camera_rig.camera.cull_mask
+	assert_eq(third, CameraRig.CULL_ALL, "third person draws every layer")
 	p.router.inject_edge(&"camera_toggle")
 	await step_ticks(1)
 	var mask := p.camera_rig.camera.cull_mask
-	for path in ["Visual/Body/Torso/Chest", "Visual/Body/Torso/Belt", "Visual/Body/Torso/Head"]:
-		var mi := p.get_node(path) as MeshInstance3D
-		assert_eq(mi.layers & mask, 0, "%s is not drawn in first person" % path.get_file())
-	# P22: the arm's boxes are one merged mesh ("Mesh") on render layer 1.
-	var arm := p.get_node("Visual/Body/ShoulderR/Mesh") as MeshInstance3D
-	assert_true((arm.layers & mask) != 0, "the arm (hand/weapon representation) stays visible")
+	assert_eq(mask, CameraRig.CULL_FIRST_PERSON, "first person's mask")
+	assert_eq(mask & (1 << (CameraRig.HEAD_LAYER - 1)), 0, "first person culls layer 3")
+	assert_eq(mask & (1 << (CameraRig.TORSO_LAYER - 1)), 0, "and layer 2")
+	assert_true((mask & 1) != 0, "and draws layer 1")
+	var listed := {}
+	for group: Array in [[HEAD_MESHES, CameraRig.HEAD_LAYER], [TORSO_MESHES, CameraRig.TORSO_LAYER], [LIMB_MESHES, 1]]:
+		for id: String in group[0]:
+			listed[id] = true
+			var mi := model.mesh(id)
+			assert_true(mi != null, "%s is in the model" % id)
+			if mi == null:
+				continue
+			assert_eq(mi.layers, 1 << (int(group[1]) - 1), "%s on render layer %d" % [id, group[1]])
+			assert_eq((mi.layers & mask) != 0, int(group[1]) == 1, "%s %s in first person" % [id,
+				"drawn" if int(group[1]) == 1 else "not drawn"])
+			assert_true((mi.layers & third) != 0, "%s drawn in third person" % id)
+	for id: String in model.index.meshes:
+		assert_true(listed.has(id), "%s is one of the listed meshes" % id)
+	var weapon := p.equipment.visual as Node3D
+	assert_true(weapon != null and weapon.get_parent() == p.get_node("Visual/Body/WeaponSocket"), "the weapon hangs at the socket")
+	for mi: MeshInstance3D in weapon.find_children("*", "MeshInstance3D", true, false):
+		assert_true((mi.layers & mask) != 0, "the weapon's %s stays visible" % mi.name)
 
 
 func test_block_guards_the_aim_while_backing_off() -> void:
