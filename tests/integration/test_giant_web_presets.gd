@@ -1,0 +1,150 @@
+extends TestSuite
+## P45 (plan M10 §3.5 item 6; the owner's answer 1, §0.6): the realistic giant in the Web build. Parses
+## only - export_presets.cfg, tools/build_web.sh, web/launcher.html, the web checks' constants and the
+## saved model's index; exports nothing and starts no process.
+##   * the Web presets ship the giant whole: its 1024 px maps (assets/giant/tex_hi/) stay in the pack
+##     from W27 on, and only the pipeline's manifest is left out; the desktop presets leave nothing of
+##     the giant out;
+##   * the tier's fallback order: "auto" draws the normal and ORM maps from tex_hi/ where the pack has
+##     them (the Web as the desktop) and from tex/ where it does not, map by map; the albedo and the
+##     masks always come from tex/; --giant-tier= forces a tier;
+##   * build_web.sh's milestone budget: 23 MB up to -m9, 26 MB from -m10 on, the giant's share the
+##     budget less 18.4 MB (tests/slow/test_giant_tooling.gd runs the rule through --version=);
+##   * the launcher's open-world start passes --mode=world --creator, GameSession turns those into a
+##     creator start for the world, and the Chromium checks expect the same arguments.
+
+const PRESETS := "res://export_presets.cfg"
+const BUILD_WEB := "res://tools/build_web.sh"
+const LAUNCHER := "res://web/launcher.html"
+const MODEL := "res://scenes/player/giant_model.tscn"
+const WORLD_START_CHECK := "res://tools/web/world_start_check.mjs"
+const CREATOR_CHECK := "res://tools/web/creator_check.mjs"
+## What the launcher hands the engine for "Start in the open world" (plan M10 §3.5).
+const WORLD_START := ["--", "--mode=world", "--creator"]
+
+
+## preset name -> {"platform", "exclude": PackedStringArray}.
+static func _presets() -> Dictionary:
+	var cfg := ConfigFile.new()
+	if cfg.load(PRESETS) != OK:
+		return {}
+	var out := {}
+	for section in cfg.get_sections():
+		if not section.begins_with("preset.") or section.ends_with(".options"):
+			continue
+		var excl := PackedStringArray()
+		for f in str(cfg.get_value(section, "exclude_filter", "")).split(",", false):
+			excl.append(f.strip_edges())
+		out[str(cfg.get_value(section, "name", ""))] = {"platform": str(cfg.get_value(section, "platform", "")),
+			"exclude": excl}
+	return out
+
+
+## A JavaScript array literal of strings as the launcher and the checks write it.
+static func _js_array(items: Array) -> String:
+	var parts := PackedStringArray()
+	for i: Variant in items:
+		parts.append("'%s'" % str(i))
+	return "[" + ", ".join(parts) + "]"
+
+
+func test_the_web_presets_ship_the_hi_tier_and_leave_out_only_the_manifest() -> void:
+	var presets := _presets()
+	assert_true(presets.has("Web") and presets.has("Web (test)") and presets.has("Linux"), "the presets parse")
+	for name: String in presets:
+		var p: Dictionary = presets[name]
+		var excl := p.exclude as PackedStringArray
+		var giant := PackedStringArray()
+		for f in excl:
+			if f.begins_with("assets/giant") or f.begins_with("assets/shaders") or f.begins_with("scenes/player"):
+				giant.append(f)
+		var want := PackedStringArray(["assets/giant/manifest.json"]) if str(p.platform) == "Web" else PackedStringArray()
+		assert_eq(giant, want, "%s leaves out of the giant: %s" % [name, str(want)])
+	# The files the tiers name are in the project (so in every pack that does not exclude them).
+	for f: String in ["tex/albedo.png", "tex/normal.png", "tex/orm.png", "tex/masks.png", "tex_hi/normal.png",
+			"tex_hi/orm.png"]:
+		assert_true(FileAccess.file_exists("res://assets/giant/%s.import" % f), "assets/giant/%s is imported" % f)
+
+
+func test_auto_draws_the_hi_maps_where_the_pack_has_them() -> void:
+	var packed := load(MODEL) as PackedScene
+	assert_true(packed != null, "scenes/player/giant_model.tscn")
+	if packed == null:
+		return
+	var model := packed.instantiate() as GiantModel
+	var index: Dictionary = model.index
+	model.free()
+	var tiers: Dictionary = index.get("tiers", {})
+	assert_eq([str(tiers.get("web", "")), str(tiers.get("hi", ""))], [GiantLook.TEX_WEB, GiantLook.TEX_HI],
+		"the index names tex/ and tex_hi/")
+	var before := GiantLook.forced_tier
+	GiantLook.forced_tier = ""
+	var web := GiantLook.TEX_WEB
+	var hi := GiantLook.TEX_HI
+	# A pack with tex_hi/ (every preset from W27 on) and one without (a Web build of W25 and W26).
+	var with_hi := func(_p: String) -> bool: return true
+	var without_hi := func(p: String) -> bool: return not p.begins_with(hi)
+	var orm_only := func(p: String) -> bool: return p != hi + "normal.png"
+	assert_eq(GiantLook.resolve_tier("auto", index, with_hi), "hi", "auto is hi where tex_hi/normal.png is packed")
+	assert_eq(GiantLook.resolve_tier("auto", index, without_hi), "web", "and web where it is not")
+	assert_eq(GiantLook.resolve_tier("auto", index), "hi", "this project has tex_hi/: auto is hi")
+	var maps := GiantLook.map_paths(index, "auto", with_hi)
+	assert_eq([str(maps.normal_tex), str(maps.orm_tex)], [hi + "normal.png", hi + "orm.png"],
+		"hi: the normal and ORM maps from tex_hi/")
+	assert_eq([str(maps.albedo_tex), str(maps.mask_tex)], [web + "albedo.png", web + "masks.png"],
+		"the albedo and the masks always from tex/")
+	for u: String in maps:
+		assert_true(ResourceLoader.exists(str(maps[u])), "%s loads (%s)" % [u, maps[u]])
+	maps = GiantLook.map_paths(index, "auto", without_hi)
+	for u: String in maps:
+		assert_true(str(maps[u]).begins_with(web), "without tex_hi/ every map falls back to tex/ (%s)" % u)
+	maps = GiantLook.map_paths(index, "hi", orm_only)
+	assert_eq([str(maps.normal_tex), str(maps.orm_tex)], [web + "normal.png", hi + "orm.png"],
+		"the fallback is map by map: a missing hi normal map draws tex/'s, the ORM stays hi")
+	GiantLook.forced_tier = "web"
+	assert_eq(GiantLook.resolve_tier("auto", index, with_hi), "web", "--giant-tier=web forces the 512 px maps")
+	GiantLook.forced_tier = before
+
+
+func test_the_budget_is_26_mb_from_m10_on() -> void:
+	var text := FileAccess.get_file_as_string(BUILD_WEB)
+	var lines := text.split("\n")
+	var rule: Array[String] = []
+	for l in lines:
+		var s := l.strip_edges()
+		if s.contains("BUDGET_MB=") and (s.begins_with("if ") or s.begins_with("elif ") or s.begins_with("else ")):
+			rule.append(s)
+	assert_eq(rule, ['if [ "$MILESTONE" -le 6 ]; then BUDGET_MB=7.5', 'elif [ "$MILESTONE" -le 7 ]; then BUDGET_MB=21',
+		'elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23', "else BUDGET_MB=26"] as Array[String],
+		"7.5 MB to M6, 21 at M7, 23 at M8 and M9, 26 from M10 on")
+	assert_true(text.contains('v = $BUDGET_MB - 18.4;'), "the giant's share: the budget less 18.4 MB (7.6 at 26)")
+	assert_true(text.contains("PART_MAX=15000000"), "still in parts of at most 15 MB")
+	assert_true(text.contains('--version=*) VERSION="${arg#--version=}" ;;'), "--version= stands for config/version")
+
+
+func test_the_open_world_start_passes_the_creator() -> void:
+	var html := FileAccess.get_file_as_string(LAUNCHER)
+	assert_true(html.contains("start(%s);" % _js_array(WORLD_START)), "the launcher: start(%s)" % _js_array(WORLD_START))
+	assert_false(html.contains("start(['--', '--mode=world']);"), "and no longer the bare world start")
+	# The game's own arguments are what follows "--".
+	var user := PackedStringArray()
+	for a: String in WORLD_START.slice(1):
+		user.append(a)
+	user.append("--no-user-settings")
+	var o := GameSession.parse_args(user)
+	assert_eq([str(o.mode), bool(o.creator), str(o.unknown_mode)], ["world", true, ""], "GameSession reads them")
+	var mode_before := GameSession.mode
+	var start_before := GameSession.creator_start.duplicate(true)
+	var persist_before := GameSession.persist
+	var preset_before := Appearance.cli_preset
+	GameSession.apply_args(o)
+	assert_eq(GameSession.mode, GameSession.Mode.TITLE, "--creator shows the title")
+	assert_eq(str(GameSession.creator_start.get("mode", "")), "world", "with a creator start for the world")
+	GameSession.creator_start = start_before
+	GameSession.mode = mode_before
+	GameSession.persist = persist_before
+	Appearance.cli_preset = preset_before
+	# The Chromium checks expect the same arguments.
+	for path: String in [WORLD_START_CHECK, CREATOR_CHECK]:
+		var js := FileAccess.get_file_as_string(path)
+		assert_true(js.contains("const WORLD_ARGS = %s;" % _js_array(WORLD_START)), "%s expects them" % path.get_file())

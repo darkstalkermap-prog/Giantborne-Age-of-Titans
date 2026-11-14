@@ -79,7 +79,9 @@ func test_the_build_fails_over_the_budget_after_saying_why() -> void:
 	# Without --budget-mb the milestone's budget comes from config/version (decision 8).
 	var version := str(ProjectSettings.get_setting("application/config/version", ""))
 	var milestone := int(version.get_slice("-m", 1)) if version.contains("-m") else 6
-	var expected := "7.5" if milestone <= 6 else ("21" if milestone <= 7 else "23")
+	# P45 (plan M10 §0.6, the owner's answer 1): 26 MB from -m10 on (tests/slow/test_giant_tooling.gd runs
+	# the rule through --version=).
+	var expected := "7.5" if milestone <= 6 else ("21" if milestone <= 7 else ("23" if milestone <= 9 else "26"))
 	var default_run: Dictionary = _check()[0]
 	assert_true(default_run.out.contains("budget_mb=%s " % expected), "%s: the budget is %s MB (%s)" % [version, expected,
 		default_run.out])

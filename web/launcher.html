@@ -237,7 +237,7 @@ kbd {
 (function () {
   // Byte counts of the current export (raw and packed as .txt), used for the progress bar, and the
   // number of parts the packed pck ships in.
-  const BUILD = { wasm: 37700666, pck: 17591244, wasmPacked: 12528700, pckPacked: 17500048, pckParts: 2 }; // set by tools/build_web.sh
+  const BUILD = { wasm: 37700666, pck: 24228276, wasmPacked: 12528700, pckPacked: 22391212, pckParts: 2 }; // set by tools/build_web.sh
 
   const stage = document.getElementById('stage');
   const poster = document.getElementById('poster');
@@ -500,7 +500,8 @@ kbd {
   }
   play.addEventListener('click', function () { start(); });
 
-  // The open-world start (--mode=world: a new game from the world's start, past the Valley)
+  // The open-world start (--mode=world --creator: a new game from the world's start, past the
+  // Valley, through the character creator first, as every new game since M10)
   // replaces the game saved in this browser, so it asks twice: the first press arms it for a few
   // seconds, the second starts. No browser dialog, which a framed page may not be allowed to show.
   const WORLD_LABEL = playWorld.textContent;
@@ -520,7 +521,7 @@ kbd {
     }
     clearTimeout(worldTimer);
     disarmWorld();
-    start(['--', '--mode=world']);
+    start(['--', '--mode=world', '--creator']);
   });
 
   // When this page is republished while someone is playing, the viewer reloads it at a quiet
