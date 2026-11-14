@@ -657,7 +657,8 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   stand 6 m outside the ring's wall, within a stage-6 giant's 13.6 m reach; its blows at Harrok near the ring's stones
   struck a watcher, and two within 30 s turned Skarn hostile for good (Ulfra's price, Skarn's forge shut, hostile
   giants at the Moot and the steading) - not Harrok's death, as the M9 gate's notes said. The watchers are spectators
-  now, whose blows offend no one, and they leave when Harrok is slain (`tests/slow/test_m9_gate_final.gd`).
+  now, whose blows offend no one, and they leave when Harrok is slain (`tests/slow/test_m9_gate_final.gd`,
+  `tests/gate/test_stonehold_walkthrough.gd`).
 - **Engine fire and the music** (fixed at the M9 gate's final round): since the M9 gate's 40 m combat cap a siege
   barrage from beyond 40 m (the Moot battery, the war camp, the toll fort's ballista) stayed at danger even as its
   stones and bolts landed - an engine's shot never reached the music. A landed shot from a hostile crewed engine now

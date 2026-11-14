@@ -2345,8 +2345,8 @@ other lanes' runs; scratch worktrees of this lane's `af0b7b9`, the evidence `m9_
 
 | Run (`w.order_crown:<skill>:2`, stage 4) | Deaths (the simulated second each respawn shows in the trace) | Result |
 | --- | --- | --- |
-| baseline novice (this lane's code) | 408, 485, 552 and 650 s | stopped at 692 s with 4 deaths: the integration's run, which lost with 6 (deaths at 405, 482, 549, 647, 717 and 878 s), within 3 s |
-| baseline expert | 487, 565, 646 and 718 s | stopped at 751 s with 4 deaths: the integration's run (deaths at 485, 563, 644, 715, 789 and 859 s: lost with 6) within 3 s |
+| baseline novice (this lane's code) | 408, 485, 552 and 650 s | stopped at 695 s with 4 deaths: the integration's run, which lost with 6 (deaths at 405, 482, 549, 647, 717 and 878 s), within 3 s |
+| baseline expert | 487, 565, 646 and 718 s | stopped at 755 s with 4 deaths: the integration's run (deaths at 485, 563, 644, 715, 789 and 859 s: lost with 6) within 3 s |
 | **the attempt** novice: `prop.siege_ballista`'s `engine.reload_s` 6.0 -> 10.0 | 410, 516, 639 and 755 s | 4 deaths by 755 s (stopped at 763 s): **over the plan's 1-3** |
 | the attempt, expert | 494, 580, 671 and 747 s | 4 deaths by 747 s (stopped at 813 s) |
 

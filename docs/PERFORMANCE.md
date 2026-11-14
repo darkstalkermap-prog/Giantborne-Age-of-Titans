@@ -636,7 +636,12 @@ average at its start was above the CPU count. A warning prints as `BUDGET WARNIN
 every one at the end with a `WARNINGS: n` line before its RESULT, and `tools/check.sh` prints those lines in its
 summary next to CHECK PASSED, so an over-budget measurement on a loaded machine is seen, not hidden in tests.log.
 At a load of 9.8-10.6 (the round's own runs beside it): the formation case 7.33 ms, the unreachable chase 9.54 ms and
-the M7 gate world's phase (4 slow ticks) warned; the Valley's load time and the world walk's p99 passed.
+the M7 gate world's phase (4 slow ticks) warned; the Valley's load time and the world walk's p99 passed. In the round's
+last full check (`f77ff64`, after the container restart, at a load of about 5.3-6.9 with the final measurement's bot
+runs beside it) none warned and all five were within their budgets: the formation cases 6.16 ms with the engines
+(8 ms) and 3.44 ms for the 40 members (5 ms; the first window 5.68 ms, the second judged), the unreachable chase
+4.20 ms (8 ms), the M7 gate world's actors' phase 0 ticks over 10 ms (at most 3), the Valley's load time within 3 s
+and the world walk's streaming p99 3.52 ms (6 ms).
 
 ### Draw calls after P27 (the HUD)
 
