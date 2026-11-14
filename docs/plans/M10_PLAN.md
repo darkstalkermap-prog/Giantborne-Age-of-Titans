@@ -115,7 +115,11 @@ Design choices are not facts and carry no mark. The facts that shape the plan:
 - **The base** (VERIFIED (code), the system docs and `.userdata/check/suite_times.txt`): the default
   test tier ran 56.2–88.4 s in the last twelve recorded runs (one commit ran 78.2 s and then 63.3 s),
   against a 75 s budget that `check.sh` only warns about; the slow tier 201–297 s of 8 minutes, the
-  gate tier 377–588 s of 50 minutes; 281 suites and 48,145 checks at P39f's last check.
+  gate tier 377–588 s of 50 minutes; 281 suites and 48,145 checks at P39f's last check. On 0.9.0-m9
+  (re-checked on 0.9.0-m9, §7): 291 suites (55 unit, 154 integration, 53 slow, 29 gate) and 50,114 checks
+  at P40's final check (default 73.4 s, slow 314.9 s, gate 687.0 s); the default tier alone is 209 suites
+  and 38,005 checks and ran 78.3 and 79.8 s in two quiet-machine runs, over its 75 s budget, and 65.8–77.9 s
+  in the last twelve recorded runs.
   `ScreenStack.SCREENS`, `ShrineScreen.TABS`, `GiantPlayer.COMPONENTS`, `DataValidator.SCHEMA_PATHS`,
   `build_scenes.gd BUILDERS` and `ResetHooks` are pre-declared registries that skip missing files
   (M6–M9's P20 shipped `test_predeclared_m7.gd` for its entries); `GiantPlayer.rig` is typed `ActorRig`;
@@ -534,7 +538,9 @@ every code hotspot of W25; P41 owns `tools/build_scenes.gd` (one BUILDERS line b
 ### 1.7 Test tiers and budgets in M10
 
 The default tier is the scarce one: 56–88 s against 75 s in the last twelve recorded runs, with ±20 %
-between two runs of one commit on this shared machine (VERIFIED, `suite_times.txt`). M10's rules:
+between two runs of one commit on this shared machine (VERIFIED, `suite_times.txt`). On the 0.9.0-m9 base
+it ran 78.3 and 79.8 s in two runs on the quiet machine, already over 75 s before any M10 suite
+(re-checked on 0.9.0-m9, §7). M10's rules:
 
 1. **Caps per package** (default / slow / gate): P41 0.4 s / 5 s / 0; P42 0.6 s / 20 s / 0; P43
    0.6 s / 45 s / 6 min; P44 0.8 s / 40 s / 0; P45 0.1 s / 10 s / 0; P46 0.1 s / +10 s inside P44's
@@ -556,7 +562,11 @@ between two runs of one commit on this shared machine (VERIFIED, `suite_times.tx
 4. **Headroom first.** In W25, P42 moves at least 3 s of the heaviest existing default suites (by the
    per-suite times on 0.9.0-m9) to `tests/slow/`, choosing long simulations whose checks other
    default suites repeat, and lists them in its system doc; together with rule 1 the default tier
-   then ends M10 no higher than it starts.
+   then ends M10 no higher than it starts. (Re-checked on 0.9.0-m9: the base already runs 78–80 s, so
+   3 s alone leaves the W25 merge's `--strict-times` over 75 s. P42 moves at least 3 s and as much more
+   as its own two runs show is needed for the faster run of the W25 merge, with P41's and P42's own
+   1.0 s, to stay under 75 s: about 6–7 s on the re-check's runs. The per-suite and per-test times and
+   the candidates are in `<scratchpad>/m10/w25/recheck/heaviest_default_suites.md`, §7.)
 5. **`--strict-times`** (P41 adds it to `check.sh`, which today only warns): when the default tier
    takes over 75 s or the slow tier over 8 minutes, the tier runs once more and the faster run
    decides; both runs are recorded. Every wave merge and the gate run with it.
@@ -1185,8 +1195,8 @@ No new setting in M10 (the World style is deferred, §0.5).
 | Repository growth | ≤ 25 MB (the vendored CC0 subset ≈ 10 MB raw, ≈ 7 MB after the trim; generated assets ≈ 8–12 MB) | P41, P46 |
 | Full regeneration | `--giant-full` ≤ 25 min and `--giant` ≤ 6 min at 2 threads on this machine | P41 |
 
-The arithmetic behind the share (MiB shipped): the base 16.59 (VERIFIED at `1c33b8e`; re-measured on
-0.9.0-m9 before W25) + the meshes with LODs and the four floor hair and beard meshes 1.76 (VERIFIED) +
+The arithmetic behind the share (MiB shipped): the base 16.59 (VERIFIED at `1c33b8e`; 16.69 on 0.9.0-m9,
+17,499,328 B, re-checked on 0.9.0-m9, so every total below is 0.10 higher: floor ≈ 19.6, target ≈ 21.2) + the meshes with LODs and the four floor hair and beard meshes 1.76 (VERIFIED) +
 the Web-tier textures and the hair atlas ≈ 0.80 (VERIFIED rates: albedo 89 KB, normal 329 KB, ORM
 136 KB, masks about 34 KB, scars and tattoo about 13 KB, the atlas 229 KB) + the design array ≈ 0.10
 (ASSUMED: 4–6 layers at 10–17 KB each, feasibility review) + the denser crop ≈ 0.06 (ASSUMED) + cloth
@@ -1371,7 +1381,8 @@ existing default suites to `tests/slow/` (§1.7 rule 4); `docs/plans/FOLLOWUPS.m
 
 **Design** (§2.2–§2.4, §2.8, §2.9's tip matching, §2.11):
 1. **Pre-declarations** and `test_predeclared_m10.gd`.
-2. **Headroom**: with P41's per-suite times, move at least 3 s of default suites to the slow tier.
+2. **Headroom**: with P41's per-suite times, move at least 3 s of default suites to the slow tier
+   (re-checked on 0.9.0-m9: enough for the W25 merge to stay under 75 s, §1.7 rule 4).
 3. **`Appearance`**: `sanitize` with notes and the later-build rule; `to_look` resolves palettes,
    locks and `mark: "auto"`; `random_record` follows §2.10 (one category or all; never a region the
    outfit covers); `summary_lines` reads like "Hair: long, combed back, chestnut, a little grey";
@@ -1570,7 +1581,9 @@ point: the capture tour (item 7) goes to P45 if P43 passes 8 hours. **Cross-lane
   `tests/integration/{test_session_flow,test_title_checkpoint_names}.gd` (New Game → the creator →
   Begin); the updates of `tests/integration/{test_shrine,test_shrine_panel_fit,test_talent_tab}.gd`
   (their exact tab lists gain Appearance; "LB twice from Rest" now lands on Ancestry, VERIFIED creator
-  brief)
+  brief) and of `tests/integration/test_progression_player.gd`'s `test_shrine_loadout_and_attributes_tabs`
+  (a shrine with both tabs off: `["Rest", "Grow", "Talents"]` gains Appearance; re-checked on 0.9.0-m9,
+  the creator brief's lab did not run that suite)
 
 **Hotspot edits:** `ui/screens/title_screen.gd` (New Game opens the creator after the confirm and the
 prologue or skip choice; `GameSession.creator_start` opens it at once; `start_game(mode, options)` made
@@ -2011,6 +2024,150 @@ sizes, footfall rates, the hip cut's pitch). Their findings and verdicts are in 
 It did not render a World-style frame: the machine was at a load of 5.5 with two Blender renders and
 an M9 gate-tier run, and the plan defers the World style instead (§0.5). The repository's main
 checkout and M9's worktrees were not modified.
+
+### Before W25: the re-check on 0.9.0-m9
+
+**14 November 2026**, on the main checkout at `86671d3` (the merged 0.9.0-m9 code, `523b956`, plus this
+plan), read-only except for this section and the in-place corrections marked "(re-checked on
+0.9.0-m9)"; 178 commits after `1c33b8e`. Every Godot run went through `tools/gd.sh` under `nice -n 19`;
+the labs ran in a scratch copy of HEAD (`git archive` plus the import cache), never in the repository.
+Evidence: `<scratchpad>/m10/w25/recheck/` (the two default runs, the lab run, the probe logs, the Web
+pack's JSON and listing, `diffstat_1c33b8e_HEAD.txt`, `heaviest_default_suites.md`).
+
+**The code facts of "in the code at `1c33b8e`"** (`git diff 1c33b8e HEAD` on each file, then read):
+
+| Fact | The plan said (at `1c33b8e`) | Now (0.9.0-m9) |
+| --- | --- | --- |
+| `game_session.gd`: `parse_args`, `start_sandbox` clearing the character, `_clear_session`, `on_level_ready` applying a character only on a pending restore | as §0's header | Still true. The file changed in two places only: `_note_respawn_moved` uses `TextUtil.with_the()` (M9 gate), and a comment in `_on_quest_stage_changed` |
+| `autopilot.gd`: the soak's injected inputs (light, heavy, block, dodge, `slot_1`, jump, lock, camera, target; no grab) and `footfalls` = `slot_1` presses | as §0 | Still true. Added: `bot_probe()`, `perf_sections()` and the result's `perf.sections` for bot runs (P39), and `_exit_tree()` printing `WORLD_WALK_UNLOAD` in a world walk (P39f, read by `world_check.mjs`) |
+| `bot_combat.gd` grabs and throws; `run_metrics.gd` counts both | as §0 | Still true. `bot_combat.gd` +234 lines (P39/M9 gate: Rampart Grip asks the grab, engine throws, ability choice); `run_metrics.gd` leaves every throw out of the ability share through `PlayerGrab.is_throw()`, adds `faction_standing` and the level and place to `load_samples` |
+| `actor_rig.gd`: walk phase only in `LOCOMOTION`/`BLOCKING`, the leg swing, no `body_sweep`/`line_pulse` pose, the 0.48π death fall | as §0 | Unchanged file. Still true |
+| `combat_controller.gd`: a jump stays in `LOCOMOTION`; the motor turns toward movement; `speed` in `get_rig_state()` | as §0 | Unchanged files (`scripts/combat/combat_controller.gd`, `scripts/actors/player/player_motor.gd`, `giant_player.gd`). Still true |
+| `dodge.json` (`data/actions/`), `shoulder_charge.json` | 4.5 m in 0.45 s; 26 m/s for 12 m | Unchanged. Still true |
+| `UiScreen.cancel()` closes without asking; `ScreenStack`'s cancel handling; `UiNav.page_step` pad-only | as §0 | Still true (`ui_nav.gd` unchanged; `cancel()` and `handle_cancel()` untouched). M9 added `UiScreen.nav_hint(pad)` (UiNav's line by default; "" hides the footer) and the stack now reads the top screen's `nav_hint()` every frame in `_process`; while any screen is open the HUD hides (`Hud.MenuWatch`) and so does the `hide_under_screens` group (the shrines' floating names) |
+| The camera's one hidden layer (2, first person and pressed close); `weapon_visuals.gd`'s canopy and needles on layer 2 | as §0 | Unchanged files. Still true |
+| `main.gd`'s title boot (no loading gate) | as §0 | Unchanged. Still true |
+| `SceneKit.own()` never owns an instance's children | as §0 | Unchanged. Still true |
+| `SaveSlots.read()` reports only dropped ids; `CharacterState.sanitize()` returns data and dropped ids | as §0 | Unchanged files. Still true |
+| The New Game tests; `audio_check.mjs` and `world_start_check.mjs` press Enter; the launcher's world start passes `--mode=world` | as §0 | `test_session_flow.gd`, both `.mjs` files and the launcher's start buttons unchanged. `test_title_checkpoint_names.gd` gained M9's checks: the save line's mid-sentence "the" and a new `test_display_names_read_lower_case_mid_sentence` (every pickup, talker, forge, battle and exit line). The 0.9.0-m9 release ran `audio_check.mjs`, `world_start_check.mjs`, `stream_check.mjs --world --audio` and P39f's new `world_check.mjs` (a Continue of a v2 world save, a fast travel and a walk), all OK in their default form (three of them re-run on the quiet machine) |
+| `test_predeclared_m7.gd`; `data/tutorial/` | as §0 | Unchanged. Still true |
+| `test_valley_audio_determinism` (gate, 150 s twin runs) | as §0 | Unchanged. Still true |
+| The base's test tiers | default 56.2–88.4 s; 281 suites, 48,145 checks (P39f) | 291 suites (55 / 154 / 53 / 29), 50,114 checks at P40's final check; default 209 suites, 38,005 checks; see the runs below. Corrected in §0's header and §1.7 |
+
+**The four probes** (`<scratchpad>/m10_plan/planner_lab/proj` copied without its import cache,
+re-imported in 5.3 s, each probe run twice; the engine and the research assets are the same, so these
+re-measure the machine, not M9):
+
+| Probe | Planner (§7 above) | Re-check, two runs |
+| --- | --- | --- |
+| 1. First load: body and garments, hair, the lab giant with clips, seven textures | 4.4, 1.5, 3.3, 18.5 ms | 5.8 / 7.2, 1.9 / 2.4, 5.0 / 5.5, 26.0 / 27.6 ms |
+| 1. Cache-miss reload, median of 5 | 3.0, 1.1, 2.5, 16.3 ms | 5.1 / 5.1, 1.7 / 1.9, 3.7 / 4.3, 22.8 / 25.1 ms |
+| 2. Instantiate + enter tree + free: 8 boxes; body, eyes, 7 garments; with hair; the lab giant | 0.027, 0.15, 0.28, 0.13 ms | 0.030–0.038, 0.16–0.19, 0.34–0.44, 0.15–0.20 ms |
+| 3. The 2D-array import | `CompressedTexture2DArray`, 4 layers 256x256, DXT5 (19), mipmaps, accepted by a `sampler2DArray` | the same |
+| 4. The `animation_library` import | `grip` 0.033 s, `idle` 2.000 s, `walk` 1.067 s, 45 tracks, loop off | the same |
+| `rig.game_engine.json` | 53 bones | 53 bones |
+
+The timings are 1.2–1.6 times the planner's (the machine ran slower than during planning: the
+default tier too, below). The conclusions of §1.7 rule 3 stand: a cache miss now costs about 28–30 ms, so the
+`preload` and the static texture cache matter more, and instancing stays well under 1 ms.
+
+**The creator brief's shrine fit and save lab**, on HEAD's `shrine_screen.gd`, `ui_screen.gd`,
+`title_screen.gd` and save code (the lab's `shrine_screen_tabs.diff`, `appearance_tab.gd` and its two
+lab suites in the scratch copy, then the whole default tier there):
+
+- **The seventh tab fits as before**: tabs Rest, Grow, Loadout, Attributes, Talents, Ancestry,
+  Appearance; the tab row's minimum width 542 px; the panel at (260, 54), 760x580, inside the room
+  above the footer (1280x690); every tab's panel and Leave inside; RB visits all seven. M9's open-tab
+  marking (`UiKit.set_tab_open`, same size open or closed) changes none of it.
+- **The save lab passes on M9's code** (12 checks, 0 failures): the 887-byte `appearance` block in a
+  2,537-byte save survives `write`, `read()` (no message), Continue (apply, capture, normalize), the next
+  checkpoint and a death reload; a schema 3 save is refused with the same message and Continue is off.
+- **The suites that assert the exact tab list** (the default tier with the seventh tab: 211 suites,
+  7 failures, all expected): `test_shrine.test_shrine_screen_rest_and_grow_tabs`,
+  `test_shrine_panel_fit.test_every_tab_and_the_ancestry_screen_fit_at_level_20`,
+  `test_talent_tab.test_the_talents_and_ancestry_tabs_with_a_pad` (the list, "LB twice from Rest" now
+  Ancestry, and a follow-on null) as the brief said, **and one the brief missed**:
+  `test_progression_player.test_shrine_loadout_and_attributes_tabs` (`["Rest", "Grow", "Talents"]` gains
+  Appearance). That suite is unchanged since `1c33b8e`: the brief's lab ran only the shrine, focus,
+  ancestry and choices suites. Added to P44's owned tests (§3.4). In W25 nothing fails: P42's `TABS`
+  entry is skipped until P44's `appearance_tab.gd` exists.
+
+**The files of §1.5 and §1.2** (`git diff --stat 1c33b8e HEAD`, every file of §1.5's tables; the list
+is `diffstat_1c33b8e_HEAD.txt`). Changed: `game_session.gd` (+10 −2), `screen_stack.gd` (+40 −5),
+`title_screen.gd` (+12 −3), `shrine_screen.gd` (+6), `ui_screen.gd` (+6), `autopilot.gd` (+41 −1),
+`test_ship_docs.gd` (+86 −2), `test_title_checkpoint_names.gd` (+59 −3), `tools/check.sh` (+3),
+`web/launcher.html` (+8 −7), `tools/web/` (5 files, +866 −18: `world_check.mjs`, its test and config are
+new; `stream_check.mjs` exports its helpers; `audio_recorder.mjs` counts holes cut at the disarm),
+`project.godot` (the version), and the docs (`PERFORMANCE.md`, `USABILITY_SCRIPT.md`, `FOLLOWUPS.md`).
+`test_shrine.gd` (+108, M9's tab-marking and shrine-name tests) is not in §1.5 but is P44's in W26.
+Every other file is unchanged, and every M10 path (`tools/giant/`, `assets/giant/`, `data/appearance/`,
+`giant_model.gd`, `giant_look.gd`, `tip_matching.gd`, `CREDITS.md`) is still absent. No change moves a
+hunk §1.5 assigns or collides with one.
+
+**The two default-tier runs** (after an import, one after the other, nothing else running, 4 CPUs):
+run 1 **78.3 s** (load 0.06 before, 1.05 after; wall 81.1 s), run 2 **79.8 s** (0.39, 1.39; wall 82.6 s),
+both 209 suites, 38,005 checks, 0 failures, `WARNINGS: 0`. Both are over 75 s on a quiet machine; P40
+recorded 73.0–73.4 s for the same code about 1.5 hours earlier (07:29–07:52 UTC), and the last twelve recorded runs read
+65.8–77.9 s. The five heaviest suites (run 1 / run 2): `test_anchors` 11.03 / 10.89 s (the compile check,
+10.3 s of it), `test_tutorial` 5.22 / 5.06 s, `test_data_and_saves` 3.53 / 4.10 s, `test_boss_arena`
+2.64 / 2.74 s, `test_growth` 2.52 / 2.82 s. The 30 heaviest, their per-test times (a third run in the
+scratch copy with a per-test print) and the move candidates are in
+`<scratchpad>/m10/w25/recheck/heaviest_default_suites.md`: the two prompt-queue tests of
+`test_tutorial` (about 3.8 s), `test_growth`'s stage-2/3 reach tests (1.8 s), `test_boss_arena`'s ten
+seeded charges (1.5 s), `test_schemas_v2`'s untelegraphed-attack warning (0.6–0.9 s, repeated by
+`test_ranged_brains`), `test_wolf`'s stage-1 reach (0.7 s), `test_boss_disengage`'s walk to the talker
+(0.6 s). The suites of §1.7 rule 2 on the base: `test_growth` 2.52 / 2.82 s, `test_grab_throw` 1.35 /
+1.50, `test_weapons` 1.13 / 1.08, `test_session_flow` 0.79 / 0.88, `test_camera_review_fixes` 0.17 /
+0.19, `test_rig_merge` 0.10 / 0.09, `test_growth_456` 0.07 / 0.07.
+
+**The Web pack** (`tools/build_web.sh --out=<scratchpad>/m10/w25/recheck/web`, without
+`XDG_DATA_HOME`; the folder deleted afterwards, `web_pack.json` and `web_build.log` kept): `index.pck`
+17,591,292 B raw, 13,124,494 B gzipped, **17,499,328 B shipped = 16.69 MiB** of 23, in 2 parts of
+8,749,664 B; 2,754 packed files, no test content (`pck_files.py --check-no-test`), every record valid
+without `data/test`; audio 9.28 MB (55 %). Against the plan's 17,399,456 B (16.59 MiB) at `1c33b8e`:
++99,872 B (+0.10 MiB); against 0.9.0-m9's release, 17,500,048 B: −720 B. Corrected in §2.12's
+arithmetic (floor ≈ 19.6, target ≈ 21.2 MiB of the owner's 26).
+
+**The shared venv** (created by the orchestrator, step 3): `$HOME/.cache/giantborn/giant-venv`, 1.2 GB,
+with `GIANT_CACHE` at `$HOME/.cache/giantborn/giant-cache`;
+`$GIANT_VENV/bin/python -c "import bpy, numpy, scipy, PIL, OpenEXR"` works and reports Python 3.13.18,
+bpy 5.3.0, numpy 2.5.4, scipy 1.18.1, Pillow 13.0.0, OpenEXR 3.5.4, the plan's pins. It installed in
+45 s from pip's cache (not the 10–15 minutes ASSUMED in §1.2); `pip freeze` is in
+`<scratchpad>/m10/venv_record.txt` for P41's pinned requirements.
+
+**What the packages must now do differently:**
+
+- **P42 (§1.7 rule 4, §3.2 design 2):** the base already runs 78–80 s, so moving 3 s is not enough for
+  the W25 merge's `--strict-times` (the faster run must be under 75 s with P41's 0.4 s and P42's 0.6 s
+  added). Move at least 3 s and as much more as P42's own two runs show is needed, about 6–7 s on the
+  re-check's runs, starting from the candidates in `heaviest_default_suites.md`; `test_growth` is on
+  rule 2's giant list, so moving its tests changes that list's baseline and must be recorded.
+- **P41 (§3.1 item 11):** the base's per-suite times and Web pack are measured here; P41 may cite them
+  instead of measuring the base again. Its `check.sh` edits (`--giant`, `--require`, `--strict-times`)
+  keep M9's `BUDGET WARNING` / `WARNINGS:` lines (`tests/support/budget_rule.gd`); its `test_ship_docs`
+  edit adds `res://tools/giant/mpfb2` to the existing `SKIP_DIRS` (today `["res://builds"]`) and keeps
+  P40's handoff and placeholder checks.
+- **P44 (§3.4):** update `test_progression_player.test_shrine_loadout_and_attributes_tabs` with the
+  three shrine suites (corrected in its owned paths). Its `title_screen.gd` edits keep M9's
+  `mid_sentence()` and `describe_save()` line; its rewrite of `test_title_checkpoint_names.gd` keeps
+  M9's mid-sentence checks and `test_display_names_read_lower_case_mid_sentence`. `CreatorScreen`'s
+  `nav_hint()` is read every frame by the stack, so it returns a cached line. At a shrine the HUD and
+  the shrines' names are already hidden while the creator is open (M9).
+- **P43 (§1.5's `autopilot.gd` row):** its edits (`--skin`, `--skin-stats`, `SKIN_STATS`) keep P39's
+  `perf.sections` and P39f's `WORLD_WALK_UNLOAD`. The seeded Valley bot twin still grabs and throws;
+  `run_metrics` now leaves every throw (`PlayerGrab.is_throw()`) out of the ability share.
+- **P42 (saves):** `tests/fixtures/saves/v2_world_check_aldmere_shrine.json` (P39f, read by
+  `test_world_check_fixture.gd`, the slow `test_world_check_route.gd` and `world_check.mjs`) is one
+  more v2 fixture without a look: it must load with the default look and stays unedited.
+- **P45 (§3.5):** `world_check.mjs` (P39f) Continues that fixture at the Aldmere shrine, so the
+  legacy-save prompt of P42 shows during that check and must not count as an error. `creator_check.mjs`
+  can import the server, the statistics and `loadPlaywright()` that `stream_check.mjs` now exports, as
+  `world_check.mjs` does.
+
+**Noticed, not an M9 change (for the orchestrator):** §0.6's owner answer 1 (26 MiB; the Web keeps the
+1024 px maps) still meets the 23 MiB figures and the Web presets' `tex_hi/*` exclusion in decision 17,
+§1.6, §2.12 and §3.1 item 9; the answers say they replace the defaults, and this re-check changed
+neither.
 
 ---
 
