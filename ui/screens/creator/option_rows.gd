@@ -191,7 +191,7 @@ static func same(a: Variant, b: Variant) -> bool:
 
 # --------------------------------------------------------------------------- what a row shows and covers
 
-## The design region a design row shows ("face", "chest", "back", "arms", "hand", or "" for a row that is not
+## The design region a design row shows ("face", "chest", "back", "arms", "hand_l", or "" for a row that is not
 ## about a place on the body): a tattoo row's region, the war paint's and a scar's by their design, the
 ## mark's by the line's mark. The preview frames it while the row has the focus.
 static func row_region(spec: Dictionary, record: Dictionary, index: Dictionary, ancestry_id: String) -> String:
@@ -223,7 +223,7 @@ static func _design_region(design_id: String, index: Dictionary) -> String:
 		return "face"
 	var first := int(regions[0])
 	if first == 10:
-		return "hand"
+		return "hand_l"   # the floor's one hand design, the knuckles scar, is on the left hand (tools/giant/kit)
 	for region: String in Appearance.DESIGN_REGION_BODY:
 		if (Appearance.DESIGN_REGION_BODY[region] as Array).has(first):
 			return region

@@ -57,7 +57,16 @@ const FRAMINGS := {
 	"chest": {"target": Vector3(0.0, 2.7, -0.18), "yaw": 12.0, "pitch": 4.0, "dist": 2.4},
 	"back_design": {"target": Vector3(0.0, 2.65, 0.12), "yaw": 180.0, "pitch": 6.0, "dist": 2.7},
 	"hand": {"target": Vector3(0.72, 1.98, -0.12), "yaw": 55.0, "pitch": 14.0, "dist": 1.35},
+	"hand_l": {"target": Vector3(-0.72, 1.98, -0.12), "yaw": -55.0, "pitch": 14.0, "dist": 1.35},
 }
+## The first-person framing (the option check and the sheets, not a view button): the game's eye at the
+## stage's eye_height_ratio of the height and 0.18 m forward, looking down and to his right at the arms, with
+## render layers 2 (torso) and 3 (head, hair, beard, eyes) culled as the game's first person does (decision 8).
+const FIRST_PERSON := "first_person"
+const FP_PITCH_DEG := -62.0
+const FP_YAW_DEG := -22.0
+const FP_FORWARD_M := 0.18
+const FP_CULL := 0xFFFFF & ~(1 << 1) & ~(1 << 2)
 ## The view buttons, in X / V order.
 const VIEWS := ["full", "face", "back", "game"]
 const VIEW_NAMES := {"full": "Full", "face": "Face", "back": "Back", "game": "Game view"}
@@ -89,6 +98,9 @@ var zoom_factor := 1.0
 var game_profile: Dictionary = {}
 ## The look applied last and its cost (ms).
 var last_apply_ms := 0.0
+## A still giant (the option check's tiles, the character sheets): the relaxed pose, never the idle clip, so
+## that every tile and page is drawn in one pose. Set before the preview enters the tree.
+var still := false
 var weapon: Node3D = null
 var _weapon_dir := Vector3.FORWARD
 var _soldier: Node3D = null
@@ -157,7 +169,7 @@ func apply_look(look: Dictionary) -> float:
 func _pose() -> void:
 	if model == null or not model.is_inside_tree():
 		return
-	if model.has_method("play_idle"):
+	if model.has_method("play_idle") and not still:
 		model.call("play_idle")
 	else:
 		model.pose_relaxed()
@@ -250,12 +262,12 @@ func world_lighting() -> bool:
 
 ## Shows framing `name` (FRAMINGS, or "game"); the user's turn and zoom start over.
 func frame(framing_name: String) -> void:
-	if framing_name != "game" and not FRAMINGS.has(framing_name):
+	if not framing_name in ["game", FIRST_PERSON] and not FRAMINGS.has(framing_name):
 		framing_name = "full"
 	framing = framing_name
 	turn_deg = 0.0
 	zoom_factor = 1.0
-	_set_lighting(framing == "game")
+	_set_lighting(framing in ["game", FIRST_PERSON])
 	_apply_stage_scale()
 	_update_camera()
 	framed.emit(framing)
@@ -320,7 +332,7 @@ static func game_fov() -> float:
 
 
 func _apply_stage_scale() -> void:
-	var k := stage_scale(game_profile) if framing == "game" else 1.0
+	var k := stage_scale(game_profile) if framing in ["game", FIRST_PERSON] else 1.0
 	model.scale = Vector3.ONE * k
 	if framing == "game":
 		_ensure_soldier()
@@ -333,6 +345,14 @@ func _apply_stage_scale() -> void:
 ## The camera for the framing, the turn and the zoom.
 func _update_camera() -> void:
 	if camera == null:
+		return
+	camera.cull_mask = FP_CULL if framing == FIRST_PERSON else 0xFFFFF
+	if framing == FIRST_PERSON:
+		var eye := Vector3(0.0, float(game_profile.get("height_m", STAGE1_HEIGHT_M)) * float(game_profile.get("eye_height_ratio",
+			0.92)), -FP_FORWARD_M)
+		camera.transform = Transform3D(Basis.from_euler(Vector3(deg_to_rad(FP_PITCH_DEG), deg_to_rad(FP_YAW_DEG + turn_deg), 0.0)),
+			eye)
+		camera.fov = game_fov()
 		return
 	if framing == "game":
 		var t := game_camera_transform(game_profile)
@@ -354,16 +374,16 @@ func _update_camera() -> void:
 ## Where a framing looks (model frame, stage 1): its FRAMINGS target, the hand framing at the posed hand.
 func framing_target(framing_name: String) -> Vector3:
 	var f: Dictionary = FRAMINGS.get(framing_name, FRAMINGS.full)
-	if framing_name in ["hand", "arms"] and model != null and model.is_inside_tree() and model.skeleton() != null:
-		var hand := model.to_local(model.hand_transform(true).origin)
-		if framing_name == "hand":
+	if framing_name in ["hand", "hand_l", "arms"] and model != null and model.is_inside_tree() and model.skeleton() != null:
+		var hand := model.to_local(model.hand_transform(framing_name != "hand_l").origin)
+		if framing_name in ["hand", "hand_l"]:
 			return hand + Vector3(0, 0.06, 0)
 		var sh: Vector3 = GiantModel.landmarks_of(model.index).get("shoulder_r", Vector3(0.41, 3.02, -0.03))
 		return sh.lerp(hand, 0.5)
 	return f.target
 
 
-## The framing that shows a design region ("face", "chest", "back", "arms", "hand").
+## The framing that shows a design region ("face", "chest", "back", "arms", "hand" or "hand_l": the left hand).
 static func region_framing(region: String) -> String:
 	match region:
 		"face":
@@ -374,8 +394,8 @@ static func region_framing(region: String) -> String:
 			return "back_design"
 		"arms":
 			return "arms"
-		"hand":
-			return "hand"
+		"hand", "hand_l":
+			return region
 	return "full"
 
 
