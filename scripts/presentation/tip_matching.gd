@@ -154,8 +154,13 @@ static func swing_geometry(profile: Dictionary, weapon: Dictionary, stage: int, 
 ## `dir` from `arm` to `arm + weapon`. Returns {"tip", "grip", "weapon_dir", "visible_tip", "hand_dir",
 ## "wrist", "elbow", "palm", "fist_error", "reached" (the visible tip is the tested tip), "exact"}.
 func match_swing(pivot: Vector3, dir: Vector3, arm: float, weapon: float, side := "r") -> Dictionary:
+	return match_swing_at(shoulder[side], pivot, dir, arm, weapon, side)
+
+
+## match_swing from the shoulder `sh` where it is now (P43: the posed skeleton's, after the clips and the
+## torso's twist moved it off its rest landmark), the bones' lengths and reach as built.
+func match_swing_at(sh: Vector3, pivot: Vector3, dir: Vector3, arm: float, weapon: float, side := "r") -> Dictionary:
 	var d := dir.normalized()
-	var sh: Vector3 = shoulder[side]
 	var tip := pivot + d * (arm + weapon)
 	var natural := sh + d * (REACH_USE * float(reach[side]))
 	var grip := tip_matched_grip(sh, tip, natural, weapon, grip_reach(side))

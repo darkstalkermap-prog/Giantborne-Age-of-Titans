@@ -5,14 +5,15 @@ extends Node3D
 ## One player entity owns both modes; switching never touches gameplay state. Third person
 ## uses a collision-tested follow arm: a sphere is swept from the pivot to the shoulder point
 ## and on to the desired camera position; the arm retracts instantly at obstacles and
-## restores smoothly. First person sits at 92% of the giant's height with the head hidden
-## (render layer 2 is culled). Shake and head bob are independently scalable in Settings.
+## restores smoothly. First person sits at 92% of the giant's height with the head and the torso
+## hidden (render layers 3 and 2 are culled; P43). Shake and head bob are independently scalable in
+## Settings.
 ##
 ## Growth (P05): apply_profile() switches to another stage's profile, keeping the zoom fraction
 ## between the stage's zoom limits and never snapping the arm (it restores at RESTORE_SPEED).
 ## The lock orbit distances scale with the profile's camera_orbit_scale. In third person the
-## camera also hides render layer 2 (head, chest, belt) while the arm is retracted so far that
-## the giant's own head would cover the screen centre (hides_head()).
+## camera also hides render layer 3 (the head, hair, beard and eyes; P43) while the arm is retracted
+## so far that the giant's own head would cover the screen centre (hides_head()).
 
 enum Mode { THIRD_PERSON, FIRST_PERSON }
 
@@ -28,7 +29,15 @@ const LOCK_SMALL_PITCH_MIN := -48.0 ## small targets at the giant's feet may be 
 const LOCK_ORBIT_DEG := 32.0        ## side orbit so a small, close target is not hidden by the giant
 const FP_ASSIST_DEG_S := 20.0
 const FP_ASSIST_CONE_DEG := 25.0
-const FP_HIDDEN_LAYER := 2           ## render layer bit for head geometry
+## P43 (plan M10 decision 8): the realistic giant's render layers - its torso and the core of its garments
+## on layer 2, its head, hair, beard and eyes on layer 3 (with whatever must also hide when the camera is
+## pressed close: the tree's canopy, the pine's needles); arms, legs and the weapon on layer 1. First
+## person culls layers 2 and 3; third person pressed close (hides_head) culls layer 3 (PRESSED_CULLS_TORSO:
+## layer 2 too, decided by the render in the growth course's low passage, docs/systems/P43.md).
+const TORSO_LAYER := 2
+const HEAD_LAYER := 3
+const FP_HIDDEN_LAYER := HEAD_LAYER   ## the layer of head geometry (first person and pressed close hide it)
+const PRESSED_CULLS_TORSO := false
 const LOCK_ORBIT_FAR_M := 12.0       ## the lock orbit ramps in between these target distances,
 const LOCK_ORBIT_NEAR_M := 3.0       ## times the profile's camera_orbit_scale
 ## Third person hides layer 2 while the arm is shorter than this times the capsule radius (a
@@ -38,7 +47,10 @@ const HEAD_HIDE_ARM_RADII := 1.2
 ## the pivot (the camera is pressed close behind the head, e.g. under a low ceiling).
 const HEAD_CLEAR_RADII := 0.5
 const CULL_ALL := 0xFFFFF
-const CULL_NO_HEAD := 0xFFFFF & ~(1 << (FP_HIDDEN_LAYER - 1))
+## Third person pressed close: no head (layer 3), and no torso when PRESSED_CULLS_TORSO.
+const CULL_NO_HEAD := CULL_ALL & ~(1 << (HEAD_LAYER - 1)) & ~((1 << (TORSO_LAYER - 1)) if PRESSED_CULLS_TORSO else 0)
+## First person: neither the head (layer 3) nor the torso (layer 2).
+const CULL_FIRST_PERSON := CULL_ALL & ~(1 << (HEAD_LAYER - 1)) & ~(1 << (TORSO_LAYER - 1))
 
 var mode: int = Mode.THIRD_PERSON
 var yaw := 0.0                       ## radians, Godot convention (0 faces -Z)
@@ -49,8 +61,8 @@ var desired_distance := 6.5
 var current_distance := 6.5
 var lock_target: CombatEntity = null
 var obstructed := false
-## True while third person hides render layer 2 (see hides_head()); always false in first
-## person, where layer 2 is hidden anyway.
+## True while third person hides the head's render layer (see hides_head()); always false in first
+## person, where it is hidden anyway.
 var head_hidden := false
 var _shake := 0.0
 var _time := 0.0
@@ -89,7 +101,7 @@ func set_mode(new_mode: int, announce := true) -> void:
 	Settings.session["camera_mode"] = mode
 	head_hidden = false
 	if mode == Mode.FIRST_PERSON:
-		camera.cull_mask = CULL_NO_HEAD
+		camera.cull_mask = CULL_FIRST_PERSON
 		pitch = clampf(pitch, deg_to_rad(FP_PITCH_MIN), deg_to_rad(FP_PITCH_MAX))
 	else:
 		camera.cull_mask = CULL_ALL
@@ -137,7 +149,7 @@ static func lock_orbit_rad(dist: float, orbit_scale: float) -> float:
 	return deg_to_rad(LOCK_ORBIT_DEG) * clampf(inverse_lerp(LOCK_ORBIT_FAR_M * s, LOCK_ORBIT_NEAR_M * s, dist), 0.0, 1.0)
 
 
-## Third person: hide render layer 2 (head, chest, belt) while the arm is shorter than
+## Third person: hide the head's render layer (3) while the arm is shorter than
 ## HEAD_HIDE_ARM_RADII x the capsule radius, or while the screen-centre ray passes closer than
 ## HEAD_CLEAR_RADII x the capsule radius beside the pivot. The camera always looks along the
 ## arm's backward axis, so its centre ray passes the pivot's height at a sideways distance of

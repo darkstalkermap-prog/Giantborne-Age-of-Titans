@@ -311,22 +311,29 @@ def hand_spec(rest, side, curl, thumb, spread=0.0):
     return spec
 
 
-def arm_spec(side, swing_deg=0.0, elbow_deg=15.0, out_deg=8.0, forward_deg=4.0, raise_deg=0.0):
-    """The arm hanging relaxed from the A-pose rest: the upper arm onto a line out_deg outward from straight
-    down (forward_deg in front), swung about the giant's left-right axis by swing_deg (negative: forward)
-    and raised sideways by raise_deg; the forearm bent forward by elbow_deg, turned so the palm faces the
-    thigh. Written for the left side and mirrored for the right."""
-    o = math.radians(out_deg)
-    fw = math.radians(forward_deg)
-    hang = (math.sin(o), -math.sin(fw), -math.cos(o) * math.cos(fw))
-    ops_up = [("aim", hang, 0.0), ("axis", X, swing_deg)]
+def set_arm(pose, side, swing_deg=0.0, elbow_deg=15.0, out_deg=8.0, forward_deg=4.0, raise_deg=0.0):
+    """The arm hanging relaxed from the A-pose rest (relative to the clavicle): the upper arm onto a line
+    out_deg outward from straight down (forward_deg in front), swung about the giant's left-right axis by
+    swing_deg (negative: forward) and raised sideways by raise_deg; the forearm bent forward by elbow_deg
+    from the upper arm's line (the rest's own 44 degree bend undone: the forearm is aimed, not added to);
+    the hand straight on the forearm."""
+    r = pose.rest
+    s = "_" + side
+    out = 1.0 if side == "l" else -1.0
+    o, fw = math.radians(out_deg), math.radians(forward_deg)
+    hang = np.array([out * math.sin(o), -math.sin(fw), -math.cos(o) * math.cos(fw)])
+    R = rot(X, swing_deg)
     if raise_deg:
-        ops_up.append(("axis", (0.0, 1.0, 0.0), -raise_deg))
-    ops_lo = [("axis", X, -elbow_deg)]
-    spec = {"upperarm_l": ops_up, "lowerarm_l": ops_lo}
-    if side == "r":
-        spec = {"upperarm_r": mirror_ops(ops_up), "lowerarm_r": mirror_ops(ops_lo)}
-    return spec
+        R = R @ rot(Y, -raise_deg * out)
+    d_up = r.direction("upperarm" + s)
+    D_up = R @ between(d_up, hang)
+    up_now = D_up @ d_up
+    fore_want = R @ rot(X, -elbow_deg) @ hang         # bent forward about the left-right axis
+    d_lo = r.direction("lowerarm" + s)
+    D_lo = between(D_up @ d_lo, fore_want) @ D_up
+    pose.set_rel("upperarm" + s, D_up)
+    pose.set_rel("lowerarm" + s, D_up.T @ D_lo)
+    return up_now
 
 
 class Leg:
@@ -528,8 +535,8 @@ class Gait:
         # arms against the legs: the left arm forward with the right leg (the right strike, 3 pi / 2)
         sw = g["arm_swing_deg"] * math.sin(phi)
         el = g["elbow_swing_deg"]
-        pose.ops(arm_spec("l", sw, g["elbow_deg"] + el * max(0.0, -math.sin(phi))))
-        pose.ops(arm_spec("r", -sw, g["elbow_deg"] + el * max(0.0, math.sin(phi))))
+        set_arm(pose, "l", sw, g["elbow_deg"] + el * max(0.0, -math.sin(phi)))
+        set_arm(pose, "r", -sw, g["elbow_deg"] + el * max(0.0, math.sin(phi)))
         relaxed_hands(pose, 0.32)
         return pose
 
@@ -565,8 +572,8 @@ def idle_pose(rest, f, frames):
     pose.set_rel("clavicle_l", rot(Y, -1.0 * breath))
     pose.set_rel("clavicle_r", rot(Y, 1.0 * breath))
     stand_legs(pose)
-    pose.ops(arm_spec("l", 1.5 * breath, 16.0))
-    pose.ops(arm_spec("r", -1.5 * breath, 16.0))
+    set_arm(pose, "l", 1.5 * breath, 14.0)
+    set_arm(pose, "r", -1.5 * breath, 14.0)
     relaxed_hands(pose, 0.32)
     return pose
 
@@ -581,8 +588,8 @@ def airborne_pose(rest, f, frames):
     pose.set_rel("thigh_r", rot(X, -18.0))
     pose.set_rel("calf_r", rot(X, 58.0))
     pose.set_rel("foot_r", rot(X, 28.0))
-    pose.ops(arm_spec("l", -12.0, 30.0, out_deg=22.0))
-    pose.ops(arm_spec("r", 8.0, 30.0, out_deg=22.0))
+    set_arm(pose, "l", -12.0, 30.0, out_deg=22.0)
+    set_arm(pose, "r", 8.0, 30.0, out_deg=22.0)
     relaxed_hands(pose, 0.4)
     return pose
 
@@ -598,8 +605,8 @@ def death_pose(rest, f, frames):
     pose.set_rel("neck_01", rot(X, 14.0 * e))
     pose.set_rel("head", rot(X, 18.0 * e) @ rot(Y, 6.0 * e))
     stand_legs(pose, drop=0.025 + 0.72 * knees, back=0.16 * knees)
-    pose.ops(arm_spec("l", -10.0 * e, 16.0 + 14.0 * e, out_deg=8.0 + 6.0 * e))
-    pose.ops(arm_spec("r", -14.0 * e, 16.0 + 18.0 * e, out_deg=8.0 + 4.0 * e))
+    set_arm(pose, "l", -10.0 * e, 14.0 + 14.0 * e, out_deg=8.0 + 6.0 * e)
+    set_arm(pose, "r", -14.0 * e, 14.0 + 18.0 * e, out_deg=8.0 + 4.0 * e)
     relaxed_hands(pose, 0.32 + 0.12 * e)
     return pose
 
