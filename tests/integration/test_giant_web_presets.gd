@@ -148,3 +148,26 @@ func test_the_open_world_start_passes_the_creator() -> void:
 	for path: String in [WORLD_START_CHECK, CREATOR_CHECK]:
 		var js := FileAccess.get_file_as_string(path)
 		assert_true(js.contains("const WORLD_ARGS = %s;" % _js_array(WORLD_START)), "%s expects them" % path.get_file())
+
+
+## The probe the Chromium checks follow (scripts/debug/ui_probe.gd): made only with --ui-probe, and its
+## stall rule (plan M10 §2.12: a first frame within three median frames; under 25 ms never a stall).
+func test_the_ui_probe_is_made_only_when_asked_and_judges_stalls() -> void:
+	assert_true(UiProbe.from_args(PackedStringArray(["--mode=world", "--creator"])) == null, "no probe without --ui-probe")
+	var plain := UiProbe.from_args(PackedStringArray(["--ui-probe", "--ui-probe-bench"]))
+	assert_true(plain != null and plain.tour == "" and plain.bench, "--ui-probe: a passive probe; --ui-probe-bench: the skin's bench")
+	var toured := UiProbe.from_args(PackedStringArray(["--ui-probe=shrine", "--ui-probe-shots=user://x"]))
+	assert_true(toured != null and toured.tour == "shrine" and toured.shots_dir == "user://x" and not toured.bench, "a tour and its shots")
+	var unknown := UiProbe.from_args(PackedStringArray(["--ui-probe=moon"]))
+	assert_true(unknown != null and unknown.tour == "", "an unknown tour is the passive probe")
+	for p: UiProbe in [plain, toured, unknown]:
+		p.free()
+	assert_eq([UiProbe.median([5.0, 1.0, 3.0]), UiProbe.median([4.0, 1.0, 3.0, 2.0]), UiProbe.median([])], [3.0, 2.5, 0.0], "the median")
+	var r := UiProbe.stall_result("creator", [40.0, 130.0, 60.0], [50.0, 40.0, 60.0])
+	assert_eq([str(r.mark), float(r.first_ms), float(r.median_ms), float(r.ratio), bool(r.ok)], ["creator", 130.0, 50.0, 2.6, true],
+		"the longest of the first frames against the median of the steady ones")
+	assert_false(bool(UiProbe.stall_result("level", [151.0], [50.0, 50.0]).ok), "over three median frames is a stall")
+	assert_true(UiProbe.stall_ratio_ok(24.0, 2.0) and not UiProbe.stall_ratio_ok(26.0, 2.0), "under 25 ms never, whatever the ratio")
+	var js := FileAccess.get_file_as_string(CREATOR_CHECK)
+	assert_true(js.contains("export const STALL_RATIO = %d;" % int(UiProbe.STALL_RATIO))
+		and js.contains("const STALL_FLOOR_MS = %d;" % int(UiProbe.STALL_FLOOR_MS)), "creator_check.mjs judges by the same rule")

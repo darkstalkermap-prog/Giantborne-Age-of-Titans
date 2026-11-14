@@ -19,6 +19,10 @@
 //     shrine ("Rest at ..."; a step back first when the giant does not face it) -> the shrine screen; Up to
 //     the tab buttons and Right until the Appearance tab has the focus, Enter; Down to "Change your look...", Enter -> the creator
 //     over the shrine (the mark "shrine_creator": its first frame); a screenshot (shrine_creator.png).
+//   * the skin's CPU a frame (the game's --ui-probe-bench: the player's rig - the tree's drive and
+//     advance, the skeleton's update and the pose modifier - in a tight loop once a mark's frames are
+//     done): in the Valley with the player alone, in the world, and with the creator's preview open over
+//     the shrine (two skinned giants in the tree); over 0.35 ms is a MISS (plan M10 §2.12);
 //   * 0 console errors (the engine's warnings are listed apart) and no failed request in either part.
 // Every stall is judged against the run's own median frame: a mark's first frame may take 3 median frames
 // (--stall-ratio; under 25 ms is never a stall). Software WebGL (SwiftShader) is all a GPU-less machine
@@ -55,6 +59,8 @@ const WORLD_ARGS = ['--', '--mode=world', '--creator'];
 // scripts/debug/ui_probe.gd: STALL_RATIO and STALL_FLOOR_MS.
 export const STALL_RATIO = 3;
 export const STALL_FLOOR_MS = 25;
+// Plan M10 §2.12: the skin's CPU a frame on the Web (the player's giant).
+export const SKIN_MS_WEB = 0.35;
 // The screens' own words (ui/screens/title_screen.gd, shrine/appearance_tab.gd, scripts/world/shrine.gd).
 const NEW_GAME = 'New Game';
 const CONTINUE = 'Continue';
@@ -100,7 +106,7 @@ export function parseArgs(argv) {
     usage('--size wants WxH, --timeout-s and --stall-ratio positive numbers');
   }
   if (opts.parts.length === 0 || opts.parts.some((p) => !PARTS.includes(p))) usage(`--parts wants a list of ${PARTS.join(', ')}`);
-  opts.gameArgs = ['--ui-probe', ...opts.args.split(',').map((x) => x.trim()).filter((x) => x.length > 0)];
+  opts.gameArgs = ['--ui-probe', '--ui-probe-bench', ...opts.args.split(',').map((x) => x.trim()).filter((x) => x.length > 0)];
   if (!opts.fixture) {
     const config = JSON.parse(readFileSync(join(ROOT, 'tools', 'web', 'world_check.json'), 'utf8'));
     opts.fixture = join(ROOT, config.fixture);
@@ -159,7 +165,7 @@ async function openPart(browser, opts, origin, args) {
   const context = await browser.newContext({ viewport: { width, height } });
   const page = await context.newPage();
   await page.addInitScript(instrument);
-  const seen = { errors: [], failed: [], aborted: 0, external: 0, states: [], stalls: {}, lines: 0 };
+  const seen = { errors: [], failed: [], aborted: 0, external: 0, states: [], stalls: {}, benches: [], lines: 0 };
   await page.route((u) => !u.href.startsWith(origin), (route) => {
     seen.external += 1;
     const css = route.request().resourceType() === 'stylesheet';
@@ -181,6 +187,7 @@ async function openPart(browser, opts, origin, args) {
     line.wall_s = round1((Date.now() - started) / 1000);
     if (line.t === 'state') seen.states.push(line);
     else if (line.t === 'stall' && !(line.mark in seen.stalls)) seen.stalls[line.mark] = line;
+    else if (line.t === 'bench') seen.benches.push(line);
   });
   page.on('pageerror', (err) => seen.errors.push(`page error: ${err.message}`));
   page.on('requestfailed', (req) => {
@@ -206,6 +213,7 @@ async function openPart(browser, opts, origin, args) {
     while (Date.now() < end && !(mark in seen.stalls)) await sleep(100);
     return seen.stalls[mark] || null;
   };
+  const note = (what) => console.log(`  [${round1((Date.now() - started) / 1000)} s] ${what}`);
   const press = async (key) => {
     await page.focus('#game-canvas').catch(() => {});
     await page.keyboard.press(key);
@@ -213,7 +221,7 @@ async function openPart(browser, opts, origin, args) {
   const shot = async (name) => {
     if (opts.shots) await page.screenshot({ path: join(opts.shots, name) });
   };
-  return { context, page, seen, url, state, until, stall, press, shot };
+  return { context, page, seen, url, state, until, stall, press, shot, note };
 }
 
 // The part's verdict on a mark: its stall line, the miss when it is over the ratio.
@@ -232,6 +240,11 @@ function judge(out, misses, problems, mark, line, opts, what) {
 async function finish(part, out, problems, misses, opts) {
   const { page, seen, context } = part;
   const work = await page.evaluate(() => window.__work.map((w) => w[1])).catch(() => []);
+  // The skin's CPU a frame (--ui-probe-bench: the player's rig in a tight loop when a mark's frames are done).
+  out.skin_bench = seen.benches.map((b) => ({ mark: b.mark, skin_ms: b.skin_ms, giants: b.giants, modifier_runs: b.modifier_runs, paused: b.paused }));
+  for (const b of out.skin_bench) {
+    if (b.skin_ms > SKIN_MS_WEB) misses.push(`the skin's CPU a frame after "${b.mark}" (${b.giants} giant(s)): ${b.skin_ms} ms (at most ${SKIN_MS_WEB} ms on the Web)`);
+  }
   out.page_frames = { count: work.length, median_work_ms: round1(median(work)), worst_work_ms: round1(Math.max(0, ...work)) };
   await context.close();
   const split = splitWarnings(seen.errors);
@@ -243,7 +256,7 @@ async function finish(part, out, problems, misses, opts) {
   if (split.errors.length > 0) problems.push(`${split.errors.length} console error(s)`);
   if (seen.failed.length > 0) problems.push(`${seen.failed.length} failed request(s)`);
   out.misses = misses;
-  if (opts.strict) for (const m of misses) problems.push(`a stall (--strict): ${m}`);
+  if (opts.strict) for (const m of misses) problems.push(`a budget miss (--strict): ${m}`);
   out.problems = problems;
   out.ok = problems.length === 0;
   return out;
@@ -252,7 +265,7 @@ async function finish(part, out, problems, misses, opts) {
 // Play -> the title -> New Game -> the creator -> Begin -> the Valley.
 async function partNewGame(browser, opts, origin) {
   const part = await openPart(browser, opts, origin, opts.gameArgs);
-  const { page, state, until, stall, press, shot } = part;
+  const { page, state, until, stall, press, shot, note } = part;
   const problems = [];
   const misses = [];
   const out = { url: part.url, stalls: {} };
@@ -262,6 +275,7 @@ async function partNewGame(browser, opts, origin) {
     await page.click('#play');
     if (!(await until((s) => s.top === 'title' && s.warming === false))) return problems.push('the title never came (or never finished preparing)');
     out.play_to_title_s = round1((Date.now() - t0) / 1000);
+    note('new_game: the title is ready');
     out.title_warmed = part.seen.states.some((s) => s.top === 'title' && s.warming === true);
     judge(out, misses, problems, 'title', await stall('title'), opts, 'the title\'s worst frame until New Game enables');
     await shot('title.png');
@@ -269,6 +283,7 @@ async function partNewGame(browser, opts, origin) {
     await press('Enter');
     if (!(await until((s) => s.top === 'creator'))) return problems.push('Enter on New Game did not open the creator');
     out.creator_context = state().context;
+    note('new_game: the creator is open');
     if (state().context !== 'new_game') problems.push(`the creator opened for "${state().context}", not a new game`);
     judge(out, misses, problems, 'creator', await stall('creator'), opts, 'the creator\'s first frame');
     out.creator_tiers = state().tiers;
@@ -292,6 +307,7 @@ async function partNewGame(browser, opts, origin) {
     await press('Control+Enter');
     if (!(await until((s) => s.level === 'level.valley' && s.loading === false && s.top === ''))) return problems.push('Begin did not load the Valley');
     out.begin_to_valley_s = round1((Date.now() - t1) / 1000);
+    note('new_game: the Valley is loaded');
     const locks = (await page.evaluate(() => window.__locks.slice())).slice(locksBefore);
     out.pointer_lock = { requests: locks.length, in_gesture: locks.length > 0 ? locks[0].in_gesture : null,
       locked: await page.evaluate(() => document.pointerLockElement !== null) };
@@ -331,7 +347,7 @@ async function partNewGame(browser, opts, origin) {
 // A world save at a shrine -> Continue -> the shrine's Appearance tab -> "Change your look...".
 async function partShrine(browser, opts, origin) {
   const part = await openPart(browser, opts, origin, opts.gameArgs);
-  const { page, state, until, stall, press, shot } = part;
+  const { page, state, until, stall, press, shot, note } = part;
   const problems = [];
   const misses = [];
   const out = { url: part.url, stalls: {}, fixture: opts.fixture.startsWith(ROOT) ? opts.fixture.slice(ROOT.length + 1) : opts.fixture };
@@ -349,6 +365,7 @@ async function partShrine(browser, opts, origin) {
     await press('Enter');
     if (!(await until((s) => s.level === 'level.world' && s.loading === false && s.top === ''))) return problems.push('Continue did not load the world');
     out.continue_to_world_s = round1((Date.now() - t0) / 1000);
+    note('shrine: the world is loaded');
     judge(out, misses, problems, 'level', await stall('level'), opts, 'the world\'s first frame on Continue');
     out.level_tiers = state().tiers;
     if (!(state().tiers || []).includes('hi')) problems.push(`the giant draws the texture tier ${JSON.stringify(state().tiers)} (hi wanted)`);
@@ -369,6 +386,7 @@ async function partShrine(browser, opts, origin) {
       }
     }
     out.shrine_tries = tries;
+    note(`shrine: the shrine screen ${state().top === 'shrine' ? 'is open' : 'did not open'} after ${tries} tries`);
     if (state().top !== 'shrine') return problems.push(`the shrine screen never opened (the prompt read "${state().prompt}")`);
     // up from the open tab's rows to the row of tab buttons, then along it
     for (let i = 0; i < 8 && state().focus_tab !== true; i++) {
@@ -446,16 +464,17 @@ async function main() {
       console.log(`    ${mark}: first ${s.first_ms} ms, median ${s.median_ms} ms, ${s.ratio}x${s.load_worst_ms !== undefined ? `, the load's worst frame ${s.load_worst_ms} ms` : ''} - ${s.ok ? 'no stall' : 'A STALL'}`);
     }
     if (p.pointer_lock) console.log(`    Begin's pointer lock: ${p.pointer_lock.requests} request(s), inside the gesture: ${p.pointer_lock.in_gesture}, locked: ${p.pointer_lock.locked}`);
+    for (const b of p.skin_bench) console.log(`    the skin's CPU after "${b.mark}": ${b.skin_ms} ms a frame (${b.giants} giant(s) in the tree, ${b.modifier_runs} modifier runs timed)`);
     if (p.level_tiers) console.log(`    the giant's texture tier in the level: ${JSON.stringify(p.level_tiers)}`);
     for (const e of p.console_errors.slice(0, 10)) console.log(`    error: ${e}`);
     for (const w of p.engine_warnings.slice(0, 6)) console.log(`    warning: ${w}`);
     for (const r of p.failed_requests.slice(0, 10)) console.log(`    request: ${r}`);
   }
-  for (const m of report.misses) console.log(`  MISS (a stall over ${opts.stallRatio}x the median frame): ${m}`);
+  for (const m of report.misses) console.log(`  MISS: ${m}`);
   console.log(`CREATOR_CHECK ${JSON.stringify(report)}`);
   if (report.ok) {
     console.log(report.misses.length > 0
-      ? `${TOOL}: OK (${report.misses.length} stall(s) over ${opts.stallRatio}x the median frame, reported as misses; --strict fails on them)`
+      ? `${TOOL}: OK (${report.misses.length} budget miss(es) reported: stalls over ${opts.stallRatio}x the median frame or the skin's CPU; --strict fails on them)`
       : `${TOOL}: OK`);
   } else {
     console.log(`${TOOL}: FAILED - ${problems.join('; ')}`);

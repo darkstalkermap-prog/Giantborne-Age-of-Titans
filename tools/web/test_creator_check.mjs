@@ -10,6 +10,7 @@
 //     pointer lock inside the gesture, the texture tier "hi" and the first save with its look;
 //   * stall: the creator's first frame takes ten median frames - the default check passes and reports a
 //     MISS, --strict fails;
+//   * slowskin: the skin's CPU a frame is 0.52 ms in the Valley - reported as a MISS, --strict fails;
 //   * noundo: Ctrl+Z changes nothing - the check fails;
 //   * nolock: Begin asks for no pointer lock - the check fails;
 //   * webtier: the giant draws the 512 px maps - the check fails (tex_hi/ is wanted in the Web pack);
@@ -56,6 +57,7 @@ const STUB = `<!doctype html>
     focus: '', focus_tab: false, prompt: '', captured: false, tiers: [] };
   const say = (line) => console.log('UI_PROBE ' + JSON.stringify(line));
   const set = (change) => { s = Object.assign({}, s, change); frame += 1; say(Object.assign({ t: 'state', frame }, s)); };
+  const bench = (mark, ms, giants) => say({ t: 'bench', mark, skin_ms: ms, batches: 5, runs: 200, giants, modifier_runs: 1000, paused: giants > 1 });
   const stall = (mark, first, med, more) => say(Object.assign({ t: 'stall', mark, first_ms: first, median_ms: med,
     ratio: Math.round(100 * first / med) / 100, frames: 40 }, more || {}));
   const db = (write) => new Promise((ok) => {
@@ -114,6 +116,7 @@ const STUB = `<!doctype html>
         setTimeout(() => {
           set({ loading: false, tiers, prompt: mode === 'turned' ? '' : 'Rest at the Aldmere shrine' });
           stall('level', 60, 40, { load_worst_ms: 800, level: 'level.world' });
+          bench('level', 0.21, 1);
         }, 300);
       }
     } else if (s.top === 'creator' && s.context === 'new_game') {
@@ -126,6 +129,7 @@ const STUB = `<!doctype html>
         setTimeout(() => {
           set({ loading: false });
           stall('level', 70, 40, { load_worst_ms: 600, level: 'level.valley' });
+          bench('level', mode === 'slowskin' ? 0.52 : 0.24, 1);
           writeSave({ level: 'level.valley', character: mode === 'nolook' ? {} : { appearance: { eyes: 'eyes.blue' } } });
         }, 300);
       }
@@ -142,6 +146,7 @@ const STUB = `<!doctype html>
       else if (k === 'Enter' && s.focus === 'Change your look...') {
         set({ top: 'creator', context: 'shrine', category: 'Presets', focus: 'Wanderer', focus_tab: false });
         stall('shrine_creator', 80, 45, { again: false });
+        bench('shrine_creator', 0.19, 2);
       }
     }
   });
@@ -181,11 +186,12 @@ console.log('ok: New Game through the creator into the Valley; a world save thro
 {
   const r = run('ok');
   check(r.code === 0, `the check passes (exit ${r.code}): ${JSON.stringify(r.rep.problems)}`);
-  check(r.out.trim().endsWith('creator_check: OK (1 stall(s) over 3x the median frame, reported as misses; --strict fails on them)')
-    || r.out.trim().endsWith('creator_check: OK (2 stall(s) over 3x the median frame, reported as misses; --strict fails on them)'),
-    'it ends OK with the title\'s warm-up frames listed as misses, not failures');
+  check(r.out.trim().endsWith('creator_check: OK (2 budget miss(es) reported: stalls over 3x the median frame or the skin\'s CPU; --strict fails on them)'),
+    'it ends OK with the two parts\' title warm-up frames listed as misses, not failures');
   check(r.rep.launcher_world_args === true, 'the launcher\'s open-world start passes --mode=world --creator');
-  check(JSON.stringify(r.rep.game_args) === JSON.stringify(['--ui-probe', '--stub=ok']), `the game gets --ui-probe (${JSON.stringify(r.rep.game_args)})`);
+  check(JSON.stringify(r.rep.game_args) === JSON.stringify(['--ui-probe', '--ui-probe-bench', '--stub=ok']), `the game gets --ui-probe and --ui-probe-bench (${JSON.stringify(r.rep.game_args)})`);
+  check(r.ng.skin_bench.length === 1 && r.ng.skin_bench[0].skin_ms === 0.24 && r.ng.skin_bench[0].giants === 1, 'the skin\'s CPU in the Valley, the player alone');
+  check(r.sh.skin_bench.length === 2 && r.sh.skin_bench[1].mark === 'shrine_creator' && r.sh.skin_bench[1].giants === 2, 'and with the creator\'s preview open at the shrine');
   const st = r.ng.stalls || {};
   check(st.title && st.title.first_ms === 900 && st.title.ok === false && st.title.warmed === true, 'the title\'s worst frame until New Game enables is reported');
   check(st.creator && st.creator.ok === true && st.creator.ratio === 1.8, `the creator's first frame (${JSON.stringify(st.creator)})`);
@@ -205,12 +211,19 @@ console.log('ok: New Game through the creator into the Valley; a world save thro
 console.log('stall: the creator\'s first frame takes ten median frames');
 {
   const r = run('stall', ['--parts=new_game']);
-  check(r.code === 0 && r.out.includes('MISS (a stall over 3x the median frame): new_game: the creator\'s first frame: 500 ms against a median frame of 50 ms (10x, over 3x)'),
+  check(r.code === 0 && r.out.includes('MISS: new_game: the creator\'s first frame: 500 ms against a median frame of 50 ms (10x, over 3x)'),
     `the default check passes and reports the miss (exit ${r.code})`);
   const s = run('stall', ['--parts=new_game', '--strict']);
-  check(s.code === 1 && s.out.includes('a stall (--strict): the creator\'s first frame'), `--strict fails on it (exit ${s.code})`);
+  check(s.code === 1 && s.out.includes('a budget miss (--strict): the creator\'s first frame'), `--strict fails on it (exit ${s.code})`);
   const w = run('stall', ['--parts=new_game', '--stall-ratio=12']);
   check(w.code === 0 && !w.out.includes('the creator\'s first frame: 500 ms'), '--stall-ratio=12 lets it be');
+}
+
+console.log('slowskin: the skin costs 0.52 ms a frame');
+{
+  const r = run('slowskin', ['--parts=new_game']);
+  check(r.code === 0 && r.out.includes('MISS: new_game: the skin\'s CPU a frame after "level" (1 giant(s)): 0.52 ms (at most 0.35 ms on the Web)'),
+    `the default check passes and reports the miss (exit ${r.code})`);
 }
 
 console.log('noundo: Ctrl+Z changes nothing');

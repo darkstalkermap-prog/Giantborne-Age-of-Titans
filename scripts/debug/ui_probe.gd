@@ -23,6 +23,12 @@ extends Node
 ##       shrine).
 ##   UI_PROBE {"t":"skin", ...}   with a tour, SkinnedRig's counters and the monitors' texture and
 ##       mesh memory, draw calls and primitives when a mark's frames are done.
+##   UI_PROBE {"t":"bench", "mark", "skin_ms", ...}   with --ui-probe-bench, when a mark's frames are
+##       done and the player's skinned rig is in the tree: the skin's CPU a frame (§2.12: Web <= 0.35 ms,
+##       native <= 0.10) - SkinnedRig._drive_tree, the AnimationTree's advance, the skeleton's update
+##       and PoseBrainModifier's pass in a tight loop, the best of BENCH_BATCHES batches of BENCH_RUNS; "giants" is
+##       how many skinned giants were in the tree (2 with the creator's preview open at a shrine), and
+##       "modifier_runs" proves the modifier ran in the loop.
 ##   UI_PROBE {"t":"done", "tour", "ok", "why"}   a tour's end (it then quits).
 ##
 ## Frame intervals are wall-clock time between two _process calls (the probe runs first in the frame,
@@ -34,6 +40,9 @@ extends Node
 ## Input.parse_input_event, as a keyboard's would):
 ##   --ui-probe=new_game   the title -> Enter (New Game) -> the creator: PageDown, R (randomize the
 ##                         category), Ctrl+Z (undo), R, Ctrl+Enter (Begin) -> the level -> quits
+##   --ui-probe=level      any level (--level=, --mode=): when the level's mark is done it prints the
+##                         giant's own draw calls and primitives (UI_PROBE {"t":"giant_draw"}: the frame's
+##                         counts with the giant's models shown and hidden) and quits
 ##   --ui-probe=shrine     a level entered with --continue at a shrine: E (rest) -> the shrine screen:
 ##                         Up to the tab buttons, Right until the Appearance tab has the focus, Enter,
 ##                         Down to "Change your look...", Enter -> the creator -> quits
@@ -52,11 +61,14 @@ const STALL_FLOOR_MS := 25.0
 ## ui/screens/shrine/appearance_tab.gd's TITLE and CHANGE (the tab has no class name).
 const APPEARANCE_TAB := "Appearance"
 const CHANGE_LOOK := "Change your look..."
-const TOURS := ["", "new_game", "shrine"]
+const TOURS := ["", "new_game", "shrine", "level"]
+const BENCH_BATCHES := 5
+const BENCH_RUNS := 200
 const TOUR_STEP_LIMIT_S := 240.0
 
 var tour := ""
 var shots_dir := ""
+var bench := false
 var _last_usec := 0
 var _state := {}
 var _frame := 0
@@ -73,6 +85,7 @@ static var _step := 0
 var _step_started_ms := 0
 var _wait_frames := 0
 var _keys: Array = []
+var _giant_draw := {}
 
 
 ## The probe the command line asks for (null without --ui-probe).
@@ -89,6 +102,7 @@ static func from_args(args: PackedStringArray) -> UiProbe:
 			shots = arg.substr(17)
 	if probe != null:
 		probe.shots_dir = shots
+		probe.bench = args.has("--ui-probe-bench")
 	return probe
 
 
@@ -214,6 +228,47 @@ func _close_mark() -> void:
 	if tour != "":
 		_say_skin(str(r.mark))
 		_shot(str(r.mark))
+	if bench:
+		var b := skin_bench()
+		if not b.is_empty():
+			b["t"] = "bench"
+			b["mark"] = r.mark
+			_say(b)
+
+
+## The skin's CPU a frame for the player's rig (see the header); {} when no skinned rig is in the tree.
+func skin_bench() -> Dictionary:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return {}
+	var rig: SkinnedRig = null
+	for n in player.find_children("*", "", true, false):
+		if n is SkinnedRig and (n as SkinnedRig).layers_on():
+			rig = n as SkinnedRig
+			break
+	if rig == null or rig.animation_tree() == null or rig.skeleton() == null:
+		return {}
+	var tree := rig.animation_tree()
+	var sk := rig.skeleton()
+	var mod := rig.modifier()
+	var runs_before := mod.runs if mod != null else 0
+	var best := INF
+	var dt := 1.0 / 60.0
+	for _b in BENCH_BATCHES:
+		var t0 := Time.get_ticks_usec()
+		for _i in BENCH_RUNS:
+			rig._drive_tree(dt)
+			tree.advance(dt)
+			sk.force_update_all_bone_transforms()
+			if mod != null:
+				mod._process_modification_with_delta(dt)   # the engine runs it inside the skeleton's deferred update
+		best = minf(best, float(Time.get_ticks_usec() - t0) / float(BENCH_RUNS))
+	var giants := 0
+	for m in get_tree().get_nodes_in_group(GiantModel.GROUP):
+		if (m as Node).is_inside_tree():
+			giants += 1
+	return {"skin_ms": snappedf(best / 1000.0, 0.0001), "batches": BENCH_BATCHES, "runs": BENCH_RUNS, "giants": giants,
+		"modifier_runs": (mod.runs if mod != null else 0) - runs_before, "paused": get_tree().paused}
 
 
 func _note_marks(was: Dictionary, s: Dictionary) -> void:
@@ -303,8 +358,34 @@ func _run_tour(s: Dictionary) -> void:
 		return
 	if tour == "new_game":
 		_tour_new_game(s)
+	elif tour == "level":
+		_tour_level()
 	else:
 		_tour_shrine(s)
+
+
+## The level tour: once the level's mark is done, the giant's own draw calls - the frame's count with the
+## giant's models shown, then hidden for a few frames (§2.12: at most 13 with the fullest look, low).
+func _tour_level() -> void:
+	match _step:
+		0:
+			if _has_result("level"):
+				_giant_draw = {"with": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+					"primitives_with": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))}
+				for m in get_tree().get_nodes_in_group(GiantModel.GROUP):
+					(m as Node3D).visible = false
+				_next(4)
+		1:
+			_giant_draw["without"] = int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+			_giant_draw["primitives_without"] = int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
+			for m in get_tree().get_nodes_in_group(GiantModel.GROUP):
+				(m as Node3D).visible = true
+			var stats := SkinnedRig.run_stats()
+			_say({"t": "giant_draw", "draw_calls_with": _giant_draw["with"], "draw_calls_without": _giant_draw.without,
+				"giant_draw_calls": int(_giant_draw["with"]) - int(_giant_draw.without),
+				"giant_primitives": int(_giant_draw.primitives_with) - int(_giant_draw.primitives_without),
+				"look": stats.look, "shown_meshes": stats.shown_meshes})
+			_end_tour(true, "")
 
 
 func _tour_new_game(s: Dictionary) -> void:
