@@ -195,7 +195,7 @@ func _fill_stand_in_maps() -> void:
 		elif mat.shader == GiantLook.HAIR_SHADER:
 			mat.set_shader_parameter("hair_atlas", ImageTexture.create_from_image(atlas))
 		elif mat.shader == GiantLook.CLOTH_SHADER:
-			mat.set_shader_parameter("detail_tex", solid.call(Color(0.6, 0.6, 0.6)))
+			mat.set_shader_parameter("detail_tex", solid.call(Color(0.5, 0.5, 1.0, 0.75)))   # a flat normal, the dye
 
 
 # --------------------------------------------------------------------------- framing and capture

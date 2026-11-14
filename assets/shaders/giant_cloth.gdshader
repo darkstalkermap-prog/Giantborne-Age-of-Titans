@@ -1,9 +1,11 @@
 // The giant's garments (P42; plan M10 §2.8): Garment_*. Ported from the asset research's cloth shader,
-// with a tileable detail map (a weave or a leather grain with mipmaps) instead of the procedural weave
-// that moired at a distance. detail_tex R is the material's shading (white = the dye itself); its
-// gradient gives the normal. The dye is a uniform (each garment takes its slot's dye). fade (0-1) is the
-// creator's "Hidden by your clothing": a screen-door fade (pixels dropped in a fixed pattern), so the
-// garment stays an opaque material. RigPaint's tint and flash as on every giant shader.
+// with a tileable detail map (a weave, a leather grain or a fur with mipmaps; P41's cloth_*.png) instead of
+// the procedural weave that moired at a distance. detail_tex holds, as P41 packs it, a tangent-space normal
+// in RGB (OpenGL, Y up) and the albedo detail in A (0.75 = the dye itself); detail_strength scales the
+// albedo detail, normal_strength the normal. The dye is a uniform (each garment takes its slot's dye). fade
+// (0-1) is the creator's "Hidden by your clothing": a screen-door fade (pixels dropped in a fixed pattern),
+// so the garment stays an opaque material. RigPaint's tint and flash as on every giant shader. GiantLook
+// always binds the map (a garment without it is a problem GiantLook.validate() reports).
 shader_type spatial;
 render_mode cull_disabled;
 
@@ -24,13 +26,11 @@ void fragment() {
 			discard;
 		}
 	}
-	vec2 p = UV * detail_scale;
-	float d = texture(detail_tex, p).r;
-	vec2 px = vec2(1.0 / float(textureSize(detail_tex, 0).x), 1.0 / float(textureSize(detail_tex, 0).y));
-	float gx = texture(detail_tex, p + vec2(px.x, 0.0)).r - texture(detail_tex, p - vec2(px.x, 0.0)).r;
-	float gy = texture(detail_tex, p + vec2(0.0, px.y)).r - texture(detail_tex, p - vec2(0.0, px.y)).r;
+	vec4 t = texture(detail_tex, UV * detail_scale);
+	float d = t.a / 0.75;   // 1 = the dye itself
 	ALBEDO = dye_color * mix(1.0, d, detail_strength) * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
-	ROUGHNESS = clamp(roughness_base - (1.0 - d) * 0.1, 0.0, 1.0);
-	NORMAL_MAP = normalize(vec3(-gx * normal_strength, gy * normal_strength, 1.0)) * 0.5 + 0.5;
+	ROUGHNESS = clamp(roughness_base + (1.0 - d) * 0.1, 0.0, 1.0);
+	NORMAL_MAP = t.rgb;
+	NORMAL_MAP_DEPTH = normal_strength;
 	EMISSION = flash;
 }

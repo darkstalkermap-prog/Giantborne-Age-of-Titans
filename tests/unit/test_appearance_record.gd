@@ -391,6 +391,39 @@ func test_covered_regions_from_the_outfit_and_from_an_index() -> void:
 	assert_eq(Appearance.covered_regions(r, {"garments": {"tunic": ["Garment_tunic_core"]},
 		"meshes": {"Garment_tunic_core": {"covers": [3, 4, 5, 6]}}}), PackedStringArray(["chest", "back"]),
 		"with an index: a design region is hidden when all its body regions are")
+	# The index's coverage shares (W25 review C2): one garment covering a body region at DESIGN_COVER_SHARE
+	# or more hides a design there, though only the regions at 97 % (its `covers`) sink under it.
+	var shares := {"garments": {"tunic": ["Garment_tunic_core"], "jerkin": ["Garment_jerkin"], "furs": ["Garment_furs"]},
+		"meshes": {"Garment_tunic_core": {"covers": [3, 4, 6], "coverage": {"3": 0.99, "4": 1.0, "5": 0.958, "6": 1.0}},
+			"Garment_jerkin": {"covers": [6], "coverage": {"3": 0.81, "4": 0.95, "5": 0.81, "6": 1.0}},
+			"Garment_furs": {"covers": [], "coverage": {"3": 0.67, "5": 0.6}}}}
+	assert_eq(Appearance.design_hidden_body_regions(["tunic"], shares), PackedInt32Array([3, 4, 5, 6]),
+		"the upper back at 96 %% hides a design (%s)" % Appearance.DESIGN_COVER_SHARE)
+	assert_eq(Appearance.covered_body_regions(["tunic"], shares), PackedInt32Array([3, 4, 6]), "though it does not sink")
+	assert_eq(Appearance.design_hidden_body_regions(["furs"], shares), PackedInt32Array(), "the furs at 67 %% hide none")
+	var tunic := Appearance.default_record()
+	tunic.outfit.set = "outfit.warrior"
+	var only := {"garments": {"tunic": ["Garment_tunic_core"]}, "meshes": shares.meshes}
+	assert_eq(Appearance.covered_regions(tunic, only), PackedStringArray(["chest", "back"]), "the tunic's shares: chest, back")
+
+
+## Describing a record names what the player wears (W25 review C3): a line's option survives the
+## summary, which used to sanitize without the line and read every locked option as the default.
+func test_the_summary_and_the_covered_regions_keep_a_lines_options() -> void:
+	var r := with({"skin": "skin.ashen", "eyes": "eyes.storm"})
+	var stone: Dictionary = Appearance.sanitize(with({"skin": "skin.ashen"}), STONE).record
+	assert_eq(str(stone.skin), "skin.ashen", "a Stoneblood keeps the ashen skin")
+	assert_true(Appearance.summary_lines(stone).has("Skin: ashen"), "and the summary says so: %s" % [Appearance.summary_lines(stone)])
+	var storm: Dictionary = Appearance.sanitize(with({"eyes": "eyes.storm"}), STORM).record
+	assert_eq(str(storm.eyes), "eyes.storm", "a Stormborn keeps the storm eyes")
+	assert_true(Appearance.summary_lines(storm).has("Eyes: storm-lit"), "and the summary says so: %s" % [Appearance.summary_lines(storm)])
+	assert_true(Appearance.summary_lines(storm, STORM).has("Eyes: storm-lit"), "with the line given too")
+	assert_true(Appearance.summary_lines(r, STONE).has("Eyes: grey-green"),
+		"with another line given, its locks apply as to_look draws it: %s" % [Appearance.summary_lines(r, STONE)])
+	assert_true(Appearance.summary_lines(r, STONE).has("Skin: ashen"), "and its own option stays")
+	var amber: Dictionary = Appearance.sanitize(with({"eyes": "eyes.amber", "outfit": {"set": "outfit.warrior"}}), WILD).record
+	assert_true(Appearance.summary_lines(amber).has("Eyes: amber"), "a Wildheart's amber eyes")
+	assert_eq(Appearance.covered_regions(amber), PackedStringArray(["chest", "back"]), "covered regions on a line's record")
 
 
 func test_every_preset_is_valid_and_names_itself() -> void:

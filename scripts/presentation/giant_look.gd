@@ -28,11 +28,13 @@ extends RefCounted
 ## --giant-tier=web forces the web tier (--giant-tier=hi forces hi). Textures are held in a static cache
 ## for the whole process (a cache miss costs about 20-30 ms).
 ##
-## File names the asset (P41) and this file agree on (the index may override them, see _texture_paths):
-## <tier folder>/albedo.png, normal.png, orm.png (R AO, G roughness, B thickness), masks.png (R stubble,
-## G scalp, B brows, A lips); assets/giant/designs.png (the design array); a hair mesh's atlas from its
-## index entry's "atlas", else assets/giant/hair_atlas.png; a garment's detail map from its entry's
-## "detail", else assets/giant/cloth_weave.png or cloth_leather.png by GARMENT_DETAIL.
+## File names the asset (P41) and this file agree on: <tier folder>/albedo.png, normal.png, orm.png (R AO,
+## G roughness, B thickness), masks.png (R stubble, G scalp, B brows, A lips). The other maps are named by
+## the index (texture_path): the real index (P41) gives a hair mesh's "atlas" and a garment's "detail" as
+## names ("hair_atlas"; "weave", "leather", "fur") that its `textures` table maps to paths (`hair_atlas`,
+## `detail_<kind>`, `designs` for the design array); a synthetic index may give paths instead; without
+## either, DEFAULT_TEXTURES. A garment's detail kind is its entry's "detail" name, else GARMENT_DETAIL of
+## its garment. A sampler whose texture does not load is a problem validate() reports.
 
 const SKIN_SHADER := preload("res://assets/shaders/giant_skin.gdshader")
 const HAIR_SHADER := preload("res://assets/shaders/giant_hair.gdshader")
@@ -79,14 +81,18 @@ const SKIN_MAPS := {"albedo_tex": "albedo.png", "normal_tex": "normal.png", "orm
 	"mask_tex": "masks.png"}
 const HI_MAPS := ["normal_tex", "orm_tex"]
 const HAIR_ATLAS := "res://assets/giant/hair_atlas.png"
-const CLOTH_DETAIL := {"weave": "res://assets/giant/cloth_weave.png", "leather": "res://assets/giant/cloth_leather.png"}
-## The detail map of each floor garment (a garment not listed is cloth).
+const CLOTH_DETAIL := {"weave": "res://assets/giant/cloth_weave.png", "leather": "res://assets/giant/cloth_leather.png",
+	"fur": "res://assets/giant/cloth_fur.png"}
+## The paths of the index's texture names when the index has no `textures` table (a synthetic index).
+const DEFAULT_TEXTURES := {"hair_atlas": HAIR_ATLAS, "designs": DESIGN_ARRAY, "detail_weave": CLOTH_DETAIL.weave,
+	"detail_leather": CLOTH_DETAIL.leather, "detail_fur": CLOTH_DETAIL.fur}
+## The detail kind of each floor garment when its index entry names none (a garment not listed is cloth).
 const GARMENT_DETAIL := {"braies": "weave", "tunic": "weave", "jerkin": "leather", "belt": "leather",
-	"bracers": "leather", "boots": "leather", "furs": "leather"}
+	"bracers": "leather", "boots": "leather", "furs": "fur"}
 ## A garment whose index entry has no dye slot ("none": the furs) keeps this colour.
 const NATURAL_DYE := Color(0.36, 0.30, 0.24)
 ## The detail map's strength per kind.
-const DETAIL_STRENGTH := {"weave": 0.35, "leather": 0.25}
+const DETAIL_STRENGTH := {"weave": 0.35, "leather": 0.25, "fur": 0.45}
 
 ## The uniforms GiantLook sets, per shader kind (validate() checks them against the shaders), and the two
 ## every giant shader declares for RigPaint.
@@ -105,11 +111,19 @@ const META_LOOK := "giant_look"
 const META_MATERIALS := "giant_look_materials"
 const META_TIER := "giant_look_tier"
 const META_NAMES := "giant_look_names"
+## On a material: uniform -> the texture path GiantLook asked for (validate() names it when it did not load).
+const META_TEX := "giant_look_textures"
+## On a root: the instance id of the root its materials and node cache were made for. Node.duplicate() copies
+## a node's metadata, so a copy carries its original's; GiantLook ignores them there (and rebuilds the copy's
+## own materials on its first apply).
+const META_OWNER := "giant_look_owner"
+const META_NODES := "giant_look_nodes"
 
 ## The texture tier the command line forces (--giant-tier=web | hi; "" = none). Tests set it directly.
 static var forced_tier := _cli_tier()
 static var _tex_cache := {}
 static var _declared_cache := {}
+static var _sampler_cache := {}
 
 
 static func _cli_tier() -> String:
@@ -159,15 +173,39 @@ static func mesh_node(root: Node, index: Dictionary, mesh_id: String) -> MeshIns
 		return null
 	var entry: Variant = _meshes(index).get(mesh_id)
 	var node_name := str((entry as Dictionary).get("node", mesh_id)) if typeof(entry) == TYPE_DICTIONARY else mesh_id
-	var cache: Dictionary = root.get_meta("giant_look_nodes", {})
+	var cache := _node_cache(root)
 	var hit: Variant = cache.get(node_name)
-	if is_instance_valid(hit) and hit is MeshInstance3D:
+	if is_instance_valid(hit) and hit is MeshInstance3D and root.is_ancestor_of(hit):
 		return hit
 	var found := root.find_child(node_name, true, false) as MeshInstance3D
 	if found != null:
 		cache[node_name] = found
-		root.set_meta("giant_look_nodes", cache)
 	return found
+
+
+## The root's own node cache (node name -> MeshInstance3D): a fresh one on a copy that carries its
+## original's (Node.duplicate() copies metadata, the cached nodes and the Dictionary itself included).
+static func _node_cache(root: Node) -> Dictionary:
+	var meta: Variant = root.get_meta(META_NODES, {})
+	if typeof(meta) == TYPE_DICTIONARY and int((meta as Dictionary).get("owner", 0)) == root.get_instance_id():
+		return meta.nodes
+	var fresh := {"owner": root.get_instance_id(), "nodes": {}}
+	root.set_meta(META_NODES, fresh)
+	return fresh.nodes
+
+
+## The root's own materials (mesh id -> ShaderMaterial; {} before build_materials, and on a copy whose
+## metadata came from its original).
+static func _own_materials(root: Node) -> Dictionary:
+	if root == null or int(root.get_meta(META_OWNER, 0)) != root.get_instance_id():
+		return {}
+	var mats: Variant = root.get_meta(META_MATERIALS, {})
+	return mats if typeof(mats) == TYPE_DICTIONARY else {}
+
+
+## True when the root carries materials made for another root (a duplicate()'s copy of its original's).
+static func _inherited_materials(root: Node) -> bool:
+	return root != null and root.has_meta(META_MATERIALS) and int(root.get_meta(META_OWNER, 0)) != root.get_instance_id()
 
 
 ## The index meshes of `category` ("hair", "beard", ...), sorted.
@@ -279,6 +317,24 @@ static func map_paths(index: Dictionary, tier: String, exists: Callable = Callab
 	return out
 
 
+## The path of a texture the index names. `ref` is a mesh entry's "atlas" or "detail" (or "" for none):
+## a path ("res://...", a synthetic index) is used as it is; a name is looked up in index.textures under
+## `prefix` + ref ("detail_" + "leather") and then ref, else in DEFAULT_TEXTURES when the index has no
+## `textures` table; "" (a texture that is not there, which validate() reports) for a name the index's
+## table does not have. An empty ref stands for `default_key` ("hair_atlas", "detail_weave", "designs").
+static func texture_path(index: Dictionary, ref: String, prefix: String, default_key: String) -> String:
+	if ref.contains("://"):
+		return ref
+	var table: Variant = index.get("textures")
+	var keys := [default_key] if ref == "" else [prefix + ref, ref]
+	for key: String in keys:
+		if typeof(table) == TYPE_DICTIONARY and typeof((table as Dictionary).get(key)) == TYPE_STRING:
+			return str(table[key])
+		if typeof(table) != TYPE_DICTIONARY and DEFAULT_TEXTURES.has(key):
+			return str(DEFAULT_TEXTURES[key])
+	return ""
+
+
 ## A texture by path, from the static cache (null when the file does not exist).
 static func texture(path: String) -> Texture:
 	if path == "":
@@ -319,26 +375,39 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 		match kind:
 			"skin":
 				for u: String in maps:
-					set_param(mat, u, texture(str(maps[u])))
-				set_param(mat, "design_tex", texture(str(index.get("design_array", DESIGN_ARRAY))))
+					_set_texture(mat, u, str(maps[u]))
+				_set_texture(mat, "design_tex", str(index.get("design_array", texture_path(index, "", "", "designs"))))
 				set_param(mat, "bake_tone", BAKE_TONE)
 				set_param(mat, "hide_shrink", HIDE_SHRINK_M)
 				set_param(mat, "brows", 1.0)
 			"hair":
-				set_param(mat, "hair_atlas", texture(str(entry.get("atlas", HAIR_ATLAS))))
+				_set_texture(mat, "hair_atlas", texture_path(index, str(entry.get("atlas", "")), "", "hair_atlas"))
 			"cloth":
 				var detail := _detail_kind(str(id), entry, index)
-				set_param(mat, "detail_tex", texture(str(entry.get("detail", CLOTH_DETAIL.get(detail, "")))))
+				var ref := str(entry.get("detail", ""))
+				_set_texture(mat, "detail_tex", texture_path(index, ref, "detail_", "detail_" + detail))
 				set_param(mat, "detail_strength", float(DETAIL_STRENGTH.get(detail, 0.3)))
 		mi.material_override = mat
 		mats[str(id)] = mat
 	root.set_meta(META_MATERIALS, mats)
+	root.set_meta(META_OWNER, root.get_instance_id())
 	root.set_meta(META_TIER, resolve_tier(tier, index))
 	apply(root, index, root.get_meta(META_LOOK, DEFAULT_LOOK))
 
 
-## The detail kind ("weave" | "leather") of a garment mesh: GARMENT_DETAIL of the garment it belongs to.
+## A sampler uniform from a path (the texture cache), the path remembered for validate().
+static func _set_texture(mat: ShaderMaterial, uniform: String, path: String) -> void:
+	set_param(mat, uniform, texture(path))
+	var paths: Dictionary = mat.get_meta(META_TEX, {})
+	paths[uniform] = path
+	mat.set_meta(META_TEX, paths)
+
+
+## The detail kind ("weave" | "leather" | "fur") of a garment mesh: its entry's "detail" when that is a
+## name of DETAIL_STRENGTH (the real index), else its "detail_kind", else GARMENT_DETAIL of its garment.
 static func _detail_kind(mesh_id: String, entry: Dictionary, index: Dictionary) -> String:
+	if DETAIL_STRENGTH.has(str(entry.get("detail", ""))):
+		return str(entry.detail)
 	if entry.has("detail_kind"):
 		return str(entry.detail_kind)
 	var garments := _garments(index)
@@ -353,16 +422,17 @@ static func materials(root: Node) -> Array[ShaderMaterial]:
 	var out: Array[ShaderMaterial] = []
 	if root == null:
 		return out
-	var mats: Dictionary = root.get_meta(META_MATERIALS, {})
+	var mats := _own_materials(root)
 	for id: Variant in mats:
 		if mats[id] is ShaderMaterial:
 			out.append(mats[id])
 	return out
 
 
-## The tier the root's materials were built with ("" before build_materials).
+## The tier the root's materials were built with ("" before build_materials, and on a copy that has not
+## built its own).
 static func built_tier(root: Node) -> String:
-	return str(root.get_meta(META_TIER, "")) if root != null else ""
+	return str(root.get_meta(META_TIER, "")) if root != null and not _own_materials(root).is_empty() else ""
 
 
 ## The look last applied to the root (DEFAULT_LOOK before any).
@@ -388,6 +458,11 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 		return
 	var l := complete(look)
 	root.set_meta(META_LOOK, l.duplicate(true))
+	if _inherited_materials(root):
+		# A copy of a model whose materials were built: its meshes still draw with its original's. Give it
+		# its own (build_materials applies the look just stored).
+		build_materials(root, index, str(root.get_meta(META_TIER, "auto")))
+		return
 	var shown := {}
 	var garments := _garments(index)
 	for g: Variant in l.garments:
@@ -406,7 +481,7 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				mi.visible = str(id) == str(l.beard_mesh)
 			"garment":
 				mi.visible = shown.has(str(id))
-	var mats: Dictionary = root.get_meta(META_MATERIALS, {})
+	var mats := _own_materials(root)
 	if mats.is_empty():
 		return
 	var hidden := hidden_regions_mask(index, l.garments)
@@ -460,7 +535,7 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 ## The creator's "Hidden by your clothing" fade (0-1) on the garments' materials (none before
 ## build_materials).
 static func set_garment_fade(root: Node, index: Dictionary, fade: float) -> void:
-	var mats: Dictionary = root.get_meta(META_MATERIALS, {}) if root != null else {}
+	var mats := _own_materials(root)
 	var meshes := _meshes(index)
 	for id: Variant in mats:
 		if typeof(meshes.get(id)) == TYPE_DICTIONARY and str((meshes[id] as Dictionary).get("category", "")) == "garment":
@@ -497,6 +572,20 @@ static func undeclared_uniforms(shader: Shader, names: Variant) -> PackedStringA
 	for n: Variant in names:
 		if not declared.has(str(n)):
 			out.append(str(n))
+	return out
+
+
+## The sampler uniforms `shader` declares (get_shader_uniform_list: the Object-typed ones).
+static func sampler_uniforms(shader: Shader) -> Dictionary:
+	if shader == null:
+		return {}
+	var out: Dictionary = _sampler_cache.get(shader.resource_path, {})
+	if out.is_empty():
+		for u: Dictionary in shader.get_shader_uniform_list():
+			if int(u.get("type", 0)) == TYPE_OBJECT:
+				out[str(u.name)] = true
+		if shader.resource_path != "":
+			_sampler_cache[shader.resource_path] = out
 	return out
 
 
@@ -549,12 +638,17 @@ static func validate(root: Node, index: Dictionary, look: Dictionary) -> PackedS
 	for kind: String in UNIFORMS:
 		for n in undeclared_uniforms(shader_for(kind), UNIFORMS[kind] + PAINT_UNIFORMS):
 			out.append("giant_%s.gdshader does not declare the uniform '%s'" % [kind, n])
-	var mats: Dictionary = root.get_meta(META_MATERIALS, {}) if root != null else {}
+	var mats := _own_materials(root)
 	for id: Variant in mats:
 		var mat: ShaderMaterial = mats[id]
 		var names: Dictionary = mat.get_meta(META_NAMES, {})
 		for n in undeclared_uniforms(mat.shader, names.keys()):
 			out.append("%s: its shader does not declare the uniform '%s'" % [id, n])
+		var samplers := sampler_uniforms(mat.shader)
+		var paths: Dictionary = mat.get_meta(META_TEX, {})
+		for n: Variant in names:
+			if samplers.has(n) and mat.get_shader_parameter(str(n)) == null:
+				out.append("%s: the texture of '%s' did not load ('%s')" % [id, n, paths.get(n, "")])
 		if mat.shader == SKIN_SHADER:
 			for arr: String in ["region_tattoo", "region_paint", "region_mark"]:
 				var v: Variant = mat.get_shader_parameter(arr)

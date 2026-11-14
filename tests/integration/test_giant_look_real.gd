@@ -4,7 +4,8 @@ extends TestSuite
 ## The data's mesh, design and garment ids all exist in the model's index; every index mesh has its node
 ## and a known category; DEFAULT_LOOK applies cleanly; and every option of every set, applied through
 ## Appearance.to_look and GiantLook.apply with the materials built, sets the expected visibility with
-## validate() empty.
+## validate() empty; every material's samplers hold the maps the index names (its `textures` table), and
+## the data's covered regions agree with the index's for every outfit.
 
 const MODEL := "res://scenes/player/giant_model.tscn"
 
@@ -112,3 +113,47 @@ func test_every_option_of_the_data_applies_with_validate_empty() -> void:
 				assert_eq(GiantLook.mesh_node(_root, index, m).visible, shown.has(m), "%s: %s's visibility" % [id, m])
 			n += 1
 	assert_true(n >= 70, "every option of the data (%d)" % n)
+
+
+## Every sampler of every material holds the map the index names (W25 review C1: the index gives names,
+## "atlas": "hair_atlas" and "detail": "leather" | "weave" | "fur", that its `textures` table maps to paths).
+func test_the_real_models_materials_get_their_textures() -> void:
+	var index := _model()
+	if index.is_empty():
+		return
+	var textures: Dictionary = index.get("textures", {})
+	GiantLook.build_materials(_root, index, "web")
+	var n := 0
+	for id: Variant in index.meshes:
+		var entry: Dictionary = index.meshes[id]
+		var mat := GiantLook.mesh_node(_root, index, str(id)).material_override as ShaderMaterial
+		for u: Variant in GiantLook.sampler_uniforms(mat.shader):
+			assert_true(mat.get_shader_parameter(str(u)) is Texture, "%s: %s is bound" % [id, u])
+			n += 1
+		match str(entry.category):
+			"hair", "beard":
+				assert_eq((mat.get_shader_parameter("hair_atlas") as Texture).resource_path, str(textures.get(entry.atlas)),
+					"%s: the atlas the index names" % id)
+			"garment":
+				assert_eq((mat.get_shader_parameter("detail_tex") as Texture).resource_path,
+					str(textures.get("detail_" + str(entry.detail))), "%s: its %s map" % [id, entry.detail])
+				assert_true(is_equal_approx(float(mat.get_shader_parameter("detail_strength")),
+					float(GiantLook.DETAIL_STRENGTH[str(entry.detail)])), "%s: the %s strength" % [id, entry.detail])
+			"body":
+				assert_eq((mat.get_shader_parameter("design_tex") as Texture).resource_path, str(textures.designs),
+					"%s: the design array" % id)
+	assert_true(n >= (index.meshes as Dictionary).size() - 1, "every sampler checked (%d)" % n)
+	assert_eq(GiantLook.validate(_root, index, GiantLook.DEFAULT_LOOK), PackedStringArray(), "validate() is empty")
+
+
+## The two sources of the covered regions agree on the real model (W25 review C2): the data's `covers`,
+## which Randomize reads, and the index's coverage, which the creator's "Hidden by your clothing" reads.
+func test_the_datas_covered_regions_match_the_real_index() -> void:
+	var index := _model()
+	if index.is_empty():
+		return
+	for id: String in Appearance.option_ids("outfit"):
+		var r := Appearance.default_record()
+		r.outfit.set = id
+		assert_eq(Appearance.covered_regions(r, index), Appearance.covered_regions(r),
+			"%s: the index's covered regions are the data's %s" % [id, Appearance.covered_regions(r)])

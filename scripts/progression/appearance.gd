@@ -29,7 +29,14 @@ extends RefCounted
 ## Covered regions (decision 18, "Hidden by your clothing"): an outfit option's optional `covers` lists
 ## the design regions (arms, chest, back, face) its garments hide; covered_regions() reads it, so
 ## random_record() never puts a new design where the clothing hides it. With the giant's index,
-## covered_regions(record, index) reads the garments' own `covers` (body region ids) instead.
+## covered_regions(record, index) reads the garments' coverage instead: a body region hides a design when
+## a garment covers at least DESIGN_COVER_SHARE of it (its index `coverage`; or it is in the garment's
+## `covers`, the regions covered at 97 % or more, which also sink under the clothing). The two agree on the
+## real model for every outfit (tests/integration/test_giant_look_real.gd).
+##
+## Describing a record (summary_lines, covered_regions) applies the line's locks only when given the
+## character's line: a stored record was sanitized for its line already, so without one it is described
+## as it is (a Stormborn's storm eyes read "storm", not the default).
 
 const RECORD_VERSION := 1
 const DEFAULT_PRESET := "appearance_preset.wanderer"
@@ -44,6 +51,10 @@ const NO_DEFAULT := ["tattoo", "paint", "scar", "mark"]
 const DESIGN_REGIONS := ["arms", "chest", "back", "face"]
 ## The body regions (plan M10 §2.6: the per-vertex ids in COLOR_0.r) each design region covers.
 const DESIGN_REGION_BODY := {"arms": [8, 9], "chest": [3, 4], "back": [5, 6], "face": [1]}
+## The share of a body region one garment must cover to hide a design there (covered_regions with an index).
+## On the floor's garments the shares fall either at 0.81 and above (the jerkin over the chest and the upper
+## back, the tunic) or at 0.67 and below (the furs, the tunic's sleeves, the boots' shins).
+const DESIGN_COVER_SHARE := 0.75
 const MAX_SCARS := 4
 const MARK_AUTO := "auto"
 const MARK_NONE := "none"
@@ -261,8 +272,10 @@ static func structure_errors(record: Variant) -> PackedStringArray:
 
 
 ## {"record": the record to keep, "dropped": unknown ids (each once), "notes": what the player is told}.
-## See the class notes; `ancestry_id` is the character's line (its locked options are reset).
-static func sanitize(record: Variant, ancestry_id := "") -> Dictionary:
+## See the class notes; `ancestry_id` is the character's line (its locked options are reset). With
+## `check_locks` false no option counts as locked (describing a stored record, which was sanitized for its
+## line when it was stored).
+static func sanitize(record: Variant, ancestry_id := "", check_locks := true) -> Dictionary:
 	var dropped := PackedStringArray()
 	var notes := PackedStringArray()
 	if is_future(record):
@@ -281,44 +294,44 @@ static func sanitize(record: Variant, ancestry_id := "") -> Dictionary:
 	out["v"] = RECORD_VERSION
 	var preset := str(r.get("preset", ""))
 	out["preset"] = preset if preset == "" or not preset_record(preset).is_empty() else ""
-	out["skin"] = _checked(r.get("skin", base.skin), "skin", false, str(base.skin), ancestry_id, dropped, locked, true)
-	out["eyes"] = _checked(r.get("eyes", base.eyes), "eyes", false, str(base.eyes), ancestry_id, dropped, locked, true)
+	out["skin"] = _checked(r.get("skin", base.skin), "skin", false, str(base.skin), ancestry_id, dropped, locked, true, check_locks)
+	out["eyes"] = _checked(r.get("eyes", base.eyes), "eyes", false, str(base.eyes), ancestry_id, dropped, locked, true, check_locks)
 	var hair := _block(r, "hair", base)
-	hair["style"] = _checked(hair.get("style"), "hair", false, str(base.hair.style), ancestry_id, dropped, locked, true)
-	hair["color"] = _checked(hair.get("color"), "haircolor", false, str(base.hair.color), ancestry_id, dropped, locked, true)
+	hair["style"] = _checked(hair.get("style"), "hair", false, str(base.hair.style), ancestry_id, dropped, locked, true, check_locks)
+	hair["color"] = _checked(hair.get("color"), "haircolor", false, str(base.hair.color), ancestry_id, dropped, locked, true, check_locks)
 	hair["grey"] = _grey(hair.get("grey", base.hair.grey))
 	out["hair"] = hair
 	var beard := _block(r, "beard", base)
-	beard["style"] = _checked(beard.get("style"), "beard", false, str(base.beard.style), ancestry_id, dropped, locked, true)
-	beard["color"] = _checked(beard.get("color"), "haircolor", true, "", ancestry_id, dropped, locked, true)
+	beard["style"] = _checked(beard.get("style"), "beard", false, str(base.beard.style), ancestry_id, dropped, locked, true, check_locks)
+	beard["color"] = _checked(beard.get("color"), "haircolor", true, "", ancestry_id, dropped, locked, true, check_locks)
 	beard["grey"] = _grey(beard.get("grey", base.beard.grey))
 	out["beard"] = beard
 	var tattoos := _block(r, "tattoos", base)
 	for region: String in DESIGN_REGIONS:
-		var t := _checked(tattoos.get(region, ""), "tattoo", true, "", ancestry_id, dropped, locked, true)
+		var t := _checked(tattoos.get(region, ""), "tattoo", true, "", ancestry_id, dropped, locked, true, check_locks)
 		if t != "" and str(option(t).get("region", "")) != region:
 			misplaced.append(t)
 			t = ""
 		tattoos[region] = t
-	tattoos["ink"] = _checked(tattoos.get("ink"), "ink", false, str(base.tattoos.ink), ancestry_id, dropped, locked, false)
+	tattoos["ink"] = _checked(tattoos.get("ink"), "ink", false, str(base.tattoos.ink), ancestry_id, dropped, locked, false, check_locks)
 	out["tattoos"] = tattoos
 	var paint := _block(r, "paint", base)
-	paint["design"] = _checked(paint.get("design", ""), "paint", true, "", ancestry_id, dropped, locked, true)
-	paint["color"] = _checked(paint.get("color"), "paintcolor", false, str(base.paint.color), ancestry_id, dropped, locked, false)
+	paint["design"] = _checked(paint.get("design", ""), "paint", true, "", ancestry_id, dropped, locked, true, check_locks)
+	paint["color"] = _checked(paint.get("color"), "paintcolor", false, str(base.paint.color), ancestry_id, dropped, locked, false, check_locks)
 	out["paint"] = paint
 	var scars: Array = []
 	for s: Variant in r.get("scars", []):
-		var id := _checked(s, "scar", true, "", ancestry_id, dropped, locked, true)
+		var id := _checked(s, "scar", true, "", ancestry_id, dropped, locked, true, check_locks)
 		if id != "" and not scars.has(id):
 			scars.append(id)
 	out["scars"] = scars.slice(0, MAX_SCARS)
 	var mark := str(r.get("mark", MARK_AUTO))
 	out["mark"] = mark if mark in [MARK_AUTO, MARK_NONE] else MARK_AUTO
 	var outfit := _block(r, "outfit", base)
-	outfit["set"] = _checked(outfit.get("set"), "outfit", false, str(base.outfit.set), ancestry_id, dropped, locked, true)
-	outfit["primary"] = _checked(outfit.get("primary"), "dye", false, str(base.outfit.primary), ancestry_id, dropped, locked, true)
+	outfit["set"] = _checked(outfit.get("set"), "outfit", false, str(base.outfit.set), ancestry_id, dropped, locked, true, check_locks)
+	outfit["primary"] = _checked(outfit.get("primary"), "dye", false, str(base.outfit.primary), ancestry_id, dropped, locked, true, check_locks)
 	outfit["secondary"] = _checked(outfit.get("secondary"), "dye", false, str(base.outfit.secondary), ancestry_id, dropped,
-		locked, true)
+		locked, true, check_locks)
 	out["outfit"] = outfit
 	if not locked.is_empty():
 		notes.append(NOTE_LOCKED % ", ".join(locked))
@@ -339,7 +352,7 @@ static func _block(r: Dictionary, key: String, base: Dictionary) -> Dictionary:
 ## `value` when it names an option of `category` this line may use; "" when empty and allowed; else
 ## `fallback`, the id listed in `dropped` (unknown, when `report`) or its name in `locked`.
 static func _checked(value: Variant, category: String, allow_empty: bool, fallback: String, ancestry_id: String,
-		dropped: PackedStringArray, locked: PackedStringArray, report: bool) -> String:
+		dropped: PackedStringArray, locked: PackedStringArray, report: bool, check_locks := true) -> String:
 	var id := str(value) if value != null else ""
 	if id == "" and allow_empty:
 		return ""
@@ -348,7 +361,7 @@ static func _checked(value: Variant, category: String, allow_empty: bool, fallba
 		if report and id != "" and not dropped.has(id):
 			dropped.append(id)
 		return fallback
-	if is_locked(id, ancestry_id):
+	if check_locks and is_locked(id, ancestry_id):
 		var name := str(opt.get("name", id))
 		if not locked.has(name):
 			locked.append(name)
@@ -441,16 +454,15 @@ static func _color(opt: Dictionary, key: String, fallback: Color) -> Color:
 
 ## The design regions (arms, chest, back, face) the record's outfit hides. Without an index: the outfit
 ## option's `covers`. With the giant's index (plan M10 §2.5): a design region is covered when every one
-## of its body regions is covered by the outfit's garments' meshes (their `covers`).
-static func covered_regions(record: Variant, index: Dictionary = {}) -> PackedStringArray:
-	var r: Dictionary = sanitize(record).record if typeof(record) == TYPE_DICTIONARY else default_record()
-	if is_future(r):
-		r = default_record()
+## of its body regions hides a design under the outfit's garments (design_hidden_body_regions). With
+## `ancestry_id` the line's locks apply (see the class notes).
+static func covered_regions(record: Variant, index: Dictionary = {}, ancestry_id := "") -> PackedStringArray:
+	var r := _described(record, ancestry_id)
 	var outfit_id := str((r.get("outfit", {}) as Dictionary).get("set", ""))
 	if index.is_empty() or typeof(index.get("garments")) != TYPE_DICTIONARY:
 		return _outfit_covers(outfit_id)
 	var out := PackedStringArray()
-	var body := covered_body_regions(option(outfit_id).get("garments", []), index)
+	var body := design_hidden_body_regions(option(outfit_id).get("garments", []), index)
 	for region: String in DESIGN_REGIONS:
 		var all := true
 		for b: int in DESIGN_REGION_BODY[region]:
@@ -468,6 +480,39 @@ static func _outfit_covers(outfit_id: String) -> PackedStringArray:
 	for c: Variant in option(outfit_id).get("covers", []):
 		if str(c) in DESIGN_REGIONS and not out.has(str(c)):
 			out.append(str(c))
+	return out
+
+
+## The record as it is described (summary_lines, covered_regions): sanitized, the locks of `ancestry_id`
+## applied only when a line is given; the default record for a record that is not a dictionary or comes
+## from a later build.
+static func _described(record: Variant, ancestry_id: String) -> Dictionary:
+	if typeof(record) != TYPE_DICTIONARY:
+		return default_record()
+	var r: Dictionary = sanitize(record, ancestry_id, ancestry_id != "").record
+	return default_record() if is_future(r) else r
+
+
+## The body region ids under the given garments where a design is hidden: those their meshes' `covers`
+## list, and those one of their meshes' `coverage` shares (region id -> 0-1) puts at DESIGN_COVER_SHARE or
+## more (sorted, unique).
+static func design_hidden_body_regions(garments: Variant, index: Dictionary) -> PackedInt32Array:
+	var seen := {}
+	for b in covered_body_regions(garments, index):
+		seen[b] = true
+	var g_table: Dictionary = index.get("garments", {}) if typeof(index.get("garments")) == TYPE_DICTIONARY else {}
+	var m_table: Dictionary = index.get("meshes", {}) if typeof(index.get("meshes")) == TYPE_DICTIONARY else {}
+	for g: Variant in (garments if typeof(garments) == TYPE_ARRAY else []):
+		for mesh_id: Variant in g_table.get(str(g), []):
+			var entry: Variant = m_table.get(str(mesh_id), {})
+			var cov: Variant = (entry as Dictionary).get("coverage", {}) if typeof(entry) == TYPE_DICTIONARY else {}
+			if typeof(cov) != TYPE_DICTIONARY:
+				continue
+			for k: Variant in cov:
+				if str(k).is_valid_int() and SchemaUtil.is_number(cov[k]) and float(cov[k]) >= DESIGN_COVER_SHARE:
+					seen[int(str(k))] = true
+	var out := PackedInt32Array(seen.keys())
+	out.sort()
 	return out
 
 
@@ -617,10 +662,10 @@ static func _region_options(category: String, region: String, ancestry_id: Strin
 
 ## The look in words, one line per part (the shrine's Appearance tab; plan M10 §2.10):
 ## "Hair: long, combed back, chestnut, a little grey", "Beard: full, chestnut, a little grey", ...
-static func summary_lines(record: Variant) -> PackedStringArray:
-	var r: Dictionary = sanitize(record).record if typeof(record) == TYPE_DICTIONARY else default_record()
-	if is_future(r):
-		r = default_record()
+## Without `ancestry_id` the record is described as it is (no option counts as locked: a stored record was
+## sanitized for its line); with it, the line's locks apply, as to_look draws it.
+static func summary_lines(record: Variant, ancestry_id := "") -> PackedStringArray:
+	var r := _described(record, ancestry_id)
 	var out := PackedStringArray()
 	var hair_color := _name(str(r.hair.color))
 	var hair := [_name(str(r.hair.style)), hair_color]

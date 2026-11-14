@@ -3,7 +3,9 @@ extends TestSuite
 ## the giant index's meshes, under a root, with a small index of the plan's format. Every look key sets its
 ## uniforms and the visibility; validate() flags a misspelled uniform name and unknown ids and is clean
 ## otherwise; two instances never share a material; the tier falls back to tex/ when a tex_hi/ file is
-## missing; the region arrays are always filled (0 = none); headless, apply() alone builds no materials.
+## missing; the region arrays are always filled (0 = none); headless, apply() alone builds no materials; the
+## index's texture names resolve through its `textures` table, and a texture that does not load is reported;
+## a duplicated model gets its own nodes and materials.
 ## (tests/integration/test_giant_look_real.gd runs the same over the real model once P41 has merged.)
 
 const INDEX := {
@@ -38,7 +40,9 @@ const INDEX := {
 		"scar_far": {"layer": 4, "channel": 0, "kind": "scar", "regions": [2]},
 	},
 	"regions": [{"id": 0, "name": "scalp"}, {"id": 1, "name": "face"}],
-	"tiers": {"web": "res://tests/fixtures/giant/tex/", "hi": "res://tests/fixtures/giant/tex_hi/"},
+	# The web tier is the real one (every sampler must load: validate() reports one that does not); the hi
+	# folder does not exist, so "auto" is "web" here.
+	"tiers": {"web": "res://assets/giant/tex/", "hi": "res://tests/fixtures/giant/tex_hi/"},
 }
 
 var _roots: Array[Node3D] = []
@@ -289,3 +293,87 @@ func test_the_region_arrays_are_always_filled() -> void:
 	assert_eq(codes.paint, _codes({}), "an unknown design is left out")
 	assert_eq(int(skin.get_shader_parameter("scar_layer")), 3, "no scar: the scars' layer all the same")
 	assert_eq(skin.get_shader_parameter("scar_on"), Vector4.ZERO, "and none on")
+
+
+## The real index names its maps ("atlas": "hair_atlas", "detail": "leather" | "weave" | "fur") and maps the
+## names to paths in `textures` (W25 review C1: they were loaded as paths and every one came back null).
+func test_the_index_names_its_textures_and_a_missing_one_is_reported() -> void:
+	var named := INDEX.duplicate(true)
+	named["textures"] = {"hair_atlas": GiantLook.HAIR_ATLAS, "designs": GiantLook.DESIGN_ARRAY,
+		"detail_weave": GiantLook.CLOTH_DETAIL.weave, "detail_leather": GiantLook.CLOTH_DETAIL.leather,
+		"detail_fur": GiantLook.CLOTH_DETAIL.fur}
+	for id: String in ["Hair_long_back", "Hair_crop", "Beard_full", "Beard_short"]:
+		named.meshes[id]["atlas"] = "hair_atlas"
+	named.meshes["Garment_braies"]["detail"] = "weave"
+	named.meshes["Garment_belt"]["detail"] = "leather"
+	named.meshes["Garment_furs"]["detail"] = "fur"
+	assert_eq(GiantLook.texture_path(named, "hair_atlas", "", "hair_atlas"), GiantLook.HAIR_ATLAS, "a name: the table's path")
+	assert_eq(GiantLook.texture_path(named, "fur", "detail_", "detail_weave"), GiantLook.CLOTH_DETAIL.fur,
+		"a detail kind: the table's detail_<kind>")
+	assert_eq(GiantLook.texture_path(named, "res://x.png", "", "hair_atlas"), "res://x.png", "a path is used as it is")
+	assert_eq(GiantLook.texture_path(named, "hair_braided", "", "hair_atlas"), "", "a name the table lacks: none")
+	assert_eq(GiantLook.texture_path(INDEX, "", "detail_", "detail_leather"), GiantLook.CLOTH_DETAIL.leather,
+		"no table: the defaults")
+	var root := _model()
+	GiantLook.build_materials(root, named, "web")
+	for id: String in ["Hair_crop", "Beard_short"]:
+		var atlas: Variant = GiantLook.mesh_node(root, named, id).material_override.get_shader_parameter("hair_atlas")
+		assert_true(atlas is Texture2D and (atlas as Texture2D).resource_path == GiantLook.HAIR_ATLAS, "%s has the atlas" % id)
+	var want := {"Garment_braies": "weave", "Garment_belt": "leather", "Garment_furs": "fur"}
+	for id: String in want:
+		var mat: ShaderMaterial = GiantLook.mesh_node(root, named, id).material_override
+		var tex: Variant = mat.get_shader_parameter("detail_tex")
+		assert_true(tex is Texture2D and (tex as Texture2D).resource_path == GiantLook.CLOTH_DETAIL[want[id]],
+			"%s has the %s map" % [id, want[id]])
+		assert_true(_near(mat.get_shader_parameter("detail_strength"), GiantLook.DETAIL_STRENGTH[want[id]]),
+			"%s has the %s strength" % [id, want[id]])
+	assert_eq(GiantLook.validate(root, named, GiantLook.DEFAULT_LOOK), PackedStringArray(), "every texture loads")
+	var broken := named.duplicate(true)
+	broken.meshes["Hair_crop"]["atlas"] = "hair_braided"
+	broken.meshes["Garment_belt"]["detail"] = "silk"
+	var root2 := _model()
+	GiantLook.build_materials(root2, broken, "web")
+	var p := "\n".join(GiantLook.validate(root2, broken, GiantLook.DEFAULT_LOOK))
+	assert_true(p.contains("Hair_crop") and p.contains("hair_atlas") and p.contains("did not load"),
+		"an atlas that does not load is reported: %s" % p)
+	assert_true(p.contains("Garment_belt") and p.contains("detail_tex"), "so is a detail map")
+	var no_tier := INDEX.duplicate(true)
+	no_tier["tiers"] = {"web": "res://tests/fixtures/giant/no_such_tier/"}
+	var root3 := _model()
+	GiantLook.build_materials(root3, no_tier, "web")
+	assert_true("\n".join(GiantLook.validate(root3, no_tier, GiantLook.DEFAULT_LOOK)).contains("albedo_tex"),
+		"and a skin map that does not load")
+
+
+## Node.duplicate() copies metadata: a copy must not reach into its original's meshes or share its
+## materials (W25 review C4).
+func test_a_duplicated_model_gets_its_own_nodes_and_materials() -> void:
+	var a := _model()
+	GiantLook.apply(a, INDEX, GiantLook.DEFAULT_LOOK)
+	GiantLook.build_materials(a, INDEX, "web")
+	var a_mat := _mat(a, "Body_Head")
+	var b := a.duplicate() as Node3D
+	add_child(b)
+	_roots.append(b)
+	assert_true(GiantLook.mesh_node(b, INDEX, "Body_Head") != GiantLook.mesh_node(a, INDEX, "Body_Head"),
+		"the copy finds its own nodes")
+	assert_true(b.is_ancestor_of(GiantLook.mesh_node(b, INDEX, "Garment_belt")), "under the copy")
+	assert_true(GiantLook.materials(b).is_empty(), "the copy has no materials of its own yet")
+	assert_eq(GiantLook.built_tier(b), "", "nor a tier")
+	GiantLook.build_materials(b, INDEX, "web")
+	assert_true(_mat(a, "Body_Head") == a_mat, "building the copy's leaves the original's materials")
+	assert_true(_mat(b, "Body_Head") != a_mat and _mat(b, "Body_Head") != null, "the copy has its own")
+	var seen := {}
+	for m in GiantLook.materials(a) + GiantLook.materials(b):
+		seen[m.get_instance_id()] = true
+	assert_eq(seen.size(), INDEX.meshes.size() * 2, "no material shared")
+	GiantLook.apply(b, INDEX, _look())
+	assert_false(_near(a_mat.get_shader_parameter("skin_tone"), _look().skin_tone), "a look on the copy leaves the original")
+	assert_true(GiantLook.mesh_node(a, INDEX, "Hair_long_back").visible, "and its visibility")
+	var c := a.duplicate() as Node3D
+	add_child(c)
+	_roots.append(c)
+	GiantLook.apply(c, INDEX, _look())
+	assert_true(_mat(c, "Body_Head") != a_mat and _near(_mat(c, "Body_Head").get_shader_parameter("skin_tone"),
+		_look().skin_tone), "a copy's first apply gives it its own materials, with the look")
+	assert_true(_near(a_mat.get_shader_parameter("skin_tone"), GiantLook.DEFAULT_LOOK.skin_tone), "the original keeps its own")
