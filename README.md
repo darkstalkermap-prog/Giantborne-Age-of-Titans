@@ -508,8 +508,9 @@ from it: [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## 11. Next milestone
 
-**M10: the realistic giant, with a character creator.** It follows `0.9.0-m9`; no plan for it is in
-the repository yet. Before it come the owner's checks of this build (the handoff's §9): the usability
-sessions in the Valley and the world, the world sheets, the listening pass, the reference PC and real
-browsers, a real gamepad; and the owner's two decisions (its §10): a licence for the project and its
-generated assets, and whether to commit the lossless music and ambience masters.
+**M10: the realistic giant, with a character creator.** It follows `0.9.0-m9`; its plan is
+`docs/plans/M10_PLAN.md` (packages P41-P47 in waves W25-W28), with the research briefs it rests on in
+`docs/plans/briefs/m10_*.md`. Before it come the owner's checks of this build (the handoff's §9): the
+usability sessions in the Valley and the world, the world sheets, the listening pass, the reference PC
+and real browsers, a real gamepad; and the owner's two decisions (its §10): a licence for the project
+and its generated assets, and whether to commit the lossless music and ambience masters.
