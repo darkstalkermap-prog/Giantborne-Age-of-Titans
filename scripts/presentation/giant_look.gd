@@ -55,6 +55,8 @@ const DEFAULT_LOOK := {
 	"beard_color": Color(0.290196, 0.172549, 0.101961),     # the hair's (beard.color "")
 	"beard_tip": Color(0.431373, 0.290196, 0.188235),
 	"beard_grey": 0.2,
+	"hair_length": 1.0,                                      # P46: the share of the cards' length drawn
+	"beard_length": 1.0,
 	"scalp_tint": 1.0,
 	"stubble": 0.8,
 	"beard_tint": 1.0,
@@ -101,7 +103,7 @@ const UNIFORMS := {
 		"beard_color", "stubble", "scalp_tint", "beard_tint", "brows", "region_tattoo", "region_paint", "region_mark",
 		"tattoo_ink", "paint_color", "mark_color", "mark_glow", "scar_layer", "scar_on", "scar_layer_b", "scar_on_b",
 		"hidden_regions", "hide_shrink"],
-	"hair": ["hair_atlas", "hair_color", "tip_color", "grey"],
+	"hair": ["hair_atlas", "hair_color", "tip_color", "grey", "length"],
 	"eye": ["iris_color", "iris_glow"],
 	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade"],
 }
@@ -572,6 +574,7 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				set_param(mat, "hair_color", l.beard_color if beard else l.hair_color)
 				set_param(mat, "tip_color", l.beard_tip if beard else l.hair_tip)
 				set_param(mat, "grey", float(l.beard_grey if beard else l.hair_grey))
+				set_param(mat, "length", clampf(float(l.beard_length if beard else l.hair_length), 0.0, 1.0))
 			"eye":
 				set_param(mat, "iris_color", l.eye_color)
 				set_param(mat, "iris_glow", float(l.eye_glow))

@@ -14,7 +14,8 @@ extends RefCounted
 ##   eyes                         color, glow (0-1; the Stormborn eyes glow a little)
 ##   haircolor                    color, tip (the sun-bleached ends), natural (default true: Randomize
 ##                                picks a natural colour nine times in ten)
-##   hair                         mesh (a giant index mesh id, "" for none), scalp_tint (0-1)
+##   hair                         mesh (a giant index mesh id, "" for none), scalp_tint (0-1), length (0.3-1,
+##                                optional: a shorter cut of the same mesh, P46)
 ##   beard                        mesh, stubble (0-1, the stubble mask), beard_tint (0-1, the skin under
 ##                                the cards takes the beard's colour)
 ##   tattoo, paint                design (a giant index design id), region (arms | chest | back | face)
@@ -60,10 +61,12 @@ static func option_fields(category: String) -> Dictionary:
 		"hair":
 			f["mesh"] = U.str_field(true)
 			f["scalp_tint"] = U.num(0.0, 1.0, true)
+			f["length"] = U.num(0.3, 1.0)   # P46: the share of its cards' length the style keeps (1 when absent)
 		"beard":
 			f["mesh"] = U.str_field(true)
 			f["stubble"] = U.num(0.0, 1.0, true)
 			f["beard_tint"] = U.num(0.0, 1.0, true)
+			f["length"] = U.num(0.3, 1.0)   # P46: as the hair's
 		"tattoo", "paint":
 			f["design"] = U.str_field(true)
 			f["region"] = U.str_field(true, Appearance.DESIGN_REGIONS)

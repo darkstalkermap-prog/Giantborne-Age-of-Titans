@@ -18,6 +18,8 @@ uniform float alpha_boost = 0.25;
 uniform float atlas_px = 512.0;
 uniform float spec_strength = 0.05;
 uniform float spec_power = 48.0;
+// The style's cut (P46): the share of every card's length that is drawn; the cut end thins out like a tip.
+uniform float length : hint_range(0.0, 1.0) = 1.0;
 uniform float shadow_soft = 0.7;
 uniform float side_feather = 0.22;
 uniform float root_dark = 0.82;
@@ -44,6 +46,7 @@ void fragment() {
 	// The card's sides feather and its last part fades, so no card shows its outline over its neighbours
 	// (the atlas's strands end at their own lengths, so the tip thins out strand by strand).
 	a *= 1.0 - smoothstep(0.82, 1.0, UV.y) * 0.6;
+	a *= 1.0 - smoothstep(length - 0.14, length, UV.y) * step(length, 0.999);
 	float u = fract(UV.x * atlas_columns);
 	a *= smoothstep(0.0, side_feather, u) * smoothstep(0.0, side_feather, 1.0 - u);
 	ALPHA = a;

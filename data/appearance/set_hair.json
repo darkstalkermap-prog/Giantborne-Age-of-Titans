@@ -9,6 +9,7 @@
 		{"key": "shaved", "name": "Shaved", "mesh": "", "scalp_tint": 0.35},
 		{"key": "crop", "name": "Cropped", "mesh": "Hair_crop", "scalp_tint": 1.0},
 		{"key": "long_back", "name": "Long, combed back", "mesh": "Hair_long_back", "scalp_tint": 1.0, "default": true},
+		{"key": "shoulder", "name": "Shoulder length", "mesh": "Hair_long_back", "scalp_tint": 1.0, "length": 0.6},
 		{"key": "long_braided", "name": "Long, two braids", "mesh": "Hair_long_braided", "scalp_tint": 1.0},
 		{"key": "warrior_tail", "name": "Warrior's tail", "mesh": "Hair_warrior_tail", "scalp_tint": 1.0},
 		{"key": "wild_mane", "name": "Wild mane", "mesh": "Hair_wild_mane", "scalp_tint": 1.0}

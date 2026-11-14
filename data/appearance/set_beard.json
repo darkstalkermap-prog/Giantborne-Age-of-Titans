@@ -10,6 +10,7 @@
 		{"key": "stubble", "name": "Stubble", "mesh": "", "stubble": 0.8, "beard_tint": 0.0},
 		{"key": "short", "name": "Short", "mesh": "Beard_short", "stubble": 0.8, "beard_tint": 0.85},
 		{"key": "full", "name": "Full", "mesh": "Beard_full", "stubble": 0.8, "beard_tint": 1.0, "default": true},
+		{"key": "trimmed", "name": "Trimmed", "mesh": "Beard_full", "stubble": 0.8, "beard_tint": 1.0, "length": 0.55},
 		{"key": "braided", "name": "Braided", "mesh": "Beard_braided", "stubble": 0.8, "beard_tint": 1.0},
 		{"key": "forked", "name": "Forked", "mesh": "Beard_forked", "stubble": 0.8, "beard_tint": 1.0}
 	]

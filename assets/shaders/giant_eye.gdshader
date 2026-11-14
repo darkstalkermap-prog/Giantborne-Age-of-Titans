@@ -10,7 +10,7 @@ uniform float iris_glow : hint_range(0.0, 1.0) = 0.0;
 uniform float pupil_size : hint_range(0.02, 0.12) = 0.055;
 uniform vec3 iris_inner : source_color = vec3(0.55, 0.42, 0.20);
 uniform vec3 sclera : source_color = vec3(0.86, 0.82, 0.78);
-uniform float iris_r = 0.165;
+uniform float iris_r = 0.176;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
@@ -22,8 +22,12 @@ void fragment() {
 	float r = UV.y;
 	float az = UV.x * 64.0;
 	float streak = mix(hash(floor(az)), hash(floor(az) + 1.0), fract(az));
-	vec3 iris = mix(iris_inner, iris_color, smoothstep(pupil_size, iris_r * 0.9, r)) * (0.75 + 0.5 * streak);
-	iris *= 1.0 - 0.6 * smoothstep(iris_r * 0.8, iris_r, r);   // limbal ring
+	// The look pass (P46): the eye colours read alike, so the brown ring round the pupil takes most of its
+	// colour from the iris and ends sooner, the iris is larger and brighter and keeps a little of its
+	// colour under the brow's shadow.
+	vec3 inner = mix(iris_color, iris_inner, 0.4);
+	vec3 iris = mix(inner, iris_color, smoothstep(pupil_size, iris_r * 0.6, r)) * (0.85 + 0.45 * streak);
+	iris *= 1.0 - 0.45 * smoothstep(iris_r * 0.82, iris_r, r);   // limbal ring
 	float in_iris = 1.0 - smoothstep(iris_r * 0.97, iris_r * 1.06, r);
 	vec3 c = mix(sclera, iris, in_iris);
 	float pupil = 1.0 - smoothstep(pupil_size * 0.9, pupil_size * 1.1, r);
@@ -32,5 +36,5 @@ void fragment() {
 	ALBEDO = c * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	ROUGHNESS = 0.08;
 	SPECULAR = 0.6;
-	EMISSION = flash + iris_color * iris_glow * in_iris * (1.0 - pupil);
+	EMISSION = flash + iris_color * (iris_glow + 0.06) * in_iris * (1.0 - pupil);
 }

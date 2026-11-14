@@ -407,6 +407,8 @@ static func to_look(record: Variant, ancestry_id := "") -> Dictionary:
 		"scalp_tint": float(hair_style.get("scalp_tint", 0.0)),
 		"stubble": float(beard_style.get("stubble", 0.0)),
 		"beard_tint": float(beard_style.get("beard_tint", 0.0)),
+		"hair_length": float(hair_style.get("length", 1.0)),     # P46: a shorter cut of the style's mesh
+		"beard_length": float(beard_style.get("length", 1.0)),
 		"tattoos": [],
 		"paint": {},
 		"mark": {},

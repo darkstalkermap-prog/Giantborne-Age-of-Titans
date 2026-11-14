@@ -1066,8 +1066,8 @@
   },
   "assets/giant/giant.glb": {
    "cycles": false,
-   "inputs": "93242146c0c534c4b95acff3f3af7fa84e5301bfac18d4b24e30f3c6cad720d4",
-   "sha256": "f04a5a6744f4f64af21da9dbe5237191625b42251b6be3639b9c041fe79f2565",
+   "inputs": "fae103cbf02e62877d6032e905f407cf49117b6b52f3c114e67025c3b4a8278f",
+   "sha256": "5385edb1b6ffd48159759087f8c64147fd7c6e23b668a3385683e96e1269e02e",
    "size": 4401640,
    "step": "export"
   },
@@ -1920,7 +1920,7 @@
    "bake.py": "68e2fdefee8d5b50e903d3339b26d3b63a241d3a4afde27f38456cc81b77a8a4",
    "clips.py": "b8ebf9277de4a6744a2bf9942479ec850d2351ed37795679d78c81252c443430",
    "designs.py": "2b14a0569b4fb34f4c5d7063b7c2249c57c51d786bde98aa99f5c3d263686f96",
-   "export_game.py": "bd72a8a23200be7a827344b02689cea1b093e44776d5997998b67bcbf34c5bb0",
+   "export_game.py": "c70dc14517d003928230ff5f1521b528b6f9fb6ab58965ddb8a5a1b2a325dea8",
    "giant_body.py": "c8f694bd9d26bfd16ef4ca60ad3d1f36ec9c75247bc360a3ae2ad8778b741581",
    "giant_garment.py": "103bbb966649904418c3f8b93830b8e3f440f4d2dc2d297d1b37785b2f5c54a5",
    "giant_hair.py": "eac0c4f74796fed8be23e6033737a5b75189490a071e25d7968ce65ba0de0973",
