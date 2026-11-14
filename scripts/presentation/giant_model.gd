@@ -23,6 +23,9 @@ const SCENE := preload("res://assets/giant/giant.glb")
 ## The arms' turn toward the body in pose_relaxed() (degrees, from the rest A-pose) and the elbows' bend.
 const RELAXED_ARM_DEG := 38.0
 const RELAXED_ELBOW_DEG := 12.0
+## play_idle(): the run-time AnimationPlayer's name and the clip it loops (assets/giant/giant_clips.glb).
+const IDLE_PLAYER := "IdlePlayer"
+const IDLE_CLIP := "idle"
 
 ## The giant index (plan §2.5): meshes, garments, designs, regions, landmarks, defaults, tiers.
 @export var index: Dictionary = {}
@@ -152,6 +155,27 @@ func pose_rest() -> void:
 	if sk != null:
 		sk.reset_bone_poses()
 		sk.force_update_all_bone_transforms()
+
+
+## Plays the idle clip (P43's: breathing, the arms hanging relaxed, a 2 s loop) on a model that stands by
+## itself: the creator's preview (plan M10 §2.10). Its AnimationPlayer is made here at run time and never
+## saved (§2.5). Without the clips, and on the player's model (SkinnedRig's AnimationTree poses that one),
+## the model stands in pose_relaxed() instead. Returns true when the clip plays.
+func play_idle() -> bool:
+	var sk := skeleton()
+	var lib := SkinnedRig.clip_library()
+	if sk == null or lib == null or not lib.has_animation(IDLE_CLIP) or has_node("AnimationTree"):
+		pose_relaxed()
+		return false
+	var player := get_node_or_null(IDLE_PLAYER) as AnimationPlayer
+	if player == null:
+		player = AnimationPlayer.new()
+		player.name = IDLE_PLAYER
+		add_child(player)
+		player.root_node = player.get_path_to(sk.get_parent().get_parent())
+		player.add_animation_library(SkinnedRig.LIBRARY, lib)
+	player.play(String(SkinnedRig.LIBRARY) + "/" + IDLE_CLIP)
+	return true
 
 
 ## Turns a bone about its head, in skeleton space, toward `toward` by up to `deg` degrees.
