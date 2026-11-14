@@ -58,6 +58,8 @@ const FRAMINGS := {
 	"back_design": {"target": Vector3(0.0, 2.65, 0.12), "yaw": 180.0, "pitch": 6.0, "dist": 2.7},
 	"hand": {"target": Vector3(0.72, 1.98, -0.12), "yaw": 55.0, "pitch": 14.0, "dist": 1.35},
 	"hand_l": {"target": Vector3(-0.72, 1.98, -0.12), "yaw": -55.0, "pitch": 14.0, "dist": 1.35},
+	# the character sheets' eye close-up (the index's eye_mid landmark)
+	"eyes": {"target": Vector3(0.0, 3.447, -0.244), "yaw": 10.0, "pitch": 0.0, "dist": 0.36},
 }
 ## The first-person framing (the option check and the sheets, not a view button): the game's eye at the
 ## stage's eye_height_ratio of the height and 0.18 m forward, looking down and to his right at the arms, with
@@ -101,6 +103,9 @@ var last_apply_ms := 0.0
 ## A still giant (the option check's tiles, the character sheets): the relaxed pose, never the idle clip, so
 ## that every tile and page is drawn in one pose. Set before the preview enters the tree.
 var still := false
+## The world's light (its sun, sky, ambient, fog and ground) at every framing, not only in Game view and first
+## person: the character sheets (plan §4.2). Read by frame().
+var world_light := false
 var weapon: Node3D = null
 var _weapon_dir := Vector3.FORWARD
 var _soldier: Node3D = null
@@ -267,7 +272,7 @@ func frame(framing_name: String) -> void:
 	framing = framing_name
 	turn_deg = 0.0
 	zoom_factor = 1.0
-	_set_lighting(framing in ["game", FIRST_PERSON])
+	_set_lighting(world_light or framing in ["game", FIRST_PERSON])
 	_apply_stage_scale()
 	_update_camera()
 	framed.emit(framing)
