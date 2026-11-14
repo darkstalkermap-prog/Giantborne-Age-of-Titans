@@ -5,7 +5,8 @@ extends IntegrationSuite
 ## interrupted grab releases both entities; a throw into a second soldier hits each once through
 ## HitFactory and never lands inside geometry; Crushing Grip's damage and release; a stage-3 giant
 ## grabs and throws an ogre-sized stub that a stage-2 one cannot; growth, checkpoint and scene
-## unload all let go cleanly.
+## unload all let go cleanly. P43: with the skinned layers, the visible palm holds the body within the
+## measured gap and the held body's Visual follows it.
 
 const WOLF := "res://scenes/enemies/wolf.tscn"
 const GRAB_ID := "ability.grab_hold"
@@ -394,6 +395,43 @@ func test_the_held_body_sits_in_the_hand_out_of_the_simulation() -> void:
 	assert_true(s.is_on_floor(), "it drops onto the floor")
 	assert_true(_spot_is_free(s), "standing in a free spot")
 	assert_near(absf(s.global_transform.basis.y.dot(Vector3.UP)), 1.0, 1e-3, "upright")
+
+
+## P43 (plan M10 decision 4): with the skinned layers on, the realistic off hand closes on the hold.
+## The visible palm lies within the measured gap of the socket the simulation holds the body at (the gap
+## the modifier measures, at most HELD_GAP_MAX x k); the held body's Visual is moved by exactly that gap,
+## so the body shows in the visible hand while its collision stays at the socket; E puts it down and the
+## Visual goes back.
+func test_the_visible_palm_holds_the_body_within_the_measured_gap() -> void:
+	SkinnedRig.enable_for_tests()   # off again after the test (ResetHooks)
+	var p := await _giant(1)
+	var s := _soldier_at(Vector3(0, 0.05, -3.0), "test.palm")
+	await step_ticks(1)
+	var visual := s.get_node("Visual") as Node3D
+	var base := visual.position
+	assert_true(await _grab(p, s), "grabbed")
+	await step_ticks(20)   # the off arm settles on the hold
+	var rig := p.rig as SkinnedRig
+	var mod := rig.modifier()
+	assert_true(mod != null and mod.holding, "the modifier holds")
+	var k := rig.body_scale
+	var socket := p.to_global(p.grab.socket_local())
+	var palm := rig.palm_global(true)
+	var gap := rig.body.global_transform.basis * mod.held_gap
+	assert_true(mod.held_gap.length() <= PoseBrainModifier.HELD_GAP_MAX + 1e-5, "the gap is at most 0.33 x k (%.3f)" % mod.held_gap.length())
+	assert_true(palm.distance_to(socket) <= PoseBrainModifier.HELD_GAP_MAX * k + 1e-3,
+		"the visible palm is within the measured gap of the socket (%.3f m)" % palm.distance_to(socket))
+	if palm.distance_to(socket) < PoseBrainModifier.HELD_GAP_MAX * k:
+		assert_true(palm.distance_to(socket + gap) < 2e-3, "the gap is the palm's offset from the socket (%.4f m)" % palm.distance_to(socket + gap))
+	var moved := s.global_transform.basis.orthonormalized() * (visual.position - base)
+	assert_true(moved.distance_to(gap) < 2e-3, "the held body's Visual is moved by the gap (%s vs %s)" % [moved, gap])
+	var anchor := (s.get_node("Anchors/Grab") as Node3D).global_position
+	assert_true(anchor.distance_to(socket) < 0.01, "its collision and grab point stay at the socket")
+	assert_true(rig.held_visual_writes > 0, "the rig wrote the held visual")
+	p.router.inject_edge(&"interact")
+	await step_ticks(2)
+	assert_false(p.grab.is_holding(), "put down")
+	assert_true(visual.position.is_equal_approx(base), "the Visual is back (%s)" % visual.position)
 
 
 func test_a_hold_times_out() -> void:

@@ -206,24 +206,30 @@ func test_equipping_is_refused_mid_swing_and_the_tree_below_stage_3() -> void:
 		"without the tree_weapon permission the tree is refused")
 
 
-## The weapon mesh replaces the generated club: under Visual/Body/ShoulderR as "Weapon", the
-## generated Club hidden, the tree's canopy on render layer 2 (first person hides it).
+## The weapon mesh hangs at the weapon socket (P43: Visual/Body/WeaponSocket, in the realistic fist with
+## the skinned layers and at the brain's hand headless) as "Weapon", one at a time; the stylized arm and
+## its generated club are gone; the tree's canopy is on render layer 3, which the camera hides in first
+## person (and when pressed close).
 func test_the_weapon_mesh_replaces_the_generated_club() -> void:
 	var p := await _grounded_player()
+	var socket := p.get_node("Visual/Body/WeaponSocket") as Node3D
 	var arm := p.get_node("Visual/Body/ShoulderR")
-	var club := arm.get_node("Club") as Node3D
-	assert_false(club.visible, "the generated Club is hidden")
-	assert_true(arm.get_node_or_null("Weapon") == p.equipment.visual, "the equipment's mesh is the Weapon node")
+	assert_true(arm.get_node_or_null("Club") == null, "no generated club on the brain's arm")
+	assert_true(socket.get_node_or_null("Weapon") == p.equipment.visual, "the equipment's mesh is the socket's Weapon node")
+	var hand := arm.get_node("Hand") as Node3D
+	assert_true(socket.global_position.is_equal_approx(hand.global_position), "headless, the socket is the brain's hand")
 	_equip(p, "weapon.hammer")
 	await step_ticks(1)
-	assert_eq(arm.get_children().filter(func(n: Node) -> bool: return n.name.begins_with("Weapon")).size(), 1,
+	assert_eq(socket.get_children().filter(func(n: Node) -> bool: return n.name.begins_with("Weapon")).size(), 1,
 		"one weapon mesh at a time")
+	assert_true(p.equipment.visual.get_parent() == socket, "the new one at the socket too")
 	assert_true(p.equipment.visual.has_node("Head"), "the maul's head")
 	await _grow(p, 3)
 	_equip(p, "weapon.tree_oak")
 	await step_ticks(1)
 	var canopy := p.equipment.visual.get_node("Canopy") as MeshInstance3D
-	assert_eq(canopy.layers, CameraRig.FP_HIDDEN_LAYER, "the canopy is on the first-person-hidden layer")
+	assert_eq(canopy.layers, WeaponVisuals.FP_HIDDEN_LAYER, "the canopy is on the first-person-hidden layer")
+	assert_eq(canopy.layers, 1 << (CameraRig.HEAD_LAYER - 1), "render layer 3, the head's")
 	assert_eq(p.rig.idle_arm_pose, WeaponVisuals.TREE_IDLE_POSE, "the tree is carried raised to the right")
 	var k := PlayerGrowth.body_scale_for(p.profile)
 	assert_near(p.equipment.visual.scale.x, 1.0 / k, 1e-4, "the tree's node undoes k (real size)")
@@ -402,8 +408,11 @@ func test_equipment_state_round_trips_silently() -> void:
 ## First person at stage 3 with the sword, the hammer and the tree in turn (and the full-size
 ## reforged sword and maul), through a light chain entered with the router, looking ahead and
 ## 25 degrees down: the crosshair probe never reports more than 30 consecutive ticks in which the
-## giant's own meshes (its weapon included) are the first thing the centre ray meets.
+## giant's own meshes (its weapon included) are the first thing the centre ray meets. P43: with the
+## skinned layers on, so the realistic arms and the weapon in the fist are where the player sees them (the
+## probe measures the skinned meshes by their posed bones).
 func test_first_person_light_chains_keep_the_crosshair_clear_at_stage_3() -> void:
+	SkinnedRig.enable_for_tests()   # off again after the test (ResetHooks)
 	var p := await _grounded_player()
 	p.entity.combatant.unkillable = true
 	await _grow(p, 3)

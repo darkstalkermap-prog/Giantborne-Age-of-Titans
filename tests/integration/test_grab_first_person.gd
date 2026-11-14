@@ -65,6 +65,7 @@ func _turn_while_holding(stage: int, ogre := false) -> CrosshairProbe:
 
 
 func test_first_person_while_holding_never_covers_the_crosshair() -> void:
+	SkinnedRig.enable_for_tests()   # off again after the test (ResetHooks)
 	for run: Array in [[1, false], [3, false], [3, true]]:
 		var what := "stage %d%s" % [run[0], " ogre" if run[1] else ""]
 		var probe := await _turn_while_holding(run[0], run[1])

@@ -8,6 +8,11 @@ extends RefCounted
 ## RANGE_M, nearer than the first physics hit (world, breakables, other actors; the roots'
 ## own bodies are excluded). The giant's visuals have no collision shapes, so bounds are the
 ## only way to test them. The probe keeps the run's statistics.
+## A skinned mesh (the realistic giant's, P43) is measured by its bones, not by its rest-pose AABB
+## (which spans the whole body, arms out): the boxes of the vertices each skin bind moves (mesh space
+## at rest, one per bind and side) carried by that bone's skinning transform in the live pose
+## (bone_parts, skinned_distance). With the skinned layers off the skeleton rests, so the tests that
+## need the arms where the player sees them turn the layers on (SkinnedRig.enable_for_tests).
 ##
 ##   var probe := CrosshairProbe.new(player.camera_rig.camera, [player])
 ##   ... every tick: probe.sample()
@@ -70,7 +75,9 @@ func first_own_hit() -> Dictionary:
 		for vi in visual_instances(root):
 			if (vi.layers & camera.cull_mask) == 0 or not vi.is_visible_in_tree():
 				continue
-			var d := ray_aabb_distance(origin, dir, vi.global_transform, vi.get_aabb(), RANGE_M)
+			var mi := vi as MeshInstance3D
+			var d := skinned_distance(mi, origin, dir) if mi != null and mi.skin != null \
+				else ray_aabb_distance(origin, dir, vi.global_transform, vi.get_aabb(), RANGE_M)
 			if d < INF and (best.is_empty() or d < float(best.distance)):
 				best = {"distance": d, "node": str(root.get_path_to(vi))}
 	return best
@@ -93,6 +100,111 @@ func _collect_rids(node: Node) -> void:
 		_exclude.append((node as CollisionObject3D).get_rid())
 	for c in node.get_children():
 		_collect_rids(c)
+
+
+## The nearest of a skinned mesh's posed bone boxes along the ray (origin, unit dir) within RANGE_M
+## (INF when none; the mesh's rest AABB when its skeleton cannot be found).
+static func skinned_distance(mi: MeshInstance3D, origin: Vector3, dir: Vector3) -> float:
+	var sk := mi.get_node_or_null(mi.skeleton) as Skeleton3D
+	var parts := bone_parts(mi.mesh)
+	if sk == null or parts.is_empty():
+		return ray_aabb_distance(origin, dir, mi.global_transform, mi.get_aabb(), RANGE_M)
+	var skin := mi.skin
+	var binds := skin.get_bind_count()
+	var sk_xform := sk.global_transform
+	var best := INF
+	var bind := -1
+	var ok := false
+	var lo := Vector3.ZERO
+	var ld := Vector3.ZERO
+	for part: Array in parts:
+		if int(part[0]) != bind:
+			bind = int(part[0])
+			var bone := skin.get_bind_bone(bind) if bind < binds else -1
+			if bone < 0 and bind < binds:
+				bone = sk.find_bone(skin.get_bind_name(bind))
+			ok = bone >= 0
+			if ok:
+				# the ray in the bind's rest (mesh) space: a point at world distance t along the ray is
+				# lo + ld * t there
+				var inv := (sk_xform * sk.get_bone_global_pose(bone) * skin.get_bind_pose(bind)).affine_inverse()
+				lo = inv * origin
+				ld = inv.basis * dir
+		if not ok:
+			continue
+		# a cheap miss first: the ray's nearest approach to the box's centre beyond its half diagonal
+		var c: Vector3 = part[2]
+		var t := maxf((c - lo).dot(ld) / ld.length_squared(), 0.0)
+		if (lo + ld * t).distance_squared_to(c) > float(part[3]):
+			continue
+		best = minf(best, _slab(lo, ld, part[1] as AABB, minf(best, RANGE_M)))
+	return best
+
+
+## The ray parameter where (lo + ld * t, t >= 0) enters `box`, 0 inside it, INF past max_t or a miss.
+static func _slab(lo: Vector3, ld: Vector3, box: AABB, max_t: float) -> float:
+	var tmin := 0.0
+	var tmax := max_t
+	for axis in 3:
+		var o := lo[axis]
+		var d := ld[axis]
+		var a := box.position[axis]
+		var b := box.end[axis]
+		if absf(d) < 1e-12:
+			if o < a or o > b:
+				return INF
+			continue
+		var t1 := (a - o) / d
+		var t2 := (b - o) / d
+		tmin = maxf(tmin, minf(t1, t2))
+		tmax = minf(tmax, maxf(t1, t2))
+		if tmin > tmax:
+			return INF
+	return tmin
+
+
+## A vertex counts toward the box of every bind that moves it by at least this weight.
+const PART_WEIGHT := 0.25
+static var _parts := {}
+
+
+## A skinned mesh's bone boxes: [bind, AABB (mesh space, rest pose), its centre, its squared half
+## diagonal] sorted by bind, one box per bind
+## and side (x < 0, x >= 0: a bind that moves both shoulders, spine_03 in the limbs, is two boxes, not
+## one spanning the chest between them), over the vertices it moves by PART_WEIGHT or more; held per
+## mesh for the process.
+static func bone_parts(mesh: Mesh) -> Array:
+	if mesh == null:
+		return []
+	var key := mesh.get_instance_id()
+	if _parts.has(key):
+		return _parts[key]
+	var boxes := {}   # bind * 2 + side -> AABB
+	for s in mesh.get_surface_count():
+		var arr := mesh.surface_get_arrays(s)
+		var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+		var bones: Variant = arr[Mesh.ARRAY_BONES]
+		var weights: Variant = arr[Mesh.ARRAY_WEIGHTS]
+		if verts.is_empty() or bones == null or weights == null:
+			continue
+		var b := PackedInt32Array(bones)
+		var w := PackedFloat32Array(weights)
+		var stride := b.size() / verts.size()
+		for v in verts.size():
+			var p := verts[v]
+			var side := 1 if p.x >= 0.0 else 0
+			for j in stride:
+				if w[v * stride + j] >= PART_WEIGHT:
+					var k := b[v * stride + j] * 2 + side
+					boxes[k] = (boxes[k] as AABB).expand(p) if boxes.has(k) else AABB(p, Vector3.ZERO)
+	var keys := boxes.keys()
+	keys.sort()
+	var out: Array = []
+	for k: int in keys:
+		var box: AABB = boxes[k]
+		out.append([k / 2, box, box.get_center(), box.size.length_squared() * 0.25])
+	_parts[key] = out
+	return out
 
 
 ## Every VisualInstance3D at or below `root`.
