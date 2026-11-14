@@ -2504,9 +2504,10 @@ about 02:30 to 03:16, with the final full check and other release work beside th
 CPU-per-tick and streaming number below is a shared-machine number, never a capture: the quiet-machine captures are
 W23's (`docs/PERFORMANCE.md`, "The M9 confirmation") and the release's. "W23" is the W23 confirmation on `a7da72d`
 (`confirm_*`): its seed-1 subset of the same six specs and, where it differs, its full 21-run matrix (the last matrix on
-three seeds). measure-a's numbers on `62dcf41` are history - the final round's eight commits that act in play came after
-them - and are named "62dcf41" where they explain a move. Lane balance's "final code" in its section above is its own
-fix-up 1 (`bd541da`); "the final code" here is `7502770`.
+three seeds). measure-a's numbers on `62dcf41` are history - the final round's eight commits that change code the game
+reads came after them (six act in play; `3729d2e` acts only in the music and `c2644d4` only in the bot's classification
+of a breach) - and are named "62dcf41" where they explain a move. Lane balance's "final code" in its section above is
+its own fix-up 1 (`bd541da`); "the final code" here is `7502770`.
 
 ### What the gate changed between W23 and the final code
 
@@ -2579,8 +2580,11 @@ director's counted combatants").
 None of the measurement's 28 runs crashed, met an invariant failure, an error or a warning in its own count, granted a
 reward twice or was classified `world_blocked` (each stop was `bot_failed`: a path existed); one needed a teleport (the
 assisted crown-first order, once, at the Stone Throne's ring). Fast travel was not used and no map screen opened (the
-main path never returns far). Godot's exit report of leaked resources follows each completed campaign's result, as
-before (FOLLOWUPS, "From the M9 gate review (lane review)").
+main path never returns far). Godot's exit report of leaked resources follows the result of every run that completed a
+world campaign, as before (524 resources still in use; 559 after the hand-over from the Valley), and also of one that
+stopped: `w_conqueror_novice_1`, a breach at Harrok's duel after 1,761 s (on `62dcf41` too, after 1,595 s). So it is not
+only a completed campaign's; the crown-first order's stop at 769 s and the Valley's runs print none (FOLLOWUPS, "From
+the M9 gate review (lane review)").
 
 **Harrok's slay is not settled on the final code** (`w_conqueror_novice_1`). The novice began the duel at level 14
 (5,277 XP). Four deaths came before any yield (his chop twice, the Moot's stones, his frenzy); in the fifth attempt he
@@ -2595,7 +2599,11 @@ the novice's fight against the risen Harrok (FOLLOWUPS, "Harrok's slay", owner M
 
 **The crown-first order unassisted** (`w_order_crown_novice_1`) no longer stops in Fort Aldmere's gateway (W23: a stuck
 there at 627 s, lane aldmere's fix). It died once at the gate (a wall archer's arrow) and then fought the Iron Regiment
-at stage 4 in five attempts, each death bringing it back to the fort gate's waystone with 60 % of its health. The Charge
+at stage 4 in five attempts; each of its first five deaths brought it back to the fort gate's waystone with 60 % of its
+health, the death floor (the sixth ended the run). The run's record of the second return reads 0.0 (tick 28,740): the
+waystone took it one tick after the reload, before the bot's first sample of the reloaded giant, so the record kept the
+dead giant's last reading. A replay of the run with the health printed (`m9_gate/final/record_fix2/probe/`: the same
+ticks, deaths, flags hash and records) gave 0.600 there: the floor over the reloaded checkpoint's 0.179. The Charge
 came in two attempts (the bar at 0.66 each time); in two others the Wall's pikes killed it in the gateway's inner mouth
 before the bar moved (three stuck moments there, z -102 to -107). Of the 3,803 damage it took in the battle the
 ballistae dealt 2,457 (65 %), the soldiers 1,236 (33 %), the riders 110 (3 %); the bot gave up its ranged blows at the
@@ -2665,7 +2673,7 @@ replay to the tick (the assisted crown-first order: 118,554 ticks, flags hash `4
 `help_ogre_novice_2`), 21 part. Twelve short attribution runs played the final code with one of the three `EnemyActor`
 commits taken out, in scratch worktrees since removed: with `6bdf7e5` out, all four specs tried (the mixed, peaceful
 and conqueror novices and the Valley's `intimidate:novice:1`) play like their measured runs past their first parting -
-the talent at tick 23,100, no raider mage's kill at 12,671, Edda's oath at 11,538, the village left at 9,858; with
+the talent at tick 23,100, no raider mage's kill at 12,671, Edda's oath at 11,538, the village reached at 9,858; with
 either of the other two out they play like the final code's runs. The partings are the firing-point rule's - leashed
 archers and mages (the Crownmarch raiders, Brannock's gate, the Valley's road patrol and ruins) shoot from inside their
 leash instead of stepping past it and being leashed home - and after a parting everything differs. The targets below
