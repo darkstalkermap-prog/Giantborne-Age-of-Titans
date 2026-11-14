@@ -120,6 +120,22 @@ def run_kit(script, *args):
 # --------------------------------------------------------------------------------------
 # the bakes and their cache
 # --------------------------------------------------------------------------------------
+def make_micro_tile(path: Path) -> None:
+    """Writes the skin's micro-relief tile (skin_textures.make_micro) at ``path`` unless it exists, in an
+    interpreter of its own: made inside the bake's process, the tile changes that process's tangent-space
+    normal bake (tex/normal.png and tex_hi/normal.png came out different, every other pass the same), so
+    the bake always finds its tile already made."""
+    if path.exists():
+        return
+    code = "import sys; sys.path.insert(0, sys.argv[1]); import skin_textures; skin_textures.make_micro(sys.argv[2])"
+    r = subprocess.run([sys.executable, "-B", "-c", code, str(KIT), str(path)],
+                       env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"),
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    if r.returncode != 0 or not path.exists():
+        sys.stdout.write(r.stdout[-4000:])
+        raise SystemExit("build_giant: the micro-relief tile could not be made (exit %d)" % r.returncode)
+
+
 def bake_dir(keys, want_expensive, read_cache, write_cache, work: Path, times: dict) -> Path:
     """A folder holding the cheap passes (and AO and thickness when ``want_expensive``)."""
     bk = bake_module()
@@ -138,12 +154,12 @@ def bake_dir(keys, want_expensive, read_cache, write_cache, work: Path, times: d
             missing.append((name, passes))
     if missing:
         passes = [p for _n, ps in missing for p in ps]
-        # The skin's micro-relief tile (skin_textures.make_micro keeps a tile that exists): in the cache
-        # under the hash of its generator, so a changed generator never meets a stale tile; a run that
-        # reads no cache (--verify, --no-cache) makes its own.
+        # The skin's micro-relief tile: in the cache under the hash of its generator, so a changed
+        # generator never meets a stale tile; a run that reads no cache (--verify, --no-cache) makes its own.
         micro_dir = (cache_root() / "micro" / manifest.hash_json(source_hashes(("skin_textures.py",)))[:16]
                      if read_cache else out)
         micro_dir.mkdir(parents=True, exist_ok=True)
+        make_micro_tile(micro_dir / "skin_micro.png")
         secs, _ = run_kit("bake.py", out, ",".join(passes), micro_dir)
         times["bake " + "+".join(n for n, _p in missing)] = round(secs, 1)
         try:
