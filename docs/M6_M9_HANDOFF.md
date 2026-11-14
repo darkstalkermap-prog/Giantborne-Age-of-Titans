@@ -73,7 +73,7 @@ or Node; the audio pipeline and the web checks do (README §1).
 From `c9434e5` (M5) to W23 (`f851b0d`), in 23 packages (P19-P39 with P24 split in two, and the W23
 fixes lane P39f) and the gate lanes: 2,845 files changed, 188,638 lines added and 3,462 removed, in
 402 commits (generated scenes, chunks and navmeshes included; `git diff --shortstat c9434e5 f851b0d`).
-To the head of the integration branch `claude/hopeful-gauss-0f323t` that the pull request merges, the release's last commit included (W24: P40): 2,890 files changed, 199,874 lines added and 3,825 removed, in 507 commits (`git diff --shortstat c9434e5 <head>`, `git rev-list --count c9434e5..<head>`); the merge to `main` follows this report (plan §6.6).
+To the head of the integration branch `claude/hopeful-gauss-0f323t` that the pull request merges, the release's last commit included (W24: P40): 2,890 files changed, 199,876 lines added and 3,825 removed, in 508 commits (`git diff --shortstat c9434e5 <head>`, `git rev-list --count c9434e5..<head>`); the merge to `main` follows this report (plan §6.6).
 
 | Area | At M5 (`c9434e5`) | At W23 (`f851b0d`) | Final (`0.9.0-m9`) | What is there now |
 | --- | --- | --- | --- | --- |

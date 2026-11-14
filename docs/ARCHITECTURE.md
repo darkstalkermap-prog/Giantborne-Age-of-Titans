@@ -389,16 +389,16 @@ faction a reconciliation.
   outcome is a flag (`boss.<name>.outcome`).
 - `BattleBoss` makes a battle a boss: phases over several encounters, each begun at a fraction of
   `BattleBoss.phase_fraction` - the planned units' current health with every engine counted at its
-  full health (a dead or routed unit counts as fallen since the M9 gate's final round), while the bar
-  the giant sees still counts what the engines have left and its notches follow the phases (M9 gate,
-  lane ironreg, `docs/systems/P39.md`, "The M9 gate (lane ironreg)"; the final round's `55a56db`) -
-  or when every unit of the phases so far has fallen; Corvane's yield ends it. `FortBattle` is the
-  Iron Regiment in Fort Aldmere's bailey (its portcullis holds the giant in until the battle ends; a
-  parley leaves the bailey at peace); `MootArena` is Harrok's ring (the talk ending, `yielded_talk`);
-  the Matriarch's den is a `BossArena` with the drive-out (`boss_disengaged(fled)`). A battle starts
-  every attempt afresh and repairs a save written mid-battle (M8 release R1). The Iron Regiment's
-  phases begin at 0.70 and 0.50 of that fraction (`tools/data/world/aldmere.json`; the thresholds since
-  the W23 confirmation, `a7da72d`).
+  full health (a routed unit counts as fallen too since the M9 gate's final round, `55a56db`), while
+  the bar the giant sees still counts what the engines have left and its notches follow the phases
+  (M9 gate, lane ironreg, `docs/systems/P39.md`, "The M9 gate (lane ironreg)"; the final round's
+  `55a56db`) - or when every unit of the phases so far has fallen; Corvane's yield ends it.
+  `FortBattle` is the Iron Regiment in Fort Aldmere's bailey (its portcullis holds the giant in until
+  the battle ends; a parley leaves the bailey at peace); `MootArena` is Harrok's ring (the talk
+  ending, `yielded_talk`); the Matriarch's den is a `BossArena` with the drive-out
+  (`boss_disengaged(fled)`). A battle starts every attempt afresh and repairs a save written
+  mid-battle (M8 release R1). The Iron Regiment's phases begin at 0.70 and 0.50 of that fraction
+  (`tools/data/world/aldmere.json`; the thresholds since the W23 confirmation, `a7da72d`).
   An engine of the battle that a later phase's encounter names in its `engines` list holds its fire
   until that phase begins (`engine_phase`, `held_engines`, `SiegeEngine.set_fire_held`; a reset, a win or
   the node leaving the tree frees every hold), and the HUD says which engines shoot now and which join
