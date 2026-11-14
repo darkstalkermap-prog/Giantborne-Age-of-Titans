@@ -129,3 +129,18 @@ func test_the_launcher_offers_the_open_world_start() -> void:
 	assert_true(html.contains("It replaces a game saved in this browser."), "the note says it replaces the saved game")
 	assert_true(html.contains("play.addEventListener('click', function () { start(); });"), "Play keeps the page's arguments")
 	assert_true(GameSession.CLI_MODES.has("world"), "GameSession knows --mode=world")
+
+
+## P41 (plan M10 §1.6, §2.5): the Web presets leave out the giant's manifest (as the audio's) and the
+## 1024 px texture tier (assets/giant/tex_hi/: the Web draws tex/ until P45 applies the owner's 26 MB
+## answer); the desktop presets keep both (desktop draws tex_hi/).
+func test_the_web_presets_leave_out_the_giant_manifest_and_the_hi_tier() -> void:
+	var cfg := ConfigFile.new()
+	assert_eq(cfg.load(PRESETS), OK, "export_presets.cfg parses")
+	var presets := _presets(cfg)
+	for name: String in presets:
+		var p: Dictionary = presets[name]
+		var web := str(p.platform) == "Web"
+		for f: String in ["assets/giant/manifest.json", "assets/giant/tex_hi/*"]:
+			assert_eq((p.exclude as PackedStringArray).has(f), web, "%s %s %s" % [name, "excludes" if web else "keeps", f])
+		assert_false((p.exclude as PackedStringArray).has("assets/giant/*"), "%s ships the giant" % name)
