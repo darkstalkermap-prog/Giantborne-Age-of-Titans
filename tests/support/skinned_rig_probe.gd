@@ -1,3 +1,4 @@
+class_name SkinnedRigProbe
 extends Node
 ## The skinned giant, rendered (P43; plan M10 §3.3 tests, §1.7 rule 6, §2.13): tests/slow/test_skinned_rig_render.gd
 ## (stage 1) and tests/gate/test_skinned_rig_stages.gd (stages 4 and 6, the pressed-close camera) run this scene
@@ -6,7 +7,7 @@ extends Node
 ##
 ##   LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1280x720x24" godot --path . --rendering-driver opengl3 \
 ##     --resolution 320x240 --audio-driver Dummy res://tests/support/skinned_rig_probe.tscn -- --giant-tier=web \
-##     [--probe-stage=N] [--probe-mode=frames|passage] [--probe-out=user://m10_frames/]
+##     [--probe-stage=N] [--probe-mode=frames|passage] [--probe-out=user://m10_frames/] [--probe-weapon=ID]
 ##
 ## The real scenes/player/giant.tscn (the skinned layers on: a display) stands on a lit floor and is driven
 ## through its InputRouter like the soak drives it; the probe draws a frame only when it captures one (the render
@@ -22,6 +23,13 @@ extends Node
 ##                "frame_ms", "validate", "errors": [...]}
 ## and quits (a watchdog quits it after WATCHDOG_S).
 
+const SCENE := "res://tests/support/skinned_rig_probe.tscn"
+const PREFIX := "SKIN_RENDER "
+const OUT := "user://m10_frames/"
+## A frame counts as drawn when this share of its pixels differs from the clear colour.
+const MIN_LIT := 0.05
+## The frames of mode "frames".
+const FRAME_NAMES := ["idle", "walk_side", "walk_game", "heavy_windup", "heavy_active", "heavy_recovery", "jump", "fp_down", "fp_ahead"]
 const GIANT := "res://scenes/player/giant.tscn"
 const COURSE := "res://scenes/test/growth_course.tscn"
 const CLEAR := Color(0.36, 0.45, 0.56)
@@ -34,11 +42,37 @@ const CROSSHAIR_PX := 3
 var stage := 1
 var mode := "frames"
 var out_dir := "user://m10_frames/"
+var weapon_id := ""
 var _root3d: Node3D
 var _cam: Camera3D
 var _p: GiantPlayer
 var _out := {}
 var _swing := {"samples": 0, "outer_max_radii": 0.0, "angle_max_deg": 0.0, "fist_max_m": 0.0, "outer_sum_radii": 0.0}
+
+
+## True when xvfb-run is installed (the rendered suites skip with a note otherwise).
+static func have_xvfb() -> bool:
+	var out: Array = []
+	return OS.execute("sh", ["-c", "command -v xvfb-run"], out, true) == 0
+
+
+## Runs the probe in a child Godot under Xvfb (opengl3, LP_NUM_THREADS=2, 320x240, the web tier's maps), its
+## frames under OUT: {"code", "report" (the parsed SKIN_RENDER line or {}), "output"}.
+static func run(extra: PackedStringArray) -> Dictionary:
+	var args := PackedStringArray(["-a", "-s", "-screen 0 1280x720x24", "env", "LP_NUM_THREADS=2", OS.get_executable_path(),
+		"--path", ProjectSettings.globalize_path("res://"), "--rendering-driver", "opengl3", "--resolution", "320x240",
+		"--audio-driver", "Dummy", SCENE, "--", "--no-user-settings", "--giant-tier=web",
+		"--probe-out=" + ProjectSettings.globalize_path(OUT)])
+	args.append_array(extra)
+	var output: Array = []
+	var code := OS.execute("xvfb-run", args, output, true)
+	var text := "\n".join(output)
+	var line := ""
+	for l in text.split("\n"):
+		if l.begins_with(PREFIX):
+			line = l.substr(PREFIX.length()).strip_edges()
+	var parsed: Variant = JSON.parse_string(line) if line != "" else null
+	return {"code": code, "report": parsed if typeof(parsed) == TYPE_DICTIONARY else {}, "output": text}
 
 
 func _ready() -> void:
@@ -52,6 +86,8 @@ func _ready() -> void:
 			mode = a.substr(13)
 		elif a.begins_with("--probe-out="):
 			out_dir = a.substr(12)
+		elif a.begins_with("--probe-weapon="):
+			weapon_id = a.substr(15)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	RenderingServer.set_default_clear_color(CLEAR)
 	_out = {"stage": stage, "mode": mode, "frames": {}, "adapter": RenderingServer.get_video_adapter_name()}
@@ -83,6 +119,9 @@ func _frames_mode() -> void:
 		var r: Dictionary = _p.growth.debug_set_stage(stage)
 		_out["grown"] = bool(r.get("ok", false))
 		await _ticks(30)
+	if weapon_id != "":
+		_out["weapon"] = _p.equipment.grant_weapon(weapon_id, true)
+		await _ticks(4)
 	var k := (_p.rig as ActorRig).body_scale
 	_view(Vector3(3.4, 2.7, -5.0), Vector3(0, 1.9, 0))
 	await _ticks(8)
