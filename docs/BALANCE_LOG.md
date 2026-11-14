@@ -2471,7 +2471,7 @@ integration, the catch-up and the final round with its merge; `docs/systems/P39.
 The main checkout was used read-only: a watcher sampled HEAD, the working tree and the load every 30 s from 02:29 to
 04:51 UTC on 14 November (282 samples, every one `7502770` with a clean tree), and each run's start and end record the
 same. The runs are the measurement's earlier set (measure-a, on `62dcf41`, the catch-up) made again on this code with
-the same specs, seeds and `--extra=--perf`, and four runs measure-a had not made (the Valley's 30 minutes, the
+the same specs, seeds and `--extra=--perf`, and five runs measure-a had not made (the Valley's 30 minutes, the
 campaign's hand-over and the three first-oath orders unassisted). Nothing was tuned: the final round's one attempt
 (the ballistae's reload, "M9 gate (final)" above) was reverted before this. The evidence is in the gate's scratch
 folder `m9_gate/final/measure-after/` (`TARGETS.md`, `reports/` with `tools/bot_report.py`'s tables of every batch,
@@ -2499,13 +2499,14 @@ tools/gd.sh --headless --path . --fixed-fps 60 res://tests/run_tests.tscn -- --n
 
 **What these numbers are.** Seeds 2-3 of the world matrix were not run (as in measure-a: the owner asked for speed),
 so every world verdict here is a seed-1 verdict, and "at least 2 of 3 seeds" is settled only where seed 1 decides it.
-The 1-minute load on the 4 CPUs was 1.5-20.5 (9-20 from 02:30 to about 03:20, with the final full check and other
-release work beside the runs; 2.7-5 from 03:25), so every CPU-per-tick and streaming number below is a shared-machine
-number, never a capture: the quiet-machine captures are W23's (`docs/PERFORMANCE.md`, "The M9 confirmation") and the
-release's. "W23" is the W23 confirmation on `a7da72d` (`confirm_*`): its seed-1 subset of the same six specs and, where
-it differs, its full 21-run matrix (the last matrix on three seeds). measure-a's numbers on `62dcf41` are history -
-the final round's eight commits that act in play came after them - and are named "62dcf41" where they explain a move.
-Lane balance's "final code" in its section above is its own fix-up 1 (`bd541da`); "the final code" here is `7502770`.
+The watcher read a 1-minute load of 1.5-20.5 on the 4 CPUs from 02:29 to the last run's end at 04:36 (9.3-20.5 from
+about 02:30 to 03:16, with the final full check and other release work beside the runs; 2.7-5.3 from 03:25), so every
+CPU-per-tick and streaming number below is a shared-machine number, never a capture: the quiet-machine captures are
+W23's (`docs/PERFORMANCE.md`, "The M9 confirmation") and the release's. "W23" is the W23 confirmation on `a7da72d`
+(`confirm_*`): its seed-1 subset of the same six specs and, where it differs, its full 21-run matrix (the last matrix on
+three seeds). measure-a's numbers on `62dcf41` are history - the final round's eight commits that act in play came after
+them - and are named "62dcf41" where they explain a move. Lane balance's "final code" in its section above is its own
+fix-up 1 (`bd541da`); "the final code" here is `7502770`.
 
 ### What the gate changed between W23 and the final code
 
