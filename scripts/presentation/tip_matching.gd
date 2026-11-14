@@ -33,7 +33,10 @@ extends RefCounted
 
 const STAGE1_HEIGHT_M := 3.6576
 const REACH_USE := 0.93
-const RMAX_USE := 0.97
+## 0.95, not 0.97 (the W25 merge): the exported skeleton's palm is the knuckle line (index, middle and ring
+## bases; reach 1.385 = upper arm + forearm + wrist-to-knuckles), so a grip at 0.97 of that reach left the wrist
+## beyond the two bones on two end-of-arc samples at stage 3 and the pull-in turned the weapon 16-17° off.
+const RMAX_USE := 0.95
 const PROJECTIONS := 12
 const GRIP_AXIS_DEG := 41.0
 const SOLVE_MARGIN := 0.999
