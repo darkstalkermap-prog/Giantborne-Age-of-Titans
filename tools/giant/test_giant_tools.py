@@ -7,8 +7,8 @@ build_giant.py --verify --skip-bake). Run with the shared venv:
 They read the committed outputs (assets/giant/) and exercise the pure parts of the kit on synthetic
 data: the per-channel resize, the region encoding, the caps (no open cut on Body_Limbs or on any limb
 garment part), the packing rule, the design generator's determinism, the --skip-bake read-back of AO
-and thickness, the manifest round trip, the Web budget's estimate rules and the vendored subset's file
-list.
+and thickness, the manifest round trip, the Cycles tolerance on another toolchain, the Web budget's
+estimate rules and the vendored subset's file list.
 """
 from __future__ import annotations
 
@@ -293,6 +293,37 @@ class ManifestTest(unittest.TestCase):
         lm = doc["index"]["landmarks"]
         self.assertAlmostEqual(lm["shoulder_r"][0], 0.414, delta=0.02)
         self.assertAlmostEqual(lm["reach_r"], 1.385, delta=0.02)
+
+
+class ToleranceTest(unittest.TestCase):
+    def test_cycles_outputs_compare_within_the_tolerance_on_another_toolchain(self):
+        """--verify on a toolchain other than the manifest's accepts Cycles pixels within 2/255 per
+        channel and 0.1/255 on average (manifest.image_close), and names what differs in the toolchain."""
+        rng = np.random.default_rng(3)
+        base = rng.integers(10, 240, (64, 64, 3), dtype=np.uint8)
+        with tempfile.TemporaryDirectory() as tmp:
+            def save(name, arr):
+                path = os.path.join(tmp, name)
+                Image.fromarray(arr, "RGB").save(path)
+                return path
+            a = save("a.png", base)
+            near = base.copy()
+            near[0, :10, 0] += 2                    # 10 values off by 2/255: the mean stays under 0.1/255
+            far = base.copy()
+            far[5, 5, 1] += 3                       # one value off by 3/255
+            drift = base + 1                        # every value off by 1/255: the mean is over
+            ok, mx, mean = manifest.image_close(a, save("near.png", near))
+            self.assertTrue(ok, (mx, mean))
+            self.assertAlmostEqual(mx, 2 / 255.0)
+            self.assertFalse(manifest.image_close(a, save("far.png", far))[0], "over the largest difference")
+            self.assertFalse(manifest.image_close(a, save("drift.png", drift))[0], "over the mean")
+            self.assertFalse(manifest.image_close(a, save("small.png", base[:32]))[0], "another size")
+        old = {"bpy": "5.3.0", "numpy": "2.5.4", "cpu": {"model": "x"}}
+        new = {"bpy": "5.3.0", "numpy": "2.6.0", "cpu": {"model": "y"}}
+        diff = manifest.toolchain_diff(old, new)
+        self.assertEqual(len(diff), 2, diff)
+        self.assertTrue(any(d.startswith("numpy") for d in diff) and any(d.startswith("cpu") for d in diff))
+        self.assertEqual(manifest.toolchain_diff(old, dict(old)), [])
 
 
 class BudgetTest(unittest.TestCase):
