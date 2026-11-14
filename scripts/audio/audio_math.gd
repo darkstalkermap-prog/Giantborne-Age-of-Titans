@@ -306,8 +306,9 @@ static func intensity_target(snapshot: Dictionary, cfg: Dictionary) -> String:
 	# under 25 % of the time among only lesser enemies): for a giant at least combat_cap_min_height_m tall the
 	# scaled combat radius (105-181 m at stages 4-6) is capped at combat_cap_m, so a formation or a crew
 	# holding 40-120 m off while the giant fights lone humans and riders raises danger, not combat; a
-	# formation that closes in, a boss and the hits of what counts still raise combat. Smaller giants (the
-	# Valley's stages 1-3) keep the scaled radius.
+	# formation that closes in, a boss and the hits of what counts still raise combat - a crewed engine's shot
+	# that lands among them (CueRouter notes it as its crew's hit, M9 gate final: before, the engine's projectile
+	# was a prop's and never reached the music). Smaller giants (the Valley's stages 1-3) keep the scaled radius.
 	if h >= float(cfg.get("combat_cap_min_height_m", INF)) - 1e-6:
 		combat_r = minf(combat_r, float(cfg.get("combat_cap_m", INF)))
 	var danger_r := minf(float(cfg.get("danger_radius_m", 70.0)) * scale, float(cfg.get("danger_cap_m", 150.0)))

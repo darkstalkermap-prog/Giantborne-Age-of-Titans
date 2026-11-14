@@ -17,6 +17,14 @@ extends IntegrationSuite
 ## pinned against him. Once he leaves, the leash holds it again: it is back inside the camp's leash, its return over
 ## (a detour's end asks for a fresh path: at AI tier 1 the rider had kept its path to the detour point and rode to
 ## and fro short of its post).
+## M9 gate (final; the early audit's R6): his first blow lands as soon as the rider waits for its post, whatever its
+## distance (it stopped 5.6-5.96 m off his body against a 6.0 m reach: a 4 cm margin), later blows within 8 m, and a
+## blow that never landed reads as that, not as four failed answer checks.
+## M9 gate (final; the final audit's F11): the camp's four riders sent home through a stage-6 giant who walks east
+## off the picket line (driven by the stick along his own path, not moved) no longer pin him: a "way" wait backs off
+## the body in its way as a post wait does, and begins at the second path failure (EnemyActor.LEASH_BODY_WAY_FAILURES).
+## Before, riders held where they stopped, pressed into his shins on his east side, and his walk stalled for 30 s
+## (test_riders_sent_home_never_pin_a_giant_walking_off_the_picket_line, stands of 10, 15 and 18 s).
 
 const SCENE := "res://scenes/world/world.tscn"
 const CAMP := "encounter.aldmere_war_camp"
@@ -26,7 +34,9 @@ const RIDER := "world.aldmere.camp_rider_2"
 const WAIT_S := 14
 const BLOWS_S := 16
 const BLOW_TICKS := 150
-const BLOW_REACH_M := 6.0
+## M9 gate (final; R6): later blows land while its body is within this of his (it brakes to 5.6-6.0 m off him: it
+## holds at CLEAR - 0.25 after starting about 0.46 m pressed into his capsule's base); the first lands at once.
+const BLOW_REACH_M := 8.0
 
 var leashed := 0
 var heals := 0
@@ -200,7 +210,8 @@ func test_a_rider_whose_picket_the_giant_stands_on_is_leashed_once_waits_off_him
 	var outside_held := 0
 	var outside_free := 0
 	for i in 60 * BLOWS_S:
-		if i >= next_blow and rider.entity.is_alive() and _gap(rider, p, giant_r, rider_r) <= BLOW_REACH_M:
+		if i >= next_blow and rider.entity.is_alive() and ((first_blow < 0 and rider.leash_waiting == "post")
+				or _gap(rider, p, giant_r, rider_r) <= BLOW_REACH_M):
 			queue_hit("player", rider.entity_id, p.global_position, 40.0)
 			blows += 1
 			next_blow = i + BLOW_TICKS
@@ -230,12 +241,15 @@ func test_a_rider_whose_picket_the_giant_stands_on_is_leashed_once_waits_off_him
 		outside_free / 60.0, pinned_longest / 60.0])
 	assert_true(_flat(p.global_position, giant) < 1.0, "he stayed on its post (%s)" % p.global_position.snappedf(0.1))
 	assert_true(rider.entity.is_alive(), "the rider lives through his blows")
-	assert_true(first_blow >= 0 and answer_tick >= 0 and answer_tick - first_blow <= 2,
-		"his first blow ends its wait at once (%d tick(s))" % (answer_tick - first_blow))
-	assert_eq(rider.leash_answers, 1, "it answered once")
-	assert_true(hp_answer < hp_max, "unhealed: the blow shows (%.0f / %.0f)" % [hp_answer, hp_max])
-	assert_true(knew_him, "it knows who struck it")
-	assert_true(not acted.is_empty(), "it turns on him (%s)" % [acted])
+	assert_true(first_blow >= 0, "a blow reached the waiting rider (%.2f m off him, reach %.1f m for later blows)" % [
+		gap_wait, BLOW_REACH_M])
+	if first_blow >= 0:
+		assert_true(answer_tick >= 0 and answer_tick - first_blow <= 2,
+			"his first blow ends its wait at once (%d tick(s))" % (answer_tick - first_blow))
+		assert_eq(rider.leash_answers, 1, "it answered once")
+		assert_true(hp_answer < hp_max, "unhealed: the blow shows (%.0f / %.0f)" % [hp_answer, hp_max])
+		assert_true(knew_him, "it knows who struck it")
+		assert_true(not acted.is_empty(), "it turns on him (%s)" % [acted])
 	assert_eq(leashed, 1, "still leashed once while he stays")
 	assert_eq(heals, 1, "and healed once")
 	assert_eq(outside_free, 0, "outside the leash, the giant on its post holds it off the leash")
@@ -264,3 +278,114 @@ static func _flat2(a: Vector3, c: Vector2) -> float:
 ## The gap between the rider's body and the giant's (negative: pressed into him).
 static func _gap(rider: Node3D, giant: Node3D, giant_r: float, rider_r: float) -> float:
 	return _flat(rider.global_position, giant.global_position) - giant_r - rider_r
+
+
+const RIDERS := ["world.aldmere.camp_rider_1", "world.aldmere.camp_rider_2", "world.aldmere.camp_rider_3",
+	"world.aldmere.camp_rider_4"]
+## The giant's walk east off the picket line ends within this (F11: the stalled walk took 30 s and more).
+const WALK_OFF_S := 20.0
+## No rider presses into him (gap < 0) longer than this at a stretch (riders he walks into touch him a few seconds).
+const CONTACT_MAX_S := 5.0
+## Every rider's return ends within this after he has walked off.
+const RETURN_END_S := 30.0
+
+
+## Walks the giant along his own titan path to `goal` with the stick for at most `seconds`; calls `each` every tick.
+## [the last position, the seconds taken].
+func _walk(w: WorldRoot, goal: Vector3, seconds: float, each: Callable) -> Array:
+	var p := w.player()
+	var path := NavQuery.path(w, p.global_position, goal, p.growth.nav_query_mask(), NavQuery.PURPOSE_FAR)
+	assert_true(path.size() >= 2, "a titan path from %s to %s" % [p.global_position.snappedf(0.1), goal.snappedf(0.1)])
+	var idx := 1
+	var t := 0
+	while t < int(seconds * 60.0):
+		if Vector2(goal.x - p.global_position.x, goal.z - p.global_position.z).length() < 3.0:
+			break
+		while idx < path.size() and Vector2(path[idx].x - p.global_position.x, path[idx].z - p.global_position.z).length() < 2.5:
+			idx += 1
+		var next := goal if idx >= path.size() else path[idx]
+		p.camera_rig.yaw = TargetingRules.yaw_of(Vector3(next.x - p.global_position.x, 0.0, next.z - p.global_position.z))
+		p.router.injected_move = Vector2(0, 1)
+		await step_ticks(1)
+		t += 1
+		each.call()
+	p.router.injected_move = Vector2.ZERO
+	return [p.global_position, t / 60.0]
+
+
+func _trap_case(stand_s: float) -> void:
+	var rec := GameData.get_record(CAMP)
+	var centre := _xz(rec.get("center_m"))
+	var post := Vector2.INF
+	for sp: Dictionary in rec.get("spawns", []):
+		if str(sp.get("entity_id", "")) == RIDER:
+			post = _xz(sp.get("position_m"))
+	var out := (post - centre).normalized()
+	var giant_r := float(_profile(6).get("capsule_radius_m", 3.7))
+	var rider_r := float(GameData.get_record("enemy.cavalry").get("capsule_radius_m", 0.9))
+	WorldState.clear()
+	WorldState.set_flag(FactionState.flag_id("aldmere", "hostile"), true)
+	WanderDirector.test_active = true
+	WanderDirector.view_probe = func(_p: Vector3) -> bool: return false
+	var w := (load(SCENE) as PackedScene).instantiate() as WorldRoot
+	world.add_child(w)
+	w.streamer.deterministic = true
+	var p := w.player()
+	p.router.use_injection = true
+	p.set_profile(_profile(6))
+	p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+	await _move(w, post + out * 54.0)
+	await step_ticks(3 * 60)
+	var y := p.global_position.y
+	var onto: Array = await _walk(w, Vector3(post.x, y, post.y), 30.0, func() -> void: pass)
+	await step_ticks(int(stand_s * 60.0))
+	queue_hit("player", "world.aldmere.camp_rider_2", p.global_position, 40.0)
+	await step_ticks(8 * 60)
+	# He walks 60 m east, off the picket line: every rider's longest stretch pressed into him, from here on.
+	var run := {}
+	var longest := {}
+	var track := func() -> void:
+		for id: String in RIDERS:
+			var e := Sim.get_entity(id)
+			if e == null or not e.is_alive() or e.actor == null:
+				continue
+			if _gap(e.actor as Node3D, p, giant_r, rider_r) < 0.0:
+				run[id] = int(run.get(id, 0)) + 1
+				longest[id] = maxi(int(longest.get(id, 0)), int(run[id]))
+			else:
+				run[id] = 0
+	var start := p.global_position
+	var east := Vector3(post.x + out.x * 60.0, y, post.y + out.y * 60.0)
+	var off: Array = await _walk(w, east, 40.0, track)
+	var moved := Vector2((off[0] as Vector3).x - start.x, (off[0] as Vector3).z - start.z).length()
+	# Then every return ends.
+	var returning := func() -> Array:
+		return RIDERS.filter(func(id: String) -> bool:
+			var e := Sim.get_entity(id)
+			return e != null and e.is_alive() and e.actor != null and (e.actor as EnemyActor).is_returning())
+	var t_left := Sim.tick
+	while Sim.tick - t_left < int(RETURN_END_S * 60.0) and not (returning.call() as Array).is_empty():
+		await step_ticks(30)
+		track.call()
+	var still: Array = returning.call()
+	var worst := 0.0
+	for id: String in longest:
+		worst = maxf(worst, int(longest[id]) / 60.0)
+	print("    riders' trap (stand %.0f s): onto the picket in %.1f s; the walk east %.1f m in %.1f s; longest pressed into him %s (ticks); returns still on after %.0f s: %s" % [
+		stand_s, float(onto[1]), moved, float(off[1]), longest, (Sim.tick - t_left) / 60.0, still])
+	assert_true(moved >= 55.0 and float(off[1]) <= WALK_OFF_S,
+		"stand %.0f s: he walks 60 m east off the picket line within %.0f s (%.1f m in %.1f s)" % [stand_s, WALK_OFF_S, moved, float(off[1])])
+	assert_true(worst <= CONTACT_MAX_S, "stand %.0f s: no rider stays pressed into him over %.0f s at a stretch (%.1f s; %s)" % [
+		stand_s, CONTACT_MAX_S, worst, longest])
+	assert_eq(still, [], "stand %.0f s: every rider's return ends within %.0f s after he left" % [stand_s, RETURN_END_S])
+	w.queue_free()
+	await step_ticks(2)
+	for f in Formation.live():
+		f.dissolve()
+	FactionState.reset_for_tests()
+	WanderDirector.reset_for_tests()
+
+
+func test_riders_sent_home_never_pin_a_giant_walking_off_the_picket_line() -> void:
+	for stand_s: float in [10.0, 15.0, 18.0]:
+		await _trap_case(stand_s)

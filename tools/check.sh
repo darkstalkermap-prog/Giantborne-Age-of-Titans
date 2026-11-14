@@ -153,6 +153,9 @@ run_limited 3600 "$GD" --headless --path . --fixed-fps 60 res://tests/run_tests.
 	>"$LOGS/tests.log" 2>&1
 TEST_EXIT=$?
 grep -E "^RESULT:|^FAIL|^TIMES:" "$LOGS/tests.log" | head -n 60
+# M9 gate (final): a wall-clock CPU budget over its limit on a loaded machine only warns (tests/support/budget_rule.gd):
+# its line is shown here, next to CHECK PASSED, not left inside tests.log.
+grep -E "^BUDGET WARNING|^WARNINGS: [1-9]" "$LOGS/tests.log" | head -n 20
 [ "$TEST_EXIT" = "0" ] || fail "tests exited with $TEST_EXIT" "$LOGS/tests.log"
 grep -q "^RESULT: .* 0 failures" "$LOGS/tests.log" || fail "no passing RESULT line" "$LOGS/tests.log"
 # The suite times (decision 34: default under 75 s, slow under 8 minutes, gate under 50 minutes),

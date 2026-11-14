@@ -205,7 +205,10 @@ static func truthy(v: Variant) -> bool:
 # --------------------------------------------------------------------------- offences (static)
 
 ## The faction a hit offends, or "" (see the class notes): a member's faction for a direct blow that
-## connected, a prop's faction for the player's damage to its house or engine.
+## connected, a prop's faction for the player's damage to its house or engine. M9 gate (final; the final audit's
+## F2): never a spectator's (EnemyActor.spectator, an encounter spawn's `spectator`: the clans' giants watching the
+## Moot from 6 m outside its ring, which a stage-6 giant's swings at Harrok near the ring's stones reach - two such
+## blows within 30 s turned Skarn hostile for good, its hearth-forge shut and Ulfra's price raised).
 static func offended_faction(result: HitResult) -> String:
 	if result == null or result.event == null:
 		return ""
@@ -218,6 +221,8 @@ static func offended_faction(result: HitResult) -> String:
 		return ""
 	if target.faction != "":
 		if hit.area_effect or not OFFENCE_OUTCOMES.has(result.outcome) or is_hostile(target.faction):
+			return ""
+		if is_instance_valid(target.actor) and target.actor.get("spectator") == true:
 			return ""
 		return target.faction
 	var owner := prop_owner(target)

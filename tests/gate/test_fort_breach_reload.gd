@@ -345,8 +345,9 @@ static func _checkpoint_holds_destroyed(id: String) -> bool:
 		and bool((deltas[id] as Dictionary).get("destroyed", false))
 
 
-func _breach_case(stage: int, banner: bool) -> void:
-	var name := "stage %d%s" % [stage, " with Brannock's banner" if banner else ""]
+func _breach_case(stage: int, banner: bool, provoke_first := false) -> void:
+	var name := "stage %d%s%s" % [stage, " with Brannock's banner" if banner else "",
+		", a stood-down pikeman struck before the breach" if provoke_first else ""]
 	await _new_game(stage, banner)
 	var p := w.player()
 	var d := w.director()
@@ -354,9 +355,30 @@ func _breach_case(stage: int, banner: bool) -> void:
 	assert_true(b != null, "%s: the battle is loaded" % name)
 	if b == null:
 		return
-	# The gate struck: the garrison takes up arms (or, for the banner, stands down while the gate stands).
 	await _move(Vector2(650.0, -80.0))
 	await step_ticks(30)
+	var provoked := EncounterDirector.provoked_flag(GARRISON)
+	if provoke_first:
+		# M9 gate (final; the final audit's F9): a blow on a member standing down for the banner provokes the garrison
+		# (P29), and an ordinary checkpoint taken then - none of it aware, Aldmere not at war - holds the provocation.
+		assert_true(d.p29_standing_down(GARRISON), "%s: the garrison stands down for the banner while the gate stands" % name)
+		var pikes := _garrison_up().filter(func(id: String) -> bool: return id.contains("pike"))
+		assert_false(pikes.is_empty(), "%s: a pikeman stands at its post" % name)
+		if not pikes.is_empty():
+			_strike_member(str(pikes[0]))
+		await step_ticks(10)
+		assert_true(QuestConditions.truthy(WorldState.get_flag(provoked)), "%s: the blow provokes the garrison" % name)
+		assert_false(d.p29_standing_down(GARRISON), "%s: ...which stands down no longer" % name)
+		await step_ticks(60)
+		saved.clear()
+		GameSession.request_checkpoint("test")
+		var held: bool = await TestWait.until(self, func() -> bool: return GameSession.pending_checkpoint().is_empty(), 120)
+		print("    fort breach (%s): the checkpoint after the blow %s (blockers %s), the garrison %d aware" % [name, saved,
+			GameSession.checkpoint_blockers(), _garrison_aware().size()])
+		assert_true(held, "%s: an ordinary checkpoint is taken after the blow (blockers %s)" % [name, GameSession.checkpoint_blockers()])
+		assert_true(QuestConditions.truthy(GameSession.checkpoint_doc.world.flags.get(provoked, false)),
+			"%s: ...holding the provocation (the worst case)" % name)
+	# The gate struck: the garrison takes up arms (or, for the banner, stands down while the gate stands).
 	await _strike_gate(0.15)
 	await step_ticks(90)
 	assert_false(WorldState.is_destroyed(GATE), "%s: the gate still stands" % name)
@@ -364,7 +386,7 @@ func _breach_case(stage: int, banner: bool) -> void:
 	var aware_before := _garrison_aware()
 	print("    fort breach (%s): before the last blow the garrison %d up, %d aware, standing down %s" % [name,
 		_garrison_up().size(), aware_before.size(), d.p29_standing_down(GARRISON)])
-	if banner:
+	if banner and not provoke_first:
 		assert_true(d.p29_standing_down(GARRISON), "%s: the garrison stands down for the banner while the gate stands" % name)
 	else:
 		assert_true(aware_before.size() >= 4, "%s: the garrison fights the giant at its gate (%d aware)" % [name, aware_before.size()])
@@ -372,6 +394,12 @@ func _breach_case(stage: int, banner: bool) -> void:
 	saved.clear()
 	await _strike_gate(0.0)
 	assert_true(WorldState.is_destroyed(GATE), "%s: the gate is breached" % name)
+	if provoke_first:
+		await step_ticks(1)
+		assert_false(QuestConditions.truthy(WorldState.get_flag(provoked)),
+			"%s: the gate's fall begins a new stand-down: the provocation from before is lifted" % name)
+		var down_in: bool = await TestWait.until(self, func() -> bool: return d.p29_standing_down(GARRISON), 60)
+		assert_true(down_in, "%s: the garrison stands down within 1 s of the breach" % name)
 	var taken: bool = await TestWait.until(self, func() -> bool:
 		return QuestConditions.truthy(GameSession.checkpoint_doc.world.flags.get("world.aldmere.fort_breached", false)) \
 			and str(GameSession.checkpoint_doc.world.flags.get("quest.iron_regiment.stage", "")) != "", 120)
@@ -390,7 +418,6 @@ func _breach_case(stage: int, banner: bool) -> void:
 	await step_ticks(40)
 	assert_true(d.p29_standing_down(GARRISON), "%s: the breached gate's garrison falls back and stands down" % name)
 	assert_eq(_garrison_aware(), [], "%s: none of it stays aware of the giant" % name)
-	var provoked := EncounterDirector.provoked_flag(GARRISON)
 	if not banner:
 		# Fix-up 1: a blow on a stood-down member after the breach's checkpoint rouses the garrison for good (P29) -
 		# the giant fights it at the gate - but it is not in the checkpoint.
@@ -432,10 +459,14 @@ func _breach_case(stage: int, banner: bool) -> void:
 	assert_eq(_garrison_aware(), [], "%s: none is aware of the giant at the waystone" % name)
 	# The walk in from the waystone: no blow, arrow or bolt of the garrison on the way.
 	garrison_hits.clear()
+	giant_hits.clear()
 	var at := await _walk(BAILEY, 30.0)
-	print("    fort breach (%s): the walk in ends at (%.1f, %.1f); the garrison's hits on the way %s" % [name, at.x, at.z, garrison_hits])
+	var bastion_hits := giant_hits.filter(func(x: Array) -> bool: return BASTION_BALLISTAE.has(str(x[1])))
+	print("    fort breach (%s): the walk in ends at (%.1f, %.1f); the garrison's hits on the way %s, the bastions' ballistae's %s" % [
+		name, at.x, at.z, garrison_hits, bastion_hits])
 	assert_true(at.z < INSIDE_Z, "%s: the giant walks from the waystone into the bailey (at z %.1f)" % [name, at.z])
 	assert_eq(garrison_hits, [], "%s: untouched by the garrison" % name)
+	assert_eq(bastion_hits, [], "%s: ...and by the bastions' ballistae" % name)
 	await step_ticks(90)
 	assert_eq(b.state_name(), "engaged", "%s: the battle engages again, a full attempt" % name)
 	# The battle as lane aldmere left it: the bastions' pair crewed by the wall crews and held through the Wall.
@@ -458,6 +489,16 @@ func test_the_breach_stays_made_after_a_death_at_stage_4() -> void:
 
 func test_the_breach_stays_made_after_a_death_at_stage_5_with_the_banner() -> void:
 	await _breach_case(5, true)
+
+
+## M9 gate (final; the final audit's F9): a stood-down member struck before the breach (the banner's stand-down, a
+## stray swing) set the garrison's provoked flag for good - it refused every branch of stand_down_when, the post-breach
+## one too - so the garrison stayed roused through the breach: the breach's ordinary request waited on its aware
+## members, a death dropped it, and the reload put a hostile garrison at the waystone (the audit's probe: the bastions'
+## ballistae hit the giant 7 times in 30 s there). The gate's fall now begins a new stand-down: the provocation from
+## before is lifted, the breach is checkpointed with none of it aware, and a death comes back to it at peace.
+func test_a_garrison_provoked_before_the_breach_stands_down_after_it() -> void:
+	await _breach_case(5, true, true)
 
 
 ## Fix-up 1: the crown's sabotage begun beside the Aldmere road's waystone - the war camp's west catapult wrecked at

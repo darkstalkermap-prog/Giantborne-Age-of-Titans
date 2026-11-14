@@ -18,7 +18,14 @@ extends IntegrationSuite
 ## to 20 health in 30 s). Now:
 ##   * struck while it waits for its post: its return ends there, unhealed, its AI resumes knowing who struck it,
 ##     and the director leaves it off the leash while he holds its post (no second leash, no second heal); once
-##     he leaves, the leash holds it again.
+##     he leaves, the leash holds it again. M9 gate (final; the early audit's R1): this soldier stands its ground
+##     (brain.ignores_morale) - else the stage-6 giant's awe and P30's join-or-flee rule routed it at its first
+##     decide, the director skipped it as routed, and the test passed with the director's held-off skip removed;
+##     now it fights him from his edge outside the leash, the director's updates meet it there (counted), and once
+##     he leaves it comes back inside (asserted whatever its state).
+##   * M9 gate (final; README item 1 of the final round): only a hostile holder keeps it off the leash - struck while
+##     a fellow member stands on its post, it answers, but nothing holds it off the leash and the director sends it
+##     home again.
 ## The real world's case (the war camp's picket rider) is the gate tier's tests/gate/test_war_camp_leash.gd.
 
 const LEVEL_SCENE := "res://scenes/test/director_test.tscn"
@@ -164,6 +171,7 @@ func test_a_member_whose_post_is_taken_outside_its_leash_waits_off_the_body() ->
 
 func test_struck_while_it_waits_for_its_post_it_answers_and_is_held_off_the_leash_while_he_stays() -> void:
 	var s := await _setup()
+	s.brain.ignores_morale = true   # it stands its ground (see the notes): it stays leashable, so the skip is exercised
 	var centre := _centre()
 	var leash := _leash_m()
 	var post := centre + Vector3(0, 0.05, leash - 3.0)   # 37 m out of a 40 m leash
@@ -195,9 +203,13 @@ func test_struck_while_it_waits_for_its_post_it_answers_and_is_held_off_the_leas
 	var states := {}
 	var outside_held := 0
 	var outside_free := 0
+	var skipped_updates := 0   # director updates that met it outside the leash, leashable (not fleeing, routed or returning)
 	for i in 60 * 8:
 		await step_ticks(1)
 		if i % 30 == 29:
+			if _flat(s.global_position, centre) > leash and s.entity.is_alive() \
+					and not (s.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED, EnemyBrain.AIState.RETURN]):
+				skipped_updates += 1
 			director.update_now()
 		if not s.entity.is_alive():
 			break
@@ -209,6 +221,7 @@ func test_struck_while_it_waits_for_its_post_it_answers_and_is_held_off_the_leas
 				outside_free += 1
 	print("    while he stays (8 s): states %s, %d leash(es), %d heal(s), %.1f s outside the leash held off, %.1f s not" % [
 		states.keys(), leashed, heals, outside_held / 60.0, outside_free / 60.0])
+	assert_true(skipped_updates > 0, "the director's updates met it outside the leash, leashable (%d of them): its held-off skip was exercised" % skipped_updates)
 	assert_false(states.has("Return"), "it answers him rather than go home")
 	assert_eq(leashed, 1, "the director does not send it home while he holds its post")
 	assert_eq(heals, heals_before, "nor heals it")
@@ -217,11 +230,50 @@ func test_struck_while_it_waits_for_its_post_it_answers_and_is_held_off_the_leas
 	_put_giant(centre + Vector3(-30, 0.05, leash + 30.0))
 	await step_ticks(1)
 	assert_false(s.leash_held_off(), "with its post free nothing holds it off the leash")
-	if s.entity.is_alive() and not (s.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]):
-		var inside: bool = await TestWait.until(self, func() -> bool:
-			return _flat(s.global_position, centre) <= leash, 60 * 15)
-		assert_true(inside, "the leash holds it again: it comes back inside (%.1f m from the centre, %d leash(es))" % [
-			_flat(s.global_position, centre), leashed])
+	assert_true(s.entity.is_alive() and not (s.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]),
+		"it stood its ground (%s)" % s.brain.state_name())
+	var inside: bool = await TestWait.until(self, func() -> bool:
+		return _flat(s.global_position, centre) <= leash, 60 * 15)
+	assert_true(inside, "the leash holds it again: it comes back inside (%.1f m from the centre, %d leash(es))" % [
+		_flat(s.global_position, centre), leashed])
+
+
+## M9 gate (final; README item 1 of the final round): a fellow member standing on its post holds it off the leash no
+## more. The answer recorded whatever body stood on the post as its holder, and the director left it exempt from the
+## leash while that body stayed - a fellow too (rare: a post wait needs a large body on the post, here a rival giant
+## of its team, and the post near the leash's edge).
+func test_a_fellow_on_its_post_does_not_hold_it_off_the_leash() -> void:
+	var s := await _setup()
+	s.brain.ignores_morale = true
+	var centre := _centre()
+	var leash := _leash_m()
+	var post := centre + Vector3(0, 0.05, leash - 1.0)   # 39 m out of a 40 m leash: a wait there backs off outside it
+	s.home_position = post
+	# A large fellow on its post (a soldier's small body lets it reach its post's edge: home): a rival giant of its
+	# team (no faction: hostile to the giant, as the member is), its AI off.
+	var fellow := TestSpawn.enemy(level, "res://scenes/enemies/rival_giant.tscn", post, "test.director.fellow_giant", false)
+	await step_ticks(2)
+	assert_true(fellow != null and fellow.entity.team == s.entity.team, "a fellow of its team stands on its post")
+	_put_giant(centre + Vector3(-25.0, 0.05, leash + 25.0))   # off the post, in sight
+	s.global_position = centre + Vector3(0.3, 0.05, leash + 8.0)
+	director.update_now()
+	assert_true(s.is_returning(), "the leash sends it home")
+	var waiting: bool = await TestWait.until(self, func() -> bool: return s.leash_waiting == "post", 60 * 12)
+	var taker: Dictionary = s.call("_leash_post_taker")
+	print("    a fellow on its post: waiting '%s' (%s), the post's taker '%s', %.1f m from the centre" % [s.leash_waiting,
+		waiting, taker.get("id", ""), _flat(s.global_position, centre)])
+	assert_true(waiting, "it waits for its post")
+	assert_eq(str(taker.get("id", "")), fellow.entity_id, "its fellow stands on its post")
+	var leashed_before := leashed
+	queue_hit("player", s.entity_id, player.global_position, 40.0)
+	var answered: bool = await TestWait.until(self, func() -> bool: return not s.is_returning(), 3)
+	assert_true(answered, "struck while it waits, it answers")
+	assert_eq(s.leash_holder_id, "", "a fellow on its post is no holder")
+	assert_false(s.leash_held_off(), "nothing holds it off the leash")
+	assert_true(_flat(s.global_position, centre) > leash, "it answered outside its leash (%.1f m)" % _flat(s.global_position, centre))
+	director.update_now()
+	assert_eq(leashed, leashed_before + 1, "the director sends it home again at its next update")
+	assert_true(s.is_returning(), "it returns")
 
 
 func test_a_member_whose_post_is_taken_inside_its_leash_ends_its_return_unhealed() -> void:

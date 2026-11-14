@@ -266,6 +266,8 @@ var _plan_place := Vector3.INF
 ## none clear), "at": the member's position then, "tick": when chosen, "bad": the spots given up}.
 var _shot_spots: Dictionary = {}
 var _lure: Dictionary = {}             ## P39: brazier world id -> {"walk": tick, "at": tick, "until": tick}
+## M9 gate (final): hostile placed members with their AI off it walked past and noted (entity id -> true).
+var _passed_hostile: Dictionary = {}
 
 
 # --------------------------------------------------------------------------- configuration
@@ -810,22 +812,34 @@ func _fight_ignored_now(_t: EnemyActor) -> bool:
 
 ## The Valley's rule (a target given up for a while), and M9 gate: in the world a placed member (the
 ## director's) whose AI is off never moves or strikes - the giants of the clans watching the Moot and of
-## Skarn's steading (P36: AI off, "they never deal damage"), whom a slain Harrok's faction leaves hostile -
-## so it is not fought: a player walks past it. A conqueror expert that slew Harrok struck a watching clan
-## giant 11.7 m off for the throne stage's whole 306 s (each blow that landed took a little health off it,
-## so the chase give-up never ran out) and stopped one step from the throne. A unit walking home on its
-## leash has its AI off too, and it is walked past as well: BotCombat.is_threat leaves it out of the
-## threats, but an encounter's task (_encounter_task: its nearest member not fleeing or routed) took it as
-## the target and the bot followed it home (the gate's w.peaceful:expert:1 chased the Crownmarch raiders'
-## mage walking home at tick 23,095 before this rule, walks past it since, and plays on differently: the
-## verification of the M9 gate). A yielded boss (is_threat leaves it out) and a Matriarch in flight (she
-## leaves the fight) have their AI off as well.
+## Skarn's steading (P36: AI off, "they never deal damage") - so it is not fought: a player walks past it.
+## Skarn turned hostile in a run when the giant's own blows at Harrok near the ring's wall struck a watcher
+## 6 m outside it (a stage-6 giant reaches 13.6 m; two blows within 30 s turn Skarn - the slay itself only
+## sets world.moot.empty; M9 gate, final: the watchers are spectators now, whose blows offend no one). A
+## conqueror expert that had turned Skarn so struck a watching clan giant 11.7 m off for the throne stage's
+## whole 306 s (each blow that landed took a little health off it, so the chase give-up never ran out) and
+## stopped one step from the throne. A unit walking home on its leash has its AI off too, and it is walked
+## past as well: BotCombat.is_threat leaves it out of the threats, but an encounter's task (_encounter_task:
+## its nearest member not fleeing or routed) took it as the target and the bot followed it home (the gate's
+## w.peaceful:expert:1 chased the Crownmarch raiders' mage walking home at tick 23,095 before this rule, walks
+## past it since, and plays on differently: the verification of the M9 gate). A yielded boss (is_threat
+## leaves it out) and a Matriarch in flight (she leaves the fight) have their AI off as well. M9 gate (final):
+## the run notes once each hostile placed member it walks past that is not walking home (a faction a duel or
+## a stray swing turned), so the matrix shows it (run_metrics' faction_standing has every faction's end too).
 func _is_ignored(e: EnemyActor) -> bool:
 	if super(e):
 		return true
 	if not _in_world() or e == null or e.ai_enabled or e.entity == null or director == null:
 		return false
-	return director.spawned(e.entity.entity_id) == e
+	if director.spawned(e.entity.entity_id) != e:
+		return false
+	var id := e.entity.entity_id
+	if e.entity.team == CombatEntity.Team.ENEMY and not _passed_hostile.has(id) \
+			and not (e.has_method("is_returning") and bool(e.call("is_returning"))):
+		_passed_hostile[id] = true
+		if run != null and run.metrics != null:
+			run.metrics.note(Sim.tick, "walked past %s (AI off, its faction %s hostile)" % [id, e.faction])
+	return true
 
 
 ## The Valley's choice, but in the world an enemy out of melee reach above the giant is fought only

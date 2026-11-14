@@ -749,6 +749,9 @@ func result(tick: int) -> Dictionary:
 		# P22 (plan M6-M9 §3.4 design 4): Thornwick turned hostile in this run (by offences or the
 		# force branch's barricade); the help paths must end with it false.
 		"faction_hostile": FactionState.is_hostile("village"),
+		# M9 gate (final): every faction's standing at the end ({faction: "hostile" | "reconciled" | ...}), so a
+		# run shows a faction its giant turned (Skarn by blows at Harrok that struck a watcher of the Moot).
+		"faction_standing": faction_standings(),
 		"flags_hash": flags_hash(),
 		"segments": seg_out,
 		"objectives": obj_out,
@@ -779,6 +782,14 @@ func result(tick: int) -> Dictionary:
 		"districts": district_seen.keys(),
 		"dialogues": dialogues.duplicate(true),
 	}
+
+
+## M9 gate (final): every faction record's standing now (FactionState.standing): {short name: standing}.
+static func faction_standings() -> Dictionary:
+	var out := {}
+	for f in FactionState.known_factions():
+		out[f] = FactionState.standing(f)
+	return out
 
 
 ## A hash of the world flags (sorted), to compare runs.

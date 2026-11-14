@@ -11,6 +11,12 @@ extends IntegrationSuite
 ## formation's front rank at z -69 to -75 and stood there for the rest of its time (the breach: the pikes advanced 6 m
 ## and braced; the parley: they held their post), as the M9 confirmation's crown runs did. The post is now in front of the
 ## west bastion, beside the road's approach (pivot (626, -75)).
+## M9 gate (final; the README's item 5): the integration's stage-4 novice ended "world_blocked" at its 6th death at
+## (660.3, -111), 6 m inside the broken gate, with no titan path to the herald (500, 33, 190). It is no pocket: the
+## titan path from there runs out through the gate to the waystone and on. The diagnosis asked one far query, and a far
+## query stops at the world's search distance (300 m) - out through the gate and down the road to the herald is longer -
+## so it answered 25-35 m short of him; the diagnosis now carries the query on from where it stopped (reaches_far)
+## (test_the_gateways_inner_mouth_is_no_pocket_and_a_far_goal_is_no_softlock).
 
 const SCENE := "res://scenes/world/world.tscn"
 const GATE := "world.aldmere.fort_gate"
@@ -192,3 +198,41 @@ func test_a_giant_of_stages_4_and_6_walks_through_the_opened_gate_to_the_forge()
 		FactionState.reset_for_tests()
 		WanderDirector.reset_for_tests()
 		WorldState.clear()
+
+
+func test_the_gateways_inner_mouth_is_no_pocket_and_a_far_goal_is_no_softlock() -> void:
+	var w := await _world(WAYSTONE)
+	var p := w.player()
+	p.set_profile(_profile(4))
+	p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+	await step_ticks(60)
+	var layers: int = p.growth.nav_query_mask()
+	var at := func(x: float, z: float) -> Vector3: return Vector3(x, w.height_at(Vector3(x, 300.0, z)), z)
+	var mouth: Vector3 = at.call(660.3, -111.0)
+	var stone: Vector3 = at.call(WAYSTONE.x, WAYSTONE.y)
+	var herald := BotDiagnosis.snap_to_layer(w, Vector3(500.0, 33.3, 190.0), layers)
+	assert_true(herald.is_finite() and w.streamer.is_ready(w.streamer.chunk_at(herald)), "the herald's ground is loaded (%s)" % [herald])
+	# the gate whole, the bailey is shut: the carried-on check never walks through it
+	assert_false(BotDiagnosis.reaches_far(w, mouth, stone, layers), "the gate whole: no titan path out of the bailey")
+	assert_true(BotDiagnosis.reaches_far(w, stone, herald, layers), "from the waystone a titan path runs to the herald")
+	assert_true(await _break(GATE, p.entity.entity_id), "the giant breaks the fort's gate")
+	await step_ticks(60)
+	assert_true(BotDiagnosis.reaches(w, mouth, stone, layers), "the gate broken: from the gateway's inner mouth a titan path runs out to the waystone")
+	var one := NavQuery.path(w, mouth, herald, layers, NavQuery.PURPOSE_FAR)
+	print("    fort gateway (the inner mouth): one far query to the herald ends at %s, %.1f m short" % [
+		one[one.size() - 1] if not one.is_empty() else Vector3.INF, Vector2(one[one.size() - 1].x - herald.x, one[one.size() - 1].z - herald.z).length() if not one.is_empty() else INF])
+	assert_true(BotDiagnosis.reaches_far(w, mouth, herald, layers), "and on to the herald, carried on from where a far query stops")
+	# the battle engaged and the giant at the mouth, as at the novice's 6th death: the bot's failure, not a softlock
+	await _move(w, Vector2(650.0, -112.0))
+	await step_ticks(6)
+	await _move(w, Vector2(650.0, -128.0))
+	await step_ticks(6)
+	await _move(w, Vector2(mouth.x, mouth.z))
+	await step_ticks(6)
+	var diag := BotDiagnosis.diagnose_world({"quest_id": "quest.world_main", "stage_id": "oaths"}, p, w, "deaths",
+		Vector3(500.0, 33.3, 190.0), BotDiagnosis.REACH_TOLERANCE_M, PackedVector3Array(), layers)
+	print("    fort gateway (the inner mouth, engaged): %s, path %s, evidence %s" % [diag.get("classification"), diag.get("path"), diag.get("evidence")])
+	assert_eq(str(diag.get("classification", "")), BotDiagnosis.BOT_FAILED, "the breach is the bot's, not world_blocked")
+	assert_true(bool((diag.get("path", {}) as Dictionary).get("reachable", false)), "a path to the herald exists from where the giant stands")
+	w.queue_free()
+	await step_ticks(2)

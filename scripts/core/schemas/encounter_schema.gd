@@ -156,6 +156,12 @@ static func fields() -> Dictionary:
 		"prefer": U.str_field(),
 	})
 
+	# M9 gate (final; the final audit's F2): a spawn's `spectator` - a member that only watches (the clans' giants
+	# around the Moot's ring): the giant's blows that strike it offend no faction (FactionState.offended_faction).
+	(((f.spawns as Dictionary).item_fields) as Dictionary).merge({
+		"spectator": U.bool_field(),
+	})
+
 	return f
 
 

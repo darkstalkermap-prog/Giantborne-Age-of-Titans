@@ -42,6 +42,8 @@ const GROWTH_SAMPLE_TICKS := 6
 ## P39: the soldiers, archers and mages that §6.4's "lone humans" are when no formation holds them.
 const HUMAN_ARCHETYPES := ["soldier", "archer", "mage"]
 ## P39: a lone human's states that count as fleeing (§6.4: "flee or rout").
+## M9 gate (final; F6): "Routed" is never sampled - a routed unit is unaware, so it is not engaged - and the §6.4
+## share cannot see a rout (P30's outmatched rule routes an aware lone soldier facing a stage-4+ giant at once).
 const FLED_STATES := ["Flee", "Routed"]
 
 var run_metrics: RunMetrics = null

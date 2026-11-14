@@ -1643,10 +1643,12 @@ func awe_tier_at(ratio: float) -> float:
 ## M9 gate (plan M6-M9 §5.14: from stage 4 "single humans flee on sight (awe at 6.1x)"): the morale the
 ## awe of a target `ratio` times this unit's height costs - tactics.awe_morale_loss, or the morale_loss
 ## of the tactics.awe_tiers entry with the largest ratio the target meets. A lone soldier's 35 of its 70
-## left it above its flee threshold of 25 before a stage-4 giant (10.97 m: 6.1x), so it fought to the end
-## (the M9 confirmation: the melee lone humans fled 0 % of their engaged time at stages 4-6); its tier at
-## 6.0x costs enough to send it running. Below the first tier (a stage-3 giant is 4.4x a soldier: the
-## Valley) the base loss holds, so the Valley's stages 1-3 are as they were.
+## left it above its flee threshold of 25 before a stage-4 giant (10.97 m: 6.1x), so it did not flee: P30's
+## outmatched rule routed it at once and for good, and a rout clears awareness, so the M9 confirmation's
+## share (the melee lone humans fled 0 % of their engaged time at stages 4-6) never counted it. Its tier at
+## 6.0x costs enough to send it into about 20 s of visible flight before the same rout (or a formation's slot);
+## lone-soldier non-flee time was unchanged by it (M9 gate (final), the final audit's F6). Below the first tier
+## (a stage-3 giant is 4.4x a soldier: the Valley) the base loss holds, so the Valley's stages 1-3 are as they were.
 func awe_loss_at(ratio: float) -> float:
 	var loss := float(tactics.get("awe_morale_loss", 0.0))
 	var best := -INF

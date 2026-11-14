@@ -20,6 +20,13 @@ extends IntegrationSuite
 ##     crews at their places, holds its fire - and from the Charge into the Last Stand all four shoot
 ##     (test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing); the HUD tells the
 ##     giant so as the battle engages and again as the Charge frees the pair (ENGINES_LINE, CHARGE_LINE).
+##   * M9 gate (final): the Wall's routed men count as fallen (test_the_wall_s_routed_men_count_as_fallen), and the
+##     bar's notches follow the phases (BattleBoss.phase_marks; the mid-Wall case of _phases_case). The early audit's
+##     A1/A3/A5: the bastion pair's hold is checked by what the engines do, not only by the battle's flag - held in
+##     the Wall they neither turn nor shoot and their crews stay counted, freed by the Charge they turn on the giant
+##     (and slow/test_m9_gate_final's held engine); the battle's holds are taken while engaged and all freed by the
+##     disengage. A2/A4: a bastion crew killed in the Wall leaves its ballista out of the HUD's engine lines
+##     (test_a_bastion_ballista_whose_crew_is_killed_is_not_announced).
 
 const SCENE := "res://scenes/world/world.tscn"
 const GATE := "world.aldmere.fort_gate"
@@ -37,18 +44,25 @@ const CORNERS := [Vector2(730, -236), Vector2(570, -236), Vector2(730, -104), Ve
 ## The HUD's lines about the ballistae as the battle engages and as the Charge begins (M9 gate).
 const ENGINES_LINE := "Smash the ballistae: two shoot now, two more at the Charge."
 const CHARGE_LINE := "Two more ballistae open fire."
+## M9 gate (final; the early audit's A2/A4): the lines with one bastion crew killed in the Wall.
+const ENGINES_LINE_ONE_CREW_DEAD := "Smash the ballistae: two shoot now, one more at the Charge."
+const CHARGE_LINE_ONE := "One more ballista opens fire."
 
 var disengaged: Array = []
 ## The HUD's messages since the test began (text only).
 var hud_lines: Array = []
+## M9 gate (final): siege_engine_fired since the test began, per engine world id.
+var engine_shots: Dictionary = {}
 
 
 func before_each() -> void:
 	await super()
 	disengaged.clear()
 	hud_lines.clear()
+	engine_shots.clear()
 	Events.boss_disengaged.connect(_on_disengaged)
 	Events.hud_message.connect(_on_hud_message)
+	Events.siege_engine_fired.connect(_on_engine_fired)
 
 
 func after_each() -> void:
@@ -56,6 +70,8 @@ func after_each() -> void:
 		Events.boss_disengaged.disconnect(_on_disengaged)
 	if Events.hud_message.is_connected(_on_hud_message):
 		Events.hud_message.disconnect(_on_hud_message)
+	if Events.siege_engine_fired.is_connected(_on_engine_fired):
+		Events.siege_engine_fired.disconnect(_on_engine_fired)
 	Quests.end_dialogue()
 	for f in Formation.live():
 		f.dissolve()
@@ -71,6 +87,10 @@ func _on_disengaged(t: int, id: String, reason: String) -> void:
 
 func _on_hud_message(text: String, _kind: String) -> void:
 	hud_lines.append(text)
+
+
+func _on_engine_fired(_tick: int, engine_id: String, _action_id: String, _target_id: String) -> void:
+	engine_shots[engine_id] = int(engine_shots.get(engine_id, 0)) + 1
 
 
 static func _profile(stage: int) -> Dictionary:
@@ -177,6 +197,10 @@ func test_the_bailey_corners_never_disengage_the_battle() -> void:
 		return
 	await _enter_bailey(w, b)
 	await step_ticks(60)
+	# M9 gate (final; the early audit's A1/A5): engaged, the battle holds the bastion pair's fire...
+	var held: Array = b.held_engines.keys()
+	held.sort()
+	assert_eq(held, BASTION_BALLISTAE, "engaged in the Wall, the battle holds the gate bastions' pair")
 	for c: Vector2 in CORNERS:
 		await _move(w, c)
 		var p := w.player()
@@ -196,6 +220,12 @@ func test_the_bailey_corners_never_disengage_the_battle() -> void:
 	if not disengaged.is_empty():
 		assert_eq([disengaged[0][1], disengaged[0][2]], ["battle.iron_regiment", "left"], "boss_disengaged(battle.iron_regiment, left)")
 	assert_eq(b.state_name(), "waiting", "the battle waits for a new attempt")
+	# ... and the disengage frees every hold (_free_engine_holds from _reset_attempt)
+	assert_eq(b.held_engines, {}, "the reset frees the battle's holds")
+	var d := w.director()
+	for eid in b.engines:
+		var e := d.p32_engine(eid) if d != null else null
+		assert_true(e != null and not e.fire_held, "%s's fire is free again after the reset" % eid)
 	w.queue_free()
 	await step_ticks(2)
 
@@ -287,9 +317,23 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		var d := w.director()
 		hud_lines.clear()
 		await _enter_bailey(w, b)
+		# M9 gate (final; the early audit's A1/A3/A5): what the held pair does, not only the battle's flag - its facing
+		# as the battle engages, and the shots from here on
+		var held_yaw := {}
+		for id: String in BASTION_BALLISTAE:
+			var e := d.p32_engine(id)
+			held_yaw[id] = e.facing_yaw if e != null else NAN
+		engine_shots.clear()
 		await step_ticks(120)
 		assert_true(hud_lines.has(ENGINES_LINE), "%s: the HUD tells the giant which ballistae shoot as the battle engages (%s)" % [
 			"web" if web else "desktop", hud_lines])
+		for id: String in BASTION_BALLISTAE:
+			var e := d.p32_engine(id)
+			assert_true(e != null and is_equal_approx(e.facing_yaw, float(held_yaw[id])),
+				"%s: held in the Wall, %s does not turn on the giant (yaw %.3f, %.3f as the battle engaged)" % [
+				"web" if web else "desktop", id, e.facing_yaw if e != null else NAN, float(held_yaw[id])])
+			assert_true(e != null and e.crewed, "%s: held, %s keeps its crew counted (no abandon cue)" % ["web" if web else "desktop", id])
+			assert_eq(int(engine_shots.get(id, 0)), 0, "%s: held in the Wall, %s does not shoot" % ["web" if web else "desktop", id])
 		assert_false(hud_lines.has(CHARGE_LINE), "the Charge's line waits for the Charge")
 		if not web:
 			await _check_box_holds_both(b.gate_line(), ENGINES_LINE)
@@ -326,6 +370,13 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		while _up(d, CHARGE).size() < 6 and guard < 300:
 			await step_ticks(1)
 			guard += 1
+		await step_ticks(maxi(0, 60 - guard))
+		# M9 gate (final): freed by the Charge, the bastion pair turns on the giant (or has already shot)
+		for id: String in BASTION_BALLISTAE:
+			var e := d.p32_engine(id)
+			var turned := e != null and absf(angle_difference(e.facing_yaw, float(held_yaw[id]))) > 0.05
+			assert_true(turned or int(engine_shots.get(id, 0)) > 0, "%s: freed by the Charge, %s turns on the giant (yaw %.3f from %.3f; %d shots)" % [
+				name, id, e.facing_yaw if e != null else NAN, float(held_yaw[id]), int(engine_shots.get(id, 0))])
 		for id: String in d.members_of(CHARGE):
 			_kill(id)
 		await step_ticks(30)
@@ -341,6 +392,51 @@ func test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing(
 		FactionState.reset_for_tests()
 		WanderDirector.reset_for_tests()
 		LevelRoot.force_web_for_tests = false
+
+
+## M9 gate (final; the early audit's A2/A4): the gate bastions' pair has only the gate garrison's wall_crew_1/2 to crew
+## it (persist_death; the Charge's entries bring none), so a bastion crew killed in the Wall - a Crag Hurl at its
+## ballista does it through the splash - leaves that ballista standing and silent for good. The HUD's engine lines
+## count only a manned engine (BattleBoss._engine_manned): with wall_crew_1 dead the engagement line says one more at
+## the Charge and the Charge "One more ballista opens fire." (it said "Two more", and only three shot); with both
+## crews dead the Charge frees none to announce.
+func test_a_bastion_ballista_whose_crew_is_killed_is_not_announced() -> void:
+	var w := await _fort(false)
+	var b := _battle(w)
+	assert_true(b != null, "the battle is loaded")
+	if b == null:
+		return
+	var d := w.director()
+	hud_lines.clear()
+	await _enter_bailey(w, b)
+	await step_ticks(120)
+	assert_true(hud_lines.has(ENGINES_LINE), "every crew alive, the engagement line counts all four (%s)" % [hud_lines])
+	_kill("world.aldmere.wall_crew_1")   # fort_ballista_w's one crew
+	await step_ticks(SiegeEngine.CREW_CHECK_TICKS + 2)
+	assert_true(WorldState.is_killed("world.aldmere.wall_crew_1"), "wall_crew_1 is killed for good")
+	assert_eq(b.engines_line(), ENGINES_LINE_ONE_CREW_DEAD, "the line counts the unmanned bastion ballista out")
+	assert_eq(b.phase_engines_line(1), CHARGE_LINE_ONE, "the Charge will free one manned ballista")
+	var crews := {}
+	for entry: Variant in GameData.get_record(WALL).get("engines", []):
+		for c: Variant in (entry as Dictionary).get("crew", []):
+			crews[str(c)] = true
+	var planned := b.planned()
+	for id: String in d.members_of(WALL):
+		if planned.has(id) and not crews.has(id):
+			_kill(id)
+	await step_ticks(30)
+	assert_true(b.phase_log.has(2), "the Charge begins once the Wall falls (%s)" % [b.phase_log])
+	print("    iron regiment: wall_crew_1 dead - the HUD %s, in the fight %s" % [hud_lines, _shooting_engines(w, b)])
+	assert_true(hud_lines.has(CHARGE_LINE_ONE), "the Charge announces the one manned bastion ballista (%s)" % [hud_lines])
+	assert_false(hud_lines.has(CHARGE_LINE), "not two (%s)" % [hud_lines])
+	assert_eq(_shooting_engines(w, b), ["world.aldmere.fort_ballista_e", "world.aldmere.fort_ballista_ne",
+		"world.aldmere.fort_ballista_nw"], "three ballistae in the fight: fort_ballista_w has no crew")
+	_kill("world.aldmere.wall_crew_2")
+	await step_ticks(SiegeEngine.CREW_CHECK_TICKS + 2)
+	assert_eq(b.phase_engines_line(1), "", "both bastion crews dead: the Charge has no ballista to announce")
+	assert_eq(b.engines_line(), "Smash the ballistae: two shoot at you.", "and the line counts the inner pair alone")
+	w.queue_free()
+	await step_ticks(2)
 
 
 ## M9 gate (lane ironreg; the review's major finding): the phases follow the battle's units whatever becomes of its
@@ -400,10 +496,15 @@ func _phases_case(name: String, web: bool, stage: int, broken_before: Array, mid
 		_kill(mid_wall)
 		await step_ticks(30)
 		assert_true(WorldState.is_destroyed(mid_wall), "%s: %s is wrecked mid-Wall" % [name, mid_wall])
-		print("    iron regiment (%s): %d of the Wall's fighting units left, the bar at %.3f, phases %s" % [name,
-			fighting.size(), b.aggregate_fraction(), b.phase_log])
+		print("    iron regiment (%s): %d of the Wall's fighting units left, the bar at %.3f, phases %s, notches %s" % [name,
+			fighting.size(), b.aggregate_fraction(), b.phase_log, b.phase_marks()])
 		assert_eq(b.phase_log, [1] as Array[int], "%s: the Charge waits for the Wall's units, not the ballista (bar %.3f)" % [
 			name, b.aggregate_fraction()])
+		# M9 gate (final; lane ironreg's 'left'): the bar shown has lost the ballista's health, so it stands below the
+		# Charge's 0.7 - its notch follows the phases and moves down with it: the bar has not passed it.
+		var marks := b.phase_marks()
+		assert_true(not marks.is_empty() and b.aggregate_fraction() > marks[0],
+			"%s: the bar (%.3f) has not passed the Charge's notch (%s) while the Wall fights" % [name, b.aggregate_fraction(), marks])
 	for id: String in fighting:
 		_kill(id)
 	await step_ticks(30)
@@ -432,6 +533,124 @@ func _phases_case(name: String, web: bool, stage: int, broken_before: Array, mid
 	FactionState.reset_for_tests()
 	WanderDirector.reset_for_tests()
 	LevelRoot.force_web_for_tests = false
+
+
+## M9 gate (final; the final audit's F10): the Wall's men who routed count as fallen. The giant does what the quest
+## stage says - he fells the Wall's two banners and a few of its men - and the rest flee and rout to the bailey's flee
+## points (out of the fight for good). Before, the phases counted a routed man's whole health: the battle stayed in the
+## Wall (phase fraction 0.898 in the audit's probe) until about twelve running men were hunted down across the bailey,
+## each running again when struck, and smashing both inner ballistae did not move it either. Stage 4, the desktop, all
+## four ballistae standing: the Charge begins without a routed man killed, the phase fraction falls to the Charge's
+## 0.7 or below, and a routed man struck afterwards (briefly STAGGERED) does not lift it again.
+func test_the_wall_s_routed_men_count_as_fallen() -> void:
+	WorldState.clear()
+	var w := await _fort(false, false, 4)
+	var b := _battle(w)
+	assert_true(b != null, "the battle is loaded")
+	if b == null:
+		return
+	var d := w.director()
+	await _enter_bailey(w, b)
+	await step_ticks(120)
+	var giant := w.player().entity.entity_id
+	var crews := {}
+	for entry: Variant in GameData.get_record(WALL).get("engines", []):
+		for c: Variant in (entry as Dictionary).get("crew", []):
+			crews[str(c)] = true
+	var planned := b.planned()
+	var fighting: Array = Array(d.members_of(WALL)).filter(func(id: String) -> bool:
+		return planned.has(id) and not crews.has(id))
+	var charge_at := float((b.phases[1] as Dictionary).get("below", 0.0))
+	# The giant fells the two banners, then four men who still stand, one every 0.75 s (the audit's probe).
+	for id: String in fighting:
+		if id.contains("banner"):
+			_strike(id, giant, 1.0e6)
+	await step_ticks(60)
+	var kills := 0
+	for i in 4:
+		var target := ""
+		for id: String in fighting:
+			var e := Sim.get_entity(id)
+			if e == null or not e.is_alive() or d.member_routed(id):
+				continue
+			var a := e.actor as EnemyActor
+			if a != null and a.brain != null and a.brain.state in [EnemyBrain.AIState.FLEE, EnemyBrain.AIState.ROUTED]:
+				continue
+			target = id
+			break
+		if target == "":
+			break
+		_strike(target, giant, 1.0e6)
+		kills += 1
+		await step_ticks(45)
+	# The rest flee and rout (their morale, as in play: the audit's probe, and this case run alone, see them all
+	# routed 19.5 s after the last kill); whoever still stands after 25 s is routed by hand (p30_force_rout), so the
+	# case checks the phases' rule whatever the morale did (run after this suite's other cases the Wall has been
+	# seen to hold its slots at full morale after its banners fell).
+	var living := func() -> Array:
+		return fighting.filter(func(id: String) -> bool:
+			var e := Sim.get_entity(id)
+			return e != null and e.is_alive())
+	var all_routed := func() -> bool:
+		return (living.call() as Array).all(func(id: String) -> bool: return d.member_routed(id))
+	var guard := 0
+	while guard < 25 * 60 and not bool(all_routed.call()):
+		await step_ticks(30)
+		guard += 30
+	var forced: Array = []
+	for id: String in living.call():
+		var a := Sim.get_entity(id).actor as EnemyActor
+		if not d.member_routed(id) and a != null and a.brain != null:
+			print("      not routed after %.1f s: %s %s morale %.0f aware %s - routed by hand" % [guard / 60.0, id,
+				EnemyBrain.AIState.keys()[a.brain.state], a.brain.morale, a.brain.aware])
+			a.p30_force_rout()
+			forced.append(id)
+	if not forced.is_empty():
+		await step_ticks(60)
+	var routed: Array = (living.call() as Array).filter(func(id: String) -> bool: return d.member_routed(id))
+	print("    iron regiment (stage 4, routs): %d killed after the banners, %d of the Wall's men alive, %d routed (%d by hand) after %.1f s; phases %s, phase fraction %.3f, bar %.3f" % [
+		kills, (living.call() as Array).size(), routed.size(), forced.size(), guard / 60.0, b.phase_log, b.phase_fraction(),
+		b.aggregate_fraction()])
+	assert_true(routed.size() >= 6, "most of the Wall's men routed rather than fell (%d routed, %d killed)" % [routed.size(), kills])
+	assert_eq(routed.size(), (living.call() as Array).size(), "every man of the Wall still alive is routed")
+	assert_eq(b.phase_log, [1, 2] as Array[int], "the Charge begins without a routed man killed (phase fraction %.3f)" % b.phase_fraction())
+	assert_true(b.phase_fraction() <= charge_at + 1e-6, "the phase fraction falls to the Charge's %.2f or below (%.3f)" % [
+		charge_at, b.phase_fraction()])
+	assert_near(b.aggregate_fraction(), b.phase_fraction(), 1e-6, "the bar shown agrees, the engines whole")
+	# A routed man struck afterwards (staggered for a moment) stays fallen for the phases.
+	if not routed.is_empty():
+		var vid: String = routed[0]
+		var before := b.phase_fraction()
+		_strike(vid, giant, 25.0)
+		var highest := before
+		for i in 20:
+			await step_ticks(6)
+			highest = maxf(highest, b.phase_fraction())
+		var ve := Sim.get_entity(vid)
+		assert_true(ve != null and ve.is_alive(), "the struck man lives")
+		assert_true(d.member_routed(vid), "and stays routed for the director")
+		assert_true(highest <= before + 1e-6, "striking a routed man does not lift the phase fraction (%.3f -> at most %.3f)" % [
+			before, highest])
+	w.queue_free()
+	await step_ticks(2)
+
+
+## A blow of `power` on `id` from `attacker` (the giant's entity: it counts as his).
+func _strike(id: String, attacker: String, power: float) -> void:
+	var e := Sim.get_entity(id)
+	if e == null or e.actor == null or not e.is_alive():
+		return
+	var h := HitEvent.new()
+	h.tick = Sim.tick
+	h.instance_id = Sim.new_instance_id()
+	h.attacker_id = attacker
+	h.target_id = id
+	h.power = power
+	h.size_policy = "none"
+	h.damage_split = {"physical": 1.0}
+	h.tags = PackedStringArray(["Melee", "Unblockable", "Unparryable"])
+	h.attacker_position = (e.actor as Node3D).global_position + Vector3(0, 0, 6)
+	Sim.queue_hit(h)
 
 
 ## M9 gate: the HUD's message box (Hud.MESSAGE_MAX_LINES at 1280 x 720) shows the portcullis's line and the

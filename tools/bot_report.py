@@ -435,12 +435,16 @@ def world_segments(rows):
 
 def world_outcomes(rows):
     keys = ["march", "wood", "crown", "boss.matriarch", "boss.corvane", "boss.harrok", "skarn", "throne", "ancestry"]
-    out = ["| Run | " + " | ".join(k.replace("boss.", "") for k in keys) + " | Yields decided |",
-           "| --- | " + " | ".join("---" for _ in keys) + " | --- |"]
+    # M9 gate (final): the factions hostile at the end (run_metrics' faction_standing; "-" for runs without it).
+    out = ["| Run | " + " | ".join(k.replace("boss.", "") for k in keys) + " | Yields decided | Hostile factions |",
+           "| --- | " + " | ".join("---" for _ in keys) + " | --- | --- |"]
     for r in rows:
         o = r["outcomes"]
         yd = ", ".join("%s %s" % (str(y[1]).split(".")[-1], y[2]) for y in r["wb"].get("yields_decided", [])) or "-"
-        out.append("| %s | %s | %s |" % (r["name"], " | ".join(str(o.get(k, "")).replace("ancestry.", "") or "-" for k in keys), yd))
+        st = r["wb"].get("faction_standing")
+        hostile = ", ".join(sorted(f for f, v in st.items() if v == "hostile")) if isinstance(st, dict) else "-"
+        out.append("| %s | %s | %s | %s |" % (r["name"], " | ".join(str(o.get(k, "")).replace("ancestry.", "") or "-" for k in keys),
+                                             yd, hostile or "none"))
     return "\n".join(out)
 
 

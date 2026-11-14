@@ -79,6 +79,16 @@ extends BossArena
 ##     riders and the Last Stand together as the Wall fell (0.494); on the web, all four smashed, the Charge came
 ##     with the Wall (0.693 as it engaged); a ballista smashed mid-Wall brought the Charge on before the Wall
 ##     fell. The bar the giant sees (aggregate) still counts what the engines have left.
+##   * M9 gate (final): a routed unit counts as fallen - nothing in the bar or the phase fraction, and fallen for
+##     _phase_spent - by the director's sticky routed flag (EncounterDirector.member_routed; a routed man struck
+##     is briefly STAGGERED, so not its brain's state). Before, the Wall's men who routed to the bailey's flee
+##     points when their banners fell held the Charge back with their whole health (3,880 of the desktop bar's
+##     14,080 in the final audit's probe), so the giant had to hunt a dozen running men across the bailey, each
+##     running again when hit. And
+##     the bar's notches follow the phases (phase_marks: each `below` less what the engines have lost), so the
+##     bar no longer passes the Charge's notch while the Wall still holds. The HUD's engine lines count only an
+##     engine with a crew now or one still to come (_engine_manned): a bastion ballista whose one garrison crew a
+##     Crag Hurl killed stands silent for good, and the Charge no longer says it opens fire.
 
 const BATTLE_GROUP := "battle_bosses"
 ## M9 gate: the engines' holds are applied again this often while engaged (an engine streamed in since).
@@ -346,7 +356,8 @@ func _apply_engine_holds() -> void:
 
 ## M9 gate: the HUD line as the battle engages - how many of its standing engines shoot now and how many
 ## more a later phase frees ("Smash the ballistae: two shoot now, two more at the Charge.");
-## "" when none stands. Engines are counted standing whether or not a crew serves them yet.
+## "" when none stands. Engines are counted standing whether or not a crew serves them yet - M9 gate (final; the
+## early audit's A2/A4): but not one whose crew is gone for good (_engine_manned): it never shoots again.
 func engines_line() -> String:
 	var standing: Array = []
 	var now := 0
@@ -354,7 +365,7 @@ func engines_line() -> String:
 	var first_later := phases.size()
 	for id in engines:
 		var e := _standing_engine(id)
-		if e == null:
+		if e == null or not _engine_manned(e):
 			continue
 		standing.append(e)
 		var ph := engine_phase(id)
@@ -377,12 +388,12 @@ func engines_line() -> String:
 
 
 ## M9 gate: the HUD line as phase `i` (0-based) frees the engines it brings ("Two more ballistae open
-## fire."); "" when it frees none that stands.
+## fire."); "" when it frees none that stands - M9 gate (final): and is manned (_engine_manned).
 func phase_engines_line(i: int) -> String:
 	var freed: Array = []
 	for id in engines:
 		var e := _standing_engine(id)
-		if e != null and engine_phase(id) == i:
+		if e != null and engine_phase(id) == i and _engine_manned(e):
 			freed.append(e)
 	if freed.is_empty():
 		return ""
@@ -397,6 +408,39 @@ func _standing_engine(world_id: String) -> SiegeEngine:
 	if e == null or e.destroyed or e.entity == null or not e.entity.is_alive():
 		return null
 	return e
+
+
+## M9 gate (final; the early audit's A2/A4): whether engine `e` has a crew now or one can still come this attempt:
+## a crew member serving it (is_crewed), one of its crew alive and not routed (on its way back to its place), or a
+## member an encounter names as its crew that is neither killed nor dead, routed or lost to its engine (unspawned
+## ones, a later phase's or a Wall crew killed in an earlier attempt, still count). Fort Aldmere's bastion pair is
+## crewed only by the gate garrison's wall_crew_1/2 (persist_death): a Crag Hurl that kills one leaves its ballista
+## standing and silent for good, and the HUD went on telling the giant it would open fire at the Charge.
+func _engine_manned(e: SiegeEngine) -> bool:
+	if e.is_crewed():
+		return true
+	for c: Variant in e.crew():
+		var a := c as EnemyActor
+		if a != null and a.entity != null and a.entity.is_alive() and a.brain != null \
+				and a.brain.state != EnemyBrain.AIState.ROUTED:
+			return true
+	var d := _director()
+	if d == null:
+		return true
+	for enc_id: String in d.encounter_ids():
+		for entry: Variant in GameData.get_record(enc_id).get("engines", []):
+			if typeof(entry) != TYPE_DICTIONARY or str((entry as Dictionary).get("engine", "")) != e.world_id:
+				continue
+			for c: Variant in (entry as Dictionary).get("crew", []):
+				var cid := str(c)
+				if WorldState.is_killed(cid) or d.member_status(cid) == EncounterDirector.DEAD:
+					continue
+				var n := d.spawned(cid)
+				var br: Variant = n.get("brain") if n != null else null
+				if br is EnemyBrain and ((br as EnemyBrain).crew_lost or (br as EnemyBrain).state == EnemyBrain.AIState.ROUTED):
+					continue
+				return true
+	return false
 
 
 ## M9 gate: what to call `list` of engines - their record's name when they share one ("ballista",
@@ -444,7 +488,8 @@ func _free_engine_holds() -> void:
 ## then whatever the aggregate says, so a composition whose later phases weigh more than a fraction
 ## never stalls (the web's smaller formations). M8 release (R1): a unit that will never come - one of a
 ## cleared encounter that is not up (the director never activates a cleared encounter again) - counts as
-## fallen, so no phase waits on it.
+## fallen, so no phase waits on it. M9 gate (final): a routed unit counts as fallen too (the director's
+## sticky routed flag, as its _check_cleared, guard_broken and FortBattle's Strike rout read it).
 func _phase_spent() -> bool:
 	var d := _director()
 	if d == null:
@@ -459,7 +504,7 @@ func _phase_spent() -> bool:
 				if (st == EncounterDirector.UNSPAWNED or st == EncounterDirector.DESPAWNED) and not _unit_spent(d, id):
 					return false   # still to come
 				var e := Sim.get_entity(id)
-				if st == EncounterDirector.SPAWNED and e != null and e.is_alive():
+				if st == EncounterDirector.SPAWNED and e != null and e.is_alive() and not d.member_routed(id):
 					return false
 				fielded += 1
 	return fielded > 0
@@ -611,18 +656,33 @@ func phase_fraction() -> float:
 	return (_units_current() + engines_full) / _total
 
 
-## The health the planned units have now: a spawned unit its current health (nothing once dead), a unit still to
-## come its full health, a unit down for this attempt (M8 release, R1) nothing.
+## The health the planned units have now: a spawned unit its current health (nothing once dead or routed: M9 gate,
+## final), a unit still to come its full health, a unit down for this attempt (M8 release, R1) nothing.
 func _units_current() -> float:
 	var current := 0.0
 	var d := _director()
 	for id: String in _planned:
 		var e := Sim.get_entity(id)
 		if e != null and e.combatant != null:
-			current += e.combatant.pools.health if e.is_alive() else 0.0
+			if e.is_alive() and not (d != null and d.member_routed(id)):
+				current += e.combatant.pools.health
 		elif d == null or not _unit_spent(d, id):
 			current += float(_planned[id])
 	return current
+
+
+## M9 gate (final): where the bar's notch for each later phase sits - its `below` less what the engines have lost
+## (phase_fraction - the bar's fraction), so the bar the giant sees reaches a phase's notch exactly as that phase
+## begins, wrecked or worn engines or not (before, a smashed ballista carried the bar past the Charge's notch while
+## the Wall still held). The same as `below` while the engines stand whole.
+func phase_marks() -> Array[float]:
+	var shift := maxf(phase_fraction() - aggregate_fraction(), 0.0) if _total > 0.0 else 0.0
+	var out: Array[float] = []
+	for ph: Dictionary in phases:
+		var f := float(ph.get("below", 1.0))
+		if f < 1.0:
+			out.append(maxf(f - shift, 0.0))
+	return out
 
 
 ## The units planned for this attempt (entity id -> maximum health; tests, debug).

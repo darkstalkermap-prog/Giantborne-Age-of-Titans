@@ -610,18 +610,38 @@ per tick at p95 (budget 5 ms); the `--stress-formations` scenario, 40 s: p95 3.6
 `tests/slow/test_formation_perf.gd` (the 40 members, 5 ms; with P39's two engines, 8 ms) time real ticks
 on a machine shared with other work, so they are load-sensitive: at a load average of 8-9 on 4 CPUs the
 engine case read 10.41 ms from its one window and the 40 members 10.94 and 11.54 ms from their two (the
-review's run), on an idle machine 4.3-4.4 ms. Both now take the better of two windows when the first is
+review's run), run alone at a load of 2.96 on 4 CPUs 4.32 and 4.44 ms. Both now take the better of two windows when the first is
 over budget, print the 1-minute load average at the measurement's start (`/proc/loadavg`) and the CPU
 count beside their numbers, and, over budget when that load average is above the CPU count, print the
 measurement as a WARNING instead of failing. The budgets are unchanged and a quiet machine (load at or
-below the CPU count, or no load average to read) still fails a real regression. At the gate's check
-(load 2.96 on 4 CPUs): 4.28 ms with the engines, 3.80 ms without. A second window only measures time
+below the CPU count, or no load average to read) still fails a real regression. Run alone after the fix (load 2.96
+on 4 CPUs): 4.28 ms with the engines, 3.80 ms without. In the lane's checks (`tools/check.sh --slow --gate`, 4 CPUs
+shared with two lanes): 5.07 / 3.70 ms at loads 6.96 / 7.12 (round 0); in fix-up 1's check the engines 5.41 ms (load
+5.86) and the 40 members 7.32 ms in their first window, over budget, then 4.42 ms in the second, judged (load 6.12)
+(corrected at the M9 gate's final round, the early audit's R5). A second window only measures time
 (the lane's fix-up 1): everything else a case asserts is taken from its first run, before any second
 window. The engine case first read the stress scenario's own checks after it - the bot had then run
 23 s instead of 15 and the scenario's 20 s brace check had turned on ("formation_test_stress.left never
 braced"), so every second window failed the case on exactly the loaded machine the rule is for (the
 verifier's forced second window: before, that failure; after, 0 failures). One helper
 (`_second_window`) serves both cases, and the suite's own test forces a second window in every slow run.
+
+**One load rule for every wall-clock CPU budget test** (M9 gate, final round; the README's item 4, the early audit's
+R2): the integration's full check failed on `test_unreachable_chase`'s CPU per tick p95 (10.85 ms against 8.0 ms at
+a load average of about 9 on 4 CPUs). The rule above is now one helper, `tests/support/budget_rule.gd` (`BudgetRule`:
+`load_average`, `verdict`, `judge`), shared by `test_formation_perf`, `test_unreachable_chase` (the p95), the M7
+gate world's actors' phase (`test_m7_gate_world`), `test_valley_smoke`'s load time and `test_world_walk`'s streaming
+p99: within budget a measurement passes; over it, it fails on a quiet machine and only warns when the 1-minute load
+average at its start was above the CPU count. A warning prints as `BUDGET WARNING <suite>: ...`; the runner repeats
+every one at the end with a `WARNINGS: n` line before its RESULT, and `tools/check.sh` prints those lines in its
+summary next to CHECK PASSED, so an over-budget measurement on a loaded machine is seen, not hidden in tests.log.
+At a load of 9.8-10.6 (the round's own runs beside it): the formation case 7.33 ms, the unreachable chase 9.54 ms and
+the M7 gate world's phase (4 slow ticks) warned; the Valley's load time and the world walk's p99 passed. In the round's
+last full check (`f77ff64`, after the container restart, at a load of about 5.3-6.9 with the final measurement's bot
+runs beside it) none warned and all five were within their budgets: the formation cases 6.16 ms with the engines
+(8 ms) and 3.44 ms for the 40 members (5 ms; the first window 5.68 ms, the second judged), the unreachable chase
+4.20 ms (8 ms), the M7 gate world's actors' phase 0 ticks over 10 ms (at most 3), the Valley's load time within 3 s
+and the world walk's streaming p99 3.52 ms (6 ms).
 
 ### Draw calls after P27 (the HUD)
 

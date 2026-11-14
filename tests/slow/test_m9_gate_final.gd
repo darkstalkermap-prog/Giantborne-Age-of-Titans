@@ -1,0 +1,459 @@
+extends IntegrationSuite
+## M9 gate (final round; docs/systems/P39.md, "M9 gate (final)"): the slow-tier tests of the final audit's fixes.
+##   * F2: the clans' giants watching the Moot (encounter.stonehold_moot_clans, faction skarn, AI off) stand 6 m
+##     outside the ring's 60 m wall, within a stage-6 giant's 13.6 m reach while it fights Harrok near the ring's
+##     stones: its light swings at Harrok struck a watcher, P11b counted each such blow an offence, and two within
+##     30 s turned Skarn hostile for good (the gate's conqueror expert struck one for the throne stage's 306 s). The
+##     watchers are spectators now (the spawns' `spectator`, FactionState.offended_faction): the blows that strike
+##     them offend no faction; any other Skarn giant (its steading's) still takes offence as before.
+##   * F4/F12: a crewed siege engine's shot that lands on the giant raises combat music (its crew's hit; decision
+##     6: crews count). The engine's projectile belongs to the engine's prop entity, which CueRouter left out with
+##     every other prop, and since the M9 gate's combat cap (40 m from a stage-4+ giant) a barrage from a battery
+##     50-60 m off stayed at danger. Through the real router into Audio.music: danger before a stone lands, combat
+##     within 5 s after it; a lone soldier's blow still raises danger only, a blow on a crate notes nothing.
+##   * F13: a ranged member never picks a firing point its leash does not hold. On the real world, Brannock at war
+##     and its south gatehouse smashed, a stage-4 giant standing south of the broken gate: the gate's archer_1 (post
+##     58.3 m from its encounter's centre, leash 60 m) stepped out past the ring for each shot and was leashed home,
+##     8 times in 20 s, and never shot. Now neither archer is leashed, every firing point it picks lies inside its
+##     leash, and both shoot.
+##   * The early audit's A1/A3/A5: what a battle's hold does to an engine (SiegeEngine._target's `fire_held`; 82eab0b
+##     kept the crew counted): held, it neither turns nor shoots, its crew stays counted (no abandon cue) and its
+##     reload is hauled; freed, it turns and shoots. The gate test read only the battle's flag.
+##   * The early audit's R4: the moved-respawn line writes a checkpoint name that begins with "The" mid-sentence
+##     ("You wake at the Broken Stair."); its only test used the King's Road waystone, which the old code wrote right.
+##   * The early audit's A8: the two layout fixes of the M9 gate (the war camp's shield wall off the King's Road, the
+##     gate garrison's pikes off the line through Fort Aldmere's gate) were spawn placements that only the gate tier's
+##     world walks guarded; a static check of the records and the layout tables (no world loads) now runs with --slow.
+
+const RIVAL := "res://scenes/enemies/rival_giant.tscn"
+const CLANS := "encounter.stonehold_moot_clans"
+const CATAPULT := "res://scenes/world/siege_catapult.tscn"
+const CREW := "res://scenes/enemies/siege_crew.tscn"
+const CRATE := "res://scenes/world/crate.tscn"
+const WORLD_SCENE := "res://scenes/world/world.tscn"
+const BRANNOCK_ARCHERS := ["world.crownmarch.brannock_archer_1", "world.crownmarch.brannock_archer_2"]
+const BRANNOCK_SOUTH_GATE := "world.crownmarch.brannock_south_gate"
+const BALLISTA := "res://scenes/world/siege_ballista.tscn"
+const WORLD_LEVEL := "level.world"
+
+
+static func _profile(stage: int) -> Dictionary:
+	for rec: Dictionary in GameData.records_of_type("growth_profile"):
+		if int(rec.get("stage", 0)) == stage:
+			return rec
+	return {}
+
+
+func _rival(pos: Vector3, id: String, faction: String, spectator: bool, yaw := 0.0) -> EnemyActor:
+	var e := (load(RIVAL) as PackedScene).instantiate() as EnemyActor
+	e.entity_id = id
+	e.ai_enabled = false
+	e.faction = faction
+	e.spectator = spectator
+	e.position = pos
+	e.rotation.y = yaw
+	world.add_child(e)
+	return e
+
+
+## A stage-6 giant with the Titanforged Club swinging six light blows at a hostile rival giant 9 m before it, with
+## Skarn giants standing 11.7 m from it at 40 and 60 degrees off its aim (the distance the gate's conqueror expert
+## stood from world.stonehold.moot_watcher_4 while fighting Harrok): [hits on the Skarn giants, Skarn warned, hostile].
+func _swing_case(spectators: bool) -> Array:
+	FactionState.reset_for_tests()
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	p.set_profile(_profile(6))
+	await TestWait.until(self, func() -> bool: return p.is_on_floor(), 60)
+	var eq: Variant = p.get("equipment")
+	if eq != null:
+		eq.call("grant_weapon", "weapon.club_titan", true)
+	await step_ticks(2)
+	var tag := "spec" if spectators else "ord"
+	var foe_id := "test.m9f_foe_" + tag
+	_rival(Vector3(0, 0.05, -9.0), foe_id, "", false)
+	var watchers: Array[EnemyActor] = []
+	for deg: float in [40.0, 60.0]:
+		var r := deg_to_rad(deg)
+		watchers.append(_rival(Vector3(11.7 * sin(r), 0.05, -11.7 * cos(r)), "test.m9f_skarn_%s_%d" % [tag, int(deg)], "skarn",
+			spectators, PI))
+	await step_ticks(10)
+	p.camera_rig.yaw = 0.0
+	for i in 6:
+		p.router.inject_edge(&"light")
+		await step_ticks(71)
+	await step_ticks(30)
+	var hits := 0
+	for wa: EnemyActor in watchers:
+		hits += hits_on(wa.entity.entity_id).size()
+	var out := [hits, QuestConditions.truthy(WorldState.get_flag("faction.skarn.warned")),
+		QuestConditions.truthy(WorldState.get_flag("faction.skarn.hostile")), hits_on(foe_id).size()]
+	print("    m9 final (F2): %s Skarn giants - %d of the giant's blows struck them (the foe %d); Skarn warned %s, hostile %s" % [
+		"spectator" if spectators else "ordinary", out[0], out[3], out[1], out[2]])
+	p.queue_free()
+	for wa: EnemyActor in watchers:
+		wa.queue_free()
+	var foe := Sim.get_entity(foe_id)
+	if foe != null and is_instance_valid(foe.actor):
+		foe.actor.queue_free()
+	await step_ticks(3)
+	return out
+
+
+func test_the_moot_watchers_are_spectators_whose_blows_offend_no_one() -> void:
+	# The data: the six watchers are spectators, every other Skarn member is not.
+	var watchers := 0
+	for enc: Dictionary in GameData.records_of_type("encounter"):
+		for s: Variant in enc.get("spawns", []):
+			if typeof(s) != TYPE_DICTIONARY:
+				continue
+			if str(enc.get("id", "")) == CLANS:
+				watchers += 1
+				assert_true(bool(s.get("spectator", false)), "%s watches the Moot: a spectator" % s.get("entity_id"))
+			elif str(s.get("faction", "")) == "skarn":
+				assert_false(bool(s.get("spectator", false)), "%s (%s) takes offence as before" % [s.get("entity_id"), enc.get("id")])
+	assert_eq(watchers, 6, "six giants watch the Moot")
+	# The swings: the blows reach the watchers either way; only an ordinary Skarn giant takes offence.
+	var spectator: Array = await _swing_case(true)
+	assert_true(int(spectator[3]) >= 4, "the giant's light blows land on the foe (%d)" % int(spectator[3]))
+	assert_true(int(spectator[0]) >= 2, "the swings at the foe strike the watchers beside it (%d blows)" % int(spectator[0]))
+	assert_false(bool(spectator[1]), "no warning from Skarn for the watchers struck")
+	assert_false(bool(spectator[2]), "Skarn does not turn hostile")
+	var ordinary: Array = await _swing_case(false)
+	assert_true(int(ordinary[0]) >= 2, "the same swings strike ordinary Skarn giants (%d blows)" % int(ordinary[0]))
+	assert_true(bool(ordinary[1]) or bool(ordinary[2]), "and an ordinary Skarn giant struck takes offence (P11b kept)")
+
+
+func after_each() -> void:
+	Audio.enable_for_tests(false)
+	await super()
+
+
+## The music's intensity target now, from the director's own snapshot of the live actors and its hit ages.
+func _target() -> String:
+	return AudioMath.intensity_target(Audio.music.intensity_snapshot(), Audio.mix.get("intensity", {}) as Dictionary)
+
+
+func test_an_engines_shot_raises_combat_music_as_its_crews_hit() -> void:
+	Audio.enable_for_tests()
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	p.set_profile(_profile(6))
+	p.entity.combatant.unkillable = true
+	await step_ticks(5)
+	var e := (load(CATAPULT) as PackedScene).instantiate() as SiegeEngine
+	e.world_id = "test.m9f_catapult"
+	e.position = Vector3(0, 0, -55.0)
+	e.rotation.y = TargetingRules.yaw_of(Vector3(0, 0, 55.0))
+	world.add_child(e)
+	var crew := TestSpawn.enemy(world, CREW, e.global_position + Vector3(0, 0.05, 0), "test.m9f_crew", true, e.rotation.y)
+	e.add_crew(crew)
+	crew.global_position = e.crew_slot(crew) + Vector3(0, 0.05, 0)
+	await step_ticks(10)
+	var before := ""
+	var landed := -1
+	var after: Array = []
+	for i in 40 * 4:
+		if crew.brain != null and not crew.brain.aware:
+			crew.brain.on_noise(Sim.tick, p.global_position, p.entity.entity_id, true)   # the director's alert group
+		await step_ticks(15)
+		var hits := hits_on(p.entity.entity_id).filter(func(r: HitResult) -> bool:
+			return r.event.attacker_id == e.entity.entity_id and r.outcome != HitResult.Outcome.IGNORED)
+		if hits.is_empty():
+			before = _target()   # the last sample before the first stone lands
+		elif landed < 0:
+			landed = Sim.tick
+		if landed >= 0:
+			after.append(_target())
+			if Sim.tick - landed >= 5 * 60 - 15:
+				break
+	var age := float(Audio.music.intensity_snapshot().get("combat_hit_age_s", INF))
+	print("    m9 final (F4/F12): catapult 55 m off a stage-6 giant, crew aware %s: before the first stone %s, the 5 s after it %s (combat hit age %.2f s)" % [
+		crew.brain.aware if crew.brain != null else false, before, after, age])
+	assert_true(landed >= 0, "a stone lands on the giant")
+	assert_eq(before, AudioMath.DANGER, "before any stone lands the battery 55 m off raises danger (the combat cap)")
+	assert_true(after.size() >= 2 and after.all(func(t: String) -> bool: return t == AudioMath.COMBAT),
+		"within 5 s after the stone lands the music is in combat (%s)" % [after])
+	e.queue_free()
+	crew.queue_free()
+	await step_ticks(3)
+	# The controls: a lone soldier's blow raises danger only, the giant's blow on a crate notes nothing.
+	await step_ticks(int(6.0 * 60))
+	var soldier := TestSpawn.enemy(world, SOLDIER, Vector3(0, 0.05, -60.0), "test.m9f_soldier", true, 0.0)
+	await step_ticks(2)
+	var h := HitEvent.new()
+	h.tick = Sim.tick
+	h.instance_id = Sim.new_instance_id()
+	h.attacker_id = soldier.entity.entity_id
+	h.target_id = p.entity.entity_id
+	h.power = 10.0
+	h.damage_split = {"physical": 1.0}
+	h.tags = PackedStringArray(["Melee"])
+	h.category = "melee"
+	h.attacker_position = p.global_position + Vector3(0, 0, -3)
+	Sim.queue_hit(h)
+	await step_ticks(3)
+	var snap: Dictionary = Audio.music.intensity_snapshot()
+	print("    m9 final (F4/F12): a lone soldier's blow - combat hit age %.2f s, lesser hit age %.2f s" % [
+		float(snap.get("combat_hit_age_s", INF)), float(snap.get("lesser_hit_age_s", INF))])
+	assert_true(float(snap.get("lesser_hit_age_s", INF)) <= 1.0, "a lone soldier's blow is noted as a lesser hit")
+	assert_true(float(snap.get("combat_hit_age_s", INF)) > 5.0, "...not as combat's")
+	soldier.queue_free()
+	await step_ticks(2)
+	var crate := (load(CRATE) as PackedScene).instantiate() as Node3D
+	crate.set("world_id", "test.m9f_crate")
+	crate.position = Vector3(0, 0.05, -12.0)
+	world.add_child(crate)
+	await step_ticks(2)
+	var age0 := float(Audio.music.intensity_snapshot().get("combat_hit_age_s", INF))
+	var ce := crate.get("entity") as CombatEntity
+	assert_true(ce != null, "the crate stands")
+	if ce != null:
+		var hc := HitEvent.new()
+		hc.tick = Sim.tick
+		hc.instance_id = Sim.new_instance_id()
+		hc.attacker_id = p.entity.entity_id
+		hc.target_id = ce.entity_id
+		hc.power = 50.0
+		hc.damage_split = {"physical": 1.0}
+		hc.tags = PackedStringArray(["Melee"])
+		hc.category = "melee"
+		hc.attacker_position = crate.global_position + Vector3(0, 0, 6)
+		Sim.queue_hit(hc)
+		await step_ticks(3)
+		assert_true(hits_on(ce.entity_id).size() >= 1, "the giant's blow reaches the crate")
+		assert_true(float(Audio.music.intensity_snapshot().get("combat_hit_age_s", INF)) >= age0,
+			"the giant's blow on a crate notes no hit")
+	crate.queue_free()
+	p.queue_free()
+	await step_ticks(3)
+
+
+## Puts the giant on the ground at `xz` once the ring around it is loaded.
+func _move(w: WorldRoot, xz: Vector2) -> void:
+	var p := w.player()
+	var at := Vector3(xz.x, 300.0, xz.y)
+	p.process_mode = Node.PROCESS_MODE_DISABLED
+	p.global_position = at
+	var guard := 0
+	while not w.streamer.ring_ready(at) and guard < 800:
+		w.streamer.load_ring_slice(at)
+		await step_ticks(1)
+		guard += 1
+	var y := w.height_at(at)
+	p.global_position = Vector3(xz.x, (y if not is_nan(y) else 80.0) + 0.3, xz.y)
+	p.velocity = Vector3.ZERO
+	p.process_mode = Node.PROCESS_MODE_INHERIT
+
+
+func test_brannocks_gate_archers_pick_firing_points_inside_their_leash() -> void:
+	WorldState.clear()
+	WanderDirector.test_active = true
+	WanderDirector.view_probe = func(_p: Vector3) -> bool: return false
+	var w := (load(WORLD_SCENE) as PackedScene).instantiate() as WorldRoot
+	world.add_child(w)
+	w.streamer.deterministic = true
+	w.player().router.use_injection = true
+	await _move(w, Vector2(60.0, 530.0))
+	var p := w.player()
+	p.set_profile(_profile(4))
+	p.entity.apply_status("status.debug_invulnerable", NAN, -1.0, "test")
+	await step_ticks(30)
+	# The south gatehouse smashed (as the force path does) and Brannock at war.
+	WorldState.set_flag(FactionState.flag_id("brannock", "hostile"), true)
+	for i in 200:
+		var g := Sim.get_entity(BRANNOCK_SOUTH_GATE)
+		if g == null or WorldState.is_destroyed(BRANNOCK_SOUTH_GATE):
+			break
+		var h := HitEvent.new()
+		h.tick = Sim.tick
+		h.instance_id = Sim.new_instance_id()
+		h.attacker_id = p.entity.entity_id
+		h.target_id = BRANNOCK_SOUTH_GATE
+		h.power = 600.0
+		h.attacker_stat = 40.0
+		h.attacker_height_m = 11.0
+		h.damage_split = {"physical": 1.0}
+		h.tags = PackedStringArray(["Melee"])
+		h.category = "melee"
+		h.attacker_growth_stage = 4
+		h.attacker_position = (g.actor as Node3D).global_position + Vector3(0, 0, 8) if g.actor != null else Vector3.ZERO
+		Sim.queue_hit(h)
+		await step_ticks(6)
+	assert_true(WorldState.is_destroyed(BRANNOCK_SOUTH_GATE), "Brannock's south gatehouse is smashed")
+	await _move(w, Vector2(60.0, 528.0))
+	var leashes := {}
+	var shots := {}
+	var on_leash := func(_t: int, _enc: String, id: String) -> void:
+		if BRANNOCK_ARCHERS.has(id):
+			leashes[id] = int(leashes.get(id, 0)) + 1
+	var on_shot := func(_t: int, _pid: int, owner_id: String, _a: String, _pos: Vector3, _vel: Vector3, _vis: String) -> void:
+		if BRANNOCK_ARCHERS.has(owner_id):
+			shots[owner_id] = int(shots.get(owner_id, 0)) + 1
+	Events.encounter_leashed.connect(on_leash)
+	Events.projectile_spawned.connect(on_shot)
+	var outside: Array = []
+	var samples := 0
+	for k in 20 * 4:
+		await step_ticks(15)
+		for id: String in BRANNOCK_ARCHERS:
+			var a := w.director().spawned(id) as EnemyActor
+			if a == null or a.brain == null:
+				continue
+			var ring := a.leash_ring()
+			var fp: Vector3 = a.brain.firing_point
+			samples += 1
+			if ring.w > 0.0 and fp != Vector3.INF \
+					and Vector2(fp.x - ring.x, fp.z - ring.z).length() > ring.w - EnemyActor.LEASH_END_MARGIN_M + 0.01:
+				outside.append([id.get_slice(".", 2), Sim.tick, Vector2(fp.x - ring.x, fp.z - ring.z).length()])
+	Events.encounter_leashed.disconnect(on_leash)
+	Events.projectile_spawned.disconnect(on_shot)
+	print("    m9 final (F13): Brannock's gate archers over 20 s - leashed %s, shots %s, firing points outside the leash %s (%d samples)" % [
+		leashes, shots, outside.slice(0, 6), samples])
+	assert_true(samples >= 100, "both archers were watched (%d samples)" % samples)
+	assert_eq(leashes, {}, "neither gate archer is leashed home")
+	assert_true(outside.is_empty(), "every firing point an archer picks lies inside its leash (%d samples outside: %s)" % [
+		outside.size(), outside.slice(0, 4)])
+	for id: String in BRANNOCK_ARCHERS:
+		assert_true(int(shots.get(id, 0)) >= 2, "%s shoots at the giant (%d shots)" % [id, int(shots.get(id, 0))])
+	w.queue_free()
+	await step_ticks(2)
+	FactionState.reset_for_tests()
+	WanderDirector.reset_for_tests()
+
+
+# --------------------------------------------------------------------------- A1/A3/A5: a held engine
+
+func test_a_held_engine_neither_turns_nor_shoots_until_freed() -> void:
+	TestFixtures.record_override("prop.siege_ballista", {"engine": {"reload_s": 0.3}})
+	TestFixtures.record_override("ability.ballista_bolt", {"windup_s": 0.1, "recovery_s": 0.05})
+	var fired: Array = []
+	var abandoned: Array = []
+	var on_fired := func(t: int, engine_id: String, _a: String, _target: String) -> void: fired.append([t, engine_id])
+	var on_crewed := func(t: int, engine_id: String, is_crewed: bool) -> void:
+		if not is_crewed:
+			abandoned.append([t, engine_id])
+	Events.siege_engine_fired.connect(on_fired)
+	Events.siege_engine_crewed.connect(on_crewed)
+	var s := spawn_soldier(Vector3(0, 0.05, 0), 0.0, "test.final_target", false)   # its target, unkillable
+	s.entity.team = CombatEntity.Team.PLAYER
+	s.entity.combatant.unkillable = true
+	var b := (load(BALLISTA) as PackedScene).instantiate() as SiegeEngine
+	b.world_id = "test.final_ballista"
+	b.position = Vector3(0, 0, -30)
+	b.rotation.y = wrapf(TargetingRules.yaw_of(Vector3(0, 0, 30)) + PI * 0.5, -PI, PI)   # 90 degrees off its target
+	world.add_child(b)
+	b.set_fire_held(true)   # as a battle holds a later phase's engine
+	var c := TestSpawn.enemy(world, CREW, b.global_position + Vector3(0, 0.05, 0), "test.final_crew", false, b.rotation.y)
+	b.add_crew(c)
+	c.global_position = b.crew_slot(c) + Vector3(0, 0.05, 0)
+	var yaw0 := b.facing_yaw
+	var reload0 := b.reload_left
+	await step_ticks(120)
+	assert_true(reload0 > 0.0, "it started with a reload to haul (%.3f s)" % reload0)
+	assert_eq(fired, [], "held, it does not shoot")
+	assert_eq(b.shots, 0, "no shot")
+	assert_near(b.facing_yaw, yaw0, 1e-4, "held, it does not turn on its target")
+	assert_true(b.crewed and b.is_crewed(), "its crew stays counted")
+	assert_eq(abandoned, [], "no siege_engine_crewed(false): the crowd hears no abandon cue")
+	assert_near(b.reload_left, 0.0, 1e-6, "held, its crew hauls its reload down")
+	assert_false(b.in_action(), "in_action() is false while held")
+	b.set_fire_held(false)
+	await TestWait.until(self, func() -> bool: return fired.size() >= 1, 6 * 60)
+	assert_eq(fired.size(), 1, "freed, it turns and shoots (%s)" % [fired])
+	assert_true(absf(angle_difference(b.facing_yaw, yaw0)) > 1.0, "turned on its target (yaw %.2f from %.2f)" % [b.facing_yaw, yaw0])
+	Events.siege_engine_fired.disconnect(on_fired)
+	Events.siege_engine_crewed.disconnect(on_crewed)
+	b.queue_free()
+
+
+# --------------------------------------------------------------------------- R4: the moved respawn's line
+
+func test_a_moved_respawn_names_the_broken_stair_lower_case_mid_sentence() -> void:
+	FactionState.reset_for_tests()
+	GameSession.start_world_for_tests("world.cp.kings_road")
+	GameSession.level_id = WORLD_LEVEL
+	var blocker := func(id: String) -> String: return FactionState.respawn_refusal(id)
+	GameSession.register_respawn_blocker(blocker)
+	WorldState.set_flag(FactionState.flag_id("brannock", "hostile"), true)   # the town sworn by force
+	var held := "Brannock's guards hold the ground there."
+	assert_eq(GameSession.respawn_blocker("world.cp.brannock"), held, "hostile: Brannock's guards refuse a respawn at its stone")
+	var lines: Array[String] = []
+	var on_message := func(text: String, _kind: String) -> void: lines.append(text)
+	Events.hud_message.connect(on_message)
+	GameSession.last_load_message = ""
+	GameSession._note_respawn_moved("world.cp.brannock", "world.cp.broken_stair")
+	Events.hud_message.disconnect(on_message)
+	GameSession.unregister_respawn_blocker(blocker)
+	assert_eq(GameSession.checkpoint_display_name("world.cp.broken_stair", WORLD_LEVEL), "The Broken Stair",
+		"the only checkpoint whose name begins with The")
+	var expected := held + " You wake at the Broken Stair."
+	assert_eq(GameSession.last_load_message, expected, "mid-sentence: 'the Broken Stair', not 'The Broken Stair'")
+	assert_true(lines.has(expected), "the HUD's line too (%s)" % [lines])
+	FactionState.reset_for_tests()
+
+
+# --------------------------------------------------------------------------- A8: the posts off the giant's ways
+
+## Flat distance from `p` to the polyline `points` (Vector2s).
+static func _polyline_distance(p: Vector2, points: Array) -> float:
+	var best := INF
+	for i in range(points.size() - 1):
+		best = minf(best, p.distance_to(Geometry2D.get_closest_point_to_segment(p, points[i], points[i + 1])))
+	return best
+
+
+## The first dictionary with `id` in a layout table (any depth).
+static func _find_id(o: Variant, id: String) -> Dictionary:
+	if o is Dictionary:
+		if str((o as Dictionary).get("id", "")) == id:
+			return o
+		for v: Variant in (o as Dictionary).values():
+			var f := _find_id(v, id)
+			if not f.is_empty():
+				return f
+	elif o is Array:
+		for v: Variant in o:
+			var f := _find_id(v, id)
+			if not f.is_empty():
+				return f
+	return {}
+
+
+static func _xz(v: Variant) -> Vector2:
+	var a: Array = v
+	return Vector2(float(a[0]), float(a[a.size() - 1]))
+
+
+func test_the_camp_wall_and_the_gate_pikes_keep_off_the_giants_ways() -> void:
+	# The war camp's shield wall: off the King's Road's line (the road's own points and width, world.json) by 6 m more
+	# than its half width, so a stage-6 giant (3.7 m) walking the road's edge passes it.
+	var road := _find_id(WorldFeatures.load_json(WorldLayout.DATA_DIR.path_join("world.json")), "kings_road")
+	assert_false(road.is_empty(), "world.json has the King's Road")
+	var line: Array = []
+	for pt: Variant in road.get("points", []):
+		line.append(_xz(pt))
+	var half := float(road.get("width_m", 18.0)) * 0.5
+	var near := INF
+	for sp: Dictionary in GameData.get_record("encounter.aldmere_war_camp").get("spawns", []):
+		if str(sp.get("formation", "")) == "shields":
+			near = minf(near, _polyline_distance(_xz(sp.position_m), line))
+	print("    posts: the war camp's shield wall %.1f m from the King's Road's line (half width %.1f m)" % [near, half])
+	assert_true(near < INF and near >= half + 6.0, "the camp's shield wall keeps off the King's Road (%.1f m from its line)" % near)
+	# The gate garrison's pikes and banner: off the giant's line from the fort gate's waystone through the gate's link
+	# (its inner end 10 m inside the gate) by the gateway's half width (9 m) and a stage-6 giant's radius.
+	var aldmere := WorldFeatures.load_json(WorldLayout.DATA_DIR.path_join("aldmere.json"))
+	var stone := _xz(_find_id(aldmere, "world.cp.fort_gate").get("pos", [650, -55]))
+	var gate := _xz(_find_id(aldmere, "world.aldmere.fort_gate").get("pos", [650, -95]))
+	var inner := gate + (gate - stone).normalized() * 10.0
+	var clear := 9.0 + float(_profile(6).get("capsule_radius_m", 3.7))
+	var nearest := INF
+	var nearest_id := ""
+	for sp: Dictionary in GameData.get_record("encounter.aldmere_fort_gate").get("spawns", []):
+		var id := str(sp.entity_id)
+		if not (id.contains("gate_pike") or id.contains("gate_banner")):
+			continue
+		var d := _polyline_distance(_xz(sp.position_m), [stone, inner])
+		if d < nearest:
+			nearest = d
+			nearest_id = id
+	print("    posts: the gate's pikes, nearest %s %.1f m from the line %s -> %s (clear %.1f m)" % [nearest_id, nearest, stone, inner, clear])
+	assert_true(nearest < INF and nearest >= clear, "the gate's pikes keep off the giant's way through the gate (%s %.1f m)" % [nearest_id, nearest])

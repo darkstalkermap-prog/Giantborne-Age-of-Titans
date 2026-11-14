@@ -166,6 +166,8 @@ func test_the_raiders_shield_wall_closes_on_a_stage_4_giant_and_braces() -> void
 var _tick_queries: Array[int] = []
 var _phase_us: Array[int] = []
 var _phase_t0 := 0
+## M9 gate (final): the load average as the timed measurement began (BudgetRule).
+var _load_start := -1.0
 var _budget_level: Node = null
 
 
@@ -208,6 +210,7 @@ func test_the_hollows_archers_and_mage_keep_the_path_query_budget_with_the_giant
 	_budget_level = w
 	_tick_queries.clear()
 	_phase_us.clear()
+	_load_start = BudgetRule.load_average()
 	for n in _ranged(d):
 		n.search_queries_peak = 0
 	Sim.add_hook(Sim.Hook.PRE_ACTORS, self, _phase_begin, 1 << 20)
@@ -249,7 +252,9 @@ func test_the_hollows_archers_and_mage_keep_the_path_query_budget_with_the_giant
 	for n in _ranged(d):
 		assert_true(n.search_queries_peak <= EnemyActor.SEARCH_QUERIES_PER_TICK,
 			"%s's searches spend at most one candidate's queries a tick (%d)" % [n.entity_id, n.search_queries_peak])
-	assert_true(slow <= 3, "the actors' phase stays under 10 ms (%d ticks over it, at most %.1f ms)" % [slow, phase_max / 1000.0])
+	# M9 gate (final): a wall-clock budget - over it on a loaded machine this warns (BudgetRule), on a quiet one it fails
+	BudgetRule.judge(self, float(slow), 3.0, _load_start,
+		"the actors' phase stays under 10 ms (%d ticks over it, at most %.1f ms)" % [slow, phase_max / 1000.0])
 
 
 func test_a_firing_point_search_with_nothing_to_find_spreads_over_ticks_and_ends() -> void:
