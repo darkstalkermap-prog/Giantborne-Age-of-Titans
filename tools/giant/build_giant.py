@@ -122,9 +122,8 @@ def run_kit(script, *args):
 # --------------------------------------------------------------------------------------
 def make_micro_tile(path: Path) -> None:
     """Writes the skin's micro-relief tile (skin_textures.make_micro) at ``path`` unless it exists, in an
-    interpreter of its own: made inside the bake's process, the tile changes that process's tangent-space
-    normal bake (tex/normal.png and tex_hi/normal.png came out different, every other pass the same), so
-    the bake always finds its tile already made."""
+    interpreter of its own: made inside the bake's process, the tile changed that process's tangent-space
+    normal bake (one texel by 1/255; every other pass the same), so the bake always finds its tile made."""
     if path.exists():
         return
     code = "import sys; sys.path.insert(0, sys.argv[1]); import skin_textures; skin_textures.make_micro(sys.argv[2])"

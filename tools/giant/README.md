@@ -12,8 +12,8 @@ The pipeline runs in one virtual environment shared by every worktree, never ins
     export GIANT_VENV=$HOME/.cache/giantborn/giant-venv GIANT_CACHE=$HOME/.cache/giantborn/giant-cache
     tools/giant/setup_venv.sh          # Python 3.13 + requirements.txt (pinned with hashes), about 1.2 GB
 
-`GIANT_CACHE` holds the bake cache (content-addressed by the bake's inputs) and the audited data
-wheel. `requirements.txt` pins the reference toolchain's Linux x86_64 wheels; on that toolchain every
+`GIANT_CACHE` holds the bake cache (content-addressed by the bake's inputs), the skin's micro-relief
+tile (under the hash of its generator) and the audited data wheel; `--verify` reads none of it. `requirements.txt` pins the reference toolchain's Linux x86_64 wheels; on that toolchain every
 output regenerates bit-exactly.
 
 ## Commands
