@@ -33,8 +33,9 @@ but still loses. The lines these change say so; `docs/BALANCE_LOG.md`, "M9 gate 
 the expert on the three presets at seed 1, the conqueror's and the peaceful experts' seeds 2-3, three Valley runs;
 `docs/BALANCE_LOG.md`, "M9 gate"): the Troll Matriarch's phase 2 (the conqueror novices now slay her, with 3, 2 and 1
 deaths), awe tiers for the world's soldiers (a lone soldier runs from a stage-4 giant), the music's combat radius
-capped for a stage-4 giant, and the world bot's measurement fixes (the Moot battery, the Raiders' Hollow, the abilities'
-first use, the expert at the toll fort, the Moot's watching clans). The lines below that it changed say so ("M9 gate:");
+capped for a stage-4 giant, the world bot's measurement fixes (the Moot battery, the Raiders' Hollow, the abilities'
+first use, the expert at the toll fort, the Moot's watching clans) and, in its fix-up, Harrok's slay (the Strike lands
+before he rises: the conqueror novices complete). The lines below that it changed say so ("M9 gate:");
 the rest are the confirmation's 21-run matrix as before.
 
 ## In short
@@ -48,8 +49,9 @@ the rest are the confirmation's 21-run matrix as before.
   a clearing); the crown taken first (the Iron Regiment at stage 4: its phases now follow the Wall and the Charge, but
   the fort's ballistae kill the novice before the Charge; two crown runs of three stopped against the gate garrison in
   Fort Aldmere's gateway); Harrok's duel stopped one mixed novice, the toll fort's tower archers one peaceful expert. M9 gate: the
-  conqueror novices slay the Matriarch now (3, 2 and 1 deaths) and stop at Harrok's slay instead (six deaths each); the
-  conqueror experts complete all three (3, 2 and 2 deaths: the Matriarch slain twice and driven out once, Harrok slain each time); the peaceful experts pass the toll fort with no death there and complete (1, 1 and
+  conqueror novices slay the Matriarch now (3, 2 and 1 deaths), and since the gate's fix-up (the Strike lands before
+  Harrok rises) they slay him too and complete all three runs (3, 2 and 3 deaths to him; before, six each); the
+  conqueror experts complete all three (3, 1 and 1 deaths on the final code - 3, 2 and 2 before the fix-up: the Matriarch slain twice and driven out once, Harrok slain each time); the peaceful experts pass the toll fort with no death there and complete (0, 1 and
   1 deaths).
   Assisted (P38's acceptance orders), the march-first and wood-first orders complete with no death; the crown-first
   reaches the battle's Last Stand twice - its phases follow now - but dies in it and runs out the oath's time. Since the
@@ -59,7 +61,8 @@ the rest are the confirmation's 21-run matrix as before.
   ballistae still kill it ("Known issues").
 - **The bosses**: the novice wins Harrok's duel with a median of 2.5 deaths (it was 6 before P39's balance pass), the
   Matriarch is driven out in one attempt with no death in the den, at stage 4 or 5, and the mixed experts spare Harrok
-  with one to three deaths. M9 gate: the Matriarch is slain by the conqueror novice with 3, 2 and 1 deaths (median 2).
+  with one to three deaths. M9 gate: the Matriarch is slain by the conqueror novice with 3, 2 and 1 deaths (median 2),
+  and Harrok, struck after his yield, with 3, 2 and 3 (median 3; the Strike now lands and leaves him 10 % of his health).
 - **It is short when played straight**: about 41 minutes of human estimate for the main path after the Valley
   (the plan's target 75-140): the bot walks from objective to objective, opens no sealed place, reads no cairn and
   takes no side quest. The first oath's segment is now in its range (12 minutes: the bot fights the Raiders' Hollow
@@ -69,9 +72,10 @@ the rest are the confirmation's 21-run matrix as before.
   locks with a formation engaged are group or banner locks, and 13 of the 14 runs that reach stage 6 throw 4 engines
   (one walked past the Moot battery out of the bot's reach and never came back). Lone soldiers do not flee a stage-4
   giant yet (4 % of the lone humans' engaged time against the target's 70 %: a known issue). M9 gate: lone soldiers run from a
-  stage-4 giant (66 % of 803 s of their engaged time; pooled with the archers, who keep their range, 25 %),
-  every run reaching stage 6 throws the Moot battery's engines on the walk, and the music among lesser enemies is in
-  combat 11 % of the time (target under 25 %: met).
+  stage-4 giant (65 % of 751 s of their engaged time on the final code; pooled with the archers, who keep their range,
+  27 %), every run reaching stage 6 throws the Moot battery's engines on the walk, and the music among lesser enemies
+  is in combat 15 % of the time (target under 25 %: met; 32 % on the same seeds before - the 40 m cap is a part of the
+  drop, the runs' own changes most of it: "The music's intensity", below).
 - **Stable**: the 60-minute world run (two campaigns back to back), the 30-minute Valley run and the campaign's
   hand-over from the Valley all passed: no crash, no blocked world, no duplicated reward, no invariant failure, no
   error or warning in the runs' own counts (Godot's exit report of leaked resources follows a campaign's result: a
@@ -237,7 +241,7 @@ a timed human run can say how long the campaign is.
 
 | Boss | Measured (`confirm_world`, novice unless named) | Plan §6.4 |
 | --- | --- | --- |
-| **Harrok the Unbowed** (the Moot's ring, stage 6) | deaths per duel: 3, 2, 2 (peaceful), 4, 6, 4 (mixed; the second stopped on its sixth) and the orders' 0 and 0 - median 2.5, won in 7 of 8; the first tries end at 33-52 % of his health; the mixed experts spare him in 2-4 attempts with one to three deaths, the peaceful experts in 1 and 3; the one conqueror expert who reached him brought him to 11 % and died five times in the duel | 1-3 per boss sequence: **met** |
+| **Harrok the Unbowed** (the Moot's ring, stage 6) | deaths per duel: 3, 2, 2 (peaceful), 4, 6, 4 (mixed; the second stopped on its sixth) and the orders' 0 and 0 - median 2.5, won in 7 of 8; the first tries end at 33-52 % of his health; the mixed experts spare him in 2-4 attempts with one to three deaths, the peaceful experts in 1 and 3; the one conqueror expert who reached him brought him to 11 % and died five times in the duel. **M9 gate** (fix-up 1: the Strike lands before he rises, leaving him 10 % of his health): slain by the conqueror novices with 3, 2 and 3 deaths (before the fix-up six each, no slay) | 1-3 per boss sequence: **met** (the slay: median 3) |
 | **The Troll Matriarch** (the den, stages 4-5) | driven out: at the first attempt in all six runs that drive her out (stage 4 in the wood-first order, stage 5 for the peaceful novices and experts), no death in the den; slain: by no novice at stage 5 - six attempts on each of three seeds, every one into her phase 2, the lowest 9, 14 and 12 %, six deaths each (her frenzy 7, the whelps 7 - six swipes and one she threw - her stomp 3 and her sweep 1 of the 18) - and by no expert: four, three and four attempts at 37-50 %, two runs on the den's time limit, the third drove her out after burning the braziers. **M9 gate** (her phase 2 13 hp/s, one whelp, the frenzy 35 + 40 with a 3.0 s punish window): slain by the conqueror novices with 3, 2 and 1 deaths (`gate3_world`) and by the conqueror experts in two runs of three (at the second attempt and the first; the third drove her out at its first attempt, at 49 %) | 1-3: the drive-out under the range; the slay met at the M9 gate (median 2) |
 | **The Iron Regiment** (Fort Aldmere's bailey, the crown's breach) | the phase thresholds are fixed (the Charge at 70 % of the bar, the Last Stand at 50 %: "What changed in tuning"); at stage 4 (`confirm_ir4`) six attempts at 78-91 % of the bar, the fort's ballistae five of six deaths (74 % of the damage taken in the battle), the Charge never begins; the matrix's crown-first run and the stage-5 run (`confirm_ir5`) stopped on stucks in the fort's gateway, against the gate garrison's pike formation; assisted (`confirm_world_orders`), the Charge began at 621 s and the Last Stand at 760 s (the bar at 0.50) and again at 1,081 s, but the giant died in the Last Stand both times (a rider's charge, a ballista) and the oath's 1,320 s ran out. Since the M9 gate (the gateway clear, the gate bastions' two ballistae holding their fire until the Charge as plan §5.13 has it): assisted, won at the first attempt with no death (`aldmere_e5_crown_assist`); unassisted at stage 4 (`aldmere_e5_ir4`) six deaths, the bar at 0.79 at best - each attempt breaks the gate again under the garrison's arrows and bolts and enters the bailey with 205-401 of 1,160 health; at stage 5 (`aldmere_e5_ir5`) the Charge in two attempts of four (the bar at 0.64, 0.63; the riders ended both), six deaths, two of them outside the broken gate to the garrison the breach roused, beside the waystone the reload gives back. The battle tells the giant which ballistae shoot ("Smash the ballistae: two shoot now, two more at the Charge."). Since lane ironreg (the breach kept through a death, the garrison at its posts after it, the phases by the units whatever becomes of the ballistae): at stage 5 (`ironreg_after_ir5`) **won** at the third attempt - the Charge in all three, the Last Stand in the third, Corvane spared - with two deaths in the battle (a rider's charge, the west bastion's ballista); at stage 4 (`ironreg_after_ir4`) every attempt after the first enters the bailey with 641-696 of 1,160 health and two reach the Charge (0.69, 0.65), but six deaths, four of them to the inner pair's ballistae | **miss** at stage 4 (the battle itself: the inner ballistae, the bot's play against the Wall at the gate's inner mouth); stage 5 unassisted: 2 deaths, **met** |
 
@@ -273,7 +277,7 @@ riders 2 and ballista 1 and a wandering pike column in the mixed runs' sabotage)
 | Formations hold or brace while their banner lives (share of their engaged time) | at least 50 % | 79 % |
 | The giant's locks with a formation engaged that are group or banner locks | at least half | 89 % |
 | Engines thrown per run that reaches stage 6 | at least 2 | 4 in 11 of 12 runs; none in `w_peaceful_expert_2` (below). M9 gate: 4 in every run reaching stage 6 (ten of ten), on the walk to the Moot |
-| Lone humans flee or rout (share of their engaged time) | at least 70 % | 4 %; the lone soldiers 0 % of 371 s. M9 gate: 25 %; the lone soldiers 66 % of 803 s (archers keep their range by design) |
+| Lone humans flee or rout (share of their engaged time) | at least 70 % | 4 %; the lone soldiers 0 % of 371 s. M9 gate: 27 % on the final code (25 % on the lane's runs); the lone soldiers 65 % of 751 s (66 % of 803 s) - archers keep their range by design |
 
 **Formations and engines** (`world_formations`, `world_siege`; the novice's twelve runs): every completed run broke 3-5
 formations and seized and threw the Moot battery's four engines (two ballistae, two catapults); the mixed runs also
@@ -340,7 +344,7 @@ novice's completed runs the largest single ability's share of the ability damage
 the experts lean on Runic Bolt (up to 98 %). Plan §6.4 asks every slotted ability to be used once a run and none above
 40 %: **miss**, a question about the bot's policy more than the abilities. M9 gate: Rampart Grip reads as ready only
 with something to seize and each slotted ability is tried at its first free tick. Never used when ready in the gate's
-ten runs: Earthquake in 9 of them, Formation Sweep, Sweeping Blow and Titan Stomp in 3, Crushing Grip and Rampart Grip in 2, Titan Surge in 1 (ten runs reach stage 6 now, five before, and Earthquake is a stage-6 ability); the largest share 51 % (Crag Hurl, `w_mixed_novice_1`).
+ten runs on the final code: Earthquake in 9 of them, Formation Sweep in 5, Titan Stomp in 4, Sweeping Blow in 3, Crushing Grip in 1 (ten runs reach stage 6 now, five before, and Earthquake is a stage-6 ability); the largest share 63 % (Runic Bolt, `w_peaceful_expert_1`; on the lane's runs 51 %, Crag Hurl).
 
 ### Discoveries, sealed places, cairns and fast travel
 
@@ -367,8 +371,14 @@ almost throughout; stage 5 holds the conqueror novices' long fights in the den. 
 4-6, none of them taller than the music's lesser height ratio of the giant), the music was in combat 43 % of the time
 over the 18 preset runs (the novice's twelve runs: 42 % of 483 s; target under 25 %: **miss**); the rest danger.
 §5.14 asks that lone humans no longer raise combat music from stage 4; the intensity rules are P28's mix data. M9 gate:
-the combat radius is capped at 40 m from a 10 m giant (the bot's own engaged radius): 11 % of the
-lesser-only time in combat on the gate's ten runs (32 % on the same seeds before) - **met**.
+the combat radius is capped at 40 m from a 10 m giant (the bot's own engaged radius), and the gate's ten runs spend
+15 % of the lesser-only time in combat on the final code (11 % on the lane's runs, 32 % on the same seeds before) -
+**met**. The cap is a part of that drop, not all of it: the music changes nothing in play, so a run replays to the
+tick with the cap taken out, and `w.mixed:novice:1` is then in combat 100 % of its 21 s among only lesser enemies
+(68 % with the cap), `w.peaceful:expert:1` 17 % both ways. Most of the drop is the runs themselves: fewer and shorter
+fights among lesser enemies (the Raiders' Hollow no longer fought on the road, lone soldiers that flee). The mixed
+runs stay mostly in combat among lesser enemies (68 % and 95 %): hits (a blow keeps the music in combat 5 s) and the
+music's hold after a fight (6 s), P28's rules (`docs/BALANCE_LOG.md`, "M9 gate", "The music among lesser enemies").
 
 ### Readability
 
@@ -571,7 +581,8 @@ No unit's numbers changed; the battle's bar and its thresholds are as they were.
 | --- | --- | --- |
 | The Troll Matriarch's phase 2 (regeneration, the roar's call, the frenzy and its punish window) | 15 hp/s, 2 whelps, 55 + 65, 1.3 s -> 13 hp/s, 1 whelp, 35 + 40, 3.0 s (her phase 1 unchanged) | no conqueror novice slew her (six deaths on each of three seeds); now all three do, with 3, 2 and 1 deaths |
 | A soldier's awe before a giant at least 6x its height (an awe tier) | 35 of its 70 morale -> 50 (35 below the tier: the Valley's stage-3 giant is 4.4x) | §5.14: single humans flee a stage-4 giant on sight; a lone soldier awed off by a tier no longer comes back (it joins a formation or routs) |
-| The music's combat radius for a giant of 10 m or more | 35 m x height/3.66 m (105 m at stage 4) -> at most 40 m | formations and crews 40-120 m off held the music in combat among lesser enemies |
+| The music's combat radius for a giant of 10 m or more | 35 m x height/3.66 m (105 m at stage 4) -> at most 40 m | formations and crews 40-120 m off held the music in combat among lesser enemies (a part of the drop from 32 % to 15 %: "The music's intensity") |
+| Harrok's yield when the giant strikes (`yield_at.strike_health_frac`, `data/enemies/harrok.json`; the gate's fix-up) | the Strike did not land: he rose with all he knelt with (25-36 % of his health) and fought his whole phase 2 again -> the Strike's blow lands first and leaves him 10 % of his health; he rises from it with all his kit | the conqueror novices died six times each in the fight to the death after the duel and never slew him; now they slay him with 3, 2 and 3 deaths and complete (Spare and the talk ending never meet it) |
 | The bot (measurement fixes, no game change) | `docs/BALANCE_LOG.md`, "M9 gate" | engines sought once they shoot (the Moot battery), formations off the way passed (the Raiders' Hollow), Rampart Grip's readiness and every slotted ability's first use, the expert's dodge reserve before pikes and archers (the toll fort), the lock invariant's rout tick, the Moot's watching clans (placed with their AI off) walked past |
 | An enemy fallen through the world (below y -30 m) | lost below the ground, alive and out of reach (its encounter never cleared) -> set back at its home | found by this lane's runs: a thrown shieldman of the Raiders' Hollow came down through the ground (how is open: FOLLOWUPS) |
 
@@ -617,8 +628,10 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
   and the expert's brazier lure, made on the old den, no longer pays (attempts at 37-50 %). Her phase-2 regeneration,
   frenzy and whelps are the levers; the owner's playtest decides how hard the slay should be. **M9 gate**: her phase 2
   eased (13 hp/s, one whelp, the frenzy 35 + 40 with a 3.0 s punish window): the novices slay her with 3, 2 and 1
-  deaths and the experts in two runs of three (at the second attempt and the first; the third drove her out at its first attempt, at 49 %). The conqueror novice now stops at **Harrok's slay** instead: struck on
-  after his yield, he kills it six times in each of three runs (down to 6-11 %; FOLLOWUPS).
+  deaths and the experts in two runs of three (at the second attempt and the first; the third drove her out at its first attempt, at 49 %). The conqueror novice then stopped at **Harrok's slay**: struck on
+  after his yield, he killed it six times in each of three runs (down to 6-11 %) - fixed in the gate's fix-up: the
+  Strike lands before he rises and leaves him 10 % of his health, and the three conqueror novices complete (Harrok
+  slain with 3, 2 and 3 deaths; `docs/BALANCE_LOG.md`, "M9 gate", "Harrok's slay").
 - **The Iron Regiment at stage 4** (the crown's oath first): the phases now follow the Wall and the Charge (fixed in the
   confirmation phase), but the novice brings the battle's bar to 78 % at best before the fort's four ballistae kill it
   (five deaths of six, 74 % of the damage taken in the battle); assisted, it reaches the Last Stand (the bar at 50 %)
@@ -665,7 +678,7 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
 - ~~**The peaceful experts** die to the toll fort's tower archers on the march's help (ten of their 22 deaths; one run
   stopped there) - the expert's world rules, a bot question.~~ Fixed at the M9 gate: the expert's dodge reserve kept it
   from every blow before the pikes and the tower's archers; kept now only for blows it dodges, the peaceful experts
-  pass the toll fort with no death there and complete (1, 1 and 1 deaths).
+  pass the toll fort with no death there and complete (0, 1 and 1 deaths on the final code).
 - ~~**The Moot battery and the walk to the Moot**: the giant passes the battery 50 m off on the rebuilt world; the bot
   fights it only when it comes back after a death in Harrok's duel (one run of 14 never did and threw no engine).~~
   Fixed at the M9 gate: an engine that shot at the giant is sought from 90 m; every run reaching stage 6 throws four.
@@ -675,16 +688,18 @@ its path), the Iron Regiment's web aggregate and everything in the Valley.
 - **Lone humans do not flee a stage-4 giant** (4 % of their engaged time; §5.14: "single humans flee on sight"): a
   lone soldier's awe (35 of 70 morale) leaves it above its flee threshold. The lever is the awe's morale loss for the
   world's soldiers (46 or more); lane P39f's raider change did not move it. **M9 gate**: an awe tier (50 before a
-  giant 6x a soldier's height) and no coming back: lone soldiers flee 66 % of 803 s of their engaged time; pooled with
-  the archers, who keep their range and posts by design, 25 % - the pooled 70 % needs archers to flee too (a
-  design decision).
+  giant 6x a soldier's height) and no coming back: lone soldiers flee 65 % of 751 s of their engaged time on the final
+  code (66 % of 803 s on the lane's runs); pooled with the archers, who keep their range and posts by design, 27 % -
+  the pooled 70 % needs archers to flee too (a design decision).
 - **Pace**: the main path played straight is about 41 minutes against 75-140 (above): a person's time is the
   measure.
 - ~~**The music among lesser enemies** is in combat 43 % of the time (target under 25 %): P28's mix data.~~ Fixed at the
-  M9 gate (the combat radius capped at 40 m from stage 4): 11 %.
+  M9 gate: 15 % on the final code's ten runs (32 % on the same seeds before). The combat radius capped at 40 m from
+  stage 4 is a part of the drop (`w.mixed:novice:1` 100 % -> 68 % with the cap alone), the runs' own changes the rest;
+  hits and the music's hold after a fight keep the mixed runs mostly in combat.
 - **Abilities**: Rampart Grip, Formation Sweep and Titan Stomp sit unused in half the runs or more; one ability takes
   over 40 % of the ability damage in most runs (Runic Bolt for the experts: the bot's policy). **M9 gate**: never used
-  when ready - Earthquake in 9 of the gate's ten runs, Formation Sweep, Sweeping Blow and Titan Stomp in 3, Crushing Grip and Rampart Grip in 2, Titan Surge in 1 (ten runs reach stage 6 now, five before, and Earthquake is a stage-6 ability); the largest share 51 % (Crag Hurl, `w_mixed_novice_1`).
+  when ready - Earthquake in 9 of the gate's ten runs on the final code, Formation Sweep in 5, Titan Stomp in 4, Sweeping Blow in 3, Crushing Grip in 1 (ten runs reach stage 6 now, five before, and Earthquake is a stage-6 ability); the largest share 63 % (Runic Bolt, `w_peaceful_expert_1`).
 - **The worst streaming work frame** is a large props part's text parse (12.2 ms on the world walk headless,
   17.9-33.9 ms in the campaign runs three at a time; exports ship binary scenes, about a tenth of the time:
   `docs/systems/P39f.md`).
