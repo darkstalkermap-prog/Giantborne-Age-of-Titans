@@ -21,12 +21,15 @@ const RIGS := [
 	["res://scenes/npcs/elder.tscn", 5, "", true],
 ]
 ## The giant's row (P43): every skinned mesh of the model, and those on layers 2 and 3.
-const GIANT_SKINNED := ["Beard_full", "Beard_short", "Body_Head", "Body_Limbs", "Body_Torso", "Eyes", "Garment_belt",
-	"Garment_boots", "Garment_bracers", "Garment_braies_core", "Garment_braies_limbs", "Garment_furs", "Garment_jerkin",
-	"Garment_tunic_core", "Garment_tunic_limbs", "Hair_crop", "Hair_long_back"]
-const GIANT_LAYER_2 := ["Body_Torso", "Garment_belt", "Garment_braies_core", "Garment_furs", "Garment_jerkin",
-	"Garment_tunic_core"]
-const GIANT_LAYER_3 := ["Beard_full", "Beard_short", "Body_Head", "Eyes", "Hair_crop", "Hair_long_back"]
+const GIANT_SKINNED := ["Beard_braided", "Beard_forked", "Beard_full", "Beard_short", "Body_Head", "Body_Limbs",
+	"Body_Torso", "Eyes", "Garment_belt", "Garment_boots", "Garment_bracers", "Garment_braies_core",
+	"Garment_braies_limbs", "Garment_cape", "Garment_furs", "Garment_jerkin", "Garment_leg_wraps", "Garment_pauldron",
+	"Garment_tunic_core", "Garment_tunic_limbs", "Hair_crop", "Hair_long_back", "Hair_long_braided", "Hair_warrior_tail",
+	"Hair_wild_mane"]   # P46: the target catalogue's five styles and three garments
+const GIANT_LAYER_2 := ["Body_Torso", "Garment_belt", "Garment_braies_core", "Garment_cape", "Garment_furs",
+	"Garment_jerkin", "Garment_pauldron", "Garment_tunic_core"]
+const GIANT_LAYER_3 := ["Beard_braided", "Beard_forked", "Beard_full", "Beard_short", "Body_Head", "Eyes", "Hair_crop",
+	"Hair_long_back", "Hair_long_braided", "Hair_warrior_tail", "Hair_wild_mane"]
 const WOLF := "res://scenes/enemies/wolf.tscn"
 
 

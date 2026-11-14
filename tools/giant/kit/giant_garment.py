@@ -1,9 +1,11 @@
-"""The giant's seven garments as separate skinned meshes on the body's skeleton.
+"""The giant's garments (the floor's seven and the look pass's three) as separate skinned meshes on the
+body's skeleton.
 
 * ``braies`` (loose linen short trousers) cut from MakeHuman's fitted "tights" helper, loosened and
   folded, and ``belt``, a leather band round the waist - the kit's garment (giant_garment.py of the
   research run's frozen kit snapshot);
-* ``tunic``, ``jerkin``, ``bracers``, ``boots`` and ``furs``: shells cut from the body surface by
+* ``tunic``, ``jerkin``, ``bracers``, ``boots`` and ``furs``, and P46's ``cape``, ``leg_wraps`` and
+  ``pauldron``: shells cut from the body surface by
   bone-weight regions and pushed out along the normals, with the body's UVs and the body's weights
   copied per vertex, so they skin exactly like the skin under them (the research's export script).
 
@@ -34,10 +36,14 @@ BRAIES = dict(
 BOOTS_TRIANGLES = 2500    # the research boots had 4,688 triangles (dense toes): decimated toward this
 # The garments' detail maps (the cloth shader's detail_tex) and dye slots (plan §2.5 index).
 DETAIL = {"braies": "weave", "tunic": "weave", "belt": "leather", "jerkin": "leather",
-          "bracers": "leather", "boots": "leather", "furs": "fur"}
+          "bracers": "leather", "boots": "leather", "furs": "fur",
+          "cape": "weave", "leg_wraps": "weave", "pauldron": "leather"}
 DYE = {"braies": "primary", "tunic": "primary", "belt": "secondary", "jerkin": "secondary",
-       "bracers": "secondary", "boots": "secondary", "furs": "none"}
-ORDER = ("braies", "belt", "tunic", "jerkin", "bracers", "boots", "furs")
+       "bracers": "secondary", "boots": "secondary", "furs": "none",
+       "cape": "primary", "leg_wraps": "primary", "pauldron": "secondary"}
+# The floor's seven, then the look pass's three (P46): a short cape down the back, cloth wraps on the
+# shins, a leather pauldron on the left shoulder.
+ORDER = ("braies", "belt", "tunic", "jerkin", "bracers", "boots", "furs", "cape", "leg_wraps", "pauldron")
 
 
 def vnormals(verts, faces):
@@ -247,4 +253,26 @@ def build_shells(bd, rig, coll, weights, S):
     fur_off = 0.05 + 0.02 * smooth_field(rng.random(n), faces, n, 2)
     out["furs"] = shell("Garment_furs", coll, rig, V, N, faces, fuv, bd.bm.uvs, keep, fur_off, weights, S,
                         "giant_fur", seed=7, hem_noise=0.03)
+    # ---- the look pass (P46) ----
+    # cape: a short cloak from the shoulders down the back to the hips, flaring towards a ragged hem
+    back = N[:, 1] > -0.15
+    keep = (((torso + B["pelvis"] * (z > hip - 0.02) + B["upperarm"] * (z > shoulder - 0.05) + B["neck"] * 0.5) > 0.45)
+            & back & (z > hip - 0.03) & (z < neck_z + 0.01) & (B["head"] < 0.02) & (B["lowerarm"] < 0.05))
+    down = np.clip((shoulder - z) / (shoulder - hip), 0.0, 1.0)
+    cape_off = 0.05 + 0.07 * down ** 1.5
+    out["cape"] = shell("Garment_cape", coll, rig, V, N, faces, fuv, bd.bm.uvs, keep, cape_off, weights, S,
+                        "giant_cloth", seed=11, hem_noise=0.035)
+    # leg wraps: cloth wound round both shins, from above the ankle to under the knee
+    keep = (B["calf"] > 0.5) & (z > ankle + 0.07 * (knee - ankle)) & (z < ankle + 0.86 * (knee - ankle))
+    wind = 0.004 * np.sin((z - ankle) / (knee - ankle) * 2 * math.pi * 7.0)       # the turns of the winding
+    out["leg_wraps"] = shell("Garment_leg_wraps", coll, rig, V, N, faces, fuv, bd.bm.uvs, keep,
+                             0.012 + wind, weights, S, "giant_cloth")
+    # pauldron: a leather guard over the left shoulder and the top of the upper arm
+    sh_l = J["joint-l-shoulder"]
+    d_sh = np.linalg.norm(V - (sh_l + np.array([0.02, 0.0, 0.03])), axis=1)
+    keep = (V[:, 0] > 0.0) & (d_sh < 0.2) & ((B["upperarm"] + B["clav"] + B["spine3"] * 0.5) > 0.5) \
+        & (z > shoulder - 0.15) & (B["neck"] < 0.25) & (B["lowerarm"] < 0.05)
+    pad = 0.03 + 0.025 * np.clip(1.0 - d_sh / 0.2, 0.0, 1.0)
+    out["pauldron"] = shell("Garment_pauldron", coll, rig, V, N, faces, fuv, bd.bm.uvs, keep, pad, weights, S,
+                            "giant_leather")
     return out

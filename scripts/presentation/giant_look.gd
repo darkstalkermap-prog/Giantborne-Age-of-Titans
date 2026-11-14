@@ -92,7 +92,7 @@ const GARMENT_DETAIL := {"braies": "weave", "tunic": "weave", "jerkin": "leather
 ## A garment whose index entry has no dye slot ("none": the furs) keeps this colour.
 const NATURAL_DYE := Color(0.36, 0.30, 0.24)
 ## The detail map's strength per kind.
-const DETAIL_STRENGTH := {"weave": 0.35, "leather": 0.25, "fur": 0.45}
+const DETAIL_STRENGTH := {"weave": 0.28, "leather": 0.5, "fur": 0.45}
 
 ## The uniforms GiantLook sets, per shader kind (validate() checks them against the shaders), and the two
 ## every giant shader declares for RigPaint.

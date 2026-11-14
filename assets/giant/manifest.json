@@ -494,11 +494,20 @@
     "Garment_braies_core",
     "Garment_braies_limbs"
    ],
+   "cape": [
+    "Garment_cape"
+   ],
    "furs": [
     "Garment_furs"
    ],
    "jerkin": [
     "Garment_jerkin"
+   ],
+   "leg_wraps": [
+    "Garment_leg_wraps"
+   ],
+   "pauldron": [
+    "Garment_pauldron"
    ],
    "tunic": [
     "Garment_tunic_core",
@@ -601,6 +610,24 @@
    ]
   },
   "meshes": {
+   "Beard_braided": {
+    "atlas": "hair_atlas",
+    "cards": 398,
+    "category": "beard",
+    "dye": "none",
+    "layer": 3,
+    "tris": 2836,
+    "verts": 3632
+   },
+   "Beard_forked": {
+    "atlas": "hair_atlas",
+    "cards": 320,
+    "category": "beard",
+    "dye": "none",
+    "layer": 3,
+    "tris": 3840,
+    "verts": 4480
+   },
    "Beard_full": {
     "atlas": "hair_atlas",
     "cards": 330,
@@ -781,6 +808,30 @@
     "tris": 676,
     "verts": 406
    },
+   "Garment_cape": {
+    "boundary_edges": 144,
+    "caps": 0,
+    "category": "garment",
+    "coverage": {
+     "3": 0.012882,
+     "4": 0.214912,
+     "5": 0.839286,
+     "6": 0.986486,
+     "7": 0.354962,
+     "8": 0.092251
+    },
+    "covers": [
+     6
+    ],
+    "cut_loops": 0,
+    "detail": "weave",
+    "dye": "primary",
+    "layer": 2,
+    "open_chains": 0,
+    "part": "torso",
+    "tris": 1228,
+    "verts": 687
+   },
    "Garment_furs": {
     "boundary_edges": 202,
     "caps": 0,
@@ -827,6 +878,43 @@
     "part": "torso",
     "tris": 2278,
     "verts": 1212
+   },
+   "Garment_leg_wraps": {
+    "boundary_edges": 88,
+    "caps": 0,
+    "category": "garment",
+    "coverage": {
+     "12": 0.016667,
+     "13": 0.835913
+    },
+    "covers": [],
+    "cut_loops": 0,
+    "detail": "weave",
+    "dye": "primary",
+    "layer": 1,
+    "open_chains": 0,
+    "part": "limbs",
+    "tris": 550,
+    "verts": 319
+   },
+   "Garment_pauldron": {
+    "boundary_edges": 70,
+    "caps": 0,
+    "category": "garment",
+    "coverage": {
+     "3": 0.067633,
+     "5": 0.065476,
+     "8": 0.182657
+    },
+    "covers": [],
+    "cut_loops": 0,
+    "detail": "leather",
+    "dye": "secondary",
+    "layer": 2,
+    "open_chains": 0,
+    "part": "torso",
+    "tris": 326,
+    "verts": 198
    },
    "Garment_tunic_core": {
     "boundary_edges": 48,
@@ -898,6 +986,33 @@
     "layer": 3,
     "tris": 5920,
     "verts": 6780
+   },
+   "Hair_long_braided": {
+    "atlas": "hair_atlas",
+    "cards": 480,
+    "category": "hair",
+    "dye": "none",
+    "layer": 3,
+    "tris": 5000,
+    "verts": 5960
+   },
+   "Hair_warrior_tail": {
+    "atlas": "hair_atlas",
+    "cards": 364,
+    "category": "hair",
+    "dye": "none",
+    "layer": 3,
+    "tris": 3424,
+    "verts": 4152
+   },
+   "Hair_wild_mane": {
+    "atlas": "hair_atlas",
+    "cards": 420,
+    "category": "hair",
+    "dye": "none",
+    "layer": 3,
+    "tris": 5800,
+    "verts": 6640
    }
   },
   "region_names": [
@@ -951,9 +1066,9 @@
   },
   "assets/giant/giant.glb": {
    "cycles": false,
-   "inputs": "6fa7d3635cdfc710e6fd37a4f024b673ce42cff343f121bc92c21462d6f3647d",
-   "sha256": "969899bb971caa0c2760442887e42a6a6a146815a7771c0a6b9f938718d66b41",
-   "size": 2884400,
+   "inputs": "93242146c0c534c4b95acff3f3af7fa84e5301bfac18d4b24e30f3c6cad720d4",
+   "sha256": "f04a5a6744f4f64af21da9dbe5237191625b42251b6be3639b9c041fe79f2565",
+   "size": 4401640,
    "step": "export"
   },
   "assets/giant/giant_clips.glb": {
@@ -1307,11 +1422,20 @@
     "Garment_braies_core",
     "Garment_braies_limbs"
    ],
+   "cape": [
+    "Garment_cape"
+   ],
    "furs": [
     "Garment_furs"
    ],
    "jerkin": [
     "Garment_jerkin"
+   ],
+   "leg_wraps": [
+    "Garment_leg_wraps"
+   ],
+   "pauldron": [
+    "Garment_pauldron"
    ],
    "tunic": [
     "Garment_tunic_core",
@@ -1413,6 +1537,24 @@
    ]
   },
   "meshes": {
+   "Beard_braided": {
+    "atlas": "hair_atlas",
+    "category": "beard",
+    "covers": [],
+    "dye": "none",
+    "layer": 3,
+    "node": "Beard_braided",
+    "tris": 2836
+   },
+   "Beard_forked": {
+    "atlas": "hair_atlas",
+    "category": "beard",
+    "covers": [],
+    "dye": "none",
+    "layer": 3,
+    "node": "Beard_forked",
+    "tris": 3840
+   },
    "Beard_full": {
     "atlas": "hair_atlas",
     "category": "beard",
@@ -1531,6 +1673,22 @@
     "part": "limbs",
     "tris": 676
    },
+   "Garment_cape": {
+    "category": "garment",
+    "coverage": {
+     "5": 0.839286,
+     "6": 0.986486
+    },
+    "covers": [
+     6
+    ],
+    "detail": "weave",
+    "dye": "primary",
+    "layer": 2,
+    "node": "Garment_cape",
+    "part": "torso",
+    "tris": 1228
+   },
    "Garment_furs": {
     "category": "garment",
     "coverage": {
@@ -1562,6 +1720,30 @@
     "node": "Garment_jerkin",
     "part": "torso",
     "tris": 2278
+   },
+   "Garment_leg_wraps": {
+    "category": "garment",
+    "coverage": {
+     "13": 0.835913
+    },
+    "covers": [],
+    "detail": "weave",
+    "dye": "primary",
+    "layer": 1,
+    "node": "Garment_leg_wraps",
+    "part": "limbs",
+    "tris": 550
+   },
+   "Garment_pauldron": {
+    "category": "garment",
+    "coverage": {},
+    "covers": [],
+    "detail": "leather",
+    "dye": "secondary",
+    "layer": 2,
+    "node": "Garment_pauldron",
+    "part": "torso",
+    "tris": 326
    },
    "Garment_tunic_core": {
     "category": "garment",
@@ -1623,6 +1805,33 @@
     "layer": 3,
     "node": "Hair_long_back",
     "tris": 5920
+   },
+   "Hair_long_braided": {
+    "atlas": "hair_atlas",
+    "category": "hair",
+    "covers": [],
+    "dye": "none",
+    "layer": 3,
+    "node": "Hair_long_braided",
+    "tris": 5000
+   },
+   "Hair_warrior_tail": {
+    "atlas": "hair_atlas",
+    "category": "hair",
+    "covers": [],
+    "dye": "none",
+    "layer": 3,
+    "node": "Hair_warrior_tail",
+    "tris": 3424
+   },
+   "Hair_wild_mane": {
+    "atlas": "hair_atlas",
+    "category": "hair",
+    "covers": [],
+    "dye": "none",
+    "layer": 3,
+    "node": "Hair_wild_mane",
+    "tris": 5800
    }
   },
   "regions": [
@@ -1711,10 +1920,10 @@
    "bake.py": "68e2fdefee8d5b50e903d3339b26d3b63a241d3a4afde27f38456cc81b77a8a4",
    "clips.py": "b8ebf9277de4a6744a2bf9942479ec850d2351ed37795679d78c81252c443430",
    "designs.py": "2b14a0569b4fb34f4c5d7063b7c2249c57c51d786bde98aa99f5c3d263686f96",
-   "export_game.py": "b71e4dbce37a4c98d0e7e09d74c979624020e709b3a5b465d997ad9b2dcfdb8e",
+   "export_game.py": "bd72a8a23200be7a827344b02689cea1b093e44776d5997998b67bcbf34c5bb0",
    "giant_body.py": "c8f694bd9d26bfd16ef4ca60ad3d1f36ec9c75247bc360a3ae2ad8778b741581",
-   "giant_garment.py": "fa3a6376dcd481ca7845880d1fd5c0e0f0e65e32bc950d6f7f05c7f6e9baf4d3",
-   "giant_hair.py": "fe89234b7128bc142323afe3567506614751b9d6b3698a37424bb8dad858e83c",
+   "giant_garment.py": "103bbb966649904418c3f8b93830b8e3f440f4d2dc2d297d1b37785b2f5c54a5",
+   "giant_hair.py": "eac0c4f74796fed8be23e6033737a5b75189490a071e25d7968ce65ba0de0973",
    "giant_skin.py": "58bca541ac7ccc8ed87c477526a1650df76a6289c5d95d15e8ce6f9d30753086",
    "mh_data.py": "c6ef5a0eae9ce4ef73a3cae30db1e15f2d1bfed69af27a3c06dd404f66119ebc",
    "node_util.py": "5accffc8870441e1dd7733a0a6bb1fa80dbe3505dcabb1cab5778dc65d4e9e20",

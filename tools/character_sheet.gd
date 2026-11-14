@@ -242,7 +242,7 @@ func pages() -> Array:
 			if pair == DYE_PAIRS[0]:
 				cloth.append(_tile(_name(id) + " - the cloth close up", rec, "chest", "", 0.0, -1.0))
 	out.append({"id": "5", "name": "clothing", "title": "5. Clothing",
-		"note": "The four outfits in two dye pairs (primary and secondary), front and back; the cloth's detail maps close up.",
+		"note": "The outfits in two dye pairs (primary and secondary), front and back; the cloth's detail maps close up.",
 		"sections": [
 			{"title": "The outfits in two dye pairs", "columns": 4, "aspect": 1.25, "tiles": outfits},
 			{"title": "The cloth close up (weave, leather, fur)", "columns": 4, "aspect": 0.75, "tiles": cloth}]})

@@ -26,10 +26,12 @@ func test_follow_arm_stays_long_through_a_doorway() -> void:
 ## beard and eyes are on layer 3, the torso and the garments' core parts on layer 2, the limbs and the
 ## garments' limb parts on layer 1 (the index says which, and these lists pin it); first person culls
 ## layers 2 and 3 and draws the limbs and the weapon; third person draws everything.
-const HEAD_MESHES := ["Body_Head", "Eyes", "Hair_crop", "Hair_long_back", "Beard_full", "Beard_short"]
+const HEAD_MESHES := ["Body_Head", "Eyes", "Hair_crop", "Hair_long_back", "Beard_full", "Beard_short",
+	"Hair_long_braided", "Hair_warrior_tail", "Hair_wild_mane", "Beard_braided", "Beard_forked"]   # P46: the target's styles
 const TORSO_MESHES := ["Body_Torso", "Garment_tunic_core", "Garment_braies_core", "Garment_jerkin", "Garment_furs",
-	"Garment_belt"]
-const LIMB_MESHES := ["Body_Limbs", "Garment_tunic_limbs", "Garment_braies_limbs", "Garment_boots", "Garment_bracers"]
+	"Garment_belt", "Garment_cape", "Garment_pauldron"]                                          # P46: the cape, the pauldron
+const LIMB_MESHES := ["Body_Limbs", "Garment_tunic_limbs", "Garment_braies_limbs", "Garment_boots", "Garment_bracers",
+	"Garment_leg_wraps"]                                                                         # P46: the leg wraps
 
 
 func test_first_person_hides_the_giants_torso() -> void:

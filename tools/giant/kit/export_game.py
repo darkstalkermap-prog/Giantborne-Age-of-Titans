@@ -48,7 +48,8 @@ GARMENT_CAP_LIFT_M = 0.02          # human scale: a garment's cap sits this far 
 COVER_SHARE = 0.97                 # a region a garment covers this much of sinks under it (covers)
 COVER_RAY_M = 0.12                 # human scale: the longest skin-to-garment ray that still covers
 SPLIT_GARMENTS = ("braies", "tunic")
-WHOLE_PART = {"belt": "torso", "jerkin": "torso", "furs": "torso", "bracers": "limbs", "boots": "limbs"}
+WHOLE_PART = {"belt": "torso", "jerkin": "torso", "furs": "torso", "bracers": "limbs", "boots": "limbs",
+              "cape": "torso", "pauldron": "torso", "leg_wraps": "limbs"}
 LIMB_ROOTS = ("upperarm_l", "upperarm_r", "thigh_l", "thigh_r")
 TORSO_ROOTS = ("clavicle_l", "clavicle_r", "pelvis")
 

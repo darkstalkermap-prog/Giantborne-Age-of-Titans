@@ -197,8 +197,11 @@ index = {
 "boots": ["Garment_boots"],
 "bracers": ["Garment_bracers"],
 "braies": ["Garment_braies_core", "Garment_braies_limbs"],
+"cape": ["Garment_cape"],
 "furs": ["Garment_furs"],
 "jerkin": ["Garment_jerkin"],
+"leg_wraps": ["Garment_leg_wraps"],
+"pauldron": ["Garment_pauldron"],
 "tunic": ["Garment_tunic_core", "Garment_tunic_limbs"]
 },
 "landmarks": {
@@ -223,8 +226,26 @@ index = {
 "wrist_l": [-1.087127, 2.306697, -0.44995],
 "wrist_r": [1.087127, 2.306697, -0.44995]
 },
-"manifest_sha256": "0612a0a5483637c55ad0a591df3d66fcfcb6e3fb5a165feccd2179bc7cae75d8",
+"manifest_sha256": "47230951865d24840dbadbff8361c528435ce4b94a5c6449ed758e655d956922",
 "meshes": {
+"Beard_braided": {
+"atlas": "hair_atlas",
+"category": "beard",
+"covers": [],
+"dye": "none",
+"layer": 3,
+"node": "Beard_braided",
+"tris": 2836
+},
+"Beard_forked": {
+"atlas": "hair_atlas",
+"category": "beard",
+"covers": [],
+"dye": "none",
+"layer": 3,
+"node": "Beard_forked",
+"tris": 3840
+},
 "Beard_full": {
 "atlas": "hair_atlas",
 "category": "beard",
@@ -339,6 +360,20 @@ index = {
 "part": "limbs",
 "tris": 676
 },
+"Garment_cape": {
+"category": "garment",
+"coverage": {
+"5": 0.839286,
+"6": 0.986486
+},
+"covers": [6],
+"detail": "weave",
+"dye": "primary",
+"layer": 2,
+"node": "Garment_cape",
+"part": "torso",
+"tris": 1228
+},
 "Garment_furs": {
 "category": "garment",
 "coverage": {
@@ -368,6 +403,30 @@ index = {
 "node": "Garment_jerkin",
 "part": "torso",
 "tris": 2278
+},
+"Garment_leg_wraps": {
+"category": "garment",
+"coverage": {
+"13": 0.835913
+},
+"covers": [],
+"detail": "weave",
+"dye": "primary",
+"layer": 1,
+"node": "Garment_leg_wraps",
+"part": "limbs",
+"tris": 550
+},
+"Garment_pauldron": {
+"category": "garment",
+"coverage": {},
+"covers": [],
+"detail": "leather",
+"dye": "secondary",
+"layer": 2,
+"node": "Garment_pauldron",
+"part": "torso",
+"tris": 326
 },
 "Garment_tunic_core": {
 "category": "garment",
@@ -424,6 +483,33 @@ index = {
 "layer": 3,
 "node": "Hair_long_back",
 "tris": 5920
+},
+"Hair_long_braided": {
+"atlas": "hair_atlas",
+"category": "hair",
+"covers": [],
+"dye": "none",
+"layer": 3,
+"node": "Hair_long_braided",
+"tris": 5000
+},
+"Hair_warrior_tail": {
+"atlas": "hair_atlas",
+"category": "hair",
+"covers": [],
+"dye": "none",
+"layer": 3,
+"node": "Hair_warrior_tail",
+"tris": 3424
+},
+"Hair_wild_mane": {
+"atlas": "hair_atlas",
+"category": "hair",
+"covers": [],
+"dye": "none",
+"layer": 3,
+"node": "Hair_wild_mane",
+"tris": 5800
 }
 },
 "regions": [{
