@@ -271,3 +271,14 @@ the docs audit's open item.
 | **After the Stone Throne is taken, "[E] Take the Stone Throne" stays on screen** beside "You take the Stone Throne..." (the world tour's shot `138_throne_claimed.png`): the throne stays interactable and its prompt does not change. Cosmetic. | M10 (UI) | `scripts/world/stone_throne.gd` (P36); evidence: the ship step's `w24/tourwork/run1/` |
 | **The map opens centred on the giant without keeping its view inside the world**: at the world's north edge (the Moot) half the panel is empty until it is panned or zoomed (shots `139_map_world.png`, `140_map_selected.png`). Cosmetic. | M10 (UI) | `ui/screens/map_screen.gd` (P27) |
 | **The checkpoint toast cuts a long shrine name**: "Checkpoint saved: Shrine of the Standing Ston..." (shot `138_throne_claimed.png`). Cosmetic. | M10 (UI) | `ui/hud/checkpoint_toast.gd` |
+
+## From the look (P42, M10 W25)
+
+What P42 (`docs/systems/P42.md`) left for the packages after it.
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| **The look's suites have not met the real model.** `test_giant_look_real`, `test_tip_matching`'s exported landmarks and `test_giant_shaders`' model frames (the long hair and full beard at the Face and Hair framings, the hair bar of §4.2) and its per-frame cost at 320x240 skip with a note until `scenes/player/giant_model.tscn` exists; on this branch the rendered check drew a stand-in (spheres and cards). | W25 merge | Run `tests/slow/test_giant_shaders.gd` on the merged tree and give P43 the frame cost for its caps; any id `test_giant_look_real` lists as missing is renamed in the data or the index. |
+| **A weapon carried past its fit stage cannot show its tested capsule.** An unreforged club, sword or hammer at stage 4 or 6 keeps its stage-2 length while the arm is the stage's; its capsule starts up to 0.28·k beyond the real hand's reach, so the visible weapon's outer half misses it by up to 4.2 x its radius (it still points within 12.7° of the swing). | P43 | `TipMatching` returns the farthest reachable grip pointing at the tested tip; P43 decides whether that is the look (and says so in its doc) or the too-small weapon is held differently. |
+| **`appearance.tab_seen` is written by nothing yet.** The shrine prompt for saves from before M10 ends on its 15 s timeout until P44's Appearance tab sets the flag. | P44 | `tests/integration/test_valley_content.gd` already counts the tab as the flag's writer. |
+| **`appearance.legacy_save` follows the plan's rule literally**: any save whose character has no look sets it on Continue - in W25 also a New Game made before the creator exists, and the saves of bot and command-line runs (which never store their `--appearance=` look). | P44 | Once the creator writes a record at every New Game only saves from before M10 and tool runs lack one. |
