@@ -2504,9 +2504,10 @@ about 02:30 to 03:16, with the final full check and other release work beside th
 CPU-per-tick and streaming number below is a shared-machine number, never a capture: the quiet-machine captures are
 W23's (`docs/PERFORMANCE.md`, "The M9 confirmation") and the release's. "W23" is the W23 confirmation on `a7da72d`
 (`confirm_*`): its seed-1 subset of the same six specs and, where it differs, its full 21-run matrix (the last matrix on
-three seeds). measure-a's numbers on `62dcf41` are history - the final round's eight commits that change code the game
-reads came after them (six act in play; `3729d2e` acts only in the music and `c2644d4` only in the bot's classification
-of a breach) - and are named "62dcf41" where they explain a move. Lane balance's "final code" in its section above is
+three seeds). measure-a's numbers on `62dcf41` are history - the final round's eight commits whose code can touch a
+measured run came after them (six act in play; `3729d2e` acts only in the music and `c2644d4` only in the bot's
+classification of a breach; a ninth, `b1f2d29`, changes only the HUD's engine lines) - and are named "62dcf41" where
+they explain a move. Lane balance's "final code" in its section above is
 its own fix-up 1 (`bd541da`); "the final code" here is `7502770`.
 
 ### What the gate changed between W23 and the final code
