@@ -2167,6 +2167,9 @@ three seeds - Harrok slain on the 4th, 3rd and 4th attempt with 3, 2 and 3 death
 42/46/0 and 42/4/2/0 %; seven, five and five deaths in the whole run, 36.2, 32.2 and 36.8 minutes of human estimate).
 Each run replays the gate's until its first Strike (the same deaths before it; seed 1's third attempt is lost 4.2 s
 after the Strike as before, its fourth won). Deaths per Harrok's slay: median 3 (plan §6.4: 1-3, met; before 6).
+M9 gate, the final measurement: on the merged code the gate releases (`7502770`) the conqueror novice of seed 1
+loses the slay again - six deaths, its one Strike landed - so the slay is not settled for the release ("M9 gate: the
+final measurement", below).
 
 ### Lone humans (awe tiers)
 
@@ -2460,3 +2463,249 @@ their non-flee time unchanged at 286 -> 276 s (F6); Harrok's spare duels in the 
 Earthquake's use (eight runs of ten) and the Millford raid (abandoned in one conqueror expert run) (F7); an engine's
 landed shot now raises combat music as its crew's hit (F4/F12: the lesser-only share on the final code is the final
 measurement's); the bastion hold's "half again as long" and "a quarter of its health" (A6/A7).
+
+## M9 gate: the final measurement (the final code `7502770`; tags `final_after_*`)
+
+Every plan §6.4 and §6.2 target on the code the M9 gate releases: `7502770` (tag `m9-gate-fixed`: the four lanes, the
+integration, the catch-up and the final round with its merge; `docs/systems/P39.md`, "M9 gate (the final round)").
+The main checkout was used read-only: a watcher sampled HEAD, the working tree and the load every 30 s from 02:29 to
+04:51 UTC on 14 November (282 samples, every one `7502770` with a clean tree), and each run's start and end record the
+same. The runs are the measurement's earlier set (measure-a, on `62dcf41`, the catch-up) made again on this code with
+the same specs, seeds and `--extra=--perf`, and four runs measure-a had not made (the Valley's 30 minutes, the
+campaign's hand-over and the three first-oath orders unassisted). Nothing was tuned: the final round's one attempt
+(the ballistae's reload, "M9 gate (final)" above) was reverted before this. The evidence is in the gate's scratch
+folder `m9_gate/final/measure-after/` (`TARGETS.md`, `reports/` with `tools/bot_report.py`'s tables of every batch,
+`logs/`, `attr/`); the runs in `user://bot_runs/final_after_*/`.
+
+```
+# one scheduler, three Godot processes at a time, each run its own call; --timeout is a wall-clock guard only
+tools/run_bots.sh w.<peaceful|conqueror|mixed>:<novice|expert>:1 --jobs=1 --timeout=10800 --tag=final_after_world_a --extra=--perf
+tools/run_bots.sh <--preset=world_assisted's and --preset=world_orders' specs> --jobs=1 --timeout=10800 --tag=final_after_<assisted|orders> --extra=--perf
+tools/run_bots.sh w.order_<march|wood|crown>:novice:1 --jobs=1 --timeout=10800 --tag=final_after_extra_orders --extra=--perf
+tools/run_bots.sh --preset=world_stability --jobs=1 --timeout=14400 --tag=final_after_stability_a --extra=--perf
+tools/run_bots.sh --preset=stability --jobs=1 --timeout=5400 --tag=final_after_extra_valley_stability --extra=--perf
+tools/run_bots.sh w.campaign:novice:1:assist --jobs=1 --timeout=10800 --tag=final_after_extra_campaign --extra=--perf
+tools/run_bots.sh <help_cache|help_ogre|intimidate>:novice:<1|2> <--preset=assisted's four> --jobs=1 --timeout=5400 --tag=final_after_valley_a --extra=--perf
+tools/gd.sh --headless --path . --fixed-fps 60 res://tests/run_tests.tscn -- --no-user-settings --no-audio --filter=budget
+```
+
+| Batch | Runs | Result |
+| --- | --- | --- |
+| `final_after_world_a` | the novice and the expert on the three presets, seed 1, unassisted | 5 of 6 completed; `w_conqueror_novice_1` stopped (`bot_failed`: six deaths at Harrok's slay) |
+| `final_after_assisted`, `final_after_orders` | P38's acceptance runs: the three presets and the three first-oath orders, the novice assisted, seed 1 | 6 of 6 completed, no death |
+| `final_after_extra_orders` | the three first-oath orders, the novice unassisted, seed 1 | the march first and the wood first completed; the crown first stopped (`bot_failed`: six deaths, five in the Iron Regiment battle) |
+| `final_after_stability_a`, `final_after_extra_valley_stability`, `final_after_extra_campaign` | plan §6.2's three stability runs | all passed |
+| `final_after_valley_a` | the novice on seeds 1-2 of `help_cache`, `help_ogre` and `intimidate`, and `--preset=assisted`'s four outcomes | 10 of 10 completed |
+
+**What these numbers are.** Seeds 2-3 of the world matrix were not run (as in measure-a: the owner asked for speed),
+so every world verdict here is a seed-1 verdict, and "at least 2 of 3 seeds" is settled only where seed 1 decides it.
+The 1-minute load on the 4 CPUs was 1.5-20.5 (9-20 from 02:30 to about 03:20, with the final full check and other
+release work beside the runs; 2.7-5 from 03:25), so every CPU-per-tick and streaming number below is a shared-machine
+number, never a capture: the quiet-machine captures are W23's (`docs/PERFORMANCE.md`, "The M9 confirmation") and the
+release's. "W23" is the W23 confirmation on `a7da72d` (`confirm_*`): its seed-1 subset of the same six specs and, where
+it differs, its full 21-run matrix (the last matrix on three seeds). measure-a's numbers on `62dcf41` are history -
+the final round's eight commits that act in play came after them - and are named "62dcf41" where they explain a move.
+Lane balance's "final code" in its section above is its own fix-up 1 (`bd541da`); "the final code" here is `7502770`.
+
+### What the gate changed between W23 and the final code
+
+| Lane | What a run meets (commits) |
+| --- | --- |
+| aldmere | Fort Aldmere's gate garrison's pikes beside the gate's approach, not on its line (`1855c3a`); the war camp's shield wall off the King's Road (`ea95089`); the Iron Regiment's gate-bastion ballistae hold their fire until the Charge (`812e626`, `82eab0b`); the battle's HUD lines on the ballistae (`40afc4e`, `f041f7b`) |
+| ironreg | the battle's phases follow its units, not its engines' health (`baaf6a8`); the breach kept through a death, the gate garrison standing down once the gate has fallen (`23d4d3c`; its fix-up 1, `bb8fab5`: the crown's roads start with an ordinary checkpoint again); the war camp's wall off the diagonal to the Aldmere road's waystone (`0b6c233`) |
+| review | a leash return never ends early outside the leash: it waits off a body on its post and answers a blow (`0f89cdd`, `1623c00`); an old save's event tracker (`471f02d`); the discovery toast, the hotbar and the map's focus label (`6d06882`, `2c2ab0f`, `7b6cc19`); Reeve Tamsin's raid line (`47b63f2`); "the" mid-sentence (`1f1ba46`) |
+| balance | awe tiers: a lone soldier flees a stage-4 giant and does not come back (`ada7ebd`, `18b2708`); the music's combat radius capped at 40 m from a 10 m giant (`4be451d`); the Matriarch's phase 2 (`b29ddb4`, `6c3d9db`); an enemy fallen through the world set back at its home (`e3aae55`); the bot's measurement fixes (`73dad1c`, `36d7938`, `41fddb0`, `bd541da`); fix-up 1: Harrok's Strike lands before he rises (`e35781c`) |
+| integration | the bot's member scan skips a chunk whose unload is pending (`6e0c7a0`; the bot only) |
+| the final round | routed planned units count as fallen for the battle's phases and bar, whose notches follow the phases (`55a56db`); the gate's fall lifts a provocation from before it (`504b989`); the Moot's watching clans are spectators and leave when Harrok is slain (`af0b7b9`); a hostile crewed engine's landed shot raises combat music as its crew's hit (`3729d2e`); a ranged member's firing points stay inside its leash (`6bdf7e5`); a rider's "way" wait backs off the body in its way and starts sooner (`771e00b`); only a hostile holder keeps a member off its leash (`71e18df`); the HUD's engine lines count a manned engine (`b1f2d29`); the diagnosis's far path check (`c2644d4`; the classification only) |
+
+The numbers tuned at the gate, each with its before and after in its lane's section above: the Matriarch's phase 2
+(13 hp/s, one whelp called, the frenzy 35 + 40 with a 3.0 s punish window), the soldier's awe tier (50 of its 70
+morale before a giant 6x its height), the music's combat cap (40 m from a 10 m giant) and Harrok's
+`yield_at.strike_health_frac` (0.1). Three encounters' data changed: Fort Aldmere's gate garrison (its pike post and
+its `stand_down_when`), the war camp (its shield wall's post, twice) and the Moot's clans (spectator spawns).
+
+### Plan §6.4: the world (seed 1)
+
+N = the three novice runs, E = the three expert runs, all = the six runs of `final_after_world_a`; each verdict is
+`tools/bot_report.py`'s `world_targets` on that batch, the orders row on it with `final_after_extra_orders`.
+
+| Plan §6.4 target | Final code | Target | Met | Runs | W23 (seed 1; the full matrix where it differs) |
+| --- | --- | --- | --- | --- | --- |
+| Completion, novice, per preset | peaceful 1 / 1, conqueror **0 / 1**, mixed 1 / 1 | at least 2 of 3 seeds | **open** on one seed: the conqueror's seed 1 lost at Harrok's slay; peaceful and mixed need a second seed | N | 1 / 1, 0 / 1, 1 / 1; full 3 / 3, 0 / 3, 2 / 3 (missed) |
+| Completion, expert | peaceful 1 / 1 (0 deaths), conqueror 1 / 1 (1), mixed 1 / 1 (2) | 3 of 3, at most 2 deaths each | **met on seed 1** | E | 1 / 1 (7), 0 / 1 (3), 1 / 1 (7); full 2 / 3, 0 / 3, 3 / 3 (missed) |
+| Every first-oath order completes (unassisted) | march first yes (5 deaths), wood first yes (3), crown first **no**: six deaths, five of them in the Iron Regiment battle | every order | **missed** | `final_after_extra_orders` | crown first no (stuck in the gateway), march and wood yes (missed) |
+| The same, assisted (P38's acceptance, M9) | 6 of 6 complete with no death, no breach, no invariant failure, 0 errors and warnings | every run | **met** | `final_after_assisted`, `final_after_orders` | the crown first stopped on its oath's time (missed) |
+| Human estimate of the main path (novice median, completed runs) | 35.3 min (raw 26.5): peaceful 40.1, mixed 30.5 | 75-140 min | **missed** | N: peaceful, mixed | 36.6 min (raw 26.8); full 41.3 (30.3) |
+| Each §5.15 segment within its range (novice median) | Opening 4.3 (7-14), First oath 6.1 (10-30), Second oath 10.9 (18-35), Growth to 5 and roaming 3.5 (0-40), Stonehold 10.6 (15-32) | every segment | **missed**: only the roaming segment is in range | N | 4.6, 9.4, 8.4, 3.6, 10.5; full 5.3, 12.3, 8.7, 5.9, 10.3 |
+| Deaths per boss attempt sequence (novice median, by resolution) | the Matriarch driven out 0 (won 1 of 1), slain 3 (won 1 of 1); Harrok spared **4.0** (5 and 3; won 2 of 2), slain **6** (won 0 of 1); with the unassisted orders: the battle **5** (won 0 of 1), driven out 0.5 (0, 1), Harrok spared 3.0 (3, 5, 3, 1) | 1-3 | **missed**: Harrok's slay, Harrok's spare (3.0 with the orders) and the battle; the drive-out's 0 is under the range by design | N, `final_after_extra_orders` | driven out 0, the Matriarch slain 6 (0 of 1), Harrok spared 3.5 (4, 3); full: the battle 1 (0 of 1), the Matriarch slain 6 (0 of 3), Harrok spared 2.5 (7 of 8) |
+| Deaths in any other segment (novice) | max 1 (`w_conqueror_novice_1`'s second oath: a Greywood wander troll) | at most 2 | **met** | N | max 2 (`w_peaceful_novice_1`, the Stonehold), both ways |
+| Lone humans flee or rout, stages 4-6 (pooled) | 31 %: the soldiers 65 % of 367 s, the archers 17 % of 974 s, the mages 33 % of 248 s | at least 70 % | **missed** | all | 4 % (the soldiers 0 % of 142 s); full 4 % (0 % of 371 s) |
+| Formations hold or brace while their banner lives (pooled) | 66 % | at least 50 % | **met** | all | 80 %; full 79 % |
+| Group or banner locks at stages 4-6 with a formation engaged (pooled) | 66 % | at least half | **met** | all | 87 %; full 89 % |
+| Engines thrown per run that reaches stage 6 | 6 of 6 runs, 4 each (the Moot battery's) | at least 2 | **met** | all | 4 of 4; full 11 of 12 (missed) |
+| Off-camera share of the hits taken | median 14 % (pooled 11 % of 1,028 hits) | under 20 % | **met** | all | median 17 % (16 % of 1,910); full 16 % (16 % of 5,599) |
+| Music in combat among only lesser enemies, stages 4-6 (pooled) | **9 %** | under 25 % | **met** | all | 43 % (missed) |
+| Every slotted ability used at least once a run | unused when ready: Earthquake in all 6 runs, Formation Sweep and Titan Stomp 3, Rampart Grip 2, Crushing Grip, Crag Hurl and Sweeping Blow 1 | all used | **missed** | all | nine abilities unused (Rampart Grip in 4 runs, Earthquake, Formation Sweep and Boulder Hurl 3, ...); full Rampart Grip 12, Formation Sweep 11, Titan Stomp 9, Earthquake 8 |
+| No ability over 40 % of ability damage | max 59 % (Runic Bolt, `w_peaceful_expert_1`); the novices' largest 28-52 % | at most 40 % | **missed** | all | 92 % (Runic Bolt); full 98 % |
+| Worst streaming work frame, headless | 18.5-26.7 ms a run (the most in `w_conqueror_expert_1`, at a load of 9.4-19.0): shared machine | at most 12 ms | **missed** (a shared machine) | all | 29.1 ms; full 33.9 ms (three at a time; the world walk alone 12.19 ms) |
+| Loaded margin and thrash | smallest margin 253 m, thrash 0 | at least 200 m, no thrash | **met** | all | the same |
+| CPU per tick p95 | median 8.84 ms, max 14.89 ms (`w_conqueror_expert_1`): shared machine | at most 8 ms | **missed** (a shared machine) | all | median 8.43, max 10.19; full 8.40, 10.64 (three at a time, nothing else running) |
+| The XP and equipment budget tests (margins at least 50 XP) | 6 suites, 191 checks, 0 failures (`test_world_budgets_crown`, `test_world_budgets_wood`, `test_world_equipment_budget`, `test_world_xp_budget`, `test_xp_budget`, `test_build_web_budget`); the smallest margin 70 XP (two oaths and the oaths stage: 3,320 against 3,250) | pass | **met** | `logs/budget_suites.out` (02:28 UTC) | the five budget suites passed (178 checks), the smallest margin 70 XP |
+| The Valley: the Ogre King in 1-2 tries for the novice | one try in each of the six novice runs, no death at the boss | 1-2 tries | **met** as tries (P22 and W23 read it as 1-2 deaths: under that range, as since P22) | `final_after_valley_a` | no novice death at the boss |
+| The Valley: segment damage at most 0.6 x maximum health (estimate; novice median) | the forest 1.12, the village 0.36, the ruins **0.81** | at most 0.6 each | **missed** in the forest and the ruins | `final_after_valley_a`: the six novice runs | the same six runs 1.12 / 0.36 / 0.93; the 18 novice runs 1.39 / 0.34 / 1.00 |
+| The Valley: the force branch within its watchdog | `force_novice_1_assist` completed, no breach (13.1 min) - the unassisted force runs were not in the set | no breach | **met** (assisted only) | `final_after_valley_a` | the novice 3 of 3, the expert 2 of 3 (seed 2 out of the Deadfall's 240 s) |
+
+Recorded beside the targets: the director's counted combatants (its cap 12) peaked at 16 in `w_conqueror_expert_1`
+(0.3 s over) and in `w_mixed_expert_1` (43.9 s over) and at 12 in the other four (on `62dcf41`: 16 in the same two, 50.3
+s over in the mixed expert's, and 14 in the conqueror novice's; W23's matrix: 13-17 for under 0.4 s in its six
+conqueror runs and 16 for 43.6 s in `w_mixed_novice_3`); no run failed the bot's budget invariant (FOLLOWUPS, "The
+director's counted combatants").
+
+### The world runs one by one
+
+| Run | Result | Deaths (killers) | Human estimate (raw) | Bosses (attempts: each attempt's lowest health) |
+| --- | --- | --- | --- | --- |
+| `final_after_world_a/w_peaceful_novice_1` | completed | 7 (Harrok 5, a Crownmarch raider mage, a scout giant) | 40.1 min (30.0) | the Matriarch driven out (1: 58 %); Harrok spared (6: 50, 37, 38, 30, 40, 25 %) |
+| `final_after_world_a/w_conqueror_novice_1` | **stopped**: six deaths in Harrok's duel | 11 (Harrok 6, the Matriarch 2, her whelp, a Greywood wander troll, a scout giant) | 38.5 min (29.4) | the Matriarch slain (4: 48, 22, 6, 0 %); Harrok not settled (6: 32, 38, 40, 27, 6, 36 %; one yield, struck) |
+| `final_after_world_a/w_mixed_novice_1` | completed | 4 (Harrok 3, a scout giant) | 30.5 min (22.9) | Harrok spared (4: 41, 62, 36, 25 %) |
+| `final_after_world_a/w_peaceful_expert_1` | completed | 0 | 40.8 min (31.1) | the Matriarch driven out (1: 58 %); Harrok spared (1: 25 %) |
+| `final_after_world_a/w_conqueror_expert_1` | completed | 1 (Harrok) | 38.2 min (28.7) | the Matriarch slain (1); Harrok slain (2; two yields, struck) |
+| `final_after_world_a/w_mixed_expert_1` | completed | 2 (a Stonehold wander troll, Harrok) | 30.3 min (22.6) | Harrok spared (2: 29, 25 %) |
+| `final_after_extra_orders/w_order_march_novice_1` | completed | 5 (Harrok 3, a Crownmarch raider mage, a scout giant) | 31.2 min (21.4) | Harrok spared (4: 43, 44, 41, 25 %) |
+| `final_after_extra_orders/w_order_wood_novice_1` | completed | 3 (the Matriarch, a scout giant, Harrok) | 29.6 min (20.1) | the Matriarch driven out at stage 4 (2: 64, 59 %); Harrok spared (2: 60, 25 %) |
+| `final_after_extra_orders/w_order_crown_novice_1` | **stopped**: six deaths on the crown's oath, stage 4 | 6 (a gate wall archer at the breach; then in the battle the Wall's pikes 3, the north-west ballista, a rider) | 17.6 min (12.8) | the Iron Regiment not won (5: 92, 66, 100, 100, 66 % of its bar; the Charge in two) |
+
+None of the measurement's 28 runs crashed, met an invariant failure, an error or a warning in its own count, granted a
+reward twice or was classified `world_blocked` (each stop was `bot_failed`: a path existed); one needed a teleport (the
+assisted crown-first order, once, at the Stone Throne's ring). Fast travel was not used and no map screen opened (the
+main path never returns far). Godot's exit report of leaked resources follows each completed campaign's result, as
+before (FOLLOWUPS, "From the M9 gate review (lane review)").
+
+**Harrok's slay is not settled on the final code** (`w_conqueror_novice_1`). The novice began the duel at level 14
+(5,277 XP). Four deaths came before any yield (his chop twice, the Moot's stones, his frenzy); in the fifth attempt he
+yielded once, the conqueror struck (tick 101,510) and the Strike's blow landed (`yield.strike`, 510 damage, leaving him
+his 10 %), but he rose and his frenzy killed the giant 3.9 s later; the sixth attempt ended on his chop. Lane balance's
+fix-up runs of this seed on its own code (`fx1_world`, `bd541da`) slew him at the fourth attempt with three deaths; the
+merged code parted from them on the King's Road (the war camp's wall that lane ironreg moved) and reached him a level
+lower - measure-a on `62dcf41` already lost the same slay with two Strikes landed (1,020) - and on the final code the
+run parts earlier still, at Edda's oath (the firing-point rule: "What moved", below). Seeds 2-3 were not run on the
+final code. The Strike's rule works as written (it lands, and Spare and the talk ending never meet it); what is open is
+the novice's fight against the risen Harrok (FOLLOWUPS, "Harrok's slay", owner M10).
+
+**The crown-first order unassisted** (`w_order_crown_novice_1`) no longer stops in Fort Aldmere's gateway (W23: a stuck
+there at 627 s, lane aldmere's fix). It died once at the gate (a wall archer's arrow) and then fought the Iron Regiment
+at stage 4 in five attempts, each death bringing it back to the fort gate's waystone with 60 % of its health. The Charge
+came in two attempts (the bar at 0.66 each time); in two others the Wall's pikes killed it in the gateway's inner mouth
+before the bar moved (three stuck moments there, z -102 to -107). Of the 3,803 damage it took in the battle the
+ballistae dealt 2,457 (65 %), the soldiers 1,236 (33 %), the riders 110 (3 %); the bot gave up its ranged blows at the
+west bastion's ballista twice and broke no engine; the Wall's pikes killed the giant three times, the north-west
+ballista and a rider once each. The final round's levers for it stand (FOLLOWUPS, "The Iron Regiment at stage 4", owner
+M10). Its assisted run (`final_after_orders`) won the battle at the first attempt with no death, replaying the
+measured run to the tick.
+
+### Plan §6.2: stability
+
+| Plan §6.2 target | Final code | Target | Met | Runs | W23 |
+| --- | --- | --- | --- | --- | --- |
+| The world, 60 minutes: no crash | exit 0, the full 3,600 s simulated (216,000 ticks; 3,257 s of wall at a load of 2.8-20.5) | no crash | **met** | `final_after_stability_a` (the assisted novice, `--bot-loop` through the presets from `--mode=world --new-game`, `--autoplay=3600`) | exit 0, 3,600 s |
+| The world: no `world_blocked` | no breach, `world_blocked` 0 | none | **met** | the same | none |
+| The world: no duplicated reward | 0 in each completed campaign and 0 in the unfinished one | none | **met** | the same | none |
+| The world: no unrecoverable targeting state | no failure of the lock and targeting invariant (`invariants_ok` true) | none | **met** | the same | none |
+| The world: no invariant failure | 0 | none | **met** | the same | 0 |
+| The world: node count after each load within 10 % of the first | 3 loads at 1,107 / 1,114 / 1,107 nodes (0.6 %), 0 orphans | within 10 % | **met** | the same | 1,107 / 1,114 / 1,107 (0.6 %) |
+| The world: 0 errors and warnings | 0 and 0 on the run's own counter (Godot's exit report of leaked resources after a completed campaign is a separate open item) | 0 and 0 | **met** | the same | 0 and 0, the same exit report |
+| (what the world run played) | the peaceful campaign completed at 1,420.4 s (33.4 min), the conqueror's in 1,163.3 s (28.8 min), the mixed one at the Moot (1,016.3 s) when the time ran out; no death, no teleport; stuck moments 9, 8 and 7, all recovered | - | - | the same | the peaceful and conqueror campaigns (about 1,480 and 1,430 s), the mixed at grow6; no death |
+| The Valley, 30 minutes (`--preset=stability`, as in M5) | exit 0, the full 1,800 s (108,001 ticks; 1,298 s of wall); help_cache completed at 509.8 s (13.3 min), help_ogre 481.5 s (12.7), intimidate 416.1 s (10.9), a fourth game at 392.5 s; no breach, invariant failure, duplicated reward, death or teleport; 4 loads at 1,554 / 1,561 / 1,561 / 1,561 nodes (0.5 %); 0 errors, 0 warnings; one stuck moment a game, recovered | the world run's checks | **met** | `final_after_extra_valley_stability` | passed: 506.9, 472.9 and 489.7 s, the fourth at 330.5 s |
+| The campaign's hand-over (one assisted run from the Valley's New Game through the Kings' Door to Brannock's oath) | the Valley in 508.8 s, the Kings' Door at 509.5 s, Edda's offer of help at 652.6 s, the march sworn at 1,085.4 s, the Stone Throne at 2,045.3 s: the campaign complete (48.2 min of human estimate; 1,154 s of wall); exit 0, no breach, invariant failure or duplicated reward, 0 errors, 0 warnings, no death; its two loads two levels (the Valley 1,554 nodes, the world 1,109) | the hand-over, then the world's checks | **met** | `final_after_extra_campaign` (`w.campaign:novice:1:assist`) | passed: the Valley 503.6 s, Edda 764.8 s, the march sworn 966.6 s, the throne 1,972.0 s |
+| CPU per tick and streaming (recorded, not a §6.2 target; a shared machine) | the world run p95 17.32 ms (p50 4.63; a load up to 20.5), loads 49, thrash 0, the smallest margin 253.3 m, the worst work frame 18.9 ms, the counted combatants at most 13 (0.05 s over 12); the Valley run p95 13.21 ms; the hand-over 6.43 ms | - | - | the three runs | 6.93, 6.52 and 6.41 ms (nothing else running) |
+
+The world run's first campaign is `final_after_assisted/w_peaceful_novice_1_assist`'s game exactly (1,420.4 s); the
+Valley run's first game is `final_after_valley_a/help_cache_novice_1_assist`'s (509.83 s).
+
+### The Valley (the six novice runs and the four outcomes assisted, `final_after_valley_a`)
+
+| Plan §5.6 row (the six novice runs, seeds 1-2) | Final code | The same six runs on W23 (and on `62dcf41`, to the tick) |
+| --- | --- | --- |
+| Human estimate (median, completed) | 13.6 min (raw 8.9), against 20-30 | 14.2 min (9.1) |
+| Each policy completes | 2 / 2 each | the same |
+| Deaths a run | 0-1 (`intimidate_novice_1`: a ruins soldier), none at the boss | 0-2 (`intimidate_novice_1` 2, `help_cache_novice_1` 1) |
+| The boss's damage per attempt (x maximum health) | 0.90 | 0.97 |
+| Soldiers in FLEE or ROUTED at stage 3 / in HOLD at stage 2 | 0.45 / 0.59 (target at least 0.5 each) | 0.41 / 0.58 |
+| Off-camera share | 0.20 | 0.20 |
+| CPU per tick p95 (a load of about 3) | 4.4-5.1 ms | 5.4-5.9 ms on W23 |
+
+The four assisted outcomes completed with no death: help_cache 13.3 minutes of human estimate, help_ogre 12.5,
+intimidate 11.5, force 13.1. Five of the six novice runs no longer replay W23's: they part where the road patrol's and
+the ruins' archers and mages now pick their firing points inside their leash (below); `help_ogre_novice_2` replays its
+measured run to the tick (32,356 ticks, flags hash `f1e9d88305a3`).
+
+### Against W23: what the gate as a whole moved (seed 1)
+
+Met now that W23's seed-1 runs missed: the expert's completion (0, 1 and 2 deaths against 7, 3 and 7, W23's conqueror
+expert stopped by the den's time), the music among lesser enemies (9 % against 43 %) and, assisted, the crown-first
+order (P38's acceptance: 6 of 6). Moved, still missed: lone humans (4 % to 31 %), the largest ability share (92 % to
+59 %), the crown-first order unassisted (stopped in the gateway, now beaten in the battle). The Matriarch's slay went
+from six deaths and no slay to three and a slay (met), which brought the conqueror novice to Harrok's slay: newly
+reached, and lost (six). Harrok's spare went from 3.5 to 4.0 deaths. Held: the novice presets' completion on seed 1 (1,
+0 and 1 - the conqueror's stop moved from the den to the duel), the engines thrown, the off-camera share, the margin
+and thrash, at most two deaths in another segment, and formations holding and group locks over their targets (80 %
+and 87 % to 66 % and 66 %: lane balance's runs traced the drop to the expert no longer standing idle before a pike
+wall and the conqueror runs going on past the den). Still under: the human estimate (36.6 to 35.3 minutes) and four of
+the five segments.
+
+### What moved, and why (the final code against `62dcf41`)
+
+The final round's code acts in every measured run: the firing-point rule (`6bdf7e5`), the "way" wait (`771e00b`) and
+the hostile-holder rule (`71e18df`) in every leashed encounter of the world and the Valley, the spectators
+(`af0b7b9`) in every world run at the Moot, the engine-hit rule (`3729d2e`) in the music of every run an engine hits,
+and the routed units and the gate's fall (`55a56db`, `504b989`) in the breach. So all 23 measured runs were made again
+and compared with their measured runs on ticks, deaths (each death's tick and killer), flags hash, XP and outcome: 2
+replay to the tick (the assisted crown-first order: 118,554 ticks, flags hash `4dae5deecf83`, XP 8,349; and
+`help_ogre_novice_2`), 21 part. Twelve short attribution runs played the final code with one of the three `EnemyActor`
+commits taken out, in scratch worktrees since removed: with `6bdf7e5` out, all four specs tried (the mixed, peaceful
+and conqueror novices and the Valley's `intimidate:novice:1`) play like their measured runs past their first parting -
+the talent at tick 23,100, no raider mage's kill at 12,671, Edda's oath at 11,538, the village left at 9,858; with
+either of the other two out they play like the final code's runs. The partings are the firing-point rule's - leashed
+archers and mages (the Crownmarch raiders, Brannock's gate, the Valley's road patrol and ruins) shoot from inside their
+leash instead of stepping past it and being leashed home - and after a parting everything differs. The targets below
+moved with the play, not through any tuning:
+
+- **The music among lesser enemies: 26 % to 9 %, met.** Most of it is the play: `w_mixed_expert_1` spent 169 s among
+  only lesser enemies with 4 s of combat music (42 s with 19 s on `62dcf41`), `w_mixed_novice_1` 67 s with 20 s (21 s
+  with 14 s). The engine-hit rule alone moved the identically played crown-first order's combat by 0.1 s (92.0 s against
+  92.1 s). It is the first measurement of the share with that rule: seed 1 only.
+- **Lone humans 19 % to 31 %** (the soldiers 57 % of 313 s to 65 % of 367 s), formations holding 56 % to 66 %, group
+  locks 62 % to 66 %, the off-camera share 16 % to 14 %.
+- **The human estimate 31.9 to 35.3 minutes**; the second oath's segment 8.9 to 10.9. The mixed novice's crown sabotage
+  took 783 s against 546 s, with three stuck moments at the war camp's south edge (x 513-541, z 57-74; the camp's
+  centre (520, 120), its leash 70 m) where the measured run had none, and the mixed expert met the same edge once
+  (traced only to the first parting: FOLLOWUPS, owner M10).
+- **Harrok's spare costs the novice more**: a median of 2.5 to 4.0 deaths (the peaceful novice 3 to 5, the mixed 2 to
+  3); with the two orders that spare him, 3.0. Harrok's slay for the conqueror novice stays lost (above).
+- **The experts**: deaths 0, 2, 1 to 0, 1, 2 (peaceful, conqueror, mixed); every one completes on seed 1.
+- **The largest ability share** 52 % (Crag Hurl) to 59 % (Runic Bolt, `w_peaceful_expert_1`).
+- **The Valley**: the ruins' damage share 0.93 to 0.81, the human estimate 14.2 to 13.6 minutes, the boss's damage per
+  attempt 0.97 to 0.90, the stage-3 flee share 0.41 to 0.45; no item crossed its target.
+- **The M9 acceptance**: still 6 of 6 with no death (the peaceful 1,502 to 1,420 s, the conqueror 1,265 to 1,221, the
+  mixed 935 to 1,145, the march first 1,092 to 1,042, the wood first 1,152 to 1,117; the crown first identical).
+- **Stability**: the world run's counted combatants 17 (45.0 s over 12) to 13 (0.05 s); the mixed expert's 16 (50.3 s)
+  to 16 (43.9 s).
+- **Performance (shared machine)**: the world runs' CPU p95 median 17.00 to 8.84 ms and worst work frame 389.0 to 26.7
+  ms - four of the six ran at a load of 3-5 here against 4-16 before: the machine, not the code. Both still miss.
+
+Did not move: the novice's completion (open: the conqueror's seed 1), the segments' miss, Earthquake unused in every
+run, the engines thrown (4 a run), the margin and thrash, the budget suites, the Ogre King's tries, the forest's damage
+share (1.12) and the force branch.
+
+### The misses, why, and who owns them (`docs/plans/FOLLOWUPS.md`)
+
+| Miss on the final code | Why | Owner (the FOLLOWUPS row) |
+| --- | --- | --- |
+| The novice's completion: the conqueror's seed 1 | Harrok's fight to the death after the Strike (above); the 2-of-3 verdict needs seeds 2-3 on the final code, not run | M10 ("Harrok's slay", "From the M9 gate (lane balance)"; "The world matrix on seeds 2-3", "From the M9 gate's final measurement") |
+| Every first-oath order: the crown first unassisted | the Iron Regiment at stage 4: the inner ballistae and the Wall's pikes, the bot's siege play in the battle; the final round's one cadence attempt missed | M10 ("The Iron Regiment at stage 4", "From the M9 gate's final round"; the crown-first order's and the M8 release check's rows) |
+| Deaths per boss attempt sequence | Harrok's slay (6) and spare (4.0; 3.0 with the orders) and the battle (5); the drive-out's 0 by design | M10 ("Deaths per boss attempt sequence", "From the M9 confirmation") |
+| The main path's pace and the §5.15 segments | the bot walks from objective to objective (no exploring, sealed places, cairns or side quests): a timed human run is the measure (NOT RUN) | P40 records it; the owner's timed run ("The main path's pace") |
+| Lone humans flee or rout (31 %) | the archers and mages keep their range and posts by design (§5.14): 1,222 of the 1,589 lone seconds; the lone soldiers flee (65 %) before the rout P30 gives them, and a rout is unseen by the measure | M10: a design decision ("Lone humans do not flee a stage-4 giant") |
+| Every slotted ability used; none over 40 % | the bot's rotation (Earthquake's few windows at stage 6) and the expert's Runic Bolt | M10 (the bot: "Ability use") |
+| The worst streaming work frame and CPU per tick p95 | shared-machine numbers (a load of 1.5-20.5): the release takes the quiet-machine captures; headless, the work frame is a props part's text parse (exports ship binary scenes) | P40 (the quiet-machine captures; "The worst streaming work frame", "CPU per tick p95 over 8 ms") |
+| The Valley's segment damage (the forest 1.12, the ruins 0.81) and stage-3 flee share (0.45) | since P17b and P22: the forest's fights and the ruins' courtyard; the shared soldier's awe loss for the stage-3 share | M10 ("The Valley's items that miss") |
