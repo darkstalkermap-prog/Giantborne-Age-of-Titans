@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.tattoo",
+	"type": "appearance_set",
+	"category": "tattoo",
+	"display_name": "Tattoos",
+	"description": "P42 (plan M10 §2.3): the floor's tattoos, two per region, bold pieces that read from behind at stage 1 or in first person (decision 18); design is a giant index design id.",
+	"options": [
+		{"key": "arm_bands", "name": "Arm bands", "design": "tat_arm_bands", "region": "arms"},
+		{"key": "arm_chevrons", "name": "Forearm chevrons", "design": "tat_arm_chevrons", "region": "arms"},
+		{"key": "chest_spiral", "name": "Chest spiral", "design": "tat_chest_spiral", "region": "chest"},
+		{"key": "chest_knot", "name": "Chest knot", "design": "tat_chest_knot", "region": "chest"},
+		{"key": "back_wings", "name": "Back wings", "design": "tat_back_wings", "region": "back"},
+		{"key": "back_tree", "name": "Back tree", "design": "tat_back_tree", "region": "back"},
+		{"key": "face_lines", "name": "Face lines", "design": "tat_face_lines", "region": "face"},
+		{"key": "face_dots", "name": "Face dots", "design": "tat_face_dots", "region": "face"}
+	]
+}

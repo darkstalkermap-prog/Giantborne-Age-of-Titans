@@ -81,7 +81,8 @@ const SILENT_SIGNALS := ["area_entered", "area_exited", "flag_changed", "xp_gain
 	"healed", "checkpoint_loaded", "reload_checkpoint_requested", "mode_change_requested",
 	"dialogue_requested", "dialogue_ended", "tutorial_dismissed", "quest_abandoned", "quest_tracked",
 	"wander_spawned", "world_chunk_loaded", "world_chunk_unloading", "world_chunk_unloaded",
-	"sandbox_reset_requested"]
+	"sandbox_reset_requested",
+	"appearance_changed"]   # M10 (P42): a look kept at a shrine is silent (the shrine's screen makes its own sounds)
 ## Silent signals the router still listens to for state (dialogue_ended lifts the dialogue duck;
 ## P28: flag_changed for the campaign's completion, which the music carries).
 const STATE_SIGNALS := ["dialogue_ended", "flag_changed"]

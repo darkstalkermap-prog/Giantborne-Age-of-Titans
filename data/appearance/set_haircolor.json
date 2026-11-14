@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.haircolor",
+	"type": "appearance_set",
+	"category": "haircolor",
+	"display_name": "Hair colour",
+	"description": "P42 (plan M10 §2.3): one palette for the hair, the beard and the brows; tip is the sun-bleached ends.",
+	"options": [
+		{"key": "black", "name": "Black", "color": "#16110e", "tip": "#2a221c"},
+		{"key": "dark_brown", "name": "Dark brown", "color": "#33221a", "tip": "#56402f"},
+		{"key": "brown", "name": "Brown", "color": "#4a3424", "tip": "#6a4c36"},
+		{"key": "chestnut", "name": "Chestnut", "color": "#4a2c1a", "tip": "#6e4a30", "default": true},
+		{"key": "auburn", "name": "Auburn", "color": "#5a2614", "tip": "#80442a"},
+		{"key": "copper", "name": "Copper", "color": "#8a4a22", "tip": "#b06a3a"},
+		{"key": "red", "name": "Red", "color": "#7a3412", "tip": "#a65a2c"},
+		{"key": "dark_blond", "name": "Dark blond", "color": "#6b5236", "tip": "#937552"},
+		{"key": "blond", "name": "Blond", "color": "#a08458", "tip": "#c8ad7e"},
+		{"key": "white", "name": "White", "color": "#b8b2a8", "tip": "#d8d4cc"}
+	]
+}

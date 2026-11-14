@@ -54,6 +54,9 @@ const SCHEMA_PATHS := {
 	"talent": "res://scripts/core/schemas/talent_schema.gd",                    # P20
 	"wander_table": "res://scripts/core/schemas/wander_table_schema.gd",        # P20
 	"world_event": "res://scripts/core/schemas/world_event_schema.gd",          # P20
+	# M10 (P42, plan M10 §1.5: the look's sets and presets; P46 adds options and revises presets).
+	"appearance_set": "res://scripts/core/schemas/appearance_set_schema.gd",          # P42
+	"appearance_preset": "res://scripts/core/schemas/appearance_preset_schema.gd",    # P42
 }
 
 ## type -> loaded schema module (GDScript), built once from the SCHEMA_PATHS files that exist.

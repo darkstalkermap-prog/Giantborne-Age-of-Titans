@@ -28,6 +28,8 @@ const COMPONENTS := [
 	["equipment", "res://scripts/actors/player/player_equipment.gd"],      # P08
 	["grab", "res://scripts/actors/player/player_grab.gd"],                # P07
 	["progression", "res://scripts/actors/player/player_progression.gd"],  # P12
+	# M10 (P42, plan M10 §1.5): the look (presentation only; no gameplay hook).
+	["appearance", "res://scripts/actors/player/player_appearance.gd"],    # P42
 ]
 ## apply_character_state order: these first (when present), then every other component in
 ## COMPONENTS order, then the core keys (loadout, known abilities, level, resources last).
@@ -81,6 +83,8 @@ var growth = null
 var equipment = null
 var grab = null
 var progression = null
+## M10 (P42): the look (PlayerAppearance): the character's appearance record and what the rig draws.
+var appearance = null
 
 ## The weapon segment of the previous tick (lives in the attack runner).
 var prev_segment: PackedVector3Array:

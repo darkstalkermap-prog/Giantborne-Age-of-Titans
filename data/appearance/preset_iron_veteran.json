@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.iron_veteran",
+	"type": "appearance_preset",
+	"display_name": "Iron Veteran",
+	"description": "Greying crop and short beard, iron bands on the arms and the scars of every fight, in the warrior's tunic.",
+	"appearance": {
+		"v": 1,
+		"preset": "appearance_preset.iron_veteran",
+		"skin": "skin.bronze",
+		"eyes": "eyes.brown",
+		"hair": {"style": "hair.crop", "color": "haircolor.dark_brown", "grey": 0.45},
+		"beard": {"style": "beard.short", "color": "", "grey": 0.5},
+		"tattoos": {"arms": "tattoo.arm_bands", "chest": "", "back": "", "face": "", "ink": "ink.iron"},
+		"paint": {"design": "", "color": "paintcolor.chalk"},
+		"scars": ["scar.brow", "scar.forearm_slash", "scar.chest_claws", "scar.knuckles"],
+		"mark": "auto",
+		"outfit": {"set": "outfit.warrior", "primary": "dye.madder", "secondary": "dye.dark_leather"}
+	}
+}

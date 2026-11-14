@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.mark",
+	"type": "appearance_set",
+	"category": "mark",
+	"display_name": "Ancestry mark",
+	"description": "P42 (plan M10 §2.3, decision 16): each line's mark, shown when the record's mark is \"auto\" once the line is chosen.",
+	"options": [
+		{"key": "granite_veins", "name": "Granite veins", "design": "mark_granite_veins", "color": "#6f7c8c", "glow": 0.0, "requires": {"ancestry": "ancestry.stoneblood"}},
+		{"key": "lightning_tree", "name": "Lightning tree", "design": "mark_lightning_tree", "color": "#9cc4ec", "glow": 0.25, "requires": {"ancestry": "ancestry.stormborn"}},
+		{"key": "claw_stripes", "name": "Claw stripes", "design": "mark_claw_stripes", "color": "#2a1c14", "glow": 0.0, "requires": {"ancestry": "ancestry.wildheart"}}
+	]
+}

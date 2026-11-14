@@ -212,3 +212,93 @@ func test_a_failed_write_reports_it() -> void:
 	assert_true(str(w.message) != "", "with a message: %s" % w.message)
 	DirAccess.remove_absolute("user://test_saves/blocked")
 	SaveSlots.path_override = TEST_PATH
+
+
+# --------------------------------------------------------------------------- M10: the giant's look (P42)
+
+const FIXTURES := "res://tests/fixtures/saves/"
+## deep_eq: numbers by value (a JSON round trip turns 1 into 1.0 and back).
+const Look := preload("res://tests/unit/test_appearance_record.gd")
+
+
+func _fixture(fixture_name: String) -> Dictionary:
+	var r := JsonIO.read_file(FIXTURES + fixture_name + ".json")
+	assert_true(r.ok, "fixture %s reads" % fixture_name)
+	return r.data if r.ok else {}
+
+
+func _look() -> Dictionary:
+	var r := Appearance.preset_record("iron_veteran")
+	r.preset = ""
+	r.hair.grey = 0.55
+	return r
+
+
+func test_a_look_round_trips_exactly_through_write_and_read() -> void:
+	var doc := _doc()
+	doc.character["appearance"] = _look()
+	assert_true(SaveSlots.write(doc).ok, "written")
+	var r := SaveSlots.read()
+	assert_true(r.ok and str(r.source) == "main", "read back")
+	assert_eq(str(r.message), "", "a clean look adds nothing to the message")
+	var back: Dictionary = r.data.character.get("appearance", {})
+	assert_true(Look.deep_eq(back, _look()), "the record comes back exactly: %s" % back)
+	assert_eq(typeof(back.v), TYPE_INT, "its version is an int again")
+	assert_false((_doc().character as Dictionary).has("appearance"), "a character from new_game has no look")
+	assert_true(SaveSlots.write(_doc()).ok, "a save without a look")
+	assert_false((SaveSlots.read().data.character as Dictionary).has("appearance"), "reads back without the key")
+
+
+func test_a_look_with_unknown_ids_loads_with_the_message() -> void:
+	var doc := _fixture("v2_appearance_unknown_ids")
+	assert_true(SaveSlots.write(doc).ok, "the fixture is written as the slot")
+	var r := SaveSlots.read()
+	assert_true(r.ok and str(r.source) == "main", "it loads from the main file")
+	var look: Dictionary = r.data.character.appearance
+	assert_eq(str(look.skin), "skin.ruddy", "an unknown skin: the default")
+	assert_eq(str(look.hair.style), "hair.long_back", "an unknown hair style: the default")
+	assert_eq(look.scars, ["scar.brow"], "the unknown scar dropped, the known one kept")
+	assert_eq(str(look.hair.color), "haircolor.copper", "the known choices are kept")
+	for id: String in ["skin.violet", "hair.mohawk", "scar.dragon", "dye.gold_leaf"]:
+		assert_true((r.dropped as PackedStringArray).has(id), "%s is listed as dropped" % id)
+		assert_true(str(r.message).contains(id), "and named in the message: %s" % r.message)
+
+
+func test_a_broken_look_loads_with_the_default_and_the_note() -> void:
+	var main := _fixture("v2_appearance_broken")
+	var backup := _fixture("v2_appearance")
+	assert_true(SaveSlots.write(backup).ok, "a good save first (it becomes the backup)")
+	assert_true(SaveSlots.write(main).ok, "then the save with the broken look")
+	var r := SaveSlots.read()
+	assert_true(r.ok, "it loads")
+	assert_eq(str(r.source), "main", "a broken look alone never sends the read to the backup")
+	assert_true(Look.deep_eq(r.data.character.appearance, Appearance.default_record()), "the look is the default")
+	assert_true(str(r.message).contains(Appearance.NOTE_BROKEN), "the note is in the message: %s" % r.message)
+	assert_false(str(r.message).contains(SaveSlots.RECOVERED_TEXT), "no recovery is reported")
+	assert_eq(r.notes, PackedStringArray([Appearance.NOTE_BROKEN]), "read() returns the notes")
+	assert_true(SaveSlots.validate(main).is_empty(), "validate() never fails a save over its look")
+
+
+func test_a_later_builds_look_loads_and_is_kept_as_it_is() -> void:
+	var doc := _fixture("v2_appearance_future")
+	var raw: Dictionary = doc.character.appearance
+	assert_true(SaveSlots.write(doc).ok, "written")
+	var r := SaveSlots.read()
+	assert_true(r.ok and str(r.source) == "main", "it loads")
+	assert_true(Look.deep_eq(r.data.character.appearance, raw), "the later build's record is kept untouched")
+	assert_true(str(r.message).contains(Appearance.NOTE_FUTURE), "with its note: %s" % r.message)
+	var look := Appearance.to_look(r.data.character.appearance, str(r.data.character.ancestry))
+	assert_eq(str(look.hair_mesh), str(GiantLook.DEFAULT_LOOK.hair_mesh), "the default look is shown")
+
+
+func test_a_damaged_main_file_with_a_look_recovers_it_from_the_backup() -> void:
+	var doc := _doc(400.0)
+	doc.character["appearance"] = _look()
+	assert_true(SaveSlots.write(doc).ok, "first save")
+	var second := _doc(300.0)
+	second.character["appearance"] = Appearance.default_record()
+	assert_true(SaveSlots.write(second).ok, "second save (the first becomes the backup)")
+	_write_text(TEST_PATH, "{ this is not json")
+	var r := SaveSlots.read()
+	assert_true(r.ok and str(r.source) == "backup", "recovered from the backup")
+	assert_true(Look.deep_eq(r.data.character.appearance, _look()), "with the backup's look")

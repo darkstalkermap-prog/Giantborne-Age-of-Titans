@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.young_giant",
+	"type": "appearance_preset",
+	"display_name": "Young Giant",
+	"description": "A blond crop and the first stubble; no marks yet.",
+	"appearance": {
+		"v": 1,
+		"preset": "appearance_preset.young_giant",
+		"skin": "skin.fair",
+		"eyes": "eyes.blue",
+		"hair": {"style": "hair.crop", "color": "haircolor.blond", "grey": 0.0},
+		"beard": {"style": "beard.stubble", "color": "", "grey": 0.0},
+		"tattoos": {"arms": "", "chest": "", "back": "", "face": "", "ink": "ink.woad"},
+		"paint": {"design": "", "color": "paintcolor.chalk"},
+		"scars": [],
+		"mark": "auto",
+		"outfit": {"set": "outfit.wanderer", "primary": "dye.undyed", "secondary": "dye.walnut"}
+	}
+}

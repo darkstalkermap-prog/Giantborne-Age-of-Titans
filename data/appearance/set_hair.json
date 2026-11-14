@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.hair",
+	"type": "appearance_set",
+	"category": "hair",
+	"display_name": "Hair",
+	"description": "P42 (plan M10 §2.3): the floor's hair styles (P46 adds the target's); mesh is a giant index mesh id, scalp_tint the hair colour on the scalp.",
+	"options": [
+		{"key": "shaved", "name": "Shaved", "mesh": "", "scalp_tint": 0.35},
+		{"key": "crop", "name": "Cropped", "mesh": "Hair_crop", "scalp_tint": 1.0},
+		{"key": "long_back", "name": "Long, combed back", "mesh": "Hair_long_back", "scalp_tint": 1.0, "default": true}
+	]
+}

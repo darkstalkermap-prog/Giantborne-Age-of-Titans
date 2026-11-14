@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.ash_raider",
+	"type": "appearance_preset",
+	"display_name": "Ash Raider",
+	"description": "Shaved head, soot lines on the face and ash bands on the shoulders, in dark leather.",
+	"appearance": {
+		"v": 1,
+		"preset": "appearance_preset.ash_raider",
+		"skin": "skin.olive",
+		"eyes": "eyes.dark",
+		"hair": {"style": "hair.shaved", "color": "haircolor.black", "grey": 0.0},
+		"beard": {"style": "beard.none", "color": "", "grey": 0.0},
+		"tattoos": {"arms": "", "chest": "", "back": "", "face": "tattoo.face_lines", "ink": "ink.soot"},
+		"paint": {"design": "paint.shoulder_bands", "color": "paintcolor.ash"},
+		"scars": ["scar.brow"],
+		"mark": "auto",
+		"outfit": {"set": "outfit.warrior", "primary": "dye.walnut", "secondary": "dye.bone"}
+	}
+}

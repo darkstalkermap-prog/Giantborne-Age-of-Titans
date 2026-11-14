@@ -35,6 +35,7 @@ const TABS := [
 	["Attributes", "res://ui/screens/shrine/attributes_tab.gd"],   # P12
 	["Talents", "res://ui/screens/shrine/talents_tab.gd"],         # P33 (pre-declared by P20)
 	["Ancestry", "res://ui/screens/shrine/ancestry_tab.gd"],       # P33 (pre-declared by P20)
+	["Appearance", "res://ui/screens/shrine/appearance_tab.gd"],   # P44 (pre-declared by P42, plan M10 §2.10)
 ]
 
 var shrine: Shrine

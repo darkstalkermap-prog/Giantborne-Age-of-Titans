@@ -1,0 +1,21 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.stone_elder",
+	"type": "appearance_preset",
+	"display_name": "Stone Elder",
+	"description": "White-haired and weathered, a soot tree across the back, wrapped in furs.",
+	"ancestry": "ancestry.stoneblood",
+	"appearance": {
+		"v": 1,
+		"preset": "appearance_preset.stone_elder",
+		"skin": "skin.weathered",
+		"eyes": "eyes.grey",
+		"hair": {"style": "hair.long_back", "color": "haircolor.white", "grey": 0.9},
+		"beard": {"style": "beard.full", "color": "", "grey": 0.9},
+		"tattoos": {"arms": "", "chest": "", "back": "tattoo.back_tree", "face": "", "ink": "ink.soot"},
+		"paint": {"design": "", "color": "paintcolor.chalk"},
+		"scars": ["scar.brow"],
+		"mark": "auto",
+		"outfit": {"set": "outfit.hunter", "primary": "dye.walnut", "secondary": "dye.dark_leather"}
+	}
+}

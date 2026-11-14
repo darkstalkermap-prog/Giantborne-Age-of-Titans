@@ -18,6 +18,10 @@ const BEFORE_EACH := [
 const AFTER_EACH := [
 	["script", "res://tests/support/test_fixtures.gd", "restore_all"],                    # P02
 	["script", "res://ui/screens/screen_stack.gd", "close_all_static", "screen left open"],  # P03
+	# M10 (pre-declared by P42, plan M10 §1.5): the skinned layers go back off after every test that
+	# turned them on (SkinnedRig.enable_for_tests); skipped until P43's file exists. It sits before the
+	# world index's entry, which stays last (plan M6-M9 §2.15).
+	["script", "res://scripts/presentation/skinned_rig.gd", "reset_for_tests"],           # P43
 	["script", "res://scripts/world/world_index.gd", "clear_cache"],                      # P20
 ]
 

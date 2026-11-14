@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.eyes",
+	"type": "appearance_set",
+	"category": "eyes",
+	"display_name": "Eyes",
+	"description": "P42 (plan M10 §2.3): ten iris colours; storm (a slight glow) is Stormborn's, amber Wildheart's.",
+	"options": [
+		{"key": "grey_green", "name": "Grey-green", "color": "#4c7361", "default": true},
+		{"key": "blue", "name": "Blue", "color": "#3e6a96"},
+		{"key": "grey", "name": "Grey", "color": "#7b8790"},
+		{"key": "green", "name": "Green", "color": "#3f6b3a"},
+		{"key": "hazel", "name": "Hazel", "color": "#6a6a32"},
+		{"key": "brown", "name": "Brown", "color": "#5a3a22"},
+		{"key": "dark", "name": "Dark", "color": "#2e2018"},
+		{"key": "ice", "name": "Ice", "color": "#9fc3d6"},
+		{"key": "storm", "name": "Storm-lit", "color": "#b8d4f0", "glow": 0.35, "requires": {"ancestry": "ancestry.stormborn"}},
+		{"key": "amber", "name": "Amber", "color": "#a0702a", "requires": {"ancestry": "ancestry.wildheart"}}
+	]
+}

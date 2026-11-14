@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.northern_chieftain",
+	"type": "appearance_preset",
+	"display_name": "Northern Chieftain",
+	"description": "Red hair going grey, a full beard, woad bands on the arms and dots on the face, the chieftain's jerkin and furs.",
+	"appearance": {
+		"v": 1,
+		"preset": "appearance_preset.northern_chieftain",
+		"skin": "skin.fair",
+		"eyes": "eyes.blue",
+		"hair": {"style": "hair.long_back", "color": "haircolor.red", "grey": 0.3},
+		"beard": {"style": "beard.full", "color": "", "grey": 0.35},
+		"tattoos": {"arms": "tattoo.arm_bands", "chest": "", "back": "", "face": "tattoo.face_dots", "ink": "ink.woad"},
+		"paint": {"design": "", "color": "paintcolor.chalk"},
+		"scars": [],
+		"mark": "auto",
+		"outfit": {"set": "outfit.chieftain", "primary": "dye.madder", "secondary": "dye.dark_leather"}
+	}
+}

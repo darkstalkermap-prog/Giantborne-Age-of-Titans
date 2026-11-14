@@ -312,3 +312,42 @@ func test_an_older_valid_main_file_becomes_the_backup() -> void:
 	var r := SaveSlots.read()
 	assert_true(r.ok and str(r.source) == "main", "the new main file loads")
 	assert_true(bool(r.data.progress.prologue_complete), "it is the completed save")
+
+
+# --------------------------------------------------------------------------- M10: the giant's look (P42)
+
+## The schema 2 fixtures written before M10 (none has a look).
+const V2_FIXTURES := ["v2_m7_after_brannock_force", "v2_crown_sabotage_stuck_on_meet", "v2_iron_regiment_wall_cleared",
+	"v2_world_check_aldmere_shrine"]
+
+
+func test_saves_from_before_the_look_load_and_resolve_to_the_default() -> void:
+	for f: String in FIXTURES + V2_FIXTURES:
+		var doc := SaveSlots.migrate(_fixture(f))
+		assert_false((doc.character as Dictionary).has("appearance"), "%s has no look" % f)
+		var clean := SaveSlots.sanitize(doc)
+		assert_false((clean.data.character as Dictionary).has("appearance"), "%s: sanitize adds none" % f)
+		assert_eq(clean.notes, PackedStringArray(), "%s: and no note" % f)
+		var rec := Appearance.resolve(clean.data.character)
+		assert_eq(str(rec.preset), Appearance.DEFAULT_PRESET, "%s: the giant wears the default look" % f)
+		var look := Appearance.to_look(rec, str(clean.data.character.get("ancestry", "")))
+		assert_eq(str(look.hair_mesh), str(GiantLook.DEFAULT_LOOK.hair_mesh), "%s: the Wanderer's hair" % f)
+
+
+func test_a_continue_of_a_save_without_a_look_sets_the_legacy_flag_once() -> void:
+	GameSession.persist = true
+	_write_text(SaveSlots.path(), _fixture_text("v1_pre_crown"))
+	var r := GameSession.continue_valley()
+	assert_true(r.ok, "Continue works (%s)" % r.message)
+	assert_true(QuestConditions.truthy(WorldState.get_flag(GameSession.LEGACY_LOOK_FLAG)),
+		"a save from before the look sets appearance.legacy_save (tutorial.appearance_shrines)")
+	assert_true(QuestConditions.truthy(((GameSession.checkpoint_doc.get("world", {}) as Dictionary).get("flags", {})
+		as Dictionary).get(GameSession.LEGACY_LOOK_FLAG)), "and the document a death reloads holds it too")
+	assert_false((GameSession.character as Dictionary).has("appearance"), "the character still has no look")
+	WorldState.clear()
+	SaveSlots.delete_slot()
+	_write_text(SaveSlots.path(), FileAccess.get_file_as_string(FIXTURE_DIR + "v2_appearance.json"))
+	assert_true(GameSession.continue_valley().ok, "a save with a look continues")
+	assert_false(WorldState.flags.has(GameSession.LEGACY_LOOK_FLAG), "and sets no legacy flag")
+	assert_eq(str((GameSession.character.appearance as Dictionary).get("skin", "")), "skin.weathered",
+		"its look is the character's")
