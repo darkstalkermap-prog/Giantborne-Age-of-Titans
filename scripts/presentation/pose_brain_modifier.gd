@@ -39,6 +39,11 @@ const HELD_GAP_MAX := 0.33
 const ARC_BLEND_RATE := 12.0
 const OFF_BLEND_RATE := 9.0
 const DEATH_BLEND_RATE := 5.0
+## The most a wrist bends (degrees between the forearm and the hand's long axis; the animation brief).
+const MAX_WRIST_DEG := 45.0
+## How many times the arm is solved again to bring a wrist bend under MAX_WRIST_DEG (the elbow moves with the
+## wrist, so the forearm turns a little each time).
+const WRIST_PASSES := 4
 ## The walk's arm swing (degrees at full swing), as the brain adds it (ActorRig._process).
 const SWING_DEG := 16.0
 ## A hold beyond the arm's reach (the gameplay socket is the stylized arm's, 1.5·k out, about 0.33 m past
@@ -308,6 +313,18 @@ func _place_arm(sk: Skeleton3D, side: String, palm_target: Vector3, hand_dir: Ve
 	var solve := TipMatching.two_bone(sh, wrist, l1, l2, tm.pole_for(side, wrist))
 	var elbow: Vector3 = solve.elbow
 	wrist = solve.end
+	# the wrist bends at most MAX_WRIST_DEG: the hand turns toward the forearm and the arm is solved again (the
+	# palm stays on its target; only the hand's angle around the grip changes)
+	for i in WRIST_PASSES:
+		var fore := (wrist - elbow).normalized()
+		var bend := fore.angle_to(hand_dir)
+		if bend <= deg_to_rad(MAX_WRIST_DEG) + 1e-4:
+			break
+		hand_dir = fore.slerp(hand_dir, (deg_to_rad(MAX_WRIST_DEG) - 1e-3) / bend).normalized()
+		wrist = palm_target - hand_dir * float(r.hand_len)
+		solve = TipMatching.two_bone(sh, wrist, l1, l2, tm.pole_for(side, wrist))
+		elbow = solve.elbow
+		wrist = solve.end
 	# skeleton space from here
 	var sh_s := _to_skel(sh)
 	var el_s := _to_skel(elbow)

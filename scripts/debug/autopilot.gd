@@ -62,6 +62,14 @@ extends Node
 ##                          to --walk-stage=N, --walk-laps=N times; the run ends with the walk. It adds
 ##                          a PerfProbe (sections: the chunk the giant is in); AUTOPILOT_RESULT's
 ##                          "world_walk" key holds the walk's report and its check failures.
+##
+## P43 (plan M10 §2.9, §3.3 item 7): --skin and --no-skin turn the player's skinned layers on and off
+## (SkinnedRig.layers_enabled); --skin-stats prints one "SKIN_STATS {json}" line (SkinnedRig.run_stats():
+## the look, the layers, posed frames, modifier runs, held-visual writes, the meshes shown, the brain's
+## footfalls) just before AUTOPILOT_RESULT, outside it, so a run with the skin and one without compare
+## line for line. --scenario=capture_m10 runs the M10 capture tour (CaptureM10, scripts/debug/
+## capture_m10.gd; with a display and --skin, --write-movie for a video): AUTOPILOT_RESULT's
+## "capture_m10" key lists its frames and the beats the game refused.
 
 const EXIT_OK := 0
 const EXIT_ERRORS := 1
@@ -77,6 +85,8 @@ const SCENARIO_VALLEY_WALK := "valley_walk"
 const SCENARIO_VALLEY := "valley"
 ## P24a: the streaming walk.
 const SCENARIO_WORLD_WALK := "world_walk"
+## P43: the M10 capture tour (CaptureM10).
+const SCENARIO_CAPTURE_M10 := "capture_m10"
 ## P38: the world bot.
 const SCENARIO_WORLD := "world"
 const WORLD_NEEDED := "--scenario=world needs the campaign: add --mode=world --new-game (or --continue)"
@@ -150,6 +160,7 @@ var _stress: StressScenario = null
 var _walk: ValleyWalk = null
 var _bot: ValleyBot = null
 var _world_walk: WorldWalk = null
+var _capture_m10: CaptureM10 = null
 var _scenario_failures := PackedStringArray()
 
 
@@ -207,7 +218,8 @@ static func is_bot_scenario(scenario: String) -> bool:
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_VALLEY, SCENARIO_WORLD] else Node.PROCESS_MODE_PAUSABLE
+	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_VALLEY, SCENARIO_WORLD] \
+		else Node.PROCESS_MODE_PAUSABLE
 	# Method callables (not lambdas): they disconnect automatically when this node is freed
 	# by a sandbox reset, so counts are never duplicated.
 	Events.hit_resolved.connect(_on_hit_resolved)
@@ -285,7 +297,7 @@ func _physics_process(dt: float) -> void:
 		if ValleyBot.run != null and ValleyBot.run.finished:
 			_finish()
 			return
-	if get_tree().paused and _scenario != "capture":
+	if get_tree().paused and _scenario != "capture" and _scenario != SCENARIO_CAPTURE_M10:
 		return
 	_elapsed += dt
 	_stats.ticks += 1
@@ -305,6 +317,10 @@ func _physics_process(dt: float) -> void:
 	if _scenario == "capture":
 		if not _busy:
 			_run_capture(dt)
+		return
+	if _scenario == SCENARIO_CAPTURE_M10:
+		if not _busy:
+			_run_capture_m10(dt)
 		return
 	if _scenario == SCENARIO_STRESS:
 		_run_stress()
@@ -576,6 +592,8 @@ func _finish() -> void:
 		var ww := _world_walk.result()
 		failures.append_array(ww.check_failures)
 		result["world_walk"] = ww
+	if _capture_m10 != null:
+		result["capture_m10"] = {"shots": _capture_m10.shots, "notes": _capture_m10.notes, "complete": _capture_m10.done}
 	if is_bot_scenario(_scenario) and ValleyBot.run != null:
 		if ValleyBot.run.world != null:
 			# P38: the world bot's run (the campaign's, or the world's alone)
@@ -600,6 +618,8 @@ func _finish() -> void:
 			"quality": perf.quality}
 		if is_bot_scenario(_scenario):
 			result["perf"]["sections"] = perf_sections(perf)   # P39: the world bot's regions
+	if OS.get_cmdline_user_args().has("--skin-stats"):
+		print("SKIN_STATS " + JSON.stringify(SkinnedRig.run_stats()))   # P43: outside the result (plan M10 §3.3)
 	print("AUTOPILOT_RESULT " + JSON.stringify(result))
 	write_result_file(result_file_arg(OS.get_cmdline_user_args()), result)
 	get_tree().quit(exit_code(result))
@@ -775,6 +795,14 @@ func _run_capture(dt: float) -> void:
 	if steps[_step].call():
 		_step += 1
 		_step_time = 0.0
+
+
+## P43: the M10 capture tour, one beat after another (CaptureM10); the run ends with it.
+func _run_capture_m10(dt: float) -> void:
+	if _capture_m10 == null:
+		_capture_m10 = CaptureM10.new(self)
+	if _capture_m10.step(player, dt):
+		_finish()
 
 
 func _toggle_debug_panel() -> void:

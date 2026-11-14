@@ -84,6 +84,9 @@ const P_WALK_T := &"parameters/walk_seek/seek_request"
 const P_RUN_T := &"parameters/run_seek/seek_request"
 const P_CHARGE_T := &"parameters/charge_seek/seek_request"
 const P_DEATH_T := &"parameters/death_seek/seek_request"
+## The blend weights (_w) and their tree parameters, set only when they change.
+const BLEND_PARAMS := {"move": P_MOVE, "run": P_RUN, "charge": P_CHARGE, "air": P_AIR, "dead": P_DEAD, "open_l": P_OPEN_L,
+	"grip_l": P_GRIP_L}
 
 ## The run's counts over every SkinnedRig of the process (a sandbox reset makes a new rig), for SKIN_STATS.
 static var totals := {"posed_frames": 0, "modifier_runs": 0, "held_visual_writes": 0, "rig_footfalls": 0, "rigs": 0}
@@ -103,6 +106,7 @@ var _layers := false
 var _look: Dictionary = {}
 var _lengths := {}
 var _w := {"move": 0.0, "run": 0.0, "charge": 0.0, "air": 0.0, "dead": 0.0, "open_l": 0.0, "grip_l": 0.0}
+var _sent := {}
 var _air := 0
 var _legs := "stance"
 var _charge_phase := 0.0
@@ -323,18 +327,24 @@ func _drive_tree(delta: float) -> void:
 	_ease("open_l", 1.0 if open and not gripping else 0.0, HAND_RATE, delta)
 	if charging:
 		_charge_phase += delta * speed / (stride_length_m * k) * PI
+	# Seek a clip only while its branch shows: a seeking branch is evaluated even at weight 0 (the tree's
+	# optimization skips only the branches that do not seek), and the brain sets the time of every shown one.
+	var live: float = (1.0 - float(_w.dead)) * (1.0 - float(_w.air))
+	var gait: float = live * (1.0 - float(_w.charge)) * float(_w.move)
 	var walk_t := fposmod(walk_phase() + PI * 0.5, TAU) / TAU
-	_tree.set(P_WALK_T, walk_t * float(_lengths.get("walk", 1.0)))
-	_tree.set(P_RUN_T, walk_t * float(_lengths.get("run", 1.0)))
-	_tree.set(P_CHARGE_T, fposmod(_charge_phase + PI * 0.5, TAU) / TAU * float(_lengths.get("run", 1.0)))
-	_tree.set(P_DEATH_T, clampf(fall_fraction(), 0.0, 1.0) * float(_lengths.get("death", 1.0)))
-	_tree.set(P_MOVE, _w.move)
-	_tree.set(P_RUN, _w.run)
-	_tree.set(P_CHARGE, _w.charge)
-	_tree.set(P_AIR, _w.air)
-	_tree.set(P_DEAD, _w.dead)
-	_tree.set(P_OPEN_L, _w.open_l)
-	_tree.set(P_GRIP_L, _w.grip_l)
+	if gait * (1.0 - float(_w.run)) > 0.0:
+		_tree.set(P_WALK_T, walk_t * float(_lengths.get("walk", 1.0)))
+	if gait * float(_w.run) > 0.0:
+		_tree.set(P_RUN_T, walk_t * float(_lengths.get("run", 1.0)))
+	if live * float(_w.charge) > 0.0:
+		_tree.set(P_CHARGE_T, fposmod(_charge_phase + PI * 0.5, TAU) / TAU * float(_lengths.get("run", 1.0)))
+	if float(_w.dead) > 0.0:
+		_tree.set(P_DEATH_T, clampf(fall_fraction(), 0.0, 1.0) * float(_lengths.get("death", 1.0)))
+	for key: String in BLEND_PARAMS:
+		var v: float = _w[key]
+		if v != float(_sent.get(key, -1.0)):
+			_sent[key] = v
+			_tree.set(BLEND_PARAMS[key], v)
 
 
 func _ease(key: String, target: float, rate: float, delta: float) -> void:
