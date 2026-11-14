@@ -1543,6 +1543,44 @@ turning hostile in the sabotage): members already in the world when their factio
 room (the director's rule: `docs/systems/P39f.md`, "The war camp's 16 counted combatants"); no counted member spawned at
 the cap (the bot's budget invariant held in every run). Lane P39's set: 12 in every run.
 
+### The 0.9.0-m9 release (the M9 gate's final code)
+
+The play link's build for `0.9.0-m9` (P40's ship step): the M9 gate's final code (`7502770`) with the release's
+version (`f904d68`, `config/version` 0.9.0-m9) and the launcher's 0.9.0-m9 notes, built with
+`env -u XDG_DATA_HOME tools/build_web.sh` (preset `Web`, into `builds/web`; no test content: `pck_files.py` finds
+none of the 2,754 packed files in `scenes/test/`, `assets/test_world/` or `data/test/`, and every record validates
+without `data/test`) and checked in headless Chromium with SwiftShader (indicative: software WebGL draws a world frame
+in hundreds of milliseconds). The machine's 4 cores were shared with the M9 gate's own check, its bot batches and the
+world tour, which had priority: each check below gives the 1-minute load average at its start and end. Two checks failed
+their default form on one hole each that the recorder did not place on the main thread, at loads of 12-19; the load
+stayed above 4 for more than 20 minutes after them (4.3-8.2 in a per-minute log from 03:16 to 03:37 UTC, the gate's three bot runs and its world tour, with none of this step's runs going),
+so they are marked **timing under load** and are re-run on the quiet machine by the ship step's finish run. The
+evidence (each check's console output and `--json` report, the build's log, the exports' logs) is in the ship step's
+`w24/web/` and `w24/exports/` folders.
+The launcher's notes were rewritten for the build: what M9 and its gate bring (the world bot and the balance pass on
+its runs, the Matriarch's second phase, Harrok's Strike, lone soldiers fleeing a giant of 36 ft and more, Fort Aldmere's
+gateway and breach, the Iron Regiment's phases and its ballistae line, the war camp's wall, the leash, the music and
+the HUD), "Sound on." as README §5 has it (the Valley, every region and every boss have their own score; towns and camps
+keep their region's music), what the build is not yet, and the next step (playtests by people, then M10).
+The release's default tier (`tools/check.sh` on this tree with the new notes and build line; load 3.9-4.7): 209 suites,
+37,996 checks, 0 failures, default 63.4 s (budget 75 s), the 120 s soak with 0 errors and 0 warnings (2 fences broken,
+2 loot awards, the debris pool at 10), 1 min 38 s in all.
+
+| Item | Result |
+| --- | --- |
+| `index.wasm` | 37,700,666 bytes (9,396,523 gzipped); 12,528,700 as shipped (gzip, base64), as since M5 |
+| `index.pck` | 17,591,244 bytes (13,125,035 gzipped); 17,500,048 as shipped (`PCK_SIZE preset="Web" raw=17591244 gzip=13125035 shipped=17500048 shipped_mb=16.69 budget_mb=23 parts=2`) in two parts of 8,750,024 bytes: **16.69 MB of the 23 MB budget** (decision 8; the 26 MB raise is M10's), the largest part 8,750,024 bytes of the host's 15 MB; the audio 9.28 MB of the pck's 16.78 MB (55 %, 882 files) |
+| The page's download | 30,433,990 bytes, about 30.4 MB (the engine 12.5 MB, the pck 17.5 MB, `index.js` 0.3 MB, the two audio worklets and the poster); the launcher's meter counts the two packed files, 30,028,748 bytes (28.6 MiB), so its "About 30 MB" holds |
+| `audio_check.mjs` (the Valley; load 2.0 at its start, 13.4 at its end as the gate's runs began) | **OK** in its default form: Play to the title's music 9.5 s, New Game to the Hollow 98.9 s, sound 1.76 s after the Hollow's music begins; 67.9 s of `music.valley_calm` with **54 holes over 50 ms** (the longest 10,092 ms), every one while the main thread left the mixer unserved (71 long tasks, the longest 10,144 ms; page frames p50 166.7 ms); peak live samples 37.0 MB of the 48.0 MB cap; 0 console errors, 0 failed requests. The plan's criterion: **NOT MET here** (the strict form is the owner's, on a GPU) |
+| `stream_check.mjs --world --audio --build=builds/web` (the world's default route; load 12.2 at its start, 17.3 at its end) | **FAILED** in its default form - **timing under load**: one hole of 760.5 ms at 62.5 s of the page that the recorder did not place on the main thread; the other 355 holes over 50 ms were the main thread's. Otherwise as at 0.8.0-m8: 397.5 m in 47.6 s of game time (373.8 s of wall time; Play to the walk 102.1 s), 4 region borders (Crownmarch, Drowned Steps, Greywood, Drowned Steps, Crownmarch), 3 seams, 6 loads, 3 unloads, 0 thrash, at most 16 chunks loaded, 222.1 m of margin, streaming work p50 0.9 / p99 13.2 / max 15.3 ms, draw calls p50 38 / max 58; 270.8 s of music with **356 holes over 50 ms** (the longest 3,349.5 ms; 369 long tasks, the longest 3,347 ms); peak live samples 57.1 MB of the 67.9 MB cap; page frames p50 666.6 / p99 2,083.3 / worst 3,349.9 ms; 0 console errors while the game ran (one page error at exit, the engine's audio teardown, as before), 0 failed requests. Re-run on the quiet machine by the finish run |
+| `world_check.mjs` (load 13.0 at its start, 14.7 at its end; 27 min of wall time) | **FAILED** in its default form - **timing under load**: one hole of 252.5 ms at 151.8 s of the page not placed on the main thread; the other 578 holes over 50 ms were the main thread's. The fixture (`v2_world_check_aldmere_shrine.json`, level.world at the Aldmere shrine, stage 5) Continued with one Enter (Play to the title's music 10.6 s; **Enter to control 93.3 s**), the fast travel to the King's Road waystone **11.2 s** from the request to control with no refusal - both over the 8 s warning (the game printed "the world's starting ring was not ready after 8 s" for each load: its 2 warnings, 0 errors); a 787.7 m walk in 80.7 s of game time across three region changes (Drowned Steps, Aldmere March, Drowned Steps), 5 seams, 0 stuck; streaming work p50 0.9 / p99 24.3 / max 41.6 ms (35 of 146 work frames over 4 ms; the heaviest steps `props_load` 41.5, `scenery` 24.1, `rows` 20.1, `decode` 16.8 ms), 9 loads, 3 unloads, 0 thrash, at most 15 chunks loaded, 209.1 m of margin; draw calls p50 40 / max 57; 1,277.5 s of music across 3 borders with **579 holes over 50 ms** (the longest 11,557.7 ms); peak live samples 57.3 MB of the 67.9 MB cap; page frames p50 1,350 / p99 9,133 / worst 12,149.5 ms; 0 console errors, 0 failed requests. Re-run on the quiet machine by the finish run |
+| The launcher's two starts (`world_start_check.mjs`; load 15.8 at its start, 19.3 at its end) | **OK**. Play starts the engine (9.5 s) with no game arguments, no save at the title, and Enter writes the Valley's first save 60.8 s later (`"level": "level.valley"`, respawn `valley.shrine.hollow`); one press of "Start in the open world" only arms it (nothing of the engine fetched) and it disarms 6 s later; two presses start the engine (12.1 s) with `['--', '--mode=world']`, and the first save, 18.8 s later, holds `"level": "level.world"`, respawn `world.cp.kingsgate_shelf`, stage 3, level 6; 0 console errors and 0 failed requests in both |
+| Linux export (`builds/linux/Giantborn.x86_64`, 90,036,432 bytes) | The 120 s soak headless (`--headless --fixed-fps 60 -- --no-user-settings --autoplay=120`), twice: at a load of 16.1-19.5, **0 errors** and 1 warning - Jolt's "job system exceeded the maximum number of jobs ... Waiting for jobs to become available", the physics' worker threads starved on the loaded cores (109 s of wall time); again at a load of 4.2, **0 errors, 0 warnings** (15 s of wall time); both: attacks 41, hits 33, kills 4, fence breaks 2, loot 2, debris 10. An assisted novice Valley run (`--mode=valley --new-game --scenario=valley --bot-village=intimidate --bot-skill=novice --bot-seed=1 --bot-assist --perf`; load 16-18 throughout, 25 min of wall time): **completed** in 452.4 s of simulated time (human estimate 691.2 s), 0 deaths, 0 breaches, 0 invariant failures, 0 duplicated rewards, 0 teleports, 0 errors, 0 warnings (one stuck moment on the causeway, cleared by a side-step jump, as at 0.8.0-m8); CPU per tick p50 2.84 / p95 91.4 ms on the loaded cores (indicative only; 9.4 ms p95 at 0.8.0-m8 at a load of 6-8) |
+| Windows export (`builds/windows/Giantborn.exe`, 123,620,032 bytes, and `Giantborn.console.exe`, 188,928 bytes) | Built; not launched (no Windows here) |
+
+The strict forms (no hole at all; `--strict` on the three music checks) are the owner's on a machine with a GPU
+(`docs/USABILITY_SCRIPT.md` §11): **NOT RUN**.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
