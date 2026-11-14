@@ -30,6 +30,9 @@ reference-PC commands below.
 | Map picture (P25) | <= 300 KB, 1,024 x 1,024 (plan §3.8) | `tests/integration/test_world_data.gd` | 52,433 bytes: **met** |
 | Static world draw calls, the real world (P25; M8 gate, F27) | <= 40 per view at `low` (plan §5.2: any view - "P25 and the region packages re-measure at the viewpoints"; §3.8: the shelf and the settlements) | `tests/slow/test_world_build.gd` (Xvfb, `tests/support/world_draw_probe.gd`: the shelf, the six settlements and, since the M8 gate, the M8 regions' ten places) | P25: at most 33 (Skarn; the shelf 30, Hollowmere 31, Brannock 28, Millford 27, Fort Aldmere 23, Harrok's Hall 19), with the giant in view 8 more: **met**. The M8 gate's review found the M8 places at up to 59 (nine of ten over 40; P35 had recorded its own as a known gap, P36 none), **not met**; after the gate's merge pass (lane m8p) all seventeen views draw at most 40 - the great pines, the sunken vault and the Mere of Kings at 40 exactly, Ballista Ridge 30, the war camp 26 -: **met** ("The M8 gate, lane m8p") |
 | Streaming work, the real world (M8 gate, F26) | <= 4 ms a frame, every step under about 3 ms (plan §5.2); P39's worst work frame <= 12 ms headless (§6.4) | the review's stage-6 walk from Aldmere to the Stonehold, carried at 16 m/s (headless, deterministic streaming); `stream_check.mjs --world` on its route at 8 m/s (the release build) | Before the gate: `props_dep` steps (a chunk's first load of a script or shared scene its props need) of 10.3-17.6 ms headless and 41.7 ms on the web, the worst work frame the same: **not met**. Since lane m8p the world's preload list loads them behind the loading screen (155-187 ms headless): no `props_dep` step during play, the worst work frame 4.0-4.6 ms headless (the heaviest step a props part's load, 2.4-3.1 ms): P39's 12 ms **met**, the 4 ms a frame within 0.6 ms; on the web (the review's Stonehold route, SwiftShader, indicative) no `props_dep` step either and the worst work frame 6.6 ms (was 41.7; the heaviest step a props part's instancing) ("The M8 gate, lane m8p"). P39's tour through every region at stage 6 ("The M9 performance captures (P39)"): headless p50 0.52 / p99 6.91 / max 12.48 ms (the first set 17.72), the max a `props_load` (a large text props part's parse; exports ship binary scenes): P39's 12 ms **not met headless** (by 0.5 ms), 4 ms not met; rendered, with the loads on the loader thread, p99 4.24 / max 6.77 ms (the first set 4.60): **not met** (4 ms). The novice's nine campaign runs: worst work frames 19.0-41.0 ms headless (two runs at a time): **not met**. The M9 confirmation (the merged code, "The M9 confirmation"): the tour headless p50 0.51 / p99 6.97 / max 12.19 ms (a `props_load`): 12 ms **not met** by 0.2 ms; rendered p99 4.12 / max 4.77 ms: **not met** (4 ms); the matrix's runs (three at a time) 17.9-33.9 ms: **not met** |
+| The giant's Web share (M10, P41; plan M10 §2.12) | M10's files (`assets/giant/`, the giant's shaders and scenes) <= 4.6 MiB shipped; the floor's <= 2.9 MiB | `tools/build_web.sh`'s `GIANT_SHARE` line (it fails over the cap: the budget less 18.4 MB); `tools/giant/build_giant.py --budget` (an estimate) | P41's test export (W25): **2,768,912 bytes shipped, 2.64 MiB** (22 files, 4,292,544 raw), the pack 20,280,372 bytes shipped (19.34 MiB of 23) in two parts of 10,140,186: **met**; no `tex_hi/` file and no manifest in the pack ("The giant's assets (P41)") |
+| The giant's draw calls and primitives (M10, P41; plan M10 §2.12) | The fullest look (the warrior: tunic, jerkin, belt, bracers, boots, long hair, full beard) <= 13 draw calls at `low`; <= 55,000 primitives at 4 m and <= 4,000 beyond 120 m | P41 (counted from the index and the imported LODs); P45 (rendered) | P41: 12 meshes of one surface each and 47,630 triangles at full detail (the chieftain 12 and 45,126): **met**; beyond 120 m (the LOD whose error projects under a pixel) 2,078 at 1280 px wide: **met**, 4,802 at 1920 px until about 151 m: **not met** (the long hair's second LOD) |
+| Repository growth and the giant's regeneration (M10, P41) | <= 25 MB for M10's assets and inputs; `check.sh --giant` <= 6 min and `--giant-full` <= 25 min at 2 threads | P41 | 12,972,626 bytes in 194 new files (6.95 MiB in git; the vendored CC0 subset 6.77 MB, the generated files 5.89 MB): **met**; `--verify --skip-bake` 72 s, `--verify` 223 s (other runs on the machine): **met** |
 
 ## The tools
 
@@ -1696,6 +1699,66 @@ build run marked **timing under load** pass their default form here; the strict 
 
 So on the release build every Chromium check passes its default form: `audio_check.mjs`, `stream_check.mjs --world
 --audio` and `world_check.mjs` here, `world_start_check.mjs` in the build run.
+
+### The giant's assets (P41, W25)
+
+The realistic giant's generated assets (`assets/giant/`, `docs/systems/P41.md`) on P41's branch, 14 November 2026.
+Container as above; the other W25 lane's rendered suites and a render job shared the machine (loads 3.6-6.7).
+
+**The Web test export** (`tools/build_web.sh --out=<scratch>`, the `Web` preset, P41's code only):
+
+| | Bytes | |
+| --- | --- | --- |
+| `index.pck` raw / gzipped / shipped | 21,891,284 / 15,210,277 / **20,280,372** (19.34 MiB of 23) | two parts of 10,140,186 |
+| The base (0.9.0-m9), shipped | 17,499,328 (16.69 MiB) | measured before W25 |
+| `GIANT_SHARE` | **2,768,912 shipped (2.64 MiB)**, 4,292,544 raw, 22 files | the floor's <= 2.9 MiB: met; cap 4.6 |
+| The giant's largest files, raw | the imported glTF 1,415,948; `designs` (four 512 px DXT5 layers with mipmaps) 1,398,308; the 512 px normal, masks and the hair atlas 349,604 each; albedo and ORM 174,828 each; the three detail maps 21,924 each; the model scene 11,597 | `pck_files.py --giant-share --verbose` |
+| `tex_hi/` if the Web kept it | 2,097,296 raw, **1,814,464 shipped (1.73 MiB)** | excluded from both Web presets in W25 |
+
+`build_giant.py --budget` estimated 2.85 MiB for the same files.
+
+**Meshes, draw calls and primitives** (the index and the imported LODs: one surface a mesh):
+
+| Mesh | Triangles | The LODs' triangles (Godot's error, m) |
+| --- | --- | --- |
+| `Body_Head` | 8,654 | 4,326 (0.004) ... 270 (0.055), 134 (0.094), 66 (0.171), 32, 16 |
+| `Body_Torso` | 3,296 | 1,648 (0.016) ... 206 (0.105), 102 (0.200), 50, 24, 12 |
+| `Body_Limbs` | 15,154 | 7,576 (0.008) ... 472 (0.128), 236 (0.254), 118, 58, 28, 14, 6 |
+| `Eyes` | 1,120 | 560 (0.002) ... 8 (0.071) |
+| `Hair_long_back` | 5,580 | 2,700 (0.143), 702 (0.214) |
+| `Hair_crop` | 3,200 | 552 (0.054) |
+| `Beard_full` / `Beard_short` | 3,360 / 1,280 | 1,106 / 280 / 14 and 304 / 40 |
+| Garments | 388-3,130 (the boots 2,500) | 2-6 levels each |
+
+| Look | Meshes | Triangles | LOD 1 | Coarsest |
+| --- | --- | --- | --- | --- |
+| Default (braies, belt, long hair, full beard) | 9 | 38,996 | 18,832 | 870 |
+| Warrior (tunic, jerkin, belt, bracers, boots) | 12 | 47,630 | 23,146 | 1,268 |
+| Chieftain (braies, belt, furs, jerkin, boots) | 12 | 45,126 | 21,896 | 1,290 |
+
+Godot draws a mesh's coarsest LOD whose error, projected at the camera's distance, stays under one pixel
+(`mesh_lod_threshold` 1.0; the error scales with the model, so these are stage 1's). At 120 m with the default 75°
+vertical field of view that is an error of 0.256 m at 1280 px
+wide and 0.171 m at 1920 px: the warrior draws 2,078 and 4,802 triangles; at 1920 px it falls under 4,000 from
+about 151 m, where the long hair's 0.214 m LOD replaces its 2,700-triangle one. The giant is the player's own
+character, so it is seldom that far from the camera; P45's probe gives the rendered numbers.
+
+**Load and instance, headless** (`tools/gd.sh --headless --path . -s <scratch>/measure.gd`, two runs at loads
+of 3.7 and 4.0):
+
+| | Run 1 | Run 2 |
+| --- | --- | --- |
+| First load of `giant_model.tscn` (the script, the scene, the preloaded glTF) | 17.1 ms | 18.3 ms |
+| The glTF again with the cache ignored, median of 5 | 6.3 ms | 6.7 ms |
+| The nine Web-tier textures, first load (headless: no upload) | 2.1 ms | 2.1 ms |
+| The two `tex_hi/` maps, first load | 1.3 ms | 1.1 ms |
+| Instance, enter the tree (`_ready`: layers and defaults), free: the first / the median of 7 | 0.46 / 0.19 ms | 0.50 / 0.18 ms |
+
+**The pipeline** (`nice -n 19`, Cycles at 2 threads): `--verify --skip-bake` 72 s (the cheap passes 50 s: the
+normal 18.4, the albedo 8.3, the rest position 7.7; the designs 14 s; the export 4 s; the pack 3 s) and `--verify`
+223 s (AO 104 s, thickness 48 s), both `GIANT VERIFY OK` with 12 files bit-exact; the pipeline's 13 tests 1.4-2.1 s.
+On a fresh checkout (`git archive`) with an empty `GIANT_CACHE`: `--verify --skip-bake` 67 s and `--verify` 217 s,
+both bit-exact. The normal bake jitters by a texel in about one bake in five (`TOLERATED`, `docs/systems/P41.md`).
 
 ## Reference PC results (owner: NOT RUN)
 

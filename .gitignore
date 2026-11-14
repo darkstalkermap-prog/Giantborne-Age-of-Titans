@@ -9,3 +9,6 @@ Thumbs.db
 *.swp
 # Per-worktree Godot user folder (tools/gd.sh sets XDG_DATA_HOME here)
 .userdata/
+# Python byte code (the asset pipelines run with -B, but a stray import must not reach a commit)
+__pycache__/
+*.pyc

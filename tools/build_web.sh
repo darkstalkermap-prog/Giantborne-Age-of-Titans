@@ -2,9 +2,9 @@
 # Builds the browser version of the game and prepares the files that the launcher page
 # (web/launcher.html) loads when it is published as a claude.ai Artifact.
 #
-# Usage:  tools/build_web.sh [--preset=NAME] [--out=DIR] [--budget-mb=N] [--parts=N]
-#                             [path-to-godot-4.6.3]
-#         tools/build_web.sh --check-size=DIR [--budget-mb=N] [--parts=N]
+# Usage:  tools/build_web.sh [--preset=NAME] [--out=DIR] [--budget-mb=N] [--giant-share-mb=N]
+#                             [--parts=N] [path-to-godot-4.6.3]
+#         tools/build_web.sh --check-size=DIR [--budget-mb=N] [--giant-share-mb=N] [--parts=N]
 #   --preset=Web          the release (default): no test content (scenes/test/, assets/test_world/,
 #                         data/test/ are excluded; P22), into builds/web/
 #   --preset="Web (test)" the same build with the test levels and records, for the web checks that
@@ -13,6 +13,10 @@
 #                         --parts)
 #   --budget-mb=N         the shipped index.pck budget in MB (default: the milestone's, from the
 #                         project's version: 7.5 MB up to M6, 21 MB at M7, 23 MB after; decision 8)
+#   --giant-share-mb=N    P41 (plan M10 §2.12): the most the realistic giant's files may add to the
+#                         shipped pack (the GIANT_SHARE line, tools/pck_files.py --giant-share);
+#                         default the budget less 18.4 MB: 4.6 MB at the 23 MB budget, and the
+#                         headroom grows with the budget (the owner's 26 MB answer: 7.6 MB)
 #   --parts=N             ship the packed pck in exactly N parts (P23: the forced two-part build of
 #                         the M6 acceptance, --parts=2); without it the pck ships in as many parts
 #                         of at most 15 MB as it needs, one part while it fits
@@ -42,19 +46,22 @@
 # The release build (--preset=Web into builds/web) also keeps the BUILD byte counts of
 # web/launcher.html in step with itself; other builds only write them into their own play.html.
 # The report: index.pck raw, gzipped and as shipped against the budget and its parts, the audio
-# share of the pck (P23: AUDIO_SHARE), the pck's test content (the release must have none: an
-# error), and for the release the data it ships validated without data/test
-# (tools/release_data_check.gd; a WARNING with the offending records).
+# share of the pck (P23: AUDIO_SHARE), the giant's share (P41: GIANT_SHARE, failing over
+# --giant-share-mb), the pck's test content (the release must have none: an error), and for the
+# release the data it ships validated without data/test (tools/release_data_check.gd; a WARNING
+# with the offending records).
 # Exit codes: 0 built; 1 failed - the export, a part over 15 MB, a packed file over the host's
 # 16 MB, the release's test content, or (M7 polish; plan §6.6) the shipped index.pck over the
 # milestone's budget (--budget-mb=N overrides it), which fails after the PCK_SIZE line and the reason
-# and before web/launcher.html is touched; 2 for a usage error.
+# and before web/launcher.html is touched, or (P41) the giant's share over --giant-share-mb (also
+# before the launcher is touched); 2 for a usage error.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 PRESET="Web"
 OUT=""
 BUDGET_MB=""
+GIANT_SHARE_MB=""
 PARTS=""
 CHECK_SIZE=""
 # The largest part of the packed pck (P23): under the host's 15 MB cap for binary files and its
@@ -66,9 +73,10 @@ for arg in "$@"; do
 		--preset=*) PRESET="${arg#--preset=}" ;;
 		--out=*) OUT="${arg#--out=}" ;;
 		--budget-mb=*) BUDGET_MB="${arg#--budget-mb=}" ;;
+		--giant-share-mb=*) GIANT_SHARE_MB="${arg#--giant-share-mb=}" ;;
 		--parts=*) PARTS="${arg#--parts=}" ;;
 		--check-size=*) CHECK_SIZE="${arg#--check-size=}" ;;
-		-h|--help) sed -n '2,52p' "$0"; exit 0 ;;
+		-h|--help) sed -n '2,57p' "$0"; exit 0 ;;
 		--*) echo "build_web.sh: unknown option '$arg'" >&2; exit 2 ;;
 		*) GODOT="$arg" ;;
 	esac
@@ -101,6 +109,14 @@ fi
 case "$BUDGET_MB" in
 	''|.|*[!0-9.]*|*.*.*) echo "build_web.sh: --budget-mb wants a number of MB (got '$BUDGET_MB')" >&2; exit 2 ;;
 esac
+# P41 (plan M10 §2.12): the giant's share of the shipped pack, 4.6 MB at the 23 MB budget; it keeps the
+# same 18.4 MB for everything else when the budget changes.
+if [ -z "$GIANT_SHARE_MB" ]; then
+	GIANT_SHARE_MB="$(awk "BEGIN { v = $BUDGET_MB - 18.4; if (v < 0) v = 0; printf \"%.1f\", v }")"
+fi
+case "$GIANT_SHARE_MB" in
+	''|.|*[!0-9.]*|*.*.*) echo "build_web.sh: --giant-share-mb wants a number of MB (got '$GIANT_SHARE_MB')" >&2; exit 2 ;;
+esac
 
 size() { wc -c < "$1" | tr -d ' '; }
 mb() { awk "BEGIN { printf \"%.2f\", $1 / 1048576 }"; }
@@ -114,6 +130,25 @@ check_budget() {
 		exit 1
 	fi
 	echo "index.pck as shipped: $(mb "$1") MB, within the milestone's budget of $BUDGET_MB MB"
+}
+# The giant's share (P41, plan M10 §2.12): prints the GIANT_SHARE line of the pck at $1 and exits 1 over
+# GIANT_SHARE_MB. A pack that python3 cannot read (no python3, not a Godot pack) prints a note instead.
+check_giant_share() {
+	local line shipped
+	if ! command -v python3 >/dev/null 2>&1; then
+		echo "GIANT_SHARE: not measured (python3 is missing)"
+		return 0
+	fi
+	if ! line="$(python3 tools/pck_files.py --giant-share "$1" 2>/dev/null)"; then
+		echo "GIANT_SHARE: not measured ($1 is not a Godot pack)"
+		return 0
+	fi
+	echo "$line cap_mb=$GIANT_SHARE_MB"
+	shipped="$(echo "$line" | sed -E 's/.* shipped=([0-9]+) .*/\1/')"
+	if awk "BEGIN { exit !($shipped > $GIANT_SHARE_MB * 1048576) }"; then
+		echo "build_web.sh: FAILED: the giant's files add $(mb "$shipped") MB to the shipped index.pck, over its share of $GIANT_SHARE_MB MB (plan M10 §2.12; --giant-share-mb=N overrides it)" >&2
+		exit 1
+	fi
 }
 
 # --check-size=DIR: an earlier build's index.pck judged without exporting or writing anything.
@@ -133,6 +168,7 @@ if [ -n "$CHECK_SIZE" ]; then
 		exit 1
 	fi
 	check_budget "$pck_packed"
+	check_giant_share "$CHECK_SIZE/index.pck"
 	exit 0
 fi
 
@@ -193,6 +229,7 @@ if command -v python3 >/dev/null 2>&1; then
 	echo "audio: $(mb "$audio_bytes") MB of the $(mb "$pck") MB pck ($(awk "BEGIN { printf \"%.0f\", 100 * $audio_bytes / $pck }") %)"
 fi
 check_budget "$pck_packed"
+check_giant_share "$OUT/index.pck"
 
 # The launcher's byte counts (used only for the progress bar) and the pck's part count.
 build_line="{ wasm: $wasm, pck: $pck, wasmPacked: $wasm_packed, pckPacked: $pck_packed, pckParts: $pck_parts }"

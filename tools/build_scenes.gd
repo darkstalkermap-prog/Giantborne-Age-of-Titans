@@ -15,6 +15,7 @@ extends Node
 ## Each builder is a script with `static func build_all(kit: SceneKit) -> void`.
 
 const BUILDERS := [
+	"res://tools/builders/giant_model.gd",     # P41: the realistic giant's model and index (M10)
 	"res://tools/builders/player.gd",          # P04: the giant
 	"res://tools/builders/soldier.gd",         # P04
 	"res://tools/builders/wolf.gd",            # P04
