@@ -5,7 +5,8 @@ extends IntegrationSuite
 ## id; the checkpoint toast names it too ("Checkpoint saved: Grove Shrine", "Game loaded: Forest road
 ## waystone"), from the index or, without one, from the loaded shrine or waystone; New Game offers
 ## "Play the prologue" / "Skip to the Old Kingdom" only for a save that finished the prologue while
-## level.world exists (a stub record here), and Skip starts the world from world_start.
+## level.world exists (a stub record here), and Skip starts the world from world_start. M10 (P44): each of the
+## two opens the character creator, whose Begin ("Begin in the Old Kingdom" for the skip) starts that game.
 
 const FIXTURE_DIR := "res://tests/fixtures/saves/"
 const STAND_IN := "res://scenes/test/flow_test_level.tscn"
@@ -44,6 +45,17 @@ func _fixture(fixture_name: String) -> Dictionary:
 func _write_save(doc: Dictionary) -> void:
 	GameSession.persist = true
 	assert_true(SaveSlots.write(doc).ok, "the save is written")
+
+
+## M10 (P44): the creator the title opened, then its Begin (named `begin_text`); the game starts in its press.
+func _begin(begin_text: String) -> void:
+	var c := stack.top() as CreatorScreen
+	assert_true(c != null and c.screen_name == "creator", "the character creator opens")
+	if c == null:
+		return
+	assert_eq(c.begin_button.text, begin_text, "its Begin: %s" % begin_text)
+	c.begin_button.pressed.emit()
+	assert_true(GameSession.character.has("appearance"), "the new character carries the creator's look")
 
 
 func _stub_world() -> void:
@@ -256,6 +268,8 @@ func test_skip_is_offered_only_for_a_finished_prologue_while_the_world_exists() 
 	assert_true(flat.has(title.button(TitleScreen.PLAY_PROLOGUE)) and flat.has(title.button(TitleScreen.SKIP_PROLOGUE)),
 		"both in the pad's focus column")
 	title.button(TitleScreen.SKIP_PROLOGUE).pressed.emit()
+	assert_eq(GameSession.scene_reloads.size(), 0, "M10: Skip opens the creator first")
+	_begin(CreatorScreen.BEGIN_WORLD)
 	assert_true(bool(GameSession.last_mode_result.get("ok", false)), "Skip starts: %s" % GameSession.last_mode_result)
 	assert_eq(GameSession.scene_reloads.back(), "new_game", "a New Game reload")
 	assert_eq(GameSession.level_id, GameSession.WORLD_LEVEL_ID, "in the world")
@@ -267,6 +281,7 @@ func test_skip_is_offered_only_for_a_finished_prologue_while_the_world_exists() 
 	assert_false(title.state().skip_choice, "a refresh hides the choice again")
 	title.button("New Game").pressed.emit()
 	title.button(TitleScreen.PLAY_PROLOGUE).pressed.emit()
+	_begin(CreatorScreen.BEGIN_VALLEY)
 	assert_true(bool(GameSession.last_mode_result.get("ok", false)), "Play the prologue starts")
 	assert_eq(GameSession.level_id, GameSession.VALLEY_LEVEL_ID, "a New Game in the Valley")
 	assert_eq(int(GameSession.character.level), 1, "from level 1")

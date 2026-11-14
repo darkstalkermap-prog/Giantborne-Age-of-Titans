@@ -109,7 +109,8 @@ func test_every_tab_and_the_ancestry_screen_fit_at_level_20() -> void:
 		return
 	var panel := screen.get_child(1) as Control
 	var titles: Array = screen.tabs.map(func(t: ShrineTab) -> String: return t.tab_title())
-	assert_eq(titles, ["Rest", "Grow", "Loadout", "Attributes", "Talents", "Ancestry"], "every tab is offered")
+	assert_eq(titles, ["Rest", "Grow", "Loadout", "Attributes", "Talents", "Ancestry", "Appearance"],
+		"every tab is offered (M10's Appearance last, P44)")
 	var bad := PackedStringArray()
 	for i in screen.tabs.size():
 		screen.show_tab(i)

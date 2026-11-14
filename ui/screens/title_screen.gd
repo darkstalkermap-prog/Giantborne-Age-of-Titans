@@ -25,12 +25,30 @@ extends UiScreen
 ## the saved game has finished the prologue (slice.completed) and the world exists, New Game asks
 ## "Play the prologue" (the default) or "Skip to the Old Kingdom" (a New Game from world_start in
 ## level.world); either replaces the saved game. Without the world the choice is hidden.
+##
+## M10 (P44, plan M10 §2.10): every New Game passes through the character creator. After the confirm and the
+## prologue or skip choice, New Game opens the creator (ScreenStack SCREENS["creator"], {"context": "new_game",
+## "start": {"mode", "options"}}) over the title; its Begin closes it with the record and the title starts the
+## game at once with options + {"appearance": record} - in the same call stack as the click (start_game: the
+## pointer lock is granted inside it). Back leaves the title as it was (the confirm, the skip choice) and the
+## save untouched. GameSession.creator_start (the launcher's --mode=world --creator) opens the creator as soon
+## as the title opens. The warm-up: with a display, a hidden 64x64 SubViewport (GiantPreview.WarmUp) draws the
+## giant's materials under the preview's and a level's lighting before New Game and Continue enable
+## ("Preparing...", at most WARMUP_LIMIT_S); without a display (headless tests) there is none and the buttons
+## are enabled at once. The warm-up is freed when a game starts (start_game) or with the title.
 
 const VALLEY_MISSING := "Valley not built yet"
 const PAGES := ["Settings", "Controls"]
 const PLAY_PROLOGUE := "Play the prologue"
 const SKIP_PROLOGUE := "Skip to the Old Kingdom"
 const SKIP_NOTE := "Starting over replaces your saved game. You finished the prologue: begin it again, or start in the Old Kingdom."
+## M10 (P44): the creator's screen name, the warm-up's note and its time limit.
+const CREATOR := "creator"
+const PREPARING := "Preparing..."
+const WARMUP_LIMIT_S := 6.0
+
+## M10 (P44): tests run the warm-up without a display (it counts frames then). Reset it after use.
+static var force_warmup := false
 
 var _new_game: Button
 var _prologue: Button
@@ -49,6 +67,15 @@ var _save_label: Label
 var _confirm_new := false
 var _save: Dictionary = {}
 var _settings_pages := SettingsPages.new()
+var _valley_ok := false
+var _continue_ok := false
+## M10 (P44): the warm-up viewport (null when there is none), when it gives up, the creator open over the
+## title and the button that opened it (the focus goes back there after Back).
+var _warmup: SubViewport = null
+var _warm_until_ms := 0
+var _warm_pending := false
+var _creator: UiScreen = null
+var _creator_from: Control = null
 
 
 func _ready() -> void:
@@ -116,6 +143,7 @@ func _ready() -> void:
 		ProjectSettings.get_setting("application/config/version"), Engine.get_version_info().string], 12, UiKit.MUTED)
 	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(info)
+	_start_warmup()
 	if stack == null:
 		refresh()   # inside a stack, on_open() refreshes
 
@@ -163,6 +191,12 @@ func focus_rows() -> Array:
 
 func on_open() -> void:
 	refresh()
+	# M10 (P44): the launcher's world start (--mode=world --creator) opens the creator at once.
+	if not GameSession.creator_start.is_empty():
+		var cs: Dictionary = GameSession.creator_start
+		GameSession.creator_start = {}
+		_open_creator.call_deferred(str(cs.get("mode", "valley")),
+			cs.get("options", {}) if typeof(cs.get("options")) == TYPE_DICTIONARY else {})
 
 
 ## Esc / pad B leave the Settings or Controls page; the title itself never closes.
@@ -203,12 +237,24 @@ func refresh() -> void:
 			save_text = (save_text + "\n" if save_text != "" else "") + str(_save.message)
 	else:
 		save_text = "No saved game yet."
-	_new_game.disabled = not valley
-	_continue.disabled = not can_continue
+	_valley_ok = valley
+	_continue_ok = can_continue
 	_note.text = "" if valley else VALLEY_MISSING
+	_update_buttons()
 	_save_label.text = save_text
 	if is_inside_tree():
 		refresh_focus()
+
+
+## New Game and Continue: enabled when they can start and the warm-up is done (M10, P44); "Preparing..." meanwhile.
+func _update_buttons() -> void:
+	var warm := warming()
+	_new_game.disabled = not _valley_ok or warm
+	_continue.disabled = not _continue_ok or warm
+	if warm:
+		_note.text = PREPARING
+	elif _note.text == PREPARING:
+		_note.text = "" if _valley_ok else VALLEY_MISSING
 
 
 ## A short line about a save document: "Saved game: level 3, stage 2, at the Grove Shrine,
@@ -329,6 +375,45 @@ func _show_page(page_name: String) -> void:
 
 func _process(_delta: float) -> void:
 	_settings_pages.update_capture()
+	if _warm_pending and not warming():
+		_warm_pending = false
+		_update_buttons()
+		if is_inside_tree() and stack != null and is_instance_valid(stack) and stack.top() == self:
+			refresh_focus()
+			var f := first_focus()
+			if UiNav.focusable(f):
+				f.grab_focus()
+
+
+# --------------------------------------------------------------------------- the warm-up (M10, P44)
+
+## With a display (or force_warmup), the hidden viewport that compiles the giant's shaders before New Game.
+func _start_warmup() -> void:
+	if not force_warmup and DisplayServer.get_name() == "headless":
+		return
+	_warmup = GiantPreview.WarmUp.new()
+	add_child(_warmup)
+	_warm_until_ms = Time.get_ticks_msec() + int(WARMUP_LIMIT_S * 1000.0)
+	_warm_pending = true
+
+
+## True while the warm-up holds New Game and Continue: its frames are not drawn yet and its time is not up.
+func warming() -> bool:
+	if _warmup == null or not is_instance_valid(_warmup) or _warmup.is_queued_for_deletion():
+		return false
+	return not bool(_warmup.get("done")) and Time.get_ticks_msec() < _warm_until_ms
+
+
+## The warm-up viewport (null when there is none or it was freed).
+func warmup_viewport() -> SubViewport:
+	return _warmup if _warmup != null and is_instance_valid(_warmup) and not _warmup.is_queued_for_deletion() else null
+
+
+func _free_warmup() -> void:
+	if _warmup != null and is_instance_valid(_warmup):
+		_warmup.queue_free()
+	_warmup = null
+	_warm_pending = false
 
 
 # --------------------------------------------------------------------------- actions
@@ -352,28 +437,61 @@ func _on_new_game() -> void:
 		_new_game.text = "New Game: replace the saved game?"
 		_note.text = "Press New Game again to start over. Your saved game will be replaced."
 		return
-	_start("valley", {"new_game": true})
+	_open_creator("valley", {"new_game": true})
 
 
-## "Play the prologue" (P20): a New Game in the Valley, replacing the saved game.
+## "Play the prologue" (P20): a New Game in the Valley, replacing the saved game (M10: through the creator).
 func _on_play_prologue() -> void:
 	if _prologue.visible:
-		_start("valley", {"new_game": true})
+		_open_creator("valley", {"new_game": true})
 
 
-## "Skip to the Old Kingdom" (P20): a New Game in the world from world_start.
+## "Skip to the Old Kingdom" (P20): a New Game in the world from world_start (M10: through the creator).
 func _on_skip_prologue() -> void:
 	if _skip.visible:
-		_start("world", {"new_game": true})
+		_open_creator("world", {"new_game": true})
 
 
 func _on_continue() -> void:
 	if not _continue.disabled:
-		_start("valley", {"continue": true})
+		start_game("valley", {"continue": true})
 
 
 func _on_sandbox() -> void:
-	_start("sandbox", {})
+	start_game("sandbox", {})
+
+
+## M10 (P44): the creator for a New Game of `mode_name` (its Begin starts it; Back leaves the title as it was).
+## Without a screen stack (or a creator) the game starts at once, as before M10. Returns the creator.
+func _open_creator(mode_name: String, options: Dictionary) -> UiScreen:
+	if stack == null or not is_instance_valid(stack) or _creator != null:
+		if _creator == null:
+			start_game(mode_name, options)
+		return _creator
+	_creator_from = UiNav.focus_owner(self)
+	_creator = stack.open(CREATOR, {"context": "new_game", "start": {"mode": mode_name, "options": options.duplicate(true)}})
+	if _creator == null:
+		start_game(mode_name, options)
+		return null
+	_creator.closed.connect(_on_creator_closed.bind(mode_name, options.duplicate(true)))
+	return _creator
+
+
+## The creator closed: Begin starts the game with its record in this same call stack; Back keeps the title.
+func _on_creator_closed(result: Dictionary, mode_name: String, options: Dictionary) -> void:
+	_creator = null
+	if bool(result.get("begin", false)) and typeof(result.get("appearance")) == TYPE_DICTIONARY:
+		var o := options.duplicate(true)
+		o["appearance"] = (result.appearance as Dictionary).duplicate(true)
+		start_game(mode_name, o)
+		return
+	if UiNav.focusable(_creator_from):
+		_creator_from.grab_focus.call_deferred()
+
+
+## The creator open over the title (null when none).
+func creator() -> UiScreen:
+	return _creator if _creator != null and is_instance_valid(_creator) else null
 
 
 func _on_quit() -> void:
@@ -381,7 +499,10 @@ func _on_quit() -> void:
 	get_tree().quit()
 
 
-func _start(mode_name: String, options: Dictionary) -> void:
+## Starts a mode (Events.mode_change_requested), capturing the mouse on the web inside the click that called
+## it. M10 (P44): public, so the creator's Begin starts the game in its own pressed handler; it frees the warm-up.
+func start_game(mode_name: String, options: Dictionary) -> void:
+	_free_warmup()
 	var web := OS.has_feature("web")
 	if web:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED   # pointer lock is granted inside this click
