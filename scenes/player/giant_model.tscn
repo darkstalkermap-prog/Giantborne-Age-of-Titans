@@ -151,7 +151,7 @@ index = {
 "wrist_l": [-1.087127, 2.306697, -0.44995],
 "wrist_r": [1.087127, 2.306697, -0.44995]
 },
-"manifest_sha256": "0f99725c98ae5f9e60de19156c255fe6b199151f9997bcf410ccf3c9f6f37580",
+"manifest_sha256": "63f328a4007dd2b1ed515ed93452034dc3fd99afba335573e3183b9281e01d38",
 "meshes": {
 "Beard_full": {
 "atlas": "hair_atlas",
@@ -160,7 +160,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Beard_full",
-"tris": 3360
+"tris": 4080
 },
 "Beard_short": {
 "atlas": "hair_atlas",
@@ -169,7 +169,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Beard_short",
-"tris": 1280
+"tris": 2240
 },
 "Body_Head": {
 "category": "body",
@@ -342,7 +342,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Hair_crop",
-"tris": 3200
+"tris": 4400
 },
 "Hair_long_back": {
 "atlas": "hair_atlas",
@@ -351,7 +351,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Hair_long_back",
-"tris": 5580
+"tris": 6960
 }
 },
 "regions": [{

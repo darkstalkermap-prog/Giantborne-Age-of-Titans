@@ -49,6 +49,7 @@ uniform vec3 wrap = vec3(0.42, 0.20, 0.13);
 uniform vec3 sss_color : source_color = vec3(0.90, 0.28, 0.16);
 uniform float transmission = 0.5;
 uniform float rough_scale = 1.25;
+uniform float normal_detail = 0.6;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
@@ -83,8 +84,8 @@ void fragment() {
 	// the hair's colours on the skin: stubble and the skin under the beard (the beard's), the scalp under
 	// a hairstyle and the brows (the hair's)
 	base = mix(base, base * mix(vec3(1.0), beard_color * 2.2, 0.85), clamp(m.r * stubble, 0.0, 1.0) * 0.75);
-	base = mix(base, hair_color * 0.55, clamp(m.g * scalp_tint, 0.0, 1.0));
-	base = mix(base, beard_color * 0.55, clamp(smoothstep(0.2, 0.7, m.r) * beard_tint, 0.0, 1.0));
+	base = mix(base, hair_color * 0.8, clamp(m.g * scalp_tint, 0.0, 1.0));
+	base = mix(base, beard_color * 0.8, clamp(smoothstep(0.2, 0.7, m.r) * beard_tint, 0.0, 1.0));
 	base = mix(base, hair_color * 0.9, clamp(m.b * brows, 0.0, 1.0) * 0.85);
 	// the designs of this texel's body region: tattoo ink in the skin, the line's mark, war paint on top
 	float tattoo = design_coverage(region_tattoo[v_region], UV);
@@ -95,6 +96,7 @@ void fragment() {
 	base = mix(base, paint_color, paint * 0.92);
 	// scars: paler, glossier, raised (one RGBA layer of the design array)
 	vec3 nm = texture(normal_tex, UV).rgb * 2.0 - 1.0;
+	nm.xy *= normal_detail;   // the baked relief, eased: the low sun drew the forehead's lines as ridges
 	float sc = 0.0;
 	if (dot(scar_on, scar_on) > 0.0) {
 		float sl = float(scar_layer);

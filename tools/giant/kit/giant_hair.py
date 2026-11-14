@@ -11,7 +11,9 @@ Every vertex is skinned 100 % to the game_engine "head" bone.
 Ported from the M10 research run's frozen kit snapshot (Surface, grow, post_collide) and its hair
 card script (ribbons, the growth of the scalp and beard guides, the four styles). The strand
 Curves objects of the renders are not ported. Changes: the crop has twice the research's cards
-(the research crop was patchy), and the styles are named by the giant index's mesh ids.
+(the research crop was patchy), and the styles are named by the giant index's mesh ids. The look
+pass (P46) made the cards narrower and more numerous (a card wider than it is long reads as a
+shingle), with fewer points along the short ones.
 """
 from __future__ import annotations
 
@@ -24,19 +26,21 @@ ATLAS_COLUMNS = 4
 # guide points, sampling power, card width m, curl, wispy-column share of the outer layer).
 STYLES = {
     "Hair_long_back": {"kind": "scalp", "layers": [
-        dict(n=170, length=0.17, lo=0.006, hi=0.012, npts=10, power=0.6, width=0.06, curl=0.12, wispy=0.0),
-        dict(n=140, length=0.21, lo=0.014, hi=0.024, npts=10, power=0.6, width=0.045, curl=0.2, wispy=0.3)]},
+        dict(n=240, length=0.17, lo=0.006, hi=0.012, npts=8, power=0.6, width=0.042, curl=0.12, wispy=0.0),
+        dict(n=200, length=0.21, lo=0.014, hi=0.024, npts=10, power=0.6, width=0.032, curl=0.2, wispy=0.3)]},
     "Hair_crop": {"kind": "scalp", "layers": [
-        dict(n=400, length=0.05, lo=0.005, hi=0.009, npts=5, power=0.4, width=0.04, curl=0.05, wispy=0.0)]},
+        dict(n=1100, length=0.065, lo=0.003, hi=0.008, npts=3, power=0.4, width=0.026, curl=0.05, wispy=0.0)]},
     "Beard_full": {"kind": "beard", "layers": [
-        dict(n=140, length=0.13, lo=0.004, hi=0.008, npts=8, power=1.0, width=0.04, curl=0.1, wispy=0.0),
-        dict(n=100, length=0.16, lo=0.009, hi=0.016, npts=8, power=1.0, width=0.032, curl=0.15, wispy=0.3)]},
+        dict(n=200, length=0.13, lo=0.004, hi=0.008, npts=7, power=1.0, width=0.03, curl=0.1, wispy=0.0),
+        dict(n=140, length=0.16, lo=0.009, hi=0.016, npts=7, power=1.0, width=0.024, curl=0.15, wispy=0.3)]},
     "Beard_short": {"kind": "beard", "layers": [
-        dict(n=160, length=0.04, lo=0.003, hi=0.006, npts=5, power=1.0, width=0.03, curl=0.05, wispy=0.0)]},
+        dict(n=560, length=0.05, lo=0.002, hi=0.006, npts=3, power=1.0, width=0.022, curl=0.05, wispy=0.0)]},
 }
 # The order the styles are grown in (one random stream, seed HAIR_SEED).
 STYLE_ORDER = ("Hair_long_back", "Hair_crop", "Beard_full", "Beard_short")
 HAIR_SEED = 11
+# How far a card's shading normal leans from the skin's normal towards the head-centre direction.
+NORMAL_ROUND = 0.5
 
 
 def log(*a):
@@ -210,7 +214,7 @@ def grow_beard(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=8, power
 # --------------------------------------------------------------------------------------
 # cards
 # --------------------------------------------------------------------------------------
-def ribbons(surf, P, widths, col_idx, curl):
+def ribbons(surf, P, widths, col_idx, curl, centre=None):
     """Guides P (N, K, 3) -> card vertices, faces (quads), uvs, normals."""
     N, K, _ = P.shape
     T = np.gradient(P, axis=1)
@@ -225,7 +229,13 @@ def ribbons(surf, P, widths, col_idx, curl):
     Lft = P - side * w * 0.5 - nrm * c
     Rgt = P + side * w * 0.5 - nrm * c
     V = np.stack([Lft, Rgt], axis=2).reshape(N, K * 2, 3)            # per card: l0 r0 l1 r1 ...
-    Nn = np.stack([nrm, nrm], axis=2).reshape(N, K * 2, 3)
+    # The shading normal: the head's normal under the card, half-way towards the direction from the
+    # head's centre, so neighbouring cards over the jaw, the ears and the temples are lit alike (P46).
+    if centre is not None:
+        shade = _unit(nrm * (1.0 - NORMAL_ROUND) + _unit(P - centre) * NORMAL_ROUND)
+    else:
+        shade = nrm
+    Nn = np.stack([shade, shade], axis=2).reshape(N, K * 2, 3)
     faces = []
     for k in range(K - 1):
         a = 2 * k
@@ -271,6 +281,8 @@ def build_styles(body, rig, coll, bd, S):
     hs = land["hs"]
     surf = Surface(body, 0, ("m_scalp", "m_beard", "m_head"))
     rng = np.random.default_rng(HAIR_SEED)
+    wh = np.clip(surf.attr["m_head"], 0, 1)
+    centre = (surf.V * wh[:, None]).sum(axis=0) / wh.sum()
     out = {}
     for mesh_id in STYLE_ORDER:
         style = STYLES[mesh_id]
@@ -287,7 +299,7 @@ def build_styles(body, rig, coll, bd, S):
                 cols = np.where(rng.random(n) < ly["wispy"], 3, rng.integers(0, 3, n))
             else:
                 cols = rng.integers(0, 3, n)
-            V, F, UV, Nn = ribbons(surf, P, width, cols, np.full(n, ly["curl"]))
+            V, F, UV, Nn = ribbons(surf, P, width, cols, np.full(n, ly["curl"]), centre)
             Vs.append(V)
             Fs.append(F + off)
             UVs.append(UV)

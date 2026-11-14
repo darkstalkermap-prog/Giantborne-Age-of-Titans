@@ -8,7 +8,7 @@
 	"options": [
 		{"key": "none", "name": "None", "mesh": "", "stubble": 0.15, "beard_tint": 0.0},
 		{"key": "stubble", "name": "Stubble", "mesh": "", "stubble": 0.8, "beard_tint": 0.0},
-		{"key": "short", "name": "Short", "mesh": "Beard_short", "stubble": 0.8, "beard_tint": 0.5},
+		{"key": "short", "name": "Short", "mesh": "Beard_short", "stubble": 0.8, "beard_tint": 0.85},
 		{"key": "full", "name": "Full", "mesh": "Beard_full", "stubble": 0.8, "beard_tint": 1.0, "default": true}
 	]
 }
