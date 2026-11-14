@@ -17,6 +17,91 @@
   }
  },
  "body_hash": "9cd81c08253e20339d78a2a5e72ca01adc08a47599c95446d6f4209ef88527be",
+ "clips": {
+  "clips": {
+   "airborne": {
+    "bones": 52,
+    "frames": 1,
+    "length_s": 0.033333,
+    "loop": false
+   },
+   "death": {
+    "bones": 52,
+    "frames": 30,
+    "length_s": 1.0,
+    "loop": false
+   },
+   "grip_l": {
+    "bones": 15,
+    "frames": 1,
+    "length_s": 0.033333,
+    "loop": false
+   },
+   "grip_r": {
+    "bones": 15,
+    "frames": 1,
+    "length_s": 0.033333,
+    "loop": false
+   },
+   "idle": {
+    "bones": 52,
+    "frames": 60,
+    "length_s": 2.0,
+    "loop": true
+   },
+   "open_l": {
+    "bones": 15,
+    "frames": 1,
+    "length_s": 0.033333,
+    "loop": false
+   },
+   "open_r": {
+    "bones": 15,
+    "frames": 1,
+    "length_s": 0.033333,
+    "loop": false
+   },
+   "run": {
+    "bones": 52,
+    "frames": 32,
+    "length_s": 1.066667,
+    "loop": true
+   },
+   "walk": {
+    "bones": 52,
+    "frames": 32,
+    "length_s": 1.066667,
+    "loop": true
+   }
+  },
+  "conversion_error_m": 2e-06,
+  "cycle_m": 3.2,
+  "fps": 30,
+  "gaits": {
+   "run": {
+    "contact_error_m": 0.0,
+    "duty": 0.36,
+    "ground_lift_m": 0.0,
+    "keys": 33,
+    "pelvis_drop_m": 0.25,
+    "slide_m": 0.0,
+    "stride_error": -0.0,
+    "stride_m": 3.2
+   },
+   "walk": {
+    "contact_error_m": 0.0,
+    "duty": 0.55,
+    "ground_lift_m": 0.0,
+    "keys": 33,
+    "pelvis_drop_m": 0.187528,
+    "slide_m": 0.0,
+    "stride_error": 0.0,
+    "stride_m": 3.2
+   }
+  },
+  "left_strike_phase": 1.570796,
+  "step_m": 1.6
+ },
  "designs": {
   "designs": {
    "mark_claw_stripes": {
@@ -746,6 +831,13 @@
    "size": 2568348,
    "step": "export"
   },
+  "assets/giant/giant_clips.glb": {
+   "cycles": false,
+   "inputs": "f9db4406406f36d5515911c280201706687f4ea4376ce7b3ef29f6226bdbeae4",
+   "sha256": "dd6b524cb34897dc751cad68b728ee4c707875eb61f0dfb2c434c3dfbb56a2f0",
+   "size": 637604,
+   "step": "clips"
+  },
   "assets/giant/hair_atlas.png": {
    "cycles": false,
    "inputs": "0e6ba6014bc4ed43cfca38c73b1873812c7d107b8eb1ed99b05dc2ec76d9f2d2",
@@ -1390,6 +1482,7 @@
  "inputs": {
   "kit": {
    "bake.py": "68e2fdefee8d5b50e903d3339b26d3b63a241d3a4afde27f38456cc81b77a8a4",
+   "clips.py": "fec38ebf0ab87513463a11a536583ce759c8b01ba1f2de82ee34393ca21f8e65",
    "designs.py": "ba2b20e8e8d0eba812cbc8a85387dab38fe4bad7300be6902f6e99c7f24416c6",
    "export_game.py": "b71e4dbce37a4c98d0e7e09d74c979624020e709b3a5b465d997ad9b2dcfdb8e",
    "giant_body.py": "c8f694bd9d26bfd16ef4ca60ad3d1f36ec9c75247bc360a3ae2ad8778b741581",

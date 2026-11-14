@@ -61,6 +61,7 @@ STEPS = ("export", "bake", "designs", "pack", "clips")
 EXPORT_SOURCES = ("mh_data.py", "giant_body.py", "giant_hair.py", "giant_garment.py", "split.py", "export_game.py")
 DESIGN_SOURCES = ("designs.py", "giant_skin.py", "giant_body.py", "mh_data.py", "split.py")
 PACK_SOURCES = ("pack.py",)
+CLIP_SOURCES = ("clips.py",) + EXPORT_SOURCES
 # the giant's share of the Web pack (plan §2.12: 4.6 MiB at the 23 MiB budget), shipped bytes: as
 # tools/build_web.sh rules it, the Web budget less what everything else keeps (OTHER_MIB)
 OTHER_MIB = 18.4
@@ -227,7 +228,7 @@ def build(steps, out_root: Path, read_cache=True, write_cache=True, skip_bake=Fa
     keys = bake_keys(tool)
     times = {}
     files = dict(old.get("files", {}))
-    doc = {k: old[k] for k in ("export", "designs") if k in old}
+    doc = {k: old[k] for k in ("export", "designs", "clips") if k in old}
     assets = out_root / ASSETS
     assets.mkdir(parents=True, exist_ok=True)
     mp = mpfb2_hash()
@@ -278,9 +279,11 @@ def build(steps, out_root: Path, read_cache=True, write_cache=True, skip_bake=Fa
                 files[ASSETS + "/" + rel] = manifest.file_entry(out_root, ASSETS + "/" + rel, "pack", inputs, cyc)
         if "clips" in steps:
             if (KIT / "clips.py").exists():
-                secs, _ = run_kit("clips.py", assets)
+                # P43: the computed-keyframe clips; their gait measures (stride, slide) join the manifest
+                secs, _ = run_kit("clips.py", assets, work / "clips")
                 times["clips"] = round(secs, 1)
-                inputs = manifest.hash_json({"sources": source_hashes(("clips.py",) + EXPORT_SOURCES), "mpfb2": mp})
+                doc["clips"] = json.loads((work / "clips" / "clips_info.json").read_text())
+                inputs = manifest.hash_json({"sources": source_hashes(CLIP_SOURCES), "mpfb2": mp})
                 files[ASSETS + "/giant_clips.glb"] = manifest.file_entry(out_root, ASSETS + "/giant_clips.glb", "clips",
                                                                          inputs, False)
             elif verbose:
@@ -326,6 +329,9 @@ IMPORT_SETTINGS = {
                                            "animation/import": "false"}),
     "designs.png": ("2d_array_texture", "CompressedTexture2DArray",
                     {"compress/mode": "2", "mipmaps/generate": "true", "slices/horizontal": "1"}),
+    # P43: the clips as an AnimationLibrary (loops are set in code: imported clips have loop off)
+    "giant_clips.glb": ("animation_library", "AnimationLibrary",
+                        {"animation/import": "true", "animation/fps": "30", "animation/remove_immutable_tracks": "true"}),
 }
 
 
