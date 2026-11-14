@@ -6,9 +6,9 @@ extends TestSuite
 ## Required: no engine or shader error, GiantLook.validate() empty, no blank tile, every option's changed pixels
 ## above its set's floor, and at least one option of each design category (tattoo, war paint, scar, ancestry
 ## mark) above the rear view's or the first-person view's floor - except a category listed in KNOWN_MISSES,
-## which must still draw in one of the two views and is reported (the floor catalogue's scars, P46's to make
-## bold). The floors were set from the floor catalogue's renders; docs/systems/P44.md records them with the
-## measured shares. The grids are saved to user://m10_frames/options/ (with index.json naming every tile) for
+## which must still draw in one of the two views and is reported (none since the look pass, P46). The floors
+## were set from the floor catalogue's renders (docs/systems/P44.md) and kept by the look pass, whose measured
+## shares with the target catalogue are in docs/systems/P46.md. The grids are saved to user://m10_frames/options/ (with index.json naming every tile) for
 ## the merges, the sheets and P46. Without xvfb-run it is skipped with a note.
 
 const PROBE := "res://tests/support/appearance_render_probe.tscn"
@@ -29,9 +29,11 @@ const FLOORS := {"skin": 0.008, "eyes": 0.0001, "hair": 0.045, "beard": 0.035, "
 const VIEW_FLOOR_PX := {"rear": 18, "fp": 90}
 const DESIGN_SETS := ["tattoo", "paint", "scar", "mark"]
 ## Design categories that do not yet read in either view, with the reason; each must still draw (a pixel or more)
-## in one of them. P46 (the look pass: bolder scars, the cheek and back_lash scars) takes an entry off when its
-## content passes.
-const KNOWN_MISSES := {"scar": "the floor catalogue's scars are thinner than the 4 cm stroke rule: the forearm slash changes 3 px of the rear tile, the knuckles nick 1 px in first person, the brow and chest claws face the camera in neither view"}
+## in one of them. Empty since the look pass (P46): the back lashes read from behind (63 px of the rear tile), so
+## the scars left the list.
+const KNOWN_MISSES := {}
+## The designs of the catalogue (the floor's 17 and the look pass's 12): each is drawn in its two views.
+const DESIGNS := 29
 
 
 static func _have(tool: String) -> bool:
@@ -95,7 +97,7 @@ func test_every_option_draws_and_reads_in_its_view() -> void:
 	var tiles := 0
 	for cat: String in Appearance.CATEGORIES:
 		tiles += Appearance.option_ids(cat).size()
-	assert_true(int(r.tiles) >= tiles + 2 * 17, "every option and every design's two views (%d tiles)" % int(r.tiles))
+	assert_true(int(r.tiles) >= tiles + 2 * DESIGNS, "every option and every design's two views (%d tiles)" % int(r.tiles))
 	for cat: String in DESIGN_SETS:
 		var reads := PackedStringArray()
 		var drawn := 0

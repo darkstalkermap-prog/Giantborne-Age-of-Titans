@@ -38,6 +38,7 @@ const INDEX := {
 		"scar_brow": {"layer": 3, "channel": 0, "kind": "scar", "regions": [1]},
 		"scar_knuckles": {"layer": 3, "channel": 2, "kind": "scar", "regions": [9]},
 		"scar_far": {"layer": 4, "channel": 0, "kind": "scar", "regions": [2]},
+		"scar_farther": {"layer": 5, "channel": 1, "kind": "scar", "regions": [2]},
 	},
 	"regions": [{"id": 0, "name": "scalp"}, {"id": 1, "name": "face"}],
 	# The web tier is the real one (every sampler must load: validate() reports one that does not); the hi
@@ -213,12 +214,16 @@ func test_validate_flags_a_misspelled_uniform_and_unknown_ids() -> void:
 	bad.hair_mesh = "Hair_mohawk"
 	bad.garments = ["tunic", "cape"]
 	bad.tattoos = [{"design": "tat_dragon", "ink": Color.BLUE}]
-	bad.scars = ["scar_brow", "scar_far", "paint_face_stripes"]
+	bad.scars = ["scar_brow", "scar_far", "scar_farther", "paint_face_stripes"]
 	var p := "\n".join(GiantLook.validate(root2, INDEX, bad))
 	assert_true(p.contains("Hair_mohawk"), "an unknown hair mesh")
 	assert_true(p.contains("'cape'"), "an unknown garment")
 	assert_true(p.contains("tat_dragon"), "an unknown design")
-	assert_true(p.contains("scar_far") and p.contains("layer"), "a scar on another layer than the first")
+	assert_true(p.contains("'scar_farther' is on layer 5"), "a scar on a third layer (P46: the scars fill two layers of four)")
+	assert_false(p.contains("'scar_far' is on layer"), "a scar on the second layer is drawn (scar_layer_b)")
+	var two := GiantLook.scar_uniforms(INDEX, ["scar_knuckles", "scar_far", "scar_farther"])
+	assert_eq([two.layer, two.on, two.layer_b, two.on_b], [3, Vector4(0, 0, 1, 0), 4, Vector4(1, 0, 0, 0)],
+		"the first layer's scars and the second layer's, the third layer's left out")
 	assert_true(p.contains("paint_face_stripes") and p.contains("is a paint"), "a design of another kind")
 	var orphan := INDEX.duplicate(true)
 	orphan.meshes["Garment_cape"] = {"node": "Garment_cape", "category": "garment"}
@@ -293,6 +298,8 @@ func test_the_region_arrays_are_always_filled() -> void:
 	assert_eq(codes.paint, _codes({}), "an unknown design is left out")
 	assert_eq(int(skin.get_shader_parameter("scar_layer")), 3, "no scar: the scars' layer all the same")
 	assert_eq(skin.get_shader_parameter("scar_on"), Vector4.ZERO, "and none on")
+	assert_eq(int(skin.get_shader_parameter("scar_layer_b")), 4, "and the second scar layer (P46)")
+	assert_eq(skin.get_shader_parameter("scar_on_b"), Vector4.ZERO, "none on there either")
 
 
 ## The real index names its maps ("atlas": "hair_atlas", "detail": "leather" | "weave" | "fur") and maps the

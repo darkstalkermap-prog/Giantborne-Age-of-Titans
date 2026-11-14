@@ -1,5 +1,5 @@
 """The design array (the step --designs): every tattoo, war paint, scar and ancestry mark of the
-floor catalogue (plan §2.3), drawn as distance fields in 3D on the rest pose and packed into the
+catalogue (plan §2.3: the floor, and the target's additions from the look pass), drawn as distance fields in 3D on the rest pose and packed into the
 512 x 512 RGBA layers of ``designs.png`` (stacked vertically; imported as a 2D texture array).
 
 Every texel's rest position and normal come from the bake (restpos.npy, restnrm.npy) and its body
@@ -8,9 +8,9 @@ Designs are drawn at the bake's 1024 px and box-filtered to 512 px.
 
 The packing rule (plan §2.5, the S3TC compressor ghosts designs that share an area): within one
 layer, the texels of any body region carry a design in at most one of R, G and B, plus at most one
-in A; designs in different regions may share a channel. The four scars fill one layer of their own
-(the shader's ``scar_layer`` and ``scar_on``); the others are placed greedily, the designs that touch
-the most regions first.
+in A; designs in different regions may share a channel. The scars fill layers of their own, four a
+layer (the shader's ``scar_layer`` and ``scar_on``, and ``scar_layer_b`` and ``scar_on_b`` for the
+fifth and sixth); the others are placed greedily, the designs that touch the most regions first.
 
 Reading in play (plan §2.3, decision 18): the pieces the camera sees from behind at stage 1 or in
 first person - arm_bands, arm_chevrons, back_wings, back_tree, shoulder_bands, forearm_slash,
@@ -34,7 +34,9 @@ LAYER_SIZE = 512
 AA = 0.0016                     # anti-aliasing ramp (m, human scale; about one 1024 px texel)
 BOLD = 0.0135                   # half-width of a stroke that reads in play (2.7 cm wide, 4 cm at stage 1)
 KINDS = ("tattoo", "paint", "scar", "mark")
-SCAR_ORDER = ("scar_brow", "scar_forearm_slash", "scar_chest_claws", "scar_knuckles")
+SCAR_ORDER = ("scar_brow", "scar_forearm_slash", "scar_chest_claws", "scar_knuckles",
+              "scar_cheek", "scar_back_lash")     # four a layer: the fifth and sixth fill a second scar layer
+SCARS_PER_LAYER = 4
 # design id -> (kind, body regions it may draw in)
 CATALOGUE = {
     "tat_arm_bands": ("tattoo", (8,)),
@@ -51,6 +53,19 @@ CATALOGUE = {
     "scar_forearm_slash": ("scar", (9,)),
     "scar_chest_claws": ("scar", (3,)),
     "scar_knuckles": ("scar", (10,)),
+    # the target catalogue (P46): two more tattoos a region, two war paints, two scars
+    "tat_arm_sleeve": ("tattoo", (8, 9)),
+    "tat_arm_winding": ("tattoo", (8, 9)),
+    "tat_chest_sun": ("tattoo", (3,)),
+    "tat_chest_collar": ("tattoo", (3,)),
+    "tat_back_shoulders": ("tattoo", (5, 8)),
+    "tat_back_serpent": ("tattoo", (5, 6)),
+    "tat_face_crown": ("tattoo", (1,)),
+    "tat_face_bars": ("tattoo", (1,)),
+    "paint_full_face": ("paint", (1,)),
+    "paint_back_hand": ("paint", (5,)),
+    "scar_cheek": ("scar", (1,)),
+    "scar_back_lash": ("scar", (5, 6)),
     "mark_granite_veins": ("mark", (8, 9)),
     "mark_lightning_tree": ("mark", (5, 6, 8, 9)),
     "mark_claw_stripes": ("mark", (1, 3, 8)),
@@ -464,6 +479,204 @@ def d_claw_stripes(P, N, J, ctx):
     return m
 
 
+# --------------------------------------------------------------------------------------
+# the target catalogue (P46)
+# --------------------------------------------------------------------------------------
+def d_arm_sleeve(P, N, J, ctx):
+    """A full sleeve on the right arm, shoulder to wrist: bold rings with a lattice of two crossing
+    windings between them (the arm the first-person view looks down at)."""
+    out = np.zeros(len(P))
+    sh, el, wr = J["joint-r-shoulder"], J["joint-r-elbow"], J["joint-r-hand"]
+    for a, b, rmax, t0, t1 in ((sh, el, 0.15, 0.08, 0.97), (el, wr, 0.11, 0.03, 0.9)):
+        t, r, th, Lx = limb_frame(P, a, b)
+        sel = (r < rmax) & (t > t0) & (t < t1)
+        along = t * Lx
+        pitch = 0.1
+        ring = band(np.abs((along / pitch) % 1.0 - 0.5) * pitch, BOLD * 0.8)
+        turn = th / (2 * math.pi)
+        w1 = band(np.abs((along / pitch + 2 * turn + 0.5) % 1.0 - 0.5) * pitch * 0.5, 0.0065)
+        w2 = band(np.abs((along / pitch - 2 * turn + 0.5) % 1.0 - 0.5) * pitch * 0.5, 0.0065)
+        out = np.maximum(out, np.where(sel, np.maximum(ring, np.maximum(w1, w2)), 0.0))
+    return out
+
+
+def d_arm_winding(P, N, J, ctx):
+    """One broad band winding down each arm from the shoulder to the wrist."""
+    out = np.zeros(len(P))
+    for s, hand in (("l", 1.0), ("r", -1.0)):
+        sh, el, wr = J[f"joint-{s}-shoulder"], J[f"joint-{s}-elbow"], J[f"joint-{s}-hand"]
+        for a, b, rmax, t0, t1, off in ((sh, el, 0.15, 0.1, 0.95, 0.0), (el, wr, 0.11, 0.05, 0.88, 0.5)):
+            t, r, th, Lx = limb_frame(P, a, b)
+            sel = (r < rmax) & (t > t0) & (t < t1)
+            pitch = 0.15
+            ph = (t * Lx / pitch + hand * th / (2 * math.pi) + off) % 1.0
+            out = np.maximum(out, np.where(sel, band(np.abs(ph - 0.5) * pitch, BOLD * 1.1), 0.0))
+    return out
+
+
+def _front_plane(P, N, J, cz, half_x, half_z):
+    sp1 = J["joint-spine-1"]
+    front = (N[:, 1] < -0.3) & (np.abs(P[:, 0]) < half_x) & (np.abs(P[:, 2] - cz) < half_z) & (P[:, 1] < sp1[1])
+    return front, np.stack([P[:, 0], P[:, 2] - cz], axis=1)
+
+
+def d_chest_sun(P, N, J, ctx):
+    """A sun on the sternum: a ring, a dot and twelve rays."""
+    cz = J["joint-spine-1"][2] - 0.06
+    front, uv = _front_plane(P, N, J, cz, 0.17, 0.17)
+    tt = np.linspace(0, 2 * math.pi, 600)
+    curves = [np.stack([np.cos(tt), np.sin(tt)], axis=1) * 0.042]
+    lin = np.linspace(0, 1, 80)[:, None]
+    for k in range(12):
+        a = 2 * math.pi * k / 12
+        d = np.array([math.cos(a), math.sin(a)])
+        curves.append(d * 0.062 + d * (0.075 if k % 2 == 0 else 0.045) * lin)
+    m = curve2d_mask(uv, curves, 0.0062)
+    m = np.maximum(m, band(np.linalg.norm(uv, axis=1), 0.014))
+    return np.where(front, m, 0.0)
+
+
+def d_chest_collar(P, N, J, ctx):
+    """A torc under the collarbones, shoulder to shoulder, with seven hanging points."""
+    sh = J["joint-l-shoulder"]
+    cz = J["joint-spine-1"][2] + 0.02
+    wide = abs(sh[0]) * 0.92
+    front, uv = _front_plane(P, N, J, cz, wide + 0.03, 0.2)
+    xs = np.linspace(-wide, wide, 500)
+
+    def arc(drop):
+        return np.stack([xs, 0.07 * (xs / wide) ** 2 - drop], axis=1)
+
+    curves = [arc(0.07), arc(0.105)]
+    lin = np.linspace(0, 1, 60)[:, None]
+    for k in range(7):
+        x0 = wide * 0.75 * (k - 3) / 3.0
+        z0 = 0.07 * (x0 / wide) ** 2 - 0.105
+        for dx in (-0.016, 0.016):
+            curves.append(np.array([x0 + dx, z0]) + np.array([-dx, -0.04]) * lin)
+    return np.where(front, curve2d_mask(uv, curves, 0.006), 0.0)
+
+
+def d_back_shoulders(P, N, J, ctx):
+    """The shoulder-to-shoulder piece: two rails across the upper back and onto the backs of both
+    upper arms, a bold zigzag between them."""
+    sh = J["joint-l-shoulder"]
+    sp1 = J["joint-spine-1"]
+    zc = sp1[2] + 0.075
+    wide = abs(sh[0]) + 0.1
+    back, uv = _back_plane(P, N, J, zc - 0.09, zc + 0.09)
+    back &= np.abs(P[:, 0]) < wide
+    xs = np.linspace(-wide, wide, 700)
+    sag = -0.035 * (xs / wide) ** 2          # the piece follows the slope of the shoulders
+    rails = [np.stack([xs, zc + 0.048 + sag], axis=1), np.stack([xs, zc - 0.048 + sag], axis=1)]
+    period = 0.085
+    tri = np.abs(((xs / period) % 1.0) - 0.5) * 2.0
+    zig = [np.stack([xs, zc + (tri - 0.5) * 0.06 + sag], axis=1)]
+    m = np.maximum(curve2d_mask(uv, rails, BOLD * 0.8), curve2d_mask(uv, zig, BOLD * 0.65))
+    return np.where(back, m, 0.0)
+
+
+def d_back_serpent(P, N, J, ctx):
+    """A serpent up the spine: an S from the lower back to between the shoulder blades, its head a ring."""
+    sp4, sp1 = J["joint-spine-4"], J["joint-spine-1"]
+    z0, z1 = sp4[2] - 0.02, sp1[2] + 0.1
+    back, uv = _back_plane(P, N, J, z0 - 0.04, z1 + 0.08)
+    tt = np.linspace(0, 1, 500)
+    body = np.stack([0.075 * np.sin(tt * 2.5 * 2 * math.pi) * (0.35 + 0.65 * tt), z0 + (z1 - z0) * tt], axis=1)
+    m = np.zeros(len(P))
+    # the body thickens towards the head
+    for a, b, half in ((0, 170, BOLD * 0.8), (160, 340, BOLD * 1.1), (330, 500, BOLD * 1.4)):
+        m = np.maximum(m, curve2d_mask(uv, [body[a:b]], half))
+    head = body[-1] + np.array([0.0, 0.03])
+    ring = np.linspace(0, 2 * math.pi, 200)
+    m = np.maximum(m, curve2d_mask(uv, [head + np.stack([np.cos(ring) * 0.03, np.sin(ring) * 0.038], axis=1)], BOLD * 0.75))
+    return np.where(back, m, 0.0)
+
+
+def d_face_crown(P, N, J, ctx):
+    """A row of points across the forehead, above the brows."""
+    eyeL = J["joint-l-eye"]
+    hs = ctx["hs"]
+    face = _face(P, N, J)
+    zlo, zhi = eyeL[2] + 0.028 * hs, eyeL[2] + 0.062 * hs
+    wide = 0.058 * hs
+    xs = np.linspace(-wide, wide, 500)
+    tri = np.abs(((xs / (wide / 2.5)) % 1.0) - 0.5) * 2.0
+    uv = np.stack([P[:, 0], P[:, 2]], axis=1)
+    curves = [np.stack([xs, zlo + tri * (zhi - zlo)], axis=1), np.stack([xs, np.full_like(xs, zlo - 0.004 * hs)], axis=1)]
+    sel = face & (P[:, 2] > zlo - 0.012 * hs) & (P[:, 2] < zhi + 0.008 * hs)
+    return np.where(sel, curve2d_mask(uv, curves, 0.0032 * hs), 0.0)
+
+
+def d_face_bars(P, N, J, ctx):
+    """Two bold bars across each cheek and one over the bridge of the nose."""
+    eyeL, eyeR = J["joint-l-eye"], J["joint-r-eye"]
+    face = _face(P, N, J)
+    m = np.zeros(len(P))
+    for e, sgn in ((eyeL, 1.0), (eyeR, -1.0)):
+        for k in range(2):
+            a = surface_point(P, e + np.array([sgn * -0.012, -0.03, -0.03 - 0.016 * k]), face)
+            b = surface_point(P, e + np.array([sgn * 0.045, -0.02, -0.036 - 0.016 * k]), face)
+            m = np.maximum(m, polyline_mask(P, np.array([a, b]), 0.0042))
+    a = surface_point(P, eyeL + np.array([-0.012, -0.03, -0.012]), face)
+    b = surface_point(P, eyeR + np.array([0.012, -0.03, -0.012]), face)
+    mid = surface_point(P, 0.5 * (eyeL + eyeR) + np.array([0.0, -0.05, -0.012]), face)
+    m = np.maximum(m, polyline_mask(P, np.array([a, mid, b]), 0.0042))
+    return np.where(face, m, 0.0)
+
+
+def d_full_face(P, N, J, ctx):
+    """War paint over the whole upper face, brow to cheekbones and temple to temple, its lower edge
+    ragged where the fingers dragged it down."""
+    eyeL = J["joint-l-eye"]
+    hs = ctx["hs"]
+    face = (N[:, 1] < -0.05) & (P[:, 1] < eyeL[1] + 0.05 * hs)
+    drag = 0.022 * hs * _noise3(np.stack([P[:, 0] * 90.0, P[:, 0] * 0.0, P[:, 0] * 0.0], axis=1), 1.0, 7)
+    lower = eyeL[2] - 0.036 * hs - drag
+    upper = eyeL[2] + 0.06 * hs
+    m = np.clip((P[:, 2] - lower) / (0.003 * hs), 0.0, 1.0) * np.clip((upper - P[:, 2]) / (0.006 * hs), 0.0, 1.0)
+    return np.where(face, m, 0.0)
+
+
+def d_back_hand(P, N, J, ctx):
+    """A hand print between the shoulder blades: the palm, four fingers and the thumb."""
+    sp1 = J["joint-spine-1"]
+    c = np.array([0.0, sp1[2] - 0.035])
+    back, uv = _back_plane(P, N, J, c[1] - 0.12, c[1] + 0.2)
+    q = uv - c
+    m = band(np.sqrt((q[:, 0] / 0.058) ** 2 + (q[:, 1] / 0.064) ** 2) * 0.06, 0.06)     # the palm
+    lin = np.linspace(0, 1, 60)[:, None]
+    fingers = []
+    for k, (x0, ang, length) in enumerate(((-0.042, 104, 0.085), (-0.014, 94, 0.1), (0.014, 86, 0.097), (0.041, 76, 0.08))):
+        a = math.radians(ang)
+        start = np.array([x0, 0.07])
+        fingers.append(c + start + np.array([math.cos(a), math.sin(a)]) * length * lin)
+    a = math.radians(18)
+    fingers.append(c + np.array([0.058, -0.012]) + np.array([math.cos(a), math.sin(a)]) * 0.075 * lin)
+    m = np.maximum(m, curve2d_mask(uv, fingers, 0.0125))
+    return np.where(back, m, 0.0)
+
+
+def d_scar_cheek(P, N, J, ctx):
+    return _scar(P, ctx["scars"]["cheek"], min_half=0.0036)
+
+
+def d_scar_back_lash(P, N, J, ctx):
+    """Three long lash scars slanting across the back, from the left shoulder blade to the right flank:
+    the scars the game camera sees."""
+    V = ctx["V"]
+    sp1, sp3 = J["joint-spine-1"], J["joint-spine-3"]
+    back_v = V[:, 1] > 0.02
+    m = np.zeros(len(P))
+    for k in range(3):
+        dz = -0.075 * k
+        a = np.array([0.17, sp1[1] + 0.14, sp1[2] + 0.07 + dz])
+        b = np.array([-0.15, sp3[1] + 0.14, sp3[2] + 0.1 + dz])
+        pts = np.array([surface_point(V, a + (b - a) * t, back_v) for t in np.linspace(0, 1, 9)])
+        m = np.maximum(m, polyline_mask(P, pts, BOLD * (1.0 - 0.12 * k), taper=0.45))
+    return m
+
+
 DRAW = {
     "tat_arm_bands": d_arm_bands, "tat_arm_chevrons": d_arm_chevrons, "tat_chest_spiral": d_chest_spiral,
     "tat_chest_knot": d_chest_knot, "tat_back_wings": d_back_wings, "tat_back_tree": d_back_tree,
@@ -472,6 +685,10 @@ DRAW = {
     "scar_forearm_slash": d_scar_forearm_slash, "scar_chest_claws": d_scar_chest_claws,
     "scar_knuckles": d_scar_knuckles, "mark_granite_veins": d_granite_veins,
     "mark_lightning_tree": d_lightning_tree, "mark_claw_stripes": d_claw_stripes,
+    "tat_arm_sleeve": d_arm_sleeve, "tat_arm_winding": d_arm_winding, "tat_chest_sun": d_chest_sun,
+    "tat_chest_collar": d_chest_collar, "tat_back_shoulders": d_back_shoulders, "tat_back_serpent": d_back_serpent,
+    "tat_face_crown": d_face_crown, "tat_face_bars": d_face_bars, "paint_full_face": d_full_face,
+    "paint_back_hand": d_back_hand, "scar_cheek": d_scar_cheek, "scar_back_lash": d_scar_back_lash,
 }
 
 
@@ -495,21 +712,23 @@ def draw_all(P, N, region, valid, bd):
 # --------------------------------------------------------------------------------------
 def pack(designs):
     """Place every design on a layer and channel under the packing rule. ``designs`` is
-    {id: (kind, regions)}. Returns {id: (layer, channel)}: the scars first, on a layer of their
-    own in SCAR_ORDER; then the others, most regions first, each in the first layer and channel
+    {id: (kind, regions)}. Returns {id: (layer, channel)}: the scars first, on layers of their
+    own in SCAR_ORDER (four a layer); then the others, most regions first, each in the first layer and channel
     where none of its regions already uses that channel, and, for R, G or B, none of its regions
     already has another of R, G and B."""
     placed = {}
     scars = [d for d in SCAR_ORDER if d in designs]
     others = sorted((d for d in designs if d not in scars), key=lambda d: (-len(designs[d][1]), d))
     layers = []   # per layer: {"scar": bool, "used": {channel: set(regions)}}
-    if scars:
-        if len(scars) > 4:
-            raise ValueError("pack: more than four scars need a second scar layer (P46's scar_layer_b)")
-        layers.append({"scar": True, "used": {c: set() for c in range(4)}})
-        for c, d in enumerate(scars):
-            placed[d] = (0, c)
-            layers[0]["used"][c] |= set(designs[d][1])
+    # the scars fill layers of their own, four a layer (the shader's scar_layer and scar_layer_b)
+    if len(scars) > 2 * SCARS_PER_LAYER:
+        raise ValueError("pack: more than eight scars need a third scar layer")
+    for i, d in enumerate(scars):
+        li, c = divmod(i, SCARS_PER_LAYER)
+        if li == len(layers):
+            layers.append({"scar": True, "used": {ch: set() for ch in range(4)}})
+        placed[d] = (li, c)
+        layers[li]["used"][c] |= set(designs[d][1])
     for d in others:
         regs = set(designs[d][1])
         spot = None

@@ -224,7 +224,7 @@ func pages() -> Array:
 		marks.append(_tile("%s - Game view, stage 1" % _name(id), rec, "game", line))
 		marks.append(_tile("%s - first person" % _name(id), rec, GiantPreview.FIRST_PERSON, line))
 	out.append({"id": "4b", "name": "paint_scars_marks", "title": "4b. War paint, scars and ancestry marks",
-		"note": "Each design framed, then in the stage-1 Game view and in first person. The scars are the floor's weakest from behind (P44.md).",
+		"note": "Each design framed, then in the stage-1 Game view and in first person. Of the scars, the back lashes are the ones that read from behind.",
 		"sections": [
 			{"title": "War paint in two colours", "columns": 4, "aspect": 0.6, "tiles": paints},
 			{"title": "Scars", "columns": 3, "aspect": 0.6, "tiles": scars},

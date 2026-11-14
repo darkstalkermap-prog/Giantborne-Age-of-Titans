@@ -107,7 +107,7 @@
    "mark_claw_stripes": {
     "channel": 3,
     "kind": "mark",
-    "layer": 1,
+    "layer": 2,
     "regions": [
      1,
      3,
@@ -119,7 +119,7 @@
    "mark_granite_veins": {
     "channel": 0,
     "kind": "mark",
-    "layer": 2,
+    "layer": 3,
     "regions": [
      8,
      9
@@ -130,7 +130,7 @@
    "mark_lightning_tree": {
     "channel": 0,
     "kind": "mark",
-    "layer": 1,
+    "layer": 2,
     "regions": [
      5,
      6,
@@ -140,25 +140,56 @@
     "texels_1024": 1774,
     "texels_512": 457
    },
+   "paint_back_hand": {
+    "channel": 3,
+    "kind": "paint",
+    "layer": 3,
+    "regions": [
+     5
+    ],
+    "texels_1024": 2971,
+    "texels_512": 761
+   },
    "paint_face_stripes": {
     "channel": 0,
     "kind": "paint",
-    "layer": 1,
+    "layer": 2,
     "regions": [
      1
     ],
     "texels_1024": 2822,
     "texels_512": 690
    },
-   "paint_shoulder_bands": {
-    "channel": 3,
+   "paint_full_face": {
+    "channel": 0,
     "kind": "paint",
-    "layer": 2,
+    "layer": 3,
+    "regions": [
+     1
+    ],
+    "texels_1024": 16469,
+    "texels_512": 4320
+   },
+   "paint_shoulder_bands": {
+    "channel": 0,
+    "kind": "paint",
+    "layer": 5,
     "regions": [
      8
     ],
     "texels_1024": 10183,
     "texels_512": 2582
+   },
+   "scar_back_lash": {
+    "channel": 1,
+    "kind": "scar",
+    "layer": 1,
+    "regions": [
+     5,
+     6
+    ],
+    "texels_1024": 2000,
+    "texels_512": 508
    },
    "scar_brow": {
     "channel": 0,
@@ -169,6 +200,16 @@
     ],
     "texels_1024": 30,
     "texels_512": 8
+   },
+   "scar_cheek": {
+    "channel": 0,
+    "kind": "scar",
+    "layer": 1,
+    "regions": [
+     1
+    ],
+    "texels_1024": 203,
+    "texels_512": 52
    },
    "scar_chest_claws": {
     "channel": 2,
@@ -201,9 +242,9 @@
     "texels_512": 30
    },
    "tat_arm_bands": {
-    "channel": 0,
+    "channel": 3,
     "kind": "tattoo",
-    "layer": 3,
+    "layer": 5,
     "regions": [
      8
     ],
@@ -213,17 +254,61 @@
    "tat_arm_chevrons": {
     "channel": 3,
     "kind": "tattoo",
-    "layer": 1,
+    "layer": 2,
     "regions": [
      9
     ],
     "texels_1024": 3059,
     "texels_512": 786
    },
-   "tat_back_tree": {
+   "tat_arm_sleeve": {
     "channel": 3,
     "kind": "tattoo",
-    "layer": 1,
+    "layer": 3,
+    "regions": [
+     8,
+     9
+    ],
+    "texels_1024": 16463,
+    "texels_512": 4210
+   },
+   "tat_arm_winding": {
+    "channel": 0,
+    "kind": "tattoo",
+    "layer": 4,
+    "regions": [
+     8,
+     9
+    ],
+    "texels_1024": 10090,
+    "texels_512": 2589
+   },
+   "tat_back_serpent": {
+    "channel": 3,
+    "kind": "tattoo",
+    "layer": 2,
+    "regions": [
+     5,
+     6
+    ],
+    "texels_1024": 3340,
+    "texels_512": 855
+   },
+   "tat_back_shoulders": {
+    "channel": 3,
+    "kind": "tattoo",
+    "layer": 4,
+    "regions": [
+     5,
+     8
+    ],
+    "texels_1024": 4846,
+    "texels_512": 1265
+   },
+   "tat_back_tree": {
+    "channel": 0,
+    "kind": "tattoo",
+    "layer": 3,
     "regions": [
      5,
      6
@@ -234,17 +319,27 @@
    "tat_back_wings": {
     "channel": 0,
     "kind": "tattoo",
-    "layer": 2,
+    "layer": 4,
     "regions": [
      5
     ],
     "texels_1024": 5753,
     "texels_512": 1466
    },
+   "tat_chest_collar": {
+    "channel": 0,
+    "kind": "tattoo",
+    "layer": 3,
+    "regions": [
+     3
+    ],
+    "texels_1024": 6461,
+    "texels_512": 1640
+   },
    "tat_chest_knot": {
     "channel": 0,
     "kind": "tattoo",
-    "layer": 1,
+    "layer": 2,
     "regions": [
      3,
      4
@@ -253,19 +348,49 @@
     "texels_512": 875
    },
    "tat_chest_spiral": {
-    "channel": 0,
+    "channel": 3,
     "kind": "tattoo",
-    "layer": 2,
+    "layer": 3,
     "regions": [
      3
     ],
     "texels_1024": 3447,
     "texels_512": 890
    },
-   "tat_face_dots": {
+   "tat_chest_sun": {
     "channel": 0,
     "kind": "tattoo",
-    "layer": 2,
+    "layer": 4,
+    "regions": [
+     3
+    ],
+    "texels_1024": 4093,
+    "texels_512": 1039
+   },
+   "tat_face_bars": {
+    "channel": 3,
+    "kind": "tattoo",
+    "layer": 3,
+    "regions": [
+     1
+    ],
+    "texels_1024": 1521,
+    "texels_512": 384
+   },
+   "tat_face_crown": {
+    "channel": 0,
+    "kind": "tattoo",
+    "layer": 4,
+    "regions": [
+     1
+    ],
+    "texels_1024": 1329,
+    "texels_512": 334
+   },
+   "tat_face_dots": {
+    "channel": 3,
+    "kind": "tattoo",
+    "layer": 4,
     "regions": [
      1
     ],
@@ -273,9 +398,9 @@
     "texels_512": 56
    },
    "tat_face_lines": {
-    "channel": 3,
+    "channel": 0,
     "kind": "tattoo",
-    "layer": 2,
+    "layer": 5,
     "regions": [
      1
     ],
@@ -284,7 +409,7 @@
    }
   },
   "layer_size": 512,
-  "layers": 4
+  "layers": 6
  },
  "export": {
   "body_hash": "9cd81c08253e20339d78a2a5e72ca01adc08a47599c95446d6f4209ef88527be",
@@ -478,12 +603,12 @@
   "meshes": {
    "Beard_full": {
     "atlas": "hair_atlas",
-    "cards": 340,
+    "cards": 330,
     "category": "beard",
     "dye": "none",
     "layer": 3,
-    "tris": 4080,
-    "verts": 4760
+    "tris": 3960,
+    "verts": 4620
    },
    "Beard_short": {
     "atlas": "hair_atlas",
@@ -767,12 +892,12 @@
    },
    "Hair_long_back": {
     "atlas": "hair_atlas",
-    "cards": 440,
+    "cards": 430,
     "category": "hair",
     "dye": "none",
     "layer": 3,
-    "tris": 6960,
-    "verts": 7840
+    "tris": 5920,
+    "verts": 6780
    }
   },
   "region_names": [
@@ -819,16 +944,16 @@
   },
   "assets/giant/designs.png": {
    "cycles": true,
-   "inputs": "a57dcdd02dca4c7897d614929cae87e653e33c3a7849227195c3c9f6525052d6",
-   "sha256": "5584d8b1a9fe3987a84db9fce3eb686111ed8205316b29ff5163ebb7571c78e2",
-   "size": 13491,
+   "inputs": "83ef0853b7be0b17592ab140913042b15bc57331cda8729e7a62e7680dfb4e98",
+   "sha256": "7daf4ba8047843164d5de9945008f188ad00ecb7e68ed30ea22ddf17488d7346",
+   "size": 25005,
    "step": "designs"
   },
   "assets/giant/giant.glb": {
    "cycles": false,
-   "inputs": "2e936a8d010d784eac40ea747e05c0f770c3ce8085b87cbca73b6c15b6114c3c",
-   "sha256": "2a9c0fbe3066126b66ecfa9ff9a7afba30cb1eed577c86877b42e53b15136fa4",
-   "size": 2953756,
+   "inputs": "6fa7d3635cdfc710e6fd37a4f024b673ce42cff343f121bc92c21462d6f3647d",
+   "sha256": "969899bb971caa0c2760442887e42a6a6a146815a7771c0a6b9f938718d66b41",
+   "size": 2884400,
    "step": "export"
   },
   "assets/giant/giant_clips.glb": {
@@ -925,7 +1050,7 @@
    "mark_claw_stripes": {
     "channel": 3,
     "kind": "mark",
-    "layer": 1,
+    "layer": 2,
     "regions": [
      1,
      3,
@@ -935,7 +1060,7 @@
    "mark_granite_veins": {
     "channel": 0,
     "kind": "mark",
-    "layer": 2,
+    "layer": 3,
     "regions": [
      8,
      9
@@ -944,7 +1069,7 @@
    "mark_lightning_tree": {
     "channel": 0,
     "kind": "mark",
-    "layer": 1,
+    "layer": 2,
     "regions": [
      5,
      6,
@@ -952,26 +1077,59 @@
      9
     ]
    },
+   "paint_back_hand": {
+    "channel": 3,
+    "kind": "paint",
+    "layer": 3,
+    "regions": [
+     5
+    ]
+   },
    "paint_face_stripes": {
     "channel": 0,
     "kind": "paint",
-    "layer": 1,
+    "layer": 2,
+    "regions": [
+     1
+    ]
+   },
+   "paint_full_face": {
+    "channel": 0,
+    "kind": "paint",
+    "layer": 3,
     "regions": [
      1
     ]
    },
    "paint_shoulder_bands": {
-    "channel": 3,
+    "channel": 0,
     "kind": "paint",
-    "layer": 2,
+    "layer": 5,
     "regions": [
      8
+    ]
+   },
+   "scar_back_lash": {
+    "channel": 1,
+    "kind": "scar",
+    "layer": 1,
+    "regions": [
+     5,
+     6
     ]
    },
    "scar_brow": {
     "channel": 0,
     "kind": "scar",
     "layer": 0,
+    "regions": [
+     1
+    ]
+   },
+   "scar_cheek": {
+    "channel": 0,
+    "kind": "scar",
+    "layer": 1,
     "regions": [
      1
     ]
@@ -1001,9 +1159,9 @@
     ]
    },
    "tat_arm_bands": {
-    "channel": 0,
+    "channel": 3,
     "kind": "tattoo",
-    "layer": 3,
+    "layer": 5,
     "regions": [
      8
     ]
@@ -1011,15 +1169,51 @@
    "tat_arm_chevrons": {
     "channel": 3,
     "kind": "tattoo",
-    "layer": 1,
+    "layer": 2,
     "regions": [
      9
     ]
    },
-   "tat_back_tree": {
+   "tat_arm_sleeve": {
     "channel": 3,
     "kind": "tattoo",
-    "layer": 1,
+    "layer": 3,
+    "regions": [
+     8,
+     9
+    ]
+   },
+   "tat_arm_winding": {
+    "channel": 0,
+    "kind": "tattoo",
+    "layer": 4,
+    "regions": [
+     8,
+     9
+    ]
+   },
+   "tat_back_serpent": {
+    "channel": 3,
+    "kind": "tattoo",
+    "layer": 2,
+    "regions": [
+     5,
+     6
+    ]
+   },
+   "tat_back_shoulders": {
+    "channel": 3,
+    "kind": "tattoo",
+    "layer": 4,
+    "regions": [
+     5,
+     8
+    ]
+   },
+   "tat_back_tree": {
+    "channel": 0,
+    "kind": "tattoo",
+    "layer": 3,
     "regions": [
      5,
      6
@@ -1028,40 +1222,72 @@
    "tat_back_wings": {
     "channel": 0,
     "kind": "tattoo",
-    "layer": 2,
+    "layer": 4,
     "regions": [
      5
+    ]
+   },
+   "tat_chest_collar": {
+    "channel": 0,
+    "kind": "tattoo",
+    "layer": 3,
+    "regions": [
+     3
     ]
    },
    "tat_chest_knot": {
     "channel": 0,
     "kind": "tattoo",
-    "layer": 1,
+    "layer": 2,
     "regions": [
      3,
      4
     ]
    },
    "tat_chest_spiral": {
-    "channel": 0,
+    "channel": 3,
     "kind": "tattoo",
-    "layer": 2,
+    "layer": 3,
     "regions": [
      3
     ]
    },
-   "tat_face_dots": {
+   "tat_chest_sun": {
     "channel": 0,
     "kind": "tattoo",
-    "layer": 2,
+    "layer": 4,
+    "regions": [
+     3
+    ]
+   },
+   "tat_face_bars": {
+    "channel": 3,
+    "kind": "tattoo",
+    "layer": 3,
+    "regions": [
+     1
+    ]
+   },
+   "tat_face_crown": {
+    "channel": 0,
+    "kind": "tattoo",
+    "layer": 4,
+    "regions": [
+     1
+    ]
+   },
+   "tat_face_dots": {
+    "channel": 3,
+    "kind": "tattoo",
+    "layer": 4,
     "regions": [
      1
     ]
    },
    "tat_face_lines": {
-    "channel": 3,
+    "channel": 0,
     "kind": "tattoo",
-    "layer": 2,
+    "layer": 5,
     "regions": [
      1
     ]
@@ -1194,7 +1420,7 @@
     "dye": "none",
     "layer": 3,
     "node": "Beard_full",
-    "tris": 4080
+    "tris": 3960
    },
    "Beard_short": {
     "atlas": "hair_atlas",
@@ -1396,7 +1622,7 @@
     "dye": "none",
     "layer": 3,
     "node": "Hair_long_back",
-    "tris": 6960
+    "tris": 5920
    }
   },
   "regions": [
@@ -1466,13 +1692,14 @@
    }
   ],
   "textures": {
-   "design_layers": 4,
+   "design_layers": 6,
    "designs": "res://assets/giant/designs.png",
    "detail_fur": "res://assets/giant/cloth_fur.png",
    "detail_leather": "res://assets/giant/cloth_leather.png",
    "detail_weave": "res://assets/giant/cloth_weave.png",
    "hair_atlas": "res://assets/giant/hair_atlas.png",
-   "scar_layer": 0
+   "scar_layer": 0,
+   "scar_layer_b": 1
   },
   "tiers": {
    "hi": "res://assets/giant/tex_hi/",
@@ -1483,11 +1710,11 @@
   "kit": {
    "bake.py": "68e2fdefee8d5b50e903d3339b26d3b63a241d3a4afde27f38456cc81b77a8a4",
    "clips.py": "b8ebf9277de4a6744a2bf9942479ec850d2351ed37795679d78c81252c443430",
-   "designs.py": "ba2b20e8e8d0eba812cbc8a85387dab38fe4bad7300be6902f6e99c7f24416c6",
+   "designs.py": "2b14a0569b4fb34f4c5d7063b7c2249c57c51d786bde98aa99f5c3d263686f96",
    "export_game.py": "b71e4dbce37a4c98d0e7e09d74c979624020e709b3a5b465d997ad9b2dcfdb8e",
    "giant_body.py": "c8f694bd9d26bfd16ef4ca60ad3d1f36ec9c75247bc360a3ae2ad8778b741581",
    "giant_garment.py": "fa3a6376dcd481ca7845880d1fd5c0e0f0e65e32bc950d6f7f05c7f6e9baf4d3",
-   "giant_hair.py": "a0a65f0acf654022b2372f1680cc6b8b12b75960e32d643062e353b3ab37d796",
+   "giant_hair.py": "fe89234b7128bc142323afe3567506614751b9d6b3698a37424bb8dad858e83c",
    "giant_skin.py": "58bca541ac7ccc8ed87c477526a1650df76a6289c5d95d15e8ce6f9d30753086",
    "mh_data.py": "c6ef5a0eae9ce4ef73a3cae30db1e15f2d1bfed69af27a3c06dd404f66119ebc",
    "node_util.py": "5accffc8870441e1dd7733a0a6bb1fa80dbe3505dcabb1cab5778dc65d4e9e20",

@@ -4,7 +4,7 @@
 	"type": "appearance_set",
 	"category": "tattoo",
 	"display_name": "Tattoos",
-	"description": "P42 (plan M10 §2.3): the floor's tattoos, two per region, bold pieces that read from behind at stage 1 or in first person (decision 18); design is a giant index design id.",
+	"description": "P42 (plan M10 §2.3): the tattoos, four per region (the floor's eight and the look pass's eight, P46), bold pieces that read from behind at stage 1 or in first person (decision 18); design is a giant index design id.",
 	"options": [
 		{"key": "arm_bands", "name": "Arm bands", "design": "tat_arm_bands", "region": "arms"},
 		{"key": "arm_chevrons", "name": "Forearm chevrons", "design": "tat_arm_chevrons", "region": "arms"},
@@ -13,6 +13,14 @@
 		{"key": "back_wings", "name": "Back wings", "design": "tat_back_wings", "region": "back"},
 		{"key": "back_tree", "name": "Back tree", "design": "tat_back_tree", "region": "back"},
 		{"key": "face_lines", "name": "Face lines", "design": "tat_face_lines", "region": "face"},
-		{"key": "face_dots", "name": "Face dots", "design": "tat_face_dots", "region": "face"}
+		{"key": "face_dots", "name": "Face dots", "design": "tat_face_dots", "region": "face"},
+		{"key": "arm_sleeve", "name": "Full sleeve", "design": "tat_arm_sleeve", "region": "arms"},
+		{"key": "arm_winding", "name": "Winding bands", "design": "tat_arm_winding", "region": "arms"},
+		{"key": "chest_sun", "name": "Chest sun", "design": "tat_chest_sun", "region": "chest"},
+		{"key": "chest_collar", "name": "Collar torc", "design": "tat_chest_collar", "region": "chest"},
+		{"key": "back_shoulders", "name": "Shoulder to shoulder", "design": "tat_back_shoulders", "region": "back"},
+		{"key": "back_serpent", "name": "Spine serpent", "design": "tat_back_serpent", "region": "back"},
+		{"key": "face_crown", "name": "Brow crown", "design": "tat_face_crown", "region": "face"},
+		{"key": "face_bars", "name": "Cheek bars", "design": "tat_face_bars", "region": "face"}
 	]
 }

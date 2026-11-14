@@ -99,7 +99,8 @@ const DETAIL_STRENGTH := {"weave": 0.35, "leather": 0.25, "fur": 0.45}
 const UNIFORMS := {
 	"skin": ["albedo_tex", "normal_tex", "orm_tex", "mask_tex", "design_tex", "skin_tone", "bake_tone", "hair_color",
 		"beard_color", "stubble", "scalp_tint", "beard_tint", "brows", "region_tattoo", "region_paint", "region_mark",
-		"tattoo_ink", "paint_color", "mark_color", "mark_glow", "scar_layer", "scar_on", "hidden_regions", "hide_shrink"],
+		"tattoo_ink", "paint_color", "mark_color", "mark_glow", "scar_layer", "scar_on", "scar_layer_b", "scar_on_b",
+		"hidden_regions", "hide_shrink"],
 	"hair": ["hair_atlas", "hair_color", "tip_color", "grey"],
 	"eye": ["iris_color", "iris_glow"],
 	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade"],
@@ -118,6 +119,13 @@ const META_TEX := "giant_look_textures"
 ## own materials on its first apply).
 const META_OWNER := "giant_look_owner"
 const META_NODES := "giant_look_nodes"
+const META_SWAY := "giant_look_sway"
+## The hair's sway (P46; the hair shader's head_motion): the tips lag the head's motion by SWAY_LAG_S seconds
+## of it, eased at SWAY_EASE a second, at most SWAY_MAX_M at the tips (stage-1 metres, the mesh's own space).
+const SWAY_LAG_S := 0.035
+const SWAY_EASE := 10.0
+const SWAY_MAX_M := 0.09
+const SWAY_BONE := "head"
 
 ## The texture tier the command line forces (--giant-tier=web | hi; "" = none). Tests set it directly.
 static var forced_tier := _cli_tier()
@@ -261,28 +269,37 @@ static func _zeros() -> PackedInt32Array:
 	return a
 
 
-## The scar uniforms of `look`: {"layer": the layer of its first known scar (0 when none), "on": a
-## Vector4 with 1 in the channel of every scar on that layer}. Scars on another layer are left out
-## (validate() reports them).
+## The scar uniforms of `look`: {"layer", "on", "layer_b", "on_b"}: the layer of its first known scar and a
+## Vector4 with 1 in the channel of every scar on that layer, and the same for the scars of a second layer
+## (P46: four scars a layer, the fifth and sixth on the second). With no scar the layers are the index's scar
+## layers and nothing is on. Scars on a third layer are left out (validate() reports them).
 static func scar_uniforms(index: Dictionary, scars: Variant) -> Dictionary:
 	var designs := _designs(index)
-	var layer := -1
-	var on := Vector4.ZERO
+	var layers: Array[int] = []
+	var on: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO]
 	for s: Variant in (scars if typeof(scars) == TYPE_ARRAY else []):
 		var d: Variant = designs.get(str(s))
 		if typeof(d) != TYPE_DICTIONARY:
 			continue
 		var l := int((d as Dictionary).get("layer", 0))
-		if layer < 0:
-			layer = l
-		if l == layer:
-			on[clampi(int((d as Dictionary).get("channel", 0)), 0, 3)] = 1.0
-	if layer < 0:
-		for id: Variant in designs:
-			if typeof(designs[id]) == TYPE_DICTIONARY and str((designs[id] as Dictionary).get("kind", "")) == "scar":
-				layer = int((designs[id] as Dictionary).get("layer", 0))
-				break
-	return {"layer": maxi(layer, 0), "on": on}
+		if not layers.has(l) and layers.size() < 2:
+			layers.append(l)
+		var slot := layers.find(l)
+		if slot >= 0:
+			on[slot][clampi(int((d as Dictionary).get("channel", 0)), 0, 3)] = 1.0
+	var known: Array[int] = []
+	for id: Variant in designs:
+		if typeof(designs[id]) == TYPE_DICTIONARY and str((designs[id] as Dictionary).get("kind", "")) == "scar":
+			var l := int((designs[id] as Dictionary).get("layer", 0))
+			if not known.has(l):
+				known.append(l)
+	known.sort()
+	for l in known:
+		if layers.size() < 2 and not layers.has(l):
+			layers.append(l)
+	while layers.size() < 2:
+		layers.append(layers[0] if not layers.is_empty() else 0)
+	return {"layer": maxi(layers[0], 0), "on": on[0], "layer_b": maxi(layers[1], 0), "on_b": on[1]}
 
 
 # --------------------------------------------------------------------------- tiers and textures
@@ -440,6 +457,41 @@ static func applied_look(root: Node) -> Dictionary:
 	return (root.get_meta(META_LOOK, DEFAULT_LOOK) as Dictionary).duplicate(true) if root != null else DEFAULT_LOOK.duplicate(true)
 
 
+## The hair's and the beard's sway for this frame (P46): call it once a drawn frame with the model and its
+## skeleton, after the pose is final (SkinnedRig, in skeleton_updated). It reads the head bone's place, eases
+## its motion and writes the hair shader's head_motion on the hair and beard materials. Presentation only.
+static func sway(root: Node3D, index: Dictionary, skeleton: Skeleton3D) -> Vector3:
+	if root == null or skeleton == null:
+		return Vector3.ZERO
+	var bone := skeleton.find_bone(SWAY_BONE)
+	if bone < 0:
+		return Vector3.ZERO
+	var now := Time.get_ticks_usec()
+	var pos: Vector3 = (skeleton.global_transform * skeleton.get_bone_global_pose(bone)).origin
+	var st: Dictionary = root.get_meta(META_SWAY, {})
+	var motion := Vector3.ZERO
+	if st.has("pos"):
+		var dt := clampf(float(now - int(st.t)) / 1.0e6, 1.0 / 240.0, 0.1)
+		motion = sway_step(st.motion, (pos - (st.pos as Vector3)) / dt, dt)
+	root.set_meta(META_SWAY, {"pos": pos, "t": now, "motion": motion})
+	var mats := _own_materials(root)
+	for category: String in ["hair", "beard"]:
+		for id in meshes_of(index, category):
+			var mi := mesh_node(root, index, id)
+			var mat: Variant = mats.get(id)
+			if mi == null or not mi.visible or not mat is ShaderMaterial:
+				continue
+			# into the mesh's own space: its scale (the growth stage) divides out, so the sway is in stage-1 metres
+			(mat as ShaderMaterial).set_shader_parameter("head_motion",
+				(mi.global_transform.basis.inverse() * motion).limit_length(SWAY_MAX_M))
+	return motion
+
+
+## One eased step of the sway (pure): the motion kept from the last frame towards `head_speed` (m/s, world).
+static func sway_step(previous: Vector3, head_speed: Vector3, dt: float) -> Vector3:
+	return previous.lerp(head_speed * SWAY_LAG_S, 1.0 - exp(-SWAY_EASE * dt))
+
+
 ## Sets a uniform and remembers its name on the material (validate() checks every name set).
 static func set_param(mat: ShaderMaterial, uniform: String, value: Variant) -> void:
 	if mat == null:
@@ -512,6 +564,8 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				set_param(mat, "mark_glow", float(mark.get("glow", 0.0)))
 				set_param(mat, "scar_layer", int(scars.layer))
 				set_param(mat, "scar_on", scars.on)
+				set_param(mat, "scar_layer_b", int(scars.layer_b))
+				set_param(mat, "scar_on_b", scars.on_b)
 				set_param(mat, "hidden_regions", hidden)
 			"hair":
 				var beard := category == "beard"
@@ -612,7 +666,7 @@ static func validate(root: Node, index: Dictionary, look: Dictionary) -> PackedS
 		wanted.append([str(l.mark.get("design", "")), "mark"])
 	for s: Variant in l.scars:
 		wanted.append([str(s), "scar"])
-	var scar_layer := -1
+	var scar_layers: Array[int] = []
 	for w: Array in wanted:
 		var d: Variant = designs.get(w[0])
 		if typeof(d) != TYPE_DICTIONARY:
@@ -623,10 +677,10 @@ static func validate(root: Node, index: Dictionary, look: Dictionary) -> PackedS
 			out.append("%s: the design '%s' is a %s" % [w[1], w[0], kind])
 		if w[1] == "scar":
 			var layer := int((d as Dictionary).get("layer", 0))
-			if scar_layer < 0:
-				scar_layer = layer
-			elif layer != scar_layer:
-				out.append("scar: '%s' is on layer %d, not the scars' layer %d (one layer of four scars)" % [w[0], layer, scar_layer])
+			if not scar_layers.has(layer) and scar_layers.size() < 2:
+				scar_layers.append(layer)
+			elif not scar_layers.has(layer):
+				out.append("scar: '%s' is on layer %d, not one of the scars' two layers %s (four scars a layer)" % [w[0], layer, scar_layers])
 	for id: Variant in meshes:
 		if typeof(meshes[id]) != TYPE_DICTIONARY:
 			out.append("index: the mesh entry '%s' is not an object" % id)

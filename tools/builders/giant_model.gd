@@ -10,7 +10,7 @@ const GLB := "res://assets/giant/giant.glb"
 const OUT := "res://scenes/player/giant_model.tscn"
 const SCRIPT := "res://scripts/presentation/giant_model.gd"
 ## Index fields that hold whole numbers (JSON gives every number back as a float).
-const INT_FIELDS := ["layer", "tris", "channel", "id", "design_layers", "scar_layer"]
+const INT_FIELDS := ["layer", "tris", "channel", "id", "design_layers", "scar_layer", "scar_layer_b"]
 const INT_LIST_FIELDS := ["covers", "regions", "face", "chest", "back", "arms"]
 
 

@@ -3,7 +3,9 @@
 // coverage in the Compatibility renderer). The colour is a uniform: the hair's (or the beard's) colour,
 // sun-bleached tips, a fraction of grey strands (the atlas's G is a per-strand id), darker roots, a
 // Kajiya-Kay highlight along the strands, and an alpha boost with the mip level so far cards do not thin
-// out. RigPaint's tint and flash as on every giant shader.
+// out. The look pass (P46): the cards' sides feather, each strand of the atlas ends at its own length, the
+// cards share a rounded shading normal on both faces and take little of each other's shadow, so a lock
+// reads as hair and not as shingles; the tips sway behind the head's motion. RigPaint's tint and flash as on every giant shader.
 shader_type spatial;
 render_mode cull_disabled, depth_prepass_alpha;
 
@@ -23,7 +25,15 @@ uniform float atlas_columns = 4.0;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
+// The sway (P46): the head's motion in the mesh's own space, eased and scaled by GiantLook.sway (metres at
+// the tips, stage 1); a card's root stays on the head and its tip lags behind the head's motion.
+uniform vec3 head_motion = vec3(0.0);
+
 varying vec3 v_strand;
+
+void vertex() {
+	VERTEX -= head_motion * UV.y * UV.y;
+}
 
 void fragment() {
 	vec4 t = texture(hair_atlas, UV);

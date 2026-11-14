@@ -4,11 +4,13 @@
 	"type": "appearance_set",
 	"category": "scar",
 	"display_name": "Scars",
-	"description": "P42 (plan M10 §2.3): the floor's scars; a record carries at most four.",
+	"description": "P42 (plan M10 §2.3): the scars (the floor's four and the look pass's two, P46); a record carries at most four.",
 	"options": [
 		{"key": "brow", "name": "Brow", "design": "scar_brow"},
 		{"key": "forearm_slash", "name": "Forearm slash", "design": "scar_forearm_slash"},
 		{"key": "chest_claws", "name": "Chest claws", "design": "scar_chest_claws"},
-		{"key": "knuckles", "name": "Knuckles", "design": "scar_knuckles"}
+		{"key": "knuckles", "name": "Knuckles", "design": "scar_knuckles"},
+		{"key": "cheek", "name": "Cheek", "design": "scar_cheek"},
+		{"key": "back_lash", "name": "Back lashes", "design": "scar_back_lash"}
 	]
 }

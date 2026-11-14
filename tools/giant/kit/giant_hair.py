@@ -26,12 +26,12 @@ ATLAS_COLUMNS = 4
 # guide points, sampling power, card width m, curl, wispy-column share of the outer layer).
 STYLES = {
     "Hair_long_back": {"kind": "scalp", "layers": [
-        dict(n=240, length=0.17, lo=0.006, hi=0.012, npts=8, power=0.6, width=0.042, curl=0.12, wispy=0.0),
-        dict(n=200, length=0.21, lo=0.014, hi=0.024, npts=10, power=0.6, width=0.032, curl=0.2, wispy=0.3)]},
+        dict(n=240, length=0.17, lo=0.006, hi=0.012, npts=7, power=0.6, width=0.042, curl=0.12, wispy=0.0),
+        dict(n=190, length=0.21, lo=0.014, hi=0.024, npts=9, power=0.6, width=0.032, curl=0.2, wispy=0.3)]},
     "Hair_crop": {"kind": "scalp", "layers": [
         dict(n=1100, length=0.065, lo=0.003, hi=0.008, npts=3, power=0.4, width=0.026, curl=0.05, wispy=0.0)]},
     "Beard_full": {"kind": "beard", "layers": [
-        dict(n=200, length=0.13, lo=0.004, hi=0.008, npts=7, power=1.0, width=0.03, curl=0.1, wispy=0.0),
+        dict(n=190, length=0.13, lo=0.004, hi=0.008, npts=7, power=1.0, width=0.03, curl=0.1, wispy=0.0),
         dict(n=140, length=0.16, lo=0.009, hi=0.016, npts=7, power=1.0, width=0.024, curl=0.15, wispy=0.3)]},
     "Beard_short": {"kind": "beard", "layers": [
         dict(n=560, length=0.05, lo=0.002, hi=0.006, npts=3, power=1.0, width=0.022, curl=0.05, wispy=0.0)]},
