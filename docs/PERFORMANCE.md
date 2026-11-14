@@ -1760,6 +1760,48 @@ normal 18.4, the albedo 8.3, the rest position 7.7; the designs 14 s; the export
 On a fresh checkout (`git archive`) with an empty `GIANT_CACHE`: `--verify --skip-bake` 67 s and `--verify` 217 s,
 both bit-exact. The normal bake jitters by a texel in about one bake in five (`TOLERATED`, `docs/systems/P41.md`).
 
+### The W25 merge (P41 and P42)
+
+P41 then P42 merged on the integration branch, 14 November 2026, with one fix-forward (`TipMatching.RMAX_USE`
+0.97 -> 0.95: the exported palm is the knuckle line, so two end-of-arc samples at stage 3 turned the weapon 16-17°
+off; `docs/systems/P42.md`). Container as above, loads 3.4-5.8 (the giant pipeline's verify ran inside the check).
+
+**The check** (`tools/check.sh --build --slow --giant --require --strict-times`, then the 120 s soak):
+
+| | Base (0.9.0-m9) | P41 merged | W25 merged (the failing run) | W25 merged (final) |
+| --- | --- | --- | --- | --- |
+| Default tier | 78.3 / 79.8 s (209 suites) | 64.2 s (210 suites) | 65.3 s | **70.4 s** (under 75: no re-run) |
+| Slow tier | - | - | 321.6 s | **323.9 s** (budget 8 min) |
+| Suites, checks, failures | 209, 38,005, 0 | 210, 38,320, 0 | 281, 49,645, 3 (`test_tip_matching`'s exported landmarks) | **281, 49,644, 0** |
+| `--giant`: `--verify --skip-bake` | - | - | 67 s, `GIANT VERIFY OK` | 72 s, `GIANT VERIFY OK`; `--budget` 2.85 MiB |
+| Soak | - | - | - | 120 s, 7,201 frames, `"errors":0` |
+
+The suites that skip until both packages are in ran on the merged tree: `test_giant_look_real` 1,168 checks;
+`test_tip_matching` over the exported landmarks, 1,004 samples, median 7.10°, worst 12.94° (the default landmarks
+7.08° / 12.66°); `test_giant_shaders` on the real model (tier web; the Face and Hair framings of the long hair and
+full beard drawn, `validate()` empty).
+
+**Each package's cost** (the runner's per-suite times, the final run and the failing one; plan M10 §1.7):
+
+| | Default (cap) | Slow (cap) | Gate |
+| --- | --- | --- | --- |
+| P41 | `test_giant_assets` 0.027-0.031 s; `test_web_presets` and `test_ship_docs` within their base noise: about **0.03-0.04 s** (0.4) | `test_design_array` 0.08-0.09 + `test_giant_tooling` 0.32-0.34: **0.40-0.42 s** (5) | 0 |
+| P42 | eight new suites 0.52-0.53 s (`test_tip_matching` 0.14 and `test_giant_look_real` 0.06 now that the model exists) + `test_save_slots` and `test_save_migration` +0.06-0.08: **0.58-0.60 s** (0.6) | `test_appearance_random` 5.2-5.5, `test_giant_shaders` 4.8-6.4, `test_appearance_shrine` 0.11: **10.1-12.0 s** (20); the five moved suites 6.7-7.4 s more | 0 |
+| The suites that load the giant (`test_rig_merge`, `test_growth`, `test_growth_456`, `test_camera_review_fixes`, `test_grab_throw`, `test_weapons`, `test_session_flow`) | 5.65-5.72 s against 6.13 / 6.63 on the base: no increase | | |
+| P42's headroom | the five default suites it cut (`test_tutorial`, `test_boss_arena`, `test_schemas_v2`, `test_wolf`, `test_boss_disengage`) 4.05-4.17 s against 11.86-12.00 on the base: **7.7-8.0 s out of the default tier** (at least 3) | | |
+
+**The real model's frame** (`tests/support/giant_shader_probe.tscn` under Xvfb, the Compatibility renderer, llvmpipe
+at 2 threads, 320x240, the whole giant in the default look, web tier; P43 sets its caps from it):
+
+| Run | Wall per frame | Render CPU | Render GPU |
+| --- | --- | --- | --- |
+| The check's rendered suite, failing run / final run | 41.9 / 54.4 ms | - | - |
+| The probe alone, three runs (loads 3.9-4.2) | 41.2, 47.2, 34.3 ms | 45.9, 42.4, 39.2 ms | 46.4, 42.9, 40.0 ms |
+
+On the same machine the stand-in of spheres and a card drew in 9.2-16.1 ms (P42's lane): the real model costs about
+three times as much in software rendering, 34-54 ms a frame at loads of 4-6. At 960x720 with the hi tier one run
+took 109 ms a frame.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
