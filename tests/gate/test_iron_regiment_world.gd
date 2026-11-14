@@ -21,7 +21,8 @@ extends IntegrationSuite
 ##     (test_the_phases_follow_the_wall_and_the_charge_with_the_ballistae_standing); the HUD tells the
 ##     giant so as the battle engages and again as the Charge frees the pair (ENGINES_LINE, CHARGE_LINE).
 ##   * M9 gate (final): the Wall's routed men count as fallen (test_the_wall_s_routed_men_count_as_fallen), and the
-##     bar's notches follow the phases (BattleBoss.phase_marks; the mid-Wall case of _phases_case). The early audit's
+##     bar's notches follow the phases (BattleBoss.phase_marks; the mid-Wall case of _phases_case, which also reads
+##     the HUD's BossBar: the notches it draws are those marks). The early audit's
 ##     A1/A3/A5: the bastion pair's hold is checked by what the engines do, not only by the battle's flag - held in
 ##     the Wall they neither turn nor shoot and their crews stay counted, freed by the Charge they turn on the giant
 ##     (and slow/test_m9_gate_final's held engine); the battle's holds are taken while engaged and all freed by the
@@ -474,6 +475,14 @@ func _phases_case(name: String, web: bool, stage: int, broken_before: Array, mid
 	await step_ticks(30)
 	for eid: String in broken_before:
 		assert_true(WorldState.is_destroyed(eid), "%s: %s is wrecked before the battle" % [name, eid])
+	# The mid-Wall case reads what the HUD's boss bar draws: a Hud on the giant, there before the battle engages.
+	var hud: Hud = null
+	if mid_wall != "":
+		var layer := CanvasLayer.new()
+		w.add_child(layer)
+		hud = Hud.new()
+		hud.player = w.player()
+		layer.add_child(hud)
 	await _enter_bailey(w, b)
 	await step_ticks(120)
 	var charge_at := float((b.phases[1] as Dictionary).get("below", 0.0))
@@ -505,6 +514,19 @@ func _phases_case(name: String, web: bool, stage: int, broken_before: Array, mid
 		var marks := b.phase_marks()
 		assert_true(not marks.is_empty() and b.aggregate_fraction() > marks[0],
 			"%s: the bar (%.3f) has not passed the Charge's notch (%s) while the Wall fights" % [name, b.aggregate_fraction(), marks])
+		# M9 gate (final; its verifier's minor): the HUD's BossBar draws those marks, not the records' raw thresholds.
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var bar := hud.get_node_or_null("BossBar")
+		assert_true(bar != null and bool(bar.call("bar_visible")), "%s: the HUD shows the battle's bar" % name)
+		if bar != null:
+			var drawn: Array[float] = bar.call("notch_fractions")
+			marks = b.phase_marks()
+			var same := drawn.size() == marks.size()
+			for i in mini(drawn.size(), marks.size()):
+				same = same and absf(drawn[i] - marks[i]) < 0.001
+			assert_true(same, "%s: the HUD's notches (%s) are the battle's phase marks (%s), the bar at %.3f" % [
+				name, drawn, marks, b.aggregate_fraction()])
 	for id: String in fighting:
 		_kill(id)
 	await step_ticks(30)
