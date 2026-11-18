@@ -20,7 +20,8 @@ extends Node
 ## Prints one line
 ##   SKIN_RENDER {"stage", "mode", "frames": {name: {"lit": share of pixels off the clear colour, "path"}},
 ##                "swing": {"samples", "outer_max_radii", "angle_max_deg", "fist_max_m"}, "crosshair": {...},
-##                "frame_ms", "validate", "errors": [...]}
+##                "frame_ms", "validate", "captures", "capture_ticks_max" (the simulation ticks a draw let
+##                through: 0, the tree is paused while a frame is drawn), "errors": [...]}
 ## and quits (a watchdog quits it after WATCHDOG_S).
 
 const SCENE := "res://tests/support/skinned_rig_probe.tscn"
@@ -319,13 +320,24 @@ func _capture(frame_name: String) -> Dictionary:
 	return rec
 
 
+## M10 gate (LC-8): the simulation is held while the frame is drawn (the tree paused: Sim ticks only in an
+## unpaused tree), so the pose captured is the pose of the tick that asked for it and no phase can pass
+## behind a slow draw. Before, the three loop iterations of a draw ran up to 8 ticks each when a frame took
+## long (a large window, one rasterizer thread, a loaded machine), and a heavy's ACTIVE phase went by while
+## its windup frame was drawn. `capture_ticks_max` reports the most ticks any draw let through (0).
 func _draw() -> Image:
+	var was_paused := get_tree().paused
+	var tick0 := Sim.tick
+	get_tree().paused = true
 	RenderingServer.render_loop_enabled = true
 	await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
 	RenderingServer.render_loop_enabled = false
+	get_tree().paused = was_paused
+	_out["capture_ticks_max"] = maxi(int(_out.get("capture_ticks_max", 0)), Sim.tick - tick0)
+	_out["captures"] = int(_out.get("captures", 0)) + 1
 	return img
 
 

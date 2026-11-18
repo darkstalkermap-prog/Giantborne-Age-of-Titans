@@ -26,6 +26,9 @@ func test_the_stage_1_frames() -> void:
 		var fr: Dictionary = frames.get(f, {})
 		assert_true(float(fr.get("lit", 0.0)) >= SkinnedRigProbe.MIN_LIT, "%s is drawn (%.2f of the pixels)" % [f, float(fr.get("lit", 0.0))])
 		assert_true(FileAccess.file_exists(str(fr.get("path", ""))), "%s is saved" % f)
+	# M10 gate (LC-8): no simulation tick passes while a frame is drawn, so a slow draw cannot skip a phase.
+	assert_true(int(rep.get("captures", 0)) >= SkinnedRigProbe.FRAME_NAMES.size(), "every frame went through the held draw (%d)" % int(rep.get("captures", 0)))
+	assert_eq(int(rep.get("capture_ticks_max", -1)), 0, "the simulation is held while a frame is drawn")
 	var cross: Dictionary = rep.get("crosshair", {})
 	assert_false(bool(cross.get("covered", true)), "first person: the giant at rest leaves the crosshair's pixels alone (diff %.3f)" % float(cross.get("diff", -1.0)))
 	assert_true(bool(rep.get("airborne", false)), "the jump left the ground")
