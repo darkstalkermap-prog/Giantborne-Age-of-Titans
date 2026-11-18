@@ -137,9 +137,10 @@ kbd {
 
 <main class="wrap">
   <header class="masthead">
-    <p class="eyebrow">Playable prototype &middot; the world opens after the Valley &middot; build 0.9.0-m9</p>
+    <p class="eyebrow">Playable prototype &middot; the realistic giant and the character creator &middot; build 0.10.0-m10</p>
     <h1><span class="name">Giantborn</span><span class="sub">Age of Titans</span></h1>
-    <p class="pitch">You wake as a <strong>12-foot juvenile giant</strong> in Giant's Hollow. The Valley of Broken
+    <p class="pitch">Design your giant in the <strong>character creator</strong>: hair and beard, skin, eyes, tattoos,
+      war paint, scars and clothing. Then you wake as a <strong>12-foot juvenile giant</strong> in Giant's Hollow. The Valley of Broken
       Kings is your tutorial: wolves and an ogre in the Old Wood, a village you can help, cow or force, and the
       Ogre King at Kingsfall, growing to 18 and then 26 feet at its shrines (about 20&ndash;30 minutes). Then the
       Kings' Door opens onto <strong>the Old Kingdom</strong>, an open world of five regions, two kilometres
@@ -154,9 +155,9 @@ kbd {
     <canvas id="game-canvas" tabindex="0" hidden></canvas>
     <div class="gate" id="gate">
       <button class="play" id="play" type="button">Play in browser</button>
-      <p class="gate-note" id="gate-note">About 30 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
+      <p class="gate-note" id="gate-note">About 36 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
       <button class="play-alt" id="play-world" type="button">Start in the open world</button>
-      <p class="alt-note" id="world-note">Skips the Valley: a new game on the Kingsgate shelf as the 26-foot giant who took the crown. It replaces a game saved in this browser.</p>
+      <p class="alt-note" id="world-note">Skips the Valley: the character creator, then a new game on the Kingsgate shelf as the 26-foot giant who took the crown. It replaces a game saved in this browser.</p>
       <div class="meter" id="meter" hidden><div class="meter-fill" id="meter-fill"></div></div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <details class="detail" id="detail" hidden><summary>Technical details</summary><pre id="detail-text"></pre></details>
@@ -196,11 +197,11 @@ kbd {
     <div class="slab">
       <h2>What to try</h2>
       <ol class="route">
-        <li>Choose <b>New Game</b>. The quest tracker (top right) and the diamond marker show the way. In Giant's Hollow, try both cameras (<kbd>V</kbd>) and spar at the post to learn block, parry and dodge.</li>
+        <li>Choose <b>New Game</b>. The character creator opens first: pick a preset or go through the categories (hair, beard, skin, eyes, tattoos, war paint, scars, clothing), turn the giant with the mouse or <kbd>Q</kbd> / <kbd>E</kbd>, undo with <kbd>Ctrl</kbd> + <kbd>Z</kbd>, then press <b>Begin your journey</b> (<kbd>Ctrl</kbd> + <kbd>Enter</kbd>). The quest tracker (top right) and the diamond marker show the way. In Giant's Hollow, try both cameras (<kbd>V</kbd>) and spar at the post to learn block, parry and dodge.</li>
         <li>In the Old Wood, wolves circle and lunge: dodge, then punish. Stagger a soldier with a heavy attack, grab it with <kbd>E</kbd> and throw it.</li>
         <li>Grow to 18&nbsp;ft at the Grove Shrine, choose how to deal with Elder Maren at Thornwick, break into the ruins and face the Ogre King at Kingsfall. Below half health it charges: make it hit a pillar, then punish.</li>
         <li>Take the crown and walk through the Kings' Door: the Old Kingdom opens below the Kingsgate shelf. <b>Start in the open world</b> begins here.</li>
-        <li>Drive the scouts off the beacon hill and relight the Kingsgate beacon. The Kingsgate shrine then grows you to 36&nbsp;ft, and Heavy Footfall and Boulder Hurl become Titan Stomp and Crag Hurl. At every shrine, the <b>Talents</b> tab spends the point each level brings in three trees (new tiers open at levels 6, 8, 9, 10 and 12), and in the Old Kingdom the <b>Ancestry</b> tab lets you choose, once, Stoneblood, Stormborn or Wildheart.</li>
+        <li>Drive the scouts off the beacon hill and relight the Kingsgate beacon. The Kingsgate shrine then grows you to 36&nbsp;ft, and Heavy Footfall and Boulder Hurl become Titan Stomp and Crag Hurl. At every shrine, the <b>Appearance</b> tab changes your look, the <b>Talents</b> tab spends the point each level brings in three trees (new tiers open at levels 6, 8, 9, 10 and 12), and in the Old Kingdom the <b>Ancestry</b> tab lets you choose, once, Stoneblood, Stormborn or Wildheart.</li>
         <li>Open the map (<kbd>M</kbd>): it fills in as you explore, the waystones and shrines you have visited are fast-travel points, and <kbd>P</kbd> pins a spot for the compass. The journal (<kbd>J</kbd>) lists your quests; <kbd>T</kbd> tracks the next one.</li>
         <li>In Brannock, swear the march oath by helping its people, cowing them or breaking the gatehouse; the town remembers which. Pikes at the King's Road toll fort and a shield wall in the Raiders' Hollow brace together as you close: step out of the band drawn on the ground, then go for the banner.</li>
         <li>In the Greywood, trolls close their wounds unless they burn: smash a bonfire or a brazier beside one, or throw it into the flames. Sedge at Hollowmere asks for the Troll Matriarch: slay her in her den, or burn her three nests and drive her out. Trees between the camera and you (or the target you lock) fade to a ghost, so the pines no longer hide the fight.</li>
@@ -215,11 +216,11 @@ kbd {
 
     <div class="slab about">
       <h2>About this build</h2>
-      <p><b>What it is.</b> Giantborn: Age of Titans (Godot 4.6.3): the Valley of Broken Kings as the tutorial, then the Old Kingdom, a streamed open world of five regions with a map, a compass, discovery and fast travel. Growth to 62&nbsp;ft, abilities that evolve as you grow, talents and an ancestry, formations with banners, siege engines and cavalry, trolls, dire wolves and rival giants, three bosses (the Troll Matriarch, the Iron Regiment and Harrok the Unbowed), towns that react to your size, three oaths each won more than one way, and the campaign's end on the Stone Throne.</p>
-      <p><b>New in 0.9.0-m9.</b> A world bot now plays the whole campaign, peacefully, by conquest and in between, in every order of the oaths, and the world was tuned on its runs: the Troll Matriarch's second phase is easier, a Strike on Harrok when he yields lands before he rises, and from 36&nbsp;ft lone soldiers flee the giant. At Fort Aldmere the gate's garrison no longer blocks the gateway, a breach stays made after a death, the Iron Regiment's phases follow its units and the screen names the ballistae that shoot; the war camp's shield wall stands off the King's Road. Enemies walking back to their posts no longer get stuck, the music keeps its battle score for fights near you but answers a siege engine's shot, and the HUD's text no longer overlaps.</p>
+      <p><b>What it is.</b> Giantborn: Age of Titans (Godot 4.6.3): a realistic giant you design yourself, in the Valley of Broken Kings as the tutorial, then the Old Kingdom, a streamed open world of five regions with a map, a compass, discovery and fast travel. Growth to 62&nbsp;ft, abilities that evolve as you grow, talents and an ancestry, formations with banners, siege engines and cavalry, trolls, dire wolves and rival giants, three bosses (the Troll Matriarch, the Iron Regiment and Harrok the Unbowed), towns that react to your size, three oaths each won more than one way, and the campaign's end on the Stone Throne.</p>
+      <p><b>New in 0.10.0-m10.</b> The giant is now a realistic, animated body instead of boxes, and you design him. New Game, the prologue's skip and "Start in the open world" all open the character creator: hair (7 styles) and beard (7) with colours and grey, skin tone, eyes, tattoos (16) with ink colours, war paint, scars, your ancestry's mark, and clothing (6 outfits) with dyes; 8 presets, Randomize and Undo. Press Begin (or Ctrl+Enter) to play. Every shrine has a new Appearance tab to change your look later, and your look is saved with your game; a game saved in 0.9.0-m9 continues with the default look. The same body walks, fights, grabs and throws in third and first person at every size from 12 to 62&nbsp;ft. The fighting, the world and the enemies are the same as in 0.9.0-m9.</p>
       <p><b>Sound on.</b> The Valley, every region and every boss have their own score, and the Valley and every region their own ambience; towns and camps keep their region's music. The music follows the place and the fight, and you can hear threats coming. Browsers start a page's sound only after a click or a key press, so if you hear nothing, click the game once. The volumes are in Settings, and the sound mutes while the tab is hidden.</p>
-      <p><b>What it is not yet.</b> The art is placeholder boxes. The balance is a bot's: it walks from objective to objective, no person has played the world yet, and some fights are still harder for it than they should be (the Iron Regiment, if you take the crown's oath first at 36&nbsp;ft). Siege trains do not wander the roads. The browser version runs on one thread, so expect slow frames, and music that can stutter, on weaker computers.</p>
-      <p><b>The next build.</b> This is the last build of this plan. Next come playtests by people, whose findings become tuning first, and then M10: a realistic giant, with a character creator.</p>
+      <p><b>What it is not yet.</b> Only your giant is realistic: the soldiers, villagers, beasts and the world are still the game's simple shapes. Hair and beards are drawn as layered strips, so up close they can read as strips rather than single strands. The balance is a bot's: it walks from objective to objective, no person has played the world yet, and some fights are still harder for it than they should be (the Iron Regiment, if you take the crown's oath first at 36&nbsp;ft). Siege trains do not wander the roads. The browser version runs on one thread, so expect slow frames, a slow first frame when the creator opens, and music that can stutter, on weaker computers.</p>
+      <p><b>The next build.</b> This is the last build of the M10 plan. Next come playtests by people, whose findings become tuning first; the recommendation for M11 is the people near the camera, soldiers and villagers, made on the same pipeline as the giant.</p>
       <p><b>If something goes wrong.</b> Esc opens the pause menu, where you can load the last checkpoint or quit to the title. Settings and your saved game stay in this browser. Note what you did, what you expected and what happened.</p>
     </div>
   </section>
@@ -237,7 +238,7 @@ kbd {
 (function () {
   // Byte counts of the current export (raw and packed as .txt), used for the progress bar, and the
   // number of parts the packed pck ships in.
-  const BUILD = { wasm: 37700666, pck: 25791588, wasmPacked: 12528700, pckPacked: 23527540, pckParts: 2 }; // set by tools/build_web.sh
+  const BUILD = { wasm: 37700666, pck: 25841308, wasmPacked: 12528700, pckPacked: 23586472, pckParts: 2 }; // set by tools/build_web.sh
 
   const stage = document.getElementById('stage');
   const poster = document.getElementById('poster');
