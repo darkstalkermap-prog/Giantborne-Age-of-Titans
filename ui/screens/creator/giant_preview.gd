@@ -42,6 +42,13 @@ const WORLD_AMBIENT_ENERGY := 0.62
 const WORLD_SUN_DEG := Vector3(-48, -35, 0)
 const WORLD_FOG_M := Vector2(120.0, 700.0)
 const GROUND_COLOR := Color(0.36, 0.41, 0.27)
+## The studio lights, in the light rig's frame (the camera at the rig's -Z, looking along +Z; a light travels
+## along its own -Z): the warm, shadow-casting key from the camera's side, above and to one side of it, so the
+## side of the giant the camera sees is the lit one; the cool rim from behind him, on the other side. The rig
+## turns with the camera's yaw (the giant turns on his disc under fixed lights), so every framing and every
+## turn is lit the same way.
+const KEY_LIGHT_DEG := Vector3(-38, 215, 0)
+const RIM_LIGHT_DEG := Vector3(-18, 20, 0)
 ## How far the turn and the zoom go: degrees a second of the right stick at full tilt, the zoom factor's range.
 const TURN_DEG_S := 120.0
 const ZOOM_MIN := 0.55
@@ -84,6 +91,8 @@ var viewport: SubViewport
 var world_root: Node3D
 var model: GiantModel
 var camera: Camera3D
+## The studio lights' rig: turned with the camera's yaw (_update_camera) so the key stays on the camera's side.
+var light_rig: Node3D
 var key_light: DirectionalLight3D
 var rim_light: DirectionalLight3D
 var sun: DirectionalLight3D
@@ -189,20 +198,23 @@ func _build_stage() -> void:
 	environment = Environment.new()
 	we.environment = environment
 	world_root.add_child(we)
+	light_rig = Node3D.new()
+	light_rig.name = "LightRig"
+	world_root.add_child(light_rig)
 	key_light = DirectionalLight3D.new()
 	key_light.name = "KeyLight"
-	key_light.rotation_degrees = Vector3(-38, 32, 0)
+	key_light.rotation_degrees = KEY_LIGHT_DEG
 	key_light.light_energy = 1.25
 	key_light.light_color = Color(1.0, 0.95, 0.88)
 	key_light.shadow_enabled = true
 	key_light.directional_shadow_max_distance = 30.0
-	world_root.add_child(key_light)
+	light_rig.add_child(key_light)
 	rim_light = DirectionalLight3D.new()
 	rim_light.name = "RimLight"
-	rim_light.rotation_degrees = Vector3(-18, 200, 0)
+	rim_light.rotation_degrees = RIM_LIGHT_DEG
 	rim_light.light_energy = 0.7
 	rim_light.light_color = Color(0.62, 0.74, 1.0)
-	world_root.add_child(rim_light)
+	light_rig.add_child(rim_light)
 	sun = DirectionalLight3D.new()
 	sun.name = "Sun"
 	sun.rotation_degrees = WORLD_SUN_DEG
@@ -372,6 +384,7 @@ func _update_camera() -> void:
 	var pitch := deg_to_rad(float(f.pitch))
 	var dir := Vector3(sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch))
 	var from := target + dir * float(f.dist) * zoom_factor
+	light_rig.rotation.y = -yaw   # the rig's -Z at the camera's side of the giant: the key lights what the camera sees
 	camera.fov = PREVIEW_FOV
 	camera.transform = Transform3D(Basis.looking_at(target - from, Vector3.UP), from)
 
@@ -591,11 +604,11 @@ class WarmUp extends SubViewport:
 		we.environment = env
 		_root.add_child(we)
 		key = DirectionalLight3D.new()
-		key.rotation_degrees = Vector3(-38, 32, 0)
+		key.rotation_degrees = GiantPreview.KEY_LIGHT_DEG
 		key.shadow_enabled = true
 		_root.add_child(key)
 		rim = DirectionalLight3D.new()
-		rim.rotation_degrees = Vector3(-18, 200, 0)
+		rim.rotation_degrees = GiantPreview.RIM_LIGHT_DEG
 		_root.add_child(rim)
 		sun = DirectionalLight3D.new()
 		sun.rotation_degrees = GiantPreview.WORLD_SUN_DEG
