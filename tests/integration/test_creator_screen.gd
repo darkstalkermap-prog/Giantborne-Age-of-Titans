@@ -171,6 +171,40 @@ func test_creator_start_opens_the_creator_at_once_for_a_world_start() -> void:
 	assert_eq(requests.size(), 0, "nothing started")
 
 
+## M10 gate, LA-6: with a display the creator of --mode=world --creator opens while the warm-up still holds
+## New Game and Continue, so the title's focus was on Sandbox when the creator opened and Back gave it back
+## to Sandbox: a pad or keyboard player who backed out and pressed A started the sandbox.
+func test_back_from_creator_start_during_the_warmup_focuses_the_titles_first_entry() -> void:
+	TitleScreen.force_warmup = true
+	GameSession.apply_args(GameSession.parse_args(PackedStringArray(["--mode=world", "--creator", "--no-user-settings"])))
+	var title := stack.open("title") as TitleScreen
+	assert_true(title.warming(), "the warm-up holds New Game")
+	assert_eq(_focus(), title.button("Sandbox"), "so the title's focus starts on Sandbox")
+	await get_tree().process_frame
+	var c := _creator()
+	assert_true(c != null, "the creator opened over the warming title")
+	if c == null:
+		TitleScreen.force_warmup = false
+		return
+	for i in 12:
+		if not title.warming():
+			break
+		await get_tree().process_frame
+	await get_tree().process_frame   # the title enables its buttons in its own _process, under the creator
+	await get_tree().process_frame
+	assert_false(title.warming(), "the warm-up is done under the creator")
+	assert_false(title.button("New Game").disabled, "and New Game is enabled while the creator is still open")
+	c.back_button.pressed.emit()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_eq(stack.top(), title, "Back leaves the player on the title")
+	assert_false(title.button("New Game").disabled, "New Game is enabled")
+	assert_eq(_focus(), title.first_focus(), "the focus is on the title's first entry")
+	assert_eq(_focus(), title.button("New Game"), "New Game, not Sandbox")
+	assert_eq(requests.size(), 0, "nothing started")
+	TitleScreen.force_warmup = false
+
+
 # --------------------------------------------------------------------------- safety: the question and Undo
 
 ## The creator alone (New Game context), on the stack; its closed result is collected.
