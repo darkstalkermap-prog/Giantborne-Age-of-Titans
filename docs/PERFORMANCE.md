@@ -2528,6 +2528,69 @@ creator 15.6-16.3x on this branch against 16.8x at the base, and 19.8x after the
 loading screen's warm-up gives `--continue` what the title gives, and neither covers the creator's first frame
 on llvmpipe with no driver cache (a follow-up for the creator's package).
 
+### M11 W29: the merged measurements (P48 and P49)
+
+The W29 merge (P49, then P48, on the tag `m11-plan`; 18 November 2026): P48's body pipeline II (the core
+`giant.glb`, 21 parts loaded on demand, the 71-bone skeleton, the `ShadowProxy`, the free cape, 28 clips) with
+P49's shadow proxy path, launcher, budget rule and stable ids. Container as above (4 shared CPUs, no GPU, a debug
+build); the merge ran alone on the machine (1-minute loads under 2 at the start of most runs; given where higher).
+
+**The check** (`tools/check.sh --slow --giant --web-tools --require --strict-times`, after the import, the full
+build and the import; the build left the tree unchanged): **CHECK PASSED** - the giant pipeline's 27 tests,
+`--verify --skip-bake` OK in 82 s (34 files, the normal maps' one texel `TOLERATED`), `GIANT_ESTIMATE` 6.43 MiB
+of 7.6, the launcher's 345 checks and the clock's 18; **305 suites, 53,942 checks, 0 failures**; **default
+64.3 s, slow 334.8 s** (plan §2.12: 72 and 400); the 120 s soak 7,201 ticks, 0 errors. The first run, straight
+after the build, read default 81.7 s and slow 356.7 s and failed `test_export_reproducible` on its M10 floor
+for `giant.glb`'s nodes (fixed at the merge: the file now holds the skeleton and five meshes). **The seeded soak
+against `0.10.0-m10`**: the tag's 120 s soak in a fresh worktree and the merge's print the same
+`AUTOPILOT_RESULT` in all 28 keys (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 ticks,
+0 errors).
+
+**The shadow proxy, P48's real one** (`test_giant_shadow_proxy`, rendered): the rig finds the model's own
+`ShadowProxy` (one surface); the giant's default look (9 surfaces) casts 9 shadow draws without it and **1** with
+it with one shadow map, 36 and **4** with four.
+
+**Draw calls** (Xvfb, the Compatibility renderer, llvmpipe at 2 threads, `--skin`; the commands of P49's section
+above; p50 / p95 / p99 / max):
+
+| Run | `medium`, the merge (the real proxy) | `medium`, P49 (a stand-in proxy) | `low`, the merge | Plan M11 §2.12 |
+| --- | --- | --- | --- | --- |
+| The Valley walk (2,182 frames) | 213 / 307 / 349 / **379** | 213 / 307 / 349 / 379 | 94 / 139 / 143 / **152** | `medium` at most 330: **a miss by 49**; `low` at most 250: met |
+| The stress arena (45 s, 2,640 frames) | 312 / 551 / 617 / **642** | 312 / 551 / 617 / 642 | 75 / 126 / 147 / **153** | `medium` at most 620: **a miss by 22**; `low` at most 250: met |
+
+The real proxy gives exactly the stand-in's counts: both are one mesh in each cascade for the giant's nine shown
+meshes. The rest at `medium` is the static world's casters and the enemies' box rigs (P60's row).
+
+**The giant's mesh buffers** (`tests/support/giant_parts_probe.tscn`, the renderer's
+`RENDERING_INFO_BUFFER_MEM_USED` under Xvfb; in brackets `GiantModel.mesh_bytes`' count): the body, the eyes
+and the proxy **1.11 MB**; **the default look 2.14 MB** (1.80); **the fullest look 2.60 MB** (2.13; eight parts);
+every part loaded 5.83 MB (M10 kept all resident: 5.98). Plan §2.12: at most 4.5 MB in play - **met**. A part's
+first load: read and bound in 2.4 ms, drawn 24.5 ms after the call.
+
+**The Web export** (`tools/build_web.sh`, the `Web` preset, version `0.10.0-m10`, budget 26):
+`PCK_SIZE raw=26459248 gzip=18291825 shipped=24389100` (**23.26 MiB of 26**) in **two parts** of 12,194,550;
+`GIANT_SHARE` 8,661,666 raw, **6,628,496 shipped (6.32 MiB of 7.6)**, 75 files; `PEOPLE_SHARE` 0 files;
+`PCK_SHA256 05868ddb336767c60bedb315484e71a23977a1b0e19a36321410c262ac6f815f`; `NORMALIZE_IMPORTS` gave
+stable ids to the 22 imported glTF scenes (`giant.glb` and the 21 parts, 92 nodes). `Web (test)`: 25,475,560
+shipped (24.30 MiB), `PCK_SHA256 a1a849b1...316868a`. Against the 0.10.0-m10 release (22.49 MiB, the share 5.57): +0.77 MiB, of it the
+giant's share +0.75 MiB (plan §2.12's arithmetic for these items: 0.35; the parts' own skeletons about 0.28 MiB).
+
+**The five Chromium checks, default forms** (headless Chromium, SwiftShader; each started at a load under 3):
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `creator_check.mjs` (960x540) | OK, 3 misses reported | the creator after New Game **3.78x** (560.8 ms against 148.6; 99 % the draw; 20 shaders compiled and 10 programs linked in its first three frames, as on P49's branch), 3.38x on a quiet re-run (load 1.3); the shrine's creator 1.93x and 1.69x; the title's own warm-up frames 22-64x (by design); renderer peak 994 and 937 MB |
+| `world_start_check.mjs` | OK | renderer peak 960 MB |
+| `audio_check.mjs` | OK | 8 clock references, largest step 9.8 ms; criterion NOT MET on software WebGL (245 holes, all on the main thread); peak 929 MB |
+| `world_check.mjs` | OK | 392 s of music, 41 references, largest step 123.9 ms (7 holes placed across a step); criterion NOT MET (607 holes, all on the main thread); peak 1,091 MB |
+| `stream_check.mjs --world --audio` (`Web (test)`) | OK on a quiet re-run | the first run (load 2.6 at the start, the machine busier during it) failed on one hole of 313.5 ms at 5.1 s not placed on the main thread; the quiet re-run (load 1.3): 123.9 s of music over 4 borders, 14 references, largest step 18.8 ms, 357 holes all on the main thread (criterion NOT MET); peak 680 MB |
+
+0 console errors and 0 failed requests in every run. The creator's first frame after New Game is now over the
+3x rule by its ratio: the frame itself is what it was on P49's branch (about 500 ms, the same 20 shaders), and the
+creator's steady frame fell from about 184 to 146-149 ms with one shadow draw for the giant. The Web tools' own
+tests: `test_launcher_parts` 345, `test_world_check` 56, `test_creator_check` 46, `test_audio_check` 39,
+`test_stream_check` 24, `test_memory_guard` 21 checks, 0 failures.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
