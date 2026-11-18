@@ -23,6 +23,13 @@ extends SubViewportContainer
 ## LT and RT, + and -). set_fade() fades the covering garments while a "Hidden by your clothing" row has the
 ## focus.
 ##
+## Resolution (M10 gate, LA-3): the project stretches its 1280x720 canvas to the window (canvas_items), so a
+## stretched container's SubViewport is the container's size in canvas units and the giant was drawn at about
+## 720x550 in every window, 1.5x upscaled at 1920x1080 and 2x at 2560x1440. With `window_pixels` (the
+## creator sets it) the preview fills its parent at the window's resolution instead: the container is
+## pixel_scale() times its parent's size and scaled down by the same factor, so its SubViewport has one pixel
+## per window pixel (up to MAX_PIXEL_SCALE; 1 on the Web, where the larger viewport's cost is not measured).
+##
 ## WarmUp (an inner class) is the title's shader warm-up: a hidden 64x64 SubViewport that draws the model
 ## with every material category for two frames under this preview's lighting and two under a level's.
 
@@ -46,6 +53,9 @@ const GROUND_COLOR := Color(0.36, 0.41, 0.27)
 const TURN_DEG_S := 120.0
 const ZOOM_MIN := 0.55
 const ZOOM_MAX := 1.6
+## The most window pixels per canvas unit the preview draws (`window_pixels`): 2 covers 2560x1440; a larger
+## window is upscaled from there.
+const MAX_PIXEL_SCALE := 2.0
 ## Framings in the model's frame at stage 1 (+X his right, +Y up, -Z his front): what the camera looks at,
 ## its yaw (0 = in front of him, 90 = at his right, 180 = behind), its pitch and distance.
 const FRAMINGS := {
@@ -106,10 +116,14 @@ var still := false
 ## The world's light (its sun, sky, ambient, fog and ground) at every framing, not only in Game view and first
 ## person: the character sheets (plan §4.2). Read by frame().
 var world_light := false
+## Fill the parent Control at the window's resolution (see the class notes); set before or after the preview
+## enters the tree. Off for the tiles of the option check and the sheets, which size their own viewports.
+var window_pixels := false
 var weapon: Node3D = null
 var _weapon_dir := Vector3.FORWARD
 var _soldier: Node3D = null
 var _fade := 0.0
+var _garments: Array = []   ## the garments of the look applied last (the skin's mask without a fade)
 var _dragging := false
 var _portrait := false
 
@@ -153,6 +167,7 @@ func _ready() -> void:
 	if game_profile.is_empty():
 		game_profile = stage_profile(1)
 	frame(framing)
+	fit_window_pixels()
 
 
 ## The model's index (the giant index of plan §2.5).
@@ -164,8 +179,10 @@ func index() -> Dictionary:
 func apply_look(look: Dictionary) -> float:
 	var t0 := Time.get_ticks_usec()
 	GiantLook.apply(model, model.index, look)
+	_garments = (look.get("garments", []) as Array).duplicate() if typeof(look.get("garments")) == TYPE_ARRAY else []
 	if _fade > 0.0:
 		GiantLook.set_garment_fade(model, model.index, _fade)
+		_show_skin_under_fade()
 	last_apply_ms = float(Time.get_ticks_usec() - t0) / 1000.0
 	return last_apply_ms
 
@@ -482,10 +499,23 @@ func _place_weapon() -> void:
 	weapon.transform = Transform3D(Basis.looking_at(_weapon_dir, up).scaled(weapon.scale), grip)
 
 
-## The "Hidden by your clothing" fade (0-1) of the covering garments.
+## The "Hidden by your clothing" fade (0-1) of the covering garments. While they fade, the skin under them is
+## drawn whole (_show_skin_under_fade).
 func set_fade(fade: float) -> void:
 	_fade = clampf(fade, 0.0, 1.0)
 	GiantLook.set_garment_fade(model, model.index, _fade)
+	_show_skin_under_fade()
+
+
+## Under a shown garment the skin's covered regions sink inside the body (giant_skin's hidden_regions), which
+## leaves a jagged step along each region's border: unseen under cloth, but through faded cloth it showed as
+## pale cut lines at the hips and dark notches at the shoulders (M10 gate, LA-5). While the garments fade no
+## region sinks; without a fade the look's own mask is back.
+func _show_skin_under_fade() -> void:
+	var hidden := 0 if _fade > 0.0 else GiantLook.hidden_regions_mask(model.index, _garments)
+	for mat: ShaderMaterial in GiantLook.materials(model):
+		if mat.get_shader_parameter("hidden_regions") != null:
+			GiantLook.set_param(mat, "hidden_regions", hidden)
 
 
 func fade() -> float:
@@ -530,8 +560,41 @@ func is_portrait() -> bool:
 
 
 func _process(_delta: float) -> void:
+	if window_pixels:
+		fit_window_pixels()
 	if weapon != null:
 		_place_weapon()
+
+
+# --------------------------------------------------------------------------- resolution
+
+## Window pixels per canvas unit for the preview's SubViewport: the scale the window stretches the canvas by,
+## from 1 (never under the canvas's own size) to MAX_PIXEL_SCALE; 1 on the Web.
+func pixel_scale() -> float:
+	if not is_inside_tree() or OS.has_feature("web"):
+		return 1.0
+	var s := get_viewport().get_final_transform().get_scale()
+	return clampf(minf(absf(s.x), absf(s.y)), 1.0, MAX_PIXEL_SCALE)
+
+
+## With `window_pixels`: fills the parent Control with a container pixel_scale() times its size, scaled down by
+## the same factor, so the stretched SubViewport is drawn 1:1 in window pixels. Called every frame (a window
+## can change its scale without changing the canvas's size); does nothing when nothing changed.
+func fit_window_pixels() -> void:
+	if not window_pixels or not is_inside_tree():
+		return
+	var parent := get_parent() as Control
+	if parent == null:
+		return
+	var k := pixel_scale()
+	var want := (parent.size * k).floor().max(Vector2.ONE)
+	var down := Vector2.ONE / k
+	if size.is_equal_approx(want) and scale.is_equal_approx(down) and position.is_zero_approx():
+		return
+	set_anchors_preset(Control.PRESET_TOP_LEFT)
+	position = Vector2.ZERO
+	scale = down
+	size = want
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -549,7 +612,7 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	var mm := event as InputEventMouseMotion
 	if mm != null and _dragging:
-		turn(-mm.relative.x * 0.4)
+		turn(-mm.relative.x * scale.x * 0.4)   # in canvas units, whatever the container's own scale (window_pixels)
 		accept_event()
 
 

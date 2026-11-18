@@ -6,6 +6,13 @@ extends IntegrationSuite
 ## Continue restore it; Cancel restores the look without a write. In the slow tier: a world start and a shrine
 ## scene cost more than the default tier's cap allows (tests/integration/test_shrine_appearance.gd covers the
 ## tab and the creator over it in the default tier).
+##
+## A save whose look a later build made (tests/fixtures/saves/v2_appearance_future.json; M10 gate, LB-1):
+## Continue says the default look is shown until it is changed; Keep without a change writes nothing and the
+## save's record stays the later build's, byte for byte; a kept change writes this build's record, the giant
+## wears it and the next load no longer carries the note. Cancel after a change and Reset never touch or show
+## the later build's record, and a later build's record of shapes this build does not know opens every
+## category without an engine error.
 
 const SHRINE := "res://scenes/world/shrine.tscn"
 const SHRINE_ID := "world.shrine.kingsgate"
@@ -145,3 +152,97 @@ func test_cancel_writes_nothing_and_continue_restores_a_kept_look() -> void:
 	GameSession.on_level_ready(world, q)
 	await step_ticks(2)
 	assert_eq(str(q.appearance.record().hair.color), "haircolor.copper", "Continue after quitting restores the look")
+
+
+func test_a_later_builds_look_in_a_save_is_replaced_by_a_kept_change() -> void:
+	GameSession.persist = true
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/v2_appearance_future.json"))
+	var later := JSON.stringify((doc.character as Dictionary).appearance)
+	SaveSlots.write(doc)
+	assert_true(GameSession.continue_valley().ok, "Continue")
+	assert_true(str(GameSession.last_load_message).contains(Appearance.NOTE_FUTURE), "the load says the default look is shown until it is changed")
+	var p := spawn_player(Vector3(0, 0.05, 0), 0.0)
+	GameSession.on_level_ready(world, p)
+	await step_ticks(2)
+	assert_eq(str(p.appearance.look().hair_mesh), str(GiantLook.DEFAULT_LOOK.hair_mesh), "the default look is shown")
+	var screen := stack.open("shrine", {"player": p}) as ShrineScreen
+	assert_true(screen != null, "the shrine screen opens")
+	if screen == null:
+		return
+	var tab := screen.tab("Appearance")
+	screen.show_tab(screen.tabs.find(tab))
+	# Keep without a change: the save still holds the later build's record.
+	var c := tab.call("press_change") as CreatorScreen
+	c.begin_button.pressed.emit()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_eq(JSON.stringify(p.appearance.record()), later, "Keep without a change: the later build's record in memory, untouched")
+	assert_eq(JSON.stringify(_saved_look()), later, "and in the save")
+	# A kept change: this build's record, in memory and in the save.
+	c = _change(tab, "haircolor.red")
+	assert_true(c.pick("hair.style", "hair.shaved"), "and a new style")
+	c.begin_button.pressed.emit()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var rec: Dictionary = p.appearance.record()
+	assert_false(Appearance.is_future(rec), "after a kept change the record is this build's")
+	assert_eq(str(p.appearance.look().hair_mesh), str(Appearance.option("hair.shaved").get("mesh", "")), "the giant wears the hair chosen")
+	var saved := _saved_look()
+	assert_eq(int(saved.get("v", 0)), Appearance.RECORD_VERSION, "the save holds this build's record")
+	assert_eq(str((saved.get("hair", {}) as Dictionary).get("style", "")), "hair.shaved", "with the look chosen")
+	assert_false(saved.has("horns"), "and nothing of the later build's record under this build's version")
+	assert_false(str(SaveSlots.read().message).contains(Appearance.NOTE_FUTURE), "the next load no longer says the default look is shown")
+
+
+func test_a_later_builds_look_survives_cancel_reset_and_unknown_shapes() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0))
+	await step_ticks(1)
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/v2_appearance_future.json"))
+	var later: Dictionary = (doc.character as Dictionary).appearance
+	p.appearance.restore_record(later)
+	var stored := JSON.stringify(p.appearance.record())
+	var events := [0]
+	var count := func(_tick: int, _id: String) -> void: events[0] += 1
+	Events.appearance_changed.connect(count)
+	var screen := stack.open("shrine", {"player": p}) as ShrineScreen
+	var tab := screen.tab("Appearance")
+	screen.show_tab(screen.tabs.find(tab))
+	# Cancel after a change: untouched.
+	var c := tab.call("press_change") as CreatorScreen
+	c.show_category("Skin")
+	assert_true(c.pick("skin", "skin.deep"), "a pick")
+	c.back_button.pressed.emit()
+	assert_true(c.question_open(), "Cancel after a change asks")
+	c.discard_button.pressed.emit()
+	assert_eq(JSON.stringify(p.appearance.record()), stored, "Cancel leaves the later build's record untouched")
+	assert_eq(events[0], 0, "no event")
+	# Reset and Undo never bring the later build's record into the screen.
+	c = tab.call("press_change") as CreatorScreen
+	c.show_category("Hair")
+	c.pick("hair.color", "haircolor.red")
+	c.reset()
+	assert_false(Appearance.is_future(c.current_record()), "Reset returns to the default look shown, not the later build's record")
+	assert_false(c.is_changed(), "which is the look the screen opened with")
+	c.undo()
+	c.undo()
+	assert_false(Appearance.is_future(c.current_record()), "nor does Undo")
+	c.back_button.pressed.emit()
+	if c.question_open():
+		c.discard_button.pressed.emit()
+	# A later build's record of shapes this build does not know: every category opens (an engine error fails
+	# the test), and a kept pick stores a clean record of this build.
+	p.appearance.restore_record({"v": 3, "skin": {"tone": "#a0785a"}, "hair": "braids", "tattoos": ["a", "b"], "scars": {"k": 1},
+		"outfit": null})
+	screen.notify_changed()
+	c = tab.call("press_change") as CreatorScreen
+	for cat: String in OptionRows.CATEGORIES:
+		c.show_category(cat)
+		await get_tree().process_frame
+	c.show_category("Scars")
+	var scar := str(Appearance.option_ids("scar")[0])
+	assert_true(c.pick("scar." + scar.get_slice(".", 1), true), "a scar on")
+	c.begin_button.pressed.emit()
+	var rec: Dictionary = p.appearance.record()
+	assert_true(Appearance.is_valid(rec, p.appearance.ancestry()) and (rec.scars as Array).has(scar), "kept as a valid record of this build: %s" % [rec])
+	assert_eq(events[0], 1, "appearance_changed fired once")
+	Events.appearance_changed.disconnect(count)

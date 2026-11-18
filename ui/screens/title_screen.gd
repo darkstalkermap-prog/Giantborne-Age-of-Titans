@@ -485,8 +485,15 @@ func _on_creator_closed(result: Dictionary, mode_name: String, options: Dictiona
 		o["appearance"] = (result.appearance as Dictionary).duplicate(true)
 		start_game(mode_name, o)
 		return
-	if UiNav.focusable(_creator_from):
-		_creator_from.grab_focus.call_deferred()
+	# The focus goes back to the button that opened the creator. The launcher's world start (creator_start)
+	# opened it from no button, and with a display it did so while the warm-up still held New Game and
+	# Continue, when the focus could only be on Sandbox: then the title's first entry takes it (M10 gate, LA-6).
+	var back_to: Control = _creator_from if _creator_from in [_new_game, _prologue, _skip] else null
+	if not UiNav.focusable(back_to):
+		refresh_focus()
+		back_to = first_focus()
+	if UiNav.focusable(back_to):
+		back_to.grab_focus.call_deferred()
 
 
 ## The creator open over the title (null when none).

@@ -7,6 +7,12 @@ extends IntegrationSuite
 ## and Discard restores the look in memory without an event. The checkpoint re-taken and written at a real
 ## shrine, Continue after quitting and a death reload: tests/slow/test_shrine_appearance_saves.gd (a world
 ## start and a shrine scene cost more than the default tier's cap allows; P42 moved its shrine case likewise).
+##
+## A look made by a later build of the game (M10 gate, LB-1; plan M10 §2.2: kept untouched): the tab says the
+## default look is shown, the creator starts from that default and never holds the later build's record,
+## Keep without a change leaves the record exactly as it was, a kept change stores this build's record and
+## the giant wears it. Cancel, Reset, a record of shapes this build does not know and the save's side:
+## tests/slow/test_shrine_appearance_saves.gd.
 
 var stack: ScreenStack
 var changed: Array = []   ## [tick, entity_id] of Events.appearance_changed
@@ -102,3 +108,50 @@ func test_the_appearance_tab_keeps_and_cancels_a_look() -> void:
 	screen = stack.open("shrine", {"player": p}) as ShrineScreen
 	tab = screen.tab("Appearance")
 	assert_eq((screen.tab_buttons()[screen.tabs.find(tab)] as Button).text, "Appearance", "no (new) once seen")
+
+
+## The look of tests/fixtures/saves/v2_appearance_future.json: v 2, a hair style, "horns" and a skin block this
+## build does not know.
+func _later_look() -> Dictionary:
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/v2_appearance_future.json"))
+	return (doc.character as Dictionary).appearance
+
+
+func test_a_later_builds_look_is_not_edited_and_a_kept_change_replaces_it() -> void:
+	var p := spawn_player(Vector3(0, 0.05, 0))
+	await step_ticks(1)
+	var later := _later_look()
+	assert_true(Appearance.is_future(later), "the fixture's look is a later build's")
+	p.appearance.restore_record(later)
+	var stored := JSON.stringify(p.appearance.record())
+	var screen := stack.open("shrine", {"player": p}) as ShrineScreen
+	var tab := screen.tab("Appearance")
+	screen.show_tab(screen.tabs.find(tab))
+	assert_true(str(tab.call("summary_text")).begins_with("Hair: long, combed back, chestnut"), "the tab describes the default look that is shown")
+	assert_true(str(tab.call("summary_text")).ends_with(Appearance.NOTE_FUTURE), "and says why: %s" % tab.call("summary_text"))
+	# Keep without a change: the later build's record stays exactly as it was.
+	var c := tab.call("press_change") as CreatorScreen
+	assert_true(c != null and c.later_build, "the creator knows the look is a later build's")
+	if c == null:
+		return
+	assert_false(Appearance.is_future(c.current_record()), "it never holds the later build's record")
+	assert_true(OptionRows.same(c.current_record(), Appearance.default_record()), "it starts from the default look, the one shown")
+	assert_false(c.is_changed(), "with nothing changed")
+	c.begin_button.pressed.emit()
+	assert_false(stack.is_open("creator"), "Keep closes the creator")
+	assert_eq(JSON.stringify(p.appearance.record()), stored, "Keep without a change leaves the later build's record untouched")
+	assert_eq(changed.size(), 0, "without an event")
+	assert_eq(str(tab.call("result_text")), "Your look is unchanged.", "and the tab says so")
+	# A change, kept: this build's record replaces it and the giant wears the pick.
+	c = tab.call("press_change") as CreatorScreen
+	c.show_category("Hair")
+	assert_false(c.set_record(later), "the screen refuses a later build's record")
+	assert_true(c.pick("hair.style", "hair.shaved"), "a new hair style")
+	c.begin_button.pressed.emit()
+	var rec: Dictionary = p.appearance.record()
+	assert_false(Appearance.is_future(rec), "a kept change stores this build's record")
+	assert_eq(str(rec.hair.style), "hair.shaved", "with the pick")
+	assert_false(rec.has("horns"), "and nothing of the later build's record under this build's version")
+	assert_eq(str(p.appearance.look().hair_mesh), str(Appearance.option("hair.shaved").get("mesh", "")), "the giant wears the hair chosen")
+	assert_eq(changed.size(), 1, "appearance_changed fired once")
+	assert_false(str(tab.call("summary_text")).contains(Appearance.NOTE_FUTURE), "the tab's note is gone")

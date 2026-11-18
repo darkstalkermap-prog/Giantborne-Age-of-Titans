@@ -8,7 +8,9 @@ extends UiScreen
 ##       {"appearance": record, "begin": true} from the button's own pressed handler, and the title starts the
 ##       game in that same call stack (browsers grant the pointer lock only inside the click);
 ##   open("creator", {"context": "shrine", "player": GiantPlayer, "shrine": Shrine, "appearance": record})
-##       the shrine's Appearance tab; "Keep this look" closes with {"appearance": record}.
+##       the shrine's Appearance tab; "Keep this look" closes with {"appearance": record}. A record made by a
+##       later build of the game is not edited: the screen starts from the default look (what the giant shows
+##       for it) and only a kept change replaces it (`later_build`).
 ## Back / Cancel, Esc and pad B close with {"cancelled": true} at once while the record equals the one the
 ## screen opened with; otherwise they ask "Discard your changes?" (Keep editing, where the focus starts, or
 ## Discard). It writes nothing itself: the title and the tab do what the result says.
@@ -53,6 +55,8 @@ const AXIS_DEADZONE := 0.2
 const TRIGGER_ZOOM_S := 4.0
 ## A Randomize that draws the same look tries again, at most this often.
 const RANDOM_TRIES := 8
+## The room kept under the Presets list for the focused preset's description (lines of its 12 px text).
+const PRESET_NOTE_LINES := 3
 const HINT_PAD := "LB/RB: category   D-pad: choose   A: select   Y: randomize   X: view   R-stick, LT/RT: turn, zoom   View: undo   B: back"
 const HINT_KEYS := "PgUp/PgDn: category   Arrows: choose   R: randomize   V: view   Q/E, +/-: turn, zoom   Ctrl+Z: undo   Ctrl+Enter: %s   Esc: back"
 
@@ -67,6 +71,11 @@ var ancestry := ""
 ## The record shown now, and the one the screen opened with (Back asks when they differ).
 var record: Dictionary = {}
 var opened_with: Dictionary = {}
+## True when the giant's own record was made by a later build of the game (Appearance.is_future): the screen
+## shows and edits the default look instead, Keep with a change stores this build's record in its place, and
+## Keep without one, like Cancel, leaves the later build's record as it was (plan M10 §2.2: kept untouched;
+## Appearance.NOTE_FUTURE: "the default look is shown until you change it").
+var later_build := false
 ## The records before each change, the newest last (Undo).
 var history: Array = []
 var preview: GiantPreview
@@ -98,6 +107,7 @@ var _root_3d_off := false
 var _axes := {}                       ## JoyAxis -> value (the right stick and the triggers)
 var _hints := {}
 var _focused_row: OptionRows.Row = null
+var _preset_note: Label = null        ## the focused preset's description, under the Presets list
 
 
 func _ready() -> void:
@@ -112,6 +122,11 @@ func _ready() -> void:
 	var given: Variant = args.get("appearance")
 	var base: Dictionary = given if typeof(given) == TYPE_DICTIONARY and not (given as Dictionary).is_empty() \
 		else (player.appearance.record() if _has_appearance() else Appearance.default_record())
+	# A later build's record (v above this build's) is never edited: the screen starts from the default look,
+	# which is what the giant shows for it, and only a kept change replaces it (M10 gate, LB-1).
+	later_build = Appearance.is_future(base)
+	if later_build:
+		base = Appearance.default_record()
 	record = Appearance.sanitize(base, ancestry).record
 	opened_with = record.duplicate(true)
 	_build()
@@ -213,6 +228,8 @@ func is_changed() -> bool:
 ## Puts `new_record` on (sanitized for the line), entering the old one into the undo history; the changes of
 ## one slider in a row (`merge_key`) are one step. False when nothing changed.
 func set_record(new_record: Dictionary, merge_key := "") -> bool:
+	if Appearance.is_future(new_record):
+		return false   # a later build's record is never shown or edited here
 	var r: Dictionary = Appearance.sanitize(new_record, ancestry).record
 	if OptionRows.same(r, record):
 		return false
@@ -273,9 +290,13 @@ func rng() -> RandomNumberGenerator:
 
 
 ## Begin (New Game) or Keep this look (a shrine): closes with the record. The title starts the game in this
-## call stack, from the button's own pressed handler.
+## call stack, from the button's own pressed handler. At a shrine, Keep without a change on a later build's
+## look closes as Cancel does (`later_build`).
 func begin() -> void:
 	if question_open():
+		return
+	if later_build and context == "shrine" and not is_changed():
+		close({"cancelled": true})   # nothing was changed: the later build's record stays as it is
 		return
 	var out: Dictionary = Appearance.sanitize(record, ancestry).record
 	if context == "shrine":
@@ -380,6 +401,9 @@ func _build_rows() -> void:
 			r.picked.connect(_on_picked)
 			r.focused.connect(_on_row_focused)
 			built.append(r)
+		if _category == "Presets":
+			_preset_note = _build_preset_note()
+			box.add_child(_preset_note)
 		_rows_box.add_child(box)
 		_category_boxes[_category] = box
 		_category_rows[_category] = built
@@ -387,6 +411,22 @@ func _build_rows() -> void:
 	_show_values()
 	if _scroll != null:
 		_scroll.scroll_vertical = 0
+
+
+## The focused preset's description: one label under the list, of a fixed height, so that no preset button
+## moves when the focus does (M10 gate, LA-1: a press moves the focus, and a button that jumps under the
+## pointer before the release loses the click).
+func _build_preset_note() -> Label:
+	var note := UiKit.label("", 12, UiKit.MUTED)
+	note.name = "PresetNote"
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size = Vector2(0, PRESET_NOTE_LINES * (note.get_theme_font("font").get_height(12) + 3.0))
+	return note
+
+
+## The preset description shown under the Presets list ("" before a preset has had the focus).
+func preset_description() -> String:
+	return _preset_note.text if _preset_note != null else ""
 
 
 func _on_picked(r: OptionRows.Row, value: Variant) -> bool:
@@ -416,6 +456,8 @@ func _on_picked(r: OptionRows.Row, value: Variant) -> bool:
 
 func _on_row_focused(r: OptionRows.Row) -> void:
 	_focused_row = r
+	if r is OptionRows.PresetRow and _preset_note != null:
+		_preset_note.text = (r as OptionRows.PresetRow).description
 	_frame_for(r)
 	_update_fade()
 
@@ -559,6 +601,9 @@ func _input(event: InputEvent) -> void:
 	if question_open():
 		return
 	if _handle_key(event as InputEventKey) or _handle_pad(event as InputEventJoypadButton):
+		# The root scene's _input (scripts/main.gd), which notes the device for the footer's hint and the
+		# prompts, runs after this one and never sees an event consumed here (M10 gate, LA-4).
+		InputBindings.note_device(event)
 		get_viewport().set_input_as_handled()
 
 
@@ -685,7 +730,7 @@ func _build() -> void:
 	holder.mouse_filter = Control.MOUSE_FILTER_PASS
 	main.add_child(holder)
 	preview = GiantPreview.new()
-	preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	preview.window_pixels = true   # fills the holder at the window's resolution (GiantPreview.fit_window_pixels)
 	holder.add_child(preview)
 	var views := HBoxContainer.new()
 	views.name = "Views"

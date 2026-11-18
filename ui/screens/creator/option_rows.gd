@@ -7,7 +7,9 @@ extends RefCounted
 ##
 ## Row kinds (the P16 focus rules: a row is one line of focusable controls, up / down between rows):
 ##   * swatch  - a row of colour buttons, every one named; moving the focus onto a swatch applies it at once
-##               (moving previews and keeps, like the cyclers), A or a click too. A locked swatch takes the
+##               (moving previews and keeps, like the cyclers), A or a click too. The focus that enters the
+##               row with the keyboard or the pad lands on the chosen swatch; a mouse press stays on the
+##               swatch it pressed and applies it (M10 gate, LA-2). A locked swatch takes the
 ##               focus but applies nothing: the line under the row says why ("Choose your line at a shrine of
 ##               the Old Kingdom").
 ##   * cycler  - one focusable button "<  Long, combed back  >": left / right (D-pad, arrows) step through the
@@ -16,7 +18,10 @@ extends RefCounted
 ##   * slider  - an HSlider (the greys): left / right move it; the changes of one slider in a row are one step
 ##               of the undo history.
 ##   * toggle  - a CheckButton (scars): A or a click turns it on or off.
-##   * preset  - a button per preset: A or a click puts the whole preset on (its description shows under it).
+##   * preset  - a button per preset: A or a click puts the whole preset on. The focused preset's description
+##               shows in one place under the list (CreatorScreen's), so that no button moves when the focus
+##               does: a mouse press moves the focus, and a button that jumps under the pointer between the
+##               press and the release loses the click (M10 gate, LA-1).
 ## Every design row (tattoos, war paint, scars, the ancestry mark) has a note line that says "Hidden by your
 ## clothing" while the current outfit covers its region (Appearance.covered_regions with the giant's index).
 
@@ -118,7 +123,8 @@ static func choices(spec: Dictionary, ancestry_id: String) -> Array:
 ## The value a row shows from `record` (an option id, a grey, "auto"/"none", or a bool for a scar toggle).
 static func value_of(record: Dictionary, key: String) -> Variant:
 	if key.begins_with("scar."):
-		return (record.get("scars", []) as Array).has("scar." + key.get_slice(".", 1))
+		var scars: Variant = record.get("scars", [])
+		return typeof(scars) == TYPE_ARRAY and (scars as Array).has("scar." + key.get_slice(".", 1))
 	if key.begins_with("preset."):
 		return str(record.get("preset", "")) == key.substr(7)
 	var parts := key.split(".")
@@ -151,7 +157,7 @@ static func with_value(record: Dictionary, key: String, value: Variant) -> Dicti
 ## the record comes back as it was).
 static func with_scar(record: Dictionary, scar_id: String, on: bool) -> Dictionary:
 	var out := record.duplicate(true)
-	var scars: Array = (out.get("scars", []) as Array).duplicate()
+	var scars: Array = (out.get("scars") as Array).duplicate() if typeof(out.get("scars")) == TYPE_ARRAY else []
 	if on and not scars.has(scar_id):
 		if scars.size() >= Appearance.MAX_SCARS:
 			return record.duplicate(true)
@@ -409,11 +415,13 @@ class SwatchRow extends Row:
 		return {}
 
 	## Moving along the row applies each swatch; entering the row from another (up, down, Tab) lands on the
-	## selected swatch and changes nothing.
+	## selected swatch and changes nothing. A mouse press gives the swatch under the pointer the focus before
+	## its own press: it keeps the focus and is applied at once (sending the focus to the selected swatch
+	## while the button is held would make the pressed swatch drop its click).
 	func _on_swatch_focus(id: String) -> void:
 		if not _inside:
 			_inside = true
-			if id != selected and buttons.has(selected):
+			if id != selected and buttons.has(selected) and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 				_redirect.call_deferred()
 				return
 		_pick(id)
@@ -610,14 +618,16 @@ class ToggleRow extends Row:
 			picked.emit(self, on)
 
 
-## A preset: its name as a button, its description under it.
+## A preset: its name as a button. Its description is shown by the screen, in one place under the list, while
+## the preset has the focus (a description that opened under the focused button moved every button below it).
 class PresetRow extends Row:
 	var button: Button
-	var _desc: Label
+	var description := ""
 
 	func _init(p_spec: Dictionary) -> void:
 		super(p_spec)
 		title.visible = false
+		description = str(p_spec.get("description", ""))
 		button = Button.new()
 		button.name = "Preset"
 		button.text = str(p_spec.get("label", ""))
@@ -626,12 +636,6 @@ class PresetRow extends Row:
 		button.add_theme_font_size_override("font_size", 16)
 		button.pressed.connect(func() -> void: picked.emit(self, true))
 		add_child(button)
-		_desc = UiKit.label(str(p_spec.get("description", "")), 12, UiKit.MUTED)
-		_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_desc.visible = false
-		add_child(_desc)
-		button.focus_entered.connect(func() -> void: _desc.visible = true)
-		button.focus_exited.connect(func() -> void: _desc.visible = false)
 		_wire_focus(button)
 
 	func focus_controls() -> Array:
