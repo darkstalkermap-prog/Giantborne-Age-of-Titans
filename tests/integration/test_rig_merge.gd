@@ -2,9 +2,11 @@ extends IntegrationSuite
 ## P22 (plan M6-M9 §3.4 designs 1 and 3, decision 9): merged rigs. Every humanoid and quadruped rig
 ## is one vertex-coloured mesh per animated pivot plus the weapon, all sharing one material (the
 ## scene's), which the rig copies once per actor: a hit flash sets its emission and a status tint
-## multiplies its albedo. The giant keeps its chest, belt and head (render layer 2, culled in first
-## person) as meshes of their own and a Hand marker where each hand box was. QuadrupedRig emits
-## `footfall` once per paw pair landing.
+## multiplies its albedo. QuadrupedRig emits `footfall` once per paw pair landing.
+## P43 (plan M10 §2.9, decision 8): the giant is no longer a merged rig. Its row lists the realistic
+## model's skinned meshes under Visual/Body/Model, the layer-2 and layer-3 meshes, and the materials (one
+## ShaderMaterial per surface with the skinned layers on; the glTF's own materials headless); the
+## brain's pivots keep their Hand markers and carry no mesh, and the weapon hangs at WeaponSocket.
 
 ## [scene, meshes under Visual/Body (the plan's estimate in the system doc), weapon mesh name,
 ## whether it has a Visual/LodProxy (the giant never leaves the camera's near range: none)]
@@ -17,8 +19,17 @@ const RIGS := [
 	["res://scenes/enemies/ogre_king.tscn", 6, "ShoulderR/Weapon", true],
 	["res://scenes/npcs/villager.tscn", 5, "", true],
 	["res://scenes/npcs/elder.tscn", 5, "", true],
-	["res://scenes/player/giant.tscn", 8, "ShoulderR/Club", false],
 ]
+## The giant's row (P43): every skinned mesh of the model, and those on layers 2 and 3.
+const GIANT_SKINNED := ["Beard_braided", "Beard_forked", "Beard_full", "Beard_short", "Body_Head", "Body_Limbs",
+	"Body_Torso", "Eyes", "Garment_belt", "Garment_boots", "Garment_bracers", "Garment_braies_core",
+	"Garment_braies_limbs", "Garment_cape", "Garment_furs", "Garment_jerkin", "Garment_leg_wraps", "Garment_pauldron",
+	"Garment_tunic_core", "Garment_tunic_limbs", "Hair_crop", "Hair_long_back", "Hair_long_braided", "Hair_warrior_tail",
+	"Hair_wild_mane"]   # P46: the target catalogue's five styles and three garments
+const GIANT_LAYER_2 := ["Body_Torso", "Garment_belt", "Garment_braies_core", "Garment_cape", "Garment_furs",
+	"Garment_jerkin", "Garment_pauldron", "Garment_tunic_core"]
+const GIANT_LAYER_3 := ["Beard_braided", "Beard_forked", "Beard_full", "Beard_short", "Body_Head", "Eyes", "Hair_crop",
+	"Hair_long_back", "Hair_long_braided", "Hair_warrior_tail", "Hair_wild_mane"]
 const WOLF := "res://scenes/enemies/wolf.tscn"
 
 
@@ -61,16 +72,45 @@ func test_each_rig_is_one_vertex_coloured_mesh_per_pivot() -> void:
 
 
 func test_the_giant_keeps_its_first_person_parts_apart() -> void:
-	var root := (load(GIANT) as PackedScene).instantiate()
-	for part in ["Chest", "Belt", "Head"]:
-		var mi := root.get_node("Visual/Body/Torso/" + part) as MeshInstance3D
-		assert_eq(mi.layers, SceneKit.FP_HIDDEN, "%s on render layer 2 (first person culls it)" % part)
-	for path in ["Visual/Body/ShoulderL/Mesh", "Visual/Body/ShoulderR/Mesh", "Visual/Body/HipL/Mesh"]:
-		assert_eq((root.get_node(path) as MeshInstance3D).layers, 1, "%s on render layer 1" % path)
+	var p := spawn_player(Vector3(0, 0.05, 0))
+	await step_ticks(1)
+	var body := p.get_node("Visual/Body")
+	var model := body.get_node("Model") as GiantModel
+	var names: Array = []
+	var socket := body.get_node("WeaponSocket")
+	for mi in _meshes(body):
+		if socket.is_ancestor_of(mi):
+			continue   # the weapon's own meshes (test_the_giants_weapon_materials_join_and_leave_the_flash_list)
+		assert_true(mi.get_parent() is Skeleton3D and mi.skin != null, "%s is a skinned mesh of the model's skeleton" % mi.name)
+		names.append(str(mi.name))
+	names.sort()
+	assert_eq(names, GIANT_SKINNED, "the meshes under Visual/Body, the weapon's aside, are the model's")
+	for id: String in GIANT_SKINNED:
+		var layer := 3 if GIANT_LAYER_3.has(id) else (2 if GIANT_LAYER_2.has(id) else 1)
+		assert_eq(model.mesh(id).layers, 1 << (layer - 1), "%s on render layer %d" % [id, layer])
+	for pivot in ["HipL", "HipR", "Torso", "ShoulderL", "ShoulderR"]:
+		assert_eq(_meshes(body.get_node(pivot)).size(), 0, "the brain's %s carries no mesh" % pivot)
 	for side in ["ShoulderL", "ShoulderR"]:
-		var hand := root.get_node("Visual/Body/%s/Hand" % side) as Marker3D
-		assert_true(hand != null and hand.position.is_equal_approx(Vector3(0, 0, -1.5)), "%s/Hand marks the hand" % side)
-	root.free()
+		var hand := body.get_node("%s/Hand" % side) as Marker3D
+		assert_true(hand != null and hand.position.is_equal_approx(Vector3(0, 0, -1.5)), "%s/Hand marks the brain's hand" % side)
+	assert_true(body.get_node_or_null("WeaponSocket") is Node3D, "the weapon's socket")
+	# headless, the glTF's own materials (GiantLook builds none while the skinned layers are off)
+	assert_false(SkinnedRig.layers_enabled(), "the skinned layers are off headless")
+	for id: String in GIANT_SKINNED:
+		assert_true(model.mesh(id).material_override == null, "%s: no ShaderMaterial headless" % id)
+	p.queue_free()
+	await step_ticks(1)
+	# with the skinned layers: one ShaderMaterial per surface, each the giant's own
+	SkinnedRig.enable_for_tests()
+	var q := spawn_player(Vector3(0, 0.05, 0))
+	await step_ticks(1)
+	var mats := GiantLook.materials(q.get_node("Visual/Body/Model") as GiantModel)
+	assert_eq(mats.size(), GIANT_SKINNED.size(), "a material per mesh")
+	var seen := {}
+	for m: Variant in mats:
+		assert_true(m is ShaderMaterial, "a ShaderMaterial (%s)" % m)
+		seen[m] = true
+	assert_eq(seen.size(), mats.size(), "none shared")
 
 
 ## One material copy per actor; a flash is emission, a tint multiplies the albedo; both go away.
@@ -111,9 +151,11 @@ func test_the_giants_weapon_materials_join_and_leave_the_flash_list() -> void:
 	var mats: Array = p.rig.get("_materials")
 	p.rig.set_weapon_visual(null)   # the equipped weapon's own visual leaves first
 	var before := mats.size()
-	assert_eq(before, 1, "bare-handed, the rig's one material")
+	# P43: the realistic body has no rig material (its ShaderMaterials are painted by RigPaint.paint_shaders)
+	assert_eq(before, 0, "bare-handed, no flat material on the flash list")
 	var club := WeaponVisuals.build({"id": "weapon.test", "visual_shape": "sword", "length_m": 1.6})
 	p.rig.set_weapon_visual(club)
+	assert_true(club.get_parent() == p.get_node("Visual/Body/WeaponSocket"), "the weapon hangs at the socket")
 	assert_true(mats.size() > before, "the weapon's materials join the list")
 	for mi in _meshes(club):
 		var m := mi.material_override as StandardMaterial3D

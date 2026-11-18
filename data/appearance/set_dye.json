@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.dye",
+	"type": "appearance_set",
+	"category": "dye",
+	"display_name": "Dyes",
+	"description": "P42 (plan M10 §2.3): each garment takes the dye of its slot; undyed is the primary's default, dark leather the secondary's (the default preset's).",
+	"options": [
+		{"key": "undyed", "name": "Undyed", "color": "#73614a", "default": true},
+		{"key": "dark_leather", "name": "Dark leather", "color": "#2a2622"},
+		{"key": "madder", "name": "Madder red", "color": "#7a2a22"},
+		{"key": "woad_blue", "name": "Woad blue", "color": "#2e3f66"},
+		{"key": "weld_yellow", "name": "Weld yellow", "color": "#8f7a2e"},
+		{"key": "moss_green", "name": "Moss green", "color": "#4a5a32"},
+		{"key": "walnut", "name": "Walnut", "color": "#4e3a28"},
+		{"key": "bone", "name": "Bone", "color": "#c8bca4"}
+	]
+}

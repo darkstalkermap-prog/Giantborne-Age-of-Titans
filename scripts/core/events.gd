@@ -205,6 +205,15 @@ signal world_event_started(tick: int, event_id: String)
 ## Emitter: WorldEvent (P37). Listeners: Quests, the HUD, Audio.
 signal world_event_ended(tick: int, event_id: String, outcome: String)
 
+# --------------------------------------------------------------------------- appearance (M10)
+# The signal of the M10 plan (§2.11), declared by P42. Presentation only: nothing in the simulation, AI,
+# combat, world or quests listens to it; GameSession's checkpoint rule does.
+
+## The player kept a new look at a shrine (the creator's "Keep this look": P44's Appearance tab calls
+## PlayerAppearance.set_record). Emitter: PlayerAppearance (P42). Listener: GameSession (the shrine's
+## checkpoint is taken again at once, as for the other shrine choices: M8 gate F15).
+signal appearance_changed(tick: int, entity_id: String)
+
 # --------------------------------------------------------------------------- package anchors
 # A package that needs a signal nobody declared above adds it directly below its own anchor.
 
@@ -291,3 +300,17 @@ signal world_event_ended(tick: int, event_id: String, outcome: String)
 ## @anchor P39
 
 ## @anchor P40
+
+# M10 (written by P42, plan M10 §1.5).
+
+## @anchor P41
+
+## @anchor P43
+
+## @anchor P44
+
+## @anchor P45
+
+## @anchor P46
+
+## @anchor P47

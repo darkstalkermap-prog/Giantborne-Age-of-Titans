@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.wanderer",
+	"type": "appearance_preset",
+	"display_name": "The Wanderer",
+	"description": "Long chestnut hair combed back, a full beard, the wanderer's braies: the giant of the first renders.",
+	"appearance": {
+		"v": 1,
+		"preset": "appearance_preset.wanderer",
+		"skin": "skin.ruddy",
+		"eyes": "eyes.grey_green",
+		"hair": {"style": "hair.long_back", "color": "haircolor.chestnut", "grey": 0.12},
+		"beard": {"style": "beard.full", "color": "", "grey": 0.2},
+		"tattoos": {"arms": "", "chest": "", "back": "", "face": "", "ink": "ink.woad"},
+		"paint": {"design": "", "color": "paintcolor.chalk"},
+		"scars": [],
+		"mark": "auto",
+		"outfit": {"set": "outfit.wanderer", "primary": "dye.undyed", "secondary": "dye.dark_leather"}
+	}
+}

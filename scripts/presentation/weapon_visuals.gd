@@ -8,7 +8,7 @@ extends RefCounted
 ##
 ## Shapes by visual_shape: club (a tapered cudgel), sword (grip, guard, blade), hammer (shaft and a
 ## wide iron head), tree (a trunk with branches and a canopy at the far end; the canopy is on render
-## layer 2, which the camera hides in first person). A reinforced weapon (id ending in
+## layer 3, which the camera hides in first person and pressed close; P43). A reinforced weapon (id ending in
 ## "_reinforced") gets iron bands. Presentation only.
 ##
 ## P31 (plan M6-M9 §5.12): axe (a long haft with a broad bearded iron head on one side and a back
@@ -21,7 +21,10 @@ extends RefCounted
 ## banded fist at the far end - the sweep runs from the elbow to the knuckles).
 
 const NODE_NAME := "Weapon"
-const FP_HIDDEN_LAYER := 2
+## The render layers (a bitmask) of the parts the camera hides in first person and when pressed close
+## (the tree's canopy, the pine's needles): render layer 3, the giant's head layer (P43, plan M10
+## decision 8: layer 2 is the realistic giant's torso, culled only in first person).
+const FP_HIDDEN_LAYER := 1 << (CameraRig.HEAD_LAYER - 1)
 ## The arm pose (yaw, pitch in degrees) the tree is carried in: raised to the right, so the trunk
 ## stays clear of the view centre in first person and out of the ground at rest.
 const TREE_IDLE_POSE := Vector2(24.0, 30.0)

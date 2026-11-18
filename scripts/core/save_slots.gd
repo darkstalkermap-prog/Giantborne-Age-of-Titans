@@ -20,6 +20,11 @@ extends RefCounted
 ##   flags; _migrate_1_to_2 adds them (the flags for the stones the save proves it reached: M7
 ##   polish). The slot name and the project name stay, so desktop and web saves are kept.
 ##   Tests point path_override at user://test_saves/.
+##   M10 (P42, plan M10 §2.2): schema 2 still - the character may carry the optional "appearance" (the
+##   giant's look, versioned by its own "v"; absent = the default look, so every older save loads as it
+##   was and a 0.9 build keeps the key through Continue and its checkpoints). A broken or unknown look is
+##   repaired by sanitize, never a reason to refuse a file or fall back to the backup; its notes join
+##   read()'s message beside the dropped ids ("Your giant's look could not be read; ...").
 
 const DIR := "user://saves"
 const SLOT := "valley_1"
@@ -97,13 +102,15 @@ static func keep_newer_main() -> String:
 
 
 ## Reads the slot. Returns {"ok", "data", "source": "main"|"backup"|"none", "message",
-## "future_version", "dropped"}: data is the validated, sanitized document; message explains a
-## recovery, a rejected newer file or dropped ids ("" when the main file loaded cleanly).
+## "future_version", "dropped", "notes"}: data is the validated, sanitized document; message explains a
+## recovery, a rejected newer file, dropped ids and (M10) the look's repair notes ("" when the main file
+## loaded cleanly).
 static func read() -> Dictionary:
 	var p := path()
 	var r := SaveIO.read_json(p, SCHEMA_VERSION)
 	var out := {"ok": false, "data": {}, "source": str(r.source), "message": str(r.message),
-		"future_version": int(r.get("future_version", 0)), "dropped": PackedStringArray()}
+		"future_version": int(r.get("future_version", 0)), "dropped": PackedStringArray(),
+		"notes": PackedStringArray()}
 	if int(out.future_version) > 0 and FileAccess.file_exists(p):
 		var keep := keep_newer_main()
 		if keep == "":
@@ -136,8 +143,12 @@ static func read() -> Dictionary:
 	out.ok = true
 	out.data = clean.data
 	out.dropped = clean.dropped
+	out.notes = clean.notes
 	if not (clean.dropped as PackedStringArray).is_empty():
 		out.message = _join(out.message, "Dropped ids this build does not know: %s." % ", ".join(clean.dropped))
+	# M10 (P42): what repairing the giant's look did, in the player's words.
+	for note: String in clean.notes:
+		out.message = _join(out.message, note)
 	return out
 
 
@@ -322,7 +333,8 @@ static func _is_vec3(v: Variant) -> bool:
 
 
 ## A validated document with the character normalized and unknown ids dropped: abilities,
-## weapons, ancestry (CharacterState.sanitize) and inventory items. {"data", "dropped"}.
+## weapons, ancestry (CharacterState.sanitize) and inventory items; M10: the look repaired (its notes).
+## {"data", "dropped", "notes"}.
 static func sanitize(doc: Dictionary) -> Dictionary:
 	var out := doc.duplicate(true)
 	var c := CharacterState.sanitize(doc.character)
@@ -337,7 +349,7 @@ static func sanitize(doc: Dictionary) -> Dictionary:
 				inventory.erase(item)
 				if not dropped.has(id):
 					dropped.append(id)
-	return {"data": out, "dropped": dropped}
+	return {"data": out, "dropped": dropped, "notes": c.get("notes", PackedStringArray())}
 
 
 ## Removes the slot, its backup and a stray temp file; with include_rejected also the

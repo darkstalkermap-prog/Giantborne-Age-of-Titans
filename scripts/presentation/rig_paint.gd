@@ -2,7 +2,8 @@ class_name RigPaint
 extends RefCounted
 ## What ActorRig and QuadrupedRig share since P22 (plan M6-M9 §3.4 designs 1 and 2, decision 9):
 ## the actor's material copies, hit flashes, status tints and the distance level of detail.
-## Presentation only.
+## Presentation only. P43: paint_shaders() gives the realistic giant's ShaderMaterials the same tint and
+## flash through their `tint` and `flash` uniforms.
 ##
 ## Materials. A merged rig (SceneKit.merge_rig) is a few vertex-coloured meshes that all use one
 ## material, so a rig makes one unique copy per source material (unique_copy): one material per
@@ -93,6 +94,20 @@ static func paint(materials: Array[StandardMaterial3D], base_colors: Array[Color
 	for i in materials.size():
 		materials[i].albedo_color = base_colors[i] * mult
 		materials[i].emission = glow
+
+
+## P43 (plan M10 §2.9 "Paint"): the realistic giant's ShaderMaterials (GiantLook gives each surface its
+## own) take the same tint and flash as uniforms: every giant shader declares `tint` (vec4: the status
+## colour, its strength in alpha; the albedo times white.lerp(rgb, strength), as tint_multiplier) and
+## `flash` (vec3: the emission, as flash_emission).
+static func paint_shaders(materials: Array, tint: Color, flash: float, flash_color: Color) -> void:
+	var t := Vector4(tint.r, tint.g, tint.b, clampf(tint.a, 0.0, 1.0))
+	var glow := flash_emission(flash, flash_color)
+	var f := Vector3(glow.r, glow.g, glow.b)
+	for m: Variant in materials:
+		if m is ShaderMaterial:
+			(m as ShaderMaterial).set_shader_parameter("tint", t)
+			(m as ShaderMaterial).set_shader_parameter("flash", f)
 
 
 ## Applies the distance LOD of `lod_m` metres to the rig `visual` (its Body and LodProxy, see the

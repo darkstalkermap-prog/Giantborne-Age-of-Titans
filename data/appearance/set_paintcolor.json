@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.paintcolor",
+	"type": "appearance_set",
+	"category": "paintcolor",
+	"display_name": "War paint colour",
+	"description": "P42 (plan M10 §2.3).",
+	"options": [
+		{"key": "chalk", "name": "Chalk", "color": "#dcd6c8", "default": true},
+		{"key": "ochre", "name": "Ochre", "color": "#a8541e"},
+		{"key": "woad", "name": "Woad", "color": "#23407a"},
+		{"key": "blood", "name": "Blood", "color": "#7a1410"},
+		{"key": "ash", "name": "Ash", "color": "#8c8a84"},
+		{"key": "soot", "name": "Soot", "color": "#18181c"}
+	]
+}

@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.hair",
+	"type": "appearance_set",
+	"category": "hair",
+	"display_name": "Hair",
+	"description": "P42 (plan M10 §2.3): the hair styles (the floor's three and the look pass's three, P46); mesh is a giant index mesh id, scalp_tint the hair colour on the scalp.",
+	"options": [
+		{"key": "shaved", "name": "Shaved", "mesh": "", "scalp_tint": 0.35},
+		{"key": "crop", "name": "Cropped", "mesh": "Hair_crop", "scalp_tint": 1.0},
+		{"key": "long_back", "name": "Long, combed back", "mesh": "Hair_long_back", "scalp_tint": 1.0, "default": true},
+		{"key": "shoulder", "name": "Shoulder length", "mesh": "Hair_long_back", "scalp_tint": 1.0, "length": 0.6},
+		{"key": "long_braided", "name": "Long, two braids", "mesh": "Hair_long_braided", "scalp_tint": 1.0},
+		{"key": "warrior_tail", "name": "Warrior's tail", "mesh": "Hair_warrior_tail", "scalp_tint": 1.0},
+		{"key": "wild_mane", "name": "Wild mane", "mesh": "Hair_wild_mane", "scalp_tint": 1.0}
+	]
+}

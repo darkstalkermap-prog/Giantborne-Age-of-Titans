@@ -16,6 +16,8 @@ const CREATORS := {
 	# M6-M9: P20 wrote every anchor of the M6-M9 plan's §1.5 table in W12 (and one in each new
 	# schema module of its own for the package that ships the first records).
 	"P20": "res://scripts/world/world_index.gd",
+	# M10: P42 wrote every anchor of the M10 plan's §1.5 table in W25.
+	"P42": "res://scripts/progression/appearance.gd",
 }
 
 const EVENTS_PACKAGES := ["P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10a", "P10b",
@@ -23,6 +25,9 @@ const EVENTS_PACKAGES := ["P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09"
 ## The M6-M9 packages with an anchor in events.gd (plan M6-M9 §1.5: P21-P40, P24 split in two).
 const EVENTS_PACKAGES_M6 := ["P21", "P22", "P23", "P24a", "P24b", "P25", "P26", "P27", "P28", "P29",
 	"P30", "P31", "P32", "P33", "P34", "P35", "P36", "P37", "P38", "P39", "P40"]
+## The M10 packages with an anchor in events.gd (plan M10 §1.5: P42 declares its signal in the
+## "appearance (M10)" block above them).
+const EVENTS_PACKAGES_M10 := ["P41", "P43", "P44", "P45", "P46", "P47"]
 
 ## [file, creator, anchors]
 const TABLE := [
@@ -77,6 +82,10 @@ const TABLE := [
 	["res://scripts/core/schemas/talent_schema.gd", "P20", ["P33"]],
 	["res://scripts/core/schemas/wander_table_schema.gd", "P20", ["P37"]],
 	["res://scripts/core/schemas/world_event_schema.gd", "P20", ["P37"]],
+	# M10 (plan M10 §1.5, written by P42)
+	["res://scripts/core/events.gd", "P42", EVENTS_PACKAGES_M10],
+	["res://scripts/core/game_data.gd", "P42", ["P42", "P46"]],
+	["res://scripts/progression/character_state.gd", "P42", ["P46"]],
 ]
 
 

@@ -19,6 +19,10 @@ extends RefCounted
 ## are dropped like abilities) and "ancestry_chosen" (true once the ancestry was chosen at a
 ## shrine: P33 normalises it to "the ancestry is not ancestry.neutral") - normalize() adds both.
 ## world_start() is the character a campaign started in the world gets.
+## M10 (P42, plan M10 §2.2): the optional "appearance" - the giant's look, written only by the creator,
+## never added here (absent = the default look, so old saves and the exact comparisons of whole
+## characters stay as they were). sanitize() repairs it with Appearance.sanitize (for the character's
+## ancestry) and passes its dropped ids and notes up; validate() never fails a character over its look.
 
 const DEFAULT_ID := "char.valley_1"
 const DEFAULT_DEFINITION := "player.giant"
@@ -272,7 +276,18 @@ static func sanitize(d: Dictionary) -> Dictionary:
 		out["resources"] = res
 	elif d.has("resources"):
 		out.erase("resources")
-	return {"data": out, "dropped": dropped}
+	# M10 (P42, plan M10 §2.2): the look, when the character has one (absent stays absent: the default
+	# look). Repaired for the character's line, never a failure; its dropped ids join the others and its
+	# notes go up to SaveSlots.read()'s message.
+	var notes := PackedStringArray()
+	if d.has("appearance"):
+		var look := Appearance.sanitize(d.appearance, ancestry)
+		out["appearance"] = look.record
+		for id: String in look.dropped:
+			_append_unique_packed(dropped, id)
+		notes.append_array(look.notes)
+	## @anchor P46
+	return {"data": out, "dropped": dropped, "notes": notes}
 
 
 ## Structural problems ("character.<key>: ..."); [] when the dictionary can be loaded. Unknown

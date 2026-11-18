@@ -1,0 +1,14 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.paint",
+	"type": "appearance_set",
+	"category": "paint",
+	"display_name": "War paint",
+	"description": "P42 (plan M10 §2.3): the war paints (the floor's two and the look pass's two, P46), drawn on top of the skin and tattoos.",
+	"options": [
+		{"key": "face_stripes", "name": "Face stripes", "design": "paint_face_stripes", "region": "face"},
+		{"key": "shoulder_bands", "name": "Shoulder bands", "design": "paint_shoulder_bands", "region": "arms"},
+		{"key": "full_face", "name": "Full face", "design": "paint_full_face", "region": "face"},
+		{"key": "back_hand", "name": "Hand print", "design": "paint_back_hand", "region": "back"}
+	]
+}

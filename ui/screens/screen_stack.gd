@@ -43,6 +43,8 @@ const SCREENS := {
 	"journal": "res://ui/screens/journal_screen.gd",           # P27
 	"ancestry": "res://ui/screens/ancestry_screen.gd",         # P33
 	"yield": "res://ui/screens/yield_prompt.gd",               # P34
+	# M10 (pre-declared by P42, plan M10 §1.5, §2.10)
+	"creator": "res://ui/screens/creator/creator_screen.gd",   # P44
 }
 ## Input action -> screen, used only while no screen is open (an action not in the InputMap yet -
 ## map and journal until P27 binds them - is skipped).

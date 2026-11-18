@@ -17,6 +17,7 @@ about 30 minutes per player.
 | The world's music and ambience on speakers and headphones (§8.7, M9) | **NOT RUN** (the owner's listening pass) |
 | Real browsers (§11, M9: load time with the multi-part pack, streaming hitches, a Continue and a fast travel, audio in a hidden tab) | **NOT RUN** (the owner's); the container's headless Chromium runs automated: `tools/web/world_check.mjs` (a Continue of a world save, a fast travel, a 60 s walk across region borders), `stream_check.mjs --world --audio`, `audio_check.mjs`, `world_start_check.mjs` - software WebGL, indicative only |
 | Real gamepad: the map, journal, track and pin bindings (§6 rows 16-21, M9) | **NOT RUN** (the owner runs it); the bindings automated: `tests/integration/test_map_screen.gd`, `test_journal.gd`, `test_tracked_quest.gd`, `test_ui_focus.gd` |
+| Creator sheet (§12, M10: New Game through the creator, the shrine's Appearance tab, with a pad, a keyboard and a mouse) | **NOT RUN** (the owner runs it); the flows automated: `tests/integration/test_creator_screen.gd`, `test_creator_layout.gd`, `test_shrine_appearance.gd`, `tests/slow/test_creator_controls.gd`, `test_shrine_appearance_saves.gd` |
 
 The recommended owner checkpoints after waves 1 and 8 (plan §1.3) use the same sheets (§4 and §5).
 
@@ -465,3 +466,52 @@ On a machine with a GPU, also run the container's checks with their strict forms
 indicative only (they pass holes placed on the main thread's stalls - since W23 also a hole the recording's end
 cut short - and under load they can fail on holes the placement misses). Write the results under the session in `docs/USABILITY_RESULTS.md` and the frame
 and load times beside the reference-PC table in `docs/PERFORMANCE.md`.
+
+## 12. Creator sheet (owner, M10)
+
+The character creator (plan M10 §2.10; `docs/systems/P44.md`) on the private preview link and on desktop:
+once with a pad, once with the keyboard alone, once with the mouse. Start from a cleared site (the browser's
+data) or a deleted save so that New Game has no save to replace; then repeat rows 1-3 with a save.
+
+| # | Check | Pad | Keyboard | Mouse |
+| --- | --- | --- | --- | --- |
+| 1 | **New Game opens the creator** ("Shape your giant"); with a save the replace question comes first. The title says "Preparing..." for a moment on the first start (desktop): how long? | | | |
+| 2 | **Back without a change** returns to the title at once, the save untouched (Continue still there). **Back after a change** asks "Discard your changes?" with Keep editing focused; Keep editing keeps the look, Discard leaves. | | | |
+| 3 | **Begin your journey** starts the prologue in the new look (pointer lock and the camera work at once in the browser); the skip choice's **Begin in the Old Kingdom** starts the world. | | | |
+| 4 | **Every category** (Presets, Skin, Eyes, Hair, Beard, Tattoos, War paint, Scars, Clothing) reachable: LB / RB, PageUp / PageDown, or a click on its tab; the focus never lost after a switch, a Randomize or an Undo. | | | |
+| 5 | **Every row**: the D-pad or the arrows move through the swatches and apply them at once; the greys move by the slider; a scar toggles; each swatch's name shows; a locked option says why. | | | |
+| 6 | **The preview**: turns (right stick, Q and E, a mouse drag) and zooms (LT / RT, + and -, the wheel); X or V (or the buttons) cycle Full, Face, Back and Game view; Hair shows the head from behind. | | | |
+| 7 | **Randomize** (Y or R) changes only the open category; **Randomize all** everything but the clothes; **Undo** (View, Ctrl+Z, the button) steps back through swatches, randomizes, a preset and Reset. | | | |
+| 8 | **Reading in play**: a tattoo under the clothes says "Hidden by your clothing" and the clothes fade while it is focused; Game view shows the giant from the game's camera beside a soldier. Which designs could you see in Game view? | | | |
+| 9 | **A shrine**: the seventh tab "Appearance (new)" until opened; "Change your look..." opens the creator over the shrine; Keep this look changes the giant and saves (quit to the title and Continue: the look is there); Cancel after a change asks and restores the old look. | | | |
+| 10 | **The launcher's open-world start** (desktop: `--mode=world --creator`) opens the creator at once; Back leaves you at the title. | | | |
+| 11 | **The layout** at 1280x720 and at the browser's full screen: nothing cut, nothing overlapping, the footer's hint readable. | | | |
+
+Questions after the sheet: which option did you look for and not find? Which choice made the biggest
+difference, and which looked the same as another (the eye colours, the scars)? Was anything slow to
+answer (a swatch, a category, the first open)? Write the answers under the session in
+`docs/USABILITY_RESULTS.md`.
+
+### 12.1 Look sheet (owner, M10): the giant's look in the creator and in play
+
+The look pass (plan M10 §3.6; `docs/systems/P46.md`) on the release candidate, beside character sheet B and
+the approved close-up render. Ten minutes in the creator, ten in play (the Valley's first shrine is enough).
+Mark each row "fine", "off" or "wrong" and say what you saw.
+
+| # | Look at | Where | Fine / off / wrong, and what you saw |
+| --- | --- | --- | --- |
+| 1 | **The long hair and the full beard** against the approved close-up: do they read as hair (strands at the tips, no shingle steps, no scalp between the locks)? | Creator: Hair, Beard; Face and Back views | |
+| 2 | **The short styles** (Cropped, Short beard, Stubble, Shaved) in a fair colour and a dark one: any bare patch or loose flake? | Creator: Hair, Beard, hair colour | |
+| 3 | **The new styles**: Long with two braids, Warrior's tail, Wild mane, Shoulder length; the Braided, Forked and Trimmed beards. Which would you wear, which looks wrong? | Creator: Hair, Beard | |
+| 4 | **Grey** at a quarter, a half and full on a dark colour: does it grow in evenly? | Creator: the grey sliders | |
+| 5 | **The hair in motion**: turn, dodge and swing; the tips should trail the head a little and settle, never stretch or flap. | Play, third person | |
+| 6 | **Tattoos from behind**: the Full sleeve, the Shoulder to shoulder piece, the Spine serpent, the Back wings. Which can you name from the game camera? | Creator: Game view; play | |
+| 7 | **War paint and scars**: Full face and the Hand print; the Back lashes and the Cheek scar. Do the scars read as scars on a pale and on a dark skin? | Creator: War paint, Scars, Skin | |
+| 8 | **Eyes**: can you tell blue, grey, green, hazel and brown apart at the Face view? Are they too bright? | Creator: Eyes | |
+| 9 | **Clothing**: the Raider's wraps and the Wayfarer's cape; the weave of the braies and the leather in the undyed and a dyed pair. Anything that looks like panels, or like plastic? | Creator: Clothing, the dyes | |
+| 10 | **First person**: look straight down while standing and while walking. Is there anything but arms, legs and cloth? | Play, first person | |
+| 11 | **The giant beside the world**: does anything about him jar next to the soldiers and the houses that did not on the first preview? | Play | |
+
+Questions after the sheet: what would you change first? Is there a style, a tattoo or a garment you expected
+and did not find? Write the answers under the session in `docs/USABILITY_RESULTS.md`; a wish for a different
+face or build is M11 work (plan M10, decision 9).

@@ -119,13 +119,32 @@ func test_the_launcher_joins_pck_parts_and_resumes_the_sound() -> void:
 
 ## The M7 release (plan M6-M9 §6.6: "the world opens after the Valley"): beside Play, the launcher
 ## starts a new game in the open world (--mode=world, GameSession's world start) on a second press,
-## since it replaces the saved game; Play and the page's ?args= are unchanged.
+## since it replaces the saved game; Play and the page's ?args= are unchanged. P45 (plan M10 §3.5): the
+## start passes --creator, so the world start too begins in the character creator.
 func test_the_launcher_offers_the_open_world_start() -> void:
 	var html := FileAccess.get_file_as_string(LAUNCHER)
 	assert_true(html.contains("id=\"play-world\""), "a second start button")
-	assert_true(html.contains("start(['--', '--mode=world']);"), "it starts the engine with --mode=world")
+	assert_true(html.contains("start(['--', '--mode=world', '--creator']);"),
+		"it starts the engine with --mode=world --creator")
 	assert_true(html.contains("if (startArgs) return startArgs;"), "through launchArgs(), which keeps ?args= otherwise")
 	assert_true(html.contains("worldTimer = setTimeout(disarmWorld, 6000);"), "the first press only arms it")
 	assert_true(html.contains("It replaces a game saved in this browser."), "the note says it replaces the saved game")
 	assert_true(html.contains("play.addEventListener('click', function () { start(); });"), "Play keeps the page's arguments")
 	assert_true(GameSession.CLI_MODES.has("world"), "GameSession knows --mode=world")
+
+
+## P41 (plan M10 §1.6, §2.5), changed by P45 (the owner's answer 1, plan M10 §0.6): the Web presets leave
+## out the giant's manifest (as the audio's) and, from W27 on, keep the 1024 px texture tier
+## (assets/giant/tex_hi/: the Web draws it as the desktop does, inside the 26 MB budget); the desktop
+## presets keep both. tests/integration/test_giant_web_presets.gd has the rest.
+func test_the_web_presets_leave_out_the_giant_manifest_and_keep_the_hi_tier() -> void:
+	var cfg := ConfigFile.new()
+	assert_eq(cfg.load(PRESETS), OK, "export_presets.cfg parses")
+	var presets := _presets(cfg)
+	for name: String in presets:
+		var p: Dictionary = presets[name]
+		var web := str(p.platform) == "Web"
+		assert_eq((p.exclude as PackedStringArray).has("assets/giant/manifest.json"), web,
+			"%s %s the giant's manifest" % [name, "excludes" if web else "keeps"])
+		assert_false((p.exclude as PackedStringArray).has("assets/giant/tex_hi/*"), "%s ships the 1024 px maps" % name)
+		assert_false((p.exclude as PackedStringArray).has("assets/giant/*"), "%s ships the giant" % name)

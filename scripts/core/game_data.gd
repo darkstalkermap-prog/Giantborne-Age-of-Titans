@@ -247,6 +247,15 @@ func _post_pass() -> void:
 	errors.append_array(p37.errors)
 	warnings.append_array(p37.warnings)
 
+	# M10 (written by P42, plan M10 §1.5): the cross-record checks of the look.
+	## @anchor P42
+	# P42 (plan M10 §2.3): every appearance set's category once, all thirteen of them; the default preset's
+	# record uses each set's default; every preset's record passes Appearance.sanitize with nothing dropped
+	# or noted (Appearance.data_errors: pure, so nothing of the giant's model loads).
+	errors.append_array(Appearance.data_errors(records, record_paths))
+
+	## @anchor P46
+
 	pass
 
 

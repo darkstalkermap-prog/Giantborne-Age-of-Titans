@@ -50,8 +50,9 @@ const NAME_EXCEPTIONS := {
 	"res://docs/GIANTBORN_SPEC_V2.md": "the owner's spec, kept verbatim (DECISIONS.md §3)",
 }
 ## Folders that are not part of the repository: the exports. Hidden folders (.git, .godot,
-## .userdata) are never listed.
-const SKIP_DIRS := ["res://builds"]
+## .userdata) are never listed. P41 (plan M10 §2.5): the vendored CC0 MakeHuman/MPFB2 data is
+## third-party data, not authored text (about 5 M characters of JSON, 43-55 ms a run to scan).
+const SKIP_DIRS := ["res://builds", "res://tools/giant/mpfb2"]
 ## Authored text. Generated scenes and resources (.tscn, .tres) come from the scanned builders and
 ## carry random ids, so they are left out.
 const TEXT_EXTENSIONS := ["md", "gd", "json", "cfg", "godot", "html", "sh", "py", "gdshader", "svg", "txt"]

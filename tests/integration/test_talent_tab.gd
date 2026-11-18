@@ -87,13 +87,15 @@ func test_the_talents_and_ancestry_tabs_with_a_pad() -> void:
 	var titles: Array = []
 	for t in screen.tabs:
 		titles.append(t.tab_title())
-	assert_eq(titles, ["Rest", "Grow", "Loadout", "Attributes", "Talents", "Ancestry"],
-		"Talents always, Ancestry in the Old Kingdom before the choice")
+	assert_eq(titles, ["Rest", "Grow", "Loadout", "Attributes", "Talents", "Ancestry", "Appearance"],
+		"Talents always, Ancestry in the Old Kingdom before the choice, M10's Appearance last (P44)")
 	# --- the Talents tab
 	await _pad(JOY_BUTTON_LEFT_SHOULDER)
 	await _pad(JOY_BUTTON_LEFT_SHOULDER)
+	assert_eq(screen.current_tab().tab_title(), "Ancestry", "LB twice from Rest: Ancestry (wrapping past Appearance)")
+	await _pad(JOY_BUTTON_LEFT_SHOULDER)
 	var tab := screen.current_tab()
-	assert_eq(tab.tab_title(), "Talents", "LB twice from Rest: the Talents tab (wrapping)")
+	assert_eq(tab.tab_title(), "Talents", "LB three times from Rest: the Talents tab")
 	var buttons: Dictionary = tab.get("buttons")
 	var learn: Button = tab.get("learn_button")
 	assert_eq(buttons.size(), 27, "a button per talent")

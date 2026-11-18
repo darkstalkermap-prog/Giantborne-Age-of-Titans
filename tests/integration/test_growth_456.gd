@@ -5,7 +5,8 @@ extends IntegrationSuite
 ## their fractions - and the stage's size-gate mask in its body mask and titan bits in its
 ## navigation query mask; Heavy Footfall's and Thunder Roar's radius and Boulder Hurl's range follow
 ## the stage; a shrine with growth_requires_conditions refuses growth until they hold; first person
-## at stages 4-6 puts the eye in the merged rig's head and hides the head; lights 1-2 and the heavy
+## at stages 4-6 puts the eye inside the realistic head's bounds and hides the head and the torso
+## (P43); lights 1-2 and the heavy
 ## reach a soldier and a wolf from contact to 0.9 x reach (the swept geometry the swings use).
 
 const SHRINE := "res://scenes/world/shrine.tscn"
@@ -140,8 +141,9 @@ func test_a_shrine_waits_for_its_growth_conditions() -> void:
 	assert_eq(p.growth_stage, 2, "stage 2")
 
 
-## First person at `stage`: the eye at 0.92 x the height, inside the merged rig's head, which the
-## camera culls (then back to third person).
+## First person at `stage`: the eye at 0.92 x the height, inside the realistic head's bounds (P43: the
+## model's Body_Head mesh at rest, as headless runs show it, scaled by k), whose render layer (3, with the
+## hair, beard and eyes) the camera culls, as it culls the torso's (2) (then back to third person).
 func _check_first_person(p: GiantPlayer, stage: int) -> void:
 	p.camera_rig.set_mode(CameraRig.Mode.FIRST_PERSON)
 	p.camera_rig.yaw = 0.0
@@ -151,15 +153,18 @@ func _check_first_person(p: GiantPlayer, stage: int) -> void:
 	var cam := p.camera_rig.camera.global_position
 	var eye_y := p.global_position.y + float(prof.height_m) * float(prof.eye_height_ratio)
 	assert_near(cam.y, eye_y, 0.05, "stage %d: the eye at %.2f m (0.92 x the height)" % [stage, eye_y - p.global_position.y])
-	var head := p.get_node("Visual/Body/Torso/Head") as MeshInstance3D
+	var model := p.get_node("Visual/Body/Model") as GiantModel
+	var head := model.mesh("Body_Head")
 	var box := head.global_transform * head.get_aabb()
-	assert_true(cam.y >= box.position.y and cam.y <= box.end.y + 0.05,
-		"stage %d: the eye is at the merged head's height (%.2f in %.2f-%.2f)" % [stage, cam.y, box.position.y, box.end.y])
-	var centre := box.get_center()
-	var off := Vector2(cam.x - centre.x, cam.z - centre.z).length()
-	assert_true(off <= maxf(box.size.x, box.size.z), "stage %d: and at its face (%.2f m from its centre)" % [stage, off])
-	assert_eq(head.layers, SceneKit.FP_HIDDEN, "stage %d: the head is on the first-person hidden layer" % stage)
-	assert_eq(p.camera_rig.camera.cull_mask & SceneKit.FP_HIDDEN, 0, "stage %d: and first person culls it" % stage)
+	assert_true(box.grow(0.02 * float(prof.height_m)).has_point(cam), "stage %d: the eye %s is inside the head's bounds %s" % [
+		stage, cam, box])
+	assert_true(cam.y >= box.position.y and cam.y <= box.end.y, "stage %d: at the head's height (%.2f in %.2f-%.2f)" % [
+		stage, cam.y, box.position.y, box.end.y])
+	var head_bit := 1 << (CameraRig.HEAD_LAYER - 1)
+	var torso_bit := 1 << (CameraRig.TORSO_LAYER - 1)
+	assert_eq(head.layers, head_bit, "stage %d: the head is on the head layer (3)" % stage)
+	assert_eq(model.mesh("Body_Torso").layers, torso_bit, "stage %d: the torso on layer 2" % stage)
+	assert_eq(p.camera_rig.camera.cull_mask & (head_bit | torso_bit), 0, "stage %d: and first person culls both" % stage)
 	p.camera_rig.set_mode(CameraRig.Mode.THIRD_PERSON)
 
 

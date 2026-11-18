@@ -1,0 +1,201 @@
+{
+	"build_version": "0.10.0-m10",
+	"character": {
+		"ancestry": "ancestry.neutral",
+		"ancestry_chosen": false,
+		"appearance": {
+			"beard": {
+				"color": "haircolor.auburn",
+				"grey": 0.3,
+				"style": "beard.short"
+			},
+			"eyes": "eyes.blue",
+			"hair": {
+				"color": "haircolor.copper",
+				"grey": 0.35,
+				"style": "hair.mohawk"
+			},
+			"mark": "none",
+			"outfit": {
+				"primary": "dye.gold_leaf",
+				"secondary": "dye.walnut",
+				"set": "outfit.hunter"
+			},
+			"paint": {
+				"color": "paintcolor.ochre",
+				"design": "paint.shoulder_bands"
+			},
+			"preset": "",
+			"scars": [
+				"scar.brow",
+				"scar.dragon"
+			],
+			"skin": "skin.violet",
+			"tattoos": {
+				"arms": "tattoo.arm_bands",
+				"back": "tattoo.back_tree",
+				"chest": "",
+				"face": "",
+				"ink": "ink.soot"
+			},
+			"v": 1
+		},
+		"attributes": {
+			"constitution": 10,
+			"dexterity": 10,
+			"endurance": 10,
+			"intellect": 10,
+			"strength": 10,
+			"willpower": 10
+		},
+		"definition_id": "player.giant",
+		"growth_stage": 4,
+		"id": "char.valley_1",
+		"known_abilities": [
+			"ability.titan_stomp",
+			"ability.heavy_footfall",
+			"ability.sweeping_blow",
+			"ability.stone_skin",
+			"ability.crushing_grip",
+			"ability.crag_hurl",
+			"ability.boulder_hurl",
+			"ability.runic_bolt",
+			"ability.ancestral_mend",
+			"ability.thunder_roar",
+			"ability.titan_surge"
+		],
+		"level": 9,
+		"level_exempt": [],
+		"loadout": {
+			"slots": [
+				"ability.titan_stomp",
+				"ability.sweeping_blow",
+				"ability.stone_skin",
+				"ability.crushing_grip",
+				"ability.crag_hurl",
+				"ability.runic_bolt",
+				"ability.ancestral_mend",
+				"ability.thunder_roar"
+			],
+			"ultimate": "ability.titan_surge"
+		},
+		"resources": {
+			"essence": 100.0,
+			"fury": 0.0,
+			"health": 950.0,
+			"stamina": 130.0
+		},
+		"talent_points": 8,
+		"talents": [],
+		"unspent_attribute_points": 24,
+		"weapon": "weapon.club_reinforced",
+		"weapons_owned": [
+			"weapon.club_reinforced"
+		],
+		"xp": 2280
+	},
+	"checkpoint": {
+		"position": [
+			60.0,
+			10.282000541687,
+			546.0
+		],
+		"reason": "waystone",
+		"respawn": "world.cp.brannock",
+		"yaw": 0.0
+	},
+	"level": "level.world",
+	"progress": {
+		"levels_visited": [
+			"level.world"
+		],
+		"prologue_complete": true,
+		"tracked_quest": "",
+		"world_entered": true
+	},
+	"saved_at_unix": 1794385066,
+	"schema_version": 2,
+	"slot": "valley_1",
+	"stats": {
+		"checkpoint_loads": 0,
+		"deaths": 0,
+		"play_time_s": 1.76666666666667
+	},
+	"world": {
+		"deltas": {
+			"world.crownmarch.brannock_south_gate": {
+				"damage_stage": 1,
+				"destroyed": true,
+				"health": 0.0,
+				"loot_awarded": true
+			},
+			"world.crownmarch.kingsgate_beacon_fire": {
+				"loot_awarded": true
+			}
+		},
+		"flags": {
+			"dialogue.edda.outcome.force": true,
+			"encounter.crownmarch_kingsgate_scouts.cleared": true,
+			"faction.brannock.hostile": true,
+			"faction.village.hostile": true,
+			"oath.march.done": true,
+			"oath.march.met": true,
+			"oath.march.outcome": "force",
+			"progress.world_entered": true,
+			"quest.main.done": true,
+			"quest.main.stage": "crown",
+			"quest.oath_march.done": true,
+			"quest.oath_march.stage": "resolve",
+			"quest.sealed_citadel.stage": "breach",
+			"quest.tutorial.done": true,
+			"quest.tutorial.stage": "spar",
+			"quest.village.done": true,
+			"quest.village.outcome": "force",
+			"quest.village.stage": "resolve",
+			"quest.world_main.stage": "oaths",
+			"reward.oath_march.force": true,
+			"reward.oath_march.meet": true,
+			"reward.oath_march.resolve": true,
+			"reward.world_main.beacon": true,
+			"reward.world_main.grow4": true,
+			"reward.world_main.kings_door": true,
+			"slice.completed": true,
+			"slice.crown_claimed": true,
+			"tutorial.attributes.done": true,
+			"tutorial.attributes.seen": true,
+			"tutorial.block.done": true,
+			"tutorial.block.seen": true,
+			"tutorial.boss_charge.done": true,
+			"tutorial.boss_charge.seen": true,
+			"tutorial.camera.done": true,
+			"tutorial.camera.seen": true,
+			"tutorial.dodge.done": true,
+			"tutorial.dodge.seen": true,
+			"tutorial.footfall.done": true,
+			"tutorial.footfall.seen": true,
+			"tutorial.grab.done": true,
+			"tutorial.grab.seen": true,
+			"tutorial.heavy.done": true,
+			"tutorial.heavy.seen": true,
+			"tutorial.hurl.done": true,
+			"tutorial.hurl.seen": true,
+			"tutorial.light.done": true,
+			"tutorial.light.seen": true,
+			"tutorial.lock.done": true,
+			"tutorial.lock.seen": true,
+			"tutorial.shrine.seen": true,
+			"tutorial.soldier_guard.done": true,
+			"tutorial.soldier_guard.seen": true,
+			"visited.world.cp.brannock": true,
+			"world.brannock.gate_broken": true,
+			"world.kingsgate.lit": true,
+			"world.ogre_king.defeated": true
+		},
+		"inventory": {
+			"item.iron_ingot": 3,
+			"item.ogre_tusk": 1,
+			"item.titan_iron": 2
+		},
+		"schema_version": 2
+	}
+}

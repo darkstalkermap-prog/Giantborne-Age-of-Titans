@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.skin",
+	"type": "appearance_set",
+	"category": "skin",
+	"display_name": "Skin",
+	"description": "P42 (plan M10 §2.3): ten skin tones; the shader scales the baked albedo by tone / bake tone. Ashen is Stoneblood's.",
+	"options": [
+		{"key": "pale", "name": "Pale", "color": "#c9a08a"},
+		{"key": "fair", "name": "Fair", "color": "#b0866e"},
+		{"key": "ruddy", "name": "Ruddy", "color": "#b07a62", "default": true},
+		{"key": "tan", "name": "Tan", "color": "#8a6248"},
+		{"key": "olive", "name": "Olive", "color": "#9a7656"},
+		{"key": "bronze", "name": "Bronze", "color": "#94603e"},
+		{"key": "brown", "name": "Brown", "color": "#6c4a34"},
+		{"key": "deep", "name": "Deep", "color": "#4e3426"},
+		{"key": "weathered", "name": "Weathered", "color": "#a07b66"},
+		{"key": "ashen", "name": "Ashen", "color": "#8a8580", "requires": {"ancestry": "ancestry.stoneblood"}}
+	]
+}

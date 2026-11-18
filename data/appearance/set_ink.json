@@ -1,0 +1,16 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.ink",
+	"type": "appearance_set",
+	"category": "ink",
+	"display_name": "Ink",
+	"description": "P42 (plan M10 §2.3): one ink for every tattoo.",
+	"options": [
+		{"key": "woad", "name": "Woad", "color": "#1a2e66", "default": true},
+		{"key": "soot", "name": "Soot", "color": "#101014"},
+		{"key": "ochre", "name": "Ochre", "color": "#8c3a14"},
+		{"key": "chalk", "name": "Chalk", "color": "#dcd6c8"},
+		{"key": "moss", "name": "Moss", "color": "#2c4a22"},
+		{"key": "iron", "name": "Iron", "color": "#3a3e44"}
+	]
+}

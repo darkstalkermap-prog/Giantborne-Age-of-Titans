@@ -5,7 +5,8 @@ extends IntegrationSuite
 ## growth; every light and the heavy still reach a soldier and a wolf at the feet of a stage-2
 ## and stage-3 giant in both camera modes (decision 5); footstep shake follows the camera_shake
 ## setting; the camera hides the head when its arm is pressed short; unlocks, debug keys,
-## events and the save key.
+## events and the save key. P43: the head-hiding and arc tests read the realistic giant (its render
+## layers; the visible weapon's head inside the swept capsule).
 
 const SHRINE := "res://scenes/world/shrine.tscn"
 const WOLF := "res://scenes/enemies/wolf.tscn"
@@ -438,26 +439,35 @@ func _walk_and_count_shake(p: GiantPlayer, setting: float, ticks: int) -> int:
 
 
 ## A wall right behind the giant cuts the third-person arm below 1.2 x the capsule radius: the
-## camera then hides render layer 2 (head, chest, belt), as first person does, and shows it
-## again once the arm grows back out.
+## camera then hides the head's render layer (3: the head, hair, beard and eyes; P43), as first person
+## does, and shows it again once the arm grows back out. The limbs stay drawn, and the torso too unless
+## CameraRig.PRESSED_CULLS_TORSO (the passage render's decision, docs/systems/P43.md).
 func test_camera_hides_the_head_while_the_arm_is_pressed_short() -> void:
 	var p := await _grounded_player(Vector3(0, 0.05, 0))
 	await step_ticks(60)
-	var head := p.get_node("Visual/Body/Torso/Head") as MeshInstance3D
+	var model := p.get_node("Visual/Body/Model") as GiantModel
+	var heads: Array[MeshInstance3D] = []
+	for id: String in ["Body_Head", "Eyes", "Hair_long_back", "Beard_full"]:
+		heads.append(model.mesh(id))
 	var cam := p.camera_rig.camera
 	assert_false(p.camera_rig.head_hidden, "an open view shows the head")
-	assert_true((head.layers & cam.cull_mask) != 0, "the head is drawn")
+	for head in heads:
+		assert_true((head.layers & cam.cull_mask) != 0, "%s is drawn" % head.name)
 	var wall := add_box(Vector3(10, 10, 1), Vector3(0, 5, 1.6))   # the camera sits behind (+Z)
 	await step_ticks(3)
 	assert_true(p.camera_rig.current_distance < 1.2 * 0.85, "the arm is pressed short (%.2f m)" % p.camera_rig.current_distance)
 	assert_true(p.camera_rig.head_hidden, "the camera hides the head")
-	assert_eq(head.layers & cam.cull_mask, 0, "the head is not drawn")
-	var arm := p.get_node("Visual/Body/ShoulderR/Mesh") as MeshInstance3D   # P22: the merged arm
-	assert_true((arm.layers & cam.cull_mask) != 0, "the arms stay drawn")
+	for head in heads:
+		assert_eq(head.layers & cam.cull_mask, 0, "%s is not drawn" % head.name)
+	var limbs := model.mesh("Body_Limbs")
+	assert_true((limbs.layers & cam.cull_mask) != 0, "the arms stay drawn")
+	var torso := model.mesh("Body_Torso")
+	assert_eq((torso.layers & cam.cull_mask) == 0, CameraRig.PRESSED_CULLS_TORSO, "the torso as the passage decision says")
 	wall.queue_free()
 	await step_ticks(90)
 	assert_false(p.camera_rig.head_hidden, "the arm grew back: the head shows again (arm %.2f m)" % p.camera_rig.current_distance)
-	assert_true((head.layers & cam.cull_mask) != 0, "drawn again")
+	for head in heads:
+		assert_true((head.layers & cam.cull_mask) != 0, "%s drawn again" % head.name)
 
 
 ## Growth keeps the camera's zoom fraction and never snaps the arm: right after growing, the
@@ -573,12 +583,17 @@ func test_growth_stage_round_trips_through_the_character_state() -> void:
 
 
 ## The rig shows the tilted arc: during the ACTIVE phase of a stage-3 light 1 (tilt -16) and
-## heavy (tilt -12), the weapon arm points exactly along the swept weapon segment, and the
-## scaled shoulder sits on the profile's pivot.
+## heavy (tilt -12), the visible weapon's head lies inside the swept capsule (P43: the realistic arm is
+## placed by tip matching, so the weapon aims from the real fist at the tested segment's tip; the brain's
+## arm, which pointed along the segment within 1 degree, is no longer drawn), and the brain's scaled
+## shoulder still sits on the profile's pivot.
 func test_the_rig_shows_the_tilted_arc_at_stage_3() -> void:
+	SkinnedRig.enable_for_tests()   # the skinned layers place the visible weapon (off again after the test)
 	var p := await _grounded_player(Vector3(0, 0.05, 0))
 	assert_true(p.growth.debug_set_stage(3).ok, "stage 3")
 	await step_ticks(3)
+	var rig := p.rig as SkinnedRig
+	assert_true(rig != null and rig.layers_on(), "the skinned rig runs its layers")
 	var shoulder := p.get_node("Visual/Body/ShoulderR") as Node3D
 	assert_true(shoulder.global_position.is_equal_approx(p.to_global(p.weapon_pivot)), "the shoulder is on the pivot")
 	for attack_id: String in ["ability.light_1", "ability.heavy_1"]:
@@ -588,13 +603,19 @@ func test_the_rig_shows_the_tilted_arc_at_stage_3() -> void:
 		var active: bool = await TestWait.until(self, func() -> bool:
 			return p.controller.phase() == ActionDef.Phase.ACTIVE and p.controller.elapsed > a.windup_ticks + 2, 60)
 		assert_true(active, "%s is active" % attack_id)
-		# The test resumes on process_frame, before the nodes' _process: the rig still shows the
-		# previous tick, whose arc fraction is active_fraction_prev().
+		# The test resumes on process_frame, before the nodes' _process: the visible weapon (placed in the
+		# previous frame's skeleton update) shows the previous tick, whose arc fraction is
+		# active_fraction_prev().
 		var seg := p.weapon_segment_global(a, p.controller.active_fraction_prev())
+		var vis := rig.visible_weapon_segment()
+		var head: Vector3 = vis[1]
+		var off := head.distance_to(Geometry3D.get_closest_point_to_segment(head, seg[0], seg[1]))
+		assert_true(off <= p.weapon_radius, "%s: the visible weapon's head is inside the swept capsule (%.3f m from the segment, radius %.3f)" % [
+			attack_id, off, p.weapon_radius])
+		var vis_dir: Vector3 = (vis[1] - vis[0]).normalized()
 		var swept := (seg[1] - seg[0]).normalized()
-		var arm := -shoulder.global_transform.basis.z.normalized()
-		assert_true(rad_to_deg(arm.angle_to(swept)) < 1.0, "%s: the arm points along the swept segment (%.2f degrees off)" % [
-			attack_id, rad_to_deg(arm.angle_to(swept))])
+		assert_true(rad_to_deg(vis_dir.angle_to(swept)) <= TipMatching.MAX_ANGLE_DEG, "%s: and within %d degrees of it (%.1f)" % [
+			attack_id, TipMatching.MAX_ANGLE_DEG, rad_to_deg(vis_dir.angle_to(swept))])
 		assert_near(float(p.get_rig_state().arc_pitch_offset_deg), PlayerAttack.offset_for(p.profile, attack_id), 1e-9,
 			"%s: the rig reads the action's tilt" % attack_id)
 		await TestWait.until(self, func() -> bool: return p.controller.action == null, 90)

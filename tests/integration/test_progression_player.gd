@@ -354,7 +354,8 @@ func test_shrine_loadout_and_attributes_tabs() -> void:
 	for t in plain.tabs:
 		titles.append(t.tab_title())
 	# P33: the Talents tab shows at every shrine (plan M6-M9 §3.17), whatever the shrine record says.
-	assert_eq(titles, ["Rest", "Grow", "Talents"], "a shrine record can turn both tabs off (Talents stays)")
+	assert_eq(titles, ["Rest", "Grow", "Talents", "Appearance"],
+		"a shrine record can turn both tabs off (Talents and M10's Appearance stay, P44)")
 	assert_eq(prog.set_slot("slot_3", "ability.stone_skin", s).reason, "no_shrine", "and its loadout")
 	stack.close_all()
 

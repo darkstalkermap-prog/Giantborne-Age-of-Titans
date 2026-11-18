@@ -7,8 +7,8 @@
 #   5. 120 s autoplay with 0 errors; a soak of 120 s or more must also break a fence, fill the
 #      debris pool and award loot (the M1 breakable path stays covered; M2 gate)
 #
-# Usage: tools/check.sh [--slow] [--gate] [--audio] [--only=<builder>[,<builder>]] [--build]
-#                       [--build-args=<args>] [--autoplay=SECONDS]
+# Usage: tools/check.sh [--slow] [--gate] [--audio] [--giant] [--giant-full] [--require] [--strict-times]
+#                       [--only=<builder>[,<builder>]] [--build] [--build-args=<args>] [--autoplay=SECONDS]
 #   --only=...    rebuild the named scene builders (before P04's builder split: all of them)
 #   --build       rebuild every scene
 #   --build-args=...  extra arguments for the builders, after "--" (P25: --build-args=--chunks=c2_6,c3_6
@@ -24,6 +24,24 @@
 #                 temporary folder and compared with assets/audio/manifest.json, bit-exact on the
 #                 reference toolchain); skipped with a note when python3, numpy or ffmpeg with
 #                 libvorbis is missing. The audio asset suites run in the default suite (P19).
+#   --giant       (P41, plan M10 §2.5) before the suites: the giant pipeline's tests
+#                 (tools/giant/test_giant_tools.py), build_giant.py --verify --skip-bake (every giant
+#                 file regenerated into a temporary folder with the cheap bake passes, AO and thickness
+#                 read back from the committed tex_hi/orm.png, and compared with manifest.json:
+#                 bit-exact on the reference toolchain, a Cycles map within the bake's own jitter of a
+#                 texel or so) and --budget (the estimated Web share); run with the venv GIANT_VENV (default
+#                 $HOME/.cache/giantborn/giant-venv) under nice -n 19; skipped with a note when the
+#                 venv is missing
+#   --giant-full  as --giant, but --verify re-bakes every pass, AO and thickness included (the full
+#                 regeneration, about 4 minutes on a quiet machine, 15-20 on a busy one; for packages
+#                 that change the bake's inputs: the body, its UVs, the skin code, the bake settings)
+#   --require     (P41, plan M10 §1.1) a skipped check is a failure, not a note: a missing giant venv,
+#                 a missing audio toolchain, and any suite's skip note in the test log (a line with
+#                 "skipped - ": no xvfb-run for the rendered suites, no Chromium, a missing tool)
+#   --strict-times (P41, plan M10 §1.7 rule 5) when the default tier takes over 75 s or the slow tier
+#                 over 8 minutes, that tier runs once more and the faster run decides: over budget
+#                 twice fails the check (without it, an over-budget tier only warns); both runs are
+#                 recorded in suite_times.txt
 # Every Godot call goes through tools/gd.sh (this worktree's own user:// folder). Logs of the
 # last run are kept in .userdata/check/.
 set -uo pipefail
@@ -36,6 +54,9 @@ mkdir -p "$LOGS"
 SLOW=0
 GATE=0
 AUDIO=0
+GIANT=0
+REQUIRE=0
+STRICT_TIMES=0
 BUILD=""
 BUILD_EXTRA=""
 AUTOPLAY=120
@@ -44,11 +65,15 @@ for arg in "$@"; do
 		--slow) SLOW=1 ;;
 		--gate) GATE=1 ;;
 		--audio) AUDIO=1 ;;
+		--giant) [ "$GIANT" = "full" ] || GIANT=1 ;;
+		--giant-full) GIANT=full ;;
+		--require) REQUIRE=1 ;;
+		--strict-times) STRICT_TIMES=1 ;;
 		--only=*) BUILD="$arg" ;;
 		--build) BUILD="all" ;;
 		--build-args=*) BUILD_EXTRA="${arg#--build-args=}" ;;
 		--autoplay=*) AUTOPLAY="${arg#--autoplay=}" ;;
-		-h|--help) sed -n '2,28p' "$0"; exit 0 ;;
+		-h|--help) sed -n '2,46p' "$0"; exit 0 ;;
 		*) echo "check.sh: unknown option '$arg'" >&2; exit 2 ;;
 	esac
 done
@@ -75,6 +100,14 @@ fail() {
 
 step() {
 	echo "== $1"
+}
+
+# skipped NOTE: a check that could not run. A note normally; a failure with --require (P41).
+skipped() {
+	echo "== $1"
+	if [ "$REQUIRE" = "1" ]; then
+		fail "a required check was skipped (--require): $1"
+	fi
 }
 
 step "import"
@@ -118,11 +151,11 @@ run_limited 600 "$GD" --headless --path . --import >"$LOGS/import2.log" 2>&1 \
 # P19: the audio pipeline (generators, bit-exact regeneration, budgets) before the suites.
 if [ "$AUDIO" = "1" ]; then
 	if ! command -v python3 >/dev/null 2>&1; then
-		echo "== audio: SKIPPED (python3 is not installed; the generators need Python 3 and numpy)"
+		skipped "audio: SKIPPED (python3 is not installed; the generators need Python 3 and numpy)"
 	elif ! python3 -c "import numpy" >/dev/null 2>&1; then
-		echo "== audio: SKIPPED (numpy is not installed)"
+		skipped "audio: SKIPPED (numpy is not installed)"
 	elif ! command -v ffmpeg >/dev/null 2>&1 || ! ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libvorbis; then
-		echo "== audio: SKIPPED (ffmpeg with the libvorbis encoder is not installed)"
+		skipped "audio: SKIPPED (ffmpeg with the libvorbis encoder is not installed)"
 	else
 		step "audio pipeline tests (tools/audio/test_synth.py)"
 		run_limited 600 python3 tools/audio/test_synth.py >"$LOGS/audio_synth.log" 2>&1 \
@@ -135,6 +168,34 @@ if [ "$AUDIO" = "1" ]; then
 		run_limited 300 python3 tools/audio/build_audio.py --budget >"$LOGS/audio_budget.log" 2>&1 \
 			|| fail "the audio is over its budget (decision 8)" "$LOGS/audio_budget.log"
 		grep -E "imported size|registered SFX" "$LOGS/audio_budget.log"
+	fi
+fi
+
+# P41 (plan M10 §2.5): the giant pipeline (tools/giant/) in the shared venv, before the suites.
+GIANT_VENV="${GIANT_VENV:-$HOME/.cache/giantborn/giant-venv}"
+if [ "$GIANT" != "0" ]; then
+	if [ ! -x "$GIANT_VENV/bin/python" ] || ! "$GIANT_VENV/bin/python" -c "import bpy, numpy, scipy, PIL" >/dev/null 2>&1; then
+		skipped "giant: SKIPPED (the giant venv $GIANT_VENV is missing or incomplete; tools/giant/setup_venv.sh makes it)"
+	else
+		step "giant pipeline tests (tools/giant/test_giant_tools.py)"
+		run_limited 900 nice -n 19 "$GIANT_VENV/bin/python" -B tools/giant/test_giant_tools.py >"$LOGS/giant_tests.log" 2>&1 \
+			|| fail "the giant pipeline's tests failed" "$LOGS/giant_tests.log"
+		grep -E "^Ran [0-9]+ tests" "$LOGS/giant_tests.log"
+		if [ "$GIANT" = "full" ]; then
+			step "giant regeneration, every bake pass (build_giant.py --verify)"
+			run_limited 5400 nice -n 19 "$GIANT_VENV/bin/python" -B tools/giant/build_giant.py --verify \
+				>"$LOGS/giant_verify.log" 2>&1
+		else
+			step "giant regeneration, the cheap bake passes (build_giant.py --verify --skip-bake)"
+			run_limited 2700 nice -n 19 "$GIANT_VENV/bin/python" -B tools/giant/build_giant.py --verify --skip-bake \
+				>"$LOGS/giant_verify.log" 2>&1
+		fi
+		VERIFY_EXIT=$?
+		grep -E "^(GIANT VERIFY|TOOLCHAIN DIFFERS|CONTENT DIFFERS|SHIPPED FILE|TOLERATED)" "$LOGS/giant_verify.log" | head -n 40
+		[ "$VERIFY_EXIT" = "0" ] || fail "the giant's regeneration differs from assets/giant/manifest.json" "$LOGS/giant_verify.log"
+		run_limited 300 "$GIANT_VENV/bin/python" -B tools/giant/build_giant.py --budget >"$LOGS/giant_budget.log" 2>&1 \
+			|| fail "the giant is over its Web share (plan M10 §2.12)" "$LOGS/giant_budget.log"
+		grep -E "^GIANT_ESTIMATE" "$LOGS/giant_budget.log"
 	fi
 fi
 
@@ -158,14 +219,57 @@ grep -E "^RESULT:|^FAIL|^TIMES:" "$LOGS/tests.log" | head -n 60
 grep -E "^BUDGET WARNING|^WARNINGS: [1-9]" "$LOGS/tests.log" | head -n 20
 [ "$TEST_EXIT" = "0" ] || fail "tests exited with $TEST_EXIT" "$LOGS/tests.log"
 grep -q "^RESULT: .* 0 failures" "$LOGS/tests.log" || fail "no passing RESULT line" "$LOGS/tests.log"
+# P41 (plan M10 §1.1): with --require, a suite's skip note is a failure (a rendered suite without
+# xvfb-run, a web check without Chromium, a tool that is missing).
+if [ "$REQUIRE" = "1" ]; then
+	SKIP_NOTES="$(grep -E "skipped - " "$LOGS/tests.log" || true)"
+	if [ -n "$SKIP_NOTES" ]; then
+		echo "$SKIP_NOTES" | head -n 20
+		fail "suites skipped checks (--require): install the missing tools (xvfb-run, Chromium) or drop --require"
+	fi
+fi
 # The suite times (decision 34: default under 75 s, slow under 8 minutes, gate under 50 minutes),
 # kept for the wave merge's record.
+tier_time() { echo "$1" | sed -E "s/.*$2 ([0-9.]+) s.*/\1/"; }
+over() { awk "BEGIN { exit !($1 > $2) }" 2>/dev/null; }
 TIMES_LINE="$(grep -m1 "^TIMES:" "$LOGS/tests.log" || true)"
 if [ -n "$TIMES_LINE" ]; then
 	echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $(git rev-parse --short HEAD 2>/dev/null || echo '?') $TIMES_LINE" \
 		>>"$LOGS/suite_times.txt"
-	DEFAULT_S="$(echo "$TIMES_LINE" | sed -E 's/^TIMES: default ([0-9.]+) s.*/\1/')"
-	if awk "BEGIN { exit !($DEFAULT_S > 75) }" 2>/dev/null; then
+	DEFAULT_S="$(tier_time "$TIMES_LINE" default)"
+	SLOW_S="$(tier_time "$TIMES_LINE" slow)"
+	OVER_DEFAULT=0
+	OVER_SLOW=0
+	over "$DEFAULT_S" 75 && OVER_DEFAULT=1
+	[ "$SLOW" = "1" ] && over "$SLOW_S" 480 && OVER_SLOW=1
+	if [ "$STRICT_TIMES" = "1" ] && [ "$OVER_DEFAULT$OVER_SLOW" != "00" ]; then
+		# P41 (plan M10 §1.7 rule 5): the tier over budget runs once more; the faster run decides.
+		RERUN_ARGS=(-- --no-user-settings --no-audio)
+		if [ "$OVER_SLOW" = "1" ]; then
+			RERUN_ARGS+=(--slow)
+			[ "$OVER_DEFAULT" = "1" ] || RERUN_ARGS+=(--filter=res://tests/slow/)
+		fi
+		step "strict times: default ${DEFAULT_S} s, slow ${SLOW_S} s; the tier over budget runs once more"
+		run_limited 3600 "$GD" --headless --path . --fixed-fps 60 res://tests/run_tests.tscn "${RERUN_ARGS[@]}" \
+			>"$LOGS/tests_rerun.log" 2>&1
+		RERUN_EXIT=$?
+		grep -E "^RESULT:|^FAIL|^TIMES:" "$LOGS/tests_rerun.log" | head -n 20
+		[ "$RERUN_EXIT" = "0" ] || fail "the re-run tier exited with $RERUN_EXIT" "$LOGS/tests_rerun.log"
+		grep -q "^RESULT: .* 0 failures" "$LOGS/tests_rerun.log" || fail "the re-run has no passing RESULT line" "$LOGS/tests_rerun.log"
+		RERUN_LINE="$(grep -m1 "^TIMES:" "$LOGS/tests_rerun.log" || true)"
+		echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $(git rev-parse --short HEAD 2>/dev/null || echo '?') $RERUN_LINE (strict-times re-run)" \
+			>>"$LOGS/suite_times.txt"
+		if [ "$OVER_DEFAULT" = "1" ]; then
+			D2="$(tier_time "$RERUN_LINE" default)"
+			over "$D2" 75 && fail "the default tier took ${DEFAULT_S} s and then ${D2} s, both over its 75 s budget (--strict-times)"
+			echo "strict times: the default tier's faster run, ${D2} s, is within 75 s"
+		fi
+		if [ "$OVER_SLOW" = "1" ]; then
+			S2="$(tier_time "$RERUN_LINE" slow)"
+			over "$S2" 480 && fail "the slow tier took ${SLOW_S} s and then ${S2} s, both over its 8 minute budget (--strict-times)"
+			echo "strict times: the slow tier's faster run, ${S2} s, is within 8 minutes"
+		fi
+	elif [ "$OVER_DEFAULT" = "1" ]; then
 		echo "WARNING: the default suite took ${DEFAULT_S} s, over its 75 s budget (decision 34)"
 	fi
 fi

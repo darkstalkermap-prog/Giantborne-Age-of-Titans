@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.appearance_shrines",
+	"type": "tutorial_prompt",
+	"description": "P42 (plan M10 §2.11): at the first shrine after loading a save from before M10 (it had no look: the flag appearance.legacy_save), the giant can now be shaped there. Dismissed when the Appearance tab is first opened (appearance.tab_seen, P44) or after 15 s.",
+	"text": "Your giant can now be shaped at any shrine: the Appearance tab.",
+	"trigger": {
+		"type": "event",
+		"event": "shrine_activated"
+	},
+	"dismiss": {
+		"type": "flag",
+		"flag": "appearance.tab_seen",
+		"timeout_s": 15
+	},
+	"requires_flags": [
+		"appearance.legacy_save"
+	],
+	"min_stage": 1,
+	"priority": 13,
+	"once": true,
+	"defer_in_combat": true
+}
