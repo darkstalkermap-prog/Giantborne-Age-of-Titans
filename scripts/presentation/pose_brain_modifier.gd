@@ -63,6 +63,8 @@ const PROTRACT_MAX_DEG := 18.0
 const FP_BLEND_RATE := 8.0
 ## The knee's pole for the legs' solve (Body space: forward and a little down).
 const KNEE_POLE := Vector3(0.0, -0.2, -1.0)
+## The most the pelvis moves for a reach (stage-1 metres; TipMatching.REACH_PELVIS_M).
+const REACH_PELVIS_MAX := TipMatching.REACH_PELVIS_M
 ## Halvings of the search for the share of the grip's turn the wrist allows.
 const ALIGN_STEPS := 4
 
@@ -101,7 +103,7 @@ var _ok := false
 ## skeleton and Visual/Body, the rest arms, and tip matching from the model's landmarks.
 func setup(p_rig: SkinnedRig, index: Dictionary, body: Node3D) -> void:
 	rig = p_rig
-	tm = TipMatching.from_index(index)
+	tm = TipMatching.for_fist(index)
 	var sk := get_skeleton()
 	if sk == null or body == null:
 		return
@@ -216,7 +218,7 @@ func _weapon_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: 
 	var sh := _to_body(sk.get_bone_global_pose(_bi.upperarm_r).origin)
 	var arc := _is_arc(s)
 	_w_arc = move_toward(_w_arc, 1.0 if arc else 0.0, delta * ARC_BLEND_RATE)
-	_w_fp = move_toward(_w_fp, 1.0 if rig.first_person_rest() else 0.0, delta * FP_BLEND_RATE)
+	_w_fp = move_toward(_w_fp, rig.first_person_rest_weight(), delta * FP_BLEND_RATE)
 	# the generic mapping
 	var target := sh + dir * (GENERIC_REACH_USE * tm.palm_reach("r"))
 	var hand_dir := dir
@@ -231,7 +233,9 @@ func _weapon_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: 
 		var m := tm.match_swing_reach(sh, pivot, dir, arm_m, weapon_m, radius_m, "r")
 		if float(m.clavicle_m) + float(m.lean_deg) + float(m.pelvis_m) > 0.0:
 			_extend(sk, m, _w_arc)
+			var predicted: Vector3 = m.shoulder
 			sh = _to_body(sk.get_bone_global_pose(_bi.upperarm_r).origin)
+			stats["reach_miss_m"] = sh.distance_to(predicted)
 			m = tm.match_swing_at(sh, pivot, dir, arm_m, weapon_m, "r")
 		target = target.lerp(m.grip, _w_arc)
 		hand_dir = hand_dir.slerp(m.hand_dir, _w_arc).normalized()
@@ -239,10 +243,8 @@ func _weapon_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: 
 		if _w_arc >= 1.0:
 			tip = m.tip
 	var weight := _w_live * (1.0 - _w_fp)
-	# the point placed on the target: the fist's centre under the generic mapping; in a tested swing the knuckle
-	# line, as M10's tip matching placed it (its contract and the elbow's path unchanged; the socket still sits in
-	# the fist, a hand's depth behind it)
-	var anchor: Vector3 = (_grip_local.r as Vector3).lerp(_rest.r.palm_local as Vector3, _w_arc)
+	# the point placed on the target: the fist's centre (tip matching is built for the fist: TipMatching.for_fist)
+	var anchor: Vector3 = _grip_local.r
 	var placed := _place_weapon_hand(sk, sh, target, wdir, hand_dir, tip, weight, anchor, 1.0 - _w_arc)
 	target = placed.target
 	wdir = placed.weapon_dir
@@ -382,20 +384,9 @@ func _set_arm(sk: Skeleton3D, side: String, sh: Vector3, elbow: Vector3, wrist: 
 ## The reach extension on the bones (Body space amounts from TipMatching.match_swing_reach, x `weight`): the
 ## pelvis shifted (the feet kept where they stand), the spine leaned, the clavicle protracted.
 func _extend(sk: Skeleton3D, m: Dictionary, weight: float) -> void:
-	var pel_m := float(m.pelvis_m) * weight
 	var lean := deg_to_rad(float(m.lean_deg)) * weight
 	var cla := float(m.clavicle_m) * weight
-	reach_ext = {"clavicle_m": cla, "lean_deg": rad_to_deg(lean), "pelvis_m": pel_m}
-	if pel_m > 0.0:
-		var feet := {}
-		for side: String in ["l", "r"]:
-			feet[side] = sk.get_bone_global_pose(_bi["foot_" + side])
-		var ip: int = _bi.pelvis
-		var gp := sk.get_bone_global_pose(ip)
-		gp.origin += _to_skel_vec(m.pelvis_dir as Vector3) * pel_m
-		sk.set_bone_global_pose(ip, gp)
-		for side: String in ["l", "r"]:
-			_keep_foot(sk, side, feet[side])
+	var sh0 := _to_body(sk.get_bone_global_pose(_bi.upperarm_r).origin)
 	if lean > 0.0:
 		var axis := _to_skel_dir(m.lean_axis as Vector3)
 		for b: String in SPINE:
@@ -406,6 +397,23 @@ func _extend(sk: Skeleton3D, m: Dictionary, weight: float) -> void:
 	if cla > 0.0:
 		var shn := _to_body(sk.get_bone_global_pose(_bi.upperarm_r).origin)
 		_protract(sk, "r", shn + (m.clavicle_dir as Vector3), cla, 1.0)
+	# the pelvis: its own share, and what the clavicle's and the spine's joints fell short of the shoulder the
+	# extension was solved for (the bones turn about their own joints, the solve about the pelvis), within its
+	# bound; the feet stay where they stand
+	var want := sh0.lerp(m.shoulder as Vector3, weight)
+	var now := _to_body(sk.get_bone_global_pose(_bi.upperarm_r).origin)
+	var shift := (want - now).limit_length(REACH_PELVIS_MAX * weight)
+	reach_ext = {"clavicle_m": cla, "lean_deg": rad_to_deg(lean), "pelvis_m": shift.length()}
+	if shift.length() > 1e-5:
+		var feet := {}
+		for side: String in ["l", "r"]:
+			feet[side] = sk.get_bone_global_pose(_bi["foot_" + side])
+		var ip: int = _bi.pelvis
+		var gp := sk.get_bone_global_pose(ip)
+		gp.origin += _to_skel_vec(shift)
+		sk.set_bone_global_pose(ip, gp)
+		for side: String in ["l", "r"]:
+			_keep_foot(sk, side, feet[side])
 
 
 ## Brings a foot back to `was` (its global pose before the pelvis moved) by a two-bone solve of the leg, the knee

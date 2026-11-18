@@ -35,8 +35,8 @@ extends ActorRig
 ##              ACTIVE phase starts (STOMP_PLANT), the rest of the action onto its settle;
 ##   roar       a cylinder_pulse with morale damage (Thunder Roar): `roar` by the action's whole fraction;
 ##   motion     an action's `motion` block moving the giant in its phase (Shoulder Charge, the grab's
-##              lunge): the run clip on the skin's own clock, advanced by ground speed / stride, the sprint
-##              clip above SPRINT_FROM of the sprint's speed;
+##              lunge): the run clip on the skin's own clock, advanced by ground speed / stride (at most the
+##              sprint's cadence), the sprint clip above SPRINT_FROM of the sprint's speed;
 ##   walking    the brain walks (over 0.3 m/s in LOCOMOTION or BLOCKING): idle | walk | run | sprint by
 ##              normalized speed (speed / k; the sprint by speed / the sprint's speed), the clips' time from
 ##              the brain's walk phase, t = fposmod(walk_phase + pi/2, 2 pi) / 2 pi x length, so heel strikes
@@ -82,8 +82,8 @@ const RUN_FULL := 6.5
 const SPRINT_FROM := 0.8
 const SPRINT_FULL := 0.95
 ## Frames off the floor before the airborne pose shows (a step down is not a jump); it then blends in at
-## AIR_RATE, past half on the third frame off the ground.
-const AIR_FRAMES := 2
+## AIR_RATE, past half by the third frame off the ground.
+const AIR_FRAMES := 1
 ## The landing clip's time after the floor returns (seconds).
 const LAND_S := 0.25
 ## A landing needs this long off the ground (seconds): a step down or a spawn's drop is not a jump.
@@ -101,16 +101,16 @@ const SNAP_DEG := 30.0
 ## A frame's move of the actor farther than this (stage-1 metres, x k) is a teleport: the springs reset.
 const TELEPORT_M := 3.0
 ## The relaxed off hand: open_l's weight and grip_l's share on top of it (a loose curl, not the bind pose).
-const RELAX_OPEN := 0.75
-const RELAX_CURL := 0.3
+const RELAX_OPEN := 1.0
+const RELAX_CURL := 0.05
 ## How fast each source's weight moves (1 / s, exponential): a fade reaches 95 % in 3 / rate seconds (0.12-0.2 s
-## for every change of source; the airborne pose keeps M10's quicker 0.07 s, the speed blends inside the gait
-## M10's 0.37 s).
+## for every change of source - the airborne pose 0.125 s, still past half on the third frame off the ground
+## (M10's 0.07 s turned a calf 30 degrees in a frame); the speed blends inside the gait M10's 0.37 s).
 const BLEND_RATE := 16.0
-const FADE_RATES := {"move": 16.0, "run": 8.0, "sprint": 8.0, "charge": 16.0, "charge_sprint": 16.0, "air": 45.0,
+const FADE_RATES := {"move": 16.0, "run": 8.0, "sprint": 8.0, "charge": 12.0, "charge_sprint": 16.0, "air": 24.0,
 	"dead": 20.0, "land": 20.0, "stomp": 20.0, "roar": 20.0, "turn": 18.0, "turn_side": 18.0, "brace": 16.0,
 	"fp": 16.0, "open_l": 12.0, "grip_l": 12.0, "fist_l": 12.0}
-const AIR_RATE := 45.0
+const AIR_RATE := 24.0
 const DEATH_RATE := 20.0
 const HAND_RATE := 12.0
 ## A flinch's weight: the flash's strength x this, eased in and out with the clip (which starts and ends at
@@ -123,6 +123,8 @@ const KNOCKBACK_STANCE_MPS := 0.5
 ## The held body's visual moves by at most this (stage-1 metres, x k).
 const HELD_GAP_MAX := PoseBrainModifier.HELD_GAP_MAX
 ## The family of a weapon -> its grip clip (P48's one-frame finger poses).
+## fp_rest is whole down to the first of these pitches (degrees) and gone by the second.
+const FP_REST_PITCH_DEG := Vector2(-30.0, -48.0)
 const GRIP_CLIPS := {"club": "grip_club", "sword": "grip_sword", "hammer": "grip_hammer", "axe": "grip_axe",
 	"fists": "grip_fist", "fist": "grip_fist", "tree": "grip_tree"}
 
@@ -498,10 +500,12 @@ func _drive_tree(delta: float) -> void:
 	_ease("grip_l", 1.0 if gripping else (0.0 if open or fists else RELAX_CURL), HAND_RATE, delta)
 	_ease("open_l", 1.0 if open and not gripping else (0.0 if gripping or fists else RELAX_OPEN), HAND_RATE, delta)
 	_ease("fist_l", 1.0 if fists else 0.0, HAND_RATE, delta)
-	_ease("fp", 1.0 if first_person_rest() else 0.0, float(FADE_RATES.fp), delta)
+	_ease("fp", first_person_rest_weight(), float(FADE_RATES.fp), delta)
 	_set_grip_clip(str(GRIP_CLIPS.get(family, "grip_r")))
 	if charging:
-		_charge_phase += delta * speed / (stride_length_m * k) * PI
+		# the stride's cadence at most the sprint's: a dash (Shoulder Charge at 26 m/s) would otherwise spin the legs
+		# through a third of a cycle a frame
+		_charge_phase += delta * minf(speed, sprint_speed()) / (stride_length_m * k) * PI
 	# Seek a clip only while its branch shows: a seeking branch is evaluated even at weight 0 (the tree's
 	# optimization skips only the branches that do not seek), and the brain sets the time of every shown one.
 	var eff := source_weights()
@@ -667,6 +671,17 @@ func _set_grip_clip(clip: String) -> void:
 ## The grip clip the right fist takes now ("grip_club", ...).
 func grip_clip() -> String:
 	return _grip_clip
+
+
+## How much of fp_rest the arms take: all of it in first person at rest looking ahead, fading out as the view
+## turns down from FP_REST_PITCH_DEG.x to .y degrees (looking down, the arm hangs as in M10 and the lower corners
+## stay clear: test_first_person_shoulders); 0 otherwise.
+func first_person_rest_weight() -> float:
+	if not first_person_rest():
+		return 0.0
+	var cam: Variant = actor.get("camera_rig")
+	var pitch := rad_to_deg(float((cam as Object).get("pitch"))) if cam != null and "pitch" in cam else 0.0
+	return clampf((pitch - FP_REST_PITCH_DEG.y) / (FP_REST_PITCH_DEG.x - FP_REST_PITCH_DEG.y), 0.0, 1.0)
 
 
 ## True in first person while the brain is at rest: no action, no block, dodge or hold (the arms take fp_rest).

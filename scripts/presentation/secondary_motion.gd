@@ -28,12 +28,16 @@ extends SkeletonModifier3D
 ## Tuning in play over the index's starting values (P50; probe 4: lift the cape less with more gravity, not
 ## more drag, which only slows the settle). By chain kind; a key left out keeps the index's value.
 const TUNING := {
-	"hair": {"stiffness": 1.2, "drag": 0.4, "gravity": 0.8},
-	"beard": {"stiffness": 2.2, "drag": 0.5, "gravity": 0.6},
-	"cape": {"stiffness": 0.6, "drag": 0.45, "gravity": 1.8},
+	"hair": {"stiffness": 3.0, "drag": 0.5, "gravity": 0.8},
+	"beard": {"stiffness": 3.0, "drag": 0.5, "gravity": 0.6},
+	"cape": {"stiffness": 1.2, "drag": 0.5, "gravity": 2.5},
 }
 ## A cape joint swings at most this far toward the giant's front from where its parent carries it (degrees).
 const CAPE_FRONT_DEG := 6.0
+## The fastest a joint turns against its parent (degrees a second): an instant change of speed (Shoulder Charge's
+## dash starts at 26 m/s and stops dead) would otherwise whip a chain from one side of its limit to the other in
+## a single frame.
+const MAX_TURN_DEG_S := 720.0
 ## The springs' joint radius (stage-1 metres in the skeleton's space) and the colliders.
 const JOINT_RADIUS := 0.02
 const HEAD_RADIUS := 0.13
@@ -41,7 +45,7 @@ const CHEST_RADIUS := 0.2
 const CHEST_HEIGHT := 0.62
 ## The chains that collide with the head sphere and the chest capsule (the cape hangs off spine_03 behind the
 ## back and its limits keep it there: no collider).
-const COLLIDES := {"hair": ["Chest"], "hair_l": ["Head", "Chest"], "hair_r": ["Head", "Chest"], "beard": ["Head", "Chest"]}
+const COLLIDES := {"hair_l": ["Head"], "hair_r": ["Head"], "beard": ["Chest"]}
 
 ## The run's counts over every SecondaryMotion of the process (SKIN_STATS: secondary_frames).
 static var totals := {"frames": 0, "resets": 0, "limited": 0, "builds": 0}
@@ -164,6 +168,8 @@ func configure(chain_ids: PackedStringArray) -> void:
 func reset() -> void:
 	if springs != null and not chains.is_empty():
 		springs.reset()
+	for j: Dictionary in _joints:
+		j.erase("prev")
 	resets += 1
 	totals["resets"] = int(totals.get("resets", 0)) + 1
 
@@ -217,6 +223,7 @@ func _process_modification_with_delta(_delta: float) -> void:
 	var worst := 0.0
 	var limited := 0
 	var front_lim := deg_to_rad(CAPE_FRONT_DEG)
+	var max_step := deg_to_rad(MAX_TURN_DEG_S) * maxf(_delta, 1.0 / 240.0)
 	for j: Dictionary in _joints:
 		var b: int = j.bone
 		var gp := sk.get_bone_global_pose(b)
@@ -237,6 +244,12 @@ func _process_modification_with_delta(_delta: float) -> void:
 				if tilt > front_lim:
 					var side := carried.cross(f).normalized()
 					want = want.rotated(side, front_lim - tilt).normalized()
+		if j.has("prev"):
+			var before := (parent_gp.basis * (j.prev as Vector3)).normalized()
+			var step := before.angle_to(want)
+			if step > max_step:
+				want = before.slerp(want, max_step / step).normalized()
+		j["prev"] = (parent_gp.basis.inverse() * want).normalized()
 		if want.angle_to(d) > 1e-5:
 			limited += 1
 			gp.basis = Basis(Quaternion(d, want)) * gp.basis
