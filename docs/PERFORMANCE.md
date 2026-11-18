@@ -1874,6 +1874,57 @@ final run's at 72.0 s with P43's suites in it), so the costs above count the sui
 `"errors":0`, in 8 min 30 s of wall time beside the two renders (the plan assumed 4 minutes). Headless (no frames)
 it runs in 11 s.
 
+### The W26 merge (P43 and P44)
+
+P43 then P44 merged on the integration branch, 14 November 2026 (tag `wave-26-merged` on the second merge, `wave-26`
+on the final commit), with one fix-forward: `GiantModel.play_idle()`, which P44's preview calls and P43's branch had
+not added, so that the creator's giant idles (`docs/systems/P43.md`, `P44.md`). Container as above. The next wave's
+two lanes and another session's render shared the machine from the second merge on: loads 4.3-5.6 during the merges'
+default tiers, 5.1-6.5 during the final check's default and slow tiers, 6.5-13.6 during its gate tier.
+
+**The check** (`tools/check.sh --build --slow --gate --giant --require --strict-times`, then the 120 s soak; the two
+merges ran `--build` and the default tier):
+
+| | Base (W25 merged) | P43 merged | W26 merged (both) | W26 final (with the fix) |
+| --- | --- | --- | --- | --- |
+| Default tier | 74.0 s | 65.4 s | 63.8 s | **69.0 s** (under 75: no re-run) |
+| Slow tier | 368.4 s | - | - | **365.6 s** (budget 8 min) |
+| Gate tier | 687.0 s (the 0.9.0-m9 ship check, 29 suites) | - | - | **960.0 s** (31 suites; budget 50 min) |
+| Suites, checks, failures | 281, 49,839, 0 | 220, 40,909, 0 | 224, 41,207, 0 | **323, 54,069, 0** |
+| `--giant`: `--verify --skip-bake` | 72 s, 12 files | - | - | 72 s, `GIANT VERIFY OK`, 13 files (the clips 3.1 s); `--budget` 2.87 MiB |
+| Soak | - | - | - | 120 s, 7,201 frames, `"errors":0`, 2 fence breaks, 2 loot |
+
+The three full builds left the tree unchanged (64 chunks, 112 seams); no suite printed a skip note. One more default-tier
+run alone, after the check and at loads 11-13, read 85.5 s (224 suites, 0 failures): on this machine the tier's time
+follows the load, and the check's own run decides.
+
+**Each package's cost** (the runner's per-suite times; plan M10 §1.7; three default runs - P43 merged, both merged,
+final - and the final check's slow and gate tiers):
+
+| | Default (cap) | Slow (cap) | Gate (cap) |
+| --- | --- | --- | --- |
+| P43 | `test_skinned_rig` 0.23-0.27 + `test_skin_rules` 0.02-0.03: **0.26-0.29 s** own (0.6). The eight named suites that load the giant 6.14-6.87 s against 6.99 on the base: `test_grab_first_person` +0.19 to +0.46 and `test_weapons` +0.22 to +0.34 (the suites that turn the layers on; P43's back-to-back runs put the layers at 0.15 s each at most), the other six 0.8-1.4 s faster (noise): no net increase | `test_skinned_rig_render` 9.9 + `test_skinned_rig_motion` 1.6 = 11.5 s own; the five rendered and probe suites +4.7 s (`test_world_build` 34.3 against 29.9, `test_formation_perf` +0.5, `test_growth_route` +0.2, `test_rig_draw_calls` and `test_growth_route_456` -0.3 each): **16.1 s** (45) | `test_giant_determinism` 190.3 + `test_skinned_rig_stages` 27.9: **218.2 s, 3.6 min** (6 min) |
+| P44 | `test_creator_screen` 0.32-0.43, `test_shrine_appearance` 0.18-0.19, `test_giant_preview` 0.12-0.13, `test_creator_layout` 0.06-0.10: **0.69 s** own on the merge (loads about 5) and **0.84 s** in the final check (loads about 6) (0.8: at the cap); the six rewritten suites 2.41-2.79 s against 2.90 on the base: no increase | `test_appearance_render` 12.4 (131 tiles, 8.9 s in the probe), `test_shrine_appearance_saves` 0.44, `test_creator_controls` 0.19: **13.0 s** (40) | 0 (0) |
+| The suites that load the giant (`tools/giant_suites.py`: 128 default, 46 slow, 23 gate with W26's own) | 43.7 / 41.5 / 46.2 s against 51.1 on the base | 263.6 s against 287.7 | 373.6 s against 335.0 (0.9.0-m9) and 327.8 (P43's lane): the gate tier ran at loads up to 13.6 |
+| The 29 gate suites that existed before | | | 741.8 s against 687.0 (0.9.0-m9) and 677.9 (P43's lane): +55 s under the load (`test_world_bot_smoke` +26, `test_valley_audio_determinism` +13, `test_war_camp_leash` +8) |
+
+`test_anchors` (every script compiled) took 10.4-10.9 s against 11.1 on the base: the two packages' scripts are
+inside its noise.
+
+**The creator's idle** (the fix-forward): `play_idle()` costs 0.07 ms for a preview at best and 0.10-0.19 ms on
+average (a run-time `AnimationPlayer` with the clip library; 12 models, twice) and 0.007-0.008 ms a frame headless.
+The creator's two default suites ran four times with it and four times without, alternating, at loads of 11-13:
+`test_creator_screen` 355-574 ms with and 407-488 ms without - no difference outside the noise. In the game's window
+(Xvfb, llvmpipe, 1280x720, `--mode=world --creator`, 170 frames at 30 fps) the preview's giant moves and repeats
+every 60 frames: frames 60 frames apart are identical, frames 13 apart differ in 6,161 pixels of the giant's outline.
+
+**On the merged tree** the option check draws the same shares as on
+P44's branch (still tiles stand in the relaxed pose: preset min 0.0254, beard 0.0702, hair 0.0910, dye 0.0289; best in
+the views tattoo 1,844 px in first person and 127 from behind, paint 1,416 and 56, mark 180 and 37, scar 1 and 3 - the
+known miss), `test_skinned_rig_render` drew the whole giant at stage 1 in 43.5 ms a frame, `test_giant_shaders` in
+60.9 ms, and the determinism gate's three soaks and two Valley runs were byte-identical with the creator's code in
+(7,204 posed frames and 254 rig footfalls; 4 grabs, 3 throws, 252 held-visual writes).
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |

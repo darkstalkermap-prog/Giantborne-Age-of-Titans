@@ -108,6 +108,46 @@ func test_the_weapon_at_the_hand_and_the_category_framings() -> void:
 	c.close({"cancelled": true})
 
 
+func test_the_preview_idles_with_the_models_clip_and_a_still_preview_stands() -> void:
+	var p := GiantPreview.new()
+	layer.add_child(p)
+	await get_tree().process_frame
+	var player := p.model.get_node_or_null(GiantModel.IDLE_PLAYER) as AnimationPlayer
+	assert_true(player != null and player.is_playing(), "the model's idle player runs (GiantModel.play_idle)")
+	if player == null:
+		return
+	assert_eq(String(player.current_animation), "giant/idle", "it plays the idle clip")
+	assert_eq(player.get_animation(player.current_animation).loop_mode, Animation.LOOP_LINEAR, "as a loop")
+	assert_false(p.model.has_node("AnimationTree"), "with no tree: the rig's nodes belong to the player's giant")
+	var t0 := player.current_animation_position
+	for i in 3:
+		await get_tree().process_frame
+	assert_true(player.current_animation_position > t0, "the clip advances with the frames")
+	# The clip poses the skeleton: the arms hang (the rest pose is an A-pose) and the chest breathes.
+	var sk := p.model.skeleton()
+	var arm := sk.find_bone("upperarm_r")
+	var fore := sk.find_bone("lowerarm_r")
+	var spine := sk.find_bone("spine_02")
+	var rest_dir := (sk.get_bone_global_rest(fore).origin - sk.get_bone_global_rest(arm).origin).normalized()
+	player.seek(0.5, true)
+	var breath_in := sk.get_bone_pose_rotation(spine)
+	var dir := (sk.get_bone_global_pose(fore).origin - sk.get_bone_global_pose(arm).origin).normalized()
+	assert_true(rad_to_deg(dir.angle_to(rest_dir)) > 15.0 and dir.y < rest_dir.y,
+		"the upper arm hangs lower than at rest (%.1f deg)" % rad_to_deg(dir.angle_to(rest_dir)))
+	player.seek(1.5, true)
+	var breath_out := sk.get_bone_pose_rotation(spine)
+	assert_true(rad_to_deg(breath_in.angle_to(breath_out)) > 1.0,
+		"the spine breathes (%.2f deg between the breath's ends)" % rad_to_deg(breath_in.angle_to(breath_out)))
+	p.queue_free()
+	# The option check's tiles and the sheets stand still: no player, the relaxed pose.
+	var still := GiantPreview.new()
+	still.still = true
+	layer.add_child(still)
+	await get_tree().process_frame
+	assert_false(still.model.has_node(GiantModel.IDLE_PLAYER), "a still preview plays no clip")
+	still.queue_free()
+
+
 func test_the_title_enables_at_once_headless_and_a_warm_up_holds_then_frees() -> void:
 	GameSession.mode = GameSession.Mode.TITLE
 	var title := stack.open("title") as TitleScreen
