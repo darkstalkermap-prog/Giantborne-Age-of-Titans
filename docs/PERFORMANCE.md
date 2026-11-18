@@ -2398,6 +2398,136 @@ morning; more in the runs with a step), which is what left that one run outside 
 publishes the checked build's bytes and not the first rebuild's, and the reproducibility of the export is an M11
 row (`docs/plans/FOLLOWUPS.md`, "From the 0.10.0-m10 release").
 
+### M11 W29: the Web, tools and performance debts (P49)
+
+P49 (`docs/systems/P49.md`; plan M11 §3.2) on its branch from the tag `m11-plan`, 18 November 2026: `0.10.0-m10`'s
+code with the launcher's part-wise unpacking, the staged budget rule, the shadow proxy path, stable node ids in
+every generated scene and the Web checks' fixes. Container as above (4 shared CPUs, no GPU, a debug build), **shared
+all day with the other lane's bakes, renders and test runs** (a Cycles bake at 2 threads and a rendering Godot beside
+almost every run: 1-minute loads of 3 to 12). Every heavy process of this package ran at `nice -n 19`, so its wall
+times are a starved process's and indicative only; counts (draw calls, bytes, checks) are not affected. The model
+has no `ShadowProxy` in this worktree (P48's lane): where a figure needs one it was taken with a **stand-in** (a
+copy of the torso's mesh under the same skeleton, named `ShadowProxy`), and says so.
+
+**The test tiers at the base** (`tools/check.sh --slow` on `m11-plan`, loads 2-6; the runner's per-suite times):
+default **64.8 s** (224 suites, 42,788 checks), slow **352.4 s** (73 suites, 10,040 checks), 298 suites and 52,934
+checks in all, 0 failures; the 120 s soak 7,201 ticks, 0 errors, attacks 41, hits 33, kills 4, fence breaks 2,
+loot 2, debris 10. Where the default tier's time is: `test_anchors` (every script compiled) 11.40 s; ten more
+suites over a second (`test_data_and_saves` 3.24, `test_growth` 2.09, `test_abilities_m2` 1.65, `test_archer` 1.53,
+`test_wolf` 1.30, `test_weapons` 1.24, `test_boss_arena` 1.20, `test_grab_throw` 1.10,
+`test_world_and_flow_integration` 1.08, `test_tutorial` 1.04: 15.5 s together); 42 suites of 0.3 to 1 s (22.9 s);
+171 under 0.3 s (14.9 s). The heaviest single tests after the compile check: the first-person light chains at
+stage 3 (0.91 s), the hold in first person (0.80 s), the reach at stages 2 and 3 (0.78 and 0.56 s), the wolves'
+tokens (0.53 s), the audio effects' samples (0.62 s), the AI-name scan of the docs (0.54 s). The slow tier's
+heaviest: `test_world_build` 35.7 s, `test_valley_walkthrough` 17.6, `test_appearance_render` 17.4,
+`test_first_person_shoulders` 15.8, `test_m8_gate_tutorials` 15.3, `test_world_cavalry` 14.9, `test_world_seams`
+14.1, `test_world_walk` 14.1, `test_stage_reach_bands` 11.3, `test_growth_route_456` 10.9, `test_siege_battery`
+10.9, `test_formation_perf` 10.1.
+
+**The headroom moves** (plan M11 §1.7 rules 2 and 3): 3.05 s of default-tier simulation to `tests/slow/` (the
+first-person light chains 0.91 s, the two reach tests 1.34 s, `test_grab_first_person` 0.80 s) and
+`test_world_cavalry` (14.9 s) from the slow tier to the gate tier. This package's own suites: default
+`test_predeclared_m11` 0.008 s and `test_build_web_budget` +0.07 s (0.31 against 0.24); slow
+`test_giant_shadow_proxy` 5.3 s, `test_build_web_parts` 2.3 s, `test_export_reproducible` 0.7 s,
+`test_loading_warm_up` +0.1 s. **After** (`tools/check.sh --build --slow --giant --require --strict-times` on the package's head, loads 4-12 with the other lane's renders beside it): default **57.3 s**, slow **317.7 s**, 303 suites, 53,231 checks, 0 failures; the 120 s soak 7,201 ticks, 0 errors, attacks 41, hits 33, kills 4, fence breaks 2, loot 2, debris 10 (as at the base). The scene build is deterministic: `--build` regenerated every scene with no change in git. `test_world_cavalry` in the gate tier: 23 checks, 0 failures, 12.9 s.
+
+**Probe 9: the launcher's unpacking at the last budget** (a 44.02 MiB packed stand-in in four parts, headless
+Chromium, the renderer's resident memory read every 20 ms, three runs each; `docs/systems/P49.md`, "Probes"):
+
+| Unpacker | Peak | Rise over the page at rest | To the whole 50.56 MB in hand |
+| --- | --- | --- | --- |
+| The joined text (0.10.0-m10) | 407-418 MB | 329-342 MB | 485-527 ms |
+| A part at a time | 373-388 MB | 296-311 MB | 504-568 ms |
+| **One stream, a network chunk at a time (shipped)** | **292-303 MB** | **214-225 MB** | **396-399 ms** |
+
+About 100 MB of each rise is the unpacked pack and the buffer it is read into; the launcher's own share falls from
+about 235 MB to about 120 MB at 44 MiB (at today's 22.5 MiB: about half of each).
+
+**The exports** (`tools/build_web.sh`, then `--parts=4`, then `--preset="Web (test)"`; the version `0.10.0-m10`,
+so the budget is 26 MB and the giant's share 7.6):
+
+| | `Web` (the release) | `Web (test)` |
+| --- | --- | --- |
+| `index.pck` raw / gzipped / shipped | 25,843,836 / 17,693,914 / **23,591,888 (22.50 MiB of 26)** | 26,952,368 / 18,508,138 / 24,677,520 (23.53 MiB) |
+| Parts (at most 15,000,000 bytes) | two of 11,795,944; with `--parts=4` four of 5,897,972 | two of 12,338,760 |
+| `GIANT_SHARE` (cap 7.6) | 8,058,775 raw, **5,847,700 shipped (5.58 MiB)**, 33 files | 5,844,396 shipped (5.57 MiB) |
+| `PEOPLE_SHARE` (no cap before m13) | 0 files, 0 bytes | 0 |
+| Audio | 9.28 MB of the 24.65 MB pck (38 %) | 9.28 MB of 25.70 MB (36 %) |
+| Files; test content | 2,840; none; the release's data validates without `data/test` | 122 test files packed |
+| `index.wasm` | 37,700,666 (packed 12,528,700) | the same engine |
+
+The pack is 5,416 bytes larger shipped than the 0.10.0-m10 release's (23,586,472): the 4,297 node ids in the
+converted scenes and this package's scripts. The page's whole download is 36,564,774 bytes (the packed engine and
+pack, `index.js`, the two worklets, the launcher and the poster; 36,520,414 at the release); the launcher's note
+reads "About 36 MB to download." from the build's own counts.
+
+**Two exports of one commit** (`PCK_SHA256`, the pack's checksum; plan M11 §3.2 item 5):
+
+| Export | Checkout and import | `PCK_SHA256` |
+| --- | --- | --- |
+| Stable node ids in the scenes, the conversion cache emptied: twice in this worktree (its `.godot` copied from the main checkout at the wave's start) | one import | `ae8f4531...2a71d`, twice: **the same** (at 0.10.0-m10 a fresh conversion of one scene differed in its two node ids) |
+| The same commit in a second checkout with its own fresh import | a second import | `f41e37b0...7d64`: **different, in one packed file** - `.godot/imported/giant.glb-<hash>.scn`, 128 bytes (28 node ids and the file's checksum): the glTF importer packs the scene it built and gives its nodes random ids at every import |
+| With `tools/normalize_imports.gd` run by the build (the imported scene's ids made from the source file's and each node's path; the import's `.md5` record updated, so the editor imports nothing again): this worktree, three exports (the release, `--parts=4`, again) | one import | `582e4fb9...290605`, three times |
+| The second checkout (the tool rewrote its 28 ids: `"rewritten":1,"nodes":28`; this worktree's run found nothing to do) | the second import | `582e4fb9...290605`: **the same bytes in two checkouts with separate imports** |
+
+The imported scene rewritten by the tool was compared with the importer's own, node by node: 28 nodes, the same
+classes and stored properties, the same vertex, skin and LOD data in every surface, the same skins and bones; only
+the ids differ (and 124 bytes of its compressed size).
+
+**Draw calls at `medium` with the shadow proxy** (Xvfb, the Compatibility renderer, llvmpipe at 2 threads, 640x360,
+`--skin`; the commands of "Commands" above with `--graphics=medium`; p50 / p95 / p99 / max over the run):
+
+| Run | 0.10.0-m10's shadow path (measured again here: the same counts as the M10 record) | With the proxy (the stand-in) | Plan M11 §2.12's row |
+| --- | --- | --- | --- |
+| The Valley walk (`--scenario=valley_walk --walk-teleport`; 2,182 frames; the sun's two cascades) | 228 / 323 / 365 / **395** | 213 / 307 / 349 / **379** | at most 330: **a miss by 49** |
+| The stress arena (`--scenario=stress`, 45 s; 2,640 frames; four cascades whatever the preset) | 344 / 583 / 649 / **674** | 312 / 551 / 617 / **642** | at most 620: **a miss by 22** |
+
+The proxy does what it was built for: the giant's shadow costs one draw a cascade instead of his nine shown meshes
+(`test_giant_shadow_proxy`: 9 against 1 with one shadow map, 36 against 4 with four), which is exactly the 16 and
+the 32 the two runs fell by at every percentile; with the fullest M10 look (12 meshes) it would be 22 and 44. The
+row's 330 and 620 asked for 65 and 54: more than the giant's shadow holds in either run. What is left at `medium`
+is not the giant: the static world's own shadow casters (up to 221 calls a view at `medium`) and every enemy's box
+rig, which is five to seven meshes drawn again in each cascade (twelve combatants in four cascades in the arena) -
+the people's one shadow draw a cascade (plan M11 §2.9; P60) is what cuts that. `low`, the Web's preset, is within
+250 everywhere (with the proxy's path in: the stress arena at most 153, p50 75, p95 126; the Valley walk at most 152, p50 94, p95 139).
+
+**The package's final export** (`tools/build_web.sh` on the head, with the preview's Web cap at 2): `PCK_SHA256
+3b1ed89c...00d19e`; 23,591,860 bytes shipped (22.50 MiB of 26) in two parts of 11,795,930; `GIANT_SHARE` 5.58 MiB
+of 7.6; `PEOPLE_SHARE` 0; `NORMALIZE_IMPORTS` found nothing to rewrite (this worktree's import already had its
+stable ids). `Web (test)`: 24,677,536 shipped (23.53 MiB).
+
+**The five Chromium checks on that export, default forms** (headless Chromium, SwiftShader; each started at a
+1-minute load under 3, the other lane's renders resuming during them):
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `creator_check.mjs` (960x540) | OK, 2 misses reported | the title's own warm-up frame 42.9x and 44.4x (by design, as in M10); the creator after New Game **2.74x** (504.3 ms against 184.4; 98 % of it the draw; its first three frames compiled 20 shaders and linked 10 programs), the shrine's creator after Continue 1.77x, the levels 1.11x and 0.32x; renderer peak 960 MB |
+| `world_start_check.mjs` | OK | |
+| `audio_check.mjs` | OK | one Enter at the title (ready 2.9 s after the page), 7 clock references, largest step -9.2 ms; criterion NOT MET on software WebGL as always (247 holes, every one placed on the main thread); renderer peak 914 MB |
+| `world_check.mjs` | OK | 398 s of music, 41 clock references, largest step 17.8 ms, 0 holes across a step, 0 holes unplaced; criterion NOT MET (602 holes, all on the main thread); renderer peak 952 MB |
+| `stream_check.mjs --world --audio` (`builds/web_test`) | OK | 132.9 s of music over 4 borders, 15 references, largest step 27.4 ms; criterion NOT MET (357 holes, all on the main thread); renderer peak 649 MB |
+
+0 console errors and 0 failed requests in all five. The Web tools' own tests on a quiet machine:
+`test_launcher_parts` 345 checks, `test_creator_check` 46, `test_audio_check` 39, `test_stream_check` 24,
+`test_world_check` 56, `test_memory_guard` 21, 0 failures.
+
+**The preview's pixel scale on the Web** (`creator_check.mjs --parts=new_game --size=1920x1080
+--args=--preview-scale=N`, loads 2.7-3.0 at the start): the creator's first frame against its median frame -
+1: 537.5 / 254.1 ms (2.12x); 1.5: 620.1 / 340.3 ms (1.82x); 2: 654.9 / 455.1 ms (1.44x). Every scale is within
+the stall rule, so `GiantPreview.WEB_MAX_PIXEL_SCALE` is 2.0 (the desktop's); the steady creator frame on
+software WebGL grows by 1.8 times from 1 to 2. Renderer peaks 942, 971 and 1,106 MB.
+
+**The page under a starved browser (LD-1)** (`tools/web/memory_probe.mjs --pin-cpu=3 --busy=4`): the renderer
+from 485 to 1,800 MB in 95 s (14 MB a second) while the page ran no animation frame after its first two seconds
+and its WebAssembly (138 MB) and JS (12 MB) heaps stayed the same; the same with the engine's position reporters
+unconnected; without an `AudioContext` the engine does not start. Not the game's (no game code runs while it
+grows); the checks' 3 GB guard stays. `docs/systems/P49.md`, item 7.
+
+**The `--continue` warm-up natively** (Xvfb, llvmpipe, `MESA_SHADER_CACHE_DISABLE=true`): the shrine's first
+creator 15.6-16.3x on this branch against 16.8x at the base, and 19.8x after the title's own warm-up: the
+loading screen's warm-up gives `--continue` what the title gives, and neither covers the creator's first frame
+on llvmpipe with no driver cache (a follow-up for the creator's package).
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
