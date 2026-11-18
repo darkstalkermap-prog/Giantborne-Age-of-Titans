@@ -37,7 +37,9 @@ look (character sheet B and the release candidate) is pending as this document i
 **The gate's result**: eight lenses, four reviewers; 21 findings, 19 confirmed and 2 refuted, plus one
 note of the orchestrator's; 5 majors, all fixed; 19 of the 20 items fixed or settled at the gate and
 one deferred to M11; the audit of the fixes came back dry on its first round; the merged code passed
-its full check with 330 suites, 56,119 checks and 0 failures (§5, §6.1).
+its full check with 330 suites, 56,119 checks and 0 failures (§5, §6.1). The ship's final check passed
+the same suites on the release's code, with every bake pass and every sound regenerated bit-exact
+(§5.5).
 
 ## 1. Engine, build and environment
 
@@ -224,20 +226,22 @@ draw calls at `medium`.
 
 ### 5.5 The Ship gate (plan §3.7, §4.3)
 
-The ship step runs in two parts at once: these documents, and the build (the version, the final
-check, the exports, the Chromium checks, the screenshots). A cell marked with the ship placeholder is
-filled from the build part's record when the two are joined; nothing here anticipates its result.
+The ship step ran in two parts at once: these documents, and the build (the version, the exports, the
+Chromium checks, the screenshots). The two were then merged (`a5c0d6b` the build, `67d3eb9` these
+documents) and the final check ran on the merged code. The build's rows are filled from its record,
+`PERFORMANCE.md`'s "The 0.10.0-m10 release", which holds every command and both runs of each
+Chromium check.
 
 | Item | Result | Evidence |
 | --- | --- | --- |
-| The final check on the final code: every scene rebuilt with no diff, every tier, `--giant-full`, `--audio`, the soak, `--require --strict-times` | ⟦SHIP: the final check's verdict, suites, checks, tier times, the giant and audio verify lines and the soak, from the build part's record⟧ | The gate merge's check on `348a7bf` (§6.1) is the last full check before it: it ran `--giant`, not `--giant-full` or `--audio` |
+| The final check on the final code: every scene rebuilt with no diff, every tier, `--giant-full`, `--audio`, the soak, `--require --strict-times` | **PASS** - `tools/check.sh --build --slow --gate --giant-full --audio --require --strict-times` on the merged head `67d3eb9` (the final code: the release's build and these documents; the commit after it only fills this table): CHECK PASSED in 30 minutes on a quiet machine (loads 0.1-1.2). Every scene rebuilt (24 builders, 124 scenes; the world's 64 chunks, 112 seams ok) with no change to a tracked file. `AUDIO VERIFY OK: 441 files regenerated bit-exact`. `GIANT VERIFY OK: 13 files regenerated bit-exact (every bake pass)` in 239 s. 330 suites, 56,119 checks, 0 failures; default 66.2 s, slow 341.8 s, gate 844.6 s, each within its budget, so `--strict-times` re-ran nothing; no suite printed a skip note. The 120 s soak: 7,201 frames, 0 errors, 0 warnings | §6.1. The gate merge's check on `348a7bf` was the last full check before it: it ran `--giant`, not `--giant-full` or `--audio` |
 | README, ARCHITECTURE and DECISIONS consolidated; this handoff | **PASS** | README.md (M10 in §2, §3, §4.3, §6, §7, §9, §11), `docs/ARCHITECTURE.md` §23 and the M10 rows of its other sections, `docs/DECISIONS.md` §1.4, §1.5, §2.3, §3.3, §3.4, §4.3 and the two changed M0/M1 rows of §5, this document; `tests/unit/test_ship_docs.gd` passes on them as committed |
-| Screenshots in `docs/screenshots/m10/`: the creator, the giant in the Valley and the world, first person, the stage lineup | ⟦SHIP: the files and how they were rendered⟧ | - |
-| The Linux export: the soak and an assisted bot run headless; once under Xvfb with `--skin` (a screenshot, 0 errors); `pck_files.py` lists `tex_hi/` in its pack | ⟦SHIP: the export's size and the three runs' results⟧ | At the gate (the candidate, lens 6): the export under Xvfb with `--skin` ran the capture tour complete with 0 errors, and headless the 120 s soak with `--skin` with 0 errors |
-| The Windows export built (not launched) | ⟦SHIP: built, with its size⟧ | - |
-| The Web export within 26 MiB, parts of at most 15 MB, `GIANT_SHARE` within 7.6 | ⟦SHIP: the release build's `PCK_SIZE`, parts and `GIANT_SHARE` lines⟧ | The release candidate from the gate's code: 22.49 MiB, two parts, 5.57 MiB (§6.2) |
-| The five Chromium checks on the release build: `creator_check.mjs`, `world_check.mjs`, `audio_check.mjs`, `world_start_check.mjs`, `stream_check.mjs --world --audio` | ⟦SHIP: each check's verdict and numbers on the release build⟧ | On the candidate at the W27 merge all five were OK in their default forms (§6.4) |
-| Version `0.10.0-m10`, the project's description, the launcher's notes | ⟦SHIP: the commits⟧ | - |
+| Screenshots in `docs/screenshots/m10/`: the creator, the giant in the Valley and the world, first person, the stage lineup | **PASS** - 11 JPG of 61-103 KB at 1280x720 (`951740f`), rendered by the release's code under Xvfb (the Compatibility renderer on llvmpipe, `--skin`): the creator at New Game (`01`, `02`), the giant in the Valley (`03`) and in the world with soldiers in view (`04` the Kingsgate shelf, `05` Fort Aldmere's gate at stage 4), first person at stages 1 and 4, a heavy swing and looking down (`06`-`09`), the stage 1-6 lineup (`10`), and one frame of the Linux export's own run (`11`) | `docs/screenshots/m10/`; `PERFORMANCE.md`, "The 0.10.0-m10 release" |
+| The Linux export: the soak and an assisted bot run headless; once under Xvfb with `--skin` (a screenshot, 0 errors); `pck_files.py` lists `tex_hi/` in its pack | **PASS** - `builds/linux/Giantborn.x86_64`, 98,321,032 bytes (90,036,432 at `0.9.0-m9`), 0 errors in the export's log. Headless, the 120 s soak: 0 errors, 0 warnings (41 attacks, 33 hits, 4 kills, 2 fences broken, 2 loot awards, the debris pool at 10: `0.9.0-m9`'s counts). Headless, an assisted novice Valley bot run (intimidate, seed 1): completed in 452.4 s of simulated time, to the tenth of a second `0.9.0-m9`'s run, with 0 deaths, 0 invariant failures, 0 errors, 0 warnings. Under Xvfb with `--skin`: the capture tour complete, 38 frames saved, 0 errors and 0 warnings by the game's count (`11_linux_export_club_heavy.jpg` is one of its frames). `pck_files.py` lists `assets/giant/tex_hi/normal.png.import` and `orm.png.import` in the Linux preset's pack exported on its own (2,983 files); the tool does not read a pack embedded in a binary, so the embedded pack's 2,983 paths were cut out and compared with that listing: the same | `PERFORMANCE.md`, "The 0.10.0-m10 release". At the gate (the candidate, lens 6): the export under Xvfb with `--skin` ran the capture tour complete with 0 errors, and headless the 120 s soak with `--skin` with 0 errors |
+| The Windows export built (not launched) | **PARTIAL** (built, not launched, as the M6-M9 handoff's Windows row) - `builds/windows/Giantborn.exe`, 131,904,632 bytes, and `Giantborn.console.exe`, 188,928 bytes; 0 errors in the export's log | `PERFORMANCE.md`, "The 0.10.0-m10 release" |
+| The Web export within 26 MiB, parts of at most 15 MB, `GIANT_SHARE` within 7.6 | **PASS** - `tools/build_web.sh` with no `--budget-mb` (the budget read from the version's `-m10`), built twice with the same bytes: `PCK_SIZE preset="Web" raw=25841308 gzip=17689852 shipped=23586472 shipped_mb=22.49 budget_mb=26 parts=2`, two parts of 11,793,236 bytes; `GIANT_SHARE giant_bytes=8058899 shipped=5845364 shipped_mib=5.57 files=33 cap_mb=7.6`; 2,840 packed files, no test content, `tex_hi/` in the pack and no manifest. The page's download is 36,520,414 bytes, about 36.5 MB | `PERFORMANCE.md`, "The 0.10.0-m10 release". The release candidate from the gate's code: 22.49 MiB, two parts, 5.57 MiB (§6.2); the release's pack is 32 bytes more as shipped (the version and the description) |
+| The five Chromium checks on the release build: `creator_check.mjs`, `world_check.mjs`, `audio_check.mjs`, `world_start_check.mjs`, `stream_check.mjs --world --audio` | **PASS** in their default forms, alone on the quiet machine (each started once the 1-minute load was under 2.5): `creator_check.mjs` OK (2 budget misses, both the title's warm-up frame, by design; the Valley's first frame after Begin 1.07 times the median frame, the world's on Continue 1.34, the shrine's creator 1.61; the skin's CPU 0.12-0.14 ms; the tier "hi"; one pointer-lock request inside Begin's gesture; 0 console errors); `world_start_check.mjs` OK (both starts through the creator, first saves `level.valley` and `level.world` with a look, version `0.10.0-m10`); `audio_check.mjs` OK (sound 0.51 s after the Hollow's music; 260 holes over 50 ms in 60.3 s, the longest 319 ms, all the main thread's); `stream_check.mjs --world --audio` OK (397.5 m, 0 thrash, streaming work p99 5.6 ms, draw calls at most 60; 357 holes, all the main thread's); `world_check.mjs` OK (Enter to control 11.3 s, the fast travel 9.7 s, a 787.7 m walk with 0 stuck, draw calls at most 59; 607 holes, all the main thread's). The first run shared the machine with the candidate's own checks (loads 7-14): there `world_start_check.mjs`, `audio_check.mjs` and `world_check.mjs` FAILED on timing (the game's 8 s starting-ring warning counted as console errors; one Enter lost to the title's warm-up; 50 of 607 holes not placed), `creator_check.mjs` and `stream_check.mjs` were OK. The plan's audio criterion is NOT MET on software WebGL and the strict forms stay NOT RUN (§5.2, §8) | `PERFORMANCE.md`, "The 0.10.0-m10 release" (both runs of each check). On the candidate at the W27 merge all five were OK in their default forms (§6.4) |
+| Version `0.10.0-m10`, the project's description, the launcher's notes | **PASS** - `c4e3804` ("P47: version 0.10.0-m10, the description and the launcher's notes": `config/version` and `config/description`; the launcher's masthead, its notes for the realistic giant and the character creator, its "About 36 MB" download note and the BUILD line of the release build); `test_launcher_notes` passes (12 checks, 0 failures) | `project.godot`, `web/launcher.html` |
 | The owner's approval of sheet B | **NOT RUN** (pending) | §7 |
 | The tag `0.10.0-m10`, the play link republished, the pull request to `main` and its merge | **NOT RUN** (they wait for the approval) | Plan §4.3 |
 
@@ -251,9 +255,10 @@ own measurements.
 
 ### 6.1 The checks
 
-`tools/check.sh --build --slow --gate --giant --require --strict-times` (W25 without `--gate`): import,
-every scene rebuilt (no diff), the world's seams, the giant pipeline's tests and regeneration, the
-three tiers, the 120 s soak. Budgets: default 75 s, slow 8 minutes, gate 50 minutes.
+`tools/check.sh --build --slow --gate --giant --require --strict-times` (W25 without `--gate`; the
+ship's final check with `--giant-full` and `--audio`): import, every scene rebuilt (no diff), the
+world's seams, the giant pipeline's tests and regeneration, the three tiers, the 120 s soak. Budgets:
+default 75 s, slow 8 minutes, gate 50 minutes.
 
 | Check | Suites | Checks | Failures | Default | Slow | Gate |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -262,6 +267,7 @@ three tiers, the 120 s soak. Budgets: default 75 s, slow 8 minutes, gate 50 minu
 | The W26 merge (14 November) | 323 | 54,069 | 0 | 69.0 s | 365.6 s | 960.0 s |
 | The W27 merge (18 November) | 324 | 55,698 | 0 | 70.2 s | 360.3 s | 899.7 s |
 | **The gate merge (`348a7bf`, 18 November, a quiet machine)** | **330** | **56,119** | **0** | **65.4 s** | **348.2 s** | **815.5 s** |
+| **The ship's final check (`67d3eb9`, 18 November, a quiet machine)** | **330** | **56,119** | **0** | **66.2 s** | **341.8 s** | **844.6 s** |
 
 On the gate merge: 62 unit, 163 integration, 73 slow and 32 gate suites; no suite printed a skip note;
 `--strict-times` re-ran nothing; `GIANT VERIFY OK`, 13 files bit-exact or within the bake's tolerance
@@ -270,6 +276,18 @@ soak 7,201 frames with 0 errors. Each wave's merge had one integration break, ea
 a test or a measurement: tip matching's grip reach for the exported skeleton's longer hand (W25), the
 creator's preview idle (W26), the hair's sway while the giant is out of the tree, which broke the
 determinism gate with three engine errors (W27).
+
+On the ship's final check (`67d3eb9`, the release's build merged with these documents; 09:06-09:36
+UTC, loads 0.1 at its start and 1.1 at its end): the same 330 suites and 56,119 checks as the gate
+merge, since the release changed the version, the description, the launcher, screenshots and
+documents only; no skip note, nothing re-run by `--strict-times`; `git status` empty after the build
+of all 124 scenes.
+`--audio`: the pipeline's 35 tests OK and `AUDIO VERIFY OK: 441 files regenerated bit-exact`, the
+built audio 9.229 MB of 9.5 (M6's 3.932 of 4.0), registered SFX 108.57 s of 110 in the Valley and
+167.81 s of 170 in the world. `--giant-full`: the pipeline's 15 tests OK and `GIANT VERIFY OK: 13
+files regenerated bit-exact (every bake pass)` in 239 s (the AO pass 105.8 s, thickness 53.2 s),
+with no tolerated texel; the estimated Web share 5.97 MiB of 7.60. The soak: 7,201 frames, 0 errors,
+0 warnings, 41 attacks, 33 hits, 4 kills, 2 fences broken, 2 loot awards, the debris pool at 10.
 
 The Web tools' own tests (`node tools/web/test_*.mjs`, outside `check.sh`): `test_memory_guard` 21
 checks, `test_creator_check` 38, `test_audio_check` 26, `test_world_check` 29, 0 failures;
@@ -284,7 +302,9 @@ checks, `test_creator_check` 38, `test_audio_check` 26, `test_world_check` 29, 0
 | `GIANT_SHARE` | - | 2.64 MiB of 4.6 (no `tex_hi/`) | 5.53 MiB of 7.6 | **5,845,324 bytes, 5.57 MiB of 7.6**, 33 files |
 
 M10 adds 5.81 MiB to the shipped pack; the two 1024 px maps are 1.73 MiB of it. The target total of
-24.3 MiB is met.
+24.3 MiB is met. The release build itself (version `0.10.0-m10`) is the candidate's pack with the
+version and the description: 23,586,472 bytes shipped, two parts of 11,793,236, `GIANT_SHARE`
+5,845,364 bytes (§5.5).
 
 ### 6.3 The giant against its budgets (plan §2.12)
 
@@ -384,7 +404,9 @@ leaves it to the owner too; the CC0 inputs fit any), and whether to commit the l
   calls at `medium`; a first start with an empty shader cache; status tints; run and sprint from the
   side; sheet pages 3, 5 and 6 (§5.2). On the gate's merged code: `--giant-full` on the merge itself
   (the look lane ran it on the same assets), `--audio`, the Web export's checks, and the far-primitive
-  and mesh-buffer probes (the look lane's figures on the same assets stand).
+  and mesh-buffer probes (the look lane's figures on the same assets stand). The ship's final check
+  ran `--giant-full` and `--audio` on the release's code, and the ship step the Web export's checks
+  (§5.5).
 - The native captures of P45 (draw calls, memory, the skin) were not repeated after the W26 merge's
   one addition; the W27 merge and the gate measured the merged model again.
 - Nobody has played it: the creator's usability, whether the options read to a person in play, and
