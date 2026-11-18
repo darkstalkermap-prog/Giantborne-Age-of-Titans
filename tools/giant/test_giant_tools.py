@@ -380,20 +380,22 @@ class ToleranceTest(unittest.TestCase):
 class BudgetTest(unittest.TestCase):
     def test_the_estimate_follows_the_web_preset_and_build_web_rule(self):
         """--budget estimates only what the Web preset ships and judges it by build_web.sh's rule (its
-        default budget less 18.4 MiB), so a change of either (P45: the owner's 26 MiB, the Web keeping
-        tex_hi/) moves the estimate and its cap together."""
+        default budget less 18.4 MiB), so a change of either moves the estimate and its cap together.
+        Since P45 (the owner's answer 1, plan §0.6) the last default is 26 MiB from -m10 on and the Web
+        keeps tex_hi/; before it the values here were 23, 4.6 and tex_hi/ excluded."""
         import build_giant
-        self.assertEqual(build_giant.web_budget_mib(), 23.0, "build_web.sh's default after M7")
-        self.assertEqual(build_giant.share_cap_mib(), 4.6, "plan §2.12")
+        self.assertEqual(build_giant.web_budget_mib(), 26.0, "build_web.sh's default from -m10 on")
+        self.assertEqual(build_giant.share_cap_mib(), 7.6, "plan §2.12, from P45 on")
         excluded = build_giant.web_excluded()
-        for pat in ("assets/giant/manifest.json", "assets/giant/tex_hi/*", "tests/*", "tools/*"):
+        for pat in ("assets/giant/manifest.json", "tests/*", "tools/*"):
             self.assertIn(pat, excluded)
+        self.assertNotIn("assets/giant/tex_hi/*", excluded, "the Web keeps the 1024 px maps (P45)")
         self.assertNotIn("assets/giant/tex_hi/*", build_giant.web_excluded(preset="Linux"), "desktop keeps it")
         with tempfile.TemporaryDirectory() as tmp:
             root = build_giant.Path(tmp)
             (root / "tools").mkdir()
-            (root / "tools" / "build_web.sh").write_text("\tif x; then BUDGET_MB=7.5\n\telse BUDGET_MB=26\n\tfi\n")
-            self.assertEqual(build_giant.share_cap_mib(root), 7.6, "the 26 MiB answer gives the giant 7.6")
+            (root / "tools" / "build_web.sh").write_text("\tif x; then BUDGET_MB=7.5\n\telse BUDGET_MB=23\n\tfi\n")
+            self.assertEqual(build_giant.share_cap_mib(root), 4.6, "the rule follows the script: 23 gives 4.6")
 
 
 class VendorTest(unittest.TestCase):

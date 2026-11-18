@@ -506,8 +506,8 @@ def estimate(rel: str, doc: dict) -> float:
 
 
 def web_budget_mib(root: Path = ROOT) -> float:
-    """The Web pack's default budget in MiB: the last default tools/build_web.sh assigns (the one after
-    M7: 23 MiB, 26 if the owner raises it, plan §0.6)."""
+    """The Web pack's default budget in MiB: the last default tools/build_web.sh assigns (26 MiB from
+    -m10 on, the owner's answer 1, plan §0.6; 23 MiB before P45)."""
     found = re.findall(r"\bBUDGET_MB=([0-9]+(?:\.[0-9]+)?)\b", (root / BUILD_WEB).read_text())
     return float(found[-1]) if found else 23.0
 
