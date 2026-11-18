@@ -53,6 +53,9 @@
 // when that folder exists). Software WebGL (SwiftShader) is all a GPU-less machine has: its frame
 // times are the CPU's rasterising, indicative only.
 
+// M10 gate (LD-1): a memory guard (tools/web/memory_guard.mjs) watches the page's renderer process: over about 3 GB
+// (GIANT_WEB_GUARD_MB; 0 = off) the run stops with a FAILED line naming the memory instead of taking the machine down.
+import { startMemoryGuard } from './memory_guard.mjs';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -219,6 +222,7 @@ async function main() {
     headless: !opts.headed,
     args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'],
   });
+  const memoryGuard = startMemoryGuard('stream_check');
   const page = await browser.newPage({ viewport: { width, height } });
   // The page's frame clock: every requestAnimationFrame interval while the giant walks (the engine
   // prints WORLD_WALK_START and WORLD_WALK_END through console.log).
@@ -309,6 +313,7 @@ async function main() {
   const rafFrames = await page.evaluate(() => window.__frames.slice());
   const walkStart = await page.evaluate(() => window.__walkStart);
   const recording = opts.audio ? await readRecording(page).catch((e) => ({ unreadable: String(e && e.message ? e.message : e) })) : null;
+  memoryGuard.stop();
   await browser.close();
   server.close();
 
@@ -320,6 +325,7 @@ async function main() {
     wall_s: Math.round(wallS * 10) / 10,
     result: result !== null,
     viewport: opts.size,
+    memory_guard: { limit_mb: memoryGuard.limitMb, renderer_peak_mb: memoryGuard.peakMb() },
     renderer: perf ? `${perf.renderer} (${perf.adapter})` : 'N/A',
     quality: perf ? perf.quality : 'N/A',
     play_to_walk_s: walkStart > 0 ? Math.round((walkStart - playAt) / 100) / 10 : null,

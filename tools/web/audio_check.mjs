@@ -54,6 +54,9 @@
 // Needs Playwright (PLAYWRIGHT_MODULE, NODE_PATH or /opt/node-tools/node_modules) and its Chromium
 // (PLAYWRIGHT_BROWSERS_PATH, default /opt/pw-browsers when that folder exists).
 
+// M10 gate (LD-1): a memory guard (tools/web/memory_guard.mjs) watches the page's renderer process: over about 3 GB
+// (GIANT_WEB_GUARD_MB; 0 = off) the run stops with a FAILED line naming the memory instead of taking the machine down.
+import { startMemoryGuard } from './memory_guard.mjs';
 import { createServer, get as httpGet } from 'node:http';
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -230,6 +233,7 @@ async function main() {
     headless: !opts.headed,
     args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
   });
+  const memoryGuard = startMemoryGuard('audio_check');
   const page = await browser.newPage({ viewport: { width, height } });
   const started = Date.now();
   await page.addInitScript(instrument, { silencePeak: SILENCE_PEAK, holeMs: HOLE_MAX_MS });
@@ -376,9 +380,11 @@ async function main() {
   }
   report.wall_s = Math.round((Date.now() - started) / 100) / 10;
   report.console_tail = problems.length > 0 ? consoleTail.slice() : consoleTail.slice(-20);
+  memoryGuard.stop();
   await browser.close();
   server.close();
   report.console_errors = errors;
+  report.memory_guard = { limit_mb: memoryGuard.limitMb, renderer_peak_mb: memoryGuard.peakMb() };
   report.failed_requests = failedRequests;
   report.external_requests_answered_empty = external.length;
   if (errors.length > 0) problems.push(`${errors.length} console error(s)`);

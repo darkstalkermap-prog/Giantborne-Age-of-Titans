@@ -59,6 +59,9 @@
 // run at a load average of 8-9 did: docs/systems/P39f.md, "Part web"). The run that counts for the gate is
 // --strict on a machine with a GPU (docs/USABILITY_SCRIPT.md §11).
 
+// M10 gate (LD-1): a memory guard (tools/web/memory_guard.mjs) watches the page's renderer process: over about 3 GB
+// (GIANT_WEB_GUARD_MB; 0 = off) the run stops with a FAILED line naming the memory instead of taking the machine down.
+import { startMemoryGuard } from './memory_guard.mjs';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -276,6 +279,7 @@ async function main() {
     headless: !opts.headed,
     args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'],
   });
+  const memoryGuard = startMemoryGuard('world_check');
   const page = await browser.newPage({ viewport: { width, height } });
   // The page's frame clock while the giant walks (stream_check.mjs's).
   await page.addInitScript(() => {
@@ -403,9 +407,11 @@ async function main() {
   report.wall_s = at();
   const rafFrames = await page.evaluate(() => window.__frames.slice()).catch(() => []);
   const recording = await readRecording(page).catch((e) => ({ unreadable: String(e && e.message ? e.message : e) }));
+  memoryGuard.stop();
   await browser.close();
   server.close();
 
+  report.memory_guard = { limit_mb: memoryGuard.limitMb, renderer_peak_mb: memoryGuard.peakMb() };
   // Continue: the first level line, the fixture's level and respawn; the travel; the arrival.
   const cont = levels.find((l) => l.travel === 'pending') || levels[0] || null;
   const arrived = levels.find((l) => l.travel === 'arrived') || null;

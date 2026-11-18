@@ -43,6 +43,9 @@
 // (PLAYWRIGHT_BROWSERS_PATH, default /opt/pw-browsers when that folder exists). Its own test is
 // tools/web/test_creator_check.mjs (a stub launcher, no engine).
 
+// M10 gate (LD-1): a memory guard (tools/web/memory_guard.mjs) watches the page's renderer process: over about 3 GB
+// (GIANT_WEB_GUARD_MB; 0 = off) the run stops with a FAILED line naming the memory instead of taking the machine down.
+import { startMemoryGuard } from './memory_guard.mjs';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -436,6 +439,7 @@ async function main() {
     headless: !opts.headed,
     args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'],
   });
+  const memoryGuard = startMemoryGuard('creator_check');
   const started = Date.now();
   console.log(`${TOOL}: ${origin}/play.html (${opts.build}, ${opts.size}; parts: ${opts.parts.join(', ')})`);
   const report = { build: opts.build, viewport: opts.size, game_args: opts.gameArgs, stall_ratio: opts.stallRatio, strict: opts.strict, parts: {} };
@@ -449,9 +453,11 @@ async function main() {
     report.parts[name] = part;
     for (const p of part.problems) problems.push(`${name}: ${p}`);
   }
+  memoryGuard.stop();
   await browser.close();
   server.close();
   report.wall_s = round1((Date.now() - started) / 1000);
+  report.memory_guard = { limit_mb: memoryGuard.limitMb, renderer_peak_mb: memoryGuard.peakMb() };
   report.misses = [].concat(...opts.parts.map((n) => report.parts[n].misses.map((m) => `${n}: ${m}`)));
   report.problems = problems;
   report.ok = problems.length === 0;
