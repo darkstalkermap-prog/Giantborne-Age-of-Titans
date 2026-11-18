@@ -53,6 +53,8 @@ const AXIS_DEADZONE := 0.2
 const TRIGGER_ZOOM_S := 4.0
 ## A Randomize that draws the same look tries again, at most this often.
 const RANDOM_TRIES := 8
+## The room kept under the Presets list for the focused preset's description (lines of its 12 px text).
+const PRESET_NOTE_LINES := 3
 const HINT_PAD := "LB/RB: category   D-pad: choose   A: select   Y: randomize   X: view   R-stick, LT/RT: turn, zoom   View: undo   B: back"
 const HINT_KEYS := "PgUp/PgDn: category   Arrows: choose   R: randomize   V: view   Q/E, +/-: turn, zoom   Ctrl+Z: undo   Ctrl+Enter: %s   Esc: back"
 
@@ -98,6 +100,7 @@ var _root_3d_off := false
 var _axes := {}                       ## JoyAxis -> value (the right stick and the triggers)
 var _hints := {}
 var _focused_row: OptionRows.Row = null
+var _preset_note: Label = null        ## the focused preset's description, under the Presets list
 
 
 func _ready() -> void:
@@ -380,6 +383,9 @@ func _build_rows() -> void:
 			r.picked.connect(_on_picked)
 			r.focused.connect(_on_row_focused)
 			built.append(r)
+		if _category == "Presets":
+			_preset_note = _build_preset_note()
+			box.add_child(_preset_note)
 		_rows_box.add_child(box)
 		_category_boxes[_category] = box
 		_category_rows[_category] = built
@@ -387,6 +393,22 @@ func _build_rows() -> void:
 	_show_values()
 	if _scroll != null:
 		_scroll.scroll_vertical = 0
+
+
+## The focused preset's description: one label under the list, of a fixed height, so that no preset button
+## moves when the focus does (M10 gate, LA-1: a press moves the focus, and a button that jumps under the
+## pointer before the release loses the click).
+func _build_preset_note() -> Label:
+	var note := UiKit.label("", 12, UiKit.MUTED)
+	note.name = "PresetNote"
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size = Vector2(0, PRESET_NOTE_LINES * (note.get_theme_font("font").get_height(12) + 3.0))
+	return note
+
+
+## The preset description shown under the Presets list ("" before a preset has had the focus).
+func preset_description() -> String:
+	return _preset_note.text if _preset_note != null else ""
 
 
 func _on_picked(r: OptionRows.Row, value: Variant) -> bool:
@@ -416,6 +438,8 @@ func _on_picked(r: OptionRows.Row, value: Variant) -> bool:
 
 func _on_row_focused(r: OptionRows.Row) -> void:
 	_focused_row = r
+	if r is OptionRows.PresetRow and _preset_note != null:
+		_preset_note.text = (r as OptionRows.PresetRow).description
 	_frame_for(r)
 	_update_fade()
 
