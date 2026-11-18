@@ -13,19 +13,19 @@ roughness = 0.1
 [sub_resource type="BoxMesh" id="BoxMesh_3"]
 size = Vector3(12, 0.05, 4)
 
-[node name="SizeGate" type="StaticBody3D"]
+[node name="SizeGate" type="StaticBody3D" unique_id=1197676392]
 collision_layer = 64
 collision_mask = 0
 script = ExtResource("1_f30a1")
 gate_id = "test.gate.water"
 
-[node name="Wall" type="CollisionShape3D" parent="."]
+[node name="Wall" type="CollisionShape3D" parent="." unique_id=405321094]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=1725224628]
 
-[node name="DeepWater" type="MeshInstance3D" parent="Visual"]
+[node name="DeepWater" type="MeshInstance3D" parent="Visual" unique_id=1426193707]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
 material_override = SubResource("StandardMaterial3D_2")
 mesh = SubResource("BoxMesh_3")

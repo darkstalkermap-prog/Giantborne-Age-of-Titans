@@ -92,165 +92,165 @@ size = Vector3(8, 5, 0.8)
 [sub_resource type="BoxMesh" id="BoxMesh_22"]
 size = Vector3(8, 5, 0.8)
 
-[node name="RangedTest" type="Node3D"]
+[node name="RangedTest" type="Node3D" unique_id=1704004651]
 
-[node name="Environment" type="WorldEnvironment" parent="."]
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=1995805407]
 environment = SubResource("Environment_1")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1506045251]
 transform = Transform3D(0.8480481, 0.41758206, -0.32625088, 0, 0.6156615, 0.7880107, 0.52991927, -0.668271, 0.5221106, 0, 0, 0)
 shadow_enabled = true
 directional_shadow_max_distance = 80.0
 
-[node name="Navigation" type="NavigationRegion3D" parent="."]
+[node name="Navigation" type="NavigationRegion3D" parent="." unique_id=46629135]
 navigation_mesh = SubResource("NavigationMesh_2")
 
-[node name="Geometry" type="Node3D" parent="."]
+[node name="Geometry" type="Node3D" parent="." unique_id=91491991]
 
-[node name="Ground" type="StaticBody3D" parent="Geometry"]
+[node name="Ground" type="StaticBody3D" parent="Geometry" unique_id=1320100734]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Ground"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Ground" unique_id=2048349320]
 shape = SubResource("BoxShape3D_3")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ground"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ground" unique_id=70544986]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 material_override = SubResource("ShaderMaterial_4")
 mesh = SubResource("PlaneMesh_5")
 
-[node name="Platform" type="StaticBody3D" parent="Geometry"]
+[node name="Platform" type="StaticBody3D" parent="Geometry" unique_id=1744465954]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 1, -8)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Platform"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Platform" unique_id=1174631398]
 shape = SubResource("BoxShape3D_6")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Platform"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Platform" unique_id=1301720912]
 material_override = SubResource("StandardMaterial3D_7")
 mesh = SubResource("BoxMesh_8")
 
-[node name="Ramp" type="StaticBody3D" parent="Geometry"]
+[node name="Ramp" type="StaticBody3D" parent="Geometry" unique_id=1139330573]
 transform = Transform3D(-1, 0, 0, 0, 0.9805807, -0.19611613, 0, -0.19611613, -0.9805807, -14, 0.80388385, -15.960776)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Ramp"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Ramp" unique_id=405500975]
 shape = SubResource("BoxShape3D_9")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ramp"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Ramp" unique_id=126618260]
 material_override = SubResource("StandardMaterial3D_10")
 mesh = SubResource("BoxMesh_11")
 
-[node name="RampRailL" type="StaticBody3D" parent="Geometry"]
+[node name="RampRailL" type="StaticBody3D" parent="Geometry" unique_id=1128307530]
 transform = Transform3D(-1, 0, 0, 0, 0.9805807, -0.19611613, 0, -0.19611613, -0.9805807, -11.9, 1.2941742, -16.058834)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/RampRailL"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/RampRailL" unique_id=1977345100]
 shape = SubResource("BoxShape3D_12")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/RampRailL"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/RampRailL" unique_id=404673175]
 material_override = SubResource("StandardMaterial3D_13")
 mesh = SubResource("BoxMesh_14")
 
-[node name="RampRailR" type="StaticBody3D" parent="Geometry"]
+[node name="RampRailR" type="StaticBody3D" parent="Geometry" unique_id=1224063418]
 transform = Transform3D(-1, 0, 0, 0, 0.9805807, -0.19611613, 0, -0.19611613, -0.9805807, -16.1, 1.2941742, -16.058834)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/RampRailR"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/RampRailR" unique_id=1983428659]
 shape = SubResource("BoxShape3D_15")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/RampRailR"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/RampRailR" unique_id=471923220]
 material_override = SubResource("StandardMaterial3D_13")
 mesh = SubResource("BoxMesh_16")
 
-[node name="CoverWall1" type="StaticBody3D" parent="Geometry"]
+[node name="CoverWall1" type="StaticBody3D" parent="Geometry" unique_id=685304695]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.55, -6)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CoverWall1"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CoverWall1" unique_id=1774932383]
 shape = SubResource("BoxShape3D_17")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/CoverWall1"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CoverWall1" unique_id=1129304686]
 material_override = SubResource("StandardMaterial3D_13")
 mesh = SubResource("BoxMesh_18")
 
-[node name="CoverWall2" type="StaticBody3D" parent="Geometry"]
+[node name="CoverWall2" type="StaticBody3D" parent="Geometry" unique_id=1422528005]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.55, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CoverWall2"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CoverWall2" unique_id=1432160600]
 shape = SubResource("BoxShape3D_19")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/CoverWall2"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CoverWall2" unique_id=915512117]
 material_override = SubResource("StandardMaterial3D_13")
 mesh = SubResource("BoxMesh_20")
 
-[node name="SightWall" type="StaticBody3D" parent="Geometry"]
+[node name="SightWall" type="StaticBody3D" parent="Geometry" unique_id=586173236]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 2.5, -24)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/SightWall"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/SightWall" unique_id=1477690305]
 shape = SubResource("BoxShape3D_21")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/SightWall"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/SightWall" unique_id=1799803335]
 material_override = SubResource("StandardMaterial3D_7")
 mesh = SubResource("BoxMesh_22")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=525969675]
 
-[node name="ElevationPlatform" type="Marker3D" parent="Markers" groups=["ai_elevation_points"]]
+[node name="ElevationPlatform" type="Marker3D" parent="Markers" unique_id=323679212 groups=["ai_elevation_points"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 2, -8)
 
-[node name="Cover1" type="Marker3D" parent="Markers" groups=["ai_cover_points"]]
+[node name="Cover1" type="Marker3D" parent="Markers" unique_id=340782028 groups=["ai_cover_points"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.05, -7.2)
 
-[node name="Cover2" type="Marker3D" parent="Markers" groups=["ai_cover_points"]]
+[node name="Cover2" type="Marker3D" parent="Markers" unique_id=1051721500 groups=["ai_cover_points"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.05, -1.2)
 
-[node name="Enemies" type="Node3D" parent="."]
+[node name="Enemies" type="Node3D" parent="." unique_id=1557709901]
 
-[node name="Archer01" type="CharacterBody3D" parent="Enemies" instance=ExtResource("2_016f5")]
+[node name="Archer01" type="CharacterBody3D" parent="Enemies" unique_id=1684760116 instance=ExtResource("2_016f5")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -8, 0.05, -14)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("3_14211")
 entity_id = "ranged_test.archer_1"
 
-[node name="Archer02" type="CharacterBody3D" parent="Enemies" instance=ExtResource("2_016f5")]
+[node name="Archer02" type="CharacterBody3D" parent="Enemies" unique_id=2031764004 instance=ExtResource("2_016f5")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 12, 0.05, -16)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("3_14211")
 entity_id = "ranged_test.archer_2"
 
-[node name="Mage01" type="CharacterBody3D" parent="Enemies" instance=ExtResource("4_681e0")]
+[node name="Mage01" type="CharacterBody3D" parent="Enemies" unique_id=1451602708 instance=ExtResource("4_681e0")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 4, 0.05, -18)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("5_7d1ac")
 entity_id = "ranged_test.mage_1"
 
-[node name="Soldier01" type="CharacterBody3D" parent="Enemies" instance=ExtResource("6_7b3a0")]
+[node name="Soldier01" type="CharacterBody3D" parent="Enemies" unique_id=273342529 instance=ExtResource("6_7b3a0")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6, 0.05, -13)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("7_8053b")
 entity_id = "ranged_test.soldier_1"
 
-[node name="Spawns" type="Node3D" parent="."]
+[node name="Spawns" type="Node3D" parent="." unique_id=563177947]
 
-[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns" unique_id=618608618]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 4)
 
-[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("8_627ae")]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1889410184 instance=ExtResource("8_627ae")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 4)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("9_7ef4a")
 
-[node name="Signs" type="Node3D" parent="."]
+[node name="Signs" type="Node3D" parent="." unique_id=991424580]
 
-[node name="SignPlatform" type="Label3D" parent="Signs"]
+[node name="SignPlatform" type="Label3D" parent="Signs" unique_id=1905100176]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 5.2, -8)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
@@ -260,7 +260,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "ELEVATION (archers climb the ramp)"
 font_size = 64
 
-[node name="SignCover" type="Label3D" parent="Signs"]
+[node name="SignCover" type="Label3D" parent="Signs" unique_id=1024729751]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.05, -7.2)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
@@ -270,7 +270,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "COVER POINTS"
 font_size = 64
 
-[node name="SignWall" type="Label3D" parent="Signs"]
+[node name="SignWall" type="Label3D" parent="Signs" unique_id=6996027]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 5.9, -24)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
@@ -280,7 +280,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "SIGHT WALL"
 font_size = 64
 
-[node name="SignStart" type="Label3D" parent="Signs"]
+[node name="SignStart" type="Label3D" parent="Signs" unique_id=584123413]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.05, 0)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0

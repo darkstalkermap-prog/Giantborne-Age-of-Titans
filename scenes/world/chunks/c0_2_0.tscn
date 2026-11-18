@@ -117,35 +117,35 @@ _surfaces = [{
 "vertex_data": PackedByteArray("ZmZmP83MzL4AAAAA2+oiP83MzL7b6iI/JDnZPjQzMz8kOdk+mpkZPzQzMz8AAAAAAAAAADQzMz8AAAAAWSV+JM3MzL5mZmY/PG4pJDQzMz+amRk/2+oiv83MzL7b6iI/JDnZvjQzMz8kOdk+ZmZmv83MzL5ZJf4kmpkZvzQzMz88bqkk2+oiv83MzL7b6iK/JDnZvjQzMz8kOdm+A5w+pc3MzL5mZma/WiX+pDQzMz+amRm/2+oiP83MzL7b6iK/JDnZPjQzMz8kOdm+ZmZmP83MzL5ZJX6lmpkZPzQzMz88bimlRPWUPsDBbL7tKAw/TxutP7oYTD/wzoW9HOj5P7oYTD8kUXk/OxRkP8DBbL74Gcs/mqqVPy8+Hb9AiLY/TMQOQPcV1D62LVA/zLvQP/cV1D4wdWe+mrsRPy8+Hb/9CsY+ZmbmP83MzL0AAAAA2+qiP83MzL3b6qI/2+qiP87MTD7b6qI/ZmbmP87MTD4AAAAAAAAAAM7MTD4AAAAAWSX+JM3MzL1mZuY/WSX+JM7MTD5mZuY/2+qiv83MzL3b6qI/2+qiv87MTD7b6qI/Zmbmv83MzL1ZJX4lZmbmv87MTD5ZJX4l2+qiv83MzL3b6qK/2+qiv87MTD7b6qK/A5y+pc3MzL1mZua/A5y+pc7MTD5mZua/2+qiP83MzL3b6qK/2+qiP87MTD7b6qK/ZmbmP83MzL1ZJf6lZmbmP87MTD5ZJf6l8XecPpqZmT6iqHo+jqB2P5qZmT5A9a878DORP5qZmT6HT/M+kwb0PpqZmT4C8jY/kwb0PgAAAAAC8jY/8DORPwAAAACHT/M+jqB2PwAAAABA9a878XecPgAAAACiqHo+mjN1v5qZmT62dSW/qBkdv5qZmT4KpJG/RDr6vZqZmT4iLku/dcLuvpqZmT6Ht5q+dcLuvgAAAACHt5q+RDr6vQAAAAAiLku/qBkdvwAAAAAKpJG/mjN1vwAAAAC2dSW/RUWYvwAAgD64MVU/OCiNvwAAgD4TR64+QkIcvwAAgD5Ju9o+XHwyvwAAgD7Sa2s/XHwyvwAAAADSa2s/QkIcvwAAAABJu9o+OCiNvwAAAAATR64+RUWYvwAAAAC4MVU/38uxlERbzMM+rrGU1lMtrV6qibW/Q9PIqK1rv5hFKs//f///AAD/v3hzvZjZhVSQMohlvBdPEK7wQrGUP506q+hfibXPaPekvhhEpXRtQ7OZRGW8q1pqqrEUwNHDUPidiTWg1dY4OqRA53jzvZ8ug2Y8y/cYLKiWTevvwr+yurZ1yujffwMpok3rHrTAoN/EoND7xsppg9oXG3WIVpE9ugcsFOSBOnGXXZVi1HspcsfddayFwokkiPSI5Cf6EWOpS9RRex5d5rXs+Kk34KbAphQr1yE5R+G2gdr/f5BeErkpt/9/aFaKpDmwPqvqR8zFRLN9t4tMxc7/f///AAD/v3hw/39Fj7CIgImqsVVb8aYpN/9/lqk/sHhbPqsgfl+eAACGj7lw8b4rO6qx92msqgAA1choVoqkPivEz2JE7qP//3fwRY+wiKoxfvYxOSGR//8pt5apP7DA1HjbeDtShP//fKVuoRK5kdyJvkGMq9ItOXzAr1Sfqi/blfZpUs2Dgb8tuV5XdtOWds+kAXn/ld5ZZU7ZE/Dd8bE8YdtLQ6JlziAm/XB/o8Ie8jHISl66+E3hsi5t/qbAHzDeQkdZlhzN+M0eWs3bzqHAn/pTEKzAdpxH2S23kfrP1ltYZsGum8c/CZxgaKUoJPpPmGfgzr9e67EAcLGiAR9PyPdOMqYTzr/eBRLOma+3AZ+GSSvAEZFzSrIxuJYk3o9IwIX3q4w1ERGnTB+wcDckXryHV9I=")
 }]
 
-[node name="Chunk_0_2_0" type="Node3D"]
+[node name="Chunk_0_2_0" type="Node3D" unique_id=1630988891]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=106924469]
 
-[node name="world_greywood_troll_den_wall" type="StaticBody3D" parent="Props"]
+[node name="world_greywood_troll_den_wall" type="StaticBody3D" parent="Props" unique_id=1146609238]
 transform = Transform3D(0.5533915, 0, 0.83292127, 0, 1, 0, -0.83292127, 0, 0.5533915, 234, 27, 162)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_6448e")
 world_id = "world.greywood.troll_den_wall"
 
-[node name="CombatEntity" type="Node" parent="Props/world_greywood_troll_den_wall"]
+[node name="CombatEntity" type="Node" parent="Props/world_greywood_troll_den_wall" unique_id=435581096]
 script = ExtResource("2_c8050")
 entity_id = "world.greywood.troll_den_wall"
 definition_id = "prop.den_back_wall"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_greywood_troll_den_wall"]
+[node name="Anchors" type="Node3D" parent="Props/world_greywood_troll_den_wall" unique_id=148029693]
 
-[node name="Center" type="Marker3D" parent="Props/world_greywood_troll_den_wall/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_greywood_troll_den_wall/Anchors" unique_id=2024501782]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_greywood_troll_den_wall"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_greywood_troll_den_wall" unique_id=1571284546]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_greywood_troll_den_wall"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_greywood_troll_den_wall" unique_id=1958483396]
 
-[node name="Body" type="Area3D" parent="Props/world_greywood_troll_den_wall/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_greywood_troll_den_wall/Hurtboxes" unique_id=746674409]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
 collision_layer = 4
 collision_mask = 0
@@ -153,39 +153,39 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_troll_den_wall/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_troll_den_wall/Hurtboxes/Body" unique_id=657126756]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Intact" type="Node3D" parent="Props/world_greywood_troll_den_wall"]
+[node name="Intact" type="Node3D" parent="Props/world_greywood_troll_den_wall" unique_id=20297072]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_troll_den_wall/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_troll_den_wall/Intact" unique_id=1293023775 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_3")
 
-[node name="Broken" type="Node3D" parent="Props/world_greywood_troll_den_wall"]
+[node name="Broken" type="Node3D" parent="Props/world_greywood_troll_den_wall" unique_id=2126655516]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_troll_den_wall/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_troll_den_wall/Broken" unique_id=113925896 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
-[node name="Frame" type="StaticBody3D" parent="Props/world_greywood_troll_den_wall"]
+[node name="Frame" type="StaticBody3D" parent="Props/world_greywood_troll_den_wall" unique_id=788054021]
 collision_mask = 0
 
-[node name="Shape0" type="CollisionShape3D" parent="Props/world_greywood_troll_den_wall/Frame"]
+[node name="Shape0" type="CollisionShape3D" parent="Props/world_greywood_troll_den_wall/Frame" unique_id=542178977]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.56, 7.5, -4.9)
 shape = SubResource("BoxShape3D_5")
 
-[node name="Shape1" type="CollisionShape3D" parent="Props/world_greywood_troll_den_wall/Frame"]
+[node name="Shape1" type="CollisionShape3D" parent="Props/world_greywood_troll_den_wall/Frame" unique_id=1648562600]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.56, 7.5, -4.9)
 shape = SubResource("BoxShape3D_6")
 
-[node name="HeavePoint" type="Node3D" parent="Props/world_greywood_troll_den_wall"]
+[node name="HeavePoint" type="Node3D" parent="Props/world_greywood_troll_den_wall" unique_id=1043334720]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 5.5)
 script = ExtResource("5_a209b")
 prompt = "Heave the wall aside"
 radius_m = 9.0
 priority = 40
 
-[node name="world_greywood_den_nest_1" type="StaticBody3D" parent="Props"]
+[node name="world_greywood_den_nest_1" type="StaticBody3D" parent="Props" unique_id=195127765]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 237, 27, 190)
 collision_layer = 16
 collision_mask = 0
@@ -193,24 +193,24 @@ script = ExtResource("6_9cfda")
 den_nests = PackedStringArray("world.greywood.den_nest_1", "world.greywood.den_nest_2", "world.greywood.den_nest_3")
 world_id = "world.greywood.den_nest_1"
 
-[node name="CombatEntity" type="Node" parent="Props/world_greywood_den_nest_1"]
+[node name="CombatEntity" type="Node" parent="Props/world_greywood_den_nest_1" unique_id=118883669]
 script = ExtResource("2_c8050")
 entity_id = "world.greywood.den_nest_1"
 definition_id = "prop.brood_nest"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_greywood_den_nest_1"]
+[node name="Anchors" type="Node3D" parent="Props/world_greywood_den_nest_1" unique_id=1616570280]
 
-[node name="Center" type="Marker3D" parent="Props/world_greywood_den_nest_1/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_greywood_den_nest_1/Anchors" unique_id=519848803]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_greywood_den_nest_1"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_greywood_den_nest_1" unique_id=1578575497]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 shape = SubResource("BoxShape3D_7")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_greywood_den_nest_1"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_greywood_den_nest_1" unique_id=59631390]
 
-[node name="Body" type="Area3D" parent="Props/world_greywood_den_nest_1/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_greywood_den_nest_1/Hurtboxes" unique_id=1482355921]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
 collision_layer = 4
 collision_mask = 0
@@ -218,45 +218,45 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_den_nest_1/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_den_nest_1/Hurtboxes/Body" unique_id=988418151]
 shape = SubResource("BoxShape3D_8")
 
-[node name="Intact" type="Node3D" parent="Props/world_greywood_den_nest_1"]
+[node name="Intact" type="Node3D" parent="Props/world_greywood_den_nest_1" unique_id=2021928727]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_den_nest_1/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_den_nest_1/Intact" unique_id=1721212049 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_9")
 
-[node name="Broken" type="Node3D" parent="Props/world_greywood_den_nest_1"]
+[node name="Broken" type="Node3D" parent="Props/world_greywood_den_nest_1" unique_id=1851846564]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_den_nest_1/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_den_nest_1/Broken" unique_id=1100817553 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_10")
 
-[node name="world_greywood_den_brazier_1" type="StaticBody3D" parent="Props"]
+[node name="world_greywood_den_brazier_1" type="StaticBody3D" parent="Props" unique_id=2081574662]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 241.79999, 27, 188.6)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("7_5fc47")
 world_id = "world.greywood.den_brazier_1"
 
-[node name="CombatEntity" type="Node" parent="Props/world_greywood_den_brazier_1"]
+[node name="CombatEntity" type="Node" parent="Props/world_greywood_den_brazier_1" unique_id=2006778323]
 script = ExtResource("2_c8050")
 entity_id = "world.greywood.den_brazier_1"
 definition_id = "prop.brazier"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_greywood_den_brazier_1"]
+[node name="Anchors" type="Node3D" parent="Props/world_greywood_den_brazier_1" unique_id=496690346]
 
-[node name="Center" type="Marker3D" parent="Props/world_greywood_den_brazier_1/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_greywood_den_brazier_1/Anchors" unique_id=1163318400]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_greywood_den_brazier_1"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_greywood_den_brazier_1" unique_id=1064500071]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
 shape = SubResource("BoxShape3D_11")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_greywood_den_brazier_1"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_greywood_den_brazier_1" unique_id=1735417184]
 
-[node name="Body" type="Area3D" parent="Props/world_greywood_den_brazier_1/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_greywood_den_brazier_1/Hurtboxes" unique_id=1960414007]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
 collision_layer = 4
 collision_mask = 0
@@ -264,39 +264,39 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_den_brazier_1/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_den_brazier_1/Hurtboxes/Body" unique_id=808665997]
 shape = SubResource("BoxShape3D_12")
 
-[node name="Intact" type="Node3D" parent="Props/world_greywood_den_brazier_1"]
+[node name="Intact" type="Node3D" parent="Props/world_greywood_den_brazier_1" unique_id=1144671308]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_den_brazier_1/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_den_brazier_1/Intact" unique_id=1295496806 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_13")
 
-[node name="Broken" type="Node3D" parent="Props/world_greywood_den_brazier_1"]
+[node name="Broken" type="Node3D" parent="Props/world_greywood_den_brazier_1" unique_id=387821997]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_den_brazier_1/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_den_brazier_1/Broken" unique_id=467082506 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_14")
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1593057349]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1606773431]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=2085692700]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=2063380214]
 
-[node name="world_marker_troll_den_exit" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_troll_den_exit" type="Marker3D" parent="Markers/Objective" unique_id=2130461974]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 238.20001, 27.2, 164.9)
 script = ExtResource("8_acc12")
 marker_id = "world.marker.troll_den_exit"
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=2003408258]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=2100291848]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1575726046]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=444954364]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1508365883]

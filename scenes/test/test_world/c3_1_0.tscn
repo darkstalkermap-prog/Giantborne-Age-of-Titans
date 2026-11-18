@@ -10,37 +10,37 @@ radius = 6.0
 height = 9.0
 radius = 7.5
 
-[node name="Chunk_3_1_0" type="Node3D"]
+[node name="Chunk_3_1_0" type="Node3D" unique_id=1756261968]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1478973580]
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1170995150]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=973050420]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1040922591]
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=163291525]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=476370680]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=667331865]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1649401785]
 
-[node name="Watchtower" type="StaticBody3D" parent="Landmarks"]
+[node name="Watchtower" type="StaticBody3D" parent="Landmarks" unique_id=1669369529]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 124, 34.596, 128)
 collision_mask = 0
 
-[node name="Shape0" type="CollisionShape3D" parent="Landmarks/Watchtower"]
+[node name="Shape0" type="CollisionShape3D" parent="Landmarks/Watchtower" unique_id=398157205]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, 0)
 shape = SubResource("CylinderShape3D_1")
 
-[node name="Shape1" type="CollisionShape3D" parent="Landmarks/Watchtower"]
+[node name="Shape1" type="CollisionShape3D" parent="Landmarks/Watchtower" unique_id=730569638]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 44.5, 0)
 shape = SubResource("CylinderShape3D_2")
 
-[node name="Mesh" type="MeshInstance3D" parent="Landmarks/Watchtower"]
+[node name="Mesh" type="MeshInstance3D" parent="Landmarks/Watchtower" unique_id=1720907840]
 mesh = ExtResource("1_de242")
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1384729746]

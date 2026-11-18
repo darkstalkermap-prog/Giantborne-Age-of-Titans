@@ -5,6 +5,9 @@ extends IntegrationSuite
 ## held body covering the screen centre for more than 30 consecutive ticks. The hold socket keeps
 ## the body low and to the left of the view at every stage, also for a two-handed hold (an
 ## ogre-sized body at stage 3: in first person it is held with the off hand alone).
+## In the slow tier since P49 (plan M11 §1.7 rule 2: headroom in the default tier; 0.8 s of simulation):
+## the default tier keeps the grab, the hold and the throw (test_grab_throw) and the crosshair's rule in
+## vertical aim (test_vertical_aim).
 
 const TURN_TICKS := 72
 

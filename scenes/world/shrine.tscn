@@ -67,28 +67,28 @@ _surfaces = [{
 "vertex_data": PackedByteArray("AACAvpqZWUBH4fq+AACAPpqZWUDMzAy/AACAPpqZWUBH4fq+AACAvpqZWUDMzAy/AACAvs3MzD9H4fq+AACAPs3MzD/MzAy/AACAPs3MzD9H4fq+AACAvs3MzD/MzAy/AACAPpqZWUBH4fq+AACAvpqZWUDMzAy/AACAPpqZWUDMzAy/AACAvpqZWUBH4fq+AACAPs3MzD9H4fq+AACAvs3MzD/MzAy/AACAPs3MzD/MzAy/AACAvs3MzD9H4fq+AACAPpqZWUBH4fq+AACAvs3MzD9H4fq+AACAvpqZWUBH4fq+AACAPs3MzD9H4fq+AACAPpqZWUDMzAy/AACAvs3MzD/MzAy/AACAvpqZWUDMzAy/AACAPs3MzD/MzAy//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+/")
 }]
 
-[node name="Shrine" type="Node3D"]
+[node name="Shrine" type="Node3D" unique_id=1567226216]
 script = ExtResource("1_e36fc")
 prompt = "Rest"
 radius_m = 4.0
 priority = 40
 
-[node name="Stone" type="StaticBody3D" parent="."]
+[node name="Stone" type="StaticBody3D" parent="." unique_id=94371635]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Stone" unique_id=1090319591]
 shape = SubResource("BoxShape3D_1")
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=751177]
 
-[node name="Glow" type="MeshInstance3D" parent="Visual"]
+[node name="Glow" type="MeshInstance3D" parent="Visual" unique_id=1027644193]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -0.53)
 visible = false
 material_override = SubResource("StandardMaterial3D_2")
 mesh = SubResource("BoxMesh_3")
 
-[node name="Name" type="Label3D" parent="Visual"]
+[node name="Name" type="Label3D" parent="Visual" unique_id=803773779]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.8, 0)
 visibility_range_begin = 7.0
 visibility_range_end = 90.0
@@ -99,12 +99,12 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "SHRINE"
 font_size = 64
 
-[node name="GrowthPad" type="Marker3D" parent="."]
+[node name="GrowthPad" type="Marker3D" parent="." unique_id=855577211]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6.5)
 
-[node name="SpawnPoint" type="Marker3D" parent="."]
+[node name="SpawnPoint" type="Marker3D" parent="." unique_id=199857417]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -6.5)
 script = ExtResource("2_74fde")
 
-[node name="Merged" type="MeshInstance3D" parent="." groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="." unique_id=43279671 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_7")

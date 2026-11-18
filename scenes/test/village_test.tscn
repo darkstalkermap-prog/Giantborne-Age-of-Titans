@@ -142,286 +142,286 @@ agent_height = 2.0
 agent_radius = 0.6
 agent_max_slope = 35.0
 
-[node name="VillageTestLevel" type="Node3D"]
+[node name="VillageTestLevel" type="Node3D" unique_id=848595379]
 script = ExtResource("1_eea46")
 level_id = "level.village_test"
 
-[node name="Environment" type="WorldEnvironment" parent="."]
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=949088651]
 environment = SubResource("Environment_1")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=184270234]
 transform = Transform3D(0.8480481, 0.41758206, -0.32625088, 0, 0.6156615, 0.7880107, 0.52991927, -0.668271, 0.5221106, 0, 0, 0)
 shadow_enabled = true
 directional_shadow_max_distance = 90.0
 
-[node name="World" type="Node3D" parent="."]
+[node name="World" type="Node3D" parent="." unique_id=1977156951]
 
-[node name="Floor" type="StaticBody3D" parent="World"]
+[node name="Floor" type="StaticBody3D" parent="World" unique_id=574471844]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/Floor"]
+[node name="Shape" type="CollisionShape3D" parent="World/Floor" unique_id=1609758183]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/Floor"]
+[node name="Mesh" type="MeshInstance3D" parent="World/Floor" unique_id=70759406]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 material_override = SubResource("ShaderMaterial_3")
 mesh = SubResource("PlaneMesh_4")
 
-[node name="WallNorth" type="StaticBody3D" parent="World"]
+[node name="WallNorth" type="StaticBody3D" parent="World" unique_id=908313716]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -41)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/WallNorth"]
+[node name="Shape" type="CollisionShape3D" parent="World/WallNorth" unique_id=125964183]
 shape = SubResource("BoxShape3D_5")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/WallNorth"]
+[node name="Mesh" type="MeshInstance3D" parent="World/WallNorth" unique_id=37103202]
 material_override = SubResource("StandardMaterial3D_6")
 mesh = SubResource("BoxMesh_7")
 
-[node name="WallSouth" type="StaticBody3D" parent="World"]
+[node name="WallSouth" type="StaticBody3D" parent="World" unique_id=467193704]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 41)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/WallSouth"]
+[node name="Shape" type="CollisionShape3D" parent="World/WallSouth" unique_id=1230652563]
 shape = SubResource("BoxShape3D_8")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/WallSouth"]
+[node name="Mesh" type="MeshInstance3D" parent="World/WallSouth" unique_id=1755278863]
 material_override = SubResource("StandardMaterial3D_6")
 mesh = SubResource("BoxMesh_9")
 
-[node name="WallEast" type="StaticBody3D" parent="World"]
+[node name="WallEast" type="StaticBody3D" parent="World" unique_id=2088466629]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 2, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/WallEast"]
+[node name="Shape" type="CollisionShape3D" parent="World/WallEast" unique_id=1866107419]
 shape = SubResource("BoxShape3D_10")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/WallEast"]
+[node name="Mesh" type="MeshInstance3D" parent="World/WallEast" unique_id=754957403]
 material_override = SubResource("StandardMaterial3D_6")
 mesh = SubResource("BoxMesh_11")
 
-[node name="WallWest" type="StaticBody3D" parent="World"]
+[node name="WallWest" type="StaticBody3D" parent="World" unique_id=1216133612]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41, 2, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/WallWest"]
+[node name="Shape" type="CollisionShape3D" parent="World/WallWest" unique_id=1235719323]
 shape = SubResource("BoxShape3D_12")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/WallWest"]
+[node name="Mesh" type="MeshInstance3D" parent="World/WallWest" unique_id=1955556490]
 material_override = SubResource("StandardMaterial3D_6")
 mesh = SubResource("BoxMesh_13")
 
-[node name="CottageNW" type="StaticBody3D" parent="World"]
+[node name="CottageNW" type="StaticBody3D" parent="World" unique_id=622246503]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2, -8)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/CottageNW"]
+[node name="Shape" type="CollisionShape3D" parent="World/CottageNW" unique_id=1149878924]
 shape = SubResource("BoxShape3D_14")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/CottageNW"]
+[node name="Mesh" type="MeshInstance3D" parent="World/CottageNW" unique_id=12497979]
 material_override = SubResource("StandardMaterial3D_15")
 mesh = SubResource("BoxMesh_16")
 
-[node name="Roof" type="MeshInstance3D" parent="World/CottageNW"]
+[node name="Roof" type="MeshInstance3D" parent="World/CottageNW" unique_id=1827248364]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
 material_override = SubResource("StandardMaterial3D_17")
 mesh = SubResource("BoxMesh_18")
 
-[node name="CottageNE" type="StaticBody3D" parent="World"]
+[node name="CottageNE" type="StaticBody3D" parent="World" unique_id=300227791]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, -8)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/CottageNE"]
+[node name="Shape" type="CollisionShape3D" parent="World/CottageNE" unique_id=1371277292]
 shape = SubResource("BoxShape3D_19")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/CottageNE"]
+[node name="Mesh" type="MeshInstance3D" parent="World/CottageNE" unique_id=2146685257]
 material_override = SubResource("StandardMaterial3D_15")
 mesh = SubResource("BoxMesh_20")
 
-[node name="Roof" type="MeshInstance3D" parent="World/CottageNE"]
+[node name="Roof" type="MeshInstance3D" parent="World/CottageNE" unique_id=1931618469]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
 material_override = SubResource("StandardMaterial3D_17")
 mesh = SubResource("BoxMesh_21")
 
-[node name="CottageSW" type="StaticBody3D" parent="World"]
+[node name="CottageSW" type="StaticBody3D" parent="World" unique_id=689101646]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2, 8)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/CottageSW"]
+[node name="Shape" type="CollisionShape3D" parent="World/CottageSW" unique_id=1458479461]
 shape = SubResource("BoxShape3D_22")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/CottageSW"]
+[node name="Mesh" type="MeshInstance3D" parent="World/CottageSW" unique_id=933296561]
 material_override = SubResource("StandardMaterial3D_15")
 mesh = SubResource("BoxMesh_23")
 
-[node name="Roof" type="MeshInstance3D" parent="World/CottageSW"]
+[node name="Roof" type="MeshInstance3D" parent="World/CottageSW" unique_id=542017650]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
 material_override = SubResource("StandardMaterial3D_17")
 mesh = SubResource("BoxMesh_24")
 
-[node name="CottageSE" type="StaticBody3D" parent="World"]
+[node name="CottageSE" type="StaticBody3D" parent="World" unique_id=1324976953]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, 8)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/CottageSE"]
+[node name="Shape" type="CollisionShape3D" parent="World/CottageSE" unique_id=1715811225]
 shape = SubResource("BoxShape3D_25")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/CottageSE"]
+[node name="Mesh" type="MeshInstance3D" parent="World/CottageSE" unique_id=1309953866]
 material_override = SubResource("StandardMaterial3D_15")
 mesh = SubResource("BoxMesh_26")
 
-[node name="Roof" type="MeshInstance3D" parent="World/CottageSE"]
+[node name="Roof" type="MeshInstance3D" parent="World/CottageSE" unique_id=266323482]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
 material_override = SubResource("StandardMaterial3D_17")
 mesh = SubResource("BoxMesh_27")
 
-[node name="YardNorth" type="StaticBody3D" parent="World"]
+[node name="YardNorth" type="StaticBody3D" parent="World" unique_id=706152212]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -25.3)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/YardNorth"]
+[node name="Shape" type="CollisionShape3D" parent="World/YardNorth" unique_id=862179089]
 shape = SubResource("BoxShape3D_28")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/YardNorth"]
+[node name="Mesh" type="MeshInstance3D" parent="World/YardNorth" unique_id=1284008475]
 material_override = SubResource("StandardMaterial3D_29")
 mesh = SubResource("BoxMesh_30")
 
-[node name="YardSouth" type="StaticBody3D" parent="World"]
+[node name="YardSouth" type="StaticBody3D" parent="World" unique_id=1031521535]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -18.7)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/YardSouth"]
+[node name="Shape" type="CollisionShape3D" parent="World/YardSouth" unique_id=817589099]
 shape = SubResource("BoxShape3D_31")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/YardSouth"]
+[node name="Mesh" type="MeshInstance3D" parent="World/YardSouth" unique_id=105325784]
 material_override = SubResource("StandardMaterial3D_29")
 mesh = SubResource("BoxMesh_32")
 
-[node name="YardEast" type="StaticBody3D" parent="World"]
+[node name="YardEast" type="StaticBody3D" parent="World" unique_id=40856819]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.3, 1.5, -22)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/YardEast"]
+[node name="Shape" type="CollisionShape3D" parent="World/YardEast" unique_id=1201769538]
 shape = SubResource("BoxShape3D_33")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/YardEast"]
+[node name="Mesh" type="MeshInstance3D" parent="World/YardEast" unique_id=300927974]
 material_override = SubResource("StandardMaterial3D_29")
 mesh = SubResource("BoxMesh_34")
 
-[node name="YardWest" type="StaticBody3D" parent="World"]
+[node name="YardWest" type="StaticBody3D" parent="World" unique_id=2030463395]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.3, 1.5, -22)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="World/YardWest"]
+[node name="Shape" type="CollisionShape3D" parent="World/YardWest" unique_id=2070062259]
 shape = SubResource("BoxShape3D_35")
 
-[node name="Mesh" type="MeshInstance3D" parent="World/YardWest"]
+[node name="Mesh" type="MeshInstance3D" parent="World/YardWest" unique_id=585390097]
 material_override = SubResource("StandardMaterial3D_29")
 mesh = SubResource("BoxMesh_36")
 
-[node name="Navigation" type="Node3D" parent="."]
+[node name="Navigation" type="Node3D" parent="." unique_id=1114045796]
 
-[node name="Human" type="NavigationRegion3D" parent="Navigation"]
+[node name="Human" type="NavigationRegion3D" parent="Navigation" unique_id=1398784478]
 navigation_mesh = SubResource("NavigationMesh_37")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=263777530]
 
-[node name="Safe" type="Node3D" parent="Markers"]
+[node name="Safe" type="Node3D" parent="Markers" unique_id=530588280]
 
-[node name="test_village_safe_nw" type="Marker3D" parent="Markers/Safe"]
+[node name="test_village_safe_nw" type="Marker3D" parent="Markers/Safe" unique_id=1461980856]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -8)
 script = ExtResource("3_acc12")
 marker_id = "test.village.safe_nw"
 kind = 4
 
-[node name="test_village_safe_ne" type="Marker3D" parent="Markers/Safe"]
+[node name="test_village_safe_ne" type="Marker3D" parent="Markers/Safe" unique_id=1600949336]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -8)
 script = ExtResource("3_acc12")
 marker_id = "test.village.safe_ne"
 kind = 4
 
-[node name="test_village_safe_sw" type="Marker3D" parent="Markers/Safe"]
+[node name="test_village_safe_sw" type="Marker3D" parent="Markers/Safe" unique_id=2053097496]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 8)
 script = ExtResource("3_acc12")
 marker_id = "test.village.safe_sw"
 kind = 4
 
-[node name="test_village_safe_se" type="Marker3D" parent="Markers/Safe"]
+[node name="test_village_safe_se" type="Marker3D" parent="Markers/Safe" unique_id=717954954]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 8)
 script = ExtResource("3_acc12")
 marker_id = "test.village.safe_se"
 kind = 4
 
-[node name="test_village_safe_yard" type="Marker3D" parent="Markers/Safe"]
+[node name="test_village_safe_yard" type="Marker3D" parent="Markers/Safe" unique_id=987198469]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22)
 script = ExtResource("3_acc12")
 marker_id = "test.village.safe_yard"
 kind = 4
 
-[node name="Formation" type="Node3D" parent="Markers"]
+[node name="Formation" type="Node3D" parent="Markers" unique_id=228182595]
 
-[node name="test_village_guard_post_1" type="Marker3D" parent="Markers/Formation"]
+[node name="test_village_guard_post_1" type="Marker3D" parent="Markers/Formation" unique_id=550117577]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 18)
 script = ExtResource("3_acc12")
 marker_id = "test.village.guard_post_1"
 kind = 3
 faction = "village"
 
-[node name="test_village_guard_post_2" type="Marker3D" parent="Markers/Formation"]
+[node name="test_village_guard_post_2" type="Marker3D" parent="Markers/Formation" unique_id=1014687877]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 18)
 script = ExtResource("3_acc12")
 marker_id = "test.village.guard_post_2"
 kind = 3
 faction = "village"
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1007914514]
 
-[node name="test_village_elder" type="Marker3D" parent="Markers/Objective"]
+[node name="test_village_elder" type="Marker3D" parent="Markers/Objective" unique_id=1682596456]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
 script = ExtResource("3_acc12")
 marker_id = "test.village.elder"
 
-[node name="Folk" type="Node3D" parent="."]
+[node name="Folk" type="Node3D" parent="." unique_id=1192729760]
 
-[node name="Villager1" type="CharacterBody3D" parent="Folk" instance=ExtResource("4_74372")]
+[node name="Villager1" type="CharacterBody3D" parent="Folk" unique_id=762511220 instance=ExtResource("4_74372")]
 transform = Transform3D(0.8660254, 0, 0.5, 0, 1, 0, -0.5, 0, 0.8660254, -2, 0.05, -3)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("5_8a1f5")
 entity_id = "test.village.villager_1"
 
-[node name="Villager2" type="CharacterBody3D" parent="Folk" instance=ExtResource("4_74372")]
+[node name="Villager2" type="CharacterBody3D" parent="Folk" unique_id=1022901215 instance=ExtResource("4_74372")]
 transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, 2, 0.05, -3)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("5_8a1f5")
 entity_id = "test.village.villager_2"
 
-[node name="Villager3" type="CharacterBody3D" parent="Folk" instance=ExtResource("4_74372")]
+[node name="Villager3" type="CharacterBody3D" parent="Folk" unique_id=1302065984 instance=ExtResource("4_74372")]
 transform = Transform3D(-0.9396926, 0, 0.3420202, 0, 1, 0, -0.3420202, 0, -0.9396926, -1.5, 0.05, 3.5)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("5_8a1f5")
 entity_id = "test.village.villager_3"
 
-[node name="Villager4" type="CharacterBody3D" parent="Folk" instance=ExtResource("4_74372")]
+[node name="Villager4" type="CharacterBody3D" parent="Folk" unique_id=1361193077 instance=ExtResource("4_74372")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -16.5)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("5_8a1f5")
 entity_id = "test.village.villager_4"
 
-[node name="Elder" type="CharacterBody3D" parent="Folk" instance=ExtResource("6_a80bf")]
+[node name="Elder" type="CharacterBody3D" parent="Folk" unique_id=2003187344 instance=ExtResource("6_a80bf")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0.05, -6)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("5_8a1f5")
 entity_id = "test.village.elder"
 
-[node name="Guards" type="Node3D" parent="."]
+[node name="Guards" type="Node3D" parent="." unique_id=1976732581]
 
-[node name="Guard1" type="CharacterBody3D" parent="Guards" instance=ExtResource("7_7b3a0")]
+[node name="Guard1" type="CharacterBody3D" parent="Guards" unique_id=104886784 instance=ExtResource("7_7b3a0")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -6, 0.05, 18)
 collision_layer = 2
 collision_mask = 51
@@ -429,7 +429,7 @@ script = ExtResource("8_8053b")
 entity_id = "test.village.guard_1"
 faction = "village"
 
-[node name="Guard2" type="CharacterBody3D" parent="Guards" instance=ExtResource("7_7b3a0")]
+[node name="Guard2" type="CharacterBody3D" parent="Guards" unique_id=1730377406 instance=ExtResource("7_7b3a0")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6, 0.05, 18)
 collision_layer = 2
 collision_mask = 51
@@ -437,29 +437,29 @@ script = ExtResource("8_8053b")
 entity_id = "test.village.guard_2"
 faction = "village"
 
-[node name="Checkpoints" type="Node3D" parent="."]
+[node name="Checkpoints" type="Node3D" parent="." unique_id=840488055]
 
-[node name="CpStart" type="Marker3D" parent="Checkpoints"]
+[node name="CpStart" type="Marker3D" parent="Checkpoints" unique_id=1836115614]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 30)
 script = ExtResource("9_74fde")
 checkpoint_id = "test.village.cp_start"
 
-[node name="Spawns" type="Node3D" parent="."]
+[node name="Spawns" type="Node3D" parent="." unique_id=2109038771]
 
-[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns" unique_id=1684281199]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 30)
 
-[node name="Spawned" type="Node3D" parent="."]
+[node name="Spawned" type="Node3D" parent="." unique_id=1508725612]
 
-[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("10_627ae")]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1267497025 instance=ExtResource("10_627ae")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 30)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("11_7ef4a")
 
-[node name="Signs" type="Node3D" parent="."]
+[node name="Signs" type="Node3D" parent="." unique_id=1757616488]
 
-[node name="SignStart" type="Label3D" parent="Signs"]
+[node name="SignStart" type="Label3D" parent="Signs" unique_id=1745976093]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.55, 26)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
@@ -469,7 +469,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "VILLAGE TEST: neutral guards, villagers, the elder"
 font_size = 64
 
-[node name="SignYard" type="Label3D" parent="Signs"]
+[node name="SignYard" type="Label3D" parent="Signs" unique_id=2081035718]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -22)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0

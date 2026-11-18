@@ -4,126 +4,126 @@
 [ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
 [ext_resource type="PackedScene" path="res://scenes/world/gate_fortified.tscn" id="3_66b76"]
 
-[node name="Chunk_2_2_0" type="Node3D"]
+[node name="Chunk_2_2_0" type="Node3D" unique_id=913075885]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=263001786]
 
-[node name="House1" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+[node name="House1" type="StaticBody3D" parent="Props" unique_id=994217357 instance=ExtResource("1_6a194")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 14, 83)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.house_1"
 
-[node name="House2" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+[node name="House2" type="StaticBody3D" parent="Props" unique_id=1590076829 instance=ExtResource("1_6a194")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 14, 83)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.house_2"
 
-[node name="House3" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+[node name="House3" type="StaticBody3D" parent="Props" unique_id=1557756472 instance=ExtResource("1_6a194")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 14, 105)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.house_3"
 
-[node name="House4" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+[node name="House4" type="StaticBody3D" parent="Props" unique_id=2085782262 instance=ExtResource("1_6a194")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 14, 105)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.house_4"
 
-[node name="House5" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+[node name="House5" type="StaticBody3D" parent="Props" unique_id=1879486733 instance=ExtResource("1_6a194")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 14, 151)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.house_5"
 
-[node name="House6" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+[node name="House6" type="StaticBody3D" parent="Props" unique_id=1256795678 instance=ExtResource("1_6a194")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 14, 151)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.house_6"
 
-[node name="House7" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+[node name="House7" type="StaticBody3D" parent="Props" unique_id=21820693 instance=ExtResource("1_6a194")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 14, 173)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.house_7"
 
-[node name="House8" type="StaticBody3D" parent="Props" instance=ExtResource("1_6a194")]
+[node name="House8" type="StaticBody3D" parent="Props" unique_id=1854707218 instance=ExtResource("1_6a194")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 126, 14, 173)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.house_8"
 
-[node name="GateNorth" type="StaticBody3D" parent="Props" instance=ExtResource("3_66b76")]
+[node name="GateNorth" type="StaticBody3D" parent="Props" unique_id=64366687 instance=ExtResource("3_66b76")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 13.8, 58)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.gate_north"
 
-[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/GateNorth"]
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/GateNorth" unique_id=822272582]
 enabled = false
 start_position = Vector3(0, 0.55, 3.5)
 end_position = Vector3(0, 0.55, -3.5)
 
-[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/GateNorth"]
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/GateNorth" unique_id=682350134]
 enabled = false
 navigation_layers = 2
 start_position = Vector3(0, 0.35, 4.5)
 end_position = Vector3(0, 0.35, -4.5)
 
-[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/GateNorth"]
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/GateNorth" unique_id=724370058]
 enabled = false
 navigation_layers = 16
 start_position = Vector3(0, 0.2, 7)
 end_position = Vector3(0, 0.2, -7)
 
-[node name="GateSouth" type="StaticBody3D" parent="Props" instance=ExtResource("3_66b76")]
+[node name="GateSouth" type="StaticBody3D" parent="Props" unique_id=1402235782 instance=ExtResource("3_66b76")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 128, 13.8, 198)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.gate_south"
 
-[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/GateSouth"]
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/GateSouth" unique_id=1423023336]
 enabled = false
 start_position = Vector3(0, 0.55, 3.5)
 end_position = Vector3(0, 0.55, -3.5)
 
-[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/GateSouth"]
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/GateSouth" unique_id=790361485]
 enabled = false
 navigation_layers = 2
 start_position = Vector3(0, 0.35, 4.5)
 end_position = Vector3(0, 0.35, -4.5)
 
-[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/GateSouth"]
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/GateSouth" unique_id=759420849]
 enabled = false
 navigation_layers = 16
 start_position = Vector3(0, 0.2, 7)
 end_position = Vector3(0, 0.2, -7)
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1639475281]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=343412046]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1948529576]
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=2009759140]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=1010748756]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1275809159]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=538816819]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1732993985]

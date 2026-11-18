@@ -3,11 +3,11 @@
 [ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
 [ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
 
-[node name="Chunk_1_7_0" type="Node3D"]
+[node name="Chunk_1_7_0" type="Node3D" unique_id=1912229085]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1509079577]
 
-[node name="world_crownmarch_vault_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
+[node name="world_crownmarch_vault_cache" type="StaticBody3D" parent="Props" unique_id=1132347372 instance=ExtResource("1_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 21.996, 1)
 collision_layer = 16
 collision_mask = 0
@@ -15,18 +15,18 @@ script = ExtResource("2_5fc47")
 world_id = "world.crownmarch.vault_cache"
 loot_table = "loot.cache_barrow_vault"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=160407979]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1271103672]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=539690305]
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1070783962]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=1129501258]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1560803010]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=268628499]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=574031569]

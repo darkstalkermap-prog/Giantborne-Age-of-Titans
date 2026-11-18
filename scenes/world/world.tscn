@@ -55,121 +55,121 @@ size = Vector3(48, 400, 2)
 [sub_resource type="BoxShape3D" id="BoxShape3D_13"]
 size = Vector3(916, 400, 2)
 
-[node name="World" type="Node3D"]
+[node name="World" type="Node3D" unique_id=429757416]
 script = ExtResource("1_ce812")
 level_id = "level.world"
 
-[node name="Environment" type="WorldEnvironment" parent="."]
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=1031218649]
 environment = SubResource("Environment_1")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1545924658]
 transform = Transform3D(0.81915206, 0.4262504, -0.38379753, 0, 0.66913056, 0.74314487, 0.57357645, -0.6087487, 0.54811966, 0, 0, 0)
 shadow_enabled = true
 directional_shadow_mode = 1
 directional_shadow_max_distance = 120.0
 
-[node name="Streamer" type="Node" parent="."]
+[node name="Streamer" type="Node" parent="." unique_id=22048315]
 script = ExtResource("2_757f0")
 
-[node name="Skyline" type="Node3D" parent="."]
+[node name="Skyline" type="Node3D" parent="." unique_id=1751899440]
 script = ExtResource("3_3d2a6")
 beacon_positions = PackedVector3Array(-255, 42.156, 750, 472, 43.876, 770)
 beacon_flags = PackedStringArray("world.kingsgate.lit", "world.shepherds_watch.lit")
 beacon_height_m = 500.0
 
-[node name="Chunks" type="Node3D" parent="."]
+[node name="Chunks" type="Node3D" parent="." unique_id=1649212171]
 
-[node name="Navigation" type="Node3D" parent="."]
+[node name="Navigation" type="Node3D" parent="." unique_id=1756557583]
 
-[node name="Bounds" type="StaticBody3D" parent="."]
+[node name="Bounds" type="StaticBody3D" parent="." unique_id=467587764]
 collision_layer = 32
 collision_mask = 0
 
-[node name="North" type="CollisionShape3D" parent="Bounds"]
+[node name="North" type="CollisionShape3D" parent="Bounds" unique_id=317384581]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 120, -897)
 shape = SubResource("BoxShape3D_2")
 
-[node name="West" type="CollisionShape3D" parent="Bounds"]
+[node name="West" type="CollisionShape3D" parent="Bounds" unique_id=2135197560]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -897, 120, 0)
 shape = SubResource("BoxShape3D_3")
 
-[node name="East" type="CollisionShape3D" parent="Bounds"]
+[node name="East" type="CollisionShape3D" parent="Bounds" unique_id=692935902]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 897, 120, 0)
 shape = SubResource("BoxShape3D_4")
 
-[node name="South0" type="CollisionShape3D" parent="Bounds"]
+[node name="South0" type="CollisionShape3D" parent="Bounds" unique_id=1266019987]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -616.5, 120, 897)
 shape = SubResource("BoxShape3D_5")
 
-[node name="Notch1W" type="CollisionShape3D" parent="Bounds"]
+[node name="Notch1W" type="CollisionShape3D" parent="Bounds" unique_id=1941955677]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -336, 120, 921)
 shape = SubResource("BoxShape3D_6")
 
-[node name="Notch1E" type="CollisionShape3D" parent="Bounds"]
+[node name="Notch1E" type="CollisionShape3D" parent="Bounds" unique_id=1816374903]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -264, 120, 921)
 shape = SubResource("BoxShape3D_7")
 
-[node name="Notch1S" type="CollisionShape3D" parent="Bounds"]
+[node name="Notch1S" type="CollisionShape3D" parent="Bounds" unique_id=545485898]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -300, 120, 946)
 shape = SubResource("BoxShape3D_8")
 
-[node name="South1" type="CollisionShape3D" parent="Bounds"]
+[node name="South1" type="CollisionShape3D" parent="Bounds" unique_id=2005011182]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -163.5, 120, 897)
 shape = SubResource("BoxShape3D_9")
 
-[node name="Notch2W" type="CollisionShape3D" parent="Bounds"]
+[node name="Notch2W" type="CollisionShape3D" parent="Bounds" unique_id=1879209986]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -63, 120, 919.5)
 shape = SubResource("BoxShape3D_10")
 
-[node name="Notch2E" type="CollisionShape3D" parent="Bounds"]
+[node name="Notch2E" type="CollisionShape3D" parent="Bounds" unique_id=1145894765]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 120, 919.5)
 shape = SubResource("BoxShape3D_11")
 
-[node name="Notch2S" type="CollisionShape3D" parent="Bounds"]
+[node name="Notch2S" type="CollisionShape3D" parent="Bounds" unique_id=656509653]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 120, 943)
 shape = SubResource("BoxShape3D_12")
 
-[node name="South2" type="CollisionShape3D" parent="Bounds"]
+[node name="South2" type="CollisionShape3D" parent="Bounds" unique_id=1105180400]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 440, 120, 897)
 shape = SubResource("BoxShape3D_13")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1240773289]
 
-[node name="Route" type="Node3D" parent="Markers"]
+[node name="Route" type="Node3D" parent="Markers" unique_id=2013745454]
 
-[node name="WP01" type="Marker3D" parent="Markers/Route"]
+[node name="WP01" type="Marker3D" parent="Markers/Route" unique_id=786444005]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -200, 9.568, 360)
 
-[node name="WP02" type="Marker3D" parent="Markers/Route"]
+[node name="WP02" type="Marker3D" parent="Markers/Route" unique_id=1990881714]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -210, 5.882, 280)
 
-[node name="WP03" type="Marker3D" parent="Markers/Route"]
+[node name="WP03" type="Marker3D" parent="Markers/Route" unique_id=594261557]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -250, 5.394, 220)
 
-[node name="WP04" type="Marker3D" parent="Markers/Route"]
+[node name="WP04" type="Marker3D" parent="Markers/Route" unique_id=1461510471]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -345, 18.958, 216)
 
-[node name="WP05" type="Marker3D" parent="Markers/Route"]
+[node name="WP05" type="Marker3D" parent="Markers/Route" unique_id=990003662]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -295, 8.365, 300)
 
-[node name="WP06" type="Marker3D" parent="Markers/Route"]
+[node name="WP06" type="Marker3D" parent="Markers/Route" unique_id=981013558]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -280, 7.6, 360)
 
-[node name="Spawns" type="Node3D" parent="."]
+[node name="Spawns" type="Node3D" parent="." unique_id=211551796]
 
-[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns" unique_id=1190418149]
 transform = Transform3D(0.9702957, 0, -0.2419219, 0, 1, 0, 0.2419219, 0, 0.9702957, -300, 46.3, 916)
 
-[node name="Spawned" type="Node3D" parent="."]
+[node name="Spawned" type="Node3D" parent="." unique_id=2045863944]
 
-[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("4_627ae")]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1736362923 instance=ExtResource("4_627ae")]
 transform = Transform3D(0.9702957, 0, -0.2419219, 0, 1, 0, 0.2419219, 0, 0.9702957, -300, 46.3, 916)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("5_7ef4a")
 
-[node name="EncounterDirector" type="Node" parent="."]
+[node name="EncounterDirector" type="Node" parent="." unique_id=1957151812]
 script = ExtResource("6_b0840")
 
-[node name="DebrisPool" type="Node3D" parent="."]
+[node name="DebrisPool" type="Node3D" parent="." unique_id=396038416]
 script = ExtResource("7_ce070")

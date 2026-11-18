@@ -42,50 +42,50 @@ size = Vector3(6.3, 6.3, 2.8)
 [sub_resource type="BoxShape3D" id="BoxShape3D_8"]
 size = Vector3(10.8, 9, 4.8)
 
-[node name="Chunk_3_7_0" type="Node3D"]
+[node name="Chunk_3_7_0" type="Node3D" unique_id=79889591]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=2086962361]
 
-[node name="world_crownmarch_broken_stair_rubble" type="Node3D" parent="Props"]
+[node name="world_crownmarch_broken_stair_rubble" type="Node3D" parent="Props" unique_id=975606928]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 216, 14, 168)
 script = ExtResource("1_727cc")
 hidden_when_flag = "world.citadel.breached"
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_broken_stair_rubble"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_broken_stair_rubble" unique_id=184812065]
 mesh = SubResource("ArrayMesh_1")
 
-[node name="Body" type="StaticBody3D" parent="Props/world_crownmarch_broken_stair_rubble"]
+[node name="Body" type="StaticBody3D" parent="Props/world_crownmarch_broken_stair_rubble" unique_id=489523552]
 collision_mask = 0
 
-[node name="Shape0" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+[node name="Shape0" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body" unique_id=257337907]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 1.75, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="Shape1" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+[node name="Shape1" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body" unique_id=633614520]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 2.2, 2.078461)
 shape = SubResource("BoxShape3D_3")
 
-[node name="Shape2" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+[node name="Shape2" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body" unique_id=346534798]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7, 2.65, 2.078461)
 shape = SubResource("BoxShape3D_4")
 
-[node name="Shape3" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+[node name="Shape3" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body" unique_id=1554409689]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4, 1.75, 2.9391524e-16)
 shape = SubResource("BoxShape3D_5")
 
-[node name="Shape4" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+[node name="Shape4" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body" unique_id=685084234]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7, 2.2, -2.078461)
 shape = SubResource("BoxShape3D_6")
 
-[node name="Shape5" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+[node name="Shape5" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body" unique_id=1573616625]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 2.65, -2.078461)
 shape = SubResource("BoxShape3D_7")
 
-[node name="Shape6" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body"]
+[node name="Shape6" type="CollisionShape3D" parent="Props/world_crownmarch_broken_stair_rubble/Body" unique_id=498489393]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
 shape = SubResource("BoxShape3D_8")
 
-[node name="world_crownmarch_stair_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="world_crownmarch_stair_cache" type="StaticBody3D" parent="Props" unique_id=1904655605 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 201, 14, 136)
 collision_layer = 16
 collision_mask = 0
@@ -93,22 +93,22 @@ script = ExtResource("4_5fc47")
 world_id = "world.crownmarch.stair_cache"
 loot_table = "loot.cache_broken_stair"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1207250720]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1973423079]
 
-[node name="world_cp_broken_stair" type="Marker3D" parent="Waystones"]
+[node name="world_cp_broken_stair" type="Marker3D" parent="Waystones" unique_id=1390841247]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 216, 14.3, 136)
 script = ExtResource("5_74fde")
 checkpoint_id = "world.cp.broken_stair"
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1794078010]
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=154535225]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=1633946154]
 
-[node name="world_exit_broken_stair" type="Node3D" parent="Exits"]
+[node name="world_exit_broken_stair" type="Node3D" parent="Exits" unique_id=1002815884]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 216, 14, 158)
 script = ExtResource("6_a5c2b")
 exit_id = "world.exit.broken_stair"
@@ -122,8 +122,8 @@ prompt = "Descend the Broken Stair"
 radius_m = 7.0
 priority = 40
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=742719572]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=792224521]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1040797348]

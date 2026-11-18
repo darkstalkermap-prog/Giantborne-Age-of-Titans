@@ -28,7 +28,7 @@ extends SubViewportContainer
 ## 720x550 in every window, 1.5x upscaled at 1920x1080 and 2x at 2560x1440. With `window_pixels` (the
 ## creator sets it) the preview fills its parent at the window's resolution instead: the container is
 ## pixel_scale() times its parent's size and scaled down by the same factor, so its SubViewport has one pixel
-## per window pixel (up to MAX_PIXEL_SCALE; 1 on the Web, where the larger viewport's cost is not measured).
+## per window pixel (up to MAX_PIXEL_SCALE; on the Web up to WEB_MAX_PIXEL_SCALE, measured by P49: pixel_scale()).
 ##
 ## WarmUp (an inner class) is the title's shader warm-up: a hidden 64x64 SubViewport that draws the model
 ## with every material category for two frames under this preview's lighting and two under a level's.
@@ -581,13 +581,37 @@ func _process(_delta: float) -> void:
 
 # --------------------------------------------------------------------------- resolution
 
+## P49 (plan M11 §3.2 item 8; the M10 gate's LA-3 for the Web): the most viewport pixels per canvas unit on
+## the Web: the largest scale whose first creator frame stays within the stall rule (3 times the median frame).
+## Measured in headless Chromium on software WebGL at 1920x1080 (creator_check.mjs --args=--preview-scale=N,
+## New Game): 1 - 2.12x, 1.5 - 1.82x, 2 - 1.44x, every one within it, so the Web follows the desktop up to 2;
+## the steady creator frame there cost 254, 340 and 455 ms (docs/systems/P49.md).
+const WEB_MAX_PIXEL_SCALE := 2.0
+## --preview-scale=N on the command line (after "--") makes pixel_scale() return N (1 to MAX_PIXEL_SCALE)
+## whatever the window: the Web measurement of P49 (tools/web/creator_check.mjs --args=--preview-scale=1.5).
+const SCALE_OPTION := "--preview-scale="
+static var _forced_scale := -1.0   # -1: the command line was not read yet; 0: no option
+
+
+## The forced scale of --preview-scale=N (0 when the option is not given).
+static func forced_pixel_scale() -> float:
+	if _forced_scale < 0.0:
+		_forced_scale = 0.0
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with(SCALE_OPTION) and a.substr(SCALE_OPTION.length()).is_valid_float():
+				_forced_scale = clampf(a.substr(SCALE_OPTION.length()).to_float(), 1.0, MAX_PIXEL_SCALE)
+	return _forced_scale
+
+
 ## Window pixels per canvas unit for the preview's SubViewport: the scale the window stretches the canvas by,
-## from 1 (never under the canvas's own size) to MAX_PIXEL_SCALE; 1 on the Web.
+## from 1 (never under the canvas's own size) to MAX_PIXEL_SCALE, on the Web to WEB_MAX_PIXEL_SCALE.
 func pixel_scale() -> float:
-	if not is_inside_tree() or OS.has_feature("web"):
+	if not is_inside_tree():
 		return 1.0
+	if forced_pixel_scale() > 0.0:
+		return forced_pixel_scale()
 	var s := get_viewport().get_final_transform().get_scale()
-	return clampf(minf(absf(s.x), absf(s.y)), 1.0, MAX_PIXEL_SCALE)
+	return clampf(minf(absf(s.x), absf(s.y)), 1.0, WEB_MAX_PIXEL_SCALE if OS.has_feature("web") else MAX_PIXEL_SCALE)
 
 
 ## With `window_pixels`: fills the parent Control with a container pixel_scale() times its size, scaled down by

@@ -26,6 +26,11 @@ const FLASH_EMISSION := 0.85
 const RENDER_LOD_MARGIN_M := 5.0
 const FAR_PROXY := "FarProxy"
 const LOD_PROXY := "LodProxy"
+## P49 (plan M11 §2.2, §3.2 item 4): a skinned model's low-detail mesh that is drawn in shadow passes
+## only (the giant's is P48's, in giant.glb). See use_shadow_proxy().
+const SHADOW_PROXY := "ShadowProxy"
+## Meshes that keep their own shadow beside the proxy: a cape hangs free of the body's outline.
+const OWN_SHADOW_PREFIXES: PackedStringArray = ["Garment_cape"]
 
 
 ## This rig's copy of `mat`: one per source material (`copies`: source -> copy), with emission on
@@ -294,3 +299,52 @@ static func _set_parts_end(node: Node, end_m: float, skip: Array) -> void:
 		if child is GeometryInstance3D:
 			(child as GeometryInstance3D).visibility_range_end = end_m
 		_set_parts_end(child, end_m, skip)
+
+
+# --- P49: the shadow proxy (plan M11 §2.2, §2.12: shadows cost one draw call a cascade) ------------
+
+## When a mesh named "ShadowProxy" lives under `root` (a skinned model: the meshes are siblings under
+## its skeleton), that mesh alone casts the model's shadow: it is shown and set to shadows only, and
+## every other mesh beside it stops casting (a directional light's cascade then draws one mesh of the
+## model instead of every shown one). A cape keeps its own shadow (OWN_SHADOW_PREFIXES). Meshes that
+## join the model later - a part loaded on demand - are treated the same as they enter. Returns the
+## proxy, or null when the model has none (nothing is changed then). Callable again.
+static func use_shadow_proxy(root: Node) -> MeshInstance3D:
+	if root == null:
+		return null
+	var proxy := root.find_child(SHADOW_PROXY, true, false) as MeshInstance3D
+	if proxy == null or proxy.mesh == null:
+		return null
+	var holder := proxy.get_parent()
+	proxy.visible = true
+	proxy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	for mi: MeshInstance3D in _meshes_under(holder):
+		shade_beside_proxy(mi)
+	var on_enter := Callable(RigPaint, "shade_beside_proxy")
+	if not holder.child_entered_tree.is_connected(on_enter):
+		holder.child_entered_tree.connect(on_enter)
+	return proxy
+
+
+## One node beside a shadow proxy: a mesh other than the proxy and the capes stops casting a shadow.
+static func shade_beside_proxy(node: Node) -> void:
+	var mi := node as MeshInstance3D
+	if mi == null or mi.name == SHADOW_PROXY:
+		return
+	for prefix in OWN_SHADOW_PREFIXES:
+		if str(mi.name).begins_with(prefix):
+			return
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## True when `mi` casts a shadow as use_shadow_proxy() leaves it beside a proxy (tests, probes).
+static func casts_beside_proxy(mi: MeshInstance3D) -> bool:
+	return mi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+static func _meshes_under(node: Node, out: Array[MeshInstance3D] = []) -> Array[MeshInstance3D]:
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			out.append(child as MeshInstance3D)
+		_meshes_under(child, out)
+	return out

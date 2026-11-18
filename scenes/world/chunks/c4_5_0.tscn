@@ -374,11 +374,11 @@ size = Vector3(16.999992, 14, 1)
 [sub_resource type="BoxShape3D" id="BoxShape3D_55"]
 size = Vector3(16.999992, 14, 1)
 
-[node name="Chunk_4_5_0" type="Node3D"]
+[node name="Chunk_4_5_0" type="Node3D" unique_id=564934624]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1235854689]
 
-[node name="world_crownmarch_brannock_forge" type="Node3D" parent="Props" instance=ExtResource("1_34b2a")]
+[node name="world_crownmarch_brannock_forge" type="Node3D" parent="Props" unique_id=1367361707 instance=ExtResource("1_34b2a")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 12, 10, 214)
 script = ExtResource("2_30029")
 faction = "brannock"
@@ -390,37 +390,37 @@ prompt = "Reforge"
 radius_m = 6.0
 priority = 45
 
-[node name="world_crownmarch_brannock_giant_banner_3" type="Node3D" parent="Props"]
+[node name="world_crownmarch_brannock_giant_banner_3" type="Node3D" parent="Props" unique_id=621149472]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 10.06, 123)
 script = ExtResource("3_727cc")
 visible_when_flag = "faction.brannock.allied"
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_giant_banner_3"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_giant_banner_3" unique_id=1313801780]
 mesh = SubResource("ArrayMesh_1")
 
-[node name="Body" type="StaticBody3D" parent="Props/world_crownmarch_brannock_giant_banner_3"]
+[node name="Body" type="StaticBody3D" parent="Props/world_crownmarch_brannock_giant_banner_3" unique_id=655599830]
 collision_mask = 0
 
-[node name="Shape0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_giant_banner_3/Body"]
+[node name="Shape0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_giant_banner_3/Body" unique_id=2564637]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
 shape = SubResource("CylinderShape3D_2")
 
-[node name="world_crownmarch_brannock_giant_banner_4" type="Node3D" parent="Props"]
+[node name="world_crownmarch_brannock_giant_banner_4" type="Node3D" parent="Props" unique_id=1541601765]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 10.06, 123)
 script = ExtResource("3_727cc")
 visible_when_flag = "faction.brannock.allied"
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_giant_banner_4"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_giant_banner_4" unique_id=562782844]
 mesh = SubResource("ArrayMesh_3")
 
-[node name="Body" type="StaticBody3D" parent="Props/world_crownmarch_brannock_giant_banner_4"]
+[node name="Body" type="StaticBody3D" parent="Props/world_crownmarch_brannock_giant_banner_4" unique_id=1216255416]
 collision_mask = 0
 
-[node name="Shape0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_giant_banner_4/Body"]
+[node name="Shape0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_giant_banner_4/Body" unique_id=1942735480]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
 shape = SubResource("CylinderShape3D_4")
 
-[node name="world_crownmarch_brannock_house_1" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_brannock_house_1" type="StaticBody3D" parent="Props" unique_id=276799567]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 38, 10.002, 142)
 collision_layer = 16
 collision_mask = 0
@@ -429,24 +429,24 @@ world_id = "world.crownmarch.brannock_house_1"
 metadata/faction = "brannock"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_1"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_1" unique_id=1350955434]
 script = ExtResource("6_c8050")
 entity_id = "world.crownmarch.brannock_house_1"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_1"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_1" unique_id=1117760560]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_1/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_1/Anchors" unique_id=349714317]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_1"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_1" unique_id=1700565522]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 shape = SubResource("BoxShape3D_5")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_1"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_1" unique_id=1518059951]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_1/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_1/Hurtboxes" unique_id=1353381258]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 collision_layer = 4
 collision_mask = 0
@@ -454,21 +454,21 @@ monitoring = false
 script = ExtResource("7_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_1/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_1/Hurtboxes/Body" unique_id=1073424424]
 shape = SubResource("BoxShape3D_6")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_1"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_1" unique_id=541785739]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_1/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_1/Intact" unique_id=1799983343 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_7")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_1"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_1" unique_id=1802239586]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_1/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_1/Broken" unique_id=1029763289 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_8")
 
-[node name="world_crownmarch_brannock_house_2" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_brannock_house_2" type="StaticBody3D" parent="Props" unique_id=2030944420]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 38, 10, 162)
 collision_layer = 16
 collision_mask = 0
@@ -477,24 +477,24 @@ world_id = "world.crownmarch.brannock_house_2"
 metadata/faction = "brannock"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_2"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_2" unique_id=1306493692]
 script = ExtResource("6_c8050")
 entity_id = "world.crownmarch.brannock_house_2"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_2"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_2" unique_id=68398427]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_2/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_2/Anchors" unique_id=2090599483]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_2"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_2" unique_id=921084228]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 shape = SubResource("BoxShape3D_9")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_2"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_2" unique_id=250940957]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_2/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_2/Hurtboxes" unique_id=1595435532]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 collision_layer = 4
 collision_mask = 0
@@ -502,21 +502,21 @@ monitoring = false
 script = ExtResource("7_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_2/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_2/Hurtboxes/Body" unique_id=986106082]
 shape = SubResource("BoxShape3D_10")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_2"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_2" unique_id=1584819477]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_2/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_2/Intact" unique_id=1123020512 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_11")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_2"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_2" unique_id=246651863]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_2/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_2/Broken" unique_id=87966558 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_12")
 
-[node name="world_crownmarch_brannock_house_3" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_brannock_house_3" type="StaticBody3D" parent="Props" unique_id=1128653172]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 38, 10, 222)
 collision_layer = 16
 collision_mask = 0
@@ -525,24 +525,24 @@ world_id = "world.crownmarch.brannock_house_3"
 metadata/faction = "brannock"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_3"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_3" unique_id=1527293091]
 script = ExtResource("6_c8050")
 entity_id = "world.crownmarch.brannock_house_3"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_3"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_3" unique_id=52753895]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_3/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_3/Anchors" unique_id=644125996]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_3"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_3" unique_id=1566163663]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 shape = SubResource("BoxShape3D_13")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_3"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_3" unique_id=2000146949]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_3/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_3/Hurtboxes" unique_id=1623131033]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 collision_layer = 4
 collision_mask = 0
@@ -550,21 +550,21 @@ monitoring = false
 script = ExtResource("7_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_3/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_3/Hurtboxes/Body" unique_id=1208318866]
 shape = SubResource("BoxShape3D_14")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_3"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_3" unique_id=1669014084]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_3/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_3/Intact" unique_id=1812184669 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_15")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_3"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_3" unique_id=922148114]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_3/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_3/Broken" unique_id=132459636 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_16")
 
-[node name="world_crownmarch_brannock_house_4" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_brannock_house_4" type="StaticBody3D" parent="Props" unique_id=436152704]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 38, 10, 242)
 collision_layer = 16
 collision_mask = 0
@@ -573,24 +573,24 @@ world_id = "world.crownmarch.brannock_house_4"
 metadata/faction = "brannock"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_4"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_4" unique_id=220920194]
 script = ExtResource("6_c8050")
 entity_id = "world.crownmarch.brannock_house_4"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_4"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_4" unique_id=1532426205]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_4/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_4/Anchors" unique_id=962134540]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_4"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_4" unique_id=1367402840]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 shape = SubResource("BoxShape3D_17")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_4"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_4" unique_id=1751789358]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_4/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_4/Hurtboxes" unique_id=1268107357]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 collision_layer = 4
 collision_mask = 0
@@ -598,21 +598,21 @@ monitoring = false
 script = ExtResource("7_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_4/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_4/Hurtboxes/Body" unique_id=1404173638]
 shape = SubResource("BoxShape3D_18")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_4"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_4" unique_id=234646429]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_4/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_4/Intact" unique_id=1959500717 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_19")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_4"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_4" unique_id=2039180974]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_4/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_4/Broken" unique_id=114530540 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_20")
 
-[node name="world_crownmarch_brannock_house_5" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_brannock_house_5" type="StaticBody3D" parent="Props" unique_id=139899558]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 82, 10.002, 142)
 collision_layer = 16
 collision_mask = 0
@@ -621,24 +621,24 @@ world_id = "world.crownmarch.brannock_house_5"
 metadata/faction = "brannock"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_5"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_5" unique_id=852985329]
 script = ExtResource("6_c8050")
 entity_id = "world.crownmarch.brannock_house_5"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_5"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_5" unique_id=1184227888]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_5/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_5/Anchors" unique_id=866695573]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_5"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_5" unique_id=977612833]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 shape = SubResource("BoxShape3D_21")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_5"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_5" unique_id=1626935107]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_5/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_5/Hurtboxes" unique_id=401580075]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 collision_layer = 4
 collision_mask = 0
@@ -646,21 +646,21 @@ monitoring = false
 script = ExtResource("7_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_5/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_5/Hurtboxes/Body" unique_id=454903338]
 shape = SubResource("BoxShape3D_22")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_5"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_5" unique_id=632407404]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_5/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_5/Intact" unique_id=479239748 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_23")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_5"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_5" unique_id=1519656023]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_5/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_5/Broken" unique_id=42093744 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_24")
 
-[node name="world_crownmarch_brannock_house_6" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_brannock_house_6" type="StaticBody3D" parent="Props" unique_id=1939527013]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 82, 10, 199)
 collision_layer = 16
 collision_mask = 0
@@ -669,24 +669,24 @@ world_id = "world.crownmarch.brannock_house_6"
 metadata/faction = "brannock"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_6"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_6" unique_id=1965853236]
 script = ExtResource("6_c8050")
 entity_id = "world.crownmarch.brannock_house_6"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_6"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_6" unique_id=1892976742]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_6/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_6/Anchors" unique_id=1159403726]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_6"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_6" unique_id=1036317040]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 shape = SubResource("BoxShape3D_25")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_6"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_6" unique_id=1486010035]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_6/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_6/Hurtboxes" unique_id=524708430]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 collision_layer = 4
 collision_mask = 0
@@ -694,21 +694,21 @@ monitoring = false
 script = ExtResource("7_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_6/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_6/Hurtboxes/Body" unique_id=1096477140]
 shape = SubResource("BoxShape3D_26")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_6"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_6" unique_id=543909508]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_6/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_6/Intact" unique_id=1069862926 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_27")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_6"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_6" unique_id=1566767224]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_6/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_6/Broken" unique_id=239207952 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_28")
 
-[node name="world_crownmarch_brannock_house_7" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_brannock_house_7" type="StaticBody3D" parent="Props" unique_id=1610441995]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 82, 10, 222)
 collision_layer = 16
 collision_mask = 0
@@ -717,24 +717,24 @@ world_id = "world.crownmarch.brannock_house_7"
 metadata/faction = "brannock"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_7"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_7" unique_id=422970257]
 script = ExtResource("6_c8050")
 entity_id = "world.crownmarch.brannock_house_7"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_7"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_7" unique_id=1103725212]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_7/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_7/Anchors" unique_id=1360830906]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_7"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_7" unique_id=1674090358]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 shape = SubResource("BoxShape3D_29")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_7"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_7" unique_id=813956513]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_7/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_7/Hurtboxes" unique_id=1196050503]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 collision_layer = 4
 collision_mask = 0
@@ -742,21 +742,21 @@ monitoring = false
 script = ExtResource("7_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_7/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_7/Hurtboxes/Body" unique_id=2073868188]
 shape = SubResource("BoxShape3D_30")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_7"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_7" unique_id=447635766]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_7/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_7/Intact" unique_id=1375430192 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_31")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_7"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_7" unique_id=1838638847]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_7/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_7/Broken" unique_id=1470791900 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_32")
 
-[node name="world_crownmarch_brannock_house_8" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_brannock_house_8" type="StaticBody3D" parent="Props" unique_id=2078260897]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 82, 10, 242)
 collision_layer = 16
 collision_mask = 0
@@ -765,24 +765,24 @@ world_id = "world.crownmarch.brannock_house_8"
 metadata/faction = "brannock"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_8"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_brannock_house_8" unique_id=1976136735]
 script = ExtResource("6_c8050")
 entity_id = "world.crownmarch.brannock_house_8"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_8"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_brannock_house_8" unique_id=2079580652]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_8/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_brannock_house_8/Anchors" unique_id=1981081255]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_8"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_8" unique_id=2097470759]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 shape = SubResource("BoxShape3D_33")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_8"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_brannock_house_8" unique_id=958272390]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_8/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_brannock_house_8/Hurtboxes" unique_id=601886830]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 collision_layer = 4
 collision_mask = 0
@@ -790,33 +790,33 @@ monitoring = false
 script = ExtResource("7_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_8/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_brannock_house_8/Hurtboxes/Body" unique_id=957541139]
 shape = SubResource("BoxShape3D_34")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_8"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_brannock_house_8" unique_id=888853223]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_8/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_8/Intact" unique_id=549864457 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_35")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_8"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_brannock_house_8" unique_id=967627045]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_8/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_brannock_house_8/Broken" unique_id=1865993468 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_36")
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1577476405]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1136380010]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1401737639]
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1757251418]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=687822099]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=476926676]
 
-[node name="world_gate_wend_deep_1" type="StaticBody3D" parent="SizeGates"]
+[node name="world_gate_wend_deep_1" type="StaticBody3D" parent="SizeGates" unique_id=1359177440]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.77004, 5.439489, 0.3656311)
 collision_layer = 64
 collision_mask = 0
@@ -824,82 +824,82 @@ script = ExtResource("8_f30a1")
 gate_id = "world.gate.wend_deep"
 message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
 
-[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=1044596]
 transform = Transform3D(-0.06651927, 0, -0.99778515, 0, 1, 0, 0.99778515, 0, -0.06651927, 0, 0, 0)
 shape = SubResource("BoxShape3D_37")
 
-[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=992503280]
 transform = Transform3D(-0.06651891, 0, -0.99778515, 0, 1, 0, 0.99778515, 0, -0.06651891, -1.0643044, 0.103358746, 15.964569)
 shape = SubResource("BoxShape3D_38")
 
-[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=1119625318]
 transform = Transform3D(0.042150598, 0, -0.9991113, 0, 1, 0, 0.9991113, 0, 0.042150598, -1.3752365, 0.39147997, 29.190521)
 shape = SubResource("BoxShape3D_39")
 
-[node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=443695414]
 transform = Transform3D(0.34570554, 0, -0.93834305, 0, 1, 0, 0.93834305, 0, 0.34570554, 1.6116295, 0.5538435, 41.94095)
 shape = SubResource("BoxShape3D_40")
 
-[node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=1250372803]
 transform = Transform3D(0.34570533, 0, -0.9383431, 0, 1, 0, 0.9383431, 0, 0.34570533, 7.1429176, 0.07445288, 56.954437)
 shape = SubResource("BoxShape3D_41")
 
-[node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=306255279]
 transform = Transform3D(0.9461448, 0, -0.32374376, 0, 1, 0, 0.32374376, 0, 0.9461448, 13.232952, 0.07445288, 65.598694)
 shape = SubResource("BoxShape3D_42")
 
-[node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=2126529033]
 transform = Transform3D(0.9998701, 0, 0.016114736, 0, 1, 0, -0.016114736, 0, 0.9998701, 35.54347, 2.7522187, 74.21304)
 shape = SubResource("BoxShape3D_43")
 
-[node name="Wall7" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall7" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=1564734665]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.425915, 1.305398, 74.13437)
 shape = SubResource("BoxShape3D_44")
 
-[node name="Wall8" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall8" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=607776850]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.42592, 1.305398, 74.13437)
 shape = SubResource("BoxShape3D_45")
 
-[node name="Wall9" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall9" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=800293180]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80.42592, 1.4273777, 74.13437)
 shape = SubResource("BoxShape3D_46")
 
-[node name="Wall10" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall10" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=605411057]
 transform = Transform3D(0.9932002, 0, -0.11641905, 0, 1, 0, 0.11641905, 0, 0.9932002, 97.61066, 1.5173101, 75.21097)
 shape = SubResource("BoxShape3D_47")
 
-[node name="Wall11" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall11" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=1209225800]
 transform = Transform3D(0.97871685, 0, -0.20521544, 0, 1, 0, 0.20521544, 0, 0.97871685, 114.62514, 1.5529895, 77.92929)
 shape = SubResource("BoxShape3D_48")
 
-[node name="Wall12" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall12" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=1431232033]
 transform = Transform3D(0.9787172, 0, -0.20521362, 0, 1, 0, 0.20521362, 0, 0.9787172, 130.28459, 1.634901, 81.21274)
 shape = SubResource("BoxShape3D_49")
 
-[node name="Wall13" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall13" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=1172352731]
 transform = Transform3D(0.97871685, 0, -0.20521544, 0, 1, 0, 0.20521544, 0, 0.97871685, 145.94408, 1.6978946, 84.496155)
 shape = SubResource("BoxShape3D_50")
 
-[node name="Wall14" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall14" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=786163114]
 transform = Transform3D(0.9337973, 0, -0.35780242, 0, 1, 0, 0.35780242, 0, 0.9337973, 162.7352, 1.7837577, 89.571625)
 shape = SubResource("BoxShape3D_51")
 
-[node name="Wall15" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall15" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=832490190]
 transform = Transform3D(0.8898179, 0, -0.45631585, 0, 1, 0, 0.45631585, 0, 0.8898179, 178.81514, 2.0285468, 96.65585)
 shape = SubResource("BoxShape3D_52")
 
-[node name="Wall16" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall16" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=1221400490]
 transform = Transform3D(0.88981694, 0, -0.45631772, 0, 1, 0, 0.45631772, 0, 0.88981694, 193.05223, 1.9562097, 103.95694)
 shape = SubResource("BoxShape3D_53")
 
-[node name="Wall17" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall17" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=1746069327]
 transform = Transform3D(0.8898177, 0, -0.4563162, 0, 1, 0, 0.4563162, 0, 0.8898177, 207.28929, 1.9562097, 111.258026)
 shape = SubResource("BoxShape3D_54")
 
-[node name="Wall18" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1"]
+[node name="Wall18" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_1" unique_id=1794724302]
 transform = Transform3D(0.8898177, 0, -0.4563162, 0, 1, 0, 0.4563162, 0, 0.8898177, 221.52638, 2.2387204, 118.55905)
 shape = SubResource("BoxShape3D_55")
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=603902178]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=230045511]

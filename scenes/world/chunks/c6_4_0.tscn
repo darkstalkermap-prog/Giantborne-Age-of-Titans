@@ -5,11 +5,11 @@
 [ext_resource type="PackedScene" path="res://scenes/world/siege_catapult.tscn" id="3_1d827"]
 [ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="4_acc12"]
 
-[node name="Chunk_6_4_0" type="Node3D"]
+[node name="Chunk_6_4_0" type="Node3D" unique_id=2015177323]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1470826630]
 
-[node name="world_aldmere_camp_ballista_2" type="StaticBody3D" parent="Props" instance=ExtResource("1_83f62")]
+[node name="world_aldmere_camp_ballista_2" type="StaticBody3D" parent="Props" unique_id=119491728 instance=ExtResource("1_83f62")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 33.352, 58)
 collision_layer = 16
 collision_mask = 0
@@ -18,7 +18,7 @@ faction = "aldmere"
 prop_targets = PackedStringArray()
 world_id = "world.aldmere.camp_ballista_2"
 
-[node name="world_aldmere_camp_catapult_2" type="StaticBody3D" parent="Props" instance=ExtResource("3_1d827")]
+[node name="world_aldmere_camp_catapult_2" type="StaticBody3D" parent="Props" unique_id=1484026879 instance=ExtResource("3_1d827")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 37.082, 66)
 collision_layer = 16
 collision_mask = 0
@@ -27,45 +27,45 @@ faction = "aldmere"
 prop_targets = PackedStringArray()
 world_id = "world.aldmere.camp_catapult_2"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=892513001]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1342793136]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1333274644]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=489200327]
 
-[node name="world_marker_war_camp_engines" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_war_camp_engines" type="Marker3D" parent="Markers/Objective" unique_id=1784847453]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 33.552002, 64)
 script = ExtResource("4_acc12")
 marker_id = "world.marker.war_camp_engines"
 
-[node name="Patrol" type="Node3D" parent="Markers"]
+[node name="Patrol" type="Node3D" parent="Markers" unique_id=234796364]
 
-[node name="world_marker_fort_flee_s" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_fort_flee_s" type="Marker3D" parent="Markers/Patrol" unique_id=1107392292]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138, 48.216, 5)
 script = ExtResource("4_acc12")
 marker_id = "world.marker.fort_flee_s"
 kind = 5
 
-[node name="world_marker_camp_flee_n" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_camp_flee_n" type="Marker3D" parent="Markers/Patrol" unique_id=950704081]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 46.413998, 10)
 script = ExtResource("4_acc12")
 marker_id = "world.marker.camp_flee_n"
 kind = 5
 
-[node name="world_marker_camp_flee_e" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_camp_flee_e" type="Marker3D" parent="Markers/Patrol" unique_id=1853545617]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 113, 34.243504, 125)
 script = ExtResource("4_acc12")
 marker_id = "world.marker.camp_flee_e"
 kind = 5
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=987999447]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=168429040]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1445756651]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=2099892051]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1287884659]

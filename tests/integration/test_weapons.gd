@@ -4,12 +4,11 @@ extends IntegrationSuite
 ## as the sweep at stages 1-3 and the swing reaches as far as it should; an unreforged sword at
 ## stage 3 keeps its stage-2 length, the HUD warns, and its heavy still lands on a soldier at the
 ## giant's feet, while the reforged blade scales to stage 3; the sword's first light grants 4
-## fury; the equipment's save keys round-trip silently; and in first person at stage 3 the sword,
-## the hammer and the tree never cover the crosshair for more than 30 ticks in a row during a
-## light chain.
+## fury; the equipment's save keys round-trip silently. (In first person at stage 3 the sword, the
+## hammer and the tree never cover the crosshair for more than 30 ticks in a row during a light
+## chain: tests/slow/test_first_person_light_chains.gd since P49, plan M11 §1.7 rule 2.)
 
 const WEAPONS := ["weapon.club", "weapon.sword", "weapon.hammer"]
-const MAX_OBSCURED_TICKS := 30
 
 var equipped: Array[String] = []
 var loadout_events := 0
@@ -401,41 +400,3 @@ func test_equipment_state_round_trips_silently() -> void:
 		"weapons_owned": ["weapon.sword", "weapon.gone"]})
 	assert_eq(dropped.data.weapon, "weapon.club", "an unknown saved weapon falls back to the record's")
 	assert_eq(dropped.data.weapons_owned, ["weapon.sword"], "and is dropped from the owned list")
-
-
-# --------------------------------------------------------------------------- first person
-
-## First person at stage 3 with the sword, the hammer and the tree in turn (and the full-size
-## reforged sword and maul), through a light chain entered with the router, looking ahead and
-## 25 degrees down: the crosshair probe never reports more than 30 consecutive ticks in which the
-## giant's own meshes (its weapon included) are the first thing the centre ray meets. P43: with the
-## skinned layers on, so the realistic arms and the weapon in the fist are where the player sees them (the
-## probe measures the skinned meshes by their posed bones).
-func test_first_person_light_chains_keep_the_crosshair_clear_at_stage_3() -> void:
-	SkinnedRig.enable_for_tests()   # off again after the test (ResetHooks)
-	var p := await _grounded_player()
-	p.entity.combatant.unkillable = true
-	await _grow(p, 3)
-	p.router.inject_edge(&"camera_toggle")
-	await step_ticks(2)
-	assert_true(p.camera_rig.is_first_person(), "first person")
-	for id: String in ["weapon.sword", "weapon.hammer", "weapon.tree_oak", "weapon.sword_reinforced", "weapon.hammer_reinforced"]:
-		assert_true(_equip(p, id).ok, "%s equipped" % id)
-		await step_ticks(2)
-		var probe := CrosshairProbe.new(p.camera_rig.camera, [p])
-		var chain := 3 if id.begins_with("weapon.sword") else 2
-		for pitch_deg: float in [0.0, -25.0]:
-			p.camera_rig.pitch = deg_to_rad(pitch_deg)
-			for i in chain:
-				p.entity.combatant.pools.stamina = p.entity.combatant.pools.stamina_max
-				p.router.inject_light_attack()
-				for t in 30:
-					await step_ticks(1)
-					probe.sample()
-			await TestWait.until(self, func() -> bool:
-				probe.sample()
-				return p.controller.state == CombatController.State.LOCOMOTION, 120)
-		assert_true(probe.samples > 100, "%s: sampled the chains (%d ticks)" % [id, probe.samples])
-		assert_true(probe.max_consecutive <= MAX_OBSCURED_TICKS,
-			"%s: never more than %d obscured ticks in a row (worst %d by %s; %d of %d obscured)" % [id,
-			MAX_OBSCURED_TICKS, probe.max_consecutive, probe.worst_blocker, probe.obscured_ticks, probe.samples])

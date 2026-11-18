@@ -110,30 +110,30 @@ _surfaces = [{
 "vertex_data": PackedByteArray("AABAwArXoz0AAOA/AABAQArXoz0AAOC/AABAQArXoz0AAOA/AABAwArXoz0AAOC/AABAwAvXo7wAAOA/AABAQAvXo7wAAOC/AABAQAvXo7wAAOA/AABAwAvXo7wAAOC/AABAQArXoz0AAOA/AABAwArXoz0AAOC/AABAQArXoz0AAOC/AABAwArXoz0AAOA/AABAQAvXo7wAAOA/AABAwAvXo7wAAOC/AABAQAvXo7wAAOC/AABAwAvXo7wAAOA/AABAQArXoz0AAOA/AABAwAvXo7wAAOA/AABAwArXoz0AAOA/AABAQAvXo7wAAOA/AABAQArXoz0AAOC/AABAwAvXo7wAAOC/AABAwArXoz0AAOC/AABAQAvXo7wAAOC//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+/")
 }]
 
-[node name="ToppledStatue" type="StaticBody3D"]
+[node name="ToppledStatue" type="StaticBody3D" unique_id=386470913]
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_5fc47")
 world_id = "world.test.toppled_statue"
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=1098618196]
 script = ExtResource("2_c8050")
 entity_id = "world.test.toppled_statue"
 definition_id = "prop.toppled_statue"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=828108377]
 
-[node name="Center" type="Marker3D" parent="Anchors"]
+[node name="Center" type="Marker3D" parent="Anchors" unique_id=402970805]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 
-[node name="BlockStatue" type="CollisionShape3D" parent="."]
+[node name="BlockStatue" type="CollisionShape3D" parent="." unique_id=156596245]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=1754508825]
 
-[node name="Body" type="Area3D" parent="Hurtboxes"]
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=777871980]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 collision_layer = 4
 collision_mask = 0
@@ -141,27 +141,27 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=2116085340]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Intact" type="Node3D" parent="."]
+[node name="Intact" type="Node3D" parent="." unique_id=1677662288]
 
-[node name="Merged" type="MeshInstance3D" parent="Intact" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Intact" unique_id=399367494 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_6")
 
-[node name="Heaved" type="Node3D" parent="."]
+[node name="Heaved" type="Node3D" parent="." unique_id=2119394702]
 visible = false
 
-[node name="Merged" type="MeshInstance3D" parent="Heaved" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Heaved" unique_id=389333026 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_8")
 
-[node name="HeavePoint" type="Node3D" parent="."]
+[node name="HeavePoint" type="Node3D" parent="." unique_id=1670158954]
 script = ExtResource("4_a209b")
 prompt = "Heave"
 radius_m = 6.0
 priority = 40
 
-[node name="NavLinkThrough" type="NavigationLink3D" parent="."]
+[node name="NavLinkThrough" type="NavigationLink3D" parent="." unique_id=1039320460]
 enabled = false
 navigation_layers = 31
 start_position = Vector3(0, 0, 5)

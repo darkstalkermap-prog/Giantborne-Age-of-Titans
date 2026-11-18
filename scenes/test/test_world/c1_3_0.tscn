@@ -5,33 +5,33 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(7, 30, 4)
 
-[node name="Chunk_1_3_0" type="Node3D"]
+[node name="Chunk_1_3_0" type="Node3D" unique_id=1854309703]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=4594857]
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1589020458]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1994278889]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=612131588]
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=326064726]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=732431808]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=20651686]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=852715807]
 
-[node name="Monolith" type="StaticBody3D" parent="Landmarks"]
+[node name="Monolith" type="StaticBody3D" parent="Landmarks" unique_id=817427401]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 39.508, 124)
 collision_mask = 0
 
-[node name="Shape0" type="CollisionShape3D" parent="Landmarks/Monolith"]
+[node name="Shape0" type="CollisionShape3D" parent="Landmarks/Monolith" unique_id=176622175]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Mesh" type="MeshInstance3D" parent="Landmarks/Monolith"]
+[node name="Mesh" type="MeshInstance3D" parent="Landmarks/Monolith" unique_id=2015512047]
 mesh = ExtResource("1_16e7f")
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1244341929]

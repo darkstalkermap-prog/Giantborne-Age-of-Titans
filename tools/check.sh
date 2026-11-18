@@ -7,7 +7,7 @@
 #   5. 120 s autoplay with 0 errors; a soak of 120 s or more must also break a fence, fill the
 #      debris pool and award loot (the M1 breakable path stays covered; M2 gate)
 #
-# Usage: tools/check.sh [--slow] [--gate] [--audio] [--giant] [--giant-full] [--require] [--strict-times]
+# Usage: tools/check.sh [--slow] [--gate] [--audio] [--giant] [--giant-full] [--web-tools] [--require] [--strict-times]
 #                       [--only=<builder>[,<builder>]] [--build] [--build-args=<args>] [--autoplay=SECONDS]
 #   --only=...    rebuild the named scene builders (before P04's builder split: all of them)
 #   --build       rebuild every scene
@@ -35,6 +35,12 @@
 #   --giant-full  as --giant, but --verify re-bakes every pass, AO and thickness included (the full
 #                 regeneration, about 4 minutes on a quiet machine, 15-20 on a busy one; for packages
 #                 that change the bake's inputs: the body, its UVs, the skin code, the bake settings)
+#   --web-tools   (P49, plan M11 §3.2) before the suites: the Web tools' own tests that need no browser
+#                 (node tools/web/test_launcher_parts.mjs: the launcher's own unpacking lines on packs
+#                 of one to four parts; node tools/web/test_world_check.mjs --no-browser: the audio
+#                 recorder's piecewise clock); skipped with a note when node is missing. The tests
+#                 that drive Chromium (test_audio_check, test_creator_check, test_stream_check,
+#                 test_world_check, test_memory_guard) stay by hand: minutes each, a quiet machine
 #   --require     (P41, plan M10 §1.1) a skipped check is a failure, not a note: a missing giant venv,
 #                 a missing audio toolchain, and any suite's skip note in the test log (a line with
 #                 "skipped - ": no xvfb-run for the rendered suites, no Chromium, a missing tool)
@@ -55,6 +61,7 @@ SLOW=0
 GATE=0
 AUDIO=0
 GIANT=0
+WEB_TOOLS=0
 REQUIRE=0
 STRICT_TIMES=0
 BUILD=""
@@ -67,13 +74,14 @@ for arg in "$@"; do
 		--audio) AUDIO=1 ;;
 		--giant) [ "$GIANT" = "full" ] || GIANT=1 ;;
 		--giant-full) GIANT=full ;;
+		--web-tools) WEB_TOOLS=1 ;;
 		--require) REQUIRE=1 ;;
 		--strict-times) STRICT_TIMES=1 ;;
 		--only=*) BUILD="$arg" ;;
 		--build) BUILD="all" ;;
 		--build-args=*) BUILD_EXTRA="${arg#--build-args=}" ;;
 		--autoplay=*) AUTOPLAY="${arg#--autoplay=}" ;;
-		-h|--help) sed -n '2,46p' "$0"; exit 0 ;;
+		-h|--help) sed -n '2,/^set -uo pipefail/p' "$0" | sed '$d'; exit 0 ;;
 		*) echo "check.sh: unknown option '$arg'" >&2; exit 2 ;;
 	esac
 done
@@ -196,6 +204,21 @@ if [ "$GIANT" != "0" ]; then
 		run_limited 300 "$GIANT_VENV/bin/python" -B tools/giant/build_giant.py --budget >"$LOGS/giant_budget.log" 2>&1 \
 			|| fail "the giant is over its Web share (plan M10 §2.12)" "$LOGS/giant_budget.log"
 		grep -E "^GIANT_ESTIMATE" "$LOGS/giant_budget.log"
+	fi
+fi
+
+# P49 (plan M11 §3.2): the Web tools' tests that need no browser.
+if [ "$WEB_TOOLS" = "1" ]; then
+	if ! command -v node >/dev/null 2>&1; then
+		skipped "web tools: SKIPPED (node is not installed)"
+	else
+		step "web tools (the launcher's unpacking, the recorder's clock)"
+		run_limited 300 node tools/web/test_launcher_parts.mjs >"$LOGS/web_launcher_parts.log" 2>&1 \
+			|| fail "the launcher's unpacking test failed" "$LOGS/web_launcher_parts.log"
+		tail -n 1 "$LOGS/web_launcher_parts.log"
+		run_limited 300 node tools/web/test_world_check.mjs --no-browser >"$LOGS/web_clock.log" 2>&1 \
+			|| fail "the recorder's clock mapping test failed" "$LOGS/web_clock.log"
+		tail -n 1 "$LOGS/web_clock.log"
 	fi
 fi
 

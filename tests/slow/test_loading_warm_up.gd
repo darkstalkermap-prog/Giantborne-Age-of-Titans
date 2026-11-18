@@ -16,11 +16,19 @@ const FAR := Vector3(-900, 0, 900)
 
 var _main: Node = null
 var _first_tick: Dictionary = {}
+var _preview_warmed_before := false
+
+
+func before_each() -> void:
+	await super()
+	_preview_warmed_before = TitleScreen.preview_warmed
+	TitleScreen.preview_warmed = true   # as after a title: the M10 gate's cases hold the level's frames only
 
 
 func after_each() -> void:
 	Sim.remove_hooks(self)
 	MainScript.force_warm_up = false
+	TitleScreen.preview_warmed = _preview_warmed_before
 	GameSession.level_override = ""
 	get_tree().paused = false
 	if FileAccess.file_exists(SCENE):
@@ -130,5 +138,48 @@ func test_the_camera_is_put_on_the_giant_while_the_tree_is_paused() -> void:
 		and ready.find("await hold_until_drawn(loading)") < ready.find("loading.queue_free()"),
 		"the warm-up is the gate's last hold, behind the loading label")
 	get_tree().paused = false
+	main.queue_free()
+	await get_tree().process_frame
+
+
+## P49 (plan M11 §3.2 item 8): a start that passed no title (--continue on the command line) warms the
+## creator's preview behind the loading screen too; after a title, or once it is done, nothing more is held.
+func test_a_start_without_a_title_warms_the_preview_behind_the_loading_screen() -> void:
+	_save_level()
+	MainScript.force_warm_up = true
+	TitleScreen.preview_warmed = false
+	var main := MainScript.new()
+	var tick0 := await _load(main)
+	assert_eq(int(main.get("warm_frames_drawn")), MainScript.WARM_FRAMES, "the level's warm frames as before")
+	assert_eq(int(main.get("preview_frames_drawn")), GiantPreview.WarmUp.FRAMES_EACH * 2,
+		"then the preview's warm-up: its frames under the studio's light and under a level's")
+	assert_true(TitleScreen.preview_warmed, "and the process knows the preview is warm")
+	assert_false(_first_tick.is_empty(), "the level's first tick ran")
+	if not _first_tick.is_empty():
+		assert_true(not bool(_first_tick.loading) and int(_first_tick.tick) > tick0, "only after the loading screen let go")
+	assert_eq(main.find_children("GiantWarmUp*", "SubViewport", true, false).filter(
+		func(n: Node) -> bool: return not n.is_queued_for_deletion()).size(), 0, "the warm-up's viewport is freed")
+	main.queue_free()
+	await get_tree().process_frame
+	# A second load in the same process (a travel, a Continue after the title): nothing more is held.
+	_save_level()
+	var again := MainScript.new()
+	await _load(again)
+	assert_eq(int(again.get("preview_frames_drawn")), 0, "a warm preview is not warmed again")
+	assert_eq(int(again.get("warm_frames_drawn")), MainScript.WARM_FRAMES, "the level's frames still are")
+	again.queue_free()
+	await get_tree().process_frame
+	# The title's own warm-up sets the same flag (ui/screens/title_screen.gd).
+	var src := FileAccess.get_file_as_string("res://ui/screens/title_screen.gd")
+	assert_true(src.contains("preview_warmed = true   # P49"), "the title marks the preview warm when its warm-up is done")
+
+
+func test_headless_no_preview_is_warmed() -> void:
+	_save_level()
+	TitleScreen.preview_warmed = false
+	var main := MainScript.new()
+	await _load(main)
+	assert_eq(int(main.get("preview_frames_drawn")), 0, "headless: nothing is drawn, nothing is held")
+	assert_false(TitleScreen.preview_warmed, "and the flag stays as it was")
 	main.queue_free()
 	await get_tree().process_frame

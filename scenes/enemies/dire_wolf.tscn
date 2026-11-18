@@ -128,34 +128,34 @@ _surfaces = [{
 "vertex_data": PackedByteArray("PQrXvlK4Hj8AAIA/PQrXPlK4Hj8AAIC/PQrXPlK4Hj8AAIA/PQrXvlK4Hj8AAIC/PQrXvlK4Hr8AAIA/PQrXPlK4Hr8AAIC/PQrXPlK4Hr8AAIA/PQrXvlK4Hr8AAIC/PQrXPlK4Hj8AAIA/PQrXvlK4Hj8AAIC/PQrXPlK4Hj8AAIC/PQrXvlK4Hj8AAIA/PQrXPlK4Hr8AAIA/PQrXvlK4Hr8AAIC/PQrXPlK4Hr8AAIC/PQrXvlK4Hr8AAIA/PQrXPlK4Hj8AAIA/PQrXvlK4Hr8AAIA/PQrXvlK4Hj8AAIA/PQrXPlK4Hr8AAIA/PQrXPlK4Hj8AAIC/PQrXvlK4Hr8AAIC/PQrXvlK4Hj8AAIC/PQrXPlK4Hr8AAIC//3//fwCAAID//////38AgP9//38AgACA//////9/AID/f/9/AIAAgP//////fwCA/3//fwCAAID//////38AgP//AIAAgP+/AAAAgP9//7///wCAAID/vwAAAID/f/+///8AgACA/78AAACA/3//v///AIAAgP+/AAAAgP9//78AgP//AAD/vwCAAAAAAP+/AID//wAA/78AgAAAAAD/vwCA//8AAP+/AIAAAAAA/78AgP//AAD/vwCAAAAAAP+/")
 }]
 
-[node name="DireWolf" type="CharacterBody3D"]
+[node name="DireWolf" type="CharacterBody3D" unique_id=311408146]
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("1_d2eb1")
 entity_id = "dire_wolf_01"
 
-[node name="BodyShape" type="CollisionShape3D" parent="."]
+[node name="BodyShape" type="CollisionShape3D" parent="." unique_id=1906877101]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_1")
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=1391072932]
 script = ExtResource("2_c8050")
 entity_id = "dire_wolf_01"
 definition_id = "enemy.dire_wolf"
 team = 2
 anchor_path = NodePath("../Anchors/Torso")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=1432733947]
 
-[node name="Torso" type="Marker3D" parent="Anchors"]
+[node name="Torso" type="Marker3D" parent="Anchors" unique_id=1458135905]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
-[node name="Grab" type="Marker3D" parent="Anchors"]
+[node name="Grab" type="Marker3D" parent="Anchors" unique_id=1270931246]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.48, -0.6)
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=693503226]
 
-[node name="Head" type="Area3D" parent="Hurtboxes"]
+[node name="Head" type="Area3D" parent="Hurtboxes" unique_id=1129179072]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.28, -1.1)
 collision_layer = 4
 collision_mask = 0
@@ -163,20 +163,20 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "head"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Head"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Head" unique_id=1152823992]
 shape = SubResource("SphereShape3D_2")
 
-[node name="Body" type="Area3D" parent="Hurtboxes"]
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=1811054284]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.04, 0)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
 script = ExtResource("3_129e0")
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=465889306]
 shape = SubResource("BoxShape3D_3")
 
-[node name="Legs" type="Area3D" parent="Hurtboxes"]
+[node name="Legs" type="Area3D" parent="Hurtboxes" unique_id=486840314]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.34, 0)
 collision_layer = 4
 collision_mask = 0
@@ -184,12 +184,12 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "legs"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Legs"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Legs" unique_id=1448761710]
 shape = SubResource("BoxShape3D_4")
 
-[node name="NavAgent" type="NavigationAgent3D" parent="."]
+[node name="NavAgent" type="NavigationAgent3D" parent="." unique_id=644314872]
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=1124765833]
 script = ExtResource("4_83e02")
 body_path = NodePath("Body")
 head_path = NodePath("Body/Head")
@@ -199,55 +199,55 @@ leg_fr_path = NodePath("Body/LegFR")
 leg_bl_path = NodePath("Body/LegBL")
 leg_br_path = NodePath("Body/LegBR")
 
-[node name="Body" type="Node3D" parent="Visual"]
+[node name="Body" type="Node3D" parent="Visual" unique_id=1078768779]
 
-[node name="BodyMesh" type="MeshInstance3D" parent="Visual/Body"]
+[node name="BodyMesh" type="MeshInstance3D" parent="Visual/Body" unique_id=1691635135]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_6")
 
-[node name="Head" type="Node3D" parent="Visual/Body"]
+[node name="Head" type="Node3D" parent="Visual/Body" unique_id=1535336859]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.28, -0.88)
 
-[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/Head"]
+[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/Head" unique_id=104707628]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_7")
 
-[node name="Tail" type="Node3D" parent="Visual/Body"]
+[node name="Tail" type="Node3D" parent="Visual/Body" unique_id=1396703410]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.28, 0.92)
 
-[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/Tail"]
+[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/Tail" unique_id=1357946956]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_8")
 
-[node name="LegFL" type="Node3D" parent="Visual/Body"]
+[node name="LegFL" type="Node3D" parent="Visual/Body" unique_id=1272210343]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0.84, -0.6)
 
-[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/LegFL"]
+[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/LegFL" unique_id=2025086996]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_9")
 
-[node name="LegFR" type="Node3D" parent="Visual/Body"]
+[node name="LegFR" type="Node3D" parent="Visual/Body" unique_id=1874489676]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0.84, -0.6)
 
-[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/LegFR"]
+[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/LegFR" unique_id=126411925]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_10")
 
-[node name="LegBL" type="Node3D" parent="Visual/Body"]
+[node name="LegBL" type="Node3D" parent="Visual/Body" unique_id=1599046928]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0.84, 0.6)
 
-[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/LegBL"]
+[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/LegBL" unique_id=1328275817]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_11")
 
-[node name="LegBR" type="Node3D" parent="Visual/Body"]
+[node name="LegBR" type="Node3D" parent="Visual/Body" unique_id=1621899127]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0.84, 0.6)
 
-[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/LegBR"]
+[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/LegBR" unique_id=1386302307]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_12")
 
-[node name="LodProxy" type="MeshInstance3D" parent="Visual"]
+[node name="LodProxy" type="MeshInstance3D" parent="Visual" unique_id=1832830697]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
 visible = false
 material_override = SubResource("StandardMaterial3D_5")

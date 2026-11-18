@@ -18,6 +18,8 @@ const CREATORS := {
 	"P20": "res://scripts/world/world_index.gd",
 	# M10: P42 wrote every anchor of the M10 plan's §1.5 table in W25.
 	"P42": "res://scripts/progression/appearance.gd",
+	# M11: P49 wrote the events.gd anchors of the M11 plan's §1.5 in W29.
+	"P49": "res://tests/unit/test_predeclared_m11.gd",
 }
 
 const EVENTS_PACKAGES := ["P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10a", "P10b",
@@ -28,6 +30,9 @@ const EVENTS_PACKAGES_M6 := ["P21", "P22", "P23", "P24a", "P24b", "P25", "P26", 
 ## The M10 packages with an anchor in events.gd (plan M10 §1.5: P42 declares its signal in the
 ## "appearance (M10)" block above them).
 const EVENTS_PACKAGES_M10 := ["P41", "P43", "P44", "P45", "P46", "P47"]
+## The M11 packages with an anchor in events.gd (plan M11 §3.2: P50-P66; P48 and P49 have none).
+const EVENTS_PACKAGES_M11 := ["P50", "P51", "P52", "P53", "P54", "P55", "P56", "P57", "P58", "P59", "P60",
+	"P61", "P62", "P63", "P64", "P65", "P66"]
 
 ## [file, creator, anchors]
 const TABLE := [
@@ -86,6 +91,8 @@ const TABLE := [
 	["res://scripts/core/events.gd", "P42", EVENTS_PACKAGES_M10],
 	["res://scripts/core/game_data.gd", "P42", ["P42", "P46"]],
 	["res://scripts/progression/character_state.gd", "P42", ["P46"]],
+	# M11 (plan M11 §1.5, written by P49)
+	["res://scripts/core/events.gd", "P49", EVENTS_PACKAGES_M11],
 ]
 
 

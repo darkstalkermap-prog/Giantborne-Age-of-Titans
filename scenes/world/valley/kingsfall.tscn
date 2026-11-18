@@ -188,251 +188,251 @@ instance_count = 17
 mesh = SubResource("CylinderMesh_39")
 buffer = PackedFloat32Array(1.2, 0, 0, 124.1, 0, 10.6, 0, 5.3, 0, 0, 1.2, 42.7, 1, 0, 0, 114.3, 0, 10, 0, 5, 0, 0, 1, 52.8, 1.06, 0, 0, 124.5, 0, 10.18, 0, 5.09, 0, 0, 1.06, 53.3, 0.92, 0, 0, 116.3, 0, 9.76, 0, 4.88, 0, 0, 0.92, 28, 0.94, 0, 0, 192.7, 0, 9.82, 0, 4.91, 0, 0, 0.94, 55.6, 1.06, 0, 0, 196, 0, 10.18, 0, 5.09, 0, 0, 1.06, 36.6, 1.06, 0, 0, 186.3, 0, 10.18, 0, 5.09, 0, 0, 1.06, 62.9, 1.12, 0, 0, 184.7, 0, 10.36, 0, 5.18, 0, 0, 1.12, 48.4, 1.2915312, 0, 0, 135.7827, 0, 10.874594, 0, 20.437296, 0, 0, 1.2915312, 90.748825, 1.3157289, 0, 0, 120.33454, 0, 10.947186, 0, 20.473593, 0, 0, 1.3157289, 76.52356, 0.9427444, 0, 0, 131.21112, 0, 9.828233, 0, 19.914116, 0, 0, 0.9427444, 78.83991, 1.1558118, 0, 0, 128.38257, 0, 10.467436, 0, 20.233717, 0, 0, 1.1558118, 91.10995, 1.3585966, 0, 0, 172.44733, 0, 11.075789, 0, 20.537895, 0, 0, 1.3585966, 89.459335, 0.95332813, 0, 0, 197.09505, 0, 9.859984, 0, 19.929993, 0, 0, 0.95332813, 78.09707, 1.2654709, 0, 0, 168.12329, 0, 10.796412, 0, 20.398207, 0, 0, 1.2654709, 81.29271, 1.0118074, 0, 0, 161.56653, 0, 10.035422, 0, 20.017712, 0, 0, 1.0118074, 77.08655, 1.275247, 0, 0, 181.6334, 0, 10.825741, 0, 20.41287, 0, 0, 1.275247, 82.48414)
 
-[node name="kingsfall" type="Node3D"]
+[node name="kingsfall" type="Node3D" unique_id=474091147]
 
-[node name="Collision" type="StaticBody3D" parent="."]
+[node name="Collision" type="StaticBody3D" parent="." unique_id=115000325]
 collision_mask = 0
 
-[node name="Kingsfall" type="CollisionShape3D" parent="Collision"]
+[node name="Kingsfall" type="CollisionShape3D" parent="Collision" unique_id=1098385845]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 156, -0.5, 57.5)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Arena" type="CollisionShape3D" parent="Collision"]
+[node name="Arena" type="CollisionShape3D" parent="Collision" unique_id=1591600384]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 156, -0.5, 147.5)
 shape = SubResource("BoxShape3D_2")
 
-[node name="KingsfallFillNw" type="CollisionShape3D" parent="Collision"]
+[node name="KingsfallFillNw" type="CollisionShape3D" parent="Collision" unique_id=397382021]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 126.5, 7.5, 81.5)
 shape = SubResource("BoxShape3D_3")
 
-[node name="KingsfallFillNe" type="CollisionShape3D" parent="Collision"]
+[node name="KingsfallFillNe" type="CollisionShape3D" parent="Collision" unique_id=1138462901]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 179.5, 7.5, 81.5)
 shape = SubResource("BoxShape3D_4")
 
-[node name="KingsfallFillE" type="CollisionShape3D" parent="Collision"]
+[node name="KingsfallFillE" type="CollisionShape3D" parent="Collision" unique_id=1306424487]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 196, 7.5, 135.5)
 shape = SubResource("BoxShape3D_5")
 
-[node name="KingsfallFillS" type="CollisionShape3D" parent="Collision"]
+[node name="KingsfallFillS" type="CollisionShape3D" parent="Collision" unique_id=445752957]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 156, 15, 188.5)
 shape = SubResource("BoxShape3D_6")
 
-[node name="ArenaFrontW" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaFrontW" type="CollisionShape3D" parent="Collision" unique_id=1715325785]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 127.5, 7.5, 68)
 shape = SubResource("BoxShape3D_7")
 
-[node name="ArenaFrontE" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaFrontE" type="CollisionShape3D" parent="Collision" unique_id=1444556299]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 178.5, 7.5, 68)
 shape = SubResource("BoxShape3D_8")
 
-[node name="AntechamberW" type="CollisionShape3D" parent="Collision"]
+[node name="AntechamberW" type="CollisionShape3D" parent="Collision" unique_id=310744787]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 142, 7.5, 82)
 shape = SubResource("BoxShape3D_9")
 
-[node name="AntechamberE" type="CollisionShape3D" parent="Collision"]
+[node name="AntechamberE" type="CollisionShape3D" parent="Collision" unique_id=1773909967]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 158, 7.5, 82)
 shape = SubResource("BoxShape3D_9")
 
-[node name="ArenaWall00" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall00" type="CollisionShape3D" parent="Collision" unique_id=971816973]
 transform = Transform3D(-0.27786648, 0, -0.96061975, 0, 1, 0, 0.96061975, 0, -0.2778665, 161.3237, 7.5, 95.85264)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall01" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall01" type="CollisionShape3D" parent="Collision" unique_id=303948778]
 transform = Transform3D(-0.48080665, 0, -0.87682664, 0, 1, 0, 0.87682664, 0, -0.48080665, 169.59393, 7.5, 99.26739)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall02" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall02" type="CollisionShape3D" parent="Collision" unique_id=2127625292]
 transform = Transform3D(-0.6605685, 0, -0.7507658, 0, 1, 0, 0.7507658, 0, -0.6605685, 176.91962, 7.5, 104.404655)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall03" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall03" type="CollisionShape3D" parent="Collision" unique_id=1773366084]
 transform = Transform3D(-0.80848783, 0, -0.5885129, 0, 1, 0, 0.5885129, 0, -0.80848783, 182.94763, 7.5, 111.01679)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall04" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall04" type="CollisionShape3D" parent="Collision" unique_id=964271246]
 transform = Transform3D(-0.9174322, 0, -0.39789224, 0, 1, 0, 0.39789224, 0, -0.9174322, 187.38739, 7.5, 118.78505)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall05" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall05" type="CollisionShape3D" parent="Collision" unique_id=595557353]
 transform = Transform3D(-0.982152, 0, -0.18808924, 0, 1, 0, 0.18808924, 0, -0.982152, 190.02486, 7.5, 127.33497)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall06" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall06" type="CollisionShape3D" parent="Collision" unique_id=790479110]
 transform = Transform3D(-0.9995262, 0, 0.030780135, 0, 1, 0, -0.030780135, 0, -0.9995262, 190.73288, 7.5, 136.2544)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall07" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall07" type="CollisionShape3D" parent="Collision" unique_id=655850378]
 transform = Transform3D(-0.9687174, 0, 0.24816658, 0, 1, 0, -0.24816658, 0, -0.9687174, 189.47736, 7.5, 145.11334)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall08" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall08" type="CollisionShape3D" parent="Collision" unique_id=1742651700]
 transform = Transform3D(-0.89121085, 0, 0.45358926, 0, 1, 0, -0.45358926, 0, -0.89121085, 186.3188, 7.5, 153.48477)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall09" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall09" type="CollisionShape3D" parent="Collision" unique_id=743828567]
 transform = Transform3D(-0.7707424, 0, 0.6371469, 0, 1, 0, -0.6371469, 0, -0.7707424, 181.40945, 7.5, 160.96512)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall10" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall10" type="CollisionShape3D" parent="Collision" unique_id=932103260]
 transform = Transform3D(-0.6131197, 0, 0.78999007, 0, 1, 0, -0.78999007, 0, -0.6131197, 174.98601, 7.5, 167.19382)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall11" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall11" type="CollisionShape3D" parent="Collision" unique_id=1315098707]
 transform = Transform3D(-0.42594248, 0, 0.9047502, 0, 1, 0, -0.9047502, 0, -0.42594248, 167.3581, 7.5, 171.87057)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall12" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall12" type="CollisionShape3D" parent="Collision" unique_id=2117139773]
 transform = Transform3D(-0.21823156, 0, 0.975897, 0, 1, 0, -0.975897, 0, -0.21823156, 158.8934, 7.5, 174.76996)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall13" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall13" type="CollisionShape3D" parent="Collision" unique_id=1996800641]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 150, 7.5, 175.7522)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall14" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall14" type="CollisionShape3D" parent="Collision" unique_id=1244084812]
 transform = Transform3D(0.21823147, 0, 0.975897, 0, 1, 0, -0.975897, 0, 0.21823147, 141.1066, 7.5, 174.76996)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall15" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall15" type="CollisionShape3D" parent="Collision" unique_id=1157904633]
 transform = Transform3D(0.42594275, 0, 0.90475017, 0, 1, 0, -0.90475017, 0, 0.42594275, 132.64192, 7.5, 171.87057)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall16" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall16" type="CollisionShape3D" parent="Collision" unique_id=43731805]
 transform = Transform3D(0.61311996, 0, 0.7899898, 0, 1, 0, -0.7899898, 0, 0.61311996, 125.01399, 7.5, 167.19382)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall17" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall17" type="CollisionShape3D" parent="Collision" unique_id=493887405]
 transform = Transform3D(0.7707425, 0, 0.63714683, 0, 1, 0, -0.63714683, 0, 0.7707425, 118.59054, 7.5, 160.96512)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall18" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall18" type="CollisionShape3D" parent="Collision" unique_id=323921840]
 transform = Transform3D(0.8912103, 0, 0.4535904, 0, 1, 0, -0.4535904, 0, 0.8912103, 113.6812, 7.5, 153.48477)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall19" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall19" type="CollisionShape3D" parent="Collision" unique_id=236293187]
 transform = Transform3D(0.96871734, 0, 0.2481667, 0, 1, 0, -0.2481667, 0, 0.96871734, 110.52264, 7.5, 145.11334)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall20" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall20" type="CollisionShape3D" parent="Collision" unique_id=949337414]
 transform = Transform3D(0.9995262, 0, 0.030780023, 0, 1, 0, -0.030780023, 0, 0.9995262, 109.26711, 7.5, 136.2544)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall21" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall21" type="CollisionShape3D" parent="Collision" unique_id=1371887193]
 transform = Transform3D(0.9821521, 0, -0.18808848, 0, 1, 0, 0.18808848, 0, 0.9821521, 109.97514, 7.5, 127.33497)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall22" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall22" type="CollisionShape3D" parent="Collision" unique_id=318890520]
 transform = Transform3D(0.9174327, 0, -0.39789099, 0, 1, 0, 0.39789099, 0, 0.9174327, 112.61261, 7.5, 118.78505)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall23" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall23" type="CollisionShape3D" parent="Collision" unique_id=25267461]
 transform = Transform3D(0.8084875, 0, -0.58851343, 0, 1, 0, 0.58851343, 0, 0.8084875, 117.05235, 7.5, 111.01679)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall24" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall24" type="CollisionShape3D" parent="Collision" unique_id=81096174]
 transform = Transform3D(0.6605689, 0, -0.75076544, 0, 1, 0, 0.75076544, 0, 0.6605689, 123.08037, 7.5, 104.404655)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall25" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall25" type="CollisionShape3D" parent="Collision" unique_id=2125837447]
 transform = Transform3D(0.48080677, 0, -0.8768266, 0, 1, 0, 0.8768266, 0, 0.48080677, 130.40607, 7.5, 99.26739)
 shape = SubResource("BoxShape3D_10")
 
-[node name="ArenaWall26" type="CollisionShape3D" parent="Collision"]
+[node name="ArenaWall26" type="CollisionShape3D" parent="Collision" unique_id=828751545]
 transform = Transform3D(0.2778665, 0, -0.9606197, 0, 1, 0, 0.96061975, 0, 0.2778665, 138.6763, 7.5, 95.85264)
 shape = SubResource("BoxShape3D_10")
 
-[node name="Tree102" type="CollisionShape3D" parent="Collision"]
+[node name="Tree102" type="CollisionShape3D" parent="Collision" unique_id=1462319600]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 124.1, 5.3, 42.7)
 shape = SubResource("CylinderShape3D_11")
 
-[node name="Tree103" type="CollisionShape3D" parent="Collision"]
+[node name="Tree103" type="CollisionShape3D" parent="Collision" unique_id=1227553784]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 114.3, 5, 52.8)
 shape = SubResource("CylinderShape3D_12")
 
-[node name="Tree104" type="CollisionShape3D" parent="Collision"]
+[node name="Tree104" type="CollisionShape3D" parent="Collision" unique_id=2005288058]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 124.5, 5.09, 53.3)
 shape = SubResource("CylinderShape3D_13")
 
-[node name="Tree105" type="CollisionShape3D" parent="Collision"]
+[node name="Tree105" type="CollisionShape3D" parent="Collision" unique_id=1136192415]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 116.3, 4.88, 28)
 shape = SubResource("CylinderShape3D_14")
 
-[node name="Tree106" type="CollisionShape3D" parent="Collision"]
+[node name="Tree106" type="CollisionShape3D" parent="Collision" unique_id=1711098224]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 192.7, 4.91, 55.6)
 shape = SubResource("CylinderShape3D_15")
 
-[node name="Tree107" type="CollisionShape3D" parent="Collision"]
+[node name="Tree107" type="CollisionShape3D" parent="Collision" unique_id=312545872]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 196, 5.09, 36.6)
 shape = SubResource("CylinderShape3D_13")
 
-[node name="Tree108" type="CollisionShape3D" parent="Collision"]
+[node name="Tree108" type="CollisionShape3D" parent="Collision" unique_id=1244680514]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 186.3, 5.09, 62.9)
 shape = SubResource("CylinderShape3D_13")
 
-[node name="Tree109" type="CollisionShape3D" parent="Collision"]
+[node name="Tree109" type="CollisionShape3D" parent="Collision" unique_id=513891723]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 184.7, 5.18, 48.4)
 shape = SubResource("CylinderShape3D_16")
 
-[node name="Blockers" type="StaticBody3D" parent="."]
+[node name="Blockers" type="StaticBody3D" parent="." unique_id=867852850]
 collision_layer = 32
 collision_mask = 0
 
-[node name="BankES" type="CollisionShape3D" parent="Blockers"]
+[node name="BankES" type="CollisionShape3D" parent="Blockers" unique_id=935981835]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 112, 6, 40.75)
 shape = SubResource("BoxShape3D_17")
 
-[node name="BankEFar" type="CollisionShape3D" parent="Blockers"]
+[node name="BankEFar" type="CollisionShape3D" parent="Blockers" unique_id=440593472]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 112, 6, 187.5)
 shape = SubResource("BoxShape3D_18")
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=1506222740]
 
-[node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual" unique_id=182627942]
 material_override = SubResource("StandardMaterial3D_19")
 multimesh = SubResource("MultiMesh_21")
 
-[node name="StoneDark_Box" type="MultiMeshInstance3D" parent="Visual"]
+[node name="StoneDark_Box" type="MultiMeshInstance3D" parent="Visual" unique_id=1429206337]
 material_override = SubResource("StandardMaterial3D_22")
 multimesh = SubResource("MultiMesh_23")
 
-[node name="Grass_Plane" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Grass_Plane" type="MultiMeshInstance3D" parent="Visual" unique_id=1810549354]
 material_override = SubResource("ShaderMaterial_24")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_26")
 
-[node name="Pavement_Plane" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Pavement_Plane" type="MultiMeshInstance3D" parent="Visual" unique_id=540245343]
 material_override = SubResource("ShaderMaterial_27")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_28")
 
-[node name="Road_Plane" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Road_Plane" type="MultiMeshInstance3D" parent="Visual" unique_id=567849606]
 material_override = SubResource("StandardMaterial3D_29")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_30")
 
-[node name="Water_Plane" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Water_Plane" type="MultiMeshInstance3D" parent="Visual" unique_id=1693850129]
 material_override = SubResource("StandardMaterial3D_31")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_32")
 
-[node name="Scenery" type="Node3D" parent="."]
+[node name="Scenery" type="Node3D" parent="." unique_id=106744093]
 
-[node name="LeavesDark_Cone" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+[node name="LeavesDark_Cone" type="MultiMeshInstance3D" parent="Scenery" unique_id=1841267551 groups=["valley_scenery"]]
 material_override = SubResource("ShaderMaterial_33")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_35")
 
-[node name="Leaves_Cone" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+[node name="Leaves_Cone" type="MultiMeshInstance3D" parent="Scenery" unique_id=386055441 groups=["valley_scenery"]]
 material_override = SubResource("ShaderMaterial_36")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_37")
 
-[node name="Bark_Cyl" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+[node name="Bark_Cyl" type="MultiMeshInstance3D" parent="Scenery" unique_id=710240012 groups=["valley_scenery"]]
 material_override = SubResource("ShaderMaterial_38")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_40")
 
-[node name="Dressing" type="Node3D" parent="."]
+[node name="Dressing" type="Node3D" parent="." unique_id=46152263]
 script = ExtResource("3_fd773")
 kinds = PackedStringArray("banner", "banner")
 transforms = Array[Transform3D]([Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 139, 0, 65), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 161, 0, 65)])

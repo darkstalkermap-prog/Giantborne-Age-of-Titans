@@ -134,9 +134,18 @@ const round1 = (x) => (typeof x === 'number' ? Math.round(x * 10) / 10 : null);
 
 // Runs in the page before anything else: the main thread's time inside each animation frame
 // (window.__work: [end, ms]) and every pointer-lock request with whether it came inside a gesture.
+// P49: also what each animation frame asked of WebGL that a steady frame does not (window.__glf: [frame's
+// end, shaders compiled, programs linked, textures allocated, textures updated in place, framebuffers and
+// renderbuffers made], frames with none left out; "megabytes" was dropped for a count of texture updates: the
+// engine hands WebGL its whole heap and an offset, so a call's bytes cannot be read from its arguments) and when each UI_PROBE state line was printed
+// (window.__states: [page time, top, loading, level]) - so a mark's first frames can be told from the
+// frames after them by what they made the renderer do (glOfMark).
 function instrument() {
   window.__work = [];
   window.__locks = [];
+  window.__glf = [];
+  window.__states = [];
+  const gl = [0, 0, 0, 0, 0];
   const raf = window.requestAnimationFrame.bind(window);
   window.requestAnimationFrame = (cb) => raf((t) => {
     const t0 = performance.now();
@@ -146,8 +155,39 @@ function instrument() {
       const t1 = performance.now();
       window.__work.push([t1, t1 - t0]);
       if (window.__work.length > 20000) window.__work.splice(0, 10000);
+      if (gl[0] || gl[1] || gl[2] || gl[3] || gl[4]) {
+        if (window.__glf.length < 20000) window.__glf.push([t1, gl[0], gl[1], gl[2], gl[3], gl[4]]);
+        gl[0] = gl[1] = gl[2] = gl[3] = gl[4] = 0;
+      }
     }
   });
+  const proto = window.WebGL2RenderingContext && WebGL2RenderingContext.prototype;
+  if (proto) {
+    const count = (name, slot) => {
+      const orig = proto[name];
+      if (typeof orig !== 'function') return;
+      proto[name] = function (...a) {
+        gl[slot] += 1;
+        return orig.apply(this, a);
+      };
+    };
+    count('compileShader', 0);
+    count('linkProgram', 1);
+    for (const name of ['texImage2D', 'texImage3D', 'texStorage2D', 'texStorage3D', 'compressedTexImage2D', 'compressedTexImage3D']) count(name, 2);
+    for (const name of ['texSubImage2D', 'texSubImage3D', 'compressedTexSubImage2D', 'compressedTexSubImage3D']) count(name, 3);
+    for (const name of ['createFramebuffer', 'renderbufferStorage', 'renderbufferStorageMultisample']) count(name, 4);
+  }
+  const log = console.log.bind(console);
+  console.log = (...items) => {
+    const text = items.length === 1 && typeof items[0] === 'string' ? items[0] : '';
+    if (text.startsWith('UI_PROBE ') && text.includes('"t":"state"') && window.__states.length < 5000) {
+      try {
+        const o = JSON.parse(text.slice(9));
+        window.__states.push([performance.now(), o.top, o.loading, o.level]);
+      } catch (e) { /* not a state line */ }
+    }
+    log(...items);
+  };
   const lock = Element.prototype.requestPointerLock;
   Element.prototype.requestPointerLock = function (...args) {
     const ua = navigator.userActivation;
@@ -227,6 +267,59 @@ async function openPart(browser, opts, origin, args) {
   return { context, page, seen, url, state, until, stall, press, shot, note };
 }
 
+// P49: of a mark's longest first frame, the share the rendering server spent drawing (0-1; null when the
+// probe gave no draw times).
+export function drawShare(line) {
+  if (!line || !Array.isArray(line.first) || !Array.isArray(line.first_draw) || line.first.length === 0) return null;
+  let at = 0;
+  for (let i = 1; i < line.first.length; i++) if (line.first[i] > line.first[at]) at = i;
+  const whole = line.first[at];
+  const draw = line.first_draw[at];
+  return whole > 0 && typeof draw === 'number' ? Math.round(Math.min(1, draw / whole) * 100) / 100 : null;
+}
+
+// P49: what a mark's first frames asked of WebGL against the frames after them. `work` is the page's
+// [frame end, ms] list, `glf` its [frame end, compiles, links, texture allocations, texture updates, framebuffers]
+// list (frames with none left out), `at` the page time the mark's state line was printed. Returns
+// { first: {...}, steady: {...} }: the sums over the FIRST_FRAMES frames that end after `at` and over the
+// STEADY_FRAMES after those (null when the mark's time is not known).
+export const FIRST_FRAMES = 3;
+export const STEADY_FRAMES = 40;
+export function glOfMark(work, glf, at) {
+  if (typeof at !== 'number' || !Array.isArray(work)) return null;
+  const from = work.findIndex((w) => w[0] >= at);
+  if (from < 0) return null;
+  const sum = (a, b) => {
+    const out = { frames: 0, shaders_compiled: 0, programs_linked: 0, textures_allocated: 0, texture_updates: 0, framebuffers: 0 };
+    if (a >= work.length) return out;
+    const t0 = a > 0 ? work[a - 1][0] : -Infinity;
+    const t1 = work[Math.min(b, work.length) - 1][0];
+    out.frames = Math.min(b, work.length) - a;
+    for (const f of glf || []) {
+      if (f[0] <= t0 || f[0] > t1) continue;
+      out.shaders_compiled += f[1];
+      out.programs_linked += f[2];
+      out.textures_allocated += f[3];
+      out.texture_updates += f[4];
+      out.framebuffers += f[5];
+    }
+    return out;
+  };
+  return { first: sum(from, from + FIRST_FRAMES), steady: sum(from + FIRST_FRAMES, from + FIRST_FRAMES + STEADY_FRAMES) };
+}
+
+// The page time of a mark's state line among `states` ([page time, top, loading, level]).
+export function markTime(states, mark) {
+  const test = {
+    creator: (x) => x[1] === 'creator',
+    shrine_creator: (x) => x[1] === 'creator',
+    level: (x) => typeof x[3] === 'string' && x[3].startsWith('level.') && x[2] === false && x[1] === '',
+  }[mark];
+  if (!test) return null;
+  const hit = (states || []).find(test);
+  return hit ? hit[0] : null;
+}
+
 // The part's verdict on a mark: its stall line, the miss when it is over the ratio.
 function judge(out, misses, problems, mark, line, opts, what) {
   if (!line) {
@@ -236,13 +329,27 @@ function judge(out, misses, problems, mark, line, opts, what) {
   const ok = stallOk(line.first_ms, line.median_ms, opts.stallRatio);
   out.stalls[mark] = { first_ms: line.first_ms, median_ms: line.median_ms, ratio: line.ratio, frames: line.frames, ok,
     ...(line.load_worst_ms !== undefined ? { load_worst_ms: line.load_worst_ms } : {}),
-    ...(line.warmed !== undefined ? { warmed: line.warmed } : {}) };
-  if (!ok) misses.push(`${what}: ${line.first_ms} ms against a median frame of ${line.median_ms} ms (${line.ratio}x, over ${opts.stallRatio}x)`);
+    ...(line.warmed !== undefined ? { warmed: line.warmed } : {}),
+    // P49: the first frames and how much of each the rendering server spent drawing (the probe's "first"
+    // and "first_draw": a shader compiled on first use is in the draw, the rest is the frame's scripts),
+    // with the steady frames' median draw - which of the two a stall is made of.
+    ...(Array.isArray(line.first_draw) ? { first: line.first, first_draw: line.first_draw, median_draw_ms: line.median_draw_ms,
+      first_frame_draw_share: drawShare(line) } : {}) };
+  const share = drawShare(line);
+  if (!ok) misses.push(`${what}: ${line.first_ms} ms against a median frame of ${line.median_ms} ms (${line.ratio}x, over ${opts.stallRatio}x${share === null ? '' : `; ${Math.round(share * 100)} % of that frame was the renderer's draw`})`);
 }
 
 async function finish(part, out, problems, misses, opts) {
   const { page, seen, context } = part;
   const work = await page.evaluate(() => window.__work.map((w) => w[1])).catch(() => []);
+  // P49: what each mark's first frames made the renderer do (shaders, textures, framebuffers).
+  const traced = await page.evaluate(() => ({ work: window.__work, glf: window.__glf, states: window.__states })).catch(() => null);
+  if (traced) {
+    for (const mark of Object.keys(out.stalls)) {
+      const gl = glOfMark(traced.work, traced.glf, markTime(traced.states, mark));
+      if (gl) out.stalls[mark].gl = gl;
+    }
+  }
   // The skin's CPU a frame (--ui-probe-bench: the player's rig in a tight loop when a mark's frames are done).
   out.skin_bench = seen.benches.map((b) => ({ mark: b.mark, skin_ms: b.skin_ms, giants: b.giants, modifier_runs: b.modifier_runs, paused: b.paused }));
   for (const b of out.skin_bench) {
@@ -468,6 +575,11 @@ async function main() {
     console.log(`  ${name}: ${p.ok ? 'ok' : 'FAILED'}; console errors ${p.console_errors.length}, engine warnings ${p.engine_warnings.length}, failed requests ${p.failed_requests.length}; the page's frames: ${p.page_frames.count}, median work ${p.page_frames.median_work_ms} ms, worst ${p.page_frames.worst_work_ms} ms`);
     for (const [mark, s] of Object.entries(p.stalls)) {
       console.log(`    ${mark}: first ${s.first_ms} ms, median ${s.median_ms} ms, ${s.ratio}x${s.load_worst_ms !== undefined ? `, the load's worst frame ${s.load_worst_ms} ms` : ''} - ${s.ok ? 'no stall' : 'A STALL'}`);
+      if (s.first_draw) console.log(`      its first frames ${JSON.stringify(s.first)} ms, of which the renderer's draw ${JSON.stringify(s.first_draw)} ms (a steady frame's draw: ${s.median_draw_ms} ms)`);
+      if (s.gl) {
+        const g = (x) => `${x.shaders_compiled} shaders compiled, ${x.programs_linked} programs linked, ${x.textures_allocated} textures allocated, ${x.texture_updates} updated in place, ${x.framebuffers} framebuffers or renderbuffers made`;
+        console.log(`      WebGL in its first ${s.gl.first.frames} frames: ${g(s.gl.first)}; in the ${s.gl.steady.frames} after: ${g(s.gl.steady)}`);
+      }
     }
     if (p.pointer_lock) console.log(`    Begin's pointer lock: ${p.pointer_lock.requests} request(s), inside the gesture: ${p.pointer_lock.in_gesture}, locked: ${p.pointer_lock.locked}`);
     for (const b of p.skin_bench) console.log(`    the skin's CPU after "${b.mark}": ${b.skin_ms} ms a frame (${b.giants} giant(s) in the tree, ${b.modifier_runs} modifier runs timed)`);

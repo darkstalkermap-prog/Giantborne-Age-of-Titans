@@ -8,7 +8,8 @@ extends TestSuite
 ##   * the tier's fallback order: "auto" draws the normal and ORM maps from tex_hi/ where the pack has
 ##     them (the Web as the desktop) and from tex/ where it does not, map by map; the albedo and the
 ##     masks always come from tex/; --giant-tier= forces a tier;
-##   * build_web.sh's milestone budget: 23 MB up to -m9, 26 MB from -m10 on, the giant's share the
+##   * build_web.sh's milestone budget: 23 MB up to -m9, 26 MB from -m10 on (P49: 32 MB at -m12, 44 MB
+##     from -m13, plan M11 §2.12; tests/integration/test_build_web_budget.gd), the giant's share the
 ##     budget less 18.4 MB (tests/slow/test_giant_tooling.gd runs the rule through --version=);
 ##   * the launcher's open-world start passes --mode=world --creator, GameSession turns those into a
 ##     creator start for the world, and the Chromium checks expect the same arguments.
@@ -114,10 +115,14 @@ func test_the_budget_is_26_mb_from_m10_on() -> void:
 		var s := l.strip_edges()
 		if s.contains("BUDGET_MB=") and (s.begins_with("if ") or s.begins_with("elif ") or s.begins_with("else ")):
 			rule.append(s)
+	# P49 (plan M11 §2.12): the staged budgets - 26 MB still at M10 and M11 (the last branch: the giant
+	# pipeline's estimate reads the last default assigned), 32 MB at M12, 44 MB from M13 on.
 	assert_eq(rule, ['if [ "$MILESTONE" -le 6 ]; then BUDGET_MB=7.5', 'elif [ "$MILESTONE" -le 7 ]; then BUDGET_MB=21',
-		'elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23', "else BUDGET_MB=26"] as Array[String],
-		"7.5 MB to M6, 21 at M7, 23 at M8 and M9, 26 from M10 on")
-	assert_true(text.contains('v = $BUDGET_MB - 18.4;'), "the giant's share: the budget less 18.4 MB (7.6 at 26)")
+		'elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23', 'elif [ "$MILESTONE" -ge 13 ]; then BUDGET_MB=44',
+		'elif [ "$MILESTONE" -eq 12 ]; then BUDGET_MB=32', "else BUDGET_MB=26"] as Array[String],
+		"7.5 MB to M6, 21 at M7, 23 at M8 and M9, 26 at M10 and M11, 32 at M12, 44 from M13 on")
+	assert_true(text.contains("OTHER_SHARE_MB=18.4") and text.contains('v = $BUDGET_MB - $OTHER_SHARE_MB - $PEOPLE_OFF;'),
+		"the giant's share: the budget less 18.4 MB (7.6 at 26), and from M13 less the people's share")
 	assert_true(text.contains("PART_MAX=15000000"), "still in parts of at most 15 MB")
 	assert_true(text.contains('--version=*) VERSION="${arg#--version=}" ;;'), "--version= stands for config/version")
 

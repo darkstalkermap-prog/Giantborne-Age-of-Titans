@@ -6,12 +6,18 @@ extends RefCounted
 ## and calls kit.save(root, path) for every scene it makes; tools/build_scenes.gd runs them in
 ## order. Builders and the kit live in tools/ (never exported); gameplay code must not use them.
 ##
-## save() writes the scene with ResourceSaver, then makes the text deterministic: it removes
-## every " unique_id=<n>" attribute Godot 4.6 puts on node lines (random per save; a scene
-## without them loads the same) and renumbers the ext_resource / sub_resource ids, which Godot
-## draws from a random stream that advances with every save of the process (so an --only build
-## and a full build would otherwise disagree). A regenerated scene only differs when its
-## content does.
+## save() writes the scene with ResourceSaver, then makes the text deterministic: it replaces
+## the " unique_id=<n>" attribute Godot 4.6 puts on every node line (random per save) with a
+## stable one - a number made from the scene's path and the node's path (stable_unique_ids) -
+## and renumbers the ext_resource / sub_resource ids, which Godot draws from a random stream
+## that advances with every save of the process (so an --only build and a full build would
+## otherwise disagree). A regenerated scene only differs when its content does.
+## P49 (plan M11 §3.2 item 5): up to 0.10.0-m10 the ids were removed instead (a scene without
+## them loads the same). But an export converts every text scene to binary by instancing and
+## packing it again, and packing gives each node without an id a random one (the engine's
+## cryptographic generator: it cannot be seeded), so two checkouts exported different packs
+## for one commit. With the ids in the files the conversion keeps them and the pack depends on
+## the commit alone (tools/build_web.sh; tests/slow/test_export_reproducible.gd).
 ##
 ## Materials are additive: the shared palette is MATERIALS below, and a builder may add its own
 ## with add_material() (no edit of this file needed).
@@ -63,6 +69,8 @@ var saved := PackedStringArray()
 var out_root := ""
 
 var _unique_id_re := RegEx.create_from_string(" unique_id=-?[0-9]+")
+var _node_re := RegEx.create_from_string("^\\[node name=\"((?:[^\"\\\\]|\\\\.)*)\"")
+var _parent_re := RegEx.create_from_string(" parent=\"((?:[^\"\\\\]|\\\\.)*)\"")
 var _header_re := RegEx.create_from_string("^\\[(ext_resource|sub_resource) [^\\n]*\\]$")
 var _attr_re := RegEx.create_from_string("(\\w+)=\"([^\"]*)\"")
 var _ref_re := RegEx.create_from_string("(ExtResource|SubResource)\\(\"([^\"]+)\"\\)")
@@ -100,8 +108,8 @@ func add_material(mat_name: String, color: Color, roughness: float, metallic := 
 	return m
 
 
-## Packs `root` (owners set), saves it to `path` (rebased under out_root when set), strips the
-## node unique_id attributes, frees `root`. Returns the written path ("" on failure).
+## Packs `root` (owners set), saves it to `path` (rebased under out_root when set), gives the
+## nodes their stable unique_id attributes, frees `root`. Returns the written path ("" on failure).
 func save(root: Node, path: String) -> String:
 	own(root, root)
 	var packed := PackedScene.new()
@@ -114,7 +122,7 @@ func save(root: Node, path: String) -> String:
 	DirAccess.make_dir_recursive_absolute(out_path.get_base_dir())
 	err = ResourceSaver.save(packed, out_path, ResourceSaver.FLAG_CHANGE_PATH)
 	if err == OK:
-		err = _strip_file(out_path)
+		err = _strip_file(out_path, path)
 	print("saved %s (%s)" % [out_path, "ok" if err == OK else "error %d" % err])
 	if err != OK:
 		push_error("SceneKit: could not save %s (error %d)" % [out_path, err])
@@ -177,13 +185,57 @@ func normalize_resource_ids(text: String) -> String:
 	return "\n".join(lines)
 
 
-func _strip_file(path: String) -> int:
+## P49: the id of the node at `node_path` (".", "Visual", "Visual/Body") in the scene saved as
+## `scene_path`: 1 to 0x7fffffff, from a hash of both (`salt` > 0 after a clash inside one scene).
+static func stable_node_id(scene_path: String, node_path: String, salt := 0) -> int:
+	var h := ("%s|%s|%d" % [scene_path, node_path, salt]).sha256_buffer()
+	var id := (int(h[0]) | (int(h[1]) << 8) | (int(h[2]) << 16) | (int(h[3]) << 24)) & 0x7fffffff
+	return id if id != 0 else 1
+
+
+## P49: the text with every node line's unique_id set to stable_node_id(scene_path, its node path)
+## (added where a line has none); two nodes of one scene never share an id.
+func stable_unique_ids(text: String, scene_path: String) -> String:
+	var lines := text.split("\n")
+	var used := {}
+	for i in lines.size():
+		var line := lines[i]
+		if not line.begins_with("[node "):
+			continue
+		var m := _node_re.search(line)
+		if m == null:
+			continue
+		var parent := ""
+		var has_parent := false
+		var pm := _parent_re.search(line)
+		if pm != null:
+			has_parent = true
+			parent = pm.get_string(1)
+		var node_path := "." if not has_parent else (m.get_string(1) if parent == "." else parent.path_join(m.get_string(1)))
+		var salt := 0
+		var id := stable_node_id(scene_path, node_path, salt)
+		while used.has(id):
+			salt += 1
+			id = stable_node_id(scene_path, node_path, salt)
+		used[id] = true
+		line = _unique_id_re.sub(line, "", true)
+		# Where Godot's own saver writes it: after name, type, parent, owner and index, before the rest.
+		var at := line.length() - 1
+		for key in [" instance=", " instance_placeholder=", " groups="]:
+			var k := line.find(key)
+			if k >= 0 and k < at:
+				at = k
+		lines[i] = line.substr(0, at) + " unique_id=%d" % id + line.substr(at)
+	return "\n".join(lines)
+
+
+func _strip_file(path: String, scene_path := "") -> int:
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
 		return FileAccess.get_open_error()
 	var text := f.get_as_text()
 	f.close()
-	var stripped := normalize_resource_ids(strip_unique_ids(text))
+	var stripped := normalize_resource_ids(stable_unique_ids(text, scene_path if scene_path != "" else path))
 	if stripped == text:
 		return OK
 	f = FileAccess.open(path, FileAccess.WRITE)

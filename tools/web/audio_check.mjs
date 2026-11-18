@@ -7,8 +7,11 @@
 //   * a buffer tracker: every createBuffer counts as a registered sample until it is attached to a
 //     source node; one attached to a source (Godot plays a copy of the registered buffer each time)
 //     counts while that source plays. The live sample bytes are their sum, sampled at every change;
-// presses Play, waits for the title's music, presses New Game (Enter: the title's first focus with no
-// saved game), then Begin in the character creator it opens (Ctrl+Enter; M10: every new game passes
+// presses Play, waits for the title's music and for the title's buttons to enable (P49: the title holds
+// New Game behind "Preparing..." until its warm-up frame is drawn, 1.3-1.5 s on a quiet machine and
+// far longer on a busy one, so the game runs with --ui-probe and the check waits for its UI_PROBE state
+// "title" with warming false, then presses Enter and presses it again while no creator has opened),
+// presses New Game (Enter: the title's first focus with no saved game), then Begin in the character creator it opens (Ctrl+Enter; M10: every new game passes
 // through the creator), and records
 //   * sound within 5 s of the Hollow (the zone set's start: the music director prints an AUDIO_MUSIC
 //     line under --audio-stats, which the check passes);
@@ -70,6 +73,13 @@ import {
 
 const TITLE = 'Giantborn: Age of Titans';
 const SOUND_WITHIN_S = 5;
+// The title (P49): how long a page may take to print its first UI_PROBE line after the title's music
+// before it is taken for a page without the probe; the pause between the title enabling and Enter; how
+// long an Enter is given to open the creator before the next one, and the most presses.
+const PROBE_GRACE_S = 8;
+const TITLE_FOCUS_MS = 300;
+const ENTER_AGAIN_S = 10;
+const ENTER_PRESSES = 4;
 const VALLEY = 'level.valley';
 // The creator (M10): the seconds it is given to open before Begin, how long a Begin is given before
 // the next press, and the most presses.
@@ -132,7 +142,8 @@ function loadPlaywright() {
 
 // The game's command line (each item one argument; web/launcher.html puts them after "--").
 function gameArgs(opts) {
-  const args = ['--audio-stats'];
+  // --ui-probe (P49): the game prints what its menus show, so the check presses Enter on an enabled title.
+  const args = ['--audio-stats', '--ui-probe'];
   for (const a of opts.args.split(',').map((x) => x.trim()).filter((x) => x.length > 0)) args.push(a);
   if (opts.route) args.push(`--route=${opts.route}`);
   for (const a of args) {
@@ -196,7 +207,7 @@ function replay(file) {
     console.error(`audio_check: ${file} holds a failed run's partial trace (no music was recorded): see its failure_state and console_tail`);
     process.exit(2);
   }
-  const placed = placeHoles(t.holes, t.service || [], t.arm, t.disarm, t.quantum_ms);
+  const placed = placeHoles(t.holes, t.service || [], t.arm, t.disarm, t.quantum_ms, t.refs || []);
   console.log(`audio_check: ${file}: ${placed.holes} hole(s) over ${HOLE_MAX_MS} ms, ${placed.while_unserved} while the main thread left the mixer unserved, ${placed.elsewhere.length} otherwise`);
   for (const e of placed.elsewhere.slice(0, 10)) console.log(`    ${e.ms} ms at ${e.page_s} s`);
   process.exit(placed.elsewhere.length === 0 ? 0 : 1);
@@ -246,11 +257,20 @@ async function main() {
   const errors = [];
   const failedRequests = [];
   const musicLines = [];
+  const uiStates = [];   // P49: the game's UI_PROBE state lines (scripts/debug/ui_probe.gd)
+  let uiLines = 0;
   const consoleTail = [];
   page.on('console', (msg) => {
     const text = msg.text();
     if (msg.type() === 'error') errors.push(text);
     if (text.startsWith('AUDIO_MUSIC ')) musicLines.push(text);
+    if (text.startsWith('UI_PROBE ')) {
+      uiLines += 1;
+      try {
+        const o = JSON.parse(text.slice('UI_PROBE '.length));
+        if (o && o.t === 'state') uiStates.push(o);
+      } catch (e) { /* not a probe line after all */ }
+    }
     consoleTail.push(`[${Math.round((Date.now() - started) / 100) / 10} s ${msg.type()}] ${text}`);
     if (consoleTail.length > CONSOLE_TAIL) consoleTail.shift();
   });
@@ -289,9 +309,35 @@ async function main() {
     const title = await waitFor('the title music', (m) => m.set === 'music.title');
     report.play_to_title_s = Math.round((title.page_ms - playAt) / 100) / 10;
     report.title_context_state = title.ctx_state;
-    await sleep(1500);
-    await page.focus('#game-canvas').catch(() => {});
-    await page.keyboard.press('Enter');   // New Game: the title's first focus without a saved game
+    // P49: New Game is pressed on an enabled title. With the game's probe (every build since M10), wait
+    // for the title's state with warming false; a page that prints no UI_PROBE line within PROBE_GRACE_S
+    // (a build from before the probe, the test's plain stub) gets the single press it always got.
+    const titleReady = () => uiStates.some((s) => s.top === 'title' && s.warming === false);
+    const inCreator = () => uiStates.some((s) => s.top === 'creator');
+    const graceEnd = Date.now() + PROBE_GRACE_S * 1000;
+    while (uiLines === 0 && Date.now() < graceEnd) await sleep(100);
+    report.ui_probe = uiLines > 0;
+    if (report.ui_probe) {
+      while (!titleReady()) {
+        if (Date.now() > deadline) throw new Error('timed out waiting for the title\'s buttons to enable (the title kept "Preparing...")');
+        await sleep(100);
+      }
+      report.title_ready_s = Math.round((await page.evaluate(() => performance.now()) - title.page_ms) / 100) / 10;
+      report.title_warmed = uiStates.some((s) => s.top === 'title' && s.warming === true);
+      await sleep(TITLE_FOCUS_MS);   // the frame in which the title takes its first focus
+    }
+    report.enter_presses = 0;
+    for (;;) {
+      await page.focus('#game-canvas').catch(() => {});
+      await page.keyboard.press('Enter');   // New Game: the title's first focus without a saved game
+      report.enter_presses += 1;
+      if (!report.ui_probe) break;
+      const until = Date.now() + ENTER_AGAIN_S * 1000;
+      while (!inCreator() && Date.now() < until) await sleep(100);
+      if (inCreator()) break;
+      if (report.enter_presses >= ENTER_PRESSES) throw new Error(`New Game did not open the creator after ${ENTER_PRESSES} presses of Enter on the enabled title`);
+      if (Date.now() > deadline) throw new Error('timed out waiting for the creator');
+    }
     // M10 (P45): New Game opens the creator; Begin (Ctrl+Enter) starts the Valley. The creator is given
     // CREATOR_SETTLE_S to open, and Begin is pressed again while no zone music has come.
     let hollow = null;
@@ -397,6 +443,7 @@ async function main() {
   console.log(`audio_check: ${report.parts} pck part(s); the Hollow plays ${report.hollow_set || '?'}; sound ${report.sound_after_hollow_s !== undefined && report.sound_after_hollow_s !== null ? `${report.sound_after_hollow_s} s after it` : 'not measured'}; context ${report.context ? report.context.state : '?'} at ${report.context ? report.context.rate : '?'} Hz`);
   if (report.music) {
     console.log(`  music for ${m.seconds} s: longest silence ${m.longest_silence_ms} ms (limit ${HOLE_MAX_MS}), runs over 50 ms ${m.silent_runs_over_50_ms} (${m.holes_while_unserved} while the main thread left the mixer unserved, ${(m.holes_elsewhere || []).length} otherwise${report.strict ? '' : '; --strict fails every one'}), peak ${m.peak}`);
+    if (m && m.clock_refs) console.log(`  the audio clock against the page's: ${m.clock_refs} references (one every 10 s), the largest step between two ${m.largest_clock_step_ms} ms${m.holes_placed_across_a_step ? `, ${m.holes_placed_across_a_step} hole(s) placed on either side of a step` : ''}`);
   } else {
     console.log('  music: not measured (the run ended before the recorder was armed)');
   }

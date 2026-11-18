@@ -392,6 +392,7 @@ async function main() {
     const m = a.music || {};
     const mbs = (b) => (typeof b === 'number' ? (b / 1048576).toFixed(1) : 'N/A');
     console.log(`  audio: ${a.music ? `music for ${m.seconds} s across ${a.borders} region border(s) (${a.sets.join(' -> ') || 'no set'}): longest silence ${m.longest_silence_ms} ms (limit ${HOLE_MAX_MS}), runs over 50 ms ${m.silent_runs_over_50_ms} (${m.holes_while_unserved} while the main thread left the mixer unserved, ${(m.holes_elsewhere || []).length} otherwise${opts.strict ? '' : '; --strict fails every one'})` : 'not recorded'}`);
+    if (a.music && m.clock_refs) console.log(`  the audio clock against the page's: ${m.clock_refs} references (one every 10 s), the largest step between two ${m.largest_clock_step_ms} ms${m.holes_placed_across_a_step ? `, ${m.holes_placed_across_a_step} hole(s) placed on either side of a step` : ''}`);
     if (a.long_tasks) console.log(`  audio, main thread: ${a.long_tasks.n} long tasks (longest ${a.long_tasks.max_ms} ms); the driver's reads ${a.driver && a.driver.watched ? `${a.driver.reads}, longest gap ${a.driver.longest_gap_ms} ms` : 'not seen'}`);
     console.log(`  audio, samples: peak live ${mbs(a.samples.peak_live_bytes)} MB (cap ${mbs(a.cap_bytes)} MB = ${a.registered_s} s x 353 KB + 12 MB)`);
     console.log(`  the plan's criterion (no silent run over ${HOLE_MAX_MS} ms in ${opts.musicS} s of music across a region border): ${crit ? (crit.met ? 'MET' : `NOT MET (${crit.holes} hole(s), the longest ${crit.longest_silence_ms} ms)`) : 'NOT MEASURED'}`);

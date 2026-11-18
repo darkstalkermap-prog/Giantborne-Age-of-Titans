@@ -81,16 +81,16 @@ _surfaces = [{
 height = 40.0
 radius = 56.0
 
-[node name="Chunk_4_1_0" type="Node3D"]
+[node name="Chunk_4_1_0" type="Node3D" unique_id=1668875933]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1879678427]
 
-[node name="world_stonehold_moot_arena" type="Node3D" parent="Props"]
+[node name="world_stonehold_moot_arena" type="Node3D" parent="Props" unique_id=79501036]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95, 23)
 
-[node name="Triggers" type="Node3D" parent="Props/world_stonehold_moot_arena"]
+[node name="Triggers" type="Node3D" parent="Props/world_stonehold_moot_arena" unique_id=1662003475]
 
-[node name="world_area_moot_engage" type="Area3D" parent="Props/world_stonehold_moot_arena/Triggers"]
+[node name="world_area_moot_engage" type="Area3D" parent="Props/world_stonehold_moot_arena/Triggers" unique_id=1506928529]
 transform = Transform3D(0.76604444, 0, 0.6427876, 0, 1, 0, -0.6427876, 0, 0.76604444, -26, 0, 32)
 collision_layer = 0
 collision_mask = 2
@@ -98,11 +98,11 @@ monitorable = false
 script = ExtResource("1_5575d")
 area_id = "world.area.moot_engage"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_moot_arena/Triggers/world_area_moot_engage"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_moot_arena/Triggers/world_area_moot_engage" unique_id=437090004]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Arena" type="Node3D" parent="Props/world_stonehold_moot_arena"]
+[node name="Arena" type="Node3D" parent="Props/world_stonehold_moot_arena" unique_id=72108068]
 script = ExtResource("2_8c428")
 boss_id = "world.stonehold.harrok"
 encounter_id = "encounter.stonehold_moot"
@@ -112,7 +112,7 @@ pillars_path = NodePath("")
 inner_radius_m = 60.0
 defeated_flag = "boss.harrok.defeated"
 
-[node name="world_stonehold_moot_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="world_stonehold_moot_cache" type="StaticBody3D" parent="Props" unique_id=1685568307 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 95, 8)
 collision_layer = 16
 collision_mask = 0
@@ -120,7 +120,7 @@ script = ExtResource("4_5fc47")
 world_id = "world.stonehold.moot_cache"
 loot_table = "loot.cache_the_moot"
 
-[node name="world_stonehold_cairnlands_cairn" type="Node3D" parent="Props"]
+[node name="world_stonehold_cairnlands_cairn" type="Node3D" parent="Props" unique_id=1874503287]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 130, 79.152, 178)
 script = ExtResource("5_dd8c0")
 npc_id = "world.stonehold.cairnlands_cairn"
@@ -129,17 +129,17 @@ prompt = "Read the cairn"
 radius_m = 4.0
 priority = 45
 
-[node name="Base" type="StaticBody3D" parent="Props/world_stonehold_cairnlands_cairn"]
+[node name="Base" type="StaticBody3D" parent="Props/world_stonehold_cairnlands_cairn" unique_id=252540304]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_cairnlands_cairn/Base"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_cairnlands_cairn/Base" unique_id=869685610]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="Stones" type="MeshInstance3D" parent="Props/world_stonehold_cairnlands_cairn/Base" groups=["scenery"]]
+[node name="Stones" type="MeshInstance3D" parent="Props/world_stonehold_cairnlands_cairn/Base" unique_id=1922768639 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_3")
 
-[node name="world_stonehold_stair_top_cairn" type="Node3D" parent="Props"]
+[node name="world_stonehold_stair_top_cairn" type="Node3D" parent="Props" unique_id=1744751815]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 77.406006, 220)
 script = ExtResource("5_dd8c0")
 npc_id = "world.stonehold.stair_top_cairn"
@@ -148,54 +148,54 @@ prompt = "Read the cairn"
 radius_m = 4.0
 priority = 45
 
-[node name="Base" type="StaticBody3D" parent="Props/world_stonehold_stair_top_cairn"]
+[node name="Base" type="StaticBody3D" parent="Props/world_stonehold_stair_top_cairn" unique_id=1789655162]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_stair_top_cairn/Base"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_stair_top_cairn/Base" unique_id=1938446178]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_4")
 
-[node name="Stones" type="MeshInstance3D" parent="Props/world_stonehold_stair_top_cairn/Base" groups=["scenery"]]
+[node name="Stones" type="MeshInstance3D" parent="Props/world_stonehold_stair_top_cairn/Base" unique_id=1631480030 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1962894716]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=497985024]
 
-[node name="world_cp_cairnlands" type="Marker3D" parent="Waystones"]
+[node name="world_cp_cairnlands" type="Marker3D" parent="Waystones" unique_id=690722501]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 96, 79.452, 212)
 script = ExtResource("7_add9b")
 requires_flags = PackedStringArray()
 display_name = "Cairnlands waystone"
 checkpoint_id = "world.cp.cairnlands"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_cairnlands"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_cairnlands" unique_id=642103941]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, -0.3, 4)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_cairnlands/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_cairnlands/Stone" unique_id=1427733029]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_6")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_cairnlands/Stone" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_cairnlands/Stone" unique_id=249091157 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_7")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_cairnlands" groups=["scenery"]]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_cairnlands" unique_id=258797088 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, -0.3, 4)
 mesh = SubResource("ArrayMesh_8")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1043631169]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=413198741]
 
-[node name="world_marker_moot_ring" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_moot_ring" type="Marker3D" parent="Markers/Objective" unique_id=2079376998]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95.2, 23)
 script = ExtResource("8_acc12")
 marker_id = "world.marker.moot_ring"
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=909277310]
 
-[node name="world_area_moot" type="Area3D" parent="Triggers"]
+[node name="world_area_moot" type="Area3D" parent="Triggers" unique_id=1929810065]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95, 23)
 collision_layer = 0
 collision_mask = 2
@@ -203,14 +203,14 @@ monitorable = false
 script = ExtResource("1_5575d")
 area_id = "world.area.moot"
 
-[node name="Shape" type="CollisionShape3D" parent="Triggers/world_area_moot"]
+[node name="Shape" type="CollisionShape3D" parent="Triggers/world_area_moot" unique_id=636251007]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 0)
 shape = SubResource("CylinderShape3D_9")
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=1897431532]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1594117858]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=2114896014]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1590214964]

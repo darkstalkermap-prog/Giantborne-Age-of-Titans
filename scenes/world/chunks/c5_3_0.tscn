@@ -3,13 +3,13 @@
 [ext_resource type="PackedScene" path="res://scenes/world/shrine.tscn" id="1_f6def"]
 [ext_resource type="Script" path="res://scripts/world/shrine.gd" id="2_e36fc"]
 
-[node name="Chunk_5_3_0" type="Node3D"]
+[node name="Chunk_5_3_0" type="Node3D" unique_id=223788546]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=698220377]
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=24674732]
 
-[node name="world_shrine_aldmere" type="Node3D" parent="Shrines" instance=ExtResource("1_f6def")]
+[node name="world_shrine_aldmere" type="Node3D" parent="Shrines" unique_id=2128181741 instance=ExtResource("1_f6def")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 164, 41.66, 216)
 script = ExtResource("2_e36fc")
 world_id = "world.shrine.aldmere"
@@ -18,16 +18,16 @@ prompt = "Rest"
 radius_m = 4.0
 priority = 40
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=2074783873]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1211539008]
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=115680408]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=793134060]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1082261614]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=268021007]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=648288184]

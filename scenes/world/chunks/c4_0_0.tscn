@@ -21,11 +21,11 @@ _surfaces = [{
 "vertex_data": PackedByteArray("mpkZwQAAAEAAAADBmpkZQQAAAEAAAADBmpkZQQAAAEAAAABBmpkZwQAAAEAAAABBmpkZwQAAgL8AAABBmpkZQQAAgL8AAABBmpkZQQAAgL8AAADBmpkZwQAAgL8AAADBZmbmwAAA4EDOzEzAZmbmQAAA4EDOzEzAZmbmQAAA4EDNzMxAZmbmwAAA4EDNzMxAZmbmwAAAAEDNzMxAZmbmQAAAAEDNzMxAZmbmQAAAAEDOzEzAZmbmwAAAAEDOzEzAZmbmwAAAsEGamdnAZmbmQAAAsEGamdnAZmbmQAAAsEE0MzPAZmbmwAAAsEE0MzPAZmbmwAAAAEA0MzPAZmbmQAAAAEA0MzPAZmbmQAAAAECamdnAZmbmwAAAAECamdnAzcwMwWZmJkHNzMzAzMzMwGZmJkHNzMzAzMzMwGZmJkHNzMxAzcwMwWZmJkHNzMxAzcwMwQAAAEDNzMxAzMzMwAAAAEDNzMxAzMzMwAAAAEDNzMzAzcwMwQAAAEDNzMzAzMzMQGZmJkHNzMzAzcwMQWZmJkHNzMzAzcwMQWZmJkHNzMxAzMzMQGZmJkHNzMxAzMzMQAAAAEDNzMxAzcwMQQAAAEDNzMxAzcwMQQAAAEDNzMzAzMzMQAAAAEDNzMzAmpmZwDMzw0FnZubAmpmZQDMzw0FnZubAmpmZQDMzw0GamRnAmpmZwDMzw0GamRnAmpmZwAAAsEGamRnAmpmZQAAAsEGamRnAmpmZQAAAsEFnZubAmpmZwAAAsEFnZubAMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamqMjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqjIzzMzsRGGn/9//3zKzzIwyszKzzEzMzP9f/584jnGczEzMTG1bbNv/n/9fHEdUlczMMjNObGGn/x//H1RVqaoyM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
 }]
 
-[node name="Chunk_4_0_0" type="Node3D"]
+[node name="Chunk_4_0_0" type="Node3D" unique_id=250182437]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=334856348]
 
-[node name="world_stonehold_stone_throne" type="Node3D" parent="Props"]
+[node name="world_stonehold_stone_throne" type="Node3D" parent="Props" unique_id=1714480599]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95, 224)
 script = ExtResource("1_9a4ec")
 world_id = "world.stonehold.stone_throne"
@@ -33,35 +33,35 @@ prompt = "Take the Stone Throne"
 radius_m = 16.0
 priority = 30
 
-[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_stone_throne"]
+[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_stone_throne" unique_id=516872972]
 collision_mask = 0
 
-[node name="Shape0" type="CollisionShape3D" parent="Props/world_stonehold_stone_throne/Body"]
+[node name="Shape0" type="CollisionShape3D" parent="Props/world_stonehold_stone_throne/Body" unique_id=1917549696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, -1.6)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Throne" type="MeshInstance3D" parent="Props/world_stonehold_stone_throne/Body"]
+[node name="Throne" type="MeshInstance3D" parent="Props/world_stonehold_stone_throne/Body" unique_id=870776582]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=626999489]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1301833156]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1733935803]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=731684056]
 
-[node name="world_marker_stone_throne" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_stone_throne" type="Marker3D" parent="Markers/Objective" unique_id=767243879]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 95.2, 238)
 script = ExtResource("3_acc12")
 marker_id = "world.marker.stone_throne"
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=2125619683]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=2101870172]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1767959271]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1217496150]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1649472944]

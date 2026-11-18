@@ -185,133 +185,133 @@ instance_count = 2
 mesh = SubResource("CylinderMesh_39")
 buffer = PackedFloat32Array(1.18, 0, 0, -25.5, 0, 10.54, 0, 5.27, 0, 0, 1.18, -93.6, 0.98, 0, 0, -25.2, 0, 9.94, 0, 4.97, 0, 0, 0.98, -101.6)
 
-[node name="hills" type="Node3D"]
+[node name="hills" type="Node3D" unique_id=950582307]
 
-[node name="Collision" type="StaticBody3D" parent="."]
+[node name="Collision" type="StaticBody3D" parent="." unique_id=923177406]
 collision_mask = 0
 
-[node name="ForestCorner" type="CollisionShape3D" parent="Collision"]
+[node name="ForestCorner" type="CollisionShape3D" parent="Collision" unique_id=2018895167]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -0.5, -101)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Riverbed" type="CollisionShape3D" parent="Collision"]
+[node name="Riverbed" type="CollisionShape3D" parent="Collision" unique_id=575202155]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106, -0.5, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="RuinsNorth" type="CollisionShape3D" parent="Collision"]
+[node name="RuinsNorth" type="CollisionShape3D" parent="Collision" unique_id=1824692691]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 156, -0.5, -175)
 shape = SubResource("BoxShape3D_3")
 
-[node name="HillsSouth" type="CollisionShape3D" parent="Collision"]
+[node name="HillsSouth" type="CollisionShape3D" parent="Collision" unique_id=1992863714]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -0.5, 150)
 shape = SubResource("BoxShape3D_4")
 
-[node name="HillsNw" type="CollisionShape3D" parent="Collision"]
+[node name="HillsNw" type="CollisionShape3D" parent="Collision" unique_id=1237948663]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -155, -0.5, -156)
 shape = SubResource("BoxShape3D_5")
 
-[node name="EdgeN" type="CollisionShape3D" parent="Collision"]
+[node name="EdgeN" type="CollisionShape3D" parent="Collision" unique_id=424635619]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, -205)
 shape = SubResource("BoxShape3D_6")
 
-[node name="EdgeS" type="CollisionShape3D" parent="Collision"]
+[node name="EdgeS" type="CollisionShape3D" parent="Collision" unique_id=1198646930]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, 205)
 shape = SubResource("BoxShape3D_6")
 
-[node name="EdgeW" type="CollisionShape3D" parent="Collision"]
+[node name="EdgeW" type="CollisionShape3D" parent="Collision" unique_id=2143858480]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -205, 15, 0)
 shape = SubResource("BoxShape3D_7")
 
-[node name="EdgeEN" type="CollisionShape3D" parent="Collision"]
+[node name="EdgeEN" type="CollisionShape3D" parent="Collision" unique_id=166885010]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 205, 15, -142.5)
 shape = SubResource("BoxShape3D_8")
 
-[node name="EdgeES" type="CollisionShape3D" parent="Collision"]
+[node name="EdgeES" type="CollisionShape3D" parent="Collision" unique_id=1822343861]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 205, 15, 82.5)
 shape = SubResource("BoxShape3D_9")
 
-[node name="EdgeEHall" type="CollisionShape3D" parent="Collision"]
+[node name="EdgeEHall" type="CollisionShape3D" parent="Collision" unique_id=1831951709]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 213, 15, -60)
 shape = SubResource("BoxShape3D_10")
 
-[node name="HillsSouth2" type="CollisionShape3D" parent="Collision"]
+[node name="HillsSouth2" type="CollisionShape3D" parent="Collision" unique_id=863229395]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 15, 150)
 shape = SubResource("BoxShape3D_11")
 
-[node name="HillsSouthCrest" type="CollisionShape3D" parent="Collision"]
+[node name="HillsSouthCrest" type="CollisionShape3D" parent="Collision" unique_id=934435187]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 23, 168)
 shape = SubResource("BoxShape3D_12")
 
-[node name="HillsNw2" type="CollisionShape3D" parent="Collision"]
+[node name="HillsNw2" type="CollisionShape3D" parent="Collision" unique_id=2119212466]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -155, 15, -167.5)
 shape = SubResource("BoxShape3D_13")
 
-[node name="HillsNwCrest" type="CollisionShape3D" parent="Collision"]
+[node name="HillsNwCrest" type="CollisionShape3D" parent="Collision" unique_id=1307472829]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -158, 22, -173)
 shape = SubResource("BoxShape3D_14")
 
-[node name="HillsNe" type="CollisionShape3D" parent="Collision"]
+[node name="HillsNe" type="CollisionShape3D" parent="Collision" unique_id=15072658]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 156, 15, -155)
 shape = SubResource("BoxShape3D_15")
 
-[node name="HillsNeCrest" type="CollisionShape3D" parent="Collision"]
+[node name="HillsNeCrest" type="CollisionShape3D" parent="Collision" unique_id=1818395924]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158, 21, -163)
 shape = SubResource("BoxShape3D_16")
 
-[node name="ForestNorthE" type="CollisionShape3D" parent="Collision"]
+[node name="ForestNorthE" type="CollisionShape3D" parent="Collision" unique_id=77174137]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.5, 15, -123.5)
 shape = SubResource("BoxShape3D_17")
 
-[node name="ForestCornerE" type="CollisionShape3D" parent="Collision"]
+[node name="ForestCornerE" type="CollisionShape3D" parent="Collision" unique_id=1135831715]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 15, -101)
 shape = SubResource("BoxShape3D_18")
 
-[node name="Tree110" type="CollisionShape3D" parent="Collision"]
+[node name="Tree110" type="CollisionShape3D" parent="Collision" unique_id=641724248]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 5.27, -93.6)
 shape = SubResource("CylinderShape3D_19")
 
-[node name="Tree111" type="CollisionShape3D" parent="Collision"]
+[node name="Tree111" type="CollisionShape3D" parent="Collision" unique_id=392517069]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.2, 4.97, -101.6)
 shape = SubResource("CylinderShape3D_20")
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=132853208]
 
-[node name="CliffDark_Box" type="MultiMeshInstance3D" parent="Visual"]
+[node name="CliffDark_Box" type="MultiMeshInstance3D" parent="Visual" unique_id=1612484256]
 material_override = SubResource("StandardMaterial3D_21")
 multimesh = SubResource("MultiMesh_23")
 
-[node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual" unique_id=1570582402]
 material_override = SubResource("StandardMaterial3D_24")
 multimesh = SubResource("MultiMesh_25")
 
-[node name="Dirt_Plane" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Dirt_Plane" type="MultiMeshInstance3D" parent="Visual" unique_id=1529448910]
 material_override = SubResource("ShaderMaterial_26")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_28")
 
-[node name="ForestFloor_Plane" type="MultiMeshInstance3D" parent="Visual"]
+[node name="ForestFloor_Plane" type="MultiMeshInstance3D" parent="Visual" unique_id=1427616166]
 material_override = SubResource("ShaderMaterial_29")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_30")
 
-[node name="Grass_Plane" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Grass_Plane" type="MultiMeshInstance3D" parent="Visual" unique_id=1096391783]
 material_override = SubResource("ShaderMaterial_31")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_32")
 
-[node name="Scenery" type="Node3D" parent="."]
+[node name="Scenery" type="Node3D" parent="." unique_id=1693282494]
 
-[node name="LeavesDark_Cone" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+[node name="LeavesDark_Cone" type="MultiMeshInstance3D" parent="Scenery" unique_id=988097732 groups=["valley_scenery"]]
 material_override = SubResource("ShaderMaterial_33")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_35")
 
-[node name="Leaves_Cone" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+[node name="Leaves_Cone" type="MultiMeshInstance3D" parent="Scenery" unique_id=914863900 groups=["valley_scenery"]]
 material_override = SubResource("ShaderMaterial_36")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_37")
 
-[node name="Bark_Cyl" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+[node name="Bark_Cyl" type="MultiMeshInstance3D" parent="Scenery" unique_id=330250701 groups=["valley_scenery"]]
 material_override = SubResource("ShaderMaterial_38")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_40")

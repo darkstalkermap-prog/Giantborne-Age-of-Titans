@@ -51,6 +51,8 @@ var _base_colors: Array[Color] = []
 var _material_copies: Dictionary = {}   ## source material -> this rig's copy (RigPaint)
 ## The copy of Visual/LodProxy under Body that the renderer shows beyond render_lod_m (P22).
 var far_proxy: MeshInstance3D = null
+## P49: the model's shadows-only mesh when it has one (RigPaint.use_shadow_proxy), else null.
+var shadow_proxy: MeshInstance3D = null
 var _fall := 0.0
 var _stagger_time := 0.0
 var _arm := Vector2.ZERO
@@ -70,6 +72,8 @@ func _ready() -> void:
 	_make_materials_unique(self)
 	if render_lod_m > 0.0:
 		set_render_lod(render_lod_m)
+	# P49 (plan M11 §2.2): a skinned model with a ShadowProxy casts its shadow through that one mesh.
+	shadow_proxy = RigPaint.use_shadow_proxy(self)
 
 
 ## P22: the distance LOD (see RigPaint): beyond lod_m metres the renderer draws the one-box proxy
