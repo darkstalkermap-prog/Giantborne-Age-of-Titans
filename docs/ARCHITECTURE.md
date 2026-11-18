@@ -712,8 +712,9 @@ write only under `Visual/Body` (and a held body's `Visual` offset), draw no numb
 emit no event the simulation hears. The gate's `test_giant_determinism` runs three seeded 120 s soaks
 (no skin; the skin with one look; with another) and a seeded Valley bot run that grabs and throws
 with and without the skin, and requires byte-identical results, with positive controls in
-`SKIN_STATS` that the skin and the look really ran; the M10 gate also found the soak and the world
-bot's smoke run byte-identical on `0.9.0-m9` and on the candidate (`docs/M10_HANDOFF.md` §5.1).
+`SKIN_STATS` that the skin and the look really ran; the M10 gate also found the soak's result
+byte-identical on `0.9.0-m9` and on the candidate, and the world bot's smoke run identical once
+wall-time, node-count and memory fields are removed (`docs/M10_HANDOFF.md` §5.1).
 
 ## 22. Where the details are
 

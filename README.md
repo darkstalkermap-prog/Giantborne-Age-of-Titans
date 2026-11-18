@@ -417,8 +417,9 @@ tools/world_tour.sh --out=/absolute/folder --places=drowned_steps    # a placed 
 only the frames of each shot, so the bot plays at its headless speed.)
 
 **The M10 capture tour** plays the skinned giant through 38 beats in the sandbox - idle, walk, run,
-sprint, a jump, every weapon family's light and heavy, a block, both dodges, Shoulder Charge, a grab,
-hold and throw, the stomp, the roar, a stagger, a knockback, stages 2-6, first person, the death fall -
+sprint, a jump, the light and the heavy of the club, the sword, the hammer, the axe and the fists, the
+tree's light and the pine's heavy, a block, both dodges, Shoulder Charge, a grab, hold and throw, the
+stomp, the roar, a buff, Earthquake, a stagger, a knockback, stages 2-6, first person, the death fall -
 and saves one frame a beat (`m10_NN_<beat>.png`), with a video when `--write-movie` is given:
 
 ```bash
