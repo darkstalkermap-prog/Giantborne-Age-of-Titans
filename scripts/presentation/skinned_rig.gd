@@ -23,20 +23,37 @@ extends ActorRig
 ##
 ## One frame (plan §2.9): ActorRig._process (the brain) -> _drive_tree (the legs' source from the brain's
 ## state, never from speed alone) and AnimationTree.advance -> the skeleton's update runs the
-## PoseBrainModifier -> skeleton_updated: the held body's visual offset, then `posed` (final bone poses and
-## the weapon are valid inside it). The legs' sources, in order of precedence:
+## PoseBrainModifier, then the springs and SecondaryMotion (P50) -> skeleton_updated: the held body's visual
+## offset, then `posed` (final bone poses and the weapon are valid inside it). The legs' sources, first match
+## wins (P50 added landing, stomp, roar, sprint, turning and bracing; plan M11 §2.3):
 ##   dead       the idle and locomotion stop; the death clip is seeked by the brain's fall fraction, under
 ##              the body's own fall;
 ##   airborne   not on the floor for more than AIR_FRAMES frames: the airborne pose;
+##   landing    LAND_S after the floor returns from the airborne pose: `land`, on its own clock;
+##   stomp      an action whose hit is a cylinder_pulse without morale damage (Heavy Footfall, Titan Stomp):
+##              `stomp_r`, the windup seeked onto the clip's lift and hold so the foot is planted as the
+##              ACTIVE phase starts (STOMP_PLANT), the rest of the action onto its settle;
+##   roar       a cylinder_pulse with morale damage (Thunder Roar): `roar` by the action's whole fraction;
 ##   motion     an action's `motion` block moving the giant in its phase (Shoulder Charge, the grab's
-##              lunge): the run clip on the skin's own clock, advanced by ground speed / stride;
-##   walking    the brain walks (over 0.3 m/s in LOCOMOTION or BLOCKING): idle | walk | run by normalized
-##              speed (speed / k), the clips' time from the brain's walk phase,
-##              t = fposmod(walk_phase + pi/2, 2 pi) / 2 pi x length, so heel strikes fall on footfalls;
+##              lunge): the run clip on the skin's own clock, advanced by ground speed / stride, the sprint
+##              clip above SPRINT_FROM of the sprint's speed;
+##   walking    the brain walks (over 0.3 m/s in LOCOMOTION or BLOCKING): idle | walk | run | sprint by
+##              normalized speed (speed / k; the sprint by speed / the sprint's speed), the clips' time from
+##              the brain's walk phase, t = fposmod(walk_phase + pi/2, 2 pi) / 2 pi x length, so heel strikes
+##              fall on footfalls;
+##   turning    the actor's yaw changing faster than TURN_MIN_DEG_S while the brain does not walk: `turn_l` or
+##              `turn_r` on a clock of the yaw travelled (a quarter turn a cycle; a snap of more than
+##              SNAP_DEG in one frame is a teleport, not a turn);
+##   bracing    blocking (or guarding) and standing: `brace`;
 ##   otherwise  the stance (the idle's legs) under the body's lean: dodges, staggers, knockbacks and
 ##              standing actions never glide in a frozen stride.
-## Then the hands: the right fist always closed on the weapon (grip_r), the left hand closed on a held
-## body (grip_l) or open while reaching or casting (open_l), else the clip's relaxed hand.
+## Every change of source cross-fades by the rig's exponential easing (FADE_RATES; docs/systems/P50.md has the
+## table). On top, additive, a flinch (`flinch_f`, `_b`, `_l`, `_r`, named by the side the hit came from) when
+## HitFeedback passes one (flinch()), weighted by the flash's strength and never during an attack's ACTIVE
+## phase. Then the hands: the right fist closed on the weapon by its family's grip (`grip_club`, `grip_sword`,
+## ...), the left hand closed on a held body (grip_l), open while reaching or casting (open_l), both fists
+## for the fists, else a relaxed curl (open_l with a share of grip_l: the off hand never droops); in first
+## person at rest the arms take `fp_rest` (the weapon in the lower right of the view).
 ##
 ## Paint: GiantLook gives every surface its own ShaderMaterial; flash() and set_status_tint() reach them
 ## through RigPaint.paint_shaders (the `tint` and `flash` uniforms) beside the weapon's flat materials.
@@ -53,43 +70,101 @@ const SOCKET_PATH := NodePath("Body/WeaponSocket")
 const HAND_PATH := NodePath("Hand")
 const CLIPS_PATH := "res://assets/giant/giant_clips.glb"
 const LIBRARY := &"giant"
-const LOOPS := ["idle", "walk", "run"]
+const LOOPS := ["idle", "walk", "run", "sprint"]
 const FINGERS := ["thumb", "index", "middle", "ring", "pinky"]
+const ARM_BONES := ["clavicle_l", "upperarm_l", "lowerarm_l", "hand_l", "clavicle_r", "upperarm_r", "lowerarm_r", "hand_r"]
 ## The run blends in between these normalized speeds (m/s / k): stage 1 walks at 5.0 (a jog) and sprints
 ## at 7.5 (a run); stage 6 walks at 1.57 (a walk).
 const RUN_FROM := 3.5
 const RUN_FULL := 6.5
+## The sprint clip blends in between these shares of the sprint's speed (the profile's walk speed x the sprint
+## action's speed_mult): stage 1 runs at 5.0 and sprints at 7.5 m/s.
+const SPRINT_FROM := 0.8
+const SPRINT_FULL := 0.95
 ## Frames off the floor before the airborne pose shows (a step down is not a jump); it then blends in at
 ## AIR_RATE, past half on the third frame off the ground.
 const AIR_FRAMES := 2
-## How fast each source's weight moves (1 / s, exponential).
-const BLEND_RATE := 14.0
+## The landing clip's time after the floor returns (seconds).
+const LAND_S := 0.25
+## A landing needs this long off the ground (seconds): a step down or a spawn's drop is not a jump.
+const LAND_MIN_AIR_S := 0.2
+## The stomp's foot is planted at this share of `stomp_r` (P48's clip: up by 0.34, held to 0.58, planted at
+## 0.72): the windup is seeked onto [0, STOMP_PLANT], ACTIVE and RECOVERY onto [STOMP_PLANT, 1].
+const STOMP_PLANT := 0.72
+## Turning on the spot: the yaw rate that starts it (degrees a second), how long it holds after the yaw stops
+## (seconds), the yaw a turn clip's cycle covers (degrees), and the most a frame may turn before it counts as a
+## teleport's snap (degrees).
+const TURN_MIN_DEG_S := 60.0
+const TURN_HOLD_S := 0.12
+const TURN_CYCLE_DEG := 90.0
+const SNAP_DEG := 30.0
+## A frame's move of the actor farther than this (stage-1 metres, x k) is a teleport: the springs reset.
+const TELEPORT_M := 3.0
+## The relaxed off hand: open_l's weight and grip_l's share on top of it (a loose curl, not the bind pose).
+const RELAX_OPEN := 0.75
+const RELAX_CURL := 0.3
+## How fast each source's weight moves (1 / s, exponential): a fade reaches 95 % in 3 / rate seconds (0.12-0.2 s
+## for every change of source; the airborne pose keeps M10's quicker 0.07 s, the speed blends inside the gait
+## M10's 0.37 s).
+const BLEND_RATE := 16.0
+const FADE_RATES := {"move": 16.0, "run": 8.0, "sprint": 8.0, "charge": 16.0, "charge_sprint": 16.0, "air": 45.0,
+	"dead": 20.0, "land": 20.0, "stomp": 20.0, "roar": 20.0, "turn": 18.0, "turn_side": 18.0, "brace": 16.0,
+	"fp": 16.0, "open_l": 12.0, "grip_l": 12.0, "fist_l": 12.0}
 const AIR_RATE := 45.0
 const DEATH_RATE := 20.0
 const HAND_RATE := 12.0
+## A flinch's weight: the flash's strength x this, eased in and out with the clip (which starts and ends at
+## nothing); it fades out at FLINCH_CUT_RATE when an attack's ACTIVE phase starts.
+const FLINCH_GAIN := 1.0
+const FLINCH_CUT_RATE := 40.0
+const FLINCH_SIDES := ["f", "b", "l", "r"]
 ## A knockback faster than this (m/s) slides the giant on the stance, never on a walk.
 const KNOCKBACK_STANCE_MPS := 0.5
 ## The held body's visual moves by at most this (stage-1 metres, x k).
 const HELD_GAP_MAX := PoseBrainModifier.HELD_GAP_MAX
+## The family of a weapon -> its grip clip (P48's one-frame finger poses).
+const GRIP_CLIPS := {"club": "grip_club", "sword": "grip_sword", "hammer": "grip_hammer", "axe": "grip_axe",
+	"fists": "grip_fist", "fist": "grip_fist", "tree": "grip_tree"}
 
 const P_MOVE := &"parameters/move/blend_amount"
 const P_RUN := &"parameters/gait/blend_amount"
+const P_SPRINT := &"parameters/sprint/blend_amount"
 const P_CHARGE := &"parameters/charge/blend_amount"
+const P_CHARGE_SPRINT := &"parameters/charge_gait/blend_amount"
 const P_AIR := &"parameters/air/blend_amount"
 const P_DEAD := &"parameters/dead/blend_amount"
+const P_LAND := &"parameters/land/blend_amount"
+const P_STOMP := &"parameters/stomp/blend_amount"
+const P_ROAR := &"parameters/roar/blend_amount"
+const P_TURN := &"parameters/turn/blend_amount"
+const P_TURN_SIDE := &"parameters/turn_side/blend_amount"
+const P_BRACE := &"parameters/brace/blend_amount"
+const P_FP := &"parameters/fp/blend_amount"
 const P_GRIP_R := &"parameters/hand_r/blend_amount"
 const P_OPEN_L := &"parameters/open_l/blend_amount"
 const P_GRIP_L := &"parameters/grip_l/blend_amount"
+const P_FIST_L := &"parameters/fist_l/blend_amount"
 const P_WALK_T := &"parameters/walk_seek/seek_request"
 const P_RUN_T := &"parameters/run_seek/seek_request"
+const P_SPRINT_T := &"parameters/sprint_seek/seek_request"
 const P_CHARGE_T := &"parameters/charge_seek/seek_request"
+const P_CHARGE_SPRINT_T := &"parameters/charge_sprint_seek/seek_request"
 const P_DEATH_T := &"parameters/death_seek/seek_request"
+const P_LAND_T := &"parameters/land_seek/seek_request"
+const P_STOMP_T := &"parameters/stomp_r_seek/seek_request"
+const P_ROAR_T := &"parameters/roar_seek/seek_request"
+const P_TURN_L_T := &"parameters/turn_l_seek/seek_request"
+const P_TURN_R_T := &"parameters/turn_r_seek/seek_request"
 ## The blend weights (_w) and their tree parameters, set only when they change.
-const BLEND_PARAMS := {"move": P_MOVE, "run": P_RUN, "charge": P_CHARGE, "air": P_AIR, "dead": P_DEAD, "open_l": P_OPEN_L,
-	"grip_l": P_GRIP_L}
+const BLEND_PARAMS := {"move": P_MOVE, "run": P_RUN, "sprint": P_SPRINT, "charge": P_CHARGE, "charge_sprint": P_CHARGE_SPRINT,
+	"air": P_AIR, "dead": P_DEAD, "land": P_LAND, "stomp": P_STOMP, "roar": P_ROAR, "turn": P_TURN, "turn_side": P_TURN_SIDE,
+	"brace": P_BRACE, "fp": P_FP, "open_l": P_OPEN_L, "grip_l": P_GRIP_L, "fist_l": P_FIST_L}
+## The legs' sources over the stance, from the lowest precedence to the highest (the tree's chain).
+const SOURCE_CHAIN := ["brace", "turn", "move", "charge", "stomp", "roar", "land", "air", "dead"]
 
 ## The run's counts over every SkinnedRig of the process (a sandbox reset makes a new rig), for SKIN_STATS.
-static var totals := {"posed_frames": 0, "modifier_runs": 0, "held_visual_writes": 0, "rig_footfalls": 0, "rigs": 0}
+static var totals := {"posed_frames": 0, "modifier_runs": 0, "held_visual_writes": 0, "rig_footfalls": 0, "rigs": 0,
+	"flinches": 0, "flinches_refused": 0, "teleports": 0}
 static var _forced := false
 static var _cli := 2           # 2 unread, 1 --skin, -1 --no-skin, 0 neither
 static var _clips: AnimationLibrary = null
@@ -105,17 +180,35 @@ var _mod: PoseBrainModifier = null
 var _layers := false
 var _look: Dictionary = {}
 var _lengths := {}
-var _w := {"move": 0.0, "run": 0.0, "charge": 0.0, "air": 0.0, "dead": 0.0, "open_l": 0.0, "grip_l": 0.0}
+var _w := {"move": 0.0, "run": 0.0, "sprint": 0.0, "charge": 0.0, "charge_sprint": 0.0, "air": 0.0, "dead": 0.0, "land": 0.0,
+	"stomp": 0.0, "roar": 0.0, "turn": 0.0, "turn_side": 0.0, "brace": 0.0, "fp": 0.0, "open_l": 0.0, "grip_l": 0.0,
+	"fist_l": 0.0}
 var _sent := {}
 var _air := 0
 var _legs := "stance"
 var _charge_phase := 0.0
+var _land_t := -1.0
+var _was_air := false
+var _air_t := 0.0
+var _yaw := 0.0
+var _yaw_set := false
+var _turn_hold := 0.0
+var _turn_travel := {"l": 0.0, "r": 0.0}
+var _last_pos := Vector3.ZERO
+var _was_dead := false
+var _grip_clip := ""
+## The running flinches: side -> {"t": seconds into the clip, "w": weight}.
+var _flinch := {}
+var _secondary: SecondaryMotion = null
 var _held: Node3D = null
 var _held_visual: Node3D = null
 var _held_base := Vector3.ZERO
 ## This rig's own counts (skin_stats()).
 var posed_frames := 0
 var held_visual_writes := 0
+var flinches := 0
+var flinches_refused := 0
+var teleports := 0
 
 
 # --------------------------------------------------------------------------- the switch (decision 6)
@@ -166,7 +259,11 @@ static func run_stats() -> Dictionary:
 	var out := {"look": rig.look_name() if rig != null else "", "layers": rig._layers if rig != null else layers_enabled(),
 		"posed_frames": int(totals.posed_frames), "modifier_runs": int(totals.modifier_runs),
 		"held_visual_writes": int(totals.held_visual_writes), "shown_meshes": rig.shown_meshes() if rig != null else [],
-		"rig_footfalls": int(totals.rig_footfalls), "rigs": int(totals.rigs)}
+		"rig_footfalls": int(totals.rig_footfalls), "rigs": int(totals.rigs),
+		"secondary_frames": int(SecondaryMotion.totals.get("frames", 0)), "secondary_resets": int(SecondaryMotion.totals.get("resets", 0)),
+		"chains": Array(rig._secondary.chains) if rig != null and rig._secondary != null else [],
+		"flinches": int(totals.get("flinches", 0)), "flinches_refused": int(totals.get("flinches_refused", 0)),
+		"teleports": int(totals.get("teleports", 0))}
 	return out
 
 
@@ -211,59 +308,97 @@ func _build_layers() -> void:
 		_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 		_tree.active = true
 		_tree.set(P_GRIP_R, 1.0)
-		for n: String in ["walk", "run", "death"]:
+		for n: String in ["walk", "run", "sprint", "death", "land", "stomp_r", "roar", "turn_l", "turn_r", "flinch_f", "flinch_b",
+				"flinch_l", "flinch_r"]:
 			_lengths[n] = lib.get_animation(n).length if lib.has_animation(n) else 1.0
 	_mod = PoseBrainModifier.new()
 	_mod.name = "PoseBrainModifier"
 	_skeleton.add_child(_mod)
 	_mod.setup(self, _model.index, body)
+	# P50: the springs and their limits after the brain (the giant's front is -Z in Body space)
+	_secondary = SecondaryMotion.attach(_skeleton, _model.index, _mod.skeleton_dir(Vector3.FORWARD))
+	_secondary.configure(SecondaryMotion.chains_for(_model.index, shown_meshes()))
 	_skeleton.skeleton_updated.connect(_on_skeleton_updated)
 	_tint_dirty = true
 
 
-## The BlendTree of §2.9 step 2, built in code (the run-time nodes are never saved, plan §2.5).
+## The BlendTree of §2.9 step 2 with P50's sources (the class notes), built in code (the run-time nodes are
+## never saved, plan §2.5): a chain of Blend2 nodes from the stance up to the death (SOURCE_CHAIN), the
+## flinches added on top, then the hands and first person's arms through filtered blends.
 func _blend_tree(lib: AnimationLibrary) -> AnimationNodeBlendTree:
 	var bt := AnimationNodeBlendTree.new()
 	var x := 0.0
+	var has := func(clip: String) -> bool: return lib.has_animation(clip)
 	var anim := func(node_name: StringName, clip: String) -> void:
 		var a := AnimationNodeAnimation.new()
-		a.animation = StringName(String(LIBRARY) + "/" + clip)
+		a.animation = StringName(String(LIBRARY) + "/" + (clip if has.call(clip) else "idle"))
 		bt.add_node(node_name, a, Vector2(x, 0))
 	var seek := func(node_name: StringName, src: StringName) -> void:
 		bt.add_node(node_name, AnimationNodeTimeSeek.new(), Vector2(x + 200, 0))
 		bt.connect_node(node_name, 0, src)
-	var blend := func(node_name: StringName, a: StringName, b: StringName, filter_side: String) -> void:
+	var clip_seek := func(clip: String) -> StringName:
+		anim.call(StringName(clip + "_clip"), clip)
+		seek.call(StringName(clip + "_seek"), StringName(clip + "_clip"))
+		return StringName(clip + "_seek")
+	var blend := func(node_name: StringName, a: StringName, b: StringName, filter: Array) -> void:
 		var n := AnimationNodeBlend2.new()
-		if filter_side != "":
+		if not filter.is_empty():
 			n.filter_enabled = true
-			for path: NodePath in _finger_paths(filter_side):
+			for path: NodePath in filter:
 				n.set_filter_path(path, true)
 		bt.add_node(node_name, n, Vector2(x + 400, 0))
 		bt.connect_node(node_name, 0, a)
 		bt.connect_node(node_name, 1, b)
 	anim.call(&"idle_clip", "idle")
-	anim.call(&"walk_clip", "walk")
-	seek.call(&"walk_seek", &"walk_clip")
-	anim.call(&"run_clip", "run")
-	seek.call(&"run_seek", &"run_clip")
-	blend.call(&"gait", &"walk_seek", &"run_seek", "")
-	blend.call(&"move", &"idle_clip", &"gait", "")
+	anim.call(&"brace_clip", "brace")
+	blend.call(&"brace", &"idle_clip", &"brace_clip", [])
+	blend.call(&"turn_side", clip_seek.call("turn_l"), clip_seek.call("turn_r"), [])
+	blend.call(&"turn", &"brace", &"turn_side", [])
+	blend.call(&"gait", clip_seek.call("walk"), clip_seek.call("run"), [])
+	blend.call(&"sprint", &"gait", clip_seek.call("sprint"), [])
+	blend.call(&"move", &"turn", &"sprint", [])
 	anim.call(&"charge_clip", "run")
 	seek.call(&"charge_seek", &"charge_clip")
-	blend.call(&"charge", &"move", &"charge_seek", "")
+	anim.call(&"charge_sprint_clip", "sprint")
+	seek.call(&"charge_sprint_seek", &"charge_sprint_clip")
+	blend.call(&"charge_gait", &"charge_seek", &"charge_sprint_seek", [])
+	blend.call(&"charge", &"move", &"charge_gait", [])
+	blend.call(&"stomp", &"charge", clip_seek.call("stomp_r"), [])
+	blend.call(&"roar", &"stomp", clip_seek.call("roar"), [])
+	blend.call(&"land", &"roar", clip_seek.call("land"), [])
 	anim.call(&"air_clip", "airborne")
-	blend.call(&"air", &"charge", &"air_clip", "")
-	anim.call(&"death_clip", "death")
-	seek.call(&"death_seek", &"death_clip")
-	blend.call(&"dead", &"air", &"death_seek", "")
+	blend.call(&"air", &"land", &"air_clip", [])
+	blend.call(&"dead", &"air", clip_seek.call("death"), [])
+	var top := &"dead"
+	for side: String in FLINCH_SIDES:
+		var add := AnimationNodeAdd2.new()
+		var node := StringName("flinch_" + side)
+		bt.add_node(node, add, Vector2(x + 600, 0))
+		bt.connect_node(node, 0, top)
+		bt.connect_node(node, 1, clip_seek.call("flinch_" + side))
+		top = node
 	anim.call(&"grip_r_clip", "grip_r")
-	blend.call(&"hand_r", &"dead", &"grip_r_clip", "r")
+	blend.call(&"hand_r", top, &"grip_r_clip", _finger_paths("r"))
 	anim.call(&"open_l_clip", "open_l")
-	blend.call(&"open_l", &"hand_r", &"open_l_clip", "l")
+	blend.call(&"open_l", &"hand_r", &"open_l_clip", _finger_paths("l"))
 	anim.call(&"grip_l_clip", "grip_l")
-	blend.call(&"grip_l", &"open_l", &"grip_l_clip", "l")
-	bt.connect_node(&"output", 0, &"grip_l")
+	blend.call(&"grip_l", &"open_l", &"grip_l_clip", _finger_paths("l"))
+	anim.call(&"fist_l_clip", "grip_fist")
+	blend.call(&"fist_l", &"grip_l", &"fist_l_clip", _finger_paths("l"))
+	anim.call(&"fp_clip", "fp_rest")
+	blend.call(&"fp", &"fist_l", &"fp_clip", _bone_paths(ARM_BONES))
+	bt.connect_node(&"output", 0, &"fp")
 	return bt
+
+
+## The track paths of `bones` ("Giant_rig/Skeleton3D:clavicle_l", ...).
+func _bone_paths(bones: Array) -> Array[NodePath]:
+	var out: Array[NodePath] = []
+	var sk_path := String(_gltf.get_path_to(_skeleton))
+	for b: Variant in bones:
+		if _skeleton.find_bone(str(b)) >= 0:
+			out.append(NodePath("%s:%s" % [sk_path, b]))
+	return out
 
 
 ## The track paths of one hand's fingers ("Giant_rig/Skeleton3D:index_01_r", ...).
@@ -300,57 +435,304 @@ func _follow_brain_hand() -> void:
 	_socket.transform = weapon_arm.transform * (hand.transform if hand != null else Transform3D(Basis(), Vector3(0, 0, -1.5)))
 
 
-## The legs' sources and the hands from the brain's state this frame (see the class notes).
+## The legs' sources, the flinches and the hands from the brain's state this frame (see the class notes).
 func _drive_tree(delta: float) -> void:
 	var s := rig_state()
 	var action: ActionDef = s.get("action")
+	var phase := int(s.get("phase", 0))
 	var speed := float(s.get("speed", 0.0))
 	var k := maxf(body_scale, 0.01)
 	var n := speed / k
 	var dead := bool(s.get("dead", false))
 	var on_floor := (actor as CharacterBody3D).is_on_floor() if actor is CharacterBody3D else true
+	var yaw_rate := _track_yaw_and_place(delta, dead)
 	_air = 0 if on_floor else _air + 1
 	var airborne := not dead and _air > AIR_FRAMES
-	var charging := not dead and not airborne and speed > 0.3 and motion_moves(action, int(s.get("phase", 0)))
+	if airborne:
+		_was_air = true
+		_air_t += delta
+		_land_t = -1.0
+	elif _was_air:
+		_was_air = false
+		_land_t = 0.0 if _air_t >= LAND_MIN_AIR_S else -1.0
+		_air_t = 0.0
+	if _land_t >= 0.0:
+		_land_t += delta
+		if _land_t > LAND_S or dead:
+			_land_t = -1.0
+	var landing := not dead and not airborne and _land_t >= 0.0
+	var pulse := action != null and action.hit_shape == "cylinder_pulse"
+	var roaring := not dead and not airborne and not landing and pulse and float(action.param("morale_damage", 0.0)) > 0.0
+	var stomping := not dead and not airborne and not landing and pulse and not roaring
+	var charging := not dead and not airborne and not landing and not pulse and speed > 0.3 and motion_moves(action, phase)
 	var knocked: bool = "knockback_velocity" in actor and (actor.get("knockback_velocity") as Vector3).length() > KNOCKBACK_STANCE_MPS
-	var walking := is_walking() and not dead and not airborne and not charging and not knocked
-	_legs = "dead" if dead else ("airborne" if airborne else ("motion" if charging else ("walking" if walking else "stance")))
-	_ease("dead", 1.0 if dead else 0.0, DEATH_RATE, delta)
-	_ease("air", 1.0 if airborne else 0.0, AIR_RATE, delta)
-	_ease("charge", 1.0 if charging else 0.0, BLEND_RATE, delta)
-	_ease("move", clampf(n, 0.0, 1.0) if walking else 0.0, BLEND_RATE, delta)
-	_ease("run", smoothstep(RUN_FROM, RUN_FULL, n), BLEND_RATE * 0.5, delta)
+	var free := not dead and not airborne and not landing and not pulse and not charging and not knocked
+	var walking := is_walking() and free
+	var turning := free and not walking and _turn_hold > 0.0
+	var state := int(s.get("state", 0))
+	var bracing := free and not walking and not turning and (state == CombatController.State.BLOCKING or bool(s.get("guarding", false)))
+	_legs = "dead" if dead else ("airborne" if airborne else ("landing" if landing else ("stomp" if stomping else (
+		"roar" if roaring else ("motion" if charging else ("walking" if walking else ("turning" if turning else (
+		"bracing" if bracing else "stance"))))))))
+	var sprint_share := speed / maxf(sprint_speed(), 0.01)
+	_ease("dead", 1.0 if dead else 0.0, float(FADE_RATES.dead), delta)
+	_ease("air", 1.0 if airborne else 0.0, float(FADE_RATES.air), delta)
+	_ease("land", 1.0 if landing else 0.0, float(FADE_RATES.land), delta)
+	_ease("stomp", 1.0 if stomping else 0.0, float(FADE_RATES.stomp), delta)
+	_ease("roar", 1.0 if roaring else 0.0, float(FADE_RATES.roar), delta)
+	_ease("charge", 1.0 if charging else 0.0, float(FADE_RATES.charge), delta)
+	_ease("charge_sprint", 1.0 if sprint_share >= SPRINT_FROM else 0.0, float(FADE_RATES.charge_sprint), delta)
+	_ease("move", clampf(n, 0.0, 1.0) if walking else 0.0, float(FADE_RATES.move), delta)
+	_ease("run", smoothstep(RUN_FROM, RUN_FULL, n), float(FADE_RATES.run), delta)
+	_ease("sprint", smoothstep(SPRINT_FROM, SPRINT_FULL, sprint_share), float(FADE_RATES.sprint), delta)
+	_ease("turn", 1.0 if turning else 0.0, float(FADE_RATES.turn), delta)
+	if turning:
+		_ease("turn_side", 0.0 if yaw_rate > 0.0 else (1.0 if yaw_rate < 0.0 else float(_w.turn_side)), float(FADE_RATES.turn_side), delta)
+	_ease("brace", 1.0 if bracing else 0.0, float(FADE_RATES.brace), delta)
+	# the hands: the off hand closed on a held body, open to reach or cast, a fist with the fists, else relaxed
 	var grab_phase := str(s.get("grab_phase", ""))
 	var gripping := grab_phase in ["hold", "crush", "throw"] and str(s.get("holding", "")) != ""
 	var open := grab_phase == "reach" or casting(action)
-	_ease("grip_l", 1.0 if gripping else 0.0, HAND_RATE, delta)
-	_ease("open_l", 1.0 if open and not gripping else 0.0, HAND_RATE, delta)
+	var family := weapon_family()
+	var fists := family in ["fists", "fist"] and not gripping and not open
+	_ease("grip_l", 1.0 if gripping else (0.0 if open or fists else RELAX_CURL), HAND_RATE, delta)
+	_ease("open_l", 1.0 if open and not gripping else (0.0 if gripping or fists else RELAX_OPEN), HAND_RATE, delta)
+	_ease("fist_l", 1.0 if fists else 0.0, HAND_RATE, delta)
+	_ease("fp", 1.0 if first_person_rest() else 0.0, float(FADE_RATES.fp), delta)
+	_set_grip_clip(str(GRIP_CLIPS.get(family, "grip_r")))
 	if charging:
 		_charge_phase += delta * speed / (stride_length_m * k) * PI
 	# Seek a clip only while its branch shows: a seeking branch is evaluated even at weight 0 (the tree's
 	# optimization skips only the branches that do not seek), and the brain sets the time of every shown one.
-	var live: float = (1.0 - float(_w.dead)) * (1.0 - float(_w.air))
-	var gait: float = live * (1.0 - float(_w.charge)) * float(_w.move)
+	var eff := source_weights()
 	var walk_t := fposmod(walk_phase() + PI * 0.5, TAU) / TAU
-	if gait * (1.0 - float(_w.run)) > 0.0:
+	var gait: float = eff.move
+	if gait * (1.0 - float(_w.run)) * (1.0 - float(_w.sprint)) > 0.0:
 		_tree.set(P_WALK_T, walk_t * float(_lengths.get("walk", 1.0)))
-	if gait * float(_w.run) > 0.0:
+	if gait * float(_w.run) * (1.0 - float(_w.sprint)) > 0.0:
 		_tree.set(P_RUN_T, walk_t * float(_lengths.get("run", 1.0)))
-	if live * float(_w.charge) > 0.0:
-		_tree.set(P_CHARGE_T, fposmod(_charge_phase + PI * 0.5, TAU) / TAU * float(_lengths.get("run", 1.0)))
-	if float(_w.dead) > 0.0:
+	if gait * float(_w.sprint) > 0.0:
+		_tree.set(P_SPRINT_T, walk_t * float(_lengths.get("sprint", 1.0)))
+	var charge_t := fposmod(_charge_phase + PI * 0.5, TAU) / TAU
+	if float(eff.charge) * (1.0 - float(_w.charge_sprint)) > 0.0:
+		_tree.set(P_CHARGE_T, charge_t * float(_lengths.get("run", 1.0)))
+	if float(eff.charge) * float(_w.charge_sprint) > 0.0:
+		_tree.set(P_CHARGE_SPRINT_T, charge_t * float(_lengths.get("sprint", 1.0)))
+	if float(eff.dead) > 0.0:
 		_tree.set(P_DEATH_T, clampf(fall_fraction(), 0.0, 1.0) * float(_lengths.get("death", 1.0)))
+	if float(eff.land) > 0.0:
+		_tree.set(P_LAND_T, clampf(maxf(_land_t, 0.0), 0.0, float(_lengths.get("land", 1.0))))
+	if float(eff.stomp) > 0.0 and action != null:
+		_tree.set(P_STOMP_T, stomp_fraction(action, phase, float(s.get("phase_fraction", 0.0))) * float(_lengths.get("stomp_r", 1.0)))
+	if float(eff.roar) > 0.0 and action != null:
+		_tree.set(P_ROAR_T, action_fraction(action, phase, float(s.get("phase_fraction", 0.0))) * float(_lengths.get("roar", 1.0)))
+	if float(eff.turn) * (1.0 - float(_w.turn_side)) > 0.0:
+		_tree.set(P_TURN_L_T, turn_time("l"))
+	if float(eff.turn) * float(_w.turn_side) > 0.0:
+		_tree.set(P_TURN_R_T, turn_time("r"))
 	for key: String in BLEND_PARAMS:
 		var v: float = _w[key]
 		if v != float(_sent.get(key, -1.0)):
 			_sent[key] = v
 			_tree.set(BLEND_PARAMS[key], v)
+	_drive_flinches(delta, action, phase)
+	_was_dead = dead
+
+
+## Each source's share of the final legs this frame (the chain's weights multiplied down from the death):
+## {"dead", "air", "land", "roar", "stomp", "charge", "move", "turn", "brace", "stance"}.
+func source_weights() -> Dictionary:
+	var out := {}
+	var rest := 1.0
+	for i in range(SOURCE_CHAIN.size() - 1, -1, -1):
+		var key: String = SOURCE_CHAIN[i]
+		out[key] = rest * float(_w[key])
+		rest *= 1.0 - float(_w[key])
+	out["stance"] = rest
+	return out
 
 
 func _ease(key: String, target: float, rate: float, delta: float) -> void:
 	_w[key] = lerpf(float(_w[key]), target, 1.0 - exp(-rate * delta))
 	if absf(float(_w[key]) - target) < 1e-3:
 		_w[key] = target
+
+
+## The actor's yaw this frame: the turn's clock and hold (a snap of more than SNAP_DEG, or a move of more than
+## TELEPORT_M x k, is a teleport: the springs reset and nothing turns), and a respawn's reset. Returns the yaw
+## rate (radians a second; positive turns left).
+func _track_yaw_and_place(delta: float, dead: bool) -> float:
+	var yaw := actor.global_rotation.y
+	var pos := actor.global_position
+	var rate := 0.0
+	if not _yaw_set:
+		_yaw_set = true
+	else:
+		var dy := wrapf(yaw - _yaw, -PI, PI)
+		var moved := pos.distance_to(_last_pos)
+		if absf(dy) > deg_to_rad(SNAP_DEG) or moved > TELEPORT_M * maxf(body_scale, 0.01):
+			_teleported()
+			_turn_hold = 0.0
+		elif delta > 0.0:
+			rate = dy / delta
+			if absf(rate) > deg_to_rad(TURN_MIN_DEG_S):
+				_turn_hold = TURN_HOLD_S
+				_turn_travel["l" if dy > 0.0 else "r"] = float(_turn_travel["l" if dy > 0.0 else "r"]) + absf(dy)
+			else:
+				_turn_hold = maxf(0.0, _turn_hold - delta)
+				rate = 0.0
+	_yaw = yaw
+	_last_pos = pos
+	if _was_dead and not dead:
+		_teleported()   # a respawn
+	return rate
+
+
+func _teleported() -> void:
+	teleports += 1
+	totals["teleports"] = int(totals.get("teleports", 0)) + 1
+	if _secondary != null:
+		_secondary.reset()
+
+
+## A turn clip's time from the yaw travelled that way (a quarter turn a cycle).
+func turn_time(side: String) -> float:
+	var cyc := deg_to_rad(TURN_CYCLE_DEG)
+	return fposmod(float(_turn_travel[side]), cyc) / cyc * float(_lengths.get("turn_" + side, 1.0))
+
+
+## The sprint's speed for this actor (m/s): its profile's walk speed x the sprint action's speed_mult (7.5 at
+## stage 1); 1.5 x k x 5 without a profile.
+func sprint_speed() -> float:
+	var profile: Variant = actor.get("profile") if actor != null and "profile" in actor else null
+	var walk := float((profile as Dictionary).get("walk_speed_mps", 5.0)) if typeof(profile) == TYPE_DICTIONARY else 5.0 * body_scale
+	var def: Variant = actor.get("sprint_def") if actor != null and "sprint_def" in actor else null
+	var mult := float((def as ActionDef).param("speed_mult", 1.5)) if def is ActionDef else 1.5
+	return walk * mult
+
+
+## The fraction of the whole of `action` at `phase` / `f` (windup, active and recovery by their ticks).
+static func action_fraction(action: ActionDef, phase: int, f: float) -> float:
+	var w := float(action.windup_ticks)
+	var a := float(action.active_ticks)
+	var r := float(action.recovery_ticks)
+	var total := maxf(w + a + r, 1.0)
+	match phase:
+		ActionDef.Phase.WINDUP:
+			return clampf(f, 0.0, 1.0) * w / total
+		ActionDef.Phase.ACTIVE:
+			return (w + clampf(f, 0.0, 1.0) * a) / total
+		ActionDef.Phase.RECOVERY:
+			return (w + a + clampf(f, 0.0, 1.0) * r) / total
+	return 1.0 if phase == ActionDef.Phase.DONE else 0.0
+
+
+## The stomp clip's share (0..1) at `phase` / `f`: the windup onto the lift and the hold, [0, STOMP_PLANT], so
+## the foot comes down as ACTIVE starts; ACTIVE and RECOVERY onto the plant's settle, [STOMP_PLANT, 1].
+static func stomp_fraction(action: ActionDef, phase: int, f: float) -> float:
+	if phase == ActionDef.Phase.WINDUP:
+		return clampf(f, 0.0, 1.0) * STOMP_PLANT
+	var a := float(action.active_ticks)
+	var r := float(action.recovery_ticks)
+	var after := 0.0
+	if phase == ActionDef.Phase.ACTIVE:
+		after = clampf(f, 0.0, 1.0) * a / maxf(a + r, 1.0)
+	elif phase == ActionDef.Phase.RECOVERY:
+		after = (a + clampf(f, 0.0, 1.0) * r) / maxf(a + r, 1.0)
+	elif phase == ActionDef.Phase.DONE:
+		after = 1.0
+	return STOMP_PLANT + (1.0 - STOMP_PLANT) * after
+
+
+## The family of the weapon the actor carries ("club", "sword", "fists", "tree", ...; "club" without one).
+func weapon_family() -> String:
+	var w: Variant = actor.get("weapon") if actor != null and "weapon" in actor else null
+	if typeof(w) != TYPE_DICTIONARY:
+		return "club"
+	var fam := str((w as Dictionary).get("family", ""))
+	return fam if fam != "" else WeaponVisuals.shape_of(w)
+
+
+func _set_grip_clip(clip: String) -> void:
+	if clip == _grip_clip or _tree == null:
+		return
+	var lib := clip_library()
+	if lib == null or not lib.has_animation(clip):
+		clip = "grip_r"
+	_grip_clip = clip
+	var node := (_tree.tree_root as AnimationNodeBlendTree).get_node(&"grip_r_clip") as AnimationNodeAnimation
+	node.animation = StringName(String(LIBRARY) + "/" + clip)
+
+
+## The grip clip the right fist takes now ("grip_club", ...).
+func grip_clip() -> String:
+	return _grip_clip
+
+
+## True in first person while the brain is at rest: no action, no block, dodge or hold (the arms take fp_rest).
+func first_person_rest() -> bool:
+	var cam: Variant = actor.get("camera_rig") if actor != null and "camera_rig" in actor else null
+	if cam == null or not (cam as Object).has_method("is_first_person") or not bool((cam as Object).call("is_first_person")):
+		return false
+	var s := rig_state()
+	return s.get("action") == null and typeof(s.get("pose_override")) != TYPE_DICTIONARY and not bool(s.get("guarding", false)) \
+		and int(s.get("state", 0)) == CombatController.State.LOCOMOTION and not bool(s.get("dead", false))
+
+
+# --------------------------------------------------------------------------- flinches (P50)
+
+## A hit taken from `from_local` (the attacker's place in the actor's own frame: -Z his front, +X his right),
+## at `strength` (the flash's, 0..1): the flinch of that side, additive on the upper body (plan M11 §2.3).
+## Refused during an attack's ACTIVE phase (the tested swing keeps its arm). Presentation only: called by
+## HitFeedback, read by nothing.
+func flinch(from_local: Vector3, strength: float) -> void:
+	if _tree == null or strength <= 0.0:
+		return
+	var s := rig_state()
+	var action: ActionDef = s.get("action")
+	if action != null and action.is_attack() and int(s.get("phase", 0)) == ActionDef.Phase.ACTIVE:
+		flinches_refused += 1
+		totals["flinches_refused"] = int(totals.get("flinches_refused", 0)) + 1
+		return
+	var side := flinch_side(from_local)
+	_flinch[side] = {"t": 0.0, "w": clampf(strength * FLINCH_GAIN, 0.0, 1.0)}
+	flinches += 1
+	totals["flinches"] = int(totals.get("flinches", 0)) + 1
+
+
+## The side a hit from `from_local` lands on: "f" (in front, -Z), "b", "l" or "r" (+X).
+static func flinch_side(from_local: Vector3) -> String:
+	if absf(from_local.x) > absf(from_local.z):
+		return "r" if from_local.x > 0.0 else "l"
+	return "f" if from_local.z <= 0.0 else "b"
+
+
+func _drive_flinches(delta: float, action: ActionDef, phase: int) -> void:
+	var active := action != null and action.is_attack() and phase == ActionDef.Phase.ACTIVE
+	for side: String in FLINCH_SIDES:
+		var param := StringName("parameters/flinch_%s/add_amount" % side)
+		var seek_param := StringName("parameters/flinch_%s_seek/seek_request" % side)
+		if not _flinch.has(side):
+			continue
+		var f: Dictionary = _flinch[side]
+		f.t = float(f.t) + delta
+		if active:
+			f.w = float(f.w) * exp(-FLINCH_CUT_RATE * delta)
+		var length := float(_lengths.get("flinch_" + side, 0.3))
+		if float(f.t) >= length or float(f.w) < 1e-3:
+			_flinch.erase(side)
+			_tree.set(param, 0.0)
+			continue
+		_tree.set(seek_param, float(f.t))
+		_tree.set(param, float(f.w))
+
+
+## The flinches running now: side -> weight (tests).
+func flinch_weights() -> Dictionary:
+	var out := {}
+	for side: String in _flinch:
+		out[side] = float(_flinch[side].w)
+	return out
 
 
 ## True while `action`'s scripted `motion` moves the giant: its block names the phase that moves
@@ -458,7 +840,16 @@ func apply_look(look: Dictionary) -> void:
 	_look = look.duplicate(true)
 	if _model != null:
 		GiantLook.apply(_model, _model.index, look)
+	if _secondary != null:
+		_secondary.configure(SecondaryMotion.chains_for(_model.index, shown_meshes()))   # configure() resets
 	_tint_dirty = true
+
+
+## Growth rescales the body: the springs start again at rest at the new size (P50).
+func set_body_scale(k: float) -> void:
+	super.set_body_scale(k)
+	if _secondary != null:
+		_secondary.reset()
 
 
 func model() -> GiantModel:
@@ -477,6 +868,11 @@ func modifier() -> PoseBrainModifier:
 	return _mod
 
 
+## The hair's, beard's and cape's springs (null without the layers).
+func secondary() -> SecondaryMotion:
+	return _secondary
+
+
 func animation_tree() -> AnimationTree:
 	return _tree
 
@@ -485,8 +881,8 @@ func layers_on() -> bool:
 	return _layers
 
 
-## This frame's source of the legs: "dead", "airborne", "motion", "walking" or "stance" (the class notes),
-## and the tree's blend weights (move, run, charge, air, dead, open_l, grip_l).
+## This frame's source of the legs: "dead", "airborne", "landing", "stomp", "roar", "motion", "walking",
+## "turning", "bracing" or "stance" (the class notes), and the tree's blend weights (BLEND_PARAMS' keys).
 func legs_source() -> String:
 	return _legs
 
@@ -542,8 +938,12 @@ func shown_meshes() -> Array:
 
 
 ## This rig's numbers (plan §2.9): the look, the layers, posed frames, modifier runs, held-visual writes,
-## the meshes shown and the brain's footfalls.
+## the meshes shown and the brain's footfalls; P50: secondary-motion frames, the chains running, the flinches
+## played and refused, the teleports the springs reset on.
 func skin_stats() -> Dictionary:
 	return {"look": look_name(), "layers": _layers, "posed_frames": posed_frames,
 		"modifier_runs": _mod.runs if _mod != null else 0, "held_visual_writes": held_visual_writes,
-		"shown_meshes": shown_meshes(), "rig_footfalls": footfalls}
+		"shown_meshes": shown_meshes(), "rig_footfalls": footfalls,
+		"secondary_frames": _secondary.frames if _secondary != null else 0,
+		"chains": Array(_secondary.chains) if _secondary != null else [], "flinches": flinches,
+		"flinches_refused": flinches_refused, "teleports": teleports}

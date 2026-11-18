@@ -194,3 +194,80 @@ func test_the_pieces() -> void:
 	assert_eq(partial.source, "index", "an index with both shoulders is read")
 	assert_eq(partial.shoulder.r, Vector3(0.4, 3.0, 0.0), "its shoulder")
 	assert_eq(partial.landmarks.elbow_r, TipMatching.DEFAULT_LANDMARKS.elbow_r, "a missing joint takes the default")
+
+
+## P50 (plan M11 §2.3, §3.3 item 5): the reach extension. Over the exported landmarks, every ACTIVE sample of
+## every player weapon arc at stages 1, 3, 4 and 6: a weapon that fits its stage is matched exactly as before
+## (no extension, the same grip and direction: M10's contract unchanged); a weapon carried past its fit stage
+## (an unreforged club, sword or hammer at stage 4 or 6) is brought by the clavicle, the lean and the pelvis -
+## each within its bound, in that order - so that its outer half lies within one capsule radius of the tested
+## segment and at most 15 degrees off it, or the miss is the measured limit of honest reach (REACH_LIMIT_RADII).
+const REACH_LIMIT_RADII := 1.0
+
+
+func test_the_reach_extension_brings_weapons_past_their_fit_stage_into_the_capsule() -> void:
+	var tm := TipMatching.from_index({})
+	if ResourceLoader.exists(MODEL):
+		var root := (load(MODEL) as PackedScene).instantiate()
+		tm = TipMatching.from_index(root.get("index"))
+		root.free()
+	var fitted := 0
+	var small := 0
+	var worst_before := 0.0
+	var worst_after := 0.0
+	var worst_deg := 0.0
+	var used := {"clavicle_m": 0.0, "lean_deg": 0.0, "pelvis_m": 0.0}
+	var steps := {"none": 0, "clavicle_m": 0, "lean_deg": 0, "pelvis_m": 0}
+	for stage: int in STAGES:
+		var profile := PlayerGrowth.find_profile(GameData.records_of_type("growth_profile"), stage)
+		for rec: Dictionary in player_weapons(stage, profile):
+			var past := PlayerEquipment.too_small_at(rec, stage)
+			var reported := false
+			for a: ActionDef in arcs_of(rec, stage):
+				if a.arc.is_empty() or a.active_ticks <= 0:
+					continue
+				var offset := PlayerAttack.offset_for(profile, a.id)
+				for i in range(0, a.active_ticks, 1 if past else 3):
+					var f := float(i + 1) / float(a.active_ticks)
+					var g := TipMatching.swing_geometry(profile, rec, stage, a, f, offset)
+					var seg := TipMatching.tested_segment(g.pivot, g.dir, g.arm, g.weapon)
+					var m0 := tm.match_swing(g.pivot, g.dir, g.arm, g.weapon)
+					var m := tm.match_swing_reach(tm.shoulder.r, g.pivot, g.dir, g.arm, g.weapon, g.radius)
+					var ang := TipMatching.angle_deg(m.weapon_dir, g.dir)
+					var why := ""
+					if not past:
+						fitted += 1
+						if float(m.clavicle_m) + float(m.lean_deg) + float(m.pelvis_m) > 0.0:
+							why = "a fitted weapon moved the body (%s)" % [[m.clavicle_m, m.lean_deg, m.pelvis_m]]
+						elif not (m.grip as Vector3).is_equal_approx(m0.grip) or not (m.weapon_dir as Vector3).is_equal_approx(m0.weapon_dir):
+							why = "a fitted weapon's grip changed"
+					else:
+						small += 1
+						var d0 := TipMatching.outer_half_deviation(m0.grip, m0.weapon_dir, g.weapon, seg[0], seg[1])
+						worst_before = maxf(worst_before, d0 / float(g.radius))
+						worst_after = maxf(worst_after, float(m.deviation) / float(g.radius))
+						worst_deg = maxf(worst_deg, ang)
+						for key: String in used:
+							used[key] = maxf(float(used[key]), float(m[key]))
+						var step := "pelvis_m" if float(m.pelvis_m) > 0.0 else ("lean_deg" if float(m.lean_deg) > 0.0 else (
+							"clavicle_m" if float(m.clavicle_m) > 0.0 else "none"))
+						steps[step] = int(steps[step]) + 1
+						if float(m.clavicle_m) > TipMatching.REACH_CLAVICLE_M + 1e-6 or float(m.lean_deg) > TipMatching.REACH_LEAN_DEG + 1e-6 \
+								or float(m.pelvis_m) > TipMatching.REACH_PELVIS_M + 1e-6:
+							why = "the extension passes its bounds (%s)" % [[m.clavicle_m, m.lean_deg, m.pelvis_m]]
+						elif (float(m.lean_deg) > 0.0 and float(m.clavicle_m) < TipMatching.REACH_CLAVICLE_M - 1e-6) \
+								or (float(m.pelvis_m) > 0.0 and float(m.lean_deg) < TipMatching.REACH_LEAN_DEG - 1e-6):
+							why = "a later step before an earlier one was used whole"
+						elif float(m.deviation) > REACH_LIMIT_RADII * float(g.radius) + 1e-4:
+							why = "the outer half strays %.2f radii" % (float(m.deviation) / float(g.radius))
+					if why == "" and ang > TipMatching.MAX_ANGLE_DEG + 1e-3:
+						why = "%.1f degrees off the tested direction" % ang
+					if why == "" and float(m.fist_error) > TipMatching.FIST_TOLERANCE_M:
+						why = "the solve misses the grip by %.4f m" % float(m.fist_error)
+					if why != "" and not reported:
+						reported = true
+						fail("%s at stage %d, %s f=%.2f: %s" % [rec.id, stage, a.id, f, why])
+	checks += 1
+	assert_true(fitted > 200 and small > 40, "fitted and past-fit samples measured (%d, %d)" % [fitted, small])
+	print("    test_tip_matching: the reach extension - %d past-fit samples, the outer half %.2f -> %.2f radii, worst %.1f deg; most used: clavicle %.3f m, lean %.1f deg, pelvis %.3f m; last step used %s" % [
+		small, worst_before, worst_after, worst_deg, used.clavicle_m, used.lean_deg, used.pelvis_m, steps])
