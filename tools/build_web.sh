@@ -3,8 +3,9 @@
 # (web/launcher.html) loads when it is published as a claude.ai Artifact.
 #
 # Usage:  tools/build_web.sh [--preset=NAME] [--out=DIR] [--budget-mb=N] [--giant-share-mb=N]
-#                             [--parts=N] [path-to-godot-4.6.3]
-#         tools/build_web.sh --check-size=DIR [--budget-mb=N] [--giant-share-mb=N] [--parts=N]
+#                             [--version=V] [--parts=N] [path-to-godot-4.6.3]
+#         tools/build_web.sh --check-size=DIR [--budget-mb=N] [--giant-share-mb=N] [--version=V]
+#                             [--parts=N]
 #   --preset=Web          the release (default): no test content (scenes/test/, assets/test_world/,
 #                         data/test/ are excluded; P22), into builds/web/
 #   --preset="Web (test)" the same build with the test levels and records, for the web checks that
@@ -12,11 +13,14 @@
 #   --out=DIR             the output folder (default per preset, above; builds/web_parts<N> with
 #                         --parts)
 #   --budget-mb=N         the shipped index.pck budget in MB (default: the milestone's, from the
-#                         project's version: 7.5 MB up to M6, 21 MB at M7, 23 MB after; decision 8)
+#                         project's version: 7.5 MB up to M6, 21 MB at M7, 23 MB at M8 and M9, 26 MB
+#                         from M10 on; decision 8 and the owner's answer 1 of plan M10 §0.6)
+#   --version=V           P45: judge the build as version V (0.10.0-m10) instead of the project's
+#                         config/version - only the milestone's budget reads it (tests use it)
 #   --giant-share-mb=N    P41 (plan M10 §2.12): the most the realistic giant's files may add to the
 #                         shipped pack (the GIANT_SHARE line, tools/pck_files.py --giant-share);
-#                         default the budget less 18.4 MB: 4.6 MB at the 23 MB budget, and the
-#                         headroom grows with the budget (the owner's 26 MB answer: 7.6 MB)
+#                         default the budget less 18.4 MB: 4.6 MB at the 23 MB budget and 7.6 MB
+#                         at M10's 26 MB, where the Web pack also holds the 1024 px maps (tex_hi/)
 #   --parts=N             ship the packed pck in exactly N parts (P23: the forced two-part build of
 #                         the M6 acceptance, --parts=2); without it the pck ships in as many parts
 #                         of at most 15 MB as it needs, one part while it fits
@@ -62,6 +66,7 @@ PRESET="Web"
 OUT=""
 BUDGET_MB=""
 GIANT_SHARE_MB=""
+VERSION=""
 PARTS=""
 CHECK_SIZE=""
 # The largest part of the packed pck (P23): under the host's 15 MB cap for binary files and its
@@ -74,9 +79,10 @@ for arg in "$@"; do
 		--out=*) OUT="${arg#--out=}" ;;
 		--budget-mb=*) BUDGET_MB="${arg#--budget-mb=}" ;;
 		--giant-share-mb=*) GIANT_SHARE_MB="${arg#--giant-share-mb=}" ;;
+		--version=*) VERSION="${arg#--version=}" ;;
 		--parts=*) PARTS="${arg#--parts=}" ;;
 		--check-size=*) CHECK_SIZE="${arg#--check-size=}" ;;
-		-h|--help) sed -n '2,57p' "$0"; exit 0 ;;
+		-h|--help) sed -n '2,61p' "$0"; exit 0 ;;
 		--*) echo "build_web.sh: unknown option '$arg'" >&2; exit 2 ;;
 		*) GODOT="$arg" ;;
 	esac
@@ -97,20 +103,31 @@ OUT="${OUT:-$DEFAULT_OUT}"
 RELEASE=0
 if [ "$PRESET" = "Web" ] && [ "$OUT" = "builds/web" ] && [ -z "$PARTS" ]; then RELEASE=1; fi
 
-# The milestone's budget for the shipped index.pck (decision 8), from config/version (0.7.0-m7: 21 MB).
+# The milestone's budget for the shipped index.pck (decision 8), from config/version (0.7.0-m7: 21 MB)
+# or --version. P45 (plan M10 §0.6, the owner's answer 1): 26 MB from -m10 on, still in parts of at
+# most 15 MB.
 if [ -z "$BUDGET_MB" ]; then
-	MILESTONE="$(sed -n 's/^config\/version="[^"]*-m\([0-9]*\)"$/\1/p' project.godot | head -n 1)"
+	if [ -n "$VERSION" ]; then
+		MILESTONE="$(printf '%s\n' "$VERSION" | sed -n 's/^.*-m\([0-9][0-9]*\)$/\1/p')"
+		if [ -z "$MILESTONE" ]; then
+			echo "build_web.sh: --version wants a version that ends in -m<milestone> (got '$VERSION')" >&2
+			exit 2
+		fi
+	else
+		MILESTONE="$(sed -n 's/^config\/version="[^"]*-m\([0-9]*\)"$/\1/p' project.godot | head -n 1)"
+	fi
 	MILESTONE="${MILESTONE:-6}"
 	if [ "$MILESTONE" -le 6 ]; then BUDGET_MB=7.5
 	elif [ "$MILESTONE" -le 7 ]; then BUDGET_MB=21
-	else BUDGET_MB=23
+	elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23
+	else BUDGET_MB=26
 	fi
 fi
 case "$BUDGET_MB" in
 	''|.|*[!0-9.]*|*.*.*) echo "build_web.sh: --budget-mb wants a number of MB (got '$BUDGET_MB')" >&2; exit 2 ;;
 esac
 # P41 (plan M10 §2.12): the giant's share of the shipped pack, 4.6 MB at the 23 MB budget; it keeps the
-# same 18.4 MB for everything else when the budget changes.
+# same 18.4 MB for everything else when the budget changes (P45: 7.6 MB at M10's 26 MB).
 if [ -z "$GIANT_SHARE_MB" ]; then
 	GIANT_SHARE_MB="$(awk "BEGIN { v = $BUDGET_MB - 18.4; if (v < 0) v = 0; printf \"%.1f\", v }")"
 fi

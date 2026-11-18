@@ -79,8 +79,14 @@ registerProcessor('godot-processor', StubDriver);\`;
     node.port.onmessage = () => node.port.postMessage({ cmd: 'data' });
     node.connect(ctx.destination);
     console.log('AUDIO_MUSIC ' + JSON.stringify({ set: 'music.title', state: 'title' }));
+    // New Game (Enter) opens the creator; only Begin (Ctrl+Enter) there starts the Valley's music.
+    let creator = false;
+    let begun = false;
     window.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter') return;
+      if (e.key !== 'Enter' || begun) return;
+      if (!e.ctrlKey) { creator = true; return; }
+      if (!creator) return;
+      begun = true;
       console.log('AUDIO_MUSIC ' + JSON.stringify({ set: 'music.stub', state: 'zone' }));
       // Three slow frames inside the check's recording (it arms about 5.5-5.8 s after this mark and
       // records --music-s=4 s), none across its start or end.
@@ -151,6 +157,8 @@ console.log('music: the stand-in mixer plays without a gap');
   check(r.out.includes("the plan's criterion (no silent run over 50 ms in 3 s of music): MET"), 'it prints the criterion as met');
   check(c.met === true && c.holes === 0, `the report's criterion is met (${JSON.stringify(c)})`);
   check(typeof c.mode === 'string' && c.mode.startsWith('default'), 'the report names the default mode');
+  check(rep.begin_presses === 1 && typeof rep.new_game_to_hollow_s === 'number' && rep.new_game_to_hollow_s >= 4,
+    `New Game (Enter) opened the creator and one Begin (Ctrl+Enter) started the Valley (${rep.begin_presses} press(es), ${rep.new_game_to_hollow_s} s)`);
 }
 
 console.log('stutter: three slow frames of 150 ms leave the stand-in mixer unserved');

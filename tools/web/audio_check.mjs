@@ -8,7 +8,8 @@
 //     source node; one attached to a source (Godot plays a copy of the registered buffer each time)
 //     counts while that source plays. The live sample bytes are their sum, sampled at every change;
 // presses Play, waits for the title's music, presses New Game (Enter: the title's first focus with no
-// saved game) and records
+// saved game), then Begin in the character creator it opens (Ctrl+Enter; M10: every new game passes
+// through the creator), and records
 //   * sound within 5 s of the Hollow (the zone set's start: the music director prints an AUDIO_MUSIC
 //     line under --audio-stats, which the check passes);
 //   * no silent run longer than 50 ms in the output during 60 s of the Hollow's music (an underrun
@@ -67,6 +68,11 @@ import {
 const TITLE = 'Giantborn: Age of Titans';
 const SOUND_WITHIN_S = 5;
 const VALLEY = 'level.valley';
+// The creator (M10): the seconds it is given to open before Begin, how long a Begin is given before
+// the next press, and the most presses.
+const CREATOR_SETTLE_S = 4;
+const BEGIN_AGAIN_S = 40;
+const BEGIN_PRESSES = 4;
 // The page's last console lines kept for a failure's report (M6 gate).
 const CONSOLE_TAIL = 200;
 
@@ -282,7 +288,25 @@ async function main() {
     await sleep(1500);
     await page.focus('#game-canvas').catch(() => {});
     await page.keyboard.press('Enter');   // New Game: the title's first focus without a saved game
-    const hollow = await waitFor('the Hollow\'s music', (m) => m.state === 'zone');
+    // M10 (P45): New Game opens the creator; Begin (Ctrl+Enter) starts the Valley. The creator is given
+    // CREATOR_SETTLE_S to open, and Begin is pressed again while no zone music has come.
+    let hollow = null;
+    report.begin_presses = 0;
+    const beginBy = Date.now() + opts.timeoutS * 1000;
+    while (hollow === null) {
+      if (Date.now() > beginBy) throw new Error('timed out waiting for the Hollow\'s music');
+      if (report.begin_presses < BEGIN_PRESSES) {
+        await sleep(report.begin_presses === 0 ? CREATOR_SETTLE_S * 1000 : 0);
+        await page.focus('#game-canvas').catch(() => {});
+        await page.keyboard.press('Control+Enter');
+        report.begin_presses += 1;
+      }
+      const until = Date.now() + BEGIN_AGAIN_S * 1000;
+      while (hollow === null && Date.now() < until) {
+        hollow = (await marks()).find((m) => m.state === 'zone') || null;
+        if (hollow === null) await sleep(250);
+      }
+    }
     report.hollow_set = hollow.set;
     report.new_game_to_hollow_s = Math.round((hollow.page_ms - title.page_ms) / 100) / 10;
     report.hollow_context_state = hollow.ctx_state;

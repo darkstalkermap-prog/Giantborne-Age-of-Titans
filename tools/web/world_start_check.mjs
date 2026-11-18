@@ -3,13 +3,15 @@
 // hand, the 0.8.0-m8 release wrote the check down): the Web release in headless Chromium, the page as a
 // player opens it (play.html with no ?args=), each part in a fresh browser profile (no saved game):
 //   * Play: the engine starts with no game arguments - the title - and writes no save while the title
-//     shows; Enter there (New Game, the title's first focus with no saved game) starts the Valley, and
-//     the first save holds "level": "level.valley";
+//     shows; Enter there (New Game, the title's first focus with no saved game) opens the character
+//     creator (M10: every new game passes through it) and Ctrl+Enter (Begin) starts the Valley; the
+//     first save holds "level": "level.valley" and the look the creator made;
 //   * Start in the open world: one press only arms the button - its label reads "Press again to start
 //     a new game in the open world", it is marked armed, the gate stays and nothing of the engine is
 //     fetched; left alone it disarms after 6 s; pressed twice it starts the engine with
-//     ['--', '--mode=world'], and the first save holds "level": "level.world" (its checkpoint, the
-//     giant's stage and level are reported);
+//     ['--', '--mode=world', '--creator'] (P45, plan M10 §3.5), the title opens the creator at once,
+//     Ctrl+Enter (Begin) starts the world and the first save holds "level": "level.world" and the look
+//     (its checkpoint, the giant's stage and level are reported);
 //   * 0 console errors and no failed request in either part.
 // The engine's arguments are read where web/launcher.html hands them over: the copy of the export's
 // index.js served to the page remembers the configuration the launcher's `new Engine({... args ...})`
@@ -25,8 +27,9 @@
 //        [--timeout-s=300] [--shots=DIR] [--json=FILE] [--headed]
 //   --settle-s     seconds the title is given to draw once the engine has started, before Enter
 //   --timeout-s    the longest wait for the engine to start and for each part's first save
-//   --shots=DIR    also saves title.png (the title, before Enter) and world.png (the open world once
-//                  its first save is written) at the viewport's size
+//   --shots=DIR    also saves title.png (the title, before Enter), world_creator.png (the creator the
+//                  open-world start opens) and world.png (the open world once its first save is
+//                  written) at the viewport's size
 //   --json=FILE    the report
 // Needs Playwright (PLAYWRIGHT_MODULE, NODE_PATH or /opt/node-tools/node_modules) and its Chromium
 // (PLAYWRIGHT_BROWSERS_PATH, default /opt/pw-browsers when that folder exists). Software WebGL
@@ -39,14 +42,16 @@ import { extname, join, normalize, resolve, sep } from 'node:path';
 
 const TITLE = 'Giantborn: Age of Titans';
 // web/launcher.html: the armed label, the arming's length (worldTimer = setTimeout(disarmWorld, 6000))
-// and the open-world start's arguments (start(['--', '--mode=world'])).
+// and the open-world start's arguments (start(['--', '--mode=world', '--creator'])).
 const ARMED_LABEL = 'Press again to start a new game in the open world';
 const DISARM_MS = 6000;
-const WORLD_ARGS = ['--', '--mode=world'];
-// A part presses Enter on the title again when no save came this long after the last press (the title
-// was still drawing), at most this many times in all.
+const WORLD_ARGS = ['--', '--mode=world', '--creator'];
+// A part presses its keys again when no save came this long after the last press (the title was still
+// preparing, the creator still opening), at most this many times in all.
 const ENTER_AGAIN_S = 45;
-const ENTER_PRESSES = 3;
+const ENTER_PRESSES = 4;
+// The creator is given this long to open before Begin (Ctrl+Enter) is pressed.
+const CREATOR_SETTLE_S = 6;
 // Where the export's index.js builds an engine from the launcher's configuration (Godot 4.6's Engine:
 // the constructor the launcher's `new Engine(...)` returns), and the line the served copy adds after it.
 const ENGINE_CONFIG_LINE = 'this.config = new InternalConfig(initConfig);';
@@ -256,14 +261,17 @@ function saveSummary(slot) {
   return {
     path: slot.path, level: d.level, build_version: d.build_version, respawn: cp.respawn, reason: cp.reason,
     growth_stage: ch.growth_stage, character_level: ch.level, world_entered: d.progress ? d.progress.world_entered : undefined,
+    has_appearance: !!ch.appearance && typeof ch.appearance === 'object' && Object.keys(ch.appearance).length > 0,
   };
 }
 
 // Waits for the slot's first save that reads as a document (a file caught mid-sync is read again);
-// presses Enter again (pressEnter) when none came ENTER_AGAIN_S after the last press. Returns
-// { slot, seconds, presses } (slot: the last one seen, null when there was none).
-async function waitForSave(page, timeoutS, pressEnter) {
+// presses the part's keys again (pressAgain, an async function; null for none) when none came
+// ENTER_AGAIN_S after the last press. Returns { slot, seconds, presses } (slot: the last one seen, null
+// when there was none).
+async function waitForSave(page, timeoutS, pressAgain) {
   const t0 = Date.now();
+  const pressEnter = pressAgain !== null;
   let presses = pressEnter ? 1 : 0;
   let lastPress = Date.now();
   let last = null;
@@ -272,7 +280,7 @@ async function waitForSave(page, timeoutS, pressEnter) {
     if (slot && slot.doc) return { slot, seconds: Math.round((Date.now() - t0) / 100) / 10, presses };
     if (slot) last = slot;
     if (pressEnter && last === null && presses < ENTER_PRESSES && Date.now() - lastPress > ENTER_AGAIN_S * 1000) {
-      await page.keyboard.press('Enter');
+      await pressAgain();
       presses += 1;
       lastPress = Date.now();
     }
@@ -303,21 +311,28 @@ async function partPlay(browser, opts, origin) {
     const atTitle = await readSlot(page);
     out.save_at_title = saveSummary(atTitle);
     if (atTitle) problems.push('a save was written while the title showed');
-    await page.keyboard.press('Enter');
-    const saved = await waitForSave(page, opts.timeoutS, true);
+    // New Game opens the creator; Begin (Ctrl+Enter) starts the Valley.
+    const newGameThenBegin = async () => {
+      await page.keyboard.press('Enter');
+      await sleep(CREATOR_SETTLE_S * 1000);
+      await page.keyboard.press('Control+Enter');
+    };
+    await newGameThenBegin();
+    const saved = await waitForSave(page, opts.timeoutS, newGameThenBegin);
     out.enter_presses = saved.presses;
     out.first_save_s = saved.seconds;
     out.first_save = saveSummary(saved.slot);
-    if (!saved.slot) problems.push(`no save within ${opts.timeoutS} s of Enter on the title`);
+    if (!saved.slot) problems.push(`no save within ${opts.timeoutS} s of Enter on the title and Ctrl+Enter in the creator`);
     else if (!saved.slot.doc || saved.slot.doc.level !== 'level.valley') {
       problems.push(`the first save after New Game holds level ${JSON.stringify(out.first_save && out.first_save.level)} (level.valley wanted)`);
-    }
+    } else if (!out.first_save.has_appearance) problems.push('the first save after New Game holds no look (the creator was skipped)');
   }
   await context.close();
   return finish(out, seen, problems);
 }
 
-// Start in the open world: one press arms, the arming lapses, two presses start --mode=world.
+// Start in the open world: one press arms, the arming lapses, two presses start --mode=world --creator;
+// Begin in the creator starts the world.
 async function partWorld(browser, opts, origin) {
   const { context, page, seen, title, hooked } = await openPage(browser, opts, origin);
   const problems = [];
@@ -353,13 +368,25 @@ async function partWorld(browser, opts, origin) {
     if (JSON.stringify(state.engine_args) !== JSON.stringify(WORLD_ARGS)) {
       problems.push(`the engine started with ${JSON.stringify(state.engine_args)} (${JSON.stringify(WORLD_ARGS)} wanted)`);
     }
-    const saved = await waitForSave(page, opts.timeoutS, false);
+    // the title opens the creator by itself: no save until Begin
+    await sleep(opts.settleS * 1000);
+    const inCreator = await readSlot(page);
+    out.save_in_creator = saveSummary(inCreator);
+    if (inCreator) problems.push('a save was written before Begin (the world start skipped the creator)');
+    if (opts.shots) await page.screenshot({ path: join(opts.shots, 'world_creator.png') });
+    const begin = async () => {
+      await page.focus('#game-canvas').catch(() => {});
+      await page.keyboard.press('Control+Enter');
+    };
+    await begin();
+    const saved = await waitForSave(page, opts.timeoutS, begin);
+    out.begin_presses = saved.presses;
     out.first_save_s = saved.seconds;
     out.first_save = saveSummary(saved.slot);
     if (!saved.slot) problems.push(`no save within ${opts.timeoutS} s of the open-world start`);
     else if (!saved.slot.doc || saved.slot.doc.level !== 'level.world') {
       problems.push(`the first save holds level ${JSON.stringify(out.first_save && out.first_save.level)} (level.world wanted)`);
-    }
+    } else if (!out.first_save.has_appearance) problems.push('the first save of the open-world start holds no look');
     if (opts.shots && saved.slot) {
       await sleep(2000);
       await page.screenshot({ path: join(opts.shots, 'world.png') });
@@ -411,12 +438,12 @@ async function main() {
 
   const s = (x) => (x === null || x === undefined ? 'N/A' : x);
   const fs = play.first_save || {};
-  console.log(`  Play: the engine started in ${s(play.engine_start_s)} s with arguments ${JSON.stringify(play.engine_args)}; no save while the title showed: ${play.save_at_title ? 'NO' : 'yes'}; Enter (${s(play.enter_presses)} press(es)) -> the first save ${s(play.first_save_s)} s later holds "level": ${JSON.stringify(fs.level)} (respawn ${s(fs.respawn)}); console errors ${play.console_errors.length}, failed requests ${play.failed_requests.length}`);
+  console.log(`  Play: the engine started in ${s(play.engine_start_s)} s with arguments ${JSON.stringify(play.engine_args)}; no save while the title showed: ${play.save_at_title ? 'NO' : 'yes'}; Enter, then Ctrl+Enter in the creator (${s(play.enter_presses)} time(s)) -> the first save ${s(play.first_save_s)} s later holds "level": ${JSON.stringify(fs.level)} (respawn ${s(fs.respawn)}, a look: ${s(fs.has_appearance)}); console errors ${play.console_errors.length}, failed requests ${play.failed_requests.length}`);
   const w1 = world.after_one_press || {};
   const wl = world.after_the_arming_lapsed || {};
   const ws = world.first_save || {};
   console.log(`  Start in the open world: one press -> "${s(w1.label)}" (armed ${s(w1.armed)}, gate shown ${s(w1.gate_shown)}, engine started ${s(w1.engine_started)}, engine files fetched ${s(w1.engine_files_fetched)}); ${DISARM_MS / 1000} s later "${s(wl.label)}" (armed ${s(wl.armed)})`);
-  console.log(`    two presses -> the engine started in ${s(world.engine_start_s)} s with ${JSON.stringify(world.engine_args)}; the first save ${s(world.first_save_s)} s later holds "level": ${JSON.stringify(ws.level)}, respawn ${s(ws.respawn)}, stage ${s(ws.growth_stage)}, level ${s(ws.character_level)}; console errors ${world.console_errors.length}, failed requests ${world.failed_requests.length}`);
+  console.log(`    two presses -> the engine started in ${s(world.engine_start_s)} s with ${JSON.stringify(world.engine_args)}; no save in the creator: ${world.save_in_creator ? 'NO' : 'yes'}; Ctrl+Enter (${s(world.begin_presses)} press(es)) -> the first save ${s(world.first_save_s)} s later holds "level": ${JSON.stringify(ws.level)}, respawn ${s(ws.respawn)}, stage ${s(ws.growth_stage)}, level ${s(ws.character_level)}, a look: ${s(ws.has_appearance)}; console errors ${world.console_errors.length}, failed requests ${world.failed_requests.length}`);
   for (const e of [...play.console_errors, ...world.console_errors].slice(0, 10)) console.log(`    error: ${e}`);
   for (const r of [...play.failed_requests, ...world.failed_requests].slice(0, 10)) console.log(`    request: ${r}`);
   console.log(`WORLD_START_CHECK ${JSON.stringify(report)}`);

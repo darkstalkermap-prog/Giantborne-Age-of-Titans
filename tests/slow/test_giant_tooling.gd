@@ -145,6 +145,17 @@ func test_the_giant_share_is_measured_and_capped() -> void:
 	var bigger := _run(["--budget-mb=26"])
 	assert_true(int(bigger.code) == 0 and str(bigger.out).contains("cap_mb=7.6"),
 		"and grows with the budget (the owner's 26 MB: 7.6 MB): %s" % bigger.out)
+	# P45 (plan M10 §0.6, the owner's answer 1): the milestone's budget is 26 MB from -m10 on and the share's
+	# default cap follows it (7.6 MB); --version= stands for the project's config/version.
+	for row: Array in [["0.9.0-m9", "23", "4.6"], ["0.10.0-m10", "26", "7.6"], ["0.11.0-m11", "26", "7.6"],
+			["0.7.0-m7", "21", "2.6"]]:
+		var by_version := _run(["--version=" + str(row[0])])
+		assert_true(int(by_version.code) == 0 and str(by_version.out).contains("budget_mb=%s " % row[1])
+			and str(by_version.out).contains("cap_mb=%s" % row[2]),
+			"%s: the budget is %s MB and the giant's share %s MB (%s)" % [row[0], row[1], row[2], by_version.out])
+	var over_m10 := _run(["--version=0.10.0-m10", "--budget-mb=23"])
+	assert_true(str(over_m10.out).contains("budget_mb=23 "), "--budget-mb still overrides the milestone's budget")
+	assert_eq(int(_run(["--version=ten"]).code), 2, "a version without its -m<milestone> is a usage error")
 	var bad := _run(["--giant-share-mb=lots"])
 	assert_eq(int(bad.code), 2, "a share that is not a number is a usage error")
 	# a file that is no Godot pack is not measured (and does not fail the build)

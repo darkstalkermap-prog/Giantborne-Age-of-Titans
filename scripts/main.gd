@@ -64,6 +64,11 @@ func _ready() -> void:
 	_layer = CanvasLayer.new()
 	_layer.layer = 10
 	add_child(_layer)
+	# P45 (plan M10 §3.5): --ui-probe prints what the menus show and the frames around them for the web
+	# checks and the native stall runs (UiProbe; nothing of it exists without the argument).
+	var probe := UiProbe.from_args(OS.get_cmdline_user_args())
+	if probe != null:
+		add_child(probe)
 	if not GameData.is_valid():
 		_show_data_errors(_layer)
 		return
