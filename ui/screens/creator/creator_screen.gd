@@ -601,6 +601,9 @@ func _input(event: InputEvent) -> void:
 	if question_open():
 		return
 	if _handle_key(event as InputEventKey) or _handle_pad(event as InputEventJoypadButton):
+		# The root scene's _input (scripts/main.gd), which notes the device for the footer's hint and the
+		# prompts, runs after this one and never sees an event consumed here (M10 gate, LA-4).
+		InputBindings.note_device(event)
 		get_viewport().set_input_as_handled()
 
 

@@ -181,3 +181,30 @@ func test_the_keyboard_keys() -> void:
 	if results.size() == 1:
 		assert_true(bool((results[0] as Dictionary).get("begin", false)), "Begin")
 		assert_true(typeof((results[0] as Dictionary).get("appearance")) == TYPE_DICTIONARY, "with the record")
+
+
+## M10 gate, LA-4: the creator consumes its own keys and buttons in _input, before the root scene's _input
+## (scripts/main.gd), the only other place that notes the device, can see them: the footer kept the other
+## device's line until an unconsumed input arrived. The creator now notes the device of what it consumes.
+func test_the_footer_follows_the_device_of_the_creators_own_buttons_and_keys() -> void:
+	var c := _open_creator()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_false(InputBindings.last_device_is_pad(), "the keyboard and mouse at first")
+	assert_true(stack.hint_text().begins_with("PgUp/PgDn: category"), "the footer shows the keys: %s" % stack.hint_text())
+	for button: JoyButton in [JOY_BUTTON_RIGHT_SHOULDER, JOY_BUTTON_LEFT_SHOULDER, JOY_BUTTON_X, JOY_BUTTON_Y, JOY_BUTTON_BACK]:
+		InputBindings.reset_device()
+		await _pad(button)
+		await get_tree().process_frame
+		assert_true(InputBindings.last_device_is_pad(), "pad button %d, one of the creator's own, is noted as the pad" % button)
+		assert_true(stack.hint_text().begins_with("LB/RB: category"), "and the footer shows the pad's line: %s" % stack.hint_text())
+	for key: Key in [KEY_PAGEDOWN, KEY_PAGEUP, KEY_Q, KEY_E, KEY_EQUAL, KEY_MINUS, KEY_V, KEY_R]:
+		await _pad(JOY_BUTTON_RIGHT_SHOULDER)
+		assert_true(InputBindings.last_device_is_pad(), "(the pad again)")
+		await _key(key)
+		await get_tree().process_frame
+		assert_false(InputBindings.last_device_is_pad(), "key %s, one of the creator's own, is noted as the keyboard" % OS.get_keycode_string(key))
+		assert_true(stack.hint_text().begins_with("PgUp/PgDn: category"), "and the footer shows the keys: %s" % stack.hint_text())
+	await _pad(JOY_BUTTON_RIGHT_SHOULDER)
+	await _key(KEY_Z, true)
+	assert_false(InputBindings.last_device_is_pad(), "Ctrl+Z too")
