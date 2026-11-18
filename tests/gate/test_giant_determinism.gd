@@ -6,6 +6,8 @@ extends TestSuite
 ##     --skin --skin-stats with the Ash Raider's - prints byte-identical AUTOPILOT_RESULT lines, while the
 ##     two SKIN_STATS lines show the layers on, more than 1,000 posed frames and modifier runs, the brain's
 ##     footfalls, and different looks and meshes shown (the positive control: the skin and the look ran);
+##   * P50: those SKIN_STATS also show the flinches played (above 0) and the secondary motion's frames: above
+##     1,000 with the Wanderer's long hair and full beard, none with the Ash Raider's, whose look hangs on no chain;
 ##   * a seeded Valley bot run (intimidate, novice, seed 3, 150 s: it grabs and throws) with --skin
 ##     --skin-stats and with --no-skin prints the same result but for the PerfProbe's timings and the
 ##     engine's node and memory samples, with grabs and throws in its metrics and held-visual writes in
@@ -107,12 +109,20 @@ func test_the_soak_is_identical_with_the_skin_off_and_with_two_looks() -> void:
 			"%s: posed frames and modifier runs (%s, %s)" % [label, s.get("posed_frames"), s.get("modifier_runs")])
 		assert_true(int(s.get("rig_footfalls", 0)) > 0, "%s: the brain's footfalls (%s)" % [label, s.get("rig_footfalls")])
 		assert_eq(str(s.get("look", "")), look, "%s: the look named" % label)
+		# P50 (plan M11 §3.3): the secondary motion and the flinches ran, and nothing played differently for it
+		if (s.get("chains", []) as Array).is_empty():
+			assert_eq(int(s.get("secondary_frames", -1)), 0, "%s: a look with no long hair, beard or cape runs no springs" % label)
+		else:
+			assert_true(int(s.get("secondary_frames", 0)) > 1000, "%s: secondary motion frames (%s)" % [label, s.get("secondary_frames")])
+		assert_true(int(s.get("flinches", 0)) > 0, "%s: the giant flinched (%s)" % [label, s.get("flinches")])
 	if stats.size() == 2:
 		print("    test_giant_determinism: the soak, %s posed frames and %s footfalls with the skin; looks %s / %s" % [
 			stats[0].get("posed_frames"), stats[0].get("rig_footfalls"), stats[0].get("look"), stats[1].get("look")])
 		assert_true(stats[0].get("look") != stats[1].get("look"), "the two runs had different looks")
 		assert_true(stats[0].get("shown_meshes") != stats[1].get("shown_meshes"), "and showed different meshes (%s / %s)" % [
 			stats[0].get("shown_meshes"), stats[1].get("shown_meshes")])
+		assert_true(int(stats[0].get("secondary_frames", 0)) + int(stats[1].get("secondary_frames", 0)) > 1000,
+			"the secondary motion ran in one of them")
 
 
 func test_a_seeded_valley_run_that_grabs_plays_the_same_with_and_without_the_skin() -> void:
