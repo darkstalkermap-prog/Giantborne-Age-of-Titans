@@ -224,7 +224,7 @@ func pages() -> Array:
 		marks.append(_tile("%s - Game view, stage 1" % _name(id), rec, "game", line))
 		marks.append(_tile("%s - first person" % _name(id), rec, GiantPreview.FIRST_PERSON, line))
 	out.append({"id": "4b", "name": "paint_scars_marks", "title": "4b. War paint, scars and ancestry marks",
-		"note": "Each design framed, then in the stage-1 Game view and in first person. The scars are the floor's weakest from behind (P44.md).",
+		"note": "Each design framed, then in the stage-1 Game view and in first person. Of the scars, the back lashes are the ones that read from behind.",
 		"sections": [
 			{"title": "War paint in two colours", "columns": 4, "aspect": 0.6, "tiles": paints},
 			{"title": "Scars", "columns": 3, "aspect": 0.6, "tiles": scars},
@@ -242,7 +242,7 @@ func pages() -> Array:
 			if pair == DYE_PAIRS[0]:
 				cloth.append(_tile(_name(id) + " - the cloth close up", rec, "chest", "", 0.0, -1.0))
 	out.append({"id": "5", "name": "clothing", "title": "5. Clothing",
-		"note": "The four outfits in two dye pairs (primary and secondary), front and back; the cloth's detail maps close up.",
+		"note": "The outfits in two dye pairs (primary and secondary), front and back; the cloth's detail maps close up.",
 		"sections": [
 			{"title": "The outfits in two dye pairs", "columns": 4, "aspect": 1.25, "tiles": outfits},
 			{"title": "The cloth close up (weave, leather, fur)", "columns": 4, "aspect": 0.75, "tiles": cloth}]})

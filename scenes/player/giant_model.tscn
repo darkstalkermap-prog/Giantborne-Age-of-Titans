@@ -20,37 +20,61 @@ index = {
 "mark_claw_stripes": {
 "channel": 3,
 "kind": "mark",
-"layer": 1,
+"layer": 2,
 "regions": [1, 3, 8]
 },
 "mark_granite_veins": {
 "channel": 0,
 "kind": "mark",
-"layer": 2,
+"layer": 3,
 "regions": [8, 9]
 },
 "mark_lightning_tree": {
 "channel": 0,
 "kind": "mark",
-"layer": 1,
+"layer": 2,
 "regions": [5, 6, 8, 9]
+},
+"paint_back_hand": {
+"channel": 3,
+"kind": "paint",
+"layer": 3,
+"regions": [5]
 },
 "paint_face_stripes": {
 "channel": 0,
 "kind": "paint",
-"layer": 1,
+"layer": 2,
+"regions": [1]
+},
+"paint_full_face": {
+"channel": 0,
+"kind": "paint",
+"layer": 3,
 "regions": [1]
 },
 "paint_shoulder_bands": {
-"channel": 3,
+"channel": 0,
 "kind": "paint",
-"layer": 2,
+"layer": 5,
 "regions": [8]
+},
+"scar_back_lash": {
+"channel": 1,
+"kind": "scar",
+"layer": 1,
+"regions": [5, 6]
 },
 "scar_brow": {
 "channel": 0,
 "kind": "scar",
 "layer": 0,
+"regions": [1]
+},
+"scar_cheek": {
+"channel": 0,
+"kind": "scar",
+"layer": 1,
 "regions": [1]
 },
 "scar_chest_claws": {
@@ -72,51 +96,99 @@ index = {
 "regions": [10]
 },
 "tat_arm_bands": {
-"channel": 0,
+"channel": 3,
 "kind": "tattoo",
-"layer": 3,
+"layer": 5,
 "regions": [8]
 },
 "tat_arm_chevrons": {
 "channel": 3,
 "kind": "tattoo",
-"layer": 1,
+"layer": 2,
 "regions": [9]
 },
-"tat_back_tree": {
+"tat_arm_sleeve": {
 "channel": 3,
 "kind": "tattoo",
-"layer": 1,
+"layer": 3,
+"regions": [8, 9]
+},
+"tat_arm_winding": {
+"channel": 0,
+"kind": "tattoo",
+"layer": 4,
+"regions": [8, 9]
+},
+"tat_back_serpent": {
+"channel": 3,
+"kind": "tattoo",
+"layer": 2,
+"regions": [5, 6]
+},
+"tat_back_shoulders": {
+"channel": 3,
+"kind": "tattoo",
+"layer": 4,
+"regions": [5, 8]
+},
+"tat_back_tree": {
+"channel": 0,
+"kind": "tattoo",
+"layer": 3,
 "regions": [5, 6]
 },
 "tat_back_wings": {
 "channel": 0,
 "kind": "tattoo",
-"layer": 2,
+"layer": 4,
 "regions": [5]
+},
+"tat_chest_collar": {
+"channel": 0,
+"kind": "tattoo",
+"layer": 3,
+"regions": [3]
 },
 "tat_chest_knot": {
 "channel": 0,
 "kind": "tattoo",
-"layer": 1,
+"layer": 2,
 "regions": [3, 4]
 },
 "tat_chest_spiral": {
-"channel": 0,
+"channel": 3,
 "kind": "tattoo",
-"layer": 2,
+"layer": 3,
 "regions": [3]
 },
-"tat_face_dots": {
+"tat_chest_sun": {
 "channel": 0,
 "kind": "tattoo",
-"layer": 2,
+"layer": 4,
+"regions": [3]
+},
+"tat_face_bars": {
+"channel": 3,
+"kind": "tattoo",
+"layer": 3,
+"regions": [1]
+},
+"tat_face_crown": {
+"channel": 0,
+"kind": "tattoo",
+"layer": 4,
+"regions": [1]
+},
+"tat_face_dots": {
+"channel": 3,
+"kind": "tattoo",
+"layer": 4,
 "regions": [1]
 },
 "tat_face_lines": {
-"channel": 3,
+"channel": 0,
 "kind": "tattoo",
-"layer": 2,
+"layer": 5,
 "regions": [1]
 }
 },
@@ -125,8 +197,11 @@ index = {
 "boots": ["Garment_boots"],
 "bracers": ["Garment_bracers"],
 "braies": ["Garment_braies_core", "Garment_braies_limbs"],
+"cape": ["Garment_cape"],
 "furs": ["Garment_furs"],
 "jerkin": ["Garment_jerkin"],
+"leg_wraps": ["Garment_leg_wraps"],
+"pauldron": ["Garment_pauldron"],
 "tunic": ["Garment_tunic_core", "Garment_tunic_limbs"]
 },
 "landmarks": {
@@ -151,8 +226,26 @@ index = {
 "wrist_l": [-1.087127, 2.306697, -0.44995],
 "wrist_r": [1.087127, 2.306697, -0.44995]
 },
-"manifest_sha256": "0f99725c98ae5f9e60de19156c255fe6b199151f9997bcf410ccf3c9f6f37580",
+"manifest_sha256": "2f64da7e1dd9b94e07f07eef9babc00be4a9520f34c65b949a482026d29bbfa6",
 "meshes": {
+"Beard_braided": {
+"atlas": "hair_atlas",
+"category": "beard",
+"covers": [],
+"dye": "none",
+"layer": 3,
+"node": "Beard_braided",
+"tris": 2836
+},
+"Beard_forked": {
+"atlas": "hair_atlas",
+"category": "beard",
+"covers": [],
+"dye": "none",
+"layer": 3,
+"node": "Beard_forked",
+"tris": 3840
+},
 "Beard_full": {
 "atlas": "hair_atlas",
 "category": "beard",
@@ -160,7 +253,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Beard_full",
-"tris": 3360
+"tris": 3960
 },
 "Beard_short": {
 "atlas": "hair_atlas",
@@ -169,7 +262,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Beard_short",
-"tris": 1280
+"tris": 2240
 },
 "Body_Head": {
 "category": "body",
@@ -267,6 +360,20 @@ index = {
 "part": "limbs",
 "tris": 676
 },
+"Garment_cape": {
+"category": "garment",
+"coverage": {
+"5": 0.839286,
+"6": 0.986486
+},
+"covers": [6],
+"detail": "weave",
+"dye": "primary",
+"layer": 2,
+"node": "Garment_cape",
+"part": "torso",
+"tris": 1228
+},
 "Garment_furs": {
 "category": "garment",
 "coverage": {
@@ -296,6 +403,30 @@ index = {
 "node": "Garment_jerkin",
 "part": "torso",
 "tris": 2278
+},
+"Garment_leg_wraps": {
+"category": "garment",
+"coverage": {
+"13": 0.835913
+},
+"covers": [],
+"detail": "weave",
+"dye": "primary",
+"layer": 1,
+"node": "Garment_leg_wraps",
+"part": "limbs",
+"tris": 550
+},
+"Garment_pauldron": {
+"category": "garment",
+"coverage": {},
+"covers": [],
+"detail": "leather",
+"dye": "secondary",
+"layer": 2,
+"node": "Garment_pauldron",
+"part": "torso",
+"tris": 326
 },
 "Garment_tunic_core": {
 "category": "garment",
@@ -342,7 +473,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Hair_crop",
-"tris": 3200
+"tris": 4400
 },
 "Hair_long_back": {
 "atlas": "hair_atlas",
@@ -351,7 +482,34 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Hair_long_back",
-"tris": 5580
+"tris": 5920
+},
+"Hair_long_braided": {
+"atlas": "hair_atlas",
+"category": "hair",
+"covers": [],
+"dye": "none",
+"layer": 3,
+"node": "Hair_long_braided",
+"tris": 5000
+},
+"Hair_warrior_tail": {
+"atlas": "hair_atlas",
+"category": "hair",
+"covers": [],
+"dye": "none",
+"layer": 3,
+"node": "Hair_warrior_tail",
+"tris": 4464
+},
+"Hair_wild_mane": {
+"atlas": "hair_atlas",
+"category": "hair",
+"covers": [],
+"dye": "none",
+"layer": 3,
+"node": "Hair_wild_mane",
+"tris": 5800
 }
 },
 "regions": [{
@@ -404,13 +562,14 @@ index = {
 "name": "cap"
 }],
 "textures": {
-"design_layers": 4,
+"design_layers": 6,
 "designs": "res://assets/giant/designs.png",
 "detail_fur": "res://assets/giant/cloth_fur.png",
 "detail_leather": "res://assets/giant/cloth_leather.png",
 "detail_weave": "res://assets/giant/cloth_weave.png",
 "hair_atlas": "res://assets/giant/hair_atlas.png",
-"scar_layer": 0
+"scar_layer": 0,
+"scar_layer_b": 1
 },
 "tiers": {
 "hi": "res://assets/giant/tex_hi/",

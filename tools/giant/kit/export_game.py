@@ -45,10 +45,14 @@ GLB_NAME = "giant.glb"
 INFO_NAME = "export_info.json"
 EYE_SEGMENTS, EYE_RINGS = 20, 14
 GARMENT_CAP_LIFT_M = 0.02          # human scale: a garment's cap sits this far outside the skin's
+# The braies' one cut loop runs round both thighs, so its cap spans the skin's two thigh caps: lifted this far
+# it covers them (P46: in first person looking down, the skin's caps showed through the cloth's).
+GARMENT_CAP_LIFT_OF = {"braies": 0.2}
 COVER_SHARE = 0.97                 # a region a garment covers this much of sinks under it (covers)
 COVER_RAY_M = 0.12                 # human scale: the longest skin-to-garment ray that still covers
 SPLIT_GARMENTS = ("braies", "tunic")
-WHOLE_PART = {"belt": "torso", "jerkin": "torso", "furs": "torso", "bracers": "limbs", "boots": "limbs"}
+WHOLE_PART = {"belt": "torso", "jerkin": "torso", "furs": "torso", "bracers": "limbs", "boots": "limbs",
+              "cape": "torso", "pauldron": "torso", "leg_wraps": "limbs"}
 LIMB_ROOTS = ("upperarm_l", "upperarm_r", "thigh_l", "thigh_r")
 TORSO_ROOTS = ("clavicle_l", "clavicle_r", "pelvis")
 
@@ -427,7 +431,7 @@ def run(out_dir):
         for pi in parts:
             suffix = "" if len(parts) == 1 else ("_core" if pi != 2 else "_limbs")
             name = f"Garment_{gid}{suffix}"
-            arrays, reg, st = split_part(G, face_part, pi, greg, root_bone, lift=GARMENT_CAP_LIFT_M * S)
+            arrays, reg, st = split_part(G, face_part, pi, greg, root_bone, lift=GARMENT_CAP_LIFT_OF.get(gid, GARMENT_CAP_LIFT_M) * S)
             mat = ob.data.materials[0].name if len(ob.data.materials) else "giant_cloth"
             gob = make_object(name, arrays, coll, rig, mat, reg)
             made.append(gob)

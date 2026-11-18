@@ -212,9 +212,10 @@ class DesignTest(unittest.TestCase):
             ly = img[li * designs.LAYER_SIZE:(li + 1) * designs.LAYER_SIZE]
             both = ((ly[..., :3] > 24).sum(axis=-1) > 1).sum()
             self.assertEqual(int(both), 0, "layer %d: no texel lit in two of R, G and B" % li)
-        # the scars fill a layer of their own
+        # the scars fill layers of their own, four a layer (P46: the fifth and sixth on a second one)
         scar_layers = {placed[d][0] for d in designs.SCAR_ORDER}
-        self.assertEqual(len(scar_layers), 1)
+        self.assertEqual(len(scar_layers), -(-len(designs.SCAR_ORDER) // designs.SCARS_PER_LAYER))
+        self.assertEqual(scar_layers, {0, 1})
         self.assertTrue(all(placed[d][0] not in scar_layers for d in placed if cat[d][0] != "scar"))
 
     def test_pack_respects_the_rule_on_crowded_regions(self):

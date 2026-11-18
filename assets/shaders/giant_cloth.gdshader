@@ -12,8 +12,8 @@ render_mode cull_disabled;
 uniform sampler2D detail_tex : hint_default_white, filter_linear_mipmap, repeat_enable;
 uniform vec3 dye_color : source_color = vec3(0.45, 0.38, 0.29);
 uniform float detail_strength : hint_range(0.0, 1.0) = 0.35;
-uniform float normal_strength : hint_range(0.0, 4.0) = 0.6;
-uniform float detail_scale = 48.0;
+uniform float normal_strength : hint_range(0.0, 4.0) = 0.4;
+uniform float detail_scale = 96.0;
 uniform float roughness_base : hint_range(0.0, 1.0) = 0.85;
 uniform float fade : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
@@ -28,7 +28,9 @@ void fragment() {
 	}
 	vec4 t = texture(detail_tex, UV * detail_scale);
 	float d = t.a / 0.75;   // 1 = the dye itself
-	ALBEDO = dye_color * mix(1.0, d, detail_strength) * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
+	// the detail scales the dye and, a little, lifts or sinks it, so it also shows on the darkest dyes (P46)
+	vec3 cloth = dye_color * mix(1.0, d, detail_strength) + vec3((d - 1.0) * detail_strength * 0.07);
+	ALBEDO = max(cloth, vec3(0.0)) * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	ROUGHNESS = clamp(roughness_base + (1.0 - d) * 0.1, 0.0, 1.0);
 	NORMAL_MAP = t.rgb;
 	NORMAL_MAP_DEPTH = normal_strength;

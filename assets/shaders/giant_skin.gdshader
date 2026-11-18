@@ -41,6 +41,8 @@ uniform vec3 mark_color : source_color = vec3(0.44, 0.49, 0.55);
 uniform float mark_glow : hint_range(0.0, 1.0) = 0.0;
 uniform int scar_layer = 0;
 uniform vec4 scar_on = vec4(0.0);
+uniform int scar_layer_b = 0;
+uniform vec4 scar_on_b = vec4(0.0);
 uniform float scar_relief = 6.0;
 uniform int hidden_regions = 0;
 uniform float hide_shrink = 0.03;
@@ -49,6 +51,7 @@ uniform vec3 wrap = vec3(0.42, 0.20, 0.13);
 uniform vec3 sss_color : source_color = vec3(0.90, 0.28, 0.16);
 uniform float transmission = 0.5;
 uniform float rough_scale = 1.25;
+uniform float normal_detail = 0.6;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
@@ -76,6 +79,17 @@ float design_coverage(int code, vec2 uv) {
 	return clamp(dot(texture(design_tex, vec3(uv, float(layer))), channel_mask(d - layer * 4)), 0.0, 1.0);
 }
 
+// The scars of one RGBA layer that `on` picks: their coverage, and the slope of their height for the relief.
+float scar_coverage(float layer, vec4 on, vec2 uv, out vec2 slope) {
+	vec2 px = vec2(1.0 / float(textureSize(design_tex, 0).x), 1.0 / float(textureSize(design_tex, 0).y));
+	float hx = dot(texture(design_tex, vec3(uv + vec2(px.x, 0.0), layer)), on)
+		- dot(texture(design_tex, vec3(uv - vec2(px.x, 0.0), layer)), on);
+	float hy = dot(texture(design_tex, vec3(uv + vec2(0.0, px.y), layer)), on)
+		- dot(texture(design_tex, vec3(uv - vec2(0.0, px.y), layer)), on);
+	slope = vec2(hx, -hy);
+	return clamp(dot(texture(design_tex, vec3(uv, layer)), on), 0.0, 1.0);
+}
+
 void fragment() {
 	vec3 base = texture(albedo_tex, UV).rgb * (skin_tone / max(bake_tone, vec3(0.01)));
 	vec4 orm = texture(orm_tex, UV);
@@ -83,8 +97,8 @@ void fragment() {
 	// the hair's colours on the skin: stubble and the skin under the beard (the beard's), the scalp under
 	// a hairstyle and the brows (the hair's)
 	base = mix(base, base * mix(vec3(1.0), beard_color * 2.2, 0.85), clamp(m.r * stubble, 0.0, 1.0) * 0.75);
-	base = mix(base, hair_color * 0.55, clamp(m.g * scalp_tint, 0.0, 1.0));
-	base = mix(base, beard_color * 0.55, clamp(smoothstep(0.2, 0.7, m.r) * beard_tint, 0.0, 1.0));
+	base = mix(base, hair_color * 0.8, clamp(m.g * scalp_tint, 0.0, 1.0));
+	base = mix(base, beard_color * 0.8, clamp(smoothstep(0.2, 0.7, m.r) * beard_tint, 0.0, 1.0));
 	base = mix(base, hair_color * 0.9, clamp(m.b * brows, 0.0, 1.0) * 0.85);
 	// the designs of this texel's body region: tattoo ink in the skin, the line's mark, war paint on top
 	float tattoo = design_coverage(region_tattoo[v_region], UV);
@@ -95,17 +109,23 @@ void fragment() {
 	base = mix(base, paint_color, paint * 0.92);
 	// scars: paler, glossier, raised (one RGBA layer of the design array)
 	vec3 nm = texture(normal_tex, UV).rgb * 2.0 - 1.0;
+	nm.xy *= normal_detail;   // the baked relief, eased: the low sun drew the forehead's lines as ridges
 	float sc = 0.0;
+	vec2 relief = vec2(0.0);
 	if (dot(scar_on, scar_on) > 0.0) {
-		float sl = float(scar_layer);
-		sc = clamp(dot(texture(design_tex, vec3(UV, sl)), scar_on), 0.0, 1.0);
-		vec2 px = vec2(1.0 / float(textureSize(design_tex, 0).x), 1.0 / float(textureSize(design_tex, 0).y));
-		float hx = dot(texture(design_tex, vec3(UV + vec2(px.x, 0.0), sl)), scar_on)
-			- dot(texture(design_tex, vec3(UV - vec2(px.x, 0.0), sl)), scar_on);
-		float hy = dot(texture(design_tex, vec3(UV + vec2(0.0, px.y), sl)), scar_on)
-			- dot(texture(design_tex, vec3(UV - vec2(0.0, px.y), sl)), scar_on);
-		nm.xy -= vec2(hx, -hy) * scar_relief * 0.5;
-		base = mix(base, base * vec3(1.18, 0.98, 0.95) + vec3(0.03, 0.0, 0.0), sc * 0.75);
+		sc = scar_coverage(float(scar_layer), scar_on, UV, relief);
+	}
+	if (dot(scar_on_b, scar_on_b) > 0.0) {   // the fifth and sixth scars: a second layer (P46)
+		vec2 relief_b = vec2(0.0);
+		float sb = scar_coverage(float(scar_layer_b), scar_on_b, UV, relief_b);
+		sc = max(sc, sb);
+		relief += relief_b;
+	}
+	if (sc > 0.0 || dot(relief, relief) > 0.0) {
+		nm.xy -= relief * scar_relief * 0.5;
+		// healed tissue: paler and pinker than the skin around it, whatever the tone (P46: the floor's
+		// scars did not read at the game camera)
+		base = mix(base, base * vec3(1.5, 1.2, 1.16) + vec3(0.07, 0.025, 0.025), sc * 0.85);
 	}
 	ALBEDO = base * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	NORMAL_MAP = normalize(nm) * 0.5 + 0.5;

@@ -29,7 +29,8 @@ const LAYER_OF := {"Body_Head": 3, "Body_Torso": 2, "Body_Limbs": 1, "Eyes": 3}
 const BRIEF_SHOULDER_R := Vector3(0.414, 3.015, -0.033)
 const BRIEF_REACH := 1.385
 ## The floor's fullest looks (plan §2.3): the warrior and the chieftain, long hair and the full beard.
-const FULLEST := [["tunic", "jerkin", "belt", "bracers", "boots"], ["braies", "belt", "furs", "jerkin", "boots"]]
+const FULLEST := [["tunic", "jerkin", "belt", "bracers", "boots"], ["braies", "belt", "furs", "jerkin", "boots"],
+	["braies", "belt", "pauldron", "bracers", "leg_wraps"], ["braies", "belt", "cape", "leg_wraps", "boots"]]   # P46's two
 const MAX_MESHES := 13
 const MAX_TRIANGLES := 55000
 
@@ -81,7 +82,8 @@ func test_the_model_loads_with_its_skeleton_and_every_index_mesh() -> void:
 		if cat == "garment":
 			assert_eq(int(e.layer), 1 if str(e.get("part", "")) == "limbs" else 2, "%s: limbs on 1, cores on 2" % id)
 	assert_eq(m.meshes("body").size(), 3, "the body in three parts")
-	assert_eq(m.meshes("hair").size() + m.meshes("beard").size(), 4, "the floor's two hair and two beard meshes")
+	assert_eq(m.meshes("hair").size() + m.meshes("beard").size(), 9,
+		"the catalogue's five hair and four beard meshes (the floor's four and the look pass's five, P46)")
 	m.free()
 
 
@@ -141,7 +143,8 @@ func test_the_index_the_gltf_and_the_design_array_agree() -> void:
 		assert_true(int(e.layer) >= 0 and int(e.layer) < int(m.index.textures.design_layers), "%s: a layer of the array" % d)
 		assert_true(int(e.channel) >= 0 and int(e.channel) <= 3, "%s: a channel" % d)
 		kinds[str(e.kind)] = int(kinds.get(str(e.kind), 0)) + 1
-	assert_eq(kinds, {"tattoo": 8, "paint": 2, "scar": 4, "mark": 3}, "the floor's 17 designs (§2.3)")
+	assert_eq(kinds, {"tattoo": 16, "paint": 4, "scar": 6, "mark": 3},
+		"the catalogue's 29 designs (§2.3: the floor's 17 and the look pass's 12, P46)")
 	assert_eq((m.index.regions as Array).size(), 16, "16 regions")
 	for tier: String in ["web", "hi"]:
 		for f: String in ["normal.png", "orm.png"]:

@@ -6,9 +6,9 @@ extends TestSuite
 ## Required: no engine or shader error, GiantLook.validate() empty, no blank tile, every option's changed pixels
 ## above its set's floor, and at least one option of each design category (tattoo, war paint, scar, ancestry
 ## mark) above the rear view's or the first-person view's floor - except a category listed in KNOWN_MISSES,
-## which must still draw in one of the two views and is reported (the floor catalogue's scars, P46's to make
-## bold). The floors were set from the floor catalogue's renders; docs/systems/P44.md records them with the
-## measured shares. The grids are saved to user://m10_frames/options/ (with index.json naming every tile) for
+## which must still draw in one of the two views and is reported (none since the look pass, P46). The floors
+## were set from the floor catalogue's renders (docs/systems/P44.md) and kept by the look pass, whose measured
+## shares with the target catalogue are in docs/systems/P46.md. The grids are saved to user://m10_frames/options/ (with index.json naming every tile) for
 ## the merges, the sheets and P46. Without xvfb-run it is skipped with a note.
 
 const PROBE := "res://tests/support/appearance_render_probe.tscn"
@@ -18,8 +18,12 @@ const TILE_PX := 320 * 240
 ## A tile is drawn when at least this share of its pixels is off its backdrop.
 const MIN_LIT := 0.02
 ## The share of a framed tile's pixels an option must change, per set: about half the smallest share the floor
-## catalogue's options measured in the set (W26, llvmpipe, the web tier; P44.md lists them).
-const FLOORS := {"skin": 0.008, "eyes": 0.0001, "hair": 0.045, "beard": 0.035, "haircolor": 0.015,
+## catalogue's options measured in the set (W26, llvmpipe, the web tier; P44.md lists them). The look pass (P46)
+## set the beard's again by the same rule on the target catalogue: its beards are compared with the default
+## full beard, so a shorter cut or another shape of the same beard changes less of the tile than a beard against
+## none (the smallest: the trimmed beard 0.0283; P46.md lists every set). The hair's floor stands: the
+## shoulder-length cut, the smallest, changes 0.0561.
+const FLOORS := {"skin": 0.008, "eyes": 0.0001, "hair": 0.045, "beard": 0.014, "haircolor": 0.015,
 	"tattoo": 0.0007, "ink": 0.008, "paint": 0.0045, "paintcolor": 0.0045, "scar": 0.00015, "mark": 0.0018,
 	"outfit": 0.012, "dye": 0.014, "preset": 0.012}
 ## The pixels of a 320x240 tile the best option of a design category must change in the stage-1 rear Game
@@ -29,9 +33,11 @@ const FLOORS := {"skin": 0.008, "eyes": 0.0001, "hair": 0.045, "beard": 0.035, "
 const VIEW_FLOOR_PX := {"rear": 18, "fp": 90}
 const DESIGN_SETS := ["tattoo", "paint", "scar", "mark"]
 ## Design categories that do not yet read in either view, with the reason; each must still draw (a pixel or more)
-## in one of them. P46 (the look pass: bolder scars, the cheek and back_lash scars) takes an entry off when its
-## content passes.
-const KNOWN_MISSES := {"scar": "the floor catalogue's scars are thinner than the 4 cm stroke rule: the forearm slash changes 3 px of the rear tile, the knuckles nick 1 px in first person, the brow and chest claws face the camera in neither view"}
+## in one of them. Empty since the look pass (P46): the back lashes read from behind (63 px of the rear tile), so
+## the scars left the list.
+const KNOWN_MISSES := {}
+## The designs of the catalogue (the floor's 17 and the look pass's 12): each is drawn in its two views.
+const DESIGNS := 29
 
 
 static func _have(tool: String) -> bool:
@@ -95,7 +101,7 @@ func test_every_option_draws_and_reads_in_its_view() -> void:
 	var tiles := 0
 	for cat: String in Appearance.CATEGORIES:
 		tiles += Appearance.option_ids(cat).size()
-	assert_true(int(r.tiles) >= tiles + 2 * 17, "every option and every design's two views (%d tiles)" % int(r.tiles))
+	assert_true(int(r.tiles) >= tiles + 2 * DESIGNS, "every option and every design's two views (%d tiles)" % int(r.tiles))
 	for cat: String in DESIGN_SETS:
 		var reads := PackedStringArray()
 		var drawn := 0

@@ -3,7 +3,7 @@
 	"id": "appearance_preset.young_giant",
 	"type": "appearance_preset",
 	"display_name": "Young Giant",
-	"description": "A blond crop and the first stubble; no marks yet.",
+	"description": "A blond crop and the first stubble; no marks yet, a wayfarer's cape and wraps.",
 	"appearance": {
 		"v": 1,
 		"preset": "appearance_preset.young_giant",
@@ -15,6 +15,6 @@
 		"paint": {"design": "", "color": "paintcolor.chalk"},
 		"scars": [],
 		"mark": "auto",
-		"outfit": {"set": "outfit.wanderer", "primary": "dye.undyed", "secondary": "dye.walnut"}
+		"outfit": {"set": "outfit.wayfarer", "primary": "dye.undyed", "secondary": "dye.walnut"}
 	}
 }

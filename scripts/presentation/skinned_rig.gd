@@ -377,6 +377,8 @@ func _on_skeleton_updated() -> void:
 	posed_frames += 1
 	totals.posed_frames = int(totals.posed_frames) + 1
 	_apply_held_visual()
+	if _model != null:
+		GiantLook.sway(_model, _model.index, _skeleton)   # P46: the hair's tips lag the head's motion
 	posed.emit()
 
 

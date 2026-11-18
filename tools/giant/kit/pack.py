@@ -106,7 +106,11 @@ def make_atlas(path, seed=3):
             x0 = c * W + 4 + rng.random() * (W - 8)
             if c == 2:      # clumps: strands gather towards 3 centres down the length
                 cx = c * W + W * (0.2 + 0.3 * rng.integers(0, 3))
-            length = ATLAS * (0.62 + 0.38 * rng.random()) if c != 3 else ATLAS * (0.5 + 0.5 * rng.random())
+            # Strands end anywhere in the card's lower two thirds, so its tip thins out strand by strand,
+            # and they thin towards its sides (the look pass, P46: a card must not show its outline).
+            if rng.random() < 0.5:
+                x0 = c * W + W * (0.5 + 0.42 * (rng.random() - rng.random()))
+            length = ATLAS * (0.34 + 0.66 * rng.random() ** 0.8) if c != 3 else ATLAS * (0.4 + 0.6 * rng.random())
             amp = (0.0, 3.5, 1.5, 4.0)[c] * (0.5 + rng.random())
             wl = 60 + 80 * rng.random()
             ph = rng.random() * 6.28
@@ -130,6 +134,12 @@ def make_atlas(path, seed=3):
                 R[rows, cols] = np.where(cov[rows] >= old, bright, R[rows, cols])
                 G[rows, cols] = np.where(cov[rows] >= old, sid, G[rows, cols])
                 A[rows, cols] = new
+    # Empty texels take the brightness and the id of the nearest strand, so the filtered and mipmapped
+    # atlas never blends a strand's id towards zero at its edge (that drew grey fringes; P46).
+    from scipy import ndimage
+    _, (iy, ix) = ndimage.distance_transform_edt(A <= 0.0, return_indices=True)
+    R = R[iy, ix]
+    G = G[iy, ix]
     B = np.broadcast_to((yy / ATLAS)[:, None], (ATLAS, ATLAS))
     img = np.stack([R, G, B, A], axis=-1)
     save((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8), path, "RGBA")

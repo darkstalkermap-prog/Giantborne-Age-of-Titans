@@ -491,3 +491,27 @@ Questions after the sheet: which option did you look for and not find? Which cho
 difference, and which looked the same as another (the eye colours, the scars)? Was anything slow to
 answer (a swatch, a category, the first open)? Write the answers under the session in
 `docs/USABILITY_RESULTS.md`.
+
+### 12.1 Look sheet (owner, M10): the giant's look in the creator and in play
+
+The look pass (plan M10 §3.6; `docs/systems/P46.md`) on the release candidate, beside character sheet B and
+the approved close-up render. Ten minutes in the creator, ten in play (the Valley's first shrine is enough).
+Mark each row "fine", "off" or "wrong" and say what you saw.
+
+| # | Look at | Where | Fine / off / wrong, and what you saw |
+| --- | --- | --- | --- |
+| 1 | **The long hair and the full beard** against the approved close-up: do they read as hair (strands at the tips, no shingle steps, no scalp between the locks)? | Creator: Hair, Beard; Face and Back views | |
+| 2 | **The short styles** (Cropped, Short beard, Stubble, Shaved) in a fair colour and a dark one: any bare patch or loose flake? | Creator: Hair, Beard, hair colour | |
+| 3 | **The new styles**: Long with two braids, Warrior's tail, Wild mane, Shoulder length; the Braided, Forked and Trimmed beards. Which would you wear, which looks wrong? | Creator: Hair, Beard | |
+| 4 | **Grey** at a quarter, a half and full on a dark colour: does it grow in evenly? | Creator: the grey sliders | |
+| 5 | **The hair in motion**: turn, dodge and swing; the tips should trail the head a little and settle, never stretch or flap. | Play, third person | |
+| 6 | **Tattoos from behind**: the Full sleeve, the Shoulder to shoulder piece, the Spine serpent, the Back wings. Which can you name from the game camera? | Creator: Game view; play | |
+| 7 | **War paint and scars**: Full face and the Hand print; the Back lashes and the Cheek scar. Do the scars read as scars on a pale and on a dark skin? | Creator: War paint, Scars, Skin | |
+| 8 | **Eyes**: can you tell blue, grey, green, hazel and brown apart at the Face view? Are they too bright? | Creator: Eyes | |
+| 9 | **Clothing**: the Raider's wraps and the Wayfarer's cape; the weave of the braies and the leather in the undyed and a dyed pair. Anything that looks like panels, or like plastic? | Creator: Clothing, the dyes | |
+| 10 | **First person**: look straight down while standing and while walking. Is there anything but arms, legs and cloth? | Play, first person | |
+| 11 | **The giant beside the world**: does anything about him jar next to the soldiers and the houses that did not on the first preview? | Play | |
+
+Questions after the sheet: what would you change first? Is there a style, a tattoo or a garment you expected
+and did not find? Write the answers under the session in `docs/USABILITY_RESULTS.md`; a wish for a different
+face or build is M11 work (plan M10, decision 9).

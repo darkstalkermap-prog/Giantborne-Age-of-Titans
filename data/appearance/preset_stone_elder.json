@@ -3,7 +3,7 @@
 	"id": "appearance_preset.stone_elder",
 	"type": "appearance_preset",
 	"display_name": "Stone Elder",
-	"description": "White-haired and weathered, a soot tree across the back, wrapped in furs.",
+	"description": "White-haired and weathered, a soot tree across the back and a crown of points on the brow, wrapped in furs.",
 	"ancestry": "ancestry.stoneblood",
 	"appearance": {
 		"v": 1,
@@ -12,7 +12,7 @@
 		"eyes": "eyes.grey",
 		"hair": {"style": "hair.long_back", "color": "haircolor.white", "grey": 0.9},
 		"beard": {"style": "beard.full", "color": "", "grey": 0.9},
-		"tattoos": {"arms": "", "chest": "", "back": "tattoo.back_tree", "face": "", "ink": "ink.soot"},
+		"tattoos": {"arms": "", "chest": "", "back": "tattoo.back_tree", "face": "tattoo.face_crown", "ink": "ink.soot"},
 		"paint": {"design": "", "color": "paintcolor.chalk"},
 		"scars": ["scar.brow"],
 		"mark": "auto",

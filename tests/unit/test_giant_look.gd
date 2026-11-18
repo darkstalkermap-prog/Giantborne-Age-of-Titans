@@ -38,6 +38,7 @@ const INDEX := {
 		"scar_brow": {"layer": 3, "channel": 0, "kind": "scar", "regions": [1]},
 		"scar_knuckles": {"layer": 3, "channel": 2, "kind": "scar", "regions": [9]},
 		"scar_far": {"layer": 4, "channel": 0, "kind": "scar", "regions": [2]},
+		"scar_farther": {"layer": 5, "channel": 1, "kind": "scar", "regions": [2]},
 	},
 	"regions": [{"id": 0, "name": "scalp"}, {"id": 1, "name": "face"}],
 	# The web tier is the real one (every sampler must load: validate() reports one that does not); the hi
@@ -89,6 +90,7 @@ func _look() -> Dictionary:
 	l.hair_color = Color(0.1, 0.1, 0.1)
 	l.hair_tip = Color(0.2, 0.2, 0.2)
 	l.hair_grey = 0.4
+	l.hair_length = 0.6
 	l.beard_color = Color(0.6, 0.3, 0.1)
 	l.beard_tip = Color(0.7, 0.4, 0.2)
 	l.beard_grey = 0.6
@@ -169,11 +171,13 @@ func test_every_look_key_sets_its_uniforms_and_visibility() -> void:
 	assert_true(_near(hair.get_shader_parameter("hair_color"), l.hair_color), "the hair's colour")
 	assert_true(_near(hair.get_shader_parameter("tip_color"), l.hair_tip), "the hair's tips")
 	assert_true(_near(hair.get_shader_parameter("grey"), l.hair_grey), "the hair's grey")
+	assert_true(_near(hair.get_shader_parameter("length"), 0.6), "the hair's cut (P46: hair_length)")
 	var beard := _mat(root, "Beard_short")
 	assert_true(beard.shader == GiantLook.HAIR_SHADER, "the beard draws with giant_hair")
 	assert_true(_near(beard.get_shader_parameter("hair_color"), l.beard_color), "the beard's colour")
 	assert_true(_near(beard.get_shader_parameter("tip_color"), l.beard_tip), "the beard's tips")
 	assert_true(_near(beard.get_shader_parameter("grey"), l.beard_grey), "the beard's grey")
+	assert_true(_near(beard.get_shader_parameter("length"), 1.0), "the beard's full length when the look names none")
 	var eye := _mat(root, "Eyes")
 	assert_true(eye.shader == GiantLook.EYE_SHADER, "the eyes draw with giant_eye")
 	assert_true(_near(eye.get_shader_parameter("iris_color"), l.eye_color), "the iris colour")
@@ -213,12 +217,16 @@ func test_validate_flags_a_misspelled_uniform_and_unknown_ids() -> void:
 	bad.hair_mesh = "Hair_mohawk"
 	bad.garments = ["tunic", "cape"]
 	bad.tattoos = [{"design": "tat_dragon", "ink": Color.BLUE}]
-	bad.scars = ["scar_brow", "scar_far", "paint_face_stripes"]
+	bad.scars = ["scar_brow", "scar_far", "scar_farther", "paint_face_stripes"]
 	var p := "\n".join(GiantLook.validate(root2, INDEX, bad))
 	assert_true(p.contains("Hair_mohawk"), "an unknown hair mesh")
 	assert_true(p.contains("'cape'"), "an unknown garment")
 	assert_true(p.contains("tat_dragon"), "an unknown design")
-	assert_true(p.contains("scar_far") and p.contains("layer"), "a scar on another layer than the first")
+	assert_true(p.contains("'scar_farther' is on layer 5"), "a scar on a third layer (P46: the scars fill two layers of four)")
+	assert_false(p.contains("'scar_far' is on layer"), "a scar on the second layer is drawn (scar_layer_b)")
+	var two := GiantLook.scar_uniforms(INDEX, ["scar_knuckles", "scar_far", "scar_farther"])
+	assert_eq([two.layer, two.on, two.layer_b, two.on_b], [3, Vector4(0, 0, 1, 0), 4, Vector4(1, 0, 0, 0)],
+		"the first layer's scars and the second layer's, the third layer's left out")
 	assert_true(p.contains("paint_face_stripes") and p.contains("is a paint"), "a design of another kind")
 	var orphan := INDEX.duplicate(true)
 	orphan.meshes["Garment_cape"] = {"node": "Garment_cape", "category": "garment"}
@@ -293,6 +301,8 @@ func test_the_region_arrays_are_always_filled() -> void:
 	assert_eq(codes.paint, _codes({}), "an unknown design is left out")
 	assert_eq(int(skin.get_shader_parameter("scar_layer")), 3, "no scar: the scars' layer all the same")
 	assert_eq(skin.get_shader_parameter("scar_on"), Vector4.ZERO, "and none on")
+	assert_eq(int(skin.get_shader_parameter("scar_layer_b")), 4, "and the second scar layer (P46)")
+	assert_eq(skin.get_shader_parameter("scar_on_b"), Vector4.ZERO, "none on there either")
 
 
 ## The real index names its maps ("atlas": "hair_atlas", "detail": "leather" | "weave" | "fur") and maps the
@@ -377,3 +387,25 @@ func test_a_duplicated_model_gets_its_own_nodes_and_materials() -> void:
 	assert_true(_mat(c, "Body_Head") != a_mat and _near(_mat(c, "Body_Head").get_shader_parameter("skin_tone"),
 		_look().skin_tone), "a copy's first apply gives it its own materials, with the look")
 	assert_true(_near(a_mat.get_shader_parameter("skin_tone"), GiantLook.DEFAULT_LOOK.skin_tone), "the original keeps its own")
+
+
+## P46: the hair's sway. One step is a pure easing towards the head's motion times the lag; the sway on a model
+## writes the hair shader's head_motion on the shown hair and beard, in the mesh's own space, and stays within
+## its bound however fast the head moves.
+func test_the_hairs_sway_eases_towards_the_heads_motion_and_is_bounded() -> void:
+	var rest := GiantLook.sway_step(Vector3.ZERO, Vector3.ZERO, 1.0 / 60.0)
+	assert_eq(rest, Vector3.ZERO, "a still head: no sway")
+	var one := GiantLook.sway_step(Vector3.ZERO, Vector3(2, 0, 0), 1.0 / 60.0)
+	var target := Vector3(2, 0, 0) * GiantLook.SWAY_LAG_S
+	assert_true(one.x > 0.0 and one.x < target.x, "one frame moves part of the way (%.4f of %.4f)" % [one.x, target.x])
+	var v := Vector3.ZERO
+	for i in 120:
+		v = GiantLook.sway_step(v, Vector3(2, 0, 0), 1.0 / 60.0)
+	assert_true(v.distance_to(target) < 1e-4, "and settles on the head's motion times the lag")
+	for i in 120:
+		v = GiantLook.sway_step(v, Vector3.ZERO, 1.0 / 60.0)
+	assert_true(v.length() < 1e-4, "and comes back to rest when the head stops")
+	assert_true(GiantLook.undeclared_uniforms(GiantLook.HAIR_SHADER, ["head_motion", "length"]).is_empty(),
+		"the hair shader declares head_motion and length")
+	assert_eq(GiantLook.sway(null, INDEX, null), Vector3.ZERO, "no model, no skeleton: nothing, and no error")
+
