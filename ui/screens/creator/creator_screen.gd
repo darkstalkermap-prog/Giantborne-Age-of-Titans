@@ -730,7 +730,7 @@ func _build() -> void:
 	holder.mouse_filter = Control.MOUSE_FILTER_PASS
 	main.add_child(holder)
 	preview = GiantPreview.new()
-	preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	preview.window_pixels = true   # fills the holder at the window's resolution (GiantPreview.fit_window_pixels)
 	holder.add_child(preview)
 	var views := HBoxContainer.new()
 	views.name = "Views"

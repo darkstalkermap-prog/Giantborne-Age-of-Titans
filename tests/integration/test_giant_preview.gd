@@ -80,6 +80,56 @@ func test_its_own_world_the_look_the_framings_and_the_views() -> void:
 	p.queue_free()
 
 
+## M10 gate, LA-3: the creator's preview is drawn at the window's resolution. The project stretches its
+## 1280x720 canvas to the window, so a 1920x1080 window scales it by 1.5 and a 2560x1440 one by 2; the
+## preview's SubViewport was the holder's size in canvas units in every window.
+func test_the_creators_preview_is_drawn_in_window_pixels() -> void:
+	var window := get_window()
+	var size_before := window.size
+	window.size = Vector2i(1280, 720)
+	var c := stack.open("creator", {"context": "new_game", "start": {"mode": "valley", "options": {}}}) as CreatorScreen
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var p := c.preview
+	var holder := p.get_parent() as Control
+	assert_true(p.window_pixels, "the creator's preview fills its holder in window pixels")
+	for case: Array in [[Vector2i(1280, 720), 1.0], [Vector2i(1920, 1080), 1.5], [Vector2i(2560, 1440), 2.0], [Vector2i(3840, 2160), 2.0],
+			[Vector2i(640, 360), 1.0]]:
+		window.size = case[0]
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var k: float = case[1]
+		assert_near(p.pixel_scale(), k, 1e-3, "a %s window: %.1f viewport pixels per canvas unit" % [case[0], k])
+		assert_true(Vector2(p.viewport.size).distance_to(holder.size * k) <= 1.5, "the viewport is %.1fx the holder (%s, holder %s)" % [k,
+			p.viewport.size, holder.size])
+		var shown := p.get_global_rect()
+		assert_true(shown.position.distance_to(holder.get_global_rect().position) <= 0.5 and shown.size.distance_to(holder.size) <= 1.0,
+			"and it fills the holder on the canvas (%s in %s)" % [shown, holder.get_global_rect()])
+	# a drag turns the giant by the canvas distance, whatever the container's scale
+	window.size = Vector2i(2560, 1440)
+	await get_tree().process_frame
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	p._gui_input(press)
+	var turn := p.turn_deg
+	var drag := InputEventMouseMotion.new()
+	drag.relative = Vector2(20, 0)   # the container's own units: 20 window pixels, 10 canvas units at 2x
+	p._gui_input(drag)
+	assert_near(p.turn_deg, turn - 10.0 * 0.4, 1e-3, "a drag turns by the canvas distance")
+	press.pressed = false
+	p._gui_input(press)
+	window.size = size_before
+	await get_tree().process_frame
+	# a preview on its own (the option check's tiles, the sheets, portraits) keeps its own size
+	var tile := GiantPreview.new()
+	layer.add_child(tile)
+	await get_tree().process_frame
+	assert_false(tile.window_pixels, "a plain preview does not resize itself")
+	assert_eq(tile.scale, Vector2.ONE, "nor scale itself")
+	tile.queue_free()
+
+
 func test_the_weapon_at_the_hand_and_the_category_framings() -> void:
 	var c := stack.open("creator", {"context": "new_game"}) as CreatorScreen
 	await get_tree().process_frame
