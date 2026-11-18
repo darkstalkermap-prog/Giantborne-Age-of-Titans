@@ -69,8 +69,19 @@ const DEFAULT_LOOK := {
 	"dye_secondary": Color(0.164706, 0.149020, 0.133333),   # #2a2622 dye.dark_leather
 }
 
-## The skin's bake was made at this tone (plan M10 §2.8): the shader scales the albedo by tone / bake tone.
-const BAKE_TONE := Color(0.69, 0.53, 0.44)
+## The tone the skin's albedo is drawn at as it was baked: the shader scales the albedo by tone / bake tone. It
+## is the default tone's colour (#b07a62, skin.ruddy; DEFAULT_LOOK.skin_tone), so the default look draws the
+## albedo exactly as the kit baked it - the skin of the approved renders - and every other tone is that albedo
+## scaled by its swatch against the default's. Until the M10 gate (OR-1) it was the kit's own parameter
+## (0.69, 0.53, 0.44; plan M10 §2.8), which made the default look the bake times (1, 0.80, 0.74) in linear
+## light: a saturated orange-red in the world's light (docs/systems/P46.md, "The M10 gate").
+const BAKE_TONE := Color(0.690196, 0.478431, 0.384314)
+## The share of a long beard's card over which its strands end one by one (the hair shader's tip_thin; the
+## M10 gate, LC-6: the full beard's lower edge was stepped blocks). Hair keeps its tips as the atlas draws them.
+const BEARD_TIP_THIN := 0.45
+## The beard meshes whose cards are long locks (giant_hair's styles without "locks": False): only their tips
+## thin out. The short and the braided beard's cards are too short for it (they showed gaps on the cheeks).
+const LOCK_BEARDS := ["Beard_full", "Beard_forked"]
 ## How far (model metres, stage 1) a region under clothing sinks inside.
 const HIDE_SHRINK_M := 0.03
 const REGIONS := 16
@@ -103,7 +114,7 @@ const UNIFORMS := {
 		"beard_color", "stubble", "scalp_tint", "beard_tint", "brows", "region_tattoo", "region_paint", "region_mark",
 		"tattoo_ink", "paint_color", "mark_color", "mark_glow", "scar_layer", "scar_on", "scar_layer_b", "scar_on_b",
 		"hidden_regions", "hide_shrink"],
-	"hair": ["hair_atlas", "hair_color", "tip_color", "grey", "length"],
+	"hair": ["hair_atlas", "hair_color", "tip_color", "grey", "length", "tip_thin", "back_fade"],
 	"eye": ["iris_color", "iris_glow"],
 	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade"],
 }
@@ -401,6 +412,10 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 				set_param(mat, "brows", 1.0)
 			"hair":
 				_set_texture(mat, "hair_atlas", texture_path(index, str(entry.get("atlas", "")), "", "hair_atlas"))
+				# the M10 gate (LC-6): a beard's tips thin strand by strand, and it fades out seen from behind
+				var is_beard := str(entry.get("category", "")) == "beard"
+				set_param(mat, "tip_thin", BEARD_TIP_THIN if is_beard and str(id) in LOCK_BEARDS else 0.0)
+				set_param(mat, "back_fade", 1.0 if is_beard else 0.0)
 			"cloth":
 				var detail := _detail_kind(str(id), entry, index)
 				var ref := str(entry.get("detail", ""))

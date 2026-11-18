@@ -29,6 +29,22 @@ func after_each() -> void:
 	await get_tree().process_frame
 
 
+## The M10 gate's LC-1: the key light (warm, shadows) shines on the side of the giant the camera sees, from above
+## and to one side, and the cool rim comes from behind him - in every framing and at every turn. Before the fix
+## the lights were fixed in the world with the key behind him, so Face, Full and chest showed him in shadow.
+func _assert_lit_from_the_camera_side(p: GiantPreview, what: String) -> void:
+	var view := -p.camera.global_basis.z
+	var flat := Vector3(view.x, 0.0, view.z).normalized()
+	var key := -p.key_light.global_basis.z
+	var rim := -p.rim_light.global_basis.z
+	var key_flat := Vector3(key.x, 0.0, key.z).normalized()
+	assert_true(key_flat.dot(flat) > 0.6, "%s: the key light shines the way the camera looks (%.2f)" % [what, key_flat.dot(flat)])
+	assert_true(key_flat.dot(flat) < 0.97, "%s: from one side, not flat on (%.2f)" % [what, key_flat.dot(flat)])
+	assert_true(key.y < -0.4, "%s: and from above (%.2f)" % [what, key.y])
+	assert_true(Vector3(rim.x, 0.0, rim.z).normalized().dot(flat) < -0.6, "%s: the rim comes from behind him" % what)
+	assert_true(p.key_light.shadow_enabled and p.key_light.light_energy > p.rim_light.light_energy, "%s: the key is the stronger, shadowed light" % what)
+
+
 func test_its_own_world_the_look_the_framings_and_the_views() -> void:
 	GiantPreview.materials_headless = true
 	var p := GiantPreview.new()
@@ -58,6 +74,12 @@ func test_its_own_world_the_look_the_framings_and_the_views() -> void:
 		p.frame(f)
 		var to_target := p.framing_target(f) - p.camera.global_position
 		assert_true(-p.camera.global_basis.z.dot(to_target.normalized()) > 0.99, "%s looks at its target" % f)
+		_assert_lit_from_the_camera_side(p, f)
+	# The lights follow a turn (the giant turns on his disc under fixed lights): the back is lit as the front is.
+	p.frame("full")
+	for deg: float in [90.0, 180.0, -120.0]:
+		p.turn(deg - p.turn_deg)
+		_assert_lit_from_the_camera_side(p, "full turned %d" % int(deg))
 	# Game view: stage 4's profile, the game's camera at rest, the world's light, a soldier.
 	var profile := GiantPreview.stage_profile(4)
 	p.set_game_profile(profile)

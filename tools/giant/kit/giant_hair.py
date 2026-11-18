@@ -13,7 +13,11 @@ card script (ribbons, the growth of the scalp and beard guides, the four styles)
 Curves objects of the renders are not ported. Changes: the crop has twice the research's cards
 (the research crop was patchy), and the styles are named by the giant index's mesh ids. The look
 pass (P46) made the cards narrower and more numerous (a card wider than it is long reads as a
-shingle), with fewer points along the short ones.
+shingle), with fewer points along the short ones. The M10 gate (LC-6) added the hairline's fringe
+(``FRINGE``: a row of short, narrow, wispy cards rooted evenly along the front of the scalp's edge,
+grown from a random stream of their own so every other card stays as it was), made a long beard's cards
+no wider than ``BEARD_ASPECT`` of their own length and taper to a point (``BEARD_TAPER``), and lays
+the wild mane's locks under the shoulders' garments as the other long styles lie (``tuck``).
 """
 from __future__ import annotations
 
@@ -26,14 +30,15 @@ ATLAS_COLUMNS = 4
 # guide points, sampling power, card width m, curl, wispy-column share of the outer layer).
 STYLES = {
     "Hair_long_back": {"kind": "scalp", "layers": [
-        dict(n=240, length=0.17, lo=0.006, hi=0.012, npts=7, power=0.6, width=0.042, curl=0.12, wispy=0.0),
-        dict(n=190, length=0.21, lo=0.014, hi=0.024, npts=9, power=0.6, width=0.032, curl=0.2, wispy=0.3)]},
+        dict(n=240, length=0.17, lo=0.006, hi=0.012, npts=6, power=0.6, width=0.042, curl=0.12, wispy=0.0),
+        dict(n=190, length=0.21, lo=0.014, hi=0.024, npts=9, power=0.6, width=0.032, curl=0.2, wispy=0.3)],
+        "fringe": dict(n=110)},
     "Hair_crop": {"kind": "scalp", "layers": [
         dict(n=1100, length=0.065, lo=0.003, hi=0.008, npts=3, power=0.4, width=0.026, curl=0.05, wispy=0.0)]},
     "Beard_full": {"kind": "beard", "layers": [
         dict(n=190, length=0.13, lo=0.004, hi=0.008, npts=7, power=1.0, width=0.03, curl=0.1, wispy=0.0),
         dict(n=140, length=0.16, lo=0.009, hi=0.016, npts=7, power=1.0, width=0.024, curl=0.15, wispy=0.3)]},
-    "Beard_short": {"kind": "beard", "layers": [
+    "Beard_short": {"kind": "beard", "locks": False, "layers": [
         dict(n=560, length=0.05, lo=0.002, hi=0.006, npts=3, power=1.0, width=0.022, curl=0.05, wispy=0.0)]},
 }
 # The target catalogue's styles (the look pass, P46; plan §2.3). Their layers carry a "grow" (the grower)
@@ -44,18 +49,18 @@ STYLES.update({
         dict(n=240, length=0.17, lo=0.006, hi=0.012, npts=7, power=0.6, width=0.042, curl=0.12, wispy=0.0),
         dict(n=110, length=0.19, lo=0.014, hi=0.022, npts=8, power=0.6, width=0.034, curl=0.2, wispy=0.3)],
         "braids": [dict(at="ear", side=s, length=0.27, width=0.034, step=0.017, lean=(0.10 * s, -0.42, -1.0))
-                   for s in (1.0, -1.0)]},
+                   for s in (1.0, -1.0)], "fringe": dict(n=90)},
     "Hair_warrior_tail": {"kind": "scalp", "layers": [
         dict(n=430, length=0.17, lo=0.003, hi=0.007, npts=5, power=0.5, width=0.04, curl=0.04, wispy=0.0,
              grow="knot"),
         dict(n=64, length=0.30, lo=0.0, hi=0.0, npts=9, power=1.0, width=0.034, curl=0.1, wispy=0.25,
-             grow="tail")]},
+             grow="tail")], "fringe": dict(n=90)},
     "Hair_wild_mane": {"kind": "scalp", "layers": [
         dict(n=230, length=0.2, lo=0.008, hi=0.016, npts=7, power=0.6, width=0.044, curl=0.1, wispy=0.0,
-             wild=0.3),
+             wild=0.3, tuck=0.02),
         dict(n=190, length=0.29, lo=0.02, hi=0.045, npts=9, power=0.6, width=0.036, curl=0.3, wispy=0.5,
-             wild=0.55)]},
-    "Beard_braided": {"kind": "beard", "layers": [
+             wild=0.55, tuck=0.02)], "fringe": dict(n=50)},
+    "Beard_braided": {"kind": "beard", "locks": False, "layers": [
         dict(n=300, length=0.1, lo=0.004, hi=0.008, npts=5, power=1.0, width=0.03, curl=0.1, wispy=0.0)],
         "braids": [dict(at="chin", side=s, length=0.17, width=0.027, step=0.014, lean=(0.05 * s, -0.16, -1.0))
                    for s in (1.0, -1.0)]},
@@ -69,6 +74,20 @@ STYLES.update({
 STYLE_ORDER = ("Hair_long_back", "Hair_crop", "Beard_full", "Beard_short",
                "Hair_long_braided", "Hair_warrior_tail", "Hair_wild_mane", "Beard_braided", "Beard_forked")
 HAIR_SEED = 11
+# The hairline's fringe (the M10 gate, LC-6): what a style's "fringe" entry does not give. Short, narrow cards
+# (three points, four triangles a card), most of them from the atlas's wispy column, lying back over the roots
+# of the style's first cards. The long hair's inner layer gave up a point a card for them (7 to 6).
+FRINGE = dict(length=0.05, lo=0.008, hi=0.016, npts=3, width=0.013, curl=0.1, wispy=0.7)
+FRINGE_SEED = 1011
+# A beard's card is at most this share of its own length wide (the cheeks' short cards were squares: steps
+# along the beard's sides), and loses this share of its width towards the tip (0.55 on the scalp: a blunt end).
+# Not the short and the braided beard ("locks": False): their cards are short, and as narrow locks they left
+# gaps on the cheeks.
+BEARD_ASPECT = 0.5
+BEARD_TAPER = 0.85
+SCALP_TAPER = 0.55
+# tuck_shoulders: how near the skin (human-scale metres) a point must be to be laid under the garments.
+TUCK_REACH = 0.11
 # How far a card's shading normal leans from the skin's normal towards the head-centre direction.
 NORMAL_ROUND = 0.5
 
@@ -199,7 +218,24 @@ def post_collide(surf, P, hmin):
     return P
 
 
-def grow_scalp(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=10, power=0.6, wild=0.0):
+def tuck_shoulders(surf, P, L, S, hs, tuck):
+    """Lay every point under the head that is near the body within ``tuck`` (human-scale metres) of the skin:
+    under the garments of the shoulders (the furs stand 0.05-0.07 off, the cape 0.05, the jerkin 0.045), as
+    the other long styles lie, so no lock dips in and out of one (the wild mane's flecks on the furs; the M10
+    gate, LC-6). A lock that flies free (further than ``TUCK_REACH`` off the skin) stays where it is."""
+    sh = P.shape
+    Q = P[:, 1:].reshape(-1, 3).copy()
+    for _ in range(3):
+        v, nn = surf.nearest(Q)
+        dist = np.einsum("ij,ij->i", Q - v, nn)
+        under = np.clip((L["chin"] - Q[:, 2]) / (0.05 * hs * S), 0.0, 1.0) * (dist < TUCK_REACH * S)
+        Q = Q - nn * (np.maximum(0.0, dist - tuck * S) * under)[:, None]
+    P = P.copy()
+    P[:, 1:] = Q.reshape(sh[0], sh[1] - 1, 3)
+    return P
+
+
+def grow_scalp(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=10, power=0.6, wild=0.0, tuck=0.0):
     roots, nrm, mv, _ = surf.sample("m_scalp", n, rng, power=power)
     roots += nrm * 0.0004 * S
     front = np.array([0.0, L["face_y"] - 0.07 * hs * S, L["brow_z"] + 0.06 * hs * S])
@@ -223,9 +259,53 @@ def grow_scalp(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=10, powe
             return _unit(base_flow(P, nn, s) + kick * (0.3 + 0.7 * s) + nn * 0.5 * wild * (1.0 - s))
 
         P = grow(surf, roots, nrm, Lh, npts, flow, lift, 0.6, 0.9, 0.3, 0.0015 * S, layer)
-        return post_collide(surf, P, 0.0015 * S)
+        P = post_collide(surf, P, 0.0015 * S)
+        return tuck_shoulders(surf, P, L, S, hs, tuck) if tuck > 0.0 else P
     P = grow(surf, roots, nrm, Lh, npts, flow, lift, 0.55, 0.9, 0.55, 0.0015 * S, layer)
     return post_collide(surf, P, 0.0015 * S)
+
+
+def grow_fringe(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=3):
+    """The hairline's fringe (the M10 gate, LC-6): ``n`` short guides rooted evenly along the front of the
+    scalp's edge (forehead, temples, in front of the ears), lying back along the scalp's own flow over the
+    roots of the style's cards. Candidates are drawn on the triangles the scalp mask's edge crosses and the
+    roots are picked farthest-first among them, so the row has no gap (the bare notch above the temple)."""
+    m = np.clip(surf.attr["m_scalp"], 0.0, 1.0)
+    tm = m[surf.T]
+    _Vs, _Ns, c, _ztop, _yback, _zmin = _scalp_frame(surf)
+    cen = surf.V[surf.T].mean(axis=1)
+    edge = np.clip(1.0 - np.abs(tm.mean(axis=1) - 0.5) / 0.5, 0.0, 1.0) * (tm.max(axis=1) > 0.05)
+    w = surf.tri_area * edge * (cen[:, 1] < c[1])            # the front half of the head (-Y is the face)
+    count = 24 * n
+    ti = rng.choice(len(w), size=count, p=w / w.sum())
+    r1 = np.sqrt(rng.random(count))
+    r2 = rng.random(count)
+    b = np.stack([1 - r1, r1 * (1 - r2), r1 * r2], axis=1)
+    tri = surf.T[ti]
+    cand = np.einsum("ij,ijk->ik", b, surf.V[tri])
+    cn = _unit(np.einsum("ij,ijk->ik", b, surf.N[tri]))
+    mv = np.einsum("ij,ij->i", b, m[tri])
+    ok = np.nonzero((mv > 0.08) & (mv < 0.6))[0]
+    cand, cn = cand[ok], cn[ok]
+    pick = [0]
+    d = np.linalg.norm(cand - cand[0], axis=1)
+    for _ in range(min(n, len(cand)) - 1):
+        i = int(np.argmax(d))
+        pick.append(i)
+        d = np.minimum(d, np.linalg.norm(cand - cand[i], axis=1))
+    roots, nrm = cand[pick] + cn[pick] * 0.0006 * S, cn[pick]
+    k = len(roots)
+    front = np.array([0.0, L["face_y"] - 0.07 * hs * S, L["brow_z"] + 0.06 * hs * S])
+
+    def flow(P, nn, s):
+        v = _unit(P - front) + np.array([0.0, 0.25, -1.0]) * (0.2 + 0.6 * s)
+        return _unit(_tangent(v, nn))
+
+    Lh = length * S * (0.7 + 0.6 * rng.random(k))
+    lift = 0.05 + 0.1 * rng.random(k)
+    layer = (layer_lo + (layer_hi - layer_lo) * rng.random(k)) * hs * S
+    P = grow(surf, roots, nrm, Lh, npts, flow, lift, 0.5, 0.9, 0.2, 0.002 * S, layer)
+    return post_collide(surf, P, 0.002 * S)
 
 
 def _scalp_frame(surf):
@@ -313,9 +393,10 @@ def grow_beard(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=8, power
 # --------------------------------------------------------------------------------------
 # cards
 # --------------------------------------------------------------------------------------
-def ribbons(surf, P, widths, col_idx, curl, centre=None, facing=None):
+def ribbons(surf, P, widths, col_idx, curl, centre=None, facing=None, taper=SCALP_TAPER):
     """Guides P (N, K, 3) -> card vertices, faces (quads), uvs, normals. ``facing`` (N, 3) replaces the
-    skin's normal as the way each card faces (a braid's lobes)."""
+    skin's normal as the way each card faces (a braid's lobes); a card loses ``taper`` of its width
+    towards its tip."""
     N, K, _ = P.shape
     T = np.gradient(P, axis=1)
     T /= np.linalg.norm(T, axis=2, keepdims=True) + 1e-12
@@ -327,7 +408,7 @@ def ribbons(surf, P, widths, col_idx, curl, centre=None, facing=None):
     side = np.cross(nrm, T)
     side /= np.linalg.norm(side, axis=2, keepdims=True) + 1e-12
     s = np.linspace(0, 1, K)[None, :, None]
-    w = widths[:, None, None] * (1.0 - 0.55 * s ** 1.4)
+    w = widths[:, None, None] * (1.0 - taper * s ** 1.4)
     c = curl[:, None, None] * w
     Lft = P - side * w * 0.5 - nrm * c
     Rgt = P + side * w * 0.5 - nrm * c
@@ -434,7 +515,7 @@ def build_styles(body, rig, coll, bd, S):
         cards = 0
         for ly in style["layers"]:
             grower = grow_scalp if style["kind"] == "scalp" else grow_beard
-            extra = {k: ly[k] for k in ("wild", "fork") if k in ly}
+            extra = {k: ly[k] for k in ("wild", "fork", "tuck") if k in ly}
             if ly.get("grow") == "knot":
                 grower = grow_knot
             elif ly.get("grow") == "tail":
@@ -447,7 +528,27 @@ def build_styles(body, rig, coll, bd, S):
                 cols = np.where(rng.random(n) < ly["wispy"], 3, rng.integers(0, 3, n))
             else:
                 cols = rng.integers(0, 3, n)
-            V, F, UV, Nn = ribbons(surf, P, width, cols, np.full(n, ly["curl"]), centre)
+            taper = SCALP_TAPER
+            if style["kind"] == "beard" and style.get("locks", True):
+                along = np.linalg.norm(np.diff(P, axis=1), axis=2).sum(axis=1)
+                width = np.minimum(width, BEARD_ASPECT * along)
+                taper = BEARD_TAPER
+            V, F, UV, Nn = ribbons(surf, P, width, cols, np.full(n, ly["curl"]), centre, taper=taper)
+            Vs.append(V)
+            Fs.append(F + off)
+            UVs.append(UV)
+            Ns.append(Nn)
+            off += len(V)
+            cards += n
+        if "fringe" in style:
+            # a random stream of its own per style: the other cards of every style stay as they were grown
+            fr = dict(FRINGE, **style["fringe"])
+            frng = np.random.default_rng([FRINGE_SEED, STYLE_ORDER.index(mesh_id)])
+            P = grow_fringe(surf, L, S, hs, frng, fr["n"], fr["length"], fr["lo"], fr["hi"], npts=fr["npts"])
+            n = len(P)
+            width = fr["width"] * S * (0.8 + 0.4 * frng.random(n))
+            cols = np.where(frng.random(n) < fr["wispy"], 3, frng.integers(0, 3, n))
+            V, F, UV, Nn = ribbons(surf, P, width, cols, np.full(n, fr["curl"]), centre, taper=0.7)
             Vs.append(V)
             Fs.append(F + off)
             UVs.append(UV)

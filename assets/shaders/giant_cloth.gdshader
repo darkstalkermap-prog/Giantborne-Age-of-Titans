@@ -19,7 +19,19 @@ uniform float fade : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
+#include "res://assets/shaders/giant_first_person.gdshaderinc"
+varying vec3 v_fp_pos;
+varying flat float v_fp_on;
+
+void vertex() {
+	v_fp_pos = VERTEX;
+	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD));
+}
+
 void fragment() {
+	if (fp_shoulders_hidden(v_fp_pos, v_fp_on, FRAGCOORD.xy)) {
+		discard;   // first person: a sleeve fades out towards the shoulder with the arm in it
+	}
 	if (fade > 0.0) {
 		float h = fract(sin(dot(floor(FRAGCOORD.xy), vec2(12.9898, 78.233))) * 43758.5453);
 		if (h < fade * 0.85) {

@@ -528,6 +528,22 @@ have the detail and the tests.
 | Ship (W24) | Two Chromium checks (`stream_check.mjs --world --audio`, `world_check.mjs`) failed their default form on the release build on one hole each the recorder did not place on the main thread, at loads of 12-17. | Run again alone on the quiet machine: both OK, with `audio_check.mjs` again (`docs/PERFORMANCE.md`, "The 0.9.0-m9 release (quiet machine)"); no code changed. |
 | Ship (W24) | The world tour's script had no committed `.uid`, which every other `tools/` script has. | Committed (`9f0112a`). |
 
+### 3.3 M10 (the gate, lane look)
+
+The look's findings of the M10 gate review and what was decided; the detail is in `docs/systems/P46.md`, "The M10
+gate (lane look)".
+
+| Finding | Decision |
+| --- | --- |
+| The creator's key light shone on the giant's back (LC-1). | The studio lights turn with the camera's yaw: the key always from the camera's side, the rim from behind. The rendered option check's floors were measured again in that light. |
+| First person looking down showed the arms' shoulder caps as flat slabs (LC-3). | Fixed in the shaders, the body mesh untouched: while the camera is inside the head the limbs fade out towards the shoulders (a dithered discard in a box round them). New cap geometry was allowed only if this did not read clean at stages 1, 4 and 6; it did. |
+| The model's mesh buffers are 5.87 MB against 3.5 MB (LD-3). | Accepted. The budget row is **6.0 MB** for the target catalogue: every hair, beard and garment mesh is resident whichever a look shows. Loading a style on demand is left to M11. |
+| The fullest look draws 4,118 primitives at 121-130 m at 1920x1080 against 4,000 (LD-4). | Accepted and recorded: 3 % over between 120 and about 150 m at 1080p only, met at 1280x720, and the game's camera never stands that far from the player's giant. A coarser last LOD for the hair cards is M11's. |
+| `giant_clips.glb` had no provenance row (LD-5). | Row added: computed keyframes, no outside animation data. |
+| The hair's card tips at the creator's framings (LC-6). | First handed to M11, then required at the gate and done: a fringe of narrow cards at the hairline of the four long styles, card roots that feather strand by strand, the full and the forked beard's cards as narrow pointed locks whose tips thin out, a beard that fades out seen from behind, the wild mane's locks laid under the shoulders' garments. A change was kept only where the before and after frames of all eight presets showed it clearly better: the short and the braided beard keep their cards. `giant.glb` regenerated; `--giant-full` bit-exact. |
+| The default skin read orange-red in the world's light (OR-1). | First handed to M11, then required at the gate and done, parameters only: the skin's `bake_tone` is the default tone, so the default look draws the albedo as the kit baked it (the approved renders' skin) and the other tones scale it by their swatch against the default's; the light's wrap is less red. **This sets aside plan M10 §2.8's row for `bake_tone`** (the constant (0.69, 0.53, 0.44), the kit's bake parameter): with it the default look multiplied the bake by (1, 0.80, 0.74). |
+| The far primitives and the mesh buffers after the hair changes. | 3,920 primitives at 121-130 m at 1920x1080: the 4,000 row is met. The mesh buffers read 5.98 MB of the 6.0 MB row. |
+
 ## 4. The plans' review logs
 
 ### 4.1 The M2-M5 plan (its §7)

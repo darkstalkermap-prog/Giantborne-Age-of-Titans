@@ -17,15 +17,19 @@ const CHILD_TIMEOUT_S := 200
 const TILE_PX := 320 * 240
 ## A tile is drawn when at least this share of its pixels is off its backdrop.
 const MIN_LIT := 0.02
-## The share of a framed tile's pixels an option must change, per set: about half the smallest share the floor
-## catalogue's options measured in the set (W26, llvmpipe, the web tier; P44.md lists them). The look pass (P46)
-## set the beard's again by the same rule on the target catalogue: its beards are compared with the default
-## full beard, so a shorter cut or another shape of the same beard changes less of the tile than a beard against
-## none (the smallest: the trimmed beard 0.0283; P46.md lists every set). The hair's floor stands: the
-## shoulder-length cut, the smallest, changes 0.0561.
-const FLOORS := {"skin": 0.008, "eyes": 0.0001, "hair": 0.045, "beard": 0.014, "haircolor": 0.015,
-	"tattoo": 0.0007, "ink": 0.008, "paint": 0.0045, "paintcolor": 0.0045, "scar": 0.00015, "mark": 0.0018,
-	"outfit": 0.012, "dye": 0.014, "preset": 0.012}
+## The share of a framed tile's pixels an option must change, per set: about half the smallest share the set's
+## options measure (llvmpipe, the web tier), P44's rule. The M10 gate (LC-1) put the creator's key light on the
+## side of the giant the camera sees and measured every set again in that light, with the same margin (P46.md
+## lists the shares before and after): the lit skin, presets and beards change more of a tile than they did in
+## the shadow (skin 0.0574 against 0.0160, presets 0.0762 against 0.0436, beards 0.0389 against 0.0283), so
+## their floors rose; the hair colours, seen from behind with the key now 35 degrees to one side instead of
+## flat on, change less (the nearest brown 0.0170 against 0.0332), so theirs fell. The hair's floor stands (the
+## shoulder-length cut, the smallest, changes 0.0580).
+## The gate's hair and skin changes (LC-6, OR-1) moved the shares again (skin 0.0594, hair 0.0599, beard 0.0306,
+## haircolor 0.0170, presets 0.0793): every floor stands; the beard's is now 0.62 of its set's smallest share.
+const FLOORS := {"skin": 0.028, "eyes": 0.00025, "hair": 0.045, "beard": 0.019, "haircolor": 0.0085,
+	"tattoo": 0.0009, "ink": 0.008, "paint": 0.005, "paintcolor": 0.005, "scar": 0.0003, "mark": 0.0019,
+	"outfit": 0.011, "dye": 0.014, "preset": 0.038}
 ## The pixels of a 320x240 tile the best option of a design category must change in the stage-1 rear Game
 ## view or in first person: about half the weakest reading category's best there (the marks: the lightning
 ## tree's 37 px from behind, the granite veins' 180 px in first person). 18 px of the tile are about 350 px of a
