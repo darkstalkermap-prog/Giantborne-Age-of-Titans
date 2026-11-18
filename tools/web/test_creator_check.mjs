@@ -11,6 +11,7 @@
 //   * stall: the creator's first frame takes ten median frames - the default check passes and reports a
 //     MISS, --strict fails;
 //   * slowskin: the skin's CPU a frame is 0.52 ms in the Valley - reported as a MISS, --strict fails;
+//   * slowsprings: with secondary motion it is 0.61 ms (0.24 without) - reported as a MISS;
 //   * noundo: Ctrl+Z changes nothing - the check fails;
 //   * nolock: Begin asks for no pointer lock - the check fails;
 //   * webtier: the giant draws the 512 px maps - the check fails (tex_hi/ is wanted in the Web pack);
@@ -60,7 +61,8 @@ const STUB = `<!doctype html>
     focus: '', focus_tab: false, prompt: '', captured: false, tiers: [] };
   const say = (line) => console.log('UI_PROBE ' + JSON.stringify(line));
   const set = (change) => { s = Object.assign({}, s, change); frame += 1; say(Object.assign({ t: 'state', frame }, s)); };
-  const bench = (mark, ms, giants) => say({ t: 'bench', mark, skin_ms: ms, batches: 5, runs: 200, giants, modifier_runs: 1000, paused: giants > 1 });
+  const bench = (mark, ms, giants) => say({ t: 'bench', mark, skin_ms: ms, skin_springs_ms: mode === 'slowsprings' ? 0.61 : ms + 0.03,
+    chains: ['beard', 'hair'], batches: 5, runs: 200, giants, modifier_runs: 1000, paused: giants > 1 });
   const stall = (mark, first, med, more) => say(Object.assign({ t: 'stall', mark, first_ms: first, median_ms: med,
     ratio: Math.round(100 * first / med) / 100, frames: 40 }, more || {}));
   const db = (write) => new Promise((ok) => {
@@ -262,6 +264,15 @@ console.log('slowskin: the skin costs 0.52 ms a frame');
   const r = run('slowskin', ['--parts=new_game']);
   check(r.code === 0 && r.out.includes('MISS: new_game: the skin\'s CPU a frame after "level" (1 giant(s)): 0.52 ms (at most 0.35 ms on the Web)'),
     `the default check passes and reports the miss (exit ${r.code})`);
+}
+
+console.log('slowsprings: the skin with secondary motion costs 0.61 ms a frame');
+{
+  const r = run('slowsprings', ['--parts=new_game']);
+  check(r.code === 0 && r.out.includes('MISS: new_game: the skin\'s CPU a frame with secondary motion after "level": 0.61 ms (at most 0.45 ms on the Web)')
+    && !r.out.includes('MISS: new_game: the skin\'s CPU a frame after'), `the default check passes and reports the miss (exit ${r.code})`);
+  const o = run('ok', ['--parts=new_game']);
+  check(o.code === 0 && o.out.includes('with secondary motion 0.27 ms (chains: beard, hair)'), `the report prints it (exit ${o.code})`);
 }
 
 console.log('noundo: Ctrl+Z changes nothing');

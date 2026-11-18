@@ -64,6 +64,8 @@ export const STALL_RATIO = 3;
 export const STALL_FLOOR_MS = 25;
 // Plan M10 §2.12: the skin's CPU a frame on the Web (the player's giant).
 export const SKIN_MS_WEB = 0.35;
+// The same with secondary motion (the springs and their limits; plan M11 §2.12: Web at most 0.45 ms).
+export const SKIN_SPRINGS_MS_WEB = 0.45;
 // The screens' own words (ui/screens/title_screen.gd, shrine/appearance_tab.gd, scripts/world/shrine.gd).
 const NEW_GAME = 'New Game';
 const CONTINUE = 'Continue';
@@ -351,9 +353,10 @@ async function finish(part, out, problems, misses, opts) {
     }
   }
   // The skin's CPU a frame (--ui-probe-bench: the player's rig in a tight loop when a mark's frames are done).
-  out.skin_bench = seen.benches.map((b) => ({ mark: b.mark, skin_ms: b.skin_ms, giants: b.giants, modifier_runs: b.modifier_runs, paused: b.paused }));
+  out.skin_bench = seen.benches.map((b) => ({ mark: b.mark, skin_ms: b.skin_ms, skin_springs_ms: b.skin_springs_ms, chains: b.chains, giants: b.giants, modifier_runs: b.modifier_runs, paused: b.paused }));
   for (const b of out.skin_bench) {
     if (b.skin_ms > SKIN_MS_WEB) misses.push(`the skin's CPU a frame after "${b.mark}" (${b.giants} giant(s)): ${b.skin_ms} ms (at most ${SKIN_MS_WEB} ms on the Web)`);
+    if (b.skin_springs_ms > SKIN_SPRINGS_MS_WEB) misses.push(`the skin's CPU a frame with secondary motion after "${b.mark}": ${b.skin_springs_ms} ms (at most ${SKIN_SPRINGS_MS_WEB} ms on the Web)`);
   }
   out.page_frames = { count: work.length, median_work_ms: round1(median(work)), worst_work_ms: round1(Math.max(0, ...work)) };
   await context.close();
@@ -582,7 +585,7 @@ async function main() {
       }
     }
     if (p.pointer_lock) console.log(`    Begin's pointer lock: ${p.pointer_lock.requests} request(s), inside the gesture: ${p.pointer_lock.in_gesture}, locked: ${p.pointer_lock.locked}`);
-    for (const b of p.skin_bench) console.log(`    the skin's CPU after "${b.mark}": ${b.skin_ms} ms a frame (${b.giants} giant(s) in the tree, ${b.modifier_runs} modifier runs timed)`);
+    for (const b of p.skin_bench) console.log(`    the skin's CPU after "${b.mark}": ${b.skin_ms} ms a frame (${b.giants} giant(s) in the tree, ${b.modifier_runs} modifier runs timed)${b.skin_springs_ms !== undefined ? `; with secondary motion ${b.skin_springs_ms} ms (chains: ${(b.chains || []).join(', ') || 'none'})` : ''}`);
     if (p.level_tiers) console.log(`    the giant's texture tier in the level: ${JSON.stringify(p.level_tiers)}`);
     for (const e of p.console_errors.slice(0, 10)) console.log(`    error: ${e}`);
     for (const w of p.engine_warnings.slice(0, 6)) console.log(`    warning: ${w}`);

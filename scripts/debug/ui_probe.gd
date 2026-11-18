@@ -31,7 +31,9 @@ extends Node
 ##       native <= 0.10) - SkinnedRig._drive_tree, the AnimationTree's advance, the skeleton's update
 ##       and PoseBrainModifier's pass in a tight loop, the best of BENCH_BATCHES batches of BENCH_RUNS; "giants" is
 ##       how many skinned giants were in the tree (2 with the creator's preview open at a shrine), and
-##       "modifier_runs" proves the modifier ran in the loop.
+##       "modifier_runs" proves the modifier ran in the loop. "skin_springs_ms" (the W30 merge) is the same loop with
+##       the skeleton advanced in manual mode, so every modifier runs - the springs and SecondaryMotion's limits too
+##       (§2.12's row with secondary motion: Web <= 0.45 ms, native <= 0.12) - and "chains" the chains they ran.
 ##   UI_PROBE {"t":"done", "tour", "ok", "why"}   a tour's end (it then quits).
 ##
 ## Frame intervals are wall-clock time between two _process calls (the probe runs first in the frame,
@@ -300,11 +302,28 @@ func skin_bench() -> Dictionary:
 			if mod != null:
 				mod._process_modification_with_delta(dt)   # the engine runs it inside the skeleton's deferred update
 		best = minf(best, float(Time.get_ticks_usec() - t0) / float(BENCH_RUNS))
+	# The same with every modifier the skeleton runs, the springs and their limits included (P50's SecondaryMotion;
+	# the W30 merge): the skeleton in manual mode, advanced by hand and updated at once (its deferred update, which
+	# runs every modifier and emits skeleton_updated as a frame does; plan M11 §2.12's row with secondary motion).
+	var with_springs := INF
+	var mode := sk.modifier_callback_mode_process
+	sk.modifier_callback_mode_process = Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_MANUAL
+	for _b in BENCH_BATCHES:
+		var t0 := Time.get_ticks_usec()
+		for _i in BENCH_RUNS:
+			rig._drive_tree(dt)
+			tree.advance(dt)
+			sk.advance(dt)   # queues the modifiers' pass with this delta; the notification runs it now
+			sk.notification(Skeleton3D.NOTIFICATION_UPDATE_SKELETON)
+		with_springs = minf(with_springs, float(Time.get_ticks_usec() - t0) / float(BENCH_RUNS))
+	sk.modifier_callback_mode_process = mode
+	var sm := rig.secondary()
 	var giants := 0
 	for m in get_tree().get_nodes_in_group(GiantModel.GROUP):
 		if (m as Node).is_inside_tree():
 			giants += 1
-	return {"skin_ms": snappedf(best / 1000.0, 0.0001), "batches": BENCH_BATCHES, "runs": BENCH_RUNS, "giants": giants,
+	return {"skin_ms": snappedf(best / 1000.0, 0.0001), "skin_springs_ms": snappedf(with_springs / 1000.0, 0.0001),
+		"chains": Array(sm.chains) if sm != null else [], "batches": BENCH_BATCHES, "runs": BENCH_RUNS, "giants": giants,
 		"modifier_runs": (mod.runs if mod != null else 0) - runs_before, "paused": get_tree().paused}
 
 

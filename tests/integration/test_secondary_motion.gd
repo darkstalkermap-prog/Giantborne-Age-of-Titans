@@ -149,3 +149,20 @@ func test_the_braids_hang_on_their_chains_and_the_shells_on_the_head() -> void:
 			assert_near(_chain_share(mi, all_chains, -1.0).x, 0.0, 1e-4, "%s hangs on no chain bone" % id)
 	assert_eq(Array(_rig(p).secondary().chains), [], "the shell look runs no chain")
 	assert_true(_rig(p).secondary().resets > resets, "and the change to it reset the springs")
+
+
+## The W30 merge: UiProbe's skin bench (creator_check.mjs's Web number) times the springs too - the skeleton
+## advanced by hand in manual mode, so every modifier runs - and puts the skeleton back in its own mode after.
+func test_the_skin_bench_times_the_springs() -> void:
+	var p := await _giant(LONG_LOOK)
+	var sk := _rig(p).skeleton()
+	var mode := sk.modifier_callback_mode_process
+	var probe := UiProbe.new()
+	add_child(probe)
+	var frames := _rig(p).secondary().frames
+	var b := probe.skin_bench()
+	probe.free()
+	assert_true(float(b.get("skin_ms", 0.0)) > 0.0 and float(b.get("skin_springs_ms", 0.0)) > 0.0, "both timings (%s)" % b)
+	assert_eq(b.get("chains"), ["beard", "cape_c", "cape_l", "cape_r", "hair", "hair_l", "hair_r"], "the look's chains ran")
+	assert_true(_rig(p).secondary().frames >= frames + UiProbe.BENCH_BATCHES * UiProbe.BENCH_RUNS, "the limits ran in the loop")
+	assert_eq(sk.modifier_callback_mode_process, mode, "the skeleton's mode is restored")
