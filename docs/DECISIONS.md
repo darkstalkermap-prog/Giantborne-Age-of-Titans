@@ -528,6 +528,20 @@ have the detail and the tests.
 | Ship (W24) | Two Chromium checks (`stream_check.mjs --world --audio`, `world_check.mjs`) failed their default form on the release build on one hole each the recorder did not place on the main thread, at loads of 12-17. | Run again alone on the quiet machine: both OK, with `audio_check.mjs` again (`docs/PERFORMANCE.md`, "The 0.9.0-m9 release (quiet machine)"); no code changed. |
 | Ship (W24) | The world tour's script had no committed `.uid`, which every other `tools/` script has. | Committed (`9f0112a`). |
 
+### 3.3 M10 (the gate, lane look)
+
+The look's findings of the M10 gate review and what was decided; the detail is in `docs/systems/P46.md`, "The M10
+gate (lane look)".
+
+| Finding | Decision |
+| --- | --- |
+| The creator's key light shone on the giant's back (LC-1). | The studio lights turn with the camera's yaw: the key always from the camera's side, the rim from behind. The rendered option check's floors were measured again in that light. |
+| First person looking down showed the arms' shoulder caps as flat slabs (LC-3). | Fixed in the shaders, the body mesh untouched: while the camera is inside the head the limbs fade out towards the shoulders (a dithered discard in a box round them). New cap geometry was allowed only if this did not read clean at stages 1, 4 and 6; it did. |
+| The model's mesh buffers are 5.87 MB against 3.5 MB (LD-3). | Accepted. The budget row is **6.0 MB** for the target catalogue: every hair, beard and garment mesh is resident whichever a look shows. Loading a style on demand is left to M11. |
+| The fullest look draws 4,118 primitives at 121-130 m at 1920x1080 against 4,000 (LD-4). | Accepted and recorded: 3 % over between 120 and about 150 m at 1080p only, met at 1280x720, and the game's camera never stands that far from the player's giant. A coarser last LOD for the hair cards is M11's. |
+| `giant_clips.glb` had no provenance row (LD-5). | Row added: computed keyframes, no outside animation data. |
+| The hair's card tips at the creator's framings (LC-6); the default skin's orange cast in the world's light (OR-1). | M11 (`docs/plans/FOLLOWUPS.md`). |
+
 ## 4. The plans' review logs
 
 ### 4.1 The M2-M5 plan (its §7)
