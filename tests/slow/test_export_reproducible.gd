@@ -25,6 +25,7 @@ const SCENES := ["res://scenes/player/giant_model.tscn", "res://scenes/player/gi
 const BUILD_WEB := "res://tools/build_web.sh"
 const NORMALIZE := "res://tools/normalize_imports.gd"
 const GIANT_GLB := "res://assets/giant/giant.glb"
+const GIANT_GLB_MESHES: Array[String] = ["Body_Head", "Body_Torso", "Body_Limbs", "Eyes", "ShadowProxy"]
 
 
 func before_each() -> void:
@@ -151,7 +152,8 @@ func test_an_imported_scene_gets_the_same_ids_whatever_the_importer_drew() -> vo
 	if imported == "":
 		return
 	var nodes := (ResourceLoader.load(imported, "PackedScene", ResourceLoader.CACHE_MODE_IGNORE) as PackedScene).get_state().get_node_count()
-	assert_true(nodes >= 20, "the imported giant has its nodes (%d)" % nodes)
+	# P48 (M11 W29): giant.glb holds the skeleton and five meshes; the hair and the garments are parts.
+	assert_true(nodes >= GIANT_GLB_MESHES.size() + 2, "the imported giant has its nodes (%d): the root, the skeleton and its meshes" % nodes)
 	# Two imports of one file: the same scene, other ids. Both are written at the same path, one after the
 	# other, as two checkouts each hold their import at one path (a binary scene names its own path in its
 	# sub-resources' references, so two paths would differ in that alone).
@@ -182,7 +184,8 @@ func test_an_imported_scene_gets_the_same_ids_whatever_the_importer_drew() -> vo
 	var after := ps.instantiate()
 	var names_before := before.find_children("*", "MeshInstance3D", true, false).map(func(n: Node) -> String: return str(n.name))
 	var names_after := after.find_children("*", "MeshInstance3D", true, false).map(func(n: Node) -> String: return str(n.name))
-	assert_true(names_before.size() >= 9 and names_before == names_after, "the same meshes under the same names (%d)" % names_after.size())
+	assert_true(GIANT_GLB_MESHES.all(func(m: String) -> bool: return names_before.has(m)) and names_before == names_after,
+		"the same meshes under the same names (%d; giant.glb's own: %s)" % [names_after.size(), ", ".join(GIANT_GLB_MESHES)])
 	var body_before := before.find_child("Body_Torso", true, false) as MeshInstance3D
 	var body_after := after.find_child("Body_Torso", true, false) as MeshInstance3D
 	assert_true(var_to_bytes(body_before.mesh.surface_get_arrays(0)) == var_to_bytes(body_after.mesh.surface_get_arrays(0)), "the torso's vertices are untouched")
