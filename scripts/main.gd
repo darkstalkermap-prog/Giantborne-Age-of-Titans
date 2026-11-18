@@ -11,7 +11,9 @@ extends Node
 ##     loading gate (P19): the tree stays paused behind "Loading..." until Audio.is_ready() - every
 ##     SFX sample of the level registered - so no sound plays before its sample exists and the
 ##     first play() never registers (plan M6-M9 §2.5, decision 2); then (M6 gate) until the level's
-##     navigation map has synced (hold_until_navigation_ready). Paused frames run no tick, and
+##     navigation map has synced (hold_until_navigation_ready); then (M10 gate) with a display the
+##     camera is put on the giant and the level drawn three times (hold_until_drawn: the warm-up of
+##     the first frame of play). Paused frames run no tick, and
 ##     the autopilot (and with it the Valley bot) does nothing while the gate holds (is_loading()),
 ##     so the seeded timeline is the same with audio on or off.
 ## The ScreenStack (P03) handles pause / Esc itself (and every modal screen); focus loss and a
@@ -42,6 +44,12 @@ const WORLD_LOAD_LIMIT_S := 8.0
 ## M6 gate: the most frames the loading gate waits for the level's navigation map to sync (one
 ## physics step in deterministic runs, where maps sync synchronously: Sim.make_navigation_synchronous).
 const NAVIGATION_WAIT_FRAMES := 120
+## M10 gate (LD-2): the frames of the finished level drawn behind the loading screen before it lets go
+## (hold_until_drawn), and the longest that may take (a slow renderer's frames: then on, as before).
+const WARM_FRAMES := 3
+const WARM_LIMIT_S := 6.0
+## Tests run the warm-up's wait without a display. Reset it after use.
+static var force_warm_up := false
 
 var hud: Hud
 var screen_stack: ScreenStack
@@ -54,6 +62,8 @@ var _layer: CanvasLayer
 var _in_level := false
 var _was_captured := false
 var _loading := false
+## M10 gate (LD-2): the frames the last load drew behind the loading screen (0 headless).
+var warm_frames_drawn := 0
 
 
 func _ready() -> void:
@@ -99,6 +109,9 @@ func _ready() -> void:
 	if not is_inside_tree():
 		return
 	await hold_until_navigation_ready(nav_built)
+	if not is_inside_tree():
+		return
+	await hold_until_drawn(loading)
 	if not is_inside_tree():
 		return
 	loading.queue_free()
@@ -153,6 +166,50 @@ func hold_until_navigation_ready(built_iteration: int) -> void:
 			and NavigationServer3D.map_get_iteration_id(world.navigation_map) <= built_iteration:
 		frames += 1
 		await get_tree().process_frame
+
+
+## The warm-up part of the loading gate (M10 gate, LD-2; plan M10 §3.5 item 5, M8's F26 pattern): with a
+## display, the finished level is drawn WARM_FRAMES times behind "Loading..." from where the player's camera
+## will stand (frame_camera_on_player) before the screen lets go - the giant in his saved look and at his
+## saved size under the level's own lights, the chunks and props around him, the HUD - so the shaders and
+## buffers the first frame of play needs are made while the player still reads "Loading...". Before, the
+## camera stood at the level's own start through the whole load, and after a Continue the first frame of
+## play drew the giant and his surroundings for the first time: on the Web it took 3 to 4.6 median frames.
+## The tree stays paused (no tick passes: a seeded run's timeline is the same) and nothing waits without a
+## display (headless runs and the test suites draw nothing). At most WARM_LIMIT_S. Returns the frames held
+## (`warm_frames_drawn`: each process frame of a paused tree with a window is followed by its draw).
+func hold_until_drawn(loading: Label) -> int:
+	warm_frames_drawn = 0
+	if not warm_up_wanted():
+		return 0
+	if is_instance_valid(loading):
+		loading.text = LOADING_TEXT
+	frame_camera_on_player()
+	var t0 := Time.get_ticks_msec()
+	while is_inside_tree() and warm_frames_drawn < WARM_FRAMES \
+			and Time.get_ticks_msec() - t0 < int(WARM_LIMIT_S * 1000.0):
+		await get_tree().process_frame
+		warm_frames_drawn += 1
+	return warm_frames_drawn
+
+
+## Puts the player's camera where its first frame of play will have it (true when it did). The rig follows
+## the giant in _process, which a paused tree does not run: after a Continue it still stood at the level's
+## own start, where the giant was before the save moved him to his shrine and grew him, so every frame behind
+## the loading screen looked at another part of the world and the first frame of play drew the giant and his
+## surroundings for the first time.
+func frame_camera_on_player() -> bool:
+	var player := get_tree().get_first_node_in_group("player") as GiantPlayer
+	if player == null or player.camera_rig == null or not player.camera_rig.has_method("_update_transform"):
+		return false
+	player.camera_rig.call("_update_transform", 0.0)   # delta 0: placed, no time passes
+	return true
+
+
+## True when the loading screen draws its warm-up frames: a level is loaded and there is a display to draw on
+## (force_warm_up lets a headless test run the wait; the frames are then the server's empty ones).
+func warm_up_wanted() -> bool:
+	return level != null and is_instance_valid(level) and (force_warm_up or DisplayServer.get_name() != "headless")
 
 
 ## The world's loading screen (P24a, plan M6-M9 §2.8): a streamed level (one that answers
