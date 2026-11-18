@@ -34,7 +34,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { drawShare, median, stallOk } from './creator_check.mjs';
+import { drawShare, glOfMark, markTime, median, stallOk } from './creator_check.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CHECK = join(ROOT, 'tools', 'web', 'creator_check.mjs');
@@ -187,6 +187,20 @@ check(median([5, 1, 3]) === 3 && median([4, 1, 3, 2]) === 2.5 && median([]) === 
 // P49: which part of a mark's longest first frame was the renderer's draw.
 check(drawShare({ first: [500, 60, 50], first_draw: [410, 30, 28] }) === 0.82 && drawShare({ first: [40, 300], first_draw: [10, 30] }) === 0.1,
   'the draw share is read at the longest of the first frames');
+// P49: what a mark's first frames asked of WebGL, from the page's frame list and its sparse GL list.
+{
+  const work = [];
+  for (let i = 0; i < 60; i++) work.push([1000 + 20 * i, 5]);
+  const glf = [[1000 + 20 * 9, 9, 9, 9, 9, 9], [1000 + 20 * 10, 4, 2, 3, 5, 1], [1000 + 20 * 12, 0, 0, 1, 2, 0], [1000 + 20 * 30, 0, 1, 0, 0, 0]];
+  const states = [[900, 'title', false, ''], [1195, 'creator', false, ''], [2100, '', true, 'level.valley'], [2150, '', false, 'level.valley']];
+  check(markTime(states, 'creator') === 1195 && markTime(states, 'level') === 2150 && markTime(states, 'title') === null && markTime([], 'creator') === null,
+    'a mark\'s time is its state line\'s (the creator opening, a level loaded and shown)');
+  const g = glOfMark(work, glf, 1195);
+  check(g && g.first.frames === 3 && g.first.shaders_compiled === 4 && g.first.programs_linked === 2 && g.first.textures_allocated === 4
+    && g.first.texture_updates === 7 && g.first.framebuffers === 1, `the three frames after the mark: ${JSON.stringify(g && g.first)}`);
+  check(g && g.steady.frames === 40 && g.steady.programs_linked === 1 && g.steady.shaders_compiled === 0, 'the forty after them, the frame before the mark left out');
+  check(glOfMark(work, glf, null) === null && glOfMark(work, glf, 99999) === null, 'no mark time, or one after the last frame: nothing');
+}
 check(drawShare({ first_ms: 90 }) === null && drawShare({ first: [], first_draw: [] }) === null && drawShare(null) === null, 'no draw times, no share');
 
 console.log('ok: New Game through the creator into the Valley; a world save through the shrine into the creator');

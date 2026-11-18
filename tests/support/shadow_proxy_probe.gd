@@ -23,7 +23,9 @@ extends SceneTree
 ## the rig's path is the same either way. Prints one line for each --splits value
 ##   SHADOW_PROXY {"splits", "stand_in", "shown", "shown_surfaces", "proxy_surfaces", "empty", "all",
 ##                 "proxy", "late", "cape", "unlit", "casting": [names], "adapter"}
-## and quits.
+## and quits. With --shots=<dir> (user://m11_frames/P49: the test passes it) the "all" and "proxy" frames
+## of each shadow mode are saved as shadow_<splits>_all.png and shadow_<splits>_proxy.png - the same giant
+## and floor, the shadow cast by every mesh and by the proxy alone.
 
 const MODEL := "res://scenes/player/giant_model.tscn"
 ## The rig's scripts are loaded at run time: a script run with -s compiles before the autoloads exist,
@@ -44,6 +46,7 @@ var _state := 0
 var _out := {}
 var _splits := 1
 var _todo: Array[int] = []
+var _shots := ""
 
 
 func _initialize() -> void:
@@ -51,6 +54,9 @@ func _initialize() -> void:
 		if a.begins_with("--splits="):
 			for part in a.substr(9).split(",", false):
 				_todo.append(int(part))
+		elif a.begins_with("--shots="):
+			_shots = a.substr(8)
+			DirAccess.make_dir_recursive_absolute(_shots)
 	if _todo.is_empty():
 		_todo.append(1)
 	_splits = _todo.pop_front()
@@ -101,6 +107,10 @@ func _on_frame() -> void:
 		return
 	_frame = 0
 	_out[STATES[_state]] = _calls()
+	if _shots != "" and STATES[_state] in ["all", "proxy"]:
+		var image := get_root().get_texture().get_image()
+		if image != null:
+			image.save_png(_shots.path_join("shadow_%d_%s.png" % [_splits, STATES[_state]]))
 	_state += 1
 	match _state:
 		1:

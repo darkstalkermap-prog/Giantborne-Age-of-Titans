@@ -74,10 +74,13 @@
 # Reproducible exports (P49; the 0.10.0-m10 release's finding): the engine converts every text scene
 # and resource to binary for the pack and keeps the conversions in .godot/exported/ (not in git);
 # a scene file without node ids got random ones at each conversion, so two checkouts packed
-# different bytes. The scene files now carry ids derived from each node's path (tools/scene_kit.gd,
-# stable_ids), and this script empties .godot/exported/ first, so a pack depends on the commit
-# alone. tests/slow/test_export_reproducible.gd converts scenes twice; docs/PERFORMANCE.md has the
-# two-checkout record.
+# different bytes. The scene files now carry ids made from each node's path (tools/scene_kit.gd,
+# stable_unique_ids), this script empties .godot/exported/ first, and the imported glTF scenes -
+# whose node ids the importer draws at random at every import - are given stable ones before the
+# export (tools/normalize_imports.gd, the NORMALIZE_IMPORTS line). A pack then depends on the
+# commit alone: the PCK_SHA256 line is the same in every checkout.
+# tests/slow/test_export_reproducible.gd converts scenes twice and normalizes an import;
+# docs/PERFORMANCE.md has the two-checkout record.
 # Exit codes: 0 built; 1 failed - the export, a part over 15 MB, a packed file over the host's
 # 16 MB, the release's test content, or (M7 polish; plan §6.6) the shipped index.pck over the
 # milestone's budget (--budget-mb=N overrides it), which fails after the PCK_SIZE line and the reason
@@ -308,6 +311,16 @@ esac
 # resource is converted by this run, from files whose node ids are in git.
 if [ "$KEEP_CACHE" != "1" ]; then
 	rm -rf .godot/exported
+fi
+# P49: the imported glTF scenes get their stable node ids too (tools/normalize_imports.gd: the importer
+# gives them random ones at every import, and the pack holds the imported file as it is). The import
+# first, so that nothing is imported - with new random ids - by the export itself.
+"$GODOT" --headless --path . --import >/dev/null 2>&1 || true
+norm_line="$("$GODOT" --headless --path . -s res://tools/normalize_imports.gd 2>/dev/null | grep -m1 '^NORMALIZE_IMPORTS ' || true)"
+echo "${norm_line:-NORMALIZE_IMPORTS: not run (tools/normalize_imports.gd printed nothing)}"
+if echo "$norm_line" | grep -qv '"failed":\[\]'; then
+	echo "build_web.sh: FAILED: an imported scene could not be given its stable node ids" >&2
+	exit 1
 fi
 "$GODOT" --headless --path . --export-release "$PRESET" "$OUT/index.html"
 for f in index.wasm index.pck; do

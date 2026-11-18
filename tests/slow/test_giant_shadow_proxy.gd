@@ -19,6 +19,8 @@ extends TestSuite
 const PROBE := "res://tests/support/shadow_proxy_probe.gd"
 const PREFIX := "SHADOW_PROXY "
 const MODEL := "res://scenes/player/giant_model.tscn"
+## The frames a reviewer looks at (plan M11 §1.1 addition 2): shadow_<maps>_all.png and shadow_<maps>_proxy.png.
+const SHOTS := "user://m11_frames/P49"
 const ON := GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 const OFF := GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 const ONLY := GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
@@ -142,7 +144,8 @@ func test_the_box_rigs_and_the_giants_model_as_they_are_today() -> void:
 func _probe(splits: Array) -> Array:
 	var args := PackedStringArray(["-a", "-s", "-screen 0 640x360x24", OS.get_executable_path(),
 		"--path", ProjectSettings.globalize_path("res://"), "--rendering-driver", "opengl3", "--resolution", "320x240",
-		"--audio-driver", "Dummy", "-s", PROBE, "--", "--splits=" + ",".join(splits.map(func(n: int) -> String: return str(n)))])
+		"--audio-driver", "Dummy", "-s", PROBE, "--", "--splits=" + ",".join(splits.map(func(n: int) -> String: return str(n))),
+		"--shots=" + SHOTS])
 	var output: Array = []
 	var code := OS.execute("xvfb-run", args, output, true)
 	var text := "\n".join(output)
@@ -177,5 +180,6 @@ func test_the_shadow_pass_draws_one_mesh_of_the_giant() -> void:
 		assert_eq(colour, shown + 2 * int(r.join_surfaces), "with the sun's shadows off: the colour pass alone")
 		if not bool(r.stand_in):
 			assert_true(bool(r.rig_found_proxy_at_ready), "the rig found the model's own proxy by itself")
+		assert_true(FileAccess.file_exists(SHOTS.path_join("shadow_%d_proxy.png" % splits)), "its frames are saved under %s" % SHOTS)
 		print("    test_giant_shadow_proxy: %d shadow map(s): %d shadow draws without the proxy, %d with it (%s; %d surfaces shown) on %s" % [
 			splits, all_shadow, proxy_shadow, "a stand-in proxy" if bool(r.stand_in) else "the model's own proxy", shown, str(r.get("adapter", "?"))])
