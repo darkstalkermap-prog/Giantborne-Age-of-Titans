@@ -345,7 +345,7 @@ index = {
 "wrist_l": [-1.087127, 2.306697, -0.44995],
 "wrist_r": [1.087127, 2.306697, -0.44995]
 },
-"manifest_sha256": "19906f9a121d6199d14499fd575fcfd83957041deebba219db6d2a087763aefe",
+"manifest_sha256": "169a73a77605f823c7815a14bd8bb6bd833deb90dd8d4b1ebccfda6bbef67539",
 "meshes": {
 "Beard_braided": {
 "atlas": "hair_atlas",
