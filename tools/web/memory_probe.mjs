@@ -246,6 +246,8 @@ async function main() {
     process.exit(0);
   };
   const finish = async (why) => end(why);
+  // Stopped from outside (a timeout, Ctrl+C): the same end, so no busy loop or browser outlives the probe.
+  for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) process.on(sig, () => end(`stopped by ${sig}`));
   // The limit is watched apart from everything else, twice a second, straight from /proc: a starved page
   // can keep a DevTools call (a memory dump, an evaluate) waiting for a minute while it grows by a gigabyte.
   const watchdog = setInterval(() => {

@@ -582,8 +582,11 @@ func _process(_delta: float) -> void:
 # --------------------------------------------------------------------------- resolution
 
 ## P49 (plan M11 §3.2 item 8; the M10 gate's LA-3 for the Web): the most viewport pixels per canvas unit on
-## the Web. @WEB_CAP_NOTE@
-const WEB_MAX_PIXEL_SCALE := 1.0
+## the Web: the largest scale whose first creator frame stays within the stall rule (3 times the median frame).
+## Measured in headless Chromium on software WebGL at 1920x1080 (creator_check.mjs --args=--preview-scale=N,
+## New Game): 1 - 2.12x, 1.5 - 1.82x, 2 - 1.44x, every one within it, so the Web follows the desktop up to 2;
+## the steady creator frame there cost 254, 340 and 455 ms (docs/systems/P49.md).
+const WEB_MAX_PIXEL_SCALE := 2.0
 ## --preview-scale=N on the command line (after "--") makes pixel_scale() return N (1 to MAX_PIXEL_SCALE)
 ## whatever the window: the Web measurement of P49 (tools/web/creator_check.mjs --args=--preview-scale=1.5).
 const SCALE_OPTION := "--preview-scale="
