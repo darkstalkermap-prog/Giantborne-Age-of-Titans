@@ -2151,6 +2151,20 @@ look..." **12.05x** (1,744 ms against 145); the same tour twice more, the cache 
 1.20x and 1.22x. P45's native figures (1.22x and 1.53x) were taken with a filled cache. A player reaches Continue
 through the title, whose warm-up draws the giant first; a start with `--continue` on a fresh machine does not.
 
+**Memory and the skin natively on the candidate** (P45's captures repeated with P46's model; Xvfb, llvmpipe at 2
+threads, 640x360, `low`, the sandbox arena; the rendering server's monitors):
+
+| What | P45's branch | The candidate | Budget |
+| --- | --- | --- | --- |
+| Mesh buffers: the model alone, every mesh shown | 3.33 MB | **5.87 MB** (25 meshes against 17; `giant.glb` 4,475,468 bytes against 2,568,348) | <= 3.5 MB: **a miss** |
+| Mesh buffers: the whole sandbox | 10.08 MB | 12.61 MB (+2.53) | - |
+| Texture memory: without the skin / the 512 px tier / the 1024 px tier | 7.47 / 10.20 / 11.70 MB | 7.47 / 10.87 / **12.37 MB**: the giant adds 3.40 MB at the 512 px tier and **4.90 MB with the 1024 px maps** (six design layers, the second scar layer) | <= 9 MB: met |
+| The skin's CPU a frame (`--ui-probe-bench`, the best of five batches of 200) | 0.074 / 0.078 ms at loads 11-12 | **0.070 / 0.062 ms** at the 512 / 1024 px tier, the machine quiet | <= 0.10: met |
+
+The mesh buffers are the one budget of plan M10 §2.12 the target catalogue breaks: its figure (3.04 MB measured
+for the floor's model) had no room for the eight meshes P46 added (five hair and beard styles and three garments) and its
+denser hair cards, which are all in memory whichever of them a look shows. It is recorded as a miss for the gate.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
