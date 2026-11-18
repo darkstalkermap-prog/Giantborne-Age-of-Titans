@@ -10,6 +10,13 @@ garment part), the packing rule, the design generator's determinism, the --skip-
 and thickness, the manifest round trip, the Cycles tolerance on another toolchain, the Web budget's
 estimate rules and the vendored subset's file list; P43: the clips (every clip in giant_clips.glb on the
 model's bones, the gaits' stride within 5 % of the brain's 3.2 m a cycle, no planted foot sliding).
+
+P48 (plan M11 §3.1): the freeze (the body's positions, normals, UVs, region ids and weights, the 53
+bones and M10's nine clips against fixtures/m10_freeze.json, read once from the 0.10.0-m10 files); the
+leaf bones (71 joints, no body vertex on one); every card's root on head; the build weights (within
+0..1, the same left and right within 2/255, nothing on the head); the parts (the index, the manifest
+and the files agree; giant.glb holds the body, the eyes and the shadow proxy alone); the free cape on
+its chains; the clips II within their rows.
 """
 from __future__ import annotations
 
@@ -30,6 +37,7 @@ import numpy as np  # noqa: E402
 from PIL import Image  # noqa: E402
 
 import designs  # noqa: E402
+import freeze  # noqa: E402
 import manifest  # noqa: E402
 import pack  # noqa: E402
 import split  # noqa: E402
@@ -80,6 +88,30 @@ def accessor(doc, binary, i):
     return out
 
 
+def glb_skins(path):
+    """{node name: {"P", "UV", "C", "W": {bone: (n,)}}} of every skinned mesh node, and the joints' names."""
+    doc, binary = read_glb(path)
+    out = {}
+    joints = [doc["nodes"][j]["name"] for j in doc["skins"][0]["joints"]] if doc.get("skins") else []
+    for node in doc["nodes"]:
+        if "mesh" not in node:
+            continue
+        prims = doc["meshes"][node["mesh"]]["primitives"]
+        at = prims[0]["attributes"]
+        P = accessor(doc, binary, at["POSITION"]).astype(np.float64)
+        J = accessor(doc, binary, at["JOINTS_0"]).astype(np.int64)
+        Wt = accessor(doc, binary, at["WEIGHTS_0"]).astype(np.float64)
+        W = {}
+        for k in range(J.shape[1]):
+            for j in np.unique(J[:, k][Wt[:, k] > 0]):
+                W.setdefault(joints[j], np.zeros(len(P)))[J[:, k] == j] += Wt[:, k][J[:, k] == j]
+        out[node["name"]] = {"P": P, "W": W,
+                             "UV": accessor(doc, binary, at["TEXCOORD_0"]) if "TEXCOORD_0" in at else None,
+                             "C": accessor(doc, binary, at["COLOR_0"]) if "COLOR_0" in at else None,
+                             "tris": int(doc["accessors"][prims[0]["indices"]]["count"]) // 3}
+    return out, joints
+
+
 def glb_meshes(path):
     """{node name: {"P": (n, 3), "T": (m, 3), "C": colours or None}} of every mesh node."""
     doc, binary = read_glb(path)
@@ -100,6 +132,16 @@ def glb_meshes(path):
         out[node["name"]] = {"P": np.concatenate(Ps), "T": np.concatenate(Ts),
                              "C": None if any(c is None for c in Cs) else np.concatenate(Cs)}
     return out, doc
+
+
+def all_meshes():
+    """Every mesh of the giant: giant.glb's and every part's (P48: a glTF a part)."""
+    meshes, _ = glb_meshes(os.path.join(ASSETS, "giant.glb"))
+    parts = os.path.join(ASSETS, "parts")
+    for name in sorted(os.listdir(parts)) if os.path.isdir(parts) else []:
+        if name.endswith(".glb"):
+            meshes.update(glb_meshes(os.path.join(parts, name))[0])
+    return meshes
 
 
 class ResizeTest(unittest.TestCase):
@@ -172,7 +214,7 @@ class CapTest(unittest.TestCase):
             self.assertGreater(float(nrm[2]) * (1 if p == 0 else -1), 0.9)
 
     def test_body_limbs_and_limb_garment_parts_have_no_open_cut(self):
-        meshes, _ = glb_meshes(os.path.join(ASSETS, "giant.glb"))
+        meshes = all_meshes()
         limbs = meshes["Body_Limbs"]
         weld = split.weld_positions(limbs["P"], 1e-5)
         self.assertEqual(len(split.boundary_edges(limbs["T"], weld)), 0, "Body_Limbs is closed")
@@ -312,7 +354,7 @@ class ClipsTest(unittest.TestCase):
     def test_the_gaits_keep_the_brains_stride_and_plant_their_feet(self):
         info = self.doc["clips"]
         self.assertAlmostEqual(info["cycle_m"], 3.2, delta=1e-9, msg="two steps of the brain's 1.6 m")
-        for name in ("walk", "run"):
+        for name in ("walk", "run", "sprint"):
             g = info["gaits"][name]
             self.assertLess(abs(g["stride_error"]), 0.05, "%s: stride %.4f m within 5 %%" % (name, g["stride_m"]))
             self.assertLess(g["slide_m"], 0.002, "%s: the planted foot does not slide" % name)
@@ -332,7 +374,325 @@ class ClipsTest(unittest.TestCase):
                 target = doc["nodes"][ch["target"]["node"]]["name"]
                 self.assertIn(target, bones, "%s animates %s, a bone of giant.glb" % (a["name"], target))
         for name, c in self.doc["clips"]["clips"].items():
-            self.assertEqual(c["loop"], name in ("idle", "walk", "run"), name)
+            self.assertEqual(c["loop"], name in ("idle", "walk", "run", "sprint"), name)
+
+    def test_the_clips_two_are_all_there_within_their_rows(self):
+        """P48 (plan M11 §2.3): 28 clips; every new one measured on its solved poses (kit/clips.py) and
+        within its row."""
+        info = self.doc["clips"]
+        new = ["sprint", "turn_l", "turn_r", "stomp_r", "land", "brace", "roar", "flinch_f", "flinch_b", "flinch_l",
+               "flinch_r", "grip_club", "grip_sword", "grip_hammer", "grip_axe", "grip_fist", "grip_tree",
+               "carry_two_hand", "fp_rest"]
+        self.assertEqual(sorted(info["clips"]), sorted(list(freeze.M10_CLIPS) + new), "M10's nine and the 19 of the clips II")
+        self.assertEqual(len(info["clips"]), 28)
+        self.assertGreater(info["gaits"]["sprint"]["duty"], 0.2)
+        self.assertLess(info["gaits"]["sprint"]["duty"], info["gaits"]["run"]["duty"], "the sprint's flight is longer than the run's")
+        m = info["measures"]
+        for name, sign in (("turn_l", 1.0), ("turn_r", -1.0)):
+            t = m[name]
+            self.assertAlmostEqual(t["turn_deg"], 90.0 * sign, delta=0.5, msg="%s turns 90 degrees" % name)
+            self.assertLess(t["slide_m"], 0.002, "%s: a standing foot stays where it stands in the world" % name)
+            self.assertLess(t["foot_error_m"], 0.002, "%s: the legs reach their feet" % name)
+            self.assertLess(t["end_to_start_m"], 0.002, "%s ends as it starts (a second turn follows on)" % name)
+            self.assertTrue(0.05 <= t["step_lift_m"] <= 0.4, "%s: the stepping foot lifts %.3f m" % (name, t["step_lift_m"]))
+        st = m["stomp_r"]
+        self.assertTrue(0.5 <= st["lift_m"] <= 1.2, "the stomp lifts the foot %.2f m" % st["lift_m"])
+        self.assertLess(st["plant_from_hip_m"], 0.15, "the plant point is under the hip")
+        self.assertLess(st["plant_from_rest_m"], 0.002, "the foot lands where it stood (nothing to slide back)")
+        self.assertLess(st["standing_foot_m"], 0.002, "the standing foot does not move")
+        self.assertTrue(0.0 < st["lift_fraction"] < st["hold_fraction"] < st["plant_fraction"] < 1.0)
+        self.assertTrue(0.25 <= m["land"]["pelvis_drop_m"] <= 0.6, "the knees take the landing")
+        self.assertLess(m["land"]["foot_off_ground_m"], 0.002)
+        self.assertTrue(0.08 <= m["brace"]["pelvis_drop_m"] <= 0.3, "the brace stands low")
+        self.assertLess(m["brace"]["foot_off_ground_m"], 0.002)
+        self.assertGreater(m["roar"]["feet_apart_m"], m["land"]["feet_apart_m"] + 0.25, "the roar sets the legs wide")
+        self.assertLess(m["roar"]["pelvis_drop_m"], 0.3)
+        for name in ("flinch_f", "flinch_b", "flinch_l", "flinch_r"):
+            fl = m[name]
+            self.assertTrue(6.0 <= fl["chest_deg"] <= 20.0, "%s: the chest turns %.1f degrees" % (name, fl["chest_deg"]))
+            self.assertLess(fl["ends_deg"], 0.01, "%s starts and ends at nothing (it is added to a pose)" % name)
+            self.assertAlmostEqual(fl["length_s"], 0.3, delta=1e-6)
+
+    def test_a_partial_clip_carries_the_tracks_of_its_own_bones_only(self):
+        """M10's follow-up: the hand clips (and P48's grips, flinches and arm rests) are written with their
+        own bones' tracks; the full-body clips key every bone but Root."""
+        doc, _binary = read_glb(os.path.join(ASSETS, "giant_clips.glb"))
+        info = self.doc["clips"]["clips"]
+        fingers = ("thumb", "index", "middle", "ring", "pinky")
+        for a in doc["animations"]:
+            bones = {doc["nodes"][ch["target"]["node"]]["name"] for ch in a["channels"]}
+            c = info[a["name"]]
+            if c["partial"]:
+                self.assertEqual(len(bones), c["bones"], a["name"])
+                self.assertEqual(len(a["channels"]), 3 * c["bones"], "%s: three tracks a bone" % a["name"])
+            else:
+                self.assertEqual(len(bones), 53, "%s keys the whole skeleton" % a["name"])
+            if a["name"] in freeze.HAND_CLIPS:
+                side = "_" + a["name"][-1]
+                self.assertTrue(all(b.startswith(fingers) and b.endswith(side) for b in bones), a["name"])
+                self.assertEqual(len(bones), 15)
+            if a["name"].startswith("grip_") and a["name"] not in freeze.HAND_CLIPS:
+                self.assertTrue(all(b.startswith(fingers) for b in bones) and len(bones) == 30, a["name"])
+            if a["name"].startswith("flinch_"):
+                self.assertEqual(bones, {"spine_01", "spine_02", "spine_03", "neck_01", "head", "clavicle_l", "clavicle_r"})
+
+
+class FreezeTest(unittest.TestCase):
+    """P48 design 1 (plan M11 §2.2): what stays bit-identical to 0.10.0-m10. The fixture was read once from
+    the files committed at the release (freeze.py --write); nothing regenerates it."""
+
+    @classmethod
+    def setUpClass(cls):
+        with open(os.path.join(HERE, "fixtures", "m10_freeze.json"), encoding="utf-8") as fh:
+            cls.fixture = json.load(fh)
+
+    def test_the_body_and_its_53_bones_are_m10s(self):
+        want = self.fixture["body"]
+        self.assertEqual(len(want["bones"]), 53)
+        got = freeze.body_freeze(os.path.join(ASSETS, "giant.glb"), bones=list(want["bones"]))
+        for bone, entry in want["bones"].items():
+            self.assertEqual(got["bones"].get(bone), entry, "%s: its parent, rest and bind matrix are M10's" % bone)
+        self.assertEqual(sorted(got["meshes"]), sorted(want["meshes"]))
+        for mesh, hashes in want["meshes"].items():
+            for what in ("vertices", "triangles", "positions", "normals", "uvs", "regions", "weights", "all", "faces"):
+                self.assertEqual(got["meshes"][mesh][what], hashes[what], "%s: its %s are M10's" % (mesh, what))
+        doc = manifest.load(ROOT)
+        self.assertEqual(doc["body_hash"], "9cd81c08253e20339d78a2a5e72ca01adc08a47599c95446d6f4209ef88527be",
+                         "the body hash of decision 9 (M10) stands")
+
+    def test_the_freeze_notices_a_change(self):
+        """A positive control on synthetic data: the hashes are sets (order does not matter), and one
+        moved vertex, one changed weight or one changed region id changes them."""
+        rng = np.random.default_rng(5)
+        P = rng.random((40, 3)).astype(np.float32)
+        perm = rng.permutation(40)
+        self.assertEqual(freeze._sha(freeze._sorted_rows(P)), freeze._sha(freeze._sorted_rows(P[perm])))
+        Q = P.copy()
+        Q[7, 1] += np.float32(1e-6)
+        self.assertNotEqual(freeze._sha(freeze._sorted_rows(P)), freeze._sha(freeze._sorted_rows(Q)))
+
+    def test_m10s_nine_clips_keep_their_tracks(self):
+        want = self.fixture["clips"]
+        self.assertEqual(sorted(want), sorted(freeze.M10_CLIPS))
+        got = freeze.clip_freeze(os.path.join(ASSETS, "giant_clips.glb"), freeze.M10_CLIPS)
+        for clip, tracks in want.items():
+            self.assertEqual(len(tracks), 53)
+            if clip in freeze.HAND_CLIPS:
+                # the hand clips lost the tracks of the bones they never keyed; the fingers' are M10's
+                self.assertEqual(len(got[clip]), 15, clip)
+                for bone, h in got[clip].items():
+                    self.assertEqual(h, tracks[bone], "%s/%s is M10's" % (clip, bone))
+            else:
+                self.assertEqual(got[clip], tracks, "%s: every bone's tracks are M10's, byte for byte" % clip)
+
+
+class BodyTwoTest(unittest.TestCase):
+    """P48 (plan M11 §2.2): leaf bones, card weights, build weights, parts, the shadow proxy, the cape."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = manifest.load(ROOT)
+        cls.core, cls.joints = glb_skins(os.path.join(ASSETS, "giant.glb"))
+        cls.parts = {}
+        for mid, e in cls.doc["export"]["meshes"].items():
+            if "file" in e:
+                meshes, joints = glb_skins(os.path.join(ASSETS, e["file"]))
+                cls.parts[mid] = (meshes, joints)
+
+    def test_the_skeleton_has_71_bones_and_no_body_vertex_is_on_a_leaf(self):
+        import giant_parts as gp
+        self.assertEqual(len(gp.LEAF_BONES), 18)
+        self.assertEqual(len(self.joints), 71)
+        self.assertEqual(sorted(self.joints), sorted(self.doc["export"]["bones"] + list(gp.LEAF_BONES)))
+        for mesh in ("Body_Head", "Body_Torso", "Body_Limbs", "Eyes", "ShadowProxy"):
+            on_leaf = [b for b in self.core[mesh]["W"] if b in gp.LEAF_BONES]
+            self.assertEqual(on_leaf, [], "%s has no vertex on a leaf bone" % mesh)
+        chains = self.doc["index"]["chains"]
+        self.assertEqual(sorted(chains), sorted(gp.CHAIN_ORDER))
+        self.assertEqual(sorted(b for c in chains.values() for b in c["bones"]), sorted(gp.LEAF_BONES))
+        doc, _b = read_glb(os.path.join(ASSETS, "giant.glb"))
+        parent = {}
+        for n in doc["nodes"]:
+            for c in n.get("children", []):
+                parent[doc["nodes"][c]["name"]] = n["name"]
+        for name, c in chains.items():
+            self.assertEqual(c["parent"], "spine_03" if c["kind"] == "cape" else "head", name)
+            prev = c["parent"]
+            for b in c["bones"]:
+                self.assertEqual(parent[b], prev, "%s hangs under %s" % (b, prev))
+                prev = b
+            for k in ("stiffness", "drag", "gravity", "length_m"):
+                self.assertGreater(c[k], 0.0, "%s.%s" % (name, k))
+
+    def test_every_cards_root_is_on_the_head_and_long_cards_reach_their_chains(self):
+        import giant_parts as gp
+        import giant_hair as gh
+        info = self.doc["export"]["meshes"]
+        long_styles = 0
+        for mid, e in sorted(info.items()):
+            if e["category"] not in ("hair", "beard"):
+                continue
+            meshes, joints = self.parts[mid]
+            self.assertEqual(len(joints), 71, "%s is on the model's skeleton" % mid)
+            m = meshes[mid]
+            total = sum(m["W"].values())
+            self.assertTrue(np.allclose(total, 1.0, atol=1e-4), "%s: the weights sum to 1" % mid)
+            root = m["UV"][:, 1] <= 1e-6                       # glTF v: 0 at a card's root
+            head = m["W"].get("head", np.zeros(len(root)))
+            off = int((root & (head < 0.9999)).sum())
+            braids = e["braid_verts"]
+            self.assertEqual(int(root.sum()), e["root_verts"], mid)
+            if braids == 0:
+                self.assertEqual(off, 0, "%s: every card's root is wholly on head" % mid)
+            else:
+                self.assertTrue(len(gh.STYLES[mid].get("braids", ())) > 0)
+                self.assertLessEqual(off, braids // 3, "%s: only a braid's lobes start off the head (%d)" % (mid, off))
+            allowed = {"head"} | {b for c in e["chains"] for b in gp.CHAINS[c][1]}
+            self.assertTrue(set(m["W"]) <= allowed, "%s is weighted to head and its chains only: %s" % (mid, sorted(m["W"])))
+            want = ("beard",) if e["category"] == "beard" else ("hair", "hair_l", "hair_r")
+            self.assertTrue(set(e["chains"]) <= set(want), mid)
+            self.assertEqual(self.doc["index"]["meshes"][mid].get("chains", []), e["chains"])
+            if e["chains"]:
+                long_styles += 1
+                tips = m["UV"][:, 1] >= 0.999
+                # the warrior's tail lies flat on the scalp but for its tail: some tips, not most
+                self.assertLess(float(np.percentile(head[tips], 5)), 0.5, "%s: its hanging tips are on the chains" % mid)
+        self.assertGreaterEqual(long_styles, 5, "the long styles hang on chains")
+        self.assertEqual(info["Hair_crop"]["chains"], [], "the crop stays on the head")
+        self.assertEqual(info["Beard_short"]["chains"], [], "and the short beard")
+
+    def test_the_build_weights_are_signed_shares_the_same_left_and_right(self):
+        from scipy.spatial import cKDTree
+        idx = self.doc["index"]
+        self.assertTrue(0.02 < idx["build_max_m"] < 0.2, "the largest push at stage 1: %s m" % idx["build_max_m"])
+        build = self.doc["export"]["build"]
+        self.assertAlmostEqual(max(build["brawn_max_m"], build["girth_max_m"]), idx["build_max_m"], delta=1e-6)
+        self.assertGreater(min(build["brawn_max_m"], build["girth_max_m"]), 0.25 * idx["build_max_m"],
+                           "both sliders use a fair share of the range")
+        extremes = np.zeros(2)
+        for mesh in ("Body_Head", "Body_Torso", "Body_Limbs"):
+            m = self.core[mesh]
+            C = m["C"]
+            self.assertTrue(float(C[:, 1:3].min()) >= 0.0 and float(C[:, 1:3].max()) <= 1.0, mesh)
+            self.assertTrue(np.allclose(C[:, 3], 1.0, atol=1e-3), "%s: alpha is left at 1 (reserved)" % mesh)
+            d, twin = cKDTree(m["P"]).query(m["P"] * [-1.0, 1.0, 1.0])
+            ok = d < 1e-4
+            if mesh != "Body_Head":       # the face is asymmetric by design (the asym targets); it carries no weight
+                self.assertGreater(int(ok.sum()), 0.9 * len(ok), "%s is a symmetric mesh" % mesh)
+            diff = np.abs(C[ok][:, 1:3] - C[twin[ok]][:, 1:3])
+            self.assertLessEqual(float(diff.max()), 2.0 / 255.0 + 1e-9, "%s: left and right agree within 2/255" % mesh)
+            extremes = np.maximum(extremes, np.abs(C[:, 1:3] - 0.5).max(axis=0) * 2.0)
+        self.assertGreater(float(extremes.max()), 0.97, "the largest weight is a whole one")
+        head = self.core["Body_Head"]
+        face = split.decode_region(head["C"][:, 0]) == split.REGION_ID["face"]
+        self.assertLess(float(np.abs(head["C"][face][:, 1:3] - 0.5).max()), 0.1, "the face keeps its shape")
+        # garments and cards inherit the weights of the skin they sit on
+        tunic = self.parts["Garment_tunic_core"][0]["Garment_tunic_core"]
+        self.assertGreater(float(np.abs(tunic["C"][:, 1:3] - 0.5).max()), 0.2, "the tunic carries the torso's weights")
+        torso = self.core["Body_Torso"]
+        d, near = cKDTree(torso["P"]).query(tunic["P"])
+        close = d < 0.06
+        self.assertGreater(int(close.sum()), 200)
+        self.assertLess(float(np.abs(tunic["C"][close][:, 1:3] - torso["C"][near[close]][:, 1:3]).mean()), 0.03,
+                        "a garment's weights are those of the skin under it")
+        for mid, (meshes, _j) in self.parts.items():
+            self.assertIsNotNone(meshes[mid]["C"], "%s carries the build channels" % mid)
+
+    def test_the_parts_the_index_the_manifest_and_the_files_agree(self):
+        idx, files, info = self.doc["index"], self.doc["files"], self.doc["export"]
+        self.assertEqual(sorted(self.core), ["Body_Head", "Body_Limbs", "Body_Torso", "Eyes", "ShadowProxy"],
+                         "giant.glb holds the body, the eyes and the shadow proxy")
+        on_disk = sorted(f for f in os.listdir(os.path.join(ASSETS, "parts")) if f.endswith(".glb"))
+        part_ids = sorted(m for m, e in idx["meshes"].items() if "part_path" in e)
+        self.assertEqual(on_disk, [m + ".glb" for m in part_ids], "a file a part, no other")
+        self.assertEqual(len(part_ids), 21)
+        self.assertEqual(sorted(m for m, e in idx["meshes"].items() if "part_path" not in e),
+                         ["Body_Head", "Body_Limbs", "Body_Torso", "Eyes"])
+        for mid in part_ids:
+            e = idx["meshes"][mid]
+            self.assertEqual(e["part_path"], "res://assets/giant/parts/%s.glb" % mid)
+            self.assertIn("assets/giant/parts/%s.glb" % mid, files)
+            meshes, _joints = self.parts[mid]
+            self.assertEqual(sorted(meshes), [mid], "%s.glb holds its one mesh" % mid)
+            self.assertEqual(meshes[mid]["tris"], e["tris"], "%s: the index counts its triangles" % mid)
+            self.assertIn(e["category"], ("hair", "beard", "garment"))
+        self.assertEqual(len(files), 13 + 21, "M10's 13 files and the 21 parts")
+        proxy = info["shadow_proxy"]
+        self.assertEqual(idx["shadow_proxy"], {"node": "ShadowProxy", "tris": proxy["tris"]})
+        self.assertEqual(self.core["ShadowProxy"]["tris"], proxy["tris"])
+        self.assertTrue(2300 <= proxy["tris"] <= 2700, "the proxy is the body at about 2,500 triangles (%d)" % proxy["tris"])
+        self.assertNotIn("ShadowProxy", idx["meshes"], "the proxy is no look's mesh")
+        import build_giant
+        for rel in files:
+            spec = build_giant.import_params(rel[len("assets/giant/"):], self.doc)
+            if rel.endswith(".glb"):
+                self.assertIsNotNone(spec, rel)
+            if "/parts/" in rel:
+                self.assertEqual(spec[2]["meshes/create_shadow_meshes"], "false", "a part casts through the proxy")
+                self.assertEqual(spec[2]["skins/use_named_skins"], "true")
+            imp = os.path.join(ROOT, rel + ".import")
+            if spec is not None and os.path.exists(imp):
+                with open(imp, encoding="utf-8") as fh:
+                    text = fh.read()
+                for k, v in spec[2].items():
+                    self.assertIn("%s=%s" % (k, v), text, "%s.import: %s" % (rel, k))
+
+    def test_the_proxy_lies_inside_the_skin_and_is_weighted_like_it(self):
+        from scipy.spatial import cKDTree
+        proxy = self.core["ShadowProxy"]
+        body_P = np.concatenate([self.core[m]["P"] for m in ("Body_Head", "Body_Torso", "Body_Limbs")])
+        d, _i = cKDTree(body_P).query(proxy["P"])
+        self.assertLess(float(d.max()), 0.12, "the proxy follows the body")
+        self.assertTrue(np.allclose(sum(proxy["W"].values()), 1.0, atol=1e-4))
+        self.assertGreaterEqual(len(proxy["W"]), 40, "the proxy keeps the body's bones (%d)" % len(proxy["W"]))
+        lo, hi = body_P.min(axis=0), body_P.max(axis=0)
+        self.assertTrue(np.all(proxy["P"].min(axis=0) >= lo - 0.02) and np.all(proxy["P"].max(axis=0) <= hi + 0.02))
+
+    def test_the_cape_hangs_free_on_its_three_chains(self):
+        import giant_parts as gp
+        e = self.doc["index"]["meshes"]["Garment_cape"]
+        self.assertEqual(e["chains"], ["cape_c", "cape_l", "cape_r"])
+        self.assertTrue(e["free"])
+        self.assertEqual(e["covers"], [6], "the cape still covers the lower back, as M10's did (the outfits' data)")
+        cape = self.parts["Garment_cape"][0]["Garment_cape"]
+        chains = self.doc["index"]["chains"]
+        root_y = chains["cape_c"]["root"][1]
+        W = cape["W"]
+        chain_w = sum(W.get(b, 0.0) for b in gp.LEAF_BONES if b.startswith("cape"))
+        top = cape["P"][:, 1] > root_y + 0.1
+        low = cape["P"][:, 1] < root_y - chains["cape_c"]["length_m"] / 3.0 - 0.02      # past the first joint
+        self.assertGreater(int(top.sum()), 20, "the collar and the shoulders")
+        self.assertLess(float(chain_w[top].max()), 0.05, "the collar stays on the body")
+        self.assertGreater(float(chain_w[low].min()), 0.9, "below the shoulder blades the cape is on its chains")
+        # closed at the collar: vertices in front of the neck as well as behind it (glTF: +Z the giant's front)
+        collar = cape["P"][cape["P"][:, 1] > cape["P"][:, 1].max() - 0.08]
+        self.assertTrue(collar[:, 2].max() > 0.05 and collar[:, 2].min() < -0.05, "the collar goes round the neck")
+        # a rest shape that hangs: the hem is further from the back than the M10 shell's 5 cm
+        hem = cape["P"][cape["P"][:, 1] < cape["P"][:, 1].min() + 0.15]
+        torso = self.core["Body_Torso"]["P"]
+        from scipy.spatial import cKDTree
+        d, _i = cKDTree(torso).query(hem)
+        self.assertGreater(float(d.mean()), 0.12, "the hem hangs clear of the back (%.3f m)" % float(d.mean()))
+
+    def test_the_new_landmarks_and_the_designs_sides(self):
+        lm = self.doc["index"]["landmarks"]
+        for s, sign in (("r", 1.0), ("l", -1.0)):
+            for key in ("grip_", "knuckle_", "toe_", "grip_axis_", "grip_local_"):
+                self.assertEqual(len(lm[key + s]), 3, key + s)
+            grip, wrist, palm = np.array(lm["grip_" + s]), np.array(lm["wrist_" + s]), np.array(lm["palm_" + s])
+            self.assertGreater(grip[0] * sign, 0.9, "grip_%s is on the giant's %s" % (s, "right" if s == "r" else "left"))
+            self.assertLess(np.linalg.norm(grip - palm), 0.12, "the fist's centre is a few centimetres off the knuckle line")
+            self.assertLess(np.linalg.norm(grip - wrist), np.linalg.norm(palm - wrist) + 0.02, "and nearer the wrist")
+            self.assertAlmostEqual(float(np.linalg.norm(lm["grip_axis_" + s])), 1.0, delta=1e-4)
+            self.assertLess(np.linalg.norm(np.array(lm["grip_local_" + s])), 0.3)
+            self.assertLess(lm["toe_" + s][1], 0.08, "the toe is on the ground")
+            self.assertLess(lm["toe_" + s][2], lm["ankle_" + s][2] - 0.3, "and in front of the ankle")
+        self.assertEqual(lm["grip_local_r"][0], -lm["grip_local_l"][0])
+        sides = {d: v["side"] for d, v in self.doc["index"]["designs"].items()}
+        self.assertTrue(set(sides.values()) <= {"left", "right", "centre"})
+        self.assertEqual(sides["tat_arm_sleeve"], "right", "the sleeve is on the right arm")
+        self.assertEqual(sides["tat_chest_sun"], "centre")
+        self.assertIn("left", sides.values(), "a design on the giant's left is framed from his left")
 
 
 class ToleranceTest(unittest.TestCase):

@@ -37,11 +37,11 @@ After a regeneration, run `tools/check.sh --only=giant_model` (import, rebuild
 
 | Step | Code | Writes |
 | --- | --- | --- |
-| `--body`, `--garments`, `--hair` (one step: one glTF) | `kit/export_game.py` with `giant_body`, `split`, `giant_garment`, `giant_hair` | `giant.glb`: `Body_Head`, `Body_Torso`, `Body_Limbs` (the body split at the neck, shoulders and hips, every cut capped, the 16 region ids in `COLOR_0.r`), `Eyes`, `Hair_long_back`, `Hair_crop`, `Beard_full`, `Beard_short`, the garments (`Garment_braies_core`/`_limbs`, `Garment_belt`, `Garment_tunic_core`/`_limbs`, `Garment_jerkin`, `Garment_bracers`, `Garment_boots`, `Garment_furs`); the landmarks and the body's hash go into the manifest |
+| `--body`, `--garments`, `--hair` (one step: one export) | `kit/export_game.py` with `giant_body`, `split`, `giant_garment`, `giant_hair`, `giant_parts` | `giant.glb`: the 71-bone skeleton (the game_engine rig's 53 and P48's 18 leaf bones), `Body_Head`, `Body_Torso`, `Body_Limbs` (the body split at the neck, shoulders and hips, every cut capped), `Eyes` and `ShadowProxy` (the body at about 2,500 triangles); `parts/<mesh id>.glb`: one hair, beard or garment mesh each on the same skeleton (21 parts); the landmarks, the chains, `build_max_m` and the body's hash into the manifest |
 | `--bake` | `kit/bake.py` (Cycles, 1024 px, 2 threads, seed 0) | into `GIANT_CACHE` only: the cheap passes (albedo, roughness, normal, masks, regions, rest position and normal; about 1 minute here) and the expensive ones (AO, thickness; about 2.5 minutes here, 13 on a busy machine) |
 | `--designs` | `kit/designs.py` | `designs.png`: the 17 designs of the floor as 512 x 512 RGBA layers stacked vertically (imported as a 2D texture array) |
 | `--pack` | `kit/pack.py` | `tex/` (albedo, normal, ORM, masks at 512 px), `tex_hi/` (normal and ORM at 1024 px), `hair_atlas.png`, `cloth_weave.png`, `cloth_leather.png`, `cloth_fur.png` |
-| `--clips` | `kit/clips.py` (P43) | `giant_clips.glb` |
+| `--clips` | `kit/clips.py` (P43; the clips II, P48) | `giant_clips.glb`: 28 computed clips; a clip that keys a few bones carries those bones' tracks only |
 
 `assets/giant/manifest.json` records every output (step, input hash, sha256, size, whether Cycles
 pixels reach it), the toolchain, the bake keys, the body's hash and the giant index that
@@ -60,6 +60,19 @@ pixels reach it), the toolchain, the bake keys, the body's hash and the giant in
   values are quantized to the S3TC block's levels (0, 1/3, 2/3, 1) so compression keeps them.
 - After W25 the body mesh, the skeleton, the regions and the landmarks are frozen for M10 (decision 9):
   the manifest's `body_hash` changes only with an orchestrator's decision.
+- **The freeze (P48, plan M11 §2.2).** `fixtures/m10_freeze.json` holds hashes of the three body meshes'
+  positions, normals, UVs, region ids and weights, of the 53 bones and of the nine M10 clips' tracks,
+  read once from the files of the 0.10.0-m10 release (`freeze.py --write`, never run again). The
+  pipeline's tests compare every regeneration with it, whatever else the files gain.
+- **Vertex colour since P48.** `COLOR.g` and `COLOR.b` carry the build sliders' brawn and girth weights
+  as `0.5 + 0.5 w` (w in -1..1, a share of the index's `build_max_m`); the head carries none; garments,
+  cards and the shadow proxy inherit the skin's. `COLOR.a` stays 1.
+- **Leaf chains.** The index's `chains` lists seven chains of leaf bones (`hair`, `hair_l`, `hair_r`,
+  `beard` under `head`; `cape_c`, `cape_l`, `cape_r` under `spine_03`) with their rest roots and the
+  secondary motion's starting values; a mesh's `chains` names the ones it is weighted to (none for a
+  short style). Every card's root is wholly on `head`.
+- **Parts.** A mesh with `part_path` in the index is loaded by `GiantModel` when a look shows it.
+  `part` keeps its M10 meaning (a garment's body part, torso or limbs).
 
 ## Adding content (P43, P46)
 

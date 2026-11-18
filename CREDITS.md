@@ -8,7 +8,7 @@ outside source of data in the game and the tools its assets are built with.
 ### MakeHuman / MPFB2 body data (CC0 1.0)
 
 - **Used for:** the realistic giant's body, skeleton and skin weights (`assets/giant/`), through the
-  vendored subset in `tools/giant/mpfb2/`: the hm08 base mesh, 122 morph targets, the regional
+  vendored subset in `tools/giant/mpfb2/`: the hm08 base mesh, 126 morph targets, the regional
   modifier table, the "game_engine" rig and its weights, and six region mask images.
 - **Authors:** the MakeHuman project (makehumancommunity.org) and MPFB2, the MakeHuman plugin for
   Blender. The base mesh's header names the copyright holders at its release to CC0 in September 2020:

@@ -14,6 +14,29 @@ model's.
   death      1 s: the knees buckle and the torso slumps (the game seeks it by the body's fall)
   grip_r, grip_l, open_r, open_l    one-frame finger poses, blended per hand with a bone filter
 
+The clips II (P48, plan M11 §2.3), all computed the same way:
+
+  sprint     the run's cycle with a shorter stance, a longer flight, a deeper lean and pumping arms (the
+             stride a cycle stays the brain's 3.2 m, so the game seeks it on the same walk phase)
+  turn_l, turn_r   a 90 degree turn on the spot in two steps, keyed on the yaw travelled (clip time =
+             yaw / 90 degrees): the inside foot steps round first, then the outside one; a planted foot
+             stays where it stands in the world while the body turns over it
+  stomp_r    the right foot lifted, held and planted where it stood, the hips over it (the game seeks it
+             by the action's phase fraction)
+  land       0.27 s: the knees take a landing and straighten
+  brace      the block's stance: the left foot forward, the knees bent, the weight low
+  roar       the legs set wide, the chest out, the head back
+  flinch_f, flinch_b, flinch_l, flinch_r   0.3 s, the spine, neck, head and clavicles only, as offsets
+             from the rest pose that start and end at nothing (played additively); named by the side
+             the giant is hit on
+  grip_club, grip_sword, grip_hammer, grip_axe, grip_fist, grip_tree   one-frame finger poses per weapon
+             family, both hands
+  carry_two_hand   both arms and hands: the off hand on a two-handed weapon carried at rest
+  fp_rest    both arms: the first-person rest, the weapon hand raised into the lower right of the view
+
+Every clip but the full-body ones is written with the tracks of its own bones only (``clip_bones``;
+``strip_tracks`` removes the others from the glTF, which Blender's exporter samples for every bone).
+
 The walk and the run are computed from the feet, not from joint angles: each foot plants on the ground
 at its heel strike and moves backward relative to the hips at exactly the body's speed while it is
 planted (heel rocker, flat foot, forefoot rocker: the point on the ground never slides), then swings
@@ -66,7 +89,24 @@ LEG_BONES = ("thigh", "calf", "foot", "ball")
 # The clips and their key counts (frames + 1 keys; the last key of a loop equals its first).
 CLIP_FRAMES = {"idle": 60, "walk": 32, "run": 32, "airborne": 1, "death": 30,
                "grip_r": 1, "grip_l": 1, "open_r": 1, "open_l": 1}
-LOOPS = ("idle", "walk", "run")
+M10_CLIPS = tuple(CLIP_FRAMES)
+# The clips II (P48): appended, so M10's nine are computed and keyed exactly as they were.
+CLIP_FRAMES.update({"sprint": 32, "turn_l": 24, "turn_r": 24, "stomp_r": 30, "land": 8, "brace": 1, "roar": 24,
+                    "flinch_f": 9, "flinch_b": 9, "flinch_l": 9, "flinch_r": 9,
+                    "grip_club": 1, "grip_sword": 1, "grip_hammer": 1, "grip_axe": 1, "grip_fist": 1, "grip_tree": 1,
+                    "carry_two_hand": 1, "fp_rest": 1})
+LOOPS = ("idle", "walk", "run", "sprint")
+HAND_CLIPS = ("grip_r", "grip_l", "open_r", "open_l")
+# The weapon families' grips: (finger curl, thumb curl, spread in degrees). A thin handle closes the fist
+# further than a thick one; a tree's trunk is held with an open hand.
+GRIPS = {"grip_club": (0.80, 0.85, 0.0), "grip_sword": (0.93, 1.0, 0.0), "grip_hammer": (0.85, 0.9, 0.0),
+         "grip_axe": (0.89, 0.95, 0.0), "grip_fist": (1.0, 0.72, 0.0), "grip_tree": (0.52, 0.45, 4.0)}
+UPPER_BODY = ("spine_01", "spine_02", "spine_03", "neck_01", "head", "clavicle_l", "clavicle_r")
+ARM_BONES = ("clavicle", "upperarm", "lowerarm", "hand")
+TURN_DEG = 90.0                   # a turn clip's whole yaw
+TURN_STEP = ((0.04, 0.50), (0.50, 0.96))    # the inside foot's step and the outside foot's, in clip fraction
+# The stomp's beats in the action's phase fraction: the foot is up by LIFT, held to HOLD, down at PLANT.
+STOMP_LIFT, STOMP_HOLD, STOMP_PLANT = 0.34, 0.58, 0.72
 
 # The gaits (metres and degrees at stage 1). duty: the share of the cycle a foot is planted.
 GAITS = {
@@ -78,6 +118,12 @@ GAITS = {
             "heel_rocker": 0.10, "heel_off": 0.45, "bias": 0.04, "top_drop": 0.10, "min_drop": 0.15,
             "sway": 0.02, "yaw_deg": 7.0, "roll_deg": 3.0, "pelvis_pitch_deg": 7.0, "lean_deg": 10.0,
             "arm_swing_deg": 34.0, "elbow_deg": 78.0, "elbow_swing_deg": 14.0, "shoulder_counter": 1.4},
+    # P48: the sprint. The cycle is the brain's (two steps of STEP_M), so "a longer stride" is a longer
+    # flight: the foot is planted for less of the cycle and swings further and higher.
+    "sprint": {"duty": 0.29, "foot_x": 0.20, "lift": 0.80, "lift_peak": 0.36, "strike_deg": -4.0, "toe_off_deg": 46.0,
+               "heel_rocker": 0.08, "heel_off": 0.40, "bias": 0.08, "top_drop": 0.12, "min_drop": 0.16,
+               "sway": 0.015, "yaw_deg": 9.0, "roll_deg": 3.5, "pelvis_pitch_deg": 10.0, "lean_deg": 17.0,
+               "arm_swing_deg": 50.0, "elbow_deg": 92.0, "elbow_swing_deg": 12.0, "shoulder_counter": 1.3},
 }
 
 
@@ -618,35 +664,277 @@ def hand_pose(rest, side, curl, thumb, spread=0.0):
 
 
 def clip_bones(rest, name):
-    """The bones a clip keys: the finger poses only their hand's fingers; the others every bone but Root."""
-    if name in ("grip_r", "grip_l", "open_r", "open_l"):
+    """The bones a clip keys: the finger poses only their fingers, the flinches the upper body, the arm
+    rests the arms; the others every bone but Root."""
+    fingers = FINGERS + ("thumb",)
+    if name in HAND_CLIPS:
         s = "_" + name[-1]
-        return [b for b in rest.order if b.endswith(s) and b.startswith(FINGERS + ("thumb",))]
+        return [b for b in rest.order if b.endswith(s) and b.startswith(fingers)]
+    if name in GRIPS:
+        return [b for b in rest.order if b.startswith(fingers)]
+    if name.startswith("flinch_"):
+        return [b for b in rest.order if b in UPPER_BODY]
+    if name == "carry_two_hand":
+        return [b for b in rest.order if b.startswith(ARM_BONES + fingers)]
+    if name == "fp_rest":
+        return [b for b in rest.order if b.startswith(ARM_BONES)]
     return [b for b in rest.order if b != "Root"]
+
+
+def is_partial(name):
+    """True for a clip written with the tracks of its own bones only."""
+    return name in HAND_CLIPS or name in GRIPS or name.startswith("flinch_") or name in ("carry_two_hand", "fp_rest")
+
+
+# --------------------------------------------------------------------------------------
+# the clips II (P48)
+# --------------------------------------------------------------------------------------
+def set_legs(pose, feet, drop=0.025):
+    """Both legs by their feet: {side: (ankle, yaw_deg, pitch_deg, toe_deg)} in armature space. The pelvis
+    (its rotation and offset already set) is lowered by ``drop``, and further by the millimetre until both
+    legs reach. Returns the drop used."""
+    r = pose.rest
+    base = pose.offset.copy()
+    legs = {s: Leg(r, s) for s in feet}
+    d = drop
+    while True:
+        pose.offset = base + np.array([0.0, 0.0, -d])
+        pose.solve()
+        if d > 1.5 or all(np.linalg.norm(np.asarray(feet[s][0]) - pose.P["thigh_" + s]) <= legs[s].reach() for s in feet):
+            break
+        d += 0.001
+    for s, (ankle, yaw, pitch, toe) in feet.items():
+        legs[s].place(pose, pose.P["thigh_" + s], np.asarray(ankle, np.float64), pitch, toe, rot(Z, 0.5 * yaw))
+        if yaw:
+            pose.set_abs(legs[s].foot, rot(Z, yaw) @ rot(X, pitch))
+            pose.set_abs(legs[s].ball, rot(Z, yaw) @ rot(X, toe))
+    return d
+
+
+def rest_ankle(rest, side):
+    return rest.head["foot_" + side].copy()
+
+
+def turn_feet(rest, u, sign):
+    """A turn's feet at clip fraction u, in the turning body's own frame: {side: (ankle, yaw_deg, lift
+    fraction 0..1, planted)}; ``sign`` +1 turns to the giant's left. In the world a foot stands still until
+    its step, swings round the body's axis by the whole turn, and stands again; the body has turned
+    TURN_DEG x u, so in its frame a standing foot moves the other way."""
+    body = TURN_DEG * u * sign
+    inside, outside = ("l", "r") if sign > 0 else ("r", "l")
+    out = {}
+    for side, (t0, t1) in ((inside, TURN_STEP[0]), (outside, TURN_STEP[1])):
+        v = min(1.0, max(0.0, (u - t0) / (t1 - t0)))
+        world = TURN_DEG * sign * smooth(v)
+        p = rot(Z, world) @ rest_ankle(rest, side)
+        lift = math.sin(math.pi * v) if 0.0 < v < 1.0 else 0.0
+        a = rot(Z, -body) @ p
+        out[side] = (a, world - body, lift, not (0.0 < v < 1.0))
+    return out
+
+
+def turn_pose(rest, f, frames, sign):
+    u = f / float(frames)
+    pose = Pose(rest)
+    feet = turn_feet(rest, u, sign)
+    swing = math.sin(math.pi * u)
+    # the weight over the standing foot: toward the outside foot in the first step, the inside in the second
+    stance = [s for s in ("l", "r") if feet[s][3]]
+    lean = np.zeros(3)
+    if len(stance) == 1:
+        a = feet[stance[0]][0]
+        lean = np.array([a[0], a[1], 0.0]) * 0.16 * max(feet["l"][2], feet["r"][2])
+    pose.offset = lean
+    pose.set_rel("pelvis", rot(Z, -3.0 * sign * math.sin(2.0 * math.pi * u)))
+    for b in ("spine_01", "spine_02", "spine_03"):
+        pose.set_rel(b, rot(Z, 3.0 * sign * swing))            # the shoulders lead the hips into the turn
+    pose.set_rel("neck_01", rot(Z, 4.0 * sign * swing))
+    pose.set_rel("head", rot(Z, 6.0 * sign * swing))
+    set_legs(pose, {s: (feet[s][0] + np.array([0.0, 0.0, 0.16 * feet[s][2]]), feet[s][1], 10.0 * feet[s][2], 0.0)
+                    for s in ("l", "r")}, drop=0.025 + 0.035 * swing)
+    set_arm(pose, "l", 4.0 * sign * swing, 14.0 + 6.0 * swing)
+    set_arm(pose, "r", -4.0 * sign * swing, 14.0 + 6.0 * swing)
+    relaxed_hands(pose, 0.32)
+    return pose
+
+
+def stomp_pose(rest, f, frames):
+    t = f / float(frames)
+    up = smooth(t / STOMP_LIFT) if t < STOMP_HOLD else 1.0 - smooth((t - STOMP_HOLD) / (STOMP_PLANT - STOMP_HOLD))
+    up = max(0.0, up)
+    hit = smooth((t - STOMP_HOLD) / (STOMP_PLANT - STOMP_HOLD)) if t > STOMP_HOLD else 0.0
+    settle = smooth((t - STOMP_PLANT) / (1.0 - STOMP_PLANT)) if t > STOMP_PLANT else 0.0
+    sink = hit * (1.0 - settle)                 # the knees take the plant, then straighten
+    pose = Pose(rest)
+    # over the standing (left) leg while the foot is up, over the stomping foot as it lands
+    pose.offset = np.array([0.10 * up - 0.10 * sink, -0.02 * sink, 0.0])
+    pose.set_rel("pelvis", rot(Y, 4.0 * up) @ rot(X, -3.0 * up + 6.0 * sink))
+    for b in ("spine_01", "spine_02", "spine_03"):
+        pose.set_rel(b, rot(X, -2.0 * up + 5.0 * sink) @ rot(Y, -1.5 * up))
+    pose.set_rel("neck_01", rot(X, 4.0 * up - 4.0 * sink))
+    pose.set_rel("head", rot(X, 6.0 * up - 6.0 * sink))
+    a_r = rest_ankle(rest, "r") + np.array([0.0, -0.26 * up, 0.86 * up])
+    set_legs(pose, {"l": (rest_ankle(rest, "l"), 0.0, 0.0, 0.0), "r": (a_r, 0.0, 24.0 * up, 0.0)},
+             drop=0.025 + 0.02 * up + 0.16 * sink)
+    set_arm(pose, "l", 6.0 * up - 8.0 * sink, 16.0 + 14.0 * up, out_deg=8.0 + 14.0 * up)
+    set_arm(pose, "r", -8.0 * up + 6.0 * sink, 16.0 + 20.0 * up, out_deg=8.0 + 10.0 * up)
+    relaxed_hands(pose, 0.36 + 0.3 * up)
+    return pose
+
+
+def land_pose(rest, f, frames):
+    t = f / float(frames)
+    deep = 0.45 + 0.55 * smooth(t / 0.3) if t < 0.3 else 1.0 - smooth((t - 0.3) / 0.7)
+    pose = Pose(rest)
+    pose.offset = np.array([0.0, 0.05 * deep, 0.0])
+    pose.set_rel("pelvis", rot(X, 12.0 * deep))
+    for b, deg in (("spine_01", 5.0), ("spine_02", 6.0), ("spine_03", 5.0)):
+        pose.set_rel(b, rot(X, deg * deep))
+    pose.set_rel("neck_01", rot(X, -6.0 * deep))
+    pose.set_rel("head", rot(X, -8.0 * deep))
+    set_legs(pose, {s: (rest_ankle(rest, s), 0.0, 0.0, 0.0) for s in ("l", "r")}, drop=0.025 + 0.40 * deep)
+    set_arm(pose, "l", -14.0 * deep, 14.0 + 30.0 * deep, out_deg=8.0 + 16.0 * deep)
+    set_arm(pose, "r", -14.0 * deep, 14.0 + 30.0 * deep, out_deg=8.0 + 16.0 * deep)
+    relaxed_hands(pose, 0.32 + 0.1 * deep)
+    return pose
+
+
+def brace_pose(rest, f, frames):
+    pose = Pose(rest)
+    pose.offset = np.array([0.0, -0.02, 0.0])
+    pose.set_rel("pelvis", rot(Z, -8.0) @ rot(X, 6.0))             # the left hip forward, the weight low
+    for b in ("spine_01", "spine_02", "spine_03"):
+        pose.set_rel(b, rot(Z, 3.0) @ rot(X, 3.0))
+    pose.set_rel("neck_01", rot(Z, 4.0) @ rot(X, -4.0))
+    pose.set_rel("head", rot(X, -4.0))
+    a_l = rest_ankle(rest, "l") + np.array([0.02, -0.30, 0.0])
+    a_r = rest_ankle(rest, "r") + np.array([-0.06, 0.26, 0.0])
+    set_legs(pose, {"l": (a_l, 6.0, 0.0, 0.0), "r": (a_r, -28.0, 0.0, 0.0)}, drop=0.17)
+    set_arm(pose, "l", -10.0, 40.0, out_deg=14.0)
+    set_arm(pose, "r", 6.0, 30.0, out_deg=12.0)
+    relaxed_hands(pose, 0.5)
+    return pose
+
+
+def roar_pose(rest, f, frames):
+    t = f / float(frames)
+    e = smooth(t / 0.3) * (1.0 - 0.5 * smooth((t - 0.82) / 0.18))
+    step = math.sin(math.pi * min(1.0, t / 0.3)) if t < 0.3 else 0.0          # the feet lift as they move apart
+    pose = Pose(rest)
+    pose.offset = np.array([0.0, -0.03 * e, 0.0])
+    pose.set_rel("pelvis", rot(X, 5.0 * e))
+    for b, deg in (("spine_01", -5.0), ("spine_02", -8.0), ("spine_03", -8.0)):   # arched back: the chest out
+        pose.set_rel(b, rot(X, deg * e))
+    pose.set_rel("clavicle_l", rot(Z, -8.0 * e))
+    pose.set_rel("clavicle_r", rot(Z, 8.0 * e))
+    pose.set_rel("neck_01", rot(X, -6.0 * e))
+    pose.set_rel("head", rot(X, -14.0 * e))
+    feet = {}
+    for s, out in (("l", 1.0), ("r", -1.0)):
+        a = rest_ankle(rest, s) + np.array([out * 0.20 * e, 0.0, 0.05 * step])
+        feet[s] = (a, out * 12.0 * e, 0.0, 0.0)
+    set_legs(pose, feet, drop=0.025 + 0.11 * e)
+    set_arm(pose, "l", 14.0 * e, 14.0 + 36.0 * e, out_deg=8.0 + 26.0 * e)
+    set_arm(pose, "r", 14.0 * e, 14.0 + 36.0 * e, out_deg=8.0 + 26.0 * e)
+    relaxed_hands(pose, 0.32 + 0.5 * e)
+    return pose
+
+
+# The flinches: the upper body's offsets at the peak (degrees about the giant's axes: X pitches the torso
+# forward, Y rolls it toward his right, Z turns it to his left), per bone as a share of the whole.
+FLINCH = {"flinch_f": (-13.0, 0.0, 0.0), "flinch_b": (15.0, 0.0, 0.0), "flinch_l": (2.0, 11.0, -5.0),
+          "flinch_r": (2.0, -11.0, 5.0)}
+FLINCH_SHARE = {"spine_01": 0.2, "spine_02": 0.3, "spine_03": 0.3, "neck_01": 0.35, "head": 0.5}
+FLINCH_PEAK = 0.3                 # the share of the clip at which the offset is whole
+
+
+def flinch_pose(rest, name, f, frames):
+    t = f / float(frames)
+    e = smooth(t / FLINCH_PEAK) if t < FLINCH_PEAK else 1.0 - smooth((t - FLINCH_PEAK) / (1.0 - FLINCH_PEAK))
+    px, ry, tz = FLINCH[name]
+    pose = Pose(rest)
+    for b, share in FLINCH_SHARE.items():
+        # the head lags the torso: it turns the other way first, as the torso is thrown under it
+        k = share * e if b not in ("neck_01", "head") else -share * e * 0.6
+        pose.set_rel(b, rot(Z, tz * k) @ rot(Y, ry * k) @ rot(X, px * k))
+    shrug = 5.0 * e
+    pose.set_rel("clavicle_l", rot(Y, -shrug))
+    pose.set_rel("clavicle_r", rot(Y, shrug))
+    return pose
+
+
+def grip_pose(rest, name):
+    curl, thumb, spread = GRIPS[name]
+    pose = Pose(rest)
+    for s in ("l", "r"):
+        pose.ops(hand_spec(rest, s, curl, thumb, spread))
+    return pose
+
+
+def carry_pose(rest):
+    """Both hands on a long handle carried across the front of the hips: the right hand low at the right
+    hip, the left a hand's breadth further along it."""
+    pose = Pose(rest)
+    pose.set_rel("clavicle_l", rot(Z, -6.0))
+    pose.set_rel("clavicle_r", rot(Z, 6.0))
+    set_arm(pose, "r", -8.0, 44.0, out_deg=4.0, forward_deg=6.0)
+    set_arm(pose, "l", -16.0, 62.0, out_deg=-6.0, forward_deg=12.0)
+    for s in ("l", "r"):
+        pose.ops(hand_spec(rest, s, 0.84, 0.9))
+    return pose
+
+
+def fp_rest_pose(rest):
+    """The first-person rest: the weapon arm forward of the body with the forearm raised, so the fist and
+    what it holds sit in the lower right of the view; the off arm a little forward and bent."""
+    pose = Pose(rest)
+    set_arm(pose, "r", -24.0, 82.0, out_deg=10.0, forward_deg=6.0)
+    set_arm(pose, "l", -10.0, 46.0, out_deg=12.0, forward_deg=4.0)
+    return pose
 
 
 def make_poses(rest):
     walk = Gait(rest, "walk", CLIP_FRAMES["walk"])
     run = Gait(rest, "run", CLIP_FRAMES["run"])
+    sprint = Gait(rest, "sprint", CLIP_FRAMES["sprint"])
+    gaits = {"walk": walk, "run": run, "sprint": sprint}
     poses = {}
     for name, frames in CLIP_FRAMES.items():
         keys = []
         for f in range(frames + 1):
             if name == "idle":
                 p = idle_pose(rest, f, frames)
-            elif name in ("walk", "run"):
-                p = (walk if name == "walk" else run).pose(2.0 * math.pi * f / frames)
+            elif name in gaits:
+                p = gaits[name].pose(2.0 * math.pi * f / frames)
+            elif name in ("turn_l", "turn_r"):
+                p = turn_pose(rest, f, frames, 1.0 if name == "turn_l" else -1.0)
+            elif name == "stomp_r":
+                p = stomp_pose(rest, f, frames)
+            elif name == "land":
+                p = land_pose(rest, f, frames)
+            elif name == "brace":
+                p = brace_pose(rest, f, frames)
+            elif name == "roar":
+                p = roar_pose(rest, f, frames)
+            elif name in FLINCH:
+                p = flinch_pose(rest, name, f, frames)
+            elif name in GRIPS:
+                p = grip_pose(rest, name)
+            elif name == "carry_two_hand":
+                p = carry_pose(rest)
+            elif name == "fp_rest":
+                p = fp_rest_pose(rest)
             elif name == "airborne":
                 p = airborne_pose(rest, f, frames)
             elif name == "death":
                 p = death_pose(rest, f, frames)
-            elif name.startswith("grip_"):
+            elif name in ("grip_r", "grip_l"):
                 p = hand_pose(rest, name[-1], 0.86, 0.9)
             else:
                 p = hand_pose(rest, name[-1], 0.08, 0.1, 5.0)
             keys.append(p.solve())
         poses[name] = keys
-    return poses, {"walk": walk, "run": run}
+    return poses, gaits
 
 
 # --------------------------------------------------------------------------------------
@@ -683,6 +971,182 @@ def measure_gait(gait: Gait, samples=256):
     return {"stride_m": r6(stride), "stride_error": r6(stride / CYCLE_M - 1.0), "slide_m": r6(slide),
             "contact_error_m": r6(err), "ground_lift_m": r6(float(np.max(np.abs(zs)))),
             "pelvis_drop_m": r6(gait.amp - gait.top), "duty": gait.g["duty"], "keys": gait.frames + 1}
+
+
+def _yaw_of(D):
+    """The yaw (degrees, positive to the giant's left) a delta turns his forward axis by."""
+    v = np.asarray(D) @ np.array([0.0, -1.0, 0.0])
+    return math.degrees(math.atan2(v[0], -v[1]))
+
+
+def _angle_of(D):
+    return math.degrees(math.acos(float(np.clip((np.trace(np.asarray(D)) - 1.0) / 2.0, -1.0, 1.0))))
+
+
+def measure_turn(rest, name, samples=97):
+    """A turn clip on its solved poses: the yaw each foot has turned by in the world at the end, the most a
+    standing foot moves in the world while the body turns over it, the highest a stepping foot lifts, and
+    how far the posed ankles are from where the clip puts them."""
+    sign = 1.0 if name == "turn_l" else -1.0
+    frames = CLIP_FRAMES[name]
+    slide, lift, err = 0.0, 0.0, 0.0
+    for i in range(samples):
+        u = i / float(samples - 1)
+        pose = turn_pose(rest, u * frames, frames, sign).solve()
+        feet = turn_feet(rest, u, sign)
+        body = TURN_DEG * u * sign
+        for side, (t0, t1) in zip(("l", "r") if sign > 0 else ("r", "l"), TURN_STEP):
+            a, _yaw, lf, planted = feet[side]
+            got = pose.P["foot_" + side]
+            lift = max(lift, float(got[2] - rest.head["foot_" + side][2]))
+            if planted:
+                err = max(err, float(np.linalg.norm(got - a)))
+                want = rest_ankle(rest, side) if u <= t0 else rot(Z, TURN_DEG * sign) @ rest_ankle(rest, side)
+                slide = max(slide, float(np.linalg.norm(rot(Z, body) @ got - want)))
+    end = turn_pose(rest, frames, frames, sign).solve()
+    start = turn_pose(rest, 0, frames, sign).solve()
+    turned = [TURN_DEG * sign + _yaw_of(end.D["foot_" + s]) - _yaw_of(start.D["foot_" + s]) for s in ("l", "r")]
+    loop = max(float(np.linalg.norm(end.P[b] - start.P[b])) for b in ("foot_l", "foot_r", "pelvis", "head"))
+    return {"turn_deg": r6(sum(turned) / 2.0), "slide_m": r6(slide), "step_lift_m": r6(lift), "foot_error_m": r6(err),
+            "end_to_start_m": r6(loop), "keys": frames + 1}
+
+
+def measure_stomp(rest, samples=121):
+    """The stomp on its solved poses: how high the foot lifts, how far the plant point (the ankle as the
+    foot lands) is from under the hip, and how far the standing foot and the planted foot are from where
+    they stood."""
+    frames = CLIP_FRAMES["stomp_r"]
+    lift, stand = 0.0, 0.0
+    for i in range(samples):
+        pose = stomp_pose(rest, frames * i / float(samples - 1), frames).solve()
+        lift = max(lift, float(pose.P["foot_r"][2] - rest.head["foot_r"][2]))
+        stand = max(stand, float(np.linalg.norm(pose.P["foot_l"] - rest.head["foot_l"])))
+    plant = stomp_pose(rest, frames * STOMP_PLANT, frames).solve()
+    off = plant.P["foot_r"][:2] - plant.P["thigh_r"][:2]
+    return {"lift_m": r6(lift), "plant_from_hip_m": r6(float(np.linalg.norm(off))),
+            "plant_from_rest_m": r6(float(np.linalg.norm(plant.P["foot_r"] - rest.head["foot_r"]))),
+            "standing_foot_m": r6(stand), "lift_fraction": STOMP_LIFT, "hold_fraction": STOMP_HOLD,
+            "plant_fraction": STOMP_PLANT, "keys": frames + 1}
+
+
+def measure_stance(rest, name, fn, samples=49):
+    """A standing clip (land, brace, roar): the most the pelvis drops and how far each posed ankle is from
+    the ground height it stands at."""
+    frames = CLIP_FRAMES[name]
+    drop, off_ground, spread = 0.0, 0.0, 0.0
+    for i in range(samples if frames > 1 else 1):
+        pose = fn(rest, frames * i / float(max(1, samples - 1)), frames).solve()
+        drop = max(drop, float(rest.head["pelvis"][2] - pose.P["pelvis"][2]))
+        spread = max(spread, float(abs(pose.P["foot_l"][0] - pose.P["foot_r"][0])))
+        if name != "roar":
+            off_ground = max(off_ground, max(abs(float(pose.P["foot_" + s][2] - rest.head["foot_" + s][2])) for s in "lr"))
+    return {"pelvis_drop_m": r6(drop), "foot_off_ground_m": r6(off_ground), "feet_apart_m": r6(spread), "keys": frames + 1}
+
+
+def measure_flinch(rest, name):
+    """A flinch: the chest's and the head's largest turn from rest, and what is left at its ends (nothing)."""
+    frames = CLIP_FRAMES[name]
+    chest, head = 0.0, 0.0
+    for f in range(frames + 1):
+        pose = flinch_pose(rest, name, f, frames).solve()
+        chest = max(chest, _angle_of(pose.D["spine_03"]))
+        head = max(head, _angle_of(pose.D["head"]))
+    ends = max(_angle_of(flinch_pose(rest, name, f, frames).solve().D[b]) for f in (0, frames) for b in UPPER_BODY)
+    return {"chest_deg": r6(chest), "head_deg": r6(head), "ends_deg": r6(ends), "length_s": r6(frames / float(FPS)),
+            "keys": frames + 1}
+
+
+def measure_clips(rest):
+    out = {"turn_l": measure_turn(rest, "turn_l"), "turn_r": measure_turn(rest, "turn_r"),
+           "stomp_r": measure_stomp(rest), "land": measure_stance(rest, "land", land_pose),
+           "brace": measure_stance(rest, "brace", brace_pose), "roar": measure_stance(rest, "roar", roar_pose)}
+    for name in sorted(FLINCH):
+        out[name] = measure_flinch(rest, name)
+    return out
+
+
+# --------------------------------------------------------------------------------------
+# the glTF's tracks: a partial clip keeps its own bones' only
+# --------------------------------------------------------------------------------------
+def strip_tracks(path, keep):
+    """Rewrites a glTF binary without the animation channels of bones a clip does not key: ``keep`` is
+    {clip: set of bone names}. Samplers, accessors and buffer views nothing uses any more leave the file;
+    what stays keeps its bytes. Returns {clip: channels kept}."""
+    import struct
+    with open(path, "rb") as fh:
+        data = fh.read()
+    pos, doc, binary = 12, None, b""
+    while pos < len(data):
+        clen, ctype = struct.unpack_from("<I4s", data, pos)
+        chunk = data[pos + 8: pos + 8 + clen]
+        if ctype == b"JSON":
+            doc = json.loads(chunk.decode("utf-8"))
+        elif ctype == b"BIN\x00":
+            binary = chunk
+        pos += 8 + clen
+    kept = {}
+    for a in doc.get("animations", []):
+        if a["name"] not in keep:
+            continue
+        chans = [c for c in a["channels"] if doc["nodes"][c["target"]["node"]]["name"] in keep[a["name"]]]
+        used = sorted({c["sampler"] for c in chans})
+        remap = {old: new for new, old in enumerate(used)}
+        a["samplers"] = [a["samplers"][i] for i in used]
+        a["channels"] = [dict(c, sampler=remap[c["sampler"]]) for c in chans]
+        kept[a["name"]] = len(chans)
+    used_acc = set()
+    for m in doc.get("meshes", []):
+        for prim in m["primitives"]:
+            used_acc.update(prim["attributes"].values())
+            if "indices" in prim:
+                used_acc.add(prim["indices"])
+    for sk in doc.get("skins", []):
+        if "inverseBindMatrices" in sk:
+            used_acc.add(sk["inverseBindMatrices"])
+    for a in doc.get("animations", []):
+        for sm in a["samplers"]:
+            used_acc.update((sm["input"], sm["output"]))
+    acc_map = {old: new for new, old in enumerate(sorted(used_acc))}
+    accessors = [doc["accessors"][i] for i in sorted(used_acc)]
+    used_bv = sorted({a["bufferView"] for a in accessors})
+    bv_map = {old: new for new, old in enumerate(used_bv)}
+    out_bin = bytearray()
+    views = []
+    for i in used_bv:
+        bv = dict(doc["bufferViews"][i])
+        start = bv.get("byteOffset", 0)
+        while len(out_bin) % 4:
+            out_bin.append(0)
+        bv["byteOffset"] = len(out_bin)
+        out_bin += binary[start: start + bv["byteLength"]]
+        views.append(bv)
+    while len(out_bin) % 4:
+        out_bin.append(0)
+    for a in accessors:
+        a["bufferView"] = bv_map[a["bufferView"]]
+    for m in doc.get("meshes", []):
+        for prim in m["primitives"]:
+            prim["attributes"] = {k: acc_map[v] for k, v in prim["attributes"].items()}
+            if "indices" in prim:
+                prim["indices"] = acc_map[prim["indices"]]
+    for sk in doc.get("skins", []):
+        if "inverseBindMatrices" in sk:
+            sk["inverseBindMatrices"] = acc_map[sk["inverseBindMatrices"]]
+    for a in doc.get("animations", []):
+        for sm in a["samplers"]:
+            sm["input"], sm["output"] = acc_map[sm["input"]], acc_map[sm["output"]]
+    doc["accessors"], doc["bufferViews"] = accessors, views
+    doc["buffers"] = [{"byteLength": len(out_bin)}]
+    text = json.dumps(doc, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    text += b" " * (-len(text) % 4)
+    total = 12 + 8 + len(text) + 8 + len(out_bin)
+    with open(path, "wb") as fh:
+        fh.write(struct.pack("<4sII", b"glTF", 2, total))
+        fh.write(struct.pack("<I4s", len(text), b"JSON"))
+        fh.write(text)
+        fh.write(struct.pack("<I4s", len(out_bin), b"BIN\x00"))
+        fh.write(bytes(out_bin))
+    return kept
 
 
 # --------------------------------------------------------------------------------------
@@ -762,8 +1226,9 @@ def run(out_dir, work_dir):
     bpy.data.objects.remove(objs["body"], do_unlink=True)
     rest = Rest(rig)
     poses, gaits = make_poses(rest)
-    worst = max(check_against_blender(rig, rest, poses[n][k]) for n, k in (("walk", 5), ("run", 11), ("death", 30),
-                                                                             ("idle", 13)))
+    worst = max(check_against_blender(rig, rest, poses[n][k]) for n, k in (
+        ("walk", 5), ("run", 11), ("death", 30), ("idle", 13), ("sprint", 7), ("turn_l", 9), ("turn_r", 17),
+        ("stomp_r", 12), ("land", 2), ("brace", 0), ("roar", 10)))
     if worst > 1e-4:
         raise SystemExit("clips: the keyed rotations do not reproduce the solved pose (%.6f m off)" % worst)
     anchor = anchor_mesh(rig, rest, coll)
@@ -788,11 +1253,18 @@ def run(out_dir, work_dir):
                               export_morph=False, export_materials="NONE", export_yup=True,
                               export_def_bones=False, export_leaf_bone=False, export_extras=False,
                               export_cameras=False, export_lights=False, export_rest_position_armature=True)
+    # P48: a partial clip keeps the tracks of its own bones only (M10's follow-up: the hand clips carried
+    # a track for every bone, which the tree evaluated every frame)
+    kept = strip_tracks(path, {n: set(clip_bones(rest, n)) for n in CLIP_FRAMES if is_partial(n)})
     info = {"fps": FPS, "step_m": STEP_M, "cycle_m": CYCLE_M, "left_strike_phase": r6(LEFT_STRIKE),
             "clips": {n: {"frames": f, "length_s": r6(f / float(FPS)), "loop": n in LOOPS,
-                          "bones": len(clip_bones(rest, n))} for n, f in CLIP_FRAMES.items()},
+                          "bones": len(clip_bones(rest, n)), "partial": is_partial(n)} for n, f in CLIP_FRAMES.items()},
             "gaits": {n: measure_gait(g) for n, g in sorted(gaits.items())},
+            "measures": measure_clips(rest),
             "conversion_error_m": r6(worst)}
+    for n, count in sorted(kept.items()):
+        if count != 3 * info["clips"][n]["bones"]:
+            raise SystemExit("clips: %s kept %d channels, expected three a bone (%d bones)" % (n, count, info["clips"][n]["bones"]))
     for n, m in info["gaits"].items():
         log("%s: stride %.4f m per cycle (%+.2f %%), slide %.4f m, pelvis drop %.3f m" % (
             n, m["stride_m"], 100.0 * m["stride_error"], m["slide_m"], m["pelvis_drop_m"]))

@@ -81,6 +81,8 @@ func test_the_giant_keeps_its_first_person_parts_apart() -> void:
 	for mi in _meshes(body):
 		if socket.is_ancestor_of(mi):
 			continue   # the weapon's own meshes (test_the_giants_weapon_materials_join_and_leave_the_flash_list)
+		if mi == model.shadow_proxy():
+			continue   # P48: the shadow proxy is no look's mesh (tests/integration/test_giant_parts.gd checks it)
 		assert_true(mi.get_parent() is Skeleton3D and mi.skin != null, "%s is a skinned mesh of the model's skeleton" % mi.name)
 		names.append(str(mi.name))
 	names.sort()

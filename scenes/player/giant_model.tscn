@@ -7,6 +7,86 @@
 script = ExtResource("1_63217")
 index = {
 "body_hash": "9cd81c08253e20339d78a2a5e72ca01adc08a47599c95446d6f4209ef88527be",
+"build_max_m": 0.099254,
+"chains": {
+"beard": {
+"bones": ["beard_01", "beard_02"],
+"drag": 0.6,
+"gravity": 0.4,
+"kind": "beard",
+"length_m": 0.269044,
+"max_deg": 22.0,
+"parent": "head",
+"root": [0.0, 3.218967, -0.26593],
+"stiffness": 3.0
+},
+"cape_c": {
+"bones": ["cape_c_01", "cape_c_02", "cape_c_03"],
+"drag": 0.35,
+"gravity": 1.0,
+"kind": "cape",
+"length_m": 0.85445,
+"max_deg": 55.0,
+"parent": "spine_03",
+"root": [0.0, 2.925734, 0.31818],
+"stiffness": 0.9
+},
+"cape_l": {
+"bones": ["cape_l_01", "cape_l_02", "cape_l_03"],
+"drag": 0.35,
+"gravity": 1.0,
+"kind": "cape",
+"length_m": 0.85445,
+"max_deg": 55.0,
+"parent": "spine_03",
+"root": [-0.256646, 2.925734, 0.288286],
+"stiffness": 0.9
+},
+"cape_r": {
+"bones": ["cape_r_01", "cape_r_02", "cape_r_03"],
+"drag": 0.35,
+"gravity": 1.0,
+"kind": "cape",
+"length_m": 0.85445,
+"max_deg": 55.0,
+"parent": "spine_03",
+"root": [0.256646, 2.925734, 0.288286],
+"stiffness": 0.9
+},
+"hair": {
+"bones": ["hair_01", "hair_02", "hair_03"],
+"drag": 0.45,
+"gravity": 0.6,
+"kind": "hair",
+"length_m": 0.448407,
+"max_deg": 38.0,
+"parent": "head",
+"root": [0.0, 3.350252, 0.075014],
+"stiffness": 1.6
+},
+"hair_l": {
+"bones": ["hair_l_01", "hair_l_02"],
+"drag": 0.45,
+"gravity": 0.6,
+"kind": "hair",
+"length_m": 0.388619,
+"max_deg": 38.0,
+"parent": "head",
+"root": [-0.142445, 3.350252, -0.070759],
+"stiffness": 1.6
+},
+"hair_r": {
+"bones": ["hair_r_01", "hair_r_02"],
+"drag": 0.45,
+"gravity": 0.6,
+"kind": "hair",
+"length_m": 0.388619,
+"max_deg": 38.0,
+"parent": "head",
+"root": [0.142445, 3.350252, -0.070759],
+"stiffness": 1.6
+}
+},
 "defaults": {
 "shown": ["Body_Head", "Body_Torso", "Body_Limbs", "Eyes", "Hair_long_back", "Beard_full", "Garment_braies_core", "Garment_braies_limbs", "Garment_belt"]
 },
@@ -21,175 +101,204 @@ index = {
 "channel": 3,
 "kind": "mark",
 "layer": 2,
-"regions": [1, 3, 8]
+"regions": [1, 3, 8],
+"side": "left"
 },
 "mark_granite_veins": {
 "channel": 0,
 "kind": "mark",
 "layer": 3,
-"regions": [8, 9]
+"regions": [8, 9],
+"side": "centre"
 },
 "mark_lightning_tree": {
 "channel": 0,
 "kind": "mark",
 "layer": 2,
-"regions": [5, 6, 8, 9]
+"regions": [5, 6, 8, 9],
+"side": "left"
 },
 "paint_back_hand": {
 "channel": 3,
 "kind": "paint",
 "layer": 3,
-"regions": [5]
+"regions": [5],
+"side": "centre"
 },
 "paint_face_stripes": {
 "channel": 0,
 "kind": "paint",
 "layer": 2,
-"regions": [1]
+"regions": [1],
+"side": "centre"
 },
 "paint_full_face": {
 "channel": 0,
 "kind": "paint",
 "layer": 3,
-"regions": [1]
+"regions": [1],
+"side": "centre"
 },
 "paint_shoulder_bands": {
 "channel": 0,
 "kind": "paint",
 "layer": 5,
-"regions": [8]
+"regions": [8],
+"side": "centre"
 },
 "scar_back_lash": {
 "channel": 1,
 "kind": "scar",
 "layer": 1,
-"regions": [5, 6]
+"regions": [5, 6],
+"side": "centre"
 },
 "scar_brow": {
 "channel": 0,
 "kind": "scar",
 "layer": 0,
-"regions": [1]
+"regions": [1],
+"side": "left"
 },
 "scar_cheek": {
 "channel": 0,
 "kind": "scar",
 "layer": 1,
-"regions": [1]
+"regions": [1],
+"side": "right"
 },
 "scar_chest_claws": {
 "channel": 2,
 "kind": "scar",
 "layer": 0,
-"regions": [3]
+"regions": [3],
+"side": "left"
 },
 "scar_forearm_slash": {
 "channel": 1,
 "kind": "scar",
 "layer": 0,
-"regions": [9]
+"regions": [9],
+"side": "right"
 },
 "scar_knuckles": {
 "channel": 3,
 "kind": "scar",
 "layer": 0,
-"regions": [10]
+"regions": [10],
+"side": "left"
 },
 "tat_arm_bands": {
 "channel": 3,
 "kind": "tattoo",
 "layer": 5,
-"regions": [8]
+"regions": [8],
+"side": "centre"
 },
 "tat_arm_chevrons": {
 "channel": 3,
 "kind": "tattoo",
 "layer": 2,
-"regions": [9]
+"regions": [9],
+"side": "centre"
 },
 "tat_arm_sleeve": {
 "channel": 3,
 "kind": "tattoo",
 "layer": 3,
-"regions": [8, 9]
+"regions": [8, 9],
+"side": "right"
 },
 "tat_arm_winding": {
 "channel": 0,
 "kind": "tattoo",
 "layer": 4,
-"regions": [8, 9]
+"regions": [8, 9],
+"side": "centre"
 },
 "tat_back_serpent": {
 "channel": 3,
 "kind": "tattoo",
 "layer": 2,
-"regions": [5, 6]
+"regions": [5, 6],
+"side": "centre"
 },
 "tat_back_shoulders": {
 "channel": 3,
 "kind": "tattoo",
 "layer": 4,
-"regions": [5, 8]
+"regions": [5, 8],
+"side": "centre"
 },
 "tat_back_tree": {
 "channel": 0,
 "kind": "tattoo",
 "layer": 3,
-"regions": [5, 6]
+"regions": [5, 6],
+"side": "centre"
 },
 "tat_back_wings": {
 "channel": 0,
 "kind": "tattoo",
 "layer": 4,
-"regions": [5]
+"regions": [5],
+"side": "centre"
 },
 "tat_chest_collar": {
 "channel": 0,
 "kind": "tattoo",
 "layer": 3,
-"regions": [3]
+"regions": [3],
+"side": "centre"
 },
 "tat_chest_knot": {
 "channel": 0,
 "kind": "tattoo",
 "layer": 2,
-"regions": [3, 4]
+"regions": [3, 4],
+"side": "centre"
 },
 "tat_chest_spiral": {
 "channel": 3,
 "kind": "tattoo",
 "layer": 3,
-"regions": [3]
+"regions": [3],
+"side": "right"
 },
 "tat_chest_sun": {
 "channel": 0,
 "kind": "tattoo",
 "layer": 4,
-"regions": [3]
+"regions": [3],
+"side": "centre"
 },
 "tat_face_bars": {
 "channel": 3,
 "kind": "tattoo",
 "layer": 3,
-"regions": [1]
+"regions": [1],
+"side": "centre"
 },
 "tat_face_crown": {
 "channel": 0,
 "kind": "tattoo",
 "layer": 4,
-"regions": [1]
+"regions": [1],
+"side": "centre"
 },
 "tat_face_dots": {
 "channel": 3,
 "kind": "tattoo",
 "layer": 4,
-"regions": [1]
+"regions": [1],
+"side": "centre"
 },
 "tat_face_lines": {
 "channel": 0,
 "kind": "tattoo",
 "layer": 5,
-"regions": [1]
+"regions": [1],
+"side": "centre"
 }
 },
 "garments": {
@@ -210,11 +319,19 @@ index = {
 "elbow_l": [-0.816601, 2.569926, -0.057258],
 "elbow_r": [0.816601, 2.569926, -0.057258],
 "eye_mid": [0.0, 3.447277, -0.244111],
+"grip_axis_l": [-0.626639, 0.335128, 0.703571],
+"grip_axis_r": [0.626639, 0.335128, 0.703571],
+"grip_l": [-1.141773, 2.170119, -0.591261],
+"grip_local_l": [0.041409, 0.199477, -0.010132],
+"grip_local_r": [-0.041409, 0.199477, -0.010132],
+"grip_r": [1.141773, 2.170119, -0.591261],
 "head": [0.0, 3.375784, -0.070759],
 "hip_l": [-0.216859, 2.071284, 0.005812],
 "hip_r": [0.216859, 2.071284, 0.005812],
 "knee_l": [-0.281627, 1.025667, -0.057458],
 "knee_r": [0.281627, 1.025667, -0.057458],
+"knuckle_l": [-1.166727, 2.199399, -0.657076],
+"knuckle_r": [1.166727, 2.199399, -0.657076],
 "neck": [0.0, 3.206089, -0.023832],
 "palm_l": [-1.178912, 2.188337, -0.636613],
 "palm_r": [1.178912, 2.188337, -0.636613],
@@ -223,45 +340,55 @@ index = {
 "reach_r": 1.384983,
 "shoulder_l": [-0.413945, 3.015415, -0.033232],
 "shoulder_r": [0.413945, 3.015415, -0.033232],
+"toe_l": [-0.369113, 0.027045, -0.450312],
+"toe_r": [0.369113, 0.027045, -0.450312],
 "wrist_l": [-1.087127, 2.306697, -0.44995],
 "wrist_r": [1.087127, 2.306697, -0.44995]
 },
-"manifest_sha256": "62df9d8b0ee6507a0b4a7d62367ec8680832b3e8e83234b397d02feca648d334",
+"manifest_sha256": "89855ad1aa46a6373d4d52430bf898de59395d731c9f80ee487f1090ee449e97",
 "meshes": {
 "Beard_braided": {
 "atlas": "hair_atlas",
 "category": "beard",
+"chains": ["beard"],
 "covers": [],
 "dye": "none",
 "layer": 3,
 "node": "Beard_braided",
+"part_path": "res://assets/giant/parts/Beard_braided.glb",
 "tris": 2836
 },
 "Beard_forked": {
 "atlas": "hair_atlas",
 "category": "beard",
+"chains": ["beard"],
 "covers": [],
 "dye": "none",
 "layer": 3,
 "node": "Beard_forked",
+"part_path": "res://assets/giant/parts/Beard_forked.glb",
 "tris": 3840
 },
 "Beard_full": {
 "atlas": "hair_atlas",
 "category": "beard",
+"chains": ["beard"],
 "covers": [],
 "dye": "none",
 "layer": 3,
 "node": "Beard_full",
+"part_path": "res://assets/giant/parts/Beard_full.glb",
 "tris": 3960
 },
 "Beard_short": {
 "atlas": "hair_atlas",
 "category": "beard",
+"chains": [],
 "covers": [],
 "dye": "none",
 "layer": 3,
 "node": "Beard_short",
+"part_path": "res://assets/giant/parts/Beard_short.glb",
 "tris": 2240
 },
 "Body_Head": {
@@ -298,6 +425,7 @@ index = {
 },
 "Garment_belt": {
 "category": "garment",
+"chains": [],
 "coverage": {},
 "covers": [],
 "detail": "leather",
@@ -305,10 +433,12 @@ index = {
 "layer": 2,
 "node": "Garment_belt",
 "part": "torso",
+"part_path": "res://assets/giant/parts/Garment_belt.glb",
 "tris": 768
 },
 "Garment_boots": {
 "category": "garment",
+"chains": [],
 "coverage": {
 "13": 0.640867,
 "14": 0.998595
@@ -319,10 +449,12 @@ index = {
 "layer": 1,
 "node": "Garment_boots",
 "part": "limbs",
+"part_path": "res://assets/giant/parts/Garment_boots.glb",
 "tris": 2500
 },
 "Garment_bracers": {
 "category": "garment",
+"chains": [],
 "coverage": {},
 "covers": [],
 "detail": "leather",
@@ -330,10 +462,12 @@ index = {
 "layer": 1,
 "node": "Garment_bracers",
 "part": "limbs",
+"part_path": "res://assets/giant/parts/Garment_bracers.glb",
 "tris": 400
 },
 "Garment_braies_core": {
 "category": "garment",
+"chains": [],
 "coverage": {
 "11": 0.932203,
 "7": 0.984733
@@ -344,10 +478,12 @@ index = {
 "layer": 2,
 "node": "Garment_braies_core",
 "part": "torso",
+"part_path": "res://assets/giant/parts/Garment_braies_core.glb",
 "tris": 388
 },
 "Garment_braies_limbs": {
 "category": "garment",
+"chains": [],
 "coverage": {
 "11": 0.932203,
 "7": 0.984733
@@ -358,24 +494,29 @@ index = {
 "layer": 1,
 "node": "Garment_braies_limbs",
 "part": "limbs",
+"part_path": "res://assets/giant/parts/Garment_braies_limbs.glb",
 "tris": 676
 },
 "Garment_cape": {
 "category": "garment",
+"chains": ["cape_c", "cape_l", "cape_r"],
 "coverage": {
-"5": 0.839286,
-"6": 0.986486
+"5": 0.815476,
+"6": 0.898649
 },
 "covers": [6],
 "detail": "weave",
 "dye": "primary",
+"free": true,
 "layer": 2,
 "node": "Garment_cape",
 "part": "torso",
-"tris": 1228
+"part_path": "res://assets/giant/parts/Garment_cape.glb",
+"tris": 1236
 },
 "Garment_furs": {
 "category": "garment",
+"chains": [],
 "coverage": {
 "3": 0.669887,
 "5": 0.60119
@@ -386,10 +527,12 @@ index = {
 "layer": 2,
 "node": "Garment_furs",
 "part": "torso",
+"part_path": "res://assets/giant/parts/Garment_furs.glb",
 "tris": 1352
 },
 "Garment_jerkin": {
 "category": "garment",
+"chains": [],
 "coverage": {
 "3": 0.811594,
 "4": 0.947368,
@@ -402,10 +545,12 @@ index = {
 "layer": 2,
 "node": "Garment_jerkin",
 "part": "torso",
+"part_path": "res://assets/giant/parts/Garment_jerkin.glb",
 "tris": 2278
 },
 "Garment_leg_wraps": {
 "category": "garment",
+"chains": [],
 "coverage": {
 "13": 0.835913
 },
@@ -415,10 +560,12 @@ index = {
 "layer": 1,
 "node": "Garment_leg_wraps",
 "part": "limbs",
+"part_path": "res://assets/giant/parts/Garment_leg_wraps.glb",
 "tris": 550
 },
 "Garment_pauldron": {
 "category": "garment",
+"chains": [],
 "coverage": {},
 "covers": [],
 "detail": "leather",
@@ -426,10 +573,12 @@ index = {
 "layer": 2,
 "node": "Garment_pauldron",
 "part": "torso",
+"part_path": "res://assets/giant/parts/Garment_pauldron.glb",
 "tris": 326
 },
 "Garment_tunic_core": {
 "category": "garment",
+"chains": [],
 "coverage": {
 "11": 0.551789,
 "3": 0.985507,
@@ -445,10 +594,12 @@ index = {
 "layer": 2,
 "node": "Garment_tunic_core",
 "part": "torso",
+"part_path": "res://assets/giant/parts/Garment_tunic_core.glb",
 "tris": 3130
 },
 "Garment_tunic_limbs": {
 "category": "garment",
+"chains": [],
 "coverage": {
 "11": 0.551789,
 "3": 0.985507,
@@ -464,51 +615,62 @@ index = {
 "layer": 1,
 "node": "Garment_tunic_limbs",
 "part": "limbs",
+"part_path": "res://assets/giant/parts/Garment_tunic_limbs.glb",
 "tris": 1390
 },
 "Hair_crop": {
 "atlas": "hair_atlas",
 "category": "hair",
+"chains": [],
 "covers": [],
 "dye": "none",
 "layer": 3,
 "node": "Hair_crop",
+"part_path": "res://assets/giant/parts/Hair_crop.glb",
 "tris": 4400
 },
 "Hair_long_back": {
 "atlas": "hair_atlas",
 "category": "hair",
+"chains": ["hair"],
 "covers": [],
 "dye": "none",
 "layer": 3,
 "node": "Hair_long_back",
+"part_path": "res://assets/giant/parts/Hair_long_back.glb",
 "tris": 5880
 },
 "Hair_long_braided": {
 "atlas": "hair_atlas",
 "category": "hair",
+"chains": ["hair", "hair_l", "hair_r"],
 "covers": [],
 "dye": "none",
 "layer": 3,
 "node": "Hair_long_braided",
+"part_path": "res://assets/giant/parts/Hair_long_braided.glb",
 "tris": 5360
 },
 "Hair_warrior_tail": {
 "atlas": "hair_atlas",
 "category": "hair",
+"chains": ["hair"],
 "covers": [],
 "dye": "none",
 "layer": 3,
 "node": "Hair_warrior_tail",
+"part_path": "res://assets/giant/parts/Hair_warrior_tail.glb",
 "tris": 4824
 },
 "Hair_wild_mane": {
 "atlas": "hair_atlas",
 "category": "hair",
+"chains": ["hair"],
 "covers": [],
 "dye": "none",
 "layer": 3,
 "node": "Hair_wild_mane",
+"part_path": "res://assets/giant/parts/Hair_wild_mane.glb",
 "tris": 6000
 }
 },
@@ -561,6 +723,10 @@ index = {
 "id": 15,
 "name": "cap"
 }],
+"shadow_proxy": {
+"node": "ShadowProxy",
+"tris": 2500
+},
 "textures": {
 "design_layers": 6,
 "designs": "res://assets/giant/designs.png",

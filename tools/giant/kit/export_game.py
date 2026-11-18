@@ -1,8 +1,11 @@
-"""The giant's meshes as one skinned glTF for Godot 4.6 (the steps --body, --garments, --hair).
+"""The giant's meshes as skinned glTFs for Godot 4.6 (the steps --body, --garments, --hair).
 
 Builds the kit's giant at the stage-1 height (3.6576 m; the game scales Visual/Body by
-k = height / 3.6576) on the MPFB2 "game_engine" skeleton (53 bones) with its CC0 weights, no
-subdivision, and writes into one glTF binary, every mesh on the one armature:
+k = height / 3.6576) on the MPFB2 "game_engine" skeleton (53 bones) with its CC0 weights and the 18
+leaf bones of P48 (giant_parts.py: 71 bones), no subdivision. ``giant.glb`` holds the skeleton, the
+three body meshes, ``Eyes`` and ``ShadowProxy`` (the body at about 2,500 triangles, for the shadow
+passes); every hair, beard and garment mesh is written to ``parts/<mesh id>.glb`` on the same
+skeleton, so the game loads a style or a garment when a look shows it (plan M11 §2.2). The meshes:
 
   Body_Head, Body_Torso, Body_Limbs   the hm08 body split at the neck, shoulders and hips (split.py),
                                       every cut capped on both sides, the joined body's normals kept,
@@ -14,9 +17,15 @@ subdivision, and writes into one glTF binary, every mesh on the one armature:
                                       split at the body's boundary with their cut loops capped; the
                                       boots decimated toward 2,500 triangles
 
+Vertex colour: ``COLOR.r`` the region id, ``COLOR.g`` and ``.b`` the build sliders' brawn and girth
+weights as 0.5 + 0.5 w (giant_parts.build_weights); garments and cards inherit the weights of the
+body vertex they sit on or grew from. Hair and beard cards are weighted along their length to the
+leaf chains (their roots on ``head``), the cape hangs free on its three chains.
+
 and ``export_info.json`` beside it: per mesh its node, category, render layer, dye slot, detail map,
-triangles, the regions it covers, its cut loops and caps; the landmarks (the skeleton's joints at
-stage 1 in the game frame: +X the giant's right, +Y up, -Z his front) and the body's hash.
+triangles, the regions it covers, its cut loops and caps, the chains it is weighted to and (for a
+part) its file; the chains; the landmarks (the skeleton's joints at stage 1 in the game frame: +X the
+giant's right, +Y up, -Z his front; the grips, knuckles and toes) and the body's hash.
 
 Usage (the shared venv): python export_game.py <out dir>
 """
@@ -37,11 +46,16 @@ from mathutils.bvhtree import BVHTree  # noqa: E402
 import giant_body as gb  # noqa: E402
 import giant_garment as gg  # noqa: E402
 import giant_hair as gh  # noqa: E402
+import giant_parts as gp  # noqa: E402
 import mh_data as mh  # noqa: E402
 import split  # noqa: E402
 
 H = gb.STAGE1_HEIGHT_M
 GLB_NAME = "giant.glb"
+PARTS_DIR = "parts"
+SHADOW_NAME = "ShadowProxy"
+# The meshes that stay in giant.glb; every other mesh is a part (parts/<mesh id>.glb).
+CORE_CATEGORIES = ("body", "eyes")
 INFO_NAME = "export_info.json"
 EYE_SEGMENTS, EYE_RINGS = 20, 14
 GARMENT_CAP_LIFT_M = 0.02          # human scale: a garment's cap sits this far outside the skin's
@@ -50,9 +64,12 @@ GARMENT_CAP_LIFT_M = 0.02          # human scale: a garment's cap sits this far 
 GARMENT_CAP_LIFT_OF = {"braies": 0.2}
 COVER_SHARE = 0.97                 # a region a garment covers this much of sinks under it (covers)
 COVER_RAY_M = 0.12                 # human scale: the longest skin-to-garment ray that still covers
+FREE_COVER_RAY_M = 0.30            # the same for a free-hanging mesh (the cape stands off the small of the back)
+FREE_COVER_SHARE = 0.85            # and its share: it hangs straight, so the flanks' rays pass beside it
 SPLIT_GARMENTS = ("braies", "tunic")
 WHOLE_PART = {"belt": "torso", "jerkin": "torso", "furs": "torso", "bracers": "limbs", "boots": "limbs",
               "cape": "torso", "pauldron": "torso", "leg_wraps": "limbs"}
+FREE_GARMENTS = ("cape",)          # free-hanging meshes on leaf chains (P48): they cover no region
 LIMB_ROOTS = ("upperarm_l", "upperarm_r", "thigh_l", "thigh_r")
 TORSO_ROOTS = ("clavicle_l", "clavicle_r", "pelvis")
 
@@ -102,9 +119,23 @@ def mesh_arrays(ob):
             "vnormal": nrm.reshape(-1, 3)}
 
 
+def colour_attribute(me, vregion, vbuild=None):
+    """The "Color" point attribute: R the region id, G and B the build weights (0.5 = none), A 1."""
+    n = len(me.vertices)
+    if "Color" in me.color_attributes:
+        me.color_attributes.remove(me.color_attributes["Color"])
+    col = me.color_attributes.new("Color", "BYTE_COLOR", "POINT")
+    rgba = np.zeros((n, 4), np.float32)
+    rgba[:, 0] = split.encode_region(vregion)
+    rgba[:, 1:3] = 0.5 if vbuild is None else gp.encode_build(vbuild)
+    rgba[:, 3] = 1.0
+    col.data.foreach_set("color", rgba.ravel())
+
+
 def make_object(name, A, coll, rig, material, vregion=None):
     """A skinned mesh object from arrays: V, faces, corner_uv, groups, corner_normal (list per face),
-    and the region per vertex in a "Color" attribute when ``vregion`` is given."""
+    and the region per vertex (with the build weights A["vbuild"], when there) in a "Color" attribute
+    when ``vregion`` is given."""
     me = bpy.data.meshes.new(name)
     me.from_pydata(np.asarray(A["V"], np.float64).tolist(), [], [list(f) for f in A["faces"]])
     me.update()
@@ -113,11 +144,7 @@ def make_object(name, A, coll, rig, material, vregion=None):
     me.polygons.foreach_set("use_smooth", np.ones(len(me.polygons), dtype=bool))
     me.normals_split_custom_set([tuple(c) for f in A["corner_normal"] for c in f])
     if vregion is not None:
-        col = me.color_attributes.new("Color", "BYTE_COLOR", "POINT")
-        rgba = np.zeros((len(A["V"]), 4), np.float32)
-        rgba[:, 0] = split.encode_region(vregion)
-        rgba[:, 3] = 1.0
-        col.data.foreach_set("color", rgba.ravel())
+        colour_attribute(me, vregion, A.get("vbuild"))
     ob = bpy.data.objects.new(name, me)
     coll.objects.link(ob)
     for bone in sorted(A["groups"]):
@@ -156,6 +183,8 @@ def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None)
     out_nrm = [[tuple(A["vnormal"][v]) for v in faces[i]] for i in sel]
     groups = {b: [w[v] for v in vids] for b, w in A["groups"].items()}
     reg = [int(vregion[v]) for v in vids]
+    src_build = A.get("vbuild")
+    build = [tuple(src_build[v]) for v in vids] if src_build is not None else None
     # the cut: edges between a face of this part and a face of another
     ef = {}
     for i, f in enumerate(faces):
@@ -193,6 +222,8 @@ def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None)
             for b in groups:
                 groups[b].append(A["groups"][b][v])
             reg.append(split.CAP_REGION)
+            if build is not None:
+                build.append(tuple(src_build[v]))
         c = len(V)
         V.append(centre)
         for b in groups:
@@ -201,6 +232,8 @@ def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None)
             groups[bone] = [0.0] * len(V)
             groups[bone][c] = 1.0
         reg.append(split.CAP_REGION)
+        if build is not None:
+            build.append(tuple(np.mean([src_build[v] for v in oriented], axis=0)))
         for (b, a, _c) in tris:
             out_faces.append((rim[b], rim[a], c))
             out_uv.append([cap_uv, cap_uv, cap_uv])
@@ -209,6 +242,8 @@ def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None)
     del part_faces
     arrays = {"V": np.asarray(V, np.float64), "faces": out_faces, "corner_uv": out_uv,
               "corner_normal": out_nrm, "groups": {b: np.asarray(w) for b, w in groups.items()}}
+    if build is not None:
+        arrays["vbuild"] = np.asarray(build, np.float64)
     return arrays, np.asarray(reg, np.int64), stats
 
 
@@ -288,12 +323,17 @@ def landmarks(rig, eye_centres):
     out["head"] = godot(head("head"))
     out["neck"] = godot(head("neck_01"))
     out["pelvis"] = godot(head("pelvis"))
+    # P48 (plan M11 §2.2): the closed fist's centre and the handle's line through it, the knuckles, the toes.
+    # grip_local_* and grip_axis_* are in the hand bone's own space (the same in Blender and in the game).
+    for k, v in sorted(gp.hand_landmarks(rig).items()):
+        out[k] = [r6(x) for x in v] if k.startswith(("grip_local", "grip_axis")) else godot(v)
     return out
 
 
 def body_hash(V, faces, fuv, uvs, weights, part, face_region, rig):
     """sha256 of what decision 9 freezes after W25: the body's positions, faces, UVs, weights,
-    parts and regions, and the skeleton's rest bones."""
+    parts and regions, and the skeleton's rest bones (the 53 game_engine bones: P48's leaf bones are
+    not part of the freeze, so the hash is M10's)."""
     h = hashlib.sha256()
     h.update(np.round(np.asarray(V, np.float64), 6).astype(np.float32).tobytes())
     h.update(np.asarray(faces, np.int64).tobytes())
@@ -304,21 +344,24 @@ def body_hash(V, faces, fuv, uvs, weights, part, face_region, rig):
     h.update(np.asarray(part, np.int64).tobytes())
     h.update(np.asarray(face_region, np.int64).tobytes())
     for bone in sorted(rig.data.bones, key=lambda x: x.name):
+        if bone.name in gp.LEAF_BONES:
+            continue
         h.update(bone.name.encode())
         h.update(np.round(np.asarray([*bone.head_local, *bone.tail_local]), 6).astype(np.float32).tobytes())
     return h.hexdigest()
 
 
-def coverage(garment_obs, body_V, body_N, region_of_vertex, S):
+def coverage(garment_obs, body_V, body_N, region_of_vertex, S, reach=None):
     """{region id: share of its body vertices whose outward ray meets one of the objects within
-    COVER_RAY_M} (human-scale reach, scene units)."""
+    ``reach`` (COVER_RAY_M when None; human-scale reach, scene units)}."""
+    reach = COVER_RAY_M if reach is None else reach
     dg = bpy.context.evaluated_depsgraph_get()
     trees = [BVHTree.FromObject(ob, dg) for ob in garment_obs]
     hit = np.zeros(len(body_V), bool)
     for i, (p, n) in enumerate(zip(body_V, body_N)):
         o = p * S + n * 0.001
         for t in trees:
-            loc, _nrm, _idx, dist = t.ray_cast(o.tolist(), n.tolist(), COVER_RAY_M * S)
+            loc, _nrm, _idx, dist = t.ray_cast(o.tolist(), n.tolist(), reach * S)
             if loc is not None:
                 hit[i] = True
                 break
@@ -334,6 +377,93 @@ def coverage(garment_obs, body_V, body_N, region_of_vertex, S):
 # --------------------------------------------------------------------------------------
 # main
 # --------------------------------------------------------------------------------------
+def card_coordinates(ob):
+    """(V (n, 3), t (n,), arc (n,)): a card mesh's vertices, each one's root-to-tip coordinate (0 the root;
+    the cards' UVs run from v = 1 at the root to 0 at the tip) and its distance from its card's root along
+    the card (a card is a connected strip of rows; a row's place is the mean of its vertices)."""
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+    me = ob.data
+    n = len(me.vertices)
+    V = np.empty(n * 3)
+    me.vertices.foreach_get("co", V)
+    V = V.reshape(-1, 3)
+    lv = np.empty(len(me.loops), np.int64)
+    me.loops.foreach_get("vertex_index", lv)
+    uv = np.empty(len(me.loops) * 2)
+    me.uv_layers[0].data.foreach_get("uv", uv)
+    t = np.zeros(n)
+    t[lv] = 1.0 - uv.reshape(-1, 2)[:, 1]
+    t = np.clip(t, 0.0, 1.0)
+    edges = np.empty(len(me.edges) * 2, np.int64)
+    me.edges.foreach_get("vertices", edges)
+    edges = edges.reshape(-1, 2)
+    graph = coo_matrix((np.ones(len(edges)), (edges[:, 0], edges[:, 1])), shape=(n, n))
+    _count, label = connected_components(graph, directed=False)
+    arc = np.zeros(n)
+    order = np.lexsort((np.round(t, 6), label))
+    start = 0
+    while start < n:
+        end = start
+        while end < n and label[order[end]] == label[order[start]]:
+            end += 1
+        ids = order[start:end]
+        levels, inverse = np.unique(np.round(t[ids], 6), return_inverse=True)
+        rows = np.stack([V[ids][inverse == k].mean(axis=0) for k in range(len(levels))])
+        along = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(rows, axis=0), axis=1))])
+        arc[ids] = along[inverse]
+        start = end
+    return V, t, arc
+
+
+def braid_vertices(mesh_id, n):
+    """A mask of a style's braid vertices: giant_hair.build_styles appends each braid's lobes (three
+    points a lobe, four lobes a step) and its core card last."""
+    mask = np.zeros(n, bool)
+    count = 0
+    for br in gh.STYLES[mesh_id].get("braids", ()):
+        steps = max(4, int(round(br["length"] / br["step"])))
+        count += 4 * steps * 3 * 2 + (steps + 2) * 2
+    if count:
+        mask[n - count:] = True
+    return mask
+
+
+def set_groups(ob, groups):
+    """Replaces an object's vertex groups by {bone: (n,) weights}."""
+    for vg in list(ob.vertex_groups):
+        ob.vertex_groups.remove(vg)
+    for bone in sorted(groups):
+        w = groups[bone]
+        idx = np.nonzero(w > 1e-4)[0]
+        if len(idx) == 0:
+            continue
+        vg = ob.vertex_groups.new(name=bone)
+        for i in idx.tolist():
+            vg.add([i], float(w[i]), "REPLACE")
+
+
+def export_glb(path, rig, meshes, vertex_colour=True):
+    """One glTF binary: the armature and the given mesh objects."""
+    for o in bpy.data.objects:
+        o.select_set(False)
+    for o in [rig] + list(meshes):
+        o.select_set(True)
+        if o.type == "MESH":
+            o.data.name = o.name
+    bpy.context.view_layer.objects.active = rig
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_selection=True, export_apply=True,
+                              export_skins=True, export_influence_nb=4, export_all_influences=False,
+                              export_animations=False, export_morph=False,
+                              export_materials="PLACEHOLDER", export_vertex_color="NAME",
+                              export_vertex_color_name="Color", export_all_vertex_colors=False,
+                              export_yup=True, export_tangents=False, export_extras=False,
+                              export_def_bones=False, export_leaf_bone=False,
+                              export_rest_position_armature=True)
+    return os.path.getsize(path)
+
+
 def run(out_dir):
     t0 = time.time()
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -347,6 +477,10 @@ def run(out_dir):
     sp = split.body_split(V, faces, weights, bd.masks, bd.joints)
     fp = sp["face_part"]
     heads = {b.name: np.asarray(b.head_local) for b in rig.data.bones}
+    base_bones = sorted(heads)
+    # ---- P48: the 18 leaf bones (hair, beard and cape chains); no body vertex is weighted to them ----
+    layout = gp.chain_layout(bd, S, heads)
+    gp.add_leaf_bones(rig, layout)
 
     def root_bone(part, centre, other):
         if part == 0 or (part == 1 and other == 0):
@@ -360,6 +494,9 @@ def run(out_dir):
     hair = gh.build_styles(body, rig, coll, bd, S)
     # ---- the body: three parts, every cut capped ------------------------------------------------
     A = mesh_arrays(body)
+    # P48: the build sliders' weights (brawn, girth) per body vertex, from the MakeHuman muscle and weight targets
+    vbuild, build_max, build_stats = gp.build_weights(bd, A["vnormal"], faces, S)
+    A["vbuild"] = vbuild
     region_any = np.full(n, -1, np.int64)
     for pi, part in enumerate(split.PARTS):
         arrays, reg, st = split_part(A, fp, pi, sp["vregion"][part], root_bone)
@@ -373,22 +510,39 @@ def run(out_dir):
         region_any = np.where(sp["vregion"][part] >= 0, np.where(region_any >= 0, region_any, sp["vregion"][part]),
                               region_any)
     body_N = A["vnormal"].copy()
+    # ---- P48: the shadow proxy (the whole body, decimated, a little inside the skin) ----------------
+    proxy = gp.shadow_proxy(body, rig, coll, S, body_V=V * S, vbuild=vbuild)
+    info["shadow_proxy"] = {"node": SHADOW_NAME, "tris": int(sum(len(p.vertices) - 2 for p in proxy.data.polygons)),
+                            "verts": len(proxy.data.vertices), "inset_m": gp.SHADOW_INSET_M}
     # ---- eyes -----------------------------------------------------------------------------------
     frames = gb.eye_frames(bd, S)
     eyes = eye_arrays(frames)
     make_object("Eyes", eyes, coll, rig, "giant_eye")
     info["meshes"]["Eyes"] = {"category": "eyes", "layer": 3, "dye": "none", "tris": triangles(eyes),
                               "verts": len(eyes["V"])}
-    for mesh_id, (ob, cards) in hair.items():
-        cat = "hair" if mesh_id.startswith("Hair_") else "beard"
-        info["meshes"][mesh_id] = {"category": cat, "layer": 3, "dye": "none", "cards": cards,
-                                   "tris": int(sum(len(p.vertices) - 2 for p in ob.data.polygons)),
-                                   "verts": len(ob.data.vertices), "atlas": "hair_atlas"}
-    # ---- garments ---------------------------------------------------------------------------------
-    built = gg.build_braies(bd, rig, coll, weights, S)
-    built.update(gg.build_shells(bd, rig, coll, weights, S))
     from scipy.spatial import cKDTree
     kd = cKDTree(V)
+    head_cy = bd.landmarks["head_cy"] * S
+    for mesh_id, (ob, cards) in hair.items():
+        cat = "hair" if mesh_id.startswith("Hair_") else "beard"
+        # P48: the cards' skin along their length (the root on head), and the build weights of the skin they
+        # grew from (a whole card takes its root's)
+        CV, t, arc = card_coordinates(ob)
+        groups = gp.fold_weak_chains(gp.card_weights(CV, arc, cat, layout, head_cy, S, braid_vertices(mesh_id, len(CV))))
+        set_groups(ob, groups)
+        _, near = kd.query(CV / S)
+        colour_attribute(ob.data, np.full(len(CV), split.REGION_ID["scalp" if cat == "hair" else "face"]), vbuild[near])
+        roots = t <= 1e-6
+        on_head = roots & (groups.get("head", np.zeros(len(CV))) > 0.9999)
+        info["meshes"][mesh_id] = {"category": cat, "layer": 3, "dye": "none", "cards": cards,
+                                   "tris": int(sum(len(p.vertices) - 2 for p in ob.data.polygons)),
+                                   "verts": len(ob.data.vertices), "atlas": "hair_atlas",
+                                   "chains": gp.chains_of(groups), "root_verts": int(roots.sum()),
+                                   "roots_on_head": int(on_head.sum()),
+                                   "braid_verts": int(braid_vertices(mesh_id, len(CV)).sum())}
+    # ---- garments ---------------------------------------------------------------------------------
+    built = gg.build_braies(bd, rig, coll, weights, S)
+    built.update(gg.build_shells(bd, rig, coll, weights, S, layout))
     body_face_of = {frozenset(f.tolist()): i for i, f in enumerate(faces)}
     vregion_flat = region_any
     for gid in gg.ORDER:
@@ -425,7 +579,10 @@ def run(out_dir):
             face_part = np.full(len(G["faces"]), split.PARTS.index(WHOLE_PART[gid]))
         if gid not in ("tunic",) or len(body_ids) != len(G["V"]):
             _, gbody = kd.query(G["V"] / S)
+        if gid in FREE_GARMENTS and len(body_ids) == len(G["V"]):
+            gbody = np.asarray(body_ids)             # a free mesh: the body vertex it was cut from, not the nearest
         greg = vregion_flat[np.asarray(gbody)]
+        G["vbuild"] = vbuild[np.asarray(gbody)]      # P48: a garment inherits the build weights of the skin under it
         parts = sorted(set(int(p) for p in face_part))
         made = []
         for pi in parts:
@@ -438,12 +595,17 @@ def run(out_dir):
             info["meshes"][name] = {"category": "garment", "layer": 1 if pi == 2 else 2, "dye": gg.DYE[gid],
                                     "detail": gg.DETAIL[gid], "tris": triangles(arrays), "verts": len(arrays["V"]),
                                     "cut_loops": st["loops"], "caps": st["capped"], "open_chains": st["open_chains"],
-                                    "boundary_edges": boundary_count(arrays), "part": split.PARTS[pi]}
+                                    "boundary_edges": boundary_count(arrays), "part": split.PARTS[pi],
+                                    "chains": gp.chains_of(arrays["groups"])}
+            if gid in FREE_GARMENTS:
+                info["meshes"][name]["free"] = True
         info["garments"][gid] = [o.name for o in made]
         bpy.data.objects.remove(ob, do_unlink=True)
         # the regions this garment covers (its parts together), assigned to the part they belong to
-        cov = coverage(made, V, body_N, region_any, S)
-        covered = [r for r, share in sorted(cov.items()) if share >= COVER_SHARE and r != split.CAP_REGION]
+        # a free mesh hangs off the skin: its rays reach further (it still hides the designs under it)
+        cov = coverage(made, V, body_N, region_any, S, FREE_COVER_RAY_M if gid in FREE_GARMENTS else COVER_RAY_M)
+        need = FREE_COVER_SHARE if gid in FREE_GARMENTS else COVER_SHARE
+        covered = [r for r, share in sorted(cov.items()) if share >= need and r != split.CAP_REGION]
         for o in made:
             e = info["meshes"][o.name]
             e["coverage"] = {str(r): s for r, s in sorted(cov.items()) if s > 0}
@@ -454,35 +616,31 @@ def run(out_dir):
     eye_c = {k: np.asarray(v[0]) for k, v in frames.items()}
     info["landmarks"] = landmarks(rig, eye_c)
     info["body_hash"] = body_hash(V, faces, fuv, bd.bm.uvs, weights, fp, sp["face_region"], rig)
-    info["bones"] = sorted(b.name for b in rig.data.bones)
+    info["bones"] = base_bones
+    info["leaf_bones"] = list(gp.LEAF_BONES)
+    info["chains"] = gp.chain_index(layout, godot)
+    info["build_max_m"] = r6(build_max)
+    info["build"] = {k: r6(v) for k, v in sorted(build_stats.items())}
     info["body_vertices"] = n
     info["cut_loop_lengths"] = {"%s|%s" % k: sorted(len(l) for l in v) for k, v in sp["loops"].items()}
     info["region_names"] = list(split.REGIONS)
     bpy.data.objects.remove(body, do_unlink=True)
-    # ---- export --------------------------------------------------------------------------------------
-    for o in bpy.data.objects:
-        o.select_set(False)
-    sel = [rig] + sorted((o for o in coll.objects if o.type == "MESH"), key=lambda o: o.name)
-    for o in sel:
-        o.select_set(True)
-        if o.type == "MESH":
-            o.data.name = o.name
-    bpy.context.view_layer.objects.active = rig
-    os.makedirs(out_dir, exist_ok=True)
+    # ---- export: giant.glb (the skeleton, the body, the eyes, the shadow proxy) and one glTF a part -----
+    by_name = {o.name: o for o in coll.objects if o.type == "MESH"}
+    core = sorted(m for m, e in info["meshes"].items() if e["category"] in CORE_CATEGORIES) + [SHADOW_NAME]
     path = os.path.join(out_dir, GLB_NAME)
-    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_selection=True, export_apply=True,
-                              export_skins=True, export_influence_nb=4, export_all_influences=False,
-                              export_animations=False, export_morph=False,
-                              export_materials="PLACEHOLDER", export_vertex_color="NAME",
-                              export_vertex_color_name="Color", export_all_vertex_colors=False,
-                              export_yup=True, export_tangents=False, export_extras=False,
-                              export_def_bones=False, export_leaf_bone=False,
-                              export_rest_position_armature=True)
-    info["glb_bytes"] = os.path.getsize(path)
+    info["glb_bytes"] = export_glb(path, rig, [by_name[m] for m in core])
+    info["parts"] = {}
+    for mid in sorted(m for m in info["meshes"] if m not in core):
+        rel = "%s/%s.glb" % (PARTS_DIR, mid)
+        size = export_glb(os.path.join(out_dir, PARTS_DIR, mid + ".glb"), rig, [by_name[mid]])
+        info["meshes"][mid]["file"] = rel
+        info["parts"][mid] = rel
+        info["glb_bytes"] += size
     info["seconds"] = round(time.time() - t0, 1)
     with open(os.path.join(out_dir, INFO_NAME), "w", encoding="utf-8") as fh:
         json.dump(info, fh, indent=1, sort_keys=True)
-    log(f"wrote {path} ({info['glb_bytes']} bytes) in {info['seconds']} s")
+    log(f"wrote {path} and {len(info['parts'])} parts ({info['glb_bytes']} bytes) in {info['seconds']} s")
     return info
 
 
