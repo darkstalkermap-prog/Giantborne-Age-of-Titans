@@ -1970,7 +1970,7 @@ the commands of "Commands" above with `--skin`, and the probe's tours of `docs/s
 | The Valley walk, primitives at most; CPU per tick p95 | 49,398; 12.3 ms at loads 9-13 beside llvmpipe (not a quiet figure) | 141,436; 17.3 ms | - |
 | The stress arena with the giant (`--scenario=stress`, 45 s), draw calls p50 / p95 / p99 / max | **75 / 126 / 147 / 153**; CPU per tick p95 4.18 ms, twelve combatants throughout, 0 errors | 344 / 583 / 649 / 674 (the arena's own sun: four shadow cascades whatever the preset, and twelve merged rigs in each); CPU per tick p95 8.83 ms at loads 14-17 | <= 250: met at `low`, the Web's preset; **a miss at `medium`** (the shadow passes; the stress arena was never measured at `medium` under a window before) |
 | The world's viewpoints (`tests/slow/test_world_build.gd`'s `world_draw_probe`) | 18-40 static over the 17 viewpoints (the most: the woodcutters' camp), **28-50 with the giant** (+10 at every viewpoint) | - | <= 250: met |
-| The giant alone in the Valley, the fullest look (the Northern Chieftain: 12 meshes) - the frame's counts with his models shown and hidden | **12 draw calls, 20,678 primitives** | 36 draw calls, 62,034 primitives (three passes: the sun's two shadow cascades) | <= 13 calls and <= 55,000 primitives at `low`: met |
+| The giant alone in the Valley, the fullest look (the Northern Chieftain: 12 meshes) - the frame's counts with his models shown and hidden (P45's branch; re-measured on the candidate in "The M10 gate, lane web": 12 and 20,578) | **12 draw calls, 20,678 primitives** | 36 draw calls, 62,034 primitives (three passes: the sun's two shadow cascades) | <= 13 calls and <= 55,000 primitives at `low`: met |
 | Texture memory (the rendering server's monitor, the sandbox arena): without the skin / the 512 px tier / the 1024 px tier | 7.47 / 10.20 / **11.70 MB**: the giant adds 2.73 MB at the Web tier of W25-W26 and **4.23 MB with the 1024 px maps** | - | <= 9 MB: met |
 | Mesh buffers: the model alone, every mesh shown | **3.33 MB** (the whole sandbox: 10.08 MB) | - | <= 3.5 MB: met |
 
@@ -2164,6 +2164,113 @@ threads, 640x360, `low`, the sandbox arena; the rendering server's monitors):
 The mesh buffers are the one budget of plan M10 §2.12 the target catalogue breaks: its figure (3.04 MB measured
 for the floor's model) had no room for the eight meshes P46 added (five hair and beard styles and three garments) and its
 denser hair cards, which are all in memory whichever of them a look shows. It is recorded as a miss for the gate.
+
+### The M10 gate, lane web
+
+The gate's Web and tools lane on the candidate (`wave-27` and this lane's commits), 18 November 2026. Container as
+above; the machine was shared with the gate's two other fix lanes and their checks throughout (1-minute loads
+5-11), so every time here is a busy machine's and every verdict is a ratio or a count.
+
+**The world's first frame on Continue (gate finding LD-2).** The merge read 3.54x and 3.69x on the Web, the review
+3.05x, the verifier 2.85x in a full run and 4.15x, 4.46x and 4.61x in three runs of the shrine part alone (the
+rule: 3x the median frame). The cause was the camera, not a shader the title had not compiled: `CameraRig` follows
+the giant in `_process`, which a paused tree does not run, so through the whole load it stood where the level's
+scene has the giant - and a Continue's save sets him down at his shrine and grows him. Every frame behind
+"Loading..." drew another part of the world; the first frame of play drew the giant at his saved size and
+everything around him for the first time. (New Game's Valley, where the giant stands at the level's start, was
+never over the rule.) `main.gd`'s loading gate now ends with `hold_until_drawn`: the camera is put on the giant
+and the finished level drawn three times behind the loading screen, the tree paused (plan M10 §3.5 item 5).
+
+| The world's first frame on Continue | Before | After |
+| --- | --- | --- |
+| Web: `creator_check.mjs --parts=shrine --size=640x360` (headless Chromium, SwiftShader), the merge's export and this lane's run in turn on the same busy machine (loads 6.3-9.6) | **4.10x** (1,473.9 ms against a median frame of 359.6 ms) and **4.34x** (1,441.3 against 332.0): a stall both times | 2.51x (1,637.6 against 652.7, in the machine's busiest minute: loads 8.4-9.0, the load's worst frame 10.7 s), 0.45x (230.0 against 513.1), 0.36x (86.7 against 242.3) and 0.45x (106.9 against 236.4): **no stall in four runs**; the frame that cost 1.4 s is now behind the loading screen (the load's worst frame 1,360-1,490 ms in the two quieter runs) |
+| Native (Xvfb, llvmpipe at 2 threads, 640x360), the title's Continue with an **empty shader cache** (`--ui-probe=continue`, a fresh user folder) | 2.04x (333.9 ms against 163.4; of the first frame 288.0 ms were the rendering server's draw, against 140.8 ms of a median frame) | 1.19x (234.3 against 197.0), 1.08x (165.4 against 153.0), 1.07x (156.1 against 146.4) and 1.18x (186.9 against 158.4) in four runs; the first frame's draw 117.8-151.1 ms against 124.4-174.7 ms of a median frame |
+| Native, three more frames behind the loading screen but the camera left where it stood | | 1.91x and 2.47x (the first frame's draw 261.4 and 339.3 ms): the frames alone do nothing |
+
+The whole check on this lane's export (`creator_check.mjs --size=640x360`, loads 5.7-6.3, 107 s): **OK**, 3 budget
+misses - the title's warm-up frame twice (85.7x and 80.9x, by design) and the creator's first frame after New
+Game (3.46x: 518.7 ms against 149.8, P45's row, unchanged). The Valley's first frame after Begin 1.00x (178.2
+against 178.0; the Valley loaded 8.6 s after Begin, one pointer-lock request inside the gesture, locked, the first
+save `level.valley` with its look), **the world's first frame on Continue 0.36x** (74.8 against 206.7; the world
+loaded 7.6 s after Continue), "Change your look..." 2.23x, the skin 0.11-0.13 ms, 0 console errors, 0 engine
+warnings, 0 failed requests, the renderer's peak 1,001 MB.
+
+The other marks of the four shrine runs did not move: the first "Change your look..." at the shrine 1.67x, 1.92x,
+2.02x and 2.76x after (1.96x and 2.36x before), the skin's CPU 0.11-0.28 ms in the world and 0.11-0.16 ms with the
+creator's preview open (<= 0.35), 0 console errors. The creator's first frame after New Game is not on this path
+(`docs/plans/FOLLOWUPS.md`). The probe's stall lines now carry the first frames and their draw time (`first`,
+`first_draw`, `median_draw_ms`), which is how the camera was found: the extra time was in the draw, and three more
+drawn frames did not remove it.
+
+**The page's memory under a starved browser (gate finding LD-1).** The review's two runs of `creator_check.mjs` on
+the candidate at loads 8-22 never finished: after Begin the page's renderer process grew by 20-58 MB a second
+(444 MB in the creator, 1.8 GB a minute after Begin, 6.6 GB five minutes after) until the kernel's OOM killer
+took the browser with the machine at 0 MB available. The verifier's runs separate the cases:
+
+| Run (headless Chromium, SwiftShader; the renderer's anonymous memory) | The candidate (`wave-27`) | 0.9.0-m9 |
+| --- | --- | --- |
+| A quiet machine (loads 2-7), `creator_check.mjs` | passes in 114 s, the renderer's peak 1,059 MB | - |
+| 10 busy loops beside it (loads 10-15) | the Valley loaded 50 s after Begin; peak about 1.6 GB, settled about 1.5 GB | settles at 1.0-1.1 GB |
+| 24 busy loops (loads 27-30) | loaded in about 43 s, settled about 1.26 GB; `creator_check.mjs --parts=new_game` OK in 173 s | settles at 1.0-1.1 GB |
+| The whole browser on one CPU beside 4 busy loops (`taskset -c 3`) | **never left the creator in 110 s; 424 to 2,267 MB, about 18 MB a second, stopped by a 2.5 GB watchdog** | **the same: 419 to 2,427 MB in 125 s after New Game, about 16 MB a second, stopped at 2.5 GB** |
+
+So the growth without bound is the single-threaded Web build's level load in a browser starved far enough, the
+0.9.0-m9 build included; it is not the realistic giant's, and a load average alone does not bring it on. It is
+the renderer process's anonymous memory only (the GPU process stays at about 240 MB, no shared memory, the JS heap
+65 MB). What inside the page allocates it was not isolated (M11: `docs/plans/FOLLOWUPS.md`). What M10 does add
+under the same moderate load is 0.2-0.5 GB after New Game. This lane met the same growth twice with the browser
+at `nice -n 19` beside two other lanes' checks (loads 5.3-9.2): the page passed 3.3 GB before the world had loaded
+and 3.6 GB a minute after it had - and both runs ended with the new guard's line instead of an OOM kill:
+`creator_check: FAILED - the page's renderer holds 3304 MB of memory (over the guard's 3072 MB): the run was
+stopped before the machine ran out of memory ...`. The same check at normal priority on the same busy machine then
+ran through five times (the table above; the renderer's peak 988-1,680 MB).
+
+The guard (`tools/web/memory_guard.mjs`): each of the five Chromium checks reads, once a second, the renderer
+processes among its own child processes from `/proc` and stops when one holds more than 3,072 MB
+(`GIANT_WEB_GUARD_MB`; 0 = off): a FAILED line naming the memory, its own browser killed, exit 1. Each report
+carries `memory_guard: {limit_mb, renderer_peak_mb}`. `tools/web/test_memory_guard.mjs` (21 checks: the rules, the
+five checks start it, a page that keeps 16 MB more every 50 ms stopped at its limit in 2 s with its process gone,
+a calm page left alone) and three cases of `test_creator_check.mjs` (38 checks).
+
+**The giant alone, re-measured (gate finding LD-6).** The probe's level tour read the frame's draw calls once
+with the giant shown and once four frames after hiding him in a running level, where the scene's own count moves
+by about 4 between the two: on the candidate it printed 15 calls for the Storm Herald's 11 meshes in one run and
+11 in another, 5 and 9 for the Wanderer's 9. Both counts are now the median of five frames of the paused level.
+Twice each (Xvfb, llvmpipe, 640x360, the Valley from New Game, `--ui-probe=level --skin`), every reading still
+(no frame of either count differed) and the two runs equal:
+
+| Look (`low` unless said) | Shown meshes and their surfaces | The frame with / without the giant | The giant: draw calls, primitives | Budget (§2.12) |
+| --- | --- | --- | --- | --- |
+| The Northern Chieftain (the fullest look) | 12, 12 | 111 / 99 | **12, 20,578** | <= 13 calls, <= 55,000 primitives: met |
+| The Storm Herald | 11, 11 | 110 / 99 | 11, 15,006 | met |
+| The Wanderer | 9, 9 | 108 / 99 | 9, 17,878 | met |
+| The Northern Chieftain at `medium` (one run) | 12, 12 | 216 / 180 | 36, 61,734 (three passes: the sun's two shadow cascades) | the budget is `low`'s |
+
+This replaces the row "The giant alone in the Valley" of P45's table above (12 calls and 20,678 primitives on
+P45's branch, before P46's content).
+
+**The tools' own fixes.** The rendered rig probe at 960x540 with one rasterizer thread (134-139 ms a frame), stage
+6, the reinforced club: before, exit 0 with `heavy_windup` and `heavy_recovery` drawn, no `heavy_active`, 1 swing
+sample (gate finding LC-8: the simulation ran on behind each slow draw); after (the tree paused for a draw), all
+nine frames, 71 samples, 0 ticks passed in any of 10 draws. The M10 capture tour (LC-7) rendered at 640x360: 38
+frames, no "Click the game to control the camera" in any, no beat refused, 0 errors; headless it runs in 13 s
+(`tests/gate/test_capture_m10_tour.gd`).
+
+**Test time added by this lane** (the runner's per-suite times on this busy machine): default
+`test_giant_web_presets` +1 test (the suite 19 ms in all); slow `test_capture_m10` 0.2 s and
+`test_loading_warm_up` 0.4 s, `test_skinned_rig_render` unchanged in work (three more asserts on its one probe
+run); gate `test_capture_m10_tour` 13.4 s, `test_skinned_rig_stages` one more assert a stage.
+
+**The lane's final check** (`tools/check.sh --build --slow --giant --require --strict-times` on its last code
+commit, loads 1.2-3.1): passed - every scene rebuilt, the world's seams, the giant pipeline's tests and
+`--verify --skip-bake` (13 files bit-exact or within the bake's tolerance: the two normal maps one texel off by
+1/255, as at the merge), the estimated share 5.92 of 7.60 MiB; 295 suites, 52,573 checks, 0 failures, 0 warnings;
+**default 64.9 s, slow 350.7 s** (one run each: neither tier was over its budget); the 120 s soak 0 errors. The
+gate suites this lane touches, by name: `test_capture_m10_tour` 13 checks (12.9 s), `test_skinned_rig_stages` 46
+(25.6 s), `test_giant_determinism` 52 (171.0 s: the seeded soak and the Valley bot print the same result with and
+without the skin, as before the loading screen's warm-up, which does not run headless), 0 failures. The checks'
+own tests: `test_memory_guard.mjs` 21, `test_creator_check.mjs` 38, `test_world_check.mjs` 29,
+`test_stream_check.mjs` 23, `test_audio_check.mjs` 26 checks, 0 failures.
 
 ## Reference PC results (owner: NOT RUN)
 

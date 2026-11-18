@@ -29,6 +29,7 @@ func _stage(stage: int) -> void:
 	for f: String in SkinnedRigProbe.FRAME_NAMES:
 		var fr: Dictionary = frames.get(f, {})
 		assert_true(float(fr.get("lit", 0.0)) >= SkinnedRigProbe.MIN_LIT, "stage %d: %s is drawn (%.2f)" % [stage, f, float(fr.get("lit", 0.0))])
+	assert_eq(int(rep.get("capture_ticks_max", -1)), 0, "stage %d: the simulation is held while a frame is drawn (M10 gate, LC-8)" % stage)
 	var swing: Dictionary = rep.get("swing", {})
 	assert_true(int(swing.get("samples", 0)) > 0, "stage %d: the heavy was measured" % stage)
 	assert_true(float(swing.get("outer_max_radii", 9.0)) <= 1.0, "stage %d: the outer half inside the capsule (%.2f radii)" % [stage, float(swing.get("outer_max_radii", 9.0))])

@@ -19,7 +19,10 @@
 //     part passes after a step;
 //   * warning: the engine warns ("WARNING: ..." and its "at:" line through console.error) - the check
 //     passes and lists it apart;
-//   * error: the engine prints an error - the check fails.
+//   * error: the engine prints an error - the check fails;
+//   * (M10 gate, LD-1) ok with GIANT_WEB_GUARD_MB=1: the memory guard (memory_guard.mjs) stops the check with a
+//     FAILED line naming the renderer's memory; with 0 the guard is off; by default the report holds its limit
+//     and the renderer's peak.
 // Prints TEST_CREATOR_CHECK with the count of checks and failures; exits 1 on a failure.
 //
 // Usage (from the project folder): node tools/web/test_creator_check.mjs [--keep]
@@ -166,10 +169,10 @@ function check(ok, what) {
 
 const dir = mkdtempSync(join(tmpdir(), 'creator_check_test-'));
 writeFileSync(join(dir, 'play.html'), STUB);
-function run(mode, more = []) {
+function run(mode, more = [], env = {}) {
   const json = join(dir, `${mode}${more.includes('--strict') ? '_strict' : ''}.json`);
   const r = spawnSync(process.execPath, [CHECK, `--build=${dir}`, `--args=--stub=${mode}`, '--timeout-s=20', '--size=320x180',
-    ...more, `--json=${json}`], { cwd: ROOT, encoding: 'utf8', timeout: 240000 });
+    ...more, `--json=${json}`], { cwd: ROOT, encoding: 'utf8', timeout: 240000, env: { ...process.env, ...env } });
   let rep = {};
   try { rep = JSON.parse(readFileSync(json, 'utf8')); } catch (e) { rep = {}; }
   const parts = rep.parts || {};
@@ -206,6 +209,20 @@ console.log('ok: New Game through the creator into the Valley; a world save thro
   check(r.sh.shrine_tries === 1 && r.sh.appearance_tab_button === 'Appearance (new)', `one E at the shrine; the tab's button read "${r.sh.appearance_tab_button}"`);
   check(r.sh.last_state && r.sh.last_state.top === 'creator' && r.sh.last_state.context === 'shrine', 'the creator opened over the shrine');
   check(r.ng.console_errors.length === 0 && r.sh.console_errors.length === 0, 'no console error');
+  const mg = r.rep.memory_guard || {};
+  check(mg.limit_mb === 3072 && mg.renderer_peak_mb > 0, `the memory guard watched the page's renderer (${JSON.stringify(r.rep.memory_guard)})`);
+}
+
+console.log('guard: the page\'s renderer is over the memory guard (M10 gate, LD-1)');
+{
+  const t0 = Date.now();
+  const r = run('ok', ['--parts=new_game'], { GIANT_WEB_GUARD_MB: '1' });
+  check(r.code === 1 && /creator_check: FAILED - the page's renderer holds \d+ MB of memory \(over the guard's 1 MB\)/.test(r.out),
+    `the check stops with a FAILED line naming the memory (exit ${r.code})`);
+  check(Date.now() - t0 < 60000 && !r.out.includes('CREATOR_CHECK '), 'at the guard\'s first reading, without running on');
+  const off = run('ok', ['--parts=new_game'], { GIANT_WEB_GUARD_MB: '0' });
+  check(off.code === 0 && off.rep.memory_guard && off.rep.memory_guard.limit_mb === 0 && off.rep.memory_guard.renderer_peak_mb === 0,
+    `GIANT_WEB_GUARD_MB=0 switches the guard off (exit ${off.code})`);
 }
 
 console.log('stall: the creator\'s first frame takes ten median frames');

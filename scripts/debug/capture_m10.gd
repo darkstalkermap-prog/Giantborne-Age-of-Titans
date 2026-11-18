@@ -17,6 +17,10 @@ extends RefCounted
 ## carry, an ability on cooldown) is noted in `notes` and the tour goes on. The tour drives the giant
 ## through its input router, its debug growth and, for the stagger, the knockback and the death, the
 ## same synthetic hits and calls the tests use: it is a capture tool, never part of a soak.
+##
+## M10 gate (LC-7): the tour holds the mouse captured, as a player's is while they play (tools/valley_tour.gd
+## does the same): the HUD otherwise lays "Click the game to control the camera" across the giant in every
+## third-person frame and through the whole video. `mouse_mode_asked` is the mode the last step asked for.
 
 const CAST_SLOT := "slot_3"
 
@@ -30,6 +34,10 @@ var _shot_done := false
 var shots: Array[String] = []
 var notes := PackedStringArray()
 var done := false
+## The mouse mode the last step asked for (-1 before the first step): Input.MOUSE_MODE_CAPTURED.
+var mouse_mode_asked := -1
+## The ability the running beat cast and the controller has not started yet ("" once it ran).
+var _expect := ""
 
 
 func _init(autopilot: Node) -> void:
@@ -51,6 +59,7 @@ func step(player: GiantPlayer, dt: float) -> bool:
 		return true
 	_p = player
 	_p.router.use_injection = true
+	_hold_mouse()
 	if _i < 0 or _t >= float(_beats[_i][1]):
 		_i += 1
 		_t = 0.0
@@ -60,17 +69,32 @@ func step(player: GiantPlayer, dt: float) -> bool:
 			dispose()
 			return true
 		_release_inputs()
+		_expect = ""
 		var start: Callable = _beats[_i][2]
 		start.call()
 	_t += dt
 	var at := float(_beats[_i][3])
+	if _expect != "" and _p.controller.action != null and _p.controller.action.id == _expect:
+		_expect = ""   # the beat's cast ran
 	if not _shot_done and at >= 0.0 and _t >= at * float(_beats[_i][1]):
 		_shot_done = true
+		if _expect != "":
+			# M10 gate (LC-7's aside): a cast the game refused leaves the beat's frame without its ability; say so.
+			notes.append("%s: %s was not cast by the shot" % [str(_beats[_i][0]), _expect])
+			_expect = ""
 		var name := "m10_%02d_%s.png" % [_i + 1, str(_beats[_i][0])]
 		if _auto != null and _auto.has_method("_shot"):
 			_auto.call("_shot", name)
 		shots.append(name)
 	return false
+
+
+## A player's mouse is captured while they play; the autopilot never captures it, so the tour does, every
+## tick (a lost focus or a screen that freed it would bring the HUD's click hint back into the frames).
+func _hold_mouse() -> void:
+	mouse_mode_asked = Input.MOUSE_MODE_CAPTURED
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 ## The labels of the beats in order (docs, tests).
@@ -91,12 +115,25 @@ func _equip(id: String) -> void:
 
 
 func _cast(id: String) -> void:
+	_expect = id
 	_p.set_loadout_slot(CAST_SLOT, id)
 	var pools := _p.entity.combatant.pools
 	pools.stamina = pools.stamina_max
 	pools.essence = pools.essence_max
 	_p.controller.cooldowns.clear()
 	_p.router.inject_edge(StringName(CAST_SLOT))
+
+
+## The throw of what the hand holds, as a light or a heavy while holding makes it (PlayerGrab.try_throw).
+## M10 gate (LC-7's aside): the beat cast ability.throw_held through a loadout slot, which the game refuses,
+## so the giant kept the soldier in his hand and the stomp, the roar and Stone Skin after it were refused
+## too: the frames 20 to 23 of the merge's tour showed him standing with "[E] Put down".
+func _throw() -> void:
+	var pools := _p.entity.combatant.pools
+	pools.stamina = pools.stamina_max
+	_expect = _p.grab.throw_id()
+	if _p.grab.try_throw() != CombatController.Verdict.ACCEPT:
+		notes.append("throw refused (%s)" % str(_p.controller.last_reject_reason))
 
 
 func _light() -> void:
@@ -112,7 +149,7 @@ func _heavy() -> void:
 func _stage(n: int) -> void:
 	var r: Variant = _p.growth.debug_set_stage(n)
 	if typeof(r) == TYPE_DICTIONARY and not bool((r as Dictionary).get("ok", false)):
-		notes.append("stage %d refused (%s)" % [n, (r as Dictionary).get("reason", "?")])
+		notes.append("stage %d refused (%s: %s)" % [n, (r as Dictionary).get("reason", "?"), (r as Dictionary).get("message", "")])
 
 
 func _view(yaw_deg: float, pitch_deg: float) -> void:
@@ -131,11 +168,24 @@ func _soldier() -> EnemyActor:
 
 
 func _hit_self(power: float) -> void:
+	_hit(_p.entity.entity_id, power)
+
+
+## The arena's soldiers fall (a synthetic hit each): the one the giant threw gets up and walks back to him,
+## and an actor beside the giant refuses every growth after it ("Soldier is in the way").
+func _clear_soldiers() -> void:
+	for n in _p.get_tree().get_nodes_in_group("enemies"):
+		var e := n as EnemyActor
+		if e != null and is_instance_valid(e) and e.entity != null and e.entity.is_alive():
+			_hit(e.entity.entity_id, 50000.0)
+
+
+func _hit(target_id: String, power: float) -> void:
 	var e := HitEvent.new()
 	e.tick = Sim.tick
 	e.instance_id = Sim.new_instance_id()
 	e.attacker_id = "capture"
-	e.target_id = _p.entity.entity_id
+	e.target_id = target_id
 	e.power = power
 	e.attacker_stat = 10.0
 	e.attacker_height_m = 1.8
@@ -192,11 +242,13 @@ func _make_beats() -> Array:
 		if _p.grab.try_grab() != CombatController.Verdict.ACCEPT:
 			notes.append("grab refused"), 0.8])
 	b.append(["hold", 2.0, func() -> void: _view(40.0, -8.0), 0.5])
-	b.append(["throw", 2.0, func() -> void: _cast("ability.throw_held"), 0.3])
+	b.append(["throw", 2.0, func() -> void: _throw(), 0.3])
 	b.append(["stomp", 2.0, func() -> void: _cast("ability.heavy_footfall"), 0.35])
 	b.append(["roar", 2.2, func() -> void: _cast("ability.thunder_roar"), 0.4])
 	b.append(["self_buff", 2.0, func() -> void: _cast("ability.stone_skin"), 0.4])
-	b.append(["stagger", 1.6, func() -> void: _p.entity.stagger(1.0, "capture"), 0.3])
+	b.append(["stagger", 1.6, func() -> void:
+		_clear_soldiers()
+		_p.entity.stagger(1.0, "capture"), 0.3])
 	b.append(["knockback", 1.6, func() -> void: _p.apply_knockback(_p.global_transform.basis.z, 9.0), 0.25])
 	for n in [2, 3, 4, 5, 6]:
 		var stage: int = n

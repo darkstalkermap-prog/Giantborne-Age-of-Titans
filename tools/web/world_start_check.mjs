@@ -35,6 +35,9 @@
 // (PLAYWRIGHT_BROWSERS_PATH, default /opt/pw-browsers when that folder exists). Software WebGL
 // (SwiftShader) is all a GPU-less machine has: the start and save times are indicative only.
 
+// M10 gate (LD-1): a memory guard (tools/web/memory_guard.mjs) watches the page's renderer process: over about 3 GB
+// (GIANT_WEB_GUARD_MB; 0 = off) the run stops with a FAILED line naming the memory instead of taking the machine down.
+import { startMemoryGuard } from './memory_guard.mjs';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -425,13 +428,16 @@ async function main() {
     headless: !opts.headed,
     args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'],
   });
+  const memoryGuard = startMemoryGuard('world_start_check');
   const started = Date.now();
   console.log(`world_start_check: ${origin}/play.html (${opts.build}, ${opts.size})`);
   const play = await partPlay(browser, opts, origin);
   const world = await partWorld(browser, opts, origin);
+  memoryGuard.stop();
   await browser.close();
   server.close();
-  const report = { build: opts.build, viewport: opts.size, wall_s: Math.round((Date.now() - started) / 100) / 10, play, world };
+  const report = { build: opts.build, viewport: opts.size, wall_s: Math.round((Date.now() - started) / 100) / 10, play, world,
+    memory_guard: { limit_mb: memoryGuard.limitMb, renderer_peak_mb: memoryGuard.peakMb() } };
   report.problems = [...play.problems.map((p) => `Play: ${p}`), ...world.problems.map((p) => `open world: ${p}`)];
   report.ok = report.problems.length === 0;
   if (opts.json) writeFileSync(opts.json, JSON.stringify(report, null, 2) + '\n');
