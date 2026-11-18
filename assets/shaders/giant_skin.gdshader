@@ -2,7 +2,8 @@
 // Body_Limbs. Ported from the creator lab's region-array skin shader, for the Compatibility renderer
 // (desktop GL 3.3 and WebGL 2). Baked textures at a neutral tone; the look comes in as uniforms
 // (GiantLook sets them from Appearance.to_look):
-//   * the skin tone as a ratio to the bake's tone; the hair colour on the scalp and the brows, the
+//   * the skin tone as a ratio to the tone the bake is drawn at (bake_tone: the default tone, so the
+//     default look draws the albedo as baked); the hair colour on the scalp and the brows, the
 //     beard colour on the stubble and on the skin under the beard's cards;
 //   * designs from ONE sampler2DArray, chosen per body region: the vertex's region id is stored in
 //     COLOR.r as (id + 0.5) / 16 and decoded with int() (rounding would be wrong); region_tattoo,
@@ -25,7 +26,7 @@ uniform sampler2D mask_tex : hint_default_black, filter_linear_mipmap, repeat_di
 uniform sampler2DArray design_tex : hint_default_black, filter_linear_mipmap, repeat_disable;
 
 uniform vec3 skin_tone : source_color = vec3(0.69, 0.53, 0.44);
-uniform vec3 bake_tone : source_color = vec3(0.69, 0.53, 0.44);
+uniform vec3 bake_tone : source_color = vec3(0.690196, 0.478431, 0.384314);   // GiantLook.BAKE_TONE: the default tone
 uniform vec3 hair_color : source_color = vec3(0.29, 0.17, 0.10);
 uniform vec3 beard_color : source_color = vec3(0.29, 0.17, 0.10);
 uniform float stubble : hint_range(0.0, 1.0) = 0.8;
@@ -47,7 +48,10 @@ uniform float scar_relief = 6.0;
 uniform int hidden_regions = 0;
 uniform float hide_shrink = 0.03;
 uniform int light_model = 2;
-uniform vec3 wrap = vec3(0.42, 0.20, 0.13);
+// How far the light wraps round, per channel (red scatters furthest). The M10 gate (OR-1) eased the tint from
+// (0.42, 0.20, 0.13): a surface 90 degrees from a white light took 0.30 / 0.17 / 0.12 of it, a red band along
+// every terminator; now 0.26 / 0.20 / 0.17.
+uniform vec3 wrap = vec3(0.36, 0.25, 0.20);
 uniform vec3 sss_color : source_color = vec3(0.90, 0.28, 0.16);
 uniform float transmission = 0.5;
 uniform float rough_scale = 1.25;

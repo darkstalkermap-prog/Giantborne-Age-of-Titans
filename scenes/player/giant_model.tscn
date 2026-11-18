@@ -226,7 +226,7 @@ index = {
 "wrist_l": [-1.087127, 2.306697, -0.44995],
 "wrist_r": [1.087127, 2.306697, -0.44995]
 },
-"manifest_sha256": "2f64da7e1dd9b94e07f07eef9babc00be4a9520f34c65b949a482026d29bbfa6",
+"manifest_sha256": "62df9d8b0ee6507a0b4a7d62367ec8680832b3e8e83234b397d02feca648d334",
 "meshes": {
 "Beard_braided": {
 "atlas": "hair_atlas",
@@ -482,7 +482,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Hair_long_back",
-"tris": 5920
+"tris": 5880
 },
 "Hair_long_braided": {
 "atlas": "hair_atlas",
@@ -491,7 +491,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Hair_long_braided",
-"tris": 5000
+"tris": 5360
 },
 "Hair_warrior_tail": {
 "atlas": "hair_atlas",
@@ -500,7 +500,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Hair_warrior_tail",
-"tris": 4464
+"tris": 4824
 },
 "Hair_wild_mane": {
 "atlas": "hair_atlas",
@@ -509,7 +509,7 @@ index = {
 "dye": "none",
 "layer": 3,
 "node": "Hair_wild_mane",
-"tris": 5800
+"tris": 6000
 }
 },
 "regions": [{

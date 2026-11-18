@@ -178,6 +178,14 @@ func test_every_look_key_sets_its_uniforms_and_visibility() -> void:
 	assert_true(_near(beard.get_shader_parameter("tip_color"), l.beard_tip), "the beard's tips")
 	assert_true(_near(beard.get_shader_parameter("grey"), l.beard_grey), "the beard's grey")
 	assert_true(_near(beard.get_shader_parameter("length"), 1.0), "the beard's full length when the look names none")
+	# the M10 gate (LC-6): a beard's tips thin strand by strand and it fades out seen from behind; hair does neither
+	var full := _mat(root, "Beard_full")
+	assert_true(_near(full.get_shader_parameter("tip_thin"), GiantLook.BEARD_TIP_THIN), "a long beard's tips thin out")
+	assert_true(_near(beard.get_shader_parameter("tip_thin"), 0.0), "the short beard's stubble does not")
+	assert_true(_near(beard.get_shader_parameter("back_fade"), 1.0) and _near(full.get_shader_parameter("back_fade"), 1.0),
+		"a beard fades out behind the head")
+	assert_true(_near(hair.get_shader_parameter("tip_thin"), 0.0), "the hair keeps the atlas's own tips")
+	assert_true(_near(hair.get_shader_parameter("back_fade"), 0.0), "the hair shows from behind")
 	var eye := _mat(root, "Eyes")
 	assert_true(eye.shader == GiantLook.EYE_SHADER, "the eyes draw with giant_eye")
 	assert_true(_near(eye.get_shader_parameter("iris_color"), l.eye_color), "the iris colour")
@@ -202,6 +210,69 @@ func test_every_look_key_sets_its_uniforms_and_visibility() -> void:
 	GiantLook.apply(root, INDEX, l.merged({"beard_mesh": ""}, true))
 	assert_true(_near(skin.get_shader_parameter("beard_tint"), 0.0), "no beard: no beard tint on the skin")
 	assert_eq(GiantLook.validate(root, INDEX, l), PackedStringArray(), "validate() is clean for the look")
+
+
+## The M10 gate's OR-1: the default skin read orange-red in the world's light. The default look multiplied the
+## baked albedo (the approved renders' skin) by ruddy / (0.69, 0.53, 0.44) - green down a fifth, blue a quarter,
+## in linear light - and the light's wrap was tinted (0.42, 0.20, 0.13). The default tone now draws the albedo
+## as baked, the other tones scale it by their swatch against the default's, and the wrap's tint is eased.
+func test_the_default_tone_draws_the_albedo_as_baked() -> void:
+	assert_true(_near(GiantLook.BAKE_TONE, GiantLook.DEFAULT_LOOK.skin_tone), "the bake tone is the default look's skin tone")
+	var look := Appearance.to_look(Appearance.default_record(), "")
+	var tone: Color = look.skin_tone
+	assert_true(_near(tone, GiantLook.BAKE_TONE), "and the default record's (%s against %s)" % [tone, GiantLook.BAKE_TONE])
+	var lin := tone.srgb_to_linear()
+	var bake := GiantLook.BAKE_TONE.srgb_to_linear()
+	for ch in 3:
+		assert_near(lin[ch] / bake[ch], 1.0, 1e-4, "the default look scales channel %d of the albedo by 1" % ch)
+	# a paler tone lifts green and blue more than red (less red, not more), a deeper one darkens every channel
+	var pale := Color("#c9a08a").srgb_to_linear()
+	assert_true(pale.g / bake.g > pale.r / bake.r and pale.b / bake.b > pale.g / bake.g, "pale is paler and less red than the default")
+	var deep := Color("#4e3426").srgb_to_linear()
+	assert_true(deep.r / bake.r < 0.5 and deep.g / bake.g < 0.5 and deep.b / bake.b < 0.5, "deep darkens every channel")
+	# the shader's own defaults: the same bake tone, and a wrap whose red reaches less than twice as far as its blue
+	var code := GiantLook.SKIN_SHADER.code
+	var re := RegEx.new()
+	re.compile("uniform vec3 bake_tone[^=]*= vec3\\(([0-9.]+), ([0-9.]+), ([0-9.]+)\\)")
+	var m := re.search(code)
+	assert_true(m != null, "the skin shader declares bake_tone with a default")
+	if m != null:
+		assert_true(_near(Color(float(m.get_string(1)), float(m.get_string(2)), float(m.get_string(3))), GiantLook.BAKE_TONE),
+			"the shader's default bake tone is GiantLook.BAKE_TONE")
+	re.compile("uniform vec3 wrap = vec3\\(([0-9.]+), ([0-9.]+), ([0-9.]+)\\)")
+	m = re.search(code)
+	assert_true(m != null, "the skin shader declares wrap with a default")
+	if m != null:
+		var r := float(m.get_string(1))
+		var b := float(m.get_string(3))
+		assert_true(r >= b and r <= 2.0 * b, "the wrap is warm but not red (%.2f against %.2f; 0.42 against 0.13 before)" % [r, b])
+
+
+## The M10 gate's LC-6: the hair shader feathers every card's root strand by strand, thins a beard's tips and
+## hides a beard from behind (its cards showed as loose squares beside the neck at the creator's Hair framing).
+func test_the_hair_shader_feathers_roots_and_hides_a_beard_from_behind() -> void:
+	var code := GiantLook.HAIR_SHADER.code
+	for u: String in ["root_feather", "tip_thin", "back_fade"]:
+		assert_true(code.contains("uniform float " + u), "giant_hair declares %s" % u)
+	var re := RegEx.new()
+	re.compile("uniform float root_feather = ([0-9.]+)")
+	var m := re.search(code)
+	assert_true(m != null and float(m.get_string(1)) >= 0.08 and float(m.get_string(1)) <= 0.25,
+		"the root fades in over a tenth to a quarter of a card")
+	re.compile("const float BACK_FADE_FROM = (-?[0-9.]+);\\s*const float BACK_FADE_TO = (-?[0-9.]+);")
+	m = re.search(code)
+	assert_true(m != null, "the beard's fade is between two camera directions")
+	if m != null:
+		var from := float(m.get_string(1))
+		var to := float(m.get_string(2))
+		# 0 is the camera beside the giant, -1 behind him; the creator's Hair framing stands at 140 degrees
+		assert_true(from < -0.2 and from > to, "a beard is whole from the side and a little behind it (%.2f)" % from)
+		assert_true(to >= cos(deg_to_rad(float(GiantPreview.FRAMINGS.hair.yaw))) + 0.03,
+			"and gone at the creator's Hair framing (%.2f against %.2f)" % [to, cos(deg_to_rad(float(GiantPreview.FRAMINGS.hair.yaw)))])
+	assert_true(code.contains("smoothstep(BACK_FADE_TO, BACK_FADE_FROM, v_behind), back_fade"), "the fade is applied to the alpha")
+	assert_true(code.contains("UV.y + sid * root_feather") and code.contains("UV.y + sid * tip_thin"),
+		"root and tip are offset by the strand's id")
+	assert_true(GiantLook.BEARD_TIP_THIN >= 0.3 and GiantLook.BEARD_TIP_THIN <= 0.6, "a beard's strands end over a third to a half of a card")
 
 
 func test_validate_flags_a_misspelled_uniform_and_unknown_ids() -> void:

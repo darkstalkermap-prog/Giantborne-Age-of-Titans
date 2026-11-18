@@ -5,7 +5,11 @@
 // Kajiya-Kay highlight along the strands, and an alpha boost with the mip level so far cards do not thin
 // out. The look pass (P46): the cards' sides feather, each strand of the atlas ends at its own length, the
 // cards share a rounded shading normal on both faces and take little of each other's shadow, so a lock
-// reads as hair and not as shingles; the tips sway behind the head's motion. RigPaint's tint and flash as on every giant shader.
+// reads as hair and not as shingles; the tips sway behind the head's motion. The M10 gate (LC-6): a card's
+// root edge feathers strand by strand (the hairline and the beard's cheek line were rows of straight card
+// ends), a long beard's tips thin strand by strand (tip_thin), and a beard fades out as the camera comes round
+// behind the head (back_fade: its cards showed as loose squares beside the neck from behind; the skin under
+// them carries the beard's colour). RigPaint's tint and flash as on every giant shader.
 shader_type spatial;
 render_mode cull_disabled, depth_prepass_alpha;
 
@@ -23,6 +27,16 @@ uniform float length : hint_range(0.0, 1.0) = 1.0;
 uniform float shadow_soft = 0.7;
 uniform float side_feather = 0.22;
 uniform float root_dark = 0.82;
+// The M10 gate (LC-6). root_feather: the share of a card's length over which it fades in from its root, each
+// strand offset by its id. tip_thin: the share of the length over which the strands end one by one (GiantLook
+// sets BEARD_TIP_THIN on the long beards). back_fade: 1 on a beard (GiantLook), which then fades out between
+// BACK_FADE_FROM and BACK_FADE_TO of the camera's direction along the mesh's front (+Z): 0 from the side,
+// -1 from straight behind.
+uniform float root_feather = 0.14;
+uniform float tip_thin : hint_range(0.0, 1.0) = 0.0;
+uniform float back_fade : hint_range(0.0, 1.0) = 0.0;
+const float BACK_FADE_FROM = -0.35;
+const float BACK_FADE_TO = -0.7;
 uniform float atlas_columns = 4.0;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
@@ -32,9 +46,14 @@ uniform vec3 flash = vec3(0.0);
 uniform vec3 head_motion = vec3(0.0);
 
 varying vec3 v_strand;
+varying float v_behind;
 
 void vertex() {
 	VERTEX -= head_motion * UV.y * UV.y;
+	// where the camera stands along the mesh's front: 1 in front of the giant, 0 beside him, -1 behind
+	mat3 m = mat3(MODEL_MATRIX);
+	vec3 to_cam = (CAMERA_POSITION_WORLD - MODEL_MATRIX[3].xyz) * m / max(dot(m[0], m[0]), 1e-8) - VERTEX;
+	v_behind = to_cam.z / max(length(to_cam), 1e-5);
 }
 
 void fragment() {
@@ -49,6 +68,12 @@ void fragment() {
 	a *= 1.0 - smoothstep(length - 0.14, length, UV.y) * step(length, 0.999);
 	float u = fract(UV.x * atlas_columns);
 	a *= smoothstep(0.0, side_feather, u) * smoothstep(0.0, side_feather, 1.0 - u);
+	// The root edge and (on a beard) the tip, strand by strand: each strand starts and ends at its own place
+	// along the card (its id, the atlas's G); minified, the ids blend and the edge is a plain ramp.
+	float sid = t.g - 0.5;
+	a *= smoothstep(0.0, root_feather, UV.y + sid * root_feather);
+	a *= 1.0 - smoothstep(1.0 - tip_thin, 1.0, UV.y + sid * tip_thin) * step(0.001, tip_thin);
+	a *= mix(1.0, smoothstep(BACK_FADE_TO, BACK_FADE_FROM, v_behind), back_fade);
 	ALPHA = a;
 	vec3 c = mix(hair_color, tip_color, smoothstep(0.55, 1.0, UV.y) * 0.3);
 	// Grey strands by their id; where the atlas is minified a card holds many strands, so the share of

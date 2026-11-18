@@ -25,6 +25,8 @@ const MIN_LIT := 0.02
 ## their floors rose; the hair colours, seen from behind with the key now 35 degrees to one side instead of
 ## flat on, change less (the nearest brown 0.0170 against 0.0332), so theirs fell. The hair's floor stands (the
 ## shoulder-length cut, the smallest, changes 0.0580).
+## The gate's hair and skin changes (LC-6, OR-1) moved the shares again (skin 0.0594, hair 0.0599, beard 0.0306,
+## haircolor 0.0170, presets 0.0793): every floor stands; the beard's is now 0.62 of its set's smallest share.
 const FLOORS := {"skin": 0.028, "eyes": 0.00025, "hair": 0.045, "beard": 0.019, "haircolor": 0.0085,
 	"tattoo": 0.0009, "ink": 0.008, "paint": 0.005, "paintcolor": 0.005, "scar": 0.0003, "mark": 0.0019,
 	"outfit": 0.011, "dye": 0.014, "preset": 0.038}
