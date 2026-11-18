@@ -345,7 +345,7 @@ index = {
 "wrist_l": [-1.087127, 2.306697, -0.44995],
 "wrist_r": [1.087127, 2.306697, -0.44995]
 },
-"manifest_sha256": "89855ad1aa46a6373d4d52430bf898de59395d731c9f80ee487f1090ee449e97",
+"manifest_sha256": "169a73a77605f823c7815a14bd8bb6bd833deb90dd8d4b1ebccfda6bbef67539",
 "meshes": {
 "Beard_braided": {
 "atlas": "hair_atlas",
@@ -356,7 +356,7 @@ index = {
 "layer": 3,
 "node": "Beard_braided",
 "part_path": "res://assets/giant/parts/Beard_braided.glb",
-"tris": 2836
+"tris": 2828
 },
 "Beard_forked": {
 "atlas": "hair_atlas",
@@ -367,7 +367,7 @@ index = {
 "layer": 3,
 "node": "Beard_forked",
 "part_path": "res://assets/giant/parts/Beard_forked.glb",
-"tris": 3840
+"tris": 3936
 },
 "Beard_full": {
 "atlas": "hair_atlas",
@@ -381,7 +381,6 @@ index = {
 "tris": 3960
 },
 "Beard_short": {
-"atlas": "hair_atlas",
 "category": "beard",
 "chains": [],
 "covers": [],
@@ -389,7 +388,11 @@ index = {
 "layer": 3,
 "node": "Beard_short",
 "part_path": "res://assets/giant/parts/Beard_short.glb",
-"tris": 2240
+"shell": {
+"height_m": 0.014947,
+"mask": "beard"
+},
+"tris": 2212
 },
 "Body_Head": {
 "category": "body",
@@ -619,7 +622,6 @@ index = {
 "tris": 1390
 },
 "Hair_crop": {
-"atlas": "hair_atlas",
 "category": "hair",
 "chains": [],
 "covers": [],
@@ -627,7 +629,11 @@ index = {
 "layer": 3,
 "node": "Hair_crop",
 "part_path": "res://assets/giant/parts/Hair_crop.glb",
-"tris": 4400
+"shell": {
+"height_m": 0.017936,
+"mask": "scalp"
+},
+"tris": 1052
 },
 "Hair_long_back": {
 "atlas": "hair_atlas",
@@ -638,7 +644,7 @@ index = {
 "layer": 3,
 "node": "Hair_long_back",
 "part_path": "res://assets/giant/parts/Hair_long_back.glb",
-"tris": 5880
+"tris": 5942
 },
 "Hair_long_braided": {
 "atlas": "hair_atlas",
@@ -649,7 +655,7 @@ index = {
 "layer": 3,
 "node": "Hair_long_braided",
 "part_path": "res://assets/giant/parts/Hair_long_braided.glb",
-"tris": 5360
+"tris": 5524
 },
 "Hair_warrior_tail": {
 "atlas": "hair_atlas",
@@ -660,7 +666,7 @@ index = {
 "layer": 3,
 "node": "Hair_warrior_tail",
 "part_path": "res://assets/giant/parts/Hair_warrior_tail.glb",
-"tris": 4824
+"tris": 4986
 },
 "Hair_wild_mane": {
 "atlas": "hair_atlas",
@@ -671,7 +677,7 @@ index = {
 "layer": 3,
 "node": "Hair_wild_mane",
 "part_path": "res://assets/giant/parts/Hair_wild_mane.glb",
-"tris": 6000
+"tris": 5942
 }
 },
 "regions": [{
@@ -732,10 +738,13 @@ index = {
 "designs": "res://assets/giant/designs.png",
 "detail_fur": "res://assets/giant/cloth_fur.png",
 "detail_leather": "res://assets/giant/cloth_leather.png",
+"detail_metal": "res://assets/giant/cloth_metal.png",
 "detail_weave": "res://assets/giant/cloth_weave.png",
 "hair_atlas": "res://assets/giant/hair_atlas.png",
 "scar_layer": 0,
-"scar_layer_b": 1
+"scar_layer_b": 1,
+"shell_strands": "res://assets/giant/shell_strands.png",
+"skin_lut": "res://assets/giant/tex/skin_lut.png"
 },
 "tiers": {
 "hi": "res://assets/giant/tex_hi/",

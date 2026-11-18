@@ -127,6 +127,7 @@ func _run() -> void:
 	base = await _shot("")
 	for id: String in parts:
 		_show([id])
+		GiantLook.stack_shells_of(_model, _model.index, id)   # P51: a shell style draws its layers
 		await RenderingServer.frame_post_draw
 		out.parts[id] = _diff(base, get_viewport().get_texture().get_image())
 	for id: String in BODY:

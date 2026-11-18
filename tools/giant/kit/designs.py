@@ -356,7 +356,7 @@ def _scar(P, segs, widen=1.0, min_half=0.0):
 
 
 def d_scar_brow(P, N, J, ctx):
-    return _scar(P, ctx["scars"]["brow"], widen=1.0, min_half=0.0026)
+    return _scar(P, ctx["scars"]["brow"], widen=1.0, min_half=BOLD)      # P51: the 4 cm rule (was 0.0026)
 
 
 def d_scar_forearm_slash(P, N, J, ctx):
@@ -364,7 +364,7 @@ def d_scar_forearm_slash(P, N, J, ctx):
 
 
 def d_scar_chest_claws(P, N, J, ctx):
-    return _scar(P, ctx["scars"]["chest_claws"], min_half=0.005)
+    return _scar(P, ctx["scars"]["chest_claws"], min_half=BOLD)          # P51: the 4 cm rule (was 0.005)
 
 
 def d_scar_knuckles(P, N, J, ctx):
@@ -658,7 +658,7 @@ def d_back_hand(P, N, J, ctx):
 
 
 def d_scar_cheek(P, N, J, ctx):
-    return _scar(P, ctx["scars"]["cheek"], min_half=0.0036)
+    return _scar(P, ctx["scars"]["cheek"], min_half=BOLD)                # P51: the 4 cm rule (was 0.0036)
 
 
 def d_scar_back_lash(P, N, J, ctx):

@@ -5,15 +5,29 @@ cloth detail maps (numpy + Pillow; no Blender).
   tex/normal.png     RGB  tangent-space normal (OpenGL, Y up), 512 px
   tex/orm.png        RGB  R ambient occlusion, G roughness, B thickness (1 = thin), 512 px
   tex/masks.png      RGBA R stubble/beard area, G scalp, B brows, A lips, 512 px
+  tex/curvature.png  L    the skin's curvature (P51: the subsurface term's lookup coordinate, 1/r over
+                          CURV_MAX_PER_M), 256 px. Plan M11 §2.4 put it in masks.png's A; there, under the
+                          import's VRAM compression, it spoiled the masks' RGB (the brows' tint drew blocks on
+                          the forehead), so it has a map of its own
+  tex/skin_lut.png   RGB  64 x 64 pre-integrated skin diffusion (P51; plan M11 decision 9): u = N.L * 0.5 + 0.5,
+                          v = curvature (as masks.png A); sRGB, imported lossless without mipmaps
   tex_hi/normal.png  RGB  the normal map at 1024 px (desktop; the Web too since the owner's 26 MiB answer)
   tex_hi/orm.png     RGB  the ORM map at 1024 px, AO and thickness at full precision: build_giant.py
                           --skip-bake reads them back from here
   hair_atlas.png     RGBA 512 px strands: A coverage, R strand brightness, G strand id (grey strands),
                           B root-to-tip (0 at the root); four columns: dense straight, dense wavy,
                           clumped, sparse wispy
-  cloth_weave.png    RGBA 128 px tileable detail: RGB a tangent-space normal (OpenGL, Y up), A the
-  cloth_leather.png       albedo detail (0.75 = neutral): plain weave, grained leather and fur
-  cloth_fur.png
+  cloth_weave.png    RGBA 256 px tileable detail (P51; 128 px before): RGB a tangent-space normal (OpenGL,
+  cloth_leather.png       Y up), A the albedo detail (0.75 = neutral): plain weave, grained leather, fur
+  cloth_fur.png           and hammered metal (the giant_cloth shader's metal kind, used from P54 on)
+  cloth_metal.png
+  shell_strands.png  RGB  128 px tileable strand cells for the shell styles (P51): R a strand's section, G its
+                          length, B its id; imported lossless with mipmaps
+
+The skin's albedo is graded here (P51, ``SKIN_GRADE``): the baked albedo keeps the research's saturated tone,
+and the lit chest in the creator's light read (208, 141, 106) against the approved studio render's
+(198, 170, 157); the grade desaturates it in linear light (less on the lips) and lifts it, so the default look
+draws the approved renders' skin (tests/slow/test_skin_tone_render.gd).
 
 Every downscale resizes one channel at a time (Pillow's RGBA resize premultiplies by alpha and
 wiped the RGB channels of the research's 512 px masks). Ported from the research's pack and hair
@@ -33,7 +47,28 @@ from PIL import Image
 LO, HI = 512, 1024
 ATLAS = 512
 ATLAS_COLUMNS = 4
-DETAIL = 128
+DETAIL = 256
+LUT = 64
+# The skin's grade (P51), in linear light: the saturation kept (on the lips ``sat_lips``) and a gain.
+SKIN_GRADE = {"sat": 0.42, "sat_lips": 0.75, "gain": (1.2, 1.2, 1.2)}
+# The curvature (1/m, human scale) that masks.png's A = 1 stands for: a radius of 3.8 mm (the ears' rims, the
+# nostrils, the fingers' sides); flatter skin reads lower, the chest about 0.01-0.03.
+CURV_MAX_PER_M = 260.0
+CURV_BLUR = 5.0
+CURV_SIZE = 256
+# The profile's distances are divided by this: the giant's skin scatters as a human's would at two sevenths of his
+# size (a look, not physics: at the true scale the band along the terminator is too thin to see).
+SCATTER_SCALE = 3.5
+CURV_STEP = 3
+# The skin's diffusion profile (d'Eon and Luebke's six Gaussians, variances in mm^2, weights R G B).
+SKIN_PROFILE = (
+    (0.0064, (0.233, 0.455, 0.649)),
+    (0.0484, (0.100, 0.336, 0.344)),
+    (0.187, (0.118, 0.198, 0.0)),
+    (0.567, (0.113, 0.007, 0.007)),
+    (1.99, (0.358, 0.004, 0.0)),
+    (7.41, (0.078, 0.0, 0.0)),
+)
 
 
 def _load(path, mode):
@@ -74,18 +109,94 @@ def pack_tiers(bake_dir, out_dir, orm_from=None):
     orm = np.stack([ao, rough, thick], axis=-1)
     m1 = _load(os.path.join(bake_dir, "masks_rgb.png"), "RGB")
     m2 = _load(os.path.join(bake_dir, "masks2_rgb.png"), "RGB")
+    albedo = grade_albedo(albedo, m2[..., 0])
     masks = np.dstack([m1, m2[..., :1]])
+    curv = curvature_map(bake_dir)
     out = {
         "tex/albedo.png": (resize_channels(albedo, LO), "RGB"),
         "tex/normal.png": (resize_channels(normal, LO), "RGB"),
         "tex/orm.png": (resize_channels(orm, LO), "RGB"),
         "tex/masks.png": (resize_channels(masks, LO), "RGBA"),
+        "tex/curvature.png": (resize_channels(curv, CURV_SIZE), "L"),
         "tex_hi/normal.png": (normal, "RGB"),
         "tex_hi/orm.png": (orm, "RGB"),
     }
     for rel, (arr, mode) in out.items():
         save(arr, os.path.join(out_dir, rel), mode)
     return sorted(out)
+
+
+def _to_linear(c):
+    c = np.asarray(c, np.float64) / 255.0
+    return np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+
+
+def _to_srgb8(c):
+    c = np.clip(c, 0.0, 1.0)
+    s = np.where(c <= 0.0031308, c * 12.92, 1.055 * c ** (1.0 / 2.4) - 0.055)
+    return (s * 255.0 + 0.5).astype(np.uint8)
+
+
+def grade_albedo(albedo, lips):
+    """The skin's albedo (sRGB uint8, h x w x 3) graded by SKIN_GRADE in linear light: towards its own
+    luminance (less where ``lips``, 0-255, marks the lips) and lifted by the gain."""
+    lin = _to_linear(albedo)
+    lum = lin @ np.array([0.2126, 0.7152, 0.0722])
+    sat = SKIN_GRADE["sat"] + (SKIN_GRADE["sat_lips"] - SKIN_GRADE["sat"]) * (lips.astype(np.float64) / 255.0)
+    out = (lum[..., None] + (lin - lum[..., None]) * sat[..., None]) * np.asarray(SKIN_GRADE["gain"])
+    return _to_srgb8(out)
+
+
+def curvature_map(bake_dir):
+    """The skin's mean curvature per texel (uint8, 1024 px): the change of the rest normal over the change of the
+    rest position between a texel's neighbours (human-scale metres), the two directions averaged, over CURV_MAX_PER_M, blurred and grown into the
+    gutters so a filtered read near a seam finds the skin's own value."""
+    from scipy import ndimage
+    P = np.load(os.path.join(bake_dir, "restpos.npy")).astype(np.float64)
+    N = np.load(os.path.join(bake_dir, "restnrm.npy")).astype(np.float64) * 2.0 - 1.0
+    valid = np.abs(P).sum(axis=-1) > 0.0
+    # the rest maps are smoothed first (masked) and differenced over CURV_STEP texels each way: per texel the
+    # interpolated normal is noisy against the head's dense texels
+    wv = ndimage.gaussian_filter(valid.astype(np.float64), CURV_BLUR)
+    P = np.stack([ndimage.gaussian_filter(P[..., c] * valid, CURV_BLUR) for c in range(3)], axis=-1) / np.maximum(wv, 1e-6)[..., None]
+    N = np.stack([ndimage.gaussian_filter(N[..., c] * valid, CURV_BLUR) for c in range(3)], axis=-1) / np.maximum(wv, 1e-6)[..., None]
+    N /= np.maximum(np.linalg.norm(N, axis=-1, keepdims=True), 1e-6)
+    inner = ndimage.binary_erosion(valid, iterations=CURV_STEP + 3)   # an island's edge reads no false bend
+    k = np.zeros(P.shape[:2])
+    cnt = np.zeros(P.shape[:2])
+    for axis in (0, 1):
+        dP = np.linalg.norm(np.roll(P, -CURV_STEP, axis) - np.roll(P, CURV_STEP, axis), axis=-1)
+        dN = np.linalg.norm(np.roll(N, -CURV_STEP, axis) - np.roll(N, CURV_STEP, axis), axis=-1)
+        ok = inner & np.roll(inner, -CURV_STEP, axis) & np.roll(inner, CURV_STEP, axis) & (dP > 1e-6) & (dP < 0.05)
+        k += np.where(ok, dN / np.maximum(dP, 1e-6), 0.0)
+        cnt += ok
+    have = cnt > 0
+    k = np.where(have, k / np.maximum(cnt, 1), 0.0)
+    w = ndimage.gaussian_filter(have.astype(np.float64), 2.0)
+    k = ndimage.gaussian_filter(k, 2.0) / np.maximum(w, 1e-6)
+    _, (iy, ix) = ndimage.distance_transform_edt(~have, return_indices=True)
+    k = k[iy, ix]
+    return (np.clip(k / CURV_MAX_PER_M, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
+
+
+def make_skin_lut(path):
+    """The pre-integrated skin lookup (Penner's method): for curvature 1/r and the angle to the light, the
+    light a ring of radius r gathers through the profile, normalized; sRGB."""
+    th = np.arccos(np.clip(2.0 * (np.arange(LUT) + 0.5) / LUT - 1.0, -1.0, 1.0))      # u: N.L * 0.5 + 0.5
+    x = np.linspace(-np.pi, np.pi, 721)[None, :]
+    out = np.zeros((LUT, LUT, 3))
+    for j in range(LUT):
+        k = max((j + 0.5) / LUT * CURV_MAX_PER_M, 1e-3)
+        r_mm = 1000.0 / k
+        d2 = (2.0 * r_mm * np.sin(x / 2.0) / SCATTER_SCALE) ** 2
+        prof = np.zeros((x.shape[1], 3))
+        for v, wrgb in SKIN_PROFILE:
+            g = np.exp(-d2 / (2.0 * v)) / (2.0 * np.pi * v)
+            prof += g[0][:, None] * np.asarray(wrgb)[None, :]
+        lit = np.clip(np.cos(th[:, None] + x), 0.0, None)                            # (LUT, samples)
+        out[j] = (lit @ prof) / np.maximum(prof.sum(axis=0), 1e-12)
+    # row 0 of the image (UV v = 0 in the game) is the flattest
+    save(_to_srgb8(out), path, "RGB")
 
 
 # --------------------------------------------------------------------------------------
@@ -222,13 +333,70 @@ def make_fur(path, seed=47):
     save(_normal_rgba(h, albedo, 5.0), path, "RGBA")
 
 
+STRANDS = 128
+STRAND_CELLS = 32
+
+
+def make_strands(path, seed=59):
+    """The shells' strands (P51): a jittered grid of STRAND_CELLS x STRAND_CELLS strands across a tileable tile,
+    R the strand's section (1 at its axis, 0 at its edge: a layer keeps it while R is above the layer's
+    height, so it tapers), G the strand's own length (0.55-1 of the style's), B its id (grey strands)."""
+    rng = np.random.default_rng(seed)
+    s, c = STRANDS, STRAND_CELLS
+    cell = s / c
+    cx = (np.arange(c)[None, :] + 0.2 + 0.6 * rng.random((c, c))) * cell
+    cy = (np.arange(c)[:, None] + 0.2 + 0.6 * rng.random((c, c))) * cell
+    length = 0.55 + 0.45 * rng.random((c, c))
+    ident = rng.random((c, c))
+    radius = cell * (0.55 + 0.25 * rng.random((c, c)))
+    yy, xx = np.mgrid[0:s, 0:s] + 0.5
+    R = np.zeros((s, s))
+    G = np.zeros((s, s))
+    B = np.zeros((s, s))
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            for j in range(c):
+                for i in range(c):
+                    px = cx[j, i] + dx * s
+                    py = cy[j, i] + dy * s
+                    d = np.hypot(xx - px, yy - py) / radius[j, i]
+                    v = np.clip(1.0 - d, 0.0, 1.0)
+                    win = v > R
+                    R = np.where(win, v, R)
+                    G = np.where(win, length[j, i], G)
+                    B = np.where(win, ident[j, i], B)
+    save((np.stack([R, G, B], axis=-1) * 255 + 0.5).astype(np.uint8), path, "RGB")
+
+
+def make_metal(path, seed=53):
+    """Hammered metal (P51, the metal kind): shallow overlapping dents and fine scratches."""
+    rng = np.random.default_rng(seed)
+    s = DETAIL
+    yy, xx = np.mgrid[0:s, 0:s] / s
+    h = np.zeros((s, s))
+    for _ in range(90):
+        cx, cy, r = rng.random(), rng.random(), 0.03 + 0.05 * rng.random()
+        dx = (xx - cx + 0.5) % 1.0 - 0.5
+        dy = (yy - cy + 0.5) % 1.0 - 0.5
+        h -= np.clip(1.0 - (dx * dx + dy * dy) / (r * r), 0.0, None) ** 2 * 0.5
+    h = (h - h.min()) / (np.ptp(h) + 1e-9)
+    scratch = _fbm(s, rng, 4, 64, stretch=(1, 32))
+    h = 0.85 * h + 0.15 * scratch
+    albedo = 0.68 + 0.12 * h + 0.06 * (_fbm(s, rng, 3, 4) - 0.5)
+    save(_normal_rgba(h, albedo, 2.5), path, "RGBA")
+
+
 def pack_all(bake_dir, out_dir, orm_from=None):
     written = pack_tiers(bake_dir, out_dir, orm_from)
+    make_skin_lut(os.path.join(out_dir, "tex", "skin_lut.png"))
     make_atlas(os.path.join(out_dir, "hair_atlas.png"))
     make_weave(os.path.join(out_dir, "cloth_weave.png"))
     make_leather(os.path.join(out_dir, "cloth_leather.png"))
     make_fur(os.path.join(out_dir, "cloth_fur.png"))
-    return written + ["cloth_fur.png", "cloth_leather.png", "cloth_weave.png", "hair_atlas.png"]
+    make_metal(os.path.join(out_dir, "cloth_metal.png"))
+    make_strands(os.path.join(out_dir, "shell_strands.png"))
+    return written + ["cloth_fur.png", "cloth_leather.png", "cloth_metal.png", "cloth_weave.png", "hair_atlas.png",
+                      "shell_strands.png", "tex/skin_lut.png"]
 
 
 if __name__ == "__main__":

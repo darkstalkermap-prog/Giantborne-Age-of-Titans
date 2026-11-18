@@ -300,8 +300,13 @@ class SkipBakeTest(unittest.TestCase):
                 Image.fromarray(rng.integers(0, 256, (s, s, 3), dtype=np.uint8), mode).save(os.path.join(bake, name))
             for name in ("rough.png", "ao.png", "thick.png"):
                 Image.fromarray(rng.integers(0, 256, (s, s), dtype=np.uint8), "L").save(os.path.join(bake, name))
-            old = (pack.LO, pack.HI)
+            yy, xx = np.mgrid[0:s, 0:s] / s
+            sphere = np.stack([np.cos(xx * 6.28), np.sin(xx * 6.28), yy], axis=-1).astype(np.float32)
+            np.save(os.path.join(bake, "restpos.npy"), sphere * 0.1)
+            np.save(os.path.join(bake, "restnrm.npy"), (sphere * [1, 1, 0] + 1) / 2)
+            old = (pack.LO, pack.HI, pack.CURV_SIZE)
             pack.LO = 32
+            pack.CURV_SIZE = 32
             try:
                 full = os.path.join(tmp, "full")
                 pack.pack_tiers(bake, full)
@@ -310,11 +315,87 @@ class SkipBakeTest(unittest.TestCase):
                 again = os.path.join(tmp, "again")
                 pack.pack_tiers(bake, again, orm_from=os.path.join(full, "tex_hi", "orm.png"))
             finally:
-                pack.LO, pack.HI = old
-            for rel in ("tex/albedo.png", "tex/normal.png", "tex/orm.png", "tex/masks.png", "tex_hi/normal.png",
-                        "tex_hi/orm.png"):
+                pack.LO, pack.HI, pack.CURV_SIZE = old
+            for rel in ("tex/albedo.png", "tex/normal.png", "tex/orm.png", "tex/masks.png", "tex/curvature.png",
+                        "tex_hi/normal.png", "tex_hi/orm.png"):
                 self.assertEqual(manifest.sha256_file(os.path.join(full, rel)),
                                  manifest.sha256_file(os.path.join(again, rel)), rel)
+
+
+class LookTwoTest(unittest.TestCase):
+    """P51 (plan M11 §3.4): the skin's grade and lookup, the curvature, the shells' strands, the braids' tubes and
+    the shell styles in the export."""
+
+    def test_the_grade_pales_the_skin_and_keeps_the_lips(self):
+        alb = np.array([[[208, 141, 106], [208, 141, 106]]], np.uint8)
+        lips = np.array([[0, 255]], np.uint8)
+        g = pack.grade_albedo(alb, lips).astype(int)
+        self.assertLess(g[0, 0, 0] - g[0, 0, 2], 208 - 106, "less saturated")
+        self.assertGreater(g[0, 1, 0] - g[0, 1, 2], g[0, 0, 0] - g[0, 0, 2], "the lips keep more of their red")
+
+    def test_the_lookup_is_lambert_on_flat_skin_and_red_round_a_bend(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "lut.png")
+            pack.make_skin_lut(path)
+            lut = np.asarray(Image.open(path).convert("RGB")).astype(int)
+        self.assertEqual(lut.shape, (pack.LUT, pack.LUT, 3))
+        lit = lut[0, -1]
+        self.assertTrue(np.all(lit >= 250), "flat skin facing the light takes all of it: %s" % lit)
+        self.assertTrue(np.all(lut[0, : pack.LUT // 2 - 2] <= 2), "flat skin facing away takes none")
+        term = lut[-1, pack.LUT // 2]
+        self.assertGreater(term[0], term[1] + 5, "at the terminator of a bend the red reaches furthest: %s" % term)
+        self.assertGreaterEqual(term[1], term[2], "then the green")
+
+    def test_the_curvature_follows_the_bend(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            s = 128
+            yy, xx = np.mgrid[0:s, 0:s] / s
+            for r, name in ((0.1, "tight"), (0.4, "wide")):
+                d = os.path.join(tmp, name)
+                os.makedirs(d)
+                a = xx * 2.0
+                P = np.stack([np.cos(a) * r, np.sin(a) * r, yy * 0.3], axis=-1).astype(np.float32)
+                N = np.stack([np.cos(a), np.sin(a), np.zeros_like(a)], axis=-1)
+                np.save(os.path.join(d, "restpos.npy"), P)
+                np.save(os.path.join(d, "restnrm.npy"), ((N + 1) / 2).astype(np.float32))
+            tight = pack.curvature_map(os.path.join(tmp, "tight"))[s // 2, s // 2] / 255.0 * pack.CURV_MAX_PER_M
+            wide = pack.curvature_map(os.path.join(tmp, "wide"))[s // 2, s // 2] / 255.0 * pack.CURV_MAX_PER_M
+        # the mean of the two principal curvatures: a cylinder of radius r reads 1 / (2 r)
+        self.assertAlmostEqual(tight, 5.0, delta=0.8, msg="1 / (2 x 0.1 m)")
+        self.assertAlmostEqual(wide, 1.25, delta=0.5, msg="1 / (2 x 0.4 m)")
+
+    def test_the_strands_tile_and_carry_a_length_and_an_id(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "s.png")
+            pack.make_strands(path)
+            a = np.asarray(Image.open(path).convert("RGB")).astype(int)
+        self.assertEqual(a.shape[:2], (pack.STRANDS, pack.STRANDS))
+        self.assertGreater(float((a[..., 0] > 128).mean()), 0.1, "the strands' axes cover a share of the tile")
+        self.assertTrue(int(a[..., 1][a[..., 0] > 0].min()) >= int(0.55 * 255) - 1, "every strand is at least 0.55 long")
+        inner = float(np.abs(a[64] - a[63]).mean())
+        self.assertLess(float(np.abs(a[0] - a[-1]).mean()), 1.5 * inner + 1.0, "the tile wraps top to bottom as inside")
+
+    def test_the_shell_styles_and_the_braids_in_the_export(self):
+        from pathlib import Path
+        import giant_hair as gh
+        root = Path(ROOT)
+        doc = manifest.load(root)
+        meshes = doc["export"]["meshes"]
+        for mid in gh.SHELLS:
+            e = meshes[mid]
+            self.assertIn("shell", e, mid)
+            self.assertEqual(doc["index"]["meshes"][mid]["shell"], e["shell"], "%s: the index carries it" % mid)
+            self.assertEqual(e["chains"], [], "%s: on the head" % mid)
+            self.assertGreater(e["tris"], 500, "%s: the skin under its mask" % mid)
+        for mid in ("Hair_long_braided", "Beard_braided"):
+            self.assertGreater(meshes[mid]["braid_verts"], 0, "%s: braids" % mid)
+        for mid in ("Beard_full", "Beard_forked"):
+            self.assertIn("under_jaw", gh.STYLES[mid], "%s: cards under the jaw" % mid)
+        for mid in ("Hair_long_back", "Hair_long_braided", "Hair_warrior_tail", "Hair_wild_mane"):
+            self.assertIn("loose", gh.STYLES[mid], "%s: loose strands" % mid)
+        for name in ("tex/skin_lut.png", "tex/curvature.png", "cloth_metal.png", "shell_strands.png"):
+            self.assertIn("assets/giant/" + name, doc["files"], name)
+        self.assertEqual(Image.open(root / "assets/giant/cloth_weave.png").size, (256, 256), "the detail maps at 256 px")
 
 
 class ManifestTest(unittest.TestCase):
@@ -556,7 +637,11 @@ class BodyTwoTest(unittest.TestCase):
                 long_styles += 1
                 tips = m["UV"][:, 1] >= 0.999
                 # the warrior's tail lies flat on the scalp but for its tail: some tips, not most
-                self.assertLess(float(np.percentile(head[tips], 5)), 0.5, "%s: its hanging tips are on the chains" % mid)
+                if braids and e["category"] == "beard":
+                    # P51: the braided beard's cards are short (on the head); its two braids hang on the chain
+                    self.assertGreater(int((head[tips] < 0.5).sum()), 0, "%s: its braids' tips are on the chain" % mid)
+                else:
+                    self.assertLess(float(np.percentile(head[tips], 5)), 0.5, "%s: its hanging tips are on the chains" % mid)
         self.assertGreaterEqual(long_styles, 5, "the long styles hang on chains")
         self.assertEqual(info["Hair_crop"]["chains"], [], "the crop stays on the head")
         self.assertEqual(info["Beard_short"]["chains"], [], "and the short beard")
@@ -616,7 +701,7 @@ class BodyTwoTest(unittest.TestCase):
             self.assertEqual(sorted(meshes), [mid], "%s.glb holds its one mesh" % mid)
             self.assertEqual(meshes[mid]["tris"], e["tris"], "%s: the index counts its triangles" % mid)
             self.assertIn(e["category"], ("hair", "beard", "garment"))
-        self.assertEqual(len(files), 13 + 21, "M10's 13 files and the 21 parts")
+        self.assertEqual(len(files), 13 + 4 + 21, "M10's 13 files, P51's four maps and the 21 parts")
         proxy = info["shadow_proxy"]
         self.assertEqual(idx["shadow_proxy"], {"node": "ShadowProxy", "tris": proxy["tris"]})
         self.assertEqual(self.core["ShadowProxy"]["tris"], proxy["tris"])

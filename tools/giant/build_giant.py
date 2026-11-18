@@ -201,7 +201,7 @@ def build_index(export_info: dict, design_info: dict) -> dict:
     for mid, e in sorted(export_info["meshes"].items()):
         entry = {"node": mid, "category": e["category"], "layer": e["layer"], "dye": e["dye"],
                  "covers": e.get("covers", []), "tris": e["tris"]}
-        for k in ("atlas", "detail", "part", "chains", "free"):
+        for k in ("atlas", "detail", "part", "chains", "free", "shell"):
             if k in e:
                 entry[k] = e[k]
         if "file" in e:
@@ -232,7 +232,8 @@ def build_index(export_info: dict, design_info: dict) -> dict:
                      "scar_layer": scar_layers[0] if scar_layers else -1,
                      "scar_layer_b": scar_layers[1] if len(scar_layers) > 1 else -1, "hair_atlas": res + "hair_atlas.png",
                      "detail_weave": res + "cloth_weave.png", "detail_leather": res + "cloth_leather.png",
-                     "detail_fur": res + "cloth_fur.png"},
+                     "detail_fur": res + "cloth_fur.png", "detail_metal": res + "cloth_metal.png",
+                     "skin_lut": res + "tex/skin_lut.png", "shell_strands": res + "shell_strands.png"},
         "body_hash": export_info["body_hash"],
     }
 
@@ -366,6 +367,10 @@ IMPORT_SETTINGS = {
                                              "animation/import": "false"}),
     "designs.png": ("2d_array_texture", "CompressedTexture2DArray",
                     {"compress/mode": "2", "mipmaps/generate": "true", "slices/horizontal": "1"}),
+    # P51: the skin's subsurface lookup is read by (N.L, curvature) in light(): exact values, no mipmaps
+    "skin_lut.png": ("texture", "CompressedTexture2D", {"compress/mode": "0", "mipmaps/generate": "false"}),
+    # P51: the shells' strands, a cell a strand: exact values with mipmaps (they thin out with distance)
+    "shell_strands.png": ("texture", "CompressedTexture2D", {"compress/mode": "0", "mipmaps/generate": "true"}),
     # P43: the clips as an AnimationLibrary (loops are set in code: imported clips have loop off)
     "giant_clips.glb": ("animation_library", "AnimationLibrary",
                         {"animation/import": "true", "animation/fps": "30", "animation/remove_immutable_tracks": "true"}),
@@ -545,6 +550,10 @@ def estimate(rel: str, doc: dict) -> float:
     with Image.open(ROOT / rel) as im:
         w, h = im.size
         has_alpha = im.mode in ("RGBA", "LA")
+    if name == "skin_lut.png":
+        return w * h * 4.0 * 0.6                                     # lossless, no mipmaps (P51)
+    if name == "shell_strands.png":
+        return w * h * 4.0 * 4.0 / 3.0 * 0.8                         # lossless with mipmaps (P51)
     bpt = 1.0 if (has_alpha or name == "normal.png") else 0.5       # DXT5 / RGTC: 1 byte a texel, DXT1: 0.5
     raw = w * h * bpt * 4.0 / 3.0
     key = "cloth" if name.startswith("cloth_") else name[:-4]

@@ -715,6 +715,7 @@ class WarmUp extends SubViewport:
 	func _ready() -> void:
 		GiantLook.build_materials(model, model.index, "auto")
 		GiantLook.apply(model, model.index, GiantLook.DEFAULT_LOOK)
+		GiantLook.warm_shells(model, model.index)   # P51: the shell styles' shader too (the crop, the short beard)
 		RenderingServer.frame_post_draw.connect(_on_drawn)
 
 	func _exit_tree() -> void:

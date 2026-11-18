@@ -433,8 +433,8 @@
      1
     ],
     "side": "left",
-    "texels_1024": 30,
-    "texels_512": 8
+    "texels_1024": 238,
+    "texels_512": 59
    },
    "scar_cheek": {
     "channel": 0,
@@ -444,8 +444,8 @@
      1
     ],
     "side": "right",
-    "texels_1024": 203,
-    "texels_512": 52
+    "texels_1024": 1377,
+    "texels_512": 343
    },
    "scar_chest_claws": {
     "channel": 2,
@@ -455,8 +455,8 @@
      3
     ],
     "side": "left",
-    "texels_1024": 576,
-    "texels_512": 139
+    "texels_1024": 3213,
+    "texels_512": 804
    },
    "scar_forearm_slash": {
     "channel": 1,
@@ -1074,8 +1074,8 @@
   "meshes": {
    "Beard_braided": {
     "atlas": "hair_atlas",
-    "braid_verts": 632,
-    "cards": 398,
+    "braid_verts": 296,
+    "cards": 302,
     "category": "beard",
     "chains": [
      "beard"
@@ -1083,15 +1083,15 @@
     "dye": "none",
     "file": "parts/Beard_braided.glb",
     "layer": 3,
-    "root_verts": 796,
-    "roots_on_head": 618,
-    "tris": 2836,
-    "verts": 3632
+    "root_verts": 616,
+    "roots_on_head": 616,
+    "tris": 2828,
+    "verts": 3296
    },
    "Beard_forked": {
     "atlas": "hair_atlas",
     "braid_verts": 0,
-    "cards": 320,
+    "cards": 346,
     "category": "beard",
     "chains": [
      "beard"
@@ -1099,15 +1099,15 @@
     "dye": "none",
     "file": "parts/Beard_forked.glb",
     "layer": 3,
-    "root_verts": 640,
-    "roots_on_head": 640,
-    "tris": 3840,
-    "verts": 4480
+    "root_verts": 692,
+    "roots_on_head": 692,
+    "tris": 3936,
+    "verts": 4628
    },
    "Beard_full": {
     "atlas": "hair_atlas",
     "braid_verts": 0,
-    "cards": 330,
+    "cards": 350,
     "category": "beard",
     "chains": [
      "beard"
@@ -1115,24 +1115,27 @@
     "dye": "none",
     "file": "parts/Beard_full.glb",
     "layer": 3,
-    "root_verts": 660,
-    "roots_on_head": 660,
+    "root_verts": 700,
+    "roots_on_head": 700,
     "tris": 3960,
-    "verts": 4620
+    "verts": 4660
    },
    "Beard_short": {
-    "atlas": "hair_atlas",
     "braid_verts": 0,
-    "cards": 560,
+    "cards": 0,
     "category": "beard",
     "chains": [],
     "dye": "none",
     "file": "parts/Beard_short.glb",
     "layer": 3,
-    "root_verts": 1120,
-    "roots_on_head": 1120,
-    "tris": 2240,
-    "verts": 3360
+    "root_verts": 0,
+    "roots_on_head": 0,
+    "shell": {
+     "height_m": 0.014947,
+     "mask": "beard"
+    },
+    "tris": 2212,
+    "verts": 1255
    },
    "Body_Head": {
     "boundary_edges": 0,
@@ -1487,23 +1490,26 @@
     "verts": 873
    },
    "Hair_crop": {
-    "atlas": "hair_atlas",
     "braid_verts": 0,
-    "cards": 1100,
+    "cards": 0,
     "category": "hair",
     "chains": [],
     "dye": "none",
     "file": "parts/Hair_crop.glb",
     "layer": 3,
-    "root_verts": 2200,
-    "roots_on_head": 2200,
-    "tris": 4400,
-    "verts": 6600
+    "root_verts": 0,
+    "roots_on_head": 0,
+    "shell": {
+     "height_m": 0.017936,
+     "mask": "scalp"
+    },
+    "tris": 1052,
+    "verts": 588
    },
    "Hair_long_back": {
     "atlas": "hair_atlas",
     "braid_verts": 0,
-    "cards": 540,
+    "cards": 567,
     "category": "hair",
     "chains": [
      "hair"
@@ -1511,15 +1517,15 @@
     "dye": "none",
     "file": "parts/Hair_long_back.glb",
     "layer": 3,
-    "root_verts": 1080,
-    "roots_on_head": 1080,
-    "tris": 5880,
-    "verts": 6960
+    "root_verts": 1134,
+    "roots_on_head": 1134,
+    "tris": 5942,
+    "verts": 7076
    },
    "Hair_long_braided": {
     "atlas": "hair_atlas",
-    "braid_verts": 840,
-    "cards": 570,
+    "braid_verts": 360,
+    "cards": 476,
     "category": "hair",
     "chains": [
      "hair",
@@ -1529,15 +1535,15 @@
     "dye": "none",
     "file": "parts/Hair_long_braided.glb",
     "layer": 3,
-    "root_verts": 1140,
-    "roots_on_head": 944,
-    "tris": 5360,
-    "verts": 6500
+    "root_verts": 964,
+    "roots_on_head": 964,
+    "tris": 5524,
+    "verts": 6292
    },
    "Hair_warrior_tail": {
     "atlas": "hair_atlas",
     "braid_verts": 0,
-    "cards": 584,
+    "cards": 611,
     "category": "hair",
     "chains": [
      "hair"
@@ -1545,15 +1551,15 @@
     "dye": "none",
     "file": "parts/Hair_warrior_tail.glb",
     "layer": 3,
-    "root_verts": 1168,
-    "roots_on_head": 1168,
-    "tris": 4824,
-    "verts": 5992
+    "root_verts": 1222,
+    "roots_on_head": 1222,
+    "tris": 4986,
+    "verts": 6208
    },
    "Hair_wild_mane": {
     "atlas": "hair_atlas",
     "braid_verts": 0,
-    "cards": 470,
+    "cards": 497,
     "category": "hair",
     "chains": [
      "hair"
@@ -1561,10 +1567,10 @@
     "dye": "none",
     "file": "parts/Hair_wild_mane.glb",
     "layer": 3,
-    "root_verts": 940,
-    "roots_on_head": 940,
-    "tris": 6000,
-    "verts": 6940
+    "root_verts": 994,
+    "roots_on_head": 994,
+    "tris": 5942,
+    "verts": 6936
    }
   },
   "parts": {
@@ -1619,238 +1625,266 @@
  "files": {
   "assets/giant/cloth_fur.png": {
    "cycles": false,
-   "inputs": "a5ca22ce2f86cb6ebc67708024550f5efe0cd0fe10c59029dbfbc37b844fc67e",
-   "sha256": "abebfb2148642766b3d791bad6f99eb6d166fce32aa1b7d4b87605b84bd0860e",
-   "size": 26412,
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
+   "sha256": "91fe634bd67466f71af61f39940ef1c34596e5273e19dc8861d93a5a6300d1b0",
+   "size": 65250,
    "step": "pack"
   },
   "assets/giant/cloth_leather.png": {
    "cycles": false,
-   "inputs": "a5ca22ce2f86cb6ebc67708024550f5efe0cd0fe10c59029dbfbc37b844fc67e",
-   "sha256": "0a3cd29d1b7f7275e5a7b9fb4a18a052fcc94c74c70d42308c8ab1970b3f24e1",
-   "size": 33872,
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
+   "sha256": "530ac99f18a01786f4e407a8adc695cedb410f770e18f115eda8fb3b5a3cc65f",
+   "size": 85583,
+   "step": "pack"
+  },
+  "assets/giant/cloth_metal.png": {
+   "cycles": false,
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
+   "sha256": "82c9f8158c9a56838efa749e4082085938965a45a57e1194e2dbaa2c202c44fd",
+   "size": 41052,
    "step": "pack"
   },
   "assets/giant/cloth_weave.png": {
    "cycles": false,
-   "inputs": "a5ca22ce2f86cb6ebc67708024550f5efe0cd0fe10c59029dbfbc37b844fc67e",
-   "sha256": "1d148888bdf37a3894fe781d84267b20ae5239536918ba0afe092471e1a5860c",
-   "size": 27596,
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
+   "sha256": "1495f7715d5ee1d9c3d2332f33807926c4906e73838ffe8133d619eda5ff8443",
+   "size": 60495,
    "step": "pack"
   },
   "assets/giant/designs.png": {
    "cycles": true,
-   "inputs": "9b9d5d94f7313ecc45de77e677f2fbe6963294159cddb8f1cb64737374af887e",
-   "sha256": "7daf4ba8047843164d5de9945008f188ad00ecb7e68ed30ea22ddf17488d7346",
-   "size": 25005,
+   "inputs": "62bd88c8179910af7bc1ee26bba534976be8eeda2452374a626be2cce62aacb2",
+   "sha256": "c1535a24620ef79f2b83022b2c16dfb40a0097a9b85c802189acb3f7e6b7b0fd",
+   "size": 25355,
    "step": "designs"
   },
   "assets/giant/giant.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "0496681c68801560f0e557c4015e0eb592fb0ce3f4b4053d02bf6f1a7eb3660a",
    "size": 1213552,
    "step": "export"
   },
   "assets/giant/giant_clips.glb": {
    "cycles": false,
-   "inputs": "76c46567e9f1ba3e2608395a8d31308f928b3b08732a14154a98c06db495fdc2",
+   "inputs": "e7dfeaffd82c6631075dd507686e32d53b275d8921573c3dd3d5e7c9f5726169",
    "sha256": "15ecaa046da049bc634380ef8ddf8388d47d0e091209b06d0bbda5c9d635dfe7",
    "size": 1292168,
    "step": "clips"
   },
   "assets/giant/hair_atlas.png": {
    "cycles": false,
-   "inputs": "a5ca22ce2f86cb6ebc67708024550f5efe0cd0fe10c59029dbfbc37b844fc67e",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "6f8abe0fab8a6184c3d3357d5aa3b43c6aeefdc0b7558a1fa807347eb9a12fb8",
    "size": 142628,
    "step": "pack"
   },
   "assets/giant/parts/Beard_braided.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
-   "sha256": "f0c35178e36e49667ed43dd5036d77e5b6ae41e7e43dd20165c4c2630eef327e",
-   "size": 258372,
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
+   "sha256": "af966093c1072a2ee77e9c629eca4ed8905f96a9d2e2e1eea91a4591dd47c486",
+   "size": 264680,
    "step": "export"
   },
   "assets/giant/parts/Beard_forked.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
-   "sha256": "066dd5214faf43608320d0806ea05ef94cc7ce056e54c3cb7c08c5f36575809d",
-   "size": 315276,
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
+   "sha256": "b1b511fc0c7af1dfcacc7a9be5e2142fc0d4b3294104d315d5d1024e5e8758b7",
+   "size": 324732,
    "step": "export"
   },
   "assets/giant/parts/Beard_full.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
-   "sha256": "57e5b0317115a2d1aa178fa8766c8dbeb2153b89c37c8c47b2fccf8dc82da8a3",
-   "size": 324392,
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
+   "sha256": "f9fae998b993e942eb175efbf449c91647869f2ae2e381c05dcfbfc349c4ac22",
+   "size": 326792,
    "step": "export"
   },
   "assets/giant/parts/Beard_short.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
-   "sha256": "7583606a9c154f369a1983abcc793986d225723cb6609244ed4e08282f1b16bb",
-   "size": 238472,
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
+   "sha256": "fcccb48a611f6f114fad44770f88b1dcad8c9df59127c7bad2ed162483106945",
+   "size": 114096,
    "step": "export"
   },
   "assets/giant/parts/Garment_belt.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "01bdf9fc612289e1e77091264c06fa004cdb6f03242c73e232bf10d05f2cf319",
    "size": 51060,
    "step": "export"
   },
   "assets/giant/parts/Garment_boots.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "e3b976093600951237bedb336d14924c6a41660fd31eaeac9b49b693387edb66",
    "size": 127172,
    "step": "export"
   },
   "assets/giant/parts/Garment_bracers.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "7d26b7e2c66988b4a7199fe5dbff0bf43e302fd0a4b7b8cac0fa021cd65f2b35",
    "size": 40932,
    "step": "export"
   },
   "assets/giant/parts/Garment_braies_core.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "278063be294e6c7178f6e852f6d9817a2a21eb202b914d276e4124d2cb93bd77",
    "size": 42136,
    "step": "export"
   },
   "assets/giant/parts/Garment_braies_limbs.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "c888612d2e0be29ad87a2497adc64c2fc7b5071e74d2f5201d65bc8c2e21f46b",
    "size": 53348,
    "step": "export"
   },
   "assets/giant/parts/Garment_cape.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "b4c398aa4629977237e9a1c61704caa09e288a5e452b99c90804114bd367687c",
    "size": 75948,
    "step": "export"
   },
   "assets/giant/parts/Garment_furs.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "85b7b9313fd0e89ca12654536cb73241892f70899d25d0b779e7d18a132ac5a0",
    "size": 80120,
    "step": "export"
   },
   "assets/giant/parts/Garment_jerkin.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "05ef90db7adea72bdc6bac1d2e57f4c2150d8a87c00c809e723d51d1852ab29b",
    "size": 112456,
    "step": "export"
   },
   "assets/giant/parts/Garment_leg_wraps.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "ead171618728dab79ecc7479c4d2efbfa0dd361517273d7a2993886e5b1a716c",
    "size": 46940,
    "step": "export"
   },
   "assets/giant/parts/Garment_pauldron.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "1a8d3c06f2a3d8b5a0e2d4257fc09e725cb364ea6e9b5253a351b122051d8260",
    "size": 37428,
    "step": "export"
   },
   "assets/giant/parts/Garment_tunic_core.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "36af4c003fec40cc79c8f7e125a29c7077061ee65e3f2b0715ce87e75365796c",
    "size": 148960,
    "step": "export"
   },
   "assets/giant/parts/Garment_tunic_limbs.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
    "sha256": "26d14e8f878f433b55a2782229513d56a9da0f59f78dcdd4873b9d192e325c71",
    "size": 85952,
    "step": "export"
   },
   "assets/giant/parts/Hair_crop.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
-   "sha256": "89d2c67536b74c520db8b169e06305d7d4c305f0c63098fd5e02657cead13414",
-   "size": 445832,
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
+   "sha256": "04135308c7e7896f0baf443f719776d394f703de99ddbfb22d07ba6248f0f4c7",
+   "size": 67760,
    "step": "export"
   },
   "assets/giant/parts/Hair_long_back.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
-   "sha256": "00caab46ef1d546c428928d7bed51fe8a204be1858c8db8c11dc927c161bd346",
-   "size": 476320,
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
+   "sha256": "33ee12acd001434fdd820c330d870c486d6802ef4b9ad2362cac0507c4a748e9",
+   "size": 483652,
    "step": "export"
   },
   "assets/giant/parts/Hair_long_braided.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
-   "sha256": "5a2320a584f6e56f2b1c92026f26ad7d96b77c85fd6a8750704900ca224055c8",
-   "size": 445608,
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
+   "sha256": "056da5222a5cd8f2d3c74cca346afd057b0937818f8afef7d36a43fe60631f73",
+   "size": 484592,
    "step": "export"
   },
   "assets/giant/parts/Hair_warrior_tail.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
-   "sha256": "89860598183a6c441cc8aa6b363ef844016c0b17b472a1f115bcdd1eadaf8158",
-   "size": 411908,
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
+   "sha256": "c5a6d1c31e19da5f13fd42d4d0df5aa6ee2e5905b65ee279599afbd7f173ce8a",
+   "size": 425840,
    "step": "export"
   },
   "assets/giant/parts/Hair_wild_mane.glb": {
    "cycles": false,
-   "inputs": "c750a756213709375d647989f1101c1e87ae898ca3130526603d1fb8600cd701",
-   "sha256": "7a6598e94275d9c2c6cc78d413c41058abc4c621c7b282a5834c84a7142fe181",
-   "size": 475840,
+   "inputs": "400cf828873bc9c816bc717ce798cc5d95892c7143a0e6ced2960ed0b6c28fa1",
+   "sha256": "9f275196e6ee260439b18df21bda6af5a0aadde63fcd3edc295b4c357cb2d3af",
+   "size": 475252,
    "step": "export"
+  },
+  "assets/giant/shell_strands.png": {
+   "cycles": false,
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
+   "sha256": "898631a5f68595b1391d2b5c4b1ad595030c9502502987dae077e04acd7988f3",
+   "size": 29558,
+   "step": "pack"
   },
   "assets/giant/tex/albedo.png": {
    "cycles": true,
-   "inputs": "a5ca22ce2f86cb6ebc67708024550f5efe0cd0fe10c59029dbfbc37b844fc67e",
-   "sha256": "328936aadb3a64f7cf7e16d07ccab09423d7a1fb2085f098a189aa592ce2a58d",
-   "size": 175136,
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
+   "sha256": "f1378d00ea6e423cd90299e41b8b440ce35a0f198e95e6131ee995141ae97b73",
+   "size": 175598,
+   "step": "pack"
+  },
+  "assets/giant/tex/curvature.png": {
+   "cycles": true,
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
+   "sha256": "f5fc7a0bf43352f327a1bb090584aff35a5302554c4a09ccb70a091e4c7d8f1c",
+   "size": 22071,
    "step": "pack"
   },
   "assets/giant/tex/masks.png": {
    "cycles": true,
-   "inputs": "a5ca22ce2f86cb6ebc67708024550f5efe0cd0fe10c59029dbfbc37b844fc67e",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "2e883e3b363db86f6ce709b97bfc1ef4c0f43399ee4c188ce312f4ec1b07c8a7",
    "size": 33575,
    "step": "pack"
   },
   "assets/giant/tex/normal.png": {
    "cycles": true,
-   "inputs": "a5ca22ce2f86cb6ebc67708024550f5efe0cd0fe10c59029dbfbc37b844fc67e",
-   "sha256": "987bf2dea9a658668bb9085edf4b9a93ef4205337a91ea8c72cd8cea09d453cd",
-   "size": 253616,
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
+   "sha256": "49583e20a787f7ef310911754b3e1a9214d0a6dc679654c18348c8e8f122519e",
+   "size": 253617,
    "step": "pack"
   },
   "assets/giant/tex/orm.png": {
    "cycles": true,
-   "inputs": "a5ca22ce2f86cb6ebc67708024550f5efe0cd0fe10c59029dbfbc37b844fc67e",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "99d36107a3e62451623d59aa287f8e72efd257301e6a4b3f71fd0e32b79102a6",
    "size": 298964,
    "step": "pack"
   },
+  "assets/giant/tex/skin_lut.png": {
+   "cycles": true,
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
+   "sha256": "006d5d6bebf38aabe8524e46db2553f432abc3b9aee40ae159bb816458591e44",
+   "size": 1290,
+   "step": "pack"
+  },
   "assets/giant/tex_hi/normal.png": {
    "cycles": true,
-   "inputs": "a5ca22ce2f86cb6ebc67708024550f5efe0cd0fe10c59029dbfbc37b844fc67e",
-   "sha256": "3a669c4456b4c380806d93ac8c0c2401f6c56598abba3833dbb49b44e054b612",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
+   "sha256": "681a3eabace4398718701b5f63e0cd785822185ebce87495c67a7a464e63c063",
    "size": 1165631,
    "step": "pack"
   },
   "assets/giant/tex_hi/orm.png": {
    "cycles": true,
-   "inputs": "a5ca22ce2f86cb6ebc67708024550f5efe0cd0fe10c59029dbfbc37b844fc67e",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "4e8bc28413a49d987786846123ac7d8bfa7dff3024f15425fa3ed0b44396077d",
    "size": 1101627,
    "step": "pack"
@@ -2488,7 +2522,7 @@
     "layer": 3,
     "node": "Beard_braided",
     "part_path": "res://assets/giant/parts/Beard_braided.glb",
-    "tris": 2836
+    "tris": 2828
    },
    "Beard_forked": {
     "atlas": "hair_atlas",
@@ -2501,7 +2535,7 @@
     "layer": 3,
     "node": "Beard_forked",
     "part_path": "res://assets/giant/parts/Beard_forked.glb",
-    "tris": 3840
+    "tris": 3936
    },
    "Beard_full": {
     "atlas": "hair_atlas",
@@ -2517,7 +2551,6 @@
     "tris": 3960
    },
    "Beard_short": {
-    "atlas": "hair_atlas",
     "category": "beard",
     "chains": [],
     "covers": [],
@@ -2525,7 +2558,11 @@
     "layer": 3,
     "node": "Beard_short",
     "part_path": "res://assets/giant/parts/Beard_short.glb",
-    "tris": 2240
+    "shell": {
+     "height_m": 0.014947,
+     "mask": "beard"
+    },
+    "tris": 2212
    },
    "Body_Head": {
     "category": "body",
@@ -2772,7 +2809,6 @@
     "tris": 1390
    },
    "Hair_crop": {
-    "atlas": "hair_atlas",
     "category": "hair",
     "chains": [],
     "covers": [],
@@ -2780,7 +2816,11 @@
     "layer": 3,
     "node": "Hair_crop",
     "part_path": "res://assets/giant/parts/Hair_crop.glb",
-    "tris": 4400
+    "shell": {
+     "height_m": 0.017936,
+     "mask": "scalp"
+    },
+    "tris": 1052
    },
    "Hair_long_back": {
     "atlas": "hair_atlas",
@@ -2793,7 +2833,7 @@
     "layer": 3,
     "node": "Hair_long_back",
     "part_path": "res://assets/giant/parts/Hair_long_back.glb",
-    "tris": 5880
+    "tris": 5942
    },
    "Hair_long_braided": {
     "atlas": "hair_atlas",
@@ -2808,7 +2848,7 @@
     "layer": 3,
     "node": "Hair_long_braided",
     "part_path": "res://assets/giant/parts/Hair_long_braided.glb",
-    "tris": 5360
+    "tris": 5524
    },
    "Hair_warrior_tail": {
     "atlas": "hair_atlas",
@@ -2821,7 +2861,7 @@
     "layer": 3,
     "node": "Hair_warrior_tail",
     "part_path": "res://assets/giant/parts/Hair_warrior_tail.glb",
-    "tris": 4824
+    "tris": 4986
    },
    "Hair_wild_mane": {
     "atlas": "hair_atlas",
@@ -2834,7 +2874,7 @@
     "layer": 3,
     "node": "Hair_wild_mane",
     "part_path": "res://assets/giant/parts/Hair_wild_mane.glb",
-    "tris": 6000
+    "tris": 5942
    }
   },
   "regions": [
@@ -2912,10 +2952,13 @@
    "designs": "res://assets/giant/designs.png",
    "detail_fur": "res://assets/giant/cloth_fur.png",
    "detail_leather": "res://assets/giant/cloth_leather.png",
+   "detail_metal": "res://assets/giant/cloth_metal.png",
    "detail_weave": "res://assets/giant/cloth_weave.png",
    "hair_atlas": "res://assets/giant/hair_atlas.png",
    "scar_layer": 0,
-   "scar_layer_b": 1
+   "scar_layer_b": 1,
+   "shell_strands": "res://assets/giant/shell_strands.png",
+   "skin_lut": "res://assets/giant/tex/skin_lut.png"
   },
   "tiers": {
    "hi": "res://assets/giant/tex_hi/",
@@ -2926,16 +2969,16 @@
   "kit": {
    "bake.py": "68e2fdefee8d5b50e903d3339b26d3b63a241d3a4afde27f38456cc81b77a8a4",
    "clips.py": "e31c14b0c932d1880d11d6a48914950532bc785c9098c8e146126f168118d555",
-   "designs.py": "a934994f1b7dd099c585b126319f2dd8b7831b1e0910d477972ea7fdb62ee2ed",
-   "export_game.py": "139c166710cba5f2f3d00d777136f11b474bfc90f834866cfe4b60254fec8df3",
+   "designs.py": "d41803b5d5139a50f0ce73b1196846f1bc097ade1bd78f75b3bf36fb261ed4aa",
+   "export_game.py": "7e1917d6e06eb22bdf47cd6b4c0bb353a778cb41d4a69bd5592c91130190477b",
    "giant_body.py": "c8f694bd9d26bfd16ef4ca60ad3d1f36ec9c75247bc360a3ae2ad8778b741581",
    "giant_garment.py": "e27d8cc0d90b27af6c3aa89237ce573323cb469cf047089e5e72babf2a2cb292",
-   "giant_hair.py": "4335501668cfca8c8a81993f6865757366392c31e1135827db7b18d8cbfe44f3",
+   "giant_hair.py": "ccffe95879b6c486cf42752972b1428b6fc4139f8022df026ac462160214bc09",
    "giant_parts.py": "8ac3a1ed88d5b096fa1eefc51d219641cf40c2c77396821f34154eac07d2e01f",
    "giant_skin.py": "58bca541ac7ccc8ed87c477526a1650df76a6289c5d95d15e8ce6f9d30753086",
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
    "node_util.py": "5accffc8870441e1dd7733a0a6bb1fa80dbe3505dcabb1cab5778dc65d4e9e20",
-   "pack.py": "e70378f7eef66c8c60e1196021228ea65ab4b3b6b746e17b0712d97ce73638b3",
+   "pack.py": "590e4c839ecf30007d42fe2dfb2aa0fc5b9c0a677bbe5c37d84ac9f20ec3db99",
    "skin_textures.py": "92716ea0794007867a8ecb930159f25fac5794a0c5e95fe5518fea0f18e8e3f2",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"
   },

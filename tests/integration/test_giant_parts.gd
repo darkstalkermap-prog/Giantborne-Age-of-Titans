@@ -140,7 +140,9 @@ func test_the_fullest_look_keeps_the_mesh_buffers_under_the_budget() -> void:
 	var resident := fullest + GiantModel.recent_bytes()
 	assert_true(GiantModel.recent_bytes() <= int(GiantModel.PART_KEEP_BYTES * 1.25), "the recent list is capped (%d bytes)" % GiantModel.recent_bytes())
 	assert_true(resident <= 4500000 * 0.85, "the fullest look and the recent list: %d bytes of mesh buffers, under 4.5 MB less the renderer's overhead" % resident)
-	assert_true(core + every > resident + 600000, "less than every part resident (%d)" % (core + every))
+	# P51: the crop and the short beard ship as their skin (the game stacks the shells at load time), so every part
+	# together is about 0.5 MB less than at W29 and the margin is smaller
+	assert_true(core + every > resident + 300000, "less than every part resident (%d against %d)" % [core + every, resident])
 	print("    test_giant_parts: mesh buffers %.2f MB the body, %.2f the default look, %.2f the fullest, %.2f with the recent list at its worst, %.2f with every part (M10)" % [
 		core / 1048576.0, default_bytes / 1048576.0, fullest / 1048576.0, resident / 1048576.0, (core + every) / 1048576.0])
 	m.free()

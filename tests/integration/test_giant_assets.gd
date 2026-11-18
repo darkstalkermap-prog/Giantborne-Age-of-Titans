@@ -172,7 +172,8 @@ func test_the_index_the_gltf_and_the_design_array_agree() -> void:
 	assert_eq(on_disk.size(), gltf_meshes.size() - 4, "a file a part under assets/giant/parts, no other")
 	for f: String in on_disk:
 		assert_true(files.has("assets/giant/parts/" + f), "the manifest lists parts/%s" % f)
-	assert_eq(files.size(), 13 + on_disk.size(), "the manifest's files: M10's 13 and the parts")
+	# P51 added four: tex/skin_lut.png, tex/curvature.png, cloth_metal.png and shell_strands.png
+	assert_eq(files.size(), 17 + on_disk.size(), "the manifest's files: M10's 13, P51's four and the parts")
 	for g: String in m.index.garments:
 		for id: String in m.index.garments[g]:
 			assert_true(m.index.meshes.has(id), "garment %s's mesh %s is indexed" % [g, id])
