@@ -2261,6 +2261,17 @@ frames, no "Click the game to control the camera" in any, no beat refused, 0 err
 `test_loading_warm_up` 0.4 s, `test_skinned_rig_render` unchanged in work (three more asserts on its one probe
 run); gate `test_capture_m10_tour` 13.4 s, `test_skinned_rig_stages` one more assert a stage.
 
+**The lane's final check** (`tools/check.sh --build --slow --giant --require --strict-times` on its last code
+commit, loads 1.2-3.1): passed - every scene rebuilt, the world's seams, the giant pipeline's tests and
+`--verify --skip-bake` (13 files bit-exact or within the bake's tolerance: the two normal maps one texel off by
+1/255, as at the merge), the estimated share 5.92 of 7.60 MiB; 295 suites, 52,573 checks, 0 failures, 0 warnings;
+**default 64.9 s, slow 350.7 s** (one run each: neither tier was over its budget); the 120 s soak 0 errors. The
+gate suites this lane touches, by name: `test_capture_m10_tour` 13 checks (12.9 s), `test_skinned_rig_stages` 46
+(25.6 s), `test_giant_determinism` 52 (171.0 s: the seeded soak and the Valley bot print the same result with and
+without the skin, as before the loading screen's warm-up, which does not run headless), 0 failures. The checks'
+own tests: `test_memory_guard.mjs` 21, `test_creator_check.mjs` 38, `test_world_check.mjs` 29,
+`test_stream_check.mjs` 23, `test_audio_check.mjs` 26 checks, 0 failures.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
