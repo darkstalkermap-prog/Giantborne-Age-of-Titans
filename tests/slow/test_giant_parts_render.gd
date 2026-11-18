@@ -18,6 +18,10 @@ const PREFIX := "GIANT_PARTS "
 ## A part draws when at least this many of the 76,800 pixels change (the smallest, the pauldron, changes
 ## about 200).
 const MIN_PART_PX := 60
+## P51: a shell style is the skin it grows on, a little lifted: the crop covers the top of the head, about 30
+## pixels of this full-figure frame (its cards stood off the head before).
+const MIN_SHELL_PX := 15
+const SHELLS := ["Hair_crop", "Beard_short"]
 const MESH_BUDGET_MB := 4.5
 
 
@@ -52,7 +56,8 @@ func test_every_part_draws_and_the_proxy_casts_the_shadow() -> void:
 	var parts: Dictionary = r.parts
 	assert_eq(parts.size(), 21, "every part was shown")
 	for id: String in parts:
-		assert_true(int(parts[id]) >= MIN_PART_PX, "%s loads, binds and draws (%d pixels)" % [id, int(parts[id])])
+		assert_true(int(parts[id]) >= (MIN_SHELL_PX if id in SHELLS else MIN_PART_PX), "%s loads, binds and draws (%d pixels)" % [
+			id, int(parts[id])])
 	assert_true(int(r.chain.hair_and_beard) >= 20, "the cards follow their chains (%d pixels move)" % int(r.chain.hair_and_beard))
 	assert_true(int(r.chain.cape) >= 100, "the cape follows its chains (%d pixels move)" % int(r.chain.cape))
 	var sh: Dictionary = r.shadow

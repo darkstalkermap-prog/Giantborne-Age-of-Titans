@@ -418,7 +418,11 @@ def card_coordinates(ob):
 
 def braid_vertices(mesh_id, n):
     """A mask of a style's braid vertices: giant_hair.build_styles appends each braid's lobes (three
-    points a lobe, four lobes a step) and its core card last."""
+    points a lobe, four lobes a step) and its core card last. Since P51 build_styles records the mask itself
+    (its braids are tubes and beads: giant_hair.BRAID_MASKS)."""
+    known = gh.BRAID_MASKS.get(mesh_id)
+    if known is not None and len(known) == n:
+        return np.asarray(known, bool)
     mask = np.zeros(n, bool)
     count = 0
     for br in gh.STYLES[mesh_id].get("braids", ()):
@@ -525,6 +529,18 @@ def run(out_dir):
     head_cy = bd.landmarks["head_cy"] * S
     for mesh_id, (ob, cards) in hair.items():
         cat = "hair" if mesh_id.startswith("Hair_") else "beard"
+        if ob is None:
+            # P51: a shell style - the skin under its mask, lifted a little; the game stacks its layers
+            sh = gh.SHELLS[mesh_id]
+            arrays, ids = gh.shell_cap(A, np.asarray(bd.masks[sh["mask"]])[:n], S, sh["threshold"], sh["lift"])
+            arrays["vbuild"] = vbuild[ids]
+            make_object(mesh_id, arrays, coll, rig, "giant_hair",
+                        np.full(len(ids), split.REGION_ID["scalp" if cat == "hair" else "face"]))
+            info["meshes"][mesh_id] = {"category": cat, "layer": 3, "dye": "none", "cards": 0,
+                                       "tris": triangles(arrays), "verts": len(arrays["V"]),
+                                       "shell": {"mask": sh["channel"], "height_m": r6(sh["height"] * S)},
+                                       "chains": [], "root_verts": 0, "roots_on_head": 0, "braid_verts": 0}
+            continue
         # P48: the cards' skin along their length (the root on head), and the build weights of the skin they
         # grew from (a whole card takes its root's)
         CV, t, arc = card_coordinates(ob)

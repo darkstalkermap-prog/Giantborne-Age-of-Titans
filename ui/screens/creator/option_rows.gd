@@ -114,6 +114,8 @@ static func choices(spec: Dictionary, ancestry_id: String) -> Array:
 		var c := {"id": str(o.id), "name": str(o.get("name", o.id)), "locked": bool(o.locked), "reason": str(o.reason)}
 		if str(o.get("color", "")) != "" and Color.html_is_valid(str(o.color)):
 			c["color"] = Color.html(str(o.color))
+			if str(spec.get("set", "")) == "skin":
+				c["color"] = GiantLook.drawn_tone(o)   # P51: the colour the skin draws at, not the record's
 		out.append(c)
 	return out
 

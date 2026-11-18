@@ -132,8 +132,13 @@ func test_the_real_models_materials_get_their_textures() -> void:
 			n += 1
 		match str(entry.category):
 			"hair", "beard":
-				assert_eq((mat.get_shader_parameter("hair_atlas") as Texture).resource_path, str(textures.get(entry.atlas)),
-					"%s: the atlas the index names" % id)
+				if entry.has("shell"):
+					# P51: a shell style reads the shells' strands and the skin's masks, not the card atlas
+					assert_eq((mat.get_shader_parameter("strand_tex") as Texture).resource_path, str(textures.shell_strands),
+						"%s: the shells' strands" % id)
+				else:
+					assert_eq((mat.get_shader_parameter("hair_atlas") as Texture).resource_path, str(textures.get(entry.atlas)),
+						"%s: the atlas the index names" % id)
 			"garment":
 				assert_eq((mat.get_shader_parameter("detail_tex") as Texture).resource_path,
 					str(textures.get("detail_" + str(entry.detail))), "%s: its %s map" % [id, entry.detail])
