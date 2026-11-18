@@ -8,6 +8,9 @@ extends ShrineTab
 ##   * Keep this look -> player.appearance.set_record(record): the live giant changes, Events.appearance_changed
 ##     fires and GameSession re-takes and writes the shrine's checkpoint (the F15 list).
 ##   * Cancel -> the look is restored in memory (PlayerAppearance.restore_record), without a write or an event.
+##   * A look made by a later build of the game (Appearance.is_future) is kept untouched: the creator starts
+##     from the default look shown for it, a kept change stores this build's record in its place, and Keep
+##     without a change is Cancel (M10 gate, LB-1).
 ## The tab's button reads "Appearance (new)" until the tab is first opened in a save: opening it sets the flag
 ## appearance.tab_seen (which also dismisses the one-time tutorial.appearance_shrines). The tab's own title
 ## stays "Appearance" (ShrineScreen.tab() and the tests find it by that).
@@ -69,6 +72,8 @@ func refresh() -> void:
 	if _summary == null or p == null or p.appearance == null:
 		return
 	_summary.text = "\n".join(summary())
+	if later_build():
+		_summary.text += "\n\n" + Appearance.NOTE_FUTURE
 	_note_seen()
 	_update_button()
 
@@ -79,6 +84,13 @@ func summary() -> PackedStringArray:
 	if p == null or p.appearance == null:
 		return PackedStringArray()
 	return Appearance.summary_lines(p.appearance.record(), p.appearance.ancestry())
+
+
+## True when the giant's look was made by a later build of the game: the summary describes the default look
+## that is shown for it and says so (Appearance.NOTE_FUTURE); a change kept in the creator replaces it.
+func later_build() -> bool:
+	var p := player()
+	return p != null and p.appearance != null and Appearance.is_future(p.appearance.record())
 
 
 ## True once the tab has been opened in this save (the flag appearance.tab_seen).

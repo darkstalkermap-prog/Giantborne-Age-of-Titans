@@ -8,7 +8,9 @@ extends UiScreen
 ##       {"appearance": record, "begin": true} from the button's own pressed handler, and the title starts the
 ##       game in that same call stack (browsers grant the pointer lock only inside the click);
 ##   open("creator", {"context": "shrine", "player": GiantPlayer, "shrine": Shrine, "appearance": record})
-##       the shrine's Appearance tab; "Keep this look" closes with {"appearance": record}.
+##       the shrine's Appearance tab; "Keep this look" closes with {"appearance": record}. A record made by a
+##       later build of the game is not edited: the screen starts from the default look (what the giant shows
+##       for it) and only a kept change replaces it (`later_build`).
 ## Back / Cancel, Esc and pad B close with {"cancelled": true} at once while the record equals the one the
 ## screen opened with; otherwise they ask "Discard your changes?" (Keep editing, where the focus starts, or
 ## Discard). It writes nothing itself: the title and the tab do what the result says.
@@ -69,6 +71,11 @@ var ancestry := ""
 ## The record shown now, and the one the screen opened with (Back asks when they differ).
 var record: Dictionary = {}
 var opened_with: Dictionary = {}
+## True when the giant's own record was made by a later build of the game (Appearance.is_future): the screen
+## shows and edits the default look instead, Keep with a change stores this build's record in its place, and
+## Keep without one, like Cancel, leaves the later build's record as it was (plan M10 §2.2: kept untouched;
+## Appearance.NOTE_FUTURE: "the default look is shown until you change it").
+var later_build := false
 ## The records before each change, the newest last (Undo).
 var history: Array = []
 var preview: GiantPreview
@@ -115,6 +122,11 @@ func _ready() -> void:
 	var given: Variant = args.get("appearance")
 	var base: Dictionary = given if typeof(given) == TYPE_DICTIONARY and not (given as Dictionary).is_empty() \
 		else (player.appearance.record() if _has_appearance() else Appearance.default_record())
+	# A later build's record (v above this build's) is never edited: the screen starts from the default look,
+	# which is what the giant shows for it, and only a kept change replaces it (M10 gate, LB-1).
+	later_build = Appearance.is_future(base)
+	if later_build:
+		base = Appearance.default_record()
 	record = Appearance.sanitize(base, ancestry).record
 	opened_with = record.duplicate(true)
 	_build()
@@ -216,6 +228,8 @@ func is_changed() -> bool:
 ## Puts `new_record` on (sanitized for the line), entering the old one into the undo history; the changes of
 ## one slider in a row (`merge_key`) are one step. False when nothing changed.
 func set_record(new_record: Dictionary, merge_key := "") -> bool:
+	if Appearance.is_future(new_record):
+		return false   # a later build's record is never shown or edited here
 	var r: Dictionary = Appearance.sanitize(new_record, ancestry).record
 	if OptionRows.same(r, record):
 		return false
@@ -276,9 +290,13 @@ func rng() -> RandomNumberGenerator:
 
 
 ## Begin (New Game) or Keep this look (a shrine): closes with the record. The title starts the game in this
-## call stack, from the button's own pressed handler.
+## call stack, from the button's own pressed handler. At a shrine, Keep without a change on a later build's
+## look closes as Cancel does (`later_build`).
 func begin() -> void:
 	if question_open():
+		return
+	if later_build and context == "shrine" and not is_changed():
+		close({"cancelled": true})   # nothing was changed: the later build's record stays as it is
 		return
 	var out: Dictionary = Appearance.sanitize(record, ancestry).record
 	if context == "shrine":
