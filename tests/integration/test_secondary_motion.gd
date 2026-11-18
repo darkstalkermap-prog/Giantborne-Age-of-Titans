@@ -88,3 +88,64 @@ func test_teleports_and_growth_reset_the_springs() -> void:
 	for b: String in angles:
 		worst = maxf(worst, float(angles[b][0]))
 	assert_true(worst < 45.0, "after the reset no chain is thrown out (worst %.1f deg)" % worst)
+
+
+## The W30 merge: P51's hair geometry on P50's chains. The braids are tubes and beads (UV2.x 1 and 2) that only
+## the springs move (the hair shader's sway skips them), so every braid's vertices must hang on its chain's
+## bones; the shell styles (the crop, the short beard) are cut from the skin and stacked at load time, and hang on
+## the head alone, so they need no chain.
+static func _chain_share(mi: MeshInstance3D, bones: Dictionary, kind: float) -> Vector2:
+	var arrays := mi.mesh.surface_get_arrays(0)
+	var uv2: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV2] if arrays[Mesh.ARRAY_TEX_UV2] != null else PackedVector2Array()
+	var b: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+	var w: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+	var n := (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+	var per := w.size() / n
+	var sk := mi.get_node(mi.skeleton) as Skeleton3D
+	var on_chain := 0.0
+	var count := 0
+	for v in n:
+		if kind >= 0.0 and (uv2.is_empty() or absf(uv2[v].x - kind) > 0.25):
+			continue
+		count += 1
+		for k in per:
+			var bind := b[v * per + k]
+			var name := str(mi.skin.get_bind_name(bind))
+			if name.is_empty():
+				name = sk.get_bone_name(mi.skin.get_bind_bone(bind))
+			if bones.has(name):
+				on_chain += w[v * per + k]
+	return Vector2(on_chain / maxf(count, 1), count)
+
+
+static func _bones_of(index: Dictionary, chain_ids: Array) -> Dictionary:
+	var out := {}
+	for c: String in chain_ids:
+		for bn: Variant in (index.chains[c] as Dictionary).bones:
+			out[str(bn)] = true
+	return out
+
+
+func test_the_braids_hang_on_their_chains_and_the_shells_on_the_head() -> void:
+	var p := await _giant(LONG_LOOK)
+	var model := _rig(p).model()
+	var index: Dictionary = model.index
+	var sides := _bones_of(index, ["hair_l", "hair_r"])
+	for kind in [1.0, 2.0]:
+		var s := _chain_share(model.mesh("Hair_long_braided"), sides, kind)
+		assert_true(s.y > 0, "the braided hair has its %s" % ("tubes" if kind == 1.0 else "beads"))
+		assert_true(s.x > 0.4, "the braids' %s hang on the side chains (share %.2f)" % ["tubes" if kind == 1.0 else "beads", s.x])
+	var beard := _chain_share(model.mesh("Beard_braided"), _bones_of(index, ["beard"]), 1.0)
+	assert_true(beard.y > 0 and beard.x > 0.5, "the braided beard's tube hangs on the beard chain (share %.2f)" % beard.x)
+	var all_chains := _bones_of(index, (index.chains as Dictionary).keys())
+	var resets := _rig(p).secondary().resets
+	_wear(p, SHORT_LOOK)
+	await step_ticks(2)
+	for id in ["Hair_crop", "Beard_short"]:
+		var mi := model.mesh(id)
+		assert_true(mi != null and mi.visible and mi.mesh != null and mi.mesh.has_meta(GiantLook.META_SHELL_STACK),
+			"%s is drawn as stacked shells" % id)
+		if mi != null and mi.mesh != null:
+			assert_near(_chain_share(mi, all_chains, -1.0).x, 0.0, 1e-4, "%s hangs on no chain bone" % id)
+	assert_eq(Array(_rig(p).secondary().chains), [], "the shell look runs no chain")
+	assert_true(_rig(p).secondary().resets > resets, "and the change to it reset the springs")
