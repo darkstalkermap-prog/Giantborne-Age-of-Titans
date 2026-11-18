@@ -6,7 +6,8 @@ extends TestSuite
 ##   * no card of the full and the forked beard is wider at its root than BEARD_ASPECT of its own length, and
 ##     each narrows to a point (the cheeks' cards were squares: steps along the beard's sides); the short and
 ##     the braided beard's cards stay as they were (as narrow locks they showed gaps);
-##   * the manifest counts the cards.
+##   * the manifest counts the cards;
+##   * P51: the long styles carry loose strands (thin four-point strips), the crop is a shell style.
 
 const MODEL := "res://scenes/player/giant_model.tscn"
 const MANIFEST := "res://assets/giant/manifest.json"
@@ -15,6 +16,10 @@ const FRINGE := {"Hair_long_back": 110, "Hair_long_braided": 90, "Hair_warrior_t
 ## A fringe card's root is at most this wide (m at stage 1; the fringe's cards measure 0.016 to 0.024 m, the
 ## narrowest card of the crop and a braid's lobes 0.031 m, the long layers' cards 0.039 m and more).
 const FRINGE_MAX_WIDTH_M := 0.026
+## P51's loose strands: four points (eight vertices) and at most this wide at the root (giant_hair.LOOSE: 6 mm
+## human scale, 0.7-1.3 of it, at stage 1 about 0.012 m).
+const LOOSE_VERTS := 8
+const LOOSE_MAX_WIDTH_M := 0.015
 const BEARDS := ["Beard_full", "Beard_forked"]
 const BEARD_ASPECT := 0.5
 const BEARD_TIP_SHARE := 0.2
@@ -62,6 +67,11 @@ func _cards(mi: MeshInstance3D) -> Array:
 	return out
 
 
+## A card as narrow as the fringe's that is neither a fringe card nor a loose strand.
+static func _other_narrow(c: Dictionary) -> bool:
+	return int(c.verts) > 6 and int(c.verts) != LOOSE_VERTS and float(c.root_w) <= FRINGE_MAX_WIDTH_M
+
+
 func test_the_long_styles_carry_the_fringe_and_the_beards_cards_are_locks() -> void:
 	if not ResourceLoader.exists(MODEL):
 		fail("no giant_model.tscn")
@@ -75,13 +85,22 @@ func test_the_long_styles_carry_the_fringe_and_the_beards_cards_are_locks() -> v
 		if mi == null:
 			continue
 		var cards := _cards(mi)
-		assert_eq(cards.size(), int(manifest.export.meshes[id].cards), "%s: the manifest counts its cards" % id)
+		var braided := id == "Hair_long_braided"
+		if braided:
+			# P51: a braid is one card in the manifest and three pieces in the mesh (its tube and two bead rings)
+			assert_true(absi(cards.size() - int(manifest.export.meshes[id].cards)) <= 6, "%s: the manifest counts its cards (%d, %d)" % [
+				id, cards.size(), int(manifest.export.meshes[id].cards)])
+		else:
+			assert_eq(cards.size(), int(manifest.export.meshes[id].cards), "%s: the manifest counts its cards" % id)
 		var fringe := cards.filter(func(c: Dictionary) -> bool: return int(c.verts) == 6 and float(c.root_w) <= FRINGE_MAX_WIDTH_M)
 		assert_eq(fringe.size(), int(FRINGE[id]), "%s: the hairline's fringe of narrow three-point cards" % id)
-		var others := cards.filter(func(c: Dictionary) -> bool: return int(c.verts) > 6 and float(c.root_w) <= FRINGE_MAX_WIDTH_M)
+		# P51: the loose strands are thin four-point strips (LOOSE_VERTS) off the style's volume
+		var loose := cards.filter(func(c: Dictionary) -> bool: return int(c.verts) == LOOSE_VERTS and float(c.root_w) <= LOOSE_MAX_WIDTH_M)
+		assert_true(loose.size() >= 10, "%s: loose strands (%d)" % [id, loose.size()])
+		var others := cards.filter(func(c: Dictionary) -> bool: return _other_narrow(c))
 		assert_true(others.size() * 20 <= cards.size(), "%s: hardly another card is that narrow (%d of %d)" % [id, others.size(), cards.size()])
-	assert_true(m.ensure_part("Hair_crop") != null and _cards(m.ensure_part("Hair_crop")).filter(
-		func(c: Dictionary) -> bool: return float(c.root_w) <= FRINGE_MAX_WIDTH_M).is_empty(), "the crop has no fringe")
+	var crop: Dictionary = m.index.meshes.Hair_crop
+	assert_true(crop.has("shell"), "the crop is a shell style, no cards (P51)")
 	for id: String in BEARDS:
 		var mi := m.ensure_part(id)
 		assert_true(mi != null, "%s is a mesh of the model" % id)

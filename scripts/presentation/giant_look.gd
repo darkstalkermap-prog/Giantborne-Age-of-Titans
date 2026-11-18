@@ -140,6 +140,12 @@ const SHELL_COMB := {"scalp": Vector3(0.0, -0.3, -0.45), "beard": Vector3(0.0, -
 const SHELL_STRANDS := "res://assets/giant/shell_strands.png"
 ## The share of the beard's tint the skin keeps under a shell beard.
 const SHELL_SKIN_TINT := 0.7
+## The skin shader's tone_scaled defaults (tone_shoulder, tone_chroma, tone_resat, TONE_RESAT_MAX), mirrored for
+## drawn_tone.
+const TONE_SHOULDER := 0.4
+const TONE_CHROMA := 1.0
+const TONE_RESAT := 0.8
+const TONE_RESAT_MAX := 2.38
 const META_SHELL_STACK := "giant_shell_stack"
 ## The default tone's lit chest in the creator's light (P51, measured by tests/slow/test_skin_tone_render.gd: the
 ## approved studio render's (198, 170, 157) within a few levels): drawn_tone scales it by a tone over the bake tone.
@@ -803,8 +809,21 @@ static func drawn_tone(option: Variant) -> Color:
 	var a := DRAWN_DEFAULT.srgb_to_linear()
 	var t := tone.srgb_to_linear()
 	var b := BAKE_TONE.srgb_to_linear()
-	var lin := Color(a.r * t.r / maxf(b.r, 0.001), a.g * t.g / maxf(b.g, 0.001), a.b * t.b / maxf(b.b, 0.001))
-	return Color(clampf(lin.r, 0.0, 1.0), clampf(lin.g, 0.0, 1.0), clampf(lin.b, 0.0, 1.0)).linear_to_srgb()
+	var r := Vector3(t.r / maxf(b.r, 0.01), t.g / maxf(b.g, 0.01), t.b / maxf(b.b, 0.01))
+	var out := tone_scaled(Vector3(a.r, a.g, a.b), r)
+	return Color(clampf(out.x, 0.0, 1.0), clampf(out.y, 0.0, 1.0), clampf(out.z, 0.0, 1.0)).linear_to_srgb()
+
+
+## The skin shader's tone_scaled (P51) with its defaults: a tone's ratio to the bake tone on a linear albedo.
+static func tone_scaled(albedo: Vector3, ratio: Vector3) -> Vector3:
+	var w := Vector3(0.2126, 0.7152, 0.0722)
+	var lr := maxf(ratio.dot(w), 1e-4)
+	var hue := Vector3.ONE.lerp(ratio / lr, TONE_CHROMA)
+	var lr2 := 1.0 + (lr - 1.0) * TONE_SHOULDER if lr > 1.0 else lr
+	var la := albedo.dot(w)
+	var sat := lerpf(1.0, TONE_RESAT_MAX, clampf(1.0 - lr, 0.0, 1.0) * TONE_RESAT)
+	var a := (Vector3.ONE * la + (albedo - Vector3.ONE * la) * sat).max(Vector3.ZERO)
+	return a * lr2 * hue
 
 
 ## `look` with every key DEFAULT_LOOK has (its own values kept), a copy.

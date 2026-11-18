@@ -55,6 +55,10 @@ uniform int hidden_regions = 0;
 uniform float hide_shrink = 0.03;
 uniform int light_model = 3;
 uniform float curvature_scale = 1.0;
+uniform float tone_shoulder : hint_range(0.0, 1.0) = 0.4;
+uniform float tone_chroma : hint_range(0.0, 1.5) = 1.0;
+uniform float tone_resat : hint_range(0.0, 1.0) = 0.8;
+const float TONE_RESAT_MAX = 2.38;   // 1 / SKIN_GRADE's saturation (0.42): the bake's own saturation back
 uniform float sss_strength : hint_range(0.0, 1.0) = 1.0;
 // How far the light wraps round, per channel (red scatters furthest). The M10 gate (OR-1) eased the tint from
 // (0.42, 0.20, 0.13): a surface 90 degrees from a white light took 0.30 / 0.17 / 0.12 of it, a red band along
@@ -109,11 +113,26 @@ float scar_coverage(float layer, vec4 on, vec2 uv, out vec2 slope) {
 	return clamp(dot(texture(design_tex, vec3(uv, layer)), on), 0.0, 1.0);
 }
 
+// A tone on the baked albedo (P51): the albedo is graded to the approved renders' pale default (tools/giant/kit/
+// pack.py SKIN_GRADE: less saturated, lighter), so the tones' ratios to the default, made for the M10 bake, would
+// draw the pale tones near white and the deep ones grey. The ratio's lightness is eased above the default
+// (tone_shoulder), its hue kept at tone_chroma, and a darker tone takes back the albedo's saturation the grade took
+// (tone_resat x its darkness). The default tone (ratio 1) draws the albedo exactly. GiantLook.drawn_tone mirrors it.
+vec3 tone_scaled(vec3 albedo, vec3 ratio) {
+	vec3 w = vec3(0.2126, 0.7152, 0.0722);
+	float lr = max(dot(ratio, w), 1e-4);
+	vec3 hue = mix(vec3(1.0), ratio / lr, tone_chroma);
+	float lr2 = lr > 1.0 ? 1.0 + (lr - 1.0) * tone_shoulder : lr;
+	float la = dot(albedo, w);
+	vec3 a = la + (albedo - la) * mix(1.0, TONE_RESAT_MAX, clamp(1.0 - lr, 0.0, 1.0) * tone_resat);
+	return max(a, vec3(0.0)) * lr2 * hue;
+}
+
 void fragment() {
 	if (fp_shoulders_hidden(v_fp_pos, v_fp_on, FRAGCOORD.xy)) {
 		discard;   // first person: the limbs fade out towards the shoulders (the include's header)
 	}
-	vec3 base = texture(albedo_tex, UV).rgb * (skin_tone / max(bake_tone, vec3(0.01)));
+	vec3 base = tone_scaled(texture(albedo_tex, UV).rgb, skin_tone / max(bake_tone, vec3(0.01)));
 	vec4 orm = texture(orm_tex, UV);
 	vec4 m = texture(mask_tex, UV);
 	// the hair's colours on the skin: stubble and the skin under the beard (the beard's), the scalp under

@@ -56,9 +56,9 @@ SKIN_GRADE = {"sat": 0.42, "sat_lips": 0.75, "gain": (1.2, 1.2, 1.2)}
 CURV_MAX_PER_M = 260.0
 CURV_BLUR = 5.0
 CURV_SIZE = 256
-# The profile's distances are divided by this: the giant's skin scatters as a human's would at half his
+# The profile's distances are divided by this: the giant's skin scatters as a human's would at two sevenths of his
 # size (a look, not physics: at the true scale the band along the terminator is too thin to see).
-SCATTER_SCALE = 2.0
+SCATTER_SCALE = 3.5
 CURV_STEP = 3
 # The skin's diffusion profile (d'Eon and Luebke's six Gaussians, variances in mm^2, weights R G B).
 SKIN_PROFILE = (

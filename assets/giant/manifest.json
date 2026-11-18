@@ -1625,28 +1625,28 @@
  "files": {
   "assets/giant/cloth_fur.png": {
    "cycles": false,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "91fe634bd67466f71af61f39940ef1c34596e5273e19dc8861d93a5a6300d1b0",
    "size": 65250,
    "step": "pack"
   },
   "assets/giant/cloth_leather.png": {
    "cycles": false,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "530ac99f18a01786f4e407a8adc695cedb410f770e18f115eda8fb3b5a3cc65f",
    "size": 85583,
    "step": "pack"
   },
   "assets/giant/cloth_metal.png": {
    "cycles": false,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "82c9f8158c9a56838efa749e4082085938965a45a57e1194e2dbaa2c202c44fd",
    "size": 41052,
    "step": "pack"
   },
   "assets/giant/cloth_weave.png": {
    "cycles": false,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "1495f7715d5ee1d9c3d2332f33807926c4906e73838ffe8133d619eda5ff8443",
    "size": 60495,
    "step": "pack"
@@ -1674,7 +1674,7 @@
   },
   "assets/giant/hair_atlas.png": {
    "cycles": false,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "6f8abe0fab8a6184c3d3357d5aa3b43c6aeefdc0b7558a1fa807347eb9a12fb8",
    "size": 142628,
    "step": "pack"
@@ -1828,63 +1828,63 @@
   },
   "assets/giant/shell_strands.png": {
    "cycles": false,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "898631a5f68595b1391d2b5c4b1ad595030c9502502987dae077e04acd7988f3",
    "size": 29558,
    "step": "pack"
   },
   "assets/giant/tex/albedo.png": {
    "cycles": true,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "f1378d00ea6e423cd90299e41b8b440ce35a0f198e95e6131ee995141ae97b73",
    "size": 175598,
    "step": "pack"
   },
   "assets/giant/tex/curvature.png": {
    "cycles": true,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "f5fc7a0bf43352f327a1bb090584aff35a5302554c4a09ccb70a091e4c7d8f1c",
    "size": 22071,
    "step": "pack"
   },
   "assets/giant/tex/masks.png": {
    "cycles": true,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "2e883e3b363db86f6ce709b97bfc1ef4c0f43399ee4c188ce312f4ec1b07c8a7",
    "size": 33575,
    "step": "pack"
   },
   "assets/giant/tex/normal.png": {
    "cycles": true,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "49583e20a787f7ef310911754b3e1a9214d0a6dc679654c18348c8e8f122519e",
    "size": 253617,
    "step": "pack"
   },
   "assets/giant/tex/orm.png": {
    "cycles": true,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "99d36107a3e62451623d59aa287f8e72efd257301e6a4b3f71fd0e32b79102a6",
    "size": 298964,
    "step": "pack"
   },
   "assets/giant/tex/skin_lut.png": {
    "cycles": true,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
-   "sha256": "4a0568a7a65638371944bbf4d36eff756b4033191a2f8e7f9655570cb50e40a0",
-   "size": 959,
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
+   "sha256": "006d5d6bebf38aabe8524e46db2553f432abc3b9aee40ae159bb816458591e44",
+   "size": 1290,
    "step": "pack"
   },
   "assets/giant/tex_hi/normal.png": {
    "cycles": true,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "681a3eabace4398718701b5f63e0cd785822185ebce87495c67a7a464e63c063",
    "size": 1165631,
    "step": "pack"
   },
   "assets/giant/tex_hi/orm.png": {
    "cycles": true,
-   "inputs": "bb39156a25a237f0647dca452998b6c15d4299284ca7a8897d8a2873d1645050",
+   "inputs": "1e3a4fe81256ead190df1f456e2f4d07d0e43be58de3ed5f36c5f7a3b4f2add2",
    "sha256": "4e8bc28413a49d987786846123ac7d8bfa7dff3024f15425fa3ed0b44396077d",
    "size": 1101627,
    "step": "pack"
@@ -2978,7 +2978,7 @@
    "giant_skin.py": "58bca541ac7ccc8ed87c477526a1650df76a6289c5d95d15e8ce6f9d30753086",
    "mh_data.py": "d034ac15a2f50d19d93e658eb762ba4659e3a9d1ca98c7d6502a299b0d8a5160",
    "node_util.py": "5accffc8870441e1dd7733a0a6bb1fa80dbe3505dcabb1cab5778dc65d4e9e20",
-   "pack.py": "802d3c19a8c06d1184d146db59d98c519dcd115309c6a3b5dd9ac9c1470c4868",
+   "pack.py": "590e4c839ecf30007d42fe2dfb2aa0fc5b9c0a677bbe5c37d84ac9f20ec3db99",
    "skin_textures.py": "92716ea0794007867a8ecb930159f25fac5794a0c5e95fe5518fea0f18e8e3f2",
    "split.py": "7072f3aa4ada6831f3080595e8aa5e66a42ac8d39d600cdbc7a2c6da78a8f1ce"
   },
