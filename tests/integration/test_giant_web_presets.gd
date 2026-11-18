@@ -171,3 +171,24 @@ func test_the_ui_probe_is_made_only_when_asked_and_judges_stalls() -> void:
 	var js := FileAccess.get_file_as_string(CREATOR_CHECK)
 	assert_true(js.contains("export const STALL_RATIO = %d;" % int(UiProbe.STALL_RATIO))
 		and js.contains("const STALL_FLOOR_MS = %d;" % int(UiProbe.STALL_FLOOR_MS)), "creator_check.mjs judges by the same rule")
+
+
+## M10 gate (LD-6): the level tour's "giant alone" reading is the difference of two medians, each of
+## DRAW_SAMPLE_FRAMES frames of the paused level, and says when a reading moved while it was sampled. Before,
+## it was one live frame with the giant against one live frame four frames later without him, and the scene's
+## own count moved by about 4 in between (15 calls for 11 meshes in one run, 5 for 9 in another).
+func test_the_level_tours_giant_draw_reading_is_two_medians_of_a_still_scene() -> void:
+	var still := UiProbe.giant_draw_result([111, 111, 111, 111, 111], [99, 99, 99, 99, 99], [120000, 120000, 120000, 120000, 120000],
+		[99422, 99422, 99422, 99422, 99422], "look", ["Body", "Eyes"], 12)
+	assert_eq([int(still.giant_draw_calls), int(still.draw_calls_with), int(still.draw_calls_without), int(still.giant_primitives),
+		bool(still.still), int(still.samples), int(still.giant_surfaces)], [12, 111, 99, 20578, true, 5, 12], "a still scene: the giant's own count")
+	# one frame of either reading off (a toast's last frame, an actor's LOD step): the median holds, "still" says it moved
+	var moved := UiProbe.giant_draw_result([111, 115, 111, 111, 111], [99, 99, 103, 99, 99], [5, 5, 5, 5, 5], [1, 1, 1, 1, 1], "look", [], 12)
+	assert_eq([int(moved.giant_draw_calls), bool(moved.still), int(moved.spread_with), int(moved.spread_without)], [12, false, 4, 4],
+		"a moving reading is reported as one, and one odd frame does not move the figure")
+	assert_true(UiProbe.DRAW_SAMPLE_FRAMES >= 5 and UiProbe.DRAW_SETTLE_FRAMES >= 4, "enough frames to settle and to sample")
+	var src := FileAccess.get_file_as_string("res://scripts/debug/ui_probe.gd")
+	var tour := src.substr(src.find("func _tour_level()"), 1600)
+	assert_true(tour.contains("get_tree().paused = true") and tour.contains("get_tree().paused = bool(_giant_draw.was_paused)"),
+		"the tour reads both counts with the tree paused and gives the pause back")
+

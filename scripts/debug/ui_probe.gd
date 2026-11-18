@@ -21,6 +21,9 @@ extends Node
 ##       "level" (the loading screen lets go of a level; "load_worst_ms" is the longest frame behind
 ##       it, reported apart: a load is not a stall), "shrine_creator" ("Change your look..." at a
 ##       shrine).
+##       M10 gate (LD-2): "first" lists the FIRST_FRAMES intervals and "first_draw" the part of each the
+##       rendering server spent drawing (frame_pre_draw to frame_post_draw: a shader compiled on first use is
+##       there; the rest is the frame's scripts and physics), "median_draw_ms" the same for the steady frames.
 ##   UI_PROBE {"t":"skin", ...}   with a tour, SkinnedRig's counters and the monitors' texture and
 ##       mesh memory, draw calls and primitives when a mark's frames are done.
 ##   UI_PROBE {"t":"bench", "mark", "skin_ms", ...}   with --ui-probe-bench, when a mark's frames are
@@ -42,10 +45,15 @@ extends Node
 ##                         category), Ctrl+Z (undo), R, Ctrl+Enter (Begin) -> the level -> quits
 ##   --ui-probe=level      any level (--level=, --mode=): when the level's mark is done it prints the
 ##                         giant's own draw calls and primitives (UI_PROBE {"t":"giant_draw"}: the frame's
-##                         counts with the giant's models shown and hidden) and quits
+##                         counts with the giant's models shown and hidden, each the median of five frames
+##                         of the paused level, "still" when neither moved, and the shown meshes' surfaces)
+##                         and quits
 ##   --ui-probe=shrine     a level entered with --continue at a shrine: E (rest) -> the shrine screen:
 ##                         Up to the tab buttons, Right until the Appearance tab has the focus, Enter,
 ##                         Down to "Change your look...", Enter -> the creator -> quits
+##   --ui-probe=continue   (M10 gate, LD-2) the title with a saved game (--save-dir=): Enter (Continue) -> the
+##                         level -> quits: a player's way into a saved world, through the title's warm-up and
+##                         the loading screen's
 ## --ui-probe-shots=<dir> saves a PNG of the window at each mark's end (tours only).
 
 const TAG := "UI_PROBE"
@@ -61,10 +69,14 @@ const STALL_FLOOR_MS := 25.0
 ## ui/screens/shrine/appearance_tab.gd's TITLE and CHANGE (the tab has no class name).
 const APPEARANCE_TAB := "Appearance"
 const CHANGE_LOOK := "Change your look..."
-const TOURS := ["", "new_game", "shrine", "level"]
+const TOURS := ["", "new_game", "shrine", "level", "continue"]
 const BENCH_BATCHES := 5
 const BENCH_RUNS := 200
 const TOUR_STEP_LIMIT_S := 240.0
+## The level tour's draw-call readings (M10 gate, LD-6): the frames let pass after the tree is paused or the
+## giant hidden, and the frames each reading takes.
+const DRAW_SETTLE_FRAMES := 6
+const DRAW_SAMPLE_FRAMES := 5
 
 var tour := ""
 var shots_dir := ""
@@ -86,6 +98,9 @@ var _step_started_ms := 0
 var _wait_frames := 0
 var _keys: Array = []
 var _giant_draw := {}
+## The rendering server's draw time: when the frame's draw began, and the last finished draw (ms).
+var _pre_draw_usec := 0
+var _last_draw_ms := 0.0
 
 
 ## The probe the command line asks for (null without --ui-probe).
@@ -137,6 +152,23 @@ func _ready() -> void:
 	process_priority = -1000
 	_last_usec = Time.get_ticks_usec()
 	_step_started_ms = Time.get_ticks_msec()
+	RenderingServer.frame_pre_draw.connect(_on_pre_draw)
+	RenderingServer.frame_post_draw.connect(_on_post_draw)
+
+
+func _exit_tree() -> void:
+	if RenderingServer.frame_pre_draw.is_connected(_on_pre_draw):
+		RenderingServer.frame_pre_draw.disconnect(_on_pre_draw)
+	if RenderingServer.frame_post_draw.is_connected(_on_post_draw):
+		RenderingServer.frame_post_draw.disconnect(_on_post_draw)
+
+
+func _on_pre_draw() -> void:
+	_pre_draw_usec = Time.get_ticks_usec()
+
+
+func _on_post_draw() -> void:
+	_last_draw_ms = float(Time.get_ticks_usec() - _pre_draw_usec) / 1000.0
 
 
 func _process(_delta: float) -> void:
@@ -207,8 +239,10 @@ func _account(ms: float, s: Dictionary) -> void:
 		return
 	if (_open.first as Array).size() < FIRST_FRAMES:
 		(_open.first as Array).append(ms)
+		(_open.first_draw as Array).append(_last_draw_ms)
 	else:
 		(_open.steady as Array).append(ms)
+		(_open.steady_draw as Array).append(_last_draw_ms)
 		if (_open.steady as Array).size() >= STEADY_FRAMES:
 			_close_mark()
 
@@ -216,12 +250,15 @@ func _account(ms: float, s: Dictionary) -> void:
 func _begin_mark(mark: String, extra: Dictionary = {}, first: Array = []) -> void:
 	if not _open.is_empty():
 		_close_mark()
-	_open = {"mark": mark, "first": first.duplicate(), "steady": [], "extra": extra}
+	_open = {"mark": mark, "first": first.duplicate(), "steady": [], "extra": extra, "first_draw": [], "steady_draw": []}
 
 
 func _close_mark() -> void:
 	var r := stall_result(str(_open.mark), _open.first, _open.steady)
 	r.merge(_open.extra as Dictionary)
+	r["first"] = (_open.first as Array).map(func(v: float) -> float: return snappedf(v, 0.1))
+	r["first_draw"] = (_open.first_draw as Array).map(func(v: float) -> float: return snappedf(v, 0.1))
+	r["median_draw_ms"] = snappedf(median(_open.steady_draw), 0.1)
 	_open = {}
 	_results.append(r)
 	_say(r)
@@ -360,32 +397,78 @@ func _run_tour(s: Dictionary) -> void:
 		_tour_new_game(s)
 	elif tour == "level":
 		_tour_level()
+	elif tour == "continue":
+		_tour_continue(s)
 	else:
 		_tour_shrine(s)
 
 
 ## The level tour: once the level's mark is done, the giant's own draw calls - the frame's count with the
-## giant's models shown, then hidden for a few frames (§2.12: at most 13 with the fullest look, low).
+## giant's models shown, then hidden (§2.12: at most 13 with the fullest look, low). M10 gate (LD-6): both
+## counts are read in a still scene - the tree paused, DRAW_SETTLE_FRAMES frames let pass after each change,
+## then DRAW_SAMPLE_FRAMES frames read and their median taken - because in a running level the scene's own
+## count moved by about 4 between the two readings (the HUD's lines, actors' LOD tiers, effects) and the
+## difference read 15 calls for 11 meshes in one run and 5 for 9 in another. "still" says that neither
+## reading moved while it was sampled; "giant_surfaces" is the shown meshes' own surface count, which the
+## difference must equal in a level whose preset draws the giant once (no shadow pass: low).
 func _tour_level() -> void:
 	match _step:
 		0:
 			if _has_result("level"):
-				_giant_draw = {"with": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
-					"primitives_with": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))}
+				_giant_draw = {"was_paused": get_tree().paused, "with": [], "without": [], "p_with": [], "p_without": []}
+				get_tree().paused = true
+				_next(DRAW_SETTLE_FRAMES)
+		1:
+			if _sample_draw("with"):
 				for m in get_tree().get_nodes_in_group(GiantModel.GROUP):
 					(m as Node3D).visible = false
-				_next(4)
-		1:
-			_giant_draw["without"] = int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
-			_giant_draw["primitives_without"] = int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
-			for m in get_tree().get_nodes_in_group(GiantModel.GROUP):
-				(m as Node3D).visible = true
-			var stats := SkinnedRig.run_stats()
-			_say({"t": "giant_draw", "draw_calls_with": _giant_draw["with"], "draw_calls_without": _giant_draw.without,
-				"giant_draw_calls": int(_giant_draw["with"]) - int(_giant_draw.without),
-				"giant_primitives": int(_giant_draw.primitives_with) - int(_giant_draw.primitives_without),
-				"look": stats.look, "shown_meshes": stats.shown_meshes})
-			_end_tour(true, "")
+				_next(DRAW_SETTLE_FRAMES)
+		2:
+			if _sample_draw("without"):
+				for m in get_tree().get_nodes_in_group(GiantModel.GROUP):
+					(m as Node3D).visible = true
+				get_tree().paused = bool(_giant_draw.was_paused)
+				var stats := SkinnedRig.run_stats()
+				_say(giant_draw_result(_giant_draw["with"], _giant_draw.without, _giant_draw.p_with, _giant_draw.p_without,
+					str(stats.look), stats.shown_meshes, _shown_surfaces()))
+				_end_tour(true, "")
+
+
+## One frame's counts into the reading `key`; true once DRAW_SAMPLE_FRAMES are in.
+func _sample_draw(key: String) -> bool:
+	(_giant_draw[key] as Array).append(int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)))
+	(_giant_draw["p_" + key] as Array).append(int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)))
+	return (_giant_draw[key] as Array).size() >= DRAW_SAMPLE_FRAMES
+
+
+## The surfaces of the giant's visible meshes (every model in the tree): what one colour pass draws.
+func _shown_surfaces() -> int:
+	var n := 0
+	for m in get_tree().get_nodes_in_group(GiantModel.GROUP):
+		for c in (m as Node).find_children("*", "MeshInstance3D", true, false):
+			var mi := c as MeshInstance3D
+			if mi.is_visible_in_tree() and mi.mesh != null:
+				n += mi.mesh.get_surface_count()
+	return n
+
+
+## The level tour's line from its two readings (each DRAW_SAMPLE_FRAMES frames of a paused scene): the
+## medians, their difference, and whether either reading moved while it was sampled ("still").
+static func giant_draw_result(with: Array, without: Array, prims_with: Array, prims_without: Array, look: String,
+		shown_meshes: Variant, surfaces: int) -> Dictionary:
+	var w := int(median(with))
+	var wo := int(median(without))
+	return {"t": "giant_draw", "draw_calls_with": w, "draw_calls_without": wo, "giant_draw_calls": w - wo,
+		"giant_primitives": int(median(prims_with)) - int(median(prims_without)),
+		"still": _spread(with) == 0 and _spread(without) == 0, "samples": mini(with.size(), without.size()),
+		"spread_with": _spread(with), "spread_without": _spread(without),
+		"look": look, "shown_meshes": shown_meshes, "giant_surfaces": surfaces}
+
+
+static func _spread(values: Array) -> int:
+	if values.is_empty():
+		return 0
+	return int(values.max()) - int(values.min())
 
 
 func _tour_new_game(s: Dictionary) -> void:
@@ -417,6 +500,21 @@ func _tour_new_game(s: Dictionary) -> void:
 			_key(KEY_ENTER, true)
 			_next()
 		6:
+			if _has_result("level"):
+				_end_tour(true, "")
+
+
+## The continue tour: the title with a saved game, Enter on Continue, the level's mark.
+func _tour_continue(s: Dictionary) -> void:
+	match _step:
+		0:
+			if _has_result("title") and str(s.top) == "title":
+				if not str(s.focus).begins_with("Continue"):
+					_end_tour(false, "the title's focus is \"%s\", not Continue (no saved game in --save-dir?)" % s.focus)
+					return
+				_key(KEY_ENTER)
+				_next()
+		1:
 			if _has_result("level"):
 				_end_tour(true, "")
 
