@@ -19,6 +19,11 @@ export const SILENCE_PEAK = 1e-4;
 export const PLACE_TOLERANCE_MS = 35;
 // Holes this close together are one stall of the mixer (a sample voice sounded between them).
 export const MERGE_GAP_MS = 12;
+// P49: while the recorder is armed the page takes a clock reference this often (the audio clock mapped
+// onto the page's clock piecewise), and a segment whose ends disagree by more than STEP_NOTICE_MS is one
+// the audio clock stepped in.
+export const REF_INTERVAL_MS = 10000;
+export const STEP_NOTICE_MS = 12;
 
 // The seconds of samples a level registers (Audio.sample_paths_for): every WAV of an SFX or UI cue
 // with no `levels`, then of the cues whose `levels` name the level; seconds from the manifest.
@@ -87,8 +92,63 @@ export function taskStats(tasks, from, to) {
   };
 }
 
-// Every hole on the page's clock (the audio clock mapped linearly between the references taken at
-// arm and disarm) against the times the main thread handled the driver's "read" messages. A hole
+// The audio clock on the page's clock, piecewise (P49; the 0.10.0-m10 release's finding): `refs` are the
+// references taken at arm, every REF_INTERVAL_MS while the recorder is armed and at disarm (each the two
+// clocks read in one task), in time order. One straight line from arm to disarm - the mapping before
+// P49 - puts a hole as far from the main thread's reads as the audio clock stepped or drifted since the
+// arm (31-194 ms in the release's failed world checks, over six minutes of music); between two
+// references ten seconds apart the clocks can part by one segment's own step at most. Returns
+//   toPage(t)        the page time of audio time t: linear inside the segment that holds t (the first
+//                    or the last segment's line outside them);
+//   candidates(t)    [toPage(t)] and, when the segment's two ends disagree by more than
+//                    STEP_NOTICE_MS (the clock stepped inside it), the two page times a hole can truly
+//                    have there: counted from the segment's start (a hole before the step) and from
+//                    its end (a hole after it), the audio clock running at the page's rate;
+//   steps            per segment, how far the audio clock fell behind (+) or ran ahead (-) of the
+//                    page's clock, in ms; largest_step_ms the largest of them in size.
+export function clockMap(refs) {
+  const list = (refs || []).filter((r) => r && Number.isFinite(r.page_ms) && Number.isFinite(r.ctx_t))
+    .sort((x, y) => x.ctx_t - y.ctx_t).filter((r, i, all) => i === 0 || r.ctx_t > all[i - 1].ctx_t);
+  const steps = [];
+  for (let i = 1; i < list.length; i++) {
+    steps.push((list[i].page_ms - list[i - 1].page_ms) - (list[i].ctx_t - list[i - 1].ctx_t) * 1000);
+  }
+  const segment = (t) => {
+    let lo = 0;
+    let hi = list.length - 2;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (list[mid].ctx_t <= t) lo = mid;
+      else hi = mid - 1;
+    }
+    return Math.max(0, lo);
+  };
+  const toPage = (t) => {
+    if (list.length === 0) return t * 1000;
+    if (list.length === 1) return list[0].page_ms + (t - list[0].ctx_t) * 1000;
+    const i = segment(t);
+    const x = list[i];
+    const y = list[i + 1];
+    return x.page_ms + (t - x.ctx_t) * (y.page_ms - x.page_ms) / (y.ctx_t - x.ctx_t);
+  };
+  const candidates = (t) => {
+    const out = [toPage(t)];
+    if (list.length < 2) return out;
+    const i = segment(t);
+    if (Math.abs(steps[i]) <= STEP_NOTICE_MS) return out;
+    out.push(list[i].page_ms + (t - list[i].ctx_t) * 1000);
+    out.push(list[i + 1].page_ms + (t - list[i + 1].ctx_t) * 1000);
+    return out;
+  };
+  let largest = 0;
+  for (const d of steps) if (Math.abs(d) > Math.abs(largest)) largest = d;
+  return { refs: list.length, toPage, candidates, steps, largest_step_ms: round1(largest) };
+}
+
+// Every hole on the page's clock (clockMap: the audio clock mapped piecewise between the references
+// taken at arm, every REF_INTERVAL_MS and at disarm; without `refs`, the one line from arm to disarm
+// of the traces recorded before P49) against the times the main thread handled the driver's "read"
+// messages. A hole
 // with no "read" handled inside it (beyond PLACE_TOLERANCE_MS of its ends) and one handled within
 // PLACE_TOLERANCE_MS of its end is the main thread's: the worklet ran dry while the main thread
 // could not mix, and the first message it handled refilled it. A hole that no "read" ended is
@@ -97,17 +157,22 @@ export function taskStats(tasks, from, to) {
 // (the disarm cut it short, so no "read" can have ended it) with no "read" handled inside it is the
 // main thread's too (counted in cut_at_disarm as well: tools/web/world_check.mjs's walk ended in a
 // 415 ms frame, its WORLD_WALK_END line disarming the recorder before the main thread served the
-// driver again). The rest are listed.
-export function placeHoles(holes, service, armRef, disarmRef, quantumMs) {
-  const out = { holes: holes.length, while_unserved: 0, cut_at_disarm: 0, elsewhere: [] };
+// driver again). The rest are listed. P49: inside a segment in which the audio clock stepped, a hole
+// is also tried at the two page times it can have on either side of the step (clockMap's
+// candidates; counted in placed_across_a_step), and the report carries the references used and the
+// largest step between two of them (clock_refs, largest_clock_step_ms). { acrossSteps: false } with no
+// `refs` is the placing of before P49 (the check's own test shows what it missed).
+export function placeHoles(holes, service, armRef, disarmRef, quantumMs, refs = [], { acrossSteps = true } = {}) {
+  const out = { holes: holes.length, while_unserved: 0, cut_at_disarm: 0, elsewhere: [], clock_refs: 0, largest_clock_step_ms: 0, placed_across_a_step: 0 };
   const list = (p, ms) => { if (out.elsewhere.length < 50) out.elsewhere.push({ page_s: round1(p), ms: round1(ms) }); };
   if (!armRef || service.length === 0) {
     for (const [t, q] of holes) list(armRef ? (t - armRef.ctx_t) : t, q * quantumMs);
     return out;
   }
-  const scale = disarmRef && disarmRef.ctx_t > armRef.ctx_t
-    ? (disarmRef.page_ms - armRef.page_ms) / ((disarmRef.ctx_t - armRef.ctx_t) * 1000) : 1;
-  const toPage = (t) => armRef.page_ms + (t - armRef.ctx_t) * 1000 * scale;
+  const inside = (refs || []).filter((r) => r && r.ctx_t > armRef.ctx_t && (!disarmRef || r.ctx_t < disarmRef.ctx_t));
+  const map = clockMap([armRef, ...inside, ...(disarmRef && disarmRef.ctx_t > armRef.ctx_t ? [disarmRef] : [])]);
+  out.clock_refs = map.refs;
+  out.largest_clock_step_ms = map.largest_step_ms;
   // The first index of service at or after x (service is in time order).
   const from = (x) => {
     let lo = 0;
@@ -130,26 +195,37 @@ export function placeHoles(holes, service, armRef, disarmRef, quantumMs) {
     if (next < service.length && service[next] <= p1 + PLACE_TOLERANCE_MS) return 'read';
     return p1 >= cutAt - PLACE_TOLERANCE_MS ? 'disarm' : '';
   };
-  const spans = holes.map(([t, quanta]) => {
-    const p0 = toPage(t);
-    return [p0, p0 + quanta * quantumMs];
-  });
-  let i = 0;
-  while (i < spans.length) {
-    const [p0, p1] = spans[i];
+  // Hole i and the holes merged with it up to j, with hole i's start at page time p0: [verdict, j].
+  const tryAt = (i, p0) => {
+    const shift = p0 - map.toPage(holes[i][0]);
+    const span = (k) => {
+      const q0 = map.toPage(holes[k][0]) + shift;
+      return [q0, q0 + holes[k][1] * quantumMs];
+    };
     let j = i;
-    let ok = unserved(p0, p1);
+    let ok = unserved(p0, span(i)[1]);
     // A hole that no "read" ended may be one stall with the holes just after it.
-    while (!ok && j + 1 < spans.length && spans[j + 1][0] - spans[j][1] <= MERGE_GAP_MS) {
+    while (!ok && j + 1 < holes.length && span(j + 1)[0] - span(j)[1] <= MERGE_GAP_MS) {
       j++;
-      ok = unserved(p0, spans[j][1]);
+      ok = unserved(p0, span(j)[1]);
     }
-    if (ok) {
-      out.while_unserved += j - i + 1;
-      if (ok === 'disarm') out.cut_at_disarm += 1;
-      i = j + 1;
+    return [ok, j];
+  };
+  let i = 0;
+  while (i < holes.length) {
+    const tries = acrossSteps ? map.candidates(holes[i][0]) : [map.toPage(holes[i][0])];
+    let placed = null;
+    for (let c = 0; c < tries.length && placed === null; c++) {
+      const [ok, j] = tryAt(i, tries[c]);
+      if (ok) placed = { ok, j, across: c > 0 };
+    }
+    if (placed) {
+      out.while_unserved += placed.j - i + 1;
+      if (placed.ok === 'disarm') out.cut_at_disarm += 1;
+      if (placed.across) out.placed_across_a_step += placed.j - i + 1;
+      i = placed.j + 1;
     } else {
-      list((p0 - armRef.page_ms) / 1000, p1 - p0);
+      list((tries[0] - armRef.page_ms) / 1000, holes[i][1] * quantumMs);
       i++;
     }
   }
@@ -171,7 +247,7 @@ export function serviceStats(service, bufferMs) {
 
 // Injected before the page's scripts (Playwright addInitScript): the AudioContext wrapper, the
 // destination tap with the recorder worklet, the buffer tracker and the AUDIO_MUSIC marks.
-export function instrument({ silencePeak, holeMs, autoArm = null }) {
+export function instrument({ silencePeak, holeMs, autoArm = null, refIntervalMs = 10000 }) {
   const A = (window.__audioCheck = {
     ctxs: [], log: [], marks: [], rec: {}, liveBytes: 0, peakLiveBytes: 0, registeredBytes: 0, playingBytes: 0,
     peakPlayingBytes: 0, buffersCreated: 0, buffersAttached: 0, sourcesStarted: 0, firstSound: null,
@@ -407,10 +483,19 @@ registerProcessor('check-recorder', CheckRecorder);
     A.service = [];
     A.frameClock = true;
     A.armRef = A.clockRef();
+    // P49: a reference every refIntervalMs (REF_INTERVAL_MS) until the disarm, for the piecewise clock.
+    A.refs = [];
+    if (A.refTimer) clearInterval(A.refTimer);
+    A.refTimer = setInterval(() => {
+      const r = A.clockRef();
+      if (r && A.refs.length < 20000) A.refs.push(r);
+    }, refIntervalMs);
     return A.post({ cmd: 'arm' });
   };
   A.disarm = () => {
     A.disarmRef = A.clockRef();
+    if (A.refTimer) clearInterval(A.refTimer);
+    A.refTimer = 0;
     return A.post({ cmd: 'disarm' });
   };
 }
@@ -427,7 +512,7 @@ export function readRecording(page) {
       sourcesStarted: A.sourcesStarted, contexts: A.ctxs.length, log: A.log.slice(0, 20), marks: A.marks,
       ctx: c ? { state: c.state, rate: c.sampleRate, base_latency: c.baseLatency } : null,
       wall_ms: performance.now(), frames: A.frames.slice(), tasks: A.tasks.slice(), service: A.service.slice(),
-      driverWatched: A.driverWatched, armRef: A.armRef || null, disarmRef: A.disarmRef || null,
+      driverWatched: A.driverWatched, armRef: A.armRef || null, disarmRef: A.disarmRef || null, refs: (A.refs || []).slice(),
       auto: A.auto ? { ...A.auto } : null,
     };
   });
@@ -447,12 +532,15 @@ export function analyseRecording(state, { musicS, strict, t0 }) {
   }
   const quantumMs = 128 / s.sample_rate * 1000;
   const bufferMs = streamBufferMs(s.sample_rate);
-  const placed = placeHoles(s.holes || [], state.service, state.armRef, state.disarmRef, quantumMs);
+  const placed = placeHoles(s.holes || [], state.service, state.armRef, state.disarmRef, quantumMs, state.refs || []);
   const music = {
     seconds: Math.round((s.end_t - s.start_t) * 10) / 10, wall_s: Math.round((state.wall_ms - t0) / 100) / 10,
     quanta: s.quanta, silent_quanta: s.silent, longest_silence_ms: Math.round(s.longest * quantumMs * 10) / 10,
     silent_runs_over_50_ms: s.runs_over + (s.run * quantumMs > HOLE_MAX_MS ? 1 : 0), peak: Math.round(s.peak * 1000) / 1000,
     holes_while_unserved: placed.while_unserved, holes_cut_at_disarm: placed.cut_at_disarm, holes_elsewhere: placed.elsewhere,
+    // P49: the piecewise clock - the references used, the largest step of the audio clock between two of
+    // them (+ behind the page's clock, - ahead of it) and the holes placed on either side of such a step.
+    clock_refs: placed.clock_refs, largest_clock_step_ms: placed.largest_clock_step_ms, holes_placed_across_a_step: placed.placed_across_a_step,
   };
   const until = state.disarmRef ? state.disarmRef.page_ms : state.wall_ms;
   const out = {
@@ -461,7 +549,7 @@ export function analyseRecording(state, { musicS, strict, t0 }) {
     long_tasks: taskStats(state.tasks, state.armRef ? state.armRef.page_ms : t0, until),
     driver: { watched: state.driverWatched, ...serviceStats(state.service.filter((x) => x <= until), bufferMs) },
     trace: {
-      arm: state.armRef, disarm: state.disarmRef, quantum_ms: quantumMs, frames: state.frames, tasks: state.tasks,
+      arm: state.armRef, disarm: state.disarmRef, refs: state.refs || [], quantum_ms: quantumMs, frames: state.frames, tasks: state.tasks,
       service: state.service, holes: s.holes || [],
     },
     // The plan's criterion (M6 gate): no silent run over HOLE_MAX_MS in the music at all.

@@ -207,157 +207,157 @@ instance_count = 31
 mesh = SubResource("CylinderMesh_33")
 buffer = PackedFloat32Array(0.92, 0, 0, -111.4, 0, 9.76, 0, 4.88, 0, 0, 0.92, 130.9, 0.82, 0, 0, -170.4, 0, 9.46, 0, 4.73, 0, 0, 0.82, 181.1, 1.18, 0, 0, -187.9, 0, 10.54, 0, 5.27, 0, 0, 1.18, 179.3, 0.9, 0, 0, -170.7, 0, 9.7, 0, 4.85, 0, 0, 0.9, 128.1, 1.08, 0, 0, -184.8, 0, 10.24, 0, 5.12, 0, 0, 1.08, 147.6, 0.84, 0, 0, -136, 0, 9.52, 0, 4.76, 0, 0, 0.84, 157.1, 1.16, 0, 0, -122.2, 0, 10.48, 0, 5.24, 0, 0, 1.16, 187.1, 0.86, 0, 0, -193.3, 0, 9.58, 0, 4.79, 0, 0, 0.86, 124.1, 0.94, 0, 0, -95.2, 0, 9.82, 0, 4.91, 0, 0, 0.94, 151.3, 0.98, 0, 0, -163.4, 0, 9.94, 0, 4.97, 0, 0, 0.98, 150.4, 1.04, 0, 0, -152.3, 0, 10.12, 0, 5.06, 0, 0, 1.04, 138.9, 0.88, 0, 0, -138.7, 0, 9.64, 0, 4.82, 0, 0, 0.88, 185.1, 1.3749071, 0, 0, -194.99728, 0, 11.124722, 0, 25.56236, 0, 0, 1.3749071, 110.678665, 1.1908128, 0, 0, -192.63246, 0, 10.572438, 0, 25.286219, 0, 0, 1.1908128, 106.20497, 1.1834195, 0, 0, -184.88977, 0, 10.550259, 0, 25.27513, 0, 0, 1.1834195, 102.698715, 1.1589051, 0, 0, -154.19835, 0, 10.476715, 0, 25.238358, 0, 0, 1.1589051, 109.81312, 1.25789, 0, 0, -166.27632, 0, 10.77367, 0, 25.386835, 0, 0, 1.25789, 104.88757, 1.1155038, 0, 0, -159.591, 0, 10.346512, 0, 25.173256, 0, 0, 1.1155038, 109.554375, 1.0315949, 0, 0, -181.18587, 0, 10.094785, 0, 25.047392, 0, 0, 1.0315949, 103.91328, 1.3759353, 0, 0, -114.74155, 0, 11.127806, 0, 25.563904, 0, 0, 1.3759353, 108.032814, 1.1163875, 0, 0, -100.48947, 0, 10.349162, 0, 25.174582, 0, 0, 1.1163875, 108.68683, 0.93765694, 0, 0, -109.173096, 0, 9.812971, 0, 24.906485, 0, 0, 0.93765694, 103.35388, 1.0319755, 0, 0, -124.091995, 0, 10.095926, 0, 25.047964, 0, 0, 1.0319755, 107.78285, 0.99963087, 0, 0, -114.49152, 0, 9.998893, 0, 24.999447, 0, 0, 0.99963087, 107.45173, 1.0315176, 0, 0, -69.33368, 0, 10.094553, 0, 35.047276, 0, 0, 1.0315176, 110.880165, 1.3057436, 0, 0, -79.17781, 0, 10.917231, 0, 35.458614, 0, 0, 1.3057436, 106.80267, 1.3973751, 0, 0, -87.22528, 0, 11.192125, 0, 35.59606, 0, 0, 1.3973751, 137.07384, 1.34833, 0, 0, -79.69765, 0, 11.044991, 0, 35.522495, 0, 0, 1.34833, 116.08591, 0.9367237, 0, 0, -63.390495, 0, 9.810171, 0, 34.905087, 0, 0, 0.9367237, 108.388, 1.1239804, 0, 0, -74.78711, 0, 10.371942, 0, 35.18597, 0, 0, 1.1239804, 121.31658, 1.3973519, 0, 0, -70.02322, 0, 11.192056, 0, 35.596027, 0, 0, 1.3973519, 107.317276)
 
-[node name="hollow" type="Node3D"]
+[node name="hollow" type="Node3D" unique_id=1901046153]
 
-[node name="Collision" type="StaticBody3D" parent="."]
+[node name="Collision" type="StaticBody3D" parent="." unique_id=1850906977]
 collision_mask = 0
 
-[node name="Hollow" type="CollisionShape3D" parent="Collision"]
+[node name="Hollow" type="CollisionShape3D" parent="Collision" unique_id=1107358566]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -145, -0.5, 150)
 shape = SubResource("BoxShape3D_1")
 
-[node name="HollowNorthW" type="CollisionShape3D" parent="Collision"]
+[node name="HollowNorthW" type="CollisionShape3D" parent="Collision" unique_id=184602056]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -173, 10, 107.5)
 shape = SubResource("BoxShape3D_2")
 
-[node name="HollowNorthE" type="CollisionShape3D" parent="Collision"]
+[node name="HollowNorthE" type="CollisionShape3D" parent="Collision" unique_id=2135560470]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -112, 10, 107.5)
 shape = SubResource("BoxShape3D_3")
 
-[node name="HollowRockSw" type="CollisionShape3D" parent="Collision"]
+[node name="HollowRockSw" type="CollisionShape3D" parent="Collision" unique_id=766963092]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -189, 6, 192)
 shape = SubResource("BoxShape3D_4")
 
-[node name="HollowRockSe" type="CollisionShape3D" parent="Collision"]
+[node name="HollowRockSe" type="CollisionShape3D" parent="Collision" unique_id=112349856]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -101, 7, 193)
 shape = SubResource("BoxShape3D_5")
 
-[node name="HollowRockW" type="CollisionShape3D" parent="Collision"]
+[node name="HollowRockW" type="CollisionShape3D" parent="Collision" unique_id=506725671]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -195.5, 5, 143)
 shape = SubResource("BoxShape3D_6")
 
-[node name="PenN" type="CollisionShape3D" parent="Collision"]
+[node name="PenN" type="CollisionShape3D" parent="Collision" unique_id=1314596975]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -100.925, 0.8, 130.85)
 shape = SubResource("BoxShape3D_7")
 
-[node name="PenE" type="CollisionShape3D" parent="Collision"]
+[node name="PenE" type="CollisionShape3D" parent="Collision" unique_id=630123996]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -97, 0.8, 135)
 shape = SubResource("BoxShape3D_8")
 
-[node name="PenS" type="CollisionShape3D" parent="Collision"]
+[node name="PenS" type="CollisionShape3D" parent="Collision" unique_id=132739798]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -100.925, 0.8, 139.15)
 shape = SubResource("BoxShape3D_7")
 
-[node name="CradleStone1" type="CollisionShape3D" parent="Collision"]
+[node name="CradleStone1" type="CollisionShape3D" parent="Collision" unique_id=1004597844]
 transform = Transform3D(0.8660254, 0, 0.5, 0, 1, 0, -0.5, 0, 0.8660254, -140.5, 1.8, 175.5)
 shape = SubResource("BoxShape3D_9")
 
-[node name="CradleStone2" type="CollisionShape3D" parent="Collision"]
+[node name="CradleStone2" type="CollisionShape3D" parent="Collision" unique_id=1250451072]
 transform = Transform3D(-0.17364821, 0, 0.9848078, 0, 1, 0, -0.9848078, 0, -0.17364821, -151.9, 1.6, 180.8)
 shape = SubResource("BoxShape3D_10")
 
-[node name="CradleStone3" type="CollisionShape3D" parent="Collision"]
+[node name="CradleStone3" type="CollisionShape3D" parent="Collision" unique_id=667811492]
 transform = Transform3D(-0.9848077, 0, 0.1736483, 0, 1, 0, -0.1736483, 0, -0.9848077, -160.8, 1.9, 171.9)
 shape = SubResource("BoxShape3D_11")
 
-[node name="CradleStone4" type="CollisionShape3D" parent="Collision"]
+[node name="CradleStone4" type="CollisionShape3D" parent="Collision" unique_id=1081496026]
 transform = Transform3D(-0.6427875, 0, -0.76604456, 0, 1, 0, 0.76604456, 0, -0.6427875, -157.1, 1.5, 161.6)
 shape = SubResource("BoxShape3D_12")
 
-[node name="Tree080" type="CollisionShape3D" parent="Collision"]
+[node name="Tree080" type="CollisionShape3D" parent="Collision" unique_id=1018377337]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -111.4, 4.88, 130.9)
 shape = SubResource("CylinderShape3D_13")
 
-[node name="Tree081" type="CollisionShape3D" parent="Collision"]
+[node name="Tree081" type="CollisionShape3D" parent="Collision" unique_id=1852831893]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -170.4, 4.73, 181.1)
 shape = SubResource("CylinderShape3D_14")
 
-[node name="Tree082" type="CollisionShape3D" parent="Collision"]
+[node name="Tree082" type="CollisionShape3D" parent="Collision" unique_id=455778888]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -187.9, 5.27, 179.3)
 shape = SubResource("CylinderShape3D_15")
 
-[node name="Tree083" type="CollisionShape3D" parent="Collision"]
+[node name="Tree083" type="CollisionShape3D" parent="Collision" unique_id=1408896609]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -170.7, 4.85, 128.1)
 shape = SubResource("CylinderShape3D_16")
 
-[node name="Tree084" type="CollisionShape3D" parent="Collision"]
+[node name="Tree084" type="CollisionShape3D" parent="Collision" unique_id=297718925]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -184.8, 5.12, 147.6)
 shape = SubResource("CylinderShape3D_17")
 
-[node name="Tree085" type="CollisionShape3D" parent="Collision"]
+[node name="Tree085" type="CollisionShape3D" parent="Collision" unique_id=2008064124]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -136, 4.76, 157.1)
 shape = SubResource("CylinderShape3D_18")
 
-[node name="Tree086" type="CollisionShape3D" parent="Collision"]
+[node name="Tree086" type="CollisionShape3D" parent="Collision" unique_id=1259016988]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -122.2, 5.24, 187.1)
 shape = SubResource("CylinderShape3D_19")
 
-[node name="Tree087" type="CollisionShape3D" parent="Collision"]
+[node name="Tree087" type="CollisionShape3D" parent="Collision" unique_id=279861490]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -193.3, 4.79, 124.1)
 shape = SubResource("CylinderShape3D_20")
 
-[node name="Tree088" type="CollisionShape3D" parent="Collision"]
+[node name="Tree088" type="CollisionShape3D" parent="Collision" unique_id=89890072]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -95.2, 4.91, 151.3)
 shape = SubResource("CylinderShape3D_21")
 
-[node name="Tree089" type="CollisionShape3D" parent="Collision"]
+[node name="Tree089" type="CollisionShape3D" parent="Collision" unique_id=1352111416]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -163.4, 4.97, 150.4)
 shape = SubResource("CylinderShape3D_22")
 
-[node name="Tree090" type="CollisionShape3D" parent="Collision"]
+[node name="Tree090" type="CollisionShape3D" parent="Collision" unique_id=1618508410]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -152.3, 5.06, 138.9)
 shape = SubResource("CylinderShape3D_23")
 
-[node name="Tree091" type="CollisionShape3D" parent="Collision"]
+[node name="Tree091" type="CollisionShape3D" parent="Collision" unique_id=1754556761]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -138.7, 4.82, 185.1)
 shape = SubResource("CylinderShape3D_24")
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=564275488]
 
-[node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual" unique_id=187710499]
 material_override = SubResource("StandardMaterial3D_25")
 multimesh = SubResource("MultiMesh_27")
 
-[node name="Stone_Box" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Stone_Box" type="MultiMeshInstance3D" parent="Visual" unique_id=260755949]
 material_override = SubResource("StandardMaterial3D_28")
 multimesh = SubResource("MultiMesh_29")
 
-[node name="WoodDark_Box" type="MultiMeshInstance3D" parent="Visual"]
+[node name="WoodDark_Box" type="MultiMeshInstance3D" parent="Visual" unique_id=544221749]
 material_override = SubResource("StandardMaterial3D_30")
 multimesh = SubResource("MultiMesh_31")
 
-[node name="StoneDark_Cyl" type="MultiMeshInstance3D" parent="Visual"]
+[node name="StoneDark_Cyl" type="MultiMeshInstance3D" parent="Visual" unique_id=1377610463]
 material_override = SubResource("StandardMaterial3D_32")
 multimesh = SubResource("MultiMesh_34")
 
-[node name="Grass_Plane" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Grass_Plane" type="MultiMeshInstance3D" parent="Visual" unique_id=1119796328]
 material_override = SubResource("ShaderMaterial_35")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_37")
 
-[node name="Road_Plane" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Road_Plane" type="MultiMeshInstance3D" parent="Visual" unique_id=454729231]
 material_override = SubResource("StandardMaterial3D_38")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_39")
 
-[node name="Scenery" type="Node3D" parent="."]
+[node name="Scenery" type="Node3D" parent="." unique_id=105614464]
 
-[node name="LeavesDark_Cone" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+[node name="LeavesDark_Cone" type="MultiMeshInstance3D" parent="Scenery" unique_id=1710752477 groups=["valley_scenery"]]
 material_override = SubResource("ShaderMaterial_40")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_42")
 
-[node name="Leaves_Cone" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+[node name="Leaves_Cone" type="MultiMeshInstance3D" parent="Scenery" unique_id=128216492 groups=["valley_scenery"]]
 material_override = SubResource("ShaderMaterial_43")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_44")
 
-[node name="Bark_Cyl" type="MultiMeshInstance3D" parent="Scenery" groups=["valley_scenery"]]
+[node name="Bark_Cyl" type="MultiMeshInstance3D" parent="Scenery" unique_id=188961534 groups=["valley_scenery"]]
 material_override = SubResource("ShaderMaterial_45")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_46")
 
-[node name="Dressing" type="Node3D" parent="."]
+[node name="Dressing" type="Node3D" parent="." unique_id=479524129]
 script = ExtResource("3_fd773")
 kinds = PackedStringArray("bush", "bush", "bush", "bush", "bush", "bush", "bush", "bush", "bush", "bush", "banner", "banner")
 transforms = Array[Transform3D]([Transform3D(1.0336618, 0, 0.37622213, 0, 1.1, 0, -0.37622213, 0, 1.0336618, -165, 0, 185), Transform3D(0.30781814, 0, 0.84572333, 0, 0.9, 0, -0.84572333, 0, 0.30781814, -145, 0, 190), Transform3D(-0.91925335, 0, 0.7713452, 0, 1.2, 0, -0.7713452, 0, -0.91925335, -128, 0, 180), Transform3D(-0.9396926, 0, -0.34202015, 0, 1, 0, 0.34202015, 0, -0.9396926, -176, 0, 165), Transform3D(-0.37622207, 0, -1.033662, 0, 1.1, 0, 1.033662, 0, -0.37622207, -170, 0, 140), Transform3D(0.4499999, 0, -0.7794229, 0, 0.9, 0, 0.7794229, 0, 0.4499999, -156, 0, 125), Transform3D(0.8660254, 0, 0.5, 0, 1, 0, -0.5, 0, 0.8660254, -126, 0, 132), Transform3D(0.20837788, 0, 1.1817694, 0, 1.2, 0, -1.1817694, 0, 0.20837788, -100, 0, 180), Transform3D(-0.9396926, 0, 0.3420202, 0, 1, 0, -0.3420202, 0, -0.9396926, -96, 0, 140), Transform3D(-0.842649, 0, -0.70706636, 0, 1.1, 0, 0.70706636, 0, -0.842649, -118, 0, 122), Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -131, 0, 151), Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -131, 0, 139)])

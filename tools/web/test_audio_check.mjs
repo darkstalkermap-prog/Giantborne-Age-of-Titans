@@ -12,12 +12,20 @@
 //   * stutter: the main thread busy for 150 ms three times in the recorded music (slow frames), so
 //     the mixer goes unserved and the music has holes over 50 ms that the main thread explains: the
 //     default check passes but ends "OK (the plan's criterion NOT MET ...)", and --strict fails.
+//   * late (P49): a title that prints the game's UI_PROBE lines and keeps New Game disabled behind
+//     "Preparing..." for 5 s after its music (the title's warm-up on a busy machine): an Enter before
+//     that is lost, as in the game. The check waits for the title's state with warming false and its
+//     one Enter opens the creator;
+//   * lost (P49): an enabled title that swallows the first Enter (a press that fell into a long
+//     frame): the check sees no creator and presses again;
+//   * dead (P49): an enabled title that never opens the creator: the check says so after its presses
+//     instead of pressing Begin at a title and waiting ten minutes for the Hollow's music.
 // Before the M6 gate a timed-out run left no trace and a default pass on such holes printed a bare
 // OK. Prints TEST_AUDIO_CHECK with the count of checks and failures; exits 1 on a failure.
 //
 // Usage (from the project folder): node tools/web/test_audio_check.mjs [--keep]
 //   --keep   keep the stub folder and the reports (printed)
-// Needs what audio_check.mjs needs: Playwright and its Chromium. About a minute.
+// Needs what audio_check.mjs needs: Playwright and its Chromium. About three minutes.
 
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -80,11 +88,27 @@ registerProcessor('godot-processor', StubDriver);\`;
     node.connect(ctx.destination);
     console.log('AUDIO_MUSIC ' + JSON.stringify({ set: 'music.title', state: 'title' }));
     // New Game (Enter) opens the creator; only Begin (Ctrl+Enter) there starts the Valley's music.
+    // P49: the probe modes print the game's UI_PROBE state lines; "late" enables New Game 5 s after the
+    // music, "lost" swallows the first Enter on the enabled title, "dead" swallows them all.
+    const probe = mode === 'late' || mode === 'lost' || mode === 'dead';
+    const say = (state) => console.log('UI_PROBE ' + JSON.stringify(Object.assign({ t: 'state', mode: 'title', level: '', loading: false, tab: '', context: '', category: '' }, state)));
+    let enabled = mode !== 'late';
+    let swallow = mode === 'lost' ? 1 : (mode === 'dead' ? 1e9 : 0);
+    window.__stubEnters = { early: 0, swallowed: 0 };
+    if (probe) say({ top: 'title', warming: !enabled });
+    if (mode === 'late') setTimeout(() => { enabled = true; say({ top: 'title', warming: false }); }, 5000);
     let creator = false;
     let begun = false;
     window.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' || begun) return;
-      if (!e.ctrlKey) { creator = true; return; }
+      if (!e.ctrlKey) {
+        if (creator) return;
+        if (!enabled) { window.__stubEnters.early += 1; console.log('stub: Enter before the title enabled'); return; }
+        if (swallow > 0) { swallow -= 1; window.__stubEnters.swallowed += 1; console.log('stub: Enter swallowed'); return; }
+        creator = true;
+        if (probe) say({ top: 'creator', warming: false, context: 'new_game', category: 'Body' });
+        return;
+      }
       if (!creator) return;
       begun = true;
       console.log('AUDIO_MUSIC ' + JSON.stringify({ set: 'music.stub', state: 'zone' }));
@@ -108,7 +132,7 @@ function check(ok, what) {
 }
 
 function run(args) {
-  const r = spawnSync(process.execPath, [CHECK, ...args], { cwd: ROOT, encoding: 'utf8', timeout: 180000 });
+  const r = spawnSync(process.execPath, [CHECK, ...args], { cwd: ROOT, encoding: 'utf8', timeout: 240000 });
   return { code: r.status, out: r.stdout || '', err: r.stderr || '' };
 }
 
@@ -178,6 +202,41 @@ console.log('stutter: three slow frames of 150 ms leave the stand-in mixer unser
   const sc = (report(join(dir, 'strict.json')) || {}).criterion || {};
   check(s.code === 1 && /audio_check: FAILED - a [\d.]+ ms hole in the music/.test(s.out), `--strict fails on them (exit ${s.code})`);
   check(sc.mode === 'strict' && sc.met === false, 'the strict report names its mode');
+}
+
+console.log('late: the title enables New Game 5 s after its music (P49)');
+{
+  const json = join(dir, 'late.json');
+  const r = run([build, '--args=--stub-mode=late', '--music-s=2', `--json=${json}`]);
+  const rep = report(json) || {};
+  check(r.code === 0, `the check passes (exit ${r.code})`);
+  check(rep.ui_probe === true && rep.title_warmed === true, 'it followed the title\'s probe lines and saw it preparing');
+  check(typeof rep.title_ready_s === 'number' && rep.title_ready_s >= 4.5, `it waited for the buttons to enable (${rep.title_ready_s} s after the title's music)`);
+  check(rep.enter_presses === 1, `one Enter, after the title enabled (${rep.enter_presses})`);
+  check(!r.out.includes('stub: Enter before the title enabled'), 'no Enter fell before the title enabled');
+  check(rep.begin_presses === 1, `and one Begin started the Valley (${rep.begin_presses})`);
+  check((rep.url_args || []).includes('--ui-probe'), 'the game is started with --ui-probe');
+}
+
+console.log('lost: an enabled title swallows the first Enter (P49)');
+{
+  const json = join(dir, 'lost.json');
+  const r = run([build, '--args=--stub-mode=lost', '--music-s=2', `--json=${json}`]);
+  const rep = report(json) || {};
+  check(r.code === 0, `the check passes (exit ${r.code})`);
+  check(rep.enter_presses === 2, `it pressed Enter again when no creator opened (${rep.enter_presses} presses)`);
+  check(rep.begin_presses === 1, `then one Begin (${rep.begin_presses})`);
+}
+
+console.log('dead: an enabled title never opens the creator (P49; timeout 60 s)');
+{
+  const json = join(dir, 'dead.json');
+  const r = run([build, '--args=--stub-mode=dead', '--timeout-s=60', `--json=${json}`]);
+  const rep = report(json) || {};
+  check(r.code === 1, `the check fails (exit ${r.code})`);
+  check(r.out.includes('audio_check: FAILED - New Game did not open the creator after 4 presses of Enter on the enabled title'),
+    'it says the title did not open the creator');
+  check(rep.enter_presses === 4 && (rep.begin_presses === undefined || rep.begin_presses === 0), `four Enters and no Begin (${rep.enter_presses}, ${rep.begin_presses})`);
 }
 
 if (KEEP) console.log(`the stub and the reports: ${dir}`);

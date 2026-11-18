@@ -24,35 +24,35 @@ _surfaces = [{
 "vertex_data": PackedByteArray("AADAvzQzMz8zM7O/AADAPzQzMz8zM7O/AADAPzQzMz8zM7M/AADAvzQzMz8zM7M/AADAv83MzL4zM7M/AADAP83MzL4zM7M/AADAP83MzL4zM7O/AADAv83MzL4zM7O/Saq8v5qZ2T/yUia/VTo8P5qZ2T/SMcu/KyXRP5qZ2T+gmgc/k0QTv5qZ2T+q1bs/k0QTvzQzMz+q1bs/KyXRPzQzMz+gmgc/VTo8PzQzMz/SMcu/Saq8vzQzMz/yUia/olanv2ZmJkCuNn29QB9NPGZmJkA727a/olanP2ZmJkDkdDa+QB9NvGZmJkDpIpg/QB9NvJqZ2T/pIpg/olanP5qZ2T/kdDa+QB9NPJqZ2T8727a/olanv5qZ2T+uNn295ow2v5mZWUDcmsg+XyR9vpmZWUCiZFK/qIJfP5mZWUDcmsi+tH3QPpmZWUCiZFI/tH3QPmZmJkCiZFI/qIJfP2ZmJkDcmsi+XyR9vmZmJkCiZFK/5ow2v2ZmJkDcmsg+IIfFvgAAgEBIGrU+mtLTvgAAgEByP+S+IIfFPgAAgEDsivK+mtLTPgAAgEDOzqY+mtLTPpqZWUDOzqY+IIfFPpqZWUDsivK+mtLTvpqZWUByP+S+IIfFvpqZWUBIGrU+zczMvgAAAEB7FK4/zczMPgAAAEB7FK4/zczMPgAAAECjcL0/zczMvgAAAECjcL0/zczMvjMzsz+jcL0/zczMPjMzsz+jcL0/zczMPjMzsz97FK4/zczMvjMzsz97FK4/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqpE6o74eV72qBdq3+gdQsoVawZG6oFhL1Ld6+KULdViX91tPTiwAbt12tCthFk0RpE/OByS5cBej0x53NPhJ3rxgSMC0T2jBqDkhR+dTR6aRPstgyKBd5dm3mDihMVt5pSVus0rQKiKRy8dXXghdaa2zytoRB2dio6chy0ewXovLDVeese5wLKTGHo/RfUqNn2DODddZLtPdbq7Fnj5M/bY+hl9GTjAYlNDawFKtd7mtoDk/Bn9Vkqo+LdBaFnfB0gZok7NJa5CiSyBQvt1WYKtrzAXoZSbJka3BS6B0VzPIMJsiTZIzO5pC4FM+aY85qtwyMBtsQ3a3q0FCYOWdJ8syM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
 }]
 
-[node name="Chunk_1_6_0" type="Node3D"]
+[node name="Chunk_1_6_0" type="Node3D" unique_id=794806704]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=993319278]
 
-[node name="world_crownmarch_barrow_vault_rockfall" type="StaticBody3D" parent="Props" instance=ExtResource("1_dfd41")]
+[node name="world_crownmarch_barrow_vault_rockfall" type="StaticBody3D" parent="Props" unique_id=750479906 instance=ExtResource("1_dfd41")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 21.996, 243)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "world.crownmarch.barrow_vault_rockfall"
 
-[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_crownmarch_barrow_vault_rockfall"]
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_crownmarch_barrow_vault_rockfall" unique_id=281965467]
 enabled = false
 start_position = Vector3(0, 0.10400009, 5)
 end_position = Vector3(0, 0.10400009, -5)
 
-[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_crownmarch_barrow_vault_rockfall"]
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_crownmarch_barrow_vault_rockfall" unique_id=1333484646]
 enabled = false
 navigation_layers = 2
 start_position = Vector3(0, -0.34600067, 6.5)
 end_position = Vector3(0, -0.7529583, -6.5)
 
-[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_crownmarch_barrow_vault_rockfall"]
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_crownmarch_barrow_vault_rockfall" unique_id=1987166636]
 enabled = false
 navigation_layers = 16
 start_position = Vector3(0, -0.4960003, 12)
 end_position = Vector3(0, -0.4960003, -11)
 
-[node name="world_crownmarch_barrow_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="world_crownmarch_barrow_cache" type="StaticBody3D" parent="Props" unique_id=1314493662 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 96, 7.948, 178)
 collision_layer = 16
 collision_mask = 0
@@ -60,7 +60,7 @@ script = ExtResource("2_5fc47")
 world_id = "world.crownmarch.barrow_cache"
 loot_table = "loot.cache_barrow_fields"
 
-[node name="world_crownmarch_barrow_cairn" type="Node3D" parent="Props"]
+[node name="world_crownmarch_barrow_cairn" type="Node3D" parent="Props" unique_id=1245219044]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 128, 9.028, 214)
 script = ExtResource("4_dd8c0")
 npc_id = "world.crownmarch.barrow_cairn"
@@ -69,35 +69,35 @@ prompt = "Read the cairn"
 radius_m = 4.0
 priority = 45
 
-[node name="Base" type="StaticBody3D" parent="Props/world_crownmarch_barrow_cairn"]
+[node name="Base" type="StaticBody3D" parent="Props/world_crownmarch_barrow_cairn" unique_id=990077238]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_barrow_cairn/Base"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_barrow_cairn/Base" unique_id=1979877412]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Stones" type="MeshInstance3D" parent="Props/world_crownmarch_barrow_cairn/Base" groups=["scenery"]]
+[node name="Stones" type="MeshInstance3D" parent="Props/world_crownmarch_barrow_cairn/Base" unique_id=2067697665 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1846720166]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1721071158]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1874977853]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=2026410096]
 
-[node name="world_marker_barrow_fields" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_barrow_fields" type="Marker3D" parent="Markers/Objective" unique_id=1452006068]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 118, 10.202001, 188)
 script = ExtResource("6_acc12")
 marker_id = "world.marker.barrow_fields"
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1755577993]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=997045791]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1695962122]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=260643607]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1963787376]

@@ -34,7 +34,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { median, stallOk } from './creator_check.mjs';
+import { drawShare, median, stallOk } from './creator_check.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CHECK = join(ROOT, 'tools', 'web', 'creator_check.mjs');
@@ -112,8 +112,8 @@ const STUB = `<!doctype html>
     if (s.top === 'title' && k === 'Enter') {
       if (s.focus === 'New Game') {
         set({ top: 'creator', context: 'new_game', category: 'Presets', focus: 'Wanderer', tiers });
-        if (mode === 'stall') stall('creator', 500, 50, { again: false });
-        else stall('creator', 90, 50, { again: false });
+        if (mode === 'stall') stall('creator', 500, 50, { again: false, first: [500, 60, 50], first_draw: [410, 30, 28], median_draw_ms: 27 });
+        else stall('creator', 90, 50, { again: false, first: [90, 50, 40], first_draw: [30, 20, 20], median_draw_ms: 18 });
       } else {
         set({ mode: 'valley', level: 'level.world', top: '', loading: true, focus: '' });
         setTimeout(() => {
@@ -184,6 +184,10 @@ check(stallOk(60, 40) && stallOk(120, 40) && !stallOk(121, 40), 'a first frame w
 check(stallOk(24, 2) && !stallOk(26, 2), 'and under 25 ms never, whatever the ratio');
 check(!stallOk(500, 0), 'no median: a long frame is a stall');
 check(median([5, 1, 3]) === 3 && median([4, 1, 3, 2]) === 2.5 && median([]) === 0, 'the median');
+// P49: which part of a mark's longest first frame was the renderer's draw.
+check(drawShare({ first: [500, 60, 50], first_draw: [410, 30, 28] }) === 0.82 && drawShare({ first: [40, 300], first_draw: [10, 30] }) === 0.1,
+  'the draw share is read at the longest of the first frames');
+check(drawShare({ first_ms: 90 }) === null && drawShare({ first: [], first_draw: [] }) === null && drawShare(null) === null, 'no draw times, no share');
 
 console.log('ok: New Game through the creator into the Valley; a world save through the shrine into the creator');
 {
@@ -198,6 +202,9 @@ console.log('ok: New Game through the creator into the Valley; a world save thro
   const st = r.ng.stalls || {};
   check(st.title && st.title.first_ms === 900 && st.title.ok === false && st.title.warmed === true, 'the title\'s worst frame until New Game enables is reported');
   check(st.creator && st.creator.ok === true && st.creator.ratio === 1.8, `the creator's first frame (${JSON.stringify(st.creator)})`);
+  check(st.creator && JSON.stringify(st.creator.first_draw) === '[30,20,20]' && st.creator.median_draw_ms === 18 && st.creator.first_frame_draw_share === 0.33,
+    'with its first frames\' draw times and the draw\'s share of the longest (P49)');
+  check(st.title && st.title.first_draw === undefined, 'a mark without draw times carries none');
   check(st.level && st.level.ok === true && st.level.load_worst_ms === 600, 'the Valley\'s first frame, the load\'s worst frame apart');
   check(JSON.stringify(r.ng.categories) === JSON.stringify(['Presets', 'Skin']) && r.ng.undo === true, 'PageDown changed the category; R then Ctrl+Z undid the change');
   check(r.ng.pointer_lock && r.ng.pointer_lock.requests === 1 && r.ng.pointer_lock.in_gesture === true, `Begin asked for the pointer lock inside the gesture (${JSON.stringify(r.ng.pointer_lock)})`);
@@ -228,7 +235,7 @@ console.log('guard: the page\'s renderer is over the memory guard (M10 gate, LD-
 console.log('stall: the creator\'s first frame takes ten median frames');
 {
   const r = run('stall', ['--parts=new_game']);
-  check(r.code === 0 && r.out.includes('MISS: new_game: the creator\'s first frame: 500 ms against a median frame of 50 ms (10x, over 3x)'),
+  check(r.code === 0 && r.out.includes('MISS: new_game: the creator\'s first frame: 500 ms against a median frame of 50 ms (10x, over 3x; 82 % of that frame was the renderer\'s draw)'),
     `the default check passes and reports the miss (exit ${r.code})`);
   const s = run('stall', ['--parts=new_game', '--strict']);
   check(s.code === 1 && s.out.includes('a budget miss (--strict): the creator\'s first frame'), `--strict fails on it (exit ${s.code})`);

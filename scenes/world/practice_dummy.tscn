@@ -48,39 +48,39 @@ height = 0.54
 radial_segments = 10
 rings = 6
 
-[node name="PracticeDummy" type="StaticBody3D"]
+[node name="PracticeDummy" type="StaticBody3D" unique_id=1877689562]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_238a0")
 
-[node name="Shape" type="CollisionShape3D" parent="."]
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=515233511]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 shape = SubResource("CylinderShape3D_1")
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=185980358]
 script = ExtResource("2_c8050")
 entity_id = "dummy_01"
 definition_id = "prop.practice_dummy"
 anchor_path = NodePath("../Anchors/Torso")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=24455381]
 
-[node name="Torso" type="Marker3D" parent="Anchors"]
+[node name="Torso" type="Marker3D" parent="Anchors" unique_id=2004433162]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=946483152]
 
-[node name="Body" type="Area3D" parent="Hurtboxes"]
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=1116545497]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
 script = ExtResource("3_129e0")
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=1206160510]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Post" type="Area3D" parent="Hurtboxes"]
+[node name="Post" type="Area3D" parent="Hurtboxes" unique_id=142426749]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 collision_layer = 4
 collision_mask = 0
@@ -88,32 +88,32 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "legs"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Post"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Post" unique_id=1331438341]
 shape = SubResource("BoxShape3D_3")
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=1723661165]
 
-[node name="Base" type="MeshInstance3D" parent="Visual"]
+[node name="Base" type="MeshInstance3D" parent="Visual" unique_id=2039957091]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
 material_override = SubResource("StandardMaterial3D_4")
 mesh = SubResource("CylinderMesh_5")
 
-[node name="Post" type="MeshInstance3D" parent="Visual"]
+[node name="Post" type="MeshInstance3D" parent="Visual" unique_id=947223610]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 material_override = SubResource("StandardMaterial3D_6")
 mesh = SubResource("CylinderMesh_7")
 
-[node name="Crossbar" type="MeshInstance3D" parent="Visual"]
+[node name="Crossbar" type="MeshInstance3D" parent="Visual" unique_id=772873784]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
 material_override = SubResource("StandardMaterial3D_6")
 mesh = SubResource("BoxMesh_8")
 
-[node name="Sack" type="MeshInstance3D" parent="Visual"]
+[node name="Sack" type="MeshInstance3D" parent="Visual" unique_id=302407165]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
 material_override = SubResource("StandardMaterial3D_9")
 mesh = SubResource("BoxMesh_10")
 
-[node name="Head" type="MeshInstance3D" parent="Visual"]
+[node name="Head" type="MeshInstance3D" parent="Visual" unique_id=192794991]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.02, 0)
 material_override = SubResource("StandardMaterial3D_9")
 mesh = SubResource("SphereMesh_11")

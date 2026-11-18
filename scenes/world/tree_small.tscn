@@ -69,30 +69,30 @@ _surfaces = [{
 "vertex_data": PackedByteArray("mpnJQGZm5j+amZk/ICDOQGZm5j8YGpI/AADQQGZm5j8AAIA/ICDOQGZm5j/Py1s/mpnJQGZm5j/NzEw/FBPFQGZm5j/Py1s/NDPDQGZm5j8AAIA/FBPFQGZm5j8YGpI/mpnJQGZm5j+amZk/mpnJQOtRuD/sUbg/W47TQOtRuD8C06c/Fa7XQOtRuD8AAIA/W47TQOtRuD/8WTA/mpnJQOtRuD8pXA8/2aS/QOtRuD/8WTA/H4W7QOtRuD8AAIA/2aS/QOtRuD8C06c/mpnJQOtRuD/sUbg/mpnJQHA9ij8+Ctc/lfzYQHA9ij/si70/KVzfQHA9ij8AAIA/lfzYQHA9ij8o6AQ/mpnJQHA9ij8K16M+nza6QHA9ij8o6AQ/C9ezQHA9ij8AAIA/nza6QHA9ij/si70/mpnJQHA9ij8+Ctc/mpnJQOpROD+PwvU/0GreQOpROD/WRNM/PgrnQOpROD8AAIA/0GreQOpROD+o7LI+mpnJQOpROD8Q16M9ZMi0QOpROD+o7LI+9iisQOpROD8AAIA/ZMi0QOpROD/WRNM/mpnJQOpROD+PwvU/mpnJQOxRuD5wPQpACtnjQOxRuD7A/eg/UrjuQOxRuD4AAIA/CtnjQOxRuD4AEjg+mpnJQOxRuD4I1yO+KlqvQOxRuD4AEjg+4nqkQOxRuD4AAIA/KlqvQOxRuD7A/eg/mpnJQOxRuD5wPQpAmpnJQAAAAACamRlAREfpQAAAAACqtv4/Z2b2QAAAAAAAAIA/REfpQAAAAAAAqyQ8mpnJQAAAAADMzMy+8OupQAAAAAAAqyQ8zcycQAAAAAAAAIA/8OupQAAAAACqtv4/mpnJQAAAAACamRlAmpnJQGZm5j8AAIA/mpnJQGZm5j+amZk/ICDOQGZm5j8YGpI/AADQQGZm5j8AAIA/ICDOQGZm5j/Py1s/mpnJQGZm5j/NzEw/FBPFQGZm5j/Py1s/NDPDQGZm5j8AAIA/FBPFQGZm5j8YGpI/mpnJQGZm5j+amZk/mpnJQAAAAAAAAIA/mpnJQAAAAACamRlAREfpQAAAAACqtv4/Z2b2QAAAAAAAAIA/REfpQAAAAAAAqyQ8mpnJQAAAAADMzMy+8OupQAAAAAAAqyQ8zcycQAAAAAAAAIA/8OupQAAAAACqtv4/mpnJQAAAAACamRlA/38ys////79+qwGp////38zMMrP//////daA1AAA/9/MzP//AAD/vwEpgNT/P/+/MTMys/9//79/VAGp/7//v/9/MrP///+//38ys////79+qwGp////38zMMrP//////daA1AAA/9/MzP//AAD/vwEpgNT/P/+/MTMys/9//79/VAGp/7//v/9/MrP///+//38ys////79+qwGp////38zMMrP//////daA1AAA/9/MzP//AAD/vwEpgNT/P/+/MTMys/9//79/VAGp/7//v/9/MrP///+//38ys////79+qwGp////38zMMrP//////daA1AAA/9/MzP//AAD/vwEpgNT/P/+/MTMys/9//79/VAGp/7//v/9/MrP///+//38ys////79+qwGp////38zMMrP//////daA1AAA/9/MzP//AAD/vwEpgNT/P/+/MTMys/9//79/VAGp/7//v/9/MrP///+//38ys////79+qwGp////38zMMrP//////daA1AAA/9/MzP//AAD/vwEpgNT/P/+/MTMys/9//79/VAGp/7//v/9/MrP///+/AID//////78AgP//////vwCA//////+/AID//////78AgP//////vwCA//////+/AID//////78AgP//////vwCA//////+/AID//////78AgAAA////vwCAAAD///+/AIAAAP///78AgAAA////vwCAAAD///+/AIAAAP///78AgAAA////vwCAAAD///+/AIAAAP///78AgAAA////vw==")
 }]
 
-[node name="TreeSmall" type="StaticBody3D"]
+[node name="TreeSmall" type="StaticBody3D" unique_id=1801697813]
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_5fc47")
 world_id = "valley.forest.tree_01"
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=804485927]
 script = ExtResource("2_c8050")
 entity_id = "valley.forest.tree_01"
 definition_id = "prop.tree_small"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=1363250602]
 
-[node name="Center" type="Marker3D" parent="Anchors"]
+[node name="Center" type="Marker3D" parent="Anchors" unique_id=985736054]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 
-[node name="BlockTrunk" type="CollisionShape3D" parent="."]
+[node name="BlockTrunk" type="CollisionShape3D" parent="." unique_id=1557502316]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
 shape = SubResource("CylinderShape3D_1")
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=2058026190]
 
-[node name="Body" type="Area3D" parent="Hurtboxes"]
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=1342798487]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 collision_layer = 4
 collision_mask = 0
@@ -100,16 +100,16 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=147457213]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Intact" type="Node3D" parent="."]
+[node name="Intact" type="Node3D" parent="." unique_id=6483233]
 
-[node name="Merged" type="MeshInstance3D" parent="Intact" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Intact" unique_id=1724629783 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")
 
-[node name="Broken" type="Node3D" parent="."]
+[node name="Broken" type="Node3D" parent="." unique_id=1744788262]
 visible = false
 
-[node name="Merged" type="MeshInstance3D" parent="Broken" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Broken" unique_id=807857553 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_6")

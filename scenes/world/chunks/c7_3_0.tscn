@@ -38,11 +38,11 @@ _surfaces = [{
 "vertex_data": PackedByteArray("AADAvzQzMz8zM7O/AADAPzQzMz8zM7O/AADAPzQzMz8zM7M/AADAvzQzMz8zM7M/AADAv83MzL4zM7M/AADAP83MzL4zM7M/AADAP83MzL4zM7O/AADAv83MzL4zM7O/Saq8v5qZ2T/yUia/VTo8P5qZ2T/SMcu/KyXRP5qZ2T+gmgc/k0QTv5qZ2T+q1bs/k0QTvzQzMz+q1bs/KyXRPzQzMz+gmgc/VTo8PzQzMz/SMcu/Saq8vzQzMz/yUia/olanv2ZmJkCuNn29QB9NPGZmJkA727a/olanP2ZmJkDkdDa+QB9NvGZmJkDpIpg/QB9NvJqZ2T/pIpg/olanP5qZ2T/kdDa+QB9NPJqZ2T8727a/olanv5qZ2T+uNn295ow2v5mZWUDcmsg+XyR9vpmZWUCiZFK/qIJfP5mZWUDcmsi+tH3QPpmZWUCiZFI/tH3QPmZmJkCiZFI/qIJfP2ZmJkDcmsi+XyR9vmZmJkCiZFK/5ow2v2ZmJkDcmsg+IIfFvgAAgEBIGrU+mtLTvgAAgEByP+S+IIfFPgAAgEDsivK+mtLTPgAAgEDOzqY+mtLTPpqZWUDOzqY+IIfFPpqZWUDsivK+mtLTvpqZWUByP+S+IIfFvpqZWUBIGrU+zczMvgAAAEB7FK4/zczMPgAAAEB7FK4/zczMPgAAAECjcL0/zczMvgAAAECjcL0/zczMvjMzsz+jcL0/zczMPjMzsz+jcL0/zczMPjMzsz97FK4/zczMvjMzsz97FK4/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqpE6o74eV72qBdq3+gdQsoVawZG6oFhL1Ld6+KULdViX91tPTiwAbt12tCthFk0RpE/OByS5cBej0x53NPhJ3rxgSMC0T2jBqDkhR+dTR6aRPstgyKBd5dm3mDihMVt5pSVus0rQKiKRy8dXXghdaa2zytoRB2dio6chy0ewXovLDVeese5wLKTGHo/RfUqNn2DODddZLtPdbq7Fnj5M/bY+hl9GTjAYlNDawFKtd7mtoDk/Bn9Vkqo+LdBaFnfB0gZok7NJa5CiSyBQvt1WYKtrzAXoZSbJka3BS6B0VzPIMJsiTZIzO5pC4FM+aY85qtwyMBtsQ3a3q0FCYOWdJ8syM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
 }]
 
-[node name="Chunk_7_3_0" type="Node3D"]
+[node name="Chunk_7_3_0" type="Node3D" unique_id=519567747]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1550445897]
 
-[node name="world_aldmere_ridge_ballista_3" type="StaticBody3D" parent="Props" instance=ExtResource("1_83f62")]
+[node name="world_aldmere_ridge_ballista_3" type="StaticBody3D" parent="Props" unique_id=1808431686 instance=ExtResource("1_83f62")]
 transform = Transform3D(-0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, -0.70710677, 51, 62.7815, 247)
 collision_layer = 16
 collision_mask = 0
@@ -51,7 +51,7 @@ faction = "aldmere"
 prop_targets = PackedStringArray()
 world_id = "world.aldmere.ridge_ballista_3"
 
-[node name="world_aldmere_eyrie_cache" type="Node3D" parent="Props"]
+[node name="world_aldmere_eyrie_cache" type="Node3D" parent="Props" unique_id=561310768]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 62.956, 246)
 script = ExtResource("3_3b229")
 world_id = "world.aldmere.eyrie_cache"
@@ -60,12 +60,12 @@ priority = 45
 requires_stage = 6
 stage_message = "Out of reach. Grow to stage 6."
 
-[node name="Visual" type="Node3D" parent="Props/world_aldmere_eyrie_cache"]
+[node name="Visual" type="Node3D" parent="Props/world_aldmere_eyrie_cache" unique_id=1123273336]
 
-[node name="Chest" type="MeshInstance3D" parent="Props/world_aldmere_eyrie_cache/Visual" groups=["scenery"]]
+[node name="Chest" type="MeshInstance3D" parent="Props/world_aldmere_eyrie_cache/Visual" unique_id=532373494 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_1")
 
-[node name="world_aldmere_eyrie_cairn" type="Node3D" parent="Props"]
+[node name="world_aldmere_eyrie_cairn" type="Node3D" parent="Props" unique_id=1151947238]
 transform = Transform3D(-0.7071068, 0, -0.7071067, 0, 1, 0, 0.7071067, 0, -0.7071068, 58, 77.678, 252)
 script = ExtResource("5_dd8c0")
 npc_id = "world.aldmere.eyrie_cairn"
@@ -76,42 +76,42 @@ priority = 45
 requires_stage = 6
 stage_message = "Out of reach. Grow to stage 6."
 
-[node name="Base" type="StaticBody3D" parent="Props/world_aldmere_eyrie_cairn"]
+[node name="Base" type="StaticBody3D" parent="Props/world_aldmere_eyrie_cairn" unique_id=1471840141]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_eyrie_cairn/Base"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_eyrie_cairn/Base" unique_id=372482535]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="Stones" type="MeshInstance3D" parent="Props/world_aldmere_eyrie_cairn/Base" groups=["scenery"]]
+[node name="Stones" type="MeshInstance3D" parent="Props/world_aldmere_eyrie_cairn/Base" unique_id=289355062 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_3")
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=240104124]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1706713469]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1974207917]
 
-[node name="Patrol" type="Node3D" parent="Markers"]
+[node name="Patrol" type="Node3D" parent="Markers" unique_id=1214197322]
 
-[node name="world_marker_ridge_flee_e" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_ridge_flee_e" type="Marker3D" parent="Markers/Patrol" unique_id=775972513]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 94, 49.861, 241)
 script = ExtResource("6_acc12")
 marker_id = "world.marker.ridge_flee_e"
 kind = 5
 
-[node name="world_marker_ridge_flee_s" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_ridge_flee_s" type="Marker3D" parent="Markers/Patrol" unique_id=33285608]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 55.2195, 201)
 script = ExtResource("6_acc12")
 marker_id = "world.marker.ridge_flee_s"
 kind = 5
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1282967375]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=1201695347]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1571985440]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1537121039]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=867382212]

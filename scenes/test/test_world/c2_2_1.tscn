@@ -4,78 +4,78 @@
 [ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
 [ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="3_960f4"]
 
-[node name="Chunk_2_2_1" type="Node3D"]
+[node name="Chunk_2_2_1" type="Node3D" unique_id=1473130469]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1267368779]
 
-[node name="Fence1" type="StaticBody3D" parent="Props" instance=ExtResource("1_24ab9")]
+[node name="Fence1" type="StaticBody3D" parent="Props" unique_id=665268425 instance=ExtResource("1_24ab9")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 162, 14, 166)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.fence_1"
 
-[node name="Fence2" type="StaticBody3D" parent="Props" instance=ExtResource("1_24ab9")]
+[node name="Fence2" type="StaticBody3D" parent="Props" unique_id=7747649 instance=ExtResource("1_24ab9")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 170, 14, 166)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.fence_2"
 
-[node name="Fence3" type="StaticBody3D" parent="Props" instance=ExtResource("1_24ab9")]
+[node name="Fence3" type="StaticBody3D" parent="Props" unique_id=1983510984 instance=ExtResource("1_24ab9")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 162, 14, 180)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.fence_3"
 
-[node name="Fence4" type="StaticBody3D" parent="Props" instance=ExtResource("1_24ab9")]
+[node name="Fence4" type="StaticBody3D" parent="Props" unique_id=1333426143 instance=ExtResource("1_24ab9")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 170, 14, 180)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.fence_4"
 
-[node name="Crate1" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="Crate1" type="StaticBody3D" parent="Props" unique_id=1871279841 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 159.4, 14, 173)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.crate_1"
 
-[node name="Crate2" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="Crate2" type="StaticBody3D" parent="Props" unique_id=1402428562 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 163.8, 14, 173)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.crate_2"
 
-[node name="Crate3" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="Crate3" type="StaticBody3D" parent="Props" unique_id=1990397149 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 168.2, 14, 173)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.crate_3"
 
-[node name="Crate4" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="Crate4" type="StaticBody3D" parent="Props" unique_id=1179029676 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 172.6, 14, 173)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "test_world.town.crate_4"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=281900220]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1242938514]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1082516967]
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1505878385]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=317543066]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1474958044]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1365810575]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=353825576]

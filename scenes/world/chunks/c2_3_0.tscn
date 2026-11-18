@@ -24,35 +24,35 @@ _surfaces = [{
 "vertex_data": PackedByteArray("AADAvzQzMz8zM7O/AADAPzQzMz8zM7O/AADAPzQzMz8zM7M/AADAvzQzMz8zM7M/AADAv83MzL4zM7M/AADAP83MzL4zM7M/AADAP83MzL4zM7O/AADAv83MzL4zM7O/Saq8v5qZ2T/yUia/VTo8P5qZ2T/SMcu/KyXRP5qZ2T+gmgc/k0QTv5qZ2T+q1bs/k0QTvzQzMz+q1bs/KyXRPzQzMz+gmgc/VTo8PzQzMz/SMcu/Saq8vzQzMz/yUia/olanv2ZmJkCuNn29QB9NPGZmJkA727a/olanP2ZmJkDkdDa+QB9NvGZmJkDpIpg/QB9NvJqZ2T/pIpg/olanP5qZ2T/kdDa+QB9NPJqZ2T8727a/olanv5qZ2T+uNn295ow2v5mZWUDcmsg+XyR9vpmZWUCiZFK/qIJfP5mZWUDcmsi+tH3QPpmZWUCiZFI/tH3QPmZmJkCiZFI/qIJfP2ZmJkDcmsi+XyR9vmZmJkCiZFK/5ow2v2ZmJkDcmsg+IIfFvgAAgEBIGrU+mtLTvgAAgEByP+S+IIfFPgAAgEDsivK+mtLTPgAAgEDOzqY+mtLTPpqZWUDOzqY+IIfFPpqZWUDsivK+mtLTvpqZWUByP+S+IIfFvpqZWUBIGrU+zczMvgAAAEB7FK4/zczMPgAAAEB7FK4/zczMPgAAAECjcL0/zczMvgAAAECjcL0/zczMvjMzsz+jcL0/zczMPjMzsz+jcL0/zczMPjMzsz97FK4/zczMvjMzsz97FK4/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqpE6o74eV72qBdq3+gdQsoVawZG6oFhL1Ld6+KULdViX91tPTiwAbt12tCthFk0RpE/OByS5cBej0x53NPhJ3rxgSMC0T2jBqDkhR+dTR6aRPstgyKBd5dm3mDihMVt5pSVus0rQKiKRy8dXXghdaa2zytoRB2dio6chy0ewXovLDVeese5wLKTGHo/RfUqNn2DODddZLtPdbq7Fnj5M/bY+hl9GTjAYlNDawFKtd7mtoDk/Bn9Vkqo+LdBaFnfB0gZok7NJa5CiSyBQvt1WYKtrzAXoZSbJka3BS6B0VzPIMJsiTZIzO5pC4FM+aY85qtwyMBtsQ3a3q0FCYOWdJ8syM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
 }]
 
-[node name="Chunk_2_3_0" type="Node3D"]
+[node name="Chunk_2_3_0" type="Node3D" unique_id=1899260756]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1960650903]
 
-[node name="world_greywood_grove_rockfall" type="StaticBody3D" parent="Props" instance=ExtResource("1_dfd41")]
+[node name="world_greywood_grove_rockfall" type="StaticBody3D" parent="Props" unique_id=1232276290 instance=ExtResource("1_dfd41")]
 transform = Transform3D(0.9252097, 0, 0.37945616, 0, 1, 0, -0.37945616, 0, 0.9252097, 7.299988, 27, 185.9)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "world.greywood.grove_rockfall"
 
-[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_greywood_grove_rockfall"]
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_greywood_grove_rockfall" unique_id=141703574]
 enabled = false
 start_position = Vector3(3.8146973e-06, 0.35000038, 5.0000153)
 end_position = Vector3(3.8146973e-06, 0.35000038, -4.9999847)
 
-[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_greywood_grove_rockfall"]
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_greywood_grove_rockfall" unique_id=1763745337]
 enabled = false
 navigation_layers = 2
 start_position = Vector3(0, 0.14999962, 6.5000153)
 end_position = Vector3(7.6293945e-06, 0.14999962, -6.5)
 
-[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_greywood_grove_rockfall"]
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_greywood_grove_rockfall" unique_id=513462149]
 enabled = false
 navigation_layers = 16
 start_position = Vector3(3.8146973e-06, 0, 12)
 end_position = Vector3(0, 0, -11.999985)
 
-[node name="world_greywood_grove_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="world_greywood_grove_cache" type="StaticBody3D" parent="Props" unique_id=1034493556 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 27, 242)
 collision_layer = 16
 collision_mask = 0
@@ -60,7 +60,7 @@ script = ExtResource("2_5fc47")
 world_id = "world.greywood.grove_cache"
 loot_table = "loot.cache_hidden_grove"
 
-[node name="world_greywood_grove_cairn" type="Node3D" parent="Props"]
+[node name="world_greywood_grove_cairn" type="Node3D" parent="Props" unique_id=1566449347]
 transform = Transform3D(0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, 0.70710677, 40, 27, 252)
 script = ExtResource("4_dd8c0")
 npc_id = "world.greywood.grove_cairn"
@@ -69,35 +69,35 @@ prompt = "Read the cairn"
 radius_m = 4.0
 priority = 45
 
-[node name="Base" type="StaticBody3D" parent="Props/world_greywood_grove_cairn"]
+[node name="Base" type="StaticBody3D" parent="Props/world_greywood_grove_cairn" unique_id=297919141]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_grove_cairn/Base"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_grove_cairn/Base" unique_id=1180739965]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Stones" type="MeshInstance3D" parent="Props/world_greywood_grove_cairn/Base" groups=["scenery"]]
+[node name="Stones" type="MeshInstance3D" parent="Props/world_greywood_grove_cairn/Base" unique_id=1949687923 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=56898467]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=2000544298]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1359186951]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=27798032]
 
-[node name="world_marker_hidden_grove" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_hidden_grove" type="Marker3D" parent="Markers/Objective" unique_id=790596110]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 27.2, 250)
 script = ExtResource("6_acc12")
 marker_id = "world.marker.hidden_grove"
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1406666387]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=1948369324]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=23562245]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1004271238]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=873697525]

@@ -58,11 +58,11 @@ _surfaces = [{
 "vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
 }]
 
-[node name="Chunk_5_4_0" type="Node3D"]
+[node name="Chunk_5_4_0" type="Node3D" unique_id=1236217990]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1302418522]
 
-[node name="world_aldmere_camp_catapult_1" type="StaticBody3D" parent="Props" instance=ExtResource("1_1d827")]
+[node name="world_aldmere_camp_catapult_1" type="StaticBody3D" parent="Props" unique_id=1389212272 instance=ExtResource("1_1d827")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 232, 33.352, 66)
 collision_layer = 16
 collision_mask = 0
@@ -71,7 +71,7 @@ faction = "aldmere"
 prop_targets = PackedStringArray()
 world_id = "world.aldmere.camp_catapult_1"
 
-[node name="world_aldmere_camp_ballista_1" type="StaticBody3D" parent="Props" instance=ExtResource("3_83f62")]
+[node name="world_aldmere_camp_ballista_1" type="StaticBody3D" parent="Props" unique_id=2083673391 instance=ExtResource("3_83f62")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 252, 33.352, 58)
 collision_layer = 16
 collision_mask = 0
@@ -80,7 +80,7 @@ faction = "aldmere"
 prop_targets = PackedStringArray()
 world_id = "world.aldmere.camp_ballista_1"
 
-[node name="world_aldmere_war_camp_cache" type="StaticBody3D" parent="Props" instance=ExtResource("4_960f4")]
+[node name="world_aldmere_war_camp_cache" type="StaticBody3D" parent="Props" unique_id=891615735 instance=ExtResource("4_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 33.352, 162)
 collision_layer = 16
 collision_mask = 0
@@ -88,7 +88,7 @@ script = ExtResource("5_5fc47")
 world_id = "world.aldmere.war_camp_cache"
 loot_table = "loot.cache_war_camp"
 
-[node name="world_aldmere_mill_cairn" type="Node3D" parent="Props"]
+[node name="world_aldmere_mill_cairn" type="Node3D" parent="Props" unique_id=1086179290]
 transform = Transform3D(-0.9396926, 0, -0.34202015, 0, 1, 0, 0.34202015, 0, -0.9396926, 198, 23.14, 236)
 script = ExtResource("6_dd8c0")
 npc_id = "world.aldmere.mill_cairn"
@@ -97,78 +97,78 @@ prompt = "Read the cairn"
 radius_m = 4.0
 priority = 45
 
-[node name="Base" type="StaticBody3D" parent="Props/world_aldmere_mill_cairn"]
+[node name="Base" type="StaticBody3D" parent="Props/world_aldmere_mill_cairn" unique_id=197723439]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_mill_cairn/Base"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_mill_cairn/Base" unique_id=115424768]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Stones" type="MeshInstance3D" parent="Props/world_aldmere_mill_cairn/Base" groups=["scenery"]]
+[node name="Stones" type="MeshInstance3D" parent="Props/world_aldmere_mill_cairn/Base" unique_id=545465377 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=906138857]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1222831303]
 
-[node name="world_cp_aldmere_road" type="Marker3D" parent="Waystones"]
+[node name="world_cp_aldmere_road" type="Marker3D" parent="Waystones" unique_id=971347804]
 transform = Transform3D(0.76604444, 0, -0.6427876, 0, 1, 0, 0.6427876, 0, 0.76604444, 214, 34.51, 60)
 script = ExtResource("8_add9b")
 requires_flags = PackedStringArray()
 display_name = "Aldmere road waystone"
 checkpoint_id = "world.cp.aldmere_road"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_aldmere_road"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_aldmere_road" unique_id=105650601]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 3)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_aldmere_road/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_aldmere_road/Stone" unique_id=1863135466]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_3")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_aldmere_road/Stone" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_aldmere_road/Stone" unique_id=1435646328 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_aldmere_road" groups=["scenery"]]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_aldmere_road" unique_id=280507019 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 3)
 mesh = SubResource("ArrayMesh_5")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=117261878]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1973930754]
 
-[node name="world_marker_war_camp_edge" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_war_camp_edge" type="Marker3D" parent="Markers/Objective" unique_id=1752248538]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 244, 33.272, 190)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.war_camp_edge"
 
-[node name="world_marker_deserters_mill" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_deserters_mill" type="Marker3D" parent="Markers/Objective" unique_id=2140349159]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 184, 23.34, 204)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.deserters_mill"
 
-[node name="Safe" type="Node3D" parent="Markers"]
+[node name="Safe" type="Node3D" parent="Markers" unique_id=2041690782]
 
-[node name="world_marker_deserters_hide" type="Marker3D" parent="Markers/Safe"]
+[node name="world_marker_deserters_hide" type="Marker3D" parent="Markers/Safe" unique_id=139726165]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 168, 23.34, 238)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.deserters_hide"
 kind = 4
 
-[node name="Patrol" type="Node3D" parent="Markers"]
+[node name="Patrol" type="Node3D" parent="Markers" unique_id=317244925]
 
-[node name="world_marker_camp_flee_w" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_camp_flee_w" type="Marker3D" parent="Markers/Patrol" unique_id=1680437000]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 164, 30.084, 110)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.camp_flee_w"
 kind = 5
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=466484918]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=684256434]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1835726070]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=975119390]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=468475190]

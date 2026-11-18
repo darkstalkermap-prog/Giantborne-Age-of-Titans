@@ -49,93 +49,93 @@ roughness = 0.3
 [sub_resource type="BoxMesh" id="BoxMesh_9"]
 size = Vector3(0.6, 0.6, 0.6)
 
-[node name="FlowTestLevel" type="Node3D"]
+[node name="FlowTestLevel" type="Node3D" unique_id=897657216]
 script = ExtResource("1_6c505")
 
-[node name="Environment" type="WorldEnvironment" parent="."]
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=1154530304]
 environment = SubResource("Environment_1")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=750700645]
 transform = Transform3D(0.8480481, 0.41758206, -0.32625088, 0, 0.6156615, 0.7880107, 0.52991927, -0.668271, 0.5221106, 0, 0, 0)
 shadow_enabled = true
 directional_shadow_max_distance = 80.0
 
-[node name="Ground" type="StaticBody3D" parent="."]
+[node name="Ground" type="StaticBody3D" parent="." unique_id=398099308]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Ground"]
+[node name="Shape" type="CollisionShape3D" parent="Ground" unique_id=1332725218]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground"]
+[node name="Mesh" type="MeshInstance3D" parent="Ground" unique_id=1417683044]
 material_override = SubResource("ShaderMaterial_3")
 mesh = SubResource("PlaneMesh_4")
 
-[node name="Checkpoints" type="Node3D" parent="."]
+[node name="Checkpoints" type="Node3D" parent="." unique_id=332119019]
 
-[node name="CpA" type="Marker3D" parent="Checkpoints"]
+[node name="CpA" type="Marker3D" parent="Checkpoints" unique_id=1846495423]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 20)
 script = ExtResource("3_74fde")
 checkpoint_id = "test.cp_a"
 
-[node name="CpB" type="Marker3D" parent="Checkpoints"]
+[node name="CpB" type="Marker3D" parent="Checkpoints" unique_id=1968194200]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 24, 0.05, -4)
 script = ExtResource("3_74fde")
 checkpoint_id = "test.cp_b"
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1828266935]
 
-[node name="CpWay" type="Marker3D" parent="Waystones"]
+[node name="CpWay" type="Marker3D" parent="Waystones" unique_id=936675090]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0.05, -4)
 script = ExtResource("4_add9b")
 radius_m = 6.0
 requires_flags = PackedStringArray("test.way_open")
 checkpoint_id = "test.cp_way"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/CpWay"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/CpWay" unique_id=549132513]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 4)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/CpWay/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/CpWay/Stone" unique_id=828129643]
 shape = SubResource("BoxShape3D_5")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/CpWay/Stone"]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/CpWay/Stone" unique_id=1393181343]
 material_override = SubResource("StandardMaterial3D_6")
 mesh = SubResource("BoxMesh_7")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/CpWay"]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/CpWay" unique_id=367823828]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 4)
 visible = false
 material_override = SubResource("StandardMaterial3D_8")
 mesh = SubResource("BoxMesh_9")
 
-[node name="Fence" type="StaticBody3D" parent="." instance=ExtResource("5_24ab9")]
+[node name="Fence" type="StaticBody3D" parent="." unique_id=1988269399 instance=ExtResource("5_24ab9")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 8, 0, 12)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("6_5fc47")
 world_id = "test.flow_fence"
 
-[node name="Spawns" type="Node3D" parent="."]
+[node name="Spawns" type="Node3D" parent="." unique_id=1442933005]
 
-[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns" unique_id=1820022336]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 20)
 
-[node name="StubEnemy" type="Marker3D" parent="Spawns"]
+[node name="StubEnemy" type="Marker3D" parent="Spawns" unique_id=724626036]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -24)
 
-[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("7_627ae")]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1908302489 instance=ExtResource("7_627ae")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 20)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("8_7ef4a")
 
-[node name="DebrisPool" type="Node3D" parent="."]
+[node name="DebrisPool" type="Node3D" parent="." unique_id=1922481873]
 script = ExtResource("9_ce070")
 
-[node name="Signs" type="Node3D" parent="."]
+[node name="Signs" type="Node3D" parent="." unique_id=1688140973]
 
-[node name="SignCpA" type="Label3D" parent="Signs"]
+[node name="SignCpA" type="Label3D" parent="Signs" unique_id=898440006]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 17)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
@@ -145,7 +145,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "CHECKPOINT test.cp_a (start)"
 font_size = 64
 
-[node name="SignCpB" type="Label3D" parent="Signs"]
+[node name="SignCpB" type="Label3D" parent="Signs" unique_id=862535643]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 4.25, -4)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
@@ -155,7 +155,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "CHECKPOINT test.cp_b"
 font_size = 64
 
-[node name="SignWaystone" type="Label3D" parent="Signs"]
+[node name="SignWaystone" type="Label3D" parent="Signs" unique_id=617392685]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 6.05, 0)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
@@ -165,7 +165,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "WAYSTONE test.cp_way (needs test.way_open)"
 font_size = 64
 
-[node name="SignFence" type="Label3D" parent="Signs"]
+[node name="SignFence" type="Label3D" parent="Signs" unique_id=480387674]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2.6, 12)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0
@@ -175,7 +175,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "FENCE test.flow_fence"
 font_size = 64
 
-[node name="SignStub" type="Label3D" parent="Signs"]
+[node name="SignStub" type="Label3D" parent="Signs" unique_id=751292306]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.05, -24)
 visibility_range_begin = 7.0
 visibility_range_end = 40.0

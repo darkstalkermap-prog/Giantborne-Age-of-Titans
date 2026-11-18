@@ -62,11 +62,11 @@ _surfaces = [{
 [sub_resource type="BoxShape3D" id="BoxShape3D_6"]
 size = Vector3(32, 24, 3)
 
-[node name="Chunk_3_1_0" type="Node3D"]
+[node name="Chunk_3_1_0" type="Node3D" unique_id=1375277787]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=119180777]
 
-[node name="world_stonehold_moot_challenge" type="Node3D" parent="Props"]
+[node name="world_stonehold_moot_challenge" type="Node3D" parent="Props" unique_id=1826147146]
 transform = Transform3D(0.76604444, 0, 0.6427876, 0, 1, 0, -0.6427876, 0, 0.76604444, 194, 91.558, 96)
 script = ExtResource("1_ce1f7")
 npc_id = "world.stonehold.harrok"
@@ -75,17 +75,17 @@ prompt = "Answer Harrok's challenge"
 radius_m = 10.0
 priority = 40
 
-[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_moot_challenge"]
+[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_moot_challenge" unique_id=1076303248]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_moot_challenge/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_moot_challenge/Body" unique_id=1394808444]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Figure" type="MeshInstance3D" parent="Props/world_stonehold_moot_challenge/Body"]
+[node name="Figure" type="MeshInstance3D" parent="Props/world_stonehold_moot_challenge/Body" unique_id=1234995031]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="world_stonehold_battery_catapult_1" type="StaticBody3D" parent="Props" instance=ExtResource("3_1d827")]
+[node name="world_stonehold_battery_catapult_1" type="StaticBody3D" parent="Props" unique_id=869561973 instance=ExtResource("3_1d827")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 50, 87.122, 116)
 collision_layer = 16
 collision_mask = 0
@@ -94,7 +94,7 @@ faction = "toll_riders"
 prop_targets = PackedStringArray()
 world_id = "world.stonehold.battery_catapult_1"
 
-[node name="world_stonehold_battery_catapult_2" type="StaticBody3D" parent="Props" instance=ExtResource("3_1d827")]
+[node name="world_stonehold_battery_catapult_2" type="StaticBody3D" parent="Props" unique_id=2042291232 instance=ExtResource("3_1d827")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 78, 86.2955, 111)
 collision_layer = 16
 collision_mask = 0
@@ -103,7 +103,7 @@ faction = "toll_riders"
 prop_targets = PackedStringArray()
 world_id = "world.stonehold.battery_catapult_2"
 
-[node name="world_stonehold_battery_ballista_1" type="StaticBody3D" parent="Props" instance=ExtResource("5_83f62")]
+[node name="world_stonehold_battery_ballista_1" type="StaticBody3D" parent="Props" unique_id=1476087861 instance=ExtResource("5_83f62")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 44, 86.813995, 138)
 collision_layer = 16
 collision_mask = 0
@@ -112,7 +112,7 @@ faction = "toll_riders"
 prop_targets = PackedStringArray()
 world_id = "world.stonehold.battery_ballista_1"
 
-[node name="world_stonehold_battery_ballista_2" type="StaticBody3D" parent="Props" instance=ExtResource("5_83f62")]
+[node name="world_stonehold_battery_ballista_2" type="StaticBody3D" parent="Props" unique_id=1738803267 instance=ExtResource("5_83f62")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 86, 86.12, 134)
 collision_layer = 16
 collision_mask = 0
@@ -121,7 +121,7 @@ faction = "toll_riders"
 prop_targets = PackedStringArray()
 world_id = "world.stonehold.battery_ballista_2"
 
-[node name="world_stonehold_stair_top_cache" type="StaticBody3D" parent="Props" instance=ExtResource("6_960f4")]
+[node name="world_stonehold_stair_top_cache" type="StaticBody3D" parent="Props" unique_id=1743238253 instance=ExtResource("6_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 240, 78.052, 212)
 collision_layer = 16
 collision_mask = 0
@@ -129,7 +129,7 @@ script = ExtResource("7_5fc47")
 world_id = "world.stonehold.stair_top_cache"
 loot_table = "loot.cache_stair_top"
 
-[node name="world_stonehold_battery_cache" type="StaticBody3D" parent="Props" instance=ExtResource("6_960f4")]
+[node name="world_stonehold_battery_cache" type="StaticBody3D" parent="Props" unique_id=1499179345 instance=ExtResource("6_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 86.548, 140)
 collision_layer = 16
 collision_mask = 0
@@ -137,67 +137,67 @@ script = ExtResource("7_5fc47")
 world_id = "world.stonehold.battery_cache"
 loot_table = "loot.cache_moot_battery"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1359906042]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1699365782]
 
-[node name="world_cp_moot_foot" type="Marker3D" parent="Waystones"]
+[node name="world_cp_moot_foot" type="Marker3D" parent="Waystones" unique_id=2088530215]
 transform = Transform3D(-0.8660254, 0, 0.50000006, 0, 1, 0, -0.50000006, 0, -0.8660254, 186, 90.465004, 118)
 script = ExtResource("8_add9b")
 requires_flags = PackedStringArray()
 display_name = "Moot foot waystone"
 checkpoint_id = "world.cp.moot_foot"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_moot_foot"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_moot_foot" unique_id=871801015]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.3, 4)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_moot_foot/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_moot_foot/Stone" unique_id=1345599918]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_3")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_moot_foot/Stone" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_moot_foot/Stone" unique_id=1677127848 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_moot_foot" groups=["scenery"]]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_moot_foot" unique_id=1841627765 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.3, 4)
 mesh = SubResource("ArrayMesh_5")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1455260109]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1532158655]
 
-[node name="world_marker_moot_gate" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_moot_gate" type="Marker3D" parent="Markers/Objective" unique_id=2064881858]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 208, 95.2, 80)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.moot_gate"
 
-[node name="world_marker_moot_battery" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_moot_battery" type="Marker3D" parent="Markers/Objective" unique_id=650063046]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 86.572, 128)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.moot_battery"
 
-[node name="Patrol" type="Node3D" parent="Markers"]
+[node name="Patrol" type="Node3D" parent="Markers" unique_id=25360799]
 
-[node name="world_marker_battery_flee_e" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_battery_flee_e" type="Marker3D" parent="Markers/Patrol" unique_id=1916771513]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 136, 83.324, 156)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.battery_flee_e"
 kind = 5
 
-[node name="world_marker_battery_flee_n" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_battery_flee_n" type="Marker3D" parent="Markers/Patrol" unique_id=1898240228]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 78.325, 53)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.battery_flee_n"
 kind = 5
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=860422092]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=122080666]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1771482895]
 
-[node name="world_gate_moot_0" type="StaticBody3D" parent="SizeGates"]
+[node name="world_gate_moot_0" type="StaticBody3D" parent="SizeGates" unique_id=1022890784]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 218, 104, 69.400024)
 collision_layer = 256
 collision_mask = 0
@@ -207,10 +207,10 @@ min_stage = 6
 message = "The clans admit only a giant of the old height to the Moot. Grow to stage 6."
 cue = "sfx.gate.stone"
 
-[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_moot_0"]
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_moot_0" unique_id=1679881033]
 transform = Transform3D(-0.7738402, 0, 0.6333809, 0, 1, 0, -0.6333809, 0, -0.7738402, 0, 0, 0)
 shape = SubResource("BoxShape3D_6")
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=891144084]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1900619465]

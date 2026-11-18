@@ -20,11 +20,11 @@ _surfaces = [{
 "vertex_data": PackedByteArray("AADAvzQzMz8zM7O/AADAPzQzMz8zM7O/AADAPzQzMz8zM7M/AADAvzQzMz8zM7M/AADAv83MzL4zM7M/AADAP83MzL4zM7M/AADAP83MzL4zM7O/AADAv83MzL4zM7O/Saq8v5qZ2T/yUia/VTo8P5qZ2T/SMcu/KyXRP5qZ2T+gmgc/k0QTv5qZ2T+q1bs/k0QTvzQzMz+q1bs/KyXRPzQzMz+gmgc/VTo8PzQzMz/SMcu/Saq8vzQzMz/yUia/olanv2ZmJkCuNn29QB9NPGZmJkA727a/olanP2ZmJkDkdDa+QB9NvGZmJkDpIpg/QB9NvJqZ2T/pIpg/olanP5qZ2T/kdDa+QB9NPJqZ2T8727a/olanv5qZ2T+uNn295ow2v5mZWUDcmsg+XyR9vpmZWUCiZFK/qIJfP5mZWUDcmsi+tH3QPpmZWUCiZFI/tH3QPmZmJkCiZFI/qIJfP2ZmJkDcmsi+XyR9vmZmJkCiZFK/5ow2v2ZmJkDcmsg+IIfFvgAAgEBIGrU+mtLTvgAAgEByP+S+IIfFPgAAgEDsivK+mtLTPgAAgEDOzqY+mtLTPpqZWUDOzqY+IIfFPpqZWUDsivK+mtLTvpqZWUByP+S+IIfFvpqZWUBIGrU+zczMvgAAAEB7FK4/zczMPgAAAEB7FK4/zczMPgAAAECjcL0/zczMvgAAAECjcL0/zczMvjMzsz+jcL0/zczMPjMzsz+jcL0/zczMPjMzsz97FK4/zczMvjMzsz97FK4/MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqpE6o74eV72qBdq3+gdQsoVawZG6oFhL1Ld6+KULdViX91tPTiwAbt12tCthFk0RpE/OByS5cBej0x53NPhJ3rxgSMC0T2jBqDkhR+dTR6aRPstgyKBd5dm3mDihMVt5pSVus0rQKiKRy8dXXghdaa2zytoRB2dio6chy0ewXovLDVeese5wLKTGHo/RfUqNn2DODddZLtPdbq7Fnj5M/bY+hl9GTjAYlNDawFKtd7mtoDk/Bn9Vkqo+LdBaFnfB0gZok7NJa5CiSyBQvt1WYKtrzAXoZSbJka3BS6B0VzPIMJsiTZIzO5pC4FM+aY85qtwyMBtsQ3a3q0FCYOWdJ8syM8zM7ERhp//f/98ys8yMMrMys8xMzMz/X/+fOI5xnMxMzExtW2zb/5//XxxHVJXMzDIzTmxhp/8f/x9UVamq")
 }]
 
-[node name="Chunk_5_2_0" type="Node3D"]
+[node name="Chunk_5_2_0" type="Node3D" unique_id=712873973]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=19740397]
 
-[node name="world_drowned_shoulder_cairn" type="Node3D" parent="Props"]
+[node name="world_drowned_shoulder_cairn" type="Node3D" parent="Props" unique_id=418419499]
 transform = Transform3D(-0.9396926, 0, -0.34202015, 0, 1, 0, 0.34202015, 0, -0.9396926, 0, 16.728, 214)
 script = ExtResource("1_dd8c0")
 npc_id = "world.drowned.shoulder_cairn"
@@ -34,29 +34,29 @@ radius_m = 4.0
 priority = 45
 requires_stage = 6
 
-[node name="Base" type="StaticBody3D" parent="Props/world_drowned_shoulder_cairn"]
+[node name="Base" type="StaticBody3D" parent="Props/world_drowned_shoulder_cairn" unique_id=1392520850]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_drowned_shoulder_cairn/Base"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_drowned_shoulder_cairn/Base" unique_id=1285078080]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Stones" type="MeshInstance3D" parent="Props/world_drowned_shoulder_cairn/Base" groups=["scenery"]]
+[node name="Stones" type="MeshInstance3D" parent="Props/world_drowned_shoulder_cairn/Base" unique_id=1683680970 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1251462849]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=855623045]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=950385882]
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1961481168]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=2068690319]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1767859729]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1792175715]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1317678935]

@@ -25,9 +25,22 @@
 //     WORLD_WALK_END line, 100 ms after), so the recording ends in a hole no "read" could end - placed on
 //     the main thread all the same (cut short by the walk's end), where the M7 gate's placing listed it
 //     as a hole elsewhere and failed the default check (the first real world check's walk ended so).
+//   * step (P49): the audio clock stops for 150 ms part-way through the walk (the stub suspends its
+//     AudioContext and resumes it: the clock falls behind the page's in one step, as the release's
+//     failed world checks showed over six minutes of music), with a slow frame before the step, one
+//     just after it and one later. The recorder maps the clocks piecewise (a reference every
+//     --clock-ref-ms; 500 ms here, 10 s in a real run), so every hole is still placed on the main
+//     thread and the check passes; the one straight line of before places the later holes wrong
+//     (shown on the same trace);
+//   * drift (P49): the audio clock loses time unevenly - ten short stops in the walk's first third -
+//     and slow frames follow: placed as well.
+// Before the browser cases, the mapping's own rules on made-up traces (clockMap, placeHoles): a clock
+// that steps, one that drifts, a hole inside the stepped segment on either side of the step, a hole
+// that no read explains.
 // Prints TEST_WORLD_CHECK with the count of checks and failures; exits 1 on a failure.
 //
-// Usage (from the project folder): node tools/web/test_world_check.mjs [--keep]
+// Usage (from the project folder): node tools/web/test_world_check.mjs [--keep] [--no-browser]
+//   --no-browser   the mapping's cases only (a second)
 //   --keep   keep the stub folder and the reports (printed)
 // Needs what world_check.mjs needs: Playwright and its Chromium. About two minutes.
 
@@ -39,9 +52,11 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CHECK = join(ROOT, 'tools', 'web', 'world_check.mjs');
+const { clockMap, placeHoles, PLACE_TOLERANCE_MS, REF_INTERVAL_MS, STEP_NOTICE_MS } = await import(join(ROOT, 'tools', 'web', 'audio_recorder.mjs'));
 const CONFIG = JSON.parse(readFileSync(join(ROOT, 'tools', 'web', 'world_check.json'), 'utf8'));
 const FIXTURE = JSON.parse(readFileSync(join(ROOT, CONFIG.fixture), 'utf8'));
 const KEEP = process.argv.includes('--keep');
+const NO_BROWSER = process.argv.includes('--no-browser');
 
 const STUB = `<!doctype html>
 <html>
@@ -101,6 +116,7 @@ registerProcessor('godot-processor', StubDriver);\`;
   let continued = false;
   document.getElementById('play').addEventListener('click', async () => {
     const ctx = new AudioContext();
+    window.__stubCtx = ctx;
     await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([DRIVER], { type: 'application/javascript' })));
     const node = new AudioWorkletNode(ctx, 'godot-processor', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
     node.port.onmessage = () => node.port.postMessage({ cmd: 'data' });
@@ -147,6 +163,19 @@ registerProcessor('godot-processor', StubDriver);\`;
     setTimeout(() => say('WORLD_WALK_START', { route_points: 11, speed_mps: 0, stage }), 2000);
     if (mode !== 'noborder') setTimeout(() => say('AUDIO_MUSIC', { set: 'music.region_drowned_steps', state: 'zone' }), 3500);
     if (mode === 'stutter') for (const t of [2600, 3700, 4700]) setTimeout(() => busy(150), t);
+    // P49: the audio clock against the page's. The stub's context is the one the Play press made.
+    const ctx = window.__stubCtx;
+    const stop = (ms) => { ctx.suspend().then(() => setTimeout(() => ctx.resume(), ms)); };
+    if (mode === 'step') {
+      setTimeout(() => busy(150), 2600);    // a slow frame before the step
+      setTimeout(() => stop(150), 3600);    // the step
+      setTimeout(() => busy(150), 3850);    // a slow frame just after it (the same 500 ms segment)
+      setTimeout(() => busy(150), 4700);    // and one later
+    }
+    if (mode === 'drift') {
+      for (let i = 0; i < 10; i++) setTimeout(() => stop(20), 2200 + 120 * i);
+      for (const t of [3900, 4700]) setTimeout(() => busy(150), t);
+    }
     setTimeout(() => {
       if (mode === 'trailing') busy(150);   // the walk's last frame: the recorder disarms in the stall
       say('WORLD_WALK_END', { finished: true, ticks: 3840 });
@@ -190,6 +219,89 @@ function run(mode, more = []) {
 }
 const respawn = FIXTURE.checkpoint.respawn;
 
+// ------------------------------------------------------------------------------------------------
+// P49: the piecewise clock on made-up traces (no browser). The page's clock in ms, the audio clock in
+// s; the main thread serves the driver every 3 ms except through each stall; a stall of S ms starves
+// the mixer, whose hole (in quanta of 2.9 ms) starts when the stall does and ends with the first read
+// after it.
+console.log('the clock mapping: a step, a drift, a hole beside a step, a hole no read explains (no browser)');
+{
+  const Q = 128 / 44100 * 1000;
+  // offset(pageMs): how far the audio clock is behind the page's at that moment, in ms.
+  const makeTrace = ({ lengthMs, stalls, offset, refEveryMs }) => {
+    const service = [];
+    let stall = 0;
+    for (let t = 0; t <= lengthMs; t += 3) {
+      while (stall < stalls.length && t > stalls[stall][0] + stalls[stall][1]) stall++;
+      if (stall < stalls.length && t > stalls[stall][0] && t < stalls[stall][0] + stalls[stall][1]) continue;
+      service.push(t);
+    }
+    const ctxAt = (pageMs) => (pageMs - offset(pageMs)) / 1000 + 5;   // the audio clock started 5 s earlier
+    const holes = stalls.map(([at, ms]) => [ctxAt(at), Math.round(ms / Q)]);
+    const ref = (pageMs) => ({ page_ms: pageMs, ctx_t: ctxAt(pageMs) });
+    const refs = [];
+    for (let t = refEveryMs; t < lengthMs; t += refEveryMs) refs.push(ref(t));
+    return { service, holes, arm: ref(0), disarm: ref(lengthMs), refs };
+  };
+  const stalls = [];
+  for (let t = 4000; t < 360000; t += 13000) stalls.push([t, 420]);
+  check(REF_INTERVAL_MS === 10000 && STEP_NOTICE_MS < PLACE_TOLERANCE_MS, 'a reference every 10 s; a step is noticed below the placing tolerance');
+
+  // A steady clock: both mappings place everything, and no step is reported.
+  const steady = makeTrace({ lengthMs: 360000, stalls, offset: () => 0, refEveryMs: 10000 });
+  const s1 = placeHoles(steady.holes, steady.service, steady.arm, steady.disarm, Q, steady.refs);
+  check(stalls.length === 28 && s1.holes === stalls.length && s1.while_unserved === stalls.length && s1.elsewhere.length === 0, `a steady clock: ${s1.while_unserved} of ${s1.holes} holes placed`);
+  check(s1.clock_refs === 37 && Math.abs(s1.largest_clock_step_ms) < 0.5 && s1.placed_across_a_step === 0, `37 references, no step (${s1.largest_clock_step_ms} ms)`);
+
+  // One step of 120 ms at 115 s (the release's failed runs: 31-194 ms), in a segment without a stall.
+  const step = makeTrace({ lengthMs: 360000, stalls, offset: (p) => (p >= 115000 ? 120 : 0), refEveryMs: 10000 });
+  const line = placeHoles(step.holes, step.service, step.arm, step.disarm, Q, [], { acrossSteps: false });
+  check(line.elsewhere.length >= 8, `one straight line from arm to disarm (before P49) leaves ${line.elsewhere.length} of ${line.holes} holes unexplained`);
+  const pieces = placeHoles(step.holes, step.service, step.arm, step.disarm, Q, step.refs);
+  check(pieces.elsewhere.length === 0 && pieces.while_unserved === stalls.length, `the piecewise clock places all ${pieces.while_unserved}`);
+  check(Math.abs(pieces.largest_clock_step_ms - 120) < 1, `and reports the step (${pieces.largest_clock_step_ms} ms)`);
+  check(pieces.placed_across_a_step === 0, 'no hole lay in the stepped segment');
+
+  // Holes inside the stepped segment, one before the step and one after it.
+  const beside = makeTrace({ lengthMs: 60000, stalls: [[21000, 300], [24000, 300], [27000, 300], [41000, 300]],
+    offset: (p) => (p >= 25000 ? 150 : 0), refEveryMs: 10000 });
+  const b1 = placeHoles(beside.holes, beside.service, beside.arm, beside.disarm, Q, beside.refs);
+  check(b1.elsewhere.length === 0 && b1.while_unserved === 4, `holes on either side of a step inside one segment are placed (${b1.while_unserved} of 4)`);
+  check(b1.placed_across_a_step >= 2, `${b1.placed_across_a_step} of them from the segment's ends, not its line`);
+  const m = clockMap([beside.arm, ...beside.refs, beside.disarm]);
+  check(m.refs === 7 && m.steps.filter((d) => Math.abs(d) > STEP_NOTICE_MS).length === 1, 'one segment of six holds the step');
+  check(m.candidates(beside.holes[0][0]).length === 3 && m.candidates(beside.holes[3][0]).length === 1, 'three page times are tried inside it, one elsewhere');
+  check(Math.abs(m.candidates(beside.holes[0][0])[1] - 21000) < 0.01 && Math.abs(m.candidates(beside.holes[2][0])[2] - 27000) < 0.01,
+    'the hole before the step counted from the segment\'s start, the one after it from its end');
+
+  // An uneven drift: 0.6 ms a second for the first two minutes, none after (72 ms in all).
+  const drift = makeTrace({ lengthMs: 360000, stalls, offset: (p) => Math.min(p, 120000) * 0.0006, refEveryMs: 10000 });
+  const dLine = placeHoles(drift.holes, drift.service, drift.arm, drift.disarm, Q, [], { acrossSteps: false });
+  const dPieces = placeHoles(drift.holes, drift.service, drift.arm, drift.disarm, Q, drift.refs);
+  check(dLine.elsewhere.length > 0, `an uneven drift: one straight line leaves ${dLine.elsewhere.length} holes unexplained`);
+  check(dPieces.elsewhere.length === 0, `the piecewise clock places all ${dPieces.while_unserved}`);
+  check(Math.abs(dPieces.largest_clock_step_ms - 6) < 0.5 && dPieces.placed_across_a_step === 0, `6 ms a segment at most (${dPieces.largest_clock_step_ms} ms), under the notice: one page time a hole`);
+
+  // A hole the main thread does not explain stays unexplained, beside a step too.
+  const bad = makeTrace({ lengthMs: 60000, stalls: [[21000, 300], [41000, 300]], offset: (p) => (p >= 25000 ? 150 : 0), refEveryMs: 10000 });
+  bad.holes.push([bad.holes[0][0] + 5.5, 40]);   // 116 ms of silence at 26.5 s (audio), the mixer served throughout
+  bad.holes.sort((x, y) => x[0] - y[0]);
+  const b2 = placeHoles(bad.holes, bad.service, bad.arm, bad.disarm, Q, bad.refs);
+  check(b2.while_unserved === 2 && b2.elsewhere.length === 1, `a hole while the mixer was served is still listed (${JSON.stringify(b2.elsewhere)})`);
+
+  // A trace from before P49 (no references): the one line, as before.
+  const old = placeHoles(steady.holes, steady.service, steady.arm, steady.disarm, Q);
+  check(old.clock_refs === 2 && old.elsewhere.length === 0, 'a trace without references is mapped with the one line from arm to disarm');
+  check(clockMap([]).toPage(1.5) === 1500 && clockMap([{ page_ms: 100, ctx_t: 1 }]).toPage(1.5) === 600, 'no reference, one reference: the clocks run alike');
+}
+
+if (NO_BROWSER) {
+  rmSync(dir, { recursive: true, force: true });
+  console.log(`TEST_WORLD_CHECK: ${checks} checks, ${failures.length} failures (the mapping's cases only: --no-browser)`);
+  for (const f of failures) console.log(`FAIL  ${f}`);
+  process.exit(failures.length === 0 ? 0 : 1);
+}
+
 console.log('ok: Continue at the fixture\'s respawn, the travel, a walk across a border with no gap in the music');
 {
   const r = run('ok');
@@ -227,6 +339,30 @@ console.log('stutter: three slow frames of 150 ms during the walk');
   check(c.met === false && c.holes >= 3, `the criterion is not met (${JSON.stringify(c)})`);
   const s = run('stutter', ['--strict']);
   check(s.code === 1 && /a [\d.]+ ms hole in the music/.test(s.out), `--strict fails on them (exit ${s.code})`);
+}
+
+console.log('step: the audio clock stops for 150 ms during the walk (P49)');
+{
+  const r = run('step', ['--clock-ref-ms=500']);
+  const a = r.rep.audio || {};
+  const mu = a.music || {};
+  check(r.code === 0, `the default check passes: every hole is still the main thread's (exit ${r.code}; ${JSON.stringify(mu.holes_elsewhere)})`);
+  check(mu.silent_runs_over_50_ms >= 3 && mu.holes_while_unserved === mu.silent_runs_over_50_ms, `${mu.holes_while_unserved} of ${mu.silent_runs_over_50_ms} holes placed`);
+  check(mu.clock_refs >= 6 && mu.largest_clock_step_ms >= 100, `the report names the step: ${mu.largest_clock_step_ms} ms over ${mu.clock_refs} references`);
+  check(/the audio clock against the page's: \d+ references .* the largest step between two [\d.]+ ms/.test(r.out), 'and prints it');
+  const t = r.rep.trace || {};
+  check(Array.isArray(t.refs) && t.refs.length >= 4, `the trace keeps the references (${(t.refs || []).length})`);
+  const line = placeHoles(t.holes || [], t.service || [], t.arm, t.disarm, t.quantum_ms, [], { acrossSteps: false });
+  check(line.elsewhere.length >= 1, `the same trace with one straight line (before P49): ${line.elsewhere.length} hole(s) not explained`);
+}
+
+console.log('drift: the audio clock loses time unevenly (P49)');
+{
+  const r = run('drift', ['--clock-ref-ms=500']);
+  const mu = (r.rep.audio || {}).music || {};
+  check(r.code === 0, `the default check passes (exit ${r.code}; ${JSON.stringify(mu.holes_elsewhere)})`);
+  check(mu.silent_runs_over_50_ms >= 2 && mu.holes_while_unserved === mu.silent_runs_over_50_ms, `${mu.holes_while_unserved} of ${mu.silent_runs_over_50_ms} holes placed`);
+  check(mu.largest_clock_step_ms >= 15, `the clock lost time between references (${mu.largest_clock_step_ms} ms at most)`);
 }
 
 console.log('short: a walk of 30 s of game time');

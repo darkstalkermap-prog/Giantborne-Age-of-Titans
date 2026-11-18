@@ -58,43 +58,43 @@ _surfaces = [{
 "vertex_data": PackedByteArray("ZmZmP83MzL4AAAAA2+oiP83MzL7b6iI/JDnZPjQzMz8kOdk+mpkZPzQzMz8AAAAAAAAAADQzMz8AAAAAWSV+JM3MzL5mZmY/PG4pJDQzMz+amRk/2+oiv83MzL7b6iI/JDnZvjQzMz8kOdk+ZmZmv83MzL5ZJf4kmpkZvzQzMz88bqkk2+oiv83MzL7b6iK/JDnZvjQzMz8kOdm+A5w+pc3MzL5mZma/WiX+pDQzMz+amRm/2+oiP83MzL7b6iK/JDnZPjQzMz8kOdm+ZmZmP83MzL5ZJX6lmpkZPzQzMz88bimlRPWUPsDBbL7tKAw/TxutP7oYTD/wzoW9HOj5P7oYTD8kUXk/OxRkP8DBbL74Gcs/mqqVPy8+Hb9AiLY/TMQOQPcV1D62LVA/zLvQP/cV1D4wdWe+mrsRPy8+Hb/9CsY+ZmbmP83MzL0AAAAA2+qiP83MzL3b6qI/2+qiP87MTD7b6qI/ZmbmP87MTD4AAAAAAAAAAM7MTD4AAAAAWSX+JM3MzL1mZuY/WSX+JM7MTD5mZuY/2+qiv83MzL3b6qI/2+qiv87MTD7b6qI/Zmbmv83MzL1ZJX4lZmbmv87MTD5ZJX4l2+qiv83MzL3b6qK/2+qiv87MTD7b6qK/A5y+pc3MzL1mZua/A5y+pc7MTD5mZua/2+qiP83MzL3b6qK/2+qiP87MTD7b6qK/ZmbmP83MzL1ZJf6lZmbmP87MTD5ZJf6l8XecPpqZmT6iqHo+jqB2P5qZmT5A9a878DORP5qZmT6HT/M+kwb0PpqZmT4C8jY/kwb0PgAAAAAC8jY/8DORPwAAAACHT/M+jqB2PwAAAABA9a878XecPgAAAACiqHo+mjN1v5qZmT62dSW/qBkdv5qZmT4KpJG/RDr6vZqZmT4iLku/dcLuvpqZmT6Ht5q+dcLuvgAAAACHt5q+RDr6vQAAAAAiLku/qBkdvwAAAAAKpJG/mjN1vwAAAAC2dSW/RUWYvwAAgD64MVU/OCiNvwAAgD4TR64+QkIcvwAAgD5Ju9o+XHwyvwAAgD7Sa2s/XHwyvwAAAADSa2s/QkIcvwAAAABJu9o+OCiNvwAAAAATR64+RUWYvwAAAAC4MVU/38uxlERbzMM+rrGU1lMtrV6qibW/Q9PIqK1rv5hFKs//f///AAD/v3hzvZjZhVSQMohlvBdPEK7wQrGUP506q+hfibXPaPekvhhEpXRtQ7OZRGW8q1pqqrEUwNHDUPidiTWg1dY4OqRA53jzvZ8ug2Y8y/cYLKiWTevvwr+yurZ1yujffwMpok3rHrTAoN/EoND7xsppg9oXG3WIVpE9ugcsFOSBOnGXXZVi1HspcsfddayFwokkiPSI5Cf6EWOpS9RRex5d5rXs+Kk34KbAphQr1yE5R+G2gdr/f5BeErkpt/9/aFaKpDmwPqvqR8zFRLN9t4tMxc7/f///AAD/v3hw/39Fj7CIgImqsVVb8aYpN/9/lqk/sHhbPqsgfl+eAACGj7lw8b4rO6qx92msqgAA1choVoqkPivEz2JE7qP//3fwRY+wiKoxfvYxOSGR//8pt5apP7DA1HjbeDtShP//fKVuoRK5kdyJvkGMq9ItOXzAr1Sfqi/blfZpUs2Dgb8tuV5XdtOWds+kAXn/ld5ZZU7ZE/Dd8bE8YdtLQ6JlziAm/XB/o8Ie8jHISl66+E3hsi5t/qbAHzDeQkdZlhzN+M0eWs3bzqHAn/pTEKzAdpxH2S23kfrP1ltYZsGum8c/CZxgaKUoJPpPmGfgzr9e67EAcLGiAR9PyPdOMqYTzr/eBRLOma+3AZ+GSSvAEZFzSrIxuJYk3o9IwIX3q4w1ERGnTB+wcDckXryHV9I=")
 }]
 
-[node name="Chunk_1_3_0" type="Node3D"]
+[node name="Chunk_1_3_0" type="Node3D" unique_id=877452315]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=712339450]
 
-[node name="world_greywood_hollowmere_lights" type="Node3D" parent="Props"]
+[node name="world_greywood_hollowmere_lights" type="Node3D" parent="Props" unique_id=1587465136]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 17.676, 210)
 script = ExtResource("1_727cc")
 visible_when_flag = "oath.wood.done"
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_hollowmere_lights"]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_hollowmere_lights" unique_id=395563254]
 mesh = SubResource("ArrayMesh_1")
 
-[node name="world_greywood_pines_brazier" type="StaticBody3D" parent="Props"]
+[node name="world_greywood_pines_brazier" type="StaticBody3D" parent="Props" unique_id=1665417054]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 214, 29.079, 6)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("3_5fc47")
 world_id = "world.greywood.pines_brazier"
 
-[node name="CombatEntity" type="Node" parent="Props/world_greywood_pines_brazier"]
+[node name="CombatEntity" type="Node" parent="Props/world_greywood_pines_brazier" unique_id=1598532990]
 script = ExtResource("4_c8050")
 entity_id = "world.greywood.pines_brazier"
 definition_id = "prop.brazier"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_greywood_pines_brazier"]
+[node name="Anchors" type="Node3D" parent="Props/world_greywood_pines_brazier" unique_id=708527967]
 
-[node name="Center" type="Marker3D" parent="Props/world_greywood_pines_brazier/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_greywood_pines_brazier/Anchors" unique_id=641658100]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_greywood_pines_brazier"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_greywood_pines_brazier" unique_id=1271683703]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_greywood_pines_brazier"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_greywood_pines_brazier" unique_id=40519443]
 
-[node name="Body" type="Area3D" parent="Props/world_greywood_pines_brazier/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_greywood_pines_brazier/Hurtboxes" unique_id=1184525214]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
 collision_layer = 4
 collision_mask = 0
@@ -102,21 +102,21 @@ monitoring = false
 script = ExtResource("5_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_pines_brazier/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_greywood_pines_brazier/Hurtboxes/Body" unique_id=1592789387]
 shape = SubResource("BoxShape3D_3")
 
-[node name="Intact" type="Node3D" parent="Props/world_greywood_pines_brazier"]
+[node name="Intact" type="Node3D" parent="Props/world_greywood_pines_brazier" unique_id=1793954669]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_pines_brazier/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_pines_brazier/Intact" unique_id=1240387721 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
-[node name="Broken" type="Node3D" parent="Props/world_greywood_pines_brazier"]
+[node name="Broken" type="Node3D" parent="Props/world_greywood_pines_brazier" unique_id=1158198630]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_pines_brazier/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_greywood_pines_brazier/Broken" unique_id=696482043 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")
 
-[node name="world_greywood_hollowmere_cache" type="StaticBody3D" parent="Props" instance=ExtResource("6_960f4")]
+[node name="world_greywood_hollowmere_cache" type="StaticBody3D" parent="Props" unique_id=298142767 instance=ExtResource("6_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 168, 21.056, 186)
 collision_layer = 16
 collision_mask = 0
@@ -124,7 +124,7 @@ script = ExtResource("3_5fc47")
 world_id = "world.greywood.hollowmere_cache"
 loot_table = "loot.cache_hollowmere"
 
-[node name="world_greywood_pines_cache" type="StaticBody3D" parent="Props" instance=ExtResource("6_960f4")]
+[node name="world_greywood_pines_cache" type="StaticBody3D" parent="Props" unique_id=1605668213 instance=ExtResource("6_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 29.07, 4)
 collision_layer = 16
 collision_mask = 0
@@ -132,42 +132,42 @@ script = ExtResource("3_5fc47")
 world_id = "world.greywood.pines_cache"
 loot_table = "loot.cache_great_pines"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=590237318]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1887964999]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=68050727]
 
-[node name="Safe" type="Node3D" parent="Markers"]
+[node name="Safe" type="Node3D" parent="Markers" unique_id=297624046]
 
-[node name="world_marker_hollowmere_hall_safe" type="Marker3D" parent="Markers/Safe"]
+[node name="world_marker_hollowmere_hall_safe" type="Marker3D" parent="Markers/Safe" unique_id=872144157]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 21.144001, 172)
 script = ExtResource("7_acc12")
 marker_id = "world.marker.hollowmere_hall_safe"
 kind = 4
 
-[node name="world_marker_hollowmere_west_safe" type="Marker3D" parent="Markers/Safe"]
+[node name="world_marker_hollowmere_west_safe" type="Marker3D" parent="Markers/Safe" unique_id=142346213]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76, 20.112001, 204)
 script = ExtResource("7_acc12")
 marker_id = "world.marker.hollowmere_west_safe"
 kind = 4
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=2013502637]
 
-[node name="world_marker_great_pines" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_great_pines" type="Marker3D" parent="Markers/Objective" unique_id=1955123359]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 208, 29.004002, 24)
 script = ExtResource("7_acc12")
 marker_id = "world.marker.great_pines"
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1316400758]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=229944117]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=324730259]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1123877038]
 
-[node name="world_greywood_great_pine_3" type="Node3D" parent="Landmarks" instance=ExtResource("8_edd7e")]
+[node name="world_greywood_great_pine_3" type="Node3D" parent="Landmarks" unique_id=1539343651 instance=ExtResource("8_edd7e")]
 transform = Transform3D(0.17364822, 0, 0.9848077, 0, 1, 0, -0.9848077, 0, 0.17364822, 206, 28.529999, 16)
 script = ExtResource("9_3c0dd")
 world_id = "world.greywood.great_pine_3"
@@ -177,4 +177,4 @@ interact_id = "world.greywood.great_pine_3"
 radius_m = 8.0
 priority = 45
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=2036680105]

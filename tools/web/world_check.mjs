@@ -39,7 +39,7 @@
 //   node tools/web/world_check.mjs [--build=builds/web] [--config=tools/web/world_check.json]
 //        [--fixture=FILE] [--travel=<checkpoint id>] [--route=x:z;x:z;...] [--walk-min-s=60]
 //        [--music-s=60] [--min-borders=1] [--registered-s=S] [--autoplay=S] [--size=1280x720]
-//        [--timeout-s=S] [--json=FILE] [--strict] [--headed]
+//        [--timeout-s=S] [--json=FILE] [--clock-ref-ms=10000] [--strict] [--headed]
 //   --config       the defaults: {fixture, travel_to, route [[x, z], ...], walk_min_s, min_borders}
 //   --fixture      the save put into the browser (a schema 2 save of level.world)
 //   --travel       the visited waystone or shrine the giant fast travels to (the fixture's flags must hold
@@ -49,6 +49,9 @@
 //   --strict       also fail on the indicative frame budget, on every hole in the music over 50 ms and on
 //                  the engine's warnings (for a machine with a GPU)
 //   --json         the report and the recording's trace (audio_check.mjs --replay places its holes again)
+//   --clock-ref-ms how often the page takes a reference of the audio clock against its own while the
+//                  music is recorded (default 10000: the recorder maps the two clocks piecewise, P49;
+//                  the check's own test uses a short one for its 3.5 s walk)
 // Needs Playwright (PLAYWRIGHT_MODULE, NODE_PATH or /opt/node-tools/node_modules) and its Chromium
 // (PLAYWRIGHT_BROWSERS_PATH, default /opt/pw-browsers when that folder exists). Software WebGL
 // (SwiftShader) is all a GPU-less machine has: its frame times are the CPU's rasterising, indicative only,
@@ -65,7 +68,7 @@ import { startMemoryGuard } from './memory_guard.mjs';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { HOLE_MAX_MS, SILENCE_PEAK, instrument, readRecording } from './audio_recorder.mjs';
+import { HOLE_MAX_MS, REF_INTERVAL_MS, SILENCE_PEAK, instrument, readRecording } from './audio_recorder.mjs';
 import {
   BUDGET_P99_MS, BUDGET_WORST_MS, MARGIN_REQUIRED_M, audioReport, loadPlaywright, serve, summary, verdict,
 } from './stream_check.mjs';
@@ -107,7 +110,7 @@ export function parseArgs(argv) {
   const opts = {
     build: 'builds/web', config: 'tools/web/world_check.json', fixture: null, travel: null, route: null,
     walkMinS: null, musicS: 60, minBorders: null, registeredS: null, autoplay: 2400, size: '1280x720',
-    timeoutS: 3600, json: '', strict: false, headed: false,
+    timeoutS: 3600, json: '', strict: false, headed: false, clockRefMs: REF_INTERVAL_MS,
   };
   for (const arg of argv) {
     const [key, ...rest] = arg.split('=');
@@ -126,6 +129,7 @@ export function parseArgs(argv) {
       case '--size': opts.size = value; break;
       case '--timeout-s': opts.timeoutS = Number(value); break;
       case '--json': opts.json = value; break;
+      case '--clock-ref-ms': opts.clockRefMs = Number(value); break;
       case '--strict': opts.strict = true; break;
       case '--headed': opts.headed = true; break;
       case '-h': case '--help':
@@ -144,6 +148,7 @@ export function parseArgs(argv) {
   if (opts.walkMinS === null) opts.walkMinS = Number(cfg.walk_min_s || 60);
   if (opts.minBorders === null) opts.minBorders = Number(cfg.min_borders !== undefined ? cfg.min_borders : 1);
   if (!/^\d+x\d+$/.test(opts.size)) usage('--size wants WxH');
+  if (!(opts.clockRefMs >= 50)) usage('--clock-ref-ms wants 50 ms or more');
   if (!(opts.musicS > 0) || !(opts.walkMinS > 0) || !(opts.minBorders >= 0) || !(opts.autoplay > 0) || !(opts.timeoutS > 0)
       || (opts.registeredS !== null && !(opts.registeredS >= 0))) {
     usage('--music-s, --walk-min-s, --autoplay and --timeout-s want positive numbers, --min-borders and --registered-s numbers >= 0');
@@ -307,6 +312,7 @@ async function main() {
   // The music recorder, armed by the page at the walk's start once zone music plays (stream_check's --audio).
   await page.addInitScript(instrument, {
     silencePeak: SILENCE_PEAK, holeMs: HOLE_MAX_MS, autoArm: { start: 'WORLD_WALK_START', end: 'WORLD_WALK_END' },
+    refIntervalMs: opts.clockRefMs,
   });
   const external = [];
   await page.route((u) => !u.href.startsWith(origin), (route) => {
@@ -516,6 +522,7 @@ async function main() {
   const m = a.music || {};
   const mbs = (b) => (typeof b === 'number' ? (b / 1048576).toFixed(1) : 'N/A');
   console.log(`  music: ${a.music ? `${m.seconds} s across ${a.borders} region border(s) (${a.sets.join(' -> ') || 'no set'}): longest silence ${m.longest_silence_ms} ms (limit ${HOLE_MAX_MS}), runs over 50 ms ${m.silent_runs_over_50_ms} (${m.holes_while_unserved} while the main thread left the mixer unserved - ${m.holes_cut_at_disarm || 0} of them cut short by the walk's end - and ${(m.holes_elsewhere || []).length} otherwise${opts.strict ? '' : '; --strict fails every one'})` : 'not recorded'}`);
+  if (a.music && m.clock_refs) console.log(`  the audio clock against the page's: ${m.clock_refs} references (one every 10 s), the largest step between two ${m.largest_clock_step_ms} ms${m.holes_placed_across_a_step ? `, ${m.holes_placed_across_a_step} hole(s) placed on either side of a step` : ''}`);
   if (a.long_tasks) console.log(`  main thread while walking: ${a.long_tasks.n} long tasks (p50 ${a.long_tasks.p50_ms} ms, longest ${a.long_tasks.max_ms} ms, ${typeof a.long_tasks.busy_share === 'number' ? Math.round(a.long_tasks.busy_share * 100) : '?'} % of the time); the driver's reads ${a.driver && a.driver.watched ? `${a.driver.reads}, longest gap ${a.driver.longest_gap_ms} ms` : 'not seen'}`);
   console.log(`  samples: peak live ${mbs(a.samples && a.samples.peak_live_bytes)} MB (cap ${mbs(a.cap_bytes)} MB = ${a.registered_s} s x 353 KB + 12 MB); console errors ${split.errors.length}, the engine's warning lines ${split.warnings.length}${opts.strict ? '' : ' (--strict fails them)'} (${exitErrors.length} more at exit, not counted); the game's own count: ${s(report.errors_counted_by_game)} error(s), ${s(report.warnings_counted_by_game)} warning(s); failed requests ${failedRequests.length}`);
   for (const e of split.errors.slice(0, 10)) console.log(`    error: ${e}`);

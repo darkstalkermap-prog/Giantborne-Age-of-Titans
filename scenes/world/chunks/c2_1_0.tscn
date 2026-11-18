@@ -4,13 +4,13 @@
 [ext_resource type="Script" path="res://scripts/world/shrine.gd" id="2_e36fc"]
 [ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
 
-[node name="Chunk_2_1_0" type="Node3D"]
+[node name="Chunk_2_1_0" type="Node3D" unique_id=1513160335]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1807613445]
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1024268320]
 
-[node name="world_shrine_stones" type="Node3D" parent="Shrines" instance=ExtResource("1_f6def")]
+[node name="world_shrine_stones" type="Node3D" parent="Shrines" unique_id=692077912 instance=ExtResource("1_f6def")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 212, 96, 168)
 script = ExtResource("2_e36fc")
 world_id = "world.shrine.stones"
@@ -19,31 +19,31 @@ prompt = "Rest"
 radius_m = 4.0
 priority = 40
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1386426744]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=299809447]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=418029559]
 
-[node name="world_marker_standing_stones" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_standing_stones" type="Marker3D" parent="Markers/Objective" unique_id=428337938]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 212, 96.2, 183)
 script = ExtResource("3_acc12")
 marker_id = "world.marker.standing_stones"
 
-[node name="Patrol" type="Node3D" parent="Markers"]
+[node name="Patrol" type="Node3D" parent="Markers" unique_id=1753663992]
 
-[node name="world_marker_battery_flee_w" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_battery_flee_w" type="Marker3D" parent="Markers/Patrol" unique_id=230369856]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 247, 96.2, 158)
 script = ExtResource("3_acc12")
 marker_id = "world.marker.battery_flee_w"
 kind = 5
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=2474605]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=342375708]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=72424735]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1557559348]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=642084273]

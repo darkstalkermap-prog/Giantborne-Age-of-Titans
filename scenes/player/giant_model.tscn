@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/presentation/giant_model.gd" id="1_63217"]
 [ext_resource type="PackedScene" path="res://assets/giant/giant.glb" id="2_c57df"]
 
-[node name="GiantModel" type="Node3D"]
+[node name="GiantModel" type="Node3D" unique_id=535982844]
 script = ExtResource("1_63217")
 index = {
 "body_hash": "9cd81c08253e20339d78a2a5e72ca01adc08a47599c95446d6f4209ef88527be",
@@ -577,5 +577,5 @@ index = {
 }
 }
 
-[node name="Giant" type="Node3D" parent="." instance=ExtResource("2_c57df")]
+[node name="Giant" type="Node3D" parent="." unique_id=1176809502 instance=ExtResource("2_c57df")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)

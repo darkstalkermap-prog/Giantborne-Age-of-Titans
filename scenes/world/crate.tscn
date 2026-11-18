@@ -57,30 +57,30 @@ _surfaces = [{
 "vertex_data": PackedByteArray("MzOTv+xRuD2amRm+mJkZPuxRuD1nZua+mJkZPuxRuD2amRm+MzOTv+xRuD1nZua+MzOTvwzXIzyamRm+mJkZPgzXIzxnZua+mJkZPgzXIzyamRm+MzOTvwzXIzxnZua+mJkZPuxRuD2amRm+MzOTv+xRuD1nZua+mJkZPuxRuD1nZua+MzOTv+xRuD2amRm+mJkZPgzXIzyamRm+MzOTvwzXIzxnZua+mJkZPgzXIzxnZua+MzOTvwzXIzyamRm+mJkZPuxRuD2amRm+MzOTvwzXIzyamRm+MzOTv+xRuD2amRm+mJkZPgzXIzyamRm+mJkZPuxRuD1nZua+MzOTvwzXIzxnZua+MzOTv+xRuD1nZua+mJkZPgzXIzxnZua+zi8Nv+xRuD0LLVU/A8aAPuxRuD3ETW6+c4HjPuxRuD2AZT67ho0+v+xRuD0AWBo/zi8NvwzXIzwLLVU/A8aAPgzXIzzETW6+c4HjPgzXIzyAZT67ho0+vwzXIzwAWBo/c4HjPuxRuD2AZT67ho0+v+xRuD0AWBo/A8aAPuxRuD3ETW6+zi8Nv+xRuD0LLVU/c4HjPgzXIzyAZT67ho0+vwzXIzwAWBo/A8aAPgzXIzzETW6+zi8NvwzXIzwLLVU/c4HjPuxRuD2AZT67zi8NvwzXIzwLLVU/zi8Nv+xRuD0LLVU/c4HjPgzXIzyAZT67A8aAPuxRuD3ETW6+ho0+vwzXIzwAWBo/ho0+v+xRuD0AWBo/A8aAPgzXIzzETW6+enxwPuxRuD3sers+IB0pPuxRuD0QV3e/yNLrPuxRuD0AAWq/3C94vexRuD3MzqA+enxwPgzXIzzsers+IB0pPgzXIzwQV3e/yNLrPgzXIzwAAWq/3C94vQzXIzzMzqA+yNLrPuxRuD0AAWq/3C94vexRuD3MzqA+IB0pPuxRuD0QV3e/enxwPuxRuD3sers+yNLrPgzXIzwAAWq/3C94vQzXIzzMzqA+IB0pPgzXIzwQV3e/enxwPgzXIzzsers+yNLrPuxRuD0AAWq/enxwPgzXIzzsers+enxwPuxRuD3sers+yNLrPgzXIzwAAWq/IB0pPuxRuD0QV3e/3C94vQzXIzzMzqA+3C94vexRuD3MzqA+IB0pPgzXIzwQV3e/sKCAP+xRuD3ktEk/yMHCPexRuD0qbUC+9LW1PuxRuD1iA62+oL4+P+xRuD1LG3A/sKCAPwzXIzzktEk/yMHCPQzXIzwqbUC+9LW1PgzXIzxiA62+oL4+PwzXIzxLG3A/9LW1PuxRuD1iA62+oL4+P+xRuD1LG3A/yMHCPexRuD0qbUC+sKCAP+xRuD3ktEk/9LW1PgzXIzxiA62+oL4+PwzXIzxLG3A/yMHCPQzXIzwqbUC+sKCAPwzXIzzktEk/9LW1PuxRuD1iA62+sKCAPwzXIzzktEk/sKCAP+xRuD3ktEk/9LW1PgzXIzxiA62+yMHCPexRuD0qbUC+oL4+PwzXIzxLG3A/oL4+P+xRuD1LG3A/yMHCPQzXIzwqbUC+/3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+/Zbr/f///Mt0AAJjFZjr/v2W6/3///zLdAACYxWY6/79luv9///8y3QAAmMVmOv+/Zbr/f///Mt0AAJjFZjr/v///ZroAAMviZjr/f2W6/7///2a6AADL4mY6/39luv+///9mugAAy+JmOv9/Zbr/v///ZroAAMviZjr/f2W6/7/+f/7/Zjr/v/5/AAD//zLd/n/+/2Y6/7/+fwAA//8y3f5//v9mOv+//n8AAP//Mt3+f/7/Zjr/v/5/AAD//zLdzuz/f///Z/YAAC+Tz2z/v87s/3///2f2AAAvk89s/7/O7P9///9n9gAAL5PPbP+/zuz/f///Z/YAAC+Tz2z/v///z+wAAJfJz2z/f87s/7///8/sAACXyc9s/3/O7P+////P7AAAl8nPbP9/zuz/v///z+wAAJfJz2z/f87s/7/+f/7/z2z/v/5/AAD//2f2/n/+/89s/7/+fwAA//9n9v5//v/PbP+//n8AAP//Z/b+f/7/z2z/v/5/AAD//2f2/v8lUQAAkejZLv9/2K7/v/7/JVEAAJHo2S7/f9iu/7/+/yVRAACR6Nku/3/Yrv+//v8lUQAAkejZLv9/2K7/vwAAJNHZLv+/2K7/f/7/kqgAACTR2S7/v9iu/3/+/5KoAAAk0dku/7/Yrv9//v+SqAAAJNHZLv+/2K7/f/7/kqj/f/7/2K7/v/9/AAAAAJHo/3/+/9iu/7//fwAAAACR6P9//v/Yrv+//38AAAAAkej/f/7/2K7/v/9/AAAAAJHo")
 }]
 
-[node name="Crate" type="StaticBody3D"]
+[node name="Crate" type="StaticBody3D" unique_id=1857242233]
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_5fc47")
 world_id = "valley.quarry.chest"
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=1051368406]
 script = ExtResource("2_c8050")
 entity_id = "valley.quarry.chest"
 definition_id = "prop.crate"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=1610101201]
 
-[node name="Center" type="Marker3D" parent="Anchors"]
+[node name="Center" type="Marker3D" parent="Anchors" unique_id=1883631106]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 
-[node name="BlockCrate" type="CollisionShape3D" parent="."]
+[node name="BlockCrate" type="CollisionShape3D" parent="." unique_id=2032675004]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=1881270553]
 
-[node name="Body" type="Area3D" parent="Hurtboxes"]
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=1028666010]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 collision_layer = 4
 collision_mask = 0
@@ -88,16 +88,16 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=1362512820]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Intact" type="Node3D" parent="."]
+[node name="Intact" type="Node3D" parent="." unique_id=1788355119]
 
-[node name="Merged" type="MeshInstance3D" parent="Intact" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Intact" unique_id=2009688195 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")
 
-[node name="Broken" type="Node3D" parent="."]
+[node name="Broken" type="Node3D" parent="." unique_id=1110493958]
 visible = false
 
-[node name="Merged" type="MeshInstance3D" parent="Broken" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Broken" unique_id=593588592 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_6")

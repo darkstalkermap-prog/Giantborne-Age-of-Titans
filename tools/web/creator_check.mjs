@@ -227,6 +227,17 @@ async function openPart(browser, opts, origin, args) {
   return { context, page, seen, url, state, until, stall, press, shot, note };
 }
 
+// P49: of a mark's longest first frame, the share the rendering server spent drawing (0-1; null when the
+// probe gave no draw times).
+export function drawShare(line) {
+  if (!line || !Array.isArray(line.first) || !Array.isArray(line.first_draw) || line.first.length === 0) return null;
+  let at = 0;
+  for (let i = 1; i < line.first.length; i++) if (line.first[i] > line.first[at]) at = i;
+  const whole = line.first[at];
+  const draw = line.first_draw[at];
+  return whole > 0 && typeof draw === 'number' ? Math.round(Math.min(1, draw / whole) * 100) / 100 : null;
+}
+
 // The part's verdict on a mark: its stall line, the miss when it is over the ratio.
 function judge(out, misses, problems, mark, line, opts, what) {
   if (!line) {
@@ -236,8 +247,14 @@ function judge(out, misses, problems, mark, line, opts, what) {
   const ok = stallOk(line.first_ms, line.median_ms, opts.stallRatio);
   out.stalls[mark] = { first_ms: line.first_ms, median_ms: line.median_ms, ratio: line.ratio, frames: line.frames, ok,
     ...(line.load_worst_ms !== undefined ? { load_worst_ms: line.load_worst_ms } : {}),
-    ...(line.warmed !== undefined ? { warmed: line.warmed } : {}) };
-  if (!ok) misses.push(`${what}: ${line.first_ms} ms against a median frame of ${line.median_ms} ms (${line.ratio}x, over ${opts.stallRatio}x)`);
+    ...(line.warmed !== undefined ? { warmed: line.warmed } : {}),
+    // P49: the first frames and how much of each the rendering server spent drawing (the probe's "first"
+    // and "first_draw": a shader compiled on first use is in the draw, the rest is the frame's scripts),
+    // with the steady frames' median draw - which of the two a stall is made of.
+    ...(Array.isArray(line.first_draw) ? { first: line.first, first_draw: line.first_draw, median_draw_ms: line.median_draw_ms,
+      first_frame_draw_share: drawShare(line) } : {}) };
+  const share = drawShare(line);
+  if (!ok) misses.push(`${what}: ${line.first_ms} ms against a median frame of ${line.median_ms} ms (${line.ratio}x, over ${opts.stallRatio}x${share === null ? '' : `; ${Math.round(share * 100)} % of that frame was the renderer's draw`})`);
 }
 
 async function finish(part, out, problems, misses, opts) {

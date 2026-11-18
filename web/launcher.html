@@ -284,8 +284,11 @@ kbd {
   // engine is 36 MB. So the build ships index.wasm and index.pck gzipped and base64-encoded as
   // .txt files: download them here with progress, unpack them in the browser, and hand Godot
   // ordinary responses. A packed pck over 15 MB ships in parts (index.pck.gz.b64.1.txt, .2.txt,
-  // ...: tools/build_web.sh): they download in order under the one progress meter and their text
-  // is joined before it is unpacked.
+  // ...: tools/build_web.sh): they download in order under the one progress meter. Each piece of
+  // text is decoded and inflated as it arrives (P49): the text of the parts is never joined, so a
+  // pack of four parts costs the page no more memory than the unpacked pack itself and a little
+  // for the piece in hand (measured: docs/PERFORMANCE.md, "The launcher's unpacking").
+  // <parts> (tools/web/test_launcher_parts.mjs runs the lines down to </parts> outside a browser)
   function pckUrls(parts) {
     const n = Math.max(1, Math.floor(Number(parts) || 1));
     if (n === 1) return ['index.pck.gz.b64.txt'];
@@ -293,13 +296,6 @@ kbd {
     for (let i = 1; i <= n; i++) urls.push('index.pck.gz.b64.' + i + '.txt');
     return urls;
   }
-  const PACKED = {
-    'index.wasm': { urls: ['index.wasm.gz.b64.txt'], type: 'application/wasm' },
-    'index.pck': { urls: pckUrls(BUILD.pckParts), type: 'application/octet-stream' },
-  };
-  const packedTotal = BUILD.wasmPacked + BUILD.pckPacked;
-  let packedReceived = 0;
-  const realFetch = window.fetch.bind(window);
 
   function decodeBase64(text) {
     if (typeof Uint8Array.fromBase64 === 'function') return Uint8Array.fromBase64(text);
@@ -309,34 +305,111 @@ kbd {
     return bytes;
   }
 
-  async function fetchPacked(entry) {
-    const chunks = [];
-    for (const url of entry.urls) {
-      const res = await realFetch(url);
+  // Base64 text that arrives in pieces cut anywhere (a network chunk, the end of a part): push()
+  // returns the bytes of every whole group of four characters so far and keeps the one to three
+  // characters left over for the next piece; end() returns what the last piece left.
+  function base64Pieces() {
+    const ascii = new TextDecoder();
+    let carry = '';
+    return {
+      push: function (chunk) {
+        let text = carry + ascii.decode(chunk, { stream: true }).replace(/[^A-Za-z0-9+/=]/g, '');
+        const keep = text.length % 4;
+        carry = keep ? text.slice(text.length - keep) : '';
+        if (keep) text = text.slice(0, text.length - keep);
+        return text.length ? decodeBase64(text) : new Uint8Array(0);
+      },
+      end: function () {
+        const text = carry;
+        carry = '';
+        return text.length ? decodeBase64(text) : new Uint8Array(0);
+      },
+    };
+  }
+
+  // Downloads `urls` in order with `fetchUrl` and returns a Response whose body is the unpacked
+  // file. The first piece is read and checked (a failed download or a damaged file rejects, as
+  // before); from then on a pump decodes each piece and writes it into the inflater while the
+  // caller reads the body, so only the piece in hand is held. A later part that fails, or text
+  // that is not base64, ends the body with that error. onBytes(n) is called for every n bytes of
+  // text received, onDone() when the last piece has been written.
+  async function unpackParts(urls, type, fetchUrl, onBytes, onDone) {
+    if (typeof DecompressionStream !== 'function') {
+      throw new Error('This browser cannot unpack the game. Use a current Chrome, Edge, Firefox or Safari.');
+    }
+    const open = async function (url) {
+      const res = await fetchUrl(url);
       if (!res.ok) {
         throw new Error('The game files could not be downloaded (HTTP ' + res.status + ').');
       }
-      const reader = res.body.getReader();
+      return res.body.getReader();
+    };
+    const pieces = base64Pieces();
+    let reader = await open(urls[0]);
+    let part = 0;
+    // The next decoded piece, or null after the last part's last piece.
+    const next = async function () {
       for (;;) {
         const step = await reader.read();
-        if (step.done) break;
-        chunks.push(step.value);
-        packedReceived += step.value.length;
-        setMeter(0.85 * Math.min(1, packedReceived / packedTotal));
-        setStatus('Downloading the game ' + mb(Math.min(packedReceived, packedTotal)) + ' / ' + mb(packedTotal) + ' MB');
+        if (!step.done) {
+          onBytes(step.value.length);
+          const bytes = pieces.push(step.value);
+          if (bytes.length) return bytes;
+          continue;
+        }
+        part += 1;
+        if (part >= urls.length) {
+          const rest = pieces.end();
+          reader = null;
+          return rest.length ? rest : null;
+        }
+        reader = await open(urls[part]);
       }
-    }
-    const text = (await new Blob(chunks).text()).replace(/[^A-Za-z0-9+/=]/g, '');
-    const gz = decodeBase64(text);
-    if (gz.length < 2 || gz[0] !== 0x1f || gz[1] !== 0x8b) {
+    };
+    const first = await next();
+    if (first === null || first.length < 2 || first[0] !== 0x1f || first[1] !== 0x8b) {
       throw new Error('The game files arrived damaged.');
     }
-    if (!('DecompressionStream' in window)) {
-      throw new Error('This browser cannot unpack the game. Use a current Chrome, Edge, Firefox or Safari.');
-    }
-    if (packedReceived >= packedTotal) setStatus('Unpacking and starting the game');
-    const body = new Blob([gz]).stream().pipeThrough(new DecompressionStream('gzip'));
-    return new Response(body, { status: 200, headers: { 'Content-Type': entry.type } });
+    const inflate = new DecompressionStream('gzip');
+    const writer = inflate.writable.getWriter();
+    (async function () {
+      let bytes = first;
+      while (bytes !== null) {
+        await writer.write(bytes);
+        bytes = reader === null ? null : await next();
+      }
+      await writer.close();
+      onDone();
+    })().catch(function (err) {
+      writer.abort(err).catch(function () { /* the body already ended */ });
+    });
+    return new Response(inflate.readable, { status: 200, headers: { 'Content-Type': type } });
+  }
+  // </parts>
+
+  const PACKED = {
+    'index.wasm': { urls: ['index.wasm.gz.b64.txt'], type: 'application/wasm' },
+    'index.pck': { urls: pckUrls(BUILD.pckParts), type: 'application/octet-stream' },
+  };
+  const packedTotal = BUILD.wasmPacked + BUILD.pckPacked;
+  let packedReceived = 0;
+  let packedOpen = 0;
+  const realFetch = window.fetch.bind(window);
+
+  // The download note follows the build (P49): the packed engine and pack, in round megabytes.
+  const DOWNLOAD_NOTE = 'About ' + Math.round(packedTotal / 1e6) + ' MB to download.';
+  if (packedTotal > 0) gateNote.textContent = gateNote.textContent.replace(/About \d+ MB to download\./, DOWNLOAD_NOTE);
+
+  function fetchPacked(entry) {
+    packedOpen += 1;
+    return unpackParts(entry.urls, entry.type, realFetch, function (n) {
+      packedReceived += n;
+      setMeter(0.85 * Math.min(1, packedReceived / packedTotal));
+      setStatus('Downloading the game ' + mb(Math.min(packedReceived, packedTotal)) + ' / ' + mb(packedTotal) + ' MB');
+    }, function () {
+      packedOpen -= 1;
+      if (packedOpen <= 0 && packedReceived >= packedTotal) setStatus('Unpacking and starting the game');
+    });
   }
 
   window.fetch = function (input, init) {

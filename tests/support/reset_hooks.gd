@@ -22,6 +22,9 @@ const AFTER_EACH := [
 	# turned them on (SkinnedRig.enable_for_tests); skipped until P43's file exists. It sits before the
 	# world index's entry, which stays last (plan M6-M9 §2.15).
 	["script", "res://scripts/presentation/skinned_rig.gd", "reset_for_tests"],           # P43
+	# M11 Part A (pre-declared by P49, plan M11 §2.11): the giant's secondary motion goes back to its
+	# headless default after every test; skipped until P50's file exists.
+	["script", "res://scripts/presentation/secondary_motion.gd", "reset_for_tests"],      # P50
 	["script", "res://scripts/world/world_index.gd", "clear_cache"],                      # P20
 ]
 

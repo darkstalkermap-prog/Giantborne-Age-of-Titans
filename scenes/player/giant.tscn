@@ -20,30 +20,30 @@ size = Vector3(1.4, 1.5, 0.9)
 [sub_resource type="BoxShape3D" id="BoxShape3D_4"]
 size = Vector3(0.7, 0.7, 0.7)
 
-[node name="Giant" type="CharacterBody3D"]
+[node name="Giant" type="CharacterBody3D" unique_id=1258411810]
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("1_7ef4a")
 
-[node name="BodyShape" type="CollisionShape3D" parent="."]
+[node name="BodyShape" type="CollisionShape3D" parent="." unique_id=559274272]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.83, 0)
 shape = SubResource("CapsuleShape3D_1")
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=1263234042]
 script = ExtResource("2_c8050")
 entity_id = "player"
 definition_id = "player.giant"
 team = 1
 anchor_path = NodePath("../Anchors/Torso")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=1108243571]
 
-[node name="Torso" type="Marker3D" parent="Anchors"]
+[node name="Torso" type="Marker3D" parent="Anchors" unique_id=1465049158]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=1996419540]
 
-[node name="Legs" type="Area3D" parent="Hurtboxes"]
+[node name="Legs" type="Area3D" parent="Hurtboxes" unique_id=1137298063]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 collision_layer = 4
 collision_mask = 0
@@ -51,20 +51,20 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "legs"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Legs"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Legs" unique_id=460696898]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Torso" type="Area3D" parent="Hurtboxes"]
+[node name="Torso" type="Area3D" parent="Hurtboxes" unique_id=1573391558]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.35, 0)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
 script = ExtResource("3_129e0")
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Torso"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Torso" unique_id=474567415]
 shape = SubResource("BoxShape3D_3")
 
-[node name="Head" type="Area3D" parent="Hurtboxes"]
+[node name="Head" type="Area3D" parent="Hurtboxes" unique_id=470215562]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.3, 0)
 collision_layer = 4
 collision_mask = 0
@@ -72,10 +72,10 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "head"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Head"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Head" unique_id=309698327]
 shape = SubResource("BoxShape3D_4")
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=898324394]
 script = ExtResource("4_ceeff")
 weapon_arm_path = NodePath("Body/ShoulderR")
 off_arm_path = NodePath("Body/ShoulderL")
@@ -84,35 +84,35 @@ leg_right_path = NodePath("Body/HipR")
 torso_path = NodePath("Body/Torso")
 body_path = NodePath("Body")
 
-[node name="Body" type="Node3D" parent="Visual"]
+[node name="Body" type="Node3D" parent="Visual" unique_id=491874068]
 
-[node name="HipL" type="Node3D" parent="Visual/Body"]
+[node name="HipL" type="Node3D" parent="Visual/Body" unique_id=173592446]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 1.6, 0)
 
-[node name="HipR" type="Node3D" parent="Visual/Body"]
+[node name="HipR" type="Node3D" parent="Visual/Body" unique_id=984494480]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, 1.6, 0)
 
-[node name="Torso" type="Node3D" parent="Visual/Body"]
+[node name="Torso" type="Node3D" parent="Visual/Body" unique_id=1525733024]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 
-[node name="ShoulderL" type="Node3D" parent="Visual/Body"]
+[node name="ShoulderL" type="Node3D" parent="Visual/Body" unique_id=1649202829]
 transform = Transform3D(0.97814757, -0.2033683, 0.04322727, 0, 0.20791169, 0.9781476, -0.20791167, -0.95677274, 0.20336832, -0.82, 2.9, 0)
 
-[node name="Hand" type="Marker3D" parent="Visual/Body/ShoulderL"]
+[node name="Hand" type="Marker3D" parent="Visual/Body/ShoulderL" unique_id=1240576819]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
 
-[node name="ShoulderR" type="Node3D" parent="Visual/Body"]
+[node name="ShoulderR" type="Node3D" parent="Visual/Body" unique_id=28893408]
 transform = Transform3D(0.97814757, 0.2033683, -0.04322727, 0, 0.20791169, 0.9781476, 0.20791167, -0.95677274, 0.20336832, 0.82, 2.9, 0)
 
-[node name="Hand" type="Marker3D" parent="Visual/Body/ShoulderR"]
+[node name="Hand" type="Marker3D" parent="Visual/Body/ShoulderR" unique_id=784734792]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
 
-[node name="Model" parent="Visual/Body" instance=ExtResource("5_e39fa")]
+[node name="Model" parent="Visual/Body" unique_id=913888889 instance=ExtResource("5_e39fa")]
 
-[node name="WeaponSocket" type="Node3D" parent="Visual/Body"]
+[node name="WeaponSocket" type="Node3D" parent="Visual/Body" unique_id=1227636293]
 transform = Transform3D(0.97814757, 0.2033683, -0.04322727, 0, 0.20791169, 0.9781476, 0.20791167, -0.95677274, 0.20336832, 0.8848409, 1.4327786, -0.3050525)
 
-[node name="CameraRig" type="Node3D" parent="."]
+[node name="CameraRig" type="Node3D" parent="." unique_id=446109875]
 script = ExtResource("6_a8aa1")
 
-[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+[node name="Camera3D" type="Camera3D" parent="CameraRig" unique_id=1578829162]

@@ -92,87 +92,87 @@ instance_count = 2
 mesh = SubResource("PrismMesh_22")
 buffer = PackedFloat32Array(-0.88560593, 0, 6.499731, 58, 0, 1.8, 0, 3.6999998, -5.022519, 0, -1.1460782, -138, 1.3199769, 0, 6.37511, 62, 0, 1.8, 0, 3.6999998, -4.9262214, 0, 1.7082055, -158)
 
-[node name="quarry" type="Node3D"]
+[node name="quarry" type="Node3D" unique_id=1190853393]
 
-[node name="Collision" type="StaticBody3D" parent="."]
+[node name="Collision" type="StaticBody3D" parent="." unique_id=32902320]
 collision_mask = 0
 
-[node name="Quarry" type="CollisionShape3D" parent="Collision"]
+[node name="Quarry" type="CollisionShape3D" parent="Collision" unique_id=913294621]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, -0.5, -145)
 shape = SubResource("BoxShape3D_1")
 
-[node name="QuarryW" type="CollisionShape3D" parent="Collision"]
+[node name="QuarryW" type="CollisionShape3D" parent="Collision" unique_id=2117853058]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, -145)
 shape = SubResource("BoxShape3D_2")
 
-[node name="QuarryNw" type="CollisionShape3D" parent="Collision"]
+[node name="QuarryNw" type="CollisionShape3D" parent="Collision" unique_id=66511909]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.5, 12, -107.5)
 shape = SubResource("BoxShape3D_3")
 
-[node name="QuarryNe" type="CollisionShape3D" parent="Collision"]
+[node name="QuarryNe" type="CollisionShape3D" parent="Collision" unique_id=1665112888]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72.5, 12, -107.5)
 shape = SubResource("BoxShape3D_4")
 
-[node name="QuarryS" type="CollisionShape3D" parent="Collision"]
+[node name="QuarryS" type="CollisionShape3D" parent="Collision" unique_id=345526671]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 15, -187.5)
 shape = SubResource("BoxShape3D_5")
 
-[node name="QuarryE" type="CollisionShape3D" parent="Collision"]
+[node name="QuarryE" type="CollisionShape3D" parent="Collision" unique_id=693242357]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85, 15, -162.5)
 shape = SubResource("BoxShape3D_6")
 
-[node name="QuarryLedge" type="CollisionShape3D" parent="Collision"]
+[node name="QuarryLedge" type="CollisionShape3D" parent="Collision" unique_id=968416953]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 2.5, -164)
 shape = SubResource("BoxShape3D_7")
 
-[node name="QuarryLedgeRamp" type="CollisionShape3D" parent="Collision"]
+[node name="QuarryLedgeRamp" type="CollisionShape3D" parent="Collision" unique_id=1453042124]
 transform = Transform3D(1, 0, 0, 0, 0.94174194, -0.33633637, 0, 0.33633637, 0.94174194, 13, 2.029129, -146.16817)
 shape = SubResource("BoxShape3D_8")
 
-[node name="RaiderTent1" type="CollisionShape3D" parent="Collision"]
+[node name="RaiderTent1" type="CollisionShape3D" parent="Collision" unique_id=347399200]
 transform = Transform3D(0.9848078, 0, 0.1736482, 0, 1, 0, -0.1736482, 0, 0.9848078, 58, 1.4, -138)
 shape = SubResource("BoxShape3D_9")
 
-[node name="RaiderTent2" type="CollisionShape3D" parent="Collision"]
+[node name="RaiderTent2" type="CollisionShape3D" parent="Collision" unique_id=1029134173]
 transform = Transform3D(0.9659259, 0, -0.25881907, 0, 1, 0, 0.25881907, 0, 0.9659258, 62, 1.4, -158)
 shape = SubResource("BoxShape3D_9")
 
-[node name="QuarryRock1" type="CollisionShape3D" parent="Collision"]
+[node name="QuarryRock1" type="CollisionShape3D" parent="Collision" unique_id=1677402028]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.6, -146)
 shape = SubResource("BoxShape3D_10")
 
-[node name="QuarryRock2" type="CollisionShape3D" parent="Collision"]
+[node name="QuarryRock2" type="CollisionShape3D" parent="Collision" unique_id=572195348]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.6, -150)
 shape = SubResource("BoxShape3D_10")
 
-[node name="Blockers" type="StaticBody3D" parent="."]
+[node name="Blockers" type="StaticBody3D" parent="." unique_id=824786033]
 collision_layer = 32
 collision_mask = 0
 
-[node name="BankWN" type="CollisionShape3D" parent="Blockers"]
+[node name="BankWN" type="CollisionShape3D" parent="Blockers" unique_id=1959796825]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 100, 6, -113.25)
 shape = SubResource("BoxShape3D_11")
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=381306279]
 
-[node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Cliff_Box" type="MultiMeshInstance3D" parent="Visual" unique_id=468896975]
 material_override = SubResource("StandardMaterial3D_12")
 multimesh = SubResource("MultiMesh_14")
 
-[node name="Sack_Box" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Sack_Box" type="MultiMeshInstance3D" parent="Visual" unique_id=65140590]
 material_override = SubResource("StandardMaterial3D_15")
 multimesh = SubResource("MultiMesh_16")
 
-[node name="Dirt_Plane" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Dirt_Plane" type="MultiMeshInstance3D" parent="Visual" unique_id=259714301]
 material_override = SubResource("ShaderMaterial_17")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_19")
 
-[node name="Road_Plane" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Road_Plane" type="MultiMeshInstance3D" parent="Visual" unique_id=1556343670]
 material_override = SubResource("StandardMaterial3D_20")
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_21")
 
-[node name="Sack_Prism" type="MultiMeshInstance3D" parent="Visual"]
+[node name="Sack_Prism" type="MultiMeshInstance3D" parent="Visual" unique_id=1918701718]
 material_override = SubResource("StandardMaterial3D_15")
 multimesh = SubResource("MultiMesh_23")

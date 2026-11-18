@@ -12,28 +12,28 @@ size = Vector3(10, 6, 8)
 [sub_resource type="BoxShape3D" id="BoxShape3D_2"]
 size = Vector3(10.4, 6.4, 8.4)
 
-[node name="HouseBreakable" type="StaticBody3D"]
+[node name="HouseBreakable" type="StaticBody3D" unique_id=1689999692]
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_5fc47")
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=893963480]
 script = ExtResource("2_c8050")
 definition_id = "prop.fence_wood"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=174811807]
 
-[node name="Center" type="Marker3D" parent="Anchors"]
+[node name="Center" type="Marker3D" parent="Anchors" unique_id=2013729441]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
-[node name="BlockBody" type="CollisionShape3D" parent="."]
+[node name="BlockBody" type="CollisionShape3D" parent="." unique_id=1462319548]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=294834739]
 
-[node name="Body" type="Area3D" parent="Hurtboxes"]
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=1472846092]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 collision_layer = 4
 collision_mask = 0
@@ -41,16 +41,16 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=810778863]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Intact" type="Node3D" parent="."]
+[node name="Intact" type="Node3D" parent="." unique_id=1444175516]
 
-[node name="House" type="MeshInstance3D" parent="Intact"]
+[node name="House" type="MeshInstance3D" parent="Intact" unique_id=1187984691]
 mesh = ExtResource("4_31963")
 
-[node name="Broken" type="Node3D" parent="."]
+[node name="Broken" type="Node3D" parent="." unique_id=338568804]
 visible = false
 
-[node name="Rubble" type="MeshInstance3D" parent="Broken"]
+[node name="Rubble" type="MeshInstance3D" parent="Broken" unique_id=1385600580]
 mesh = ExtResource("5_8b32e")

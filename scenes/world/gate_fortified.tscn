@@ -82,38 +82,38 @@ _surfaces = [{
 "vertex_data": PackedByteArray("mpm5wM3MTD/NzEw/NDNzwM3MTD/NzEy/NDNzwM3MTD/NzEw/mpm5wM3MTD/NzEy/mpm5wAAAAADNzEw/NDNzwAAAAADNzEy/NDNzwAAAAADNzEw/mpm5wAAAAADNzEy/NDNzwM3MTD/NzEw/mpm5wM3MTD/NzEy/NDNzwM3MTD/NzEy/mpm5wM3MTD/NzEw/NDNzwAAAAADNzEw/mpm5wAAAAADNzEy/NDNzwAAAAADNzEy/mpm5wAAAAADNzEw/NDNzwM3MTD/NzEw/mpm5wAAAAADNzEw/mpm5wM3MTD/NzEw/NDNzwAAAAADNzEw/NDNzwM3MTD/NzEy/mpm5wAAAAADNzEy/mpm5wM3MTD/NzEy/NDNzwAAAAADNzEy/mplZwM3MTD8AAABANDOzv83MTD/OzMw+NDOzv83MTD8AAABAmplZwM3MTD/OzMw+mplZwAAAAAAAAABANDOzvwAAAADOzMw+NDOzvwAAAAAAAABAmplZwAAAAADOzMw+NDOzv83MTD8AAABAmplZwM3MTD/OzMw+NDOzv83MTD/OzMw+mplZwM3MTD8AAABANDOzvwAAAAAAAABAmplZwAAAAADOzMw+NDOzvwAAAADOzMw+mplZwAAAAAAAAABANDOzv83MTD8AAABAmplZwAAAAAAAAABAmplZwM3MTD8AAABANDOzvwAAAAAAAABANDOzv83MTD/OzMw+mplZwAAAAADOzMw+mplZwM3MTD/OzMw+NDOzvwAAAADOzMw+AACAv83MTD/NzEw/AACAP83MTD/NzEy/AACAP83MTD/NzEw/AACAv83MTD/NzEy/AACAvwAAAADNzEw/AACAPwAAAADNzEy/AACAPwAAAADNzEw/AACAvwAAAADNzEy/AACAP83MTD/NzEw/AACAv83MTD/NzEy/AACAP83MTD/NzEy/AACAv83MTD/NzEw/AACAPwAAAADNzEw/AACAvwAAAADNzEy/AACAPwAAAADNzEy/AACAvwAAAADNzEw/AACAP83MTD/NzEw/AACAvwAAAADNzEw/AACAv83MTD/NzEw/AACAPwAAAADNzEw/AACAP83MTD/NzEy/AACAvwAAAADNzEy/AACAv83MTD/NzEy/AACAPwAAAADNzEy/NDOzP83MTD8AAABAmplZQM3MTD/OzMw+mplZQM3MTD8AAABANDOzP83MTD/OzMw+NDOzPwAAAAAAAABAmplZQAAAAADOzMw+mplZQAAAAAAAAABANDOzPwAAAADOzMw+mplZQM3MTD8AAABANDOzP83MTD/OzMw+mplZQM3MTD/OzMw+NDOzP83MTD8AAABAmplZQAAAAAAAAABANDOzPwAAAADOzMw+mplZQAAAAADOzMw+NDOzPwAAAAAAAABAmplZQM3MTD8AAABANDOzPwAAAAAAAABANDOzP83MTD8AAABAmplZQAAAAAAAAABAmplZQM3MTD/OzMw+NDOzPwAAAADOzMw+NDOzP83MTD/OzMw+mplZQAAAAADOzMw+NDNzQM3MTD/NzEw/mpm5QM3MTD/NzEy/mpm5QM3MTD/NzEw/NDNzQM3MTD/NzEy/NDNzQAAAAADNzEw/mpm5QAAAAADNzEy/mpm5QAAAAADNzEw/NDNzQAAAAADNzEy/mpm5QM3MTD/NzEw/NDNzQM3MTD/NzEy/mpm5QM3MTD/NzEy/NDNzQM3MTD/NzEw/mpm5QAAAAADNzEw/NDNzQAAAAADNzEy/mpm5QAAAAADNzEy/NDNzQAAAAADNzEw/mpm5QM3MTD/NzEw/NDNzQAAAAADNzEw/NDNzQM3MTD/NzEw/mpm5QAAAAADNzEw/mpm5QM3MTD/NzEy/NDNzQAAAAADNzEy/NDNzQM3MTD/NzEy/mpm5QAAAAADNzEy//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+/")
 }]
 
-[node name="GateFortified" type="StaticBody3D"]
+[node name="GateFortified" type="StaticBody3D" unique_id=1973412519]
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_5fc47")
 world_id = "valley.ruins.citadel_gate"
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=988382020]
 script = ExtResource("2_c8050")
 entity_id = "valley.ruins.citadel_gate"
 definition_id = "prop.gate_fortified"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=1049364781]
 
-[node name="Center" type="Marker3D" parent="Anchors"]
+[node name="Center" type="Marker3D" parent="Anchors" unique_id=1453499646]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
 
-[node name="BlockDoors" type="CollisionShape3D" parent="."]
+[node name="BlockDoors" type="CollisionShape3D" parent="." unique_id=1831251364]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="TowerLeft" type="CollisionShape3D" parent="."]
+[node name="TowerLeft" type="CollisionShape3D" parent="." unique_id=609308885]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 7.5, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="TowerRight" type="CollisionShape3D" parent="."]
+[node name="TowerRight" type="CollisionShape3D" parent="." unique_id=1371153968]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 7.5, 0)
 shape = SubResource("BoxShape3D_3")
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=689424379]
 
-[node name="Body" type="Area3D" parent="Hurtboxes"]
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=1777944759]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
 collision_layer = 4
 collision_mask = 0
@@ -121,26 +121,26 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=313171298]
 shape = SubResource("BoxShape3D_4")
 
-[node name="Frame" type="Node3D" parent="."]
+[node name="Frame" type="Node3D" parent="." unique_id=882146825]
 
-[node name="Merged" type="MeshInstance3D" parent="Frame" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Frame" unique_id=776579004 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_6")
 
-[node name="Intact" type="Node3D" parent="."]
+[node name="Intact" type="Node3D" parent="." unique_id=1475043264]
 
-[node name="Merged" type="MeshInstance3D" parent="Intact" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Intact" unique_id=1945036243 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_9")
 
-[node name="Breached" type="Node3D" parent="."]
+[node name="Breached" type="Node3D" parent="." unique_id=896266179]
 visible = false
 
-[node name="Merged" type="MeshInstance3D" parent="Breached" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Breached" unique_id=148555756 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_10")
 
-[node name="NavLinkThrough" type="NavigationLink3D" parent="."]
+[node name="NavLinkThrough" type="NavigationLink3D" parent="." unique_id=251562334]
 enabled = false
 navigation_layers = 15
 start_position = Vector3(0, 0, 3)

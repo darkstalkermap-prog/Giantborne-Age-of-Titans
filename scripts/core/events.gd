@@ -314,3 +314,39 @@ signal appearance_changed(tick: int, entity_id: String)
 ## @anchor P46
 
 ## @anchor P47
+
+# M11 (written by P49, plan M11 §1.5: Part A's pre-declarations; no gameplay signal is added by M11).
+
+## @anchor P50
+
+## @anchor P51
+
+## @anchor P52
+
+## @anchor P53
+
+## @anchor P54
+
+## @anchor P55
+
+## @anchor P56
+
+## @anchor P57
+
+## @anchor P58
+
+## @anchor P59
+
+## @anchor P60
+
+## @anchor P61
+
+## @anchor P62
+
+## @anchor P63
+
+## @anchor P64
+
+## @anchor P65
+
+## @anchor P66
