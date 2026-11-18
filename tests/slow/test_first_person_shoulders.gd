@@ -12,7 +12,7 @@ extends TestSuite
 ## skipped with a note (tools/check.sh --require turns that into a failure).
 
 ## The share of a corner block's pixels the giant may change (the dither's last pixels at the fade's edge: at
-## most 0.003 measured, in the sprint).
+## most 0.007 measured, in the stage-1 sprint).
 const CORNER_MAX := 0.02
 ## The share of the whole frame the giant must still change (his forearms, hands and legs: 0.08-0.13 measured).
 const DRAWN_MIN := 0.04
