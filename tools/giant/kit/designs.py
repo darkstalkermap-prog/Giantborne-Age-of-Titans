@@ -792,6 +792,23 @@ def downsample(mask, size, out_size=LAYER_SIZE):
     return np.round(t * t * (3.0 - 2.0 * t) * LEVELS) / LEVELS
 
 
+SIDE_SHARE = 0.8          # a design with this share of its ink on one side of the body is that side's
+SIDE_MID_M = 0.01         # human scale: texels this near the middle belong to neither side
+
+
+def side_of(mask, P):
+    """"left" | "right" | "centre": where a design's ink lies on the giant (his own left is +X in the bake's
+    rest positions; P48, plan M11 §2.2: the creator frames a design from its side)."""
+    w = np.asarray(mask, np.float64).reshape(-1)
+    x = np.asarray(P, np.float64).reshape(-1, 3)[:, 0]
+    total = float(w.sum())
+    if total <= 0.0:
+        return "centre"
+    left = float(w[x > SIDE_MID_M].sum()) / total
+    right = float(w[x < -SIDE_MID_M].sum()) / total
+    return "left" if left >= SIDE_SHARE else ("right" if right >= SIDE_SHARE else "centre")
+
+
 def build(bake_dir, out_dir):
     """Draw, pack and write designs.png (512 x 512*layers RGBA) and designs.json."""
     from PIL import Image
@@ -812,6 +829,7 @@ def build(bake_dir, out_dir):
         img[rows, :, c] = np.maximum(img[rows, :, c], small)
         kind, regions = CATALOGUE[did]
         stats[did] = {"layer": li, "channel": c, "kind": kind, "regions": list(regions),
+                      "side": side_of(masks[did], P),
                       "texels_512": int((small > 0.5).sum()), "texels_1024": int((masks[did] > 0.5).sum())}
         if stats[did]["texels_512"] == 0:
             raise ValueError("designs: %s draws nothing" % did)

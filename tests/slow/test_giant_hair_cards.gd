@@ -70,7 +70,7 @@ func test_the_long_styles_carry_the_fringe_and_the_beards_cards_are_locks() -> v
 	add_child(m)
 	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(MANIFEST))
 	for id: String in FRINGE:
-		var mi := m.mesh(id)
+		var mi := m.ensure_part(id)
 		assert_true(mi != null, "%s is a mesh of the model" % id)
 		if mi == null:
 			continue
@@ -80,10 +80,10 @@ func test_the_long_styles_carry_the_fringe_and_the_beards_cards_are_locks() -> v
 		assert_eq(fringe.size(), int(FRINGE[id]), "%s: the hairline's fringe of narrow three-point cards" % id)
 		var others := cards.filter(func(c: Dictionary) -> bool: return int(c.verts) > 6 and float(c.root_w) <= FRINGE_MAX_WIDTH_M)
 		assert_true(others.size() * 20 <= cards.size(), "%s: hardly another card is that narrow (%d of %d)" % [id, others.size(), cards.size()])
-	assert_true(m.mesh("Hair_crop") != null and _cards(m.mesh("Hair_crop")).filter(
+	assert_true(m.ensure_part("Hair_crop") != null and _cards(m.ensure_part("Hair_crop")).filter(
 		func(c: Dictionary) -> bool: return float(c.root_w) <= FRINGE_MAX_WIDTH_M).is_empty(), "the crop has no fringe")
 	for id: String in BEARDS:
-		var mi := m.mesh(id)
+		var mi := m.ensure_part(id)
 		assert_true(mi != null, "%s is a mesh of the model" % id)
 		if mi == null:
 			continue

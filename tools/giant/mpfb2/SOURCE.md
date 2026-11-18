@@ -1,9 +1,11 @@
 # The vendored MakeHuman / MPFB2 subset (CC0 1.0)
 
-The 133 files listed in `FILES.sha256` are the part of the MakeHuman / MPFB2 data that the giant
+The 137 files listed in `FILES.sha256` are the part of the MakeHuman / MPFB2 data that the giant
 pipeline (`tools/giant/`) reads: the hm08 base mesh (`3dobjs/base.obj`, with its helper geometry and
 joint cubes), the 122 morph targets of the giant's phenotype (`targets/**`, chosen by
-`kit/mh_data.py`'s `GIANT_MACRO` and `GIANT_MODIFIERS`), the regional modifier table
+`kit/mh_data.py`'s `GIANT_MACRO` and `GIANT_MODIFIERS`), the four universal muscle-and-weight targets
+the build sliders are measured against (`macrodetails/universal-male-{young,old}-averagemuscle-maxweight`
+and `-maxmuscle-averageweight`, `mh_data.BUILD_TARGETS`; P48), the regional modifier table
 (`targets/target.json`), the "game_engine" skeleton and its skinning weights
 (`rigs/standard/rig.game_engine.json`, `weights.game_engine.json`) and six region mask images
 (`textures/mpfb_*.jpg`). `LICENSE.md` is the CC0 1.0 text that ships with the data.

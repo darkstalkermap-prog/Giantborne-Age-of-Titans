@@ -205,8 +205,10 @@ def build_braies(bd, rig, coll, weights, S, p=None):
     return {"braies": (ob, braies_body), "belt": (belt, belt_body)}
 
 
-def build_shells(bd, rig, coll, weights, S):
-    """tunic, jerkin, bracers, boots, furs: {name: (object, body vertex per local vertex)}."""
+def build_shells(bd, rig, coll, weights, S, layout=None):
+    """tunic, jerkin, bracers, boots, furs and the look pass's three: {name: (object, body vertex per local
+    vertex)}. ``layout``: the leaf chains (giant_parts.chain_layout) the free cape hangs on; without it the
+    cape keeps the body's weights."""
     n = mh.N_BODY_VERTS
     _, faces, fuv = bd.group("body")
     V = bd.verts[:n]
@@ -254,14 +256,8 @@ def build_shells(bd, rig, coll, weights, S):
     out["furs"] = shell("Garment_furs", coll, rig, V, N, faces, fuv, bd.bm.uvs, keep, fur_off, weights, S,
                         "giant_fur", seed=7, hem_noise=0.03)
     # ---- the look pass (P46) ----
-    # cape: a short cloak from the shoulders down the back to the hips, flaring towards a ragged hem
-    back = N[:, 1] > -0.15
-    keep = (((torso + B["pelvis"] * (z > hip - 0.02) + B["upperarm"] * (z > shoulder - 0.05) + B["neck"] * 0.5) > 0.45)
-            & back & (z > hip - 0.03) & (z < neck_z + 0.01) & (B["head"] < 0.02) & (B["lowerarm"] < 0.05))
-    down = np.clip((shoulder - z) / (shoulder - hip), 0.0, 1.0)
-    cape_off = 0.05 + 0.07 * down ** 1.5
-    out["cape"] = shell("Garment_cape", coll, rig, V, N, faces, fuv, bd.bm.uvs, keep, cape_off, weights, S,
-                        "giant_cloth", seed=11, hem_noise=0.035)
+    # cape: a short cloak from the shoulders down the back to the hips (P48: free of the back, on its chains)
+    out["cape"] = build_cape(bd, rig, coll, weights, S, layout, V, N, faces, fuv, B, z, shoulder, hip, neck_z)
     # leg wraps: cloth wound round both shins, from above the ankle to under the knee
     keep = (B["calf"] > 0.5) & (z > ankle + 0.07 * (knee - ankle)) & (z < ankle + 0.86 * (knee - ankle))
     wind = 0.004 * np.sin((z - ankle) / (knee - ankle) * 2 * math.pi * 7.0)       # the turns of the winding
@@ -276,3 +272,80 @@ def build_shells(bd, rig, coll, weights, S):
     out["pauldron"] = shell("Garment_pauldron", coll, rig, V, N, faces, fuv, bd.bm.uvs, keep, pad, weights, S,
                             "giant_leather")
     return out
+
+
+# The free cape (P48, plan M11 §2.2; human-scale metres). It is cut from the body as the M10 shell was - the
+# back from the neck to the hips and over the shoulders - with a band round the base of the neck that closes
+# it at the collar; below the shoulder blades it leaves the back and hangs: every vertex takes the rearmost
+# place of the cloth above it in its own column, the hem flares and falls in folds.
+CAPE = dict(offset=0.05, flare=0.07, column=0.022, fold_depth=0.016, folds=9.0, hem_noise=0.035,
+            collar_lo=0.045, collar_hi=0.012, collar_offset=0.03)
+
+
+def build_cape(bd, rig, coll, weights, S, layout, V, N, faces, fuv, B, z, shoulder, hip, neck_z, p=None):
+    """(object, body vertex per local vertex): the cape as a free mesh. Its skin: the body's weights down
+    to the chains' roots, then the three cape chains (giant_parts.chain_weights)."""
+    import giant_parts as gp
+    p = dict(CAPE, **(p or {}))
+    n = len(V)
+    torso = B["spine3"] + B["spine2"] + B["spine1"] + B["clav"]
+    back = N[:, 1] > -0.15
+    keep = (((torso + B["pelvis"] * (z > hip - 0.02) + B["upperarm"] * (z > shoulder - 0.05) + B["neck"] * 0.5) > 0.45)
+            & back & (z > hip - 0.03) & (z < neck_z + 0.01) & (B["head"] < 0.02) & (B["lowerarm"] < 0.05))
+    # the collar: a band round the base of the neck, front included, so the cape closes on the chest
+    collar = ((torso + B["neck"]) > 0.6) & (z > neck_z - p["collar_lo"]) & (z < neck_z + p["collar_hi"]) \
+        & (B["head"] < 0.02) & (B["upperarm"] < 0.2)
+    keep = keep | collar
+    down = np.clip((shoulder - z) / (shoulder - hip), 0.0, 1.0)
+    off = np.where(collar & ~back, p["collar_offset"], p["offset"])
+    shell_v = V + N * off[:, None]
+    hang = keep & back & (z < shoulder + 0.02)
+    idx = np.nonzero(hang)[0]
+    y = shell_v[:, 1].copy()
+    hx, hz, hy = shell_v[idx, 0], shell_v[idx, 2], shell_v[idx, 1]
+    for i, vi in enumerate(idx):
+        above = (np.abs(hx - hx[i]) < p["column"]) & (hz >= hz[i])
+        y[vi] = hy[above].max()
+    y = np.where(hang, smooth_field(y, faces, n, 3), y)
+    y = np.maximum(y, shell_v[:, 1])
+    rng = np.random.default_rng(11)
+    ph = rng.random() * 6.28
+    fold = p["fold_depth"] * down ** 1.2 * np.sin(p["folds"] * shell_v[:, 0] / 0.2 + ph)
+    y = np.where(hang, y + p["flare"] * down ** 1.5 + fold, y)
+    pos = shell_v.copy()
+    pos[:, 1] = y
+    keep_f = np.all(keep[faces], axis=1)
+    F, FU = faces[keep_f], fuv[keep_f]
+    used = np.unique(F.ravel())
+    remap = -np.ones(n, np.int64)
+    remap[used] = np.arange(len(used))
+    P = pos[used]
+    # the ragged hem (the M10 cape's): the lower boundary pulled down by noise
+    E = np.concatenate([F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 3]], F[:, [3, 0]]])
+    E.sort(axis=1)
+    u, c = np.unique(E, axis=0, return_counts=True)
+    bv = np.unique(u[c == 1].ravel())
+    bv = bv[z[bv] < hip + 0.12]
+    P[remap[bv], 2] -= p["hem_noise"] * rng.random(len(bv))
+    ob = gb.new_mesh_object("Garment_cape", P * S, remap[F], coll, bd.bm.uvs, FU)
+    body_groups = {}
+    for bone, lst in weights.items():
+        w = np.zeros(n)
+        for vi, wt in lst:
+            if vi < n:
+                w[vi] = wt
+        if w[used].max() > 1e-4:
+            body_groups[bone] = w[used]
+    groups = gp.chain_weights(P * S, body_groups, layout) if layout is not None else body_groups
+    for bone in sorted(groups):
+        w = groups[bone]
+        ids = np.nonzero(w > 1e-4)[0]
+        if len(ids) == 0:
+            continue
+        vg = ob.vertex_groups.new(name=bone)
+        for i in ids.tolist():
+            vg.add([i], float(w[i]), "REPLACE")
+    gb.parent_keep(ob, rig)
+    gb.armature_modifier(ob, rig)
+    ob.data.materials.append(_placeholder("giant_cloth"))
+    return ob, used
