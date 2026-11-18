@@ -2,27 +2,32 @@
 
 The specification ([GIANTBORN_SPEC_V2.md](GIANTBORN_SPEC_V2.md)) asks that every interpretation
 and conflict resolution be recorded. This file collects them for the whole build, milestones M0 to
-M9:
+M10:
 
 1. [The plans' decisions](#1-the-plans-decisions): the 30 interpretations the M2-M5 plan fixed
    before any code was written (`docs/plans/M2_M5_PLAN.md` §0.3, numbered 1-30 here) and the 34 of
    the M6-M9 plan (`docs/plans/M6_M9_PLAN.md` §0.3, numbered 31-64 here), each with what was built;
    then §1.3: the one deviation from the spec itself (the lossless music and ambience masters that
    are not committed), the licence left to the owner, and the spec's scope as the owner later
-   directed it and as the plan read it.
+   directed it and as the plan read it; §1.4: the 21 decisions of the M10 plan
+   (`docs/plans/M10_PLAN.md` §0.4, numbered 65-85 here), and §1.5: the owner's answers to that plan's
+   questions.
 2. [Deviations recorded by the packages](#2-deviations-recorded-by-the-packages): where the packages
-   (P01-P18 for M2-M5, P19-P40 for M6-M9) departed from their plan, and why. Each package's own
+   (P01-P18 for M2-M5, P19-P40 for M6-M9, P41-P46 for M10) departed from their plan, and why. Each package's own
    record, with every detail and the test that covers it, is `docs/systems/<package>.md`.
 3. [Fixes from the milestone gate reviews](#3-fixes-from-the-milestone-gate-reviews).
 4. [The plans' review logs](#4-the-plans-review-logs), in short.
 5. [The M0/M1 decisions](#5-the-m0m1-decisions): the combat sandbox's rules, still in force unless
-   a row says what replaced them.
+   a row says what replaced them (M10 changed two: the visible swing and first person's render
+   layers).
 
 Everything below is a proposed default: data, or a small code path, that can be changed. A number
 quoted from a measurement names its source. Measurements of the M6-M9 code are the W23 confirmation's
 (`wave-23` with commit `a7da72d`; `docs/BALANCE_LOG.md`, "M9 confirmation") unless named otherwise:
 the M9 gate's fixes followed that confirmation, and what they changed is in §3.2; the M9 gate's final
-measurements and the ship's final check are in `docs/M6_M9_HANDOFF.md` §5.4, §6 and §7.
+measurements and the ship's final check are in `docs/M6_M9_HANDOFF.md` §5.4, §6 and §7. Measurements
+of the M10 code are the M10 gate's on its merged code (`m10-gate`, commit `348a7bf`) unless named
+otherwise; `docs/M10_HANDOFF.md` §5 and §6 hold them.
 
 ## 1. The plans' decisions
 
@@ -141,6 +146,53 @@ still labelled "Prototype pacing" (plan decision 25, here 55; plan §5.7: "All q
 `prototype_pacing: true`"). The growth brief had offered either dropping the acceleration or keeping
 the label (`docs/plans/briefs/growth_extension.md` §5.1). Every quest's XP shows the label, and the
 campaign's end screen reads "The Old Kingdom - prototype pacing".
+
+### 1.4 The M10 decisions (M10 plan §0.4)
+
+The M10 plan's decisions 1-21 are numbered 65-85 here ("Plan" gives the plan's own number, which the
+system documents `P41.md` to `P46.md` use). The plan holds each decision's full text. Decisions 67 and
+72 change two M0/M1 contracts; each is also recorded beside the row it changes, in §5 ("Hit
+detection", "Camera and targeting").
+
+| # | Plan | Decision | What was built (and where it moved) |
+| --- | --- | --- | --- |
+| 65 | 1 | **The player's giant only.** M10 replaces the stylized rig of the player; soldiers, villagers, named NPCs, the rival and clan giants, Harrok, the creatures and the world keep their low-poly look, and so do the player's weapons. | As planned (P43: `scenes/player/giant.tscn` lost its stylized meshes; no other actor's scene changed). The owner confirmed the low-poly weapons (§1.5, answer 4). |
+| 66 | 2 | **The pose brain stays; a skinned body follows it.** `ActorRig` keeps computing every pose; `SkinnedRig extends ActorRig` adds an `AnimationTree` of computed-keyframe clips and one `PoseBrainModifier`; where the brain does not walk the legs never step. | As planned (P43). The legs' source is chosen in a fixed order: dead, airborne, an action's own motion (the run clip on a clock of its own), walking (the clips' time from the brain's walk phase), else the stance. Added by the package: a wrist limit of 45°, one grip axis of 41° for every weapon family, a protracted clavicle and a straight arm during a hold (§2.3). Not built: the stomp's leg lift (the plan's cut list). |
+| 67 | 3 | **Tip matching replaces the 1° rule**: the hand holds a grip the real arm can reach and the visible weapon aims at the tested segment's tip; its outer half stays inside the tested capsule, at most 15° off the tested direction (7° median). The gameplay geometry is not changed. | `TipMatching` (P42), driven by `PoseBrainModifier` (P43). On the exported landmarks, 1,004 samples over every player weapon arc at stages 1, 3, 4 and 6: median 7.10°, worst 12.94° (`test_tip_matching`); the M10 gate's own every-tick check over stages 1-6: 2,626 samples, median 7.06°, worst 13.03°, the outer half at most 0.80 radii from the capsule's axis, none breaking the contract. **The contract holds for weapons that fit their stage**: an unreforged club, sword or hammer carried past its fit stage points at the tested tip and falls short of it (the gate measured up to 3.88 radii, the stage-6 sword); the HUD already tells the player that weapon is too small (§2.3, P42 and P43). The W25 merge moved the grip's reach limit from 0.97 to 0.95 of the palm's reach for the exported skeleton's longer hand. |
+| 68 | 4 | **The gameplay body is unchanged**: the capsule, hurtboxes, lock anchor, attack origin, grab sockets, launch points and camera geometry stay the stylized giant's; a held body's *visual* is moved by the remaining gap to the visible palm (at most 0.33·k m). | As planned. The M10 gate compared the player's scene with `0.9.0-m9`'s: its 23 gameplay nodes are identical, no existing data record and no simulation script changed. During a hold the visible palm comes within 0.23·k of the socket and the held body's visual closes the rest; its collision never moves. |
+| 69 | 5 | **Presentation only, write-only**: the skinned layers write only under `Visual/Body` (and the held body's `Visual` offset); no simulation, AI, combat, world or quest code reads the skeleton, the clips, the model or the look. | As planned: `test_skin_rules` and `test_appearance_rules` (the code rules), gate `test_giant_determinism` (three seeded soaks and a seeded Valley run byte-identical with the skin off, on, and with another look, with positive controls). The M10 gate found the 120 s soak and the world bot's smoke run byte-identical on `0.9.0-m9` and on the candidate. |
+| 70 | 6 | **The skinned layers run where something is drawn**: with a display they run; headless they stay off unless a test enables them or the command line says `--skin`; `--skin-stats` proves what ran. | As planned (`SkinnedRig.layers_enabled()`, `--skin`, `--no-skin`, `enable_for_tests()`, the `SKIN_STATS` line). The model is instanced headless, so node paths exist; the weapon then hangs at the brain's hand. |
+| 71 | 7 | **Growth is a uniform scale** of the stage-1 model by height / 3.6576; no per-stage proportions; growth stays instant. | As planned. |
+| 72 | 8 | **First person by render layers, with closed cuts**: the head on layer 3 with hair, beard and eyes, the torso on layer 2 with the garments' core parts, the limbs on layer 1; every cut loop capped; first person culls layers 2 and 3; pressed close culls layer 3, and layer 2 only if a render shows the torso over the crosshair; the tree's canopy and the pine's needles move to layer 3. The camera's geometry does not change. | As planned (P41: five cut loops, each capped on both sides; P43: the camera's masks). The render of the growth course's low passage showed the torso below the crosshair, so pressed close culls the head's layer only (`CameraRig.PRESSED_CULLS_TORSO` false). The gate added a shader fade of the limbs round the shoulders in first person, because the capped shoulder cuts showed as slabs when looking down (§3.3, LC-3); P46 lifted the braies' cap over the thigh cuts. |
+| 73 | 9 | **Assets are generated, audited and verified**: `tools/giant/` regenerates every giant asset from a vendored, audited CC0 subset of the MakeHuman/MPFB2 data; `--verify` compares with the manifest, bit-exact on the reference toolchain; no GPL or Apache code is copied. After W25 the body mesh, the skeleton, the region ids and the landmarks are frozen. | As planned (P41; the clips P43; the target content P46), with one recorded deviation: the tangent-normal bake jitters by a texel from run to run, so "bit-exact" tolerates at most 64 texels of a Cycles map off by 1/255 (§2.3, P41). 133 vendored files, 13 generated files. The gate's provenance lens regenerated all 13 bit-exact with every bake pass, found no line of the kit shared with the wheel's code, and the audit clean. The body stayed frozen through the gate (its hash is the W25 one). |
+| 74 | 10 | **No shape keys in M10**: no face or build sliders; one face and one build; height is the growth stage. | As planned. |
+| 75 | 11 | **One design array**: tattoos, war paint, ancestry marks and scars are layers of one VRAM-compressed texture array; the body's per-vertex region id picks each region's design; within a layer a region's area carries at most one design in R, G or B plus one in A. | As planned: 29 designs in six 512 px layers (16 tattoos, 4 war paints, 6 scars, 3 marks). The scars are designs too, on two layers of their own, where the research had baked them into the skin (§2.3, P41 and P46). The values are quantized to the compressor's levels, which keeps every design within the slow suite's error bound with no ghost. |
+| 76 | 12 | **Hair is cards** with depth-pre-pass blending and tinted skin under them; no alpha to coverage. **Skin** uses wrap lighting with a back-light transmission term; no subsurface scattering. | As planned. The cards took two more passes to read as hair: P46's second pass (feathered sides, strand tips, narrower and more cards, softened card shadows, rounded normals) and the gate's (a hairline fringe, feathered roots, the long beards as pointed locks, a beard that fades seen from behind; §3.3, LC-6). The gate also eased the wrap's red and tied the bake tone to the default tone (§3.3, OR-1). |
+| 77 | 13 | **Palettes, not free colour pickers**: every colour is a named swatch from data, saved as an id. | As planned: skin, eyes, hair colour, ink, paint colour and dye are `appearance_set` records of named swatches. |
+| 78 | 14 | **The look lives in the character, schema 2 kept**: `character.appearance` is optional with its own `"v"`; absent means the default look; sanitize repairs and reports, and its notes reach the load message; a record from a later build is kept untouched; the creator writes the full record. | As planned (P42). The gate found the creator editing a later build's record in place and fixed it: the creator starts from the default look and only a kept change replaces such a record (§3.4, LB-1). A `0.9.0-m9` build keeps a `0.10` save's look through Continue, checkpoints and a death (the gate's cross-version run). |
+| 79 | 15 | **One creator, three doors**: `CreatorScreen` opens at New Game, at the launcher's "Start in the open world" (`--creator`) and from the shrine's Appearance tab (Keep applies and re-takes the shrine's checkpoint; Cancel restores). Leaving with changes asks first; Undo covers every change; changes are free at any shrine and stage. Two one-time messages tell players of older saves and new ancestry marks where the tab is. | As planned (P44; the launcher's argument P45). |
+| 80 | 16 | **Ancestry marks are automatic and removable**: `mark: "auto"` shows the chosen ancestry's mark, "none" hides it; marks, two ancestry-only eye colours and one skin tone are locked until the ancestry is chosen. | As planned; the owner kept the default (§1.5, answer 2). |
+| 81 | 17 | **Two texture tiers**: the desktop draws the 1024 px normal and ORM maps; the Web preset excludes them and keeps the 23 MB budget - unless the owner raises it. | The owner raised it (§1.5, answer 1). W25 and W26 shipped as the decision's first half says; since P45 (W27) the Web presets keep `tex_hi/`, the tier "auto" picks the 1024 px maps on the Web too, the budget for a `-m10` version is 26 MB and the giant's share is capped at 7.6. `--giant-tier=web` still forces the 512 px maps. |
+| 82 | 18 | **Options must read in play**: every design category offers bold pieces that show from behind at stage 1 or in first person; the rendered option check measures those views; the creator has a "Game view" and says when clothing hides a design. | As planned (P44's check, P46's content). At W26 the scars did not reach the views' floors and were a listed known miss; P46's back lashes read from behind (63 pixels of the tile against a floor of 18) and the list is empty. The check draws 176 tiles. |
+| 83 | 19 | **The owner sees it early and approves it before the release**: a note before W25; a private playable link, a video and character sheet A after W26; sheet B and the release candidate after the gate. The release waits for the approval; no other work waits. | The note and the questions went out before W25 and were answered on 12 November 2026 (§1.5). The preview link, the video and sheet A followed the W26 merge. No notes on them had arrived when P46 finished, during the W27 merge or at the gate, so none was applied. Sheet B was rendered from the gate's code and the release candidate built from it; **the owner's answer on sheet B is pending** as these documents are committed (`docs/M10_HANDOFF.md` §7). |
+| 84 | 20 | **Test tiers as in M6-M9, with M10's caps**: each package's cost is counted from the runner's per-suite times; merges run with `--require` (no check may skip) and `--strict-times`. | As planned (`tools/check.sh --require`, `--strict-times`, P41; `tools/giant_suites.py` for the suites that load the giant). Every wave merge and the gate merge record the tiers: the gate's merged code ran 330 suites in 65.4 s (default), 348.2 s (slow) and 815.5 s (gate), under 75 s, 8 minutes and 50 minutes. P42 moved six long default tests to the slow tier for headroom. |
+| 85 | 21 | **The gate has an independent review** with fix lanes and an audit, plus the owner's look approval. | Four reviewers over the plan's eight lenses, every finding verified adversarially: 21 findings, 19 confirmed and 2 refuted, and one note of the orchestrator's (the skin's tone). Three fix lanes (ui, web, look), one at a time on the generated assets; the audit of the fixes came back dry on its first round. §3.3, §3.4; `docs/M10_HANDOFF.md` §5. |
+
+### 1.5 The owner's answers to the M10 plan's questions (M10 plan §0.6)
+
+Sent with the note before W25 and answered on 12 November 2026. They replace the plan's defaults where
+they differ, and every package read them as decisions.
+
+| # | Question | The plan's default | The owner's answer | What it changed |
+| --- | --- | --- | --- | --- |
+| 1 | Raise the Web pack budget from 23 to 26 MiB (still two parts)? | Keep 23: the Web draws 512 px textures | **Raise it to 26 MiB**, still in parts of at most 15 MiB; the Web keeps the 1024 px normal and ORM maps like the desktop builds | Applied by P45 in W27 (the orchestrator's reading: W25 and W26 keep 23 MiB and the exclusion, so that P41's export measures the floor's share): `tex_hi/` off the Web presets' exclusions, the `-m10` budget 26, `GIANT_SHARE`'s cap 7.6. The two maps add 1.73 MiB shipped. The gate's release candidate ships 22.49 MiB |
+| 2 | Ancestry marks automatic on the choice (removable at shrines), or only offered? | Automatic, removable | **Automatic**, hidden at shrines if the player wishes (the default stands) | Nothing: `mark: "auto"` is the default record's |
+| 3 | A "World style" switch that lights the giant flatter, closer to the world's look? | Not built in M10 | **No** (the default stands) | Nothing built; no Settings row |
+| 4 | Keep the low-poly weapons in M10? | Yes | **Yes** (the default stands) | No material pass on the weapons |
+| 5 | Approve the look: notes on the preview link and sheet A after W26; on sheet B before the release approve, approve with notes, or not yet | - | No notes on the preview had arrived by the gate. **Sheet B: pending** | The tag `0.10.0-m10`, the play link and the merge to `main` wait for it (`docs/M10_HANDOFF.md` §7) |
+
+One more decision is the owner's and open: M11's direction. The plan recommends people near the
+camera on the giant's pipeline, then world materials (plan §0.5, §4.4).
 
 ## 2. Deviations recorded by the packages
 
@@ -460,6 +512,93 @@ checks' default verdicts pass a hole cut short by the recording's end with no dr
 
 **P40 Ship.** As planned, with these deviations. The world tour is a new tool, `tools/world_tour.gd` with `tools/world_tour.sh`, which renders only each shot's frames, because a fully drawn campaign under software OpenGL would take days; its route is the crown-first order assisted (the one route through Fort Aldmere's breach and battle), with three placed shots for what it does not pass. Two bugs in the tool that the run found were fixed before its commit, and the three cosmetic problems its shots showed (the throne's prompt, the map's view at the world's edge, the cut checkpoint toast) went to FOLLOWUPS, not fixed. No game code changed; the version commit also changes the description's milestone count, which `test_launcher_notes` requires. The two Chromium checks the build run ran under load (`stream_check.mjs --world --audio`, `world_check.mjs`) were run again on the quiet machine, where all three pass their default form. The final check ran on the merged head `43d92b8`, beside these documents' last commit, which changes no code. The director's budget rule was kept (decision 45). Left: the strict web audio criteria, the reference PC, real browsers and people (handoff §9), the world matrix's seeds 2-3, two cairns. See [docs/systems/P40.md](systems/P40.md).
 
+### 2.3 M10 (P41-P46)
+
+The ones that change behaviour or a contract, in short. Each package's system document has a
+"Decisions and deviations" (or "Decisions as built" and "Deviations") section with the reasons in
+full, and its gate section the later changes.
+
+**P41 The giant asset pipeline and the model.** "Bit-exact on the reference toolchain" allows the
+bake's own jitter: the tangent-space normal bake came out one texel different (one channel by 1/255)
+in 3 of 14 bakes on the same inputs and machine, so `--verify` accepts a Cycles map that differs in at
+most 64 texels by at most 1/255 and reports it as `TOLERATED`; anything more is a content difference.
+The cause inside Blender was not traced. The scars are designs in the array, not baked into the skin,
+so a look can show or hide each. The design values are quantized to the S3TC block's levels. A garment
+`covers` a body region when at least 97 % of the region's vertices meet it along their normals. Garment
+hems stay open; only cuts at the body's part boundaries are capped. The vendored subset is 133 files,
+not the plan's 136 (the default rig, its weights and the SSS image are not needed). The detail maps
+are 128 px and there are three (a fur map beside weave and leather). `--verify` never reads the bake
+cache. The braies' cut is one loop round both thighs. The Web presets excluded `tex_hi/` in W25
+although the owner's answer was already 26 MiB: the plan gave that change to P45. `GIANT_SHARE`'s cap
+is the budget less 18.4 MB, so it moves with the budget. The behavioural test of the Web share runs in
+the slow tier.
+
+**P42 The look.** The tip-matching contract holds for the weapons that fit their stage; for a weapon
+carried past its fit stage the test checks the direction, the reach and the solve, and prints the
+capsule's miss (decision 67). The contract runs at stages 1, 3, 4 and 6. The mark's one-time prompt is
+the player's own: its flag is set only for a look with a record or a save from before M10, never for a
+command-line or bot look, so the bots' runs set no new flag. An empty record sanitizes to the default
+with no preset name. Randomize over 1,000 seeds in every scope runs in the slow tier, the session's
+tests are a suite of their own, and the shrine case is a slow suite: the default tier's cap could not
+carry them. `--creator` without a matching mode warns and starts nothing different. Six long default
+tests moved whole to `tests/slow/` for headroom, each still covered by a named suite. Two files outside
+the package's list changed because the new signal and prompts required it (`cue_router.gd`'s silent
+list, `test_valley_content`). The W25 review then fixed four things the lanes could not see apart:
+`GiantLook` loaded texture names as paths, so the real model drew its hair without the atlas and its
+garments without their detail maps; "Hidden by your clothing" counted a region as covered only at
+97 %, where the creator needs 75 % of one garment's coverage; the shrine tab's summary ignored the
+giant's line; a copy of a model shared its original's materials.
+
+**P43 The skinned giant.** The hold reaches further than the plan's "farthest point toward the
+socket": the gameplay socket is the stylized arm's, beyond the real palm's reach, so the modifier
+protracts the clavicle (up to 18°) and straightens the arm, which brings the palm within 0.23 m of the
+socket at stage 1, under the 0.33·k the held body's visual may move. One grip axis (41°) serves every
+weapon family, and a wrist limit replaces a per-family axis: the arm is solved again until the wrist
+bends at most 45°. A weapon carried past its fit stage points at the tested tip and falls short of it;
+that is the look. The airborne pose blends in over the third frame off the ground. A knockback faster
+than 0.5 m/s shows the stance, so a slide never walks. The pressed-close camera culls the head's layer
+only (decision 72). `tests/support/crosshair_probe.gd` measures a skinned mesh by the triangles its
+posed bones move, not by its rest box, which spans the whole body; two first-person suites turn the
+skinned layers on. The motion checks are a slow suite. The player's builder instances the model with
+its edit state, so the saved scene holds no stale copy of the index. Not built: the stomp's leg lift
+(the cut list). The W26 merge added `GiantModel.play_idle()`, which the package had left out, so the
+creator's preview idles.
+
+**P44 The character creator.** The sheet tool is a main scene (`tools/character_sheet.tscn`), not the
+plan's `-s` script: a script run that way has no autoloads, and the look's rules read the game data.
+Sheet A has seven pages (the designs page is two). War paint frames its design's region, as tattoos
+and scars do, not always the face. Hand designs frame the left hand, where the one hand design is.
+The preview builds no materials headless unless a test asks. The option check's view floors are in
+pixels (18 from behind, 90 in first person) and its tiles stand still, so an option is measured
+against its base in the same pose. The creator's pad and keyboard walks and the shrine's saves run in
+the slow tier. At W26 the scars were a listed known miss of the option check; P46 took them off.
+
+**P45 The Web build, performance and the Chromium checks.** No warm-up was added to the loading
+screen: the plan asks for one only if Continue or the shrine path stalls above three times the median
+frame, and on the package's branch neither did (the gate later read it over the rule and built it:
+§3.4, LD-2). `scripts/main.gd` instead gained the hook of `UiProbe`, which prints the marks the checks
+need and exists only with `--ui-probe`. The title's worst frame is reported as a miss by design: it is
+the warm-up itself, behind "Preparing...". A stall or a slow skin is a MISS line and fails a check
+only with `--strict`, because software WebGL is all this machine has. `build_web.sh --version=V` is
+new, so that the `-m10` budget rule could be tested before the version changed. P41's budget test was
+updated to the owner's 26 and 7.6. The fullest look shows 12 meshes, not the plan's 13: no preset
+pairs the warrior's outfit with long hair and a full beard. `world_start_check.mjs` has no test of its
+own; its arguments are tied to the launcher's by a default suite.
+
+**P46 The look pass.** Braids are cards (a herringbone of short lobes over a core card), not the
+plan's braided-strand atlas: the same read at the creator's framings and about 0.2 MiB less in the
+pack. A hair or beard option may carry a `length`, a cut of its mesh drawn by the shader; two cuts
+ship (`hair.shoulder`, `beard.trimmed`), not the plan's two or three a mesh. The option needed the
+set's schema and two lines of `Appearance.to_look`, files outside the package's list; the hair's sway
+needed one line in `SkinnedRig`. The scars fill two layers of the array and are drawn paler and pinker
+than the skin, where they were the skin a little redder and read as nothing in play. The option
+check's beard floor was set again by its rule (about half the set's smallest share) on the target
+catalogue, where a trimmed beard is compared with the full one. No bake input changed, so the quick
+verify was the package's check. Not built: the end-screen portrait (the cut list), the World style and
+the weapons' material pass (the owner's answers). No owner's notes had arrived, so none was applied.
+The W27 merge fixed the sway forward: it read world transforms while the sandbox's reset had the
+giant out of the tree, three engine errors a skinned soak, which broke the determinism gate.
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate
@@ -544,6 +683,32 @@ gate (lane look)".
 | The default skin read orange-red in the world's light (OR-1). | First handed to M11, then required at the gate and done, parameters only: the skin's `bake_tone` is the default tone, so the default look draws the albedo as the kit baked it (the approved renders' skin) and the other tones scale it by their swatch against the default's; the light's wrap is less red. **This sets aside plan M10 §2.8's row for `bake_tone`** (the constant (0.69, 0.53, 0.44), the kit's bake parameter): with it the default look multiplied the bake by (1, 0.80, 0.74). |
 | The far primitives and the mesh buffers after the hair changes. | 3,920 primitives at 121-130 m at 1920x1080: the 4,000 row is met. The mesh buffers read 5.98 MB of the 6.0 MB row. |
 
+### 3.4 M10 (the gate, lanes ui and web)
+
+The other two fix lanes of the M10 gate (the review of the W27 merge: four reviewers over the plan's
+eight lenses, every finding verified adversarially; 19 of 21 confirmed). The detail is in
+`docs/systems/P44.md`, "The M10 gate's fixes (lane ui)", `docs/systems/P43.md` and `P45.md`, "After the
+M10 gate (lane web)", and `docs/PERFORMANCE.md`, "The M10 gate, lane web". Every fix has a regression
+test that failed before it.
+
+| Finding | What was found | Fix or decision |
+| --- | --- | --- |
+| LA-1 (major, ui) | With the mouse a click on a preset below the focused one was lost whenever the pointer moved at all while held: the focused preset's description opened under its button and moved every button below it. | The description is shown in one label under the list; no preset button moves. `tests/slow/test_creator_mouse.gd` sends real mouse events to every preset and swatch row; no suite had. |
+| LA-2 (major, ui) | The first click on a colour swatch was swallowed whenever the focus was on another row (hair, beard, ink, paint and dye colours): the row sent the focus back to its chosen swatch while the button was held. | A focus that arrives with the left mouse button down stays on the pressed swatch and applies it; the keyboard and the pad still enter a row on its chosen swatch. |
+| LB-1 (major, ui) | The creator at a shrine edited a later build's look (`v` above 1) in place: Keep stored it altered and still marked as the later build's, the giant kept the default look, and unknown shapes raised script errors. No build writes such a record yet; `0.10` is the build that will meet them. | The creator starts from the default look (what the giant shows for such a record) and never holds the later record; a kept change stores this build's record; Cancel and Keep without a change leave the later record as it was. The Appearance tab says that the default look is shown (decision 78). |
+| LA-3 (minor, ui) | The creator's preview was drawn at about 720x550 in every window, so upscaled 1.5x at 1920x1080 and 2x at 2560x1440. | On desktop the preview draws one viewport pixel per window pixel, up to 2x. **On the Web it stays at 1x**: the larger viewport's cost there was not measured against the budgets (a follow-up for M11). |
+| LA-4 (minor, ui) | The footer hint kept the other device's line for the creator's own keys and buttons. | The creator notes the device of every event it consumes. |
+| LA-5 (minor, ui) | Through the faded garments of a "Hidden by your clothing" row the sunken skin showed cut lines at the hips and notches at the shoulders. | While the garments fade the skin is not sunk. The warrior's outfit has nothing under its tunic, so the faded back view still shows bare hips: an asset change, left to M11. |
+| LA-6 (minor, ui) | After Back from the launcher's world start the title's focus was on Sandbox. | The focus returns to the button that opened the creator only when one did, otherwise to the title's first entry. |
+| LC-7 (minor, web) | The capture tour never captured the mouse, so "Click the game to control the camera" lay across every third-person frame and the video; its throw beat was refused, and the stomp, roar and buff after it with it. | The tour holds the mouse captured, throws as a player does, notes every cast that has not started by its shot and fells the arena's soldiers before the growth beats; `tests/gate/test_capture_m10_tour.gd` runs the whole tour headless. |
+| LC-8 (minor, web) | The rendered rig probe could miss its heavy swing's active frame when a frame took long to draw. | The probe pauses the tree while a frame is drawn; the suites assert that no tick passed. |
+| LD-1 (minor, web; downgraded from major) | Under CPU load the Web check's page grew to 4.3 and 6.9 GB after Begin and was OOM-killed. The verifier found it is not M10's: `0.9.0-m9` grows the same with the browser pinned to one CPU, and with evenly competing load the candidate finishes. | Recorded as the single-threaded Web build's level load in a starved browser on software WebGL; the allocation inside the page was not chased (M11). Each of the five Chromium checks now watches its page's renderer and stops with a FAILED line over 3,072 MB (`tools/web/memory_guard.mjs`). |
+| LD-2 (minor, web) | The world's first frame on Continue was over the stall rule on the Web in six of seven readings (up to 4.61 times the median frame), and the loading screen's warm-up the plan asks for in that case had not been built. | Built: the loading gate ends by putting the camera on the giant and drawing the finished level three times behind "Loading...", the tree paused. The cause was the camera, which stood at the level's start through the load while the save had set the giant down at his shrine. After: 0.36 to 2.51 times the median frame in five runs. |
+| LD-6 (minor, web) | The probe's "giant alone" draw-call reading was the difference of two live frames and moved by about 4 from run to run. | Both counts are the median of five frames of the paused level. Re-measured: 12 draw calls and 20,578 primitives for the fullest look at `low`. |
+| LC-5 (minor, web) | In the brain's generic arm poses (a roar, the stomp, a buff) the weapon sits on the knuckle line with the fist hanging under it, and the open off hand droops. The tested swings are not affected. | **Deferred to M11**: the fix moves tip matching's socket and needs rendered frames of every weapon at stages 1, 4 and 6 (`docs/plans/FOLLOWUPS.md`, "From the M10 gate review"). |
+| LC-2 (refuted) | The Stoneknuckles are drawn as a plank of boxes hanging from the fist. | The frames are accurate and the plan allows it: the player's weapons keep their low-poly meshes in M10 (decision 65; the owner's answer 4), the fists included. Not a defect of M10; realistic weapons are deferred. |
+| LC-4 (refuted) | Scars and ancestry marks cannot be made out by eye in play. | Refuted at the game's resolution: at 1280x720 the back lashes, the forearm slash and the lightning tree read from behind. The reviewer had judged the option check's 320x240 tiles, where the giant is about 30 pixels wide. |
+
 ## 4. The plans' review logs
 
 ### 4.1 The M2-M5 plan (its §7)
@@ -615,6 +780,23 @@ whose facts were re-measured, the one rejected in part, and why:
   lesson at the woodcutters' camp; burning logs were left out (carrying props would need a second grab
   path).
 
+### 4.3 The M10 plan (its §8)
+
+Three reviews of the plan's first draft, each answered in the plan before any package started: a
+feasibility review (14 findings), a review from the owner's and the player's side (10) and a review
+of the process and the tests (15). All 39 findings were checked against the code, the logs or the
+reviewer's probe and folded in, 34 as proposed and 5 with a change; seven of the reviewers' specific
+proposals were rejected, each with its reason (a locomotion clock from ground speed in every grounded
+state, a required stomp clip, committing the full-resolution bake outputs, a first-person mask test on
+background pixels, among them). The plan's §8 lists every finding and where it went, and §7 the probes
+that verified the facts the plan rests on. The reviews are the reason for, among others, the capped
+cuts and the three render layers (decision 72; the owner's review, finding 7), the packing rule of the
+design array (75; feasibility 4), the positive controls of the determinism gate (69; feasibility 3),
+the rule that options must read in play and its rendered check (82; the owner's review, 4), the
+owner's three checkpoints (83; the owner's review, 1), the legs' sources that keep a stride from
+gliding or stepping in the air (66; the owner's review, 3) and `--require` with `--strict-times` (84;
+process 4 and 5).
+
 ## 5. The M0/M1 decisions
 
 The combat sandbox's rules. They still hold unless a row says what replaced them.
@@ -663,7 +845,7 @@ The combat sandbox's rules. They still hold unless a row says what replaced them
 
 | Topic | Decision |
 | --- | --- |
-| Weapon shape | A capsule along the arm and weapon, swept from the previous to the current pose; the procedural rig reads the same `AttackGeometry`, so the visible swing is the tested swing. Since M3 it scales with the growth stage and the weapon's fit. |
+| Weapon shape | A capsule along the arm and weapon, swept from the previous to the current pose; the procedural rig reads the same `AttackGeometry`, so the visible swing is the tested swing. Since M3 it scales with the growth stage and the weapon's fit. **Changed in M10 for the player's giant (decision 67, tip matching):** the tested capsule and everything that decides a hit are as this row says, but the realistic arm cannot reach the stylized grip, so the visible swing is no longer the tested swing to within a degree. The hand takes a grip the real arm can reach and the visible weapon aims at the tested segment's tip: its outer half stays inside the tested capsule and it lies at most 15° off the tested direction (measured: median 7.1°, worst 12.9°), for every weapon that fits its stage. Every other actor's rig still reads `AttackGeometry` directly. |
 | Sweeps | Sub-stepped at no more than 3/4 of the radius per step (up to 16 sub-steps per tick). |
 | Occlusion | The line from the attack origin to the weapon point, and from the weapon point to the hurtbox, must be clear of world and breakable geometry (the target's own colliders excluded). |
 | Query buffer | Starts at 64 results and doubles until nothing is cut off (hard cap 4096, with a warning). |
@@ -679,7 +861,7 @@ The combat sandbox's rules. They still hold unless a row says what replaced them
 | Aim and cone | Lock cone and target switching use horizontal directions; visibility is a ray from the eyes. Lock range 35 / 40 / 45 m by stage. Only hostile or faction-less targets are lockable (decision 17). |
 | Wheel and stick flick | While locked the wheel switches targets; otherwise it zooms. A right-stick flick switches in third person; in first person only a flick that snaps back within 0.25 s does. |
 | Controller combos | Ability slots and the ultimate are LT + button combos; while LT is held those buttons do nothing else. Remappable. |
-| First person | Eye at 92 % of height; head, chest and belt on render layer 2, culled by the first-person camera. First-person lock never rotates the camera unless the optional aim assist is on. |
+| First person | Eye at 92 % of height; head, chest and belt on render layer 2, culled by the first-person camera. First-person lock never rotates the camera unless the optional aim assist is on. **Changed in M10 (decision 72, render layers with closed cuts):** the eye and the camera's geometry are as this row says, but the realistic body is three meshes with capped cuts - the head with the eyes, hair and beard on render layer 3, the torso with the garments' core parts on layer 2, the limbs on layer 1. First person culls layers 2 and 3; third person with the arm pressed close culls layer 3 only; the tree's canopy and the pine's needles moved to layer 3. Since the M10 gate the limbs also fade out round the shoulders while the camera is inside the head (§3.3, LC-3). |
 | Motion blur | None; the setting shows "Off". |
 
 ### AI, world and data

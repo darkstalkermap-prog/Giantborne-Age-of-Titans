@@ -3,11 +3,13 @@
 How the build is put together: the layers, the autoloads and the simulation tick, each area of the
 game - the combat core, the giant, the enemies, the two campaign levels and the streamed world, the
 world builder, quests, the campaign and its saves, bosses, the living world, the UI, presentation and
-audio - and the tools, the bots and the tests. It consolidates the system documents of the M2-M5
-packages (`docs/systems/P01.md` ... `P18.md`) and the M6-M9 packages (`P19.md` ...
-`P40.md`), which keep every public API and
+audio - and the tools, the bots and the tests, and since M10 the realistic giant and the character
+creator (§23). It consolidates the system documents of the M2-M5
+packages (`docs/systems/P01.md` ... `P18.md`), the M6-M9 packages (`P19.md` ...
+`P40.md`) and the M10 packages (`P41.md` ... `P46.md`), which keep every public API and
 detail; §22 says which document holds what. The interpretations behind it are in
-[DECISIONS.md](DECISIONS.md) (decisions 1-30 from the M2-M5 plan, 31-64 from the M6-M9 plan).
+[DECISIONS.md](DECISIONS.md) (decisions 1-30 from the M2-M5 plan, 31-64 from the M6-M9 plan, 65-85
+from the M10 plan).
 
 ## 1. Layers
 
@@ -24,7 +26,7 @@ data/**/*.json ──► GameData (schema registry, validation, post-pass) ─�
                                                                              │
                               HitFactory ─► HitEvent ─► Sim (stable order) ─► CombatEntity ─► DamageResolver (pure)
                                                                              │
-       Events (90 signals: hits, deaths, telegraphs, quests, saves, screens, travel, regions, formations, ...)
+       Events (91 signals: hits, deaths, telegraphs, quests, saves, screens, travel, regions, formations, ...)
                                                                              │
    Quests · GameSession (checkpoints, travel) · EncounterDirector · WanderDirector · FactionState · Discovery ·
    BossArena / BattleBoss · HUD widgets · HitFeedback · TelegraphVisuals · CameraRig · rigs · Audio · the bots
@@ -148,13 +150,17 @@ pre-action logic, post-movement work, saves, the rig and the debug panel:
 | `PlayerEquipment` | Owned weapons, equipping, the fit cap, the stage movesets of a reinforced weapon (`moveset_for(rec, stage)`, P26/P31), the weapon mesh |
 | `PlayerGrab` | Grab, hold, throw, put down, Crushing Grip, every release path; at stage 6 siege engines and Rampart Grip (P32); no boss can be grabbed |
 | `PlayerProgression` | XP, levels, attributes, ability learning, evolutions (P31), talents and the ancestry with their passives (P33), kill loot |
+| `PlayerAppearance` (M10, P42) | The giant's look: the character's record, else the `--appearance=` preset, else the default; `set_record` (the creator's Keep: applies it and emits `appearance_changed`), `restore_record` (Cancel), the line's mark on `ancestry_chosen`. It has no simulation hook (§23.8) |
 
 Growth profiles 1-6 are data (3.66 / 5.49 / 7.92 / 10.97 / 14.63 / 18.90 m). Each profile names the
 size-gate layers its body still collides with (`size_gate_mask`) and the titan navigation bits its
 paths may use (`nav_query_mask`), and the interaction permissions it grants (stage 4 `trample`, 5
 `formation_sweep` and `heave`, 6 `siege_disruption`). `apply_character_state` /
 `capture_character_state` move the whole character (stage, level, XP, attributes, talents, ancestry,
-loadout, weapons, resources) in and out of the save document.
+loadout, weapons, resources, and since M10 the look when it has one) in and out of the save document.
+Since M10 the giant's body is the realistic skinned model (§23); every gameplay shape named here - the
+capsule, the hurtboxes, the lock anchor, the attack origin, the grab sockets, the camera's geometry -
+is unchanged, and a growth still scales `Visual/Body` uniformly.
 
 ## 6. Enemies, NPCs and factions (`scripts/actors/`, `scripts/ai/`)
 
@@ -372,10 +378,18 @@ faction a reconciliation.
   (`user://saves/valley_1.json`) and the project name stay, so desktop and web saves carry over.
   `SaveIO` writes it (temp file, verify, backup, replace); `CharacterState` builds and normalises the
   character. `TitleScreen.describe_save` names where Continue wakes the giant (M8 release R2).
+- **The look** (M10, P42) is the optional `character.appearance`, with a version of its own; schema 2
+  is kept, an absent key is the default look, and a repaired look adds its notes to the load message
+  (§23.8). A look kept at a shrine is a shrine choice (the F15 list), so its checkpoint is taken again
+  at once.
 - Every mode change, reset, reload and travel is a reload of `scenes/main.tscn`; `main.gd` builds the
   level with the tree paused, holds it behind "Loading... N%" until the audio has registered the
   level's samples, the navigation map has synced and, in the world, the starting ring is ready (at
-  most 8 s, then a warning), then calls `GameSession.on_level_ready`.
+  most 8 s, then a warning), then calls `GameSession.on_level_ready`. Since the M10 gate the gate ends
+  with `hold_until_drawn`: with a display the camera is put on the giant (`frame_camera_on_player`) and
+  the finished level drawn three times behind "Loading..." with the tree still paused, so the first
+  frame of play after a Continue does not draw the giant's surroundings for the first time (no tick
+  passes: a seeded run is the same; headless nothing waits).
 
 ## 11. Bosses and battles (P34; `scripts/world/boss_arena.gd`, `battle_boss.gd`)
 
@@ -435,8 +449,10 @@ faction a reconciliation.
   view instead of about 120; `test_hud_layout` checks the rules), and since W23 it hides while any
   screen is open. The layout test checks every region at five resolutions.
 - `ScreenStack` and `UiScreen`s: pause (Settings with the Audio section, Controls), title (the
-  skip-prologue choice, the save line by name), shrine (Rest, Grow, Loadout, Attributes, Talents,
-  Ancestry tabs; the open tab marked), dialogue (locked choices greyed with their reason), inventory,
+  skip-prologue choice, the save line by name; since M10 every New Game path opens the creator, and
+  with a display a warm-up draws the giant once behind "Preparing..."), shrine (Rest, Grow, Loadout,
+  Attributes, Talents, Ancestry and, since M10, Appearance tabs; the open tab marked), **creator**
+  (`CreatorScreen`, M10: §23.7), dialogue (locked choices greyed with their reason), inventory,
   attributes, forge (reinforce, titanforge), end (the prologue's and the campaign's), and since M7
   **map** (`map_screen.gd`: the world's picture or the Valley's vector map, fog by chunk, places by
   what is known, the panel's details, fast travel, pins, level tabs, labels laid out so none overlap),
@@ -453,9 +469,13 @@ faction a reconciliation.
 ## 14. Presentation (`scripts/presentation/`)
 
 - `CameraRig`: third and first person, a collision-swept arm scaled by stage (to 23.5 m at stage 6,
-  32 m zoomed), lock framing (a formation's anchor), head culling, the far plane from the level.
+  32 m zoomed), lock framing (a formation's anchor), head culling, the far plane from the level. Since
+  M10 its cull masks follow the realistic giant's three render layers (§16, §23.2); its geometry is
+  unchanged.
 - **Rigs**: `ActorRig` and `QuadrupedRig` pose procedurally from the same `AttackGeometry` as the hit
-  sweep. Since P22 each rig is one vertex-coloured mesh per animated pivot plus its weapon with one
+  sweep. Since M10 the player's rig is `SkinnedRig`, an `ActorRig` whose pose brain drives the
+  realistic skinned body (§23.4): the brain's pivots stay, without meshes. Every other actor keeps
+  the stylized rig described here. Since P22 each rig is one vertex-coloured mesh per animated pivot plus its weapon with one
   material per actor (`SceneKit.merge_rig`), and `RigPaint` paints hit flashes as emission and status
   tints as albedo and runs the distance level of detail: the renderer swaps a rig for its one-box
   proxy beyond its record's `render_lod_m`, and at `low` (P30) for a merged rest-pose mesh from
@@ -465,7 +485,8 @@ faction a reconciliation.
 - `HitFeedback`, `TelegraphVisuals` (filling decals, aim lines, a formation's band, a catapult's
   landing circle through the stone's flight, the Moot's stones), `WeaponVisuals` (the stage 4-6
   weapons, the axe, the great pine, the fists), `SceneryFade` with `assets/shaders/scenery_fade.gdshader`
-  (trees between the camera and the giant fade, M8 screenshot pass). Materials are flat colours.
+  (trees between the camera and the giant fade, M8 screenshot pass). Materials are flat colours, but
+  for the giant's (`GiantLook` and the four `giant_*` shaders, §23.3).
 
 ## 15. Audio (`scripts/audio/`, `tools/audio/`; P19, P21, P23, P28)
 
@@ -528,8 +549,13 @@ faction a reconciliation.
 | 6 (32) | blockers | Invisible movement walls (river banks, bridge rails, the world's bounds); actors only (`ACTOR_MASK` 51) |
 | 7-9 (64, 128, 256) | size_gate_4, size_gate_5, size_gate_6 | Size-gate walls; only the giant's body collides with them, and only below their stage (P26) |
 
-Render layer 2 (`first_person_hidden`) holds the head, chest and belt (culled in first person and
-when the third-person arm is pressed close) and the tree weapon's canopy. Navigation layers: 1 human
+Render layers of the giant since M10 (plan M10 decision 8; before it, layer 2 `first_person_hidden`
+held the head, chest and belt and the tree weapon's canopy): layer 1 the limbs and the garments' limb
+parts, layer 2 (`CameraRig.TORSO_LAYER`) the torso and the garments' core parts, layer 3
+(`HEAD_LAYER`) the head, the eyes, the hair and the beard, and the tree's canopy and the pine's
+needles. First person culls layers 2 and 3 (`CULL_FIRST_PERSON`); third person with the arm pressed
+close culls layer 3 only (`CULL_NO_HEAD`; `PRESSED_CULLS_TORSO` is false, decided on a render of the
+growth course's low passage). Navigation layers: 1 human
 (soldiers and their formations, crews, archers, mages, wolves and dire wolves, civilians), 2 large
 (ogres, trolls and whelps, riders), 4 giant (stages 2-3 in the Valley, the Ogre King), 8 small giant
 (stage 1, with the Valley's 4 m alleys), 16 titan (the giant at stages 4-6, and at stage 3 in the
@@ -548,12 +574,13 @@ checkpoints (M8 release R1), the yield's decision, the boss music's gate cue, th
 ## 17. Scenes and builders
 
 Every scene is generated: `tools/build_scenes.tscn` runs the builders of `tools/builders/` in
-dependency order (`player`, `soldier`, `wolf`, `props`, `shrine`, `growth_course`, `test_levels`,
+dependency order (`giant_model` (M10: the realistic model and its index, from `assets/giant/`), `player`, `soldier`, `wolf`, `props`, `shrine`, `growth_course`, `test_levels`,
 `world_props`, `world_props2`, `ranged`, `test_director`, `forge`, `heavy`, `npcs`, `formations`,
 `siege`, `big`, `sandbox`, `valley`, `stress`, `test_world`, `world`, `main`); `-- --only=<names>`
 rebuilds a few and `--chunks=` a part of the world. `SceneKit` (`tools/scene_kit.gd`) holds the
 palette, the node helpers, the layer constants, `save()` (stable resource ids, so a rebuild changes
-only what changed), `merge_meshes` and `merge_rig`. Scenes: the giant, the enemy and NPC scenes (with
+only what changed), `merge_meshes` and `merge_rig`. Scenes: the giant (`scenes/player/giant.tscn`, which since M10 instances
+`scenes/player/giant_model.tscn` with its edit state, so the saved scene keeps the instance alone), the enemy and NPC scenes (with
 pikemen, shieldmen, bannermen, crews, riders, trolls, rival giants and the bosses), the world props,
 the siege engines, the sandbox arena, the Valley and its districts, the world's root scene and its
 chunks' prop parts, and the test levels (`scenes/test/`: growth course, flow test, ranged playground,
@@ -599,6 +626,17 @@ siege test levels, and P34's troll den, Moot's ring and bailey test).
   `capture_tour.sh` and `valley_tour.gd` (screenshots)
   `world_tour.gd` with `world_tour.sh` (the world tour beside the world bot, P40: `docs/systems/P40.md`),
   `draw_call_probe.tscn`.
+- **M10's tools**: `tools/giant/` (the asset pipeline, §23.1); `check.sh --giant`, `--giant-full`,
+  `--require` (a skipped check fails) and `--strict-times` (a tier over its budget runs once more and
+  the faster run decides); `tools/giant_suites.py` (the suites that load the giant and their time in
+  a test log); `CaptureM10` (`--scenario=capture_m10`: the skinned giant through 38 beats, one frame
+  each, P43); `--skin-stats` (a `SKIN_STATS {json}` line beside `AUTOPILOT_RESULT`: what the skinned
+  layers ran); `UiProbe` (`scripts/debug/ui_probe.gd`, made only with `--ui-probe`: `UI_PROBE` state,
+  stall and bench lines for the web checks, and the native tours `new_game`, `shrine`, `level` and
+  `continue`, P45); `tools/character_sheet.tscn` (the owner's sheets, P44); the fifth web check
+  `tools/web/creator_check.mjs` with its stub test, and `tools/web/memory_guard.mjs`, which stops any
+  of the five checks when its page's renderer passes 3,072 MB (the M10 gate);
+  `tools/pck_files.py --giant-share` and `build_web.sh`'s `GIANT_SHARE` line and `--version=`.
 
 ## 19. Tests (`tests/`)
 
@@ -607,7 +645,8 @@ siege test levels, and P34's troll den, Moot's ring and bailey test).
   `--slow`; 8 minutes) and `tests/gate` (only with `--gate`: the walkthroughs of every region, every
   order of the oaths, seeded boss runs, the battles' reloads, determinism soaks with and without audio,
   the world bot's smoke run, the living world on the real world; 50 minutes).
-  291 suites (55 unit, 154 integration, 53 slow, 29 gate) on the final commit (the final check's RESULT line, `docs/M6_M9_HANDOFF.md` §6.1; the `test_*.gd` files directly in each tier's folder);
+  330 suites (62 unit, 163 integration, 73 slow, 32 gate) on the M10 gate's code (`m10-gate`; the gate merge's check, `docs/M10_HANDOFF.md` §6.1; the `test_*.gd` files directly in each tier's folder);
+  291 suites (55 unit, 154 integration, 53 slow, 29 gate) on the `0.9.0-m9` release (`docs/M6_M9_HANDOFF.md` §6.1);
   282 at W23 (`docs/systems/P39.md`, "Tests and the full check"; by tier, the suite files at
   `wave-23`, `f851b0d`: 55 unit, 154 integration, 49 slow, 24 gate).
 - The runner (`tests/run_tests.tscn`) reseeds `Sim`, runs `ResetHooks` around every test (session,
@@ -619,6 +658,14 @@ siege test levels, and P34's troll den, Moot's ring and bailey test).
   `tests/fixtures/saves/` holds schema 1 and 2 saves.
 - `test_anchors` also compiles every script in the project, because `--import` does not.
   `test_ship_docs` holds the documentation to its rules.
+- M10's rendered suites draw the real giant under `xvfb-run` and skip with a note without it
+  (a failure with `check.sh --require`): the shaders (`test_giant_shaders`), the option check
+  (`test_appearance_render`: 176 tiles, every option of the catalogue above its set's floor, every
+  design category readable from behind or in first person), the skinned rig's frames
+  (`test_skinned_rig_render`, gate `test_skinned_rig_stages`) and first person looking down
+  (`test_first_person_shoulders`). The gate's `test_giant_determinism` proves that the skin and the
+  look never reach the simulation (§21), `test_skin_rules` and `test_appearance_rules` hold the code
+  rules behind it, and `test_predeclared_m10` the M10 registries and anchors.
 
 ## 20. Adding content
 
@@ -640,6 +687,15 @@ siege test levels, and P34's troll den, Moot's ring and bailey test).
   `build_audio.py --only=<family>`, the bank or set records in `data/audio/`, and an `audio_region` for
   a new place (or the silent list).
 - **The Valley's geometry:** edit `tools/data/valley_layout.json`, then `tools/check.sh --only=valley`.
+- **A look option** (M10): a colour or a cut is data alone - an option in a `data/appearance/set_*.json`
+  (a palette's `#rrggbb`; a hair or beard option's `length` over an existing mesh), a preset a
+  `data/appearance/preset_*.json`. A new hair or beard style, garment or design is drawn by the kit
+  (`tools/giant/kit/giant_hair.py` `STYLES`, `giant_garment.py`, `designs.py`), regenerated with
+  `build_giant.py --hair`, `--garments` or `--designs` (seconds; the manifest and the index follow),
+  then `tools/check.sh --only=giant_model --giant` and the option naming its mesh, garment or design
+  id; `test_giant_look_real` lists any id the data names and the index lacks, and the rendered option
+  check (`tests/slow/test_appearance_render.gd`) holds its floor. The body mesh, the skeleton, the
+  regions and the landmarks are frozen (decision 73).
 
 ## 21. Determinism
 
@@ -651,6 +707,13 @@ walks with AI and requires byte-identical results). The loading gate waits for t
 navigation map, so seeded runs are identical with audio on and off (`test_audio_determinism`,
 `test_valley_audio_determinism`). A bot run is repeatable for a seed on one machine, with small
 differences across machines (physics), which is why balance is judged over several seeds.
+The realistic giant is outside all of it (M10, decisions 68-70): the skinned layers and the look
+write only under `Visual/Body` (and a held body's `Visual` offset), draw no number from `Sim.rng` and
+emit no event the simulation hears. The gate's `test_giant_determinism` runs three seeded 120 s soaks
+(no skin; the skin with one look; with another) and a seeded Valley bot run that grabs and throws
+with and without the skin, and requires byte-identical results, with positive controls in
+`SKIN_STATS` that the skin and the look really ran; the M10 gate also found the soak and the world
+bot's smoke run byte-identical on `0.9.0-m9` and on the candidate (`docs/M10_HANDOFF.md` §5.1).
 
 ## 22. Where the details are
 
@@ -685,4 +748,271 @@ differences across machines (physics), which is why balance is judged over sever
 | Stability, balance and the report; the M9 confirmation | P39 |
 | The W23 fixes and polish (the HUD and map, raiders, the world rebuilt, placed fights, the web world check) | P39f |
 | The M9 ship (the final check, the world tour, the exports and web checks, these documents) | P40 |
+| M10: the giant's asset pipeline (the venv, the vendored CC0 subset and its audit, the kit, the export, the bakes, the designs, the pack, the manifest, `--verify`, `--budget`), `GiantModel` and its index | P41 |
+| M10: the look - `Appearance` (the record, sanitize, `to_look`, Randomize), the appearance data and schemas, the saves, `PlayerAppearance`, the session's `--appearance=` and `--creator`, the four giant shaders, `GiantLook`, `TipMatching`, the M10 pre-declarations | P42 |
+| M10: the skinned giant - the clips, `SkinnedRig`, `PoseBrainModifier`, the player's scene, the camera's layers, the capture tour, the determinism gate | P43 |
+| M10: the creator - `CreatorScreen`, `OptionRows`, `GiantPreview`, the title's flows and warm-up, the shrine's Appearance tab, the rendered option check, the character sheets | P44 |
+| M10: the Web build at 26 MB with the 1024 px maps, the launcher's world start, `UiProbe`, `creator_check.mjs`, the stall and memory measures | P45 |
+| M10: the look pass - the hair's second pass, the cut and the sway, the target catalogue's styles, designs, garments and presets, the second scar layer | P46 |
+| The M10 gate's fixes | `DECISIONS.md` §3.3 and §3.4 in short; the detail in `docs/systems/P44.md`, "The M10 gate's fixes (lane ui)", `docs/systems/P46.md`, "The M10 gate (lane look)", `docs/systems/P43.md` and `P45.md`, "After the M10 gate (lane web)", and `docs/PERFORMANCE.md`, "The M10 gate, lane web" |
 | The gate reviews' fixes | `DECISIONS.md` §3.2 in short; the detail in the M6 gate's inline "M6 gate" notes (P04, P17b, P19, P21, P23), each package's "M7 gate", "M7 polish", "M8 gate", "M8 screenshot pass" and "M8 release" sections, and the M9 gate's sections: `docs/systems/P39.md`, "The M9 gate (lane aldmere)", "The M9 gate (lane ironreg)", "M9 gate (lane "balance")", "M9 gate (integration)", "M9 gate (catch-up)", "M9 gate (final)" and "M9 gate (the final round)", and `docs/systems/P39f.md`, "M9 gate (lane review)" |
+
+## 23. The realistic giant and the character creator (M10; P41-P46)
+
+The player's giant is a skinned, textured body generated from CC0 data, driven by the same pose brain
+as before, with a look the player chooses. It is presentation only: nothing in §2-§12 reads it
+(decisions 68-70, §21). The pieces, in the order the data flows:
+
+```
+tools/giant/mpfb2 (CC0 data) ─► tools/giant/kit (bpy, numpy) ─► assets/giant/*.glb, *.png + manifest.json (the index)
+                                                                        │
+   tools/builders/giant_model.gd ─► scenes/player/giant_model.tscn (GiantModel + index) ─► giant.tscn (Visual/Body/Model)
+                                                                        │
+ data/appearance/*.json ─► Appearance (record ─► sanitize ─► to_look) ─► GiantLook (materials, uniforms, visibility)
+        ▲                          ▲                                    │
+ CreatorScreen ─ OptionRows        PlayerAppearance ◄─ character.appearance (the save)
+        │                                                               │
+ GiantPreview (own world)      ActorRig's pose brain ─► SkinnedRig (clips, AnimationTree) ─► PoseBrainModifier (TipMatching)
+```
+
+### 23.1 The asset pipeline (`tools/giant/`, P41; offline, not exported)
+
+- **The toolchain** lives outside every worktree, in one venv all worktrees share: `GIANT_VENV` (fifteen
+  pinned wheels with their sha256 in `tools/giant/requirements.txt`, installed by `setup_venv.sh`:
+  Blender 5.3 as the `bpy` 5.3.0 module on Python 3.13, numpy, scipy, Pillow, OpenEXR) and
+  `GIANT_CACHE` (the bake cache, keyed by a hash of each bake group's inputs, and the audited data
+  wheel). Neither is needed to build, export or play the game.
+- **The inputs** are `tools/giant/mpfb2/`: 133 files of MakeHuman/MPFB2 data under CC0 - the hm08 base
+  mesh, 122 morph targets, the modifier table, the "game_engine" rig and its weights, six region mask
+  images, the licence - copied as data from one wheel, with `FILES.sha256` and `SOURCE.md`;
+  `fetch_mpfb2.py` audits the copy against the wheel. An empty `.gdignore` keeps Godot's importer out
+  of the folder, and `test_ship_docs` skips it. Nothing else enters the pipeline, and the kit's code is
+  the project's own (`assets/giant/PROVENANCE.md`, `CREDITS.md`).
+- **The kit** (`tools/giant/kit/`): `mh_data` (the MakeHuman formats), `giant_body` (the morphed body at
+  the stage-1 height of 3.6576 m on the rig, its masks and landmarks), `split` (the three body parts,
+  the 16 regions, the cut loops and their caps), `giant_garment` (ten garments as shells cut from the
+  body by bone-weight regions), `giant_hair` (strand growth and cards for five hair and four beard
+  meshes, braids as cards, the hairline's fringe), `giant_skin` and `skin_textures` (the procedural
+  skin the bakes read), `export_game` (the glTF), `bake` (Cycles, 1024 px, seed 0, two threads: the
+  cheap passes - albedo at a neutral tone, roughness, tangent normal, masks, the region map, the rest
+  position and normal - and the expensive ones, AO and thickness), `designs` (tattoos, war paint,
+  scars and marks as distance fields in 3D on the rest pose, quantized to the S3TC block's levels),
+  `pack` (the two texture tiers, the hair atlas, three tileable cloth detail maps) and `clips` (§23.6).
+- **`build_giant.py`** runs the steps (`--body`, `--garments`, `--hair`, `--bake`, `--designs`, `--pack`,
+  `--clips`, `--all`), writes each output's `.import` settings and records everything in
+  **`assets/giant/manifest.json`**: for each of the 13 generated files its step, the hash of that step's
+  inputs, its sha256 and size and whether Cycles pixels reach it; the toolchain (versions and a CPU
+  fingerprint); the hashes of the vendored files and the kit's sources; the bake settings; the clips'
+  measurements; the body's hash; and **the giant index** (§23.2). `--verify` regenerates every file
+  into a temporary folder and compares it with the manifest and the committed files: bit-exact on the
+  reference toolchain but for the bake's own jitter (a Cycles map may differ in at most 64 texels by
+  1/255: `TOLERATED`), a stated tolerance for Cycles pixels on another CPU, and `TOOLCHAIN DIFFERS`
+  kept apart from `CONTENT DIFFERS` and `SHIPPED FILE`. It never reads the bake cache. `--skip-bake`
+  re-bakes the cheap passes and reads AO and thickness back from the committed `tex_hi/orm.png`, so any
+  fresh worktree verifies in about a minute; `--budget` estimates the giant's share of the Web pack.
+  `tools/check.sh --giant` runs the pipeline's own tests, `--verify --skip-bake` and `--budget`;
+  `--giant-full` verifies with every bake pass.
+- **The outputs** (`assets/giant/`, generated and committed, never edited by hand): `giant.glb` (every
+  mesh on one 53-bone skeleton, imported with LODs, shadow meshes and tangents), `giant_clips.glb` (an
+  animation library), `tex/` (albedo, normal, ORM and masks at 512 px), `tex_hi/` (normal and ORM at
+  1024 px), `designs.png` (six 512 px RGBA layers stacked, imported as a 2D texture array),
+  `hair_atlas.png` and `cloth_weave.png`, `cloth_leather.png`, `cloth_fur.png` (128 px), all
+  VRAM-compressed with mipmaps. **The body mesh, the skeleton, the region ids and the landmarks are
+  frozen since W25** (decision 73); hair, garments, designs, clips and textures regenerate freely.
+
+### 23.2 `GiantModel` and the index (`scripts/presentation/giant_model.gd`, P41)
+
+`scenes/player/giant_model.tscn` is a `GiantModel` root holding the glTF instance, turned 180° about Y
+(the glTF faces +Z, every actor faces -Z), and the exported **index**, a dictionary copied from the
+manifest by the model's builder. A scene saved by SceneKit keeps nothing set inside an instance, so
+`_ready()` applies every mesh's render layer and the default visibility from the index and joins the
+group `giant_models`.
+
+- **The index**: `meshes` (25: `Body_Head`, `Body_Torso`, `Body_Limbs`, `Eyes`, five hair and four
+  beard meshes, twelve garment meshes; each with its node, category, render layer, triangle count,
+  and for garments the dye slot, the detail kind, the body regions it `covers` and its `coverage` per
+  region), `garments` (ten; the braies and the tunic are a `_core` and a `_limbs` mesh each), `designs`
+  (29: 16 tattoos, 4 war paints, 6 scars, 3 ancestry marks, each a layer and a channel of the array),
+  `regions` (16 body regions), `design_regions` (face, chest, back, arms), `landmarks` (the joints and
+  the two reaches at stage 1), `defaults.shown`, `tiers` and `textures`.
+- **The meshes**: the body is three meshes cut at the neck, the shoulders and the hips - the head on
+  render layer 3 with the eyes, the hair and the beard, the torso on layer 2 with the garments' core
+  parts, the limbs on layer 1 - and every cut loop is capped on both sides, so no limb is hollow from
+  inside (§16 has the camera's masks). A vertex's region id rides in its colour (`COLOR.r x 16`), which
+  is how one skin shader picks a design per region and sinks the skin under a garment.
+- `skeleton()`, `mesh(id)`, `meshes(category)`, `landmarks()`, `hand_transform(right)`, `pose_relaxed()`,
+  `pose_rest()` and `play_idle()` (a run-time `AnimationPlayer` looping the idle clip on a model that
+  stands by itself, the creator's preview; never on the player's model, which has the rig's tree).
+
+### 23.3 `GiantLook` and the shaders (`scripts/presentation/giant_look.gd`, `assets/shaders/giant_*.gdshader`; P42, P46)
+
+`GiantLook` is static and stateless but for a texture cache: it turns a *look* (the dictionary
+`Appearance.to_look` returns: colours as values, mesh, garment and design ids) into materials, uniforms
+and visibility on one model.
+
+- `build_materials(root, index, tier)`: one `ShaderMaterial` per mesh and per instance, never shared
+  (so two giants, or a giant and the creator's preview, never paint each other), of its category's
+  shader, with the tier's textures. Tiers: "web" (the 512 px maps), "hi" (the 1024 px normal and ORM,
+  each falling back to the 512 px file when missing) and "auto" (hi when `tex_hi/normal.png` is in the
+  pack); `--giant-tier=web|hi` forces one. Materials are built only where something is drawn.
+- `apply(root, index, look)` shows the look's hair, beard and garment meshes, hides the others and
+  sets every uniform; headless it only sets visibility and stores the look. `validate()` lists unknown
+  ids, a sampler whose texture did not load and every uniform name the shader does not declare (a
+  headless material stores a misspelled name without complaint), and never raises an engine error.
+- **`giant_skin`**: the baked albedo scaled by the chosen tone against `bake_tone` (the default tone,
+  so the default look draws the albedo as baked: the M10 gate's OR-1), normal, ORM and mask maps; the
+  hair's colour on stubble, scalp and brows; the **design array** (`sampler2DArray`) read through three
+  16-entry region tables (`region_tattoo`, `region_paint`, `region_mark`: a layer and a channel for each
+  body region, 0 for none) with ink, paint and mark colours and the mark's glow; scars on two layers
+  of their own; `hidden_regions`, a bitmask of regions that sink under the garment covering them; wrap
+  lighting with a thickness-driven transmission term in place of subsurface scattering.
+- **`giant_hair`** (cards, depth pre-pass, both faces): the strand atlas, colour, lighter tips, grey,
+  `length` (a cut of the same mesh: an option can ship a shorter style at no pack cost), feathered
+  sides and roots, softened card-on-card shadow, `tip_thin` on the full and the forked beard,
+  `back_fade` (a beard fades out as the camera comes round behind the head) and `head_motion`:
+  `GiantLook.sway` eases the head bone's motion each drawn frame and lags the cards' tips by at most
+  0.09 m at stage 1, a shader offset and not physics.
+- **`giant_eye`** (procedural iris, colour and glow) and **`giant_cloth`** (a detail map per kind -
+  weave, leather, fur - two dyes, and a screen-door `fade` the creator uses to show what a garment
+  hides). Every giant shader declares `tint` and `flash`, which `RigPaint.paint_shaders` drives, so hit
+  flashes and status tints reach the realistic body as they reach every other rig.
+- **`giant_first_person.gdshaderinc`** (the M10 gate's LC-3), included by the skin and the cloth: while
+  the camera stands inside the head, limb fragments inside a box round the shoulders are discarded with
+  a dithered edge, so first person looking down never shows the arms' shoulder caps. The box is fixed
+  in the model's own space, so it is the same at every stage; a shadow pass keeps the shoulders.
+
+### 23.4 `SkinnedRig` and `PoseBrainModifier` on the pose brain (`scripts/presentation/`, P43)
+
+The pose brain did not change: `ActorRig._process` still computes every pose of the player on the
+frame clock, and its stylized pivots (`HipL`, `HipR`, `Torso`, `ShoulderL`, `ShoulderR` and their
+`Hand` markers) stay in `Visual/Body`, without meshes. `SkinnedRig extends ActorRig` is `Visual`'s
+script, so every `is ActorRig` reader, the footfall audio and the camera shake work as before; it adds
+the realistic body beside the pivots: `Visual/Body/Model` (the `GiantModel`) and
+`Visual/Body/WeaponSocket`.
+
+- **Where the layers run** (decision 70): with a display, with `--skin`, or after
+  `SkinnedRig.enable_for_tests()`; never with `--no-skin`. Headless (the default test tier, the bots)
+  the run-time nodes are not made, the skeleton rests, `GiantLook` only shows and hides meshes and the
+  weapon hangs at the brain's hand, so node paths exist everywhere and nothing is paid for.
+- **The run-time nodes** (never saved): an `AnimationPlayer` with the clip library, an `AnimationTree`
+  whose blend tree is built in code and advanced by hand from the rig's `_process`, and the
+  `PoseBrainModifier` under the skeleton.
+- **The legs** come from the clips, chosen by what the brain is doing, in this order: *dead* (the death
+  clip seeked by the brain's fall fraction; the idle stops, so the corpse does not breathe), *airborne*
+  (off the floor for more than two frames: the airborne pose), *motion* (an action that moves the giant
+  in this phase, Shoulder Charge's dash or the grab's lunge: the run clip on a clock of its own),
+  *walking* (idle, walk and run blended by speed, their time taken from the brain's walk phase so that
+  a heel strikes on every brain footfall) and otherwise the *stance* (the idle's legs under the body's
+  lean: dodges, staggers, knockbacks, standing actions). So no stride freezes in a glide and no leg
+  steps in the air.
+- **`PoseBrainModifier`** (a `SkeletonModifier3D`) runs inside the skeleton's update, after the clips:
+  the brain's torso twist over the three spine bones; **the weapon arm by tip matching during a weapon
+  arc** (§23.5) and by a generic mapping of the brain's arm pose otherwise, crossing over without a
+  jump; the off arm on the brain's off pose while an action, a block or a dodge runs; during a hold
+  the off palm on the grab socket (the clavicle protracted, the arm straight when the socket is out of
+  reach); the fists closed on the weapon and on a held body. Every arm is an analytic two-bone solve,
+  solved again until the wrist bends at most 45°.
+- **The held body**: the simulation holds a grabbed body at the stylized arm's socket. After the
+  modifier, the rig moves the held body's `Visual` by the gap to the visible palm (at most 0.33 x the
+  growth scale) and puts it back on every release path; its collision and grab point never move. That
+  offset and the rig's own nodes are the only things the skinned layers write.
+- **The look and paint**: `apply_look(look)` (called by `PlayerAppearance`) is `GiantLook.apply` on the
+  model; `flash()` and `set_status_tint()` reach every surface's shader and the weapon.
+  `skin_stats()` and the static `run_stats()` count posed frames, modifier runs, footfalls and
+  held-visual writes: the `SKIN_STATS` line the determinism gate uses as its positive control.
+- **Growth** is a uniform scale of `Visual/Body` by height / 3.6576, as before; there are no per-stage
+  proportions.
+
+### 23.5 Tip matching (`scripts/presentation/tip_matching.gd`, P42; pure)
+
+The stylized rig drew the tested swing exactly; a body of real proportions cannot, because the
+gameplay's grip point is beyond the real arm's reach in almost every sample. So the contract changed
+(decision 67, replacing the M0/M1 rule in `DECISIONS.md` §5): the hand takes a grip the real arm can
+reach and the visible weapon **aims at the tested segment's tip**. `TipMatching` computes it from the
+weapon data and the model's landmarks: `swing_geometry` gives the tested segment in body space,
+`match_swing` the grip (the natural grip moved onto the weapon-length sphere round the tip and
+projected into reach), the hand's axis (41° off the weapon), and the wrist and elbow of a two-bone
+solve. The contract, checked over every player weapon arc at stages 1, 3, 4 and 6 on the exported
+landmarks (`test_tip_matching`): the weapon's outer half stays inside the tested capsule and the
+weapon within 15° of the tested direction (measured: median 7.1°, worst 12.9°), for every weapon that
+fits its stage. A weapon carried past the stage it fits keeps its short length while the arm grows, so
+it points at the tested tip and falls short of it; the HUD already says such a weapon is too small.
+The gameplay geometry - pivots, arm lengths, reach bands - is untouched.
+
+### 23.6 The clips (`tools/giant/kit/clips.py` ─► `assets/giant/giant_clips.glb`, P43)
+
+Computed keyframes, no hand animation and no outside motion data: `idle` (a 2 s breathing loop), `walk`
+and `run` (one two-step cycle each on the brain's 3.2 m stride, the feet planted), `airborne` and four
+one-frame hand poses (`grip_r`, `grip_l`, `open_r`, `open_l`), and `death` (the knees buckle and the
+torso slumps). They are written by Blender in the same pipeline, listed in the manifest and verified
+with the other outputs, and imported as an animation library whose loops are set in code.
+
+### 23.7 The creator (`ui/screens/creator/`, `ui/screens/shrine/appearance_tab.gd`, the title; P44)
+
+- **`CreatorScreen`** (`ScreenStack.SCREENS["creator"]`) has three doors: the title's New Game paths
+  (after the replace-the-save confirm and the prologue-or-skip choice), `--creator` (the launcher's
+  world start: `GameSession.creator_start`) and the shrine's tab. It closes with the record and
+  `begin` (Begin calls `start_game` from the button's own handler, in the same call stack, which is
+  what keeps the browser's pointer lock), with the record alone (Keep this look) or cancelled. It
+  holds the record being edited, an undo history of 64 records, its own random generator for Randomize
+  (never `Sim.rng`), the discard question, and the framing each category wants. While it is on top the
+  root viewport's 3D is off. A record a later build wrote is never edited in place: the screen starts
+  from the default look, and only a kept change replaces that record (the M10 gate's LB-1).
+- **`OptionRows`** builds each category's rows from the appearance sets - swatch rows, cyclers,
+  sliders, toggles, the preset list - with the record path each row reads and writes, a locked
+  option's reason and "Hidden by your clothing" from the index's garment coverage.
+- **`GiantPreview`** is a `SubViewportContainer` with a world of its own: a second `GiantModel` with
+  `GiantLook`'s materials, the idle clip, a studio (a key and a rim light on a rig that turns with the
+  camera, so the side the camera sees is always lit), and the world's light for **Game view** (the
+  stage's real third-person camera and scale, a soldier beside the giant) and for first person. Its
+  framings (full, face, hair, back, arms, chest, hand, eyes, game, first person) serve the creator, the
+  rendered option check and the character sheets. On desktop it draws one viewport pixel per window
+  pixel up to 2x; on the Web at the canvas's size.
+- **The title** warms the giant's shaders up: with a display it draws the default look in a hidden
+  64 x 64 viewport under both lights and holds New Game and Continue behind "Preparing..." until that
+  is done (at most 6 s).
+- **The shrine's Appearance tab** (the seventh of `ShrineScreen.TABS`) shows the look in words
+  (`Appearance.summary_lines`) and opens the creator over the paused shrine. Keep calls
+  `player.appearance.set_record`: the live giant changes, `Events.appearance_changed` fires once and
+  `GameSession` takes the shrine's checkpoint again; Cancel restores the look in memory and writes
+  nothing.
+
+### 23.8 The appearance record and its saves (`scripts/progression/appearance.gd`, P42)
+
+`character.appearance` is optional and carries its own version (`"v": 1`); save schema 2 is kept
+(decision 78). It names options by id (`<set>.<key>`): a preset, the skin, the eyes, hair and beard
+(style, colour, grey), a tattoo for each of four regions and their ink, a war paint and its colour, up
+to four scars, the mark's mode (`"auto"` or `"none"`) and the outfit with two dyes. The options are
+data: thirteen `appearance_set` records (`data/appearance/set_*.json`, 99 options) and eight
+`appearance_preset` records, validated by their schemas and a post-pass at startup.
+
+- `Appearance` is pure. `resolve(character)` is the character's record, else the `--appearance=`
+  preset, else the default (the Wanderer). `sanitize(record, ancestry)` never fails: unknown ids fall
+  back to the default's and are listed, options locked to another line are reset, a broken record
+  becomes the default, each with a note; **a record from a later build (`v` above 1) is kept
+  untouched** and drawn as the default. `to_look(record, ancestry)` resolves palettes to colours, the
+  mark's `"auto"` to the line's mark, and the outfit to garments. `random_record` is the creator's
+  Randomize; `covered_regions` says what the outfit hides.
+- **Saves**: `CharacterState.sanitize` repairs a look for the character's line and passes its notes up;
+  `SaveSlots.read` joins them into the load message. A broken look is never a reason to refuse a file
+  or to fall back to the backup; absent stays absent, so every older save, fixture and bot run is
+  byte-for-byte what it was. A Continue of a save without a look sets `appearance.legacy_save`, which
+  brings up the one-time prompt at the next shrine; `appearance.mark_shown` brings up the other when a
+  line's mark first shows on a look of the player's own.
+- **`PlayerAppearance`** (the giant's component, §5) holds the record in play and calls
+  `rig.apply_look`. The code rule (`test_appearance_rules`, `test_skin_rules`): nothing in combat, AI,
+  the world, quests, `sim.gd` or the other player components names the skeleton, the model, the look
+  or the skin.
+
+### 23.9 The Web tiers and budgets (P41, P45)
+
+Both texture tiers ship everywhere. W25 and W26 excluded `tex_hi/` from the Web presets to keep the
+23 MB pack; the owner then raised the Web budget to 26 MB so that the browser keeps the 1024 px maps,
+and since P45 the Web presets leave out only `assets/giant/manifest.json`, `GiantLook`'s "auto" tier
+picks "hi" on the Web as on the desktop, and `tools/build_web.sh` judges a `-m10` (or later) version
+against 26 MB in parts of at most 15 MB. Its `GIANT_SHARE` line weighs M10's files in the shipped pack
+(everything under `assets/giant/`, the giant's shaders and scenes) and fails over its cap, the budget
+less 18.4 MB: 7.6. The model's budgets and what the M10 gate measured against them - draw calls and
+primitives, texture and mesh memory, the skin's CPU a frame, the first-frame stalls - are in
+`docs/PERFORMANCE.md` ("Budgets"; "The M10 Web build and its budgets (P45, W27)"; "The W27 merge";
+"The M10 gate, lane web") and summarized in `docs/M10_HANDOFF.md` §6.
