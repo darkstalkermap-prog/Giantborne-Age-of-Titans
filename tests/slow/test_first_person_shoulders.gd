@@ -2,15 +2,17 @@ extends TestSuite
 ## The M10 gate's LC-3 (plan M10 decision 8; docs/systems/P46.md "The M10 gate"): first person looking down. The
 ## camera stands inside the head and only the limbs draw; past a pitch of about -55 degrees the arms' shoulder
 ## ends came into the frame's lower corners as flat, saw-toothed slabs (the caps that close the limb mesh at the
-## shoulder cuts: 89 % and 78 % of the two corner blocks at -70 degrees, all of both at -85). The giant's skin and
+## shoulder cuts: 86 % and 73 % of the two corner blocks at -70 degrees, all of both at -85). The giant's skin and
 ## cloth shaders now fade the limbs out towards the shoulders while the camera is inside the head
 ## (assets/shaders/giant_first_person.gdshaderinc). This runs tests/support/skinned_rig_probe.tscn in mode
-## "fp_down" in a child Godot under Xvfb (the Compatibility renderer, 480x270) at stages 1 and 6: at pitches
-## -55, -70 and -85 the frame's two bottom corner blocks are the same with the giant and without him, while his
-## arms and legs still draw elsewhere in the frame; no shader error; the look validates. Without xvfb-run it is
+## "fp_down" in a child Godot under Xvfb (the Compatibility renderer, 480x270) at stages 1 and 6: at rest at
+## pitches -55, -70 and -85, and walking and sprinting at -70 (the camera bobs, the body leans: the worst of
+## four moments of each), the frame's two bottom corner blocks are the same with the giant and without him,
+## while his arms and legs still draw elsewhere in the frame; no shader error; the look validates. Without xvfb-run it is
 ## skipped with a note (tools/check.sh --require turns that into a failure).
 
-## The share of a corner block's pixels the giant may change (the dither's last pixels at the fade's edge).
+## The share of a corner block's pixels the giant may change (the dither's last pixels at the fade's edge: at
+## most 0.003 measured, in the sprint).
 const CORNER_MAX := 0.02
 ## The share of the whole frame the giant must still change (his forearms, hands and legs: 0.08-0.13 measured).
 const DRAWN_MIN := 0.04
@@ -30,7 +32,7 @@ func test_the_shoulders_stay_out_of_the_lower_corners() -> void:
 		assert_eq(int(r.code), 0, "stage %d: the probe ran (exit %d)" % [stage, int(r.code)])
 		assert_false(str(r.output).contains("SHADER ERROR"), "stage %d: no shader error" % stage)
 		var corners: Dictionary = rep.get("fp_corners", {})
-		assert_eq(corners.size(), SkinnedRigProbe.FP_DOWN_PITCHES.size(), "stage %d: every pitch was drawn: %s" % [stage,
+		assert_eq(corners.size(), SkinnedRigProbe.FP_DOWN_PITCHES.size() + 2, "stage %d: every pitch, the walk and the sprint were drawn: %s" % [stage,
 			str(r.output).right(400) if corners.is_empty() else ""])
 		assert_eq(rep.get("validate", ["?"]), [], "stage %d: the look validates" % stage)
 		for frame: String in corners:

@@ -59,14 +59,13 @@ varying float v_thin;
 varying flat int v_region;
 
 #include "res://assets/shaders/giant_first_person.gdshaderinc"
-varying vec3 v_fp_rel;
+varying vec3 v_fp_pos;
 varying flat float v_fp_on;
 
 void vertex() {
 	v_region = clamp(int(COLOR.r * 16.0), 0, 15);
-	vec3 fp_cam = fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD);
-	v_fp_rel = VERTEX - fp_cam;
-	v_fp_on = fp_in_head(fp_cam);
+	v_fp_pos = VERTEX;
+	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD));
 	if (((hidden_regions >> v_region) & 1) == 1) {
 		VERTEX -= NORMAL * hide_shrink;
 	}
@@ -98,7 +97,7 @@ float scar_coverage(float layer, vec4 on, vec2 uv, out vec2 slope) {
 }
 
 void fragment() {
-	if (fp_shoulders_hidden(v_fp_rel, v_fp_on, FRAGCOORD.xy)) {
+	if (fp_shoulders_hidden(v_fp_pos, v_fp_on, FRAGCOORD.xy)) {
 		discard;   // first person: the limbs fade out towards the shoulders (the include's header)
 	}
 	vec3 base = texture(albedo_tex, UV).rgb * (skin_tone / max(bake_tone, vec3(0.01)));

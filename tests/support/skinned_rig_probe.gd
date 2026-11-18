@@ -41,6 +41,7 @@ const CROSSHAIR_PX := 3
 ## Mode "fp_down": the pitches drawn, and the size of a bottom corner block (a share of the frame each way).
 const FP_DOWN_PITCHES := [-55.0, -70.0, -85.0]
 const FP_CORNER := Vector2(0.16, 0.24)
+const FP_MOVE_FRAMES := 4
 
 var stage := 1
 var mode := "frames"
@@ -199,8 +200,9 @@ func _frames_mode() -> void:
 
 # --------------------------------------------------------------------------- first person, looking down
 
-## Mode "fp_down" (the M10 gate's LC-3): first person at rest at each of FP_DOWN_PITCHES, each frame drawn with
-## the giant and without him; "fp_corners" reports, per frame, the share of the pixels of the two bottom corner
+## Mode "fp_down" (the M10 gate's LC-3): first person at rest at each of FP_DOWN_PITCHES, then walking and
+## sprinting at -70 degrees (the worst of FP_MOVE_FRAMES moments of each), each frame drawn with the giant and
+## without him; "fp_corners" reports, per frame, the share of the pixels of the two bottom corner
 ## blocks (FP_CORNER of the frame each) that the giant changes. Before the fix the arms' shoulder caps filled
 ## them (flat, saw-toothed slabs); with it the limbs fade out towards the shoulders and the corners show the
 ## ground.
@@ -231,6 +233,27 @@ func _fp_down_mode() -> void:
 		vis.visible = true
 		corners[frame_name] = {"left": _block_diff(with_giant, without, false), "right": _block_diff(with_giant, without, true),
 			"drawn": _block_diff(with_giant, without, false, Vector2(1.0, 1.0))}
+	# on the move: a walk, then a sprint, at -70 degrees, at FP_MOVE_FRAMES moments of the stride (the camera bobs,
+	# the body leans: the corners must stay clear)
+	_p.camera_rig.pitch = deg_to_rad(-70.0)
+	for gait: String in ["walk", "sprint"]:
+		_p.router.set_injected_move(Vector2(0, 1))
+		_p.router.set_injected_hold(&"sprint", gait == "sprint")
+		await _ticks(40)
+		var worst := {"left": 0.0, "right": 0.0, "drawn": 1.0}
+		for i in FP_MOVE_FRAMES:
+			await _ticks(7)
+			var rec := await _capture("fp_%s70_%d" % [gait, i])
+			var with_giant := Image.load_from_file(str(rec.path))
+			vis.visible = false
+			var without := await _draw()
+			vis.visible = true
+			worst.left = maxf(worst.left, _block_diff(with_giant, without, false))
+			worst.right = maxf(worst.right, _block_diff(with_giant, without, true))
+			worst.drawn = minf(worst.drawn, _block_diff(with_giant, without, false, Vector2(1.0, 1.0)))
+		corners["fp_%s70" % gait] = worst
+	_p.router.set_injected_hold(&"sprint", false)
+	_p.router.set_injected_move(Vector2.ZERO)
 	_out["fp_corners"] = corners
 	_p.camera_rig.set_mode(CameraRig.Mode.THIRD_PERSON)
 

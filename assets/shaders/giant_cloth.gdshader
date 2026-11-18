@@ -20,17 +20,16 @@ uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
 #include "res://assets/shaders/giant_first_person.gdshaderinc"
-varying vec3 v_fp_rel;
+varying vec3 v_fp_pos;
 varying flat float v_fp_on;
 
 void vertex() {
-	vec3 fp_cam = fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD);
-	v_fp_rel = VERTEX - fp_cam;
-	v_fp_on = fp_in_head(fp_cam);
+	v_fp_pos = VERTEX;
+	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD));
 }
 
 void fragment() {
-	if (fp_shoulders_hidden(v_fp_rel, v_fp_on, FRAGCOORD.xy)) {
+	if (fp_shoulders_hidden(v_fp_pos, v_fp_on, FRAGCOORD.xy)) {
 		discard;   // first person: a sleeve fades out towards the shoulder with the arm in it
 	}
 	if (fade > 0.0) {
