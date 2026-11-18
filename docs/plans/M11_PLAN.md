@@ -354,6 +354,10 @@ Sent before W29 with the note of §4.2. No answer blocks W29.
 | 6 | Women among villagers and named characters (Edda, Reeve Tamsin, the ferrywoman) need more CC0 body data from the same source as the giant's. Agreed? | Yes | No: every person is built from the male body, with clothes and hair doing the work |
 | 7 | Approve each part's look (the preview and its sheet, §4.2) | - | Notes steer the part's look pass; "not yet" opens one fix lane |
 
+**Answered.** The owner confirmed all the defaults above on 18 November 2026 ("GO"): three releases; 59.1 MB
+for the last download; build and face sliders; the two added slots; boxes kept rather than a poor wolf; women
+among the people from more CC0 body data. Question 7 is asked at each part's checkpoint.
+
 ---
 
 ## 1. Execution model and wave schedule
@@ -1874,3 +1878,188 @@ What this plan ran or read, and what it did not.
 - **Not run**: no probe, no export, no render and no test was run for this plan beyond
   `test_ship_docs` on this file. Every "ASSUMED" above is waiting for the probes of §1.2 or for the
   first package that measures it; their results are recorded here, under this line, before W29.
+
+
+### The probes before W29 (§1.2): results
+
+Probes 1 and 2 ran in P48's lane and probe 9 in P49's, each before the package built on it (their full
+records: `docs/systems/P48.md` and `docs/systems/P49.md`, "Probes"); probes 3-8 and 10 were run by the
+orchestrator before W29 in scratch projects outside the repository. Reference toolchain throughout:
+Godot 4.6.3, the Compatibility renderer; Blender through the project's `tools/giant/` venv; a 4-CPU
+machine shared with other work and with no GPU: native runs on llvmpipe (desktop GL 4.5) under a
+virtual display, Web runs a test export (the Web preset) in headless Chromium (WebGL 2 on
+SwiftShader). Every timing run started when the 1-minute load was below 3, or after waiting 100 s
+(the load is recorded where it was higher). Frame timings on these software devices are indicative
+only and are given as ratios with and without the feature, measured in alternating blocks; CPU-side
+timings (probes 4 and 7) are real for this machine.
+
+| # | Decides | Verdict | Decision |
+| --- | --- | --- | --- |
+| 1 | Meshes on demand (P48) | works | `giant.glb` and `parts/<id>.glb`, bound by the named skin; every part's skin equals `giant.glb`'s bind for bind, so the model binds every part with its own one `Skin` |
+| 2 | Build sliders (decision 7) | works | Build sliders by vertex shader (`COLOR.g`, `.b`); no build shape keys; the shadow proxy carries the build channels too |
+| 3 | Face sliders (decision 7; P56) | works | Face keys built; exported with morph tangents (`export_tangents` and `export_morph_tangent` on) |
+| 4 | Secondary motion (P50) | works | `SpringBoneSimulator3D` as planned; `reset()` on teleports, respawns and look changes; colliders only where reachable |
+| 5 | The subsurface term (P51) | works | The 64 px lookup in `light()`, `light_model` 3 on both tiers |
+| 6 | Shells (P51, P63) | works with limits | Shells never cast shadows; 12 layers on desktop, 6 on the Web, built at load time |
+| 7 | The people's clip driver (P60) | works | One `AnimationPlayer` per actor, `seek(phase, false)` + `advance(dt)`, fades by `play(clip, 0.15)` |
+| 8 | Crowd variation and flashes (P60) | works | One `MultiMesh` per role, pose and level; palette row and flash in custom data |
+| 9 | The launcher's change (P49) | works | One stream, a network chunk at a time, into one `DecompressionStream` |
+| 10 | The people's share (§2.12) | works with limits | A variant ships at about 282 KB (275 KiB), not 165 KiB: 19 variants, or lighter variants of about 3,000 triangles; P59's first variant decides |
+
+**Probe 1 - a hair mesh in its own glTF, loaded at run time and bound by named skin (P48).** In a
+scratch Godot project on the files the real pipeline wrote (`giant.glb` with the 71-bone skeleton, the
+body, the eyes and the shadow proxy; the parts `Hair_long_back.glb`, `Garment_tunic_core.glb` and
+`Garment_tunic_limbs.glb`, each with `build_giant.py`'s import settings), the hair's glTF was loaded,
+instanced, and its `Mesh` and `Skin` put on a new `MeshInstance3D` under `giant.glb`'s `Skeleton3D`.
+Frames of the body alone, with the hair, with the head turned 35 degrees, with `hair_01`-`03` bent 30
+degrees each, and from 60 m. Seen: the part's skin has 71 binds, all named (`use_named_skins`); the hair
+drew (318 pixels at 640x480 from the front), followed the turned head (332 pixels moved) and its tips
+followed the bent chain (391 pixels moved, the roots stayed); the imported meshes have their LODs (2 for
+the hair, 9 for the head, 5 for the tunic's core, 8 for the proxy) and still drew at 60 m; a part's read
+and bind took 1.1-2.1 ms. `ArrayMesh.shadow_mesh` is empty on every skinned mesh, the body's included,
+although `create_shadow_meshes` is on, so there is none to lose. **Verdict: works. Decision:** meshes on
+demand as planned; no fallback. Every part's skin turned out equal to `giant.glb`'s bind for bind (the
+same armature is exported with each), so the model binds every part with its own one `Skin`.
+
+**Probe 2 - build sliders by vertex shader (decision 7).** A spatial shader with
+`VERTEX += NORMAL * dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m` on the three body meshes and both
+tunic parts, under a shadowed sun over a ground plane (the proxy hidden, so the pushed meshes cast);
+frames at `build` = (0,0), (1,0), (-1,0), (0,1), (0,-1), (1,1), and (0,0) against (1,1) from 60 m. Seen:
+the silhouette changed with each slider (1,261-1,816 pixels of the body's box at one slider's end, 2,788
+with both at +1); the tunic stayed over the skin (it carries the skin's weights); the shadow followed the
+vertex shader (the ground's shadow 605 pixels at rest, 743 with both at +1, 541 with girth at -1); the
+LODs followed (41 pixels changed on a figure about 25 pixels tall); the mesh format keeps `COLOR` on the
+body, the hair and the garments. **Verdict: works. Decision:** build sliders by vertex shader as planned;
+no build shape keys. Consequence: the shadow proxy carries the build channels too and needs the same push
+when P53 adds the uniforms (FOLLOWUPS, "From the body pipeline II").
+
+**Probe 3 - the dark patch between the brows (face keys; P56).** `Body_Head` of the shipped `giant.glb`
+(4,570 vertices) with four vendored detail targets as shape keys (nose volume, chin prominence, brows
+forward, head age), exported from Blender three ways - positions only; positions and morph normals (the
+exporter's default); positions, morph normals and morph tangents - each imported with `ensure_tangents`
+off and on and with compression forced off and not (12 imports), every key at +1 and -1 rendered at the
+Face framing and differenced against the same shape applied to the base mesh (a "patch": the 9 x 9 px
+mean of the luminance difference, in 1/255):
+
+| Export | `ensure_tangents` | Darkest patch (1/255) | Where |
+| --- | --- | --- | --- |
+| positions only | off / on | -39.0 / -38.9 | brows at -1 (normals not morphed) |
+| positions + morph normals | off | -22.1 | brows at -1 |
+| positions + morph normals | **on (the shipped setting)** | **-89.2** | **brows at +1: a hard dark quad between the brows** |
+| positions + morph normals + morph tangents | off / on | -22.0 / -22.0 | brows at -1 |
+
+The cause is the pair "morph normals without morph tangents" imported with `ensure_tangents` on; with
+the morph tangents exported it is gone. Compression changed nothing. The remaining -22/255 is a soft,
+wide band under both brows at weight -1 only (the linear blend of normals at a negative weight). Size: a
+head with four keys imports to 550 KB against 210 KB (about 85 KB a key). **Verdict: works. Decision for
+P56:** build the face keys and export them with `export_tangents=True` and `export_morph_tangent=True`
+(today `export_game.py` exports with morphs and tangents off, and `giant.glb.import` has
+`ensure_tangents=true`: morphs with the exporter's defaults give exactly the failing pair); keep P56's
+dark-patch test (local contrast 8/255) and judge the negative-weight band against it - if it fails, clamp
+the brow key to 0..+1. The 0.7 MiB row for six face keys is about right for the head alone; the copies on
+the beards and the hairline strips come on top.
+
+**Probe 4 - `SpringBoneSimulator3D` (secondary motion; P50).** The shipped giant with leaf chains added
+at run time (three under `head`, four 3-bone cape chains under `spine_03`) on card ribbons, a stand-in
+for `PoseBrainModifier` before the springs, a sphere and capsules as colliders (head, chest), through a
+scripted course (idle, run, abrupt stop, a 70-degree head turn, a spin, a heavy swing, a teleport without
+and with `reset()`) at 60 and 20 frames a second. Cost a giant a frame: natively 0.043-0.046 ms springs
+off, 0.075-0.082 with colliders, 0.055 without (+0.031-0.037, the colliders about 0.025 of it); on the
+Web 0.056-0.065 off, 0.086-0.096 on (+0.030). No NaN; tips deflect up to 47 degrees (cape) and 61-64
+(hair) on the run; with colliders a joint enters the chest capsule by at most 0.05 m (0.13 without).
+Settle with the clip frozen, to within 2 degrees: 0.40 s after a stop from a run, 0.07 after the head
+turn, 0.47 after the spin, 0.33 after the swing; at 20 fps the same look within 8 degrees. A teleport
+without `reset()` throws every chain to 90-95 degrees; with `reset()` the first frame is at rest.
+**Verdict: works**, inside §2.12's 0.12 / 0.45 ms. **Decision for P50:** the plan's design -
+`SpringBoneSimulator3D` for the hair and cape chains, `reset()` on every teleport, respawn and look
+change (a test shows the reset), colliders for the head and chest only where a chain can reach them.
+**Cape tuning notes:** the probe's values (cape stiffness 0.6, drag 0.45; hair 1.2, 0.35) settled best;
+more drag makes this solver slower to settle, not faster (drag x2.5: 1.38 s after the stop, 1.57 after
+the spin), so lift the cape less on the run with more gravity, not more drag; the cape lifts to about
+45-50 degrees on the run (a flag in wind rather than heavy cloth) and reads as a stiff board, because the
+four chains have no cross links - a cross-chain constraint or a cloth-like card layout if that matters.
+
+**Probe 5 - a 64 px lookup sampled in `light()` (the subsurface term; P51).** The shipped head, torso and
+limbs with a copy of `giant_skin.gdshader` whose `light()` switches between Lambert, today's wrap, a
+64 x 64 lookup (N.L against curvature, pre-integrated from a six-Gaussian skin profile) and an analytic
+wrap by curvature; rendered natively and in a Web test export. The lookup is sampled in `light()` on both
+tiers (a debug lookup proves it; the images agree within 0.002); frame time with the lookup against the
+wrap 1.045 natively and 1.016 on the Web at the face (0.93 and 1.02 at the body: noise); the analytic
+model costs the same. The lookup gives the reddish terminator band and keeps the lit side near Lambert's
+colour. **Verdict: works. Decision for P51:** the 64 px lookup in `light()`, `light_model` 3 on both
+tiers; the analytic model stays a tuning comparison, not a fallback.
+
+**Probe 6 - twelve shell layers (short hair and fur; P51, P63).** A 4,364-triangle scalp cap cut from the
+shipped head (skinned to it) and a 4,000-triangle animal body, each with 1, 6 and 12 shells in one mesh
+and one `ShaderMaterial` (pushed along the normal, discarded by a strand noise), five views at 640x360,
+natively and on the Web. The shells are one draw call a style (plus one a shadow cascade while they cast:
+at the game camera's four cascades the scalp's primitives went from 53,270 to 315,110 with shadows, to
+105,638 without). The frame with 6 / 12 layers against none at the game distance: natively 1.20 / 1.64
+(scalp, no shadows), 1.39 / 1.90 (animal); on the Web 1.12 / 1.32 and 1.19 / 1.39; up to 2.2-2.5 close
+up. Twelve layers read as a dense short crop and a coat; six show the scalp at the crown and banding on
+the animal; one is not usable. **Verdict: works with limits. Decision for P51 and P63:** shells never cast
+shadows (the cap or the body casts); **12 layers on the desktop tier and 6 on the Web**, the stack built
+at load time from the cap's or the body's arrays (no shipped bytes for the layers); P63's wolf coat the
+same. Measure again on a GPU at the first package's frame check; drop to cards on the Web if the Web's
+`low` frame grows by more than 10 % with the shells in view.
+
+**Probe 7 - one `AnimationPlayer` per actor, seeked by hand, with a cross-fade (P60).** 16 actors of 23
+bones, each with its own player in manual mode on one library of three clips. `seek(t, true)` gives the
+pose at t (worst 0.0007 rad); `seek(t, false)` then `advance(dt)` the pose at t + dt; a cross-fade by
+`play(clip, 0.15)` while seeking by hand lands exactly on the hand-driven phase (worst 3 degrees at the
+fade's first frame); `seek(t, true)` alone does not move a fade. Cost for 16 actors, best / median ms a
+frame: player advanced 0.107 / 0.110 natively and 0.138-0.149 / 0.143-0.160 on the Web; seeked by hand
+0.112 / 0.116 and 0.149-0.164 / 0.161-0.168; with a fade always running 0.222 / 0.228 and
+0.258-0.261 / 0.270-0.283; an `AnimationTree` 15-70 % more. **Verdict: works. Decision for P60:** one
+`AnimationPlayer` per promoted actor in manual mode, `seek(phase, false)` then `advance(dt)` every frame
+(never `seek(t, true)` alone), fades by `play(clip, 0.15)`; the cap of 16 stands; a test asserts a fade
+completes in its time and lands on the hand-driven phase.
+
+**Probe 8 - a `MultiMesh` with per-instance colour and custom data (P60).** 40 members in one `MultiMesh`
+with `use_colors` and `use_custom_data`, a `ShaderMaterial` reading the palette row (`INSTANCE_CUSTOM.x`,
+an 8 x 4 palette texture, nearest filtering), the flash (`INSTANCE_CUSTOM.y`) and a tint (`COLOR`), read
+back inside the engine through an unshaded variant: 80 of 80 pixel checks right on desktop GL and on
+WebGL 2 (worst error 0.016), 0 wrong of 480 with new custom data every frame, 80 of 80 with the whole
+buffer in one write; setting the data for 40 members 0.003 ms natively and 0.011 on the Web. (The first
+runs' failures were the check's expectation computed in the wrong colour space.) **Verdict: works.
+Decision for P60:** one `MultiMesh` per role, pose and level, the palette row and the flash in custom
+data and a tint in the instance colour; compute the flash in the albedo's space, and read the frame back
+with an unshaded check variant in P60's test.
+
+**Probe 9 - the launcher unpacking a 44 MiB pack in four parts (P49).** A 50,560,000-byte stand-in pack
+gzipped and base64-encoded to 44.02 MiB and cut into four parts; three unpackers run in headless Chromium,
+three fresh browsers each, the renderer's resident memory read every 20 ms, every output's checksum
+matched:
+
+| Unpacker | Peak | Rise | Time |
+| --- | --- | --- | --- |
+| The joined text (0.10.0-m10) | 407-418 MB | 329-342 MB | 485-527 ms |
+| A part at a time | 373-388 MB | 296-311 MB | 504-568 ms |
+| **One stream, a network chunk at a time** | **292-303 MB** | **214-225 MB** | **396-399 ms** |
+
+About 100 MB of each rise is the unpacked pack and the buffer it is read into. **Verdict: works**, far
+from the 1.4 GB row, so the fallback is not taken. **Decision:** one stream, not a part at a time: each
+network chunk decoded as it arrives (the one to three characters past a group of four carried over) and
+written into one `DecompressionStream` whose readable side is the response's body; it holds 110-120 MB
+less than the join at the last budget and was the fastest.
+
+**Probe 10 - the people's bytes (§2.12).** Four clothed people of 5,000 triangles (6,590 vertices, 23
+bones) made from the shipped giant's body, garments and hair, and three atlas sets (albedo 512 px, normal
+and the third map 256 px), exported for the Web with the giant's import settings five times with more and
+fewer of them (shipped bytes as `build_web.sh` counts them): one variant adds 282,536 bytes, three more
+281,976 each; one atlas set 240,384, two more 245,686 each. A variant imports to 192-245 KB and ships at
+255-323 KB (mesh data barely compresses; LODs 10 KB of it, shadow meshes nothing measurable). So **a
+variant costs about 282 KB (275 KiB) shipped against the 165 KiB planned** (1.7 times) and an atlas set
+about 240 KiB against 205; at the plan's counts Part C's people lines come to about 13.0 MiB against 10.2,
+over the 12.0 share. **Verdict: works with limits. Decision for §2.12 and P59:** the fallback - fewer
+variants per role in §6.3's order (notables 5 to 3, villagers 5 to 3, then the second archer, mage, crew
+and rider): **19 variants** bring the lines to about 11.9 MiB with the 0.4 margin; or keep 23 with
+**lighter meshes** (about 3,000 triangles and few UV seams: about 43 shipped bytes a vertex). **P59's first
+variant decides.** Do not count on dropping LODs or shadow meshes.
+
+**What the probes did not measure**: no timing on a real GPU (the shells' cost is the one decision this
+leaves open; P51 re-measures at its first frame check); probe 4 did not see the real cape and hair meshes
+P48 exports, nor more than one giant a frame on the Web; probe 3 keyed only `Body_Head` (not the beards
+or the hairline strips); probe 6 not at 1280x720 or with anti-aliasing, nor the stack's build time;
+probe 7 not the skin's cost of 16 people of 5,000 triangles (P60's formation measurement); probe 10 not
+how a person looks at the game camera, nor a 3,000-triangle variant's bytes.
