@@ -15,7 +15,9 @@ extends IntegrationSuite
 ##   * apply_look on the live giant, growth to stage 4 scaling Body by 3 with the look kept;
 ##   * the render layers per mesh kind and the first-person mask;
 ##   * the crosshair probe meets the skinned body where it is and only there;
-##   * skin_stats() and SkinnedRig.run_stats() count what ran.
+##   * skin_stats() and SkinnedRig.run_stats() count what ran;
+##   * P50: the tree holds every source of plan M11 §2.3 and the flinches, every family has its grip, and the fist's
+##     landmarks in the hand bone's space put the fist where the index's stage-1 grip_r is.
 
 const LAYER_OF := {"body": 0, "eyes": 3, "hair": 3, "beard": 3}
 
@@ -75,9 +77,12 @@ func test_every_clip_track_resolves_to_a_bone() -> void:
 	if lib == null:
 		return
 	var names := lib.get_animation_list()
-	for clip in ["idle", "walk", "run", "airborne", "death", "grip_r", "grip_l", "open_r", "open_l"]:
+	for clip in ["idle", "walk", "run", "airborne", "death", "grip_r", "grip_l", "open_r", "open_l",
+			# P50 wires P48's clips II (plan M11 §2.3)
+			"sprint", "turn_l", "turn_r", "stomp_r", "land", "brace", "roar", "flinch_f", "flinch_b", "flinch_l", "flinch_r",
+			"grip_club", "grip_sword", "grip_hammer", "grip_axe", "grip_fist", "grip_tree", "carry_two_hand", "fp_rest"]:
 		assert_true(names.has(clip), "the %s clip" % clip)
-	for clip in ["idle", "walk", "run"]:
+	for clip in ["idle", "walk", "run", "sprint"]:
 		assert_eq(lib.get_animation(clip).loop_mode, Animation.LOOP_LINEAR, "%s loops" % clip)
 	var root := (load(GIANT) as PackedScene).instantiate()
 	world.add_child(root)
@@ -278,3 +283,28 @@ func test_skin_stats_count_what_ran() -> void:
 	assert_true(int(run.rigs) > int(before.rigs), "and count the rig")
 	for key in ["look", "layers", "posed_frames", "modifier_runs", "held_visual_writes", "shown_meshes", "rig_footfalls", "rigs"]:
 		assert_true(run.has(key), "SKIN_STATS has %s" % key)
+
+
+func test_the_sources_the_grips_and_the_fist_landmarks() -> void:
+	SkinnedRig.enable_for_tests()
+	var p := await _grounded()
+	var rig := _rig(p)
+	var bt := rig.animation_tree().tree_root as AnimationNodeBlendTree
+	for node: String in ["brace", "turn", "turn_side", "move", "gait", "sprint", "charge", "charge_gait", "stomp", "roar", "land", "air",
+			"dead", "flinch_f", "flinch_b", "flinch_l", "flinch_r", "hand_r", "open_l", "grip_l", "fist_l", "fp"]:
+		assert_true(bt.has_node(StringName(node)), "the tree's %s node" % node)
+	assert_true(bt.get_node(&"flinch_f") is AnimationNodeAdd2, "the flinches are added on top")
+	for fam: String in ["club", "sword", "hammer", "axe", "fists", "tree"]:
+		assert_true(SkinnedRig.clip_library().has_animation(str(SkinnedRig.GRIP_CLIPS[fam])), "%s's grip clip" % fam)
+	assert_eq(rig.grip_clip(), "grip_club", "the club closes the fist with its grip")
+	var sk := rig.skeleton()
+	var hand := sk.get_bone_global_rest(sk.find_bone("hand_r"))
+	var lm: Dictionary = rig.model().index.landmarks
+	var gl: Array = lm.grip_local_r
+	var at_rest := PoseBrainModifier.relative_transform(sk, rig.body) * (hand * Vector3(gl[0], gl[1], gl[2]))
+	var grip: Array = lm.grip_r
+	assert_true(at_rest.distance_to(Vector3(grip[0], grip[1], grip[2])) < 0.005,
+		"grip_local_r in the hand bone's space is the index's grip_r at rest (%s against %s)" % [at_rest, grip])
+	var tm := TipMatching.for_fist(rig.model().index)
+	assert_eq(tm.source, "fist", "tip matching is built for the fist")
+	assert_true(float(tm.reach.r) < 1.385 and float(tm.reach.r) > 1.2, "its reach is the fist's (%.3f)" % float(tm.reach.r))

@@ -46,7 +46,7 @@ const DEFAULT_IDLE_POSE := Vector2(12.0, -78.0)   ## ActorRig.idle_arm_pose
 const IDLE_POSES := {"tree": Vector2(24.0, 30.0)}  ## WeaponVisuals.TREE_IDLE_POSE (the tree and the pine)
 ## The elbow's pole: down, back (+Z) and out; across the body it lifts further out.
 const POLES := {"r": Vector3(0.55, -0.55, 0.6), "l": Vector3(-0.55, -0.55, 0.6)}
-const CROSS_POLES := {"r": Vector3(0.85, -0.25, 0.45), "l": Vector3(-0.85, -0.25, 0.45)}
+const CROSS_POLES := {"r": Vector3(1.0, -0.1, 0.3), "l": Vector3(-1.0, -0.1, 0.3)}
 ## How far (stage-1 metres) across the body's middle the pole has turned fully to CROSS_POLES.
 const CROSS_BLEND_M := 0.5
 ## The contract's bounds (plan M10 §2.9).
@@ -54,6 +54,24 @@ const MAX_ANGLE_DEG := 15.0
 const FIST_TOLERANCE_M := 0.01
 ## The outer half of the visible weapon is measured at this many points (t = 0.5 ... 1.0).
 const OUTER_HALF_SAMPLES := 6
+## The reach extension (P50; plan M11 §2.3) for a weapon carried past its fit stage: when the natural grip
+## cannot bring the outer half into the tested capsule, the clavicle protracts by up to REACH_CLAVICLE_M, the
+## spine leans toward the tip by up to REACH_LEAN_DEG about the pelvis, and the pelvis shifts toward it by up to
+## REACH_PELVIS_M (stage-1 metres, x k in the world), in that order, each by the least that suffices.
+const REACH_CLAVICLE_M := 0.08
+const REACH_LEAN_DEG := 12.0
+const REACH_PELVIS_M := 0.10
+## The least amount of a step is found by bisection, this many halvings of its range.
+const REACH_SEARCH := 7
+## The extension aims the outer half this far inside the capsule (a share of its radius): the posed body is not
+## the landmarks' rest body, and the margin keeps it inside in play.
+const REACH_FILL := 0.75
+## A swing whose outer half already lies within this share of the radius needs no extension (every fitted
+## weapon's samples lie within 0.80 of it: M10's record); past it the extension leaves the solve's own pull-in
+## some room.
+const REACH_FIT := 0.95
+## Where the lean turns about when the landmarks name no pelvis (the base of the spine, stage-1 metres).
+const DEFAULT_PELVIS := Vector3(0.0, 2.096, -0.013)
 
 ## The animation research's lab body (its export of the kit's giant on the game_engine rig, stage 1, the
 ## game frame), read from the skeleton's rest pose; reach_r / reach_l are the brief's 1.385 (shoulder to
@@ -66,7 +84,7 @@ const DEFAULT_LANDMARKS := {
 	"hip_r": Vector3(0.21686, 2.071284, 0.005812), "hip_l": Vector3(-0.216859, 2.071284, 0.005812),
 	"knee_r": Vector3(0.281627, 1.025667, -0.057457), "knee_l": Vector3(-0.281627, 1.025667, -0.057457),
 	"ankle_r": Vector3(0.372591, 0.158973, 0.005816), "ankle_l": Vector3(-0.372591, 0.158973, 0.005816),
-	"eye_mid": Vector3(0.0, 3.447093, -0.244148),
+	"eye_mid": Vector3(0.0, 3.447093, -0.244148), "pelvis": Vector3(0.0, 2.09614, -0.01289),
 	"reach_r": 1.385, "reach_l": 1.385,
 }
 
@@ -91,6 +109,22 @@ static func from_index(index: Dictionary) -> TipMatching:
 	return from_landmarks(DEFAULT_LANDMARKS)
 
 
+## P50: tip matching for the fist (plan M11 §2.3: the weapon in the closed fist, not on the knuckle line): the
+## index's landmarks with each palm moved to its fist's centre (`grip_r`, `grip_l`) and the reach measured to it,
+## so the grip tip matching returns is where the fist's centre goes. An index without the grips: from_index's.
+static func for_fist(index: Dictionary) -> TipMatching:
+	var lm: Variant = index.get("landmarks")
+	if typeof(lm) != TYPE_DICTIONARY or not (lm as Dictionary).has("grip_r") or not (lm as Dictionary).has("grip_l"):
+		return from_index(index)
+	var fist := (lm as Dictionary).duplicate()
+	for side: String in ["r", "l"]:
+		fist["palm_" + side] = fist["grip_" + side]
+		fist.erase("reach_" + side)
+	var t := from_landmarks(fist)
+	t.source = "fist"
+	return t
+
+
 ## From landmarks ({"shoulder_r": [x, y, z] or Vector3, ...}); a missing joint takes DEFAULT_LANDMARKS'.
 static func from_landmarks(lm: Dictionary) -> TipMatching:
 	var t := TipMatching.new()
@@ -105,7 +139,7 @@ static func from_landmarks(lm: Dictionary) -> TipMatching:
 		t.upper[side] = sh.distance_to(el)
 		t.fore[side] = el.distance_to(wr)
 		t.hand[side] = wr.distance_to(pa)
-		var r := float(t.landmarks.get("reach_" + side, 0.0))
+		var r := float(lm.get("reach_" + side, 0.0)) if SchemaUtil.is_number(lm.get("reach_" + side)) else 0.0
 		t.reach[side] = r if r > 0.0 else float(t.upper[side]) + float(t.fore[side]) + float(t.hand[side])
 	t.source = "landmarks"
 	return t
@@ -174,6 +208,90 @@ func match_swing_at(sh: Vector3, pivot: Vector3, dir: Vector3, arm: float, weapo
 	return {"tip": tip, "grip": grip, "weapon_dir": wdir, "visible_tip": grip + wdir * weapon, "hand_dir": hand_dir,
 		"wrist": arm_solve.end, "elbow": arm_solve.elbow, "palm": palm, "fist_error": palm.distance_to(grip),
 		"reached": absf(grip.distance_to(tip) - weapon) < 1e-3, "exact": bool(arm_solve.exact)}
+
+
+## match_swing_at with the reach extension (P50; plan M11 §2.3): when the visible weapon's outer half from the
+## shoulder `sh` would stray more than `radius` from the tested segment (a weapon carried past its fit stage),
+## the shoulder is carried toward the tip - the clavicle's protraction, then the spine's lean about the pelvis,
+## then the pelvis's shift - each by the least that brings the outer half inside, stopping at the first step
+## that suffices (a step that does not suffice is used whole); a weapon that fits never moves the body. Returns
+## match_swing_at's dictionary with "shoulder" (where the grip was solved from), "deviation" (the outer half's
+## farthest point from the tested segment), the extension used ("clavicle_m", "lean_deg", "pelvis_m") with its
+## directions ("clavicle_dir", "lean_axis", "pelvis_dir") and "inside".
+func match_swing_reach(sh: Vector3, pivot: Vector3, dir: Vector3, arm: float, weapon: float, radius: float,
+		side := "r") -> Dictionary:
+	var seg := tested_segment(pivot, dir, arm, weapon)
+	var zero := {"clavicle_m": 0.0, "lean_deg": 0.0, "pelvis_m": 0.0}
+	var m0 := _reach_try(sh, pivot, dir, arm, weapon, seg, zero, side)
+	if float(m0.deviation) <= radius * REACH_FIT:
+		return _reach_out(m0, zero, radius)   # it fits: the body never moves
+	var best := [m0, zero.duplicate()]
+	var ok := func(t: Dictionary, bound: float) -> bool:
+		return float(t.deviation) <= bound and angle_deg(t.weapon_dir, dir) <= MAX_ANGLE_DEG
+	# first aim REACH_FILL inside the capsule, then settle for its surface; each step by the least that suffices
+	for bound: float in [radius * REACH_FILL, radius]:
+		var ext := zero.duplicate()
+		for step: String in ["clavicle_m", "lean_deg", "pelvis_m"]:
+			var top := float({"clavicle_m": REACH_CLAVICLE_M, "lean_deg": REACH_LEAN_DEG, "pelvis_m": REACH_PELVIS_M}[step])
+			ext[step] = top
+			var full := _reach_try(sh, pivot, dir, arm, weapon, seg, ext, side)
+			if angle_deg(full.weapon_dir, dir) <= MAX_ANGLE_DEG and float(full.deviation) < float((best[0] as Dictionary).deviation):
+				best = [full, ext.duplicate()]
+			if not ok.call(full, bound):
+				continue
+			var lo := 0.0
+			var hi := top
+			var found := full
+			for i in REACH_SEARCH:
+				var mid := (lo + hi) * 0.5
+				ext[step] = mid
+				var t := _reach_try(sh, pivot, dir, arm, weapon, seg, ext, side)
+				if ok.call(t, bound):
+					hi = mid
+					found = t
+				else:
+					lo = mid
+			ext[step] = hi
+			return _reach_out(found, ext, radius)
+	# nothing brings it inside: the nearest it came (the measured limit of honest reach)
+	return _reach_out(best[0], best[1], radius)
+
+
+## The shoulder carried by an extension {"clavicle_m", "lean_deg", "pelvis_m"} toward the tested segment `seg`
+## (Body space): {"shoulder", "clavicle_dir", "lean_axis", "pelvis_dir"}. The clavicle carries the shoulder
+## toward the segment's near end, the lean turns it about the pelvis toward the tip, the pelvis moves it level
+## toward the tip.
+func reach_shoulder(sh: Vector3, seg: PackedVector3Array, ext: Dictionary) -> Dictionary:
+	var toward := seg[0] - sh
+	var cdir := toward.normalized() if toward.length_squared() > 1e-10 else Vector3.FORWARD
+	var s := sh + cdir * float(ext.get("clavicle_m", 0.0))
+	var pel: Vector3 = landmarks.get("pelvis", DEFAULT_PELVIS)
+	var arm := s - pel
+	var to_tip := seg[1] - pel
+	var axis := arm.cross(to_tip)
+	axis = axis.normalized() if axis.length_squared() > 1e-10 else Vector3.RIGHT
+	s = pel + arm.rotated(axis, minf(deg_to_rad(float(ext.get("lean_deg", 0.0))), arm.angle_to(to_tip)))
+	var flat := Vector3(seg[1].x - pel.x, 0.0, seg[1].z - pel.z)
+	var pdir := flat.normalized() if flat.length_squared() > 1e-10 else Vector3.FORWARD
+	s += pdir * float(ext.get("pelvis_m", 0.0))
+	return {"shoulder": s, "clavicle_dir": cdir, "lean_axis": axis, "pelvis_dir": pdir}
+
+
+func _reach_try(sh: Vector3, pivot: Vector3, dir: Vector3, arm: float, weapon: float, seg: PackedVector3Array,
+		ext: Dictionary, side: String) -> Dictionary:
+	var r := reach_shoulder(sh, seg, ext)
+	var m := match_swing_at(r.shoulder, pivot, dir, arm, weapon, side)
+	m.merge(r, true)
+	m["deviation"] = outer_half_deviation(m.grip, m.weapon_dir, weapon, seg[0], seg[1])
+	return m
+
+
+static func _reach_out(m: Dictionary, ext: Dictionary, radius: float) -> Dictionary:
+	m["clavicle_m"] = float(ext.clavicle_m)
+	m["lean_deg"] = float(ext.lean_deg)
+	m["pelvis_m"] = float(ext.pelvis_m)
+	m["inside"] = float(m.deviation) <= radius + 1e-6
+	return m
 
 
 ## The grip for a weapon of `length` ending on `tip`: `natural` moved onto the sphere of radius `length`

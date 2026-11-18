@@ -4,8 +4,11 @@ extends TestSuite
 ##     player components other than PlayerAppearance names the skeleton, the model, the look, the skinned rig,
 ##     its modifier, the weapon socket, the animation tree or tip matching (P42 owns the `appearance` word of
 ##     the same rule: tests/unit/test_appearance_rules.gd);
-##   * SkinnedRig and PoseBrainModifier are write-only: no event, no simulation call, no request, no write to
-##     the actor or another actor but the held body's Visual.position (which they put back);
+##   * SkinnedRig, PoseBrainModifier and SecondaryMotion (P50) are write-only: no event, no simulation call, no
+##     request, no write to the actor or another actor but the held body's Visual.position (which they put back);
+##     P50's words join the rule (SecondaryMotion, the springs, the flinch);
+##   * HitFeedback's flinch hands the rig the hit's side and nothing else: it reads the hit, calls the rig's
+##     flinch() and writes nothing (plan M11 §2.3);
 ##   * the skinned layers are off at the start of every test: a test that turns them on
 ##     (SkinnedRig.enable_for_tests) leaves them to ResetHooks (the two tests below run in this order).
 
@@ -14,8 +17,10 @@ const RULE_FILES := ["res://scripts/core/sim.gd"]
 const COMPONENTS_DIR := "res://scripts/actors/player/"
 const EXEMPT := "player_appearance.gd"
 const WORDS := ["Skeleton3D", "get_bone_", "GiantModel", "GiantLook", "SkinnedRig", "PoseBrainModifier", "WeaponSocket",
-	"AnimationTree", "TipMatching"]
-const SKIN := ["res://scripts/presentation/skinned_rig.gd", "res://scripts/presentation/pose_brain_modifier.gd"]
+	"AnimationTree", "TipMatching", "SecondaryMotion", "SpringBone", "flinch"]
+const SKIN := ["res://scripts/presentation/skinned_rig.gd", "res://scripts/presentation/pose_brain_modifier.gd",
+	"res://scripts/presentation/secondary_motion.gd"]
+const HIT_FEEDBACK := "res://scripts/presentation/hit_feedback.gd"
 ## What the skin never does (code only, comments and strings left out): the simulation's buses and calls, a
 ## request to a controller, a write to an actor's state or place.
 const FORBIDDEN := {
@@ -86,6 +91,26 @@ func test_b_the_layers_are_off_again_and_the_skin_writes_nothing_it_does_not_own
 	assert_true(rig.contains("func _restore_held") and rig.contains("_held_visual.position = _held_base"),
 		"and puts it back")
 	assert_true(rig.contains("func _exit_tree") and rig.contains("_restore_held()"), "also when the rig goes")
+	# P50: SecondaryMotion writes only its skeleton's bones (set_bone_global_pose) and its own springs
+	var sm := _code_only(FileAccess.get_file_as_string(SKIN[2]))
+	var sm_writes := RegEx.create_from_string("(\\w+)\\.(set_[a-z_]+)\\(").search_all(sm)
+	var sm_targets := {}
+	for m in sm_writes:
+		sm_targets[m.get_string(1)] = true
+	var sm_keys := sm_targets.keys()
+	sm_keys.sort()
+	assert_eq(sm_keys, ["sk", "springs"], "SecondaryMotion sets only its skeleton's bones and its springs (%s)" % [sm_keys])
+	# P50: HitFeedback's flinch: the rig's flinch() with the hit's side, nothing written
+	var hf := FileAccess.get_file_as_string(HIT_FEEDBACK)
+	var at := hf.find("func _flinch(")
+	assert_true(at > 0, "HitFeedback has its flinch hook")
+	var raw := hf.substr(at, hf.find("\nfunc ", at + 10) - at)
+	var body := _code_only(raw)
+	assert_true(raw.contains("call(\"flinch\", local, strength)"), "it calls the rig's flinch with the hit's side")
+	for pattern: String in FORBIDDEN:
+		var m := RegEx.create_from_string(pattern).search(body)
+		assert_true(m == null, "HitFeedback's flinch %s (%s)" % [FORBIDDEN[pattern], m.get_string() if m != null else ""])
+	assert_false(RegEx.create_from_string("\\b\\w+\\.\\w+\\s*=(?!=)").search(body) != null, "and assigns nothing")
 
 
 ## The text without comments and string literals' contents (the rules read code only).

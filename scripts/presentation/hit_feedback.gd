@@ -168,7 +168,9 @@ func _on_hit_resolved(_tick: int, r: HitResult) -> void:
 		_spawn_number(target.anchor_position() + Vector3.UP * 0.6, text, color)
 	if r.outcome in [HitResult.Outcome.HIT, HitResult.Outcome.BLOCKED, HitResult.Outcome.GUARD_BROKEN] \
 			and target.actor.has_method("flash"):
-		target.actor.flash(0.9 if r.outcome == HitResult.Outcome.HIT else 0.45)
+		var strength := 0.9 if r.outcome == HitResult.Outcome.HIT else 0.45
+		target.actor.flash(strength)
+		_flinch(target.actor, r.event, strength)
 	var rig := _player_rig()
 	if rig == null:
 		return
@@ -180,6 +182,19 @@ func _on_hit_resolved(_tick: int, r: HitResult) -> void:
 		_rumble(0.2, 0.45 if r.event.has_tag("Heavy") else 0.15, 0.1)
 	elif r.outcome == HitResult.Outcome.PARRIED and target.team == CombatEntity.Team.PLAYER:
 		_rumble(0.5, 0.2, 0.12)
+
+
+## P50 (plan M11 §2.3): a skinned rig flinches from the side the hit came from (the attacker's place in the
+## actor's own frame), weighted by the flash's strength; the rig refuses it during an attack's ACTIVE phase.
+## Presentation only: the rig reads it, nothing reads it back.
+func _flinch(actor: Node, event: HitEvent, strength: float) -> void:
+	var rig: Variant = actor.get("rig") if actor != null and "rig" in actor else null
+	if not rig is Node or not (rig as Node).has_method("flinch") or not actor is Node3D:
+		return
+	var a := actor as Node3D
+	var from := event.attacker_position if event.attacker_position != Vector3.ZERO else event.hit_point
+	var local := a.global_transform.basis.orthonormalized().inverse() * (from - a.global_position)
+	(rig as Node).call("flinch", local, strength)
 
 
 ## Controller rumble, scaled by the vibration setting (0 disables it).

@@ -2591,6 +2591,26 @@ creator's steady frame fell from about 184 to 146-149 ms with one shadow draw fo
 tests: `test_launcher_parts` 345, `test_world_check` 56, `test_creator_check` 46, `test_audio_check` 39,
 `test_stream_check` 24, `test_memory_guard` 21 checks, 0 failures.
 
+### M11 W30: the giant's motion (P50)
+
+P50 (`docs/systems/P50.md`; plan M11 §3.3) on its branch from the tag `wave-29`, 18 November 2026, beside P51.
+Container as above (4 shared CPUs, no GPU, a debug build; loads 1-2 at most runs).
+
+**The skin's CPU a frame with secondary motion** (plan §2.12: native at most 0.12 ms, Web 0.45): the rig's drive
+(`SkinnedRig._drive_tree`), the tree's advance and the skeleton's modifier pass run by `Skeleton3D.advance(dt)` in
+manual mode (so the springs and their limits are in it, which `--ui-probe-bench` leaves out), headless in a test
+world, the best of five batches of 200, the giant idle:
+
+| Look | A frame (two runs) | |
+| --- | --- | --- |
+| The crop, the short beard, the wanderer's clothes (no chain) | 0.105 / 0.105-0.113 ms | the tree's sources and the hand's turn onto the handle: about +0.035 ms over M10's 0.07 |
+| The long braided hair, the braided beard, the wayfarer's cape (seven chains) | 0.107-0.109 / 0.107-0.116 ms | the springs and limits on seven chains: +0.002-0.004 ms |
+| Budget | native at most 0.12 ms: **met**; the Web not measured (probe 4's +0.030 ms on M10's 0.127: about 0.17 of 0.45, inferred; FOLLOWUPS for P57) | |
+
+**The seeded soak**: the 120 s soak `--no-skin` and `--skin --skin-stats --appearance=appearance_preset.wanderer`
+print byte-identical `AUTOPILOT_RESULT` (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 ticks,
+0 errors: wave-29's); SKIN_STATS 7 flinches, 7,203 secondary-motion frames, 9 teleports the springs reset on.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
