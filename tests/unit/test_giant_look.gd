@@ -409,3 +409,26 @@ func test_the_hairs_sway_eases_towards_the_heads_motion_and_is_bounded() -> void
 		"the hair shader declares head_motion and length")
 	assert_eq(GiantLook.sway(null, INDEX, null), Vector3.ZERO, "no model, no skeleton: nothing, and no error")
 
+
+## The W27 merge's fix: the skeleton can update while the giant is out of the tree (the sandbox's reset
+## re-parents the player for a frame), where a world transform is an engine error - three of them in the skinned
+## 120 s soak, which the determinism gate counts. The sway then does nothing, forgets its last frame, and starts
+## afresh in the tree. (The runner fails this test on any logged error.)
+func test_the_sway_waits_while_the_giant_is_out_of_the_tree() -> void:
+	var root := _model()
+	GiantLook.build_materials(root, INDEX, "web")
+	var skeleton := Skeleton3D.new()
+	skeleton.add_bone(GiantLook.SWAY_BONE)
+	root.add_child(skeleton)
+	var hair := _mat(root, "Hair_long_back")
+	GiantLook.sway(root, INDEX, skeleton)
+	root.position = Vector3(0.5, 0, 0)
+	assert_true(GiantLook.sway(root, INDEX, skeleton).x > 0.0, "in the tree the head's move sways the hair")
+	assert_true((hair.get_shader_parameter("head_motion") as Vector3).x > 0.0, "and the hair's material has it")
+	remove_child(root)
+	assert_eq(GiantLook.sway(root, INDEX, skeleton), Vector3.ZERO, "out of the tree: no sway, and no engine error")
+	assert_true(not root.has_meta(GiantLook.META_SWAY), "and the last frame is forgotten")
+	add_child(root)
+	assert_eq(GiantLook.sway(root, INDEX, skeleton), Vector3.ZERO, "back in the tree the sway starts afresh")
+	assert_true(root.has_meta(GiantLook.META_SWAY), "from this frame's place")
+

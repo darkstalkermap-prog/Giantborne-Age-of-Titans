@@ -465,6 +465,11 @@ static func applied_look(root: Node) -> Dictionary:
 static func sway(root: Node3D, index: Dictionary, skeleton: Skeleton3D) -> Vector3:
 	if root == null or skeleton == null:
 		return Vector3.ZERO
+	if not root.is_inside_tree() or not skeleton.is_inside_tree():
+		# a pose can update while the giant is out of the tree (a level reset re-parents the player): there is
+		# no world transform to read, and the next frame in the tree starts the sway afresh
+		root.remove_meta(META_SWAY)
+		return Vector3.ZERO
 	var bone := skeleton.find_bone(SWAY_BONE)
 	if bone < 0:
 		return Vector3.ZERO
@@ -481,7 +486,7 @@ static func sway(root: Node3D, index: Dictionary, skeleton: Skeleton3D) -> Vecto
 		for id in meshes_of(index, category):
 			var mi := mesh_node(root, index, id)
 			var mat: Variant = mats.get(id)
-			if mi == null or not mi.visible or not mat is ShaderMaterial:
+			if mi == null or not mi.visible or not mi.is_inside_tree() or not mat is ShaderMaterial:
 				continue
 			# into the mesh's own space: its scale (the growth stage) divides out, so the sway is in stage-1 metres
 			(mat as ShaderMaterial).set_shader_parameter("head_motion",
