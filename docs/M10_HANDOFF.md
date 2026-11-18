@@ -31,9 +31,10 @@ smoke run and a Valley run that grabs and throws are identical once wall-time, n
 fields are removed, with the skin on or off and with different looks (§5.1, lens 2). The Web build
 keeps the 1024 px maps inside the 26 MiB budget the owner chose. Everything was measured in a Linux container
 without a GPU, a real browser, a gamepad or a human player, so the look on a real screen, the frame
-times, the warm-ups and the pad are **NOT RUN** and are the owner's (§8). **The owner's approval of the
-look (character sheet B and the release candidate) is pending as this document is committed**: the tag
-`0.10.0-m10`, the play link and the merge to `main` wait for it (§7).
+times, the warm-ups and the pad are **NOT RUN** and are the owner's (§8). **The owner approved the look
+(character sheet B and the release candidate) on 18 November 2026, with no notes** (§7): the tag
+`0.10.0-m10` is on the commit that records the approval, and the play link and the merge to `main`
+follow it.
 
 **The gate's result**: eight lenses, four reviewers; 21 findings, 19 confirmed and 2 refuted, plus one
 note of the orchestrator's; 5 majors, all fixed; 19 of the 20 items fixed or settled at the gate and
@@ -141,7 +142,7 @@ here, or was not run on this code. A Result is the verdict on the gate's merged 
 | 5. UI and controls | **PARTIAL** | **PASS here** for the pad through every category and row, the keyboard (PageUp/PageDown, Q/E, +/-, Ctrl+Z, Ctrl+Enter), the focus never lost (30 Tab presses, every action), the discard question at five window sizes, Undo through 40 changes, the shrine's seven tabs at level 20, Game view and "Hidden by your clothing", and the Web pointer lock on Begin (one request inside the gesture, locked; also for a mouse click on Begin in Chromium). The mouse **failed** at the review on presets and swatches (LA-1, LA-2): fixed, `test_creator_mouse` 86 checks with real mouse events. The layout holds at 1280x720 to 2560x1440; the preview's resolution (LA-3) is fixed on desktop and left at 1x on the Web. The footer hint (LA-4) fixed. PARTIAL because a real gamepad and a real browser are the owner's (§8) |
 | 6. Web and performance | **PARTIAL** | The pack: 22.49 MiB shipped of 26 in two parts of 11,793,220 bytes, `GIANT_SHARE` 5.57 MiB of 7.6, `tex_hi/` in the pack and no manifest (the release candidate built from the gate's code; the review's own export of the candidate was byte-identical to the merge's). Draw calls at `low`, the Web's preset: at most 152 (the Valley walk), 153 (the stress arena), 63 (the Web's world walk), all within 250. The giant alone: 12 draw calls, 20,578 primitives. The skin's CPU: 0.070-0.072 ms natively (0.10), 0.09-0.14 ms on the Web (0.35). Texture memory 4.90 MB of 9. The Linux export under Xvfb with `--skin`: the capture tour complete, 38 frames, 0 errors. The five Chromium checks passed on the candidate at the W27 merge; the review re-ran `creator_check.mjs` and `world_check.mjs` (pass). What keeps it PARTIAL is §5.2: draw calls at `medium`, the creator's first frame on the Web at the stall rule's line, the title's warm-up frame (a miss by design), the mesh buffers' budget raised from 3.5 to 6.0 MB (LD-3), and that every time is a software renderer's. Fixed at the gate: Continue's first frame on the Web (LD-2: 0.36-2.51 times the median frame in five runs, from up to 4.61), the probe's draw count (LD-6), the checks' memory guard (LD-1) |
 | 7. Provenance and determinism of the assets | **PASS** | `tools/check.sh --giant-full` in a fresh worktree with an empty cache: `GIANT VERIFY OK: 13 files regenerated bit-exact (every bake pass)`; `--giant` in another: 13 files, the two normal maps within the bake's known one-texel jitter. After the gate's hair changes the look lane ran `--giant-full` again: 13 files bit-exact (197 s). The CC0 subset's audit: 133 vendored files equal the wheel's, 0 hash mismatches. No copied GPL or Apache code: no non-trivial line of the kit's 13 files shared with the wheel's 39 Python files. No hand-edited generated file; no `.import` under `tools/`; every scene rebuilds with no diff (124 scenes, 64 chunks, 112 seams); `test_ship_docs` passes. `PROVENANCE.md` lacked the clips' row at the review (LD-5): added |
-| 8. The look | **PARTIAL**; the owner's approval **NOT RUN** (pending, §7) | The owner's notes: none had arrived, so none to apply. The hair at the creator's Face and Hair framings: better than the W25 hair bar and than sheet A; the review still saw cards at the hairline, a stepped beard edge and loose beard squares from behind (LC-6), which the gate then fixed with before and after frames of all eight presets; what is left is in §5.4. The creator's key light shone on the giant's back (LC-1): fixed. The default skin read orange-red in the world's light (the orchestrator's note OR-1): fixed by parameters, with a grey-card comparison against the approved renders; the lit skin is still warmer than they are. Options in play: `test_appearance_render` 25 checks over 176 tiles, every design category above its view floors, and readable by eye at 1280x720. The giant among soldiers and buildings in the real world: whole, lit and shadowed on the Kingsgate shelf, in Brannock and at Fort Aldmere's gate. No World style to judge (the owner's answer 3) |
+| 8. The look | **PARTIAL** at the gate (what the review's own look left is in §5.4); the owner's approval, **NOT RUN** then, was given after it: approved on 18 November 2026 with no notes (§7) | The owner's notes: none had arrived, so none to apply. The hair at the creator's Face and Hair framings: better than the W25 hair bar and than sheet A; the review still saw cards at the hairline, a stepped beard edge and loose beard squares from behind (LC-6), which the gate then fixed with before and after frames of all eight presets; what is left is in §5.4. The creator's key light shone on the giant's back (LC-1): fixed. The default skin read orange-red in the world's light (the orchestrator's note OR-1): fixed by parameters, with a grey-card comparison against the approved renders; the lit skin is still warmer than they are. Options in play: `test_appearance_render` 25 checks over 176 tiles, every design category above its view floors, and readable by eye at 1280x720. The giant among soldiers and buildings in the real world: whole, lit and shadowed on the Kingsgate shelf, in Brannock and at Fort Aldmere's gate. No World style to judge (the owner's answer 3) |
 
 ### 5.2 Inside the lenses: what is not PASS
 
@@ -162,7 +163,7 @@ here, or was not run on this code. A Result is the verdict on the gate's merged 
 | The Web's audio criterion and the strict forms (lens 6) | **NOT RUN** where they can pass | NOT MET on software WebGL as in every earlier record: every music hole is the main thread's (frames of 150-550 ms with the realistic giant on SwiftShader). `--strict` on a machine with a GPU is the owner's (§8) |
 | A first start with an empty shader cache (lens 6) | **NOT RUN** by the review | The merge's 12x at the first "Change your look..." after a command-line `--continue` was not reproduced; a player reaches Continue through the title, whose warm-up covers it (§5.4) |
 | The sheet's pages 3, 5 and 6 compared with sheet A (lens 8) | **NOT RUN** by the review | The review re-rendered pages 1, 2, 4a and 4b. Sheet B's seven pages were rendered from the gate's code afterwards (§7) |
-| The owner's approval of the look (plan §0.3) | **NOT RUN** (pending) | §7 |
+| The owner's approval of the look (plan §0.3) | **PASS** since the gate | **NOT RUN** at the gate (pending then). Approved on 18 November 2026, in the owner's words "Approve", with no notes (§7) |
 | The test tiers within budget at every merge (plan §0.3) | **PASS** | §6.1: every merge's check under 75 s, 8 minutes and 50 minutes, with `--require` and `--strict-times`; nothing re-run, no check skipped |
 
 ### 5.3 Findings fixed at the gate
@@ -205,7 +206,8 @@ The audit of the fixes found nothing in its first round, so the gate's code is t
 
 ### 5.4 Follow-ups deferred to M11
 
-The eleven rows of `docs/plans/FOLLOWUPS.md`, "From the M10 gate review", each with its owner:
+The thirteen rows of `docs/plans/FOLLOWUPS.md`, "From the M10 gate review", each with its owner (the last two
+were added at the release, from the gate's merge record and the ship step's busy run):
 
 | Follow-up | From |
 | --- | --- |
@@ -220,6 +222,16 @@ The eleven rows of `docs/plans/FOLLOWUPS.md`, "From the M10 gate review", each w
 | A coarser last LOD for the hair cards | LD-4's rest |
 | Every style's mesh is resident: load a style only when a look shows it | LD-3's rest |
 | A tunic's skirt shows its flat waist cap from above in first person | seen while fixing LC-3 |
+| `tools/web/audio_check.mjs` presses Enter once at the title, 1.5 s after the title's music, and under load loses it to the title's warm-up (a weakness of the check, not of the page) | the ship step's busy run (§5.5) |
+| `tools/web/test_stream_check.mjs` fails about one run in three on this machine: its stub's quiet walk reads 29-61 ms against its own 50 ms rule | the gate's merge (§9) |
+
+And the two rows of "From the 0.10.0-m10 release", found when the Web release was built again after the approval
+(§5.5):
+
+| Follow-up | From |
+| --- | --- |
+| `tools/web/world_check.mjs`'s default form fails when the audio clock steps or drifts against the page's clock during its six minutes of music: the recorder maps one clock onto the other with a single straight line | the release's rebuild |
+| A Web export is not the same bytes in two checkouts (the engine gives a text scene's nodes random ids when it converts it, and each checkout keeps its own conversions); with one such pack `world_check.mjs` failed in 6 runs of 6, which is not explained | the release's rebuild |
 
 Earlier M10 rows that stay open are in the same file under "From P41", "From the look pass (P46)" and
 "From the Web build and its checks (P45)": the bake's one-texel jitter untraced, `--verify`'s
@@ -245,8 +257,10 @@ Chromium check.
 | The Web export within 26 MiB, parts of at most 15 MB, `GIANT_SHARE` within 7.6 | **PASS** - `tools/build_web.sh` with no `--budget-mb` (the budget read from the version's `-m10`), built twice with the same bytes: `PCK_SIZE preset="Web" raw=25841308 gzip=17689852 shipped=23586472 shipped_mb=22.49 budget_mb=26 parts=2`, two parts of 11,793,236 bytes; `GIANT_SHARE giant_bytes=8058899 shipped=5845364 shipped_mib=5.57 files=33 cap_mb=7.6`; 2,840 packed files, no test content, `tex_hi/` in the pack and no manifest. The page's download is 36,520,414 bytes, about 36.5 MB | `PERFORMANCE.md`, "The 0.10.0-m10 release". The release candidate from the gate's code: 22.49 MiB, two parts, 5.57 MiB (§6.2); the release's pack is 32 bytes more as shipped (the version and the description) |
 | The five Chromium checks on the release build: `creator_check.mjs`, `world_check.mjs`, `audio_check.mjs`, `world_start_check.mjs`, `stream_check.mjs --world --audio` | **PASS** in their default forms, alone on the quiet machine (each started once the 1-minute load was under 2.5): `creator_check.mjs` OK (2 budget misses, both the title's warm-up frame, by design; the Valley's first frame after Begin 1.07 times the median frame, the world's on Continue 1.34, the shrine's creator 1.61; the skin's CPU 0.12-0.14 ms; the tier "hi"; one pointer-lock request inside Begin's gesture; 0 console errors); `world_start_check.mjs` OK (both starts through the creator, first saves `level.valley` and `level.world` with a look, version `0.10.0-m10`); `audio_check.mjs` OK (sound 0.51 s after the Hollow's music; 260 holes over 50 ms in 60.3 s, the longest 319 ms, all the main thread's); `stream_check.mjs --world --audio` OK (397.5 m, 0 thrash, streaming work p99 5.6 ms, draw calls at most 60; 357 holes, all the main thread's); `world_check.mjs` OK (Enter to control 11.3 s, the fast travel 9.7 s, a 787.7 m walk with 0 stuck, draw calls at most 59; 607 holes, all the main thread's). The first run shared the machine with the candidate's own checks (loads 7-14): there `world_start_check.mjs`, `audio_check.mjs` and `world_check.mjs` FAILED on timing (the game's 8 s starting-ring warning counted as console errors; one Enter lost to the title's warm-up; 50 of 607 holes not placed), `creator_check.mjs` and `stream_check.mjs` were OK. The plan's audio criterion is NOT MET on software WebGL and the strict forms stay NOT RUN (§5.2, §8) | `PERFORMANCE.md`, "The 0.10.0-m10 release" (both runs of each check). On the candidate at the W27 merge all five were OK in their default forms (§6.4) |
 | Version `0.10.0-m10`, the project's description, the launcher's notes | **PASS** - `c4e3804` ("P47: version 0.10.0-m10, the description and the launcher's notes": `config/version` and `config/description`; the launcher's masthead, its notes for the realistic giant and the character creator, its "About 36 MB" download note and the BUILD line of the release build); `test_launcher_notes` passes (12 checks, 0 failures) | `project.godot`, `web/launcher.html` |
-| The owner's approval of sheet B | **NOT RUN** (pending) | §7 |
-| The tag `0.10.0-m10`, the play link republished, the pull request to `main` and its merge | **NOT RUN** (they wait for the approval) | Plan §4.3 |
+| The owner's approval of sheet B | **PASS** - "Approve", the owner's reply on 18 November 2026, with no notes: nothing to apply, and no game file changed after the final check | §7 |
+| The Web release built again after the approval, for the play link, and compared with the build the five checks passed on | **PASS** for the published files: `tools/build_web.sh` in the main checkout at the release's commit gives the checked build byte for byte (`index.pck` and its two parts, `index.wasm`, `index.js`, the worklets, `play.html`; `web/launcher.html` unchanged), so its five checks stand. **PARTIAL** behind it: that holds only with the checked build's conversion of `giant_model.tscn` in the export cache. With the main checkout's own conversion the pack differs in 23 bytes (two random node ids and that file's MD5); on that first rebuild `creator_check.mjs`, `world_start_check.mjs`, `audio_check.mjs` and `stream_check.mjs --world --audio` were OK in their default forms and `world_check.mjs` FAILED its default form in 5 runs of 5 on a quiet machine, each time on the recorder's clock mapping (an audio-clock step of 31-84 ms; with the offset taken out the same rule places 604-607 of 605-608 holes) and never on the Continue, the fast travel, the walk, the draw calls, memory or console errors. On the checked build's bytes the same check was OK in 4 runs of 5 in the same hour (the fifth 10 ms outside the tolerance, with no step). Why the two packs differ there is not explained, so the release publishes the checked bytes | `PERFORMANCE.md`, "The 0.10.0-m10 release, rebuilt after the owner's approval"; two M11 rows (§5.4) |
+| The tag `0.10.0-m10` | **PASS** - on the commit that records the approval, with `m10-rc` moved to it | `git tag` |
+| The play link republished, the pull request to `main` and its merge | **NOT RUN** as this document is committed: the orchestrator's steps, which follow the tag | Plan §4.3 |
 
 ## 6. Test results and measurements
 
@@ -308,7 +322,7 @@ M10 adds 5.80 MiB to the shipped pack (6,086,424 bytes, release against release)
 are 1.73 MiB of it. The target total of
 24.3 MiB is met. The release build itself (version `0.10.0-m10`) is the candidate's pack with the
 version and the description: 23,586,472 bytes shipped, two parts of 11,793,236, `GIANT_SHARE`
-5,845,364 bytes (§5.5).
+5,845,364 bytes (§5.5). The files published after the approval are that build byte for byte (§5.5).
 
 ### 6.3 The giant against its budgets (plan §2.12)
 
@@ -372,14 +386,21 @@ version, on the quiet machine; the ship step's row is in §5.5.
 | --- | --- | --- |
 | 0. Before W25 | A note with in-engine frames from the research beside the approved renders, the scope in plain words and the questions above | The four answers above |
 | 1. After the W26 merge | A private playable preview page of the W26 build, a video cut from the capture tour and **character sheet A** (seven labelled pages rendered by the game: the giant beside the game's soldier and villager and beside the approved renders, hair and beards, skin and eyes, tattoos, war paint with scars and marks, clothing, the two texture tiers) | No notes had arrived when P46 finished, during the W27 merge or at the gate; none was applied. Two things sheet A itself showed were taken up at the gate without waiting for a note: the hair's cards (LC-6) and the default skin's orange-red tone (OR-1, the orchestrator's own look at the sheet) |
-| 2. After the gate | **Character sheet B** was rendered from the gate's code after its fixes (the same seven pages with the target catalogue and the revised presets, and frames of the creator at New Game and at a shrine, the giant on the Kingsgate shelf and at Fort Aldmere's gate, first person at stages 1, 4 and 6, a heavy swing in three frames and the stage 1-6 lineup), and the release candidate was built from the same code for the private page | **Pending as this document is committed** |
+| 2. After the gate | **Character sheet B** was rendered from the gate's code after its fixes (the same seven pages with the target catalogue and the revised presets, and frames of the creator at New Game and at a shrine, the giant on the Kingsgate shelf and at Fort Aldmere's gate, first person at stages 1, 4 and 6, a heavy swing in three frames and the stage 1-6 lineup), and the release candidate was built from the same code for the private page | **"Approve"** - the owner's reply on 18 November 2026, in their words, with no notes |
 
-**What waits for the answer**: the tag `0.10.0-m10`, the play link (the public link stays on
-`0.9.0-m9` until then) and the merge to `main`. "Approve": the ship step finishes. "Approve with
-notes": the notes are applied as data or parameters (about an hour; anything larger becomes an M11
-follow-up) and the checks of plan §3.7 run again - `--giant` (`--giant-full` if a bake input changed),
-the default and slow tiers, the Web build and the Chromium checks. "Not yet": one fix lane on the
-notes, then sheet B again.
+**The approval** (18 November 2026). The owner's answer on sheet B and the release candidate was
+"Approve", with no notes. Of the three answers the plan allows - "Approve": the ship step finishes;
+"Approve with notes": the notes are applied as data or parameters (about an hour; anything larger
+becomes an M11 follow-up) and the checks of plan §3.7 run again; "Not yet": one fix lane on the notes,
+then sheet B again - it was the first, so there was nothing to apply and no game file changed after
+the final check (§5.5): `--giant`, the default tier and the slow tier were not run again. What the
+ship step did after the answer: two rows for the Web tools added to `docs/plans/FOLLOWUPS.md` (§5.4);
+the Web release built again in the main checkout, for the play link, compared with the build the five
+Chromium checks passed on and published as that build byte for byte, after a first rebuild whose pack
+differed in two node ids had been checked and had failed one check (§5.5); this record; and the tag
+`0.10.0-m10` on the commit that holds it, with `m10-rc` moved to the same commit. The play link (the
+public link stayed on `0.9.0-m9` until the approval), the pull request to `main` and its merge follow
+the tag; they are the orchestrator's steps and this document does not record them.
 
 **Open decisions of the owner's**: M11's direction (§10). The two decisions of the M6-M9 handoff's §10
 are still open: a licence for the project and its generated assets (`assets/giant/PROVENANCE.md`
@@ -400,7 +421,7 @@ leaves it to the owner too; the CC0 inputs fit any), and whether to commit the l
    checks of the M6-M9 handoff's §9.
 4. **A real gamepad in the creator**: the creator sheet of `docs/USABILITY_SCRIPT.md` §12, once with a
    pad, once with the keyboard alone, once with the mouse.
-5. **Sheet B and the release candidate**: the approval of §7.
+5. **Sheet B and the release candidate**: done - approved on 18 November 2026, with no notes (§7).
 
 **What a package or the gate could not run here**:
 
@@ -437,9 +458,19 @@ leaves it to the owner too; the CC0 inputs fit any), and whether to commit the l
 - **`tools/web/test_stream_check.mjs` is flaky on this machine**: 0 failures in 12 runs of 17 on the
   gate's code, 1 to 4 failures in the other 5. The stub's music walk reads a longest silence of 29-49 ms
   on a good run and 58-61 ms on a bad one against the 50 ms rule it tests; with the memory guard on or
-  off alike, and the same thin margin (29-41 ms) on the tree before the gate. The test was not changed.
+  off alike, and the same thin margin (29-41 ms) on the tree before the gate. The test was not changed
+  (an M11 row, §5.4).
 - **`audio_check.mjs`'s default form** can fail on one hole the recorder does not place on the main
-  thread; run it again before reading a failure as the build's (P45's record).
+  thread; run it again before reading a failure as the build's (P45's record). Under load its one
+  Enter at the title can fall inside the title's warm-up, and the check then times out at the title
+  (§5.5; an M11 row, §5.4).
+- **`world_check.mjs`'s default form** fails when the audio clock steps or drifts by more than 35 ms
+  against the page's clock during its six minutes of music, on a quiet machine too (the release day:
+  1 run of 5 on the published bytes); read its "not explained" holes against the offsets of the
+  holes around them before reading a failure as the build's (§5.5; an M11 row, §5.4).
+- **Two checkouts export different bytes** for a scene converted afresh (random node ids); the
+  release's pack was reproduced with the checked build's conversion of `giant_model.tscn` (§5.5; an
+  M11 row, §5.4).
 - **The bake's one-texel jitter**: `--giant` may report the two normal maps as `TOLERATED`; a
   regeneration can show them as changed in git with no change of content.
 - **Saves written by the preview builds**, before the version was set, carry `build_version`
@@ -453,7 +484,8 @@ camera** - soldiers, villagers and named NPCs on the giant's body pipeline, with
 kept as the far level of detail - then world materials, so that the giant no longer stands alone
 against a low-poly world. Before it:
 
-1. The owner's answer on sheet B, then the tag, the play link and the merge (§7).
+1. Done with this record: the owner's answer on sheet B ("Approve", 18 November 2026) and the tag;
+   the play link and the merge to `main` follow it (§7).
 2. The owner's tasks of §8, and those of the M6-M9 handoff's §9 that are still open.
 3. What they find, as data and parameters first; then the M11 rows of §5.4, starting with what a
    player sees (the hands in the generic poses, the hair at the Face framing, the skin's warmth) and

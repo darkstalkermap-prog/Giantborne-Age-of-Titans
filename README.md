@@ -597,8 +597,8 @@ from it: [docs/DECISIONS.md](docs/DECISIONS.md).
   The skin has no subsurface scattering and is lit warmer than the renders the owner approved. There
   is one face and one build. The stomp is drawn with the arms only; in a roar or a buff the weapon
   sits on the knuckles and the open hand droops; a weapon carried past the stage it fits points at
-  its swing but falls short of it. Hair, braids and the cape do not swing freely. The owner's
-  approval of the look is the last step of this release (`docs/M10_HANDOFF.md` §7).
+  its swing but falls short of it. Hair, braids and the cape do not swing freely. The owner
+  approved the look on 18 November 2026, the last step of this release (`docs/M10_HANDOFF.md` §7).
 - **No human has played these builds yet**, and they have not run on real hardware: the usability
   sessions, the listening pass, a timed human run, a real gamepad, Windows, real-GPU frame times and
   real desktop browsers are the owner's to run (`docs/USABILITY_SCRIPT.md`, `docs/PERFORMANCE.md`).
@@ -655,9 +655,10 @@ from it: [docs/DECISIONS.md](docs/DECISIONS.md).
 **M11 is the owner's to choose.** M10's plan recommends **people near the camera**: soldiers,
 villagers and named NPCs on the giant's body pipeline, with their low-poly rigs kept as the far level
 of detail, and world materials after that (`docs/plans/M10_PLAN.md` §0.5), so that the realistic giant
-no longer stands alone. Before it come the owner's approval of the giant's look (character sheet B and
-the release candidate), the owner's checks of this build - the look on a real screen, ten minutes
-through the creator into the Valley and at a shrine on desktop and in a browser, frame times and the
-warm-ups on real hardware, a real gamepad in the creator (`docs/M10_HANDOFF.md` §8) - and the rows the
-M10 gate left for M11 (`docs/plans/FOLLOWUPS.md`, "From the M10 gate review"). The owner's checks and
+no longer stands alone. The owner approved the giant's look (character sheet B and the release
+candidate) on 18 November 2026. Before M11 come the owner's checks of this build - the look on a
+real screen, ten minutes through the creator into the Valley and at a shrine on desktop and in a
+browser, frame times and the warm-ups on real hardware, a real gamepad in the creator
+(`docs/M10_HANDOFF.md` §8) - and the rows the M10 gate left for M11 (`docs/plans/FOLLOWUPS.md`,
+"From the M10 gate review"). The owner's checks and
 decisions of `0.9.0-m9` stay open too (`docs/M6_M9_HANDOFF.md` §9 and §10).

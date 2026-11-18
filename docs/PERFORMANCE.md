@@ -2329,6 +2329,75 @@ in the world at the third-person camera with soldiers in view (the Kingsgate she
 and its pikes at 36 ft), first person at stages 1 and 4 (a heavy swing and looking down), the stage 1-6 lineup, and
 one frame of the Linux export's tour.
 
+### The 0.10.0-m10 release, rebuilt after the owner's approval
+
+18 November 2026, after the owner's "Approve" (no notes, so no game file changed after the final check): the Web
+release built again in the main checkout for the play link and compared with the build the five Chromium checks
+passed on (the section above; "the checked build"). The same container after a restart, nothing else running. The
+evidence (the build logs, every check's console output and `--json` report, the two small scripts that read the
+reports) is in the ship step's `w28/release/` folder; the published files are in `w28/web_release/`.
+
+**The published build is the checked build, byte for byte.** `env -u XDG_DATA_HOME tools/build_web.sh` at the
+release's commit, with the checked build's conversion of one scene in the export cache (below): `index.pck`
+(25,841,308 bytes), its two parts (11,793,236 bytes each, 23,586,472 as shipped), `index.wasm` and its packed text,
+`index.js`, the two audio worklets, `poster.jpg` and `play.html` are the same bytes as the checked build's, and the
+build left `web/launcher.html` as committed (the same `BUILD` line). `PCK_SIZE preset="Web" raw=25841308
+gzip=17689852 shipped=23586472 shipped_mb=22.49 budget_mb=26 parts=2`, `GIANT_SHARE giant_bytes=8058899
+shipped=5845364 shipped_mib=5.57 files=33 cap_mb=7.6`, 2,840 packed files, no test content, every record valid
+without `data/test`. So the five checks of the section above stand for the published files.
+
+**Why the export cache matters: a Web export is not the same bytes in two checkouts.** The first rebuild here, with
+the main checkout's own export cache, differed from the checked build in 23 bytes of `index.pck`: 8 bytes in one
+packed file, the binary form of `scenes/player/giant_model.tscn` (its two nodes' ids), and 15 bytes of that file's
+MD5 in the pack's directory. Every other of the 2,840 packed files, `index.wasm`, `index.js` and the worklets were
+the same bytes. The scene files carry no node ids (the builders strip them, `tools/scene_kit.gd`), so the engine
+gives each node a random id when it converts a text scene for export, and a checkout keeps its conversions in
+`.godot/exported/` (not in git): the main checkout converted `giant_model.tscn` afresh in this build (it changed at
+the gate, after this checkout's last export) and wrote ids 2040545137 and 1893704212, where the worktree of the
+checked build had written 1171697090 and 35269261. Built twice in the main checkout: the same bytes both times.
+With those 23 bytes the pack is one byte shorter gzipped (17,689,851; 23,586,468 as shipped, parts of 11,793,234).
+The engine's source reads a node's id only when it packs a scene and to find a node of an inherited or instanced
+scene that its name no longer finds (`scene/resources/packed_scene.cpp`, 4.6.3), and scripts cannot read one; no id
+is used twice in either pack (3,329 ids in 107 scenes).
+
+**The five checks on the first rebuild** (each started once the 1-minute load was under 2.5; the loads at each
+start and end are given). Four pass their default form; `world_check.mjs` did not, in five runs of five:
+
+| Check | Result on the first rebuild (loads at start / end) |
+| --- | --- |
+| `creator_check.mjs` (960x540) | **OK** (0.38 / 5.01; 154 s), 2 budget misses, both the title's warm-up frame (43.3x and 64.5x, by design). Play to the title 8.5 s; New Game opens the creator (first frame 2.73x the median: 517.9 against 190.0 ms); Begin to the Valley 14.3 s, the Valley's first frame 1.15x (423.7 against 370.0 ms), one pointer-lock request inside the gesture, locked; the first save `level.valley` with its look. Continue the Aldmere fixture: the world in 8.2 s, its first frame 0.19x (77.5 against 416.8 ms); the shrine's "Appearance (new)" tab and "Change your look..." 1.54x. The skin's CPU 0.12-0.14 ms a frame; the giant's texture tier `["hi"]`; 0 console errors, 0 engine warnings, 0 failed requests; the renderer's peak 965 MB |
+| `world_start_check.mjs` (1280x720) | **OK** (2.29 / 4.71; 113 s). Play starts the engine (8.2 s) with no game arguments, no save at the title; Enter, then Ctrl+Enter in the creator: the Valley's first save 20.5 s later (`"level": "level.valley"`, respawn `valley.shrine.hollow`, version 0.10.0-m10, a look). One press of "Start in the open world" only arms it and it disarms 6 s later; two presses start the engine (7.9 s) with `["--","--mode=world","--creator"]`, no save in the creator, and Ctrl+Enter's first save, 26 s later, holds `"level": "level.world"`, respawn `world.cp.kingsgate_shelf`, stage 3, level 6, a look; 0 console errors and 0 failed requests in both |
+| `audio_check.mjs` (the Valley; 640x360) | **OK** in its default form (2.41 / 5.89; 98 s): Play to the title's music 7.6 s, New Game through the creator (one Begin) to the Hollow 20.1 s, sound 0.36 s after the Hollow's music begins; 60.5 s of `music.valley_calm` with 225 holes over 50 ms (the longest 661.8 ms), every one while the main thread left the mixer unserved (258 long tasks, the longest 745 ms; page frames p50 216.7 ms); peak live samples 37.1 MB of the 48.0 MB cap; 0 console errors, 0 failed requests. The plan's criterion: **NOT MET here** |
+| `stream_check.mjs --world --audio` (the world's default route; 1280x720) | **OK** in its default form (2.16 / 4.32; 196 s): 397.5 m in 47.6 s of game time (Play to the walk 56.8 s) across 4 region borders, loads 6, unloads 3, 0 thrash, at most 16 chunks loaded, 224.1 m of margin; streaming work p50 0.8 / p99 6.3 / max 7.3 ms; draw calls p50 40 / max 60; 134.7 s of music with 357 holes over 50 ms (the longest 519.5 ms), every one placed on the main thread (360 long tasks, the longest 606 ms; page frames p50 366.6 / worst 616.6 ms); peak live samples 57.1 MB of the 67.9 MB cap; 0 console errors (one more at exit, not counted), 0 failed requests. The plan's criterion: **NOT MET here** |
+| `world_check.mjs` (1280x720) | **FAILED** in its default form in 5 runs of 5 (loads 2.22 / 6.94, then four started under 1.0: 0.85 / 6.84, 0.89 / 6.72, 0.84 / 6.75, 0.91 / 6.27; 424-489 s each), every time on the music's holes alone: "50 hole(s) over 50 ms not explained by the main thread" (the list holds 50; 79, 114, 339, 339 and 146 of 605-608 holes were not placed). Everything else as in the checked build's quiet run: the fixture Continued with one Enter (Enter to control 12.3-22.3 s), the fast travel to the King's Road waystone 9.7-11.2 s with no refusal (the 8 s warning in three of the five), the 787.7 m walk in 80.7 s of game time across three region changes, 5 seams, 0 stuck; streaming work p99 8.9-17.2 / max 11.8-24.6 ms, 0 thrash; draw calls p50 42 / max 59-63; 379-405 s of music with 605-608 holes over 50 ms; peak live samples 57.3-57.5 MB of the 67.9 MB cap; the renderer's peak 919-966 MB; 0 console errors, 0 failed requests |
+
+**What failed in `world_check.mjs` is the recorder's clock, not a hole nobody explains.** The recorder maps the
+audio clock onto the page's clock with one straight line between a reference taken when it arms and one when it
+disarms (`placeHoles`, `tools/web/audio_recorder.mjs`) and places a hole on the main thread only when a driver read
+the main thread handled ends it within 35 ms. In each failed run the audio context's clock fell behind the page's
+clock in one step of 44, 31, 56, 68 and 84 ms (3 to 296 s into the walk): every hole on one side of the step then
+lies up to that far from its read, and the rule lists it. With each hole moved by the median offset of the 21 holes
+around it, the same rule places 605 of 608, 605 of 605, 604 of 606, 606 of 606 and 607 of 607 (the five left over
+are the first holes of two recordings, at the step itself), 99 holes in 100 within 9 to 16 ms of the offset of
+the holes around them. The checked build's busy run in the section above failed the same way (517 of 607 placed; 607 of 607 with the offset
+taken out). The shorter recordings of `audio_check.mjs` (60 s) and `stream_check.mjs --audio` (135 s) stayed inside
+the tolerance. The row is in `docs/plans/FOLLOWUPS.md`, "From the 0.10.0-m10 release".
+
+**The same check on the checked build's bytes, in between** (the same machine, the same hour, each started under a
+load of 1.0): **OK** in 4 runs of 5 - the checked build's folder three times (605 holes each, all placed; the
+largest step 16, 14 and 11 ms), a fresh folder holding its pack once (606, all placed; 27 ms), and the main
+checkout's build of the same bytes (the published bytes) once, **FAILED** by a small margin (36 of 605 holes not
+placed: no step over 16 ms, but the offsets ran from -44.9 to 10.7 ms, 10 ms past the tolerance at one end; 605 of
+605 with the offset taken out). The first rebuild's pack in a copy
+of the checked build's folder: FAILED (a step of 194 ms). So 6 runs of 6 with the first rebuild's pack had a step of
+31 ms or more and 5 runs of 5 with the checked build's pack had none over 27 ms. **Not explained**: the two packs
+differ only in the two node ids and that file's MD5, which nothing reads while the game runs, and in the packed
+text that follows from them (one byte shorter gzipped). On this machine today the audio clock also ran 229 to 273
+parts in a million slow against the page's clock in every run of the checked build's pack (33 in its quiet run that
+morning; more in the runs with a step), which is what left that one run outside the tolerance. Because of it the release
+publishes the checked build's bytes and not the first rebuild's, and the reproducibility of the export is an M11
+row (`docs/plans/FOLLOWUPS.md`, "From the 0.10.0-m10 release").
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
