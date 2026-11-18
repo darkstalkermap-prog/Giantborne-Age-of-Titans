@@ -123,6 +123,7 @@ var weapon: Node3D = null
 var _weapon_dir := Vector3.FORWARD
 var _soldier: Node3D = null
 var _fade := 0.0
+var _garments: Array = []   ## the garments of the look applied last (the skin's mask without a fade)
 var _dragging := false
 var _portrait := false
 
@@ -178,8 +179,10 @@ func index() -> Dictionary:
 func apply_look(look: Dictionary) -> float:
 	var t0 := Time.get_ticks_usec()
 	GiantLook.apply(model, model.index, look)
+	_garments = (look.get("garments", []) as Array).duplicate() if typeof(look.get("garments")) == TYPE_ARRAY else []
 	if _fade > 0.0:
 		GiantLook.set_garment_fade(model, model.index, _fade)
+		_show_skin_under_fade()
 	last_apply_ms = float(Time.get_ticks_usec() - t0) / 1000.0
 	return last_apply_ms
 
@@ -496,10 +499,23 @@ func _place_weapon() -> void:
 	weapon.transform = Transform3D(Basis.looking_at(_weapon_dir, up).scaled(weapon.scale), grip)
 
 
-## The "Hidden by your clothing" fade (0-1) of the covering garments.
+## The "Hidden by your clothing" fade (0-1) of the covering garments. While they fade, the skin under them is
+## drawn whole (_show_skin_under_fade).
 func set_fade(fade: float) -> void:
 	_fade = clampf(fade, 0.0, 1.0)
 	GiantLook.set_garment_fade(model, model.index, _fade)
+	_show_skin_under_fade()
+
+
+## Under a shown garment the skin's covered regions sink inside the body (giant_skin's hidden_regions), which
+## leaves a jagged step along each region's border: unseen under cloth, but through faded cloth it showed as
+## pale cut lines at the hips and dark notches at the shoulders (M10 gate, LA-5). While the garments fade no
+## region sinks; without a fade the look's own mask is back.
+func _show_skin_under_fade() -> void:
+	var hidden := 0 if _fade > 0.0 else GiantLook.hidden_regions_mask(model.index, _garments)
+	for mat: ShaderMaterial in GiantLook.materials(model):
+		if mat.get_shader_parameter("hidden_regions") != null:
+			GiantLook.set_param(mat, "hidden_regions", hidden)
 
 
 func fade() -> float:

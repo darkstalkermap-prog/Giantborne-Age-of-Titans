@@ -130,6 +130,40 @@ func test_the_creators_preview_is_drawn_in_window_pixels() -> void:
 	tile.queue_free()
 
 
+## M10 gate, LA-5: under a shown garment the skin's covered regions sink inside the body, which leaves a jagged
+## step along each region's border; through the faded garments of a "Hidden by your clothing" row it showed as
+## cut lines at the hips and notches at the shoulders. While the garments fade no region sinks.
+func test_while_the_garments_fade_the_skin_under_them_is_whole() -> void:
+	GiantPreview.materials_headless = true
+	var p := GiantPreview.new()
+	layer.add_child(p)
+	await get_tree().process_frame
+	var rec := Appearance.default_record()
+	rec["outfit"] = {"set": "outfit.warrior", "primary": str(rec.outfit.primary), "secondary": str(rec.outfit.secondary)}
+	var look := Appearance.to_look(rec, "")
+	p.apply_look(look)
+	var mask := GiantLook.hidden_regions_mask(p.index(), look.garments)
+	assert_true(mask != 0, "the warrior's tunic covers body regions")
+	var skins: Array = GiantLook.materials(p.model).filter(func(m: ShaderMaterial) -> bool:
+		return m.get_shader_parameter("hidden_regions") != null)
+	assert_true(not skins.is_empty(), "the body's materials carry the mask")
+	var all_are := func(v: int) -> bool:
+		return skins.all(func(m: ShaderMaterial) -> bool: return int(m.get_shader_parameter("hidden_regions")) == v)
+	assert_true(all_are.call(mask), "without a fade the covered regions sink under the cloth")
+	p.set_fade(0.7)
+	assert_true(all_are.call(0), "while the garments fade no region sinks: the skin under them is whole")
+	p.apply_look(Appearance.to_look(OptionRows.with_value(rec, "tattoos.back", "tattoo.back_wings"), ""))
+	assert_true(all_are.call(0), "a pick while they fade keeps it whole")
+	p.set_fade(0.0)
+	assert_true(all_are.call(mask), "and without the fade the look's mask is back")
+	rec["outfit"] = {"set": "outfit.wanderer", "primary": str(rec.outfit.primary), "secondary": str(rec.outfit.secondary)}
+	var plain := Appearance.to_look(rec, "")
+	p.set_fade(0.7)
+	p.apply_look(plain)
+	p.set_fade(0.0)
+	assert_true(all_are.call(GiantLook.hidden_regions_mask(p.index(), plain.garments)), "the mask restored is the current outfit's")
+
+
 func test_the_weapon_at_the_hand_and_the_category_framings() -> void:
 	var c := stack.open("creator", {"context": "new_game"}) as CreatorScreen
 	await get_tree().process_frame
