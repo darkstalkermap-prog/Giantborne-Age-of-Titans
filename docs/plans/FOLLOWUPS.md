@@ -353,3 +353,14 @@ What P46 (`docs/systems/P46.md`) answered of the rows above, and what it leaves.
 | **One cut a mesh.** The `length` uniform ships two cuts (`hair.shoulder`, `beard.trimmed`); the plan's "2-3 lengths per mesh" for the other styles was not looked at. | M11 | A hair or beard option's `length` (0.3-1) is data; the option check's floors decide whether a cut is told apart. |
 | **Designs on the giant's left are still framed from his right** (P44's row), and the new cheek scar is on his right. | M11 (with the kit) | A `side` per design in the index. |
 | **The end-screen portrait** (cut list 2) was not built. | M11 | `ui/screens/end_screen.gd`; `GiantPreview.render_once()` draws a portrait. |
+
+## From the W27 merge (M10)
+
+What the merge of P45 and P46 measured on the candidate and leaves for the gate (`docs/PERFORMANCE.md`, "The W27
+merge (P45 and P46)").
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| **The world's first frame on Continue is over the stall rule on the Web.** Two runs of `creator_check.mjs` on the candidate's release export read 3.54x and 3.69x (938 and 915 ms against a median frame of 265 and 248 ms; software WebGL at 640x360), where P45's branch read 2.45x and added no warm-up on that ground. Plan M10 §3.5 asks for the loading screen's warm-up of the giant's level and preview variants when Continue stalls above 3x. | M10 gate (the Web lens), then P47's checks | `scripts/main.gd` (the loading screen; M8's F26 pattern); `creator_check.mjs --parts=shrine` re-measures it; `--strict` on a machine with a GPU decides. The creator's first frame after New Game stays at 3.1-3.3x (P45's row above). |
+| **A start with `--continue` skips the title's warm-up.** Natively with an empty shader cache the first "Change your look..." at a shrine took 1,744 ms against a median frame of 145 ms (12x) and the world's first frame 2.97x; with the cache filled 1.2x and 1.8x. A player reaches Continue through the title, whose warm-up draws the giant first; the command line's `--continue` (the probe's shrine tour, a desktop shortcut) does not. | M10 gate (the Web lens) or M11 | The same warm-up behind the loading screen would cover it. P45's native stall figures were taken with a filled cache. |
+| **The bake's one-texel jitter showed in both of the merge's `--giant` runs** (the two normal maps `TOLERATED`, one texel off by 1/255) where P46's own run on the same files was bit-exact (as P45's was on the W26 files). | M10 gate (the provenance lens, `--giant-full`) | The W25 review's finding: real and rare; `--verify` tolerates exactly that. |

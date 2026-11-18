@@ -2054,6 +2054,103 @@ P45's cost by the runner's per-suite times (plan M10 §1.7; caps 0.1 s / 10 s / 
 runs this package's code (the probe exists only with `--ui-probe`), so the differences are the runs'. `test_anchors`
 11.3 s against 10.9.
 
+### The W27 merge (P45 and P46)
+
+P45 then P46 merged on the integration branch, 18 November 2026 (tag `wave-27` on the final commit), with one
+fix-forward: `GiantLook.sway`, P46's hair sway, read world transforms while the giant was out of the tree for a
+frame of the sandbox's reset - three engine errors in the skinned 120 s soak, which the gate tier's
+`test_giant_determinism` counts (`docs/systems/P46.md`, "After the W27 merge"). Container as above, the machine
+quiet: loads 0.1-1.6 during the merges and the checks, 0.7-6.8 during the Chromium checks (their own software
+rendering). One conflict, in `docs/plans/FOLLOWUPS.md` (each package's section kept); the giant's assets and its
+tools are P46's, with P45's budget test (26 MB, the share's cap 7.6, the Web keeping `tex_hi/`) merged into
+`tools/giant/test_giant_tools.py` by git.
+
+**The check** (`tools/check.sh --build --slow --gate --giant --require --strict-times`, then the 120 s soak; the
+two merges ran `--build` and the default tier; `--giant-full` and `--audio` are left to the gate and to P47):
+
+| | Base (W26 final) | P45 merged | W27 merged (both) | First full check (both merged) | W27 final (with the fix) |
+| --- | --- | --- | --- | --- | --- |
+| Default tier | 69.0 s | 73.7 s | 69.1 s | 69.0 s | **70.2 s** (under 75: no re-run) |
+| Slow tier | 365.6 s | - | - | 358.0 s | **360.3 s** (budget 8 min) |
+| Gate tier | 960.0 s (31 suites, loads up to 13.6) | - | - | 898.6 s | **899.7 s** (31 suites; budget 50 min) |
+| Suites, checks, failures | 323, 54,069, 0 | 225, 41,265, 0 | 225, 42,732, 0 | 324, 55,692, **4** (`test_giant_determinism`: the two skinned soaks' errors and their results against the run without the skin) | **324, 55,698, 0** |
+| `--giant`: `--verify --skip-bake` | 72 s, 13 files; `--budget` 2.87 MiB of 4.6 | - | - | 74 s, 13 files | 15 pipeline tests; 75 s, `GIANT VERIFY OK`, 13 files (the two normal maps one texel off by 1/255, the bake's own jitter, in both runs); `--budget` **5.92 MiB of 7.6** |
+| Soak | 120 s, 7,201 frames, `"errors":0` | - | - | not reached | 120 s, 7,201 frames, `"errors":0`, 2 fence breaks, 2 loot |
+
+The four full builds left the tree unchanged (64 chunks, 112 seams); no suite printed a skip note. After the fix the
+three soaks of the determinism gate are byte-identical again (7,204 posed frames and 254 rig footfalls with the
+skin) and its Valley run is identical with and without the skin (4 grabs, 3 throws, 252 held-visual writes).
+
+**Each package's cost** (the runner's per-suite times; plan M10 §1.7; four default runs - P45 merged, both merged,
+the first full check, the final - and the two full checks' slow and gate tiers):
+
+| | Default (cap) | Slow (cap) | Gate (cap) |
+| --- | --- | --- | --- |
+| P45 | `test_giant_web_presets` (new): **0.009-0.010 s** (0.1). The two changed suites did not grow: `test_web_presets` 0.021-0.024 s against 0.024, `test_build_web_budget` 0.22-0.24 s against 0.43 | `test_giant_tooling` 0.56 / 0.60 s against 0.43: **+0.13 to +0.18 s** (10) | 0 (0) |
+| P46 | no suite of its own; its five changed suites (`test_appearance_schemas`, `test_giant_look`, `test_giant_assets`, `test_rig_merge`, `test_camera_review_fixes`) 0.33-0.35 s against 0.33 on the base: **+0.01 to +0.02 s** (0.1), the fix's new test in `test_giant_look` included (0.037 s against 0.032). The 0.176 s that suite read in P46's own check is the first load's noise: it read 0.385 s on the P45 merge, which has none of P46's code | `test_appearance_render` (P44's option check, now 176 tiles in 11 grids) 13.5 / 13.1 s against 12.4: **+0.7 to +1.2 s** (+10) | 0 (0) |
+| The suites that load the giant (`tools/giant_suites.py`: 128 default, 46 slow, 23 gate) | 47.4 / 47.5 / 46.9 / 47.7 s against 46.2 on the base (P45's lane 47.3, P46's lane 43.1): +0.7 to +1.5 s over 128 suites, inside the runs' spread | 264.8 / 265.3 s against 263.6 | 340.2 / 343.2 s against 373.6 (the base ran at loads up to 13.6) |
+| The eight named suites | 7.16 / 7.44 / 7.29 / 7.40 s against 6.87 (P45's lane 7.29, P46's 6.59) | | |
+
+`test_anchors` (every script compiled) took 10.6-11.1 s against 10.9 on the base. The gate tier is a minute
+shorter than at W26 on the quiet machine (`test_giant_determinism` 175.5 s against 190.3, `test_world_bot_smoke`
+88.7 against 104.6).
+
+**P46's look on the merged tree** (llvmpipe, the web tier, 320x240; the quiet machine P46's own check did not
+have): the whole giant at stage 1 draws in **37.7-38.5 ms a frame** (`test_skinned_rig_render`) against 34.5 ms
+on P45's branch the same day, without P46's hair: about a tenth more for the second pass; the shader suite's model
+frame 39.2 ms against 38.4; the option check 537-558 ms a grid of 16 tiles against 535. The option check draws the
+shares of P46's table (preset min 0.0436, beard 0.0283, hair 0.0561, scar 0.0003; best in the views tattoo 4,440 px
+in first person and 129 from behind, paint 1,439 and 62, mark 183 and 37, scar 1 and 63), with no known miss.
+
+**The capture tour on the merged candidate** (`--scenario=capture_m10 --skin` under Xvfb with `--write-movie`,
+llvmpipe at 2 threads): 38 beats, 38 frames saved, no beat refused, 2,328 frames (77.6 s of video), `"errors":0`,
+0 warnings, 7 min 17 s of wall time.
+
+**The candidate's Web exports** (`tools/build_web.sh --budget-mb=26`, then `--preset="Web (test)"`; the version
+is still `0.9.0-m9`):
+
+| | `Web` (the release) | `Web (test)` |
+| --- | --- | --- |
+| `index.pck` raw / gzipped / shipped | 25,791,588 / 17,645,654 / **23,527,540 (22.44 MiB of 26; the target <= 24.3)** | 26,900,120 / 18,461,754 / 24,615,672 (23.48 MiB) |
+| Parts (at most 15 MB each) | two of 11,763,770 | two of 12,307,836 |
+| `GIANT_SHARE` (cap 7.6) | 8,016,851 raw, **5,796,784 shipped (5.53 MiB)**, 32 files | 5,798,232 shipped (5.53 MiB), 32 files |
+| Audio | 9.28 MB of the 24.60 MB pck (38 %) | 9.28 MB (37 %) |
+| Files; test content | 2,839; `pck_files.py --check-no-test`: none; the release's data validates without `data/test` | the test levels packed |
+| `tex_hi/` | `assets/giant/tex_hi/normal.png.import` and `orm.png.import` listed; no `assets/giant/manifest.json` | the same |
+
+P45's branch shipped 21.36 MiB with a share of 4.45; P46's target catalogue adds 1.08 MiB to both, as its second
+export predicted (5.53 and 22.42). 2.07 MiB of the share and 3.56 MiB of the budget are left.
+`web/launcher.html`'s `BUILD` line carries this release export's byte counts.
+
+**The five Chromium checks on the candidate** (the exports above, headless Chromium with SwiftShader, one after
+another, nothing else on the machine; software WebGL, so the timings are indicative; the loads at each check's
+start and end):
+
+| Check | Result |
+| --- | --- |
+| `creator_check.mjs --size=640x360` (0.7 / 5.5; 111 s), and once more (110 s) | **OK** both times, **4 budget misses** reported each time. New Game: the title ready 9.5 s after Play (warmed), the creator open, Presets to Skin, R, Ctrl+Z (undone), Ctrl+Enter: the Valley loaded 8.9 / 8.5 s later, one pointer-lock request inside the gesture, locked; the first save holds `level.valley` and a look; the tier `["hi"]`. Shrine: the fixture Continued (5.3 / 5.5 s), the shrine screen after 3 tries of E, Appearance, "Change your look...", the creator over the shrine. 0 console errors, 0 engine warnings, 0 failed requests. Stalls (first frame against the median): the title 83.5x and 85.8x / 89.1x and 33.2x (by design: P44's warm-up); **the creator's first frame 3.31x / 3.10x** (530 / 480 ms against 160 / 155; P45's branch 3.50x); the Valley after Begin 1.45x / 1.08x; **the world's first frame on Continue 3.54x / 3.69x** (938 / 915 ms against 265 / 248; P45's branch 2.45x, 1,354 ms against 553); "Change your look..." 2.31x / 1.80x. The skin's CPU a frame: 0.109 / 0.135 ms in the Valley, 0.105 / 0.123 ms in the world, 0.098 / 0.107 ms with the creator's preview over the shrine (<= 0.35) |
+| `world_start_check.mjs` (5.5 / 5.3; 114 s) | **OK**: Play starts the engine with no arguments in 7.5 s and writes no save at the title; Enter, then Ctrl+Enter in the creator: the first save 17.3 s later holds `level.valley` and a look. "Start in the open world": one press arms it (no engine file fetched) and it lapses after 6 s; two presses start the engine with `["--","--mode=world","--creator"]`, no save while the creator shows, and Ctrl+Enter saves `level.world` (stage 3, level 6, a look) 20.7 s later. 0 console errors, 0 failed requests |
+| `audio_check.mjs` (5.3 / 6.8; 91 s) | **OK** in its default form on the first run: 60.4 s of `music.valley_calm`, the Hollow's music 16.8 s after New Game, sound 0.33 s after it, **264 holes over 50 ms** (the longest 258.3 ms), every one while the main thread left the mixer unserved (331 long tasks, the longest 311 ms; page frames p50 183 ms); peak live samples 37.1 MB of the 48.0 MB cap; 0 console errors, 0 failed requests. The plan's criterion: **NOT MET here** |
+| `world_check.mjs` (6.8 / 6.8; 357 s) | **OK** in its default form: the fixture Continued with one Enter (Play to the title's music 6.8 s, Enter to control 12.1 s), the fast travel to the King's Road waystone 7.3 s with no refusal; a 787.7 m walk in 80.7 s of game time across three region changes, 5 seams, 0 stuck; streaming work p50 0.8 / p99 9.3 / max 149.2 ms (23 of 146 work frames over 4 ms; one `scenery` step of 147.4 ms, then `props_load` 13.1, `nav_request` 7.6, `props_add` 6.2 ms; P45's run: max 24.7 ms), 9 loads, 3 unloads, 0 thrash, 210.3 m of margin; draw calls p50 42 / max 63 (as on P45's branch); page frames while walking p50 533.3 ms; 321.3 s of music across 3 borders with **606 holes over 50 ms** (the longest 1,170 ms), every one placed on the main thread; peak live samples 57.5 MB of the 67.9 MB cap; 0 console errors. The plan's criterion: **NOT MET here** |
+| `stream_check.mjs --world --audio` on the `Web (test)` export (6.8 / 5.3; 163 s) | **OK** in its default form: a 397.5 m walk in 47.6 s of game time, Play to the walk 42.8 s; streaming work p50 0.8 / p99 5.1 / max 11.3 ms, 6 loads, 3 unloads, 0 thrash, 225.9 m of margin; draw calls p50 40 / max 60; page frames p50 283.3 ms; 115.9 s of music across 4 borders with **356 holes over 50 ms** (the longest 716.9 ms), every one placed on the main thread; peak live samples 57.1 MB of 67.9; 0 console errors (one page error at exit, not counted, as before). The plan's criterion: **NOT MET here** |
+| `test_creator_check.mjs`, `test_audio_check.mjs` | 34 checks and 26 checks, 0 failures |
+
+So the five checks pass their default forms on the candidate, `audio_check.mjs` on its first run this time. **One
+reading changed with the merge: the world's first frame on Continue is over the stall rule on the Web in both
+runs** (3.54x and 3.69x, where P45's branch read 2.45x and added no warm-up on that ground; plan M10 §3.5 asks for
+the loading screen's warm-up when Continue stalls above 3x). The first frame itself is shorter than on P45's
+branch (0.92-0.94 s against 1.35 s); the median frame it is compared with fell further (0.25-0.26 s against
+0.55 s). It is recorded as a miss for the gate's Web lens, with the creator's first frame (3.1-3.3x), which P45
+already lists.
+
+**The same marks natively on the candidate** (Xvfb, llvmpipe at 2 threads, 640x360, the probe's tours of
+`docs/systems/P45.md`): the creator's first frame 1.66x (234 ms against 141), the Valley after Begin 1.12x, the
+title's warm-up frame 336x (by design). With `--continue` on the command line (no title, so no title warm-up)
+and an **empty shader cache**: the world's first frame 2.97x (451 ms against 152) and the first "Change your
+look..." **12.05x** (1,744 ms against 145); the same tour twice more, the cache filled: 1.84x and 1.79x, and
+1.20x and 1.22x. P45's native figures (1.22x and 1.53x) were taken with a filled cache. A player reaches Continue
+through the title, whose warm-up draws the giant first; a start with `--continue` on a fresh machine does not.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
