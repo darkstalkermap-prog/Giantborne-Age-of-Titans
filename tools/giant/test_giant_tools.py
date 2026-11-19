@@ -218,8 +218,11 @@ class CapTest(unittest.TestCase):
         limbs = meshes["Body_Limbs"]
         weld = split.weld_positions(limbs["P"], 1e-5)
         self.assertEqual(len(split.boundary_edges(limbs["T"], weld)), 0, "Body_Limbs is closed")
-        names = [n for n in meshes if n.startswith("Garment_") and (n.endswith(LIMB_PARTS_OF) or n in WHOLE_LIMB_GARMENTS)]
-        self.assertGreaterEqual(len(names), 4, "the limb garment parts: %s" % names)
+        info_meshes = manifest.load(ROOT)["export"]["meshes"]
+        # P54: every garment drawn with the limbs (a split garment's _limbs part and the whole limb garments)
+        names = [n for n in meshes if n.startswith("Garment_") and (n.endswith(LIMB_PARTS_OF) or n in WHOLE_LIMB_GARMENTS
+                                                                     or info_meshes.get(n, {}).get("part") == "limbs")]
+        self.assertGreaterEqual(len(names), 12, "the limb garment parts: %s" % names)
         for name in names:
             m = meshes[name]
             weld = split.weld_positions(m["P"], 1e-5)
@@ -694,7 +697,9 @@ class BodyTwoTest(unittest.TestCase):
         on_disk = sorted(f for f in os.listdir(os.path.join(ASSETS, "parts")) if f.endswith(".glb"))
         part_ids = sorted(m for m, e in idx["meshes"].items() if "part_path" in e)
         self.assertEqual(on_disk, [m + ".glb" for m in part_ids], "a file a part, no other")
-        self.assertEqual(len(part_ids), 21)
+        # M10's (P48's) 21 parts and the wardrobe's (P54): 28 more garment meshes (25 garments, three of them split)
+        # and the 8 accessories
+        self.assertEqual(len(part_ids), 21 + 28 + 8)
         self.assertEqual(sorted(m for m, e in idx["meshes"].items() if "part_path" not in e),
                          ["Body_Head", "Body_Limbs", "Body_Torso", "Eyes"])
         for mid in part_ids:
@@ -704,8 +709,8 @@ class BodyTwoTest(unittest.TestCase):
             meshes, _joints = self.parts[mid]
             self.assertEqual(sorted(meshes), [mid], "%s.glb holds its one mesh" % mid)
             self.assertEqual(meshes[mid]["tris"], e["tris"], "%s: the index counts its triangles" % mid)
-            self.assertIn(e["category"], ("hair", "beard", "garment"))
-        self.assertEqual(len(files), 13 + 4 + 21, "M10's 13 files, P51's four maps and the 21 parts")
+            self.assertIn(e["category"], ("hair", "beard", "garment", "accessory"))
+        self.assertEqual(len(files), 13 + 4 + 2 + 57, "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts")
         proxy = info["shadow_proxy"]
         self.assertEqual(idx["shadow_proxy"], {"node": "ShadowProxy", "tris": proxy["tris"]})
         self.assertEqual(self.core["ShadowProxy"]["tris"], proxy["tris"])
@@ -742,17 +747,19 @@ class BodyTwoTest(unittest.TestCase):
         e = self.doc["index"]["meshes"]["Garment_cape"]
         self.assertEqual(e["chains"], ["cape_c", "cape_l", "cape_r"])
         self.assertTrue(e["free"])
-        self.assertEqual(e["covers"], [6], "the cape still covers the lower back, as M10's did (the outfits' data)")
+        # P54: the cape lies on the back down to below the shoulders' garments, so it covers the upper back too
+        self.assertEqual(e["covers"], [5, 6], "the cape covers the back (the outfits' data: back)")
         cape = self.parts["Garment_cape"][0]["Garment_cape"]
         chains = self.doc["index"]["chains"]
         root_y = chains["cape_c"]["root"][1]
         W = cape["W"]
         chain_w = sum(W.get(b, 0.0) for b in gp.LEAF_BONES if b.startswith("cape"))
         top = cape["P"][:, 1] > root_y + 0.1
-        low = cape["P"][:, 1] < root_y - chains["cape_c"]["length_m"] / 3.0 - 0.02      # past the first joint
+        # P54: it lies on the back down to below the shoulders' garments, then hangs from its chains
+        low = cape["P"][:, 1] < root_y - 2.0 * chains["cape_c"]["length_m"] / 3.0 - 0.02
         self.assertGreater(int(top.sum()), 20, "the collar and the shoulders")
         self.assertLess(float(chain_w[top].max()), 0.05, "the collar stays on the body")
-        self.assertGreater(float(chain_w[low].min()), 0.9, "below the shoulder blades the cape is on its chains")
+        self.assertGreater(float(chain_w[low].min()), 0.9, "below the shoulders' garments the cape is on its chains")
         # closed at the collar: vertices in front of the neck as well as behind it (glTF: +Z the giant's front)
         collar = cape["P"][cape["P"][:, 1] > cape["P"][:, 1].max() - 0.08]
         self.assertTrue(collar[:, 2].max() > 0.05 and collar[:, 2].min() < -0.05, "the collar goes round the neck")
@@ -834,8 +841,11 @@ class BudgetTest(unittest.TestCase):
         Since P45 (the owner's answer 1, plan §0.6) the last default is 26 MiB from -m10 on and the Web
         keeps tex_hi/; before it the values here were 23, 4.6 and tex_hi/ excluded."""
         import build_giant
-        self.assertEqual(build_giant.web_budget_mib(), 26.0, "build_web.sh's default from -m10 on")
-        self.assertEqual(build_giant.share_cap_mib(), 7.6, "plan §2.12, from P45 on")
+        self.assertEqual(build_giant.web_budget_mib(milestone=None), 26.0, "build_web.sh's default from -m10 on")
+        # P54: the wardrobe's files are made for 0.12: its budget (32 MiB) and the giant's share at m12 (13.6 MiB)
+        self.assertEqual(build_giant.ASSET_MILESTONE, 12)
+        self.assertEqual(build_giant.web_budget_mib(), 32.0, "build_web.sh's -m12 branch")
+        self.assertEqual(build_giant.share_cap_mib(), 13.6, "plan §2.12 at 0.12")
         excluded = build_giant.web_excluded()
         for pat in ("assets/giant/manifest.json", "tests/*", "tools/*"):
             self.assertIn(pat, excluded)
@@ -846,6 +856,94 @@ class BudgetTest(unittest.TestCase):
             (root / "tools").mkdir()
             (root / "tools" / "build_web.sh").write_text("\tif x; then BUDGET_MB=7.5\n\telse BUDGET_MB=23\n\tfi\n")
             self.assertEqual(build_giant.share_cap_mib(root), 4.6, "the rule follows the script: 23 gives 4.6")
+
+
+class WardrobeTest(unittest.TestCase):
+    """P54 (plan M11 §2.6, §3.7): the wardrobe's 35 garments in ten slots and 8 accessories, the index v2's fields, the
+    shells' distances in four poses, the head garments' cut of the hair, the accessories' triangles and bones."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = manifest.load(ROOT)
+        cls.idx = cls.doc["index"]
+        cls.info = cls.doc["export"]
+
+    def _gg(self):
+        import giant_garment
+        return giant_garment
+
+    def test_the_slots_their_offsets_and_the_35_garments_in_the_index(self):
+        gg = self._gg()
+        self.assertEqual(gg.SLOT_SHELL_M, {"legs": 0.012, "chest": 0.014, "shins": 0.020, "feet": 0.024, "arms": 0.022,
+                                           "waist": 0.030, "armour": 0.034, "shoulders": 0.046, "head": 0.020,
+                                           "cape": 0.030}, "the plan's table (stage-1 metres; the cape hangs free)")
+        self.assertEqual(len(gg.GARMENTS), 35)
+        self.assertEqual(len(gg.NEW_ORDER), 25)
+        self.assertEqual(set(gg.ORDER), set(gg.GARMENTS))
+        self.assertEqual(sorted({g["slot"] for g in gg.GARMENTS.values()}), sorted(gg.SLOT_SHELL_M))
+        self.assertEqual(sorted(self.idx["garments"]), sorted(gg.GARMENTS))
+        for gid, spec in gg.GARMENTS.items():
+            meshes = self.idx["garments"][gid]
+            self.assertEqual(len(meshes), 2 if spec["part"] == "split" else 1, gid)
+            for m in meshes:
+                e = self.idx["meshes"][m]
+                self.assertEqual((e["slot"], e["material"]), (spec["slot"], spec["material"]), m)
+                self.assertAlmostEqual(e["shell"], gg.SLOT_SHELL_M[spec["slot"]], 6, m)
+                self.assertEqual(e.get("hides_hair", "none"), spec.get("hides_hair", "none") if spec["slot"] == "head"
+                                 else "none", m)
+                self.assertLessEqual(e["tris"], 5000, "%s: a garment mesh at most 5,000 triangles" % m)
+            rec = self.info["slots"][gid]
+            # a shell never comes nearer the skin than its slot's offset (a band's or the braies' least is measured
+            # over the skin vertex nearest each of its vertices, where its edge may stand nearer)
+            if gid in ("braies", "belt", "war_belt", "sash"):
+                continue
+            self.assertGreaterEqual(rec["least_m"], gg.SLOT_SHELL_M[spec["slot"]] - 1e-4, gid)
+
+    def test_the_shells_keep_apart_in_four_poses(self):
+        """Every two garments of different slots that stand over the same skin keep at least 0.004 m apart at stage
+        1 (k = 1) in the rest pose, an idle frame, a walk frame and a raised arm (the export measures it along each
+        skin vertex's own skinned normal, export_game.shell_distances)."""
+        self.assertEqual(self.info["shell_poses"], ["rest", "idle", "walk", "raised_arm"])
+        d = self.info["shell_distances"]
+        self.assertGreater(len(d), 150, "the overlapping pairs of the 35 garments")
+        for pair in ("braies|tunic", "tunic|jerkin", "leg_wraps|boots", "shirt|mail_hauberk", "mail_hauberk|iron_pauldrons",
+                     "trousers|greaves", "shirt|iron_vambraces", "mail_hauberk|long_cloak", "long_cloak|fur_mantle"):
+            self.assertIn(pair, d, "the pair %s is measured" % pair)
+        bad = {k: v for k, v in d.items() if v < 0.004}
+        self.assertEqual(bad, {}, "pairs nearer than 0.004 m in some pose")
+
+    def test_a_helm_cuts_or_hides_each_hair_style(self):
+        gg = self._gg()
+        styles = sorted(m for m, e in self.idx["meshes"].items() if e["category"] == "hair")
+        for gid, spec in gg.GARMENTS.items():
+            if spec["slot"] != "head":
+                continue
+            e = self.idx["meshes"]["Garment_" + gid]
+            if spec["hides_hair"] == "all":
+                self.assertNotIn("hair_cut", e, gid)
+                continue
+            cut = e["hair_cut"]
+            self.assertEqual(sorted(cut), styles, "%s: a cut for every hair style" % gid)
+            for style, length in cut.items():
+                self.assertTrue(length == 0.0 or 0.3 <= length <= 1.0, "%s %s: %s" % (gid, style, length))
+            self.assertEqual(cut["Hair_crop"], 1.0, "%s: the crop's shells stay under it" % gid)
+
+    def test_the_accessories_rigid_on_one_bone_and_small(self):
+        gg = self._gg()
+        self.assertEqual(len(gg.ACCESSORIES), 8)
+        slots = sorted(a["slot"] for a in gg.ACCESSORIES.values())
+        self.assertEqual(slots, ["arm_ring"] * 3 + ["belt"] * 2 + ["neck"] * 3)
+        self.assertEqual(sorted(self.idx["accessories"]), sorted(gg.ACCESSORIES))
+        bone_of = {"neck": "spine_03", "arm_ring": "upperarm_l", "belt": "pelvis"}
+        for aid, spec in gg.ACCESSORIES.items():
+            mid = self.idx["accessories"][aid]
+            e = self.idx["meshes"][mid]
+            self.assertEqual((e["category"], e["slot"], e["bone"]), ("accessory", spec["slot"], bone_of[spec["slot"]]))
+            self.assertLessEqual(e["tris"], 400, "%s: at most 400 triangles" % aid)
+            meshes, joints = glb_skins(os.path.join(ROOT, e["part_path"][len("res://"):]))
+            W = meshes[mid]["W"]
+            self.assertEqual(sorted(b for b, w in W.items() if float(np.max(w)) > 0.0), [bone_of[spec["slot"]]],
+                             "%s: all on its one bone" % aid)
 
 
 class VendorTest(unittest.TestCase):

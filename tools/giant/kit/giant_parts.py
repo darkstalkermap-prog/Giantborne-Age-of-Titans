@@ -204,15 +204,18 @@ def card_weights(V, arc, kind, layout, head_centre_y, S, free=None):
     return prune(groups, n)
 
 
-def chain_weights(V, body_groups, layout, names=("cape_l", "cape_c", "cape_r"), blend=0.06):
+def chain_weights(V, body_groups, layout, names=("cape_l", "cape_c", "cape_r"), blend=0.06, let_go_z=None):
     """A free cloth's skin: above the chains' roots the body's own weights (``body_groups``, the shell's);
     below, the three chains by where the vertex is across the back, joint by joint. ``blend``: the height
-    (m) over which the body lets go."""
+    (m) over which the body lets go; ``let_go_z`` (stage-1 m, P54): where it begins to, when lower than the roots
+    (a cloak lies on the back down to there, so the shoulders' garments lie over it in every pose)."""
     n = len(V)
     xs = np.array([layout[c]["root"][0] for c in names])
     order = np.argsort(xs)
     xs, names = xs[order], [names[i] for i in order]
     root_z = float(np.mean([layout[c]["root"][2] for c in names]))
+    if let_go_z is not None:
+        root_z = min(root_z, float(let_go_z))
     let_go = sstep(root_z + blend - V[:, 2], 0.0, 2.0 * blend)       # 0 above the roots, 1 below
     across = np.stack([np.clip(1.0 - np.abs(V[:, 0] - x) / (xs[1] - xs[0]), 0.0, 1.0) for x in xs], axis=1)
     across[:, 0] = np.where(V[:, 0] <= xs[0], 1.0, across[:, 0])

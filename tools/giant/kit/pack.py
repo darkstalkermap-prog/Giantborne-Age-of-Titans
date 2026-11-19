@@ -22,6 +22,8 @@ cloth detail maps (numpy + Pillow; no Blender).
   cloth_leather.png       Y up), A the albedo detail (0.75 = neutral): plain weave, grained leather, fur
   cloth_fur.png           and hammered metal (the giant_cloth shader's metal kind, used from P54 on)
   cloth_metal.png
+  cloth_mail.png          P54: riveted mail (the mail hauberk) and overlapping scales (the scale coat), the same
+  cloth_scale.png         layout: the gaps dark in A
   shell_strands.png  RGB  128 px tileable strand cells for the shell styles (P51): R a strand's section, G its
                           length, B its id; imported lossless with mipmaps
 
@@ -400,6 +402,62 @@ def make_metal(path, seed=53):
     save(_normal_rgba(h, albedo, 2.5), path, "RGBA")
 
 
+def make_mail(path, seed=61):
+    """Riveted mail (P54, the mail hauberk): rows of interlinked rings, 3 x 3 a tile, each row offset by half a
+    ring and overlapping the next; the gaps between the rings dark (the albedo's A low), the rings' wire raised."""
+    rng = np.random.default_rng(seed)
+    s = DETAIL
+    yy, xx = (np.mgrid[0:s, 0:s] + 0.5) / s
+    k = 3
+    h = np.zeros((s, s))
+    wire = np.zeros((s, s))
+    for row in range(-1, k + 1):
+        for col in range(-1, k + 1):
+            cx = (col + 0.5 * (row % 2) + 0.5) / k
+            cy = (row + 0.5) / k
+            dx = (xx - cx + 0.5) % 1.0 - 0.5
+            dy = ((yy - cy + 0.5) % 1.0 - 0.5) * 1.15
+            r = np.sqrt(dx * dx + dy * dy) * k
+            ring = np.clip(1.0 - np.abs(r - 0.42) / 0.13, 0.0, 1.0)
+            # each ring lies a little over the one above it (the overlap reads as rows)
+            tilt = 0.75 + 0.25 * np.clip(0.5 + dy * k, 0.0, 1.0)
+            v = np.sin(ring * math.pi / 2.0) * tilt
+            win = v > wire
+            wire = np.where(win, v, wire)
+    h = wire
+    grit = _fbm(s, rng, 3, 32)
+    albedo = 0.18 + 0.62 * np.clip(wire * 1.4, 0.0, 1.0) + 0.06 * (grit - 0.5)
+    save(_normal_rgba(h, albedo, 9.0), path, "RGBA")
+
+
+def make_scale(path, seed=67):
+    """Scale armour (P54, the scale coat): rounded scales 2 x 2 a tile in rows offset by half a scale, each
+    overlapping the one below; the scale rises toward its free lower edge and the gaps between scales are dark."""
+    rng = np.random.default_rng(seed)
+    s = DETAIL
+    yy, xx = (np.mgrid[0:s, 0:s] + 0.5) / s
+    k = 2
+    h = np.full((s, s), -1.0)
+    edge = np.zeros((s, s))
+    for row in range(k + 1, -2, -1):          # lower rows first: an upper scale lies over the one below it
+        for col in range(-1, k + 1):
+            cx = (col + 0.5 * (row % 2) + 0.5) / k
+            cy = (row + 0.35) / k
+            dx = ((xx - cx + 0.5) % 1.0 - 0.5) * k
+            dy = ((yy - cy + 0.5) % 1.0 - 0.5) * k
+            inside = (np.abs(dx) < 0.48) & (dy > -0.62) & (dx * dx + np.maximum(dy, 0.0) ** 2 * 1.4 < 0.23)
+            rise = 0.4 + 0.6 * np.clip((dy + 0.62) / 1.1, 0.0, 1.0)
+            dome = rise * (1.0 - 0.6 * (dx / 0.48) ** 2)
+            win = inside & (dome > h - 0.15)
+            h = np.where(win, dome, h)
+            rim = np.clip(1.0 - (0.23 - dx * dx - np.maximum(dy, 0.0) ** 2 * 1.4) / 0.04, 0.0, 1.0)
+            edge = np.where(win, rim, edge)
+    h = np.clip(h, 0.0, None)
+    grit = _fbm(s, rng, 3, 32)
+    albedo = 0.22 + 0.55 * np.clip(h * 1.3, 0.0, 1.0) - 0.2 * edge + 0.06 * (grit - 0.5)
+    save(_normal_rgba(h, albedo, 5.0), path, "RGBA")
+
+
 def pack_all(bake_dir, out_dir, orm_from=None):
     written = pack_tiers(bake_dir, out_dir, orm_from)
     make_skin_lut(os.path.join(out_dir, "tex", "skin_lut.png"))
@@ -408,8 +466,11 @@ def pack_all(bake_dir, out_dir, orm_from=None):
     make_leather(os.path.join(out_dir, "cloth_leather.png"))
     make_fur(os.path.join(out_dir, "cloth_fur.png"))
     make_metal(os.path.join(out_dir, "cloth_metal.png"))
+    make_mail(os.path.join(out_dir, "cloth_mail.png"))
+    make_scale(os.path.join(out_dir, "cloth_scale.png"))
     make_strands(os.path.join(out_dir, "shell_strands.png"))
-    return written + ["cloth_fur.png", "cloth_leather.png", "cloth_metal.png", "cloth_weave.png", "hair_atlas.png",
+    return written + ["cloth_fur.png", "cloth_leather.png", "cloth_mail.png", "cloth_metal.png", "cloth_scale.png",
+                      "cloth_weave.png", "hair_atlas.png",
                       "shell_strands.png", "tex/skin_lut.png"]
 
 

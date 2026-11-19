@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import sys
 import time
@@ -66,10 +67,11 @@ COVER_SHARE = 0.97                 # a region a garment covers this much of sink
 COVER_RAY_M = 0.12                 # human scale: the longest skin-to-garment ray that still covers
 FREE_COVER_RAY_M = 0.30            # the same for a free-hanging mesh (the cape stands off the small of the back)
 FREE_COVER_SHARE = 0.85            # and its share: it hangs straight, so the flanks' rays pass beside it
-SPLIT_GARMENTS = ("braies", "tunic")
-WHOLE_PART = {"belt": "torso", "jerkin": "torso", "furs": "torso", "bracers": "limbs", "boots": "limbs",
-              "cape": "torso", "pauldron": "torso", "leg_wraps": "limbs"}
-FREE_GARMENTS = ("cape",)          # free-hanging meshes on leaf chains (P48): they cover no region
+# P54: a garment's part ("split", "torso", "limbs" or "head") and whether it hangs free are its gg.GARMENTS entry's;
+# a split garment is cut along the body's own boundary, but for the braies (not a shell: by their weights)
+SPLIT_BY_WEIGHT = ("braies",)
+PART_LAYER = {0: 3, 1: 2, 2: 1}    # head, torso, limbs -> their render layers
+HAIR_CUT_LEAST = 0.3               # a style cut shorter than this under a head garment is not drawn there
 LIMB_ROOTS = ("upperarm_l", "upperarm_r", "thigh_l", "thigh_r")
 TORSO_ROOTS = ("clavicle_l", "clavicle_r", "pelvis")
 
@@ -168,10 +170,13 @@ def triangles(A):
 # --------------------------------------------------------------------------------------
 # split and cap
 # --------------------------------------------------------------------------------------
-def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None):
+def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None, skin_rims=False):
     """The arrays of one part of a mesh (its faces, their vertices) with every closed cut loop
     capped: rim copies of the loop's vertices (their skin weights, region 15, the cap's normal)
-    and a centre vertex weighted 100 % to ``root_bone(part, centre, other part)``.
+    and a centre vertex weighted 100 % to ``root_bone(part, centre, other part)``. ``skin_rims`` (P54, the
+    garments): the rim copies keep their vertex's own normal and the centre takes no build push, so the build
+    sliders move a garment's cap with the cloth round it (the cap's normal pushed the rim along the limb: the sleeve's
+    edge stood off in steps at -1).
     Returns (arrays, regions per local vertex, {"loops", "capped", "open_chains"})."""
     faces = A["faces"]
     sel = [i for i, p in enumerate(face_part) if p == part]
@@ -197,7 +202,8 @@ def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None)
             cut.append((a, b))
             other_of[(a, b)] = face_part[fs[1]] if face_part[fs[0]] == part else face_part[fs[0]]
     loops, chains, pinches = split.walk_loops(np.asarray(cut, np.int64).reshape(-1, 2))
-    stats = {"loops": len(loops), "capped": 0, "open_chains": len(chains), "pinches": len(pinches)}
+    stats = {"loops": len(loops), "capped": 0, "open_chains": len(chains), "pinches": len(pinches),
+             "source": list(vids)}
     part_faces = np.asarray([faces[i] for i in sel], dtype=object)
     # every corner UV of a vertex inside this part (the cap's UV is one of the loop's own)
     corner_uvs = {}
@@ -218,6 +224,7 @@ def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None)
         rim = {}
         for v in oriented:
             rim[v] = len(V)
+            stats["source"].append(v)
             V.append(A["V"][v])
             for b in groups:
                 groups[b].append(A["groups"][b][v])
@@ -225,6 +232,7 @@ def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None)
             if build is not None:
                 build.append(tuple(src_build[v]))
         c = len(V)
+        stats["source"].append(-1)
         V.append(centre)
         for b in groups:
             groups[b].append(1.0 if b == bone else 0.0)
@@ -233,11 +241,14 @@ def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None)
             groups[bone][c] = 1.0
         reg.append(split.CAP_REGION)
         if build is not None:
-            build.append(tuple(np.mean([src_build[v] for v in oriented], axis=0)))
+            build.append((0.0, 0.0) if skin_rims else tuple(np.mean([src_build[v] for v in oriented], axis=0)))
         for (b, a, _c) in tris:
             out_faces.append((rim[b], rim[a], c))
             out_uv.append([cap_uv, cap_uv, cap_uv])
-            out_nrm.append([tuple(nrm)] * 3)
+            if skin_rims:
+                out_nrm.append([tuple(A["vnormal"][b]), tuple(A["vnormal"][a]), tuple(nrm)])
+            else:
+                out_nrm.append([tuple(nrm)] * 3)
         stats["capped"] += 1
     del part_faces
     arrays = {"V": np.asarray(V, np.float64), "faces": out_faces, "corner_uv": out_uv,
@@ -433,6 +444,169 @@ def braid_vertices(mesh_id, n):
     return mask
 
 
+def hair_cut(gid, w, hair, V, N, kd, S):
+    """{hair style: the share of its length drawn under the head garment ``gid``} (P54, plan M11 §2.6: a helm cuts
+    the long styles by length or hides them): a card is cut where its first vertex stands within LAYER_GAP_M of the
+    garment's shell or beyond it over the garment's footprint (the cards' root-to-tip coordinate, rounded down to
+    0.05), and a style that would keep less than HAIR_CUT_LEAST is not drawn (0). A shell style keeps all of it when
+    its layers stay under the garment."""
+    used, off = w.shells[gid]
+    n = len(V)
+    foot = np.zeros(n, bool)
+    foot[used] = True
+    offb = np.full(n, np.inf)
+    offb[used] = off
+    out = {}
+    for mid in sorted(hair):
+        if not mid.startswith("Hair_"):
+            continue
+        ob, _cards = hair[mid]
+        if ob is None:
+            sh = gh.SHELLS[mid]
+            top = (sh["height"] + sh["lift"]) * S
+            least = float(np.min(off)) if len(off) else 0.0
+            out[mid] = 1.0 if top < least - gg.LAYER_GAP_M else 0.0
+            continue
+        CV, t, _arc = card_coordinates(ob)
+        _, near = kd.query(CV / S)
+        hgt = np.einsum("ij,ij->i", CV - V[near] * S, N[near])
+        bad = foot[near] & (hgt > offb[near] - gg.LAYER_GAP_M)
+        keep = 1.0 if not bad.any() else math.floor(float(t[bad].min()) * 20.0 + 1e-9) / 20.0
+        out[mid] = r6(keep if keep >= HAIR_CUT_LEAST else 0.0)
+    return out
+
+
+SHELL_POSES = ("rest", "idle", "walk", "raised_arm")
+
+
+def _poses(rig):
+    """The four poses of the shells' check (plan M11 §2.6): the rest, an idle frame, the walk's left heel strike
+    (the legs at their widest) and a raised arm (the left arm 70 degrees out, the right forward and bent), from
+    the clips' own solver."""
+    import clips as cl
+    rest = cl.Rest(rig)
+    walk = cl.Gait(rest, "walk", cl.CLIP_FRAMES["walk"])
+    raised = cl.Pose(rest)
+    cl.set_arm(raised, "l", 0.0, 25.0, out_deg=8.0, raise_deg=70.0)
+    cl.set_arm(raised, "r", -45.0, 70.0, out_deg=10.0, forward_deg=20.0)
+    return rest, {"rest": None, "idle": cl.idle_pose(rest, 15, cl.CLIP_FRAMES["idle"]).solve(),
+                  "walk": walk.pose(cl.LEFT_STRIKE).solve(), "raised_arm": raised.solve()}
+
+
+def _set_pose(rig, rest, pose):
+    from mathutils import Quaternion, Vector
+    for pb in rig.pose.bones:
+        pb.rotation_quaternion = Quaternion()
+        pb.location = Vector((0.0, 0.0, 0.0))
+    if pose is not None:
+        for b in rest.order:
+            if b != "Root":
+                rig.pose.bones[b].rotation_quaternion = pose.basis(b)
+        rig.pose.bones["pelvis"].location = pose.pelvis_location()
+    bpy.context.view_layer.update()
+
+
+def skinned_normals(rig, W, bones, N):
+    """Each skin vertex's rest normal carried by the posed bones as the skin carries it (the linear blend of the
+    bones' rotations, by the vertex's weights), unit length: the line a shell vertex over it moves along. (The
+    posed skin's own face normals fold over in the armpit when the arm comes down; every garment there folds the
+    same way, so the gaps are measured along the vertex's own line.)"""
+    R = np.zeros((len(bones), 3, 3))
+    for j, b in enumerate(bones):
+        M = rig.pose.bones[b].matrix @ rig.data.bones[b].matrix_local.inverted()
+        R[j] = np.array([list(r) for r in M.to_3x3()])
+    Nn = np.einsum("vj,jab,vb->va", W, R, N)
+    return Nn / np.maximum(np.linalg.norm(Nn, axis=1, keepdims=True), 1e-9)
+
+
+def shell_distances(rig, body, w, parts, n, S):
+    """({"inner|outer": the smallest gap (stage-1 m)}, the poses): for every two garments of different slots that
+    stand over the same skin, in each of the four poses, the least height of the outer garment's vertices over a
+    posed skin vertex less the greatest height of the inner one's over it (gg.heights: each vertex measured along
+    the normal of the posed skin vertex it stands over; the inner slot is the one earlier in gg.LAYER_ORDER). A
+    negative value is an intersection. A cloak counts its cloth that lies on the body (not what hangs from the chains,
+    which the springs pose in play), with its hanging cloth kept HANG_MARGIN_M clear at rest."""
+    from scipy.spatial import cKDTree
+    rest, poses = _poses(rig)
+    order = {s: i for i, s in enumerate(gg.LAYER_ORDER)}
+    bones = [b.name for b in rig.data.bones]
+    col = {b: j for j, b in enumerate(bones)}
+    W = np.zeros((n, len(bones)))
+    for bone, lst in w.weights.items():
+        if bone in col:
+            for vi, wt in lst:
+                if vi < n:
+                    W[vi, col[bone]] = wt
+    W /= np.maximum(W.sum(axis=1, keepdims=True), 1e-9)
+    body_N = w.N
+    gids = [g for g in gg.ORDER if g in parts]
+    # the skin both garments of a pair stand on at rest: a pair is measured there in every pose (the plan's "slots
+    # whose regions overlap"; an arm's garment that comes near a belt in a pose is not a layering)
+    foot = {}
+    for g in gids:
+        m = np.zeros(n, bool)
+        m[np.asarray(sorted(w.footprint[g]), np.int64)] = True
+        foot[g] = m
+    out = {}
+    for pname in SHELL_POSES:
+        _set_pose(rig, rest, poses[pname])
+        dg = bpy.context.evaluated_depsgraph_get()
+        be = body.evaluated_get(dg)
+        me = be.to_mesh()
+        BV = np.empty(len(me.vertices) * 3)
+        me.vertices.foreach_get("co", BV)
+        BV = BV.reshape(-1, 3)[:n]
+        be.to_mesh_clear()
+        BN = skinned_normals(rig, W, bones, body_N)
+        kd = cKDTree(BV)
+        lo, hi = {}, {}
+        for g in gids:
+            Ps, Bs = [], []
+            for o in parts[g]:
+                oe = o.evaluated_get(dg)
+                m = oe.to_mesh()
+                P = np.empty(len(m.vertices) * 3)
+                m.vertices.foreach_get("co", P)
+                oe.to_mesh_clear()
+                Ps.append(P.reshape(-1, 3))
+                Bs.append(np.asarray(o["body_ids"], np.int64))
+            P = np.concatenate(Ps)
+            bid = np.concatenate(Bs)
+            P, bid = P[bid != -2], bid[bid != -2]
+            a = np.full(n, np.nan)
+            b = np.full(n, np.nan)
+            own = bid >= 0
+            if own.any():
+                # a shell: each vertex over its own skin vertex, along that vertex's posed normal
+                h = np.einsum("ij,ij->i", P[own] - BV[bid[own]], BN[bid[own]])
+                np.fmin.at(a, bid[own], h)
+                np.fmax.at(b, bid[own], h)
+            if (~own).any() and not gg.GARMENTS[g].get("free"):
+                # the rest (a band, the braies): over the skin vertex nearest it. A free cloak's hanging cloth is not
+                # measured: it hangs from the cape chains, whose pose in play is the springs' (P50), not a clip's
+                ids, hmin, hmax = gg.heights(P[~own], BV, BN, kd)
+                a[ids] = np.fmin(a[ids], hmin)
+                b[ids] = np.fmax(b[ids], hmax)
+            lo[g], hi[g] = a, b
+        for ai, a in enumerate(gids):
+            for b in gids[ai + 1:]:
+                sa, sb = gg.GARMENTS[a]["slot"], gg.GARMENTS[b]["slot"]
+                if sa == sb:
+                    continue
+                inner, outer = (a, b) if order[sa] < order[sb] else (b, a)
+                both = np.isfinite(hi[inner]) & np.isfinite(lo[outer]) & foot[inner] & foot[outer]
+                if not both.any():
+                    continue
+                gap = float(np.min(lo[outer][both] - hi[inner][both]))
+                key = "%s|%s" % (inner, outer)
+                out[key] = min(out.get(key, gap), gap)
+                if os.environ.get("GIANT_SHELL_DEBUG") and gap < 0.004:
+                    k = np.nonzero(both)[0][int(np.argmin(lo[outer][both] - hi[inner][both]))]
+                    log("shell %s %s %.4f at body vertex %d (%.3f %.3f %.3f)" % (pname, key, gap, k, *BV[k]))
+    _set_pose(rig, rest, None)
+    return {k: r6(v) for k, v in sorted(out.items())}, list(SHELL_POSES)
+
+
 def set_groups(ob, groups):
     """Replaces an object's vertex groups by {bone: (n,) weights}."""
     for vg in list(ob.vertex_groups):
@@ -556,12 +730,14 @@ def run(out_dir):
                                    "chains": gp.chains_of(groups), "root_verts": int(roots.sum()),
                                    "roots_on_head": int(on_head.sum()),
                                    "braid_verts": int(braid_vertices(mesh_id, len(CV)).sum())}
-    # ---- garments ---------------------------------------------------------------------------------
-    built = gg.build_braies(bd, rig, coll, weights, S)
-    built.update(gg.build_shells(bd, rig, coll, weights, S, layout))
+    # ---- garments (P54: slot by slot, gg.Wardrobe) and accessories ----------------------------------------
+    wardrobe = gg.Wardrobe(bd, rig, coll, weights, S, layout)
+    built = wardrobe.build()
     body_face_of = {frozenset(f.tolist()): i for i, f in enumerate(faces)}
     vregion_flat = region_any
+    garment_parts = {}
     for gid in gg.ORDER:
+        spec = gg.GARMENTS[gid]
         ob, body_ids = built[gid]
         for m in list(ob.modifiers):
             if m.type == "SOLIDIFY":
@@ -579,48 +755,63 @@ def run(out_dir):
         ob.name = "_source_" + gid
         ob.data.name = "_source_" + gid
         G = mesh_arrays(ob)
-        if gid in ("tunic",) and len(body_ids) == len(G["V"]):
-            gbody = np.asarray(body_ids)
+        exact = len(body_ids) == len(G["V"])
+        if exact:
+            gbody = np.asarray(body_ids)             # a shell's (or a free mesh's) own body vertex, not the nearest
+        else:
+            _, gbody = kd.query(G["V"] / S)
+        if spec["part"] == "split" and gid not in SPLIT_BY_WEIGHT and exact:
             face_part = []
             for f in G["faces"]:
                 bf = body_face_of.get(frozenset(int(gbody[v]) for v in f))
                 face_part.append(int(fp[bf]) if bf is not None else 1)
             face_part = np.asarray(face_part)
-        elif gid in SPLIT_GARMENTS:
-            _, gbody = kd.query(G["V"] / S)
+        elif spec["part"] == "split":
             quads = np.asarray([f for f in G["faces"]])
             face_part = split.assign_parts(quads, sp["part_w"][gbody], min_island=12)
         else:
-            _, gbody = kd.query(G["V"] / S)
-            face_part = np.full(len(G["faces"]), split.PARTS.index(WHOLE_PART[gid]))
-        if gid not in ("tunic",) or len(body_ids) != len(G["V"]):
-            _, gbody = kd.query(G["V"] / S)
-        if gid in FREE_GARMENTS and len(body_ids) == len(G["V"]):
-            gbody = np.asarray(body_ids)             # a free mesh: the body vertex it was cut from, not the nearest
+            face_part = np.full(len(G["faces"]), split.PARTS.index(spec["part"]))
         greg = vregion_flat[np.asarray(gbody)]
         G["vbuild"] = vbuild[np.asarray(gbody)]      # P48: a garment inherits the build weights of the skin under it
+        # P54: a shell's vertex takes the normal of the skin vertex it stands on: the build sliders push it along that
+        # normal as they push the skin (the cloth shader's push follows NORMAL), so the layers move together and
+        # keep their order at any build (P53's follow-up: at -1 the tunic's sleeve hem stood off in steps)
+        # (every garment: a band's, the braies' and a cloak's hanging cloth's the skin vertex nearest it, or the one it
+        # was cut from: so the hanging cloth pushes as the back it was cut from does)
+        G["vnormal"] = body_N[np.asarray(gbody)]
         parts = sorted(set(int(p) for p in face_part))
         made = []
         for pi in parts:
             suffix = "" if len(parts) == 1 else ("_core" if pi != 2 else "_limbs")
             name = f"Garment_{gid}{suffix}"
-            arrays, reg, st = split_part(G, face_part, pi, greg, root_bone, lift=GARMENT_CAP_LIFT_OF.get(gid, GARMENT_CAP_LIFT_M) * S)
+            arrays, reg, st = split_part(G, face_part, pi, greg, root_bone, lift=GARMENT_CAP_LIFT_OF.get(gid, GARMENT_CAP_LIFT_M) * S,
+                                         skin_rims=True)
             mat = ob.data.materials[0].name if len(ob.data.materials) else "giant_cloth"
             gob = make_object(name, arrays, coll, rig, mat, reg)
+            src = np.asarray(st["source"], np.int64)
+            # a shell's own body vertex per vertex (-1: a cap's centre, or a garment that is not a shell)
+            ex = wardrobe.exact.get(gid)
+            ids = np.asarray(ex)[np.maximum(src, 0)] if ex is not None and len(ex) == len(G["V"]) \
+                else np.full(len(src), -1)
+            gob["body_ids"] = np.where(src >= 0, ids, -2).tolist()      # -2: a cap's centre (inside the limb)
             made.append(gob)
-            info["meshes"][name] = {"category": "garment", "layer": 1 if pi == 2 else 2, "dye": gg.DYE[gid],
+            info["meshes"][name] = {"category": "garment", "layer": PART_LAYER[pi], "dye": gg.DYE[gid],
                                     "detail": gg.DETAIL[gid], "tris": triangles(arrays), "verts": len(arrays["V"]),
                                     "cut_loops": st["loops"], "caps": st["capped"], "open_chains": st["open_chains"],
                                     "boundary_edges": boundary_count(arrays), "part": split.PARTS[pi],
-                                    "chains": gp.chains_of(arrays["groups"])}
-            if gid in FREE_GARMENTS:
+                                    "chains": gp.chains_of(arrays["groups"]), "slot": spec["slot"],
+                                    "shell": r6(gg.SLOT_SHELL_M[spec["slot"]]), "material": spec["material"]}
+            if spec.get("free"):
                 info["meshes"][name]["free"] = True
+            if spec["slot"] == "head":
+                info["meshes"][name]["hides_hair"] = spec.get("hides_hair", "none")
         info["garments"][gid] = [o.name for o in made]
+        garment_parts[gid] = made
         bpy.data.objects.remove(ob, do_unlink=True)
         # the regions this garment covers (its parts together), assigned to the part they belong to
         # a free mesh hangs off the skin: its rays reach further (it still hides the designs under it)
-        cov = coverage(made, V, body_N, region_any, S, FREE_COVER_RAY_M if gid in FREE_GARMENTS else COVER_RAY_M)
-        need = FREE_COVER_SHARE if gid in FREE_GARMENTS else COVER_SHARE
+        cov = coverage(made, V, body_N, region_any, S, FREE_COVER_RAY_M if spec.get("free") else COVER_RAY_M)
+        need = FREE_COVER_SHARE if spec.get("free") else COVER_SHARE
         covered = [r for r, share in sorted(cov.items()) if share >= need and r != split.CAP_REGION]
         for o in made:
             e = info["meshes"][o.name]
@@ -628,6 +819,42 @@ def run(out_dir):
             part_regions = set(split.PART_REGIONS["limbs"]) if e["part"] == "limbs" else \
                 set(split.PART_REGIONS["torso"]) | set(split.PART_REGIONS["head"])
             e["covers"] = [r for r in covered if r in part_regions]
+    info["slot_shell_m"] = {k: r6(v) for k, v in sorted(gg.SLOT_SHELL_M.items())}
+    info["layer_order"] = list(gg.LAYER_ORDER)
+    info["slots"] = {g: {k: r6(v) for k, v in sorted(rec.items())} for g, rec in sorted(wardrobe.record.items())}
+    # ---- P54: the accessories, rigid on one bone each, clear of the whole wardrobe at the fullest build ---------
+    # the rigid trophies keep clear of the skin at the fullest build; the rings move with it (build_accessories)
+    wardrobe.push = (np.abs(vbuild[:, 0]) + np.abs(vbuild[:, 1])) * build_max
+    for aid, aob in gg.build_accessories(wardrobe).items():
+        spec = gg.ACCESSORIES[aid]
+        name = aob.name
+        A = mesh_arrays(aob)
+        _, near = kd.query(A["V"] / S)
+        A["corner_normal"] = [[tuple(A["vnormal"][v]) for v in f] for f in A["faces"]]
+        bpy.data.objects.remove(aob, do_unlink=True)
+        if spec["slot"] != "belt":
+            # a ring (the neck's, the arm's) takes the skin's build weights and the skin's normal under each vertex: the
+            # build sliders push it as they push the skin under it, so it keeps its place round a neck or an arm that
+            # swells or thins; a trophy hangs rigid (no push: it is placed clear of the fullest build)
+            A["vbuild"] = vbuild[near]
+            A["corner_normal"] = [[tuple(body_N[near[v]]) for v in f] for f in A["faces"]]
+        acc = make_object(name, A, coll, rig, "giant_bone" if spec["detail"] == "bone" else "giant_metal",
+                          region_any[near].clip(0))
+        layer = 1 if spec["bone"].startswith("upperarm") else 2
+        info["meshes"][name] = {"category": "accessory", "layer": layer, "dye": "none", "detail": spec["detail"],
+                                "tris": triangles(A), "verts": len(A["V"]), "slot": spec["slot"], "bone": spec["bone"],
+                                "color": spec["color"], "chains": [], "covers": []}
+        info.setdefault("accessories", {})[aid] = name
+    # ---- P54: the head garments' cut of the hair (hides_hair "top": the length a style keeps under it) ---------
+    for gid in gg.ORDER:
+        spec = gg.GARMENTS[gid]
+        if spec.get("hides_hair") != "top":
+            continue
+        cut = hair_cut(gid, wardrobe, hair, V, body_N, kd, S)
+        for name in info["garments"][gid]:
+            info["meshes"][name]["hair_cut"] = cut
+    # ---- P54: the shells' distances in four poses -----------------------------------------------------------
+    info["shell_distances"], info["shell_poses"] = shell_distances(rig, body, wardrobe, garment_parts, n, S)
     # ---- landmarks, hash ----------------------------------------------------------------------------
     eye_c = {k: np.asarray(v[0]) for k, v in frames.items()}
     info["landmarks"] = landmarks(rig, eye_c)
