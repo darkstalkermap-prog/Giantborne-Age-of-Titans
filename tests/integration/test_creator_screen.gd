@@ -326,10 +326,10 @@ func test_locked_options_give_their_reason_and_covered_designs_say_hidden() -> v
 	for key: String in ["tattoos.chest", "tattoos.back"]:
 		assert_eq(c.row(key).note_text(), OptionRows.HIDDEN_NOTE, "%s: %s" % [key, OptionRows.HIDDEN_NOTE])
 	assert_eq(c.row("tattoos.face").note_text(), "", "the face is never covered")
-	(c.row("tattoos.chest") as OptionRows.CyclerRow).button.grab_focus()
+	(c.row("tattoos.chest") as OptionRows.GridRow).button.grab_focus()   # P55: a grid row (was a cycler)
 	assert_near(c.preview.fade(), 0.7, 1e-4, "while a hidden row has the focus the covering garments fade")
 	assert_eq(c.preview.framing, "chest", "and the preview frames its region")
-	(c.row("tattoos.face") as OptionRows.CyclerRow).button.grab_focus()
+	(c.row("tattoos.face") as OptionRows.GridRow).button.grab_focus()
 	assert_near(c.preview.fade(), 0.0, 1e-4, "the fade goes when the focus leaves")
 	assert_eq(c.preview.framing, "face", "the face row frames the face")
 	c.show_category("Scars")

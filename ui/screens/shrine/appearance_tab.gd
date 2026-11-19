@@ -11,6 +11,9 @@ extends ShrineTab
 ##   * A look made by a later build of the game (Appearance.is_future) is kept untouched: the creator starts
 ##     from the default look shown for it, a kept change stores this build's record in its place, and Keep
 ##     without a change is Cancel (M10 gate, LB-1).
+## P55 (plan M11 §2.7): the clothing is summarised by slot, in the record's order of slots, each worn piece with
+## the dye it is drawn in (its own, else the outfit's dye of its material; a fur none) and the accessories after
+## them: "Clothing (Warrior): Chest: tunic, madder; Armour: jerkin, dark leather; ...; Neck: bronze torc".
 ## The tab's button reads "Appearance (new)" until the tab is first opened in a save: opening it sets the flag
 ## appearance.tab_seen (which also dismisses the one-time tutorial.appearance_shrines). The tab's own title
 ## stays "Appearance" (ShrineScreen.tab() and the tests find it by that).
@@ -78,12 +81,59 @@ func refresh() -> void:
 	_update_button()
 
 
-## The look in words (one line per part), for the giant's line.
+## The look in words (one line per part), for the giant's line; the clothing by slot (clothing_line).
 func summary() -> PackedStringArray:
 	var p := player()
 	if p == null or p.appearance == null:
 		return PackedStringArray()
-	return Appearance.summary_lines(p.appearance.record(), p.appearance.ancestry())
+	return summary_of(p.appearance.record(), p.appearance.ancestry())
+
+
+## Appearance.summary_lines with its "Clothing:" line told by slot.
+static func summary_of(record: Variant, ancestry_id := "") -> PackedStringArray:
+	var out := PackedStringArray()
+	for line: String in Appearance.summary_lines(record, ancestry_id):
+		out.append(clothing_line(record, ancestry_id) if line.begins_with("Clothing:") else line)
+	return out
+
+
+## The clothing by slot (plan M11 §2.7): "Clothing (Wanderer): Waist: belt, dark leather; Legs: braies, undyed",
+## "Clothing (custom): ...", "Clothing: nothing worn".
+static func clothing_line(record: Variant, ancestry_id := "") -> String:
+	var r: Dictionary = Appearance.default_record()
+	if typeof(record) == TYPE_DICTIONARY:
+		var clean: Dictionary = Appearance.sanitize(record, ancestry_id, ancestry_id != "").record
+		if not Appearance.is_future(clean):
+			r = clean
+	var o: Dictionary = r.outfit
+	var parts := PackedStringArray()
+	for slot: String in Appearance.SLOTS:
+		var item := str(o.slots[slot].item)
+		if item == "":
+			continue
+		var g := Appearance.option(item)
+		var words := "%s: %s" % [str(OptionRows.SLOT_NAMES.get(slot, slot)), _lower(g, item)]
+		var material := str(g.get("material", "cloth"))
+		if Appearance.DYE_SET.has(material):
+			var dye := str(o.slots[slot].dye)
+			if dye == "":
+				dye = str(o.dyes.get(Appearance.DYE_OF_MATERIAL.get(material, ""), ""))
+			if dye != "":
+				words += ", " + _lower(Appearance.option(dye), dye)
+		parts.append(words)
+	for slot: String in Appearance.ACCESSORY_SLOTS:
+		var a := str(o.accessories.get(slot, ""))
+		if a != "":
+			parts.append("%s: %s" % [str(OptionRows.ACCESSORY_NAMES.get(slot, slot)), _lower(Appearance.option(a), a)])
+	var head := "Clothing (%s)" % (_lower(Appearance.option(str(o.set)), str(o.set)) if str(o.set) != "" else "custom")
+	if parts.is_empty():
+		return "Clothing: nothing worn"
+	return "%s: %s" % [head, "; ".join(parts)]
+
+
+static func _lower(opt: Dictionary, id: String) -> String:
+	var n := str(opt.get("name", id.get_slice(".", 1).replace("_", " ")))
+	return n.left(1).to_lower() + n.substr(1) if n.length() > 1 and n.substr(1, 1) == n.substr(1, 1).to_lower() else n
 
 
 ## True when the giant's look was made by a later build of the game: the summary describes the default look

@@ -43,6 +43,7 @@ func _room(view: Vector2) -> Rect2:
 
 
 func test_every_panel_and_button_fits_at_five_sizes() -> void:
+	CreatorCatalogue.install()   # P55: the outfits' grid full (twelve)
 	var c := stack.open("creator", {"context": "new_game"}) as CreatorScreen
 	assert_true(c != null, "the creator opens")
 	if c == null:
@@ -98,3 +99,18 @@ func test_every_panel_and_button_fits_at_five_sizes() -> void:
 			"with both its buttons at %s" % size_text)
 		assert_false(_rect(c.keep_editing_button).intersects(_rect(c.discard_button)), "apart at %s" % size_text)
 		c.keep_editing()
+		# P55: an option grid of the test catalogue's (filters, twelve cells, the name, the pager) inside the options
+		# panel and the window
+		c.show_category("Clothing")
+		c.open_grid(c.row("outfit.set") as OptionRows.GridRow)
+		await get_tree().process_frame
+		var panel := _rect(parts.options).grow(0.5)
+		var g := c.grid
+		var grid_bad := PackedStringArray()
+		for ctl: Control in [g.filter_box, g.done_button, g.name_label] + g.cells.filter(func(x: Button) -> bool: return x.visible):
+			if not (panel.encloses(_rect(ctl)) and room.encloses(_rect(ctl))):
+				grid_bad.append("%s %s" % [ctl.name, _rect(ctl)])
+		assert_eq(grid_bad, PackedStringArray(), "the grid inside the options panel at %s" % size_text)
+		assert_true(g.cell_px() >= OptionGrid.CELL_MIN_PX, "cells of %d px at %s" % [g.cell_px(), size_text])
+		c.close_grid()
+		c.show_category("Tattoos")
