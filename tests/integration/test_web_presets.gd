@@ -116,8 +116,13 @@ func test_the_launcher_joins_pck_parts_and_resumes_the_sound() -> void:
 	assert_true(html.contains("const bytes = pieces.push(step.value);") and html.contains("await writer.write(bytes);")
 		and html.contains("new DecompressionStream('gzip')"), "each piece is decoded and inflated as it arrives")
 	assert_true(html.contains("// <parts>") and html.contains("// </parts>"), "the block the launcher's own test runs")
-	assert_true(html.contains("About 36 MB to download.") and html.contains("Math.round(packedTotal / 1e6)"),
-		"the download note is written from the build's byte counts")
+	# P52: the page's own text is the note the script writes from the BUILD line (the engine and the pck as
+	# shipped, in millions of bytes), so a reader without script reads the same figure (36 MB at 0.10.0-m10).
+	var counts := RegEx.create_from_string("wasmPacked: (\\d+), pckPacked: (\\d+)").search(html)
+	var note := "About %d MB to download." % roundi((int(counts.get_string(1)) + int(counts.get_string(2))) / 1e6) \
+		if counts != null else "(no BUILD line)"
+	assert_true(html.contains(note) and html.contains("Math.round(packedTotal / 1e6)"),
+		"the download note is written from the build's byte counts (%s)" % note)
 	assert_true(html.contains("window.addEventListener('pointerdown', resumeAudio, true);")
 		and html.contains("window.addEventListener('keydown', resumeAudio, true);"), "the first press resumes the sound")
 	assert_true(html.contains("if (ctx.state === 'suspended') ctx.resume()"), "only suspended contexts")

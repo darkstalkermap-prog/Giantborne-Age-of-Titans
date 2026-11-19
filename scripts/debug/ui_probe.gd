@@ -33,7 +33,8 @@ extends Node
 ##       how many skinned giants were in the tree (2 with the creator's preview open at a shrine), and
 ##       "modifier_runs" proves the modifier ran in the loop. "skin_springs_ms" (the W30 merge) is the same loop with
 ##       the skeleton advanced in manual mode, so every modifier runs - the springs and SecondaryMotion's limits too
-##       (§2.12's row with secondary motion: Web <= 0.45 ms, native <= 0.12) - and "chains" the chains they ran.
+##       (§2.12's row with secondary motion: Web <= 0.45 ms, native <= 0.15 since 0.11.0-m11, was 0.12) - and
+##       "chains" the chains they ran.
 ##   UI_PROBE {"t":"done", "tour", "ok", "why"}   a tour's end (it then quits).
 ##
 ## Frame intervals are wall-clock time between two _process calls (the probe runs first in the frame,

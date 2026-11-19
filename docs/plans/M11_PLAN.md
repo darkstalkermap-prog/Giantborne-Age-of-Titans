@@ -1027,7 +1027,7 @@ until P48's and P59's test exports measure them):
 | Draw calls at `medium` | the Valley walk at most 330, the stress arena at most 620 (395 and 674 today; 250 has never been met at `medium`, where the static world alone draws up to 221, and is not M11's goal) | P49 |
 | A person's draw calls | skinned: at most 3 and one shadow draw a cascade; a crowd: one per role, pose and level | P60 |
 | Skinned at once | 16 people and 8 others | P60, P64 |
-| The giant's CPU a frame with secondary motion | native at most 0.12 ms, Web at most 0.45 ms (0.07 and 0.09-0.14 today) | P50, P57 |
+| The giant's CPU a frame with secondary motion | native at most 0.15 ms (the owner's decision at checkpoint A; 0.12 until then, 0.136-0.144 measured at Gate A and Gate A2), Web at most 0.45 ms (0.07 and 0.09-0.14 today) | P50, P57 |
 | The people's CPU a frame, 16 skinned and a crowd of 40 | native at most 0.6 ms, Web at most 2.5 ms | P60, P64 |
 | The simulation | p95 at most 8 ms a tick, unchanged; no presentation code in `Sim` | lens 2 |
 | The giant's primitives | at most 70,000 at 4 m in the fullest slot look; at most 4,000 beyond 120 m | P54, P57 |
