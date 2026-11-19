@@ -1974,6 +1974,14 @@ const LEASH_RETRY_S := 3.0
 const LEASH_BODY_WAY_FAILURES := 2
 ## M9 gate (final): a "way" wait keeps clear of the body in its way while that body's edge is this close to its own.
 const LEASH_WAY_BODY_M := 8.0
+## W32 (the war-camp riders' trap's phase sweep): a return held pressed into a giant's body (its edge within
+## LEASH_CONTACT_M of his, or into it) for LEASH_CONTACT_WAY_S on end begins its wait at once - "way" (backing off
+## him on its own side, as after its second path failure), or "post" when he stands on its post - instead of waiting
+## for its path failures: in a third of the Sim's update phases the first failure came after 2-5 s pressed into him
+## and the second (the way wait) 5 s or more after the contact began, the giant pinned meanwhile. A return that
+## touches no giant is unchanged; inside the leash (where the return may end early) it is unchanged too.
+const LEASH_CONTACT_M := 0.05
+const LEASH_CONTACT_WAY_S := 1.0
 
 ## Tick the current leash return began (-1 when it is not returning).
 var leash_started_tick := -1
@@ -2006,6 +2014,9 @@ var _leash_struck_by := ""
 var _leash_wait_hp := -1.0
 ## M9 gate (final): the body in its way when a "way" wait began (entity id, "" for a wall): the wait keeps clear of it.
 var _leash_wait_body := ""
+## W32: the ticks on end this return has been pressed into a giant's body (LEASH_CONTACT_WAY_S), and which giant.
+var _leash_contact_ticks := 0
+var _leash_contact_id := ""
 
 
 ## Starts the leash return (plan §2.7.3): drop the target and its attack tokens, run home to
@@ -2027,6 +2038,7 @@ func begin_leash_return() -> void:
 	leash_waiting = ""
 	_leash_wait_tick = -1
 	_leash_struck_by = ""
+	_leash_contact_ticks = 0
 	leash_holder_id = ""   # a new return: the hold of an earlier answer is over
 	Sim.release_all_tokens(entity.entity_id)
 	_release_formation_marker()
@@ -2073,6 +2085,18 @@ func _leash_step(tick: int) -> void:
 	var to_home := Vector2(home_position.x - global_position.x, home_position.z - global_position.z)
 	if to_home.length() <= LEASH_ARRIVE_M:
 		_end_leash_return(true)   # home: healed now if LEASH_HEAL_S had not passed yet
+		return
+	var pressed_on := _leash_giant_pressed_on()
+	if pressed_on != "" and pressed_on == _leash_contact_id:
+		_leash_contact_ticks += 1
+	else:
+		_leash_contact_ticks = 1 if pressed_on != "" else 0
+	_leash_contact_id = pressed_on
+	if _leash_contact_ticks >= ActionDef.seconds_to_ticks(LEASH_CONTACT_WAY_S) and not _leash_may_end_here():
+		# W32: held pressed into a giant outside its leash - the wait at once, not at the second path failure
+		var taker := _leash_post_taker()
+		_leash_failures_seen = path_failures
+		_begin_leash_wait(tick, "post" if str(taker.get("id", "")) == pressed_on else "way", pressed_on)
 		return
 	if path_failures > _leash_failures_seen:   # W23 (P39f): no progress for a path check - something is in the way
 		_leash_failures += path_failures - _leash_failures_seen
@@ -2134,8 +2158,9 @@ func _leash_may_end_here() -> bool:
 ## M9 gate (lane review): the return stops riding home and waits outside its leash ("post": a body stands on
 ## its post; "way": its way is lost). It stays a return - the director leaves it alone, it ignores what hits it
 ## - and LEASH_HEAL_S still heals it once.
-func _begin_leash_wait(tick: int, why: String) -> void:
+func _begin_leash_wait(tick: int, why: String, way_body := "") -> void:
 	leash_waiting = why
+	_leash_contact_ticks = 0
 	leash_waits += 1
 	_leash_wait_tick = tick
 	_leash_wait_hold_until = -1
@@ -2143,7 +2168,7 @@ func _begin_leash_wait(tick: int, why: String) -> void:
 	_leash_struck_by = ""
 	_leash_wait_hp = entity.combatant.pools.health
 	leash_detour = Vector3.INF
-	_leash_wait_body = str(_leash_blocker().get("id", "")) if why == "way" else ""
+	_leash_wait_body = (way_body if way_body != "" else str(_leash_blocker().get("id", ""))) if why == "way" else ""
 	_leash_wait_step(tick)
 
 
@@ -2256,6 +2281,20 @@ func _leash_post_taker() -> Dictionary:
 	if best == null:
 		return {}
 	return {"centre": best.actor.global_position, "radius": best_r, "id": best.entity_id}
+
+
+## W32: the giant this member's body is pressed into (its edge within LEASH_CONTACT_M of his, or into it), as an
+## entity id; "" when it touches none. Only a giant's body counts (LEASH_CONTACT_WAY_S).
+func _leash_giant_pressed_on() -> String:
+	var my_r := float(record.get("capsule_radius_m", 0.5))
+	for e: CombatEntity in Sim.entities():
+		if e == entity or not e.is_alive() or not (is_instance_valid(e.actor) and e.actor is GiantPlayer):
+			continue
+		var gap := Vector2(e.actor.global_position.x - global_position.x, e.actor.global_position.z - global_position.z).length() \
+			- _leash_body_radius(e) - my_r
+		if gap <= LEASH_CONTACT_M:
+			return e.entity_id
+	return ""
 
 
 ## The radius _leash_blocker and _leash_post_taker give a body: the giant's profile's, else its record's.
