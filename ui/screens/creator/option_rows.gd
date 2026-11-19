@@ -487,6 +487,17 @@ static func row_hidden(spec: Dictionary, record: Dictionary, index: Dictionary, 
 ## Clothing comes first, so that the designs drawn after it never go where it covers.
 static func random_record(rng: RandomNumberGenerator, scope: String, keep_outfit: bool, ancestry_id: String,
 		base: Dictionary) -> Dictionary:
+	var r := _random_record(rng, scope, keep_outfit, ancestry_id, base)
+	# the greys as their sliders keep them: a drawn grey of 0.01 would be snapped to 0 by its slider on show, and
+	# that snap picked back as a second undo step
+	for part: String in ["hair", "beard"]:
+		if r.get(part) is Dictionary and (r[part] as Dictionary).has("grey"):
+			r[part]["grey"] = snap_slider(float(r[part]["grey"]))
+	return r
+
+
+static func _random_record(rng: RandomNumberGenerator, scope: String, keep_outfit: bool, ancestry_id: String,
+		base: Dictionary) -> Dictionary:
 	var r: Dictionary = Appearance.sanitize(base, ancestry_id).record
 	match scope:
 		"body":
