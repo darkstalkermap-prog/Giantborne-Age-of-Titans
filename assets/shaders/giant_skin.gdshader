@@ -14,7 +14,8 @@
 //   * the regions under the shown garments sink inside (hidden_regions, one bit per region);
 //   * light_model 0 Lambert, 1 per-channel wrap (red wraps furthest), 2 wrap and a thickness-driven
 //     back-light, 3 (P51, plan M11 decision 9; the default) a pre-integrated subsurface term: skin_lut, 64 x 64,
-//     is the light a ring of the skin gathers through a skin's diffusion profile, by N.L (u) and the curvature
+//     is the light a ring of the skin gathers through a skin's diffusion profile, of a light wrapped a little round
+//     the terminator per channel (Gate A: the giant's skin is nearly flat at the profile's scale), by N.L (u) and the curvature
 //     (v; curvature_tex, scaled by curvature_scale), blended over Lambert by sss_strength, with model 2's
 //     back-light on the thin parts; the terminator softens and reddens where the skin curves (nose, ears,
 //     lips, fingers) and the lit side keeps the albedo's colour (no screen-space scattering in this renderer);
@@ -57,8 +58,8 @@ uniform int light_model = 3;
 uniform float curvature_scale = 1.0;
 uniform float tone_shoulder : hint_range(0.0, 1.0) = 0.4;
 uniform float tone_chroma : hint_range(0.0, 1.5) = 1.0;
-uniform float tone_resat : hint_range(0.0, 1.0) = 0.8;
-const float TONE_RESAT_MAX = 2.38;   // 1 / SKIN_GRADE's saturation (0.42): the bake's own saturation back
+uniform float tone_resat : hint_range(0.0, 1.0) = 1.0;
+const float TONE_RESAT_MAX = 1.25;   // 1 / SKIN_GRADE's saturation (0.8): the bake's own saturation back
 uniform float sss_strength : hint_range(0.0, 1.0) = 1.0;
 // How far the light wraps round, per channel (red scatters furthest). The M10 gate (OR-1) eased the tint from
 // (0.42, 0.20, 0.13): a surface 90 degrees from a white light took 0.30 / 0.17 / 0.12 of it, a red band along
@@ -124,7 +125,7 @@ vec3 tone_scaled(vec3 albedo, vec3 ratio) {
 	vec3 hue = mix(vec3(1.0), ratio / lr, tone_chroma);
 	float lr2 = lr > 1.0 ? 1.0 + (lr - 1.0) * tone_shoulder : lr;
 	float la = dot(albedo, w);
-	vec3 a = la + (albedo - la) * mix(1.0, TONE_RESAT_MAX, clamp(1.0 - lr, 0.0, 1.0) * tone_resat);
+	vec3 a = la + (albedo - la) * mix(1.0, TONE_RESAT_MAX, clamp(abs(1.0 - lr) * 2.0, 0.0, 1.0) * tone_resat);
 	return max(a, vec3(0.0)) * lr2 * hue;
 }
 

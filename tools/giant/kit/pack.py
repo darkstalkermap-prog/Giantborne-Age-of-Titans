@@ -9,8 +9,9 @@ cloth detail maps (numpy + Pillow; no Blender).
                           CURV_MAX_PER_M), 256 px. Plan M11 §2.4 put it in masks.png's A; there, under the
                           import's VRAM compression, it spoiled the masks' RGB (the brows' tint drew blocks on
                           the forehead), so it has a map of its own
-  tex/skin_lut.png   RGB  64 x 64 pre-integrated skin diffusion (P51; plan M11 decision 9): u = N.L * 0.5 + 0.5,
-                          v = curvature (as masks.png A); sRGB, imported lossless without mipmaps
+  tex/skin_lut.png   RGB  64 x 64 pre-integrated skin diffusion (P51; plan M11 decision 9) of a light wrapped
+                          round the terminator per channel (Gate A, SKIN_WRAP): u = N.L * 0.5 + 0.5, v = curvature;
+                          sRGB, imported lossless without mipmaps
   tex_hi/normal.png  RGB  the normal map at 1024 px (desktop; the Web too since the owner's 26 MiB answer)
   tex_hi/orm.png     RGB  the ORM map at 1024 px, AO and thickness at full precision: build_giant.py
                           --skip-bake reads them back from here
@@ -26,8 +27,10 @@ cloth detail maps (numpy + Pillow; no Blender).
 
 The skin's albedo is graded here (P51, ``SKIN_GRADE``): the baked albedo keeps the research's saturated tone,
 and the lit chest in the creator's light read (208, 141, 106) against the approved studio render's
-(198, 170, 157); the grade desaturates it in linear light (less on the lips) and lifts it, so the default look
-draws the approved renders' skin (tests/slow/test_skin_tone_render.gd).
+(198, 170, 157); the grade desaturates it in linear light (less on the lips). P51 took it to the studio render
+(saturation 0.42, gain 1.2), which read near white and grey in the world's sun; Gate A eased it (0.8, no gain): the
+chest draws (220, 160, 131) in the creator's light (tests/slow/test_skin_tone_render.gd) and the skin keeps its
+colour in the world's (tests/slow/test_skin_world_render.gd).
 
 Every downscale resizes one channel at a time (Pillow's RGBA resize premultiplies by alpha and
 wiped the RGB channels of the research's 512 px masks). Ported from the research's pack and hair
@@ -49,8 +52,9 @@ ATLAS = 512
 ATLAS_COLUMNS = 4
 DETAIL = 256
 LUT = 64
-# The skin's grade (P51), in linear light: the saturation kept (on the lips ``sat_lips``) and a gain.
-SKIN_GRADE = {"sat": 0.42, "sat_lips": 0.75, "gain": (1.2, 1.2, 1.2)}
+# The skin's grade (P51; eased at Gate A from 0.42 / 0.75 / 1.2), in linear light: the saturation kept (on the lips
+# ``sat_lips``) and a gain. The skin shader's TONE_RESAT_MAX is 1 / sat.
+SKIN_GRADE = {"sat": 0.8, "sat_lips": 0.9, "gain": (1.0, 1.0, 1.0)}
 # The curvature (1/m, human scale) that masks.png's A = 1 stands for: a radius of 3.8 mm (the ears' rims, the
 # nostrils, the fingers' sides); flatter skin reads lower, the chest about 0.01-0.03.
 CURV_MAX_PER_M = 260.0
@@ -60,6 +64,12 @@ CURV_SIZE = 256
 # size (a look, not physics: at the true scale the band along the terminator is too thin to see).
 SCATTER_SCALE = 3.5
 CURV_STEP = 3
+# The light each channel wraps round the terminator before the profile spreads it (Gate A): the giant's skin is
+# nearly flat at the profile's scale (the chest's ring is 13-38 cm wide), so without it the lookup's flat rows are
+# Lambert's hard terminator, which the normal map's grain and the self-shadow broke into ragged white patches in
+# the world's sun. Like M10's light_model 2 wrap (0.36, 0.25, 0.20) but evener: the self-shadow cuts the wrapped light
+# a little past the terminator, and M10's red reach drew a red band there. The profile softens the curved parts more.
+SKIN_WRAP = (0.28, 0.24, 0.22)
 # The skin's diffusion profile (d'Eon and Luebke's six Gaussians, variances in mm^2, weights R G B).
 SKIN_PROFILE = (
     (0.0064, (0.233, 0.455, 0.649)),
@@ -181,7 +191,8 @@ def curvature_map(bake_dir):
 
 def make_skin_lut(path):
     """The pre-integrated skin lookup (Penner's method): for curvature 1/r and the angle to the light, the
-    light a ring of radius r gathers through the profile, normalized; sRGB."""
+    light a ring of radius r gathers through the profile, normalized; sRGB. The light on the ring is wrapped per
+    channel by SKIN_WRAP (Gate A), so the flattest rows are a soft wrap, not Lambert."""
     th = np.arccos(np.clip(2.0 * (np.arange(LUT) + 0.5) / LUT - 1.0, -1.0, 1.0))      # u: N.L * 0.5 + 0.5
     x = np.linspace(-np.pi, np.pi, 721)[None, :]
     out = np.zeros((LUT, LUT, 3))
@@ -193,8 +204,11 @@ def make_skin_lut(path):
         for v, wrgb in SKIN_PROFILE:
             g = np.exp(-d2 / (2.0 * v)) / (2.0 * np.pi * v)
             prof += g[0][:, None] * np.asarray(wrgb)[None, :]
-        lit = np.clip(np.cos(th[:, None] + x), 0.0, None)                            # (LUT, samples)
-        out[j] = (lit @ prof) / np.maximum(prof.sum(axis=0), 1e-12)
+        c = np.cos(th[:, None] + x)
+        for ch in range(3):
+            w = SKIN_WRAP[ch]
+            lit = np.clip((c + w) / (1.0 + w), 0.0, None)                           # (LUT, samples)
+            out[j, :, ch] = (lit @ prof[:, ch]) / max(prof[:, ch].sum(), 1e-12)
     # row 0 of the image (UV v = 0 in the game) is the flattest
     save(_to_srgb8(out), path, "RGB")
 

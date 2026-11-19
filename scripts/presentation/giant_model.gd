@@ -47,7 +47,9 @@ const PART_PATH := "part_path"
 const PART_META := &"giant_part"
 ## The shadow proxy's node when the index names none.
 const SHADOW_PROXY := "ShadowProxy"
-const SHADOW_PROXY_LAYER := 3
+## Gate A: the limbs' layer, which every camera draws. A shadows-only mesh is still culled by the camera's cull
+## mask in the shadow passes, so on the head's layer (W29) first person and the pressed camera lost the shadow.
+const SHADOW_PROXY_LAYER := 1
 ## The parts let go last stay loaded (strong references), so a style turned off and on again, or the next
 ## model that shows it, does not load it twice.
 const PART_KEEP := 6
@@ -156,8 +158,9 @@ func apply_defaults() -> void:
 			mi.cast_shadow = (GeometryInstance3D.SHADOW_CASTING_SETTING_ON if bool(e.get("free", false))
 					else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
 	if proxy != null:
-		# on the head's layer: the first-person camera never draws that layer, and a mesh that is drawn in
-		# shadow passes only is not a camera's to draw anyway (shadow casters are not culled by camera masks)
+		# on the limbs' layer, which every camera keeps: the renderer culls a shadow caster by the camera's
+		# mask too, so on a layer first person culls (the head's, W29) the giant cast no shadow there; a mesh
+		# drawn in the shadow passes only is never drawn by the camera itself
 		proxy.layers = 1 << (SHADOW_PROXY_LAYER - 1)
 		proxy.visible = true
 		proxy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY

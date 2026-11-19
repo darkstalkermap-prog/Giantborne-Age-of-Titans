@@ -114,7 +114,10 @@ const NATURAL_DYE := Color(0.36, 0.30, 0.24)
 ## The detail map's strength per kind.
 const DETAIL_STRENGTH := {"weave": 0.28, "leather": 0.5, "fur": 0.45, "metal": 0.35}
 ## The cloth shader's soft edge light per detail kind (P51: wool and fur catch the light at their edges).
-const CLOTH_RIM := {"weave": 0.3, "leather": 0.1, "fur": 0.45, "metal": 0.0}
+## Gate A: weave and leather take no rim. The renderer's rim light does not look at N.L, so a sliver of a fold seen
+## edge-on against the sun (the braies' crotch in the world's light) was lit as if it faced it: small bright patches.
+## Fur keeps its fuzz (its folds are soft and it reads right in the world's light).
+const CLOTH_RIM := {"weave": 0.0, "leather": 0.0, "fur": 0.45, "metal": 0.0}
 
 ## The uniforms GiantLook sets, per shader kind (validate() checks them against the shaders), and the two
 ## every giant shader declares for RigPaint.
@@ -144,12 +147,14 @@ const SHELL_SKIN_TINT := 0.7
 ## drawn_tone.
 const TONE_SHOULDER := 0.4
 const TONE_CHROMA := 1.0
-const TONE_RESAT := 0.8
-const TONE_RESAT_MAX := 2.38
+const TONE_RESAT := 1.0
+const TONE_RESAT_MAX := 1.25
 const META_SHELL_STACK := "giant_shell_stack"
-## The default tone's lit chest in the creator's light (P51, measured by tests/slow/test_skin_tone_render.gd: the
-## approved studio render's (198, 170, 157) within a few levels): drawn_tone scales it by a tone over the bake tone.
-const DRAWN_DEFAULT := Color(0.780392, 0.666667, 0.615686)   # (199, 170, 157)
+## The default tone's lit chest in the creator's light (measured by tests/slow/test_skin_tone_render.gd): drawn_tone
+## scales it by a tone over the bake tone. P51 graded the albedo to the approved studio render's (198, 170, 157)
+## (199, 170, 157 drawn); Gate A eased the grade so the skin holds its colour in the world's light, and the chest
+## now draws (220, 160, 131), 26/255 off the studio render (docs/systems/P51.md, "Gate A").
+const DRAWN_DEFAULT := Color(0.862745, 0.627451, 0.513725)   # (220, 160, 131)
 const PAINT_UNIFORMS := ["tint", "flash"]
 const KIND_OF_CATEGORY := {"body": "skin", "eyes": "eye", "hair": "hair", "beard": "hair", "garment": "cloth"}
 
@@ -821,7 +826,7 @@ static func tone_scaled(albedo: Vector3, ratio: Vector3) -> Vector3:
 	var hue := Vector3.ONE.lerp(ratio / lr, TONE_CHROMA)
 	var lr2 := 1.0 + (lr - 1.0) * TONE_SHOULDER if lr > 1.0 else lr
 	var la := albedo.dot(w)
-	var sat := lerpf(1.0, TONE_RESAT_MAX, clampf(1.0 - lr, 0.0, 1.0) * TONE_RESAT)
+	var sat := lerpf(1.0, TONE_RESAT_MAX, clampf(absf(1.0 - lr) * 2.0, 0.0, 1.0) * TONE_RESAT)
 	var a := (Vector3.ONE * la + (albedo - Vector3.ONE * la) * sat).max(Vector3.ZERO)
 	return a * lr2 * hue
 

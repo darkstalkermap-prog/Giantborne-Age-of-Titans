@@ -196,10 +196,9 @@ func test_every_look_key_sets_its_uniforms_and_visibility() -> void:
 	assert_true((eye.get_meta(GiantLook.META_NAMES, {}) as Dictionary).has("look")
 		and eye.get_shader_parameter("look") == Vector2.ZERO, "the eyes look ahead until the rig turns them (P51)")
 	var tunic := _mat(root, "Garment_tunic_core")
-	assert_true(_near(tunic.get_shader_parameter("kind"), 0) and float(tunic.get_shader_parameter("rim")) > 0.0,
-		"wool is cloth with a soft edge light (P51)")
-	assert_true(float(_mat(root, "Garment_furs").get_shader_parameter("rim")) > float(tunic.get_shader_parameter("rim")),
-		"fur catches more of it")
+	assert_true(_near(tunic.get_shader_parameter("kind"), 0) and _near(tunic.get_shader_parameter("rim"), 0.0),
+		"wool is cloth with no rim light (Gate A: the rim ignores N.L and lit the braies' folds edge-on)")
+	assert_true(float(_mat(root, "Garment_furs").get_shader_parameter("rim")) > 0.0, "fur keeps its soft edge light (P51)")
 	var head := _mat(root, "Body_Head")
 	assert_true(head.get_shader_parameter("skin_lut") is Texture2D and head.get_shader_parameter("curvature_tex") is Texture2D,
 		"the skin has its subsurface lookup and its curvature (P51)")
@@ -612,7 +611,8 @@ func test_the_swatch_shows_the_tone_the_skin_draws() -> void:
 		"the default tone draws as the measured chest")
 	var approved := Color8(198, 170, 157)
 	for ch in 3:
-		assert_true(absf(GiantLook.DRAWN_DEFAULT[ch] - approved[ch]) <= 12.0 / 255.0, "within 12/255 of the approved render")
+		assert_true(absf(GiantLook.DRAWN_DEFAULT[ch] - approved[ch]) <= 30.0 / 255.0,
+			"within 30/255 of the approved render (Gate A: the world's light first; P51 had 12)")
 	var pale := GiantLook.drawn_tone({"color": "#c9a08a"})
 	var deep := GiantLook.drawn_tone({"color": "#4e3426"})
 	assert_true(pale.get_luminance() > d.get_luminance() and deep.get_luminance() < d.get_luminance(),
