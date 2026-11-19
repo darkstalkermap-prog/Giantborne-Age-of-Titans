@@ -77,6 +77,11 @@ func first_own_hit() -> Dictionary:
 		for vi in visual_instances(root):
 			if (vi.layers & camera.cull_mask) == 0 or not vi.is_visible_in_tree():
 				continue
+			# a shadows-only mesh (the giant's shadow proxy, on a layer every camera keeps since Gate A) is never
+			# drawn by the camera
+			var gi := vi as GeometryInstance3D
+			if gi != null and gi.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY:
+				continue
 			var mi := vi as MeshInstance3D
 			var d := skinned_distance(mi, origin, dir) if mi != null and mi.skin != null \
 				else ray_aabb_distance(origin, dir, vi.global_transform, vi.get_aabb(), RANGE_M)

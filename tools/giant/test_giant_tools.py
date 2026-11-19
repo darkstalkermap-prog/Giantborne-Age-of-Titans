@@ -333,7 +333,7 @@ class LookTwoTest(unittest.TestCase):
         self.assertLess(g[0, 0, 0] - g[0, 0, 2], 208 - 106, "less saturated")
         self.assertGreater(g[0, 1, 0] - g[0, 1, 2], g[0, 0, 0] - g[0, 0, 2], "the lips keep more of their red")
 
-    def test_the_lookup_is_lambert_on_flat_skin_and_red_round_a_bend(self):
+    def test_the_lookup_wraps_on_flat_skin_and_is_red_round_a_bend(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, "lut.png")
             pack.make_skin_lut(path)
@@ -341,7 +341,11 @@ class LookTwoTest(unittest.TestCase):
         self.assertEqual(lut.shape, (pack.LUT, pack.LUT, 3))
         lit = lut[0, -1]
         self.assertTrue(np.all(lit >= 250), "flat skin facing the light takes all of it: %s" % lit)
-        self.assertTrue(np.all(lut[0, : pack.LUT // 2 - 2] <= 2), "flat skin facing away takes none")
+        reach = int(np.ceil(max(pack.SKIN_WRAP) * pack.LUT / 2.0)) + 1
+        self.assertTrue(np.all(lut[0, : pack.LUT // 2 - reach] <= 2), "flat skin facing away past the wrap takes none")
+        edge = lut[0, pack.LUT // 2]
+        self.assertTrue(np.all(edge >= 80), "flat skin at the terminator still takes some (Gate A's wrap): %s" % edge)
+        self.assertGreaterEqual(int(edge[0]), int(edge[2]), "the red wraps at least as far as the blue")
         term = lut[-1, pack.LUT // 2]
         self.assertGreater(term[0], term[1] + 5, "at the terminator of a bend the red reaches furthest: %s" % term)
         self.assertGreaterEqual(term[1], term[2], "then the green")

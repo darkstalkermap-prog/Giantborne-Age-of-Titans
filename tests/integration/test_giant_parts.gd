@@ -206,7 +206,11 @@ func test_the_shadow_proxy_casts_the_giants_shadow() -> void:
 		return
 	assert_eq(proxy.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY, "drawn in shadow passes only")
 	assert_true(proxy.visible, "and shown")
-	assert_eq(proxy.layers, 1 << (GiantModel.SHADOW_PROXY_LAYER - 1), "on the layer no first-person camera draws")
+	assert_eq(proxy.layers, 1 << (GiantModel.SHADOW_PROXY_LAYER - 1), "on its layer")
+	# Gate A: the renderer culls a shadow caster by the camera's mask too; on the head's layer (W29) first person and
+	# the pressed third-person camera lost the giant's shadow
+	for mask: int in [CameraRig.CULL_ALL, CameraRig.CULL_NO_HEAD, CameraRig.CULL_FIRST_PERSON, GiantPreview.FP_CULL]:
+		assert_true((proxy.layers & mask) != 0, "every camera keeps the proxy's layer (mask %x), so its shadow is cast" % mask)
 	var tris := int(proxy.mesh.surface_get_array_index_len(0)) / 3
 	assert_eq(tris, int(m.index.shadow_proxy.tris), "the index counts its triangles")
 	assert_true(tris >= 2300 and tris <= 2700, "about 2,500 triangles (%d)" % tris)
