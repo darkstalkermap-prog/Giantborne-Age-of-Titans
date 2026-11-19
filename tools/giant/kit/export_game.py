@@ -547,8 +547,9 @@ def add_face_keys(ob, deltas, least=FACE_KEY_LEAST_M):
 
 
 def card_root_vertices(ob, kd, S):
-    """Per vertex of a card mesh, the body vertex its card's root grew from (P56): a card is a connected strip; its
-    root is its vertex nearest the root end (the UVs' v = 1 there)."""
+    """Per vertex of a card mesh, the body vertex its card's root grew from (P56): a card (or a braid's tube) is a
+    connected strip; its root row is its vertices nearest the root end (the UVs' v = 1 there); every vertex takes the
+    body vertex under the root-row vertex nearest it (a card's left edge the skin under its left root corner)."""
     from scipy.sparse import coo_matrix
     from scipy.sparse.csgraph import connected_components
     CV, t, _arc = card_coordinates(ob)
@@ -559,13 +560,16 @@ def card_root_vertices(ob, kd, S):
     edges = edges.reshape(-1, 2)
     _c, label = connected_components(coo_matrix((np.ones(len(edges)), (edges[:, 0], edges[:, 1])), shape=(n, n)),
                                      directed=False)
-    order = np.lexsort((t, label))
-    first = np.ones(n, bool)
-    first[1:] = label[order][1:] != label[order][:-1]
-    root_of_label = {int(label[i]): int(i) for i in order[first]}
-    roots = np.array([root_of_label[int(l)] for l in label])
-    _, body = kd.query(CV[roots] / S)
-    return body
+    _, body_of = kd.query(CV / S)
+    out = np.empty(n, np.int64)
+    order = np.argsort(label, kind="stable")
+    bounds = np.flatnonzero(np.diff(label[order])) + 1
+    for ids in np.split(order, bounds):
+        tt = t[ids]
+        root = ids[tt <= tt.min() + 1e-6]
+        d = np.linalg.norm(CV[ids][:, None, :] - CV[root][None, :, :], axis=2)
+        out[ids] = body_of[root[np.argmin(d, axis=1)]]
+    return out
 
 
 def bead_codes():

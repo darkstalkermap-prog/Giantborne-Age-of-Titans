@@ -561,3 +561,34 @@ func test_every_preset_is_valid_and_names_itself() -> void:
 	assert_true(ids.has(Appearance.DEFAULT_PRESET), "the Wanderer is one of them")
 	assert_eq(Appearance.data_errors(GameData.records, GameData.record_paths), PackedStringArray(),
 		"the data's own rules hold on the shipped data")
+
+
+## P56 (plan M11 §2.5, §2.6): the catalogue II's options - beads known now (the hair's and the beard's apart, the
+## set's mesh in the look), the face sliders' set, the legs' tattoos, a face paint and a body paint at once, six scars.
+func test_the_catalogue_two_options() -> void:
+	var r := Appearance.default_record()
+	r.hair.style = "hair.twin_braids"
+	r.hair.beads = "bead.bronze_rings"
+	r.beard.style = "beard.chin_braid"
+	r.beard.beads = "bead.silver_beads"
+	r.tattoos.legs = "tattoo.leg_serpent"
+	r.paint.face = "paint.eye_band"
+	r.paint.body = "paint.leg_stripes"
+	r.scars = ["scar.lip", "scar.shoulder_bite", "scar.thigh_gash", "scar.ribs", "scar.brow", "scar.cheek"]
+	r.face.jaw = 0.6
+	var s := Appearance.sanitize(r)
+	assert_eq((s.dropped as PackedStringArray), PackedStringArray(), "every new option is known")
+	var rec: Dictionary = s.record
+	assert_eq([str(rec.hair.beads), str(rec.beard.beads)], ["bead.bronze_rings", "bead.silver_beads"], "beads kept")
+	assert_eq([str(rec.paint.face), str(rec.paint.body)], ["paint.eye_band", "paint.leg_stripes"], "a face and a body paint")
+	assert_eq((rec.scars as Array).size(), 6, "six scars worn")
+	var look := Appearance.to_look(rec, "")
+	assert_eq([str(look.hair_mesh), str(look.hair_beads), str(look.beard_beads)], ["Hair_twin_braids", "Beads_bronze",
+		"Beads_silver"], "the look names the style and the bead sets' meshes")
+	assert_true(is_equal_approx(float(look.face.jaw), 0.6), "the face slider reaches the look")
+	assert_eq((look.paint as Array).size(), 2, "both paints in the look")
+	assert_eq(Appearance.option_ids("face").size(), 6, "the six face sliders")
+	for id in Appearance.option_ids("face"):
+		assert_true(Appearance.FACE_KEYS.has(id.get_slice(".", 1)), "%s is a face key" % id)
+	assert_eq(str(Appearance.option("bead.none").get("mesh", "x")), "", "no beads is the default")
+

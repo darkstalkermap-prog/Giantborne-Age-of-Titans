@@ -286,8 +286,13 @@ func _check_run() -> void:
 		else:
 			beaded.beard.beads = "bead.bone_beads"
 		var with_beads: Image = await _tile(beaded, false, turn, framing)
+		var beads := _changed(plain, with_beads)
+		if hair:
+			# a braid that falls in front (the twin braids, the temples' braids) wears its beads on the chest
+			var front: Image = await _tile(r, false, 50.0, "face")
+			beads = maxf(beads, _changed(front, await _tile(beaded, false, 50.0, "face")))
 		report.styles[k] = {"drawn": _changed(plain, none_hair if hair else none_face), "sway": _changed(plain, swayed),
-			"beads": _changed(plain, with_beads), "validate": Array(GiantLook.validate(_p.model, _p.model.index,
+			"beads": beads, "validate": Array(GiantLook.validate(_p.model, _p.model.index,
 			Appearance.to_look(beaded)))}
 	# 2. the face keys against the CPU's blend of the same arrays (the skin alone: no hair, no beard)
 	var head := GiantLook.mesh_node(_p.model, _p.model.index, "Body_Head")

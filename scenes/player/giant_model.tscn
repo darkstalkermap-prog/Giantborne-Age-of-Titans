@@ -520,7 +520,7 @@ index = {
 "wrist_l": [-1.087127, 2.306697, -0.44995],
 "wrist_r": [1.087127, 2.306697, -0.44995]
 },
-"manifest_sha256": "764c7d40a626eb28093ac543a84c20794fa6d889bd60eef2ed9c2545c81aab84",
+"manifest_sha256": "28052bc5d5ef030f3b588a0944707d5c8d33fcf300d43a6b66b3665e80dc95f9",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -732,7 +732,7 @@ index = {
 "chains": ["beard"],
 "covers": [],
 "dye": "none",
-"face_keys": ["jaw", "nose", "cheeks", "age"],
+"face_keys": ["jaw", "chin", "nose", "cheeks", "age"],
 "layer": 3,
 "node": "Beard_braided_moustache",
 "part_path": "res://assets/giant/parts/Beard_braided_moustache.glb",
