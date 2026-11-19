@@ -5,9 +5,10 @@ Run with the shared venv's Python under nice (plan M10 §2.5):
   nice -n 19 $GIANT_VENV/bin/python tools/giant/build_giant.py [steps] [options]
 
 Steps (none given: --all):
-  --body, --garments, --hair   the export (kit/export_game.py): every mesh on the one skeleton in
-                               giant.glb (one glTF, so the three run together), the landmarks and the
-                               body's hash
+  --body, --garments, --hair   the export (kit/export_game.py): the skeleton, the body, the eyes and the
+                               shadow proxy in giant.glb and every hair, beard and garment mesh in
+                               parts/<mesh id>.glb on the same skeleton (one run, so the three steps run
+                               together), the landmarks, the chains and the body's hash
   --bake                       the Cycles bakes (kit/bake.py) into GIANT_CACHE: the cheap passes and
                                AO and thickness
   --designs                    the design array designs.png (kit/designs.py; needs the cheap passes)
@@ -58,7 +59,9 @@ import manifest  # noqa: E402
 
 ASSETS = "assets/giant"
 STEPS = ("export", "bake", "designs", "pack", "clips")
-EXPORT_SOURCES = ("mh_data.py", "giant_body.py", "giant_hair.py", "giant_garment.py", "split.py", "export_game.py")
+EXPORT_SOURCES = ("mh_data.py", "giant_body.py", "giant_hair.py", "giant_garment.py", "giant_parts.py", "split.py",
+                  "export_game.py")
+PARTS = ASSETS + "/parts"
 DESIGN_SOURCES = ("designs.py", "giant_skin.py", "giant_body.py", "mh_data.py", "split.py")
 PACK_SOURCES = ("pack.py",)
 CLIP_SOURCES = ("clips.py",) + EXPORT_SOURCES
@@ -70,7 +73,14 @@ PRESETS = "export_presets.cfg"
 # Measured shipped rates (gzip -9 then base64 of the imported files; the M10 asset brief's test export):
 # meshes per vertex (LODs and shadow meshes included), textures per byte of VRAM data with mipmaps.
 RATE_MESH_B_PER_VERTEX = 61.0
-RATE_CARD_B_PER_VERTEX = 35.0
+# P48, measured on its Web test export (each imported scene gzipped alone, then base64): a garment part
+# ships 70.7 B a glTF vertex and a card mesh 36.0 B (fits over the 12 and the 9 parts), plus 13.5 KB a file
+# for the skeleton and the skin every part's scene carries; the clips 11.6 B a keyed bone and key.
+RATE_CARD_B_PER_VERTEX = 33.4
+RATE_PART_B_PER_VERTEX = 65.4
+RATE_PROXY_B_PER_VERTEX = 45.0     # the shadow proxy: no UVs (ASSUMED: inside giant.glb, not measured apart)
+RATE_SKELETON_B = 13500.0
+RATE_CLIP_B_PER_BONE_KEY = 11.6
 GODOT_VERTEX_SPLIT = 1.08          # the importer splits vertices at UV seams and normals
 TEXTURE_FACTOR = {"albedo": 0.51, "normal": 0.94, "orm": 0.78, "masks": 0.10, "hair_atlas": 0.66,
                   "designs": 0.07, "cloth": 0.8}
@@ -186,21 +196,29 @@ def bake_dir(keys, want_expensive, read_cache, write_cache, work: Path, times: d
 # --------------------------------------------------------------------------------------
 def build_index(export_info: dict, design_info: dict) -> dict:
     import split
+    res = "res://" + ASSETS + "/"
     meshes = {}
     for mid, e in sorted(export_info["meshes"].items()):
         entry = {"node": mid, "category": e["category"], "layer": e["layer"], "dye": e["dye"],
                  "covers": e.get("covers", []), "tris": e["tris"]}
-        for k in ("atlas", "detail", "part"):
+        for k in ("atlas", "detail", "part", "chains", "free", "shell"):
             if k in e:
                 entry[k] = e[k]
+        if "file" in e:
+            # P48 (plan M11 §2.2): the mesh is a part, loaded when a look shows it (GiantModel.ensure_part).
+            # "part" already names a garment's body part (torso | limbs), so the file is "part_path".
+            entry["part_path"] = res + e["file"]
         if "coverage" in e:
             entry["coverage"] = {r: s for r, s in e["coverage"].items() if s >= 0.5}
         meshes[mid] = entry
-    designs = {d: {"layer": v["layer"], "channel": v["channel"], "kind": v["kind"], "regions": v["regions"]}
+    designs = {d: {"layer": v["layer"], "channel": v["channel"], "kind": v["kind"], "regions": v["regions"],
+                   "side": v.get("side", "centre")}
                for d, v in sorted(design_info["designs"].items())}
     scar_layers = sorted({v["layer"] for v in designs.values() if v["kind"] == "scar"})
-    res = "res://" + ASSETS + "/"
     return {
+        "chains": export_info.get("chains", {}),
+        "build_max_m": export_info.get("build_max_m", 0.0),
+        "shadow_proxy": {k: export_info["shadow_proxy"][k] for k in ("node", "tris")} if "shadow_proxy" in export_info else {},
         "meshes": meshes,
         "garments": {g: list(m) for g, m in sorted(export_info["garments"].items())},
         "designs": designs,
@@ -214,7 +232,8 @@ def build_index(export_info: dict, design_info: dict) -> dict:
                      "scar_layer": scar_layers[0] if scar_layers else -1,
                      "scar_layer_b": scar_layers[1] if len(scar_layers) > 1 else -1, "hair_atlas": res + "hair_atlas.png",
                      "detail_weave": res + "cloth_weave.png", "detail_leather": res + "cloth_leather.png",
-                     "detail_fur": res + "cloth_fur.png"},
+                     "detail_fur": res + "cloth_fur.png", "detail_metal": res + "cloth_metal.png",
+                     "skin_lut": res + "tex/skin_lut.png", "shell_strands": res + "shell_strands.png"},
         "body_hash": export_info["body_hash"],
     }
 
@@ -245,6 +264,19 @@ def build(steps, out_root: Path, read_cache=True, write_cache=True, skip_bake=Fa
             doc["export"] = info
             inputs = manifest.hash_json({"sources": source_hashes(EXPORT_SOURCES), "mpfb2": mp})
             files[ASSETS + "/giant.glb"] = manifest.file_entry(out_root, ASSETS + "/giant.glb", "export", inputs, False)
+            # P48: one glTF a part; a part the export no longer writes leaves the folder and the manifest
+            (assets / "parts").mkdir(exist_ok=True)
+            wanted = {Path(rel).name for rel in info.get("parts", {}).values()}
+            for old_part in sorted((assets / "parts").glob("*.glb")):
+                if old_part.name not in wanted:
+                    old_part.unlink()
+                    for extra in (".import",):
+                        Path(str(old_part) + extra).unlink(missing_ok=True)
+            for rel in [k for k in files if k.startswith(PARTS + "/")]:
+                del files[rel]
+            for mid, rel in sorted(info.get("parts", {}).items()):
+                shutil.copyfile(work / "export" / rel, assets / rel)
+                files[ASSETS + "/" + rel] = manifest.file_entry(out_root, ASSETS + "/" + rel, "export", inputs, False)
         need_bake = any(s in steps for s in ("bake", "designs", "pack"))
         if need_bake:
             if skip_bake:
@@ -328,8 +360,17 @@ IMPORT_SETTINGS = {
     "giant.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "true",
                                            "meshes/ensure_tangents": "true", "skins/use_named_skins": "true",
                                            "animation/import": "false"}),
+    # P48: a part is one mesh on the model's skeleton, bound by its named skin; it casts no shadow of its own
+    # (the shadow proxy does; a free cape draws its own with its drawn mesh)
+    "parts/*.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "false",
+                                             "meshes/ensure_tangents": "true", "skins/use_named_skins": "true",
+                                             "animation/import": "false"}),
     "designs.png": ("2d_array_texture", "CompressedTexture2DArray",
                     {"compress/mode": "2", "mipmaps/generate": "true", "slices/horizontal": "1"}),
+    # P51: the skin's subsurface lookup is read by (N.L, curvature) in light(): exact values, no mipmaps
+    "skin_lut.png": ("texture", "CompressedTexture2D", {"compress/mode": "0", "mipmaps/generate": "false"}),
+    # P51: the shells' strands, a cell a strand: exact values with mipmaps (they thin out with distance)
+    "shell_strands.png": ("texture", "CompressedTexture2D", {"compress/mode": "0", "mipmaps/generate": "true"}),
     # P43: the clips as an AnimationLibrary (loops are set in code: imported clips have loop off)
     "giant_clips.glb": ("animation_library", "AnimationLibrary",
                         {"animation/import": "true", "animation/fps": "30", "animation/remove_immutable_tracks": "true"}),
@@ -339,6 +380,8 @@ IMPORT_SETTINGS = {
 def import_params(rel: str, doc: dict):
     """(importer, type, {param: value}) of a generated file, or None for files Godot must not import."""
     name = rel.rsplit("/", 1)[-1]
+    if rel.startswith("parts/") and name.endswith(".glb"):
+        name = "parts/*.glb"
     if name in IMPORT_SETTINGS:
         imp, typ, params = IMPORT_SETTINGS[name]
         params = dict(params)
@@ -486,20 +529,31 @@ def verify(skip_bake: bool, use_cache_write: bool) -> int:
 def estimate(rel: str, doc: dict) -> float:
     """The estimated shipped bytes of one generated file (measured rates; plan §2.12)."""
     name = rel.rsplit("/", 1)[-1]
+    meshes = doc["export"]["meshes"]
     if name == "giant.glb":
-        total = 0.0
-        for mid, e in doc["export"]["meshes"].items():
-            rate = RATE_CARD_B_PER_VERTEX if e["category"] in ("hair", "beard") else RATE_MESH_B_PER_VERTEX
-            total += e["verts"] * GODOT_VERTEX_SPLIT * rate
+        total = RATE_SKELETON_B
+        for mid, e in meshes.items():
+            if "file" not in e:
+                total += e["verts"] * GODOT_VERTEX_SPLIT * RATE_MESH_B_PER_VERTEX
+        total += doc["export"].get("shadow_proxy", {}).get("verts", 0) * RATE_PROXY_B_PER_VERTEX
         return total
+    if "/parts/" in rel and name.endswith(".glb"):
+        e = meshes.get(name[:-4], {})
+        rate = RATE_CARD_B_PER_VERTEX if e.get("category") in ("hair", "beard") else RATE_PART_B_PER_VERTEX
+        return RATE_SKELETON_B + e.get("verts", 0) * GODOT_VERTEX_SPLIT * rate
     if name == "giant_clips.glb":
-        return 20000.0
+        return RATE_CLIP_B_PER_BONE_KEY * sum(c["bones"] * (c["frames"] + 1)
+                                              for c in doc.get("clips", {}).get("clips", {}).values())
     if not name.endswith(".png"):
         return 0.0
     from PIL import Image
     with Image.open(ROOT / rel) as im:
         w, h = im.size
         has_alpha = im.mode in ("RGBA", "LA")
+    if name == "skin_lut.png":
+        return w * h * 4.0 * 0.6                                     # lossless, no mipmaps (P51)
+    if name == "shell_strands.png":
+        return w * h * 4.0 * 4.0 / 3.0 * 0.8                         # lossless with mipmaps (P51)
     bpt = 1.0 if (has_alpha or name == "normal.png") else 0.5       # DXT5 / RGTC: 1 byte a texel, DXT1: 0.5
     raw = w * h * bpt * 4.0 / 3.0
     key = "cloth" if name.startswith("cloth_") else name[:-4]

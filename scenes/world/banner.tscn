@@ -35,11 +35,11 @@ _surfaces = [{
 "vertex_data": PackedByteArray("ZmYmv8zMfECuR2G9ZmYmP8zMfEA9Cte9ZmYmP8zMfECuR2G9ZmYmv8zMfEA9Cte9ZmYmv///3z+uR2G9ZmYmP///3z89Cte9ZmYmP///3z+uR2G9ZmYmv///3z89Cte9ZmYmP8zMfECuR2G9ZmYmv8zMfEA9Cte9ZmYmP8zMfEA9Cte9ZmYmv8zMfECuR2G9ZmYmP///3z+uR2G9ZmYmv///3z89Cte9ZmYmP///3z89Cte9ZmYmv///3z+uR2G9ZmYmP8zMfECuR2G9ZmYmv///3z+uR2G9ZmYmv8zMfECuR2G9ZmYmP///3z+uR2G9ZmYmP8zMfEA9Cte9ZmYmv///3z89Cte9ZmYmv8zMfEA9Cte9ZmYmP///3z89Cte9/3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+/")
 }]
 
-[node name="Banner" type="Node3D"]
+[node name="Banner" type="Node3D" unique_id=2111343824]
 script = ExtResource("1_7bfd3")
 prop_id = "prop.banner"
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=379887970]
 
-[node name="Merged" type="MeshInstance3D" parent="Visual" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Visual" unique_id=573109064 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_3")

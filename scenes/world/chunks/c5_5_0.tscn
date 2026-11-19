@@ -212,11 +212,11 @@ size = Vector3(16.999977, 14, 1)
 [sub_resource type="BoxShape3D" id="BoxShape3D_45"]
 size = Vector3(17, 14, 1)
 
-[node name="Chunk_5_5_0" type="Node3D"]
+[node name="Chunk_5_5_0" type="Node3D" unique_id=1373236797]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1961666393]
 
-[node name="world_crownmarch_toll_gate" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_toll_gate" type="StaticBody3D" parent="Props" unique_id=1200228110]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 204, 12.249001, 99)
 collision_layer = 16
 collision_mask = 0
@@ -224,32 +224,32 @@ script = ExtResource("1_5fc47")
 world_id = "world.crownmarch.toll_gate"
 metadata/faction = "toll_riders"
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_toll_gate"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_toll_gate" unique_id=1468098855]
 script = ExtResource("2_c8050")
 entity_id = "world.crownmarch.toll_gate"
 definition_id = "prop.gate_toll"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_toll_gate"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_toll_gate" unique_id=1549216877]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_toll_gate/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_toll_gate/Anchors" unique_id=734845233]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_toll_gate"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_toll_gate" unique_id=1914603515]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Block1" type="CollisionShape3D" parent="Props/world_crownmarch_toll_gate"]
+[node name="Block1" type="CollisionShape3D" parent="Props/world_crownmarch_toll_gate" unique_id=2118739260]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.6, 4.5, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="Block2" type="CollisionShape3D" parent="Props/world_crownmarch_toll_gate"]
+[node name="Block2" type="CollisionShape3D" parent="Props/world_crownmarch_toll_gate" unique_id=1936991364]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.6, 4.5, 0)
 shape = SubResource("BoxShape3D_3")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_toll_gate"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_toll_gate" unique_id=1224035624]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_toll_gate/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_toll_gate/Hurtboxes" unique_id=1599248251]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
 collision_layer = 4
 collision_mask = 0
@@ -257,38 +257,38 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_toll_gate/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_toll_gate/Hurtboxes/Body" unique_id=812344633]
 shape = SubResource("BoxShape3D_4")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_toll_gate"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_toll_gate" unique_id=852832501]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_gate/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_gate/Intact" unique_id=1574487410 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_toll_gate"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_toll_gate" unique_id=704723681]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_gate/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_gate/Broken" unique_id=733922780 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_6")
 
-[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_crownmarch_toll_gate"]
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_crownmarch_toll_gate" unique_id=610568207]
 enabled = false
 start_position = Vector3(0, 0.0798645, 4)
 end_position = Vector3(0, 0.11377144, -4)
 
-[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_crownmarch_toll_gate"]
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_crownmarch_toll_gate" unique_id=423439591]
 enabled = false
 navigation_layers = 2
 start_position = Vector3(0, -0.09900093, 5)
 end_position = Vector3(0, -0.09900093, -5)
 
-[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_crownmarch_toll_gate"]
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_crownmarch_toll_gate" unique_id=1567038734]
 enabled = false
 navigation_layers = 16
 start_position = Vector3(0, -0.2739668, 8)
 end_position = Vector3(0, -0.24900055, -8)
 
-[node name="world_crownmarch_toll_ballista" type="Node3D" parent="Props"]
+[node name="world_crownmarch_toll_ballista" type="Node3D" parent="Props" unique_id=613250364]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 219, 22.23, 101.5)
 script = ExtResource("5_0a08d")
 scene = "res://scenes/world/siege_ballista.tscn"
@@ -302,23 +302,23 @@ when = {
 }
 child_name = "world_crownmarch_toll_ballista"
 
-[node name="world_crownmarch_toll_aldmere_banner_1" type="Node3D" parent="Props"]
+[node name="world_crownmarch_toll_aldmere_banner_1" type="Node3D" parent="Props" unique_id=1680806088]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 193.5, 12.249001, 95)
 script = ExtResource("6_727cc")
 hidden_when_flag = "world.aldmere.flags_struck"
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_aldmere_banner_1" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_aldmere_banner_1" unique_id=471607779 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_7")
 
-[node name="world_crownmarch_toll_aldmere_banner_2" type="Node3D" parent="Props"]
+[node name="world_crownmarch_toll_aldmere_banner_2" type="Node3D" parent="Props" unique_id=963437115]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 214.5, 12.250125, 95)
 script = ExtResource("6_727cc")
 hidden_when_flag = "world.aldmere.flags_struck"
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_aldmere_banner_2" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_toll_aldmere_banner_2" unique_id=447805576 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_8")
 
-[node name="world_crownmarch_kings_road_cache" type="StaticBody3D" parent="Props" instance=ExtResource("7_960f4")]
+[node name="world_crownmarch_kings_road_cache" type="StaticBody3D" parent="Props" unique_id=187993180 instance=ExtResource("7_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 57, 11.618, 66)
 collision_layer = 16
 collision_mask = 0
@@ -326,7 +326,7 @@ script = ExtResource("1_5fc47")
 world_id = "world.crownmarch.kings_road_cache"
 loot_table = "loot.cache_kings_road"
 
-[node name="world_crownmarch_toll_cache" type="StaticBody3D" parent="Props" instance=ExtResource("7_960f4")]
+[node name="world_crownmarch_toll_cache" type="StaticBody3D" parent="Props" unique_id=1053732467 instance=ExtResource("7_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 192, 12.252, 66)
 collision_layer = 16
 collision_mask = 0
@@ -334,83 +334,83 @@ script = ExtResource("1_5fc47")
 world_id = "world.crownmarch.toll_cache"
 loot_table = "loot.cache_toll_fort"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=259991740]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=820003339]
 
-[node name="world_cp_kings_road" type="Marker3D" parent="Waystones"]
+[node name="world_cp_kings_road" type="Marker3D" parent="Waystones" unique_id=718096283]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 44, 11.860001, 84)
 script = ExtResource("8_add9b")
 requires_flags = PackedStringArray()
 display_name = "King's Road waystone"
 checkpoint_id = "world.cp.kings_road"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_kings_road"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_kings_road" unique_id=1605163729]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 9)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_kings_road/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_kings_road/Stone" unique_id=344345468]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_9")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_kings_road/Stone" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_kings_road/Stone" unique_id=809069283 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_10")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_kings_road" groups=["scenery"]]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_kings_road" unique_id=2051394233 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 9)
 mesh = SubResource("ArrayMesh_11")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=908359785]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1428291153]
 
-[node name="world_marker_toll_bar" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_toll_bar" type="Marker3D" parent="Markers/Objective" unique_id=1096547155]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 148, 11.464, 116)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.toll_bar"
 
-[node name="world_marker_toll_fort" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_toll_fort" type="Marker3D" parent="Markers/Objective" unique_id=690972615]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 204, 12.448, 116)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.toll_fort"
 
-[node name="Elevation" type="Node3D" parent="Markers"]
+[node name="Elevation" type="Node3D" parent="Markers" unique_id=988128541]
 
-[node name="world_marker_toll_tower_w" type="Marker3D" parent="Markers/Elevation"]
+[node name="world_marker_toll_tower_w" type="Marker3D" parent="Markers/Elevation" unique_id=1894112425]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 187.6, 25.4556, 100)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.toll_tower_w"
 kind = 2
 faction = "toll_riders"
 
-[node name="world_marker_toll_tower_e" type="Marker3D" parent="Markers/Elevation"]
+[node name="world_marker_toll_tower_e" type="Marker3D" parent="Markers/Elevation" unique_id=1023294333]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 190.4, 25.470001, 100)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.toll_tower_e"
 kind = 2
 faction = "toll_riders"
 
-[node name="Patrol" type="Node3D" parent="Markers"]
+[node name="Patrol" type="Node3D" parent="Markers" unique_id=1784197863]
 
-[node name="world_marker_toll_flee_n" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_toll_flee_n" type="Marker3D" parent="Markers/Patrol" unique_id=1205053641]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 204, 17.604, 24)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.toll_flee_n"
 kind = 5
 
-[node name="world_marker_toll_flee_w" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_toll_flee_w" type="Marker3D" parent="Markers/Patrol" unique_id=132014810]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 13.96, 62)
 script = ExtResource("9_acc12")
 marker_id = "world.marker.toll_flee_w"
 kind = 5
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1881788281]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=808777718]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1963602022]
 
-[node name="world_gate_wend_deep_2" type="StaticBody3D" parent="SizeGates"]
+[node name="world_gate_wend_deep_2" type="StaticBody3D" parent="SizeGates" unique_id=1880201956]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.024536, 7.319914, 125.87854)
 collision_layer = 64
 collision_mask = 0
@@ -418,75 +418,75 @@ script = ExtResource("10_f30a1")
 gate_id = "world.gate.wend_deep"
 message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
 
-[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=1477609578]
 transform = Transform3D(0.8945069, 0, -0.44705415, 0, 1, 0, 0.44705415, 0, 0.8945069, 0, 0, 0)
 shape = SubResource("BoxShape3D_12")
 
-[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=497815986]
 transform = Transform3D(0.9298792, 0, -0.367865, 0, 1, 0, 0.367865, 0, 0.9298792, 14.048584, 0, 6.246216)
 shape = SubResource("BoxShape3D_13")
 
-[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=1340435752]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 28.926636, 0.029706955, 12.13208)
 shape = SubResource("BoxShape3D_14")
 
-[node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=215030234]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 43.80475, 0.09132147, 18.017883)
 shape = SubResource("BoxShape3D_15")
 
-[node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=222530394]
 transform = Transform3D(0.9298792, 0, -0.367865, 0, 1, 0, 0.367865, 0, 0.9298792, 58.6828, 0.13487768, 23.903748)
 shape = SubResource("BoxShape3D_16")
 
-[node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=1068827779]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 73.56085, 0.04976034, 29.78955)
 shape = SubResource("BoxShape3D_17")
 
-[node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=1717629699]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 88.438965, 0.04976034, 35.675415)
 shape = SubResource("BoxShape3D_18")
 
-[node name="Wall7" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall7" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=689239912]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 103.31702, 0.102101326, 41.56122)
 shape = SubResource("BoxShape3D_19")
 
-[node name="Wall8" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall8" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=2004151499]
 transform = Transform3D(0.9298792, 0, -0.367865, 0, 1, 0, 0.367865, 0, 0.9298792, 118.1951, 0.20337915, 47.447083)
 shape = SubResource("BoxShape3D_20")
 
-[node name="Wall9" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall9" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=861731636]
 transform = Transform3D(0.92988014, 0, -0.3678627, 0, 1, 0, 0.3678627, 0, 0.92988014, 133.07318, 0.20337915, 53.332886)
 shape = SubResource("BoxShape3D_21")
 
-[node name="Wall10" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall10" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=2000804064]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 147.95123, 0.23024702, 59.21869)
 shape = SubResource("BoxShape3D_22")
 
-[node name="Wall11" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall11" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=613492218]
 transform = Transform3D(0.9298792, 0, -0.367865, 0, 1, 0, 0.367865, 0, 0.9298792, 162.82932, 0.23333073, 65.10455)
 shape = SubResource("BoxShape3D_23")
 
-[node name="Wall12" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall12" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=173806830]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 177.7074, 0.004729748, 70.99036)
 shape = SubResource("BoxShape3D_24")
 
-[node name="Wall13" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall13" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=1895327146]
 transform = Transform3D(0.9778748, 0, -0.20919093, 0, 1, 0, 0.20919093, 0, 0.9778748, 191.91467, 0.004729748, 75.381165)
 shape = SubResource("BoxShape3D_25")
 
-[node name="Wall14" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall14" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=1662489757]
 transform = Transform3D(0.97904545, 0, -0.20364182, 0, 1, 0, 0.20364182, 0, 0.97904545, 206.51529, 0.053691387, 78.45819)
 shape = SubResource("BoxShape3D_26")
 
-[node name="Wall15" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall15" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=2008669796]
 transform = Transform3D(0.9790454, 0, -0.20364219, 0, 1, 0, 0.20364219, 0, 0.9790454, 222.18, 0.12232971, 81.71649)
 shape = SubResource("BoxShape3D_27")
 
-[node name="Wall16" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2"]
+[node name="Wall16" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_2" unique_id=1988173931]
 transform = Transform3D(0.97904575, 0, -0.20364037, 0, 1, 0, 0.20364037, 0, 0.97904575, 237.84473, 0.113488674, 84.97473)
 shape = SubResource("BoxShape3D_28")
 
-[node name="world_gate_wend_deep_8" type="StaticBody3D" parent="SizeGates"]
+[node name="world_gate_wend_deep_8" type="StaticBody3D" parent="SizeGates" unique_id=1119507110]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7222595, 7.7892375, 148.62476)
 collision_layer = 64
 collision_mask = 0
@@ -494,74 +494,74 @@ script = ExtResource("10_f30a1")
 gate_id = "world.gate.wend_deep"
 message = "Too deep to wade. Grow to stage 4, or cross at Brannock Bridge."
 
-[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=101426534]
 transform = Transform3D(0.8969015, 0, -0.44223034, 0, 1, 0, 0.44223034, 0, 0.8969015, 0, 0, 0)
 shape = SubResource("BoxShape3D_29")
 
-[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=1057840159]
 transform = Transform3D(0.9298792, 0, -0.367865, 0, 1, 0, 0.367865, 0, 0.9298792, 15.154266, -0.078829765, 6.7470093)
 shape = SubResource("BoxShape3D_30")
 
-[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=870043661]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 30.032318, -0.078829765, 12.632874)
 shape = SubResource("BoxShape3D_31")
 
-[node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=184444355]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 44.91043, -0.06554413, 18.518677)
 shape = SubResource("BoxShape3D_32")
 
-[node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=1104557957]
 transform = Transform3D(0.9298792, 0, -0.367865, 0, 1, 0, 0.367865, 0, 0.9298792, 59.788483, -0.0947876, 24.404541)
 shape = SubResource("BoxShape3D_33")
 
-[node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=1320504394]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 74.666534, -0.2024374, 30.290344)
 shape = SubResource("BoxShape3D_34")
 
-[node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=69659298]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 89.54465, -0.2653036, 36.17621)
 shape = SubResource("BoxShape3D_35")
 
-[node name="Wall7" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall7" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=1522159958]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 104.4227, -0.27090263, 42.06201)
 shape = SubResource("BoxShape3D_36")
 
-[node name="Wall8" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall8" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=1886873624]
 transform = Transform3D(0.9298792, 0, -0.367865, 0, 1, 0, 0.367865, 0, 0.9298792, 119.30078, -0.34177208, 47.947876)
 shape = SubResource("BoxShape3D_37")
 
-[node name="Wall9" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall9" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=754354993]
 transform = Transform3D(0.92988014, 0, -0.3678627, 0, 1, 0, 0.3678627, 0, 0.92988014, 134.17886, -0.34177208, 53.83368)
 shape = SubResource("BoxShape3D_38")
 
-[node name="Wall10" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall10" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=1563502852]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 149.05692, -0.22500563, 59.719482)
 shape = SubResource("BoxShape3D_39")
 
-[node name="Wall11" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall11" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=1140663886]
 transform = Transform3D(0.9298792, 0, -0.367865, 0, 1, 0, 0.367865, 0, 0.9298792, 163.935, -0.08561516, 65.60535)
 shape = SubResource("BoxShape3D_40")
 
-[node name="Wall12" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall12" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=1258016224]
 transform = Transform3D(0.9298795, 0, -0.36786434, 0, 1, 0, 0.36786434, 0, 0.9298795, 178.81308, -0.102995396, 71.49115)
 shape = SubResource("BoxShape3D_41")
 
-[node name="Wall13" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall13" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=1494775758]
 transform = Transform3D(0.9737381, 0, -0.22767112, 0, 1, 0, 0.22767112, 0, 0.9737381, 195.07312, -0.11265421, 76.49652)
 shape = SubResource("BoxShape3D_42")
 
-[node name="Wall14" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall14" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=589368247]
 transform = Transform3D(0.97904545, 0, -0.20364182, 0, 1, 0, 0.20364182, 0, 0.97904545, 211.7265, -0.18670225, 80.18811)
 shape = SubResource("BoxShape3D_43")
 
-[node name="Wall15" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall15" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=2078899667]
 transform = Transform3D(0.9790454, 0, -0.20364219, 0, 1, 0, 0.20364219, 0, 0.9790454, 227.3912, -0.31754827, 83.44641)
 shape = SubResource("BoxShape3D_44")
 
-[node name="Wall16" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8"]
+[node name="Wall16" type="CollisionShape3D" parent="SizeGates/world_gate_wend_deep_8" unique_id=1275707655]
 transform = Transform3D(0.97904587, 0, -0.20363997, 0, 1, 0, 0.20363997, 0, 0.97904587, 243.05594, -0.31754827, 86.70465)
 shape = SubResource("BoxShape3D_45")
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1650881999]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1531865839]

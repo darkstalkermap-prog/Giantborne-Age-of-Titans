@@ -12,11 +12,11 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(16.979977, 18, 1)
 
-[node name="Chunk_3_4_0" type="Node3D"]
+[node name="Chunk_3_4_0" type="Node3D" unique_id=941546877]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1949577551]
 
-[node name="world_drowned_stoneknuckles_rack" type="Node3D" parent="Props" instance=ExtResource("1_2400b")]
+[node name="world_drowned_stoneknuckles_rack" type="Node3D" parent="Props" unique_id=362896241 instance=ExtResource("1_2400b")]
 transform = Transform3D(-0.8660254, 0, 0.50000006, 0, 1, 0, -0.50000006, 0, -0.8660254, 52, 4.996, 36)
 script = ExtResource("2_0cdd4")
 requires_flags = PackedStringArray("world.drowned.bells_rung")
@@ -26,7 +26,7 @@ weapon_id = "weapon.fists"
 radius_m = 6.0
 priority = 45
 
-[node name="world_drowned_mere_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="world_drowned_mere_cache" type="StaticBody3D" parent="Props" unique_id=1389771926 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 4.764, 110)
 collision_layer = 16
 collision_mask = 0
@@ -34,7 +34,7 @@ script = ExtResource("4_5fc47")
 world_id = "world.drowned.mere_cache"
 loot_table = "loot.cache_mere_of_kings"
 
-[node name="world_drowned_steps_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="world_drowned_steps_cache" type="StaticBody3D" parent="Props" unique_id=364689093 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106, 10, 100)
 collision_layer = 16
 collision_mask = 0
@@ -42,9 +42,9 @@ script = ExtResource("4_5fc47")
 world_id = "world.drowned.steps_cache"
 loot_table = "loot.cache_sunken_steps"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=786601589]
 
-[node name="world_shrine_steps" type="Node3D" parent="Shrines" instance=ExtResource("5_f6def")]
+[node name="world_shrine_steps" type="Node3D" parent="Shrines" unique_id=1746586459 instance=ExtResource("5_f6def")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 15, 168)
 script = ExtResource("6_e36fc")
 world_id = "world.shrine.steps"
@@ -53,32 +53,32 @@ prompt = "Rest"
 radius_m = 4.0
 priority = 40
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=2094610411]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1882425365]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1979719331]
 
-[node name="world_marker_ferry_landing" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_ferry_landing" type="Marker3D" parent="Markers/Objective" unique_id=1274065886]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 5.12, 30)
 script = ExtResource("7_acc12")
 marker_id = "world.marker.ferry_landing"
 
-[node name="Safe" type="Node3D" parent="Markers"]
+[node name="Safe" type="Node3D" parent="Markers" unique_id=1681386499]
 
-[node name="world_marker_steps_safe" type="Marker3D" parent="Markers/Safe"]
+[node name="world_marker_steps_safe" type="Marker3D" parent="Markers/Safe" unique_id=1604238302]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 5.2, 44)
 script = ExtResource("7_acc12")
 marker_id = "world.marker.steps_safe"
 kind = 4
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1234429736]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=1809981422]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=760350003]
 
-[node name="world_gate_mere_channel_2" type="StaticBody3D" parent="SizeGates"]
+[node name="world_gate_mere_channel_2" type="StaticBody3D" parent="SizeGates" unique_id=203985091]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 242.46088, 5.433041, 8.049591)
 collision_layer = 128
 collision_mask = 0
@@ -87,10 +87,10 @@ gate_id = "world.gate.mere_channel"
 min_stage = 5
 message = "The channel is too deep. Grow to stage 5."
 
-[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_2"]
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_2" unique_id=1602441544]
 transform = Transform3D(-0.87767905, 0, 0.47924885, 0, 1, 0, -0.47924885, 0, -0.87767905, 0, 0, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=700955596]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=271938018]

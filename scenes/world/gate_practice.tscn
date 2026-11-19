@@ -152,38 +152,38 @@ _surfaces = [{
 "vertex_data": PackedByteArray("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7HiIPxDKJD6S0uK/10SBwKPKI76WvSjAXBOFPw9ZDz8IuOG/Ox6CwIrPdD5RMCjAHJWYPg9ZDz+KeIHAbMVUwIrPdD4A2rC+7HiIPxDKJD6S0uK/10SBwKPKI76WvSjAXCumPhDKJD4tv4HApBJTwKPKI74oRLW+XBOFPw9ZDz8IuOG/pBJTwKPKI74oRLW+bMVUwIrPdD4A2rC+7HiIPxDKJD6S0uK/HJWYPg9ZDz+KeIHA10SBwKPKI76WvSjAOx6CwIrPdD5RMCjAXCumPhDKJD4tv4HA/3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+/Yp//f0T5O9IAAJvgdyShvGKf/39E+TvSAACb4Hckobxin/9/RPk70gAAm+B3JKG8Yp//f0T5O9IAAJvgdyShvET5d6QAAE3wdyREeWKf/79E+XekAABN8HckRHlin/+/RPl3pAAATfB3JER5Yp//v0T5d6QAAE3wdyREeWKf/78seKH1dyShvF2K0gdE+TvSLHih9XckobxditIHRPk70ix4ofV3JKG8XYrSB0T5O9IseKH1dyShvF2K0gdE+TvS")
 }]
 
-[node name="GatePractice" type="StaticBody3D"]
+[node name="GatePractice" type="StaticBody3D" unique_id=1058431469]
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_5fc47")
 world_id = "valley.ruins.practice_gate"
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=2108658130]
 script = ExtResource("2_c8050")
 entity_id = "valley.ruins.practice_gate"
 definition_id = "prop.gate_practice"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=774282222]
 
-[node name="Center" type="Marker3D" parent="Anchors"]
+[node name="Center" type="Marker3D" parent="Anchors" unique_id=1589060355]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
-[node name="BlockLeaves" type="CollisionShape3D" parent="."]
+[node name="BlockLeaves" type="CollisionShape3D" parent="." unique_id=16330656]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="PostLeft" type="CollisionShape3D" parent="."]
+[node name="PostLeft" type="CollisionShape3D" parent="." unique_id=1317403192]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.45, 3.4, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="PostRight" type="CollisionShape3D" parent="."]
+[node name="PostRight" type="CollisionShape3D" parent="." unique_id=336843705]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.45, 3.4, 0)
 shape = SubResource("BoxShape3D_3")
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=1439706401]
 
-[node name="Body" type="Area3D" parent="Hurtboxes"]
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=1477673544]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 collision_layer = 4
 collision_mask = 0
@@ -191,32 +191,32 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=1749639027]
 shape = SubResource("BoxShape3D_4")
 
-[node name="Frame" type="Node3D" parent="."]
+[node name="Frame" type="Node3D" parent="." unique_id=1625681918]
 
-[node name="Merged" type="MeshInstance3D" parent="Frame" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Frame" unique_id=362133749 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_7")
 
-[node name="Intact" type="Node3D" parent="."]
+[node name="Intact" type="Node3D" parent="." unique_id=1104549954]
 
-[node name="Merged" type="MeshInstance3D" parent="Intact" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Intact" unique_id=1206024322 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_10")
 
-[node name="Cracked" type="Node3D" parent="."]
+[node name="Cracked" type="Node3D" parent="." unique_id=1236649868]
 visible = false
 
-[node name="Merged" type="MeshInstance3D" parent="Cracked" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Cracked" unique_id=1863466189 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_13")
 
-[node name="Broken" type="Node3D" parent="."]
+[node name="Broken" type="Node3D" parent="." unique_id=1525778676]
 visible = false
 
-[node name="Merged" type="MeshInstance3D" parent="Broken" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Broken" unique_id=360266758 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_14")
 
-[node name="NavLinkThrough" type="NavigationLink3D" parent="."]
+[node name="NavLinkThrough" type="NavigationLink3D" parent="." unique_id=75620853]
 enabled = false
 navigation_layers = 15
 start_position = Vector3(0, 0, 3)

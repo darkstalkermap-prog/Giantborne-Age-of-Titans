@@ -165,35 +165,35 @@ size = Vector3(16.97998, 18, 1)
 [sub_resource type="BoxShape3D" id="BoxShape3D_30"]
 size = Vector3(16.979977, 18, 1)
 
-[node name="Chunk_3_3_0" type="Node3D"]
+[node name="Chunk_3_3_0" type="Node3D" unique_id=1649211381]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1755734528]
 
-[node name="world_drowned_bell_1" type="StaticBody3D" parent="Props"]
+[node name="world_drowned_bell_1" type="StaticBody3D" parent="Props" unique_id=12210718]
 transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, 106, 1, 196)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_5fc47")
 world_id = "world.drowned.bell_1"
 
-[node name="CombatEntity" type="Node" parent="Props/world_drowned_bell_1"]
+[node name="CombatEntity" type="Node" parent="Props/world_drowned_bell_1" unique_id=1153492777]
 script = ExtResource("2_c8050")
 entity_id = "world.drowned.bell_1"
 definition_id = "prop.bell"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_drowned_bell_1"]
+[node name="Anchors" type="Node3D" parent="Props/world_drowned_bell_1" unique_id=1654736851]
 
-[node name="Center" type="Marker3D" parent="Props/world_drowned_bell_1/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_drowned_bell_1/Anchors" unique_id=2083127068]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.3, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_drowned_bell_1"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_drowned_bell_1" unique_id=99212766]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.3, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_drowned_bell_1"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_drowned_bell_1" unique_id=1786892052]
 
-[node name="Body" type="Area3D" parent="Props/world_drowned_bell_1/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_drowned_bell_1/Hurtboxes" unique_id=1324980701]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.3, 0)
 collision_layer = 4
 collision_mask = 0
@@ -201,56 +201,56 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_drowned_bell_1/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_drowned_bell_1/Hurtboxes/Body" unique_id=239982867]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Intact" type="Node3D" parent="Props/world_drowned_bell_1"]
+[node name="Intact" type="Node3D" parent="Props/world_drowned_bell_1" unique_id=660859162]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_drowned_bell_1/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_drowned_bell_1/Intact" unique_id=1108306639 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_3")
 
-[node name="Broken" type="Node3D" parent="Props/world_drowned_bell_1"]
+[node name="Broken" type="Node3D" parent="Props/world_drowned_bell_1" unique_id=844834053]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_drowned_bell_1/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_drowned_bell_1/Broken" unique_id=679854085 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
-[node name="Frame" type="StaticBody3D" parent="Props/world_drowned_bell_1"]
+[node name="Frame" type="StaticBody3D" parent="Props/world_drowned_bell_1" unique_id=1362290299]
 collision_mask = 0
 
-[node name="Shape0" type="CollisionShape3D" parent="Props/world_drowned_bell_1/Frame"]
+[node name="Shape0" type="CollisionShape3D" parent="Props/world_drowned_bell_1/Frame" unique_id=419630126]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1, 3.6, 0)
 shape = SubResource("BoxShape3D_5")
 
-[node name="Shape1" type="CollisionShape3D" parent="Props/world_drowned_bell_1/Frame"]
+[node name="Shape1" type="CollisionShape3D" parent="Props/world_drowned_bell_1/Frame" unique_id=1624994547]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1, 3.6, 0)
 shape = SubResource("BoxShape3D_6")
 
-[node name="world_drowned_bell_3" type="StaticBody3D" parent="Props"]
+[node name="world_drowned_bell_3" type="StaticBody3D" parent="Props" unique_id=41391850]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, 190, 4.707, 74)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_5fc47")
 world_id = "world.drowned.bell_3"
 
-[node name="CombatEntity" type="Node" parent="Props/world_drowned_bell_3"]
+[node name="CombatEntity" type="Node" parent="Props/world_drowned_bell_3" unique_id=1092858893]
 script = ExtResource("2_c8050")
 entity_id = "world.drowned.bell_3"
 definition_id = "prop.bell"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_drowned_bell_3"]
+[node name="Anchors" type="Node3D" parent="Props/world_drowned_bell_3" unique_id=2090021201]
 
-[node name="Center" type="Marker3D" parent="Props/world_drowned_bell_3/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_drowned_bell_3/Anchors" unique_id=1374735928]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_drowned_bell_3"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_drowned_bell_3" unique_id=1284375241]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
 shape = SubResource("BoxShape3D_7")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_drowned_bell_3"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_drowned_bell_3" unique_id=1292182370]
 
-[node name="Body" type="Area3D" parent="Props/world_drowned_bell_3/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_drowned_bell_3/Hurtboxes" unique_id=989441305]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
 collision_layer = 4
 collision_mask = 0
@@ -258,32 +258,32 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_drowned_bell_3/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_drowned_bell_3/Hurtboxes/Body" unique_id=1276758184]
 shape = SubResource("BoxShape3D_8")
 
-[node name="Intact" type="Node3D" parent="Props/world_drowned_bell_3"]
+[node name="Intact" type="Node3D" parent="Props/world_drowned_bell_3" unique_id=185859332]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_drowned_bell_3/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_drowned_bell_3/Intact" unique_id=1984824224 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_9")
 
-[node name="Broken" type="Node3D" parent="Props/world_drowned_bell_3"]
+[node name="Broken" type="Node3D" parent="Props/world_drowned_bell_3" unique_id=1131277437]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_drowned_bell_3/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_drowned_bell_3/Broken" unique_id=1648263410 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_10")
 
-[node name="Frame" type="StaticBody3D" parent="Props/world_drowned_bell_3"]
+[node name="Frame" type="StaticBody3D" parent="Props/world_drowned_bell_3" unique_id=1842820827]
 collision_mask = 0
 
-[node name="Shape0" type="CollisionShape3D" parent="Props/world_drowned_bell_3/Frame"]
+[node name="Shape0" type="CollisionShape3D" parent="Props/world_drowned_bell_3/Frame" unique_id=538614195]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1, 3.2, 0)
 shape = SubResource("BoxShape3D_11")
 
-[node name="Shape1" type="CollisionShape3D" parent="Props/world_drowned_bell_3/Frame"]
+[node name="Shape1" type="CollisionShape3D" parent="Props/world_drowned_bell_3/Frame" unique_id=278458187]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1, 3.2, 0)
 shape = SubResource("BoxShape3D_12")
 
-[node name="world_drowned_bell_cache" type="StaticBody3D" parent="Props" instance=ExtResource("5_960f4")]
+[node name="world_drowned_bell_cache" type="StaticBody3D" parent="Props" unique_id=859678967 instance=ExtResource("5_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 6.5559998, 34)
 collision_layer = 16
 collision_mask = 0
@@ -291,53 +291,53 @@ script = ExtResource("1_5fc47")
 world_id = "world.drowned.bell_cache"
 loot_table = "loot.cache_bell_tower"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1588179551]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=224272199]
 
-[node name="world_cp_bell_tower" type="Marker3D" parent="Waystones"]
+[node name="world_cp_bell_tower" type="Marker3D" parent="Waystones" unique_id=1107653241]
 transform = Transform3D(-0.8660254, 0, 0.50000006, 0, 1, 0, -0.50000006, 0, -0.8660254, 76, 9.028, 56)
 script = ExtResource("6_add9b")
 requires_flags = PackedStringArray()
 display_name = "Bell tower waystone"
 checkpoint_id = "world.cp.bell_tower"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_bell_tower"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_bell_tower" unique_id=291503982]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, -0.3, 5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_bell_tower/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_bell_tower/Stone" unique_id=2081431677]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_13")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_bell_tower/Stone" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_bell_tower/Stone" unique_id=1953322491 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_14")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_bell_tower" groups=["scenery"]]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_bell_tower" unique_id=998598985 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, -0.3, 5)
 mesh = SubResource("ArrayMesh_15")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=432645488]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=488160918]
 
-[node name="world_marker_bell_1" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_bell_1" type="Marker3D" parent="Markers/Objective" unique_id=707929840]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 106, 1.2, 202)
 script = ExtResource("7_acc12")
 marker_id = "world.marker.bell_1"
 
-[node name="world_marker_bell_3" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_bell_3" type="Marker3D" parent="Markers/Objective" unique_id=1843820957]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 190, 4.574, 80)
 script = ExtResource("7_acc12")
 marker_id = "world.marker.bell_3"
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=470861339]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=722357242]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=826695492]
 
-[node name="world_gate_mere_channel_3" type="StaticBody3D" parent="SizeGates"]
+[node name="world_gate_mere_channel_3" type="StaticBody3D" parent="SizeGates" unique_id=1786629830]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 229.05191, 5.433041, 255.43217)
 collision_layer = 128
 collision_mask = 0
@@ -346,66 +346,66 @@ gate_id = "world.gate.mere_channel"
 min_stage = 5
 message = "The channel is too deep. Grow to stage 5."
 
-[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=1115904270]
 transform = Transform3D(-0.8005412, 0, 0.5992777, 0, 1, 0, -0.5992777, 0, -0.8005412, 0, 0, 0)
 shape = SubResource("BoxShape3D_16")
 
-[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall1" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=50539461]
 transform = Transform3D(-0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, -0.70710677, -12.046089, 0.004324913, -10.437996)
 shape = SubResource("BoxShape3D_17")
 
-[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall2" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=2033754571]
 transform = Transform3D(-0.59927773, 0, 0.8005412, 0, 1, 0, -0.8005412, 0, -0.59927773, -22.484085, 0.004324913, -22.484085)
 shape = SubResource("BoxShape3D_18")
 
-[node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall3" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=352324638]
 transform = Transform3D(-0.47924888, 0, 0.87767905, 0, 1, 0, -0.87767905, 0, -0.47924888, -31.101501, 0.0054240227, -35.893047)
 shape = SubResource("BoxShape3D_19")
 
-[node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall4" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=259046541]
 transform = Transform3D(-0.349464, 0, 0.9369498, 0, 1, 0, -0.9369498, 0, -0.349464, -37.722908, 0.0054240227, -50.39191)
 shape = SubResource("BoxShape3D_20")
 
-[node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall5" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=1070537403]
 transform = Transform3D(-0.21256538, 0, 0.97714686, 0, 1, 0, -0.97714686, 0, -0.21256538, -42.213516, 0.0078053474, -65.68552)
 shape = SubResource("BoxShape3D_21")
 
-[node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall6" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=952585386]
 transform = Transform3D(-0.071339205, 0, 0.99745214, 0, 1, 0, -0.99745214, 0, -0.071339205, -44.48191, 0.0069589615, -81.46254)
 shape = SubResource("BoxShape3D_22")
 
-[node name="Wall7" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall7" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=1246399109]
 transform = Transform3D(0.071339235, 0, 0.99745214, 0, 1, 0, -0.99745214, 0, 0.071339235, -44.48191, 0.0069589615, -97.40181)
 shape = SubResource("BoxShape3D_23")
 
-[node name="Wall8" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall8" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=630375079]
 transform = Transform3D(0.2125654, 0, 0.97714686, 0, 1, 0, -0.97714686, 0, 0.2125654, -42.213516, 0.0078053474, -113.17883)
 shape = SubResource("BoxShape3D_24")
 
-[node name="Wall9" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall9" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=875323041]
 transform = Transform3D(0.3494639, 0, 0.93694985, 0, 1, 0, -0.93694985, 0, 0.3494639, -37.722908, 0.0054249763, -128.47244)
 shape = SubResource("BoxShape3D_25")
 
-[node name="Wall10" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall10" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=209268195]
 transform = Transform3D(0.47924912, 0, 0.87767893, 0, 1, 0, -0.87767893, 0, 0.47924912, -31.101501, 0.0054249763, -142.9713)
 shape = SubResource("BoxShape3D_26")
 
-[node name="Wall11" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall11" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=1137676430]
 transform = Transform3D(0.59927773, 0, 0.80054116, 0, 1, 0, -0.80054116, 0, 0.59927773, -22.484085, 0.004324913, -156.38026)
 shape = SubResource("BoxShape3D_27")
 
-[node name="Wall12" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall12" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=1865616510]
 transform = Transform3D(0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, 0.70710677, -12.046089, 0.004324913, -168.42635)
 shape = SubResource("BoxShape3D_28")
 
-[node name="Wall13" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall13" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=1745397332]
 transform = Transform3D(0.8005412, 0, 0.59927773, 0, 1, 0, -0.59927773, 0, 0.8005412, 0, 0.29266167, -178.86435)
 shape = SubResource("BoxShape3D_29")
 
-[node name="Wall14" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3"]
+[node name="Wall14" type="CollisionShape3D" parent="SizeGates/world_gate_mere_channel_3" unique_id=776315052]
 transform = Transform3D(0.87767905, 0, 0.47924888, 0, 1, 0, -0.47924888, 0, 0.87767905, 13.408962, 3.6162305, -187.48177)
 shape = SubResource("BoxShape3D_30")
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1207688468]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1660750167]

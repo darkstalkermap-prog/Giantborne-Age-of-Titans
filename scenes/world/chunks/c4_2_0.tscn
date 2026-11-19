@@ -56,11 +56,11 @@ _surfaces = [{
 [sub_resource type="BoxShape3D" id="BoxShape3D_5"]
 size = Vector3(64, 40, 2)
 
-[node name="Chunk_4_2_0" type="Node3D"]
+[node name="Chunk_4_2_0" type="Node3D" unique_id=935751910]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=727146692]
 
-[node name="world_drowned_titan_forge" type="Node3D" parent="Props" instance=ExtResource("1_34b2a")]
+[node name="world_drowned_titan_forge" type="Node3D" parent="Props" unique_id=710771881 instance=ExtResource("1_34b2a")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 225, 16.728, 233)
 script = ExtResource("2_f9160")
 world_id = "world.drowned.titan_forge"
@@ -72,7 +72,7 @@ prompt = "Reforge"
 radius_m = 7.0
 priority = 45
 
-[node name="world_drowned_titan_forge_fire" type="Node3D" parent="Props"]
+[node name="world_drowned_titan_forge_fire" type="Node3D" parent="Props" unique_id=441982218]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 233, 16.728, 226)
 script = ExtResource("3_ee3f8")
 world_id = "world.drowned.titan_forge_fire"
@@ -87,22 +87,22 @@ prompt = "Light the forge"
 radius_m = 9.0
 priority = 35
 
-[node name="Hearth" type="StaticBody3D" parent="Props/world_drowned_titan_forge_fire"]
+[node name="Hearth" type="StaticBody3D" parent="Props/world_drowned_titan_forge_fire" unique_id=1396688142]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_drowned_titan_forge_fire/Hearth"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_drowned_titan_forge_fire/Hearth" unique_id=1430060178]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_drowned_titan_forge_fire/Hearth" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_drowned_titan_forge_fire/Hearth" unique_id=47535967 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="Fire" type="MeshInstance3D" parent="Props/world_drowned_titan_forge_fire" groups=["scenery"]]
+[node name="Fire" type="MeshInstance3D" parent="Props/world_drowned_titan_forge_fire" unique_id=1351256304 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
 visible = false
 mesh = SubResource("ArrayMesh_3")
 
-[node name="world_drowned_shoulder_cache" type="Node3D" parent="Props"]
+[node name="world_drowned_shoulder_cache" type="Node3D" parent="Props" unique_id=287866347]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 250, 16.728, 216)
 script = ExtResource("5_3b229")
 world_id = "world.drowned.shoulder_cache"
@@ -112,31 +112,31 @@ priority = 45
 requires_stage = 6
 stage_message = "Out of reach. Grow to stage 6."
 
-[node name="Visual" type="Node3D" parent="Props/world_drowned_shoulder_cache"]
+[node name="Visual" type="Node3D" parent="Props/world_drowned_shoulder_cache" unique_id=1566360526]
 
-[node name="Chest" type="MeshInstance3D" parent="Props/world_drowned_shoulder_cache/Visual" groups=["scenery"]]
+[node name="Chest" type="MeshInstance3D" parent="Props/world_drowned_shoulder_cache/Visual" unique_id=40216873 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=234694941]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=105458386]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1688822523]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1873520802]
 
-[node name="world_marker_titan_forge" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_titan_forge" type="Marker3D" parent="Markers/Objective" unique_id=378365540]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 228, 16.928001, 242)
 script = ExtResource("6_acc12")
 marker_id = "world.marker.titan_forge"
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1709582709]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=2100804348]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1733042247]
 
-[node name="world_gate_giants_stair_0" type="StaticBody3D" parent="SizeGates"]
+[node name="world_gate_giants_stair_0" type="StaticBody3D" parent="SizeGates" unique_id=852332428]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 45.456, 87)
 collision_layer = 256
 collision_mask = 0
@@ -146,9 +146,9 @@ min_stage = 6
 message = "Each step is taller than a house: only a giant of the old height can climb the Stair. Grow to stage 6, or go round by the Ironway, up from Aldmere's road."
 cue = "sfx.gate.stone"
 
-[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_giants_stair_0"]
+[node name="Wall0" type="CollisionShape3D" parent="SizeGates/world_gate_giants_stair_0" unique_id=1995183096]
 shape = SubResource("BoxShape3D_5")
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=788031039]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=330873032]

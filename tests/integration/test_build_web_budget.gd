@@ -81,13 +81,48 @@ func test_the_build_fails_over_the_budget_after_saying_why() -> void:
 	var milestone := int(version.get_slice("-m", 1)) if version.contains("-m") else 6
 	# P45 (plan M10 §0.6, the owner's answer 1): 26 MB from -m10 on (tests/slow/test_giant_tooling.gd runs
 	# the rule through --version=).
-	var expected := "7.5" if milestone <= 6 else ("21" if milestone <= 7 else ("23" if milestone <= 9 else "26"))
+	# P49 (plan M11 §2.12): 26 MB still at -m11, 32 MB at -m12, 44 MB from -m13 on.
+	var expected := "7.5" if milestone <= 6 else ("21" if milestone <= 7 else ("23" if milestone <= 9
+		else ("26" if milestone <= 11 else ("32" if milestone == 12 else "44"))))
 	var default_run: Dictionary = _check()[0]
 	assert_true(default_run.out.contains("budget_mb=%s " % expected), "%s: the budget is %s MB (%s)" % [version, expected,
 		default_run.out])
 	assert_eq(int(default_run.code), 0, "and the stand-in fits it")
 	var bad: Dictionary = _check("lots")[0]
 	assert_eq(int(bad.code), 2, "a budget that is not a number is a usage error")
+
+
+## P49 (plan M11 §2.12, §3.2 item 2): the staged budgets and the shares' caps, the rule alone through
+## --print-caps (no pack is read): [version, budget MB, the giant's cap, the people's cap]. The packs
+## themselves - the line order, a three-part and a four-part pack, the pack at the last budget - are
+## judged by tests/slow/test_build_web_parts.gd.
+const MILESTONES := [
+	["0.10.0-m10", "26", "7.6", "none"],
+	["0.11.0-m11", "26", "7.6", "none"],
+	["0.12.0-m12", "32", "13.6", "none"],
+	["0.13.0-m13", "44", "13.6", "12.0"],
+	["0.14.0-m14", "44", "13.6", "12.0"],
+]
+
+
+func test_the_budget_and_the_shares_by_milestone() -> void:
+	for tool: String in ["bash", "awk"]:
+		if not _have(tool):
+			print("    test_build_web_budget: skipped - %s is not installed" % tool)
+			return
+	# One run prints the rule for every milestone (--print-caps with several --version=); a forced
+	# budget and a forced people's share are in the slow suite.
+	var args: Array = ["--print-caps"]
+	for row: Array in MILESTONES:
+		args.append("--version=" + str(row[0]))
+	var all := _run(args)
+	assert_eq(int(all.code), 0, "--print-caps exits 0 (%s)" % all.out)
+	var lines: PackedStringArray = all.lines
+	assert_eq(lines.size(), MILESTONES.size(), "one CAPS line a version: %s" % [lines])
+	for i in mini(lines.size(), MILESTONES.size()):
+		var row: Array = MILESTONES[i]
+		assert_eq(lines[i], "CAPS budget_mb=%s giant_share_mb=%s people_share_mb=%s" % [row[1], row[2], row[3]],
+			"%s: budget %s, the giant's share %s, the people's %s" % [row[0], row[1], row[2], row[3]])
 
 
 func test_a_part_over_15_mb_stays_a_failure() -> void:

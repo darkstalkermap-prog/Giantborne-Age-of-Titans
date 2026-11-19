@@ -144,178 +144,178 @@ agent_max_slope = 35.0
 region_min_size = 8.0
 edge_max_error = 2.0
 
-[node name="StressArena" type="Node3D"]
+[node name="StressArena" type="Node3D" unique_id=1756058823]
 script = ExtResource("1_eea46")
 level_id = "level.stress_arena"
 
-[node name="Environment" type="WorldEnvironment" parent="."]
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=1285443352]
 environment = SubResource("Environment_1")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1747034087]
 transform = Transform3D(0.8480481, 0.41758206, -0.32625088, 0, 0.6156615, 0.7880107, 0.52991927, -0.668271, 0.5221106, 0, 0, 0)
 shadow_enabled = true
 directional_shadow_max_distance = 120.0
 
-[node name="Geometry" type="Node3D" parent="."]
+[node name="Geometry" type="Node3D" parent="." unique_id=1785452821]
 
-[node name="Floor" type="StaticBody3D" parent="Geometry"]
+[node name="Floor" type="StaticBody3D" parent="Geometry" unique_id=34815267]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Floor"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Floor" unique_id=1620707779]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Floor"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Floor" unique_id=1644811606]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 material_override = SubResource("ShaderMaterial_3")
 mesh = SubResource("PlaneMesh_4")
 
-[node name="WallNorth" type="StaticBody3D" parent="Geometry"]
+[node name="WallNorth" type="StaticBody3D" parent="Geometry" unique_id=114825271]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -81)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallNorth"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallNorth" unique_id=1082674231]
 shape = SubResource("BoxShape3D_5")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/WallNorth"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/WallNorth" unique_id=1324253686]
 material_override = SubResource("StandardMaterial3D_6")
 mesh = SubResource("BoxMesh_7")
 
-[node name="WallSouth" type="StaticBody3D" parent="Geometry"]
+[node name="WallSouth" type="StaticBody3D" parent="Geometry" unique_id=926245014]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 81)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallSouth"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallSouth" unique_id=1029233296]
 shape = SubResource("BoxShape3D_8")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/WallSouth"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/WallSouth" unique_id=89509324]
 material_override = SubResource("StandardMaterial3D_6")
 mesh = SubResource("BoxMesh_9")
 
-[node name="WallEast" type="StaticBody3D" parent="Geometry"]
+[node name="WallEast" type="StaticBody3D" parent="Geometry" unique_id=630670730]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 81, 2, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallEast"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallEast" unique_id=92666303]
 shape = SubResource("BoxShape3D_10")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/WallEast"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/WallEast" unique_id=1042882462]
 material_override = SubResource("StandardMaterial3D_6")
 mesh = SubResource("BoxMesh_11")
 
-[node name="WallWest" type="StaticBody3D" parent="Geometry"]
+[node name="WallWest" type="StaticBody3D" parent="Geometry" unique_id=2017131065]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -81, 2, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallWest"]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallWest" unique_id=641352929]
 shape = SubResource("BoxShape3D_12")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/WallWest"]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/WallWest" unique_id=1458628280]
 material_override = SubResource("StandardMaterial3D_6")
 mesh = SubResource("BoxMesh_13")
 
-[node name="RouteStrip" type="Node3D" parent="."]
+[node name="RouteStrip" type="Node3D" parent="." unique_id=1452597563]
 
-[node name="Strip1" type="MeshInstance3D" parent="RouteStrip"]
+[node name="Strip1" type="MeshInstance3D" parent="RouteStrip" unique_id=2117771414]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.02, 14)
 material_override = SubResource("StandardMaterial3D_14")
 mesh = SubResource("BoxMesh_15")
 
-[node name="Strip2" type="MeshInstance3D" parent="RouteStrip"]
+[node name="Strip2" type="MeshInstance3D" parent="RouteStrip" unique_id=1915237078]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.02, 14)
 material_override = SubResource("StandardMaterial3D_14")
 mesh = SubResource("BoxMesh_16")
 
-[node name="Strip3" type="MeshInstance3D" parent="RouteStrip"]
+[node name="Strip3" type="MeshInstance3D" parent="RouteStrip" unique_id=108109873]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.02, 7)
 material_override = SubResource("StandardMaterial3D_14")
 mesh = SubResource("BoxMesh_17")
 
-[node name="Strip4" type="MeshInstance3D" parent="RouteStrip"]
+[node name="Strip4" type="MeshInstance3D" parent="RouteStrip" unique_id=2076348880]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.02, -7)
 material_override = SubResource("StandardMaterial3D_14")
 mesh = SubResource("BoxMesh_18")
 
-[node name="Strip5" type="MeshInstance3D" parent="RouteStrip"]
+[node name="Strip5" type="MeshInstance3D" parent="RouteStrip" unique_id=1333689288]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.02, -14)
 material_override = SubResource("StandardMaterial3D_14")
 mesh = SubResource("BoxMesh_19")
 
-[node name="Strip6" type="MeshInstance3D" parent="RouteStrip"]
+[node name="Strip6" type="MeshInstance3D" parent="RouteStrip" unique_id=414089726]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.02, -14)
 material_override = SubResource("StandardMaterial3D_14")
 mesh = SubResource("BoxMesh_20")
 
-[node name="Strip7" type="MeshInstance3D" parent="RouteStrip"]
+[node name="Strip7" type="MeshInstance3D" parent="RouteStrip" unique_id=1733852504]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.02, -7)
 material_override = SubResource("StandardMaterial3D_14")
 mesh = SubResource("BoxMesh_21")
 
-[node name="Strip8" type="MeshInstance3D" parent="RouteStrip"]
+[node name="Strip8" type="MeshInstance3D" parent="RouteStrip" unique_id=1485146453]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.02, 7)
 material_override = SubResource("StandardMaterial3D_14")
 mesh = SubResource("BoxMesh_22")
 
-[node name="Scenery" type="Node3D" parent="."]
+[node name="Scenery" type="Node3D" parent="." unique_id=1198142750]
 
-[node name="Trunks" type="MultiMeshInstance3D" parent="Scenery" groups=["scenery"]]
+[node name="Trunks" type="MultiMeshInstance3D" parent="Scenery" unique_id=1068483882 groups=["scenery"]]
 material_override = SubResource("StandardMaterial3D_23")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_25")
 
-[node name="Crowns" type="MultiMeshInstance3D" parent="Scenery" groups=["scenery"]]
+[node name="Crowns" type="MultiMeshInstance3D" parent="Scenery" unique_id=1670677907 groups=["scenery"]]
 material_override = SubResource("StandardMaterial3D_26")
 visibility_range_end = 220.0
 multimesh = SubResource("MultiMesh_28")
 
-[node name="Navigation" type="Node3D" parent="."]
+[node name="Navigation" type="Node3D" parent="." unique_id=1163703202]
 
-[node name="Human" type="NavigationRegion3D" parent="Navigation"]
+[node name="Human" type="NavigationRegion3D" parent="Navigation" unique_id=914279256]
 navigation_mesh = SubResource("NavigationMesh_29")
 use_edge_connections = false
 
-[node name="Large" type="NavigationRegion3D" parent="Navigation"]
+[node name="Large" type="NavigationRegion3D" parent="Navigation" unique_id=1500768377]
 navigation_mesh = SubResource("NavigationMesh_30")
 use_edge_connections = false
 navigation_layers = 2
 
-[node name="Route" type="Node3D" parent="."]
+[node name="Route" type="Node3D" parent="." unique_id=883310530]
 
-[node name="1" type="Marker3D" parent="Route"]
+[node name="1" type="Marker3D" parent="Route" unique_id=681701505]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, 14)
 metadata/stop = 0
 
-[node name="2" type="Marker3D" parent="Route"]
+[node name="2" type="Marker3D" parent="Route" unique_id=285645060]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 14)
 metadata/stop = 1
 
-[node name="3" type="Marker3D" parent="Route"]
+[node name="3" type="Marker3D" parent="Route" unique_id=2000213244]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 14)
 metadata/stop = 2
 
-[node name="4" type="Marker3D" parent="Route"]
+[node name="4" type="Marker3D" parent="Route" unique_id=1186271764]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0)
 metadata/stop = 3
 
-[node name="5" type="Marker3D" parent="Route"]
+[node name="5" type="Marker3D" parent="Route" unique_id=1852782033]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, -14)
 metadata/stop = 4
 
-[node name="6" type="Marker3D" parent="Route"]
+[node name="6" type="Marker3D" parent="Route" unique_id=699900298]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -14)
 metadata/stop = 5
 
-[node name="7" type="Marker3D" parent="Route"]
+[node name="7" type="Marker3D" parent="Route" unique_id=1295639366]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, -14)
 metadata/stop = 6
 
-[node name="8" type="Marker3D" parent="Route"]
+[node name="8" type="Marker3D" parent="Route" unique_id=1292405697]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, 0)
 metadata/stop = 7
 
-[node name="Breakables" type="Node3D" parent="."]
+[node name="Breakables" type="Node3D" parent="." unique_id=14513243]
 
-[node name="stress_crate_01" type="StaticBody3D" parent="Breakables" instance=ExtResource("3_960f4")]
+[node name="stress_crate_01" type="StaticBody3D" parent="Breakables" unique_id=690616107 instance=ExtResource("3_960f4")]
 transform = Transform3D(-0.77705824, 0, 0.6294287, 0, 1, 0, -0.6294287, 0, -0.77705824, -21.825344, 0, 16.25347)
 collision_layer = 16
 collision_mask = 0
@@ -324,7 +324,7 @@ world_id = "stress.crate_01"
 metadata/stop = 0
 metadata/order = 0
 
-[node name="stress_crate_02" type="StaticBody3D" parent="Breakables" instance=ExtResource("3_960f4")]
+[node name="stress_crate_02" type="StaticBody3D" parent="Breakables" unique_id=202192146 instance=ExtResource("3_960f4")]
 transform = Transform3D(-0.32543644, 0, 0.9455639, 0, 1, 0, -0.9455639, 0, -0.32543644, -22.742136, 0, 14.943766)
 collision_layer = 16
 collision_mask = 0
@@ -333,7 +333,7 @@ world_id = "stress.crate_02"
 metadata/stop = 0
 metadata/order = 1
 
-[node name="stress_tree_01" type="StaticBody3D" parent="Breakables" instance=ExtResource("5_46f38")]
+[node name="stress_tree_01" type="StaticBody3D" parent="Breakables" unique_id=1007817446 instance=ExtResource("5_46f38")]
 transform = Transform3D(-0.96588975, 0, 0.25895363, 0, 1, 0, -0.25895363, 0, -0.96588975, -20.776861, 0, 16.897669)
 collision_layer = 16
 collision_mask = 0
@@ -342,7 +342,7 @@ world_id = "stress.tree_01"
 metadata/stop = 0
 metadata/order = 2
 
-[node name="stress_tree_02" type="StaticBody3D" parent="Breakables" instance=ExtResource("5_46f38")]
+[node name="stress_tree_02" type="StaticBody3D" parent="Breakables" unique_id=2066428501 instance=ExtResource("5_46f38")]
 transform = Transform3D(0.087294504, 0, 0.99618256, 0, 1, 0, -0.99618256, 0, 0.087294504, -22.988548, 0, 13.738116)
 collision_layer = 16
 collision_mask = 0
@@ -351,7 +351,7 @@ world_id = "stress.tree_02"
 metadata/stop = 0
 metadata/order = 3
 
-[node name="stress_fence_01" type="StaticBody3D" parent="Breakables" instance=ExtResource("6_24ab9")]
+[node name="stress_fence_01" type="StaticBody3D" parent="Breakables" unique_id=585209510 instance=ExtResource("6_24ab9")]
 transform = Transform3D(0.121731125, 0, -0.9925631, 0, 1, 0, 0.9925631, 0, 0.121731125, -19.147882, 0, 20.94794)
 collision_layer = 16
 collision_mask = 0
@@ -360,7 +360,7 @@ world_id = "stress.fence_01"
 metadata/stop = 0
 metadata/order = 4
 
-[node name="stress_fence_02" type="StaticBody3D" parent="Breakables" instance=ExtResource("6_24ab9")]
+[node name="stress_fence_02" type="StaticBody3D" parent="Breakables" unique_id=156186001 instance=ExtResource("6_24ab9")]
 transform = Transform3D(-0.8909432, 0, 0.45411465, 0, 1, 0, -0.45411465, 0, -0.8909432, -26.236603, 0, 10.8211975)
 collision_layer = 16
 collision_mask = 0
@@ -369,7 +369,7 @@ world_id = "stress.fence_02"
 metadata/stop = 0
 metadata/order = 5
 
-[node name="stress_gate_01" type="StaticBody3D" parent="Breakables" instance=ExtResource("7_f1734")]
+[node name="stress_gate_01" type="StaticBody3D" parent="Breakables" unique_id=616991343 instance=ExtResource("7_f1734")]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 17)
 collision_layer = 16
 collision_mask = 0
@@ -378,7 +378,7 @@ world_id = "stress.gate_01"
 metadata/stop = 1
 metadata/order = 6
 
-[node name="stress_fence_03" type="StaticBody3D" parent="Breakables" instance=ExtResource("6_24ab9")]
+[node name="stress_fence_03" type="StaticBody3D" parent="Breakables" unique_id=1359564455 instance=ExtResource("6_24ab9")]
 transform = Transform3D(1, 0, 1.2246469e-16, 0, 1, 0, -1.2246469e-16, 0, 1, -4.0413345e-16, 0, 10.7)
 collision_layer = 16
 collision_mask = 0
@@ -387,7 +387,7 @@ world_id = "stress.fence_03"
 metadata/stop = 1
 metadata/order = 7
 
-[node name="stress_fence_04" type="StaticBody3D" parent="Breakables" instance=ExtResource("6_24ab9")]
+[node name="stress_fence_04" type="StaticBody3D" parent="Breakables" unique_id=800393887 instance=ExtResource("6_24ab9")]
 transform = Transform3D(-0.5734624, 0, -0.81923187, 0, 1, 0, 0.81923187, 0, -0.5734624, 22.703465, 0, 15.892426)
 collision_layer = 16
 collision_mask = 0
@@ -396,7 +396,7 @@ world_id = "stress.fence_04"
 metadata/stop = 2
 metadata/order = 8
 
-[node name="stress_tree_03" type="StaticBody3D" parent="Breakables" instance=ExtResource("5_46f38")]
+[node name="stress_tree_03" type="StaticBody3D" parent="Breakables" unique_id=1125340926 instance=ExtResource("5_46f38")]
 transform = Transform3D(-0.98478353, 0, -0.17378542, 0, 1, 0, 0.17378542, 0, -0.98478353, 20.564802, 0, 17.200546)
 collision_layer = 16
 collision_mask = 0
@@ -405,7 +405,7 @@ world_id = "stress.tree_03"
 metadata/stop = 2
 metadata/order = 9
 
-[node name="stress_crate_03" type="StaticBody3D" parent="Breakables" instance=ExtResource("3_960f4")]
+[node name="stress_crate_03" type="StaticBody3D" parent="Breakables" unique_id=585310562 instance=ExtResource("3_960f4")]
 transform = Transform3D(0.7770583, 0, -0.6294286, 0, 1, 0, 0.6294286, 0, 0.7770583, 21.825344, 0, -16.25347)
 collision_layer = 16
 collision_mask = 0
@@ -414,7 +414,7 @@ world_id = "stress.crate_03"
 metadata/stop = 4
 metadata/order = 10
 
-[node name="stress_crate_04" type="StaticBody3D" parent="Breakables" instance=ExtResource("3_960f4")]
+[node name="stress_crate_04" type="StaticBody3D" parent="Breakables" unique_id=2076597471 instance=ExtResource("3_960f4")]
 transform = Transform3D(0.32543647, 0, -0.9455639, 0, 1, 0, 0.9455639, 0, 0.32543647, 22.742136, 0, -14.943766)
 collision_layer = 16
 collision_mask = 0
@@ -423,7 +423,7 @@ world_id = "stress.crate_04"
 metadata/stop = 4
 metadata/order = 11
 
-[node name="stress_tree_04" type="StaticBody3D" parent="Breakables" instance=ExtResource("5_46f38")]
+[node name="stress_tree_04" type="StaticBody3D" parent="Breakables" unique_id=1673833089 instance=ExtResource("5_46f38")]
 transform = Transform3D(0.96588975, 0, -0.25895354, 0, 1, 0, 0.25895354, 0, 0.96588975, 20.776861, 0, -16.897669)
 collision_layer = 16
 collision_mask = 0
@@ -432,7 +432,7 @@ world_id = "stress.tree_04"
 metadata/stop = 4
 metadata/order = 12
 
-[node name="stress_tree_05" type="StaticBody3D" parent="Breakables" instance=ExtResource("5_46f38")]
+[node name="stress_tree_05" type="StaticBody3D" parent="Breakables" unique_id=534335919 instance=ExtResource("5_46f38")]
 transform = Transform3D(-0.087294474, 0, -0.99618256, 0, 1, 0, 0.99618256, 0, -0.087294474, 22.988548, 0, -13.738116)
 collision_layer = 16
 collision_mask = 0
@@ -441,7 +441,7 @@ world_id = "stress.tree_05"
 metadata/stop = 4
 metadata/order = 13
 
-[node name="stress_fence_05" type="StaticBody3D" parent="Breakables" instance=ExtResource("6_24ab9")]
+[node name="stress_fence_05" type="StaticBody3D" parent="Breakables" unique_id=1316783820 instance=ExtResource("6_24ab9")]
 transform = Transform3D(-0.121731095, 0, 0.9925631, 0, 1, 0, -0.9925631, 0, -0.121731095, 19.147882, 0, -20.94794)
 collision_layer = 16
 collision_mask = 0
@@ -450,7 +450,7 @@ world_id = "stress.fence_05"
 metadata/stop = 4
 metadata/order = 14
 
-[node name="stress_fence_06" type="StaticBody3D" parent="Breakables" instance=ExtResource("6_24ab9")]
+[node name="stress_fence_06" type="StaticBody3D" parent="Breakables" unique_id=402184354 instance=ExtResource("6_24ab9")]
 transform = Transform3D(0.8909433, 0, -0.45411456, 0, 1, 0, 0.45411456, 0, 0.8909433, 26.236603, 0, -10.8211975)
 collision_layer = 16
 collision_mask = 0
@@ -459,7 +459,7 @@ world_id = "stress.fence_06"
 metadata/stop = 4
 metadata/order = 15
 
-[node name="stress_gate_02" type="StaticBody3D" parent="Breakables" instance=ExtResource("7_f1734")]
+[node name="stress_gate_02" type="StaticBody3D" parent="Breakables" unique_id=354894562 instance=ExtResource("7_f1734")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -17)
 collision_layer = 16
 collision_mask = 0
@@ -468,7 +468,7 @@ world_id = "stress.gate_02"
 metadata/stop = 5
 metadata/order = 16
 
-[node name="stress_fence_07" type="StaticBody3D" parent="Breakables" instance=ExtResource("6_24ab9")]
+[node name="stress_fence_07" type="StaticBody3D" parent="Breakables" unique_id=1899403587 instance=ExtResource("6_24ab9")]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 4.0413345e-16, 0, -10.7)
 collision_layer = 16
 collision_mask = 0
@@ -477,7 +477,7 @@ world_id = "stress.fence_07"
 metadata/stop = 5
 metadata/order = 17
 
-[node name="stress_fence_08" type="StaticBody3D" parent="Breakables" instance=ExtResource("6_24ab9")]
+[node name="stress_fence_08" type="StaticBody3D" parent="Breakables" unique_id=729511532 instance=ExtResource("6_24ab9")]
 transform = Transform3D(0.5734623, 0, 0.8192319, 0, 1, 0, -0.8192319, 0, 0.5734623, -22.703465, 0, -15.892426)
 collision_layer = 16
 collision_mask = 0
@@ -486,7 +486,7 @@ world_id = "stress.fence_08"
 metadata/stop = 6
 metadata/order = 18
 
-[node name="stress_tree_06" type="StaticBody3D" parent="Breakables" instance=ExtResource("5_46f38")]
+[node name="stress_tree_06" type="StaticBody3D" parent="Breakables" unique_id=1965014202 instance=ExtResource("5_46f38")]
 transform = Transform3D(0.9847836, 0, 0.17378531, 0, 1, 0, -0.17378531, 0, 0.9847836, -20.564802, 0, -17.200546)
 collision_layer = 16
 collision_mask = 0
@@ -495,97 +495,97 @@ world_id = "stress.tree_06"
 metadata/stop = 6
 metadata/order = 19
 
-[node name="Spawns" type="Node3D" parent="."]
+[node name="Spawns" type="Node3D" parent="." unique_id=219684953]
 
-[node name="PlayerSpawn" type="Marker3D" parent="Spawns"]
+[node name="PlayerSpawn" type="Marker3D" parent="Spawns" unique_id=139632840]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -20, 0.05, 7)
 
-[node name="Combatants" type="Node3D" parent="Spawns"]
+[node name="Combatants" type="Node3D" parent="Spawns" unique_id=1752925833]
 
-[node name="soldier_1" type="Marker3D" parent="Spawns/Combatants"]
+[node name="soldier_1" type="Marker3D" parent="Spawns/Combatants" unique_id=1976844932]
 transform = Transform3D(0.96152395, 0, -0.27472112, 0, 1, 0, 0.27472112, 0, 0.96152395, -8, 0, 28)
 metadata/scene = "res://scenes/enemies/soldier.tscn"
 metadata/definition = "enemy.soldier"
 
-[node name="soldier_2" type="Marker3D" parent="Spawns/Combatants"]
+[node name="soldier_2" type="Marker3D" parent="Spawns/Combatants" unique_id=244195671]
 transform = Transform3D(0.96152395, 0, 0.27472112, 0, 1, 0, -0.27472112, 0, 0.96152395, 8, 0, 28)
 metadata/scene = "res://scenes/enemies/soldier.tscn"
 metadata/definition = "enemy.soldier"
 
-[node name="soldier_3" type="Marker3D" parent="Spawns/Combatants"]
+[node name="soldier_3" type="Marker3D" parent="Spawns/Combatants" unique_id=868854331]
 transform = Transform3D(-0.96152395, 0, 0.27472118, 0, 1, 0, -0.27472118, 0, -0.96152395, 8, 0, -28)
 metadata/scene = "res://scenes/enemies/soldier.tscn"
 metadata/definition = "enemy.soldier"
 
-[node name="soldier_4" type="Marker3D" parent="Spawns/Combatants"]
+[node name="soldier_4" type="Marker3D" parent="Spawns/Combatants" unique_id=707051441]
 transform = Transform3D(-0.96152395, 0, -0.27472118, 0, 1, 0, 0.27472118, 0, -0.96152395, -8, 0, -28)
 metadata/scene = "res://scenes/enemies/soldier.tscn"
 metadata/definition = "enemy.soldier"
 
-[node name="wolf_1" type="Marker3D" parent="Spawns/Combatants"]
+[node name="wolf_1" type="Marker3D" parent="Spawns/Combatants" unique_id=1839374429]
 transform = Transform3D(0.2290393, 0, -0.97341716, 0, 1, 0, 0.97341716, 0, 0.2290393, -34, 0, 8)
 metadata/scene = "res://scenes/enemies/wolf.tscn"
 metadata/definition = "enemy.wolf"
 
-[node name="wolf_2" type="Marker3D" parent="Spawns/Combatants"]
+[node name="wolf_2" type="Marker3D" parent="Spawns/Combatants" unique_id=813919032]
 transform = Transform3D(-0.22903937, 0, 0.97341716, 0, 1, 0, -0.97341716, 0, -0.22903937, 34, 0, -8)
 metadata/scene = "res://scenes/enemies/wolf.tscn"
 metadata/definition = "enemy.wolf"
 
-[node name="wolf_3" type="Marker3D" parent="Spawns/Combatants"]
+[node name="wolf_3" type="Marker3D" parent="Spawns/Combatants" unique_id=337393248]
 transform = Transform3D(-0.22903937, 0, -0.97341716, 0, 1, 0, 0.97341716, 0, -0.22903937, -34, 0, -8)
 metadata/scene = "res://scenes/enemies/wolf.tscn"
 metadata/definition = "enemy.wolf"
 
-[node name="archer_1" type="Marker3D" parent="Spawns/Combatants"]
+[node name="archer_1" type="Marker3D" parent="Spawns/Combatants" unique_id=1766277397]
 transform = Transform3D(0.5854905, 0, 0.81067926, 0, 1, 0, -0.81067926, 0, 0.5854905, 36, 0, 26)
 metadata/scene = "res://scenes/enemies/archer.tscn"
 metadata/definition = "enemy.archer"
 
-[node name="archer_2" type="Marker3D" parent="Spawns/Combatants"]
+[node name="archer_2" type="Marker3D" parent="Spawns/Combatants" unique_id=351823024]
 transform = Transform3D(-0.5854906, 0, -0.8106792, 0, 1, 0, 0.8106792, 0, -0.5854906, -36, 0, -26)
 metadata/scene = "res://scenes/enemies/archer.tscn"
 metadata/definition = "enemy.archer"
 
-[node name="mage_1" type="Marker3D" parent="Spawns/Combatants"]
+[node name="mage_1" type="Marker3D" parent="Spawns/Combatants" unique_id=833080887]
 transform = Transform3D(-0.5854906, 0, 0.8106792, 0, 1, 0, -0.8106792, 0, -0.5854906, 36, 0, -26)
 metadata/scene = "res://scenes/enemies/mage.tscn"
 metadata/definition = "enemy.mage"
 
-[node name="ogre_1" type="Marker3D" parent="Spawns/Combatants"]
+[node name="ogre_1" type="Marker3D" parent="Spawns/Combatants" unique_id=547982355]
 transform = Transform3D(0.28216636, 0, 0.9593655, 0, 1, 0, -0.9593655, 0, 0.28216636, 34, 0, 10)
 metadata/scene = "res://scenes/enemies/ogre.tscn"
 metadata/definition = "enemy.ogre"
 
-[node name="ogre_2" type="Marker3D" parent="Spawns/Combatants"]
+[node name="ogre_2" type="Marker3D" parent="Spawns/Combatants" unique_id=55683680]
 transform = Transform3D(0.5854905, 0, -0.81067926, 0, 1, 0, 0.81067926, 0, 0.5854905, -36, 0, 26)
 metadata/scene = "res://scenes/enemies/ogre.tscn"
 metadata/definition = "enemy.ogre"
 
-[node name="Checkpoints" type="Node3D" parent="."]
+[node name="Checkpoints" type="Node3D" parent="." unique_id=2107049700]
 
-[node name="CpStart" type="Marker3D" parent="Checkpoints"]
+[node name="CpStart" type="Marker3D" parent="Checkpoints" unique_id=1382673844]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -20, 0.05, 7)
 script = ExtResource("8_74fde")
 checkpoint_id = "test.stress.cp_start"
 
-[node name="Spawned" type="Node3D" parent="."]
+[node name="Spawned" type="Node3D" parent="." unique_id=101822057]
 
-[node name="Player" type="CharacterBody3D" parent="." instance=ExtResource("9_627ae")]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=299099651 instance=ExtResource("9_627ae")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -20, 0.05, 7)
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("10_7ef4a")
 
-[node name="DebrisPool" type="Node3D" parent="."]
+[node name="DebrisPool" type="Node3D" parent="." unique_id=2132938922]
 script = ExtResource("11_ce070")
 
-[node name="StressScenario" type="Node" parent="."]
+[node name="StressScenario" type="Node" parent="." unique_id=549654704]
 script = ExtResource("12_2b37b")
 
-[node name="Signs" type="Node3D" parent="."]
+[node name="Signs" type="Node3D" parent="." unique_id=1376221259]
 
-[node name="SignStop1" type="Label3D" parent="Signs"]
+[node name="SignStop1" type="Label3D" parent="Signs" unique_id=1209743062]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.95192, 3, 12.566344)
 visibility_range_begin = 7.0
 visibility_range_end = 60.0
@@ -595,7 +595,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "STOP 1"
 font_size = 64
 
-[node name="SignStop2" type="Label3D" parent="Signs"]
+[node name="SignStop2" type="Label3D" parent="Signs" unique_id=394339667]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 11.5)
 visibility_range_begin = 7.0
 visibility_range_end = 60.0
@@ -605,7 +605,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "STOP 2"
 font_size = 64
 
-[node name="SignStop3" type="Label3D" parent="Signs"]
+[node name="SignStop3" type="Label3D" parent="Signs" unique_id=1436511088]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.95192, 3, 12.566344)
 visibility_range_begin = 7.0
 visibility_range_end = 60.0
@@ -615,7 +615,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "STOP 3"
 font_size = 64
 
-[node name="SignStop4" type="Label3D" parent="Signs"]
+[node name="SignStop4" type="Label3D" parent="Signs" unique_id=1075455508]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.5, 3, 0)
 visibility_range_begin = 7.0
 visibility_range_end = 60.0
@@ -625,7 +625,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "STOP 4"
 font_size = 64
 
-[node name="SignStop5" type="Label3D" parent="Signs"]
+[node name="SignStop5" type="Label3D" parent="Signs" unique_id=1695548375]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.95192, 3, -12.566344)
 visibility_range_begin = 7.0
 visibility_range_end = 60.0
@@ -635,7 +635,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "STOP 5"
 font_size = 64
 
-[node name="SignStop6" type="Label3D" parent="Signs"]
+[node name="SignStop6" type="Label3D" parent="Signs" unique_id=1461271636]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -11.5)
 visibility_range_begin = 7.0
 visibility_range_end = 60.0
@@ -645,7 +645,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "STOP 6"
 font_size = 64
 
-[node name="SignStop7" type="Label3D" parent="Signs"]
+[node name="SignStop7" type="Label3D" parent="Signs" unique_id=783733144]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.95192, 3, -12.566344)
 visibility_range_begin = 7.0
 visibility_range_end = 60.0
@@ -655,7 +655,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "STOP 7"
 font_size = 64
 
-[node name="SignStop8" type="Label3D" parent="Signs"]
+[node name="SignStop8" type="Label3D" parent="Signs" unique_id=1525100349]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.5, 3, 0)
 visibility_range_begin = 7.0
 visibility_range_end = 60.0
@@ -665,7 +665,7 @@ modulate = Color(1, 0.95, 0.8, 1)
 text = "STOP 8"
 font_size = 64
 
-[node name="SignTitle" type="Label3D" parent="Signs"]
+[node name="SignTitle" type="Label3D" parent="Signs" unique_id=2076452034]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 5.05, 7)
 visibility_range_begin = 7.0
 visibility_range_end = 80.0

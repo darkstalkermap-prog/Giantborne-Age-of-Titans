@@ -99,30 +99,30 @@ _surfaces = [{
 "vertex_data": PackedByteArray("ZmaGQK5HYT6amVm/3V6XQK5HYT7y6oi/ZmaeQK5HYT7NzMy/3V6XQK5HYT5UVwjAZmaGQK5HYT5mZhbA3ttqQK5HYT5UVwjAzMxcQK5HYT7NzMy/3ttqQK5HYT7y6oi/ZmaGQK5HYT6amVm/ZmaGQOtROD6amVm/3V6XQOtROD7y6oi/ZmaeQOtROD7NzMy/3V6XQOtROD5UVwjAZmaGQOtROD5mZhbA3ttqQOtROD5UVwjAzMxcQOtROD7NzMy/3ttqQOtROD7y6oi/ZmaGQOtROD6amVm/ZmaGQChcDz6amVm/3V6XQChcDz7y6oi/ZmaeQChcDz7NzMy/3V6XQChcDz5UVwjAZmaGQChcDz5mZhbA3ttqQChcDz5UVwjAzMxcQChcDz7NzMy/3ttqQChcDz7y6oi/ZmaGQChcDz6amVm/ZmaGQMzMzD2amVm/3V6XQMzMzD3y6oi/ZmaeQMzMzD3NzMy/3V6XQMzMzD1UVwjAZmaGQMzMzD1mZhbA3ttqQMzMzD1UVwjAzMxcQMzMzD3NzMy/3ttqQMzMzD3y6oi/ZmaGQMzMzD2amVm/ZmaGQIzCdT2amVm/3V6XQIzCdT3y6oi/ZmaeQIzCdT3NzMy/3V6XQIzCdT1UVwjAZmaGQIzCdT1mZhbA3ttqQIzCdT1UVwjAzMxcQIzCdT3NzMy/3ttqQIzCdT3y6oi/ZmaGQIzCdT2amVm/ZmaGQAjXozyamVm/3V6XQAjXozzy6oi/ZmaeQAjXozzNzMy/3V6XQAjXozxUVwjAZmaGQAjXozxmZhbA3ttqQAjXozxUVwjAzMxcQAjXozzNzMy/3ttqQAjXozzy6oi/ZmaGQAjXozyamVm/ZmaGQK5HYT7NzMy/ZmaGQK5HYT6amVm/3V6XQK5HYT7y6oi/ZmaeQK5HYT7NzMy/3V6XQK5HYT5UVwjAZmaGQK5HYT5mZhbA3ttqQK5HYT5UVwjAzMxcQK5HYT7NzMy/3ttqQK5HYT7y6oi/ZmaGQK5HYT6amVm/ZmaGQAjXozzNzMy/ZmaGQAjXozyamVm/3V6XQAjXozzy6oi/ZmaeQAjXozzNzMy/3V6XQAjXozxUVwjAZmaGQAjXozxmZhbA3ttqQAjXozxUVwjAzMxcQAjXozzNzMy/3ttqQAjXozzy6oi/ZmaGQAjXozyamVm//3//f////7//v/9/////3///AID/////////vwAA/9//////AAD/vwAA/7//P/+/AAAAgP9//7//P/9//7//v/9//3////+//3//f////7//v/9/////3///AID/////////vwAA/9//////AAD/vwAA/7//P/+/AAAAgP9//7//P/9//7//v/9//3////+//3//f////7//v/9/////3///AID/////////vwAA/9//////AAD/vwAA/7//P/+/AAAAgP9//7//P/9//7//v/9//3////+//3//f////7//v/9/////3///AID/////////vwAA/9//////AAD/vwAA/7//P/+/AAAAgP9//7//P/9//7//v/9//3////+//3//f////7//v/9/////3///AID/////////vwAA/9//////AAD/vwAA/7//P/+/AAAAgP9//7//P/9//7//v/9//3////+//3//f////7//v/9/////3///AID/////////vwAA/9//////AAD/vwAA/7//P/+/AAAAgP9//7//P/9//7//v/9//3////+/AID//////78AgP//////vwCA//////+/AID//////78AgP//////vwCA//////+/AID//////78AgP//////vwCA//////+/AID//////78AgAAA////vwCAAAD///+/AIAAAP///78AgAAA////vwCAAAD///+/AIAAAP///78AgAAA////vwCAAAD///+/AIAAAP///78AgAAA////vw==")
 }]
 
-[node name="CartBarricade" type="StaticBody3D"]
+[node name="CartBarricade" type="StaticBody3D" unique_id=755255563]
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_5fc47")
 world_id = "valley.village.barricade"
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=354608431]
 script = ExtResource("2_c8050")
 entity_id = "valley.village.barricade"
 definition_id = "prop.cart_barricade"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=814232003]
 
-[node name="Center" type="Marker3D" parent="Anchors"]
+[node name="Center" type="Marker3D" parent="Anchors" unique_id=191476312]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 
-[node name="BlockCarts" type="CollisionShape3D" parent="."]
+[node name="BlockCarts" type="CollisionShape3D" parent="." unique_id=2024838383]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=914765139]
 
-[node name="Body" type="Area3D" parent="Hurtboxes"]
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=643727825]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
 collision_layer = 4
 collision_mask = 0
@@ -130,21 +130,21 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=297384514]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Intact" type="Node3D" parent="."]
+[node name="Intact" type="Node3D" parent="." unique_id=1607064377]
 
-[node name="Merged" type="MeshInstance3D" parent="Intact" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Intact" unique_id=348670924 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_7")
 
-[node name="Broken" type="Node3D" parent="."]
+[node name="Broken" type="Node3D" parent="." unique_id=1748068234]
 visible = false
 
-[node name="Merged" type="MeshInstance3D" parent="Broken" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Broken" unique_id=486515466 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_8")
 
-[node name="NavLinkThrough" type="NavigationLink3D" parent="."]
+[node name="NavLinkThrough" type="NavigationLink3D" parent="." unique_id=929995361]
 enabled = false
 navigation_layers = 15
 start_position = Vector3(0, 0, 3)

@@ -178,18 +178,30 @@ func test_every_look_key_sets_its_uniforms_and_visibility() -> void:
 	assert_true(_near(beard.get_shader_parameter("tip_color"), l.beard_tip), "the beard's tips")
 	assert_true(_near(beard.get_shader_parameter("grey"), l.beard_grey), "the beard's grey")
 	assert_true(_near(beard.get_shader_parameter("length"), 1.0), "the beard's full length when the look names none")
-	# the M10 gate (LC-6): a beard's tips thin strand by strand and it fades out seen from behind; hair does neither
+	# the M10 gate (LC-6): a beard's tips thin strand by strand; P51: a beard no longer fades out seen from behind
+	# (its under-jaw cards are closed), and every style shades as a volume
 	var full := _mat(root, "Beard_full")
 	assert_true(_near(full.get_shader_parameter("tip_thin"), GiantLook.BEARD_TIP_THIN), "a long beard's tips thin out")
 	assert_true(_near(beard.get_shader_parameter("tip_thin"), 0.0), "the short beard's stubble does not")
-	assert_true(_near(beard.get_shader_parameter("back_fade"), 1.0) and _near(full.get_shader_parameter("back_fade"), 1.0),
-		"a beard fades out behind the head")
+	assert_true(_near(beard.get_shader_parameter("back_fade"), 0.0) and _near(full.get_shader_parameter("back_fade"), 0.0),
+		"a beard is there from behind the head (P51)")
+	for m: ShaderMaterial in [hair, beard, full]:
+		assert_true(_near(m.get_shader_parameter("volume_normal"), GiantLook.VOLUME_NORMAL), "the style shades as a volume")
 	assert_true(_near(hair.get_shader_parameter("tip_thin"), 0.0), "the hair keeps the atlas's own tips")
 	assert_true(_near(hair.get_shader_parameter("back_fade"), 0.0), "the hair shows from behind")
 	var eye := _mat(root, "Eyes")
 	assert_true(eye.shader == GiantLook.EYE_SHADER, "the eyes draw with giant_eye")
 	assert_true(_near(eye.get_shader_parameter("iris_color"), l.eye_color), "the iris colour")
 	assert_true(_near(eye.get_shader_parameter("iris_glow"), l.eye_glow), "the iris glow")
+	assert_true((eye.get_meta(GiantLook.META_NAMES, {}) as Dictionary).has("look")
+		and eye.get_shader_parameter("look") == Vector2.ZERO, "the eyes look ahead until the rig turns them (P51)")
+	var tunic := _mat(root, "Garment_tunic_core")
+	assert_true(_near(tunic.get_shader_parameter("kind"), 0) and _near(tunic.get_shader_parameter("rim"), 0.0),
+		"wool is cloth with no rim light (Gate A: the rim ignores N.L and lit the braies' folds edge-on)")
+	assert_true(float(_mat(root, "Garment_furs").get_shader_parameter("rim")) > 0.0, "fur keeps its soft edge light (P51)")
+	var head := _mat(root, "Body_Head")
+	assert_true(head.get_shader_parameter("skin_lut") is Texture2D and head.get_shader_parameter("curvature_tex") is Texture2D,
+		"the skin has its subsurface lookup and its curvature (P51)")
 	assert_true(_mat(root, "Garment_tunic_core").shader == GiantLook.CLOTH_SHADER, "garments draw with giant_cloth")
 	assert_true(_near(_mat(root, "Garment_tunic_core").get_shader_parameter("dye_color"), l.dye_primary), "primary dye")
 	assert_true(_near(_mat(root, "Garment_belt").get_shader_parameter("dye_color"), l.dye_secondary), "secondary dye")
@@ -249,7 +261,8 @@ func test_the_default_tone_draws_the_albedo_as_baked() -> void:
 
 
 ## The M10 gate's LC-6: the hair shader feathers every card's root strand by strand, thins a beard's tips and
-## hides a beard from behind (its cards showed as loose squares beside the neck at the creator's Hair framing).
+## can hide a beard from behind (its cards showed as loose squares beside the neck at the creator's Hair framing;
+## since P51 GiantLook no longer asks it to: the beard's under-jaw cards are closed).
 func test_the_hair_shader_feathers_roots_and_hides_a_beard_from_behind() -> void:
 	var code := GiantLook.HAIR_SHADER.code
 	for u: String in ["root_feather", "tip_thin", "back_fade"]:
@@ -503,3 +516,109 @@ func test_the_sway_waits_while_the_giant_is_out_of_the_tree() -> void:
 	assert_eq(GiantLook.sway(root, INDEX, skeleton), Vector3.ZERO, "back in the tree the sway starts afresh")
 	assert_true(root.has_meta(GiantLook.META_SWAY), "from this frame's place")
 
+
+
+# --------------------------------------------------------------------------- P51: the look pass II
+
+## A model that loads its parts on demand: it records what GiantLook asks of it (GiantModel's two calls).
+class PartsRoot extends Node3D:
+	var ensured: Array = []
+	var released: Array = []
+
+	func ensure_part(id: String) -> MeshInstance3D:
+		ensured.append(id)
+		return null
+
+	func release_unused(shown: Array) -> void:
+		released = shown.duplicate()
+
+
+## One triangle, skinned to bone 0, as a part's imported surface.
+static func _triangle() -> ArrayMesh:
+	var a := []
+	a.resize(Mesh.ARRAY_MAX)
+	a[Mesh.ARRAY_VERTEX] = PackedVector3Array([Vector3.ZERO, Vector3.RIGHT, Vector3.UP])
+	a[Mesh.ARRAY_NORMAL] = PackedVector3Array([Vector3.BACK, Vector3.BACK, Vector3.BACK])
+	a[Mesh.ARRAY_TEX_UV] = PackedVector2Array([Vector2.ZERO, Vector2.RIGHT, Vector2.DOWN])
+	a[Mesh.ARRAY_BONES] = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+	a[Mesh.ARRAY_WEIGHTS] = PackedFloat32Array([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0])
+	a[Mesh.ARRAY_INDEX] = PackedInt32Array([0, 1, 2])
+	var m := ArrayMesh.new()
+	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, a)
+	return m
+
+
+func test_apply_loads_the_parts_a_look_shows_and_lets_go_of_the_rest() -> void:
+	var root := PartsRoot.new()
+	for id: String in INDEX.meshes:
+		var mi := MeshInstance3D.new()
+		mi.name = id
+		root.add_child(mi)
+	add_child(root)
+	_roots.append(root)
+	var l := _look()
+	GiantLook.apply(root, INDEX, l)
+	for id: String in ["Hair_crop", "Beard_short", "Garment_tunic_core", "Garment_tunic_limbs", "Garment_belt", "Garment_furs"]:
+		assert_true(root.ensured.has(id), "%s is loaded before it is shown" % id)
+	assert_false(root.ensured.has("Hair_long_back"), "a style the look does not show is not loaded")
+	assert_true(root.released.has("Hair_crop") and not root.released.has("Hair_long_back"),
+		"release_unused hears what the look shows: %s" % [root.released])
+
+
+func test_a_shell_style_draws_its_layers_in_one_surface_and_casts_no_shadow() -> void:
+	var index: Dictionary = INDEX.duplicate(true)
+	index.meshes["Hair_crop"]["shell"] = {"mask": "scalp", "height_m": 0.018}
+	var root := _model()
+	var crop := GiantLook.mesh_node(root, index, "Hair_crop")
+	var src := _triangle()
+	crop.mesh = src
+	GiantLook.build_materials(root, index, "web")
+	var l := _look()
+	GiantLook.apply(root, index, l)
+	var mat := crop.material_override as ShaderMaterial
+	assert_true(mat != null and mat.shader == GiantLook.SHELL_SHADER, "a shell style draws with giant_shell")
+	assert_eq(GiantLook.mesh_kind(index.meshes.Hair_crop), "shell", "a mesh with a shell entry is a shell style")
+	assert_eq(int(mat.get_shader_parameter("shell_count")), GiantLook.shell_layers(), "the build's layers")
+	assert_eq(GiantLook.shell_layers(), GiantLook.SHELL_LAYERS, "twelve off the Web (probe 6)")
+	assert_true(_near(mat.get_shader_parameter("hair_color"), l.hair_color), "the hair's colour")
+	assert_true(_near(mat.get_shader_parameter("mask_channel"), GiantLook.SHELL_MASKS.scalp), "the scalp's mask")
+	assert_eq(crop.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "shells never cast a shadow")
+	var stack := crop.mesh as ArrayMesh
+	assert_true(stack != src and stack.has_meta(GiantLook.META_SHELL_STACK), "the loaded skin was stacked")
+	assert_eq(stack.get_surface_count(), 1, "one surface: one draw call a style")
+	var a := stack.surface_get_arrays(0)
+	var layers := GiantLook.shell_layers()
+	assert_eq((a[Mesh.ARRAY_VERTEX] as PackedVector3Array).size(), 3 * layers, "a copy of the skin a layer")
+	var uv2: PackedVector2Array = a[Mesh.ARRAY_TEX_UV2]
+	assert_true(is_equal_approx(uv2[0].x, 0.0) and is_equal_approx(uv2[uv2.size() - 1].x, float(layers - 1)),
+		"each copy carries its layer in UV2.x")
+	assert_eq((a[Mesh.ARRAY_INDEX] as PackedInt32Array).size(), 3 * layers, "every layer drawn at LOD 0")
+	assert_true(GiantLook.shell_stack(src, layers) == stack, "a stack is built once for a skin")
+	GiantLook.apply(root, index, l)
+	assert_true(crop.mesh == stack, "and not stacked again")
+	assert_eq(GiantLook.validate(root, index, l), PackedStringArray(), "the shell's uniforms are declared")
+	index.meshes["Beard_short"]["shell"] = {"mask": "beard", "height_m": 0.015}
+	l.beard_mesh = "Beard_short"
+	GiantLook.apply(root, index, l)
+	var skin := _mat(root, "Body_Head")
+	assert_true(float(skin.get_shader_parameter("stubble")) < float(l.stubble),
+		"under a shell beard the skin keeps a shade of its stubble only")
+
+
+func test_the_swatch_shows_the_tone_the_skin_draws() -> void:
+	var d := GiantLook.drawn_tone(GiantLook.BAKE_TONE)
+	assert_true(_near(d, GiantLook.DRAWN_DEFAULT) or d.is_equal_approx(GiantLook.DRAWN_DEFAULT),
+		"the default tone draws as the measured chest")
+	var approved := Color8(198, 170, 157)
+	for ch in 3:
+		assert_true(absf(GiantLook.DRAWN_DEFAULT[ch] - approved[ch]) <= 30.0 / 255.0,
+			"within 30/255 of the approved render (Gate A: the world's light first; P51 had 12)")
+	var pale := GiantLook.drawn_tone({"color": "#c9a08a"})
+	var deep := GiantLook.drawn_tone({"color": "#4e3426"})
+	assert_true(pale.get_luminance() > d.get_luminance() and deep.get_luminance() < d.get_luminance(),
+		"tones keep their order")
+	var rows := OptionRows.choices({"key": "skin", "kind": "swatch", "set": "skin"}, "")
+	assert_true(rows.size() >= 9, "the skin row lists its tones")
+	for c: Dictionary in rows:
+		var o := Appearance.option(str(c.id))
+		assert_true((c.color as Color).is_equal_approx(GiantLook.drawn_tone(o)), "%s's swatch is its drawn tone" % c.id)

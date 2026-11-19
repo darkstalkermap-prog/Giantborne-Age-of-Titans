@@ -115,40 +115,40 @@ _surfaces = [{
 "vertex_data": PackedByteArray("pqVFvwEA4D/x8BA/pqVFPwEA4D/x8BC/pqVFPwEA4D/x8BA/pqVFvwEA4D/x8BC/pqVFvwEA4L/x8BA/pqVFPwEA4L/x8BC/pqVFPwEA4L/x8BA/pqVFvwEA4L/x8BC/pqVFPwEA4D/x8BA/pqVFvwEA4D/x8BC/pqVFPwEA4D/x8BC/pqVFvwEA4D/x8BA/pqVFPwEA4L/x8BA/pqVFvwEA4L/x8BC/pqVFPwEA4L/x8BC/pqVFvwEA4L/x8BA/pqVFPwEA4D/x8BA/pqVFvwEA4L/x8BA/pqVFvwEA4D/x8BA/pqVFPwEA4L/x8BA/pqVFPwEA4D/x8BC/pqVFvwEA4L/x8BC/pqVFvwEA4D/x8BC/pqVFPwEA4L/x8BC//3//fwCAAID//////38AgP9//38AgACA//////9/AID/f/9/AIAAgP//////fwCA/3//fwCAAID//////38AgP//AIAAgP+/AAAAgP9//7///wCAAID/vwAAAID/f/+///8AgACA/78AAACA/3//v///AIAAgP+/AAAAgP9//78AgP//AAD/vwCAAAAAAP+/AID//wAA/78AgAAAAAD/vwCA//8AAP+/AIAAAAAA/78AgP//AAD/vwCAAAAAAP+/")
 }]
 
-[node name="TrollWhelp" type="CharacterBody3D"]
+[node name="TrollWhelp" type="CharacterBody3D" unique_id=1179093323]
 collision_layer = 2
 collision_mask = 51
 script = ExtResource("1_a1c35")
 entity_id = "troll_whelp_01"
 
-[node name="BodyShape" type="CollisionShape3D" parent="."]
+[node name="BodyShape" type="CollisionShape3D" parent="." unique_id=1824157828]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
 shape = SubResource("CapsuleShape3D_1")
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=295244763]
 script = ExtResource("2_c8050")
 entity_id = "troll_whelp_01"
 definition_id = "enemy.troll_whelp"
 team = 2
 anchor_path = NodePath("../Anchors/Torso")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=106556039]
 
-[node name="Torso" type="Marker3D" parent="Anchors"]
+[node name="Torso" type="Marker3D" parent="Anchors" unique_id=1842450579]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.264706, 0)
 
-[node name="KneeL" type="Marker3D" parent="Anchors"]
+[node name="KneeL" type="Marker3D" parent="Anchors" unique_id=2079310433]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.36029413, 0.9264706, -0.08235294)
 
-[node name="KneeR" type="Marker3D" parent="Anchors"]
+[node name="KneeR" type="Marker3D" parent="Anchors" unique_id=694616376]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36029413, 0.9264706, -0.08235294)
 
-[node name="Grab" type="Marker3D" parent="Anchors"]
+[node name="Grab" type="Marker3D" parent="Anchors" unique_id=1427723694]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3676472, 0)
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=587540114]
 
-[node name="Head" type="Area3D" parent="Hurtboxes"]
+[node name="Head" type="Area3D" parent="Hurtboxes" unique_id=2132103112]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1705883, -0.05147059)
 collision_layer = 4
 collision_mask = 0
@@ -156,20 +156,20 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "head"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Head"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Head" unique_id=1509860703]
 shape = SubResource("SphereShape3D_2")
 
-[node name="Torso" type="Area3D" parent="Hurtboxes"]
+[node name="Torso" type="Area3D" parent="Hurtboxes" unique_id=83626246]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2132354, 0)
 collision_layer = 4
 collision_mask = 0
 monitoring = false
 script = ExtResource("3_129e0")
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Torso"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Torso" unique_id=844417968]
 shape = SubResource("BoxShape3D_3")
 
-[node name="Legs" type="Area3D" parent="Hurtboxes"]
+[node name="Legs" type="Area3D" parent="Hurtboxes" unique_id=710395166]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72058827, 0)
 collision_layer = 4
 collision_mask = 0
@@ -177,12 +177,12 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "legs"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Legs"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Legs" unique_id=839910889]
 shape = SubResource("BoxShape3D_4")
 
-[node name="NavAgent" type="NavigationAgent3D" parent="."]
+[node name="NavAgent" type="NavigationAgent3D" parent="." unique_id=403010211]
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=807056605]
 script = ExtResource("4_5a5a3")
 weapon_arm_path = NodePath("Body/ShoulderR")
 off_arm_path = NodePath("Body/ShoulderL")
@@ -196,48 +196,48 @@ block_pose = Vector2(-30, 10)
 stride_length_m = 1.5441176470588238
 leg_swing_rad = 0.45
 
-[node name="Body" type="Node3D" parent="Visual"]
+[node name="Body" type="Node3D" parent="Visual" unique_id=1319645015]
 
-[node name="HipL" type="Node3D" parent="Visual/Body"]
+[node name="HipL" type="Node3D" parent="Visual/Body" unique_id=373391784]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.37058827, 1.3382353, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/HipL"]
+[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/HipL" unique_id=1816475370]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_6")
 
-[node name="HipR" type="Node3D" parent="Visual/Body"]
+[node name="HipR" type="Node3D" parent="Visual/Body" unique_id=1657481820]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37058827, 1.3382353, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/HipR"]
+[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/HipR" unique_id=1175360954]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_7")
 
-[node name="Torso" type="Node3D" parent="Visual/Body"]
+[node name="Torso" type="Node3D" parent="Visual/Body" unique_id=1692483253]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3382353, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/Torso"]
+[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/Torso" unique_id=846355154]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_8")
 
-[node name="ShoulderL" type="Node3D" parent="Visual/Body"]
+[node name="ShoulderL" type="Node3D" parent="Visual/Body" unique_id=1988822953]
 transform = Transform3D(0.9702958, -0.23255026, 0.06668271, 0, 0.27563736, 0.9612617, -0.24192192, -0.93270814, 0.26744974, -0.90588236, 2.6970587, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/ShoulderL"]
+[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/ShoulderL" unique_id=672485681]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_9")
 
-[node name="ShoulderR" type="Node3D" parent="Visual/Body"]
+[node name="ShoulderR" type="Node3D" parent="Visual/Body" unique_id=1093750364]
 transform = Transform3D(0.9702958, 0.23255026, -0.06668271, 0, 0.27563736, 0.9612617, 0.24192192, -0.93270814, 0.26744974, 0.90588236, 2.6970587, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/ShoulderR"]
+[node name="Mesh" type="MeshInstance3D" parent="Visual/Body/ShoulderR" unique_id=875661408]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_10")
 
-[node name="Weapon" type="MeshInstance3D" parent="Visual/Body/ShoulderR"]
+[node name="Weapon" type="MeshInstance3D" parent="Visual/Body/ShoulderR" unique_id=159646360]
 material_override = SubResource("StandardMaterial3D_5")
 mesh = SubResource("ArrayMesh_11")
 
-[node name="LodProxy" type="MeshInstance3D" parent="Visual"]
+[node name="LodProxy" type="MeshInstance3D" parent="Visual" unique_id=244256741]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7500001, 0)
 visible = false
 material_override = SubResource("StandardMaterial3D_5")

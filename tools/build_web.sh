@@ -3,9 +3,10 @@
 # (web/launcher.html) loads when it is published as a claude.ai Artifact.
 #
 # Usage:  tools/build_web.sh [--preset=NAME] [--out=DIR] [--budget-mb=N] [--giant-share-mb=N]
-#                             [--version=V] [--parts=N] [path-to-godot-4.6.3]
-#         tools/build_web.sh --check-size=DIR [--budget-mb=N] [--giant-share-mb=N] [--version=V]
-#                             [--parts=N]
+#                             [--people-share-mb=N] [--version=V] [--parts=N] [--keep-export-cache]
+#                             [path-to-godot-4.6.3]
+#         tools/build_web.sh --check-size=DIR [--budget-mb=N] [--giant-share-mb=N]
+#                             [--people-share-mb=N] [--version=V] [--parts=N]
 #   --preset=Web          the release (default): no test content (scenes/test/, assets/test_world/,
 #                         data/test/ are excluded; P22), into builds/web/
 #   --preset="Web (test)" the same build with the test levels and records, for the web checks that
@@ -14,16 +15,30 @@
 #                         --parts)
 #   --budget-mb=N         the shipped index.pck budget in MB (default: the milestone's, from the
 #                         project's version: 7.5 MB up to M6, 21 MB at M7, 23 MB at M8 and M9, 26 MB
-#                         from M10 on; decision 8 and the owner's answer 1 of plan M10 §0.6)
+#                         at M10 and M11, 32 MB at M12 and 44 MB from M13 on; decision 8, the owner's
+#                         answer 1 of plan M10 §0.6 and plan M11 §2.12)
 #   --version=V           P45: judge the build as version V (0.10.0-m10) instead of the project's
 #                         config/version - only the milestone's budget reads it (tests use it)
 #   --giant-share-mb=N    P41 (plan M10 §2.12): the most the realistic giant's files may add to the
 #                         shipped pack (the GIANT_SHARE line, tools/pck_files.py --giant-share);
 #                         default the budget less 18.4 MB: 4.6 MB at the 23 MB budget and 7.6 MB
-#                         at M10's 26 MB, where the Web pack also holds the 1024 px maps (tex_hi/)
+#                         at M10's 26 MB, where the Web pack also holds the 1024 px maps (tex_hi/);
+#                         13.6 MB at 32 MB and, from M13, the budget less 18.4 MB and less the
+#                         people's share (13.6 MB at 44 MB)
+#   --people-share-mb=N   P49 (plan M11 §2.12): the most the realistic people and creatures may add
+#                         (the PEOPLE_SHARE line, tools/pck_files.py --people-share: assets/people/,
+#                         assets/creatures/, their shaders and scenes); the line is printed for every
+#                         build (0 until the files exist) and capped at 12.0 MB from M13 on - before
+#                         that only when this option gives a cap
+#   --keep-export-cache   P49: do not empty .godot/exported/ before the export. By default the
+#                         build exports from an empty conversion cache, so that every text scene is
+#                         converted by this run (see "Reproducible exports" below)
 #   --parts=N             ship the packed pck in exactly N parts (P23: the forced two-part build of
 #                         the M6 acceptance, --parts=2); without it the pck ships in as many parts
 #                         of at most 15 MB as it needs, one part while it fits
+#   --print-caps          export nothing and read no pack: print one CAPS line - the budget and the
+#                         two shares' caps this build would be judged by - for every --version=
+#                         given, in order (tests use it)
 #   --check-size=DIR      export nothing and write nothing: pack DIR/index.pck (an earlier build's)
 #                         in memory and judge it as a build would - the PCK_SIZE line, the part cap
 #                         and the budget, with the same exit codes (M7 polish; tests use it)
@@ -42,7 +57,9 @@
 #   index.pck.gz.b64.txt                  the game data, packed (one part), or
 #   index.pck.gz.b64.<n>.txt              its parts n = 1, 2, ... of at most 15 MB each (P23: the
 #                                         launcher downloads them in order with one progress meter
-#                                         and joins the text before unpacking it)
+#                                         and decodes and inflates them as they arrive: P49)
+#   index.pck.sha256                      the pack's SHA-256 (the PCK_SHA256 line; P49: two exports
+#                                         of one commit must print the same one)
 #   poster.jpg                            still shown before Play
 #   play.html                             the launcher wrapped like the Artifact host wraps it,
 #                                         for testing with any static web server (play.html?args=a,b
@@ -54,6 +71,16 @@
 # --giant-share-mb), the pck's test content (the release must have none: an error), and for the
 # release the data it ships validated without data/test (tools/release_data_check.gd; a WARNING
 # with the offending records).
+# Reproducible exports (P49; the 0.10.0-m10 release's finding): the engine converts every text scene
+# and resource to binary for the pack and keeps the conversions in .godot/exported/ (not in git);
+# a scene file without node ids got random ones at each conversion, so two checkouts packed
+# different bytes. The scene files now carry ids made from each node's path (tools/scene_kit.gd,
+# stable_unique_ids), this script empties .godot/exported/ first, and the imported glTF scenes -
+# whose node ids the importer draws at random at every import - are given stable ones before the
+# export (tools/normalize_imports.gd, the NORMALIZE_IMPORTS line). A pack then depends on the
+# commit alone: the PCK_SHA256 line is the same in every checkout.
+# tests/slow/test_export_reproducible.gd converts scenes twice and normalizes an import;
+# docs/PERFORMANCE.md has the two-checkout record.
 # Exit codes: 0 built; 1 failed - the export, a part over 15 MB, a packed file over the host's
 # 16 MB, the release's test content, or (M7 polish; plan §6.6) the shipped index.pck over the
 # milestone's budget (--budget-mb=N overrides it), which fails after the PCK_SIZE line and the reason
@@ -66,7 +93,11 @@ PRESET="Web"
 OUT=""
 BUDGET_MB=""
 GIANT_SHARE_MB=""
+PEOPLE_SHARE_MB=""
+KEEP_CACHE=0
+PRINT_CAPS=0
 VERSION=""
+VERSIONS=""
 PARTS=""
 CHECK_SIZE=""
 # The largest part of the packed pck (P23): under the host's 15 MB cap for binary files and its
@@ -79,10 +110,13 @@ for arg in "$@"; do
 		--out=*) OUT="${arg#--out=}" ;;
 		--budget-mb=*) BUDGET_MB="${arg#--budget-mb=}" ;;
 		--giant-share-mb=*) GIANT_SHARE_MB="${arg#--giant-share-mb=}" ;;
+		--people-share-mb=*) PEOPLE_SHARE_MB="${arg#--people-share-mb=}" ;;
+		--keep-export-cache) KEEP_CACHE=1 ;;
+		--print-caps) PRINT_CAPS=1 ;;
 		--version=*) VERSION="${arg#--version=}" ;;
 		--parts=*) PARTS="${arg#--parts=}" ;;
 		--check-size=*) CHECK_SIZE="${arg#--check-size=}" ;;
-		-h|--help) sed -n '2,61p' "$0"; exit 0 ;;
+		-h|--help) sed -n '2,/^set -euo pipefail/p' "$0" | sed '$d'; exit 0 ;;
 		--*) echo "build_web.sh: unknown option '$arg'" >&2; exit 2 ;;
 		*) GODOT="$arg" ;;
 	esac
@@ -103,10 +137,15 @@ OUT="${OUT:-$DEFAULT_OUT}"
 RELEASE=0
 if [ "$PRESET" = "Web" ] && [ "$OUT" = "builds/web" ] && [ -z "$PARTS" ]; then RELEASE=1; fi
 
-# The milestone's budget for the shipped index.pck (decision 8), from config/version (0.7.0-m7: 21 MB)
-# or --version. P45 (plan M10 §0.6, the owner's answer 1): 26 MB from -m10 on, still in parts of at
-# most 15 MB.
-if [ -z "$BUDGET_MB" ]; then
+# resolve_caps: sets MILESTONE, BUDGET_MB, GIANT_SHARE_MB and PEOPLE_SHARE_MB for VERSION (or the project's
+# version) from the options given (ARG_BUDGET_MB, ARG_GIANT_SHARE_MB, ARG_PEOPLE_SHARE_MB); exits 2 on a usage error.
+resolve_caps() {
+	BUDGET_MB="$ARG_BUDGET_MB"
+	GIANT_SHARE_MB="$ARG_GIANT_SHARE_MB"
+	PEOPLE_SHARE_MB="$ARG_PEOPLE_SHARE_MB"
+	# The milestone's budget for the shipped index.pck (decision 8), from config/version (0.7.0-m7: 21 MB)
+	# or --version. P45 (plan M10 §0.6, the owner's answer 1): 26 MB from -m10 on, still in parts of at
+	# most 15 MB. P49 (plan M11 §2.12): 26 MB at -m11, 32 MB at -m12, 44 MB from -m13 on.
 	if [ -n "$VERSION" ]; then
 		MILESTONE="$(printf '%s\n' "$VERSION" | sed -n 's/^.*-m\([0-9][0-9]*\)$/\1/p')"
 		if [ -z "$MILESTONE" ]; then
@@ -117,23 +156,63 @@ if [ -z "$BUDGET_MB" ]; then
 		MILESTONE="$(sed -n 's/^config\/version="[^"]*-m\([0-9]*\)"$/\1/p' project.godot | head -n 1)"
 	fi
 	MILESTONE="${MILESTONE:-6}"
-	if [ "$MILESTONE" -le 6 ]; then BUDGET_MB=7.5
-	elif [ "$MILESTONE" -le 7 ]; then BUDGET_MB=21
-	elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23
-	else BUDGET_MB=26
+	if [ -z "$BUDGET_MB" ]; then
+		# The current milestone's default stays the LAST one assigned in this file: the giant pipeline's
+		# estimate (tools/giant/build_giant.py, web_budget_mib) reads the last default it finds here. The
+		# package that sets the version to -m12 (and later -m13) moves that milestone's branch to the end.
+		if [ "$MILESTONE" -le 6 ]; then BUDGET_MB=7.5
+		elif [ "$MILESTONE" -le 7 ]; then BUDGET_MB=21
+		elif [ "$MILESTONE" -le 9 ]; then BUDGET_MB=23
+		elif [ "$MILESTONE" -ge 13 ]; then BUDGET_MB=44
+		elif [ "$MILESTONE" -eq 12 ]; then BUDGET_MB=32
+		else BUDGET_MB=26
+		fi
 	fi
+	case "$BUDGET_MB" in
+		''|.|*[!0-9.]*|*.*.*) echo "build_web.sh: --budget-mb wants a number of MB (got '$BUDGET_MB')" >&2; exit 2 ;;
+	esac
+	# P49 (plan M11 §2.12): the people's share (assets/people/, assets/creatures/, their shaders and scenes).
+	# Its line is printed for every build; its cap, 12.0 MB, applies from -m13 on (earlier only when
+	# --people-share-mb names one).
+	PEOPLE_FROM_MILESTONE=13
+	PEOPLE_SHARE_CAP_MB=12.0
+	if [ -z "$PEOPLE_SHARE_MB" ] && [ "$MILESTONE" -ge "$PEOPLE_FROM_MILESTONE" ]; then
+		PEOPLE_SHARE_MB="$PEOPLE_SHARE_CAP_MB"
+	fi
+	case "$PEOPLE_SHARE_MB" in
+		'') ;;
+		.|*[!0-9.]*|*.*.*) echo "build_web.sh: --people-share-mb wants a number of MB (got '$PEOPLE_SHARE_MB')" >&2; exit 2 ;;
+	esac
+	# P41 (plan M10 §2.12): the giant's share of the shipped pack, 4.6 MB at the 23 MB budget; it keeps the
+	# same 18.4 MB for everything else when the budget changes (P45: 7.6 MB at M10's 26 MB; P49: 13.6 MB at
+	# 32 MB, and from -m13 the people's share comes off as well: 44 - 18.4 - 12.0 = 13.6 MB).
+	OTHER_SHARE_MB=18.4
+	if [ -z "$GIANT_SHARE_MB" ]; then
+		PEOPLE_OFF=0
+		if [ "$MILESTONE" -ge "$PEOPLE_FROM_MILESTONE" ]; then PEOPLE_OFF="${PEOPLE_SHARE_MB:-0}"; fi
+		GIANT_SHARE_MB="$(awk "BEGIN { v = $BUDGET_MB - $OTHER_SHARE_MB - $PEOPLE_OFF; if (v < 0) v = 0; printf \"%.1f\", v }")"
+	fi
+	case "$GIANT_SHARE_MB" in
+		''|.|*[!0-9.]*|*.*.*) echo "build_web.sh: --giant-share-mb wants a number of MB (got '$GIANT_SHARE_MB')" >&2; exit 2 ;;
+	esac
+}
+# Every --version= given, in order (--print-caps reports each; a build is judged by the last).
+for arg in "$@"; do
+	case "$arg" in --version=*) VERSIONS="$VERSIONS ${arg#--version=}" ;; esac
+done
+ARG_BUDGET_MB="$BUDGET_MB"
+ARG_GIANT_SHARE_MB="$GIANT_SHARE_MB"
+ARG_PEOPLE_SHARE_MB="$PEOPLE_SHARE_MB"
+# --print-caps: the rule alone, one CAPS line for each --version given (or the project's), nothing
+# exported or read (tests).
+if [ "$PRINT_CAPS" = "1" ]; then
+	for VERSION in ${VERSIONS:-""}; do
+		resolve_caps
+		echo "CAPS budget_mb=$BUDGET_MB giant_share_mb=$GIANT_SHARE_MB people_share_mb=${PEOPLE_SHARE_MB:-none}"
+	done
+	exit 0
 fi
-case "$BUDGET_MB" in
-	''|.|*[!0-9.]*|*.*.*) echo "build_web.sh: --budget-mb wants a number of MB (got '$BUDGET_MB')" >&2; exit 2 ;;
-esac
-# P41 (plan M10 §2.12): the giant's share of the shipped pack, 4.6 MB at the 23 MB budget; it keeps the
-# same 18.4 MB for everything else when the budget changes (P45: 7.6 MB at M10's 26 MB).
-if [ -z "$GIANT_SHARE_MB" ]; then
-	GIANT_SHARE_MB="$(awk "BEGIN { v = $BUDGET_MB - 18.4; if (v < 0) v = 0; printf \"%.1f\", v }")"
-fi
-case "$GIANT_SHARE_MB" in
-	''|.|*[!0-9.]*|*.*.*) echo "build_web.sh: --giant-share-mb wants a number of MB (got '$GIANT_SHARE_MB')" >&2; exit 2 ;;
-esac
+resolve_caps
 
 size() { wc -c < "$1" | tr -d ' '; }
 mb() { awk "BEGIN { printf \"%.2f\", $1 / 1048576 }"; }
@@ -167,6 +246,33 @@ check_giant_share() {
 		exit 1
 	fi
 }
+# The people's share (P49, plan M11 §2.12): prints the PEOPLE_SHARE line of the pck at $1 (0 until the
+# files exist) and, where a cap applies (from -m13, or --people-share-mb), exits 1 over it.
+check_people_share() {
+	local line shipped
+	if ! command -v python3 >/dev/null 2>&1; then
+		echo "PEOPLE_SHARE: not measured (python3 is missing)"
+		return 0
+	fi
+	if ! line="$(python3 tools/pck_files.py --people-share "$1" 2>/dev/null)"; then
+		echo "PEOPLE_SHARE: not measured ($1 is not a Godot pack)"
+		return 0
+	fi
+	echo "$line cap_mb=${PEOPLE_SHARE_MB:-none}"
+	[ -n "$PEOPLE_SHARE_MB" ] || return 0
+	shipped="$(echo "$line" | sed -E 's/.* shipped=([0-9]+) .*/\1/')"
+	if awk "BEGIN { exit !($shipped > $PEOPLE_SHARE_MB * 1048576) }"; then
+		echo "build_web.sh: FAILED: the people's and creatures' files add $(mb "$shipped") MB to the shipped index.pck, over their share of $PEOPLE_SHARE_MB MB (plan M11 §2.12; --people-share-mb=N overrides it)" >&2
+		exit 1
+	fi
+}
+# The parts' report (P49): one PCK_PARTS line - how many parts, the size of each, the largest against
+# the cap - for a pack of $1 bytes in $2 parts.
+report_parts() {
+	local per=$(( ($1 + $2 - 1) / $2 )) last
+	last=$(( $1 - per * ($2 - 1) ))
+	echo "PCK_PARTS parts=$2 part_bytes=$per last_part_bytes=$last part_max=$PART_MAX"
+}
 
 # --check-size=DIR: an earlier build's index.pck judged without exporting or writing anything.
 if [ -n "$CHECK_SIZE" ]; then
@@ -176,7 +282,8 @@ if [ -n "$CHECK_SIZE" ]; then
 	fi
 	pck=$(size "$CHECK_SIZE/index.pck")
 	pck_gz=$(gzip -9 -n -c "$CHECK_SIZE/index.pck" | wc -c | tr -d ' ')
-	pck_packed=$(gzip -9 -n -c "$CHECK_SIZE/index.pck" | base64 | tr -d '\n' | wc -c | tr -d ' ')
+	# base64 without line breaks is four characters for every three bytes, the last group padded.
+	pck_packed=$(( (pck_gz + 2) / 3 * 4 ))
 	pck_parts=$(part_count "$pck_packed")
 	echo "PCK_SIZE preset=\"check-size\" raw=$pck gzip=$pck_gz shipped=$pck_packed shipped_mb=$(mb "$pck_packed") budget_mb=$BUDGET_MB parts=$pck_parts"
 	per=$(( (pck_packed + pck_parts - 1) / pck_parts ))
@@ -184,8 +291,10 @@ if [ -n "$CHECK_SIZE" ]; then
 		echo "build_web.sh: FAILED: a part of the $pck_parts would hold $per bytes (at most $PART_MAX)" >&2
 		exit 1
 	fi
+	report_parts "$pck_packed" "$pck_parts"
 	check_budget "$pck_packed"
 	check_giant_share "$CHECK_SIZE/index.pck"
+	check_people_share "$CHECK_SIZE/index.pck"
 	exit 0
 fi
 
@@ -198,6 +307,21 @@ case "$OUT" in
 	builds/*) : > builds/.gdignore ;;
 	*) : > "$OUT/.gdignore" ;;
 esac
+# P49: export from an empty conversion cache (see "Reproducible exports" above): every text scene and
+# resource is converted by this run, from files whose node ids are in git.
+if [ "$KEEP_CACHE" != "1" ]; then
+	rm -rf .godot/exported
+fi
+# P49: the imported glTF scenes get their stable node ids too (tools/normalize_imports.gd: the importer
+# gives them random ones at every import, and the pack holds the imported file as it is). The import
+# first, so that nothing is imported - with new random ids - by the export itself.
+"$GODOT" --headless --path . --import >/dev/null 2>&1 || true
+norm_line="$("$GODOT" --headless --path . -s res://tools/normalize_imports.gd 2>/dev/null | grep -m1 '^NORMALIZE_IMPORTS ' || true)"
+echo "${norm_line:-NORMALIZE_IMPORTS: not run (tools/normalize_imports.gd printed nothing)}"
+if echo "$norm_line" | grep -qv '"failed":\[\]'; then
+	echo "build_web.sh: FAILED: an imported scene could not be given its stable node ids" >&2
+	exit 1
+fi
 "$GODOT" --headless --path . --export-release "$PRESET" "$OUT/index.html"
 for f in index.wasm index.pck; do
 	gzip -9 -n -c "$OUT/$f" | base64 | tr -d '\n' > "$OUT/$f.gz.b64.txt"
@@ -233,6 +357,12 @@ if [ "$pck_parts" -gt 1 ]; then
 	rm "$OUT/index.pck.gz.b64.txt"
 fi
 
+# The pack's checksum (P49): two exports of one commit must print the same one.
+if command -v sha256sum >/dev/null 2>&1; then
+	pck_sha="$(sha256sum "$OUT/index.pck" | cut -d' ' -f1)"
+	echo "$pck_sha  index.pck" > "$OUT/index.pck.sha256"
+	echo "PCK_SHA256 preset=\"$PRESET\" sha256=$pck_sha"
+fi
 # The pck's sizes against the budget, before anything outside the build folder is touched.
 echo "PCK_SIZE preset=\"$PRESET\" raw=$pck gzip=$pck_gz shipped=$pck_packed shipped_mb=$(mb "$pck_packed") budget_mb=$BUDGET_MB parts=$pck_parts"
 if [ "$pck_parts" -gt 1 ]; then
@@ -245,8 +375,10 @@ if command -v python3 >/dev/null 2>&1; then
 	audio_bytes="$(echo "$share_line" | sed -E 's/.*audio_bytes=([0-9]+).*/\1/')"
 	echo "audio: $(mb "$audio_bytes") MB of the $(mb "$pck") MB pck ($(awk "BEGIN { printf \"%.0f\", 100 * $audio_bytes / $pck }") %)"
 fi
+report_parts "$pck_packed" "$pck_parts"
 check_budget "$pck_packed"
 check_giant_share "$OUT/index.pck"
+check_people_share "$OUT/index.pck"
 
 # The launcher's byte counts (used only for the progress bar) and the pck's part count.
 build_line="{ wasm: $wasm, pck: $pck, wasmPacked: $wasm_packed, pckPacked: $pck_packed, pckParts: $pck_parts }"

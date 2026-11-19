@@ -3,13 +3,14 @@
 How the build is put together: the layers, the autoloads and the simulation tick, each area of the
 game - the combat core, the giant, the enemies, the two campaign levels and the streamed world, the
 world builder, quests, the campaign and its saves, bosses, the living world, the UI, presentation and
-audio - and the tools, the bots and the tests, and since M10 the realistic giant and the character
-creator (§23). It consolidates the system documents of the M2-M5
+audio - and the tools, the bots and the tests, since M10 the realistic giant and the character
+creator (§23), and since M11's first part the giant refined: his motion, hair, skin and eyes (§24). It
+consolidates the system documents of the M2-M5
 packages (`docs/systems/P01.md` ... `P18.md`), the M6-M9 packages (`P19.md` ...
-`P40.md`) and the M10 packages (`P41.md` ... `P46.md`), which keep every public API and
-detail; §22 says which document holds what. The interpretations behind it are in
+`P40.md`), the M10 packages (`P41.md` ... `P46.md`) and M11's Part A (`P48.md` ... `P51.md`), which keep
+every public API and detail; §22 says which document holds what. The interpretations behind it are in
 [DECISIONS.md](DECISIONS.md) (decisions 1-30 from the M2-M5 plan, 31-64 from the M6-M9 plan, 65-85
-from the M10 plan).
+from the M10 plan, 86-106 from the M11 plan).
 
 ## 1. Layers
 
@@ -474,7 +475,8 @@ faction a reconciliation.
   unchanged.
 - **Rigs**: `ActorRig` and `QuadrupedRig` pose procedurally from the same `AttackGeometry` as the hit
   sweep. Since M10 the player's rig is `SkinnedRig`, an `ActorRig` whose pose brain drives the
-  realistic skinned body (§23.4): the brain's pivots stay, without meshes. Every other actor keeps
+  realistic skinned body (§23.4; since M11 with more sources for the legs, flinches, secondary motion
+  and the eyes' look, §24.3-§24.5): the brain's pivots stay, without meshes. Every other actor keeps
   the stylized rig described here. Since P22 each rig is one vertex-coloured mesh per animated pivot plus its weapon with one
   material per actor (`SceneKit.merge_rig`), and `RigPaint` paints hit flashes as emission and status
   tints as albedo and runs the distance level of detail: the renderer swaps a rig for its one-box
@@ -555,7 +557,10 @@ parts, layer 2 (`CameraRig.TORSO_LAYER`) the torso and the garments' core parts,
 (`HEAD_LAYER`) the head, the eyes, the hair and the beard, and the tree's canopy and the pine's
 needles. First person culls layers 2 and 3 (`CULL_FIRST_PERSON`); third person with the arm pressed
 close culls layer 3 only (`CULL_NO_HEAD`; `PRESSED_CULLS_TORSO` is false, decided on a render of the
-growth course's low passage). Navigation layers: 1 human
+growth course's low passage). Since M11 the giant's shadow proxy (shadows only) is on layer 1, because the
+renderer culls shadow casters by the camera's mask too and first person must keep the body's shadow; and
+first person no longer draws the legs (a shader discard by body region, §24.6), though their layer stays
+1. Navigation layers: 1 human
 (soldiers and their formations, crews, archers, mages, wolves and dire wolves, civilians), 2 large
 (ogres, trolls and whelps, riders), 4 giant (stages 2-3 in the Valley, the Ogre King), 8 small giant
 (stage 1, with the Valley's 4 m alleys), 16 titan (the giant at stages 4-6, and at stage 3 in the
@@ -755,6 +760,11 @@ wall-time, node-count and memory fields are removed (`docs/M10_HANDOFF.md` §5.1
 | M10: the creator - `CreatorScreen`, `OptionRows`, `GiantPreview`, the title's flows and warm-up, the shrine's Appearance tab, the rendered option check, the character sheets | P44 |
 | M10: the Web build at 26 MB with the 1024 px maps, the launcher's world start, `UiProbe`, `creator_check.mjs`, the stall and memory measures | P45 |
 | M10: the look pass - the hair's second pass, the cut and the sway, the target catalogue's styles, designs, garments and presets, the second scar layer | P46 |
+| M11: the body pipeline II - leaf bones and the cards' weights, build weights, the grip and side landmarks, parts on demand, the shadow proxy, the free cape, the clips II, the freeze test | P48 |
+| M11: the Web, tools and performance debts - the launcher's one-stream unpacking, the staged budgets and `PEOPLE_SHARE`, the shadow proxy's path in `RigPaint`, reproducible exports, the checks' flakiness, the starved browser's memory, the preview's warm-up on `--continue`, the Part A pre-declarations and headroom | P49 |
+| M11: the giant's motion - the grip through the fist, the legs' new sources, flinches, `SecondaryMotion`, the reach past a weapon's fit stage, first person, `capture_m11.gd`; Gate A (the skin's CPU, the arms' limit, the eyes' look) and Gate A2 (the flinches, first person's rest and legs) | P50 |
+| M11: the look pass II - hair shading, shells, braids as tubes, loose strands, the skin's grade and subsurface lookup with its curvature map, the eyes, scars and cloth; Gate A (the skin in the world's light, the proxy's layer, the cloth's rim) and Gate A2 (the shells in the world's light) | P51 |
+| The M11 Gate A and Gate A2 fixes | `DECISIONS.md` §3.5 in short; the detail in `docs/systems/P50.md` and `P51.md`, "Gate A" and "Gate A2", and `docs/PERFORMANCE.md`, "M11 Gate A: the merged measurements" |
 | The M10 gate's fixes | `DECISIONS.md` §3.3 and §3.4 in short; the detail in `docs/systems/P44.md`, "The M10 gate's fixes (lane ui)", `docs/systems/P46.md`, "The M10 gate (lane look)", `docs/systems/P43.md` and `P45.md`, "After the M10 gate (lane web)", and `docs/PERFORMANCE.md`, "The M10 gate, lane web" |
 | The gate reviews' fixes | `DECISIONS.md` §3.2 in short; the detail in the M6 gate's inline "M6 gate" notes (P04, P17b, P19, P21, P23), each package's "M7 gate", "M7 polish", "M8 gate", "M8 screenshot pass" and "M8 release" sections, and the M9 gate's sections: `docs/systems/P39.md`, "The M9 gate (lane aldmere)", "The M9 gate (lane ironreg)", "M9 gate (lane "balance")", "M9 gate (integration)", "M9 gate (catch-up)", "M9 gate (final)" and "M9 gate (the final round)", and `docs/systems/P39f.md`, "M9 gate (lane review)" |
 
@@ -762,7 +772,9 @@ wall-time, node-count and memory fields are removed (`docs/M10_HANDOFF.md` §5.1
 
 The player's giant is a skinned, textured body generated from CC0 data, driven by the same pose brain
 as before, with a look the player chooses. It is presentation only: nothing in §2-§12 reads it
-(decisions 68-70, §21). The pieces, in the order the data flows:
+(decisions 68-70, §21). This section describes it as M10 built it, revised where M11's first part
+changed a contract; §24 describes what M11 added (the parts, the bones and the motion, the hair, the
+skin and the eyes). The pieces, in the order the data flows:
 
 ```
 tools/giant/mpfb2 (CC0 data) ─► tools/giant/kit (bpy, numpy) ─► assets/giant/*.glb, *.png + manifest.json (the index)
@@ -783,7 +795,7 @@ tools/giant/mpfb2 (CC0 data) ─► tools/giant/kit (bpy, numpy) ─► assets/g
   Blender 5.3 as the `bpy` 5.3.0 module on Python 3.13, numpy, scipy, Pillow, OpenEXR) and
   `GIANT_CACHE` (the bake cache, keyed by a hash of each bake group's inputs, and the audited data
   wheel). Neither is needed to build, export or play the game.
-- **The inputs** are `tools/giant/mpfb2/`: 133 files of MakeHuman/MPFB2 data under CC0 - the hm08 base
+- **The inputs** are `tools/giant/mpfb2/`: 133 files (137 since M11's four build targets, §24.1) of MakeHuman/MPFB2 data under CC0 - the hm08 base
   mesh, 122 morph targets, the modifier table, the "game_engine" rig and its weights, six region mask
   images, the licence - copied as data from one wheel, with `FILES.sha256` and `SOURCE.md`;
   `fetch_mpfb2.py` audits the copy against the wheel. An empty `.gdignore` keeps Godot's importer out
@@ -801,7 +813,8 @@ tools/giant/mpfb2 (CC0 data) ─► tools/giant/kit (bpy, numpy) ─► assets/g
   `pack` (the two texture tiers, the hair atlas, three tileable cloth detail maps) and `clips` (§23.6).
 - **`build_giant.py`** runs the steps (`--body`, `--garments`, `--hair`, `--bake`, `--designs`, `--pack`,
   `--clips`, `--all`), writes each output's `.import` settings and records everything in
-  **`assets/giant/manifest.json`**: for each of the 13 generated files its step, the hash of that step's
+  **`assets/giant/manifest.json`**: for each of the 13 generated files (38 since M11: the 21 part files and
+  four more maps, §24.1) its step, the hash of that step's
   inputs, its sha256 and size and whether Cycles pixels reach it; the toolchain (versions and a CPU
   fingerprint); the hashes of the vendored files and the kit's sources; the bake settings; the clips'
   measurements; the body's hash; and **the giant index** (§23.2). `--verify` regenerates every file
@@ -818,8 +831,11 @@ tools/giant/mpfb2 (CC0 data) ─► tools/giant/kit (bpy, numpy) ─► assets/g
   animation library), `tex/` (albedo, normal, ORM and masks at 512 px), `tex_hi/` (normal and ORM at
   1024 px), `designs.png` (six 512 px RGBA layers stacked, imported as a 2D texture array),
   `hair_atlas.png` and `cloth_weave.png`, `cloth_leather.png`, `cloth_fur.png` (128 px), all
-  VRAM-compressed with mipmaps. **The body mesh, the skeleton, the region ids and the landmarks are
-  frozen since W25** (decision 73); hair, garments, designs, clips and textures regenerate freely.
+  VRAM-compressed with mipmaps. **The body mesh, the skeleton, the region ids and the landmarks were
+  frozen in W25** (decision 73) and **unfrozen once in M11's W29** (decision 91): 18 leaf bones, build
+  weights, more landmarks and the parts were added, while the body's positions, UVs, region ids and
+  weights, its 53 bones and M10's clips stay bit-identical, which `tools/giant/freeze.py` proves at every
+  regeneration (§24.1). Hair, garments, designs, clips and textures regenerate freely.
 
 ### 23.2 `GiantModel` and the index (`scripts/presentation/giant_model.gd`, P41)
 
@@ -830,7 +846,8 @@ manifest by the model's builder. A scene saved by SceneKit keeps nothing set ins
 group `giant_models`.
 
 - **The index**: `meshes` (25: `Body_Head`, `Body_Torso`, `Body_Limbs`, `Eyes`, five hair and four
-  beard meshes, twelve garment meshes; each with its node, category, render layer, triangle count,
+  beard meshes, twelve garment meshes; since M11 the hair, beard and garment meshes are parts loaded on
+  demand, with `part_path` and their spring `chains`, §24.1; each with its node, category, render layer, triangle count,
   and for garments the dye slot, the detail kind, the body regions it `covers` and its `coverage` per
   region), `garments` (ten; the braies and the tunic are a `_core` and a `_limbs` mesh each), `designs`
   (29: 16 tattoos, 4 war paints, 6 scars, 3 ancestry marks, each a layer and a channel of the array),
@@ -880,7 +897,9 @@ and visibility on one model.
 - **`giant_first_person.gdshaderinc`** (the M10 gate's LC-3), included by the skin and the cloth: while
   the camera stands inside the head, limb fragments inside a box round the shoulders are discarded with
   a dithered edge, so first person looking down never shows the arms' shoulder caps. The box is fixed
-  in the model's own space, so it is the same at every stage; a shadow pass keeps the shoulders.
+  in the model's own space, so it is the same at every stage; a shadow pass keeps the shoulders. Since
+  M11 it also discards the pelvis, the legs, the feet and the caps by body region (§24.6), and the skin's
+  `light()` reads a subsurface lookup (§24.5).
 
 ### 23.4 `SkinnedRig` and `PoseBrainModifier` on the pose brain (`scripts/presentation/`, P43)
 
@@ -905,7 +924,8 @@ the realistic body beside the pivots: `Visual/Body/Model` (the `GiantModel`) and
   *walking* (idle, walk and run blended by speed, their time taken from the brain's walk phase so that
   a heel strikes on every brain footfall) and otherwise the *stance* (the idle's legs under the body's
   lean: dodges, staggers, knockbacks, standing actions). So no stride freezes in a glide and no leg
-  steps in the air.
+  steps in the air. M11 added landing, the stomp, the roar, the sprint, turning and bracing, and placed
+  every source under a balanced, gated blend tree (§24.3).
 - **`PoseBrainModifier`** (a `SkeletonModifier3D`) runs inside the skeleton's update, after the clips:
   the brain's torso twist over the three spine bones; **the weapon arm by tip matching during a weapon
   arc** (§23.5) and by a generic mapping of the brain's arm pose otherwise, crossing over without a
@@ -946,7 +966,8 @@ Computed keyframes, no hand animation and no outside motion data: `idle` (a 2 s 
 and `run` (one two-step cycle each on the brain's 3.2 m stride, the feet planted), `airborne` and four
 one-frame hand poses (`grip_r`, `grip_l`, `open_r`, `open_l`), and `death` (the knees buckle and the
 torso slumps). They are written by Blender in the same pipeline, listed in the manifest and verified
-with the other outputs, and imported as an animation library whose loops are set in code.
+with the other outputs, and imported as an animation library whose loops are set in code. M11 added 19
+clips (28 in all), each keyed only on the bones it moves (§24.3).
 
 ### 23.7 The creator (`ui/screens/creator/`, `ui/screens/shrine/appearance_tab.gd`, the title; P44)
 
@@ -1011,9 +1032,185 @@ Both texture tiers ship everywhere. W25 and W26 excluded `tex_hi/` from the Web 
 23 MB pack; the owner then raised the Web budget to 26 MB so that the browser keeps the 1024 px maps,
 and since P45 the Web presets leave out only `assets/giant/manifest.json`, `GiantLook`'s "auto" tier
 picks "hi" on the Web as on the desktop, and `tools/build_web.sh` judges a `-m10` (or later) version
-against 26 MB in parts of at most 15 MB. Its `GIANT_SHARE` line weighs M10's files in the shipped pack
+against 26 MB in parts of at most 15 MB (`-m11` too; 32 MB from `-m12` and 44 from `-m13`, decision 87). Its `GIANT_SHARE` line weighs M10's files in the shipped pack
 (everything under `assets/giant/`, the giant's shaders and scenes) and fails over its cap, the budget
 less 18.4 MB: 7.6. The model's budgets and what the M10 gate measured against them - draw calls and
 primitives, texture and mesh memory, the skin's CPU a frame, the first-frame stalls - are in
 `docs/PERFORMANCE.md` ("Budgets"; "The M10 Web build and its budgets (P45, W27)"; "The W27 merge";
 "The M10 gate, lane web") and summarized in `docs/M10_HANDOFF.md` §6.
+
+## 24. The giant refined (M11 Part A; P48-P51, Gate A and Gate A2)
+
+M11's first part (`0.11.0-m11`) kept everything of §23 and refined the giant: the body pipeline was
+reopened once for bones, build weights, landmarks and parts; the rig gained new sources for the legs,
+grips, flinches, secondary motion, a longer reach, the eyes' look and a first person of its own; the
+shaders gained shells, braids as tubes, a subsurface term and better eyes. It is still presentation only
+(decisions 88, 89): the simulation, the soak and the bots did not change. The data flow of §23 holds, with
+the parts and the springs added:
+
+```
+tools/giant/kit (+ giant_parts, freeze) ─► giant.glb (71 bones, body, eyes, ShadowProxy) + parts/<mesh>.glb (21) + giant_clips.glb (28 clips)
+                                                          │ index: part_path, chains, build_max_m, shadow_proxy, landmarks II
+GiantModel ─ ensure_part / release_unused (shown parts only; a shared, weak table and a recent list)
+                                                          │
+GiantLook.apply ─► materials; shells stacked at load (12 layers desktop, 6 Web); eyes' look
+                                                          │
+ActorRig's pose brain ─► SkinnedRig: balanced gated blend tree (legs' sources, grips, flinches, fp_rest)
+                         └► Skeleton3D modifiers: PoseBrainModifier (fist, reach, arm limit) ─► SpringBoneSimulator3D ─► SecondaryMotion (limits)
+```
+
+### 24.1 The body pipeline II (`tools/giant/`, P48)
+
+- **The freeze test first.** `tools/giant/freeze.py` reduces a glTF to order-free hashes (per body mesh:
+  positions, normals, UVs, region ids, weights by bone name, triangles; per bone its rest and inverse
+  bind; per clip its tracks). `fixtures/m10_freeze.json` was written once from the `0.10.0-m10` files and
+  `test_giant_tools.py` compares every regeneration with it: the three body meshes, the 53 body bones and
+  M10's clips are bit-identical, so no bake input changed and M10's clips still play.
+- **Leaf bones** (`kit/giant_parts.py`): 18 bones added after the body was built - `hair_01`-`03` behind
+  the head, `hair_l_*` and `hair_r_*` at its sides, `beard_01`-`02` under the chin (all under `head`) and
+  `cape_c`, `cape_l`, `cape_r` (three bones each, under `spine_03`): 71 bones. Hair and beard cards are
+  re-weighted along the chain beside them, a card's root wholly on `head`; a chain no vertex hangs on by
+  half is folded back into `head`, so the crop and the short beard have none. The index's `chains` holds
+  each chain's parent, bones, kind, rest root, length and the springs' starting values.
+- **Build weights**: `COLOR.g` (brawn) and `COLOR.b` (girth) hold two MakeHuman targets' displacement
+  along the normal, smoothed, mirrored, zero on the head and normalized by `build_max_m` (0.099 m). Garments
+  take the skin's under them, cards the skin's they grew from, the proxy the nearest skin's. Nothing pushes
+  them yet: the sliders are Part B's (decision 92). Four more CC0 targets were vendored for the two
+  directions (137 files).
+- **Landmarks**: `grip_r`, `grip_l` (the closed fist's centre), `grip_local_*` and `grip_axis_*` (the same
+  in the hand bone's space and the handle's line through the fist), `knuckle_*`, `toe_*`; every design has a
+  `side`.
+- **Parts on demand** (`GiantModel`): `giant.glb` holds the skeleton, the three body meshes, the eyes and
+  the shadow proxy; each hair, beard and garment mesh is `assets/giant/parts/<id>.glb` on the same armature
+  (one `Skin` serves all). The model puts an empty node for every part under the skeleton at once (so
+  every finder by node name works), loads a part's mesh when its node is shown or by `ensure_part(id)`,
+  and lets it go on hide or `release_unused(shown)`; loaded meshes are shared through a weak table and
+  the last ones let go stay in a recent list (6 parts, 1 MB). The fullest look holds 2.60 MB of mesh
+  buffers, the default 2.15 (every part: 5.28; the budget 4.5).
+- **`ShadowProxy`**: the whole body decimated to 2,500 triangles, 12 mm inside the skin, shadows only;
+  `RigPaint.use_shadow_proxy` (P49) stops every other mesh of the model casting, so a cascade draws the
+  giant once instead of 9-12 times (the free cape keeps its own). Since Gate A it is on render layer 1
+  (§16).
+- **The free cape** hangs straight from the shoulder blades with a flared, folded hem, weighted below the
+  shoulders to the three cape chains.
+- **The clips II** (`kit/clips.py`; 28 clips): `sprint`, `turn_l`, `turn_r` (90 degrees in two steps),
+  `stomp_r` (lift, hold, plant), `land`, `brace`, `roar`, `flinch_f`, `_b`, `_l`, `_r` (the spine, neck,
+  head and clavicles only, additive), six grips by weapon family (`grip_club` ... `grip_tree`),
+  `carry_two_hand` (not wired) and `fp_rest`. A clip that keys a few bones is written with those tracks
+  only (`clips.strip_tracks`).
+- **The outputs**: 38 files in the manifest (M10's 13, the 21 parts, `tex/curvature.png`,
+  `tex/skin_lut.png`, `shell_strands.png` and `cloth_metal.png`), all bit-exact under `--verify`
+  (`tools/check.sh --giant`, `--giant-full`).
+
+### 24.2 The Web and the tools (P49)
+
+The launcher unpacks the pack as one stream, a network chunk at a time, into one `DecompressionStream`
+(probe 9). `tools/build_web.sh` stages the budget by milestone (26, 32, 44 MiB), prints `PEOPLE_SHARE`
+(0 until Part C) and `PCK_SHA256`; exports are reproducible because the builders write stable node ids
+(`SceneKit.stable_node_id`) and `tools/normalize_imports.gd` gives the imported glTF scenes stable ones
+before an export, which also empties `.godot/exported/` first: two checkouts of one commit build the
+same pack. The Web checks wait for the title's warm-up, map the audio clock piecewise, and stop on a
+renderer over 3 GB. The loading screen warms the creator's preview for a `--continue` start.
+
+### 24.3 The rig's sources, grips and the balanced blend tree (`skinned_rig.gd`, `pose_brain_modifier.gd`; P50)
+
+- **The legs' sources**, first match wins: dead; airborne (after one frame off the ground); **landing**
+  (0.25 s after at least 0.2 s in the air); **stomp** (an action whose hit is a cylinder pulse without
+  morale damage - Heavy Footfall, Titan Stomp: `stomp_r`'s windup seeked so the foot is planted as the
+  ACTIVE phase starts); **roar**; motion (the run, or the sprint clip above 0.8 of the sprint's speed);
+  walking (idle, walk, run and **sprint** by speed, timed by the brain's walk phase); **turning** (the yaw
+  changing faster than 60 degrees a second while the brain does not walk: `turn_l` or `turn_r` on the yaw
+  travelled); **bracing** (blocking or guarding, standing); the stance. Their weights are a chain from the
+  stance to the death (`SOURCE_CHAIN`), eased at the rates of `docs/systems/P50.md` (0.12-0.37 s to 95 %).
+- **The balanced, gated blend tree** (Gate A): a `Blend2` evaluates a branch at a weight of 0 (about a
+  microsecond a node), so the sources sit under a balanced tree of `Blend2` nodes in the chain's leaf order
+  (`SOURCE_LEAVES`; each node's amount its right half's share, so every clip weighs what the chain gave
+  it), with **gates** (`GATE_NAMES`: a `Transition` to the empty clip `_gate_off`) before every branch that
+  is often at no weight - the turn, the gait and each gait, the charge, the stomp and roar, the fall, the
+  upper sources, the left fist, first person's arms - and the four flinches under one gated `Add2`. Every
+  amount and gate is a fixed slot (`SLOT_PARAMS`), written only on a change. The picture is unchanged (every
+  bone within 0.000005 m of the ungated tree) and the giant's CPU a frame with secondary motion is
+  0.136-0.144 ms natively (budget 0.15 since the owner's checkpoint A, decision in `DECISIONS.md` §1.7),
+  0.23-0.25 ms on the Web (0.45).
+- **Grips**: `PoseBrainModifier` places the weapon hand by its **fist** (`grip_local_r`), the socket on the
+  fist's centre and the weapon along the grip's line, so the handle passes through the closed fist in
+  every pose; tip matching is built for the fist (`TipMatching.for_fist`) and keeps its contract. In the
+  generic poses the hand turns toward laying the fist's axis along the handle within the wrist's 45
+  degrees. The right fist closes by the weapon family's grip clip; the off hand rests open with a little of
+  `grip_l`.
+- **The arms' limit** (Gate A): outside a tested swing each arm's upper arm, forearm and hand move at most
+  `ARM_STEP_DEG_S` (1,200 degrees a second) from the last frame, so a block's start or end no longer pops
+  the arm (81 to 20 degrees a frame); a teleport or respawn forgets the last frame.
+- **The reach past a weapon's fit stage** (`TipMatching.match_swing_reach`): when the visible weapon's outer
+  half would lie beyond 0.95 of the capsule's radius, the drawn clavicle protracts, then the spine leans,
+  then the pelvis shifts, each by the least that brings it within reach (the feet put back by a leg solve).
+  A weapon that fits never moves the body.
+
+### 24.4 Flinches and the eyes (P50, Gate A, Gate A2)
+
+- **Flinches**: `HitFeedback` hands the rig the hit's side with the flash's strength; `SkinnedRig.flinch()`
+  adds `flinch_f`, `_b`, `_l` or `_r` (named by the side the hit came from) at up to `FLINCH_GAIN` (2.5)
+  times over 0.5 s, so the head moves 0.31-0.44 m **away** from the hit and the chest turns 22-28 degrees
+  (Gate A2: the side clips had leaned toward it). None during an attack's ACTIVE phase; nothing reads it
+  back.
+- **The eyes' look** (Gate A): `SkinnedRig._look_eyes` writes `giant_eye`'s `look` through
+  `GiantLook.set_param`: toward the camera's lock focus point, else along the camera's level facing, in the
+  head's rest frame, clamped to 0.25 of the iris's radius (about 7.6 degrees) and eased. The creator's
+  preview does not turn them yet.
+
+### 24.5 Secondary motion and the shaders II (P50, P51)
+
+- **`SecondaryMotion`** (`scripts/presentation/secondary_motion.gd`): the engine's `SpringBoneSimulator3D`
+  runs only the chains the shown meshes hang on (`SecondaryMotion.chains_for`: none for the crop, the
+  short beard and no cape), one setting a chain, after `PoseBrainModifier`; then `SecondaryMotion`, a
+  `SkeletonModifier3D`, holds every joint within its chain's limit of its parent's pose, a cape joint at
+  most 6 degrees toward the front, and every joint at most 720 degrees a second (so a dash's stop does not
+  whip a braid). Colliders: a sphere on the head, a capsule across the chest. Reset on a look change,
+  growth, a teleport and a respawn. Hair, braids, beards and the cape swing as he moves and settle about
+  a quarter of a second after he stops; the hair's shader sway of M10 (`GiantLook.sway_step`, now run by the
+  rig) adds a little on the cards.
+- **Hair** (`giant_hair.gdshader`): head-centred volume normals baked into the cards and blended per card,
+  two highlights along the strands (a white one toward the tip, a tinted, broader one toward the root),
+  softer card-on-card shadow. **Shells** (`giant_shell.gdshader`): the crop and the short beard are the
+  skin under the style's mask lifted off the skin; `GiantLook.shell_stack` copies it into
+  `shell_layers()` layers in one surface at load time - **12 on the desktop, 6 on the Web**
+  (`SHELL_LAYERS`, `SHELL_LAYERS_WEB`) - one draw call a style, no shipped bytes for the layers, never a
+  shadow; the shader keeps a strand of `shell_strands.png` per layer, combs the tips and, since Gate A2,
+  takes the grey and the light as the cards do, with a sky sheen. **Braids** are seven-sided tubes with a
+  plait's three strands and two bead rings (one draw call with the style). **Loose strands** at the
+  hairline of the four long styles; a row of cards under the jaw so a full or forked beard exists from
+  behind.
+- **The skin** (`giant_skin.gdshader`, `kit/pack.py`): the albedo graded in the pack step; a **subsurface
+  term**: `tex/skin_lut.png` (64 x 64, a skin profile pre-integrated over a light wrapped per channel,
+  `SKIN_WRAP`, since Gate A) read in `light()` by (N.L, curvature), the curvature from **`tex/curvature.png`**,
+  a 256 px map of its own (the mask map's alpha spoiled the masks under VRAM compression). A tone away
+  from the default keeps its hue and takes back the bake's saturation by its distance, so pale and dark
+  tones are not grey. In the world's sun the skin is warm; in the creator's light the default chest reads
+  (220, 160, 131), which the owner accepted (`DECISIONS.md` §1.7). The swatches show the colour drawn
+  (`GiantLook.drawn_tone`).
+- **Eyes** (`giant_eye.gdshader`): `look`, a limbal ring, a lid shadow, a painted catch-light on the iris,
+  a duller sclera. **Cloth** (`giant_cloth.gdshader`): 256 px detail maps, a rim light for fur only (Gate
+  A), a metal kind for Part B, the darkest dyes lifted. **Scars**: the three thinnest widened.
+
+### 24.6 First person (P50, Gate A, Gate A2)
+
+- **At rest** the arms take `fp_rest`: the forearm raised and turned 75 degrees about its own line (Gate A2),
+  so the weapon lies low in the lower right corner with the fist in view at every stage; it fades out as
+  the view turns down from -30 to -48 degrees. A block raises both forearms into view.
+- **Looking down** (`giant_first_person.gdshaderinc`, included by the skin and the cloth): while the camera
+  stands inside the head (`fp_in_head`), the limbs fade out in the box round the shoulders (M10), and every
+  vertex of the **pelvis, thigh, knee, shin, foot or a cut's cap** (regions 7 and 11-15, read from
+  `COLOR.r`, which every garment also carries for the skin under it) is discarded (`fp_region_shown`,
+  Gate A2). First person therefore shows the arms, the weapon and the body's shadow, never the legs or the
+  hips' caps; the shadow pass's camera is the light, so the whole body still casts. A third-person camera
+  pressed into the head box hides the same.
+
+### 24.7 The capture tour and the measures
+
+`scripts/debug/capture_m11.gd` (`--scenario=capture_m11 --part=a --skin`, `--capture-dir=`,
+`--capture-beats=a,b`): 43 beats and 163 frames from the side, the front and three-quarters - idle, walk,
+run, sprint, the stop, the turns, a jump and landing, every weapon's light and heavy, the stomp (lifted,
+held, planted), the roar, a buff, a block, the dodges, Shoulder Charge, a grab and throw, four flinches,
+stages 4 and 6, the reach past fit, first person at rest, blocking and looking down, the death. Headless
+it still runs every beat and its measures. The budgets and what Part A met are in `docs/PERFORMANCE.md`
+("M11 W29", "M11 W30", "M11 Gate A", "The 0.11.0-m11 release") and summarized in `docs/M11_HANDOFF.md` §6.

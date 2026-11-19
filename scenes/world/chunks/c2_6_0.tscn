@@ -312,11 +312,11 @@ _surfaces = [{
 "vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
 }]
 
-[node name="Chunk_2_6_0" type="Node3D"]
+[node name="Chunk_2_6_0" type="Node3D" unique_id=828234639]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=661385038]
 
-[node name="world_crownmarch_kingsgate_anvil" type="Node3D" parent="Props" instance=ExtResource("1_34b2a")]
+[node name="world_crownmarch_kingsgate_anvil" type="Node3D" parent="Props" unique_id=322582124 instance=ExtResource("1_34b2a")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 188, 12, 246)
 script = ExtResource("2_f9160")
 world_id = "world.crownmarch.kingsgate_anvil"
@@ -326,7 +326,7 @@ prompt = "Reforge"
 radius_m = 6.0
 priority = 45
 
-[node name="world_crownmarch_millford_house_1" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_millford_house_1" type="StaticBody3D" parent="Props" unique_id=665856010]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 172, 8.068, 112)
 collision_layer = 16
 collision_mask = 0
@@ -335,24 +335,24 @@ world_id = "world.crownmarch.millford_house_1"
 metadata/faction = "millford"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_1"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_1" unique_id=1147420618]
 script = ExtResource("4_c8050")
 entity_id = "world.crownmarch.millford_house_1"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_1"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_1" unique_id=301976654]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_1/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_1/Anchors" unique_id=265448022]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_1"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_1" unique_id=325339476]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_1"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_1" unique_id=1926691239]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_1/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_1/Hurtboxes" unique_id=1508748237]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 collision_layer = 4
 collision_mask = 0
@@ -360,21 +360,21 @@ monitoring = false
 script = ExtResource("5_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_1/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_1/Hurtboxes/Body" unique_id=1452218354]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_1"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_1" unique_id=1362250415]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_1/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_1/Intact" unique_id=1277121096 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_3")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_1"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_1" unique_id=1383775932]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_1/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_1/Broken" unique_id=258943258 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
-[node name="world_crownmarch_millford_house_2" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_millford_house_2" type="StaticBody3D" parent="Props" unique_id=1097697114]
 transform = Transform3D(0.8660254, 0, 0.5, 0, 1, 0, -0.5, 0, 0.8660254, 140, 8.076, 94)
 collision_layer = 16
 collision_mask = 0
@@ -383,24 +383,24 @@ world_id = "world.crownmarch.millford_house_2"
 metadata/faction = "millford"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_2"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_2" unique_id=291984889]
 script = ExtResource("4_c8050")
 entity_id = "world.crownmarch.millford_house_2"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_2"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_2" unique_id=1921664565]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_2/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_2/Anchors" unique_id=1971666426]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_2"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_2" unique_id=2054404899]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 shape = SubResource("BoxShape3D_5")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_2"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_2" unique_id=1255878842]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_2/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_2/Hurtboxes" unique_id=1822190538]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 collision_layer = 4
 collision_mask = 0
@@ -408,21 +408,21 @@ monitoring = false
 script = ExtResource("5_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_2/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_2/Hurtboxes/Body" unique_id=1643477110]
 shape = SubResource("BoxShape3D_6")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_2"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_2" unique_id=528142409]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_2/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_2/Intact" unique_id=433084463 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_7")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_2"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_2" unique_id=687015940]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_2/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_2/Broken" unique_id=1673532163 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_8")
 
-[node name="world_crownmarch_millford_house_3" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_millford_house_3" type="StaticBody3D" parent="Props" unique_id=1548560124]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 150, 8.076, 156)
 collision_layer = 16
 collision_mask = 0
@@ -431,24 +431,24 @@ world_id = "world.crownmarch.millford_house_3"
 metadata/faction = "millford"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_3"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_3" unique_id=338357840]
 script = ExtResource("4_c8050")
 entity_id = "world.crownmarch.millford_house_3"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_3"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_3" unique_id=1225513825]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_3/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_3/Anchors" unique_id=670740324]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_3"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_3" unique_id=723502003]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 shape = SubResource("BoxShape3D_9")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_3"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_3" unique_id=357370915]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_3/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_3/Hurtboxes" unique_id=1700751395]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 collision_layer = 4
 collision_mask = 0
@@ -456,21 +456,21 @@ monitoring = false
 script = ExtResource("5_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_3/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_3/Hurtboxes/Body" unique_id=343600367]
 shape = SubResource("BoxShape3D_10")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_3"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_3" unique_id=441125592]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_3/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_3/Intact" unique_id=460450416 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_11")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_3"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_3" unique_id=1394358949]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_3/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_3/Broken" unique_id=1522447334 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_12")
 
-[node name="world_crownmarch_millford_house_4" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_millford_house_4" type="StaticBody3D" parent="Props" unique_id=2000054640]
 transform = Transform3D(-0.9396926, 0, 0.3420202, 0, 1, 0, -0.3420202, 0, -0.9396926, 112, 8.076, 160)
 collision_layer = 16
 collision_mask = 0
@@ -479,24 +479,24 @@ world_id = "world.crownmarch.millford_house_4"
 metadata/faction = "millford"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_4"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_4" unique_id=77983527]
 script = ExtResource("4_c8050")
 entity_id = "world.crownmarch.millford_house_4"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_4"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_4" unique_id=835092720]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_4/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_4/Anchors" unique_id=123724652]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_4"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_4" unique_id=2056476178]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 shape = SubResource("BoxShape3D_13")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_4"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_4" unique_id=1219253626]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_4/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_4/Hurtboxes" unique_id=694664948]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 collision_layer = 4
 collision_mask = 0
@@ -504,21 +504,21 @@ monitoring = false
 script = ExtResource("5_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_4/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_4/Hurtboxes/Body" unique_id=1900023273]
 shape = SubResource("BoxShape3D_14")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_4"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_4" unique_id=1827168986]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_4/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_4/Intact" unique_id=1392119769 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_15")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_4"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_4" unique_id=373548417]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_4/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_4/Broken" unique_id=327324247 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_16")
 
-[node name="world_crownmarch_millford_house_5" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_millford_house_5" type="StaticBody3D" parent="Props" unique_id=535630968]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 94, 8.076, 120)
 collision_layer = 16
 collision_mask = 0
@@ -527,24 +527,24 @@ world_id = "world.crownmarch.millford_house_5"
 metadata/faction = "millford"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_5"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_5" unique_id=121354426]
 script = ExtResource("4_c8050")
 entity_id = "world.crownmarch.millford_house_5"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_5"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_5" unique_id=1217965392]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_5/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_5/Anchors" unique_id=1044850786]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_5"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_5" unique_id=368542752]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 shape = SubResource("BoxShape3D_17")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_5"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_5" unique_id=30840279]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_5/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_5/Hurtboxes" unique_id=899935477]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 collision_layer = 4
 collision_mask = 0
@@ -552,21 +552,21 @@ monitoring = false
 script = ExtResource("5_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_5/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_5/Hurtboxes/Body" unique_id=921485132]
 shape = SubResource("BoxShape3D_18")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_5"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_5" unique_id=802903010]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_5/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_5/Intact" unique_id=1118247906 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_19")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_5"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_5" unique_id=338588524]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_5/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_5/Broken" unique_id=1618910242 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_20")
 
-[node name="world_crownmarch_millford_house_6" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_millford_house_6" type="StaticBody3D" parent="Props" unique_id=483118599]
 transform = Transform3D(-0.1736482, 0, 0.9848077, 0, 1, 0, -0.9848077, 0, -0.1736482, 76, 8.036, 138)
 collision_layer = 16
 collision_mask = 0
@@ -575,24 +575,24 @@ world_id = "world.crownmarch.millford_house_6"
 metadata/faction = "millford"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_6"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_6" unique_id=315907557]
 script = ExtResource("4_c8050")
 entity_id = "world.crownmarch.millford_house_6"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_6"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_6" unique_id=788285491]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_6/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_6/Anchors" unique_id=676639198]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_6"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_6" unique_id=1335233036]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 shape = SubResource("BoxShape3D_21")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_6"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_6" unique_id=1217590727]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_6/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_6/Hurtboxes" unique_id=1541258780]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 collision_layer = 4
 collision_mask = 0
@@ -600,21 +600,21 @@ monitoring = false
 script = ExtResource("5_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_6/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_6/Hurtboxes/Body" unique_id=2053730633]
 shape = SubResource("BoxShape3D_22")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_6"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_6" unique_id=1531103]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_6/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_6/Intact" unique_id=952844423 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_23")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_6"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_6" unique_id=474472685]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_6/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_6/Broken" unique_id=462897388 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_24")
 
-[node name="world_crownmarch_millford_house_7" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_millford_house_7" type="StaticBody3D" parent="Props" unique_id=175444230]
 transform = Transform3D(0.9396926, 0, -0.34202012, 0, 1, 0, 0.34202012, 0, 0.9396926, 190, 8.076, 104)
 collision_layer = 16
 collision_mask = 0
@@ -623,24 +623,24 @@ world_id = "world.crownmarch.millford_house_7"
 metadata/faction = "millford"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_7"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millford_house_7" unique_id=1109199778]
 script = ExtResource("4_c8050")
 entity_id = "world.crownmarch.millford_house_7"
 definition_id = "prop.house_town"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_7"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millford_house_7" unique_id=1208738483]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_7/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millford_house_7/Anchors" unique_id=1818326193]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_7"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_7" unique_id=1760333335]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 shape = SubResource("BoxShape3D_25")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_7"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millford_house_7" unique_id=2114957802]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_7/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_millford_house_7/Hurtboxes" unique_id=1694846236]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
 collision_layer = 4
 collision_mask = 0
@@ -648,45 +648,45 @@ monitoring = false
 script = ExtResource("5_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_7/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millford_house_7/Hurtboxes/Body" unique_id=436475542]
 shape = SubResource("BoxShape3D_26")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_7"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millford_house_7" unique_id=381232817]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_7/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_7/Intact" unique_id=160555507 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_27")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_7"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millford_house_7" unique_id=2030975841]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_7/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millford_house_7/Broken" unique_id=700285496 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_28")
 
-[node name="world_crownmarch_millrace_dam" type="StaticBody3D" parent="Props"]
+[node name="world_crownmarch_millrace_dam" type="StaticBody3D" parent="Props" unique_id=588054347]
 transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, 152, 8.872, 48)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("3_5fc47")
 world_id = "world.crownmarch.millrace_dam"
 
-[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millrace_dam"]
+[node name="CombatEntity" type="Node" parent="Props/world_crownmarch_millrace_dam" unique_id=2113401636]
 script = ExtResource("4_c8050")
 entity_id = "world.crownmarch.millrace_dam"
 definition_id = "prop.millrace_dam"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millrace_dam"]
+[node name="Anchors" type="Node3D" parent="Props/world_crownmarch_millrace_dam" unique_id=1130593937]
 
-[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millrace_dam/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_crownmarch_millrace_dam/Anchors" unique_id=941458058]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millrace_dam"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_crownmarch_millrace_dam" unique_id=1874452680]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_29")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millrace_dam"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_crownmarch_millrace_dam" unique_id=817427382]
 
-[node name="Body" type="Area3D" parent="Props/world_crownmarch_millrace_dam/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_crownmarch_millrace_dam/Hurtboxes" unique_id=180218662]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 collision_layer = 4
 collision_mask = 0
@@ -694,91 +694,91 @@ monitoring = false
 script = ExtResource("5_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millrace_dam/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_crownmarch_millrace_dam/Hurtboxes/Body" unique_id=1577174901]
 shape = SubResource("BoxShape3D_30")
 
-[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millrace_dam"]
+[node name="Intact" type="Node3D" parent="Props/world_crownmarch_millrace_dam" unique_id=1170310976]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millrace_dam/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millrace_dam/Intact" unique_id=278671993 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_31")
 
-[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millrace_dam"]
+[node name="Broken" type="Node3D" parent="Props/world_crownmarch_millrace_dam" unique_id=244488125]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millrace_dam/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_crownmarch_millrace_dam/Broken" unique_id=1655459064 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_32")
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1640279929]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=548453436]
 
-[node name="world_cp_millford" type="Marker3D" parent="Waystones"]
+[node name="world_cp_millford" type="Marker3D" parent="Waystones" unique_id=1869290509]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 162, 8.376, 88)
 script = ExtResource("7_add9b")
 requires_flags = PackedStringArray()
 display_name = "Millford waystone"
 checkpoint_id = "world.cp.millford"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_millford"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_millford" unique_id=2042583196]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 3)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_millford/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_millford/Stone" unique_id=1735045945]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_33")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_millford/Stone" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_millford/Stone" unique_id=19805158 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_34")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_millford" groups=["scenery"]]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_millford" unique_id=928026063 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.3, 3)
 mesh = SubResource("ArrayMesh_35")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=762661688]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1313273360]
 
-[node name="world_marker_kingsgate_beacon" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_kingsgate_beacon" type="Marker3D" parent="Markers/Objective" unique_id=681050504]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 250, 11.69, 252)
 script = ExtResource("8_acc12")
 marker_id = "world.marker.kingsgate_beacon"
 
-[node name="world_marker_millrace_dam" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_millrace_dam" type="Marker3D" parent="Markers/Objective" unique_id=1573581073]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 152, 9, 64)
 script = ExtResource("8_acc12")
 marker_id = "world.marker.millrace_dam"
 
-[node name="world_marker_millford_green" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_millford_green" type="Marker3D" parent="Markers/Objective" unique_id=1243312701]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 126, 8.276, 150)
 script = ExtResource("8_acc12")
 marker_id = "world.marker.millford_green"
 
-[node name="Safe" type="Node3D" parent="Markers"]
+[node name="Safe" type="Node3D" parent="Markers" unique_id=1965261302]
 
-[node name="world_marker_millford_mill_safe" type="Marker3D" parent="Markers/Safe"]
+[node name="world_marker_millford_mill_safe" type="Marker3D" parent="Markers/Safe" unique_id=1996805262]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 186, 8.276, 164)
 script = ExtResource("8_acc12")
 marker_id = "world.marker.millford_mill_safe"
 kind = 4
 
-[node name="world_marker_millford_barn_safe" type="Marker3D" parent="Markers/Safe"]
+[node name="world_marker_millford_barn_safe" type="Marker3D" parent="Markers/Safe" unique_id=633700820]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 98, 8.276, 118)
 script = ExtResource("8_acc12")
 marker_id = "world.marker.millford_barn_safe"
 kind = 4
 
-[node name="world_marker_millford_west_safe" type="Marker3D" parent="Markers/Safe"]
+[node name="world_marker_millford_west_safe" type="Marker3D" parent="Markers/Safe" unique_id=1130358657]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82, 8.276, 106)
 script = ExtResource("8_acc12")
 marker_id = "world.marker.millford_west_safe"
 kind = 4
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1772727163]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=133459556]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1509404543]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=275523276]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=763803015]

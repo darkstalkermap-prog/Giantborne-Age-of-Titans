@@ -3,11 +3,11 @@
 [ext_resource type="PackedScene" path="res://scenes/world/crate.tscn" id="1_960f4"]
 [ext_resource type="Script" path="res://scripts/world/breakable_prop.gd" id="2_5fc47"]
 
-[node name="Chunk_3_2_0" type="Node3D"]
+[node name="Chunk_3_2_0" type="Node3D" unique_id=1065744000]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1335272637]
 
-[node name="world_stonehold_stair_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
+[node name="world_stonehold_stair_cache" type="StaticBody3D" parent="Props" unique_id=276670996 instance=ExtResource("1_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 222, 28.878, 92)
 collision_layer = 16
 collision_mask = 0
@@ -15,18 +15,18 @@ script = ExtResource("2_5fc47")
 world_id = "world.stonehold.stair_cache"
 loot_table = "loot.cache_giants_stair"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=2053417647]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1673985770]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1189400977]
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1731061491]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=388403591]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=42824471]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1740298314]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=512168461]

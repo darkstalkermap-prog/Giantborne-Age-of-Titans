@@ -41,35 +41,35 @@ _surfaces = [{
 "vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
 }]
 
-[node name="Chunk_2_7_0" type="Node3D"]
+[node name="Chunk_2_7_0" type="Node3D" unique_id=834212346]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=157549390]
 
-[node name="world_crownmarch_kingsgate_statue" type="StaticBody3D" parent="Props" instance=ExtResource("1_b708e")]
+[node name="world_crownmarch_kingsgate_statue" type="StaticBody3D" parent="Props" unique_id=967547941 instance=ExtResource("1_b708e")]
 transform = Transform3D(0.9659258, 0, 0.25881904, 0, 1, 0, -0.25881904, 0, 0.9659258, 167, 11.028, 22)
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("2_5fc47")
 world_id = "world.crownmarch.kingsgate_statue"
 
-[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_crownmarch_kingsgate_statue"]
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_crownmarch_kingsgate_statue" unique_id=154367868]
 enabled = false
 start_position = Vector3(0, 0.3220005, 5)
 end_position = Vector3(0, 0.27952385, -5.000004)
 
-[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_crownmarch_kingsgate_statue"]
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_crownmarch_kingsgate_statue" unique_id=348318391]
 enabled = false
 navigation_layers = 2
 start_position = Vector3(0, 0.53226185, 6.5)
 end_position = Vector3(0, -0.3732481, -6.500004)
 
-[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_crownmarch_kingsgate_statue"]
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_crownmarch_kingsgate_statue" unique_id=939104687]
 enabled = false
 navigation_layers = 16
 start_position = Vector3(0, 0.59329796, 12)
 end_position = Vector3(0, -0.96464443, -12.000008)
 
-[node name="world_crownmarch_shelf_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="world_crownmarch_shelf_cache" type="StaticBody3D" parent="Props" unique_id=1790079161 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 190, 46, 154)
 collision_layer = 16
 collision_mask = 0
@@ -77,7 +77,7 @@ script = ExtResource("2_5fc47")
 world_id = "world.crownmarch.shelf_cache"
 loot_table = "loot.cache_kingsgate_shelf"
 
-[node name="world_crownmarch_statue_cache" type="StaticBody3D" parent="Props" instance=ExtResource("3_960f4")]
+[node name="world_crownmarch_statue_cache" type="StaticBody3D" parent="Props" unique_id=1866973796 instance=ExtResource("3_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 167, 11.028, 22)
 collision_layer = 16
 collision_mask = 0
@@ -85,9 +85,9 @@ script = ExtResource("2_5fc47")
 world_id = "world.crownmarch.statue_cache"
 loot_table = "loot.cache_kingsgate_statue"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=278512791]
 
-[node name="world_shrine_kingsgate" type="Node3D" parent="Shrines" instance=ExtResource("4_f6def")]
+[node name="world_shrine_kingsgate" type="Node3D" parent="Shrines" unique_id=27830971 instance=ExtResource("4_f6def")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 212, 12.028, 2)
 script = ExtResource("5_e36fc")
 world_id = "world.shrine.kingsgate"
@@ -96,9 +96,9 @@ prompt = "Rest"
 radius_m = 4.0
 priority = 40
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=700164113]
 
-[node name="world_cp_kingsgate_shelf" type="Marker3D" parent="Waystones"]
+[node name="world_cp_kingsgate_shelf" type="Marker3D" parent="Waystones" unique_id=1012805201]
 transform = Transform3D(0.9702957, 0, -0.2419219, 0, 1, 0, 0.2419219, 0, 0.9702957, 212, 46.3, 148)
 script = ExtResource("6_add9b")
 radius_m = 12.0
@@ -106,35 +106,35 @@ requires_flags = PackedStringArray()
 display_name = "Kingsgate shelf waystone"
 checkpoint_id = "world.cp.kingsgate_shelf"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_kingsgate_shelf"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_kingsgate_shelf" unique_id=435390946]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -0.3, 6)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_kingsgate_shelf/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_kingsgate_shelf/Stone" unique_id=377853357]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_kingsgate_shelf/Stone" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_kingsgate_shelf/Stone" unique_id=155967274 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_kingsgate_shelf" groups=["scenery"]]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_kingsgate_shelf" unique_id=1440172844 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -0.3, 6)
 mesh = SubResource("ArrayMesh_3")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1228271284]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1126261568]
 
-[node name="world_marker_kingsgate_shrine" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_kingsgate_shrine" type="Marker3D" parent="Markers/Objective" unique_id=885374077]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 212, 12.248, 10)
 script = ExtResource("8_acc12")
 marker_id = "world.marker.kingsgate_shrine"
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1087323499]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=158346110]
 
-[node name="world_exit_kingsgate" type="Node3D" parent="Exits"]
+[node name="world_exit_kingsgate" type="Node3D" parent="Exits" unique_id=900394501]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 212, 46, 165)
 script = ExtResource("9_a5c2b")
 exit_id = "world.exit.kingsgate"
@@ -148,8 +148,8 @@ prompt = "Enter the Kings' Door tunnel"
 radius_m = 9.0
 priority = 40
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=578637038]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=2045304738]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=606709180]

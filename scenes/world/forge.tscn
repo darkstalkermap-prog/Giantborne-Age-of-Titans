@@ -66,7 +66,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray("ZmbmvjMzkz8zM5M/ZmbmPjMzkz9nZuY+ZmbmPjMzkz8zM5M/ZmbmvjMzkz9nZuY+ZmbmvpqZWT8zM5M/ZmbmPpqZWT9nZuY+ZmbmPpqZWT8zM5M/ZmbmvpqZWT9nZuY+ZmbmPjMzkz8zM5M/ZmbmvjMzkz9nZuY+ZmbmPjMzkz9nZuY+ZmbmvjMzkz8zM5M/ZmbmPpqZWT8zM5M/ZmbmvpqZWT9nZuY+ZmbmPpqZWT9nZuY+ZmbmvpqZWT8zM5M/ZmbmPjMzkz8zM5M/ZmbmvpqZWT8zM5M/ZmbmvjMzkz8zM5M/ZmbmPpqZWT8zM5M/ZmbmPjMzkz9nZuY+ZmbmvpqZWT9nZuY+ZmbmvjMzkz9nZuY+ZmbmPpqZWT9nZuY+mpmZv83MzD8AAKA/mpmZP83MzD80M7M+mpmZP83MzD8AAKA/mpmZv83MzD80M7M+mpmZv83MjD8AAKA/mpmZP83MjD80M7M+mpmZP83MjD8AAKA/mpmZv83MjD80M7M+mpmZP83MzD8AAKA/mpmZv83MzD80M7M+mpmZP83MzD80M7M+mpmZv83MzD8AAKA/mpmZP83MjD8AAKA/mpmZv83MjD80M7M+mpmZP83MjD80M7M+mpmZv83MjD8AAKA/mpmZP83MzD8AAKA/mpmZv83MjD8AAKA/mpmZv83MzD8AAKA/mpmZP83MjD8AAKA/mpmZP83MzD80M7M+mpmZv83MjD80M7M+mpmZv83MzD80M7M+mpmZP83MjD80M7M+zMyMP83MrD+amVk/zMyMP1NTsT/Z2VU/zMyMPzMzsz/NzEw/zMyMP1NTsT/Bv0M/zMyMP83MrD8AAEA/zMyMP0dGqD/Bv0M/zMyMP2Zmpj/NzEw/zMyMP0dGqD/Z2VU/zMyMP83MrD+amVk/wvWoP83MrD9Ei2w/wvWoP/AFuD8UP2M/wvWoPwisvD/NzEw/wvWoP/AFuD+GWjY/wvWoP83MrD9WDi0/wvWoP6mToT+GWjY/wvWoP5LtnD/NzEw/wvWoP6mToT8UP2M/wvWoP83MrD9Ei2w/uB7FP83MrD/ufH8/uB7FP464vj9PpHA/uB7FP90kxj/NzEw/uB7FP464vj9L9Sg/uB7FP83MrD+sHBo/uB7FPwzhmj9L9Sg/uB7FP710kz/NzEw/uB7FPwzhmj9PpHA/uB7FP83MrD/ufH8/rkfhP83MrD9MN4k/rkfhPytrxT+KCX4/rkfhP7Kdzz/NzEw/rkfhPytrxT8QkBs/rkfhP83MrD8CKwc/rkfhP28ulD8QkBs/rkfhP+j7iT/NzEw/rkfhP28ulD+KCX4/rkfhP83MrD9MN4k/pHD9P83MrD8hsJI/pHD9P8kdzD9it4U/pHD9P4cW2T/NzEw/pHD9P8kdzD/VKg4/pHD9P83MrD+xcug+pHD9P9F7jT/VKg4/pHD9PxODgD/NzEw/pHD9P9F7jT9it4U/pHD9P83MrD8hsJI/zcwMQM3MrD/2KJw/zcwMQGbQ0j8Aaow/zcwMQFyP4j/NzEw/zcwMQGbQ0j+axQA/zcwMQM3MrD9dj8I+zcwMQDTJhj+axQA/zcwMQHwUbj/NzEw/zcwMQDTJhj8Aaow/zcwMQM3MrD/2KJw/zMyMP83MrD/NzEw/zMyMP83MrD+amVk/zMyMP1NTsT/Z2VU/zMyMPzMzsz/NzEw/zMyMP1NTsT/Bv0M/zMyMP83MrD8AAEA/zMyMP0dGqD/Bv0M/zMyMP2Zmpj/NzEw/zMyMP0dGqD/Z2VU/zMyMP83MrD+amVk/zcwMQM3MrD/NzEw/zcwMQM3MrD/2KJw/zcwMQGbQ0j8Aaow/zcwMQFyP4j/NzEw/zcwMQGbQ0j+axQA/zcwMQM3MrD9dj8I+zcwMQDTJhj+axQA/zcwMQHwUbj/NzEw/zcwMQDTJhj8Aaow/zcwMQM3MrD/2KJw//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+/yF//f/9///9nZ7Oz/z///8hfx9//////tDNm5/+/AIAAADcgAIAAgLQzlxgAgP+fyF82IACA/79nZ0tMAID/38hf/3//f///yF//f/9///9nZ7Oz/z///8hfx9//////tDNm5/+/AIAAADcgAIAAgLQzlxgAgP+fyF82IACA/79nZ0tMAID/38hf/3//f///yF//f/9///9nZ7Oz/z///8hfx9//////tDNm5/+/AIAAADcgAIAAgLQzlxgAgP+fyF82IACA/79nZ0tMAID/38hf/3//f///yF//f/9///9nZ7Oz/z///8hfx9//////tDNm5/+/AIAAADcgAIAAgLQzlxgAgP+fyF82IACA/79nZ0tMAID/38hf/3//f///yF//f/9///9nZ7Oz/z///8hfx9//////tDNm5/+/AIAAADcgAIAAgLQzlxgAgP+fyF82IACA/79nZ0tMAID/38hf/3//f///yF//f/9///9nZ7Oz/z///8hfx9//////tDNm5/+/AIAAADcgAIAAgLQzlxgAgP+fyF82IACA/79nZ0tMAID/38hf/3//f///AAD/f/9///8AAP9//3///wAA/3//f///AAD/f/9///8AAP9//3///wAA/3//f///AAD/f/9///8AAP9//3///wAA/3//f///AAD/f/9//////wCA/3//////AID/f/////8AgP9//////wCA/3//////AID/f/////8AgP9//////wCA/3//////AID/f/////8AgP9//////wCA/3///w==")
 }]
 
-[node name="Forge" type="Node3D"]
+[node name="Forge" type="Node3D" unique_id=627440777]
 script = ExtResource("1_f9160")
 world_id = "valley.ruins.giantforge"
 display_name = "Giantforge"
@@ -75,29 +75,29 @@ prompt = "Reforge"
 radius_m = 4.5
 priority = 45
 
-[node name="Hearth" type="StaticBody3D" parent="."]
+[node name="Hearth" type="StaticBody3D" parent="." unique_id=990520688]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
 collision_mask = 0
 
-[node name="Base" type="CollisionShape3D" parent="Hearth"]
+[node name="Base" type="CollisionShape3D" parent="Hearth" unique_id=2083927029]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Chimney" type="CollisionShape3D" parent="Hearth"]
+[node name="Chimney" type="CollisionShape3D" parent="Hearth" unique_id=899063082]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0.5)
 shape = SubResource("BoxShape3D_2")
 
-[node name="Anvil" type="StaticBody3D" parent="."]
+[node name="Anvil" type="StaticBody3D" parent="." unique_id=1382256369]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.8)
 collision_mask = 0
 
-[node name="Block" type="CollisionShape3D" parent="Anvil"]
+[node name="Block" type="CollisionShape3D" parent="Anvil" unique_id=437267028]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
 shape = SubResource("BoxShape3D_3")
 
-[node name="Top" type="CollisionShape3D" parent="Anvil"]
+[node name="Top" type="CollisionShape3D" parent="Anvil" unique_id=780961859]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
 shape = SubResource("BoxShape3D_4")
 
-[node name="Merged" type="MeshInstance3D" parent="." groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="." unique_id=28392309 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_8")

@@ -144,11 +144,11 @@ _surfaces = [{
 "vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
 }]
 
-[node name="Chunk_6_3_0" type="Node3D"]
+[node name="Chunk_6_3_0" type="Node3D" unique_id=1780346576]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1965112415]
 
-[node name="world_aldmere_fort_gate" type="StaticBody3D" parent="Props"]
+[node name="world_aldmere_fort_gate" type="StaticBody3D" parent="Props" unique_id=749640976]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138, 58.0645, 161)
 collision_layer = 16
 collision_mask = 0
@@ -157,32 +157,32 @@ world_id = "world.aldmere.fort_gate"
 metadata/faction = "aldmere"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_aldmere_fort_gate"]
+[node name="CombatEntity" type="Node" parent="Props/world_aldmere_fort_gate" unique_id=995995821]
 script = ExtResource("2_c8050")
 entity_id = "world.aldmere.fort_gate"
 definition_id = "prop.gate_fort_aldmere"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_aldmere_fort_gate"]
+[node name="Anchors" type="Node3D" parent="Props/world_aldmere_fort_gate" unique_id=447751038]
 
-[node name="Center" type="Marker3D" parent="Props/world_aldmere_fort_gate/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_aldmere_fort_gate/Anchors" unique_id=588430220]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_aldmere_fort_gate"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_aldmere_fort_gate" unique_id=817300314]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Block1" type="CollisionShape3D" parent="Props/world_aldmere_fort_gate"]
+[node name="Block1" type="CollisionShape3D" parent="Props/world_aldmere_fort_gate" unique_id=1985955380]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.6, 7, 0)
 shape = SubResource("BoxShape3D_2")
 
-[node name="Block2" type="CollisionShape3D" parent="Props/world_aldmere_fort_gate"]
+[node name="Block2" type="CollisionShape3D" parent="Props/world_aldmere_fort_gate" unique_id=144089101]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.6, 7, 0)
 shape = SubResource("BoxShape3D_3")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_aldmere_fort_gate"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_aldmere_fort_gate" unique_id=1689758123]
 
-[node name="Body" type="Area3D" parent="Props/world_aldmere_fort_gate/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_aldmere_fort_gate/Hurtboxes" unique_id=668457828]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
 collision_layer = 4
 collision_mask = 0
@@ -190,43 +190,43 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_fort_gate/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_fort_gate/Hurtboxes/Body" unique_id=311357107]
 shape = SubResource("BoxShape3D_4")
 
-[node name="Intact" type="Node3D" parent="Props/world_aldmere_fort_gate"]
+[node name="Intact" type="Node3D" parent="Props/world_aldmere_fort_gate" unique_id=1710360494]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_aldmere_fort_gate/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_aldmere_fort_gate/Intact" unique_id=191439381 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")
 
-[node name="Broken" type="Node3D" parent="Props/world_aldmere_fort_gate"]
+[node name="Broken" type="Node3D" parent="Props/world_aldmere_fort_gate" unique_id=460782072]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_aldmere_fort_gate/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_aldmere_fort_gate/Broken" unique_id=1823508487 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_6")
 
-[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
+[node name="NavLinkHuman" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate" unique_id=1803094907]
 enabled = false
 start_position = Vector3(0, 0.28549957, 4)
 end_position = Vector3(0, 0.8146553, -6)
 
-[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
+[node name="NavLinkLarge" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate" unique_id=999560772]
 enabled = false
 navigation_layers = 2
 start_position = Vector3(0, -0.13241196, 5)
 end_position = Vector3(0, 1.5855026, -7.5)
 
-[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate"]
+[node name="NavLinkTitan" type="NavigationLink3D" parent="Props/world_aldmere_fort_gate" unique_id=1718892452]
 enabled = false
 navigation_layers = 16
 start_position = Vector3(0, -0.2519989, 8)
 end_position = Vector3(0, 1.9355011, -10)
 
-[node name="world_aldmere_iron_regiment_arena" type="Node3D" parent="Props"]
+[node name="world_aldmere_iron_regiment_arena" type="Node3D" parent="Props" unique_id=1753532237]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138, 60, 91)
 
-[node name="Triggers" type="Node3D" parent="Props/world_aldmere_iron_regiment_arena"]
+[node name="Triggers" type="Node3D" parent="Props/world_aldmere_iron_regiment_arena" unique_id=128661337]
 
-[node name="world_area_fort_bailey" type="Area3D" parent="Props/world_aldmere_iron_regiment_arena/Triggers"]
+[node name="world_area_fort_bailey" type="Area3D" parent="Props/world_aldmere_iron_regiment_arena/Triggers" unique_id=922985729]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 52)
 collision_layer = 0
 collision_mask = 2
@@ -234,22 +234,22 @@ monitorable = false
 script = ExtResource("5_5575d")
 area_id = "world.area.fort_bailey"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_iron_regiment_arena/Triggers/world_area_fort_bailey"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_iron_regiment_arena/Triggers/world_area_fort_bailey" unique_id=1594223086]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
 shape = SubResource("BoxShape3D_7")
 
-[node name="ArenaGate" type="StaticBody3D" parent="Props/world_aldmere_iron_regiment_arena"]
+[node name="ArenaGate" type="StaticBody3D" parent="Props/world_aldmere_iron_regiment_arena" unique_id=1647786909]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.4570007, 66)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_iron_regiment_arena/ArenaGate"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_iron_regiment_arena/ArenaGate" unique_id=49123509]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.5, 0)
 shape = SubResource("BoxShape3D_8")
 
-[node name="Bars" type="MeshInstance3D" parent="Props/world_aldmere_iron_regiment_arena/ArenaGate"]
+[node name="Bars" type="MeshInstance3D" parent="Props/world_aldmere_iron_regiment_arena/ArenaGate" unique_id=684354932]
 mesh = SubResource("ArrayMesh_9")
 
-[node name="Arena" type="Node3D" parent="Props/world_aldmere_iron_regiment_arena"]
+[node name="Arena" type="Node3D" parent="Props/world_aldmere_iron_regiment_arena" unique_id=461958326]
 script = ExtResource("6_58f28")
 peace_condition = {
 "equals": "parley",
@@ -283,7 +283,7 @@ inner_radius_m = 72.0
 floor_rect = Rect2(-90, -80, 180, 150)
 defeated_flag = "boss.corvane.defeated"
 
-[node name="world_aldmere_fort_parley" type="Node3D" parent="Props"]
+[node name="world_aldmere_fort_parley" type="Node3D" parent="Props" unique_id=415636114]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 152, 57.788002, 186)
 script = ExtResource("7_ce1f7")
 npc_id = "world.aldmere.fort_parley"
@@ -292,17 +292,17 @@ prompt = "Hail Warlord Corvane"
 radius_m = 9.0
 priority = 40
 
-[node name="Body" type="StaticBody3D" parent="Props/world_aldmere_fort_parley"]
+[node name="Body" type="StaticBody3D" parent="Props/world_aldmere_fort_parley" unique_id=2057421343]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_fort_parley/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_aldmere_fort_parley/Body" unique_id=1033755379]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 shape = SubResource("BoxShape3D_10")
 
-[node name="Figure" type="MeshInstance3D" parent="Props/world_aldmere_fort_parley/Body"]
+[node name="Figure" type="MeshInstance3D" parent="Props/world_aldmere_fort_parley/Body" unique_id=72887369]
 mesh = SubResource("ArrayMesh_11")
 
-[node name="world_aldmere_fort_forge" type="Node3D" parent="Props"]
+[node name="world_aldmere_fort_forge" type="Node3D" parent="Props" unique_id=1485331495]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 92, 60, 30)
 script = ExtResource("8_17c29")
 open_when = {
@@ -328,25 +328,25 @@ prompt = "Reforge"
 radius_m = 8.0
 priority = 45
 
-[node name="Body" type="StaticBody3D" parent="Props/world_aldmere_fort_forge"]
+[node name="Body" type="StaticBody3D" parent="Props/world_aldmere_fort_forge" unique_id=1773232949]
 collision_mask = 0
 
-[node name="Hearth" type="CollisionShape3D" parent="Props/world_aldmere_fort_forge/Body"]
+[node name="Hearth" type="CollisionShape3D" parent="Props/world_aldmere_fort_forge/Body" unique_id=1312123129]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -2.5)
 shape = SubResource("BoxShape3D_12")
 
-[node name="Chimney" type="CollisionShape3D" parent="Props/world_aldmere_fort_forge/Body"]
+[node name="Chimney" type="CollisionShape3D" parent="Props/world_aldmere_fort_forge/Body" unique_id=1173857896]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, -3.2)
 shape = SubResource("BoxShape3D_13")
 
-[node name="Anvil" type="CollisionShape3D" parent="Props/world_aldmere_fort_forge/Body"]
+[node name="Anvil" type="CollisionShape3D" parent="Props/world_aldmere_fort_forge/Body" unique_id=1177008091]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 3)
 shape = SubResource("BoxShape3D_14")
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_aldmere_fort_forge" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_aldmere_fort_forge" unique_id=280789989 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_15")
 
-[node name="world_aldmere_fort_ballista_w" type="StaticBody3D" parent="Props" instance=ExtResource("9_83f62")]
+[node name="world_aldmere_fort_ballista_w" type="StaticBody3D" parent="Props" unique_id=783671655 instance=ExtResource("9_83f62")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 123, 74.95, 161)
 collision_layer = 16
 collision_mask = 0
@@ -355,7 +355,7 @@ faction = "aldmere"
 prop_targets = PackedStringArray()
 world_id = "world.aldmere.fort_ballista_w"
 
-[node name="world_aldmere_fort_ballista_e" type="StaticBody3D" parent="Props" instance=ExtResource("9_83f62")]
+[node name="world_aldmere_fort_ballista_e" type="StaticBody3D" parent="Props" unique_id=1884423419 instance=ExtResource("9_83f62")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 153, 74.43, 161)
 collision_layer = 16
 collision_mask = 0
@@ -364,7 +364,7 @@ faction = "aldmere"
 prop_targets = PackedStringArray()
 world_id = "world.aldmere.fort_ballista_e"
 
-[node name="world_aldmere_fort_ballista_nw" type="StaticBody3D" parent="Props" instance=ExtResource("9_83f62")]
+[node name="world_aldmere_fort_ballista_nw" type="StaticBody3D" parent="Props" unique_id=1245117833 instance=ExtResource("9_83f62")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 76, 60, 30)
 collision_layer = 16
 collision_mask = 0
@@ -373,7 +373,7 @@ faction = "aldmere"
 prop_targets = PackedStringArray()
 world_id = "world.aldmere.fort_ballista_nw"
 
-[node name="world_aldmere_fort_ballista_ne" type="StaticBody3D" parent="Props" instance=ExtResource("9_83f62")]
+[node name="world_aldmere_fort_ballista_ne" type="StaticBody3D" parent="Props" unique_id=1956214979 instance=ExtResource("9_83f62")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 200, 60, 30)
 collision_layer = 16
 collision_mask = 0
@@ -382,114 +382,114 @@ faction = "aldmere"
 prop_targets = PackedStringArray()
 world_id = "world.aldmere.fort_ballista_ne"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1030092337]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=1430213611]
 
-[node name="world_cp_fort_gate" type="Marker3D" parent="Waystones"]
+[node name="world_cp_fort_gate" type="Marker3D" parent="Waystones" unique_id=1728871931]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138, 55.7445, 201)
 script = ExtResource("11_add9b")
 requires_flags = PackedStringArray()
 display_name = "Fort gate waystone"
 checkpoint_id = "world.cp.fort_gate"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_fort_gate"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_fort_gate" unique_id=1843653287]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -0.3, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_fort_gate/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_fort_gate/Stone" unique_id=1617549132]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_16")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_fort_gate/Stone" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_fort_gate/Stone" unique_id=642756921 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_17")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_fort_gate" groups=["scenery"]]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_fort_gate" unique_id=365183043 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -0.3, 0)
 mesh = SubResource("ArrayMesh_18")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1162180709]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1730321448]
 
-[node name="world_marker_fort_gate" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_fort_gate" type="Marker3D" parent="Markers/Objective" unique_id=1144539075]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138, 56.812, 186)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.fort_gate"
 
-[node name="world_marker_fort_bailey" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_fort_bailey" type="Marker3D" parent="Markers/Objective" unique_id=284313079]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138, 60.2, 106)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.fort_bailey"
 
-[node name="Elevation" type="Node3D" parent="Markers"]
+[node name="Elevation" type="Node3D" parent="Markers" unique_id=159348410]
 
-[node name="world_marker_fort_bastion_w1" type="Marker3D" parent="Markers/Elevation"]
+[node name="world_marker_fort_bastion_w1" type="Marker3D" parent="Markers/Elevation" unique_id=1238421158]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 119, 75.2, 165.5)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.fort_bastion_w1"
 kind = 2
 faction = "aldmere"
 
-[node name="world_marker_fort_bastion_w2" type="Marker3D" parent="Markers/Elevation"]
+[node name="world_marker_fort_bastion_w2" type="Marker3D" parent="Markers/Elevation" unique_id=878135774]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 127, 75.2, 165.5)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.fort_bastion_w2"
 kind = 2
 faction = "aldmere"
 
-[node name="world_marker_fort_bastion_e1" type="Marker3D" parent="Markers/Elevation"]
+[node name="world_marker_fort_bastion_e1" type="Marker3D" parent="Markers/Elevation" unique_id=1610257532]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 149, 74.68, 165.5)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.fort_bastion_e1"
 kind = 2
 faction = "aldmere"
 
-[node name="world_marker_fort_bastion_e2" type="Marker3D" parent="Markers/Elevation"]
+[node name="world_marker_fort_bastion_e2" type="Marker3D" parent="Markers/Elevation" unique_id=166619838]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 157, 74.68, 165.5)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.fort_bastion_e2"
 kind = 2
 faction = "aldmere"
 
-[node name="Patrol" type="Node3D" parent="Markers"]
+[node name="Patrol" type="Node3D" parent="Markers" unique_id=1630970640]
 
-[node name="world_marker_fort_flee_w" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_fort_flee_w" type="Marker3D" parent="Markers/Patrol" unique_id=997734548]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73, 54.455997, 211)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.fort_flee_w"
 kind = 5
 
-[node name="world_marker_fort_flee_e" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_fort_flee_e" type="Marker3D" parent="Markers/Patrol" unique_id=1466686241]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 203, 54.89675, 211)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.fort_flee_e"
 kind = 5
 
-[node name="world_marker_bailey_flee_w" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_bailey_flee_w" type="Marker3D" parent="Markers/Patrol" unique_id=1685759406]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 60.2, 41)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.bailey_flee_w"
 kind = 5
 
-[node name="world_marker_bailey_flee_e" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_bailey_flee_e" type="Marker3D" parent="Markers/Patrol" unique_id=1747310911]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 210, 60.2, 41)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.bailey_flee_e"
 kind = 5
 
-[node name="world_marker_bailey_flee_n" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_bailey_flee_n" type="Marker3D" parent="Markers/Patrol" unique_id=160039872]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138, 60.2, 18)
 script = ExtResource("12_acc12")
 marker_id = "world.marker.bailey_flee_n"
 kind = 5
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1957410247]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=1174179471]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=830645074]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1512181190]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=995220103]

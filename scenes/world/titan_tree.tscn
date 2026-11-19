@@ -35,30 +35,30 @@ bottom_radius = 2.6
 height = 24.0
 radial_segments = 8
 
-[node name="TitanTree" type="StaticBody3D"]
+[node name="TitanTree" type="StaticBody3D" unique_id=4348771]
 collision_layer = 16
 collision_mask = 0
 script = ExtResource("1_5fc47")
 world_id = "world.test.titan_tree"
 
-[node name="CombatEntity" type="Node" parent="."]
+[node name="CombatEntity" type="Node" parent="." unique_id=922069979]
 script = ExtResource("2_c8050")
 entity_id = "world.test.titan_tree"
 definition_id = "prop.titan_tree"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="."]
+[node name="Anchors" type="Node3D" parent="." unique_id=1221801236]
 
-[node name="Center" type="Marker3D" parent="Anchors"]
+[node name="Center" type="Marker3D" parent="Anchors" unique_id=939679024]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 
-[node name="BlockTrunk" type="CollisionShape3D" parent="."]
+[node name="BlockTrunk" type="CollisionShape3D" parent="." unique_id=1168009061]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=1463835600]
 
-[node name="Body" type="Area3D" parent="Hurtboxes"]
+[node name="Body" type="Area3D" parent="Hurtboxes" unique_id=110991759]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 collision_layer = 4
 collision_mask = 0
@@ -66,29 +66,29 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Hurtboxes/Body" unique_id=1239750297]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Intact" type="Node3D" parent="."]
+[node name="Intact" type="Node3D" parent="." unique_id=1095618068]
 
-[node name="Merged" type="MeshInstance3D" parent="Intact" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Intact" unique_id=432794106 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
-[node name="Heaved" type="Node3D" parent="."]
+[node name="Heaved" type="Node3D" parent="." unique_id=706963225]
 visible = false
 
-[node name="Trunk" type="MeshInstance3D" parent="Heaved"]
+[node name="Trunk" type="MeshInstance3D" parent="Heaved" unique_id=122789398]
 transform = Transform3D(-4.2412974e-08, -0.9702957, 0.2419219, 1, -4.371139e-08, 0, 1.0574742e-08, 0.2419219, 0.9702957, -2, 2.5, 7.5)
 material_override = SubResource("StandardMaterial3D_3")
 mesh = SubResource("CylinderMesh_5")
 
-[node name="HeavePoint" type="Node3D" parent="."]
+[node name="HeavePoint" type="Node3D" parent="." unique_id=9326169]
 script = ExtResource("4_a209b")
 prompt = "Heave"
 radius_m = 6.0
 priority = 40
 
-[node name="NavLinkThrough" type="NavigationLink3D" parent="."]
+[node name="NavLinkThrough" type="NavigationLink3D" parent="." unique_id=1710055156]
 enabled = false
 navigation_layers = 31
 start_position = Vector3(0, 0, 6)

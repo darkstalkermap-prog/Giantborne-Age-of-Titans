@@ -101,15 +101,28 @@ func test_the_launcher_passes_args_to_the_engine() -> void:
 	assert_true(re.search(html) != null, "the BUILD line build_web.sh keeps in step")
 
 
-## P23 (plan M6-M9 §3.5): the launcher downloads a multi-part pck in order under one meter and joins
-## its text, resumes a suspended AudioContext on the first press, and says "Sound on".
+## P23 (plan M6-M9 §3.5): the launcher downloads a multi-part pck in order under one meter, resumes a
+## suspended AudioContext on the first press, and says "Sound on". P49 (plan M11 §3.2 item 3): the
+## parts' text is no longer joined - each piece is decoded and inflated as it arrives, through one
+## stream (tools/web/test_launcher_parts.mjs runs the launcher's own lines on packs of 1-4 parts).
 func test_the_launcher_joins_pck_parts_and_resumes_the_sound() -> void:
 	var html := FileAccess.get_file_as_string(LAUNCHER)
 	assert_true(html.contains("'index.pck': { urls: pckUrls(BUILD.pckParts)"), "the pck's parts from the BUILD line")
 	assert_true(html.contains("urls.push('index.pck.gz.b64.' + i + '.txt')"), "named index.pck.gz.b64.<n>.txt")
 	assert_true(html.contains("if (n === 1) return ['index.pck.gz.b64.txt'];"), "one part keeps its plain name")
-	assert_true(html.contains("for (const url of entry.urls)"), "downloaded in order")
-	assert_true(html.contains("await new Blob(chunks).text()"), "the text of every part joined before decoding")
+	assert_true(html.contains("reader = await open(urls[part]);") and html.contains("let reader = await open(urls[0]);"),
+		"downloaded in order, one part after the other")
+	assert_false(html.contains("new Blob(chunks).text()"), "the parts' text is not joined (P49)")
+	assert_true(html.contains("const bytes = pieces.push(step.value);") and html.contains("await writer.write(bytes);")
+		and html.contains("new DecompressionStream('gzip')"), "each piece is decoded and inflated as it arrives")
+	assert_true(html.contains("// <parts>") and html.contains("// </parts>"), "the block the launcher's own test runs")
+	# P52: the page's own text is the note the script writes from the BUILD line (the engine and the pck as
+	# shipped, in millions of bytes), so a reader without script reads the same figure (36 MB at 0.10.0-m10).
+	var counts := RegEx.create_from_string("wasmPacked: (\\d+), pckPacked: (\\d+)").search(html)
+	var note := "About %d MB to download." % roundi((int(counts.get_string(1)) + int(counts.get_string(2))) / 1e6) \
+		if counts != null else "(no BUILD line)"
+	assert_true(html.contains(note) and html.contains("Math.round(packedTotal / 1e6)"),
+		"the download note is written from the build's byte counts (%s)" % note)
 	assert_true(html.contains("window.addEventListener('pointerdown', resumeAudio, true);")
 		and html.contains("window.addEventListener('keydown', resumeAudio, true);"), "the first press resumes the sound")
 	assert_true(html.contains("if (ctx.state === 'suspended') ctx.resume()"), "only suspended contexts")

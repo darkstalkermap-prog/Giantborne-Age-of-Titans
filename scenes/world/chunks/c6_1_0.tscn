@@ -38,11 +38,11 @@ _surfaces = [{
 "vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
 }]
 
-[node name="Chunk_6_1_0" type="Node3D"]
+[node name="Chunk_6_1_0" type="Node3D" unique_id=1370761163]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1412361481]
 
-[node name="world_stonehold_siege_catapult_1" type="Node3D" parent="Props"]
+[node name="world_stonehold_siege_catapult_1" type="Node3D" parent="Props" unique_id=2137820949]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 36, 77.352, 128)
 script = ExtResource("1_0a08d")
 scene = "res://scenes/world/siege_catapult.tscn"
@@ -59,7 +59,7 @@ when = {
 }
 child_name = "world_stonehold_siege_catapult_1"
 
-[node name="world_stonehold_siege_catapult_2" type="Node3D" parent="Props"]
+[node name="world_stonehold_siege_catapult_2" type="Node3D" parent="Props" unique_id=412320685]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 44, 78.122, 106)
 script = ExtResource("1_0a08d")
 scene = "res://scenes/world/siege_catapult.tscn"
@@ -76,7 +76,7 @@ when = {
 }
 child_name = "world_stonehold_siege_catapult_2"
 
-[node name="world_stonehold_siege_catapult_3" type="Node3D" parent="Props"]
+[node name="world_stonehold_siege_catapult_3" type="Node3D" parent="Props" unique_id=1094701724]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 36, 77.856, 84)
 script = ExtResource("1_0a08d")
 scene = "res://scenes/world/siege_catapult.tscn"
@@ -93,7 +93,7 @@ when = {
 }
 child_name = "world_stonehold_siege_catapult_3"
 
-[node name="world_stonehold_siege_ballista_1" type="Node3D" parent="Props"]
+[node name="world_stonehold_siege_ballista_1" type="Node3D" parent="Props" unique_id=1030122329]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 18, 76.244, 118)
 script = ExtResource("1_0a08d")
 scene = "res://scenes/world/siege_ballista.tscn"
@@ -110,7 +110,7 @@ when = {
 }
 child_name = "world_stonehold_siege_ballista_1"
 
-[node name="world_stonehold_siege_ballista_2" type="Node3D" parent="Props"]
+[node name="world_stonehold_siege_ballista_2" type="Node3D" parent="Props" unique_id=866691762]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 18, 76.363, 94)
 script = ExtResource("1_0a08d")
 scene = "res://scenes/world/siege_ballista.tscn"
@@ -127,7 +127,7 @@ when = {
 }
 child_name = "world_stonehold_siege_ballista_2"
 
-[node name="world_stonehold_ironway_top_cache" type="StaticBody3D" parent="Props" instance=ExtResource("2_960f4")]
+[node name="world_stonehold_ironway_top_cache" type="StaticBody3D" parent="Props" unique_id=515297556 instance=ExtResource("2_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 224, 76.164, 180)
 collision_layer = 16
 collision_mask = 0
@@ -135,67 +135,67 @@ script = ExtResource("3_5fc47")
 world_id = "world.stonehold.ironway_top_cache"
 loot_table = "loot.cache_ironway_top"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=1706386552]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=2007473826]
 
-[node name="world_cp_ironway_top" type="Marker3D" parent="Waystones"]
+[node name="world_cp_ironway_top" type="Marker3D" parent="Waystones" unique_id=2088393054]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 188, 76.22401, 192)
 script = ExtResource("4_add9b")
 requires_flags = PackedStringArray()
 display_name = "Ironway top waystone"
 checkpoint_id = "world.cp.ironway_top"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_ironway_top"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_ironway_top" unique_id=778269448]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.3, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_ironway_top/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_ironway_top/Stone" unique_id=2029843621]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_ironway_top/Stone" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_ironway_top/Stone" unique_id=1976857002 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_ironway_top" groups=["scenery"]]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_ironway_top" unique_id=1684414240 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.3, 0)
 mesh = SubResource("ArrayMesh_3")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1405738730]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1428672732]
 
-[node name="world_marker_siege_line" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_siege_line" type="Marker3D" parent="Markers/Objective" unique_id=1913707282]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 77.313995, 106)
 script = ExtResource("6_acc12")
 marker_id = "world.marker.siege_line"
 
-[node name="Patrol" type="Node3D" parent="Markers"]
+[node name="Patrol" type="Node3D" parent="Markers" unique_id=1189822945]
 
-[node name="world_marker_siege_flee_e" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_siege_flee_e" type="Marker3D" parent="Markers/Patrol" unique_id=1663640875]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 76.06799, 128)
 script = ExtResource("6_acc12")
 marker_id = "world.marker.siege_flee_e"
 kind = 5
 
-[node name="world_marker_siege_flee_s" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_siege_flee_s" type="Marker3D" parent="Markers/Patrol" unique_id=660300293]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73, 77.15825, 183)
 script = ExtResource("6_acc12")
 marker_id = "world.marker.siege_flee_s"
 kind = 5
 
-[node name="world_marker_siege_flee_n" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_siege_flee_n" type="Marker3D" parent="Markers/Patrol" unique_id=556108693]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73, 79.801994, 33)
 script = ExtResource("6_acc12")
 marker_id = "world.marker.siege_flee_n"
 kind = 5
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1032483825]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=60723914]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1053738236]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1707814495]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=709505432]

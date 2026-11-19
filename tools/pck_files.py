@@ -15,10 +15,19 @@ Usage:
                                                       build_web.sh counts it (gzip -9, then base64):
                                                       the pack without them against the pack with
                                                       them; --verbose lists the files
+  python3 tools/pck_files.py --people-share PCK [--verbose]
+                                                      print one PEOPLE_SHARE line: M11's realistic
+                                                      people and creatures in the pack (P49, plan M11
+                                                      §2.12), counted as the giant's share is; 0 files
+                                                      until they exist
 
 The giant's files (GIANT_PREFIXES) are everything under assets/giant/ (each import's remap) with the
 files those remaps point at (.godot/imported/...), the giant's shaders (assets/shaders/giant_*) and
 its model scene (scenes/player/giant_model.tscn, packed as a .remap and its exported binary).
+
+The people's files (PEOPLE_PREFIXES) are everything under assets/people/ and assets/creatures/ with
+the files their remaps point at, the people's and creatures' shaders (assets/shaders/person*,
+fur_shell*) and their model scenes (scenes/people/, scenes/creatures/).
 
 Test content (plan M6-M9 decision 8, P22) is anything under scenes/test/, assets/test_world/ or
 data/test/: the Web preset excludes it, the Web (test) preset keeps it. A text scene the export
@@ -41,6 +50,9 @@ AUDIO_EXTENSIONS = (".oggvorbisstr", ".sample", ".mp3str")
 PACK_DIR_ENCRYPTED = 1
 # P41: the giant's own files (plan M10 §2.12: M10's share is assets/giant/, the giant's shaders and scenes).
 GIANT_PREFIXES = ("assets/giant/", "assets/shaders/giant_", "scenes/player/giant_model.")
+# P49 (plan M11 §2.12): the people's and creatures' own files (their share applies from 0.13.0-m13).
+PEOPLE_PREFIXES = ("assets/people/", "assets/creatures/", "assets/shaders/person", "assets/shaders/fur_shell",
+                   "scenes/people/", "scenes/creatures/")
 
 
 def packed_paths(path):
@@ -102,13 +114,14 @@ def audio_share(entries):
 _REMAP_PATH = re.compile(r'^(?:path(?:\.[a-z0-9_]+)?)="res://([^"]+)"', re.M)
 
 
-def giant_files(entries, data):
-    """The packed files that belong to the giant: GIANT_PREFIXES and every file a remap among them
-    points at (an import's imported files, an exported scene's binary)."""
+def giant_files(entries, data, prefixes=GIANT_PREFIXES):
+    """The packed files that belong to the giant (or, with PEOPLE_PREFIXES, to the people): the
+    prefixes' files and every file a remap among them points at (an import's imported files, an
+    exported scene's binary)."""
     names = {n for n, _o, _s in entries}
     out = set()
     for name, offset, size in entries:
-        if not name.startswith(GIANT_PREFIXES):
+        if not name.startswith(prefixes):
             continue
         out.add(name)
         if name.endswith((".import", ".remap")):
@@ -124,13 +137,13 @@ def shipped(blob):
     return len(base64.b64encode(gzip.compress(blob, 9, mtime=0)))
 
 
-def giant_share(path):
-    """{"files", "raw", "shipped", "listing"}: the giant's files in the pack at `path` and their shipped
-    share - the pack's files with them (in pack order, the giant's last) against the pack's files
-    without them."""
+def giant_share(path, prefixes=GIANT_PREFIXES):
+    """{"files", "raw", "shipped", "listing"}: the giant's files (or another share's, by `prefixes`) in
+    the pack at `path` and their shipped share - the pack's files with them (in pack order, the share's
+    last) against the pack's files without them."""
     data = _read(path)
     entries = packed_index(data, path)
-    giant = giant_files(entries, data)
+    giant = giant_files(entries, data, prefixes)
     base = b"".join(data[o:o + s] for n, o, s in entries if n not in giant)
     mine = b"".join(data[o:o + s] for n, o, s in entries if n in giant)
     share = shipped(base + mine) - shipped(base) if mine else 0
@@ -157,6 +170,14 @@ def main(argv):
     if "--giant-share" in argv:
         g = giant_share(args[0])
         print("GIANT_SHARE giant_bytes=%d shipped=%d shipped_mib=%.2f files=%d" % (
+            g["raw"], g["shipped"], g["shipped"] / 1048576.0, g["files"]))
+        if "--verbose" in argv:
+            for size, name in g["listing"]:
+                print("  %10d  %s" % (size, name))
+        return 0
+    if "--people-share" in argv:
+        g = giant_share(args[0], PEOPLE_PREFIXES)
+        print("PEOPLE_SHARE people_bytes=%d shipped=%d shipped_mib=%.2f files=%d" % (
             g["raw"], g["shipped"], g["shipped"] / 1048576.0, g["files"]))
         if "--verbose" in argv:
             for size, name in g["listing"]:

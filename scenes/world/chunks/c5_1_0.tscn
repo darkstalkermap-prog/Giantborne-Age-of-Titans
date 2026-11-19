@@ -218,11 +218,11 @@ _surfaces = [{
 "vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
 }]
 
-[node name="Chunk_5_1_0" type="Node3D"]
+[node name="Chunk_5_1_0" type="Node3D" unique_id=1860026281]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=1643505454]
 
-[node name="world_stonehold_skarn_longhouse_1" type="StaticBody3D" parent="Props"]
+[node name="world_stonehold_skarn_longhouse_1" type="StaticBody3D" parent="Props" unique_id=741408161]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 149, 76, 78)
 collision_layer = 16
 collision_mask = 0
@@ -231,24 +231,24 @@ world_id = "world.stonehold.skarn_longhouse_1"
 metadata/faction = "skarn"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_stonehold_skarn_longhouse_1"]
+[node name="CombatEntity" type="Node" parent="Props/world_stonehold_skarn_longhouse_1" unique_id=901804396]
 script = ExtResource("2_c8050")
 entity_id = "world.stonehold.skarn_longhouse_1"
 definition_id = "prop.longhouse_skarn"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1"]
+[node name="Anchors" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1" unique_id=328849549]
 
-[node name="Center" type="Marker3D" parent="Props/world_stonehold_skarn_longhouse_1/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_stonehold_skarn_longhouse_1/Anchors" unique_id=878127163]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_1"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_1" unique_id=2130245707]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1" unique_id=258482207]
 
-[node name="Body" type="Area3D" parent="Props/world_stonehold_skarn_longhouse_1/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_stonehold_skarn_longhouse_1/Hurtboxes" unique_id=896669230]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.5, 0)
 collision_layer = 4
 collision_mask = 0
@@ -256,35 +256,35 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_1/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_1/Hurtboxes/Body" unique_id=442545349]
 shape = SubResource("BoxShape3D_2")
 
-[node name="Intact" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1"]
+[node name="Intact" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1" unique_id=2057869794]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_1/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_1/Intact" unique_id=136539439 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_3")
 
-[node name="Broken" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1"]
+[node name="Broken" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1" unique_id=1636271758]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_1/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_1/Broken" unique_id=1471736533 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_4")
 
-[node name="Rebuilt" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1"]
+[node name="Rebuilt" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1" unique_id=1492367265]
 script = ExtResource("5_727cc")
 visible_when_flag = "world.skarn.longhouse_1.rebuilt"
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_1/Rebuilt" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_1/Rebuilt" unique_id=1471670623 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")
 
-[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_skarn_longhouse_1/Rebuilt"]
+[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_skarn_longhouse_1/Rebuilt" unique_id=1417994759]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_1/Rebuilt/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_1/Rebuilt/Body" unique_id=1409884592]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
 shape = SubResource("BoxShape3D_6")
 
-[node name="RebuildPoint" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1"]
+[node name="RebuildPoint" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_1" unique_id=516029443]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 11)
 script = ExtResource("6_f152f")
 prop_world_id = "world.stonehold.skarn_longhouse_1"
@@ -295,7 +295,7 @@ radius_m = 10.0
 priority = 40
 requires_stage = 6
 
-[node name="world_stonehold_skarn_longhouse_2" type="StaticBody3D" parent="Props"]
+[node name="world_stonehold_skarn_longhouse_2" type="StaticBody3D" parent="Props" unique_id=1062167284]
 transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 212, 76, 74)
 collision_layer = 16
 collision_mask = 0
@@ -304,24 +304,24 @@ world_id = "world.stonehold.skarn_longhouse_2"
 metadata/faction = "skarn"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_stonehold_skarn_longhouse_2"]
+[node name="CombatEntity" type="Node" parent="Props/world_stonehold_skarn_longhouse_2" unique_id=1140174529]
 script = ExtResource("2_c8050")
 entity_id = "world.stonehold.skarn_longhouse_2"
 definition_id = "prop.longhouse_skarn"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2"]
+[node name="Anchors" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2" unique_id=1170870847]
 
-[node name="Center" type="Marker3D" parent="Props/world_stonehold_skarn_longhouse_2/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_stonehold_skarn_longhouse_2/Anchors" unique_id=1123852726]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_2"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_2" unique_id=403417858]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
 shape = SubResource("BoxShape3D_7")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2" unique_id=1345890798]
 
-[node name="Body" type="Area3D" parent="Props/world_stonehold_skarn_longhouse_2/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_stonehold_skarn_longhouse_2/Hurtboxes" unique_id=348859404]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.5, 0)
 collision_layer = 4
 collision_mask = 0
@@ -329,35 +329,35 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_2/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_2/Hurtboxes/Body" unique_id=2115613837]
 shape = SubResource("BoxShape3D_8")
 
-[node name="Intact" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2"]
+[node name="Intact" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2" unique_id=796726319]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_2/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_2/Intact" unique_id=1065453899 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_9")
 
-[node name="Broken" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2"]
+[node name="Broken" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2" unique_id=812356777]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_2/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_2/Broken" unique_id=250921856 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_10")
 
-[node name="Rebuilt" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2"]
+[node name="Rebuilt" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2" unique_id=28695694]
 script = ExtResource("5_727cc")
 visible_when_flag = "world.skarn.longhouse_2.rebuilt"
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_2/Rebuilt" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_2/Rebuilt" unique_id=384746071 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_11")
 
-[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_skarn_longhouse_2/Rebuilt"]
+[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_skarn_longhouse_2/Rebuilt" unique_id=77075070]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_2/Rebuilt/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_2/Rebuilt/Body" unique_id=2071710423]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
 shape = SubResource("BoxShape3D_12")
 
-[node name="RebuildPoint" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2"]
+[node name="RebuildPoint" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_2" unique_id=1551536470]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 11)
 script = ExtResource("6_f152f")
 prop_world_id = "world.stonehold.skarn_longhouse_2"
@@ -368,7 +368,7 @@ radius_m = 10.0
 priority = 40
 requires_stage = 6
 
-[node name="world_stonehold_skarn_longhouse_3" type="StaticBody3D" parent="Props"]
+[node name="world_stonehold_skarn_longhouse_3" type="StaticBody3D" parent="Props" unique_id=414660888]
 transform = Transform3D(0.9975641, 0, -0.06975647, 0, 1, 0, 0.06975647, 0, 0.9975641, 184, 76, 162)
 collision_layer = 16
 collision_mask = 0
@@ -377,24 +377,24 @@ world_id = "world.stonehold.skarn_longhouse_3"
 metadata/faction = "skarn"
 metadata/prop_tags = PackedStringArray("house")
 
-[node name="CombatEntity" type="Node" parent="Props/world_stonehold_skarn_longhouse_3"]
+[node name="CombatEntity" type="Node" parent="Props/world_stonehold_skarn_longhouse_3" unique_id=1602410143]
 script = ExtResource("2_c8050")
 entity_id = "world.stonehold.skarn_longhouse_3"
 definition_id = "prop.longhouse_skarn"
 anchor_path = NodePath("../Anchors/Center")
 
-[node name="Anchors" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3"]
+[node name="Anchors" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3" unique_id=2003711689]
 
-[node name="Center" type="Marker3D" parent="Props/world_stonehold_skarn_longhouse_3/Anchors"]
+[node name="Center" type="Marker3D" parent="Props/world_stonehold_skarn_longhouse_3/Anchors" unique_id=185785429]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
 
-[node name="Block0" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_3"]
+[node name="Block0" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_3" unique_id=950274840]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
 shape = SubResource("BoxShape3D_13")
 
-[node name="Hurtboxes" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3"]
+[node name="Hurtboxes" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3" unique_id=663747512]
 
-[node name="Body" type="Area3D" parent="Props/world_stonehold_skarn_longhouse_3/Hurtboxes"]
+[node name="Body" type="Area3D" parent="Props/world_stonehold_skarn_longhouse_3/Hurtboxes" unique_id=784319092]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.5, 0)
 collision_layer = 4
 collision_mask = 0
@@ -402,35 +402,35 @@ monitoring = false
 script = ExtResource("3_129e0")
 region = "body"
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_3/Hurtboxes/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_3/Hurtboxes/Body" unique_id=1119869759]
 shape = SubResource("BoxShape3D_14")
 
-[node name="Intact" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3"]
+[node name="Intact" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3" unique_id=113580282]
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_3/Intact" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_3/Intact" unique_id=472452957 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_15")
 
-[node name="Broken" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3"]
+[node name="Broken" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3" unique_id=165495277]
 visible = false
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_3/Broken" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_3/Broken" unique_id=159312485 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_16")
 
-[node name="Rebuilt" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3"]
+[node name="Rebuilt" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3" unique_id=1599415458]
 script = ExtResource("5_727cc")
 visible_when_flag = "world.skarn.longhouse_3.rebuilt"
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_3/Rebuilt" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_longhouse_3/Rebuilt" unique_id=217978775 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_17")
 
-[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_skarn_longhouse_3/Rebuilt"]
+[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_skarn_longhouse_3/Rebuilt" unique_id=159985401]
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_3/Rebuilt/Body"]
+[node name="Shape" type="CollisionShape3D" parent="Props/world_stonehold_skarn_longhouse_3/Rebuilt/Body" unique_id=77424173]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
 shape = SubResource("BoxShape3D_18")
 
-[node name="RebuildPoint" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3"]
+[node name="RebuildPoint" type="Node3D" parent="Props/world_stonehold_skarn_longhouse_3" unique_id=1510664443]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 11)
 script = ExtResource("6_f152f")
 prop_world_id = "world.stonehold.skarn_longhouse_3"
@@ -441,7 +441,7 @@ radius_m = 10.0
 priority = 40
 requires_stage = 6
 
-[node name="world_stonehold_skarn_forge" type="Node3D" parent="Props"]
+[node name="world_stonehold_skarn_forge" type="Node3D" parent="Props" unique_id=1833830898]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 200, 76, 116)
 script = ExtResource("7_17c29")
 open_when = {
@@ -466,25 +466,25 @@ prompt = "Reforge"
 radius_m = 9.0
 priority = 45
 
-[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_skarn_forge"]
+[node name="Body" type="StaticBody3D" parent="Props/world_stonehold_skarn_forge" unique_id=1766632517]
 collision_mask = 0
 
-[node name="Hearth" type="CollisionShape3D" parent="Props/world_stonehold_skarn_forge/Body"]
+[node name="Hearth" type="CollisionShape3D" parent="Props/world_stonehold_skarn_forge/Body" unique_id=1402415864]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -2.5)
 shape = SubResource("BoxShape3D_19")
 
-[node name="Chimney" type="CollisionShape3D" parent="Props/world_stonehold_skarn_forge/Body"]
+[node name="Chimney" type="CollisionShape3D" parent="Props/world_stonehold_skarn_forge/Body" unique_id=989739216]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, -3.2)
 shape = SubResource("BoxShape3D_20")
 
-[node name="Anvil" type="CollisionShape3D" parent="Props/world_stonehold_skarn_forge/Body"]
+[node name="Anvil" type="CollisionShape3D" parent="Props/world_stonehold_skarn_forge/Body" unique_id=2113640883]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 3)
 shape = SubResource("BoxShape3D_21")
 
-[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_forge" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Props/world_stonehold_skarn_forge" unique_id=56952869 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_22")
 
-[node name="world_stonehold_ulfra_talk" type="Node3D" parent="Props"]
+[node name="world_stonehold_ulfra_talk" type="Node3D" parent="Props" unique_id=907492119]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 184, 76, 114)
 script = ExtResource("8_ce1f7")
 npc_id = "world.stonehold.ulfra"
@@ -493,55 +493,55 @@ prompt = "Talk to Ulfra of Skarn"
 radius_m = 10.0
 priority = 40
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=507791277]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=598311603]
 
-[node name="world_cp_skarn" type="Marker3D" parent="Waystones"]
+[node name="world_cp_skarn" type="Marker3D" parent="Waystones" unique_id=732622423]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 144, 76.3, 168)
 script = ExtResource("9_add9b")
 requires_flags = PackedStringArray()
 display_name = "Skarn waystone"
 checkpoint_id = "world.cp.skarn"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_skarn"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_skarn" unique_id=2108992407]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 8)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_skarn/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_skarn/Stone" unique_id=918733136]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_23")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_skarn/Stone" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_skarn/Stone" unique_id=376995602 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_24")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_skarn" groups=["scenery"]]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_skarn" unique_id=1895044976 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 8)
 mesh = SubResource("ArrayMesh_25")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=322414452]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1126460628]
 
-[node name="world_marker_skarn_green" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_skarn_green" type="Marker3D" parent="Markers/Objective" unique_id=1012826317]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 184, 76.2, 128)
 script = ExtResource("10_acc12")
 marker_id = "world.marker.skarn_green"
 
-[node name="Safe" type="Node3D" parent="Markers"]
+[node name="Safe" type="Node3D" parent="Markers" unique_id=1465757660]
 
-[node name="world_marker_skarn_safe" type="Marker3D" parent="Markers/Safe"]
+[node name="world_marker_skarn_safe" type="Marker3D" parent="Markers/Safe" unique_id=739548457]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 76.2, 128)
 script = ExtResource("10_acc12")
 marker_id = "world.marker.skarn_safe"
 kind = 4
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=399729482]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=779659021]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=432560797]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=1054553666]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=1564597517]

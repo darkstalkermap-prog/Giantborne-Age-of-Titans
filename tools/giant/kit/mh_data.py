@@ -542,6 +542,41 @@ def build_phenotype(macro=None, modifiers=None):
     return bm, verts, tw
 
 
+# The build sliders' directions (P48, plan M11 §2.2): what the giant's own muscle and his own weight (both
+# at their most, GIANT_MACRO) add over an average man's. Each is the universal muscle-and-weight target
+# the giant uses less the one with that slider back at its average, mixed by age as the phenotype is.
+BUILD_BASE = "maxmuscle-maxweight"
+BUILD_TARGETS = {"brawn": "averagemuscle-maxweight", "girth": "maxmuscle-averageweight"}
+
+
+def build_target_weights(macro=None):
+    """{"brawn" | "girth": {target: weight}}: the signed targets whose sum is that slider's displacement."""
+    macro = dict(GIANT_MACRO if macro is None else macro)
+    ages = {a: w for a, w in macro_variable_weights(**macro)["age"].items() if w > 1e-5}
+    out = {}
+    for key, low in BUILD_TARGETS.items():
+        tw = {}
+        for age, wa in sorted(ages.items()):
+            tw["macrodetails/universal-male-%s-%s" % (age, BUILD_BASE)] = wa
+            tw["macrodetails/universal-male-%s-%s" % (age, low)] = -wa
+        out[key] = tw
+    return out
+
+
+def build_displacements(n_verts=None, macro=None):
+    """{"brawn" | "girth": (n, 3)}: each slider's displacement per hm08 vertex in MakeHuman units (the
+    muscle target's, the weight target's: what the giant has over the average of that slider)."""
+    bm = load_base_mesh()
+    n = len(bm.verts) if n_verts is None else n_verts
+    out = {}
+    for key, tw in build_target_weights(macro).items():
+        d = compose(np.zeros_like(bm.verts), tw)
+        out[key] = d[:n]
+    return out
+
+
 def subset_files():
-    """Data-relative paths of every file the kit reads: DATA_FILES and the phenotype's targets."""
-    return sorted(set(DATA_FILES) | {target_rel(k) for k in phenotype_targets()})
+    """Data-relative paths of every file the kit reads: DATA_FILES, the phenotype's targets and the build
+    sliders' (BUILD_TARGETS)."""
+    build = {target_rel(k) for tw in build_target_weights().values() for k in tw}
+    return sorted(set(DATA_FILES) | {target_rel(k) for k in phenotype_targets()} | build)

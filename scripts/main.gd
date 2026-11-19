@@ -13,7 +13,8 @@ extends Node
 ##     first play() never registers (plan M6-M9 §2.5, decision 2); then (M6 gate) until the level's
 ##     navigation map has synced (hold_until_navigation_ready); then (M10 gate) with a display the
 ##     camera is put on the giant and the level drawn three times (hold_until_drawn: the warm-up of
-##     the first frame of play). Paused frames run no tick, and
+##     the first frame of play), and (P49) when no title warmed the creator's preview in this process
+##     - a command-line --continue - its shader variants are drawn too (warm_preview). Paused frames run no tick, and
 ##     the autopilot (and with it the Valley bot) does nothing while the gate holds (is_loading()),
 ##     so the seeded timeline is the same with audio on or off.
 ## The ScreenStack (P03) handles pause / Esc itself (and every modal screen); focus loss and a
@@ -64,6 +65,8 @@ var _was_captured := false
 var _loading := false
 ## M10 gate (LD-2): the frames the last load drew behind the loading screen (0 headless).
 var warm_frames_drawn := 0
+## P49: the frames the last load's preview warm-up drew (0 when the title had warmed it, and headless).
+var preview_frames_drawn := 0
 
 
 func _ready() -> void:
@@ -190,7 +193,31 @@ func hold_until_drawn(loading: Label) -> int:
 			and Time.get_ticks_msec() - t0 < int(WARM_LIMIT_S * 1000.0):
 		await get_tree().process_frame
 		warm_frames_drawn += 1
+	await warm_preview()
 	return warm_frames_drawn
+
+
+## P49 (plan M11 §3.2 item 8; the M10 gate's row "a start with --continue skips the title's warm-up"):
+## the title compiles the giant's and the creator's preview's shader variants in a hidden viewport
+## before it enables New Game and Continue (GiantPreview.WarmUp), so the first "Change your look..." at
+## a shrine draws nothing for the first time. A start that passes no title - --continue on the command
+## line, a desktop shortcut - had no such frame: natively with an empty shader cache that first creator
+## took 12 median frames. So when no warm-up has finished in this process (TitleScreen.preview_warmed)
+## the loading screen runs the same one behind "Loading...", the tree still paused, for at most
+## WARM_LIMIT_S; with a display only (as hold_until_drawn). Returns the frames it drew.
+func warm_preview() -> int:
+	preview_frames_drawn = 0
+	if TitleScreen.preview_warmed or not warm_up_wanted():
+		return 0
+	var warm := GiantPreview.WarmUp.new()
+	add_child(warm)
+	var t0 := Time.get_ticks_msec()
+	while is_inside_tree() and not warm.done and Time.get_ticks_msec() - t0 < int(WARM_LIMIT_S * 1000.0):
+		await get_tree().process_frame
+	preview_frames_drawn = warm.frames
+	TitleScreen.preview_warmed = warm.done
+	warm.queue_free()
+	return preview_frames_drawn
 
 
 ## Puts the player's camera where its first frame of play will have it (true when it did). The rig follows

@@ -372,7 +372,8 @@ func test_a_waystone_needs_its_flag_and_fires_once_per_load() -> void:
 func test_the_flow_test_level_layout() -> void:
 	var text := FileAccess.get_file_as_string(FLOW)
 	assert_true(text.length() > 0, "the generated scene is committed")
-	assert_false(text.contains("unique_id="), "without node unique_id attributes (SceneKit.save)")
+	# P49: SceneKit.save gives every node its stable unique_id (stripped up to 0.10.0-m10).
+	assert_true(text.contains(" unique_id=%d]" % SceneKit.stable_node_id(FLOW, ".")), "with the kit's stable node ids (SceneKit.save)")
 	_load_level(false)
 	assert_eq(level.level_id, "test.flow", "level id")
 	assert_eq(level.start_checkpoint, "test.cp_a", "start checkpoint")

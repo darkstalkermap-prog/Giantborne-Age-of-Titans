@@ -38,8 +38,29 @@ float fp_in_head(vec3 cam) {
 	return (all(greaterThan(cam, FP_HEAD_MIN)) && all(lessThan(cam, FP_HEAD_MAX))) ? 1.0 : 0.0;
 }
 
+// Gate A2: the hips. Looking down, the camera saw the flat caps that close the thighs (and, with the tunic, the
+// skirt's waist) where the culled torso met them. The legs are not drawn in first person now, as the torso is not:
+// a fragment whose body region (COLOR.r, kit/split.py: 7 pelvis, 11 thigh, 12 knee, 13 shin, 14 foot, 15 the caps of
+// every cut) is FP_PELVIS_REGION or FP_FIRST_HIDDEN_REGION and above is discarded while the camera stands in the head, on the skin and on
+// every garment over those regions (garments carry the region of the skin under them). Looking down shows the arms,
+// the weapon and the whole body's shadow (the shadow pass's camera is the light). Position cannot do it: a fade
+// by height dissolved the thighs into rings with the feet inside, and a column round the legs cut the hanging
+// hands, which reach the same x. A shader that includes this passes its vertex's region:
+//   v_fp_on = fp_in_head(...) * fp_region_shown(region)   - 0 hides nothing, as before.
+const int FP_FIRST_HIDDEN_REGION = 11;
+// The pelvis is the torso's (culled), but a limb garment's hip rim takes the region of the skin nearest it.
+const int FP_PELVIS_REGION = 7;
+
+// -1 for a vertex of a region first person does not draw (times fp_in_head: -1 in first person, 0 outside), else 1.
+float fp_region_shown(int region) {
+	return (region >= FP_FIRST_HIDDEN_REGION || region == FP_PELVIS_REGION) ? -1.0 : 1.0;
+}
+
 // True when this fragment is to be discarded: inside the shoulder box, or the dither's share of the fade round it.
 bool fp_shoulders_hidden(vec3 pos, float on, vec2 fragcoord) {
+	if (on < -0.5) {
+		return true;   // first person: a leg or a cap (fp_region_shown)
+	}
 	if (on < 0.5) {
 		return false;
 	}

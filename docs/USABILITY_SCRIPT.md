@@ -18,6 +18,7 @@ about 30 minutes per player.
 | Real browsers (§11, M9: load time with the multi-part pack, streaming hitches, a Continue and a fast travel, audio in a hidden tab) | **NOT RUN** (the owner's); the container's headless Chromium runs automated: `tools/web/world_check.mjs` (a Continue of a world save, a fast travel, a 60 s walk across region borders), `stream_check.mjs --world --audio`, `audio_check.mjs`, `world_start_check.mjs` - software WebGL, indicative only |
 | Real gamepad: the map, journal, track and pin bindings (§6 rows 16-21, M9) | **NOT RUN** (the owner runs it); the bindings automated: `tests/integration/test_map_screen.gd`, `test_journal.gd`, `test_tracked_quest.gd`, `test_ui_focus.gd` |
 | Creator sheet (§12, M10: New Game through the creator, the shrine's Appearance tab, with a pad, a keyboard and a mouse) | **NOT RUN** (the owner runs it); the flows automated: `tests/integration/test_creator_screen.gd`, `test_creator_layout.gd`, `test_shrine_appearance.gd`, `tests/slow/test_creator_controls.gd`, `test_shrine_appearance_saves.gd` |
+| Motion sheet (§12.2, M11 part one, `0.11.0-m11`: every weapon family, a sprint, a stomp, turns, flinches, hair and the cape in motion, the eyes, first person, the skin in sunlight) | **NOT RUN** (the owner runs it); measured headless and rendered in software: `tests/slow/test_giant_motion_render.gd`, `test_first_person_shoulders.gd`, `test_skin_world_render.gd`, `tests/integration/test_skinned_rig.gd`, `tests/gate/test_capture_m11_tour.gd` and the capture tour's frames (`scripts/debug/capture_m11.gd`) |
 
 The recommended owner checkpoints after waves 1 and 8 (plan §1.3) use the same sheets (§4 and §5).
 
@@ -515,3 +516,34 @@ Mark each row "fine", "off" or "wrong" and say what you saw.
 Questions after the sheet: what would you change first? Is there a style, a tattoo or a garment you expected
 and did not find? Write the answers under the session in `docs/USABILITY_RESULTS.md`; a wish for a different
 face or build is M11 work (plan M10, decision 9).
+
+### 12.2 Motion sheet (owner, M11 part one): the giant refined in your hands
+
+The giant's motion and look of `0.11.0-m11` (plan M11 §3.3, §3.4, §4.5; `docs/systems/P50.md`, `P51.md`) on
+desktop with a GPU and on the play link, ten minutes of play: start a new game (or Continue a `0.10` save) and
+use the Sandbox for the weapons. Pick the Young Giant preset, or Long with two braids, a braided or full beard
+and the Wayfarer's cape, so that every swinging part is on screen. Mark each row "fine", "off" or "wrong" and
+say what you saw; the column "0.10" is for a comparison with the `0.10.0-m10` build where you have it.
+
+| # | Do this | Look for | Fine / off / wrong, and what you saw | 0.10 |
+| --- | --- | --- | --- | --- |
+| 1 | **Every weapon family**: the club, the sword, the hammer, the axe, the fists and the tree; a light chain and a heavy with each, at the camera from behind and from the side (orbit with the mouse while locked off). | The handle passes through the closed fist at rest, in the swing and at its end; the free hand rests open, not drooping; no hand snaps round between two frames. | | |
+| 2 | **Sprint** (hold Shift) along a road, then stop. | A run of its own (longer flight, more lean, the arms pumping), no sliding feet; the stop eases into the stance. | | |
+| 3 | **Stomp**: Heavy Footfall (and Titan Stomp at 36 ft). | The right foot lifts, holds and stamps down as the shock lands; the other foot stays planted. | | |
+| 4 | **Turn on the spot**: stand still and swing the camera or the stick a quarter turn each way, slowly and quickly. | He steps round (inside foot first) instead of sliding; no step when you only look. | | |
+| 5 | **Jump and land**, from flat ground and off a ledge. | The knees take the landing; no frame with straight legs on the ground. | | |
+| 6 | **Roar and buff** (Titan Roar or Thunder Roar, and Stone Skin, where unlocked), and **block** (hold, release, hold again). | The legs set wide and the chest out on the roar; the weapon stays in the fist; the arms do not pop on a block's start and end (they may trail by a moment). | | |
+| 7 | **Get hit from four sides**: let a soldier or a wolf hit you from the front, behind, the left and the right (Sandbox). | He flinches away from the side of the hit, readably, and recovers in about half a second; never during his own swing's strike. | | |
+| 8 | **Hair, braids, the beard and the cape** in a sprint, a sudden stop, a full head turn (look over the shoulder), a heavy swing and Shoulder Charge. | They swing and settle within about a second; nothing passes through the shoulders or the chest; the cape does not lift like a flag. Does the cape look like cloth or like one board? | | |
+| 9 | **The eyes**: at the creator's Face view and close in play, look left and right with the camera, then lock a target. | A small catch-light on each iris; the eyes follow where you look and turn toward the locked target. | | |
+| 10 | **First person** (V): stand, walk, block, swing, then look straight down while standing and while walking, at stage 1 and as high a stage as you have. | At rest the weapon sits low in the lower right corner with the fist in view; looking down you see your arms, the weapon and your body's shadow, no flat patches, no hips (your legs are not drawn). | | |
+| 11 | **The skin in sunlight and in shade**, in the Valley at midday light and in the creator, with the default look, a pale tone (Storm Herald) and a dark one (Iron Veteran). | Warm where the sun hits, not white or grey; shade not mauve; the pale tone not chalky. Compare the creator's default chest with the render approved for 0.10: still acceptable? | | |
+| 12 | **The short styles in the sun**: the Cropped hair, Stubble and the Short beard in a black and a grey colour, from the front with the sun behind him and from the side. | Strands, not a flat cap; grey grows in evenly. A black short beard face-on against the sun reads dark (known): how much does it bother you? | | |
+| 13 | **A weapon past its fit stage**: the unreforged club or sword at stage 4 and 6, light and heavy. | The shoulder and body reach toward the swing instead of the arm falling short; nothing stretches. At stage 6 in first person the unreforged sword is a sliver at rest (known). | | |
+| 14 | **Frame time** on your machine with the giant in view in third person, at `medium`, walking in the Valley and in the Old Kingdom. | Smooth? Note the frame rate the game shows (F3 in a debug build) or how it feels. | | |
+
+Questions after the sheet: which motion still looks mechanical, and in which beat? Which change from 0.10 do
+you notice first? Anything about the hair, the cape or first person you would rather have as it was? Write the
+answers under the session in `docs/USABILITY_RESULTS.md`; notes on the look go to the next look pass (P56 in
+part two), notes on the motion to `docs/plans/FOLLOWUPS.md`.
+

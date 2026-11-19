@@ -4,11 +4,11 @@
 [ext_resource type="Script" path="res://scripts/world/siege_engine.gd" id="2_29782"]
 [ext_resource type="Script" path="res://scripts/world/level_marker.gd" id="3_acc12"]
 
-[node name="Chunk_7_4_0" type="Node3D"]
+[node name="Chunk_7_4_0" type="Node3D" unique_id=160007324]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=2063649095]
 
-[node name="world_aldmere_ridge_ballista_1" type="StaticBody3D" parent="Props" instance=ExtResource("1_83f62")]
+[node name="world_aldmere_ridge_ballista_1" type="StaticBody3D" parent="Props" unique_id=730543298 instance=ExtResource("1_83f62")]
 transform = Transform3D(-0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, -0.70710677, 7, 59.419, 41)
 collision_layer = 16
 collision_mask = 0
@@ -17,7 +17,7 @@ faction = "aldmere"
 prop_targets = PackedStringArray()
 world_id = "world.aldmere.ridge_ballista_1"
 
-[node name="world_aldmere_ridge_ballista_2" type="StaticBody3D" parent="Props" instance=ExtResource("1_83f62")]
+[node name="world_aldmere_ridge_ballista_2" type="StaticBody3D" parent="Props" unique_id=513327459 instance=ExtResource("1_83f62")]
 transform = Transform3D(-0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, -0.70710677, 29, 61.63525, 17)
 collision_layer = 16
 collision_mask = 0
@@ -26,33 +26,33 @@ faction = "aldmere"
 prop_targets = PackedStringArray()
 world_id = "world.aldmere.ridge_ballista_2"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=528216988]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=970851165]
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1013099156]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=1783554586]
 
-[node name="world_marker_ballista_ridge" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_ballista_ridge" type="Marker3D" parent="Markers/Objective" unique_id=1411625073]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 60.436, 30)
 script = ExtResource("3_acc12")
 marker_id = "world.marker.ballista_ridge"
 
-[node name="Patrol" type="Node3D" parent="Markers"]
+[node name="Patrol" type="Node3D" parent="Markers" unique_id=826444627]
 
-[node name="world_marker_ridge_flee_n" type="Marker3D" parent="Markers/Patrol"]
+[node name="world_marker_ridge_flee_n" type="Marker3D" parent="Markers/Patrol" unique_id=1546415233]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 67, 36.83225, 75)
 script = ExtResource("3_acc12")
 marker_id = "world.marker.ridge_flee_n"
 kind = 5
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=665517087]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=2004787425]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1774712584]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=721734799]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=554419776]

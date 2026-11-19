@@ -69,14 +69,14 @@ _surfaces = [{
 "vertex_data": PackedByteArray("mpkZvgAAoD+amRk+mpkZPgAAoD+amRm+mpkZPgAAoD+amRk+mpkZvgAAoD+amRm+mpkZvjQzcz+amRk+mpkZPjQzcz+amRm+mpkZPjQzcz+amRk+mpkZvjQzcz+amRm+mpkZPgAAoD+amRk+mpkZvgAAoD+amRm+mpkZPgAAoD+amRm+mpkZvgAAoD+amRk+mpkZPjQzcz+amRk+mpkZvjQzcz+amRm+mpkZPjQzcz+amRm+mpkZvjQzcz+amRk+mpkZPgAAoD+amRk+mpkZvjQzcz+amRk+mpkZvgAAoD+amRk+mpkZPjQzcz+amRk+mpkZPgAAoD+amRm+mpkZvjQzcz+amRm+mpkZvgAAoD+amRm+mpkZPjQzcz+amRm+/3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+/")
 }]
 
-[node name="ItemPickup" type="Node3D"]
+[node name="ItemPickup" type="Node3D" unique_id=1845082021]
 script = ExtResource("1_3b229")
 world_id = "valley.quarry.cache"
 prompt = "Take"
 radius_m = 3.0
 priority = 45
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=1266577776]
 
-[node name="Merged" type="MeshInstance3D" parent="Visual" groups=["scenery"]]
+[node name="Merged" type="MeshInstance3D" parent="Visual" unique_id=1395558383 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_5")

@@ -49,6 +49,10 @@ const WARMUP_LIMIT_S := 6.0
 
 ## M10 (P44): tests run the warm-up without a display (it counts frames then). Reset it after use.
 static var force_warmup := false
+## P49 (plan M11 §3.2 item 8): true once a warm-up of the giant's and the preview's shader variants has
+## finished in this process - the title's own, or the loading screen's after a start that passed no title
+## (a command-line --continue: scripts/main.gd, warm_preview). Tests set it back.
+static var preview_warmed := false
 
 var _new_game: Button
 var _prologue: Button
@@ -377,6 +381,8 @@ func _process(_delta: float) -> void:
 	_settings_pages.update_capture()
 	if _warm_pending and not warming():
 		_warm_pending = false
+		if _warmup != null and is_instance_valid(_warmup) and bool(_warmup.get("done")):
+			preview_warmed = true   # P49: the loading screen need not warm the preview again
 		_update_buttons()
 		if is_inside_tree() and stack != null and is_instance_valid(stack) and stack.top() == self:
 			refresh_focus()

@@ -20,7 +20,7 @@ reference-PC commands below.
 | Navmesh files | <= 100 KB each | P10b test | Met (15-19 KB); the streamed test world's (P24b) 0.9-16 KB each |
 | Path queries (P24b) | <= 8 a tick per level (`nav_query.queries_per_tick`); chases capped at 120 m, the bot and the director at 300 m, unlimited polygons; tier-0 re-paths at least 6 ticks apart and only after the goal moved 2 m (plan §2.8) | `tests/slow/test_unreachable_chase.gd` | At most 8 re-paths in a tick (twenty asking at once served 8, 8, 4), never two of one agent closer than 6 ticks without a failure: **met**. P39: the same test three times, at most 8 a tick; the world walk through every region (AI on) p95 1, at most 4 a tick; the novice's nine campaign runs p95 1, at most 6-8 a tick: **met** |
 | Navigation readiness (P24b) | Deterministic runs: a chunk ready one tick after its last region add; world walks with AI identical run to run (decision 13) | `tests/integration/test_nav_maps.gd`; `tests/gate/test_world_determinism.gd` | One tick in every run; two traced world walks identical (with async iterations on they part by two ticks): **met** |
-| Web `.pck` | <= 4 MB packed at P18; since decision 8 the milestone's budget for the shipped pck (7.5 MB to M6, 21 MB at M7, 23 MB at M8 and M9, 26 MB from M10: the owner's answer 1, plan M10 §0.6), in parts of at most 15 MB | P18; `tools/build_web.sh` (fails over the budget since the M7 polish) | P18 **met**: `index.pck` 2,356,808 bytes, 1,260,098 gzipped, 1,680,132 as shipped (gzip + base64). The 0.8.0-m8 release (its patch, lane m8r) **met**: 17,457,348 bytes, 12,998,617 gzipped, 17,331,492 as shipped (16.53 MB of 23 MB) in two parts of 8,665,746 ("The 0.8.0-m8 release"). The M9 confirmation's release build (the merged W23) **met**: 17,567,168 bytes, 13,106,092 gzipped, 17,474,792 as shipped (16.67 MB of 23 MB) in two parts of 8,737,396 ("The M9 confirmation"). The 0.10.0-m10 release **met**: 25,841,308 bytes, 17,689,852 gzipped, 23,586,472 as shipped (22.49 MB of 26 MB) in two parts of 11,793,236 ("The 0.10.0-m10 release") |
+| Web `.pck` | <= 4 MB packed at P18; since decision 8 the milestone's budget for the shipped pck (7.5 MB to M6, 21 MB at M7, 23 MB at M8 and M9, 26 MB from M10: the owner's answer 1, plan M10 §0.6), in parts of at most 15 MB | P18; `tools/build_web.sh` (fails over the budget since the M7 polish) | P18 **met**: `index.pck` 2,356,808 bytes, 1,260,098 gzipped, 1,680,132 as shipped (gzip + base64). The 0.8.0-m8 release (its patch, lane m8r) **met**: 17,457,348 bytes, 12,998,617 gzipped, 17,331,492 as shipped (16.53 MB of 23 MB) in two parts of 8,665,746 ("The 0.8.0-m8 release"). The M9 confirmation's release build (the merged W23) **met**: 17,567,168 bytes, 13,106,092 gzipped, 17,474,792 as shipped (16.67 MB of 23 MB) in two parts of 8,737,396 ("The M9 confirmation"). The 0.10.0-m10 release **met**: 25,841,308 bytes, 17,689,852 gzipped, 23,586,472 as shipped (22.49 MB of 26 MB) in two parts of 11,793,236 ("The 0.10.0-m10 release"). The 0.11.0-m11 release **met**: 26,739,748 bytes, 18,434,864 gzipped, 24,579,820 as shipped (23.44 MiB of 26) in two parts of 12,289,910 ("The 0.11.0-m11 release") |
 | Streaming work (P24a) | <= 4 ms a frame, every step under about 3 ms (plan §5.3) | `--scenario=world_walk` on the test world (`tests/slow/test_world_walk.gd`); the web stream check | Desktop at 16 m/s: p50 0.9, p99 3.5-3.9 ms (up to 6.5 while another agent's runs loaded the cores), max 4.4 ms; the heaviest steps 3.2 ms (the terrain mesh) and 3.5 ms (a town part): **met** (container, indicative). Web: p99 9.2 ms walking and 17.9 ms at 16 m/s (Chromium with software WebGL on loaded shared cores; every step's mean is under 3 ms, the peaks are the main thread preempted): **not met in this container**; real browsers **NOT RUN** |
 | Loaded margin, thrash, chunks (P24a) | >= 200 m to unloaded ground at 16 m/s; 0 reloads walking a border; <= 25 loaded | the same | 254.9 m, 0 thrash, at most 15 loaded (16 m/s, 2.9 km); 20 border walks load each chunk once: **met**. P39, the real world's tour (5,555 m at 16 m/s, every region, 25 seams): 250.3 m, 0 thrash, at most 16 loaded; the novice's nine campaign runs 253.9-254.9 m, 0 thrash: **met**; the M9 confirmation (the merged code): the tour 250.3 m, 0 thrash, at most 16 loaded; the matrix's 21 runs 252.7-255.3 m, 0 thrash: **met** |
 | Static world draw calls, streamed (P24a) | <= 40 per view at web `low`, and <= 25 more for breakable houses in a settlement view (plan §5.3) | Xvfb viewpoints on the test world | At most 35 static plus the 8 breakable houses at `low` (`medium`: at most 127 with shadows): **met** on the test world; P25 and the region packages re-measure the real one |
@@ -30,7 +30,7 @@ reference-PC commands below.
 | Map picture (P25) | <= 300 KB, 1,024 x 1,024 (plan §3.8) | `tests/integration/test_world_data.gd` | 52,433 bytes: **met** |
 | Static world draw calls, the real world (P25; M8 gate, F27) | <= 40 per view at `low` (plan §5.2: any view - "P25 and the region packages re-measure at the viewpoints"; §3.8: the shelf and the settlements) | `tests/slow/test_world_build.gd` (Xvfb, `tests/support/world_draw_probe.gd`: the shelf, the six settlements and, since the M8 gate, the M8 regions' ten places) | P25: at most 33 (Skarn; the shelf 30, Hollowmere 31, Brannock 28, Millford 27, Fort Aldmere 23, Harrok's Hall 19), with the giant in view 8 more: **met**. The M8 gate's review found the M8 places at up to 59 (nine of ten over 40; P35 had recorded its own as a known gap, P36 none), **not met**; after the gate's merge pass (lane m8p) all seventeen views draw at most 40 - the great pines, the sunken vault and the Mere of Kings at 40 exactly, Ballista Ridge 30, the war camp 26 -: **met** ("The M8 gate, lane m8p") |
 | Streaming work, the real world (M8 gate, F26) | <= 4 ms a frame, every step under about 3 ms (plan §5.2); P39's worst work frame <= 12 ms headless (§6.4) | the review's stage-6 walk from Aldmere to the Stonehold, carried at 16 m/s (headless, deterministic streaming); `stream_check.mjs --world` on its route at 8 m/s (the release build) | Before the gate: `props_dep` steps (a chunk's first load of a script or shared scene its props need) of 10.3-17.6 ms headless and 41.7 ms on the web, the worst work frame the same: **not met**. Since lane m8p the world's preload list loads them behind the loading screen (155-187 ms headless): no `props_dep` step during play, the worst work frame 4.0-4.6 ms headless (the heaviest step a props part's load, 2.4-3.1 ms): P39's 12 ms **met**, the 4 ms a frame within 0.6 ms; on the web (the review's Stonehold route, SwiftShader, indicative) no `props_dep` step either and the worst work frame 6.6 ms (was 41.7; the heaviest step a props part's instancing) ("The M8 gate, lane m8p"). P39's tour through every region at stage 6 ("The M9 performance captures (P39)"): headless p50 0.52 / p99 6.91 / max 12.48 ms (the first set 17.72), the max a `props_load` (a large text props part's parse; exports ship binary scenes): P39's 12 ms **not met headless** (by 0.5 ms), 4 ms not met; rendered, with the loads on the loader thread, p99 4.24 / max 6.77 ms (the first set 4.60): **not met** (4 ms). The novice's nine campaign runs: worst work frames 19.0-41.0 ms headless (two runs at a time): **not met**. The M9 confirmation (the merged code, "The M9 confirmation"): the tour headless p50 0.51 / p99 6.97 / max 12.19 ms (a `props_load`): 12 ms **not met** by 0.2 ms; rendered p99 4.12 / max 4.77 ms: **not met** (4 ms); the matrix's runs (three at a time) 17.9-33.9 ms: **not met** |
-| The giant's Web share (M10, P41; plan M10 §2.12) | M10's files (`assets/giant/`, the giant's shaders and scenes) <= 4.6 MiB shipped; the floor's <= 2.9 MiB | `tools/build_web.sh`'s `GIANT_SHARE` line (it fails over the cap: the budget less 18.4 MB); `tools/giant/build_giant.py --budget` (an estimate) | P41's test export (W25): **2,768,912 bytes shipped, 2.64 MiB** (22 files, 4,292,544 raw), the pack 20,280,372 bytes shipped (19.34 MiB of 23) in two parts of 10,140,186: **met**; no `tex_hi/` file and no manifest in the pack ("The giant's assets (P41)"). From P45 on the Web pack keeps `tex_hi/` and the cap is 7.6 MiB at the 26 MB budget; the 0.10.0-m10 release: **5,845,364 bytes shipped, 5.57 MiB** (33 files, 8,058,899 raw): **met** ("The 0.10.0-m10 release") |
+| The giant's Web share (M10, P41; plan M10 §2.12) | M10's files (`assets/giant/`, the giant's shaders and scenes) <= 4.6 MiB shipped; the floor's <= 2.9 MiB | `tools/build_web.sh`'s `GIANT_SHARE` line (it fails over the cap: the budget less 18.4 MB); `tools/giant/build_giant.py --budget` (an estimate) | P41's test export (W25): **2,768,912 bytes shipped, 2.64 MiB** (22 files, 4,292,544 raw), the pack 20,280,372 bytes shipped (19.34 MiB of 23) in two parts of 10,140,186: **met**; no `tex_hi/` file and no manifest in the pack ("The giant's assets (P41)"). From P45 on the Web pack keeps `tex_hi/` and the cap is 7.6 MiB at the 26 MB budget; the 0.10.0-m10 release: **5,845,364 bytes shipped, 5.57 MiB** (33 files, 8,058,899 raw): **met** ("The 0.10.0-m10 release"). The 0.11.0-m11 release (the cap still 7.6 MiB at `-m11`): **6,726,120 bytes shipped, 6.41 MiB** (84 files, 8,872,395 raw): **met** ("The 0.11.0-m11 release") |
 | The giant's draw calls and primitives (M10, P41; plan M10 §2.12) | The fullest look (the warrior: tunic, jerkin, belt, bracers, boots, long hair, full beard) <= 13 draw calls at `low`; <= 55,000 primitives at 4 m and <= 4,000 beyond 120 m | P41 (counted from the index and the imported LODs); P45 (rendered) | P41: 12 meshes of one surface each and 47,630 triangles at full detail (the chieftain 12 and 45,126): **met**; beyond 120 m (the LOD whose error projects under a pixel) 2,078 at 1280 px wide: **met**, 4,802 at 1920 px until about 151 m: **not met** (the long hair's second LOD). **The M10 gate measured it in the engine** (a far camera on `giant_model.tscn`, the warrior outfit, long hair and full beard: 12 draw calls at every distance): at 1920x1080 43,402 primitives at 4 m (met), **4,118 at 121 m and at 130 m**, 3,822 at 151 m, 1,820 at 200 m - 118 primitives (3 %) over between 120 and about 150 m: **not met at 1080p, accepted** (the game's camera never stands 120 m from the player's giant; coarsening the hair cards' last LOD is M11's); at 1280x720 41,098 at 4 m and 1,854 at 121 m and 130 m: **met**. **After the gate's hair changes** (LC-6: the long hair's inner cards lost a point each to pay for the hairline's fringe, 5,880 triangles against 5,920) the same probe reads 43,362 at 4 m, **3,920 at 121 m and at 130 m**, 3,816 at 151 m and 1,800 at 200 m at 1920x1080: **met**; 1,834 at 121 m at 1280x720: **met** |
 | Repository growth and the giant's regeneration (M10, P41) | <= 25 MB for M10's assets and inputs; `check.sh --giant` <= 6 min and `--giant-full` <= 25 min at 2 threads | P41 | 12,972,626 bytes in 194 new files (6.95 MiB in git; the vendored CC0 subset 6.77 MB, the generated files 5.89 MB): **met**; `--verify --skip-bake` 72 s, `--verify` 223 s (other runs on the machine): **met** |
 
@@ -2397,6 +2397,401 @@ parts in a million slow against the page's clock in every run of the checked bui
 morning; more in the runs with a step), which is what left that one run outside the tolerance. Because of it the release
 publishes the checked build's bytes and not the first rebuild's, and the reproducibility of the export is an M11
 row (`docs/plans/FOLLOWUPS.md`, "From the 0.10.0-m10 release").
+
+### M11 W29: the Web, tools and performance debts (P49)
+
+P49 (`docs/systems/P49.md`; plan M11 §3.2) on its branch from the tag `m11-plan`, 18 November 2026: `0.10.0-m10`'s
+code with the launcher's part-wise unpacking, the staged budget rule, the shadow proxy path, stable node ids in
+every generated scene and the Web checks' fixes. Container as above (4 shared CPUs, no GPU, a debug build), **shared
+all day with the other lane's bakes, renders and test runs** (a Cycles bake at 2 threads and a rendering Godot beside
+almost every run: 1-minute loads of 3 to 12). Every heavy process of this package ran at `nice -n 19`, so its wall
+times are a starved process's and indicative only; counts (draw calls, bytes, checks) are not affected. The model
+has no `ShadowProxy` in this worktree (P48's lane): where a figure needs one it was taken with a **stand-in** (a
+copy of the torso's mesh under the same skeleton, named `ShadowProxy`), and says so.
+
+**The test tiers at the base** (`tools/check.sh --slow` on `m11-plan`, loads 2-6; the runner's per-suite times):
+default **64.8 s** (224 suites, 42,788 checks), slow **352.4 s** (73 suites, 10,040 checks), 298 suites and 52,934
+checks in all, 0 failures; the 120 s soak 7,201 ticks, 0 errors, attacks 41, hits 33, kills 4, fence breaks 2,
+loot 2, debris 10. Where the default tier's time is: `test_anchors` (every script compiled) 11.40 s; ten more
+suites over a second (`test_data_and_saves` 3.24, `test_growth` 2.09, `test_abilities_m2` 1.65, `test_archer` 1.53,
+`test_wolf` 1.30, `test_weapons` 1.24, `test_boss_arena` 1.20, `test_grab_throw` 1.10,
+`test_world_and_flow_integration` 1.08, `test_tutorial` 1.04: 15.5 s together); 42 suites of 0.3 to 1 s (22.9 s);
+171 under 0.3 s (14.9 s). The heaviest single tests after the compile check: the first-person light chains at
+stage 3 (0.91 s), the hold in first person (0.80 s), the reach at stages 2 and 3 (0.78 and 0.56 s), the wolves'
+tokens (0.53 s), the audio effects' samples (0.62 s), the AI-name scan of the docs (0.54 s). The slow tier's
+heaviest: `test_world_build` 35.7 s, `test_valley_walkthrough` 17.6, `test_appearance_render` 17.4,
+`test_first_person_shoulders` 15.8, `test_m8_gate_tutorials` 15.3, `test_world_cavalry` 14.9, `test_world_seams`
+14.1, `test_world_walk` 14.1, `test_stage_reach_bands` 11.3, `test_growth_route_456` 10.9, `test_siege_battery`
+10.9, `test_formation_perf` 10.1.
+
+**The headroom moves** (plan M11 §1.7 rules 2 and 3): 3.05 s of default-tier simulation to `tests/slow/` (the
+first-person light chains 0.91 s, the two reach tests 1.34 s, `test_grab_first_person` 0.80 s) and
+`test_world_cavalry` (14.9 s) from the slow tier to the gate tier. This package's own suites: default
+`test_predeclared_m11` 0.008 s and `test_build_web_budget` +0.07 s (0.31 against 0.24); slow
+`test_giant_shadow_proxy` 5.3 s, `test_build_web_parts` 2.3 s, `test_export_reproducible` 0.7 s,
+`test_loading_warm_up` +0.1 s. **After** (`tools/check.sh --build --slow --giant --require --strict-times` on the package's head, loads 4-12 with the other lane's renders beside it): default **57.3 s**, slow **317.7 s**, 303 suites, 53,231 checks, 0 failures; the 120 s soak 7,201 ticks, 0 errors, attacks 41, hits 33, kills 4, fence breaks 2, loot 2, debris 10 (as at the base). The scene build is deterministic: `--build` regenerated every scene with no change in git. `test_world_cavalry` in the gate tier: 23 checks, 0 failures, 12.9 s.
+
+**Probe 9: the launcher's unpacking at the last budget** (a 44.02 MiB packed stand-in in four parts, headless
+Chromium, the renderer's resident memory read every 20 ms, three runs each; `docs/systems/P49.md`, "Probes"):
+
+| Unpacker | Peak | Rise over the page at rest | To the whole 50.56 MB in hand |
+| --- | --- | --- | --- |
+| The joined text (0.10.0-m10) | 407-418 MB | 329-342 MB | 485-527 ms |
+| A part at a time | 373-388 MB | 296-311 MB | 504-568 ms |
+| **One stream, a network chunk at a time (shipped)** | **292-303 MB** | **214-225 MB** | **396-399 ms** |
+
+About 100 MB of each rise is the unpacked pack and the buffer it is read into; the launcher's own share falls from
+about 235 MB to about 120 MB at 44 MiB (at today's 22.5 MiB: about half of each).
+
+**The exports** (`tools/build_web.sh`, then `--parts=4`, then `--preset="Web (test)"`; the version `0.10.0-m10`,
+so the budget is 26 MB and the giant's share 7.6):
+
+| | `Web` (the release) | `Web (test)` |
+| --- | --- | --- |
+| `index.pck` raw / gzipped / shipped | 25,843,836 / 17,693,914 / **23,591,888 (22.50 MiB of 26)** | 26,952,368 / 18,508,138 / 24,677,520 (23.53 MiB) |
+| Parts (at most 15,000,000 bytes) | two of 11,795,944; with `--parts=4` four of 5,897,972 | two of 12,338,760 |
+| `GIANT_SHARE` (cap 7.6) | 8,058,775 raw, **5,847,700 shipped (5.58 MiB)**, 33 files | 5,844,396 shipped (5.57 MiB) |
+| `PEOPLE_SHARE` (no cap before m13) | 0 files, 0 bytes | 0 |
+| Audio | 9.28 MB of the 24.65 MB pck (38 %) | 9.28 MB of 25.70 MB (36 %) |
+| Files; test content | 2,840; none; the release's data validates without `data/test` | 122 test files packed |
+| `index.wasm` | 37,700,666 (packed 12,528,700) | the same engine |
+
+The pack is 5,416 bytes larger shipped than the 0.10.0-m10 release's (23,586,472): the 4,297 node ids in the
+converted scenes and this package's scripts. The page's whole download is 36,564,774 bytes (the packed engine and
+pack, `index.js`, the two worklets, the launcher and the poster; 36,520,414 at the release); the launcher's note
+reads "About 36 MB to download." from the build's own counts.
+
+**Two exports of one commit** (`PCK_SHA256`, the pack's checksum; plan M11 §3.2 item 5):
+
+| Export | Checkout and import | `PCK_SHA256` |
+| --- | --- | --- |
+| Stable node ids in the scenes, the conversion cache emptied: twice in this worktree (its `.godot` copied from the main checkout at the wave's start) | one import | `ae8f4531...2a71d`, twice: **the same** (at 0.10.0-m10 a fresh conversion of one scene differed in its two node ids) |
+| The same commit in a second checkout with its own fresh import | a second import | `f41e37b0...7d64`: **different, in one packed file** - `.godot/imported/giant.glb-<hash>.scn`, 128 bytes (28 node ids and the file's checksum): the glTF importer packs the scene it built and gives its nodes random ids at every import |
+| With `tools/normalize_imports.gd` run by the build (the imported scene's ids made from the source file's and each node's path; the import's `.md5` record updated, so the editor imports nothing again): this worktree, three exports (the release, `--parts=4`, again) | one import | `582e4fb9...290605`, three times |
+| The second checkout (the tool rewrote its 28 ids: `"rewritten":1,"nodes":28`; this worktree's run found nothing to do) | the second import | `582e4fb9...290605`: **the same bytes in two checkouts with separate imports** |
+
+The imported scene rewritten by the tool was compared with the importer's own, node by node: 28 nodes, the same
+classes and stored properties, the same vertex, skin and LOD data in every surface, the same skins and bones; only
+the ids differ (and 124 bytes of its compressed size).
+
+**Draw calls at `medium` with the shadow proxy** (Xvfb, the Compatibility renderer, llvmpipe at 2 threads, 640x360,
+`--skin`; the commands of "Commands" above with `--graphics=medium`; p50 / p95 / p99 / max over the run):
+
+| Run | 0.10.0-m10's shadow path (measured again here: the same counts as the M10 record) | With the proxy (the stand-in) | Plan M11 §2.12's row |
+| --- | --- | --- | --- |
+| The Valley walk (`--scenario=valley_walk --walk-teleport`; 2,182 frames; the sun's two cascades) | 228 / 323 / 365 / **395** | 213 / 307 / 349 / **379** | at most 330: **a miss by 49** |
+| The stress arena (`--scenario=stress`, 45 s; 2,640 frames; four cascades whatever the preset) | 344 / 583 / 649 / **674** | 312 / 551 / 617 / **642** | at most 620: **a miss by 22** |
+
+The proxy does what it was built for: the giant's shadow costs one draw a cascade instead of his nine shown meshes
+(`test_giant_shadow_proxy`: 9 against 1 with one shadow map, 36 against 4 with four), which is exactly the 16 and
+the 32 the two runs fell by at every percentile; with the fullest M10 look (12 meshes) it would be 22 and 44. The
+row's 330 and 620 asked for 65 and 54: more than the giant's shadow holds in either run. What is left at `medium`
+is not the giant: the static world's own shadow casters (up to 221 calls a view at `medium`) and every enemy's box
+rig, which is five to seven meshes drawn again in each cascade (twelve combatants in four cascades in the arena) -
+the people's one shadow draw a cascade (plan M11 §2.9; P60) is what cuts that. `low`, the Web's preset, is within
+250 everywhere (with the proxy's path in: the stress arena at most 153, p50 75, p95 126; the Valley walk at most 152, p50 94, p95 139).
+
+**The package's final export** (`tools/build_web.sh` on the head, with the preview's Web cap at 2): `PCK_SHA256
+3b1ed89c...00d19e`; 23,591,860 bytes shipped (22.50 MiB of 26) in two parts of 11,795,930; `GIANT_SHARE` 5.58 MiB
+of 7.6; `PEOPLE_SHARE` 0; `NORMALIZE_IMPORTS` found nothing to rewrite (this worktree's import already had its
+stable ids). `Web (test)`: 24,677,536 shipped (23.53 MiB).
+
+**The five Chromium checks on that export, default forms** (headless Chromium, SwiftShader; each started at a
+1-minute load under 3, the other lane's renders resuming during them):
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `creator_check.mjs` (960x540) | OK, 2 misses reported | the title's own warm-up frame 42.9x and 44.4x (by design, as in M10); the creator after New Game **2.74x** (504.3 ms against 184.4; 98 % of it the draw; its first three frames compiled 20 shaders and linked 10 programs), the shrine's creator after Continue 1.77x, the levels 1.11x and 0.32x; renderer peak 960 MB |
+| `world_start_check.mjs` | OK | |
+| `audio_check.mjs` | OK | one Enter at the title (ready 2.9 s after the page), 7 clock references, largest step -9.2 ms; criterion NOT MET on software WebGL as always (247 holes, every one placed on the main thread); renderer peak 914 MB |
+| `world_check.mjs` | OK | 398 s of music, 41 clock references, largest step 17.8 ms, 0 holes across a step, 0 holes unplaced; criterion NOT MET (602 holes, all on the main thread); renderer peak 952 MB |
+| `stream_check.mjs --world --audio` (`builds/web_test`) | OK | 132.9 s of music over 4 borders, 15 references, largest step 27.4 ms; criterion NOT MET (357 holes, all on the main thread); renderer peak 649 MB |
+
+0 console errors and 0 failed requests in all five. The Web tools' own tests on a quiet machine:
+`test_launcher_parts` 345 checks, `test_creator_check` 46, `test_audio_check` 39, `test_stream_check` 24,
+`test_world_check` 56, `test_memory_guard` 21, 0 failures.
+
+**The preview's pixel scale on the Web** (`creator_check.mjs --parts=new_game --size=1920x1080
+--args=--preview-scale=N`, loads 2.7-3.0 at the start): the creator's first frame against its median frame -
+1: 537.5 / 254.1 ms (2.12x); 1.5: 620.1 / 340.3 ms (1.82x); 2: 654.9 / 455.1 ms (1.44x). Every scale is within
+the stall rule, so `GiantPreview.WEB_MAX_PIXEL_SCALE` is 2.0 (the desktop's); the steady creator frame on
+software WebGL grows by 1.8 times from 1 to 2. Renderer peaks 942, 971 and 1,106 MB.
+
+**The page under a starved browser (LD-1)** (`tools/web/memory_probe.mjs --pin-cpu=3 --busy=4`): the renderer
+from 485 to 1,800 MB in 95 s (14 MB a second) while the page ran no animation frame after its first two seconds
+and its WebAssembly (138 MB) and JS (12 MB) heaps stayed the same; the same with the engine's position reporters
+unconnected; without an `AudioContext` the engine does not start. Not the game's (no game code runs while it
+grows); the checks' 3 GB guard stays. `docs/systems/P49.md`, item 7.
+
+**The `--continue` warm-up natively** (Xvfb, llvmpipe, `MESA_SHADER_CACHE_DISABLE=true`): the shrine's first
+creator 15.6-16.3x on this branch against 16.8x at the base, and 19.8x after the title's own warm-up: the
+loading screen's warm-up gives `--continue` what the title gives, and neither covers the creator's first frame
+on llvmpipe with no driver cache (a follow-up for the creator's package).
+
+### M11 W29: the merged measurements (P48 and P49)
+
+The W29 merge (P49, then P48, on the tag `m11-plan`; 18 November 2026): P48's body pipeline II (the core
+`giant.glb`, 21 parts loaded on demand, the 71-bone skeleton, the `ShadowProxy`, the free cape, 28 clips) with
+P49's shadow proxy path, launcher, budget rule and stable ids. Container as above (4 shared CPUs, no GPU, a debug
+build); the merge ran alone on the machine (1-minute loads under 2 at the start of most runs; given where higher).
+
+**The check** (`tools/check.sh --slow --giant --web-tools --require --strict-times`, after the import, the full
+build and the import; the build left the tree unchanged): **CHECK PASSED** - the giant pipeline's 27 tests,
+`--verify --skip-bake` OK in 82 s (34 files, the normal maps' one texel `TOLERATED`), `GIANT_ESTIMATE` 6.43 MiB
+of 7.6, the launcher's 345 checks and the clock's 18; **305 suites, 53,942 checks, 0 failures**; **default
+64.3 s, slow 334.8 s** (plan §2.12: 72 and 400); the 120 s soak 7,201 ticks, 0 errors. The first run, straight
+after the build, read default 81.7 s and slow 356.7 s and failed `test_export_reproducible` on its M10 floor
+for `giant.glb`'s nodes (fixed at the merge: the file now holds the skeleton and five meshes). **The seeded soak
+against `0.10.0-m10`**: the tag's 120 s soak in a fresh worktree and the merge's print the same
+`AUTOPILOT_RESULT` in all 28 keys (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 ticks,
+0 errors).
+
+**The shadow proxy, P48's real one** (`test_giant_shadow_proxy`, rendered): the rig finds the model's own
+`ShadowProxy` (one surface); the giant's default look (9 surfaces) casts 9 shadow draws without it and **1** with
+it with one shadow map, 36 and **4** with four.
+
+**Draw calls** (Xvfb, the Compatibility renderer, llvmpipe at 2 threads, `--skin`; the commands of P49's section
+above; p50 / p95 / p99 / max):
+
+| Run | `medium`, the merge (the real proxy) | `medium`, P49 (a stand-in proxy) | `low`, the merge | Plan M11 §2.12 |
+| --- | --- | --- | --- | --- |
+| The Valley walk (2,182 frames) | 213 / 307 / 349 / **379** | 213 / 307 / 349 / 379 | 94 / 139 / 143 / **152** | `medium` at most 330: **a miss by 49**; `low` at most 250: met |
+| The stress arena (45 s, 2,640 frames) | 312 / 551 / 617 / **642** | 312 / 551 / 617 / 642 | 75 / 126 / 147 / **153** | `medium` at most 620: **a miss by 22**; `low` at most 250: met |
+
+The real proxy gives exactly the stand-in's counts: both are one mesh in each cascade for the giant's nine shown
+meshes. The rest at `medium` is the static world's casters and the enemies' box rigs (P60's row).
+
+**The giant's mesh buffers** (`tests/support/giant_parts_probe.tscn`, the renderer's
+`RENDERING_INFO_BUFFER_MEM_USED` under Xvfb; in brackets `GiantModel.mesh_bytes`' count): the body, the eyes
+and the proxy **1.11 MB**; **the default look 2.14 MB** (1.80); **the fullest look 2.60 MB** (2.13; eight parts);
+every part loaded 5.83 MB (M10 kept all resident: 5.98). Plan §2.12: at most 4.5 MB in play - **met**. A part's
+first load: read and bound in 2.4 ms, drawn 24.5 ms after the call.
+
+**The Web export** (`tools/build_web.sh`, the `Web` preset, version `0.10.0-m10`, budget 26):
+`PCK_SIZE raw=26459248 gzip=18291825 shipped=24389100` (**23.26 MiB of 26**) in **two parts** of 12,194,550;
+`GIANT_SHARE` 8,661,666 raw, **6,628,496 shipped (6.32 MiB of 7.6)**, 75 files; `PEOPLE_SHARE` 0 files;
+`PCK_SHA256 05868ddb336767c60bedb315484e71a23977a1b0e19a36321410c262ac6f815f`; `NORMALIZE_IMPORTS` gave
+stable ids to the 22 imported glTF scenes (`giant.glb` and the 21 parts, 92 nodes). `Web (test)`: 25,475,560
+shipped (24.30 MiB), `PCK_SHA256 a1a849b1...316868a`. Against the 0.10.0-m10 release (22.49 MiB, the share 5.57): +0.77 MiB, of it the
+giant's share +0.75 MiB (plan §2.12's arithmetic for these items: 0.35; the parts' own skeletons about 0.28 MiB).
+
+**The five Chromium checks, default forms** (headless Chromium, SwiftShader; each started at a load under 3):
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `creator_check.mjs` (960x540) | OK, 3 misses reported | the creator after New Game **3.78x** (560.8 ms against 148.6; 99 % the draw; 20 shaders compiled and 10 programs linked in its first three frames, as on P49's branch), 3.38x on a quiet re-run (load 1.3); the shrine's creator 1.93x and 1.69x; the title's own warm-up frames 22-64x (by design); renderer peak 994 and 937 MB |
+| `world_start_check.mjs` | OK | renderer peak 960 MB |
+| `audio_check.mjs` | OK | 8 clock references, largest step 9.8 ms; criterion NOT MET on software WebGL (245 holes, all on the main thread); peak 929 MB |
+| `world_check.mjs` | OK | 392 s of music, 41 references, largest step 123.9 ms (7 holes placed across a step); criterion NOT MET (607 holes, all on the main thread); peak 1,091 MB |
+| `stream_check.mjs --world --audio` (`Web (test)`) | OK on a quiet re-run | the first run (load 2.6 at the start, the machine busier during it) failed on one hole of 313.5 ms at 5.1 s not placed on the main thread; the quiet re-run (load 1.3): 123.9 s of music over 4 borders, 14 references, largest step 18.8 ms, 357 holes all on the main thread (criterion NOT MET); peak 680 MB |
+
+0 console errors and 0 failed requests in every run. The creator's first frame after New Game is now over the
+3x rule by its ratio: the frame itself is what it was on P49's branch (about 500 ms, the same 20 shaders), and the
+creator's steady frame fell from about 184 to 146-149 ms with one shadow draw for the giant. The Web tools' own
+tests: `test_launcher_parts` 345, `test_world_check` 56, `test_creator_check` 46, `test_audio_check` 39,
+`test_stream_check` 24, `test_memory_guard` 21 checks, 0 failures.
+
+### M11 W30: the giant's motion (P50)
+
+P50 (`docs/systems/P50.md`; plan M11 §3.3) on its branch from the tag `wave-29`, 18 November 2026, beside P51.
+Container as above (4 shared CPUs, no GPU, a debug build; loads 1-2 at most runs).
+
+**The skin's CPU a frame with secondary motion** (plan §2.12: native at most 0.12 ms, Web 0.45): the rig's drive
+(`SkinnedRig._drive_tree`), the tree's advance and the skeleton's modifier pass run by `Skeleton3D.advance(dt)` in
+manual mode (so the springs and their limits are in it, which `--ui-probe-bench` leaves out), headless in a test
+world, the best of five batches of 200, the giant idle:
+
+| Look | A frame (two runs) | |
+| --- | --- | --- |
+| The crop, the short beard, the wanderer's clothes (no chain) | 0.105 / 0.105-0.113 ms | the tree's sources and the hand's turn onto the handle: about +0.035 ms over M10's 0.07 |
+| The long braided hair, the braided beard, the wayfarer's cape (seven chains) | 0.107-0.109 / 0.107-0.116 ms | the springs and limits on seven chains: +0.002-0.004 ms |
+| Budget | native at most 0.12 ms: **met**; the Web not measured (probe 4's +0.030 ms on M10's 0.127: about 0.17 of 0.45, inferred; FOLLOWUPS for P57) | |
+
+**The seeded soak**: the 120 s soak `--no-skin` and `--skin --skin-stats --appearance=appearance_preset.wanderer`
+print byte-identical `AUTOPILOT_RESULT` (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 ticks,
+0 errors: wave-29's); SKIN_STATS 7 flinches, 7,203 secondary-motion frames, 9 teleports the springs reset on.
+
+### M11 W30: the merged measurements (P50 and P51)
+
+The W30 merge (P51, then P50, on the tag `wave-29`; 18-19 November 2026): P51's look pass II (shells, braided
+tubes and loose strands, the graded skin with the subsurface lookup, the eyes, scars and cloth) with P50's motion
+(the legs' new sources, flinches, the springs, the reach, first person). Container as above (4 shared CPUs, no
+GPU, a debug build); loads given where above 2.
+
+**The check** (`tools/check.sh --slow --gate --giant --web-tools --require --strict-times`; the gate tier because
+W30 is Part A's last wave, plan §1.2): **CHECK PASSED** - the giant pipeline's 32 tests, `--verify --skip-bake`
+OK (38 files bit-exact), `GIANT_ESTIMATE` 6.48 MiB of 7.6, the launcher's 345 checks and the clock's 18;
+**343 suites, 57,520 checks, 0 failures**; **default 60.0 s, slow 361.0 s, gate 794.6 s** (plan §2.12: 72, 400
+and 50 minutes); the 120 s soak 7,201 ticks, 0 errors. The first run (with `--build`, which left the tree
+unchanged) read default 66.6 s, slow 377.8 s, gate 866.7 s. No suite changed tier: the slow tier is under 400 with
+`test_hair_render` (22.5 s, over P51's 5 s cap; FOLLOWUPS) in it. **The seeded soak** prints the same
+`AUTOPILOT_RESULT` as the W29 merge in all 28 keys (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks,
+7,201 ticks, 0 errors).
+
+**P51's deviations from plan §2.4, measured merged:**
+
+| Item | Plan | As built | Cost |
+| --- | --- | --- | --- |
+| The skin's curvature | in `masks.png`'s spare alpha | its own map, `tex/curvature.png` 256 px (the alpha spoiled the masks' RGB under VRAM compression: the brows' tint drew blocks on the forehead) | 22 KB in the repository, about 25 KB shipped |
+| Shell layers on the Web | twelve (probe 6) | `SHELL_LAYERS_WEB` 6 (the desktop 12); one draw call a style either way, stacked at load time, no shipped bytes for the layers, no shadow | the crop's stack about 0.13 MB of mesh on the Web, 0.26 on the desktop |
+
+**The Web export** (`tools/build_web.sh`, `Web`, budget 26): `PCK_SIZE raw=26723540 gzip=18421930
+shipped=24562576` (**23.42 MiB of 26**) in **two parts** of 12,281,288; `GIANT_SHARE` 8,868,521 raw,
+**6,729,000 shipped (6.42 MiB of 7.6)**, 84 files; `PEOPLE_SHARE` 0 files;
+`PCK_SHA256 bf14554bcd265f9d44270ba99fe576de0089d47ddc39d8a10d5b4e50afc1a893`. Against the W29 merge: +0.16 MiB,
+of it the giant's share +0.10 (plan §2.12's Part A arithmetic for P51's items: about 0.8). `Web (test)`:
+25,650,164 shipped (24.46 MiB), `PCK_SHA256 dfd13b5c...47c03890f`.
+
+**The five Chromium checks, default forms** (each started at a 1-minute load under 3; no re-run was needed):
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `creator_check.mjs` | OK, 3 misses reported | the creator after New Game **3.28x** (544.5 ms against 165.8; 20 shaders and 10 programs in its first three frames); the shrine's creator 1.74x; the title's warm-up frames 30-53x (by design); renderer peak 1,005 MB |
+| `world_start_check.mjs` | OK | peak 939 MB |
+| `audio_check.mjs` | OK | 7 references, largest step 5.3 ms; criterion NOT MET (274 holes, all on the main thread); peak 971 MB |
+| `world_check.mjs` | OK | 39 references, largest step 27.3 ms; criterion NOT MET (605 holes, all on the main thread); peak 959 MB |
+| `stream_check.mjs --world --audio` (`Web (test)`) | OK | 14 references, largest step 32.2 ms; criterion NOT MET (356 holes, all on the main thread); peak 683 MB |
+
+0 console errors and 0 failed requests in every run.
+
+**The skin's CPU a frame** (plan §2.12 with secondary motion: native at most 0.12 ms, Web at most 0.45).
+`--ui-probe-bench` now also times the loop with the skeleton in manual mode, advanced and updated at once, so every
+modifier runs - the brain's, the springs and `SecondaryMotion`'s limits - and `skeleton_updated`'s handlers (the
+hair's sway) with them; before, it called the brain's modifier by hand and left the springs out. The same New Game
+tour (the Wanderer: the hair and beard chains), natively under Xvfb at 960x540 and in `creator_check.mjs`:
+
+| | 0.10.0-m10 (same loop, same machine) | W29 merge (Web) | The merge: the M10 loop | The merge: every modifier |
+| --- | --- | --- | --- | --- |
+| Native, two runs | 0.075 / 0.079 ms | - | 0.178 / 0.181 ms | **0.291 / 0.292 ms** - **missed** (0.12) |
+| Web (`creator_check`), three readings | - | 0.11-0.15 ms | 0.25-0.29 ms | **0.39-0.42 ms** - met, with 0.03-0.06 to spare (0.45) |
+
+Natively, by part (a test world, headless, best of five batches of 200; the Wanderer / the seven-chain look):
+`_drive_tree` 0.034 / 0.032 ms, the tree's advance 0.069 / 0.068, the brain's modifier 0.048 / 0.047, the limits
+0.007 / 0.020, the hair's sway (P46's, every pose update) 0.061 / 0.060, the skeleton's update with every modifier
+0.142 / 0.162 (0.138 / 0.152 without the springs). P50's own reading (0.105-0.109 ms) timed a smaller loop; the
+rise over 0.10 is the tree's larger chain of sources and the hand's turn onto the handle, not the springs
+(0.004-0.010 ms). FOLLOWUPS.
+
+**Draw calls** (Xvfb, llvmpipe at 2 threads, `--skin`, 640x360; p50 / p95 / p99 / max): the Valley walk `medium`
+213 / 307 / 349 / **379**, `low` 94 / 139 / 143 / **152**; the stress arena `medium` 312 / 551 / 617 / **642**,
+`low` 75 / 126 / 147 / **153** - the W29 merge's counts exactly (the default look's meshes are unchanged; a shell
+style is one draw call and casts no shadow). `low` at most 250: met; `medium` 330 and 620: missed by 49 and 22
+(P60's row).
+
+**The giant's mesh buffers** (`giant_parts_probe`, the renderer's measure; counted in brackets): the body, eyes and
+proxy **1.11 MB**; the default look **2.15 MB** (1.81); the fullest look **2.60 MB** (2.13; eight parts); every
+part 5.28 MB (W29: 5.83). Plan §2.12: at most 4.5 MB in play - **met**. A part's first load (the braided hair):
+1.9 ms read and bound, 23.6 ms to its first frame.
+
+### M11 Gate A: the merged measurements (the look and motion lanes)
+
+The Gate A merge (the look lane - the skin in the world's light, first person's shadow, the braies' rim - then the
+motion lane - the skin's CPU, the arms' rate limit, the eyes' look - on the tag `wave-30`; 19 November 2026).
+Container as above (4 shared CPUs, **no GPU**: every frame and figure is the software renderer's, Mesa llvmpipe or
+SwiftShader; a debug build).
+
+**The check** (`tools/check.sh --build --slow --gate --giant --web-tools --require --strict-times`): **CHECK
+PASSED** - the build left the tree unchanged, the giant pipeline's tests and `--verify --skip-bake` OK, the launcher's
+345 checks and the clock's 18; **344 suites, 57,578 checks, 0 failures**; default 73.5 s, **slow 375.3 s**, gate
+885.2 s. The default figure ran beside a file search the merge had left running (its rise was spread over unrelated
+suites: the Valley's ambience +3.3 s, the sound banks +1.4); the default tier again on a quiet machine (load 1.42,
+`--require --strict-times`): **62.8 s** (W30 merge 60.0), 227 suites, 0 failures. No suite changed tier (plan §1.7:
+72 / 400 s; `test_skin_world_render` adds 4.3 s to the slow tier). **The seeded soak** prints the W30 merge's
+`AUTOPILOT_RESULT` in all 28 keys (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 ticks, 0 errors),
+both runs.
+
+**The Web export** (`tools/build_web.sh`, `Web`, budget 26): `PCK_SIZE raw=26735908 gzip=18432680
+shipped=24576908` (**23.44 MiB of 26**) in two parts; `GIANT_SHARE` 8,868,607 raw, **6,724,464 shipped (6.41 MiB of
+7.6)**, 84 files; `PEOPLE_SHARE` 0; `PCK_SHA256 c1fcce1126c47924f063b05224854915902bfdfd3b4ce6585eea7f060d9d2222`.
+`Web (test)`: 25,661,860 shipped (24.47 MiB), `PCK_SHA256 550abc66...6b9890f8115`.
+
+**The five Chromium checks** (each started at a 1-minute load under 3; no re-run): `creator_check` OK, 3 misses
+reported (the creator after New Game **3.3x**, 506.8 ms against 153.8; the shrine's creator 2.21x; the title's warm-up
+frames 64-75x by design; renderer peak 1,062 MB); `world_start_check` OK (peak 1,042 MB); `audio_check` OK, criterion
+NOT MET (264 holes, all on the main thread; largest clock step 11.2 ms); `world_check` OK, criterion NOT MET (604
+holes; 32 references, largest step 23.5 ms; peak 1,160 MB); `stream_check --world --audio` (`Web (test)`) OK,
+criterion NOT MET (340 holes; peak 690 MB). 0 console errors and 0 failed requests in every run.
+
+**Plan §2.12, measured on the merged code:**
+
+| Budget | Measured | |
+| --- | --- | --- |
+| The giant's CPU a frame with secondary motion, native (0.12 ms) | `--ui-probe-bench` `skin_springs_ms`, the New Game tour, the Wanderer's two chains, Xvfb 960x540, four runs at loads 1.29-1.44: **0.136-0.143 ms** (the M10 loop `skin_ms` 0.106-0.110, one run 0.206); W30 merge 0.291 | **missed**; within the motion lane's proposed 0.15 |
+| The same on the Web (0.45 ms) | `creator_check`: **0.230 / 0.248 ms** after the level (M10 loop 0.186 / 0.161), 0.171 with the shrine's two giants; W30 merge 0.39-0.42 | met |
+| Draw calls at `low` (250) | the Valley walk p50 / p95 / p99 / max 94 / 139 / 143 / **152**; the stress arena 75 / 126 / 147 / **153** | met |
+| Draw calls at `medium` (Valley 330, stress 620) | the Valley 213 / 307 / 349 / **379**; the stress arena 312 / 551 / 617 / **642** - the W30 merge's counts exactly (third person: the shadow proxy's layer change adds a shadow draw in first person only) | missed by 49 and 22 (unchanged) |
+| The giant's mesh buffers in play (4.5 MB) | `giant_parts_probe`: the body, eyes and proxy 1.11 MB; the default look 2.15 (1.81 counted); the fullest 2.60 (2.13); every part 5.28 | met |
+| The creator's first frame (3x the median) | 3.3x after New Game (W30 3.28x); the shrine's creator 2.21x (W30 1.74x) | missed (unchanged) |
+
+**Open decision (the gate's):** the native skin CPU misses §2.12's 0.12 ms by 0.016-0.023 ms in these runs (it was
+0.291 at the W30 merge). The motion lane proposes **0.15 ms natively** as the budget (the measured floor with every
+feature on and this container's run-to-run spread), the Web's 0.45 unchanged; the plan's figure is not edited here.
+The alternative is to keep 0.12 and give P57 the brain's modifier (0.046-0.051 ms of the frame; FOLLOWUPS).
+
+### The 0.11.0-m11 release (Part A's final code)
+
+The release build for `0.11.0-m11` (P52's ship step, plan M11 §3.5 and §4.3): Gate A2's final code (`m11-gate-a2`,
+`d0db605`) with the release's version (`117b713`: `config/version` 0.11.0-m11, the description, the launcher's notes)
+and the owner's native budget (`d37228c`: plan §2.12's row and a comment). 19 November 2026, container as above (4
+shared CPUs, no GPU, a debug build; headless Chromium with SwiftShader, llvmpipe under Xvfb), shared with P53's lane:
+the numbers are indicative. The evidence (the builds' logs, the built files, each check's console output and
+`--json` report, the exports' logs and frames) is in the ship step's scratch folders.
+
+**The budget from the version.** `env -u XDG_DATA_HOME nice -n 19 tools/build_web.sh --out=<folder>`, no
+`--budget-mb`: the script reads `-m11` and applies the 26 MiB budget and the giant's 7.6 MiB share (plan §2.12).
+Built five times (a trial before the launcher's BUILD line was set, two builds, and two more after the launcher's
+static download note was corrected from 38 to 37 MB): **the same `PCK_SHA256` every time**; each pair equal in every
+file, the pairs differing only in `play.html` (the launcher is not in the pack). The Chromium checks ran on the first
+pair, the published files are the second.
+
+| Item | Result |
+| --- | --- |
+| `index.wasm` | 37,700,666 bytes; 12,528,700 as shipped (gzip, base64), as since M5 |
+| `index.pck` | 26,739,748 bytes (18,434,864 gzipped); 24,579,820 as shipped (`PCK_SIZE preset="Web" raw=26739748 gzip=18434864 shipped=24579820 shipped_mb=23.44 budget_mb=26 parts=2`): **23.44 MiB of the 26 MiB budget** (plan §2.12: about 24.0 planned). Against `0.10.0-m10`'s 23,586,472 shipped: +993,348 bytes (0.95 MiB), the whole of Part A; against Gate A2's candidate +20 bytes (the version and the description) |
+| `PCK_SHA256` | `0f61a02bdec5fb840854e2f46cd49337f601cfe491b87cb13ad881e10e65a21e`, on all five builds |
+| Parts | **two of 12,289,910 bytes** (`PCK_PARTS parts=2 part_bytes=12289910`; the host's cap: 15,000,000) |
+| `GIANT_SHARE` | `giant_bytes=8872395 shipped=6726120 shipped_mib=6.41 files=84 cap_mb=7.6`: **6.41 MiB of the 7.6 MiB share** (1.19 to spare; 5.57 at `0.10.0-m10`); `PEOPLE_SHARE` 0 files |
+| Audio | 9.28 MiB of the pck's 25.24 MiB (37 %, 882 files) |
+| Files; test content | 2,895 packed files; `pck_files.py --check-no-test`: none; every record validates without `data/test`; `NORMALIZE_IMPORTS` 22 imported scenes, none rewritten (their ids already stable) |
+| The page's download | 37,513,762 bytes, about 37.5 MB (the engine 12.5 MB, the pck 24.6 MB, `index.js` 0.3 MB, the two audio worklets and the poster; 36.5 MB at `0.10.0-m10`; plan §2.12: at most 40.2); the launcher's note reads "About 37 MB" (the engine and the pck as shipped, which its script rounds) and its BUILD line is this build's |
+| Linux export (`Giantborn.x86_64`, 99,243,280 bytes; 98,321,032 at `0.10.0-m10`) | `godot --headless --export-release "Linux"`, 0 errors in the export's log |
+| Linux export, the 120 s soak headless (`--headless --fixed-fps 60 -- --no-user-settings --autoplay=120`; load 1.5 at its start, 15 s of wall time) | **0 errors, 0 warnings**; `AUTOPILOT_RESULT` identical in all 28 keys to Gate A2's check (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 2 loot awards, the debris pool at 10, 7,201 frames) |
+| Linux export, an assisted bot run headless (`--mode=valley --new-game --scenario=valley --bot-village=intimidate --bot-skill=novice --bot-seed=1 --bot-assist --perf --autoplay=2400`; loads 1.7 to 2.9, 199 s of wall time) | **completed** in 452.4 s of simulated time (human estimate 691.2 s), 0 deaths, 0 breaches, 0 invariant failures, 0 duplicated rewards, 0 teleports, **0 errors, 0 warnings**, one stuck moment on the causeway cleared by a side-step jump - to the tenth of a second the run of `0.9.0-m9` and `0.10.0-m10` on their exports; CPU per tick p50 2.84 / p95 4.94 / p99 6.53 ms (8 ms: met) |
+| Linux export, once under Xvfb with `--skin` (`LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1280x720x24" Giantborn.x86_64 --rendering-driver opengl3 --fixed-fps 30 --resolution 1280x720 --audio-driver Dummy -- --no-user-settings --scenario=capture_m11 --part=a --skin --capture-dir=<folder>`; loads 2.9 to 2.8, 575 s of wall time) | the M11 capture tour on the export: **complete, 163 frames** (43 beats, every one; no note), 83.9 s simulated, **0 errors, 0 warnings** by the game's count (the engine's one line at start: "Could not set V-Sync mode", Xvfb's driver); its measures: the four flinch sides, the legs' sources as P50 lists them, the grip (the handle 0.0000 x k from the fist, its axis 29.9 degrees off at most, the wrist 45.3), seven spring chains over 2,354 frames at most 0.036 degrees past a limit, the reach (the clavicle 0.08 x k, the lean 0.75 degrees, the pelvis 0.041 m). `docs/screenshots/m11/` holds ten of its frames |
+| Windows export (`Giantborn.exe`, 132,826,880 bytes, and `Giantborn.console.exe`, 188,928 bytes) | Built, 0 errors in the export's log; not launched (no Windows here) |
+| The release's final check | **CHECK PASSED** - `nice -n 19 tools/check.sh --build --slow --gate --giant-full --audio --require --strict-times` on `b36fc37`, 15:14-15:48 UTC (loads 1.9 / 1.0): scenes rebuilt with no diff, 64 chunks and 112 seams ok, `AUDIO VERIFY OK` (441 files), `GIANT VERIFY OK` (38 files, every bake pass, 236 s; the two normal maps one texel within the jitter), **344 suites, 57,657 checks, 0 failures, default 71.1 s, slow 420.6 s, gate 978.7 s** (the slow tier over plan §1.7's 400 s, within the script's 8 minutes), the soak's `AUTOPILOT_RESULT` byte-identical to Gate A2's. The first run (`9cbbf96`) failed `test_web_presets` on the page's download note (38 MB written, 37 from the script; fixed) at 68.3 / 416.7 / 1,028.8 s |
+
+**The five Chromium checks** on that build (`--build=<the first of the two builds>`, each check's own defaults and
+`--json`), each started once the 1-minute load was under 3 (the loads at each start and end are given; P53's lane
+shared the machine, and the browser raises the load itself). The strict forms (no hole at all; `--strict`) are the
+owner's on a machine with a GPU: **NOT RUN**.
+
+| Check | Result (loads at start / end; wall time) |
+| --- | --- |
+| `creator_check.mjs` (960x540) | **OK** (2.76 / 5.30; 127 s), 3 budget misses reported: the title's warm-up frame twice (48.1x and 27.1x: by design, behind "Preparing...") and **the creator's first frame after New Game, 3.59 times the median** (611.6 against 170.6 ms; 98 % of it the renderer's draw; 20 shaders and 10 programs in its first three frames; Gate A read 3.3x). The Valley's first frame after Begin 1.21x; Continue the Aldmere fixture: the world's first frame 0.46x; the shrine's creator 2.18x. One pointer-lock request inside Begin's gesture, locked. **The skin's CPU** (`--ui-probe-bench`): after the Valley 0.160 ms a frame, **0.2365 ms with secondary motion** (chains beard, hair); after the world 0.194 / **0.279**; with the shrine's two giants 0.163 / **0.2005** (plan §2.12, the Web: 0.35 and 0.45: met). The giant's texture tier `["hi"]`; 0 console errors, 0 engine warnings, 0 failed requests; the renderer's peak 1,136 MB (the guard: 3,072; §2.12: 1.4 GB) |
+| `world_start_check.mjs` (1280x720) | **OK** (2.55 / 4.93; 111 s). Play starts the engine (8.6 s) with no game arguments, no save at the title; Enter, then Ctrl+Enter in the creator: the Valley's first save 18.4 s later (`level.valley`, respawn `valley.shrine.hollow`, version `0.11.0-m11`, a look). One press of "Start in the open world" only arms it and disarms 6 s later; two presses start the engine (7.9 s) with `["--","--mode=world","--creator"]`, no save in the creator, Ctrl+Enter's first save 23 s later holds `level.world`, `world.cp.kingsgate_shelf`, stage 3, level 6, a look; 0 console errors and 0 failed requests in both; the renderer's peak 1,089 MB |
+| `audio_check.mjs` (the Valley; 640x360) | **OK** in its default form (2.99 / 5.80; 94 s): the Hollow plays `music.valley_calm`, sound 0.18 s after it; 60.3 s of music with **242 holes over 50 ms** (the longest 339.6 ms), every one while the main thread left the mixer unserved (272 long tasks, the longest 412 ms; page frames p50 216.6 ms); 8 clock references, the largest step 50.2 ms; peak live samples 37.1 MB of the 48.0 MB cap; 0 console errors, 0 failed requests; the renderer's peak 1,064 MB. The plan's criterion: **NOT MET here** |
+| `world_check.mjs` (1280x720) | **FAILED** in its default form, twice - **one hole of about 600 not placed on the main thread each time**, under the other lane's load. First run (2.74 / 7.69; 490 s): the fixture Continued with one Enter (Play to the title's music 7.4 s; Enter to control 15.7 s), the fast travel to the King's Road waystone 9.8 s with no refusal (the game's own "starting ring was not ready after 8 s" warning once; its count 0 errors, 1 warning), the 787.7 m walk in 80.7 s of game time across 3 region changes, 5 seams, 0 stuck; streaming work p50 0.9 / p99 20.5 / max 81.6 ms (a `nav_request` step), 9 loads, 3 unloads, 0 thrash, at most 15 loaded, 207.8 m of margin; **draw calls p50 42 / max 63**; 442.6 s of music with 607 holes over 50 ms, 606 placed on the main thread and **one not** (1,068.1 ms at 382.2 s; the clock's largest step 18.3 ms over 46 references); 0 console errors, 0 failed requests; the renderer's peak 1,042 MB. The re-run (2.68 / 8.43, the 5-minute load 4.73 at its start; 511 s): Enter to control 11.7 s, the fast travel 7.0 s with no warning (0 errors, 0 warnings by the game's count), the same walk and counts, streaming max 24.7 ms, draw calls p50 42 / max 63, 609 holes with **one not placed** (798.2 ms at 249.0 s; the largest clock step 27.4 ms), page frames up to 8.5 s, the renderer's peak 1,584 MB. Gate A's merge passed the same check on the same pack but for the version (604 holes, all placed; loads 2.72 at its start). The plan's criterion: **NOT MET here**. A third run on a quiet machine was not possible while P53's lane ran (FOLLOWUPS, "From the 0.11.0-m11 release (P52)") |
+| `stream_check.mjs --world --audio` (the world's default route, on the release build; 1280x720) | **OK** in its default form (2.59 / 5.98; 218 s): 397.5 m in 47.6 s of game time (Play to the walk 64.2 s, through the creator) across 4 region borders, loads 6, unloads 3, 0 thrash, at most 16 chunks loaded, 224.5 m of margin; streaming work p50 0.9 / p99 11.4 / max 15.9 ms; **draw calls p50 40 / max 60**; 148 s of music with **357 holes over 50 ms** (the longest 635.6 ms), every one placed on the main thread (358 long tasks, the longest 785 ms; page frames p50 400 / worst 800 ms); 16 clock references, the largest step 12.4 ms; peak live samples 57.1 MB of the 67.9 MB cap; 0 console errors (one more at exit, not counted), 0 failed requests; the renderer's peak 651 MB. The plan's criterion: **NOT MET here** |
+
+So on the release build four Chromium checks pass their default form and `world_check.mjs` failed its default form
+twice on a single hole each time, with every functional part of it (the Continue, the fast travel, the walk, the
+streaming, the draw calls, the memory, the console) as Gate A recorded. Against Gate A's merge (the same pack but for
+the version): the creator's first frame 3.59x (3.3x), the Valley's first frame 1.21x, Continue 0.46x, the shrine's
+creator 2.18x (2.21x); the skin with secondary motion 0.2005-0.279 ms (0.230-0.248).
+
+**After the release package: `world_check.mjs` run again with the other lane finished.** Seven more runs, each started
+with the machine otherwise idle (the check itself raises the load to 5-7), alternating the release build with Gate
+A's merge as a control:
+
+| Build | Runs | Default form |
+| --- | --- | --- |
+| The release build (0.11.0-m11) | 3 | FAILED once (one hole, 510.8 ms at 265.5 s), then OK twice (603 and 608 holes, every one placed on the main thread) |
+| Gate A's merge (before the second fix round) | 3 | OK twice (606 holes each), then FAILED once (one hole, 557.3 ms at 182.5 s) |
+
+So over the day the release build failed 3 runs of 5 and Gate A's merge 1 of 3, each failure on a single hole of about
+600 at a different time, and both builds pass and fail. This reads as the recorder's placing on a machine whose frames
+run to a second, not as a change the second fix round made; it is not proven, and the row in `FOLLOWUPS.md` stays open.
 
 ## Reference PC results (owner: NOT RUN)
 

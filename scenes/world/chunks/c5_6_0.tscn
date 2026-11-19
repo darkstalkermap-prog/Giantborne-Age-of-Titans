@@ -37,11 +37,11 @@ _surfaces = [{
 "vertex_data": PackedByteArray("zczMvs3MzEDNzMy+zczMPs3MzEDNzMy+zczMPs3MzEDNzMw+zczMvs3MzEDNzMw+zczMvjMzs0DNzMw+zczMPjMzs0DNzMw+zczMPjMzs0DNzMy+zczMvjMzs0DNzMy+MjPMzOxEYaf/3//fMrPMjDKzMrPMTMzM/1//nziOcZzMTMxMbVts2/+f/18cR1SVzMwyM05sYaf/H/8fVFWpqg==")
 }]
 
-[node name="Chunk_5_6_0" type="Node3D"]
+[node name="Chunk_5_6_0" type="Node3D" unique_id=1201095252]
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." unique_id=40503722]
 
-[node name="world_crownmarch_watch_cache" type="StaticBody3D" parent="Props" instance=ExtResource("1_960f4")]
+[node name="world_crownmarch_watch_cache" type="StaticBody3D" parent="Props" unique_id=301730255 instance=ExtResource("1_960f4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 206, 27.054, 240)
 collision_layer = 16
 collision_mask = 0
@@ -49,47 +49,47 @@ script = ExtResource("2_5fc47")
 world_id = "world.crownmarch.watch_cache"
 loot_table = "loot.cache_shepherds_watch"
 
-[node name="Shrines" type="Node3D" parent="."]
+[node name="Shrines" type="Node3D" parent="." unique_id=613473649]
 
-[node name="Waystones" type="Node3D" parent="."]
+[node name="Waystones" type="Node3D" parent="." unique_id=90299611]
 
-[node name="world_cp_shepherds_watch" type="Marker3D" parent="Waystones"]
+[node name="world_cp_shepherds_watch" type="Marker3D" parent="Waystones" unique_id=302789954]
 transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, 236, 26.032, 238)
 script = ExtResource("3_add9b")
 requires_flags = PackedStringArray()
 display_name = "Shepherd's Watch waystone"
 checkpoint_id = "world.cp.shepherds_watch"
 
-[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_shepherds_watch"]
+[node name="Stone" type="StaticBody3D" parent="Waystones/world_cp_shepherds_watch" unique_id=1913385789]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, -0.3, 5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_shepherds_watch/Stone"]
+[node name="Shape" type="CollisionShape3D" parent="Waystones/world_cp_shepherds_watch/Stone" unique_id=476087331]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_shepherds_watch/Stone" groups=["scenery"]]
+[node name="Mesh" type="MeshInstance3D" parent="Waystones/world_cp_shepherds_watch/Stone" unique_id=332837436 groups=["scenery"]]
 mesh = SubResource("ArrayMesh_2")
 
-[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_shepherds_watch" groups=["scenery"]]
+[node name="Glow" type="MeshInstance3D" parent="Waystones/world_cp_shepherds_watch" unique_id=1981273100 groups=["scenery"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, -0.3, 5)
 mesh = SubResource("ArrayMesh_3")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=1089407841]
 
-[node name="Objective" type="Node3D" parent="Markers"]
+[node name="Objective" type="Node3D" parent="Markers" unique_id=325758012]
 
-[node name="world_marker_watch_beacon" type="Marker3D" parent="Markers/Objective"]
+[node name="world_marker_watch_beacon" type="Marker3D" parent="Markers/Objective" unique_id=522723088]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 214, 26.902, 240)
 script = ExtResource("5_acc12")
 marker_id = "world.marker.watch_beacon"
 
-[node name="Triggers" type="Node3D" parent="."]
+[node name="Triggers" type="Node3D" parent="." unique_id=1540086512]
 
-[node name="Exits" type="Node3D" parent="."]
+[node name="Exits" type="Node3D" parent="." unique_id=2121581410]
 
-[node name="SizeGates" type="Node3D" parent="."]
+[node name="SizeGates" type="Node3D" parent="." unique_id=1203257994]
 
-[node name="Landmarks" type="Node3D" parent="."]
+[node name="Landmarks" type="Node3D" parent="." unique_id=7298132]
 
-[node name="NavLinks" type="Node3D" parent="."]
+[node name="NavLinks" type="Node3D" parent="." unique_id=40444214]

@@ -6,6 +6,11 @@
 // (0-1) is the creator's "Hidden by your clothing": a screen-door fade (pixels dropped in a fixed pattern),
 // so the garment stays an opaque material. RigPaint's tint and flash as on every giant shader. GiantLook
 // always binds the map (a garment without it is a problem GiantLook.validate() reports).
+//
+// The look pass II (P51; plan M11 §2.4): `kind` 0 is cloth, leather and fur as before, 1 metal (the hammered
+// detail map, a metallic response: armour from P54 on); `rim` a soft edge light for wool and fur (the cloth's
+// fuzz against the light); the darkest dyes lifted to DARK_FLOOR (linear albedo) so dark leather is not black in
+// the world's shadow; the detail maps are 256 px.
 shader_type spatial;
 render_mode cull_disabled;
 
@@ -16,6 +21,9 @@ uniform float normal_strength : hint_range(0.0, 4.0) = 0.4;
 uniform float detail_scale = 96.0;
 uniform float roughness_base : hint_range(0.0, 1.0) = 0.85;
 uniform float fade : hint_range(0.0, 1.0) = 0.0;
+uniform int kind = 0;
+uniform float rim : hint_range(0.0, 1.0) = 0.0;
+const float DARK_FLOOR = 0.035;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
@@ -25,7 +33,7 @@ varying flat float v_fp_on;
 
 void vertex() {
 	v_fp_pos = VERTEX;
-	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD));
+	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(clamp(int(COLOR.r * 16.0), 0, 15));
 }
 
 void fragment() {
@@ -42,8 +50,15 @@ void fragment() {
 	float d = t.a / 0.75;   // 1 = the dye itself
 	// the detail scales the dye and, a little, lifts or sinks it, so it also shows on the darkest dyes (P46)
 	vec3 cloth = dye_color * mix(1.0, d, detail_strength) + vec3((d - 1.0) * detail_strength * 0.07);
-	ALBEDO = max(cloth, vec3(0.0)) * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
+	cloth = max(cloth, vec3(DARK_FLOOR) * mix(vec3(1.0), dye_color / max(max(dye_color.r, dye_color.g), max(dye_color.b, 0.001)), 0.5));
+	ALBEDO = cloth * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	ROUGHNESS = clamp(roughness_base + (1.0 - d) * 0.1, 0.0, 1.0);
+	if (kind == 1) {
+		METALLIC = 0.85;
+		ROUGHNESS = clamp(0.32 + (1.0 - d) * 0.35, 0.0, 1.0);
+	}
+	RIM = rim;
+	RIM_TINT = 0.6;
 	NORMAL_MAP = t.rgb;
 	NORMAL_MAP_DEPTH = normal_strength;
 	EMISSION = flash;

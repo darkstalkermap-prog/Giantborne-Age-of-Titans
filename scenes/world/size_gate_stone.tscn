@@ -12,7 +12,7 @@ roughness = 0.95
 [sub_resource type="BoxMesh" id="BoxMesh_3"]
 size = Vector3(12, 6, 2)
 
-[node name="SizeGate" type="StaticBody3D"]
+[node name="SizeGate" type="StaticBody3D" unique_id=893905390]
 collision_layer = 256
 collision_mask = 0
 script = ExtResource("1_f30a1")
@@ -20,13 +20,13 @@ gate_id = "test.gate.stone"
 min_stage = 6
 cue = "sfx.gate.stone"
 
-[node name="Wall" type="CollisionShape3D" parent="."]
+[node name="Wall" type="CollisionShape3D" parent="." unique_id=1907493954]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=1241859380]
 
-[node name="Step" type="MeshInstance3D" parent="Visual"]
+[node name="Step" type="MeshInstance3D" parent="Visual" unique_id=1243263491]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -1)
 material_override = SubResource("StandardMaterial3D_2")
 mesh = SubResource("BoxMesh_3")

@@ -69,7 +69,9 @@ extends Node
 ## footfalls) just before AUTOPILOT_RESULT, outside it, so a run with the skin and one without compare
 ## line for line. --scenario=capture_m10 runs the M10 capture tour (CaptureM10, scripts/debug/
 ## capture_m10.gd; with a display and --skin, --write-movie for a video): AUTOPILOT_RESULT's
-## "capture_m10" key lists its frames and the beats the game refused.
+## "capture_m10" key lists its frames and the beats the game refused. P50: --scenario=capture_m11 --part=a
+## runs the M11 tour of the giant's motion (CaptureM11, scripts/debug/capture_m11.gd; each moment from the
+## side, the front and three-quarters): "capture_m11" has its frames, notes and measures.
 
 const EXIT_OK := 0
 const EXIT_ERRORS := 1
@@ -87,6 +89,7 @@ const SCENARIO_VALLEY := "valley"
 const SCENARIO_WORLD_WALK := "world_walk"
 ## P43: the M10 capture tour (CaptureM10).
 const SCENARIO_CAPTURE_M10 := "capture_m10"
+const SCENARIO_CAPTURE_M11 := "capture_m11"
 ## P38: the world bot.
 const SCENARIO_WORLD := "world"
 const WORLD_NEEDED := "--scenario=world needs the campaign: add --mode=world --new-game (or --continue)"
@@ -161,6 +164,7 @@ var _walk: ValleyWalk = null
 var _bot: ValleyBot = null
 var _world_walk: WorldWalk = null
 var _capture_m10: CaptureM10 = null
+var _capture_m11: CaptureM11 = null
 var _scenario_failures := PackedStringArray()
 
 
@@ -218,7 +222,7 @@ static func is_bot_scenario(scenario: String) -> bool:
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_VALLEY, SCENARIO_WORLD] \
+	process_mode = Node.PROCESS_MODE_ALWAYS if _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11, SCENARIO_VALLEY, SCENARIO_WORLD] \
 		else Node.PROCESS_MODE_PAUSABLE
 	# Method callables (not lambdas): they disconnect automatically when this node is freed
 	# by a sandbox reset, so counts are never duplicated.
@@ -297,7 +301,7 @@ func _physics_process(dt: float) -> void:
 		if ValleyBot.run != null and ValleyBot.run.finished:
 			_finish()
 			return
-	if get_tree().paused and _scenario != "capture" and _scenario != SCENARIO_CAPTURE_M10:
+	if get_tree().paused and not _scenario in ["capture", SCENARIO_CAPTURE_M10, SCENARIO_CAPTURE_M11]:
 		return
 	_elapsed += dt
 	_stats.ticks += 1
@@ -321,6 +325,10 @@ func _physics_process(dt: float) -> void:
 	if _scenario == SCENARIO_CAPTURE_M10:
 		if not _busy:
 			_run_capture_m10(dt)
+		return
+	if _scenario == SCENARIO_CAPTURE_M11:
+		if not _busy:
+			_run_capture_m11(dt)
 		return
 	if _scenario == SCENARIO_STRESS:
 		_run_stress()
@@ -592,9 +600,13 @@ func _finish() -> void:
 		var ww := _world_walk.result()
 		failures.append_array(ww.check_failures)
 		result["world_walk"] = ww
-	if _capture_m10 != null:
+	if _capture_m10 != null and _capture_m11 == null:
 		result["capture_m10"] = {"shots": _capture_m10.shots, "notes": _capture_m10.notes, "complete": _capture_m10.done}
 		_capture_m10.dispose()
+	if _capture_m11 != null:
+		result["capture_m11"] = {"part": CaptureM11.PART, "shots": _capture_m11.shots, "notes": _capture_m11.notes,
+			"complete": _capture_m11.done, "measures": _capture_m11.measures}
+		_capture_m11.dispose()
 	if is_bot_scenario(_scenario) and ValleyBot.run != null:
 		if ValleyBot.run.world != null:
 			# P38: the world bot's run (the campaign's, or the world's alone)
@@ -803,6 +815,20 @@ func _run_capture_m10(dt: float) -> void:
 	if _capture_m10 == null:
 		_capture_m10 = CaptureM10.new(self)
 	if _capture_m10.step(player, dt):
+		_finish()
+
+
+## P50: the M11 capture tour, part A (CaptureM11); the run ends with it. Only part A exists in this wave
+## (--part=b and c are P57's and P64's): another part ends the run with a note.
+func _run_capture_m11(dt: float) -> void:
+	if _capture_m11 == null:
+		_capture_m11 = CaptureM11.new(self)
+		for arg in OS.get_cmdline_user_args():
+			if arg.begins_with("--part=") and arg.substr(7) != CaptureM11.PART:
+				_capture_m11.notes.append("part %s is not in this build (only part a)" % arg.substr(7))
+				_capture_m11.done = true
+	if _capture_m11.step(player, dt):
+		get_tree().paused = false
 		_finish()
 
 

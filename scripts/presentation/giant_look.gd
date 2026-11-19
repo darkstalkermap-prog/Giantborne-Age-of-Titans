@@ -40,6 +40,7 @@ const SKIN_SHADER := preload("res://assets/shaders/giant_skin.gdshader")
 const HAIR_SHADER := preload("res://assets/shaders/giant_hair.gdshader")
 const EYE_SHADER := preload("res://assets/shaders/giant_eye.gdshader")
 const CLOTH_SHADER := preload("res://assets/shaders/giant_cloth.gdshader")
+const SHELL_SHADER := preload("res://assets/shaders/giant_shell.gdshader")
 
 ## The Wanderer (plan M10 §2.4), so the model draws before and without the data; Appearance.to_look of the
 ## default record equals it within 1/255 per colour channel (hex-parsed colours differ in the last bit).
@@ -82,6 +83,9 @@ const BEARD_TIP_THIN := 0.45
 ## The beard meshes whose cards are long locks (giant_hair's styles without "locks": False): only their tips
 ## thin out. The short and the braided beard's cards are too short for it (they showed gaps on the cheeks).
 const LOCK_BEARDS := ["Beard_full", "Beard_forked"]
+## How far a card's shading turns from its own facing towards the style's head-centred normal (P51; the hair
+## shader's volume_normal; braids and beads take their tube's normal whatever it is).
+const VOLUME_NORMAL := 0.75
 ## How far (model metres, stage 1) a region under clothing sinks inside.
 const HIDE_SHRINK_M := 0.03
 const REGIONS := 16
@@ -91,21 +95,29 @@ const TEX_HI := "res://assets/giant/tex_hi/"
 const DESIGN_ARRAY := "res://assets/giant/designs.png"
 ## The skin's maps: uniform -> file name in a tier folder; the hi tier holds only HI_MAPS.
 const SKIN_MAPS := {"albedo_tex": "albedo.png", "normal_tex": "normal.png", "orm_tex": "orm.png",
-	"mask_tex": "masks.png"}
+	"mask_tex": "masks.png", "curvature_tex": "curvature.png"}
 const HI_MAPS := ["normal_tex", "orm_tex"]
 const HAIR_ATLAS := "res://assets/giant/hair_atlas.png"
 const CLOTH_DETAIL := {"weave": "res://assets/giant/cloth_weave.png", "leather": "res://assets/giant/cloth_leather.png",
-	"fur": "res://assets/giant/cloth_fur.png"}
+	"fur": "res://assets/giant/cloth_fur.png", "metal": "res://assets/giant/cloth_metal.png"}
+## The skin's pre-integrated subsurface lookup (P51; the index's textures.skin_lut).
+const SKIN_LUT := "res://assets/giant/tex/skin_lut.png"
 ## The paths of the index's texture names when the index has no `textures` table (a synthetic index).
 const DEFAULT_TEXTURES := {"hair_atlas": HAIR_ATLAS, "designs": DESIGN_ARRAY, "detail_weave": CLOTH_DETAIL.weave,
-	"detail_leather": CLOTH_DETAIL.leather, "detail_fur": CLOTH_DETAIL.fur}
+	"detail_leather": CLOTH_DETAIL.leather, "detail_fur": CLOTH_DETAIL.fur, "detail_metal": CLOTH_DETAIL.metal,
+	"skin_lut": SKIN_LUT, "shell_strands": SHELL_STRANDS}
 ## The detail kind of each floor garment when its index entry names none (a garment not listed is cloth).
 const GARMENT_DETAIL := {"braies": "weave", "tunic": "weave", "jerkin": "leather", "belt": "leather",
 	"bracers": "leather", "boots": "leather", "furs": "fur"}
 ## A garment whose index entry has no dye slot ("none": the furs) keeps this colour.
 const NATURAL_DYE := Color(0.36, 0.30, 0.24)
 ## The detail map's strength per kind.
-const DETAIL_STRENGTH := {"weave": 0.28, "leather": 0.5, "fur": 0.45}
+const DETAIL_STRENGTH := {"weave": 0.28, "leather": 0.5, "fur": 0.45, "metal": 0.35}
+## The cloth shader's soft edge light per detail kind (P51: wool and fur catch the light at their edges).
+## Gate A: weave and leather take no rim. The renderer's rim light does not look at N.L, so a sliver of a fold seen
+## edge-on against the sun (the braies' crotch in the world's light) was lit as if it faced it: small bright patches.
+## Fur keeps its fuzz (its folds are soft and it reads right in the world's light).
+const CLOTH_RIM := {"weave": 0.0, "leather": 0.0, "fur": 0.45, "metal": 0.0}
 
 ## The uniforms GiantLook sets, per shader kind (validate() checks them against the shaders), and the two
 ## every giant shader declares for RigPaint.
@@ -114,10 +126,35 @@ const UNIFORMS := {
 		"beard_color", "stubble", "scalp_tint", "beard_tint", "brows", "region_tattoo", "region_paint", "region_mark",
 		"tattoo_ink", "paint_color", "mark_color", "mark_glow", "scar_layer", "scar_on", "scar_layer_b", "scar_on_b",
 		"hidden_regions", "hide_shrink"],
-	"hair": ["hair_atlas", "hair_color", "tip_color", "grey", "length", "tip_thin", "back_fade"],
-	"eye": ["iris_color", "iris_glow"],
-	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade"],
+	"hair": ["hair_atlas", "hair_color", "tip_color", "grey", "length", "tip_thin", "back_fade", "volume_normal"],
+	"eye": ["iris_color", "iris_glow", "look"],
+	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade", "kind", "rim"],
+	"shell": ["strand_tex", "mask_tex", "mask_channel", "shell_count", "shell_height_m", "comb", "hair_color", "tip_color",
+		"grey", "length"],
 }
+## The shell styles (P51; the index entry's "shell": {mask, height_m}): the layers on the desktop and on the Web
+## (probe 6: twelve read as a dense crop; six on the Web, where they cost a third more of a frame), the skin
+## mask's channel each reads (the skin's masks map: R the beard, G the scalp) and the tips' lean in the mesh's
+## own space (+Z his front: the crop combed back and down, the short beard down).
+const SHELL_LAYERS := 12
+const SHELL_LAYERS_WEB := 6
+const SHELL_MASKS := {"scalp": Vector4(0, 1, 0, 0), "beard": Vector4(1, 0, 0, 0)}
+const SHELL_COMB := {"scalp": Vector3(0.0, -0.3, -0.45), "beard": Vector3(0.0, -0.8, 0.15)}
+const SHELL_STRANDS := "res://assets/giant/shell_strands.png"
+## The share of the beard's tint the skin keeps under a shell beard.
+const SHELL_SKIN_TINT := 0.7
+## The skin shader's tone_scaled defaults (tone_shoulder, tone_chroma, tone_resat, TONE_RESAT_MAX), mirrored for
+## drawn_tone.
+const TONE_SHOULDER := 0.4
+const TONE_CHROMA := 1.0
+const TONE_RESAT := 1.0
+const TONE_RESAT_MAX := 1.25
+const META_SHELL_STACK := "giant_shell_stack"
+## The default tone's lit chest in the creator's light (measured by tests/slow/test_skin_tone_render.gd): drawn_tone
+## scales it by a tone over the bake tone. P51 graded the albedo to the approved studio render's (198, 170, 157)
+## (199, 170, 157 drawn); Gate A eased the grade so the skin holds its colour in the world's light, and the chest
+## now draws (220, 160, 131), 26/255 off the studio render (docs/systems/P51.md, "Gate A").
+const DRAWN_DEFAULT := Color(0.862745, 0.627451, 0.513725)   # (220, 160, 131)
 const PAINT_UNIFORMS := ["tint", "flash"]
 const KIND_OF_CATEGORY := {"body": "skin", "eyes": "eye", "hair": "hair", "beard": "hair", "garment": "cloth"}
 
@@ -145,6 +182,8 @@ static var forced_tier := _cli_tier()
 static var _tex_cache := {}
 static var _declared_cache := {}
 static var _sampler_cache := {}
+## The shell stacks built so far: "<source mesh id>:<layers>" -> WeakRef of the stacked ArrayMesh.
+static var _shell_stacks := {}
 
 
 static func _cli_tier() -> String:
@@ -163,8 +202,17 @@ static func shader_kind(category: String) -> String:
 	return str(KIND_OF_CATEGORY.get(category, ""))
 
 
+## The shader kind of an index mesh entry: "shell" for a shell style (P51), else its category's.
+static func mesh_kind(entry: Dictionary) -> String:
+	if typeof(entry.get("shell")) == TYPE_DICTIONARY:
+		return "shell"
+	return shader_kind(str(entry.get("category", "")))
+
+
 static func shader_for(kind: String) -> Shader:
 	match kind:
+		"shell":
+			return SHELL_SHADER
 		"skin":
 			return SKIN_SHADER
 		"hair":
@@ -396,7 +444,7 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 	var meshes := _meshes(index)
 	for id: Variant in meshes:
 		var entry: Dictionary = meshes[id] if typeof(meshes[id]) == TYPE_DICTIONARY else {}
-		var kind := shader_kind(str(entry.get("category", "")))
+		var kind := mesh_kind(entry)
 		var mi := mesh_node(root, index, str(id))
 		if kind == "" or mi == null:
 			continue
@@ -407,20 +455,39 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 				for u: String in maps:
 					_set_texture(mat, u, str(maps[u]))
 				_set_texture(mat, "design_tex", str(index.get("design_array", texture_path(index, "", "", "designs"))))
+				var lut := texture_path(index, "", "", "skin_lut")
+				_set_texture(mat, "skin_lut", lut if lut != "" else SKIN_LUT)   # an index from before P51 names none
 				set_param(mat, "bake_tone", BAKE_TONE)
 				set_param(mat, "hide_shrink", HIDE_SHRINK_M)
 				set_param(mat, "brows", 1.0)
 			"hair":
 				_set_texture(mat, "hair_atlas", texture_path(index, str(entry.get("atlas", "")), "", "hair_atlas"))
-				# the M10 gate (LC-6): a beard's tips thin strand by strand, and it fades out seen from behind
+				# the M10 gate (LC-6): a beard's tips thin strand by strand. P51: a beard no longer fades out seen
+				# from behind (its under-jaw cards are closed); the hair shades as a volume
 				var is_beard := str(entry.get("category", "")) == "beard"
 				set_param(mat, "tip_thin", BEARD_TIP_THIN if is_beard and str(id) in LOCK_BEARDS else 0.0)
-				set_param(mat, "back_fade", 1.0 if is_beard else 0.0)
+				set_param(mat, "back_fade", 0.0)
+				set_param(mat, "volume_normal", VOLUME_NORMAL)
+			"eye":
+				set_param(mat, "look", Vector2.ZERO)   # P51: ahead; SkinnedRig and the creator turn it later
+			"shell":
+				var sh: Dictionary = entry.shell
+				var channel := str(sh.get("mask", "scalp"))
+				var strands := texture_path(index, "", "", "shell_strands")
+				_set_texture(mat, "strand_tex", strands if strands != "" else SHELL_STRANDS)
+				_set_texture(mat, "mask_tex", str(maps.mask_tex))
+				set_param(mat, "mask_channel", SHELL_MASKS.get(channel, SHELL_MASKS.scalp))
+				set_param(mat, "comb", SHELL_COMB.get(channel, SHELL_COMB.scalp))
+				set_param(mat, "shell_count", shell_layers())
+				set_param(mat, "shell_height_m", float(sh.get("height_m", 0.018)))
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			"cloth":
 				var detail := _detail_kind(str(id), entry, index)
 				var ref := str(entry.get("detail", ""))
 				_set_texture(mat, "detail_tex", texture_path(index, ref, "detail_", "detail_" + detail))
 				set_param(mat, "detail_strength", float(DETAIL_STRENGTH.get(detail, 0.3)))
+				set_param(mat, "kind", 1 if detail == "metal" else 0)
+				set_param(mat, "rim", float(CLOTH_RIM.get(detail, 0.2)))
 		mi.material_override = mat
 		mats[str(id)] = mat
 	root.set_meta(META_MATERIALS, mats)
@@ -543,6 +610,10 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 		for m: Variant in (garments.get(str(g), []) if typeof(garments.get(str(g))) == TYPE_ARRAY else []):
 			shown[str(m)] = true
 	var meshes := _meshes(index)
+	# P51 (plan M11 §2.2): a model that loads its parts on demand (GiantModel) loads what the look shows and lets
+	# go of the rest; a synthetic root just shows and hides its nodes
+	var parts := root.has_method("ensure_part") and root.has_method("release_unused")
+	var shown_ids: Array = []
 	for id: Variant in meshes:
 		var entry: Dictionary = meshes[id] if typeof(meshes[id]) == TYPE_DICTIONARY else {}
 		var mi := mesh_node(root, index, str(id))
@@ -555,9 +626,19 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				mi.visible = str(id) == str(l.beard_mesh)
 			"garment":
 				mi.visible = shown.has(str(id))
+		if mi.visible:
+			shown_ids.append(str(id))
+			if parts:
+				root.call("ensure_part", str(id))
+	if parts:
+		root.call("release_unused", shown_ids)
 	var mats := _own_materials(root)
 	if mats.is_empty():
 		return
+	for id: String in shown_ids:
+		var entry: Dictionary = meshes.get(id, {}) if typeof(meshes.get(id)) == TYPE_DICTIONARY else {}
+		if mesh_kind(entry) == "shell":
+			_stack_shells(mesh_node(root, index, id))
 	var hidden := hidden_regions_mask(index, l.garments)
 	var codes := region_codes(index, l)
 	var scars := scar_uniforms(index, l.scars)
@@ -575,8 +656,12 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				set_param(mat, "hair_color", l.hair_color)
 				set_param(mat, "beard_color", l.beard_color)
 				set_param(mat, "scalp_tint", float(l.scalp_tint))
-				set_param(mat, "stubble", float(l.stubble))
-				set_param(mat, "beard_tint", float(l.beard_tint) if str(l.beard_mesh) != "" else 0.0)
+				set_param(mat, "stubble", float(l.stubble) * (SHELL_SKIN_TINT if _shell_beard(meshes, l) else 1.0))
+				# P51: under a shell beard the skin keeps only a shade of the beard's colour (the shells are the
+				# beard; the skin's hard-edged beard area showed through as a line on the cheeks)
+				var shell_beard := _shell_beard(meshes, l)
+				set_param(mat, "beard_tint", (float(l.beard_tint) * (SHELL_SKIN_TINT if shell_beard else 1.0))
+					if str(l.beard_mesh) != "" else 0.0)
 				set_param(mat, "region_tattoo", codes.tattoo)
 				set_param(mat, "region_paint", codes.paint)
 				set_param(mat, "region_mark", codes.mark)
@@ -617,6 +702,133 @@ static func set_garment_fade(root: Node, index: Dictionary, fade: float) -> void
 	for id: Variant in mats:
 		if typeof(meshes.get(id)) == TYPE_DICTIONARY and str((meshes[id] as Dictionary).get("category", "")) == "garment":
 			set_param(mats[id], "fade", clampf(fade, 0.0, 1.0))
+
+
+## The shader warm-ups (P51; GiantPreview.WarmUp): shows every shell style's node beside the look's own, so the
+## shell shader's variants compile behind the title or the loading screen and not in the creator's first frame.
+## Returns the shell styles shown. Only for a hidden warm-up model: the next apply() hides them again.
+static func warm_shells(root: Node3D, index: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	var meshes := _meshes(index)
+	for id: Variant in meshes:
+		if typeof(meshes[id]) != TYPE_DICTIONARY or mesh_kind(meshes[id]) != "shell":
+			continue
+		var mi := mesh_node(root, index, str(id))
+		if mi == null:
+			continue
+		mi.visible = true
+		if root.has_method("ensure_part"):
+			root.call("ensure_part", str(id))
+		if not _own_materials(root).is_empty():
+			_stack_shells(mi)
+		out.append(str(id))
+	return out
+
+
+## True when the look's beard is a shell style.
+static func _shell_beard(meshes: Dictionary, l: Dictionary) -> bool:
+	var e: Variant = meshes.get(str(l.beard_mesh))
+	return typeof(e) == TYPE_DICTIONARY and mesh_kind(e) == "shell"
+
+
+## The shell layers of this build (P51): SHELL_LAYERS, SHELL_LAYERS_WEB on the Web.
+static func shell_layers() -> int:
+	return SHELL_LAYERS_WEB if OS.has_feature("web") else SHELL_LAYERS
+
+
+## Stacks the shells of mesh `id` when it is a shell style shown with its skin loaded (a caller that shows a
+## style's node itself, not through apply(): the parts probe). False for any other mesh.
+static func stack_shells_of(root: Node3D, index: Dictionary, id: String) -> bool:
+	var e: Variant = _meshes(index).get(id)
+	if typeof(e) != TYPE_DICTIONARY or mesh_kind(e) != "shell" or _own_materials(root).is_empty():
+		return false
+	_stack_shells(mesh_node(root, index, id))
+	return true
+
+
+## Puts the stacked shells on a shell style's node in place of its loaded skin (once a load; the stack is shared
+## by every model that shows the style).
+static func _stack_shells(mi: MeshInstance3D) -> void:
+	if mi == null or mi.mesh == null or mi.mesh.has_meta(META_SHELL_STACK):
+		return
+	mi.mesh = shell_stack(mi.mesh, shell_layers())
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## `layers` copies of `src`'s first surface in one surface (P51; plan M11 §2.4): copy i carries i in UV2.x (the
+## shell shader lifts it), its indices offset by i copies; LODs keep a third of the layers, then the base alone.
+## Built once for a source mesh and a layer count while some model holds it.
+static func shell_stack(src: Mesh, layers: int) -> ArrayMesh:
+	var key := "%d:%d" % [src.get_instance_id(), layers]
+	var hit: Variant = _shell_stacks.get(key)
+	if hit is WeakRef and (hit as WeakRef).get_ref() != null:
+		return (hit as WeakRef).get_ref()
+	var arrays := src.surface_get_arrays(0)
+	var n := (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+	var idx: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+	if idx.is_empty():
+		for i in n:
+			idx.append(i)
+	var out := []
+	out.resize(Mesh.ARRAY_MAX)
+	for t in Mesh.ARRAY_MAX:
+		if t == Mesh.ARRAY_INDEX or t == Mesh.ARRAY_TEX_UV2 or arrays[t] == null:
+			continue
+		var a: Variant = arrays[t].duplicate()
+		for i in range(1, layers):
+			a.append_array(arrays[t])
+		out[t] = a
+	var uv2 := PackedVector2Array()
+	uv2.resize(n * layers)
+	var index := PackedInt32Array()
+	for i in layers:
+		for v in n:
+			uv2[i * n + v] = Vector2(float(i), 0.0)
+		for k in idx:
+			index.append(k + i * n)
+	out[Mesh.ARRAY_TEX_UV2] = uv2
+	out[Mesh.ARRAY_INDEX] = index
+	var lod1 := index.slice(0, idx.size() * maxi(1, layers / 3))
+	var lod2 := index.slice(0, idx.size())
+	var flags := 0
+	if src is ArrayMesh:
+		flags = (src as ArrayMesh).surface_get_format(0) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, out, [], {0.04: lod1, 0.12: lod2}, flags)
+	mesh.set_meta(META_SHELL_STACK, layers)
+	mesh.resource_name = src.resource_name + "_shells"
+	_shell_stacks[key] = weakref(mesh)
+	return mesh
+
+
+## The colour a skin tone draws at (P51; plan M11 §2.4): the creator's swatch shows it instead of the record's
+## colour. The shader draws the baked albedo times tone / bake tone in linear light; the default tone's lit chest
+## in the creator's light is DRAWN_DEFAULT, so a tone draws DRAWN_DEFAULT times the same ratio. `option` is a skin
+## option (its "color") or a Color.
+static func drawn_tone(option: Variant) -> Color:
+	var tone := BAKE_TONE
+	if option is Color:
+		tone = option
+	elif typeof(option) == TYPE_DICTIONARY and Color.html_is_valid(str((option as Dictionary).get("color", ""))):
+		tone = Color.html(str(option.color))
+	var a := DRAWN_DEFAULT.srgb_to_linear()
+	var t := tone.srgb_to_linear()
+	var b := BAKE_TONE.srgb_to_linear()
+	var r := Vector3(t.r / maxf(b.r, 0.01), t.g / maxf(b.g, 0.01), t.b / maxf(b.b, 0.01))
+	var out := tone_scaled(Vector3(a.r, a.g, a.b), r)
+	return Color(clampf(out.x, 0.0, 1.0), clampf(out.y, 0.0, 1.0), clampf(out.z, 0.0, 1.0)).linear_to_srgb()
+
+
+## The skin shader's tone_scaled (P51) with its defaults: a tone's ratio to the bake tone on a linear albedo.
+static func tone_scaled(albedo: Vector3, ratio: Vector3) -> Vector3:
+	var w := Vector3(0.2126, 0.7152, 0.0722)
+	var lr := maxf(ratio.dot(w), 1e-4)
+	var hue := Vector3.ONE.lerp(ratio / lr, TONE_CHROMA)
+	var lr2 := 1.0 + (lr - 1.0) * TONE_SHOULDER if lr > 1.0 else lr
+	var la := albedo.dot(w)
+	var sat := lerpf(1.0, TONE_RESAT_MAX, clampf(absf(1.0 - lr) * 2.0, 0.0, 1.0) * TONE_RESAT)
+	var a := (Vector3.ONE * la + (albedo - Vector3.ONE * la) * sat).max(Vector3.ZERO)
+	return a * lr2 * hue
 
 
 ## `look` with every key DEFAULT_LOOK has (its own values kept), a copy.

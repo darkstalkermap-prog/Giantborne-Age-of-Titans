@@ -18,6 +18,16 @@ shingle), with fewer points along the short ones. The M10 gate (LC-6) added the 
 grown from a random stream of their own so every other card stays as it was), made a long beard's cards
 no wider than ``BEARD_ASPECT`` of their own length and taper to a point (``BEARD_TAPER``), and lays
 the wild mane's locks under the shoulders' garments as the other long styles lie (``tuck``).
+
+The look pass II (P51; plan M11 §2.4, decision 8): a card's normal is the style's head-centred normal
+(``volume_normal``: outward from the head's centre above it, from a vertical axis through it below), which the
+hair shader blends with the card's own facing, so a style shades as one volume; the long styles gain a sparse
+third layer of thin loose strands (``LOOSE``) from a random stream of their own; braids are twisted tubes with
+bead rings (``braid_tube``; the second UV's x marks a vertex's kind: 0 a card, 1 a braid, 2 a bead), not
+herringbone cards; the crop and the short beard are shells (``SHELLS``: the scalp's or the beard's skin, cut
+from the body with its own UVs, which the game stacks into layers at load time; ``shell_cap``), still grown
+here as cards first so the random stream of every later style stays as it was; the full and the forked beard
+gain a row of cards under the jaw (``UNDER_JAW``), so a beard is there from behind.
 """
 from __future__ import annotations
 
@@ -31,13 +41,14 @@ ATLAS_COLUMNS = 4
 STYLES = {
     "Hair_long_back": {"kind": "scalp", "layers": [
         dict(n=240, length=0.17, lo=0.006, hi=0.012, npts=6, power=0.6, width=0.042, curl=0.12, wispy=0.0),
-        dict(n=190, length=0.21, lo=0.014, hi=0.024, npts=9, power=0.6, width=0.032, curl=0.2, wispy=0.3)],
-        "fringe": dict(n=110)},
+        dict(n=180, length=0.21, lo=0.014, hi=0.024, npts=9, power=0.6, width=0.032, curl=0.2, wispy=0.3)],
+        "fringe": dict(n=110), "loose": dict(n=40)},
     "Hair_crop": {"kind": "scalp", "layers": [
         dict(n=1100, length=0.065, lo=0.003, hi=0.008, npts=3, power=0.4, width=0.026, curl=0.05, wispy=0.0)]},
     "Beard_full": {"kind": "beard", "layers": [
         dict(n=190, length=0.13, lo=0.004, hi=0.008, npts=7, power=1.0, width=0.03, curl=0.1, wispy=0.0),
-        dict(n=140, length=0.16, lo=0.009, hi=0.016, npts=7, power=1.0, width=0.024, curl=0.15, wispy=0.3)]},
+        dict(n=120, length=0.16, lo=0.009, hi=0.016, npts=7, power=1.0, width=0.024, curl=0.15, wispy=0.3)],
+        "under_jaw": dict(n=40)},
     "Beard_short": {"kind": "beard", "locks": False, "layers": [
         dict(n=560, length=0.05, lo=0.002, hi=0.006, npts=3, power=1.0, width=0.022, curl=0.05, wispy=0.0)]},
 }
@@ -49,25 +60,25 @@ STYLES.update({
         dict(n=240, length=0.17, lo=0.006, hi=0.012, npts=7, power=0.6, width=0.042, curl=0.12, wispy=0.0),
         dict(n=110, length=0.19, lo=0.014, hi=0.022, npts=8, power=0.6, width=0.034, curl=0.2, wispy=0.3)],
         "braids": [dict(at="ear", side=s, length=0.27, width=0.034, step=0.017, lean=(0.10 * s, -0.42, -1.0))
-                   for s in (1.0, -1.0)], "fringe": dict(n=90)},
+                   for s in (1.0, -1.0)], "fringe": dict(n=90), "loose": dict(n=40)},
     "Hair_warrior_tail": {"kind": "scalp", "layers": [
         dict(n=430, length=0.17, lo=0.003, hi=0.007, npts=5, power=0.5, width=0.04, curl=0.04, wispy=0.0,
              grow="knot"),
         dict(n=64, length=0.30, lo=0.0, hi=0.0, npts=9, power=1.0, width=0.034, curl=0.1, wispy=0.25,
-             grow="tail")], "fringe": dict(n=90)},
+             grow="tail")], "fringe": dict(n=90), "loose": dict(n=30, length=0.12)},
     "Hair_wild_mane": {"kind": "scalp", "layers": [
         dict(n=230, length=0.2, lo=0.008, hi=0.016, npts=7, power=0.6, width=0.044, curl=0.1, wispy=0.0,
              wild=0.3, tuck=0.02),
-        dict(n=190, length=0.29, lo=0.02, hi=0.045, npts=9, power=0.6, width=0.036, curl=0.3, wispy=0.5,
-             wild=0.55, tuck=0.02)], "fringe": dict(n=50)},
+        dict(n=168, length=0.29, lo=0.02, hi=0.045, npts=9, power=0.6, width=0.036, curl=0.3, wispy=0.5,
+             wild=0.55, tuck=0.02)], "fringe": dict(n=50), "loose": dict(n=58, length=0.25, wild=0.35)},
     "Beard_braided": {"kind": "beard", "locks": False, "layers": [
         dict(n=300, length=0.1, lo=0.004, hi=0.008, npts=5, power=1.0, width=0.03, curl=0.1, wispy=0.0)],
         "braids": [dict(at="chin", side=s, length=0.17, width=0.027, step=0.014, lean=(0.05 * s, -0.16, -1.0))
                    for s in (1.0, -1.0)]},
     "Beard_forked": {"kind": "beard", "layers": [
         dict(n=190, length=0.15, lo=0.004, hi=0.008, npts=7, power=1.0, width=0.03, curl=0.1, wispy=0.0, fork=1.0),
-        dict(n=130, length=0.19, lo=0.009, hi=0.016, npts=7, power=1.0, width=0.024, curl=0.15, wispy=0.3,
-             fork=1.0)]},
+        dict(n=120, length=0.19, lo=0.009, hi=0.016, npts=7, power=1.0, width=0.024, curl=0.15, wispy=0.3,
+             fork=1.0)], "under_jaw": dict(n=36)},
 })
 # The order the styles are grown in (one random stream, seed HAIR_SEED): the floor's four first, so the
 # target's styles leave them as they were.
@@ -88,8 +99,27 @@ BEARD_TAPER = 0.85
 SCALP_TAPER = 0.55
 # tuck_shoulders: how near the skin (human-scale metres) a point must be to be laid under the garments.
 TUCK_REACH = 0.11
-# How far a card's shading normal leans from the skin's normal towards the head-centre direction.
-NORMAL_ROUND = 0.5
+# How far a card's shading normal leans from the skin's normal towards the style's head-centred normal (P46: 0.5,
+# towards the direction from the head's centre; P51: the whole way, to the volume normal of ``volume_normal``).
+NORMAL_ROUND = 1.0
+# The loose strands at the hairline and over the long styles (P51): thin, sparse strips off the volume, from a
+# random stream of their own per style (LOOSE_SEED), the wispy column.
+LOOSE = dict(n=40, length=0.19, lo=0.012, hi=0.03, npts=4, width=0.006, curl=0.0, wild=0.2)
+LOOSE_SEED = 2011
+# Styles drawn as shells (P51): the skin under the mask (a body vertex attribute) is cut out a little off the
+# skin; height_m (human scale) is how far the outermost layer stands; the game builds the layers.
+SHELLS = {"Hair_crop": dict(mask="m_scalp", channel="scalp", height=0.012, threshold=0.003, lift=0.0006),
+          "Beard_short": dict(mask="m_beard", channel="beard", height=0.010, threshold=0.003, lift=0.0005)}
+# The braids as tubes (P51): sides round a tube, the plait's three-strand relief and its twist a step, beads.
+BRAID_SIDES = 7
+BRAID_RELIEF = 0.22
+BRAID_TWIST = 1.1
+BEAD_SIDES = 8
+BEAD_RADIUS = 0.55          # of the braid's width
+BEAD_LENGTH = 0.55          # of the braid's width
+# A beard's cards under the jaw (P51): grown from the beard's lowest skin, hanging down and a little back.
+UNDER_JAW = dict(n=40, length=0.09, lo=0.004, hi=0.008, npts=4, width=0.03, curl=0.1)
+UNDER_JAW_SEED = 3011
 
 
 def log(*a):
@@ -413,10 +443,11 @@ def ribbons(surf, P, widths, col_idx, curl, centre=None, facing=None, taper=SCAL
     Lft = P - side * w * 0.5 - nrm * c
     Rgt = P + side * w * 0.5 - nrm * c
     V = np.stack([Lft, Rgt], axis=2).reshape(N, K * 2, 3)            # per card: l0 r0 l1 r1 ...
-    # The shading normal: the head's normal under the card, half-way towards the direction from the
-    # head's centre, so neighbouring cards over the jaw, the ears and the temples are lit alike (P46).
+    # The shading normal: the head's normal under the card, turned towards the style's head-centred normal
+    # (P46 half-way, towards the direction from the head's centre; P51 the whole way, to volume_normal), so
+    # neighbouring cards over the jaw, the ears and the temples are lit alike and a style shades as one volume.
     if centre is not None:
-        shade = _unit(skin_nrm * (1.0 - NORMAL_ROUND) + _unit(P - centre) * NORMAL_ROUND)
+        shade = _unit(skin_nrm * (1.0 - NORMAL_ROUND) + volume_normal(P, centre) * NORMAL_ROUND)
     else:
         shade = skin_nrm
     Nn = np.stack([shade, shade], axis=2).reshape(N, K * 2, 3)
@@ -434,6 +465,108 @@ def ribbons(surf, P, widths, col_idx, curl, centre=None, facing=None, taper=SCAL
     UV[:, :, 1, 0] = uu[:, None, 1]
     UV[:, :, :, 1] = vv[None, :, None]
     return V.reshape(-1, 3), F, UV.reshape(-1, 2), Nn.reshape(-1, 3)
+
+
+def volume_normal(P, centre):
+    """The style's head-centred normal at points P (..., 3) (P51): outward from the head's centre above it and
+    from the vertical axis through the centre below it (hanging hair and a beard face out, not down)."""
+    C = np.broadcast_to(np.asarray(centre, float), P.shape).copy()
+    C[..., 2] = np.minimum(P[..., 2], C[..., 2])
+    return _unit(P - C)
+
+
+def grow_under_jaw(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=5):
+    """A row of beard cards under the jaw (P51): rooted on the beard's skin below the chin's height, hanging
+    down and a little back, so the beard has a body seen from behind and from below."""
+    m = np.clip(surf.attr["m_beard"], 0.0, 1.0) * (surf.V[:, 2] < L["chin"] + 0.01 * hs * S)
+    roots, nrm, mv, _ = surf.sample(m, n, rng, power=1.0)
+    roots += nrm * 0.0003 * S
+
+    def flow(P, nn, s):
+        return _unit(np.array([0.0, 0.25, -1.0]) + nn * 0.2 * (1.0 - s))
+
+    Lb = length * S * (0.7 + 0.5 * rng.random(len(roots)))
+    lift = 0.3 + 0.2 * rng.random(len(roots))
+    layer = (layer_lo + (layer_hi - layer_lo) * rng.random(len(roots))) * hs * S
+    P = grow(surf, roots, nrm, Lb, npts, flow, lift, 0.5, 0.7, 0.9, 0.001 * S, layer)
+    return post_collide(surf, P, 0.0012 * S)
+
+
+def braid_tube(path, width, S, centre):
+    """A braid as a twisted tube along ``path`` (K, 3) (P51): BRAID_SIDES round, its radius rippling with the
+    three strands of a plait (BRAID_RELIEF) that turn BRAID_TWIST radians a ring, narrowing towards the tie, and
+    a bead ring at its tie and one at two fifths. Returns V, F (quads), UV, normals and UV2 (1 the tube, 2 the
+    beads); the tube's u runs round the atlas's dense column, its v from the root (1) to the tie (0)."""
+    K = len(path)
+    w = width * S
+    T = np.gradient(path, axis=0)
+    T /= np.linalg.norm(T, axis=1, keepdims=True) + 1e-12
+    out0 = volume_normal(path[0], centre)
+    Vs, Fs, UVs, Ns, U2 = [], [], [], [], []
+    frames = []
+    ref = _unit(out0 - T[0] * float(out0 @ T[0]))
+    for i in range(K):
+        x = _unit(ref - T[i] * float(ref @ T[i]))
+        y = np.cross(T[i], x)
+        frames.append((x, y))
+        ref = x
+    ring = BRAID_SIDES + 1
+    for i in range(K):
+        x, y = frames[i]
+        thin = 1.0 - 0.45 * (i / (K - 1)) ** 2
+        for j in range(ring):
+            a = 2.0 * np.pi * j / BRAID_SIDES
+            rel = 1.0 + BRAID_RELIEF * np.cos(3.0 * a + BRAID_TWIST * i)
+            d = np.cos(a) * x + np.sin(a) * y
+            Vs.append(path[i] + d * 0.5 * w * thin * rel)
+            Ns.append(d)
+            UVs.append((0.004 + 0.242 * j / BRAID_SIDES, 1.0 - i / (K - 1)))
+            U2.append((1.0, 0.0))
+    for i in range(K - 1):
+        for j in range(BRAID_SIDES):
+            a = i * ring + j
+            Fs.append((a, a + ring, a + ring + 1, a + 1))
+    # beads: short rings round the tube
+    for at in (int(round(0.4 * (K - 1))), K - 2):
+        base = len(Vs)
+        x, y = frames[at]
+        r = BEAD_RADIUS * w
+        for e, off in enumerate((-0.5, 0.5)):
+            c = path[at] + T[at] * off * BEAD_LENGTH * w
+            for j in range(BEAD_SIDES + 1):
+                a = 2.0 * np.pi * j / BEAD_SIDES
+                d = np.cos(a) * x + np.sin(a) * y
+                Vs.append(c + d * r)
+                Ns.append(_unit(d + T[at] * off * 0.6))
+                UVs.append((0.004 + 0.242 * j / BEAD_SIDES, 1.0 - at / (K - 1)))
+                U2.append((2.0, 0.0))
+        for j in range(BEAD_SIDES):
+            a = base + j
+            Fs.append((a, a + BEAD_SIDES + 1, a + BEAD_SIDES + 2, a + 1))
+    return np.asarray(Vs), np.asarray(Fs), np.asarray(UVs), np.asarray(Ns), np.asarray(U2)
+
+
+def shell_cap(A, mask, S, threshold, lift):
+    """The skin a shell style grows on (P51): the body faces whose vertices' mean ``mask`` (per body vertex) is
+    above ``threshold``, lifted ``lift`` (human-scale metres) along the skin's normal, with the body's own UVs
+    (the game reads the hair's density from the skin's mask map there). Returns (arrays for make_object, the
+    body vertex of each cap vertex)."""
+    faces = [f for f in A["faces"] if float(np.mean(mask[list(f)])) > threshold]
+    keep = sorted({v for f in faces for v in f})
+    remap = {v: i for i, v in enumerate(keep)}
+    ids = np.asarray(keep, np.int64)
+    V = A["V"][ids] + A["vnormal"][ids] * lift * S
+    face_index = {tuple(f): k for k, f in enumerate(A["faces"])}
+    corner_uv = [A["corner_uv"][face_index[tuple(f)]] for f in faces]
+    out = {"V": V, "faces": [tuple(remap[v] for v in f) for f in faces], "corner_uv": corner_uv,
+           "corner_normal": [[tuple(A["vnormal"][v]) for v in f] for f in faces],
+           "groups": {"head": np.ones(len(ids))}}
+    return out, ids
+
+
+# The vertices of each style that belong to its braids (tubes and beads), set by build_styles (P51; the
+# export's skin hangs them whole from where they leave the head).
+BRAID_MASKS = {}
 
 
 def braid_start(surf, L, S, hs, at, side):
@@ -476,7 +609,7 @@ def braid_guides(surf, S, start, lean, length, width, step):
     return np.array(lobes), np.array(facing), path[None, :, :]
 
 
-def card_object(name, V, F, UV, Nn, coll, rig, mat_name):
+def card_object(name, V, F, UV, Nn, coll, rig, mat_name, UV2=None):
     import giant_body as gb
     me = bpy.data.meshes.new(name)
     me.from_pydata(V.tolist(), [], F.tolist())
@@ -485,6 +618,11 @@ def card_object(name, V, F, UV, Nn, coll, rig, mat_name):
     lv = np.empty(len(me.loops), np.int64)
     me.loops.foreach_get("vertex_index", lv)
     uvl.data.foreach_set("uv", UV[lv].astype(np.float32).ravel())
+    if UV2 is not None:
+        # P51: the vertex's kind (0 a card, 1 a braid's tube, 2 a bead) for the hair shader; a style without
+        # braids carries no second UV (the shader reads 0)
+        uv2 = me.uv_layers.new(name="UV2")
+        uv2.data.foreach_set("uv", UV2[lv].astype(np.float32).ravel())
     me.polygons.foreach_set("use_smooth", np.ones(len(me.polygons), dtype=bool))
     me.normals_split_custom_set_from_vertices(Nn.tolist())
     ob = bpy.data.objects.new(name, me)
@@ -555,21 +693,70 @@ def build_styles(body, rig, coll, bd, S):
             Ns.append(Nn)
             off += len(V)
             cards += n
+        if "loose" in style:
+            # P51: thin loose strands off the style's volume, from a random stream of their own
+            lo = dict(LOOSE, **style["loose"])
+            lrng = np.random.default_rng([LOOSE_SEED, STYLE_ORDER.index(mesh_id)])
+            P = grow_scalp(surf, L, S, hs, lrng, lo["n"], lo["length"], lo["lo"], lo["hi"], npts=lo["npts"],
+                           power=0.6, wild=lo["wild"])
+            # only strands that hang back or down over the style: none falls forward over the face
+            back = ((P[:, -1, 1] - P[:, 0, 1] > -0.005 * S) & (P[:, 1:, 2] < P[:, :1, 2] + 0.004 * S).all(axis=1)
+                    & (P[:, 0, 1] > centre[1] - 0.02 * S))
+            P = P[back]
+            n = len(P)
+            width = lo["width"] * S * (0.7 + 0.6 * lrng.random(n))
+            V, F, UV, Nn = ribbons(surf, P, width, np.full(n, 3), np.full(n, lo["curl"]), centre, taper=0.8)
+            Vs.append(V)
+            Fs.append(F + off)
+            UVs.append(UV)
+            Ns.append(Nn)
+            off += len(V)
+            cards += n
+        if "under_jaw" in style:
+            # P51: a row of cards under the jaw, so a beard is there from behind and from below
+            uj = dict(UNDER_JAW, **style["under_jaw"])
+            urng = np.random.default_rng([UNDER_JAW_SEED, STYLE_ORDER.index(mesh_id)])
+            P = grow_under_jaw(surf, L, S, hs, urng, uj["n"], uj["length"], uj["lo"], uj["hi"], npts=uj["npts"])
+            n = len(P)
+            along = np.linalg.norm(np.diff(P, axis=1), axis=2).sum(axis=1)
+            width = np.minimum(uj["width"] * S * (0.8 + 0.4 * urng.random(n)), BEARD_ASPECT * along)
+            V, F, UV, Nn = ribbons(surf, P, width, urng.integers(0, 3, n), np.full(n, uj["curl"]), centre,
+                                   taper=BEARD_TAPER)
+            Vs.append(V)
+            Fs.append(F + off)
+            UVs.append(UV)
+            Ns.append(Nn)
+            off += len(V)
+            cards += n
+        card_verts = off
+        U2s = []
         for br in style.get("braids", ()):
+            # P51: a twisted tube with beads along the braid's path (it was herringbone cards)
             start = braid_start(surf, L, S, hs, br["at"], br["side"])
-            lobes, facing, core = braid_guides(surf, S, start, br["lean"], br["length"], br["width"], br["step"])
-            for guides, face, width, col in ((lobes, facing, br["width"] * 0.62, 2), (core, None, br["width"] * 0.8, 0)):
-                n = len(guides)
-                V, F, UV, Nn = ribbons(surf, guides, np.full(n, width * S), np.full(n, col), np.zeros(n), centre, face)
-                Vs.append(V)
-                Fs.append(F + off)
-                UVs.append(UV)
-                Ns.append(Nn)
-                off += len(V)
-                cards += n
+            _lobes, _facing, core = braid_guides(surf, S, start, br["lean"], br["length"], br["width"], br["step"])
+            V, F, UV, Nn, u2 = braid_tube(core[0], br["width"], S, centre)
+            U2s.append(u2)
+            Vs.append(V)
+            Fs.append(F + off)
+            UVs.append(UV)
+            Ns.append(Nn)
+            off += len(V)
+            cards += 1
+        if mesh_id in SHELLS:
+            # P51: a shell style; its cards were grown above only to keep the random stream of the later styles
+            out[mesh_id] = (None, 0)
+            log(f"{mesh_id}: a shell style (its skin is cut in export_game)")
+            continue
+        V_all = np.concatenate(Vs)
+        UV2 = None
+        if off > card_verts:
+            kinds = np.zeros((off, 2))
+            kinds[card_verts:] = np.concatenate(U2s)
+            UV2 = kinds
+        BRAID_MASKS[mesh_id] = np.arange(off) >= card_verts
         mat = "giant_hair" if style["kind"] == "scalp" else "giant_beard"
-        ob = card_object(mesh_id, np.concatenate(Vs), np.concatenate(Fs), np.concatenate(UVs),
-                         np.concatenate(Ns), coll, rig, mat)
+        ob = card_object(mesh_id, V_all, np.concatenate(Fs), np.concatenate(UVs),
+                         np.concatenate(Ns), coll, rig, mat, UV2)
         out[mesh_id] = (ob, cards)
         log(f"{mesh_id}: {cards} cards, {len(ob.data.polygons) * 2} triangles")
     return out

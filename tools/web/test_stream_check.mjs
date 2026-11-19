@@ -8,11 +8,19 @@
 // AUTOPILOT_RESULT. By mode (stream_check's --route=M, which the game gets as --route=M):
 //   * music: the walk crosses a border with no gap in the music: the recorder arms at the walk's
 //     start, disarms at its end, the criterion is MET across one border and the check ends a bare OK;
-//   * stutter: the main thread busy for 150 ms three times during the walk: holes over 50 ms that
+//   * stutter: the main thread busy for 400 ms three times during the walk: holes over 50 ms that
 //     the main thread explains - the default check passes but ends "OK (the plan's audio criterion
 //     NOT MET ...)", --strict fails, and audio_check.mjs --replay places the saved trace's holes;
 //   * noborder: the walk stays in one region's music: the check fails (no border crossed);
 //   * nomusic: no zone music ever plays: the check fails (the recorder never armed).
+// The stand-in holds what the real mixer holds (P49): the no-threads build's stream buffer is 8,192
+// frames, 185.8 ms (output_latency.web 200), so the stub sounds for 185.8 ms after the main thread's
+// last answer. Before P49 it held 20 ms: the main thread's ordinary pauses in a headless browser
+// (a quiet walk read a longest silence of 29-61 ms against the 50 ms rule) failed the "music" and
+// "noborder" cases about one run in three. A pause must now pass 235 ms to cross the rule, the slow
+// frames of "stutter" are 400 ms (holes of about 210 ms), and "music" also checks the margin itself:
+// its quiet walk's longest silence stays under half the rule. Ten consecutive passes were its
+// acceptance (docs/PERFORMANCE.md, "The Web tools' own tests").
 // Before the M7 gate stream_check.mjs had no recorder and audio_check.mjs could not start in the
 // world (it waits for the title's music): the gate's world audio check could not be run.
 // Prints TEST_STREAM_CHECK with the count of checks and failures; exits 1 on a failure.
@@ -47,7 +55,9 @@ const STUB = `<!doctype html>
   const mode = (args.find((a) => a.startsWith('--route=')) || '--route=music').split('=')[1];
   // The main thread drawing a slow frame.
   const busy = (ms) => { const t = performance.now(); while (performance.now() - t < ms) { /* busy */ } };
-  // The mixer's stand-in: asks the main thread for every quantum and sounds only while it answers.
+  // The mixer's stand-in: asks the main thread for every quantum and sounds while its buffer lasts -
+  // HOLD_S after the main thread's last answer (the real stream buffer: 8,192 frames at 44.1 kHz).
+  const HOLD_S = 0.1858;
   const DRIVER = \`
 class StubDriver extends AudioWorkletProcessor {
   constructor() {
@@ -58,7 +68,7 @@ class StubDriver extends AudioWorkletProcessor {
   }
   process(inputs, outputs) {
     this.port.postMessage({ cmd: 'read' });
-    const on = this.fed >= 0 && currentTime - this.fed < 0.02;
+    const on = this.fed >= 0 && currentTime - this.fed < \${HOLD_S};
     const out = outputs[0];
     for (let i = 0; i < out[0].length; i++) {
       const v = on ? 0.1 * Math.sin(this.phase) : 0;
@@ -85,7 +95,7 @@ registerProcessor('godot-processor', StubDriver);\`;
       setTimeout(() => say('AUDIO_MUSIC ' + JSON.stringify({ set: 'music.region_drowned_steps', state: 'zone' })), 2600);
     }
     // Three slow frames inside the walk, none across its start or end.
-    if (mode === 'stutter') for (const at of [1700, 2700, 3700]) setTimeout(() => busy(150), at);
+    if (mode === 'stutter') for (const at of [1700, 2700, 3700]) setTimeout(() => busy(400), at);
     setTimeout(() => {
       say('WORLD_WALK_END ' + JSON.stringify({ finished: true, ticks: 240 }));
       setTimeout(() => {
@@ -149,11 +159,12 @@ console.log('music: the walk crosses a region border with no gap in the music');
   check(a.music && a.music.seconds >= 2.7 && a.music.seconds <= 5, `it recorded the walk, from its start to its end (${a.music && a.music.seconds} s)`);
   check(a.auto && a.auto.armed === true && a.auto.ended === true, 'the recorder armed at the walk\'s start and disarmed at its end');
   check(a.level === 'level.world' && a.registered_s > 100, `the cap is the world's (${a.registered_s} s registered)`);
+  check(a.music && a.music.longest_silence_ms <= 25, `the quiet walk's longest silence is under half the rule (${a.music && a.music.longest_silence_ms} ms; P49: the stub's margin)`);
   check(r.rep.url_args && r.rep.url_args.includes('--audio-stats') && r.rep.url_args.includes('--mode=world'),
     'the game gets --audio-stats and the world\'s arguments');
 }
 
-console.log('stutter: three slow frames of 150 ms leave the stand-in mixer unserved during the walk');
+console.log('stutter: three slow frames of 400 ms leave the stand-in mixer unserved during the walk');
 {
   const r = checkRun('stutter');
   const a = r.rep.audio || {};
