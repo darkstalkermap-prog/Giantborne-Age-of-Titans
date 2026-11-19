@@ -2611,6 +2611,78 @@ world, the best of five batches of 200, the giant idle:
 print byte-identical `AUTOPILOT_RESULT` (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 ticks,
 0 errors: wave-29's); SKIN_STATS 7 flinches, 7,203 secondary-motion frames, 9 teleports the springs reset on.
 
+### M11 W30: the merged measurements (P50 and P51)
+
+The W30 merge (P51, then P50, on the tag `wave-29`; 18-19 November 2026): P51's look pass II (shells, braided
+tubes and loose strands, the graded skin with the subsurface lookup, the eyes, scars and cloth) with P50's motion
+(the legs' new sources, flinches, the springs, the reach, first person). Container as above (4 shared CPUs, no
+GPU, a debug build); loads given where above 2.
+
+**The check** (`tools/check.sh --slow --gate --giant --web-tools --require --strict-times`; the gate tier because
+W30 is Part A's last wave, plan §1.2): **CHECK PASSED** - the giant pipeline's 32 tests, `--verify --skip-bake`
+OK (38 files bit-exact), `GIANT_ESTIMATE` 6.48 MiB of 7.6, the launcher's 345 checks and the clock's 18;
+**343 suites, 57,520 checks, 0 failures**; **default 60.0 s, slow 361.0 s, gate 794.6 s** (plan §2.12: 72, 400
+and 50 minutes); the 120 s soak 7,201 ticks, 0 errors. The first run (with `--build`, which left the tree
+unchanged) read default 66.6 s, slow 377.8 s, gate 866.7 s. No suite changed tier: the slow tier is under 400 with
+`test_hair_render` (22.5 s, over P51's 5 s cap; FOLLOWUPS) in it. **The seeded soak** prints the same
+`AUTOPILOT_RESULT` as the W29 merge in all 28 keys (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks,
+7,201 ticks, 0 errors).
+
+**P51's deviations from plan §2.4, measured merged:**
+
+| Item | Plan | As built | Cost |
+| --- | --- | --- | --- |
+| The skin's curvature | in `masks.png`'s spare alpha | its own map, `tex/curvature.png` 256 px (the alpha spoiled the masks' RGB under VRAM compression: the brows' tint drew blocks on the forehead) | 22 KB in the repository, about 25 KB shipped |
+| Shell layers on the Web | twelve (probe 6) | `SHELL_LAYERS_WEB` 6 (the desktop 12); one draw call a style either way, stacked at load time, no shipped bytes for the layers, no shadow | the crop's stack about 0.13 MB of mesh on the Web, 0.26 on the desktop |
+
+**The Web export** (`tools/build_web.sh`, `Web`, budget 26): `PCK_SIZE raw=26723540 gzip=18421930
+shipped=24562576` (**23.42 MiB of 26**) in **two parts** of 12,281,288; `GIANT_SHARE` 8,868,521 raw,
+**6,729,000 shipped (6.42 MiB of 7.6)**, 84 files; `PEOPLE_SHARE` 0 files;
+`PCK_SHA256 bf14554bcd265f9d44270ba99fe576de0089d47ddc39d8a10d5b4e50afc1a893`. Against the W29 merge: +0.16 MiB,
+of it the giant's share +0.10 (plan §2.12's Part A arithmetic for P51's items: about 0.8). `Web (test)`:
+25,650,164 shipped (24.46 MiB), `PCK_SHA256 dfd13b5c...47c03890f`.
+
+**The five Chromium checks, default forms** (each started at a 1-minute load under 3; no re-run was needed):
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `creator_check.mjs` | OK, 3 misses reported | the creator after New Game **3.28x** (544.5 ms against 165.8; 20 shaders and 10 programs in its first three frames); the shrine's creator 1.74x; the title's warm-up frames 30-53x (by design); renderer peak 1,005 MB |
+| `world_start_check.mjs` | OK | peak 939 MB |
+| `audio_check.mjs` | OK | 7 references, largest step 5.3 ms; criterion NOT MET (274 holes, all on the main thread); peak 971 MB |
+| `world_check.mjs` | OK | 39 references, largest step 27.3 ms; criterion NOT MET (605 holes, all on the main thread); peak 959 MB |
+| `stream_check.mjs --world --audio` (`Web (test)`) | OK | 14 references, largest step 32.2 ms; criterion NOT MET (356 holes, all on the main thread); peak 683 MB |
+
+0 console errors and 0 failed requests in every run.
+
+**The skin's CPU a frame** (plan §2.12 with secondary motion: native at most 0.12 ms, Web at most 0.45).
+`--ui-probe-bench` now also times the loop with the skeleton in manual mode, advanced and updated at once, so every
+modifier runs - the brain's, the springs and `SecondaryMotion`'s limits - and `skeleton_updated`'s handlers (the
+hair's sway) with them; before, it called the brain's modifier by hand and left the springs out. The same New Game
+tour (the Wanderer: the hair and beard chains), natively under Xvfb at 960x540 and in `creator_check.mjs`:
+
+| | 0.10.0-m10 (same loop, same machine) | W29 merge (Web) | The merge: the M10 loop | The merge: every modifier |
+| --- | --- | --- | --- | --- |
+| Native, two runs | 0.075 / 0.079 ms | - | 0.178 / 0.181 ms | **0.291 / 0.292 ms** - **missed** (0.12) |
+| Web (`creator_check`), three readings | - | 0.11-0.15 ms | 0.25-0.29 ms | **0.39-0.42 ms** - met, with 0.03-0.06 to spare (0.45) |
+
+Natively, by part (a test world, headless, best of five batches of 200; the Wanderer / the seven-chain look):
+`_drive_tree` 0.034 / 0.032 ms, the tree's advance 0.069 / 0.068, the brain's modifier 0.048 / 0.047, the limits
+0.007 / 0.020, the hair's sway (P46's, every pose update) 0.061 / 0.060, the skeleton's update with every modifier
+0.142 / 0.162 (0.138 / 0.152 without the springs). P50's own reading (0.105-0.109 ms) timed a smaller loop; the
+rise over 0.10 is the tree's larger chain of sources and the hand's turn onto the handle, not the springs
+(0.004-0.010 ms). FOLLOWUPS.
+
+**Draw calls** (Xvfb, llvmpipe at 2 threads, `--skin`, 640x360; p50 / p95 / p99 / max): the Valley walk `medium`
+213 / 307 / 349 / **379**, `low` 94 / 139 / 143 / **152**; the stress arena `medium` 312 / 551 / 617 / **642**,
+`low` 75 / 126 / 147 / **153** - the W29 merge's counts exactly (the default look's meshes are unchanged; a shell
+style is one draw call and casts no shadow). `low` at most 250: met; `medium` 330 and 620: missed by 49 and 22
+(P60's row).
+
+**The giant's mesh buffers** (`giant_parts_probe`, the renderer's measure; counted in brackets): the body, eyes and
+proxy **1.11 MB**; the default look **2.15 MB** (1.81); the fullest look **2.60 MB** (2.13; eight parts); every
+part 5.28 MB (W29: 5.83). Plan §2.12: at most 4.5 MB in play - **met**. A part's first load (the braided hair):
+1.9 ms read and bound, 23.6 ms to its first frame.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
