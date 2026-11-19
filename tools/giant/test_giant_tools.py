@@ -1025,15 +1025,17 @@ class CatalogueTest(unittest.TestCase):
                 continue
             m = self._mesh(e["part_path"].replace("res://", ""))
             self.assertTrue(set(m["names"]) <= set(self.FACE_KEYS) and {"jaw", "chin"} <= set(m["names"]), mid)
+            self.assertNotIn("brow", m["names"], "%s: the brow keeps off the beard" % mid)
             self.assertTrue(all(a == ["POSITION"] for a in m["target_attrs"]), "%s: positions only" % mid)
             roots = m["UV"][:, 1] <= 1e-6
             if m["UV2"] is not None:
                 roots &= m["UV2"][:, 0] < 0.5            # the cards' roots (a braid hangs off the skin from its start)
             R = m["P"][roots]
             _d, near = cKDTree(head["P"]).query(R)
-            for k in m["names"]:
+            for k in head["names"]:
+                # every head key: a key the beard does not carry must not move its roots' skin (the keys keep off it)
                 hk = head["targets"][head["names"].index(k)][near]
-                bk = m["targets"][m["names"].index(k)][roots]
+                bk = m["targets"][m["names"].index(k)][roots] if k in m["names"] else np.zeros_like(hk)
                 # a root moves with the skin under it: its offset from the nearest skin vertex changes by w (bk - hk)
                 worst = float(np.max(np.linalg.norm(bk - hk, axis=1)))
                 self.assertLessEqual(worst, 0.002, "%s: %s at -1 or +1 moves a root %.4f m off the skin" % (mid, k, worst))

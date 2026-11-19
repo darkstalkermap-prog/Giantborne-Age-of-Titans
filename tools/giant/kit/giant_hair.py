@@ -686,7 +686,7 @@ def shell_cap(A, mask, S, threshold, lift):
 # The vertices of each style that belong to its braids (tubes and beads), set by build_styles (P51; the
 # export's skin hangs them whole from where they leave the head).
 BRAID_MASKS = {}
-# Each style's fringe as vertex ranges (P56: the hairline strips, which take the face keys).
+# Each style's fringe as vertex ranges (P56: the hairline strips; the face keys keep off the scalp, so they take none).
 STRIP_RANGES = {}
 
 
