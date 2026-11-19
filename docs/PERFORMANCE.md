@@ -2739,14 +2739,16 @@ the numbers are indicative. The evidence (the builds' logs, the built files, eac
 
 **The budget from the version.** `env -u XDG_DATA_HOME nice -n 19 tools/build_web.sh --out=<folder>`, no
 `--budget-mb`: the script reads `-m11` and applies the 26 MiB budget and the giant's 7.6 MiB share (plan §2.12).
-Built three times (a trial before the launcher's download note was set, then twice): **the same `PCK_SHA256` every
-time**, and the last two builds equal in every file.
+Built five times (a trial before the launcher's BUILD line was set, two builds, and two more after the launcher's
+static download note was corrected from 38 to 37 MB): **the same `PCK_SHA256` every time**; each pair equal in every
+file, the pairs differing only in `play.html` (the launcher is not in the pack). The Chromium checks ran on the first
+pair, the published files are the second.
 
 | Item | Result |
 | --- | --- |
 | `index.wasm` | 37,700,666 bytes; 12,528,700 as shipped (gzip, base64), as since M5 |
 | `index.pck` | 26,739,748 bytes (18,434,864 gzipped); 24,579,820 as shipped (`PCK_SIZE preset="Web" raw=26739748 gzip=18434864 shipped=24579820 shipped_mb=23.44 budget_mb=26 parts=2`): **23.44 MiB of the 26 MiB budget** (plan §2.12: about 24.0 planned). Against `0.10.0-m10`'s 23,586,472 shipped: +993,348 bytes (0.95 MiB), the whole of Part A; against Gate A2's candidate +20 bytes (the version and the description) |
-| `PCK_SHA256` | `0f61a02bdec5fb840854e2f46cd49337f601cfe491b87cb13ad881e10e65a21e`, on both builds (and the trial) |
+| `PCK_SHA256` | `0f61a02bdec5fb840854e2f46cd49337f601cfe491b87cb13ad881e10e65a21e`, on all five builds |
 | Parts | **two of 12,289,910 bytes** (`PCK_PARTS parts=2 part_bytes=12289910`; the host's cap: 15,000,000) |
 | `GIANT_SHARE` | `giant_bytes=8872395 shipped=6726120 shipped_mib=6.41 files=84 cap_mb=7.6`: **6.41 MiB of the 7.6 MiB share** (1.19 to spare; 5.57 at `0.10.0-m10`); `PEOPLE_SHARE` 0 files |
 | Audio | 9.28 MiB of the pck's 25.24 MiB (37 %, 882 files) |
@@ -2757,7 +2759,7 @@ time**, and the last two builds equal in every file.
 | Linux export, an assisted bot run headless (`--mode=valley --new-game --scenario=valley --bot-village=intimidate --bot-skill=novice --bot-seed=1 --bot-assist --perf --autoplay=2400`; loads 1.7 to 2.9, 199 s of wall time) | **completed** in 452.4 s of simulated time (human estimate 691.2 s), 0 deaths, 0 breaches, 0 invariant failures, 0 duplicated rewards, 0 teleports, **0 errors, 0 warnings**, one stuck moment on the causeway cleared by a side-step jump - to the tenth of a second the run of `0.9.0-m9` and `0.10.0-m10` on their exports; CPU per tick p50 2.84 / p95 4.94 / p99 6.53 ms (8 ms: met) |
 | Linux export, once under Xvfb with `--skin` (`LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1280x720x24" Giantborn.x86_64 --rendering-driver opengl3 --fixed-fps 30 --resolution 1280x720 --audio-driver Dummy -- --no-user-settings --scenario=capture_m11 --part=a --skin --capture-dir=<folder>`; loads 2.9 to 2.8, 575 s of wall time) | the M11 capture tour on the export: **complete, 163 frames** (43 beats, every one; no note), 83.9 s simulated, **0 errors, 0 warnings** by the game's count (the engine's one line at start: "Could not set V-Sync mode", Xvfb's driver); its measures: the four flinch sides, the legs' sources as P50 lists them, the grip (the handle 0.0000 x k from the fist, its axis 29.9 degrees off at most, the wrist 45.3), seven spring chains over 2,354 frames at most 0.036 degrees past a limit, the reach (the clavicle 0.08 x k, the lean 0.75 degrees, the pelvis 0.041 m). `docs/screenshots/m11/` holds ten of its frames |
 | Windows export (`Giantborn.exe`, 132,826,880 bytes, and `Giantborn.console.exe`, 188,928 bytes) | Built, 0 errors in the export's log; not launched (no Windows here) |
-| The release's final check | **Pending** at this commit: the final check runs on it, and its numbers are recorded in the next commit |
+| The release's final check | **CHECK PASSED** - `nice -n 19 tools/check.sh --build --slow --gate --giant-full --audio --require --strict-times` on `b36fc37`, 15:14-15:48 UTC (loads 1.9 / 1.0): scenes rebuilt with no diff, 64 chunks and 112 seams ok, `AUDIO VERIFY OK` (441 files), `GIANT VERIFY OK` (38 files, every bake pass, 236 s; the two normal maps one texel within the jitter), **344 suites, 57,657 checks, 0 failures, default 71.1 s, slow 420.6 s, gate 978.7 s** (the slow tier over plan §1.7's 400 s, within the script's 8 minutes), the soak's `AUTOPILOT_RESULT` byte-identical to Gate A2's. The first run (`9cbbf96`) failed `test_web_presets` on the page's download note (38 MB written, 37 from the script; fixed) at 68.3 / 416.7 / 1,028.8 s |
 
 **The five Chromium checks** on that build (`--build=<the first of the two builds>`, each check's own defaults and
 `--json`), each started once the 1-minute load was under 3 (the loads at each start and end are given; P53's lane
