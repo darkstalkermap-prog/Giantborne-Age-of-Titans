@@ -4,13 +4,13 @@
 	"type": "appearance_set",
 	"category": "outfit",
 	"display_name": "Clothing",
-	"description": "P42 (plan M10 §2.3): the outfits (the floor's four and the look pass's two, P46) over the garments braies, belt, tunic, jerkin, bracers, boots, furs, cape, leg_wraps and pauldron (giant index garment ids); covers lists the design regions the garments hide.",
+	"description": "P42 (plan M10 §2.3): the outfits (the floor's four and the look pass's two, P46). P53 (plan M11 §2.5, §2.6): an outfit is a starting point that fills the garment slots (slots: slot -> a garment of set_garment.json; the slots it leaves out are empty); garments is M10's list of giant index garment ids, kept for the migration of version-1 looks and checked against the slots; covers (the design regions the garments hide) is M10's summary, the garments' own covers decide.",
 	"options": [
-		{"key": "wanderer", "name": "Wanderer's braies", "garments": ["braies", "belt"], "covers": [], "default": true},
-		{"key": "hunter", "name": "Hunter's furs", "garments": ["braies", "belt", "furs", "bracers"], "covers": []},
-		{"key": "warrior", "name": "Warrior's tunic", "garments": ["tunic", "jerkin", "belt", "bracers", "boots"], "covers": ["chest", "back"]},
-		{"key": "chieftain", "name": "Chieftain's jerkin", "garments": ["braies", "belt", "furs", "jerkin", "boots"], "covers": ["chest", "back"]},
-		{"key": "raider", "name": "Raider's wraps", "garments": ["braies", "belt", "pauldron", "bracers", "leg_wraps"], "covers": []},
-		{"key": "wayfarer", "name": "Wayfarer's cape", "garments": ["braies", "belt", "cape", "leg_wraps", "boots"], "covers": ["back"]}
+		{"key": "wanderer", "name": "Wanderer's braies", "slots": {"waist": "garment.belt", "legs": "garment.braies"}, "garments": ["braies", "belt"], "covers": [], "default": true},
+		{"key": "hunter", "name": "Hunter's furs", "slots": {"shoulders": "garment.furs", "arms": "garment.bracers", "waist": "garment.belt", "legs": "garment.braies"}, "garments": ["braies", "belt", "furs", "bracers"], "covers": []},
+		{"key": "warrior", "name": "Warrior's tunic", "slots": {"chest": "garment.tunic", "armour": "garment.jerkin", "arms": "garment.bracers", "waist": "garment.belt", "feet": "garment.boots"}, "garments": ["tunic", "jerkin", "belt", "bracers", "boots"], "covers": ["chest", "back"]},
+		{"key": "chieftain", "name": "Chieftain's jerkin", "slots": {"shoulders": "garment.furs", "armour": "garment.jerkin", "waist": "garment.belt", "legs": "garment.braies", "feet": "garment.boots"}, "garments": ["braies", "belt", "furs", "jerkin", "boots"], "covers": ["chest", "back"]},
+		{"key": "raider", "name": "Raider's wraps", "slots": {"shoulders": "garment.pauldron", "arms": "garment.bracers", "waist": "garment.belt", "legs": "garment.braies", "shins": "garment.leg_wraps"}, "garments": ["braies", "belt", "pauldron", "bracers", "leg_wraps"], "covers": []},
+		{"key": "wayfarer", "name": "Wayfarer's cape", "slots": {"waist": "garment.belt", "legs": "garment.braies", "shins": "garment.leg_wraps", "feet": "garment.boots", "cape": "garment.cape"}, "garments": ["braies", "belt", "cape", "leg_wraps", "boots"], "covers": ["back"]}
 	]
 }

@@ -5,16 +5,34 @@
 	"display_name": "Iron Veteran",
 	"description": "Greying crop and a braided beard, an iron sleeve down the sword arm and the scars of every fight, in the warrior's tunic.",
 	"appearance": {
-		"v": 1,
+		"v": 2,
 		"preset": "appearance_preset.iron_veteran",
 		"skin": "skin.bronze",
 		"eyes": "eyes.brown",
-		"hair": {"style": "hair.crop", "color": "haircolor.dark_brown", "grey": 0.45},
-		"beard": {"style": "beard.braided", "color": "", "grey": 0.5},
-		"tattoos": {"arms": "tattoo.arm_sleeve", "chest": "", "back": "", "face": "", "ink": "ink.iron"},
-		"paint": {"design": "", "color": "paintcolor.chalk"},
+		"build": {"brawn": 0.0, "girth": 0.0},
+		"face": {"jaw": 0.0, "chin": 0.0, "nose": 0.0, "brow": 0.0, "cheeks": 0.0, "age": 0.0},
+		"hair": {"style": "hair.crop", "color": "haircolor.dark_brown", "grey": 0.45, "beads": "bead.none"},
+		"beard": {"style": "beard.braided", "color": "", "grey": 0.5, "beads": "bead.none"},
+		"tattoos": {"arms": "tattoo.arm_sleeve", "chest": "", "back": "", "face": "", "legs": "", "ink": "ink.iron"},
+		"paint": {"face": "", "body": "", "color": "paintcolor.chalk"},
 		"scars": ["scar.brow", "scar.cheek", "scar.forearm_slash", "scar.back_lash"],
 		"mark": "auto",
-		"outfit": {"set": "outfit.warrior", "primary": "dye.madder", "secondary": "dye.dark_leather"}
+		"outfit": {
+			"set": "outfit.warrior",
+			"slots": {
+				"head": {"item": "", "dye": ""},
+				"shoulders": {"item": "", "dye": ""},
+				"chest": {"item": "garment.tunic", "dye": ""},
+				"armour": {"item": "garment.jerkin", "dye": ""},
+				"arms": {"item": "garment.bracers", "dye": ""},
+				"waist": {"item": "garment.belt", "dye": ""},
+				"legs": {"item": "", "dye": ""},
+				"shins": {"item": "", "dye": ""},
+				"feet": {"item": "garment.boots", "dye": ""},
+				"cape": {"item": "", "dye": ""}
+			},
+			"accessories": {"neck": "", "arm_ring": "", "belt": ""},
+			"dyes": {"cloth": "dye.madder", "leather": "dye.dark_leather", "metal": "metal.iron"}
+		}
 	}
 }

@@ -1,0 +1,20 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.garment",
+	"type": "appearance_set",
+	"category": "garment",
+	"display_name": "Garments",
+	"description": "P53 (plan M11 §2.5, §2.6, decision 10): the garments worn by slot - M10's ten, each in the slot the migration of version-1 looks gives it. slot: one of the ten garment slots; mesh: the giant index garment (index.garments) it shows; material: cloth and leather take the outfit's cloth and leather dyes (or the slot's own), metal the metal, fur keeps its colour; covers: the design regions it hides (Hidden by your clothing; Randomize avoids them).",
+	"options": [
+		{"key": "braies", "name": "Braies", "slot": "legs", "mesh": "braies", "material": "cloth", "covers": []},
+		{"key": "belt", "name": "Belt", "slot": "waist", "mesh": "belt", "material": "leather", "covers": []},
+		{"key": "tunic", "name": "Tunic", "slot": "chest", "mesh": "tunic", "material": "cloth", "covers": ["chest", "back"]},
+		{"key": "jerkin", "name": "Jerkin", "slot": "armour", "mesh": "jerkin", "material": "leather", "covers": ["chest", "back"]},
+		{"key": "bracers", "name": "Bracers", "slot": "arms", "mesh": "bracers", "material": "leather", "covers": []},
+		{"key": "boots", "name": "Boots", "slot": "feet", "mesh": "boots", "material": "leather", "covers": []},
+		{"key": "furs", "name": "Furs", "slot": "shoulders", "mesh": "furs", "material": "fur", "covers": []},
+		{"key": "pauldron", "name": "Pauldron", "slot": "shoulders", "mesh": "pauldron", "material": "leather", "covers": []},
+		{"key": "cape", "name": "Cape", "slot": "cape", "mesh": "cape", "material": "cloth", "covers": ["back"]},
+		{"key": "leg_wraps", "name": "Leg wraps", "slot": "shins", "mesh": "leg_wraps", "material": "cloth", "covers": []}
+	]
+}

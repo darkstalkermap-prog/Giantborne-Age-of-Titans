@@ -7,7 +7,9 @@ extends PlayerComponent
 ##   * apply_state / capture_state move the optional "appearance" key: capture writes it only when the
 ##     character has a record (old saves, fixtures, the bots and command-line starts carry none, so the
 ##     exact comparisons of whole characters stay as they were); a later build's record (its "v" above
-##     1) is written back unchanged.
+##     Appearance.RECORD_VERSION, 2 since P53) is written back unchanged. P53 (plan M11 §2.5): a version-1
+##     record is migrated as it is applied (Appearance.sanitize) and so captured as version 2 by the next
+##     checkpoint; a player who keeps a look in the creator writes version 2 at once.
 ##   * record() is the record the giant wears: the character's, else the --appearance= preset's
 ##     (Appearance.cli_preset: in every mode, the sandbox and the soak included), else the default.
 ##   * set_record(record) - the shrine's "Keep this look" (P44) - stores it (sanitized), applies it and
