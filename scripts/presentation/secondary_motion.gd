@@ -61,6 +61,16 @@ var stats := {}
 
 var _index: Dictionary = {}
 var _joints: Array = []   # [{"bone", "parent", "axis" (local, toward the child), "rest" (local), "max", "cape", "chain"}]
+## The same joints as packed arrays for the per-frame pass (Gate A, lens 6: no Dictionary read a joint a frame), and
+## each joint's last limited direction in its parent's frame ("prev"; _has_prev 0 after a reset).
+var _j_bone := PackedInt32Array()
+var _j_parent := PackedInt32Array()
+var _j_axis := PackedVector3Array()
+var _j_rest: Array[Basis] = []
+var _j_max := PackedFloat64Array()
+var _j_cape := PackedByteArray()
+var _j_prev := PackedVector3Array()
+var _has_prev := PackedByteArray()
 var _front_skel := Vector3.BACK
 var _colliders := {}
 
@@ -121,6 +131,14 @@ func configure(chain_ids: PackedStringArray) -> void:
 		return
 	chains = PackedStringArray()
 	_joints.clear()
+	_j_bone.clear()
+	_j_parent.clear()
+	_j_axis.clear()
+	_j_rest.clear()
+	_j_max.clear()
+	_j_cape.clear()
+	_j_prev.clear()
+	_has_prev.clear()
 	springs.clear_settings()
 	var ids: Array = Array(chain_ids)
 	ids.sort()
@@ -168,8 +186,7 @@ func configure(chain_ids: PackedStringArray) -> void:
 func reset() -> void:
 	if springs != null and not chains.is_empty():
 		springs.reset()
-	for j: Dictionary in _joints:
-		j.erase("prev")
+	_has_prev.fill(0)
 	resets += 1
 	totals["resets"] = int(totals.get("resets", 0)) + 1
 
@@ -209,6 +226,14 @@ func _add_joints(sk: Skeleton3D, cid: String, v: Dictionary) -> void:
 		last_axis = axis
 		_joints.append({"bone": b, "parent": sk.get_bone_parent(b), "axis": axis, "rest": sk.get_bone_rest(b),
 			"max": deg_to_rad(float(v.max_deg)), "cape": str(v.kind) == "cape", "chain": cid})
+		_j_bone.append(b)
+		_j_parent.append(sk.get_bone_parent(b))
+		_j_axis.append(axis)
+		_j_rest.append(sk.get_bone_rest(b).basis)
+		_j_max.append(deg_to_rad(float(v.max_deg)))
+		_j_cape.append(1 if str(v.kind) == "cape" else 0)
+		_j_prev.append(Vector3.ZERO)
+		_has_prev.append(0)
 
 
 ## The angle limits after the springs (see the class notes), root to tip so each joint is judged where its
@@ -224,19 +249,21 @@ func _process_modification_with_delta(_delta: float) -> void:
 	var limited := 0
 	var front_lim := deg_to_rad(CAPE_FRONT_DEG)
 	var max_step := deg_to_rad(MAX_TURN_DEG_S) * maxf(_delta, 1.0 / 240.0)
-	for j: Dictionary in _joints:
-		var b: int = j.bone
+	for i in _j_bone.size():
+		var b := _j_bone[i]
 		var gp := sk.get_bone_global_pose(b)
-		var parent_gp := sk.get_bone_global_pose(int(j.parent)) if int(j.parent) >= 0 else Transform3D.IDENTITY
-		var axis: Vector3 = j.axis
-		var carried := (parent_gp.basis * (j.rest as Transform3D).basis * axis).normalized()
+		var parent := _j_parent[i]
+		var parent_gp := sk.get_bone_global_pose(parent) if parent >= 0 else Transform3D.IDENTITY
+		var axis := _j_axis[i]
+		var carried := (parent_gp.basis * _j_rest[i] * axis).normalized()
 		var d := (gp.basis * axis).normalized()
 		var ang := carried.angle_to(d)
 		worst = maxf(worst, ang)
 		var want := d
-		if ang > float(j.max):
-			want = carried.slerp(d, float(j.max) / ang).normalized()
-		if bool(j.cape):
+		var jmax := _j_max[i]
+		if ang > jmax:
+			want = carried.slerp(d, jmax / ang).normalized()
+		if _j_cape[i] == 1:
 			var f := _front_skel - carried * _front_skel.dot(carried)
 			if f.length_squared() > 1e-8:
 				f = f.normalized()
@@ -244,12 +271,13 @@ func _process_modification_with_delta(_delta: float) -> void:
 				if tilt > front_lim:
 					var side := carried.cross(f).normalized()
 					want = want.rotated(side, front_lim - tilt).normalized()
-		if j.has("prev"):
-			var before := (parent_gp.basis * (j.prev as Vector3)).normalized()
+		if _has_prev[i] == 1:
+			var before := (parent_gp.basis * _j_prev[i]).normalized()
 			var step := before.angle_to(want)
 			if step > max_step:
 				want = before.slerp(want, max_step / step).normalized()
-		j["prev"] = (parent_gp.basis.inverse() * want).normalized()
+		_j_prev[i] = (parent_gp.basis.inverse() * want).normalized()
+		_has_prev[i] = 1
 		if want.angle_to(d) > 1e-5:
 			limited += 1
 			gp.basis = Basis(Quaternion(d, want)) * gp.basis

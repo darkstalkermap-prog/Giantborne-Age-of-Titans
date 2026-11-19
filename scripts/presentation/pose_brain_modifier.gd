@@ -31,6 +31,9 @@ extends SkeletonModifier3D
 ## weapon arm fades to the clip's (`fp_rest`, the weapon in the fist's own line). A weapon carried past its fit
 ## stage reaches with the clavicle, the spine's lean and the pelvis (TipMatching.match_swing_reach; the feet
 ## kept where they stand by a two-bone solve of each leg).
+## Gate A: outside a tested swing no arm bone (the upper arm, the forearm, the hand) turns faster than ARM_STEP_DEG_S
+## in its parent's frame (_limit_arm: a block's press and release, an action's first frame, the off arm handed back
+## to its clip; the weapon turns with the hand so the handle stays in the fist). Presentation only.
 ## Every arm is placed by an analytic two-bone solve (TipMatching.two_bone, the elbow toward
 ## TipMatching.pole_for) and set as whole frames: the upper arm and the forearm keep the rest arm's plane
 ## (the elbow bends about its own hinge), the hand's long axis (wrist to the knuckles) and its across axis
@@ -65,6 +68,15 @@ const FP_BLEND_RATE := 8.0
 const KNEE_POLE := Vector3(0.0, -0.2, -1.0)
 ## The most the pelvis moves for a reach (stage-1 metres; TipMatching.REACH_PELVIS_M).
 const REACH_PELVIS_MAX := TipMatching.REACH_PELVIS_M
+## No reach extension (reach_ext's value outside a past-fit swing; read-only).
+const REACH_NONE := {"clavicle_m": 0.0, "lean_deg": 0.0, "pelvis_m": 0.0}
+## The fastest an arm bone turns in its parent's frame outside a tested swing (degrees a second: 20 a frame at 60 fps;
+## _limit_arm), and the bones it holds.
+const ARM_STEP_DEG_S := 1200.0
+const ARM_LIMITED := {"r": ["upperarm_r", "lowerarm_r", "hand_r"], "l": ["upperarm_l", "lowerarm_l", "hand_l"]}
+## TipMatching's poles for the right arm (_pole_r).
+const POLE_R: Vector3 = TipMatching.POLES.r
+const CROSS_POLE_R: Vector3 = TipMatching.CROSS_POLES.r
 ## Halvings of the search for the share of the grip's turn the wrist allows.
 const ALIGN_STEPS := 4
 
@@ -83,9 +95,15 @@ var held_gap := Vector3.ZERO
 ## palm and its target), "wrist_deg" (the weapon wrist's bend), "off_w", "us" (the run's microseconds).
 var stats := {}
 ## The reach extension in use this frame (stage-1 metres and degrees, weighted by the arc's blend).
-var reach_ext := {"clavicle_m": 0.0, "lean_deg": 0.0, "pelvis_m": 0.0}
+var reach_ext: Dictionary = REACH_NONE
 
 var _bi := {}
+## Each arm's bones as _limit_arm left them last frame ("r"/"l" -> [Quaternion]), and the rig's teleports then.
+var _arm_prev := {}
+var _arm_teleports := -1
+## The last _solve's elbow and end.
+var _sv_elbow := Vector3.ZERO
+var _sv_end := Vector3.ZERO
 var _grip_local := {"r": Vector3.ZERO, "l": Vector3.ZERO}
 var _grip_axis := {"r": Vector3.ZERO, "l": Vector3.ZERO}
 var _leg_len := {}
@@ -224,7 +242,8 @@ func _weapon_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: 
 	var hand_dir := dir
 	var wdir := _carried_weapon_dir(hand_dir, actor)
 	var tip := Vector3.INF
-	reach_ext = {"clavicle_m": 0.0, "lean_deg": 0.0, "pelvis_m": 0.0}
+	if not is_same(reach_ext, REACH_NONE):
+		reach_ext = REACH_NONE
 	if _w_arc > 0.0:
 		var pivot := to_body * (_prop(actor, "weapon_pivot", Vector3(0.82, 2.9, 0.0) * k) as Vector3)
 		var arm_m := float(_prop(actor, "arm_length", 1.5 * k)) / k
@@ -249,6 +268,12 @@ func _weapon_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: 
 	target = placed.target
 	wdir = placed.weapon_dir
 	palm_target["r"] = target
+	# Gate A: no arm bone turns faster than ARM_STEP_DEG_S outside a tested swing (a block's press and release moved
+	# the brain's arm 37 degrees in one frame and the hand up to 81); the weapon turns with the hand, in the fist
+	var computed := sk.get_bone_global_pose(_bi.hand_r).basis
+	if _limit_arm("r", delta, _w_arc <= 0.0):
+		var turn := sk.get_bone_global_pose(_bi.hand_r).basis.orthonormalized() * computed.orthonormalized().inverse()
+		wdir = _to_body_dir(turn * _to_skel_dir(wdir))
 	var hand := sk.get_bone_global_pose(_bi.hand_r)
 	palm["r"] = _to_body(hand.origin + hand.basis * (_rest.r.palm_local as Vector3))
 	var fist := _to_body(hand.origin + hand.basis * (_grip_local.r as Vector3))
@@ -267,7 +292,7 @@ func _weapon_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: 
 	stats["fist_error_m"] = placed_at.distance_to(target) * k
 	stats["grip_axis_deg"] = rad_to_deg(axis.angle_to(wdir))
 	stats["wrist_deg"] = rad_to_deg(fore.angle_to(_to_body_dir(hand.basis * (_rest.r.palm_local as Vector3))))
-	stats["reach"] = reach_ext.duplicate()
+	stats["reach"] = reach_ext   # (a new Dictionary whenever it changes: _extend makes one, REACH_NONE is read-only)
 
 
 ## Places the weapon hand by its fist (P50; see the class notes): the point `anchor` of the hand (the hand bone's
@@ -299,8 +324,8 @@ func _place_weapon_hand(sk: Skeleton3D, sh: Vector3, target: Vector3, wdir: Vect
 				w_s = _to_skel_dir(wdir)
 				across = -w_s
 		var wrist_t := target - _to_body_vec(hs * gl)
-		var solve := TipMatching.two_bone(sh, wrist_t, l1, l2, tm.pole_for("r", wrist_t))
-		var fore := ((solve.end as Vector3) - (solve.elbow as Vector3)).normalized()
+		_solve(sh, wrist_t, l1, l2, _pole_r(wrist_t))
+		var fore := (_sv_end - _sv_elbow).normalized()
 		var bend := fore.angle_to(hand_dir)
 		if bend <= lim + 1e-4:
 			break
@@ -313,16 +338,20 @@ func _place_weapon_hand(sk: Skeleton3D, sh: Vector3, target: Vector3, wdir: Vect
 	var best := hs
 	var lo := 0.0
 	var hi := clampf(align, 0.0, 1.0)
+	var q_from := hs.get_rotation_quaternion()
+	var q_to := full.get_rotation_quaternion()
+	var palm_local: Vector3 = r.palm_local
+	var lim_align := lim + deg_to_rad(0.4)
 	for i in (ALIGN_STEPS + 1 if hi > 0.0 else 0):
 		var t := hi if i == 0 else (lo + hi) * 0.5
-		var cand := Basis(hs.get_rotation_quaternion().slerp(full.get_rotation_quaternion(), t))
+		var cand := Basis(q_from.slerp(q_to, t))
 		var wt := target - _to_body_vec(cand * gl)
 		if sh.distance_to(wt) > reach:
 			hi = t
 			continue
-		var sv := TipMatching.two_bone(sh, wt, l1, l2, tm.pole_for("r", wt))
-		var fore_s := _to_skel_dir((sv.end as Vector3) - (sv.elbow as Vector3))
-		if fore_s.angle_to((cand * (r.palm_local as Vector3)).normalized()) <= lim + deg_to_rad(0.4):
+		_solve(sh, wt, l1, l2, _pole_r(wt))
+		var fore_s := _to_skel_dir(_sv_end - _sv_elbow)
+		if fore_s.angle_to((cand * palm_local).normalized()) <= lim_align:
 			best = cand
 			if i == 0:
 				break
@@ -338,9 +367,35 @@ func _place_weapon_hand(sk: Skeleton3D, sh: Vector3, target: Vector3, wdir: Vect
 		target = clip_fist.lerp(target, weight)
 		hs = Basis(now.basis.get_rotation_quaternion().slerp(hs.get_rotation_quaternion(), weight)).scaled(now.basis.get_scale())
 		wrist_t2 = target - _to_body_vec(hs * gl)
-	var solve2 := TipMatching.two_bone(sh, wrist_t2, l1, l2, tm.pole_for("r", wrist_t2))
-	_set_arm(sk, "r", sh, solve2.elbow, solve2.end, hs)
+	_solve(sh, wrist_t2, l1, l2, _pole_r(wrist_t2))
+	_set_arm(sk, "r", sh, _sv_elbow, _sv_end, hs)
 	return {"target": target, "weapon_dir": wdir}
+
+
+## TipMatching.two_bone into _sv_elbow and _sv_end: the same arithmetic without a Dictionary a solve (the weapon hand
+## runs up to ten a frame; Gate A, lens 6).
+func _solve(sh: Vector3, target: Vector3, l1: float, l2: float, pole: Vector3) -> void:
+	var d := target - sh
+	var lo := absf(l1 - l2) * 1.001 + 1e-4
+	var hi := (l1 + l2) * TipMatching.SOLVE_MARGIN
+	var dist := clampf(d.length(), lo, hi)
+	var dn := d.normalized() if d.length_squared() > 1e-10 else Vector3.DOWN
+	var pv := pole - dn * pole.dot(dn)
+	if pv.length_squared() < 1e-8:
+		pv = Vector3.DOWN - dn * Vector3.DOWN.dot(dn)
+	if pv.length_squared() < 1e-8:
+		pv = Vector3.BACK - dn * Vector3.BACK.dot(dn)
+	pv = pv.normalized()
+	var a := (l1 * l1 + dist * dist - l2 * l2) / (2.0 * dist)
+	var h := sqrt(maxf(0.0, l1 * l1 - a * a))
+	_sv_elbow = sh + dn * a + pv * h
+	_sv_end = sh + dn * dist
+
+
+## TipMatching.pole_for("r", target), the same arithmetic.
+static func _pole_r(target: Vector3) -> Vector3:
+	var t := clampf(-target.x / TipMatching.CROSS_BLEND_M, 0.0, 1.0)
+	return POLE_R.lerp(CROSS_POLE_R, t).normalized()
 
 
 ## The fist's target pulled in along the shoulder line until its wrist (the target less `offset`, the fist's
@@ -459,7 +514,7 @@ static func _is_arc(s: Dictionary) -> bool:
 static func _carried_weapon_dir(hand_dir: Vector3, actor: Node) -> Vector3:
 	var w: Variant = _prop(actor, "weapon", {})
 	var shape := WeaponVisuals.shape_of(w) if typeof(w) == TYPE_DICTIONARY else "club"
-	var toward := Vector3.UP if shape in ["tree", "pine"] else Vector3.FORWARD
+	var toward := Vector3.UP if shape == "tree" or shape == "pine" else Vector3.FORWARD
 	var h := hand_dir.normalized()
 	var perp := toward - h * toward.dot(h)
 	if perp.length_squared() < 1e-8:
@@ -474,15 +529,17 @@ func _off_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: Tra
 	var override: Variant = s.get("pose_override")
 	var state := int(s.get("state", 0))
 	var acting := s.get("action") != null or typeof(override) == TYPE_DICTIONARY \
-		or state in [CombatController.State.BLOCKING, CombatController.State.DODGING] or bool(s.get("guarding", false))
+		or state == CombatController.State.BLOCKING or state == CombatController.State.DODGING or bool(s.get("guarding", false))
 	_w_off = move_toward(_w_off, 1.0 if acting else 0.0, delta * OFF_BLEND_RATE)
 	var sh := _to_body(sk.get_bone_global_pose(_bi.upperarm_l).origin)
 	var grab_phase := str(s.get("grab_phase", ""))
-	holding = grab_phase in ["hold", "crush", "throw"] and str(s.get("holding", "")) != ""
+	holding = grab_phase in SkinnedRig.GRIP_PHASES and str(s.get("holding", "")) != ""
+	var hold := grab_phase == "hold" or grab_phase == "crush"
 	var target: Vector3
 	var hand_dir: Vector3
-	var grab: Variant = _prop(actor, "grab", null)
-	if grab_phase in ["hold", "crush"] and grab != null and (grab as Object).has_method("socket_local"):
+	# (read only in a grab: outside one nothing below uses it)
+	var grab: Variant = _prop(actor, "grab", null) if grab_phase != "" else null
+	if hold and grab != null and (grab as Object).has_method("socket_local"):
 		var socket := to_body * ((grab as Object).call("socket_local") as Vector3)
 		var reach := tm.palm_reach("l") * TipMatching.SOLVE_MARGIN
 		if sh.distance_to(socket) > reach:
@@ -498,7 +555,8 @@ func _off_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: Tra
 	palm_target["l"] = target
 	var w := _w_off * _w_live
 	if w > 0.0:
-		_place_arm(sk, "l", target, hand_dir, Vector3.ZERO, w, not (grab_phase in ["hold", "crush"]))
+		_place_arm(sk, "l", target, hand_dir, Vector3.ZERO, w, not hold)
+	_limit_arm("l", delta, true)
 	var hand := sk.get_bone_global_pose(_bi.hand_l)
 	palm["l"] = _to_body(hand.origin + hand.basis * (_rest.l.palm_local as Vector3))
 	stats["off_w"] = w
@@ -508,6 +566,37 @@ func _off_arm(sk: Skeleton3D, s: Dictionary, actor: Node, k: float, to_body: Tra
 		held_gap = (palm.l as Vector3) - socket
 		if held_gap.length() > HELD_GAP_MAX:
 			held_gap = held_gap.normalized() * HELD_GAP_MAX
+
+
+## Holds the arm of `side` (the upper arm, the forearm and the hand, in their parents' frames) within ARM_STEP_DEG_S
+## of where it was last frame when `limit` is true (Gate A: the pop on a block's press and release, and the off arm
+## handed back to its clip); remembers where it is now either way. Forgets on a teleport or a respawn. Presentation
+## only: what the bones show, never when anything happens. True when it moved a bone.
+func _limit_arm(side: String, delta: float, limit: bool) -> bool:
+	var sk := get_skeleton()
+	if rig.teleports != _arm_teleports:
+		_arm_teleports = rig.teleports
+		_arm_prev.clear()
+	var prev: Array = _arm_prev.get(side, [])
+	var bones: Array = ARM_LIMITED[side]
+	var max_step := deg_to_rad(ARM_STEP_DEG_S) * maxf(delta, 1.0 / 240.0)
+	var moved := false
+	var now: Array = []
+	for i in bones.size():
+		var b: int = _bi[bones[i]]
+		var q := sk.get_bone_pose_rotation(b)
+		if limit and not prev.is_empty():
+			var was: Quaternion = prev[i]
+			var ang := was.angle_to(q)
+			if ang > max_step:
+				q = was.slerp(q, max_step / ang)
+				sk.set_bone_pose_rotation(b, q)
+				moved = true
+		now.append(q)
+	_arm_prev[side] = now
+	if moved:
+		stats["arm_limited"] = int(stats.get("arm_limited", 0)) + 1
+	return moved
 
 
 ## Turns the clavicle of `side` about its own joint so the shoulder moves toward `toward` (Body space) by
@@ -612,6 +701,11 @@ func _to_skel_vec(v: Vector3) -> Vector3:
 ## A Body-space direction in the skeleton's space (SecondaryMotion's front; tests).
 func skeleton_dir(v: Vector3) -> Vector3:
 	return _to_skel_dir(v)
+
+
+## A skeleton-space direction in Body space (the eyes' look: SkinnedRig).
+func body_dir(v: Vector3) -> Vector3:
+	return _to_body_dir(v)
 
 
 ## The weapon fist's centre and the handle's line through it now (Body space; valid inside SkinnedRig.posed):

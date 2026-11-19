@@ -17,7 +17,10 @@ extends IntegrationSuite
 ##   * the crosshair probe meets the skinned body where it is and only there;
 ##   * skin_stats() and SkinnedRig.run_stats() count what ran;
 ##   * P50: the tree holds every source of plan M11 §2.3 and the flinches, every family has its grip, and the fist's
-##     landmarks in the hand bone's space put the fist where the index's stage-1 grip_r is.
+##     landmarks in the hand bone's space put the fist where the index's stage-1 grip_r is;
+##   * Gate A (lens 6): the sources' balanced, gated tree gives every leaf the chain's weight (source_weights()) and
+##     opens the gate over every leaf that weighs; the hair's sway (P46) reaches the card hair and beard; the eyes
+##     look along the camera's facing and toward the lock target, within the shader's quarter of the iris.
 
 const LAYER_OF := {"body": 0, "eyes": 3, "hair": 3, "beard": 3}
 
@@ -290,10 +293,13 @@ func test_the_sources_the_grips_and_the_fist_landmarks() -> void:
 	var p := await _grounded()
 	var rig := _rig(p)
 	var bt := rig.animation_tree().tree_root as AnimationNodeBlendTree
-	for node: String in ["brace", "turn", "turn_side", "move", "gait", "sprint", "charge", "charge_gait", "stomp", "roar", "land", "air",
-			"dead", "flinch_f", "flinch_b", "flinch_l", "flinch_r", "hand_r", "open_l", "grip_l", "fist_l", "fp"]:
+	for node: String in ["idle_clip", "brace_clip", "turn_side", "gait", "sprint", "charge_gait", "stomp_r_seek", "roar_seek",
+			"land_seek", "air_clip", "death_seek", "flinch_f_seek", "flinch_b_seek", "flinch_l_seek", "flinch_r_seek", "hand_r",
+			"open_l", "grip_l", "fist_l", "fp"]:
 		assert_true(bt.has_node(StringName(node)), "the tree's %s node" % node)
-	assert_true(bt.get_node(&"flinch_f") is AnimationNodeAdd2, "the flinches are added on top")
+	assert_true(bt.get_node(&"flinch") is AnimationNodeAdd2, "the flinches are added on top")
+	for g: String in SkinnedRig.GATE_NAMES:
+		assert_true(bt.get_node(StringName(g)) is AnimationNodeTransition, "the gate %s" % g)
 	for fam: String in ["club", "sword", "hammer", "axe", "fists", "tree"]:
 		assert_true(SkinnedRig.clip_library().has_animation(str(SkinnedRig.GRIP_CLIPS[fam])), "%s's grip clip" % fam)
 	assert_eq(rig.grip_clip(), "grip_club", "the club closes the fist with its grip")
@@ -308,3 +314,102 @@ func test_the_sources_the_grips_and_the_fist_landmarks() -> void:
 	var tm := TipMatching.for_fist(rig.model().index)
 	assert_eq(tm.source, "fist", "tip matching is built for the fist")
 	assert_true(float(tm.reach.r) < 1.385 and float(tm.reach.r) > 1.2, "its reach is the fist's (%.3f)" % float(tm.reach.r))
+
+
+## Gate A: SLOT_PARAMS' shares multiplied down the balanced tree are source_weights() for any weights, and every gate
+## over a leaf that weighs is open (an unweighted branch may be closed: it is not evaluated).
+func test_the_gated_source_tree_weighs_each_leaf_as_the_chain() -> void:
+	SkinnedRig.enable_for_tests()
+	var p := await _grounded()
+	var rig := _rig(p)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 30
+	var worst := 0.0
+	var shut := 0
+	for trial in 60:
+		for key: String in SkinnedRig.SOURCE_CHAIN:
+			rig._w[key] = 0.0 if rng.randf() < 0.5 else (1.0 if rng.randf() < 0.2 else rng.randf())
+		var eff := rig.source_weights()
+		rig._send_all(eff, float(eff.move))
+		var a := rig._want
+		var g := func(i: int) -> float: return float(a[i])
+		# SLOT_PARAMS 8.. : sources, sources_lo, stance_brace, turn_move, sources_hi, charge_pulse, stomp_roar, land_fall, air_dead
+		var lo: float = 1.0 - g.call(8)
+		var hi: float = g.call(8)
+		var leaf := {
+			"stance": lo * (1.0 - g.call(9)) * (1.0 - g.call(10)), "brace": lo * (1.0 - g.call(9)) * g.call(10),
+			"turn": lo * g.call(9) * (1.0 - g.call(11)), "move": lo * g.call(9) * g.call(11),
+			"charge": hi * (1.0 - g.call(12)) * (1.0 - g.call(13)), "stomp": hi * (1.0 - g.call(12)) * g.call(13) * (1.0 - g.call(14)),
+			"roar": hi * (1.0 - g.call(12)) * g.call(13) * g.call(14), "land": hi * g.call(12) * (1.0 - g.call(15)),
+			"air": hi * g.call(12) * g.call(15) * (1.0 - g.call(16)), "dead": hi * g.call(12) * g.call(15) * g.call(16)}
+		for key: String in SkinnedRig.SOURCE_LEAVES:
+			worst = maxf(worst, absf(float(leaf[key]) - float(eff[key])))
+		# the gates over each leaf: GATE_NAMES 0..8
+		var over := {"turn": [0, 2], "move": [1, 2], "charge": [3, 6, 8], "stomp": [4, 6, 8], "roar": [4, 6, 8], "land": [7, 8],
+			"air": [5, 7, 8], "dead": [5, 7, 8]}
+		for key: String in over:
+			if float(eff[key]) > 0.0:
+				for i: int in over[key]:
+					if rig._want_gate[i] != 1:
+						shut += 1
+	assert_true(worst < 1e-9, "each leaf weighs what the chain gave it (worst %s)" % worst)
+	assert_eq(shut, 0, "no gate is closed over a leaf that weighs")
+
+
+## Gate A: the hair's sway (P46) is the rig's own step now: it finds the card hair and beard (not the shells) and
+## writes their head_motion when the head moves.
+func test_the_sway_reaches_the_card_hair() -> void:
+	SkinnedRig.enable_for_tests()
+	var p := await _grounded()
+	var rig := _rig(p)
+	await step_ticks(2)
+	var model := rig.model()
+	var cards := 0
+	for mi: MeshInstance3D in rig._sway_meshes:
+		var id := str(mi.name)
+		assert_true(mi.material_override is ShaderMaterial and (mi.material_override as ShaderMaterial).shader == GiantLook.HAIR_SHADER,
+			"%s is a card mesh on the hair shader" % id)
+		cards += 1
+	var expect := 0
+	for cat: String in ["hair", "beard"]:
+		for id in GiantLook.meshes_of(model.index, cat):
+			if GiantLook.mesh_kind(model.index.meshes[id]) == "hair":
+				expect += 1
+	assert_eq(cards, expect, "every card hair and beard mesh (%d)" % expect)
+	var shown: MeshInstance3D = null
+	for mi: MeshInstance3D in rig._sway_meshes:
+		if mi.visible:
+			shown = mi
+	assert_true(shown != null, "the default look shows a card style")
+	p.router.set_injected_move(Vector2(0, 1))
+	await step_ticks(20)
+	p.router.set_injected_move(Vector2.ZERO)
+	var hm: Variant = (shown.material_override as ShaderMaterial).get_shader_parameter("head_motion")
+	assert_true(hm is Vector3 and (hm as Vector3).length() > 0.0 and (hm as Vector3).length() <= GiantLook.SWAY_MAX_M + 1e-6,
+		"a walk sways the shown cards (%s)" % [hm])
+
+
+## Gate A: the eyes' look (P51's uniform) follows the camera's facing, level, and the lock target, within the
+## shader's quarter of the iris; the giant's right is +x.
+func test_the_eyes_look_along_the_camera_and_at_the_lock_target() -> void:
+	SkinnedRig.enable_for_tests()
+	var p := await _grounded()
+	var rig := _rig(p)
+	await step_ticks(20)
+	var eyes := GiantLook.mesh_node(rig.model(), rig.model().index, "Eyes")
+	var mat := eyes.material_override as ShaderMaterial
+	assert_true(rig.eye_look().length() < 0.05, "the camera behind him: the eyes ahead (%s)" % rig.eye_look())
+	p.camera_rig.yaw -= deg_to_rad(40.0)   # the camera turns to his right
+	await step_ticks(30)
+	assert_true(rig.eye_look().x > 0.2 and rig.eye_look().x <= SkinnedRig.EYE_LOOK_MAX, "the eyes turn right (%s)" % rig.eye_look())
+	assert_true(absf(rig.eye_look().y) < 0.05, "and stay level (%s)" % rig.eye_look())
+	assert_true((mat.get_shader_parameter("look") as Vector2).distance_to(rig.eye_look()) < 1e-3, "the Eyes material has it")
+	p.camera_rig.yaw += deg_to_rad(40.0)
+	await step_ticks(30)
+	assert_true(absf(rig.eye_look().x) < 0.05, "and come back (%s)" % rig.eye_look())
+	spawn_soldier(Vector3(6, 0.05, -10))
+	await step_ticks(3)
+	p.router.inject_edge(&"lock_press")
+	await step_ticks(30)
+	assert_true(p.camera_rig.lock_focus_point() != Vector3.INF, "locked on the soldier")
+	assert_true(rig.eye_look().y < -0.1, "the eyes look down at the soldier's chest (%s)" % rig.eye_look())
