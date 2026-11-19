@@ -104,7 +104,7 @@ const BAKE_TONE := Color(0.690196, 0.478431, 0.384314)
 const BEARD_TIP_THIN := 0.45
 ## The beard meshes whose cards are long locks (giant_hair's styles without "locks": False): only their tips
 ## thin out. The short and the braided beard's cards are too short for it (they showed gaps on the cheeks).
-const LOCK_BEARDS := ["Beard_full", "Beard_forked"]
+const LOCK_BEARDS := ["Beard_full", "Beard_forked", "Beard_long_forked"]   # P56: the long forked beard's locks too
 ## How far a card's shading turns from its own facing towards the style's head-centred normal (P51; the hair
 ## shader's volume_normal; braids and beads take their tube's normal whatever it is).
 const VOLUME_NORMAL := 0.75
@@ -157,10 +157,11 @@ const UNIFORMS := {
 	"skin": ["albedo_tex", "normal_tex", "orm_tex", "mask_tex", "design_tex", "skin_tone", "bake_tone", "hair_color",
 		"beard_color", "stubble", "scalp_tint", "beard_tint", "brows", "region_tattoo", "region_paint", "region_mark",
 		"tattoo_ink", "paint_color", "mark_color", "mark_glow", "scar_layer", "scar_on", "scar_layer_b", "scar_on_b",
+		"scar_regions", "scar_regions_b",
 		"hidden_regions", "hide_shrink", "build", "build_max_m"],
 	"hair": ["hair_atlas", "hair_color", "tip_color", "grey", "length", "tip_thin", "back_fade", "volume_normal"],
 	"eye": ["iris_color", "iris_glow", "look"],
-	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade", "kind", "rim", "build", "build_max_m"],
+	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade", "kind", "rim", "build", "build_max_m", "bead_mask"],
 	"shell": ["strand_tex", "mask_tex", "mask_channel", "shell_count", "shell_height_m", "comb", "hair_color", "tip_color",
 		"grey", "length"],
 }
@@ -442,6 +443,8 @@ static func scar_uniforms(index: Dictionary, scars: Variant) -> Dictionary:
 	var designs := _designs(index)
 	var layers: Array[int] = []
 	var on: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO]
+	# P56: a scar channel may hold scars of several regions; it is on only in the worn scars' regions
+	var regions: Array[Vector4i] = [Vector4i.ZERO, Vector4i.ZERO]
 	for s: Variant in (scars if typeof(scars) == TYPE_ARRAY else []):
 		var d: Variant = designs.get(str(s))
 		if typeof(d) != TYPE_DICTIONARY:
@@ -451,7 +454,11 @@ static func scar_uniforms(index: Dictionary, scars: Variant) -> Dictionary:
 			layers.append(l)
 		var slot := layers.find(l)
 		if slot >= 0:
-			on[slot][clampi(int((d as Dictionary).get("channel", 0)), 0, 3)] = 1.0
+			var ch := clampi(int((d as Dictionary).get("channel", 0)), 0, 3)
+			on[slot][ch] = 1.0
+			for r: Variant in (d as Dictionary).get("regions", []):
+				if SchemaUtil.is_number(r) and int(r) >= 0 and int(r) < REGIONS:
+					regions[slot][ch] |= 1 << int(r)
 	var known: Array[int] = []
 	for id: Variant in designs:
 		if typeof(designs[id]) == TYPE_DICTIONARY and str((designs[id] as Dictionary).get("kind", "")) == "scar":
@@ -464,7 +471,8 @@ static func scar_uniforms(index: Dictionary, scars: Variant) -> Dictionary:
 			layers.append(l)
 	while layers.size() < 2:
 		layers.append(layers[0] if not layers.is_empty() else 0)
-	return {"layer": maxi(layers[0], 0), "on": on[0], "layer_b": maxi(layers[1], 0), "on_b": on[1]}
+	return {"layer": maxi(layers[0], 0), "on": on[0], "layer_b": maxi(layers[1], 0), "on_b": on[1],
+		"regions": regions[0], "regions_b": regions[1]}
 
 
 # --------------------------------------------------------------------------- tiers and textures
@@ -734,8 +742,11 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				mi.visible = str(id) == str(l.beard_mesh)
 			"garment":
 				mi.visible = shown.has(str(id))
-			"accessory", "bead":
+			"accessory":
 				mi.visible = extras.has(str(id))
+			"bead":
+				# P56: a bead set with style codes shows only on the shown styles that have anchors
+				mi.visible = extras.has(str(id)) and (not entry.has("styles") or bead_mask(entry, str(id), l, cut) != 0)
 		if mi.visible:
 			shown_ids.append(str(id))
 			if parts:
@@ -794,6 +805,8 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				set_param(mat, "scar_on", scars.on)
 				set_param(mat, "scar_layer_b", int(scars.layer_b))
 				set_param(mat, "scar_on_b", scars.on_b)
+				set_param(mat, "scar_regions", scars.regions)
+				set_param(mat, "scar_regions_b", scars.regions_b)
 				set_param(mat, "hidden_regions", hidden)
 				if set_build:
 					set_param(mat, "build", build)
@@ -811,6 +824,8 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				set_param(mat, "iris_color", l.eye_color)
 				set_param(mat, "iris_glow", float(l.eye_glow))
 			"cloth":
+				if category == "bead" and entry.has("styles"):
+					set_param(mat, "bead_mask", bead_mask(entry, str(id), l, cut))
 				var g: Dictionary = shown.get(id, {})
 				var own := str(entry.get("color", ""))
 				var fallback: Color = Color.html(own) if Color.html_is_valid(own) else _legacy_dye(l, str(entry.get("dye", "primary")))
@@ -821,6 +836,21 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				if set_build:
 					set_param(mat, "build", build)
 					set_param(mat, "build_max_m", build_max)
+
+
+## The bead set `id`'s mask of style codes shown with look `l` (P56; plan M11 §2.5: beads only on styles whose index
+## entry has bead anchors): bit `code` for the hair style when the look's hair beads are this set and the style is
+## drawn whole (a helm's cut leaves its braids' beads off), and for the beard likewise. `entry.styles` maps a style
+## mesh to its code (the bead mesh's UV2.x); the cloth shader drops the beads of every other code.
+static func bead_mask(entry: Dictionary, id: String, l: Dictionary, cut: Dictionary = {}) -> int:
+	var styles: Dictionary = entry.get("styles", {}) if typeof(entry.get("styles")) == TYPE_DICTIONARY else {}
+	var mask := 0
+	if str(l.get("hair_beads", "")) == id and styles.has(str(l.get("hair_mesh", ""))) \
+			and float(cut.get(str(l.hair_mesh), 1.0)) >= 1.0:
+		mask |= 1 << int(styles[str(l.hair_mesh)])
+	if str(l.get("beard_beads", "")) == id and styles.has(str(l.get("beard_mesh", ""))):
+		mask |= 1 << int(styles[str(l.beard_mesh)])
+	return mask
 
 
 ## The creator's "Hidden by your clothing" fade (0-1) on the garments' materials (none before

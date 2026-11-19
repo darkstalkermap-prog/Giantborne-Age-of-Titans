@@ -476,6 +476,63 @@ def hair_cut(gid, w, hair, V, N, kd, S):
     return out
 
 
+def bead_codes():
+    """{style mesh id: its code in a bead set's UV2.x} (P56): 1, 2, ... in giant_hair.STYLE_ORDER for every style
+    with bead anchors; GiantLook shows a set's beads of the shown styles' codes (the cloth shader's bead_mask)."""
+    styles = [m for m in gh.STYLE_ORDER if m in gh.BEAD_ANCHORS]
+    return {m: k + 1 for k, m in enumerate(styles)}
+
+
+def bead_arrays(set_id, style_skin, codes):
+    """A bead set's mesh (P56): the set's bead shape on every anchor of every style, each vertex skinned as the
+    nearest vertex of its style's braid (the bead rides its strand on the chains) and carrying the style's code."""
+    from scipy.spatial import cKDTree
+    spec = gh.BEAD_SETS[set_id]
+    Vs, Fs, Ns, UVs, U2, skins = [], [], [], [], [], []
+    off = 0
+    for mid, code in codes.items():
+        CV, sg, braid = style_skin[mid]
+        ids = np.nonzero(braid)[0] if np.any(braid) else np.arange(len(CV))
+        kd = cKDTree(CV[ids])
+        for p, t, r in gh.BEAD_ANCHORS[mid]:
+            ref = np.array([0.0, 0.0, 1.0]) if abs(t[2]) < 0.9 else np.array([1.0, 0.0, 0.0])
+            V, F, N, UV = gh.bead_shape(spec["shape"], p, t, r, ref)
+            _, near = kd.query(V)
+            skins.append({bone: np.asarray(w)[ids[near]] for bone, w in sg.items()})
+            Vs.append(V)
+            Fs.append(F + off)
+            Ns.append(N)
+            UVs.append(UV)
+            U2.append(np.tile([float(code), 0.0], (len(V), 1)))
+            off += len(V)
+    bones = sorted({b for sk in skins for b in sk})
+    groups = {b: np.concatenate([sk.get(b, np.zeros(len(v))) for sk, v in zip(skins, Vs)]) for b in bones}
+    return {"V": np.concatenate(Vs), "F": np.concatenate(Fs), "N": np.concatenate(Ns), "UV": np.concatenate(UVs),
+            "UV2": np.concatenate(U2), "groups": gp.prune(groups, off)}
+
+
+def bead_object(name, B, coll, rig):
+    """A bead set's object: smooth quads with their own normals, UV and UV2 (the style code), the region of the
+    head (its scalp's code: first person culls the head's layer anyway) and no build push."""
+    me = bpy.data.meshes.new(name)
+    me.from_pydata(B["V"].tolist(), [], B["F"].tolist())
+    me.update()
+    lv = np.empty(len(me.loops), np.int64)
+    me.loops.foreach_get("vertex_index", lv)
+    me.uv_layers.new(name="UVMap").data.foreach_set("uv", B["UV"][lv].astype(np.float32).ravel())
+    me.uv_layers.new(name="UV2").data.foreach_set("uv", B["UV2"][lv].astype(np.float32).ravel())
+    me.polygons.foreach_set("use_smooth", np.ones(len(me.polygons), dtype=bool))
+    me.normals_split_custom_set_from_vertices(B["N"].tolist())
+    colour_attribute(me, np.full(len(B["V"]), split.REGION_ID["scalp"]))
+    ob = bpy.data.objects.new(name, me)
+    coll.objects.link(ob)
+    set_groups(ob, B["groups"])
+    gb.parent_keep(ob, rig)
+    gb.armature_modifier(ob, rig)
+    ob.data.materials.append(bpy.data.materials.get("giant_bead") or bpy.data.materials.new("giant_bead"))
+    return ob
+
+
 SHELL_POSES = ("rest", "idle", "walk", "raised_arm")
 
 
@@ -701,6 +758,7 @@ def run(out_dir):
     from scipy.spatial import cKDTree
     kd = cKDTree(V)
     head_cy = bd.landmarks["head_cy"] * S
+    style_skin = {}
     for mesh_id, (ob, cards) in hair.items():
         cat = "hair" if mesh_id.startswith("Hair_") else "beard"
         if ob is None:
@@ -720,6 +778,7 @@ def run(out_dir):
         CV, t, arc = card_coordinates(ob)
         groups = gp.fold_weak_chains(gp.card_weights(CV, arc, cat, layout, head_cy, S, braid_vertices(mesh_id, len(CV))))
         set_groups(ob, groups)
+        style_skin[mesh_id] = (CV, groups, braid_vertices(mesh_id, len(CV)))
         _, near = kd.query(CV / S)
         colour_attribute(ob.data, np.full(len(CV), split.REGION_ID["scalp" if cat == "hair" else "face"]), vbuild[near])
         roots = t <= 1e-6
@@ -730,6 +789,18 @@ def run(out_dir):
                                    "chains": gp.chains_of(groups), "root_verts": int(roots.sum()),
                                    "roots_on_head": int(on_head.sum()),
                                    "braid_verts": int(braid_vertices(mesh_id, len(CV)).sum())}
+    # ---- P56: the bead sets, each one mesh with its beads on every style's anchors (the style's code in UV2.x) ----
+    codes = bead_codes()
+    for mid in codes:
+        info["meshes"][mid]["bead_anchors"] = len(gh.BEAD_ANCHORS[mid])
+    for set_id in sorted(gh.BEAD_SETS):
+        B = bead_arrays(set_id, style_skin, codes)
+        bob = bead_object(set_id, B, coll, rig)
+        spec = gh.BEAD_SETS[set_id]
+        info["meshes"][set_id] = {"category": "bead", "layer": 3, "dye": "none", "detail": spec["detail"],
+                                  "tris": int(len(B["F"]) * 2), "verts": len(B["V"]), "color": spec["color"],
+                                  "styles": dict(codes), "chains": gp.chains_of(B["groups"]), "covers": []}
+        del bob
     # ---- garments (P54: slot by slot, gg.Wardrobe) and accessories ----------------------------------------
     wardrobe = gg.Wardrobe(bd, rig, coll, weights, S, layout)
     built = wardrobe.build()

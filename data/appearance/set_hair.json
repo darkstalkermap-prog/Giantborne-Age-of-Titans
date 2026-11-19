@@ -4,7 +4,7 @@
 	"type": "appearance_set",
 	"category": "hair",
 	"display_name": "Hair",
-	"description": "P42 (plan M10 §2.3): the hair styles (the floor's three and the look pass's three, P46); mesh is a giant index mesh id, scalp_tint the hair colour on the scalp.",
+	"description": "P42 (plan M10 §2.3): the hair styles (the floor's three and the look pass's three, P46; the catalogue II's five, P56: every one with bead anchors); mesh is a giant index mesh id, scalp_tint the hair colour on the scalp (the side-shaved head's bare sides take half of it).",
 	"options": [
 		{"key": "shaved", "name": "Shaved", "mesh": "", "scalp_tint": 0.35},
 		{"key": "crop", "name": "Cropped", "mesh": "Hair_crop", "scalp_tint": 1.0},
@@ -12,6 +12,11 @@
 		{"key": "shoulder", "name": "Shoulder length", "mesh": "Hair_long_back", "scalp_tint": 1.0, "length": 0.6},
 		{"key": "long_braided", "name": "Long, two braids", "mesh": "Hair_long_braided", "scalp_tint": 1.0},
 		{"key": "warrior_tail", "name": "Warrior's tail", "mesh": "Hair_warrior_tail", "scalp_tint": 1.0},
-		{"key": "wild_mane", "name": "Wild mane", "mesh": "Hair_wild_mane", "scalp_tint": 1.0}
+		{"key": "wild_mane", "name": "Wild mane", "mesh": "Hair_wild_mane", "scalp_tint": 1.0},
+		{"key": "top_knot", "name": "Top knot", "mesh": "Hair_top_knot", "scalp_tint": 1.0},
+		{"key": "side_braids", "name": "Shaved sides, braided top", "mesh": "Hair_side_braids", "scalp_tint": 0.5},
+		{"key": "twin_braids", "name": "Twin braids", "mesh": "Hair_twin_braids", "scalp_tint": 1.0},
+		{"key": "long_loose", "name": "Long and loose", "mesh": "Hair_long_loose", "scalp_tint": 1.0},
+		{"key": "circlet_braid", "name": "Circlet braid", "mesh": "Hair_circlet_braid", "scalp_tint": 1.0}
 	]
 }

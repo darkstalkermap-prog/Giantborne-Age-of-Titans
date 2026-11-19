@@ -4,7 +4,7 @@
 	"type": "appearance_set",
 	"category": "tattoo",
 	"display_name": "Tattoos",
-	"description": "P42 (plan M10 §2.3): the tattoos, four per region (the floor's eight and the look pass's eight, P46), bold pieces that read from behind at stage 1 or in first person (decision 18); design is a giant index design id.",
+	"description": "P42 (plan M10 §2.3): the tattoos, four per region (the floor's eight and the look pass's eight, P46; the catalogue II's twelve, P56: four for the legs and two more for every other region), bold pieces that read from behind at stage 1 or in first person (decision 18); design is a giant index design id.",
 	"options": [
 		{"key": "arm_bands", "name": "Arm bands", "design": "tat_arm_bands", "region": "arms"},
 		{"key": "arm_chevrons", "name": "Forearm chevrons", "design": "tat_arm_chevrons", "region": "arms"},
@@ -21,6 +21,18 @@
 		{"key": "back_shoulders", "name": "Shoulder to shoulder", "design": "tat_back_shoulders", "region": "back"},
 		{"key": "back_serpent", "name": "Spine serpent", "design": "tat_back_serpent", "region": "back"},
 		{"key": "face_crown", "name": "Brow crown", "design": "tat_face_crown", "region": "face"},
-		{"key": "face_bars", "name": "Cheek bars", "design": "tat_face_bars", "region": "face"}
+		{"key": "face_bars", "name": "Cheek bars", "design": "tat_face_bars", "region": "face"},
+		{"key": "leg_bands", "name": "Thigh bands", "design": "tat_leg_bands", "region": "legs"},
+		{"key": "leg_serpent", "name": "Leg serpent", "design": "tat_leg_serpent", "region": "legs"},
+		{"key": "leg_runes", "name": "Shin runes", "design": "tat_leg_runes", "region": "legs"},
+		{"key": "leg_claws", "name": "Thigh claws", "design": "tat_leg_claws", "region": "legs"},
+		{"key": "arm_runes", "name": "Forearm runes", "design": "tat_arm_runes", "region": "arms"},
+		{"key": "arm_spirals", "name": "Shoulder spirals", "design": "tat_arm_spirals", "region": "arms"},
+		{"key": "chest_raven", "name": "Chest raven", "design": "tat_chest_raven", "region": "chest"},
+		{"key": "chest_runes", "name": "Rune column", "design": "tat_chest_runes", "region": "chest"},
+		{"key": "back_wheel", "name": "Sun wheel", "design": "tat_back_wheel", "region": "back"},
+		{"key": "back_spine", "name": "Spine chevrons", "design": "tat_back_spine", "region": "back"},
+		{"key": "face_temples", "name": "Temple spirals", "design": "tat_face_temples", "region": "face"},
+		{"key": "face_chin", "name": "Chin lines", "design": "tat_face_chin", "region": "face"}
 	]
 }

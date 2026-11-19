@@ -80,10 +80,89 @@ STYLES.update({
         dict(n=120, length=0.19, lo=0.009, hi=0.016, npts=7, power=1.0, width=0.024, curl=0.15, wispy=0.3,
              fork=1.0)], "under_jaw": dict(n=36)},
 })
+# The catalogue II (P56; plan M11 §2.6, §3.9): five hair and four beard styles, every one with bead anchors. A
+# layer's "grow" picks its grower ("knot" and "tail" take an "at": the back knot or the crown; "toward" combs the
+# locks to the braids' roots), a "region" narrows the skin it grows on ("strip": the top of a side-shaved head;
+# "chops": the beard without the chin; "mustache": the upper lip). A braid's "at" is where it leaves the head
+# (see braid_start), its "ties" the share of its length where a tie ring sits, its "beads" where the bead sets
+# (bead_shapes) sit on it; "lean" the way it hangs; "grow": True lets it fall along the body (twin braids over the
+# chest) instead of a straight line pushed off the skin.
+STYLES.update({
+    "Hair_top_knot": {"kind": "scalp", "layers": [
+        dict(n=420, length=0.18, lo=0.003, hi=0.007, npts=5, power=0.5, width=0.04, curl=0.04, wispy=0.0,
+             grow="knot", at="crown"),
+        dict(n=90, length=0.10, lo=0.0, hi=0.0, npts=5, power=1.0, width=0.036, curl=0.12, wispy=0.35,
+             grow="tail", at="crown")], "fringe": dict(n=70),
+        "braids": [dict(at="crown", side=0.0, length=0.24, width=0.032, step=0.016, lean=(0.0, 0.75, -1.0),
+                        ties=(1.0,), beads=(0.3, 0.55, 0.8))]},
+    "Hair_side_braids": {"kind": "scalp", "layers": [
+        dict(n=300, length=0.2, lo=0.003, hi=0.008, npts=6, power=0.5, width=0.038, curl=0.05, wispy=0.0,
+             grow="toward", region="strip"),
+        dict(n=120, length=0.22, lo=0.009, hi=0.014, npts=7, power=0.7, width=0.032, curl=0.12, wispy=0.3,
+             grow="toward", region="strip")], "fringe": dict(n=36, region="strip"),
+        "braids": [dict(at="back", side=0.0, length=0.34, width=0.044, step=0.017, lean=(0.0, 0.3, -1.0),
+                        ties=(1.0,), beads=(0.25, 0.5, 0.75)),
+                   dict(at="back_side", side=1.0, length=0.2, width=0.022, step=0.014, lean=(0.08, 0.3, -1.0),
+                        ties=(1.0,), beads=(0.55,)),
+                   dict(at="back_side", side=-1.0, length=0.2, width=0.022, step=0.014, lean=(-0.08, 0.3, -1.0),
+                        ties=(1.0,), beads=(0.55,))]},
+    "Hair_twin_braids": {"kind": "scalp", "layers": [
+        dict(n=335, length=0.2, lo=0.003, hi=0.008, npts=6, power=0.5, width=0.04, curl=0.05, wispy=0.0,
+             grow="toward"),
+        dict(n=130, length=0.22, lo=0.009, hi=0.015, npts=6, power=0.7, width=0.034, curl=0.1, wispy=0.25,
+             grow="toward")], "fringe": dict(n=80),
+        "braids": [dict(at="nape_side", side=s, length=0.56, width=0.04, step=0.018, lean=(0.22 * s, -0.55, -1.0),
+                        ties=(1.0,), beads=(0.35, 0.6, 0.85), grow=True) for s in (1.0, -1.0)]},
+    "Hair_long_loose": {"kind": "scalp", "layers": [
+        dict(n=230, length=0.21, lo=0.006, hi=0.012, npts=6, power=0.6, width=0.044, curl=0.12, wispy=0.0,
+             tuck=0.02),
+        dict(n=150, length=0.33, lo=0.014, hi=0.03, npts=9, power=0.6, width=0.036, curl=0.22, wispy=0.4,
+             wild=0.15, tuck=0.02)], "fringe": dict(n=80), "loose": dict(n=44, length=0.3, wild=0.25),
+        "braids": [dict(at="temple", side=s, length=0.26, width=0.018, step=0.013, lean=(0.1 * s, -0.25, -1.0),
+                        ties=(1.0,), beads=(0.45, 0.75), grow=True) for s in (1.0, -1.0)]},
+    "Hair_circlet_braid": {"kind": "scalp", "layers": [
+        dict(n=260, length=0.15, lo=0.004, hi=0.009, npts=6, power=0.6, width=0.042, curl=0.1, wispy=0.0),
+        dict(n=150, length=0.2, lo=0.011, hi=0.018, npts=7, power=0.6, width=0.034, curl=0.18, wispy=0.3)],
+        "fringe": dict(n=80),
+        "braids": [dict(at="circlet", side=0.0, length=0.0, width=0.022, step=0.013, lean=(0.0, 0.0, 0.0),
+                        ties=(0.0,), beads=(0.125, 0.25, 0.375, 0.625, 0.75, 0.875))]},
+    "Beard_chin_braid": {"kind": "beard", "locks": False, "layers": [
+        dict(n=340, length=0.09, lo=0.004, hi=0.008, npts=5, power=1.0, width=0.022, curl=0.1, wispy=0.2)],
+        "braids": [dict(at="chin", side=0.0, length=0.26, width=0.038, step=0.015, lean=(0.0, -0.2, -1.0),
+                        ties=(1.0,), beads=(0.3, 0.55, 0.8))]},
+    "Beard_long_forked": {"kind": "beard", "layers": [
+        dict(n=160, length=0.24, lo=0.004, hi=0.008, npts=7, power=1.0, width=0.03, curl=0.1, wispy=0.0, fork=1.0),
+        dict(n=110, length=0.3, lo=0.009, hi=0.016, npts=8, power=1.0, width=0.024, curl=0.15, wispy=0.3,
+             fork=1.0)], "under_jaw": dict(n=30),
+        "braids": [dict(at="tine", side=s, length=0.1, width=0.03, step=0.014, lean=(0.02 * s, -0.1, -1.0),
+                        ties=(1.0,), beads=(0.45,)) for s in (1.0, -1.0)]},
+    "Beard_mutton_chops": {"kind": "beard", "locks": False, "layers": [
+        dict(n=400, length=0.06, lo=0.004, hi=0.009, npts=4, power=1.0, width=0.02, curl=0.1, wispy=0.15,
+             region="chops"),
+        dict(n=160, length=0.075, lo=0.009, hi=0.014, npts=4, power=1.0, width=0.018, curl=0.14, wispy=0.4,
+             region="chops")],
+        "braids": [dict(at="chop", side=s, length=0.08, width=0.022, step=0.012, lean=(0.04 * s, -0.1, -1.0),
+                        ties=(1.0,), beads=(0.5,)) for s in (1.0, -1.0)]},
+    "Beard_braided_moustache": {"kind": "beard", "locks": False, "layers": [
+        dict(n=260, length=0.06, lo=0.003, hi=0.007, npts=4, power=1.0, width=0.018, curl=0.1, wispy=0.2,
+             region="mustache")],
+        "braids": [dict(at="corner", side=s, length=0.21, width=0.022, step=0.013, lean=(0.12 * s, -0.2, -1.0),
+                        ties=(1.0,), beads=(0.4, 0.7), grow=True) for s in (1.0, -1.0)]},
+})
+# The bead anchors of M10's braided styles (P56): beads between their own two rings (at two fifths and at the tie).
+OLD_BRAID_BEADS = {"Hair_long_braided": (0.2, 0.68), "Beard_braided": (0.2, 0.65)}
 # The order the styles are grown in (one random stream, seed HAIR_SEED): the floor's four first, so the
-# target's styles leave them as they were.
+# target's styles leave them as they were; the catalogue II's after them (P56), so every earlier style is as it was.
 STYLE_ORDER = ("Hair_long_back", "Hair_crop", "Beard_full", "Beard_short",
-               "Hair_long_braided", "Hair_warrior_tail", "Hair_wild_mane", "Beard_braided", "Beard_forked")
+               "Hair_long_braided", "Hair_warrior_tail", "Hair_wild_mane", "Beard_braided", "Beard_forked",
+               "Hair_top_knot", "Hair_side_braids", "Hair_twin_braids", "Hair_long_loose", "Hair_circlet_braid",
+               "Beard_chin_braid", "Beard_long_forked", "Beard_mutton_chops", "Beard_braided_moustache")
+NEW_STYLES = STYLE_ORDER[9:]
+# The bead sets (P56): their shape round a braid (bead_shapes), detail kind and colour; the index's "bead" meshes.
+BEAD_SETS = {"Beads_bone": dict(shape="barrel", detail="bone", color="#d9ccb0"),
+             "Beads_bronze": dict(shape="rings", detail="metal", color="#a8743c"),
+             "Beads_silver": dict(shape="round", detail="metal", color="#c9ccd1")}
+BEAD_SIDES_SET = 6
 HAIR_SEED = 11
 # The hairline's fringe (the M10 gate, LC-6): what a style's "fringe" entry does not give. Short, narrow cards
 # (three points, four triangles a card), most of them from the atlas's wispy column, lying back over the roots
@@ -265,8 +344,9 @@ def tuck_shoulders(surf, P, L, S, hs, tuck):
     return P
 
 
-def grow_scalp(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=10, power=0.6, wild=0.0, tuck=0.0):
-    roots, nrm, mv, _ = surf.sample("m_scalp", n, rng, power=power)
+def grow_scalp(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=10, power=0.6, wild=0.0, tuck=0.0,
+               mask="m_scalp"):
+    roots, nrm, mv, _ = surf.sample(mask, n, rng, power=power)
     roots += nrm * 0.0004 * S
     front = np.array([0.0, L["face_y"] - 0.07 * hs * S, L["brow_z"] + 0.06 * hs * S])
 
@@ -295,12 +375,13 @@ def grow_scalp(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=10, powe
     return post_collide(surf, P, 0.0015 * S)
 
 
-def grow_fringe(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=3):
+def grow_fringe(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=3, mask=None):
     """The hairline's fringe (the M10 gate, LC-6): ``n`` short guides rooted evenly along the front of the
     scalp's edge (forehead, temples, in front of the ears), lying back along the scalp's own flow over the
     roots of the style's cards. Candidates are drawn on the triangles the scalp mask's edge crosses and the
-    roots are picked farthest-first among them, so the row has no gap (the bare notch above the temple)."""
-    m = np.clip(surf.attr["m_scalp"], 0.0, 1.0)
+    roots are picked farthest-first among them, so the row has no gap (the bare notch above the temple).
+    ``mask`` (P56): a narrower scalp (the side-shaved top's strip)."""
+    m = np.clip(surf.attr["m_scalp"] if mask is None else mask, 0.0, 1.0)
     tm = m[surf.T]
     _Vs, _Ns, c, _ztop, _yback, _zmin = _scalp_frame(surf)
     cen = surf.V[surf.T].mean(axis=1)
@@ -345,19 +426,23 @@ def _scalp_frame(surf):
     return Vs, Ns, Vs.mean(axis=0), Vs[:, 2].max(), Vs[:, 1].max(), Vs[:, 2].min()
 
 
-def knot_point(surf, S):
-    """Where the warrior's tail is tied: high on the back of the head, a little off the scalp."""
+def knot_point(surf, S, at="back"):
+    """Where the warrior's tail is tied: high on the back of the head, a little off the scalp; ``at`` "crown" (P56):
+    the top knot's, on the crown a little behind the top."""
     Vs, Ns, c, ztop, yback, _zmin = _scalp_frame(surf)
-    target = np.array([0.0, c[1] + 0.62 * (yback - c[1]), c[2] + 0.8 * (ztop - c[2])])
+    if at == "crown":
+        target = np.array([0.0, c[1] + 0.2 * (yback - c[1]), ztop])
+    else:
+        target = np.array([0.0, c[1] + 0.62 * (yback - c[1]), c[2] + 0.8 * (ztop - c[2])])
     i = int(np.argmin(np.linalg.norm(Vs - target, axis=1)))
     return Vs[i] + Ns[i] * 0.012 * S
 
 
-def grow_knot(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=5, power=0.5):
+def grow_knot(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=5, power=0.5, at="back", mask="m_scalp"):
     """The warrior's tail, on the head: every lock lies flat and runs to the knot."""
-    roots, nrm, mv, _ = surf.sample("m_scalp", n, rng, power=power)
+    roots, nrm, mv, _ = surf.sample(mask, n, rng, power=power)
     roots += nrm * 0.0004 * S
-    knot = knot_point(surf, S)
+    knot = knot_point(surf, S, at)
 
     def flow(P, nn, s):
         return _unit(_tangent(knot - P, nn))
@@ -370,24 +455,49 @@ def grow_knot(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=5, power=
     return post_collide(surf, P, 0.001 * S)
 
 
-def grow_tail(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=9, power=1.0):
-    """The warrior's tail, off the head: locks from the knot, out behind the head and down the back."""
-    knot = knot_point(surf, S)
+def grow_tail(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=9, power=1.0, at="back"):
+    """The warrior's tail, off the head: locks from the knot, out behind the head and down the back. ``at``
+    "crown" (P56): the top knot's tuft, rising from the knot and falling over it all round."""
+    knot = knot_point(surf, S, at)
     G = np.array([0.0, 0.0, -1.0])
     start = knot + rng.normal(size=(n, 3)) * 0.012 * S
-    d = _unit(np.array([0.0, 0.85, 0.35]) + rng.normal(size=(n, 3)) * 0.22)
+    if at == "crown":
+        d = _unit(np.array([0.0, 0.25, 1.0]) + rng.normal(size=(n, 3)) * 0.55)
+        keep, fall = 0.7, 0.32
+    else:
+        d = _unit(np.array([0.0, 0.85, 0.35]) + rng.normal(size=(n, 3)) * 0.22)
+        keep, fall = 0.62, 0.5
     Lh = length * S * (0.75 + 0.35 * rng.random(n))
     seg = (Lh / (npts - 1))[:, None]
     P = np.zeros((n, npts, 3))
     P[:, 0] = start
     for k in range(1, npts):
-        d = _unit(d * 0.62 + G * 0.5)
+        d = _unit(d * keep + G * fall)
         P[:, k] = P[:, k - 1] + d * seg
     return post_collide(surf, P, 0.012 * S)
 
 
-def grow_beard(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=8, power=1.0, fork=0.0):
-    roots, nrm, mv, _ = surf.sample("m_beard", n, rng, power=power)
+def grow_toward(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=6, power=0.5, targets=None,
+                mask="m_scalp"):
+    """Locks combed to where a braid leaves the head (P56: the twin braids, the side-shaved top): every lock lies
+    flat on the scalp and runs to ``targets(roots)`` (n, 3), at most ``length`` long."""
+    roots, nrm, mv, _ = surf.sample(mask, n, rng, power=power)
+    roots += nrm * 0.0004 * S
+    tgt = targets(roots)
+
+    def flow(P, nn, s):
+        return _unit(_tangent(tgt - P, nn) + np.array([0.0, 0.0, -0.15]))
+
+    dist = np.linalg.norm(roots - tgt, axis=1)
+    Lh = np.clip(dist * (0.85 + 0.3 * rng.random(n)), 0.04 * S, length * S)
+    lift = 0.05 + 0.08 * rng.random(n)
+    layer = (layer_lo + (layer_hi - layer_lo) * rng.random(n)) * hs * S
+    P = grow(surf, roots, nrm, Lh, npts, flow, lift, 0.4, 1.0, 0.1, 0.001 * S, layer)
+    return post_collide(surf, P, 0.001 * S)
+
+
+def grow_beard(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=8, power=1.0, fork=0.0, mask="m_beard"):
+    roots, nrm, mv, _ = surf.sample(mask, n, rng, power=power)
     roots += nrm * 0.0003 * S
     chin, lip_bot, lip_top = L["chin"], L["lip_bot"], L["lip_top"]
     z = roots[:, 2]
@@ -492,11 +602,18 @@ def grow_under_jaw(surf, L, S, hs, rng, n, length, layer_lo, layer_hi, npts=5):
     return post_collide(surf, P, 0.0012 * S)
 
 
-def braid_tube(path, width, S, centre):
+def braid_thin(i, K, closed=False):
+    """A braid's narrowing towards its tie at ring ``i`` of ``K`` (a closed braid, the circlet, keeps its width)."""
+    return 1.0 if closed else 1.0 - 0.45 * (i / (K - 1)) ** 2
+
+
+def braid_tube(path, width, S, centre, ties=None, closed=False):
     """A braid as a twisted tube along ``path`` (K, 3) (P51): BRAID_SIDES round, its radius rippling with the
     three strands of a plait (BRAID_RELIEF) that turn BRAID_TWIST radians a ring, narrowing towards the tie, and
     a bead ring at its tie and one at two fifths. Returns V, F (quads), UV, normals and UV2 (1 the tube, 2 the
-    beads); the tube's u runs round the atlas's dense column, its v from the root (1) to the tie (0)."""
+    beads); the tube's u runs round the atlas's dense column, its v from the root (1) to the tie (0). ``ties``
+    (P56): the shares of its length where its rings sit (None: M10's two); ``closed``: a ring round the head
+    (the circlet: no narrowing; its last ring meets its first under a tie)."""
     K = len(path)
     w = width * S
     T = np.gradient(path, axis=0)
@@ -513,7 +630,7 @@ def braid_tube(path, width, S, centre):
     ring = BRAID_SIDES + 1
     for i in range(K):
         x, y = frames[i]
-        thin = 1.0 - 0.45 * (i / (K - 1)) ** 2
+        thin = braid_thin(i, K, closed)
         for j in range(ring):
             a = 2.0 * np.pi * j / BRAID_SIDES
             rel = 1.0 + BRAID_RELIEF * np.cos(3.0 * a + BRAID_TWIST * i)
@@ -527,10 +644,12 @@ def braid_tube(path, width, S, centre):
             a = i * ring + j
             Fs.append((a, a + ring, a + ring + 1, a + 1))
     # beads: short rings round the tube
-    for at in (int(round(0.4 * (K - 1))), K - 2):
+    rings = (int(round(0.4 * (K - 1))), K - 2) if ties is None else \
+        tuple(min(max(int(round(f * (K - 1))), 0), K - 2) for f in ties)
+    for at in rings:
         base = len(Vs)
         x, y = frames[at]
-        r = BEAD_RADIUS * w
+        r = BEAD_RADIUS * w * (1.0 if ties is None else braid_thin(at, K, closed) * 1.3)
         for e, off in enumerate((-0.5, 0.5)):
             c = path[at] + T[at] * off * BEAD_LENGTH * w
             for j in range(BEAD_SIDES + 1):
@@ -567,6 +686,19 @@ def shell_cap(A, mask, S, threshold, lift):
 # The vertices of each style that belong to its braids (tubes and beads), set by build_styles (P51; the
 # export's skin hangs them whole from where they leave the head).
 BRAID_MASKS = {}
+# Each style's fringe as vertex ranges (P56: the hairline strips, which take the face keys).
+STRIP_RANGES = {}
+
+
+def _toward_targets(surf, L, S, hs, style):
+    """The point every lock of a "toward" layer runs to (P56): the root of the braid on its side (the twin braids),
+    else the first braid's (the side-shaved head's back braid)."""
+    braids = style["braids"]
+    by_side = {b["side"]: braid_start(surf, L, S, hs, b["at"], b["side"]) for b in braids}
+    if 1.0 in by_side and -1.0 in by_side and 0.0 not in by_side:
+        return lambda R: np.where((R[:, 0] >= 0.0)[:, None], by_side[1.0][None, :], by_side[-1.0][None, :])
+    first = braid_start(surf, L, S, hs, braids[0]["at"], braids[0]["side"])
+    return lambda R: np.broadcast_to(first, R.shape).copy()
 
 
 def braid_start(surf, L, S, hs, at, side):
@@ -576,11 +708,175 @@ def braid_start(surf, L, S, hs, at, side):
         target = np.array([side * (np.abs(Vs[:, 0]).max() + 0.01 * S), c[1] + 0.01 * S, c[2] - 0.45 * (c[2] - zmin)])
         i = int(np.argmin(np.linalg.norm(Vs - target, axis=1)))
         return Vs[i] + Ns[i] * 0.008 * S
+    if at in ("crown", "back", "back_side", "temple", "nape_side"):
+        # P56: the top knot's crown; the side-shaved head's back (its middle, and a little to either side); the
+        # temple in front of the ear (the long loose hair's thin braids)
+        Vs, Ns, c, ztop, yback, zmin = _scalp_frame(surf)
+        half_x = np.abs(Vs[:, 0]).max()
+        if at == "crown":
+            return knot_point(surf, S, "crown") + np.array([0.0, 0.01 * S, 0.0])
+        if at == "back":
+            target = np.array([0.0, yback, c[2] + 0.15 * (ztop - c[2])])
+        elif at == "nape_side":
+            target = np.array([side * 0.85 * half_x, c[1] + 0.3 * (yback - c[1]), L["ear_z"][0] - 0.005 * hs * S])
+        elif at == "back_side":
+            target = np.array([side * 0.3 * half_x, yback, c[2] - 0.1 * (c[2] - zmin)])
+        else:
+            target = np.array([side * half_x, c[1] - 0.45 * (yback - c[1]), L["ear_z"][1] + 0.012 * hs * S])
+        i = int(np.argmin(np.linalg.norm(Vs - target, axis=1)))
+        return Vs[i] + Ns[i] * 0.012 * S
+    if at in ("corner", "chop"):
+        # P56: a corner of the mouth (the braided moustache), the lower end of a chop
+        sel = surf.attr["m_beard"] > 0.3
+        Vb, Nb = surf.V[sel], surf.N[sel]
+        if at == "corner":
+            target = np.array([side * 0.03 * hs * S, L["face_y"] + 0.022 * hs * S, L["lip_bot"] - 0.004 * hs * S])
+        else:
+            target = np.array([side * 0.058 * hs * S, L["face_y"] + 0.07 * hs * S, L["chin"] + 0.012 * hs * S])
+        i = int(np.argmin(np.linalg.norm(Vb - target, axis=1)))
+        return Vb[i] + Nb[i] * 0.008 * S
     sel = surf.attr["m_beard"] > 0.5
     Vb, Nb = surf.V[sel], surf.N[sel]
     target = np.array([side * 0.02 * hs * S, Vb[:, 1].min(), L["chin"] - 0.005 * hs * S])
     i = int(np.argmin(np.linalg.norm(Vb - target, axis=1)))
     return Vb[i] + Nb[i] * 0.01 * S
+
+
+def braid_path(surf, S, start, lean, length, width, step, hang=False):
+    """A braid's path (K, 3) from ``start`` (P56): along ``lean`` pushed off the body like braid_guides', or with
+    ``hang`` grown step by step under gravity over the body's surface (a braid falling over the shoulder onto the
+    chest), its middle kept a braid's radius and a little off the skin."""
+    n_steps = max(4, int(round(length / step)))
+    clear = 0.5 * width * S * (1.0 + BRAID_RELIEF) + 0.004 * S
+    if not hang:
+        d = _unit(np.asarray(lean, float))
+        path = start[None, :] + d[None, :] * (np.arange(n_steps + 2)[:, None] * step * S)
+        return post_collide(surf, path[None, :, :], max(0.014 * S, clear))[0]
+    lean = _unit(np.asarray(lean, float))
+    _, nrm = surf.nearest(start[None, :])
+
+    def flow(P, nn, s):
+        return np.broadcast_to(lean, P.shape)
+
+    P = grow(surf, start[None, :], nrm, np.array([(n_steps + 1) * step * S]), n_steps + 2, flow,
+             np.array([0.4]), 0.55, 1.0, 0.5, clear, clear)
+    return post_collide(surf, P, clear)[0]
+
+
+def circlet_path(surf, L, S, hs, width, step):
+    """The circlet braid's ring round the head (P56): at the hairline in front, a little lower behind, standing a
+    braid's radius off the hair's inner layer; closed (its last point is its first)."""
+    Vs, Ns, c, ztop, yback, zmin = _scalp_frame(surf)
+    z_front = L["brow_z"] + 0.095 * hs * S
+    z_back = z_front - 0.035 * hs * S
+    clear = 0.5 * width * S * (1.0 + BRAID_RELIEF) + 0.004 * hs * S
+    pts = []
+    head = surf.V[np.clip(surf.attr["m_head"], 0, 1) > 0.5]
+    n = 48
+    for k in range(n):
+        th = 2.0 * np.pi * k / n                      # 0 the face (-Y), round by the giant's left (+X)
+        d = np.array([np.sin(th), -np.cos(th), 0.0])
+        z = z_back + (z_front - z_back) * 0.5 * (1.0 + np.cos(th))
+        band = head[np.abs(head[:, 2] - z) < 0.006 * S]
+        far = band[int(np.argmax((band[:, :2] - c[:2]) @ d[:2]))]
+        pts.append(np.array([far[0], far[1], z]) + d * clear)
+    path = np.asarray(pts)
+    # smooth the ring (the slice's farthest points step with the mesh)
+    for _ in range(3):
+        path = 0.5 * path + 0.25 * (np.roll(path, 1, axis=0) + np.roll(path, -1, axis=0))
+    # resample at the braid's step
+    seg = np.linalg.norm(np.diff(np.vstack([path, path[:1]]), axis=0), axis=1)
+    total = seg.sum()
+    m = max(8, int(round(total / (step * S))))
+    s = np.concatenate([[0.0], np.cumsum(seg)])
+    closed = np.vstack([path, path[:1]])
+    out = np.stack([np.interp(np.linspace(0.0, total, m + 1), s, closed[:, a]) for a in range(3)], axis=1)
+    return post_collide(surf, out[None, :, :], clear)[0]
+
+
+def region_mask(surf, L, S, hs, region):
+    """A narrower skin for a layer (P56): "strip" the top of a side-shaved head (the sides bare), "chops" the beard
+    without the chin, "mustache" the upper lip."""
+    V = surf.V
+    if region == "strip":
+        Vs = surf.V[surf.attr["m_scalp"] > 0.5]
+        half_x = np.abs(Vs[:, 0]).max()
+        return np.clip(surf.attr["m_scalp"], 0, 1) * (1.0 - sstep_np(np.abs(V[:, 0]), 0.3 * half_x, 0.42 * half_x))
+    if region == "chops":
+        chin = (1.0 - sstep_np(np.abs(V[:, 0]), 0.045 * hs * S, 0.065 * hs * S)) * \
+            sstep_np(L["lip_bot"] - V[:, 2], -0.004 * hs * S, 0.006 * hs * S)
+        throat = sstep_np(L["chin"] + 0.01 * hs * S - V[:, 2], 0.0, 0.01 * hs * S)
+        return np.clip(surf.attr["m_beard"], 0, 1) * (1.0 - chin) * (1.0 - throat)
+    if region == "mustache":
+        return np.clip(surf.attr["m_mustache"], 0, 1)
+    raise ValueError("unknown region %s" % region)
+
+
+def sstep_np(x, a, b):
+    t = np.clip((np.asarray(x, np.float64) - a) / (b - a), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+def tine_point(tips, side, hs, S):
+    """Where the long forked beard's tine on ``side`` gathers (P56): the mean of the lowest tips (n, 3) on that side."""
+    sel = tips[:, 0] * side > 0.02 * hs * S
+    t = tips[sel]
+    lo = t[t[:, 2] <= np.quantile(t[:, 2], 0.2)]
+    return lo.mean(axis=0) + np.array([0.0, 0.0, 0.012 * S])
+
+
+def anchors_on(path, width, S, fractions, closed=False):
+    """The bead anchors of a braid (P56): at each share of its length, (point, tangent, radius the bead wraps)."""
+    K = len(path)
+    seg = np.linalg.norm(np.diff(path, axis=0), axis=1)
+    s = np.concatenate([[0.0], np.cumsum(seg)]) / max(seg.sum(), 1e-9)
+    T = np.gradient(path, axis=0)
+    T /= np.linalg.norm(T, axis=1, keepdims=True) + 1e-12
+    out = []
+    for f in fractions:
+        i = int(np.clip(np.searchsorted(s, f), 1, K - 1))
+        a = (f - s[i - 1]) / max(s[i] - s[i - 1], 1e-9)
+        p = path[i - 1] * (1.0 - a) + path[i] * a
+        t = _unit(T[i - 1] * (1.0 - a) + T[i] * a)
+        thin = braid_thin((i - 1) + a, K, closed)
+        out.append((p, t, 0.5 * width * S * thin * (1.0 + BRAID_RELIEF)))
+    return out
+
+
+def bead_shape(shape, p, t, r, ref):
+    """One bead round a braid (P56): V (n, 3), F (quads), N, UV for the bead set's ``shape``: "barrel" a long bone
+    bead, "rings" two flat rings, "round" a round bead; ``r`` the radius it wraps, ``ref`` a direction across."""
+    x = _unit(ref - t * float(ref @ t))
+    y = np.cross(t, x)
+    if shape == "barrel":
+        prof = [(-0.7, 1.02), (-0.5, 1.16), (0.5, 1.16), (0.7, 1.02)]
+    elif shape == "rings":
+        prof = [(-0.55, 1.04), (-0.45, 1.2), (-0.25, 1.2), (-0.15, 1.04), (0.15, 1.04), (0.25, 1.2), (0.45, 1.2),
+                (0.55, 1.04)]
+    else:
+        prof = [(-0.5, 1.02), (-0.34, 1.26), (0.0, 1.38), (0.34, 1.26), (0.5, 1.02)]
+    n = BEAD_SIDES_SET
+    V, N, UV, F = [], [], [], []
+    for k, (a, rad) in enumerate(prof):
+        for j in range(n + 1):
+            ang = 2.0 * np.pi * j / n
+            d = np.cos(ang) * x + np.sin(ang) * y
+            V.append(p + t * a * r * 1.2 + d * rad * r)
+            nb = prof[min(k + 1, len(prof) - 1)][1] - prof[max(k - 1, 0)][1]
+            N.append(_unit(d - t * nb * 0.8))
+            UV.append((j / n, k / (len(prof) - 1)))
+    for k in range(len(prof) - 1):
+        if shape == "rings" and k == 3:
+            continue                                   # the gap between the two rings
+        for j in range(n):
+            a = k * (n + 1) + j
+            F.append((a, a + n + 1, a + n + 2, a + 1))
+    return np.asarray(V), np.asarray(F), np.asarray(N), np.asarray(UV)
+
+
+# The bead anchors of every style that takes beads (P56), set by build_styles: mesh id -> [(point, tangent, radius)]
+# in Blender's frame at stage 1; the export builds the bead sets on them.
+BEAD_ANCHORS = {}
 
 
 def braid_guides(surf, S, start, lean, length, width, step):
@@ -641,7 +937,7 @@ def build_styles(body, rig, coll, bd, S):
     L = {k: (np.asarray(v) * S if isinstance(v, (list, tuple)) else (v * S if isinstance(v, float) else v))
          for k, v in land.items() if k != "hs"}
     hs = land["hs"]
-    surf = Surface(body, 0, ("m_scalp", "m_beard", "m_head"))
+    surf = Surface(body, 0, ("m_scalp", "m_beard", "m_head", "m_mustache"))
     rng = np.random.default_rng(HAIR_SEED)
     wh = np.clip(surf.attr["m_head"], 0, 1)
     centre = (surf.V * wh[:, None]).sum(axis=0) / wh.sum()
@@ -651,6 +947,8 @@ def build_styles(body, rig, coll, bd, S):
         Vs, Fs, UVs, Ns = [], [], [], []
         off = 0
         cards = 0
+        grown = []      # P56: the layers' guides (the long forked beard's tines gather from them)
+        strips = []     # P56: the fringe's vertex range (the hairline strips that take the face keys)
         for ly in style["layers"]:
             grower = grow_scalp if style["kind"] == "scalp" else grow_beard
             extra = {k: ly[k] for k in ("wild", "fork", "tuck") if k in ly}
@@ -658,9 +956,18 @@ def build_styles(body, rig, coll, bd, S):
                 grower = grow_knot
             elif ly.get("grow") == "tail":
                 grower = grow_tail
+            elif ly.get("grow") == "toward":
+                # P56: the locks run to the braids' roots (each side's own, or the back's on a side-shaved head)
+                grower = grow_toward
+                extra["targets"] = _toward_targets(surf, L, S, hs, style)
+            if "at" in ly:
+                extra["at"] = ly["at"]
+            if "region" in ly:
+                extra["mask"] = region_mask(surf, L, S, hs, ly["region"])
             P = grower(surf, L, S, hs, rng, ly["n"], ly["length"], ly["lo"], ly["hi"], npts=ly["npts"],
                        power=ly["power"], **extra)
             n = len(P)
+            grown.append(P)
             width = ly["width"] * S * (0.8 + 0.4 * rng.random(n))
             if ly["wispy"] > 0:
                 cols = np.where(rng.random(n) < ly["wispy"], 3, rng.integers(0, 3, n))
@@ -682,7 +989,10 @@ def build_styles(body, rig, coll, bd, S):
             # a random stream of its own per style: the other cards of every style stay as they were grown
             fr = dict(FRINGE, **style["fringe"])
             frng = np.random.default_rng([FRINGE_SEED, STYLE_ORDER.index(mesh_id)])
-            P = grow_fringe(surf, L, S, hs, frng, fr["n"], fr["length"], fr["lo"], fr["hi"], npts=fr["npts"])
+            fmask = region_mask(surf, L, S, hs, fr["region"]) if "region" in fr else None
+            P = grow_fringe(surf, L, S, hs, frng, fr["n"], fr["length"], fr["lo"], fr["hi"], npts=fr["npts"],
+                            mask=fmask)
+            strips.append((off, off + len(P) * fr["npts"] * 2))
             n = len(P)
             width = fr["width"] * S * (0.8 + 0.4 * frng.random(n))
             cols = np.where(frng.random(n) < fr["wispy"], 3, frng.integers(0, 3, n))
@@ -730,11 +1040,25 @@ def build_styles(body, rig, coll, bd, S):
             cards += n
         card_verts = off
         U2s = []
+        anchors = []
         for br in style.get("braids", ()):
             # P51: a twisted tube with beads along the braid's path (it was herringbone cards)
-            start = braid_start(surf, L, S, hs, br["at"], br["side"])
-            _lobes, _facing, core = braid_guides(surf, S, start, br["lean"], br["length"], br["width"], br["step"])
-            V, F, UV, Nn, u2 = braid_tube(core[0], br["width"], S, centre)
+            if mesh_id not in NEW_STYLES:
+                start = braid_start(surf, L, S, hs, br["at"], br["side"])
+                _lobes, _facing, core = braid_guides(surf, S, start, br["lean"], br["length"], br["width"], br["step"])
+                path, ties, closed = core[0], None, False
+            elif br["at"] == "circlet":
+                path, ties, closed = circlet_path(surf, L, S, hs, br["width"], br["step"]), br["ties"], True
+            else:
+                start = tine_point(np.concatenate([g[:, -1] for g in grown]), br["side"], hs, S) if br["at"] == "tine" else \
+                    braid_start(surf, L, S, hs, br["at"], br["side"])
+                path = braid_path(surf, S, start, br["lean"], br["length"], br["width"], br["step"],
+                                  hang=br.get("grow", False))
+                ties, closed = br["ties"], False
+            V, F, UV, Nn, u2 = braid_tube(path, br["width"], S, centre, ties=ties, closed=closed)
+            # P56: the bead sets' anchors on this braid (M10's braided styles: between their own rings)
+            beads = br.get("beads", OLD_BRAID_BEADS.get(mesh_id, ()))
+            anchors += anchors_on(path, br["width"], S, beads, closed)
             U2s.append(u2)
             Vs.append(V)
             Fs.append(F + off)
@@ -754,6 +1078,9 @@ def build_styles(body, rig, coll, bd, S):
             kinds[card_verts:] = np.concatenate(U2s)
             UV2 = kinds
         BRAID_MASKS[mesh_id] = np.arange(off) >= card_verts
+        STRIP_RANGES[mesh_id] = strips
+        if anchors:
+            BEAD_ANCHORS[mesh_id] = anchors
         mat = "giant_hair" if style["kind"] == "scalp" else "giant_beard"
         ob = card_object(mesh_id, V_all, np.concatenate(Fs), np.concatenate(UVs),
                          np.concatenate(Ns), coll, rig, mat, UV2)

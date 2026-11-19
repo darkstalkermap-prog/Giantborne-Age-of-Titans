@@ -257,9 +257,10 @@ class DesignTest(unittest.TestCase):
             ly = img[li * designs.LAYER_SIZE:(li + 1) * designs.LAYER_SIZE]
             both = ((ly[..., :3] > 24).sum(axis=-1) > 1).sum()
             self.assertEqual(int(both), 0, "layer %d: no texel lit in two of R, G and B" % li)
-        # the scars fill layers of their own, four a layer (P46: the fifth and sixth on a second one)
+        # the scars fill layers of their own, four a layer (P46: the fifth and sixth on a second one; P56: the ten share
+        # the two layers' channels by region, the skin shader's scar_regions)
         scar_layers = {placed[d][0] for d in designs.SCAR_ORDER}
-        self.assertEqual(len(scar_layers), -(-len(designs.SCAR_ORDER) // designs.SCARS_PER_LAYER))
+        self.assertEqual(len(scar_layers), designs.SCAR_LAYERS)
         self.assertEqual(scar_layers, {0, 1})
         self.assertTrue(all(placed[d][0] not in scar_layers for d in placed if cat[d][0] != "scar"))
 
@@ -644,7 +645,8 @@ class BodyTwoTest(unittest.TestCase):
                 long_styles += 1
                 tips = m["UV"][:, 1] >= 0.999
                 # the warrior's tail lies flat on the scalp but for its tail: some tips, not most
-                if braids and e["category"] == "beard":
+                if braids and (e["category"] == "beard" or mid in ("Hair_side_braids", "Hair_twin_braids")):
+                    # P56: the side-shaved top's and the twin braids' cards lie on the head too; their braids hang
                     # P51: the braided beard's cards are short (on the head); its two braids hang on the chain
                     self.assertGreater(int((head[tips] < 0.5).sum()), 0, "%s: its braids' tips are on the chain" % mid)
                 else:
@@ -698,8 +700,8 @@ class BodyTwoTest(unittest.TestCase):
         part_ids = sorted(m for m, e in idx["meshes"].items() if "part_path" in e)
         self.assertEqual(on_disk, [m + ".glb" for m in part_ids], "a file a part, no other")
         # M10's (P48's) 21 parts and the wardrobe's (P54): 28 more garment meshes (25 garments, three of them split)
-        # and the 8 accessories
-        self.assertEqual(len(part_ids), 21 + 28 + 8)
+        # and the 8 accessories; the catalogue II's (P56) nine styles and three bead sets
+        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3)
         self.assertEqual(sorted(m for m, e in idx["meshes"].items() if "part_path" not in e),
                          ["Body_Head", "Body_Limbs", "Body_Torso", "Eyes"])
         for mid in part_ids:
@@ -709,8 +711,8 @@ class BodyTwoTest(unittest.TestCase):
             meshes, _joints = self.parts[mid]
             self.assertEqual(sorted(meshes), [mid], "%s.glb holds its one mesh" % mid)
             self.assertEqual(meshes[mid]["tris"], e["tris"], "%s: the index counts its triangles" % mid)
-            self.assertIn(e["category"], ("hair", "beard", "garment", "accessory"))
-        self.assertEqual(len(files), 13 + 4 + 2 + 57, "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts")
+            self.assertIn(e["category"], ("hair", "beard", "garment", "accessory", "bead"))
+        self.assertEqual(len(files), 13 + 4 + 2 + 69, "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts")
         proxy = info["shadow_proxy"]
         self.assertEqual(idx["shadow_proxy"], {"node": "ShadowProxy", "tris": proxy["tris"]})
         self.assertEqual(self.core["ShadowProxy"]["tris"], proxy["tris"])

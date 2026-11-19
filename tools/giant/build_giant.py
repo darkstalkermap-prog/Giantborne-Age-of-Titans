@@ -203,8 +203,9 @@ def build_index(export_info: dict, design_info: dict) -> dict:
                  "covers": e.get("covers", []), "tris": e["tris"]}
         # P54 (plan M11 §2.6, the index v2): a garment's slot, its slot's shell offset (stage-1 m), its material, a head
         # garment's cut of the hair; an accessory's slot, bone and natural colour
+        # P56: a style's bead anchors (how many), a bead set's style codes (style mesh -> its code in UV2.x)
         for k in ("atlas", "detail", "part", "chains", "free", "shell", "slot", "material", "hides_hair", "hair_cut",
-                  "bone", "color"):
+                  "bone", "color", "bead_anchors", "styles"):
             if k in e:
                 entry[k] = e[k]
         if "file" in e:

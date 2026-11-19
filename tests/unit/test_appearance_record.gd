@@ -550,12 +550,14 @@ func test_the_summary_and_the_covered_regions_keep_a_lines_options() -> void:
 
 func test_every_preset_is_valid_and_names_itself() -> void:
 	var ids := Appearance.preset_ids()
-	assert_eq(ids.size(), 8, "eight presets")
+	assert_eq(ids.size(), 14, "fourteen presets (P56: M10's eight and six new)")
 	for id: String in ids:
 		var r := Appearance.preset_record(id)
 		assert_eq(str(r.get("preset", "")), id, "%s names itself" % id)
 		assert_true(Appearance.is_valid(r, ""), "%s is valid before any line (offered at New Game)" % id)
-		assert_eq(Appearance.summary_lines(r).size(), 9, "%s reads in nine lines" % id)
+		# P56: a preset with its build sliders off zero says so in a tenth line
+		var built := absf(float(r.build.brawn)) > 0.0 or absf(float(r.build.girth)) > 0.0
+		assert_eq(Appearance.summary_lines(r).size(), 10 if built else 9, "%s reads in nine lines, ten with a build" % id)
 	assert_true(ids.has(Appearance.DEFAULT_PRESET), "the Wanderer is one of them")
 	assert_eq(Appearance.data_errors(GameData.records, GameData.record_paths), PackedStringArray(),
 		"the data's own rules hold on the shipped data")

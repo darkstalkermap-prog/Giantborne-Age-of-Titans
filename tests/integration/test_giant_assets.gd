@@ -26,7 +26,8 @@ const SIDE_BONES := ["clavicle", "upperarm", "lowerarm", "hand", "thumb_01", "th
 	"index_01", "index_02", "index_03", "middle_01", "middle_02", "middle_03", "ring_01", "ring_02", "ring_03",
 	"pinky_01", "pinky_02", "pinky_03", "thigh", "calf", "foot", "ball"]
 ## Triangles a mesh may have, by category (the boots are decimated toward 2,500).
-const TRI_CAP := {"body": 16000, "eyes": 1200, "hair": 6000, "beard": 4000, "garment": 5000, "accessory": 400}
+const TRI_CAP := {"body": 16000, "eyes": 1200, "hair": 6000, "beard": 4000, "garment": 5000, "accessory": 400,
+	"bead": 3200}   # P56: a bead set holds the beads of every braided style (the shader shows the shown styles')
 ## P48 (plan M11 §2.2): the leaf chains under head and spine_03.
 const LEAF_BONES := ["hair_01", "hair_02", "hair_03", "hair_l_01", "hair_l_02", "hair_r_01", "hair_r_02", "beard_01",
 	"beard_02", "cape_c_01", "cape_c_02", "cape_c_03", "cape_l_01", "cape_l_02", "cape_l_03", "cape_r_01", "cape_r_02",
@@ -107,8 +108,8 @@ func test_the_model_loads_with_its_skeleton_and_every_index_mesh() -> void:
 		if cat == "accessory":
 			assert_eq(int(e.layer), 1 if str(e.get("bone", "")).begins_with("upperarm") else 2, "%s: on its bone's layer" % id)
 	assert_eq(m.meshes("body").size(), 3, "the body in three parts")
-	assert_eq(m.meshes("hair").size() + m.meshes("beard").size(), 9,
-		"the catalogue's five hair and four beard meshes (the floor's four and the look pass's five, P46)")
+	assert_eq(m.meshes("hair").size() + m.meshes("beard").size(), 18,
+		"the catalogue's ten hair and eight beard meshes (the floor's four, the look pass's five, P46, the catalogue II's nine, P56)")
 	m.free()
 
 
@@ -196,8 +197,8 @@ func test_the_index_the_gltf_and_the_design_array_agree() -> void:
 		assert_true(int(e.layer) >= 0 and int(e.layer) < int(m.index.textures.design_layers), "%s: a layer of the array" % d)
 		assert_true(int(e.channel) >= 0 and int(e.channel) <= 3, "%s: a channel" % d)
 		kinds[str(e.kind)] = int(kinds.get(str(e.kind), 0)) + 1
-	assert_eq(kinds, {"tattoo": 16, "paint": 4, "scar": 6, "mark": 3},
-		"the catalogue's 29 designs (§2.3: the floor's 17 and the look pass's 12, P46)")
+	assert_eq(kinds, {"tattoo": 28, "paint": 8, "scar": 10, "mark": 3},
+		"the catalogue's 49 designs (§2.3: the floor's 17, the look pass's 12, P46, the catalogue II's 20, P56)")
 	for d: String in m.index.designs:
 		assert_true(str(m.index.designs[d].get("side", "")) in ["left", "right", "centre"], "%s: its side (P48)" % d)
 	# P48: the chains and the build range

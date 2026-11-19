@@ -4,11 +4,15 @@
 	"type": "appearance_set",
 	"category": "paint",
 	"display_name": "War paint",
-	"description": "P42 (plan M10 §2.3): the war paints (the floor's two and the look pass's two, P46), drawn on top of the skin and tattoos.",
+	"description": "P42 (plan M10 §2.3): the war paints (the floor's two and the look pass's two, P46; the catalogue II's four, P56), drawn on top of the skin and tattoos. A face paint (region face) and a body paint (any other region) are worn at once; the design packer keeps a face paint on the face's region alone and a body paint off it, so the two never share a region's area.",
 	"options": [
 		{"key": "face_stripes", "name": "Face stripes", "design": "paint_face_stripes", "region": "face"},
 		{"key": "shoulder_bands", "name": "Shoulder bands", "design": "paint_shoulder_bands", "region": "arms"},
 		{"key": "full_face", "name": "Full face", "design": "paint_full_face", "region": "face"},
-		{"key": "back_hand", "name": "Hand print", "design": "paint_back_hand", "region": "back"}
+		{"key": "back_hand", "name": "Hand print", "design": "paint_back_hand", "region": "back"},
+		{"key": "eye_band", "name": "Eye band", "design": "paint_eye_band", "region": "face"},
+		{"key": "half_face", "name": "Half face", "design": "paint_half_face", "region": "face"},
+		{"key": "chest_slash", "name": "Chest slash", "design": "paint_chest_slash", "region": "chest"},
+		{"key": "leg_stripes", "name": "Leg stripes", "design": "paint_leg_stripes", "region": "legs"}
 	]
 }
