@@ -78,12 +78,14 @@ uniform vec3 sss_color : source_color = vec3(0.90, 0.28, 0.16);
 uniform float transmission = 0.5;
 uniform float rough_scale = 1.25;
 uniform float normal_detail = 0.6;
+const float TSIGN_FLIP = 1.0;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
 varying float v_thin;
 varying float v_curv;
 varying flat int v_region;
+varying float v_tsign;
 
 #include "res://assets/shaders/giant_first_person.gdshaderinc"
 varying vec3 v_fp_pos;
@@ -91,6 +93,7 @@ varying flat float v_fp_on;
 
 void vertex() {
 	v_region = clamp(int(COLOR.r * 16.0), 0, 15);
+	v_tsign = COLOR.a * 2.0 - 1.0;
 	v_fp_pos = VERTEX;
 	VERTEX += NORMAL * dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m;   // P53: the build sliders
 	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(v_region);
@@ -149,6 +152,9 @@ void fragment() {
 	if (fp_shoulders_hidden(v_fp_pos, v_fp_on, FRAGCOORD.xy)) {
 		discard;   // first person: the limbs fade out towards the shoulders (the include's header)
 	}
+	// P56: the binormal from the normal, the tangent and the tangent's sign the mesh carries in COLOR.a: the renderer's
+	// blend shapes (the face keys) lose the sign (the binormal went to zero at a key's +1: a black quad between the brows)
+	BINORMAL = normalize(cross(NORMAL, TANGENT)) * (v_tsign < 0.0 ? -1.0 : 1.0) * TSIGN_FLIP;
 	vec3 base = tone_scaled(texture(albedo_tex, UV).rgb, skin_tone / max(bake_tone, vec3(0.01)));
 	vec4 orm = texture(orm_tex, UV);
 	vec4 m = texture(mask_tex, UV);

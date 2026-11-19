@@ -766,10 +766,16 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 	var build_key := [build, build_max]
 	var set_build: bool = root.get_meta(META_BUILD, []) != build_key
 	root.set_meta(META_BUILD, build_key)
+	var stacked := false
 	for id: String in shown_ids:
 		var entry: Dictionary = meshes.get(id, {}) if typeof(meshes.get(id)) == TYPE_DICTIONARY else {}
 		if mesh_kind(entry) == "shell":
-			_stack_shells(mesh_node(root, index, id))
+			var mi := mesh_node(root, index, id)
+			var before: Mesh = mi.mesh if mi != null else null
+			_stack_shells(mi)
+			stacked = stacked or (mi != null and mi.mesh != before)
+	if stacked:
+		_apply_face(root, index, shown_ids, l.face, true)   # P56: a fresh stack starts with its face keys at 0
 	var hidden := hidden_regions_mask(index, l.garments)
 	var codes := region_codes(index, l)
 	var scars := scar_uniforms(index, l.scars)
@@ -953,7 +959,24 @@ static func shell_stack(src: Mesh, layers: int) -> ArrayMesh:
 	if src is ArrayMesh:
 		flags = (src as ArrayMesh).surface_get_format(0) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS
 	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, out, [], {0.04: lod1, 0.12: lod2}, flags)
+	# P56: the face keys of a shell (the skin under the short beard or the crop) go with every layer
+	var shapes := []
+	if src is ArrayMesh and (src as ArrayMesh).get_blend_shape_count() > 0:
+		var am := src as ArrayMesh
+		mesh.blend_shape_mode = am.blend_shape_mode
+		for b in am.get_blend_shape_count():
+			mesh.add_blend_shape(am.get_blend_shape_name(b))
+		for shape: Array in am.surface_get_blend_shape_arrays(0):
+			var sa := []
+			sa.resize(Mesh.ARRAY_MAX)
+			for t in [Mesh.ARRAY_VERTEX, Mesh.ARRAY_NORMAL, Mesh.ARRAY_TANGENT]:
+				if t < shape.size() and shape[t] != null:
+					var a: Variant = shape[t].duplicate()
+					for i in range(1, layers):
+						a.append_array(shape[t])
+					sa[t] = a
+			shapes.append(sa)
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, out, shapes, {0.04: lod1, 0.12: lod2}, flags)
 	mesh.set_meta(META_SHELL_STACK, layers)
 	mesh.resource_name = src.resource_name + "_shells"
 	_shell_stacks[key] = weakref(mesh)
@@ -1012,14 +1035,14 @@ static func complete(look: Dictionary) -> Dictionary:
 ## The face sliders (P53; plan M11 §2.5): every shown mesh with a blend shape named like a face key takes the
 ## key's value (0 when the look has none). A mesh without the shapes (every mesh before P56's face keys) is left
 ## alone.
-static func _apply_face(root: Node3D, index: Dictionary, shown_ids: Array, face: Variant) -> void:
+static func _apply_face(root: Node3D, index: Dictionary, shown_ids: Array, face: Variant, again := false) -> void:
 	var values: Dictionary = face if typeof(face) == TYPE_DICTIONARY else {}
 	var any := false
 	for k: Variant in values:
 		if SchemaUtil.is_number(values[k]) and float(values[k]) != 0.0:
 			any = true
 			break
-	if not any and not root.has_meta(META_FACE):
+	if not any and (again or not root.has_meta(META_FACE)):
 		return   # no face slider set, now or before: nothing to put back
 	if any:
 		root.set_meta(META_FACE, true)

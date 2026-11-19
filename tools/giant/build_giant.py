@@ -203,9 +203,10 @@ def build_index(export_info: dict, design_info: dict) -> dict:
                  "covers": e.get("covers", []), "tris": e["tris"]}
         # P54 (plan M11 §2.6, the index v2): a garment's slot, its slot's shell offset (stage-1 m), its material, a head
         # garment's cut of the hair; an accessory's slot, bone and natural colour
-        # P56: a style's bead anchors (how many), a bead set's style codes (style mesh -> its code in UV2.x)
+        # P56: a style's bead anchors (how many), a bead set's style codes (style mesh -> its code in UV2.x), the face keys a
+        # mesh carries
         for k in ("atlas", "detail", "part", "chains", "free", "shell", "slot", "material", "hides_hair", "hair_cut",
-                  "bone", "color", "bead_anchors", "styles"):
+                  "bone", "color", "bead_anchors", "styles", "face_keys"):
             if k in e:
                 entry[k] = e[k]
         if "file" in e:
@@ -365,8 +366,10 @@ def write(out_root: Path, doc: dict) -> Path:
 # --------------------------------------------------------------------------------------
 IMPORT_TEXTURE = {"compress/mode": "2", "mipmaps/generate": "true"}
 IMPORT_SETTINGS = {
+    # P56 (probe 3): giant.glb carries its own tangents and the head's morph tangents (the face keys); the importer's
+    # ensure_tangents regenerated the keys' tangents and drew a dark quad between the brows at a key's +1
     "giant.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "true",
-                                           "meshes/ensure_tangents": "true", "skins/use_named_skins": "true",
+                                           "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
                                            "animation/import": "false"}),
     # P48: a part is one mesh on the model's skeleton, bound by its named skin; it casts no shadow of its own
     # (the shadow proxy does; a free cape draws its own with its drawn mesh)

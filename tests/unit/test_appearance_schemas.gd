@@ -35,7 +35,7 @@ func _skin(key: String, default := false, color := "#b07a62") -> Dictionary:
 
 func test_the_shipped_sets_and_presets_pass() -> void:
 	var sets := GameData.ids_of_type("appearance_set")
-	assert_eq(sets.size(), 18, "M10's thirteen sets, the record v2's three (garment, metal, build), P54's accessories and P56's beads")
+	assert_eq(sets.size(), 19, "M10's thirteen sets, the record v2's three (garment, metal, build), P54's accessories and P56's beads and face")
 	for id: String in sets:
 		assert_eq(_errors(GameData.get_record(id)), "", "%s passes its schema" % id)
 	var presets := GameData.ids_of_type("appearance_preset")
@@ -49,7 +49,7 @@ func test_the_shipped_sets_and_presets_pass() -> void:
 func test_the_target_catalogue_is_in_the_sets() -> void:
 	# P54 (plan M11 §2.6): twelve outfits, fourteen dyes, 35 garments, 8 accessories; P56: 12 hair styles, 11 beards,
 	# 28 tattoos, 8 war paints, 10 scars, 3 bead sets and none
-	var want := {"hair": 12, "beard": 11, "tattoo": 28, "paint": 8, "scar": 10, "bead": 4, "outfit": 12, "skin": 10, "eyes": 10,
+	var want := {"hair": 12, "beard": 11, "tattoo": 28, "paint": 8, "scar": 10, "bead": 4, "face": 6, "outfit": 12, "skin": 10, "eyes": 10,
 		"haircolor": 10, "ink": 6, "paintcolor": 6, "mark": 3, "dye": 14, "garment": 35, "accessory": 8, "metal": 5}
 	for cat: String in want:
 		assert_eq(Appearance.option_ids(cat).size(), int(want[cat]), "the %s set's options" % cat)
