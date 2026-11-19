@@ -7,7 +7,7 @@ extends Node
 ##
 ##   LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1280x720x24" godot --path . --rendering-driver opengl3 \
 ##     --resolution 320x240 --audio-driver Dummy res://tests/support/skinned_rig_probe.tscn -- --giant-tier=web \
-##     [--probe-stage=N] [--probe-mode=frames|passage|fp_down] [--probe-out=user://m10_frames/] [--probe-weapon=ID]
+##     [--probe-stage=N] [--probe-mode=frames|passage|fp_down|fp_rest] [--probe-out=user://m10_frames/] [--probe-weapon=ID]
 ##
 ## The real scenes/player/giant.tscn (the skinned layers on: a display) stands on a lit floor and is driven
 ## through its InputRouter like the soak drives it; the probe draws a frame only when it captures one (the render
@@ -43,6 +43,11 @@ const CROSSHAIR_PX := 3
 const FP_DOWN_PITCHES := [-55.0, -70.0, -85.0]
 const FP_CORNER := Vector2(0.16, 0.24)
 const FP_MOVE_FRAMES := 4
+## Gate A2: the block between the hands where the thighs' caps showed looking down (x0, y0, x1, y1 shares).
+const FP_HIPS := Rect2(0.44, 0.5, 0.14, 0.35)
+## Mode "fp_rest" (Gate A2): the weapons and the pitches first person at rest is drawn with.
+const FP_REST_WEAPONS := ["weapon.club", "weapon.sword", "weapon.hammer_reinforced"]
+const FP_REST_PITCHES := [0.0, -10.0]
 
 var stage := 1
 var mode := "frames"
@@ -105,6 +110,8 @@ func _run() -> void:
 		await _passage()
 	elif mode == "fp_down":
 		await _fp_down_mode()
+	elif mode == "fp_rest":
+		await _fp_rest_mode()
 	else:
 		await _frames_mode()
 	_out["swing"] = _swing
@@ -201,7 +208,8 @@ func _frames_mode() -> void:
 
 # --------------------------------------------------------------------------- first person, looking down
 
-## Mode "fp_down" (the M10 gate's LC-3): first person at rest at each of FP_DOWN_PITCHES, then walking and
+## Mode "fp_down" (the M10 gate's LC-3), and since Gate A2 first person at rest looking ahead ("fp_rest", below): first
+## person at rest at each of FP_DOWN_PITCHES, then walking and
 ## sprinting at -70 degrees (the worst of FP_MOVE_FRAMES moments of each), each frame drawn with the giant and
 ## without him; "fp_corners" reports, per frame, the share of the pixels of the two bottom corner
 ## blocks (FP_CORNER of the frame each) that the giant changes. Before the fix the arms' shoulder caps filled
@@ -232,8 +240,13 @@ func _fp_down_mode() -> void:
 		vis.visible = false
 		var without := await _draw()
 		vis.visible = true
+		# Gate A2: the hips' block (where the thighs' caps showed between the hands), drawn without the weapon
+		var socket := (vis as SkinnedRig).weapon_socket()
+		socket.visible = false
+		var no_weapon := await _draw()
+		socket.visible = true
 		corners[frame_name] = {"left": _block_diff(with_giant, without, false), "right": _block_diff(with_giant, without, true),
-			"drawn": _block_diff(with_giant, without, false, Vector2(1.0, 1.0))}
+			"drawn": _block_diff(with_giant, without, false, Vector2(1.0, 1.0)), "hips": _rect_diff(no_weapon, without, FP_HIPS)}
 	# on the move: a walk, then a sprint, at -70 degrees, at FP_MOVE_FRAMES moments of the stride (the camera bobs,
 	# the body leans: the corners must stay clear)
 	_p.camera_rig.pitch = deg_to_rad(-70.0)
@@ -256,7 +269,97 @@ func _fp_down_mode() -> void:
 	_p.router.set_injected_hold(&"sprint", false)
 	_p.router.set_injected_move(Vector2.ZERO)
 	_out["fp_corners"] = corners
+	# Gate A2: first person at rest looking ahead, with a club, a sword and a hammer (the weapon low at the right)
+	await _ticks(30)
+	_out["fp_rest"] = await _fp_rest_frames([0.0], false)
 	_p.camera_rig.set_mode(CameraRig.Mode.THIRD_PERSON)
+
+
+## Mode "fp_rest" (Gate A2): first person at rest looking ahead (FP_REST_PITCHES) with each of FP_REST_WEAPONS, each
+## frame drawn with the weapon and without it; "fp_rest" reports per weapon and pitch the share of the frame the
+## weapon draws and its box (left, top, right, bottom as shares of the frame), and the share the whole giant draws. At
+## m11-gate-a the club stood upright over the right third of the view; 0.10 drew no weapon there.
+func _fp_rest_mode() -> void:
+	_world()
+	_spawn(Vector3(0, 0.05, 0))
+	await _ticks(20)
+	if stage > 1:
+		var r: Dictionary = _p.growth.debug_set_stage(stage)
+		_out["grown"] = bool(r.get("ok", false))
+		await _ticks(30)
+	_p.camera_rig.set_mode(CameraRig.Mode.FIRST_PERSON)
+	_out["fp_rest"] = await _fp_rest_frames(FP_REST_PITCHES, true)
+	_p.camera_rig.set_mode(CameraRig.Mode.THIRD_PERSON)
+
+
+## First person at rest with each of FP_REST_WEAPONS at each of `pitches` (in first person already): per frame the
+## weapon's share and box (_region), the whole giant's share when `giant`.
+func _fp_rest_frames(pitches: Array, giant: bool) -> Dictionary:
+	_p.camera_rig.yaw = 0.0
+	var rig := _p.get_node("Visual") as SkinnedRig
+	var res := {}
+	for wid: String in FP_REST_WEAPONS:
+		_p.equipment.grant_weapon(wid, true)
+		for pitch: float in pitches:
+			_p.camera_rig.pitch = deg_to_rad(pitch)
+			_p.camera_rig.camera.make_current()
+			await _ticks(45)
+			var name := "fp_rest_%s_%d" % [wid.trim_prefix("weapon."), int(-pitch)]
+			var rec := await _capture(name)
+			var with_all := Image.load_from_file(str(rec.path))
+			var socket := rig.weapon_socket()
+			socket.visible = false
+			var no_weapon := await _draw()
+			socket.visible = true
+			var m := _region(with_all, no_weapon)
+			if giant:
+				rig.visible = false
+				m["giant"] = _block_diff(with_all, await _draw(), false, Vector2(1.0, 1.0))
+				rig.visible = true
+			m["fp_weight"] = rig.first_person_rest_weight()
+			res[name] = m
+	return res
+
+
+## The share of the pixels of `r` (shares of the frame) that differ between two frames.
+static func _rect_diff(a: Image, b: Image, r: Rect2) -> float:
+	var w := a.get_width()
+	var h := a.get_height()
+	var n := 0
+	var d := 0
+	for y in range(int(r.position.y * h), int(r.end.y * h)):
+		for x in range(int(r.position.x * w), int(r.end.x * w)):
+			n += 1
+			var c := a.get_pixel(x, y)
+			var e := b.get_pixel(x, y)
+			if absf(c.r - e.r) + absf(c.g - e.g) + absf(c.b - e.b) > 0.06:
+				d += 1
+	return float(d) / maxf(1.0, float(n))
+
+
+## The pixels that differ between two frames: their share of the frame and their box (shares of the frame).
+static func _region(a: Image, b: Image) -> Dictionary:
+	var w := a.get_width()
+	var h := a.get_height()
+	var n := 0
+	var box := Rect2i(w, h, -w, -h)
+	var x0 := w
+	var y0 := h
+	var x1 := -1
+	var y1 := -1
+	for y in h:
+		for x in w:
+			var c := a.get_pixel(x, y)
+			var d := b.get_pixel(x, y)
+			if absf(c.r - d.r) + absf(c.g - d.g) + absf(c.b - d.b) > 0.06:
+				n += 1
+				x0 = mini(x0, x)
+				y0 = mini(y0, y)
+				x1 = maxi(x1, x)
+				y1 = maxi(y1, y)
+	if n == 0:
+		return {"share": 0.0, "box": [0.0, 0.0, 0.0, 0.0]}
+	return {"share": float(n) / float(w * h), "box": [float(x0) / w, float(y0) / h, float(x1 + 1) / w, float(y1 + 1) / h]}
 
 
 ## The share of the pixels of a bottom block (`size` of the frame; the left one or the right one) that differ

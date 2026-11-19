@@ -234,7 +234,7 @@ func test_flinches_from_the_hits_side_never_in_an_active_window() -> void:
 		rig.flinch(side[1], 0.9)
 		await step_ticks(6)
 		assert_true(float(rig.flinch_weights().get(side[0], 0.0)) > 0.5, "the %s flinch plays (%s)" % [side[0], rig.flinch_weights()])
-		await step_ticks(20)
+		await step_ticks(30)
 	assert_true(rig.flinch_weights().is_empty(), "and ends")
 	# a real hit through HitFeedback
 	var fb := HitFeedback.new()
@@ -272,6 +272,80 @@ func test_flinches_from_the_hits_side_never_in_an_active_window() -> void:
 	assert_true(int(during.frames) > 3, "the heavy's ACTIVE frames were watched (%d)" % int(during.frames))
 	assert_true(rig.flinches_refused > refused, "a flinch asked for in them is refused")
 	assert_true(float(during.weight) < 0.05, "and none shows (%.3f)" % float(during.weight))
+
+
+## Gate A2: a flinch reads at the game camera's distance (at m11-gate-a a hit from the front and one from behind read
+## as the same frame in the tour). For each side, after a hit at the tour's strength (0.9): the head's largest move
+## from where it was as the hit landed, in the giant's own frame (stage-1 metres), and its direction at that peak;
+## the chest's (spine_03's) largest turn from its pose then; the frame by which the head is back within a quarter of
+## its peak. Measured (m11-gate-a / fixed): the head 0.12-0.18 / 0.31-0.44 m, the chest 8.7-11.4 / 21.8-27.9 degrees; the side
+## flinches leaned the head toward the hit at m11-gate-a (the clips' roll had its sign the wrong way round).
+const FLINCH_HEAD_MIN_M := 0.25
+const FLINCH_CHEST_MIN_DEG := 15.0
+## The head's move at its peak points away from the hit: at least this share of it along the away direction.
+const FLINCH_AWAY_SHARE := 0.75
+## Back within a quarter of its peak by this many frames (60 fps): a quick ease back.
+const FLINCH_BACK_FRAMES := 45
+const FLINCH_HITS := [["f", Vector3(0, 0, -3)], ["b", Vector3(0, 0, 3)], ["l", Vector3(-3, 0, 0)], ["r", Vector3(3, 0, 0)]]
+
+
+func _flinch_moves(p: GiantPlayer, rig: SkinnedRig) -> Dictionary:
+	var sk := rig.skeleton()
+	var head := sk.find_bone("head")
+	var chest := sk.find_bone("spine_03")
+	var local := func(i: int) -> Vector3:
+		return p.global_transform.basis.inverse() * (sk.global_transform * sk.get_bone_global_pose(i).origin - p.global_position)
+	var out := {}
+	for side: Array in FLINCH_HITS:
+		await step_ticks(40)
+		var h0: Vector3 = local.call(head)
+		var q0 := sk.get_bone_global_pose(chest).basis.get_rotation_quaternion()
+		var m := {"head": 0.0, "chest_deg": 0.0, "dir": Vector3.ZERO, "frames": 0, "back_at": -1}
+		var cb := func() -> void:
+			var dh: Vector3 = local.call(head) - h0
+			m.frames = int(m.frames) + 1
+			if dh.length() > float(m.head):
+				m.head = dh.length()
+				m.dir = dh
+			var q := sk.get_bone_global_pose(chest).basis.get_rotation_quaternion()
+			m.chest_deg = maxf(float(m.chest_deg), rad_to_deg(q0.angle_to(q)))
+			if int(m.back_at) < 0 and float(m.head) > 0.02 and dh.length() < 0.25 * float(m.head):
+				m.back_at = int(m.frames)
+		rig.posed.connect(cb)
+		rig.flinch(side[1], 0.9)
+		await step_ticks(60)
+		rig.posed.disconnect(cb)
+		out[side[0]] = m
+	return out
+
+
+func test_flinches_read_at_the_game_camera() -> void:
+	var p := await _grounded()
+	var rig := _rig(p)
+	var m := await _flinch_moves(p, rig)
+	var line := PackedStringArray()
+	for side: Array in FLINCH_HITS:
+		var s: String = side[0]
+		var d: Vector3 = m[s].dir
+		var away := -(side[1] as Vector3).normalized()
+		var along := d.dot(away) / maxf(d.length(), 1e-6)
+		assert_true(float(m[s].head) >= FLINCH_HEAD_MIN_M, "%s: the head moves %.3f m (at least %.2f)" % [s, float(m[s].head), FLINCH_HEAD_MIN_M])
+		assert_true(float(m[s].chest_deg) >= FLINCH_CHEST_MIN_DEG,
+			"%s: the chest turns %.1f deg (at least %.0f)" % [s, float(m[s].chest_deg), FLINCH_CHEST_MIN_DEG])
+		assert_true(along >= FLINCH_AWAY_SHARE, "%s: the head moves away from the hit (%.2f of its move, at least %.2f; %s)" % [
+			s, along, FLINCH_AWAY_SHARE, d])
+		assert_true(int(m[s].back_at) > 0 and int(m[s].back_at) <= FLINCH_BACK_FRAMES,
+			"%s: and eases back (frame %d, by %d)" % [s, int(m[s].back_at), FLINCH_BACK_FRAMES])
+		line.append("%s head %.2f m (%.2f, %.2f, %.2f) chest %.1f deg back at %d" % [s, float(m[s].head), d.x, d.y, d.z,
+			float(m[s].chest_deg), int(m[s].back_at)])
+	# four distinct directions: no two sides' head moves within 60 degrees of each other
+	for i in FLINCH_HITS.size():
+		for j in range(i + 1, FLINCH_HITS.size()):
+			var a: Vector3 = m[FLINCH_HITS[i][0]].dir
+			var b: Vector3 = m[FLINCH_HITS[j][0]].dir
+			assert_true(rad_to_deg(a.angle_to(b)) > 60.0, "%s and %s move the head apart (%.0f deg)" % [FLINCH_HITS[i][0],
+				FLINCH_HITS[j][0], rad_to_deg(a.angle_to(b))])
+	print("    test_giant_motion_render: the flinches - " + "; ".join(line))
 
 
 ## The handle's line (the socket and its -Z) to the fist's centre, in stage-1 metres; the off hand's droop (the

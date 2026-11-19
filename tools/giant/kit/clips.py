@@ -841,9 +841,11 @@ def roar_pose(rest, f, frames):
 
 
 # The flinches: the upper body's offsets at the peak (degrees about the giant's axes: X pitches the torso
-# forward, Y rolls it toward his right, Z turns it to his left), per bone as a share of the whole.
-FLINCH = {"flinch_f": (-13.0, 0.0, 0.0), "flinch_b": (15.0, 0.0, 0.0), "flinch_l": (2.0, 11.0, -5.0),
-          "flinch_r": (2.0, -11.0, 5.0)}
+# forward, Y rolls it toward his left, Z turns it to his right), per bone as a share of the whole. Each throws the
+# torso away from the side it is named by (Gate A2: the side ones leaned into the hit - the game measured the head
+# moving toward the attacker - so their signs are swapped; the comment had Y's and Z's senses the wrong way round).
+FLINCH = {"flinch_f": (-13.0, 0.0, 0.0), "flinch_b": (15.0, 0.0, 0.0), "flinch_l": (2.0, -11.0, 5.0),
+          "flinch_r": (2.0, 11.0, -5.0)}
 FLINCH_SHARE = {"spine_01": 0.2, "spine_02": 0.3, "spine_03": 0.3, "neck_01": 0.35, "head": 0.5}
 FLINCH_PEAK = 0.3                 # the share of the clip at which the offset is whole
 
@@ -884,11 +886,27 @@ def carry_pose(rest):
     return pose
 
 
+def twist_forearm(pose, side, deg):
+    """Turns the forearm (and the hand on it) about its own posed line by deg (positive: right-handed about the
+    elbow-to-wrist direction), so what the fist holds turns about the forearm."""
+    s = "_" + side
+    pose.solve()
+    d_up = pose.D["upperarm" + s]
+    f = pose.D["lowerarm" + s] @ pose.rest.direction("lowerarm" + s)
+    pose.set_rel("lowerarm" + s, d_up.T @ rot(f, deg) @ d_up)
+
+
+FP_REST_R = (-24.0, 82.0, 10.0, 6.0, 75.0)
+
+
 def fp_rest_pose(rest):
     """The first-person rest: the weapon arm forward of the body with the forearm raised, so the fist and
     what it holds sit in the lower right of the view; the off arm a little forward and bent."""
     pose = Pose(rest)
-    set_arm(pose, "r", -24.0, 82.0, out_deg=10.0, forward_deg=6.0)
+    sw, el, out, fw, tw = FP_REST_R
+    set_arm(pose, "r", sw, el, out_deg=out, forward_deg=fw)
+    if tw:
+        twist_forearm(pose, "r", tw)
     set_arm(pose, "l", -10.0, 46.0, out_deg=12.0, forward_deg=4.0)
     return pose
 

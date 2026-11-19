@@ -11,6 +11,11 @@ extends Node
 ## It also draws first person (GiantPreview's FIRST_PERSON framing: the torso and head layers culled) with and without
 ## the giant and reports `fp_shadow`, the share of the frame's ground the giant darkens (W29 put the shadow proxy on
 ## the head's layer, and the camera's cull mask culled its shadow).
+## Gate A2: the shell hair in the world's light. For five looks (dark, greying, red, fair and grey hair) it draws a
+## shell style (the crop, the short beard) and the same look with a card style in its place (the long back hair, the
+## full beard), each with and without the style; the pixels that differ are hair. `shells` reports per case the
+## shell's mean colour (sRGB), the card's, and the shell's luminance spread (the 90th less the 10th percentile): at
+## m11-gate-a the black short beard drew one flat black and the greying crop near black with sparse white specks.
 ## Prints one line "SKIN_WORLD <json>" and quits. tests/slow/test_skin_world_render.gd runs it in a child:
 ##   LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1280x720x24" godot --path . --rendering-driver opengl3 \
 ##     --resolution 320x240 --audio-driver Dummy res://tests/support/skin_world_probe.tscn [-- --out=/abs/folder]
@@ -26,6 +31,14 @@ const WHITE_SPREAD := 0.2
 const STEP_JUMP := 40.0
 const LIT_SHARE := 0.3
 const SHADE_SHARE := 0.15
+## The shell cases (Gate A2): the look, the slot, the shell style, the card style it is compared with, the framing.
+const SHELL_CASES := [
+	{"name": "storm_herald_beard", "preset": "storm_herald", "slot": "beard_mesh", "shell": "Beard_short", "card": "Beard_full", "framing": "face"},
+	{"name": "iron_veteran_crop", "preset": "iron_veteran", "slot": "hair_mesh", "shell": "Hair_crop", "card": "Hair_long_back", "framing": "hair"},
+	{"name": "chieftain_beard", "preset": "northern_chieftain", "slot": "beard_mesh", "shell": "Beard_short", "card": "Beard_full", "framing": "face"},
+	{"name": "young_giant_crop", "preset": "young_giant", "slot": "hair_mesh", "shell": "Hair_crop", "card": "Hair_long_back", "framing": "hair"},
+	{"name": "stone_elder_beard", "preset": "stone_elder", "slot": "beard_mesh", "shell": "Beard_short", "card": "Beard_full", "framing": "face"},
+]
 ## A ground pixel is in the giant's shadow when it is darker than without him by this much (sum, 0-765).
 const SHADOW_DIFF := 30
 
@@ -101,6 +114,7 @@ func _run() -> void:
 			_save(img, "%s_%s" % [look_id, f])
 			per[f] = measure(img, empty[f])
 		report.looks[look_id] = per
+	report["shells"] = await _shells()
 	_p.apply_look(Appearance.to_look(Appearance.preset_record("appearance_preset.wanderer")))
 	_p.frame(GiantPreview.FIRST_PERSON)
 	var with_giant: Image = await _draw_frame()
@@ -111,6 +125,52 @@ func _run() -> void:
 	report["fp_shadow"] = shadow_share(with_giant, without)
 	print(PREFIX + JSON.stringify(report))
 	get_tree().quit(0)
+
+
+## The shell cases: each style's hair pixels (the frame against the same frame with the style hidden).
+func _shells() -> Dictionary:
+	var out := {}
+	for c: Dictionary in SHELL_CASES:
+		var per := {}
+		for kind: String in ["shell", "card"]:
+			var look := Appearance.to_look(Appearance.preset_record("appearance_preset." + str(c.preset)))
+			look[str(c.slot)] = str(c[kind])
+			_p.apply_look(look)
+			_p.frame(str(c.framing))
+			var mi := GiantLook.mesh_node(_p.model, _p.model.index, str(c[kind]))
+			if mi == null:
+				per[kind] = {"pixels": 0}
+				continue
+			var img: Image = await _draw_frame()
+			mi.visible = false
+			var without: Image = await _draw_frame()
+			mi.visible = true
+			if kind == "shell":
+				_save(img, "shell_" + str(c.name))
+			per[kind] = hair_measure(img, without)
+		out[str(c.name)] = per
+	return out
+
+
+## The hair's pixels of `img` against `without`: their count, mean colour (sRGB 0-255) and luminance's 10th and 90th
+## percentiles.
+static func hair_measure(img: Image, without: Image) -> Dictionary:
+	var sum := Vector3.ZERO
+	var lums := PackedFloat32Array()
+	for y in img.get_height():
+		for x in img.get_width():
+			var a := _px(img, x, y)
+			var b := _px(without, x, y)
+			if absf(a.x - b.x) + absf(a.y - b.y) + absf(a.z - b.z) > SKIN_DIFF:
+				sum += a
+				lums.append(a.dot(Vector3(0.2126, 0.7152, 0.0722)))
+	var n := lums.size()
+	if n < 50:
+		return {"pixels": n}
+	lums.sort()
+	var mean := sum / n
+	return {"pixels": n, "rgb": [mean.x, mean.y, mean.z], "lum": mean.dot(Vector3(0.2126, 0.7152, 0.0722)),
+		"p10": lums[int(n * 0.1)], "p90": lums[int(n * 0.9)]}
 
 
 static func _px(img: Image, x: int, y: int) -> Vector3:

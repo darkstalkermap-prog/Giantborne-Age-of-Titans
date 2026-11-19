@@ -33,10 +33,20 @@ uniform vec3 flash = vec3(0.0);
 // The mask is read a few mip levels down: the skin's beard area ends in a hard line on the cheeks, and the
 // shells' edge should thin out over a few centimetres instead.
 const float MASK_LOD = 3.0;
+// Gate A2: the strand tile's texels (kit/pack.py STRANDS), for the strands' mip level; the grey strands' colour
+// (the cards'); the root's shade (the cards' root_dark); the share of the base and the strands' shadow left out
+// (the cards' shadow_soft).
+const float STRAND_PX = 128.0;
+const vec3 GREY = vec3(0.62, 0.60, 0.57);
+uniform float root_dark = 0.78;
+uniform float shadow_soft = 0.8;
+uniform float sky_sheen = 0.02;
 
 varying float v_h;
 varying float v_layer;
 varying vec3 v_comb;
+varying vec3 v_up;
+varying float v_vary;
 
 void vertex() {
 	v_layer = UV2.x;
@@ -45,6 +55,7 @@ void vertex() {
 	float lift = shell_height_m * length * v_h * smoothstep(0.02, 0.35, m * density);
 	VERTEX += (NORMAL + comb * v_h) * lift;
 	v_comb = normalize((MODELVIEW_MATRIX * vec4(comb + NORMAL * 0.2, 0.0)).xyz);
+	v_up = normalize((VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
 }
 
 void fragment() {
@@ -65,11 +76,21 @@ void fragment() {
 	}
 	// clumps: a coarse read of the same strands lightens and darkens patches of the style
 	float clump = texture(strand_tex, UV * strand_scale * 0.13 + vec2(0.37, 0.61)).b;
+	// Gate A2: the colour as the cards take it (giant_hair.gdshader): the tips toward tip_color, grey strands by
+	// their id, and where the strands are minified (several to a pixel: the ids blend in the mip chain) the grey's
+	// share blended in, not stepped - a step on a blended id drew a dark crop with sparse white specks
 	vec3 c = mix(hair_color, tip_color, smoothstep(0.3, 1.0, v_h) * 0.5);
-	float is_grey = step(st.b, grey);
-	c = mix(c, vec3(0.62, 0.60, 0.57), is_grey);
-	// the strands darken towards the skin (each other's shadow) and vary strand by strand
-	c *= mix(0.5, 1.1, smoothstep(0.0, 0.85, v_h)) * (0.8 + 0.4 * st.b) * (0.85 + 0.3 * clump);
+	vec2 sdx = dFdx(UV * strand_scale * STRAND_PX);
+	vec2 sdy = dFdy(UV * strand_scale * STRAND_PX);
+	float mip = 0.5 * log2(max(max(dot(sdx, sdx), dot(sdy, sdy)), 1e-6));
+	float gw = clamp(0.02 + 0.2 * max(mip, 0.0), 0.02, 0.5);
+	float is_grey = (1.0 - smoothstep(grey - gw, grey + gw, st.b)) * step(0.001, grey);
+	c = mix(c, GREY, mix(is_grey, grey, clamp((mip - 1.0) * 0.5, 0.0, 1.0)));
+	// the strands darken a little towards the skin (each other's shadow) and vary strand by strand (not by the id
+	// the grey reads: the grey strands were the darkest); the mean is the cards' (about 1)
+	float vary = fract(st.b * 7.31);
+	v_vary = vary;
+	c *= mix(root_dark, 1.1, smoothstep(0.0, 0.85, v_h)) * (0.82 + 0.36 * vary) * (0.88 + 0.24 * clump);
 	ALBEDO = c * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	ROUGHNESS = 0.85;
 	SPECULAR = 0.05;
@@ -77,11 +98,24 @@ void fragment() {
 }
 
 void light() {
+	// the cards' light (giant_hair.gdshader): a wrapped diffuse, most of the shadow on each other left out, and a
+	// little light through the strands' thin tips with the light behind them
 	float ndl = dot(NORMAL, LIGHT);
-	DIFFUSE_LIGHT += clamp(ndl * 0.6 + 0.4, 0.0, 1.0) * clamp(ndl * 0.6 + 0.4, 0.0, 1.0) * ATTENUATION * LIGHT_COLOR / PI;
+	float att = mix(ATTENUATION, 1.0, shadow_soft);
+	DIFFUSE_LIGHT += clamp(ndl * 0.75 + 0.25, 0.0, 1.0) * att * LIGHT_COLOR / PI;
+	float through = pow(clamp(dot(VIEW, -LIGHT), 0.0, 1.0), 3.0) * (0.25 + 0.5 * v_h);
+	DIFFUSE_LIGHT += hair_color * 0.5 * through * att * LIGHT_COLOR / PI;
 	vec3 h = normalize(LIGHT + VIEW);
 	float th = dot(v_comb, h);
 	float s = pow(sqrt(max(1.0 - th * th, 0.0)), 24.0);
-	SPECULAR_LIGHT += mix(vec3(1.0), hair_color * 2.0, 0.5) * s * spec_strength * clamp(ndl + 0.2, 0.0, 1.0) * ATTENUATION
+	SPECULAR_LIGHT += mix(vec3(1.0), hair_color * 2.0, 0.5) * s * spec_strength * clamp(ndl + 0.25, 0.0, 1.0) * att
 		* LIGHT_COLOR * v_h;
+	if (LIGHT_IS_DIRECTIONAL) {
+		// the sky's sheen along the strands: the sky above lights a strand's highlight whichever side the sun is on
+		// (the renderer's ambient has no highlight); scaled by the sun's light so it fades with it
+		float tu = dot(v_comb, normalize(v_up + VIEW));
+		float sk = pow(sqrt(max(1.0 - tu * tu, 0.0)), 6.0) * (0.6 + 0.8 * v_vary) * v_h;
+		SPECULAR_LIGHT += mix(vec3(1.0), hair_color * 2.0, 0.5) * sky_sheen * sk * LIGHT_COLOR
+			* clamp(dot(NORMAL, v_up) * 0.5 + 0.5, 0.0, 1.0);
+	}
 }

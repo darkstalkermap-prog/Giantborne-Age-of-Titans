@@ -1667,8 +1667,8 @@
   },
   "assets/giant/giant_clips.glb": {
    "cycles": false,
-   "inputs": "e7dfeaffd82c6631075dd507686e32d53b275d8921573c3dd3d5e7c9f5726169",
-   "sha256": "15ecaa046da049bc634380ef8ddf8388d47d0e091209b06d0bbda5c9d635dfe7",
+   "inputs": "00a04eba65166e84195c3e8aa4b128cb989d49a3d79ac05067d8982a5d61471e",
+   "sha256": "500272b7a29f7cb68744e32b2a5e7259425b48b471b0c7f64b8f8ccd3f03025b",
    "size": 1292168,
    "step": "clips"
   },
@@ -2968,7 +2968,7 @@
  "inputs": {
   "kit": {
    "bake.py": "68e2fdefee8d5b50e903d3339b26d3b63a241d3a4afde27f38456cc81b77a8a4",
-   "clips.py": "e31c14b0c932d1880d11d6a48914950532bc785c9098c8e146126f168118d555",
+   "clips.py": "bf3f28b778202f855df45afb1214039d2bd9bf551db5e88c5990d4d783c51723",
    "designs.py": "d41803b5d5139a50f0ce73b1196846f1bc097ade1bd78f75b3bf36fb261ed4aa",
    "export_game.py": "7e1917d6e06eb22bdf47cd6b4c0bb353a778cb41d4a69bd5592c91130190477b",
    "giant_body.py": "c8f694bd9d26bfd16ef4ca60ad3d1f36ec9c75247bc360a3ae2ad8778b741581",

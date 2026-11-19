@@ -83,7 +83,7 @@ varying flat float v_fp_on;
 void vertex() {
 	v_region = clamp(int(COLOR.r * 16.0), 0, 15);
 	v_fp_pos = VERTEX;
-	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD));
+	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(v_region);
 	if (((hidden_regions >> v_region) & 1) == 1) {
 		VERTEX -= NORMAL * hide_shrink;
 	}
