@@ -30,6 +30,10 @@ extends SubViewportContainer
 ## pixel_scale() times its parent's size and scaled down by the same factor, so its SubViewport has one pixel
 ## per window pixel (up to MAX_PIXEL_SCALE; on the Web up to WEB_MAX_PIXEL_SCALE, measured by P49: pixel_scale()).
 ##
+## P55 (plan M11 §2.7): the slots' framings (head, shoulders, waist, legs, shins, feet), a design region framed from
+## the giant's left (`<framing>_left`: region_framing(region, side)), the stage-1 rear Game view (GAME_STAGE1) and
+## the thumbnail mode (`thumbnail`: a fixed-size, still, unshown preview that ThumbnailCache draws once per option).
+##
 ## WarmUp (an inner class) is the title's shader warm-up: a hidden 64x64 SubViewport that draws the model
 ## with every material category for two frames under this preview's lighting and two under a level's.
 
@@ -77,7 +81,27 @@ const FRAMINGS := {
 	"hand_l": {"target": Vector3(-0.72, 1.98, -0.12), "yaw": -55.0, "pitch": 14.0, "dist": 1.35},
 	# the character sheets' eye close-up (the index's eye_mid landmark)
 	"eyes": {"target": Vector3(0.0, 3.447, -0.244), "yaw": 10.0, "pitch": 0.0, "dist": 0.36},
+	# P55: the slots' framings (the creator II's option grids and their thumbnails; plan M11 §2.7)
+	"head": {"target": Vector3(0.0, 3.42, -0.1), "yaw": 24.0, "pitch": 8.0, "dist": 1.9},
+	"shoulders": {"target": Vector3(0.0, 2.95, -0.05), "yaw": 28.0, "pitch": 10.0, "dist": 2.6},
+	"waist": {"target": Vector3(0.0, 1.85, -0.08), "yaw": 20.0, "pitch": 6.0, "dist": 2.6},
+	"legs": {"target": Vector3(0.0, 1.05, -0.05), "yaw": 20.0, "pitch": 4.0, "dist": 4.4},
+	"shins": {"target": Vector3(0.0, 0.62, -0.08), "yaw": 22.0, "pitch": 6.0, "dist": 2.5},
+	"feet": {"target": Vector3(0.0, 0.32, -0.12), "yaw": 24.0, "pitch": 14.0, "dist": 1.9},
+	# the live preview while a slot's grid is open: the upper or the lower half, whole
+	"upper": {"target": Vector3(0.0, 2.6, -0.05), "yaw": 22.0, "pitch": 5.0, "dist": 4.6},
+	"lower": {"target": Vector3(0.0, 1.05, -0.05), "yaw": 22.0, "pitch": 5.0, "dist": 4.8},
+	# a hair style's thumbnail: the head from behind, close
+	"hair_close": {"target": Vector3(0.0, 3.22, 0.0), "yaw": 150.0, "pitch": 10.0, "dist": 1.75},
 }
+## P55 (M10's follow-up, plan M11 §2.7): a design on the giant's left is framed from his left - the framing's
+## name with this suffix is the framing mirrored (its yaw and its target's x negated; "arms" follows the left hand).
+const LEFT_SUFFIX := "_left"
+## The framings a design region may be framed with from either side.
+const MIRRORED := ["face", "chest", "arms", "back_design"]
+## P55: the stage-1 rear Game view (the build sliders show it while they have the focus, plan M11 §2.7): the game's
+## third-person camera behind the giant at stage 1's profile, whatever the profile Game view shows.
+const GAME_STAGE1 := "game_stage1"
 ## The first-person framing (the option check and the sheets, not a view button): the game's eye at the
 ## stage's eye_height_ratio of the height and 0.18 m forward, looking down and to his right at the arms, with
 ## render layers 2 (torso) and 3 (head, hair, beard, eyes) culled as the game's first person does (decision 8).
@@ -128,6 +152,9 @@ var world_light := false
 ## Fill the parent Control at the window's resolution (see the class notes); set before or after the preview
 ## enters the tree. Off for the tiles of the option check and the sheets, which size their own viewports.
 var window_pixels := false
+## P55: a thumbnail preview (ThumbnailCache's): its viewport keeps the size it is given, draws only when
+## render_thumbnail() asks, and never follows the container's visibility. Set before the preview enters the tree.
+var thumbnail := false
 var weapon: Node3D = null
 var _weapon_dir := Vector3.FORWARD
 var _soldier: Node3D = null
@@ -296,12 +323,12 @@ func world_lighting() -> bool:
 
 ## Shows framing `name` (FRAMINGS, or "game"); the user's turn and zoom start over.
 func frame(framing_name: String) -> void:
-	if not framing_name in ["game", FIRST_PERSON] and not FRAMINGS.has(framing_name):
+	if not framing_name in ["game", GAME_STAGE1, FIRST_PERSON] and not FRAMINGS.has(_base_framing(framing_name)):
 		framing_name = "full"
 	framing = framing_name
 	turn_deg = 0.0
 	zoom_factor = 1.0
-	_set_lighting(world_light or framing in ["game", FIRST_PERSON])
+	_set_lighting(world_light or _is_game(framing) or framing == FIRST_PERSON)
 	_apply_stage_scale()
 	_update_camera()
 	framed.emit(framing)
@@ -365,10 +392,42 @@ static func game_fov() -> float:
 	return float(s) if s != null else GAME_FOV_DEFAULT
 
 
+## True for the Game views (the profile's and the stage-1 rear one).
+static func _is_game(framing_name: String) -> bool:
+	return framing_name == "game" or framing_name == GAME_STAGE1
+
+
+## The growth profile the framing shows: stage 1's for GAME_STAGE1, else game_profile.
+func _framing_profile() -> Dictionary:
+	if framing == GAME_STAGE1:
+		var p := stage_profile(1)
+		return p if not p.is_empty() else game_profile
+	return game_profile
+
+
+## A framing's FRAMINGS entry name ("chest_left" -> "chest").
+static func _base_framing(framing_name: String) -> String:
+	if framing_name.ends_with(LEFT_SUFFIX):
+		var base := framing_name.trim_suffix(LEFT_SUFFIX)
+		return base if base in MIRRORED else ""
+	return framing_name
+
+
+## A framing's FRAMINGS entry, mirrored for a "_left" framing.
+static func framing_entry(framing_name: String) -> Dictionary:
+	var base := _base_framing(framing_name)
+	var f: Dictionary = (FRAMINGS.get(base, FRAMINGS.full) as Dictionary).duplicate()
+	if framing_name != base:
+		f["yaw"] = -float(f.yaw)
+		var t: Vector3 = f.target
+		f["target"] = Vector3(-t.x, t.y, t.z)
+	return f
+
+
 func _apply_stage_scale() -> void:
-	var k := stage_scale(game_profile) if framing in ["game", FIRST_PERSON] else 1.0
+	var k := stage_scale(_framing_profile()) if _is_game(framing) or framing == FIRST_PERSON else 1.0
 	model.scale = Vector3.ONE * k
-	if framing == "game":
+	if _is_game(framing):
 		_ensure_soldier()
 		_soldier.position = Vector3(2.6 * k, 0.0, -2.2 * k)
 		_soldier.visible = true
@@ -388,14 +447,15 @@ func _update_camera() -> void:
 			eye)
 		camera.fov = game_fov()
 		return
-	if framing == "game":
-		var t := game_camera_transform(game_profile)
-		var pivot := Vector3.UP * float(game_profile.get("camera_pivot_height_m", 3.3))
+	if _is_game(framing):
+		var profile := _framing_profile()
+		var t := game_camera_transform(profile)
+		var pivot := Vector3.UP * float(profile.get("camera_pivot_height_m", 3.3))
 		var turned := Basis(Vector3.UP, deg_to_rad(turn_deg))
 		camera.transform = Transform3D(turned * t.basis, pivot + turned * (t.origin - pivot) * zoom_factor)
 		camera.fov = game_fov()
 		return
-	var f: Dictionary = FRAMINGS[framing]
+	var f := framing_entry(framing)
 	var target := framing_target(framing)
 	var yaw := deg_to_rad(float(f.yaw) + turn_deg)
 	var pitch := deg_to_rad(float(f.pitch))
@@ -408,30 +468,41 @@ func _update_camera() -> void:
 
 ## Where a framing looks (model frame, stage 1): its FRAMINGS target, the hand framing at the posed hand.
 func framing_target(framing_name: String) -> Vector3:
-	var f: Dictionary = FRAMINGS.get(framing_name, FRAMINGS.full)
-	if framing_name in ["hand", "hand_l", "arms"] and model != null and model.is_inside_tree() and model.skeleton() != null:
-		var hand := model.to_local(model.hand_transform(framing_name != "hand_l").origin)
-		if framing_name in ["hand", "hand_l"]:
-			return hand + Vector3(0, 0.06, 0)
-		var sh: Vector3 = GiantModel.landmarks_of(model.index).get("shoulder_r", Vector3(0.41, 3.02, -0.03))
-		return sh.lerp(hand, 0.5)
+	var f := framing_entry(framing_name)
+	var arms_left := framing_name == "arms" + LEFT_SUFFIX
+	if framing_name in ["hand", "hand_l", "arms"] or arms_left:
+		if model != null and model.is_inside_tree() and model.skeleton() != null:
+			var hand := model.to_local(model.hand_transform(framing_name != "hand_l" and not arms_left).origin)
+			if framing_name in ["hand", "hand_l"]:
+				return hand + Vector3(0, 0.06, 0)
+			var lm := GiantModel.landmarks_of(model.index)
+			var sh: Vector3 = lm.get("shoulder_l", Vector3(-0.41, 3.02, -0.03)) if arms_left else lm.get("shoulder_r",
+				Vector3(0.41, 3.02, -0.03))
+			return sh.lerp(hand, 0.5)
 	return f.target
 
 
 ## The framing that shows a design region ("face", "chest", "back", "arms", "hand" or "hand_l": the left hand).
-static func region_framing(region: String) -> String:
+## P55: `side` is the design's side in the index ("left", "right" or "centre"): a design on the giant's left is
+## framed from his left (M10's follow-up); the legs (P53's fifth region) are framed whole.
+static func region_framing(region: String, side := "centre") -> String:
+	var out := "full"
 	match region:
 		"face":
-			return "face"
+			out = "face"
 		"chest":
-			return "chest"
+			out = "chest"
 		"back":
-			return "back_design"
+			out = "back_design"
 		"arms":
-			return "arms"
+			out = "arms"
+		"legs":
+			out = "legs"
 		"hand", "hand_l":
 			return region
-	return "full"
+	if side == "left" and out in MIRRORED:
+		return out + LEFT_SUFFIX
+	return out
 
 
 # --------------------------------------------------------------------------- the soldier, the weapon, the fade
@@ -555,6 +626,9 @@ func render_live() -> void:
 func _apply_update_mode() -> void:
 	if viewport == null:
 		return
+	if thumbnail:
+		viewport.render_target_update_mode = SubViewport.UPDATE_ONCE if _portrait else SubViewport.UPDATE_DISABLED
+		return
 	if is_inside_tree() and not is_visible_in_tree():
 		viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	elif _portrait:
@@ -570,6 +644,18 @@ func _notification(what: int) -> void:
 
 func is_portrait() -> bool:
 	return _portrait
+
+
+## P55: a thumbnail preview draws its next frame once (ThumbnailCache reads it back after the frame is drawn).
+func render_thumbnail() -> void:
+	_portrait = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+
+## P55: the thumbnail preview stops drawing (between thumbnails).
+func stop_thumbnail() -> void:
+	_portrait = false
+	viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
 
 func _process(_delta: float) -> void:
