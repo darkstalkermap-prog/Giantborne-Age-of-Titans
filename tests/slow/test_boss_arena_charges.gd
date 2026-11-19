@@ -1,6 +1,6 @@
 extends IntegrationSuite
 ## Ten seeded phase-2 charges of the Ogre King on scenes/test/boss_arena_test.tscn (moved here from
-## tests/integration/test_boss_arena.gd by P42, plan M10 §1.7 rule 4: about 1.5 s of the default tier;
+## tests/integration/test_boss_arena.gd (tests/slow/ since P53) by P42, plan M10 §1.7 rule 4: about 1.5 s of the default tier;
 ## tests/slow/test_valley_boss.gd fights the king in the real Valley): from random spots at least 8 m from
 ## the giant, every charge ends against stone (the ring, a pillar or the closed gate) in the wall recovery.
 
