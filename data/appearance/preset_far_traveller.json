@@ -16,10 +16,10 @@
 		"face": {
 			"jaw": 0.0,
 			"chin": 0.0,
-			"nose": 0.0,
+			"nose": 0.5,
 			"brow": 0.0,
 			"cheeks": 0.0,
-			"age": 0.0
+			"age": 0.8
 		},
 		"hair": {
 			"style": "hair.long_loose",
@@ -98,7 +98,7 @@
 				"belt": ""
 			},
 			"dyes": {
-				"cloth": "dye.slate",
+				"cloth": "dye.ochre",
 				"leather": "dye.dark_leather",
 				"metal": "metal.iron"
 			}

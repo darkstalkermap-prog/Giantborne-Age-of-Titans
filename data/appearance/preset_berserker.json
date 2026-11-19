@@ -14,10 +14,10 @@
 			"girth": 0.0
 		},
 		"face": {
-			"jaw": 0.0,
+			"jaw": 0.6,
 			"chin": 0.0,
-			"nose": 0.0,
-			"brow": 0.0,
+			"nose": 0.3,
+			"brow": 0.8,
 			"cheeks": 0.0,
 			"age": 0.0
 		},

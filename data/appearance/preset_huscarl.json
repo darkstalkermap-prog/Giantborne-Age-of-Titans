@@ -14,8 +14,8 @@
 			"girth": 0.1
 		},
 		"face": {
-			"jaw": 0.0,
-			"chin": 0.0,
+			"jaw": 0.3,
+			"chin": 0.4,
 			"nose": 0.0,
 			"brow": 0.0,
 			"cheeks": 0.0,

@@ -17,9 +17,9 @@
 			"jaw": 0.0,
 			"chin": 0.0,
 			"nose": 0.0,
-			"brow": 0.0,
-			"cheeks": 0.0,
-			"age": 0.0
+			"brow": 0.5,
+			"cheeks": 0.7,
+			"age": 0.3
 		},
 		"hair": {
 			"style": "hair.side_braids",

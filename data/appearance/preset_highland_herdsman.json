@@ -14,12 +14,12 @@
 			"girth": 0.2
 		},
 		"face": {
-			"jaw": 0.0,
-			"chin": 0.0,
+			"jaw": -0.4,
+			"chin": -0.3,
 			"nose": 0.0,
 			"brow": 0.0,
 			"cheeks": 0.0,
-			"age": 0.0
+			"age": -0.5
 		},
 		"hair": {
 			"style": "hair.circlet_braid",
