@@ -189,7 +189,8 @@ func _grid(category: String, key: String, shot_name: String) -> void:
 		"with_thumbnail": shown, "frames": n, "frames_ms": frames_ms, "median_after_ms": after[after.size() / 2],
 		"worst_ms": frames_ms.max() if not frames_ms.is_empty() else 0.0, "work_ms": work,
 		"most_in_a_frame": c.thumbnails.most_in_a_frame, "off_page": off_page, "pages": c.grid.pages(),
-		"cell_px": c.grid.cell_px(), "design": c.thumbnails.design_timings.duplicate()}
+		"cell_px": c.grid.cell_px(), "design": c.thumbnails.design_timings.duplicate(),
+		"focus": str(get_viewport().gui_get_focus_owner().name) if get_viewport().gui_get_focus_owner() != null else ""}
 	await _shot(shot_name)
 	c.close_grid()
 

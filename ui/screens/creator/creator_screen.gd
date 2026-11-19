@@ -594,6 +594,7 @@ func grid_row() -> OptionRows.GridRow:
 func open_grid(r: OptionRows.GridRow) -> void:
 	if r == null or not _rows.has(r) or question_open():
 		return
+	_ensure_grid()
 	_grid_row = r
 	_grid_session += 1
 	_merge_key = ""
@@ -625,8 +626,22 @@ func close_grid() -> void:
 			r.button.grab_focus()
 
 
+## The option grid is made on the first grid row opened, never while the screen opens (its first frame draws no
+## more than M10's did: creator_check.mjs's GL counts).
+func _ensure_grid() -> void:
+	if grid != null:
+		return
+	grid = OptionGrid.new()
+	grid.chosen.connect(_on_grid_chosen)
+	grid.close_requested.connect(close_grid)
+	grid.page_shown.connect(_on_grid_page)
+	_scroll.get_parent().add_child(grid)
+	_scroll.get_parent().move_child(grid, _scroll.get_index() + 1)
+
+
 func _close_grid_quietly() -> void:
-	grid.close()
+	if grid != null:
+		grid.close()
 	thumbnails.request([])
 	_grid_row = null
 	_merge_key = ""
@@ -1073,11 +1088,6 @@ func _build() -> void:
 	_rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_rows_box.add_theme_constant_override("separation", 12)
 	_scroll.add_child(_rows_box)
-	grid = OptionGrid.new()
-	grid.chosen.connect(_on_grid_chosen)
-	grid.close_requested.connect(close_grid)
-	grid.page_shown.connect(_on_grid_page)
-	pv.add_child(grid)
 	thumbnails = ThumbnailCache.new()
 	thumbnails.thumbnail_ready.connect(_on_thumbnail)
 	add_child(thumbnails)

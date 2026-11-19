@@ -102,7 +102,7 @@ func _init() -> void:
 	_grid.columns = COLS
 	_grid.add_theme_constant_override("h_separation", GAP)
 	_grid.add_theme_constant_override("v_separation", GAP)
-	_grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_grid.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN   # the cells keep their places when a filter hides some
 	_grid.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(_grid)
 	for i in PER_PAGE:
@@ -153,7 +153,6 @@ func _make_cell(i: int) -> Button:
 	b.focus_mode = Control.FOCUS_ALL
 	b.mouse_filter = Control.MOUSE_FILTER_PASS   # the wheel reaches the grid (pages)
 	b.custom_minimum_size = Vector2(CELL_PX, CELL_PX)
-	b.clip_contents = true
 	var tex := TextureRect.new()
 	tex.name = "Thumb"
 	tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
