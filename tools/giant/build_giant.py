@@ -31,8 +31,8 @@ Options:
   --budget       estimate the shipped size (gzip then base64, as tools/build_web.sh counts) of each
                  file the Web preset ships (its exclude_filter in export_presets.cfg leaves out the
                  manifest and tex_hi/) from the measured rates, and fail over the giant's Web share
-                 (plan §2.12): build_web.sh's rule, its default budget less 18.4 MiB (4.6 at 23 MiB);
-                 --share-mib=N overrides it
+                 (plan §2.12): build_web.sh's rule, the budget less 18.4 MiB (4.6 at 23 MiB) of the milestone
+                 the assets are made for (ASSET_MILESTONE: 12, 13.6 MiB; P54); --share-mib=N overrides it
   --out=DIR      write under DIR instead of the repository (DIR/assets/giant/...)
 
 Environment: GIANT_CACHE (default $HOME/.cache/giantborn/giant-cache), BAKE_THREADS (default 2).
@@ -60,7 +60,7 @@ import manifest  # noqa: E402
 ASSETS = "assets/giant"
 STEPS = ("export", "bake", "designs", "pack", "clips")
 EXPORT_SOURCES = ("mh_data.py", "giant_body.py", "giant_hair.py", "giant_garment.py", "giant_parts.py", "split.py",
-                  "export_game.py")
+                  "export_game.py", "clips.py")
 PARTS = ASSETS + "/parts"
 DESIGN_SOURCES = ("designs.py", "giant_skin.py", "giant_body.py", "mh_data.py", "split.py")
 PACK_SOURCES = ("pack.py",)
@@ -201,7 +201,10 @@ def build_index(export_info: dict, design_info: dict) -> dict:
     for mid, e in sorted(export_info["meshes"].items()):
         entry = {"node": mid, "category": e["category"], "layer": e["layer"], "dye": e["dye"],
                  "covers": e.get("covers", []), "tris": e["tris"]}
-        for k in ("atlas", "detail", "part", "chains", "free", "shell"):
+        # P54 (plan M11 §2.6, the index v2): a garment's slot, its slot's shell offset (stage-1 m), its material, a head
+        # garment's cut of the hair; an accessory's slot, bone and natural colour
+        for k in ("atlas", "detail", "part", "chains", "free", "shell", "slot", "material", "hides_hair", "hair_cut",
+                  "bone", "color"):
             if k in e:
                 entry[k] = e[k]
         if "file" in e:
@@ -221,6 +224,8 @@ def build_index(export_info: dict, design_info: dict) -> dict:
         "shadow_proxy": {k: export_info["shadow_proxy"][k] for k in ("node", "tris")} if "shadow_proxy" in export_info else {},
         "meshes": meshes,
         "garments": {g: list(m) for g, m in sorted(export_info["garments"].items())},
+        "accessories": dict(sorted(export_info.get("accessories", {}).items())),
+        "slots": {"shell_m": export_info.get("slot_shell_m", {}), "layers": export_info.get("layer_order", [])},
         "designs": designs,
         "regions": [{"id": i, "name": n} for i, n in enumerate(split.REGIONS)],
         "design_regions": {k: list(v) for k, v in sorted(split.DESIGN_REGIONS.items())},
@@ -233,6 +238,8 @@ def build_index(export_info: dict, design_info: dict) -> dict:
                      "scar_layer_b": scar_layers[1] if len(scar_layers) > 1 else -1, "hair_atlas": res + "hair_atlas.png",
                      "detail_weave": res + "cloth_weave.png", "detail_leather": res + "cloth_leather.png",
                      "detail_fur": res + "cloth_fur.png", "detail_metal": res + "cloth_metal.png",
+                     "detail_mail": res + "cloth_mail.png", "detail_scale": res + "cloth_scale.png",
+                     "detail_bone": res + "cloth_leather.png",
                      "skin_lut": res + "tex/skin_lut.png", "shell_strands": res + "shell_strands.png"},
         "body_hash": export_info["body_hash"],
     }
@@ -560,10 +567,22 @@ def estimate(rel: str, doc: dict) -> float:
     return raw * TEXTURE_FACTOR.get(key, 0.8)
 
 
-def web_budget_mib(root: Path = ROOT) -> float:
-    """The Web pack's default budget in MiB: the last default tools/build_web.sh assigns (26 MiB from
-    -m10 on, the owner's answer 1, plan §0.6; 23 MiB before P45)."""
-    found = re.findall(r"\bBUDGET_MB=([0-9]+(?:\.[0-9]+)?)\b", (root / BUILD_WEB).read_text())
+# P54 (plan M11 §2.12): the release the committed giant assets are made for. Part B's wardrobe ships in 0.12, so its
+# files are judged by build_web.sh's -m12 budget (32 MiB: the giant's share 13.6) while the version string still
+# reads -m11 until P58 sets it; the estimate falls back on the last default when the script names no such branch.
+ASSET_MILESTONE = 12
+
+
+def web_budget_mib(root: Path = ROOT, milestone: int | None = ASSET_MILESTONE) -> float:
+    """The Web pack's budget in MiB for ``milestone``: the branch of tools/build_web.sh that assigns it ("-eq N"),
+    else the last default the script assigns (26 MiB from -m10 on, the owner's answer 1, plan §0.6; 23 MiB before
+    P45)."""
+    text = (root / BUILD_WEB).read_text()
+    if milestone is not None:
+        own = re.findall(r'-eq %d \]; then BUDGET_MB=([0-9]+(?:\.[0-9]+)?)\b' % milestone, text)
+        if own:
+            return float(own[-1])
+    found = re.findall(r"\bBUDGET_MB=([0-9]+(?:\.[0-9]+)?)\b", text)
     return float(found[-1]) if found else 23.0
 
 

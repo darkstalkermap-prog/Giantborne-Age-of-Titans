@@ -21,7 +21,16 @@ const RIGS := [
 	["res://scenes/npcs/elder.tscn", 5, "", true],
 ]
 ## The giant's row (P43): every skinned mesh of the model, and those on layers 2 and 3.
-const GIANT_SKINNED := ["Beard_braided", "Beard_forked", "Beard_full", "Beard_short", "Body_Head", "Body_Limbs",
+## The giant model's meshes: M10's 25 (the floor's and P46's) and, since P54, the wardrobe's: every mesh of the
+## giant's index (the shadow proxy is no look's mesh). Read from the manifest, so the content can grow.
+static func giant_skinned() -> Array:
+	var doc: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/giant/manifest.json"))
+	var out: Array = ((doc as Dictionary).index.meshes as Dictionary).keys() if typeof(doc) == TYPE_DICTIONARY else []
+	out.sort()
+	return out
+
+
+const M10_SKINNED := ["Beard_braided", "Beard_forked", "Beard_full", "Beard_short", "Body_Head", "Body_Limbs",
 	"Body_Torso", "Eyes", "Garment_belt", "Garment_boots", "Garment_bracers", "Garment_braies_core",
 	"Garment_braies_limbs", "Garment_cape", "Garment_furs", "Garment_jerkin", "Garment_leg_wraps", "Garment_pauldron",
 	"Garment_tunic_core", "Garment_tunic_limbs", "Hair_crop", "Hair_long_back", "Hair_long_braided", "Hair_warrior_tail",
@@ -86,9 +95,13 @@ func test_the_giant_keeps_its_first_person_parts_apart() -> void:
 		assert_true(mi.get_parent() is Skeleton3D and mi.skin != null, "%s is a skinned mesh of the model's skeleton" % mi.name)
 		names.append(str(mi.name))
 	names.sort()
-	assert_eq(names, GIANT_SKINNED, "the meshes under Visual/Body, the weapon's aside, are the model's")
-	for id: String in GIANT_SKINNED:
+	assert_eq(names, giant_skinned(), "the meshes under Visual/Body, the weapon's aside, are the model's")
+	for id: String in M10_SKINNED:
+		assert_true(names.has(id), "M10's %s is still one of them" % id)
+	for id: String in giant_skinned():
 		var layer := 3 if GIANT_LAYER_3.has(id) else (2 if GIANT_LAYER_2.has(id) else 1)
+		if not M10_SKINNED.has(id):
+			layer = int((model.index.meshes[id] as Dictionary).get("layer", 1))   # P54: the wardrobe's, by the index
 		assert_eq(model.mesh(id).layers, 1 << (layer - 1), "%s on render layer %d" % [id, layer])
 	for pivot in ["HipL", "HipR", "Torso", "ShoulderL", "ShoulderR"]:
 		assert_eq(_meshes(body.get_node(pivot)).size(), 0, "the brain's %s carries no mesh" % pivot)
@@ -98,7 +111,7 @@ func test_the_giant_keeps_its_first_person_parts_apart() -> void:
 	assert_true(body.get_node_or_null("WeaponSocket") is Node3D, "the weapon's socket")
 	# headless, the glTF's own materials (GiantLook builds none while the skinned layers are off)
 	assert_false(SkinnedRig.layers_enabled(), "the skinned layers are off headless")
-	for id: String in GIANT_SKINNED:
+	for id: String in giant_skinned():
 		assert_true(model.mesh(id).material_override == null, "%s: no ShaderMaterial headless" % id)
 	p.queue_free()
 	await step_ticks(1)
@@ -107,7 +120,7 @@ func test_the_giant_keeps_its_first_person_parts_apart() -> void:
 	var q := spawn_player(Vector3(0, 0.05, 0))
 	await step_ticks(1)
 	var mats := GiantLook.materials(q.get_node("Visual/Body/Model") as GiantModel)
-	assert_eq(mats.size(), GIANT_SKINNED.size(), "a material per mesh")
+	assert_eq(mats.size(), giant_skinned().size(), "a material per mesh")
 	var seen := {}
 	for m: Variant in mats:
 		assert_true(m is ShaderMaterial, "a ShaderMaterial (%s)" % m)

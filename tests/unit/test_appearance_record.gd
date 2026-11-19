@@ -326,6 +326,10 @@ func test_to_look_for_every_option_of_every_set() -> void:
 					var want: Array = []
 					for g: Variant in o.get("garments", []):
 						want.append(str(g))
+					if not o.has("garments"):
+						# P54: an outfit made for the record v2 names no M10 list: the garments of its slots
+						for slot: Variant in o.slots:
+							want.append(str(Appearance.option(str(o.slots[slot])).get("mesh", "")))
 					var got := Appearance.garment_ids(look.garments)
 					want.sort()
 					got.sort()
@@ -363,7 +367,7 @@ func test_to_look_for_the_record_v2s_own_sets() -> void:
 			var s := Appearance.sanitize(r)
 			assert_eq(str(s.record.outfit.slots[str(g.slot)].dye), "", "%s: a metal on cloth or leather is the outfit's dye" % id)
 		n += 1
-	assert_eq(n, 10, "M10's ten garments")
+	assert_eq(n, 35, "M10's ten garments and the wardrobe's 25 (P54)")
 	for id: String in Appearance.option_ids("metal"):
 		var r := Appearance.default_record()
 		r.outfit.dyes.metal = id
@@ -388,12 +392,12 @@ func test_to_look_for_the_record_v2s_own_sets() -> void:
 ## ("" once the slots differ), two war paints at once, beads and accessories before their sets exist.
 func test_the_slots_paint_beads_and_accessories_rules() -> void:
 	var r := Appearance.default_record()
-	r.outfit.slots.chest = {"item": "garment.kilt", "dye": ""}
+	r.outfit.slots.chest = {"item": "garment.dragon_scale", "dye": ""}   # P54: no such garment (the kilt is one now)
 	r.outfit.slots.head = {"item": "garment.braies", "dye": ""}
 	r.outfit.slots.erase("feet")
 	var s := Appearance.sanitize(r)
 	assert_eq(str(s.record.outfit.slots.chest.item), "", "an unknown garment comes off")
-	assert_true((s.dropped as PackedStringArray).has("garment.kilt"), "and is reported")
+	assert_true((s.dropped as PackedStringArray).has("garment.dragon_scale"), "and is reported")
 	assert_eq(str(s.record.outfit.slots.head.item), "", "a garment of another slot comes off")
 	assert_true(str(s.notes).contains("garment.braies"), "with a note naming it: %s" % [s.notes])
 	assert_true(deep_eq(s.record.outfit.slots.feet, {"item": "", "dye": ""}), "a missing slot is empty")
