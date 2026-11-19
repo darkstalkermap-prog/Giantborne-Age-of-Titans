@@ -23,6 +23,11 @@ uniform float roughness_base : hint_range(0.0, 1.0) = 0.85;
 uniform float fade : hint_range(0.0, 1.0) = 0.0;
 uniform int kind = 0;
 uniform float rim : hint_range(0.0, 1.0) = 0.0;
+// P53 (plan M11 §2.4, decision 7): the build sliders (brawn, girth; each -1 to 1) push the surface along its
+// normal by the mesh's build weights (COLOR.g brawn, COLOR.b girth, stored as 0.5 + 0.5 w) times the index's
+// build_max_m (stage-1 metres). No joint moves; at (0, 0) nothing does.
+uniform vec2 build = vec2(0.0);
+uniform float build_max_m = 0.0;
 const float DARK_FLOOR = 0.035;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
@@ -33,6 +38,7 @@ varying flat float v_fp_on;
 
 void vertex() {
 	v_fp_pos = VERTEX;
+	VERTEX += NORMAL * dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m;   // P53: the build sliders
 	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(clamp(int(COLOR.r * 16.0), 0, 15));
 }
 

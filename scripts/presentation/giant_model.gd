@@ -177,6 +177,48 @@ func shadow_proxy() -> MeshInstance3D:
 	return sk.get_node_or_null(node_name) as MeshInstance3D
 
 
+## The build sliders on the shadow proxy (P53; plan M11 §2.4, decision 7; FOLLOWUPS "the shadow proxy needs
+## the build sliders' vertex push"): the proxy carries the body's build weights, so a material whose vertex
+## function pushes like the skin's keeps the shadow on the pushed body (at a build below zero the skin would
+## otherwise sink inside the proxy, which then shades it). GiantLook.apply calls it with every look. The giant
+## as built keeps the glTF's own material (nothing new to compile, the shadow pass as it was); the first build
+## away from zero puts the push on, and it stays on this model with its values updated.
+func apply_build(build: Vector2, build_max_m: float) -> void:
+	var proxy := shadow_proxy()
+	if proxy == null:
+		return
+	var mat := proxy.material_override as ShaderMaterial
+	if mat == null or mat.shader != build_shadow_shader():
+		if build == Vector2.ZERO:
+			return
+		mat = ShaderMaterial.new()
+		mat.shader = build_shadow_shader()
+		proxy.material_override = mat
+	mat.set_shader_parameter("build", build)
+	mat.set_shader_parameter("build_max_m", build_max_m)
+
+
+## The shadow proxy's build push: giant_skin's vertex push alone (the proxy is drawn in the shadow passes only,
+## so it needs no colour).
+const BUILD_SHADOW_CODE := """shader_type spatial;
+render_mode unshaded, cull_back;
+uniform vec2 build = vec2(0.0);
+uniform float build_max_m = 0.0;
+void vertex() {
+	VERTEX += NORMAL * dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m;
+}
+"""
+static var _build_shadow: Shader = null
+
+
+## The shader of the proxy's build push (one for the process).
+static func build_shadow_shader() -> Shader:
+	if _build_shadow == null:
+		_build_shadow = Shader.new()
+		_build_shadow.code = BUILD_SHADOW_CODE
+	return _build_shadow
+
+
 ## True when `id` is a part (a mesh with a glTF of its own).
 func is_part(id: String) -> bool:
 	var e: Variant = index.get("meshes", {}).get(id)
