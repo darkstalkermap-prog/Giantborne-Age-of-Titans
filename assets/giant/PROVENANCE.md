@@ -37,6 +37,14 @@ here is edited by hand.
 | `tex/skin_lut.png`, `tex/curvature.png`, `shell_strands.png`, `cloth_metal.png` (P51, M11) | `tools/giant/kit/pack.py` | The skin's pre-integrated subsurface lookup integrated in numpy from a published six-Gaussian skin diffusion profile (numbers only, no data file); the skin's curvature from the bake's rest position and normal maps; the shell styles' strand cells and a hammered-metal detail map drawn in numpy. Since P51 `pack.py` also grades the baked albedo (`SKIN_GRADE`), the cloth detail maps are 256 px, the crop and the short beard in `parts/` are the skin under their masks (shells, stacked by the game), and the braids are tubes with bead rings, all built by the kit's own code |
 | `parts/Garment_*.glb` of the wardrobe, `parts/Accessory_*.glb`, `cloth_mail.png`, `cloth_scale.png` (P54, M11) | `tools/giant/kit/giant_garment.py`, `export_game.py`, `pack.py` | 25 more garments in ten slots (35 in all) cut from the same CC0 body surface by bone-weight regions and pushed out along the normals at their slot's offset, layered by the kit so that the shells of two slots never meet, carrying the body's weights; the plated war belt and the sash are bands like the belt; the long cloak and the fur cloak are the cape's construction carried on below the body's cut; the horned helm's horns and the eight accessories (torcs, a tooth necklace, arm rings, a drinking horn, a beast's jaw) are tubes and cones built in numpy, rigid on one bone each; the mail and scale detail maps are drawn in numpy. No outside mesh, texture or reference image |
 
+Since P56 (M11), the catalogue II: five more hair styles and four more beards in `parts/` grown by the same kit (a top
+knot, a side-shaved top, twin braids, long loose hair, a circlet braid; a chin braid, a long forked beard, mutton chops, a
+braided moustache), their braids as tubes; three bead sets (`parts/Beads_*.glb`: bone, bronze and silver beads built in
+numpy on the braids' anchors); twenty more designs in `designs.png` (tattoos, war paints, scars) drawn as distance
+fields like the others; six face shape keys on the head (and copied to the beards, the hairline strips, the shells and the
+beads) mixed from the vendored CC0 detail targets already in `tools/giant/mpfb2/` (chin, jaw, nose, brow, forehead,
+cheek, head-age, eye-bag and laugh-line targets the giant's own phenotype uses). No new input.
+
 The code of `tools/giant/kit/` was written for this project (ported from the project's own M10
 research kit); it reads the MakeHuman data's documented formats and rules and copies no third-party
 code.

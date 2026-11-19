@@ -727,3 +727,31 @@ func test_the_face_sliders_set_blend_shapes_where_a_mesh_has_them() -> void:
 	GiantLook.apply(root, INDEX, GiantLook.DEFAULT_LOOK)
 	assert_true(_near(head.get_blend_shape_value(head.find_blend_shape_by_name("jaw")), 0.0), "the default face is 0")
 	assert_eq(GiantLook.mesh_node(root, INDEX, "Body_Torso").get_blend_shape_count(), 0, "a mesh without keys is left alone")
+
+
+## P56 (plan M11 §2.5): a bead set with style codes shows its beads only on the shown styles that have anchors - the
+## look's hair style when its hair beads are the set (and the style is drawn whole), its beard likewise - by the cloth
+## shader's bead_mask (a bit a style code); a style without anchors wears none; a set without codes (the floor's
+## shape) shows when named. The scars' channels are gated by the worn scars' regions.
+func test_beads_by_style_code_and_scars_by_region() -> void:
+	var entry := {"category": "bead", "styles": {"Hair_twin": 1, "Beard_chin": 2}}
+	var l: Dictionary = GiantLook.DEFAULT_LOOK.duplicate(true)
+	l.hair_mesh = "Hair_twin"
+	l.beard_mesh = "Beard_chin"
+	l.hair_beads = "Beads_bone"
+	assert_eq(GiantLook.bead_mask(entry, "Beads_bone", l), 1 << 1, "the hair's code")
+	l.beard_beads = "Beads_bone"
+	assert_eq(GiantLook.bead_mask(entry, "Beads_bone", l), (1 << 1) | (1 << 2), "both the hair's and the beard's")
+	assert_eq(GiantLook.bead_mask(entry, "Beads_silver", l), 0, "another set shows nothing")
+	assert_eq(GiantLook.bead_mask(entry, "Beads_bone", l, {"Hair_twin": 0.3}), 1 << 2, "a helm's cut takes the hair's off")
+	l.hair_mesh = "Hair_crop"
+	l.beard_mesh = "Beard_full"
+	assert_eq(GiantLook.bead_mask(entry, "Beads_bone", l), 0, "styles without anchors wear none")
+	var index := {"designs": {"scar_a": {"kind": "scar", "layer": 0, "channel": 0, "regions": [1]},
+		"scar_b": {"kind": "scar", "layer": 0, "channel": 0, "regions": [11]},
+		"scar_c": {"kind": "scar", "layer": 1, "channel": 3, "regions": [5, 6]}}}
+	var u := GiantLook.scar_uniforms(index, ["scar_b", "scar_c"])
+	assert_eq(u.on, Vector4(1, 0, 0, 0), "scar_b's channel on")
+	assert_eq(u.regions, Vector4i(1 << 11, 0, 0, 0), "only in its own region (scar_a shares the channel)")
+	assert_eq(u.regions_b, Vector4i(0, 0, 0, (1 << 5) | (1 << 6)), "the second layer's scar in its regions")
+

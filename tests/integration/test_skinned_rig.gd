@@ -22,7 +22,7 @@ extends IntegrationSuite
 ##     opens the gate over every leaf that weighs; the hair's sway (P46) reaches the card hair and beard; the eyes
 ##     look along the camera's facing and toward the lock target, within the shader's quarter of the iris.
 
-const LAYER_OF := {"body": 0, "eyes": 3, "hair": 3, "beard": 3}
+const LAYER_OF := {"body": 0, "eyes": 3, "hair": 3, "beard": 3, "bead": 3}   # P56: the beads ride the head's layer
 
 
 func _rig(p: GiantPlayer) -> SkinnedRig:

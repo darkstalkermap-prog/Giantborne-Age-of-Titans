@@ -1,0 +1,109 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.bronze_lord",
+	"type": "appearance_preset",
+	"display_name": "The Bronze Lord",
+	"description": "A southern war-king: horned helm, bronze breastplate and a fur cloak; twin black braids and a chin braid ringed in bronze.",
+	"appearance": {
+		"v": 2,
+		"preset": "appearance_preset.bronze_lord",
+		"skin": "skin.olive",
+		"eyes": "eyes.brown",
+		"build": {
+			"brawn": 0.1,
+			"girth": 0.4
+		},
+		"face": {
+			"jaw": 0.0,
+			"chin": 0.0,
+			"nose": 0.0,
+			"brow": 0.0,
+			"cheeks": 0.0,
+			"age": 0.0
+		},
+		"hair": {
+			"style": "hair.twin_braids",
+			"color": "haircolor.black",
+			"grey": 0.05,
+			"beads": "bead.bronze_rings"
+		},
+		"beard": {
+			"style": "beard.chin_braid",
+			"color": "",
+			"grey": 0.0,
+			"beads": "bead.bronze_rings"
+		},
+		"tattoos": {
+			"arms": "tattoo.arm_runes",
+			"chest": "",
+			"back": "",
+			"face": "",
+			"legs": "",
+			"ink": "ink.ochre"
+		},
+		"paint": {
+			"face": "",
+			"body": "",
+			"color": "paintcolor.chalk"
+		},
+		"scars": [
+			"scar.forearm_slash"
+		],
+		"mark": "auto",
+		"outfit": {
+			"set": "outfit.bronze_lord",
+			"slots": {
+				"head": {
+					"item": "garment.horned_helm",
+					"dye": ""
+				},
+				"shoulders": {
+					"item": "garment.fur_mantle",
+					"dye": ""
+				},
+				"chest": {
+					"item": "garment.tunic",
+					"dye": ""
+				},
+				"armour": {
+					"item": "garment.bronze_breastplate",
+					"dye": ""
+				},
+				"arms": {
+					"item": "garment.bracers",
+					"dye": ""
+				},
+				"waist": {
+					"item": "garment.war_belt",
+					"dye": ""
+				},
+				"legs": {
+					"item": "garment.kilt",
+					"dye": ""
+				},
+				"shins": {
+					"item": "garment.greaves",
+					"dye": ""
+				},
+				"feet": {
+					"item": "garment.wrapped_sandals",
+					"dye": ""
+				},
+				"cape": {
+					"item": "garment.fur_cloak",
+					"dye": ""
+				}
+			},
+			"accessories": {
+				"neck": "accessory.gilded_torc",
+				"arm_ring": "accessory.gilded_arm_ring",
+				"belt": "accessory.drinking_horn"
+			},
+			"dyes": {
+				"cloth": "dye.madder",
+				"leather": "dye.dark_leather",
+				"metal": "metal.bronze"
+			}
+		}
+	}
+}

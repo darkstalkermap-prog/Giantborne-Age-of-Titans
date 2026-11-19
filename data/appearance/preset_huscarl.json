@@ -1,0 +1,110 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.huscarl",
+	"type": "appearance_preset",
+	"display_name": "The Huscarl",
+	"description": "A hall's sworn shield in steel: mail, iron helm and vambraces, a long cloak; a long forked beard tied with silver.",
+	"appearance": {
+		"v": 2,
+		"preset": "appearance_preset.huscarl",
+		"skin": "skin.tan",
+		"eyes": "eyes.ice",
+		"build": {
+			"brawn": 0.3,
+			"girth": 0.1
+		},
+		"face": {
+			"jaw": 0.3,
+			"chin": 0.4,
+			"nose": 0.0,
+			"brow": 0.0,
+			"cheeks": 0.0,
+			"age": 0.0
+		},
+		"hair": {
+			"style": "hair.long_loose",
+			"color": "haircolor.dark_blond",
+			"grey": 0.1,
+			"beads": "bead.none"
+		},
+		"beard": {
+			"style": "beard.long_forked",
+			"color": "",
+			"grey": 0.15,
+			"beads": "bead.silver_beads"
+		},
+		"tattoos": {
+			"arms": "",
+			"chest": "",
+			"back": "",
+			"face": "",
+			"legs": "",
+			"ink": "ink.iron"
+		},
+		"paint": {
+			"face": "paint.eye_band",
+			"body": "",
+			"color": "paintcolor.soot"
+		},
+		"scars": [
+			"scar.lip",
+			"scar.cheek"
+		],
+		"mark": "auto",
+		"outfit": {
+			"set": "outfit.huscarl",
+			"slots": {
+				"head": {
+					"item": "garment.iron_helm",
+					"dye": ""
+				},
+				"shoulders": {
+					"item": "garment.iron_pauldrons",
+					"dye": ""
+				},
+				"chest": {
+					"item": "garment.shirt",
+					"dye": ""
+				},
+				"armour": {
+					"item": "garment.mail_hauberk",
+					"dye": ""
+				},
+				"arms": {
+					"item": "garment.iron_vambraces",
+					"dye": ""
+				},
+				"waist": {
+					"item": "garment.war_belt",
+					"dye": ""
+				},
+				"legs": {
+					"item": "garment.trousers",
+					"dye": ""
+				},
+				"shins": {
+					"item": "garment.greaves",
+					"dye": ""
+				},
+				"feet": {
+					"item": "garment.boots",
+					"dye": ""
+				},
+				"cape": {
+					"item": "garment.long_cloak",
+					"dye": ""
+				}
+			},
+			"accessories": {
+				"neck": "accessory.iron_torc",
+				"arm_ring": "accessory.iron_arm_ring",
+				"belt": ""
+			},
+			"dyes": {
+				"cloth": "dye.woad_blue",
+				"leather": "dye.walnut",
+				"metal": "metal.steel"
+			}
+		}
+	}
+}

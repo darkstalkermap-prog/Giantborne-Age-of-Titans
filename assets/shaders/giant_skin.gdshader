@@ -51,6 +51,10 @@ uniform int scar_layer = 0;
 uniform vec4 scar_on = vec4(0.0);
 uniform int scar_layer_b = 0;
 uniform vec4 scar_on_b = vec4(0.0);
+// P56 (plan M11 §2.6): ten scars in the two scar layers, a channel shared by scars of other regions (the packer keeps
+// them apart); each channel is on only in the body regions of the worn scars on it (a bit a region; all by default).
+uniform ivec4 scar_regions = ivec4(65535);
+uniform ivec4 scar_regions_b = ivec4(65535);
 uniform float scar_relief = 6.0;
 uniform int hidden_regions = 0;
 uniform float hide_shrink = 0.03;
@@ -74,12 +78,14 @@ uniform vec3 sss_color : source_color = vec3(0.90, 0.28, 0.16);
 uniform float transmission = 0.5;
 uniform float rough_scale = 1.25;
 uniform float normal_detail = 0.6;
+const float TSIGN_FLIP = 1.0;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
 varying float v_thin;
 varying float v_curv;
 varying flat int v_region;
+varying float v_tsign;
 
 #include "res://assets/shaders/giant_first_person.gdshaderinc"
 varying vec3 v_fp_pos;
@@ -87,6 +93,7 @@ varying flat float v_fp_on;
 
 void vertex() {
 	v_region = clamp(int(COLOR.r * 16.0), 0, 15);
+	v_tsign = COLOR.a * 2.0 - 1.0;
 	v_fp_pos = VERTEX;
 	VERTEX += NORMAL * dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m;   // P53: the build sliders
 	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(v_region);
@@ -107,6 +114,12 @@ float design_coverage(int code, vec2 uv) {
 	int d = code - 1;
 	int layer = d / 4;
 	return clamp(dot(texture(design_tex, vec3(uv, float(layer))), channel_mask(d - layer * 4)), 0.0, 1.0);
+}
+
+// A scar layer's channels on in this texel's region (P56): `on` gated by each channel's region bits.
+vec4 scar_gate(vec4 on, ivec4 regions) {
+	return on * vec4(float((regions.x >> v_region) & 1), float((regions.y >> v_region) & 1),
+		float((regions.z >> v_region) & 1), float((regions.w >> v_region) & 1));
 }
 
 // The scars of one RGBA layer that `on` picks: their coverage, and the slope of their height for the relief.
@@ -139,6 +152,9 @@ void fragment() {
 	if (fp_shoulders_hidden(v_fp_pos, v_fp_on, FRAGCOORD.xy)) {
 		discard;   // first person: the limbs fade out towards the shoulders (the include's header)
 	}
+	// P56: the binormal from the normal, the tangent and the tangent's sign the mesh carries in COLOR.a: the renderer's
+	// blend shapes (the face keys) lose the sign (the binormal went to zero at a key's +1: a black quad between the brows)
+	BINORMAL = normalize(cross(NORMAL, TANGENT)) * (v_tsign < 0.0 ? -1.0 : 1.0) * TSIGN_FLIP;
 	vec3 base = tone_scaled(texture(albedo_tex, UV).rgb, skin_tone / max(bake_tone, vec3(0.01)));
 	vec4 orm = texture(orm_tex, UV);
 	vec4 m = texture(mask_tex, UV);
@@ -160,12 +176,14 @@ void fragment() {
 	nm.xy *= normal_detail;   // the baked relief, eased: the low sun drew the forehead's lines as ridges
 	float sc = 0.0;
 	vec2 relief = vec2(0.0);
-	if (dot(scar_on, scar_on) > 0.0) {
-		sc = scar_coverage(float(scar_layer), scar_on, UV, relief);
+	vec4 on_a = scar_gate(scar_on, scar_regions);
+	vec4 on_b = scar_gate(scar_on_b, scar_regions_b);
+	if (dot(on_a, on_a) > 0.0) {
+		sc = scar_coverage(float(scar_layer), on_a, UV, relief);
 	}
-	if (dot(scar_on_b, scar_on_b) > 0.0) {   // the fifth and sixth scars: a second layer (P46)
+	if (dot(on_b, on_b) > 0.0) {   // the fifth and sixth scars: a second layer (P46)
 		vec2 relief_b = vec2(0.0);
-		float sb = scar_coverage(float(scar_layer_b), scar_on_b, UV, relief_b);
+		float sb = scar_coverage(float(scar_layer_b), on_b, UV, relief_b);
 		sc = max(sc, sb);
 		relief += relief_b;
 	}

@@ -32,6 +32,10 @@ uniform float rim : hint_range(0.0, 1.0) = 0.0;
 // build_max_m (stage-1 metres). No joint moves; at (0, 0) nothing does.
 uniform vec2 build = vec2(0.0);
 uniform float build_max_m = 0.0;
+// P56 (plan M11 §2.5): a bead set holds its beads for every style with anchors, each vertex carrying its style's code
+// in UV2.x; GiantLook sets the codes of the shown styles as bits, and the others' beads collapse to a point (no
+// fragment). -1 (every garment and accessory): no mask.
+uniform int bead_mask = -1;
 const float DARK_FLOOR = 0.035;
 const vec3 BONE = vec3(0.62, 0.56, 0.45);   // linear: an aged, sun-yellowed bone
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
@@ -42,6 +46,9 @@ varying vec3 v_fp_pos;
 varying flat float v_fp_on;
 
 void vertex() {
+	if (bead_mask >= 0 && ((bead_mask >> int(UV2.x + 0.5)) & 1) == 0) {
+		VERTEX = vec3(0.0);   // P56: a bead of a style not shown
+	}
 	v_fp_pos = VERTEX;
 	VERTEX += NORMAL * dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m;   // P53: the build sliders
 	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(clamp(int(COLOR.r * 16.0), 0, 15));

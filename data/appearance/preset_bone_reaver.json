@@ -1,0 +1,111 @@
+{
+	"schema_version": 1,
+	"id": "appearance_preset.bone_reaver",
+	"type": "appearance_preset",
+	"display_name": "The Bone Reaver",
+	"description": "Half-painted in ash, bone on his shoulders and a serpent down his bare leg; a braided moustache hung with bone.",
+	"appearance": {
+		"v": 2,
+		"preset": "appearance_preset.bone_reaver",
+		"skin": "skin.weathered",
+		"eyes": "eyes.grey",
+		"build": {
+			"brawn": -0.2,
+			"girth": -0.3
+		},
+		"face": {
+			"jaw": 0.0,
+			"chin": 0.0,
+			"nose": 0.0,
+			"brow": 0.5,
+			"cheeks": 0.7,
+			"age": 0.3
+		},
+		"hair": {
+			"style": "hair.side_braids",
+			"color": "haircolor.copper",
+			"grey": 0.0,
+			"beads": "bead.bone_beads"
+		},
+		"beard": {
+			"style": "beard.braided_moustache",
+			"color": "",
+			"grey": 0.0,
+			"beads": "bead.bone_beads"
+		},
+		"tattoos": {
+			"arms": "",
+			"chest": "",
+			"back": "tattoo.back_spine",
+			"face": "",
+			"legs": "tattoo.leg_serpent",
+			"ink": "ink.soot"
+		},
+		"paint": {
+			"face": "paint.half_face",
+			"body": "",
+			"color": "paintcolor.ash"
+		},
+		"scars": [
+			"scar.thigh_gash",
+			"scar.ribs",
+			"scar.shoulder_bite"
+		],
+		"mark": "auto",
+		"outfit": {
+			"set": "",
+			"slots": {
+				"head": {
+					"item": "",
+					"dye": ""
+				},
+				"shoulders": {
+					"item": "garment.bone_spaulders",
+					"dye": ""
+				},
+				"chest": {
+					"item": "garment.chest_wrap",
+					"dye": ""
+				},
+				"armour": {
+					"item": "",
+					"dye": ""
+				},
+				"arms": {
+					"item": "garment.arm_wraps",
+					"dye": ""
+				},
+				"waist": {
+					"item": "garment.belt",
+					"dye": ""
+				},
+				"legs": {
+					"item": "garment.loincloth",
+					"dye": ""
+				},
+				"shins": {
+					"item": "garment.leg_wraps",
+					"dye": ""
+				},
+				"feet": {
+					"item": "garment.wrapped_sandals",
+					"dye": ""
+				},
+				"cape": {
+					"item": "",
+					"dye": ""
+				}
+			},
+			"accessories": {
+				"neck": "accessory.tooth_necklace",
+				"arm_ring": "",
+				"belt": "accessory.beast_jaw"
+			},
+			"dyes": {
+				"cloth": "dye.soot",
+				"leather": "dye.walnut",
+				"metal": "metal.blackened"
+			}
+		}
+	}
+}

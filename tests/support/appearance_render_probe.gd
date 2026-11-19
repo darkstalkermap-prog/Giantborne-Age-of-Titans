@@ -87,6 +87,13 @@ static func jobs() -> Array:
 	add_base.call("arms", inked, "base.ink")
 	var painted := OptionRows.with_value(base, "paint.design", "paint.face_stripes")
 	add_base.call("face", painted, "base.paintcolor")
+	# P56: the legs' designs are read on bare legs (the Wanderer's braies cover the thighs), against bare legs
+	var bare_legs := OptionRows.with_value(base, "outfit.slots.legs.item", "")
+	add_base.call("legs", bare_legs, "base.legs")
+	out.append({"key": "base.rear_legs", "cat": "base", "view": "rear", "framing": "game", "record": bare_legs,
+		"ancestry": "", "vs": ""})
+	out.append({"key": "base.fp_legs", "cat": "base", "view": "fp", "framing": GiantPreview.FIRST_PERSON,
+		"record": bare_legs, "ancestry": "", "vs": ""})
 	# Every option of every set in its framing.
 	for cat: String in Appearance.CATEGORIES:
 		var ids := Appearance.option_ids(cat)
@@ -104,14 +111,17 @@ static func jobs() -> Array:
 			elif cat in DESIGN_SETS:
 				framing = GiantPreview.region_framing(_design_region(cat, o))
 				vs = "base." + framing
+			var legs := cat in DESIGN_SETS and framing == "legs"
+			if legs:
+				rec = OptionRows.with_value(rec, "outfit.slots.legs.item", "")
 			if OptionRows.same(rec, (base if cat not in ["ink", "paintcolor"] else (inked if cat == "ink" else painted))):
 				vs = cat + "." + ids[(i + 1) % ids.size()].get_slice(".", 1)   # the base's own value: against its neighbour
 			out.append({"key": id, "cat": cat, "view": "framed", "framing": framing, "record": rec, "ancestry": line, "vs": vs})
 			if cat in DESIGN_SETS:
 				out.append({"key": id + "@rear", "cat": cat, "view": "rear", "framing": "game", "record": rec, "ancestry": line,
-					"vs": "base.rear"})
+					"vs": "base.rear_legs" if legs else "base.rear"})
 				out.append({"key": id + "@fp", "cat": cat, "view": "fp", "framing": GiantPreview.FIRST_PERSON, "record": rec,
-					"ancestry": line, "vs": "base.fp"})
+					"ancestry": line, "vs": "base.fp_legs" if legs else "base.fp"})
 	for pid: String in Appearance.preset_ids():
 		var rec := Appearance.preset_record(pid)
 		rec["mark"] = Appearance.MARK_NONE

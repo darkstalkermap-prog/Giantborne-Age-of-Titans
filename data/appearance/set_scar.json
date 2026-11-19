@@ -4,13 +4,17 @@
 	"type": "appearance_set",
 	"category": "scar",
 	"display_name": "Scars",
-	"description": "P42 (plan M10 §2.3): the scars (the floor's four and the look pass's two, P46); a record carries at most four.",
+	"description": "P42 (plan M10 §2.3): the scars (the floor's four and the look pass's two, P46; the catalogue II's four, P56); a record carries at most six (the record v2, P53).",
 	"options": [
 		{"key": "brow", "name": "Brow", "design": "scar_brow"},
 		{"key": "forearm_slash", "name": "Forearm slash", "design": "scar_forearm_slash"},
 		{"key": "chest_claws", "name": "Chest claws", "design": "scar_chest_claws"},
 		{"key": "knuckles", "name": "Knuckles", "design": "scar_knuckles"},
 		{"key": "cheek", "name": "Cheek", "design": "scar_cheek"},
-		{"key": "back_lash", "name": "Back lashes", "design": "scar_back_lash"}
+		{"key": "back_lash", "name": "Back lashes", "design": "scar_back_lash"},
+		{"key": "lip", "name": "Split lip", "design": "scar_lip"},
+		{"key": "shoulder_bite", "name": "Shoulder bite", "design": "scar_shoulder_bite"},
+		{"key": "thigh_gash", "name": "Thigh gash", "design": "scar_thigh_gash"},
+		{"key": "ribs", "name": "Spear scar", "design": "scar_ribs"}
 	]
 }

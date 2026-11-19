@@ -257,9 +257,10 @@ class DesignTest(unittest.TestCase):
             ly = img[li * designs.LAYER_SIZE:(li + 1) * designs.LAYER_SIZE]
             both = ((ly[..., :3] > 24).sum(axis=-1) > 1).sum()
             self.assertEqual(int(both), 0, "layer %d: no texel lit in two of R, G and B" % li)
-        # the scars fill layers of their own, four a layer (P46: the fifth and sixth on a second one)
+        # the scars fill layers of their own, four a layer (P46: the fifth and sixth on a second one; P56: the ten share
+        # the two layers' channels by region, the skin shader's scar_regions)
         scar_layers = {placed[d][0] for d in designs.SCAR_ORDER}
-        self.assertEqual(len(scar_layers), -(-len(designs.SCAR_ORDER) // designs.SCARS_PER_LAYER))
+        self.assertEqual(len(scar_layers), designs.SCAR_LAYERS)
         self.assertEqual(scar_layers, {0, 1})
         self.assertTrue(all(placed[d][0] not in scar_layers for d in placed if cat[d][0] != "scar"))
 
@@ -644,7 +645,8 @@ class BodyTwoTest(unittest.TestCase):
                 long_styles += 1
                 tips = m["UV"][:, 1] >= 0.999
                 # the warrior's tail lies flat on the scalp but for its tail: some tips, not most
-                if braids and e["category"] == "beard":
+                if braids and (e["category"] == "beard" or mid in ("Hair_side_braids", "Hair_twin_braids")):
+                    # P56: the side-shaved top's and the twin braids' cards lie on the head too; their braids hang
                     # P51: the braided beard's cards are short (on the head); its two braids hang on the chain
                     self.assertGreater(int((head[tips] < 0.5).sum()), 0, "%s: its braids' tips are on the chain" % mid)
                 else:
@@ -666,7 +668,9 @@ class BodyTwoTest(unittest.TestCase):
             m = self.core[mesh]
             C = m["C"]
             self.assertTrue(float(C[:, 1:3].min()) >= 0.0 and float(C[:, 1:3].max()) <= 1.0, mesh)
-            self.assertTrue(np.allclose(C[:, 3], 1.0, atol=1e-3), "%s: alpha is left at 1 (reserved)" % mesh)
+            # P56: the alpha carries the tangent's sign (1 for +1, 0 for -1; the skin shader rebuilds its binormal)
+            self.assertTrue(np.all((np.abs(C[:, 3]) < 1e-3) | (np.abs(C[:, 3] - 1.0) < 1e-3)),
+                            "%s: alpha is the tangent's sign, 0 or 1" % mesh)
             d, twin = cKDTree(m["P"]).query(m["P"] * [-1.0, 1.0, 1.0])
             ok = d < 1e-4
             if mesh != "Body_Head":       # the face is asymmetric by design (the asym targets); it carries no weight
@@ -698,8 +702,8 @@ class BodyTwoTest(unittest.TestCase):
         part_ids = sorted(m for m, e in idx["meshes"].items() if "part_path" in e)
         self.assertEqual(on_disk, [m + ".glb" for m in part_ids], "a file a part, no other")
         # M10's (P48's) 21 parts and the wardrobe's (P54): 28 more garment meshes (25 garments, three of them split)
-        # and the 8 accessories
-        self.assertEqual(len(part_ids), 21 + 28 + 8)
+        # and the 8 accessories; the catalogue II's (P56) nine styles and three bead sets
+        self.assertEqual(len(part_ids), 21 + 28 + 8 + 9 + 3)
         self.assertEqual(sorted(m for m, e in idx["meshes"].items() if "part_path" not in e),
                          ["Body_Head", "Body_Limbs", "Body_Torso", "Eyes"])
         for mid in part_ids:
@@ -709,8 +713,8 @@ class BodyTwoTest(unittest.TestCase):
             meshes, _joints = self.parts[mid]
             self.assertEqual(sorted(meshes), [mid], "%s.glb holds its one mesh" % mid)
             self.assertEqual(meshes[mid]["tris"], e["tris"], "%s: the index counts its triangles" % mid)
-            self.assertIn(e["category"], ("hair", "beard", "garment", "accessory"))
-        self.assertEqual(len(files), 13 + 4 + 2 + 57, "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts")
+            self.assertIn(e["category"], ("hair", "beard", "garment", "accessory", "bead"))
+        self.assertEqual(len(files), 13 + 4 + 2 + 69, "M10's 13 files, P51's four maps, P54's two (mail, scale), the parts")
         proxy = info["shadow_proxy"]
         self.assertEqual(idx["shadow_proxy"], {"node": "ShadowProxy", "tris": proxy["tris"]})
         self.assertEqual(self.core["ShadowProxy"]["tris"], proxy["tris"])
@@ -944,6 +948,97 @@ class WardrobeTest(unittest.TestCase):
             W = meshes[mid]["W"]
             self.assertEqual(sorted(b for b, w in W.items() if float(np.max(w)) > 0.0), [bone_of[spec["slot"]]],
                              "%s: all on its one bone" % aid)
+
+
+class CatalogueTest(unittest.TestCase):
+    """P56 (plan M11 §2.6, §3.9): the catalogue II - five hair and four beard styles with bead anchors, three bead sets,
+    twenty designs under the packing and two-paint rules, six face keys."""
+    NEW_STYLES = ("Hair_top_knot", "Hair_side_braids", "Hair_twin_braids", "Hair_long_loose", "Hair_circlet_braid",
+                  "Beard_chin_braid", "Beard_long_forked", "Beard_mutton_chops", "Beard_braided_moustache")
+    BEAD_SETS = ("Beads_bone", "Beads_bronze", "Beads_silver")
+    FACE_KEYS = ("jaw", "chin", "nose", "brow", "cheeks", "age")
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = manifest.load(ROOT)
+        cls.idx = cls.doc["index"]
+
+    @staticmethod
+    def _mesh(rel, name=None):
+        doc, binary = read_glb(os.path.join(ROOT, rel))
+        m = [x for x in doc["meshes"] if name is None or x["name"] == name][0]
+        prim = m["primitives"][0]
+        at = prim["attributes"]
+        out = {"P": accessor(doc, binary, at["POSITION"]).astype(np.float64),
+               "UV": accessor(doc, binary, at["TEXCOORD_0"]) if "TEXCOORD_0" in at else None,
+               "UV2": accessor(doc, binary, at["TEXCOORD_1"]) if "TEXCOORD_1" in at else None,
+               "names": (m.get("extras") or {}).get("targetNames", []),
+               "targets": [accessor(doc, binary, t["POSITION"]).astype(np.float64) for t in prim.get("targets", [])],
+               "target_attrs": [sorted(t) for t in prim.get("targets", [])]}
+        return out
+
+    def test_the_new_styles_carry_bead_anchors_and_the_sets_their_codes(self):
+        meshes = self.idx["meshes"]
+        for mid in self.NEW_STYLES:
+            e = meshes[mid]
+            self.assertGreater(e.get("bead_anchors", 0), 0, "%s has bead anchors" % mid)
+            self.assertLessEqual(e["tris"], 6000 if mid.startswith("Hair_") else 4000, "%s under its cap" % mid)
+        anchored = sorted(m for m, e in meshes.items() if e.get("bead_anchors"))
+        self.assertTrue({"Hair_long_braided", "Beard_braided"} <= set(anchored), "M10's braided styles take beads too")
+        for sid in self.BEAD_SETS:
+            e = meshes[sid]
+            self.assertEqual(e["category"], "bead")
+            self.assertEqual(sorted(e["styles"]), anchored, "%s: a code for every anchored style" % sid)
+            self.assertEqual(sorted(e["styles"].values()), list(range(1, len(anchored) + 1)))
+            self.assertLessEqual(e["tris"], 3200, "%s: at most 3,200 triangles" % sid)
+            m = self._mesh(e["part_path"].replace("res://", ""))
+            codes = sorted({int(round(v)) for v in m["UV2"][:, 0]})
+            self.assertEqual(codes, sorted(e["styles"].values()), "%s: every vertex carries a style's code" % sid)
+
+    def test_the_designs_keep_the_packing_and_the_two_paint_rule(self):
+        cat = {d: (v["kind"], tuple(v["regions"])) for d, v in self.idx["designs"].items()}
+        kinds = {}
+        for k, _r in cat.values():
+            kinds[k] = kinds.get(k, 0) + 1
+        self.assertEqual(kinds, {"tattoo": 28, "paint": 8, "scar": 10, "mark": 3})
+        self.assertEqual(designs.paint_problems(cat), [], "a face paint on the face alone, a body paint off it")
+        bad = dict(cat, paint_wrong=("paint", (1, 3)))
+        self.assertEqual(len(designs.paint_problems(bad)), 1, "a paint on the face and the body is caught")
+        legs = [d for d, (k, r) in cat.items() if k == "tattoo" and set(r) <= {11, 12, 13}]
+        self.assertEqual(len(legs), 4, "four tattoos for the legs (regions 11-13)")
+        self.assertLessEqual(self.idx["textures"]["design_layers"], 12, "at most twelve design layers (plan §2.12)")
+
+    def test_the_face_keys_on_the_head_and_the_beards(self):
+        """The head carries the six keys with morph normals and tangents; its base shape is the body's (the freeze
+        test hashes it); every beard follows its skin: at -1 and +1 no card's root leaves the keyed skin by more than
+        2 mm (plan §3.9)."""
+        from scipy.spatial import cKDTree
+        head = self._mesh("assets/giant/giant.glb", "Body_Head")
+        self.assertEqual(head["names"], list(self.FACE_KEYS))
+        self.assertTrue(all(a == ["NORMAL", "POSITION", "TANGENT"] for a in head["target_attrs"]),
+                        "the head's keys carry morph normals and tangents (probe 3)")
+        for k, d in zip(head["names"], head["targets"]):
+            self.assertGreater(float(np.abs(d).max()), 0.004, "%s moves the face" % k)
+        self.assertEqual(self.idx["meshes"]["Body_Head"]["face_keys"], list(self.FACE_KEYS))
+        for mid, e in sorted(self.idx["meshes"].items()):
+            if e["category"] != "beard" or e.get("shell"):
+                continue
+            m = self._mesh(e["part_path"].replace("res://", ""))
+            self.assertTrue(set(m["names"]) <= set(self.FACE_KEYS) and {"jaw", "chin"} <= set(m["names"]), mid)
+            self.assertNotIn("brow", m["names"], "%s: the brow keeps off the beard" % mid)
+            self.assertTrue(all(a == ["POSITION"] for a in m["target_attrs"]), "%s: positions only" % mid)
+            roots = m["UV"][:, 1] <= 1e-6
+            if m["UV2"] is not None:
+                roots &= m["UV2"][:, 0] < 0.5            # the cards' roots (a braid hangs off the skin from its start)
+            R = m["P"][roots]
+            _d, near = cKDTree(head["P"]).query(R)
+            for k in head["names"]:
+                # every head key: a key the beard does not carry must not move its roots' skin (the keys keep off it)
+                hk = head["targets"][head["names"].index(k)][near]
+                bk = m["targets"][m["names"].index(k)][roots] if k in m["names"] else np.zeros_like(hk)
+                # a root moves with the skin under it: its offset from the nearest skin vertex changes by w (bk - hk)
+                worst = float(np.max(np.linalg.norm(bk - hk, axis=1)))
+                self.assertLessEqual(worst, 0.002, "%s: %s at -1 or +1 moves a root %.4f m off the skin" % (mid, k, worst))
 
 
 class VendorTest(unittest.TestCase):

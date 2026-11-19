@@ -134,6 +134,29 @@ def colour_attribute(me, vregion, vbuild=None):
     col.data.foreach_set("color", rgba.ravel())
 
 
+def tangent_sign_alpha(ob):
+    """The body's colour moves to the corners with its alpha the tangent's sign there (P56): the renderer's blend
+    shapes lose the tangent's sign (at a face key's +1 the head's binormal went to zero and the normal map drew a
+    black quad between the brows), so the skin shader rebuilds its binormal from this. Blender's own tangents (MikkTSpace,
+    the ones the glTF carries) give the sign; A = 1 where it is +1, 0 where it is -1."""
+    me = ob.data
+    me.calc_tangents(uvmap="UVMap")
+    nl = len(me.loops)
+    sign = np.empty(nl)
+    me.loops.foreach_get("bitangent_sign", sign)
+    lv = np.empty(nl, np.int64)
+    me.loops.foreach_get("vertex_index", lv)
+    old = me.color_attributes["Color"]
+    pt = np.empty(len(me.vertices) * 4, np.float32)
+    old.data.foreach_get("color", pt)
+    rgba = pt.reshape(-1, 4)[lv].copy()
+    rgba[:, 3] = (sign > 0.0).astype(np.float32)
+    me.color_attributes.remove(old)
+    col = me.color_attributes.new("Color", "BYTE_COLOR", "CORNER")
+    col.data.foreach_set("color", rgba.ravel())
+    me.free_tangents()
+
+
 def make_object(name, A, coll, rig, material, vregion=None):
     """A skinned mesh object from arrays: V, faces, corner_uv, groups, corner_normal (list per face),
     and the region per vertex (with the build weights A["vbuild"], when there) in a "Color" attribute
@@ -476,6 +499,159 @@ def hair_cut(gid, w, hair, V, N, kd, S):
     return out
 
 
+# P56 (plan M11 decision 7, §3.9; probe 3): the six face keys, each a mix of the vendored CC0 detail targets (the giant's
+# own modifiers, MakeHuman units) at +1; a key at -1 is the same displacement negated. Built on Body_Head and copied to
+# every beard (each card follows the skin its root grew from), to the hairline strips of the hair styles (their
+# fringe) and to the bead sets (each bead follows its braid's root); a mesh takes a key only where the key moves it.
+FACE_KEYS = {
+    "jaw": {"chin/chin-width-incr": 1.4, "chin/chin-bones-incr": 1.1},
+    "chin": {"chin/chin-prominent-incr": 1.5, "chin/chin-height-incr": 0.75},
+    "nose": {"nose/nose-volume-incr": 1.2, "nose/nose-hump-incr": 0.9, "nose/nose-scale-horiz-incr": 0.6},
+    "brow": {"eyebrows/eyebrows-trans-forward": 0.8},
+    "cheeks": {"cheek/l-cheek-bones-incr": 1.8, "cheek/r-cheek-bones-incr": 1.8},
+    "age": {"eyes/l-eye-bag-incr": 1.2, "eyes/r-eye-bag-incr": 1.2, "mouth/mouth-laugh-lines-out": 1.0},
+}
+# Where each key may move the skin (P56): a key is copied to a part only where it moves it (each copy costs the part's
+# vertex data again in the shipped pack: the renderer stores a key as a whole copy), so the keys keep off the skin the
+# hair grows on (every key: no hair style carries one) and the upper face's keys off the beard's skin (only the jaw and
+# the chin move a beard). Each is a smooth fade by the body's own scalp and beard masks.
+FACE_KEY_SPARES = {"jaw": ("scalp", "upper"), "chin": ("scalp", "upper"), "nose": ("scalp", "beard"), "brow": ("scalp", "beard"),
+                   "cheeks": ("scalp", "beard"), "age": ("scalp", "beard")}
+FACE_KEY_FADE = {"scalp": (0.0, 0.05), "beard": (0.0, 0.02)}
+# "upper": the face above the eyes (the jaw's and the chin's targets reach the brow a little), faded over this much
+# (human-scale metres) below the eyes' height
+FACE_KEY_UPPER_FADE_M = 0.03
+FACE_KEY_ORDER = ("jaw", "chin", "nose", "brow", "cheeks", "age")
+FACE_KEY_LEAST_M = 0.0005          # the head takes a key when the key moves some vertex of it this far (stage 1)
+# A part (a beard, a hair style's hairline strips, a shell, a bead set) takes a key only when the key moves some vertex
+# of it further than this (stage 1): the renderer stores a key as a whole copy of the mesh's vertex data (about the
+# part's own size again, a key), so a key that moves a part's roots less than the 2 mm the test allows is left off.
+FACE_KEY_PART_LEAST_M = 0.002
+
+
+def face_deltas(S, n, masks=None, eye_z=None, V=None):
+    """{key: (n, 3)}: each face key's displacement per body vertex in the body mesh's own frame (stage-1 metres), faded
+    off the skin FACE_KEY_SPARES names (``masks``: the body's m_scalp and m_beard per vertex)."""
+    out = {}
+    zero = np.zeros((len(mh.load_base_mesh().verts), 3))
+    for k in FACE_KEY_ORDER:
+        d = mh.mh_to_blender(mh.compose(zero, FACE_KEYS[k])[:n]) * S
+        if masks is not None:
+            for spare in FACE_KEY_SPARES[k]:
+                if spare == "upper":
+                    if eye_z is not None and V is not None:
+                        d = d * (1.0 - gp.sstep(np.asarray(V)[:n, 2], eye_z - FACE_KEY_UPPER_FADE_M, eye_z))[:, None]
+                    continue
+                lo, hi = FACE_KEY_FADE[spare]
+                d = d * (1.0 - gp.sstep(np.asarray(masks["m_" + spare])[:n], lo, hi))[:, None]
+        out[k] = d
+    return out
+
+
+def add_face_keys(ob, deltas, least=FACE_KEY_LEAST_M):
+    """Shape keys on ``ob`` (P56): {key: (n_vertices, 3)} added over a basis, each only when it moves some vertex at
+    least ``least``. Returns the keys added."""
+    added = []
+    co = np.empty(len(ob.data.vertices) * 3)
+    ob.data.vertices.foreach_get("co", co)
+    for k in FACE_KEY_ORDER:
+        d = deltas.get(k)
+        if d is None or float(np.abs(d).max()) < least:
+            continue
+        if ob.data.shape_keys is None:
+            ob.shape_key_add(name="Basis", from_mix=False)
+        kb = ob.shape_key_add(name=k, from_mix=False)
+        kb.slider_min, kb.slider_max = -1.0, 1.0
+        kb.data.foreach_set("co", (co + np.asarray(d, np.float64).ravel()).astype(np.float32))
+        added.append(k)
+    return added
+
+
+def card_root_vertices(ob, kd, S):
+    """Per vertex of a card mesh, the body vertex its card's root grew from (P56): a card (or a braid's tube) is a
+    connected strip; its root row is its vertices nearest the root end (the UVs' v = 1 there); every vertex takes the
+    body vertex under the root-row vertex nearest it (a card's left edge the skin under its left root corner)."""
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+    CV, t, _arc = card_coordinates(ob)
+    me = ob.data
+    n = len(CV)
+    edges = np.empty(len(me.edges) * 2, np.int64)
+    me.edges.foreach_get("vertices", edges)
+    edges = edges.reshape(-1, 2)
+    _c, label = connected_components(coo_matrix((np.ones(len(edges)), (edges[:, 0], edges[:, 1])), shape=(n, n)),
+                                     directed=False)
+    _, body_of = kd.query(CV / S)
+    out = np.empty(n, np.int64)
+    order = np.argsort(label, kind="stable")
+    bounds = np.flatnonzero(np.diff(label[order])) + 1
+    for ids in np.split(order, bounds):
+        tt = t[ids]
+        root = ids[tt <= tt.min() + 1e-6]
+        d = np.linalg.norm(CV[ids][:, None, :] - CV[root][None, :, :], axis=2)
+        out[ids] = body_of[root[np.argmin(d, axis=1)]]
+    return out
+
+
+def bead_codes():
+    """{style mesh id: its code in a bead set's UV2.x} (P56): 1, 2, ... in giant_hair.STYLE_ORDER for every style
+    with bead anchors; GiantLook shows a set's beads of the shown styles' codes (the cloth shader's bead_mask)."""
+    styles = [m for m in gh.STYLE_ORDER if m in gh.BEAD_ANCHORS]
+    return {m: k + 1 for k, m in enumerate(styles)}
+
+
+def bead_arrays(set_id, style_skin, codes):
+    """A bead set's mesh (P56): the set's bead shape on every anchor of every style, each vertex skinned as the
+    nearest vertex of its style's braid (the bead rides its strand on the chains) and carrying the style's code."""
+    from scipy.spatial import cKDTree
+    spec = gh.BEAD_SETS[set_id]
+    Vs, Fs, Ns, UVs, U2, skins, keys = [], [], [], [], [], [], []
+    off = 0
+    for mid, code in codes.items():
+        CV, sg, braid, ck = style_skin[mid]
+        ids = np.nonzero(braid)[0] if np.any(braid) else np.arange(len(CV))
+        kd = cKDTree(CV[ids])
+        for p, t, r in gh.BEAD_ANCHORS[mid]:
+            ref = np.array([0.0, 0.0, 1.0]) if abs(t[2]) < 0.9 else np.array([1.0, 0.0, 0.0])
+            V, F, N, UV = gh.bead_shape(spec["shape"], p, t, r, ref)
+            _, near = kd.query(V)
+            skins.append({bone: np.asarray(w)[ids[near]] for bone, w in sg.items()})
+            keys.append({k: np.asarray(d)[ids[near]] for k, d in ck.items()})
+            Vs.append(V)
+            Fs.append(F + off)
+            Ns.append(N)
+            UVs.append(UV)
+            U2.append(np.tile([float(code), 0.0], (len(V), 1)))
+            off += len(V)
+    bones = sorted({b for sk in skins for b in sk})
+    groups = {b: np.concatenate([sk.get(b, np.zeros(len(v))) for sk, v in zip(skins, Vs)]) for b in bones}
+    return {"V": np.concatenate(Vs), "F": np.concatenate(Fs), "N": np.concatenate(Ns), "UV": np.concatenate(UVs),
+            "UV2": np.concatenate(U2), "groups": gp.prune(groups, off),
+            "keys": {k: np.concatenate([kk[k] for kk in keys]) for k in FACE_KEY_ORDER}}
+
+
+def bead_object(name, B, coll, rig):
+    """A bead set's object: smooth quads with their own normals, UV and UV2 (the style code), the region of the
+    head (its scalp's code: first person culls the head's layer anyway) and no build push."""
+    me = bpy.data.meshes.new(name)
+    me.from_pydata(B["V"].tolist(), [], B["F"].tolist())
+    me.update()
+    lv = np.empty(len(me.loops), np.int64)
+    me.loops.foreach_get("vertex_index", lv)
+    me.uv_layers.new(name="UVMap").data.foreach_set("uv", B["UV"][lv].astype(np.float32).ravel())
+    me.uv_layers.new(name="UV2").data.foreach_set("uv", B["UV2"][lv].astype(np.float32).ravel())
+    me.polygons.foreach_set("use_smooth", np.ones(len(me.polygons), dtype=bool))
+    me.normals_split_custom_set_from_vertices(B["N"].tolist())
+    colour_attribute(me, np.full(len(B["V"]), split.REGION_ID["scalp"]))
+    ob = bpy.data.objects.new(name, me)
+    coll.objects.link(ob)
+    set_groups(ob, B["groups"])
+    gb.parent_keep(ob, rig)
+    gb.armature_modifier(ob, rig)
+    ob.data.materials.append(bpy.data.materials.get("giant_bead") or bpy.data.materials.new("giant_bead"))
+    return ob
+
+
 SHELL_POSES = ("rest", "idle", "walk", "raised_arm")
 
 
@@ -621,7 +797,7 @@ def set_groups(ob, groups):
             vg.add([i], float(w[i]), "REPLACE")
 
 
-def export_glb(path, rig, meshes, vertex_colour=True):
+def export_glb(path, rig, meshes, vertex_colour=True, morph_normals=True):
     """One glTF binary: the armature and the given mesh objects."""
     for o in bpy.data.objects:
         o.select_set(False)
@@ -631,12 +807,23 @@ def export_glb(path, rig, meshes, vertex_colour=True):
             o.data.name = o.name
     bpy.context.view_layer.objects.active = rig
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_selection=True, export_apply=True,
+    # P56 (probe 3): the head's face keys are exported with their morph normals and morph tangents, and its tangents (the
+    # import's ensure_tangents with morph normals but no morph tangents drew a dark patch between the brows); a part's
+    # keys (cards, shells, beads: each card moved whole with its root's skin) carry positions only - Blender would
+    # derive their morph normals from the keyed shape's own normals, not the cards' baked volume normals, and every
+    # card would turn to the light at any key's weight
+    morph = any(o.type == "MESH" and o.data.shape_keys is not None for o in meshes)
+    shade = morph and morph_normals
+    # a keyed mesh is exported without applying its modifiers (its armature is exported as its skin either way): applying
+    # them evaluates the mesh once a key, and the base came out triangulated after the keys' shapes (the head's faces
+    # left M10's: the freeze test)
+    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_selection=True, export_apply=not morph,
                               export_skins=True, export_influence_nb=4, export_all_influences=False,
-                              export_animations=False, export_morph=False,
+                              export_animations=False, export_morph=morph, export_morph_normal=shade,
+                              export_morph_tangent=shade, export_morph_animation=False, export_try_sparse_sk=False,
                               export_materials="PLACEHOLDER", export_vertex_color="NAME",
                               export_vertex_color_name="Color", export_all_vertex_colors=False,
-                              export_yup=True, export_tangents=False, export_extras=False,
+                              export_yup=True, export_tangents=shade, export_extras=False,
                               export_def_bones=False, export_leaf_bone=False,
                               export_rest_position_armature=True)
     return os.path.getsize(path)
@@ -676,10 +863,18 @@ def run(out_dir):
     vbuild, build_max, build_stats = gp.build_weights(bd, A["vnormal"], faces, S)
     A["vbuild"] = vbuild
     region_any = np.full(n, -1, np.int64)
+    # P56: the face keys' displacement per body vertex
+    deltas = face_deltas(S, n, bd.masks, bd.landmarks["eye_z"], V)
+    face_keys = {}
     for pi, part in enumerate(split.PARTS):
         arrays, reg, st = split_part(A, fp, pi, sp["vregion"][part], root_bone)
         name = split.PART_MESH[part]
-        make_object(name, arrays, coll, rig, "giant_skin", reg)
+        pob = make_object(name, arrays, coll, rig, "giant_skin", reg)
+        tangent_sign_alpha(pob)
+        if name == "Body_Head":
+            src = np.asarray(st["source"], np.int64)
+            face_keys[name] = add_face_keys(pob, {k: np.where((src >= 0)[:, None], d[np.maximum(src, 0)], 0.0)
+                                                  for k, d in deltas.items()})
         info["meshes"][name] = {"category": "body", "layer": split.PART_LAYER[part], "dye": "none",
                                 "tris": triangles(arrays), "verts": len(arrays["V"]), "cut_loops": st["loops"],
                                 "caps": st["capped"], "open_chains": st["open_chains"],
@@ -701,6 +896,7 @@ def run(out_dir):
     from scipy.spatial import cKDTree
     kd = cKDTree(V)
     head_cy = bd.landmarks["head_cy"] * S
+    style_skin = {}
     for mesh_id, (ob, cards) in hair.items():
         cat = "hair" if mesh_id.startswith("Hair_") else "beard"
         if ob is None:
@@ -708,8 +904,11 @@ def run(out_dir):
             sh = gh.SHELLS[mesh_id]
             arrays, ids = gh.shell_cap(A, np.asarray(bd.masks[sh["mask"]])[:n], S, sh["threshold"], sh["lift"])
             arrays["vbuild"] = vbuild[ids]
-            make_object(mesh_id, arrays, coll, rig, "giant_hair",
-                        np.full(len(ids), split.REGION_ID["scalp" if cat == "hair" else "face"]))
+            sob = make_object(mesh_id, arrays, coll, rig, "giant_hair",
+                              np.full(len(ids), split.REGION_ID["scalp" if cat == "hair" else "face"]))
+            # P56: a shell is the skin under its mask, lifted: it takes the skin's keys exactly
+            if cat == "beard":
+                face_keys[mesh_id] = add_face_keys(sob, {k: d[ids] for k, d in deltas.items()}, FACE_KEY_PART_LEAST_M)
             info["meshes"][mesh_id] = {"category": cat, "layer": 3, "dye": "none", "cards": 0,
                                        "tris": triangles(arrays), "verts": len(arrays["V"]),
                                        "shell": {"mask": sh["channel"], "height_m": r6(sh["height"] * S)},
@@ -720,6 +919,14 @@ def run(out_dir):
         CV, t, arc = card_coordinates(ob)
         groups = gp.fold_weak_chains(gp.card_weights(CV, arc, cat, layout, head_cy, S, braid_vertices(mesh_id, len(CV))))
         set_groups(ob, groups)
+        # P56: the face keys: every card of a beard follows the skin its root grew from. The keys keep off the scalp
+        # (FACE_KEY_SPARES), so a hair style takes none (its hairline strips stand on skin the keys do not move; only a
+        # sideburn's few fringe cards stand where the jaw's and the chin's keys still reach, by at most about 13 mm at -1
+        # or +1, and stay put)
+        body_root = card_root_vertices(ob, kd, S)
+        card_keys = {k: (d[body_root] if cat == "beard" else np.zeros((len(CV), 3))) for k, d in deltas.items()}
+        face_keys[mesh_id] = add_face_keys(ob, card_keys, FACE_KEY_PART_LEAST_M)
+        style_skin[mesh_id] = (CV, groups, braid_vertices(mesh_id, len(CV)), card_keys)
         _, near = kd.query(CV / S)
         colour_attribute(ob.data, np.full(len(CV), split.REGION_ID["scalp" if cat == "hair" else "face"]), vbuild[near])
         roots = t <= 1e-6
@@ -730,6 +937,19 @@ def run(out_dir):
                                    "chains": gp.chains_of(groups), "root_verts": int(roots.sum()),
                                    "roots_on_head": int(on_head.sum()),
                                    "braid_verts": int(braid_vertices(mesh_id, len(CV)).sum())}
+    # ---- P56: the bead sets, each one mesh with its beads on every style's anchors (the style's code in UV2.x) ----
+    codes = bead_codes()
+    for mid in codes:
+        info["meshes"][mid]["bead_anchors"] = len(gh.BEAD_ANCHORS[mid])
+    for set_id in sorted(gh.BEAD_SETS):
+        B = bead_arrays(set_id, style_skin, codes)
+        bob = bead_object(set_id, B, coll, rig)
+        face_keys[set_id] = add_face_keys(bob, B["keys"], FACE_KEY_PART_LEAST_M)
+        spec = gh.BEAD_SETS[set_id]
+        info["meshes"][set_id] = {"category": "bead", "layer": 3, "dye": "none", "detail": spec["detail"],
+                                  "tris": int(len(B["F"]) * 2), "verts": len(B["V"]), "color": spec["color"],
+                                  "styles": dict(codes), "chains": gp.chains_of(B["groups"]), "covers": []}
+        del bob
     # ---- garments (P54: slot by slot, gg.Wardrobe) and accessories ----------------------------------------
     wardrobe = gg.Wardrobe(bd, rig, coll, weights, S, layout)
     built = wardrobe.build()
@@ -855,6 +1075,11 @@ def run(out_dir):
             info["meshes"][name]["hair_cut"] = cut
     # ---- P54: the shells' distances in four poses -----------------------------------------------------------
     info["shell_distances"], info["shell_poses"] = shell_distances(rig, body, wardrobe, garment_parts, n, S)
+    # ---- P56: the face keys each mesh carries ----------------------------------------------------------------
+    for mid, ks in sorted(face_keys.items()):
+        if ks and mid in info["meshes"]:
+            info["meshes"][mid]["face_keys"] = list(ks)
+    info["face_keys"] = {k: {t: r6(w) for t, w in sorted(FACE_KEYS[k].items())} for k in FACE_KEY_ORDER}
     # ---- landmarks, hash ----------------------------------------------------------------------------
     eye_c = {k: np.asarray(v[0]) for k, v in frames.items()}
     info["landmarks"] = landmarks(rig, eye_c)
@@ -876,7 +1101,7 @@ def run(out_dir):
     info["parts"] = {}
     for mid in sorted(m for m in info["meshes"] if m not in core):
         rel = "%s/%s.glb" % (PARTS_DIR, mid)
-        size = export_glb(os.path.join(out_dir, PARTS_DIR, mid + ".glb"), rig, [by_name[mid]])
+        size = export_glb(os.path.join(out_dir, PARTS_DIR, mid + ".glb"), rig, [by_name[mid]], morph_normals=False)
         info["meshes"][mid]["file"] = rel
         info["parts"][mid] = rel
         info["glb_bytes"] += size

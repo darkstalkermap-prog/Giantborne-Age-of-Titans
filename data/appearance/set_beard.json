@@ -4,7 +4,7 @@
 	"type": "appearance_set",
 	"category": "beard",
 	"display_name": "Beard",
-	"description": "P42 (plan M10 §2.3): the beards (the floor's four and the look pass's two, P46); stubble is the skin's stubble mask, beard_tint the beard colour on the skin under the cards.",
+	"description": "P42 (plan M10 §2.3): the beards (the floor's four and the look pass's two, P46; the catalogue II's four, P56: every one with bead anchors); stubble is the skin's stubble mask, beard_tint the beard colour on the skin under the cards.",
 	"options": [
 		{"key": "none", "name": "None", "mesh": "", "stubble": 0.15, "beard_tint": 0.0},
 		{"key": "stubble", "name": "Stubble", "mesh": "", "stubble": 0.8, "beard_tint": 0.0},
@@ -12,6 +12,10 @@
 		{"key": "full", "name": "Full", "mesh": "Beard_full", "stubble": 0.8, "beard_tint": 1.0, "default": true},
 		{"key": "trimmed", "name": "Trimmed", "mesh": "Beard_full", "stubble": 0.8, "beard_tint": 1.0, "length": 0.55},
 		{"key": "braided", "name": "Braided", "mesh": "Beard_braided", "stubble": 0.8, "beard_tint": 1.0},
-		{"key": "forked", "name": "Forked", "mesh": "Beard_forked", "stubble": 0.8, "beard_tint": 1.0}
+		{"key": "forked", "name": "Forked", "mesh": "Beard_forked", "stubble": 0.8, "beard_tint": 1.0},
+		{"key": "chin_braid", "name": "Chin braid", "mesh": "Beard_chin_braid", "stubble": 0.8, "beard_tint": 1.0},
+		{"key": "long_forked", "name": "Long forked", "mesh": "Beard_long_forked", "stubble": 0.8, "beard_tint": 1.0},
+		{"key": "mutton_chops", "name": "Mutton chops", "mesh": "Beard_mutton_chops", "stubble": 0.35, "beard_tint": 0.3},
+		{"key": "braided_moustache", "name": "Braided moustache", "mesh": "Beard_braided_moustache", "stubble": 0.5, "beard_tint": 0.15}
 	]
 }

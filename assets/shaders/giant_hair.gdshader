@@ -90,6 +90,15 @@ void fragment() {
 	vec3 n = FRONT_FACING ? NORMAL : -NORMAL;
 	// the card's own facing (its triangle), taken outside every branch (derivatives in uniform control flow)
 	vec3 geo = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
+	// P56: the strand's way along the card, root to tip, from the screen derivatives of the position and of UV.y: the
+	// renderer's blend shapes (the face keys) lose the tangent's sign, so BINORMAL alone flipped every card's highlight
+	// at any key's weight; BINORMAL is turned to point to the tip whatever its sign (as most cards' did before)
+	vec3 dpx = dFdx(VERTEX);
+	vec3 dpy = dFdy(VERTEX);
+	vec2 dux = dFdx(UV);
+	vec2 duy = dFdy(UV);
+	vec3 to_tip = (dpy * dux.x - dpx * duy.x) * sign(dux.x * duy.y - duy.x * dux.y);
+	vec3 strand = normalize(BINORMAL) * (dot(BINORMAL, to_tip) < 0.0 ? -1.0 : 1.0);
 	if (v_kind > 1.5) {
 		// a bead: opaque, the bead's colour, the tube's own normal
 		ALPHA = 1.0;
@@ -98,7 +107,7 @@ void fragment() {
 		SPECULAR = 0.5;
 		EMISSION = flash;
 		NORMAL = n;
-		v_strand = normalize(BINORMAL);
+		v_strand = strand;
 		v_sid = 0.0;
 		v_edge = 0.0;
 	} else {
@@ -143,7 +152,7 @@ void fragment() {
 		SPECULAR = 0.04;
 		EMISSION = flash;
 		NORMAL = n;
-		v_strand = normalize(BINORMAL);
+		v_strand = strand;
 		v_sid = sid * strand_noise;
 		v_edge = 1.0 - clamp(t.a, 0.0, 1.0);
 	}
