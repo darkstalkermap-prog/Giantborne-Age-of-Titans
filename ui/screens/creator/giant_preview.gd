@@ -99,6 +99,13 @@ const FRAMINGS := {
 const LEFT_SUFFIX := "_left"
 ## The framings a design region may be framed with from either side.
 const MIRRORED := ["face", "chest", "arms", "back_design"]
+## P55 (P51's follow-up): the eyes look toward the camera, as SkinnedRig._look_eyes turns them toward the game's -
+## at most a quarter of the iris's radius (P51's `look`), an eye turned by an angle a taking a / (pi x EYE_IRIS_R),
+## eased at EYE_RATE; straight ahead when the camera is behind him. Not in a still preview (the tiles, the sheets,
+## the thumbnails).
+const EYE_LOOK_MAX := 0.25
+const EYE_IRIS_R := 0.168
+const EYE_RATE := 10.0
 ## P55: the stage-1 rear Game view (the build sliders show it while they have the focus, plan M11 §2.7): the game's
 ## third-person camera behind the giant at stage 1's profile, whatever the profile Game view shows.
 const GAME_STAGE1 := "game_stage1"
@@ -162,6 +169,9 @@ var _fade := 0.0
 var _garments: Array = []   ## the garments of the look applied last (the skin's mask without a fade)
 var _dragging := false
 var _portrait := false
+var _eye_mat: ShaderMaterial = null
+var _eye_look := Vector2.ZERO
+var _eye_sent := Vector2(INF, INF)
 
 
 func _init() -> void:
@@ -658,11 +668,46 @@ func stop_thumbnail() -> void:
 	viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if window_pixels:
 		fit_window_pixels()
 	if weapon != null:
 		_place_weapon()
+	_look_eyes(delta)
+
+
+## Where the eyes look for the camera now ((0, 0) when it is behind him or out of reach): x toward his right, y up,
+## in the iris's radius (P51's `look`), from the eyes' landmark in the model's frame.
+func eye_target() -> Vector2:
+	if model == null or camera == null or not model.is_inside_tree():
+		return Vector2.ZERO
+	var eye: Vector3 = GiantModel.landmarks_of(model.index).get("eye_mid", Vector3(0.0, 3.447, -0.244))
+	var d := model.global_transform.affine_inverse() * camera.global_position - eye
+	if d.length_squared() < 1e-8:
+		return Vector2.ZERO
+	d = d.normalized()
+	var ahead := -d.z
+	if ahead <= 0.05:
+		return Vector2.ZERO
+	var per := 1.0 / (PI * EYE_IRIS_R)
+	return Vector2(clampf(atan2(d.x, ahead) * per, -EYE_LOOK_MAX, EYE_LOOK_MAX),
+		clampf(atan2(d.y, Vector2(d.x, ahead).length()) * per, -EYE_LOOK_MAX, EYE_LOOK_MAX))
+
+
+func _look_eyes(delta: float) -> void:
+	if still or thumbnail or model == null:
+		return
+	if _eye_mat == null:
+		for id in GiantLook.meshes_of(model.index, "eyes"):
+			var eyes := GiantLook.mesh_node(model, model.index, id)
+			if eyes != null and eyes.material_override is ShaderMaterial:
+				_eye_mat = eyes.material_override as ShaderMaterial
+		if _eye_mat == null:
+			return
+	_eye_look = _eye_look.lerp(eye_target(), 1.0 - exp(-EYE_RATE * delta))
+	if _eye_look.distance_squared_to(_eye_sent) > 1e-8:
+		_eye_sent = _eye_look
+		GiantLook.set_param(_eye_mat, "look", _eye_look)
 
 
 # --------------------------------------------------------------------------- resolution

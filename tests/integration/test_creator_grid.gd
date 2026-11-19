@@ -332,6 +332,12 @@ func test_a_design_on_the_left_is_framed_from_the_left() -> void:
 	if cheek != null:
 		cheek.check.grab_focus()
 		assert_eq(c.preview.framing, "face", "the cheek scar (his right) from his right")
+	# the eyes look toward the camera (P51's look): from his right at the face framing, ahead from behind
+	c.preview.frame("face")
+	var look := c.preview.eye_target()
+	assert_true(look.x > 0.0 and look.x <= GiantPreview.EYE_LOOK_MAX, "the face framing: the eyes turn to his right, toward the camera (%s)" % look)
+	c.preview.frame("back")
+	assert_eq(c.preview.eye_target(), Vector2.ZERO, "from behind: straight ahead")
 	var left := GiantPreview.framing_entry("chest_left")
 	var right := GiantPreview.framing_entry("chest")
 	assert_near(float(left.yaw), -float(right.yaw), 1e-6, "a left framing is the right one mirrored")
