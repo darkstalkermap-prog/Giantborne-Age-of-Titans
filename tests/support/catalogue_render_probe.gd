@@ -26,7 +26,7 @@ const NEW_BEARD := ["chin_braid", "long_forked", "mutton_chops", "braided_mousta
 const BEAD_SETS := ["bone_beads", "bronze_rings", "silver_beads"]
 const NEW_DESIGNS := ["tat_leg_bands", "tat_leg_serpent", "tat_leg_runes", "tat_leg_claws", "tat_arm_runes",
 	"tat_arm_spirals", "tat_chest_raven", "tat_chest_runes", "tat_back_wheel", "tat_back_spine", "tat_face_temples",
-	"tat_face_chin", "paint_eye_band", "paint_half_face", "paint_chest_slash", "paint_leg_stripes", "scar_lip",
+	"tat_face_tears", "paint_eye_band", "paint_half_face", "paint_chest_slash", "paint_leg_stripes", "scar_lip",
 	"scar_shoulder_bite", "scar_thigh_gash", "scar_ribs"]
 ## The framing a design is reviewed at, by its region.
 const REGION_FRAMING := {"face": "face", "chest": "chest", "back": "back_design", "arms": "arms", "legs": "legs"}
@@ -190,11 +190,10 @@ func _designs_sheet(only: String) -> void:
 		var framing := design_framing(id)
 		var tiles: Array = by_kind.get(kind, [])
 		var turn := 0.0
-		if framing == "legs" and id in ["scar.thigh_gash"]:
-			turn = 160.0
-		if id in ["scar.shoulder_bite", "tattoo.arm_spirals"]:
+		if id == "scar.shoulder_bite":
+			turn = 20.0
+		if id == "tattoo.arm_spirals":
 			framing = "arms_left"
-			turn = 0.0
 		tiles.append(await _tile(all[id], true, turn, framing))
 		tiles.append(await _tile(all[id], false, turn + (0.0 if framing != "legs" else 180.0), framing))
 		by_kind[kind] = tiles

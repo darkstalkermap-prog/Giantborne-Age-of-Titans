@@ -85,7 +85,7 @@ CATALOGUE = {
     "tat_back_wheel": ("tattoo", (5,)),
     "tat_back_spine": ("tattoo", (5, 6)),
     "tat_face_temples": ("tattoo", (1,)),
-    "tat_face_chin": ("tattoo", (1,)),
+    "tat_face_tears": ("tattoo", (1,)),
     "paint_eye_band": ("paint", (1,)),
     "paint_half_face": ("paint", (1,)),
     "paint_chest_slash": ("paint", (3, 4)),
@@ -770,13 +770,13 @@ def d_leg_runes(P, N, J, ctx):
 
 
 def d_leg_claws(P, N, J, ctx):
-    """Three claw stripes raking down the outer side of the left thigh."""
+    """Three claw stripes raking down the front and outer side of the left thigh."""
     hip, kn = J["joint-l-upper-leg"], J["joint-l-knee"]
     t, r, th, Lx = limb_frame(P, hip, kn)
     sel = (r < 0.17) & (t > 0.18) & (t < 0.8)
     m = np.zeros(len(P))
     for k in (-1, 0, 1):
-        line = math.pi + 0.42 * k + 0.5 * (t - 0.5)          # the outer side (+X), slanting forward as it falls
+        line = math.pi + 0.8 + 0.42 * k + 0.5 * (t - 0.5)    # the front of the outer side, slanting as it falls
         dth = np.abs((th - line + math.pi) % (2 * math.pi) - math.pi)
         along = np.clip((t - 0.18) / 0.62, 0.0, 1.0)
         m = np.maximum(m, band(dth * np.maximum(r, 0.05), BOLD * (1.0 - 0.5 * along)))
@@ -897,16 +897,17 @@ def d_face_temples(P, N, J, ctx):
     return m
 
 
-def d_face_chin(P, N, J, ctx):
-    """Three bold lines from the lower lip down the chin."""
+def d_face_tears(P, N, J, ctx):
+    """Two bold lines from under each eye's outer corner down over the cheekbone, above the beard's line."""
+    eyeL, eyeR = J["joint-l-eye"], J["joint-r-eye"]
     hs = ctx["hs"]
-    L = ctx["L"]
-    face = _face(P, N, J) & (P[:, 2] < L["lip_bot"] - 0.004 * hs)
+    face = _face(P, N, J)
     m = np.zeros(len(P))
-    for dx in (-0.016, 0.0, 0.016):
-        a = surface_point(P, np.array([dx * hs, L["face_y"] + 0.0, L["lip_bot"] - 0.008 * hs]), face)
-        b = surface_point(P, np.array([dx * 1.3 * hs, L["face_y"] + 0.02 * hs, L["chin"] + 0.004 * hs]), face)
-        m = np.maximum(m, polyline_mask(P, np.array([a, b]), 0.0042 * hs, taper=0.3))
+    for e, sgn in ((eyeL, 1.0), (eyeR, -1.0)):
+        for k in range(2):
+            a = surface_point(P, e + np.array([sgn * (0.008 + 0.012 * k), -0.03, -0.018]) * hs, face)
+            b = surface_point(P, e + np.array([sgn * (0.016 + 0.014 * k), -0.026, -0.05]) * hs, face)
+            m = np.maximum(m, polyline_mask(P, np.array([a, b]), 0.0045 * hs, taper=0.4))
     return np.where(face, m, 0.0)
 
 
@@ -971,11 +972,11 @@ def d_scar_lip(P, N, J, ctx):
 
 
 def d_scar_shoulder_bite(P, N, J, ctx):
-    """A beast's bite on the outside of the left shoulder: two arcs of tooth marks."""
+    """A beast's bite on the outside of the right shoulder (the arm the creator frames): two arcs of tooth marks."""
     V = ctx["V"]
-    sh, el = J["joint-l-shoulder"], J["joint-l-elbow"]
-    c = sh + (el - sh) * 0.28 + np.array([0.08, 0.02, 0.0])
-    back = (V[:, 0] > c[0] - 0.05) & (np.linalg.norm(V - c, axis=1) < 0.2)
+    sh, el = J["joint-r-shoulder"], J["joint-r-elbow"]
+    c = sh + (el - sh) * 0.28 + np.array([-0.08, 0.02, 0.0])
+    back = (V[:, 0] < c[0] + 0.05) & (np.linalg.norm(V - c, axis=1) < 0.2)
     m = np.zeros(len(P))
     for row, dz in ((0, 0.06), (1, -0.06)):
         for k in range(5):
@@ -987,11 +988,11 @@ def d_scar_shoulder_bite(P, N, J, ctx):
 
 
 def d_scar_thigh_gash(P, N, J, ctx):
-    """A long gash slanting across the back of the right thigh."""
+    """A long gash slanting across the front of the right thigh."""
     hip, kn = J["joint-r-upper-leg"], J["joint-r-knee"]
     t, r, th, Lx = limb_frame(P, hip, kn)
     sel = (r < 0.17) & (t > 0.28) & (t < 0.68)
-    line = math.pi / 2 + 3.0 * (t - 0.48)                     # the back (+Y), crossing from the outside in
+    line = -math.pi / 2 + 0.35 + 3.0 * (t - 0.48)             # the front (-Y), crossing from the outside in
     dth = np.abs((th - line + math.pi) % (2 * math.pi) - math.pi)
     along = np.clip((t - 0.28) / 0.4, 0.0, 1.0)
     return np.where(sel, band(dth * np.maximum(r, 0.05), BOLD * (0.6 + 0.6 * np.sin(math.pi * along))), 0.0)
@@ -1022,7 +1023,7 @@ DRAW = {
     "tat_leg_bands": d_leg_bands, "tat_leg_serpent": d_leg_serpent, "tat_leg_runes": d_leg_runes,
     "tat_leg_claws": d_leg_claws, "tat_arm_runes": d_arm_runes, "tat_arm_spirals": d_arm_spirals,
     "tat_chest_raven": d_chest_raven, "tat_chest_runes": d_chest_runes, "tat_back_wheel": d_back_wheel,
-    "tat_back_spine": d_back_spine, "tat_face_temples": d_face_temples, "tat_face_chin": d_face_chin,
+    "tat_back_spine": d_back_spine, "tat_face_temples": d_face_temples, "tat_face_tears": d_face_tears,
     "paint_eye_band": d_eye_band, "paint_half_face": d_half_face, "paint_chest_slash": d_chest_slash,
     "paint_leg_stripes": d_leg_stripes, "scar_lip": d_scar_lip, "scar_shoulder_bite": d_scar_shoulder_bite,
     "scar_thigh_gash": d_scar_thigh_gash, "scar_ribs": d_scar_ribs,

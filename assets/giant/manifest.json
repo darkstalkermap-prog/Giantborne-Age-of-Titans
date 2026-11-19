@@ -555,9 +555,9 @@
     "regions": [
      8
     ],
-    "side": "left",
-    "texels_1024": 374,
-    "texels_512": 95
+    "side": "right",
+    "texels_1024": 375,
+    "texels_512": 98
    },
    "scar_thigh_gash": {
     "channel": 0,
@@ -567,7 +567,7 @@
      11
     ],
     "side": "right",
-    "texels_1024": 542,
+    "texels_1024": 575,
     "texels_512": 144
    },
    "tat_arm_bands": {
@@ -787,19 +787,8 @@
     "texels_1024": 1521,
     "texels_512": 384
    },
-   "tat_face_chin": {
-    "channel": 0,
-    "kind": "tattoo",
-    "layer": 5,
-    "regions": [
-     1
-    ],
-    "side": "centre",
-    "texels_1024": 185,
-    "texels_512": 44
-   },
    "tat_face_crown": {
-    "channel": 3,
+    "channel": 0,
     "kind": "tattoo",
     "layer": 5,
     "regions": [
@@ -810,9 +799,9 @@
     "texels_512": 334
    },
    "tat_face_dots": {
-    "channel": 0,
+    "channel": 3,
     "kind": "tattoo",
-    "layer": 6,
+    "layer": 5,
     "regions": [
      1
     ],
@@ -821,7 +810,7 @@
     "texels_512": 56
    },
    "tat_face_lines": {
-    "channel": 3,
+    "channel": 0,
     "kind": "tattoo",
     "layer": 6,
     "regions": [
@@ -830,6 +819,17 @@
     "side": "centre",
     "texels_1024": 427,
     "texels_512": 108
+   },
+   "tat_face_tears": {
+    "channel": 3,
+    "kind": "tattoo",
+    "layer": 6,
+    "regions": [
+     1
+    ],
+    "side": "centre",
+    "texels_1024": 725,
+    "texels_512": 179
    },
    "tat_face_temples": {
     "channel": 0,
@@ -861,8 +861,8 @@
      11
     ],
     "side": "left",
-    "texels_1024": 2288,
-    "texels_512": 621
+    "texels_1024": 2228,
+    "texels_512": 591
    },
    "tat_leg_runes": {
     "channel": 0,
@@ -3798,9 +3798,9 @@
   },
   "assets/giant/designs.png": {
    "cycles": true,
-   "inputs": "b139647972da0f820b75596ab17f74a451a7b1103267d487d35ec71e794a6b34",
-   "sha256": "a40b53f892a216fd4629d50a7cce169ccd66c775b5cd7cd9a5bbcde2e8519c1e",
-   "size": 37885,
+   "inputs": "64f1f4cea88953af7b7f60baeed64d9b3ddc3566c2e9b63c2623ba092d593d09",
+   "sha256": "3ffac7a1272591d1cce960f0301dfe0c0ed7b9c8cf77c6098bd405b052d766ac",
+   "size": 37855,
    "step": "designs"
   },
   "assets/giant/giant.glb": {
@@ -4735,7 +4735,7 @@
     "regions": [
      8
     ],
-    "side": "left"
+    "side": "right"
    },
    "scar_thigh_gash": {
     "channel": 0,
@@ -4925,17 +4925,8 @@
     ],
     "side": "centre"
    },
-   "tat_face_chin": {
-    "channel": 0,
-    "kind": "tattoo",
-    "layer": 5,
-    "regions": [
-     1
-    ],
-    "side": "centre"
-   },
    "tat_face_crown": {
-    "channel": 3,
+    "channel": 0,
     "kind": "tattoo",
     "layer": 5,
     "regions": [
@@ -4944,6 +4935,15 @@
     "side": "centre"
    },
    "tat_face_dots": {
+    "channel": 3,
+    "kind": "tattoo",
+    "layer": 5,
+    "regions": [
+     1
+    ],
+    "side": "centre"
+   },
+   "tat_face_lines": {
     "channel": 0,
     "kind": "tattoo",
     "layer": 6,
@@ -4952,7 +4952,7 @@
     ],
     "side": "centre"
    },
-   "tat_face_lines": {
+   "tat_face_tears": {
     "channel": 3,
     "kind": "tattoo",
     "layer": 6,
@@ -6886,7 +6886,7 @@
   "kit": {
    "bake.py": "68e2fdefee8d5b50e903d3339b26d3b63a241d3a4afde27f38456cc81b77a8a4",
    "clips.py": "bf3f28b778202f855df45afb1214039d2bd9bf551db5e88c5990d4d783c51723",
-   "designs.py": "bc7165d4fca9a4d7e4c433059f7aa6d049b4e9dca2a20bd0c45077373869fd6f",
+   "designs.py": "4dc94bdd6dce2bdcb20f6d36f1d71a63bfc5d1f897442d04cdf835d7ddca028d",
    "export_game.py": "a3d51e087f4e6f9984aeb080b9ae0a4e83e98db31e274fed3dc4589cd54add59",
    "giant_body.py": "c8f694bd9d26bfd16ef4ca60ad3d1f36ec9c75247bc360a3ae2ad8778b741581",
    "giant_garment.py": "e3a81fea74a8fdb729c22baa60262618fd0e486f446673832508c400dcd2c349",

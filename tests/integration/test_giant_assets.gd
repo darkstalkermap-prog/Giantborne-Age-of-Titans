@@ -264,9 +264,11 @@ func test_the_import_settings_and_nothing_imported_under_tools() -> void:
 	var glb := ConfigFile.new()
 	assert_eq(glb.load(GLB + ".import"), OK, "giant.glb.import")
 	assert_eq(str(glb.get_value("remap", "importer", "")), "scene", "imported as a scene")
-	for key: String in ["meshes/generate_lods", "meshes/create_shadow_meshes", "meshes/ensure_tangents",
-			"skins/use_named_skins"]:
+	for key: String in ["meshes/generate_lods", "meshes/create_shadow_meshes", "skins/use_named_skins"]:
 		assert_eq(glb.get_value("params", key, false), true, "giant.glb: %s" % key)
+	# P56 (probe 3): giant.glb carries its own tangents and the face keys' morph tangents; the importer must not
+	# regenerate them (a black quad between the brows at a key's +1)
+	assert_eq(glb.get_value("params", "meshes/ensure_tangents", true), false, "giant.glb: its own tangents")
 	assert_eq(glb.get_value("params", "animation/import", true), false, "giant.glb: no animation import")
 	# P48: a part is a scene with LODs, tangents and its named skin; its shadow is the proxy's
 	for f in DirAccess.get_files_at("res://assets/giant/parts"):

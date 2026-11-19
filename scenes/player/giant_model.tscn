@@ -245,7 +245,7 @@ index = {
 "kind": "scar",
 "layer": 0,
 "regions": [8],
-"side": "left"
+"side": "right"
 },
 "scar_thigh_gash": {
 "channel": 0,
@@ -387,28 +387,28 @@ index = {
 "regions": [1],
 "side": "centre"
 },
-"tat_face_chin": {
-"channel": 0,
-"kind": "tattoo",
-"layer": 5,
-"regions": [1],
-"side": "centre"
-},
 "tat_face_crown": {
-"channel": 3,
+"channel": 0,
 "kind": "tattoo",
 "layer": 5,
 "regions": [1],
 "side": "centre"
 },
 "tat_face_dots": {
+"channel": 3,
+"kind": "tattoo",
+"layer": 5,
+"regions": [1],
+"side": "centre"
+},
+"tat_face_lines": {
 "channel": 0,
 "kind": "tattoo",
 "layer": 6,
 "regions": [1],
 "side": "centre"
 },
-"tat_face_lines": {
+"tat_face_tears": {
 "channel": 3,
 "kind": "tattoo",
 "layer": 6,
@@ -520,7 +520,7 @@ index = {
 "wrist_l": [-1.087127, 2.306697, -0.44995],
 "wrist_r": [1.087127, 2.306697, -0.44995]
 },
-"manifest_sha256": "28052bc5d5ef030f3b588a0944707d5c8d33fcf300d43a6b66b3665e80dc95f9",
+"manifest_sha256": "f63f5317770bf215967ca7027c69cad2556d6881c50def9bcbfbe8a4926fa635",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",

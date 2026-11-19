@@ -37,6 +37,8 @@ func test_a_record_per_m10_option_migrates_to_the_look_it_drew() -> void:
 			var o := Oracle.option(id)
 			if c == "outfit" and not o.has("garments"):
 				continue   # P54: the wardrobe's outfits are no M10 option
+			if c == "tattoo" and not str(o.get("region", "")) in Appearance.V1_DESIGN_REGIONS:
+				continue   # P56: the legs' tattoos are no M10 option (M10's record had no legs region)
 			var line := Oracle.required_ancestry(o)
 			var r: Dictionary = Oracle.FALLBACK_RECORD.duplicate(true)
 			match c:

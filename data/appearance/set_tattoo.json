@@ -33,6 +33,6 @@
 		{"key": "back_wheel", "name": "Sun wheel", "design": "tat_back_wheel", "region": "back"},
 		{"key": "back_spine", "name": "Spine chevrons", "design": "tat_back_spine", "region": "back"},
 		{"key": "face_temples", "name": "Temple spirals", "design": "tat_face_temples", "region": "face"},
-		{"key": "face_chin", "name": "Chin lines", "design": "tat_face_chin", "region": "face"}
+		{"key": "face_tears", "name": "Tear lines", "design": "tat_face_tears", "region": "face"}
 	]
 }
