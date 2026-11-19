@@ -120,8 +120,12 @@ const EYE_LOOK_MAX := 0.25
 const EYE_IRIS_R := 0.168
 const EYE_RATE := 10.0
 ## A flinch's weight: the flash's strength x this, eased in and out with the clip (which starts and ends at
-## nothing); it fades out at FLINCH_CUT_RATE when an attack's ACTIVE phase starts.
-const FLINCH_GAIN := 1.0
+## nothing); it fades out at FLINCH_CUT_RATE when an attack's ACTIVE phase starts. Gate A2: the clips' offsets
+## (about 10 degrees of the torso) were hard to see at the game camera's distance, so they are added at more than
+## their whole (the Add2 extrapolates an additive clip) and played slower than keyed (FLINCH_RATE: the 0.3 s clip
+## over 0.5 s, its peak at 0.15 s, then the ease back).
+const FLINCH_GAIN := 2.5
+const FLINCH_RATE := 0.6
 const FLINCH_CUT_RATE := 40.0
 const FLINCH_SIDES := ["f", "b", "l", "r"]
 ## The grab's phases in which the off hand closes on the held body.
@@ -794,7 +798,7 @@ func flinch(from_local: Vector3, strength: float) -> void:
 		totals["flinches_refused"] = int(totals.get("flinches_refused", 0)) + 1
 		return
 	var side := flinch_side(from_local)
-	_flinch[side] = {"t": 0.0, "w": clampf(strength * FLINCH_GAIN, 0.0, 1.0)}
+	_flinch[side] = {"t": 0.0, "w": clampf(strength * FLINCH_GAIN, 0.0, FLINCH_GAIN)}
 	flinches += 1
 	totals["flinches"] = int(totals.get("flinches", 0)) + 1
 
@@ -817,7 +821,7 @@ func _drive_flinches(delta: float, action: ActionDef, phase: int) -> void:
 		if not _flinch.has(side):
 			continue
 		var f: Dictionary = _flinch[side]
-		f.t = float(f.t) + delta
+		f.t = float(f.t) + delta * FLINCH_RATE
 		if active:
 			f.w = float(f.w) * exp(-FLINCH_CUT_RATE * delta)
 		var length := float(_lengths.get("flinch_" + side, 0.3))

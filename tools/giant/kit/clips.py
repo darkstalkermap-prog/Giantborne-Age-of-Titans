@@ -841,9 +841,11 @@ def roar_pose(rest, f, frames):
 
 
 # The flinches: the upper body's offsets at the peak (degrees about the giant's axes: X pitches the torso
-# forward, Y rolls it toward his right, Z turns it to his left), per bone as a share of the whole.
-FLINCH = {"flinch_f": (-13.0, 0.0, 0.0), "flinch_b": (15.0, 0.0, 0.0), "flinch_l": (2.0, 11.0, -5.0),
-          "flinch_r": (2.0, -11.0, 5.0)}
+# forward, Y rolls it toward his left, Z turns it to his right), per bone as a share of the whole. Each throws the
+# torso away from the side it is named by (Gate A2: the side ones leaned into the hit - the game measured the head
+# moving toward the attacker - so their signs are swapped; the comment had Y's and Z's senses the wrong way round).
+FLINCH = {"flinch_f": (-13.0, 0.0, 0.0), "flinch_b": (15.0, 0.0, 0.0), "flinch_l": (2.0, -11.0, 5.0),
+          "flinch_r": (2.0, 11.0, -5.0)}
 FLINCH_SHARE = {"spine_01": 0.2, "spine_02": 0.3, "spine_03": 0.3, "neck_01": 0.35, "head": 0.5}
 FLINCH_PEAK = 0.3                 # the share of the clip at which the offset is whole
 
