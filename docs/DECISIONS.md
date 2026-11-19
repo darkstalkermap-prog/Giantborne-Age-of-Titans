@@ -2,7 +2,7 @@
 
 The specification ([GIANTBORN_SPEC_V2.md](GIANTBORN_SPEC_V2.md)) asks that every interpretation
 and conflict resolution be recorded. This file collects them for the whole build, milestones M0 to
-M10:
+M11 (M11's first part, `0.11.0-m11`):
 
 1. [The plans' decisions](#1-the-plans-decisions): the 30 interpretations the M2-M5 plan fixed
    before any code was written (`docs/plans/M2_M5_PLAN.md` §0.3, numbered 1-30 here) and the 34 of
@@ -11,9 +11,13 @@ M10:
    are not committed), the licence left to the owner, and the spec's scope as the owner later
    directed it and as the plan read it; §1.4: the 21 decisions of the M10 plan
    (`docs/plans/M10_PLAN.md` §0.4, numbered 65-85 here), and §1.5: the owner's answers to that plan's
-   questions.
+   questions; §1.6: the 21 decisions of the M11 plan (`docs/plans/M11_PLAN.md` §0.4, numbered 86-106
+   here; Part A, the giant refined, used thirteen of them, and the other eight are recorded when the
+   part that uses them ships), and §1.7: the owner's answers to the M11 plan's questions and their
+   decisions at checkpoint A.
 2. [Deviations recorded by the packages](#2-deviations-recorded-by-the-packages): where the packages
-   (P01-P18 for M2-M5, P19-P40 for M6-M9, P41-P46 for M10) departed from their plan, and why. Each package's own
+   (P01-P18 for M2-M5, P19-P40 for M6-M9, P41-P46 for M10, P48-P51 for M11's Part A) departed from their
+   plan, and why. Each package's own
    record, with every detail and the test that covers it, is `docs/systems/<package>.md`.
 3. [Fixes from the milestone gate reviews](#3-fixes-from-the-milestone-gate-reviews).
 4. [The plans' review logs](#4-the-plans-review-logs), in short.
@@ -27,7 +31,9 @@ quoted from a measurement names its source. Measurements of the M6-M9 code are t
 the M9 gate's fixes followed that confirmation, and what they changed is in §3.2; the M9 gate's final
 measurements and the ship's final check are in `docs/M6_M9_HANDOFF.md` §5.4, §6 and §7. Measurements
 of the M10 code are the M10 gate's on its merged code (`m10-gate`, commit `348a7bf`) unless named
-otherwise; `docs/M10_HANDOFF.md` §5 and §6 hold them.
+otherwise; `docs/M10_HANDOFF.md` §5 and §6 hold them. Measurements of M11's Part A are the Gate A merge's
+(`m11-gate-a`, commit `9f96bb7`) and its second fix round's (`m11-gate-a2`, commit `d0db605`) unless named
+otherwise; `docs/M11_HANDOFF.md` §5 and §6 hold them.
 
 ## 1. The plans' decisions
 
@@ -191,8 +197,58 @@ they differ, and every package read them as decisions.
 | 4 | Keep the low-poly weapons in M10? | Yes | **Yes** (the default stands) | No material pass on the weapons |
 | 5 | Approve the look: notes on the preview link and sheet A after W26; on sheet B before the release approve, approve with notes, or not yet | - | No notes on the preview had arrived by the gate. **Sheet B: "Approve"** (18 November 2026), with no notes | Nothing to apply. The tag `0.10.0-m10`, the play link and the merge to `main` waited for it and followed it (`docs/M10_HANDOFF.md` §7) |
 
-One more decision is the owner's and open: M11's direction. The plan recommends people near the
-camera on the giant's pipeline, then world materials (plan §0.5, §4.4).
+One more decision was the owner's and open at the M10 release: M11's direction. Their request of 18
+November 2026 set it (the giant refined, more customization, realistic NPCs; M11 plan §0.2, and §1.6
+below).
+
+### 1.6 The M11 decisions (M11 plan §0.4)
+
+The M11 plan's decisions 1-21 are numbered 86-106 here ("Plan" gives the plan's own number, which the
+system documents `P48.md` to `P51.md` use). The plan holds each decision's full text. Part A (the giant
+refined, `0.11.0-m11`) used decisions 86-94 and 103-106; decisions 95-102 are Part B's and Part C's (the
+clothing slots, the record's `v` 2, the people and the beasts) and are recorded with what was built when
+those parts ship (P58, P66).
+
+| # | Plan | Decision | What was built in Part A (and where it moved) |
+| --- | --- | --- | --- |
+| 86 | 1 | **Three parts in the owner's order, each a release**: the giant refined (`0.11.0-m11`), more customization (`0.12.0-m12`), realistic NPCs (`0.13.0-m13`). | As planned; the owner confirmed three releases (§1.7). Part A passed its gate (Gate A and its second fix round, Gate A2) and the owner approved it at checkpoint A; this release is the first of the three. |
+| 87 | 2 | **The pack budget grows in steps to 44 MiB** (26, 32, 44) inside the owner's "about 60 MB" for the page. | `tools/build_web.sh` applies 26 MiB and the giant's 7.6 MiB share to `-m10` and `-m11`, 32 and 13.6 to `-m12`, 44, 13.6 and the people's 12.0 from `-m13` (P49). The `0.11.0-m11` release ships 23.44 MiB of 26 (6.41 MiB of the giant's 7.6); the page is about 37.5 MB. |
+| 88 | 3 | **Gameplay geometry stays the stylized bodies'**; the realistic bodies are presentation. | As planned: no capsule, hurtbox, anchor, socket, reach band or data record changed in Part A. The reach past a weapon's fit stage (P50) moves only the drawn shoulder, spine and pelvis. |
+| 89 | 4 | **The pose brain stays the driver of every actor**; skinned bodies follow it; no gameplay script reads a skeleton, a clip, a model or a look. | As planned. The seeded soak's `AUTOPILOT_RESULT` is the same in all 28 keys from the W29 merge to this release, and `test_giant_determinism` (gate) passes with the skin off and on (57 checks). |
+| 90 | 5 | **Clips stay computed keyframes**; no outside motion data. | As planned: 19 more clips from `tools/giant/kit/clips.py` (28 in all; P48), keyed only on the bones they move; two were changed at Gate A2 (the side flinches' lean, `fp_rest`'s forearm). |
+| 91 | 6 | **The body is unfrozen once, in W29, and frozen again**: leaf bones for hair, beard, braids and the cape; build weights in the vertex colour; grip and side landmarks; the styles and garments as separate parts; the body's positions, UVs, region ids and bone weights bit-identical to M10's. | As planned (P48): 18 leaf bones (71 in all), `COLOR.g` and `.b` the brawn and girth weights, `grip_*`, `knuckle_*` and `toe_*` landmarks, designs with a side, 21 parts in `assets/giant/parts/`. `tools/giant/freeze.py` and `fixtures/m10_freeze.json` prove the body, the 53 body bones and M10's clips unchanged at every regeneration. Four more CC0 targets were vendored (137 files) so the two build directions exist. |
+| 92 | 7 | **Shape changes: the build by shader, the face by shape keys only if the probe passes**; height is never a choice. | Part A built only the channels: the build weights are in the vertex colour and probe 2 showed the vertex push and its shadow working; the sliders themselves are Part B's (P53, P56). Probe 3 found the dark patch's cause (morph normals without morph tangents) and passed, so the face keys are P56's to build. No player-facing slider ships in `0.11.0-m11`. |
+| 93 | 8 | **Hair stays polygons and becomes more than flat cards**: volume normals, a two-lobe strand highlight, shells for the crop, stubble and the short beard, braids as twisted tubes with beads, loose strands at the hairline, hair bones for sway. | As planned (P51): shells at 12 layers on the desktop and 6 on the Web, stacked at load time (no shipped bytes for the layers, never a shadow); braids as seven-sided tubes with two bead rings; loose strands on the four long styles; a row of cards under the jaw so a beard exists from behind. Gate A2 gave the shells the cards' light and grey (§3.5). A black shell beard face-on with the sun behind him is still dark (`docs/M11_HANDOFF.md` §9). |
+| 94 | 9 | **Skin gets a pre-integrated subsurface term**: a 64 px lookup in `light()`, curvature in the mask map's spare capacity. | Built with one deviation (§2.4): the curvature is a 256 px map of its own (`tex/curvature.png`), because in the mask map's alpha the VRAM compression spoiled the masks. Gate A made the lookup a per-channel wrap (`SKIN_WRAP`) and eased the albedo's grade, so the skin is warm in the world's sun (§3.5, and the owner's decision 3 in §1.7). |
+| 95-102 | 10-17 | Clothing by slot (10), the record's `v` 2 (11), NPCs as one mesh and one material (12), people skinned only near the giant (13), the 23-bone people skeleton (14), the rival giants on the giant's model (15), ogres and trolls as morphs (16), scripted quadrupeds (17). | Not used by Part A. P49 pre-declared Part A's registries only; Parts B and C record these with what they build (P58, P66). |
+| 103 | 18 | **One asset writer per wave**, and one writing lane during a gate. | As planned: P48 in W29, P51 in W30; at Gate A the look lane and then the motion lane, one at a time; Gate A2 one lane. |
+| 104 | 19 | **Headless stays cheap**: skinned layers only where something is drawn. | As planned: the springs, the flinches and the eyes' look run inside the skinned layers (decision 70); headless the bots and the default tier pay nothing new. |
+| 105 | 20 | **The owner sees each part in their hands before it ships**, and the look is theirs to approve. | Checkpoint A: a private page with the Gate A2 candidate, a video of the tour and the giant sheet. **The owner approved it** and decided three things (§1.7). |
+| 106 | 21 | **Test tiers as in M10**, `--require` and `--strict-times` at every merge, the default tier at most 72 s and the slow tier at most 400 s at Part A's end. | P49 moved 3.05 s of the default tier to `tests/slow/` and one slow suite to `tests/gate/` for headroom. The Gate A merge's quiet default tier read 62.8 s; the slow tier 375-395 s, near its 400 (P53 moves headroom in W31). This release's final check is in `docs/M11_HANDOFF.md` §5.5. |
+
+### 1.7 The owner's answers to the M11 plan's questions, and checkpoint A
+
+**The questions** (M11 plan §0.6) went out with the note before W29; on 18 November 2026 the owner
+confirmed every default ("GO"): three releases, one per part; 59.1 MB for the last download as "about
+60"; build sliders and, if the engine allows them cleanly, six face sliders; the two added clothing slots
+("armour" and "shins"); the box animals kept rather than a poor wolf; women among the people from more
+CC0 body data. Question 7, the look, is asked at each part's checkpoint.
+
+**Checkpoint A** (M11 plan §4.2): the owner saw the Gate A2 candidate on a private page with its video
+and the giant sheet, and **approved part one**. With the approval they decided:
+
+| # | Decision | What it changed |
+| --- | --- | --- |
+| 1 | **Ship part one as `0.11.0-m11`.** | This release (P52): the version, the launcher's notes, the exports and the checks. The tag, the play link and the merge to `main` are the lead's, after the release's checks. |
+| 2 | **The giant's native CPU budget with secondary motion is 0.15 ms a frame**, not 0.12 (plan §2.12). Measured with every modifier on: 0.136-0.143 ms at Gate A, 0.143-0.144 at Gate A2; the Web's 0.230-0.248 ms stays within its 0.45. | Plan §2.12's row and `UiProbe`'s comment on `skin_springs_ms` read 0.15; no test or tool encoded the native figure. The row is met. The brain's modifier (0.046-0.051 ms of it) stays P57's to trim if the wardrobe needs the room. |
+| 3 | **The warmer skin in the world's light is accepted**, although the default look's lit chest in the creator's light now reads (220, 160, 131), up to 26/255 a channel off the studio render approved for `0.10.0-m10` (198, 170, 157); Part A's gate row asked for 12. | Nothing to change: `test_skin_tone_render` keeps its tolerance of 30/255 and `GiantLook.DRAWN_DEFAULT` the drawn tone; `test_skin_world_render` guards the world's light. The Gate A look lane's FOLLOWUPS row is closed by this decision. |
+
+Known and accepted with the approval, and stated in the handoff and the launcher's notes: the draw calls
+at `medium` (379 against 330 in the Valley walk, 642 against 620 in the stress arena; the people's part
+brings the room); the creator's first frame in the browser at 3.3 times the median frame (the rule: 3);
+no legs or feet in first person; a black shell beard face-on against the sun reads dark; stage 6's
+unreforged sword is a sliver at first person's rest; the slow test tier near its 400 s (P53 moves
+headroom).
 
 ## 2. Deviations recorded by the packages
 
@@ -599,6 +655,44 @@ the weapons' material pass (the owner's answers). No owner's notes had arrived, 
 The W27 merge fixed the sway forward: it read world transforms while the sandbox's reset had the
 giant out of the tree, three engine errors a skinned soak, which broke the determinism gate.
 
+### 2.4 M11 Part A (P48-P51)
+
+The ones that change behaviour or a contract, in short; each package's system document has the reasons in
+full, and its "Gate A" and "Gate A2" sections the later changes (§3.5).
+
+**P48 The body pipeline II.** A part's file is `part_path` in the index, not `part` (M10's `part`, a
+garment's body part, is read by a test outside the package). `GiantLook.apply` did not call `ensure_part`
+and `release_unused` in W29 (not P48's file); the model loads a part when its node is shown and lets it go
+when hidden, and P51 added the two calls. Four more CC0 targets were vendored (137 files) so the brawn and
+girth directions both exist; that changed the bake's input keys and the bake ran again in full, every map
+coming out M10's. The shadow proxy went on render layer 3 (Gate A moved it to 1: §3.5). The free cape still
+covers the lower back, so the outfits' data and the designs' rule hold. One texel of the normal bake flips
+by 1/255 between runs (M10's jitter, now with an address).
+
+**P49 Web, tools and performance debts.** The launcher unpacks the pack as one stream, a network chunk at a
+time (probe 9: 110-120 MB less than joining the text at the last budget), not a part at a time. Exports are
+reproducible because the builders write stable node ids (`SceneKit.stable_node_id`) and the imported glTF
+scenes are given stable ones before the export (`tools/normalize_imports.gd`); the engine's own random ids
+cannot be seeded. The memory growth of a starved browser (the M10 gate's LD-1) is the browser's and the
+engine's audio side while no line of the game runs: recorded, not fixed, the checks' memory guard kept. The
+loading screen runs the creator preview's warm-up for a `--continue` start; natively on llvmpipe without a
+driver cache it does not cover the creator's first frame, on the Web it does. 3.05 s of the default tier and
+one slow suite moved down a tier for headroom.
+
+**P50 The giant's motion.** Tip matching places the fist's centre, not the knuckle line (`for_fist`), with
+its contract unchanged; in a tested swing the hand keeps M10's orientation and only the generic poses turn
+the fist onto the handle. A roar source was added. The springs' joints are rate-limited (720 degrees a
+second) after the solver. The pelvis makes up the clavicle's and the spine's shortfall within its own 0.10
+x k, so the reach past a weapon's fit stage holds in play. Not done: the skirt's waist fade (Gate A2 instead
+stops drawing the legs in first person, §3.5), `carry_two_hand` (the tree is carried one-handed), the
+creator's preview without secondary motion or the eyes' look (P55).
+
+**P51 The look pass II.** The curvature is a map of its own (decision 94). Shells are 12 layers on the
+desktop and 6 on the Web, stacked at load time. The skin's grade first matched the studio render within
+5/255; Gate A traded that match for the world's light (§1.7, decision 3). Not done: a coarser last LOD for
+the hair cards, lashes and fuller brows as geometry. The scars that cannot be in the stage-1 rear view or
+first person (the face's, the chest's, the left hand's) are listed as such in the rendered check.
+
 ## 3. Fixes from the milestone gate reviews
 
 ### 3.1 M2-M5 and their Ship gate
@@ -709,6 +803,27 @@ test that failed before it.
 | LC-2 (refuted) | The Stoneknuckles are drawn as a plank of boxes hanging from the fist. | The frames are accurate and the plan allows it: the player's weapons keep their low-poly meshes in M10 (decision 65; the owner's answer 4), the fists included. Not a defect of M10; realistic weapons are deferred. |
 | LC-4 (refuted) | Scars and ancestry marks cannot be made out by eye in play. | Refuted at the game's resolution: at 1280x720 the back lashes, the forearm slash and the lightning tree read from behind. The reviewer had judged the option check's 320x240 tiles, where the giant is about 30 pixels wide. |
 
+### 3.5 M11 Part A (Gate A and Gate A2)
+
+Gate A reviewed the W30 merge (P50 and P51 on P48 and P49) through the plan's eight lenses (M11 plan
+§4.1); two fix lanes (the look, then the motion) and a merge, then a second fix round, Gate A2, on what the
+merge's own tour showed. The detail is in `docs/systems/P50.md` and `P51.md`, "Gate A" and "Gate A2", and
+`docs/PERFORMANCE.md`, "M11 Gate A: the merged measurements"; `docs/M11_HANDOFF.md` §5 has the gate table.
+Every change has a test that failed before it or a rendered comparison.
+
+| Finding | Fix or decision |
+| --- | --- |
+| The skin read chalk-white where the sun lit it and grey-mauve in shade, with ragged bright islands (the W30 merge's frames against 0.10's). | Gate A: the lookup became a per-channel wrap (`SKIN_WRAP`), the albedo's grade eased (saturation 0.8, no gain), a tone away from the default takes back the bake's saturation. The default skin's near-white share 0.88-0.90 to 0.00; the studio match 5/255 to 26/255, accepted by the owner (§1.7, decision 3). `test_skin_world_render` (new). |
+| First person cast no body shadow. | Gate A: the renderer culls shadow casters by the camera's mask, and the proxy was on the head's layer, which first person culls; it is on the limbs' layer (1). First person gains one shadow draw a cascade; third person is unchanged. |
+| The braies showed bright slivers at the crotch in the world's light. | Gate A: the cloth's rim light ignores N.L; weave and leather take none (fur keeps 0.45). |
+| The giant's native CPU a frame with secondary motion was 0.29 ms (§2.12: 0.12). | Gate A: a balanced, gated blend tree (a branch at no weight is not evaluated), the sway run by the rig with its nodes held, fixed parameter slots, no dictionary a frame: 0.136-0.143 ms merged with the picture unchanged (every bone within 0.000005 m). The owner set the budget at 0.15 (§1.7, decision 2). |
+| The arms popped up to 81 degrees between two frames when a block started or ended. | Gate A: outside a tested swing each arm's joints move at most 1,200 degrees a second (20 a frame); the arms' worst step 20.0 degrees. The block's gameplay window is untouched. |
+| The eyes did not move. | Gate A: the rig writes the eye's `look` toward the lock's focus point, else along the camera's level facing, clamped to about 7.6 degrees and eased. The creator's preview does not turn them yet (P55). |
+| The Storm Herald's short beard (a shell) drew as one black mass, the Iron Veteran's greying crop near black with white specks. | Gate A2: the shells take the grey as the cards do, the cards' light and a sky sheen along the strands. A black shell beard face-on against the sun stays dark, as black cards are: accepted. |
+| A hit from the front and one from behind read as the same frame; the side flinches leaned toward the hit. | Gate A2: the side clips' sign fixed in `kit/clips.py`; the rig adds the flinches at up to 2.5 times over 0.5 s: the head moves 0.31-0.44 m away from the hit (0.12-0.18 before). |
+| First person at rest showed the club upright over the right third of the view. | Gate A2: `fp_rest`'s forearm turned 75 degrees, so the weapon lies low in the lower right corner at every stage (the stage-1 club 0.058 of the frame, 0.183 before). Stage 6's unreforged sword is a sliver there: accepted. |
+| First person looking down showed the thighs' flat caps between the arms. | Gate A2: first person draws no legs, as it draws no torso: the skin and every garment discard the pelvis, legs, feet and caps by the region id in `COLOR.r` while the camera is in the head; the shadow keeps the whole body. No legs or feet in first person: accepted. |
+
 ## 4. The plans' review logs
 
 ### 4.1 The M2-M5 plan (its §7)
@@ -796,6 +911,16 @@ the rule that options must read in play and its rendered check (82; the owner's 
 owner's three checkpoints (83; the owner's review, 1), the legs' sources that keep a stride from
 gliding or stepping in the air (66; the owner's review, 3) and `--require` with `--strict-times` (84;
 process 4 and 5).
+
+### 4.4 The M11 plan (its §7)
+
+The M11 plan carries a verification log instead of a review section: what was read in full, what was read
+in the code at `5ff50f0` (each fact marked VERIFIED), what was derived, and the ten probes of its §1.2,
+run before W29 and recorded under the log. Two changed the plan: probe 10 found a clothed person ships at
+about 282 KB, not 165 KiB, so Part C's variants per role or their triangles come down (P59's first
+variant decides); probe 6 set the shells at 12 layers on the desktop and 6 on the Web. The others confirmed
+the plan's designs (parts on demand, the build by shader, the face keys with morph tangents, the springs,
+the lookup in `light()`, the people's clip driver, crowd variation, the launcher's stream).
 
 ## 5. The M0/M1 decisions
 
