@@ -154,7 +154,7 @@ func test_the_first_click_on_a_swatch_applies_it_from_any_focus() -> void:
 	await get_tree().process_frame
 	var cases := [["Hair", "hair.color", "haircolor.black"], ["Beard", "beard.color", "haircolor.white"],
 		["Tattoos", "tattoos.ink", "ink.soot"], ["War paint", "paint.color", "paintcolor.blood"],
-		["Clothing", "outfit.primary", "dye.madder"], ["Clothing", "outfit.secondary", "dye.bone"],
+		["Clothing", "outfit.dyes.cloth", "dye.madder"], ["Clothing", "outfit.dyes.leather", "dye.bone"],   # P53: the record v2's paths
 		["Skin", "skin", "skin.tan"], ["Eyes", "eyes", "eyes.blue"]]
 	for jitter: bool in [false, true]:
 		var lost := PackedStringArray()

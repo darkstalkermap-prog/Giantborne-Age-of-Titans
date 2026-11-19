@@ -110,10 +110,10 @@ func test_the_appearance_tab_keeps_and_cancels_a_look() -> void:
 	assert_eq((screen.tab_buttons()[screen.tabs.find(tab)] as Button).text, "Appearance", "no (new) once seen")
 
 
-## The look of tests/fixtures/saves/v2_appearance_future.json: v 2, a hair style, "horns" and a skin block this
-## build does not know.
+## The look of tests/fixtures/saves/v2_appearance_v3_future.json: v 3 (P53: v 2 is this build's now), a hair
+## style, "horns" and a skin block this build does not know.
 func _later_look() -> Dictionary:
-	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/v2_appearance_future.json"))
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/v2_appearance_v3_future.json"))
 	return (doc.character as Dictionary).appearance
 
 

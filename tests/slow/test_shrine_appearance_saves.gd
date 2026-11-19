@@ -7,7 +7,7 @@ extends IntegrationSuite
 ## scene cost more than the default tier's cap allows (tests/integration/test_shrine_appearance.gd covers the
 ## tab and the creator over it in the default tier).
 ##
-## A save whose look a later build made (tests/fixtures/saves/v2_appearance_future.json; M10 gate, LB-1):
+## A save whose look a later build made (tests/fixtures/saves/v2_appearance_v3_future.json; M10 gate, LB-1):
 ## Continue says the default look is shown until it is changed; Keep without a change writes nothing and the
 ## save's record stays the later build's, byte for byte; a kept change writes this build's record, the giant
 ## wears it and the next load no longer carries the note. Cancel after a change and Reset never touch or show
@@ -156,7 +156,7 @@ func test_cancel_writes_nothing_and_continue_restores_a_kept_look() -> void:
 
 func test_a_later_builds_look_in_a_save_is_replaced_by_a_kept_change() -> void:
 	GameSession.persist = true
-	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/v2_appearance_future.json"))
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/v2_appearance_v3_future.json"))
 	var later := JSON.stringify((doc.character as Dictionary).appearance)
 	SaveSlots.write(doc)
 	assert_true(GameSession.continue_valley().ok, "Continue")
@@ -197,7 +197,7 @@ func test_a_later_builds_look_in_a_save_is_replaced_by_a_kept_change() -> void:
 func test_a_later_builds_look_survives_cancel_reset_and_unknown_shapes() -> void:
 	var p := spawn_player(Vector3(0, 0.05, 0))
 	await step_ticks(1)
-	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/v2_appearance_future.json"))
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/v2_appearance_v3_future.json"))
 	var later: Dictionary = (doc.character as Dictionary).appearance
 	p.appearance.restore_record(later)
 	var stored := JSON.stringify(p.appearance.record())

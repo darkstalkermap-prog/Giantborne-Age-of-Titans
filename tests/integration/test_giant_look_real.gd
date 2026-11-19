@@ -40,6 +40,9 @@ static func data_refs() -> Array:
 	for id: String in Appearance.option_ids("outfit"):
 		for g: Variant in Appearance.option(id).get("garments", []):
 			out.append([id, "garment", str(g)])
+	# P53 (plan M11 §2.6): every garment of the slots names an index garment
+	for id: String in Appearance.option_ids("garment"):
+		out.append([id, "garment", str(Appearance.option(id).get("mesh", ""))])
 	for c: String in ["tattoo", "paint", "scar", "mark"]:
 		for id: String in Appearance.option_ids(c):
 			out.append([id, "design", str(Appearance.option(id).get("design", ""))])
@@ -88,16 +91,16 @@ func test_every_option_of_the_data_applies_with_validate_empty() -> void:
 					r.tattoos.arms = "tattoo.arm_bands"
 					r.tattoos.ink = id
 				"paint":
-					r.paint.design = id
+					r = Appearance.with_paint(r, id)   # P53: the paint in its place (face or body)
 				"paintcolor":
-					r.paint.design = "paint.face_stripes"
+					r = Appearance.with_paint(r, "paint.face_stripes")
 					r.paint.color = id
 				"scar":
 					r.scars = [id]
 				"outfit":
-					r.outfit.set = id
+					r = Appearance.with_outfit(r, id)   # P53: an outfit fills the slots
 				"dye":
-					r.outfit.primary = id
+					r.outfit.dyes.cloth = id   # P53: M10's primary dye is the cloth dye
 			var look := Appearance.to_look(r, line if line != "" else "ancestry.stoneblood")
 			GiantLook.apply(_root, index, look)
 			assert_eq(GiantLook.validate(_root, index, look), PackedStringArray(), "%s: validate() is empty" % id)
@@ -107,7 +110,7 @@ func test_every_option_of_the_data_applies_with_validate_empty() -> void:
 				assert_eq(GiantLook.mesh_node(_root, index, m).visible, m == str(look.beard_mesh), "%s: %s's visibility" % [id, m])
 			var shown := {}
 			for g: Variant in look.garments:
-				for m: Variant in index.garments.get(str(g), []):
+				for m: Variant in index.garments.get(Appearance.garment_id(g), []):
 					shown[str(m)] = true
 			for m: String in GiantLook.meshes_of(index, "garment"):
 				assert_eq(GiantLook.mesh_node(_root, index, m).visible, shown.has(m), "%s: %s's visibility" % [id, m])
@@ -159,6 +162,27 @@ func test_the_datas_covered_regions_match_the_real_index() -> void:
 		return
 	for id: String in Appearance.option_ids("outfit"):
 		var r := Appearance.default_record()
-		r.outfit.set = id
+		r = Appearance.with_outfit(r, id)   # P53: an outfit fills the slots
 		assert_eq(Appearance.covered_regions(r, index), Appearance.covered_regions(r),
 			"%s: the index's covered regions are the data's %s" % [id, Appearance.covered_regions(r)])
+
+
+## P53 (plan M11 §2.5, §2.6): each garment alone hides what the index says it hides (its data's `covers` and the
+## index's coverage agree), and its material is the dye its meshes took in M10 (cloth the primary, leather the
+## secondary, fur none), so a migrated look dyes every mesh as M10 did.
+func test_every_garments_covers_and_material_match_the_real_index() -> void:
+	var index := _model()
+	if index.is_empty():
+		return
+	var empty := Appearance.with_outfit(Appearance.default_record(), "outfit.wanderer")
+	empty.outfit.slots = Appearance.empty_slots()
+	var want_dye := {"cloth": "primary", "leather": "secondary", "fur": "none"}
+	for id: String in Appearance.option_ids("garment"):
+		var g := Appearance.option(id)
+		var r: Dictionary = empty.duplicate(true)
+		r.outfit.slots[str(g.slot)]["item"] = id
+		assert_eq(Appearance.covered_regions(r, index), Appearance.covered_regions(r),
+			"%s: the index's covered regions are the data's %s" % [id, Appearance.covered_regions(r)])
+		for m: Variant in index.garments.get(str(g.mesh), []):
+			assert_eq(str(index.meshes[m].get("dye", "")), str(want_dye.get(str(g.material), "?")),
+				"%s: %s's M10 dye slot is its material's (%s)" % [id, m, g.material])

@@ -161,7 +161,7 @@ func test_while_the_garments_fade_the_skin_under_them_is_whole() -> void:
 	layer.add_child(p)
 	await get_tree().process_frame
 	var rec := Appearance.default_record()
-	rec["outfit"] = {"set": "outfit.warrior", "primary": str(rec.outfit.primary), "secondary": str(rec.outfit.secondary)}
+	rec = Appearance.with_outfit(rec, "outfit.warrior")   # P53: an outfit fills the slots
 	var look := Appearance.to_look(rec, "")
 	p.apply_look(look)
 	var mask := GiantLook.hidden_regions_mask(p.index(), look.garments)
@@ -178,7 +178,7 @@ func test_while_the_garments_fade_the_skin_under_them_is_whole() -> void:
 	assert_true(all_are.call(0), "a pick while they fade keeps it whole")
 	p.set_fade(0.0)
 	assert_true(all_are.call(mask), "and without the fade the look's mask is back")
-	rec["outfit"] = {"set": "outfit.wanderer", "primary": str(rec.outfit.primary), "secondary": str(rec.outfit.secondary)}
+	rec = Appearance.with_outfit(rec, "outfit.wanderer")
 	var plain := Appearance.to_look(rec, "")
 	p.set_fade(0.7)
 	p.apply_look(plain)
