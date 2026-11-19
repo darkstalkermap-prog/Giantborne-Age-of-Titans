@@ -43,6 +43,8 @@ const WORLD_PROMPTS := ["tutorial.map", "tutorial.compass", "tutorial.fast_trave
 const P35_PROMPTS := ["tutorial.troll_fire"]
 ## M10 (P42, plan M10 §2.11): the look's two one-time prompts (data/tutorial/appearance_{shrines,mark}.json).
 const M10_PROMPTS := ["tutorial.appearance_shrines", "tutorial.appearance_mark"]
+## M11 (P53, plan M11 §2.11): the one-time prompt after a look from before clothing by slot was migrated.
+const M11_PROMPTS := ["tutorial.appearance_slots"]
 const QUESTS := ["quest.main", "quest.tutorial", "quest.village", "quest.village_cache", "quest.village_ogre"]
 
 static var _index: Dictionary = {}
@@ -207,6 +209,8 @@ func _written_flags() -> Dictionary:
 	w[GameSession.LEGACY_LOOK_FLAG] = true
 	w[PlayerAppearance.MARK_SHOWN_FLAG] = true
 	w["appearance.tab_seen"] = true
+	# M11 (P53): SaveSlots sets appearance.slots_seen when a loaded look was migrated to version 2.
+	w[SaveSlots.SLOTS_SEEN_FLAG] = true
 	# The world's writers besides the records (P29): its encounters, factions, beacons and breakable sites.
 	w.merge(WorldContent.written_flags())
 	return w
@@ -284,6 +288,7 @@ func test_every_id_in_the_scene_is_unique_and_the_content_is_shipped() -> void:
 	expected.append_array(WORLD_PROMPTS)
 	expected.append_array(P35_PROMPTS)
 	expected.append_array(M10_PROMPTS)
+	expected.append_array(M11_PROMPTS)
 	expected.sort()
 	assert_eq(prompt_ids, expected,
 		"the 13 tutorial prompts of plan §4.5, the world's ten (P27, P29, P33), P35's and the look's two (M10)")

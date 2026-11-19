@@ -25,6 +25,9 @@ const AFTER_EACH := [
 	# M11 Part A (pre-declared by P49, plan M11 §2.11): the giant's secondary motion goes back to its
 	# headless default after every test; skipped until P50's file exists.
 	["script", "res://scripts/presentation/secondary_motion.gd", "reset_for_tests"],      # P50
+	# M11 Part B (pre-declared by P53, plan M11 §2.11): the creator II's thumbnail cache (its hidden preview and
+	# the textures it rendered) is emptied after every test; skipped until P55's file exists.
+	["script", "res://ui/screens/creator/thumbnail_cache.gd", "reset_for_tests"],         # P55
 	["script", "res://scripts/world/world_index.gd", "clear_cache"],                      # P20
 ]
 

@@ -256,6 +256,13 @@ func _post_pass() -> void:
 
 	## @anchor P46
 
+	# M11 Part B (written by P53, plan M11 §1.5): the look record v2's packages add their cross-record checks here.
+	# P53's own (the slots' rules: every outfit's slots and its M10 garments, every M10 garment in its slot, every
+	# preset at version 2 with its outfit's name matching its slots) are Appearance.data_errors', called above.
+	## @anchor P53
+	## @anchor P54
+	## @anchor P56
+
 	pass
 
 
