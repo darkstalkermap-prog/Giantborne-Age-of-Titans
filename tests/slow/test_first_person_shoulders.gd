@@ -21,8 +21,13 @@ extends TestSuite
 ## The share of a corner block's pixels the giant may change (the dither's last pixels at the fade's edge: at
 ## most 0.007 measured, in the stage-1 sprint).
 const CORNER_MAX := 0.02
-## The share of the whole frame the giant must still change (his forearms, hands and legs: 0.08-0.13 measured).
-const DRAWN_MIN := 0.04
+## The share of the whole frame the giant must still change: his forearms and hands (and his legs before Gate A2:
+## 0.08-0.13 measured then). Gate A2 lowered it from 0.04 to 0.025: first person no longer draws the legs (the
+## thighs' caps showed between the hands), and the arms alone draw 0.037-0.066 (stage 6 the least).
+const DRAWN_MIN := 0.025
+## Gate A2: the share of the block between the hands (the probe's FP_HIPS) the giant draws looking down, the weapon
+## hidden (m11-gate-a: the thighs' caps; fixed: nothing).
+const HIPS_MAX := 0.02
 const STAGES := [1, 6]
 ## The game's 16:9 (the corner blocks are a share of the frame; at 4:3 the forearms cross them).
 const RESOLUTION := "480x270"
@@ -54,9 +59,13 @@ func test_the_shoulders_stay_out_of_the_lower_corners() -> void:
 				stage, frame, float(c.left)])
 			assert_true(float(c.right) <= CORNER_MAX, "stage %d %s: the lower right corner shows no shoulder (%.3f of it changed)" % [
 				stage, frame, float(c.right)])
+			if c.has("hips"):
+				assert_true(float(c.hips) <= HIPS_MAX, "stage %d %s: no hip cap between the hands (%.3f of the block)" % [stage, frame,
+					float(c.hips)])
 			assert_true(float(c.drawn) >= DRAWN_MIN, "stage %d %s: the arms and legs still draw (%.3f of the frame)" % [stage, frame,
 				float(c.drawn)])
-			notes.append("s%d %s %.3f/%.3f" % [stage, frame.trim_prefix("fp_down"), float(c.left), float(c.right)])
+			notes.append("s%d %s %.3f/%.3f hips %.3f drawn %.3f" % [stage, frame.trim_prefix("fp_down"), float(c.left), float(c.right),
+				float(c.get("hips", -1.0)), float(c.drawn)])
 		var rest: Dictionary = rep.get("fp_rest", {})
 		assert_eq(rest.size(), 3, "stage %d: first person at rest drawn with three weapons" % stage)
 		for frame: String in rest:

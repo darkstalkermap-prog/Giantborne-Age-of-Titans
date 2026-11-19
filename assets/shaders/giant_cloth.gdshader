@@ -33,7 +33,7 @@ varying flat float v_fp_on;
 
 void vertex() {
 	v_fp_pos = VERTEX;
-	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD));
+	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(clamp(int(COLOR.r * 16.0), 0, 15));
 }
 
 void fragment() {

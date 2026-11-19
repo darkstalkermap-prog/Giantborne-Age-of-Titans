@@ -43,6 +43,8 @@ const CROSSHAIR_PX := 3
 const FP_DOWN_PITCHES := [-55.0, -70.0, -85.0]
 const FP_CORNER := Vector2(0.16, 0.24)
 const FP_MOVE_FRAMES := 4
+## Gate A2: the block between the hands where the thighs' caps showed looking down (x0, y0, x1, y1 shares).
+const FP_HIPS := Rect2(0.44, 0.5, 0.14, 0.35)
 ## Mode "fp_rest" (Gate A2): the weapons and the pitches first person at rest is drawn with.
 const FP_REST_WEAPONS := ["weapon.club", "weapon.sword", "weapon.hammer_reinforced"]
 const FP_REST_PITCHES := [0.0, -10.0]
@@ -238,8 +240,13 @@ func _fp_down_mode() -> void:
 		vis.visible = false
 		var without := await _draw()
 		vis.visible = true
+		# Gate A2: the hips' block (where the thighs' caps showed between the hands), drawn without the weapon
+		var socket := (vis as SkinnedRig).weapon_socket()
+		socket.visible = false
+		var no_weapon := await _draw()
+		socket.visible = true
 		corners[frame_name] = {"left": _block_diff(with_giant, without, false), "right": _block_diff(with_giant, without, true),
-			"drawn": _block_diff(with_giant, without, false, Vector2(1.0, 1.0))}
+			"drawn": _block_diff(with_giant, without, false, Vector2(1.0, 1.0)), "hips": _rect_diff(no_weapon, without, FP_HIPS)}
 	# on the move: a walk, then a sprint, at -70 degrees, at FP_MOVE_FRAMES moments of the stride (the camera bobs,
 	# the body leans: the corners must stay clear)
 	_p.camera_rig.pitch = deg_to_rad(-70.0)
@@ -312,6 +319,22 @@ func _fp_rest_frames(pitches: Array, giant: bool) -> Dictionary:
 			m["fp_weight"] = rig.first_person_rest_weight()
 			res[name] = m
 	return res
+
+
+## The share of the pixels of `r` (shares of the frame) that differ between two frames.
+static func _rect_diff(a: Image, b: Image, r: Rect2) -> float:
+	var w := a.get_width()
+	var h := a.get_height()
+	var n := 0
+	var d := 0
+	for y in range(int(r.position.y * h), int(r.end.y * h)):
+		for x in range(int(r.position.x * w), int(r.end.x * w)):
+			n += 1
+			var c := a.get_pixel(x, y)
+			var e := b.get_pixel(x, y)
+			if absf(c.r - e.r) + absf(c.g - e.g) + absf(c.b - e.b) > 0.06:
+				d += 1
+	return float(d) / maxf(1.0, float(n))
 
 
 ## The pixels that differ between two frames: their share of the frame and their box (shares of the frame).
