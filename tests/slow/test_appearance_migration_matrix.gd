@@ -35,6 +35,8 @@ func test_a_record_per_m10_option_migrates_to_the_look_it_drew() -> void:
 	for c: String in Oracle.CATEGORIES:
 		for id: String in Oracle.option_ids(c):
 			var o := Oracle.option(id)
+			if c == "outfit" and not o.has("garments"):
+				continue   # P54: the wardrobe's outfits are no M10 option
 			var line := Oracle.required_ancestry(o)
 			var r: Dictionary = Oracle.FALLBACK_RECORD.duplicate(true)
 			match c:
@@ -68,7 +70,7 @@ func test_a_record_per_m10_option_migrates_to_the_look_it_drew() -> void:
 					r.outfit.secondary = Oracle.option_ids("dye")[(Oracle.option_ids("dye").find(id) + 3) % Oracle.option_ids("dye").size()]
 			check_migrated(r, line, id)
 			if c in ["outfit", "dye"]:
-				for outfit: String in Oracle.option_ids("outfit"):   # every outfit in a dye pair, every dye on every outfit
+				for outfit: String in m10_outfits():   # every outfit in a dye pair, every dye on every outfit
 					var o2 := r.duplicate(true)
 					o2.outfit.set = outfit
 					check_migrated(o2, line, "%s on %s" % [id, outfit])
@@ -88,7 +90,17 @@ func test_random_m10_records_migrate_to_the_looks_they_drew() -> void:
 			rng.seed = seed * 104729 + scope.hash()
 			var line: String = LINES[seed % LINES.size()]
 			var r: Dictionary = Oracle.random_record(rng, scope, seed % 2 == 0, line, Oracle.FALLBACK_RECORD.duplicate(true))
+			# P54: M10's Randomize reads this build's outfit set, which holds the wardrobe's six outfits too (no M10 list
+			# of garments: no M10 record wore them); such a draw wears an M10 outfit instead, picked by the seed
+			if not m10_outfits().has(str(r.outfit.set)):
+				r.outfit.set = m10_outfits()[seed % m10_outfits().size()]
 			var diff := Migration.look_difference(Oracle.to_look(r, line), Appearance.to_look(r, line))
 			assert_eq(diff, "", "%s seed %d (%s): the look M10 drew" % [scope, seed, line])
 			n += 1
 	assert_true(n >= 9 * RANDOM_SEEDS, "%d random M10 records" % n)
+
+
+## The outfits an M10 record could wear: those of the outfit set that keep M10's list of garments (P54 added six
+## without one).
+static func m10_outfits() -> Array:
+	return Array(Oracle.option_ids("outfit")).filter(func(id: String) -> bool: return Oracle.option(id).has("garments"))

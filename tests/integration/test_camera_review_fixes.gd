@@ -60,7 +60,14 @@ func test_first_person_hides_the_giants_torso() -> void:
 				"drawn" if int(group[1]) == 1 else "not drawn"])
 			assert_true((mi.layers & third) != 0, "%s drawn in third person" % id)
 	for id: String in model.index.meshes:
-		assert_true(listed.has(id), "%s is one of the listed meshes" % id)
+		if listed.has(id):
+			continue
+		# P54: the wardrobe's meshes are not listed one by one: each on its index layer, culled in first person unless on 1
+		var layer := int((model.index.meshes[id] as Dictionary).get("layer", 0))
+		assert_true(layer in [1, 2, 3] and model.mesh(id) != null, "%s: a mesh on layer %d" % [id, layer])
+		if model.mesh(id) != null:
+			assert_eq(model.mesh(id).layers, 1 << (layer - 1), "%s on render layer %d" % [id, layer])
+			assert_eq((model.mesh(id).layers & mask) != 0, layer == 1, "%s in first person as its layer says" % id)
 	var weapon := p.equipment.visual as Node3D
 	assert_true(weapon != null and weapon.get_parent() == p.get_node("Visual/Body/WeaponSocket"), "the weapon hangs at the socket")
 	for mi: MeshInstance3D in weapon.find_children("*", "MeshInstance3D", true, false):

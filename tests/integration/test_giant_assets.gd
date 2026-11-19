@@ -400,11 +400,12 @@ func test_a_helm_hides_or_cuts_each_hair_style_and_every_outfit_is_valid() -> vo
 		for style: String in styles:
 			var want := 0.0 if str(e.hides_hair) == "all" else float((e.get("hair_cut", {}) as Dictionary).get(style, 1.0))
 			assert_true(is_equal_approx(float(cut.get(style, 1.0)), want), "%s over %s: %.2f of its length" % [g, style, want])
-			var look := GiantLook.DEFAULT_LOOK.duplicate(true)
-			look.hair_mesh = style
-			look.garments = [{"mesh": g, "dye": Color.GRAY, "kind": str(e.get("material", "cloth"))}]
-			GiantLook.apply(m, idx, look)
-			assert_eq(GiantLook.mesh_node(m, idx, style).visible, want > 0.0, "%s over %s: drawn or not" % [g, style])
+		# the look applied: the default long hair drawn or not under it (a look a helm, so the parts load once)
+		var look := GiantLook.DEFAULT_LOOK.duplicate(true)
+		look.garments = [{"mesh": g, "dye": Color.GRAY, "kind": str(e.get("material", "cloth"))}]
+		GiantLook.apply(m, idx, look)
+		var hair := str(look.hair_mesh)
+		assert_eq(GiantLook.mesh_node(m, idx, hair).visible, float(cut.get(hair, 1.0)) > 0.0, "%s over %s: drawn or not" % [g, hair])
 	assert_eq(helms, 4, "the hood, the leather cap, the iron helm and the horned helm")
 	for id: String in Appearance.option_ids("outfit"):
 		var r := Appearance.with_outfit(Appearance.default_record(), id)
