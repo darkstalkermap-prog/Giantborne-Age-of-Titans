@@ -8,8 +8,8 @@ config_version=5
 [application]
 
 config/name="Giantborn: Age of Titans"
-config/description="Action-RPG prototype: a realistic giant you design in a character creator, in a low-poly world: the Valley of Broken Kings as the tutorial, then the Old Kingdom, a streamed open world of five regions with three oaths, three bosses and the Stone Throne, with sound and music (milestones M0-M10)."
-config/version="0.10.0-m10"
+config/description="Action-RPG prototype: a realistic, animated giant you design in a character creator, in a low-poly world: the Valley of Broken Kings as the tutorial, then the Old Kingdom, a streamed open world of five regions with three oaths, three bosses and the Stone Throne, with sound and music (milestones M0-M11)."
+config/version="0.11.0-m11"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"

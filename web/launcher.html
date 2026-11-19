@@ -137,7 +137,7 @@ kbd {
 
 <main class="wrap">
   <header class="masthead">
-    <p class="eyebrow">Playable prototype &middot; the realistic giant and the character creator &middot; build 0.10.0-m10</p>
+    <p class="eyebrow">Playable prototype &middot; the giant refined: motion, hair and skin &middot; build 0.11.0-m11</p>
     <h1><span class="name">Giantborn</span><span class="sub">Age of Titans</span></h1>
     <p class="pitch">Design your giant in the <strong>character creator</strong>: hair and beard, skin, eyes, tattoos,
       war paint, scars and clothing. Then you wake as a <strong>12-foot juvenile giant</strong> in Giant's Hollow. The Valley of Broken
@@ -155,7 +155,7 @@ kbd {
     <canvas id="game-canvas" tabindex="0" hidden></canvas>
     <div class="gate" id="gate">
       <button class="play" id="play" type="button">Play in browser</button>
-      <p class="gate-note" id="gate-note">About 36 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
+      <p class="gate-note" id="gate-note">About 38 MB to download. Play on a computer with a keyboard and mouse; a gamepad may also work.</p>
       <button class="play-alt" id="play-world" type="button">Start in the open world</button>
       <p class="alt-note" id="world-note">Skips the Valley: the character creator, then a new game on the Kingsgate shelf as the 26-foot giant who took the crown. It replaces a game saved in this browser.</p>
       <div class="meter" id="meter" hidden><div class="meter-fill" id="meter-fill"></div></div>
@@ -217,10 +217,10 @@ kbd {
     <div class="slab about">
       <h2>About this build</h2>
       <p><b>What it is.</b> Giantborn: Age of Titans (Godot 4.6.3): a realistic giant you design yourself, in the Valley of Broken Kings as the tutorial, then the Old Kingdom, a streamed open world of five regions with a map, a compass, discovery and fast travel. Growth to 62&nbsp;ft, abilities that evolve as you grow, talents and an ancestry, formations with banners, siege engines and cavalry, trolls, dire wolves and rival giants, three bosses (the Troll Matriarch, the Iron Regiment and Harrok the Unbowed), towns that react to your size, three oaths each won more than one way, and the campaign's end on the Stone Throne.</p>
-      <p><b>New in 0.10.0-m10.</b> The giant is now a realistic, animated body instead of boxes, and you design him. New Game, the prologue's skip and "Start in the open world" all open the character creator: hair (7 styles) and beard (7) with colours and grey, skin tone, eyes, tattoos (16) with ink colours, war paint, scars, your ancestry's mark, and clothing (6 outfits) with dyes; 8 presets, Randomize and Undo. Press Begin (or Ctrl+Enter) to play. Every shrine has a new Appearance tab to change your look later, and your look is saved with your game; a game saved in 0.9.0-m9 continues with the default look. The same body walks, fights, grabs and throws in third and first person at every size from 12 to 62&nbsp;ft. The fighting, the world and the enemies are the same as in 0.9.0-m9.</p>
+      <p><b>New in 0.11.0-m11.</b> Your giant moves and looks more like a living body. He sprints with a run of his own (hold Shift), Heavy Footfall lifts a foot and stamps it down, and he turns on the spot with steps instead of sliding. His hands close round the weapon's handle, and the free hand rests open. Hair, braids, beards and capes swing as he moves and settle when he stops; braids are now round plaits with beads, and short hair, stubble and short beards are drawn as layers of strands. His eyes catch the light and follow where you look and the target you lock. A hit makes him flinch away from the side it came from. In first person you see your body's shadow on the ground and carry the weapon low in the lower right corner. His skin is warm in sunlight instead of pale. Your look, saves and games from 0.10.0-m10 carry over; the fighting, the world and the enemies are the same as in 0.10.0-m10.</p>
       <p><b>Sound on.</b> The Valley, every region and every boss have their own score, and the Valley and every region their own ambience; towns and camps keep their region's music. The music follows the place and the fight, and you can hear threats coming. Browsers start a page's sound only after a click or a key press, so if you hear nothing, click the game once. The volumes are in Settings, and the sound mutes while the tab is hidden.</p>
-      <p><b>What it is not yet.</b> Only your giant is realistic: the soldiers, villagers, beasts and the world are still the game's simple shapes. Hair and beards are drawn as layered strips, so up close they can read as strips rather than single strands. The balance is a bot's: it walks from objective to objective, no person has played the world yet, and some fights are still harder for it than they should be (the Iron Regiment, if you take the crown's oath first at 36&nbsp;ft). Siege trains do not wander the roads. The browser version runs on one thread, so expect slow frames, a slow first frame when the creator opens, and music that can stutter, on weaker computers.</p>
-      <p><b>The next build.</b> This is the last build of the M10 plan. Next come playtests by people, whose findings become tuning first; the recommendation for M11 is the people near the camera, soldiers and villagers, made on the same pipeline as the giant.</p>
+      <p><b>What it is not yet.</b> Only your giant changed: the soldiers, villagers, beasts and the world are still the game's simple shapes. The clothing is still the six outfits of 0.10.0-m10. Hair is still made of shaped strips and layers, not single strands, and a black short beard seen face-on against the sun reads very dark. In first person you do not see your legs or feet, and at the last growth stage the unreforged sword shows only as a sliver at rest. The balance is a bot's: it walks from objective to objective, no person has played the world yet, and some fights are still harder for it than they should be (the Iron Regiment, if you take the crown's oath first at 36&nbsp;ft). Siege trains do not wander the roads. The browser version runs on one thread, so expect slow frames, a slow first frame when the creator opens, and music that can stutter, on weaker computers.</p>
+      <p><b>The next build.</b> 0.12.0-m12 brings more customization: clothing and armour piece by piece (head, shoulders, chest, arms, waist, legs, shins, feet and cape), more hair, beards, braids and beads, and a larger character creator. After it, 0.13.0-m13 makes the people and beasts around you realistic too.</p>
       <p><b>If something goes wrong.</b> Esc opens the pause menu, where you can load the last checkpoint or quit to the title. Settings and your saved game stay in this browser. Note what you did, what you expected and what happened.</p>
     </div>
   </section>
@@ -238,7 +238,7 @@ kbd {
 (function () {
   // Byte counts of the current export (raw and packed as .txt), used for the progress bar, and the
   // number of parts the packed pck ships in.
-  const BUILD = { wasm: 37700666, pck: 25843820, wasmPacked: 12528700, pckPacked: 23591860, pckParts: 2 }; // set by tools/build_web.sh
+  const BUILD = { wasm: 37700666, pck: 26739748, wasmPacked: 12528700, pckPacked: 24579820, pckParts: 2 }; // set by tools/build_web.sh
 
   const stage = document.getElementById('stage');
   const poster = document.getElementById('poster');
