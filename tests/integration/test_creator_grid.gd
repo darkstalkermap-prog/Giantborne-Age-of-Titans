@@ -1,6 +1,6 @@
 extends TestSuite
 ## The creator II's rows and option grids (P55; plan M11 §2.7, §3.8): every row built from the sets' data - today's
-## (M10's ten garments, no accessory: an empty set shows an empty grid) and the test catalogue at the target's size
+## (P54's wardrobe), an empty set of the test's own (an empty grid) and the test catalogue at the target's size
 ## (tests/fixtures/appearance/creator_catalogue.json, about 190 options; CreatorCatalogue) - so P54's and P56's sets
 ## need no edit here; at most 4 pad moves from a category to any option, computed from each grid's geometry (the
 ## row, A to open, the page presses with the wrap, the cell); the material and name filters with the pad and the
@@ -94,11 +94,25 @@ func test_rows_follow_the_sets_and_an_empty_set_shows_an_empty_grid() -> void:
 				want += 1
 		assert_true(r != null and r.option_count() == want and str(r.choices[0].name) == OptionRows.NONE,
 			"%s: None and the set's %d garments of the slot" % [slot, want])
-	# today's accessory set does not exist: three rows whose grids hold "None" alone
+	# the accessory rows follow the real set (P54's: three a slot), each with "None" first
 	c.show_category("Accessories")
 	assert_eq(c.rows().size(), Appearance.ACCESSORY_SLOTS.size(), "three accessory rows")
+	for slot: String in Appearance.ACCESSORY_SLOTS:
+		var r := c.row("outfit.accessories.%s" % slot) as OptionRows.GridRow
+		var want := 0
+		for id: String in Appearance.option_ids("accessory"):
+			if str(Appearance.option(id).get("slot", "")) == slot:
+				want += 1
+		assert_true(r != null and r.option_count() == want and str(r.choices[0].name) == OptionRows.NONE,
+			"%s: None and the set's %d accessories of the slot" % [slot, want])
+	stack.close_all()
+	# an empty set (the test's own, whatever the game's data holds): three rows whose grids hold "None" alone
+	CreatorCatalogue.install_empty("accessory")
+	c = _open()
+	c.show_category("Accessories")
+	assert_eq(c.rows().size(), Appearance.ACCESSORY_SLOTS.size(), "an empty set: still three accessory rows")
 	var neck := c.row("outfit.accessories.neck") as OptionRows.GridRow
-	assert_eq(neck.option_count(), 0, "no accessory yet")
+	assert_eq(neck.option_count(), 0, "an empty set: no accessory")
 	assert_eq(neck.count_label.text, "none yet", "the row says so")
 	c.open_grid(neck)
 	assert_true(c.grid_open(), "its grid opens")
@@ -318,6 +332,16 @@ func test_the_build_sliders_step_snap_and_show_the_rear_view() -> void:
 	assert_true(brawn.value_label.text.begins_with("Brawny"), "named by its end: %s" % brawn.value_label.text)
 	(c.row("skin") as OptionRows.SwatchRow).main_control().grab_focus()
 	assert_eq(c.preview.framing, "full", "the whole giant again when the focus leaves it")
+	# W32: a record's grey under SNAP_ZERO (Randomize draws 0.04) is shown, never picked back as a change of its own
+	var was := c.current_record()
+	var r := was.duplicate(true)
+	r.hair["grey"] = 0.04
+	c.set_record(r)
+	c.show_category("Hair")
+	assert_true(c.row("hair.grey") is OptionRows.SliderRow, "a hair Grey slider")
+	assert_near(float(c.current_record().hair.grey), 0.04, 1e-6, "showing a grey of 0.04 leaves the record as it is")
+	c.undo()
+	assert_true(OptionRows.same(c.current_record(), was), "and one Undo takes that change back")
 
 
 func test_a_design_on_the_left_is_framed_from_the_left() -> void:

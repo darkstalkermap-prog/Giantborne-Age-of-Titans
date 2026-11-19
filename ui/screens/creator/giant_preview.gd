@@ -88,6 +88,9 @@ const FRAMINGS := {
 	"legs": {"target": Vector3(0.0, 1.05, -0.05), "yaw": 20.0, "pitch": 4.0, "dist": 4.4},
 	"shins": {"target": Vector3(0.0, 0.62, -0.08), "yaw": 22.0, "pitch": 6.0, "dist": 2.5},
 	"feet": {"target": Vector3(0.0, 0.32, -0.12), "yaw": 24.0, "pitch": 14.0, "dist": 1.9},
+	# W32 (the creator on P54's wardrobe): a neck accessory's thumbnail - the torc at the neck's base from his right,
+	# beside the beard that hides it from the front (the chest framing showed three identical beards)
+	"neck": {"target": Vector3(0.0, 3.22, -0.04), "yaw": 64.0, "pitch": 2.0, "dist": 1.45},
 	# the live preview while a slot's grid is open: the upper or the lower half, whole
 	"upper": {"target": Vector3(0.0, 2.6, -0.05), "yaw": 22.0, "pitch": 5.0, "dist": 4.6},
 	"lower": {"target": Vector3(0.0, 1.05, -0.05), "yaw": 22.0, "pitch": 5.0, "dist": 4.8},

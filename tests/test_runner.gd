@@ -3,6 +3,8 @@ extends Node
 ## Headless test runner. Usage (from the project folder):
 ##   tools/gd.sh --headless --path . --fixed-fps 60 res://tests/run_tests.tscn -- --no-user-settings
 ##       [--no-audio] [--filter=unit] [--slow] [--gate] [--with-audio]
+## --filter= keeps the suites whose path contains it; several, comma-separated, keep the suites that match any of
+## them, in the runner's usual order (one process: to find which earlier suites change a later one's outcome).
 ## Runs every test_*.gd in tests/unit and tests/integration (flat folders, sorted), plus
 ## tests/slow with --slow and tests/gate with --gate (P19: walkthroughs, oath combinations,
 ## seeded boss runs and soaks; plan M6-M9 decision 34). Exit code 0 when every check passes, 1
@@ -92,7 +94,7 @@ func _ready() -> void:
 	for dir_path: String in suite_dirs(slow, gate):
 		var tier_started := Time.get_ticks_msec()
 		for path in list_suites(dir_path):
-			if filter != "" and not path.contains(filter):
+			if not filter_keeps(filter, path):
 				continue
 			var made := instantiate_suite(path)
 			if made.suite == null:
@@ -146,6 +148,17 @@ func _ready() -> void:
 	print("RESULT: %d suites, %d checks, %d failures" % [suites, total_checks, total_failures.size()])
 	OS.remove_logger(_logger)
 	get_tree().quit(1 if not total_failures.is_empty() else 0)
+
+
+## Whether --filter=`filter` keeps the suite at `path`: no filter keeps every suite; otherwise the path contains one
+## of its comma-separated parts.
+static func filter_keeps(filter: String, path: String) -> bool:
+	if filter == "":
+		return true
+	for part in filter.split(",", false):
+		if path.contains(part):
+			return true
+	return false
 
 
 ## The suite in the script at `path`, ready to add: {"suite": TestSuite, "error": ""}, or
