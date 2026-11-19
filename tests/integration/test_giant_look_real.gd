@@ -104,8 +104,11 @@ func test_every_option_of_the_data_applies_with_validate_empty() -> void:
 			var look := Appearance.to_look(r, line if line != "" else "ancestry.stoneblood")
 			GiantLook.apply(_root, index, look)
 			assert_eq(GiantLook.validate(_root, index, look), PackedStringArray(), "%s: validate() is empty" % id)
+			# P54: a head garment hides the hair or cuts it by length (its index entry's hides_hair, hair_cut)
+			var cut := GiantLook.hair_cut(index, GiantLook.garment_meshes(index, look).keys())
 			for m: String in GiantLook.meshes_of(index, "hair"):
-				assert_eq(GiantLook.mesh_node(_root, index, m).visible, m == str(look.hair_mesh), "%s: %s's visibility" % [id, m])
+				assert_eq(GiantLook.mesh_node(_root, index, m).visible, m == str(look.hair_mesh) and float(cut.get(m, 1.0)) > 0.0,
+					"%s: %s's visibility" % [id, m])
 			for m: String in GiantLook.meshes_of(index, "beard"):
 				assert_eq(GiantLook.mesh_node(_root, index, m).visible, m == str(look.beard_mesh), "%s: %s's visibility" % [id, m])
 			var shown := {}
@@ -176,7 +179,7 @@ func test_every_garments_covers_and_material_match_the_real_index() -> void:
 		return
 	var empty := Appearance.with_outfit(Appearance.default_record(), "outfit.wanderer")
 	empty.outfit.slots = Appearance.empty_slots()
-	var want_dye := {"cloth": "primary", "leather": "secondary", "fur": "none"}
+	var want_dye := {"cloth": "primary", "leather": "secondary", "fur": "none", "metal": "metal"}   # P54: metal
 	for id: String in Appearance.option_ids("garment"):
 		var g := Appearance.option(id)
 		var r: Dictionary = empty.duplicate(true)

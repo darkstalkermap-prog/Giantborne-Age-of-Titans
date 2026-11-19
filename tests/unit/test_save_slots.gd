@@ -342,7 +342,7 @@ func test_the_version_2_fixtures_load() -> void:
 	assert_true(SaveSlots.write(_fixture("v2_appearance_v2_unknown_slot")).ok, "unknown and misplaced clothing")
 	var u := SaveSlots.read()
 	assert_true(u.ok and str(u.source) == "main", "loads from the main file")
-	assert_true(str(u.message).contains("garment.mail_hauberk") and str(u.message).contains("garment.boots"),
+	assert_true(str(u.message).contains("garment.dragon_scale") and str(u.message).contains("garment.boots"),   # P54
 		"the message names them: %s" % u.message)
 	assert_true(SaveSlots.write(_fixture("v2_appearance_v2_broken")).ok, "a broken slots block")
 	var b := SaveSlots.read()

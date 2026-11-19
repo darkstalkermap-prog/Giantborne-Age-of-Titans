@@ -273,7 +273,7 @@ func test_the_version_2_fixtures() -> void:
 	assert_true(_near(legs.get("dye"), Color.html(str(Appearance.option("dye.madder").color))), "the braies' own dye")
 	var odd := _fixture_look("v2_appearance_v2_unknown_slot")
 	var u := Appearance.sanitize(odd)
-	for id: String in ["garment.mail_hauberk", "accessory.wolf_torc", "bead.amber"]:
+	for id: String in ["garment.dragon_scale", "accessory.wolf_torc", "bead.amber"]:   # P54: no such garment (the mail hauberk is one now)
 		assert_true((u.dropped as PackedStringArray).has(id), "%s is reported" % id)
 	assert_eq(str(u.record.outfit.slots.chest.item), "", "the unknown chest garment comes off")
 	assert_eq(str(u.record.outfit.slots.head.item), "", "boots on the head come off")

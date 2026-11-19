@@ -11,6 +11,10 @@
 // detail map, a metallic response: armour from P54 on); `rim` a soft edge light for wool and fur (the cloth's
 // fuzz against the light); the darkest dyes lifted to DARK_FLOOR (linear albedo) so dark leather is not black in
 // the world's shadow; the detail maps are 256 px.
+//
+// The wardrobe (P54; plan M11 §2.4, §3.7): the metal kind (1) also draws mail and scale (their detail maps carry the
+// rings' and the scales' dark gaps in A, so the gaps stay dark and rough); kind 2 is bone (bone spaulders and the bone
+// trophies): its own pale colour under the dye's faint stain, a soft sheen, no metal.
 shader_type spatial;
 render_mode cull_disabled;
 
@@ -29,6 +33,7 @@ uniform float rim : hint_range(0.0, 1.0) = 0.0;
 uniform vec2 build = vec2(0.0);
 uniform float build_max_m = 0.0;
 const float DARK_FLOOR = 0.035;
+const vec3 BONE = vec3(0.62, 0.56, 0.45);   // linear: an aged, sun-yellowed bone
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
@@ -60,8 +65,17 @@ void fragment() {
 	ALBEDO = cloth * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	ROUGHNESS = clamp(roughness_base + (1.0 - d) * 0.1, 0.0, 1.0);
 	if (kind == 1) {
-		METALLIC = 0.85;
-		ROUGHNESS = clamp(0.32 + (1.0 - d) * 0.35, 0.0, 1.0);
+		// P54: without reflections to mirror (the world's sky is a colour, the creator's backdrop dark) a fully
+		// metallic surface drew black: the metal keeps a part of its colour as diffuse, and the gaps between rings and
+		// scales are dark and dull, not bright metal
+		METALLIC = 0.55 * smoothstep(0.35, 0.75, d);
+		ROUGHNESS = clamp(0.36 + (1.0 - d) * 0.4, 0.0, 1.0);
+		SPECULAR = 0.65;
+	} else if (kind == 2) {
+		ALBEDO = BONE * mix(vec3(1.0), dye_color / max(max(dye_color.r, dye_color.g), max(dye_color.b, 0.001)), 0.15)
+			* mix(1.0, d, detail_strength) * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
+		ROUGHNESS = clamp(0.45 + (1.0 - d) * 0.2, 0.0, 1.0);
+		SPECULAR = 0.35;
 	}
 	RIM = rim;
 	RIM_TINT = 0.6;

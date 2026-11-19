@@ -121,12 +121,15 @@ const SKIN_MAPS := {"albedo_tex": "albedo.png", "normal_tex": "normal.png", "orm
 const HI_MAPS := ["normal_tex", "orm_tex"]
 const HAIR_ATLAS := "res://assets/giant/hair_atlas.png"
 const CLOTH_DETAIL := {"weave": "res://assets/giant/cloth_weave.png", "leather": "res://assets/giant/cloth_leather.png",
-	"fur": "res://assets/giant/cloth_fur.png", "metal": "res://assets/giant/cloth_metal.png"}
+	"fur": "res://assets/giant/cloth_fur.png", "metal": "res://assets/giant/cloth_metal.png",
+	"mail": "res://assets/giant/cloth_mail.png", "scale": "res://assets/giant/cloth_scale.png",
+	"bone": "res://assets/giant/cloth_leather.png"}
 ## The skin's pre-integrated subsurface lookup (P51; the index's textures.skin_lut).
 const SKIN_LUT := "res://assets/giant/tex/skin_lut.png"
 ## The paths of the index's texture names when the index has no `textures` table (a synthetic index).
 const DEFAULT_TEXTURES := {"hair_atlas": HAIR_ATLAS, "designs": DESIGN_ARRAY, "detail_weave": CLOTH_DETAIL.weave,
 	"detail_leather": CLOTH_DETAIL.leather, "detail_fur": CLOTH_DETAIL.fur, "detail_metal": CLOTH_DETAIL.metal,
+	"detail_mail": CLOTH_DETAIL.mail, "detail_scale": CLOTH_DETAIL.scale, "detail_bone": CLOTH_DETAIL.bone,
 	"skin_lut": SKIN_LUT, "shell_strands": SHELL_STRANDS}
 ## The detail kind of each floor garment when its index entry names none (a garment not listed is cloth).
 const GARMENT_DETAIL := {"braies": "weave", "tunic": "weave", "jerkin": "leather", "belt": "leather",
@@ -134,12 +137,19 @@ const GARMENT_DETAIL := {"braies": "weave", "tunic": "weave", "jerkin": "leather
 ## A garment whose index entry has no dye slot ("none": the furs) keeps this colour.
 const NATURAL_DYE := Color(0.36, 0.30, 0.24)
 ## The detail map's strength per kind.
-const DETAIL_STRENGTH := {"weave": 0.28, "leather": 0.5, "fur": 0.45, "metal": 0.35}
+const DETAIL_STRENGTH := {"weave": 0.28, "leather": 0.5, "fur": 0.45, "metal": 0.35, "mail": 0.85, "scale": 0.8,
+	"bone": 0.18}
 ## The cloth shader's soft edge light per detail kind (P51: wool and fur catch the light at their edges).
 ## Gate A: weave and leather take no rim. The renderer's rim light does not look at N.L, so a sliver of a fold seen
 ## edge-on against the sun (the braies' crotch in the world's light) was lit as if it faced it: small bright patches.
 ## Fur keeps its fuzz (its folds are soft and it reads right in the world's light).
-const CLOTH_RIM := {"weave": 0.0, "leather": 0.0, "fur": 0.45, "metal": 0.0}
+const CLOTH_RIM := {"weave": 0.0, "leather": 0.0, "fur": 0.45, "metal": 0.0, "mail": 0.0, "scale": 0.0, "bone": 0.0}
+## The cloth shader's `kind` per detail map (P54): cloth, leather and fur 0; plate, mail and scale 1 (the metal
+## response); bone 2 (its own pale colour, a soft sheen: bone spaulders, the bone accessories).
+const DETAIL_KIND := {"metal": 1, "mail": 1, "scale": 1, "bone": 2}
+## A head garment's index entry "hides_hair" (P54, plan M11 §2.6): "all" hides every hair style; "top" draws a style
+## cut to the share of its length its "hair_cut" gives (0: not drawn).
+const HIDES_ALL := "all"
 
 ## The uniforms GiantLook sets, per shader kind (validate() checks them against the shaders), and the two
 ## every giant shader declares for RigPaint.
@@ -387,6 +397,26 @@ static func garment_meshes(index: Dictionary, look: Dictionary) -> Dictionary:
 	return out
 
 
+## The hair styles a look's head garments cut (P54, plan M11 §2.6): hair mesh id -> the share of its length drawn
+## (0: not drawn; a style not named is drawn whole). `garment_ids` are the garment meshes shown.
+static func hair_cut(index: Dictionary, garment_ids: Array) -> Dictionary:
+	var out := {}
+	var meshes := _meshes(index)
+	for g: Variant in garment_ids:
+		var e: Variant = meshes.get(str(g))
+		if typeof(e) != TYPE_DICTIONARY:
+			continue
+		var hides := str((e as Dictionary).get("hides_hair", ""))
+		if hides == HIDES_ALL:
+			for id in meshes_of(index, "hair"):
+				out[id] = 0.0
+		elif hides == "top" and typeof((e as Dictionary).get("hair_cut")) == TYPE_DICTIONARY:
+			var c: Dictionary = (e as Dictionary).hair_cut
+			for id: Variant in c:
+				out[str(id)] = minf(float(out.get(str(id), 1.0)), float(c[id]))
+	return out
+
+
 ## An M10-shaped look's dye for a mesh's index "dye" slot.
 static func _legacy_dye(look: Dictionary, slot: String) -> Color:
 	match slot:
@@ -560,7 +590,7 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 				var ref := str(entry.get("detail", ""))
 				_set_texture(mat, "detail_tex", texture_path(index, ref, "detail_", "detail_" + detail))
 				set_param(mat, "detail_strength", float(DETAIL_STRENGTH.get(detail, 0.3)))
-				set_param(mat, "kind", 1 if detail == "metal" else 0)
+				set_param(mat, "kind", int(DETAIL_KIND.get(detail, 0)))
 				set_param(mat, "rim", float(CLOTH_RIM.get(detail, 0.2)))
 		mi.material_override = mat
 		mats[str(id)] = mat
@@ -687,6 +717,7 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 		if str(l[key]) != "":
 			extras[str(l[key])] = true
 	var meshes := _meshes(index)
+	var cut := hair_cut(index, shown.keys())
 	# P51 (plan M11 §2.2): a model that loads its parts on demand (GiantModel) loads what the look shows and lets
 	# go of the rest; a synthetic root just shows and hides its nodes
 	var parts := root.has_method("ensure_part") and root.has_method("release_unused")
@@ -698,7 +729,7 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 			continue
 		match str(entry.get("category", "")):
 			"hair":
-				mi.visible = str(id) == str(l.hair_mesh)
+				mi.visible = str(id) == str(l.hair_mesh) and float(cut.get(str(id), 1.0)) > 0.0
 			"beard":
 				mi.visible = str(id) == str(l.beard_mesh)
 			"garment":
@@ -772,13 +803,18 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				set_param(mat, "hair_color", l.beard_color if beard else l.hair_color)
 				set_param(mat, "tip_color", l.beard_tip if beard else l.hair_tip)
 				set_param(mat, "grey", float(l.beard_grey if beard else l.hair_grey))
-				set_param(mat, "length", clampf(float(l.beard_length if beard else l.hair_length), 0.0, 1.0))
+				var length := float(l.beard_length if beard else l.hair_length)
+				if not beard:
+					length = minf(length, float(cut.get(str(id), 1.0)))   # P54: under a helm
+				set_param(mat, "length", clampf(length, 0.0, 1.0))
 			"eye":
 				set_param(mat, "iris_color", l.eye_color)
 				set_param(mat, "iris_glow", float(l.eye_glow))
 			"cloth":
 				var g: Dictionary = shown.get(id, {})
-				set_param(mat, "dye_color", g.get("dye", _legacy_dye(l, str(entry.get("dye", "primary")))))
+				var own := str(entry.get("color", ""))
+				var fallback: Color = Color.html(own) if Color.html_is_valid(own) else _legacy_dye(l, str(entry.get("dye", "primary")))
+				set_param(mat, "dye_color", g.get("dye", fallback))   # P54: an accessory in its own colour
 				if str(g.get("kind", "")) == "metal":
 					set_param(mat, "kind", 1)   # a metal garment's response whatever its detail map
 				set_param(mat, "fade", 0.0)

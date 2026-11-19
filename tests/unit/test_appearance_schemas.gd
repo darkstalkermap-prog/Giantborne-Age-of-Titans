@@ -35,7 +35,7 @@ func _skin(key: String, default := false, color := "#b07a62") -> Dictionary:
 
 func test_the_shipped_sets_and_presets_pass() -> void:
 	var sets := GameData.ids_of_type("appearance_set")
-	assert_eq(sets.size(), 16, "M10's thirteen sets and the record v2's three (garment, metal, build)")
+	assert_eq(sets.size(), 17, "M10's thirteen sets, the record v2's three (garment, metal, build) and P54's accessories")
 	for id: String in sets:
 		assert_eq(_errors(GameData.get_record(id)), "", "%s passes its schema" % id)
 	var presets := GameData.ids_of_type("appearance_preset")
@@ -47,8 +47,9 @@ func test_the_shipped_sets_and_presets_pass() -> void:
 ## P46 (plan M10 §2.3): the target catalogue. The sets hold the floor's options and the look pass's, the
 ## tattoos four a region; a hair or beard option may carry a `length` (a shorter cut of its mesh).
 func test_the_target_catalogue_is_in_the_sets() -> void:
-	var want := {"hair": 7, "beard": 7, "tattoo": 16, "paint": 4, "scar": 6, "outfit": 6, "skin": 10, "eyes": 10,
-		"haircolor": 10, "ink": 6, "paintcolor": 6, "mark": 3, "dye": 8}
+	# P54 (plan M11 §2.6): twelve outfits, fourteen dyes, 35 garments, 8 accessories
+	var want := {"hair": 7, "beard": 7, "tattoo": 16, "paint": 4, "scar": 6, "outfit": 12, "skin": 10, "eyes": 10,
+		"haircolor": 10, "ink": 6, "paintcolor": 6, "mark": 3, "dye": 14, "garment": 35, "accessory": 8, "metal": 5}
 	for cat: String in want:
 		assert_eq(Appearance.option_ids(cat).size(), int(want[cat]), "the %s set's options" % cat)
 	var per_region := {}
