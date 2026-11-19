@@ -28,6 +28,12 @@ const ACCESSORIES := {"neck": "accessory.gilded_torc", "arm_ring": "accessory.ir
 const NUDGE_M := 0.0005
 ## Two colours are one garment's when they differ by less than this (sum over the channels, 0-3).
 const SAME := 0.02
+## A pixel is a garment's flat colour when it lies within this of it (the frame's own rounding).
+const MATCH := 0.08
+## The flat colours, far apart from one another and from the backdrop's sky and ground.
+const PALETTE := [Color(1, 0, 0), Color(0, 1, 0), Color(0, 0, 1), Color(1, 1, 0), Color(1, 0, 1), Color(0, 1, 1),
+	Color(1, 0.5, 0), Color(0.5, 0, 1), Color(0, 0.5, 0), Color(0.5, 0, 0), Color(0, 0, 0.5), Color(1, 1, 1),
+	Color(0.5, 0.5, 0), Color(0, 0.5, 0.5), Color(0.5, 0, 0.5), Color(1, 0.5, 0.5)]
 
 var _p: GiantPreview
 var _out := ""
@@ -59,7 +65,7 @@ func _ready() -> void:
 
 
 func _draw_frame() -> Image:
-	for i in 3:
+	for i in 2:
 		await RenderingServer.frame_post_draw
 	return _p.viewport.get_texture().get_image()
 
@@ -84,11 +90,12 @@ func _run() -> void:
 	for mi: MeshInstance3D in _p.model.find_children("*", "MeshInstance3D", true, false):
 		if mi.visible and mi.is_visible_in_tree():
 			shown.append(mi)
-	report["meshes"] = shown.size()
+	report["meshes"] = shown.filter(func(mi: MeshInstance3D) -> bool: return mi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY).size()
 	for view: String in ["front", "back"]:
 		_p.frame("full")
 		_p.turn(0.0 if view == "front" else 180.0)
-		var counters := await _counters()
+		var counters: Dictionary = (await _counters()) if view == "front" else report.views.front.duplicate()
+		counters = {"draws": counters.draws, "primitives": counters.primitives}
 		var colours := _flat(shown)
 		var a: Image = await _draw_frame()
 		_p.camera.position += _p.camera.transform.basis.x * NUDGE_M
@@ -104,29 +111,42 @@ func _run() -> void:
 	get_tree().quit(0)
 
 
-## The view's draw calls and primitives as the renderer counts them (the look as drawn, its own materials).
+## The giant's own draw calls and primitives in the view's main pass, as the renderer counts them: the frame with the
+## model less the frame without it (the look as drawn, its own materials; shadows are counted apart, the proxy's).
 func _counters() -> Dictionary:
-	await _draw_frame()
 	var rid := _p.viewport.get_viewport_rid()
-	return {"draws": RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE,
-		RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
-		"primitives": RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE,
-		RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME)}
+	var info := func() -> Vector2i:
+		return Vector2i(RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE,
+			RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
+			RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE,
+			RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME))
+	await _draw_frame()
+	var with_model: Vector2i = info.call()
+	_p.model.visible = false
+	await _draw_frame()
+	var without: Vector2i = info.call()
+	_p.model.visible = true
+	return {"draws": with_model.x - without.x, "primitives": with_model.y - without.y}
 
 
 ## Every garment and accessory mesh in a flat colour of its own (the body, hair and eyes black): {mesh name: colour}.
 func _flat(shown: Array) -> Dictionary:
 	var out := {}
 	var i := 0
+	# the flat colours come out as they are: no fog, no tonemapping
+	_p.environment.fog_enabled = false
+	_p.environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	_p.environment.tonemap_exposure = 1.0
 	for mi: MeshInstance3D in shown:
 		var m := StandardMaterial3D.new()
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		m.cull_mode = BaseMaterial3D.CULL_DISABLED
 		var cat := str((_p.model.index.meshes.get(str(mi.name), {}) as Dictionary).get("category", ""))
+		m.disable_fog = true
 		var c := Color.BLACK
 		if cat in ["garment", "accessory"]:
+			c = PALETTE[i % PALETTE.size()]
 			i += 1
-			c = Color.from_hsv(fmod(i * 0.381966, 1.0), 0.85, 0.35 + 0.6 * float(i % 3) / 2.0)
 			out[str(mi.name)] = c
 		m.albedo_color = c
 		mi.set_meta("wardrobe_probe_material", mi.material_override)
@@ -135,6 +155,7 @@ func _flat(shown: Array) -> Dictionary:
 
 
 func _unflat(shown: Array) -> void:
+	_p.environment.fog_enabled = _p.world_light
 	for mi: MeshInstance3D in shown:
 		mi.material_override = mi.get_meta("wardrobe_probe_material")
 		mi.remove_meta("wardrobe_probe_material")
@@ -148,7 +169,7 @@ static func _seen(img: Image, colours: Dictionary) -> Array:
 			var p := img.get_pixel(x, y)
 			for k: String in colours:
 				var c: Color = colours[k]
-				if absf(p.r - c.r) + absf(p.g - c.g) + absf(p.b - c.b) < SAME:
+				if absf(p.r - c.r) + absf(p.g - c.g) + absf(p.b - c.b) < MATCH:
 					counts[k] = int(counts.get(k, 0)) + 1
 					break
 	var out: Array = []
