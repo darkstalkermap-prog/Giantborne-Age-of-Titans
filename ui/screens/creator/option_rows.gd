@@ -57,10 +57,11 @@ const RANDOM_SCOPE := {"Presets": "presets", "Body": "body", "Face": "face", "Ha
 const SLOT_NAMES := {"head": "Head", "shoulders": "Shoulders", "chest": "Chest", "armour": "Armour", "arms": "Arms",
 	"waist": "Waist", "legs": "Legs", "shins": "Shins", "feet": "Feet", "cape": "Cape"}
 const ACCESSORY_NAMES := {"neck": "Neck", "arm_ring": "Arm ring", "belt": "Belt"}
-## A slot's thumbnails' framing (GiantPreview.FRAMINGS) and the live preview's while its grid is open.
+## A slot's thumbnails' framing (GiantPreview.FRAMINGS) and the live preview's while its grid is open. W32: P54's arm
+## rings are on his left upper arm ("arms_left"), its torcs under the beard ("neck", from his right).
 const SLOT_FRAMINGS := {"head": "head", "shoulders": "shoulders", "chest": "chest", "armour": "chest", "arms": "arms",
-	"waist": "waist", "legs": "legs", "shins": "shins", "feet": "feet", "cape": "back", "neck": "chest",
-	"arm_ring": "arms", "belt": "waist"}
+	"waist": "waist", "legs": "legs", "shins": "shins", "feet": "feet", "cape": "back", "neck": "neck",
+	"arm_ring": "arms_left", "belt": "waist"}
 const SLOT_PREVIEW := {"head": "head", "shoulders": "upper", "chest": "upper", "armour": "upper", "arms": "upper",
 	"waist": "lower", "legs": "lower", "shins": "lower", "feet": "lower", "cape": "back", "neck": "upper",
 	"arm_ring": "upper", "belt": "lower"}
@@ -928,9 +929,9 @@ class SliderRow extends Row:
 	func _on_changed(v: float) -> void:
 		var snapped := OptionRows.snap_slider(v)
 		if not is_equal_approx(snapped, v):
-			_quiet = true
+			# no signal, and the quiet flag left as it was: a value shown by show_value (a record's grey of 0.04,
+			# under SNAP_ZERO) is never picked back as a change of its own (W32: Randomize was two undo steps)
 			slider.set_value_no_signal(snapped)
-			_quiet = false
 		_label(snapped)
 		if not _quiet:
 			picked.emit(self, snapped)

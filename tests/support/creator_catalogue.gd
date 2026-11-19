@@ -29,6 +29,13 @@ static func install() -> int:
 	return int(doc.get("total", 0))
 
 
+## Empties the set of `category` for this test (TestFixtures.record_override: restored after it): the creator's
+## rows for a set with no option, whatever the game's data holds.
+static func install_empty(category: String) -> void:
+	TestFixtures.record_override(Appearance.SET_PREFIX + category, {"type": "appearance_set", "category": category,
+		"id": Appearance.SET_PREFIX + category, "display_name": category.capitalize(), "options": []})
+
+
 ## The same without TestFixtures (a probe run outside the test runner: nothing to restore).
 static func install_for_probe() -> int:
 	var doc := document()
