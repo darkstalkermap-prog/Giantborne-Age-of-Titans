@@ -113,11 +113,19 @@ const FADE_RATES := {"move": 16.0, "run": 8.0, "sprint": 8.0, "charge": 12.0, "c
 const AIR_RATE := 24.0
 const DEATH_RATE := 20.0
 const HAND_RATE := 12.0
+## The eyes' look (_look_eyes): its largest (P51's shader clamps at a quarter of the iris's radius), the iris's
+## radius in the eyeball's polar angle / pi (the shader's iris_r, which GiantLook leaves at its default), and its
+## easing (1 / s).
+const EYE_LOOK_MAX := 0.25
+const EYE_IRIS_R := 0.168
+const EYE_RATE := 10.0
 ## A flinch's weight: the flash's strength x this, eased in and out with the clip (which starts and ends at
 ## nothing); it fades out at FLINCH_CUT_RATE when an attack's ACTIVE phase starts.
 const FLINCH_GAIN := 1.0
 const FLINCH_CUT_RATE := 40.0
 const FLINCH_SIDES := ["f", "b", "l", "r"]
+## The grab's phases in which the off hand closes on the held body.
+const GRIP_PHASES := ["hold", "crush", "throw"]
 ## A knockback faster than this (m/s) slides the giant on the stance, never on a walk.
 const KNOCKBACK_STANCE_MPS := 0.5
 ## The held body's visual moves by at most this (stage-1 metres, x k).
@@ -128,19 +136,10 @@ const FP_REST_PITCH_DEG := Vector2(-30.0, -48.0)
 const GRIP_CLIPS := {"club": "grip_club", "sword": "grip_sword", "hammer": "grip_hammer", "axe": "grip_axe",
 	"fists": "grip_fist", "fist": "grip_fist", "tree": "grip_tree"}
 
-const P_MOVE := &"parameters/move/blend_amount"
 const P_RUN := &"parameters/gait/blend_amount"
 const P_SPRINT := &"parameters/sprint/blend_amount"
-const P_CHARGE := &"parameters/charge/blend_amount"
 const P_CHARGE_SPRINT := &"parameters/charge_gait/blend_amount"
-const P_AIR := &"parameters/air/blend_amount"
-const P_DEAD := &"parameters/dead/blend_amount"
-const P_LAND := &"parameters/land/blend_amount"
-const P_STOMP := &"parameters/stomp/blend_amount"
-const P_ROAR := &"parameters/roar/blend_amount"
-const P_TURN := &"parameters/turn/blend_amount"
 const P_TURN_SIDE := &"parameters/turn_side/blend_amount"
-const P_BRACE := &"parameters/brace/blend_amount"
 const P_FP := &"parameters/fp/blend_amount"
 const P_GRIP_R := &"parameters/hand_r/blend_amount"
 const P_OPEN_L := &"parameters/open_l/blend_amount"
@@ -157,12 +156,46 @@ const P_STOMP_T := &"parameters/stomp_r_seek/seek_request"
 const P_ROAR_T := &"parameters/roar_seek/seek_request"
 const P_TURN_L_T := &"parameters/turn_l_seek/seek_request"
 const P_TURN_R_T := &"parameters/turn_r_seek/seek_request"
-## The blend weights (_w) and their tree parameters, set only when they change.
-const BLEND_PARAMS := {"move": P_MOVE, "run": P_RUN, "sprint": P_SPRINT, "charge": P_CHARGE, "charge_sprint": P_CHARGE_SPRINT,
-	"air": P_AIR, "dead": P_DEAD, "land": P_LAND, "stomp": P_STOMP, "roar": P_ROAR, "turn": P_TURN, "turn_side": P_TURN_SIDE,
-	"brace": P_BRACE, "fp": P_FP, "open_l": P_OPEN_L, "grip_l": P_GRIP_L, "fist_l": P_FIST_L}
-## The legs' sources over the stance, from the lowest precedence to the highest (the tree's chain).
+## The blend weights (_w) that are tree parameters as they stand (inside the gait, the turn, the charge, the hands
+## and first person).
+const BLEND_PARAMS := {"run": P_RUN, "sprint": P_SPRINT, "charge_sprint": P_CHARGE_SPRINT, "turn_side": P_TURN_SIDE,
+	"fp": P_FP, "open_l": P_OPEN_L, "grip_l": P_GRIP_L, "fist_l": P_FIST_L}
+## The legs' sources over the stance, from the lowest precedence to the highest (the weights' chain: each source's
+## share of the legs is its weight times what the sources above it leave; source_weights()).
 const SOURCE_CHAIN := ["brace", "turn", "move", "charge", "stomp", "roar", "land", "air", "dead"]
+## Gate A (lens 6): the tree places the sources' shares by a balanced tree of Blend2 nodes over the leaves in
+## SOURCE_LEAVES' order (the order P50's chain blended them in, so the mixer adds their clips in the same order), each
+## node's amount its right half's share of the weight under it (_send_all), so each clip's weight is the chain's
+## (source_weights()); and gates ("gate_*", Transitions) before the branches that are often at no weight: a gate is
+## "on" while anything under it weighs, else "off" (an empty clip, GATE_CLIP), and its branch is not evaluated at
+## all (behind a Blend2 at a weight of 0 it still is: about 1 microsecond a node). The tree's advance at the stance:
+## about 0.025 ms, from 0.068 (docs/systems/P50.md, "Gate A").
+const SOURCE_LEAVES := ["stance", "brace", "turn", "move", "charge", "stomp", "roar", "land", "air", "dead"]
+const GATE_CLIP := "_gate_off"
+## Every blend amount _send_all sets, in its slot order: BLEND_PARAMS' then the sources' nodes (sources, sources_lo,
+## stance_brace, turn_move, sources_hi, charge_pulse, stomp_roar, land_fall, air_dead).
+const SLOT_PARAMS := [P_RUN, P_SPRINT, P_CHARGE_SPRINT, P_TURN_SIDE, P_FP, P_OPEN_L, P_GRIP_L, P_FIST_L,
+	&"parameters/sources/blend_amount", &"parameters/sources_lo/blend_amount", &"parameters/stance_brace/blend_amount",
+	&"parameters/turn_move/blend_amount", &"parameters/sources_hi/blend_amount", &"parameters/charge_pulse/blend_amount",
+	&"parameters/stomp_roar/blend_amount", &"parameters/land_fall/blend_amount", &"parameters/air_dead/blend_amount"]
+## Every gate _send_all opens and closes, in its slot order.
+const GATE_NAMES := ["gate_turn", "gate_move", "gate_turn_move", "gate_charge", "gate_pulse", "gate_fall", "gate_charge_pulse",
+	"gate_land_fall", "gate_hi", "gate_walk", "gate_run", "gate_sprint", "gate_fist_l", "gate_fp"]
+const GATE_PARAMS := [&"parameters/gate_turn/transition_request", &"parameters/gate_move/transition_request",
+	&"parameters/gate_turn_move/transition_request", &"parameters/gate_charge/transition_request",
+	&"parameters/gate_pulse/transition_request", &"parameters/gate_fall/transition_request",
+	&"parameters/gate_charge_pulse/transition_request", &"parameters/gate_land_fall/transition_request",
+	&"parameters/gate_hi/transition_request", &"parameters/gate_walk/transition_request",
+	&"parameters/gate_run/transition_request", &"parameters/gate_sprint/transition_request",
+	&"parameters/gate_fist_l/transition_request", &"parameters/gate_fp/transition_request"]
+## The flinches: one Add2 ("flinch") by the sum of their weights over a blend of the four sides by their shares
+## (each side's clip added at its own weight, as four Add2 nodes did, for one node evaluated without a flinch).
+const P_FLINCH := &"parameters/flinch/add_amount"
+const P_FLINCH_SIDES := &"parameters/flinch_sides/blend_amount"
+const P_FLINCH_FB := &"parameters/flinch_fb/blend_amount"
+const P_FLINCH_LR := &"parameters/flinch_lr/blend_amount"
+const P_FLINCH_T := {"f": &"parameters/flinch_f_seek/seek_request", "b": &"parameters/flinch_b_seek/seek_request",
+	"l": &"parameters/flinch_l_seek/seek_request", "r": &"parameters/flinch_r_seek/seek_request"}
 
 ## The run's counts over every SkinnedRig of the process (a sandbox reset makes a new rig), for SKIN_STATS.
 static var totals := {"posed_frames": 0, "modifier_runs": 0, "held_visual_writes": 0, "rig_footfalls": 0, "rigs": 0,
@@ -186,6 +219,27 @@ var _w := {"move": 0.0, "run": 0.0, "sprint": 0.0, "charge": 0.0, "charge_sprint
 	"stomp": 0.0, "roar": 0.0, "turn": 0.0, "turn_side": 0.0, "brace": 0.0, "fp": 0.0, "open_l": 0.0, "grip_l": 0.0,
 	"fist_l": 0.0}
 var _sent := {}
+## _send_all's slots: the amounts and gates wanted this frame and those last set (-1 / 0: none yet, all closed).
+var _want := PackedFloat64Array()
+var _sent_v := PackedFloat64Array()
+var _want_gate := PackedByteArray()
+var _sent_gate := PackedByteArray()
+## The flinches' gate (open while one plays).
+var _gates := {}
+## The hair's sway (_sway): its card meshes, the head bone, and the last frame's place, time and motion.
+var _sway_meshes: Array[MeshInstance3D] = []
+var _sway_bone := -1
+var _sway_dirty := true
+var _sway_has := false
+var _sway_pos := Vector3.ZERO
+var _sway_t := 0
+var _sway_motion := Vector3.ZERO
+## The eyes' look (_look_eyes): the Eyes material, the head bone and its rest, the eased look and the last written.
+var _eye_mat: ShaderMaterial = null
+var _head_bone := -1
+var _head_rest := Basis()
+var _eye_look := Vector2.ZERO
+var _eye_sent := Vector2.ZERO
 var _air := 0
 var _legs := "stance"
 var _charge_phase := 0.0
@@ -252,6 +306,10 @@ static func clip_library() -> AnimationLibrary:
 			for n: String in LOOPS:
 				if _clips.has_animation(n):
 					_clips.get_animation(n).loop_mode = Animation.LOOP_LINEAR
+			# the gates' empty clip (no track: a closed gate evaluates nothing)
+			var none := Animation.new()
+			none.length = 1.0 / 30.0
+			_clips.add_animation(GATE_CLIP, none)
 	return _clips
 
 
@@ -310,6 +368,12 @@ func _build_layers() -> void:
 		_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 		_tree.active = true
 		_tree.set(P_GRIP_R, 1.0)
+		_want.resize(SLOT_PARAMS.size())
+		_sent_v.resize(SLOT_PARAMS.size())
+		_sent_v.fill(-1.0)
+		_want_gate.resize(GATE_NAMES.size())
+		_sent_gate.resize(GATE_NAMES.size())
+		_sent_gate.fill(0)
 		for n: String in ["walk", "run", "sprint", "death", "land", "stomp_r", "roar", "turn_l", "turn_r", "flinch_f", "flinch_b",
 				"flinch_l", "flinch_r"]:
 			_lengths[n] = lib.get_animation(n).length if lib.has_animation(n) else 1.0
@@ -325,8 +389,9 @@ func _build_layers() -> void:
 
 
 ## The BlendTree of §2.9 step 2 with P50's sources (the class notes), built in code (the run-time nodes are
-## never saved, plan §2.5): a chain of Blend2 nodes from the stance up to the death (SOURCE_CHAIN), the
-## flinches added on top, then the hands and first person's arms through filtered blends.
+## never saved, plan §2.5): the sources' leaves under a balanced tree of Blend2 nodes with gates (SOURCE_LEAVES; each
+## leaf weighs what SOURCE_CHAIN's chain gives it), the flinches added on top by one gated Add2, then the hands and
+## first person's arms through filtered blends.
 func _blend_tree(lib: AnimationLibrary) -> AnimationNodeBlendTree:
 	var bt := AnimationNodeBlendTree.new()
 	var x := 0.0
@@ -351,34 +416,55 @@ func _blend_tree(lib: AnimationLibrary) -> AnimationNodeBlendTree:
 		bt.add_node(node_name, n, Vector2(x + 400, 0))
 		bt.connect_node(node_name, 0, a)
 		bt.connect_node(node_name, 1, b)
+	# a gate (GATE_NAMES) before a branch that is often at no weight: off, a Transition shows an empty clip and the branch
+	# is not evaluated at all (a Blend2 still evaluates a branch at a weight of 0)
+	var gate := func(node_name: StringName, branch: StringName) -> StringName:
+		var t := AnimationNodeTransition.new()
+		t.add_input("off")
+		t.add_input("on")
+		t.set_input_reset(1, false)
+		bt.add_node(node_name, t, Vector2(x + 300, 0))
+		var off := AnimationNodeAnimation.new()
+		off.animation = StringName(String(LIBRARY) + "/" + GATE_CLIP)
+		bt.add_node(StringName(String(node_name) + "_off"), off, Vector2(x + 100, 0))
+		bt.connect_node(node_name, 0, StringName(String(node_name) + "_off"))
+		bt.connect_node(node_name, 1, branch)
+		return node_name
+	# the leaves, in SOURCE_LEAVES' order
 	anim.call(&"idle_clip", "idle")
 	anim.call(&"brace_clip", "brace")
-	blend.call(&"brace", &"idle_clip", &"brace_clip", [])
 	blend.call(&"turn_side", clip_seek.call("turn_l"), clip_seek.call("turn_r"), [])
-	blend.call(&"turn", &"brace", &"turn_side", [])
-	blend.call(&"gait", clip_seek.call("walk"), clip_seek.call("run"), [])
-	blend.call(&"sprint", &"gait", clip_seek.call("sprint"), [])
-	blend.call(&"move", &"turn", &"sprint", [])
+	blend.call(&"gait", gate.call(&"gate_walk", clip_seek.call("walk")), gate.call(&"gate_run", clip_seek.call("run")), [])
+	blend.call(&"sprint", &"gait", gate.call(&"gate_sprint", clip_seek.call("sprint")), [])
 	anim.call(&"charge_clip", "run")
 	seek.call(&"charge_seek", &"charge_clip")
 	anim.call(&"charge_sprint_clip", "sprint")
 	seek.call(&"charge_sprint_seek", &"charge_sprint_clip")
 	blend.call(&"charge_gait", &"charge_seek", &"charge_sprint_seek", [])
-	blend.call(&"charge", &"move", &"charge_gait", [])
-	blend.call(&"stomp", &"charge", clip_seek.call("stomp_r"), [])
-	blend.call(&"roar", &"stomp", clip_seek.call("roar"), [])
-	blend.call(&"land", &"roar", clip_seek.call("land"), [])
+	var stomp_leaf: StringName = clip_seek.call("stomp_r")
+	var roar_leaf: StringName = clip_seek.call("roar")
+	var land_leaf: StringName = clip_seek.call("land")
 	anim.call(&"air_clip", "airborne")
-	blend.call(&"air", &"land", &"air_clip", [])
-	blend.call(&"dead", &"air", clip_seek.call("death"), [])
-	var top := &"dead"
-	for side: String in FLINCH_SIDES:
-		var add := AnimationNodeAdd2.new()
-		var node := StringName("flinch_" + side)
-		bt.add_node(node, add, Vector2(x + 600, 0))
-		bt.connect_node(node, 0, top)
-		bt.connect_node(node, 1, clip_seek.call("flinch_" + side))
-		top = node
+	var death_leaf: StringName = clip_seek.call("death")
+	# the sources' balanced tree (SLOT_PARAMS), gated
+	blend.call(&"stance_brace", &"idle_clip", &"brace_clip", [])
+	blend.call(&"turn_move", gate.call(&"gate_turn", &"turn_side"), gate.call(&"gate_move", &"sprint"), [])
+	blend.call(&"sources_lo", &"stance_brace", gate.call(&"gate_turn_move", &"turn_move"), [])
+	blend.call(&"stomp_roar", stomp_leaf, roar_leaf, [])
+	blend.call(&"charge_pulse", gate.call(&"gate_charge", &"charge_gait"), gate.call(&"gate_pulse", &"stomp_roar"), [])
+	blend.call(&"air_dead", &"air_clip", death_leaf, [])
+	blend.call(&"land_fall", land_leaf, gate.call(&"gate_fall", &"air_dead"), [])
+	blend.call(&"sources_hi", gate.call(&"gate_charge_pulse", &"charge_pulse"), gate.call(&"gate_land_fall", &"land_fall"), [])
+	blend.call(&"sources", &"sources_lo", gate.call(&"gate_hi", &"sources_hi"), [])
+	# the flinches, added on top by their sum over the sides' shares
+	blend.call(&"flinch_fb", clip_seek.call("flinch_f"), clip_seek.call("flinch_b"), [])
+	blend.call(&"flinch_lr", clip_seek.call("flinch_l"), clip_seek.call("flinch_r"), [])
+	blend.call(&"flinch_sides", &"flinch_fb", &"flinch_lr", [])
+	var add := AnimationNodeAdd2.new()
+	bt.add_node(&"flinch", add, Vector2(x + 600, 0))
+	bt.connect_node(&"flinch", 0, &"sources")
+	bt.connect_node(&"flinch", 1, gate.call(&"gate_flinch", &"flinch_sides"))
+	var top := &"flinch"
 	anim.call(&"grip_r_clip", "grip_r")
 	blend.call(&"hand_r", top, &"grip_r_clip", _finger_paths("r"))
 	anim.call(&"open_l_clip", "open_l")
@@ -386,9 +472,9 @@ func _blend_tree(lib: AnimationLibrary) -> AnimationNodeBlendTree:
 	anim.call(&"grip_l_clip", "grip_l")
 	blend.call(&"grip_l", &"open_l", &"grip_l_clip", _finger_paths("l"))
 	anim.call(&"fist_l_clip", "grip_fist")
-	blend.call(&"fist_l", &"grip_l", &"fist_l_clip", _finger_paths("l"))
+	blend.call(&"fist_l", &"grip_l", gate.call(&"gate_fist_l", &"fist_l_clip"), _finger_paths("l"))
 	anim.call(&"fp_clip", "fp_rest")
-	blend.call(&"fp", &"fist_l", &"fp_clip", _bone_paths(ARM_BONES))
+	blend.call(&"fp", &"fist_l", gate.call(&"gate_fp", &"fp_clip"), _bone_paths(ARM_BONES))
 	bt.connect_node(&"output", 0, &"fp")
 	return bt
 
@@ -493,10 +579,10 @@ func _drive_tree(delta: float) -> void:
 	_ease("brace", 1.0 if bracing else 0.0, float(FADE_RATES.brace), delta)
 	# the hands: the off hand closed on a held body, open to reach or cast, a fist with the fists, else relaxed
 	var grab_phase := str(s.get("grab_phase", ""))
-	var gripping := grab_phase in ["hold", "crush", "throw"] and str(s.get("holding", "")) != ""
+	var gripping := grab_phase in GRIP_PHASES and str(s.get("holding", "")) != ""
 	var open := grab_phase == "reach" or casting(action)
 	var family := weapon_family()
-	var fists := family in ["fists", "fist"] and not gripping and not open
+	var fists := (family == "fists" or family == "fist") and not gripping and not open
 	_ease("grip_l", 1.0 if gripping else (0.0 if open or fists else RELAX_CURL), HAND_RATE, delta)
 	_ease("open_l", 1.0 if open and not gripping else (0.0 if gripping or fists else RELAX_OPEN), HAND_RATE, delta)
 	_ease("fist_l", 1.0 if fists else 0.0, HAND_RATE, delta)
@@ -534,11 +620,7 @@ func _drive_tree(delta: float) -> void:
 		_tree.set(P_TURN_L_T, turn_time("l"))
 	if float(eff.turn) * float(_w.turn_side) > 0.0:
 		_tree.set(P_TURN_R_T, turn_time("r"))
-	for key: String in BLEND_PARAMS:
-		var v: float = _w[key]
-		if v != float(_sent.get(key, -1.0)):
-			_sent[key] = v
-			_tree.set(BLEND_PARAMS[key], v)
+	_send_all(eff, gait)
 	_drive_flinches(delta, action, phase)
 	_was_dead = dead
 
@@ -557,9 +639,11 @@ func source_weights() -> Dictionary:
 
 
 func _ease(key: String, target: float, rate: float, delta: float) -> void:
-	_w[key] = lerpf(float(_w[key]), target, 1.0 - exp(-rate * delta))
-	if absf(float(_w[key]) - target) < 1e-3:
-		_w[key] = target
+	var w: float = _w[key]
+	if w == target:
+		return   # (lerpf of a weight already at its target is that target)
+	w = lerpf(w, target, 1.0 - exp(-rate * delta))
+	_w[key] = target if absf(w - target) < 1e-3 else w
 
 
 ## The actor's yaw this frame: the turn's clock and hold (a snap of more than SNAP_DEG, or a move of more than
@@ -723,10 +807,13 @@ static func flinch_side(from_local: Vector3) -> String:
 
 
 func _drive_flinches(delta: float, action: ActionDef, phase: int) -> void:
+	if _flinch.is_empty():
+		_send(P_FLINCH, 0.0)
+		_open_gate(&"gate_flinch", false)
+		return
+	_open_gate(&"gate_flinch", true)
 	var active := action != null and action.is_attack() and phase == ActionDef.Phase.ACTIVE
 	for side: String in FLINCH_SIDES:
-		var param := StringName("parameters/flinch_%s/add_amount" % side)
-		var seek_param := StringName("parameters/flinch_%s_seek/seek_request" % side)
 		if not _flinch.has(side):
 			continue
 		var f: Dictionary = _flinch[side]
@@ -736,10 +823,105 @@ func _drive_flinches(delta: float, action: ActionDef, phase: int) -> void:
 		var length := float(_lengths.get("flinch_" + side, 0.3))
 		if float(f.t) >= length or float(f.w) < 1e-3:
 			_flinch.erase(side)
-			_tree.set(param, 0.0)
 			continue
-		_tree.set(seek_param, float(f.t))
-		_tree.set(param, float(f.w))
+		_tree.set(P_FLINCH_T[side], float(f.t))
+	# each side's clip at its own weight: the sum on the Add2, the sides' shares under it
+	var wf := float(_flinch.f.w) if _flinch.has("f") else 0.0
+	var wb := float(_flinch.b.w) if _flinch.has("b") else 0.0
+	var wl := float(_flinch.l.w) if _flinch.has("l") else 0.0
+	var wr := float(_flinch.r.w) if _flinch.has("r") else 0.0
+	var sum := wf + wb + wl + wr
+	_send(P_FLINCH, sum)
+	if sum > 0.0:
+		_send(P_FLINCH_SIDES, (wl + wr) / sum)
+		_send(P_FLINCH_FB, wb / (wf + wb) if wf + wb > 0.0 else 0.0)
+		_send(P_FLINCH_LR, wr / (wl + wr) if wl + wr > 0.0 else 0.0)
+
+
+## Opens or closes the flinches' gate when that changes: the Transition switches at once.
+func _open_gate(g: StringName, on: bool) -> void:
+	if _gates.get(g, false) == on:
+		return
+	_gates[g] = on
+	_tree.set(StringName("parameters/%s/transition_request" % g), "on" if on else "off")
+
+
+## Sets a tree parameter when its value changed.
+func _send(param: StringName, v: float) -> void:
+	if _sent.get(param, -1.0) != v:
+		_sent[param] = v
+		_tree.set(param, v)
+
+
+## The blend amounts (SLOT_PARAMS) and the gates (GATE_NAMES) from `eff` (source_weights()) and the gait's share,
+## each set only when it changed: each source node's amount is its right half's share of the weight under it (0 with
+## none), each gate open while anything under it weighs.
+func _send_all(eff: Dictionary, gait: float) -> void:
+	var st: float = eff.stance
+	var br: float = eff.brace
+	var tu: float = eff.turn
+	var mo: float = eff.move
+	var ch: float = eff.charge
+	var so: float = eff.stomp
+	var ro: float = eff.roar
+	var la: float = eff.land
+	var ai: float = eff.air
+	var de: float = eff.dead
+	var pulse := so + ro
+	var fall := ai + de
+	var tm := tu + mo
+	var hi := ch + pulse + la + fall
+	var run_w: float = _w.run
+	var sprint_w: float = _w.sprint
+	var fp_w: float = _w.fp
+	var fist_w: float = _w.fist_l
+	var want := _want
+	want[0] = run_w
+	want[1] = sprint_w
+	want[2] = _w.charge_sprint
+	want[3] = _w.turn_side
+	want[4] = fp_w
+	want[5] = _w.open_l
+	want[6] = _w.grip_l
+	want[7] = fist_w
+	want[8] = _part(st + br + tm, hi)
+	want[9] = _part(st + br, tm)
+	want[10] = _part(st, br)
+	want[11] = _part(tu, mo)
+	want[12] = _part(ch + pulse, la + fall)
+	want[13] = _part(ch, pulse)
+	want[14] = _part(so, ro)
+	want[15] = _part(la, fall)
+	want[16] = _part(ai, de)
+	for i in want.size():
+		if want[i] != _sent_v[i]:
+			_sent_v[i] = want[i]
+			_tree.set(SLOT_PARAMS[i], want[i])
+	var open := _want_gate
+	open[0] = 1 if tu > 0.0 else 0
+	open[1] = 1 if mo > 0.0 else 0
+	open[2] = 1 if tm > 0.0 else 0
+	open[3] = 1 if ch > 0.0 else 0
+	open[4] = 1 if pulse > 0.0 else 0
+	open[5] = 1 if fall > 0.0 else 0
+	open[6] = 1 if ch + pulse > 0.0 else 0
+	open[7] = 1 if la + fall > 0.0 else 0
+	open[8] = 1 if hi > 0.0 else 0
+	# inside the gait (the clips' shares as _drive_tree's seeks take them), the left fist and first person's arms
+	open[9] = 1 if gait > 0.0 and run_w < 1.0 and sprint_w < 1.0 else 0
+	open[10] = 1 if gait > 0.0 and run_w > 0.0 and sprint_w < 1.0 else 0
+	open[11] = 1 if gait > 0.0 and sprint_w > 0.0 else 0
+	open[12] = 1 if fist_w > 0.0 else 0
+	open[13] = 1 if fp_w > 0.0 else 0
+	for i in open.size():
+		if open[i] != _sent_gate[i]:
+			_sent_gate[i] = open[i]
+			_tree.set(GATE_PARAMS[i], "on" if open[i] == 1 else "off")
+
+
+## The right part's share of left + right (0 when the right has none).
+static func _part(left: float, right: float) -> float:
+	return right / (left + right) if right > 0.0 else 0.0
 
 
 ## The flinches running now: side -> weight (tests).
@@ -774,9 +956,110 @@ func _on_skeleton_updated() -> void:
 	posed_frames += 1
 	totals.posed_frames = int(totals.posed_frames) + 1
 	_apply_held_visual()
-	if _model != null:
-		GiantLook.sway(_model, _model.index, _skeleton)   # P46: the hair's tips lag the head's motion
+	_sway()   # P46: the hair's tips lag the head's motion
+	_look_eyes()   # Gate A: the eyes toward the lock target or the camera's facing
 	posed.emit()
+
+
+## GiantLook.sway's step for this rig (P46), with what it looked up every frame held here (Gate A, lens 6): the head
+## bone's index and the hair's and beard's card meshes, found again when the look or the materials change. The same
+## numbers as GiantLook.sway: the head's place, its motion eased by GiantLook.sway_step over the wall clock's frame,
+## written as `head_motion` in each shown card mesh's own space, at most GiantLook.SWAY_MAX_M; out of the tree the
+## last frame is forgotten. Shell styles (no `head_motion` uniform) are left out.
+func _sway() -> void:
+	if _model == null or _skeleton == null:
+		return
+	if not _model.is_inside_tree() or not _skeleton.is_inside_tree():
+		_sway_has = false
+		return
+	if _sway_dirty:
+		_find_sway_meshes()
+	if _sway_bone < 0:
+		return
+	var now := Time.get_ticks_usec()
+	var pos: Vector3 = (_skeleton.global_transform * _skeleton.get_bone_global_pose(_sway_bone)).origin
+	var motion := Vector3.ZERO
+	if _sway_has:
+		var dt := clampf(float(now - _sway_t) / 1.0e6, 1.0 / 240.0, 0.1)
+		motion = GiantLook.sway_step(_sway_motion, (pos - _sway_pos) / dt, dt)
+	_sway_has = true
+	_sway_pos = pos
+	_sway_t = now
+	_sway_motion = motion
+	for mi: MeshInstance3D in _sway_meshes:
+		if not is_instance_valid(mi):
+			_sway_dirty = true
+			continue
+		if not mi.visible or not mi.is_inside_tree():
+			continue
+		var mat := mi.material_override as ShaderMaterial
+		if mat != null:
+			mat.set_shader_parameter(&"head_motion", (mi.global_transform.basis.inverse() * motion).limit_length(GiantLook.SWAY_MAX_M))
+
+
+## The eyes' `look` (P51's uniform on the Eyes material: x toward the giant's right, y up, at most EYE_LOOK_MAX):
+## toward the lock target's focus point when the camera holds one, else along the camera's facing, level (ahead of
+## the giant only: a camera that faces him from the front leaves the eyes ahead), in the head's own frame, eased at
+## EYE_RATE a second. The iris slides by look x its radius (the shader's iris_r) of the eyeball's polar angle / pi,
+## so an eye turned by an angle a takes a / (pi x iris_r): the quarter of the iris's radius is about 7.6 degrees.
+## Written through GiantLook.set_param when it moves; presentation only (the camera and the lock are read).
+func _look_eyes() -> void:
+	if _eye_mat == null or _head_bone < 0 or not _skeleton.is_inside_tree():
+		return
+	var want := Vector2.ZERO
+	var cam: Variant = actor.get("camera_rig") if actor != null and "camera_rig" in actor else null
+	if cam is CameraRig and is_instance_valid(cam) and not bool(rig_state().get("dead", false)):
+		var rig_cam := cam as CameraRig
+		var head := _skeleton.get_bone_global_pose(_head_bone)
+		var focus := rig_cam.lock_focus_point()
+		var dir := Vector3.ZERO
+		if focus != Vector3.INF:
+			dir = focus - _skeleton.global_transform * head.origin
+		elif rig_cam.camera != null:
+			dir = -rig_cam.camera.global_transform.basis.z
+			dir.y = 0.0   # the camera's pitch frames the view; only where it faces turns the eyes
+		if dir.length_squared() > 1e-8:
+			# into the skeleton's space, back through the head's turn from its rest (where it faces Body's front),
+			# then into Body's axes
+			var dir_s := _skeleton.global_transform.basis.orthonormalized().inverse() * dir.normalized()
+			var turn := head.basis.orthonormalized() * _head_rest.inverse()
+			var d := _mod.body_dir(turn.inverse() * dir_s)
+			var ahead := -d.z
+			if ahead > 0.05:
+				var per := 1.0 / (PI * EYE_IRIS_R)
+				want = Vector2(clampf(atan2(d.x, ahead) * per, -EYE_LOOK_MAX, EYE_LOOK_MAX),
+					clampf(atan2(d.y, Vector2(d.x, ahead).length()) * per, -EYE_LOOK_MAX, EYE_LOOK_MAX))
+	_eye_look = _eye_look.lerp(want, 1.0 - exp(-EYE_RATE * get_process_delta_time()))
+	if _eye_look.distance_squared_to(_eye_sent) > 1e-8:
+		_eye_sent = _eye_look
+		GiantLook.set_param(_eye_mat, "look", _eye_look)
+
+
+## The eyes' look now (tests).
+func eye_look() -> Vector2:
+	return _eye_look
+
+
+func _find_sway_meshes() -> void:
+	_sway_dirty = false
+	_sway_meshes.clear()
+	_sway_bone = _skeleton.find_bone(GiantLook.SWAY_BONE)
+	_head_bone = _skeleton.find_bone("head")
+	_head_rest = _skeleton.get_bone_global_rest(_head_bone).basis.orthonormalized() if _head_bone >= 0 else Basis()
+	_eye_mat = null
+	for id in GiantLook.meshes_of(_model.index, "eyes"):
+		var eyes := GiantLook.mesh_node(_model, _model.index, id)
+		if eyes != null and eyes.material_override is ShaderMaterial:
+			_eye_mat = eyes.material_override as ShaderMaterial
+			_eye_sent = Vector2(INF, INF)
+	var meshes: Dictionary = _model.index.get("meshes", {})
+	for category: String in ["hair", "beard"]:
+		for id in GiantLook.meshes_of(_model.index, category):
+			if GiantLook.mesh_kind(meshes[id]) != "hair":
+				continue
+			var mi := GiantLook.mesh_node(_model, _model.index, id)
+			if mi != null:
+				_sway_meshes.append(mi)
 
 
 func _on_footfall() -> void:
@@ -853,6 +1136,7 @@ func set_weapon_visual(weapon: Node3D, _hand_offset := Vector3(0.0, 0.0, -1.5)) 
 ## GiantLook.apply on the model (PlayerAppearance calls it with Appearance.to_look of the giant's record).
 func apply_look(look: Dictionary) -> void:
 	_look = look.duplicate(true)
+	_sway_dirty = true
 	if _model != null:
 		GiantLook.apply(_model, _model.index, look)
 	if _secondary != null:

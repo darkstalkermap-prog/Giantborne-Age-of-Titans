@@ -5,8 +5,9 @@ extends IntegrationSuite
 ##     SPRINT_FROM of the sprint's speed), turning on the spot (only while the brain does not walk), airborne and
 ##     landing, the stomp, the roar, Shoulder Charge's motion, bracing on a block, the stance - and no bone's
 ##     rotation changes by more than 25 degrees between two posed frames through all of them (outside a
-##     teleport; the arms and hands, which the brain's generic mapping places as in M10, are measured and printed:
-##     FOLLOWUPS, "the weapon hand on a block's release");
+##     teleport); the arms and hands, which the brain's generic mapping places, by no more than ARM_POP_DEG (Gate A:
+##     PoseBrainModifier holds an arm bone to 20 degrees a frame outside a tested swing; it was 81.1 on a block's
+##     release at the W30 merge, 65.4 at wave-29);
 ##   * the stomp's right foot leaves the ground in the windup and is planted as the ACTIVE phase starts (the
 ##     pulse), the left foot never lifts;
 ##   * a hit flinches the upper body from its side, and never during an attack's ACTIVE phase;
@@ -21,6 +22,8 @@ extends IntegrationSuite
 ## turn beats from the side draw the giant with no shader error.
 
 const POP_DEG := 25.0
+## The arms' worst change between two frames (Gate A: 20.0 measured; PoseBrainModifier.ARM_STEP_DEG_S at 60 fps).
+const ARM_POP_DEG := 22.0
 const HANDLE_MAX := 0.02
 const DROOP_MAX_DEG := 40.0
 const SecondarySuite := preload("res://tests/integration/test_secondary_motion.gd")
@@ -180,6 +183,8 @@ func test_each_source_for_its_state_without_a_pop() -> void:
 	print("    test_giant_motion_render: the sources %s; the largest change between two frames %.1f deg (%s); the arms (the brain's, M10's mapping) %.1f deg (%s)" % [
 		w.sources, w.pop, w.pop_where, w.arm_pop, w.arm_where])
 	assert_true(w.pop <= POP_DEG, "no bone turns more than %.0f degrees between two frames (worst %.1f: %s)" % [POP_DEG, w.pop, w.pop_where])
+	assert_true(w.arm_pop <= ARM_POP_DEG, "no arm bone turns more than %.0f degrees between two frames (worst %.1f: %s)" % [
+		ARM_POP_DEG, w.arm_pop, w.arm_where])
 
 
 func test_the_stomp_lifts_and_plants_on_the_pulse() -> void:
