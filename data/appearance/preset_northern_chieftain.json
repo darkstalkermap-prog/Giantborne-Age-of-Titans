@@ -5,16 +5,34 @@
 	"display_name": "Northern Chieftain",
 	"description": "Red hair going grey in two braids, a forked beard, a woad torc under the collarbones and dots on the face, the chieftain's jerkin and furs.",
 	"appearance": {
-		"v": 1,
+		"v": 2,
 		"preset": "appearance_preset.northern_chieftain",
 		"skin": "skin.fair",
 		"eyes": "eyes.blue",
-		"hair": {"style": "hair.long_braided", "color": "haircolor.red", "grey": 0.3},
-		"beard": {"style": "beard.forked", "color": "", "grey": 0.35},
-		"tattoos": {"arms": "tattoo.arm_bands", "chest": "tattoo.chest_collar", "back": "", "face": "tattoo.face_dots", "ink": "ink.woad"},
-		"paint": {"design": "", "color": "paintcolor.chalk"},
+		"build": {"brawn": 0.0, "girth": 0.0},
+		"face": {"jaw": 0.0, "chin": 0.0, "nose": 0.0, "brow": 0.0, "cheeks": 0.0, "age": 0.0},
+		"hair": {"style": "hair.long_braided", "color": "haircolor.red", "grey": 0.3, "beads": "bead.none"},
+		"beard": {"style": "beard.forked", "color": "", "grey": 0.35, "beads": "bead.none"},
+		"tattoos": {"arms": "tattoo.arm_bands", "chest": "tattoo.chest_collar", "back": "", "face": "tattoo.face_dots", "legs": "", "ink": "ink.woad"},
+		"paint": {"face": "", "body": "", "color": "paintcolor.chalk"},
 		"scars": [],
 		"mark": "auto",
-		"outfit": {"set": "outfit.chieftain", "primary": "dye.madder", "secondary": "dye.dark_leather"}
+		"outfit": {
+			"set": "outfit.chieftain",
+			"slots": {
+				"head": {"item": "", "dye": ""},
+				"shoulders": {"item": "garment.furs", "dye": ""},
+				"chest": {"item": "", "dye": ""},
+				"armour": {"item": "garment.jerkin", "dye": ""},
+				"arms": {"item": "", "dye": ""},
+				"waist": {"item": "garment.belt", "dye": ""},
+				"legs": {"item": "garment.braies", "dye": ""},
+				"shins": {"item": "", "dye": ""},
+				"feet": {"item": "garment.boots", "dye": ""},
+				"cape": {"item": "", "dye": ""}
+			},
+			"accessories": {"neck": "", "arm_ring": "", "belt": ""},
+			"dyes": {"cloth": "dye.madder", "leather": "dye.dark_leather", "metal": "metal.iron"}
+		}
 	}
 }

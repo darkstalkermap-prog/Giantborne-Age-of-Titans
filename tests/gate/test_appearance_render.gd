@@ -10,6 +10,8 @@ extends TestSuite
 ## were set from the floor catalogue's renders (docs/systems/P44.md) and kept by the look pass, whose measured
 ## shares with the target catalogue are in docs/systems/P46.md. The grids are saved to user://m10_frames/options/ (with index.json naming every tile) for
 ## the merges, the sheets and P46. Without xvfb-run it is skipped with a note.
+## M11 (P53, plan M11 §1.7 rule 3, §3.10: the rendered option grids go to the gate tier; P57 extends it to grids
+## per slot): moved from tests/slow/, unchanged; about 18 s of the slow tier.
 
 const PROBE := "res://tests/support/appearance_render_probe.tscn"
 const PREFIX := "APPEARANCE_RENDER "

@@ -4,7 +4,10 @@ extends TestSuite
 ## default (GiantLook.DEFAULT_LOOK within §2.4's tolerance), random_record() in every scope (valid, never a
 ## design where the outfit hides it, Sim.rng untouched), the summary in words, the covered regions and the
 ## presets. Pure: no node, no scene. (tests/slow/test_appearance_random.gd runs random_record over 1,000
-## seeds in every scope; this suite runs 6.)
+## seeds in every scope; this suite runs 6.) P53 (plan M11 §2.5): the record at version 2 - the slots, the
+## dyes by material, the paint in its two places, the build and face sliders, the beads and accessories (no
+## content yet), six scars - and the new sets' options in the look; the migration from version 1 is
+## tests/unit/test_appearance_migration.gd's.
 
 const STONE := "ancestry.stoneblood"
 const STORM := "ancestry.stormborn"
@@ -45,7 +48,8 @@ static func deep_eq(a: Variant, b: Variant, tol := 1e-6) -> bool:
 	return typeof(a) == typeof(b) and a == b
 
 
-## The default record with `changes` merged in (one level into the blocks).
+## The default record with `changes` merged in (one level into the blocks). P53: an outfit named without slots
+## is put on (its slots filled), as the creator's Outfit row does.
 static func with(changes: Dictionary) -> Dictionary:
 	var r := Appearance.default_record()
 	for k: Variant in changes:
@@ -54,6 +58,9 @@ static func with(changes: Dictionary) -> Dictionary:
 				r[k][sub] = changes[k][sub]
 		else:
 			r[k] = changes[k]
+	var o: Variant = changes.get("outfit")
+	if typeof(o) == TYPE_DICTIONARY and (o as Dictionary).has("set") and not (o as Dictionary).has("slots"):
+		r = Appearance.with_outfit(r, str(o.set))
 	return r
 
 
@@ -75,7 +82,10 @@ func test_the_default_record_is_the_wanderer_from_the_data() -> void:
 	assert_eq(str(d.hair.color), Appearance.set_default("haircolor"), "the default hair colour")
 	assert_eq(str(d.beard.style), Appearance.set_default("beard"), "the default beard")
 	assert_eq(str(d.outfit.set), Appearance.set_default("outfit"), "the default outfit")
-	assert_eq(str(d.outfit.primary), Appearance.set_default("dye"), "the default dye")
+	assert_eq(str(d.outfit.dyes.cloth), Appearance.set_default("dye"), "the default dye")
+	assert_eq(str(d.outfit.dyes.metal), Appearance.set_default("metal"), "the default metal")
+	assert_eq(int(d.v), Appearance.RECORD_VERSION, "the record v2")
+	assert_true(deep_eq(d.outfit.slots, Appearance.slots_of_outfit(str(d.outfit.set))), "the Wanderer's slots")
 	assert_eq(str(d.mark), Appearance.MARK_AUTO, "the mark shows once a line is chosen")
 	assert_true(Appearance.is_valid(d), "the default passes sanitize unchanged")
 	d.skin = "skin.pale"
@@ -123,7 +133,8 @@ func test_unknown_ids_fall_back_to_the_default_and_are_listed() -> void:
 	assert_eq(str(s.record.skin), str(d.skin), "an unknown skin: the default skin")
 	assert_eq(str(s.record.hair.style), str(d.hair.style), "an unknown hair style: the default")
 	assert_eq(str(s.record.hair.color), str(d.hair.color), "an unknown hair colour: the default")
-	assert_eq(str(s.record.outfit.set), str(d.outfit.set), "an unknown outfit: the default")
+	assert_eq(str(s.record.outfit.set), "", "an unknown outfit names none (P53: the set is a summary of the slots)")
+	assert_true(deep_eq(s.record.outfit.slots, d.outfit.slots), "and the clothing is the default's")
 	assert_eq(str(s.record.eyes), str(d.eyes), "another set's id in the eyes: the default eyes")
 	assert_eq(s.record.scars, ["scar.brow"], "an unknown scar dropped, the known one kept")
 	for id: String in ["skin.purple", "hair.mohawk", "haircolor.green", "outfit.armour", "scar.dragon", "hair.crop"]:
@@ -171,35 +182,36 @@ func test_a_tattoo_in_the_wrong_region_is_removed_with_a_note() -> void:
 	assert_true((unknown.dropped as PackedStringArray).has("paint.face_stripes"), "and is dropped")
 
 
-func test_scars_unique_and_at_most_four_numbers_clamped_and_cast() -> void:
-	var r := with({"scars": ["scar.brow", "scar.brow", "scar.knuckles", "scar.chest_claws", "scar.forearm_slash",
-		"scar.knuckles", ""], "hair": {"grey": 1.7}, "beard": {"grey": -3}})
+func test_scars_unique_and_at_most_six_numbers_clamped_and_cast() -> void:
+	var all := Array(Appearance.option_ids("scar"))
+	var r := with({"scars": [all[0], all[0]] + all + [all[1], ""], "hair": {"grey": 1.7}, "beard": {"grey": -3}})
 	var s := Appearance.sanitize(r)
-	assert_eq(s.record.scars, ["scar.brow", "scar.knuckles", "scar.chest_claws", "scar.forearm_slash"],
+	assert_eq(s.record.scars, all.slice(0, Appearance.MAX_SCARS),
 		"scars unique, in order, at most %d" % Appearance.MAX_SCARS)
-	assert_eq((s.record.scars as Array).size() <= Appearance.MAX_SCARS, true, "never more than four")
+	assert_eq(Appearance.MAX_SCARS, 6, "six scars worn (plan M11 §2.5; M10 wore four)")
 	assert_eq(s.record.hair.grey, 1.0, "the hair's grey clamped to 1")
 	assert_eq(typeof(s.record.beard.grey), TYPE_FLOAT, "an int grey is cast to a float")
 	assert_eq(s.record.beard.grey, 0.0, "and clamped to 0")
 	var as_text := Appearance.sanitize(with({"hair": {"grey": "0.5"}}))
 	assert_eq(as_text.record.hair.grey, 0.0, "a grey that is not a number reads as 0")
-	var v := Appearance.sanitize(with({"v": 1.0}))
-	assert_eq(typeof(v.record.v), TYPE_INT, "v 1.0 (JSON) is cast to the int 1")
-	assert_eq(v.record.v, 1, "v is 1")
+	var v := Appearance.sanitize(with({"v": 2.0}))
+	assert_eq(typeof(v.record.v), TYPE_INT, "v 2.0 (JSON) is cast to the int 2")
+	assert_eq(v.record.v, 2, "v is 2")
 	assert_eq(str(Appearance.sanitize(with({"mark": "sometimes"})).record.mark), "auto", "an unknown mark mode: auto")
 	assert_eq(str(Appearance.sanitize(with({"preset": "appearance_preset.no_such"})).record.preset), "",
 		"an unknown preset name is cleared")
 
 
 func test_a_later_builds_record_is_kept_untouched_with_its_note() -> void:
-	var future := {"v": 2, "skin": "skin.starlight", "wings": {"span": 9}, "hair": "braided"}
+	var future := {"v": 3, "skin": "skin.starlight", "wings": {"span": 9}, "hair": "braided"}
 	var s := Appearance.sanitize(future)
-	assert_true(deep_eq(s.record, future), "a record with v 2 comes back exactly as it was")
+	assert_true(deep_eq(s.record, future), "a record with v 3 comes back exactly as it was")
 	assert_eq(s.notes, PackedStringArray([Appearance.NOTE_FUTURE]), "with the later-build note")
 	assert_true((s.dropped as PackedStringArray).is_empty(), "nothing dropped")
 	assert_true(Appearance.is_future(future), "is_future")
-	assert_true(Appearance.is_future({"v": 2.0}), "v 2.0 (JSON) is a later build's too")
-	assert_false(Appearance.is_future({"v": 1}), "v 1 is this build's")
+	assert_true(Appearance.is_future({"v": 3.0}), "v 3.0 (JSON) is a later build's too")
+	assert_false(Appearance.is_future({"v": 2}), "v 2 is this build's")
+	assert_false(Appearance.is_future({"v": 1}), "v 1 is migrated, not a later build's")
 	var look := Appearance.to_look(future, STONE)
 	assert_eq(str(look.hair_mesh), str(Appearance.to_look(Appearance.default_record(), STONE).hair_mesh),
 		"it draws as the default look")
@@ -215,7 +227,9 @@ func test_unknown_keys_are_kept_and_a_broken_record_is_the_default() -> void:
 	assert_eq(float((s.record.hair as Dictionary).get("shine", -1.0)), 0.2, "and one inside a block")
 	assert_true((s.notes as PackedStringArray).is_empty(), "no note for them")
 	for broken: Variant in ["a string", 7, [1, 2], null, {"hair": "long"}, {"scars": "brow"}, {"skin": 3},
-			{"v": 0}, {"v": "one"}, {"v": 1.5}, {"tattoos": {"arms": 4}}]:
+			{"v": 0}, {"v": "one"}, {"v": 1.5}, {"tattoos": {"arms": 4}}, {"v": 2, "outfit": {"dyes": "red"}},
+			{"v": 2, "outfit": {"dyes": {"cloth": 3}}}, {"v": 2, "paint": {"face": 2}}, {"build": 0.5}, {"face": [1]},
+			{"hair": {"beads": 2}}, {"v": 1, "outfit": {"primary": 4}}, {"v": 1, "paint": {"design": 9}}]:
 		var b := Appearance.sanitize(broken)
 		assert_true(deep_eq(b.record, Appearance.default_record()), "%s: the default record" % [broken])
 		assert_eq(b.notes, PackedStringArray([Appearance.NOTE_BROKEN]), "%s: with the broken note" % [broken])
@@ -260,19 +274,19 @@ func test_to_look_for_every_option_of_every_set() -> void:
 					r.tattoos.arms = "tattoo.arm_bands"
 					r.tattoos.ink = id
 				"paint":
-					r.paint.design = id
+					r = Appearance.with_paint(r, id)
 				"paintcolor":
-					r.paint.design = "paint.face_stripes"
+					r = Appearance.with_paint(r, "paint.face_stripes")
 					r.paint.color = id
 				"scar":
 					r.scars = [id]
 				"mark":
 					r.mark = Appearance.MARK_AUTO
 				"outfit":
-					r.outfit.set = id
+					r = Appearance.with_outfit(r, id)
 				"dye":
-					r.outfit.primary = id
-					r.outfit.secondary = id
+					r.outfit.dyes.cloth = id
+					r.outfit.dyes.leather = id
 			assert_true(Appearance.is_valid(r, line), "%s: a record with it is valid for %s" % [id, line])
 			var look := Appearance.to_look(r, line)
 			match c:
@@ -299,9 +313,10 @@ func test_to_look_for_every_option_of_every_set() -> void:
 				"ink":
 					assert_true(deep_eq((look.tattoos as Array)[0].ink, _hex(id)), "%s: the tattoo's ink" % id)
 				"paint":
-					assert_eq(str(look.paint.get("design", "")), str(o.design), "%s: the war paint's design" % id)
+					assert_eq((look.paint as Array).size(), 1, "%s: one war paint" % id)
+					assert_eq(str(look.paint[0].get("design", "")), str(o.design), "%s: the war paint's design" % id)
 				"paintcolor":
-					assert_true(deep_eq(look.paint.get("color"), _hex(id)), "%s: the paint's colour" % id)
+					assert_true(deep_eq(look.paint[0].get("color"), _hex(id)), "%s: the paint's colour" % id)
 				"scar":
 					assert_eq(look.scars, [str(o.design)], "%s: the scar's design" % id)
 				"mark":
@@ -311,12 +326,116 @@ func test_to_look_for_every_option_of_every_set() -> void:
 					var want: Array = []
 					for g: Variant in o.get("garments", []):
 						want.append(str(g))
-					assert_eq(look.garments, want, "%s: its garments" % id)
+					var got := Appearance.garment_ids(look.garments)
+					want.sort()
+					got.sort()
+					assert_eq(got, want, "%s: its garments" % id)
 				"dye":
-					assert_true(deep_eq(look.dye_primary, _hex(id)), "%s: the first dye" % id)
-					assert_true(deep_eq(look.dye_secondary, _hex(id)), "%s: the second dye" % id)
+					for g: Dictionary in look.garments:
+						if str(g.kind) in ["cloth", "leather"]:
+							assert_true(deep_eq(g.dye, _hex(id)), "%s: %s in the dye" % [id, g.mesh])
 			n += 1
 	assert_true(n >= 70, "every option of the thirteen sets was drawn (%d)" % n)
+
+
+## P53 (plan M11 §2.5, §2.6): every garment in its slot draws its index garment in its material's dye (the slot's
+## own dye over the outfit's), every metal dyes a metal garment's slot (none of M10's is metal: checked on the
+## record), and the build sliders reach the look clamped.
+func test_to_look_for_the_record_v2s_own_sets() -> void:
+	var n := 0
+	for id: String in Appearance.option_ids("garment"):
+		var g := Appearance.option(id)
+		var r := Appearance.with_outfit(Appearance.default_record(), "outfit.wanderer")
+		r.outfit.slots = Appearance.empty_slots()
+		r.outfit.slots[str(g.slot)] = {"item": id, "dye": ""}
+		assert_true(Appearance.is_valid(r), "%s: a record wearing it alone is valid" % id)
+		var look := Appearance.to_look(r)
+		assert_eq((look.garments as Array).size(), 1, "%s: one garment drawn" % id)
+		var entry: Dictionary = look.garments[0]
+		assert_eq(str(entry.mesh), str(g.mesh), "%s: its index garment" % id)
+		assert_eq(str(entry.kind), str(g.material), "%s: its material" % id)
+		var want := Appearance.FUR_COLOR if str(g.material) == "fur" else _hex(str(r.outfit.dyes[str(g.material)]))
+		assert_true(deep_eq(entry.dye, want), "%s: the outfit's %s dye" % [id, g.material])
+		if str(g.material) in ["cloth", "leather"]:
+			r.outfit.slots[str(g.slot)].dye = "dye.madder"
+			assert_true(deep_eq(Appearance.to_look(r).garments[0].dye, _hex("dye.madder")), "%s: the slot's own dye" % id)
+			r.outfit.slots[str(g.slot)].dye = "metal.gilded"
+			var s := Appearance.sanitize(r)
+			assert_eq(str(s.record.outfit.slots[str(g.slot)].dye), "", "%s: a metal on cloth or leather is the outfit's dye" % id)
+		n += 1
+	assert_eq(n, 10, "M10's ten garments")
+	for id: String in Appearance.option_ids("metal"):
+		var r := Appearance.default_record()
+		r.outfit.dyes.metal = id
+		assert_true(Appearance.is_valid(r), "%s: the outfit's metal" % id)
+		assert_eq(str(Appearance.sanitize(r).record.outfit.dyes.metal), id, "%s kept" % id)
+	var b := Appearance.default_record()
+	b.build = {"brawn": 0.4, "girth": -2.5}
+	assert_eq(Appearance.to_look(b).build, Vector2(0.4, -1.0), "the build sliders, clamped to -1..1")
+	b.build = {"brawn": "big"}
+	assert_eq(Appearance.to_look(b).build, Vector2.ZERO, "not a number: 0")
+	b.face = {"jaw": 0.5, "nose": 7, "horns": 1.0}
+	var f: Dictionary = Appearance.sanitize(b).record.face
+	assert_eq(float(f.jaw), 0.5, "a face slider kept")
+	assert_eq(float(f.nose), 1.0, "and clamped")
+	assert_eq(float(f.get("horns", 0.0)), 1.0, "an unknown face key is kept for a later build")
+	assert_eq(float(Appearance.to_look(b).face.jaw), 0.5, "the look's face")
+	assert_false((Appearance.to_look(b).face as Dictionary).has("horns"), "the look has the known face keys only")
+
+
+## P53 (plan M11 §2.5): the slots' rules - an unknown or wrong-slot garment comes off (reported), a missing slot
+## is empty, a broken slots block alone wears the default clothing with its note, the outfit's name is a summary
+## ("" once the slots differ), two war paints at once, beads and accessories before their sets exist.
+func test_the_slots_paint_beads_and_accessories_rules() -> void:
+	var r := Appearance.default_record()
+	r.outfit.slots.chest = {"item": "garment.kilt", "dye": ""}
+	r.outfit.slots.head = {"item": "garment.braies", "dye": ""}
+	r.outfit.slots.erase("feet")
+	var s := Appearance.sanitize(r)
+	assert_eq(str(s.record.outfit.slots.chest.item), "", "an unknown garment comes off")
+	assert_true((s.dropped as PackedStringArray).has("garment.kilt"), "and is reported")
+	assert_eq(str(s.record.outfit.slots.head.item), "", "a garment of another slot comes off")
+	assert_true(str(s.notes).contains("garment.braies"), "with a note naming it: %s" % [s.notes])
+	assert_true(deep_eq(s.record.outfit.slots.feet, {"item": "", "dye": ""}), "a missing slot is empty")
+	assert_eq(str(s.record.outfit.set), "outfit.wanderer", "the legs and waist still wear the Wanderer's")
+	var shirtless := Appearance.default_record()
+	shirtless.outfit.slots.waist.item = ""
+	assert_eq(str(Appearance.sanitize(shirtless).record.outfit.set), "", "slots unlike the outfit's: no outfit name")
+	assert_true(Appearance.summary_lines(shirtless).has("Clothing: custom (braies), undyed and dark leather"),
+		"the summary says custom: %s" % [Appearance.summary_lines(shirtless)])
+	for broken: Variant in ["all", 3, [], {"legs": "garment.braies"}, {"legs": {"item": 5}}]:
+		var b := Appearance.default_record()
+		b.outfit.slots = broken
+		b.skin = "skin.deep"
+		var bs := Appearance.sanitize(b)
+		assert_eq(bs.notes, PackedStringArray([Appearance.NOTE_SLOTS]), "%s: the clothing's note" % [broken])
+		assert_true(deep_eq(bs.record.outfit.slots, Appearance.default_record().outfit.slots), "%s: the default clothing" % [broken])
+		assert_eq(str(bs.record.skin), "skin.deep", "%s: the rest of the look stays" % [broken])
+	var acc := Appearance.default_record()
+	acc.outfit.accessories = "torc"
+	assert_eq(Appearance.sanitize(acc).notes, PackedStringArray([Appearance.NOTE_SLOTS]), "broken accessories: the note")
+	var two := Appearance.default_record()
+	two.paint = {"face": "paint.face_stripes", "body": "paint.back_hand", "color": "paintcolor.ash"}
+	assert_true(Appearance.is_valid(two), "a face paint and a body paint at once")
+	assert_eq((Appearance.to_look(two).paint as Array).size(), 2, "both drawn")
+	assert_true(Appearance.summary_lines(two).has("War paint: ash face stripes and hand print"), "%s" % [Appearance.summary_lines(two)])
+	var swapped := Appearance.default_record()
+	swapped.paint = {"face": "paint.back_hand", "body": "paint.full_face", "color": "paintcolor.ash"}
+	var ss := Appearance.sanitize(swapped)
+	assert_eq([str(ss.record.paint.face), str(ss.record.paint.body)], ["", ""], "a paint in the other place comes off")
+	assert_eq((ss.notes as PackedStringArray).size(), 1, "with the misplaced note")
+	var beads := Appearance.default_record()
+	beads.hair.beads = "bead.bone"
+	beads.beard.beads = ""
+	beads.outfit.accessories.neck = "accessory.torc"
+	var bs2 := Appearance.sanitize(beads)
+	assert_eq(str(bs2.record.hair.beads), Appearance.BEAD_NONE, "an unknown bead: none")
+	assert_true((bs2.dropped as PackedStringArray).has("bead.bone"), "reported")
+	assert_eq(str(bs2.record.beard.beads), Appearance.BEAD_NONE, "no beads: none")
+	assert_eq(str(bs2.record.outfit.accessories.neck), "", "an unknown accessory comes off")
+	assert_true((bs2.dropped as PackedStringArray).has("accessory.torc"), "reported")
+	var look := Appearance.to_look(Appearance.default_record())
+	assert_eq([look.hair_beads, look.beard_beads, look.accessories], ["", "", []], "no beads or accessories drawn yet")
 
 
 func test_a_locked_option_draws_as_the_default_until_the_line_is_chosen() -> void:
@@ -401,8 +520,7 @@ func test_covered_regions_from_the_outfit_and_from_an_index() -> void:
 		"the upper back at 96 %% hides a design (%s)" % Appearance.DESIGN_COVER_SHARE)
 	assert_eq(Appearance.covered_body_regions(["tunic"], shares), PackedInt32Array([3, 4, 6]), "though it does not sink")
 	assert_eq(Appearance.design_hidden_body_regions(["furs"], shares), PackedInt32Array(), "the furs at 67 %% hide none")
-	var tunic := Appearance.default_record()
-	tunic.outfit.set = "outfit.warrior"
+	var tunic := Appearance.with_outfit(Appearance.default_record(), "outfit.warrior")
 	var only := {"garments": {"tunic": ["Garment_tunic_core"]}, "meshes": shares.meshes}
 	assert_eq(Appearance.covered_regions(tunic, only), PackedStringArray(["chest", "back"]), "the tunic's shares: chest, back")
 

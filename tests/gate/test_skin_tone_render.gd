@@ -9,6 +9,8 @@ extends TestSuite
 ## reads (220, 160, 131): the tolerance is 30 (the deviation is recorded in docs/systems/P51.md, "Gate A"). Also: no shader or script error,
 ## GiantLook.validate() empty for every look the probe drew, and GiantLook.DRAWN_DEFAULT (the swatch's colour of the
 ## default tone) within 6/255 of the measure. Without xvfb-run it is skipped with a note.
+## M11 (P53, plan M11 §1.7 rule 3): moved from tests/slow/ to the gate tier with test_hair_render, whose child run it
+## reads (alone in the slow tier it would draw the giant again, about 13 s), unchanged.
 
 const RUN := preload("res://tests/support/giant_look_probe_run.gd")
 const TOLERANCE := 30

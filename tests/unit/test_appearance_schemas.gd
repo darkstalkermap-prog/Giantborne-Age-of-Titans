@@ -5,7 +5,10 @@ extends TestSuite
 ## line, an outfit without garments, a wrong id) and bad presets too (no record, a record that is not a
 ## full one, a wrong version, a wrong id); GameData's post-pass (Appearance.data_errors, anchor P42)
 ## catches a missing set, a second set of one category, a default preset that does not use the sets'
-## defaults and a preset naming ids no set has.
+## defaults and a preset naming ids no set has. P53 (plan M11 §2.5, §2.6): the record v2's sets (garment,
+## metal, build) and Part B's later ones (accessory, bead, face) by their fields; an outfit as slots; presets at
+## version 2; the post-pass's slot rules (an outfit's slot naming a garment of another slot, its M10 garments
+## not what its slots wear, an M10 garment moved off its slot, a preset whose outfit name is not its slots').
 
 
 func _set_rec(category: String, options: Array) -> Dictionary:
@@ -32,7 +35,7 @@ func _skin(key: String, default := false, color := "#b07a62") -> Dictionary:
 
 func test_the_shipped_sets_and_presets_pass() -> void:
 	var sets := GameData.ids_of_type("appearance_set")
-	assert_eq(sets.size(), 13, "thirteen sets")
+	assert_eq(sets.size(), 16, "M10's thirteen sets and the record v2's three (garment, metal, build)")
 	for id: String in sets:
 		assert_eq(_errors(GameData.get_record(id)), "", "%s passes its schema" % id)
 	var presets := GameData.ids_of_type("appearance_preset")
@@ -90,8 +93,37 @@ func test_bad_sets_are_rejected() -> void:
 		"default": true}]), "has no default", "a default in a set whose default is none")
 	_rejects(_set_rec("mark", [{"key": "veins", "name": "Veins", "design": "mark_veins", "color": "#808080"}]),
 		"belongs to a line", "a mark without its line")
-	_rejects(_set_rec("outfit", [{"key": "bare", "name": "Bare", "garments": [], "default": true}]), "at least one garment",
+	_rejects(_set_rec("outfit", [{"key": "bare", "name": "Bare", "slots": {}, "default": true}]), "at least one garment",
 		"an outfit without garments")
+	_rejects(_set_rec("outfit", [{"key": "bare", "name": "Bare", "garments": ["braies"], "default": true}]), "slots",
+		"an outfit without slots (P53)")
+	_rejects(_set_rec("outfit", [{"key": "odd", "name": "Odd", "slots": {"tail": "garment.braies"}, "default": true}]),
+		"tail", "an outfit with a slot the body has not")
+	_rejects(_set_rec("outfit", [{"key": "odd", "name": "Odd", "slots": {"legs": "braies"}, "default": true}]),
+		"not a garment id", "an outfit slot naming no garment id")
+	# P53: the record v2's sets and Part B's later ones
+	var braies := {"key": "braies", "name": "Braies", "slot": "legs", "mesh": "braies", "material": "cloth"}
+	assert_eq(_errors(_set_rec("garment", [braies])), "", "a garment set passes (no default)")
+	_rejects(_set_rec("garment", [braies.merged({"slot": "tail"}, true)]), "slot", "a garment in a slot the body has not")
+	_rejects(_set_rec("garment", [braies.merged({"material": "silk"}, true)]), "material", "an unknown material")
+	_rejects(_set_rec("garment", [braies.merged({"mesh": ""}, true)]), "mesh", "a garment without its mesh")
+	_rejects(_set_rec("garment", [braies.merged({"default": true}, true)]), "has no default", "a default garment")
+	_rejects(_set_rec("garment", [braies.merged({"hides_hair": "some"}, true)]), "hides_hair", "an unknown hair cut")
+	assert_eq(_errors(_set_rec("metal", [{"key": "iron", "name": "Iron", "color": "#6b6c6e", "default": true}])), "",
+		"a metal set passes")
+	_rejects(_set_rec("metal", [{"key": "iron", "name": "Iron", "default": true}]), "color", "a metal without a colour")
+	assert_eq(_errors(_set_rec("build", [{"key": "brawn", "name": "Brawn", "low": "Lean", "high": "Brawny"}])), "",
+		"a slider set passes")
+	_rejects(_set_rec("build", [{"key": "brawn", "name": "Brawn", "default": true}]), "has no default", "a default slider")
+	assert_eq(_errors(_set_rec("face", [{"key": "jaw", "name": "Jaw"}])), "", "the face sliders' set (P56) is declared")
+	assert_eq(_errors(_set_rec("accessory", [{"key": "torc", "name": "Torc", "slot": "neck", "mesh": "Acc_torc"}])), "",
+		"the accessories' set (P54) is declared")
+	_rejects(_set_rec("accessory", [{"key": "torc", "name": "Torc", "slot": "legs", "mesh": "Acc_torc"}]), "slot",
+		"an accessory in a garment slot")
+	assert_eq(_errors(_set_rec("bead", [{"key": "none", "name": "None", "mesh": "", "default": true}])), "",
+		"the beads' set (P56) is declared")
+	assert_eq(_errors(_set_rec("tattoo", [{"key": "shin", "name": "Shin", "design": "tat_shin", "region": "legs"}])), "",
+		"a tattoo may be on the legs (v2's fifth region)")
 	_rejects(_set_rec("skin", [_skin("Pale Skin", true)]), "lowercase", "a key that is not lowercase")
 	var wrong := _set_rec("skin", [_skin("pale", true)])
 	wrong.id = "appearance_set.skins"
@@ -116,8 +148,11 @@ func test_bad_presets_are_rejected() -> void:
 	(broken.appearance as Dictionary)["scars"] = "brow"
 	_rejects(broken, "scars", "a preset whose record is broken")
 	var later := good.duplicate(true)
-	(later.appearance as Dictionary)["v"] = 2
-	_rejects(later, "version 1", "a preset of another record version")
+	(later.appearance as Dictionary)["v"] = 1
+	_rejects(later, "version 2", "a preset of another record version (P53: presets are version 2)")
+	var flat := good.duplicate(true)
+	(flat.appearance as Dictionary).erase("build")
+	_rejects(flat, "full record", "a preset without its build")
 	var id := good.duplicate(true)
 	id.id = "preset.wanderer"
 	_rejects(id, "appearance_preset.", "a preset whose id lacks the prefix")
@@ -155,5 +190,25 @@ func test_the_post_pass_rules() -> void:
 	selfless["appearance_preset.ash_raider"]["appearance"]["preset"] = "appearance_preset.wanderer"
 	assert_true("\n".join(Appearance.data_errors(selfless, paths)).contains("not the preset itself"),
 		"a preset whose record names another preset is an error")
+	var slot_off := records.duplicate(true)
+	slot_off["appearance_set.outfit"]["options"][0]["slots"]["chest"] = "garment.braies"
+	var e := "\n".join(Appearance.data_errors(slot_off, paths))
+	assert_true(e.contains("a garment of the legs slot"), "an outfit's slot naming a garment of another slot: %s" % e)
+	var m10 := records.duplicate(true)
+	m10["appearance_set.outfit"]["options"][1]["slots"].erase("arms")
+	assert_true("\n".join(Appearance.data_errors(m10, paths)).contains("its M10 garments are"),
+		"an outfit whose slots do not wear its M10 garments is an error")
+	var moved := records.duplicate(true)
+	moved["appearance_set.garment"]["options"][0]["slot"] = "shins"
+	assert_true("\n".join(Appearance.data_errors(moved, paths)).contains("worn in the legs slot"),
+		"an M10 garment off its slot (plan M11 §2.5's mapping) is an error")
+	var named := records.duplicate(true)
+	named["appearance_preset.ash_raider"]["appearance"]["outfit"]["set"] = "outfit.warrior"
+	assert_true("\n".join(Appearance.data_errors(named, paths)).contains("does not match its slots"),
+		"a preset whose outfit name is not what its slots wear is an error")
+	var no_garment := records.duplicate(true)
+	no_garment.erase("appearance_set.garment")
+	assert_true("\n".join(Appearance.data_errors(no_garment, paths)).contains("no appearance set of category 'garment'"),
+		"the garment set is required")
 	assert_eq(Appearance.data_errors({"x": {"type": "weapon"}}, {}), PackedStringArray(),
 		"no appearance record at all (a test's temporary data): nothing to check")

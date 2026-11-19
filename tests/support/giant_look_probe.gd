@@ -1,6 +1,6 @@
 extends Node
-## The giant's look, measured against frames (P51; plan M11 §2.13, §3.4): tests/slow/test_skin_tone_render.gd and
-## tests/slow/test_hair_render.gd run this scene (a main scene, so the autoloads exist: Appearance reads GameData)
+## The giant's look, measured against frames (P51; plan M11 §2.13, §3.4): tests/gate/test_skin_tone_render.gd and
+## tests/gate/test_hair_render.gd run this scene (a main scene, so the autoloads exist: Appearance reads GameData)
 ## once in a child Godot under Xvfb with the Compatibility renderer (GiantLookProbeRun shares that one run between
 ## the suites), and the package's before and after captures use it with `--show`:
 ##

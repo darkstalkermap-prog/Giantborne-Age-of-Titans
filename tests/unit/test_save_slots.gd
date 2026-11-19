@@ -280,7 +280,7 @@ func test_a_broken_look_loads_with_the_default_and_the_note() -> void:
 
 
 func test_a_later_builds_look_loads_and_is_kept_as_it_is() -> void:
-	var doc := _fixture("v2_appearance_future")
+	var doc := _fixture("v2_appearance_v3_future")
 	var raw: Dictionary = doc.character.appearance
 	assert_true(SaveSlots.write(doc).ok, "written")
 	var r := SaveSlots.read()
@@ -302,3 +302,50 @@ func test_a_damaged_main_file_with_a_look_recovers_it_from_the_backup() -> void:
 	var r := SaveSlots.read()
 	assert_true(r.ok and str(r.source) == "backup", "recovered from the backup")
 	assert_true(Look.deep_eq(r.data.character.appearance, _look()), "with the backup's look")
+
+
+# --------------------------------------------------------------------------- M11: the look record v2 (P53)
+
+## Plan M11 §2.5: a look from before clothing by slot is migrated in memory with the one message, and the flag
+## appearance.slots_seen goes into the document; a load that finds the flag says nothing more. The file on disk is
+## not rewritten by a read.
+func test_a_version_1_look_is_migrated_with_the_note_once() -> void:
+	var doc := _fixture("v2_appearance")
+	assert_true(SaveSlots.write(doc).ok, "an M10 save with a look")
+	var on_disk := FileAccess.get_file_as_string(TEST_PATH)
+	var r := SaveSlots.read()
+	assert_true(r.ok and str(r.source) == "main", "it loads")
+	assert_eq(int(r.data.character.appearance.v), Appearance.RECORD_VERSION, "the look is version 2 in memory")
+	assert_true(str(r.message).contains(Appearance.NOTE_MIGRATED), "the message says so: %s" % r.message)
+	assert_true((r.notes as PackedStringArray).has(Appearance.NOTE_MIGRATED), "it is one of the notes")
+	assert_true(QuestConditions.truthy((r.data.world.flags as Dictionary).get(SaveSlots.SLOTS_SEEN_FLAG)),
+		"the flag %s is set in the document" % SaveSlots.SLOTS_SEEN_FLAG)
+	assert_eq(FileAccess.get_file_as_string(TEST_PATH), on_disk, "reading wrote nothing")
+	assert_true(SaveSlots.write(r.data).ok, "the next checkpoint writes the document")
+	var again := SaveSlots.read()
+	assert_eq(int(JsonIO.read_file(TEST_PATH).data.character.appearance.v), Appearance.RECORD_VERSION,
+		"the checkpoint wrote version 2")
+	assert_false(str(again.message).contains(Appearance.NOTE_MIGRATED), "and the next load says nothing")
+	var seen := _fixture("v2_appearance")
+	seen.world.flags[SaveSlots.SLOTS_SEEN_FLAG] = true
+	assert_true(SaveSlots.write(seen).ok, "a version-1 look whose save has seen the message")
+	assert_false(str(SaveSlots.read().message).contains(Appearance.NOTE_MIGRATED), "is migrated without a second message")
+
+
+func test_the_version_2_fixtures_load() -> void:
+	var good := _fixture("v2_appearance_v2")
+	assert_true(SaveSlots.write(good).ok, "a 0.12 save")
+	var r := SaveSlots.read()
+	assert_true(r.ok and str(r.message) == "", "loads cleanly: '%s'" % r.message)
+	assert_true(Look.deep_eq(r.data.character.appearance, good.character.appearance), "its look kept exactly")
+	assert_false((r.data.world.flags as Dictionary).has(SaveSlots.SLOTS_SEEN_FLAG), "no migration, no flag")
+	assert_true(SaveSlots.write(_fixture("v2_appearance_v2_unknown_slot")).ok, "unknown and misplaced clothing")
+	var u := SaveSlots.read()
+	assert_true(u.ok and str(u.source) == "main", "loads from the main file")
+	assert_true(str(u.message).contains("garment.mail_hauberk") and str(u.message).contains("garment.boots"),
+		"the message names them: %s" % u.message)
+	assert_true(SaveSlots.write(_fixture("v2_appearance_v2_broken")).ok, "a broken slots block")
+	var b := SaveSlots.read()
+	assert_true(b.ok and str(b.source) == "main", "never sends the read to the backup")
+	assert_eq(b.notes, PackedStringArray([Appearance.NOTE_SLOTS]), "the clothing's note alone")
+	assert_eq(str(b.data.character.appearance.skin), "skin.weathered", "the rest of the look kept")

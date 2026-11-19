@@ -6,16 +6,34 @@
 	"description": "Black hair in a warrior's tail, pale skin and ice-blue eyes; woad wings on the back, bands winding down the arms, chalk stripes under the eyes.",
 	"ancestry": "ancestry.stormborn",
 	"appearance": {
-		"v": 1,
+		"v": 2,
 		"preset": "appearance_preset.storm_herald",
 		"skin": "skin.pale",
 		"eyes": "eyes.ice",
-		"hair": {"style": "hair.warrior_tail", "color": "haircolor.black", "grey": 0.0},
-		"beard": {"style": "beard.short", "color": "", "grey": 0.0},
-		"tattoos": {"arms": "tattoo.arm_winding", "chest": "", "back": "tattoo.back_wings", "face": "", "ink": "ink.woad"},
-		"paint": {"design": "paint.face_stripes", "color": "paintcolor.chalk"},
+		"build": {"brawn": 0.0, "girth": 0.0},
+		"face": {"jaw": 0.0, "chin": 0.0, "nose": 0.0, "brow": 0.0, "cheeks": 0.0, "age": 0.0},
+		"hair": {"style": "hair.warrior_tail", "color": "haircolor.black", "grey": 0.0, "beads": "bead.none"},
+		"beard": {"style": "beard.short", "color": "", "grey": 0.0, "beads": "bead.none"},
+		"tattoos": {"arms": "tattoo.arm_winding", "chest": "", "back": "tattoo.back_wings", "face": "", "legs": "", "ink": "ink.woad"},
+		"paint": {"face": "paint.face_stripes", "body": "", "color": "paintcolor.chalk"},
 		"scars": [],
 		"mark": "auto",
-		"outfit": {"set": "outfit.hunter", "primary": "dye.woad_blue", "secondary": "dye.dark_leather"}
+		"outfit": {
+			"set": "outfit.hunter",
+			"slots": {
+				"head": {"item": "", "dye": ""},
+				"shoulders": {"item": "garment.furs", "dye": ""},
+				"chest": {"item": "", "dye": ""},
+				"armour": {"item": "", "dye": ""},
+				"arms": {"item": "garment.bracers", "dye": ""},
+				"waist": {"item": "garment.belt", "dye": ""},
+				"legs": {"item": "garment.braies", "dye": ""},
+				"shins": {"item": "", "dye": ""},
+				"feet": {"item": "", "dye": ""},
+				"cape": {"item": "", "dye": ""}
+			},
+			"accessories": {"neck": "", "arm_ring": "", "belt": ""},
+			"dyes": {"cloth": "dye.woad_blue", "leather": "dye.dark_leather", "metal": "metal.iron"}
+		}
 	}
 }

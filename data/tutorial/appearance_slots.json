@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"id": "tutorial.appearance_slots",
+	"type": "tutorial_prompt",
+	"description": "P53 (plan M11 §2.5, §2.11): at the first shrine after loading a save whose look was made before clothing by slot (SaveSlots sets the flag appearance.slots_seen when it migrates the look; the load's message already said that nothing was changed), the Appearance tab now dresses the giant piece by piece. Dismissed when the Appearance tab is opened (appearance.tab_seen) or after 15 s.",
+	"text": "Your giant's clothing is now worn piece by piece: change it at any shrine, in Appearance.",
+	"trigger": {
+		"type": "event",
+		"event": "shrine_activated"
+	},
+	"dismiss": {
+		"type": "flag",
+		"flag": "appearance.tab_seen",
+		"timeout_s": 15
+	},
+	"requires_flags": [
+		"appearance.slots_seen"
+	],
+	"min_stage": 1,
+	"priority": 13,
+	"once": true,
+	"defer_in_combat": true
+}

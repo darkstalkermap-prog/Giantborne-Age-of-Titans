@@ -10,11 +10,12 @@ extends RefCounted
 ##                                       share one) of its category's shader - body: giant_skin, eyes:
 ##                                       giant_eye, hair and beard: giant_hair, garment: giant_cloth - with
 ##                                       the textures of the tier; then the stored look is applied.
-##   apply(root, index, look)            shows the look's hair, beard and garment meshes and hides the other
-##                                       hair, beard and garment meshes; stores the look on the root; when
-##                                       the materials exist, sets every uniform (the region arrays always
-##                                       filled, 0 = none). Without materials (headless, the skinned layers
-##                                       off) it only sets visibility and stores the look.
+##   apply(root, index, look)            shows the look's hair, beard, garment, accessory and bead meshes and
+##                                       hides the others of those categories; stores the look on the root;
+##                                       sets the face's blend shapes where a shown mesh has them; when the
+##                                       materials exist, sets every uniform (the region arrays always filled,
+##                                       0 = none). Without materials (headless, the skinned layers off) it only
+##                                       sets visibility and stores the look.
 ##   validate(root, index, look)         the problems: ids the index does not know (meshes, garments,
 ##                                       designs), index meshes without their node, and every uniform name
 ##                                       GiantLook sets that the shader does not declare
@@ -35,6 +36,17 @@ extends RefCounted
 ## `detail_<kind>`, `designs` for the design array); a synthetic index may give paths instead; without
 ## either, DEFAULT_TEXTURES. A garment's detail kind is its entry's "detail" name, else GARMENT_DETAIL of
 ## its garment. A sampler whose texture does not load is a problem validate() reports.
+##
+## The look by slot (P53; plan M11 §2.5): `garments` is an Array of {"mesh": an index garment (its meshes in
+## index.garments) or a garment mesh, "dye": Color, "kind": "cloth" | "leather" | "fur" | "metal"}, each garment
+## drawn in its own dye (a metal one with the cloth shader's metal response); `build` (Vector2: brawn, girth,
+## each -1 to 1) pushes the skin and the garments along their normals by the meshes' build weights (COLOR.g,
+## .b) times the index's build_max_m, and the model's shadow proxy with them (GiantModel.apply_build); `face`
+## (the face sliders) sets the blend shapes of those names on every shown mesh that has them (none before
+## P56: then ignored); `accessories` and `hair_beads` / `beard_beads` are index mesh ids shown (none before P54
+## and P56); `paint` is an Array of at most two {"design", "color"}. M10's shape - garments as index garment
+## ids with `dye_primary` / `dye_secondary` by each mesh's index "dye", and `paint` as one dictionary - is still
+## drawn as it was (the tests' and the sheets' hand-made looks).
 
 const SKIN_SHADER := preload("res://assets/shaders/giant_skin.gdshader")
 const HAIR_SHADER := preload("res://assets/shaders/giant_hair.gdshader")
@@ -44,6 +56,7 @@ const SHELL_SHADER := preload("res://assets/shaders/giant_shell.gdshader")
 
 ## The Wanderer (plan M10 §2.4), so the model draws before and without the data; Appearance.to_look of the
 ## default record equals it within 1/255 per colour channel (hex-parsed colours differ in the last bit).
+## P53 restated it in the look v2's shape (plan M11 §2.5) with the Wanderer's values unchanged.
 const DEFAULT_LOOK := {
 	"skin_tone": Color(0.690196, 0.478431, 0.384314),       # #b07a62 skin.ruddy
 	"eye_color": Color(0.298039, 0.450980, 0.380392),       # #4c7361 eyes.grey_green
@@ -61,14 +74,23 @@ const DEFAULT_LOOK := {
 	"scalp_tint": 1.0,
 	"stubble": 0.8,
 	"beard_tint": 1.0,
+	"build": Vector2.ZERO,                                   # P53: brawn, girth
+	"face": {"jaw": 0.0, "chin": 0.0, "nose": 0.0, "brow": 0.0, "cheeks": 0.0, "age": 0.0},
+	"hair_beads": "",
+	"beard_beads": "",
 	"tattoos": [],
-	"paint": {},
+	"paint": [],
 	"mark": {},
 	"scars": [],
-	"garments": ["braies", "belt"],
-	"dye_primary": Color(0.450980, 0.380392, 0.290196),     # #73614a dye.undyed
-	"dye_secondary": Color(0.164706, 0.149020, 0.133333),   # #2a2622 dye.dark_leather
+	"garments": [
+		{"mesh": "belt", "dye": Color(0.164706, 0.149020, 0.133333), "kind": "leather"},   # #2a2622 dye.dark_leather
+		{"mesh": "braies", "dye": Color(0.450980, 0.380392, 0.290196), "kind": "cloth"},   # #73614a dye.undyed
+	],
+	"accessories": [],
 }
+## The dyes of an M10-shaped look's garments without dye_primary / dye_secondary (the Wanderer's).
+const LEGACY_PRIMARY := Color(0.450980, 0.380392, 0.290196)
+const LEGACY_SECONDARY := Color(0.164706, 0.149020, 0.133333)
 
 ## The tone the skin's albedo is drawn at as it was baked: the shader scales the albedo by tone / bake tone. It
 ## is the default tone's colour (#b07a62, skin.ruddy; DEFAULT_LOOK.skin_tone), so the default look draws the
@@ -125,10 +147,10 @@ const UNIFORMS := {
 	"skin": ["albedo_tex", "normal_tex", "orm_tex", "mask_tex", "design_tex", "skin_tone", "bake_tone", "hair_color",
 		"beard_color", "stubble", "scalp_tint", "beard_tint", "brows", "region_tattoo", "region_paint", "region_mark",
 		"tattoo_ink", "paint_color", "mark_color", "mark_glow", "scar_layer", "scar_on", "scar_layer_b", "scar_on_b",
-		"hidden_regions", "hide_shrink"],
+		"hidden_regions", "hide_shrink", "build", "build_max_m"],
 	"hair": ["hair_atlas", "hair_color", "tip_color", "grey", "length", "tip_thin", "back_fade", "volume_normal"],
 	"eye": ["iris_color", "iris_glow", "look"],
-	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade", "kind", "rim"],
+	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade", "kind", "rim", "build", "build_max_m"],
 	"shell": ["strand_tex", "mask_tex", "mask_channel", "shell_count", "shell_height_m", "comb", "hair_color", "tip_color",
 		"grey", "length"],
 }
@@ -150,13 +172,16 @@ const TONE_CHROMA := 1.0
 const TONE_RESAT := 1.0
 const TONE_RESAT_MAX := 1.25
 const META_SHELL_STACK := "giant_shell_stack"
-## The default tone's lit chest in the creator's light (measured by tests/slow/test_skin_tone_render.gd): drawn_tone
+## The default tone's lit chest in the creator's light (measured by tests/gate/test_skin_tone_render.gd): drawn_tone
 ## scales it by a tone over the bake tone. P51 graded the albedo to the approved studio render's (198, 170, 157)
 ## (199, 170, 157 drawn); Gate A eased the grade so the skin holds its colour in the world's light, and the chest
 ## now draws (220, 160, 131), 26/255 off the studio render (docs/systems/P51.md, "Gate A").
 const DRAWN_DEFAULT := Color(0.862745, 0.627451, 0.513725)   # (220, 160, 131)
 const PAINT_UNIFORMS := ["tint", "flash"]
-const KIND_OF_CATEGORY := {"body": "skin", "eyes": "eye", "hair": "hair", "beard": "hair", "garment": "cloth"}
+## P53 pre-declares Part B's categories: accessories (P54) and beads (P56) draw with the cloth shader (metal and
+## bone take its metal response or not by their entry's detail).
+const KIND_OF_CATEGORY := {"body": "skin", "eyes": "eye", "hair": "hair", "beard": "hair", "garment": "cloth",
+	"accessory": "cloth", "bead": "cloth"}
 
 const META_LOOK := "giant_look"
 const META_MATERIALS := "giant_look_materials"
@@ -170,6 +195,10 @@ const META_TEX := "giant_look_textures"
 const META_OWNER := "giant_look_owner"
 const META_NODES := "giant_look_nodes"
 const META_SWAY := "giant_look_sway"
+## On a root: the build and build_max_m its materials hold (P53: set again only when they change).
+const META_BUILD := "giant_look_build"
+## On a root: a face slider was set on one of its meshes (P53: a look with no face then skips the meshes).
+const META_FACE := "giant_look_face"
 ## The hair's sway (P46; the hair shader's head_motion): the tips lag the head's motion by SWAY_LAG_S seconds
 ## of it, eased at SWAY_EASE a second, at most SWAY_MAX_M at the tips (stage-1 metres, the mesh's own space).
 const SWAY_LAG_S := 0.035
@@ -316,11 +345,56 @@ static func region_codes(index: Dictionary, look: Dictionary) -> Dictionary:
 	for t: Variant in look.get("tattoos", []):
 		if typeof(t) == TYPE_DICTIONARY:
 			place.call("tattoo", str((t as Dictionary).get("design", "")))
-	if typeof(look.get("paint")) == TYPE_DICTIONARY and not (look.paint as Dictionary).is_empty():
-		place.call("paint", str(look.paint.get("design", "")))
+	for p: Dictionary in paints(look):
+		place.call("paint", str(p.get("design", "")))
 	if typeof(look.get("mark")) == TYPE_DICTIONARY and not (look.mark as Dictionary).is_empty():
 		place.call("mark", str(look.mark.get("design", "")))
 	return out
+
+
+## A look's war paints (P53: an Array of at most two {"design", "color"}; M10's one dictionary read as one).
+static func paints(look: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var p: Variant = look.get("paint")
+	if typeof(p) == TYPE_DICTIONARY and not (p as Dictionary).is_empty():
+		out.append(p)
+	elif typeof(p) == TYPE_ARRAY:
+		for e: Variant in p:
+			if typeof(e) == TYPE_DICTIONARY and not (e as Dictionary).is_empty():
+				out.append(e)
+	return out
+
+
+## The garment meshes a look shows: mesh id -> {"dye": Color, "kind": String ("" for an M10-shaped entry)}. An
+## entry names an index garment (its meshes) or a garment mesh; an M10-shaped entry (an index garment id) takes
+## dye_primary, dye_secondary or the natural colour by each mesh's index "dye".
+static func garment_meshes(index: Dictionary, look: Dictionary) -> Dictionary:
+	var out := {}
+	var garments := _garments(index)
+	var meshes := _meshes(index)
+	var g_list: Variant = look.get("garments", [])
+	for g: Variant in (g_list if typeof(g_list) == TYPE_ARRAY else []):
+		var id := Appearance.garment_id(g)
+		var ids: Array = garments.get(id, []) if typeof(garments.get(id)) == TYPE_ARRAY else ([id] if meshes.has(id) else [])
+		for m: Variant in ids:
+			var entry: Dictionary = meshes.get(str(m), {}) if typeof(meshes.get(str(m))) == TYPE_DICTIONARY else {}
+			if typeof(g) == TYPE_DICTIONARY:
+				var dye: Variant = (g as Dictionary).get("dye", LEGACY_PRIMARY)
+				out[str(m)] = {"dye": dye if dye is Color else (Color.html(str(dye)) if Color.html_is_valid(str(dye)) else NATURAL_DYE),
+					"kind": str((g as Dictionary).get("kind", ""))}
+			else:
+				out[str(m)] = {"dye": _legacy_dye(look, str(entry.get("dye", "primary"))), "kind": ""}
+	return out
+
+
+## An M10-shaped look's dye for a mesh's index "dye" slot.
+static func _legacy_dye(look: Dictionary, slot: String) -> Color:
+	match slot:
+		"primary":
+			return look.get("dye_primary", LEGACY_PRIMARY)
+		"secondary":
+			return look.get("dye_secondary", LEGACY_SECONDARY)
+	return NATURAL_DYE
 
 
 static func _zeros() -> PackedInt32Array:
@@ -492,6 +566,7 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 		mats[str(id)] = mat
 	root.set_meta(META_MATERIALS, mats)
 	root.set_meta(META_OWNER, root.get_instance_id())
+	root.remove_meta(META_BUILD)
 	root.set_meta(META_TIER, resolve_tier(tier, index))
 	apply(root, index, root.get_meta(META_LOOK, DEFAULT_LOOK))
 
@@ -604,11 +679,13 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 		# its own (build_materials applies the look just stored).
 		build_materials(root, index, str(root.get_meta(META_TIER, "auto")))
 		return
-	var shown := {}
-	var garments := _garments(index)
-	for g: Variant in l.garments:
-		for m: Variant in (garments.get(str(g), []) if typeof(garments.get(str(g))) == TYPE_ARRAY else []):
-			shown[str(m)] = true
+	var shown := garment_meshes(index, l)
+	var extras := {}   # P53: the accessories and the beads shown (Part B's meshes; none before P54 and P56)
+	for m: Variant in l.accessories:
+		extras[str(m)] = true
+	for key: String in ["hair_beads", "beard_beads"]:
+		if str(l[key]) != "":
+			extras[str(l[key])] = true
 	var meshes := _meshes(index)
 	# P51 (plan M11 §2.2): a model that loads its parts on demand (GiantModel) loads what the look shows and lets
 	# go of the rest; a synthetic root just shows and hides its nodes
@@ -626,15 +703,27 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				mi.visible = str(id) == str(l.beard_mesh)
 			"garment":
 				mi.visible = shown.has(str(id))
+			"accessory", "bead":
+				mi.visible = extras.has(str(id))
 		if mi.visible:
 			shown_ids.append(str(id))
 			if parts:
 				root.call("ensure_part", str(id))
 	if parts:
 		root.call("release_unused", shown_ids)
+	_apply_face(root, index, shown_ids, l.face)
+	var build: Vector2 = l.build if l.build is Vector2 else Vector2.ZERO
+	var build_max := float(index.get("build_max_m", 0.0)) if SchemaUtil.is_number(index.get("build_max_m")) else 0.0
+	if root.has_method("apply_build"):
+		root.call("apply_build", build, build_max)
 	var mats := _own_materials(root)
 	if mats.is_empty():
 		return
+	# the build's two uniforms only when they change (a look applied in the creator's every pick: plan M10 §1.7's
+	# 1 ms); build_materials forgets the last values, so new materials always get them
+	var build_key := [build, build_max]
+	var set_build: bool = root.get_meta(META_BUILD, []) != build_key
+	root.set_meta(META_BUILD, build_key)
 	for id: String in shown_ids:
 		var entry: Dictionary = meshes.get(id, {}) if typeof(meshes.get(id)) == TYPE_DICTIONARY else {}
 		if mesh_kind(entry) == "shell":
@@ -642,7 +731,8 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 	var hidden := hidden_regions_mask(index, l.garments)
 	var codes := region_codes(index, l)
 	var scars := scar_uniforms(index, l.scars)
-	var paint: Dictionary = l.paint if typeof(l.paint) == TYPE_DICTIONARY else {}
+	var painted := paints(l)
+	var paint: Dictionary = painted[0] if not painted.is_empty() else {}
 	var mark: Dictionary = l.mark if typeof(l.mark) == TYPE_DICTIONARY else {}
 	var ink: Color = (l.tattoos[0] as Dictionary).get("ink", Color(0.1, 0.18, 0.4)) if not (l.tattoos as Array).is_empty() \
 		else Color(0.1, 0.18, 0.4)
@@ -674,6 +764,9 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				set_param(mat, "scar_layer_b", int(scars.layer_b))
 				set_param(mat, "scar_on_b", scars.on_b)
 				set_param(mat, "hidden_regions", hidden)
+				if set_build:
+					set_param(mat, "build", build)
+					set_param(mat, "build_max_m", build_max)
 			"hair":
 				var beard := category == "beard"
 				set_param(mat, "hair_color", l.beard_color if beard else l.hair_color)
@@ -684,14 +777,14 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				set_param(mat, "iris_color", l.eye_color)
 				set_param(mat, "iris_glow", float(l.eye_glow))
 			"cloth":
-				match str(entry.get("dye", "primary")):
-					"primary":
-						set_param(mat, "dye_color", l.dye_primary)
-					"secondary":
-						set_param(mat, "dye_color", l.dye_secondary)
-					_:
-						set_param(mat, "dye_color", NATURAL_DYE)
+				var g: Dictionary = shown.get(id, {})
+				set_param(mat, "dye_color", g.get("dye", _legacy_dye(l, str(entry.get("dye", "primary")))))
+				if str(g.get("kind", "")) == "metal":
+					set_param(mat, "kind", 1)   # a metal garment's response whatever its detail map
 				set_param(mat, "fade", 0.0)
+				if set_build:
+					set_param(mat, "build", build)
+					set_param(mat, "build_max_m", build_max)
 
 
 ## The creator's "Hidden by your clothing" fade (0-1) on the garments' materials (none before
@@ -836,13 +929,45 @@ static func complete(look: Dictionary) -> Dictionary:
 	var l := DEFAULT_LOOK.duplicate(true)
 	for k: Variant in look:
 		l[k] = look[k]
-	for key: String in ["tattoos", "scars", "garments"]:
+	for key: String in ["tattoos", "scars", "garments", "accessories"]:
 		if typeof(l[key]) != TYPE_ARRAY:
 			l[key] = []
-	for key: String in ["paint", "mark"]:
-		if typeof(l[key]) != TYPE_DICTIONARY:
-			l[key] = {}
+	if typeof(l.mark) != TYPE_DICTIONARY:
+		l["mark"] = {}
+	if typeof(l.paint) != TYPE_DICTIONARY and typeof(l.paint) != TYPE_ARRAY:
+		l["paint"] = []
+	if typeof(l.face) != TYPE_DICTIONARY:
+		l["face"] = {}
+	if not l.build is Vector2:
+		l["build"] = Vector2.ZERO
 	return l
+
+
+## The face sliders (P53; plan M11 §2.5): every shown mesh with a blend shape named like a face key takes the
+## key's value (0 when the look has none). A mesh without the shapes (every mesh before P56's face keys) is left
+## alone.
+static func _apply_face(root: Node3D, index: Dictionary, shown_ids: Array, face: Variant) -> void:
+	var values: Dictionary = face if typeof(face) == TYPE_DICTIONARY else {}
+	var any := false
+	for k: Variant in values:
+		if SchemaUtil.is_number(values[k]) and float(values[k]) != 0.0:
+			any = true
+			break
+	if not any and not root.has_meta(META_FACE):
+		return   # no face slider set, now or before: nothing to put back
+	if any:
+		root.set_meta(META_FACE, true)
+	else:
+		root.remove_meta(META_FACE)
+	for id: Variant in shown_ids:
+		var mi := mesh_node(root, index, str(id))
+		if mi == null or mi.mesh == null or mi.get_blend_shape_count() == 0:
+			continue
+		for k: String in Appearance.FACE_KEYS:
+			var at := mi.find_blend_shape_by_name(k)
+			if at >= 0:
+				var v: Variant = values.get(k, 0.0)
+				mi.set_blend_shape_value(at, clampf(float(v), -1.0, 1.0) if SchemaUtil.is_number(v) else 0.0)
 
 
 # --------------------------------------------------------------------------- validate
@@ -890,13 +1015,22 @@ static func validate(root: Node, index: Dictionary, look: Dictionary) -> PackedS
 		if m != "" and not meshes.has(m):
 			out.append("%s: the index has no mesh '%s'" % [key, m])
 	for g: Variant in l.garments:
-		if not garments.has(str(g)):
-			out.append("garments: the index has no garment '%s'" % g)
+		var gid := Appearance.garment_id(g)
+		var as_mesh: Variant = meshes.get(gid)
+		var garment_mesh := typeof(as_mesh) == TYPE_DICTIONARY and str((as_mesh as Dictionary).get("category", "")) == "garment"
+		if not garments.has(gid) and not garment_mesh:
+			out.append("garments: the index has no garment '%s'" % gid)
+	for m: Variant in l.accessories:
+		if not meshes.has(str(m)):
+			out.append("accessories: the index has no mesh '%s'" % m)
+	for key: String in ["hair_beads", "beard_beads"]:
+		if str(l[key]) != "" and not meshes.has(str(l[key])):
+			out.append("%s: the index has no mesh '%s'" % [key, l[key]])
 	var wanted := []   # [design id, kind]
 	for t: Variant in l.tattoos:
 		wanted.append([str((t as Dictionary).get("design", "")) if typeof(t) == TYPE_DICTIONARY else str(t), "tattoo"])
-	if not (l.paint as Dictionary).is_empty():
-		wanted.append([str(l.paint.get("design", "")), "paint"])
+	for p: Dictionary in paints(l):
+		wanted.append([str(p.get("design", "")), "paint"])
 	if not (l.mark as Dictionary).is_empty():
 		wanted.append([str(l.mark.get("design", "")), "mark"])
 	for s: Variant in l.scars:

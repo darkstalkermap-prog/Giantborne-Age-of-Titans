@@ -24,6 +24,14 @@ extends RefCounted
 ##               press and the release loses the click (M10 gate, LA-1).
 ## Every design row (tattoos, war paint, scars, the ancestry mark) has a note line that says "Hidden by your
 ## clothing" while the current outfit covers its region (Appearance.covered_regions with the giant's index).
+##
+## P53 (plan M11 §2.5): the record is version 2 (clothing by slot), and today's rows keep working on it - the
+## smallest change until the creator II (P55): the Outfit row still shows the six outfits and puts one on by
+## filling its slots (Appearance.with_outfit), the two dye rows edit the outfit's cloth and leather dyes
+## (outfit.dyes.cloth, outfit.dyes.leather), and the one War paint row puts one paint on in its place (face or
+## body) and takes the other off (Appearance.with_paint). The record paths M10's rows used ("outfit.primary",
+## "outfit.secondary", "paint.design") still read and write the same values (LEGACY_KEYS), for the sheets and
+## the probes that name them.
 
 ## The creator's categories, in tab order.
 const CATEGORIES := ["Presets", "Skin", "Eyes", "Hair", "Beard", "Tattoos", "War paint", "Scars", "Clothing"]
@@ -42,6 +50,10 @@ const SWATCH_PX := 34
 const NOTE_COLOR := Color(1.0, 0.72, 0.35)
 ## The record paths of the design regions' tattoo rows.
 const TATTOO_ROWS := {"tattoos.arms": "arms", "tattoos.chest": "chest", "tattoos.back": "back", "tattoos.face": "face"}
+## M10's record paths of the dye rows and the record v2's paths they edit now (P53).
+const LEGACY_KEYS := {"outfit.primary": "outfit.dyes.cloth", "outfit.secondary": "outfit.dyes.leather"}
+## The one War paint row's path (its value is the record's first paint: Appearance.first_paint).
+const PAINT_ROW := "paint.design"
 
 
 # --------------------------------------------------------------------------- the categories
@@ -88,8 +100,8 @@ static func row_specs(category: String) -> Array:
 			return out
 		"Clothing":
 			return [{"key": "outfit.set", "kind": "cycler", "set": "outfit", "label": "Outfit"},
-				{"key": "outfit.primary", "kind": "swatch", "set": "dye", "label": "Main dye"},
-				{"key": "outfit.secondary", "kind": "swatch", "set": "dye", "label": "Second dye"}]
+				{"key": "outfit.dyes.cloth", "kind": "swatch", "set": "dye", "label": "Main dye"},
+				{"key": "outfit.dyes.leather", "kind": "swatch", "set": "dye", "label": "Second dye"}]
 	return []
 
 
@@ -129,11 +141,15 @@ static func value_of(record: Dictionary, key: String) -> Variant:
 		return typeof(scars) == TYPE_ARRAY and (scars as Array).has("scar." + key.get_slice(".", 1))
 	if key.begins_with("preset."):
 		return str(record.get("preset", "")) == key.substr(7)
-	var parts := key.split(".")
-	if parts.size() == 1:
-		return record.get(key, "")
-	var block: Variant = record.get(parts[0], {})
-	return (block as Dictionary).get(parts[1], "") if typeof(block) == TYPE_DICTIONARY else ""
+	if key == PAINT_ROW:
+		return Appearance.first_paint(record)
+	var parts := str(LEGACY_KEYS.get(key, key)).split(".")
+	var v: Variant = record
+	for p: String in parts:
+		if typeof(v) != TYPE_DICTIONARY:
+			return ""
+		v = (v as Dictionary).get(p, "")
+	return v
 
 
 ## A copy of `record` with the row `key` set to `value`; any manual edit makes the look "custom" (its preset
@@ -142,17 +158,26 @@ static func with_value(record: Dictionary, key: String, value: Variant) -> Dicti
 	if key.begins_with("preset."):
 		var rec := Appearance.preset_record(key.substr(7))
 		return rec if not rec.is_empty() else record.duplicate(true)
-	var out := record.duplicate(true)
-	var parts := key.split(".")
-	if parts.size() == 1:
-		out[key] = value
+	var out: Dictionary
+	if key == "outfit.set":
+		out = Appearance.with_outfit(record, str(value))
+	elif key == PAINT_ROW:
+		out = Appearance.with_paint(record, str(value))
 	else:
-		var block: Dictionary = (out.get(parts[0], {}) as Dictionary).duplicate(true) \
-			if typeof(out.get(parts[0])) == TYPE_DICTIONARY else {}
-		block[parts[1]] = value
-		out[parts[0]] = block
+		out = record.duplicate(true)
+		_set_path(out, str(LEGACY_KEYS.get(key, key)).split("."), value)
 	out["preset"] = ""
 	return out
+
+
+## Sets `value` at the record path `parts` inside `d` (the blocks on the way copied or made).
+static func _set_path(d: Dictionary, parts: PackedStringArray, value: Variant) -> void:
+	if parts.size() == 1:
+		d[parts[0]] = value
+		return
+	var block: Dictionary = (d.get(parts[0]) as Dictionary).duplicate(true) if typeof(d.get(parts[0])) == TYPE_DICTIONARY else {}
+	_set_path(block, parts.slice(1), value)
+	d[parts[0]] = block
 
 
 ## A copy of `record` with the scar `scar_id` on or off (at most Appearance.MAX_SCARS: a fifth is refused and
@@ -242,7 +267,7 @@ static func _design_region(design_id: String, index: Dictionary) -> String:
 ## (Appearance.covered_regions), "body": the body region ids where a design is hidden
 ## (Appearance.design_hidden_body_regions)}. Computed once per record.
 static func coverage(record: Dictionary, index: Dictionary, ancestry_id: String) -> Dictionary:
-	var garments: Array = Appearance.option(str(value_of(record, "outfit.set"))).get("garments", [])
+	var garments: Array = Appearance.record_garments(Appearance.sanitize(record, ancestry_id, false).record)
 	return {"regions": Appearance.covered_regions(record, index, ancestry_id),
 		"body": Appearance.design_hidden_body_regions(garments, index)}
 

@@ -5,16 +5,34 @@
 	"display_name": "The Wanderer",
 	"description": "Long chestnut hair combed back, a full beard, the wanderer's braies: the giant of the first renders.",
 	"appearance": {
-		"v": 1,
+		"v": 2,
 		"preset": "appearance_preset.wanderer",
 		"skin": "skin.ruddy",
 		"eyes": "eyes.grey_green",
-		"hair": {"style": "hair.long_back", "color": "haircolor.chestnut", "grey": 0.12},
-		"beard": {"style": "beard.full", "color": "", "grey": 0.2},
-		"tattoos": {"arms": "", "chest": "", "back": "", "face": "", "ink": "ink.woad"},
-		"paint": {"design": "", "color": "paintcolor.chalk"},
+		"build": {"brawn": 0.0, "girth": 0.0},
+		"face": {"jaw": 0.0, "chin": 0.0, "nose": 0.0, "brow": 0.0, "cheeks": 0.0, "age": 0.0},
+		"hair": {"style": "hair.long_back", "color": "haircolor.chestnut", "grey": 0.12, "beads": "bead.none"},
+		"beard": {"style": "beard.full", "color": "", "grey": 0.2, "beads": "bead.none"},
+		"tattoos": {"arms": "", "chest": "", "back": "", "face": "", "legs": "", "ink": "ink.woad"},
+		"paint": {"face": "", "body": "", "color": "paintcolor.chalk"},
 		"scars": [],
 		"mark": "auto",
-		"outfit": {"set": "outfit.wanderer", "primary": "dye.undyed", "secondary": "dye.dark_leather"}
+		"outfit": {
+			"set": "outfit.wanderer",
+			"slots": {
+				"head": {"item": "", "dye": ""},
+				"shoulders": {"item": "", "dye": ""},
+				"chest": {"item": "", "dye": ""},
+				"armour": {"item": "", "dye": ""},
+				"arms": {"item": "", "dye": ""},
+				"waist": {"item": "garment.belt", "dye": ""},
+				"legs": {"item": "garment.braies", "dye": ""},
+				"shins": {"item": "", "dye": ""},
+				"feet": {"item": "", "dye": ""},
+				"cape": {"item": "", "dye": ""}
+			},
+			"accessories": {"neck": "", "arm_ring": "", "belt": ""},
+			"dyes": {"cloth": "dye.undyed", "leather": "dye.dark_leather", "metal": "metal.iron"}
+		}
 	}
 }

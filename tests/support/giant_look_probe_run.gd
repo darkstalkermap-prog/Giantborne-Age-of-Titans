@@ -1,6 +1,6 @@
 extends RefCounted
 ## One run of tests/support/giant_look_probe.tscn shared by the look's rendered suites (P51): the test runner runs
-## every suite in one process, so tests/slow/test_skin_tone_render.gd and tests/slow/test_hair_render.gd read the
+## every suite in one process, so tests/gate/test_skin_tone_render.gd and tests/gate/test_hair_render.gd read the
 ## same child's report instead of drawing the giant twice. result() runs the child (Xvfb, the Compatibility
 ## renderer, two llvmpipe threads, a 320x240 window, `--giant-tier=` the tier asked) the first time a tier is asked
 ## for and keeps its report: {"report": the GIANT_LOOK dictionary or {}, "errors": shader and script errors,

@@ -14,6 +14,9 @@ extends IntegrationSuite
 ##     winnable battle: the cleared flag is repaired as the battle loads, and its portcullis stands open;
 ##   * a phase never waits on units that will never come: units of a cleared encounter that are not up count
 ##     as fallen, and units of a begun phase that left the world come back.
+## M11 (P53, plan M11 §1.7 rule 2): moved from tests/integration/ to the slow tier, unchanged (about 1 s of the
+## default tier); the gate's test_iron_regiment_reload walks the same death, quit-and-Continue and mid-battle save
+## on the real world.
 
 const BAILEY := "res://scenes/test/bailey_test.tscn"
 const WALL := "encounter.bailey_test_wall"

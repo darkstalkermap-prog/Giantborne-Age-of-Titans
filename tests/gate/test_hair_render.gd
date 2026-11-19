@@ -13,13 +13,15 @@ extends TestSuite
 ##     first person but for those neither camera shows (NOT_IN_EITHER_VIEW, with the reason);
 ##   * a shell style one draw call (as a card style is).
 ## Without xvfb-run it is skipped with a note.
+## M11 (P53, plan M11 §1.7 rule 3; FOLLOWUPS, P51's row): moved from tests/slow/ to the gate tier, unchanged, with
+## test_skin_tone_render (they share the probe's child run): about 23 s of the slow tier.
 
 const RUN := preload("res://tests/support/giant_look_probe_run.gd")
 const MIN_PX := 300
 const BEHIND_FLOOR_PX := 10
 const HIGHLIGHT_FLOOR_PX := 4
 const LOOK_FLOOR_PX := 200
-## The option check's floors in the rear Game view and in first person (tests/slow/test_appearance_render.gd).
+## The option check's floors in the rear Game view and in first person (tests/gate/test_appearance_render.gd).
 const VIEW_FLOOR_PX := {"rear": 18, "fp": 90}
 ## M10's frames (the probe on the W29 tree, P51's first run; docs/systems/P51.md): [roughness, scalp share].
 const M10_HAIR := {

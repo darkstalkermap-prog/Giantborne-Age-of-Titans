@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"id": "appearance_set.build",
+	"type": "appearance_set",
+	"category": "build",
+	"display_name": "Build",
+	"description": "P53 (plan M11 §2.4, §2.5, decision 7): the two build sliders, each from -1 to 1 (0: the giant as built). The skin's and the garments' vertex shader pushes the surface along its normal by the body's build weights (COLOR.g brawn, COLOR.b girth) times the index's build_max_m; no joint moves. low and high name the slider's two ends.",
+	"options": [
+		{"key": "brawn", "name": "Brawn", "low": "Lean", "high": "Brawny"},
+		{"key": "girth", "name": "Girth", "low": "Narrow", "high": "Heavy"}
+	]
+}

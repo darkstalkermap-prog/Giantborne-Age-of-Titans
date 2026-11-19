@@ -6,6 +6,8 @@ extends IntegrationSuite
 ## king's death opens the gate, sets world.ogre_king.defeated and emits boss_defeated; a level loaded
 ## after the king's defeat stays open. (The ten seeded phase-2 charges that all end against stone, about
 ## 1.5 s, moved to tests/slow/test_boss_arena_charges.gd: M10, P42, plan M10 §1.7 rule 4.)
+## M11 (P53, plan M11 §1.7 rule 2): moved from tests/integration/ to the slow tier, unchanged (about 1 s of the
+## default tier), beside test_boss_arena_charges; test_valley_boss fights the king in the real Valley.
 
 const ARENA := "res://scenes/test/boss_arena_test.tscn"
 const HB := preload("res://tools/builders/heavy.gd")

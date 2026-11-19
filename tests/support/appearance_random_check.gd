@@ -26,9 +26,10 @@ static func run(seeds: int, base: Dictionary, line: String) -> Dictionary:
 					if covered.has(region) and str(r.tattoos[region]) != "":
 						return {"count": n, "error": "%s seed %d: a tattoo where the outfit hides it (%s)" % [scope, seed,
 							region]}
-				var paint := str(r.paint.design)
-				if paint != "" and covered.has(str(Appearance.option(paint).get("region", ""))):
-					return {"count": n, "error": "%s seed %d: war paint where the outfit hides it" % [scope, seed]}
+				for place: String in Appearance.PAINT_PLACES:   # P53: the record v2's two places
+					var paint := str(r.paint[place])
+					if paint != "" and covered.has(str(Appearance.option(paint).get("region", ""))):
+						return {"count": n, "error": "%s seed %d: war paint where the outfit hides it" % [scope, seed]}
 			if scope == "all" and keep and base_outfit != null and str(r.outfit) != str(base_outfit):
 				return {"count": n, "error": "all seed %d: the outfit changed with keep_outfit" % seed}
 			if scope != "presets" and str(r.mark) != str(base.get("mark", Appearance.MARK_AUTO)):

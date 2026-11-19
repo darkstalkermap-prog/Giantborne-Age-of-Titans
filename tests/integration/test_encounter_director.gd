@@ -5,8 +5,9 @@ extends IntegrationSuite
 ## count) with its flag and event once, the leash return, LOD tiers by distance, spawn
 ## properties and the patrol route, despawn and re-activation, flag gates and alert groups.
 ##
-## Most tests spawn with the AI off (member_spawned) so nothing but the director moves; the
-## leash test runs the real soldier AI.
+## Most tests spawn with the AI off (member_spawned) so nothing but the director moves. The leash
+## return with the real soldier AI (about 0.4 s) moved to tests/slow/test_director_leash_return.gd
+## (M11, P53, plan M11 §1.7 rule 2).
 
 const LEVEL_SCENE := "res://scenes/test/director_test.tscn"
 const WOLVES := "encounter.director_test_wolves"
@@ -323,58 +324,6 @@ func test_spawned_wolves_engage_and_their_deaths_clear_the_encounter() -> void:
 
 
 # --------------------------------------------------------------------------- leash
-
-func test_leash_return_walks_home_ignoring_the_player() -> void:
-	await _load_level(true)
-	director.force_activate(SOLDIERS)
-	await step_ticks(2)
-	var s := _enemy("test.director.soldier_3")
-	var home := s.home_position
-	var hp_max := s.entity.combatant.pools.health_max
-	queue_hit("player", s.entity_id, s.global_position + Vector3(0, 0, -2), 60.0)   # from behind
-	await step_ticks(1)
-	assert_true(s.entity.combatant.pools.health < hp_max, "hurt before the lure")
-	# Lured 60 m out of its 40 m leash, the giant right in front of it.
-	s.global_position = SOLDIERS_CENTER + Vector3(0, 0.05, 60)
-	_teleport(SOLDIERS_CENTER + Vector3(0, 0.05, 64))
-	director.update_now()
-	assert_eq(leashed, ["%s:test.director.soldier_3" % SOLDIERS] as Array[String], "encounter_leashed")
-	assert_true(s.is_returning(), "it returns")
-	assert_eq(s.brain.state, EnemyBrain.AIState.RETURN, "brain state RETURN")
-	assert_eq(s.brain.state_name(), "Return", "named Return")
-	assert_eq(s.leash_count, 1, "one leash")
-	var start_dist := s.global_position.distance_to(home)
-	var attacked := false
-	var aware := false
-	var healed_early := false
-	for i in 359:
-		if i == 120:
-			queue_hit("player", s.entity_id, s.global_position + Vector3(0, 0, 2), 10.0)   # it ignores even this
-		await step_ticks(1)
-		if i < 350 and s.entity.combatant.pools.health >= hp_max - 1e-3:
-			healed_early = true
-		attacked = attacked or started.any(func(x: String) -> bool: return x.begins_with(s.entity_id + ":"))
-		aware = aware or s.brain.aware or s.brain.target_id != ""
-		if i % 30 == 29:
-			director.update_now()
-	assert_false(healed_early, "not healed before 6 s")
-	await step_ticks(2)
-	assert_near(s.entity.combatant.pools.health, hp_max, 1e-3, "full health 6 s after the leash")
-	assert_false(attacked, "no attack on the way home, though the giant stood next to it")
-	assert_false(aware, "it never became aware or took a target")
-	assert_true(s.is_returning(), "still on its way")
-	assert_eq(leashed.size(), 1, "leashed once while it returns")
-	var walked := start_dist - s.global_position.distance_to(home)
-	assert_true(walked > 12.0, "it ran home (%.1f m in 6 s)" % walked)
-	# Near home it arrives, and its AI resumes: it engages the giant again.
-	s.global_position = home + Vector3(0, 0, 3)
-	_teleport(home + Vector3(0, 0.05, -8))   # ahead of it: it arrives facing north
-	var arrived: bool = await TestWait.until(self, func() -> bool: return not s.is_returning(), 120)
-	assert_true(arrived, "the return ends at home")
-	assert_true(s.ai_enabled, "its AI is back on")
-	var engaged: bool = await TestWait.until(self, func() -> bool: return s.brain.aware, 90)
-	assert_true(engaged, "back inside, it engages again")
-	assert_eq(director.encounter_state(SOLDIERS), EncounterDirector.ACTIVE, "the encounter stayed active")
 
 
 # --------------------------------------------------------------------------- LOD
