@@ -2683,6 +2683,51 @@ proxy **1.11 MB**; the default look **2.15 MB** (1.81); the fullest look **2.60 
 part 5.28 MB (W29: 5.83). Plan §2.12: at most 4.5 MB in play - **met**. A part's first load (the braided hair):
 1.9 ms read and bound, 23.6 ms to its first frame.
 
+### M11 Gate A: the merged measurements (the look and motion lanes)
+
+The Gate A merge (the look lane - the skin in the world's light, first person's shadow, the braies' rim - then the
+motion lane - the skin's CPU, the arms' rate limit, the eyes' look - on the tag `wave-30`; 19 November 2026).
+Container as above (4 shared CPUs, **no GPU**: every frame and figure is the software renderer's, Mesa llvmpipe or
+SwiftShader; a debug build).
+
+**The check** (`tools/check.sh --build --slow --gate --giant --web-tools --require --strict-times`): **CHECK
+PASSED** - the build left the tree unchanged, the giant pipeline's tests and `--verify --skip-bake` OK, the launcher's
+345 checks and the clock's 18; **344 suites, 57,578 checks, 0 failures**; default 73.5 s, **slow 375.3 s**, gate
+885.2 s. The default figure ran beside a file search the merge had left running (its rise was spread over unrelated
+suites: the Valley's ambience +3.3 s, the sound banks +1.4); the default tier again on a quiet machine (load 1.42,
+`--require --strict-times`): **62.8 s** (W30 merge 60.0), 227 suites, 0 failures. No suite changed tier (plan §1.7:
+72 / 400 s; `test_skin_world_render` adds 4.3 s to the slow tier). **The seeded soak** prints the W30 merge's
+`AUTOPILOT_RESULT` in all 28 keys (41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 ticks, 0 errors),
+both runs.
+
+**The Web export** (`tools/build_web.sh`, `Web`, budget 26): `PCK_SIZE raw=26735908 gzip=18432680
+shipped=24576908` (**23.44 MiB of 26**) in two parts; `GIANT_SHARE` 8,868,607 raw, **6,724,464 shipped (6.41 MiB of
+7.6)**, 84 files; `PEOPLE_SHARE` 0; `PCK_SHA256 c1fcce1126c47924f063b05224854915902bfdfd3b4ce6585eea7f060d9d2222`.
+`Web (test)`: 25,661,860 shipped (24.47 MiB), `PCK_SHA256 550abc66...6b9890f8115`.
+
+**The five Chromium checks** (each started at a 1-minute load under 3; no re-run): `creator_check` OK, 3 misses
+reported (the creator after New Game **3.3x**, 506.8 ms against 153.8; the shrine's creator 2.21x; the title's warm-up
+frames 64-75x by design; renderer peak 1,062 MB); `world_start_check` OK (peak 1,042 MB); `audio_check` OK, criterion
+NOT MET (264 holes, all on the main thread; largest clock step 11.2 ms); `world_check` OK, criterion NOT MET (604
+holes; 32 references, largest step 23.5 ms; peak 1,160 MB); `stream_check --world --audio` (`Web (test)`) OK,
+criterion NOT MET (340 holes; peak 690 MB). 0 console errors and 0 failed requests in every run.
+
+**Plan §2.12, measured on the merged code:**
+
+| Budget | Measured | |
+| --- | --- | --- |
+| The giant's CPU a frame with secondary motion, native (0.12 ms) | `--ui-probe-bench` `skin_springs_ms`, the New Game tour, the Wanderer's two chains, Xvfb 960x540, four runs at loads 1.29-1.44: **0.136-0.143 ms** (the M10 loop `skin_ms` 0.106-0.110, one run 0.206); W30 merge 0.291 | **missed**; within the motion lane's proposed 0.15 |
+| The same on the Web (0.45 ms) | `creator_check`: **0.230 / 0.248 ms** after the level (M10 loop 0.186 / 0.161), 0.171 with the shrine's two giants; W30 merge 0.39-0.42 | met |
+| Draw calls at `low` (250) | the Valley walk p50 / p95 / p99 / max 94 / 139 / 143 / **152**; the stress arena 75 / 126 / 147 / **153** | met |
+| Draw calls at `medium` (Valley 330, stress 620) | the Valley 213 / 307 / 349 / **379**; the stress arena 312 / 551 / 617 / **642** - the W30 merge's counts exactly (third person: the shadow proxy's layer change adds a shadow draw in first person only) | missed by 49 and 22 (unchanged) |
+| The giant's mesh buffers in play (4.5 MB) | `giant_parts_probe`: the body, eyes and proxy 1.11 MB; the default look 2.15 (1.81 counted); the fullest 2.60 (2.13); every part 5.28 | met |
+| The creator's first frame (3x the median) | 3.3x after New Game (W30 3.28x); the shrine's creator 2.21x (W30 1.74x) | missed (unchanged) |
+
+**Open decision (the gate's):** the native skin CPU misses §2.12's 0.12 ms by 0.016-0.023 ms in these runs (it was
+0.291 at the W30 merge). The motion lane proposes **0.15 ms natively** as the budget (the measured floor with every
+feature on and this container's run-to-run spread), the Web's 0.45 unchanged; the plan's figure is not edited here.
+The alternative is to keep 0.12 and give P57 the brain's modifier (0.046-0.051 ms of the frame; FOLLOWUPS).
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
