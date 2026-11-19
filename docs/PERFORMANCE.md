@@ -2780,6 +2780,19 @@ streaming, the draw calls, the memory, the console) as Gate A recorded. Against 
 the version): the creator's first frame 3.59x (3.3x), the Valley's first frame 1.21x, Continue 0.46x, the shrine's
 creator 2.18x (2.21x); the skin with secondary motion 0.2005-0.279 ms (0.230-0.248).
 
+**After the release package: `world_check.mjs` run again with the other lane finished.** Seven more runs, each started
+with the machine otherwise idle (the check itself raises the load to 5-7), alternating the release build with Gate
+A's merge as a control:
+
+| Build | Runs | Default form |
+| --- | --- | --- |
+| The release build (0.11.0-m11) | 3 | FAILED once (one hole, 510.8 ms at 265.5 s), then OK twice (603 and 608 holes, every one placed on the main thread) |
+| Gate A's merge (before the second fix round) | 3 | OK twice (606 holes each), then FAILED once (one hole, 557.3 ms at 182.5 s) |
+
+So over the day the release build failed 3 runs of 5 and Gate A's merge 1 of 3, each failure on a single hole of about
+600 at a different time, and both builds pass and fail. This reads as the recorder's placing on a machine whose frames
+run to a second, not as a change the second fix round made; it is not proven, and the row in `FOLLOWUPS.md` stays open.
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
