@@ -347,3 +347,56 @@ func test_a_member_whose_way_is_lost_outside_its_leash_holds_and_tries_again() -
 	assert_true(home and _flat(s.global_position, post) <= EnemyActor.LEASH_ARRIVE_M + 0.3,
 		"the wall gone, it rides home (%.1f m from its post)" % _flat(s.global_position, post))
 	assert_eq(leashed, 1, "still leashed once")
+
+
+## Gate B (the M12 review's finding 2; W32's contact rule, an accepted gameplay change in docs/DECISIONS.md): a
+## return outside its leash held pressed into a giant's body (its edge within EnemyActor.LEASH_CONTACT_M of his) for
+## EnemyActor.LEASH_CONTACT_WAY_S on end begins its "way" wait at once, before its path failures would have begun it
+## (LEASH_BODY_WAY_FAILURES). Run from a chosen Sim phase (the AI's and the director's tick % N updates) so the
+## outcome does not follow the suites run before it; the ticks it counts are its own (_leash_contact_ticks).
+func _contact_case(phase: int) -> Dictionary:
+	await step_ticks(posmod(phase - Sim.tick, 60))
+	var s := await _setup()
+	var centre := _centre()
+	var leash := _leash_m()
+	s.home_position = centre + Vector3(0, 0.05, leash - 10.0)   # its post well inside the leash
+	_put_giant(centre + Vector3(0, 0.05, leash + 10.0))   # he stands in its way home, outside the leash
+	s.global_position = centre + Vector3(0.3, 0.05, leash + 24.0)   # lured out behind him
+	director.update_now()
+	assert_true(s.is_returning(), "phase %d: the leash sends it home" % phase)
+	var failures_before := s.path_failures
+	var first_contact := -1
+	var wait_tick := -1
+	var contact_at_wait := 0
+	for i in 60 * 12:
+		await step_ticks(1)
+		if first_contact < 0 and s._leash_contact_ticks > 0:
+			first_contact = Sim.tick
+		if s.leash_waiting != "":
+			wait_tick = Sim.tick
+			break
+		contact_at_wait = s._leash_contact_ticks
+	var out := {"first_contact": first_contact, "wait_tick": wait_tick, "waiting": s.leash_waiting,
+		"failures": s.path_failures - failures_before, "contact_ticks": contact_at_wait,
+		"from_centre": _flat(s.global_position, centre), "leash": leash}
+	print("    pressed into him from phase %d: contact at +%d ticks, wait '%s' %d ticks later, %d path failure(s), %.1f m from the centre (leash %.0f)" % [
+		phase, first_contact - s.leash_started_tick, out.waiting, wait_tick - first_contact, out.failures, out.from_centre, leash])
+	return out
+
+
+func _assert_contact_wait(o: Dictionary, phase: int) -> void:
+	var way_ticks := ActionDef.seconds_to_ticks(EnemyActor.LEASH_CONTACT_WAY_S)
+	assert_true(int(o.first_contact) >= 0, "phase %d: it rides into him" % phase)
+	assert_eq(o.waiting, "way", "phase %d: it waits for its way" % phase)
+	assert_eq(int(o.contact_ticks), way_ticks - 1, "phase %d: the wait begins on the tick it has been pressed into him %d ticks" % [phase, way_ticks])
+	assert_true(int(o.failures) < EnemyActor.LEASH_BODY_WAY_FAILURES,
+		"phase %d: before its path failures would have begun it (%d)" % [phase, o.failures])
+	assert_true(float(o.from_centre) > float(o.leash), "phase %d: outside its leash" % phase)
+
+
+func test_a_return_pressed_into_a_giant_for_a_second_begins_its_wait_phase_0() -> void:
+	_assert_contact_wait(await _contact_case(0), 0)
+
+
+func test_a_return_pressed_into_a_giant_for_a_second_begins_its_wait_phase_30() -> void:
+	_assert_contact_wait(await _contact_case(30), 30)
