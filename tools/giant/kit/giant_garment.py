@@ -71,6 +71,7 @@ SKIRT_UV_PER_M = 0.347      # the third look lane: a skirt's own UVs at the body
 SKIRT_UV_SEAM = 0.0         # ... their seam round it at this angle (rad from his left side: under the arm)
 HAUBERK_SEAT_M = 0.014       # stage 1 (the third look lane): a hauberk's skirt stands this much more off the seat
 SKIRT_THIGH_FOLLOW = 1.0     # the third look lane: a skirt's hem follows the thigh on its side this much (the rows ease to it)
+JERKIN_LACING_M = 0.008       # the fourth look lane: how far the jerkin's laced edges stand up (human m)
 BOOT_TOE_M = 0.012           # the fourth look lane: a boot's more over the toes (human m)
 CUIRASS_LAME_M = 0.065       # the fourth look lane: the leather cuirass's bands (human m)
 TUNIC_SLIT_M = 0.13          # the fourth look lane: the tunic's neck slit (human m)
@@ -1812,11 +1813,15 @@ class Wardrobe:
         hip = self.hip
         keep = (self.torso + B["pelvis"] * (z > hip + 0.06) > 0.6) & (B["upperarm"] < 0.25) & (B["neck"] < 0.3) \
             & (z > hip + 0.05) & (B["head"] < 0.02)
-        # the fourth look lane: laced up the front, its two edges a hand apart at the neck (it read as the cuirass)
+        # the fourth look lane: laced up the front - its two edges stand up as a ridge down the breastbone, a little
+        # apart toward the neck (it read as the cuirass; an opening left the chest uncovered, which the data says the
+        # jerkin covers)
         V = self.V
-        opening = (self.N[:, 1] < -0.3) & (np.abs(V[:, 0]) < 0.008 + 0.035 * sstep(z, self.shoulder - 0.25, self.neck_z))
-        keep = keep & ~opening
-        self.add_shell("jerkin", keep, np.full(self.n, 0.045 * self.S), snaps=[self.zsnap(hip + 0.05)],
+        front = sstep(-self.N[:, 1], 0.3, 0.6)
+        apart = 0.008 + 0.02 * sstep(z, self.shoulder - 0.25, self.neck_z)
+        edges = np.exp(-((np.abs(V[:, 0]) - apart) / 0.012) ** 2) * front
+        off = (0.045 + JERKIN_LACING_M * edges) * self.S
+        self.add_shell("jerkin", keep, off, snaps=[self.zsnap(hip + 0.05)],
                        mat="giant_leather")
 
     def g_mail_hauberk(self):
