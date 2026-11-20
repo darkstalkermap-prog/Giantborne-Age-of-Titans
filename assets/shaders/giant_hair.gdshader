@@ -137,8 +137,8 @@ void fragment() {
 			// (the fifth look lane: on a beard over a longer share, strand by strand - each card's root stood off the
 			// skin as a straight edge: from the side the cheek was a staircase of shingles)
 			float beard = step(0.001, tip_thin);
-			float rf = mix(root_feather, BEARD_ROOT_FEATHER, beard);
-			float rr = smoothstep(0.0, rf, UV.y + sid * rf);
+			float rr = mix(smoothstep(0.0, root_feather, UV.y + sid * root_feather),
+				smoothstep(0.0, BEARD_ROOT_FEATHER, UV.y + sid * BEARD_ROOT_FEATHER), beard);
 			a *= BEARD_ROOT_FLOOR * beard * (1.0 - rr) + rr;
 			a *= 1.0 - smoothstep(1.0 - tip_thin, 1.0, UV.y + sid * tip_thin) * step(0.001, tip_thin);
 			if (tip_thin > 0.001) {

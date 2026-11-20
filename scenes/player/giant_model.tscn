@@ -812,7 +812,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "68390917ba73666edacbc4e96affa55aef99ef1aaaa438851d0051794a01f16e",
+"manifest_sha256": "a38b0097adbad960185c7a0d83507a489d9a930ba6069717a9a5be763f9aad07",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -1052,7 +1052,7 @@ index = {
 "chains": ["beard"],
 "covers": [],
 "dye": "none",
-"face_keys": ["jaw", "chin", "nose", "cheeks"],
+"face_keys": ["jaw", "chin", "nose"],
 "layer": 3,
 "node": "Beard_chin_braid",
 "part_path": "res://assets/giant/parts/Beard_chin_braid.glb",
@@ -1076,7 +1076,7 @@ index = {
 "chains": ["beard"],
 "covers": [],
 "dye": "none",
-"face_keys": ["jaw", "chin"],
+"face_keys": ["jaw", "chin", "cheeks"],
 "layer": 3,
 "node": "Beard_full",
 "part_path": "res://assets/giant/parts/Beard_full.glb",

@@ -138,7 +138,7 @@ STYLES.update({
         "braids": [dict(at="tine", side=s, length=0.1, width=0.03, step=0.014, lean=(0.02 * s, -0.1, -1.0),
                         ties=(1.0,), beads=(0.45,)) for s in (1.0, -1.0)]},
     "Beard_mutton_chops": {"kind": "beard", "locks": False, "edge": dict(n=90), "layers": [
-        dict(n=400, length=0.06, lo=0.004, hi=0.009, npts=4, power=1.0, width=0.025, curl=0.1, wispy=0.15,
+        dict(n=400, length=0.06, lo=0.004, hi=0.009, npts=4, power=1.0, width=0.028, curl=0.1, wispy=0.15,
              region="chops"),
         dict(n=160, length=0.075, lo=0.009, hi=0.014, npts=4, power=1.0, width=0.022, curl=0.14, wispy=0.4,
              region="chops")],
@@ -1099,7 +1099,8 @@ def build_styles(body, rig, coll, bd, S):
             P = grow_beard(surf, L, S, hs, erng, ed["n"], ed["length"], ed["lo"], ed["hi"], npts=ed["npts"],
                            power=1.0, mask=band)
             n = len(P)
-            width = ed["width"] * S * (0.6 + 0.8 * erng.random(n))
+            along = np.linalg.norm(np.diff(P, axis=1), axis=2).sum(axis=1)
+            width = np.minimum(ed["width"] * S * (0.6 + 0.8 * erng.random(n)), BEARD_ASPECT * along)
             V, F, UV, Nn = ribbons(surf, P, width, np.full(n, 3), np.full(n, ed["curl"]), centre, taper=BEARD_TAPER)
             Vs.append(V)
             Fs.append(F + off)
