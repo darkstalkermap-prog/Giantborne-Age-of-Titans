@@ -61,7 +61,7 @@ BRAIES = dict(
     fold_lines=((-1.25, 0.35, 1.0), (-2.2, -0.25, 0.7), (0.35, 0.2, 0.6), (1.55, -0.3, 0.9), (2.45, 0.25, 0.6)),
     fold_width=0.30,
     back_taper=0.18,     # (the fourth look lane: 0.10 and 0.16 read as ballooning)
-    side_taper=0.30,
+    side_taper=0.55,     # (the fifth look lane: 0.30 still ballooned at the outer hips)
     waist_cinch=0.006,    # W33: the most the waist stands off the skin (human m)
     belt_height=0.065,
     belt_thickness=0.006,
@@ -81,6 +81,7 @@ LOINCLOTH_FLAP_HALF_M = 0.14   # ... and the loincloth's flaps are this wide eit
 BRAIES_CROTCH_BELOW_HIP = 0.31  # the third look lane: the braies' seat spans the legs down to this under the hip joints
 BRAIES_SEAT_TOP = -0.02     # the third look lane: the braies' seat spans the hips' back up to this over the hip joints
 BRAIES_CLEFT_OVER = 0.07    # ... and over the cleft this much higher (under a shirt's hem)
+BRAIES_OUTER_SLIM = 0.5     # the fifth look lane: the share of the braies' ease taken off their outer side
 BRAIES_UV_SCALE = 11.0    # the third look lane: the body's UV density over the tights helper's (0.347 / 0.031 a metre)
 BOOTS_TRIANGLES = 2500    # the research boots had 4,688 triangles (dense toes): decimated toward this
 
@@ -619,6 +620,8 @@ def build_braies(bd, rig, coll, weights, S, p=None):
     # knee, a few narrow fold lines and a plain hem (the sines' ease ballooned the hips and thighs, every hollow of the
     # tights helper showed through, and the hem pulled in like an elastic's)
     loose = p["looseness"] * (0.95 + 0.3 * sstep(0.7 - t, 0.0, 0.7)) * (1.0 - 0.5 * sstep(t, 0.7, 0.85) - 0.2 * sstep(t, 0.85, 0.9))  # (gathered into the waistband)
+    # the fifth look lane: the outer hips and thighs eased less (wide bulbs either side from the front)
+    loose = loose * (1.0 - BRAIES_OUTER_SLIM * np.clip(vn[:, 0] * np.sign(verts[:, 0]), 0.0, 1.0))
     out_v, lift = drape_breeches(verts + vn * loose[:, None], vn, faces, J, z_lo, z_hi, p)
     # straighten the stair-stepped cut: snap boundary vertices to the waist / hem heights
     E = np.concatenate([faces[:, [0, 1]], faces[:, [1, 2]], faces[:, [2, 3]], faces[:, [3, 0]]])
