@@ -310,15 +310,18 @@ func test_the_material_and_name_filters_with_the_pad_and_the_keys() -> void:
 	assert_eq(names, ["None", "Mail hauberk", "Scale coat", "Bronze breastplate"], "metal only, None kept first")
 	_key(KEY_F, 102)
 	assert_eq(g.material_filter, "all", "and round to All")
-	# the name filter: typing goes into the box
+	# the name filter: typing goes into the box (Gate B: the first letter puts the focus there, the rest type in it)
 	_key(KEY_S, 115)
+	assert_true(g.filter_box.has_focus(), "the first letter puts the focus in the box")
 	_key(KEY_C, 99)
+	await get_tree().process_frame   # LineEdit tells its text change at the frame's end
 	assert_eq(g.query, "sc", "typing filters by name")
 	names.clear()
 	for ch: Dictionary in g.shown:
 		names.append(str(ch.name))
 	assert_eq(names, ["None", "Scale coat"], "a match anywhere in the name")
 	_key(KEY_BACKSPACE)
+	await get_tree().process_frame
 	assert_eq(g.query, "s", "Backspace takes a letter off")
 	g.set_query("zzz")
 	assert_true(g.empty_label.visible and g.empty_label.text == OptionGrid.NO_MATCH, "no match says so")
@@ -336,6 +339,27 @@ func test_the_material_and_name_filters_with_the_pad_and_the_keys() -> void:
 	assert_false(c.grid_open(), "Esc closes the grid")
 	assert_eq(get_viewport().gui_get_focus_owner(), armour.button, "the focus back on its row")
 	assert_true(stack.has_screen(c), "and the creator stays")
+
+
+## Gate B (the M12 review's finding 4): the first letter typed in an open grid puts the focus in the box, so the rest
+## of a name types there: "iron" in the Head grid searched "ion" and R randomized the whole Clothing category.
+func test_typing_a_name_in_a_grid_types_the_creators_own_keys_into_the_box() -> void:
+	var c := _open()
+	c.show_category("Clothing")
+	var head := c.row("outfit.slots.head.item") as OptionRows.GridRow
+	head.button.grab_focus()
+	_key(KEY_ENTER)
+	assert_true(c.grid_open(), "the head grid is open")
+	var before := c.current_record()
+	var turn := c.preview.turn_deg
+	for ch in "iron":
+		_key(OS.find_keycode_from_string(ch.to_upper()), ch.unicode_at(0))
+	await get_tree().process_frame   # LineEdit tells its text change at the frame's end
+	assert_true(c.grid.filter_box.has_focus(), "the first letter put the focus in the box")
+	assert_eq(c.grid.query, "iron", "the query is what was typed")
+	assert_true(OptionRows.same(c.current_record(), before), "typing a name changes nothing on the giant")
+	assert_eq(c.preview.turn_deg, turn, "nor turns the preview")
+	assert_false(c.status_text().begins_with("Randomized"), "nothing randomized (%s)" % c.status_text())
 
 
 func test_a_grid_puts_on_by_moving_and_closes_with_a() -> void:

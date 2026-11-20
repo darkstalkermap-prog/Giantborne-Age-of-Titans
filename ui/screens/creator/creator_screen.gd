@@ -132,6 +132,8 @@ var _preset_note: Label = null        ## the focused preset's description, under
 ## P55: the option grid (in the options panel, in place of the rows while open), its row, and the thumbnails.
 var grid: OptionGrid
 var thumbnails: ThumbnailCache
+## Gate B: the pictures the page shown asked for, key (ThumbnailCache.key_of) -> option id.
+var _thumbs_wanted: Dictionary = {}
 var _grid_row: OptionRows.GridRow = null
 var _grid_session := 0
 var _triggers := {}                   ## JoyAxis -> true while a trigger is held past GRID_TRIGGER_PRESS
@@ -647,6 +649,7 @@ func _close_grid_quietly() -> void:
 	if grid != null:
 		grid.close()
 	thumbnails.request([])
+	_thumbs_wanted = {}
 	_grid_row = null
 	_merge_key = ""
 	_scroll.visible = true
@@ -685,15 +688,19 @@ func _on_grid_page(ids: Array) -> void:
 	var k := get_viewport().get_final_transform().get_scale().x if is_inside_tree() else 1.0
 	thumbnails.set_cell_pixels((grid.cell_px() - 8) * absf(k))
 	var items: Array = []
+	_thumbs_wanted = {}
 	for id: String in ids:
 		var item := thumb_item(_grid_row.spec, id)
 		if not item.is_empty():
 			items.append(item)
+			_thumbs_wanted[thumbnails.key_of(item)] = id
 	thumbnails.request(items)
 
 
-func _on_thumbnail(id: String, tex: Texture2D) -> void:
-	if grid_open():
+## Gate B: only a picture the page shown asked for (its option id and key); one still in flight for another grid
+## (the hair's beads when the beard's open) or for other dyes is dropped.
+func _on_thumbnail(id: String, tex: Texture2D, key: String) -> void:
+	if grid_open() and str(_thumbs_wanted.get(key, "")) == id:
 		grid.set_thumbnail(id, tex)
 
 
@@ -744,6 +751,8 @@ func thumb_item(spec: Dictionary, id: String) -> Dictionary:
 			key = "%s|%s|%s|%s" % [id, skin_id, colour_id, base.beard.style]
 		"garment":
 			base.outfit.slots[str(spec.slot)] = {"item": id, "dye": ""}
+			# Gate B: a garment's picture by the one dye it is drawn in (its material's, or its own), not all three
+			key = "%s|%s|%s" % [id, skin_id, Appearance.slot_dye_id(base.outfit.slots[str(spec.slot)], dyes)]
 		"accessory":
 			base.outfit.accessories[str(spec.slot)] = id
 			aim = [str(Appearance.option(id).get("mesh", ""))]
@@ -953,6 +962,9 @@ func _handle_grid_key(k: InputEventKey) -> bool:
 		return false   # the creator's own keys
 	var ch := char(k.unicode) if k.unicode >= 32 else ""
 	if ch != "" and (ch.to_lower() != ch.to_upper() or ch.is_valid_int() or ch == " "):
+		# Gate B: the first letter typed puts the focus in the box, so the rest of the name types there (Q, E, R, V
+		# and F mid-word turned the preview, randomized the category and cycled the material filter)
+		_edit_filter()
 		grid.set_query(grid.query + ch)
 		return true
 	return false

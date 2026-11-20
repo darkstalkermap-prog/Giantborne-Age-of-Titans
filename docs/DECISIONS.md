@@ -824,6 +824,21 @@ Every change has a test that failed before it or a rendered comparison.
 | First person at rest showed the club upright over the right third of the view. | Gate A2: `fp_rest`'s forearm turned 75 degrees, so the weapon lies low in the lower right corner at every stage (the stage-1 club 0.058 of the frame, 0.183 before). Stage 6's unreforged sword is a sliver there: accepted. |
 | First person looking down showed the thighs' flat caps between the arms. | Gate A2: first person draws no legs, as it draws no torso: the skin and every garment discard the pelvis, legs, feet and caps by the region id in `COLOR.r` while the camera is in the head; the shadow keeps the whole body. No legs or feet in first person: accepted. |
 
+### 3.6 M11 Part B (Gate B)
+
+Gate B reviewed Part B's candidate (`47a0af6`) through the plan's lenses; one fix lane followed. The findings and
+their fixes are in `docs/systems/GATE_B.md`; what was not fixed is in `docs/plans/FOLLOWUPS.md`, "From the M12 gate
+review". Every fix has a test that failed before it.
+
+| Finding | Fix or decision |
+| --- | --- |
+| **An accepted gameplay change inside Part B: the leash's contact rule** (W32, commit `d09f1d7`). A leash return outside its leash held pressed into a giant's body (its edge within `EnemyActor.LEASH_CONTACT_M` = 0.05 m of his, or into it) for `LEASH_CONTACT_WAY_S` = 1 s on end begins its wait at once ("way", or "post" when he stands on its post) instead of at its second path failure. It changes the war-camp riders' trap: in 20 of 60 Sim phases a rider stayed pressed into him up to 6.8 s, now at most 3.5 s, and every return ends within 11 s. Part B was to carry no gameplay number; this one is kept as a deliberate gameplay change, not a test fix. | Kept; recorded here and in `docs/BALANCE_LOG.md`, "Gate B: the leash's contact rule"; the 0.12.0-m12 release notes name it. The soak is unchanged (41 attacks, 33 hits, 4 kills, 2 fence breaks). `test_leash_waits.test_a_return_pressed_into_a_giant_for_a_second_begins_its_wait_phase_0` / `_phase_30` (slow tier): the wait begins on the 60th tick pressed into him, before any second path failure (with the rule off: 314 ticks and two failures). |
+| The look's skip-unchanged cache (P57) left a piece hidden while the build or the layering changed with its old build and push when shown again. | The build and a garment's push are part of each material's own compared values; a whole look still about 0.33 ms. `test_giant_look_cache`, slow `test_giant_look_cache_random`. |
+| The creator's grid showed another grid's or another dye's pictures (kept by option id), and a late picture overwrote the open grid's. | A grid forgets its pictures when it opens and shows only those its page asked for (by key). Slow `test_creator_thumbnails`. |
+| Typing a name in a grid: Q, E, R, V, F acted mid-word. | The first letter puts the focus in the find box; those keys keep their meaning only as the first key ("/" for a name that starts with one). `test_creator_grid`. |
+| The shrine's line and the Colours row ignored a garment's own dye. | Both resolve the dye as the look draws it (`Appearance.slot_dye_id`). `test_appearance_record`. |
+| The picture cache was unbounded and keyed a garment by all three dyes. | At most 200 pictures, the least recently shown going first; a garment keyed by its one dye. `test_thumbnail_cache`, slow `test_creator_thumbnails`. |
+
 ## 4. The plans' review logs
 
 ### 4.1 The M2-M5 plan (its §7)

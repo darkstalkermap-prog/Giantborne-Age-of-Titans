@@ -206,6 +206,7 @@ func open(p_row: OptionRows.GridRow, p_selected: String) -> void:
 	selected = p_selected
 	material_filter = "all"
 	query = ""
+	thumbnails.clear()   # Gate B: pictures are by option id here; another grid's (or other dyes') never show
 	_quiet = true
 	filter_box.text = ""
 	_quiet = false

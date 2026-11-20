@@ -216,8 +216,6 @@ const META_TEX := "giant_look_textures"
 const META_OWNER := "giant_look_owner"
 const META_NODES := "giant_look_nodes"
 const META_SWAY := "giant_look_sway"
-## On a root: the build and build_max_m its materials hold (P53: set again only when they change).
-const META_BUILD := "giant_look_build"
 ## On a root: a face slider was set on one of its meshes (P53: a look with no face then skips the meshes).
 const META_FACE := "giant_look_face"
 ## On a root: apply()'s walk over its meshes (P57; _plan()).
@@ -232,8 +230,6 @@ const R_OWN_COLOR := 6
 const R_DYE_SLOT := 7
 ## On a material: the look uniforms (name -> value) apply() last set there (P57: an unchanged material is skipped).
 const META_LAST := "giant_look_last"
-## The W33 look lane: the cloth shader's push_m last set per garment mesh (apply sets only what changed).
-const META_PUSH := "giant_look_push"
 ## The cloth shader's knots of the layering's push (its uniform arrays' length).
 const PUSH_KNOTS := 6
 const ZERO_PUSH: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -800,8 +796,6 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 		mats[str(id)] = mat
 	root.set_meta(META_MATERIALS, mats)
 	root.set_meta(META_OWNER, root.get_instance_id())
-	root.remove_meta(META_BUILD)
-	root.remove_meta(META_PUSH)
 	root.set_meta(META_TIER, resolve_tier(tier, index))
 	apply(root, index, root.get_meta(META_LOOK, DEFAULT_LOOK))
 
@@ -965,11 +959,6 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 	var mats := _own_materials(root)
 	if mats.is_empty():
 		return
-	# the build's two uniforms only when they change (a look applied in the creator's every pick: plan M10 §1.7's
-	# 1 ms); build_materials forgets the last values, so new materials always get them
-	var build_key := [build, build_max]
-	var set_build: bool = root.get_meta(META_BUILD, []) != build_key
-	root.set_meta(META_BUILD, build_key)
 	var stacked := false
 	for id: String in shown_ids:
 		var entry: Dictionary = meshes.get(id, {}) if typeof(meshes.get(id)) == TYPE_DICTIONARY else {}
@@ -980,10 +969,6 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 			stacked = stacked or (mi != null and mi.mesh != before)
 	if stacked:
 		_apply_face(root, index, shown_ids, l.face, true)   # P56: a fresh stack starts with its face keys at 0
-	var pushed: Dictionary = root.get_meta(META_PUSH, {})   # W33: the garments' pushes last set (0 not listed)
-	var push_changed := pushes != pushed
-	if push_changed:
-		root.set_meta(META_PUSH, pushes)
 	var hidden := hidden_regions_mask(index, l.garments)
 	var codes := region_codes(index, l)
 	var scars := scar_uniforms(index, l.scars)
@@ -996,6 +981,8 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 	# skipped (the creator applies the whole look on every pick; 73 materials with the catalogue II). set_param
 	# (and so set_garment_fade) forgets a material's last values, so only a raw set_shader_parameter outside
 	# GiantLook could be missed; GiantLook.forget_applied(root) makes the next look set everything again.
+	# Gate B: the build and a garment's push are part of each material's own compared values (a root-wide "last
+	# build" left a piece hidden while the build or the layering changed with its old values when shown again).
 	var shell_beard := _shell_beard(meshes, l)
 	var skin := {"skin_tone": l.skin_tone, "hair_color": l.hair_color, "beard_color": l.beard_color,
 		"scalp_tint": float(l.scalp_tint), "stubble": float(l.stubble) * (SHELL_SKIN_TINT if shell_beard else 1.0),
@@ -1006,7 +993,7 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 		"paint_color": paint.get("color", Color(0.86, 0.84, 0.78)), "mark_color": mark.get("color", Color(0.44, 0.49, 0.55)),
 		"mark_glow": float(mark.get("glow", 0.0)), "scar_layer": int(scars.layer), "scar_on": scars.on,
 		"scar_layer_b": int(scars.layer_b), "scar_on_b": scars.on_b, "scar_regions": scars.regions,
-		"scar_regions_b": scars.regions_b, "hidden_regions": hidden}
+		"scar_regions_b": scars.regions_b, "hidden_regions": hidden, "build": build, "build_max_m": build_max}
 	var hair := {"hair_color": l.hair_color, "tip_color": l.hair_tip, "grey": float(l.hair_grey),
 		"length": clampf(float(l.hair_length), 0.0, 1.0)}
 	var beard := {"hair_color": l.beard_color, "tip_color": l.beard_tip, "grey": float(l.beard_grey),
@@ -1022,9 +1009,6 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 		var category: String = r[R_CATEGORY]
 		match r[R_SHADER]:
 			"skin":
-				if set_build:
-					set_param(mat, "build", build)
-					set_param(mat, "build_max_m", build_max)
 				_put(mat, skin)
 			"hair":
 				if category == "beard":
@@ -1042,18 +1026,15 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				var dye: Variant = g.get("dye")
 				if dye == null:   # P54: an accessory in its own colour
 					dye = r[R_OWN_COLOR] if r[R_OWN_COLOR] != null else _legacy_dye(l, r[R_DYE_SLOT])
-				var c := {"dye_color": dye, "fade": 0.0}
+				var c := {"dye_color": dye, "fade": 0.0, "build": build, "build_max_m": build_max}
 				if category == "bead" and r[R_STYLES]:
 					c["bead_mask"] = bead_mask(r[R_ENTRY], id, l, cut)
 				if str(g.get("kind", "")) == "metal":
 					c["kind"] = 1   # a metal garment's response whatever its detail map
-				if push_changed and (category == "garment" or category == "accessory") and pushes.get(id) != pushed.get(id):
-					# W33: only when it changes; `pushed` skips the shader's knots for a garment that stands at its mesh
-					mat.set_shader_parameter("push_m", pushes.get(id, ZERO_PUSH))
-					mat.set_shader_parameter("pushed", pushes.has(id))
-				if set_build:
-					set_param(mat, "build", build)
-					set_param(mat, "build_max_m", build_max)
+				if category == "garment" or category == "accessory":
+					# W33: `pushed` skips the shader's knots for a garment that stands at its mesh
+					c["push_m"] = pushes.get(id, ZERO_PUSH)
+					c["pushed"] = pushes.has(id)
 				_put(mat, c)
 
 

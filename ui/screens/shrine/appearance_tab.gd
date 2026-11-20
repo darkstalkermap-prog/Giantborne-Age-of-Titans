@@ -115,9 +115,7 @@ static func clothing_line(record: Variant, ancestry_id := "") -> String:
 		var words := "%s: %s" % [str(OptionRows.SLOT_NAMES.get(slot, slot)), _lower(g, item)]
 		var material := str(g.get("material", "cloth"))
 		if Appearance.DYE_SET.has(material):
-			var dye := str(o.slots[slot].dye)
-			if dye == "":
-				dye = str(o.dyes.get(Appearance.DYE_OF_MATERIAL.get(material, ""), ""))
+			var dye := Appearance.slot_dye_id(o.slots[slot], o.dyes)   # Gate B: as drawn (a garment's own dye too)
 			if dye != "":
 				words += ", " + _lower(Appearance.option(dye), dye)
 		parts.append(words)
