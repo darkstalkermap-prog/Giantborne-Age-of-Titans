@@ -57,8 +57,10 @@ uniform float back_fade : hint_range(0.0, 1.0) = 0.0;
 const float BACK_FADE_FROM = -0.35;
 const float BACK_FADE_TO = -0.7;
 const float BEARD_LOCKS = 7.0;   // the third look lane: the locks a beard card breaks into across its width
+const float BEARD_ROOT_FLOOR = 0.0;      // ... from this cover at the root (0: from the skin)
+const float BEARD_ROOT_FEATHER = 0.42;   // the fifth look lane: the share of a beard card its strands fade in over
 const float BEARD_STRANDS = 6.0;     // the fourth look lane: the strands a lock is drawn with
-const float BEARD_EDGE_ALPHA = 0.65; // ... and the share of a card's cover left where it is seen edge-on
+const float BEARD_EDGE_ALPHA = 0.85; // ... and the share of a card's cover left where it is seen edge-on
 const float TIP_TAPER = 0.12;   // the second look lane: how much the side feather widens at a beard card's tip
 uniform float atlas_columns = 4.0;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
@@ -132,7 +134,12 @@ void fragment() {
 			a *= smoothstep(0.0, sf, u) * smoothstep(0.0, sf, 1.0 - u);
 			// The root edge and the tip, strand by strand: each strand starts and ends at its own place along the card
 			// (its id, the atlas's G); minified, the ids blend and the edge is a plain ramp.
-			a *= smoothstep(0.0, root_feather, UV.y + sid * root_feather);
+			// (the fifth look lane: on a beard over a longer share, strand by strand - each card's root stood off the
+			// skin as a straight edge: from the side the cheek was a staircase of shingles)
+			float beard = step(0.001, tip_thin);
+			float rr = mix(smoothstep(0.0, root_feather, UV.y + sid * root_feather),
+				smoothstep(0.0, BEARD_ROOT_FEATHER, UV.y + sid * BEARD_ROOT_FEATHER), beard);
+			a *= BEARD_ROOT_FLOOR * beard * (1.0 - rr) + rr;
 			a *= 1.0 - smoothstep(1.0 - tip_thin, 1.0, UV.y + sid * tip_thin) * step(0.001, tip_thin);
 			if (tip_thin > 0.001) {
 				// the third look lane: a beard card breaks into locks of its own lengths across it, whatever the atlas's
@@ -163,7 +170,7 @@ void fragment() {
 		float is_grey = (1.0 - smoothstep(grey - gw, grey + gw, t.g)) * step(0.001, grey);
 		c = mix(c, vec3(0.62, 0.60, 0.57), mix(is_grey, grey, clamp(max(mip, 0.0) * 0.5, 0.0, 1.0)));
 		c *= 0.62 + 0.5 * t.r;
-		c *= 1.0 - 0.32 * lock_shade * step(0.001, tip_thin);   // (the third look lane: a beard's locks vary)
+		c *= 1.0 - 0.18 * lock_shade * step(0.001, tip_thin);   // (the fifth look lane: 0.32 drew blotches)   // (the third look lane: a beard's locks vary)
 		// a little darker at the very root (the fourth look lane: not on a beard, where each short card's dark root drew
 		// its outline across the cheek: a row of blocks)
 		c *= mix(mix(root_dark, 1.0, 0.75 * step(0.001, tip_thin)), 1.0, smoothstep(0.0, 0.12, UV.y));

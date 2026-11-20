@@ -46,8 +46,8 @@ STYLES = {
     "Hair_crop": {"kind": "scalp", "layers": [
         dict(n=1100, length=0.065, lo=0.003, hi=0.008, npts=3, power=0.4, width=0.026, curl=0.05, wispy=0.0)]},
     "Beard_full": {"kind": "beard", "layers": [
-        dict(n=190, length=0.13, lo=0.004, hi=0.008, npts=7, power=1.0, width=0.03, curl=0.1, wispy=0.0),
-        dict(n=120, length=0.16, lo=0.009, hi=0.016, npts=7, power=1.0, width=0.024, curl=0.15, wispy=0.3)],
+        dict(n=190, length=0.13, lo=0.004, hi=0.008, npts=6, power=1.0, width=0.03, curl=0.1, wispy=0.0),
+        dict(n=120, length=0.16, lo=0.009, hi=0.016, npts=6, power=1.0, width=0.024, curl=0.15, wispy=0.3)],
         "under_jaw": dict(n=40)},
     "Beard_short": {"kind": "beard", "locks": False, "layers": [
         dict(n=560, length=0.05, lo=0.002, hi=0.006, npts=3, power=1.0, width=0.022, curl=0.05, wispy=0.0)]},
@@ -76,8 +76,8 @@ STYLES.update({
         "braids": [dict(at="chin", side=s, length=0.17, width=0.027, step=0.014, lean=(0.05 * s, -0.16, -1.0))
                    for s in (1.0, -1.0)]},
     "Beard_forked": {"kind": "beard", "layers": [
-        dict(n=190, length=0.15, lo=0.004, hi=0.008, npts=7, power=1.0, width=0.03, curl=0.1, wispy=0.0, fork=1.0),
-        dict(n=120, length=0.19, lo=0.009, hi=0.016, npts=7, power=1.0, width=0.024, curl=0.15, wispy=0.3,
+        dict(n=190, length=0.15, lo=0.004, hi=0.008, npts=6, power=1.0, width=0.03, curl=0.1, wispy=0.0, fork=1.0),
+        dict(n=120, length=0.19, lo=0.009, hi=0.016, npts=6, power=1.0, width=0.024, curl=0.15, wispy=0.3,
              fork=1.0)], "under_jaw": dict(n=36)},
 })
 # The catalogue II (P56; plan M11 §2.6, §3.9): five hair and four beard styles, every one with bead anchors. A
@@ -107,11 +107,11 @@ STYLES.update({
                    dict(at="back_side", side=-1.0, length=0.2, width=0.022, step=0.014, lean=(-0.08, 0.3, -1.0),
                         ties=(1.0,), beads=(0.55,))]},
     "Hair_twin_braids": {"kind": "scalp", "layers": [
-        dict(n=335, length=0.2, lo=0.003, hi=0.008, npts=6, power=0.5, width=0.04, curl=0.05, wispy=0.0,
+        dict(n=300, length=0.2, lo=0.003, hi=0.008, npts=6, power=0.5, width=0.04, curl=0.05, wispy=0.0,
              grow="toward"),
         dict(n=130, length=0.22, lo=0.009, hi=0.015, npts=6, power=0.7, width=0.034, curl=0.1, wispy=0.25,
              grow="toward")], "fringe": dict(n=80),
-        "cover": dict(n=16, length=0.10, lo=0.006, hi=0.016, npts=4, width=0.06, curl=0.05),
+        "cover": dict(n=48, length=0.12, lo=0.006, hi=0.016, npts=4, width=0.065, curl=0.05),
         "braids": [dict(at="nape_side", side=s, length=0.56, width=0.04, step=0.018, lean=(0.22 * s, -0.55, -1.0),
                         ties=(1.0,), beads=(0.35, 0.6, 0.85), grow=True) for s in (1.0, -1.0)]},
     "Hair_long_loose": {"kind": "scalp", "layers": [
@@ -132,20 +132,20 @@ STYLES.update({
         "braids": [dict(at="chin", side=0.0, length=0.26, width=0.038, step=0.015, lean=(0.0, -0.2, -1.0),
                         ties=(1.0,), beads=(0.3, 0.55, 0.8))]},
     "Beard_long_forked": {"kind": "beard", "layers": [
-        dict(n=160, length=0.24, lo=0.004, hi=0.008, npts=7, power=1.0, width=0.03, curl=0.1, wispy=0.0, fork=1.0),
-        dict(n=110, length=0.3, lo=0.009, hi=0.016, npts=8, power=1.0, width=0.024, curl=0.15, wispy=0.3,
+        dict(n=160, length=0.24, lo=0.004, hi=0.008, npts=6, power=1.0, width=0.03, curl=0.1, wispy=0.0, fork=1.0),
+        dict(n=110, length=0.3, lo=0.009, hi=0.016, npts=7, power=1.0, width=0.024, curl=0.15, wispy=0.3,
              fork=1.0)], "under_jaw": dict(n=30),
         "braids": [dict(at="tine", side=s, length=0.1, width=0.03, step=0.014, lean=(0.02 * s, -0.1, -1.0),
                         ties=(1.0,), beads=(0.45,)) for s in (1.0, -1.0)]},
-    "Beard_mutton_chops": {"kind": "beard", "locks": False, "layers": [
-        dict(n=400, length=0.06, lo=0.004, hi=0.009, npts=4, power=1.0, width=0.02, curl=0.1, wispy=0.15,
+    "Beard_mutton_chops": {"kind": "beard", "locks": False, "edge": dict(n=90), "layers": [
+        dict(n=400, length=0.06, lo=0.004, hi=0.009, npts=4, power=1.0, width=0.028, curl=0.1, wispy=0.15,
              region="chops"),
-        dict(n=160, length=0.075, lo=0.009, hi=0.014, npts=4, power=1.0, width=0.018, curl=0.14, wispy=0.4,
+        dict(n=160, length=0.075, lo=0.009, hi=0.014, npts=4, power=1.0, width=0.022, curl=0.14, wispy=0.4,
              region="chops")],
         "braids": [dict(at="chop", side=s, length=0.08, width=0.022, step=0.012, lean=(0.04 * s, -0.1, -1.0),
                         ties=(1.0,), beads=(0.5,)) for s in (1.0, -1.0)]},
-    "Beard_braided_moustache": {"kind": "beard", "locks": False, "layers": [
-        dict(n=260, length=0.06, lo=0.003, hi=0.007, npts=4, power=1.0, width=0.018, curl=0.1, wispy=0.2,
+    "Beard_braided_moustache": {"kind": "beard", "locks": False, "edge": dict(n=60), "layers": [
+        dict(n=300, length=0.06, lo=0.003, hi=0.007, npts=4, power=1.0, width=0.018, curl=0.1, wispy=0.2,
              region="mustache")],
         "braids": [dict(at="corner", side=s, length=0.21, width=0.022, step=0.013, lean=(0.12 * s, -0.2, -1.0),
                         ties=(1.0,), beads=(0.4, 0.7), grow=True) for s in (1.0, -1.0)]},
@@ -201,6 +201,18 @@ BEAD_LENGTH = 0.55          # of the braid's width
 # A beard's cards under the jaw (P51): grown from the beard's lowest skin, hanging down and a little back.
 UNDER_JAW = dict(n=40, length=0.09, lo=0.004, hi=0.008, npts=4, width=0.03, curl=0.1)
 UNDER_JAW_SEED = 3011
+# The fifth look lane: a card beard's edge - fine short strands in the band where its mask thins out (their own random
+# stream), and its cards there narrower (beard_edge_share).
+BEARD_EDGE = dict(n=150, length=0.04, lo=0.002, hi=0.005, npts=3, width=0.010, curl=0.05)
+BEARD_EDGE_SEED = 5011
+BEARD_EDGE_NARROW = 0.4      # a card's width where the beard's mask is 0 (its share; 1 where it is whole)
+
+
+def beard_edge_share(surf, roots):
+    """Per card the share of its width it keeps by the beard's mask at its root (BEARD_EDGE_NARROW at the edge)."""
+    _, i = surf.kd.query(roots)
+    m = np.clip(surf.attr["m_beard"][i], 0.0, 1.0)
+    return BEARD_EDGE_NARROW + (1.0 - BEARD_EDGE_NARROW) * np.clip(m / 0.8, 0.0, 1.0) ** 0.8
 
 
 def log(*a):
@@ -990,6 +1002,10 @@ def build_styles(body, rig, coll, bd, S):
                 along = np.linalg.norm(np.diff(P, axis=1), axis=2).sum(axis=1)
                 width = np.minimum(width, BEARD_ASPECT * along)
                 taper = BEARD_TAPER
+            if style["kind"] == "beard" and mesh_id not in SHELLS and ly.get("region") != "mustache":
+                # the fifth look lane: narrower where the beard thins out (the cheek's edge was a row of full-width
+                # cards: a staircase of blocks from the side)
+                width = width * beard_edge_share(surf, P[:, 0])
             V, F, UV, Nn = ribbons(surf, P, width, cols, np.full(n, ly["curl"]), centre, taper=taper)
             Vs.append(V)
             Fs.append(F + off)
@@ -1062,6 +1078,30 @@ def build_styles(body, rig, coll, bd, S):
             width = np.minimum(uj["width"] * S * (0.8 + 0.4 * urng.random(n)), BEARD_ASPECT * along)
             V, F, UV, Nn = ribbons(surf, P, width, urng.integers(0, 3, n), np.full(n, uj["curl"]), centre,
                                    taper=BEARD_TAPER)
+            Vs.append(V)
+            Fs.append(F + off)
+            UVs.append(UV)
+            Ns.append(Nn)
+            off += len(V)
+            cards += n
+        if style["kind"] == "beard" and mesh_id not in SHELLS:
+            # the fifth look lane: fine short strands along the beard's edge, sparser toward the skin, from a random
+            # stream of their own, so the cheek fades from the beard to stray hairs to bare skin
+            ed = dict(BEARD_EDGE, **style.get("edge", {}))
+            erng = np.random.default_rng([BEARD_EDGE_SEED, STYLE_ORDER.index(mesh_id)])
+            m = np.clip(surf.attr["m_beard"], 0.0, 1.0)
+            band = np.clip(4.0 * m * (1.0 - m), 0.0, 1.0) * (surf.V[:, 2] > L["chin"])
+            reg = style["layers"][0].get("region")
+            if reg is not None:
+                # (only round the style's own skin: no stray hairs on a bare chin or cheek)
+                rm = np.clip(region_mask(surf, L, S, hs, reg), 0.0, 1.0)
+                band = band * np.clip(rm * 3.0, 0.0, 1.0)
+            P = grow_beard(surf, L, S, hs, erng, ed["n"], ed["length"], ed["lo"], ed["hi"], npts=ed["npts"],
+                           power=1.0, mask=band)
+            n = len(P)
+            along = np.linalg.norm(np.diff(P, axis=1), axis=2).sum(axis=1)
+            width = np.minimum(ed["width"] * S * (0.6 + 0.8 * erng.random(n)), BEARD_ASPECT * along)
+            V, F, UV, Nn = ribbons(surf, P, width, np.full(n, 3), np.full(n, ed["curl"]), centre, taper=BEARD_TAPER)
             Vs.append(V)
             Fs.append(F + off)
             UVs.append(UV)
