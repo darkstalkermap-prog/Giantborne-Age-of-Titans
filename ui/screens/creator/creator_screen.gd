@@ -960,6 +960,9 @@ func _handle_grid_key(k: InputEventKey) -> bool:
 		return false   # the creator's own keys
 	var ch := char(k.unicode) if k.unicode >= 32 else ""
 	if ch != "" and (ch.to_lower() != ch.to_upper() or ch.is_valid_int() or ch == " "):
+		# Gate B: the first letter typed puts the focus in the box, so the rest of the name types there (Q, E, R, V
+		# and F mid-word turned the preview, randomized the category and cycled the material filter)
+		_edit_filter()
 		grid.set_query(grid.query + ch)
 		return true
 	return false
