@@ -45,7 +45,7 @@ left's mirror, so the reshape is symmetric. `giant_parts.BUILD_SHOULDER_EASE` ta
 off the shoulders, the upper arms and the trapezius (at +1 they reached 4.5 head widths and buried the neck). Saves are
 unchanged: a slider's value is a share of the build push, which now lands on the new body.
 
-**Why the shoulders stay at 3.1 head widths, not 2.6-2.9.** The game's tip matching (`TipMatching`, plan M10 §2.9)
+**Why the shoulders stay at 3.1 head widths, not 2.6-2.9 (accepted by the owner, 2026-11-20: "Keep as is").** The game's tip matching (`TipMatching`, plan M10 §2.9)
 holds the visible weapon within 15 degrees of the tested swing; its arm is the gameplay's (pivot (0.82, 2.9)·k, a
 1.5·k arm), unchanged. With the shoulder joints drawn in by 9 cm (2.9 head widths) 73 of 1,004 samples broke it, at
 the ends of the light arcs; the joints are now 1 cm narrower than M10's and the shoulders' slimming is in the deltoids'
@@ -57,7 +57,20 @@ arcs' ends): the fingertips hang a quarter of a head above mid-thigh.
 - The garments: the waist is the hip joints' height plus `WAIST_OVER_HIP` (it was the M10 body's 1.535 m); a
   cloak's collar band `COLLAR_DROP_M` lower (the longer neck carries the head's weights down); a coat's seat span
   leaves out the hanging arms; the jerkin's hem spans the small of the back over a tunic's band; the cape lets go to
-  its chains 0.31 m under the shoulders (0.375); the boots have a toe box (each cross-section's hull, eased).
+  its chains 0.31 m under the shoulders (0.375); the boots have a toe box (each cross-section's hull, eased) over the
+  foot smoothed into one round form (`toe_foot`, lifted to clear the real toes), and over the toes they shade with
+  their own smoothed normals where the skin's turn away (`export_game.OWN_NORMAL_EASED`: the skin's pointed into the
+  gaps between the toes and drew bright crumples and dark specks, read as tears; folded triangles 468 to 281 of
+  2,500, the rest the between-toe faces squeezed to slivers, in `docs/plans/FOLLOWUPS.md`).
+- The build sliders: a part's cut cap keeps the body's normals on its rim and takes no build push at its centre (at
+  -1 the shoulders' caps pushed out along their own faces: spikes); the shadow proxy insets a little more at the
+  build's extremes (dark patches at -1); `giant_parts.BUILD_CALF_EASE` takes half the push off the calves (a bulge at
+  +1).
+- The hair and the beards' cards scale with the head (`giant_hair`: the head's 1.12): the braided moustache and the
+  mutton chops drew 50-51 px in the parts check's framing (60), now over it.
+- The weapon arm's elbow: `TipMatching.CROSS_POLES` lowered to y -0.07 and `CROSS_BLEND_M` 0.35 m (the elbow crossed
+  the middle by 0.15-0.18 m on the new shoulder line); `test_skinned_rig_motion` and `test_giant_motion_render`
+  pass.
 - The landmarks follow (grips mirrored exactly); the animation brief's shoulder and reach in
   `tests/integration/test_giant_assets.gd` moved to the new body's ((0.404, 2.930, -0.030), 1.307) with the reason.
 - The clips are regenerated: the gaits still cover the brain's stride (3.2 m a cycle) with no slide; with the longer
@@ -68,24 +81,24 @@ arcs' ends): the fingertips hang a quarter of a head above mid-thigh.
 
 ## Checks
 
-- **Regeneration** (`--giant-full`, every bake pass): GIANT VERIFY OK, 88 files bit-exact (225 s);
+- **Regeneration** (`--giant-full`, every bake pass): GIANT VERIFY OK, 88 files bit-exact (222 s);
   `test_giant_tools.py`: 40 tests OK (the freeze re-taken, the shells' 4 mm in four poses, the layering).
-- **The share**: `PCK_SIZE ... shipped=31616620 shipped_mb=30.15`; `GIANT_SHARE ... shipped=13634556
-  shipped_mib=13.00` (12.88 before: the re-baked maps).
+- **The share** (`tools/build_web.sh --version=0.12.0-m12`): `PCK_SIZE ... shipped=31748820 shipped_mb=30.28
+  budget_mb=32`; `GIANT_SHARE ... shipped=13767408 shipped_mib=13.13 cap_mb=13.6` (12.88 before: the re-baked maps).
+- **The far primitives** (`test_giant_far_render`, beyond 120 m): the Wanderer 1,636, the fullest look 2,914 (under
+  4,000).
 - **The soak** (120 s): 41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 frames, 0 errors - the
   baseline, unmoved.
-- **The full check** (`--build --slow --gate --giant --giant-full --web-tools --require`): `TIMES: default 65.7 s |
-  slow 424.9 s | gate 1231.9 s` (the base `dcb23da`'s default tier the same hour: 68.4 s); `RESULT: 361 suites,
-  78412 checks, 21 failures`. **Not passed.** The failures:
-  - the creator's framings (`GiantPreview.FRAMINGS`, `ui/screens/creator/giant_preview.gd`) are fixed stage-1
-    points of the M10 body: the chest, the back's designs, the shoulders and the arms are 8-15 cm lower now, so the
-    rendered checks that measure a design or the skin in its framing read less than their floors
-    (`test_hair_render`: the back lash, the granite veins, the lightning tree, the claw stripes, the chest claws' 4 cm
-    rule, the crop's and the long hair's measures; `test_appearance_render`: the circlet braid, the claw stripes;
-    `test_skin_tone_render`: the default swatch's drawn tone; `test_skin_world_render`: the face's terminator, the
-    chieftain's beard). This lane may not edit `ui/screens/creator/**`; the framings' new heights, moved with the
-    landmarks, are in `docs/plans/FOLLOWUPS.md`.
-  - `test_skinned_rig_motion`: the weapon arm's elbow crosses the middle by 0.15-0.18 m at stage 1 (sword, hammer,
-    axe) and stage 3 (axe), over its 0.15: the shoulders are 1 cm narrower and the shoulder line lower against the
-    gameplay arm.
-  - `test_giant_parts_render`: the braided moustache and the mutton chops draw 50-51 pixels in their framing (60).
+- **The full check** (`--build --slow --gate --giant --giant-full --web-tools --require`): `TIMES: default 74.7 s |
+  slow 474.4 s | gate 1246.5 s` (the base `dcb23da`'s default tier the same hour, run as the check runs it: 75.4 s,
+  0 failures); `RESULT: 361 suites, 78408 checks, 14 failures`. **Not passed.** Every failure is a rendered check
+  that measures the head, a design or the skin in one of the creator's framings (`GiantPreview.FRAMINGS`,
+  `ui/screens/creator/giant_preview.gd`), fixed stage-1 points of the M10 body: the chest, the back's designs, the
+  shoulders and the arms are 8-15 cm lower now. `test_hair_render` (the back lash, the granite veins, the lightning
+  tree, the claw stripes, the chest claws' 4 cm rule, the crop's and the long hair's measures), `test_appearance_render`
+  (the claw stripes), `test_skin_tone_render` (the default swatch's drawn tone), `test_skin_world_render` (the
+  faces' terminator, the chieftain's beard). The owner approved moving the framings' targets in this lane
+  (2026-11-20), but the permission system refused the edit to `ui/screens/creator/giant_preview.gd`; the new heights,
+  moved with the landmarks, are in `docs/plans/FOLLOWUPS.md`.
+- Fixed since the first full check (21 failures): the weapon arm's elbow (`test_skinned_rig_motion`) and the braided
+  moustache and mutton chops (`test_giant_parts_render`).
