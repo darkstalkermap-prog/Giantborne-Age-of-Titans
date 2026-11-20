@@ -46,9 +46,13 @@ const DEFAULT_IDLE_POSE := Vector2(12.0, -78.0)   ## ActorRig.idle_arm_pose
 const IDLE_POSES := {"tree": Vector2(24.0, 30.0)}  ## WeaponVisuals.TREE_IDLE_POSE (the tree and the pine)
 ## The elbow's pole: down, back (+Z) and out; across the body it lifts further out.
 const POLES := {"r": Vector3(0.55, -0.55, 0.6), "l": Vector3(-0.55, -0.55, 0.6)}
-const CROSS_POLES := {"r": Vector3(1.0, -0.1, 0.3), "l": Vector3(-1.0, -0.1, 0.3)}
-## How far (stage-1 metres) across the body's middle the pole has turned fully to CROSS_POLES.
-const CROSS_BLEND_M := 0.5
+const CROSS_POLES := {"r": Vector3(1.0, -0.07, 0.0), "l": Vector3(-1.0, -0.07, 0.0)}
+## How far (stage-1 metres) across the body's middle the pole has turned fully to CROSS_POLES. (The body's
+## proportions, 2026-11-20, approved by the owner: on the lower, slightly narrower shoulder line the elbow swung
+## 0.15-0.18 m across the middle on the cross-body arcs; the cross pole now points straight out, a little down,
+## and the pole turns to it sooner (0.35, it was 0.5; (1.0, -0.1, 0.3)). Only the elbow moves: the grip, the tip
+## and the contract are the solve's own.)
+const CROSS_BLEND_M := 0.35
 ## The contract's bounds (plan M10 §2.9).
 const MAX_ANGLE_DEG := 15.0
 const FIST_TOLERANCE_M := 0.01
