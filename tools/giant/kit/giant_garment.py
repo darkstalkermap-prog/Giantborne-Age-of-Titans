@@ -1061,13 +1061,16 @@ class Wardrobe:
 
     def g_kilt(self):
         z, w, kn, hp = self.z, self.waist_z, self.knee, self.hip
-        hem = kn + 0.09
+        # the second look lane: to the knee (it ended a hand above it and read as shorts), flared more and pleated
+        # deeper, its pleats knife-edged (a pleat's fold is sharp, its face flat)
+        hem = kn + 0.035
         keep = self._legs(w - 0.004, hem) & (self.B["calf"] < 0.3)
         down = np.clip((hp + 0.06 - z) / (hp + 0.06 - hem), 0, 1)
         V = self.V
         th = np.arctan2(V[:, 1], V[:, 0])                     # round the hips: the pleats run all the way round
-        pleat = 0.007 * np.abs(np.sin(11.0 * th)) * (0.3 + 0.7 * down)
-        off = SLOT_SHELL_M["legs"] + 0.004 + 0.030 * down ** 1.2 + pleat
+        saw = np.abs(((13.0 * th / (2.0 * np.pi)) % 1.0) * 2.0 - 1.0)
+        pleat = 0.012 * (1.0 - saw) ** 1.5 * (0.25 + 0.75 * down)
+        off = SLOT_SHELL_M["legs"] + 0.004 + 0.044 * down ** 1.1 + pleat
         self.add_shell("kilt", keep, off, snaps=[self.zsnap(hem), self.zsnap(w - 0.004)], hang_z=hp + 0.06)
 
     def g_loincloth(self):
@@ -1075,10 +1078,16 @@ class Wardrobe:
         N = self.N
         front_back = np.clip((np.abs(N[:, 1]) - 0.35) / 0.65, 0, 1)
         hem = hp - 0.07 - 0.16 * front_back                        # deep flaps before and behind, short at the sides
+        # the second look lane: the back flap covers the buttocks (under them the skin faces down, so the flap by the
+        # normal ended at their tops and left them bare from behind): behind the hips' middle it reaches as deep as
+        # the front flap, between the thighs' backs, and hangs from the buttocks as a panel (hull_fill, hang)
+        yc = self.J["joint-pelvis"][1]
+        behind = np.clip((self.V[:, 1] - yc - 0.01) / 0.05, 0, 1) * (np.abs(self.V[:, 0]) < 0.13)
+        hem = np.minimum(hem, hp - 0.07 - 0.17 * behind)
         keep = self._legs(w - 0.004, -1.0) & (z > hem) & (self.B["calf"] < 0.05)
         down = np.clip((hp + 0.05 - z) / 0.25, 0, 1)
         off = SLOT_SHELL_M["legs"] + 0.004 + 0.016 * down
-        self.add_shell("loincloth", keep, off, seed=31, hem_noise=0.025, snaps=[self.zsnap(w - 0.004)])
+        self.add_shell("loincloth", keep, off, seed=31, hem_noise=0.025, snaps=[self.zsnap(w - 0.004)], hang_z=hp + 0.04)
 
     # ================================================================================== chest (0.014)
     def g_tunic(self):
@@ -1537,17 +1546,21 @@ class Wardrobe:
         keep = (self.B["head"] > 0.9) & (z > rim)
         crest = ridge * np.exp(-(V[:, 0] / 0.018) ** 2) * sstep(z, rim + 0.04, rim + 0.08)
         brim = band * np.exp(-((z - rim) / 0.018) ** 2)
-        off = SLOT_SHELL_M["head"] + crown + crest + brim
+        # the second look lane: the rim closes in on the brow, the temples and the nape (the cap stood its whole
+        # crown's height off the skin there: it sat high, with a gap under it at the brow); the dome keeps it
+        rise = sstep(z, rim, rim + 0.05)
+        off = np.maximum(SLOT_SHELL_M["head"] * (0.55 + 0.45 * rise) + crown * (0.3 + 0.7 * rise), CAP_RIM_LEAST_M) \
+            + crest + brim
         self.add_shell(gid, keep, off, snaps=[(z - rim, 0.0, np.tile([0.0, 0.0, 1.0], (self.n, 1)), 0.03)], mat=mat)
         return keep, off
 
     def g_leather_cap(self):
         L = self.bd.landmarks
-        self._cap("leather_cap", L["brow_z"] + 0.022, L["ear_z"][1] + 0.012, 0.024, "giant_leather", band=0.004)
+        self._cap("leather_cap", L["brow_z"] + 0.012, L["ear_z"][1] + 0.006, 0.024, "giant_leather", band=0.004)
 
     def g_iron_helm(self):
         L = self.bd.landmarks
-        self._cap("iron_helm", L["brow_z"] + 0.004, L["ear_z"][1] - 0.012, 0.028, "giant_metal", ridge=0.008,
+        self._cap("iron_helm", L["brow_z"] - 0.002, L["ear_z"][1] - 0.012, 0.028, "giant_metal", ridge=0.008,
                   band=0.007)
 
     def g_horned_helm(self):
@@ -1858,13 +1871,15 @@ def add_horns(helm, bd, S, V, N, C, kd):
 # --------------------------------------------------------------------------------------------------------------
 # accessories: rigid meshes on one bone each
 # --------------------------------------------------------------------------------------------------------------
-def build_accessories(w, ring_slots=RING_SLOTS, only=None):
+def build_accessories(w, ring_slots=RING_SLOTS, only=None, bare=False):
     """{accessory id: object}: every accessory placed clear of the whole wardrobe's envelope (w.C after the last
     slot), 100 % on its bone; a ring (the neck's, the arm's) clear of ``ring_slots``' envelope (the W33 look lane: ()
-    gives its place on the bare skin, the ring's mesh; ``ring_push`` its push to its place over those slots)."""
+    gives its place on the bare skin, the ring's mesh; ``ring_push`` its push to its place over those slots). The
+    second look lane: ``bare`` places a belt's trophy on the bare skin (its mesh; ``trophy_push`` its push out)."""
     S = w.S
     out = {}
     w.ring_slots = ring_slots
+    w.trophy_bare = bare
     for aid in ACCESSORY_ORDER:
         if only is not None and aid not in only:
             continue
@@ -1928,7 +1943,7 @@ def ring_push(w, base, full):
     return out
 
 
-def _ring_clear(w, centre, axis, sel, gap, push=False, slots=None):
+def _ring_clear(w, centre, axis, sel, gap, push=False, slots=None, spread=True):
     """Per angle (32 sectors) round ``axis`` through ``centre``: the largest distance from the axis of the skin
     pushed out by the wardrobe's envelope (``slots``' alone when given), over the body vertices ``sel``, plus ``gap``
     (human metres)."""
@@ -1954,7 +1969,10 @@ def _ring_clear(w, centre, axis, sel, gap, push=False, slots=None):
         d = np.abs((ang - th + math.pi) % (2 * math.pi) - math.pi)
         s = d < 2 * math.pi / 32 * 1.2
         out[k] = rad[s].max() if s.any() else (rad.max() if len(rad) else 0.05)
-    out = np.maximum(out, np.maximum(np.roll(out, 1), np.roll(out, -1)))
+    if spread:
+        out = np.maximum(out, np.maximum(np.roll(out, 1), np.roll(out, -1)))
+    else:
+        out = np.maximum(out, 0.5 * (np.roll(out, 1) + np.roll(out, -1)))   # (a slice: smoothed, not widened)
     return a, b, out + gap
 
 
@@ -1968,15 +1986,32 @@ def _ring_path(centre, a, b, radii, m, open_deg=0.0, start=-math.pi):
     return np.array(pts)
 
 
+CAP_RIM_LEAST_M = 0.031   # the second look lane: a cap's rim stands at least this far off (stage 1): the crop's shells
+#                           (their top and LAYER_GAP_M) stay under it
+TORC_TILT = 0.26       # the second look lane: a torc's ring drops this much (m a m) from its back to its front, which
+#                        rests on the collarbones (it went round the neck level with the chin, a bar under the beard)
+TORC_GAP = 0.004       # ... and a ring's clearance over what it sits on (human m; LAYER_GAP_M's 8 mm stood it off)
+
+
 def _acc_neck(w, aid):
     L = w.bd.landmarks
     J = w.J
-    zt = w.neck_z + 0.035
+    torc = aid != "tooth_necklace"
+    zt = w.neck_z + (0.012 if torc else 0.035)
     centre = np.array([0.0, J["joint-neck"][1] + 0.005, zt])
-    # the neck's own skin and what is worn on it (a collar's rim further out is fur: a torc sits on it, P54.md)
-    sel = (np.abs(w.z - zt) < 0.025) & (w.B["neck"] > 0.55) & (w.B["head"] < 0.3)
     tube_r = {"iron_torc": 0.011, "gilded_torc": 0.012, "tooth_necklace": 0.004}[aid]
-    a, b, radii = _ring_clear(w, centre, [0.0, 0.0, 1.0], sel, tube_r + LAYER_GAP_M / w.S, slots=w.ring_slots)
+    if torc:
+        # the second look lane: tilted by TORC_TILT, its front lower: the plane through the back at zt; a vertex is near
+        # the ring when it lies within 2 cm of that plane (the neck's and the collarbones' skin and what is worn there)
+        tilt = TORC_TILT
+        plane_z = zt + (w.V[:, 1] - centre[1]) * tilt
+        sel = (np.abs(w.z - plane_z) < 0.02) & ((w.B["neck"] + w.torso) > 0.5) & (w.B["head"] < 0.3) \
+            & (np.abs(w.V[:, 0]) < 0.16)
+        a, b, radii = _ring_clear(w, centre, [0.0, 0.0, 1.0], sel, tube_r + TORC_GAP, slots=w.ring_slots)
+    else:
+        # the neck's own skin and what is worn on it (a collar's rim further out is fur: a torc sits on it, P54.md)
+        sel = (np.abs(w.z - zt) < 0.025) & (w.B["neck"] > 0.55) & (w.B["head"] < 0.3)
+        a, b, radii = _ring_clear(w, centre, [0.0, 0.0, 1.0], sel, tube_r + LAYER_GAP_M / w.S, slots=w.ring_slots)
     # the opening of a torc faces front (-Y: the angle where the ring direction is -Y)
     front = math.atan2(np.dot([0.0, -1.0, 0.0], b), np.dot([0.0, -1.0, 0.0], a))
     if aid == "tooth_necklace":
@@ -2000,6 +2035,8 @@ def _acc_neck(w, aid):
         return np.vstack(V), F
     m = 30
     path = _ring_path(centre, a, b, radii, m, 50.0, front)
+    if torc:
+        path[:, 2] += (path[:, 1] - centre[1]) * tilt
     twist = 0.9 if aid == "gilded_torc" else 0.0
     radius = np.full(m, tube_r) * (1.0 + 0.12 * np.sin(np.arange(m) * 2.4)) if aid == "gilded_torc" else np.full(m, tube_r)
     verts, faces = _tube(path, radius, 5, twist=twist)
@@ -2013,13 +2050,18 @@ def _acc_neck(w, aid):
 
 
 def _acc_arm_ring(w, aid):
-    t = {"iron_arm_ring": 0.72, "bronze_arm_spiral": 0.70, "gilded_arm_ring": 0.74}[aid]
+    # the second look lane: round the biceps (at three quarters of the way to the elbow the skin there bends with the
+    # forearm and the rigid ring stood off it as a hoop in the relaxed pose)
+    t = {"iron_arm_ring": 0.5, "bronze_arm_spiral": 0.48, "gilded_arm_ring": 0.52}[aid]
     sh, el = w.sh, w.el
     axis = el - sh
     centre = sh + axis * t
-    sel = (np.abs(w.t_up - t) < 0.05) & (w.V[:, 0] > 0.05) & (w.B["upperarm"] > 0.6)
+    # the second look lane: the skin a ring closes round is its own slice of the arm (5 % of the upper arm wide: a
+    # tenth stood it off by the biceps' bulge) and it clears it by TORC_GAP (it stood off like a hoop)
+    sel = (np.abs(w.t_up - t) < (0.05 if aid == "bronze_arm_spiral" else 0.025)) & (w.V[:, 0] > 0.05) \
+        & (w.B["upperarm"] > 0.6)
     tube_r = {"iron_arm_ring": 0.012, "bronze_arm_spiral": 0.0075, "gilded_arm_ring": 0.010}[aid]
-    a, b, radii = _ring_clear(w, centre, axis, sel, tube_r + LAYER_GAP_M / w.S, slots=w.ring_slots)
+    a, b, radii = _ring_clear(w, centre, axis, sel, tube_r + TORC_GAP, slots=w.ring_slots, spread=False)
     if aid == "bronze_arm_spiral":
         m = 56
         u = axis / np.linalg.norm(axis)
@@ -2049,6 +2091,11 @@ def _acc_belt(w, aid):
     P = w.V[ids] + w.N[ids] * cover[:, None]
     k = int(np.argmax(P[:, 0] * side))
     root = P[k] + np.array([side, 0.0, 0.0]) * (LAYER_GAP_M / w.S + 0.012)
+    if getattr(w, "trophy_bare", False):
+        # the second look lane: on the bare skin the trophy hangs from the same height and depth, nearer in (along X
+        # alone: trophy_push moves it back out as far as what is worn needs)
+        Pb = w.V[ids] + w.N[ids] * (w.push[ids] / w.S)[:, None]
+        root[0] = side * float(np.max(Pb[:, 0] * side)) + side * (LAYER_GAP_M / w.S + 0.012)
     if aid == "drinking_horn":
         m = 10
         path, radius = [], []
@@ -2084,10 +2131,58 @@ def _acc_belt(w, aid):
     return _clear_hang(w, verts, side), faces
 
 
+def _trophy_env(w):
+    """The envelope a belt's trophy is placed over (stage-1 m per skin vertex): the whole wardrobe's, or none (the bare
+    skin, w.trophy_bare: the trophy's mesh since the second look lane)."""
+    if getattr(w, "trophy_bare", False):
+        return np.zeros(w.n)
+    return np.where(np.isnan(w.C), 0.0, w.C)
+
+
+def trophy_push(w, base, full):
+    """The second look lane: a belt's trophies' layering, as ``ring_push`` gives a ring's. ``base``, ``full``:
+    {accessory id: object} on the bare skin and clear of the whole wardrobe (the same topology, moved along +-X).
+    Returns {accessory id: (per vertex push stage-1 m along its side, quantized as a garment's; its scale; {inner
+    garment: [shares, PUSH_SAMPLES x knots]})}: the least share of the push that keeps the trophy LAYER_GAP_M clear of
+    the inner garment's envelope at each of its shares (the trophy is rigid: one share for every knot). The drinking
+    horn stood a hand off the hip when only braies were worn under it (it cleared the fullest wardrobe's envelope)."""
+    S = w.S
+    samples = np.linspace(0.0, 1.0, PUSH_SAMPLES)
+    out = {}
+    for aid, ob in base.items():
+        side = 1.0 if aid == "drinking_horn" else -1.0
+        Pb, Pf = _co(ob) / S, _co(full[aid]) / S
+        shift = float(np.max((Pf[:, 0] - Pb[:, 0]) * side))
+        d = np.full(len(Pb), max(shift, 0.0) * S)
+        scale = float(d.max())
+        if scale > 1e-6:
+            d = np.ceil(d / scale * 255.0 - 1e-6) / 255.0 * scale
+        _, near = w.kd.query(Pb)
+        rows = {}
+        for g in ORDER:
+            vals = []
+            run = np.full(w.n, np.nan)
+            for k, sv in enumerate(samples):
+                run = np.fmax(run, w._env_at(g, sv))
+                E = run[near]
+                ok = np.isfinite(E)
+                if not ok.any() or scale <= 1e-6:
+                    vals += [0.0] * len(w.knots)
+                    continue
+                skin = w.V[near] + w.N[near] * ((np.where(ok, E, 0.0) + w.push[near]) / S + LAYER_GAP_M / S + 0.004)[:, None]
+                need = np.where(ok, (skin[:, 0] - Pb[:, 0]) * side, -np.inf).max() * S
+                sv_need = float(min(1.0, math.ceil(max(0.0, need / scale) * 1000.0) / 1000.0))
+                vals += [sv_need] * len(w.knots)
+            if max(vals) > 0.0:
+                rows[g] = vals
+        out[aid] = (d, scale, rows)
+    return out
+
+
 def _clear_hang(w, verts, side):
     """Moves a hanging trophy outward (along +-X) until every vertex clears the envelope under it."""
     _, near = w.kd.query(verts)
-    cover = (np.where(np.isnan(w.C[near]), 0.0, w.C[near]) + w.push[near]) / w.S
+    cover = (_trophy_env(w)[near] + w.push[near]) / w.S
     skin = w.V[near] + w.N[near] * (cover + LAYER_GAP_M / w.S + 0.004)[:, None]
     push = np.max(np.maximum(0.0, (skin[:, 0] - verts[:, 0]) * side))
     return verts + np.array([side * push, 0.0, 0.0])

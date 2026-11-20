@@ -151,6 +151,20 @@ def polyline_mask(P, pts, half, taper=0.0):
     return out
 
 
+def polyline_dist(P, pts):
+    """The distance of points P to a 3D polyline ``pts`` (k, 3), and where along it (0-1) the nearest point lies."""
+    best = np.full(len(P), np.inf)
+    where = np.zeros(len(P))
+    L = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))])
+    for i in range(len(pts) - 1):
+        d, t = seg_dist(P, pts[i], pts[i + 1])
+        s = (L[i] + t * (L[i + 1] - L[i])) / max(L[-1], 1e-9)
+        closer = d < best
+        best = np.where(closer, d, best)
+        where = np.where(closer, s, where)
+    return best, where
+
+
 def curve2d_mask(Q, curves, half):
     """Distance of 2D points Q (n, 2) to densely sampled polylines -> an anti-aliased line mask."""
     from scipy.spatial import cKDTree
@@ -373,22 +387,51 @@ def d_shoulder_bands(P, N, J, ctx):
     return out
 
 
-def _scar(P, segs, widen=1.0, min_half=0.0):
+SCAR_FEATHER = 0.5            # the second look lane: a scar's edge eases off over this share of its half-width
+SCAR_SPREAD = 1.85            # ... and is drawn this much wider than its line's half-width (its feathered edge and its
+#                               pointed ends kept its reading area, the coverage over a half, at least M10's)
+SCAR_GRAIN = 0.18             # ... and its healed tissue is uneven: a fine grain this deep (the relief's detail)
+
+
+def scar_profile(d, half, P, seed=0):
+    """A healed scar's coverage at distance ``d`` from its line of half-width ``half`` (the second look lane: it was a
+    hard-edged band, a rectangle on the cheek): a feathered edge (SCAR_FEATHER of the half-width), the edge itself
+    wandering a little (low noise along the skin) and the tissue grained (SCAR_GRAIN: fine noise the skin shader's
+    relief turns into fine ridges)."""
+    wander = 0.8 + 0.4 * _noise3(P, 70.0, 31 + seed)
+    h = half * wander
+    core = h * (1.0 - SCAR_FEATHER)
+    x = np.clip((h - d) / np.maximum(h - core, 1e-6), 0.0, 1.0)
+    m = x * x * (3.0 - 2.0 * x)
+    grain = 1.0 - SCAR_GRAIN * _noise3(P, 250.0, 57 + seed)
+    return m * grain
+
+
+def _scar(P, segs, widen=1.0, min_half=0.0, seed=0):
+    """Scars along segments [(A, B, half-width)]: each a spindle, widest in its middle and drawn out to a point at
+    both ends (a healed cut), feathered (scar_profile)."""
     m = np.zeros(len(P))
-    for a, b, w in segs:
+    for k, (a, b, w) in enumerate(segs):
         half = max(w * widen, min_half)
         d, t = seg_dist(P, a, b)
-        taper = 0.7 + 0.3 * np.sin(np.pi * t)
-        m = np.maximum(m, band(d, half * taper))
+        taper = 0.4 + 0.6 * np.sin(np.pi * t) ** 0.5
+        # past an end the distance grows from the end point; the spindle closes there
+        m = np.maximum(m, scar_profile(d, half * taper * SCAR_SPREAD, P, seed + k))
     return m
 
 
 def d_scar_brow(P, N, J, ctx):
-    return _scar(P, ctx["scars"]["brow"], widen=1.0, min_half=BOLD)      # P51: the 4 cm rule (was 0.0026)
+    # the second look lane: drawn a third longer either way (the spindle's pointed ends left only a blotch on the brow)
+    (a, b, w), = ctx["scars"]["brow"]
+    a, b = a + (a - b) * 0.35, b + (b - a) * 0.35
+    return _scar(P, [(a, b, w)], widen=1.0, min_half=BOLD * 0.8)      # P51: the 4 cm rule (was 0.0026)
 
 
 def d_scar_forearm_slash(P, N, J, ctx):
-    return _scar(P, ctx["scars"]["forearm_slash"], min_half=BOLD)
+    # the second look lane: longer and broader (it barely read from the arms' framing; feathered, it read less still)
+    (a, b, w), = ctx["scars"]["forearm_slash"]
+    a, b = a + (a - b) * 0.15, b + (b - a) * 0.15
+    return _scar(P, [(a, b, w)], min_half=BOLD * 1.4)
 
 
 def d_scar_chest_claws(P, N, J, ctx):
@@ -653,17 +696,35 @@ def d_face_bars(P, N, J, ctx):
     return np.where(face, m, 0.0)
 
 
+def paint_edge(x, soft, P, seed, rag=1.0):
+    """War paint's edge (the second look lane: the paints ended in straight, hard edges): 1 well inside (x > 0, in
+    metres inside the edge), easing to 0 over ``soft`` metres, the edge itself ragged by ``rag`` x ``soft`` of
+    two-scale noise along the skin, as a hand smears it."""
+    n = 0.65 * _noise3(P, 55.0, seed) + 0.35 * _noise3(P, 170.0, seed + 1)
+    y = (x + (n - 0.5) * 2.0 * soft * rag) / soft + 0.5
+    y = np.clip(y, 0.0, 1.0)
+    return y * y * (3.0 - 2.0 * y)
+
+
+def paint_body(P, seed):
+    """Paint's own thickness: a smear is not one flat colour (0.82-1)."""
+    return 0.82 + 0.18 * _noise3(P, 90.0, seed)
+
+
 def d_full_face(P, N, J, ctx):
     """War paint over the whole upper face, brow to cheekbones and temple to temple, its lower edge
-    ragged where the fingers dragged it down."""
+    ragged where the fingers dragged it down; its edges soft and smeared, fading round the temples."""
     eyeL = J["joint-l-eye"]
     hs = ctx["hs"]
-    face = (N[:, 1] < -0.05) & (P[:, 1] < eyeL[1] + 0.05 * hs)
+    face = (N[:, 1] < 0.25) & (P[:, 1] < eyeL[1] + 0.07 * hs)
     drag = 0.022 * hs * _noise3(np.stack([P[:, 0] * 90.0, P[:, 0] * 0.0, P[:, 0] * 0.0], axis=1), 1.0, 7)
     lower = eyeL[2] - 0.036 * hs - drag
     upper = eyeL[2] + 0.06 * hs
-    m = np.clip((P[:, 2] - lower) / (0.003 * hs), 0.0, 1.0) * np.clip((upper - P[:, 2]) / (0.006 * hs), 0.0, 1.0)
-    return np.where(face, m, 0.0)
+    soft = 0.007 * hs
+    m = paint_edge(P[:, 2] - lower, soft, P, 71) * paint_edge(upper - P[:, 2], soft * 1.6, P, 73)
+    # round the temples the paint thins out where the face turns away (it was cut off where the normal turned)
+    m *= paint_edge(-0.05 - N[:, 1], 0.2, P, 75, rag=0.6)
+    return np.where(face, m * paint_body(P, 77), 0.0)
 
 
 def d_back_hand(P, N, J, ctx):
@@ -701,7 +762,8 @@ def d_scar_back_lash(P, N, J, ctx):
         a = np.array([0.17, sp1[1] + 0.14, sp1[2] + 0.07 + dz])
         b = np.array([-0.15, sp3[1] + 0.14, sp3[2] + 0.1 + dz])
         pts = np.array([surface_point(V, a + (b - a) * t, back_v) for t in np.linspace(0, 1, 9)])
-        m = np.maximum(m, polyline_mask(P, pts, BOLD * (1.0 - 0.12 * k), taper=0.45))
+        d, t = polyline_dist(P, pts)
+        m = np.maximum(m, scar_profile(d, BOLD * SCAR_SPREAD * (1.0 - 0.12 * k) * (1.0 - 0.45 * t), P, k))
     return m
 
 
@@ -912,15 +974,18 @@ def d_face_tears(P, N, J, ctx):
 
 
 def d_eye_band(P, N, J, ctx):
-    """War paint in a band across both eyes, temple to temple, its edges dragged."""
+    """War paint in a band across both eyes, temple to temple, its edges dragged and soft, its ends smeared out at
+    the temples (the second look lane: it was a rectangle with hard edges)."""
     eyeL = J["joint-l-eye"]
     hs = ctx["hs"]
-    face = (N[:, 1] < -0.05) & (P[:, 1] < eyeL[1] + 0.06 * hs) & (np.abs(P[:, 0]) < 0.075 * hs)
+    face = (N[:, 1] < 0.2) & (P[:, 1] < eyeL[1] + 0.07 * hs) & (np.abs(P[:, 0]) < 0.1 * hs)
     drag = 0.008 * hs * _noise3(np.stack([P[:, 0] * 120.0, P[:, 0] * 0.0, P[:, 0] * 0.0], axis=1), 1.0, 11)
     lower = eyeL[2] - 0.02 * hs - drag
     upper = eyeL[2] + 0.016 * hs + drag * 0.5
-    m = np.clip((P[:, 2] - lower) / (0.003 * hs), 0.0, 1.0) * np.clip((upper - P[:, 2]) / (0.003 * hs), 0.0, 1.0)
-    return np.where(face, m, 0.0)
+    soft = 0.0055 * hs
+    m = paint_edge(P[:, 2] - lower, soft, P, 81) * paint_edge(upper - P[:, 2], soft, P, 83)
+    m *= paint_edge(0.072 * hs - np.abs(P[:, 0]), 0.014 * hs, P, 85)
+    return np.where(face, m * paint_body(P, 87), 0.0)
 
 
 def d_half_face(P, N, J, ctx):
@@ -928,10 +993,13 @@ def d_half_face(P, N, J, ctx):
     eyeL = J["joint-l-eye"]
     hs = ctx["hs"]
     L = ctx["L"]
-    face = (N[:, 1] < 0.1) & (P[:, 1] < eyeL[1] + 0.06 * hs)
-    m = np.clip(P[:, 0] / (0.002 * hs), 0.0, 1.0) * np.clip((eyeL[2] + 0.045 * hs - P[:, 2]) / (0.004 * hs), 0.0, 1.0)
-    m *= np.clip((P[:, 2] - (L["chin"] + 0.01 * hs)) / (0.004 * hs), 0.0, 1.0)
-    return np.where(face, m, 0.0)
+    face = (N[:, 1] < 0.3) & (P[:, 1] < eyeL[1] + 0.06 * hs)
+    # the second look lane: the middle line stays straight but not cut (a 3 mm ease), the brow's and the jaw's edges
+    # smeared
+    m = paint_edge(P[:, 0], 0.003 * hs, P, 91, rag=0.3) * paint_edge(eyeL[2] + 0.045 * hs - P[:, 2], 0.007 * hs, P, 93)
+    m *= paint_edge(P[:, 2] - (L["chin"] + 0.01 * hs), 0.007 * hs, P, 95)
+    m *= paint_edge(0.1 - N[:, 1], 0.2, P, 99, rag=0.6)     # thinning out round the side of the head
+    return np.where(face, m * paint_body(P, 97), 0.0)
 
 
 def d_chest_slash(P, N, J, ctx):
@@ -983,7 +1051,7 @@ def d_scar_shoulder_bite(P, N, J, ctx):
             ang = math.radians(-50 + 25 * k)
             p = c + np.array([0.0, 0.07 * math.sin(ang), dz * math.cos(ang) - (0.02 if row else -0.02)])
             q = surface_point(V, p, back)
-            m = np.maximum(m, band(np.linalg.norm(P - q, axis=1), BOLD * 1.05))
+            m = np.maximum(m, scar_profile(np.linalg.norm(P - q, axis=1), BOLD * SCAR_SPREAD, P, 5 * row + k))
     return m
 
 
@@ -995,7 +1063,7 @@ def d_scar_thigh_gash(P, N, J, ctx):
     line = -math.pi / 2 + 0.35 + 3.0 * (t - 0.48)             # the front (-Y), crossing from the outside in
     dth = np.abs((th - line + math.pi) % (2 * math.pi) - math.pi)
     along = np.clip((t - 0.28) / 0.4, 0.0, 1.0)
-    return np.where(sel, band(dth * np.maximum(r, 0.05), BOLD * (0.6 + 0.6 * np.sin(math.pi * along))), 0.0)
+    return np.where(sel, scar_profile(dth * np.maximum(r, 0.05), BOLD * SCAR_SPREAD * (0.35 + 0.85 * np.sin(math.pi * along) ** 0.6), P), 0.0)
 
 
 def d_scar_ribs(P, N, J, ctx):
@@ -1005,7 +1073,11 @@ def d_scar_ribs(P, N, J, ctx):
     uv = np.stack([P[:, 0], P[:, 2]], axis=1)
     lin = np.linspace(0, 1, 120)[:, None]
     curve = np.array([0.05, sp2[2] - 0.01]) + np.array([0.13, -0.09]) * lin
-    return np.where(front, curve2d_mask(uv, [curve], BOLD * 1.1), 0.0)
+    from scipy.spatial import cKDTree
+    d, i = cKDTree(curve).query(uv, distance_upper_bound=BOLD * 8)
+    along = np.where(np.isfinite(d), np.minimum(i, len(curve) - 1) / (len(curve) - 1), 0.0)
+    d = np.where(np.isfinite(d), d, 1.0)
+    return np.where(front, scar_profile(d, BOLD * SCAR_SPREAD * 1.1 * (0.3 + 0.7 * np.sin(math.pi * along) ** 0.6), P), 0.0)
 
 
 DRAW = {

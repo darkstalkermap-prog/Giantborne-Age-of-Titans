@@ -930,9 +930,20 @@ class WardrobeTest(unittest.TestCase):
         # a ring over the shirt's or the armour's envelope (the arm rings; a torc above the collars needs none)
         rings = [r for r in all_rings if self.idx["meshes"][r].get("push_m")]
         self.assertEqual(sorted(r for r in rings if "arm" in r), sorted(r for r in all_rings if "arm" in r))
-        self.assertEqual(sorted(lay["order"]), sorted(list(gg.GARMENTS) + rings), "the garments, then the rings")
+        # the second look lane: a belt's trophy sits on the bare skin too and moves out along its side over what is
+        # worn under it (it hung clear of the fullest wardrobe: the horn a hand off bare braies)
+        trophies = ["Accessory_" + a for a in gg.ACCESSORY_ORDER if gg.ACCESSORIES[a]["slot"] == "belt"]
+        for t in trophies:
+            e = self.idx["meshes"][t]
+            self.assertTrue(e.get("push_tangent") and e.get("push_m"), "%s: its push rides in its tangents" % t)
+            self.assertIn("braies", lay["push"][t], "%s: moves out over the braies" % t)
+            self.assertLess(max(lay["push"][t]["braies"]), 0.5, "%s: the braies need less than half its push" % t)
+            self.assertGreater(max(lay["push"][t]["mail_hauberk"]), 2.0 * max(lay["push"][t]["braies"]),
+                               "%s: a hauberk's skirt pushes it out further than braies" % t)
+        self.assertEqual(sorted(lay["order"]), sorted(list(gg.GARMENTS) + rings + trophies),
+                         "the garments, then the rings and the trophies")
         layer = {g: gg.LAYER_ORDER.index(gg.GARMENTS[g]["slot"]) for g in gg.GARMENTS}
-        layer.update({r: len(gg.LAYER_ORDER) for r in rings})
+        layer.update({r: len(gg.LAYER_ORDER) for r in rings + trophies})
         self.assertEqual([layer[g] for g in lay["order"]], sorted(layer[g] for g in lay["order"]), "from the skin out")
         for r in rings:
             self.assertIn("shirt", lay["push"][r], "%s: it sits on the bare skin and moves out over the shirt" % r)
