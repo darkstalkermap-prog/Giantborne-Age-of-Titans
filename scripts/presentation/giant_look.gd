@@ -151,7 +151,7 @@ const NORMAL_STRENGTH := {"mail": 1.1, "scale": 1.0}
 const CLOTH_RIM := {"weave": 0.0, "leather": 0.0, "fur": 0.45, "metal": 0.0, "mail": 0.0, "scale": 0.0, "bone": 0.0}
 ## The cloth shader's `kind` per detail map (P54): cloth, leather and fur 0; plate, mail and scale 1 (the metal
 ## response); bone 2 (its own pale colour, a soft sheen: bone spaulders, the bone accessories).
-const DETAIL_KIND := {"metal": 1, "mail": 1, "scale": 1, "bone": 2}
+const DETAIL_KIND := {"metal": 1, "mail": 1, "scale": 1, "bone": 2, "fur": 3}
 ## A head garment's index entry "hides_hair" (P54, plan M11 §2.6): "all" hides every hair style; "top" draws a style
 ## cut to the share of its length its "hair_cut" gives (0: not drawn).
 const HIDES_ALL := "all"

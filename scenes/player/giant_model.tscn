@@ -745,7 +745,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "51ba9a499eb9372f1ecaddb0983e5abf14372562a31bfff56ac19754fd61172a",
+"manifest_sha256": "b9e5e813c679d5aa8efdc554cd9d47916f58b52e26c0e7a1852e9a94a962196e",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -1927,7 +1927,7 @@ index = {
 "layer": 3,
 "node": "Hair_circlet_braid",
 "part_path": "res://assets/giant/parts/Hair_circlet_braid.glb",
-"tris": 5520
+"tris": 5506
 },
 "Hair_crop": {
 "category": "hair",
