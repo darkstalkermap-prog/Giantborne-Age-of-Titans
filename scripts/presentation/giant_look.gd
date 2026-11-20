@@ -210,6 +210,18 @@ const META_SWAY := "giant_look_sway"
 const META_BUILD := "giant_look_build"
 ## On a root: a face slider was set on one of its meshes (P53: a look with no face then skips the meshes).
 const META_FACE := "giant_look_face"
+## On a root: apply()'s walk over its meshes (P57; _plan()).
+const META_PLAN := "giant_look_plan"
+const R_ID := 0
+const R_CATEGORY := 1
+const R_NODE := 2
+const R_STYLES := 3
+const R_ENTRY := 4
+const R_SHADER := 5
+const R_OWN_COLOR := 6
+const R_DYE_SLOT := 7
+## On a material: the look uniforms (name -> value) apply() last set there (P57: an unchanged material is skipped).
+const META_LAST := "giant_look_last"
 ## The hair's sway (P46; the hair shader's head_motion): the tips lag the head's motion by SWAY_LAG_S seconds
 ## of it, eased at SWAY_EASE a second, at most SWAY_MAX_M at the tips (stage-1 metres, the mesh's own space).
 const SWAY_LAG_S := 0.035
@@ -280,15 +292,16 @@ static func _designs(index: Dictionary) -> Dictionary:
 static func mesh_node(root: Node, index: Dictionary, mesh_id: String) -> MeshInstance3D:
 	if root == null:
 		return null
+	# P57: cached by mesh id, so a hit costs one lookup (apply() asks for every mesh of the index on every look)
+	var cache := _node_cache(root)
+	var hit: Variant = cache.get(mesh_id)
+	if hit != null and is_instance_valid(hit) and root.is_ancestor_of(hit):
+		return hit
 	var entry: Variant = _meshes(index).get(mesh_id)
 	var node_name := str((entry as Dictionary).get("node", mesh_id)) if typeof(entry) == TYPE_DICTIONARY else mesh_id
-	var cache := _node_cache(root)
-	var hit: Variant = cache.get(node_name)
-	if is_instance_valid(hit) and hit is MeshInstance3D and root.is_ancestor_of(hit):
-		return hit
 	var found := root.find_child(node_name, true, false) as MeshInstance3D
 	if found != null:
-		cache[node_name] = found
+		cache[mesh_id] = found
 	return found
 
 
@@ -459,13 +472,7 @@ static func scar_uniforms(index: Dictionary, scars: Variant) -> Dictionary:
 			for r: Variant in (d as Dictionary).get("regions", []):
 				if SchemaUtil.is_number(r) and int(r) >= 0 and int(r) < REGIONS:
 					regions[slot][ch] |= 1 << int(r)
-	var known: Array[int] = []
-	for id: Variant in designs:
-		if typeof(designs[id]) == TYPE_DICTIONARY and str((designs[id] as Dictionary).get("kind", "")) == "scar":
-			var l := int((designs[id] as Dictionary).get("layer", 0))
-			if not known.has(l):
-				known.append(l)
-	known.sort()
+	var known := _scar_layers(designs)
 	for l in known:
 		if layers.size() < 2 and not layers.has(l):
 			layers.append(l)
@@ -473,6 +480,28 @@ static func scar_uniforms(index: Dictionary, scars: Variant) -> Dictionary:
 		layers.append(layers[0] if not layers.is_empty() else 0)
 	return {"layer": maxi(layers[0], 0), "on": on[0], "layer_b": maxi(layers[1], 0), "on_b": on[1],
 		"regions": regions[0], "regions_b": regions[1]}
+
+
+static var _scar_layers_of: Dictionary = {}
+static var _scar_layers_size := -1
+static var _scar_layers_known: Array[int] = []
+
+
+## The index's scar layers, sorted (P57: worked out once per designs Dictionary).
+static func _scar_layers(designs: Dictionary) -> Array[int]:
+	if is_same(designs, _scar_layers_of) and designs.size() == _scar_layers_size:
+		return _scar_layers_known
+	var known: Array[int] = []
+	for id: Variant in designs:
+		if typeof(designs[id]) == TYPE_DICTIONARY and str((designs[id] as Dictionary).get("kind", "")) == "scar":
+			var l := int((designs[id] as Dictionary).get("layer", 0))
+			if not known.has(l):
+				known.append(l)
+	known.sort()
+	_scar_layers_of = designs
+	_scar_layers_size = designs.size()
+	_scar_layers_known = known
+	return known
 
 
 # --------------------------------------------------------------------------- tiers and textures
@@ -699,9 +728,16 @@ static func set_param(mat: ShaderMaterial, uniform: String, value: Variant) -> v
 	if mat == null:
 		return
 	mat.set_shader_parameter(uniform, value)
-	var names: Dictionary = mat.get_meta(META_NAMES, {})
-	names[uniform] = true
-	mat.set_meta(META_NAMES, names)
+	if mat.has_meta(META_LAST):
+		mat.remove_meta(META_LAST)   # P57: apply() sets this material's look again next time
+	# P57: the names' Dictionary is stored once and then filled in place (a set_meta on every uniform was most of
+	# a look's cost in the creator's every pick)
+	if not mat.has_meta(META_NAMES):
+		mat.set_meta(META_NAMES, {uniform: true})
+		return
+	var names: Dictionary = mat.get_meta(META_NAMES)
+	if not names.has(uniform):
+		names[uniform] = true
 
 
 # --------------------------------------------------------------------------- apply
@@ -730,27 +766,26 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 	# go of the rest; a synthetic root just shows and hides its nodes
 	var parts := root.has_method("ensure_part") and root.has_method("release_unused")
 	var shown_ids: Array = []
-	for id: Variant in meshes:
-		var entry: Dictionary = meshes[id] if typeof(meshes[id]) == TYPE_DICTIONARY else {}
-		var mi := mesh_node(root, index, str(id))
-		if mi == null:
-			continue
-		match str(entry.get("category", "")):
+	var rows := _plan(root, index)
+	for r: Array in rows:
+		var mi: MeshInstance3D = r[R_NODE]
+		var id: String = r[R_ID]
+		match r[R_CATEGORY]:
 			"hair":
-				mi.visible = str(id) == str(l.hair_mesh) and float(cut.get(str(id), 1.0)) > 0.0
+				mi.visible = id == str(l.hair_mesh) and float(cut.get(id, 1.0)) > 0.0
 			"beard":
-				mi.visible = str(id) == str(l.beard_mesh)
+				mi.visible = id == str(l.beard_mesh)
 			"garment":
-				mi.visible = shown.has(str(id))
+				mi.visible = shown.has(id)
 			"accessory":
-				mi.visible = extras.has(str(id))
+				mi.visible = extras.has(id)
 			"bead":
 				# P56: a bead set with style codes shows only on the shown styles that have anchors
-				mi.visible = extras.has(str(id)) and (not entry.has("styles") or bead_mask(entry, str(id), l, cut) != 0)
+				mi.visible = extras.has(id) and (not r[R_STYLES] or bead_mask(r[R_ENTRY], id, l, cut) != 0)
 		if mi.visible:
-			shown_ids.append(str(id))
+			shown_ids.append(id)
 			if parts:
-				root.call("ensure_part", str(id))
+				root.call("ensure_part", id)
 	if parts:
 		root.call("release_unused", shown_ids)
 	_apply_face(root, index, shown_ids, l.face)
@@ -784,64 +819,115 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 	var mark: Dictionary = l.mark if typeof(l.mark) == TYPE_DICTIONARY else {}
 	var ink: Color = (l.tattoos[0] as Dictionary).get("ink", Color(0.1, 0.18, 0.4)) if not (l.tattoos as Array).is_empty() \
 		else Color(0.1, 0.18, 0.4)
-	for id: Variant in mats:
-		var mat: ShaderMaterial = mats[id]
-		var entry: Dictionary = meshes.get(id, {}) if typeof(meshes.get(id)) == TYPE_DICTIONARY else {}
-		var category := str(entry.get("category", ""))
-		match shader_kind(category):
+	# P57: each kind's uniforms are worked out once per look, and a material whose last look set the same values is
+	# skipped (the creator applies the whole look on every pick; 73 materials with the catalogue II). set_param
+	# (and so set_garment_fade) forgets a material's last values, so only a raw set_shader_parameter outside
+	# GiantLook could be missed; GiantLook.forget_applied(root) makes the next look set everything again.
+	var shell_beard := _shell_beard(meshes, l)
+	var skin := {"skin_tone": l.skin_tone, "hair_color": l.hair_color, "beard_color": l.beard_color,
+		"scalp_tint": float(l.scalp_tint), "stubble": float(l.stubble) * (SHELL_SKIN_TINT if shell_beard else 1.0),
+		# P51: under a shell beard the skin keeps only a shade of the beard's colour (the shells are the beard; the
+		# skin's hard-edged beard area showed through as a line on the cheeks)
+		"beard_tint": (float(l.beard_tint) * (SHELL_SKIN_TINT if shell_beard else 1.0)) if str(l.beard_mesh) != "" else 0.0,
+		"region_tattoo": codes.tattoo, "region_paint": codes.paint, "region_mark": codes.mark, "tattoo_ink": ink,
+		"paint_color": paint.get("color", Color(0.86, 0.84, 0.78)), "mark_color": mark.get("color", Color(0.44, 0.49, 0.55)),
+		"mark_glow": float(mark.get("glow", 0.0)), "scar_layer": int(scars.layer), "scar_on": scars.on,
+		"scar_layer_b": int(scars.layer_b), "scar_on_b": scars.on_b, "scar_regions": scars.regions,
+		"scar_regions_b": scars.regions_b, "hidden_regions": hidden}
+	var hair := {"hair_color": l.hair_color, "tip_color": l.hair_tip, "grey": float(l.hair_grey),
+		"length": clampf(float(l.hair_length), 0.0, 1.0)}
+	var beard := {"hair_color": l.beard_color, "tip_color": l.beard_tip, "grey": float(l.beard_grey),
+		"length": clampf(float(l.beard_length), 0.0, 1.0)}
+	var eye := {"iris_color": l.eye_color, "iris_glow": float(l.eye_glow)}
+	for r: Array in rows:
+		var mat: ShaderMaterial = mats.get(r[R_ID])
+		if mat == null:
+			continue
+		if not (r[R_NODE] as MeshInstance3D).visible and r[R_SHADER] != "skin" and mat.has_meta(META_LAST):
+			continue   # P57: a hidden piece keeps the values of the last look that showed it until it is shown again
+		var id: String = r[R_ID]
+		var category: String = r[R_CATEGORY]
+		match r[R_SHADER]:
 			"skin":
-				set_param(mat, "skin_tone", l.skin_tone)
-				set_param(mat, "hair_color", l.hair_color)
-				set_param(mat, "beard_color", l.beard_color)
-				set_param(mat, "scalp_tint", float(l.scalp_tint))
-				set_param(mat, "stubble", float(l.stubble) * (SHELL_SKIN_TINT if _shell_beard(meshes, l) else 1.0))
-				# P51: under a shell beard the skin keeps only a shade of the beard's colour (the shells are the
-				# beard; the skin's hard-edged beard area showed through as a line on the cheeks)
-				var shell_beard := _shell_beard(meshes, l)
-				set_param(mat, "beard_tint", (float(l.beard_tint) * (SHELL_SKIN_TINT if shell_beard else 1.0))
-					if str(l.beard_mesh) != "" else 0.0)
-				set_param(mat, "region_tattoo", codes.tattoo)
-				set_param(mat, "region_paint", codes.paint)
-				set_param(mat, "region_mark", codes.mark)
-				set_param(mat, "tattoo_ink", ink)
-				set_param(mat, "paint_color", paint.get("color", Color(0.86, 0.84, 0.78)))
-				set_param(mat, "mark_color", mark.get("color", Color(0.44, 0.49, 0.55)))
-				set_param(mat, "mark_glow", float(mark.get("glow", 0.0)))
-				set_param(mat, "scar_layer", int(scars.layer))
-				set_param(mat, "scar_on", scars.on)
-				set_param(mat, "scar_layer_b", int(scars.layer_b))
-				set_param(mat, "scar_on_b", scars.on_b)
-				set_param(mat, "scar_regions", scars.regions)
-				set_param(mat, "scar_regions_b", scars.regions_b)
-				set_param(mat, "hidden_regions", hidden)
 				if set_build:
 					set_param(mat, "build", build)
 					set_param(mat, "build_max_m", build_max)
+				_put(mat, skin)
 			"hair":
-				var beard := category == "beard"
-				set_param(mat, "hair_color", l.beard_color if beard else l.hair_color)
-				set_param(mat, "tip_color", l.beard_tip if beard else l.hair_tip)
-				set_param(mat, "grey", float(l.beard_grey if beard else l.hair_grey))
-				var length := float(l.beard_length if beard else l.hair_length)
-				if not beard:
-					length = minf(length, float(cut.get(str(id), 1.0)))   # P54: under a helm
-				set_param(mat, "length", clampf(length, 0.0, 1.0))
+				if category == "beard":
+					_put(mat, beard)
+				elif cut.has(id):
+					var h := hair.duplicate()
+					h.length = clampf(minf(float(l.hair_length), float(cut[id])), 0.0, 1.0)   # P54: under a helm
+					_put(mat, h)
+				else:
+					_put(mat, hair)
 			"eye":
-				set_param(mat, "iris_color", l.eye_color)
-				set_param(mat, "iris_glow", float(l.eye_glow))
+				_put(mat, eye)
 			"cloth":
-				if category == "bead" and entry.has("styles"):
-					set_param(mat, "bead_mask", bead_mask(entry, str(id), l, cut))
 				var g: Dictionary = shown.get(id, {})
-				var own := str(entry.get("color", ""))
-				var fallback: Color = Color.html(own) if Color.html_is_valid(own) else _legacy_dye(l, str(entry.get("dye", "primary")))
-				set_param(mat, "dye_color", g.get("dye", fallback))   # P54: an accessory in its own colour
+				var dye: Variant = g.get("dye")
+				if dye == null:   # P54: an accessory in its own colour
+					dye = r[R_OWN_COLOR] if r[R_OWN_COLOR] != null else _legacy_dye(l, r[R_DYE_SLOT])
+				var c := {"dye_color": dye, "fade": 0.0}
+				if category == "bead" and r[R_STYLES]:
+					c["bead_mask"] = bead_mask(r[R_ENTRY], id, l, cut)
 				if str(g.get("kind", "")) == "metal":
-					set_param(mat, "kind", 1)   # a metal garment's response whatever its detail map
-				set_param(mat, "fade", 0.0)
+					c["kind"] = 1   # a metal garment's response whatever its detail map
 				if set_build:
 					set_param(mat, "build", build)
 					set_param(mat, "build_max_m", build_max)
+				_put(mat, c)
+
+
+## P57: the root's meshes as apply() walks them, worked out once per root and index: one Array a mesh of the index
+## that has a node, [id, category, node, has style codes, entry, shader kind, own colour or null, dye slot]. Made
+## again when the index or a node changes (a copy of the root, a node freed).
+static func _plan(root: Node, index: Dictionary) -> Array:
+	var meshes := _meshes(index)
+	if root.has_meta(META_PLAN):
+		var plan: Dictionary = root.get_meta(META_PLAN)
+		if int(plan.owner) == root.get_instance_id() and is_same(plan.meshes, meshes) and int(plan.size) == meshes.size():
+			var valid := true
+			for r: Array in plan.rows:
+				if not is_instance_valid(r[R_NODE]):
+					valid = false
+					break
+			if valid:
+				return plan.rows
+	var rows := []
+	for id: Variant in meshes:
+		var entry: Dictionary = meshes[id] if typeof(meshes[id]) == TYPE_DICTIONARY else {}
+		var mi := mesh_node(root, index, str(id))
+		if mi == null:
+			continue
+		var category := str(entry.get("category", ""))
+		var own := str(entry.get("color", ""))
+		rows.append([str(id), category, mi, entry.has("styles"), entry, shader_kind(category),
+			Color.html(own) if Color.html_is_valid(own) else null, str(entry.get("dye", "primary"))])
+	root.set_meta(META_PLAN, {"owner": root.get_instance_id(), "meshes": meshes, "size": meshes.size(), "rows": rows})
+	return rows
+
+
+## P57: `values` (uniform -> value) on `mat`, unless the last look put exactly these values there; the names are
+## remembered for validate() as set_param does.
+static func _put(mat: ShaderMaterial, values: Dictionary) -> void:
+	var last: Variant = mat.get_meta(META_LAST) if mat.has_meta(META_LAST) else null
+	if last is Dictionary and last == values:
+		return
+	if not mat.has_meta(META_NAMES):
+		mat.set_meta(META_NAMES, {})
+	var names: Dictionary = mat.get_meta(META_NAMES)
+	for u: String in values:
+		mat.set_shader_parameter(u, values[u])
+		names[u] = true
+	mat.set_meta(META_LAST, values)
+
+
+## P57: the next look sets every uniform of the root's materials again (after a uniform was set outside GiantLook).
+static func forget_applied(root: Node) -> void:
+	for mat: Variant in _own_materials(root).values():
+		(mat as ShaderMaterial).remove_meta(META_LAST)
 
 
 ## The bead set `id`'s mask of style codes shown with look `l` (P56; plan M11 §2.5: beads only on styles whose index

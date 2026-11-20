@@ -255,8 +255,10 @@ func ensure_part(id: String) -> MeshInstance3D:
 ## proxy.
 func release_unused(shown: Array) -> void:
 	for id: String in _meshes:
-		if is_part(id) and not shown.has(id):
-			(_meshes[id] as MeshInstance3D).visible = false
+		var mi := _meshes[id] as MeshInstance3D
+		# P57: a part already hidden and let go is passed at once (most of the 69 on every look)
+		if (mi.visible or mi.mesh != null) and is_part(id) and not shown.has(id):
+			mi.visible = false
 			_release(id)
 
 
