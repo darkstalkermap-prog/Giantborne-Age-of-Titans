@@ -3,34 +3,34 @@
 	"id": "appearance_preset.highland_herdsman",
 	"type": "appearance_preset",
 	"display_name": "The Highland Herdsman",
-	"description": "A circlet braid set with silver, a kilt and a sleeveless vest; spirals on his bare upper arms.",
+	"description": "A weathered hill-herder: a circlet braid set with silver and a full greying beard, a fur cloak over an ochre kilt and a sleeveless vest; spirals on his bare upper arms.",
 	"appearance": {
 		"v": 2,
 		"preset": "appearance_preset.highland_herdsman",
-		"skin": "skin.fair",
+		"skin": "skin.weathered",
 		"eyes": "eyes.blue",
 		"build": {
-			"brawn": -0.1,
-			"girth": 0.2
+			"brawn": 0.25,
+			"girth": 0.45
 		},
 		"face": {
-			"jaw": -0.4,
+			"jaw": 0.3,
 			"chin": -0.3,
 			"nose": 0.0,
 			"brow": 0.0,
 			"cheeks": 0.0,
-			"age": -0.5
+			"age": 0.4
 		},
 		"hair": {
 			"style": "hair.circlet_braid",
-			"color": "haircolor.auburn",
-			"grey": 0.0,
+			"color": "haircolor.dark_brown",
+			"grey": 0.3,
 			"beads": "bead.silver_beads"
 		},
 		"beard": {
-			"style": "beard.short",
+			"style": "beard.full",
 			"color": "",
-			"grey": 0.1,
+			"grey": 0.35,
 			"beads": "bead.none"
 		},
 		"tattoos": {
@@ -90,17 +90,17 @@
 					"dye": ""
 				},
 				"cape": {
-					"item": "garment.cape",
+					"item": "garment.fur_cloak",
 					"dye": ""
 				}
 			},
 			"accessories": {
 				"neck": "",
 				"arm_ring": "",
-				"belt": ""
+				"belt": "accessory.drinking_horn"
 			},
 			"dyes": {
-				"cloth": "dye.pine",
+				"cloth": "dye.ochre",
 				"leather": "dye.walnut",
 				"metal": "metal.iron"
 			}

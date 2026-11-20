@@ -77,7 +77,13 @@ RATE_MESH_B_PER_VERTEX = 61.0
 # ships 70.7 B a glTF vertex and a card mesh 36.0 B (fits over the 12 and the 9 parts), plus 13.5 KB a file
 # for the skeleton and the skin every part's scene carries; the clips 11.6 B a keyed bone and key.
 RATE_CARD_B_PER_VERTEX = 33.4
-RATE_PART_B_PER_VERTEX = 65.4
+RATE_PART_B_PER_VERTEX = 70.7     # the W33 look lane: refitted on its parts (a garment's UV2 and its push alpha)
+# The W33 look lane, fitted on the imported parts (each .scn is compressed by the importer, so gzip keeps it and
+# base64 adds a third): a part's file no longer carries the skeleton (part_import.gd), only its skin's 71 binds, 8 KB;
+# a blend shape (a face key) costs about 20 B a glTF vertex more (P56's keys were not counted: the estimate read
+# 10.78 MiB while the Web build shipped 13.31).
+RATE_PART_FILE_B = 8000.0
+RATE_KEY_B_PER_VERTEX = 20.4
 RATE_PROXY_B_PER_VERTEX = 45.0     # the shadow proxy: no UVs (ASSUMED: inside giant.glb, not measured apart)
 RATE_SKELETON_B = 13500.0
 RATE_CLIP_B_PER_BONE_KEY = 11.6
@@ -553,13 +559,15 @@ def estimate(rel: str, doc: dict) -> float:
         total = RATE_SKELETON_B
         for mid, e in meshes.items():
             if "file" not in e:
-                total += e["verts"] * GODOT_VERTEX_SPLIT * RATE_MESH_B_PER_VERTEX
+                total += e["verts"] * GODOT_VERTEX_SPLIT * (RATE_MESH_B_PER_VERTEX
+                                                            + len(e.get("face_keys", [])) * RATE_KEY_B_PER_VERTEX)
         total += doc["export"].get("shadow_proxy", {}).get("verts", 0) * RATE_PROXY_B_PER_VERTEX
         return total
     if "/parts/" in rel and name.endswith(".glb"):
         e = meshes.get(name[:-4], {})
         rate = RATE_CARD_B_PER_VERTEX if e.get("category") in ("hair", "beard") else RATE_PART_B_PER_VERTEX
-        return RATE_SKELETON_B + e.get("verts", 0) * GODOT_VERTEX_SPLIT * rate
+        rate += len(e.get("face_keys", [])) * RATE_KEY_B_PER_VERTEX
+        return RATE_PART_FILE_B + e.get("verts", 0) * GODOT_VERTEX_SPLIT * rate
     if name == "giant_clips.glb":
         return RATE_CLIP_B_PER_BONE_KEY * sum(c["bones"] * (c["frames"] + 1)
                                               for c in doc.get("clips", {}).get("clips", {}).values())
