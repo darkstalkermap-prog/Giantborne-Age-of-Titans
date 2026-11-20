@@ -35,8 +35,11 @@ const LEAF_BONES := ["hair_01", "hair_02", "hair_03", "hair_l_01", "hair_l_02", 
 const CORE_MESHES := ["Body_Head", "Body_Limbs", "Body_Torso", "Eyes", "ShadowProxy"]
 const LAYER_OF := {"Body_Head": 3, "Body_Torso": 2, "Body_Limbs": 1, "Eyes": 3}
 ## The animation brief's landmarks at stage 1 (game frame).
-const BRIEF_SHOULDER_R := Vector3(0.414, 3.015, -0.033)
-const BRIEF_REACH := 1.385
+## (the body's proportions, 2026-11-20, the owner's request at checkpoint B: the brief's M10 shoulder (0.414, 3.015,
+## -0.033) and reach 1.385 became the proportioned body's - the shoulder line lower, the legs longer, the height kept;
+## TipMatching's contract holds on them)
+const BRIEF_SHOULDER_R := Vector3(0.404, 2.930, -0.030)
+const BRIEF_REACH := 1.307
 ## The floor's fullest looks (plan §2.3): the warrior and the chieftain, long hair and the full beard.
 const FULLEST := [["tunic", "jerkin", "belt", "bracers", "boots"], ["braies", "belt", "furs", "jerkin", "boots"],
 	["braies", "belt", "pauldron", "bracers", "leg_wraps"], ["braies", "belt", "cape", "leg_wraps", "boots"]]   # P46's two

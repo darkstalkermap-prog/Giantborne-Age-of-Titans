@@ -34,6 +34,8 @@ from __future__ import annotations
 import bpy
 import numpy as np
 
+import giant_body as gb
+
 ATLAS_COLUMNS = 4
 
 # The floor's styles (plan §2.3): mesh id -> layers (count, length m human scale, layer lo, hi,
@@ -961,6 +963,9 @@ def build_styles(body, rig, coll, bd, S):
     L = {k: (np.asarray(v) * S if isinstance(v, (list, tuple)) else (v * S if isinstance(v, float) else v))
          for k, v in land.items() if k != "hs"}
     hs = land["hs"]
+    # the body's proportions (2026-11-20): the cards and the braids grow with the head (their widths and lengths are
+    # human metres; the head was scaled by PROPORTIONS["head"], so at stage 1 they were 6 % smaller while the head grew)
+    f = gb.PROPORTIONS["head"]
     surf = Surface(body, 0, ("m_scalp", "m_beard", "m_head", "m_mustache"))
     rng = np.random.default_rng(HAIR_SEED)
     wh = np.clip(surf.attr["m_head"], 0, 1)
@@ -988,11 +993,11 @@ def build_styles(body, rig, coll, bd, S):
                 extra["at"] = ly["at"]
             if "region" in ly:
                 extra["mask"] = region_mask(surf, L, S, hs, ly["region"])
-            P = grower(surf, L, S, hs, rng, ly["n"], ly["length"], ly["lo"], ly["hi"], npts=ly["npts"],
+            P = grower(surf, L, S, hs, rng, ly["n"], ly["length"] * f, ly["lo"], ly["hi"], npts=ly["npts"],
                        power=ly["power"], **extra)
             n = len(P)
             grown.append(P)
-            width = ly["width"] * S * (0.8 + 0.4 * rng.random(n))
+            width = ly["width"] * S * f * (0.8 + 0.4 * rng.random(n))
             if ly["wispy"] > 0:
                 cols = np.where(rng.random(n) < ly["wispy"], 3, rng.integers(0, 3, n))
             else:
@@ -1018,11 +1023,11 @@ def build_styles(body, rig, coll, bd, S):
             fr = dict(FRINGE, **style["fringe"])
             frng = np.random.default_rng([FRINGE_SEED, STYLE_ORDER.index(mesh_id)])
             fmask = region_mask(surf, L, S, hs, fr["region"]) if "region" in fr else None
-            P = grow_fringe(surf, L, S, hs, frng, fr["n"], fr["length"], fr["lo"], fr["hi"], npts=fr["npts"],
+            P = grow_fringe(surf, L, S, hs, frng, fr["n"], fr["length"] * f, fr["lo"], fr["hi"], npts=fr["npts"],
                             mask=fmask)
             strips.append((off, off + len(P) * fr["npts"] * 2))
             n = len(P)
-            width = fr["width"] * S * (0.8 + 0.4 * frng.random(n))
+            width = fr["width"] * S * f * (0.8 + 0.4 * frng.random(n))
             cols = np.where(frng.random(n) < fr["wispy"], 3, frng.integers(0, 3, n))
             V, F, UV, Nn = ribbons(surf, P, width, cols, np.full(n, fr["curl"]), centre, taper=0.7)
             Vs.append(V)
@@ -1036,11 +1041,11 @@ def build_styles(body, rig, coll, bd, S):
             # stream of their own (the twin braids' locks run apart to each side and left a ragged scalp patch)
             cv = style["cover"]
             crng = np.random.default_rng([COVER_SEED, STYLE_ORDER.index(mesh_id)])
-            P = grow_scalp(surf, L, S, hs, crng, cv["n"], cv["length"], cv["lo"], cv["hi"], npts=cv["npts"], power=0.6,
+            P = grow_scalp(surf, L, S, hs, crng, cv["n"], cv["length"] * f, cv["lo"], cv["hi"], npts=cv["npts"], power=0.6,
                            mask=region_mask(surf, L, S, hs, cv.get("region", "strip"))
                            * sstep_np(surf.V[:, 2], L["ear_z"][1] + 0.01 * hs * S, L["ear_z"][1] + 0.04 * hs * S))
             n = len(P)
-            width = cv["width"] * S * (0.8 + 0.4 * crng.random(n))
+            width = cv["width"] * S * f * (0.8 + 0.4 * crng.random(n))
             V, F, UV, Nn = ribbons(surf, P, width, crng.integers(0, 3, n), np.full(n, cv["curl"]), centre,
                                    taper=SCALP_TAPER)
             Vs.append(V)
@@ -1053,14 +1058,14 @@ def build_styles(body, rig, coll, bd, S):
             # P51: thin loose strands off the style's volume, from a random stream of their own
             lo = dict(LOOSE, **style["loose"])
             lrng = np.random.default_rng([LOOSE_SEED, STYLE_ORDER.index(mesh_id)])
-            P = grow_scalp(surf, L, S, hs, lrng, lo["n"], lo["length"], lo["lo"], lo["hi"], npts=lo["npts"],
+            P = grow_scalp(surf, L, S, hs, lrng, lo["n"], lo["length"] * f, lo["lo"], lo["hi"], npts=lo["npts"],
                            power=0.6, wild=lo["wild"])
             # only strands that hang back or down over the style: none falls forward over the face
             back = ((P[:, -1, 1] - P[:, 0, 1] > -0.005 * S) & (P[:, 1:, 2] < P[:, :1, 2] + 0.004 * S).all(axis=1)
                     & (P[:, 0, 1] > centre[1] - 0.02 * S))
             P = P[back]
             n = len(P)
-            width = lo["width"] * S * (0.7 + 0.6 * lrng.random(n))
+            width = lo["width"] * S * f * (0.7 + 0.6 * lrng.random(n))
             V, F, UV, Nn = ribbons(surf, P, width, np.full(n, 3), np.full(n, lo["curl"]), centre, taper=0.8)
             Vs.append(V)
             Fs.append(F + off)
@@ -1072,10 +1077,10 @@ def build_styles(body, rig, coll, bd, S):
             # P51: a row of cards under the jaw, so a beard is there from behind and from below
             uj = dict(UNDER_JAW, **style["under_jaw"])
             urng = np.random.default_rng([UNDER_JAW_SEED, STYLE_ORDER.index(mesh_id)])
-            P = grow_under_jaw(surf, L, S, hs, urng, uj["n"], uj["length"], uj["lo"], uj["hi"], npts=uj["npts"])
+            P = grow_under_jaw(surf, L, S, hs, urng, uj["n"], uj["length"] * f, uj["lo"], uj["hi"], npts=uj["npts"])
             n = len(P)
             along = np.linalg.norm(np.diff(P, axis=1), axis=2).sum(axis=1)
-            width = np.minimum(uj["width"] * S * (0.8 + 0.4 * urng.random(n)), BEARD_ASPECT * along)
+            width = np.minimum(uj["width"] * S * f * (0.8 + 0.4 * urng.random(n)), BEARD_ASPECT * along)
             V, F, UV, Nn = ribbons(surf, P, width, urng.integers(0, 3, n), np.full(n, uj["curl"]), centre,
                                    taper=BEARD_TAPER)
             Vs.append(V)
@@ -1096,11 +1101,11 @@ def build_styles(body, rig, coll, bd, S):
                 # (only round the style's own skin: no stray hairs on a bare chin or cheek)
                 rm = np.clip(region_mask(surf, L, S, hs, reg), 0.0, 1.0)
                 band = band * np.clip(rm * 3.0, 0.0, 1.0)
-            P = grow_beard(surf, L, S, hs, erng, ed["n"], ed["length"], ed["lo"], ed["hi"], npts=ed["npts"],
+            P = grow_beard(surf, L, S, hs, erng, ed["n"], ed["length"] * f, ed["lo"], ed["hi"], npts=ed["npts"],
                            power=1.0, mask=band)
             n = len(P)
             along = np.linalg.norm(np.diff(P, axis=1), axis=2).sum(axis=1)
-            width = np.minimum(ed["width"] * S * (0.6 + 0.8 * erng.random(n)), BEARD_ASPECT * along)
+            width = np.minimum(ed["width"] * S * f * (0.6 + 0.8 * erng.random(n)), BEARD_ASPECT * along)
             V, F, UV, Nn = ribbons(surf, P, width, np.full(n, 3), np.full(n, ed["curl"]), centre, taper=BEARD_TAPER)
             Vs.append(V)
             Fs.append(F + off)
@@ -1115,20 +1120,20 @@ def build_styles(body, rig, coll, bd, S):
             # P51: a twisted tube with beads along the braid's path (it was herringbone cards)
             if mesh_id not in NEW_STYLES:
                 start = braid_start(surf, L, S, hs, br["at"], br["side"])
-                _lobes, _facing, core = braid_guides(surf, S, start, br["lean"], br["length"], br["width"], br["step"])
+                _lobes, _facing, core = braid_guides(surf, S, start, br["lean"], br["length"] * f, br["width"] * f, br["step"] * f)
                 path, ties, closed = core[0], None, False
             elif br["at"] == "circlet":
-                path, ties, closed = circlet_path(surf, L, S, hs, br["width"], br["step"]), br["ties"], True
+                path, ties, closed = circlet_path(surf, L, S, hs, br["width"] * f, br["step"] * f), br["ties"], True
             else:
                 start = tine_point(np.concatenate([g[:, -1] for g in grown]), br["side"], hs, S) if br["at"] == "tine" else \
                     braid_start(surf, L, S, hs, br["at"], br["side"])
-                path = braid_path(surf, S, start, br["lean"], br["length"], br["width"], br["step"],
+                path = braid_path(surf, S, start, br["lean"], br["length"] * f, br["width"] * f, br["step"] * f,
                                   hang=br.get("grow", False))
                 ties, closed = br["ties"], False
-            V, F, UV, Nn, u2 = braid_tube(path, br["width"], S, centre, ties=ties, closed=closed)
+            V, F, UV, Nn, u2 = braid_tube(path, br["width"] * f, S, centre, ties=ties, closed=closed)
             # P56: the bead sets' anchors on this braid (M10's braided styles: between their own rings)
             beads = br.get("beads", OLD_BRAID_BEADS.get(mesh_id, ()))
-            anchors += anchors_on(path, br["width"], S, beads, closed)
+            anchors += anchors_on(path, br["width"] * f, S, beads, closed)
             U2s.append(u2)
             Vs.append(V)
             Fs.append(F + off)

@@ -702,6 +702,16 @@ What the fifth look lane (`docs/systems/W33look5.md`) answered and what still lo
 | **The crop's nape**: the scalp mask ends low on the neck: the shell thins out but its line is the mask's. **The twin braids' front**: a pale patch at the front of the crown. | a later look pass | The scalp mask at the nape (a bake input); the toward locks' parting. |
 | **Braies' outer hips still round** (mostly the thigh under them); **toes at the boots' tips** (a toe box by cross-section hulls was written but not finished); **hood from behind, top knot, leg wraps and greaves**: not done. | a later look pass | - |
 
+## From the body's proportions (W33body, M11 part B)
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| **The creator's framings follow the M10 body** (`GiantPreview.FRAMINGS`, `ui/screens/creator/giant_preview.gd`): 14 rendered checks fail on the proportioned body until they move. Heights moved with the landmarks about them (stage-1 m): face 3.36 to 3.346, hair 3.25 to 3.224, arms 2.55 to 2.478, chest 2.7 to 2.619, back_design 2.65 to 2.569, hand(_l) 1.98 to 1.95, eyes 3.447 to 3.443, head 3.42 to 3.413, shoulders 2.95 to 2.866, waist 1.85 to 1.99, legs 1.05 to 1.236, shins 0.62 to 0.733, feet 0.32 to 0.378, neck 3.22 to 3.191, upper 2.6 to 2.52, lower 1.05 to 1.236, hair_close 3.22 to 3.191, outfit 2.35 to 2.362; full and back kept. | the creator's owner: the owner approved these targets for this lane (2026-11-20), but the permission system refused the edit to `ui/screens/creator/giant_preview.gd`, so it is still open | Then re-run `test_hair_render`, `test_appearance_render`, `test_skin_tone_render`, `test_skin_world_render`. |
+| ~~**The weapon arm's elbow crosses the middle by 0.15-0.18 m**~~ | done (W33body) | `TipMatching.CROSS_POLES` lowered to y -0.07 and the cross blend to 0.35 m: `test_skinned_rig_motion` passes at its bound (0.15), as does `test_giant_motion_render`. |
+| ~~**The braided moustache and the mutton chops draw 50-51 px**~~ | done (W33body) | The beard and hair cards scale with the proportioned head (x1.12): the parts check passes at its 60 px floor. |
+| ~~**Shoulders 3.1 head widths, fingertips a quarter head above mid-thigh**~~ | accepted by the owner (2026-11-20: "Keep as is") | The gameplay arm and TipMatching unchanged. |
+| **The boots' toes still fold in places** (281 of 2,500 triangles; 468 before W33body): the between-toe faces of the body's topology squeeze to slivers in a shell over the smoothed foot. Small dark specks at the toe bases from close up. | a later look pass | A boot shell over its own toe topology (the toes' gap faces dropped and the hole bridged) instead of the body's. |
+
 ## From the M12 gate review
 
 Gate B (M11 part B, candidate `47a0af6`; `docs/systems/GATE_B.md`) fixed its seven confirmed findings. What it leaves:

@@ -78,6 +78,8 @@ SPLIT_BY_WEIGHT = ("braies",)
 PART_LAYER = {0: 3, 1: 2, 2: 1}    # head, torso, limbs -> their render layers
 OWN_NORMAL_SMOOTH = {"braies": 3}   # ... their face normals (area-weighted) averaged over this many rings of neighbours
 #                                     (1 elsewhere: the kilt's pleats keep their edges)
+OWN_NORMAL_EASED = {"boots": 2}     # the body's proportions: garments easing to their own normals (smoothed this many
+#                                     rings) where the skin's turn away from them (the toes under a boot)
 OWN_NORMAL_SLOTS = ("legs",)        # the third look lane: garments that shade with their own normals (not the skin's)
 PUSH_Y_NORM = 4.0                  # stage-1 m: a garment's rest height over this in UV2.x (the W33 look lane)
 HAIR_CUT_LEAST = 0.3               # a style cut shorter than this under a head garment is not drawn there
@@ -306,14 +308,16 @@ def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None,
             groups[bone][c] = 1.0
         reg.append(split.CAP_REGION)
         if build is not None:
-            build.append((0.0, 0.0) if skin_rims else tuple(np.mean([src_build[v] for v in oriented], axis=0)))
+            # (the body's proportions, 2026-11-20: a body cap's centre takes no build push either - pushed along its own
+            # mean it poked out of the shoulder as a spike at build -1)
+            build.append((0.0, 0.0))
         for (b, a, _c) in tris:
             out_faces.append((rim[b], rim[a], c))
             out_uv.append([cap_uv, cap_uv, cap_uv])
-            if skin_rims:
-                out_nrm.append([tuple(A["vnormal"][b]), tuple(A["vnormal"][a]), tuple(nrm)])
-            else:
-                out_nrm.append([tuple(nrm)] * 3)
+            # the rim copies keep their vertex's own normal (the build sliders push along it: with the cap's normal a
+            # body cap's rim was pushed along the limb, spikes at the shoulders at build -1; the body's from the
+            # proportions, 2026-11-20, the garments' from P54)
+            out_nrm.append([tuple(A["vnormal"][b]), tuple(A["vnormal"][a]), tuple(nrm)])
         stats["capped"] += 1
     del part_faces
     arrays = {"V": np.asarray(V, np.float64), "faces": out_faces, "corner_uv": out_uv,
@@ -1133,6 +1137,15 @@ def run(out_dir):
             # surface's normal; with the skin's they drew the buttocks' cleft and cheeks and the thighs' muscles on
             # cloth that spans them (the build sliders push them along it: they stand clear of the skin there)
             G["vnormal"] = smooth_normals(G["V"], G["faces"], OWN_NORMAL_SMOOTH.get(gid, 1))
+        if gid in OWN_NORMAL_EASED:
+            # the body's proportions: a boot shades with its own smoothed normal wherever the skin's under it turns
+            # away from it (over the toes the skin's normals point into the gaps between them: the boot drew bright
+            # crumples and dark specks there, read as tears); elsewhere the skin's, so the build pushes them together
+            own = smooth_normals(G["V"], G["faces"], OWN_NORMAL_EASED[gid])
+            t = np.clip((0.9 - np.einsum("ij,ij->i", own, G["vnormal"])) / 0.4, 0.0, 1.0)
+            t = (t * t * (3.0 - 2.0 * t))[:, None]
+            mixed = G["vnormal"] * (1.0 - t) + own * t
+            G["vnormal"] = mixed / np.maximum(np.linalg.norm(mixed, axis=1, keepdims=True), 1e-9)
         if gid == "horned_helm":
             # the W33 look lane: the horns (after the cap's own vertices) keep their own round normals (with the scalp's
             # under them they shaded flat, and from behind as a board)

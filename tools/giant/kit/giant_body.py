@@ -148,13 +148,158 @@ def build_armature(name, rig_json, verts_mh, joints_mh, to_scene, coll):
 # --------------------------------------------------------------------------------------
 # body
 # --------------------------------------------------------------------------------------
+# The body's proportions (2026-11-20, the owner's request at checkpoint B: the M10 freeze lifted for it). The
+# strongman phenotype (GIANT_MACRO at its most) stood 8.35 heads with legs 40 % of his height, shoulders 1.6 times his
+# hips, the chin level with the neck joint and the fingertips at the hips. The vendored targets have no limb-length
+# targets, so the morphed mesh (every vertex: the body, the helpers, the eyes) is reshaped here before the joints are
+# read from it, and the joints follow: the legs longer and the torso shorter, the neck longer, the head a little
+# larger, the arms longer, the shoulders and the trapezius drawn in, the thighs' outer bulge eased. The whole height
+# is the model's (build_giant scales it to the stage-1 height), so each stage keeps its height.
+PROPORTIONS = dict(
+    legs=1.30,          # the legs (under the crotch) this much longer
+    torso=0.85,         # the torso (the crotch to the shoulders' line) this much shorter
+    neck=0.07,          # m the head and the neck's top are lifted over the shoulders' line
+    head=1.12,          # the head's scale about the neck joint
+    arms=1.10,          # (the hands ride on the forearm's end, scaled by ``hands``)
+    hands=0.80,          # the arms (and the hands) this much longer from the shoulder
+    shoulders=-0.02,    # m each shoulder and arm drawn in toward the spine
+    deltoids=0.75,      # the shoulders' and the upper arms' bulk drawn in toward the arm's own line by this share
+    trapezius=0.035,    # m the trapezius beside the neck drawn down
+    thighs=0.35,        # the thighs' outer side drawn in toward the leg's axis by this share
+)
+
+
+def _blend(x, a, b):
+    t = np.clip((np.asarray(x, np.float64) - a) / (b - a), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+def proportioned(bm, verts_mh, p):
+    """The morphed vertices (MakeHuman units) reshaped to the body's proportions (PROPORTIONS)."""
+    J = {k: mh.mh_to_blender(v) for k, v in mh.joint_positions(bm, verts_mh).items()}
+    for k in list(J):
+        if k.startswith("joint-l-"):           # the right side the left's mirror (the reshape stays symmetric)
+            r = "joint-r-" + k[len("joint-l-"):]
+            if r in J:
+                J[r] = J[k] * np.array([-1.0, 1.0, 1.0])
+    V = mh.mh_to_blender(verts_mh)
+    w = mh.load_weights()
+    n = len(V)
+
+    def wsum(prefixes):
+        out = np.zeros(n)
+        for bone, lst in w.items():
+            if bone.startswith(prefixes):
+                for vi, wt in lst:
+                    if vi < n:
+                        out[vi] += wt
+        return np.clip(out, 0.0, 1.0)
+
+    arm = wsum(("upperarm", "lowerarm", "hand", "thumb", "index", "middle", "ring", "pinky"))
+    head = wsum(("head",))
+    g = J["joint-ground"][2]
+    knee = 0.5 * (J["joint-l-knee"][2] + J["joint-r-knee"][2])
+    hip = 0.5 * (J["joint-l-upper-leg"][2] + J["joint-r-upper-leg"][2])
+    nb = n if n < mh.N_BODY_VERTS else mh.N_BODY_VERTS
+    Vb = V[:nb]
+    mid = (np.abs(Vb[:, 0]) < 0.02) & (Vb[:, 2] > knee) & (Vb[:, 2] < hip)
+    crotch = float(Vb[mid, 2].min())
+    sh = 0.5 * (J["joint-l-shoulder"][2] + J["joint-r-shoulder"][2])
+    neck = J["joint-neck"]
+    z = V[:, 2].copy()
+    # the thighs' outer side toward the leg's axis (before the legs are stretched)
+    for s, side in ((1.0, "l"), (-1.0, "r")):
+        hp, kn = J["joint-%s-upper-leg" % side], J["joint-%s-knee" % side]
+        t = np.clip((hp[2] - z) / (hp[2] - kn[2]), 0.0, 1.0)
+        ax = hp[0] + (kn[0] - hp[0]) * t
+        outer = (V[:, 0] - ax) * s
+        sel = (np.sign(V[:, 0]) == s) & (outer > 0.0) & (arm < 0.5)
+        amt = p["thighs"] * _blend(z, knee + 0.05, knee + 0.25) * (1.0 - _blend(z, hip + 0.04, hip + 0.14))
+        V[:, 0] = np.where(sel, V[:, 0] - s * outer * amt, V[:, 0])
+    # the shoulders and the arms drawn in; the trapezius down
+    ax_ = np.abs(V[:, 0])
+    upper = _blend(z, sh - 0.40, sh - 0.12)
+    shift = p["shoulders"] * np.maximum(arm, _blend(ax_, 0.09, abs(J["joint-l-shoulder"][0])) * upper)
+    V[:, 0] -= np.sign(V[:, 0]) * np.minimum(shift, np.maximum(ax_ - 0.05, 0.0))
+    trap = p["trapezius"] * _blend(ax_, 0.06, 0.12) * (1.0 - _blend(ax_, 0.20, 0.27)) * _blend(z, sh - 0.08, sh + 0.02) \
+        * (1.0 - _blend(z, neck[2] + 0.02, neck[2] + 0.08)) * (1.0 - arm) * (1.0 - head)
+    z = z - trap
+    # the deltoids and the upper arms slimmer about the arm's own line (the strongman's bulk made the shoulders twice
+    # the hips; the joints stay near a real shoulder's, so a held weapon keeps its tested swing)
+    upw = wsum(("upperarm", "clavicle"))
+    for s, side in ((1.0, "l"), (-1.0, "r")):
+        shj = J["joint-%s-shoulder" % side].copy()
+        shj[0] -= s * p["shoulders"]
+        el = J["joint-%s-elbow" % side].copy()
+        el[0] -= s * p["shoulders"]
+        u = (el - shj) / np.linalg.norm(el - shj)
+        P = np.column_stack([V[:, 0], V[:, 1], z])
+        t = (P - shj) @ u
+        foot = shj + np.outer(np.clip(t, -0.08, np.linalg.norm(el - shj)), u)
+        sel = (np.sign(V[:, 0]) == s) & (upw > 0.0)
+        amt = p["deltoids"] * upw * (1.0 - _blend(t, 0.1, 0.35)) * np.where(sel, 1.0, 0.0)
+        Q = foot + (P - foot) * (1.0 - amt)[:, None]
+        V[:, 0], V[:, 1], z = Q[:, 0], Q[:, 1], Q[:, 2]
+    # the arms longer along their own line from the shoulder
+    for s, side in ((1.0, "l"), (-1.0, "r")):
+        shj = J["joint-%s-shoulder" % side].copy()
+        shj[0] -= s * p["shoulders"]
+        hand = J["joint-%s-hand" % side].copy()
+        hand[0] -= s * p["shoulders"]
+        u = (hand - shj) / np.linalg.norm(hand - shj)
+        P = np.column_stack([V[:, 0], V[:, 1], z])
+        wrist = float((hand - shj) @ u)
+        along = np.clip((P - shj) @ u, 0.0, wrist)      # the hand rides on the forearm's end
+        sel = (np.sign(V[:, 0]) == s)
+        d = np.where(sel, arm * (p["arms"] - 1.0) * along, 0.0)
+        V[:, 0] += d * u[0]
+        V[:, 1] += d * u[1]
+        z = z + d * u[2]
+    # the hands smaller about the wrist
+    hw = wsum(("hand", "thumb", "index", "middle", "ring", "pinky"))
+    for s, side in ((1.0, "l"), (-1.0, "r")):
+        shj = J["joint-%s-shoulder" % side].copy()
+        shj[0] -= s * p["shoulders"]
+        wr = J["joint-%s-hand" % side].copy()
+        wr[0] -= s * p["shoulders"]
+        wr = shj + (wr - shj) * p["arms"]
+        sel = (np.sign(V[:, 0]) == s) & (hw > 0.0)
+        k = 1.0 + (p["hands"] - 1.0) * hw
+        V[:, 0] = np.where(sel, wr[0] + (V[:, 0] - wr[0]) * k, V[:, 0])
+        V[:, 1] = np.where(sel, wr[1] + (V[:, 1] - wr[1]) * k, V[:, 1])
+        z = np.where(sel, wr[2] + (z - wr[2]) * k, z)
+    # the head a little larger about the neck joint
+    hs = 1.0 + (p["head"] - 1.0) * head
+    V[:, 0] = neck[0] + (V[:, 0] - neck[0]) * hs
+    V[:, 1] = neck[1] + (V[:, 1] - neck[1]) * hs
+    z = np.where(head > 0.0, neck[2] + (z - neck[2]) * hs, z)
+    # heights: the legs longer, the torso shorter, the neck longer
+    zc_new = g + (crotch - g) * p["legs"]
+    zs_new = zc_new + (sh - crotch) * p["torso"]
+    out = np.where(z < crotch, g + (z - g) * p["legs"], zc_new + (z - crotch) * p["torso"])
+    above = z >= sh
+    lift = p["neck"] * _blend(z, sh, neck[2] + 0.06)
+    out = np.where(above, zs_new + (z - sh) + lift, out)
+    # an arm rides with its shoulder (its own heights compressed as the torso's would bend it)
+    sh_new = zs_new
+    out = np.where(arm > 0.0, (1.0 - arm) * out + arm * (sh_new + (z - sh)), out)
+    V[:, 2] = out
+    back = np.empty_like(V)
+    back[:, 0] = V[:, 0] * 10.0
+    back[:, 1] = V[:, 2] * 10.0
+    back[:, 2] = -V[:, 1] * 10.0
+    return back
+
+
 class BodyData:
     """Morphed hm08 data in Blender space (metres, Z up, feet on z=0), human scale."""
 
-    def __init__(self, macro=None, modifiers=None):
+    def __init__(self, macro=None, modifiers=None, proportions=None):
         mods = dict(mh.GIANT_MODIFIERS if modifiers is None else modifiers)
         t = time.time()
         self.bm, self.verts_mh, self.target_weights = mh.build_phenotype(macro, mods)
+        if proportions is not False:
+            self.verts_mh = proportioned(self.bm, self.verts_mh, PROPORTIONS if proportions is None else proportions)
         self.joints_mh = mh.joint_positions(self.bm, self.verts_mh)
         ground = mh.mh_to_blender(self.joints_mh["joint-ground"])
         self.offset = np.array([0.0, 0.0, -ground[2]])

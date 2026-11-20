@@ -27,7 +27,7 @@
 		{"key": "greaves", "name": "Greaves", "slot": "shins", "mesh": "greaves", "material": "metal", "covers": []},
 		{"key": "long_cloak", "name": "Long cloak", "slot": "cape", "mesh": "long_cloak", "material": "cloth", "covers": ["back"]},
 		{"key": "shirt", "name": "Shirt", "slot": "chest", "mesh": "shirt", "material": "cloth", "covers": ["chest", "back"]},
-		{"key": "sleeveless_vest", "name": "Sleeveless vest", "slot": "chest", "mesh": "sleeveless_vest", "material": "leather", "covers": []},
+		{"key": "sleeveless_vest", "name": "Sleeveless vest", "slot": "chest", "mesh": "sleeveless_vest", "material": "leather", "covers": ["back"]},
 		{"key": "war_belt", "name": "Plated war belt", "slot": "waist", "mesh": "war_belt", "material": "metal", "covers": []},
 		{"key": "fur_mantle", "name": "Fur mantle", "slot": "shoulders", "mesh": "fur_mantle", "material": "fur", "covers": []},
 		{"key": "leather_cap", "name": "Leather cap", "slot": "head", "mesh": "leather_cap", "material": "leather", "covers": [], "hides_hair": "top"},

@@ -424,8 +424,9 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(build_giant.shipped_problems(doc), [])
         self.assertEqual(doc["body_hash"], doc["index"]["body_hash"])
         lm = doc["index"]["landmarks"]
-        self.assertAlmostEqual(lm["shoulder_r"][0], 0.414, delta=0.02)
-        self.assertAlmostEqual(lm["reach_r"], 1.385, delta=0.02)
+        # (the body's proportions, 2026-11-20: 0.414 on the M10 body)
+        self.assertAlmostEqual(lm["shoulder_r"][0], 0.404, delta=0.02)
+        self.assertAlmostEqual(lm["reach_r"], 1.307, delta=0.02)          # (1.385 on the M10 body)
 
 
 class ClipsTest(unittest.TestCase):
@@ -546,8 +547,9 @@ class FreezeTest(unittest.TestCase):
             for what in ("vertices", "triangles", "positions", "normals", "uvs", "regions", "weights", "all", "faces"):
                 self.assertEqual(got["meshes"][mesh][what], hashes[what], "%s: its %s are M10's" % (mesh, what))
         doc = manifest.load(ROOT)
-        self.assertEqual(doc["body_hash"], "9cd81c08253e20339d78a2a5e72ca01adc08a47599c95446d6f4209ef88527be",
-                         "the body hash of decision 9 (M10) stands")
+        # (decision 9's M10 hash 9cd81c08... until the body's proportions, 2026-11-20: the freeze lifted and re-taken)
+        self.assertEqual(doc["body_hash"], "52190c406ec66f23a3afe9ac050eaf15bd29160ea14d378801a674237182f133",
+                         "the body hash of the proportioned body stands")
 
     def test_the_freeze_notices_a_change(self):
         """A positive control on synthetic data: the hashes are sets (order does not matter), and one

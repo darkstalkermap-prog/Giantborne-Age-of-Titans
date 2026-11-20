@@ -292,6 +292,10 @@ def _mirror_mean(values, V):
     return out
 
 
+BUILD_CALF_EASE = 0.5      # ... and off the calves (the body's proportions, 2026-11-20)
+BUILD_SHOULDER_EASE = 0.85  # the share of the build sliders' push taken off the shoulders and the upper arms
+
+
 def build_weights(bd, normals, faces, S):
     """((n, 2) signed weights in -1..1: brawn, girth; build_max_m; {"brawn_max_m", "girth_max_m"}).
     The head keeps its shape (the face has sliders of its own, and the eyes, the hair and the beard
@@ -300,6 +304,20 @@ def build_weights(bd, normals, faces, S):
     disp = mh.build_displacements(n)
     V = bd.verts[:n]
     keep = 1.0 - np.clip(bd.masks["m_head"], 0.0, 1.0)
+    # the body's proportions (2026-11-20): the shoulders and the upper arms widen less, so the build sliders' ends keep
+    # a strong man's shoulders (at +1 they reached 3.7 head widths)
+    J = bd.joints
+    shz = 0.5 * (J["joint-l-shoulder"][2] + J["joint-r-shoulder"][2])
+    sh_x = abs(J["joint-l-shoulder"][0])
+    ease = sstep(np.abs(V[:, 0]), sh_x - 0.08, sh_x) * sstep(V[:, 2], shz - 0.45, shz - 0.2)
+    # (and the trapezius beside the neck, which at +1 rose round it and buried it)
+    ease = np.maximum(ease, sstep(np.abs(V[:, 0]), 0.04, 0.09) * sstep(V[:, 2], shz - 0.12, shz - 0.02))
+    keep = keep * (1.0 - BUILD_SHOULDER_EASE * ease)
+    # (and the calves, which at +1 bulged like a bodybuilder's past the knee)
+    kz = 0.5 * (J["joint-l-knee"][2] + J["joint-r-knee"][2])
+    az = 0.5 * (J["joint-l-ankle"][2] + J["joint-r-ankle"][2])
+    calf = sstep(V[:, 2], az + 0.02, az + 0.12) * (1.0 - sstep(V[:, 2], kz - 0.02, kz + 0.08))
+    keep = keep * (1.0 - BUILD_CALF_EASE * calf)
     proj = {}
     for key in ("brawn", "girth"):
         d = mh.mh_to_blender(disp[key]) * S
@@ -407,4 +425,9 @@ def hand_landmarks(rig):
         out[f"grip_axis_{s}"] = unit(M.T @ across)
         out[f"knuckle_{s}"] = 0.5 * (knuckles[0] + knuckles[1])
         out[f"toe_{s}"] = tail(f"ball_{s}")
+    # the two fists' grips mirrored exactly (the body's proportions, 2026-11-20: its reshape left them a micrometre
+    # apart, which the six-place index rounded differently)
+    m = np.array([-1.0, 1.0, 1.0])
+    gl = 0.5 * (out["grip_local_l"] + out["grip_local_r"] * m)
+    out["grip_local_l"], out["grip_local_r"] = gl, gl * m
     return out
