@@ -15,7 +15,10 @@ fifth and sixth); the others are placed greedily, the designs that touch the mos
 Reading in play (plan §2.3, decision 18): the pieces the camera sees from behind at stage 1 or in
 first person - arm_bands, arm_chevrons, back_wings, back_tree, shoulder_bands, forearm_slash,
 knuckles, granite_veins, lightning_tree - are drawn with strokes at least 2.7 cm wide on the
-human-scale rest body (4 cm at stage 1, x 1.4947).
+human-scale rest body (4 cm at stage 1, x 1.4947 on the M10 body). W33frame: the stroke is set from the body's own
+stage-1 scale (draw_all: BOLD = BOLD_M10 x M10_SCALE / the body's scale), so it stays 4 cm at stage 1 on any body -
+the reproportioned body (W33body) is taller at human scale (x 1.3594 to stage 1) and its fixed 2.7 cm strokes drew
+3.7 cm.
 
 Usage: python designs.py <bake dir> <out dir>   (writes designs.png and designs.json)
 """
@@ -32,7 +35,10 @@ import numpy as np  # noqa: E402
 
 LAYER_SIZE = 512
 AA = 0.0016                     # anti-aliasing ramp (m, human scale; about one 1024 px texel)
-BOLD = 0.0135                   # half-width of a stroke that reads in play (2.7 cm wide, 4 cm at stage 1)
+BOLD_M10 = 0.0135               # half-width of a stroke that reads in play on the M10 body (2.7 cm wide, 4 cm at stage 1)
+M10_SCALE = 1.494689            # the M10 body's human scale to stage 1 (3.6576 m over its human height)
+STAGE1_HEIGHT_M = 3.6576
+BOLD = BOLD_M10                 # draw_all sets it from the body drawn on (4 cm at stage 1)
 KINDS = ("tattoo", "paint", "scar", "mark")
 SCAR_ORDER = ("scar_brow", "scar_forearm_slash", "scar_chest_claws", "scar_knuckles",
               "scar_cheek", "scar_back_lash",     # four a layer: the fifth and sixth fill a second scar layer
@@ -478,12 +484,35 @@ def d_granite_veins(P, N, J, ctx):
         t2, r2, _, _ = limb_frame(P, el, wr)
         sel |= (r1 < 0.15) & (t1 > -0.05) & (t1 < 0.42)
         sel |= (r2 < 0.1) & (t2 > 0.25) & (t2 < 0.85)
-    n1 = _noise3(P, 9.0, 3)
-    n2 = _noise3(P + 0.37, 21.0, 5)
-    v = 0.7 * n1 + 0.3 * n2
-    # gradient-normalised distance to the 0.5 iso-line, so the vein width stays even
-    m = band(np.abs(v - 0.5), 0.045, 0.02)
-    return np.where(sel, m, 0.0)
+    # W33frame: the veins are the field's iso-line drawn as a stroke of even width (the distance to it is the
+    # field's offset over its gradient, in metres), BOLD wide: a band of the field's value (0.045 of it) drew blobs
+    # where the field lay flat and hairlines where it was steep, so how much read hung on where the noise's lattice
+    # fell on the body - on the reproportioned body (W33body) a third of M10's in the arms framing
+    idx = np.nonzero(sel)[0]
+    Q = P[idx]
+    v = _vein_field(Q)
+    # the iso-line at the field's median over the selected skin (not a fixed 0.5): where the lattice falls on a body
+    # skews the field (its median over the arms read 0.42 on the reproportioned body) and a fixed level then crosses
+    # it rarely
+    level = float(np.median(v))
+    h = 0.003
+    g2 = np.zeros(len(Q))
+    for ax in range(3):
+        e = np.zeros(3)
+        e[ax] = h
+        g2 += ((_vein_field(Q + e) - _vein_field(Q - e)) / (2.0 * h)) ** 2
+    d = np.abs(v - level) / np.maximum(np.sqrt(g2), 1e-6)
+    out = np.zeros(len(P))
+    out[idx] = band(d, BOLD * VEIN_HALF)
+    return out
+
+
+VEIN_HALF = 0.8   # the veins' half-width, of BOLD
+
+
+def _vein_field(P):
+    """The granite veins' field: two octaves of value noise (its 0.5 iso-line is the veins)."""
+    return 0.7 * _noise3(P, 9.0, 3) + 0.3 * _noise3(P + 0.37, 21.0, 5)
 
 
 def d_lightning_tree(P, N, J, ctx):
@@ -1102,10 +1131,17 @@ DRAW = {
 }
 
 
+def bold_half(human_height_m):
+    """The half-width (human-scale metres) of a stroke 4 cm wide at stage 1 on a body ``human_height_m`` tall."""
+    return BOLD_M10 * M10_SCALE * human_height_m / STAGE1_HEIGHT_M
+
+
 def draw_all(P, N, region, valid, bd):
     """{design id: float mask over the texels} with every design restricted to its regions."""
     import giant_skin as gs
     import mh_data as mh
+    global BOLD
+    BOLD = bold_half(bd.height)
     J = bd.joints
     ctx = {"hs": bd.landmarks["hs"], "scars": gs.scar_segments(bd), "V": bd.verts[: mh.N_BODY_VERTS], "L": bd.landmarks}
     out = {}

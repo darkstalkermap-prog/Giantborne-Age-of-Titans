@@ -27,13 +27,22 @@ const CHILD_TIMEOUT_S := 150
 const WHITE_MAX := {"wanderer": 0.15, "storm_herald": 0.65, "iron_veteran": 0.15}
 ## Ceilings of the hard steps' share at the face framing (fixed / wave-30: 0.0060 / 0.0116, 0.0087 / 0.0156,
 ## 0.0070 / 0.0095).
-const STEP_MAX := {"wanderer": 0.009, "storm_herald": 0.012, "iron_veteran": 0.0085}
+## W33frame: re-derived on the reproportioned body (W33body). The face's own steps did not change (the Wanderer's in
+## the head's rows 125 on the M10 body, 131 on this one), but the share's denominator did: at the face framing the
+## narrower, lower shoulders and chest leave 22,537 skin pixels in the frame, not 29,670, and the upper arms' outlines
+## now fall inside it - the fixed skin reads 0.0106 / 0.0170 / 0.0067. Wave-30's terminator on this body (its
+## subsurface lookup, the cause of the hard edge, put back on this tree) reads 0.0154 / 0.0217 / 0.0080; the ceilings
+## sit halfway (the Iron Veteran's stands: 0.0067 under it, and wave-30's full build also had the pale grade).
+const STEP_MAX := {"wanderer": 0.013, "storm_herald": 0.0194, "iron_veteran": 0.0085}
 ## Floors of the shade's warmth, red minus blue of the darkest 15 %, both framings (fixed / wave-30: 16.8-26.6 /
 ## 12.1-21.3, 4.6-4.9 / -5.5 to -3.5, 16.7-26.1 / 13.3-14.5).
 const WARM_MIN := {"wanderer": 10.0, "storm_herald": 1.5, "iron_veteran": 10.0}
 ## Gate A2: a shell's mean luminance within SHELL_LUM_TOL of the card style's (or SHELL_LUM_ABS, for black hair),
 ## each channel within SHELL_RGB_TOL (or SHELL_RGB_ABS); its spread (90th less 10th percentile of luminance) at least
-## SHELL_SPREAD_MIN and SHELL_SPREAD_SHARE of its mean (fixed / m11-gate-a: Storm Herald 12.0 / 0.2).
+## SHELL_SPREAD_MIN and SHELL_SPREAD_SHARE of its mean (fixed / m11-gate-a: Storm Herald 12.0 / 0.2). W33frame: the card
+## style's colour is its pixels where the shell draws too: the card beards grew with the reproportioned head and their
+## longer, lighter tips over the lit chest moved the whole style's mean (the Northern Chieftain's blue 34.8 to 37.1,
+## the shell's 23.6 to 23.7) while the card's colour in the shell's area held (31.4 to 31.1).
 const SHELL_LUM_TOL := 0.3
 const SHELL_LUM_ABS := 6.0
 const SHELL_RGB_TOL := 0.35
@@ -92,9 +101,12 @@ func test_the_skin_holds_its_colour_in_the_worlds_light() -> void:
 	assert_eq(shells.size(), 5, "the probe drew the five shell cases")
 	for case_name: String in shells:
 		var sh: Dictionary = shells[case_name].get("shell", {})
+		# W33frame: the card style's colour is read where the shell draws (the probe's `card`), its presence on the whole
+		# style (`card_all`)
 		var card: Dictionary = shells[case_name].get("card", {})
-		assert_true(int(sh.get("pixels", 0)) > 1000 and int(card.get("pixels", 0)) > 1000,
-			"%s: the shell and the card style are in the frame (%d, %d px)" % [case_name, int(sh.get("pixels", 0)), int(card.get("pixels", 0))])
+		var card_all: Dictionary = shells[case_name].get("card_all", {})
+		assert_true(int(sh.get("pixels", 0)) > 1000 and int(card_all.get("pixels", 0)) > 1000,
+			"%s: the shell and the card style are in the frame (%d, %d px)" % [case_name, int(sh.get("pixels", 0)), int(card_all.get("pixels", 0))])
 		if not sh.has("rgb") or not card.has("rgb"):
 			continue
 		var ls := float(sh.lum)

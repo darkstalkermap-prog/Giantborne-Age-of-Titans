@@ -42,16 +42,18 @@ const KNOWN_MISSES := {
 	"Hair_crop@face.rough": "the shells hug the head: a smoother outline than 1,100 standing cards",
 	"Hair_crop@hair.rough": "the same",
 	"Hair_crop@hair.scalp": "the shells thin out towards the nape where the cards covered it",
-	"Hair_long_braided@face.scalp": "the hairline's fringe draws lighter over the paler skin and reads as skin",
-	"Hair_long_braided@hair.rough": "the braids' tubes",
 	"Hair_long_braided@hair.scalp": "the braids' tubes leave the nape's cards fewer",
-	"Hair_warrior_tail@face.scalp": "the same",
-	"Hair_wild_mane@face.rough": "outer locks traded for loose strands within the triangle cap",
+	"Hair_warrior_tail@face.scalp": "the hairline's fringe draws lighter over the paler skin and reads as skin",
 	"Hair_wild_mane@hair.rough": "outer locks traded for loose strands within the triangle cap",
-	"Beard_braided@face.rough": "the braids are tubes, not lobes of cards",
-	"Beard_braided@face.scalp": "the same",
 	"Beard_forked@face.scalp": "outer cards traded for the under-jaw row within the triangle cap (the full beard's beats M10's since Gate A's warmer skin)",
 	"Beard_short@face.rough": "the shells: a dense short beard with a closed edge",
+	# W33frame: the reproportioned body (W33body; the styles regenerated on it). On the M10 body the same tree read 0.1041,
+	# 1.5714 and 1.3793 (each beat M10's); on this one 0.1839, 1.4501 and 1.3138. Five others came to beat M10's on it
+	# and left the list (the long braided style's face scalp share and its outline from behind, the wild mane's face
+	# outline, the braided beard's two)
+	"Hair_crop@face.scalp": "the crop's front edge sits a pixel above the scalp tint's hairline on the reshaped head: a thin strip of tinted skin shows",
+	"Hair_long_back@hair.rough": "the hair hangs straight past the narrower shoulders, where it fanned over them: a smoother outline from behind",
+	"Hair_long_braided@face.rough": "the braids hang straight down past the longer neck, where they bent over the shoulders",
 }
 ## M10's scars and marks in their creator framings (pixels of the 320x240 tile that change against the base).
 const M10_FRAMED := {"scar.brow": 48, "scar.cheek": 88, "scar.chest_claws": 242, "scar.forearm_slash": 276,
@@ -60,7 +62,11 @@ const M10_FRAMED := {"scar.brow": 48, "scar.cheek": 88, "scar.chest_claws": 242,
 ## Gate A: designs that read less in their creator framing on the softer, warmer skin (the wrapped lookup softens the
 ## relief's shading, the albedo is less grey) - their floor is this share of M10's instead of 0.9, with the reading
 ## (docs/systems/P51.md, "Gate A").
-const GATE_A_FRAMED_SHARE := {"scar.forearm_slash": 0.8, "scar.back_lash": 0.8}
+const GATE_A_FRAMED_SHARE := {"scar.forearm_slash": 0.8, "scar.back_lash": 0.8,
+	# W33frame: the claw stripes' first region is the face, framed as before (the cheek's stripes 75 px on the M10 body,
+	# 78 on the reproportioned one), but their chest stripes, which M10's face framing showed at its bottom edge (234 px),
+	# lie under it now with the longer neck (57 px): 309 to 139 on the same tree, 0.45; the floor is 0.4 of M10's
+	"mark.claw_stripes": 0.4}
 ## The designs neither the stage-1 rear Game view nor first person can show above the floor, with the reason
 ## (each is checked in its creator framing above; docs/systems/P51.md has their readings).
 const NOT_IN_EITHER_VIEW := {
