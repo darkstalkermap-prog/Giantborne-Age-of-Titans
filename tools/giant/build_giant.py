@@ -379,13 +379,16 @@ IMPORT_TEXTURE = {"compress/mode": "2", "mipmaps/generate": "true"}
 IMPORT_SETTINGS = {
     # P56 (probe 3): giant.glb carries its own tangents and the head's morph tangents (the face keys); the importer's
     # ensure_tangents regenerated the keys' tangents and drew a dark quad between the brows at a key's +1
+    # (the second look lane: part_import.gd gives the body's meshes their far levels, far_lods.gd)
     "giant.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "true",
                                            "meshes/ensure_tangents": "false", "skins/use_named_skins": "true",
-                                           "animation/import": "false"}),
+                                           "animation/import": "false",
+                                           "import_script/path": '"res://tools/giant/part_import.gd"'}),
     # P48: a part is one mesh on the model's skeleton, bound by its named skin; it casts no shadow of its own
     # (the shadow proxy does; a free cape draws its own with its drawn mesh)
     # (the W33 look lane: part_import.gd keeps the skinned mesh and its skin and drops the 71-bone skeleton the glTF
-    # carries, which GiantModel never uses: about 7.7 KB a part off the Web pack)
+    # carries, which GiantModel never uses: about 7.7 KB a part off the Web pack; the second look lane: and gives
+    # every part its far levels, a hair style's and a beard's its strand levels, far_lods.gd)
     "parts/*.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "false",
                                              "meshes/ensure_tangents": "true", "skins/use_named_skins": "true",
                                              "animation/import": "false",

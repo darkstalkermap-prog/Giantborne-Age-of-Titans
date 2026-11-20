@@ -831,10 +831,11 @@ def set_groups(ob, groups):
             vg.add([i], float(w[i]), "REPLACE")
 
 
-def add_push_tangents(path, kd, body_N, S):
+def add_push_tangents(path, kd, body_N, S, along=None):
     """The W33 look lane: a ring accessory's glTF gets a TANGENT attribute holding, per vertex, the normal of the skin
-    vertex nearest it (the line the build sliders push it along; the cloth shader's push_tangent). Returns the file's
-    size."""
+    vertex nearest it (the line the build sliders push it along; the cloth shader's push_tangent); the second look
+    lane: ``along`` (a Blender direction) for every vertex instead (a belt's trophy: out along its side). Returns the
+    file's size."""
     import struct
     with open(path, "rb") as fh:
         data = fh.read()
@@ -851,7 +852,7 @@ def add_push_tangents(path, kd, body_N, S):
             P = np.frombuffer(bytes(binary[start:start + acc["count"] * 12]), np.float32).reshape(-1, 3)
             blender = np.stack([P[:, 0], -P[:, 2], P[:, 1]], axis=1) / S
             _, near = kd.query(blender)
-            n = body_N[near]
+            n = body_N[near] if along is None else np.tile(np.asarray(along, np.float64), (len(near), 1))
             tang = np.concatenate([np.stack([n[:, 0], n[:, 2], -n[:, 1]], axis=1), np.ones((len(n), 1))], axis=1)
             raw = tang.astype("<f4").tobytes()
             while len(binary) % 4:
@@ -1149,7 +1150,13 @@ def run(out_dir):
     rings = [a for a in gg.ACCESSORY_ORDER if gg.ACCESSORIES[a]["slot"] != "belt"]
     bare = gg.build_accessories(wardrobe, ring_slots=(), only=rings)
     pushes = gg.ring_push(wardrobe, bare, {a: accessories[a] for a in rings})
-    for a in rings:
+    # the second look lane: a belt's trophy likewise sits on the bare skin, its push out along its side (+-X) to clear
+    # what is worn under it in its tangents (it hung clear of the fullest wardrobe: the horn a hand off bare braies)
+    trophies = [a for a in gg.ACCESSORY_ORDER if gg.ACCESSORIES[a]["slot"] == "belt"]
+    bare.update(gg.build_accessories(wardrobe, only=trophies, bare=True))
+    pushes.update(gg.trophy_push(wardrobe, {a: bare[a] for a in trophies}, {a: accessories[a] for a in trophies}))
+    trophy_side = {a: (1.0 if a == "drinking_horn" else -1.0) for a in trophies}
+    for a in rings + trophies:
         bpy.data.objects.remove(accessories[a], do_unlink=True)
         accessories[a] = bare[a]
         accessories[a].name = "Accessory_" + a
@@ -1163,14 +1170,15 @@ def run(out_dir):
         if spec["slot"] != "belt":
             # a ring (the neck's, the arm's) takes the skin's build weights: the build sliders push it as they push the
             # skin under it, so it keeps its place round a neck or an arm that swells or thins; a trophy hangs rigid (no
-            # push: it is placed clear of the fullest build). The W33 look lane: the ring keeps its own round normals
+            # build push: it is placed clear of the fullest build; the second look lane: its layering push, out along
+            # its side, rides in its tangents as a ring's skin normal does). The W33 look lane: the ring keeps its own round normals
             # (with the skin's it shaded as a flat band) and carries the skin's normal, the line of its push, in its
             # glTF's tangents (add_push_tangents; the cloth shader's push_tangent)
             A["vbuild"] = vbuild[near]
-            ring_push.add(name)
-            d, scale, rows = pushes[aid]
-            if scale > 0.0:
-                A["valpha"] = np.round(d / scale * 255.0) / 255.0
+        ring_push.add(name)
+        d, scale, rows = pushes[aid]
+        if scale > 0.0:
+            A["valpha"] = np.round(d / scale * 255.0) / 255.0
         acc = make_object(name, A, coll, rig, "giant_bone" if spec["detail"] == "bone" else "giant_metal",
                           region_any[near].clip(0))
         layer = 1 if spec["bone"].startswith("upperarm") else 2
@@ -1229,7 +1237,9 @@ def run(out_dir):
         rel = "%s/%s.glb" % (PARTS_DIR, mid)
         size = export_glb(os.path.join(out_dir, PARTS_DIR, mid + ".glb"), rig, [by_name[mid]], morph_normals=False)
         if info["meshes"][mid].get("push_tangent"):
-            size = add_push_tangents(os.path.join(out_dir, PARTS_DIR, mid + ".glb"), kd, body_N, S)
+            side = trophy_side.get(mid[len("Accessory_"):]) if mid.startswith("Accessory_") else None
+            size = add_push_tangents(os.path.join(out_dir, PARTS_DIR, mid + ".glb"), kd, body_N, S,
+                                     along=None if side is None else (side, 0.0, 0.0))
         info["meshes"][mid]["file"] = rel
         info["parts"][mid] = rel
         info["glb_bytes"] += size

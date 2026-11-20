@@ -767,9 +767,12 @@ def circlet_path(surf, L, S, hs, width, step):
     """The circlet braid's ring round the head (P56): at the hairline in front, a little lower behind, standing a
     braid's radius off the hair's inner layer; closed (its last point is its first)."""
     Vs, Ns, c, ztop, yback, zmin = _scalp_frame(surf)
-    z_front = L["brow_z"] + 0.095 * hs * S
-    z_back = z_front - 0.035 * hs * S
-    clear = 0.5 * width * S * (1.0 + BRAID_RELIEF) + 0.004 * hs * S
+    # the second look lane: round the brow at the hairline and over the back of the skull (it went round the crown
+    # 9.5 cm over the brow, level with the top of the hair: a halo standing on the head), resting on the hair's
+    # inner layer rather than on the skin under it
+    z_front = L["brow_z"] + 0.058 * hs * S
+    z_back = z_front - 0.05 * hs * S
+    clear = 0.5 * width * S * (1.0 + BRAID_RELIEF) + 0.009 * hs * S
     pts = []
     head = surf.V[np.clip(surf.attr["m_head"], 0, 1) > 0.5]
     n = 48
@@ -785,7 +788,8 @@ def circlet_path(surf, L, S, hs, width, step):
         sector = ang < 0.16
         cand = band[sector] if sector.any() else band
         far = cand[int(np.argmax((cand[:, :2] - c[:2]) @ d[:2]))]
-        pts.append(np.array([far[0], far[1], z]) + d * clear)
+        # (behind, the hair is thicker over the skull: the ring stands a little further out there, or it sank into it)
+        pts.append(np.array([far[0], far[1], z]) + d * (clear + 0.006 * hs * S * 0.5 * (1.0 - np.cos(th))))
     path = np.asarray(pts)
     # smooth the ring (the slice's farthest points step with the mesh)
     for _ in range(3):

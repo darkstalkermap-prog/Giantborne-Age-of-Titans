@@ -56,6 +56,7 @@ uniform float tip_thin : hint_range(0.0, 1.0) = 0.0;
 uniform float back_fade : hint_range(0.0, 1.0) = 0.0;
 const float BACK_FADE_FROM = -0.35;
 const float BACK_FADE_TO = -0.7;
+const float TIP_TAPER = 0.26;   // the second look lane: how much the side feather widens at a beard card's tip
 uniform float atlas_columns = 4.0;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
@@ -121,9 +122,12 @@ void fragment() {
 			// (the atlas's strands end at their own lengths, so the tip thins out strand by strand).
 			a *= 1.0 - smoothstep(0.82, 1.0, UV.y) * 0.6;
 			float u = fract(UV.x * atlas_columns);
-			a *= smoothstep(0.0, side_feather, u) * smoothstep(0.0, side_feather, 1.0 - u);
-			// The root edge and (on a beard) the tip, strand by strand: each strand starts and ends at its own place
-			// along the card (its id, the atlas's G); minified, the ids blend and the edge is a plain ramp.
+			// the second look lane: on a beard (tip_thin set) the feather widens towards the tip, so a card narrows to a
+			// point (the short cards of the beards ended square at the cheeks, a row of blocks from the side)
+			float sf = side_feather + TIP_TAPER * UV.y * UV.y * step(0.001, tip_thin);
+			a *= smoothstep(0.0, sf, u) * smoothstep(0.0, sf, 1.0 - u);
+			// The root edge and the tip, strand by strand: each strand starts and ends at its own place along the card
+			// (its id, the atlas's G); minified, the ids blend and the edge is a plain ramp.
 			a *= smoothstep(0.0, root_feather, UV.y + sid * root_feather);
 			a *= 1.0 - smoothstep(1.0 - tip_thin, 1.0, UV.y + sid * tip_thin) * step(0.001, tip_thin);
 			// The volume: the card's own facing (its triangle) blended towards the head-centred normal.
