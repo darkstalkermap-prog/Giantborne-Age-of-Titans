@@ -219,34 +219,34 @@
     "vertices": 4570,
     "triangles": 8654,
     "positions": "1a10dd625275aa447fca7b764f5839508b007646cb7f62c90cb23af0d549b224",
-    "normals": "4d37cd9a4dd601632e7748fbb48a691863f7ba716f96a7a505ac430e49c261ac",
+    "normals": "1f41b25c2a780d795a3daef5aa50e6ef90d70fbcbc587680c71eee9b2a8215f0",
     "uvs": "7090d5949fb2abeb755987bc56ae0bab39479a8295d0d5b635b853a41a9000fa",
     "regions": "01e647c0de68a1415778326b7d9b11192a385216760e0d0bbfa10c9a83849ac1",
     "weights": "d83a3fda41e64ce8f7670629048dc238558bdc2d27212bf9ac6568a3144f2038",
-    "all": "07bb0992bb3de35d39556fcf80f2bd11acb1aa2089f5985ef6bbe45491c4b02b",
-    "faces": "5524fca6b9a5cedbaa2b298e6b2279a7a74a4fdaf80d48428ff33399c11faeb9"
+    "all": "dcf866bf953d740955f8e0e3819e24e8f0c586342bc2aec223ea1b1b697f24e3",
+    "faces": "0e84f17f918adf5f8c71ed3a81b9bb419a1bb0ecd8dcf105e831aaddb2d5b671"
    },
    "Body_Limbs": {
     "vertices": 8591,
     "triangles": 15154,
     "positions": "6a4974c520710c3cf5b4e7de99a76349f55014eb183c47bf105e400b3a22379c",
-    "normals": "80d44fdaea8ffc5639aaea7d4bd9b9022e42429fbfbe950d7d26a06f22eb729b",
+    "normals": "a2afb6d9411596dd170cf54f6943d8c6a955d640a066cc9e7c3f4e97e4590929",
     "uvs": "e645814363cdfe918c0a724d97eea2dbc8b6dfe5ba3b9ef80baac53da3afc057",
     "regions": "2a8cdb500904c55ea4caca5222caa32747f2cfcd6a76074eaf54d6bf7d0ec6d5",
     "weights": "00cf2e2ffaee3339a7336e4f3fea29c23bcb44b6b014dab6f96854aa9c3fa39e",
-    "all": "4ef12fb6bef1afe7ae7e70bf4bdfedbd6bf4e41ba5536c8b43110158f5e94732",
-    "faces": "309544cfd99655dad942e13b18d7db8189e3603c336ed7b5509bf2fee300f087"
+    "all": "a1141df7f7e50e28536bf8e49c4083efcfbad206e4104971b168d0aac3b60f9b",
+    "faces": "62f8b498ccba476236872ee40c6e5467fb5186e6765b8a6ff85d5d0222a4e836"
    },
    "Body_Torso": {
     "vertices": 1891,
     "triangles": 3296,
     "positions": "88a4b375da0c50e2e3d359b6b23628106244e0360cb1e7c6094ffc70b03254b2",
-    "normals": "9bda5e17150d0faa9a10c4805904da8aa875be152f60ea157fae620e123b1d39",
+    "normals": "2340bf3bb1fc7c64c0665366c5e5a333ae7ece1d74dd7f942a2d9eb1922e0abd",
     "uvs": "76aec5c027aab6ebc91d52101716b03ef3af70b4c1ba38928b77ed0ba1353783",
     "regions": "b05bb179d52a545c4461385018ac840cb29fee91a97770a199fa3c707642f925",
     "weights": "486783cd57cf4e557e07c4c7af43285fbd676c31f7022410df0762d0ba529c74",
-    "all": "af3683f51e39930bf2c86a70ff24f30345a816403bfa3208a9877688cc0559d7",
-    "faces": "02c69726a54e95c76b8988fa8d04392d4ce94b27923385e90b47d3a171748e64"
+    "all": "6a3a284d29cd4fd81b671c22a4d188e35072e79510aad686d3ddd335908c7ee3",
+    "faces": "6dc2129edb60cc3a4c42eb2fba8d19ed99e306a2dd2adb9231f2146ee39f0d4f"
    }
   }
  },

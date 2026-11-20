@@ -306,14 +306,16 @@ def split_part(A, face_part, part, vregion, root_bone, lift=0.0, cap_uv_of=None,
             groups[bone][c] = 1.0
         reg.append(split.CAP_REGION)
         if build is not None:
-            build.append((0.0, 0.0) if skin_rims else tuple(np.mean([src_build[v] for v in oriented], axis=0)))
+            # (the body's proportions, 2026-11-20: a body cap's centre takes no build push either - pushed along its own
+            # mean it poked out of the shoulder as a spike at build -1)
+            build.append((0.0, 0.0))
         for (b, a, _c) in tris:
             out_faces.append((rim[b], rim[a], c))
             out_uv.append([cap_uv, cap_uv, cap_uv])
-            if skin_rims:
-                out_nrm.append([tuple(A["vnormal"][b]), tuple(A["vnormal"][a]), tuple(nrm)])
-            else:
-                out_nrm.append([tuple(nrm)] * 3)
+            # the rim copies keep their vertex's own normal (the build sliders push along it: with the cap's normal a
+            # body cap's rim was pushed along the limb, spikes at the shoulders at build -1; the body's from the
+            # proportions, 2026-11-20, the garments' from P54)
+            out_nrm.append([tuple(A["vnormal"][b]), tuple(A["vnormal"][a]), tuple(nrm)])
         stats["capped"] += 1
     del part_faces
     arrays = {"V": np.asarray(V, np.float64), "faces": out_faces, "corner_uv": out_uv,

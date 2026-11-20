@@ -208,7 +208,9 @@ render_mode unshaded, cull_back;
 uniform vec2 build = vec2(0.0);
 uniform float build_max_m = 0.0;
 void vertex() {
-	VERTEX += NORMAL * dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m;
+	// (the body's proportions, 2026-11-20: a little further in as a slider leaves 0 - the decimated proxy's build
+	// weights are its nearest skin vertex's, and at -1 it stood out of the chest and the shoulder blades in patches)
+	VERTEX += NORMAL * (dot(COLOR.gb * 2.0 - 1.0, build) - 0.3 * max(abs(build.x), abs(build.y))) * build_max_m;
 }
 """
 static var _build_shadow: Shader = null

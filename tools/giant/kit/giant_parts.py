@@ -292,6 +292,7 @@ def _mirror_mean(values, V):
     return out
 
 
+BUILD_CALF_EASE = 0.5      # ... and off the calves (the body's proportions, 2026-11-20)
 BUILD_SHOULDER_EASE = 0.85  # the share of the build sliders' push taken off the shoulders and the upper arms
 
 
@@ -312,6 +313,11 @@ def build_weights(bd, normals, faces, S):
     # (and the trapezius beside the neck, which at +1 rose round it and buried it)
     ease = np.maximum(ease, sstep(np.abs(V[:, 0]), 0.04, 0.09) * sstep(V[:, 2], shz - 0.12, shz - 0.02))
     keep = keep * (1.0 - BUILD_SHOULDER_EASE * ease)
+    # (and the calves, which at +1 bulged like a bodybuilder's past the knee)
+    kz = 0.5 * (J["joint-l-knee"][2] + J["joint-r-knee"][2])
+    az = 0.5 * (J["joint-l-ankle"][2] + J["joint-r-ankle"][2])
+    calf = sstep(V[:, 2], az + 0.02, az + 0.12) * (1.0 - sstep(V[:, 2], kz - 0.02, kz + 0.08))
+    keep = keep * (1.0 - BUILD_CALF_EASE * calf)
     proj = {}
     for key in ("brawn", "girth"):
         d = mh.mh_to_blender(disp[key]) * S
