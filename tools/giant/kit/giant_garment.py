@@ -53,15 +53,15 @@ from split import bone_sums
 BRAIES = dict(
     top_z=1.535,          # human-scale cut heights (m, the 2.45 m body)
     knee_offset=0.13,     # bottom hem this far above the knee joint
-    looseness=0.018,      # m pushed out from the skin (thighs), human scale (W33: 0.03 read as puffed; the third look
+    looseness=0.015,      # m pushed out from the skin (thighs), human scale (W33: 0.03 read as puffed; the third look
     #                       lane: an even ease, the seat and the fall give the volume)
     fold_depth=0.012,
     # the third look lane (drape_breeches): fold lines (angle round the leg from his side, rad; their drift toward the
     # hip; their depth's share), their half-width, and how fast the back and the sides narrow toward the knee
     fold_lines=((-1.25, 0.35, 1.0), (-2.2, -0.25, 0.7), (0.35, 0.2, 0.6), (1.55, -0.3, 0.9), (2.45, 0.25, 0.6)),
     fold_width=0.30,
-    back_taper=0.10,
-    side_taper=0.16,
+    back_taper=0.18,     # (the fourth look lane: 0.10 and 0.16 read as ballooning)
+    side_taper=0.30,
     waist_cinch=0.006,    # W33: the most the waist stands off the skin (human m)
     belt_height=0.065,
     belt_thickness=0.006,
@@ -449,7 +449,7 @@ def seat_hull(P, vn, z_lo, z_hi, yc, crotch, most=0.05, slice_h=0.02, window=0.0
                 eq = ConvexHull(P[gw, :2]).equations
             except Exception:
                 continue
-            mv = g[(P[g, 1] > yc) | ((np.abs(P[g, 0]) < 0.07) & (P[g, 1] > yc - 0.05))] if joined else g[ln[g] > 0.2]
+            mv = g[(P[g, 1] > yc) | ((np.abs(P[g, 0]) < 0.07) & (P[g, 1] > yc - 0.025) & (vn[g, 1] > -0.3))] if joined else g[ln[g] > 0.2]
             if len(mv) == 0:
                 continue
             # across the seat straight back (the cleft's walls face each other: along their normals they crossed)
@@ -460,6 +460,24 @@ def seat_hull(P, vn, z_lo, z_hi, yc, crotch, most=0.05, slice_h=0.02, window=0.0
             ease = np.where(np.abs(P[mv[ok], 0]) < 0.08, sstep(top + BRAIES_CLEFT_OVER - P[mv[ok], 2], 0.0, 0.04),
                             sstep(top - P[mv[ok], 2], 0.0, 0.06)) if top is not None else 1.0
             P[mv[ok], :2] += Dm[ok] * (np.minimum(reach[ok], most * (4.0 if joined else 1.0)) * ease)[:, None]
+    return P
+
+
+def flat_front(P, faces, yc, hip, half=0.12, lo=0.32, hi=0.05, passes=60):
+    """The fourth look lane: the front of a garment over the groin made flat (a codpiece's nub on every preset in
+    braies): the depth (y) of the points in front of the hips' middle within ``half`` of it, from ``lo`` under the hip
+    joints to ``hi`` over them, relaxed to the mean of their neighbours' ``passes`` times but never behind where it
+    was (-y is his front), the box's rim held - cloth spanning the groin from the belly to the thighs."""
+    P = P.copy()
+    n = len(P)
+    box = (P[:, 1] < yc) & (np.abs(P[:, 0]) < half) & (P[:, 2] > hip - lo) & (P[:, 2] < hip + hi)
+    e = np.concatenate([faces[:, [0, 1]], faces[:, [1, 2]], faces[:, [2, 3]], faces[:, [3, 0]]])
+    e = np.concatenate([e, e[:, ::-1]])
+    deg = np.maximum(np.bincount(e[:, 0], minlength=n), 1).astype(float)
+    y0 = P[:, 1].copy()
+    for _ in range(passes):
+        mean = np.bincount(e[:, 0], weights=P[e[:, 1], 1], minlength=n) / deg
+        P[:, 1] = np.where(box, np.minimum(mean, y0), P[:, 1])     # (never behind where it was: over the groin)
     return P
 
 
@@ -526,6 +544,11 @@ def drape_breeches(P, vn, faces, J, z_lo, z_hi, p):
         folds += depth * np.exp(-(dth / p["fold_width"]) ** 2)
     folds *= p["fold_depth"] * sstep(0.62 - t, 0.0, 0.35)
     P = untangle(P + vn * folds[:, None], faces, P0)
+    # the fourth look lane: nothing in front of the hips' middle is drawn back (the seat's span and the relaxing pulled
+    # the front of the crotch back through the legs: a notch under a nub), then the groin's front made flat
+    front = (P0[:, 1] < yc - 0.02) & (np.abs(P0[:, 0]) < 0.14) & (P0[:, 2] > hip - 0.34) & (P0[:, 2] < hip + 0.06)
+    P = np.where(front[:, None], P0, P)
+    P = flat_front(P, faces, yc, hip)
     return P, np.linalg.norm(P - P0, axis=1)
 
 
