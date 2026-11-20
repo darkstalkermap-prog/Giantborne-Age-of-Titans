@@ -820,7 +820,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "f0301be38357d4461c7abd4c41c421ad44d6298a72e9fcea7dcbb009dafe3cdd",
+"manifest_sha256": "ec9cff7c6bbb6571374dd762ae974a4fed0307f92bc7fada15678c2f152e783c",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -1465,7 +1465,7 @@ index = {
 "Hair_long_loose": 0.0,
 "Hair_side_braids": 0.0,
 "Hair_top_knot": 0.0,
-"Hair_twin_braids": 0.75,
+"Hair_twin_braids": 0.65,
 "Hair_warrior_tail": 0.0,
 "Hair_wild_mane": 0.0
 },
@@ -1496,7 +1496,7 @@ index = {
 "Hair_long_loose": 0.0,
 "Hair_side_braids": 0.0,
 "Hair_top_knot": 0.0,
-"Hair_twin_braids": 0.75,
+"Hair_twin_braids": 0.65,
 "Hair_warrior_tail": 0.0,
 "Hair_wild_mane": 0.0
 },
@@ -2089,7 +2089,7 @@ index = {
 "layer": 3,
 "node": "Hair_twin_braids",
 "part_path": "res://assets/giant/parts/Hair_twin_braids.glb",
-"tris": 5898
+"tris": 5994
 },
 "Hair_warrior_tail": {
 "atlas": "hair_atlas",
