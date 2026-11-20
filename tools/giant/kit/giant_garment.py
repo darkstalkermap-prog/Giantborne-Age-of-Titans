@@ -71,6 +71,9 @@ SKIRT_UV_PER_M = 0.347      # the third look lane: a skirt's own UVs at the body
 SKIRT_UV_SEAM = 0.0         # ... their seam round it at this angle (rad from his left side: under the arm)
 HAUBERK_SEAT_M = 0.014       # stage 1 (the third look lane): a hauberk's skirt stands this much more off the seat
 SKIRT_THIGH_FOLLOW = 1.0     # the third look lane: a skirt's hem follows the thigh on its side this much (the rows ease to it)
+BOOT_TOE_M = 0.012           # the fourth look lane: a boot's more over the toes (human m)
+CUIRASS_LAME_M = 0.065       # the fourth look lane: the leather cuirass's bands (human m)
+TUNIC_SLIT_M = 0.13          # the fourth look lane: the tunic's neck slit (human m)
 KILT_PLEATS = 9              # the third look lane: the kilt skirt's pleats (about three columns each)
 KILT_CUT_BELOW_HIP = 0.05   # the third look lane: a skirt's shell ends this far under the hip joints (above the crotch)
 LOINCLOTH_FLAP_HALF_M = 0.14   # ... and the loincloth's flaps are this wide either side of the middle (human m)
@@ -109,7 +112,12 @@ BAND_SECTOR = 0.28         # rad: a band's ring spans the skin's highest within 
 BRIDGE_ITERS = 12          # a shell spans the hollows of the skin under it this many neighbour averages wide
 SKIRT_BRIDGE_ITERS = 40    # a mail or scale coat spans the cleft of the buttocks and the fold under them
 CLOAK_BRIDGE_ITERS = 0     # a cloak lies looser: it spans the spine's groove and the shoulder blades' hollows
-SMOOTH_PUSH_DIR = ("tunic",)   # the third look lane: garments pushed and shaded along smoothed skin normals
+# the third look lane: garments pushed and shaded along smoothed skin normals, up to this far under the shoulders (the
+# fourth: the chest's and the armour's too, which drew the pectorals and the belly's muscles on cloth and leather)
+SMOOTH_PUSH_DIR = {"tunic": 0.14, "jerkin": 0.14, "leather_cuirass": 0.14, "sleeveless_vest": 0.14}
+CHEST_NORMAL_SMOOTH = 30     # the fourth look lane: their passes (12 left the pectorals on the tunic)
+SMOOTH_PUSH_FLOOR = {"leather_cuirass": 0.18, "jerkin": 0.18}   # ... and none under this over the hips (a war belt lies there)
+#                    (not the shirt: under a hauberk or a scale coat its push along them left it 13 mm through)
 CLOAK_ARM_MARGIN_M = 0.003   # stage 1 (the third look lane): a cloak's cloth over the shoulders' sides keeps this more
 SHEET_TOP_OVERLAP_M = 0.02   # the fourth look lane: a cloak's cut cloth reaches this far under where its sheet falls from
 CLOAK_NORMAL_SMOOTH = 12   # the third look lane: a cloak's normals on the back, smoothed this many neighbour passes
@@ -1295,8 +1303,11 @@ class Wardrobe:
         if gid in SMOOTH_PUSH_DIR:
             # the third look lane: a skirt's band over the seat pushes (and shades) along the skin's normals smoothed
             # over its own mesh (with the skin's own the tunic drew the buttocks' cheeks)
-            fade = sstep(self.hip + 0.15 - P[:, 2] / self.S, 0.0, 0.10)[:, None]      # (the seat only)
-            N = N * (1.0 - fade) + _smooth_dirs(ob.data, N, CLOAK_NORMAL_SMOOTH) * fade
+            fade = sstep(self.shoulder - SMOOTH_PUSH_DIR[gid] - P[:, 2] / self.S, 0.0, 0.10)[:, None]
+            if gid in SMOOTH_PUSH_FLOOR:
+                fade = fade * sstep(P[:, 2] / self.S, self.hip + SMOOTH_PUSH_FLOOR[gid], self.hip + SMOOTH_PUSH_FLOOR[gid]
+                                    + 0.08)[:, None]
+            N = N * (1.0 - fade) + _smooth_dirs(ob.data, N, CHEST_NORMAL_SMOOTH) * fade
             N = N / np.maximum(np.linalg.norm(N, axis=1, keepdims=True), 1e-9)
             self.pdir[gid] = N
             return N
@@ -1520,6 +1531,11 @@ class Wardrobe:
         # the third look lane: the skirt hangs from the hips to mid-thigh as cloth of its own (add_skirt; the shell
         # followed the buttocks and the thighs round: briefs on the Iron Veteran)
         keep = keep & (z > hip - KILT_CUT_BELOW_HIP)
+        # the fourth look lane: a slit at the neck, down the breastbone (the tunic and the shirt read alike)
+        top = self.neck_z - 0.02
+        slit = (self.N[:, 1] < -0.3) & (z > top - TUNIC_SLIT_M) & (z < top + 0.05) \
+            & (np.abs(V[:, 0]) < 0.006 + 0.03 * np.clip((z - (top - TUNIC_SLIT_M)) / TUNIC_SLIT_M, 0, 1))
+        keep = keep & ~slit
         off = np.full(self.n, 0.022 * self.S)
         self.add_skirt("tunic", keep, off, mid_thigh, flare=0.035, clear=0.02, rows=6, thigh_follow=SKIRT_THIGH_FOLLOW,
                        snaps=[self.upsnap(cut_t)], bridge=BRIDGE_ITERS)
@@ -1615,8 +1631,12 @@ class Wardrobe:
         B, z = self.B, self.z
         ankle, knee = self.ankle, self.knee
         keep = ((B["foot"] > 0.3) | ((B["calf"] > 0.5) & (z < ankle + 0.5 * (knee - ankle)))) & (z < ankle + 0.5 * (knee - ankle))
-        self.add_shell("boots", keep, np.full(self.n, 0.014 * self.S), snaps=[self.zsnap(ankle + 0.5 * (knee - ankle))],
-                       mat="giant_leather", allowance=DECIMATE_MARGIN_M)
+        # the fourth look lane: the toes boxed - the boot spans the gaps between them and stands a little further off
+        # over them (they showed through the tips)
+        toes = sstep(self.J["joint-l-ankle"][1] - 0.05 - self.V[:, 1], 0.0, 0.05) * (z < ankle)
+        off = (0.014 + BOOT_TOE_M * toes) * self.S
+        self.add_shell("boots", keep, np.full(self.n, 1.0) * off, snaps=[self.zsnap(ankle + 0.5 * (knee - ankle))],
+                       mat="giant_leather", allowance=DECIMATE_MARGIN_M, bridge=SKIRT_BRIDGE_ITERS)
 
     def g_wrapped_sandals(self):
         B, z, N, V = self.B, self.z, self.N, self.V
@@ -1792,6 +1812,10 @@ class Wardrobe:
         hip = self.hip
         keep = (self.torso + B["pelvis"] * (z > hip + 0.06) > 0.6) & (B["upperarm"] < 0.25) & (B["neck"] < 0.3) \
             & (z > hip + 0.05) & (B["head"] < 0.02)
+        # the fourth look lane: laced up the front, its two edges a hand apart at the neck (it read as the cuirass)
+        V = self.V
+        opening = (self.N[:, 1] < -0.3) & (np.abs(V[:, 0]) < 0.008 + 0.035 * sstep(z, self.shoulder - 0.25, self.neck_z))
+        keep = keep & ~opening
         self.add_shell("jerkin", keep, np.full(self.n, 0.045 * self.S), snaps=[self.zsnap(hip + 0.05)],
                        mat="giant_leather")
 
@@ -1814,7 +1838,10 @@ class Wardrobe:
         bottom = self.hip + 0.09
         keep = ((self.torso + B["pelvis"] * (z > self.hip + 0.1)) > 0.6) & (B["upperarm"] < 0.15) & (B["neck"] < 0.25) \
             & (z > bottom) & (B["head"] < 0.02)
-        off = SLOT_SHELL_M["armour"] + 0.012 + 0.004 * sstep(bottom + 0.06 - z, 0, 0.06)
+        # the fourth look lane: a moulded cuirass, its lower half in overlapping bands (it read as the jerkin)
+        steps = np.clip((self.shoulder - 0.30 - z) / CUIRASS_LAME_M, 0.0, 6.0)
+        off = SLOT_SHELL_M["armour"] + 0.012 + 0.004 * sstep(bottom + 0.06 - z, 0, 0.06) \
+            + 0.0035 * (np.mod(steps, 1.0) * (steps > 0) * (steps < 6)) * sstep(z, bottom + 0.06, bottom + 0.10) * self.S
         self.add_shell("leather_cuirass", keep, off, snaps=[self.zsnap(bottom)], mat="giant_leather")
 
     def g_scale_coat(self):
