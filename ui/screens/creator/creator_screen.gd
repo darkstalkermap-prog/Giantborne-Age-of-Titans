@@ -751,6 +751,8 @@ func thumb_item(spec: Dictionary, id: String) -> Dictionary:
 			key = "%s|%s|%s|%s" % [id, skin_id, colour_id, base.beard.style]
 		"garment":
 			base.outfit.slots[str(spec.slot)] = {"item": id, "dye": ""}
+			# Gate B: a garment's picture by the one dye it is drawn in (its material's, or its own), not all three
+			key = "%s|%s|%s" % [id, skin_id, Appearance.slot_dye_id(base.outfit.slots[str(spec.slot)], dyes)]
 		"accessory":
 			base.outfit.accessories[str(spec.slot)] = id
 			aim = [str(Appearance.option(id).get("mesh", ""))]

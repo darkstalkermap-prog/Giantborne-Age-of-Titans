@@ -1,7 +1,8 @@
 class_name ThumbnailCache
 extends Node
 ## The creator II's option thumbnails (P55; plan M11 §2.7, §3.8 item 3): 96 x 96 pictures of the options an option
-## grid shows, made at run time and kept for the screen's life. Nothing is shipped for them.
+## grid shows, made at run time and kept for the screen's life (the MAX_PICTURES most recently shown). Nothing is
+## shipped for them.
 ##
 ##   * A garment, an accessory, an outfit, a hair or beard style, beads: drawn by a second, unshown GiantPreview
 ##     (`thumbnail`: still, its viewport UPDATE_ONCE, 96 x 96, the studio light) in the item's framing, then read
@@ -31,6 +32,9 @@ const MAX_SIZE := 256
 const SIZE_STEP := 32
 ## P57: the time a frame may spend loading the parts of the next picture (natively a part takes about 1 ms).
 const PART_BUDGET_MS := 4.0
+## Gate B: the most pictures kept; past it the least recently shown goes (each up to 256 x 256 RGBA, 256 KiB: about
+## 50 MiB at most, where browsing every dye kept them all for the screen's life).
+const MAX_PICTURES := 200
 ## The Web's rule (plan M11 §2.7): never more than this many thumbnails a frame.
 const THUMBS_PER_FRAME := 1
 const BACKDROP := Color(0.12, 0.13, 0.16)
@@ -51,7 +55,7 @@ static func pictures_wanted() -> bool:
 ## Every live cache (reset_for_tests frees what they hold).
 static var _live: Array = []
 
-## The textures made so far: item key -> Texture2D.
+## The textures made so far: item key -> Texture2D, the least recently shown first (MAX_PICTURES at most).
 var textures: Dictionary = {}
 ## The items still to make (the visible page's, in page order).
 var queue: Array = []
@@ -104,7 +108,10 @@ func request(items: Array) -> void:
 			continue
 		var key := key_of(item)
 		if textures.has(key):
-			thumbnail_ready.emit(str(item.id), textures[key], key)
+			var tex: Texture2D = textures[key]
+			textures.erase(key)   # Gate B: shown again, it is the newest
+			textures[key] = tex
+			thumbnail_ready.emit(str(item.id), tex, key)
 		elif str(_pending.get("sized_key", "")) != key:
 			var sized := item.duplicate()
 			sized["sized_key"] = key
@@ -265,7 +272,10 @@ func _store(item: Dictionary, tex: Texture2D) -> void:
 	made += 1
 	var key := str(item.get("sized_key", item.key))
 	if tex != null:
+		textures.erase(key)
 		textures[key] = tex
+		while textures.size() > MAX_PICTURES:
+			textures.erase(textures.keys()[0])   # Gate B: the least recently shown goes
 	thumbnail_ready.emit(str(item.id), tex, key)
 
 

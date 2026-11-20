@@ -262,3 +262,24 @@ func test_a_grid_opened_after_a_dye_change_never_shows_the_old_dyes_picture() ->
 	await _idle(c)
 	var want := _cached_for(c, id)
 	assert_true(want != null and want != old_tex and _shown_tex(c.grid, id) == want, "it shows the new dye's")
+
+
+## Gate B (the M12 review's finding 7): a garment's picture is keyed by the one dye it is drawn in (its material's, or
+## its own), so a metal change does not make the cloth garments' pictures again (the cap is tests/unit's
+## test_thumbnail_cache).
+func test_a_garment_s_picture_is_keyed_by_its_own_dye_only() -> void:
+	var c := _open()
+	await get_tree().process_frame
+	c.show_category("Clothing")
+	var chest := (c.row("outfit.slots.chest.item") as OptionRows.GridRow).spec
+	var armour := (c.row("outfit.slots.armour.item") as OptionRows.GridRow).spec
+	var tunic := str(c.thumb_item(chest, "garment.tunic").key)
+	var plate := str(c.thumb_item(armour, "garment.bronze_breastplate").key)
+	var metal := "metal.steel" if str(c.record.outfit.dyes.metal) != "metal.steel" else "metal.blackened"
+	assert_true(c.set_record(OptionRows.with_value(c.record, "outfit.dyes.metal", metal)), "the metal changes")
+	assert_eq(str(c.thumb_item(chest, "garment.tunic").key), tunic, "the tunic's key keeps")
+	assert_eq(str(c.thumb_item(armour, "garment.bronze_breastplate").key), plate, "the bronze breastplate (its own dye) keeps")
+	var cloth := "dye.madder" if str(c.record.outfit.dyes.cloth) != "dye.madder" else "dye.woad_blue"
+	assert_true(c.set_record(OptionRows.with_value(c.record, "outfit.dyes.cloth", cloth)), "the cloth dye changes")
+	assert_true(str(c.thumb_item(chest, "garment.tunic").key) != tunic, "the tunic's key changes with it")
+	assert_true(str(c.thumb_item(chest, "garment.tunic").key).contains(cloth), "and names it")
