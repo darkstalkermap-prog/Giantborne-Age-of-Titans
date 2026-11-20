@@ -99,7 +99,7 @@ func _run() -> void:
 		after_frames = 6
 		for case: Array in [["Clothing", "outfit.slots.armour.item", "grid_armour"], ["Tattoos", "tattoos.arms", "grid_tattoo_arms"]]:
 			await _grid(case[0], case[1], case[2])
-		report["thumbnails"] = {"made": c.thumbnails.made, "rendered": c.thumbnails.rendered, "flat": c.thumbnails.flat,
+		report["thumbnails"] = {"made": c.thumbnails.made, "rendered": c.thumbnails.rendered,
 			"most_in_a_frame": c.thumbnails.most_in_a_frame}
 		_finish()
 		return
@@ -153,7 +153,7 @@ func _run() -> void:
 	await _frames(3)
 	await _shot("31_question")
 	c.keep_editing()
-	report["thumbnails"] = {"made": c.thumbnails.made, "rendered": c.thumbnails.rendered, "flat": c.thumbnails.flat,
+	report["thumbnails"] = {"made": c.thumbnails.made, "rendered": c.thumbnails.rendered,
 		"most_in_a_frame": c.thumbnails.most_in_a_frame}
 	_finish()
 
@@ -201,7 +201,7 @@ func _grid(category: String, key: String, shot_name: String) -> void:
 		"with_thumbnail": shown, "frames": n, "frames_ms": frames_ms, "median_after_ms": after[after.size() / 2],
 		"worst_ms": frames_ms.max() if not frames_ms.is_empty() else 0.0, "work_ms": work,
 		"most_in_a_frame": c.thumbnails.most_in_a_frame, "off_page": off_page, "pages": c.grid.pages(),
-		"cell_px": c.grid.cell_px(), "design": c.thumbnails.design_timings.duplicate(),
+		"cell_px": c.grid.cell_px(), "thumb_px": c.thumbnails.size,
 		"focus": str(get_viewport().gui_get_focus_owner().name) if get_viewport().gui_get_focus_owner() != null else ""}
 	await _shot(shot_name)
 	c.close_grid()

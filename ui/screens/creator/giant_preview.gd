@@ -96,7 +96,13 @@ const FRAMINGS := {
 	"lower": {"target": Vector3(0.0, 1.05, -0.05), "yaw": 22.0, "pitch": 5.0, "dist": 4.8},
 	# a hair style's thumbnail: the head from behind, close
 	"hair_close": {"target": Vector3(0.0, 3.22, 0.0), "yaw": 150.0, "pitch": 10.0, "dist": 1.75},
+	# P57: an outfit's thumbnail - the head to the knees, three-quarter (the whole giant in a cell drew every outfit
+	# alike: they differ on the torso, the arms and the hips)
+	"outfit": {"target": Vector3(0.0, 2.35, -0.05), "yaw": 28.0, "pitch": 4.0, "dist": 5.2},
 }
+## P57: the framing aimed at a box (frame_on): ThumbnailCache's for pieces whose place the slot's framing misses
+## (the belt's trophies hang at one hip or the other).
+const AIM := "aim"
 ## P55 (M10's follow-up, plan M11 §2.7): a design on the giant's left is framed from his left - the framing's
 ## name with this suffix is the framing mirrored (its yaw and its target's x negated; "arms" follows the left hand).
 const LEFT_SUFFIX := "_left"
@@ -162,6 +168,8 @@ var world_light := false
 ## Fill the parent Control at the window's resolution (see the class notes); set before or after the preview
 ## enters the tree. Off for the tiles of the option check and the sheets, which size their own viewports.
 var window_pixels := false
+## P57: the box frame_on() aims at (framing AIM; shared: one thumbnail is made at a time).
+static var _aim_entry := {"target": Vector3(0.0, 1.85, 0.0), "yaw": 20.0, "pitch": 3.0, "dist": 8.4}
 ## P55: a thumbnail preview (ThumbnailCache's): its viewport keeps the size it is given, draws only when
 ## render_thumbnail() asks, and never follows the container's visibility. Set before the preview enters the tree.
 var thumbnail := false
@@ -279,31 +287,44 @@ func _build_stage() -> void:
 	sun.directional_shadow_max_distance = 120.0
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	world_root.add_child(sun)
-	disc = MeshInstance3D.new()
-	disc.name = "Disc"
+	disc = make_disc()
+	world_root.add_child(disc)
+	ground = make_ground()
+	world_root.add_child(ground)
+	_set_lighting(false)
+
+
+## The stone disc he stands on in the studio light (P57: WarmUp draws the same, so its material is compiled before
+## the creator's first frame).
+static func make_disc() -> MeshInstance3D:
+	var d := MeshInstance3D.new()
+	d.name = "Disc"
 	var cyl := CylinderMesh.new()
 	cyl.top_radius = 1.6
 	cyl.bottom_radius = 1.7
 	cyl.height = 0.12
 	cyl.radial_segments = 40
-	disc.mesh = cyl
-	disc.position = Vector3(0, -0.06, 0)
+	d.mesh = cyl
+	d.position = Vector3(0, -0.06, 0)
 	var stone := StandardMaterial3D.new()
 	stone.albedo_color = Color(0.33, 0.32, 0.30)
 	stone.roughness = 0.95
-	disc.material_override = stone
-	world_root.add_child(disc)
-	ground = MeshInstance3D.new()
-	ground.name = "Ground"
+	d.material_override = stone
+	return d
+
+
+## The ground of Game view's world light.
+static func make_ground() -> MeshInstance3D:
+	var g := MeshInstance3D.new()
+	g.name = "Ground"
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(400, 400)
-	ground.mesh = plane
+	g.mesh = plane
 	var grass := StandardMaterial3D.new()
 	grass.albedo_color = GROUND_COLOR
 	grass.roughness = 1.0
-	ground.material_override = grass
-	world_root.add_child(ground)
-	_set_lighting(false)
+	g.material_override = grass
+	return g
 
 
 ## The preview's studio light (false) or the world's (true, Game view).
@@ -335,8 +356,19 @@ func world_lighting() -> bool:
 # --------------------------------------------------------------------------- framing
 
 ## Shows framing `name` (FRAMINGS, or "game"); the user's turn and zoom start over.
+## P57: frames the box `aabb` (the model's frame, stage 1) from the side its centre is on (his right from his right,
+## his left from his left, three-quarter from the front when it is in the middle), close enough that it fills about
+## half the frame.
+func frame_on(aabb: AABB) -> void:
+	var c := aabb.get_center()
+	var side := clampf(c.x / 0.25, -1.0, 1.0)
+	_aim_entry = {"target": c, "yaw": 22.0 + 50.0 * absf(side) if side >= 0.0 else -22.0 - 50.0 * absf(side),
+		"pitch": 6.0, "dist": clampf(aabb.get_longest_axis_size() * 2.4 + 0.5, 0.9, 3.5)}
+	frame(AIM)
+
+
 func frame(framing_name: String) -> void:
-	if not framing_name in ["game", GAME_STAGE1, FIRST_PERSON] and not FRAMINGS.has(_base_framing(framing_name)):
+	if not framing_name in ["game", GAME_STAGE1, FIRST_PERSON, AIM] and not FRAMINGS.has(_base_framing(framing_name)):
 		framing_name = "full"
 	framing = framing_name
 	turn_deg = 0.0
@@ -428,6 +460,8 @@ static func _base_framing(framing_name: String) -> String:
 
 ## A framing's FRAMINGS entry, mirrored for a "_left" framing.
 static func framing_entry(framing_name: String) -> Dictionary:
+	if framing_name == AIM:
+		return _aim_entry
 	var base := _base_framing(framing_name)
 	var f: Dictionary = (FRAMINGS.get(base, FRAMINGS.full) as Dictionary).duplicate()
 	if framing_name != base:
@@ -804,6 +838,8 @@ class WarmUp extends SubViewport:
 	var key: DirectionalLight3D
 	var rim: DirectionalLight3D
 	var sun: DirectionalLight3D
+	var disc: MeshInstance3D
+	var ground: MeshInstance3D
 	var frames := 0
 	var done := false
 	var _root: Node3D
@@ -822,6 +858,10 @@ class WarmUp extends SubViewport:
 		env.background_color = GiantPreview.BACKDROP
 		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 		env.ambient_light_color = Color(0.46, 0.48, 0.54)
+		# P57: the preview's environment keeps depth fog's mode with the fog off in the studio light, and the
+		# renderer compiles that pair apart from fog on and from the default mode: the creator's first frame on the
+		# Web compiled the giant's every material again for it (20 shaders, 10 programs)
+		env.fog_mode = Environment.FOG_MODE_DEPTH
 		we.environment = env
 		_root.add_child(we)
 		key = DirectionalLight3D.new()
@@ -837,6 +877,11 @@ class WarmUp extends SubViewport:
 		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 		sun.visible = false
 		_root.add_child(sun)
+		disc = GiantPreview.make_disc()   # P57: the studio's disc and the world's ground, as the preview draws them
+		_root.add_child(disc)
+		ground = GiantPreview.make_ground()
+		ground.visible = false
+		_root.add_child(ground)
 		model = GiantPreview.MODEL.instantiate() as GiantModel
 		_root.add_child(model)
 		var cam := Camera3D.new()
@@ -866,6 +911,8 @@ class WarmUp extends SubViewport:
 		key.visible = false
 		rim.visible = false
 		sun.visible = true
+		disc.visible = false
+		ground.visible = true
 		env.fog_enabled = true
 		env.fog_mode = Environment.FOG_MODE_DEPTH
 		env.background_color = GiantPreview.WORLD_SKY

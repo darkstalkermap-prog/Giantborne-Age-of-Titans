@@ -677,6 +677,9 @@ func _on_grid_page(ids: Array) -> void:
 		return
 	if is_inside_tree():
 		refresh_focus()   # the cells shown changed: the focus neighbours with them
+	# P57: the pictures at the cells' own size in window pixels (a 1920x1080 window draws a cell about 210 px wide)
+	var k := get_viewport().get_final_transform().get_scale().x if is_inside_tree() else 1.0
+	thumbnails.set_cell_pixels((grid.cell_px() - 8) * absf(k))
 	var items: Array = []
 	for id: String in ids:
 		var item := thumb_item(_grid_row.spec, id)
@@ -692,8 +695,9 @@ func _on_thumbnail(id: String, tex: Texture2D) -> void:
 
 ## What a thumbnail of option `id` of a grid row shows, and its cache key (plan M11 §2.7: by option id, skin tone
 ## and dyes): a garment, an accessory or an outfit on the giant as built (the record's skin, hair and dyes, nothing
-## else worn), in the slot's framing; a hair or beard style in the record's colour; a design (a tattoo, a war
-## paint) as a flat picture of its layer in the record's ink or paint colour over the skin tone. {} for "None".
+## else worn), in the slot's framing (P57: an accessory aimed at its own mesh, an outfit head to knees); a hair or
+## beard style in the record's colour; a design (a tattoo, a war paint) alone on the giant in the record's ink or
+## paint colour, at its region's framing from its side (P57; no beard over a face design). {} for "None".
 func thumb_item(spec: Dictionary, id: String) -> Dictionary:
 	if id == "" or id == Appearance.BEAD_NONE or Appearance.option(id).is_empty():
 		return {}
@@ -701,18 +705,6 @@ func thumb_item(spec: Dictionary, id: String) -> Dictionary:
 	var dyes: Dictionary = record.outfit.dyes
 	var dye_key := "%s|%s|%s" % [dyes.get("cloth", ""), dyes.get("leather", ""), dyes.get("metal", "")]
 	var skin_id := str(record.skin)
-	match set_name:
-		"tattoo", "paint":
-			var o := Appearance.option(id)
-			var d: Variant = (preview.index().get("designs", {}) as Dictionary).get(str(o.get("design", ""))) \
-				if typeof(preview.index().get("designs")) == TYPE_DICTIONARY else null
-			if typeof(d) != TYPE_DICTIONARY:
-				return {}
-			var colour_id := str(record.tattoos.ink) if set_name == "tattoo" else str(record.paint.color)
-			var look := Appearance.to_look(record, ancestry)
-			return {"id": id, "key": "%s|%s|%s" % [id, skin_id, colour_id], "kind": "design", "design": d,
-				"color": Appearance._color(Appearance.option(colour_id), "color", Color(0.1, 0.18, 0.4)),
-				"skin": look.get("skin_tone", Color(0.69, 0.53, 0.44))}
 	var base := Appearance.default_record()
 	base["skin"] = record.skin
 	base["hair"] = (record.hair as Dictionary).duplicate(true)
@@ -726,11 +718,31 @@ func thumb_item(spec: Dictionary, id: String) -> Dictionary:
 	outfit["dyes"] = dyes.duplicate(true)
 	base["outfit"] = outfit
 	var key := "%s|%s|%s" % [id, skin_id, dye_key]
+	var framing := str(spec.get("thumb", spec.get("framing", "full")))
+	var aim: Array = []
 	match set_name:
+		"tattoo", "paint":
+			# P57: a design on the giant, alone, at its region's framing from its side (the flat picture of its layer
+			# showed the other designs of its channel and every island of the UV map); no beard over a face design
+			var design := str(Appearance.option(id).get("design", ""))
+			if not (preview.index().get("designs", {}) as Dictionary).has(design):
+				return {}
+			for k: String in OptionRows.TATTOO_ROWS:
+				base = OptionRows.with_value(base, k, "")
+			for k: String in OptionRows.PAINT_ROWS:
+				base = OptionRows.with_value(base, k, "")
+			base = OptionRows.with_value(base, str(spec.key), id)
+			var region := OptionRows.row_region(spec, base, preview.index(), ancestry)
+			if region == "face":
+				base.beard["style"] = "beard.none"
+			framing = GiantPreview.region_framing(region, OptionRows.design_side(design, preview.index()))
+			var colour_id := str(record.tattoos.ink) if set_name == "tattoo" else str(record.paint.color)
+			key = "%s|%s|%s|%s" % [id, skin_id, colour_id, base.beard.style]
 		"garment":
 			base.outfit.slots[str(spec.slot)] = {"item": id, "dye": ""}
 		"accessory":
 			base.outfit.accessories[str(spec.slot)] = id
+			aim = [str(Appearance.option(id).get("mesh", ""))]
 		"outfit":
 			base = Appearance.with_outfit(base, id)
 		"hair", "beard":
@@ -740,8 +752,7 @@ func thumb_item(spec: Dictionary, id: String) -> Dictionary:
 			var part := "hair" if str(spec.key).begins_with("hair") else "beard"
 			base[part]["beads"] = id
 			key = "%s|%s|%s|%s" % [id, skin_id, base[part].style, base.hair.color]
-	return {"id": id, "key": key, "kind": "render", "look": Appearance.to_look(base, ancestry),
-		"framing": str(spec.get("thumb", spec.get("framing", "full")))}
+	return {"id": id, "key": key, "kind": "render", "look": Appearance.to_look(base, ancestry), "framing": framing, "aim": aim}
 
 
 # --------------------------------------------------------------------------- views
