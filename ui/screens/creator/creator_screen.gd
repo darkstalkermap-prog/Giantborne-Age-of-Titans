@@ -132,6 +132,8 @@ var _preset_note: Label = null        ## the focused preset's description, under
 ## P55: the option grid (in the options panel, in place of the rows while open), its row, and the thumbnails.
 var grid: OptionGrid
 var thumbnails: ThumbnailCache
+## Gate B: the pictures the page shown asked for, key (ThumbnailCache.key_of) -> option id.
+var _thumbs_wanted: Dictionary = {}
 var _grid_row: OptionRows.GridRow = null
 var _grid_session := 0
 var _triggers := {}                   ## JoyAxis -> true while a trigger is held past GRID_TRIGGER_PRESS
@@ -647,6 +649,7 @@ func _close_grid_quietly() -> void:
 	if grid != null:
 		grid.close()
 	thumbnails.request([])
+	_thumbs_wanted = {}
 	_grid_row = null
 	_merge_key = ""
 	_scroll.visible = true
@@ -685,15 +688,19 @@ func _on_grid_page(ids: Array) -> void:
 	var k := get_viewport().get_final_transform().get_scale().x if is_inside_tree() else 1.0
 	thumbnails.set_cell_pixels((grid.cell_px() - 8) * absf(k))
 	var items: Array = []
+	_thumbs_wanted = {}
 	for id: String in ids:
 		var item := thumb_item(_grid_row.spec, id)
 		if not item.is_empty():
 			items.append(item)
+			_thumbs_wanted[thumbnails.key_of(item)] = id
 	thumbnails.request(items)
 
 
-func _on_thumbnail(id: String, tex: Texture2D) -> void:
-	if grid_open():
+## Gate B: only a picture the page shown asked for (its option id and key); one still in flight for another grid
+## (the hair's beads when the beard's open) or for other dyes is dropped.
+func _on_thumbnail(id: String, tex: Texture2D, key: String) -> void:
+	if grid_open() and str(_thumbs_wanted.get(key, "")) == id:
 		grid.set_thumbnail(id, tex)
 
 

@@ -20,8 +20,9 @@ extends Node
 ## frame, one a frame, so the scheduling is the same headless (tests). reset_for_tests() (ResetHooks.AFTER_EACH,
 ## pre-declared by P53) frees every live cache's preview and textures.
 
-## A thumbnail is made for an item: its option id and the texture.
-signal thumbnail_ready(id: String, texture: Texture2D)
+## A thumbnail is made for an item: its option id, the texture and the item's key at its size (key_of; Gate B: the
+## screen shows only the pictures its page asked for, so one still in flight when another grid opens is dropped).
+signal thumbnail_ready(id: String, texture: Texture2D, key: String)
 
 ## The smallest picture (P55's size); P57: a picture is made at the cell's own pixel size (set_cell_pixels), from SIZE
 ## to MAX_SIZE in steps of SIZE_STEP, so a cell at 1920x1080 (about 210 px) is not a 96 px picture stretched.
@@ -103,7 +104,7 @@ func request(items: Array) -> void:
 			continue
 		var key := key_of(item)
 		if textures.has(key):
-			thumbnail_ready.emit(str(item.id), textures[key])
+			thumbnail_ready.emit(str(item.id), textures[key], key)
 		elif str(_pending.get("sized_key", "")) != key:
 			var sized := item.duplicate()
 			sized["sized_key"] = key
@@ -262,9 +263,10 @@ func _harvest() -> void:
 
 func _store(item: Dictionary, tex: Texture2D) -> void:
 	made += 1
+	var key := str(item.get("sized_key", item.key))
 	if tex != null:
-		textures[str(item.get("sized_key", item.key))] = tex
-	thumbnail_ready.emit(str(item.id), tex)
+		textures[key] = tex
+	thumbnail_ready.emit(str(item.id), tex, key)
 
 
 ## The unshown preview: made on the first thumbnail, kept for the screen's life.

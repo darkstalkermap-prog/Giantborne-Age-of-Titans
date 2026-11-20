@@ -169,3 +169,96 @@ func test_rendered_thumbnails_for_the_visible_page_one_a_frame() -> void:
 			int(g.made), int(g.frames), during, after, float(g.worst_ms), (g.work_ms as Array).max()])
 	assert_eq(int(r.thumbnails.rendered), int(r.thumbnails.made), "every picture is drawn on the giant (%d)" % int(r.thumbnails.made))
 	print("    test_creator_thumbnails: %s; on %s" % ["; ".join(lines), str(r.adapter)])
+
+
+## Gate B (the M12 review's finding 3): the grid keeps its pictures by option id, the cache by id, skin, dyes and the
+## part they hang on. Opening a grid forgets the last grid's pictures, and a picture the page shown did not ask for
+## (still in flight for another grid) is dropped.
+func _idle(c: CreatorScreen) -> void:
+	for i in 120:
+		await get_tree().process_frame
+		if not c.thumbnails.busy():
+			break
+	await get_tree().process_frame
+
+
+func _shown_tex(g: OptionGrid, id: String) -> Texture2D:
+	var cell := g.cell_of(id)
+	return (cell.get_node("Thumb") as TextureRect).texture if cell != null else null
+
+
+func _turn_to(g: OptionGrid, id: String) -> void:
+	for i in g.pages():
+		if g.cell_of(id) != null:
+			return
+		g.step_page(1)
+
+
+func _cached_for(c: CreatorScreen, id: String) -> Texture2D:
+	return c.thumbnails.cached(c.thumbnails.key_of(c.thumb_item(c.grid_row().spec, id)))
+
+
+func test_the_beard_beads_grid_never_shows_the_hair_beads_grids_pictures() -> void:
+	var c := _open()
+	await get_tree().process_frame
+	c.show_category("Hair")
+	c.open_grid(c.row("hair.beads") as OptionRows.GridRow)
+	await _idle(c)
+	var id := "bead.bone_beads"
+	var hair_tex := _shown_tex(c.grid, id)
+	assert_true(hair_tex != null, "the hair beads' picture is made")
+	c.close_grid()
+	c.show_category("Beard")
+	c.open_grid(c.row("beard.beads") as OptionRows.GridRow)
+	assert_true(_shown_tex(c.grid, id) != hair_tex, "the beard grid's first frame does not show the hair grid's picture")
+	await _idle(c)
+	var want := _cached_for(c, id)
+	assert_true(want != null and _shown_tex(c.grid, id) == want, "it shows its own")
+
+
+func test_a_picture_in_flight_for_another_grid_never_lands_on_the_grid_open() -> void:
+	var c := _open()
+	await get_tree().process_frame
+	c.show_category("Beard")
+	c.open_grid(c.row("beard.beads") as OptionRows.GridRow)
+	await _idle(c)   # the beard's pictures cached
+	c.close_grid()
+	c.show_category("Hair")
+	c.open_grid(c.row("hair.beads") as OptionRows.GridRow)
+	var target := "bead.silver_beads"
+	var in_flight := false
+	for i in 60:
+		await get_tree().process_frame
+		if str(c.thumbnails._pending.get("id", "")) == target:
+			in_flight = true
+			break
+	assert_true(in_flight, "the hair's silver beads are being drawn")
+	c.close_grid()
+	c.show_category("Beard")
+	c.open_grid(c.row("beard.beads") as OptionRows.GridRow)
+	await _idle(c)
+	var want := _cached_for(c, target)
+	assert_true(want != null and _shown_tex(c.grid, target) == want, "the beard grid keeps the beard's picture")
+
+
+func test_a_grid_opened_after_a_dye_change_never_shows_the_old_dyes_picture() -> void:
+	var c := _open()
+	await get_tree().process_frame
+	c.show_category("Clothing")
+	var key := "outfit.slots.chest.item"
+	c.open_grid(c.row(key) as OptionRows.GridRow)
+	await _idle(c)
+	var id := "garment.tunic"
+	_turn_to(c.grid, id)
+	await _idle(c)
+	var old_tex := _shown_tex(c.grid, id)
+	assert_true(old_tex != null, "the tunic's picture is made")
+	c.close_grid()
+	var dye := "dye.madder" if str(c.record.outfit.dyes.cloth) != "dye.madder" else "dye.woad_blue"
+	assert_true(c.set_record(OptionRows.with_value(c.record, "outfit.dyes.cloth", dye)), "the cloth dye changes")
+	c.open_grid(c.row(key) as OptionRows.GridRow)
+	_turn_to(c.grid, id)
+	assert_true(_shown_tex(c.grid, id) != old_tex, "the first frame does not show the old dye's picture")
+	await _idle(c)
+	var want := _cached_for(c, id)
+	assert_true(want != null and want != old_tex and _shown_tex(c.grid, id) == want, "it shows the new dye's")
