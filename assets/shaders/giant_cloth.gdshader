@@ -15,7 +15,8 @@
 // The wardrobe (P54; plan M11 §2.4, §3.7): the metal kind (1) also draws mail and scale (their detail maps carry the
 // rings' and the scales' dark gaps in A, so the gaps stay dark and rough); kind 2 is bone (bone spaulders and the bone
 // trophies): its own pale colour under the dye's faint stain, a soft sheen, no metal. The W33 look lane: kind 3 is fur
-// (clumps, a fuzz at the rim, a silhouette broken into tufts where it turns from the eye).
+// (clumps, a fuzz at the rim, a silhouette broken into tufts where it turns from the eye). The second look lane: kind 4
+// is leather (warm, waxed, sewn in panels), and metal mirrors a sky and a horizon (it read as dull cloth).
 shader_type spatial;
 render_mode cull_disabled;
 
@@ -50,6 +51,8 @@ uniform bool pushed = false;
 // normal, the line the build sliders push it along, in its tangents (no detail normal then).
 uniform bool push_tangent = false;
 const float DARK_FLOOR = 0.035;
+const float METAL_SHEEN = 1.6;   // the second look lane: the metal's mirrored sky (kind 1)
+const float LEATHER_PANEL_M = 0.17;   // the second look lane: a leather garment's panels (stage-1 m of rest height)
 const vec3 BONE = vec3(0.64, 0.55, 0.40);   // linear: an aged, sun-yellowed bone (W33: warmer; it read grey-blue)
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
@@ -106,18 +109,48 @@ void fragment() {
 	cloth = max(cloth, vec3(DARK_FLOOR) * mix(vec3(1.0), dye_color / max(max(dye_color.r, dye_color.g), max(dye_color.b, 0.001)), 0.5));
 	ALBEDO = cloth * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	ROUGHNESS = clamp(roughness_base + (1.0 - d) * 0.1, 0.0, 1.0);
+	vec3 metal_sheen = vec3(0.0);
 	if (kind == 1) {
 		// P54: without reflections to mirror (the world's sky is a colour, the creator's backdrop dark) a fully
 		// metallic surface drew black: the metal keeps a part of its colour as diffuse, and the gaps between rings and
 		// scales are dark and dull, not bright metal
-		METALLIC = 0.55 * smoothstep(0.35, 0.75, d);
-		ROUGHNESS = clamp(0.36 + (1.0 - d) * 0.4, 0.0, 1.0);
-		SPECULAR = 0.65;
+		float plate = smoothstep(0.35, 0.75, d);
+		METALLIC = 0.7 * plate;
+		ROUGHNESS = clamp(0.3 + (1.0 - d) * 0.45, 0.0, 1.0);
+		SPECULAR = 0.7;
+		// the second look lane: metal read as dull cloth (bronze as leather) under both lights - it mirrors a sky
+		// above, the dark ground below and a bright horizon between (the reflection the scene does not give it),
+		// tinted by the metal's own colour and stronger at grazing angles
+		vec3 up_v = normalize((VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+		float u = dot(reflect(-VIEW, NORMAL), up_v);
+		vec3 env = mix(vec3(0.06, 0.055, 0.05), vec3(0.4, 0.44, 0.5), smoothstep(-0.3, 0.6, u))
+			+ vec3(0.45) * exp(-abs(u - 0.08) * 8.0);
+		float fres = 0.55 + 0.45 * pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
+		metal_sheen = env * mix(cloth, vec3(dot(cloth, vec3(0.333))), 0.15) * plate * fres * METAL_SHEEN;
 	} else if (kind == 2) {
 		ALBEDO = BONE * mix(vec3(1.0), dye_color / max(max(dye_color.r, dye_color.g), max(dye_color.b, 0.001)), 0.15)
 			* mix(1.0, d, detail_strength) * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 		ROUGHNESS = clamp(0.62 + (1.0 - d) * 0.2, 0.0, 1.0);   // (W33: duller, so it mirrors less of a cool sky)
 		SPECULAR = 0.22;
+	}
+	if (kind == 4) {
+		// the second look lane: leather - a warm, waxed hide (a soft sheen, lifted out of black) sewn in panels: on a
+		// garment that carries its rest height (UV2.x; the pushed ones: a jerkin, a cuirass, boots over wraps) a seam
+		// every LEATHER_PANEL_M of height, a dark groove with a row of lighter stitches beside it
+		vec3 warm = cloth * vec3(1.18, 1.0, 0.8);
+		cloth = max(mix(cloth, warm, 0.6), vec3(0.05, 0.035, 0.022));
+		float y = UV2.x * push_y_norm;
+		if (y > 0.01) {
+			float row = fract(y / LEATHER_PANEL_M);
+			float edge = min(row, 1.0 - row) * LEATHER_PANEL_M;
+			float groove = 1.0 - smoothstep(0.004, 0.011, edge);
+			float stitch_row = 1.0 - smoothstep(0.003, 0.006, abs(edge - 0.018));
+			float stitch = stitch_row * step(0.55, fract(UV.x * detail_scale * 0.35 + UV.y * detail_scale * 0.35));
+			cloth = cloth * (1.0 - 0.55 * groove) + vec3(0.16, 0.12, 0.08) * stitch * 0.6;
+		}
+		ALBEDO = cloth * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
+		ROUGHNESS = clamp(0.55 + (1.0 - d) * 0.2, 0.0, 1.0);
+		SPECULAR = 0.42;
 	}
 	RIM = rim;
 	RIM_TINT = 0.6;
@@ -131,5 +164,5 @@ void fragment() {
 	}
 	NORMAL_MAP = t.rgb;
 	NORMAL_MAP_DEPTH = push_tangent ? 0.0 : normal_strength * (kind == 3 ? 2.2 : 1.0);
-	EMISSION = flash;
+	EMISSION = flash + metal_sheen;
 }

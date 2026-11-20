@@ -188,10 +188,15 @@ void fragment() {
 		relief += relief_b;
 	}
 	if (sc > 0.0 || dot(relief, relief) > 0.0) {
-		nm.xy -= relief * scar_relief * 0.5;
+		// the second look lane: a healed scar is raised a little, not gouged (at half the relief its feathered edges
+		// still cut dark grooves beside every scar); the slope is limited so a steep edge cannot turn the normal over
+		nm.xy -= clamp(relief * scar_relief * 0.16, vec2(-0.35), vec2(0.35));
 		// healed tissue: paler and pinker than the skin around it, whatever the tone (P46: the floor's
-		// scars did not read at the game camera)
-		base = mix(base, base * vec3(1.5, 1.2, 1.16) + vec3(0.07, 0.025, 0.025), sc * 0.85);
+		// scars did not read at the game camera); the second look lane: less saturated, not oranger (the skin's
+		// own colour times 1.5 in red read as an orange stripe), and lighter on dark skin than on pale
+		float lum = dot(base, vec3(0.2126, 0.7152, 0.0722));
+		vec3 healed = mix(base, vec3(lum), 0.55) * vec3(1.5, 1.27, 1.3) + vec3(0.09, 0.055, 0.06);
+		base = mix(base, healed, min(sc * 1.1, 1.0));
 	}
 	ALBEDO = base * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	NORMAL_MAP = normalize(nm) * 0.5 + 0.5;

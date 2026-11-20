@@ -102,6 +102,9 @@ const BAKE_TONE := Color(0.690196, 0.478431, 0.384314)
 ## The share of a long beard's card over which its strands end one by one (the hair shader's tip_thin; the
 ## M10 gate, LC-6: the full beard's lower edge was stepped blocks). Hair keeps its tips as the atlas draws them.
 const BEARD_TIP_THIN := 0.45
+## The second look lane: every other beard's (its short cards ended square at the cheeks); the hair shader also narrows
+## a card towards its tip where tip_thin is set.
+const BEARD_SHORT_TIP_THIN := 0.18
 ## The beard meshes whose cards are long locks (giant_hair's styles without "locks": False): only their tips
 ## thin out. The short and the braided beard's cards are too short for it (they showed gaps on the cheeks).
 const LOCK_BEARDS := ["Beard_full", "Beard_forked", "Beard_long_forked"]   # P56: the long forked beard's locks too
@@ -150,8 +153,9 @@ const NORMAL_STRENGTH := {"mail": 1.1, "scale": 1.0}
 ## Fur keeps its fuzz (its folds are soft and it reads right in the world's light).
 const CLOTH_RIM := {"weave": 0.0, "leather": 0.0, "fur": 0.45, "metal": 0.0, "mail": 0.0, "scale": 0.0, "bone": 0.0}
 ## The cloth shader's `kind` per detail map (P54): cloth, leather and fur 0; plate, mail and scale 1 (the metal
-## response); bone 2 (its own pale colour, a soft sheen: bone spaulders, the bone accessories).
-const DETAIL_KIND := {"metal": 1, "mail": 1, "scale": 1, "bone": 2, "fur": 3}
+## response); bone 2 (its own pale colour, a soft sheen: bone spaulders, the bone accessories); the second look lane:
+## leather 4 (a warm waxed hide in stitched panels: the jerkin and the cuirass read as near-black slabs).
+const DETAIL_KIND := {"metal": 1, "mail": 1, "scale": 1, "bone": 2, "fur": 3, "leather": 4}
 ## A head garment's index entry "hides_hair" (P54, plan M11 §2.6): "all" hides every hair style; "top" draws a style
 ## cut to the share of its length its "hair_cut" gives (0: not drawn).
 const HIDES_ALL := "all"
@@ -757,7 +761,7 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 				# the M10 gate (LC-6): a beard's tips thin strand by strand. P51: a beard no longer fades out seen
 				# from behind (its under-jaw cards are closed); the hair shades as a volume
 				var is_beard := str(entry.get("category", "")) == "beard"
-				set_param(mat, "tip_thin", BEARD_TIP_THIN if is_beard and str(id) in LOCK_BEARDS else 0.0)
+				set_param(mat, "tip_thin", (BEARD_TIP_THIN if str(id) in LOCK_BEARDS else BEARD_SHORT_TIP_THIN) if is_beard else 0.0)
 				set_param(mat, "back_fade", 0.0)
 				set_param(mat, "volume_normal", VOLUME_NORMAL)
 			"eye":

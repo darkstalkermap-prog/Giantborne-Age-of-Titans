@@ -182,7 +182,9 @@ func test_every_look_key_sets_its_uniforms_and_visibility() -> void:
 	# (its under-jaw cards are closed), and every style shades as a volume
 	var full := _mat(root, "Beard_full")
 	assert_true(_near(full.get_shader_parameter("tip_thin"), GiantLook.BEARD_TIP_THIN), "a long beard's tips thin out")
-	assert_true(_near(beard.get_shader_parameter("tip_thin"), 0.0), "the short beard's stubble does not")
+	# the second look lane: a short-card beard's tips thin a little too (and its cards narrow to points: they ended
+	# square at the cheeks)
+	assert_true(_near(beard.get_shader_parameter("tip_thin"), GiantLook.BEARD_SHORT_TIP_THIN), "a short beard's a little")
 	assert_true(_near(beard.get_shader_parameter("back_fade"), 0.0) and _near(full.get_shader_parameter("back_fade"), 0.0),
 		"a beard is there from behind the head (P51)")
 	for m: ShaderMaterial in [hair, beard, full]:
@@ -659,7 +661,8 @@ func test_the_look_by_slot_dyes_each_garment_and_pushes_the_build() -> void:
 	assert_true(_near(_mat(root, "Garment_belt").get_shader_parameter("dye_color"), brown), "the belt in its dye")
 	assert_false(GiantLook.mesh_node(root, index, "Garment_braies").visible, "the braies are not worn")
 	assert_eq(int(_mat(root, "Garment_furs").get_shader_parameter("kind")), 1, "a metal garment takes the metal response")
-	assert_eq(int(_mat(root, "Garment_belt").get_shader_parameter("kind")), 0, "leather does not")
+	# the second look lane: leather takes its own response (4: warm, waxed, in stitched panels), not the metal's
+	assert_eq(int(_mat(root, "Garment_belt").get_shader_parameter("kind")), 4, "leather takes the leather response")
 	for id: String in ["Body_Torso", "Garment_belt", "Garment_tunic_limbs"]:
 		assert_eq(_mat(root, id).get_shader_parameter("build"), Vector2(0.5, -0.25), "%s: the build" % id)
 		assert_true(_near(_mat(root, id).get_shader_parameter("build_max_m"), 0.099254), "%s: the index's build_max_m" % id)
