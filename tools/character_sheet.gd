@@ -11,12 +11,24 @@ extends Node
 ##   4b war paint in two colours, the scars and the ancestry marks, each also in Game view and first person
 ##   5  clothing: the four outfits in two dye pairs, front and back, and their cloth close up
 ##   6  web and desktop: the creator's face framing at the web (512 px) and hi (1024 px) texture tiers
+## Sheet B (P57; plan M11 §4.2, the owner's checkpoint B: the wardrobe sheet), every page built from the sets, so a
+## set that grows shows its new options:
+##   b1 the garments by slot, each on the default giant in its slot's framing and whole (a cape from behind and his right)
+##   b2 the outfits front and back; the fullest look from four sides; its armour in every metal
+##   b3 the accessories (each aimed at, as the creator's pictures are) and the bead sets on a hair style and a beard
+##   b4 the hair styles from the front and from behind, the beards from the front and the side
+##   b5 the designs by region: every tattoo, war paint and scar framed and in the stage-1 Game view
+##   b6 the build sliders at the creator's ends, from behind in Game view and whole; the face sliders at -1 and +1
+##   b7 the presets, front and back
+##   b8a, b8b the creator at 1280x720 and at 1920x1080 (--creator-shots=<dir at 1280x720>,<dir at 1920x1080>: the PNGs
+##      tests/support/creator_probe.tscn --shots wrote at those sizes)
 ## A main scene, not a -s script (Appearance and GiantPreview read the autoloads' data). Run under Xvfb:
 ##
 ##   LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1920x1080x24" tools/gd.sh --path . --rendering-driver opengl3 \
 ##     --resolution 1920x1080 --audio-driver Dummy res://tools/character_sheet.tscn -- \
 ##     [--out=docs/screenshots/m10/] [--renders=<folder with test_studio_full34.png, test_outdoor_head.png>] \
 ##     [--pages=1,2,3,4a,4b,5,6] [--sheet=a] [--jpg]
+##   ... -- --sheet=b --out=<dir> [--pages=b1,...] [--creator-shots=<dir>,<dir>]
 ##
 ## It writes sheet_<sheet>_<page>_<name>.png (or .jpg with --jpg) into --out (a path relative to the project or
 ## absolute; default docs/screenshots/m10/), prints CHARACTER_SHEET {"pages", "tiles", "ms", "tier", "adapter"}
@@ -52,6 +64,8 @@ const MARK_LINES := {"mark.granite_veins": "ancestry.stoneblood", "mark.lightnin
 
 var out_dir := ""
 var renders_dir := ""
+## Sheet b's page 8: the creator_probe shots at 1280x720 and at 1920x1080.
+var creator_shots := PackedStringArray()
 var sheet := "a"
 var only_pages := PackedStringArray()
 var jpg := false
@@ -79,6 +93,8 @@ func _ready() -> void:
 			sheet = arg.substr(8).to_lower()
 		elif arg == "--jpg":
 			jpg = true
+		elif arg.begins_with("--creator-shots="):
+			creator_shots = arg.substr(16).split(",", false)
 	if not out_dir.is_absolute_path():
 		out_dir = ProjectSettings.globalize_path("res://").path_join(out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
@@ -89,6 +105,7 @@ func _ready() -> void:
 	for i in POOL:
 		var p := GiantPreview.new()
 		p.still = true
+		p.stretch = false   # P57: the tile sets its viewport's size itself
 		p.world_light = true
 		holder.add_child(p)
 		_pool.append(p)
@@ -120,6 +137,8 @@ func _run() -> void:
 ## The pages of the sheet: {id, name, title, note, sections: [{title, columns, aspect, tiles: [tile]}]}. A tile is
 ## {label, record, ancestry, framing, turn, zoom, villager, tier} or {label, image_path} (an approved render).
 func pages() -> Array:
+	if sheet == "b":
+		return pages_b()
 	var base := Appearance.default_record()
 	base["mark"] = Appearance.MARK_NONE
 	var out: Array = []
@@ -260,6 +279,215 @@ func pages() -> Array:
 	return out
 
 
+## Sheet B, the wardrobe sheet (see the header). Its framed tiles are drawn in the creator's studio light, its Game view
+## and first-person tiles in the world's.
+func pages_b() -> Array:
+	var base := Appearance.default_record()
+	base["mark"] = Appearance.MARK_NONE
+	base["preset"] = ""
+	var out: Array = []
+	var dye_words := "the default dyes (cloth: %s; leather: %s; metal: %s)" % [_name(str(base.outfit.dyes.cloth)).to_lower(),
+		_name(str(base.outfit.dyes.leather)).to_lower(), _name(str(base.outfit.dyes.metal)).to_lower()]
+	# b1 - the garments by slot
+	var slots: Array = []
+	for slot: String in Appearance.SLOTS:
+		var tiles: Array = []
+		for id in Appearance.option_ids("garment"):
+			var o := Appearance.option(id)
+			if str(o.get("slot", "")) != slot:
+				continue
+			var rec := OptionRows.with_value(base, "outfit.slots.%s.item" % slot, id)
+			var words := "%s (%s)" % [_name(id), str(o.get("material", ""))]
+			tiles.append(_tile(words, rec, str(OptionRows.SLOT_FRAMINGS.get(slot, "full"))))
+			if slot == "cape":
+				tiles.append(_tile(words + " - his right", rec, "full", "", -70.0))   # the slot's own framing is from behind
+			else:
+				tiles.append(_tile(words + " - whole", rec, "full"))
+		slots.append({"title": "%s: %d garments (each in the slot's framing, then the whole giant)" % [str(OptionRows.SLOT_NAMES.get(slot, slot)),
+			tiles.size() / 2], "columns": 6, "aspect": 1.15, "tiles": tiles})
+	out.append({"id": "b1", "name": "garments", "title": "B1. The garments, slot by slot",
+		"note": "Each garment alone on the default giant (the Wanderer: his braies and belt stay unless the slot replaces them), in %s, in the creator's light." % dye_words,
+		"sections": slots})
+	# b2 - outfits, the fullest look, the metals
+	var outfits: Array = []
+	for id in Appearance.option_ids("outfit"):
+		var rec := OptionRows.with_value(base, "outfit.set", id)
+		outfits.append(_tile(_name(id), rec, "full"))
+		outfits.append(_tile(_name(id) + " - behind", rec, "back"))
+	var fullest := fullest_record(base)
+	var sides: Array = []
+	for turn: Array in [[0.0, "front"], [-90.0, "his right"], [180.0, "behind"], [90.0, "his left"]]:
+		sides.append(_tile("The fullest look - %s" % turn[1], fullest, "full", "", float(turn[0]) - 20.0))
+	var metals: Array = []
+	for id in Appearance.option_ids("metal"):
+		var rec := OptionRows.with_value(fullest, "outfit.dyes.metal", id)
+		metals.append(_tile("Armour in %s" % _name(id).to_lower(), rec, "chest", "", 0.0, -2.0))
+	out.append({"id": "b2", "name": "outfits", "title": "B2. Outfits, the fullest look, the metals",
+		"note": "Every outfit fills its slots at once (front and behind). The fullest look: %s." % _fullest_words(fullest),
+		"sections": [
+			{"title": "The %d outfits, front and behind" % (outfits.size() / 2), "columns": 6, "aspect": 1.25, "tiles": outfits},
+			{"title": "The fullest look from four sides", "columns": 4, "aspect": 1.25, "tiles": sides},
+			{"title": "Its armour in every metal", "columns": mini(6, maxi(1, metals.size())), "aspect": 0.8, "tiles": metals}]})
+	# b3 - accessories and beads
+	var acc: Array = []
+	for id in Appearance.option_ids("accessory"):
+		var o := Appearance.option(id)
+		var slot := str(o.get("slot", ""))
+		var rec := OptionRows.with_value(base, "outfit.accessories." + slot, id)
+		var framing := str(OptionRows.SLOT_FRAMINGS.get(slot, "full"))
+		var t := _tile("%s (%s)" % [_name(id), str(OptionRows.ACCESSORY_NAMES.get(slot, slot)).to_lower()], rec, framing)
+		t["aim"] = [str(o.get("mesh", ""))]
+		acc.append(t)
+	var beads: Array = []
+	var index := _pool[0].index()
+	for id in Appearance.option_ids("bead"):
+		var mesh := str(Appearance.option(id).get("mesh", ""))
+		if mesh == "":
+			continue
+		var styles: Dictionary = ((index.get("meshes", {}) as Dictionary).get(mesh, {}) as Dictionary).get("styles", {})
+		for part: String in ["hair", "beard"]:
+			var style := _style_with_anchors(part, styles)
+			if style == "":
+				continue
+			var rec := OptionRows.with_value(OptionRows.with_value(base, part + ".style", style), part + ".beads", id)
+			beads.append(_tile("%s on %s" % [_name(id), _name(style).to_lower()], rec, "face", "", 60.0 if part == "hair" else 30.0))
+	out.append({"id": "b3", "name": "accessories_beads", "title": "B3. Accessories and beads",
+		"note": "Each accessory on the default giant, framed as its picture in the creator (a belt piece aimed at itself); each bead set on a hair style and a beard that carry its anchors.",
+		"sections": [
+			{"title": "The %d accessories" % acc.size(), "columns": 4, "aspect": 1.0, "tiles": acc},
+			{"title": "The bead sets", "columns": 6, "aspect": 1.0, "tiles": beads}]})
+	# b4 - hair and beards
+	var hair: Array = []
+	for id in Appearance.option_ids("hair"):
+		var rec := OptionRows.with_value(base, "hair.style", id)
+		hair.append(_tile(_name(id) + " - front", rec, "face", "", 0.0, -2.0))
+		hair.append(_tile(_name(id) + " - behind", rec, "hair"))
+	var beards: Array = []
+	for id in Appearance.option_ids("beard"):
+		var rec := OptionRows.with_value(base, "beard.style", id)
+		beards.append(_tile(_name(id) + " - front", rec, "face"))
+		beards.append(_tile(_name(id) + " - side", rec, "face", "", 70.0))
+	out.append({"id": "b4", "name": "hair_beards", "title": "B4. Hair and beards",
+		"note": "Every style in the default colours (%s), the hair from the front and from behind, the beards from the front and his right." %
+			_name(str(base.hair.color)).to_lower(),
+		"sections": [
+			{"title": "The %d hair styles" % (hair.size() / 2), "columns": 6, "aspect": 1.0, "tiles": hair},
+			{"title": "The %d beards" % (beards.size() / 2), "columns": 6, "aspect": 1.0, "tiles": beards}]})
+	# b5 - designs by region
+	var sections: Array = []
+	for kind: Array in [["tattoo", "Tattoos"], ["paint", "War paint"], ["scar", "Scars"]]:
+		var tiles: Array = []
+		for id in Appearance.option_ids(str(kind[0])):
+			var o := Appearance.option(id)
+			var rec: Dictionary
+			var region: String
+			match str(kind[0]):
+				"tattoo":
+					region = str(o.get("region", "arms"))
+					rec = OptionRows.with_value(base, "tattoos." + region, id)
+				"paint":
+					region = str(o.get("region", "face"))
+					rec = OptionRows.with_value(base, "paint.design", id)
+				_:
+					rec = OptionRows.with_scar(base, id, true)
+					region = OptionRows.row_region({"key": "scar.x", "id": id}, {}, index, "")
+			if region == "face":
+				rec = OptionRows.with_value(rec, "beard.style", "beard.none")
+			elif region == "legs":
+				rec = OptionRows.with_value(rec, "outfit.slots.legs.item", "")   # the braies cover the thighs
+			var side := OptionRows.design_side(str(o.get("design", "")), index)
+			tiles.append(_tile("%s (%s%s)" % [_name(id), str(REGION_WORDS.get(region, region)), "" if side == "centre" else ", " + side], rec,
+				GiantPreview.region_framing(region, side)))
+			tiles.append(_tile(_name(id) + " - Game view", rec, "game"))
+		sections.append({"title": "%s: %d, each framed and in the stage-1 Game view" % [kind[1], tiles.size() / 2], "columns": 6,
+			"aspect": 0.75, "tiles": tiles})
+	out.append({"id": "b5", "name": "designs", "title": "B5. Designs by region",
+		"note": "Every tattoo, war paint and scar alone on the default giant (no beard over a face design, no braies over a leg design), framed from its side, then at the stage-1 game camera.",
+		"sections": sections})
+	# b6 - sliders
+	var build: Array = []
+	for o: Dictionary in Appearance.options("build", ""):
+		for v: float in [-OptionRows.BUILD_LIMIT, OptionRows.BUILD_LIMIT]:
+			var rec := OptionRows.with_value(base, "build." + str(o.key), v)
+			var words := "%s %+.1f (%s)" % [str(o.get("name", o.key)), v, str(o.get("low" if v < 0.0 else "high", ""))]
+			build.append(_tile(words + " - Game view, behind", rec, "game"))
+			build.append(_tile(words + " - whole", rec, "full"))
+	var shaven := OptionRows.with_value(base, "beard.style", "beard.none")   # the jaw and the chin under no beard
+	var face: Array = [_tile("Every face slider at 0 (no beard)", shaven, "face", "", 20.0)]
+	for o: Dictionary in Appearance.options("face", ""):
+		for v: float in [-1.0, 1.0]:
+			face.append(_tile("%s %+d (%s)" % [str(o.get("name", o.key)), int(v), str(o.get("low" if v < 0.0 else "high", ""))],
+				OptionRows.with_value(shaven, "face." + str(o.key), v), "face", "", 20.0))
+	out.append({"id": "b6", "name": "sliders", "title": "B6. The build and face sliders at their ends",
+		"note": "The build sliders at the creator's ends (%.1f each way), from behind at the stage-1 game camera and whole; the face sliders at -1 and +1 without a beard." %
+			OptionRows.BUILD_LIMIT,
+		"sections": [
+			{"title": "Build", "columns": 4, "aspect": 0.75, "tiles": build},
+			{"title": "Face", "columns": 5, "aspect": 1.0, "tiles": face}]})
+	# b7 - presets
+	var presets: Array = []
+	for pid in Appearance.preset_ids():
+		var rec := Appearance.preset_record(pid)
+		rec["mark"] = Appearance.MARK_NONE
+		var words := str(GameData.get_record(pid).get("display_name", pid))
+		presets.append(_tile(words, rec, "full"))
+		presets.append(_tile(words + " - behind", rec, "back"))
+	out.append({"id": "b7", "name": "presets", "title": "B7. The %d presets" % (presets.size() / 2),
+		"note": "Every preset as the creator puts it on (its ancestry mark left off), front and behind.",
+		"sections": [{"title": "Front and behind", "columns": 6, "aspect": 1.25, "tiles": presets}]})
+	# b8 - the creator, one page a window size, one screen a line (legible at the page's width)
+	for i in creator_shots.size():
+		var dir := creator_shots[i]
+		var size_words := "1280x720" if i == 0 else "1920x1080"
+		var screens: Array = []
+		for f: Array in [["01_presets.png", "Presets"], ["11_clothing.png", "Clothing: the slot rows"],
+				["23_grid_outfits.png", "The outfits' grid"], ["22_grid_armour.png", "The armour's grid"],
+				["32_grid_belt.png", "The belt's grid"], ["25_grid_tattoo_arms.png", "The arm tattoos' grid"],
+				["33_grid_paint_face.png", "The face paints' grid"]]:
+			screens.append({"label": "%s - %s" % [str(f[1]), size_words], "image_path": dir.path_join(str(f[0]))})
+		out.append({"id": "b8%s" % ("a" if i == 0 else "b"), "name": "creator_%s" % size_words, "title": "B8%s. The creator at %s" %
+			["a" if i == 0 else "b", size_words],
+			"note": "The creator as a player meets it after New Game (the game's own sets), from tests/support/creator_probe.tscn: the slot rows and option grids with their pictures (the desktop's; the browser shows the names).",
+			"sections": [{"title": "The creator's screens", "columns": 1, "aspect": 0.5625, "tiles": screens}]})
+	return out
+
+
+## The fullest look of the data: the outfit that fills the most slots, an accessory in every accessory slot (the first
+## of each), the default hair and beard.
+static func fullest_record(base: Dictionary) -> Dictionary:
+	var best := ""
+	var most := -1
+	for id in Appearance.option_ids("outfit"):
+		var n := Appearance.record_garments(Appearance.with_outfit(base, id)).size()
+		if n > most:
+			most = n
+			best = id
+	var rec := Appearance.with_outfit(base, best) if best != "" else base.duplicate(true)
+	for slot: String in Appearance.ACCESSORY_SLOTS:
+		for id in Appearance.option_ids("accessory"):
+			if str(Appearance.option(id).get("slot", "")) == slot:
+				rec = OptionRows.with_value(rec, "outfit.accessories." + slot, id)
+				break
+	return rec
+
+
+static func _fullest_words(rec: Dictionary) -> String:
+	var acc: Array = []
+	for slot: String in Appearance.ACCESSORY_SLOTS:
+		var id := str(OptionRows.value_of(rec, "outfit.accessories." + slot))
+		if id != "":
+			acc.append(_name(id).to_lower())
+	return "%s (%d garments) with %s" % [_name(str(rec.outfit.set)), Appearance.record_garments(rec).size(), ", ".join(acc)]
+
+
+## The first style of `part` whose mesh has bead anchors in `styles` (a bead set's index "styles").
+static func _style_with_anchors(part: String, styles: Dictionary) -> String:
+	for id in Appearance.option_ids(part):
+		if styles.has(str(Appearance.option(id).get("mesh", ""))):
+			return id
+	return ""
+
+
 func _tile(label: String, record: Dictionary, framing: String, ancestry := "", turn := 0.0, zoom := 0.0) -> Dictionary:
 	return {"label": label, "record": record, "framing": framing, "ancestry": ancestry, "turn": turn, "zoom": zoom}
 
@@ -330,8 +558,14 @@ func _set_up(p: GiantPreview, tile: Dictionary, size: Vector2i) -> void:
 		GiantLook.forced_tier = forced
 		p.set_meta("sheet_tier", tier)
 	p.set_game_profile(_stage1)
+	# P57: sheet B draws its framed tiles in the creator's studio light (a face against the world's sun was in shadow);
+	# Game view and first person keep the world's light (GiantPreview.frame)
+	p.world_light = sheet != "b"
 	p.apply_look(Appearance.to_look(tile.record, str(tile.ancestry)))
-	p.frame(str(tile.framing))
+	if str(tile.framing) == GiantPreview.AIM:
+		p.frame_on(p.aim_box(tile.get("aim", []) as Array))   # P57: a belt piece, as the creator's picture aims at it
+	else:
+		p.frame(str(tile.framing))
 	if float(tile.get("turn", 0.0)) != 0.0:
 		p.turn(float(tile.turn))
 	if float(tile.get("zoom", 0.0)) != 0.0:

@@ -59,9 +59,10 @@ const SLOT_NAMES := {"head": "Head", "shoulders": "Shoulders", "chest": "Chest",
 const ACCESSORY_NAMES := {"neck": "Neck", "arm_ring": "Arm ring", "belt": "Belt"}
 ## A slot's thumbnails' framing (GiantPreview.FRAMINGS) and the live preview's while its grid is open. W32: P54's arm
 ## rings are on his left upper arm ("arms_left"), its torcs under the beard ("neck", from his right).
+## P57: the belt's trophies hang at one hip or the other, so their pictures aim at the piece (GiantPreview.AIM).
 const SLOT_FRAMINGS := {"head": "head", "shoulders": "shoulders", "chest": "chest", "armour": "chest", "arms": "arms",
 	"waist": "waist", "legs": "legs", "shins": "shins", "feet": "feet", "cape": "back", "neck": "neck",
-	"arm_ring": "arms_left", "belt": "waist"}
+	"arm_ring": "arms_left", "belt": GiantPreview.AIM}
 const SLOT_PREVIEW := {"head": "head", "shoulders": "upper", "chest": "upper", "armour": "upper", "arms": "upper",
 	"waist": "lower", "legs": "lower", "shins": "lower", "feet": "lower", "cape": "back", "neck": "upper",
 	"arm_ring": "upper", "belt": "lower"}
@@ -163,7 +164,8 @@ static func row_specs(category: String, record: Dictionary = {}) -> Array:
 					"label": str(Appearance.option(id).get("name", id))})
 			return out
 		"Clothing":
-			var out: Array = [{"key": "outfit.set", "kind": "grid", "set": "outfit", "label": "Outfit", "framing": "full"}]
+			var out: Array = [{"key": "outfit.set", "kind": "grid", "set": "outfit", "label": "Outfit", "framing": "full",
+				"thumb": "outfit"}]
 			for slot: String in Appearance.SLOTS:
 				out.append({"key": "outfit.slots.%s.item" % slot, "kind": "grid", "set": "garment", "slot": slot,
 					"label": str(SLOT_NAMES.get(slot, slot.capitalize())), "framing": str(SLOT_PREVIEW.get(slot, "full")),

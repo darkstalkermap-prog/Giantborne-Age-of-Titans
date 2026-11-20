@@ -67,6 +67,9 @@ static var _part_cache: Dictionary = {}
 static var _part_recent: Array = []
 ## Parts read from disk since the process started (the tests' and the bench's count).
 static var _part_loads := 0
+## P57: the time the part loads took (ms: all of them, the longest), for the Web's first-show stall.
+static var _part_load_ms := 0.0
+static var _part_load_max_ms := 0.0
 static var _exit_hooked := false
 
 var _skeleton: Skeleton3D = null
@@ -255,8 +258,10 @@ func ensure_part(id: String) -> MeshInstance3D:
 ## proxy.
 func release_unused(shown: Array) -> void:
 	for id: String in _meshes:
-		if is_part(id) and not shown.has(id):
-			(_meshes[id] as MeshInstance3D).visible = false
+		var mi := _meshes[id] as MeshInstance3D
+		# P57: a part already hidden and let go is passed at once (most of the 69 on every look)
+		if (mi.visible or mi.mesh != null) and is_part(id) and not shown.has(id):
+			mi.visible = false
 			_release(id)
 
 
@@ -299,6 +304,7 @@ static func load_part(path: String) -> Dictionary:
 	if not ResourceLoader.exists(path):
 		push_warning("GiantModel: the part %s is missing (tools/giant/build_giant.py writes it)" % path)
 		return {}
+	var t0 := Time.get_ticks_usec()
 	var scene := load(path) as PackedScene
 	var inst := scene.instantiate() if scene != null else null
 	var out := {}
@@ -313,6 +319,9 @@ static func load_part(path: String) -> Dictionary:
 		push_warning("GiantModel: the part %s holds no skinned mesh" % path)
 		return {}
 	_part_loads += 1
+	var ms := float(Time.get_ticks_usec() - t0) / 1000.0
+	_part_load_ms += ms
+	_part_load_max_ms = maxf(_part_load_max_ms, ms)
 	_part_cache[path] = {"mesh": weakref(out.mesh), "skin": out.skin}
 	_drop_at_exit()
 	return out
@@ -370,7 +379,8 @@ static func same_binds(a: Skin, b: Skin) -> bool:
 
 
 ## {"loads": parts read from disk so far, "alive": parts some model or the recent list holds,
-## "recent": the paths kept after their last model let go}.
+## "recent": the paths kept after their last model let go, "load_ms" and "load_max_ms": the loads' time in all and the
+## longest (P57)}.
 static func part_stats() -> Dictionary:
 	var alive := 0
 	for path: String in _part_cache:
@@ -379,7 +389,8 @@ static func part_stats() -> Dictionary:
 	var recent := PackedStringArray()
 	for r: Array in _part_recent:
 		recent.append(str(r[0]))
-	return {"loads": _part_loads, "alive": alive, "recent": recent}
+	return {"loads": _part_loads, "alive": alive, "recent": recent, "load_ms": snappedf(_part_load_ms, 0.1),
+		"load_max_ms": snappedf(_part_load_max_ms, 0.1)}
 
 
 ## The bytes of a mesh's vertex, attribute, skin and index buffers, its LODs' indices included (what the

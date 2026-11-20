@@ -83,7 +83,7 @@ function usage(message) {
 
 export function parseArgs(argv) {
   const opts = { build: 'builds/web', size: '960x540', timeoutS: 600, parts: PARTS.slice(), fixture: '', stallRatio: STALL_RATIO,
-    strict: false, args: '', shots: '', json: '', headed: false };
+    strict: false, args: '', shots: '', json: '', headed: false, shaderLog: '' };
   for (const arg of argv) {
     const [key, ...rest] = arg.split('=');
     const value = rest.join('=');
@@ -99,6 +99,7 @@ export function parseArgs(argv) {
       case '--shots': opts.shots = value; break;
       case '--json': opts.json = value; break;
       case '--headed': opts.headed = true; break;
+      case '--shader-log': opts.shaderLog = value; break;
       case '-h': case '--help':
         console.log(readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(1).filter((l, i, all) =>
           all.slice(0, i + 1).every((x) => x.startsWith('//'))).join('\n'));
@@ -175,6 +176,26 @@ function instrument() {
     };
     count('compileShader', 0);
     count('linkProgram', 1);
+    // P57 (--shader-log): every shader compiled, with its #define lines and a short digest of its source, so the
+    // shaders a mark's first frames compile can be told from the warm-up's
+    window.__shaders = [];
+    const src = new WeakMap();
+    const source = proto.shaderSource;
+    proto.shaderSource = function (shader, text) {
+      src.set(shader, text);
+      return source.call(this, shader, text);
+    };
+    const compile = proto.compileShader;
+    proto.compileShader = function (shader) {
+      const text = src.get(shader) || '';
+      if (window.__shaders.length < 4000) {
+        let h = 0;
+        for (let i = 0; i < text.length; i += 1) h = (h * 31 + text.charCodeAt(i)) | 0;
+        const defines = text.split('\n').filter((l) => l.startsWith('#define')).map((l) => l.slice(8).trim()).join(' ');
+        window.__shaders.push([performance.now(), (h >>> 0).toString(16), text.length, defines.slice(0, 600)]);
+      }
+      return compile.call(this, shader);
+    };
     for (const name of ['texImage2D', 'texImage3D', 'texStorage2D', 'texStorage3D', 'compressedTexImage2D', 'compressedTexImage3D']) count(name, 2);
     for (const name of ['texSubImage2D', 'texSubImage3D', 'compressedTexSubImage2D', 'compressedTexSubImage3D']) count(name, 3);
     for (const name of ['createFramebuffer', 'renderbufferStorage', 'renderbufferStorageMultisample']) count(name, 4);
@@ -210,7 +231,7 @@ async function openPart(browser, opts, origin, args) {
   const context = await browser.newContext({ viewport: { width, height } });
   const page = await context.newPage();
   await page.addInitScript(instrument);
-  const seen = { errors: [], failed: [], aborted: 0, external: 0, states: [], stalls: {}, benches: [], lines: 0 };
+  const seen = { errors: [], failed: [], aborted: 0, external: 0, states: [], stalls: {}, benches: [], lines: 0, thumbs: [] };
   await page.route((u) => !u.href.startsWith(origin), (route) => {
     seen.external += 1;
     const css = route.request().resourceType() === 'stylesheet';
@@ -231,7 +252,9 @@ async function openPart(browser, opts, origin, args) {
     }
     line.wall_s = round1((Date.now() - started) / 1000);
     if (line.t === 'state') seen.states.push(line);
+    else if (line.t === 'stall' && (line.mark === 'grid' || line.mark === 'pick')) seen.stalls[`${line.mark}:${line.key}`] = line;
     else if (line.t === 'stall' && !(line.mark in seen.stalls)) seen.stalls[line.mark] = line;
+    else if (line.t === 'thumbs') seen.thumbs.push(line);
     else if (line.t === 'bench') seen.benches.push(line);
   });
   page.on('pageerror', (err) => seen.errors.push(`page error: ${err.message}`));
@@ -359,6 +382,14 @@ async function finish(part, out, problems, misses, opts) {
     if (b.skin_springs_ms > SKIN_SPRINGS_MS_WEB) misses.push(`the skin's CPU a frame with secondary motion after "${b.mark}": ${b.skin_springs_ms} ms (at most ${SKIN_SPRINGS_MS_WEB} ms on the Web)`);
   }
   out.page_frames = { count: work.length, median_work_ms: round1(median(work)), worst_work_ms: round1(Math.max(0, ...work)) };
+  if (opts.shaderLog && traced) {
+    const shaders = await page.evaluate(() => window.__shaders || []).catch(() => []);
+    const marks = {};
+    for (const mark of Object.keys(out.stalls)) marks[mark] = markTime(traced.states, mark);
+    const file = `${opts.shaderLog}.${out.part || 'part'}.json`;
+    writeFileSync(file, JSON.stringify({ marks, shaders, work: traced.work.slice(0, 20000) }));
+    part.note(`shader log: ${shaders.length} shaders -> ${file}`);
+  }
   await context.close();
   const split = splitWarnings(seen.errors);
   out.console_errors = split.errors;
@@ -375,13 +406,78 @@ async function finish(part, out, problems, misses, opts) {
   return out;
 }
 
+// P57: the category `want` with PageDown (the categories wrap); true once it shows.
+async function toCategory(part, want) {
+  for (let i = 0; i < 12 && part.state().category !== want; i++) {
+    const was = part.state().category;
+    await part.press('PageDown');
+    await part.until((s) => s.category !== was, 30);
+  }
+  return part.state().category === want;
+}
+
+// P57: opens the grid of the focused row with Enter, waits for its first frame ("grid") and its thumbnails
+// ("thumbs"), puts the next option on with the arrow (the first piece put on in a grid: "pick"), then closes it with
+// Enter. Returns null or the problem.
+async function gridSteps(part, out, misses, problems, opts, key) {
+  const { state, until, press, stall, shot } = part;
+  await press('Enter');
+  if (!(await until((s) => s.grid === key, 60))) return `Enter did not open the grid of ${key} (open: "${state().grid}")`;
+  judge(out, misses, problems, `grid:${key}`, await stall(`grid:${key}`), opts, `the first frame of the grid ${key}`);
+  const end = Date.now() + opts.timeoutS * 1000;
+  let thumbs = null;
+  while (Date.now() < end && !(thumbs = part.seen.thumbs.find((t) => t.key === key))) await sleep(200);
+  if (!thumbs) return `the grid ${key} reported no thumbnails`;
+  out.thumbnails = out.thumbnails || {};
+  out.thumbnails[key] = thumbs;
+  // P57 (plan M11 §2.7): the Web build shows names in the grids (no picture: a read-back took seconds on SwiftShader);
+  // with --args=--creator-pictures=on the pictures are made and judged
+  if (thumbs.pictures !== false && thumbs.made < 1) problems.push(`the grid ${key} made no thumbnail`);
+  if (thumbs.pictures === false && thumbs.made > 0) problems.push(`the grid ${key} made ${thumbs.made} pictures where the Web shows names`);
+  if (!thumbs.ok) misses.push(`the thumbnails of ${key}: a frame of ${thumbs.worst_ms} ms while they were made against ${thumbs.after_median_ms} ms after (${thumbs.ratio}x, over ${opts.stallRatio}x)`);
+  await shot(`grid_${key.replace(/[^a-z0-9]+/gi, '_')}.png`);
+  const history = state().history;
+  await press('ArrowRight');
+  if (!(await until((s) => s.history > history, 30))) return `the arrow in the grid ${key} put nothing on`;
+  judge(out, misses, problems, `pick:${key}`, await stall(`pick:${key}`), opts, `the first piece put on in the grid ${key}`);
+  await press('Enter');
+  if (!(await until((s) => s.grid === '', 30))) return `Enter did not close the grid ${key}`;
+  return null;
+}
+
+// P57: a build slider (Body), the outfits' grid and the armour slot's grid (Clothing).
+async function wardrobeSteps(part, out, misses, problems, opts) {
+  const { state, until, press, note } = part;
+  if (!(await toCategory(part, 'Body'))) return `PageDown never reached Body (at "${state().category}")`;
+  await press('ArrowDown');
+  await sleep(300);
+  let history = state().history;
+  await press('ArrowRight');
+  if (!(await until((s) => s.history > history, 30))) return `the arrow on the slider "${state().focus}" changed nothing`;
+  out.slider = state().focus;
+  note('new_game: a build slider moved');
+  if (!(await toCategory(part, 'Clothing'))) return `PageDown never reached Clothing (at "${state().category}")`;
+  let problem = await gridSteps(part, out, misses, problems, opts, 'outfit.set');
+  if (problem) return problem;
+  note('new_game: an outfit put on from its grid');
+  for (let i = 0; i < 4; i++) {
+    await press('ArrowDown');
+    await sleep(250);
+  }
+  problem = await gridSteps(part, out, misses, problems, opts, 'outfit.slots.armour.item');
+  if (problem) return problem;
+  note('new_game: a piece of armour put on from its grid');
+  history = state().history;
+  return history > 0 ? null : 'the wardrobe left no history';
+}
+
 // Play -> the title -> New Game -> the creator -> Begin -> the Valley.
 async function partNewGame(browser, opts, origin) {
   const part = await openPart(browser, opts, origin, opts.gameArgs);
   const { page, state, until, stall, press, shot, note } = part;
   const problems = [];
   const misses = [];
-  const out = { url: part.url, stalls: {} };
+  const out = { url: part.url, stalls: {}, part: 'new_game' };
   const steps = async () => {
     if ((await page.title()) !== TITLE) problems.push(`the page is "${await page.title()}", not ${TITLE}`);
     const t0 = Date.now();
@@ -414,6 +510,9 @@ async function partNewGame(browser, opts, origin) {
     if (!(await until((s) => s.changed === true, 30))) return problems.push('R did not change the look again');
     await sleep(1500);
     await shot('creator.png');
+    // P57 (plan M11 §3.10 item 2): a slider, the outfits' grid and a slot's grid with the keys a player uses
+    const problem = await wardrobeSteps(part, out, misses, problems, opts);
+    if (problem) return problems.push(problem);
     // Begin: the Valley loads; the pointer lock is asked for inside the press
     const locksBefore = await page.evaluate(() => window.__locks.length);
     const t1 = Date.now();
@@ -463,7 +562,7 @@ async function partShrine(browser, opts, origin) {
   const { page, state, until, stall, press, shot, note } = part;
   const problems = [];
   const misses = [];
-  const out = { url: part.url, stalls: {}, fixture: opts.fixture.startsWith(ROOT) ? opts.fixture.slice(ROOT.length + 1) : opts.fixture };
+  const out = { url: part.url, stalls: {}, part: 'shrine', fixture: opts.fixture.startsWith(ROOT) ? opts.fixture.slice(ROOT.length + 1) : opts.fixture };
   const steps = async () => {
     const saveText = readFileSync(opts.fixture, 'utf8');
     await page.evaluate(writeSaveInPage, { dbName: IDB_NAME, version: IDB_VERSION, store: IDB_STORE, path: SAVE_PATH, text: saveText,
@@ -525,6 +624,12 @@ async function partShrine(browser, opts, origin) {
     judge(out, misses, problems, 'shrine_creator', await stall('shrine_creator'), opts, `the first frame of "${CHANGE_LOOK}" at a shrine`);
     await sleep(1500);
     await shot('shrine_creator.png');
+    // P57: a change, then Keep (Ctrl+Enter): the shrine is back with the look kept
+    await part.press('r');
+    if (!(await until((s) => s.changed === true, 30))) return problems.push('R did not change the look at the shrine');
+    await part.press('Control+Enter');
+    if (!(await until((s) => s.top === 'shrine', 60))) return problems.push(`Keep (Ctrl+Enter) left "${state().top}" on top, not the shrine`);
+    out.kept = true;
     return null;
   };
   await steps().catch((e) => problems.push(`the part broke: ${e && e.message ? e.message : e}`));

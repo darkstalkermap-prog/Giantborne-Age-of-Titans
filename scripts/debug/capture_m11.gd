@@ -1,6 +1,7 @@
 class_name CaptureM11
 extends CaptureM10
-## The M11 capture tour, part A (P50; plan M11 §3.3 item 7, §2.13): --scenario=capture_m11 --part=a shows the
+## The M11 capture tour, part A (P50; plan M11 §3.3 item 7, §2.13) and part B (P57: the wardrobe in play,
+## part_b_beats()): --scenario=capture_m11 --part=a shows the
 ## giant's motion beat by beat and films each beat's moment from the side, the front and three-quarters
 ## (m11a_NN_<beat>_<view>.png under user://captures or --capture-dir=): the tree pauses at the moment, a camera
 ## of the tour's own stands at each view in turn (k times its stage-1 distance), and the game's camera comes
@@ -21,7 +22,9 @@ extends CaptureM10
 ## each moment, the flinches by side and the grip's measures over the generic poses (`grip`: the handle's line
 ## to the fist's centre, x k, and the fist's own axis off the handle).
 
+## The default part; P57: --part=b is the wardrobe's (see part_b_beats()).
 const PART := "a"
+const PARTS := ["a", "b"]
 const VIEWS := ["side", "front", "three_quarter"]
 ## The tour's camera at stage 1: its distance from the giant's middle, its height and where it looks (m).
 const CAM_DISTANCE_M := 8.5
@@ -124,7 +127,7 @@ func _moment(label: String) -> void:
 		measures.legs[label] = _rig.legs_source()
 		measures.gait[label] = {"move": snappedf(float(w.move), 0.01), "run": snappedf(float(w.run), 0.01),
 			"sprint": snappedf(float(w.sprint), 0.01)}
-	_shot_name = "m11%s_%02d_%s" % [PART, _i + 1, label]
+	_shot_name = "m11%s_%02d_%s" % [part(), _i + 1, label]
 	var fp := _p.camera_rig.is_first_person()
 	_views = ["game"] if fp else VIEWS.duplicate()
 	_views.append("restore")
@@ -320,8 +323,75 @@ func _flinch_beat(side: String) -> Array:
 				measures.flinch_sides[side] = true]
 
 
+## The part the command line asks for (--part=a or b; "a" without one, "" for a part this build does not have).
+static func part() -> String:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--part="):
+			var p := arg.substr(7)
+			return p if p in PARTS else ""
+	return PART
+
+
+## P57 (plan M11 §3.10 item 6): part B, the wardrobe in play - the giant in the world's light at the game's own
+## cameras: every preset standing (the tour's three views), the fullest look standing, walking, running, at stage 4
+## and in first person, and the build sliders at the creator's ends from the three views. Frames m11b_NN_<beat>_<view>.
+func part_b_beats() -> Array:
+	var b: Array = []
+	var dress := func(rec: Dictionary) -> void:
+		_p.appearance.set_record(rec)
+		_to_open_ground()
+	for pid in Appearance.preset_ids():
+		var rec := Appearance.preset_record(pid)
+		b.append(["preset_" + pid.get_slice(".", 1), 1.2, func() -> void: dress.call(rec), 0.8])
+	var base := Appearance.preset_record("appearance_preset.wanderer")
+	var fullest := _fullest(base)
+	b.append(["fullest", 1.2, func() -> void: dress.call(fullest), 0.8])
+	b.append(["fullest_walk", 2.0, func() -> void:
+		_to_open_ground()
+		_p.router.set_injected_move(Vector2(0.0, 0.55)), 0.8])
+	b.append(["fullest_run", 2.0, func() -> void:
+		_to_open_ground()
+		_p.router.set_injected_move(Vector2(0.0, 1.0)), 0.8])
+	b.append(["fullest_stage_4", 2.0, func() -> void:
+		_stage(4)
+		_to_open_ground(), 0.8])
+	b.append(["fullest_fp", 1.6, func() -> void:
+		_stage(1)
+		_equip("weapon.club")
+		_p.camera_rig.set_mode(CameraRig.Mode.FIRST_PERSON, false)
+		_view(0.0, -30.0), 0.8])
+	b.append(["fullest_fp_down", 1.4, func() -> void: _view(0.0, -70.0), 0.7])
+	for o: Dictionary in Appearance.options("build", ""):
+		for v: float in [-OptionRows.BUILD_LIMIT, OptionRows.BUILD_LIMIT]:
+			var rec := OptionRows.with_value(fullest, "build." + str(o.key), v)
+			b.append(["build_%s_%s" % [str(o.key), "low" if v < 0.0 else "high"], 1.2, func() -> void:
+				_p.camera_rig.set_mode(CameraRig.Mode.THIRD_PERSON, false)
+				dress.call(rec), 0.8])
+	return b
+
+
+## The fullest look of the data: the outfit that fills the most slots and an accessory in every accessory slot.
+static func _fullest(base: Dictionary) -> Dictionary:
+	var best := ""
+	var most := -1
+	for id in Appearance.option_ids("outfit"):
+		var n := Appearance.record_garments(Appearance.with_outfit(base, id)).size()
+		if n > most:
+			most = n
+			best = id
+	var rec := Appearance.with_outfit(base, best) if best != "" else base.duplicate(true)
+	for slot: String in Appearance.ACCESSORY_SLOTS:
+		for id in Appearance.option_ids("accessory"):
+			if str(Appearance.option(id).get("slot", "")) == slot:
+				rec = OptionRows.with_value(rec, "outfit.accessories." + slot, id)
+				break
+	return rec
+
+
 ## [label, seconds, start, shot at this share of the beat (-1: none; an Array: several moments), per tick]
 func _make_beats() -> Array:
+	if part() == "b":
+		return part_b_beats()
 	var b: Array = []
 	b.append(["idle", 2.0, func() -> void:
 		_wear_the_look()

@@ -6,8 +6,9 @@ extends Node
 ##   * A garment, an accessory, an outfit, a hair or beard style, beads: drawn by a second, unshown GiantPreview
 ##     (`thumbnail`: still, its viewport UPDATE_ONCE, 96 x 96, the studio light) in the item's framing, then read
 ##     back into an ImageTexture after the frame that drew it.
-##   * A design (a tattoo, a war paint): a flat picture of its own layer and channel of the giant's design array -
-##     the design's ink over the skin tone, cropped to where the design is - instead of a render.
+##   * A design (a tattoo, a war paint): drawn the same way, alone on the giant at its region's framing (P57: P55's
+##     flat picture of its layer and channel showed the other designs sharing the channel and every island of the UV
+##     map, cropped to all its ink).
 ##
 ## The Web's rule, kept everywhere: at most one thumbnail is made a frame (THUMBS_PER_FRAME), and only for the page
 ## the grid shows: request() replaces the queue with the visible page's items, so a page turned past is never
@@ -22,18 +23,29 @@ extends Node
 ## A thumbnail is made for an item: its option id and the texture.
 signal thumbnail_ready(id: String, texture: Texture2D)
 
+## The smallest picture (P55's size); P57: a picture is made at the cell's own pixel size (set_cell_pixels), from SIZE
+## to MAX_SIZE in steps of SIZE_STEP, so a cell at 1920x1080 (about 210 px) is not a 96 px picture stretched.
 const SIZE := 96
+const MAX_SIZE := 256
+const SIZE_STEP := 32
+## P57: the time a frame may spend loading the parts of the next picture (natively a part takes about 1 ms).
+const PART_BUDGET_MS := 4.0
 ## The Web's rule (plan M11 §2.7): never more than this many thumbnails a frame.
 const THUMBS_PER_FRAME := 1
-## The skin around a design's flat picture, and how much of the layer around the design's ink is kept.
-const DESIGN_MARGIN := 0.12
-## A design's ink counts where its channel is above this (the crop).
-const DESIGN_INK := 0.2
-## The resolution the flat pictures are cut from (the array's layers are halved down to it).
-const DESIGN_SOURCE_PX := 256
-## The copy the ink's box is found on.
-const BOX_PX := 64
 const BACKDROP := Color(0.12, 0.13, 0.16)
+
+## P57 (plan M11 §2.7: "if P57 measures a thumbnail above the stall rule there, garment grids on the Web show names
+## with the live preview only"): measured in creator_check.mjs on the Web build (SwiftShader), a picture's read-back
+## of its frame took 0.7-3.9 s (the renderer's whole queue waited for; the part loads 1-11 ms), so on the Web no
+## picture is made: every grid shows the options' names and the live preview puts each on as the focus moves. The
+## command line's --creator-pictures=on|off overrides it either way (to try a GPU's browser; tests).
+static func pictures_wanted() -> bool:
+	for arg in OS.get_cmdline_user_args():
+		if arg == "--creator-pictures=on":
+			return true
+		if arg == "--creator-pictures=off":
+			return false
+	return not OS.has_feature("web")
 
 ## Every live cache (reset_for_tests frees what they hold).
 static var _live: Array = []
@@ -42,30 +54,34 @@ static var _live: Array = []
 var textures: Dictionary = {}
 ## The items still to make (the visible page's, in page order).
 var queue: Array = []
-## Counters for the tests and the probe: the thumbnails made (rendered and flat), the most made in one frame, the
+## Counters for the tests and the probe: the thumbnails made (all rendered since P57), the most made in one frame, the
 ## frame numbers (Engine.get_process_frames) each was started in, and the ids made in order.
 var made := 0
 var rendered := 0
-var flat := 0
 var most_in_a_frame := 0
 var made_frames: Array = []
 var made_ids: Array = []
-## The milliseconds each thumbnail's own work took in its frame (the look and framing, or the flat picture; the
-## read-back of a rendered one is added in the next frame).
+## The milliseconds each thumbnail's own work took in its frame (the look and framing; the read-back is added in the
+## next frame).
 var work_ms: Array = []
+## P57: the read-backs' milliseconds, and the parts loaded ahead of a picture (one a frame) with their milliseconds.
+var readback_ms: Array = []
+var parts_loaded := 0
+var parts_ms: Array = []
 var preview: GiantPreview = null
-## The last design picture's parts (ms): reading its layer (the first of a layer: the array's read-back and
-## decompression), the rest.
-var design_timings := {}
+## False on the Web (pictures_wanted()): request() makes nothing and the grid shows the names.
+var enabled := true
+## The pictures' side in pixels now (set_cell_pixels); part of every item's key.
+var size := SIZE
 var _pending: Dictionary = {}   ## the item drawn this frame, read back in the next
 var _drawn := false
 var _frame_count := {}          ## frame -> thumbnails started in it
-var _layers: Dictionary = {}    ## design array layer -> Image (decompressed, DESIGN_SOURCE_PX), or null
-var _designs_texture: Variant = null
+var _held: Dictionary = {}      ## part path -> its mesh, held from its load until the picture that needs it is made
 
 
 func _init() -> void:
 	name = "ThumbnailCache"
+	enabled = pictures_wanted()
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_live.append(weakref(self))
 
@@ -75,19 +91,39 @@ func _exit_tree() -> void:
 		RenderingServer.frame_post_draw.disconnect(_on_drawn)
 
 
-## The visible page's items (CreatorScreen.thumb_item: {"id", "key", "kind": "render" | "design", "look",
-## "framing"} or {"id", "key", "kind": "design", "design", "color", "skin"}): the cached ones are handed back at
+## The visible page's items (CreatorScreen.thumb_item: {"id", "key", "kind": "render", "look", "framing", "aim"}):
+## the cached ones are handed back at
 ## once, the rest replace whatever was still queued (a page turned past is never drawn).
 func request(items: Array) -> void:
 	queue.clear()
+	if not enabled:
+		return
 	for item: Dictionary in items:
-		var key := str(item.get("key", ""))
-		if key == "":
+		if str(item.get("key", "")) == "":
 			continue
+		var key := key_of(item)
 		if textures.has(key):
 			thumbnail_ready.emit(str(item.id), textures[key])
-		elif str(_pending.get("key", "")) != key:
-			queue.append(item)
+		elif str(_pending.get("sized_key", "")) != key:
+			var sized := item.duplicate()
+			sized["sized_key"] = key
+			queue.append(sized)
+
+
+## P57: the cells' side in window pixels: the pictures are made at that size (rounded up to SIZE_STEP, SIZE to
+## MAX_SIZE). Pictures made at another size stay cached under their own key.
+func set_cell_pixels(px: float) -> void:
+	var want := clampi(int(ceil(px / SIZE_STEP)) * SIZE_STEP, SIZE, MAX_SIZE)
+	if want == size:
+		return
+	size = want
+	if preview != null and is_instance_valid(preview) and _pending.is_empty():
+		_fit_preview()
+
+
+## An item's key at the size the pictures are made at now.
+func key_of(item: Dictionary) -> String:
+	return "%s@%d" % [str(item.get("key", "")), size]
 
 
 ## The texture of an item key (null when not made yet).
@@ -104,8 +140,8 @@ func busy() -> bool:
 func clear() -> void:
 	queue.clear()
 	_pending = {}
+	_held.clear()
 	textures.clear()
-	_layers.clear()
 
 
 ## Frees what every live cache holds (ResetHooks.AFTER_EACH): the unshown previews, the textures, the queues.
@@ -134,26 +170,62 @@ func _process(_delta: float) -> void:
 	var frame := Engine.get_process_frames()
 	if int(_frame_count.get(frame, 0)) >= THUMBS_PER_FRAME:
 		return
+	# P57: the parts the next picture shows are loaded ahead, for at most PART_BUDGET_MS a frame (a picture of an
+	# outfit loads up to ten), and its picture is made once they are all in hand
+	var t_frame := Time.get_ticks_usec()
+	while true:
+		var t_part := Time.get_ticks_usec()
+		if not _load_a_part(queue[0] as Dictionary):
+			break
+		parts_loaded += 1
+		parts_ms.append(float(Time.get_ticks_usec() - t_part) / 1000.0)
+		if float(Time.get_ticks_usec() - t_frame) / 1000.0 >= PART_BUDGET_MS:
+			return   # the rest next frame
 	var item: Dictionary = queue.pop_front()
 	var t0 := Time.get_ticks_usec()
 	_frame_count = {frame: int(_frame_count.get(frame, 0)) + 1}
 	most_in_a_frame = maxi(most_in_a_frame, int(_frame_count[frame]))
 	made_frames.append(frame)
 	made_ids.append(str(item.id))
-	if str(item.get("kind", "")) == "design":
-		var tex := design_picture(item)
-		flat += 1
-		_store(item, tex)
-	else:
-		_start_render(item)
+	_start_render(item)
 	work_ms.append(float(Time.get_ticks_usec() - t0) / 1000.0)
+
+
+## P57: loads one part the item's look shows that is not loaded yet (held until its picture is made); false when
+## every part it shows is in hand.
+func _load_a_part(item: Dictionary) -> bool:
+	_ensure_preview()
+	var index: Dictionary = preview.model.index
+	var meshes: Dictionary = index.get("meshes", {}) if typeof(index.get("meshes")) == TYPE_DICTIONARY else {}
+	var look: Dictionary = item.get("look", {})
+	var ids: Array = GiantLook.garment_meshes(index, GiantLook.complete(look)).keys()
+	for k: String in ["hair_mesh", "beard_mesh", "hair_beads", "beard_beads"]:
+		ids.append(str(look.get(k, "")))
+	ids.append_array(look.get("accessories", []) as Array)
+	for id: Variant in ids:
+		var e: Variant = meshes.get(str(id))
+		if typeof(e) != TYPE_DICTIONARY or not (e as Dictionary).has(GiantModel.PART_PATH):
+			continue
+		var path := str((e as Dictionary)[GiantModel.PART_PATH])
+		if _held.has(path) or preview.model.is_part_loaded(str(id)):
+			continue
+		var res := GiantModel.load_part(path)
+		_held[path] = res.get("mesh")
+		return true
+	return false
 
 
 ## Puts the item's look on the unshown preview and asks for one frame; it is read back in the next _process.
 func _start_render(item: Dictionary) -> void:
 	_ensure_preview()
+	if Vector2i(preview.viewport.size) != Vector2i(size, size):
+		_fit_preview()
 	preview.apply_look(item.get("look", {}) as Dictionary)
-	preview.frame(str(item.get("framing", "full")))
+	var framing := str(item.get("framing", "full"))
+	if framing == GiantPreview.AIM:
+		preview.frame_on(preview.aim_box(item.get("aim", []) as Array))   # P57: at the piece itself (the belt's trophies)
+	else:
+		preview.frame(framing)
 	preview.render_thumbnail()
 	_pending = item
 	_drawn = DisplayServer.get_name() == "headless"   # nothing draws: the next frame stands for it
@@ -175,20 +247,23 @@ func _harvest() -> void:
 	if DisplayServer.get_name() != "headless" and preview != null:
 		var t0 := Time.get_ticks_usec()
 		img = preview.viewport.get_texture().get_image()
+		var read := float(Time.get_ticks_usec() - t0) / 1000.0
+		readback_ms.append(read)
 		if not work_ms.is_empty():
-			work_ms[work_ms.size() - 1] = float(work_ms[-1]) + float(Time.get_ticks_usec() - t0) / 1000.0
+			work_ms[work_ms.size() - 1] = float(work_ms[-1]) + read
 		preview.stop_thumbnail()
 	if img == null or img.is_empty():
-		img = Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
+		img = Image.create(size, size, false, Image.FORMAT_RGBA8)
 		img.fill(BACKDROP)
 	rendered += 1
+	_held.clear()   # the preview holds the parts it shows; the rest go back to GiantModel's recent list as they will
 	_store(item, ImageTexture.create_from_image(img))
 
 
 func _store(item: Dictionary, tex: Texture2D) -> void:
 	made += 1
 	if tex != null:
-		textures[str(item.key)] = tex
+		textures[str(item.get("sized_key", item.key))] = tex
 	thumbnail_ready.emit(str(item.id), tex)
 
 
@@ -202,89 +277,14 @@ func _ensure_preview() -> void:
 	preview.still = true
 	preview.stretch = false
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	preview.size = Vector2(SIZE, SIZE)
-	preview.position = Vector2(-4 * SIZE, -4 * SIZE)   # never on screen: only its viewport's frames are read
-	preview.viewport.size = Vector2i(SIZE, SIZE)
 	preview.viewport.msaa_3d = Viewport.MSAA_DISABLED
+	_fit_preview()
 	add_child(preview)
 	preview.stop_thumbnail()
 
 
-# --------------------------------------------------------------------------- the designs' flat pictures
-
-## A design's flat picture (plan M11 §2.7): the ink of the design's channel of its layer in the giant's design
-## array over the skin tone, cropped to the ink's box, SIZE x SIZE. null when the array cannot be read (no display:
-## the layers live on the GPU) - the cell then shows the option's name.
-func design_picture(item: Dictionary) -> Texture2D:
-	var d: Dictionary = item.get("design", {}) if typeof(item.get("design")) == TYPE_DICTIONARY else {}
-	var t0 := Time.get_ticks_usec()
-	var layer := _layer_image(int(d.get("layer", -1)))
-	design_timings["layer_ms"] = float(Time.get_ticks_usec() - t0) / 1000.0
-	if layer == null:
-		return null
-	var channel := clampi(int(d.get("channel", 0)), 0, 3)
-	# the ink's box, found on a BOX_PX copy (cheap), then cut from the layer
-	var small: Image = _layers.get("small:%d" % int(d.layer))
-	var sw := small.get_width()
-	var box := Rect2i()
-	var found := false
-	for y in small.get_height():
-		for x in sw:
-			if small.get_pixel(x, y)[channel] > DESIGN_INK:
-				box = Rect2i(x, y, 1, 1) if not found else box.merge(Rect2i(x, y, 1, 1))
-				found = true
-	if not found:
-		return null
-	var k := float(layer.get_width()) / float(sw)
-	var side := int(ceil(maxf(box.size.x, box.size.y) * k * (1.0 + 2.0 * DESIGN_MARGIN))) + 2
-	side = mini(side, mini(layer.get_width(), layer.get_height()))
-	var centre := Vector2(box.get_center()) * k
-	var x0 := clampi(int(centre.x) - side / 2, 0, layer.get_width() - side)
-	var y0 := clampi(int(centre.y) - side / 2, 0, layer.get_height() - side)
-	var cut := layer.get_region(Rect2i(x0, y0, side, side))
-	cut.resize(SIZE, SIZE, Image.INTERPOLATE_BILINEAR)
-	var skin: Color = item.get("skin", Color(0.69, 0.53, 0.44))
-	var ink: Color = item.get("color", Color(0.1, 0.18, 0.4))
-	var out := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
-	for y in SIZE:
-		for x in SIZE:
-			out.set_pixel(x, y, skin.lerp(ink, clampf(cut.get_pixel(x, y)[channel], 0.0, 1.0)))
-	return ImageTexture.create_from_image(out)
-
-
-## A layer of the design array, decompressed and halved down to DESIGN_SOURCE_PX (cached); null without one.
-func _layer_image(layer: int) -> Image:
-	if layer < 0:
-		return null
-	if _layers.has(layer):
-		return _layers[layer]
-	var img: Image = null
-	if _designs_texture == null:
-		_designs_texture = load(GiantLook.DESIGN_ARRAY) if ResourceLoader.exists(GiantLook.DESIGN_ARRAY) else false
-	var tex := _designs_texture as TextureLayered
-	if tex != null and layer < tex.get_layers():
-		var t0 := Time.get_ticks_usec()
-		img = tex.get_layer_data(layer)
-		design_timings["read_ms"] = float(Time.get_ticks_usec() - t0) / 1000.0
-		if img != null and not img.is_empty():
-			design_timings["format"] = img.get_format()
-			design_timings["size"] = [img.get_width(), img.get_height(), img.has_mipmaps()]
-			img = img.duplicate() as Image
-			t0 = Time.get_ticks_usec()
-			if img.is_compressed() and img.decompress() != OK:
-				img = null
-			design_timings["decompress_ms"] = float(Time.get_ticks_usec() - t0) / 1000.0
-			if img != null:
-				img.clear_mipmaps()
-				if img.get_format() != Image.FORMAT_RGBA8:
-					img.convert(Image.FORMAT_RGBA8)
-				var k := maxi(1, img.get_width() / DESIGN_SOURCE_PX)
-				if k > 1:
-					img.resize(img.get_width() / k, img.get_height() / k, Image.INTERPOLATE_BILINEAR)
-				var small := img.duplicate() as Image
-				small.resize(BOX_PX, BOX_PX, Image.INTERPOLATE_BILINEAR)
-				_layers["small:%d" % layer] = small
-		else:
-			img = null
-	_layers[layer] = img
-	return img
+## The unshown preview at the pictures' size, off the screen.
+func _fit_preview() -> void:
+	preview.size = Vector2(size, size)
+	preview.position = Vector2(-4 * MAX_SIZE, -4 * MAX_SIZE)   # never on screen: only its viewport's frames are read
+	preview.viewport.size = Vector2i(size, size)

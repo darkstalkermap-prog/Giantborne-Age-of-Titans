@@ -301,18 +301,24 @@ func test_randomize_one_category_all_but_the_outfit_and_never_sim_rng() -> void:
 
 
 func test_random_greys_are_kept_as_their_sliders_keep_them() -> void:
-	# a drawn grey of 0.01 was snapped to 0 by its slider when shown, and that snap became a second undo step
+	# a drawn grey of 0.01 was snapped to 0 by its slider when shown, and that snap became a second undo step. P57
+	# (plan M11 §1.7 rule 2): 40 seeds here, the 400 in tests/slow/test_giant_look_walks.gd
+	random_greys_are_slider_values(self, 40)
+
+
+## Every random grey of `seeds` seeds in the hair, beard and whole scopes is a value its slider keeps.
+static func random_greys_are_slider_values(t: TestSuite, seeds: int) -> void:
 	var rng := RandomNumberGenerator.new()
-	for s in 400:
+	for s in seeds:
 		rng.seed = s
 		for scope: String in ["hair", "beard", "all"]:
 			var r := OptionRows.random_record(rng, scope, true, "", Appearance.default_record())
 			for part: String in ["hair", "beard"]:
 				var g := float(r[part].grey)
 				if not is_equal_approx(g, OptionRows.snap_slider(g)):
-					assert_true(false, "seed %d %s: %s grey %f is not a slider value" % [s, scope, part, g])
+					t.assert_true(false, "seed %d %s: %s grey %f is not a slider value" % [s, scope, part, g])
 					return
-	assert_true(true, "every random grey is a value its slider keeps")
+	t.assert_true(true, "every random grey of %d seeds is a value its slider keeps" % seeds)
 
 
 # --------------------------------------------------------------------------- reading in play, locks

@@ -12,6 +12,8 @@ extends TestSuite
 
 ## Plan M11 §2.7: any option at most this many pad moves from its category.
 const MAX_PAD_MOVES := 4
+## P57: the literal pad presses from a category's first row to any option of the game's own sets.
+const MAX_PRESSES := 6
 
 var layer: CanvasLayer
 var stack: ScreenStack
@@ -171,7 +173,9 @@ func _pad_moves(record: Dictionary) -> Dictionary:
 			worst.most_pages = maxi(int(worst.most_pages), pages)
 			var land := g.index_on_page(g.selected) if g.page_of(g.selected) >= 0 else 0
 			var land_page := maxi(g.page_of(g.selected), 0)
-			var to_row := mini(ri + 1, rows.size() + 2 - (ri + 1))   # from the tabs, the focus rows wrapping
+			# P57: from the category's first row (where the focus lands), along the focus rows (the tabs, the rows, the
+			# actions: a ring) with the D-pad's one row and the triggers' ROW_JUMP
+			var to_row := ring_presses(rows.size() + 2, 1, ri + 1, CreatorScreen.ROW_JUMP)
 			for ch: Dictionary in (r as OptionRows.GridRow).choices:
 				var id := str(ch.id)
 				var p := g.page_of(id)
@@ -181,7 +185,8 @@ func _pad_moves(record: Dictionary) -> Dictionary:
 				var moves := 1 + 1 + page_presses + (0 if page_presses == 0 and cell == land else 1)
 				var dc := absi(cell % OptionGrid.COLS - land % OptionGrid.COLS)
 				var dr := absi(cell / OptionGrid.COLS - land / OptionGrid.COLS)
-				var presses := to_row + 1 + page_presses + mini(dc, OptionGrid.COLS - dc) + dr
+				var lines := maxi(1, int(ceil(float(g.visible_ids().size()) / OptionGrid.COLS)))
+				var presses := to_row + 1 + page_presses + mini(dc, OptionGrid.COLS - dc) + mini(dr, lines - dr)   # P57: lines wrap
 				total_presses += presses
 				n += 1
 				if moves > int(worst.moves):
@@ -197,6 +202,22 @@ func _pad_moves(record: Dictionary) -> Dictionary:
 	worst["options"] = n
 	worst["mean_presses"] = float(total_presses) / maxf(1.0, float(n))
 	return worst
+
+
+## P57: the fewest presses from position `from` to `to` on a ring of `n` with steps of one and of `jump` either way.
+static func ring_presses(n: int, from: int, to: int, jump: int) -> int:
+	var seen := {from: 0}
+	var todo := [from]
+	while not todo.is_empty():
+		var at: int = todo.pop_front()
+		if at == to:
+			return int(seen[at])
+		for step: int in [1, -1, jump, -jump]:
+			var nxt := (at + step + n * jump) % n
+			if not seen.has(nxt):
+				seen[nxt] = int(seen[at]) + 1
+				todo.append(nxt)
+	return 0
 
 
 func test_any_option_is_at_most_four_pad_moves_from_its_category() -> void:
@@ -217,9 +238,51 @@ func test_any_option_is_at_most_four_pad_moves_from_its_category() -> void:
 	assert_eq(int(big.most_pages), 3, "35 styles: three pages of twelve")
 	assert_true(int(big.moves) <= MAX_PAD_MOVES, "35 styles: still at most %d moves (%d: %s)" % [MAX_PAD_MOVES,
 		int(big.moves), str(big.what)])
-	print("    test_creator_grid: pad moves - today %d (of %d options), catalogue %d (of %d); literal presses at most %d (%s), mean %.1f" %
-		[int(today.moves), int(today.options), int(full.moves), int(full.options), int(full.presses), str(full.presses_what),
+	# P57 (P55's row: the literal presses were up to 9): the game's own sets at most MAX_PRESSES, the D-pad and LT/RT
+	assert_true(int(today.presses) <= MAX_PRESSES, "today's data: at most %d literal presses (%d: %s)" % [MAX_PRESSES,
+		int(today.presses), str(today.presses_what)])
+	print("    test_creator_grid: pad moves - today %d (of %d options, presses at most %d), catalogue %d (of %d); literal presses at most %d (%s), mean %.1f" %
+		[int(today.moves), int(today.options), int(today.presses), int(full.moves), int(full.options), int(full.presses), str(full.presses_what),
 		float(full.mean_presses)])
+
+
+## P57: LT / RT with no grid open jump ROW_JUMP rows along the focus rows (wrapping); a grid's cell lines wrap up and
+## down; the right stick's up and down zoom.
+func test_the_triggers_jump_rows_and_the_cell_lines_wrap() -> void:
+	var c := _open()
+	c.show_category("Clothing")
+	await get_tree().process_frame
+	var rows := UiNav.link_rows(c.focus_rows())
+	var first := c.first_focus()
+	var at := -1
+	for i in rows.size():
+		if (rows[i] as Array).has(first):
+			at = i
+	var landed := c.jump_rows(1)
+	assert_true((rows[(at + CreatorScreen.ROW_JUMP) % rows.size()] as Array).has(landed), "RT: five rows down")
+	landed = c.jump_rows(-1)
+	assert_eq(landed, first, "LT: back")
+	landed = c.jump_rows(-1)
+	assert_true((rows[(at - CreatorScreen.ROW_JUMP + rows.size()) % rows.size()] as Array).has(landed), "LT again: round the ring")
+	c.open_grid(c.row("outfit.set") as OptionRows.GridRow)
+	await get_tree().process_frame
+	var g := c.grid
+	var top: Button = g.cells[0]
+	var last_line := (g.visible_ids().size() - 1) / OptionGrid.COLS
+	assert_true(last_line >= 1, "the outfits fill two lines or more")
+	assert_eq(top.get_node(top.focus_neighbor_top), g.cells[last_line * OptionGrid.COLS], "Up from the first line: the last")
+	var bottom: Button = g.cells[last_line * OptionGrid.COLS]
+	assert_eq(bottom.get_node(bottom.focus_neighbor_bottom), top, "Down from the last line: the first")
+	c.close_grid()
+	var zoom := c.preview.zoom_factor
+	var stick := InputEventJoypadMotion.new()
+	stick.axis = JOY_AXIS_RIGHT_Y
+	stick.axis_value = -1.0
+	c._input(stick)
+	c._process(0.25)
+	assert_true(c.preview.zoom_factor < zoom, "the right stick up zooms in (%.2f -> %.2f)" % [zoom, c.preview.zoom_factor])
+	stick.axis_value = 0.0
+	c._input(stick)
 
 
 # --------------------------------------------------------------------------- the filters and the keys

@@ -62,6 +62,29 @@ func test_its_own_world_the_look_the_framings_and_the_views() -> void:
 	for i in 3:
 		best = minf(best, p.apply_look(look))
 	assert_true(best < 1.0, "a whole look is applied in under 1 ms (%.3f ms)" % best)
+	# P57: a material whose values did not change is skipped, and a hidden piece keeps its last values until it is
+	# shown: a changed value still lands, a garment shown later wears the new dye, a uniform set by set_param is set
+	# again by the next look
+	var skin_mat := GiantLook.mesh_node(p.model, p.index(), "Body_Torso").material_override as ShaderMaterial
+	var changed := look.duplicate(true)
+	changed["skin_tone"] = Color(0.3, 0.2, 0.1)
+	p.apply_look(changed)
+	assert_eq(skin_mat.get_shader_parameter("skin_tone"), Color(0.3, 0.2, 0.1), "a changed value lands")
+	GiantLook.set_param(skin_mat, "skin_tone", Color.RED)
+	p.apply_look(changed)
+	assert_eq(skin_mat.get_shader_parameter("skin_tone"), Color(0.3, 0.2, 0.1), "a value set outside the look is set again")
+	var g_entry: Variant = (look.garments as Array)[0]
+	var g_id := str(GiantLook.garment_meshes(p.index(), {"garments": [g_entry]}).keys()[0])
+	var g_mat := GiantLook.mesh_node(p.model, p.index(), g_id).material_override as ShaderMaterial
+	var bare := changed.duplicate(true)
+	bare["garments"] = []
+	p.apply_look(bare)
+	var dyed := changed.duplicate(true)
+	var g_dyed: Dictionary = (g_entry as Dictionary).duplicate() if typeof(g_entry) == TYPE_DICTIONARY else {"mesh": g_entry}
+	g_dyed["dye"] = Color(0.9, 0.1, 0.8)
+	(dyed.garments as Array)[0] = g_dyed
+	p.apply_look(dyed)
+	assert_eq(g_mat.get_shader_parameter("dye_color"), Color(0.9, 0.1, 0.8), "a garment shown again wears the new dye")
 	assert_eq(GiantLook.validate(p.model, p.index(), look), PackedStringArray(), "validate() is empty")
 	var shown_hair := GiantLook.mesh_node(p.model, p.index(), str(look.hair_mesh))
 	assert_true(str(look.hair_mesh) == "" or (shown_hair != null and shown_hair.visible), "the look's hair shows")
