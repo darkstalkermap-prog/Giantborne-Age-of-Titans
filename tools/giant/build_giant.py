@@ -373,9 +373,12 @@ IMPORT_SETTINGS = {
                                            "animation/import": "false"}),
     # P48: a part is one mesh on the model's skeleton, bound by its named skin; it casts no shadow of its own
     # (the shadow proxy does; a free cape draws its own with its drawn mesh)
+    # (the W33 look lane: part_import.gd keeps the skinned mesh and its skin and drops the 71-bone skeleton the glTF
+    # carries, which GiantModel never uses: about 7.7 KB a part off the Web pack)
     "parts/*.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "false",
                                              "meshes/ensure_tangents": "true", "skins/use_named_skins": "true",
-                                             "animation/import": "false"}),
+                                             "animation/import": "false",
+                                             "import_script/path": '"res://tools/giant/part_import.gd"'}),
     "designs.png": ("2d_array_texture", "CompressedTexture2DArray",
                     {"compress/mode": "2", "mipmaps/generate": "true", "slices/horizontal": "1"}),
     # P51: the skin's subsurface lookup is read by (N.L, curvature) in light(): exact values, no mipmaps
