@@ -778,7 +778,13 @@ def circlet_path(surf, L, S, hs, width, step):
         d = np.array([np.sin(th), -np.cos(th), 0.0])
         z = z_back + (z_front - z_back) * 0.5 * (1.0 + np.cos(th))
         band = head[np.abs(head[:, 2] - z) < 0.006 * S]
-        far = band[int(np.argmax((band[:, :2] - c[:2]) @ d[:2]))]
+        # the W33 look lane: the farthest point of the slice in this direction's own sector (the farthest along the
+        # direction over the whole slice was an ear's or the brow's, and the ring stood off the temples)
+        rel = band[:, :2] - c[:2]
+        ang = np.abs((np.arctan2(rel[:, 0], -rel[:, 1]) - th + np.pi) % (2.0 * np.pi) - np.pi)
+        sector = ang < 0.16
+        cand = band[sector] if sector.any() else band
+        far = cand[int(np.argmax((cand[:, :2] - c[:2]) @ d[:2]))]
         pts.append(np.array([far[0], far[1], z]) + d * clear)
     path = np.asarray(pts)
     # smooth the ring (the slice's farthest points step with the mesh)

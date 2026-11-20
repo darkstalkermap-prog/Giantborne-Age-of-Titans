@@ -755,3 +755,38 @@ func test_beads_by_style_code_and_scars_by_region() -> void:
 	assert_eq(u.regions, Vector4i(1 << 11, 0, 0, 0), "only in its own region (scar_a shares the channel)")
 	assert_eq(u.regions_b, Vector4i(0, 0, 0, (1 << 5) | (1 << 6)), "the second layer's scar in its regions")
 
+
+
+## The W33 look lane: a garment stands off only as far as what is worn under it needs. The index's layering table
+## gives, per outer garment and worn inner garment, the least share of its push at each share (0, 0.25 ... 1) of the
+## inner one's own push; a garment takes the greatest over the garments worn under it, read at the step at or above
+## the inner garment's share; the mesh's push_m scales it.
+func test_the_layering_pushes_a_garment_only_as_far_as_what_is_worn_under_it() -> void:
+	var index := {"garments": {"braies": ["Garment_braies"], "tunic": ["Garment_tunic_core", "Garment_tunic_limbs"],
+			"belt": ["Garment_belt"]},
+		"meshes": {"Garment_braies": {"category": "garment"}, "Garment_tunic_core": {"category": "garment", "push_m": 0.05},
+			"Garment_tunic_limbs": {"category": "garment", "push_m": 0.05}, "Garment_belt": {"category": "garment", "push_m": 0.1}},
+		"layering": {"order": ["braies", "tunic", "belt"], "samples": 5,
+			"push": {"tunic": {"braies": [0.4, 0.4, 0.4, 0.4, 0.4]},
+				"belt": {"braies": [0.2, 0.2, 0.2, 0.2, 0.2], "tunic": [0.1, 0.3, 0.5, 0.7, 0.9]}}}}
+	var one := func(x: float) -> PackedFloat32Array: return PackedFloat32Array([x, x, x, x, x, x])
+	assert_eq(GiantLook.garment_pushes(index, ["belt"]), {"belt": one.call(0.0)}, "worn alone: none")
+	assert_false(GiantLook.garment_push_m(index, {"Garment_belt": {}}).has("Garment_belt"), "and no push_m set")
+	assert_eq(GiantLook.garment_pushes(index, ["belt", "braies"]), {"braies": one.call(0.0), "belt": one.call(0.2)},
+		"over the braies")
+	var s := GiantLook.garment_pushes(index, ["belt", "tunic", "braies"])
+	assert_eq(s.tunic, one.call(0.4), "the tunic over the braies")
+	assert_eq(s.belt, one.call(0.5), "the belt over the tunic at 0.4 reads the step at or above it (0.5): more than the braies' 0.2")
+	assert_eq(GiantLook.garment_pushes(index, ["belt", "tunic"]).belt, one.call(0.1), "over the tunic at no push")
+	var m := GiantLook.garment_push_m(index, {"Garment_braies": {}, "Garment_tunic_core": {}, "Garment_tunic_limbs": {},
+		"Garment_belt": {}})
+	assert_true(absf((m.Garment_tunic_limbs as PackedFloat32Array)[3] - 0.02) < 1e-6, "a mesh's push_m times its garment's share")
+	assert_true(absf((m.Garment_belt as PackedFloat32Array)[0] - 0.05) < 1e-6, "the belt's")
+	assert_false(m.has("Garment_braies"), "a mesh without push_m takes none")
+	assert_eq(GiantLook.garment_pushes({"garments": {}}, ["belt"]), {}, "an index without the table: none")
+	# three knots (the hips, the waist, the chest): a garment under the hips' part pushes that part only
+	index.layering["knots_m"] = [2.0, 2.3, 2.7]
+	index.layering.push = {"tunic": {"braies": [0.6, 0.1, 0.0, 0.6, 0.1, 0.0, 0.6, 0.1, 0.0, 0.6, 0.1, 0.0, 0.7, 0.2, 0.0]}}
+	index["manifest_sha256"] = ""
+	assert_eq(GiantLook.garment_pushes(index, ["tunic", "braies"]).tunic, PackedFloat32Array([0.6, 0.1, 0.0, 0.0, 0.0, 0.0]),
+		"by knot (the table's last knot repeated)")

@@ -607,3 +607,25 @@ What P56 (`docs/systems/P56.md`) answered of the rows above and what it leaves.
 | **The giant's content costs the default tier more** (P54's row): 12 more parts (69); not moved here. | P57 | As P54's row. |
 | **`test_creator_screen`'s Undo test fails about one run in ten**: Randomize draws the hair's grey at a step of 0.01, the creator's grey slider snaps it when the look is applied and enters a second Undo step (seen: grey 0.01 then 0.0). Seed-dependent (the creator seeds Randomize from the clock); the catalogue's longer lists make the draw likelier than on the wave-32 head. | P57 or the W33 merge (the creator's owner) | Snap `Appearance._random_grey` to the slider's step, or have `_apply` set the sliders without emitting their change. |
 
+
+
+## From the W33 look lane (M11 part B, before the part-two preview)
+
+What the look lane (`docs/systems/W33look.md`) answered of the rows above and what it leaves.
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| **Answered: outer garments balloon over the loosest inner candidate** (P54's row): each garment's mesh is its place over nothing, pushed by the cloth shader as far as the garments worn under it need (the index's layering table, six knots of height). | - | `Wardrobe._push_field`, `_layering`; `GiantLook.garment_pushes`. |
+| **Answered in part: mail and scale read as plate, the skirts hug the buttocks** (P54's row): the rings and scales are larger and deeper and read as rows at the game camera; the skirts flare less, span the cleft and fall straight below the hips. The scale coat still shows the buttocks' round shape from behind (its scales catch the light on each cheek). | a later look pass | A skirt that leaves the body (a tube between the legs, its own mesh) instead of a shell pushed along the skin's normals: a shell vertex under the buttocks faces down and cannot move back. |
+| **Answered in part: the cloaks step off the back, the short cape a bustle** (P54's rows): they hang from the shoulder blades as one sheet, their hanging cloth shaded by its own normal; the short cape lies on the back. Over a war belt the long cloak still shows small bulges at the waist (its push follows the belt's plates under it). | a motion pass | The cloak's hanging push could be one value a column (a sheet), and the springs (P50's `TUNING`) looked at with the new hang. |
+| **Answered: the accessories shade with the skin's normal; the arm ring stands off like a bar** (P54's row). | - | The rings' tangents carry the push line; `RING_SLOTS`. |
+| **Answered: the bronze breastplate draws iron** (P55's row): a garment's own dye. | - | `set_garment.json` `dye`. |
+| **Answered: the giant's estimate does not count blend shapes** (P56's row). | - | `RATE_KEY_B_PER_VERTEX`. |
+| **Answered: the circlet braid stands off the temples** (P56's row). Not done: **the twin braids' parting and the long loose crown still show the scalp's tint in blotches**, and the top knot's tuft is thin. | a later look pass | `giant_hair` toward layers near the parting; the knot's tuft cards. |
+| **Not done: the short-card beards read as square patches up close** (mutton chops, the chin braid's base, M10's braided beard). | a later look pass | Break the cards' silhouettes in the hair atlas's alpha (a ragged tip column), or more, narrower cards at the jaw's corners; each beard carries face keys, so more vertices cost the pack about 20 B a vertex a key. |
+| **Not done: ragged cloth edges** (the wraps', the loincloth's), the slivers at build ±1 (the body's cut caps between a pauldron and a cloak: P54's row), the sash's stripes. | a later look pass | The hems' noise (`shell(hem_noise=...)`) along the skin's tangent; the caps' rims (`split_part`, the freeze test holds the body's normals). |
+| **The hood reads as a hood from the side, still as a bowl from behind**: a shell over the head stands off the crown and comes to a point, but it cannot drape onto the shoulders as a cowl. | a later look pass | A cowl below the rim (its own strip over the collars, head slot outermost) would. |
+| **The fur's tufts are subtle at the game camera**: the silhouette breaks only where the surface turns from the eye. | a later look pass | Shells (as the crop's) for the furs' edge. |
+| **The look application costs about 0.02 ms more** (the layering lookup; within the noise of the 1 ms check, which fails on the base at 1.04-1.08 ms). | the performance lane | `GiantLook.garment_push_m` (cached per index), `set_param`'s meta set once. |
+| **The belt's trophies hang clear of the whole wardrobe's envelope at its fullest** (rigid, no push): the drinking horn stands off the hip by a hand when little is worn (`sheet_fullest_build_stage`). | a later look pass | A trophy could take a push as the rings do (its own rows in the layering table, its push in its tangents). |
+| **The layering table is measured at rest**: a pose can bring two layers nearer (the export's four poses keep at least 5.4 mm, the floor 4). A cloak's hanging cloth is not measured in the poses (P54's rule). | - | `shell_distances`. |

@@ -359,7 +359,9 @@ func test_to_look_for_the_record_v2s_own_sets() -> void:
 		assert_eq(str(entry.mesh), str(g.mesh), "%s: its index garment" % id)
 		assert_eq(str(entry.kind), str(g.material), "%s: its material" % id)
 		var want := Appearance.FUR_COLOR if str(g.material) == "fur" else _hex(str(r.outfit.dyes[str(g.material)]))
-		assert_true(deep_eq(entry.dye, want), "%s: the outfit's %s dye" % [id, g.material])
+		if str(g.get("dye", "")) != "":
+			want = _hex(str(g.dye))   # (the W33 look lane: a garment's own colour - the bronze breastplate - before the outfit's)
+		assert_true(deep_eq(entry.dye, want), "%s: the outfit's %s dye (or its own)" % [id, g.material])
 		if str(g.material) in ["cloth", "leather"]:
 			r.outfit.slots[str(g.slot)].dye = "dye.madder"
 			assert_true(deep_eq(Appearance.to_look(r).garments[0].dye, _hex("dye.madder")), "%s: the slot's own dye" % id)
@@ -592,3 +594,25 @@ func test_the_catalogue_two_options() -> void:
 		assert_true(Appearance.FACE_KEYS.has(id.get_slice(".", 1)), "%s is a face key" % id)
 	assert_eq(str(Appearance.option("bead.none").get("mesh", "x")), "", "no beads is the default")
 
+
+
+## The W33 look lane: a garment may name its own dye of its material's palette (the bronze breastplate: bronze); it is
+## taken before the outfit's dye of its material, and a per-slot dye still wins.
+func test_a_garment_s_own_dye_before_the_outfit_s_and_after_the_slot_s() -> void:
+	var r := Appearance.with_outfit(Appearance.preset_record("appearance_preset.wanderer"), "outfit.bronze_lord")
+	r.outfit.dyes.metal = "metal.iron"
+	var bronze := Color.html(str(Appearance.option("metal.bronze").color))
+	var iron := Color.html(str(Appearance.option("metal.iron").color))
+	var plate := func(rec: Dictionary) -> Variant:
+		for g: Dictionary in Appearance.to_look(rec).garments:
+			if g.mesh == "bronze_breastplate":
+				return g.dye
+		return null
+	assert_eq(plate.call(r), bronze, "the bronze breastplate is bronze though the outfit's metal is iron")
+	var greaves: Variant = null
+	for g: Dictionary in Appearance.to_look(r).garments:
+		if g.mesh == "greaves":
+			greaves = g.dye
+	assert_eq(greaves, iron, "a metal garment without its own takes the outfit's")
+	r.outfit.slots.armour.dye = "metal.steel"
+	assert_eq(plate.call(r), Color.html(str(Appearance.option("metal.steel").color)), "the slot's own dye wins")
