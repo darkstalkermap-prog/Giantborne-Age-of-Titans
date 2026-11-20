@@ -916,6 +916,46 @@ class WardrobeTest(unittest.TestCase):
         bad = {k: v for k, v in d.items() if v < 0.004}
         self.assertEqual(bad, {}, "pairs nearer than 0.004 m in some pose")
 
+    def test_the_layering_table_pushes_a_garment_only_as_far_as_what_is_worn_under_it(self):
+        """The W33 look lane: each garment mesh sits where it would over nothing; its push to its place over the loosest
+        garment of every inner slot rides in the vertex colour's alpha (push_m the alpha's 1), and the index's layering
+        gives the least share of that push for each worn inner garment (the export's shells' distances measure every
+        pair at the inner garment's no push and full push with the outer one at the share the table gives it)."""
+        gg = self._gg()
+        lay = self.idx["layering"]
+        self.assertEqual(lay["samples"], gg.PUSH_SAMPLES)
+        all_rings = ["Accessory_" + a for a in gg.ACCESSORY_ORDER if gg.ACCESSORIES[a]["slot"] != "belt"]
+        for r in all_rings:
+            self.assertTrue(self.idx["meshes"][r].get("push_tangent"), "%s: its push rides in its tangents" % r)
+        # a ring over the shirt's or the armour's envelope (the arm rings; a torc above the collars needs none)
+        rings = [r for r in all_rings if self.idx["meshes"][r].get("push_m")]
+        self.assertEqual(sorted(r for r in rings if "arm" in r), sorted(r for r in all_rings if "arm" in r))
+        self.assertEqual(sorted(lay["order"]), sorted(list(gg.GARMENTS) + rings), "the garments, then the rings")
+        layer = {g: gg.LAYER_ORDER.index(gg.GARMENTS[g]["slot"]) for g in gg.GARMENTS}
+        layer.update({r: len(gg.LAYER_ORDER) for r in rings})
+        self.assertEqual([layer[g] for g in lay["order"]], sorted(layer[g] for g in lay["order"]), "from the skin out")
+        for r in rings:
+            self.assertIn("shirt", lay["push"][r], "%s: it sits on the bare skin and moves out over the shirt" % r)
+        knots = lay["knots_m"]
+        self.assertEqual(len(knots), len(gg.PUSH_KNOT_MARKS))
+        self.assertEqual(knots, sorted(knots), "the knots from the thighs up")
+        nk = len(knots)
+        for outer, row in lay["push"].items():
+            for inner, shares in row.items():
+                self.assertLess(layer[inner], layer[outer], "%s over %s" % (outer, inner))
+                self.assertEqual(len(shares), gg.PUSH_SAMPLES * nk, "a share a knot at each sample")
+                self.assertTrue(all(0.0 <= x <= 1.0 for x in shares), (outer, inner, shares))
+                for j in range(nk):
+                    col = shares[j::nk]
+                    self.assertEqual(col, sorted(col), "%s over %s: more push under, more push over" % (outer, inner))
+        pushed = [m for m, e in self.idx["meshes"].items() if e.get("push_m")]
+        self.assertGreater(len(pushed), 20, "the garments that stand over inner slots carry their push")
+        # the default look (the Wanderer: braies and belt): the belt sits on the braies, nearer than its full place
+        self.assertLess(max(lay["push"]["belt"]["braies"][:nk]), 0.5, "the belt over the braies alone")
+        hauberk = lay["push"]["mail_hauberk"]["shirt"]
+        self.assertLess(max(hauberk[:3]), 0.1, "a shirt under a hauberk pushes its chest, not its skirt")
+        self.assertNotIn("braies", lay["push"], "the innermost slot is never pushed")
+
     def test_a_helm_cuts_or_hides_each_hair_style(self):
         gg = self._gg()
         styles = sorted(m for m, e in self.idx["meshes"].items() if e["category"] == "hair")

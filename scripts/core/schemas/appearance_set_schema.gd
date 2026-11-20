@@ -100,6 +100,7 @@ static func option_fields(category: String) -> Dictionary:
 			f["material"] = U.str_field(true, Appearance.MATERIALS)
 			f["covers"] = U.enum_array(Appearance.DESIGN_REGIONS)
 			f["hides_hair"] = U.str_field(false, ["all", "top", "none"])
+			f["dye"] = U.str_field(false)   # the W33 look lane: its own dye or metal (Appearance.data_errors checks it)
 		"metal":
 			f["color"] = U.str_field(true)
 		"build", "face":

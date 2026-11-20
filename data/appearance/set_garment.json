@@ -4,7 +4,7 @@
 	"type": "appearance_set",
 	"category": "garment",
 	"display_name": "Garments",
-	"description": "P53 (plan M11 §2.5, §2.6, decision 10): the garments worn by slot - M10's ten, each in the slot the migration of version-1 looks gives it; P54 (plan M11 §2.6, §3.7): the wardrobe's 25 more, 35 in ten slots. slot: one of the ten garment slots; mesh: the giant index garment (index.garments) it shows; material: cloth and leather take the outfit's cloth and leather dyes (or the slot's own), metal the metal, fur keeps its colour (the bone spaulders too); covers: the design regions it hides (Hidden by your clothing; Randomize avoids them), as the index's coverage measures them; hides_hair: a head garment's cut of the hair (all: none drawn; top: each style cut by length as the index's hair_cut says, or not drawn).",
+	"description": "P53 (plan M11 §2.5, §2.6, decision 10): the garments worn by slot - M10's ten, each in the slot the migration of version-1 looks gives it; P54 (plan M11 §2.6, §3.7): the wardrobe's 25 more, 35 in ten slots. slot: one of the ten garment slots; mesh: the giant index garment (index.garments) it shows; material: cloth and leather take the outfit's cloth and leather dyes (or the slot's own), metal the metal, fur keeps its colour (the bone spaulders too); covers: the design regions it hides (Hidden by your clothing; Randomize avoids them), as the index's coverage measures them; hides_hair: a head garment's cut of the hair (all: none drawn; top: each style cut by length as the index's hair_cut says, or not drawn). The W33 look lane: dye (optional) is the garment's own colour of its material's palette, taken before the outfit's (the bronze breastplate is bronze); a per-slot dye still wins.",
 	"options": [
 		{"key": "braies", "name": "Braies", "slot": "legs", "mesh": "braies", "material": "cloth", "covers": []},
 		{"key": "belt", "name": "Belt", "slot": "waist", "mesh": "belt", "material": "leather", "covers": []},
@@ -37,7 +37,7 @@
 		{"key": "chest_wrap", "name": "Chest wrap", "slot": "chest", "mesh": "chest_wrap", "material": "cloth", "covers": []},
 		{"key": "sash", "name": "Sash", "slot": "waist", "mesh": "sash", "material": "cloth", "covers": []},
 		{"key": "wrapped_sandals", "name": "Wrapped sandals", "slot": "feet", "mesh": "wrapped_sandals", "material": "leather", "covers": []},
-		{"key": "bronze_breastplate", "name": "Bronze breastplate", "slot": "armour", "mesh": "bronze_breastplate", "material": "metal", "covers": []},
+		{"key": "bronze_breastplate", "name": "Bronze breastplate", "slot": "armour", "mesh": "bronze_breastplate", "material": "metal", "dye": "metal.bronze", "covers": []},
 		{"key": "scale_coat", "name": "Scale coat", "slot": "armour", "mesh": "scale_coat", "material": "metal", "covers": ["chest", "back"]},
 		{"key": "horned_helm", "name": "Horned helm", "slot": "head", "mesh": "horned_helm", "material": "metal", "covers": [], "hides_hair": "top"},
 		{"key": "bone_spaulders", "name": "Bone spaulders", "slot": "shoulders", "mesh": "bone_spaulders", "material": "fur", "covers": []}

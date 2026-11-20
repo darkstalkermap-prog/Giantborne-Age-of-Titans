@@ -77,7 +77,13 @@ RATE_MESH_B_PER_VERTEX = 61.0
 # ships 70.7 B a glTF vertex and a card mesh 36.0 B (fits over the 12 and the 9 parts), plus 13.5 KB a file
 # for the skeleton and the skin every part's scene carries; the clips 11.6 B a keyed bone and key.
 RATE_CARD_B_PER_VERTEX = 33.4
-RATE_PART_B_PER_VERTEX = 65.4
+RATE_PART_B_PER_VERTEX = 70.7     # the W33 look lane: refitted on its parts (a garment's UV2 and its push alpha)
+# The W33 look lane, fitted on the imported parts (each .scn is compressed by the importer, so gzip keeps it and
+# base64 adds a third): a part's file no longer carries the skeleton (part_import.gd), only its skin's 71 binds, 8 KB;
+# a blend shape (a face key) costs about 20 B a glTF vertex more (P56's keys were not counted: the estimate read
+# 10.78 MiB while the Web build shipped 13.31).
+RATE_PART_FILE_B = 8000.0
+RATE_KEY_B_PER_VERTEX = 20.4
 RATE_PROXY_B_PER_VERTEX = 45.0     # the shadow proxy: no UVs (ASSUMED: inside giant.glb, not measured apart)
 RATE_SKELETON_B = 13500.0
 RATE_CLIP_B_PER_BONE_KEY = 11.6
@@ -206,7 +212,7 @@ def build_index(export_info: dict, design_info: dict) -> dict:
         # P56: a style's bead anchors (how many), a bead set's style codes (style mesh -> its code in UV2.x), the face keys a
         # mesh carries
         for k in ("atlas", "detail", "part", "chains", "free", "shell", "slot", "material", "hides_hair", "hair_cut",
-                  "bone", "color", "bead_anchors", "styles", "face_keys"):
+                  "bone", "color", "bead_anchors", "styles", "face_keys", "push_m", "push_tangent"):
             if k in e:
                 entry[k] = e[k]
         if "file" in e:
@@ -228,6 +234,11 @@ def build_index(export_info: dict, design_info: dict) -> dict:
         "garments": {g: list(m) for g, m in sorted(export_info["garments"].items())},
         "accessories": dict(sorted(export_info.get("accessories", {}).items())),
         "slots": {"shell_m": export_info.get("slot_shell_m", {}), "layers": export_info.get("layer_order", [])},
+        # the W33 look lane: the garments from the skin out and, per outer garment and worn inner garment, the least
+        # share of its push (its index push_m) at each share of the inner one's (GiantLook.garment_pushes)
+        "layering": {k: export_info["layering"][k] for k in ("order", "samples", "knots_m", "y_norm_m", "push")}
+        if "layering" in export_info
+        else {},
         "designs": designs,
         "regions": [{"id": i, "name": n} for i, n in enumerate(split.REGIONS)],
         "design_regions": {k: list(v) for k, v in sorted(split.DESIGN_REGIONS.items())},
@@ -373,9 +384,12 @@ IMPORT_SETTINGS = {
                                            "animation/import": "false"}),
     # P48: a part is one mesh on the model's skeleton, bound by its named skin; it casts no shadow of its own
     # (the shadow proxy does; a free cape draws its own with its drawn mesh)
+    # (the W33 look lane: part_import.gd keeps the skinned mesh and its skin and drops the 71-bone skeleton the glTF
+    # carries, which GiantModel never uses: about 7.7 KB a part off the Web pack)
     "parts/*.glb": ("scene", "PackedScene", {"meshes/generate_lods": "true", "meshes/create_shadow_meshes": "false",
                                              "meshes/ensure_tangents": "true", "skins/use_named_skins": "true",
-                                             "animation/import": "false"}),
+                                             "animation/import": "false",
+                                             "import_script/path": '"res://tools/giant/part_import.gd"'}),
     "designs.png": ("2d_array_texture", "CompressedTexture2DArray",
                     {"compress/mode": "2", "mipmaps/generate": "true", "slices/horizontal": "1"}),
     # P51: the skin's subsurface lookup is read by (N.L, curvature) in light(): exact values, no mipmaps
@@ -545,13 +559,15 @@ def estimate(rel: str, doc: dict) -> float:
         total = RATE_SKELETON_B
         for mid, e in meshes.items():
             if "file" not in e:
-                total += e["verts"] * GODOT_VERTEX_SPLIT * RATE_MESH_B_PER_VERTEX
+                total += e["verts"] * GODOT_VERTEX_SPLIT * (RATE_MESH_B_PER_VERTEX
+                                                            + len(e.get("face_keys", [])) * RATE_KEY_B_PER_VERTEX)
         total += doc["export"].get("shadow_proxy", {}).get("verts", 0) * RATE_PROXY_B_PER_VERTEX
         return total
     if "/parts/" in rel and name.endswith(".glb"):
         e = meshes.get(name[:-4], {})
         rate = RATE_CARD_B_PER_VERTEX if e.get("category") in ("hair", "beard") else RATE_PART_B_PER_VERTEX
-        return RATE_SKELETON_B + e.get("verts", 0) * GODOT_VERTEX_SPLIT * rate
+        rate += len(e.get("face_keys", [])) * RATE_KEY_B_PER_VERTEX
+        return RATE_PART_FILE_B + e.get("verts", 0) * GODOT_VERTEX_SPLIT * rate
     if name == "giant_clips.glb":
         return RATE_CLIP_B_PER_BONE_KEY * sum(c["bones"] * (c["frames"] + 1)
                                               for c in doc.get("clips", {}).get("clips", {}).values())

@@ -832,7 +832,10 @@ static func to_look(record: Variant, ancestry_id := "") -> Dictionary:
 		if g.is_empty():
 			continue
 		var material := str(g.get("material", "cloth"))
-		var dye_id := str(s.dye) if str(s.dye) != "" else str(dyes.get(DYE_OF_MATERIAL.get(material, ""), ""))
+		# the slot's own dye (the player's per-piece colour), else the garment's own (the W33 look lane: the bronze
+		# breastplate is bronze whatever the outfit's metal), else the outfit's dye of its material
+		var own := _slot_dye(str(s.item), str(g.get("dye", "")))
+		var dye_id := str(s.dye) if str(s.dye) != "" else (own if own != "" else str(dyes.get(DYE_OF_MATERIAL.get(material, ""), "")))
 		var dye := FUR_COLOR if not DYE_SET.has(material) else _color(option(dye_id), "color", FUR_COLOR)
 		(look.garments as Array).append({"mesh": str(g.get("mesh", "")), "dye": dye, "kind": material})
 	for slot: String in ACCESSORY_SLOTS:
@@ -1208,6 +1211,8 @@ static func data_errors(records: Dictionary, record_paths: Dictionary) -> Packed
 	for key: Variant in garments:
 		var g: Dictionary = garments[key]
 		var ctx := "%s (garment.%s)" % [record_paths.get(SET_PREFIX + "garment", "?"), key]
+		if str(g.get("dye", "")) != "" and _slot_dye("garment." + str(key), str(g.dye)) == "":
+			errors.append("%s: its own dye '%s' is no %s of its material's palette" % [ctx, g.dye, g.get("material", "cloth")])
 		if M10_SLOTS.has(str(g.get("mesh", ""))) and str(g.get("slot", "")) != str(M10_SLOTS[str(g.mesh)]):
 			errors.append("%s: M10's %s is worn in the %s slot (plan M11 §2.5), not '%s'" % [ctx, g.mesh, M10_SLOTS[str(g.mesh)],
 				g.get("slot", "")])
