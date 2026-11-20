@@ -94,7 +94,7 @@ seats moved the covered ring's widest point behind it).
 
 - **Regeneration**: `build_giant.py --verify --skip-bake`: GIANT VERIFY OK, 88 files regenerated bit-exact (118-123
   s). No bake input changed (the design array was drawn again with its own code unchanged). `test_giant_tools.py`: 40
-  tests OK; the shells keep their 4 mm in the four poses, the belt over the braies alone takes 0.17 of its push at
+  tests OK; the shells keep their 4 mm in the four poses, the belt over the braies alone takes 0.26 of its push at
   most, a shirt does not push a hauberk's skirt, the trophies move out over the braies.
 - **The share** (`env -u XDG_DATA_HOME tools/build_web.sh --version=0.12.0-m12`): `PCK_SIZE ... shipped=31354304
   shipped_mb=29.90 budget_mb=32 parts=3`; `GIANT_SHARE giant_bytes=14827020 shipped=13373132 shipped_mib=12.75 ...
