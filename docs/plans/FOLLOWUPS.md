@@ -690,6 +690,18 @@ bar ("natural, not clunky"). Removed above: the cloaks (partly), item 6's list a
 | **Still artificial: the hood from behind is a bowl; the top knot is thin; a skirt's front rows let the thighs through in a stride; the long cloak from the side is a straight slanted sheet** (no secondary motion in the previews). | a later look pass / a motion pass | A cowl strip; more knot cards under its cap; skirt rows on chains; the cape chains in the previews. |
 | **The cloth dyes are muted by the shader** (`CLOTH_SATURATION` 0.82 and an uneven tone) rather than in `set_dye.json`: the swatches in the creator keep their data colours. | the creator's owner | Move the muting into the dye data if the swatches should match. |
 
+## From the fifth W33 look lane (W33look5, M11 part B)
+
+What the fifth look lane (`docs/systems/W33look5.md`) answered and what still looks artificial.
+
+| Item | Owner | Notes |
+| --- | --- | --- |
+| **The body's proportions (the owner: "proportionate ... whether 6 foot or 60 ft")**: legs 40 % of the height (target 47-50), shoulders 4.2 head widths (target about 2.2-2.5 head heights' worth: narrower), no visible neck, short arms (fingertips at the hips). Every stage is the same body scaled uniformly. | Orchestrator decision (body freeze), then a body lane | A vertical remap of the phenotype (legs x1.18, torso x0.86, the neck lengthened; shoulders drawn in) measured in a scratch prototype: legs 45 %, 7.9 heads, shoulders 3.9 head widths. Needs: the freeze fixture rewritten (`freeze.py --write`), `--giant-full` (the bake), the clips, every garment, hair and design re-fitted, the game's landmarks and the soak re-baselined. |
+| **Card beards from the side still read blocky at the sheet's size** (the trimmed beard and the chops most): narrower edge cards, edge strands and strand-by-strand roots help close up. | a later look pass | New atlas tips with feathered alpha (a bake input: `--giant-full`). |
+| **The short beard is still grey-brown**: `test_skin_world_render` keeps the shell's colour near the card beards' (whose grey blends at a distance). | a later look pass | Both the shell and the cards less grey at the default grey. |
+| **The crop's nape**: the scalp mask ends low on the neck: the shell thins out but its line is the mask's. **The twin braids' front**: a pale patch at the front of the crown. | a later look pass | The scalp mask at the nape (a bake input); the toward locks' parting. |
+| **Braies' outer hips still round** (mostly the thigh under them); **toes at the boots' tips** (a toe box by cross-section hulls was written but not finished); **hood from behind, top knot, leg wraps and greaves**: not done. | a later look pass | - |
+
 ## From the M12 gate review
 
 Gate B (M11 part B, candidate `47a0af6`; `docs/systems/GATE_B.md`) fixed its seven confirmed findings. What it leaves:
