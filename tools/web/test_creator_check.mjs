@@ -57,8 +57,12 @@ const STUB = `<!doctype html>
   const TABS = ['Rest', 'Grow', 'Talents', 'Appearance (new)'];
   const tiers = mode === 'webtier' ? ['web'] : ['hi'];
   let frame = 0;
+  // P57: the creator's categories, the focused row of the category, and whether a grid had its first pick
+  const CATS = ['Presets', 'Body', 'Face', 'Hair', 'Beard', 'Tattoos', 'War paint', 'Scars', 'Clothing', 'Accessories', 'Colours'];
+  let row = 0;
+  let picked = false;
   let s = { mode: 'title', level: '', loading: false, top: '', warming: false, tab: '', context: '', category: '', changed: false, history: 0,
-    focus: '', focus_tab: false, prompt: '', captured: false, tiers: [] };
+    focus: '', focus_tab: false, prompt: '', captured: false, tiers: [], grid: '' };
   const say = (line) => console.log('UI_PROBE ' + JSON.stringify(line));
   const set = (change) => { s = Object.assign({}, s, change); frame += 1; say(Object.assign({ t: 'state', frame }, s)); };
   const bench = (mark, ms, giants) => say({ t: 'bench', mark, skin_ms: ms, skin_springs_ms: mode === 'slowsprings' ? 0.61 : ms + 0.03,
@@ -125,7 +129,22 @@ const STUB = `<!doctype html>
         }, 300);
       }
     } else if (s.top === 'creator' && s.context === 'new_game') {
-      if (k === 'PageDown') set({ category: 'Skin' });
+      if (k === 'PageDown') { row = 0; set({ category: CATS[(CATS.indexOf(s.category) + 1) % CATS.length] }); }
+      else if (k === 'ArrowDown' && !s.grid) row += 1;
+      else if (k === 'ArrowRight' && s.grid) {
+        set({ changed: true, history: s.history + 1 });
+        if (!picked) { picked = true; stall('pick', 70, 50, { key: s.grid }); }
+      } else if (k === 'ArrowRight' && s.category === 'Body' && row === 1) set({ changed: true, history: s.history + 1, focus: 'Brawn' });
+      else if (k === 'Enter' && !e.ctrlKey && s.grid) set({ grid: '' });
+      else if (k === 'Enter' && !e.ctrlKey && s.category === 'Clothing') {
+        const key = row === 0 ? 'outfit.set' : (row === 4 ? 'outfit.slots.armour.item' : 'outfit.slots.other.item');
+        picked = false;
+        set({ grid: key });
+        stall('grid', 80, 50, { key });
+        setTimeout(() => say({ t: 'thumbs', key, made: mode === 'names' ? 0 : 5, pictures: mode !== 'names', frames: 6,
+          worst_ms: mode === 'slowthumbs' ? 240 : 60, median_ms: 55, after_median_ms: 50, ratio: mode === 'slowthumbs' ? 4.8 : 1.2,
+          ok: mode !== 'slowthumbs' }), 200);
+      }
       else if (k === 'r') set({ changed: true, history: s.history + 1 });
       else if (k === 'z' && e.ctrlKey) { if (mode !== 'noundo') set({ changed: s.history > 1, history: Math.max(0, s.history - 1) }); }
       else if (k === 'Enter' && e.ctrlKey) {
@@ -153,6 +172,9 @@ const STUB = `<!doctype html>
         stall('shrine_creator', 80, 45, { again: false });
         bench('shrine_creator', 0.19, 2);
       }
+    } else if (s.top === 'creator' && s.context === 'shrine') {
+      if (k === 'r') set({ changed: true, history: s.history + 1 });
+      else if (k === 'Enter' && e.ctrlKey && mode !== 'nokeep') set({ top: 'shrine', context: '', category: '', changed: false, history: 0 });
     }
   });
 })();
@@ -222,7 +244,7 @@ console.log('ok: New Game through the creator into the Valley; a world save thro
     'with its first frames\' draw times and the draw\'s share of the longest (P49)');
   check(st.title && st.title.first_draw === undefined, 'a mark without draw times carries none');
   check(st.level && st.level.ok === true && st.level.load_worst_ms === 600, 'the Valley\'s first frame, the load\'s worst frame apart');
-  check(JSON.stringify(r.ng.categories) === JSON.stringify(['Presets', 'Skin']) && r.ng.undo === true, 'PageDown changed the category; R then Ctrl+Z undid the change');
+  check(JSON.stringify(r.ng.categories) === JSON.stringify(['Presets', 'Body']) && r.ng.undo === true, 'PageDown changed the category; R then Ctrl+Z undid the change');
   check(r.ng.pointer_lock && r.ng.pointer_lock.requests === 1 && r.ng.pointer_lock.in_gesture === true, `Begin asked for the pointer lock inside the gesture (${JSON.stringify(r.ng.pointer_lock)})`);
   check(JSON.stringify(r.ng.level_tiers) === JSON.stringify(['hi']), 'the giant draws the hi tier');
   check(r.ng.first_save && r.ng.first_save.level === 'level.valley' && r.ng.first_save.has_appearance === true, 'the first save holds the Valley and the look');
@@ -230,10 +252,39 @@ console.log('ok: New Game through the creator into the Valley; a world save thro
   const ss = r.sh.stalls || {};
   check(ss.level && ss.shrine_creator && ss.shrine_creator.ok === true, 'the shrine part reports the world\'s first frame and "Change your look..."');
   check(r.sh.shrine_tries === 1 && r.sh.appearance_tab_button === 'Appearance (new)', `one E at the shrine; the tab's button read "${r.sh.appearance_tab_button}"`);
-  check(r.sh.last_state && r.sh.last_state.top === 'creator' && r.sh.last_state.context === 'shrine', 'the creator opened over the shrine');
+  check(r.sh.kept === true && r.sh.last_state && r.sh.last_state.top === 'shrine', 'the creator opened over the shrine and Keep took the look back to it (P57)');
+  // P57: a slider, the outfits' grid and the armour's: each grid's first frame, its thumbnails, the first piece put on
+  check(r.ng.slider === 'Brawn', `a build slider moved (${r.ng.slider})`);
+  for (const key of ['outfit.set', 'outfit.slots.armour.item']) {
+    check(st[`grid:${key}`] && st[`grid:${key}`].ok === true && st[`pick:${key}`] && st[`pick:${key}`].ok === true,
+      `the grid ${key}: its first frame and the first piece put on are judged`);
+    check(r.ng.thumbnails && r.ng.thumbnails[key] && r.ng.thumbnails[key].made === 5 && r.ng.thumbnails[key].ok === true,
+      `and its thumbnails' frames (${JSON.stringify(r.ng.thumbnails && r.ng.thumbnails[key])})`);
+  }
   check(r.ng.console_errors.length === 0 && r.sh.console_errors.length === 0, 'no console error');
   const mg = r.rep.memory_guard || {};
   check(mg.limit_mb === 3072 && mg.renderer_peak_mb > 0, `the memory guard watched the page's renderer (${JSON.stringify(r.rep.memory_guard)})`);
+}
+
+console.log('slowthumbs: a grid\'s thumbnails over the stall rule are a miss (P57), --strict fails on it');
+{
+  const r = run('slowthumbs', ['--parts=new_game']);
+  check(r.code === 0 && (r.ng.misses || []).some((m) => m.startsWith('the thumbnails of outfit.set:')), `reported as a miss (${JSON.stringify(r.ng.misses)})`);
+  const strict = run('slowthumbs', ['--parts=new_game', '--strict']);
+  check(strict.code === 1 && strict.out.includes('a budget miss (--strict): the thumbnails of outfit.set'), `and --strict fails on it (exit ${strict.code})`);
+}
+
+console.log('names: the Web\'s grids show names, no picture (P57, plan M11 §2.7)');
+{
+  const r = run('names', ['--parts=new_game']);
+  check(r.code === 0 && r.ng.thumbnails && r.ng.thumbnails['outfit.set'].pictures === false && r.ng.thumbnails['outfit.set'].made === 0,
+    `the grids are judged without pictures (exit ${r.code}, ${JSON.stringify(r.ng.thumbnails && r.ng.thumbnails['outfit.set'])})`);
+}
+
+console.log('nokeep: Keep at the shrine that does not go back is a failure (P57)');
+{
+  const r = run('nokeep', ['--parts=shrine']);
+  check(r.code === 1 && r.out.includes('Keep (Ctrl+Enter) left "creator" on top'), `the check fails (exit ${r.code})`);
 }
 
 console.log('guard: the page\'s renderer is over the memory guard (M10 gate, LD-1)');
