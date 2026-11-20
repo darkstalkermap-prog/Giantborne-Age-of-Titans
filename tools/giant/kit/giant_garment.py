@@ -219,6 +219,8 @@ ACCESSORIES = {
     "beast_jaw": dict(slot="belt", bone="pelvis", detail="bone", color="#d8ccb0", name="Beast's jaw"),
 }
 ACCESSORY_ORDER = tuple(ACCESSORIES)
+RING_SLOTS = ("chest", "armour")   # the W33 look lane: the slots a torc or an arm ring sits over (not the collars and
+#                                  the shoulders' garments: it stood off as far as a mantle's fur and read as a bar)
 ACCESSORY_TRIANGLES = 400
 
 
@@ -1511,11 +1513,20 @@ class Wardrobe:
         brow, chin = L["brow_z"], L["chin"]
         zc = 0.5 * ((brow + 0.03) + (chin - 0.07))
         rz = 0.5 * ((brow + 0.03) - (chin - 0.07))
-        face = (V[:, 1] < L["head_cy"] - 0.02) & ((V[:, 0] / 0.088) ** 2 + ((z - zc) / rz) ** 2 < 1.0)
-        keep = (hn > 0.6) & (z > self.neck_z + 0.065) & ~face
+        face = (V[:, 1] < L["head_cy"] - 0.02) & ((V[:, 0] / 0.072) ** 2 + ((z - zc) / rz) ** 2 < 1.0)
+        # (W33: the opening narrower than P54's 0.088 wide: the ears were in it and stood out of the hood)
+        # the W33 look lane: a hood, not a coif - it stands well off the crown, falls loose to a point behind the head
+        # and over the nape, and its sides hang out from the cheeks (it sat tight)
+        behind = sstep(V[:, 1], L["head_cy"] - 0.02, L["head_cy"] + 0.08)
+        rim = self.neck_z + 0.065 - 0.02 * behind               # a little lower behind, over the nape
+        keep = (hn > 0.5) & (z > rim) & ~face
         back = sstep(V[:, 1], L["head_cy"], L["head_cy"] + 0.11) * sstep(z, L["ear_z"][1], L["top"])
-        off = SLOT_SHELL_M["head"] + 0.032 + 0.045 * back + 0.012 * sstep(L["ear_z"][0] - z, 0, 0.08)
-        self.add_shell("hood", keep, off, snaps=[self.zsnap(self.neck_z + 0.065)])
+        point = np.exp(-((z - (L["top"] - 0.06)) / 0.07) ** 2) * sstep(V[:, 1], L["head_cy"] + 0.02, L["head_cy"] + 0.12)
+        side = sstep(L["ear_z"][1] + 0.02 - z, 0, 0.10) * (1.0 - 0.6 * behind)
+        off = SLOT_SHELL_M["head"] + 0.036 + 0.055 * back + 0.050 * point + 0.025 * side \
+            + 0.025 * sstep(L["ear_z"][0] - z, 0, 0.08)
+        self.add_shell("hood", keep, off, snaps=[(z - rim, 0.0, np.tile([0.0, 0.0, 1.0], (self.n, 1)), 0.03)],
+                       bridge=SKIRT_BRIDGE_ITERS)
 
     def _cap(self, gid, front, back, crown, mat, ridge=0.0, band=0.0):
         """A skull cap: the scalp above ``front`` (at the brow) and ``back`` (round the ears and the nape)."""
@@ -1847,12 +1858,16 @@ def add_horns(helm, bd, S, V, N, C, kd):
 # --------------------------------------------------------------------------------------------------------------
 # accessories: rigid meshes on one bone each
 # --------------------------------------------------------------------------------------------------------------
-def build_accessories(w):
+def build_accessories(w, ring_slots=RING_SLOTS, only=None):
     """{accessory id: object}: every accessory placed clear of the whole wardrobe's envelope (w.C after the last
-    slot), 100 % on its bone."""
+    slot), 100 % on its bone; a ring (the neck's, the arm's) clear of ``ring_slots``' envelope (the W33 look lane: ()
+    gives its place on the bare skin, the ring's mesh; ``ring_push`` its push to its place over those slots)."""
     S = w.S
     out = {}
+    w.ring_slots = ring_slots
     for aid in ACCESSORY_ORDER:
+        if only is not None and aid not in only:
+            continue
         spec = ACCESSORIES[aid]
         verts, faces = globals()["_acc_" + spec["slot"]](w, aid)
         ob = gb.new_mesh_object("Accessory_" + aid, np.asarray(verts) * S, np.array(faces, dtype=object), w.coll)
@@ -1874,15 +1889,61 @@ def build_accessories(w):
     return out
 
 
-def _ring_clear(w, centre, axis, sel, gap, push=False):
+def ring_push(w, base, full):
+    """The W33 look lane: the rings' layering. ``base``, ``full``: {accessory id: object} on the bare skin and over
+    RING_SLOTS' envelope (the same topology). Returns {accessory id: (per vertex push stage-1 m along the skin's normal,
+    quantized as a garment's; its scale; {inner garment: [shares, PUSH_SAMPLES x knots]})}: a ring's push is one share,
+    so every knot of a sample carries it."""
+    S = w.S
+    order = [g for g in ORDER if GARMENTS[g]["slot"] in RING_SLOTS]
+    samples = np.linspace(0.0, 1.0, PUSH_SAMPLES)
+    envs = {}
+    for g in order:
+        run = np.full(w.n, np.nan)
+        for k, sv in enumerate(samples):
+            run = np.fmax(run, w._env_at(g, sv))
+            envs[(g, k)] = run
+    out = {}
+    for aid, ob in base.items():
+        Pb, Pf = _co(ob), _co(full[aid])
+        near = w.kd.query(Pb / S)[1]
+        N = w.N[near]
+        d = np.maximum(0.0, np.einsum("ij,ij->i", Pf - Pb, N))
+        scale = float(d.max())
+        if scale > 1e-6:
+            d = np.ceil(d / scale * 255.0 - 1e-6) / 255.0 * scale
+        hb = np.einsum("ij,ij->i", Pb - w.V[near] * S, N)
+        rows = {}
+        for g in order:
+            vals = []
+            for k in range(PUSH_SAMPLES):
+                E = envs[(g, k)][near]
+                need = np.where(np.isfinite(E), E + LAYER_GAP_M - hb, -np.inf)
+                si = np.where(need > 0.0, need / np.maximum(d, 1e-9), 0.0)
+                sv = float(min(1.0, math.ceil(max(0.0, float(si.max())) * 1000.0) / 1000.0))
+                vals += [sv] * len(w.knots)
+            if max(vals) > 0.0:
+                rows[g] = vals
+        out[aid] = (d, scale, rows)
+    return out
+
+
+def _ring_clear(w, centre, axis, sel, gap, push=False, slots=None):
     """Per angle (32 sectors) round ``axis`` through ``centre``: the largest distance from the axis of the skin
-    pushed out by the wardrobe's envelope, over the body vertices ``sel``, plus ``gap`` (human metres)."""
+    pushed out by the wardrobe's envelope (``slots``' alone when given), over the body vertices ``sel``, plus ``gap``
+    (human metres)."""
     axis = np.asarray(axis, np.float64) / np.linalg.norm(axis)
     a = np.cross(axis, [0.0, 0.0, 1.0] if abs(axis[2]) < 0.9 else [1.0, 0.0, 0.0])
     a /= np.linalg.norm(a)
     b = np.cross(axis, a)
     ids = np.nonzero(sel)[0]
-    cover = (np.where(np.isnan(w.C[ids]), 0.0, w.C[ids]) + (w.push[ids] if push else 0.0)) / w.S
+    C = w.C
+    if slots is not None:
+        C = np.full(w.n, np.nan)
+        for slot in slots:
+            if slot in w.E:
+                C = np.fmax(C, w.E[slot])
+    cover = (np.where(np.isnan(C[ids]), 0.0, C[ids]) + (w.push[ids] if push else 0.0)) / w.S
     P = w.V[ids] + w.N[ids] * cover[:, None] - centre
     P = P - np.outer(P @ axis, axis)
     ang = np.arctan2(P @ b, P @ a)
@@ -1915,7 +1976,7 @@ def _acc_neck(w, aid):
     # the neck's own skin and what is worn on it (a collar's rim further out is fur: a torc sits on it, P54.md)
     sel = (np.abs(w.z - zt) < 0.025) & (w.B["neck"] > 0.55) & (w.B["head"] < 0.3)
     tube_r = {"iron_torc": 0.011, "gilded_torc": 0.012, "tooth_necklace": 0.004}[aid]
-    a, b, radii = _ring_clear(w, centre, [0.0, 0.0, 1.0], sel, tube_r + LAYER_GAP_M / w.S)
+    a, b, radii = _ring_clear(w, centre, [0.0, 0.0, 1.0], sel, tube_r + LAYER_GAP_M / w.S, slots=w.ring_slots)
     # the opening of a torc faces front (-Y: the angle where the ring direction is -Y)
     front = math.atan2(np.dot([0.0, -1.0, 0.0], b), np.dot([0.0, -1.0, 0.0], a))
     if aid == "tooth_necklace":
@@ -1956,9 +2017,9 @@ def _acc_arm_ring(w, aid):
     sh, el = w.sh, w.el
     axis = el - sh
     centre = sh + axis * t
-    sel = (np.abs(w.t_up - t) < 0.08) & (w.V[:, 0] > 0.05) & (w.B["upperarm"] > 0.5)
+    sel = (np.abs(w.t_up - t) < 0.05) & (w.V[:, 0] > 0.05) & (w.B["upperarm"] > 0.6)
     tube_r = {"iron_arm_ring": 0.012, "bronze_arm_spiral": 0.0075, "gilded_arm_ring": 0.010}[aid]
-    a, b, radii = _ring_clear(w, centre, axis, sel, tube_r + LAYER_GAP_M / w.S)
+    a, b, radii = _ring_clear(w, centre, axis, sel, tube_r + LAYER_GAP_M / w.S, slots=w.ring_slots)
     if aid == "bronze_arm_spiral":
         m = 56
         u = axis / np.linalg.norm(axis)

@@ -45,8 +45,11 @@ uniform float push_m[6];
 uniform float push_knots[6];
 uniform float push_y_norm = 4.0;
 uniform bool pushed = false;
+// The W33 look lane: a ring accessory (a torc, an arm ring) shades with its own round normals and carries the skin's
+// normal, the line the build sliders push it along, in its tangents (no detail normal then).
+uniform bool push_tangent = false;
 const float DARK_FLOOR = 0.035;
-const vec3 BONE = vec3(0.62, 0.56, 0.45);   // linear: an aged, sun-yellowed bone
+const vec3 BONE = vec3(0.64, 0.55, 0.40);   // linear: an aged, sun-yellowed bone (W33: warmer; it read grey-blue)
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
 uniform vec3 flash = vec3(0.0);
 
@@ -69,7 +72,8 @@ void vertex() {
 			}
 		}
 	}
-	VERTEX += NORMAL * (dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m + COLOR.a * push);   // P53: the build; W33: the layering
+	vec3 along = push_tangent ? TANGENT : NORMAL;
+	VERTEX += along * (dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m + COLOR.a * push);   // P53: the build; W33: the layering
 	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(clamp(int(COLOR.r * 16.0), 0, 15));
 }
 
@@ -100,12 +104,12 @@ void fragment() {
 	} else if (kind == 2) {
 		ALBEDO = BONE * mix(vec3(1.0), dye_color / max(max(dye_color.r, dye_color.g), max(dye_color.b, 0.001)), 0.15)
 			* mix(1.0, d, detail_strength) * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
-		ROUGHNESS = clamp(0.45 + (1.0 - d) * 0.2, 0.0, 1.0);
-		SPECULAR = 0.35;
+		ROUGHNESS = clamp(0.62 + (1.0 - d) * 0.2, 0.0, 1.0);   // (W33: duller, so it mirrors less of a cool sky)
+		SPECULAR = 0.22;
 	}
 	RIM = rim;
 	RIM_TINT = 0.6;
 	NORMAL_MAP = t.rgb;
-	NORMAL_MAP_DEPTH = normal_strength;
+	NORMAL_MAP_DEPTH = push_tangent ? 0.0 : normal_strength;
 	EMISSION = flash;
 }

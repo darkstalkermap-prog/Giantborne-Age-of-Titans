@@ -142,7 +142,7 @@ const DETAIL_STRENGTH := {"weave": 0.28, "leather": 0.5, "fur": 0.45, "metal": 0
 ## The W33 look lane: the detail map's tiles over the body's UVs (the shader's 96 otherwise) and its normal's
 ## strength (0.4 otherwise) per kind: the mail's rings and the scales larger and deeper, so they read at the game's
 ## camera (at 96 a ring was about a centimetre on the giant and the hauberk drew as flat grey plate).
-const DETAIL_SCALE := {"mail": 44.0, "scale": 34.0}
+const DETAIL_SCALE := {"mail": 56.0, "scale": 40.0}
 const NORMAL_STRENGTH := {"mail": 1.1, "scale": 1.0}
 ## The cloth shader's soft edge light per detail kind (P51: wool and fur catch the light at their edges).
 ## Gate A: weave and leather take no rim. The renderer's rim light does not look at N.L, so a sliver of a fold seen
@@ -167,7 +167,7 @@ const UNIFORMS := {
 	"hair": ["hair_atlas", "hair_color", "tip_color", "grey", "length", "tip_thin", "back_fade", "volume_normal"],
 	"eye": ["iris_color", "iris_glow", "look"],
 	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade", "kind", "rim", "build", "build_max_m", "bead_mask",
-		"push_m", "pushed", "push_knots", "push_y_norm", "detail_scale", "normal_strength"],
+		"push_m", "pushed", "push_knots", "push_y_norm", "detail_scale", "normal_strength", "push_tangent"],
 	"shell": ["strand_tex", "mask_tex", "mask_channel", "shell_count", "shell_height_m", "comb", "hair_color", "tip_color",
 		"grey", "length"],
 }
@@ -518,7 +518,13 @@ static func _layering_table(index: Dictionary) -> Dictionary:
 				push_m[str(m)] = float((e as Dictionary).push_m)
 	var rank := {}
 	for i in ((lay as Dictionary).order as Array).size():
-		rank[str((lay as Dictionary).order[i])] = i
+		var id := str((lay as Dictionary).order[i])
+		rank[id] = i
+		if not garments.has(id) and typeof(meshes.get(id)) == TYPE_DICTIONARY:
+			# a ring accessory: its own mesh in the table (after every garment)
+			g_of[id] = id
+			if SchemaUtil.is_number((meshes[id] as Dictionary).get("push_m")):
+				push_m[id] = float((meshes[id] as Dictionary).push_m)
 	for m: String in g_of:
 		if not rank.has(g_of[m]):
 			rank[g_of[m]] = rank.size()
@@ -533,6 +539,14 @@ static func _layering_table(index: Dictionary) -> Dictionary:
 	if key != "":
 		_layering_tables[key] = t
 	return t
+
+
+## `shown` with the ids of `more` as keys too (a copy).
+static func _with(shown: Dictionary, more: Variant) -> Dictionary:
+	var out := shown.duplicate()
+	for m: Variant in (more if typeof(more) == TYPE_ARRAY else []):
+		out[str(m)] = {}
+	return out
 
 
 ## The hair styles a look's head garments cut (P54, plan M11 §2.6): hair mesh id -> the share of its length drawn
@@ -737,13 +751,15 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 				set_param(mat, "detail_strength", float(DETAIL_STRENGTH.get(detail, 0.3)))
 				set_param(mat, "kind", int(DETAIL_KIND.get(detail, 0)))
 				set_param(mat, "rim", float(CLOTH_RIM.get(detail, 0.2)))
-				if str(entry.get("category", "")) == "garment":
+				if str(entry.get("category", "")) in ["garment", "accessory"]:
 					set_param(mat, "push_m", ZERO_PUSH)   # W33: apply sets it as the worn garments need
 					set_param(mat, "pushed", false)
 					var lay: Variant = index.get("layering")
 					if typeof(lay) == TYPE_DICTIONARY and ((lay as Dictionary).get("knots_m", []) as Array).size() == PUSH_KNOTS:
 						set_param(mat, "push_knots", PackedFloat32Array((lay as Dictionary).knots_m))
 						set_param(mat, "push_y_norm", float((lay as Dictionary).get("y_norm_m", 4.0)))
+				if bool(entry.get("push_tangent", false)):
+					set_param(mat, "push_tangent", true)   # W33: a ring's push rides in its tangents
 				if DETAIL_SCALE.has(detail):
 					set_param(mat, "detail_scale", float(DETAIL_SCALE[detail]))
 					set_param(mat, "normal_strength", float(NORMAL_STRENGTH[detail]))
@@ -867,7 +883,7 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 		build_materials(root, index, str(root.get_meta(META_TIER, "auto")))
 		return
 	var shown := garment_meshes(index, l)
-	var pushes := garment_push_m(index, shown)   # W33: how far each worn garment stands off over what is worn under it
+	var pushes := garment_push_m(index, shown if l.accessories.is_empty() else _with(shown, l.accessories))   # W33
 	var extras := {}   # P53: the accessories and the beads shown (Part B's meshes; none before P54 and P56)
 	for m: Variant in l.accessories:
 		extras[str(m)] = true
@@ -993,7 +1009,7 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				if str(g.get("kind", "")) == "metal":
 					set_param(mat, "kind", 1)   # a metal garment's response whatever its detail map
 				set_param(mat, "fade", 0.0)
-				if push_changed and category == "garment" and pushes.get(id) != pushed.get(id):
+				if push_changed and (category == "garment" or category == "accessory") and pushes.get(id) != pushed.get(id):
 					# W33: only when it changes; `pushed` skips the shader's knots for a garment that stands at its mesh
 					mat.set_shader_parameter("push_m", pushes.get(id, ZERO_PUSH))
 					mat.set_shader_parameter("pushed", pushes.has(id))

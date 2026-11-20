@@ -522,8 +522,18 @@ index = {
 },
 "layering": {
 "knots_m": [1.862027, 2.071284, 2.294347, 2.488657, 2.686583, 3.075203],
-"order": ["braies", "loincloth", "trousers", "kilt", "tunic", "shirt", "sleeveless_vest", "chest_wrap", "leg_wraps", "greaves", "bracers", "iron_vambraces", "arm_wraps", "boots", "wrapped_sandals", "belt", "war_belt", "sash", "jerkin", "mail_hauberk", "leather_cuirass", "bronze_breastplate", "scale_coat", "cape", "long_cloak", "fur_cloak", "furs", "pauldron", "iron_pauldrons", "fur_mantle", "bone_spaulders", "hood", "leather_cap", "iron_helm", "horned_helm"],
+"order": ["braies", "loincloth", "trousers", "kilt", "tunic", "shirt", "sleeveless_vest", "chest_wrap", "leg_wraps", "greaves", "bracers", "iron_vambraces", "arm_wraps", "boots", "wrapped_sandals", "belt", "war_belt", "sash", "jerkin", "mail_hauberk", "leather_cuirass", "bronze_breastplate", "scale_coat", "cape", "long_cloak", "fur_cloak", "furs", "pauldron", "iron_pauldrons", "fur_mantle", "bone_spaulders", "hood", "leather_cap", "iron_helm", "horned_helm", "Accessory_iron_arm_ring", "Accessory_bronze_arm_spiral", "Accessory_gilded_arm_ring"],
 "push": {
+"Accessory_bronze_arm_spiral": {
+"shirt": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+"tunic": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+},
+"Accessory_gilded_arm_ring": {
+"shirt": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+},
+"Accessory_iron_arm_ring": {
+"shirt": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+},
 "arm_wraps": {
 "shirt": [0.0, 0.889, 0.999, 1.0, 1.0, 0.0, 0.0, 0.889, 0.999, 1.0, 1.0, 0.0, 0.0, 0.889, 0.999, 1.0, 1.0, 0.0, 0.0, 0.889, 0.999, 1.0, 1.0, 0.0, 0.0, 0.889, 0.999, 1.0, 1.0, 0.0]
 },
@@ -735,7 +745,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "387e84257c8a486335076cdfe39d534a1a25f5365236982feab021abf0fd2903",
+"manifest_sha256": "51ba9a499eb9372f1ecaddb0983e5abf14372562a31bfff56ac19754fd61172a",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -762,6 +772,8 @@ index = {
 "layer": 1,
 "node": "Accessory_bronze_arm_spiral",
 "part_path": "res://assets/giant/parts/Accessory_bronze_arm_spiral.glb",
+"push_m": 0.033947,
+"push_tangent": true,
 "slot": "arm_ring",
 "tris": 330
 },
@@ -790,6 +802,8 @@ index = {
 "layer": 1,
 "node": "Accessory_gilded_arm_ring",
 "part_path": "res://assets/giant/parts/Accessory_gilded_arm_ring.glb",
+"push_m": 0.034119,
+"push_tangent": true,
 "slot": "arm_ring",
 "tris": 312
 },
@@ -804,6 +818,7 @@ index = {
 "layer": 2,
 "node": "Accessory_gilded_torc",
 "part_path": "res://assets/giant/parts/Accessory_gilded_torc.glb",
+"push_tangent": true,
 "slot": "neck",
 "tris": 300
 },
@@ -818,6 +833,8 @@ index = {
 "layer": 1,
 "node": "Accessory_iron_arm_ring",
 "part_path": "res://assets/giant/parts/Accessory_iron_arm_ring.glb",
+"push_m": 0.034706,
+"push_tangent": true,
 "slot": "arm_ring",
 "tris": 312
 },
@@ -832,6 +849,7 @@ index = {
 "layer": 2,
 "node": "Accessory_iron_torc",
 "part_path": "res://assets/giant/parts/Accessory_iron_torc.glb",
+"push_tangent": true,
 "slot": "neck",
 "tris": 300
 },
@@ -846,6 +864,7 @@ index = {
 "layer": 2,
 "node": "Accessory_tooth_necklace",
 "part_path": "res://assets/giant/parts/Accessory_tooth_necklace.glb",
+"push_tangent": true,
 "slot": "neck",
 "tris": 251
 },
@@ -1346,7 +1365,7 @@ index = {
 "part_path": "res://assets/giant/parts/Garment_hood.glb",
 "shell": 0.02,
 "slot": "head",
-"tris": 2564
+"tris": 3116
 },
 "Garment_horned_helm": {
 "category": "garment",

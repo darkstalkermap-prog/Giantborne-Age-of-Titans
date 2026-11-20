@@ -924,9 +924,18 @@ class WardrobeTest(unittest.TestCase):
         gg = self._gg()
         lay = self.idx["layering"]
         self.assertEqual(lay["samples"], gg.PUSH_SAMPLES)
-        self.assertEqual(sorted(lay["order"]), sorted(gg.GARMENTS))
+        all_rings = ["Accessory_" + a for a in gg.ACCESSORY_ORDER if gg.ACCESSORIES[a]["slot"] != "belt"]
+        for r in all_rings:
+            self.assertTrue(self.idx["meshes"][r].get("push_tangent"), "%s: its push rides in its tangents" % r)
+        # a ring over the shirt's or the armour's envelope (the arm rings; a torc above the collars needs none)
+        rings = [r for r in all_rings if self.idx["meshes"][r].get("push_m")]
+        self.assertEqual(sorted(r for r in rings if "arm" in r), sorted(r for r in all_rings if "arm" in r))
+        self.assertEqual(sorted(lay["order"]), sorted(list(gg.GARMENTS) + rings), "the garments, then the rings")
         layer = {g: gg.LAYER_ORDER.index(gg.GARMENTS[g]["slot"]) for g in gg.GARMENTS}
+        layer.update({r: len(gg.LAYER_ORDER) for r in rings})
         self.assertEqual([layer[g] for g in lay["order"]], sorted(layer[g] for g in lay["order"]), "from the skin out")
+        for r in rings:
+            self.assertIn("shirt", lay["push"][r], "%s: it sits on the bare skin and moves out over the shirt" % r)
         knots = lay["knots_m"]
         self.assertEqual(len(knots), len(gg.PUSH_KNOT_MARKS))
         self.assertEqual(knots, sorted(knots), "the knots from the thighs up")

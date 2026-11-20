@@ -642,7 +642,8 @@ def bead_object(name, B, coll, rig):
     """A bead set's object: smooth quads with their own normals, UV and UV2 (the style code), the region of the
     head (its scalp's code: first person culls the head's layer anyway) and no build push."""
     me = bpy.data.meshes.new(name)
-    me.from_pydata(B["V"].tolist(), [], B["F"].tolist())
+    me.from_pydata(B["V"].tolist(), [], np.asarray(B["F"])[:, ::-1].tolist())   # (W33: the winding outward: with it
+    #                                         inward the double-sided shader turned the normals in, and the beads drew dark)
     me.update()
     lv = np.empty(len(me.loops), np.int64)
     me.loops.foreach_get("vertex_index", lv)
@@ -828,6 +829,48 @@ def set_groups(ob, groups):
         vg = ob.vertex_groups.new(name=bone)
         for i in idx.tolist():
             vg.add([i], float(w[i]), "REPLACE")
+
+
+def add_push_tangents(path, kd, body_N, S):
+    """The W33 look lane: a ring accessory's glTF gets a TANGENT attribute holding, per vertex, the normal of the skin
+    vertex nearest it (the line the build sliders push it along; the cloth shader's push_tangent). Returns the file's
+    size."""
+    import struct
+    with open(path, "rb") as fh:
+        data = fh.read()
+    jlen = struct.unpack_from("<I", data, 12)[0]
+    doc = json.loads(data[20:20 + jlen].decode("utf-8"))
+    bin_off = 20 + jlen
+    blen = struct.unpack_from("<I", data, bin_off)[0]
+    binary = bytearray(data[bin_off + 8:bin_off + 8 + blen])
+    for mesh in doc["meshes"]:
+        for prim in mesh["primitives"]:
+            acc = doc["accessors"][prim["attributes"]["POSITION"]]
+            bv = doc["bufferViews"][acc["bufferView"]]
+            start = bv.get("byteOffset", 0) + acc.get("byteOffset", 0)
+            P = np.frombuffer(bytes(binary[start:start + acc["count"] * 12]), np.float32).reshape(-1, 3)
+            blender = np.stack([P[:, 0], -P[:, 2], P[:, 1]], axis=1) / S
+            _, near = kd.query(blender)
+            n = body_N[near]
+            tang = np.concatenate([np.stack([n[:, 0], n[:, 2], -n[:, 1]], axis=1), np.ones((len(n), 1))], axis=1)
+            raw = tang.astype("<f4").tobytes()
+            while len(binary) % 4:
+                binary.append(0)
+            doc["bufferViews"].append({"buffer": 0, "byteOffset": len(binary), "byteLength": len(raw), "target": 34962})
+            binary.extend(raw)
+            doc["accessors"].append({"bufferView": len(doc["bufferViews"]) - 1, "componentType": 5126,
+                                     "count": int(acc["count"]), "type": "VEC4"})
+            prim["attributes"]["TANGENT"] = len(doc["accessors"]) - 1
+    while len(binary) % 4:
+        binary.append(0)
+    doc["buffers"][0]["byteLength"] = len(binary)
+    js = json.dumps(doc, separators=(",", ":")).encode("utf-8")
+    js += b" " * ((4 - len(js) % 4) % 4)
+    out = struct.pack("<III", 0x46546C67, 2, 12 + 8 + len(js) + 8 + len(binary))
+    out += struct.pack("<II", len(js), 0x4E4F534A) + js + struct.pack("<II", len(binary), 0x004E4942) + bytes(binary)
+    with open(path, "wb") as fh:
+        fh.write(out)
+    return len(out)
 
 
 def export_glb(path, rig, meshes, vertex_colour=True, morph_normals=True):
@@ -1031,7 +1074,13 @@ def run(out_dir):
         # keep their order at any build (P53's follow-up: at -1 the tunic's sleeve hem stood off in steps)
         # (every garment: a band's, the braies' and a cloak's hanging cloth's the skin vertex nearest it, or the one it
         # was cut from: so the hanging cloth pushes as the back it was cut from does)
+        own_normal = G["vnormal"].copy()
         G["vnormal"] = body_N[np.asarray(gbody)]
+        if gid == "horned_helm":
+            # the W33 look lane: the horns (after the cap's own vertices) keep their own round normals (with the scalp's
+            # under them they shaded flat, and from behind as a board)
+            horn = np.arange(len(G["V"])) >= len(wardrobe.exact[gid])
+            G["vnormal"][horn] = own_normal[horn]
         if spec.get("free") and len(wardrobe.pdir.get(gid, ())) == len(G["V"]):
             # the W33 look lane: a cloak's hanging cloth takes its own surface's normal, eased in as it leaves the back
             G["vnormal"] = np.asarray(wardrobe.pdir[gid])
@@ -1090,16 +1139,21 @@ def run(out_dir):
     info["slot_shell_m"] = {k: r6(v) for k, v in sorted(gg.SLOT_SHELL_M.items())}
     info["layer_order"] = list(gg.LAYER_ORDER)
     info["slots"] = {g: {k: r6(v) for k, v in sorted(rec.items())} for g, rec in sorted(wardrobe.record.items())}
-    lay = wardrobe.layering
-    info["layering"] = {"order": list(lay["order"]), "samples": gg.PUSH_SAMPLES,
-                        "knots_m": [r6(k) for k in lay["knots_m"]], "y_norm_m": PUSH_Y_NORM,
-                        "push": {g: {h: [r6(x) for x in v] for h, v in sorted(row.items())}
-                                 for g, row in sorted(lay["push"].items())},
-                        "short": {k: r6(v) for k, v in sorted(lay["short"].items())}}
     # ---- P54: the accessories, rigid on one bone each, clear of the whole wardrobe at the fullest build ---------
     # the rigid trophies keep clear of the skin at the fullest build; the rings move with it (build_accessories)
     wardrobe.push = (np.abs(vbuild[:, 0]) + np.abs(vbuild[:, 1])) * build_max
-    for aid, aob in gg.build_accessories(wardrobe).items():
+    ring_push = set()
+    # the W33 look lane: a ring's mesh sits on the bare skin; its push to its place over the shirt's or the armour's
+    # envelope rides in its colour's alpha, the layering table's rows for it as for a garment (gg.ring_push)
+    accessories = gg.build_accessories(wardrobe)
+    rings = [a for a in gg.ACCESSORY_ORDER if gg.ACCESSORIES[a]["slot"] != "belt"]
+    bare = gg.build_accessories(wardrobe, ring_slots=(), only=rings)
+    pushes = gg.ring_push(wardrobe, bare, {a: accessories[a] for a in rings})
+    for a in rings:
+        bpy.data.objects.remove(accessories[a], do_unlink=True)
+        accessories[a] = bare[a]
+        accessories[a].name = "Accessory_" + a
+    for aid, aob in accessories.items():
         spec = gg.ACCESSORIES[aid]
         name = aob.name
         A = mesh_arrays(aob)
@@ -1107,18 +1161,36 @@ def run(out_dir):
         A["corner_normal"] = [[tuple(A["vnormal"][v]) for v in f] for f in A["faces"]]
         bpy.data.objects.remove(aob, do_unlink=True)
         if spec["slot"] != "belt":
-            # a ring (the neck's, the arm's) takes the skin's build weights and the skin's normal under each vertex: the
-            # build sliders push it as they push the skin under it, so it keeps its place round a neck or an arm that
-            # swells or thins; a trophy hangs rigid (no push: it is placed clear of the fullest build)
+            # a ring (the neck's, the arm's) takes the skin's build weights: the build sliders push it as they push the
+            # skin under it, so it keeps its place round a neck or an arm that swells or thins; a trophy hangs rigid (no
+            # push: it is placed clear of the fullest build). The W33 look lane: the ring keeps its own round normals
+            # (with the skin's it shaded as a flat band) and carries the skin's normal, the line of its push, in its
+            # glTF's tangents (add_push_tangents; the cloth shader's push_tangent)
             A["vbuild"] = vbuild[near]
-            A["corner_normal"] = [[tuple(body_N[near[v]]) for v in f] for f in A["faces"]]
+            ring_push.add(name)
+            d, scale, rows = pushes[aid]
+            if scale > 0.0:
+                A["valpha"] = np.round(d / scale * 255.0) / 255.0
         acc = make_object(name, A, coll, rig, "giant_bone" if spec["detail"] == "bone" else "giant_metal",
                           region_any[near].clip(0))
         layer = 1 if spec["bone"].startswith("upperarm") else 2
         info["meshes"][name] = {"category": "accessory", "layer": layer, "dye": "none", "detail": spec["detail"],
                                 "tris": triangles(A), "verts": len(A["V"]), "slot": spec["slot"], "bone": spec["bone"],
                                 "color": spec["color"], "chains": [], "covers": []}
+        if name in ring_push:
+            info["meshes"][name]["push_tangent"] = True
+            d, scale, rows = pushes[aid]
+            if scale > 0.0:
+                info["meshes"][name]["push_m"] = r6(scale)
+                wardrobe.layering["push"][name] = rows
+                wardrobe.layering["order"].append(name)
         info.setdefault("accessories", {})[aid] = name
+    lay = wardrobe.layering
+    info["layering"] = {"order": list(lay["order"]), "samples": gg.PUSH_SAMPLES,
+                        "knots_m": [r6(k) for k in lay["knots_m"]], "y_norm_m": PUSH_Y_NORM,
+                        "push": {g: {h: [r6(x) for x in v] for h, v in sorted(row.items())}
+                                 for g, row in sorted(lay["push"].items())},
+                        "short": {k: r6(v) for k, v in sorted(lay["short"].items())}}
     # ---- P54: the head garments' cut of the hair (hides_hair "top": the length a style keeps under it) ---------
     for gid in gg.ORDER:
         spec = gg.GARMENTS[gid]
@@ -1156,6 +1228,8 @@ def run(out_dir):
     for mid in sorted(m for m in info["meshes"] if m not in core):
         rel = "%s/%s.glb" % (PARTS_DIR, mid)
         size = export_glb(os.path.join(out_dir, PARTS_DIR, mid + ".glb"), rig, [by_name[mid]], morph_normals=False)
+        if info["meshes"][mid].get("push_tangent"):
+            size = add_push_tangents(os.path.join(out_dir, PARTS_DIR, mid + ".glb"), kd, body_N, S)
         info["meshes"][mid]["file"] = rel
         info["parts"][mid] = rel
         info["glb_bytes"] += size
