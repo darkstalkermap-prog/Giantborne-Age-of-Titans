@@ -199,7 +199,8 @@ the game. Button prompts follow the last device you used (Settings → Button pr
 | Controls overlay | F1 or H | — |
 | Confirm on the death screen (load the last checkpoint; the sandbox restarts) | Enter | A |
 | **In the character creator:** change category | PageUp / PageDown | LB / RB |
-| Turn / zoom the giant | Q and E, or drag with the mouse / + and -, or the wheel | Right stick / LT and RT |
+| Turn / zoom the giant | Q and E, or drag with the mouse / + and -, or the wheel | Right stick left and right / right stick up and down |
+| Jump five rows / turn an option grid's pages | — / PageUp and PageDown | LT and RT |
 | Cycle the view (Full, Face, Back, Game view) | V | X |
 | Randomize the open category / undo | R / Ctrl+Z | Y / View |
 | Begin (New Game) or Keep this look (a shrine) | Ctrl+Enter | D-pad to the button, A |
