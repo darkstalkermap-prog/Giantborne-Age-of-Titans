@@ -616,3 +616,29 @@ func test_a_garment_s_own_dye_before_the_outfit_s_and_after_the_slot_s() -> void
 	assert_eq(greaves, iron, "a metal garment without its own takes the outfit's")
 	r.outfit.slots.armour.dye = "metal.steel"
 	assert_eq(plate.call(r), Color.html(str(Appearance.option("metal.steel").color)), "the slot's own dye wins")
+
+
+## Gate B (the M12 review's finding 5): the shrine's clothing line and the creator's Colours row name the dye a garment
+## is drawn in, in to_look's order (the slot's, the garment's own, the outfit's): the bronze breastplate in an iron
+## outfit read "bronze breastplate, iron" and its Colours row "Outfit's dye".
+func test_the_shrine_and_the_colours_row_name_a_garment_s_own_dye() -> void:
+	var r := Appearance.default_record()
+	r.outfit.slots.armour = {"item": "garment.bronze_breastplate", "dye": ""}
+	r.outfit.dyes.metal = "metal.iron"
+	r = Appearance.sanitize(r).record
+	var tab := load("res://ui/screens/shrine/appearance_tab.gd") as GDScript
+	var line := str(tab.call("clothing_line", r))
+	assert_true(line.contains("bronze breastplate, bronze"), "the shrine names the bronze it is drawn in: %s" % line)
+	assert_eq(Appearance.slot_dye_id(r.outfit.slots.armour, r.outfit.dyes), "metal.bronze", "the dye drawn")
+	var spec := {"key": "outfit.slots.armour.dye", "kind": "swatch", "set": "metal", "slot": "armour",
+		"item": "garment.bronze_breastplate"}
+	assert_eq(str((OptionRows.choices(spec, "")[0] as Dictionary).name), OptionRows.GARMENTS_OWN_DYE % "Bronze",
+		"the Colours row's first choice is its own dye")
+	r.outfit.slots.armour.dye = "metal.steel"
+	assert_true(str(tab.call("clothing_line", r)).contains("bronze breastplate, steel"), "the slot's own dye still wins")
+	r.outfit.slots.armour = {"item": "", "dye": ""}
+	r.outfit.slots.shins = {"item": "garment.greaves", "dye": ""}
+	r = Appearance.sanitize(r).record
+	assert_true(str(tab.call("clothing_line", r)).contains("greaves, iron"), "a garment without its own: the outfit's")
+	spec = {"key": "outfit.slots.shins.dye", "kind": "swatch", "set": "metal", "slot": "shins", "item": "garment.greaves"}
+	assert_eq(str((OptionRows.choices(spec, "")[0] as Dictionary).name), OptionRows.OUTFITS_DYE, "and its row says so")

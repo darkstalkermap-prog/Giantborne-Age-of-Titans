@@ -72,6 +72,8 @@ const HIDDEN_NOTE := "Hidden by your clothing"
 const SAME_AS_HAIR := "Same as hair"
 ## A slot's own dye that follows the outfit's dye of its material ("" in the record).
 const OUTFITS_DYE := "Outfit's dye"
+## Gate B: the "" choice of a slot's dye when its garment has its own dye (the bronze breastplate's bronze).
+const GARMENTS_OWN_DYE := "Its own: %s"
 const NONE := "None"
 ## The Outfit row once the slots are no outfit's.
 const CUSTOM := "Custom"
@@ -247,7 +249,9 @@ static func choices(spec: Dictionary, ancestry_id: String) -> Array:
 		"beard.color":
 			out.append({"id": "", "name": SAME_AS_HAIR, "locked": false, "reason": "", "same": true})
 	if key.begins_with("outfit.slots.") and key.ends_with(".dye"):
-		out.append({"id": "", "name": OUTFITS_DYE, "locked": false, "reason": "", "same": true})
+		var own := Appearance.garment_dye(str(spec.get("item", "")))
+		var own_name := GARMENTS_OWN_DYE % str(Appearance.option(own).get("name", own)) if own != "" else OUTFITS_DYE
+		out.append({"id": "", "name": own_name, "locked": false, "reason": "", "same": true})
 	if set_name in ["tattoo", "paint", "garment", "accessory"]:
 		out.append({"id": "", "name": NONE, "locked": false, "reason": ""})
 	elif set_name == "bead":

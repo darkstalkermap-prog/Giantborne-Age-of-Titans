@@ -694,6 +694,27 @@ static func _slots_readable(slots: Variant) -> bool:
 
 ## A slot's dye: a dye (or a metal for a metal garment) that fits the garment's material, else "" (the outfit's
 ## dye of that material). A fur takes none; an empty slot keeps none.
+## The dye id a worn slot `s` ({item, dye}) is drawn in with the outfit's `dyes`: the slot's own dye (the player's
+## per-piece colour), else the garment's own (the W33 look lane: the bronze breastplate is bronze whatever the outfit's
+## metal), else the outfit's dye of its material. "" for none (a fur, no garment). to_look draws it; the shrine's
+## summary and the creator's Colours rows name it (Gate B).
+static func slot_dye_id(s: Dictionary, dyes: Dictionary) -> String:
+	var g := option(str(s.get("item", "")))
+	if g.is_empty():
+		return ""
+	if str(s.get("dye", "")) != "":
+		return str(s.dye)
+	var own := garment_dye(str(s.item))
+	if own != "":
+		return own
+	return str(dyes.get(DYE_OF_MATERIAL.get(str(g.get("material", "cloth")), ""), ""))
+
+
+## The garment `item`'s own dye of its material's palette ("" when it names none: it takes the outfit's).
+static func garment_dye(item: String) -> String:
+	return _slot_dye(item, str(option(item).get("dye", ""))) if item != "" else ""
+
+
 static func _slot_dye(item: String, dye: String) -> String:
 	if item == "" or dye == "":
 		return ""
@@ -832,10 +853,7 @@ static func to_look(record: Variant, ancestry_id := "") -> Dictionary:
 		if g.is_empty():
 			continue
 		var material := str(g.get("material", "cloth"))
-		# the slot's own dye (the player's per-piece colour), else the garment's own (the W33 look lane: the bronze
-		# breastplate is bronze whatever the outfit's metal), else the outfit's dye of its material
-		var own := _slot_dye(str(s.item), str(g.get("dye", "")))
-		var dye_id := str(s.dye) if str(s.dye) != "" else (own if own != "" else str(dyes.get(DYE_OF_MATERIAL.get(material, ""), "")))
+		var dye_id := slot_dye_id(s, dyes)
 		var dye := FUR_COLOR if not DYE_SET.has(material) else _color(option(dye_id), "color", FUR_COLOR)
 		(look.garments as Array).append({"mesh": str(g.get("mesh", "")), "dye": dye, "kind": material})
 	for slot: String in ACCESSORY_SLOTS:
