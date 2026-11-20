@@ -86,6 +86,7 @@ varying float v_thin;
 varying float v_curv;
 varying flat int v_region;
 varying float v_tsign;
+varying float v_down;
 
 #include "res://assets/shaders/giant_first_person.gdshaderinc"
 varying vec3 v_fp_pos;
@@ -94,12 +95,32 @@ varying flat float v_fp_on;
 void vertex() {
 	v_region = clamp(int(COLOR.r * 16.0), 0, 15);
 	v_tsign = COLOR.a * 2.0 - 1.0;
+	v_down = -(MODEL_MATRIX * vec4(NORMAL, 0.0)).y;
 	v_fp_pos = VERTEX;
 	VERTEX += NORMAL * dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m;   // P53: the build sliders
 	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(v_region);
 	if (((hidden_regions >> v_region) & 1) == 1) {
 		VERTEX -= NORMAL * hide_shrink;
 	}
+}
+
+const vec2 SCAR_CORE = vec2(0.34, 0.72);   // the third look lane: the scar's coverage drawn as healed tissue
+const float SCAR_RIM_DARK = 0.12;           // ... and its rim's darkening
+const float NECK_SHADOW_SOFT = 0.6;         // the third look lane: the share of a shadow on the neck left out
+const float PAINT_SMEAR_UV = 0.014;         // the third look lane: how far war paint's border wanders (UV)
+
+// Smooth 3D value noise in [0, 1] (the third look lane: war paint's strokes, pores and edges, in the rest position).
+float hash3(vec3 p) {
+	p = fract(p * vec3(0.1031, 0.1030, 0.0973));
+	p += dot(p, p.yxz + 33.33);
+	return fract((p.x + p.y) * p.z);
+}
+float vnoise(vec3 p) {
+	vec3 i = floor(p);
+	vec3 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(mix(hash3(i), hash3(i + vec3(1, 0, 0)), f.x), mix(hash3(i + vec3(0, 1, 0)), hash3(i + vec3(1, 1, 0)), f.x), f.y),
+		mix(mix(hash3(i + vec3(0, 0, 1)), hash3(i + vec3(1, 0, 1)), f.x), mix(hash3(i + vec3(0, 1, 1)), hash3(i + vec3(1, 1, 1)), f.x), f.y), f.z);
 }
 
 vec4 channel_mask(int ch) {
@@ -160,7 +181,16 @@ void fragment() {
 	vec4 m = texture(mask_tex, UV);
 	// the hair's colours on the skin: stubble and the skin under the beard (the beard's), the scalp under
 	// a hairstyle and the brows (the hair's)
-	base = mix(base, base * mix(vec3(1.0), beard_color * 2.2, 0.85), clamp(m.r * stubble, 0.0, 1.0) * 0.75);
+	// the third look lane: stubble is the beard's hair cut at the skin - fine dark points of its colour over the skin,
+	// not a tint (the skin times the beard's colour read as an orange-red stain)
+	float stub = clamp(m.r * stubble, 0.0, 1.0);
+	if (stub > 0.0) {
+		float dots = smoothstep(0.35, 0.8, vnoise(v_fp_pos * 1400.0)) * 0.6 + smoothstep(0.3, 0.7, vnoise(v_fp_pos * 380.0)) * 0.4;
+		vec3 cut = mix(beard_color * 0.7, base * 0.5, 0.35);
+		// (under a beard's cards the skin keeps the beard's shade, so no skin shows between them)
+		float under = clamp(beard_tint, 0.0, 1.0);
+		base = mix(base, cut, stub * mix(0.18 + 0.5 * dots, 0.75, under));
+	}
 	base = mix(base, hair_color * 0.8, clamp(m.g * scalp_tint, 0.0, 1.0));
 	base = mix(base, beard_color * 0.8, clamp(smoothstep(0.2, 0.7, m.r) * beard_tint, 0.0, 1.0));
 	base = mix(base, hair_color * 0.9, clamp(m.b * brows, 0.0, 1.0) * 0.85);
@@ -169,8 +199,23 @@ void fragment() {
 	base = mix(base, base * mix(vec3(1.0), tattoo_ink * 2.0, 0.85), tattoo * 0.92);
 	float mark = design_coverage(region_mark[v_region], UV);
 	base = mix(base, base * mix(vec3(1.0), mark_color * 2.0, 0.85), mark * 0.9);
-	float paint = design_coverage(region_paint[v_region], UV);
-	base = mix(base, paint_color, paint * 0.92);
+	// the third look lane: war paint is a pigment smeared on by hand, not a flat mask - semi-opaque, the skin showing
+	// through at the pores and along the strokes, its borders uneven and smeared (the design's soft edge cut at a
+	// noisy level), its tone varying along the strokes; matte (below)
+	float paint = 0.0;
+	vec3 q = v_fp_pos;
+	// (sampled a little off its place by a smooth noise: the border wanders as a hand smears it)
+	vec2 smear = (vec2(vnoise(q * 20.0), vnoise(q * 20.0 + 7.31)) - 0.5) * PAINT_SMEAR_UV;
+	float paint_raw = design_coverage(region_paint[v_region], UV + smear);
+	if (paint_raw > 0.0) {
+		float edge_n = vnoise(q * 34.0) * 0.6 + vnoise(q * 105.0) * 0.4;
+		float streak = vnoise(vec3(q.x * 12.0, q.y * 150.0, q.z * 28.0));
+		float pores = vnoise(q * 480.0);
+		float cover = smoothstep(0.08 + 0.55 * edge_n, 0.38 + 0.55 * edge_n, paint_raw);
+		paint = cover * mix(0.5, 0.84, smoothstep(0.2, 0.8, streak)) * mix(0.6, 1.0, smoothstep(0.25, 0.6, pores));
+		vec3 pigment = paint_color * mix(0.84, 1.04, streak);
+		base = mix(base, pigment, paint);
+	}
 	// scars: paler, glossier, raised (one RGBA layer of the design array)
 	vec3 nm = texture(normal_tex, UV).rgb * 2.0 - 1.0;
 	nm.xy *= normal_detail;   // the baked relief, eased: the low sun drew the forehead's lines as ridges
@@ -194,14 +239,19 @@ void fragment() {
 		// healed tissue: paler and pinker than the skin around it, whatever the tone (P46: the floor's
 		// scars did not read at the game camera); the second look lane: less saturated, not oranger (the skin's
 		// own colour times 1.5 in red read as an orange stripe), and lighter on dark skin than on pale
+		// the third look lane: narrower (the feathered coverage's middle) and gentler - a little paler and pinker than
+		// the skin round it, with a thin darker rim where the tissue puckers (it read as a white paint smear)
 		float lum = dot(base, vec3(0.2126, 0.7152, 0.0722));
-		vec3 healed = mix(base, vec3(lum), 0.55) * vec3(1.5, 1.27, 1.3) + vec3(0.09, 0.055, 0.06);
-		base = mix(base, healed, min(sc * 1.1, 1.0));
+		vec3 healed = mix(base, vec3(lum), 0.3) * vec3(1.2, 1.06, 1.09) + vec3(0.035, 0.012, 0.02);
+		float scar_core = smoothstep(SCAR_CORE.x, SCAR_CORE.y, sc);
+		float scar_rim = smoothstep(0.12, 0.32, sc) * (1.0 - smoothstep(SCAR_CORE.x, SCAR_CORE.y, sc));
+		base = mix(base, healed, scar_core) * (1.0 - SCAR_RIM_DARK * scar_rim);
+		sc = scar_core;
 	}
 	ALBEDO = base * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	NORMAL_MAP = normalize(nm) * 0.5 + 0.5;
-	ROUGHNESS = clamp(mix(orm.g * rough_scale, 0.3, sc * 0.6), 0.0, 1.0);
-	SPECULAR = 0.35;
+	ROUGHNESS = clamp(mix(mix(orm.g * rough_scale, 0.3, sc * 0.6), 0.9, paint), 0.0, 1.0);
+	SPECULAR = mix(0.35, 0.2, paint);
 	AO = orm.r;
 	AO_LIGHT_AFFECT = 0.25;
 	EMISSION = flash + mark_color * mark_glow * mark;
@@ -211,6 +261,10 @@ void fragment() {
 
 void light() {
 	float ndl = dot(NORMAL, LIGHT);
+	// the third look lane: the neck and the jaw's underside take the jaw's shadow softly (the shadow proxy has no face keys and a coarse jaw:
+	// its hard shadow read as a dark patch under every bare jaw, a wedge at the chin key's -1)
+	float soft = v_region == 2 ? NECK_SHADOW_SOFT : (v_region == 1 ? NECK_SHADOW_SOFT * smoothstep(0.0, 0.5, v_down) : 0.0);
+	float att = mix(ATTENUATION, 1.0, soft);
 	vec3 diff;
 	if (light_model == 0) {
 		diff = vec3(clamp(ndl, 0.0, 1.0));
@@ -220,7 +274,7 @@ void light() {
 	} else {
 		diff = clamp((vec3(ndl) + wrap) / (1.0 + wrap), vec3(0.0), vec3(1.0));
 	}
-	DIFFUSE_LIGHT += diff * ATTENUATION * LIGHT_COLOR / PI;
+	DIFFUSE_LIGHT += diff * att * LIGHT_COLOR / PI;
 	if (light_model >= 2) {
 		float back = pow(clamp(dot(VIEW, -LIGHT), 0.0, 1.0), 4.0);
 		float rim = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 2.0);
@@ -232,5 +286,5 @@ void light() {
 	float a2 = r * r * r * r;
 	float d = a2 / (PI * pow(ndh * ndh * (a2 - 1.0) + 1.0, 2.0));
 	float f = 0.028 + 0.972 * pow(1.0 - clamp(dot(h, VIEW), 0.0, 1.0), 5.0);
-	SPECULAR_LIGHT += vec3(d * f * 0.25) * clamp(ndl, 0.0, 1.0) * ATTENUATION * LIGHT_COLOR / PI;
+	SPECULAR_LIGHT += vec3(d * f * 0.25) * clamp(ndl, 0.0, 1.0) * att * LIGHT_COLOR / PI;
 }
