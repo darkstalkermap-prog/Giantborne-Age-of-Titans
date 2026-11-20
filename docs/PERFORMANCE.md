@@ -2793,6 +2793,36 @@ So over the day the release build failed 3 runs of 5 and Gate A's merge 1 of 3, 
 600 at a different time, and both builds pass and fail. This reads as the recorder's placing on a machine whose frames
 run to a second, not as a change the second fix round made; it is not proven, and the row in `FOLLOWUPS.md` stays open.
 
+### M11 W33: Web and performance for the wardrobe (P57)
+
+Interim (before the look lane's merge; taken again on the final head). The giant's rows of plan §2.12 with the
+wardrobe and the catalogue II. Method: `tools/build_web.sh --version=0.12.0-m12` (under the shared heavy-work lock);
+`tools/web/creator_check.mjs` on that build (960x540, SwiftShader); `wardrobe_render_probe.tscn --budget` under Xvfb
+at 1920x1080 (the Wanderer and the fullest look of the data: the Huscarl's mail, ten garments, an iron torc, an iron
+arm ring, a drinking horn; the camera three-quarter from the front); `--ui-probe=level --ui-probe-bench --mode=valley
+--new-game --appearance=<preset> --graphics=low` under Xvfb at 1280x720 (the Valley, two runs each, the 1-minute load
+1.7-1.9 from the other lane). Details in `docs/systems/P57.md`.
+
+| Row (plan §2.12) | Budget | Measured | Status |
+| --- | --- | --- | --- |
+| `PCK_SIZE` | 32 MB at -m12 | 31,935,256 bytes shipped, 30.46 MB, 3 parts of 10,645,086 | met |
+| `GIANT_SHARE` | 13.6 MiB | 13,957,700 bytes shipped, 13.31 MiB, 184 files | met, 0.29 MiB to spare |
+| The creator's first frame on the Web | 3x the median | 0.17x and 0.23x (0 shaders compiled; base build 2.47x here) | met |
+| A part's first show in the creator on the Web (`pick`) | 3x | 0.65-0.94x (a part's load 1-11 ms) | met |
+| The thumbnails on the Web | 3x | a grid's first frame 9.7-197x, the read-back of a picture 0.7-3.9 s | not met: the Web shows names (plan §2.7's rule) |
+| The giant's draw calls at `low`, a typical preset | 14 | the Wanderer 9 (the Valley), 6 in the probe's main pass | met |
+| The giant's draw calls, the fullest look | 24 | 20 (the Valley, the Huscarl), 22 at the default quality; 16 in the probe's main pass | met |
+| Draw calls in the Valley's view at `low` | 250 | 112 (the Wanderer), 123 (the Huscarl) | met |
+| The giant's primitives at 4 m, the fullest look | 70,000 | 34,592 (1920x1080, LODs); 57,722 triangles at full detail (P54) | met |
+| The giant's primitives beyond 120 m | 4,000 | the Wanderer 10,958 at 121 and 130 m (the long hair 5,942: its cards keep every triangle at every LOD; the full beard 1,848; the limbs 1,894); the fullest look 15,828 | **not met** (M10's gate: 3,920) |
+| The crop's shell stack | (measured) | the whole giant with the crop 27,176 / 19,066 / 7,376 primitives at 30 / 60 / 120 m | recorded |
+| Texture memory, the giant | 9 MB | 4.85 MB at the web tier; 6.95 MB with the hi tier's maps added | met |
+| Mesh buffers in play | 4.5 MB | the Wanderer 1.90 MB, the fullest look 2.59 MB (recent parts 0.07-0.76 MB apart) | met |
+| The skin's CPU natively with secondary motion | 0.15 ms | the Wanderer 0.167-0.170 ms (2 chains), the Huscarl 0.180 ms (7 chains: the long cloak's three) at a load of 1.8 | **not met at this load** (Gate A 0.136-0.144 at 0.3-2.2); taken again quiet |
+| The skin's CPU on the Web | 0.45 ms | 0.2385-0.277 ms with the springs (the Wanderer); 0.1735-0.384 without | met |
+| The Web page's peak renderer memory | 1.4 GB | 1,047 and 1,152 MB | met |
+| A whole look applied (`test_giant_preview`) | 1 ms | 0.32 ms (was 1.04-1.5) | met |
+
 ## Reference PC results (owner: NOT RUN)
 
 | Run | Machine (CPU, GPU, driver) | Frame ms p50 / p95 / p99 | GPU ms p50 / p95 | CPU render ms p95 | Sim CPU per tick p95 / p99 | Draw calls max | Exit code |
