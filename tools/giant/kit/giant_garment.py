@@ -84,6 +84,7 @@ BRAIES_SEAT_TOP = -0.02     # the third look lane: the braies' seat spans the hi
 BRAIES_CLEFT_OVER = 0.07    # ... and over the cleft this much higher (under a shirt's hem)
 BRAIES_OUTER_SLIM = 0.5     # the fifth look lane: the share of the braies' ease taken off their outer side
 BRAIES_UV_SCALE = 11.0    # the third look lane: the body's UV density over the tights helper's (0.347 / 0.031 a metre)
+TOE_SMOOTH_ITERS = 24       # the body's proportions: how far the foot under a boot's toes is smoothed
 BOOTS_TRIANGLES = 2500    # the research boots had 4,688 triangles (dense toes): decimated toward this
 
 # ---- slots (plan M11 §2.6) ---------------------------------------------------------------------------------
@@ -1172,6 +1173,31 @@ class Wardrobe:
                 self.note(gid, slot, ids, hmax + MAPPED_MARGIN_M)
         return ob
 
+    def toe_foot(self, toes, it=TOE_SMOOTH_ITERS):
+        """The body's points and normals with the toes (weight ``toes``) smoothed into one rounded foot, and the
+        offsets (human m) that foot needs to clear the real toes (the body's proportions: a shell displaced off the
+        toes themselves stood off further than they are round and folded over itself, a seventh of a boot inverted)."""
+        V, N = self.V, self.N
+        w = np.clip(np.asarray(toes, np.float64) * 2.0, 0.0, 1.0)
+        Vs = V.copy()
+        for _ in range(it):
+            L = np.column_stack([smooth_field(Vs[:, c], self.faces, self.n, 1) for c in range(3)])
+            Vs = Vs + (L - Vs) * w[:, None]
+        Ns = vnormals(Vs, self.faces)
+        Ns = N * (1.0 - w[:, None]) + Ns * w[:, None]
+        Ns /= np.maximum(np.linalg.norm(Ns, axis=1, keepdims=True), 1e-9)
+        # how far the real skin stands out past the smoothed foot, near each point (its ring's most)
+        e = np.concatenate([self.faces[:, [0, 1]], self.faces[:, [1, 2]], self.faces[:, [2, 3]], self.faces[:, [3, 0]]])
+        e = np.concatenate([e, e[:, ::-1]])
+        lift = np.maximum(np.einsum("ij,ij->i", V - Vs, Ns), 0.0)
+        ring = lift.copy()
+        np.maximum.at(ring, e[:, 0], np.maximum(np.einsum("ij,ij->i", V[e[:, 1]] - Vs[e[:, 0]], Ns[e[:, 0]]), 0.0))
+        # (spread over a few rings and smoothed: a lift vertex by vertex folded the cloth between the toes)
+        for _ in range(3):
+            np.maximum.at(ring, e[:, 0], ring[e[:, 1]])
+        ring = smooth_field(ring, self.faces, self.n, 8)
+        return Vs, Ns, ring * w
+
     def toe_box(self, off, sel, slice_d=0.015, most=0.03):
         """Offsets (stage-1 m) of a foot's shell raised over ``sel`` to the convex hull of each cross-section across
         the foot (slices along y, each side's foot apart), along the normal's part in the section (the fifth look lane)."""
@@ -1679,13 +1705,23 @@ class Wardrobe:
         # over them (they showed through the tips)
         toes = sstep(self.J["joint-l-ankle"][1] - 0.05 - self.V[:, 1], 0.0, 0.05) * (z < ankle)
         off = (0.014 + BOOT_TOE_M * toes) * self.S
-        # the fifth look lane: over the toes the boot spans each 1.5 cm cross-section's convex hull (a toe box: the
-        # toes showed through its tip one by one)
-        boxed = self.toe_box(off, keep & (toes > 0.05), most=0.02)
-        # (eased over the foot: raised vertex by vertex the box folded the cloth over itself between the toes)
-        off = np.where(toes > 0.02, smooth_field(boxed, self.faces, self.n, 8), off)
-        self.add_shell("boots", keep, np.full(self.n, 1.0) * off, snaps=[self.zsnap(ankle + 0.5 * (knee - ankle))],
-                       mat="giant_leather", allowance=DECIMATE_MARGIN_M, bridge=SKIRT_BRIDGE_ITERS)
+        # the body's proportions: over the toes the shell stands off a smoothed, rounded foot (displaced off the toes
+        # themselves it folded over itself and tore at the tips)
+        V0, N0 = self.V, self.N
+        Vs, Ns, lift = self.toe_foot(toes)
+        self.V, self.N = Vs, Ns
+        try:
+            off = off + lift * self.S
+            # the fifth look lane: over the toes the boot spans each 1.5 cm cross-section's convex hull (a toe box:
+            # the toes showed through its tip one by one)
+            boxed = self.toe_box(off, keep & (toes > 0.05), most=0.02)
+            # (eased over the foot, and blended in over the instep: switched on at once it creased the cloth)
+            sm = smooth_field(np.where(toes > 0.0, boxed, off), self.faces, self.n, 12)
+            off = off + (np.maximum(sm, off) - off) * sstep(toes, 0.0, 0.3)
+            self.add_shell("boots", keep, np.full(self.n, 1.0) * off, snaps=[self.zsnap(ankle + 0.5 * (knee - ankle))],
+                           mat="giant_leather", allowance=DECIMATE_MARGIN_M, bridge=SKIRT_BRIDGE_ITERS)
+        finally:
+            self.V, self.N = V0, N0
 
     def g_wrapped_sandals(self):
         B, z, N, V = self.B, self.z, self.N, self.V
