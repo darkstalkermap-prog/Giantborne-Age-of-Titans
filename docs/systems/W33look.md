@@ -113,4 +113,30 @@ rendered grid are now M10's veteran and chieftain (7.5 % of the frame), not the 
 
 ## Checks
 
-See the final section (filled in from the runs on the head commit).
+- **The giant's regeneration**: `build_giant.py --verify --skip-bake`: GIANT VERIFY OK, 88 files regenerated bit-exact
+  (98-102 s). No bake input changed (the body, its UVs, the skin code, the bake settings, `pack.py`), so `--giant-full`
+  was not needed. `test_giant_tools.py`: 40 tests OK (about 4 s).
+- **The share** (`env -u XDG_DATA_HOME tools/build_web.sh --version=0.12.0-m12`, the version string unchanged):
+  `PCK_SIZE shipped=31383912 shipped_mb=29.93 budget_mb=32 parts=3` (30.44 on the base) and
+  `GIANT_SHARE shipped=13405208 shipped_mib=12.78 cap_mb=13.6` (13.31 on the base): 0.53 MiB less - the parts'
+  skeletons out (about 0.66), the garments' UV2, push alphas and the layering table in (about 0.13).
+  `build_giant.py --budget`: 13.26 MiB estimated (10.78 before: the keys were not counted).
+- **The full check** (`tools/check.sh --build --slow --gate --giant --web-tools --require --strict-times`, on the
+  lane's last asset commit, beside the other lane's runs, which the lock kept apart): `TIMES: default 66.7 s | slow
+  432.6 s | gate 1029.3 s`; `RESULT: 354 suites, 70222 checks, 1 failures` - the known one on the base,
+  `test_giant_preview` "a whole look is applied in under 1 ms" (1.101 ms; 1.04-1.08 on the base under the same load). A
+  bench of `GiantPreview.apply_look` (60 rounds, the same look): median 1.08-1.09 ms with this lane's GiantLook against
+  1.05-1.08 with the base's, the layering lookup about 0.02 ms (cached per index; only changed pushes are set).
+- **The soak** (`--autoplay=120`, the check's step, run on its own since the check stops at the failing suite): 41
+  attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 frames, 0 errors - the baseline.
+- **The rendered suites**: `test_wardrobe_render` (no z-fighting in the fullest look's flat colours),
+  `test_catalogue_render` (every preset distinct; the likest now 7.5 %) and `test_giant_parts_render` pass.
+- **The fullest slot look**: the shells' least distance over the four poses 5.4 mm (floor 4); mesh buffers 2.01 MB the
+  fullest look (budget 4.5).
+
+## Frames
+
+The lane's captures (not committed): the review sheets of every outfit before and after, the single looks (the belt on
+the braies, the hauberk over a shirt at the game camera, the cloaks alone and over armour, the rings bare and over a
+sleeve, the beads in the creator's light, the hood and the horned helm, fur, the circlet). They are reproduced by
+`tests/support/wardrobe_render_probe.tscn -- --review --out=<folder> [--looks=...] [--closeups]`.
