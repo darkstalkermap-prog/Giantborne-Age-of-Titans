@@ -20,8 +20,9 @@ extends Node
 
 const TAG := "CREATOR_PROBE "
 const WATCHDOG_S := 240.0
-## Frames a grid is given for its thumbnails (12 a page at one a frame, and the read-back's frame).
-const GRID_FRAMES := 40
+## Frames a grid is given for its thumbnails (12 a page at one a frame, and the read-back's frame; P57: the parts a
+## picture shows are loaded ahead of it, one a frame - an outfit's up to ten).
+const GRID_FRAMES := 160
 
 var out_dir := "user://m11_frames/P55/"
 var shots := false
@@ -99,7 +100,7 @@ func _run() -> void:
 		after_frames = 6
 		for case: Array in [["Clothing", "outfit.slots.armour.item", "grid_armour"], ["Tattoos", "tattoos.arms", "grid_tattoo_arms"]]:
 			await _grid(case[0], case[1], case[2])
-		report["thumbnails"] = {"made": c.thumbnails.made, "rendered": c.thumbnails.rendered, "flat": c.thumbnails.flat,
+		report["thumbnails"] = {"made": c.thumbnails.made, "rendered": c.thumbnails.rendered,
 			"most_in_a_frame": c.thumbnails.most_in_a_frame}
 		_finish()
 		return
@@ -122,7 +123,8 @@ func _run() -> void:
 	# grids: a clothing slot, the outfits, the hair styles, a tattoo region, an accessory slot
 	for case: Array in [["Clothing", "outfit.slots.chest.item", "21_grid_chest"], ["Clothing", "outfit.slots.armour.item",
 			"22_grid_armour"], ["Clothing", "outfit.set", "23_grid_outfits"], ["Hair", "hair.style", "24_grid_hair"],
-			["Tattoos", "tattoos.arms", "25_grid_tattoo_arms"], ["Accessories", "outfit.accessories.neck", "26_grid_neck"]]:
+			["Tattoos", "tattoos.arms", "25_grid_tattoo_arms"], ["Accessories", "outfit.accessories.neck", "26_grid_neck"],
+			["Accessories", "outfit.accessories.belt", "32_grid_belt"], ["War paint", "paint.face", "33_grid_paint_face"]]:
 		await _grid(case[0], case[1], case[2])
 	# the second page of the hair styles (the catalogue has more than a page), the material filter
 	c.show_category("Clothing")
@@ -153,7 +155,7 @@ func _run() -> void:
 	await _frames(3)
 	await _shot("31_question")
 	c.keep_editing()
-	report["thumbnails"] = {"made": c.thumbnails.made, "rendered": c.thumbnails.rendered, "flat": c.thumbnails.flat,
+	report["thumbnails"] = {"made": c.thumbnails.made, "rendered": c.thumbnails.rendered,
 		"most_in_a_frame": c.thumbnails.most_in_a_frame}
 	_finish()
 
@@ -201,7 +203,7 @@ func _grid(category: String, key: String, shot_name: String) -> void:
 		"with_thumbnail": shown, "frames": n, "frames_ms": frames_ms, "median_after_ms": after[after.size() / 2],
 		"worst_ms": frames_ms.max() if not frames_ms.is_empty() else 0.0, "work_ms": work,
 		"most_in_a_frame": c.thumbnails.most_in_a_frame, "off_page": off_page, "pages": c.grid.pages(),
-		"cell_px": c.grid.cell_px(), "design": c.thumbnails.design_timings.duplicate(),
+		"cell_px": c.grid.cell_px(), "thumb_px": c.thumbnails.size,
 		"focus": str(get_viewport().gui_get_focus_owner().name) if get_viewport().gui_get_focus_owner() != null else ""}
 	await _shot(shot_name)
 	c.close_grid()

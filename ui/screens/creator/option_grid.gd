@@ -397,6 +397,30 @@ func focus_rows() -> Array:
 	return out
 
 
+## P57: the visible cells' lines wrap up and down among themselves (CreatorScreen.refresh_focus calls it after the
+## screen's rows are linked): Up from the first line goes to the last, Down from the last to the first.
+func wrap_cell_lines() -> void:
+	var lines: Array = []
+	for r in ROWS:
+		var line: Array = []
+		for c in COLS:
+			var b: Button = cells[r * COLS + c]
+			if UiNav.focusable(b):
+				line.append(b)
+		if not line.is_empty():
+			lines.append(line)
+	if lines.size() < 2:
+		return
+	var top: Array = lines[0]
+	var bottom: Array = lines[lines.size() - 1]
+	for i in top.size():
+		var b: Button = top[i]
+		b.focus_neighbor_top = b.get_path_to(bottom[mini(i, bottom.size() - 1)])
+	for i in bottom.size():
+		var b: Button = bottom[i]
+		b.focus_neighbor_bottom = b.get_path_to(top[mini(i, top.size() - 1)])
+
+
 ## Shows the record's value (the gold border) without moving anything.
 func show_selected(id: String) -> void:
 	selected = id

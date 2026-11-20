@@ -63,10 +63,17 @@ func focus_rows() -> Array:
 ## Returns the rows kept (focusable controls only).
 func refresh_focus() -> Array:
 	var kept := UiNav.link_rows(focus_rows())
+	focus_linked()
 	focus_dirty = true
 	if is_inside_tree() and (stack == null or not is_instance_valid(stack) or stack.top() == self):
 		UiNav.keep_focus(self)
 	return kept
+
+
+## P57: after focus_rows() were linked (here and by the stack once laid out): a screen may change a neighbour the rows
+## do not say (the creator's grid wraps its cell lines).
+func focus_linked() -> void:
+	pass
 
 
 ## After the screen was added and shown (its _ready has run).

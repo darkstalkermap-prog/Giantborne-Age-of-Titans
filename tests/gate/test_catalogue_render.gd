@@ -10,6 +10,8 @@ extends TestSuite
 ##   * every preset is valid and drawn distinct from every other (at least MIN_PRESET_DIFF of the frame differs).
 ## The beard roots' 2 mm against the keyed skin and the base shape are the tools' tests (tools/giant/test_giant_tools.py
 ## CatalogueTest, FreezeTest). Without xvfb-run it is skipped with a note.
+## P57 (plan M11 §1.7 rule 3: rendered option checks run in the gate tier): moved from tests/slow/, unchanged (about
+## 12 s, over the slow tier's 5 s a suite); run it with `--gate --filter=_render` before merging a change of the looks.
 
 const PROBE := "res://tests/support/catalogue_render_probe.tscn"
 const CHILD_TIMEOUT_S := 150

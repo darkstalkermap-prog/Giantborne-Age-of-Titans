@@ -604,7 +604,7 @@ func _finish() -> void:
 		result["capture_m10"] = {"shots": _capture_m10.shots, "notes": _capture_m10.notes, "complete": _capture_m10.done}
 		_capture_m10.dispose()
 	if _capture_m11 != null:
-		result["capture_m11"] = {"part": CaptureM11.PART, "shots": _capture_m11.shots, "notes": _capture_m11.notes,
+		result["capture_m11"] = {"part": CaptureM11.part(), "shots": _capture_m11.shots, "notes": _capture_m11.notes,
 			"complete": _capture_m11.done, "measures": _capture_m11.measures}
 		_capture_m11.dispose()
 	if is_bot_scenario(_scenario) and ValleyBot.run != null:
@@ -818,15 +818,14 @@ func _run_capture_m10(dt: float) -> void:
 		_finish()
 
 
-## P50: the M11 capture tour, part A (CaptureM11); the run ends with it. Only part A exists in this wave
-## (--part=b and c are P57's and P64's): another part ends the run with a note.
+## P50: the M11 capture tour, part A (CaptureM11); the run ends with it. P57: part B too (--part=b); part C is
+## P64's: a part this build does not have ends the run with a note.
 func _run_capture_m11(dt: float) -> void:
 	if _capture_m11 == null:
 		_capture_m11 = CaptureM11.new(self)
-		for arg in OS.get_cmdline_user_args():
-			if arg.begins_with("--part=") and arg.substr(7) != CaptureM11.PART:
-				_capture_m11.notes.append("part %s is not in this build (only part a)" % arg.substr(7))
-				_capture_m11.done = true
+		if CaptureM11.part() == "":
+			_capture_m11.notes.append("that part is not in this build (only parts %s)" % ", ".join(CaptureM11.PARTS))
+			_capture_m11.done = true
 	if _capture_m11.step(player, dt):
 		get_tree().paused = false
 		_finish()

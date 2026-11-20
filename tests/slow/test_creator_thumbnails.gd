@@ -5,7 +5,7 @@ extends TestSuite
 ##     at once, a closed grid makes nothing, nothing is made while the screen opens.
 ##   * Rendered: tests/support/creator_probe.tscn (--quick, the test catalogue) in a child Godot under Xvfb at
 ##     640x360 (the Compatibility renderer, two llvmpipe threads): a clothing slot's grid, the outfits, a tattoo region
-##     (flat pictures of the designs) - every visible option gets its picture, none off the page, never two in a
+##     (P57: the designs drawn on the giant too) - every visible option gets its picture, none off the page, never two in a
 ##     frame, no engine or shader error; the frames while they are made against the frames after are reported (the
 ##     thumbnails' cost; the creator's first frame is creator_check.mjs's). Frames: user://m11_frames/P55/grid_*.png.
 ## Without xvfb-run the rendered part is skipped with a note.
@@ -167,5 +167,5 @@ func test_rendered_thumbnails_for_the_visible_page_one_a_frame() -> void:
 			[key, during, after])
 		lines.append("%s %d in %d frames, %.1f ms a frame against %.1f after (worst %.1f), own work at most %.1f ms" % [key,
 			int(g.made), int(g.frames), during, after, float(g.worst_ms), (g.work_ms as Array).max()])
-	assert_true(int(r.thumbnails.flat) > 0, "the tattoos are flat pictures of their designs (%d)" % int(r.thumbnails.flat))
+	assert_eq(int(r.thumbnails.rendered), int(r.thumbnails.made), "every picture is drawn on the giant (%d)" % int(r.thumbnails.made))
 	print("    test_creator_thumbnails: %s; on %s" % ["; ".join(lines), str(r.adapter)])

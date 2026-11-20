@@ -70,55 +70,10 @@ func test_every_option_of_the_data_applies_with_validate_empty() -> void:
 	GiantLook.build_materials(_root, index, "web")
 	assert_eq(GiantLook.materials(_root).size(), (index.get("meshes", {}) as Dictionary).size(),
 		"every index mesh has its own material")
-	var n := 0
-	for c: String in Appearance.CATEGORIES:
-		for id: String in Appearance.option_ids(c):
-			var o := Appearance.option(id)
-			var line := Appearance.required_ancestry(o)
-			var r := Appearance.default_record()
-			match c:
-				"skin", "eyes":
-					r[c] = id
-				"hair":
-					r.hair.style = id
-				"haircolor":
-					r.hair.color = id
-				"beard":
-					r.beard.style = id
-				"tattoo":
-					r.tattoos[str(o.region)] = id
-				"ink":
-					r.tattoos.arms = "tattoo.arm_bands"
-					r.tattoos.ink = id
-				"paint":
-					r = Appearance.with_paint(r, id)   # P53: the paint in its place (face or body)
-				"paintcolor":
-					r = Appearance.with_paint(r, "paint.face_stripes")
-					r.paint.color = id
-				"scar":
-					r.scars = [id]
-				"outfit":
-					r = Appearance.with_outfit(r, id)   # P53: an outfit fills the slots
-				"dye":
-					r.outfit.dyes.cloth = id   # P53: M10's primary dye is the cloth dye
-			var look := Appearance.to_look(r, line if line != "" else "ancestry.stoneblood")
-			GiantLook.apply(_root, index, look)
-			assert_eq(GiantLook.validate(_root, index, look), PackedStringArray(), "%s: validate() is empty" % id)
-			# P54: a head garment hides the hair or cuts it by length (its index entry's hides_hair, hair_cut)
-			var cut := GiantLook.hair_cut(index, GiantLook.garment_meshes(index, look).keys())
-			for m: String in GiantLook.meshes_of(index, "hair"):
-				assert_eq(GiantLook.mesh_node(_root, index, m).visible, m == str(look.hair_mesh) and float(cut.get(m, 1.0)) > 0.0,
-					"%s: %s's visibility" % [id, m])
-			for m: String in GiantLook.meshes_of(index, "beard"):
-				assert_eq(GiantLook.mesh_node(_root, index, m).visible, m == str(look.beard_mesh), "%s: %s's visibility" % [id, m])
-			var shown := {}
-			for g: Variant in look.garments:
-				for m: Variant in index.garments.get(Appearance.garment_id(g), []):
-					shown[str(m)] = true
-			for m: String in GiantLook.meshes_of(index, "garment"):
-				assert_eq(GiantLook.mesh_node(_root, index, m).visible, shown.has(m), "%s: %s's visibility" % [id, m])
-			n += 1
-	assert_true(n >= 70, "every option of the data (%d)" % n)
+	# P57 (plan M11 §1.7 rule 2): the default tier walks a sample - the first and the last option of every set; every
+	# option of the data is walked in tests/slow/test_giant_look_walks.gd
+	var n := OptionWalk.every_option(self, _root, index, true)
+	assert_true(n >= Appearance.CATEGORIES.size(), "a sample of every set (%d)" % n)
 
 
 ## Every sampler of every material holds the map the index names (W25 review C1: the index gives names,

@@ -100,6 +100,7 @@ func _process(_delta: float) -> void:
 	if t.focus_dirty:
 		t.focus_dirty = false
 		UiNav.link_rows(t.focus_rows())
+		t.focus_linked()
 	UiNav.keep_focus(t)
 
 

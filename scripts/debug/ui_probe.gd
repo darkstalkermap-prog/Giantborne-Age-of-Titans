@@ -35,6 +35,12 @@ extends Node
 ##       the skeleton advanced in manual mode, so every modifier runs - the springs and SecondaryMotion's limits too
 ##       (§2.12's row with secondary motion: Web <= 0.45 ms, native <= 0.15 since 0.11.0-m11, was 0.12) - and
 ##       "chains" the chains they ran.
+##   UI_PROBE {"t":"thumbs", "key", "made", "frames", "worst_ms", "median_ms", "after_median_ms", "ratio"}   P57 (plan
+##       M11 §2.7: the thumbnails' cost decides the Web's rule): once per option grid opened in the creator, when its
+##       page's thumbnails are made and THUMBS_AFTER_FRAMES frames have followed - the frames while they were made
+##       (one a frame) against the median of the frames after. The state's "grid" is the open grid's row ("" when
+##       none) and "thumbs" how many thumbnails were made; the marks "grid" (a grid opens) and "pick" (the first
+##       option put on in a grid: a piece's part loaded and drawn for the first time) are measured as the others.
 ##   UI_PROBE {"t":"done", "tour", "ok", "why"}   a tour's end (it then quits).
 ##
 ## Frame intervals are wall-clock time between two _process calls (the probe runs first in the frame,
@@ -73,6 +79,8 @@ const STALL_FLOOR_MS := 25.0
 const APPEARANCE_TAB := "Appearance"
 const CHANGE_LOOK := "Change your look..."
 const TOURS := ["", "new_game", "shrine", "level", "continue"]
+## The frames after a grid's thumbnails are made that the "thumbs" line's median is taken over (P57).
+const THUMBS_AFTER_FRAMES := 20
 const BENCH_BATCHES := 5
 const BENCH_RUNS := 200
 const TOUR_STEP_LIMIT_S := 240.0
@@ -102,6 +110,9 @@ var _wait_frames := 0
 var _keys: Array = []
 var _giant_draw := {}
 ## The rendering server's draw time: when the frame's draw began, and the last finished draw (ms).
+## P57: the open grid's thumbnails: {"key", "made_before", "during": [ms], "after": [ms], "done": bool} or {}.
+var _thumbs := {}
+var _picked_in_grid := false
 var _pre_draw_usec := 0
 var _last_draw_ms := 0.0
 
@@ -214,6 +225,9 @@ func read_state() -> Dictionary:
 		s.category = c.current_category()
 		s.changed = c.is_changed()
 		s.history = c.history.size()
+		s["grid"] = c.grid_row().key if c.grid_open() and c.grid_row() != null else ""
+		s["thumbs"] = c.thumbnails.made if c.thumbnails != null else 0
+		s["thumbs_busy"] = c.thumbnails != null and c.thumbnails.busy()
 	var focus := get_viewport().gui_get_focus_owner() if get_viewport() != null else null
 	if focus != null:
 		s.focus = str(focus.get("text")) if focus.get("text") != null else str(focus.name)
@@ -238,6 +252,7 @@ func _account(ms: float, s: Dictionary) -> void:
 		_title_worst_ms = maxf(_title_worst_ms, ms)
 	if bool(s.loading) or bool(_state.get("loading", false)):
 		_load_worst_ms = maxf(_load_worst_ms, ms)
+	_account_thumbs(ms, s)
 	if _open.is_empty():
 		return
 	if (_open.first as Array).size() < FIRST_FRAMES:
@@ -248,6 +263,45 @@ func _account(ms: float, s: Dictionary) -> void:
 		(_open.steady_draw as Array).append(_last_draw_ms)
 		if (_open.steady as Array).size() >= STEADY_FRAMES:
 			_close_mark()
+
+
+## P57: the frames of an open grid while its thumbnails are made, then THUMBS_AFTER_FRAMES after; one "thumbs" line.
+func _account_thumbs(ms: float, s: Dictionary) -> void:
+	if _thumbs.is_empty():
+		return
+	if str(s.get("grid", "")) != str(_thumbs.key) and not bool(_thumbs.done):
+		_thumbs = {}   # the grid closed before its page was done
+		return
+	if not bool(_thumbs.done):
+		(_thumbs.during as Array).append(ms)
+		if not bool(s.get("thumbs_busy", false)) and (_thumbs.during as Array).size() > 1:
+			_thumbs.done = true
+		return
+	(_thumbs.after as Array).append(ms)
+	if (_thumbs.after as Array).size() < THUMBS_AFTER_FRAMES:
+		return
+	var during: Array = _thumbs.during
+	var worst: float = during.max()
+	var after_med := median(_thumbs.after)
+	var cache := _thumb_cache()
+	var parts := GiantModel.part_stats()
+	_say({"t": "thumbs", "key": _thumbs.key, "made": int(s.get("thumbs", 0)) - int(_thumbs.made_before),
+		"pictures": cache != null and cache.enabled,
+		"work_max_ms": snappedf(float((cache.work_ms as Array).max()), 0.1) if cache != null and not cache.work_ms.is_empty() else 0.0,
+		"readback_max_ms": snappedf(float((cache.readback_ms as Array).max()), 0.1) if cache != null and not cache.readback_ms.is_empty() else 0.0,
+		"part_loads": int(parts.loads), "part_load_max_ms": parts.load_max_ms, "part_load_ms": parts.load_ms,
+		"frames": during.size(), "worst_ms": snappedf(worst, 0.1), "median_ms": snappedf(median(during), 0.1),
+		"after_median_ms": snappedf(after_med, 0.1), "ratio": snappedf(worst / after_med, 0.01) if after_med > 0.0 else 0.0,
+		"ok": stall_ratio_ok(worst, after_med)})
+	_thumbs = {}
+
+
+## The creator's thumbnail cache (null when no creator is on top).
+func _thumb_cache() -> ThumbnailCache:
+	var main := get_parent()
+	var stack: ScreenStack = main.get("screen_stack") as ScreenStack if main != null else null
+	var top: UiScreen = stack.top() if stack != null and is_instance_valid(stack) else null
+	return (top as CreatorScreen).thumbnails if top is CreatorScreen else null
 
 
 func _begin_mark(mark: String, extra: Dictionary = {}, first: Array = []) -> void:
@@ -341,6 +395,16 @@ func _note_marks(was: Dictionary, s: Dictionary) -> void:
 		_begin_mark("shrine_creator" if str(s.context) == "shrine" else "creator",
 			{"again": _had_creator, "tiers": s.tiers})
 		_had_creator = true
+	# P57: an option grid opens, and the first option put on in it
+	var grid := str(s.get("grid", ""))
+	if creator and grid != "" and str(was.get("grid", "")) != grid:
+		_begin_mark("grid", {"key": grid})
+		_thumbs = {"key": grid, "made_before": int(s.get("thumbs", 0)), "during": [], "after": [], "done": false}
+		_picked_in_grid = false
+	elif creator and grid != "" and not _picked_in_grid and int(s.history) > int(was.get("history", 0)):
+		_picked_in_grid = true
+		var parts := GiantModel.part_stats()
+		_begin_mark("pick", {"key": grid, "part_loads": int(parts.loads), "part_load_max_ms": parts.load_max_ms})
 	if _was_loading and not bool(s.loading) and str(s.mode) != "title":
 		_begin_mark("level", {"load_worst_ms": snappedf(_load_worst_ms, 0.01), "level": s.level, "tiers": s.tiers})
 	_was_loading = bool(s.loading)
