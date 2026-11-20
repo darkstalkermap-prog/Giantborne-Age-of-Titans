@@ -32,6 +32,19 @@ const SIZE_STEP := 32
 const THUMBS_PER_FRAME := 1
 const BACKDROP := Color(0.12, 0.13, 0.16)
 
+## P57 (plan M11 §2.7: "if P57 measures a thumbnail above the stall rule there, garment grids on the Web show names
+## with the live preview only"): measured in creator_check.mjs on the Web build (SwiftShader), a picture's read-back
+## of its frame took 0.7-3.9 s (the renderer's whole queue waited for; the part loads 1-11 ms), so on the Web no
+## picture is made: every grid shows the options' names and the live preview puts each on as the focus moves. The
+## command line's --creator-pictures=on|off overrides it either way (to try a GPU's browser; tests).
+static func pictures_wanted() -> bool:
+	for arg in OS.get_cmdline_user_args():
+		if arg == "--creator-pictures=on":
+			return true
+		if arg == "--creator-pictures=off":
+			return false
+	return not OS.has_feature("web")
+
 ## Every live cache (reset_for_tests frees what they hold).
 static var _live: Array = []
 
@@ -49,16 +62,24 @@ var made_ids: Array = []
 ## The milliseconds each thumbnail's own work took in its frame (the look and framing; the read-back is added in the
 ## next frame).
 var work_ms: Array = []
+## P57: the read-backs' milliseconds, and the parts loaded ahead of a picture (one a frame) with their milliseconds.
+var readback_ms: Array = []
+var parts_loaded := 0
+var parts_ms: Array = []
 var preview: GiantPreview = null
+## False on the Web (pictures_wanted()): request() makes nothing and the grid shows the names.
+var enabled := true
 ## The pictures' side in pixels now (set_cell_pixels); part of every item's key.
 var size := SIZE
 var _pending: Dictionary = {}   ## the item drawn this frame, read back in the next
 var _drawn := false
 var _frame_count := {}          ## frame -> thumbnails started in it
+var _held: Dictionary = {}      ## part path -> its mesh, held from its load until the picture that needs it is made
 
 
 func _init() -> void:
 	name = "ThumbnailCache"
+	enabled = pictures_wanted()
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_live.append(weakref(self))
 
@@ -73,6 +94,8 @@ func _exit_tree() -> void:
 ## once, the rest replace whatever was still queued (a page turned past is never drawn).
 func request(items: Array) -> void:
 	queue.clear()
+	if not enabled:
+		return
 	for item: Dictionary in items:
 		if str(item.get("key", "")) == "":
 			continue
@@ -115,6 +138,7 @@ func busy() -> bool:
 func clear() -> void:
 	queue.clear()
 	_pending = {}
+	_held.clear()
 	textures.clear()
 
 
@@ -144,6 +168,14 @@ func _process(_delta: float) -> void:
 	var frame := Engine.get_process_frames()
 	if int(_frame_count.get(frame, 0)) >= THUMBS_PER_FRAME:
 		return
+	# P57: the parts the next picture shows are loaded ahead, one a frame (on the Web a part's load is the frame's
+	# whole cost; a picture of an outfit loads up to ten), and its picture is made once they are all in hand
+	var t_part := Time.get_ticks_usec()
+	if _load_a_part(queue[0] as Dictionary):
+		parts_loaded += 1
+		parts_ms.append(float(Time.get_ticks_usec() - t_part) / 1000.0)
+		_frame_count = {frame: int(_frame_count.get(frame, 0)) + 1}
+		return
 	var item: Dictionary = queue.pop_front()
 	var t0 := Time.get_ticks_usec()
 	_frame_count = {frame: int(_frame_count.get(frame, 0)) + 1}
@@ -154,6 +186,30 @@ func _process(_delta: float) -> void:
 	work_ms.append(float(Time.get_ticks_usec() - t0) / 1000.0)
 
 
+## P57: loads one part the item's look shows that is not loaded yet (held until its picture is made); false when
+## every part it shows is in hand.
+func _load_a_part(item: Dictionary) -> bool:
+	_ensure_preview()
+	var index: Dictionary = preview.model.index
+	var meshes: Dictionary = index.get("meshes", {}) if typeof(index.get("meshes")) == TYPE_DICTIONARY else {}
+	var look: Dictionary = item.get("look", {})
+	var ids: Array = GiantLook.garment_meshes(index, GiantLook.complete(look)).keys()
+	for k: String in ["hair_mesh", "beard_mesh", "hair_beads", "beard_beads"]:
+		ids.append(str(look.get(k, "")))
+	ids.append_array(look.get("accessories", []) as Array)
+	for id: Variant in ids:
+		var e: Variant = meshes.get(str(id))
+		if typeof(e) != TYPE_DICTIONARY or not (e as Dictionary).has(GiantModel.PART_PATH):
+			continue
+		var path := str((e as Dictionary)[GiantModel.PART_PATH])
+		if _held.has(path) or preview.model.is_part_loaded(str(id)):
+			continue
+		var res := GiantModel.load_part(path)
+		_held[path] = res.get("mesh")
+		return true
+	return false
+
+
 ## Puts the item's look on the unshown preview and asks for one frame; it is read back in the next _process.
 func _start_render(item: Dictionary) -> void:
 	_ensure_preview()
@@ -162,7 +218,7 @@ func _start_render(item: Dictionary) -> void:
 	preview.apply_look(item.get("look", {}) as Dictionary)
 	var framing := str(item.get("framing", "full"))
 	if framing == GiantPreview.AIM:
-		preview.frame_on(aim_box(item.get("aim", []) as Array))   # P57: at the piece itself (the belt's trophies)
+		preview.frame_on(preview.aim_box(item.get("aim", []) as Array))   # P57: at the piece itself (the belt's trophies)
 	else:
 		preview.frame(framing)
 	preview.render_thumbnail()
@@ -186,13 +242,16 @@ func _harvest() -> void:
 	if DisplayServer.get_name() != "headless" and preview != null:
 		var t0 := Time.get_ticks_usec()
 		img = preview.viewport.get_texture().get_image()
+		var read := float(Time.get_ticks_usec() - t0) / 1000.0
+		readback_ms.append(read)
 		if not work_ms.is_empty():
-			work_ms[work_ms.size() - 1] = float(work_ms[-1]) + float(Time.get_ticks_usec() - t0) / 1000.0
+			work_ms[work_ms.size() - 1] = float(work_ms[-1]) + read
 		preview.stop_thumbnail()
 	if img == null or img.is_empty():
 		img = Image.create(size, size, false, Image.FORMAT_RGBA8)
 		img.fill(BACKDROP)
 	rendered += 1
+	_held.clear()   # the preview holds the parts it shows; the rest go back to GiantModel's recent list as they will
 	_store(item, ImageTexture.create_from_image(img))
 
 
@@ -224,20 +283,3 @@ func _fit_preview() -> void:
 	preview.size = Vector2(size, size)
 	preview.position = Vector2(-4 * MAX_SIZE, -4 * MAX_SIZE)   # never on screen: only its viewport's frames are read
 	preview.viewport.size = Vector2i(size, size)
-
-
-## P57: the box (the model's frame) of the shown meshes among `ids` (index mesh ids), from their meshes' own boxes;
-## the whole giant's when none shows.
-func aim_box(ids: Array) -> AABB:
-	var box := AABB()
-	var any := false
-	for id: Variant in ids:
-		if str(id) == "":
-			continue
-		var mi := GiantLook.mesh_node(preview.model, preview.model.index, str(id))
-		if mi == null or mi.mesh == null or not mi.visible:
-			continue
-		var b := preview.model.global_transform.affine_inverse() * mi.global_transform * mi.get_aabb()
-		box = b if not any else box.merge(b)
-		any = true
-	return box if any else AABB(Vector3(-0.5, 0.0, -0.4), Vector3(1.0, 3.8, 0.8))

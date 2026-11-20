@@ -168,8 +168,8 @@ var world_light := false
 ## Fill the parent Control at the window's resolution (see the class notes); set before or after the preview
 ## enters the tree. Off for the tiles of the option check and the sheets, which size their own viewports.
 var window_pixels := false
-## P57: the box frame_on() aims at (framing AIM; shared: one thumbnail is made at a time).
-static var _aim_entry := {"target": Vector3(0.0, 1.85, 0.0), "yaw": 20.0, "pitch": 3.0, "dist": 8.4}
+## P57: the framing frame_on() made (framing AIM).
+var _aim_entry := {"target": Vector3(0.0, 1.85, 0.0), "yaw": 20.0, "pitch": 3.0, "dist": 8.4}
 ## P55: a thumbnail preview (ThumbnailCache's): its viewport keeps the size it is given, draws only when
 ## render_thumbnail() asks, and never follows the container's visibility. Set before the preview enters the tree.
 var thumbnail := false
@@ -367,6 +367,23 @@ func frame_on(aabb: AABB) -> void:
 	frame(AIM)
 
 
+## P57: the box (the model's frame) of the shown meshes among `ids` (index mesh ids), from their meshes' own boxes;
+## the whole giant's when none shows (frame_on's box for a piece).
+func aim_box(ids: Array) -> AABB:
+	var box := AABB()
+	var any := false
+	for id: Variant in ids:
+		if str(id) == "":
+			continue
+		var mi := GiantLook.mesh_node(model, model.index, str(id))
+		if mi == null or mi.mesh == null or not mi.visible:
+			continue
+		var b := model.global_transform.affine_inverse() * mi.global_transform * mi.get_aabb()
+		box = b if not any else box.merge(b)
+		any = true
+	return box if any else AABB(Vector3(-0.5, 0.0, -0.4), Vector3(1.0, 3.8, 0.8))
+
+
 func frame(framing_name: String) -> void:
 	if not framing_name in ["game", GAME_STAGE1, FIRST_PERSON, AIM] and not FRAMINGS.has(_base_framing(framing_name)):
 		framing_name = "full"
@@ -460,8 +477,6 @@ static func _base_framing(framing_name: String) -> String:
 
 ## A framing's FRAMINGS entry, mirrored for a "_left" framing.
 static func framing_entry(framing_name: String) -> Dictionary:
-	if framing_name == AIM:
-		return _aim_entry
 	var base := _base_framing(framing_name)
 	var f: Dictionary = (FRAMINGS.get(base, FRAMINGS.full) as Dictionary).duplicate()
 	if framing_name != base:
@@ -502,7 +517,7 @@ func _update_camera() -> void:
 		camera.transform = Transform3D(turned * t.basis, pivot + turned * (t.origin - pivot) * zoom_factor)
 		camera.fov = game_fov()
 		return
-	var f := framing_entry(framing)
+	var f := _aim_entry if framing == AIM else framing_entry(framing)
 	var target := framing_target(framing)
 	var yaw := deg_to_rad(float(f.yaw) + turn_deg)
 	var pitch := deg_to_rad(float(f.pitch))
@@ -515,6 +530,8 @@ func _update_camera() -> void:
 
 ## Where a framing looks (model frame, stage 1): its FRAMINGS target, the hand framing at the posed hand.
 func framing_target(framing_name: String) -> Vector3:
+	if framing_name == AIM:
+		return _aim_entry.target
 	var f := framing_entry(framing_name)
 	var arms_left := framing_name == "arms" + LEFT_SUFFIX
 	if framing_name in ["hand", "hand_l", "arms"] or arms_left:
