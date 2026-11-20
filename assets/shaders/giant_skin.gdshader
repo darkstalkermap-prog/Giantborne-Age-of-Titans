@@ -86,6 +86,7 @@ varying float v_thin;
 varying float v_curv;
 varying flat int v_region;
 varying float v_tsign;
+varying float v_down;
 
 #include "res://assets/shaders/giant_first_person.gdshaderinc"
 varying vec3 v_fp_pos;
@@ -94,6 +95,7 @@ varying flat float v_fp_on;
 void vertex() {
 	v_region = clamp(int(COLOR.r * 16.0), 0, 15);
 	v_tsign = COLOR.a * 2.0 - 1.0;
+	v_down = -(MODEL_MATRIX * vec4(NORMAL, 0.0)).y;
 	v_fp_pos = VERTEX;
 	VERTEX += NORMAL * dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m;   // P53: the build sliders
 	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(v_region);
@@ -104,6 +106,7 @@ void vertex() {
 
 const vec2 SCAR_CORE = vec2(0.34, 0.72);   // the third look lane: the scar's coverage drawn as healed tissue
 const float SCAR_RIM_DARK = 0.12;           // ... and its rim's darkening
+const float NECK_SHADOW_SOFT = 0.6;         // the third look lane: the share of a shadow on the neck left out
 const float PAINT_SMEAR_UV = 0.014;         // the third look lane: how far war paint's border wanders (UV)
 
 // Smooth 3D value noise in [0, 1] (the third look lane: war paint's strokes, pores and edges, in the rest position).
@@ -184,7 +187,9 @@ void fragment() {
 	if (stub > 0.0) {
 		float dots = smoothstep(0.35, 0.8, vnoise(v_fp_pos * 1400.0)) * 0.6 + smoothstep(0.3, 0.7, vnoise(v_fp_pos * 380.0)) * 0.4;
 		vec3 cut = mix(beard_color * 0.7, base * 0.5, 0.35);
-		base = mix(base, cut, stub * (0.18 + 0.5 * dots));
+		// (under a beard's cards the skin keeps the beard's shade, so no skin shows between them)
+		float under = clamp(beard_tint, 0.0, 1.0);
+		base = mix(base, cut, stub * mix(0.18 + 0.5 * dots, 0.75, under));
 	}
 	base = mix(base, hair_color * 0.8, clamp(m.g * scalp_tint, 0.0, 1.0));
 	base = mix(base, beard_color * 0.8, clamp(smoothstep(0.2, 0.7, m.r) * beard_tint, 0.0, 1.0));
@@ -256,6 +261,10 @@ void fragment() {
 
 void light() {
 	float ndl = dot(NORMAL, LIGHT);
+	// the third look lane: the neck and the jaw's underside take the jaw's shadow softly (the shadow proxy has no face keys and a coarse jaw:
+	// its hard shadow read as a dark patch under every bare jaw, a wedge at the chin key's -1)
+	float soft = v_region == 2 ? NECK_SHADOW_SOFT : (v_region == 1 ? NECK_SHADOW_SOFT * smoothstep(0.0, 0.5, v_down) : 0.0);
+	float att = mix(ATTENUATION, 1.0, soft);
 	vec3 diff;
 	if (light_model == 0) {
 		diff = vec3(clamp(ndl, 0.0, 1.0));
@@ -265,7 +274,7 @@ void light() {
 	} else {
 		diff = clamp((vec3(ndl) + wrap) / (1.0 + wrap), vec3(0.0), vec3(1.0));
 	}
-	DIFFUSE_LIGHT += diff * ATTENUATION * LIGHT_COLOR / PI;
+	DIFFUSE_LIGHT += diff * att * LIGHT_COLOR / PI;
 	if (light_model >= 2) {
 		float back = pow(clamp(dot(VIEW, -LIGHT), 0.0, 1.0), 4.0);
 		float rim = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 2.0);
@@ -277,5 +286,5 @@ void light() {
 	float a2 = r * r * r * r;
 	float d = a2 / (PI * pow(ndh * ndh * (a2 - 1.0) + 1.0, 2.0));
 	float f = 0.028 + 0.972 * pow(1.0 - clamp(dot(h, VIEW), 0.0, 1.0), 5.0);
-	SPECULAR_LIGHT += vec3(d * f * 0.25) * clamp(ndl, 0.0, 1.0) * ATTENUATION * LIGHT_COLOR / PI;
+	SPECULAR_LIGHT += vec3(d * f * 0.25) * clamp(ndl, 0.0, 1.0) * att * LIGHT_COLOR / PI;
 }

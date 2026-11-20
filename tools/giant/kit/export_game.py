@@ -74,7 +74,6 @@ FREE_COVER_SHARE = 0.85            # and its share: it hangs straight, so the fl
 # a split garment is cut along the body's own boundary, but for the braies (not a shell: by their weights)
 SPLIT_BY_WEIGHT = ("braies",)
 PART_LAYER = {0: 3, 1: 2, 2: 1}    # head, torso, limbs -> their render layers
-SHADOW_JAW_INSET_M = 0.045         # stage 1: the shadow proxy's jaw and chin this much further in (the third look lane)
 OWN_NORMAL_SMOOTH = {"braies": 3}   # ... their face normals (area-weighted) averaged over this many rings of neighbours
 #                                     (1 elsewhere: the kilt's pleats keep their edges)
 OWN_NORMAL_SLOTS = ("legs",)        # the third look lane: garments that shade with their own normals (not the skin's)
@@ -562,6 +561,8 @@ FACE_KEY_FADE = {"scalp": (0.0, 0.05), "beard": (0.0, 0.02)}
 # "upper": the face above the eyes (the jaw's and the chin's targets reach the brow a little), faded over this much
 # (human-scale metres) below the eyes' height
 FACE_KEY_UPPER_FADE_M = 0.03
+# the third look lane: the jaw's and the chin's keys are none this far under the chin and whole this far (human m)
+FACE_KEY_NECK_FADE = {"jaw": (0.11, 0.04), "chin": (0.11, 0.04)}
 FACE_KEY_ORDER = ("jaw", "chin", "nose", "brow", "cheeks", "age")
 FACE_KEY_LEAST_M = 0.0005          # the head takes a key when the key moves some vertex of it this far (stage 1)
 # A part (a beard, a hair style's hairline strips, a shell, a bead set) takes a key only when the key moves some vertex
@@ -570,7 +571,7 @@ FACE_KEY_LEAST_M = 0.0005          # the head takes a key when the key moves som
 FACE_KEY_PART_LEAST_M = 0.002
 
 
-def face_deltas(S, n, masks=None, eye_z=None, V=None):
+def face_deltas(S, n, masks=None, eye_z=None, V=None, chin_z=None):
     """{key: (n, 3)}: each face key's displacement per body vertex in the body mesh's own frame (stage-1 metres), faded
     off the skin FACE_KEY_SPARES names (``masks``: the body's m_scalp and m_beard per vertex)."""
     out = {}
@@ -585,6 +586,11 @@ def face_deltas(S, n, masks=None, eye_z=None, V=None):
                     continue
                 lo, hi = FACE_KEY_FADE[spare]
                 d = d * (1.0 - gp.sstep(np.asarray(masks["m_" + spare])[:n], lo, hi))[:, None]
+        if chin_z is not None and V is not None and k in FACE_KEY_NECK_FADE:
+            # the third look lane: the jaw's and the chin's keys fade out down the neck before the head's cut (the
+            # chin at -1 pulled the neck's skin off the torso's: a seam line and a dark wedge under the jaw)
+            lo, hi = FACE_KEY_NECK_FADE[k]
+            d = d * gp.sstep(np.asarray(V)[:n, 2], chin_z - lo, chin_z - hi)[:, None]
         out[k] = d
     return out
 
@@ -977,7 +983,7 @@ def run(out_dir):
     A["vbuild"] = vbuild
     region_any = np.full(n, -1, np.int64)
     # P56: the face keys' displacement per body vertex
-    deltas = face_deltas(S, n, bd.masks, bd.landmarks["eye_z"], V)
+    deltas = face_deltas(S, n, bd.masks, bd.landmarks["eye_z"], V, bd.landmarks["chin"])
     face_keys = {}
     for pi, part in enumerate(split.PARTS):
         arrays, reg, st = split_part(A, fp, pi, sp["vregion"][part], root_bone)
@@ -997,19 +1003,7 @@ def run(out_dir):
                               region_any)
     body_N = A["vnormal"].copy()
     # ---- P48: the shadow proxy (the whole body, decimated, a little inside the skin) ----------------
-    L = bd.landmarks
-    hs_ = float(L["hs"])
-
-    def jaw_inset(P):
-        # the third look lane: the proxy's jaw and chin moved further in (it has no face keys, and its coarse jaw cast a
-        # dark patch on the neck under every jaw, a wedge with the chin key at -1)
-        q = np.asarray(P, np.float64) / S
-        w = gg.sstep(q[:, 2], L["chin"] - 0.07 * hs_, L["chin"] - 0.02 * hs_) \
-            * (1.0 - gg.sstep(q[:, 2], L["lip_bot"] - 0.005 * hs_, L["lip_bot"] + 0.025 * hs_)) \
-            * gg.sstep(L["head_cy"] + 0.02 - q[:, 1], 0.0, 0.05) * (1.0 - gg.sstep(np.abs(q[:, 0]), 0.07 * hs_, 0.1 * hs_))
-        return SHADOW_JAW_INSET_M * w
-
-    proxy = gp.shadow_proxy(body, rig, coll, S, body_V=V * S, vbuild=vbuild, inset_more=jaw_inset)
+    proxy = gp.shadow_proxy(body, rig, coll, S, body_V=V * S, vbuild=vbuild)
     info["shadow_proxy"] = {"node": SHADOW_NAME, "tris": int(sum(len(p.vertices) - 2 for p in proxy.data.polygons)),
                             "verts": len(proxy.data.vertices), "inset_m": gp.SHADOW_INSET_M}
     # ---- eyes -----------------------------------------------------------------------------------

@@ -136,10 +136,10 @@ void fragment() {
 				// the third look lane: a beard card breaks into locks of its own lengths across it, whatever the atlas's
 				// mip (minified, a short card was a solid spade of one colour: square patches at the cheeks)
 				float lock_i = floor(u * BEARD_LOCKS) + floor(UV.x * atlas_columns) * 17.0;
-				float lock_len = 0.45 + 0.55 * fract(sin(lock_i * 12.9898) * 43758.5453);
+				float lock_len = 0.8 + 0.2 * fract(sin(lock_i * 12.9898) * 43758.5453);
 				float across = fract(u * BEARD_LOCKS);
-				a *= 1.0 - smoothstep(lock_len - 0.25 * (1.0 - 0.6 * abs(across - 0.5) * 2.0), lock_len, UV.y);
-				a *= mix(1.0, smoothstep(0.0, 0.25, across) * smoothstep(0.0, 0.25, 1.0 - across), smoothstep(0.3, 0.9, UV.y));
+				a *= 1.0 - smoothstep(lock_len - 0.15 * (1.0 - 0.6 * abs(across - 0.5) * 2.0), lock_len, UV.y);
+				a *= mix(1.0, smoothstep(0.0, 0.25, across) * smoothstep(0.0, 0.25, 1.0 - across), smoothstep(0.8, 1.0, UV.y));
 				lock_shade = fract(sin(lock_i * 78.233) * 12543.123);
 			}
 			// The volume: the card's own facing (its triangle) blended towards the head-centred normal.
@@ -156,7 +156,7 @@ void fragment() {
 		float is_grey = (1.0 - smoothstep(grey - gw, grey + gw, t.g)) * step(0.001, grey);
 		c = mix(c, vec3(0.62, 0.60, 0.57), mix(is_grey, grey, clamp(max(mip, 0.0) * 0.5, 0.0, 1.0)));
 		c *= 0.62 + 0.5 * t.r;
-		c *= 0.86 + 0.28 * lock_shade * step(0.001, tip_thin);   // (the third look lane: a beard's locks vary)
+		c *= 1.0 - 0.22 * lock_shade * step(0.001, tip_thin);   // (the third look lane: a beard's locks vary)
 		c *= mix(root_dark, 1.0, smoothstep(0.0, 0.12, UV.y));   // a little darker at the very root
 		if (v_kind > 0.5) {
 			// a braid: the plait's crossing strands as chevrons round the tube, dark in their grooves
