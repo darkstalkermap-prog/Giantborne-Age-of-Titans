@@ -927,16 +927,24 @@ class WardrobeTest(unittest.TestCase):
         self.assertEqual(sorted(lay["order"]), sorted(gg.GARMENTS))
         layer = {g: gg.LAYER_ORDER.index(gg.GARMENTS[g]["slot"]) for g in gg.GARMENTS}
         self.assertEqual([layer[g] for g in lay["order"]], sorted(layer[g] for g in lay["order"]), "from the skin out")
+        knots = lay["knots_m"]
+        self.assertEqual(len(knots), len(gg.PUSH_KNOT_MARKS))
+        self.assertEqual(knots, sorted(knots), "the knots from the thighs up")
+        nk = len(knots)
         for outer, row in lay["push"].items():
             for inner, shares in row.items():
                 self.assertLess(layer[inner], layer[outer], "%s over %s" % (outer, inner))
-                self.assertEqual(len(shares), gg.PUSH_SAMPLES)
+                self.assertEqual(len(shares), gg.PUSH_SAMPLES * nk, "a share a knot at each sample")
                 self.assertTrue(all(0.0 <= x <= 1.0 for x in shares), (outer, inner, shares))
-                self.assertEqual(shares, sorted(shares), "%s over %s: more push under, more push over" % (outer, inner))
+                for j in range(nk):
+                    col = shares[j::nk]
+                    self.assertEqual(col, sorted(col), "%s over %s: more push under, more push over" % (outer, inner))
         pushed = [m for m, e in self.idx["meshes"].items() if e.get("push_m")]
         self.assertGreater(len(pushed), 20, "the garments that stand over inner slots carry their push")
         # the default look (the Wanderer: braies and belt): the belt sits on the braies, nearer than its full place
-        self.assertLess(lay["push"]["belt"]["braies"][0], 0.8, "the belt over the braies alone")
+        self.assertLess(max(lay["push"]["belt"]["braies"][:nk]), 0.5, "the belt over the braies alone")
+        hauberk = lay["push"]["mail_hauberk"]["shirt"]
+        self.assertLess(max(hauberk[:3]), 0.1, "a shirt under a hauberk pushes its chest, not its skirt")
         self.assertNotIn("braies", lay["push"], "the innermost slot is never pushed")
 
     def test_a_helm_cuts_or_hides_each_hair_style(self):

@@ -139,6 +139,11 @@ const NATURAL_DYE := Color(0.36, 0.30, 0.24)
 ## The detail map's strength per kind.
 const DETAIL_STRENGTH := {"weave": 0.28, "leather": 0.5, "fur": 0.45, "metal": 0.35, "mail": 0.85, "scale": 0.8,
 	"bone": 0.18}
+## The W33 look lane: the detail map's tiles over the body's UVs (the shader's 96 otherwise) and its normal's
+## strength (0.4 otherwise) per kind: the mail's rings and the scales larger and deeper, so they read at the game's
+## camera (at 96 a ring was about a centimetre on the giant and the hauberk drew as flat grey plate).
+const DETAIL_SCALE := {"mail": 44.0, "scale": 34.0}
+const NORMAL_STRENGTH := {"mail": 1.1, "scale": 1.0}
 ## The cloth shader's soft edge light per detail kind (P51: wool and fur catch the light at their edges).
 ## Gate A: weave and leather take no rim. The renderer's rim light does not look at N.L, so a sliver of a fold seen
 ## edge-on against the sun (the braies' crotch in the world's light) was lit as if it faced it: small bright patches.
@@ -162,7 +167,7 @@ const UNIFORMS := {
 	"hair": ["hair_atlas", "hair_color", "tip_color", "grey", "length", "tip_thin", "back_fade", "volume_normal"],
 	"eye": ["iris_color", "iris_glow", "look"],
 	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade", "kind", "rim", "build", "build_max_m", "bead_mask",
-		"push_m"],
+		"push_m", "pushed", "push_knots", "push_y_norm", "detail_scale", "normal_strength"],
 	"shell": ["strand_tex", "mask_tex", "mask_channel", "shell_count", "shell_height_m", "comb", "hair_color", "tip_color",
 		"grey", "length"],
 }
@@ -213,6 +218,9 @@ const META_BUILD := "giant_look_build"
 const META_FACE := "giant_look_face"
 ## The W33 look lane: the cloth shader's push_m last set per garment mesh (apply sets only what changed).
 const META_PUSH := "giant_look_push"
+## The cloth shader's knots of the layering's push (its uniform arrays' length).
+const PUSH_KNOTS := 6
+const ZERO_PUSH: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 ## The hair's sway (P46; the hair shader's head_motion): the tips lag the head's motion by SWAY_LAG_S seconds
 ## of it, eased at SWAY_EASE a second, at most SWAY_MAX_M at the tips (stage-1 metres, the mesh's own space).
 const SWAY_LAG_S := 0.035
@@ -405,8 +413,11 @@ static func garment_meshes(index: Dictionary, look: Dictionary) -> Dictionary:
 ## and each vertex carries its push to its place over the loosest garment of every inner slot (the cloth shader's
 ## `push_m` times the vertex colour's alpha); the index's `layering` gives, per outer garment and worn inner garment,
 ## the least share of that push which keeps it clear of the inner one at each share of the inner one's own push
-## (`samples` steps of 0-1, read at the step at or above it). Returns {garment id: share 0-1} for `garment_ids` (the
-## worn garments, index ids); an index without the table gives {} (every garment at its mesh: an index from before).
+## (`samples` steps of 0-1, read at the step at or above the inner garment's greatest share), one share for each of the
+## table's `knots_m` (rest heights from the thighs to the shoulders: the cloth shader eases between them), so a garment
+## worn under the hips' part of a coat pushes that part and not its chest. Returns {garment id: PackedFloat32Array of
+## PUSH_KNOTS shares 0-1} for `garment_ids` (the worn garments, index ids); a table with fewer knots repeats its last;
+## an index without the table gives {} (every garment at its mesh: an index from before).
 static func garment_pushes(index: Dictionary, garment_ids: Array, prepared: Dictionary = {}) -> Dictionary:
 	var out := {}
 	var t := prepared if not prepared.is_empty() else _layering_table(index)
@@ -425,23 +436,34 @@ static func garment_pushes(index: Dictionary, garment_ids: Array, prepared: Dict
 	var worn: Array[String] = []
 	for r: int in ranks:
 		worn.append(by_rank[r])
+	var knots := int(t.knots)
+	var most := {}   # each worn garment's greatest share (its row's sample is read at or above it)
 	for i in worn.size():
 		var id: String = worn[i]
 		var row: Variant = push.get(id)
-		var share := 0.0
+		var share := PackedFloat32Array()
+		share.resize(PUSH_KNOTS)
+		share.fill(0.0)
+		var top := 0.0
 		if typeof(row) == TYPE_DICTIONARY:
 			for j in i:
 				var h: String = worn[j]
 				var r: Variant = (row as Dictionary).get(h)
-				if typeof(r) == TYPE_ARRAY and not (r as Array).is_empty():
-					var k := clampi(ceili(float(out[h]) * last - 0.000001), 0, (r as Array).size() - 1)
-					share = maxf(share, float((r as Array)[k]))
+				if typeof(r) == TYPE_ARRAY and (r as Array).size() >= (last + 1) * knots:
+					var k := clampi(ceili(float(most[h]) * last - 0.000001), 0, last) * knots
+					for c in PUSH_KNOTS:
+						var v := float(r[k + mini(c, knots - 1)])
+						if v > share[c]:
+							share[c] = v
+							top = maxf(top, v)
 		out[id] = share
+		most[id] = top
 	return out
 
 
 ## The cloth shader's push_m of every garment mesh in `shown` (garment_meshes: the look's shown garment meshes): the
-## share garment_pushes gives its garment times the mesh's index push_m, {mesh id: metres}. The index's table is
+## shares garment_pushes gives its garment times the mesh's index push_m, {mesh id: PackedFloat32Array of metres at the
+## knots} (a mesh that stays at its place is left out). The index's table is
 ## prepared once per index (its manifest_sha256; a synthetic index without one every time).
 static func garment_push_m(index: Dictionary, shown: Dictionary) -> Dictionary:
 	var out := {}
@@ -460,7 +482,17 @@ static func garment_push_m(index: Dictionary, shown: Dictionary) -> Dictionary:
 	var push_m: Dictionary = t.push_m
 	for m: Variant in shown:
 		if push_m.has(m):
-			out[m] = float(shares.get(g_of[m], 0.0)) * float(push_m[m])
+			var sh: PackedFloat32Array = shares.get(g_of[m], PackedFloat32Array())
+			if sh.is_empty():
+				continue
+			var pm := PackedFloat32Array(sh)
+			var scale := float(push_m[m])
+			var any := false
+			for c in pm.size():
+				pm[c] *= scale
+				any = any or pm[c] > 0.0
+			if any:
+				out[m] = pm
 	return out
 
 
@@ -496,7 +528,8 @@ static func _layering_table(index: Dictionary) -> Dictionary:
 		by_rank[int(rank[g])] = g
 	var t := {"g_of": g_of, "rank": rank, "by_rank": by_rank, "push_m": push_m,
 		"push": (lay as Dictionary).get("push", {}) if typeof((lay as Dictionary).get("push")) == TYPE_DICTIONARY else {},
-		"last": maxi(1, int((lay as Dictionary).get("samples", 5)) - 1)}
+		"last": maxi(1, int((lay as Dictionary).get("samples", 5)) - 1),
+		"knots": clampi(((lay as Dictionary).get("knots_m", [0]) as Array).size(), 1, PUSH_KNOTS)}
 	if key != "":
 		_layering_tables[key] = t
 	return t
@@ -705,7 +738,15 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 				set_param(mat, "kind", int(DETAIL_KIND.get(detail, 0)))
 				set_param(mat, "rim", float(CLOTH_RIM.get(detail, 0.2)))
 				if str(entry.get("category", "")) == "garment":
-					set_param(mat, "push_m", 0.0)   # W33: apply sets it as the worn garments need
+					set_param(mat, "push_m", ZERO_PUSH)   # W33: apply sets it as the worn garments need
+					set_param(mat, "pushed", false)
+					var lay: Variant = index.get("layering")
+					if typeof(lay) == TYPE_DICTIONARY and ((lay as Dictionary).get("knots_m", []) as Array).size() == PUSH_KNOTS:
+						set_param(mat, "push_knots", PackedFloat32Array((lay as Dictionary).knots_m))
+						set_param(mat, "push_y_norm", float((lay as Dictionary).get("y_norm_m", 4.0)))
+				if DETAIL_SCALE.has(detail):
+					set_param(mat, "detail_scale", float(DETAIL_SCALE[detail]))
+					set_param(mat, "normal_strength", float(NORMAL_STRENGTH[detail]))
 		mi.material_override = mat
 		mats[str(id)] = mat
 	root.set_meta(META_MATERIALS, mats)
@@ -952,8 +993,10 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				if str(g.get("kind", "")) == "metal":
 					set_param(mat, "kind", 1)   # a metal garment's response whatever its detail map
 				set_param(mat, "fade", 0.0)
-				if push_changed and category == "garment" and float(pushes.get(id, 0.0)) != float(pushed.get(id, 0.0)):
-					mat.set_shader_parameter("push_m", float(pushes.get(id, 0.0)))   # W33: only when it changes
+				if push_changed and category == "garment" and pushes.get(id) != pushed.get(id):
+					# W33: only when it changes; `pushed` skips the shader's knots for a garment that stands at its mesh
+					mat.set_shader_parameter("push_m", pushes.get(id, ZERO_PUSH))
+					mat.set_shader_parameter("pushed", pushes.has(id))
 				if set_build:
 					set_param(mat, "build", build)
 					set_param(mat, "build_max_m", build_max)

@@ -71,7 +71,7 @@ SLOT_SHELL_M = {"legs": 0.012, "chest": 0.014, "shins": 0.020, "feet": 0.024, "a
 LAYER_ORDER = ("legs", "chest", "shins", "arms", "feet", "waist", "armour", "cape", "shoulders", "head")
 LAYER_GAP_M = 0.012        # stage 1: an outer slot's shell over an inner slot's envelope (the test's floor: 0.004; the skin's
 #                            linear blend shortens a shell's offset where two bones share it, a third at a raised shoulder)
-RAMP_SLOPE = 0.8           # how fast that clearance eases off beyond the inner garment's edge (m a m)
+RAMP_SLOPE = 1.6           # (W33: 0.8 flared an armour over a belt far up the belly) how fast that clearance eases off beyond the inner garment's edge (m a m)
 ENV_REACH_M = 0.30         # stage 1: the longest skin-to-garment ray of a ray-cast envelope
 MAPPED_MARGIN_M = 0.005    # stage 1: added to an envelope measured over the nearest skin vertex (not a shell's own)
 HANG_MARGIN_M = 0.050      # stage 1: a cloak's hanging cloth keeps this much more over what lies under it (it hangs
@@ -88,10 +88,13 @@ PUSH_SAMPLES = 5           # the inner garment's share of its own push, 0, 0.25,
 BAND_SECTOR = 0.28         # rad: a band's ring spans the skin's highest within this either side (it bridges the
 #                            small of the back and the cleft of the buttocks; P54's 0.12 dipped into them)
 BRIDGE_ITERS = 12          # a shell spans the hollows of the skin under it this many neighbour averages wide
+SKIRT_BRIDGE_ITERS = 40    # a mail or scale coat spans the cleft of the buttocks and the fold under them
 CLOAK_BRIDGE_ITERS = 0     # a cloak lies looser: it spans the spine's groove and the shoulder blades' hollows
 CLOAK_PUSH_COLUMN = 0.10   # human m: a cloak's hanging cloth keeps the greatest push above it this far either side
 PUSH_RAMP = 0.35           # a band's or a cloak's push changes by at most this much a metre along its cloth
 _DEBUG = bool(__import__("os").environ.get("GIANT_LAYER_DEBUG"))   # prints where a pair's full push falls short
+# the push's knots (human m): off the hip joints, the hip joints, the waist, off the waist, off the shoulders twice
+PUSH_KNOT_MARKS = (("hip", -0.14), ("hip", 0.0), ("waist", 0.0), ("waist", 0.13), ("shoulder", -0.22), ("shoulder", 0.04))
 PUSH_FILL_RINGS = 3        # a band's push per skin vertex reaches its solidified outer layer's nearest vertices
 
 
@@ -536,6 +539,10 @@ class Wardrobe:
         self.geo = {}             # the base mesh as exported: (points stage-1, body vertex, push, own, hung)
         self.layering = {}
         self.pdir = {}            # per vertex of a garment's mesh, the line of its pushes (its exported normal)
+        # the push's knots (human m): a garment's push takes its own share at each, so a garment worn under the hips'
+        # part of it pushes that part, not the chest (PUSH_KNOT_MARKS)
+        mark = {"hip": self.hip, "waist": self.waist_z, "shoulder": self.shoulder}
+        self.knots = tuple(mark[k] + dz for k, dz in PUSH_KNOT_MARKS)
 
     # ---- the layering -----------------------------------------------------------------------------------------
     def need(self, keep):
@@ -680,10 +687,87 @@ class Wardrobe:
             off = np.where(keep & has, np.maximum(off, h), off)
         return off
 
+    def hang(self, off, keep, top_z, column=0.05, most=0.05):
+        """Offsets (stage-1 m) of a skirt raised so its cloth falls straight below ``top_z`` (human m) instead of
+        following the skin in under the buttocks, the belly or the hips: a vertex below it facing back (front, his
+        side) stands at least as far back (forward, out) as the skirt above it in its column (``column`` human m
+        wide), at most ``most`` more. The inner thighs (facing the other leg) keep their offsets."""
+        keep = np.asarray(keep, bool)
+        V, N, S = self.V, self.N, self.S
+        P = V + N * (np.asarray(off) / S)[:, None]
+        z = V[:, 2]
+        sk = keep & (z < top_z)
+        out = np.asarray(off, np.float64).copy()
+        ids = np.nonzero(keep & (z < top_z + 0.04))[0]
+        for axis, sel, sign in ((1, N[:, 1] > 0.3, 1.0), (1, N[:, 1] < -0.3, -1.0),
+                                (0, (N[:, 0] * np.sign(V[:, 0]) > 0.45), 0.0)):
+            cand = ids[sel[ids]]
+            for v in np.nonzero(sk & sel)[0].tolist():
+                other = 1 - axis
+                near = cand[(np.abs(P[cand, other] - P[v, other]) < column) & (P[cand, 2] >= P[v, 2])
+                            & ((np.sign(V[cand, 0]) == np.sign(V[v, 0])) | (axis == 1))]
+                if len(near) == 0:
+                    continue
+                if axis == 1:
+                    want = sign * (P[near, 1] * sign).max()
+                    gap = (want - P[v, 1]) * sign
+                    ncomp = abs(N[v, 1])
+                else:
+                    want = np.abs(P[near, 0]).max()
+                    gap = want - abs(P[v, 0])
+                    ncomp = abs(N[v, 0])
+                if gap > 0.0:
+                    out[v] = max(out[v], off[v] + min(most, gap / max(ncomp, 0.3) * S))
+        return out
+
+    def hull_fill(self, off, keep, top_z, low_z, most=0.06):
+        """Offsets (stage-1 m) of a coat's back raised to the convex hull of each horizontal slice of it (2 cm high)
+        between ``low_z`` and ``top_z`` (human m): the cloth spans the cleft of the buttocks and the hollows beside
+        them, as a skirt hangs over them, instead of drawing each cheek round. Only the back (facing back, behind the
+        hips' middle) and at most ``most`` (human m) more."""
+        from scipy.spatial import ConvexHull
+        keep = np.asarray(keep, bool)
+        V, N, S = self.V, self.N, self.S
+        out = np.asarray(off, np.float64).copy()
+        P = V + N * (out / S)[:, None]
+        yc = self.J["joint-pelvis"][1]
+        band = keep & (V[:, 2] < top_z) & (V[:, 2] > low_z)
+        back = band & (N[:, 1] > 0.15) & (V[:, 1] > yc)
+        for z0 in np.arange(low_z, top_z, 0.02):
+            sl = np.nonzero(band & (V[:, 2] >= z0) & (V[:, 2] < z0 + 0.02))[0]
+            if len(sl) < 4:
+                continue
+            Q = P[sl, :2]
+            try:
+                hull = ConvexHull(Q)
+            except Exception:
+                continue
+            eq = hull.equations                      # a x + b y + c <= 0 inside
+            for v in sl[back[sl]].tolist():
+                nh = N[v, :2]
+                ln = float(np.linalg.norm(nh))
+                if ln < 0.2:
+                    continue
+                dirv = nh / ln
+                # the distance along the normal's horizontal part to the hull's boundary
+                den = eq[:, :2] @ dirv
+                num = -(eq[:, :2] @ P[v, :2] + eq[:, 2])
+                t = num[den > 1e-9] / den[den > 1e-9]
+                if len(t) == 0:
+                    continue
+                reach = float(t.min())
+                if reach > 1e-4:
+                    out[v] = max(out[v], out[v] + min(most, reach / ln) * S)
+        return out
+
     def add_shell(self, gid, keep, off_st, seed=0, hem_noise=0.0, snaps=(), mat="giant_cloth", allowance=0.0,
-                  bridge=None):
+                  bridge=None, hang_z=None):
         slot = GARMENTS[gid]["slot"]
-        off = self.bridge(self.resolve(slot, off_st, keep), keep, BRIDGE_ITERS if bridge is None else bridge) + allowance
+        off = self.resolve(slot, off_st, keep)
+        if hang_z is not None:
+            off = self.hull_fill(off, keep, hang_z, self.hip - 0.16)
+            off = self.hang(off, keep, hang_z)
+        off = self.bridge(off, keep, BRIDGE_ITERS if bridge is None else bridge) + allowance
         ob, used = shell("Garment_" + gid, self.coll, self.rig, self.V, self.N, self.faces, self.fuv, self.uvs,
                          keep, off / self.S, self.weights, self.S, mat, seed=seed, hem_noise=hem_noise, snaps=snaps)
         self.note(gid, slot, used, off[used])
@@ -801,7 +885,9 @@ class Wardrobe:
         # the envelope the outer slots clear is this garment's place at its whole push (what the shader can draw)
         slot = GARMENTS[gid]["slot"]
         E = self.E.setdefault(slot, np.full(self.n, np.nan))
-        self.E[slot] = np.fmax(E, self._env_at(gid, 1.0))
+        for k in range(PUSH_SAMPLES):        # (a cloak's hanging cloth may stand over other skin part way)
+            E = np.fmax(E, self._env_at(gid, k / (PUSH_SAMPLES - 1.0)))
+        self.E[slot] = E
 
     def _push_dir(self, gid, ob, P, b, own):
         """Per vertex of a garment's mesh the line the cloth shader pushes it along (its exported normal): the skin
@@ -883,7 +969,13 @@ class Wardrobe:
         order = [g for slot in LAYER_ORDER for g in ORDER if GARMENTS[g]["slot"] == slot]
         layer = {g: LAYER_ORDER.index(GARMENTS[g]["slot"]) for g in order}
         samples = np.linspace(0.0, 1.0, PUSH_SAMPLES)
-        envs = {(g, k): self._env_at(g, s) for g in order for k, s in enumerate(samples)}
+        envs = {}
+        for g in order:
+            # each share's envelope at least the smaller shares' (the table is read at the share at or above)
+            run = np.full(self.n, np.nan)
+            for k, sv in enumerate(samples):
+                run = np.fmax(run, self._env_at(g, sv))
+                envs[(g, k)] = run
         push, short = {}, {}
         for g in order:
             Pe, _be, d0, _own, hung, be, cosf, _pdir = self.geo[g]
@@ -895,6 +987,7 @@ class Wardrobe:
                 if layer[h] >= layer[g]:
                     continue
                 vals = []
+                wk = self.knot_weights(Pe[:, 2] / self.S) > 0.0      # (points, knots): the knots each point reads
                 for k in range(PUSH_SAMPLES):
                     E = envs[(h, k)][be]
                     over = np.isfinite(E)
@@ -911,12 +1004,32 @@ class Wardrobe:
                             print("[layering] %s s=1 short %.4f at point %d/%d body %d z %.3f: hb %.4f d %.4f (d0 %.4f "
                                   "cos %.2f) E %.4f" % (key, miss, i, len(Pe), be[i], self.V[be[i], 2], hb[i], d[i], d0[i],
                                                        cosf[i], envs[(h, k)][be[i]]), flush=True)
-                    vals.append(float(min(1.0, math.ceil(max(0.0, float(s_i.max())) * 1000.0) / 1000.0)))
+                    # each knot's share: the greatest any point that reads it needs (so any mix of knots is enough)
+                    for j in range(len(self.knots)):
+                        sj = float(s_i[wk[:, j]].max()) if wk[:, j].any() else 0.0
+                        vals.append(float(min(1.0, math.ceil(max(0.0, sj) * 1000.0) / 1000.0)))
                 if max(vals) > 0.0:
                     row[h] = vals
             if row:
                 push[g] = row
-        self.layering = {"order": order, "push": push, "short": short}
+        self.layering = {"order": order, "push": push, "short": short,
+                         "knots_m": [float(k * self.S) for k in self.knots]}
+
+    def knot_weights(self, z):
+        """(points, knots) the share of each knot's push a point at rest height ``z`` (human m) takes: the lowest knot's
+        below it, the highest's above, and between two knots a smoothstep from the one to the other (the cloth shader's
+        push_weights, from the point's rest height in UV2.x)."""
+        z = np.asarray(z, np.float64)
+        K = self.knots
+        W = np.zeros((len(z), len(K)))
+        W[:, 0] = z <= K[0]
+        W[:, -1] = z >= K[-1]
+        for j in range(len(K) - 1):
+            inside = (z > K[j]) & (z < K[j + 1])
+            t = sstep(z, K[j], K[j + 1])
+            W[:, j] = np.where(inside, 1.0 - t, W[:, j])
+            W[:, j + 1] = np.where(inside, t, W[:, j + 1])
+        return W
 
     # ================================================================================== legs (0.012)
     def g_braies(self):
@@ -953,7 +1066,7 @@ class Wardrobe:
         th = np.arctan2(V[:, 1], V[:, 0])                     # round the hips: the pleats run all the way round
         pleat = 0.007 * np.abs(np.sin(11.0 * th)) * (0.3 + 0.7 * down)
         off = SLOT_SHELL_M["legs"] + 0.004 + 0.030 * down ** 1.2 + pleat
-        self.add_shell("kilt", keep, off, snaps=[self.zsnap(hem), self.zsnap(w - 0.004)])
+        self.add_shell("kilt", keep, off, snaps=[self.zsnap(hem), self.zsnap(w - 0.004)], hang_z=hp + 0.06)
 
     def g_loincloth(self):
         z, w, hp = self.z, self.waist_z, self.hip
@@ -979,7 +1092,7 @@ class Wardrobe:
             & (B["head"] < 0.05) & (B["lowerarm"] < 0.3) & (B["hand"] < 0.05) & (z > mid_thigh)
         off = 0.022 + 0.018 * np.clip((hip - z) / (hip - mid_thigh), 0, 1)
         # P54: the sleeve's and the skirt's hems straightened (P53's follow-up: the sleeve edge stepped)
-        self.add_shell("tunic", keep, off * self.S, snaps=[self.upsnap(cut_t), self.zsnap(mid_thigh)])
+        self.add_shell("tunic", keep, off * self.S, snaps=[self.upsnap(cut_t), self.zsnap(mid_thigh)], hang_z=hip + 0.08)
 
     def g_shirt(self):
         B, z = self.B, self.z
@@ -1259,8 +1372,9 @@ class Wardrobe:
         skirt = np.clip((self.hip + 0.12 - z) / (self.hip + 0.12 - hem), 0, 1)
         rng = np.random.default_rng(43)
         folds = 0.004 * np.sin(7.0 * self.leg_theta + rng.random() * 6.28) * skirt
-        off = SLOT_SHELL_M["armour"] + 0.008 + 0.032 * skirt ** 1.5 + folds
-        self.add_shell("mail_hauberk", keep, off, snaps=[self.zsnap(hem), self.upsnap(0.5)], mat="giant_metal")
+        off = SLOT_SHELL_M["armour"] + 0.008 + 0.014 * skirt ** 1.5 + folds     # (W33: the skirt hangs; 0.032 flared)
+        self.add_shell("mail_hauberk", keep, off, snaps=[self.zsnap(hem), self.upsnap(0.5)], mat="giant_metal",
+                       hang_z=self.hip + 0.12, bridge=SKIRT_BRIDGE_ITERS)
 
     def g_leather_cuirass(self):
         B, z = self.B, self.z
@@ -1276,8 +1390,9 @@ class Wardrobe:
         keep = ((self.torso + B["pelvis"] + B["thigh"] * (z > hem)) > 0.55) & (B["upperarm"] < 0.25) & (B["neck"] < 0.3) \
             & (B["head"] < 0.02) & (z > hem)
         skirt = np.clip((self.hip + 0.12 - z) / (self.hip + 0.12 - hem), 0, 1)
-        off = SLOT_SHELL_M["armour"] + 0.011 + 0.030 * skirt ** 1.5
-        self.add_shell("scale_coat", keep, off, snaps=[self.zsnap(hem)], mat="giant_metal")
+        off = SLOT_SHELL_M["armour"] + 0.011 + 0.014 * skirt ** 1.5             # (W33: the skirt hangs; 0.030 flared)
+        self.add_shell("scale_coat", keep, off, snaps=[self.zsnap(hem)], mat="giant_metal", hang_z=self.hip + 0.12,
+                       bridge=SKIRT_BRIDGE_ITERS)
 
     def g_bronze_breastplate(self):
         B, z, V, N = self.B, self.z, self.V, self.N

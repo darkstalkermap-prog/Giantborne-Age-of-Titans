@@ -38,8 +38,13 @@ uniform float build_max_m = 0.0;
 uniform int bead_mask = -1;
 // The W33 look lane: a garment's mesh sits where it would over nothing; each vertex's colour alpha is its push (along
 // the skin's normal) to its place over the loosest garment of every inner slot, over the mesh's push_m. GiantLook sets
-// push_m to the share of that the garments worn under it need (GiantLook.garment_pushes): 0 worn alone.
-uniform float push_m = 0.0;
+// push_m to the shares of that the garments worn under it need at six knots of rest height (push_knots, stage-1 m:
+// from the thighs to the shoulders; GiantLook.garment_pushes): 0 worn alone. UV2.x is the vertex's rest height over
+// push_y_norm; between two knots the share eases from the one to the other.
+uniform float push_m[6];
+uniform float push_knots[6];
+uniform float push_y_norm = 4.0;
+uniform bool pushed = false;
 const float DARK_FLOOR = 0.035;
 const vec3 BONE = vec3(0.62, 0.56, 0.45);   // linear: an aged, sun-yellowed bone
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
@@ -54,7 +59,17 @@ void vertex() {
 		VERTEX = vec3(0.0);   // P56: a bead of a style not shown
 	}
 	v_fp_pos = VERTEX;
-	VERTEX += NORMAL * (dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m + COLOR.a * push_m);   // P53: the build sliders; W33: the layering
+	float push = 0.0;
+	if (pushed) {
+		float y = UV2.x * push_y_norm;
+		push = push_m[5];
+		for (int j = 4; j >= 0; j--) {
+			if (y < push_knots[j + 1]) {
+				push = mix(push_m[j], push_m[j + 1], smoothstep(push_knots[j], push_knots[j + 1], y));
+			}
+		}
+	}
+	VERTEX += NORMAL * (dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m + COLOR.a * push);   // P53: the build; W33: the layering
 	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(clamp(int(COLOR.r * 16.0), 0, 15));
 }
 

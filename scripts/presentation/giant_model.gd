@@ -348,11 +348,13 @@ static func _keep_recent(path: String, mesh: Mesh) -> void:
 
 
 ## A mesh's buffers in bytes, roughly and without reading them back (mesh_bytes does): 40 bytes a vertex
-## (position, normal, tangent, colour, UV, four bones and weights) and its indices with their LODs.
+## (position, normal, tangent, colour, UV, four bones and weights; 48 with a UV2) and its indices with their LODs.
 static func part_cost(mesh: Mesh) -> int:
 	if mesh == null or mesh.get_surface_count() == 0:
 		return 0
-	return mesh.surface_get_array_len(0) * 40 + mesh.surface_get_array_index_len(0) * 3
+	# (a garment carries its rest height in UV2 since the W33 look lane, a bead set its style code: 8 bytes more)
+	var uv2 := 8 if (mesh.surface_get_format(0) & Mesh.ARRAY_FORMAT_TEX_UV2) != 0 else 0
+	return mesh.surface_get_array_len(0) * (40 + uv2) + mesh.surface_get_array_index_len(0) * 3
 
 
 ## True when two skins bind the same bones by name in the same order with the same poses.

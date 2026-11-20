@@ -230,7 +230,8 @@ def build_index(export_info: dict, design_info: dict) -> dict:
         "slots": {"shell_m": export_info.get("slot_shell_m", {}), "layers": export_info.get("layer_order", [])},
         # the W33 look lane: the garments from the skin out and, per outer garment and worn inner garment, the least
         # share of its push (its index push_m) at each share of the inner one's (GiantLook.garment_pushes)
-        "layering": {k: export_info["layering"][k] for k in ("order", "samples", "push")} if "layering" in export_info
+        "layering": {k: export_info["layering"][k] for k in ("order", "samples", "knots_m", "y_norm_m", "push")}
+        if "layering" in export_info
         else {},
         "designs": designs,
         "regions": [{"id": i, "name": n} for i, n in enumerate(split.REGIONS)],

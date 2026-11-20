@@ -71,6 +71,7 @@ FREE_COVER_SHARE = 0.85            # and its share: it hangs straight, so the fl
 # a split garment is cut along the body's own boundary, but for the braies (not a shell: by their weights)
 SPLIT_BY_WEIGHT = ("braies",)
 PART_LAYER = {0: 3, 1: 2, 2: 1}    # head, torso, limbs -> their render layers
+PUSH_Y_NORM = 4.0                  # stage-1 m: a garment's rest height over this in UV2.x (the W33 look lane)
 HAIR_CUT_LEAST = 0.3               # a style cut shorter than this under a head garment is not drawn there
 LIMB_ROOTS = ("upperarm_l", "upperarm_r", "thigh_l", "thigh_r")
 TORSO_ROOTS = ("clavicle_l", "clavicle_r", "pelvis")
@@ -167,6 +168,12 @@ def make_object(name, A, coll, rig, material, vregion=None):
     me.update()
     uvl = me.uv_layers.new(name="UVMap")
     uvl.data.foreach_set("uv", np.asarray([c for f in A["corner_uv"] for c in f], np.float32).ravel())
+    if "uv2" in A:
+        # the W33 look lane: a garment's rest height (stage-1 m over PUSH_Y_NORM) in UV2.x: the cloth shader's push
+        # takes its knots' shares by it
+        u2 = np.asarray(A["uv2"], np.float32)
+        me.uv_layers.new(name="UV2").data.foreach_set(
+            "uv", np.asarray([(float(u2[v]), 0.0) for f in A["faces"] for v in f], np.float32).ravel())
     me.polygons.foreach_set("use_smooth", np.ones(len(me.polygons), dtype=bool))
     me.normals_split_custom_set([tuple(c) for f in A["corner_normal"] for c in f])
     if vregion is not None:
@@ -739,7 +746,7 @@ def shell_distances(rig, body, w, parts, n, S):
         kd = cKDTree(BV)
         pts = {}
         for g in gids:
-            Ps, Bs, Ds, Qs = [], [], [], []
+            Ps, Bs, Ds, Qs, Ys = [], [], [], [], []
             for o in parts[g]:
                 oe = o.evaluated_get(dg)
                 m = oe.to_mesh()
@@ -750,20 +757,22 @@ def shell_distances(rig, body, w, parts, n, S):
                 Bs.append(np.asarray(o["body_ids"], np.int64))
                 Ds.append(np.asarray(o["push_d"], np.float64))
                 Qs.append(np.asarray(o["push_body"], np.int64))
+                Ys.append(np.asarray(o["push_y"], np.float64) if "push_y" in o else np.zeros(len(o["push_d"])))
             P, bid, pd, pb = np.concatenate(Ps), np.concatenate(Bs), np.concatenate(Ds), np.concatenate(Qs)
             keep = bid != -2
-            pts[g] = (P[keep], bid[keep], pd[keep], pb[keep])
+            pts[g] = (P[keep], bid[keep], pd[keep], pb[keep], w.knot_weights(np.concatenate(Ys)[keep]))
         cache = {}
 
         def lohi(g, s):
             """The least and the greatest height of garment g over each posed skin vertex with a share s of its push
             (the W33 look lane: the cloth shader's push along the posed normal of each vertex's skin vertex)."""
-            key = (g, round(float(s), 4))
+            s = np.asarray(s, np.float64) * np.ones(len(w.knots))
+            key = (g, tuple(np.round(s, 4)))
             if key in cache:
                 return cache[key]
-            P, bid, pd, pb = pts[g]
-            if s > 0.0:
-                P = P + (s * pd)[:, None] * BN[np.maximum(pb, 0)] * (pb >= 0)[:, None]
+            P, bid, pd, pb, kw = pts[g]
+            if s.max() > 0.0:
+                P = P + ((kw @ s) * pd)[:, None] * BN[np.maximum(pb, 0)] * (pb >= 0)[:, None]
             a = np.full(n, np.nan)
             b = np.full(n, np.nan)
             own = bid >= 0
@@ -788,8 +797,9 @@ def shell_distances(rig, body, w, parts, n, S):
                 inner, outer = (a, b) if order[sa] < order[sb] else (b, a)
                 # the W33 look lane: the inner garment at no push and at its full push, the outer one at the share
                 # the layering table gives it over the inner one then (worn alone together: the least it may have)
-                row = push.get(outer, {}).get(inner, [0.0] * gg.PUSH_SAMPLES)
-                for s_in, s_out in ((0.0, row[0]), (1.0, row[-1])):
+                nk = len(w.knots)
+                row = push.get(outer, {}).get(inner, [0.0] * (gg.PUSH_SAMPLES * nk))
+                for s_in, s_out in ((0.0, row[:nk]), (1.0, row[-nk:])):
                     _lo_in, hi_in = lohi(inner, s_in)
                     lo_out, _hi_out = lohi(outer, s_out)
                     both = np.isfinite(hi_in) & np.isfinite(lo_out) & foot[inner] & foot[outer]
@@ -800,7 +810,7 @@ def shell_distances(rig, body, w, parts, n, S):
                     out[key] = min(out.get(key, gap), gap)
                     if os.environ.get("GIANT_SHELL_DEBUG") and gap < 0.004:
                         k = np.nonzero(both)[0][int(np.argmin(lo_out[both] - hi_in[both]))]
-                        log("shell %s %s (%.2f %.2f) %.4f at body vertex %d (%.3f %.3f %.3f)"
+                        log("shell %s %s (%.2f %s) %.4f at body vertex %d (%.3f %.3f %.3f)"
                             % (pname, key, s_in, s_out, gap, k, *BV[k]))
     _set_pose(rig, rest, None)
     return {k: r6(v) for k, v in sorted(out.items())}, list(SHELL_POSES)
@@ -1040,7 +1050,9 @@ def run(out_dir):
             part_push = np.where(src >= 0, vpush[np.maximum(src, 0)], 0.0)      # a cap's centre takes none
             if push_scale > 0.0:
                 arrays["valpha"] = np.round(part_push / push_scale * 255.0) / 255.0
+                arrays["uv2"] = np.asarray(arrays["V"], np.float64)[:, 2] / PUSH_Y_NORM
             gob = make_object(name, arrays, coll, rig, mat, reg)
+            gob["push_y"] = (np.asarray(arrays["V"], np.float64)[:, 2] / S).tolist()
             gob["push_d"] = part_push.tolist()
             gob["push_body"] = np.where(src >= 0, np.asarray(gbody)[np.maximum(src, 0)], -1).tolist()
             # a shell's own body vertex per vertex (-1: a cap's centre, or a garment that is not a shell)
@@ -1080,6 +1092,7 @@ def run(out_dir):
     info["slots"] = {g: {k: r6(v) for k, v in sorted(rec.items())} for g, rec in sorted(wardrobe.record.items())}
     lay = wardrobe.layering
     info["layering"] = {"order": list(lay["order"]), "samples": gg.PUSH_SAMPLES,
+                        "knots_m": [r6(k) for k in lay["knots_m"]], "y_norm_m": PUSH_Y_NORM,
                         "push": {g: {h: [r6(x) for x in v] for h, v in sorted(row.items())}
                                  for g, row in sorted(lay["push"].items())},
                         "short": {k: r6(v) for k, v in sorted(lay["short"].items())}}
