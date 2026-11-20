@@ -122,7 +122,8 @@ func _run() -> void:
 	# grids: a clothing slot, the outfits, the hair styles, a tattoo region, an accessory slot
 	for case: Array in [["Clothing", "outfit.slots.chest.item", "21_grid_chest"], ["Clothing", "outfit.slots.armour.item",
 			"22_grid_armour"], ["Clothing", "outfit.set", "23_grid_outfits"], ["Hair", "hair.style", "24_grid_hair"],
-			["Tattoos", "tattoos.arms", "25_grid_tattoo_arms"], ["Accessories", "outfit.accessories.neck", "26_grid_neck"]]:
+			["Tattoos", "tattoos.arms", "25_grid_tattoo_arms"], ["Accessories", "outfit.accessories.neck", "26_grid_neck"],
+			["Accessories", "outfit.accessories.belt", "32_grid_belt"], ["War paint", "paint.face", "33_grid_paint_face"]]:
 		await _grid(case[0], case[1], case[2])
 	# the second page of the hair styles (the catalogue has more than a page), the material filter
 	c.show_category("Clothing")
