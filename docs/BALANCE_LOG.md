@@ -2719,3 +2719,14 @@ share (1.12) and the force branch.
 | Every slotted ability used; none over 40 % | the bot's rotation (Earthquake's few windows at stage 6) and the expert's Runic Bolt | M10 (the bot: "Ability use") |
 | The worst streaming work frame and CPU per tick p95 | shared-machine numbers (a load of 1.5-20.5): the release takes the quiet-machine captures; headless, the work frame is a props part's text parse (exports ship binary scenes) | P40 (the quiet-machine captures; "The worst streaming work frame", "CPU per tick p95 over 8 ms") |
 | The Valley's segment damage (the forest 1.12, the ruins 0.81) and stage-3 flee share (0.45) | since P17b and P22: the forest's fights and the ruins' courtyard; the shared soldier's awe loss for the stage-3 share | M10 ("The Valley's items that miss") |
+
+## Gate B: the leash's contact rule (M11 Part B, an accepted gameplay change)
+
+W32 (commit `d09f1d7`) added `EnemyActor.LEASH_CONTACT_M` (0.05 m) and `LEASH_CONTACT_WAY_S` (1 s): a leash return
+outside its leash held pressed into a giant's body for 1 s on end begins its wait at once, instead of at its second
+path failure. Why: in a third of the Sim's update phases the war-camp riders sent home through a giant stayed pressed
+into him for 5 s or more and pinned him (FOLLOWUPS, `test_war_camp_leash`). Before and after, the 60-phase sweep of the
+riders' trap: 20 of 60 phases failed a check (contact up to 6.8 s, two returns not ended in 30 s) to 0 of 60 (the
+longest contact 3.5 s, every return ended within 11 s). The seeded 120 s soak is unchanged (41 attacks, 33 hits
+resolved, 4 enemy kills, 2 fence breaks, 7,201 frames). Gate B kept it as a gameplay change (`docs/DECISIONS.md` §3.6);
+`test_leash_waits` (slow tier) exercises the branch from two Sim phases.

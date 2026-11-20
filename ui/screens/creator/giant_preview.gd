@@ -19,9 +19,9 @@ extends SubViewportContainer
 ## degrees, the settings' field of view), in the world's light (its sky, ambient, sun and fog), on the
 ## ground, with a soldier beside him for scale (game_camera_transform()).
 ##
-## The user turns the giant (turn(): a mouse drag, the right stick, Q and E) and zooms (zoom(): the wheel,
-## LT and RT, + and -). set_fade() fades the covering garments while a "Hidden by your clothing" row has the
-## focus.
+## The user turns the giant (turn(): a mouse drag, the right stick's left and right, Q and E) and zooms (zoom(): the
+## wheel, the right stick's up and down (P57; LT and RT jump five rows and turn a grid's pages), + and -).
+## set_fade() fades the covering garments while a "Hidden by your clothing" row has the focus.
 ##
 ## Resolution (M10 gate, LA-3): the project stretches its 1280x720 canvas to the window (canvas_items), so a
 ## stretched container's SubViewport is the container's size in canvas units and the giant was drawn at about
