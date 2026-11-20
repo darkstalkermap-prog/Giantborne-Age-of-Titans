@@ -393,6 +393,8 @@ func pages_b() -> Array:
 					region = OptionRows.row_region({"key": "scar.x", "id": id}, {}, index, "")
 			if region == "face":
 				rec = OptionRows.with_value(rec, "beard.style", "beard.none")
+			elif region == "legs":
+				rec = OptionRows.with_value(rec, "outfit.slots.legs.item", "")   # the braies cover the thighs
 			var side := OptionRows.design_side(str(o.get("design", "")), index)
 			tiles.append(_tile("%s (%s%s)" % [_name(id), str(REGION_WORDS.get(region, region)), "" if side == "centre" else ", " + side], rec,
 				GiantPreview.region_framing(region, side)))
@@ -400,7 +402,7 @@ func pages_b() -> Array:
 		sections.append({"title": "%s: %d, each framed and in the stage-1 Game view" % [kind[1], tiles.size() / 2], "columns": 6,
 			"aspect": 0.75, "tiles": tiles})
 	out.append({"id": "b5", "name": "designs", "title": "B5. Designs by region",
-		"note": "Every tattoo, war paint and scar alone on the default giant (no beard over a face design), framed from its side, then at the stage-1 game camera.",
+		"note": "Every tattoo, war paint and scar alone on the default giant (no beard over a face design, no braies over a leg design), framed from its side, then at the stage-1 game camera.",
 		"sections": sections})
 	# b6 - sliders
 	var build: Array = []
@@ -410,13 +412,14 @@ func pages_b() -> Array:
 			var words := "%s %+.1f (%s)" % [str(o.get("name", o.key)), v, str(o.get("low" if v < 0.0 else "high", ""))]
 			build.append(_tile(words + " - Game view, behind", rec, "game"))
 			build.append(_tile(words + " - whole", rec, "full"))
-	var face: Array = [_tile("Every face slider at 0", base, "face", "", 20.0)]
+	var shaven := OptionRows.with_value(base, "beard.style", "beard.none")   # the jaw and the chin under no beard
+	var face: Array = [_tile("Every face slider at 0 (no beard)", shaven, "face", "", 20.0)]
 	for o: Dictionary in Appearance.options("face", ""):
 		for v: float in [-1.0, 1.0]:
 			face.append(_tile("%s %+d (%s)" % [str(o.get("name", o.key)), int(v), str(o.get("low" if v < 0.0 else "high", ""))],
-				OptionRows.with_value(base, "face." + str(o.key), v), "face", "", 20.0))
+				OptionRows.with_value(shaven, "face." + str(o.key), v), "face", "", 20.0))
 	out.append({"id": "b6", "name": "sliders", "title": "B6. The build and face sliders at their ends",
-		"note": "The build sliders at the creator's ends (%.1f each way), from behind at the stage-1 game camera and whole; the face sliders at -1 and +1." %
+		"note": "The build sliders at the creator's ends (%.1f each way), from behind at the stage-1 game camera and whole; the face sliders at -1 and +1 without a beard." %
 			OptionRows.BUILD_LIMIT,
 		"sections": [
 			{"title": "Build", "columns": 4, "aspect": 0.75, "tiles": build},
