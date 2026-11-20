@@ -111,6 +111,7 @@ SKIRT_BRIDGE_ITERS = 40    # a mail or scale coat spans the cleft of the buttock
 CLOAK_BRIDGE_ITERS = 0     # a cloak lies looser: it spans the spine's groove and the shoulder blades' hollows
 SMOOTH_PUSH_DIR = ("tunic",)   # the third look lane: garments pushed and shaded along smoothed skin normals
 CLOAK_ARM_MARGIN_M = 0.003   # stage 1 (the third look lane): a cloak's cloth over the shoulders' sides keeps this more
+SHEET_TOP_OVERLAP_M = 0.02   # the fourth look lane: a cloak's cut cloth reaches this far under where its sheet falls from
 CLOAK_NORMAL_SMOOTH = 12   # the third look lane: a cloak's normals on the back, smoothed this many neighbour passes
 CLOAK_PUSH_COLUMN = 0.10   # human m: a cloak's hanging cloth keeps the greatest push above it this far either side
 PUSH_RAMP = 0.35           # a band's or a cloak's push changes by at most this much a metre along its cloth
@@ -727,6 +728,7 @@ class Wardrobe:
         self.geo = {}             # the base mesh as exported: (points stage-1, body vertex, push, own, hung)
         self.layering = {}
         self.skirt_rows = {}      # the third look lane: a skirt's hanging rows (human m) and its slot, at its full place
+        self.hang_pts = {}        # the fourth: points an outer hanging cloth clears (skirt rows, the braies' seat) and slot
         self.pdir = {}            # per vertex of a garment's mesh, the line of its pushes (its exported normal)
         # the push's knots (human m): a garment's push takes its own share at each, so a garment worn under the hips'
         # part of it pushes that part, not the chest (PUSH_KNOT_MARKS)
@@ -1038,7 +1040,7 @@ class Wardrobe:
                 pts = [self.V[sl, :2] + self.N[sl, :2] * lift[:, None]]
                 if self.mode == "full":
                     # and the hanging rows of the skirts of the inner slots (no envelope over the skin holds them)
-                    for g2, (Q2, slot2) in self.skirt_rows.items():
+                    for g2, (Q2, slot2) in self.hang_pts.items():
                         if LAYER_ORDER.index(slot2) < LAYER_ORDER.index(slot):
                             near = np.abs(Q2[:, 2] - zr) < 0.04
                             if near.any():
@@ -1110,6 +1112,7 @@ class Wardrobe:
         ob.data.materials.append(_placeholder(mat))
         if self.mode == "full":
             self.skirt_rows[gid] = (P2[src_loop >= 0], slot)
+            self.hang_pts[gid] = (P2[src_loop >= 0], slot)
         exact = np.where(src_loop >= 0, -1, body)
         shell_ids = body[src_loop < 0]
         self.note(gid, slot, shell_ids, off[shell_ids])
@@ -1129,7 +1132,7 @@ class Wardrobe:
         if self.mode != "full":
             return P
         c = np.array([0.0, float(self.J["joint-pelvis"][1])])
-        for g2, (Q2, slot2) in self.skirt_rows.items():
+        for g2, (Q2, slot2) in self.hang_pts.items():
             if LAYER_ORDER.index(slot2) >= LAYER_ORDER.index(slot):
                 continue
             rq = Q2[:, :2] - c
@@ -1422,6 +1425,12 @@ class Wardrobe:
         ob, body = build_braies(self.bd, self.rig, self.coll, self.weights, self.S)
         self.built["braies"] = (ob, body)
         self.ray_env("braies", ob, np.unique(body))
+        if self.mode == "full":
+            # the fourth look lane: the braies' seat for the hanging cloth over it to clear (its envelope over the
+            # skin under the cleft is low: the cloaks fell into the seat)
+            Pb = _co(ob) / self.S
+            seat = (Pb[:, 1] > self.J["joint-pelvis"][1]) & (np.abs(Pb[:, 2] - self.hip) < 0.25)
+            self.hang_pts["braies"] = (Pb[seat], "legs")
 
     def _legs(self, top, bottom):
         B, z = self.B, self.z
@@ -1812,13 +1821,38 @@ class Wardrobe:
                                  extend=0.16, extend_rows=3, extend_flare=0.025, extend_spread=0.02, end_noise=0.02))
 
     def g_long_cloak(self):
-        self._cloak("long_cloak", dict(CAPE, fold_depth=0.026, folds=7.0, hem_noise=0.0, extend=0.80, extend_rows=10, extend_flare=0.20,
-                                        extend_spread=0.10, end_noise=0.03, seed=13))
+        self._cloak("long_cloak", dict(CAPE, fold_depth=0.026, folds=7.0, hem_noise=0.0, extend=0.80, extend_rows=10, extend_flare=0.09,
+                                        extend_spread=0.06, end_noise=0.012, seed=13))   # (the fourth look lane: it
+        #                                 flared back as a board; it falls)
 
     def g_fur_cloak(self):
         self._cloak("fur_cloak", dict(CAPE, offset=0.06, collar_offset=0.05, collar_lo=0.06, hem_noise=0.0,
-                                       extend=0.48, extend_rows=7, extend_flare=0.14, extend_spread=0.08,
-                                       end_noise=0.05, seed=17), mat="giant_fur")
+                                       extend=0.48, extend_rows=7, extend_flare=0.07, extend_spread=0.05,
+                                       end_noise=0.02, seed=17), mat="giant_fur")
+
+    def _cloak_clear(self, P, own, extra):
+        """A cloak's points cleared of the envelope under them (``clear``: the hanging cloth straight back) and its
+        hanging cloth of the inner skirts' rows and the braies' seat (the fourth look lane: they showed through it in dark
+        patches near the seat), each column of the hanging cloth then standing at least as far back as any of it above
+        (one sheet falling from the shoulders, not a lump over each thing under it)."""
+        own = np.asarray(own)
+        P = self.clear(P, extra, own=own, along=np.where((own < 0)[:, None], np.array([[0.0, 1.0, 0.0]]), 0.0))
+        hung = np.nonzero(own < 0)[0]
+        if len(hung) == 0 or self.mode != "full":
+            return P
+        Q = self.clear_skirts(P[hung], "cape", (LAYER_GAP_M + HANG_MARGIN_M) / self.S)
+        lift = np.maximum(0.0, Q[:, 1] - P[hung, 1])
+        if lift.max() <= 0.0:
+            return P
+        y = P[hung, 1] + lift
+        x, z = P[hung, 0], P[hung, 2]
+        out = y.copy()
+        for k in range(len(hung)):
+            above = (np.abs(x - x[k]) < CLOAK_PUSH_COLUMN) & (z >= z[k])
+            out[k] = max(out[k], float(np.max(np.where(above, y, -np.inf))))
+        P = P.copy()
+        P[hung, 1] = out
+        return P
 
     def _cloak(self, gid, p, mat="giant_cloth"):
         w = self
@@ -1826,8 +1860,7 @@ class Wardrobe:
         ob, used = build_cape(w.bd, w.rig, w.coll, w.weights, w.S, w.layout, V, N, faces, fuv, B, z,
                               w.shoulder, w.hip, w.neck_z, p, name="Garment_" + gid,
                               need=lambda keep: w.need(keep) / w.S, mat=mat,
-                              clear=lambda P, own, extra: w.clear(P, extra, own=own, along=np.where(
-                                  (np.asarray(own) < 0)[:, None], np.array([[0.0, 1.0, 0.0]]), 0.0)),
+                              clear=lambda P, own, extra: w._cloak_clear(P, own, extra),
                               bridge=lambda off, keep: w.bridge(off * w.S, keep, CLOAK_BRIDGE_ITERS) / w.S)
         # the cut part stands over its own skin vertex, unless the hang moved it; the rows below the body's cut do not
         w.exact[gid] = np.asarray(ob["exact_ids"], np.int64)
@@ -1996,6 +2029,12 @@ def build_cape(bd, rig, coll, weights, S, layout, V, N, faces, fuv, B, z, should
     keep = keep | collar
     # P54: the cloth lies on the back down to hang_z (below the shoulders' garments, which lie over it), then hangs
     hang_z = shoulder - p["hang_below"]
+    sheet = bool(p.get("sheet", True))
+    if sheet:
+        # the fourth look lane: only the cloth on the shoulders and the upper back is cut from the body; below hang_z
+        # the cloak is one sheet of rows falling from there (_extend_cloak) to its hem (cut from the body down to the
+        # hips it followed the buttocks' cleft: dark notches and a slit near the seat, and it stood off as a board)
+        keep = keep & ((z > hang_z - SHEET_TOP_OVERLAP_M) | collar)
     down = np.clip((hang_z - z) / (hang_z - hip), 0.0, 1.0)
     off = np.where(collar & ~back, p["collar_offset"], p["offset"])
     if need is not None:
@@ -2039,9 +2078,14 @@ def build_cape(bd, rig, coll, weights, S, layout, V, N, faces, fuv, B, z, should
     ease_boundary(P, remap[F], N[used])
     E = _boundary(F)
     bv = np.unique(E.ravel())
-    bv = bv[z[bv] < hip + 0.12]
+    bv = bv[z[bv] < (hang_z + 0.03 if sheet else hip + 0.12)]
     uvs = np.asarray(bd.bm.uvs, np.float64)
-    bottom = bv[z[bv] < hip + 0.01]
+    bottom = bv[z[bv] < (hang_z - SHEET_TOP_OVERLAP_M + 0.03 if sheet else hip + 0.01)]
+    if sheet:
+        bottom = bottom[np.abs(V[bottom, 0]) < 0.30]
+        fall = (hang_z - SHEET_TOP_OVERLAP_M) - (hip - 0.03)
+        p = dict(p, extend=fall + p["extend"], extend_rows=max(4, int(math.ceil((fall + p["extend"]) / 0.07))),
+                 sheet_folds=True)
     FL = remap[F]
     FUV = FU
     body_ids = used.copy()
@@ -2126,6 +2170,11 @@ def _extend_cloak(P, FL, uvs, FUV, body_ids, hem_local, used, z, hip, p, rng):
     m = len(chain)
     top = P[chain].copy()
     top[:, 2] = np.minimum(top[:, 2], np.min(top[:, 2]) + 0.015)       # an even top for the fall
+    # the fourth look lane: the fall starts from the hem's rearmost within a hand either side (the hem dips into the
+    # cleft of the buttocks, and the rows fell from the dip: a dark slit down the middle of the long cloaks)
+    for k in range(len(top)):
+        near = np.abs(P[chain, 0] - P[chain[k], 0]) < 0.07
+        top[k, 1] = max(top[k, 1], float(np.max(P[chain[near], 1])))
     xs = top[:, 0]
     mid = 0.5 * (xs.max() + xs.min())
     newP = [P]
@@ -2141,18 +2190,22 @@ def _extend_cloak(P, FL, uvs, FUV, body_ids, hem_local, used, z, hip, p, rng):
         uv_top[k] = uvs[corner[v]]
     new_uv = []
     noise = rng.random(m)
+    fold_ph = rng.random() * 6.28
     for r in range(1, rows + 1):
         s = r / rows
         row = top.copy()
         row[:, 2] = top[:, 2] - p["extend"] * s
         row[:, 1] = top[:, 1] + p["extend_flare"] * s ** 1.3 + 0.012 * np.sin(xs * 30.0 + r) * s
+        if p.get("sheet_folds"):
+            # vertical folds, deepening as it falls (the fourth look lane)
+            row[:, 1] += p["fold_depth"] * min(1.0, 3.0 * s) * np.sin(p["folds"] * xs / 0.2 + fold_ph)
         row[:, 0] = top[:, 0] + (xs - mid) * p["extend_spread"] * s / max(1e-6, (xs.max() - xs.min()) / 2)
         if r == rows:
             row[:, 2] -= p["end_noise"] * noise
         newP.append(row)
         ids.append(base + (r - 1) * m + np.arange(m))
         uvr = uv_top.copy()
-        uvr[:, 1] -= 0.12 * s
+        uvr[:, 1] -= (SKIRT_UV_PER_M * p["extend"] if p.get("sheet_folds") else 0.12) * s
         new_uv.append(uvr)
     P2 = np.concatenate(newP)
     uv2 = np.concatenate([uvs] + new_uv)
