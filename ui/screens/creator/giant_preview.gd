@@ -69,21 +69,25 @@ const ZOOM_MAX := 1.6
 const MAX_PIXEL_SCALE := 2.0
 ## Framings in the model's frame at stage 1 (+X his right, +Y up, -Z his front): what the camera looks at,
 ## its yaw (0 = in front of him, 90 = at his right, 180 = behind), its pitch and distance.
+## W33frame: on the reproportioned body (W33body) the torso, the arms and the hands are smaller at stage 1 (the legs take
+## more of the same height), so the chest, back, shoulders, arms and hand close-ups come closer (about the torso's
+## width ratio, 0.8; the hand's 0.8) to fill their frames as on the M10 body; "arms" and "hand" aim at the posed arm
+## (framing_target), their targets here the fallback without a skeleton.
 const FRAMINGS := {
 	"full": {"target": Vector3(0.0, 1.85, 0.0), "yaw": 20.0, "pitch": 3.0, "dist": 8.4},
 	"face": {"target": Vector3(0.0, 3.346, -0.2), "yaw": 14.0, "pitch": 2.0, "dist": 1.75},
 	"hair": {"target": Vector3(0.0, 3.224, -0.02), "yaw": 140.0, "pitch": 12.0, "dist": 2.3},
 	"back": {"target": Vector3(0.0, 1.9, 0.0), "yaw": 180.0, "pitch": 4.0, "dist": 8.4},
-	"arms": {"target": Vector3(0.62, 2.478, -0.08), "yaw": 72.0, "pitch": 6.0, "dist": 2.7},
-	"chest": {"target": Vector3(0.0, 2.619, -0.18), "yaw": 12.0, "pitch": 4.0, "dist": 2.4},
-	"back_design": {"target": Vector3(0.0, 2.569, 0.12), "yaw": 180.0, "pitch": 6.0, "dist": 2.7},
-	"hand": {"target": Vector3(0.72, 1.95, -0.12), "yaw": 55.0, "pitch": 14.0, "dist": 1.35},
-	"hand_l": {"target": Vector3(-0.72, 1.95, -0.12), "yaw": -55.0, "pitch": 14.0, "dist": 1.35},
+	"arms": {"target": Vector3(0.43, 2.404, -0.17), "yaw": 72.0, "pitch": 6.0, "dist": 2.55},
+	"chest": {"target": Vector3(0.0, 2.68, -0.18), "yaw": 12.0, "pitch": 4.0, "dist": 2.0},
+	"back_design": {"target": Vector3(0.0, 2.62, 0.12), "yaw": 180.0, "pitch": 6.0, "dist": 2.25},
+	"hand": {"target": Vector3(0.45, 1.94, -0.32), "yaw": 55.0, "pitch": 14.0, "dist": 1.1},
+	"hand_l": {"target": Vector3(-0.45, 1.94, -0.32), "yaw": -55.0, "pitch": 14.0, "dist": 1.1},
 	# the character sheets' eye close-up (the index's eye_mid landmark)
 	"eyes": {"target": Vector3(0.0, 3.443, -0.244), "yaw": 10.0, "pitch": 0.0, "dist": 0.36},
 	# P55: the slots' framings (the creator II's option grids and their thumbnails; plan M11 §2.7)
 	"head": {"target": Vector3(0.0, 3.413, -0.1), "yaw": 24.0, "pitch": 8.0, "dist": 1.9},
-	"shoulders": {"target": Vector3(0.0, 2.866, -0.05), "yaw": 28.0, "pitch": 10.0, "dist": 2.6},
+	"shoulders": {"target": Vector3(0.0, 3.02, -0.05), "yaw": 28.0, "pitch": 10.0, "dist": 2.3},
 	"waist": {"target": Vector3(0.0, 1.99, -0.08), "yaw": 20.0, "pitch": 6.0, "dist": 2.6},
 	"legs": {"target": Vector3(0.0, 1.236, -0.05), "yaw": 20.0, "pitch": 4.0, "dist": 4.4},
 	"shins": {"target": Vector3(0.0, 0.733, -0.08), "yaw": 22.0, "pitch": 6.0, "dist": 2.5},

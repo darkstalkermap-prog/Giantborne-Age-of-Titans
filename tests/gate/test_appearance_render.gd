@@ -31,8 +31,12 @@ const MIN_LIT := 0.02
 ## haircolor 0.0170, presets 0.0793): every floor stands; the beard's is now 0.62 of its set's smallest share.
 ## P51's look pass (the paler skin, the hair shaded as a volume) brought the hair's smallest shares to 0.0428-0.0439
 ## (the shoulder-length cut against the long hair, the braided style against the base): the hair's floor is 0.038.
+## W33frame (the reproportioned body, W33body): the claw stripes, the marks' smallest, change 0.0018 of their face tile
+## (0.0040 on the M10 body): their cheek stripes read as before, but their chest stripes, at the bottom edge of M10's
+## face framing, lie under it now with the longer neck (test_hair_render's GATE_A_FRAMED_SHARE has the pixels); the
+## marks' floor is half of it by the rule, 0.0009.
 const FLOORS := {"skin": 0.028, "eyes": 0.00025, "hair": 0.038, "beard": 0.019, "haircolor": 0.0085,
-	"tattoo": 0.0009, "ink": 0.008, "paint": 0.005, "paintcolor": 0.005, "scar": 0.0003, "mark": 0.0019,
+	"tattoo": 0.0009, "ink": 0.008, "paint": 0.005, "paintcolor": 0.005, "scar": 0.0003, "mark": 0.0009,
 	"outfit": 0.011, "dye": 0.014, "preset": 0.038}
 ## The pixels of a 320x240 tile the best option of a design category must change in the stage-1 rear Game
 ## view or in first person: about half the weakest reading category's best there (the marks: the lightning

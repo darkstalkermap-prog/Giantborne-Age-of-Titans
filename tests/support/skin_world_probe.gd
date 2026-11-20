@@ -14,7 +14,8 @@ extends Node
 ## Gate A2: the shell hair in the world's light. For five looks (dark, greying, red, fair and grey hair) it draws a
 ## shell style (the crop, the short beard) and the same look with a card style in its place (the long back hair, the
 ## full beard), each with and without the style; the pixels that differ are hair. `shells` reports per case the
-## shell's mean colour (sRGB), the card's, and the shell's luminance spread (the 90th less the 10th percentile): at
+## shell's mean colour (sRGB), the card's (W33frame: in the shell's own pixels; card_all: the whole card style's), and
+## the shell's luminance spread (the 90th less the 10th percentile): at
 ## m11-gate-a the black short beard drew one flat black and the greying crop near black with sparse white specks.
 ## Prints one line "SKIN_WORLD <json>" and quits. tests/slow/test_skin_world_render.gd runs it in a child:
 ##   LP_NUM_THREADS=2 xvfb-run -a -s "-screen 0 1280x720x24" godot --path . --rendering-driver opengl3 \
@@ -132,6 +133,7 @@ func _shells() -> Dictionary:
 	var out := {}
 	for c: Dictionary in SHELL_CASES:
 		var per := {}
+		var shell_px := PackedByteArray()
 		for kind: String in ["shell", "card"]:
 			var look := Appearance.to_look(Appearance.preset_record("appearance_preset." + str(c.preset)))
 			look[str(c.slot)] = str(c[kind])
@@ -147,18 +149,41 @@ func _shells() -> Dictionary:
 			mi.visible = true
 			if kind == "shell":
 				_save(img, "shell_" + str(c.name))
-			per[kind] = hair_measure(img, without)
+				per[kind] = hair_measure(img, without)
+				shell_px = hair_mask(img, without)
+			else:
+				# W33frame: the card style's colour where the shell draws too (like with like): the card beards grew with
+				# the reproportioned head (W33body), and their longer tips over the lit chest lightened the card's mean
+				# (the Northern Chieftain's blue 34.8 to 37.1) while in the shell's own area it held (31.4 to 31.1);
+				# the whole style's reading stays in card_all
+				per["card_all"] = hair_measure(img, without)
+				per[kind] = hair_measure(img, without, shell_px)
 		out[str(c.name)] = per
 	return out
 
 
+## The mask (1 a pixel) of the pixels of `img` that differ from `without` (a style's hair pixels).
+static func hair_mask(img: Image, without: Image) -> PackedByteArray:
+	var m := PackedByteArray()
+	m.resize(img.get_width() * img.get_height())
+	for y in img.get_height():
+		for x in img.get_width():
+			var a := _px(img, x, y)
+			var b := _px(without, x, y)
+			if absf(a.x - b.x) + absf(a.y - b.y) + absf(a.z - b.z) > SKIN_DIFF:
+				m[y * img.get_width() + x] = 1
+	return m
+
+
 ## The hair's pixels of `img` against `without`: their count, mean colour (sRGB 0-255) and luminance's 10th and 90th
-## percentiles.
-static func hair_measure(img: Image, without: Image) -> Dictionary:
+## percentiles; with `within` (a hair_mask) only the pixels in it.
+static func hair_measure(img: Image, without: Image, within := PackedByteArray()) -> Dictionary:
 	var sum := Vector3.ZERO
 	var lums := PackedFloat32Array()
 	for y in img.get_height():
 		for x in img.get_width():
+			if not within.is_empty() and within[y * img.get_width() + x] == 0:
+				continue
 			var a := _px(img, x, y)
 			var b := _px(without, x, y)
 			if absf(a.x - b.x) + absf(a.y - b.y) + absf(a.z - b.z) > SKIN_DIFF:
