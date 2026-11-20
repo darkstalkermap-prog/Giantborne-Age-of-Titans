@@ -56,6 +56,7 @@ uniform float tip_thin : hint_range(0.0, 1.0) = 0.0;
 uniform float back_fade : hint_range(0.0, 1.0) = 0.0;
 const float BACK_FADE_FROM = -0.35;
 const float BACK_FADE_TO = -0.7;
+const float BEARD_LOCKS = 7.0;   // the third look lane: the locks a beard card breaks into across its width
 const float TIP_TAPER = 0.26;   // the second look lane: how much the side feather widens at a beard card's tip
 uniform float atlas_columns = 4.0;
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
@@ -113,6 +114,7 @@ void fragment() {
 		v_edge = 0.0;
 	} else {
 		float a;
+		float lock_shade = 0.5;
 		if (v_kind > 0.5) {
 			// a braid's tube: the dense strands wrap round it; only its tie end thins out
 			a = clamp(0.55 + t.a, 0.0, 1.0) * (1.0 - smoothstep(0.9, 1.0, UV.y) * 0.8);
@@ -130,6 +132,16 @@ void fragment() {
 			// (its id, the atlas's G); minified, the ids blend and the edge is a plain ramp.
 			a *= smoothstep(0.0, root_feather, UV.y + sid * root_feather);
 			a *= 1.0 - smoothstep(1.0 - tip_thin, 1.0, UV.y + sid * tip_thin) * step(0.001, tip_thin);
+			if (tip_thin > 0.001) {
+				// the third look lane: a beard card breaks into locks of its own lengths across it, whatever the atlas's
+				// mip (minified, a short card was a solid spade of one colour: square patches at the cheeks)
+				float lock_i = floor(u * BEARD_LOCKS) + floor(UV.x * atlas_columns) * 17.0;
+				float lock_len = 0.45 + 0.55 * fract(sin(lock_i * 12.9898) * 43758.5453);
+				float across = fract(u * BEARD_LOCKS);
+				a *= 1.0 - smoothstep(lock_len - 0.25 * (1.0 - 0.6 * abs(across - 0.5) * 2.0), lock_len, UV.y);
+				a *= mix(1.0, smoothstep(0.0, 0.25, across) * smoothstep(0.0, 0.25, 1.0 - across), smoothstep(0.3, 0.9, UV.y));
+				lock_shade = fract(sin(lock_i * 78.233) * 12543.123);
+			}
 			// The volume: the card's own facing (its triangle) blended towards the head-centred normal.
 			geo = dot(geo, n) < 0.0 ? -geo : geo;
 			n = normalize(mix(geo, n, volume_normal));
@@ -144,6 +156,7 @@ void fragment() {
 		float is_grey = (1.0 - smoothstep(grey - gw, grey + gw, t.g)) * step(0.001, grey);
 		c = mix(c, vec3(0.62, 0.60, 0.57), mix(is_grey, grey, clamp(max(mip, 0.0) * 0.5, 0.0, 1.0)));
 		c *= 0.62 + 0.5 * t.r;
+		c *= 0.86 + 0.28 * lock_shade * step(0.001, tip_thin);   // (the third look lane: a beard's locks vary)
 		c *= mix(root_dark, 1.0, smoothstep(0.0, 0.12, UV.y));   // a little darker at the very root
 		if (v_kind > 0.5) {
 			// a braid: the plait's crossing strands as chevrons round the tube, dark in their grooves
