@@ -121,8 +121,9 @@ def mesh_arrays(ob):
             "vnormal": nrm.reshape(-1, 3)}
 
 
-def colour_attribute(me, vregion, vbuild=None):
-    """The "Color" point attribute: R the region id, G and B the build weights (0.5 = none), A 1."""
+def colour_attribute(me, vregion, vbuild=None, valpha=None):
+    """The "Color" point attribute: R the region id, G and B the build weights (0.5 = none), A 1 (a garment's: its
+    push to its full place over the mesh's push_m, the W33 look lane)."""
     n = len(me.vertices)
     if "Color" in me.color_attributes:
         me.color_attributes.remove(me.color_attributes["Color"])
@@ -130,7 +131,7 @@ def colour_attribute(me, vregion, vbuild=None):
     rgba = np.zeros((n, 4), np.float32)
     rgba[:, 0] = split.encode_region(vregion)
     rgba[:, 1:3] = 0.5 if vbuild is None else gp.encode_build(vbuild)
-    rgba[:, 3] = 1.0
+    rgba[:, 3] = 1.0 if valpha is None else np.asarray(valpha, np.float32)
     col.data.foreach_set("color", rgba.ravel())
 
 
@@ -169,7 +170,7 @@ def make_object(name, A, coll, rig, material, vregion=None):
     me.polygons.foreach_set("use_smooth", np.ones(len(me.polygons), dtype=bool))
     me.normals_split_custom_set([tuple(c) for f in A["corner_normal"] for c in f])
     if vregion is not None:
-        colour_attribute(me, vregion, A.get("vbuild"))
+        colour_attribute(me, vregion, A.get("vbuild"), A.get("valpha"))
     ob = bpy.data.objects.new(name, me)
     coll.objects.link(ob)
     for bone in sorted(A["groups"]):
@@ -716,6 +717,7 @@ def shell_distances(rig, body, w, parts, n, S):
     W /= np.maximum(W.sum(axis=1, keepdims=True), 1e-9)
     body_N = w.N
     gids = [g for g in gg.ORDER if g in parts]
+    push = w.layering.get("push", {})
     # the skin both garments of a pair stand on at rest: a pair is measured there in every pose (the plan's "slots
     # whose regions overlap"; an arm's garment that comes near a belt in a pose is not a layering)
     foot = {}
@@ -735,9 +737,9 @@ def shell_distances(rig, body, w, parts, n, S):
         be.to_mesh_clear()
         BN = skinned_normals(rig, W, bones, body_N)
         kd = cKDTree(BV)
-        lo, hi = {}, {}
+        pts = {}
         for g in gids:
-            Ps, Bs = [], []
+            Ps, Bs, Ds, Qs = [], [], [], []
             for o in parts[g]:
                 oe = o.evaluated_get(dg)
                 m = oe.to_mesh()
@@ -746,9 +748,22 @@ def shell_distances(rig, body, w, parts, n, S):
                 oe.to_mesh_clear()
                 Ps.append(P.reshape(-1, 3))
                 Bs.append(np.asarray(o["body_ids"], np.int64))
-            P = np.concatenate(Ps)
-            bid = np.concatenate(Bs)
-            P, bid = P[bid != -2], bid[bid != -2]
+                Ds.append(np.asarray(o["push_d"], np.float64))
+                Qs.append(np.asarray(o["push_body"], np.int64))
+            P, bid, pd, pb = np.concatenate(Ps), np.concatenate(Bs), np.concatenate(Ds), np.concatenate(Qs)
+            keep = bid != -2
+            pts[g] = (P[keep], bid[keep], pd[keep], pb[keep])
+        cache = {}
+
+        def lohi(g, s):
+            """The least and the greatest height of garment g over each posed skin vertex with a share s of its push
+            (the W33 look lane: the cloth shader's push along the posed normal of each vertex's skin vertex)."""
+            key = (g, round(float(s), 4))
+            if key in cache:
+                return cache[key]
+            P, bid, pd, pb = pts[g]
+            if s > 0.0:
+                P = P + (s * pd)[:, None] * BN[np.maximum(pb, 0)] * (pb >= 0)[:, None]
             a = np.full(n, np.nan)
             b = np.full(n, np.nan)
             own = bid >= 0
@@ -763,22 +778,30 @@ def shell_distances(rig, body, w, parts, n, S):
                 ids, hmin, hmax = gg.heights(P[~own], BV, BN, kd)
                 a[ids] = np.fmin(a[ids], hmin)
                 b[ids] = np.fmax(b[ids], hmax)
-            lo[g], hi[g] = a, b
+            cache[key] = (a, b)
+            return a, b
         for ai, a in enumerate(gids):
             for b in gids[ai + 1:]:
                 sa, sb = gg.GARMENTS[a]["slot"], gg.GARMENTS[b]["slot"]
                 if sa == sb:
                     continue
                 inner, outer = (a, b) if order[sa] < order[sb] else (b, a)
-                both = np.isfinite(hi[inner]) & np.isfinite(lo[outer]) & foot[inner] & foot[outer]
-                if not both.any():
-                    continue
-                gap = float(np.min(lo[outer][both] - hi[inner][both]))
-                key = "%s|%s" % (inner, outer)
-                out[key] = min(out.get(key, gap), gap)
-                if os.environ.get("GIANT_SHELL_DEBUG") and gap < 0.004:
-                    k = np.nonzero(both)[0][int(np.argmin(lo[outer][both] - hi[inner][both]))]
-                    log("shell %s %s %.4f at body vertex %d (%.3f %.3f %.3f)" % (pname, key, gap, k, *BV[k]))
+                # the W33 look lane: the inner garment at no push and at its full push, the outer one at the share
+                # the layering table gives it over the inner one then (worn alone together: the least it may have)
+                row = push.get(outer, {}).get(inner, [0.0] * gg.PUSH_SAMPLES)
+                for s_in, s_out in ((0.0, row[0]), (1.0, row[-1])):
+                    _lo_in, hi_in = lohi(inner, s_in)
+                    lo_out, _hi_out = lohi(outer, s_out)
+                    both = np.isfinite(hi_in) & np.isfinite(lo_out) & foot[inner] & foot[outer]
+                    if not both.any():
+                        continue
+                    gap = float(np.min(lo_out[both] - hi_in[both]))
+                    key = "%s|%s" % (inner, outer)
+                    out[key] = min(out.get(key, gap), gap)
+                    if os.environ.get("GIANT_SHELL_DEBUG") and gap < 0.004:
+                        k = np.nonzero(both)[0][int(np.argmin(lo_out[both] - hi_in[both]))]
+                        log("shell %s %s (%.2f %.2f) %.4f at body vertex %d (%.3f %.3f %.3f)"
+                            % (pname, key, s_in, s_out, gap, k, *BV[k]))
     _set_pose(rig, rest, None)
     return {k: r6(v) for k, v in sorted(out.items())}, list(SHELL_POSES)
 
@@ -999,6 +1022,12 @@ def run(out_dir):
         # (every garment: a band's, the braies' and a cloak's hanging cloth's the skin vertex nearest it, or the one it
         # was cut from: so the hanging cloth pushes as the back it was cut from does)
         G["vnormal"] = body_N[np.asarray(gbody)]
+        if spec.get("free") and len(wardrobe.pdir.get(gid, ())) == len(G["V"]):
+            # the W33 look lane: a cloak's hanging cloth takes its own surface's normal, eased in as it leaves the back
+            G["vnormal"] = np.asarray(wardrobe.pdir[gid])
+        # the W33 look lane: each vertex's push to its full place (the alpha of its colour, over the mesh's push_m)
+        push_scale = wardrobe.push_scale[gid]
+        vpush = wardrobe.pushd[gid][np.asarray(gbody)]
         parts = sorted(set(int(p) for p in face_part))
         made = []
         for pi in parts:
@@ -1007,8 +1036,13 @@ def run(out_dir):
             arrays, reg, st = split_part(G, face_part, pi, greg, root_bone, lift=GARMENT_CAP_LIFT_OF.get(gid, GARMENT_CAP_LIFT_M) * S,
                                          skin_rims=True)
             mat = ob.data.materials[0].name if len(ob.data.materials) else "giant_cloth"
-            gob = make_object(name, arrays, coll, rig, mat, reg)
             src = np.asarray(st["source"], np.int64)
+            part_push = np.where(src >= 0, vpush[np.maximum(src, 0)], 0.0)      # a cap's centre takes none
+            if push_scale > 0.0:
+                arrays["valpha"] = np.round(part_push / push_scale * 255.0) / 255.0
+            gob = make_object(name, arrays, coll, rig, mat, reg)
+            gob["push_d"] = part_push.tolist()
+            gob["push_body"] = np.where(src >= 0, np.asarray(gbody)[np.maximum(src, 0)], -1).tolist()
             # a shell's own body vertex per vertex (-1: a cap's centre, or a garment that is not a shell)
             ex = wardrobe.exact.get(gid)
             ids = np.asarray(ex)[np.maximum(src, 0)] if ex is not None and len(ex) == len(G["V"]) \
@@ -1023,6 +1057,8 @@ def run(out_dir):
                                     "shell": r6(gg.SLOT_SHELL_M[spec["slot"]]), "material": spec["material"]}
             if spec.get("free"):
                 info["meshes"][name]["free"] = True
+            if push_scale > 0.0:
+                info["meshes"][name]["push_m"] = r6(push_scale)
             if spec["slot"] == "head":
                 info["meshes"][name]["hides_hair"] = spec.get("hides_hair", "none")
         info["garments"][gid] = [o.name for o in made]
@@ -1042,6 +1078,11 @@ def run(out_dir):
     info["slot_shell_m"] = {k: r6(v) for k, v in sorted(gg.SLOT_SHELL_M.items())}
     info["layer_order"] = list(gg.LAYER_ORDER)
     info["slots"] = {g: {k: r6(v) for k, v in sorted(rec.items())} for g, rec in sorted(wardrobe.record.items())}
+    lay = wardrobe.layering
+    info["layering"] = {"order": list(lay["order"]), "samples": gg.PUSH_SAMPLES,
+                        "push": {g: {h: [r6(x) for x in v] for h, v in sorted(row.items())}
+                                 for g, row in sorted(lay["push"].items())},
+                        "short": {k: r6(v) for k, v in sorted(lay["short"].items())}}
     # ---- P54: the accessories, rigid on one bone each, clear of the whole wardrobe at the fullest build ---------
     # the rigid trophies keep clear of the skin at the fullest build; the rings move with it (build_accessories)
     wardrobe.push = (np.abs(vbuild[:, 0]) + np.abs(vbuild[:, 1])) * build_max

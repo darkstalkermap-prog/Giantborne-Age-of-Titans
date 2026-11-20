@@ -916,6 +916,29 @@ class WardrobeTest(unittest.TestCase):
         bad = {k: v for k, v in d.items() if v < 0.004}
         self.assertEqual(bad, {}, "pairs nearer than 0.004 m in some pose")
 
+    def test_the_layering_table_pushes_a_garment_only_as_far_as_what_is_worn_under_it(self):
+        """The W33 look lane: each garment mesh sits where it would over nothing; its push to its place over the loosest
+        garment of every inner slot rides in the vertex colour's alpha (push_m the alpha's 1), and the index's layering
+        gives the least share of that push for each worn inner garment (the export's shells' distances measure every
+        pair at the inner garment's no push and full push with the outer one at the share the table gives it)."""
+        gg = self._gg()
+        lay = self.idx["layering"]
+        self.assertEqual(lay["samples"], gg.PUSH_SAMPLES)
+        self.assertEqual(sorted(lay["order"]), sorted(gg.GARMENTS))
+        layer = {g: gg.LAYER_ORDER.index(gg.GARMENTS[g]["slot"]) for g in gg.GARMENTS}
+        self.assertEqual([layer[g] for g in lay["order"]], sorted(layer[g] for g in lay["order"]), "from the skin out")
+        for outer, row in lay["push"].items():
+            for inner, shares in row.items():
+                self.assertLess(layer[inner], layer[outer], "%s over %s" % (outer, inner))
+                self.assertEqual(len(shares), gg.PUSH_SAMPLES)
+                self.assertTrue(all(0.0 <= x <= 1.0 for x in shares), (outer, inner, shares))
+                self.assertEqual(shares, sorted(shares), "%s over %s: more push under, more push over" % (outer, inner))
+        pushed = [m for m, e in self.idx["meshes"].items() if e.get("push_m")]
+        self.assertGreater(len(pushed), 20, "the garments that stand over inner slots carry their push")
+        # the default look (the Wanderer: braies and belt): the belt sits on the braies, nearer than its full place
+        self.assertLess(lay["push"]["belt"]["braies"][0], 0.8, "the belt over the braies alone")
+        self.assertNotIn("braies", lay["push"], "the innermost slot is never pushed")
+
     def test_a_helm_cuts_or_hides_each_hair_style(self):
         gg = self._gg()
         styles = sorted(m for m, e in self.idx["meshes"].items() if e["category"] == "hair")

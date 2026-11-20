@@ -161,7 +161,8 @@ const UNIFORMS := {
 		"hidden_regions", "hide_shrink", "build", "build_max_m"],
 	"hair": ["hair_atlas", "hair_color", "tip_color", "grey", "length", "tip_thin", "back_fade", "volume_normal"],
 	"eye": ["iris_color", "iris_glow", "look"],
-	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade", "kind", "rim", "build", "build_max_m", "bead_mask"],
+	"cloth": ["detail_tex", "dye_color", "detail_strength", "fade", "kind", "rim", "build", "build_max_m", "bead_mask",
+		"push_m"],
 	"shell": ["strand_tex", "mask_tex", "mask_channel", "shell_count", "shell_height_m", "comb", "hair_color", "tip_color",
 		"grey", "length"],
 }
@@ -210,6 +211,8 @@ const META_SWAY := "giant_look_sway"
 const META_BUILD := "giant_look_build"
 ## On a root: a face slider was set on one of its meshes (P53: a look with no face then skips the meshes).
 const META_FACE := "giant_look_face"
+## The W33 look lane: the cloth shader's push_m last set per garment mesh (apply sets only what changed).
+const META_PUSH := "giant_look_push"
 ## The hair's sway (P46; the hair shader's head_motion): the tips lag the head's motion by SWAY_LAG_S seconds
 ## of it, eased at SWAY_EASE a second, at most SWAY_MAX_M at the tips (stage-1 metres, the mesh's own space).
 const SWAY_LAG_S := 0.035
@@ -396,6 +399,107 @@ static func garment_meshes(index: Dictionary, look: Dictionary) -> Dictionary:
 			else:
 				out[str(m)] = {"dye": _legacy_dye(look, str(entry.get("dye", "primary"))), "kind": ""}
 	return out
+
+
+## The W33 look lane: how far each worn garment stands off the skin. A garment's mesh sits where it would over nothing,
+## and each vertex carries its push to its place over the loosest garment of every inner slot (the cloth shader's
+## `push_m` times the vertex colour's alpha); the index's `layering` gives, per outer garment and worn inner garment,
+## the least share of that push which keeps it clear of the inner one at each share of the inner one's own push
+## (`samples` steps of 0-1, read at the step at or above it). Returns {garment id: share 0-1} for `garment_ids` (the
+## worn garments, index ids); an index without the table gives {} (every garment at its mesh: an index from before).
+static func garment_pushes(index: Dictionary, garment_ids: Array, prepared: Dictionary = {}) -> Dictionary:
+	var out := {}
+	var t := prepared if not prepared.is_empty() else _layering_table(index)
+	if t.is_empty():
+		return out
+	var push: Dictionary = t.push
+	var rank: Dictionary = t.rank
+	var by_rank: Array = t.by_rank
+	var last := int(t.last)
+	var ranks: Array[int] = []
+	for g: Variant in garment_ids:
+		var r: Variant = rank.get(str(g))
+		if r != null and not ranks.has(r):
+			ranks.append(r)
+	ranks.sort()
+	var worn: Array[String] = []
+	for r: int in ranks:
+		worn.append(by_rank[r])
+	for i in worn.size():
+		var id: String = worn[i]
+		var row: Variant = push.get(id)
+		var share := 0.0
+		if typeof(row) == TYPE_DICTIONARY:
+			for j in i:
+				var h: String = worn[j]
+				var r: Variant = (row as Dictionary).get(h)
+				if typeof(r) == TYPE_ARRAY and not (r as Array).is_empty():
+					var k := clampi(ceili(float(out[h]) * last - 0.000001), 0, (r as Array).size() - 1)
+					share = maxf(share, float((r as Array)[k]))
+		out[id] = share
+	return out
+
+
+## The cloth shader's push_m of every garment mesh in `shown` (garment_meshes: the look's shown garment meshes): the
+## share garment_pushes gives its garment times the mesh's index push_m, {mesh id: metres}. The index's table is
+## prepared once per index (its manifest_sha256; a synthetic index without one every time).
+static func garment_push_m(index: Dictionary, shown: Dictionary) -> Dictionary:
+	var out := {}
+	if shown.is_empty():
+		return out
+	var t := _layering_table(index)
+	if t.is_empty():
+		return out
+	var g_of: Dictionary = t.g_of
+	var worn: Array = []
+	for m: Variant in shown:
+		var g: Variant = g_of.get(m)
+		if g != null:
+			worn.append(g)
+	var shares := garment_pushes(index, worn, t)
+	var push_m: Dictionary = t.push_m
+	for m: Variant in shown:
+		if push_m.has(m):
+			out[m] = float(shares.get(g_of[m], 0.0)) * float(push_m[m])
+	return out
+
+
+static var _layering_tables := {}
+
+
+static func _layering_table(index: Dictionary) -> Dictionary:
+	var key := str(index.get("manifest_sha256", ""))
+	if key != "" and _layering_tables.has(key):
+		return _layering_tables[key]
+	var lay: Variant = index.get("layering")
+	if typeof(lay) != TYPE_DICTIONARY or typeof((lay as Dictionary).get("order")) != TYPE_ARRAY:
+		return {}
+	var g_of := {}
+	var push_m := {}
+	var garments := _garments(index)
+	var meshes := _meshes(index)
+	for g: Variant in garments:
+		for m: Variant in (garments[g] if typeof(garments[g]) == TYPE_ARRAY else []):
+			g_of[str(m)] = str(g)
+			var e: Variant = meshes.get(str(m))
+			if typeof(e) == TYPE_DICTIONARY and SchemaUtil.is_number((e as Dictionary).get("push_m")):
+				push_m[str(m)] = float((e as Dictionary).push_m)
+	var rank := {}
+	for i in ((lay as Dictionary).order as Array).size():
+		rank[str((lay as Dictionary).order[i])] = i
+	for m: String in g_of:
+		if not rank.has(g_of[m]):
+			rank[g_of[m]] = rank.size()
+	var by_rank: Array = []
+	by_rank.resize(rank.size())
+	for g: String in rank:
+		by_rank[int(rank[g])] = g
+	var t := {"g_of": g_of, "rank": rank, "by_rank": by_rank, "push_m": push_m,
+		"push": (lay as Dictionary).get("push", {}) if typeof((lay as Dictionary).get("push")) == TYPE_DICTIONARY else {},
+		"last": maxi(1, int((lay as Dictionary).get("samples", 5)) - 1)}
+	if key != "":
+		_layering_tables[key] = t
+	return t
 
 
 ## The hair styles a look's head garments cut (P54, plan M11 §2.6): hair mesh id -> the share of its length drawn
@@ -600,11 +704,14 @@ static func build_materials(root: Node3D, index: Dictionary, tier: String) -> vo
 				set_param(mat, "detail_strength", float(DETAIL_STRENGTH.get(detail, 0.3)))
 				set_param(mat, "kind", int(DETAIL_KIND.get(detail, 0)))
 				set_param(mat, "rim", float(CLOTH_RIM.get(detail, 0.2)))
+				if str(entry.get("category", "")) == "garment":
+					set_param(mat, "push_m", 0.0)   # W33: apply sets it as the worn garments need
 		mi.material_override = mat
 		mats[str(id)] = mat
 	root.set_meta(META_MATERIALS, mats)
 	root.set_meta(META_OWNER, root.get_instance_id())
 	root.remove_meta(META_BUILD)
+	root.remove_meta(META_PUSH)
 	root.set_meta(META_TIER, resolve_tier(tier, index))
 	apply(root, index, root.get_meta(META_LOOK, DEFAULT_LOOK))
 
@@ -700,8 +807,9 @@ static func set_param(mat: ShaderMaterial, uniform: String, value: Variant) -> v
 		return
 	mat.set_shader_parameter(uniform, value)
 	var names: Dictionary = mat.get_meta(META_NAMES, {})
-	names[uniform] = true
-	mat.set_meta(META_NAMES, names)
+	if not names.has(uniform):   # (the W33 look lane: the meta's dictionary is shared; set it once, not every call)
+		names[uniform] = true
+		mat.set_meta(META_NAMES, names)
 
 
 # --------------------------------------------------------------------------- apply
@@ -718,6 +826,7 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 		build_materials(root, index, str(root.get_meta(META_TIER, "auto")))
 		return
 	var shown := garment_meshes(index, l)
+	var pushes := garment_push_m(index, shown)   # W33: how far each worn garment stands off over what is worn under it
 	var extras := {}   # P53: the accessories and the beads shown (Part B's meshes; none before P54 and P56)
 	for m: Variant in l.accessories:
 		extras[str(m)] = true
@@ -776,6 +885,10 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 			stacked = stacked or (mi != null and mi.mesh != before)
 	if stacked:
 		_apply_face(root, index, shown_ids, l.face, true)   # P56: a fresh stack starts with its face keys at 0
+	var pushed: Dictionary = root.get_meta(META_PUSH, {})   # W33: the garments' pushes last set (0 not listed)
+	var push_changed := pushes != pushed
+	if push_changed:
+		root.set_meta(META_PUSH, pushes)
 	var hidden := hidden_regions_mask(index, l.garments)
 	var codes := region_codes(index, l)
 	var scars := scar_uniforms(index, l.scars)
@@ -839,6 +952,8 @@ static func apply(root: Node3D, index: Dictionary, look: Dictionary) -> void:
 				if str(g.get("kind", "")) == "metal":
 					set_param(mat, "kind", 1)   # a metal garment's response whatever its detail map
 				set_param(mat, "fade", 0.0)
+				if push_changed and category == "garment" and float(pushes.get(id, 0.0)) != float(pushed.get(id, 0.0)):
+					mat.set_shader_parameter("push_m", float(pushes.get(id, 0.0)))   # W33: only when it changes
 				if set_build:
 					set_param(mat, "build", build)
 					set_param(mat, "build_max_m", build_max)

@@ -206,7 +206,7 @@ def build_index(export_info: dict, design_info: dict) -> dict:
         # P56: a style's bead anchors (how many), a bead set's style codes (style mesh -> its code in UV2.x), the face keys a
         # mesh carries
         for k in ("atlas", "detail", "part", "chains", "free", "shell", "slot", "material", "hides_hair", "hair_cut",
-                  "bone", "color", "bead_anchors", "styles", "face_keys"):
+                  "bone", "color", "bead_anchors", "styles", "face_keys", "push_m"):
             if k in e:
                 entry[k] = e[k]
         if "file" in e:
@@ -228,6 +228,10 @@ def build_index(export_info: dict, design_info: dict) -> dict:
         "garments": {g: list(m) for g, m in sorted(export_info["garments"].items())},
         "accessories": dict(sorted(export_info.get("accessories", {}).items())),
         "slots": {"shell_m": export_info.get("slot_shell_m", {}), "layers": export_info.get("layer_order", [])},
+        # the W33 look lane: the garments from the skin out and, per outer garment and worn inner garment, the least
+        # share of its push (its index push_m) at each share of the inner one's (GiantLook.garment_pushes)
+        "layering": {k: export_info["layering"][k] for k in ("order", "samples", "push")} if "layering" in export_info
+        else {},
         "designs": designs,
         "regions": [{"id": i, "name": n} for i, n in enumerate(split.REGIONS)],
         "design_regions": {k: list(v) for k, v in sorted(split.DESIGN_REGIONS.items())},

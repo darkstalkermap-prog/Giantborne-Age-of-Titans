@@ -1404,6 +1404,1154 @@
    "shoulders",
    "head"
   ],
+  "layering": {
+   "order": [
+    "braies",
+    "loincloth",
+    "trousers",
+    "kilt",
+    "tunic",
+    "shirt",
+    "sleeveless_vest",
+    "chest_wrap",
+    "leg_wraps",
+    "greaves",
+    "bracers",
+    "iron_vambraces",
+    "arm_wraps",
+    "boots",
+    "wrapped_sandals",
+    "belt",
+    "war_belt",
+    "sash",
+    "jerkin",
+    "mail_hauberk",
+    "leather_cuirass",
+    "bronze_breastplate",
+    "scale_coat",
+    "cape",
+    "long_cloak",
+    "fur_cloak",
+    "furs",
+    "pauldron",
+    "iron_pauldrons",
+    "fur_mantle",
+    "bone_spaulders",
+    "hood",
+    "leather_cap",
+    "iron_helm",
+    "horned_helm"
+   ],
+   "push": {
+    "arm_wraps": {
+     "shirt": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "belt": {
+     "braies": [
+      0.562,
+      0.562,
+      0.562,
+      0.562,
+      0.562
+     ],
+     "kilt": [
+      0.446,
+      0.446,
+      0.446,
+      0.446,
+      0.446
+     ],
+     "loincloth": [
+      0.394,
+      0.394,
+      0.394,
+      0.394,
+      0.394
+     ],
+     "shirt": [
+      0.625,
+      0.678,
+      0.752,
+      0.826,
+      0.9
+     ],
+     "sleeveless_vest": [
+      0.753,
+      0.79,
+      0.826,
+      0.863,
+      0.9
+     ],
+     "trousers": [
+      0.404,
+      0.404,
+      0.404,
+      0.404,
+      0.404
+     ],
+     "tunic": [
+      0.96,
+      0.962,
+      0.965,
+      0.968,
+      0.971
+     ]
+    },
+    "bone_spaulders": {
+     "cape": [
+      0.654,
+      0.703,
+      0.756,
+      0.809,
+      0.997
+     ],
+     "fur_cloak": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "jerkin": [
+      0.603,
+      0.617,
+      0.63,
+      0.644,
+      0.658
+     ],
+     "long_cloak": [
+      0.654,
+      0.705,
+      0.762,
+      0.818,
+      0.999
+     ],
+     "mail_hauberk": [
+      0.06,
+      0.187,
+      0.313,
+      0.44,
+      0.569
+     ],
+     "scale_coat": [
+      0.164,
+      0.285,
+      0.405,
+      0.526,
+      0.646
+     ]
+    },
+    "boots": {
+     "greaves": [
+      0.469,
+      0.559,
+      0.649,
+      0.74,
+      0.862
+     ],
+     "leg_wraps": [
+      0.562,
+      0.616,
+      0.677,
+      0.759,
+      0.866
+     ],
+     "trousers": [
+      0.468,
+      0.468,
+      0.468,
+      0.468,
+      0.468
+     ]
+    },
+    "bracers": {
+     "shirt": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "bronze_breastplate": {
+     "belt": [
+      0.496,
+      0.567,
+      0.637,
+      0.809,
+      0.991
+     ],
+     "chest_wrap": [
+      0.995,
+      0.995,
+      0.995,
+      0.995,
+      0.995
+     ],
+     "sash": [
+      0.683,
+      0.762,
+      0.841,
+      0.92,
+      0.999
+     ],
+     "shirt": [
+      0.009,
+      0.009,
+      0.02,
+      0.038,
+      0.13
+     ],
+     "sleeveless_vest": [
+      0.021,
+      0.021,
+      0.03,
+      0.042,
+      0.055
+     ],
+     "tunic": [
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98
+     ],
+     "war_belt": [
+      0.718,
+      0.789,
+      0.859,
+      0.93,
+      1.0
+     ]
+    },
+    "cape": {
+     "bronze_breastplate": [
+      0.72,
+      0.774,
+      0.829,
+      0.887,
+      0.994
+     ],
+     "chest_wrap": [
+      0.568,
+      0.568,
+      0.568,
+      0.568,
+      0.568
+     ],
+     "jerkin": [
+      0.997,
+      0.997,
+      0.997,
+      0.997,
+      1.0
+     ],
+     "leather_cuirass": [
+      0.674,
+      0.737,
+      0.802,
+      0.872,
+      0.997
+     ],
+     "mail_hauberk": [
+      0.627,
+      0.705,
+      0.801,
+      0.898,
+      0.997
+     ],
+     "sash": [
+      0.174,
+      0.319,
+      0.464,
+      0.609,
+      0.754
+     ],
+     "scale_coat": [
+      0.662,
+      0.731,
+      0.8,
+      0.871,
+      1.0
+     ],
+     "shirt": [
+      0.383,
+      0.383,
+      0.383,
+      0.383,
+      0.383
+     ],
+     "sleeveless_vest": [
+      0.415,
+      0.415,
+      0.415,
+      0.415,
+      0.415
+     ],
+     "tunic": [
+      0.525,
+      0.525,
+      0.525,
+      0.525,
+      0.525
+     ],
+     "war_belt": [
+      0.318,
+      0.443,
+      0.569,
+      0.694,
+      0.82
+     ]
+    },
+    "fur_cloak": {
+     "bronze_breastplate": [
+      0.584,
+      0.665,
+      0.747,
+      0.828,
+      0.99
+     ],
+     "chest_wrap": [
+      0.342,
+      0.342,
+      0.342,
+      0.342,
+      0.342
+     ],
+     "jerkin": [
+      0.948,
+      0.96,
+      0.973,
+      0.985,
+      1.0
+     ],
+     "leather_cuirass": [
+      0.514,
+      0.61,
+      0.706,
+      0.802,
+      0.989
+     ],
+     "mail_hauberk": [
+      0.444,
+      0.558,
+      0.673,
+      0.794,
+      0.999
+     ],
+     "sash": [
+      0.408,
+      0.528,
+      0.648,
+      0.767,
+      0.887
+     ],
+     "scale_coat": [
+      0.496,
+      0.6,
+      0.703,
+      0.822,
+      0.999
+     ],
+     "shirt": [
+      0.075,
+      0.075,
+      0.075,
+      0.075,
+      0.075
+     ],
+     "sleeveless_vest": [
+      0.124,
+      0.124,
+      0.124,
+      0.124,
+      0.124
+     ],
+     "tunic": [
+      0.289,
+      0.289,
+      0.289,
+      0.289,
+      0.289
+     ],
+     "war_belt": [
+      0.054,
+      0.224,
+      0.394,
+      0.565,
+      0.764
+     ]
+    },
+    "fur_mantle": {
+     "bronze_breastplate": [
+      0.0,
+      0.0,
+      0.108,
+      0.239,
+      0.37
+     ],
+     "cape": [
+      0.7,
+      0.759,
+      0.818,
+      0.921,
+      0.999
+     ],
+     "fur_cloak": [
+      0.999,
+      0.999,
+      0.999,
+      0.999,
+      1.0
+     ],
+     "jerkin": [
+      0.0,
+      0.055,
+      0.161,
+      0.266,
+      0.807
+     ],
+     "leather_cuirass": [
+      0.0,
+      0.0,
+      0.096,
+      0.232,
+      0.368
+     ],
+     "long_cloak": [
+      0.697,
+      0.762,
+      0.87,
+      0.932,
+      0.994
+     ],
+     "mail_hauberk": [
+      0.0,
+      0.0,
+      0.087,
+      0.228,
+      0.368
+     ],
+     "scale_coat": [
+      0.0,
+      0.0,
+      0.096,
+      0.233,
+      0.371
+     ]
+    },
+    "furs": {
+     "bronze_breastplate": [
+      0.0,
+      0.0,
+      0.0,
+      0.293,
+      0.93
+     ],
+     "cape": [
+      0.212,
+      0.261,
+      0.418,
+      0.693,
+      1.0
+     ],
+     "fur_cloak": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "jerkin": [
+      0.125,
+      0.341,
+      0.557,
+      0.773,
+      0.989
+     ],
+     "leather_cuirass": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.408
+     ],
+     "long_cloak": [
+      0.212,
+      0.263,
+      0.419,
+      0.694,
+      0.993
+     ],
+     "mail_hauberk": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.435
+     ],
+     "scale_coat": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.477
+     ]
+    },
+    "greaves": {
+     "braies": [
+      0.995,
+      0.995,
+      0.995,
+      0.995,
+      0.995
+     ],
+     "trousers": [
+      0.999,
+      0.999,
+      0.999,
+      0.999,
+      0.999
+     ]
+    },
+    "iron_pauldrons": {
+     "bronze_breastplate": [
+      0.154,
+      0.263,
+      0.371,
+      0.48,
+      0.588
+     ],
+     "cape": [
+      0.689,
+      0.729,
+      0.778,
+      0.827,
+      0.998
+     ],
+     "fur_cloak": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "jerkin": [
+      0.945,
+      0.945,
+      0.945,
+      0.945,
+      0.945
+     ],
+     "leather_cuirass": [
+      0.0,
+      0.034,
+      0.146,
+      0.257,
+      0.369
+     ],
+     "long_cloak": [
+      0.689,
+      0.732,
+      0.784,
+      0.835,
+      0.994
+     ],
+     "mail_hauberk": [
+      0.064,
+      0.121,
+      0.27,
+      0.522,
+      0.774
+     ],
+     "scale_coat": [
+      0.106,
+      0.206,
+      0.318,
+      0.43,
+      0.541
+     ]
+    },
+    "iron_vambraces": {
+     "shirt": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "jerkin": {
+     "belt": [
+      0.448,
+      0.51,
+      0.572,
+      0.647,
+      0.731
+     ],
+     "sash": [
+      0.636,
+      0.727,
+      0.818,
+      0.908,
+      1.0
+     ],
+     "shirt": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.018
+     ],
+     "tunic": [
+      0.0,
+      0.0,
+      0.0,
+      0.004,
+      0.086
+     ],
+     "war_belt": [
+      0.682,
+      0.762,
+      0.841,
+      0.921,
+      1.0
+     ]
+    },
+    "leather_cuirass": {
+     "belt": [
+      0.499,
+      0.557,
+      0.618,
+      0.684,
+      0.79
+     ],
+     "chest_wrap": [
+      0.957,
+      0.957,
+      0.957,
+      0.957,
+      0.957
+     ],
+     "sash": [
+      0.686,
+      0.764,
+      0.843,
+      0.921,
+      1.0
+     ],
+     "shirt": [
+      0.036,
+      0.036,
+      0.07,
+      0.139,
+      0.211
+     ],
+     "sleeveless_vest": [
+      0.135,
+      0.135,
+      0.135,
+      0.135,
+      0.135
+     ],
+     "tunic": [
+      0.61,
+      0.61,
+      0.61,
+      0.61,
+      0.61
+     ],
+     "war_belt": [
+      0.719,
+      0.789,
+      0.86,
+      0.93,
+      1.0
+     ]
+    },
+    "leg_wraps": {
+     "trousers": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "long_cloak": {
+     "bronze_breastplate": [
+      0.728,
+      0.783,
+      0.837,
+      0.892,
+      0.995
+     ],
+     "chest_wrap": [
+      0.57,
+      0.57,
+      0.57,
+      0.57,
+      0.57
+     ],
+     "jerkin": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "leather_cuirass": [
+      0.681,
+      0.745,
+      0.81,
+      0.874,
+      0.995
+     ],
+     "mail_hauberk": [
+      0.634,
+      0.711,
+      0.8,
+      0.896,
+      0.999
+     ],
+     "sash": [
+      0.484,
+      0.589,
+      0.694,
+      0.799,
+      0.903
+     ],
+     "scale_coat": [
+      0.669,
+      0.739,
+      0.808,
+      0.878,
+      1.0
+     ],
+     "shirt": [
+      0.387,
+      0.387,
+      0.387,
+      0.387,
+      0.387
+     ],
+     "sleeveless_vest": [
+      0.42,
+      0.42,
+      0.42,
+      0.42,
+      0.42
+     ],
+     "tunic": [
+      0.531,
+      0.531,
+      0.531,
+      0.531,
+      0.531
+     ],
+     "war_belt": [
+      0.286,
+      0.417,
+      0.549,
+      0.681,
+      0.817
+     ]
+    },
+    "mail_hauberk": {
+     "belt": [
+      0.53,
+      0.583,
+      0.635,
+      0.7,
+      0.797
+     ],
+     "braies": [
+      0.759,
+      0.759,
+      0.759,
+      0.759,
+      0.759
+     ],
+     "chest_wrap": [
+      0.972,
+      0.972,
+      0.972,
+      0.972,
+      0.972
+     ],
+     "sash": [
+      0.745,
+      0.809,
+      0.872,
+      0.936,
+      1.0
+     ],
+     "shirt": [
+      0.344,
+      0.344,
+      0.344,
+      0.344,
+      0.344
+     ],
+     "sleeveless_vest": [
+      0.278,
+      0.278,
+      0.278,
+      0.278,
+      0.278
+     ],
+     "tunic": [
+      0.989,
+      0.989,
+      0.989,
+      0.989,
+      1.0
+     ],
+     "war_belt": [
+      0.724,
+      0.793,
+      0.861,
+      0.93,
+      1.0
+     ]
+    },
+    "pauldron": {
+     "bronze_breastplate": [
+      0.336,
+      0.436,
+      0.537,
+      0.638,
+      0.739
+     ],
+     "cape": [
+      0.726,
+      0.743,
+      0.789,
+      0.835,
+      0.997
+     ],
+     "fur_cloak": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "jerkin": [
+      0.895,
+      0.895,
+      0.895,
+      0.895,
+      0.895
+     ],
+     "leather_cuirass": [
+      0.171,
+      0.215,
+      0.314,
+      0.412,
+      0.516
+     ],
+     "long_cloak": [
+      0.726,
+      0.745,
+      0.794,
+      0.842,
+      0.993
+     ],
+     "mail_hauberk": [
+      0.253,
+      0.413,
+      0.574,
+      0.734,
+      0.895
+     ],
+     "scale_coat": [
+      0.278,
+      0.318,
+      0.369,
+      0.473,
+      0.577
+     ],
+     "tunic": [
+      0.04,
+      0.04,
+      0.04,
+      0.04,
+      0.04
+     ]
+    },
+    "sash": {
+     "braies": [
+      0.487,
+      0.487,
+      0.487,
+      0.487,
+      0.487
+     ],
+     "kilt": [
+      0.195,
+      0.195,
+      0.195,
+      0.195,
+      0.195
+     ],
+     "loincloth": [
+      0.167,
+      0.167,
+      0.167,
+      0.167,
+      0.167
+     ],
+     "shirt": [
+      0.468,
+      0.575,
+      0.696,
+      0.816,
+      0.936
+     ],
+     "sleeveless_vest": [
+      0.545,
+      0.608,
+      0.671,
+      0.734,
+      0.797
+     ],
+     "trousers": [
+      0.156,
+      0.156,
+      0.156,
+      0.156,
+      0.156
+     ],
+     "tunic": [
+      0.814,
+      0.851,
+      0.9,
+      0.949,
+      1.0
+     ]
+    },
+    "scale_coat": {
+     "belt": [
+      0.521,
+      0.574,
+      0.627,
+      0.694,
+      0.79
+     ],
+     "braies": [
+      0.538,
+      0.538,
+      0.538,
+      0.538,
+      0.538
+     ],
+     "chest_wrap": [
+      0.943,
+      0.943,
+      0.943,
+      0.943,
+      0.943
+     ],
+     "sash": [
+      0.737,
+      0.803,
+      0.868,
+      0.934,
+      1.0
+     ],
+     "shirt": [
+      0.048,
+      0.048,
+      0.059,
+      0.166,
+      0.277
+     ],
+     "sleeveless_vest": [
+      0.175,
+      0.175,
+      0.175,
+      0.175,
+      0.175
+     ],
+     "tunic": [
+      0.964,
+      0.964,
+      0.964,
+      0.964,
+      1.0
+     ],
+     "war_belt": [
+      0.721,
+      0.791,
+      0.86,
+      0.93,
+      1.0
+     ]
+    },
+    "shirt": {
+     "braies": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "kilt": [
+      0.984,
+      0.984,
+      0.984,
+      0.984,
+      0.984
+     ],
+     "loincloth": [
+      0.817,
+      0.817,
+      0.817,
+      0.817,
+      0.817
+     ],
+     "trousers": [
+      0.827,
+      0.827,
+      0.827,
+      0.827,
+      0.827
+     ]
+    },
+    "sleeveless_vest": {
+     "braies": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "kilt": [
+      0.992,
+      0.992,
+      0.992,
+      0.992,
+      0.992
+     ],
+     "loincloth": [
+      0.869,
+      0.869,
+      0.869,
+      0.869,
+      0.869
+     ],
+     "trousers": [
+      0.981,
+      0.981,
+      0.981,
+      0.981,
+      0.981
+     ]
+    },
+    "tunic": {
+     "braies": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "kilt": [
+      0.082,
+      0.082,
+      0.082,
+      0.082,
+      0.082
+     ],
+     "loincloth": [
+      0.067,
+      0.067,
+      0.067,
+      0.067,
+      0.067
+     ]
+    },
+    "war_belt": {
+     "braies": [
+      0.475,
+      0.475,
+      0.475,
+      0.475,
+      0.475
+     ],
+     "kilt": [
+      0.121,
+      0.121,
+      0.121,
+      0.121,
+      0.121
+     ],
+     "loincloth": [
+      0.093,
+      0.093,
+      0.093,
+      0.093,
+      0.093
+     ],
+     "shirt": [
+      0.452,
+      0.525,
+      0.598,
+      0.68,
+      0.801
+     ],
+     "sleeveless_vest": [
+      0.482,
+      0.526,
+      0.569,
+      0.613,
+      0.681
+     ],
+     "trousers": [
+      0.083,
+      0.083,
+      0.083,
+      0.083,
+      0.083
+     ],
+     "tunic": [
+      0.804,
+      0.807,
+      0.81,
+      0.812,
+      0.86
+     ]
+    },
+    "wrapped_sandals": {
+     "leg_wraps": [
+      0.624,
+      0.718,
+      0.811,
+      0.905,
+      1.0
+     ],
+     "trousers": [
+      0.487,
+      0.487,
+      0.487,
+      0.487,
+      0.487
+     ]
+    }
+   },
+   "samples": 5,
+   "short": {
+    "sash|scale_coat": 0.0,
+    "war_belt|leather_cuirass": 0.0
+   }
+  },
   "leaf_bones": [
    "hair_01",
    "hair_02",
@@ -1893,7 +3041,7 @@
     "chains": [],
     "coverage": {
      "10": 0.002193,
-     "9": 0.635628
+     "9": 0.633603
     },
     "covers": [],
     "cut_loops": 0,
@@ -1904,6 +3052,7 @@
     "material": "cloth",
     "open_chains": 0,
     "part": "limbs",
+    "push_m": 0.022822,
     "shell": 0.022,
     "slot": "arms",
     "tris": 588,
@@ -1916,8 +3065,8 @@
     "chains": [],
     "coverage": {
      "4": 0.223684,
-     "6": 0.148649,
-     "7": 0.076336
+     "6": 0.182432,
+     "7": 0.041985
     },
     "covers": [],
     "cut_loops": 0,
@@ -1928,6 +3077,7 @@
     "material": "leather",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.050481,
     "shell": 0.03,
     "slot": "waist",
     "tris": 768,
@@ -1939,9 +3089,9 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "3": 0.086957,
-     "5": 0.095238,
-     "8": 0.354244
+     "3": 0.083736,
+     "5": 0.10119,
+     "8": 0.357934
     },
     "covers": [],
     "cut_loops": 0,
@@ -1952,6 +3102,7 @@
     "material": "fur",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.04596,
     "shell": 0.046,
     "slot": "shoulders",
     "tris": 516,
@@ -1964,7 +3115,7 @@
     "chains": [],
     "coverage": {
      "13": 0.696594,
-     "14": 0.999063
+     "14": 0.998126
     },
     "covers": [
      14
@@ -1977,6 +3128,7 @@
     "material": "leather",
     "open_chains": 0,
     "part": "limbs",
+    "push_m": 0.085469,
     "shell": 0.024,
     "slot": "feet",
     "tris": 2500,
@@ -1999,6 +3151,7 @@
     "material": "leather",
     "open_chains": 0,
     "part": "limbs",
+    "push_m": 0.026699,
     "shell": 0.022,
     "slot": "arms",
     "tris": 400,
@@ -2010,10 +3163,10 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "11": 0.932203,
+     "11": 0.93597,
      "4": 0.289474,
      "6": 0.121622,
-     "7": 0.984733
+     "7": 0.980916
     },
     "covers": [
      7
@@ -2028,8 +3181,8 @@
     "part": "torso",
     "shell": 0.012,
     "slot": "legs",
-    "tris": 388,
-    "verts": 265
+    "tris": 398,
+    "verts": 272
    },
    "Garment_braies_limbs": {
     "boundary_edges": 36,
@@ -2037,10 +3190,10 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "11": 0.932203,
+     "11": 0.93597,
      "4": 0.289474,
      "6": 0.121622,
-     "7": 0.984733
+     "7": 0.980916
     },
     "covers": [],
     "cut_loops": 1,
@@ -2053,8 +3206,8 @@
     "part": "limbs",
     "shell": 0.012,
     "slot": "legs",
-    "tris": 676,
-    "verts": 406
+    "tris": 670,
+    "verts": 405
    },
    "Garment_bronze_breastplate": {
     "boundary_edges": 140,
@@ -2062,13 +3215,12 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.006565,
-     "3": 0.702093,
+     "1": 0.00709,
+     "3": 0.703704,
      "4": 0.785088,
-     "5": 0.639881,
-     "6": 0.945946,
-     "7": 0.019084,
-     "8": 0.01845
+     "5": 0.633929,
+     "6": 0.891892,
+     "8": 0.02583
     },
     "covers": [],
     "cut_loops": 0,
@@ -2079,6 +3231,7 @@
     "material": "metal",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.14533,
     "shell": 0.034,
     "slot": "armour",
     "tris": 1866,
@@ -2095,12 +3248,11 @@
     ],
     "coverage": {
      "1": 0.003676,
-     "3": 0.012882,
-     "4": 0.184211,
-     "5": 0.895833,
-     "6": 1.0,
-     "7": 0.209924,
-     "8": 0.103321
+     "3": 0.003221,
+     "5": 0.866071,
+     "6": 0.912162,
+     "7": 0.19084,
+     "8": 0.084871
     },
     "covers": [
      5,
@@ -2115,10 +3267,11 @@
     "material": "cloth",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.129967,
     "shell": 0.03,
     "slot": "cape",
-    "tris": 1236,
-    "verts": 699
+    "tris": 1244,
+    "verts": 703
    },
    "Garment_chest_wrap": {
     "boundary_edges": 154,
@@ -2127,10 +3280,10 @@
     "chains": [],
     "coverage": {
      "3": 0.247987,
-     "4": 0.105263,
-     "5": 0.279762,
+     "4": 0.114035,
+     "5": 0.276786,
      "6": 0.148649,
-     "8": 0.00738
+     "8": 0.01107
     },
     "covers": [],
     "cut_loops": 0,
@@ -2157,13 +3310,12 @@
     ],
     "coverage": {
      "1": 0.004202,
-     "11": 0.06968,
-     "3": 0.017713,
-     "4": 0.184211,
-     "5": 0.89881,
-     "6": 1.0,
-     "7": 0.270992,
-     "8": 0.110701
+     "11": 0.080979,
+     "3": 0.006441,
+     "5": 0.869048,
+     "6": 0.939189,
+     "7": 0.28626,
+     "8": 0.088561
     },
     "covers": [
      5,
@@ -2178,10 +3330,11 @@
     "material": "fur",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.124195,
     "shell": 0.03,
     "slot": "cape",
-    "tris": 1524,
-    "verts": 854
+    "tris": 1532,
+    "verts": 858
    },
    "Garment_fur_mantle": {
     "boundary_edges": 162,
@@ -2189,11 +3342,11 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.007878,
-     "2": 0.265873,
-     "3": 0.925926,
-     "5": 0.845238,
-     "8": 0.429889
+     "1": 0.00709,
+     "2": 0.34127,
+     "3": 0.927536,
+     "5": 0.842262,
+     "8": 0.435424
     },
     "covers": [],
     "cut_loops": 0,
@@ -2204,6 +3357,7 @@
     "material": "fur",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.21286,
     "shell": 0.046,
     "slot": "shoulders",
     "tris": 2080,
@@ -2215,11 +3369,11 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.009979,
-     "2": 0.063492,
-     "3": 0.666667,
-     "5": 0.627976,
-     "8": 0.291513
+     "1": 0.007353,
+     "2": 0.178571,
+     "3": 0.665056,
+     "5": 0.625,
+     "8": 0.295203
     },
     "covers": [],
     "cut_loops": 0,
@@ -2230,6 +3384,7 @@
     "material": "fur",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.027695,
     "shell": 0.046,
     "slot": "shoulders",
     "tris": 1352,
@@ -2241,7 +3396,7 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "12": 0.35,
+     "12": 0.341667,
      "13": 0.321981
     },
     "covers": [],
@@ -2253,6 +3408,7 @@
     "material": "metal",
     "open_chains": 0,
     "part": "limbs",
+    "push_m": 0.041446,
     "shell": 0.02,
     "slot": "shins",
     "tris": 392,
@@ -2265,7 +3421,7 @@
     "chains": [],
     "coverage": {
      "0": 1.0,
-     "1": 0.290179,
+     "1": 0.289653,
      "2": 0.246032
     },
     "covers": [
@@ -2292,7 +3448,7 @@
     "chains": [],
     "coverage": {
      "0": 0.686567,
-     "1": 0.075105
+     "1": 0.074055
     },
     "covers": [],
     "cut_loops": 0,
@@ -2328,7 +3484,7 @@
     "chains": [],
     "coverage": {
      "0": 0.701493,
-     "1": 0.091912
+     "1": 0.091124
     },
     "covers": [],
     "cut_loops": 0,
@@ -2363,8 +3519,7 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.000263,
-     "3": 0.132045,
+     "3": 0.125604,
      "5": 0.154762,
      "8": 0.413284
     },
@@ -2377,6 +3532,7 @@
     "material": "metal",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.052018,
     "shell": 0.046,
     "slot": "shoulders",
     "tris": 660,
@@ -2399,6 +3555,7 @@
     "material": "metal",
     "open_chains": 0,
     "part": "limbs",
+    "push_m": 0.022055,
     "shell": 0.022,
     "slot": "arms",
     "tris": 460,
@@ -2410,13 +3567,13 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.012605,
-     "2": 0.003968,
-     "3": 0.822866,
+     "1": 0.010242,
+     "2": 0.015873,
+     "3": 0.818035,
      "4": 0.97807,
-     "5": 0.770833,
-     "6": 0.972973,
-     "7": 0.148855,
+     "5": 0.764881,
+     "6": 1.0,
+     "7": 0.152672,
      "8": 0.0369
     },
     "covers": [
@@ -2431,6 +3588,7 @@
     "material": "leather",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.128863,
     "shell": 0.034,
     "slot": "armour",
     "tris": 2268,
@@ -2443,7 +3601,7 @@
     "chains": [],
     "coverage": {
      "11": 1.0,
-     "12": 0.070833,
+     "12": 0.075,
      "4": 0.105263,
      "6": 0.121622,
      "7": 0.984733
@@ -2471,7 +3629,7 @@
     "chains": [],
     "coverage": {
      "11": 1.0,
-     "12": 0.070833,
+     "12": 0.075,
      "4": 0.105263,
      "6": 0.121622,
      "7": 0.984733
@@ -2534,13 +3692,13 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.005777,
-     "3": 0.721417,
+     "1": 0.006828,
+     "3": 0.723027,
      "4": 0.929825,
      "5": 0.6875,
-     "6": 0.925676,
+     "6": 0.945946,
      "7": 0.041985,
-     "8": 0.02952
+     "8": 0.02583
     },
     "covers": [],
     "cut_loops": 0,
@@ -2551,6 +3709,7 @@
     "material": "leather",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.145618,
     "shell": 0.034,
     "slot": "armour",
     "tris": 2032,
@@ -2562,8 +3721,8 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "12": 0.041667,
-     "13": 0.832817
+     "12": 0.033333,
+     "13": 0.848297
     },
     "covers": [],
     "cut_loops": 0,
@@ -2574,6 +3733,7 @@
     "material": "cloth",
     "open_chains": 0,
     "part": "limbs",
+    "push_m": 0.041085,
     "shell": 0.02,
     "slot": "shins",
     "tris": 550,
@@ -2615,13 +3775,14 @@
     ],
     "coverage": {
      "1": 0.003676,
-     "11": 0.084746,
-     "3": 0.012882,
-     "4": 0.184211,
-     "5": 0.895833,
-     "6": 1.0,
-     "7": 0.278626,
-     "8": 0.103321
+     "11": 0.112994,
+     "12": 0.020833,
+     "13": 0.006192,
+     "3": 0.003221,
+     "5": 0.866071,
+     "6": 0.925676,
+     "7": 0.290076,
+     "8": 0.086716
     },
     "covers": [
      5,
@@ -2636,10 +3797,11 @@
     "material": "cloth",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.145019,
     "shell": 0.03,
     "slot": "cape",
-    "tris": 1636,
-    "verts": 909
+    "tris": 1644,
+    "verts": 913
    },
    "Garment_mail_hauberk": {
     "boundary_edges": 134,
@@ -2647,16 +3809,18 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.008141,
-     "11": 0.636535,
-     "3": 0.966184,
+     "1": 0.007878,
+     "11": 0.645951,
+     "2": 0.007937,
+     "3": 0.974235,
      "4": 1.0,
      "5": 0.943452,
-     "6": 0.972973,
-     "7": 0.977099,
+     "6": 1.0,
+     "7": 0.984733,
      "8": 0.505535
     },
     "covers": [
+     3,
      4,
      6,
      7
@@ -2669,6 +3833,7 @@
     "material": "metal",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.217306,
     "shell": 0.034,
     "slot": "armour",
     "tris": 4272,
@@ -2680,10 +3845,9 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.000263,
-     "3": 0.066023,
-     "5": 0.065476,
-     "8": 0.195572
+     "3": 0.059581,
+     "5": 0.0625,
+     "8": 0.186347
     },
     "covers": [],
     "cut_loops": 0,
@@ -2694,6 +3858,7 @@
     "material": "leather",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.055123,
     "shell": 0.046,
     "slot": "shoulders",
     "tris": 324,
@@ -2705,10 +3870,10 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "11": 0.009416,
-     "4": 0.236842,
-     "6": 0.027027,
-     "7": 0.152672
+     "11": 0.00565,
+     "4": 0.25,
+     "6": 0.040541,
+     "7": 0.19084
     },
     "covers": [],
     "cut_loops": 0,
@@ -2719,6 +3884,7 @@
     "material": "cloth",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.079038,
     "shell": 0.03,
     "slot": "waist",
     "tris": 876,
@@ -2730,13 +3896,14 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.008141,
-     "11": 0.508475,
-     "3": 0.797101,
+     "1": 0.008929,
+     "11": 0.517891,
+     "2": 0.007937,
+     "3": 0.809984,
      "4": 1.0,
      "5": 0.764881,
-     "6": 0.972973,
-     "7": 0.977099,
+     "6": 1.0,
+     "7": 0.984733,
      "8": 0.04797
     },
     "covers": [
@@ -2752,6 +3919,7 @@
     "material": "metal",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.209384,
     "shell": 0.034,
     "slot": "armour",
     "tris": 3300,
@@ -2763,8 +3931,8 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.001576,
-     "3": 0.980676,
+     "1": 0.005515,
+     "3": 0.987118,
      "4": 1.0,
      "5": 0.979167,
      "6": 1.0,
@@ -2786,6 +3954,7 @@
     "material": "cloth",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.037128,
     "shell": 0.014,
     "slot": "chest",
     "tris": 2820,
@@ -2797,8 +3966,8 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.001576,
-     "3": 0.980676,
+     "1": 0.005515,
+     "3": 0.987118,
      "4": 1.0,
      "5": 0.979167,
      "6": 1.0,
@@ -2817,6 +3986,7 @@
     "material": "cloth",
     "open_chains": 0,
     "part": "limbs",
+    "push_m": 0.037128,
     "shell": 0.014,
     "slot": "chest",
     "tris": 1846,
@@ -2828,12 +3998,12 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "3": 0.544283,
+     "3": 0.547504,
      "4": 0.798246,
-     "5": 0.744048,
+     "5": 0.747024,
      "6": 1.0,
      "7": 0.145038,
-     "8": 0.02214
+     "8": 0.02583
     },
     "covers": [
      6
@@ -2846,6 +4016,7 @@
     "material": "leather",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.019584,
     "shell": 0.014,
     "slot": "chest",
     "tris": 1888,
@@ -2860,7 +4031,7 @@
      "11": 1.0,
      "12": 1.0,
      "13": 0.693498,
-     "4": 0.105263,
+     "4": 0.096491,
      "6": 0.121622,
      "7": 0.984733
     },
@@ -2889,7 +4060,7 @@
      "11": 1.0,
      "12": 1.0,
      "13": 0.693498,
-     "4": 0.105263,
+     "4": 0.096491,
      "6": 0.121622,
      "7": 0.984733
     },
@@ -2916,14 +4087,15 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.005252,
+     "1": 0.00709,
      "11": 0.566855,
-     "3": 0.980676,
+     "2": 0.007937,
+     "3": 0.993559,
      "4": 1.0,
      "5": 0.979167,
      "6": 1.0,
-     "7": 0.977099,
-     "8": 0.538745
+     "7": 0.984733,
+     "8": 0.542435
     },
     "covers": [
      3,
@@ -2940,6 +4112,7 @@
     "material": "cloth",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.032263,
     "shell": 0.014,
     "slot": "chest",
     "tris": 3130,
@@ -2951,14 +4124,15 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "1": 0.005252,
+     "1": 0.00709,
      "11": 0.566855,
-     "3": 0.980676,
+     "2": 0.007937,
+     "3": 0.993559,
      "4": 1.0,
      "5": 0.979167,
      "6": 1.0,
-     "7": 0.977099,
-     "8": 0.538745
+     "7": 0.984733,
+     "8": 0.542435
     },
     "covers": [],
     "cut_loops": 4,
@@ -2969,6 +4143,7 @@
     "material": "cloth",
     "open_chains": 0,
     "part": "limbs",
+    "push_m": 0.032263,
     "shell": 0.014,
     "slot": "chest",
     "tris": 1386,
@@ -2980,9 +4155,9 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "4": 0.254386,
-     "6": 0.027027,
-     "7": 0.148855
+     "4": 0.27193,
+     "6": 0.087838,
+     "7": 0.175573
     },
     "covers": [],
     "cut_loops": 0,
@@ -2993,6 +4168,7 @@
     "material": "metal",
     "open_chains": 0,
     "part": "torso",
+    "push_m": 0.059092,
     "shell": 0.03,
     "slot": "waist",
     "tris": 896,
@@ -3004,8 +4180,8 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "13": 0.086687,
-     "14": 0.671194
+     "13": 0.092879,
+     "14": 0.670726
     },
     "covers": [],
     "cut_loops": 0,
@@ -3016,6 +4192,7 @@
     "material": "leather",
     "open_chains": 0,
     "part": "limbs",
+    "push_m": 0.090171,
     "shell": 0.024,
     "slot": "feet",
     "tris": 2678,
@@ -3290,183 +4467,183 @@
    "verts": 1252
   },
   "shell_distances": {
-   "belt|bronze_breastplate": 0.016972,
-   "belt|jerkin": 0.016972,
-   "belt|leather_cuirass": 0.016972,
-   "belt|mail_hauberk": 0.016972,
-   "belt|scale_coat": 0.016972,
-   "braies|belt": 0.034037,
-   "braies|bronze_breastplate": 0.059367,
-   "braies|jerkin": 0.059431,
-   "braies|leather_cuirass": 0.059431,
-   "braies|mail_hauberk": 0.017,
-   "braies|sash": 0.035549,
-   "braies|scale_coat": 0.028825,
-   "braies|shirt": 0.01682,
-   "braies|sleeveless_vest": 0.01682,
-   "braies|tunic": 0.016458,
-   "braies|war_belt": 0.039397,
-   "bronze_breastplate|cape": 0.026777,
-   "bronze_breastplate|fur_cloak": 0.036565,
-   "bronze_breastplate|fur_mantle": 0.027903,
-   "bronze_breastplate|furs": 0.023507,
-   "bronze_breastplate|iron_pauldrons": 0.028634,
-   "bronze_breastplate|long_cloak": 0.026777,
-   "bronze_breastplate|pauldron": 0.02864,
-   "cape|bone_spaulders": 0.019108,
-   "cape|fur_mantle": 0.019748,
-   "cape|furs": 0.017899,
-   "cape|iron_pauldrons": 0.019212,
-   "cape|pauldron": 0.02203,
-   "chest_wrap|bronze_breastplate": 0.028752,
-   "chest_wrap|cape": 0.055602,
-   "chest_wrap|fur_cloak": 0.065337,
-   "chest_wrap|fur_mantle": 0.062178,
-   "chest_wrap|furs": 0.061135,
-   "chest_wrap|jerkin": 0.044412,
-   "chest_wrap|leather_cuirass": 0.024796,
-   "chest_wrap|long_cloak": 0.055602,
-   "chest_wrap|mail_hauberk": 0.023382,
-   "chest_wrap|scale_coat": 0.023492,
-   "fur_cloak|bone_spaulders": 0.005652,
-   "fur_cloak|fur_mantle": 0.007017,
-   "fur_cloak|furs": 0.008247,
-   "fur_cloak|iron_pauldrons": 0.007019,
-   "fur_cloak|pauldron": 0.009727,
-   "greaves|boots": 0.014124,
-   "jerkin|bone_spaulders": 0.023488,
-   "jerkin|cape": 0.009382,
-   "jerkin|fur_cloak": 0.011267,
-   "jerkin|fur_mantle": 0.014965,
-   "jerkin|furs": 0.013716,
-   "jerkin|iron_pauldrons": 0.010082,
-   "jerkin|long_cloak": 0.009382,
-   "jerkin|pauldron": 0.009799,
-   "kilt|belt": 0.043863,
-   "kilt|jerkin": 0.093643,
-   "kilt|leather_cuirass": 0.093668,
-   "kilt|mail_hauberk": 0.028127,
-   "kilt|sash": 0.05821,
-   "kilt|scale_coat": 0.031308,
-   "kilt|shirt": 0.011914,
-   "kilt|sleeveless_vest": 0.023272,
-   "kilt|tunic": 0.014242,
-   "kilt|war_belt": 0.056779,
-   "leather_cuirass|cape": 0.029928,
-   "leather_cuirass|fur_cloak": 0.039569,
-   "leather_cuirass|fur_mantle": 0.036225,
-   "leather_cuirass|furs": 0.034951,
-   "leather_cuirass|iron_pauldrons": 0.031765,
-   "leather_cuirass|long_cloak": 0.029928,
-   "leather_cuirass|pauldron": 0.032207,
-   "leg_wraps|boots": 0.013408,
-   "leg_wraps|wrapped_sandals": 0.011849,
-   "loincloth|belt": 0.045484,
-   "loincloth|jerkin": 0.095264,
-   "loincloth|leather_cuirass": 0.095289,
-   "loincloth|mail_hauberk": 0.041905,
-   "loincloth|sash": 0.058523,
-   "loincloth|scale_coat": 0.041905,
-   "loincloth|shirt": 0.014089,
-   "loincloth|sleeveless_vest": 0.024603,
-   "loincloth|tunic": 0.016417,
-   "loincloth|war_belt": 0.055433,
-   "long_cloak|bone_spaulders": 0.019108,
-   "long_cloak|fur_mantle": 0.019748,
-   "long_cloak|furs": 0.017899,
-   "long_cloak|iron_pauldrons": 0.019212,
-   "long_cloak|pauldron": 0.02203,
-   "mail_hauberk|bone_spaulders": 0.010768,
-   "mail_hauberk|cape": 0.008529,
-   "mail_hauberk|fur_cloak": 0.025444,
-   "mail_hauberk|fur_mantle": 0.036294,
-   "mail_hauberk|furs": 0.029246,
-   "mail_hauberk|iron_pauldrons": 0.009725,
-   "mail_hauberk|long_cloak": 0.008529,
-   "mail_hauberk|pauldron": 0.01045,
-   "sash|bronze_breastplate": 0.027487,
-   "sash|jerkin": 0.022198,
-   "sash|leather_cuirass": 0.022209,
-   "sash|mail_hauberk": 0.010924,
-   "sash|scale_coat": 0.010924,
-   "scale_coat|bone_spaulders": 0.045512,
-   "scale_coat|cape": 0.029139,
-   "scale_coat|fur_cloak": 0.033388,
-   "scale_coat|fur_mantle": 0.037225,
-   "scale_coat|furs": 0.035949,
-   "scale_coat|iron_pauldrons": 0.03154,
-   "scale_coat|long_cloak": 0.029139,
-   "scale_coat|pauldron": 0.031441,
-   "shirt|arm_wraps": 0.011999,
-   "shirt|belt": 0.008624,
-   "shirt|bone_spaulders": 0.032778,
-   "shirt|bracers": 0.011999,
-   "shirt|bronze_breastplate": 0.024946,
-   "shirt|cape": 0.024129,
-   "shirt|fur_cloak": 0.049221,
-   "shirt|fur_mantle": 0.058181,
-   "shirt|furs": 0.050674,
-   "shirt|iron_pauldrons": 0.033087,
-   "shirt|iron_vambraces": 0.011999,
-   "shirt|jerkin": 0.024956,
-   "shirt|leather_cuirass": 0.0232,
-   "shirt|long_cloak": 0.024129,
-   "shirt|mail_hauberk": 0.011771,
-   "shirt|pauldron": 0.033614,
-   "shirt|sash": 0.010153,
-   "shirt|scale_coat": 0.011771,
-   "shirt|war_belt": 0.010045,
-   "sleeveless_vest|belt": 0.008624,
-   "sleeveless_vest|bone_spaulders": 0.070207,
-   "sleeveless_vest|bronze_breastplate": 0.024661,
-   "sleeveless_vest|cape": 0.04997,
-   "sleeveless_vest|fur_cloak": 0.059492,
-   "sleeveless_vest|fur_mantle": 0.059225,
-   "sleeveless_vest|furs": 0.057959,
-   "sleeveless_vest|iron_pauldrons": 0.052568,
-   "sleeveless_vest|jerkin": 0.024956,
-   "sleeveless_vest|leather_cuirass": 0.020799,
-   "sleeveless_vest|long_cloak": 0.04997,
-   "sleeveless_vest|mail_hauberk": 0.018556,
-   "sleeveless_vest|pauldron": 0.053784,
-   "sleeveless_vest|sash": 0.014968,
-   "sleeveless_vest|scale_coat": 0.018941,
-   "sleeveless_vest|war_belt": 0.01694,
-   "trousers|belt": 0.045418,
-   "trousers|boots": 0.025336,
-   "trousers|greaves": 0.01046,
-   "trousers|jerkin": 0.095198,
-   "trousers|leather_cuirass": 0.095223,
-   "trousers|leg_wraps": 0.011831,
-   "trousers|mail_hauberk": 0.029987,
-   "trousers|sash": 0.059265,
-   "trousers|scale_coat": 0.033101,
-   "trousers|shirt": 0.014588,
-   "trousers|sleeveless_vest": 0.024489,
-   "trousers|tunic": 0.016916,
-   "trousers|war_belt": 0.056175,
-   "trousers|wrapped_sandals": 0.02391,
-   "tunic|belt": 0.008624,
-   "tunic|bone_spaulders": 0.021669,
-   "tunic|bronze_breastplate": 0.014716,
-   "tunic|cape": 0.011454,
-   "tunic|fur_cloak": 0.037132,
-   "tunic|fur_mantle": 0.047441,
-   "tunic|furs": 0.03968,
-   "tunic|iron_pauldrons": 0.021265,
-   "tunic|jerkin": 0.024956,
-   "tunic|leather_cuirass": 0.010943,
-   "tunic|long_cloak": 0.011454,
-   "tunic|mail_hauberk": 0.0092,
-   "tunic|pauldron": 0.022057,
-   "tunic|sash": 0.010153,
-   "tunic|scale_coat": 0.007438,
-   "tunic|war_belt": 0.010045,
-   "war_belt|bronze_breastplate": 0.016928,
-   "war_belt|jerkin": 0.015112,
-   "war_belt|leather_cuirass": 0.014905,
-   "war_belt|mail_hauberk": 0.015112,
-   "war_belt|scale_coat": 0.015112
+   "belt|bronze_breastplate": 0.014467,
+   "belt|jerkin": 0.014359,
+   "belt|leather_cuirass": 0.012238,
+   "belt|mail_hauberk": 0.014164,
+   "belt|scale_coat": 0.014131,
+   "braies|belt": 0.017027,
+   "braies|bronze_breastplate": 0.039712,
+   "braies|jerkin": 0.04338,
+   "braies|leather_cuirass": 0.030271,
+   "braies|mail_hauberk": 0.019189,
+   "braies|sash": 0.017,
+   "braies|scale_coat": 0.019582,
+   "braies|shirt": 0.01451,
+   "braies|sleeveless_vest": 0.014531,
+   "braies|tunic": 0.01356,
+   "braies|war_belt": 0.016286,
+   "bronze_breastplate|cape": 0.012003,
+   "bronze_breastplate|fur_cloak": 0.01202,
+   "bronze_breastplate|fur_mantle": 0.012026,
+   "bronze_breastplate|furs": 0.011826,
+   "bronze_breastplate|iron_pauldrons": 0.011923,
+   "bronze_breastplate|long_cloak": 0.012016,
+   "bronze_breastplate|pauldron": 0.012042,
+   "cape|bone_spaulders": 0.009693,
+   "cape|fur_mantle": 0.010039,
+   "cape|furs": 0.009906,
+   "cape|iron_pauldrons": 0.011925,
+   "cape|pauldron": 0.011613,
+   "chest_wrap|bronze_breastplate": 0.011864,
+   "chest_wrap|cape": 0.01201,
+   "chest_wrap|fur_cloak": 0.01201,
+   "chest_wrap|fur_mantle": 0.028585,
+   "chest_wrap|furs": 0.032674,
+   "chest_wrap|jerkin": 0.01212,
+   "chest_wrap|leather_cuirass": 0.011877,
+   "chest_wrap|long_cloak": 0.01204,
+   "chest_wrap|mail_hauberk": 0.011892,
+   "chest_wrap|scale_coat": 0.011884,
+   "fur_cloak|bone_spaulders": 0.009306,
+   "fur_cloak|fur_mantle": 0.010729,
+   "fur_cloak|furs": 0.009518,
+   "fur_cloak|iron_pauldrons": 0.011001,
+   "fur_cloak|pauldron": 0.011446,
+   "greaves|boots": 0.012002,
+   "jerkin|bone_spaulders": 0.011935,
+   "jerkin|cape": 0.009974,
+   "jerkin|fur_cloak": 0.011339,
+   "jerkin|fur_mantle": 0.01197,
+   "jerkin|furs": 0.011745,
+   "jerkin|iron_pauldrons": 0.01168,
+   "jerkin|long_cloak": 0.00995,
+   "jerkin|pauldron": 0.011671,
+   "kilt|belt": 0.011979,
+   "kilt|jerkin": 0.037565,
+   "kilt|leather_cuirass": 0.018657,
+   "kilt|mail_hauberk": 0.019868,
+   "kilt|sash": 0.012032,
+   "kilt|scale_coat": 0.022892,
+   "kilt|shirt": 0.011906,
+   "kilt|sleeveless_vest": 0.011888,
+   "kilt|tunic": 0.011939,
+   "kilt|war_belt": 0.011995,
+   "leather_cuirass|cape": 0.012038,
+   "leather_cuirass|fur_cloak": 0.012026,
+   "leather_cuirass|fur_mantle": 0.012087,
+   "leather_cuirass|furs": 0.01187,
+   "leather_cuirass|iron_pauldrons": 0.011617,
+   "leather_cuirass|long_cloak": 0.012017,
+   "leather_cuirass|pauldron": 0.011425,
+   "leg_wraps|boots": 0.005592,
+   "leg_wraps|wrapped_sandals": 0.011994,
+   "loincloth|belt": 0.012011,
+   "loincloth|jerkin": 0.037674,
+   "loincloth|leather_cuirass": 0.019467,
+   "loincloth|mail_hauberk": 0.019699,
+   "loincloth|sash": 0.012032,
+   "loincloth|scale_coat": 0.0229,
+   "loincloth|shirt": 0.011981,
+   "loincloth|sleeveless_vest": 0.011816,
+   "loincloth|tunic": 0.011974,
+   "loincloth|war_belt": 0.011993,
+   "long_cloak|bone_spaulders": 0.009693,
+   "long_cloak|fur_mantle": 0.01016,
+   "long_cloak|furs": 0.009915,
+   "long_cloak|iron_pauldrons": 0.011925,
+   "long_cloak|pauldron": 0.011613,
+   "mail_hauberk|bone_spaulders": 0.009925,
+   "mail_hauberk|cape": 0.011986,
+   "mail_hauberk|fur_cloak": 0.011695,
+   "mail_hauberk|fur_mantle": 0.012007,
+   "mail_hauberk|furs": 0.011848,
+   "mail_hauberk|iron_pauldrons": 0.008276,
+   "mail_hauberk|long_cloak": 0.012015,
+   "mail_hauberk|pauldron": 0.011991,
+   "sash|bronze_breastplate": 0.017295,
+   "sash|jerkin": 0.019394,
+   "sash|leather_cuirass": 0.021255,
+   "sash|mail_hauberk": 0.01201,
+   "sash|scale_coat": 0.012093,
+   "scale_coat|bone_spaulders": 0.011696,
+   "scale_coat|cape": 0.012021,
+   "scale_coat|fur_cloak": 0.011429,
+   "scale_coat|fur_mantle": 0.012028,
+   "scale_coat|furs": 0.01186,
+   "scale_coat|iron_pauldrons": 0.010867,
+   "scale_coat|long_cloak": 0.012006,
+   "scale_coat|pauldron": 0.011381,
+   "shirt|arm_wraps": 0.012005,
+   "shirt|belt": 0.012031,
+   "shirt|bone_spaulders": 0.021849,
+   "shirt|bracers": 0.012002,
+   "shirt|bronze_breastplate": 0.011923,
+   "shirt|cape": 0.012026,
+   "shirt|fur_cloak": 0.01197,
+   "shirt|fur_mantle": 0.040092,
+   "shirt|furs": 0.037868,
+   "shirt|iron_pauldrons": 0.020305,
+   "shirt|iron_vambraces": 0.012006,
+   "shirt|jerkin": 0.011749,
+   "shirt|leather_cuirass": 0.012045,
+   "shirt|long_cloak": 0.012015,
+   "shirt|mail_hauberk": 0.011991,
+   "shirt|pauldron": 0.017354,
+   "shirt|sash": 0.011994,
+   "shirt|scale_coat": 0.010785,
+   "shirt|war_belt": 0.012019,
+   "sleeveless_vest|belt": 0.012029,
+   "sleeveless_vest|bone_spaulders": 0.03429,
+   "sleeveless_vest|bronze_breastplate": 0.012027,
+   "sleeveless_vest|cape": 0.012005,
+   "sleeveless_vest|fur_cloak": 0.011978,
+   "sleeveless_vest|fur_mantle": 0.03891,
+   "sleeveless_vest|furs": 0.036504,
+   "sleeveless_vest|iron_pauldrons": 0.024945,
+   "sleeveless_vest|jerkin": 0.020556,
+   "sleeveless_vest|leather_cuirass": 0.012003,
+   "sleeveless_vest|long_cloak": 0.012022,
+   "sleeveless_vest|mail_hauberk": 0.012009,
+   "sleeveless_vest|pauldron": 0.021001,
+   "sleeveless_vest|sash": 0.011995,
+   "sleeveless_vest|scale_coat": 0.012,
+   "sleeveless_vest|war_belt": 0.01201,
+   "trousers|belt": 0.012006,
+   "trousers|boots": 0.012023,
+   "trousers|greaves": 0.011572,
+   "trousers|jerkin": 0.038391,
+   "trousers|leather_cuirass": 0.020326,
+   "trousers|leg_wraps": 0.012001,
+   "trousers|mail_hauberk": 0.020699,
+   "trousers|sash": 0.012008,
+   "trousers|scale_coat": 0.023912,
+   "trousers|shirt": 0.011914,
+   "trousers|sleeveless_vest": 0.011822,
+   "trousers|tunic": 0.011663,
+   "trousers|war_belt": 0.012005,
+   "trousers|wrapped_sandals": 0.012078,
+   "tunic|belt": 0.012024,
+   "tunic|bone_spaulders": 0.014882,
+   "tunic|bronze_breastplate": 0.009862,
+   "tunic|cape": 0.012019,
+   "tunic|fur_cloak": 0.011986,
+   "tunic|fur_mantle": 0.034029,
+   "tunic|furs": 0.032045,
+   "tunic|iron_pauldrons": 0.013442,
+   "tunic|jerkin": 0.011834,
+   "tunic|leather_cuirass": 0.011073,
+   "tunic|long_cloak": 0.012026,
+   "tunic|mail_hauberk": 0.009866,
+   "tunic|pauldron": 0.011722,
+   "tunic|sash": 0.012022,
+   "tunic|scale_coat": 0.010373,
+   "tunic|war_belt": 0.012011,
+   "war_belt|bronze_breastplate": 0.012,
+   "war_belt|jerkin": 0.012,
+   "war_belt|leather_cuirass": 0.012036,
+   "war_belt|mail_hauberk": 0.012082,
+   "war_belt|scale_coat": 0.012011
   },
   "shell_poses": [
    "rest",
@@ -3488,68 +4665,68 @@
   },
   "slots": {
    "arm_wraps": {
-    "least_m": 0.0235,
-    "most_m": 0.040736,
+    "least_m": 0.027982,
+    "most_m": 0.071848,
     "shell": 0.022
    },
    "belt": {
-    "least_m": 0.065774,
-    "most_m": 0.122,
+    "least_m": 0.056482,
+    "most_m": 0.126405,
     "shell": 0.03
    },
    "bone_spaulders": {
-    "least_m": 0.056983,
-    "most_m": 0.101682,
+    "least_m": 0.066573,
+    "most_m": 0.132513,
     "shell": 0.046
    },
    "boots": {
     "least_m": 0.028,
-    "most_m": 0.058807,
+    "most_m": 0.166503,
     "shell": 0.024
    },
    "bracers": {
-    "least_m": 0.022,
-    "most_m": 0.040736,
+    "least_m": 0.032034,
+    "most_m": 0.071891,
     "shell": 0.022
    },
    "braies": {
-    "least_m": 0.008585,
-    "most_m": 0.080832,
+    "least_m": 0.005082,
+    "most_m": 0.063827,
     "shell": 0.012
    },
    "bronze_breastplate": {
     "least_m": 0.05,
-    "most_m": 0.178386,
+    "most_m": 0.19751,
     "shell": 0.034
    },
    "cape": {
     "least_m": 0.044841,
-    "most_m": 0.320813,
+    "most_m": 0.328704,
     "shell": 0.03
    },
    "chest_wrap": {
-    "least_m": 0.018031,
-    "most_m": 0.0205,
+    "least_m": 0.018213,
+    "most_m": 0.087331,
     "shell": 0.014
    },
    "fur_cloak": {
     "least_m": 0.074734,
-    "most_m": 0.624076,
+    "most_m": 0.581897,
     "shell": 0.03
    },
    "fur_mantle": {
-    "least_m": 0.082226,
-    "most_m": 0.12554,
+    "least_m": 0.086737,
+    "most_m": 0.30531,
     "shell": 0.046
    },
    "furs": {
-    "least_m": 0.079333,
-    "most_m": 0.101682,
+    "least_m": 0.083478,
+    "most_m": 0.146078,
     "shell": 0.046
    },
    "greaves": {
-    "least_m": 0.028737,
-    "most_m": 0.062333,
+    "least_m": 0.034271,
+    "most_m": 0.133628,
     "shell": 0.02
    },
    "hood": {
@@ -3559,7 +4736,7 @@
    },
    "horned_helm": {
     "least_m": 0.048,
-    "most_m": 0.055995,
+    "most_m": 0.056065,
     "shell": 0.02
    },
    "iron_helm": {
@@ -3568,98 +4745,98 @@
     "shell": 0.02
    },
    "iron_pauldrons": {
-    "least_m": 0.056883,
-    "most_m": 0.101682,
+    "least_m": 0.063488,
+    "most_m": 0.15487,
     "shell": 0.046
    },
    "iron_vambraces": {
-    "least_m": 0.027,
-    "most_m": 0.040736,
+    "least_m": 0.032034,
+    "most_m": 0.071806,
     "shell": 0.022
    },
    "jerkin": {
     "least_m": 0.067261,
-    "most_m": 0.178386,
+    "most_m": 0.197394,
     "shell": 0.034
    },
    "kilt": {
-    "least_m": 0.016025,
-    "most_m": 0.051998,
+    "least_m": 0.016266,
+    "most_m": 0.059252,
     "shell": 0.012
    },
    "leather_cap": {
     "least_m": 0.044,
-    "most_m": 0.047999,
+    "most_m": 0.049374,
     "shell": 0.02
    },
    "leather_cuirass": {
     "least_m": 0.046,
-    "most_m": 0.178386,
+    "most_m": 0.197387,
     "shell": 0.034
    },
    "leg_wraps": {
-    "least_m": 0.020001,
-    "most_m": 0.046325,
+    "least_m": 0.033161,
+    "most_m": 0.11747,
     "shell": 0.02
    },
    "loincloth": {
     "least_m": 0.016,
-    "most_m": 0.031626,
+    "most_m": 0.044373,
     "shell": 0.012
    },
    "long_cloak": {
     "least_m": 0.044841,
-    "most_m": 0.62251,
+    "most_m": 0.599326,
     "shell": 0.03
    },
    "mail_hauberk": {
     "least_m": 0.044883,
-    "most_m": 0.180511,
+    "most_m": 0.273502,
     "shell": 0.034
    },
    "pauldron": {
-    "least_m": 0.056883,
-    "most_m": 0.101682,
+    "least_m": 0.063391,
+    "most_m": 0.148734,
     "shell": 0.046
    },
    "sash": {
-    "least_m": 0.071216,
-    "most_m": 0.168511,
+    "least_m": 0.057874,
+    "most_m": 0.22556,
     "shell": 0.03
    },
    "scale_coat": {
     "least_m": 0.045,
-    "most_m": 0.180511,
+    "most_m": 0.273502,
     "shell": 0.034
    },
    "shirt": {
     "least_m": 0.02,
-    "most_m": 0.085485,
+    "most_m": 0.079887,
     "shell": 0.014
    },
    "sleeveless_vest": {
     "least_m": 0.023,
-    "most_m": 0.085485,
+    "most_m": 0.081343,
     "shell": 0.014
    },
    "trousers": {
-    "least_m": 0.0135,
-    "most_m": 0.034542,
+    "least_m": 0.013713,
+    "most_m": 0.07766,
     "shell": 0.012
    },
    "tunic": {
     "least_m": 0.032883,
-    "most_m": 0.092832,
+    "most_m": 0.086263,
     "shell": 0.014
    },
    "war_belt": {
-    "least_m": 0.073606,
-    "most_m": 0.166386,
+    "least_m": 0.062965,
+    "most_m": 0.170237,
     "shell": 0.03
    },
    "wrapped_sandals": {
     "least_m": 0.026,
-    "most_m": 0.046116,
+    "most_m": 0.121872,
     "shell": 0.024
    }
   }
@@ -3716,7 +4893,7 @@
   },
   "assets/giant/giant.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "66fc24bcd003e08d422ba41efb711b6be5e29384c5e6911ab3d608b8145f176e",
    "size": 2459128,
    "step": "export"
@@ -3737,483 +4914,483 @@
   },
   "assets/giant/parts/Accessory_beast_jaw.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "a3585f517438a619adb386ec8d604ce4b0f86abdb3b49bd97643dadcd8d6e388",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "e47b8493f083031a787f93eac9b52f4ec361937a7290679e9d9904b02b1da377",
    "size": 29000,
    "step": "export"
   },
   "assets/giant/parts/Accessory_bronze_arm_spiral.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "6775c3b5583681254f25d2aab2e012c25ddea7cee7c66c5141cbb6132a317b90",
-   "size": 35500,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "7417759168494a7cfcbe48e73315dda99cc54f662486c128066ceec084077f6b",
+   "size": 35496,
    "step": "export"
   },
   "assets/giant/parts/Accessory_drinking_horn.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "e88781d99bc3b66aea0a063354fe330141f7ba7c290f17bf0c88b1ccfab5bb1a",
-   "size": 29720,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "cc92c6d796c051c938d375e096019267affc400338a17bd4936e2cef0a07524b",
+   "size": 29724,
    "step": "export"
   },
   "assets/giant/parts/Accessory_gilded_arm_ring.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "b322bc6c4570e4ffec47965b6c9e9b0aa1e3525a4af9798ff0d6e6e933d58168",
-   "size": 34664,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "9ffdb6bd595ce87a3d986f46665ba4893172c34b86cc2a93faf81c3425da0ecd",
+   "size": 34668,
    "step": "export"
   },
   "assets/giant/parts/Accessory_gilded_torc.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "cfdbd6532b3554b616284103a6b382340cca4f568397448f9bc808ca750d3fa9",
-   "size": 34528,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "fefcaba26d72eadf9f387f1727b5967b66228a1c98f52f6b248b2eea49f7bae3",
+   "size": 34648,
    "step": "export"
   },
   "assets/giant/parts/Accessory_iron_arm_ring.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "e780f89daafc1ccc0739b1d0f78a452d9c6bd8518a6cb27d61599faee2d4e3c5",
-   "size": 34660,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "0adbcfc34afb209019aa590fb169b57667f2f419c4a532f13586fccc7a4fe988",
+   "size": 34664,
    "step": "export"
   },
   "assets/giant/parts/Accessory_iron_torc.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "161d954290ab44d24b8d1045fa9878c4d684e44fdedac5d47f0bff08750a260b",
-   "size": 34648,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "9adea372a6b24b9adb7ee45f230e89c1467e64f887456c30f23362568429116f",
+   "size": 34588,
    "step": "export"
   },
   "assets/giant/parts/Accessory_tooth_necklace.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "f71eb9d9eb10500240467a44f86ea871a6db1d08a80c9336350c70cb96efdf35",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "15f73d70146e4b22dccc8dcb4eb64dd009e20c3f06eafcdcd0e521f54bd3d129",
    "size": 33824,
    "step": "export"
   },
   "assets/giant/parts/Beads_bone.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "ed52ddafa3c8fe0dbd3068027c13b98fe73ab3c19314d125f495c2c5c96c2a14",
    "size": 144240,
    "step": "export"
   },
   "assets/giant/parts/Beads_bronze.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "fc872ed6ba27b600ac17c18253e2038542bb388a7f8604bb6cedbcc75cc75c5b",
    "size": 264312,
    "step": "export"
   },
   "assets/giant/parts/Beads_silver.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "18ae4f1be1e6923f47a3d1bfe06927ecbf5aa22a2aba57f6c422b6e8acc1acb6",
    "size": 175040,
    "step": "export"
   },
   "assets/giant/parts/Beard_braided.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "9eefac65b51246955d88237bd29220bda5055fa795a7d44c461ccfa63420c7a0",
    "size": 384216,
    "step": "export"
   },
   "assets/giant/parts/Beard_braided_moustache.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "69740598e565190dcba06cd58576cb217ec4ad241c1a4aecd18f2f024a69e625",
    "size": 286848,
    "step": "export"
   },
   "assets/giant/parts/Beard_chin_braid.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "cbcd7c7443cf20aa9e095663e1db05b36d4deba143fd774d5d41ae33d35d4ef8",
    "size": 413660,
    "step": "export"
   },
   "assets/giant/parts/Beard_forked.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "d104ef173ff79d09bd65e08c9dba6fa35d5f076e8ec894ab61a1b4d0a5ad1768",
    "size": 436436,
    "step": "export"
   },
   "assets/giant/parts/Beard_full.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "6754e8dc692259cdbe4a343776fe82dec4565bb3fcbda66b7577e765044a133a",
    "size": 495392,
    "step": "export"
   },
   "assets/giant/parts/Beard_long_forked.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "602a552e331266717c11614a86cbb12b0832848ce3f894eafdf3053037a19297",
    "size": 507516,
    "step": "export"
   },
   "assets/giant/parts/Beard_mutton_chops.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "ee62f8ae6abfde5c2a76ebfbf318715a047760fa79367e807b8b634a009928b4",
    "size": 586964,
    "step": "export"
   },
   "assets/giant/parts/Beard_short.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "e301c55e13db7c8104a498052981c020e738b42eaae0b8f0a5bb1a5b4d39c969",
    "size": 177140,
    "step": "export"
   },
   "assets/giant/parts/Garment_arm_wraps.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "b750e9120e227265bdd1c404dc2ff5a23f4e0f1467927cb09994d59284f24f80",
-   "size": 48904,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "7e27dc357c1bfedfdf6b088da650c6152a2e34299364bdffc90a2a1f923c5d14",
+   "size": 48908,
    "step": "export"
   },
   "assets/giant/parts/Garment_belt.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "7cfac5e2f39bdec829bd239c251aaf8955eefd1f26ac84f518709b6740eaaa3c",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "b233bef492bef56bba96d3f8e7c9ff39f953f06a6a466d5da8df556c780cf895",
    "size": 51060,
    "step": "export"
   },
   "assets/giant/parts/Garment_bone_spaulders.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "00d319193b626c1fe5b60f69f6258dfbdd5b24d8afd08dc07778ba915a269566",
-   "size": 45608,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "1ff0e82408cffcd4fb7cdd75be40e5279b9d8c9a7da14f200c5ce1ca4eb6e4f7",
+   "size": 45604,
    "step": "export"
   },
   "assets/giant/parts/Garment_boots.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "298fd4b4f4b294ee598ea15ec9947c2062d369e1c7030a827289b692306aa685",
-   "size": 127348,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "eeccbacac622120db3aecaa1099fdbaa9bcd56dd0baaa18c6842dccd74e3a719",
+   "size": 127832,
    "step": "export"
   },
   "assets/giant/parts/Garment_bracers.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "585729eb785f15eb3c7ae9642a673f586fa1ba6c48e1f921c0f7d39acbf17b89",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "7e0bd7f46cdb927c064ed421a4609db4d86e2ef2c29ae0dc65d5ef97df7d7cd6",
    "size": 40936,
    "step": "export"
   },
   "assets/giant/parts/Garment_braies_core.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "2a6f8dddfeb60984037698dd7c01e5a60672f07cd93fc61ca3f27548af0e7cc1",
-   "size": 42136,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "fe912bcdfe30eb6b5b7c0ea6e4e0c8d1f32b00c1a79585968b3fd76491fd06f3",
+   "size": 42612,
    "step": "export"
   },
   "assets/giant/parts/Garment_braies_limbs.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "8f93e4e11acc7e654f225371142125453cd6f5a650ee8426ba02514218ca544f",
-   "size": 53348,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "79dd900ec6b28b35516d1b4a9e900a1a27af7384fe8306bd41812ebb324b5976",
+   "size": 53248,
    "step": "export"
   },
   "assets/giant/parts/Garment_bronze_breastplate.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "ab00d27a5ff04c039e40c7eb76f6ccdede72485de995c83b0bc27e1321b61f2c",
-   "size": 97164,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "b30cd94f4c8ea1f6259432e59af979dfc98cd11c3f9049f8d40c09330901c0bd",
+   "size": 97168,
    "step": "export"
   },
   "assets/giant/parts/Garment_cape.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "5257471897c4e9eddb265531fbf81374467b5c3764d3d3ab00dcc0be8ca2f9cc",
-   "size": 75948,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "26a261efd01b31c9aa0ca0d299f3436608a9b266e00d94da368a9f9413cb64fb",
+   "size": 76236,
    "step": "export"
   },
   "assets/giant/parts/Garment_chest_wrap.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "55f5298c0bd933d0e09d6e680cda4ea40878ae6e0dcd1ad1ca85977c58fdad11",
-   "size": 49928,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "62239d464bd0fb6209961551dd80342400092167bc5dfbe34e41305a07881f0d",
+   "size": 49932,
    "step": "export"
   },
   "assets/giant/parts/Garment_fur_cloak.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "cab570e98ad7d2914747a1ba1c164258faefff73351b5b7594bbc52aebea67c9",
-   "size": 86988,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "ba3bb0f5a1d0feef763993602874edaafe2d28a16d0dcdc99bb0dc8c3231ce46",
+   "size": 87276,
    "step": "export"
   },
   "assets/giant/parts/Garment_fur_mantle.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "86bfaf861901861f4ecaf66dfac823adef7219c77e2a32a0385c6680d991db4f",
-   "size": 105572,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "38e74090c63f0b6d1b1a63f443f941acf73c011a782cb096a81feb79829da936",
+   "size": 105568,
    "step": "export"
   },
   "assets/giant/parts/Garment_furs.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "be2075831e0d6fcf32f27a4430d7299978b2dcbae425c40deb0e3d2c4d19b070",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "e7b71ad95b080df86ee96b1ad37fb03a9733c3a64902f280e78c2d6fe500724d",
    "size": 80124,
    "step": "export"
   },
   "assets/giant/parts/Garment_greaves.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "67d607a895fc30f87b50c6a240227cd49c667728b9bc15e2d4790e23eddd93b0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "f763a460ca155b0861af86d3dd0839dd53441fbc1737b419528259b04e4937e0",
    "size": 41128,
    "step": "export"
   },
   "assets/giant/parts/Garment_hood.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "6994d61ea9db8ef1b2df30cc434ea9b3d48b099fd6aea47b82f8c12b41586fb3",
-   "size": 119628,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "e9765113e69887e6943b21447ac88bf4bf93d9c04c94a7fa5ed0343f09f8d0ff",
+   "size": 119632,
    "step": "export"
   },
   "assets/giant/parts/Garment_horned_helm.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "35826bf68e115cabe1ed28d4ee38c622a6aa7c0c2c4aaf8ff8b56c1f3579aa60",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "892cb45059ad04c40a6f192339d8ebd48fb9aa89b8b3afdd31f76b98c86ed961",
    "size": 89244,
    "step": "export"
   },
   "assets/giant/parts/Garment_iron_helm.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "3c453a6efb09fce8052408888a09f24a7f4a0ab9bb5a46bfc959f65de6a9cfd6",
-   "size": 50400,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "c1fa9198b7bd64d4282856c5ce23826179a8e333bf3170557ba2f7f3ef82582c",
+   "size": 50396,
    "step": "export"
   },
   "assets/giant/parts/Garment_iron_pauldrons.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "fafbba15e6ab68ec91d5ae9603994dd4dde591e6cc9960e40da4ce1f05ed8d1d",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "db1e1b44f6c435fd8ac64677b37a2de4cd571fa0c75e68397e0ba6380ba56cf6",
    "size": 51508,
    "step": "export"
   },
   "assets/giant/parts/Garment_iron_vambraces.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "9b1a8bf9a3518648751562cfbb0becfd3da81cf00aaf2dc5ef2ee3767f2d1b27",
-   "size": 43348,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "bd16cc17cbe5141de072de85f06ba15f8963151b6ba8090095b8e3597184c52d",
+   "size": 43352,
    "step": "export"
   },
   "assets/giant/parts/Garment_jerkin.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "a5f887d6d0ed04dc27e64bffd6d7f39a580cbc17f402d3047cd5ff5480ede8ab",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "a848b169e101a15efc02f094ab988c72e0ac554b57ee8d41aab0786306f526ef",
    "size": 111796,
    "step": "export"
   },
   "assets/giant/parts/Garment_kilt_core.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "c45199d555f3796f2e81454c8949f039eeeb99380489f1dbbdbcecba7408dda0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "e357e2cbec30feca2863bcacfc68f255785c861c405413995e024155d64187eb",
    "size": 50772,
    "step": "export"
   },
   "assets/giant/parts/Garment_kilt_limbs.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "027722a1f43afa959546433229384cec1b48491cbddb522f4d0c755b5bf5f871",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "1c6dfd39ace296e80af6a0e7b7963532db2e9a30cb206e0377ac3f1116a71d65",
    "size": 71976,
    "step": "export"
   },
   "assets/giant/parts/Garment_leather_cap.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "2d023fe400942f3f2804160fb427020544d2bdf14a6b9b9b17e27b2a880814bf",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "71600b70ba2ad535f162ca3c2ad1e9b78c513aa0682eefed84a8dad587bd61a9",
    "size": 42336,
    "step": "export"
   },
   "assets/giant/parts/Garment_leather_cuirass.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "816eb80aeb92e4fd3d52a26f6985daf8f3bcd69466f5dbe7005c9de66aeb8ca4",
-   "size": 102960,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "cd0a046c987cd43fa8a880d48f0dc411df8d6a4d67f8a7606df96646160dc2e0",
+   "size": 102956,
    "step": "export"
   },
   "assets/giant/parts/Garment_leg_wraps.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "2c929fdd03a3f0f07a742c5672d25d5f2a5c8ba9f704098b9478a108ea9b55cb",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "b5cc902d91904ed0852d2b336e96cdedbf3b76fc9e6bc15dbfa48437c6f0a7cf",
    "size": 46944,
    "step": "export"
   },
   "assets/giant/parts/Garment_loincloth.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "1623393ef374977d7010637dfdddd7926473e6363e2e8e5fd4c853e718dc7490",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "c3ac50a6b32afdb8286365f317bc6674e6088308938350adf848cb60f7deaf03",
    "size": 53172,
    "step": "export"
   },
   "assets/giant/parts/Garment_long_cloak.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "01589267a0b752deb5627b78874743f26265c6b27f0b159284a11c8989f2bddb",
-   "size": 90964,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "c2a48d70d531bd823abe35ef28a84f308303ff9d09588216ee3d87da81b787ac",
+   "size": 91252,
    "step": "export"
   },
   "assets/giant/parts/Garment_mail_hauberk.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "8b8e194ce41246d8715fb334e84c90b6f46de44877d28eda11b0452226c597a3",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "b5738898ba2cef2853f108b0c7dbee53ba4427e34dcb7b9445d8de3171fbdfe9",
    "size": 186536,
    "step": "export"
   },
   "assets/giant/parts/Garment_pauldron.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "1d19582e374d16a4acafe10d6b6ee201f060c377c9d937bbbd0e9e65e9a529ea",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "126ca66508081c52cefff52c5831f973aabd21f7710243490e3467d535c0bdc7",
    "size": 37296,
    "step": "export"
   },
   "assets/giant/parts/Garment_sash.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "d81498ccaf52a5eea294e1592c317db304b568a9eaec183529727e3ba7d7cf76",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "967fe587afca4665980a40f9f9e9510dd41c1906f7f93dcbb5a31e03ae473717",
    "size": 55068,
    "step": "export"
   },
   "assets/giant/parts/Garment_scale_coat.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "809204418355eca3ae6153c703b3812a6b3b78aab822e7e5326c0ab8b2e1e821",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "82ba9a16d3fb5c3764a9f98adf22fb023f3e871027fd0eb00b88f2d909b93c30",
    "size": 150520,
    "step": "export"
   },
   "assets/giant/parts/Garment_shirt_core.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "e4ed88c5f08f9fb36ff7ee0616efe998282f95991f8ae26109ce231810d9379e",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "5d1139933ca1bccf7ef1ae20858764d874951a583e84b1a1aaac92e4f5fc3dfd",
    "size": 135040,
    "step": "export"
   },
   "assets/giant/parts/Garment_shirt_limbs.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "b6dd8238884a1561acc295411994db44aa01e557da337e5dba150b0bfe15b846",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "8460193945a5edac1da26c65d84737c8294e962e73834d3a21af9d09ea3b0aff",
    "size": 98172,
    "step": "export"
   },
   "assets/giant/parts/Garment_sleeveless_vest.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "3f5b5faae9d01ad51e6e070fa0467116465da4d4365c2ffdb0a9de098e9bfedf",
-   "size": 98844,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "f08d0ff873cce204c21f2a51ac2dc343c94b25ca3341edab8f6d22077e61db65",
+   "size": 98852,
    "step": "export"
   },
   "assets/giant/parts/Garment_trousers_core.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "85aa594caffc1e5823796985640af3bbc2d06e13ac4445e58794be289b46982e",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "b243b422c1a0934fb69bd5753e14fd5451ccdcecd59e6094c6a098eab068703b",
    "size": 50776,
    "step": "export"
   },
   "assets/giant/parts/Garment_trousers_limbs.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "8657eca2dbd629d261ec5892a6ed58ce36146f3fa769337239117cb019b4b72b",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "b001fbcba069ef4c0babb302d2a5a77c552378ff3853519cb2b357bbdc610aed",
    "size": 106724,
    "step": "export"
   },
   "assets/giant/parts/Garment_tunic_core.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "6087fb9772079c2a30f00857397e30582fb64515823d5ee882649abc4a342dc6",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "9eb81bd2c61c6f5312ac14402da754acc05a8c78c6d3b7bc5b9bcf5004ca1ab4",
    "size": 148960,
    "step": "export"
   },
   "assets/giant/parts/Garment_tunic_limbs.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "6ac282a42f655a8f74a302e4899e389f413d666b2432dd4b1ffd63482312efc7",
-   "size": 85084,
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "c5b1ffabe46d74ce47b54bda91011e4feb89e90f47a79baf9b19061b88675447",
+   "size": 85088,
    "step": "export"
   },
   "assets/giant/parts/Garment_war_belt.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "2a8d644f1430030f144614189113758e2ea8cc4a1190c57557abdd27b8319622",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "9c57e129cbf2add1e4efb2d119da1ac82555ef3840f1ff22e8a723193edd22e6",
    "size": 55676,
    "step": "export"
   },
   "assets/giant/parts/Garment_wrapped_sandals.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
-   "sha256": "52f9855c82366ee561d6208e6183a6b89dba0c80ab7bf140e84ee9bc84353592",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
+   "sha256": "7d91cd98ab9c72e22400769d62d73be2a92f7de38f3a381d9913a35d88441a4c",
    "size": 146320,
    "step": "export"
   },
   "assets/giant/parts/Hair_circlet_braid.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "d20571a963809691f0da320a74f5c12cd8b452d2919a4f5acdb9e0efb321696b",
    "size": 476544,
    "step": "export"
   },
   "assets/giant/parts/Hair_crop.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "04135308c7e7896f0baf443f719776d394f703de99ddbfb22d07ba6248f0f4c7",
    "size": 67760,
    "step": "export"
   },
   "assets/giant/parts/Hair_long_back.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "33ee12acd001434fdd820c330d870c486d6802ef4b9ad2362cac0507c4a748e9",
    "size": 483652,
    "step": "export"
   },
   "assets/giant/parts/Hair_long_braided.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "056da5222a5cd8f2d3c74cca346afd057b0937818f8afef7d36a43fe60631f73",
    "size": 484592,
    "step": "export"
   },
   "assets/giant/parts/Hair_long_loose.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "e451f910eef3de93eb7eaa6e43a0bd563dbe31ef397fccfd26eb572b32dee0b5",
    "size": 510352,
    "step": "export"
   },
   "assets/giant/parts/Hair_side_braids.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "87fae5ebb89e16c3f1c426f3a13280c4662d6a89c17411188f69e55d07b22af4",
    "size": 462440,
    "step": "export"
   },
   "assets/giant/parts/Hair_top_knot.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "73df5c3fe3b224269b1987e78a88b43d266cda3c6e1765656a77b2cc8b22c4ed",
    "size": 437016,
    "step": "export"
   },
   "assets/giant/parts/Hair_twin_braids.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "953c82f87b84a6bb0fd4d4819fede4bca0989e049a9da3f8086c35a1a85f0d05",
    "size": 509412,
    "step": "export"
   },
   "assets/giant/parts/Hair_warrior_tail.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "c5a6d1c31e19da5f13fd42d4d0df5aa6ee2e5905b65ee279599afbd7f173ce8a",
    "size": 425840,
    "step": "export"
   },
   "assets/giant/parts/Hair_wild_mane.glb": {
    "cycles": false,
-   "inputs": "7d2b352ac522a566391052fcad746e4cccbc0c60b884e3deff54c378b202b1e0",
+   "inputs": "5212b5760c2b4031dd159cd32511845b144b8cc8444118e1017f069822abe074",
    "sha256": "9f275196e6ee260439b18df21bda6af5a0aadde63fcd3edc295b4c357cb2d3af",
    "size": 475252,
    "step": "export"
@@ -5176,6 +6353,1150 @@
     -0.44995
    ]
   },
+  "layering": {
+   "order": [
+    "braies",
+    "loincloth",
+    "trousers",
+    "kilt",
+    "tunic",
+    "shirt",
+    "sleeveless_vest",
+    "chest_wrap",
+    "leg_wraps",
+    "greaves",
+    "bracers",
+    "iron_vambraces",
+    "arm_wraps",
+    "boots",
+    "wrapped_sandals",
+    "belt",
+    "war_belt",
+    "sash",
+    "jerkin",
+    "mail_hauberk",
+    "leather_cuirass",
+    "bronze_breastplate",
+    "scale_coat",
+    "cape",
+    "long_cloak",
+    "fur_cloak",
+    "furs",
+    "pauldron",
+    "iron_pauldrons",
+    "fur_mantle",
+    "bone_spaulders",
+    "hood",
+    "leather_cap",
+    "iron_helm",
+    "horned_helm"
+   ],
+   "push": {
+    "arm_wraps": {
+     "shirt": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "belt": {
+     "braies": [
+      0.562,
+      0.562,
+      0.562,
+      0.562,
+      0.562
+     ],
+     "kilt": [
+      0.446,
+      0.446,
+      0.446,
+      0.446,
+      0.446
+     ],
+     "loincloth": [
+      0.394,
+      0.394,
+      0.394,
+      0.394,
+      0.394
+     ],
+     "shirt": [
+      0.625,
+      0.678,
+      0.752,
+      0.826,
+      0.9
+     ],
+     "sleeveless_vest": [
+      0.753,
+      0.79,
+      0.826,
+      0.863,
+      0.9
+     ],
+     "trousers": [
+      0.404,
+      0.404,
+      0.404,
+      0.404,
+      0.404
+     ],
+     "tunic": [
+      0.96,
+      0.962,
+      0.965,
+      0.968,
+      0.971
+     ]
+    },
+    "bone_spaulders": {
+     "cape": [
+      0.654,
+      0.703,
+      0.756,
+      0.809,
+      0.997
+     ],
+     "fur_cloak": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "jerkin": [
+      0.603,
+      0.617,
+      0.63,
+      0.644,
+      0.658
+     ],
+     "long_cloak": [
+      0.654,
+      0.705,
+      0.762,
+      0.818,
+      0.999
+     ],
+     "mail_hauberk": [
+      0.06,
+      0.187,
+      0.313,
+      0.44,
+      0.569
+     ],
+     "scale_coat": [
+      0.164,
+      0.285,
+      0.405,
+      0.526,
+      0.646
+     ]
+    },
+    "boots": {
+     "greaves": [
+      0.469,
+      0.559,
+      0.649,
+      0.74,
+      0.862
+     ],
+     "leg_wraps": [
+      0.562,
+      0.616,
+      0.677,
+      0.759,
+      0.866
+     ],
+     "trousers": [
+      0.468,
+      0.468,
+      0.468,
+      0.468,
+      0.468
+     ]
+    },
+    "bracers": {
+     "shirt": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "bronze_breastplate": {
+     "belt": [
+      0.496,
+      0.567,
+      0.637,
+      0.809,
+      0.991
+     ],
+     "chest_wrap": [
+      0.995,
+      0.995,
+      0.995,
+      0.995,
+      0.995
+     ],
+     "sash": [
+      0.683,
+      0.762,
+      0.841,
+      0.92,
+      0.999
+     ],
+     "shirt": [
+      0.009,
+      0.009,
+      0.02,
+      0.038,
+      0.13
+     ],
+     "sleeveless_vest": [
+      0.021,
+      0.021,
+      0.03,
+      0.042,
+      0.055
+     ],
+     "tunic": [
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98
+     ],
+     "war_belt": [
+      0.718,
+      0.789,
+      0.859,
+      0.93,
+      1.0
+     ]
+    },
+    "cape": {
+     "bronze_breastplate": [
+      0.72,
+      0.774,
+      0.829,
+      0.887,
+      0.994
+     ],
+     "chest_wrap": [
+      0.568,
+      0.568,
+      0.568,
+      0.568,
+      0.568
+     ],
+     "jerkin": [
+      0.997,
+      0.997,
+      0.997,
+      0.997,
+      1.0
+     ],
+     "leather_cuirass": [
+      0.674,
+      0.737,
+      0.802,
+      0.872,
+      0.997
+     ],
+     "mail_hauberk": [
+      0.627,
+      0.705,
+      0.801,
+      0.898,
+      0.997
+     ],
+     "sash": [
+      0.174,
+      0.319,
+      0.464,
+      0.609,
+      0.754
+     ],
+     "scale_coat": [
+      0.662,
+      0.731,
+      0.8,
+      0.871,
+      1.0
+     ],
+     "shirt": [
+      0.383,
+      0.383,
+      0.383,
+      0.383,
+      0.383
+     ],
+     "sleeveless_vest": [
+      0.415,
+      0.415,
+      0.415,
+      0.415,
+      0.415
+     ],
+     "tunic": [
+      0.525,
+      0.525,
+      0.525,
+      0.525,
+      0.525
+     ],
+     "war_belt": [
+      0.318,
+      0.443,
+      0.569,
+      0.694,
+      0.82
+     ]
+    },
+    "fur_cloak": {
+     "bronze_breastplate": [
+      0.584,
+      0.665,
+      0.747,
+      0.828,
+      0.99
+     ],
+     "chest_wrap": [
+      0.342,
+      0.342,
+      0.342,
+      0.342,
+      0.342
+     ],
+     "jerkin": [
+      0.948,
+      0.96,
+      0.973,
+      0.985,
+      1.0
+     ],
+     "leather_cuirass": [
+      0.514,
+      0.61,
+      0.706,
+      0.802,
+      0.989
+     ],
+     "mail_hauberk": [
+      0.444,
+      0.558,
+      0.673,
+      0.794,
+      0.999
+     ],
+     "sash": [
+      0.408,
+      0.528,
+      0.648,
+      0.767,
+      0.887
+     ],
+     "scale_coat": [
+      0.496,
+      0.6,
+      0.703,
+      0.822,
+      0.999
+     ],
+     "shirt": [
+      0.075,
+      0.075,
+      0.075,
+      0.075,
+      0.075
+     ],
+     "sleeveless_vest": [
+      0.124,
+      0.124,
+      0.124,
+      0.124,
+      0.124
+     ],
+     "tunic": [
+      0.289,
+      0.289,
+      0.289,
+      0.289,
+      0.289
+     ],
+     "war_belt": [
+      0.054,
+      0.224,
+      0.394,
+      0.565,
+      0.764
+     ]
+    },
+    "fur_mantle": {
+     "bronze_breastplate": [
+      0.0,
+      0.0,
+      0.108,
+      0.239,
+      0.37
+     ],
+     "cape": [
+      0.7,
+      0.759,
+      0.818,
+      0.921,
+      0.999
+     ],
+     "fur_cloak": [
+      0.999,
+      0.999,
+      0.999,
+      0.999,
+      1.0
+     ],
+     "jerkin": [
+      0.0,
+      0.055,
+      0.161,
+      0.266,
+      0.807
+     ],
+     "leather_cuirass": [
+      0.0,
+      0.0,
+      0.096,
+      0.232,
+      0.368
+     ],
+     "long_cloak": [
+      0.697,
+      0.762,
+      0.87,
+      0.932,
+      0.994
+     ],
+     "mail_hauberk": [
+      0.0,
+      0.0,
+      0.087,
+      0.228,
+      0.368
+     ],
+     "scale_coat": [
+      0.0,
+      0.0,
+      0.096,
+      0.233,
+      0.371
+     ]
+    },
+    "furs": {
+     "bronze_breastplate": [
+      0.0,
+      0.0,
+      0.0,
+      0.293,
+      0.93
+     ],
+     "cape": [
+      0.212,
+      0.261,
+      0.418,
+      0.693,
+      1.0
+     ],
+     "fur_cloak": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "jerkin": [
+      0.125,
+      0.341,
+      0.557,
+      0.773,
+      0.989
+     ],
+     "leather_cuirass": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.408
+     ],
+     "long_cloak": [
+      0.212,
+      0.263,
+      0.419,
+      0.694,
+      0.993
+     ],
+     "mail_hauberk": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.435
+     ],
+     "scale_coat": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.477
+     ]
+    },
+    "greaves": {
+     "braies": [
+      0.995,
+      0.995,
+      0.995,
+      0.995,
+      0.995
+     ],
+     "trousers": [
+      0.999,
+      0.999,
+      0.999,
+      0.999,
+      0.999
+     ]
+    },
+    "iron_pauldrons": {
+     "bronze_breastplate": [
+      0.154,
+      0.263,
+      0.371,
+      0.48,
+      0.588
+     ],
+     "cape": [
+      0.689,
+      0.729,
+      0.778,
+      0.827,
+      0.998
+     ],
+     "fur_cloak": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "jerkin": [
+      0.945,
+      0.945,
+      0.945,
+      0.945,
+      0.945
+     ],
+     "leather_cuirass": [
+      0.0,
+      0.034,
+      0.146,
+      0.257,
+      0.369
+     ],
+     "long_cloak": [
+      0.689,
+      0.732,
+      0.784,
+      0.835,
+      0.994
+     ],
+     "mail_hauberk": [
+      0.064,
+      0.121,
+      0.27,
+      0.522,
+      0.774
+     ],
+     "scale_coat": [
+      0.106,
+      0.206,
+      0.318,
+      0.43,
+      0.541
+     ]
+    },
+    "iron_vambraces": {
+     "shirt": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "jerkin": {
+     "belt": [
+      0.448,
+      0.51,
+      0.572,
+      0.647,
+      0.731
+     ],
+     "sash": [
+      0.636,
+      0.727,
+      0.818,
+      0.908,
+      1.0
+     ],
+     "shirt": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.018
+     ],
+     "tunic": [
+      0.0,
+      0.0,
+      0.0,
+      0.004,
+      0.086
+     ],
+     "war_belt": [
+      0.682,
+      0.762,
+      0.841,
+      0.921,
+      1.0
+     ]
+    },
+    "leather_cuirass": {
+     "belt": [
+      0.499,
+      0.557,
+      0.618,
+      0.684,
+      0.79
+     ],
+     "chest_wrap": [
+      0.957,
+      0.957,
+      0.957,
+      0.957,
+      0.957
+     ],
+     "sash": [
+      0.686,
+      0.764,
+      0.843,
+      0.921,
+      1.0
+     ],
+     "shirt": [
+      0.036,
+      0.036,
+      0.07,
+      0.139,
+      0.211
+     ],
+     "sleeveless_vest": [
+      0.135,
+      0.135,
+      0.135,
+      0.135,
+      0.135
+     ],
+     "tunic": [
+      0.61,
+      0.61,
+      0.61,
+      0.61,
+      0.61
+     ],
+     "war_belt": [
+      0.719,
+      0.789,
+      0.86,
+      0.93,
+      1.0
+     ]
+    },
+    "leg_wraps": {
+     "trousers": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ]
+    },
+    "long_cloak": {
+     "bronze_breastplate": [
+      0.728,
+      0.783,
+      0.837,
+      0.892,
+      0.995
+     ],
+     "chest_wrap": [
+      0.57,
+      0.57,
+      0.57,
+      0.57,
+      0.57
+     ],
+     "jerkin": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "leather_cuirass": [
+      0.681,
+      0.745,
+      0.81,
+      0.874,
+      0.995
+     ],
+     "mail_hauberk": [
+      0.634,
+      0.711,
+      0.8,
+      0.896,
+      0.999
+     ],
+     "sash": [
+      0.484,
+      0.589,
+      0.694,
+      0.799,
+      0.903
+     ],
+     "scale_coat": [
+      0.669,
+      0.739,
+      0.808,
+      0.878,
+      1.0
+     ],
+     "shirt": [
+      0.387,
+      0.387,
+      0.387,
+      0.387,
+      0.387
+     ],
+     "sleeveless_vest": [
+      0.42,
+      0.42,
+      0.42,
+      0.42,
+      0.42
+     ],
+     "tunic": [
+      0.531,
+      0.531,
+      0.531,
+      0.531,
+      0.531
+     ],
+     "war_belt": [
+      0.286,
+      0.417,
+      0.549,
+      0.681,
+      0.817
+     ]
+    },
+    "mail_hauberk": {
+     "belt": [
+      0.53,
+      0.583,
+      0.635,
+      0.7,
+      0.797
+     ],
+     "braies": [
+      0.759,
+      0.759,
+      0.759,
+      0.759,
+      0.759
+     ],
+     "chest_wrap": [
+      0.972,
+      0.972,
+      0.972,
+      0.972,
+      0.972
+     ],
+     "sash": [
+      0.745,
+      0.809,
+      0.872,
+      0.936,
+      1.0
+     ],
+     "shirt": [
+      0.344,
+      0.344,
+      0.344,
+      0.344,
+      0.344
+     ],
+     "sleeveless_vest": [
+      0.278,
+      0.278,
+      0.278,
+      0.278,
+      0.278
+     ],
+     "tunic": [
+      0.989,
+      0.989,
+      0.989,
+      0.989,
+      1.0
+     ],
+     "war_belt": [
+      0.724,
+      0.793,
+      0.861,
+      0.93,
+      1.0
+     ]
+    },
+    "pauldron": {
+     "bronze_breastplate": [
+      0.336,
+      0.436,
+      0.537,
+      0.638,
+      0.739
+     ],
+     "cape": [
+      0.726,
+      0.743,
+      0.789,
+      0.835,
+      0.997
+     ],
+     "fur_cloak": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "jerkin": [
+      0.895,
+      0.895,
+      0.895,
+      0.895,
+      0.895
+     ],
+     "leather_cuirass": [
+      0.171,
+      0.215,
+      0.314,
+      0.412,
+      0.516
+     ],
+     "long_cloak": [
+      0.726,
+      0.745,
+      0.794,
+      0.842,
+      0.993
+     ],
+     "mail_hauberk": [
+      0.253,
+      0.413,
+      0.574,
+      0.734,
+      0.895
+     ],
+     "scale_coat": [
+      0.278,
+      0.318,
+      0.369,
+      0.473,
+      0.577
+     ],
+     "tunic": [
+      0.04,
+      0.04,
+      0.04,
+      0.04,
+      0.04
+     ]
+    },
+    "sash": {
+     "braies": [
+      0.487,
+      0.487,
+      0.487,
+      0.487,
+      0.487
+     ],
+     "kilt": [
+      0.195,
+      0.195,
+      0.195,
+      0.195,
+      0.195
+     ],
+     "loincloth": [
+      0.167,
+      0.167,
+      0.167,
+      0.167,
+      0.167
+     ],
+     "shirt": [
+      0.468,
+      0.575,
+      0.696,
+      0.816,
+      0.936
+     ],
+     "sleeveless_vest": [
+      0.545,
+      0.608,
+      0.671,
+      0.734,
+      0.797
+     ],
+     "trousers": [
+      0.156,
+      0.156,
+      0.156,
+      0.156,
+      0.156
+     ],
+     "tunic": [
+      0.814,
+      0.851,
+      0.9,
+      0.949,
+      1.0
+     ]
+    },
+    "scale_coat": {
+     "belt": [
+      0.521,
+      0.574,
+      0.627,
+      0.694,
+      0.79
+     ],
+     "braies": [
+      0.538,
+      0.538,
+      0.538,
+      0.538,
+      0.538
+     ],
+     "chest_wrap": [
+      0.943,
+      0.943,
+      0.943,
+      0.943,
+      0.943
+     ],
+     "sash": [
+      0.737,
+      0.803,
+      0.868,
+      0.934,
+      1.0
+     ],
+     "shirt": [
+      0.048,
+      0.048,
+      0.059,
+      0.166,
+      0.277
+     ],
+     "sleeveless_vest": [
+      0.175,
+      0.175,
+      0.175,
+      0.175,
+      0.175
+     ],
+     "tunic": [
+      0.964,
+      0.964,
+      0.964,
+      0.964,
+      1.0
+     ],
+     "war_belt": [
+      0.721,
+      0.791,
+      0.86,
+      0.93,
+      1.0
+     ]
+    },
+    "shirt": {
+     "braies": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "kilt": [
+      0.984,
+      0.984,
+      0.984,
+      0.984,
+      0.984
+     ],
+     "loincloth": [
+      0.817,
+      0.817,
+      0.817,
+      0.817,
+      0.817
+     ],
+     "trousers": [
+      0.827,
+      0.827,
+      0.827,
+      0.827,
+      0.827
+     ]
+    },
+    "sleeveless_vest": {
+     "braies": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "kilt": [
+      0.992,
+      0.992,
+      0.992,
+      0.992,
+      0.992
+     ],
+     "loincloth": [
+      0.869,
+      0.869,
+      0.869,
+      0.869,
+      0.869
+     ],
+     "trousers": [
+      0.981,
+      0.981,
+      0.981,
+      0.981,
+      0.981
+     ]
+    },
+    "tunic": {
+     "braies": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "kilt": [
+      0.082,
+      0.082,
+      0.082,
+      0.082,
+      0.082
+     ],
+     "loincloth": [
+      0.067,
+      0.067,
+      0.067,
+      0.067,
+      0.067
+     ]
+    },
+    "war_belt": {
+     "braies": [
+      0.475,
+      0.475,
+      0.475,
+      0.475,
+      0.475
+     ],
+     "kilt": [
+      0.121,
+      0.121,
+      0.121,
+      0.121,
+      0.121
+     ],
+     "loincloth": [
+      0.093,
+      0.093,
+      0.093,
+      0.093,
+      0.093
+     ],
+     "shirt": [
+      0.452,
+      0.525,
+      0.598,
+      0.68,
+      0.801
+     ],
+     "sleeveless_vest": [
+      0.482,
+      0.526,
+      0.569,
+      0.613,
+      0.681
+     ],
+     "trousers": [
+      0.083,
+      0.083,
+      0.083,
+      0.083,
+      0.083
+     ],
+     "tunic": [
+      0.804,
+      0.807,
+      0.81,
+      0.812,
+      0.86
+     ]
+    },
+    "wrapped_sandals": {
+     "leg_wraps": [
+      0.624,
+      0.718,
+      0.811,
+      0.905,
+      1.0
+     ],
+     "trousers": [
+      0.487,
+      0.487,
+      0.487,
+      0.487,
+      0.487
+     ]
+    }
+   },
+   "samples": 5
+  },
   "meshes": {
    "Accessory_beast_jaw": {
     "bone": "pelvis",
@@ -5586,7 +7907,7 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "9": 0.635628
+     "9": 0.633603
     },
     "covers": [],
     "detail": "weave",
@@ -5596,6 +7917,7 @@
     "node": "Garment_arm_wraps",
     "part": "limbs",
     "part_path": "res://assets/giant/parts/Garment_arm_wraps.glb",
+    "push_m": 0.022822,
     "shell": 0.022,
     "slot": "arms",
     "tris": 588
@@ -5612,6 +7934,7 @@
     "node": "Garment_belt",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_belt.glb",
+    "push_m": 0.050481,
     "shell": 0.03,
     "slot": "waist",
     "tris": 768
@@ -5628,6 +7951,7 @@
     "node": "Garment_bone_spaulders",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_bone_spaulders.glb",
+    "push_m": 0.04596,
     "shell": 0.046,
     "slot": "shoulders",
     "tris": 516
@@ -5637,7 +7961,7 @@
     "chains": [],
     "coverage": {
      "13": 0.696594,
-     "14": 0.999063
+     "14": 0.998126
     },
     "covers": [
      14
@@ -5649,6 +7973,7 @@
     "node": "Garment_boots",
     "part": "limbs",
     "part_path": "res://assets/giant/parts/Garment_boots.glb",
+    "push_m": 0.085469,
     "shell": 0.024,
     "slot": "feet",
     "tris": 2500
@@ -5665,6 +7990,7 @@
     "node": "Garment_bracers",
     "part": "limbs",
     "part_path": "res://assets/giant/parts/Garment_bracers.glb",
+    "push_m": 0.026699,
     "shell": 0.022,
     "slot": "arms",
     "tris": 400
@@ -5673,8 +7999,8 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "11": 0.932203,
-     "7": 0.984733
+     "11": 0.93597,
+     "7": 0.980916
     },
     "covers": [
      7
@@ -5688,14 +8014,14 @@
     "part_path": "res://assets/giant/parts/Garment_braies_core.glb",
     "shell": 0.012,
     "slot": "legs",
-    "tris": 388
+    "tris": 398
    },
    "Garment_braies_limbs": {
     "category": "garment",
     "chains": [],
     "coverage": {
-     "11": 0.932203,
-     "7": 0.984733
+     "11": 0.93597,
+     "7": 0.980916
     },
     "covers": [],
     "detail": "weave",
@@ -5707,16 +8033,16 @@
     "part_path": "res://assets/giant/parts/Garment_braies_limbs.glb",
     "shell": 0.012,
     "slot": "legs",
-    "tris": 676
+    "tris": 670
    },
    "Garment_bronze_breastplate": {
     "category": "garment",
     "chains": [],
     "coverage": {
-     "3": 0.702093,
+     "3": 0.703704,
      "4": 0.785088,
-     "5": 0.639881,
-     "6": 0.945946
+     "5": 0.633929,
+     "6": 0.891892
     },
     "covers": [],
     "detail": "metal",
@@ -5726,6 +8052,7 @@
     "node": "Garment_bronze_breastplate",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_bronze_breastplate.glb",
+    "push_m": 0.14533,
     "shell": 0.034,
     "slot": "armour",
     "tris": 1866
@@ -5738,8 +8065,8 @@
      "cape_r"
     ],
     "coverage": {
-     "5": 0.895833,
-     "6": 1.0
+     "5": 0.866071,
+     "6": 0.912162
     },
     "covers": [
      5,
@@ -5753,9 +8080,10 @@
     "node": "Garment_cape",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_cape.glb",
+    "push_m": 0.129967,
     "shell": 0.03,
     "slot": "cape",
-    "tris": 1236
+    "tris": 1244
    },
    "Garment_chest_wrap": {
     "category": "garment",
@@ -5781,8 +8109,8 @@
      "cape_r"
     ],
     "coverage": {
-     "5": 0.89881,
-     "6": 1.0
+     "5": 0.869048,
+     "6": 0.939189
     },
     "covers": [
      5,
@@ -5796,16 +8124,17 @@
     "node": "Garment_fur_cloak",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_fur_cloak.glb",
+    "push_m": 0.124195,
     "shell": 0.03,
     "slot": "cape",
-    "tris": 1524
+    "tris": 1532
    },
    "Garment_fur_mantle": {
     "category": "garment",
     "chains": [],
     "coverage": {
-     "3": 0.925926,
-     "5": 0.845238
+     "3": 0.927536,
+     "5": 0.842262
     },
     "covers": [],
     "detail": "fur",
@@ -5815,6 +8144,7 @@
     "node": "Garment_fur_mantle",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_fur_mantle.glb",
+    "push_m": 0.21286,
     "shell": 0.046,
     "slot": "shoulders",
     "tris": 2080
@@ -5823,8 +8153,8 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "3": 0.666667,
-     "5": 0.627976
+     "3": 0.665056,
+     "5": 0.625
     },
     "covers": [],
     "detail": "fur",
@@ -5834,6 +8164,7 @@
     "node": "Garment_furs",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_furs.glb",
+    "push_m": 0.027695,
     "shell": 0.046,
     "slot": "shoulders",
     "tris": 1352
@@ -5850,6 +8181,7 @@
     "node": "Garment_greaves",
     "part": "limbs",
     "part_path": "res://assets/giant/parts/Garment_greaves.glb",
+    "push_m": 0.041446,
     "shell": 0.02,
     "slot": "shins",
     "tris": 392
@@ -5949,6 +8281,7 @@
     "node": "Garment_iron_pauldrons",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_iron_pauldrons.glb",
+    "push_m": 0.052018,
     "shell": 0.046,
     "slot": "shoulders",
     "tris": 660
@@ -5967,6 +8300,7 @@
     "node": "Garment_iron_vambraces",
     "part": "limbs",
     "part_path": "res://assets/giant/parts/Garment_iron_vambraces.glb",
+    "push_m": 0.022055,
     "shell": 0.022,
     "slot": "arms",
     "tris": 460
@@ -5975,10 +8309,10 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "3": 0.822866,
+     "3": 0.818035,
      "4": 0.97807,
-     "5": 0.770833,
-     "6": 0.972973
+     "5": 0.764881,
+     "6": 1.0
     },
     "covers": [
      4,
@@ -5991,6 +8325,7 @@
     "node": "Garment_jerkin",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_jerkin.glb",
+    "push_m": 0.128863,
     "shell": 0.034,
     "slot": "armour",
     "tris": 2268
@@ -6072,10 +8407,10 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "3": 0.721417,
+     "3": 0.723027,
      "4": 0.929825,
      "5": 0.6875,
-     "6": 0.925676
+     "6": 0.945946
     },
     "covers": [],
     "detail": "leather",
@@ -6085,6 +8420,7 @@
     "node": "Garment_leather_cuirass",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_leather_cuirass.glb",
+    "push_m": 0.145618,
     "shell": 0.034,
     "slot": "armour",
     "tris": 2032
@@ -6093,7 +8429,7 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "13": 0.832817
+     "13": 0.848297
     },
     "covers": [],
     "detail": "weave",
@@ -6103,6 +8439,7 @@
     "node": "Garment_leg_wraps",
     "part": "limbs",
     "part_path": "res://assets/giant/parts/Garment_leg_wraps.glb",
+    "push_m": 0.041085,
     "shell": 0.02,
     "slot": "shins",
     "tris": 550
@@ -6133,8 +8470,8 @@
      "cape_r"
     ],
     "coverage": {
-     "5": 0.895833,
-     "6": 1.0
+     "5": 0.866071,
+     "6": 0.925676
     },
     "covers": [
      5,
@@ -6148,23 +8485,25 @@
     "node": "Garment_long_cloak",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_long_cloak.glb",
+    "push_m": 0.145019,
     "shell": 0.03,
     "slot": "cape",
-    "tris": 1636
+    "tris": 1644
    },
    "Garment_mail_hauberk": {
     "category": "garment",
     "chains": [],
     "coverage": {
-     "11": 0.636535,
-     "3": 0.966184,
+     "11": 0.645951,
+     "3": 0.974235,
      "4": 1.0,
      "5": 0.943452,
-     "6": 0.972973,
-     "7": 0.977099,
+     "6": 1.0,
+     "7": 0.984733,
      "8": 0.505535
     },
     "covers": [
+     3,
      4,
      6,
      7
@@ -6176,6 +8515,7 @@
     "node": "Garment_mail_hauberk",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_mail_hauberk.glb",
+    "push_m": 0.217306,
     "shell": 0.034,
     "slot": "armour",
     "tris": 4272
@@ -6192,6 +8532,7 @@
     "node": "Garment_pauldron",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_pauldron.glb",
+    "push_m": 0.055123,
     "shell": 0.046,
     "slot": "shoulders",
     "tris": 324
@@ -6208,6 +8549,7 @@
     "node": "Garment_sash",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_sash.glb",
+    "push_m": 0.079038,
     "shell": 0.03,
     "slot": "waist",
     "tris": 876
@@ -6216,12 +8558,12 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "11": 0.508475,
-     "3": 0.797101,
+     "11": 0.517891,
+     "3": 0.809984,
      "4": 1.0,
      "5": 0.764881,
-     "6": 0.972973,
-     "7": 0.977099
+     "6": 1.0,
+     "7": 0.984733
     },
     "covers": [
      4,
@@ -6235,6 +8577,7 @@
     "node": "Garment_scale_coat",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_scale_coat.glb",
+    "push_m": 0.209384,
     "shell": 0.034,
     "slot": "armour",
     "tris": 3300
@@ -6243,7 +8586,7 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "3": 0.980676,
+     "3": 0.987118,
      "4": 1.0,
      "5": 0.979167,
      "6": 1.0,
@@ -6263,6 +8606,7 @@
     "node": "Garment_shirt_core",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_shirt_core.glb",
+    "push_m": 0.037128,
     "shell": 0.014,
     "slot": "chest",
     "tris": 2820
@@ -6271,7 +8615,7 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "3": 0.980676,
+     "3": 0.987118,
      "4": 1.0,
      "5": 0.979167,
      "6": 1.0,
@@ -6288,6 +8632,7 @@
     "node": "Garment_shirt_limbs",
     "part": "limbs",
     "part_path": "res://assets/giant/parts/Garment_shirt_limbs.glb",
+    "push_m": 0.037128,
     "shell": 0.014,
     "slot": "chest",
     "tris": 1846
@@ -6296,9 +8641,9 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "3": 0.544283,
+     "3": 0.547504,
      "4": 0.798246,
-     "5": 0.744048,
+     "5": 0.747024,
      "6": 1.0
     },
     "covers": [
@@ -6311,6 +8656,7 @@
     "node": "Garment_sleeveless_vest",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_sleeveless_vest.glb",
+    "push_m": 0.019584,
     "shell": 0.014,
     "slot": "chest",
     "tris": 1888
@@ -6367,12 +8713,12 @@
     "chains": [],
     "coverage": {
      "11": 0.566855,
-     "3": 0.980676,
+     "3": 0.993559,
      "4": 1.0,
      "5": 0.979167,
      "6": 1.0,
-     "7": 0.977099,
-     "8": 0.538745
+     "7": 0.984733,
+     "8": 0.542435
     },
     "covers": [
      3,
@@ -6388,6 +8734,7 @@
     "node": "Garment_tunic_core",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_tunic_core.glb",
+    "push_m": 0.032263,
     "shell": 0.014,
     "slot": "chest",
     "tris": 3130
@@ -6397,12 +8744,12 @@
     "chains": [],
     "coverage": {
      "11": 0.566855,
-     "3": 0.980676,
+     "3": 0.993559,
      "4": 1.0,
      "5": 0.979167,
      "6": 1.0,
-     "7": 0.977099,
-     "8": 0.538745
+     "7": 0.984733,
+     "8": 0.542435
     },
     "covers": [],
     "detail": "weave",
@@ -6412,6 +8759,7 @@
     "node": "Garment_tunic_limbs",
     "part": "limbs",
     "part_path": "res://assets/giant/parts/Garment_tunic_limbs.glb",
+    "push_m": 0.032263,
     "shell": 0.014,
     "slot": "chest",
     "tris": 1386
@@ -6428,6 +8776,7 @@
     "node": "Garment_war_belt",
     "part": "torso",
     "part_path": "res://assets/giant/parts/Garment_war_belt.glb",
+    "push_m": 0.059092,
     "shell": 0.03,
     "slot": "waist",
     "tris": 896
@@ -6436,7 +8785,7 @@
     "category": "garment",
     "chains": [],
     "coverage": {
-     "14": 0.671194
+     "14": 0.670726
     },
     "covers": [],
     "detail": "leather",
@@ -6446,6 +8795,7 @@
     "node": "Garment_wrapped_sandals",
     "part": "limbs",
     "part_path": "res://assets/giant/parts/Garment_wrapped_sandals.glb",
+    "push_m": 0.090171,
     "shell": 0.024,
     "slot": "feet",
     "tris": 2678
@@ -6714,9 +9064,9 @@
    "bake.py": "68e2fdefee8d5b50e903d3339b26d3b63a241d3a4afde27f38456cc81b77a8a4",
    "clips.py": "bf3f28b778202f855df45afb1214039d2bd9bf551db5e88c5990d4d783c51723",
    "designs.py": "4dc94bdd6dce2bdcb20f6d36f1d71a63bfc5d1f897442d04cdf835d7ddca028d",
-   "export_game.py": "f25a62176d5bd32d00b0a0fa782471209e850d7c0ff6f2f460c3d8802108e29a",
+   "export_game.py": "4ec19336dc3ffc07712aaa57e997f141225fee54ed89150fc75c314ad18830c1",
    "giant_body.py": "c8f694bd9d26bfd16ef4ca60ad3d1f36ec9c75247bc360a3ae2ad8778b741581",
-   "giant_garment.py": "e3a81fea74a8fdb729c22baa60262618fd0e486f446673832508c400dcd2c349",
+   "giant_garment.py": "474a99b9047dcc2440b7c0ed629aa06b57c5df49aae2f34008033981cc14987b",
    "giant_hair.py": "b827674aee9e46531161eda77050420b34ab26260f66e7bb4dd76bfbabb8d0c4",
    "giant_parts.py": "293a7356a0e64b3c424f51e607d48e0eef7cb112651fb340adde71b03f56b51c",
    "giant_skin.py": "58bca541ac7ccc8ed87c477526a1650df76a6289c5d95d15e8ce6f9d30753086",

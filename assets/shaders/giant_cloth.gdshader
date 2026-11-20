@@ -36,6 +36,10 @@ uniform float build_max_m = 0.0;
 // in UV2.x; GiantLook sets the codes of the shown styles as bits, and the others' beads collapse to a point (no
 // fragment). -1 (every garment and accessory): no mask.
 uniform int bead_mask = -1;
+// The W33 look lane: a garment's mesh sits where it would over nothing; each vertex's colour alpha is its push (along
+// the skin's normal) to its place over the loosest garment of every inner slot, over the mesh's push_m. GiantLook sets
+// push_m to the share of that the garments worn under it need (GiantLook.garment_pushes): 0 worn alone.
+uniform float push_m = 0.0;
 const float DARK_FLOOR = 0.035;
 const vec3 BONE = vec3(0.62, 0.56, 0.45);   // linear: an aged, sun-yellowed bone
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
@@ -50,7 +54,7 @@ void vertex() {
 		VERTEX = vec3(0.0);   // P56: a bead of a style not shown
 	}
 	v_fp_pos = VERTEX;
-	VERTEX += NORMAL * dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m;   // P53: the build sliders
+	VERTEX += NORMAL * (dot(COLOR.gb * 2.0 - 1.0, build) * build_max_m + COLOR.a * push_m);   // P53: the build sliders; W33: the layering
 	v_fp_on = fp_in_head(fp_camera_mesh(MODEL_MATRIX, CAMERA_POSITION_WORLD)) * fp_region_shown(clamp(int(COLOR.r * 16.0), 0, 15));
 }
 
