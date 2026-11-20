@@ -102,3 +102,49 @@ arcs' ends): the fingertips hang a quarter of a head above mid-thigh.
   moved with the landmarks, are in `docs/plans/FOLLOWUPS.md`.
 - Fixed since the first full check (21 failures): the weapon arm's elbow (`test_skinned_rig_motion`) and the braided
   moustache and mutton chops (`test_giant_parts_render`).
+
+## W33frame: the creator's close-ups and the rendered checks on the new body
+
+On `pkg/W33frame`, from `d30e7e6` (the framings' targets moved with the landmarks; the owner approved editing
+`GiantPreview.FRAMINGS` on 2026-11-20). Each of the 15 failures was traced by drawing the same probe on this tree and
+on `dcb23da` (the M10 body, the same code otherwise) and comparing the frames.
+
+**The framings.** The torso, the arms and the hands are smaller at stage 1 on the new body (the legs take more of the
+same height): at the chest framing the torso was 0.78 of its M10 width in the frame, the hand 0.8. The chest
+(2.4 to 2.0 m, target 2.68), back_design (2.7 to 2.25, 2.62), shoulders (2.6 to 2.3, 3.02: the head was cut), arms
+(2.7 to 2.55) and hand framings (1.35 to 1.1) come closer so the subject fills the frame as on the M10 body; every
+other framing composes as before (face centred, hair from behind, waist, legs, shins, feet, neck, upper, lower,
+hair_close, outfit, head, eyes; looked at side by side with the M10 body's). The arms' and hands' targets in the
+table are fallbacks (they aim at the posed arm); they now hold the new body's.
+
+**The designs.** Two real defects, in `tools/giant/kit/designs.py` (designs.png regenerated with `--designs`):
+
+- The strokes "4 cm at stage 1" were 2.7 cm on the human-scale body times M10's 1.4947; the new body is taller at
+  human scale (x 1.3594 to stage 1), so every bold stroke drew 3.7 cm. `BOLD` now follows the body's own scale
+  (`bold_half`): 4 cm at stage 1 on any body.
+- The granite veins were a band of a noise field's value round 0.5; where the lattice fell on the new arms the field's
+  median was 0.42, so the band crossed it rarely (352 px in the arms framing against 1,071 on the M10 body; 5,275
+  texels against 8,443). They are now the field's median iso-line at an even stroke width (the offset over the
+  gradient, in metres): 900 px.
+
+**The probes.** The look probe's chest patch was a fixed stage-1 point (2.78 m), on the collarbones of the new body
+(228/168/139 against the swatch's 220/160/131); it follows the landmarks now (217/159/130). The shell check compared
+the shell's colour with the whole card style's: the card beards grew with the head (W33body) and their longer tips
+over the lit chest lightened the card's mean (the Northern Chieftain's blue 34.8 to 37.1) while in the shell's area
+it held (31.4 to 31.1); the card's colour is read in the shell's pixels now.
+
+**References re-derived** (each with its reason beside the number):
+
+- The face's hard steps (`test_skin_world_render.STEP_MAX`): the face's own steps did not change (the Wanderer's in
+  the head's rows 125 against 131); the share's denominator did (22,537 skin pixels at the face framing, 29,670 on the
+  M10 body, and the upper arms' outlines now inside the frame). Wave-30's subsurface lookup (the hard terminator's
+  cause) put back on this tree reads 0.0154 / 0.0217 / 0.0080 against the fixed 0.0106 / 0.0170 / 0.0067; the
+  ceilings sit halfway (0.013, 0.0194; the Iron Veteran's 0.0085 stands).
+- The claw stripes in the face framing: the cheek's stripes read as before (75 to 78 px), the chest's went under the
+  frame with the longer neck (234 to 57): `GATE_A_FRAMED_SHARE` 0.4 of M10's, the marks' option floor 0.0009 (half
+  the smallest share, 0.0018; 0.0040 on the M10 body).
+- Three hair measures join `KNOWN_MISSES` (they beat M10's on the M10 body): the crop's face scalp share (its front
+  edge a pixel above the scalp tint's hairline), the long hair's outline from behind and the long braids' at the face
+  (both hang straight past the narrower shoulders and the longer neck). Five others now beat M10's and left the list.
+
+**Checks.** The full check (`--build --slow --gate --giant --web-tools --require`): `TIMES: default 82.6 s | slow 468.7 s | gate 1273.3 s` (the default tier over its 75 s on this machine, a warning, as before), `RESULT: 361 suites, 78409 checks, 0 failures`, GIANT VERIFY OK (88 files bit-exact), CHECK PASSED. The soak (120 s): 41 attacks, 33 hits resolved, 4 enemy kills, 2 fence breaks, 7,201 frames, 0 errors - the baseline, unmoved. The character sheets B1-B7 drawn and looked at (B4, B5, B6 compose; B6's face close-ups are the sheet's own camera, the crown near the top edge). The designs.png grew 561 bytes.

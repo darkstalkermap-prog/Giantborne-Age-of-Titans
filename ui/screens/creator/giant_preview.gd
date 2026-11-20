@@ -69,6 +69,10 @@ const ZOOM_MAX := 1.6
 const MAX_PIXEL_SCALE := 2.0
 ## Framings in the model's frame at stage 1 (+X his right, +Y up, -Z his front): what the camera looks at,
 ## its yaw (0 = in front of him, 90 = at his right, 180 = behind), its pitch and distance.
+## W33frame: on the reproportioned body (W33body) the torso, the arms and the hands are smaller at stage 1 (the legs take
+## more of the same height), so the chest, back, shoulders, arms and hand close-ups come closer (about the torso's
+## width ratio, 0.8; the hand's 0.8) to fill their frames as on the M10 body; "arms" and "hand" aim at the posed arm
+## (framing_target), their targets here the fallback without a skeleton.
 const FRAMINGS := {
 	"full": {"target": Vector3(0.0, 1.85, 0.0), "yaw": 20.0, "pitch": 3.0, "dist": 8.4},
 	"face": {"target": Vector3(0.0, 3.346, -0.2), "yaw": 14.0, "pitch": 2.0, "dist": 1.75},
