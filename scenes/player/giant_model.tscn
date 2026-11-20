@@ -813,7 +813,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "7bae762bcf6165315519662929858ffd517695b7b033d4a3781bb099fa3bb914",
+"manifest_sha256": "eae08e553d096de8e7fb03ced99653bad930af2db49e42a0844adcc32bba645f",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -1566,7 +1566,7 @@ index = {
 "chains": [],
 "coverage": {
 "11": 0.711864,
-"7": 0.70229
+"7": 0.755725
 },
 "covers": [],
 "detail": "weave",
@@ -1578,14 +1578,14 @@ index = {
 "part_path": "res://assets/giant/parts/Garment_kilt_core.glb",
 "shell": 0.012,
 "slot": "legs",
-"tris": 1280
+"tris": 424
 },
 "Garment_kilt_limbs": {
 "category": "garment",
 "chains": [],
 "coverage": {
 "11": 0.711864,
-"7": 0.70229
+"7": 0.755725
 },
 "covers": [],
 "detail": "weave",
@@ -1597,7 +1597,7 @@ index = {
 "part_path": "res://assets/giant/parts/Garment_kilt_limbs.glb",
 "shell": 0.012,
 "slot": "legs",
-"tris": 88
+"tris": 960
 },
 "Garment_leather_cap": {
 "category": "garment",
@@ -1911,7 +1911,7 @@ index = {
 "4": 1.0,
 "5": 0.979167,
 "6": 1.0,
-"7": 0.70229,
+"7": 0.759542,
 "8": 0.542435
 },
 "covers": [3, 4, 5, 6],
@@ -1925,7 +1925,7 @@ index = {
 "push_m": 0.106824,
 "shell": 0.014,
 "slot": "chest",
-"tris": 3524
+"tris": 2956
 },
 "Garment_tunic_limbs": {
 "category": "garment",
@@ -1935,7 +1935,7 @@ index = {
 "4": 1.0,
 "5": 0.979167,
 "6": 1.0,
-"7": 0.70229,
+"7": 0.759542,
 "8": 0.542435
 },
 "covers": [],
@@ -1949,7 +1949,7 @@ index = {
 "push_m": 0.106824,
 "shell": 0.014,
 "slot": "chest",
-"tris": 796
+"tris": 1380
 },
 "Garment_war_belt": {
 "category": "garment",

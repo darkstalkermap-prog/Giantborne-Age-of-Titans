@@ -1103,7 +1103,8 @@ def run(out_dir):
             face_part = []
             for f in G["faces"]:
                 bf = body_face_of.get(frozenset(int(gbody[v]) for v in f))
-                face_part.append(int(fp[bf]) if bf is not None else 1)
+                # (the third look lane: a skirt's hanging rows over the thighs are the limbs' part)
+                face_part.append(int(fp[bf]) if bf is not None else (2 if gid in wardrobe.skirt_rows else 1))
             face_part = np.asarray(face_part)
         elif gid in SPLIT_BY_HEIGHT:
             # the third look lane: the braies cut round each thigh under the crotch (by their weights the cut ran up the
