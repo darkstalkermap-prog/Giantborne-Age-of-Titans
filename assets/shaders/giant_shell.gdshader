@@ -50,10 +50,12 @@ varying float v_layer;
 varying vec3 v_comb;
 varying vec3 v_up;
 varying float v_vary;
+varying float v_back;
 
 void vertex() {
 	v_layer = UV2.x;
 	v_h = (UV2.x + 1.0) / float(max(shell_count, 1));
+	v_back = smoothstep(0.1, 0.6, -NORMAL.z);   // (the fifth look lane: the back of the head; the mesh faces +Z)
 	float m = dot(textureLod(mask_tex, UV, MASK_LOD), mask_channel);
 	float lift = shell_height_m * length * v_h * smoothstep(0.02, 0.35, m * density);
 	VERTEX += (NORMAL + comb * v_h) * lift;
@@ -64,12 +66,14 @@ void vertex() {
 void fragment() {
 	// (the fifth look lane: on a beard the strands drawn as short strokes along the face, down the cheeks and the chin -
 	// round, they read as a speckle)
-	vec2 suv = mask_channel.x > 0.5 ? vec2(UV.x * strand_scale * BEARD_STROKE, UV.y * strand_scale) : UV * strand_scale;
+	vec2 suv = vec2(UV.x * strand_scale * BEARD_STROKE, UV.y * strand_scale);   // (the crop's too: a speckled cap)
 	vec4 st = texture(strand_tex, suv);
 	float m = clamp(dot(textureLod(mask_tex, UV, MASK_LOD), mask_channel) * density, 0.0, 1.0);
 	// the style's edge thins strand by strand: a short strand drops out first where the mask fades
 	// (the fourth look lane: a beard thins out over a wider, uneven band, so its edge is ragged, not the mask's line)
-	float keep = mask_channel.x > 0.5 ? smoothstep(0.05, 0.75, m) * (0.75 + 0.5 * texture(strand_tex, UV * strand_scale * 0.07).b) : smoothstep(0.03, 0.4, m);
+	float ragged = smoothstep(0.05, 0.75, m) * (0.75 + 0.5 * texture(strand_tex, UV * strand_scale * 0.07).b);
+	// (the crop thins out the same way at the nape, behind: from behind it ended in a hard line)
+	float keep = mask_channel.x > 0.5 ? ragged : mix(smoothstep(0.03, 0.4, m), ragged, v_back);
 	// every layer keeps the strands that reach it and are still wider than its height there (the innermost,
 	// nearly all of them: with the skin's own beard or scalp shade under it, it hides the skin)
 	float reach = st.g * keep;

@@ -820,7 +820,7 @@ index = {
 "samples": 5.0,
 "y_norm_m": 4.0
 },
-"manifest_sha256": "70c4a874f14c9f0f0f4db7a36109a4a1b3b5cbb4d3a202eb7dc4805c38f158a0",
+"manifest_sha256": "2a65dade7c7fcd64e7b4abee414006f38c4b240050d130f455913d29b04c954c",
 "meshes": {
 "Accessory_beast_jaw": {
 "bone": "pelvis",
@@ -1060,7 +1060,7 @@ index = {
 "chains": ["beard"],
 "covers": [],
 "dye": "none",
-"face_keys": ["jaw", "chin", "cheeks"],
+"face_keys": ["jaw", "chin", "nose", "cheeks"],
 "layer": 3,
 "node": "Beard_chin_braid",
 "part_path": "res://assets/giant/parts/Beard_chin_braid.glb",
@@ -1465,7 +1465,7 @@ index = {
 "Hair_long_loose": 0.0,
 "Hair_side_braids": 0.0,
 "Hair_top_knot": 0.0,
-"Hair_twin_braids": 0.65,
+"Hair_twin_braids": 0.3,
 "Hair_warrior_tail": 0.0,
 "Hair_wild_mane": 0.0
 },
@@ -1496,7 +1496,7 @@ index = {
 "Hair_long_loose": 0.0,
 "Hair_side_braids": 0.0,
 "Hair_top_knot": 0.0,
-"Hair_twin_braids": 0.65,
+"Hair_twin_braids": 0.3,
 "Hair_warrior_tail": 0.0,
 "Hair_wild_mane": 0.0
 },
@@ -1623,7 +1623,7 @@ index = {
 "Hair_long_loose": 0.0,
 "Hair_side_braids": 0.0,
 "Hair_top_knot": 0.0,
-"Hair_twin_braids": 0.55,
+"Hair_twin_braids": 0.3,
 "Hair_warrior_tail": 0.0,
 "Hair_wild_mane": 0.0
 },
@@ -2089,7 +2089,7 @@ index = {
 "layer": 3,
 "node": "Hair_twin_braids",
 "part_path": "res://assets/giant/parts/Hair_twin_braids.glb",
-"tris": 5994
+"tris": 5836
 },
 "Hair_warrior_tail": {
 "atlas": "hair_atlas",

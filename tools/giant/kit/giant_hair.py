@@ -107,11 +107,11 @@ STYLES.update({
                    dict(at="back_side", side=-1.0, length=0.2, width=0.022, step=0.014, lean=(-0.08, 0.3, -1.0),
                         ties=(1.0,), beads=(0.55,))]},
     "Hair_twin_braids": {"kind": "scalp", "layers": [
-        dict(n=335, length=0.2, lo=0.003, hi=0.008, npts=6, power=0.5, width=0.04, curl=0.05, wispy=0.0,
+        dict(n=300, length=0.2, lo=0.003, hi=0.008, npts=6, power=0.5, width=0.04, curl=0.05, wispy=0.0,
              grow="toward"),
         dict(n=130, length=0.22, lo=0.009, hi=0.015, npts=6, power=0.7, width=0.034, curl=0.1, wispy=0.25,
              grow="toward")], "fringe": dict(n=80),
-        "cover": dict(n=16, length=0.10, lo=0.006, hi=0.016, npts=4, width=0.06, curl=0.05),
+        "cover": dict(n=48, length=0.12, lo=0.006, hi=0.016, npts=4, width=0.065, curl=0.05),
         "braids": [dict(at="nape_side", side=s, length=0.56, width=0.04, step=0.018, lean=(0.22 * s, -0.55, -1.0),
                         ties=(1.0,), beads=(0.35, 0.6, 0.85), grow=True) for s in (1.0, -1.0)]},
     "Hair_long_loose": {"kind": "scalp", "layers": [
