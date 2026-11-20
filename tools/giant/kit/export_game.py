@@ -68,6 +68,8 @@ SPLIT_BY_HEIGHT = ("braies",)
 BRAIES_CUT_BELOW_HIP = 0.17         # human m: the braies' torso / limbs cut under the hip joints (under the crotch)
 COVER_SHARE = 0.97                 # a region a garment covers this much of sinks under it (covers)
 COVER_RAY_M = 0.12                 # human scale: the longest skin-to-garment ray that still covers
+COVER_RAY_OF = {"braies": 0.25}    # the fourth look lane: the braies' seat spans the cleft, whose skin's rays cross it
+#                                     sideways (0.12 left the pelvis uncovered, unsunk: its groin showed through in front)
 FREE_COVER_RAY_M = 0.30            # the same for a free-hanging mesh (the cape stands off the small of the back)
 FREE_COVER_SHARE = 0.85            # and its share: it hangs straight, so the flanks' rays pass beside it
 # P54: a garment's part ("split", "torso", "limbs" or "head") and whether it hangs free are its gg.GARMENTS entry's;
@@ -1182,7 +1184,8 @@ def run(out_dir):
         bpy.data.objects.remove(ob, do_unlink=True)
         # the regions this garment covers (its parts together), assigned to the part they belong to
         # a free mesh hangs off the skin: its rays reach further (it still hides the designs under it)
-        cov = coverage(made, V, body_N, region_any, S, FREE_COVER_RAY_M if spec.get("free") else COVER_RAY_M)
+        cov = coverage(made, V, body_N, region_any, S, FREE_COVER_RAY_M if spec.get("free")
+                       else COVER_RAY_OF.get(gid, COVER_RAY_M))
         need = FREE_COVER_SHARE if spec.get("free") else COVER_SHARE
         covered = [r for r, share in sorted(cov.items()) if share >= need and r != split.CAP_REGION]
         for o in made:

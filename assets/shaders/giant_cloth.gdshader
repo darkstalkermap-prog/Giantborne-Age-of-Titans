@@ -51,7 +51,9 @@ uniform bool pushed = false;
 // normal, the line the build sliders push it along, in its tangents (no detail normal then).
 uniform bool push_tangent = false;
 const float DARK_FLOOR = 0.035;
-const float METAL_SHEEN = 1.6;   // the second look lane: the metal's mirrored sky (kind 1)
+const float CLOTH_SATURATION = 0.82;   // the fourth look lane: a cloth dye's saturation kept
+const float METAL_SHEEN = 2.1;   // the second look lane: the metal's mirrored sky (kind 1; the fourth: 1.6 left plate
+//                                  dark in the world's light)
 const float LEATHER_PANEL_M = 0.17;   // the second look lane: a leather garment's panels (stage-1 m of rest height)
 const vec3 BONE = vec3(0.64, 0.55, 0.40);   // linear: an aged, sun-yellowed bone (W33: warmer; it read grey-blue)
 uniform vec4 tint = vec4(1.0, 1.0, 1.0, 0.0);
@@ -107,6 +109,12 @@ void fragment() {
 	// the detail scales the dye and, a little, lifts or sinks it, so it also shows on the darkest dyes (P46)
 	vec3 cloth = dye_color * mix(1.0, d, detail_strength) + vec3((d - 1.0) * detail_strength * 0.07);
 	cloth = max(cloth, vec3(DARK_FLOOR) * mix(vec3(1.0), dye_color / max(max(dye_color.r, dye_color.g), max(dye_color.b, 0.001)), 0.5));
+	if (kind == 0) {
+		// the fourth look lane: a natural dye on wool is a little greyer than its swatch, and uneven over the cloth (the
+		// dyes read as flat saturated fills)
+		float uneven = texture(detail_tex, UV * detail_scale * 0.043 + vec2(0.21, 0.67)).a / 0.75;
+		cloth = mix(vec3(dot(cloth, vec3(0.2126, 0.7152, 0.0722))), cloth, CLOTH_SATURATION) * mix(1.0, uneven, 0.25);
+	}
 	ALBEDO = cloth * mix(vec3(1.0), tint.rgb, clamp(tint.a, 0.0, 1.0));
 	ROUGHNESS = clamp(roughness_base + (1.0 - d) * 0.1, 0.0, 1.0);
 	vec3 metal_sheen = vec3(0.0);
@@ -115,7 +123,7 @@ void fragment() {
 		// metallic surface drew black: the metal keeps a part of its colour as diffuse, and the gaps between rings and
 		// scales are dark and dull, not bright metal
 		float plate = smoothstep(0.35, 0.75, d);
-		METALLIC = 0.7 * plate;
+		METALLIC = 0.6 * plate;   // (the fourth look lane: 0.7 drew plate near black in the world's light)
 		ROUGHNESS = clamp(0.3 + (1.0 - d) * 0.45, 0.0, 1.0);
 		SPECULAR = 0.7;
 		// the second look lane: metal read as dull cloth (bronze as leather) under both lights - it mirrors a sky

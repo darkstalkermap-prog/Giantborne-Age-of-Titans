@@ -111,6 +111,7 @@ STYLES.update({
              grow="toward"),
         dict(n=130, length=0.22, lo=0.009, hi=0.015, npts=6, power=0.7, width=0.034, curl=0.1, wispy=0.25,
              grow="toward")], "fringe": dict(n=80),
+        "cover": dict(n=16, length=0.10, lo=0.006, hi=0.016, npts=4, width=0.06, curl=0.05),
         "braids": [dict(at="nape_side", side=s, length=0.56, width=0.04, step=0.018, lean=(0.22 * s, -0.55, -1.0),
                         ties=(1.0,), beads=(0.35, 0.6, 0.85), grow=True) for s in (1.0, -1.0)]},
     "Hair_long_loose": {"kind": "scalp", "layers": [
@@ -164,6 +165,7 @@ BEAD_SETS = {"Beads_bone": dict(shape="barrel", detail="bone", color="#d9ccb0"),
              "Beads_silver": dict(shape="round", detail="metal", color="#c9ccd1")}
 BEAD_SIDES_SET = 6
 HAIR_SEED = 11
+COVER_SEED = 4041            # the fourth look lane: a style's "cover" locks (their own random stream)
 # The hairline's fringe (the M10 gate, LC-6): what a style's "fringe" entry does not give. Short, narrow cards
 # (three points, four triangles a card), most of them from the atlas's wispy column, lying back over the roots
 # of the style's first cards. The long hair's inner layer gave up a point a card for them (7 to 6).
@@ -1007,6 +1009,24 @@ def build_styles(body, rig, coll, bd, S):
             width = fr["width"] * S * (0.8 + 0.4 * frng.random(n))
             cols = np.where(frng.random(n) < fr["wispy"], 3, frng.integers(0, 3, n))
             V, F, UV, Nn = ribbons(surf, P, width, cols, np.full(n, fr["curl"]), centre, taper=0.7)
+            Vs.append(V)
+            Fs.append(F + off)
+            UVs.append(UV)
+            Ns.append(Nn)
+            off += len(V)
+            cards += n
+        if "cover" in style:
+            # the fourth look lane: a few short locks combed straight back over the top of the head, from a random
+            # stream of their own (the twin braids' locks run apart to each side and left a ragged scalp patch)
+            cv = style["cover"]
+            crng = np.random.default_rng([COVER_SEED, STYLE_ORDER.index(mesh_id)])
+            P = grow_scalp(surf, L, S, hs, crng, cv["n"], cv["length"], cv["lo"], cv["hi"], npts=cv["npts"], power=0.6,
+                           mask=region_mask(surf, L, S, hs, cv.get("region", "strip"))
+                           * sstep_np(surf.V[:, 2], L["ear_z"][1] + 0.01 * hs * S, L["ear_z"][1] + 0.04 * hs * S))
+            n = len(P)
+            width = cv["width"] * S * (0.8 + 0.4 * crng.random(n))
+            V, F, UV, Nn = ribbons(surf, P, width, crng.integers(0, 3, n), np.full(n, cv["curl"]), centre,
+                                   taper=SCALP_TAPER)
             Vs.append(V)
             Fs.append(F + off)
             UVs.append(UV)

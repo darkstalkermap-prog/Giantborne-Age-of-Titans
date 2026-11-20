@@ -106,6 +106,7 @@ void vertex() {
 
 const vec2 SCAR_CORE = vec2(0.34, 0.72);   // the third look lane: the scar's coverage drawn as healed tissue
 const float SCAR_RIM_DARK = 0.12;           // ... and its rim's darkening
+const float SCALP_SHADE = 0.9;              // the fourth look lane: the scalp under a style as its hair (0.8 drew the gaps between the locks dark)
 const float NECK_SHADOW_SOFT = 0.6;         // the third look lane: the share of a shadow on the neck left out
 const float PAINT_SMEAR_UV = 0.014;         // the third look lane: how far war paint's border wanders (UV)
 
@@ -191,7 +192,7 @@ void fragment() {
 		float under = clamp(beard_tint, 0.0, 1.0);
 		base = mix(base, cut, stub * mix(0.18 + 0.5 * dots, 0.75, under));
 	}
-	base = mix(base, hair_color * 0.8, clamp(m.g * scalp_tint, 0.0, 1.0));
+	base = mix(base, hair_color * SCALP_SHADE, clamp(m.g * scalp_tint, 0.0, 1.0));
 	base = mix(base, beard_color * 0.8, clamp(smoothstep(0.2, 0.7, m.r) * beard_tint, 0.0, 1.0));
 	base = mix(base, hair_color * 0.9, clamp(m.b * brows, 0.0, 1.0) * 0.85);
 	// the designs of this texel's body region: tattoo ink in the skin, the line's mark, war paint on top
