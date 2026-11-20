@@ -24,7 +24,7 @@ extends UiScreen
 ## Controls (the P16 focus rules): focus_rows() = [the tabs] + the category's rows + [the actions]; LB and RB,
 ## or PageUp and PageDown, change the category; swatch rows and cyclers apply the focused value at once,
 ## sliders move the greys, toggles the scars (OptionRows). The preview turns with the right stick, a mouse drag
-## or Q and E, zooms with LT and RT, the wheel or + and -; X or V cycles its view; Y or R randomizes the open
+## or Q and E, zooms with the right stick's up and down (P57; LT and RT jump five rows), the wheel or + and -; X or V cycles its view; Y or R randomizes the open
 ## category; "Randomize all" keeps the outfit unless Clothing is open; Undo (the button, Ctrl+Z, the pad's View
 ## button) steps back through HISTORY_MAX changes - swatches, Randomize, presets and Reset included; Reset
 ## returns to the look the screen opened with (a shrine) or the default preset (New Game); Ctrl+Enter is
@@ -63,12 +63,16 @@ const HISTORY_MAX := 64
 const TURN_STEP_DEG := 15.0
 ## The stick's dead zone and how fast the triggers zoom (steps a second at full pull).
 const AXIS_DEADZONE := 0.2
+## How fast the right stick's up and down zooms (steps a second at full tilt; P57: the triggers jump rows now).
 const TRIGGER_ZOOM_S := 4.0
+## P57: LT / RT with no grid open move the focus this many rows along the screen's rows (the tabs, the category's
+## rows and the actions, wrapping), so with the D-pad any row of Clothing's eleven is at most two presses away.
+const ROW_JUMP := 5
 ## A Randomize that draws the same look tries again, at most this often.
 const RANDOM_TRIES := 8
 ## The room kept under the Presets list for the focused preset's description (lines of its 12 px text).
 const PRESET_NOTE_LINES := 3
-const HINT_PAD := "LB/RB: category   D-pad: choose   A: open   Y: randomize   X: view   R-stick, LT/RT: turn, zoom   View: undo   B: back"
+const HINT_PAD := "LB/RB: category   D-pad, LT/RT: choose   A: open   Y: randomize   X: view   R-stick: turn, zoom   View: undo   B: back"
 const HINT_KEYS := "PgUp/PgDn: category   Arrows: choose   Enter: open   R: randomize   V: view   Q/E, +/-: turn, zoom   Ctrl+Z: undo   Ctrl+Enter: %s   Esc: back"
 ## While an option grid is open (P55).
 const HINT_GRID_PAD := "D-pad: choose   A: done   LT/RT: page   X: material   LB/RB: category   View: undo   B: back"
@@ -847,11 +851,10 @@ func _process(delta: float) -> void:
 	var rx := float(_axes.get(JOY_AXIS_RIGHT_X, 0.0))
 	if absf(rx) > AXIS_DEADZONE:
 		preview.turn(-rx * GiantPreview.TURN_DEG_S * delta)
-	if grid_open():
-		return   # the triggers turn the grid's pages (_input) instead of zooming
-	var zoom := float(_axes.get(JOY_AXIS_TRIGGER_RIGHT, 0.0)) - float(_axes.get(JOY_AXIS_TRIGGER_LEFT, 0.0))
-	if absf(zoom) > AXIS_DEADZONE:
-		preview.zoom(zoom * TRIGGER_ZOOM_S * delta)
+	# P57: the right stick's up and down zoom (the triggers turn a grid's pages and jump rows: _trigger_page)
+	var ry := float(_axes.get(JOY_AXIS_RIGHT_Y, 0.0))
+	if absf(ry) > AXIS_DEADZONE:
+		preview.zoom(-ry * TRIGGER_ZOOM_S * delta)
 
 
 func _input(event: InputEvent) -> void:
@@ -859,7 +862,7 @@ func _input(event: InputEvent) -> void:
 		return
 	var motion := event as InputEventJoypadMotion
 	if motion != null:
-		if motion.axis in [JOY_AXIS_RIGHT_X, JOY_AXIS_TRIGGER_LEFT, JOY_AXIS_TRIGGER_RIGHT]:
+		if motion.axis in [JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y, JOY_AXIS_TRIGGER_LEFT, JOY_AXIS_TRIGGER_RIGHT]:
 			_axes[motion.axis] = motion.axis_value
 		if motion.axis in [JOY_AXIS_TRIGGER_LEFT, JOY_AXIS_TRIGGER_RIGHT] and not question_open():
 			_trigger_page(motion)
@@ -873,17 +876,43 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-## LT / RT while a grid is open: one page per pull (the trigger must fall back before it counts again).
+## LT / RT: while a grid is open one page per pull, else (P57) ROW_JUMP rows up or down (the trigger must fall back
+## before it counts again).
 func _trigger_page(motion: InputEventJoypadMotion) -> void:
 	var held := bool(_triggers.get(motion.axis, false))
 	if not held and motion.axis_value > GRID_TRIGGER_PRESS:
 		_triggers[motion.axis] = true
 		if grid_open():
 			grid.step_page(-1 if motion.axis == JOY_AXIS_TRIGGER_LEFT else 1)
-			InputBindings.note_device(motion)
-			get_viewport().set_input_as_handled()
+		else:
+			jump_rows(-1 if motion.axis == JOY_AXIS_TRIGGER_LEFT else 1)
+		InputBindings.note_device(motion)
+		get_viewport().set_input_as_handled()
 	elif held and motion.axis_value < GRID_TRIGGER_RELEASE:
 		_triggers[motion.axis] = false
+
+
+## P57: the focus ROW_JUMP rows down (+1) or up (-1) along the screen's focus rows, wrapping; the control at the same
+## place in the row (its last when the row is shorter). Returns the control that has the focus.
+func jump_rows(dir: int) -> Control:
+	var rows := UiNav.link_rows(focus_rows())
+	var owner := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
+	for ri in rows.size():
+		var at := (rows[ri] as Array).find(owner)
+		if at < 0:
+			continue
+		var target: Array = rows[(ri + dir * ROW_JUMP + rows.size() * ROW_JUMP) % rows.size()]
+		var c: Control = target[mini(at, target.size() - 1)]
+		c.grab_focus()
+		return c
+	return owner
+
+
+## P57: a grid's cell lines wrap up and down among themselves (the filters and the pager stay a press away from the
+## tabs and the actions, and on X, F, "/", LT, RT and the keys), so any cell is at most three D-pad presses away.
+func focus_linked() -> void:
+	if grid_open():
+		grid.wrap_cell_lines()
 
 
 ## The name filter's box takes the keys (Godot's LineEdit edits once asked to when the focus comes from code).
